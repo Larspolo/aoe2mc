@@ -20,7 +20,7 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   `search/...` and branch deletes give 403. A push to a new ref works, a non-fast-forward push fails: `tools/claim.py`
   uses it as a lock (#211). REST ref paths: `git/refs/heads/...`. `urllib` with a JSON body needs
   `Content-Type: application/json`, else 415 (#345).
-- Quote the heredoc tag (`<<'EOF'`) for GitHub text: `<<EOF` runs each `` `name` `` as a command. Pass paths as arguments.
+- Quote the heredoc tag (`<<'EOF'`) for GitHub text: `<<EOF` runs each `` `name` `` as a command.
 - Private repository: a workflow with a `permissions:` block also needs `contents: read`; the `pulls` API needs
   `pull-requests: read`. A new `workflow_dispatch` workflow runs only after the merge to `main` (#207).
 - Minecraft server: a bad property value (`facing=up`) loads silently as the default state. An unknown block gives
@@ -30,10 +30,11 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   The 26.3 server writes a missing `white-list` as `true`: write `white-list=false` (`game/run.py`, #285).
 - Minecraft client (#178, #179): `tools/mc_shot.py` runs it in `Xvfb`. 26.3 needs `mesa-vulkan-drivers` (lavapipe) and
   a placeholder for the title panorama. The view ends at about 100 blocks: put `--at` near the subject (#208).
-- Test data: `samples/de-64.3.aoe2record` (`mgz`, MIT, #134; each town center 4 times, #139). Old `.scx` (no license, do not
-  commit): GitHub raw `SiegeEngineers/genie-rs/master/crates/genie-scx/test/scenarios/` (format 1.21: `Age of Heroes b1-3-5.scx`).
-- `tools/claim.py` names the run by the current local branch (`who()`): stay on the session branch (a beat from a helper
-  branch fails with "belongs to another run", #361). Do not beat in a background loop and in the foreground at once.
+- Test data: `samples/de-64.3.aoe2record` (`mgz`, MIT, #134; each town center 4 times, #139). `parse_match(f).actions`:
+  `ERROR` actions are commands mgz could not read (all `DE_QUEUE` in DE 64.3: `aoe2mc.de_queue`; raw bytes: a wrapper
+  of `mgz.fast.parse_action`, #372). Old `.scx` (no license, do not commit): GitHub raw
+  `SiegeEngineers/genie-rs/master/crates/genie-scx/test/scenarios/` (format 1.21: `Age of Heroes b1-3-5.scx`).
+- `tools/claim.py` names the run by the local branch (`who()`): beat only from the session branch, never in parallel (#361).
 - The cloud clone is shallow: `git fetch --unshallow origin` before a scan of the history (#367).
 
 ## Libraries
@@ -52,47 +53,14 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   the world is turned 45°, not mirrored; the AoE2 top corner is in the north-east (`SPAWN_YAW`). Do not trust the axis
   gate names: `plan_walls` uses the walls next to the gate. `--orientation` turns the tile grid (`turn_map`) and each
   building canvas (`buildings.turn`); gates, walls and bridges follow their neighbours.
-- Real maps have all water at elevation 0 (#164). `terrain_style`: an earlier rule wins (`ROAD_GRAVEL` matched `GRAVEL`, #5).
-- Golden test: change the house chimney of the tiny scenario to see it fail. `columns()` in `tests/test_terrain.py`
-  makes `Columns` from a terrain array. Maps of one size draw the same random numbers: compare them per block.
-- `place_objects` without a scenario: call it with one object dict (`kind`, `name`, `player`, `x`, `y`,
-  `rotation`, `hero`, `garrisoned`) on a 16 × 16 `Columns`. With `sys.settrace` this shows which branch each
-  `OtherInfo` name takes (#6). Buildings (also `FISH_TRAP`, docks) need `kind="B"`, else nothing is placed.
-  `build_chunk` returns `(nbt, vol)`: test exact blocks of a chunk with `vol` (#19).
-- `aoe2mc.py` reads `tools/mcdata/1.21.1.json` at import (#19). The package ships it as `tools.mcdata`
-  (`pyproject.toml`). A new runtime data file must go into the package data too (test: `pip install .` in a venv).
-- The column "Used today in" of the feature table in `docs/DESIGN.md` is generated on main (`tools/feature_table.py`,
-  `coverage.yml`, #234). A PR adds rows, but does not edit the column. GitHub ignored the old `union` rule (#210).
-- PRs do not change `docs/coverage.md` or `MAX` in `tests/test_coverage.py`: the `coverage.yml` workflow updates them on
-  main (#233). A conflict there (old PR): take main's side. Check `mergeable_state` after the push: a PR is "dirty"
-  when main moved. `automerge.yml` merges green agent PRs (#232).
-- Block IDs in `B` depend on earlier tests or conversions: draw random numbers per block in state-name order, not
-  ID order (#44). A test that passes alone but fails in the full suite often has this cause.
-- An invalid item in a block entity can vanish without a log line. `tools/mc_check.py W --keep DIR` keeps the world
-  that the server saved: read it with `tools/world_reader.py` (1.21.1 saves the loaded chunks again, 26.3 can skip them) (#27).
-  26.3 saves a default state as the bare name and puts the properties in another order: normalize before you compare (#189).
-- New entity NBT: convert a map with one unit per type (`add_unit` in a loop) and run `tools/mc_check.py` (1 min).
-- Inside of a design: `tools/render.py building NAME OUT.png --cut 2` (#265). Exact local layers: run the design
-  function on a `Canvas` and read `c.get(x, y, z)` (#255).
-- `vary()` picks a `ROOF_ALT` material per variant: count blocks with `render.building_blocks(NAME, arch, variant=v)` (#146).
-- `tools/render.py world` draws only Y >= 50 (`--y0`): use `--y0 -64` for blocks under the map (`--border`). `--scale 4`
-  gives about 800 px, the size of the images in `docs/images/` (#262).
-- Footprint rule in a test: `Edits.add` keeps a block outside the footprint when `y >= cols.wtop + E.HEAD` (not the
-  surface). Match a block by its name before `[`: `minecraft:water_cauldron` starts with `minecraft:water` (#295).
-- `aoe2mc.json` "ground" over a tree, mine or building footprint is the top of the barriers, not the terrain: take
-  the ground of the free cells next to it (`Map.around`, #307). The parser stump names: `STUMP`, `*_STUMP` (no `TREE_STUMP`).
-- The `buildings` test scenario is about 1150 × 1570 blocks: to read one building of player 1 in the world, use the area
-  around tile (4 + i % 40 × 7, 4 + i // 40 × 7), i = the index of the name in `BuildingInfo` (#251).
-- An "other" object in `MONUMENTS` goes to `place_building` as a copy (`dict(o, kind="B")`): it gets no `o["footprint"]`.
-  In a test, compute its block area from `buildings.footprint(name)` (#296).
-- Sibling sub-issues (#249-#256) run in parallel: before you add a helper or a tool option, `git fetch origin main` and
-  grep for it. #252 and #265 both added `render.py --cut`, and two runs added a `furnish` (#252).
+- Real maps have all water at elevation 0 (#164). `terrain_style`: an earlier rule wins (#5). `columns()` in
+  `tests/test_terrain.py` makes `Columns` from a terrain array. Maps of one size draw the same random numbers.
 - `place_objects` without a scenario: one object dict (`kind`, `name`, `player`, `x`, `y`, `rotation`, `hero`,
   `garrisoned`) on a 16 × 16 `Columns`. Buildings (also `FISH_TRAP`, docks) need `kind="B"`. `build_chunk` returns
   `(nbt, vol)`: test exact blocks with `vol` (#19). Footprint rule: `Edits.add` keeps a block outside the footprint
   when `y >= cols.wtop + E.HEAD`. Match a block by its name before `[` (`water_cauldron` starts with `water`, #295).
-- `aoe2mc.py` reads `tools/mcdata/1.21.1.json` at import. A new runtime data file must go into the package data
-  (`pyproject.toml`; test: `pip install .` in a venv).
+  A `MONUMENTS` object goes to `place_building` as a copy without `o["footprint"]`: use `buildings.footprint(name)` (#296).
+- A new runtime data file (like `tools/mcdata/1.21.1.json`) must go into the package data (`pyproject.toml`).
 - Generated on main, not in PRs: the column "Used today in" of `docs/DESIGN.md` (`tools/feature_table.py`), `docs/coverage.md`
   and `MAX` in `tests/test_coverage.py` (`coverage.yml`, #233, #234). A conflict there: take main's side.
 - Block IDs in `B` depend on earlier tests: draw random numbers in state-name order, not ID order (a cause of full-suite-only failures, #44).
