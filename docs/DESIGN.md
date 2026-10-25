@@ -43,7 +43,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Gate of a pen | `*_fence_gate` | `pasture` |
 | Wheel | open `*_trapdoor` on the side | `cart` |
 | Tent canvas | `white_wool`, a valance of wool in the player color | `army_tent`, `command_tent` |
-| Thatch | `hay_block` | `hut`, `settlement` |
+| Thatch | `hay_block` | `hut`, `settlement`, `tower` (African) |
 | Palisade stakes | `*_log[axis=y]` of two heights | `wooden_fort` |
 | Gold statue, finial | `gold_block` | `buddha_statue`, `stupa`, `monument` |
 | Painted wood (torii) | `red_concrete`, black top beam | `torii` |
@@ -60,8 +60,9 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Sacred tree | `oak_log`, `oak_leaves[persistent=true]` | `pagan_shrine` |
 | Sail | wool (player color) | `flagship` |
 | Hides | `brown_wool` | `helepolis` |
-| Band in the player color | `*_wool` (player color) | `town_center` |
+| Band in the player color | `*_wool` (player color) | `town_center`, `tower` |
 | Outside stairs to an upper floor | `*_stairs` of the wood of the set | `town_center` |
+| Cannon | `polished_basalt` barrel on its side | `tower` (bombard) |
 | Books, study | `bookshelf`, `lectern` | none yet (`university` needs them) |
 
 Add a line when a design uses a new feature block. Each new block state must pass `mcvalid`.
