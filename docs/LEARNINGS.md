@@ -44,6 +44,9 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   `map_manager.map_size = N`, `unit_manager.add_unit(PlayerId, ID, x=, y=)`, `write_to_file(path)`.
   It prints much text: wrap calls in `contextlib.redirect_stdout(io.StringIO())`.
 - In a default scenario all players have civilization RANDOM, so all buildings use the `western` set.
+- The server drops entity tags that it does not know, without a log line. To check a new entity format, let the
+  server save the world and compare the entity NBT before and after (method in `docs/minecraft-versions.md`).
+  A tag with a wrong type gives "Serialization errors" (WARN), which `tools/mc_check.py` finds.
 - `tools/fetch_mcdata.py` reads the exact Mojang data of each release from `misode/mcmeta` (GitHub raw).
   PrismarineJS lags behind (blocks up to 26.1). Its `data/pc/common/protocolVersions.json` has the data
   versions of all releases (26.3 = 5023).

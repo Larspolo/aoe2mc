@@ -7,7 +7,7 @@ Each unit gets a name tag with its AoE2 name in the player color.
 import json
 import math
 
-from nbtlib.tag import Byte, Compound, Double, Float, Int, IntArray, List, Short, String
+from nbtlib.tag import Byte, Compound, Double, Float, Int, IntArray, List, Long, Short, String
 
 # AoE2 DE player colors
 HEX = {"blue": "#2D2DF5", "red": "#E0281E", "green": "#00B400", "yellow": "#F0F000", "cyan": "#00E0E0",
@@ -564,3 +564,43 @@ def is_bird(n):
 
 def is_boat(desc):
     return desc is not None and desc["id"] in ("minecraft:boat", "minecraft:chest_boat")
+
+
+def item_to_version(it):
+    """Item of 1.21.1 -> 1.21.5: dyed_color is a plain int."""
+    c = it.get("components", {})
+    if "minecraft:dyed_color" not in c:
+        return it
+    it = Compound(it)
+    it["components"] = Compound(c)
+    it["components"]["minecraft:dyed_color"] = Int(int(c["minecraft:dyed_color"]["rgb"]))
+    return it
+
+
+def to_version(nbt, data_version):
+    """Entity NBT in the 1.21.1 format -> the format of a later data version (docs/minecraft-versions.md)."""
+    if data_version < 4080:
+        return nbt
+    t = Compound(nbt)
+    kind = str(t["id"])
+    if kind in ("minecraft:boat", "minecraft:chest_boat"):                    # 1.21.2: one entity type per wood
+        wood, chest = str(t.pop("Type")), "chest_" if kind == "minecraft:chest_boat" else ""
+        t["id"] = String(f"minecraft:{wood}_{chest}{'raft' if wood == 'bamboo' else 'boat'}")
+    if data_version >= 4325:                                                    # 1.21.5
+        eq = dict(zip(("feet", "legs", "chest", "head"), t.pop("ArmorItems", [])))
+        eq.update(zip(("mainhand", "offhand"), t.pop("HandItems", [])))
+        for old, slot in (("SaddleItem", "saddle"), ("body_armor_item", "body")):
+            if old in t:
+                eq[slot] = t.pop(old)
+        eq = {k: item_to_version(v) for k, v in eq.items() if len(v)}          # no empty slots
+        if eq:
+            t["equipment"] = Compound(eq)
+        if "CustomName" in t:                                                   # text components are NBT
+            t["CustomName"] = Compound({k: String(v) for k, v in json.loads(str(t["CustomName"])).items()})
+        if "FallDistance" in t:
+            t["fall_distance"] = Double(float(t.pop("FallDistance")))
+    if data_version >= 5023 and "AngerTime" in t:                             # 26.3 saves the end as game time
+        t["anger_end_time"] = Long(int(t.pop("AngerTime")))
+    if "Passengers" in t:
+        t["Passengers"] = List[Compound]([to_version(p, data_version) for p in t["Passengers"]])
+    return t

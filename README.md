@@ -45,7 +45,7 @@ The world is in creative mode. Outside the map there is only void. The world lis
 | `--name` | file name | World name in the Minecraft menu |
 | `--seed` | 1 | Seed for random details (tree heights, flowers) |
 | `--preview` | off | Writes `preview.png` (top view) into the world folder |
-| `--mc-version` | 1.21.1 | Minecraft Java version of the output: `1.21.1` or `26.3`. The 26.3 output is not complete yet. |
+| `--mc-version` | 1.21.1 | Minecraft Java version of the output: `1.21.1` or `26.3` |
 | `--no-units` | off | Do not convert units |
 | `--no-birds` | off | Do not convert birds. Flying birds float 6 blocks above the ground (parrot or bat); peacocks, flamingos, storks and cranes are chickens |
 | `--no-barriers` | off | Do not fill building footprints with invisible barrier blocks |

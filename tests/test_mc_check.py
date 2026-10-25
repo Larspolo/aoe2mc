@@ -34,3 +34,20 @@ def test_server_loads_tiny_world(tiny_world):
     assert any("Done (" in line for line in log)
     assert any("Saved the game" in line for line in log)
     assert bad == []
+
+
+@pytest.mark.mc
+def test_server_26_3_loads_tiny_world(tmp_path):
+    import contextlib
+    import io
+
+    import aoe2mc
+    import scenarios
+    if not mojang_reachable():
+        pytest.skip("Mojang is not reachable")
+    src = scenarios.tiny(str(tmp_path / "tiny.aoe2scenario"))
+    with contextlib.redirect_stdout(io.StringIO()):
+        aoe2mc.convert(src, str(tmp_path / "W"), mc_version="26.3")
+    bad, log = mc_check.check(str(tmp_path / "W"), "26.3")
+    assert any("Saved the game" in line for line in log)
+    assert bad == []

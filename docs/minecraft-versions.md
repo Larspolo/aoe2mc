@@ -67,6 +67,8 @@ entities, and the upgrade does not change these.
 | 1.21.5 | Mob equipment is one compound `equipment` with the keys `head`, `chest`, `legs`, `feet`, `mainhand`, `offhand`, `body`, `saddle`. It replaces `ArmorItems`, `HandItems`, `body_armor_item` and `SaddleItem`. The item format (`id`, `count`, `components`) does not change: the unbreakable helmet keeps `components: {"minecraft:unbreakable": {}}`. | `units.armor()`, `units.hands()`, `units.soldier()`, `units.mounted()` |
 | 1.21.5 | Text components are NBT, not JSON strings. `CustomName` is a compound such as `{text: "Zebra", color: "#E0281E"}`. | `units.make_entity()` |
 | 1.21.5 | `FallDistance` (float) is now `fall_distance` (double). | `units.to_nbt()` |
+| 1.21.5 to 26.3 | Item component `minecraft:dyed_color` is a plain int (`255`), not `{rgb: 255}`. 26.3 does not load an entity with the old form ("Serialization errors" in the log). | `units.item_to_version()` (dyed leather armor) |
+| 26.3 | `AngerTime` (ticks) is read, but the game saves `anger_end_time` (Long, game time of the end). | `units.to_version()` (angry wolves, polar bears) |
 | 1.21.5 | The upgrade adds `drop_chances: {saddle: 2.0f}` to a saddled mount (the saddle always drops). | Optional: `units.mounted()` |
 
 These tags that aoe2mc writes do not change up to 26.3: `id`, `Pos`, `Motion`, `Rotation`, `UUID`, `Fire`, `Air`,
@@ -122,5 +124,6 @@ Notes for the check of a world with the dedicated server:
 - Book, sign and banner texts: aoe2mc does not write them now. Their text components are NBT since 1.21.5,
   as `CustomName`.
 - Items in containers: aoe2mc does not write them now.
-- Whether 26.3 opens a world with data version 5023 and the old palette form (`Name`, `Properties`). Ticket
-  #57 must check its output with the server (#13).
+- Whether 26.3 opens a world with data version 5023 and the old palette form (`Name`, `Properties`). aoe2mc
+  writes `id` and `properties` for 26.3. Its tiny, units gallery and full gallery worlds load in the 26.3 server
+  without problems (`tools/mc_check.py --version 26.3`, #57).
