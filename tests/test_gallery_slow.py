@@ -1,0 +1,27 @@
+"""Slow: convert a scenario with every object type of the parser and check the complete world.
+
+Run with:  pytest -m slow
+"""
+import contextlib
+import io
+
+import pytest
+
+import aoe2mc
+import mcvalid
+import scenarios
+import world_reader
+from conftest import entity_ids
+
+
+@pytest.mark.slow
+def test_gallery_world(tmp_path):
+    src = scenarios.gallery(str(tmp_path / "gallery.aoe2scenario"))
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        aoe2mc.convert(src, str(tmp_path / "GalleryWorld"))
+    w = world_reader.World(str(tmp_path / "GalleryWorld"))
+    assert mcvalid.invalid_states(w.palette()) == {}
+    for e in w.entities(flat=False):
+        for i in entity_ids(e):
+            assert mcvalid.entity_error(i) is None, i
