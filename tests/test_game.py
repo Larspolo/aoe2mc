@@ -74,6 +74,12 @@ def position(game):
     return tuple(map(float, m.groups())) if m else None
 
 
+def test_properties_let_players_join():
+    props = dict(line.split("=", 1) for line in run.properties(25565, 25575, "pw").splitlines())
+    assert props["white-list"] == "false" and props["online-mode"] == "false"
+    assert (props["server-port"], props["rcon.port"], props["rcon.password"]) == ("25565", "25575", "pw")
+
+
 @pytest.mark.mc
 def test_game_moves_a_unit_with_tp(tiny_world, tmp_path):
     import time
@@ -86,6 +92,7 @@ def test_game_moves_a_unit_with_tp(tiny_world, tmp_path):
         with open(os.path.join(game.folder, "server.properties")) as f:      # the server keeps the values (#292)
             props = f.read()
         assert "gamemode=creative" in props and "force-gamemode=true" in props
+        assert "white-list=false" in props.splitlines()
         game.forceload()
         end = time.time() + 60                      # entities load in other threads
         while "Added tag" not in game.command("tag @e[nbt={NoAI:1b},limit=1] add t137"):
