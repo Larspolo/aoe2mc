@@ -173,7 +173,7 @@ Read these files first:
 
 - Object types that the parser does not know (new IDs) are skipped.
 - Garrisoned units are not converted. Birds are not converted.
-- The direction that units face is not tested in the game yet.
+- The direction that units face is not checked in the game yet. See [`docs/facing.md`](docs/facing.md) for the check.
 - In scenarios older than version 1.56 the architecture set field can be wrong, so the program uses the civilization.
 - Unique buildings use the design of a similar building (for example krepost → small castle).
 - Diagonal gates are drawn along a tile axis.
