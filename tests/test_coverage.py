@@ -4,9 +4,9 @@ import pytest
 import coverage as cov
 
 # Allowed maximums (ratchet). When a count goes down, lower its maximum here in the same PR.
-MAX = {"Buildings": {"fallback": 22, "default": 0},
+MAX = {"Buildings": {"fallback": 12, "default": 0},
        "Other objects": {"fallback": 41, "default": 0},
-       "Units": {"fallback": 16, "default": 101},
+       "Units": {"fallback": 16, "default": 74},
        "Heroes": {"fallback": 0, "default": 196}}
 
 
@@ -22,7 +22,7 @@ def test_coverage_report(tmp_path):
     for title in ("## Buildings", "## Other objects", "## Units", "## Heroes"):
         assert title in text
     assert "| KREPOST | krepost | no |" in text
-    assert "| MILITIA | zombie – default infantry | no |" in text
+    assert "| HUSKARL | zombie – default infantry | no |" in text
     assert "| generic | yes |" in text       # some buildings still use the fallback design
     assert "| BLOCKER | skipped on purpose (path blocker) | no |" in text
     assert "| HINT_OBJECT | skipped on purpose (editor hint) | no |" in text

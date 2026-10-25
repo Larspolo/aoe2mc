@@ -30,7 +30,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Archery target | `target` | `archery_range` |
 | Bow and arrow work | `fletching_table` | `archery_range` |
 | Forge, smithy | `blast_furnace`, `anvil`, `smithing_table`, `cauldron` (water) | `blacksmith` |
-| Fire, cooking | `campfire`, `smoker` | `blacksmith`, `house`, `outpost`, `church` |
+| Fire, cooking | `campfire`, `smoker` | `blacksmith`, `house`, `outpost`, `church`, `oracles_temple` |
 | Weapon rack, sharpening | `grindstone` | `barracks`, `granary` |
 | Bell | `bell` | `monastery`, `town_center` |
 | Loom, cloth | `loom`, wool | `church` |
@@ -52,6 +52,8 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Chain, rope | `chain` | `dock`, `siege_workshop` |
 | Portcullis, grille | `iron_bars` | `gate`, `castle` |
 | Lamp | `lantern` | `decorate()` |
+| Column | `quartz_pillar` | `arch_of_constantine`, `oracles_temple` |
+| Sacred tree | `oak_log`, `oak_leaves[persistent=true]` | `pagan_shrine` |
 | Books, study | `bookshelf`, `lectern` | none yet (`university` needs them) |
 
 Add a line when a design uses a new feature block. Each new block state must pass `mcvalid`.
