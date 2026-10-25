@@ -113,6 +113,45 @@ def test_clicks_select_a_villager_and_send_it_to_a_tree(tiny_world):
     assert g.villagers[uuid].state == "to_tree" and g.villagers[uuid].tree == (tx, ty)
 
 
+def test_event_log_gives_the_configured_timing(tiny_world):
+    import io
+
+    import measure_gather
+    data, uuid, server, _ = tiny(tiny_world)
+    now, log = [0.0], io.StringIO()
+    g = gather.Gather(server, data, tick=0.25, carry=3, chop=0.5, log=log, clock=lambda: now[0]).setup()
+    tree, = g.map.trees
+    g.select(uuid)
+    g.send(tree)
+    for _ in range(400):
+        g.step()
+        now[0] += 0.25
+    events = [json.loads(line) for line in log.getvalue().splitlines()]
+    assert [e["event"] for e in events[:5]] == ["walk", "chop", "carry", "drop", "walk"]
+    assert all(e["villager"] == uuid and len(e["pos"]) == 3 for e in events)
+    drops = [e for e in events if e["event"] == "drop"]
+    assert [e["wood"] for e in drops[:3]] == [3, 6, 9] and g.wood == server.wood()
+    m = measure_gather.analyze(events)
+    assert m["chop"] == pytest.approx(2.0) and m["trip"] > 0
+    assert 3.0 < m["walk"] <= 4 * 1.42                                 # 1 block per tick, diagonal steps 1.41
+    conf = measure_gather.configured(0.25, 0.5, 3, m["trip_blocks"])
+    assert "| Chop (wood/s) | 2.00 | 2.00 | 0.39 | 0.66 |" in measure_gather.table(m, conf, 4)
+
+
+@pytest.mark.mc
+def test_measured_gather_timing_is_near_the_configured_timing():
+    from test_mc_check import mojang_reachable
+    if not mojang_reachable():
+        pytest.skip("Mojang is not reachable")
+    import measure_gather
+    events, T = measure_gather.measure(distance=10, loads=2)
+    m = measure_gather.analyze(events)
+    conf = measure_gather.configured(0.25, 1.0, 10, m["trip_blocks"])
+    print(measure_gather.table(m, conf, T))
+    for k in ("walk", "chop", "trip"):
+        assert m[k] == pytest.approx(conf[k], rel=0.1), (k, m[k], conf[k])
+
+
 @pytest.mark.mc
 def test_villager_gathers_wood_on_a_server(tiny_world, tmp_path):
     from test_mc_check import mojang_reachable
