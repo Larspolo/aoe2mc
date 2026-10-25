@@ -19,6 +19,8 @@ python3 tools/refimage.py get "Aoe2de castle houses.png" $SCRATCH/ref.png
 Good names: `Aoe2de castle houses.png` (the houses of all sets), `<Building> aoe2DE.png` (the default Western
 European model, for example `Castle aoe2DE.png`) and `Arch set <set> <age> AoE2DE.png` (all buildings of one
 set, for example `Arch set West European Castle Age AoE2DE.png`). Look at the PNG with the Read tool.
+For some buildings `<Building> aoe2DE.png` is only the icon (crossed swords, a horseshoe). Then use
+`<Building> Castle DE AoE2DE.png` (3 sets side by side) and the `Arch set` images.
 
 If no image of the architecture set exists, use the nearest set and say so in the PR.
 
