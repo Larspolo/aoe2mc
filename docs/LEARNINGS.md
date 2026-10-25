@@ -24,11 +24,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 - Minecraft server: a bad property value (`facing=up`) loads silently as the default state. An unknown block gives
   "Recoverable errors when loading section". A missing `level.dat` compound gives "key missing: <name>" (#60).
   The yggdrasil key error is normal: `api.minecraftservices.com` is not reachable.
-- AoE2 wiki: HTML pages give a Cloudflare challenge (403). The MediaWiki API works: `ageofempires.fandom.com/
-  api.php?action=query&titles=File:Castle_aoe2DE.png&prop=imageinfo&iiprop=url&format=json` gives the image URL
-  on `static.wikia.nocookie.net` (WebP). Page text: `action=parse&page=Title&prop=wikitext&format=json&formatversion=2`.
-  Python `urllib` with the default User-Agent gets 403: use `curl`, or send another `User-Agent`
-  (see `tools/refimage.py`).
+- AoE2 wiki: HTML pages give 403 (Cloudflare). Use `tools/refimage.py` (MediaWiki API, own `User-Agent`). Page text:
+  `api.php?action=parse&page=Title&prop=wikitext&format=json&formatversion=2`.
 - AoE2 recorded games: the record hosts (`aoe.ms`, `data.aoe2companion.com`, `www.aoe2insights.com`) are blocked.
   The `mgz` test records on GitHub raw work (`happyleavesaoc/aoc-mgz/master/tests/recs/de-64.3.aoe2record`, MIT):
   `mgz.model.parse_match(f).map.tiles` gives terrain and elevation of a real DE map. Install `mgz` after
@@ -66,6 +63,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 - `aoe2mc.py` reads `tools/mcdata/1.21.1.json` at import (#19). The package ships it as `tools.mcdata`
   (`pyproject.toml`). A new runtime data file must go into the package data too (test: `pip install .` in a venv).
 - `terrain_style` checks names in sequence: an earlier rule wins (`ROAD_GRAVEL` matched `GRAVEL` until #5).
+- `.gitattributes` merges `docs/DESIGN.md` with `union`: a local merge keeps the new table lines of both sides; look for
+  one line in two versions and keep one. `union` is wrong for text that runs rewrite (LEARNINGS: both versions stay, #174).
 - A merge conflict in `docs/coverage.md`: take any side, run `python3 tools/coverage.py`, then set `MAX` in
   `tests/test_coverage.py` to the new counts. Parallel runs often change the same counts (#79). Check
   `mergeable_state` before the merge: a green PR is "dirty" when main moved after the push. Merge in the CI poll
