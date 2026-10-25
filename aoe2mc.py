@@ -1543,7 +1543,7 @@ def build_chunk(cx, cz, cols, edits, origin=(0, 0)):
     water = (Y > top) & (Y <= wtop)
     vol = np.where(water, np.where(ice & (Y == wtop), ICE, WATER), vol)
     vol[0] = np.where(top[0] > NONE, BEDROCK, AIR)
-    if cols.floor > MIN_Y:              # --border diorama: the map stands on a plinth with air under it
+    if cols.floor > MIN_Y:              # --border diorama, island, table: the map stands on a floor with air under it
         vol[:cols.floor - MIN_Y] = AIR
     zz, xx = np.nonzero(deco)
     if len(zz):
@@ -1762,7 +1762,7 @@ def write_level_dat(path, name, spawn, yaw=SPAWN_YAW, size=None):
 # --------------------------------------------------------------------------------------------
 # Border (#172): blocks outside the map square for --border. The map itself does not change.
 # --------------------------------------------------------------------------------------------
-BORDERS = {"none": 0, "diorama": 2, "natural": 16, "wall": 8}     # design -> width of the ring in blocks
+BORDERS = {"none": 0, "diorama": 2, "natural": 16, "wall": 8, "island": 1, "table": 3}  # design -> ring width
 
 
 def ring(n, r):
@@ -1818,6 +1818,47 @@ def border(cols, design, colors, E):
         fill(E, x, z, gy + 1, WATER_Y + 1, "water")
         o = d == r
         fill(E, x[o], z[o], gy[o] + 1, WATER_Y + 1, "barrier")
+    elif design == "island":
+        # A floating island (#262): a rim of earth holds the water, and a cone of rock and earth hangs under the
+        # map, deepest at the center. Hanging roots grow under the shallow parts.
+        f = cols.floor = int(cols.top[:n, :n].min()) - 6
+        land = h == g
+        fill(E, x, z, f, h + 1, np.where(land, cols.sub_id[ex, ez], B("dirt")))
+        fill(E, x, z, h, h + 1, np.where(land, cols.top_id[ex, ez], B("sand")))
+        mx, mz = (a.ravel() for a in np.meshgrid(np.arange(n), np.arange(n), indexing="ij"))
+        rr = np.hypot(mx - (n - 1) / 2, mz - (n - 1) / 2) / (n / 2 * 1.42)
+        e = np.minimum.reduce([mx, n - 1 - mx, mz, n - 1 - mz])        # distance to the map edge
+        rng = np.random.default_rng(n)
+        # steep sides (2 blocks down per block in), so that a view from above sees them; a round tip
+        depth = 3 + (np.minimum(2 * e, min(n * 0.6, f - MIN_Y - 8) * np.clip(1 - rr, 0, 1))
+                     + rng.integers(0, 3, mx.size)).astype(int)
+        bot = np.maximum(f - depth, MIN_Y + 2)
+        fill(E, mx, mz, f - 3, f, "dirt")
+        rock = np.where(rng.random(mx.size) < 0.15, B("andesite"), np.where(rng.random(mx.size) < 0.03,
+                                                                            B("coal_ore"), B("stone")))
+        fill(E, mx, mz, bot, f - 3, rock)
+        hang = (depth < 8) & (rng.random(mx.size) < 0.25)
+        fill(E, mx[hang], mz[hang], f - 4, f - 3, "rooted_dirt")
+        fill(E, mx[hang], mz[hang], f - 5, f - 4, "hanging_roots[waterlogged=false]")
+    elif design == "table":
+        # A map table (#262): a frame of dark oak with a raised lip, a leg under each corner, a banner in a player
+        # color on each corner and lanterns on the lip.
+        f = cols.floor = int(cols.top[:n, :n].min()) - 6
+        lip = d <= 2
+        fill(E, x[lip], z[lip], f, h[lip] + 2, "dark_oak_planks")
+        o = d == 3
+        fill(E, x[o], z[o], f, h[o] + 1, "dark_oak_planks")
+        fill(E, x[o], z[o], h[o] + 1, h[o] + 2, "dark_oak_slab[type=bottom,waterlogged=false]")
+        fill(E, x, z, f - 1, f, "stripped_dark_oak_log[axis=y]")
+        along = np.where((x < 0) | (x >= n), z, x)
+        lamp = (d == 2) & (along % 12 == 6) & (along > 0) & (along < n - 1)
+        fill(E, x[lamp], z[lamp], h[lamp] + 2, h[lamp] + 3, "lantern[hanging=false,waterlogged=false]")
+        for i, (cx, cz) in enumerate(((-2, -2), (n + 1, -2), (n + 1, n + 1), (-2, n + 1))):
+            t = (np.abs(x - cx) <= 1) & (np.abs(z - cz) <= 1)
+            fill(E, x[t], z[t], max(f - 40, MIN_Y + 1), f - 1, "dark_oak_log[axis=y]")
+            c = t & (x == cx) & (z == cz)
+            color = colors[i % len(colors)] if colors else "white"
+            fill(E, x[c], z[c], h[c] + 2, h[c] + 3, f"{color}_banner[rotation={(2 + 4 * i) % 16}]")
     elif design == "wall":
         # A low wall of stone bricks with merlons, and a tower in a player color at each corner.
         a = d <= 2
