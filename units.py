@@ -48,29 +48,68 @@ INVISIBLE = (("MAP_REVEAL", "map revealer"), ("INVISIBLE_OBJECT", "invisible obj
              ("PLACEHOLDER", "placeholder"), ("DISABLED", "disabled unit"), ("OUTLW", "unused unit"),
              ("RFARC", "unused unit"))
 
-SKIP = ("TORCH_", "VMDL", "BUTTERFLY", "SEAGULLS", "FALCON", "HAWK", "VULTURE", "STORK",
-        "MACAW", "CONDOR", "RAVEN", "OWL", "PEACOCK", "FLAMINGO", "CRANE", "FLAMING_BIRD",
-        "TREASURE_CHEST", "PHOTONMAN", "SHARKATZOR", "NESSIE")
+SKIP = ("BUTTERFLY", "SEAGULLS", "FALCON", "HAWK", "VULTURE", "STORK",
+        "MACAW", "CONDOR", "RAVEN", "OWL", "PEACOCK", "FLAMINGO", "CRANE", "FLAMING_BIRD")
+JOKES = {   # joke and special units -> entity
+    "TREASURE_CHEST": lambda: vehicle("chest_minecart", []),
+    "TORCH_": lambda: mob("armor_stand", Invisible=Byte(1), ShowArms=Byte(1), HandItems=hands("torch")),
+    "PHOTONMAN": lambda: soldier("zombie", 3, "crossbow"),      # white space suit, laser gun
+    "SHARKATZOR": lambda: mob("guardian"),                     # a shark with laser eyes
+    "NESSIE": lambda: mob("elder_guardian"),
+}
 
-ANIMALS = [   # (keywords, minecraft mob, extra tags)
-    (("POLAR_BEAR",), "polar_bear", {}),
-    (("SHEEP", "MOUFLON", "ARGALI", "TIGER", "LION", "JAGUAR", "LEOPARD", "PANTHER", "LYNX", "OSTRICH", "RHEA",
-      "GAZELLE", "MONKEY", "SNAKE", "PENGUIN", "HARE", "CAPYBARA"), "sheep", {"Color": Byte(0)}),
-    (("RHINO", "CROCODILE", "CAIMAN", "KOMODO", "BEAR"), "hoglin",
-     {"IsImmuneToZombification": Byte(1), "CannotBeHunted": Byte(1)}),
-    (("COW_", "BUFFALO", "WALRUS", "TAPIR", "SEAL", "YAK"), "cow", {}),
-    (("RED_FOX",), "fox", {"Type": String("red")}),
-    (("ARCTIC_FOX",), "fox", {"Type": String("snow")}),
-    (("WOLF", "DOG"), "wolf", {}),
-    (("WILD_BOAR", "IRON_BOAR", "JAVELINA"), "hoglin", {"IsImmuneToZombification": Byte(1), "CannotBeHunted": Byte(1)}),
-    (("PIG",), "pig", {}),
-    (("DEER", "IBEX", "ELK", "GOAT"), "goat", {}),
-    (("TURKEY", "GOOSE", "CHICKEN", "PHEASANT"), "chicken", {}),
-    (("DONKEY",), "donkey", {"Tame": Byte(1)}),
-    (("LLAMA", "ALPACA", "GUANACO"), "llama", {"Variant": Int(0)}),
-    (("WILD_CAMEL", "BACTRIAN_CAMEL"), "camel", {}),
-    (("HORSE", "ZEBRA"), "horse", {"Variant": Int(0)}),
+HOGLIN = {"IsImmuneToZombification": Byte(1), "CannotBeHunted": Byte(1)}
+ANGRY = {"AngerTime": Int(2 ** 31 - 1)}   # angry look; attacks all players only with gamerule universalAnger
+
+
+def wolf(variant):
+    return {"variant": String("minecraft:" + variant), **ANGRY}
+
+
+# AoE2 behavior -> a Minecraft mob of the same class (owner's rule in #43). docs/animals.md gives the source
+# and the reason of each row. "military": cheat units that fight for a player; the look wins.
+# The first row that matches wins.
+ANIMALS = [   # (keywords, AoE2 behavior, minecraft mob, extra tags)
+    (("ALFRED_THE_ALPACA",), "military", "llama", {"Variant": Int(1)}),
+    (("FURIOUS_THE_MONKEY_BOY",), "military", "ocelot", {}),
+    (("WAR_PENGUIN",), "military", "chicken", {}),
+    (("WAR_DOG", "STORMY_DOG"), "military", "wolf", wolf("black")),
+    (("POLAR_BEAR",), "aggressive", "polar_bear", ANGRY),
+    (("BROWN_BEAR", "BLACK_BEAR", "CROCODILE", "CAIMAN", "KOMODO", "IRON_BOAR"), "aggressive", "hoglin", HOGLIN),
+    (("SNAKE",), "aggressive", "silverfish", {}),
+    (("ARCTIC_WOLF", "SNOW_LEOPARD"), "aggressive", "wolf", wolf("snowy")),
+    (("ARABIAN_WOLF", "TIGER"), "aggressive", "wolf", wolf("striped")),
+    (("DIRE_WOLF", "PANTHER"), "aggressive", "wolf", wolf("black")),
+    (("RABID_WOLF",), "aggressive", "wolf", wolf("ashen")),
+    (("LION",), "aggressive", "wolf", wolf("chestnut")),
+    (("JAGUAR",), "aggressive", "wolf", wolf("spotted")),
+    (("LYNX",), "aggressive", "wolf", wolf("rusty")),
+    (("WOLF",), "aggressive", "wolf", wolf("pale")),
+    (("WILD_BOAR", "JAVELINA", "RHINO", "TAPIR"), "defensive", "panda",
+     {"MainGene": String("aggressive"), "HiddenGene": String("aggressive")}),
+    (("ELEPHANT", "WALRUS"), "defensive", "polar_bear", {}),
+    (("ELK",), "defensive", "llama", {"Variant": Int(2)}),
+    (("SHEEP",), "passive", "sheep", {"Color": Byte(0)}),
+    (("MOUFLON", "ARGALI", "IBEX"), "passive", "sheep", {"Color": Byte(12)}),
+    (("GOAT",), "passive", "sheep", {"Color": Byte(8)}),
+    (("COW_", "BUFFALO", "YAK"), "passive", "cow", {}),
+    (("SEAL",), "passive", "turtle", {}),
+    (("RED_FOX",), "passive", "fox", {"Type": String("red")}),
+    (("ARCTIC_FOX",), "passive", "fox", {"Type": String("snow")}),
+    (("PIG", "CAPYBARA"), "passive", "pig", {}),
+    (("TURKEY", "GOOSE", "CHICKEN", "PHEASANT", "OSTRICH", "RHEA", "PENGUIN"), "passive", "chicken", {}),
+    (("ARCTIC_HARE",), "passive", "rabbit", {"RabbitType": Int(1)}),
+    (("HARE",), "passive", "rabbit", {"RabbitType": Int(0)}),
+    (("MONKEY",), "passive", "ocelot", {}),
+    (("DONKEY",), "passive", "donkey", {"Tame": Byte(1)}),
+    (("LLAMA", "ALPACA", "GUANACO", "WILD_CAMEL", "BACTRIAN_CAMEL"), "passive", "camel", {}),
+    (("DEER",), "passive", "horse", {"Variant": Int(2 | 3 << 8)}),     # chestnut, white dots
+    (("GAZELLE",), "passive", "horse", {"Variant": Int(1)}),           # creamy
+    (("ZEBRA",), "passive", "horse", {"Variant": Int(0 | 4 << 8)}),    # white, black dots
+    (("HORSE",), "passive", "horse", {"Variant": Int(0)}),
 ]
+ANIMAL_EXACT = {"ELEPHANT"}    # "ELEPHANT" alone; the war elephants are units
+
 
 VILLAGER_JOBS = [("FARMER", "farmer"), ("FORAGER", "farmer"), ("FISHERMAN", "fisherman"), ("OYSTER", "fisherman"),
                  ("SHEPHERD", "shepherd"), ("HERDER", "shepherd"), ("HUNTER", "butcher"), ("BUILDER", "mason"),
@@ -182,21 +221,29 @@ def invisible(n):
     return next((r for k, r in INVISIBLE if k in n), None)
 
 
+def animal(n):
+    """(AoE2 behavior, minecraft mob, extra tags) for an animal name, else None."""
+    if "ELEPHANT" in n and n not in ANIMAL_EXACT or has(n, "CAMEL_", "ARCHER", "RIDER", "CAVALRY", "_WARRIOR"):
+        return None
+    return next((row[1:] for row in ANIMALS if has(n, *row[0])), None)
+
+
 def classify(n, hero=False):
     """Return the entity description for unit name n, or None to skip it."""
     if invisible(n) or has(n, *SKIP):
         return None
+    joke = next((f for k, f in JOKES.items() if k in n), None)
+    if joke:
+        return joke()
+    if n == "VMDL":                 # an old villager model
+        n = "VILLAGER_MALE"
     t = tier_of(n, hero)
 
     # Animals (but not war animals)
-    if not hero and n == "ELEPHANT":
-        return mob("ravager")
-    if not hero and not has(n, "CAMEL_", "ARCHER", "RIDER", "CAVALRY"):
-        for keys, kind, extra in ANIMALS:
-            if has(n, *keys) and not has(n, "_WARRIOR", "CAVALRY"):
-                if kind == "camel":
-                    return mounted("camel", None)
-                return mob(kind, **extra)
+    a = animal(n) if not hero else None
+    if a:
+        _, kind, extra = a
+        return mounted("camel", None) if kind == "camel" else mob(kind, **extra)
 
     # Villagers, monks, kings, traders
     if n.startswith("VILLAGER") or n.startswith("REPAIRER"):

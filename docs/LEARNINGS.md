@@ -9,6 +9,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 - `/root/.local/bin/pytest` and `/usr/bin/pip` use another Python. Use `python3 -m pytest` and `python3 -m pip`.
   Symptom: "cannot import name '_imaging' from 'PIL'" in the end-to-end tests. If it stays after the install,
   the old Debian pillow shadows it: `python3 -m pip install --ignore-installed pillow`.
+- `minecraft.wiki` is blocked (curl and WebFetch). The AoE2 wiki API (`ageofempires.fandom.com/api.php?action=parse
+  &page=Title&prop=wikitext&format=json&formatversion=2`) works with `curl`, but Python `urllib` gets 403.
 - Java 21 is installed in the cloud container. Minecraft 1.21.1 needs Java 21, 26.3 needs Java 25
   (`javaVersion.majorVersion` in the version JSON). The Mojang hosts are allowed since #12.
 - GitHub in cloud sessions: `gh api repos/Larspolo/aoe2mc/...` (REST) works. GraphQL (`gh issue list`,
