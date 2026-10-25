@@ -30,6 +30,7 @@ python3 tools/render.py building CASTLE --arch western $SCRATCH/before_se.png
 python3 tools/render.py building CASTLE --arch western --view nw $SCRATCH/before_nw.png
 ```
 The default view (south-east) shows the front, as the AoE2 camera does. Look at the images with the Read tool.
+The default `--scale 8` is small for details: use `--scale 16` for one building. `sheet --variants 1` is faster.
 
 ## 3. List the differences
 

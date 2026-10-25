@@ -34,7 +34,10 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Weapon rack, sharpening | `grindstone` | `barracks`, `granary` |
 | Bell | `bell` | `monastery`, `town_center` |
 | Loom, cloth | `loom`, wool | `church` |
-| Market goods | `barrel`, `chest`, `composter`, `hay_block` | `market`, `dock` |
+| Market goods | `barrel`, `chest`, `composter`, `hay_block`, `melon`, `pumpkin` | `market`, `dock` |
+| Market stall | lean-to of roof stairs on `*_fence` posts; wool awning in stripes for flat-roof sets | `market` |
+| Painted trim (deck edge) | `*_concrete` (player color) | `dock` |
+| Hoist | log beam with `chain` | `dock` |
 | Hay, fodder | `hay_block` | `stable`, `barracks`, `granary` |
 | Water trough | `cauldron` (water) | `stable` |
 | Banner, flag | `*_banner` (player color), `Canvas.flag` | most designs |

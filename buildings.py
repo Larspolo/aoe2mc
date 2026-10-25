@@ -737,23 +737,42 @@ def blacksmith(c, w, st, col, T, ctx):
 
 
 def market(c, w, st, col, T, ctx):
+    """Market: a two-floor hall at the back, a paved yard with a trading table, and lean-to stalls around it."""
     c.box(0, w, 0, 1, 0, w, st.stone2)
-    k = max(3, w // 4)
-    c.timber_room(k, w - k, k, w - k, 0, 5, st, low_stone=1)
-    c.windows(k, w - k, k, w - k, 3, step=2)
-    top = c.roof(k, w - k, k, w - k, 6, st)
-    c.door(w // 2, 1, w - k - 1)
-    c.flag(w // 2, top + 1, w // 2, col, 2)
-    # Stalls with colored awnings
+    d = max(4, w * 3 // 8)                                                 # depth of the hall
+    h = 7 if w >= 12 else 5
+    c.timber_room(1, w - 1, 0, d, 0, h, st, low_stone=1)
+    c.windows(1, w - 1, 0, d, 2, step=3)
+    c.windows(1, w - 1, 0, d, h - 2, step=3)
+    top = c.roof(1, w - 1, 0, d, h + 1, st, axis="x")
+    c.door(w // 2, 1, d - 1)
+    c.banner(w // 2 - 1, 3, d, col); c.banner(w // 2 + 1, 3, d, col)
+    c.flag(w - 2, top + 1, d // 2, col, 2)
+    # Lean-to stalls on the west, south and east sides; the gap in the middle of the south row is the entrance
     goods = ["barrel[facing=up]", "hay_block", "melon", "pumpkin", "chest[facing=south]", "composter"]
-    spots = [(0, 0), (w - 3, 0), (0, w - 3), (w - 3, w - 3), (0, w // 2 - 1), (w - 3, w // 2 - 1)]
-    for i, (sx, sz) in enumerate(spots):
-        for x in (sx, sx + 2):
-            for z in (sz, sz + 2):
-                c.box(x, x + 1, 1, 3, z, z + 1, "oak_fence")
-        for x in range(sx, sx + 3):
-            c.box(x, x + 1, 3, 4, sz, sz + 3, f"{col}_wool" if (x + i) % 2 == 0 else "white_wool")
-        c.set(sx + 1, 1, sz + 1, goods[i % len(goods)])
+    stairs = family(st.roof)[0]
+    wood = st.wood.replace("_planks", "")
+    wood = wood if wood in WOODS else "spruce"
+    gate = range(w // 2 - 1, w // 2 + 2)
+    rows = [(x, z, "north", (x, w - 1)) for x in range(w) for z in range(w - 2, w)]
+    rows += [(x, z, "east" if x < 2 else "west", (0 if x < 2 else w - 1, z))
+             for x in (0, 1, w - 2, w - 1) for z in range(d + 1, w - 2)]
+    for x, z, face, (ox, oz) in rows:
+        depth = abs(x - ox) + abs(z - oz)                                  # 0 = outer edge, 1 = inner edge
+        if st.shape == "flat":                                             # cloth awnings in stripes
+            c.set(x, 4, z, f"{col}_wool" if (x + z) % 2 else "white_wool")
+        else:
+            c.set(x, 3 + depth, z, stair(stairs, face))
+        open_ = face == "north" and x in gate
+        on_post = (x % 3 == 0 or x == w - 1) if face == "north" else (z - d - 1) % 3 == 0 or z == w - 3
+        if on_post and not open_:
+            c.box(x, x + 1, 1, 4 if st.shape == "flat" else 3 + depth, z, z + 1, f"{wood}_fence")
+        elif depth == 0 and not open_ and c.rng.random() < 0.7:            # goods on the counter
+            c.set(x, 1, z, goods[int(c.rng.integers(len(goods)))])
+    # Trading table in the yard
+    tx, tz = w // 2 - 1, (d + w - 2) // 2
+    c.box(tx, tx + 3, 1, 2, tz, tz + 2, f"{wood}_slab[type=top]")
+    c.set(tx, 2, tz, "barrel[facing=up]"); c.set(tx + 2, 2, tz + 1, "chest[facing=south]")
 
 
 def monastery(c, w, st, col, T, ctx):
@@ -897,22 +916,33 @@ def mining_camp(c, w, st, col, T, ctx):
 
 
 def dock(c, w, st, col, T, ctx):
+    """Dock: a timber house in the middle of a plank deck on piles, with steps down to the water and goods."""
     c.box(0, w, 1, 2, 0, w, "spruce_planks")                              # deck above the water
     for x in list(range(0, w, 3)) + [w - 1]:
         for z in list(range(0, w, 3)) + [w - 1]:
             c.box(x, x + 1, -8, 1, z, z + 1, "spruce_log")                 # piles
-    c.box(0, 1, 2, 3, 0, w, "spruce_fence"); c.box(w - 1, w, 2, 3, 0, w, "spruce_fence")
-    hw = 3
-    c.timber_room(1, max(5, w // 2 + 1), 1, max(4, w // 2), 1, hw, st)
-    c.roof(1, max(5, w // 2 + 1), 1, max(4, w // 2), hw + 2, st, axis="x")
-    c.door(2, 2, max(4, w // 2) - 1)
-    mx, mz, mh = w - 2, w - 2, max(8, w)                                     # crane
-    c.box(mx, mx + 1, 2, mh, mz, mz + 1, "stripped_spruce_log")
-    c.box(mx - 3, mx + 1, mh, mh + 1, mz, mz + 1, "stripped_spruce_log[axis=x]")
-    c.box(mx - 3, mx - 2, mh - 3, mh, mz, mz + 1, "chain")
-    c.set(mx - 3, mh - 4, mz, "barrel[facing=up]")
-    c.set(w - 2, 2, 1, "barrel[facing=up]"); c.set(w - 3, 2, 1, "chest[facing=south]")
-    c.flag(mx, mh + 1, mz, col, 2)
+    c.box(0, w, 1, 2, 0, 1, f"{col}_concrete"); c.box(0, 1, 1, 2, 0, w, f"{col}_concrete")   # painted deck edge
+    c.box(w - 1, w, 1, 2, 0, w, f"{col}_concrete"); c.box(0, w, 1, 2, w - 1, w, f"{col}_concrete")
+    m = w // 2
+    for z in range(m - 1, m + 1):                                          # steps down to the water
+        c.set(0, 1, z, "spruce_stairs[facing=east,half=bottom,shape=straight]")
+        c.set(w - 1, 1, z, "spruce_stairs[facing=west,half=bottom,shape=straight]")
+    x0, x1, z0, z1 = 2, w - 2, 2, w - 3
+    c.timber_room(x0, x1, z0, z1, 1, 4, st)
+    c.windows(x0, x1, z0, z1, 3, step=3)
+    top = c.roof(x0, x1, z0, z1, 6, st, axis="z")
+    c.door(m, 2, z1 - 1)
+    c.banner(m - 1, 4, z1, col); c.banner(m + 1, 4, z1, col)
+    c.set(m, 6, z1, "spruce_planks"); c.box(m, m + 1, 6, 7, z1 + 1, z1 + 2, "stripped_spruce_log[axis=z]")   # hoist
+    c.set(m, 5, z1 + 1, "chain")
+    c.flag(m, top + 1, (z0 + z1) // 2, col, 2)
+    goods = ["barrel[facing=up]", "chest[facing=south]", "hay_block", "composter", "barrel[facing=up]"]
+    for x, z in ((1, 1), (2, 1), (w - 2, 1), (w - 3, 1), (1, w - 2), (w - 2, w - 2), (w - 2, w - 3), (1, w - 3)):
+        if c.rng.random() < 0.75:
+            c.set(x, 2, z, goods[int(c.rng.integers(len(goods)))])
+    for x in (0, w - 1):                                                   # bollards with rope
+        for z in (0, w - 1):
+            c.set(x, 2, z, "spruce_fence")
 
 
 def hull(c, x0, x1, zc, y, half, wood="oak", ribs=False):
