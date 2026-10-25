@@ -51,6 +51,8 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   "belongs to another run" although the claim is yours.
 - `tools/claim.py` names the run by the current local branch (`who()`): a beat from a helper branch fails with
   "belongs to another run". Stay on the session branch and push with `HEAD:<branch>` (#361).
+- The cloud clone is shallow (`git rev-parse --is-shallow-repository`): `git fetch --unshallow origin` before a scan
+  of the history or a `git log` of old files (#367).
 
 ## Libraries
 
