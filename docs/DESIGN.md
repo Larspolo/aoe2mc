@@ -44,6 +44,8 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Light on a wall (inside) | `wall_torch` | `town_hall`, `archery_range`, `stable` |
 | Loom, cloth | `loom`, wool | `decorate`, `command_tent`, `dock` |
 | Market goods | `barrel`, `chest`, `composter`, `hay_block`, `melon`, `pumpkin` | `market`, `decorate`, `settlement`, `harbor` +10 more |
+| Bales of trade goods (inside) | `*_wool` and `hay_block`, stacked in corners and along walls | |
+| Counting room (inside) | `cartography_table` with a `lantern`, `lectern[has_book=true]` | |
 | Market stall | lean-to of roof stairs on `*_fence` posts; wool awning in stripes for flat-roof sets | `pasture`, `nine_bands`, `fish_trap`, `outpost` +37 more |
 | Upper floor (inside) | `*_planks` floor and a `ladder` | `outpost`, `tower`, `barracks`, `market` +32 more |
 | Painted trim (deck edge, band) | `*_concrete` (player color) | `torii`, `stupa`, `pyramid`, `dock` +3 more |
