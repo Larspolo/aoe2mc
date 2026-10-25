@@ -1169,6 +1169,25 @@ def mill(c, w, st, col, T, ctx):
     c.banner(mid + 1, 3, zf, col)
     c.set(0, 1, w - 1, "barrel[facing=up]"); c.set(1, 1, w - 1, "hay_block")             # flour and grain sacks
     c.set(w - 1, 1, 1, "grindstone[face=floor,facing=south]")                          # millstone
+    mill_room(c, cx, mid, zf, shaft=hb - 1)
+
+
+def mill_room(c, cx, mid, zf, shaft=None, lamp=None):
+    """Inside of a round mill (#255): a millstone in the middle (with the drive shaft of a windmill above it),
+    grain sacks and barrels at the wall and a lantern. The way from the door to the millstone stays free."""
+    z = zf - 1
+    while z > cx and c.get(mid, 1, z) not in (-1, c.id("air")):           # the door leads into the room
+        c.box(mid, mid + 1, 1, 3, z, z + 1, "air")
+        z -= 1
+    lo, hi = int(cx) - 1, int(cx) + 2                                      # the free floor inside the wall
+    c.set(lo + 1, 1, lo + 1, "grindstone[face=floor,facing=south]")
+    if shaft:
+        c.box(lo + 1, lo + 2, 2, shaft + 1, lo + 1, lo + 2, "stripped_spruce_log[axis=y]")
+    c.set(lo, 1, lo, "hay_block"); c.set(lo, 2, lo, "hay_block"); c.set(lo, 1, lo + 1, "hay_block")
+    c.set(hi, 1, lo, "barrel[facing=up]"); c.set(lo, 1, hi, "barrel[facing=up]")
+    c.set(hi, 2, lo, "lantern[hanging=false]")
+    if lamp:
+        c.set(lo + 1, lamp, lo + 1, "lantern[hanging=true]")
 
 
 def folwark(c, w, st, col, T, ctx):
@@ -1238,6 +1257,7 @@ def granary(c, w, st, col, T, ctx):
     c.door(mid, 1, zf)
     c.set(0, 1, w - 1, "grindstone[face=floor,facing=south]"); c.set(w - 1, 1, w - 1, "hay_block")
     c.banner(mid + 1, 3, zf, col)
+    mill_room(c, cx, mid, zf, lamp=h)
 
 
 def log_pile(c, x0, x1, z0, n, logs):
@@ -1269,6 +1289,7 @@ def lumber_camp(c, w, st, col, T, ctx):
     c.box(1, 2, 1, 6, 1, 2, post)                                          # hoist: post, arm, chain, log
     c.box(1, 4, 6, 7, 1, 2, post + "[axis=x]")
     c.set(3, 5, 1, "chain"); c.set(3, 4, 1, "oak_log[axis=x]")
+    c.set(2, 5, 1, "lantern[hanging=true]")                               # light under the hoist arm
     c.set(4, 1, 2, "spruce_fence"); c.set(6, 1, 2, "spruce_fence")      # sawhorse with a log on it
     c.box(4, 7, 2, 3, 2, 3, "stripped_spruce_log[axis=x]")
     c.set(1, 1, 3, "crafting_table"); c.set(2, 1, 3, "oak_log")           # workbench, chopping block
@@ -1281,6 +1302,7 @@ def mining_camp(c, w, st, col, T, ctx):
     shelter(c, 0, 5, 0, 4, st)
     c.set(1, 1, 1, "barrel[facing=up]"); c.set(2, 1, 1, "grindstone[face=floor,facing=south]")
     c.set(3, 1, 1, "chest[facing=south]")
+    c.set(2, 2, 0, "lantern[hanging=true]")                               # light under the roof beam
     for x, z, h, b in ((w - 2, 1, 2, "cobblestone"), (w - 1, 1, 1, "stone"), (w - 2, 2, 1, "andesite"),
                        (w - 1, 2, 2, "cobblestone"), (w - 2, 3, 1, "cobblestone"),            # stone heap
                        (1, w - 3, 1, "gold_ore"), (2, w - 3, 2, "raw_gold_block"), (1, w - 2, 1, "raw_gold_block")):
@@ -1312,6 +1334,15 @@ def dock(c, w, st, col, T, ctx):
     c.set(m, 6, z1, "spruce_planks"); c.box(m, m + 1, 6, 7, z1 + 1, z1 + 2, "stripped_spruce_log[axis=z]")   # hoist
     c.set(m, 5, z1 + 1, "chain")
     c.flag(m, top + 1, (z0 + z1) // 2, col, 2)
+    # Inside (#255): goods and a lantern at the back wall, a net loom and a boat workbench at the side walls.
+    # The way from the door to the back wall stays free.
+    ix0, ix1, iz0 = x0 + 1, x1 - 2, z0 + 1
+    for x, b in ((ix0, "barrel[facing=up]"), (ix0 + 1, "barrel[facing=up]"), (ix0 + 2, "chest[facing=south]"),
+                 (ix1, "barrel[facing=up]")):
+        c.set(x, 2, iz0, b)
+    c.set(ix0 + 1, 3, iz0, "lantern[hanging=false]"); c.set(ix1, 3, iz0, "lantern[hanging=false]")
+    c.set(ix0, 2, iz0 + 2, "loom[facing=east]"); c.set(ix0, 2, iz0 + 3, "hay_block")             # nets, ropes
+    c.set(ix1, 2, iz0 + 2, "crafting_table"); c.set(ix1, 2, iz0 + 1, "spruce_slab[type=bottom]")  # boat work
     goods = ["barrel[facing=up]", "chest[facing=south]", "hay_block", "composter", "barrel[facing=up]"]
     for x, z in ((1, 1), (2, 1), (w - 2, 1), (w - 3, 1), (1, w - 2), (w - 2, w - 2), (w - 2, w - 3), (1, w - 3)):
         if c.rng.random() < 0.75:

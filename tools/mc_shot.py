@@ -158,7 +158,9 @@ def shoot(world, out, views=None, version=None, size=(1280, 720), settle=8.0, ti
                 while f"aoe2mc view {i}" not in open(log_path, errors="replace").read():
                     if client.poll() is not None or time.time() - t0 > timeout:
                         shutil.copy(log_path, out + ".log")
-                        sys.exit(f"the client did not reach view {i} ({time.time() - t0:.0f} s): see {out}.log")
+                        subprocess.run(["import", "-window", "root", out], env=env)   # the screen that stops it
+                        sys.exit(f"the client did not reach view {i} ({time.time() - t0:.0f} s): see {out} "
+                                 f"and {out}.log")
                     time.sleep(0.5)
                 time.sleep(settle)          # the chunks around the new position are drawn
                 subprocess.run(["import", "-window", "root", path], env=env, check=True)

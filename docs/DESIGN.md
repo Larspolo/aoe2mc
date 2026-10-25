@@ -31,10 +31,10 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Bow and arrow work | `fletching_table` | `archery_range` |
 | Forge, smithy | `blast_furnace`, `anvil`, `smithing_table`, `cauldron` (water) | `blacksmith` |
 | Fire, cooking | `campfire`, `smoker` | `decorate`, `burned_building`, `outpost`, `blacksmith` +3 more |
-| Weapon rack, sharpening | `grindstone` | `decorate`, `mining_camp`, `granary`, `mill` +2 more |
+| Weapon rack, sharpening | `grindstone` | `mill_room`, `decorate`, `mining_camp`, `granary` +3 more |
 | Training dummy | `oak_fence`, `hay_block`, `carved_pumpkin` | `barracks`, `pasture`, `settlement`, `decorate` +10 more |
 | Bell | `bell` | `town_center`, `fortified_church`, `monastery` |
-| Loom, cloth | `loom`, wool | `decorate`, `command_tent` |
+| Loom, cloth | `loom`, wool | `decorate`, `command_tent`, `dock` |
 | Market goods | `barrel`, `chest`, `composter`, `hay_block`, `melon`, `pumpkin` | `market`, `decorate`, `settlement`, `harbor` +7 more |
 | Market stall | lean-to of roof stairs on `*_fence` posts; wool awning in stripes for flat-roof sets | `pasture`, `nine_bands`, `fish_trap`, `outpost` +37 more |
 | Painted trim (deck edge, band) | `*_concrete` (player color) | `torii`, `stupa`, `pyramid`, `dock` +3 more |
@@ -42,11 +42,14 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Balustrade of a stair | `polished_granite` | `pyramid` |
 | Hoist | log beam with `chain` | `harbor_chain`, `lumber_camp`, `shipyard`, `siege_workshop` +1 more |
 | Crop field | `wheat` rows (ages 5–7) on `farmland`, furrows of bare `farmland`, `dirt_path` edge | `folwark` |
-| Hay, fodder | `hay_block` | `settlement`, `hut`, `granary`, `pasture` +14 more |
-| Log pile, cut timber | `*_log[axis=x]` stacked as a pyramid (`log_pile`) | `log_pile`, `barricade`, `wooden_bridge`, `fish_trap` +35 more |
+| Hay, fodder | `hay_block` | `settlement`, `hut`, `mill_room`, `granary` +15 more |
+| Log pile, cut timber | `*_log[axis=x]` stacked as a pyramid (`log_pile`) | `log_pile`, `barricade`, `wooden_bridge`, `fish_trap` +36 more |
 | Hoist | a log post and arm, `chain`, a hanging log | `harbor_chain`, `lumber_camp`, `shipyard`, `siege_workshop` +1 more |
-| Workbench | `crafting_table` | `lumber_camp` |
-| Millstone | `grindstone` | `decorate`, `mining_camp`, `granary`, `mill` +2 more |
+| Workbench | `crafting_table` | `lumber_camp`, `dock` |
+| Millstone | `grindstone` | `mill_room`, `decorate`, `mining_camp`, `granary` +3 more |
+| Drive shaft of a windmill | `stripped_spruce_log[axis=y]` above the millstone | `mill_room`, `settlement`, `sapper_tunnel`, `shipyard` +15 more |
+| Net loom, boat workbench | `loom`, `crafting_table`, `spruce_slab` | `dock` |
+| Light in a room or a yard | `lantern` on a barrel, or hanging under a beam | `mill_room`, `decorate`, `pagoda`, `lumber_camp` +3 more |
 | Ore, mined gold and stone | `gold_ore`, `raw_gold_block`, `cobblestone`, `stone`, `andesite` | `mining_camp`, `mole` |
 | Mine cart track | `rail` | `mining_camp` |
 | Water trough | `cauldron` (water) | `decorate` |
@@ -56,8 +59,8 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Gate of a pen | `*_fence_gate` | `pasture`, `folwark` |
 | Wheel | open `*_trapdoor` on the side | `cart`, `university`, `market`, `dock` +9 more |
 | Tent canvas | `white_wool`, a valance of wool in the player color | `command_tent`, `army_tent`, `pavilion`, `yurt` +4 more |
-| Thatch | `hay_block` | `settlement`, `hut`, `granary`, `pasture` +14 more |
-| Palisade stakes | `*_log[axis=y]` of two heights, `spruce_fence` tips | `barricade`, `fish_trap`, `outpost`, `wooden_fort` +38 more |
+| Thatch | `hay_block` | `settlement`, `hut`, `mill_room`, `granary` +15 more |
+| Palisade stakes | `*_log[axis=y]` of two heights, `spruce_fence` tips | `barricade`, `fish_trap`, `outpost`, `wooden_fort` +39 more |
 | Gold statue, finial | `gold_block` | `buddha_statue`, `dome_rock`, `ring`, `caravanserai` +14 more |
 | Painted wood (torii) | `red_concrete`, black top beam | `torii` |
 | Climbing plants | `vine`, `azalea_leaves` | `pillar`, `garden` |
@@ -76,8 +79,8 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Portcullis, grille | `iron_bars` | `tower`, `donjon`, `krepost`, `castle` +3 more |
 | Wooden hoarding | wood slab (top) or `spruce_planks` with a `*_fence` rail | `helepolis`, `outpost`, `shipyard`, `wooden_fort` +44 more |
 | Coat of arms | `*_wall_banner` (player color) over the gate | `torii`, `sapper_tunnel`, `yurt`, `archery_range` +39 more |
-| Lamp | `lantern` | `decorate`, `pagoda`, `blacksmith` |
-| Siege engine under construction | `spruce_slab`, `spruce_fence` and `spruce_log` | `tower`, `market`, `barricade`, `fish_trap` +9 more |
+| Lamp | `lantern` | `mill_room`, `decorate`, `pagoda`, `lumber_camp` +3 more |
+| Siege engine under construction | `spruce_slab`, `spruce_fence` and `spruce_log` | `dock`, `tower`, `market`, `barricade` +9 more |
 | Cloth awning | `*_wool` in the player color | `pavilion`, `yurt`, `command_tent`, `army_tent` +19 more |
 | Stair to a roof terrace | `*_stairs` of the roof material | `storage`, `shelter`, `great_pyramid`, `pagoda` +32 more |
 | Column | `quartz_pillar` | `oracles_temple`, `arch_of_constantine`, `taj`, `university` |
