@@ -34,8 +34,9 @@ JOINED = re.compile(r"/INFO\]: (\w{1,16}) joined the game$")      # a chat line 
 
 
 def properties(game_port, rcon_port, password):
-    """server.properties: only local players can join (127.0.0.1). They play in creative mode (#292)."""
-    return (f"online-mode=false\nserver-ip=127.0.0.1\nserver-port={game_port}\n"
+    """server.properties: only local players can join (127.0.0.1). They play in creative mode (#292).
+    A missing white-list becomes "true" in 26.3: then no player can join (#285)."""
+    return (f"online-mode=false\nserver-ip=127.0.0.1\nserver-port={game_port}\nwhite-list=false\n"
             f"enable-rcon=true\nrcon.port={rcon_port}\nrcon.password={password}\n"
             "spawn-protection=0\nmax-tick-time=-1\nenable-query=false\nbroadcast-rcon-to-ops=false\n"
             "gamemode=creative\nforce-gamemode=true\n")

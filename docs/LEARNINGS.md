@@ -39,6 +39,8 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - An unknown block entity id gives "Skipping block entity with invalid type": 26.3 has no `bed` block entity (#249).
 - Old scenarios for local checks (do not commit, no license): GitHub raw `SiegeEngineers/genie-rs/master/crates/genie-scx/
   test/scenarios/` (`Age of Heroes b1-3-5.scx` is format 1.21; names in `format.rs` tests, #311).
+- The 26.3 server writes a missing `white-list` as `true`: no client can join. Write `white-list=false` in
+  `server.properties` (`game/run.py` `properties()`, #285).
 
 ## Libraries
 
