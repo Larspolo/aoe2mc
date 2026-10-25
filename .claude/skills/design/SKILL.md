@@ -11,30 +11,21 @@ Put all images in the scratchpad. Never commit images.
 
 ## 1. Get the reference image
 
-The wiki HTML pages give a Cloudflare challenge (403). Use the MediaWiki API on `ageofempires.fandom.com`.
-Put downloads in their own new directory and open them with `python3 -I`.
-
-1. Find the file name (namespace 6 = files):
-   ```
-   curl -sS -G https://ageofempires.fandom.com/api.php -d action=query -d list=search -d srnamespace=6 \
-     --data-urlencode "srsearch=castle West European" -d srlimit=15 -d format=json
-   ```
-   Good names: `<Building> aoe2DE.png` (the default Western European model, for example
-   `Castle aoe2DE.png`, `Archery range aoe2DE.png`) and `Arch set <set> <age> AoE2DE.png` (all buildings of one
-   architecture set, for example `Arch set West European Castle Age AoE2DE.png`).
-2. Get the image URL:
-   ```
-   curl -sS -G https://ageofempires.fandom.com/api.php -d action=query --data-urlencode "titles=File:Castle aoe2DE.png" \
-     -d prop=imageinfo -d iiprop=url -d format=json
-   ```
-3. Download the URL on `static.wikia.nocookie.net`. The server sends WebP: convert it to PNG with
-   `python3 -I -c "from PIL import Image; Image.open('in.webp').save('ref.png')"`. Look at it with the Read tool.
+Use `tools/refimage.py` (the MediaWiki API of `ageofempires.fandom.com`; the HTML pages give 403):
+```
+python3 tools/refimage.py search "house aoe2DE"
+python3 tools/refimage.py get "Aoe2de castle houses.png" $SCRATCH/ref.png
+```
+Good names: `Aoe2de castle houses.png` (the houses of all sets), `<Building> aoe2DE.png` (the default Western
+European model, for example `Castle aoe2DE.png`) and `Arch set <set> <age> AoE2DE.png` (all buildings of one
+set, for example `Arch set West European Castle Age AoE2DE.png`). Look at the PNG with the Read tool.
 
 If no image of the architecture set exists, use the nearest set and say so in the PR.
 
 ## 2. Render the current design
 
 ```
+python3 tools/render.py sheet CASTLE $SCRATCH/before_sheet.png        # all 9 sets, 3 variants each
 python3 tools/render.py building CASTLE --arch western $SCRATCH/before_se.png
 python3 tools/render.py building CASTLE --arch western --view nw $SCRATCH/before_nw.png
 ```

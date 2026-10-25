@@ -12,7 +12,9 @@ Options:
     --seed N           Seed for the random details (tree heights, flowers) (default 1)
     --preview          Also write preview.png (top view) into the world folder
     --mc-version V     Minecraft Java version of the output: 1.21.1 (default) or 26.3 (not complete yet)
+    --orientation C    Minecraft corner (ne, se, sw, nw) of the top corner of the AoE2 screen (default ne)
     --no-units         Do not convert units (mobs, boats, minecarts)
+    --no-birds         Do not convert birds
     --no-barriers      Do not fill building footprints with invisible barrier blocks
     --verbose          Print the time of each phase (read, columns, objects, units, chunks, write)
     --architecture X   Use one architecture set for all players (western, central, mediterranean,
@@ -28,7 +30,10 @@ import argparse
 import contextlib
 import io
 import json
+import math
 import os
+import re
+import textwrap
 import time
 import zlib
 from collections import Counter
@@ -60,6 +65,9 @@ NONE = -10000                # marker for "no column here" (outside the map)
 # top corner is in the north-east: the map is the in-game view turned 45° clockwise, not mirrored.
 # The player looks north-east at the spawn, like the AoE2 camera (yaw 0 = south, 90 = west, 180 = north).
 SPAWN_YAW = -135.0
+# --orientation: the Minecraft corner that gets the top corner of the AoE2 screen. Value: clockwise quarter turns
+# of the tile grid (seen from above) and the spawn yaw (the player looks at that corner). "ne" is no turn.
+ORIENTATIONS = {"ne": (0, SPAWN_YAW), "se": (1, -45.0), "sw": (2, 45.0), "nw": (3, 135.0)}
 
 
 # --------------------------------------------------------------------------------------------
@@ -247,6 +255,9 @@ def read_scenario(path):
                                 "civ": getattr(civ, "name", "?"),
                                 "view": view if view[0] is not None and min(view) >= 0 else None}
 
+    msg = scn.message_manager
+    texts = {k: getattr(msg, k, "") or "" for k in CHAPTERS}
+
     objects = []
     for player, player_units in enumerate(scn.unit_manager.units):
         for u in player_units:
@@ -254,7 +265,26 @@ def read_scenario(path):
             garrisoned = u.garrisoned_in_id not in (None, -1)
             objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name,
                                 player=player, x=u.x, y=u.y, rotation=float(u.rotation or 0), garrisoned=garrisoned))
-    return size, terrain, elevation, terrain_names, objects, players
+    return size, terrain, elevation, terrain_names, texts, objects, players
+
+
+def turn_tile(x, y, size, k):
+    """Tile position (x, y) after k clockwise quarter turns of a size × size grid (size 0: turn a vector)."""
+    for _ in range(k % 4):
+        x, y = size - y, x
+    return x, y
+
+
+def turn_map(k, size, terrain, elevation, objects, players):
+    """Turn the tile grid by k clockwise quarter turns (--orientation). It is a turn, not a mirror, so buildings
+    keep their hand. Unit rotation (direction cos r, sin r in tiles) and the start views turn with the map."""
+    for o in objects:
+        o["x"], o["y"] = turn_tile(o["x"], o["y"], size, k)
+        o["rotation"] = o.get("rotation", 0.0) + k * math.pi / 2
+    for p in players.values():
+        if p.get("view"):
+            p["view"] = turn_tile(*p["view"], size, k)
+    return np.rot90(terrain, k).copy(), np.rot90(elevation, k).copy()
 
 
 # --------------------------------------------------------------------------------------------
@@ -986,7 +1016,7 @@ PASSABLE = ("short_grass", "tall_grass", "large_fern", "petals", "moss_carpet", 
             "seagrass", "dead_bush", "sweet_berry", "rail", "carpet", "banner", "button", "lantern", "snow[")
 
 
-def plan_units(objects, players, cols, rng, stats):
+def plan_units(objects, players, cols, rng, stats, birds=True):
     """Entities per chunk: {(cx, cz): [(nbt, x, z, is_boat)]}."""
     T = cols.T
     out = {}
@@ -994,6 +1024,9 @@ def plan_units(objects, players, cols, rng, stats):
         if o["kind"] == "U":
             if o.get("garrisoned"):
                 stats["units (garrisoned, skipped)"] += 1
+                continue
+            if not birds and units.is_bird(o["name"]):
+                stats["birds (skipped)"] += 1
                 continue
             desc = units.classify(o["name"], o.get("hero", False))
             if desc is None:
@@ -1052,12 +1085,72 @@ def find_spawn(cols, objects, players, tile=None):
     if tile is None:
         tc = next((o for o in objects if o["kind"] == "B" and o["player"] == 1 and "TOWN_CENTER" in o["name"]), None)
         if tc:
-            tile = (tc["x"], tc["y"] + buildings.footprint(tc["name"]) / 2 + 0.5)
+            dx, dy = turn_tile(0, buildings.footprint(tc["name"]) / 2 + 0.5, 0, buildings.TURN)   # the front
+            tile = (tc["x"] + dx, tc["y"] + dy)
     T, n = cols.T, cols.n
     bx, bz = (n // 2, n // 2) if tile is None else (int(min(max(tile[0] * T, 0), n - 1)),
                                                     int(min(max(tile[1] * T, 0), n - 1)))
     bx, bz = free_spot(cols, bx, bz, 8 * T) or (bx, bz)
     return bx, cols.surface(bx, bz) + 2, bz
+
+
+CHAPTERS = {"instructions": "Instructions", "hints": "Hints", "victory": "Victory", "loss": "Loss",
+            "history": "History", "scouts": "Scouts"}
+BLOCK_DATA = {}        # (x, y, z) -> extra block entity fields (the book of the lectern)
+
+
+def book_pages(texts, cols=19, rows=14):
+    """Pages of the scenario texts: one chapter per text that is not empty, its title in bold.
+    A book page shows 14 lines of about 19 characters. AoE2 color tags (<BLUE>) are removed."""
+    pages = []
+    for key, title in CHAPTERS.items():
+        text = re.sub(r"<[^<>]*>", "", texts.get(key) or "").replace("\r", "").strip()
+        if not text:
+            continue
+        # wrap only to count the lines: the game wraps the text itself, so only the paragraphs keep "\n"
+        lines = [(w, i == len(ws) - 1) for para in text.split("\n")
+                 for ws in [textwrap.wrap(para, cols) or [""]] for i, w in enumerate(ws)]
+        first, n = True, rows - 2                     # the title and an empty line
+        while lines or first:
+            page = "".join(w + ("\n" if end else " ") for w, end in lines[:n]).rstrip()
+            pages.append((title if first else None, page))
+            lines, first, n = lines[n:], False, rows
+    return pages[:100]                                 # the maximum of a written book
+
+
+def text_nbt(parts):
+    """A text component of (text, bold) parts in the format of the target version."""
+    extra = [dict(text=t, bold=True) if b else dict(text=t) for t, b in parts]
+    if MC["data_version"] < 4325:                      # before 1.21.5 text components are JSON strings
+        return String(json.dumps({"text": "", "extra": extra}))
+    return Compound({"text": String(""), "extra": List[Compound](
+        [Compound({k: Byte(1) if k == "bold" else String(v) for k, v in e.items()}) for e in extra])})
+
+
+def place_book(cols, edits, spawn, texts, title):
+    """A lectern with the scenario texts as a written book, 2 blocks in front of the spawn view.
+    Returns the block position, or None when all texts are empty or no free land is near."""
+    pages = book_pages(texts)
+    if not pages:
+        return None
+    sx, _, sz = spawn
+    dx, dz = turn_tile(2, -2, 0, buildings.TURN)         # the spawn view turns with --orientation
+    spot = free_spot(cols, min(max(sx + dx, 0), cols.n - 1), min(max(sz + dz, 0), cols.n - 1), 4)
+    if spot is None or spot == (sx, sz) or cols.wtop[spot] > cols.top[spot]:
+        return None
+    x, z = spot
+    y = cols.surface(x, z)
+    facing = ("west" if x > sx else "east") if abs(x - sx) >= abs(z - sz) else ("north" if z > sz else "south")
+    edits.footprint = None
+    edits.add([x], [y], [z], f"lectern[facing={facing},has_book=true,powered=false]")
+    cols.blocked[x, z] = True                          # no unit stands in the lectern
+    book = Compound({"title": Compound({"raw": String(title[:32])}), "author": String("aoe2mc"),
+                     "pages": List[Compound]([Compound({"raw": text_nbt(([(t + "\n\n", True)] if t else []) + [(b, False)])})
+                                              for t, b in pages]), "resolved": Byte(1)})
+    BLOCK_DATA[(x, y, z)] = {"Page": Int(0), "Book": Compound({
+        "id": String("minecraft:written_book"), "count": Int(1),
+        "components": Compound({"minecraft:written_book_content": book})})}
+    return x, y, z
 
 
 def set_pos(nbt, x, y, z):
@@ -1100,6 +1193,8 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
                 if os.environ.get("AOE2MC_DEBUG"):
                     print("   in block:", str(top_name(nbt)), bx, top + 1, bz, B.states[col[top + 1 - MIN_Y]],
                           B.states[col[top + 2 - MIN_Y]])
+        if units.top_entity(nbt).get("NoGravity"):               # a flying bird
+            y += units.FLY_HEIGHT
         set_pos(nbt, x, float(y), z)
         out.append(nbt)
     if not out:
@@ -1233,9 +1328,10 @@ def build_chunk(cx, cz, cols, edits):
     be_ids = [i for i in sorted(present) if block_entity_type(B.states[i])]
     for i in be_ids:
         for y, z, x in zip(*np.nonzero(vol == i)):
+            pos = (x0 + int(x), int(y) + MIN_Y, z0 + int(z))
             block_entities.append(Compound({
                 "id": String("minecraft:" + block_entity_type(B.states[i])), "keepPacked": Byte(0),
-                "x": Int(x0 + int(x)), "y": Int(int(y) + MIN_Y), "z": Int(z0 + int(z))}))
+                "x": Int(pos[0]), "y": Int(pos[1]), "z": Int(pos[2]), **BLOCK_DATA.get(pos, {})}))
 
     chunk = Compound({
         "DataVersion": Int(MC["data_version"]), "xPos": Int(cx), "zPos": Int(cz), "yPos": Int(MIN_Y // 16),
@@ -1278,7 +1374,7 @@ def write_region(path, chunks):
         f.write(header + body)
 
 
-def write_level_dat(path, name, spawn):
+def write_level_dat(path, name, spawn, yaw=SPAWN_YAW):
     def dim(kind, gen):
         return Compound({"type": String(f"minecraft:{kind}"), "generator": gen})
     void = Compound({"type": String("minecraft:flat"), "settings": Compound({
@@ -1296,7 +1392,7 @@ def write_level_dat(path, name, spawn):
                              "Series": String("main"), "Snapshot": Byte(0)}),
         "LevelName": String(name), "GameType": Int(1), "Difficulty": Byte(1),   # not peaceful: peaceful removes the soldiers
         "allowCommands": Byte(1), "hardcore": Byte(0), "initialized": Byte(1),
-        "SpawnX": Int(spawn[0]), "SpawnY": Int(spawn[1]), "SpawnZ": Int(spawn[2]), "SpawnAngle": Float(SPAWN_YAW),
+        "SpawnX": Int(spawn[0]), "SpawnY": Int(spawn[1]), "SpawnZ": Int(spawn[2]), "SpawnAngle": Float(yaw),
         "LastPlayed": Long(int(time.time() * 1000)), "Time": Long(0), "DayTime": Long(6000),
         "raining": Byte(0), "thundering": Byte(0), "rainTime": Int(0), "thunderTime": Int(0),
         "clearWeatherTime": Int(0), "WasModded": Byte(0),
@@ -1358,20 +1454,25 @@ def block_color(state):
 # Main
 # --------------------------------------------------------------------------------------------
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
-            barriers=True, mc_version=VERSION_NAME, spawn=None, verbose=False):
+            barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False):
     global MC
     MC = VERSIONS[mc_version]
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
     try:
-        _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, verbose)
+        _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
+                 verbose)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
+        buildings.TURN = 0
 
 
-def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, verbose):
+def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
+             verbose):
     buildings.BARRIERS = barriers
+    buildings.TURN, yaw = ORIENTATIONS[orientation]
     MOVED.clear()           # the counts of an earlier conversion in this process
+    BLOCK_DATA.clear()
     rng = np.random.default_rng(seed)
     t0 = time.time()
     times, clock = {}, [t0]
@@ -1381,8 +1482,12 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         times[phase] = times.get(phase, 0.0) + now - clock[0]
         clock[0] = now
 
-    size, terrain, elevation, tnames, objects, players = read_scenario(src)
+    size, terrain, elevation, tnames, texts, objects, players = read_scenario(src)
     tick("read")
+    name = name or os.path.splitext(os.path.basename(src))[0]
+    terrain, elevation = turn_map(buildings.TURN, size, terrain, elevation, objects, players)
+    if spawn is not None:       # --spawn is in AoE2 tiles
+        spawn = turn_tile(*spawn, size, buildings.TURN)
     if arch:
         for p in players.values():
             p["arch"] = arch
@@ -1406,9 +1511,13 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     edits, stats = place_objects(objects, players, cols, rng)
     for k, v in sorted(stats.items()):
         print(f"  {k}: {v}")
+    spawn = find_spawn(cols, objects, players, spawn)
+    book = place_book(cols, edits, spawn, texts, name)
+    if book:
+        print(f"  book with the scenario texts: lectern at {book}")
     per_chunk = edits.by_chunk(cols.width)
     tick("objects")
-    unit_chunks = plan_units(objects, players, cols, rng, stats) if with_units else {}
+    unit_chunks = plan_units(objects, players, cols, rng, stats, birds) if with_units else {}
     tick("units")
     print(f"  units: {stats['units']}, fish: {stats['fish']}")
     passable = np.array([st.split(":")[1].split("[")[0] in ("air", "cave_air") or
@@ -1439,8 +1548,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     for (rx, rz), chunks in entity_regions.items():
         write_region(os.path.join(out, "entities", f"r.{rx}.{rz}.mca"), chunks)
 
-    spawn = find_spawn(cols, objects, players, spawn)
-    write_level_dat(os.path.join(out, "level.dat"), name or os.path.splitext(os.path.basename(src))[0], spawn)
+    write_level_dat(os.path.join(out, "level.dat"), name, spawn, yaw)
 
     from PIL import Image
     lut = np.array([block_color(s) for s in B.states], np.uint8)
@@ -1510,6 +1618,7 @@ def main(argv=None):
     ap.add_argument("--architecture", choices=sorted(buildings.ARCH),
                     help="use one architecture set for all players (default: from each player's civilization)")
     ap.add_argument("--no-units", action="store_true", help="do not convert units (mobs, boats, minecarts)")
+    ap.add_argument("--no-birds", action="store_true", help="do not convert birds")
     ap.add_argument("--no-barriers", action="store_true",
                     help="do not fill building footprints with invisible barrier blocks")
     ap.add_argument("--player-architecture", action="append", default=[], metavar="P=SET",
@@ -1519,11 +1628,14 @@ def main(argv=None):
                     help="player spawn in tiles (default: start view or town center of player 1)")
     ap.add_argument("--mc-version", choices=sorted(VERSIONS), default=VERSION_NAME,
                     help=f"Minecraft Java version of the output (default {VERSION_NAME}; 26.3 is not complete yet)")
+    ap.add_argument("--orientation", choices=sorted(ORIENTATIONS), default="ne",
+                    help="Minecraft corner of the top corner of the AoE2 screen (default ne)")
     ap.add_argument("--verbose", action="store_true", help="print the time of each phase")
     a = ap.parse_args(argv)
     try:
         convert(a.scenario, a.output, a.tile_size, a.level_height, a.name, a.seed, a.preview, a.architecture,
-                a.player_architecture, not a.no_units, not a.no_barriers, a.mc_version, a.spawn, a.verbose)
+                a.player_architecture, not a.no_units, not a.no_barriers, a.mc_version, a.spawn, not a.no_birds,
+                a.orientation, a.verbose)
     except OptionError as e:
         ap.error(str(e))
 

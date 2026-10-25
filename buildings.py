@@ -1152,6 +1152,8 @@ def wall_banners(c, w, ctx, y, col, every=4):
 def gate(c, w, st, col, T, ctx):
     """Gate along the x axis: towers at both ends and an opening in the middle (w = 4 tiles)."""
     name = ctx["name"]
+    if ctx.get("diag"):
+        return diagonal_gate(c, w, st, col, T, ctx)
     z0, z1 = 0, T
     if "PALISADE" in name:
         h = T + 1
@@ -1171,6 +1173,32 @@ def gate(c, w, st, col, T, ctx):
         c.box(x0, x0 + T, 1, th, z0, z1, st.stone)
         c.crenels(x0, x0 + T, z0, z1, th, (st.merlon or st.stone))
     c.banner(T // 2, h, z1, col); c.banner(w - T + T // 2, h, z1, col)
+
+
+def diagonal_gate(c, w, st, col, T, ctx):
+    """Gate on the diagonal x = z (w = 3 tiles): a band of wall, a tower on each end tile and an opening
+    in the middle tile. Units go through it in the direction (+1, -1)."""
+    palisade = "PALISADE" in ctx["name"]
+    fort = any(k in ctx["name"] for k in ("FORTIFIED", "CITY", "FORT_"))
+    h = T + 1 if palisade else T + (3 if fort else 2)
+    mat = "spruce_log" if palisade else st.stone
+    r = T // 2
+    for x in range(w):
+        for z in range(w):
+            v, u = x - z, (x + z) / 2
+            if abs(v) > r:
+                continue
+            end = u < T * 0.75 or u >= w - T * 0.75
+            top = h + (0 if palisade or not end else 3)
+            c.box(x, x + 1, 1, top + 1, z, z + 1, mat)
+            if not end and T <= u < w - T:
+                c.box(x, x + 1, 1, 4, z, z + 1, "air")                   # the opening
+            if not palisade and abs(v) == r and x % 2 == 0:
+                c.set(x, top + 1, z, st.merlon or st.stone)
+    if palisade:
+        c.flag(T // 2, h + 1, T // 2, col, 2); c.flag(w - 1 - T // 2, h + 1, w - 1 - T // 2, col, 2)
+    else:
+        c.flag(T // 3, h + 4, T // 3, col, 2); c.flag(w - 1 - T // 3, h + 4, w - 1 - T // 3, col, 2)
 
 
 def farm(c, w, st, col, T, ctx):
@@ -1451,8 +1479,51 @@ def transpose(c):
     c.a = a
 
 
+CLOCKWISE = {"north": "east", "east": "south", "south": "west", "west": "north"}
+
+
+def turn_state(s, k):
+    """Block state s after k clockwise quarter turns (seen from above): facing, axis, rotation, the side
+    properties of fences, walls and panes, and rail shapes."""
+    if "[" not in s:
+        return s
+    name, props = s[:-1].split("[", 1)
+    keys = [kv.split("=")[0] for kv in props.split(",")]
+    d = dict(kv.split("=") for kv in props.split(","))
+    for _ in range(k % 4):
+        t = {}
+        for key, v in d.items():
+            if key in ("facing", "axis") or key == "shape" and "_" in v and any(w in v for w in CLOCKWISE):
+                if v in ("north_south", "east_west"):
+                    v = "east_west" if v == "north_south" else "north_south"
+                elif v.startswith("ascending_"):
+                    v = "ascending_" + CLOCKWISE[v[10:]]
+                elif key == "shape":                                # rail curve: north/south part first
+                    a, b = (CLOCKWISE[w] for w in v.split("_"))
+                    v = f"{a}_{b}" if a in ("north", "south") else f"{b}_{a}"
+                else:
+                    v = {"x": "z", "z": "x"}.get(v, CLOCKWISE.get(v, v))
+            elif key == "rotation":                                 # signs, banners, skulls: 4 = a quarter
+                v = str((int(v) + 4) % 16)
+            t[CLOCKWISE.get(key, key)] = v
+        d = t
+    return f"{name}[" + ",".join(f"{key}={d[key]}" for key in keys + [x for x in d if x not in keys] if key in d) + "]"
+
+
+def turn(c, k):
+    """Turn a square canvas by k clockwise quarter turns (seen from above), with block directions."""
+    a = np.rot90(c.a, k, axes=(0, 2)).copy()
+    out = a.copy()
+    for i in np.unique(a[a >= 0]):
+        t = turn_state(c.B.states[i], k)
+        if t != c.B.states[i]:
+            out[a == i] = c.B(t)
+    c.a = out
+
+
 SOFT_BARRIER = -3    # canvas marker: barrier that only fills free space
 BARRIERS = True      # fill the free space of footprints with barrier blocks (option --no-barriers)
+TURN = 0             # clockwise quarter turns of the map (option --orientation); buildings turn with it
 
 
 def place_building(E, cols, B, o, players, walls, gates):
@@ -1478,7 +1549,7 @@ def place_building(E, cols, B, o, players, walls, gates):
     along_z = False
     if fn is bridge:
         letter = name.split("BRIDGE_")[1][:1]
-        along_z = letter in ("B", "D")
+        along_z = (letter in ("B", "D")) != (TURN % 2 == 1)
         w, L = 3 * T, 2 * T
         if along_z:
             x0, z0 = int(round((ux - 1.5) * T)), int(round((uy - 1) * T))
@@ -1491,6 +1562,9 @@ def place_building(E, cols, B, o, players, walls, gates):
         w = T
         x0, z0 = int(round((ux - 0.5) * T)), int(round((uy - 0.5) * T))
         fx, fz = w, w
+    elif fn is gate and str(gates.get(id(o))).startswith("diag"):
+        w = fx = fz = 3 * T
+        x0, z0 = int(round((ux - 1.5) * T)), int(round((uy - 1.5) * T))
     elif fn is gate:
         along_z = gates.get(id(o), False)
         w = 4 * T
@@ -1521,7 +1595,7 @@ def place_building(E, cols, B, o, players, walls, gates):
             for z in zs:
                 E.box(x, x + 1, int(cols.wtop[x, z]) + 1, base + 1, z, z + 1, found)
 
-    ctx = {"name": name, "deck": max(1, cols.water_y + 2 - base),
+    ctx = {"name": name, "deck": max(1, cols.water_y + 2 - base), "diag": gates.get(id(o)) in ("diag+", "diag-"),
            "origin": (int(ux) * T if not along_z else int(uy) * T, 0)}
     if fn in (bridge, wooden_bridge):
         BRIDGE_CELLS.update((x, z) for x in xs for z in zs)
@@ -1550,8 +1624,12 @@ def place_building(E, cols, B, o, players, walls, gates):
     weather(c)
     if fn not in NO_PROPS:
         decorate(c, fx, fz)
+    if TURN and fn not in (gate, aqueduct, bridge, wooden_bridge, wall_segment):    # these follow their neighbours
+        turn(c, TURN)
     if along_z:
         transpose(c)
+    if gates.get(id(o)) == "diag-":
+        c.a = c.a[:, :, ::-1].copy()                                     # mirror: the other diagonal
     if BARRIERS and fn not in (gate, bridge, wooden_bridge, fish_trap):
         barriers(c, fx, fz)
     ix, iy, iz = np.nonzero(c.a >= 0)
@@ -1572,7 +1650,7 @@ BRIDGE_CELLS = set()     # block columns with a bridge deck (units there stand o
 
 
 def plan_walls(objects):
-    """Tiles with walls, and the direction of each gate (True = along z)."""
+    """Tiles with walls, and the direction of each gate (True = along z, "diag+" / "diag-" = diagonal)."""
     WOOD_BRIDGE_TILES.clear()
     BRIDGE_CELLS.clear()
     WOOD_BRIDGE_TILES.update((int(o["x"]), int(o["y"])) for o in objects if "WOODEN_BRIDGE" in o["name"])
@@ -1590,6 +1668,16 @@ def plan_walls(objects):
         if o["kind"] == "B" and "GATE" in o["name"]:
             ux, uy = o["x"], o["y"]
             tx, ty = int(ux), int(uy)
+            if "WEST_TO_EAST" in o["name"] or "NORTH_TO_SOUTH" in o["name"]:
+                # Diagonal gate (3 tiles). Screen west-east is tile (+1, +1), screen north-south is (+1, -1)
+                # (#23); the wall tiles next to the gate decide first.
+                up = any((tx + d, ty + d) in walls for d in (-2, 2))
+                down = any((tx + d, ty - d) in walls for d in (-2, 2))
+                ns = ("NORTH_TO_SOUTH" in o["name"]) != (TURN % 2 == 1)        # an odd turn swaps the diagonals
+                s = -1 if down and not up or not up and ns else 1
+                gates[id(o)] = "diag+" if s > 0 else "diag-"
+                walls.update((tx + d, ty + s * d) for d in (-1, 0, 1))
+                continue
             on_x = any((int(ux + d), ty) in walls for d in (-2.5, -3, 2, 2.5))
             on_z = any((tx, int(uy + d)) in walls for d in (-2.5, -3, 2, 2.5))
             gates[id(o)] = on_z and not on_x
