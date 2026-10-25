@@ -20,6 +20,9 @@ Good names: `Aoe2de castle houses.png` (the houses of all sets), `<Building> aoe
 European model, for example `Castle aoe2DE.png`) and `Arch set <set> <age> AoE2DE.png` (all buildings of one
 set, for example `Arch set West European Castle Age AoE2DE.png`). Look at the PNG with the Read tool.
 
+Look at each image before you use it: some names give another picture (`Towncenter aoe2DE.png` is a portrait).
+The `Arch set ...` images are reliable. Crop one building and scale it 2× with PIL to see the details.
+
 If no image of the architecture set exists, use the nearest set and say so in the PR.
 
 ## 2. Render the current design
