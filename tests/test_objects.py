@@ -123,3 +123,19 @@ def test_chinese_garden_objects():
             low = ys < cols.surface(x0, z0) + aoe2mc.Edits.HEAD
             assert low.any() and ((xs[low] >= x0) & (xs[low] < x1) & (zs[low] >= z0) & (zs[low] < z1)).all(), n
     assert mcvalid.invalid_states(aoe2mc.B.states) == {}
+
+
+def test_last_animals_get_a_mob():
+    """Whales, howler monkeys and butterflies are mobs; a beached whale is not (#299)."""
+    import units
+    assert [aoe2mc.object_mob(n) for n in ("WHALE", "HOWLER_MONKEY", "BEACHED_WHALE")] == ["dolphin", "ocelot", None]
+    for n in ("BUTTERFLY1", "BUTTERFLY2", "BUTTERFLY3"):
+        assert units.classify(n)["id"] == "minecraft:bee" and units.classify(n)["NoGravity"] == 1, n
+    for kind in ("dolphin", "ocelot", "bee"):
+        assert mcvalid.entity_error("minecraft:" + kind) is None, kind
+    cols = aoe2mc.Columns(16, np.zeros((16, 16), np.int16), np.zeros((16, 16), np.float32),
+                          {0: "GRASS_1"}, 4, 3, np.random.default_rng(1))
+    o = dict(kind="O", name="HOWLER_MONKEY", player=0, x=6.5, y=6.5, rotation=0.0, hero=False, garrisoned=False)
+    stats = Counter()
+    ents = [e for c in aoe2mc.plan_units([o], {}, cols, np.random.default_rng(1), stats).values() for e in c]
+    assert stats["animals (objects)"] == 1 and ents[0][3] is False      # on land, not in water

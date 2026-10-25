@@ -1360,12 +1360,14 @@ def place_objects(objects, players, cols, rng):
 # Units -> entities
 # --------------------------------------------------------------------------------------------
 FISH = [("SALMON", "salmon"), ("DORADO", "tropical_fish"), ("SNAPPER", "tropical_fish"), ("FISH", "cod"),
-        ("DOLPHIN", "dolphin"), ("BOX_TURTLES", "turtle")]
+        ("DOLPHIN", "dolphin"), ("BOX_TURTLES", "turtle"), ("HOWLER_MONKEY", "ocelot")]
+OBJECT_MOBS = {"WHALE": "dolphin"}    # exact names: BEACHED_WHALE is a carcass, not a mob. No whale mob: the dolphin
+LAND_MOBS = ("turtle", "ocelot")      # is the nearest large sea animal
 
 
 def object_mob(name):
-    """Minecraft mob for an AoE2 'other object' that is an animal (fish, dolphin, turtles), else None."""
-    return next((k for key, k in FISH if key in name), None)
+    """Minecraft mob for an AoE2 'other object' that is an animal (fish, dolphin, whale, turtles, monkey), else None."""
+    return OBJECT_MOBS.get(name) or next((k for key, k in FISH if key in name), None)
 PASSABLE = ("short_grass", "tall_grass", "large_fern", "petals", "moss_carpet", "mushroom", "allium", "bluet",
             "tulip", "lily_of", "fern", "wheat", "poppy", "dandelion", "cornflower", "daisy", "water",
             "seagrass", "dead_bush", "sweet_berry", "rail", "carpet", "banner", "button", "lantern", "snow[", "kelp",
@@ -1418,7 +1420,7 @@ def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside
         elif o["kind"] == "O" and object_mob(o["name"]):
             kind = object_mob(o["name"])
             nbt = units.to_nbt(units.mob(kind), (0, 0, 0), 0.0, rng)
-            boat = "fish" if kind != "turtle" else False
+            boat = "fish" if kind not in LAND_MOBS else False
             stats["fish" if kind in ("cod", "salmon", "tropical_fish") else "animals (objects)"] += 1
         else:
             continue
@@ -1591,7 +1593,7 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
                     print("   in block:", str(top_name(nbt)), bx, top + 1, bz, B.states[col[top + 1 - MIN_Y]],
                           B.states[col[top + 2 - MIN_Y]])
         if units.top_entity(nbt).get("NoGravity"):               # a flying bird
-            y += units.FLY_HEIGHT
+            y += units.FLY_LOW.get(str(units.top_entity(nbt)["id"]), units.FLY_HEIGHT)
         set_pos(nbt, x, float(y), z)
         out.append(nbt)
     if not out:
