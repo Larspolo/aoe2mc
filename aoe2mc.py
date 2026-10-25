@@ -835,6 +835,10 @@ def leaves(wood):
     return f"{wood}_leaves[persistent=true]"
 
 
+WOODS = {"palm": "jungle", "jungle": "jungle", "acacia": "acacia", "spruce": "spruce", "birch": "birch",
+         "mangrove": "mangrove"}                         # tree kind -> wood (log and leaves); else oak
+
+
 def make_tree(E, kind, x, y, z, rng):
     """Put one tree with its trunk base at (x, y, z)."""
     h = int(rng.integers(4, 7))
@@ -848,8 +852,7 @@ def make_tree(E, kind, x, y, z, rng):
         E.box(x, x + 1, y, y + h - 1, z, z + 1, "oak_log")
         E.add([x + 1, x - 1], [y + h - 2, y + h - 3], [z, z], "oak_log[axis=x]")
         return
-    wood = {"palm": "jungle", "jungle": "jungle", "acacia": "acacia", "spruce": "spruce",
-            "birch": "birch", "mangrove": "mangrove"}.get(kind, "oak")
+    wood = WOODS.get(kind, "oak")
     log, leaf = f"{wood}_log", leaves(wood)
     if kind == "spruce":
         h += 2
