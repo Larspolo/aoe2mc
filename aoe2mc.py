@@ -1012,6 +1012,73 @@ def decor(E, cols, name, rect, rng):
         x, z = min(max(cx, 0), cols.n - 1), min(max(cz, 0), cols.n - 1)
         if cols.wtop[x, z] > cols.top[x, z]:
             E.add([x], [int(cols.top[x, z]) + 1], [z], "sea_pickle[pickles=3]")
+    elif chinese_garden(E, n, rect, y, put):
+        pass
+    else:
+        return False
+    return True
+
+
+def chinese_garden(E, n, rect, y, put):
+    """Chinese garden objects (#294): red wood, white stone and dark tile roofs. Returns False if unknown."""
+    x0, x1, z0, z1 = rect
+    W, cz = x1 - x0, (z0 + z1) // 2
+    i = 1 if W >= 6 else 0                              # inset of posts in a large footprint
+
+    def roof(a0, a1, b0, b1, yy):                      # stepped tile roof that ends in a ridge
+        for k in range(max(1, (min(a1 - a0, b1 - b0) + 1) // 2)):
+            E.box(a0 + k, a1 - k, yy + k, yy + k + 1, b0 + k, b1 - k, "deepslate_tile_slab[type=bottom]")
+        return yy + k + 1
+
+    if n == "PAPER_LANTERN":                            # a glowing paper lantern hangs from a post
+        for dy in range(3):
+            put(0, dy, 0, "dark_oak_fence")
+        put(1, 2, 0, "dark_oak_fence"); put(1, 1, 0, "shroomlight")
+    elif n == "ASIAN_LANTERNS":                         # a row of stone lanterns (toro)
+        for x in range(x0 + (W > 2), max(x0 + 1, x1 - (W > 2)), 2):
+            E.add([x] * 3, [y, y + 1, y + 2], [cz] * 3,
+                  [B("stone_brick_wall"), B("lantern[hanging=false]"), B("stone_brick_slab[type=bottom]")])
+    elif n == "HUABIAO_TOTEM":                          # white marble column with a cloud board near the top
+        E.box(x0 + (W > 2), x1 - (W > 2), y, y + 1, z0 + (W > 2), z1 - (W > 2), "polished_diorite")
+        for dy in range(1, 6):
+            put(0, dy, 0, "chiseled_quartz_block" if dy == 5 else "quartz_pillar")
+        put(-1, 4, 0, "smooth_quartz_slab[type=top]"); put(1, 4, 0, "smooth_quartz_slab[type=top]")
+        put(0, 6, 0, "smooth_quartz_slab[type=bottom]")
+    elif n.startswith("PAIFANG_GATE"):                  # red posts, beams and tile roofs along x
+        large = n.endswith("LARGE")
+        a, b, H = x0 + (W >= 4), x1 - 1 - (W >= 4), 5 if large else 4
+        k = (b - a) // 3 if large else 0
+        for x in sorted({a, b, a + k, b - k}):
+            E.add([x], [y], [cz], "polished_blackstone")
+            E.box(x, x + 1, y + 1, y + H, cz, cz + 1, "red_concrete")
+        E.box(a, b + 1, y + H - 1, y + H, cz, cz + 1, "red_concrete")
+        for r0, r1, yy in ((a, b, y + H), (a + k, b - k, y + H + 1)) if large else ((a, b, y + H),):
+            E.box(r0, r1 + 1, yy, yy + 1, cz - 1, cz, "deepslate_tile_stairs[facing=south,half=bottom,shape=straight]")
+            E.box(r0, r1 + 1, yy, yy + 1, cz + 1, cz + 2, "deepslate_tile_stairs[facing=north,half=bottom,shape=straight]")
+            E.box(r0, r1 + 1, yy, yy + 1, cz, cz + 1, "deepslate_tile_slab[type=double]")
+        if large:
+            E.box(a + k + 1, b - k, y + H - 2, y + H - 1, cz, cz + 1, "gold_block")    # name board
+    elif n == "GARDEN_PAVILION":                        # open pavilion: four red posts, a floor and a tile roof
+        E.box(x0 + i, x1 - i, y, y + 1, z0 + i, z1 - i, "smooth_stone_slab[type=bottom]")
+        for x, z in ((x0 + i, z0 + i), (x1 - 1 - i, z0 + i), (x0 + i, z1 - 1 - i), (x1 - 1 - i, z1 - 1 - i)):
+            E.box(x, x + 1, y, y + 3, z, z + 1, "stripped_mangrove_log[axis=y]")
+        top = roof(x0, x1, z0, z1, y + 3)
+        put(0, top - y, 0, "lightning_rod"); put(0, 2, 0, "lantern[hanging=true]")
+    elif n == "QUE_TOWER":                              # tall brick tower with a small pavilion on top
+        H = max(4, W)
+        E.box(x0 + i, x1 - i, y, y + H, z0 + i, z1 - i, "stone_bricks")
+        E.box(x0 + i, x1 - i, y + H - 1, y + H, z0 + i, z1 - i, "polished_andesite")
+        j = i + (W >= 4)
+        for x, z in ((x0 + j, z0 + j), (x1 - 1 - j, z0 + j), (x0 + j, z1 - 1 - j), (x1 - 1 - j, z1 - 1 - j)):
+            E.box(x, x + 1, y + H, y + H + 2, z, z + 1, "stripped_mangrove_log[axis=y]")
+        roof(x0, x1, z0, z1, y + H + 2)
+    elif n == "GARDEN_BRIDGE":                          # red arched bridge along x: deck of half steps, rails
+        for x in range(x0, x1):
+            h = min(x - x0, x1 - 1 - x, 3)
+            yy = y + h // 2
+            E.box(x, x + 1, yy, yy + 1, z0 + i, z1 - i, f"spruce_slab[type={'top' if h % 2 else 'bottom'}]")
+            for z in {z0 + i, z1 - 1 - i}:              # on a top slab, else in place of the low slab
+                E.add([x], [yy + h % 2], [z], "mangrove_fence")
     else:
         return False
     return True

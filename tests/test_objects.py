@@ -86,3 +86,23 @@ def test_tree_stump_is_level_with_the_ground_and_free_for_units():
         y = cols.surface(10, 10) - aoe2mc.MIN_Y                       # the first free block above the ground
         assert B.states[vol[y - 1, 10, 10]].endswith(("spruce_log[axis=y]", "stripped_bamboo_block[axis=y]")), name
         assert (vol[y:, 8:12, 8:12] == 0).all(), name                  # nothing above the ground: air only
+
+
+GARDEN = ["PAPER_LANTERN", "ASIAN_LANTERNS", "PAIFANG_GATE_SMALL", "PAIFANG_GATE_LARGE", "GARDEN_PAVILION",
+          "GARDEN_BRIDGE", "HUABIAO_TOTEM", "QUE_TOWER"]
+
+
+def test_chinese_garden_objects():
+    """The Chinese garden objects place blocks, and below head height only in their footprint (#294)."""
+    for n in GARDEN:
+        for x in (6, 6.5):                              # even and odd footprint
+            cols = aoe2mc.Columns(16, np.zeros((16, 16), np.int16), np.zeros((16, 16), np.float32),
+                                  {0: "GRASS_1"}, 4, 3, np.random.default_rng(1))
+            o = dict(kind="O", name=n, player=0, x=x, y=x, rotation=0.0, hero=False, garrisoned=False)
+            E, stats = aoe2mc.place_objects([o], {}, cols, np.random.default_rng(1))
+            assert stats["decorations"] == 1 and stats["skipped (other objects)"] == 0, n
+            xs, ys, zs = (np.concatenate([p[k] for p in E.parts]) for k in range(3))
+            x0, x1, z0, z1 = aoe2mc.object_footprint(o, 4)
+            low = ys < cols.surface(x0, z0) + aoe2mc.Edits.HEAD
+            assert low.any() and ((xs[low] >= x0) & (xs[low] < x1) & (zs[low] >= z0) & (zs[low] < z1)).all(), n
+    assert mcvalid.invalid_states(aoe2mc.B.states) == {}

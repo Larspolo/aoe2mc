@@ -38,6 +38,7 @@ Check exact positions with `render.building_blocks` (see step 5.3). The default 
 too: it is the AoE2 camera (the bottom corner of the screen is the south-west corner, the front is on the right, #128). Look at the images with the Read tool.
 For the inside of a room add `--cut Y` (no blocks higher than Y above the ground; barriers are invisible).
 The default `--scale 8` is small for details: use `--scale 16` for one building. `sheet --variants 1` is faster.
+Furniture from a list of `(x, y, z, state)` goes in with `Canvas.furniture`: it fills only air and keeps the cells next to a door free.
 
 ## 3. List the differences
 
