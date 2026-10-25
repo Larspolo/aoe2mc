@@ -34,11 +34,14 @@ def read_region(path):
         start = loc * 4096
         length = int.from_bytes(data[start:start + 4], "big")
         kind = data[start + 4]
-        if kind & 0x80:
-            raise ValueError(f"{path}: chunk {i} is stored in an external .mcc file (not supported here)")
-        if kind != 2:
-            raise ValueError(f"{path}: chunk {i} has compression {kind}, expected 2 (zlib)")
-        raw = zlib.decompress(data[start + 5:start + 4 + length])
+        if kind & 0x7F != 2:
+            raise ValueError(f"{path}: chunk {i} has compression {kind & 0x7F}, expected 2 (zlib)")
+        if kind & 0x80:                 # large chunk: the data is in an external c.<x>.<z>.mcc file
+            rx, rz = (int(v) for v in os.path.basename(path).split(".")[1:3])
+            with open(os.path.join(os.path.dirname(path), f"c.{rx * 32 + i % 32}.{rz * 32 + i // 32}.mcc"), "rb") as f:
+                raw = zlib.decompress(f.read())
+        else:
+            raw = zlib.decompress(data[start + 5:start + 4 + length])
         out[(i % 32, i // 32)] = nbtlib.File.parse(io.BytesIO(raw))
     return out
 
