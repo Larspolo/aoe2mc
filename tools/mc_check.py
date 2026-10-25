@@ -148,9 +148,9 @@ def free_port():
 
 
 class Server:
-    def __init__(self, java, jar, folder):
+    def __init__(self, java, jar, folder, args=()):
         self.lines, self.log = queue.Queue(), []
-        self.p = subprocess.Popen([java, "-Xmx2G", "-jar", jar, "nogui"], cwd=folder, stdin=subprocess.PIPE,
+        self.p = subprocess.Popen([java, "-Xmx2G", "-jar", jar, *args, "nogui"], cwd=folder, stdin=subprocess.PIPE,
                                   stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
         threading.Thread(target=self._read, daemon=True).start()
 
