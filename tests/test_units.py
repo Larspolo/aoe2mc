@@ -122,3 +122,19 @@ def test_no_empty_item_has_components(name):
     for d in [desc, *desc.get("Passengers", [])]:
         for it in [*d.get("ArmorItems", []), *d.get("HandItems", [])]:
             assert "id" in it or not len(it), (name, it)
+
+
+def test_facing_map_knights_face_away_from_the_center(tmp_path):
+    """tools/scenarios.py facing: knight k stands in the direction of its rotation, so it faces away from the
+    center in Minecraft (#20). The owner compares this with the AoE2 editor (docs/facing.md)."""
+    import math
+
+    import aoe2mc
+    import scenarios
+    *_, objects, players = aoe2mc.read_scenario(scenarios.facing(str(tmp_path / "facing.aoe2scenario")))
+    knights = [o for o in objects if o["name"] == "KNIGHT"]
+    assert len(knights) == 8 and len([o for o in objects if o["name"] == "ARCHER"]) == 8
+    for o in knights:
+        yaw = math.radians(float(units.make_entity(o, players, (0, 64, 0), np.random.default_rng(0))["Rotation"][0]))
+        out = np.array([o["x"] - 16.5, o["y"] - 16.5]) / 6           # from the center to the knight (x, z)
+        assert np.dot([-math.sin(yaw), math.cos(yaw)], out) > 0.99    # Minecraft look direction of this yaw
