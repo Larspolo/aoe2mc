@@ -37,6 +37,8 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   `python3 -m pip install --ignore-installed setuptools` (the Debian setuptools cannot build it).
   A record has each town center 4 times (IDs 109 and the annex parts 618–620): `read_record` skips them (#139).
 - An unknown block entity id gives "Skipping block entity with invalid type": 26.3 has no `bed` block entity (#249).
+- Old scenarios for local checks (do not commit, no license): GitHub raw `SiegeEngineers/genie-rs/master/crates/genie-scx/
+  test/scenarios/` (`Age of Heroes b1-3-5.scx` is format 1.21; names in `format.rs` tests, #311).
 
 ## Libraries
 
@@ -84,3 +86,5 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   gives about 800 px, the size of the images in `docs/images/` (#262).
 - Footprint rule in a test: `Edits.add` keeps a block outside the footprint when `y >= cols.wtop + E.HEAD` (not the
   surface). Match a block by its name before `[`: `minecraft:water_cauldron` starts with `minecraft:water` (#295).
+- Sibling sub-issues (#249-#256) run in parallel: before you add a helper or a tool option, `git fetch origin main` and
+  grep for it. #252 and #265 both added `render.py --cut`, and two runs added a `furnish` (#252).
