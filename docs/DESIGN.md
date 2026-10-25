@@ -102,6 +102,10 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Raised portal (pishtaq) of an arched gate | wall over the roof line, `chiseled_sandstone` frame, upside-down stairs as the arch | `caravanserai` |
 | Kitchen garden | `carrots`, `potatoes`, `wheat` (age 7) on `farmland`, `spruce_fence` with a `spruce_fence_gate` | `folwark` |
 | Windmill sails | `spruce_fence` arms with `white_wool` cloth, `stripped_spruce_log` hub | `mill`, `folwark` |
+| Forge hearth, quench tub (inside) | `lava_cauldron` beside the chimney, `water_cauldron[level=3]` | `blacksmith` |
+| Ledger and trade maps (inside) | `lectern` (with a book) and `cartography_table` on a counter of top slabs | `market` |
+| Upper floor (inside) | `*_planks` floor and a `ladder` | `market` |
+| Lamp inside a room | `lantern[hanging=true]` under a ceiling, or on a `chain` | `blacksmith`, `market` |
 
 Add a line when a design uses a new feature block. Each new block state must pass `mcvalid`.
 

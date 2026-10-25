@@ -245,6 +245,15 @@ class Canvas:
         self.box(x, x + 1, y, y + h, z, z + 1, "oak_fence")
         self.set(x, y + h, z, f"{color}_banner[rotation=4]")
 
+    def furnish(self, items):
+        """Furniture (x, y, z, state) inside a room: only into air, and the cells next to a door stay free.
+        Small sizes (--tile-size) have small rooms: things that hit a wall are left out."""
+        air = self.id("air")
+        free = {(x + dx, z + dz) for x, z in self.doors for dx in (-1, 0, 1) for dz in (-1, 0, 1)}
+        for x, y, z, b in items:
+            if (x, z) not in free and self.get(x, y, z) == air:
+                self.set(x, y, z, b)
+
     # ---- roofs ----------------------------------------------------------------------------
     def gable(self, x0, x1, z0, z1, y, mat, fill=None, axis="x"):
         """Pitched roof over x0..x1-1, z0..z1-1 starting at height y. The ridge runs along `axis`.
@@ -869,6 +878,14 @@ def blacksmith(c, w, st, col, T, ctx):
     c.set(m + 1, 1, hz + 1, "barrel[facing=up]")
     c.set(mid + 1, 3, hz + 1, "lantern[hanging=true]")
     c.banner(mid + 1, 3, hz, col)
+    # The smithy inside: the hearth at the chimney, anvils, the quench tub, tools and stock along the walls
+    e, n = w - m - 3, m + 1                                                # east of the room (beside the chimney), north wall
+    c.furnish([(e, 1, n, "lava_cauldron"), (e - 1, 1, n, "water_cauldron[level=3]"), (e - 1, 1, n + 2, "anvil[facing=east]"),
+               (m + 1, 1, n, "grindstone[face=floor,facing=north]"), (m + 2, 1, n, "smithing_table"),
+               (m + 3, 1, n, "barrel[facing=up]"), (m + 3, 2, n, "barrel[facing=up]"), (m + 4, 1, n, "chest[facing=south]"),
+               (m + 1, 1, n + 2, "chipped_anvil[facing=north]"), (m + 1, 1, n + 4, "chest[facing=east]"),
+               (m + 1, 1, n + 5, "barrel[facing=up]"), (m + 1, 4, n + 2, "chain"), (e, 4, n + 4, "chain"),
+               (m + 1, 3, n + 2, "lantern[hanging=true]"), (e, 3, n + 4, "lantern[hanging=true]")])
 
 
 def market(c, w, st, col, T, ctx):
@@ -882,12 +899,27 @@ def market(c, w, st, col, T, ctx):
     top = c.roof(1, w - 1, 0, d, h + 1, st, axis="x")
     c.door(w // 2, 1, d - 1)
     c.banner(w // 2 - 1, 3, d, col); c.banner(w // 2 + 1, 3, d, col)
+    # The hall inside: shelves of goods on the back wall, a counter with the ledger, a store room upstairs
+    wood = st.wood.replace("_planks", "")
+    wood = wood if wood in WOODS else "spruce"
+    stock = ["barrel[facing=up]", "chest[facing=south]", "hay_block", "white_wool", "brown_wool", "barrel[facing=up]"]
+    back = [(x, 1, 1, stock[int(c.rng.integers(len(stock)))]) for x in range(2, w - 3)]
+    back += [(x, 2, 1, "barrel[facing=up]") for x in range(3, w - 3, 3)]
+    counter = [(x, 1, d - 3, f"{wood}_slab[type=top]") for x in range(3, w - 3) if abs(x - w // 2) > 1]
+    c.furnish(back + counter + [(4, 2, d - 3, "cartography_table"),
+                                (w - 5, 2, d - 3, "lectern[facing=south,has_book=true,powered=false]")])
+    if h >= 7:                                                             # upper floor over a ladder, lit from below
+        c.box(2, w - 2, 4, 5, 1, d - 1, st.wood)
+        c.box(w - 3, w - 2, 1, 5, 1, 2, "ladder[facing=south]")
+        c.furnish([(x, 3, 2, "lantern[hanging=true]") for x in (5, w - 6)]
+                  + [(x, 5, z, stock[(x + z) % len(stock)]) for x in range(2, w - 4) for z in (1, 2) if x % 4]
+                  + [(w // 2, 5, 3, "lantern[hanging=false]")])
+    else:
+        c.furnish([(w // 2 - 2, h, 2, "lantern[hanging=true]")])
     c.flag(w - 2, top + 1, d // 2, col, 2)
     # Lean-to stalls on the west, south and east sides; the gap in the middle of the south row is the entrance
     goods = ["barrel[facing=up]", "hay_block", "melon", "pumpkin", "chest[facing=south]", "composter"]
     stairs = family(st.roof)[0]
-    wood = st.wood.replace("_planks", "")
-    wood = wood if wood in WOODS else "spruce"
     gate = range(w // 2 - 1, w // 2 + 2)
     rows = [(x, z, "north", (x, w - 1)) for x in range(w) for z in range(w - 2, w)]
     rows += [(x, z, "east" if x < 2 else "west", (0 if x < 2 else w - 1, z))
