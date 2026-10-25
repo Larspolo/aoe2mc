@@ -7,7 +7,7 @@ import coverage as cov
 MAX = {"Buildings": {"fallback": 0, "default": 0},
        "Other objects": {"fallback": 71, "default": 0},
        "Units": {"fallback": 16, "default": 74},
-       "Heroes": {"fallback": 0, "default": 196}}
+       "Heroes": {"fallback": 0, "default": 0}}
 
 
 @pytest.fixture(scope="module")

@@ -97,3 +97,9 @@ def test_each_militia_upgrade_looks_stronger():
     order = [None, "leather", "chainmail", "iron", "golden", "diamond"]
     worn = [sum(order.index(p if not isinstance(p, tuple) else p[0]) for p in units.LINES[n][1]) for n in line]
     assert worn == sorted(worn) and len(set(worn)) == len(worn), worn
+
+
+@pytest.mark.parametrize("name,mob", [("THE_BLACK_PRINCE", "horse"), ("PORUS", "ravager"), ("LEONIDAS", "zombie"),
+                                      ("EINAR_PAUNCH_SHAKER", "skeleton"), ("HUNTING_WOLF", "wolf")])
+def test_hero_base_unit(name, mob):
+    assert units.classify(name, hero=True)["id"] == "minecraft:" + mob
