@@ -6,7 +6,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 ## Environment
 
 - GitHub raw files, PyPI and the Mojang hosts (`piston-meta`, `piston-data`, `libraries.minecraft.net`) work.
-- `/root/.local/bin/pytest` uses another Python. Use `python3 -m pytest`.
+- `/root/.local/bin/pytest` and `/usr/bin/pip` use another Python. Use `python3 -m pytest` and `python3 -m pip`.
+  Symptom: "cannot import name '_imaging' from 'PIL'" in the end-to-end tests.
 - Java 21 is installed in the cloud container. Minecraft 1.21.1 needs Java 21, 26.3 needs Java 25
   (`javaVersion.majorVersion` in the version JSON). The Mojang hosts are allowed since #12.
 - GitHub in cloud sessions: `gh api repos/Larspolo/aoe2mc/...` (REST) works. GraphQL (`gh issue list`,

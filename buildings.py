@@ -519,8 +519,8 @@ def town_center(c, w, st, col, T, ctx):
     top = c.roof(x0, x1, x0, x1, ih + 1, st)
     mid = w // 2
     c.box(mid - 1, mid + 1, 1, 4, x1 - 1, x1, "air")   # double door
-    c.door(mid - 1, 1, x1 - 1); c.set(mid, 1, x1 - 1, f"spruce_door[facing=south,half=lower,hinge=right,open=false]")
-    c.set(mid, 2, x1 - 1, f"spruce_door[facing=south,half=upper,hinge=right,open=false]")
+    c.door(mid - 1, 1, x1 - 1); c.set(mid, 1, x1 - 1, "spruce_door[facing=south,half=lower,hinge=right,open=false]")
+    c.set(mid, 2, x1 - 1, "spruce_door[facing=south,half=upper,hinge=right,open=false]")
     c.box(mid - 1, mid + 1, 3, 4, x1 - 1, x1, st.beam + "[axis=x]")
     # Central tower with a bell and a flag.
     t = 4 if w >= 14 else 3
@@ -844,7 +844,7 @@ def granary(c, w, st, col, T, ctx):
     h = max(4, round(w * 0.6))
     c.cylinder(cx, cx, r, 1, h + 1, st.plaster, hollow=True)
     c.cylinder(cx, cx, r + 0.5, h + 1, h + 2, st.wood)
-    top = c.cone(cx, cx, r + 0.8, h + 2, "hay_block" if st.shape != "asian" else family(st.roof)[2])
+    c.cone(cx, cx, r + 0.8, h + 2, "hay_block" if st.shape != "asian" else family(st.roof)[2])
     mid = w // 2
     zf = int(round(cx + r))
     c.door(mid, 1, zf)
