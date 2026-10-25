@@ -8,6 +8,11 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 - The cloud network blocks Mojang hosts (`piston-meta.mojang.com` gives 403). GitHub raw files and PyPI work.
 - `/root/.local/bin/pytest` uses another Python. Use `python3 -m pytest`.
 - Java 21 is installed in the cloud container (Minecraft 1.21.x and 26.x servers need Java 21).
+- GitHub in cloud sessions: `gh api repos/Larspolo/aoe2mc/...` (REST) works. GraphQL (`gh issue list`,
+  `gh pr create`) and `search/...` give 403. CI job logs: only `mcp__github__get_job_logs`.
+- Scheduled runs can have no MCP connector tools. The `autopilot` skill has a REST table for that case.
+- The repository is private: a workflow with a `permissions:` block also needs `contents: read`, or
+  `actions/checkout` fails with "Repository not found".
 
 ## Libraries
 
