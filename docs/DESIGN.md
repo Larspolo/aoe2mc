@@ -93,6 +93,9 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Stepped stone roof (Mesoamerican set) | `stone_brick` stairs (hip roof) | `Style.roof` |
 | Thatch or shingle roof (East Asian set) | `spruce` stairs | `Style.roof` |
 | Cannon | `polished_basalt` barrel on its side | `tower` (bombard) |
+| Checkered stone base | `polished_deepslate` in a checker pattern in the main stone | `caravanserai` |
+| Gilded dome | `gold_block` | `caravanserai` |
+| Raised portal (pishtaq) of an arched gate | wall over the roof line, `chiseled_sandstone` frame, upside-down stairs as the arch | `caravanserai` |
 | Kitchen garden | `carrots`, `potatoes`, `wheat` (age 7) on `farmland`, `spruce_fence` with a `spruce_fence_gate` | `folwark` |
 | Windmill sails | `spruce_fence` arms with `white_wool` cloth, `stripped_spruce_log` hub | `mill`, `folwark` |
 
