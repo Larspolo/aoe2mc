@@ -1259,8 +1259,8 @@ PASSABLE = ("short_grass", "tall_grass", "large_fern", "petals", "moss_carpet", 
 SEATS = {"minecraft:boat": 2, "minecraft:chest_boat": 1}
 
 
-def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside"):
-    """Entities per chunk: {(cx, cz): [(nbt, x, z, is_boat)]}.
+def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside", silent=False):
+    """Entities per chunk: {(cx, cz): [(nbt, x, z, is_boat)]}. silent: also the passive animals (--ambience off).
     garrison="outside": a garrisoned unit rides its ship if a seat is free, else stands next to its holder."""
     T = cols.T
     out = {}
@@ -1282,6 +1282,8 @@ def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside
             if desc is None:
                 continue
             nbt = units.make_entity(o, players, (0, 0, 0), rng, desc)
+            if silent:
+                nbt["Silent"] = Byte(1)
             boat = units.is_boat(desc)
             if held:
                 holder = refs.get(o.get("holder"))
@@ -1757,9 +1759,12 @@ def ambience_lines(biome_names):
 def write_datapack(out, objects, ground, biome_names=(), ambience="basic"):
     """datapacks/aoe2mc: a function every 2 s plays a work sound at each building with a player near it
     (docs/datapack.md). Fixed positions, no marker entities: the check costs nothing that /tick query shows.
-    Ambience (#219): particles and sounds near the players by biome; "full" also writes the custom biomes.
+    Ambience (#219): particles and sounds near the players by biome; "full" also writes the custom biomes, "off"
+    writes no pack.
     Returns (work sounds, ambience lines)."""
     root = os.path.join(out, "datapacks", "aoe2mc")
+    if ambience == "off":           # the world as before #188: no pack
+        return 0, 0
     lines = []
     for o in objects:
         rule = next((r for r in WORK_SOUNDS if r[0] in o["name"]), None) if o["kind"] == "B" else None
@@ -1775,7 +1780,7 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic"):
         if rule[3]:
             lines.append(f"{at} particle minecraft:{rule[3]} ~ ~1 ~ 0.4 0.2 0.4 0 4")
     work = len(lines)
-    lines += ambience_lines(biome_names) if ambience != "off" else []
+    lines += ambience_lines(biome_names)
     groups = sorted({n.split(":")[1] for n in biome_names if n.startswith("aoe2mc:")})
     if not lines and not groups:    # the server finds a new pack by itself; level.dat needs no entry
         return 0, 0
@@ -2107,7 +2112,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     per_chunk = edits.by_chunk(max(cols.width, cols.n + r), -r)
     tick("objects")
     before = set(stats)
-    unit_chunks = plan_units(objects, players, cols, rng, stats, birds, garrison) if with_units else {}
+    unit_chunks = plan_units(objects, players, cols, rng, stats, birds, garrison, ambience == "off") if with_units else {}
     tick("units")
     print(f"  units: {stats['units']}, fish: {stats['fish']}")
     for k in sorted(set(stats) - before - {"units", "fish"}):
@@ -2339,9 +2344,10 @@ def main(argv=None):
     ap.add_argument("--border", choices=sorted(BORDERS), default="diorama",
                     help="design of the edge outside the map (default diorama); all keep the vanilla world border at the edge")
     ap.add_argument("--ambience", choices=("basic", "full", "off"), default="basic",
-                    help="particles and sounds by terrain (default basic); full also gives each terrain group a custom "
-                         "biome with its own sky, fog and water colors, but Minecraft then shows an \"Experimental "
-                         "Settings\" warning when the world opens")
+                    help="work sounds at buildings, animal sounds, and particles and sounds by terrain (default basic); "
+                         "full also gives each terrain group a custom biome with its own sky, fog and water colors, but "
+                         "Minecraft then shows an \"Experimental Settings\" warning when the world opens; off: a "
+                         "silent world without a datapack")
     ap.add_argument("--verbose", action="store_true", help="print the time of each phase")
     a = ap.parse_args(argv)
     kw = dict(T=a.tile_size, H=a.level_height, seed=a.seed, preview=a.preview, arch=a.architecture,
