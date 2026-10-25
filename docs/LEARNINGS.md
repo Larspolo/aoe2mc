@@ -68,7 +68,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 - `terrain_style` checks names in sequence: an earlier rule wins (`ROAD_GRAVEL` matched `GRAVEL` until #5).
 - A merge conflict in `docs/coverage.md`: take any side, run `python3 tools/coverage.py`, then set `MAX` in
   `tests/test_coverage.py` to the new counts. Parallel runs often change the same counts (#79). Check
-  `mergeable_state` before the merge: a green PR is "dirty" when main moved after the push.
+  `mergeable_state` before the merge: a green PR is "dirty" when main moved after the push. Merge in the CI poll
+  loop at once. Union both sides of a `docs/DESIGN.md` table conflict: all design PRs add rows there.
 - All 243 building types of one set draw in about 1 s; the gallery converts in about 23 s (`--verbose`: per phase, #26).
 - Block IDs in `B` depend on what was registered before (earlier tests or conversions). Code that draws random
   numbers per block ID must go in state-name order, not ID order (see #44). A test that passes alone but

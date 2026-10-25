@@ -5,7 +5,7 @@ Make synthetic AoE2 DE scenarios for tests (no real map files necessary).
 Usage:
     python tools/scenarios.py tiny OUT.aoe2scenario
     python tools/scenarios.py gallery OUT.aoe2scenario [--kinds BOU]
-    python tools/scenarios.py stress|buildings|units|village|facing|river OUT.aoe2scenario
+    python tools/scenarios.py stress|buildings|units|village|facing|walls|river OUT.aoe2scenario
 
 tiny:      24x24 tiles with land, shallow and deep water, a hill, buildings, units, a tree, a mine and fish.
 gallery:   every object type of the parser in a grid (B = buildings, O = other objects, U = units).
@@ -15,6 +15,7 @@ units:     every land unit on land and every ship on water.
 village:   a small map with terrain types, water, a hill, a town and animals.
 river:     a river at elevation 2 between land at elevation 2, with a dock, a bridge, a ship and fish (#165).
 facing:    units at the rotations 0, pi/4 ... 7pi/4, to compare the facing in AoE2 and in Minecraft (docs/facing.md).
+walls:     palisade, stone and fortified walls with a gate and a corner, for 3 architecture sets (players 1, 4, 7).
 """
 import argparse
 import contextlib
@@ -208,6 +209,29 @@ def facing(path):
     return save(scn, path)
 
 
+def walls(path):
+    """Per player (western, middle_eastern, east_asian) and per kind: a wall line along tile x with a gate in the
+    middle, a corner and a line along tile y with a gate. The lines start at x = 2 and y = 2 + 10 * row."""
+    scn = new_scenario(64)
+    set_civs(scn)
+    um = scn.unit_manager
+    kinds = [("PALISADE_WALL", BuildingInfo.PALISADE_GATE_NORTHWEST_TO_SOUTHEAST),
+             ("STONE_WALL", BuildingInfo.GATE_NORTHWEST_TO_SOUTHEAST),
+             ("FORTIFIED_WALL", BuildingInfo.FORTIFIED_GATE_NORTHWEST_TO_SOUTHEAST)]
+    row = 0
+    for player in (PlayerId.ONE, PlayerId.FOUR, PlayerId.SEVEN):
+        for x0, (wall, gate) in zip((2, 22, 42), kinds):
+            y0 = 2 + 20 * row
+            for x in [*range(x0, x0 + 4), *range(x0 + 8, x0 + 12)]:
+                um.add_unit(player, BuildingInfo[wall].ID, x=x + 0.5, y=y0 + 0.5)
+            um.add_unit(player, gate.ID, x=x0 + 6.0, y=y0 + 0.5)
+            for y in [*range(y0 + 1, y0 + 5), *range(y0 + 9, y0 + 13)]:
+                um.add_unit(player, BuildingInfo[wall].ID, x=x0 + 11.5, y=y + 0.5)
+            um.add_unit(player, gate.ID, x=x0 + 11.5, y=y0 + 7.0)
+        row += 1
+    return save(scn, path)
+
+
 def river(path):
     """Highland at elevation 2 with a river along tile x (deep in the middle), and a sea at elevation 0 in the south."""
     scn = new_scenario(32)
@@ -233,8 +257,8 @@ def river(path):
     return save(scn, path)
 
 
-MAKERS = {"tiny": tiny, "stress": stress, "buildings": buildings_map, "units": units_map, "village": village,
-          "facing": facing, "river": river}
+MAKERS = {"tiny": tiny, "stress": stress, "buildings": buildings_map, "units": units_map, "village": village, "facing": facing,
+          "walls": walls, "river": river}
 
 
 def main():
