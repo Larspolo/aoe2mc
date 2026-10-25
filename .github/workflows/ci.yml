@@ -30,8 +30,10 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: .cache/mc
-          key: mc-${{ hashFiles('tools/mc_check.py') }}
-      - name: Minecraft server check
+          key: mc-${{ hashFiles('tools/mc_check.py', 'tools/mc_shot.py') }}
+      - name: Packages for the client screenshots (tools/mc_shot.py)
+        run: sudo apt-get update -q && sudo apt-get install -y -q xvfb imagemagick mesa-vulkan-drivers
+      - name: Minecraft server and client checks
         run: pytest -m mc
       - name: Package
         run: pip install . && cd /tmp && aoe2mc --help
