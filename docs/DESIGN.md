@@ -35,7 +35,10 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Training dummy | `oak_fence`, `hay_block`, `carved_pumpkin` | `barracks` |
 | Bell | `bell` | `monastery`, `town_center` |
 | Loom, cloth | `loom`, wool | `church` |
-| Market goods | `barrel`, `chest`, `composter`, `hay_block` | `market`, `dock` |
+| Market goods | `barrel`, `chest`, `composter`, `hay_block`, `melon`, `pumpkin` | `market`, `dock` |
+| Market stall | lean-to of roof stairs on `*_fence` posts; wool awning in stripes for flat-roof sets | `market` |
+| Painted trim (deck edge) | `*_concrete` (player color) | `dock` |
+| Hoist | log beam with `chain` | `dock` |
 | Crop field | `wheat` rows (ages 5–7) on `farmland`, furrows of bare `farmland`, `dirt_path` edge | farm (`place_building`) |
 | Hay, fodder | `hay_block` | `stable`, `barracks`, `granary` |
 | Water trough | `cauldron` (water) | `stable` |
