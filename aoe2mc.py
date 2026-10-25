@@ -1278,8 +1278,11 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
         for p in players.values():
             p["arch"] = arch
     for spec in player_arch:
-        pid, a = spec.split("=")
-        players[int(pid)]["arch"] = a
+        pid, a = player_arch_spec(spec) if isinstance(spec, str) else spec
+        if pid not in players:
+            raise OptionError(f"--player-architecture: player {pid} is not in the scenario "
+                              f"(players: {', '.join(map(str, sorted(players)))})")
+        players[pid]["arch"] = a
     print(f"Read {os.path.basename(src)}: {size}x{size} tiles, {len(objects)} objects "
           f"({time.time() - t0:.1f}s)")
 
@@ -1341,12 +1344,38 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
           f"({time.time() - t0:.1f}s). Spawn: {spawn}")
 
 
-def main():
+class OptionError(ValueError):
+    """A command-line option that does not match the scenario."""
+
+
+def int_range(lo, hi):
+    def parse(v):
+        try:
+            n = int(v)
+        except ValueError:
+            raise argparse.ArgumentTypeError(f"{v!r} is not an integer") from None
+        if not lo <= n <= hi:
+            raise argparse.ArgumentTypeError(f"{n} is not in the range {lo}-{hi}")
+        return n
+    return parse
+
+
+def player_arch_spec(v):
+    """'6=western' -> (6, 'western')."""
+    pid, eq, a = v.partition("=")
+    if not eq or not pid.strip().isdigit():
+        raise argparse.ArgumentTypeError(f"{v!r} is not P=SET, for example 6=western")
+    if a not in buildings.ARCH:
+        raise argparse.ArgumentTypeError(f"unknown set {a!r} (choose from {', '.join(sorted(buildings.ARCH))})")
+    return int(pid), a
+
+
+def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
     ap.add_argument("scenario", help=".aoe2scenario file")
     ap.add_argument("output", help="output world folder (put it in .minecraft/saves/)")
-    ap.add_argument("--tile-size", type=int, default=4, help="blocks per tile (default 4)")
-    ap.add_argument("--level-height", type=int, default=3, help="blocks per elevation level (default 3)")
+    ap.add_argument("--tile-size", type=int_range(1, 16), default=4, help="blocks per tile (default 4)")
+    ap.add_argument("--level-height", type=int_range(1, 16), default=3, help="blocks per elevation level (default 3)")
     ap.add_argument("--name", help="world name in the Minecraft menu")
     ap.add_argument("--seed", type=int, default=1, help="seed for random details (default 1)")
     ap.add_argument("--preview", action="store_true", help="also write preview.png")
@@ -1356,10 +1385,14 @@ def main():
     ap.add_argument("--no-barriers", action="store_true",
                     help="do not fill building footprints with invisible barrier blocks")
     ap.add_argument("--player-architecture", action="append", default=[], metavar="P=SET",
+                    type=player_arch_spec,
                     help="architecture set for one player, for example 6=western (can be repeated)")
-    a = ap.parse_args()
-    convert(a.scenario, a.output, a.tile_size, a.level_height, a.name, a.seed, a.preview, a.architecture,
-            a.player_architecture, not a.no_units, not a.no_barriers)
+    a = ap.parse_args(argv)
+    try:
+        convert(a.scenario, a.output, a.tile_size, a.level_height, a.name, a.seed, a.preview, a.architecture,
+                a.player_architecture, not a.no_units, not a.no_barriers)
+    except OptionError as e:
+        ap.error(str(e))
 
 
 if __name__ == "__main__":

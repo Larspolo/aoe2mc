@@ -32,8 +32,8 @@ The world is in creative mode. Outside the map there is only void.
 
 | Option | Default | Description |
 |---|---|---|
-| `--tile-size` | 4 | Blocks per AoE2 tile, in each direction. 5 or 6 gives more detail. |
-| `--level-height` | 3 | Blocks per AoE2 elevation level |
+| `--tile-size` | 4 | Blocks per AoE2 tile, in each direction. 5 or 6 gives more detail. Range 1–16. |
+| `--level-height` | 3 | Blocks per AoE2 elevation level. Range 1–16. |
 | `--architecture` | from civ | One architecture set for all players |
 | `--player-architecture` | – | Architecture set for one player, for example `6=western`. Can be repeated. |
 | `--name` | file name | World name in the Minecraft menu |
