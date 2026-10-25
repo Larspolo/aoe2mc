@@ -698,6 +698,15 @@ def siege_workshop(c, w, st, col, T, ctx):
     c.box(cx, cx + 1, ch - 3, ch, w // 2, w // 2 + 1, "chain")
     c.set(cx, ch - 4, w // 2, "oak_log[axis=x]")
     c.box(hx + 1, hx + 3, 1, 2, w - 3, w - 1, "oak_log[axis=x]")           # timber pile
+    # A siege engine under construction in the yard: a wooden frame with a ram beam, and barrels at the hall
+    rx, rz = hx + 1, 3
+    c.box(rx, rx + 3, 1, 2, rz, rz + 2, "spruce_slab[type=bottom]")
+    for x in (rx, rx + 2):
+        for z in (rz, rz + 1):
+            c.set(x, 2, z, "oak_fence")
+    c.box(rx, rx + 3, 3, 4, rz, rz + 2, "spruce_slab[type=bottom]")
+    c.set(rx + 1, 2, rz, "oak_log[axis=x]"); c.set(rx + 1, 2, rz + 1, "oak_log[axis=x]")
+    c.set(hx, 1, 2, "barrel[facing=up]"); c.set(hx, 1, 3, "barrel[facing=up]"); c.set(hx, 2, 2, "barrel[facing=up]")
     c.set(hx + 1, 2, w - 2, "oak_log[axis=x]")
     c.banner(hx // 2 + 1, 4, w - 1, col)
     c.flag(cx, ch + 1, 2, col, 2)
@@ -710,7 +719,7 @@ def blacksmith(c, w, st, col, T, ctx):
     c.timber_room(m, w - m, m, hz, 0, 4, st, low_stone=2)
     c.windows(m, w - m, m, hz, 3, sides="new")
     top = c.roof(m, w - m, m, hz, 5, st, axis="x")
-    c.box(w - m - 2, w - m, 1, top + 2, m + 1, m + 3, "bricks")             # forge chimney
+    c.box(w - m - 2, w - m, 1, top + 2, m + 1, m + 3, st.stone2)            # forge chimney of rough stone, as in the game
     c.set(w - m - 2, top + 2, m + 1, "campfire[lit=true,signal_fire=false]")
     c.set(w - m - 2, 1, m + 3, "blast_furnace[facing=south,lit=true]")
     mid = w // 2
@@ -724,6 +733,9 @@ def blacksmith(c, w, st, col, T, ctx):
         c.box(m, w - m, 4, 5, hz, w, family(st.roof)[1] + "[type=bottom]")
     c.set(mid + 1, 1, hz + 1, "anvil[facing=east]")
     c.set(mid + 2, 1, hz, "smithing_table"); c.set(m + 1, 1, hz, "water_cauldron[level=3]")
+    c.set(w - m - 2, 1, hz + 1, "grindstone[face=floor,facing=east]")      # the workshop in front: tools and stock
+    c.set(m + 1, 1, hz + 1, "barrel[facing=up]")
+    c.set(mid + 1, 3, hz + 1, "lantern[hanging=true]")
     c.banner(mid + 1, 3, hz, col)
 
 
@@ -1557,15 +1569,20 @@ def place_building(E, cols, B, o, players, walls, gates):
     size = footprint(name)
 
     if fn is farm:
+        # Like the game: rows of crops with furrows of bare soil between them, along tile y (they turn with
+        # --orientation), and a path around the plot. Some rows are not ripe yet.
         x0, z0 = int(round((ux - 1.5) * T)), int(round((uy - 1.5) * T))
+        rng = np.random.default_rng(abs((x0 * 73856093) ^ (z0 * 19349663)) % (2 ** 32))
         for x in range(max(0, x0), min(cols.n, x0 + 3 * T)):
             for z in range(max(0, z0), min(cols.n, z0 + 3 * T)):
                 if cols.wtop[x, z] == cols.top[x, z]:
                     y = int(cols.top[x, z])
                     edge = x in (x0, x0 + 3 * T - 1) or z in (z0, z0 + 3 * T - 1)
+                    row = (x - x0 if TURN % 2 == 0 else z - z0) % 2 == 1
+                    age = rng.choice((7, 6, 5), p=(.7, .2, .1))
                     E.add([x, x], [y, y + 1], [z, z],
                           [B("farmland[moisture=7]") if not edge else B("dirt_path"),
-                           B("wheat[age=7]") if not edge else 0])
+                           B(f"wheat[age={age}]") if row and not edge else 0])
         return
 
     along_z = False
