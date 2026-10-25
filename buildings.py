@@ -1646,13 +1646,16 @@ def decorate(c, fx, fz, chance=0.22):
 
 def weather(c):
     """Mix similar blocks into walls, floors and roofs (moss, cracks, other stones and tiles)."""
-    for i in np.unique(c.a[c.a >= 0]):
+    # Go in the order of the state names: the IDs depend on what was registered before (other conversions).
+    # Take the cells from the original blocks, so each block is mixed one time only.
+    orig = c.a.copy()
+    for i in sorted(np.unique(orig[orig >= 0]), key=lambda i: c.B.states[i]):
         state = c.B.states[i]
         name = state.split(":")[1]
         base = name.split("[")[0]
         if base not in TEXTURE:
             continue
-        cells = np.argwhere(c.a == i)
+        cells = np.argwhere(orig == i)
         r = c.rng.random(len(cells))
         acc = 0.0
         for repl, share in TEXTURE[base]:

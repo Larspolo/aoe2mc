@@ -36,3 +36,6 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   around the map edge with `np.roll` (brown dots on shores and at x = 0). See its ticket.
 - Drawing all 243 building types for one architecture set takes about 1 s. A full gallery conversion takes
   about 30 s per set.
+- Block IDs in `B` depend on what was registered before (earlier tests or conversions). Code that draws random
+  numbers per block ID must go in state-name order, not ID order (see #44). A test that passes alone but
+  fails in the full suite often has this cause.
