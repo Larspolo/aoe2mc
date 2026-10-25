@@ -49,12 +49,13 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Mine cart track | `rail` | `mining_camp` |
 | Water trough | `cauldron` (water) | `stable` |
 | Banner, flag | `*_banner` (player color), `Canvas.flag` | most designs |
+| Player color band (walls, gate towers) | `*_wool` (player color), one row | `wall_segment`, `gate` |
 | Fence, pen | `*_fence` | `stable`, `market`, `outpost`, `wall_segment` |
 | Gate of a pen | `*_fence_gate` | `pasture` |
 | Wheel | open `*_trapdoor` on the side | `cart` |
 | Tent canvas | `white_wool`, a valance of wool in the player color | `army_tent`, `command_tent` |
 | Thatch | `hay_block` | `hut`, `settlement`, `tower` (African) |
-| Palisade stakes | `*_log[axis=y]` of two heights | `wooden_fort` |
+| Palisade stakes | `*_log[axis=y]` of two heights, `spruce_fence` tips | `wooden_fort`, `wall_segment`, `gate` |
 | Gold statue, finial | `gold_block` | `buddha_statue`, `stupa`, `monument`, `temple` |
 | Painted wood (torii) | `red_concrete`, black top beam | `torii` |
 | Climbing plants | `vine`, `azalea_leaves` | `pillar` |
@@ -64,6 +65,9 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Slate spire | `deepslate_tiles` | `cathedral` |
 | Pinnacle | the `accent_wall` of the style (`*_wall`) | `cathedral` |
 | Striped marble | rows of `polished_deepslate` in the main stone | `cathedral` (Mediterranean) |
+| Mud-brick pinnacle | `mud_brick_wall` on a buttress | `djenne` (Wonder, African) |
+| Glazed tile band, tile panel | `blue_terracotta`; `Style.dome` terracotta over arches | `taj`, `samarra` (Wonders) |
+| Chhatri (small domed kiosk) | `quartz_pillar` posts and a small dome | `taj` (Wonder, South Asian) |
 | Chain, rope | `chain` | `dock`, `siege_workshop`, `shipyard`, `harbor_chain` |
 | Portcullis, grille | `iron_bars` | `gate`, `castle` |
 | Lamp | `lantern` | `decorate()`, `blacksmith` (hanging) |
