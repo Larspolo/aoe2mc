@@ -20,26 +20,29 @@ import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from aoe2mc import PASSABLE_OBJECTS, WOODS, object_footprint, tree_kind  # noqa: E402
+from aoe2mc import MINE_BLOCKS, PASSABLE_OBJECTS, WOODS, object_footprint, tree_kind  # noqa: E402
 from units import VILLAGER_JOBS  # noqa: E402
 
 RESOURCES = ("Wood", "Food", "Gold", "Stone")
 DROP_SITES = {"wood": ("TOWN_CENTER", "LUMBER_CAMP"), "food": ("TOWN_CENTER", "MILL"),   # as in AoE2 (#389)
               "gold": ("TOWN_CENTER", "MINING_CAMP"), "stone": ("TOWN_CENTER", "MINING_CAMP")}
 TREE_WOOD = 100                                                    # wood in one tree, as in AoE2
+MINES = {"GOLD_MINE": ("gold", 800), "STONE_MINE": ("stone", 350)}    # resource and amount of a mine, as in AoE2
+TASKS = {"wood": "LUMBERJACK", "gold": "GOLD_MINER", "stone": "STONE_MINER"}   # the look (units.VILLAGER_JOBS)
 STEPS = [(dx, dz) for dx in (-1, 0, 1) for dz in (-1, 0, 1) if dx or dz]
 NUMBER = r"(-?[\d.]+(?:E-?\d+)?)[df]"
 EVENTS = {"idle": "idle", "to_tree": "walk", "chop": "chop", "to_drop": "carry"}    # state -> event in the log
 
 
 class Map:
-    """The block grid of aoe2mc.json: where a unit can stand, the trees and the drop sites of a player."""
+    """The block grid of aoe2mc.json: where a unit can stand, the trees, the mines and the drop sites of a player."""
 
     def __init__(self, data, player=1):
         self.T = data["tile_size"]
         self.ground = [[None if v == "-" else int(v) for v in row.split()] for row in data["ground"]]
         self.n = len(self.ground)
         self.blocked, self.trees, self.feet, self.woods = set(), {}, {}, {}
+        self.mines, self.names, self.res = {}, {}, {}                  # mine amounts; object name, resource per tile
         self.drops = {r: [] for r in DROP_SITES}                       # resource -> footprints of the drop sites
         for o in data["objects"]:
             if o["kind"] == "building":
@@ -52,13 +55,21 @@ class Map:
             elif o["kind"] == "other" and not any(k in o["name"] for k in PASSABLE_OBJECTS):
                 tile = int(o["tile"][0]), int(o["tile"][1])
                 self.blocked |= self.cells(tile)
-                if "TREE" in o["name"]:
-                    self.trees[tile] = TREE_WOOD
+                if "TREE" in o["name"] or o["name"] in MINES:
                     self.feet[tile] = object_footprint({"name": o["name"], "x": o["tile"][0], "y": o["tile"][1]}, self.T)
+                    self.names[tile] = o["name"]
+                if o["name"] in MINES:
+                    self.res[tile], self.mines[tile] = MINES[o["name"]]
+                elif "TREE" in o["name"]:
+                    self.trees[tile], self.res[tile] = TREE_WOOD, "wood"
                     kind = tree_kind(o["name"])                # log and leaves of the felled trunk (None: no crown)
                     self.woods[tile] = ("minecraft:bamboo_block", None) if kind == "bamboo" else \
                         ("minecraft:oak_log", None) if kind == "dead" else \
                         (f"minecraft:{WOODS.get(kind, 'oak')}_log", f"minecraft:{WOODS.get(kind, 'oak')}_leaves[persistent=true]")
+
+    def amount(self, tile):
+        """Resource left in the tree or mine on tile."""
+        return self.trees.get(tile, self.mines.get(tile, 0))
 
     def cells(self, tile):
         T = self.T
@@ -104,7 +115,7 @@ class Map:
         return None
 
     def pick_tree(self, eye, d, reach=64):
-        """The tree tile that the ray from eye in direction d hits first, or None."""
+        """The tile of the tree or mine that the ray from eye in direction d hits first, or None."""
         for k in range(1, reach * 4):
             x, y, z = (eye[i] + d[i] * k / 4 for i in range(3))
             bx, bz = math.floor(x), math.floor(z)
@@ -112,7 +123,7 @@ class Map:
                 return None
             tile = bx // self.T, bz // self.T
             g = self.y(bx, bz)
-            if tile in self.trees and (g is None or y < g + 12):
+            if tile in self.res and (g is None or y < g + 12):
                 return tile
             if g is not None and y < g:                                # the ray hits the ground or a building
                 return None
@@ -203,12 +214,24 @@ class Gather:
             self.command(f'data merge entity {v.uuid} {{VillagerData:{{profession:"minecraft:{job}"}}}}')
 
     def send(self, tile):
-        """Send the selected villagers to the tree on tile."""
+        """Send the selected villagers to the tree or mine on tile."""
         for u in self.selected:
             v = self.villagers[u]
-            self.task(v, "LUMBERJACK")
+            v.res = self.map.res[tile]
+            self.task(v, TASKS[v.res])
             v.tree = tile
             self.go(v, "to_tree", self.map.around(self.map.cells(tile)))
+
+    def next_source(self, v):
+        """The source of v is empty: go to the nearest tree or mine of the same resource, else stop (#390)."""
+        goals = {c: t for t, r in self.map.res.items() if r == v.res and self.map.amount(t) > 0
+                 for c in self.map.around(self.map.cells(t))}
+        path = self.map.path(v.cell, set(goals))
+        if path is None:
+            self.set(v, "idle")
+            return
+        v.tree, v.path = goals[path[-1] if path else v.cell], path
+        self.set(v, "to_tree")
 
     def go(self, v, state, goals):
         path = self.map.path(v.cell, goals)
@@ -268,27 +291,34 @@ class Gather:
                 self.command(f"tp {v.uuid} {v.pos[0]} {v.pos[1]} {v.pos[2]} {yaw:.0f} 0")
             elif v.state == "to_tree":
                 v.timer = 0.0
-                self.set(v, "chop" if self.map.trees.get(v.tree, 0) > 0 else "idle")
+                if self.map.amount(v.tree) > 0:
+                    self.set(v, "chop")
+                else:
+                    self.next_source(v)
             elif v.state == "to_drop":
                 self.command(f"scoreboard players add {v.res.capitalize()} aoe_res {v.load}")
                 self.stock[v.res] += v.load
                 v.load = 0
                 self.event(v, "drop")
-                if self.map.trees.get(v.tree, 0) > 0:
+                if self.map.amount(v.tree) > 0:
                     self.go(v, "to_tree", self.map.around(self.map.cells(v.tree)))
                 else:
-                    self.set(v, "idle")
+                    self.next_source(v)
             elif v.state == "chop":
                 v.timer += self.tick
-                while v.timer >= self.chop and v.load < self.carry and self.map.trees.get(v.tree, 0) > 0:
+                pile = self.map.trees if v.tree in self.map.trees else self.map.mines
+                while v.timer >= self.chop and v.load < self.carry and pile.get(v.tree, 0) > 0:
                     v.timer -= self.chop
                     v.load += 1
-                    self.map.trees[v.tree] -= 1
-                    if self.map.trees[v.tree] == 0:
+                    pile[v.tree] -= 1
+                    if pile is self.map.mines:
+                        if pile[v.tree] == 0:
+                            self.empty(v.tree)
+                    elif pile[v.tree] == 0:
                         self.fell(v.tree)
                     else:
                         self.trunk(v.tree)
-                if v.load >= self.carry or self.map.trees.get(v.tree, 0) <= 0:
+                if v.load >= self.carry or pile.get(v.tree, 0) <= 0:
                     self.go(v, "to_drop", set().union(*map(self.map.around, self.map.drops[v.res])))
 
     def site(self, tile):
@@ -339,6 +369,12 @@ class Gather:
         self.command(f"fill {fx0} {min(ys) - 2} {fz0} {fx1 - 1} {max(ys) + 3} {fz1 - 1} air replace minecraft:barrier")
         self.command(f"setblock {sx} {min(ys) - 1} {sz} minecraft:spruce_log[axis=y]")
         self.trunks.pop(tile, None)
+
+    def empty(self, tile):
+        """An empty mine disappears: its ore and stone blocks and the barriers of its footprint (#390)."""
+        (fx0, fx1, fz0, fz1), ys, _, _ = self.site(tile)
+        for b in sorted(set(MINE_BLOCKS[self.map.names[tile]])) + ["barrier"]:
+            self.command(f"fill {fx0} {min(ys)} {fz0} {fx1 - 1} {max(ys) + 4} {fz1 - 1} air replace minecraft:{b}")
 
     def run(self, seconds=None, until=None):
         """Play in real time until seconds passed or until() is true."""

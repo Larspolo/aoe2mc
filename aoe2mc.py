@@ -1027,6 +1027,10 @@ def mound(E, cols, cx, cz, radius, height, blocks, rng):
                 E.add([cx + dx], [y0 + dy], [cz + dz], blocks[int(rng.integers(len(blocks)))])
 
 
+MINE_BLOCKS = {"GOLD_MINE": ["gold_ore", "gold_ore", "raw_gold_block", "stone"],     # also game/gather.py (#390)
+               "STONE_MINE": ["cobblestone", "andesite", "stone", "tuff"]}
+
+
 def tile_heap(E, cols, rect, height, blocks, rng):
     """A heap of mixed blocks that covers its whole footprint, highest in the middle."""
     x0, x1, z0, z1 = rect
@@ -1437,12 +1441,9 @@ def place_objects(objects, players, cols, rng):
         elif kind == "O" and "TREE" in name:
             make_tree(E, tree_kind(name), bx, y, bz, rng)
             stats["trees"] += 1
-        elif kind == "O" and name == "GOLD_MINE":
-            tile_heap(E, cols, E.footprint, 3, ["gold_ore", "gold_ore", "raw_gold_block", "stone"], rng)
-            stats["gold mines"] += 1
-        elif kind == "O" and name == "STONE_MINE":
-            tile_heap(E, cols, E.footprint, 3, ["cobblestone", "andesite", "stone", "tuff"], rng)
-            stats["stone mines"] += 1
+        elif kind == "O" and name in MINE_BLOCKS:
+            tile_heap(E, cols, E.footprint, 3, MINE_BLOCKS[name], rng)
+            stats["gold mines" if name == "GOLD_MINE" else "stone mines"] += 1
         elif kind == "O" and name.startswith(MOUNTAINS):
             mound(E, cols, bx, bz, T * 2, T * 4, ["stone", "snow_block", "andesite", "snow_block", "packed_ice"]
                   if name.startswith("SNOW") else ["stone", "stone", "andesite", "cobblestone", "tuff"], rng)
