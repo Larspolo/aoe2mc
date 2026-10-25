@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 aoe2mc - Convert an Age of Empires II: DE scenario (.aoe2scenario) or the start state of a recorded game
-(.aoe2record) to a Minecraft Java world. A campaign (.aoe2campaign) gives one world per scenario; an old campaign
+(.aoe2record) or an old scenario (.scx, format 1.21) to a Minecraft Java world. A campaign (.aoe2campaign) gives one world per scenario; an old campaign
 (.cpx, .cpn) gives its old scenario files and the steps to save them in the DE editor.
 
 Usage:
@@ -233,8 +233,38 @@ def object_kinds():
 
 
 def read_map(path):
-    """read_record for .aoe2record files, else read_scenario."""
-    return (read_record if path.lower().endswith(".aoe2record") else read_scenario)(path)
+    """read_record for .aoe2record files, read_scx for old .scx scenarios, else read_scenario."""
+    p = path.lower()
+    return (read_record if p.endswith(".aoe2record") else read_scx if p.endswith(".scx") else read_scenario)(path)
+
+
+def read_scx(path):
+    """An old scenario (.scx format 1.21, #312), as read_scenario returns it. The old terrain and object IDs are the
+    DE IDs. A map that is not square gets the edge tiles repeated to a square. Old scenarios give no texts here."""
+    import scx
+    from AoE2ScenarioParser.datasets.terrains import TerrainId
+    try:
+        s = scx.read(path)
+    except scx.ScxError as e:
+        raise OptionError(str(e)) from None
+    w, h = s["width"], s["height"]
+    size = max(w, h)
+    terrain, elevation = (np.pad(a, ((0, size - w), (0, size - h)), mode="edge") for a in (s["terrain"], s["elevation"]))
+    kinds = object_kinds()
+    players = {}
+    for pid, p in s["players"].items():
+        color = buildings.COLOR_NAMES[p["color"]] if pid and p["color"] is not None and 0 <= p["color"] < 8 else "light_gray"
+        players[pid] = {"color": color, "arch": buildings.CIV_TO_ARCH.get(p["civ"], "western"), "civ": p["civ"],
+                        "view": p["view"]}
+    objects = []
+    for o in s["objects"]:
+        prefix, name = kinds.get(o["type"], ("?", f"UNKNOWN_{o['type']}"))
+        holder = o["garrisoned_in"]
+        objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name, id=o["type"],
+                            player=o["player"], x=o["x"], y=o["y"], rotation=float(o["angle"]),
+                            garrisoned=holder is not None, ref=o["id"], holder=holder))
+    texts = {k: "" for k in CHAPTERS}
+    return size, terrain, elevation, {t.value: t.name for t in TerrainId}, texts, objects, players
 
 
 def read_scenario(path):
@@ -2431,7 +2461,8 @@ def convert_campaign(src, out, only=None, name=None, **kw):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
-    ap.add_argument("scenario", help=".aoe2scenario file, .aoe2record (the start state of a recorded game), or "
+    ap.add_argument("scenario", help=".aoe2scenario file, .aoe2record (the start state of a recorded game), .scx "
+                    "(an old scenario, format 1.21), or "
                     ".aoe2campaign (one world per scenario; .cpx and .cpn: the steps for the DE editor)")
     ap.add_argument("output", help="output world folder (put it in .minecraft/saves/); for a campaign the folder of "
                     "the worlds")
