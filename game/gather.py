@@ -3,8 +3,9 @@ Villagers gather wood: the first playable milestone of docs/research/gameplay.md
 
 The player holds the command stick (`carrot_on_a_stick`). A right click on a villager of player 1 selects it
 (glowing). A right click on a tree sends the selected villagers there. A villager walks on a path around
-buildings, trees and water (one /tp per block), chops, carries the wood to the nearest town center or lumber
-camp, and goes back to the tree. It gets the lumberjack look (`units.VILLAGER_JOBS`, as in AoE2). A sidebar scoreboard shows wood, food, gold and stone of player 1.
+buildings, trees and water (one /tp per block), chops, carries the wood to the nearest drop site that takes wood
+(town center or lumber camp, `DROP_SITES`), and goes back to the tree. It gets the lumberjack look
+(`units.VILLAGER_JOBS`, as in AoE2). A sidebar scoreboard shows wood, food, gold and stone of player 1.
 
 The program sees a click in two statistics: the use of the stick, and "talked to villager" (a right click on a
 villager is an interaction with the entity, not a use of the item). Then it reads the position and the view of
@@ -23,7 +24,8 @@ from aoe2mc import PASSABLE_OBJECTS, WOODS, object_footprint, tree_kind  # noqa:
 from units import VILLAGER_JOBS  # noqa: E402
 
 RESOURCES = ("Wood", "Food", "Gold", "Stone")
-DROP_SITES = ("TOWN_CENTER", "LUMBER_CAMP")
+DROP_SITES = {"wood": ("TOWN_CENTER", "LUMBER_CAMP"), "food": ("TOWN_CENTER", "MILL"),   # as in AoE2 (#389)
+              "gold": ("TOWN_CENTER", "MINING_CAMP"), "stone": ("TOWN_CENTER", "MINING_CAMP")}
 TREE_WOOD = 100                                                    # wood in one tree, as in AoE2
 STEPS = [(dx, dz) for dx in (-1, 0, 1) for dz in (-1, 0, 1) if dx or dz]
 NUMBER = r"(-?[\d.]+(?:E-?\d+)?)[df]"
@@ -37,14 +39,16 @@ class Map:
         self.T = data["tile_size"]
         self.ground = [[None if v == "-" else int(v) for v in row.split()] for row in data["ground"]]
         self.n = len(self.ground)
-        self.blocked, self.trees, self.drops, self.feet, self.woods = set(), {}, [], {}, {}
+        self.blocked, self.trees, self.feet, self.woods = set(), {}, {}, {}
+        self.drops = {r: [] for r in DROP_SITES}                       # resource -> footprints of the drop sites
         for o in data["objects"]:
             if o["kind"] == "building":
                 x0, z0, x1, z1 = o["footprint"]
                 cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
                 self.blocked |= cells
-                if o["player"] == player and any(k in o["name"] for k in DROP_SITES):
-                    self.drops.append(cells)
+                for r, names in DROP_SITES.items():
+                    if o["player"] == player and any(k in o["name"] for k in names):
+                        self.drops[r].append(cells)
             elif o["kind"] == "other" and not any(k in o["name"] for k in PASSABLE_OBJECTS):
                 tile = int(o["tile"][0]), int(o["tile"][1])
                 self.blocked |= self.cells(tile)
@@ -138,6 +142,7 @@ class Villager:
         self.state, self.path, self.tree, self.load, self.timer = "idle", [], None, 0, 0.0
         self.job = None                                                # profession that the program set
         self.walked = 0.0                                              # blocks, for the log
+        self.res = "wood"                                              # the resource of the load
 
     @property
     def cell(self):
@@ -151,11 +156,16 @@ class Gather:
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=1.0, log=None, clock=time.monotonic):
         self.game, self.map, self.player = game, Map(data, player), player
         self.tick, self.carry, self.chop = tick, carry, chop
-        self.log, self.clock, self.t0, self.wood = log, clock, clock(), 0
+        self.log, self.clock, self.t0 = log, clock, clock()
+        self.stock = dict.fromkeys(DROP_SITES, 0)                      # resources at the drop sites
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
                       and "VILLAGER" in o["name"]]
         self.villagers, self.selected = {}, set()
         self.trunks = {}                                               # tree tile -> logs of its trunk on the ground
+
+    @property
+    def wood(self):
+        return self.stock["wood"]
 
     def command(self, cmd):
         return self.game.command(cmd)
@@ -260,8 +270,8 @@ class Gather:
                 v.timer = 0.0
                 self.set(v, "chop" if self.map.trees.get(v.tree, 0) > 0 else "idle")
             elif v.state == "to_drop":
-                self.command(f"scoreboard players add Wood aoe_res {v.load}")
-                self.wood += v.load
+                self.command(f"scoreboard players add {v.res.capitalize()} aoe_res {v.load}")
+                self.stock[v.res] += v.load
                 v.load = 0
                 self.event(v, "drop")
                 if self.map.trees.get(v.tree, 0) > 0:
@@ -279,7 +289,7 @@ class Gather:
                     else:
                         self.trunk(v.tree)
                 if v.load >= self.carry or self.map.trees.get(v.tree, 0) <= 0:
-                    self.go(v, "to_drop", set().union(*map(self.map.around, self.map.drops)))
+                    self.go(v, "to_drop", set().union(*map(self.map.around, self.map.drops[v.res])))
 
     def site(self, tile):
         """Footprint (x0, x1, z0, z1), ground heights next to it, stump cell and trunk row z of a tree."""
