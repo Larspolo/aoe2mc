@@ -83,7 +83,7 @@ def test_convert_with_orientation(tmp_path):
     out = io.StringIO()
     with contextlib.redirect_stdout(out):
         aoe2mc.convert(src, str(tmp_path / "W"), orientation="nw")
-    assert float(world_reader.World(str(tmp_path / "W")).level()["SpawnAngle"]) == 135
+    assert world_reader.World(str(tmp_path / "W")).spawn()[3] == 135
     assert "units in a block (moved up): 0" in out.getvalue() or "moved up" not in out.getvalue()
     assert buildings.TURN == 0
 

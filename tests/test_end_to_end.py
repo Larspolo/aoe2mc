@@ -10,7 +10,8 @@ from conftest import entity_ids
 
 def test_world_files(tiny_world):
     path, _ = tiny_world
-    for f in ("level.dat", "preview.png", "region/r.0.0.mca", "entities/r.0.0.mca"):
+    dim = "dimensions/minecraft/overworld/"                       # 26.x layout
+    for f in ("level.dat", "preview.png", dim + "region/r.0.0.mca", dim + "entities/r.0.0.mca"):
         assert os.path.exists(os.path.join(path, f)), f
 
 
@@ -25,7 +26,7 @@ def test_level_dat(tiny_world):
     assert int(level["DataVersion"]) == aoe2mc.DATA_VERSION
     assert str(level["LevelName"]) == "tiny"
     assert int(level["GameType"]) == 1
-    assert float(level["SpawnAngle"]) == aoe2mc.SPAWN_YAW == -135  # look north-east, like the AoE2 camera (#23)
+    assert float(level["spawn"]["yaw"]) == aoe2mc.SPAWN_YAW == -135  # look north-east, like the AoE2 camera (#23)
 
 
 def test_chunks_have_valid_blocks_and_biomes(tiny_world):
@@ -37,8 +38,8 @@ def test_chunks_have_valid_blocks_and_biomes(tiny_world):
         assert (int(c["xPos"]), int(c["zPos"])) == (cx, cz)
         for s in c["sections"]:
             for b in s["biomes"]["palette"]:
-                assert mcvalid.biome_error(str(b)) is None
-    assert mcvalid.invalid_states(w.palette()) == {}
+                assert mcvalid.biome_error(str(b), aoe2mc.VERSION_NAME) is None
+    assert mcvalid.invalid_states(w.palette(), aoe2mc.VERSION_NAME) == {}
 
 
 def test_terrain_and_water(tiny_world):
@@ -53,7 +54,7 @@ def test_entities(tiny_world):
     ents = world_reader.World(path).entities(flat=False)
     ids = [i for e in ents for i in entity_ids(e)]
     for i in ids:
-        assert mcvalid.entity_error(i) is None, i
+        assert mcvalid.entity_error(i, aoe2mc.VERSION_NAME) is None, i
     assert "minecraft:horse" in ids and "minecraft:villager" in ids and "minecraft:skeleton" in ids
     assert "units in a block (moved up): 0" in out
 
@@ -105,7 +106,7 @@ def test_book_of_scenario_texts(tmp_path):
         aoe2mc.convert(src, str(tmp_path / "BookWorld"))
     assert "units in a block (moved up): 0" in out.getvalue()
     w = world_reader.World(str(tmp_path / "BookWorld"))
-    sx, sz = int(w.level()["SpawnX"]), int(w.level()["SpawnZ"])
+    sx, _, sz, _ = w.spawn()
     lecterns = [be for c in w.chunks().values() for be in c["block_entities"] if str(be["id"]) == "minecraft:lectern"]
     assert len(lecterns) == 1
     be = lecterns[0]
@@ -114,7 +115,11 @@ def test_book_of_scenario_texts(tmp_path):
     assert w.block(x, y - 1, z) != "minecraft:air" and max(abs(x - sx), abs(z - sz)) <= 6
     book = be["Book"]["components"]["minecraft:written_book_content"]
     assert str(book["title"]["raw"]) == "book"
-    pages = [json.loads(str(p["raw"])) for p in book["pages"]]
+    def text(raw):                                                # 26.3: NBT compound, 1.21.1: JSON string
+        if not hasattr(raw, "keys"):
+            return json.loads(str(raw))
+        return {"extra": [{k: bool(v) if k == "bold" else str(v) for k, v in e.items()} for e in raw["extra"]]}
+    pages = [text(p["raw"]) for p in book["pages"]]
     assert pages[0]["extra"] == [{"text": "Instructions\n\n", "bold": True}, {"text": "Defend the town center."}]
     assert pages[1]["extra"][0]["text"] == "History\n\n" and len(pages) > 3      # the long text has more pages
     assert all(len(p["extra"][-1]["text"]) <= 14 * 19 for p in pages)
@@ -123,3 +128,22 @@ def test_book_of_scenario_texts(tmp_path):
 def test_no_book_without_texts(tiny_world):
     w = world_reader.World(tiny_world[0])
     assert not any(str(be["id"]) == "minecraft:lectern" for c in w.chunks().values() for be in c["block_entities"])
+
+
+def test_mc_version_1_21_1(tmp_path):
+    import contextlib
+    import io
+
+    import scenarios
+    src = scenarios.tiny(str(tmp_path / "tiny.aoe2scenario"))
+    with contextlib.redirect_stdout(io.StringIO()):
+        aoe2mc.main([src, str(tmp_path / "W"), "--mc-version", "1.21.1"])
+    assert os.path.isdir(tmp_path / "W" / "region") and not os.path.exists(tmp_path / "W" / "dimensions")
+    w = world_reader.World(str(tmp_path / "W"))
+    level = w.level()
+    assert (int(level["DataVersion"]), str(level["Version"]["Name"])) == (3955, "1.21.1")
+    assert float(level["SpawnAngle"]) == aoe2mc.SPAWN_YAW and "GameRules" in level
+    assert {int(c["DataVersion"]) for c in w.chunks().values()} == {3955}
+    assert mcvalid.invalid_states(w.palette(), "1.21.1") == {}
+    ids = [i for e in w.entities(flat=False) for i in entity_ids(e)]
+    assert ids and all(mcvalid.entity_error(i, "1.21.1") is None for i in ids)
