@@ -829,24 +829,10 @@ def place_objects(objects, players, cols, rng):
         elif kind == "O" and name.startswith("ROCK_FORMATION"):
             tile_heap(E, cols, E.footprint, T, ["stone", "andesite", "granite", "sandstone", "stone"], rng)
             stats["rocks"] += 1
-        elif kind == "O" and (name.startswith("STATUE") or name.startswith("STELAE")):
-            h = 2 if name.startswith("STELAE") else 4
-            E.box(bx, bx + 1, y, y + h, bz, bz + 1, "chiseled_sandstone" if name.startswith("STELAE") else "quartz_pillar")
-            E.add([bx], [y + h], [bz], "chiseled_quartz_block" if name.startswith("STATUE") else "sandstone_slab[type=bottom]")
-            stats["decorations"] += 1
-        elif kind == "O" and name == "RUGS":
-            E.box(bx - 1, bx + 1, y, y + 1, bz - 1, bz + 2, ["red_carpet", "orange_carpet", "brown_carpet"][int(rng.integers(3))], hard=False)
-            stats["decorations"] += 1
-        elif kind == "O" and name in ("VASES", "GOODS", "BARRELS"):
-            things = {"VASES": ["decorated_pot[facing=south,cracked=false]"] * 3,
-                      "GOODS": ["barrel[facing=up]", "hay_block", "chest[facing=south]"],
-                      "BARRELS": ["barrel[facing=up]"] * 3}[name]
-            E.add([bx, bx + 1, bx], [y, y, y], [bz, bz, bz + 1], [B(t) for t in things])
-            stats["decorations"] += 1
         elif kind == "O" and name == "CACTUS":
             E.box(bx, bx + 1, y, y + 2, bz, bz + 1, "cactus")
             stats["plants"] += 1
-        elif kind == "O" and (name.startswith("PLANT") or name == "FERN_PATCH"):
+        elif kind == "O" and name.startswith("PLANT"):
             plant = "fern" if ("FERN" in name or "JUNGLE" in name or "UNDERBRUSH" in name) else \
                 "oak_leaves[persistent=true]" if ("SHRUB" in name or "BUSH" in name) else \
                 ["poppy", "dandelion", "cornflower", "allium"][int(rng.integers(4))] if "FLOWER" in name else \
@@ -867,15 +853,8 @@ def place_objects(objects, players, cols, rng):
             if name.startswith("TORCH") or name == "SIGN":
                 E.add([bx], [y + 1], [bz], "torch" if name.startswith("TORCH") else "oak_fence")
             stats["decorations"] += 1
-        elif kind == "O" and name in ("CRATER", "SMOKE", "CRACKS") or name.startswith("WATERFALL"):
+        elif kind == "O" and (name in ("CRATER", "SMOKE", "CRACKS") or name.startswith("WATERFALL")):
             pass
-        elif kind == "O" and name == "BONFIRE":
-            E.add([bx], [y], [bz], "campfire[lit=true,signal_fire=false]")
-            stats["decorations"] += 1
-        elif kind == "O" and "DISMANTLED_CART" in name:
-            E.add([bx, bx + 1, bx - 1, bx], [y, y, y, y + 1], [bz, bz, bz + 1, bz],
-                  [B("spruce_slab[type=bottom]"), B("spruce_log[axis=x]"), B("barrel[facing=up]"), B("spruce_trapdoor[facing=north,half=bottom,open=true]")])
-            stats["decorations"] += 1
         elif kind == "O" and "ROCK" in name:
             mound(E, cols, bx, bz, T * 0.4, 2, ["mossy_cobblestone", "cobblestone", "stone"], rng)
             stats["rocks"] += 1
