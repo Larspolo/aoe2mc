@@ -181,7 +181,6 @@ Read these files first:
 - The direction that units face is not checked in the game yet. See [`docs/facing.md`](docs/facing.md) for the check.
 - In scenarios older than version 1.56 the architecture set field can be wrong, so the program uses the civilization.
 - Unique buildings use the design of a similar building (for example krepost → small castle).
-- Diagonal gates are drawn along a tile axis.
 - Map tile (x, y) becomes block (x × tile-size, z = y × tile-size). AoE2 shows the map as a diamond with the top corner
   at the top of the screen. In Minecraft this corner is in the north-east: the map is the in-game view turned 45°
   clockwise, not mirrored. A turn of 45° is not possible on a block grid. At the spawn the player looks north-east,
