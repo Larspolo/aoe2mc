@@ -54,7 +54,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   `CORNERS`; openage: axes NE, SE). Block x = east, z = south: the world is turned 45°, not mirrored; the AoE2 top
   corner is in the north-east. The spawn looks north-east like the AoE2 camera (`SPAWN_YAW`). Gates `WEST_TO_EAST`
   and `NORTH_TO_SOUTH` are diagonal. Do not trust the axis gate names (`samples/gallery` has a `NORTHWEST_TO_SOUTHEAST`
-  gate along tile x): `plan_walls` uses the walls next to the gate.
+  gate along tile x): `plan_walls` uses the walls next to the gate. `--orientation` turns the
+  tile grid (`turn_map`) and each building canvas (`buildings.turn`); gates, walls and bridges follow their neighbours.
 
 - The tiny scenario has only a town center, a house and a barracks. To see the golden test fail, change a
   block that these designs draw last (for example the house chimney).
