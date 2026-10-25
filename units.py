@@ -315,9 +315,9 @@ def top_entity(nbt):
     return nbt
 
 
-def make_entity(o, players, pos, rng):
-    """Entity NBT for AoE2 unit o at block position pos, or None."""
-    desc = classify(o["name"], o.get("hero", False))
+def make_entity(o, players, pos, rng, desc=None):
+    """Entity NBT for AoE2 unit o at block position pos, or None. desc: the result of classify(), if known."""
+    desc = desc or classify(o["name"], o.get("hero", False))
     if desc is None:
         return None
     r = o.get("rotation", 0.0)
