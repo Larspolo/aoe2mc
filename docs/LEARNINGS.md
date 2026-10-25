@@ -7,8 +7,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 
 - GitHub raw files, PyPI and the Mojang hosts (`piston-meta`, `piston-data`, `libraries.minecraft.net`) work.
 - `/root/.local/bin/pytest` and `/usr/bin/pip` use another Python. Use `python3 -m pytest` and `python3 -m pip`.
-  Symptom: "cannot import name '_imaging' from 'PIL'" in the end-to-end tests.
-  If the error stays after `pip install -r`, the Debian Pillow shadows it: `python3 -m pip install --ignore-installed pillow`.
+  Symptom: "cannot import name '_imaging' from 'PIL'" in the end-to-end tests. If it stays after the install,
+  the old Debian pillow shadows it: `python3 -m pip install --ignore-installed pillow`.
 - Java 21 is installed in the cloud container. Minecraft 1.21.1 needs Java 21, 26.3 needs Java 25
   (`javaVersion.majorVersion` in the version JSON). The Mojang hosts are allowed since #12.
 - GitHub in cloud sessions: `gh api repos/Larspolo/aoe2mc/...` (REST) works. GraphQL (`gh issue list`,
@@ -20,6 +20,10 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   unless the task sets another model.
 - The repository is private: a workflow with a `permissions:` block also needs `contents: read`, or
   `actions/checkout` fails with "Repository not found".
+
+- AoE2 wiki: HTML pages give a Cloudflare challenge (403). The MediaWiki API works: `ageofempires.fandom.com/
+  api.php?action=query&titles=File:Castle_aoe2DE.png&prop=imageinfo&iiprop=url&format=json` gives the image URL
+  on `static.wikia.nocookie.net` (WebP).
 
 ## Libraries
 
@@ -33,8 +37,15 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 
 ## Code
 
-- `Columns.ground_detail` has two road passes. The second one also changes the gravel sea floor and wraps
-  around the map edge with `np.roll` (brown dots on shores and at x = 0). See its ticket.
+- The tiny scenario has only a town center, a house and a barracks. To see the golden test fail, change a
+  block that these designs draw last (for example the house chimney).
+
+- Test terrain code without a scenario: `columns()` in `tests/test_terrain.py` makes `aoe2mc.Columns` from a
+  small terrain array. Maps of the same size draw the same random numbers, so two maps can be compared per block.
+- `place_objects` without a scenario: call it with one object dict (`kind`, `name`, `player`, `x`, `y`,
+  `rotation`, `hero`, `garrisoned`) on a 16 × 16 `Columns`. With `sys.settrace` this shows which branch each
+  `OtherInfo` name takes (#6).
+- `terrain_style` checks names in sequence: an earlier rule wins (`ROAD_GRAVEL` matched `GRAVEL` until #5).
 - Drawing all 243 building types for one architecture set takes about 1 s. A full gallery conversion takes
   about 30 s per set.
 - Block IDs in `B` depend on what was registered before (earlier tests or conversions). Code that draws random

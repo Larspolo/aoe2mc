@@ -36,3 +36,15 @@ def test_convert_without_barriers(tmp_path):
     assert not any("barrier" in s for s in w.palette())
     w, _ = run(src, str(tmp_path / "B"))
     assert any("barrier" in s for s in w.palette())
+
+
+def test_unknown_object_ids_are_reported(tmp_path):
+    scn = scenarios.new_scenario(16)
+    for x in (2.5, 4.5):
+        scn.unit_manager.add_unit(scenarios.PlayerId.GAIA, 9999, x=x, y=2.5)
+    scn.unit_manager.add_unit(scenarios.PlayerId.ONE, 9998, x=8.5, y=8.5)
+    src = scenarios.save(scn, str(tmp_path / "unknown.aoe2scenario"))
+    log = io.StringIO()
+    with contextlib.redirect_stdout(log):
+        aoe2mc.convert(src, str(tmp_path / "W"))
+    assert "  unknown object IDs (skipped): 9998 ×1, 9999 ×2" in log.getvalue().splitlines()

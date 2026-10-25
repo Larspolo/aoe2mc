@@ -30,7 +30,10 @@ against `tools/mcdata/1.21.1.json`.
    your change. Use `--preview`. Put the output in the scratchpad.
 3. Scale small previews up (for example 4× with `PIL.Image.resize(..., Image.NEAREST)`). Look at both images
    with the Read tool. Describe the difference in the PR body.
-4. For exact checks use `tools/world_reader.py WORLD X Y Z` or `world_reader.World(path).block(x, y, z)`.
+4. For the 3D shape use `tools/render.py`: `building NAME --arch SET OUT.png` draws one design on flat grass,
+   `world WORLD X0 Z0 X1 Z1 OUT.png` draws an area of a converted world. The default view is from the
+   south-east (the front). `--view sw|ne|nw` shows the other sides. Look at the PNG with the Read tool.
+5. For exact checks use `tools/world_reader.py WORLD X Y Z` or `world_reader.World(path).block(x, y, z)`.
    Add a test for the exact check when the behavior must stay.
 
 ## Level 4 – only the game can show it
@@ -44,4 +47,7 @@ face you.").
 
 - A test must fail before a bug fix and pass after it.
 - Output must stay deterministic. Two conversions of the same scenario with the same seed give the same files.
+- `tests/test_golden.py` fails when the output of the tiny scenario changes. If the change is on purpose, write
+  a new golden file (`AOE2MC_UPDATE_GOLDEN=1 python3 -m pytest tests/test_golden.py`), commit it and explain in
+  the PR body which blocks or entities changed and why. A refactor must not change the golden file.
 - If a check fails for a reason outside your change, do not hide it. Make a ticket and say so in the PR.

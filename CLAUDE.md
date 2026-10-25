@@ -21,7 +21,9 @@ The README already uses this style. Keep it.
 | Test scenario | `python3 tools/scenarios.py tiny OUT.aoe2scenario` (or `gallery`, see `--help`) |
 | Convert | `python3 aoe2mc.py IN.aoe2scenario OUTWorld --preview` |
 | Look at a world | `python3 tools/world_reader.py OUTWorld [X Y Z]` |
+| 3D image | `python3 tools/render.py building CASTLE --arch western OUT.png` (or `world OUTWorld X0 Z0 X1 Z1 OUT.png`) |
 | Check states | `tools/mcvalid.py` (`block_error`, `entity_error`, `biome_error`) |
+| Coverage of AoE2 types | `python3 tools/coverage.py` writes `docs/coverage.md` (designs, mappings, fallbacks) |
 | Minecraft data | `python3 tools/fetch_mcdata.py VERSION` writes `tools/mcdata/VERSION.json` |
 
 Put scratch output (worlds, scenarios, images) in the scratchpad or in `out/` (ignored by git). Never commit worlds.
@@ -39,7 +41,7 @@ Find code by function name with Grep. Do not read the large files from start to 
   `timber_room`, `roof`, `gable`, `hip`, `dome`, `cylinder` ...), one function per design, `select()` (name → design),
   `FOOTPRINT`, `place_building()`, `plan_walls()`, `vary()`, `weather()`, `decorate()`, `barriers()`.
 - `units.py` – `classify()` (AoE2 unit name → entity description), `make_entity()`, `pretty()`.
-- `tools/` – test and debug tools (scenarios, world reader, Minecraft data, validation).
+- `tools/` – test and debug tools (scenarios, world reader, 3D render, Minecraft data, validation).
 - `tests/` – pytest. `conftest.py` has the `tiny_world` fixture (one conversion per session).
 
 ## Rules of the domain

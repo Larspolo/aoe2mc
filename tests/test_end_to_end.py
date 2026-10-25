@@ -13,6 +13,12 @@ def test_world_files(tiny_world):
         assert os.path.exists(os.path.join(path, f)), f
 
 
+def test_world_icon(tiny_world):
+    from PIL import Image
+    with Image.open(os.path.join(tiny_world[0], "icon.png")) as im:
+        assert im.size == (64, 64)                                # the size of the Minecraft world list icon
+
+
 def test_level_dat(tiny_world):
     level = world_reader.World(tiny_world[0]).level()
     assert int(level["DataVersion"]) == aoe2mc.DATA_VERSION

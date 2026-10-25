@@ -126,7 +126,7 @@ def terrain_style(name):
     if "DESERT" in n and "GRAVEL" not in n:
         return S("sandstone" if "CRACKED" in n else "sand", "sandstone", biome="desert",
                  deco=[("dead_bush", .01)])
-    if "GRAVEL" in n:
+    if "GRAVEL" in n and "ROAD" not in n:
         return S("gravel", "gravel", biome="desert" if "DESERT" in n else "plains")
     if "FARM" in n:
         if "DEAD" in n:
@@ -319,6 +319,8 @@ class Columns:
                 return 0
             if s["top"] == "grass_block":
                 return 2 if s["biome"] in ("forest", "birch_forest", "jungle", "bamboo_jungle", "taiga") else 1
+            if s["top"] == "gravel" and s["sub"] == "cobblestone":
+                return 6                                # gravel road (other gravel is terrain or sea floor)
             return {"podzol": 2, "coarse_dirt": 3, "dirt": 3, "mud": 3, "sand": 4,
                     "cobblestone": 5, "mossy_cobblestone": 5}.get(s["top"], 0)
 
@@ -358,13 +360,14 @@ class Columns:
         deco[floor & (r >= 0.24) & (r < 0.25)] = B("red_mushroom")
         deco[floor & (r >= 0.25) & (r < 0.45) & (n2 > 0.6)] = B("moss_carpet")
         deco[floor & (r >= 0.45) & (r < 0.6)] = B("short_grass")
+        def near(mask):                                 # 4 neighbors, no wrap-around at the map edge
+            m = np.zeros_like(mask)
+            m[1:] |= mask[:-1]; m[:-1] |= mask[1:]; m[:, 1:] |= mask[:, :-1]; m[:, :-1] |= mask[:, 1:]
+            return m
+
         # roads: a mix of stones with worn patches, rough edges and worn verges next to the road
         road = g == 5
         if road.any():
-            def near(mask):
-                m = np.zeros_like(mask)
-                m[1:] |= mask[:-1]; m[:-1] |= mask[1:]; m[:, 1:] |= mask[:, :-1]; m[:, :-1] |= mask[:, 1:]
-                return m
             edge = road & near(~road)
             verge = ~road & near(road) & ((g == 1) | (g == 2) | (g == 3))
             stones = [("cobblestone", .34), ("andesite", .14), ("stone", .10), ("mossy_cobblestone", .10),
@@ -385,29 +388,16 @@ class Columns:
             deco[road & ~edge & free & (r2 > 0.97)] = B("short_grass")  # grass between the stones
             deco[verge & (top == B("dirt_path"))] = AIR                 # no plants on worn ground
 
-        # roads: a mix of stones, moss in quiet places, and worn edges
-        cobble = (top == B("cobblestone")) & (g == 0)
-        gravel_road = (top == B("gravel")) & (g == 0)
-        road = cobble | gravel_road
-        mix = [("andesite", .12), ("gravel", .08), ("stone", .06), ("polished_andesite", .04), ("tuff", .03)]
-        acc = 0.0
-        for b, share in mix:
-            top[cobble & (r >= acc) & (r < acc + share)] = B(b)
-            acc += share
-        top[cobble & (r >= acc) & (r < acc + 0.25) & (n2 > 0.55)] = B("mossy_cobblestone")
-        top[gravel_road & (r < 0.15)] = B("coarse_dirt")
-        top[gravel_road & (r >= 0.15) & (r < 0.22)] = B("cobblestone")
-        top[gravel_road & (r >= 0.22) & (r < 0.3)] = B("dirt_path")
-        land = (g > 0)
-        near_land = np.zeros_like(road)
-        near_road = np.zeros_like(road)
-        for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-            near_land |= np.roll(np.roll(land, dx, 0), dz, 1)
-            near_road |= np.roll(np.roll(road, dx, 0), dz, 1)
-        edge = road & near_land
+        # gravel roads: some dirt and stones, and worn edges and verges
+        road = g == 6
+        top[road & (r < 0.15)] = B("coarse_dirt")
+        top[road & (r >= 0.15) & (r < 0.22)] = B("cobblestone")
+        top[road & (r >= 0.22) & (r < 0.3)] = B("dirt_path")
+        land = (g > 0) & ~road
+        edge = road & near(land)
         top[edge & (r2 < 0.35)] = B("dirt_path")
         top[edge & (r2 >= 0.35) & (r2 < 0.5)] = B("coarse_dirt")
-        worn = land & near_road & ~road
+        worn = land & near(road)
         top[worn & (r2 < 0.3)] = B("coarse_dirt")
         top[worn & (r2 >= 0.3) & (r2 < 0.45)] = B("dirt_path")
         deco[worn & (r2 < 0.45)] = AIR
@@ -839,24 +829,10 @@ def place_objects(objects, players, cols, rng):
         elif kind == "O" and name.startswith("ROCK_FORMATION"):
             tile_heap(E, cols, E.footprint, T, ["stone", "andesite", "granite", "sandstone", "stone"], rng)
             stats["rocks"] += 1
-        elif kind == "O" and (name.startswith("STATUE") or name.startswith("STELAE")):
-            h = 2 if name.startswith("STELAE") else 4
-            E.box(bx, bx + 1, y, y + h, bz, bz + 1, "chiseled_sandstone" if name.startswith("STELAE") else "quartz_pillar")
-            E.add([bx], [y + h], [bz], "chiseled_quartz_block" if name.startswith("STATUE") else "sandstone_slab[type=bottom]")
-            stats["decorations"] += 1
-        elif kind == "O" and name == "RUGS":
-            E.box(bx - 1, bx + 1, y, y + 1, bz - 1, bz + 2, ["red_carpet", "orange_carpet", "brown_carpet"][int(rng.integers(3))], hard=False)
-            stats["decorations"] += 1
-        elif kind == "O" and name in ("VASES", "GOODS", "BARRELS"):
-            things = {"VASES": ["decorated_pot[facing=south,cracked=false]"] * 3,
-                      "GOODS": ["barrel[facing=up]", "hay_block", "chest[facing=south]"],
-                      "BARRELS": ["barrel[facing=up]"] * 3}[name]
-            E.add([bx, bx + 1, bx], [y, y, y], [bz, bz, bz + 1], [B(t) for t in things])
-            stats["decorations"] += 1
         elif kind == "O" and name == "CACTUS":
             E.box(bx, bx + 1, y, y + 2, bz, bz + 1, "cactus")
             stats["plants"] += 1
-        elif kind == "O" and (name.startswith("PLANT") or name == "FERN_PATCH"):
+        elif kind == "O" and name.startswith("PLANT"):
             plant = "fern" if ("FERN" in name or "JUNGLE" in name or "UNDERBRUSH" in name) else \
                 "oak_leaves[persistent=true]" if ("SHRUB" in name or "BUSH" in name) else \
                 ["poppy", "dandelion", "cornflower", "allium"][int(rng.integers(4))] if "FLOWER" in name else \
@@ -877,15 +853,8 @@ def place_objects(objects, players, cols, rng):
             if name.startswith("TORCH") or name == "SIGN":
                 E.add([bx], [y + 1], [bz], "torch" if name.startswith("TORCH") else "oak_fence")
             stats["decorations"] += 1
-        elif kind == "O" and name in ("CRATER", "SMOKE", "CRACKS") or name.startswith("WATERFALL"):
+        elif kind == "O" and (name in ("CRATER", "SMOKE", "CRACKS") or name.startswith("WATERFALL")):
             pass
-        elif kind == "O" and name == "BONFIRE":
-            E.add([bx], [y], [bz], "campfire[lit=true,signal_fire=false]")
-            stats["decorations"] += 1
-        elif kind == "O" and "DISMANTLED_CART" in name:
-            E.add([bx, bx + 1, bx - 1, bx], [y, y, y, y + 1], [bz, bz, bz + 1, bz],
-                  [B("spruce_slab[type=bottom]"), B("spruce_log[axis=x]"), B("barrel[facing=up]"), B("spruce_trapdoor[facing=north,half=bottom,open=true]")])
-            stats["decorations"] += 1
         elif kind == "O" and "ROCK" in name:
             mound(E, cols, bx, bz, T * 0.4, 2, ["mossy_cobblestone", "cobblestone", "stone"], rng)
             stats["rocks"] += 1
@@ -1285,6 +1254,9 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
         players[pid]["arch"] = a
     print(f"Read {os.path.basename(src)}: {size}x{size} tiles, {len(objects)} objects "
           f"({time.time() - t0:.1f}s)")
+    unknown = Counter(int(o["name"][8:]) for o in objects if o["kind"] == "?")
+    if unknown:                 # users can report these IDs, so that the parser data can get them
+        print("  unknown object IDs (skipped): " + ", ".join(f"{i} ×{n}" for i, n in sorted(unknown.items())))
 
     cols = Columns(size, terrain, elevation, tnames, T, H, rng)
     for pid, p in sorted(players.items()):
@@ -1305,7 +1277,7 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
     entity_regions = {}
     nchunks = cols.width // 16
     regions = {}
-    top_view = np.zeros((cols.width, cols.width), np.uint16) if preview else None
+    top_view = np.zeros((cols.width, cols.width), np.uint16)     # for icon.png and preview.png
     for cx in range(nchunks):
         for cz in range(nchunks):
             data, vol = build_chunk(cx, cz, cols, per_chunk.get((cx, cz)))
@@ -1314,11 +1286,9 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
                 ed = entity_chunk(cx, cz, unit_chunks[(cx, cz)], cols, vol, passable)
                 if ed:
                     entity_regions.setdefault((cx >> 5, cz >> 5), {})[(cx & 31, cz & 31)] = ed
-            if preview:
-                solid = (vol != AIR) & (vol != BARRIER)
-                hi = HEIGHT - 1 - np.argmax(solid[::-1], axis=0)
-                top_view[cx * 16:cx * 16 + 16, cz * 16:cz * 16 + 16] = \
-                    np.take_along_axis(vol, hi[None], 0)[0].T
+            solid = (vol != AIR) & (vol != BARRIER)
+            hi = HEIGHT - 1 - np.argmax(solid[::-1], axis=0)
+            top_view[cx * 16:cx * 16 + 16, cz * 16:cz * 16 + 16] = np.take_along_axis(vol, hi[None], 0)[0].T
     for (rx, rz), chunks in regions.items():
         write_region(os.path.join(out, "region", f"r.{rx}.{rz}.mca"), chunks)
     for (rx, rz), chunks in entity_regions.items():
@@ -1328,13 +1298,15 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
     spawn = (c, cols.surface(c, c) + 2, c)
     write_level_dat(os.path.join(out, "level.dat"), name or os.path.splitext(os.path.basename(src))[0], spawn)
 
+    from PIL import Image
+    lut = np.array([block_color(s) for s in B.states], np.uint8)
+    img = lut[top_view[:cols.n, :cols.n].T]                     # rows = z, columns = x
+    shade = np.clip(1 + (cols.wtop[:cols.n, :cols.n].T - WATER_Y) * 0.02, 0.6, 1.4)
+    img = Image.fromarray(np.clip(img * shade[..., None], 0, 255).astype(np.uint8))
     if preview:
-        from PIL import Image
-        lut = np.array([block_color(s) for s in B.states], np.uint8)
-        img = lut[top_view[:cols.n, :cols.n].T]                 # rows = z, columns = x
-        shade = np.clip(1 + (cols.wtop[:cols.n, :cols.n].T - WATER_Y) * 0.02, 0.6, 1.4)
-        img = np.clip(img * shade[..., None], 0, 255).astype(np.uint8)
-        Image.fromarray(img).save(os.path.join(out, "preview.png"))
+        img.save(os.path.join(out, "preview.png"))
+    # the world list shows icon.png; keep the pixels sharp when the map is smaller than the icon
+    img.resize((64, 64), Image.LANCZOS if cols.n >= 64 else Image.NEAREST).save(os.path.join(out, "icon.png"))
 
     bridge = MOVED.pop("(on a bridge)", 0)
     if bridge:
