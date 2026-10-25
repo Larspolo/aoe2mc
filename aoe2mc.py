@@ -1286,6 +1286,8 @@ def write_level_dat(path, name, spawn):
         "LastPlayed": Long(int(time.time() * 1000)), "Time": Long(0), "DayTime": Long(6000),
         "raining": Byte(0), "thundering": Byte(0), "rainTime": Int(0), "thunderTime": Int(0),
         "clearWeatherTime": Int(0), "WasModded": Byte(0),
+        "DragonFight": Compound({"NeedsStateScanning": Byte(1), "DragonKilled": Byte(0),   # else "key missing" on load
+                                 "PreviouslyKilled": Byte(0)}),
         "GameRules": Compound({"doDaylightCycle": String("false"), "doWeatherCycle": String("false"),
                                "doMobSpawning": String("false"), "doFireTick": String("false")}),
         "DataPacks": Compound({"Enabled": List[String]([String("vanilla")]), "Disabled": List[String]([])}),
