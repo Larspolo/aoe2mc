@@ -945,9 +945,9 @@ def plan_units(objects, players, cols, rng, stats):
                 stats["units (garrisoned, skipped)"] += 1
                 continue
             desc = units.classify(o["name"], o.get("hero", False))
-            nbt = units.make_entity(o, players, (0, 0, 0), rng)
-            if nbt is None:
+            if desc is None:
                 continue
+            nbt = units.make_entity(o, players, (0, 0, 0), rng, desc)
             boat = units.is_boat(desc)
             stats["units"] += 1
         elif o["kind"] == "O" and "FISH" in o["name"]:
@@ -1267,7 +1267,10 @@ def block_color(state):
 # --------------------------------------------------------------------------------------------
 # Main
 # --------------------------------------------------------------------------------------------
-def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True):
+def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
+            barriers=True):
+    buildings.BARRIERS = barriers
+    MOVED.clear()           # the counts of an earlier conversion in this process
     rng = np.random.default_rng(seed)
     t0 = time.time()
     size, terrain, elevation, tnames, objects, players = read_scenario(src)
@@ -1355,9 +1358,8 @@ def main():
     ap.add_argument("--player-architecture", action="append", default=[], metavar="P=SET",
                     help="architecture set for one player, for example 6=western (can be repeated)")
     a = ap.parse_args()
-    buildings.BARRIERS = not a.no_barriers
     convert(a.scenario, a.output, a.tile_size, a.level_height, a.name, a.seed, a.preview, a.architecture,
-            a.player_architecture, not a.no_units)
+            a.player_architecture, not a.no_units, not a.no_barriers)
 
 
 if __name__ == "__main__":
