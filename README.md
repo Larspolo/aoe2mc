@@ -56,6 +56,15 @@ is at the town center of player 1. This needs the `mgz` package (in `requirement
 
     aoe2mc samples/de-64.3.aoe2record RecordWorld --preview
 
+With `--at MM:SS` the converter shows the game at that time, as far as the commands in the record show it:
+
+    aoe2mc samples/de-64.3.aoe2record RecordAt10 --at 10:00
+
+The buildings and walls of the build commands until that time stand at their tiles, and the trained units stand at
+their building. The record has no positions and no results of the game, so `--at` cannot show: unit moves, dead
+units, destroyed or unfinished buildings, cut trees, used mines and farms. A delete command removes only objects of
+the start state. A unit from a building that was built later stands at the first building of its player.
+
 Copy the folder `MyMapWorld` into your Minecraft `saves` folder. Open it in Minecraft Java 26.3 or newer. For an older game (1.21.1 to 26.2), convert with `--mc-version 1.21.1`.
 The world is in creative mode. Outside the map there is only void. The world list shows a small top view of the map
 (`icon.png`).
