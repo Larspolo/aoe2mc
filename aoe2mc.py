@@ -13,6 +13,7 @@ Options:
     --preview          Also write preview.png (top view) into the world folder
     --mc-version V     Minecraft Java version of the output: 1.21.1 (default) or 26.3 (not complete yet)
     --no-units         Do not convert units (mobs, boats, minecarts)
+    --no-birds         Do not convert birds
     --no-barriers      Do not fill building footprints with invisible barrier blocks
     --architecture X   Use one architecture set for all players (western, central, mediterranean,
                        middle_eastern, south_asian, african, east_asian, southeast_asian, mesoamerican)
@@ -985,7 +986,7 @@ PASSABLE = ("short_grass", "tall_grass", "large_fern", "petals", "moss_carpet", 
             "seagrass", "dead_bush", "sweet_berry", "rail", "carpet", "banner", "button", "lantern", "snow[")
 
 
-def plan_units(objects, players, cols, rng, stats):
+def plan_units(objects, players, cols, rng, stats, birds=True):
     """Entities per chunk: {(cx, cz): [(nbt, x, z, is_boat)]}."""
     T = cols.T
     out = {}
@@ -993,6 +994,9 @@ def plan_units(objects, players, cols, rng, stats):
         if o["kind"] == "U":
             if o.get("garrisoned"):
                 stats["units (garrisoned, skipped)"] += 1
+                continue
+            if not birds and units.is_bird(o["name"]):
+                stats["birds (skipped)"] += 1
                 continue
             desc = units.classify(o["name"], o.get("hero", False))
             if desc is None:
@@ -1099,6 +1103,8 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
                 if os.environ.get("AOE2MC_DEBUG"):
                     print("   in block:", str(top_name(nbt)), bx, top + 1, bz, B.states[col[top + 1 - MIN_Y]],
                           B.states[col[top + 2 - MIN_Y]])
+        if units.top_entity(nbt).get("NoGravity"):               # a flying bird
+            y += units.FLY_HEIGHT
         set_pos(nbt, x, float(y), z)
         out.append(nbt)
     if not out:
@@ -1348,18 +1354,18 @@ def block_color(state):
 # Main
 # --------------------------------------------------------------------------------------------
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
-            barriers=True, mc_version=VERSION_NAME, spawn=None):
+            barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True):
     global MC
     MC = VERSIONS[mc_version]
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
     try:
-        _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn)
+        _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
 
 
-def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn):
+def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds=True):
     buildings.BARRIERS = barriers
     MOVED.clear()           # the counts of an earlier conversion in this process
     rng = np.random.default_rng(seed)
@@ -1388,7 +1394,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     for k, v in sorted(stats.items()):
         print(f"  {k}: {v}")
     per_chunk = edits.by_chunk(cols.width)
-    unit_chunks = plan_units(objects, players, cols, rng, stats) if with_units else {}
+    unit_chunks = plan_units(objects, players, cols, rng, stats, birds) if with_units else {}
     print(f"  units: {stats['units']}, fish: {stats['fish']}")
     passable = np.array([st.split(":")[1].split("[")[0] in ("air", "cave_air") or
                          any(k in st.split(":")[1] for k in PASSABLE) and "grass_block" not in st
@@ -1484,6 +1490,7 @@ def main(argv=None):
     ap.add_argument("--architecture", choices=sorted(buildings.ARCH),
                     help="use one architecture set for all players (default: from each player's civilization)")
     ap.add_argument("--no-units", action="store_true", help="do not convert units (mobs, boats, minecarts)")
+    ap.add_argument("--no-birds", action="store_true", help="do not convert birds")
     ap.add_argument("--no-barriers", action="store_true",
                     help="do not fill building footprints with invisible barrier blocks")
     ap.add_argument("--player-architecture", action="append", default=[], metavar="P=SET",
@@ -1496,7 +1503,7 @@ def main(argv=None):
     a = ap.parse_args(argv)
     try:
         convert(a.scenario, a.output, a.tile_size, a.level_height, a.name, a.seed, a.preview, a.architecture,
-                a.player_architecture, not a.no_units, not a.no_barriers, a.mc_version, a.spawn)
+                a.player_architecture, not a.no_units, not a.no_barriers, a.mc_version, a.spawn, not a.no_birds)
     except OptionError as e:
         ap.error(str(e))
 
