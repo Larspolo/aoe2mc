@@ -40,8 +40,9 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 - The tiny scenario has only a town center, a house and a barracks. To see the golden test fail, change a
   block that these designs draw last (for example the house chimney).
 
-- `Columns.ground_detail` has two road passes. The second one also changes the gravel sea floor and wraps
-  around the map edge with `np.roll` (brown dots on shores and at x = 0). See its ticket.
+- Test terrain code without a scenario: `columns()` in `tests/test_terrain.py` makes `aoe2mc.Columns` from a
+  small terrain array. Maps of the same size draw the same random numbers, so two maps can be compared per block.
+- `terrain_style` checks names in sequence: an earlier rule wins (`ROAD_GRAVEL` matched `GRAVEL` until #5).
 - Drawing all 243 building types for one architecture set takes about 1 s. A full gallery conversion takes
   about 30 s per set.
 - Block IDs in `B` depend on what was registered before (earlier tests or conversions). Code that draws random
