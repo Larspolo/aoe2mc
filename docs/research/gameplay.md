@@ -85,6 +85,29 @@ The milestone is done when a player can select a villager, send it to a tree, an
 6. Fog of war and line of sight (optional; hard in vanilla).
 7. Measure: commands per second through RCON, server tick time with 200, 500 and 1000 units.
 
+## Measured gather timing (#289)
+
+`python3 tools/measure_gather.py` plays a fixed map on a real server without a client: one villager of player 1,
+a town center and one tree in one row, 10 tiles from the center of the town center. It sends the villager to the
+tree (no click), plays until 2 loads are at the town center, and reads the event log of `game/gather.py`
+(`Gather(log=...)`, also `game/run.py --play --log FILE`; `--read FILE` reads a log of a real game).
+Result (Minecraft 26.3 server in the cloud, `--tile-size` 4, `gather.py` defaults `tick` 0.25 s, `chop` 1.0 s, `carry` 10):
+
+| | measured | configured | AoE2, per game second | AoE2 at Normal speed (1.7×) |
+|---|---|---|---|---|
+| Walk (blocks/s) | 3.93 | 4.00 | 3.20 | 5.44 |
+| Chop (wood/s) | 0.99 | 1.00 | 0.39 | 0.66 |
+| One trip of 62 blocks (s) | 26.0 | 26.0 | 45.0 | 26.5 |
+
+- AoE2 values: AoE2 DE `empires2_x2_p1.dat`, unit 123 `VMLUM` (lumberjack): `speed` 0.8 tiles/s, `work_rate`
+  0.39 wood/s, `resource_capacity` 10, per game second (owner's data in #267). Normal speed is 1.7× real time.
+- The server keeps the tick: the measured values are within 2 % of the configured values. The `mc` test
+  `test_measured_gather_timing_is_near_the_configured_timing` fails above 10 %.
+- Compared with AoE2 at Normal speed, the villager walks 26 % slower and chops 1.5× faster. For this
+  distance the two errors cancel: one trip takes about the same time as in AoE2.
+- A diagonal step is 1.41 blocks in one tick, so on a diagonal path the villager walks 41 % faster.
+- Each state change costs one tick (0.25 s), and a walk of n blocks takes n ticks.
+
 ## Connection to the converter
 
 - The converted world is the start map. The converter stays the first step and needs only one change:
