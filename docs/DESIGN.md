@@ -65,6 +65,9 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Slate spire | `deepslate_tiles` | `cathedral` |
 | Pinnacle | the `accent_wall` of the style (`*_wall`) | `cathedral` |
 | Striped marble | rows of `polished_deepslate` in the main stone | `cathedral` (Mediterranean) |
+| Mud-brick pinnacle | `mud_brick_wall` on a buttress | `djenne` (Wonder, African) |
+| Glazed tile band, tile panel | `blue_terracotta`; `Style.dome` terracotta over arches | `taj`, `samarra` (Wonders) |
+| Chhatri (small domed kiosk) | `quartz_pillar` posts and a small dome | `taj` (Wonder, South Asian) |
 | Chain, rope | `chain` | `dock`, `siege_workshop`, `shipyard`, `harbor_chain` |
 | Portcullis, grille | `iron_bars` | `gate`, `castle` |
 | Lamp | `lantern` | `decorate()`, `blacksmith` (hanging) |
