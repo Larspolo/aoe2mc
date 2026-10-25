@@ -16,7 +16,7 @@ the slowest CI steps, the setup minutes, takeovers, releases, merge conflicts, c
 that do not belong in git. Collect by hand only what it does not print.
 
 - Agent: the last 20 run comments by the agent on the status issue (label `agent-status`). Each has a line
-  `Metrics: ticket #n · size · result · minutes · setup m min · CI runs k · CI c min · time sinks: ...`.
+  `Metrics: ticket #n · size · result · minutes · setup m min · checks k · checks c min · time sinks: ...`.
   Also the tickets and PRs closed in that period, and rework (tickets that the owner reopened, or that came
   from owner feedback on merged work).
 - CI: the last 50 runs of each workflow (`/actions/runs?per_page=50`: `conclusion`, `run_started_at`,
@@ -32,7 +32,8 @@ that do not belong in git. Collect by hand only what it does not print.
 ## 2. Find the largest loss
 
 Compute the numbers of all five areas: tickets per run, median minutes for `size:S` and `size:M` tickets
-(last 5 runs against the 5 runs before), setup minutes, CI runs per PR, CI minutes and CI failures that are
+(last 5 runs against the 5 runs before), setup minutes, local check rounds per PR, GitHub Actions minutes per day (the account has 2,000 per month: keep
+the use below about 50 per day), nightly CI failures that are
 not in the code, rework, takeovers and conflicts. Then find the one pattern that costs the most. Typical
 patterns and their fixes:
 
@@ -44,7 +45,8 @@ patterns and their fixes:
 | Agent | Unclear tickets, many questions | A better form in the `ticket` skill, ask earlier |
 | Agent | Rework after owner feedback | A rule from the feedback in `CLAUDE.md` |
 | Agent | Runs longer than 90 minutes | Stricter size rules, split earlier |
-| CI | CI red after the push | Add the failing check to the local verify level, or fix the flaky test |
+| CI | Nightly CI red, or main red at the start of a run | Add the failing check to the local checks (autopilot 6.8), or fix the flaky test |
+| CI | More than about 50 Actions minutes per day | Fewer scheduled workflow runs, or move the job into the local checks |
 | CI | A slow step (install, download) | `actions/cache` with the correct path and key, or a smaller install |
 | CI | A cache that is never restored ("Cache not found") | Correct the cache path or key |
 | CI | Slow tests | Faster fixtures, or move a test to the slow suite |
