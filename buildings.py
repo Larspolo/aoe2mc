@@ -1535,15 +1535,20 @@ def place_building(E, cols, B, o, players, walls, gates):
     size = footprint(name)
 
     if fn is farm:
+        # Like the game: rows of crops with furrows of bare soil between them, along tile y (they turn with
+        # --orientation), and a path around the plot. Some rows are not ripe yet.
         x0, z0 = int(round((ux - 1.5) * T)), int(round((uy - 1.5) * T))
+        rng = np.random.default_rng(abs((x0 * 73856093) ^ (z0 * 19349663)) % (2 ** 32))
         for x in range(max(0, x0), min(cols.n, x0 + 3 * T)):
             for z in range(max(0, z0), min(cols.n, z0 + 3 * T)):
                 if cols.wtop[x, z] == cols.top[x, z]:
                     y = int(cols.top[x, z])
                     edge = x in (x0, x0 + 3 * T - 1) or z in (z0, z0 + 3 * T - 1)
+                    row = (x - x0 if TURN % 2 == 0 else z - z0) % 2 == 1
+                    age = rng.choice((7, 6, 5), p=(.7, .2, .1))
                     E.add([x, x], [y, y + 1], [z, z],
                           [B("farmland[moisture=7]") if not edge else B("dirt_path"),
-                           B("wheat[age=7]") if not edge else 0])
+                           B(f"wheat[age={age}]") if row and not edge else 0])
         return
 
     along_z = False

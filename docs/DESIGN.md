@@ -35,6 +35,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Bell | `bell` | `monastery`, `town_center` |
 | Loom, cloth | `loom`, wool | `church` |
 | Market goods | `barrel`, `chest`, `composter`, `hay_block` | `market`, `dock` |
+| Crop field | `wheat` rows (ages 5–7) on `farmland`, furrows of bare `farmland`, `dirt_path` edge | farm (`place_building`) |
 | Hay, fodder | `hay_block` | `stable`, `barracks`, `granary` |
 | Water trough | `cauldron` (water) | `stable` |
 | Banner, flag | `*_banner` (player color), `Canvas.flag` | most designs |
