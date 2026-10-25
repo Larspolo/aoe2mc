@@ -1,0 +1,20 @@
+# name|color|description   (the Labels workflow creates or updates these labels on main)
+P0|b60205|Do next
+P1|d93f0b|High priority
+P2|fbca04|Normal priority
+P3|c5def5|Later
+size:S|e6f4ea|One short PR
+size:M|bfe5c8|One PR, up to about 400 lines
+size:L|7fc98f|Too large: the agent splits it first
+bug|d73a4a|Something works wrong
+feature|a2eeef|New function
+tooling|5319e7|Tests and tools for the agent
+design|f9d0c4|Look of buildings and objects
+docs|0075ca|Documentation
+cleanup|cfd3d7|Code cleanup without new function
+needs-human|e99695|Waits for the owner
+blocked|000000|Waits for another ticket
+in-progress|0e8a16|The agent works on it now
+epic|3e4b9e|Parent ticket with sub-issues
+agent-status|1d76db|The dashboard of the agent
+paused|b60205|On the status issue: the agent stops

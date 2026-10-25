@@ -1,0 +1,58 @@
+---
+name: ticket
+description: Write, size and split GitHub issues (tickets) for aoe2mc in the project format. Use when you make a new ticket, triage an owner's issue, or split a size-L ticket into sub-issues.
+---
+
+# Write a ticket
+
+Tickets are GitHub Issues in `Larspolo/aoe2mc`. Write in ASD-STE100 Simplified Technical English.
+
+## Form
+
+Title: an instruction, less than 70 characters ("Fix the road pass on the sea floor").
+
+Body:
+
+```
+## Goal
+<One or two sentences: what changes for the user or the developer.>
+
+## Context
+<Where in the code (function names), why, and the evidence (output, image, test).>
+
+## Acceptance criteria
+- [ ] <A result that a test or a check can show.>
+- [ ] <...>
+
+## Verify
+<The verify level (1-4) and the commands or checks.>
+
+Depends on: #<n>, #<m>        (only when another ticket must close first)
+```
+
+Labels: one priority (`P0`-`P3`), one kind (`bug`, `feature`, `tooling`, `design`, `docs`, `cleanup`),
+one size (`size:S`, `size:M`, `size:L`). Add `needs-human` when only the owner can do it.
+
+## Size
+
+- `size:S`: one PR, a small diff (about 150 lines or less), clear solution.
+- `size:M`: one PR, up to about 400 lines, or one design decision.
+- `size:L`: more than one PR, or research first. Do not start an L ticket: split it.
+
+## Split an L ticket
+
+1. Make S or M sub-issues (`sub_issue_write` in a cloud session, or "Depends on" lines in a local session).
+   Make the first sub-issue small and useful alone.
+2. Give the sub-issues the priority of the parent and the order of the work (lower number = first).
+3. Add `epic` to the parent. The parent closes when all sub-issues are closed.
+
+## needs-human tickets
+
+The owner reads them on a phone. Give numbered steps, the exact names of settings or files, and what the
+owner must reply. One ticket per decision.
+
+## Rules
+
+- One goal per ticket. If you write "and also", make two tickets.
+- Search the open issues first. Do not make a duplicate.
+- Do not change the priority of a ticket that the owner set. Propose the change in a comment.

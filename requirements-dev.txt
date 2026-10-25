@@ -1,0 +1,4 @@
+# Development: tests and lint
+-r requirements.txt
+pytest>=8
+ruff>=0.6

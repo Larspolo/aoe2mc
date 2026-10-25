@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+# Converted worlds and scratch output
+*World/
+out/
+tmp/
+preview.png
+# Minecraft server files that tools download (large)
+.cache/
