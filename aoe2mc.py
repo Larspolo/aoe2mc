@@ -224,8 +224,10 @@ def read_scenario(path):
             pass
         color = buildings.COLOR_NAMES[p.color] if 0 <= p.color < 8 else "light_gray"
         arch = buildings.CIV_TO_ARCH.get(getattr(civ, "name", ""), "western")
+        view = (getattr(p, "initial_player_view_x", -1), getattr(p, "initial_player_view_y", -1))
         players[p.player_id] = {"color": color if p.player_id else "light_gray", "arch": arch,
-                                "civ": getattr(civ, "name", "?")}
+                                "civ": getattr(civ, "name", "?"),
+                                "view": view if view[0] is not None and min(view) >= 0 else None}
 
     objects = []
     for player, player_units in enumerate(scn.unit_manager.units):
@@ -1024,6 +1026,22 @@ def free_spot(cols, bx, bz, r, water=False):
     return int(xs[i] + x0), int(zs[i] + z0)
 
 
+def find_spawn(cols, objects, players, tile=None):
+    """Spawn block (x, y, z): the tile given (--spawn), else the start view of player 1, else in front of
+    (south of) the first town center of player 1, else the map center. Moved to the nearest free land column."""
+    if tile is None:
+        tile = players.get(1, {}).get("view")
+    if tile is None:
+        tc = next((o for o in objects if o["kind"] == "B" and o["player"] == 1 and "TOWN_CENTER" in o["name"]), None)
+        if tc:
+            tile = (tc["x"], tc["y"] + buildings.footprint(tc["name"]) / 2 + 0.5)
+    T, n = cols.T, cols.n
+    bx, bz = (n // 2, n // 2) if tile is None else (int(min(max(tile[0] * T, 0), n - 1)),
+                                                    int(min(max(tile[1] * T, 0), n - 1)))
+    bx, bz = free_spot(cols, bx, bz, 8 * T) or (bx, bz)
+    return bx, cols.surface(bx, bz) + 2, bz
+
+
 def set_pos(nbt, x, y, z):
     nbt["Pos"] = List[Double]([Double(x), Double(y), Double(z)])
     for p in nbt.get("Passengers", []):
@@ -1328,18 +1346,18 @@ def block_color(state):
 # Main
 # --------------------------------------------------------------------------------------------
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
-            barriers=True, mc_version=VERSION_NAME):
+            barriers=True, mc_version=VERSION_NAME, spawn=None):
     global MC
     MC = VERSIONS[mc_version]
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
     try:
-        _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers)
+        _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
 
 
-def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers):
+def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn):
     buildings.BARRIERS = barriers
     MOVED.clear()           # the counts of an earlier conversion in this process
     rng = np.random.default_rng(seed)
@@ -1397,8 +1415,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     for (rx, rz), chunks in entity_regions.items():
         write_region(os.path.join(dim, "entities", f"r.{rx}.{rz}.mca"), chunks)
 
-    c = cols.n // 2
-    spawn = (c, cols.surface(c, c) + 2, c)
+    spawn = find_spawn(cols, objects, players, spawn)
     write_level_dat(os.path.join(out, "level.dat"), name or os.path.splitext(os.path.basename(src))[0], spawn)
 
     from PIL import Image
@@ -1445,6 +1462,15 @@ def player_arch_spec(v):
     return int(pid), a
 
 
+def spawn_spec(v):
+    """'12,30' -> (12.0, 30.0)."""
+    try:
+        x, z = (float(t) for t in v.split(","))
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"{v!r} is not X,Z, for example 12,30") from None
+    return x, z
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
     ap.add_argument("scenario", help=".aoe2scenario file")
@@ -1462,12 +1488,14 @@ def main(argv=None):
     ap.add_argument("--player-architecture", action="append", default=[], metavar="P=SET",
                     type=player_arch_spec,
                     help="architecture set for one player, for example 6=western (can be repeated)")
+    ap.add_argument("--spawn", type=spawn_spec, metavar="X,Z",
+                    help="player spawn in tiles (default: start view or town center of player 1)")
     ap.add_argument("--mc-version", choices=sorted(VERSIONS), default=VERSION_NAME,
                     help=f"Minecraft Java version of the output (default {VERSION_NAME})")
     a = ap.parse_args(argv)
     try:
         convert(a.scenario, a.output, a.tile_size, a.level_height, a.name, a.seed, a.preview, a.architecture,
-                a.player_architecture, not a.no_units, not a.no_barriers, a.mc_version)
+                a.player_architecture, not a.no_units, not a.no_barriers, a.mc_version, a.spawn)
     except OptionError as e:
         ap.error(str(e))
 
