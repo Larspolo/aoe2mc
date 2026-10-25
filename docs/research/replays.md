@@ -43,7 +43,8 @@ the converter needs (`match.map.tiles`, `match.gaia`, `match.players[i].objects`
 
 Tested here: `pip install mgz` in a venv works with Python 3.11. No record was parsed: the hosts that serve
 records (`aoe.ms`, `data.aoe2companion.com`, `www.aoe2insights.com`) are blocked in the cloud container, and
-the `mgz` package has no sample records. The owner must add one record to `samples/` (see the tickets below).
+the `mgz` package has no sample records. Update (#134): `samples/de-64.3.aoe2record` is a DE test record of the
+`mgz` repository (MIT, GitHub raw). `mgz.model.parse_match` reads it.
 
 ## Options for the replay in Minecraft
 
