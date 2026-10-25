@@ -265,7 +265,8 @@ def read_scenario(path):
             prefix, name = kinds.get(u.unit_const, ("?", f"UNKNOWN_{u.unit_const}"))
             garrisoned = u.garrisoned_in_id not in (None, -1)
             objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name,
-                                player=player, x=u.x, y=u.y, rotation=float(u.rotation or 0), garrisoned=garrisoned))
+                                player=player, x=u.x, y=u.y, rotation=float(u.rotation or 0), garrisoned=garrisoned,
+                                ref=u.reference_id, holder=u.garrisoned_in_id if garrisoned else None))
     return size, terrain, elevation, terrain_names, texts, objects, players
 
 
@@ -1017,13 +1018,22 @@ PASSABLE = ("short_grass", "tall_grass", "large_fern", "petals", "moss_carpet", 
             "seagrass", "dead_bush", "sweet_berry", "rail", "carpet", "banner", "button", "lantern", "snow[")
 
 
-def plan_units(objects, players, cols, rng, stats, birds=True):
-    """Entities per chunk: {(cx, cz): [(nbt, x, z, is_boat)]}."""
+SEATS = {"minecraft:boat": 2, "minecraft:chest_boat": 1}
+
+
+def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside"):
+    """Entities per chunk: {(cx, cz): [(nbt, x, z, is_boat)]}.
+    garrison="outside": a garrisoned unit rides its ship if a seat is free, else stands next to its holder."""
     T = cols.T
     out = {}
-    for o in objects:
+    refs = {o["ref"]: o for o in objects if o.get("ref") is not None}
+    boats = {}                  # reference ID of a ship -> its boat NBT
+    taken = set()               # columns that garrisoned units use, so that they do not stand in one column
+    # The holders come first: a ship must exist before its passengers board it.
+    for o in sorted(objects, key=lambda o: bool(o.get("garrisoned"))):
+        held = bool(o.get("garrisoned")) and o["kind"] == "U"
         if o["kind"] == "U":
-            if o.get("garrisoned"):
+            if held and garrison == "skip":
                 stats["units (garrisoned, skipped)"] += 1
                 continue
             if not birds and units.is_bird(o["name"]):
@@ -1034,6 +1044,20 @@ def plan_units(objects, players, cols, rng, stats, birds=True):
                 continue
             nbt = units.make_entity(o, players, (0, 0, 0), rng, desc)
             boat = units.is_boat(desc)
+            if held:
+                holder = refs.get(o.get("holder"))
+                if o.get("holder") in boats:
+                    ship = boats[o["holder"]]
+                    if len(ship.get("Passengers", [])) < SEATS[str(ship["id"])]:
+                        ship.setdefault("Passengers", List[Compound]([])).append(nbt)
+                        stats["units (garrisoned, in a ship)"] += 1
+                    else:
+                        stats["units (garrisoned, no free seat in the ship, skipped)"] += 1
+                    continue
+                o = dict(o, x=holder["x"], y=holder["y"]) if holder else o
+                stats["units (garrisoned, next to the holder)"] += 1
+            elif boat and o.get("ref") is not None:
+                boats[o["ref"]] = nbt
             stats["units"] += 1
         elif o["kind"] == "O" and object_mob(o["name"]):
             kind = object_mob(o["name"])
@@ -1046,14 +1070,17 @@ def plan_units(objects, players, cols, rng, stats, birds=True):
         bx, bz = int(x), int(z)
         if not cols.inside(bx, bz):
             continue
-        if cols.blocked[bx, bz] and boat is not True:
-            spot = free_spot(cols, bx, bz, 6 * T, water=boat == "fish")
+        if (cols.blocked[bx, bz] or held) and boat is not True:
+            spot = free_spot(cols, bx, bz, 6 * T, water=boat == "fish", taken=taken if held else ())
             if spot is None:
                 stats["units (inside a building, no free space)"] += 1
                 continue
             x, z = spot[0] + 0.5, spot[1] + 0.5
             bx, bz = spot
-            stats["units moved out of a building or obstacle"] += 1
+            if held:
+                taken.add(spot)
+            else:
+                stats["units moved out of a building or obstacle"] += 1
         out.setdefault((bx >> 4, bz >> 4), []).append((nbt, x, z, boat))
     return out
 
@@ -1063,11 +1090,14 @@ def top_name(nbt):
     return t.get("CustomName", t["id"])
 
 
-def free_spot(cols, bx, bz, r, water=False):
-    """Nearest column that is not blocked (and on land, unless water=True), or None."""
+def free_spot(cols, bx, bz, r, water=False, taken=()):
+    """Nearest column that is not blocked or taken (and on land, unless water=True), or None."""
     x0, x1 = max(0, bx - r), min(cols.n, bx + r + 1)
     z0, z1 = max(0, bz - r), min(cols.n, bz + r + 1)
     ok = ~cols.blocked[x0:x1, z0:z1]
+    for tx, tz in taken:
+        if x0 <= tx < x1 and z0 <= tz < z1:
+            ok[tx - x0, tz - z0] = False
     wet = cols.wtop[x0:x1, z0:z1] - cols.top[x0:x1, z0:z1]
     ok &= (wet >= 2) if water else (wet <= 1)
     xs, zs = np.nonzero(ok)
@@ -1478,13 +1508,14 @@ def block_color(state):
 # Main
 # --------------------------------------------------------------------------------------------
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
-            barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False):
+            barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False,
+            garrison="outside"):
     global MC
     MC = VERSIONS[mc_version]
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
     try:
         _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-                 verbose)
+                 verbose, garrison)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
@@ -1492,7 +1523,7 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
 
 
 def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-             verbose):
+             verbose, garrison):
     buildings.BARRIERS = barriers
     buildings.TURN, yaw = ORIENTATIONS[orientation]
     MOVED.clear()           # the counts of an earlier conversion in this process
@@ -1541,9 +1572,12 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         print(f"  book with the scenario texts: lectern at {book}")
     per_chunk = edits.by_chunk(cols.width)
     tick("objects")
-    unit_chunks = plan_units(objects, players, cols, rng, stats, birds) if with_units else {}
+    before = set(stats)
+    unit_chunks = plan_units(objects, players, cols, rng, stats, birds, garrison) if with_units else {}
     tick("units")
     print(f"  units: {stats['units']}, fish: {stats['fish']}")
+    for k in sorted(set(stats) - before - {"units", "fish"}):
+        print(f"  {k}: {stats[k]}")
     passable = np.array([st.split(":")[1].split("[")[0] in ("air", "cave_air") or
                          any(k in st.split(":")[1] for k in PASSABLE) and "grass_block" not in st
                          for st in B.states] + [True] * 1024)
@@ -1651,6 +1685,8 @@ def main(argv=None):
                     help="architecture set for one player, for example 6=western (can be repeated)")
     ap.add_argument("--spawn", type=spawn_spec, metavar="X,Z",
                     help="player spawn in tiles (default: start view or town center of player 1)")
+    ap.add_argument("--garrison", choices=("outside", "skip"), default="outside",
+                    help="garrisoned units: ride their ship or stand next to their holder (default), or skip them")
     ap.add_argument("--mc-version", choices=sorted(VERSIONS), default=VERSION_NAME,
                     help=f"Minecraft Java version of the output (default {VERSION_NAME})")
     ap.add_argument("--orientation", choices=sorted(ORIENTATIONS), default="ne",
@@ -1660,7 +1696,7 @@ def main(argv=None):
     try:
         convert(a.scenario, a.output, a.tile_size, a.level_height, a.name, a.seed, a.preview, a.architecture,
                 a.player_architecture, not a.no_units, not a.no_barriers, a.mc_version, a.spawn, not a.no_birds,
-                a.orientation, a.verbose)
+                a.orientation, a.verbose, a.garrison)
     except OptionError as e:
         ap.error(str(e))
 
