@@ -638,7 +638,61 @@ def castle(c, w, st, col, T, ctx, small=False):
 
 
 def krepost(c, w, st, col, T, ctx):
-    castle(c, w, st, col, T, ctx, small=True)
+    """Bulgarian Krepost (#122): a tall square keep at the back, a round tower with a cone roof (west), a gatehouse
+    with an open arch (front) and a tower with a hip roof (east), wooden hoardings between them. The game has one
+    model for all sets: brick walls on a stone base and red tile roofs."""
+    s = w / 12                                                            # the design is drawn for 3 tiles
+    S = lambda v: round(v * s)
+    base, wall, roof = st.stone2, "bricks", "red_sandstone"             # red_sandstone: the orange roof tiles
+    c.box(0, w, 0, 1, 0, w, base)
+    def block(x0, x1, z0, z1, h):                                         # stone up to 3, brick above
+        c.box(x0, x1, 1, h, z0, z1, wall)
+        c.box(x0, x1, 1, min(h, 4), z0, z1, "stone_bricks")
+    # Keep: the highest part, with merlons and a band in the player color
+    kx0, kx1, kz0, kz1, kh = S(4), w - 1, S(1), S(7), S(17)
+    block(kx0, kx1, kz0, kz1, kh)
+    c.walls(kx0 - 1, kx1 + 1, kh, kh + 1, kz0 - 1, kz1 + 1, wall)       # machicolation ledge
+    c.walls(kx0 - 1, kx1 + 1, kh - 1, kh, kz0 - 1, kz1 + 1, f"{col}_wool")
+    c.box(kx0, kx1, kh, kh + 1, kz0, kz1, "bricks")
+    c.crenels(kx0 - 1, kx1 + 1, kz0 - 1, kz1 + 1, kh + 1, wall)
+    for y in (kh - 8, kh - 4):                                            # narrow windows
+        for x in range(kx0 + 1, kx1 - 1, 2):
+            c.set(x, y, kz0, "iron_bars"); c.set(x, y, kz1 - 1, "iron_bars")
+        for z in range(kz0 + 1, kz1 - 1, 2):
+            c.set(kx1 - 1, y, z, "iron_bars"); c.set(kx0, y, z, "iron_bars")
+    c.flag((kx0 + kx1) // 2, kh + 1, (kz0 + kz1) // 2, col, 3)
+    # Round tower in the west with a cone roof
+    r, cx, cz, rh = 2.3 * s, S(2.5), S(3.5), S(11)
+    c.cylinder(cx, cz, r, 1, rh, wall)
+    c.cylinder(cx, cz, r, 1, 4, "stone_bricks")
+    c.cylinder(cx, cz, r + 0.6, rh - 1, rh, "stone_bricks")              # cornice
+    for y in (S(6), rh - 2):
+        c.set(int(cx + r), y, int(cz), "iron_bars"); c.set(int(cx), y, int(cz + r), "iron_bars")
+    c.cone(cx, cz, r + 1, rh, "red_sandstone")
+    c.set(int(cx), rh + int(r + 1), int(cz), "lightning_rod")
+    # Gatehouse at the front with an open arch and a gable roof
+    gx0, gx1, gz0, gh = 0, S(5), S(7), S(6)
+    block(gx0, gx1, gz0, w, gh)
+    mid = (gx0 + gx1) // 2
+    c.box(mid - 1, mid + 1, 1, 4, gz0, w, "air")                         # passage through the gatehouse
+    c.box(mid - 1, mid + 1, 4, 5, w - 1, w, "stone_bricks")              # arch stones
+    c.box(mid - 1, mid + 1, 3, 4, w - 1, w, "iron_bars")                 # raised portcullis
+    c.gable(gx0 - 1, gx1 + 1, gz0, w + 1, gh, roof, fill=(gx0, gx1, gz0, w, wall), axis="z")
+    # Tower in the east with a hip roof and banners
+    ex0, ez0, eh = S(7), S(7), S(10)
+    block(ex0, w, ez0, w, eh)
+    for x in range(ex0 + 1, w - 1, 2):
+        c.set(x, eh - 3, w - 1, "iron_bars")
+        c.banner(x, eh - 5, w, col)
+    c.hip(ex0 - 1, w + 1, ez0 - 1, w + 1, eh, roof)
+    c.box(gx1, ex0, 1, S(8), kz1, w - 1, wall)                           # wall between gatehouse and east tower
+    c.box(gx1, ex0, 1, 4, kz1, w - 1, "stone_bricks")
+    # Wooden hoarding on the front of the keep, above the roofs
+    hy = S(13)
+    c.box(kx0, kx1, hy, hy + 1, kz1, kz1 + 1, "spruce_planks")
+    c.box(kx0, kx1, hy + 1, hy + 2, kz1, kz1 + 1, "spruce_fence")
+    for x in (kx0, kx1 - 1):
+        c.set(x, hy + 2, kz1, "spruce_fence")
 
 
 def hall_with_yard(c, w, st, col, depth=0.6, hw=4, open_front=False):

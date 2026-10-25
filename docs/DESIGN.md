@@ -75,6 +75,8 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Bartizan (corner turret) | stone, `smooth_quartz` cap, `lightning_rod` | `feitoria` |
 | Terracotta roof (Portuguese, Sicilian) | `brick` stairs | `feitoria`, `donjon` |
 | Wooden hoarding | wood slab (top) with a `*_fence` rail | `donjon` |
+| Portcullis, grille | `iron_bars` | `gate`, `castle`, `krepost` |
+| Wooden hoarding | wood slab (top) or `spruce_planks` with a `*_fence` rail | `donjon`, `krepost` |
 | Coat of arms | `*_wall_banner` (player color) over the gate | `donjon` |
 | Lamp | `lantern` | `decorate()`, `blacksmith` (hanging) |
 | Siege engine under construction | spruce slabs, fences and logs | `siege_workshop` |
@@ -89,6 +91,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Books, study | `bookshelf`, `lectern` (with a book) | `university` |
 | Scholar statue | `chiseled_stone_bricks` pedestal, `quartz_pillar`, `chiseled_quartz_block` | `university` |
 | Rose window | stained glass panes | `monastery` |
+| Orange roof tiles (Krepost) | `red_sandstone` stairs and blocks | `krepost` |
 | Cannon | `polished_basalt` barrel on its side | `tower` (bombard) |
 
 Add a line when a design uses a new feature block. Each new block state must pass `mcvalid`.
