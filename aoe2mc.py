@@ -424,6 +424,57 @@ def read_timeline(path):
     return sorted(events, key=lambda e: e["time"])
 
 
+def wall_tiles(x0, y0, x1, y1):
+    """The tiles of a wall that a player drags from tile (x0, y0) to (x1, y1): a straight line in tile steps."""
+    n = int(max(abs(x1 - x0), abs(y1 - y0)))
+    return [(int(round(x0 + (x1 - x0) * i / n)), int(round(y0 + (y1 - y0) * i / n))) for i in range(n + 1)] if n \
+        else [(int(x0), int(y0))]
+
+
+def apply_timeline(objects, timeline, at):
+    """The objects of a recorded game at time `at` (ms, --at, #373): the start state with the commands until then.
+    BUILD and WALL place buildings (also gates), DELETE removes start objects (the record has no IDs of new
+    objects), QUEUE adds the trained units at their building (the record has no positions), or at the first
+    building of the player when the building is not in the start state. Returns (objects, stats)."""
+    kinds, stats = object_kinds(), Counter()
+    refs = {o["ref"]: o for o in objects if o.get("ref") is not None}
+    first = {}
+    for o in objects:
+        if o["kind"] == "B":
+            first.setdefault(o["player"], o)
+    out, deleted, seen = list(objects), set(), set()
+    for e in timeline:
+        if e["time"] > at:
+            break
+        kind, player = e["kind"], e["player"]
+        if kind in ("build", "wall") and "type" in e and "tile" in e:
+            prefix, name = kinds.get(e["type"], ("?", ""))
+            if prefix != "B":
+                continue
+            tiles = [(x + 0.5, y + 0.5) for x, y in wall_tiles(*e["tile"], *e["end"])] if kind == "wall" \
+                else [tuple(e["tile"])]
+            for x, y in tiles:
+                if (name, x, y) not in seen:            # the same foundation again (a second click)
+                    seen.add((name, x, y))
+                    out.append(dict(kind="B", hero=False, name=name, player=player, x=x, y=y, rotation=0.0,
+                                    garrisoned=False, ref=None, holder=None))
+                    stats["buildings (BUILD and WALL commands)"] += 1
+        elif kind == "delete":
+            deleted.update(i for i in e.get("objects", ()) if i in refs)
+        elif kind == "queue" and "type" in e:
+            prefix, name = kinds.get(e["type"], ("?", ""))
+            at_b = next((refs[i] for i in e.get("objects", ()) if i in refs and refs[i]["kind"] == "B"), None)
+            at_b = at_b or first.get(player)
+            if prefix not in ("U", "H") or at_b is None or at_b.get("ref") in deleted:
+                continue
+            for _ in range(max(1, int(e.get("amount", 1)))):
+                out.append(dict(kind="U", hero=prefix == "H", name=name, player=player, x=at_b["x"], y=at_b["y"],
+                                rotation=0.0, garrisoned=False, ref=None, holder=None))
+                stats["units (QUEUE commands, at their building)"] += 1
+    stats["start objects removed (DELETE commands)"] = len(deleted)
+    return [o for o in out if o.get("ref") is None or o["ref"] not in deleted], stats
+
+
 def turn_tile(x, y, size, k):
     """Tile position (x, y) after k clockwise quarter turns of a size × size grid (size 0: turn a vector)."""
     for _ in range(k % 4):
@@ -2327,13 +2378,14 @@ def block_color(state):
 # --------------------------------------------------------------------------------------------
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
             barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False,
-            garrison="outside", border_design="diorama", ambience="basic"):
+            garrison="outside", border_design="diorama", ambience="basic", at=None):
+    """at: recorded games only, the time in ms (--at): convert the state at that time (apply_timeline)."""
     global MC
     MC = VERSIONS[mc_version]
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
     try:
         _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-                 verbose, garrison, border_design, ambience)
+                 verbose, garrison, border_design, ambience, at)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
@@ -2341,7 +2393,7 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
 
 
 def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-             verbose, garrison, border_design, ambience):
+             verbose, garrison, border_design, ambience, at=None):
     buildings.BARRIERS = barriers
     buildings.TURN, yaw = ORIENTATIONS[orientation]
     MOVED.clear()           # the counts of an earlier conversion in this process
@@ -2357,6 +2409,11 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
 
     size, terrain, elevation, tnames, texts, objects, players = read_map(src)
     timeline = read_timeline(src) if src.lower().endswith(".aoe2record") else None
+    at_stats = Counter()
+    if at is not None:
+        if timeline is None:
+            raise OptionError("--at needs a recorded game (.aoe2record)")
+        objects, at_stats = apply_timeline(objects, timeline, at)
     for e in timeline or ():
         for k in ("tile", "end"):
             if k in e:
@@ -2377,6 +2434,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         players[pid]["arch"] = a
     print(f"Read {os.path.basename(src)}: {size}x{size} tiles, {len(objects)} objects "
           f"({time.time() - t0:.1f}s)")
+    if at is not None:
+        print(f"  state at {at // 60000}:{at // 1000 % 60:02d}: " + ", ".join(f"{k}: {v}" for k, v in at_stats.items()))
     unknown = Counter(int(o["name"][8:]) for o in objects if o["kind"] == "?")
     if unknown:                 # users can report these IDs, so that the parser data can get them
         print("  unknown object IDs (skipped): " + ", ".join(f"{i} ×{n}" for i, n in sorted(unknown.items())))
@@ -2617,6 +2676,15 @@ def convert_campaign(src, out, only=None, name=None, **kw):
             convert(path, os.path.join(out, f"{i} {stem}"), name=f"{name} {i}" if name else stem, **kw)
 
 
+def game_time(text):
+    """--at MM:SS (or H:MM:SS) -> ms."""
+    m = re.fullmatch(r"(?:(\d+):)?(\d+):([0-5]\d)", text)
+    if not m:
+        raise argparse.ArgumentTypeError(f"{text!r}: use MM:SS, for example 12:30")
+    h, mm, ss = int(m.group(1) or 0), int(m.group(2)), int(m.group(3))
+    return ((h * 60 + mm) * 60 + ss) * 1000
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
     ap.add_argument("scenario", help=".aoe2scenario file, .aoe2record (the start state of a recorded game), .scx "
@@ -2656,6 +2724,9 @@ def main(argv=None):
                          "full also gives each terrain group a custom biome with its own sky, fog and water colors, but "
                          "Minecraft then shows an \"Experimental Settings\" warning when the world opens; off: a "
                          "silent world without a datapack")
+    ap.add_argument("--at", type=game_time, metavar="MM:SS",
+                    help="recorded game: convert the state at this game time (buildings and trained units of the "
+                         "commands until then; default: the start)")
     ap.add_argument("--verbose", action="store_true", help="print the time of each phase")
     a = ap.parse_args(argv)
     kw = dict(T=a.tile_size, H=a.level_height, seed=a.seed, preview=a.preview, arch=a.architecture,
@@ -2663,12 +2734,14 @@ def main(argv=None):
               mc_version=a.mc_version, spawn=a.spawn, birds=not a.no_birds, orientation=a.orientation,
               verbose=a.verbose, garrison=a.garrison, border_design=a.border, ambience=a.ambience)
     try:
+        if a.at is not None and not a.scenario.lower().endswith(".aoe2record"):
+            ap.error("--at needs a recorded game (.aoe2record)")
         if a.scenario.lower().endswith((".aoe2campaign", ".cpx", ".cpn")):
             convert_campaign(a.scenario, a.output, a.only, a.name, **kw)
         elif a.only is not None:
             ap.error("--scenario needs a campaign file (.aoe2campaign, .cpx, .cpn)")
         else:
-            convert(a.scenario, a.output, name=a.name, **kw)
+            convert(a.scenario, a.output, name=a.name, at=a.at, **kw)
     except (OptionError, CampaignError) as e:
         ap.error(str(e))
 
