@@ -111,7 +111,16 @@ For each open issue without a priority label:
 Candidates: open issues without `needs-human`, `blocked`, `epic`, `agent-status`, `in-progress`, and whose
 "Depends on: #n" issues are all closed. Order: `P0`, `P1`, `P2`, `P3`, then the lowest issue number.
 `python3 tools/dashboard.py --next` prints the candidates in this order (the rule is `dashboard.candidates()`).
-If there is no candidate, go to step 8 and report "No ticket is ready".
+Refill the queue when fewer candidates are ready than runs are active (tickets with `in-progress` that changed in
+the last 30 minutes), so that parallel runs always find work. Do this at most once per run, in about 10 minutes:
+1. Split each `size:L` ticket without open sub-issues (`ticket` skill), also when it is not a candidate yet.
+2. For each open epic whose sub-issues are all closed: make a sub-issue for each acceptance criterion that is
+   still open and that an agent can do. A criterion that needs the owner stays on the epic.
+3. Make up to 5 new tickets for the remaining goals of the open epics and `docs/ROADMAP.md`, and for the
+   fallbacks in `docs/coverage.md`. Priority: that of the epic, else `P3`. Never `P0` or `P1`, except for
+   a `tooling` ticket that blocks other tickets. Look for duplicates first.
+4. Prefer tickets that depend on no open ticket and change other files than the claimed tickets (fewer conflicts).
+Then pick again. If there is no candidate, go to step 8 and report "No ticket is ready".
 If the top candidate has `size:L`, split it now (`ticket` skill), then pick again.
 Claim it with `python3 tools/claim.py N`. It pushes a unique commit to the ref `claim/N` without force, so only one
 run can win (#211). Exit 1: another run owns the ticket, pick the next candidate (do not comment).
