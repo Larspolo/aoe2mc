@@ -18,8 +18,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   `search/...` and branch deletes give 403. CI job logs: only `mcp__github__get_job_logs`. A push to a new ref works,
   a non-fast-forward push fails: `tools/claim.py` uses it as a lock (#211). REST ref paths: `git/refs/heads/...`.
 - Quote the heredoc tag (`<<'EOF'`) for GitHub text: `<<EOF` runs each `` `name` `` as a command. Pass paths as arguments.
-- A scheduled task from `create_trigger` has no repository, so its sessions cannot clone: set `Larspolo/aoe2mc`
-  as its repository in the claude.ai UI. Scheduled runs use Sonnet 5.5 unless the task sets another model.
+- A task from `create_trigger` has no repository: set `Larspolo/aoe2mc` in the claude.ai UI. Scheduled runs use
+  Sonnet 5.5 unless the task sets another model. Some sessions have no `fire_trigger` tool: skip the fan-out, report it.
 - The repository is private: a workflow with a `permissions:` block also needs `contents: read`, or
   `actions/checkout` fails with "Repository not found". The `pulls` API needs `pull-requests: read` (else 403).
 - Minecraft server: a bad property value (`facing=up`) loads silently as the default state. An unknown block gives
@@ -51,13 +51,11 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   `CORNERS`; openage: axes NE, SE). Block x = east, z = south: the world is turned 45°, not mirrored; the AoE2 top
   corner is in the north-east. The spawn looks north-east like the AoE2 camera (`SPAWN_YAW`). Gates `WEST_TO_EAST`
   and `NORTH_TO_SOUTH` are diagonal. Do not trust the axis gate names (`samples/gallery` has a `NORTHWEST_TO_SOUTHEAST`
-  gate along tile x): `plan_walls` uses the walls next to the gate. `--orientation` turns the
-  tile grid (`turn_map`) and each building canvas (`buildings.turn`); gates, walls and bridges follow their neighbours.
-- Water (#164, `docs/research/water.md`): AoE2 has no water level. In the samples and two real DE maps all water is at
-  elevation 0; trenches come from high land next to the water.
-- The tiny scenario has a town center, a house and a barracks: change the house chimney to see the golden test fail.
-- Test terrain code without a scenario: `columns()` in `tests/test_terrain.py` makes `aoe2mc.Columns` from a
-  small terrain array. Maps of the same size draw the same random numbers, so two maps can be compared per block.
+  gate along tile x): `plan_walls` uses the walls next to the gate. `--orientation` turns the tile grid (`turn_map`)
+  and each building canvas (`buildings.turn`); gates, walls and bridges follow their neighbours.
+- Water (#164, `docs/research/water.md`): AoE2 has no water level. Real maps have all water at elevation 0.
+- Golden test: change the house chimney of the tiny scenario to see it fail. `columns()` in `tests/test_terrain.py`
+  makes `Columns` from a terrain array. Maps of one size draw the same random numbers: compare them per block.
 - `place_objects` without a scenario: call it with one object dict (`kind`, `name`, `player`, `x`, `y`,
   `rotation`, `hero`, `garrisoned`) on a 16 × 16 `Columns`. With `sys.settrace` this shows which branch each
   `OtherInfo` name takes (#6). Buildings (also `FISH_TRAP`, docks) need `kind="B"`, else nothing is placed.
