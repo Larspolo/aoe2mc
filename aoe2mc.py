@@ -1195,13 +1195,19 @@ def build_chunk(cx, cz, cols, edits):
 
 
 def write_region(path, chunks):
-    """chunks: {(local_x, local_z): nbt_bytes}"""
+    """chunks: {(local_x, local_z): nbt_bytes}. A chunk of more than 255 sectors goes to c.<x>.<z>.mcc, as in
+    Minecraft: the region file then holds only the compression byte with the 'external' bit (0x82)."""
     header = bytearray(8192)
     body = bytearray()
     now = int(time.time())
+    rx, rz = (int(v) for v in os.path.basename(path).split(".")[1:3])
     for (lx, lz), data in chunks.items():
         comp = zlib.compress(data, 6)
         payload = (len(comp) + 1).to_bytes(4, "big") + b"\x02" + comp
+        if len(payload) > 255 * 4096:
+            with open(os.path.join(os.path.dirname(path), f"c.{rx * 32 + lx}.{rz * 32 + lz}.mcc"), "wb") as f:
+                f.write(comp)
+            payload = (1).to_bytes(4, "big") + b"\x82"
         payload += b"\x00" * (-len(payload) % 4096)
         offset = 2 + len(body) // 4096
         sectors = len(payload) // 4096
