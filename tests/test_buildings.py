@@ -1,4 +1,6 @@
 """Every AoE2 building draws without errors in every architecture set, with valid block states only."""
+from collections import Counter
+
 import numpy as np
 import pytest
 from AoE2ScenarioParser.datasets.buildings import BuildingInfo
@@ -78,3 +80,23 @@ def test_wall_tiles_decide_the_diagonal_of_a_gate():
     assert gate_solid("GATE_WEST_TO_EAST", [(10, 6), (6, 10)])[1] == "diag-"
     assert gate_solid("GATE_NORTH_TO_SOUTH", [(10, 10), (6, 6)])[1] == "diag+"
     assert gate_solid("GATE_SOUTHWEST_TO_NORTHEAST", [(10, 8), (5, 8)])[1] is False
+
+
+def test_farm_has_crop_rows():
+    """A farm (#65): rows of wheat with bare furrows between them, a path around it. The rows turn with the map."""
+    for turn in (0, 1):
+        cols = aoe2mc.Columns(8, np.zeros((8, 8), np.int16), np.zeros((8, 8), np.float32), {0: "GRASS_1"}, 4, 3,
+                              np.random.default_rng(1))
+        buildings.TURN = turn
+        try:
+            E, _ = aoe2mc.place_objects([dict(kind="B", name="FARM", player=1, x=4.5, y=4.5, rotation=0.0, hero=False,
+                                              garrisoned=False)], {}, cols, np.random.default_rng(1))
+        finally:
+            buildings.TURN = 0
+        x, y, z, ids, _ = (np.concatenate(p) for p in zip(*E.parts))
+        names = np.array([aoe2mc.B.states[i].split(":")[1].split("[")[0] for i in ids])
+        assert Counter(names) == {"farmland": 100, "dirt_path": 44, "wheat": 50, "air": 94}   # air: no grass
+        wx, wz = x[names == "wheat"], z[names == "wheat"]
+        assert len(set(wx if turn == 0 else wz)) == 5 and len(set(wz if turn == 0 else wx)) == 10
+        ages = Counter(aoe2mc.B.states[i] for i in ids[names == "wheat"])
+        assert ages.most_common(1)[0][0].endswith("age=7]") and len(ages) > 1
