@@ -1295,7 +1295,7 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
     entity_regions = {}
     nchunks = cols.width // 16
     regions = {}
-    top_view = np.zeros((cols.width, cols.width), np.uint16) if preview else None
+    top_view = np.zeros((cols.width, cols.width), np.uint16)     # for icon.png and preview.png
     for cx in range(nchunks):
         for cz in range(nchunks):
             data, vol = build_chunk(cx, cz, cols, per_chunk.get((cx, cz)))
@@ -1304,11 +1304,9 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
                 ed = entity_chunk(cx, cz, unit_chunks[(cx, cz)], cols, vol, passable)
                 if ed:
                     entity_regions.setdefault((cx >> 5, cz >> 5), {})[(cx & 31, cz & 31)] = ed
-            if preview:
-                solid = (vol != AIR) & (vol != BARRIER)
-                hi = HEIGHT - 1 - np.argmax(solid[::-1], axis=0)
-                top_view[cx * 16:cx * 16 + 16, cz * 16:cz * 16 + 16] = \
-                    np.take_along_axis(vol, hi[None], 0)[0].T
+            solid = (vol != AIR) & (vol != BARRIER)
+            hi = HEIGHT - 1 - np.argmax(solid[::-1], axis=0)
+            top_view[cx * 16:cx * 16 + 16, cz * 16:cz * 16 + 16] = np.take_along_axis(vol, hi[None], 0)[0].T
     for (rx, rz), chunks in regions.items():
         write_region(os.path.join(out, "region", f"r.{rx}.{rz}.mca"), chunks)
     for (rx, rz), chunks in entity_regions.items():
@@ -1318,13 +1316,15 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
     spawn = (c, cols.surface(c, c) + 2, c)
     write_level_dat(os.path.join(out, "level.dat"), name or os.path.splitext(os.path.basename(src))[0], spawn)
 
+    from PIL import Image
+    lut = np.array([block_color(s) for s in B.states], np.uint8)
+    img = lut[top_view[:cols.n, :cols.n].T]                     # rows = z, columns = x
+    shade = np.clip(1 + (cols.wtop[:cols.n, :cols.n].T - WATER_Y) * 0.02, 0.6, 1.4)
+    img = Image.fromarray(np.clip(img * shade[..., None], 0, 255).astype(np.uint8))
     if preview:
-        from PIL import Image
-        lut = np.array([block_color(s) for s in B.states], np.uint8)
-        img = lut[top_view[:cols.n, :cols.n].T]                 # rows = z, columns = x
-        shade = np.clip(1 + (cols.wtop[:cols.n, :cols.n].T - WATER_Y) * 0.02, 0.6, 1.4)
-        img = np.clip(img * shade[..., None], 0, 255).astype(np.uint8)
-        Image.fromarray(img).save(os.path.join(out, "preview.png"))
+        img.save(os.path.join(out, "preview.png"))
+    # the world list shows icon.png; keep the pixels sharp when the map is smaller than the icon
+    img.resize((64, 64), Image.LANCZOS if cols.n >= 64 else Image.NEAREST).save(os.path.join(out, "icon.png"))
 
     bridge = MOVED.pop("(on a bridge)", 0)
     if bridge:
