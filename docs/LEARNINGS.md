@@ -54,8 +54,7 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   and `NORTH_TO_SOUTH` are diagonal. Do not trust the axis gate names (`samples/gallery` has a `NORTHWEST_TO_SOUTHEAST`
   gate along tile x): `plan_walls` uses the walls next to the gate. `--orientation` turns the tile grid (`turn_map`)
   and each building canvas (`buildings.turn`); gates, walls and bridges follow their neighbours.
-- Water (#164, `docs/research/water.md`): AoE2 has no water level; real maps have all water at elevation 0.
-  `terrain_style` checks names in sequence: an earlier rule wins (`ROAD_GRAVEL` matched `GRAVEL` until #5).
+- Real maps have all water at elevation 0 (#164). `terrain_style`: an earlier rule wins (`ROAD_GRAVEL` matched `GRAVEL`, #5).
 - Golden test: change the house chimney of the tiny scenario to see it fail. `columns()` in `tests/test_terrain.py`
   makes `Columns` from a terrain array. Maps of one size draw the same random numbers: compare them per block.
 - `place_objects` without a scenario: call it with one object dict (`kind`, `name`, `player`, `x`, `y`,
@@ -64,9 +63,6 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   `build_chunk` returns `(nbt, vol)`: test exact blocks of a chunk with `vol` (#19).
 - `aoe2mc.py` reads `tools/mcdata/1.21.1.json` at import (#19). The package ships it as `tools.mcdata`
   (`pyproject.toml`). A new runtime data file must go into the package data too (test: `pip install .` in a venv).
-- `.gitattributes` merges `docs/DESIGN.md` with `union`: a local merge keeps the new table lines of both sides; look for
-  one line in two versions and keep one. `union` is wrong for lines that runs rewrite: both versions stay (#174).
-- `terrain_style` checks names in sequence: an earlier rule wins (`ROAD_GRAVEL` matched `GRAVEL` until #5).
 - `.gitattributes` merges `docs/DESIGN.md` with `union`: a local merge keeps the new table lines of both sides; look for one
   line in two versions and keep one. GitHub ignores `union` (the PR is "dirty", #210). Not for text that runs rewrite (#174).
 - PRs do not change `docs/coverage.md` or `MAX` in `tests/test_coverage.py`: the `coverage.yml` workflow updates them on
