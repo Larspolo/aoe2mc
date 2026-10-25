@@ -126,7 +126,7 @@ def terrain_style(name):
     if "DESERT" in n and "GRAVEL" not in n:
         return S("sandstone" if "CRACKED" in n else "sand", "sandstone", biome="desert",
                  deco=[("dead_bush", .01)])
-    if "GRAVEL" in n:
+    if "GRAVEL" in n and "ROAD" not in n:
         return S("gravel", "gravel", biome="desert" if "DESERT" in n else "plains")
     if "FARM" in n:
         if "DEAD" in n:
@@ -319,6 +319,8 @@ class Columns:
                 return 0
             if s["top"] == "grass_block":
                 return 2 if s["biome"] in ("forest", "birch_forest", "jungle", "bamboo_jungle", "taiga") else 1
+            if s["top"] == "gravel" and s["sub"] == "cobblestone":
+                return 6                                # gravel road (other gravel is terrain or sea floor)
             return {"podzol": 2, "coarse_dirt": 3, "dirt": 3, "mud": 3, "sand": 4,
                     "cobblestone": 5, "mossy_cobblestone": 5}.get(s["top"], 0)
 
@@ -358,13 +360,14 @@ class Columns:
         deco[floor & (r >= 0.24) & (r < 0.25)] = B("red_mushroom")
         deco[floor & (r >= 0.25) & (r < 0.45) & (n2 > 0.6)] = B("moss_carpet")
         deco[floor & (r >= 0.45) & (r < 0.6)] = B("short_grass")
+        def near(mask):                                 # 4 neighbors, no wrap-around at the map edge
+            m = np.zeros_like(mask)
+            m[1:] |= mask[:-1]; m[:-1] |= mask[1:]; m[:, 1:] |= mask[:, :-1]; m[:, :-1] |= mask[:, 1:]
+            return m
+
         # roads: a mix of stones with worn patches, rough edges and worn verges next to the road
         road = g == 5
         if road.any():
-            def near(mask):
-                m = np.zeros_like(mask)
-                m[1:] |= mask[:-1]; m[:-1] |= mask[1:]; m[:, 1:] |= mask[:, :-1]; m[:, :-1] |= mask[:, 1:]
-                return m
             edge = road & near(~road)
             verge = ~road & near(road) & ((g == 1) | (g == 2) | (g == 3))
             stones = [("cobblestone", .34), ("andesite", .14), ("stone", .10), ("mossy_cobblestone", .10),
@@ -385,29 +388,16 @@ class Columns:
             deco[road & ~edge & free & (r2 > 0.97)] = B("short_grass")  # grass between the stones
             deco[verge & (top == B("dirt_path"))] = AIR                 # no plants on worn ground
 
-        # roads: a mix of stones, moss in quiet places, and worn edges
-        cobble = (top == B("cobblestone")) & (g == 0)
-        gravel_road = (top == B("gravel")) & (g == 0)
-        road = cobble | gravel_road
-        mix = [("andesite", .12), ("gravel", .08), ("stone", .06), ("polished_andesite", .04), ("tuff", .03)]
-        acc = 0.0
-        for b, share in mix:
-            top[cobble & (r >= acc) & (r < acc + share)] = B(b)
-            acc += share
-        top[cobble & (r >= acc) & (r < acc + 0.25) & (n2 > 0.55)] = B("mossy_cobblestone")
-        top[gravel_road & (r < 0.15)] = B("coarse_dirt")
-        top[gravel_road & (r >= 0.15) & (r < 0.22)] = B("cobblestone")
-        top[gravel_road & (r >= 0.22) & (r < 0.3)] = B("dirt_path")
-        land = (g > 0)
-        near_land = np.zeros_like(road)
-        near_road = np.zeros_like(road)
-        for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-            near_land |= np.roll(np.roll(land, dx, 0), dz, 1)
-            near_road |= np.roll(np.roll(road, dx, 0), dz, 1)
-        edge = road & near_land
+        # gravel roads: some dirt and stones, and worn edges and verges
+        road = g == 6
+        top[road & (r < 0.15)] = B("coarse_dirt")
+        top[road & (r >= 0.15) & (r < 0.22)] = B("cobblestone")
+        top[road & (r >= 0.22) & (r < 0.3)] = B("dirt_path")
+        land = (g > 0) & ~road
+        edge = road & near(land)
         top[edge & (r2 < 0.35)] = B("dirt_path")
         top[edge & (r2 >= 0.35) & (r2 < 0.5)] = B("coarse_dirt")
-        worn = land & near_road & ~road
+        worn = land & near(road)
         top[worn & (r2 < 0.3)] = B("coarse_dirt")
         top[worn & (r2 >= 0.3) & (r2 < 0.45)] = B("dirt_path")
         deco[worn & (r2 < 0.45)] = AIR
