@@ -142,7 +142,8 @@ def test_book_of_scenario_texts(tmp_path):
     assert "units in a block (moved up): 0" in out.getvalue()
     w = world_reader.World(str(tmp_path / "BookWorld"))
     sx, _, sz, _ = w.spawn()
-    lecterns = [be for c in w.chunks().values() for be in c["block_entities"] if str(be["id"]) == "minecraft:lectern"]
+    lecterns = [be for c in w.chunks().values() for be in c["block_entities"]
+                if str(be["id"]) == "minecraft:lectern" and "Book" in be]      # the town center has an empty one
     assert len(lecterns) == 1
     be = lecterns[0]
     x, y, z = int(be["x"]), int(be["y"]), int(be["z"])
@@ -162,7 +163,8 @@ def test_book_of_scenario_texts(tmp_path):
 
 def test_no_book_without_texts(tiny_world):
     w = world_reader.World(tiny_world[0])
-    assert not any(str(be["id"]) == "minecraft:lectern" for c in w.chunks().values() for be in c["block_entities"])
+    assert not any(str(be["id"]) == "minecraft:lectern" and "Book" in be
+                   for c in w.chunks().values() for be in c["block_entities"])
 
 
 def test_mc_version_1_21_1(tmp_path):

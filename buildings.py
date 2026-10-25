@@ -495,6 +495,31 @@ def house(c, w, st, col, T, ctx):
         c.banner(mid + 1 if mid + 1 < x1 - 1 else mid - 1, 3 if wall_top > 3 else 2, z1, col)
 
 
+def town_hall(c, x0, x1, z0, z1, y, door, st, col):
+    """Furniture of the town center hall (#250): a long table with benches, the lectern of the town clerk at the
+    back wall, chests and barrels, banners and a carpet in the player color, lanterns. Rooms x0..x1-1, z0..z1-1
+    with the floor under y; the door is at x = door in the front wall (z = z1), so that column stays free."""
+    wood = st.wood.replace("_planks", "")
+    stairs, slab, _ = family(wood)
+    mid = (z0 + z1) // 2
+    tx = [x for x in range(x0 + 1, x1 - 1) if x != door]
+    for x in tx:
+        c.set(x, y, mid, f"{slab}[type=top]")
+        c.set(x, y, mid - 1, stair(stairs, "north"))       # benches: the back faces away from the table
+        c.set(x, y, mid + 1, stair(stairs, "south"))
+    for x in tx[::2]:
+        c.set(x, y + 1, mid, "lantern[hanging=false]")
+    c.box(door, door + 1, y, y + 1, z0, z1, f"{col}_carpet")      # carpet from the door to the back wall
+    c.set(door, y, z0, "lectern[facing=south]")
+    c.set(x0, y, z0, "chest[facing=south]"); c.set(x1 - 1, y, z0, "barrel[facing=up]")
+    c.set(x0, y, z1 - 1, "barrel[facing=up]")
+    if x1 - 1 != door:
+        c.set(x1 - 1, y, z1 - 1, "chest[facing=north]")
+    for x in (x0 + 1, x1 - 2):
+        c.banner(x, y + 2, z0, col)                              # on the back wall, facing the door
+    c.set(x0, y + 2, mid, "wall_torch[facing=east]"); c.set(x1 - 1, y + 2, mid, "wall_torch[facing=west]")
+
+
 def town_center(c, w, st, col, T, ctx):
     """The in-game model: a high main building at the back (open ground floor on posts, the hall above it,
     stairs up at the front) and two L-shaped open sheds on posts at the front corners around an open yard."""
@@ -541,6 +566,8 @@ def town_center(c, w, st, col, T, ctx):
     c.door(sx, hp + 1, hz1 - 1)
     c.set(mid - 1, hp - 1, hz1 - 2, "bell[attachment=ceiling,facing=south]")       # the town bell
     c.set(hx0 + 1, 1, hz1 - 2, "barrel[facing=up]"); c.set(hx1 - 2, 1, hz0 + 1, "chest[facing=south]")
+    if hx1 - hx0 >= 6 and hz1 - hz0 >= 6:
+        town_hall(c, hx0 + 1, hx1 - 1, hz0 + 1, hz1 - 1, hp + 1, sx, st, col)
     for x in (hx0 + 1, hx1 - 2):
         if x != sx:
             c.banner(x, hp + 3, hz1, col)
