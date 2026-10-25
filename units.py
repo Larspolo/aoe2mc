@@ -1,7 +1,7 @@
 """
 Units for aoe2mc: AoE2 units -> Minecraft mobs, boats and minecarts.
 
-All mobs stand still (NoAI), do not despawn (PersistenceRequired) and are silent.
+All mobs stand still (NoAI), do not despawn (PersistenceRequired) and are silent, except passive animals.
 Each unit gets a name tag with its AoE2 name in the player color.
 """
 import json
@@ -392,8 +392,11 @@ def classify(n, hero=False):
     # Animals (but not war animals)
     a = animal(n) if not hero else None
     if a:
-        _, kind, extra = a
-        return mounted("camel", None) if kind == "camel" else mob(kind, **extra)
+        behavior, kind, extra = a
+        d = mounted("camel", None) if kind == "camel" else mob(kind, **extra)
+        if behavior == "passive":   # sheep and cows make their sounds (#221)
+            del d["Silent"]
+        return d
 
     # Villagers, monks, kings, traders
     if n.startswith("VILLAGER") or n.startswith("REPAIRER"):

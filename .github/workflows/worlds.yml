@@ -1,0 +1,49 @@
+name: Worlds
+
+# Converts each map in examples/ and samples/ and attaches one zip per world to a GitHub Release (#207).
+# Worlds do not go into git (CLAUDE.md). A manual run updates the release "worlds"; a tag v* gets its own release.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag"
+        required: true
+        default: "worlds"
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write    # make the release (also read: the repository is private)
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - run: pip install -r requirements.txt
+      - name: Convert the maps
+        run: |
+          mkdir -p out
+          for f in examples/*.aoe2scenario samples/*.aoe2scenario; do
+            n=$(basename "$f" .aoe2scenario)
+            python aoe2mc.py "$f" "out/$n" --preview
+            (cd out && zip -qr "$n.zip" "$n")
+          done
+      - name: Attach the zips to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          notes="Converted example worlds (Minecraft Java 26.3) of commit $GITHUB_SHA. Unzip a world into the saves folder of Minecraft."
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --notes "$notes"
+          else
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "Example worlds ($TAG)" --notes "$notes"
+          fi
+          gh release upload "$TAG" out/*.zip --clobber

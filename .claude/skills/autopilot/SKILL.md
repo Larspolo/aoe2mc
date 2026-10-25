@@ -40,6 +40,7 @@ Put the method after the path (`... -X PATCH`): the permission rules match the s
 | Size | `size:S` (one short PR), `size:M` (one PR), `size:L` (too large: split first) |
 | Kind | `bug`, `feature`, `tooling`, `design`, `docs`, `cleanup` |
 | Flow | `needs-human` (waits for the owner), `blocked` (waits for another ticket), `in-progress`, `epic` (parent of sub-issues), `agent-status` (the status issue), `paused` |
+| PR | `hold` (the Automerge workflow does not merge it), `conflict` (the workflow could not merge it: fix it in step 2) |
 
 ## Runs can overlap
 
@@ -47,11 +48,13 @@ Several runs work at the same time: the owner wants maximum use of the quota. A 
 belong to the other run when the ticket or the PR changed less than 2 hours ago: do not touch them.
 After 2 hours without a change the other run is dead: take the ticket over with `python3 tools/claim.py N --takeover`
 and say so in a comment. Exit 1 means that another run took it over first: leave it.
-Exception: a PR with no new commit and no new comment for 30 minutes is stalled. Take it over at once
+The workflow `automerge.yml` merges an agent PR when its CI is green (#232). A PR whose CI runs or is green waits
+for that workflow: it is not stalled. Exception: a PR with red CI, label `conflict` or a merge conflict, and with no new
+commit and no new comment for 30 minutes, is stalled. Take it over at once
 (`python3 tools/claim.py N --takeover` with the ticket number N, then comment "Taken over by `<your branch>`: stalled."), for example when it has a merge conflict and its run waits for a
 CI event. Then read the PR comments again: if an older "Taken over by" comment of another branch is less than
 30 minutes old, leave the PR to that run.
-A PR whose ticket has no `in-progress` label is free: any run can finish and merge it (hand-off, step 6.8).
+A PR whose ticket has no `in-progress` label is free: any run can fix it (hand-off).
 If your usage limit stops you, the next run continues your work through this rule.
 
 ## 1. Start
@@ -70,9 +73,12 @@ List open PRs. For each PR that the agent opened (branch `claude/*` or `agent/*`
 owns (see "Runs can overlap"):
 - Its ticket has `needs-human` or `blocked`, or is closed → skip the PR: it waits for the owner or another
   ticket. When the ticket is closed as "not planned", close the PR with a one-line comment.
-- CI green, no open owner comments → merge it (squash), do step 7 for its ticket, then continue with step 3.
+- CI green or running, no label → skip it: the Automerge workflow merges it. Do not merge it by hand.
+  Exception: CI was green more than 15 minutes ago and the PR is still open (the workflow failed) → merge it
+  (squash) and do step 7.
 - CI red or owner review comments → fix it now. That is the work of this cycle: continue at step 6.8.
-- Merge conflict (`mergeable_state` is `dirty`, often with no CI run) → step 6.10, then continue at step 6.8.
+- Merge conflict (label `conflict`, or `mergeable_state` is `dirty`, often with no CI run) → step 6.10, then
+  continue at step 6.8. Remove the label `conflict` when you push the fix.
 
 ## 3. Read the owner's feedback
 
@@ -124,24 +130,22 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
 7. Push. Open a PR: title = ticket title, body = what changed, how you verified, `Closes #<number>`.
 8. Read `mergeable_state` (`/pulls/N`; `unknown` means GitHub still computes it: read it again). If it is
    `dirty`, do step 10 first: GitHub runs no CI on a PR with a merge conflict, so no CI event comes.
-   Wait for CI. If the session has `subscribe_pr_activity`: call it and end the turn; the CI result wakes
-   the session. Local session: `gh pr checks <pr> --watch`. Else hand the PR off: remove `in-progress`
-   from the ticket, comment on the PR "Waiting for CI. A later run merges it.", and continue with a ticket
-   that does not depend on it (or go to step 8). A later run merges it in step 2.
+   Do not wait for CI: the Automerge workflow merges the PR when CI is green, removes `in-progress` and deletes
+   the branch. Continue with step 7 and the next ticket. Step 2 of your next cycle finds a red or conflicted PR.
 9. CI red → find the cause, fix, push. After 3 failed attempts stop: comment the cause on the ticket,
-   add `blocked` or `needs-human`, remove `in-progress`, and go to step 8.
+   add `blocked` or `needs-human` and `hold`, remove `in-progress`, and go to step 8.
 10. Merge conflict (another PR changed the same lines) → merge `origin/main` into the branch, solve the
     conflict, verify again, push. Do not rebase or force-push a branch that has an open PR.
     `docs/DESIGN.md` merges by itself (`union` in `.gitattributes`): remove
     a line that is now there twice in two versions (`git diff origin/main -- docs/`).
-11. CI green → merge with squash and delete the branch.
+11. CI green → the Automerge workflow merges. Add label `hold` to the PR if it must not merge yet.
 
 If the ticket is wrong or not possible: comment why, add `needs-human`, remove `in-progress`. Do not merge
-partial work.
+partial work: add `hold` to its PR (the workflow also skips a PR whose ticket has `needs-human` or `blocked`).
 
 ## 7. Close the ticket
 
-The merge closes the ticket. Remove `in-progress`. If the owner must check something in the game, comment
+The merge closes the ticket, and the Automerge workflow removes `in-progress`. If the owner must check something in the game, comment
 precise check steps on the ticket and make a small `needs-human` ticket for the check.
 
 ## 8. Report on the status issue
@@ -181,7 +185,10 @@ If the argument asks for more than 1 ticket, go back to step 2 after step 8 (fin
 feedback). In a
 cloud session, reset the branch first: `git fetch origin main && git checkout -B <branch> origin/main`. Then push with
 `git fetch origin <branch> && git push --force-with-lease origin <branch> && git branch -u origin/<branch>`
-(a plain `git push -u origin <branch>` when the branch is not on the remote). After `checkout -B` the upstream is
+(a plain `git push -u origin <branch>` when the branch is not on the remote).
+The session branch can carry only one open PR: do the next ticket in a local commit, and push it only when the PR
+of the last ticket is merged or closed (`/pulls?head=Larspolo:<branch>&state=open` is empty). Else a push replaces
+the open PR. After `checkout -B` the upstream is
 `origin/main`, so a bare `git push` fails: check that the output shows `-> <branch>`, else the PR has old commits.
 Stop when the context is more than half full.
 

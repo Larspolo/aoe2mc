@@ -18,7 +18,10 @@ Converts an Age of Empires II: Definitive Edition scenario (`.aoe2scenario`) int
 | `tests/` | The tests (pytest) |
 | `docs/` | Design guide, roadmap, steering, coverage report and other notes |
 
-The repository has no converted worlds. Convert a sample map to get one (see "Use").
+The repository has no converted worlds. Convert a sample map to get one (see "Use"), or download the converted
+worlds: the release `worlds` on the GitHub page of the repository ("Releases") has one zip per map of `examples/` and
+`samples/`. Unzip a world into the `saves` folder of Minecraft Java. The workflow `.github/workflows/worlds.yml` makes
+the zips: start it in the "Actions" tab, or push a tag `v*` for a release of that tag.
 
 ## Install
 
@@ -82,7 +85,7 @@ near the spawn. Each text is a chapter. There is no lectern when all texts are e
 
 ## Units
 
-All units stand still (no AI), do not despawn and are silent. Each unit has a name tag with its AoE2 name in the player color.
+All units stand still (no AI), do not despawn and are silent. Passive animals (sheep, cows, pigs and others) make their normal sounds. Each unit has a name tag with its AoE2 name in the player color.
 The world difficulty is Easy: on Peaceful, Minecraft removes the hostile mobs (the soldiers).
 
 | AoE2 | Minecraft |
