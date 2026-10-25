@@ -169,7 +169,7 @@ def test_birds_fly_or_walk_and_can_be_skipped():
     assert units.classify("MACAW")["id"] == "minecraft:parrot" and units.classify("MACAW")["NoGravity"] == 1
     assert units.classify("RAVEN")["id"] == "minecraft:bat"
     assert units.classify("FLAMINGO")["id"] == "minecraft:chicken" and "NoGravity" not in units.classify("FLAMINGO")
-    assert units.classify("BUTTERFLY1") is None
+    assert units.classify("BUTTERFLY1")["id"] == "minecraft:bee" and "BatFlags" not in units.classify("BUTTERFLY3")
     cols = aoe2mc.Columns(16, np.zeros((16, 16), np.int16), np.zeros((16, 16), np.float32),
                           {0: "GRASS_1"}, 4, 3, np.random.default_rng(1))
     birds = [dict(kind="U", name=n, player=0, x=x, y=2.5, rotation=0.0, hero=False, garrisoned=False)

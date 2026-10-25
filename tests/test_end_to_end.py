@@ -251,5 +251,12 @@ def test_ambience(tiny_world, tmp_path, monkeypatch):
     monkeypatch.setattr(aoe2mc, "MC", aoe2mc.VERSIONS["1.21.1"])
     old = aoe2mc.biome_file("swamp")
     assert old["effects"]["water_color"] == 0x617b64 and old["effects"]["grass_color_modifier"] == "swamp"
-    # off: no ambience lines
-    assert aoe2mc.write_datapack(str(tmp_path / "O"), [], None, ["minecraft:forest"], "off") == (0, 0)
+    # off: the world as before #188: no datapack, the animals are silent too (#222)
+    monkeypatch.setattr(aoe2mc, "MC", aoe2mc.VERSIONS[aoe2mc.VERSION_NAME])
+    with contextlib.redirect_stdout(io.StringIO()) as log:
+        aoe2mc.convert(src, str(tmp_path / "O"), ambience="off")
+    assert not os.path.exists(tmp_path / "O" / "datapacks") and "work sounds" not in log.getvalue()
+    sheep = [e for e in world_reader.World(str(tmp_path / "O")).entities() if str(e["id"]) == "minecraft:sheep"]
+    assert sheep and all(e.get("Silent") == 1 for e in sheep)
+    loud = [e for e in world_reader.World(path).entities() if str(e["id"]) == "minecraft:sheep"]
+    assert loud and not any(e.get("Silent") for e in loud)                  # basic: animal sounds (#227)

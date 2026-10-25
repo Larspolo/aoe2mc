@@ -4,7 +4,8 @@ A port of the reader of genie-scx (genie-rs, GPL-3.0; crates/genie-scx/src/forma
 fields that aoe2mc needs. Layout: docs/campaign-formats.md, "The old scenario format".
 
     import scx
-    s = scx.read("old.scx")      # dict: width, height, terrain [x, y], elevation [x, y], players {id: {civ, color, view}}
+    s = scx.read("old.scx")      # dict: width, height, terrain [x, y], elevation [x, y], players {id: {civ, color, view}},
+                                 # objects [{player, id, type, x, y, angle, garrisoned_in}]
 """
 import struct
 import zlib
@@ -124,8 +125,12 @@ def read(path):
     # The colors and start views are in the scenario player data after the objects (format < 1.36)
     n = s.u32()
     s.skip((n - 1) * 7 * 4)                 # world player data: resources and population
-    for _ in range(n):                      # objects: x, y, z, ID, type, state, angle, frame, garrisoned in
-        s.skip(s.u32() * 29)
+    objects = []
+    for p in range(n):                      # objects: x, y, z, ID, type, state, angle, frame, garrisoned in
+        for _ in range(s.u32()):
+            x, y, _, ref, kind, _, angle, _, holder = s.unpack("fffiHBfhi")
+            objects.append({"player": p, "id": ref, "type": kind, "x": x, "y": y, "angle": angle,
+                            "garrisoned_in": holder if holder > 0 else None})     # 0 and -1: not garrisoned
     players = {0: {"civ": "GAIA", "color": None, "view": None}}
     for p in range(1, s.u32()):
         s.str16()
@@ -146,4 +151,4 @@ def read(path):
             players[p] = {"civ": CIVS[civ] if 0 <= civ < len(CIVS) else f"CIV_{civ}", "color": color,
                           "view": view if min(view) >= 0 else None}
     return {"format": fmt.decode(), "width": w, "height": h, "terrain": terrain, "elevation": elevation,
-            "players": players}
+            "players": players, "objects": objects}
