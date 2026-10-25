@@ -69,6 +69,25 @@ def test_entities(tiny_world):
     assert "units in a block (moved up): 0" in out
 
 
+
+def test_objects_file(tiny_world):
+    """aoe2mc.json lists the map, the players and the objects; the unit UUIDs are the UUIDs of the entities."""
+    path, _ = tiny_world
+    with open(os.path.join(path, "aoe2mc.json")) as f:
+        data = json.load(f)
+    assert (data["tile_size"], data["level_height"]) == (4, 3) and data["map_size"] > 0
+    assert all({"civ", "color", "arch"} <= set(p) for p in data["players"].values())
+    objs = data["objects"]
+    assert all({"id", "name", "kind", "player", "tile", "rotation"} <= set(o) for o in objs)
+    world = {aoe2mc.units.uuid_str(e["UUID"]) for e in world_reader.World(path).entities()}
+    uuids = [o["uuid"] for o in objs if o["kind"] == "unit"]
+    assert uuids and set(uuids) <= world and len(set(uuids)) == len(uuids)
+    blds = [o for o in objs if o["kind"] == "building"]
+    assert blds and all(len(o["footprint"]) == 4 for o in blds)
+    tc, = [o for o in blds if o["name"] == "TOWN_CENTER"]
+    x0, z0, x1, z1 = tc["footprint"]
+    assert x1 - x0 == z1 - z0 == 16 and x0 <= tc["tile"][0] * 4 <= x1
+
 def test_mc_version_26_3(tmp_path, monkeypatch):
     import contextlib
     import io

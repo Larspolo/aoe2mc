@@ -15,8 +15,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   else `apt-get install -y openjdk-25-jre-headless` (`tools/mc_check.py` finds it, or runs apt-get as root, #195).
   Send `stop` only after "Done (" is in `logs/latest.log`. Do not use `pkill -f server.jar`: it kills your own shell.
 - GitHub in cloud sessions: `gh api repos/Larspolo/aoe2mc/...` (REST) works. GraphQL (`gh issue list`, `gh pr create`),
-  `search/...` and branch deletes give 403. CI job logs: only `mcp__github__get_job_logs`.
-- A push to a new ref (`claim/N`) works; a push of a non-fast-forward fails: `tools/claim.py` uses it as a lock (#211).
+  `search/...` and branch deletes give 403. CI job logs: only `mcp__github__get_job_logs`. A push to a new ref works,
+  a non-fast-forward push fails: `tools/claim.py` uses it as a lock (#211). REST ref paths: `git/refs/heads/...`.
 - Quote the heredoc tag (`<<'EOF'`) for GitHub text: `<<EOF` runs each `` `name` `` as a command. Pass paths as arguments.
 - A scheduled task from `create_trigger` has no repository, so its sessions cannot clone: set `Larspolo/aoe2mc`
   as its repository in the claude.ai UI. Scheduled runs use Sonnet 5.5 unless the task sets another model.
@@ -30,7 +30,7 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 - AoE2 wiki: HTML pages give 403 (Cloudflare). Use `tools/refimage.py` (MediaWiki API, own `User-Agent`). Page text:
   `api.php?action=parse&page=Title&prop=wikitext&format=json&formatversion=2`.
 - AoE2 recorded games: the record hosts (`aoe.ms`, `data.aoe2companion.com`, `www.aoe2insights.com`) are blocked.
-  The `mgz` test records on GitHub raw work (`happyleavesaoc/aoc-mgz/master/tests/recs/de-64.3.aoe2record`, MIT):
+  `samples/de-64.3.aoe2record` is an `mgz` test record (MIT, #134; more in `happyleavesaoc/aoc-mgz/master/tests/recs/`):
   `mgz.model.parse_match(f).map.tiles` gives terrain and elevation of a real DE map. Install `mgz` after
   `python3 -m pip install --ignore-installed setuptools` (the Debian setuptools cannot build it).
 
@@ -70,9 +70,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   `tests/test_coverage.py` to the new counts. Parallel runs often change the same counts (#79). Check
   `mergeable_state` before the merge: a green PR is "dirty" when main moved after the push. Merge in the CI poll loop.
 - All 243 building types of one set draw in about 1 s; the gallery converts in about 23 s (`--verbose`: per phase, #26).
-- Block IDs in `B` depend on what was registered before (earlier tests or conversions). Code that draws random
-  numbers per block ID must go in state-name order, not ID order (see #44). A test that passes alone but
-  fails in the full suite often has this cause.
+- Block IDs in `B` depend on earlier tests or conversions: draw random numbers per block in state-name order, not
+  ID order (#44). A test that passes alone but fails in the full suite often has this cause.
 - An invalid item in a block entity can vanish without a log line. `tools/mc_check.py W --keep DIR` keeps the world
   that the server saved: read it with `tools/world_reader.py` (1.21.1 saves the loaded chunks again, 26.3 can skip them) (#27).
   26.3 saves a default state as the bare name and puts the properties in another order: normalize before you compare (#189).
