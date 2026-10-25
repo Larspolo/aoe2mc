@@ -27,6 +27,7 @@ import argparse
 import contextlib
 import io
 import json
+import math
 import os
 import time
 import zlib
@@ -56,7 +57,7 @@ HEIGHT = MAX_Y - MIN_Y
 WATER_Y = 62                 # Y of the highest water block (sea level)
 NONE = -10000                # marker for "no column here" (outside the map)
 # AoE2 tile x goes to the top corner of the screen, tile y to the bottom corner. With x → +X and y → +Z the
-# top corner is in the north-east: the map is the in-game view turned 45° clockwise, not mirrored.
+# top corner is in the north-east: the map is the in-game view turned 45° clockwise, not mirrored (`--orientation ne`, the default).
 # The player looks north-east at the spawn, like the AoE2 camera (yaw 0 = south, 90 = west, 180 = north).
 SPAWN_YAW = -135.0
 
@@ -513,6 +514,67 @@ class Edits:
         for k, s, e in zip(keys, starts, ends):
             out[(int(k // 100000), int(k % 100000))] = (x[s:e] & 15, y[s:e], z[s:e] & 15, ids[s:e], hard[s:e])
         return out
+
+
+# --------------------------------------------------------------------------------------------
+# Orientation: turn the finished map in steps of 90° (--orientation), with all block directions.
+# --------------------------------------------------------------------------------------------
+ORIENTATIONS = ("ne", "se", "sw", "nw")    # Minecraft corner of the AoE2 top corner; index = clockwise turns
+DIRS = ("north", "east", "south", "west")   # clockwise
+RAILS = {"north_south", "east_west", "north_east", "north_west", "south_east", "south_west"}
+
+
+def turn_state(state, k):
+    """The block state turned k × 90° clockwise (seen from above)."""
+    name, _, props = state.partition("[")
+    if not props or k % 4 == 0:
+        return state
+    out = []
+    for kv in props[:-1].split(","):
+        key, v = kv.split("=")
+        if key in DIRS:                                   # fence, wall, pane and vine sides
+            key = DIRS[(DIRS.index(key) + k) % 4]
+        elif key == "facing" and v in DIRS:
+            v = DIRS[(DIRS.index(v) + k) % 4]
+        elif key == "axis" and v in ("x", "z") and k % 2:
+            v = "z" if v == "x" else "x"
+        elif key == "rotation":                           # signs, skulls, banners: 16 steps, clockwise
+            v = str((int(v) + 4 * k) % 16)
+        elif key == "shape" and v.split("_")[-1] in DIRS:  # rails (stair shapes are relative: no change)
+            t = [DIRS[(DIRS.index(w) + k) % 4] if w in DIRS else w for w in v.split("_")]
+            v = "_".join(t) if t[0] == "ascending" or "_".join(t) in RAILS else "_".join(t[::-1])
+        out.append(f"{key}={v}")
+    return f"{name}[{','.join(out)}]"
+
+
+def turn_xz(x, z, k, m):
+    """Point (x, z) turned k × 90° clockwise in the square 0..m (m = n - 1 for block cells, n for positions)."""
+    for _ in range(k % 4):
+        x, z = m - z, x
+    return x, z
+
+
+def turn_world(cols, edits, k):
+    """Turn the columns, the edits and the bridge cells of the map k × 90° clockwise."""
+    k %= 4
+    if not k:
+        return
+    n = cols.n
+    states = list(B.states)
+    lut = np.array([B(turn_state(s, k)) for s in states], np.uint16)
+    for key, a in vars(cols).items():
+        if isinstance(a, np.ndarray) and a.ndim == 2 and min(a.shape) >= n:
+            part = np.rot90(a[:n, :n], k).copy()
+            a[:n, :n] = lut[part] if key in ("top_id", "sub_id", "deco", "deco2") else part
+    parts = []
+    for xs, ys, zs, ids, hard in edits.parts:
+        ok = (xs >= 0) & (zs >= 0) & (xs < n) & (zs < n)  # the padding to whole chunks does not turn
+        x, z = turn_xz(xs[ok], zs[ok], k, n - 1)
+        parts.append((x, ys[ok], z, lut[ids[ok]], hard[ok]))
+    edits.parts = parts
+    cells = {turn_xz(x, z, k, n - 1) for x, z in buildings.BRIDGE_CELLS}
+    buildings.BRIDGE_CELLS.clear()
+    buildings.BRIDGE_CELLS.update(cells)
 
 
 # --------------------------------------------------------------------------------------------
@@ -1043,9 +1105,10 @@ def free_spot(cols, bx, bz, r, water=False):
     return int(xs[i] + x0), int(zs[i] + z0)
 
 
-def find_spawn(cols, objects, players, tile=None):
+def find_spawn(cols, objects, players, tile=None, k=0):
     """Spawn block (x, y, z): the tile given (--spawn), else the start view of player 1, else in front of
-    (south of) the first town center of player 1, else the map center. Moved to the nearest free land column."""
+    (south of) the first town center of player 1, else the map center. Moved to the nearest free land column.
+    k: the clockwise quarter turns of the map (--orientation); the tiles are AoE2 tiles before the turn."""
     if tile is None:
         tile = players.get(1, {}).get("view")
     if tile is None:
@@ -1053,6 +1116,8 @@ def find_spawn(cols, objects, players, tile=None):
         if tc:
             tile = (tc["x"], tc["y"] + buildings.footprint(tc["name"]) / 2 + 0.5)
     T, n = cols.T, cols.n
+    if tile is not None:
+        tile = turn_xz(tile[0], tile[1], k, n / T)
     bx, bz = (n // 2, n // 2) if tile is None else (int(min(max(tile[0] * T, 0), n - 1)),
                                                     int(min(max(tile[1] * T, 0), n - 1)))
     bx, bz = free_spot(cols, bx, bz, 8 * T) or (bx, bz)
@@ -1268,7 +1333,7 @@ def write_region(path, chunks):
         f.write(header + body)
 
 
-def write_level_dat(path, name, spawn):
+def write_level_dat(path, name, spawn, yaw=SPAWN_YAW):
     def dim(kind, gen):
         return Compound({"type": String(f"minecraft:{kind}"), "generator": gen})
     void = Compound({"type": String("minecraft:flat"), "settings": Compound({
@@ -1286,7 +1351,7 @@ def write_level_dat(path, name, spawn):
                              "Series": String("main"), "Snapshot": Byte(0)}),
         "LevelName": String(name), "GameType": Int(1), "Difficulty": Byte(1),   # not peaceful: peaceful removes the soldiers
         "allowCommands": Byte(1), "hardcore": Byte(0), "initialized": Byte(1),
-        "SpawnX": Int(spawn[0]), "SpawnY": Int(spawn[1]), "SpawnZ": Int(spawn[2]), "SpawnAngle": Float(SPAWN_YAW),
+        "SpawnX": Int(spawn[0]), "SpawnY": Int(spawn[1]), "SpawnZ": Int(spawn[2]), "SpawnAngle": Float(yaw),
         "LastPlayed": Long(int(time.time() * 1000)), "Time": Long(0), "DayTime": Long(6000),
         "raining": Byte(0), "thundering": Byte(0), "rainTime": Int(0), "thunderTime": Int(0),
         "clearWeatherTime": Int(0), "WasModded": Byte(0),
@@ -1348,18 +1413,19 @@ def block_color(state):
 # Main
 # --------------------------------------------------------------------------------------------
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
-            barriers=True, mc_version=VERSION_NAME, spawn=None):
+            barriers=True, mc_version=VERSION_NAME, spawn=None, orientation="ne"):
     global MC
     MC = VERSIONS[mc_version]
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
     try:
-        _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn)
+        _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn,
+                 ORIENTATIONS.index(orientation))
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
 
 
-def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn):
+def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, turns):
     buildings.BARRIERS = barriers
     MOVED.clear()           # the counts of an earlier conversion in this process
     rng = np.random.default_rng(seed)
@@ -1387,8 +1453,11 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     edits, stats = place_objects(objects, players, cols, rng)
     for k, v in sorted(stats.items()):
         print(f"  {k}: {v}")
+    turn_world(cols, edits, turns)
     per_chunk = edits.by_chunk(cols.width)
-    unit_chunks = plan_units(objects, players, cols, rng, stats) if with_units else {}
+    turned = [dict(o, rotation=o["rotation"] + turns * math.pi / 2,
+                   **dict(zip("xy", turn_xz(o["x"], o["y"], turns, size)))) for o in objects]
+    unit_chunks = plan_units(turned, players, cols, rng, stats) if with_units else {}
     print(f"  units: {stats['units']}, fish: {stats['fish']}")
     passable = np.array([st.split(":")[1].split("[")[0] in ("air", "cave_air") or
                          any(k in st.split(":")[1] for k in PASSABLE) and "grass_block" not in st
@@ -1416,8 +1485,9 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     for (rx, rz), chunks in entity_regions.items():
         write_region(os.path.join(out, "entities", f"r.{rx}.{rz}.mca"), chunks)
 
-    spawn = find_spawn(cols, objects, players, spawn)
-    write_level_dat(os.path.join(out, "level.dat"), name or os.path.splitext(os.path.basename(src))[0], spawn)
+    spawn = find_spawn(cols, objects, players, spawn, turns)
+    write_level_dat(os.path.join(out, "level.dat"), name or os.path.splitext(os.path.basename(src))[0], spawn,
+                    SPAWN_YAW + 90 * turns)
 
     from PIL import Image
     lut = np.array([block_color(s) for s in B.states], np.uint8)
@@ -1493,10 +1563,13 @@ def main(argv=None):
                     help="player spawn in tiles (default: start view or town center of player 1)")
     ap.add_argument("--mc-version", choices=sorted(VERSIONS), default=VERSION_NAME,
                     help=f"Minecraft Java version of the output (default {VERSION_NAME}; 26.3 is not complete yet)")
+    ap.add_argument("--orientation", choices=ORIENTATIONS, default="ne",
+                    help="Minecraft corner of the top corner of the AoE2 screen (default ne: the map is the "
+                         "in-game view turned 45° clockwise)")
     a = ap.parse_args(argv)
     try:
         convert(a.scenario, a.output, a.tile_size, a.level_height, a.name, a.seed, a.preview, a.architecture,
-                a.player_architecture, not a.no_units, not a.no_barriers, a.mc_version, a.spawn)
+                a.player_architecture, not a.no_units, not a.no_barriers, a.mc_version, a.spawn, a.orientation)
     except OptionError as e:
         ap.error(str(e))
 

@@ -49,6 +49,7 @@ The world is in creative mode. Outside the map there is only void. The world lis
 | `--no-units` | off | Do not convert units |
 | `--no-barriers` | off | Do not fill building footprints with invisible barrier blocks |
 | `--spawn X,Z` | start view or town center of player 1 | Player spawn in tiles. Without it the spawn is the start view of player 1, else the front of its first town center, else the map center. |
+| `--orientation` | `ne` | Minecraft corner of the top corner of the AoE2 screen: `ne`, `se`, `sw` or `nw`. The map, the buildings, the units and the spawn view turn with it. |
 
 ## Buildings
 
@@ -186,3 +187,5 @@ Read these files first:
   at the top of the screen. In Minecraft this corner is in the north-east: the map is the in-game view turned 45°
   clockwise, not mirrored. A turn of 45° is not possible on a block grid. At the spawn the player looks north-east,
   as the AoE2 camera does.
+  Use `--orientation` to put the top corner in another corner, for example `nw`. The building fronts turn with the map:
+  south for `ne`, west for `se`, north for `sw` and east for `nw`.
