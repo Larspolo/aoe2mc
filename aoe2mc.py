@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 aoe2mc - Convert an Age of Empires II: DE scenario (.aoe2scenario) or the start state of a recorded game
-(.aoe2record) to a Minecraft Java world. A campaign (.aoe2campaign) gives one world per scenario.
+(.aoe2record) to a Minecraft Java world. A campaign (.aoe2campaign) gives one world per scenario; an old campaign
+(.cpx, .cpn) gives its old scenario files and the steps to save them in the DE editor.
 
 Usage:
     python aoe2mc.py MAP.aoe2scenario OUTPUT_WORLD_FOLDER [options]
@@ -2063,49 +2064,81 @@ class CampaignError(ValueError):
 
 
 def read_campaign(path):
-    """.aoe2campaign -> (campaign name, [(scenario name, scenario bytes)]). Layout: docs/campaign-formats.md."""
+    """.aoe2campaign or .cpx/.cpn -> (version, campaign name, [(scenario file name, scenario bytes)]).
+    Layout: docs/campaign-formats.md."""
     import struct
     with open(path, "rb") as f:
         b = f.read()
+
+    def text(raw):                                                  # old files use the code page of the author
+        try:
+            return raw.decode("utf-8")
+        except UnicodeDecodeError:
+            return raw.decode("cp1252", "replace")
 
     def de_string(o):
         if b[o:o + 2] != b"\x60\x0a":
             raise CampaignError(f"{path}: no string at byte {o}: the file is not a valid campaign")
         n = struct.unpack_from("<H", b, o + 2)[0]
-        return b[o + 4:o + 4 + n].decode("utf-8", "replace"), o + 4 + n
+        return text(b[o + 4:o + 4 + n]), o + 4 + n
 
-    if b[:4] != b"2.00":
-        raise CampaignError(f"{path}: version {b[:4]!r} is not 2.00: only .aoe2campaign files (AoE2 DE) are supported")
+    version = b[:4]
+    if version not in (b"1.00", b"2.00"):
+        raise CampaignError(f"{path}: version {version!r} is not 1.00 (.cpx, .cpn) or 2.00 (.aoe2campaign)")
     try:
-        deps = struct.unpack_from("<I", b, 4)[0]
-        o = 8 + 4 * deps
-        name = b[o:o + 256].split(b"\0")[0].decode("utf-8", "replace")
+        o = 4 if version == b"1.00" else 8 + 4 * struct.unpack_from("<I", b, 4)[0]   # 2.00: DLC dependencies
+        name = text(b[o:o + 256].split(b"\0")[0])
         n = struct.unpack_from("<I", b, o + 256)[0]
         o += 260
         entries = []
         for _ in range(n):
             size, off = struct.unpack_from("<II", b, o)
-            title, o = de_string(o + 8)
-            _, o = de_string(o)                                     # the file name, the same as the title in DE
+            if version == b"1.00":                                   # fixed strings of 255 bytes, 2 bytes padding
+                file_name = text(b[o + 263:o + 518].split(b"\0")[0])
+                o += 520
+            else:
+                _, o = de_string(o + 8)                                 # the scenario name
+                file_name, o = de_string(o)
             if off + size > len(b):
-                raise CampaignError(f"{path}: scenario {title!r} ends after the end of the file")
-            entries.append((title, b[off:off + size]))
+                raise CampaignError(f"{path}: scenario {file_name!r} ends after the end of the file")
+            entries.append((file_name, b[off:off + size]))
     except struct.error:
         raise CampaignError(f"{path}: the file ends in the header: the file is not a valid campaign") from None
-    return name, entries
+    return version, name, entries
+
+
+OLD_CAMPAIGN_STEPS = """\
+The scenarios of this campaign use the old scenario format ({ext}). aoe2mc cannot read it.
+aoe2mc wrote the scenario files to {out}:
+{files}
+Do these steps to convert them:
+  1. Copy the files to the scenario folder of AoE2 DE:
+     <Steam user folder>/Games/Age of Empires 2 DE/<number>/resources/_common/scenario
+  2. Start AoE2 DE. In the scenario editor, open each scenario and save it. DE saves it as .aoe2scenario.
+  3. Convert each .aoe2scenario file with aoe2mc. Or, in the DE campaign editor, make a campaign of the
+     scenarios and convert the .aoe2campaign file."""
 
 
 def convert_campaign(src, out, only=None, name=None, **kw):
-    """One world per scenario: out/<number> <scenario name>/. only: the number of one scenario (1 = first)."""
+    """One world per scenario: out/<number> <scenario name>/. only: the number of one scenario (1 = first).
+    An old campaign (.cpx, .cpn): write the old scenario files to out/ and stop with the steps for the DE editor."""
     import tempfile
-    title, entries = read_campaign(src)
+    version, title, entries = read_campaign(src)
     if only is not None and not 1 <= only <= len(entries):
         raise OptionError(f"--scenario {only}: the campaign {title!r} has {len(entries)} scenarios")
     print(f"Campaign {title!r}: {len(entries)} scenarios")
-    for i, (scn_name, data) in enumerate(entries, 1):
-        if only is not None and i != only:
-            continue
-        stem = re.sub(r'[\\/:*?"<>|]', "_", re.sub(r"\.aoe2scenario$", "", scn_name, flags=re.I))
+    chosen = [(i, re.sub(r'[\\/:*?"<>|]', "_", fn), data) for i, (fn, data) in enumerate(entries, 1)
+              if only is None or i == only]
+    if version == b"1.00":
+        os.makedirs(out, exist_ok=True)
+        for i, fn, data in chosen:
+            with open(os.path.join(out, f"{i} {fn}"), "wb") as f:
+                f.write(data)
+        exts = sorted({os.path.splitext(fn)[1] or "?" for _, fn, _ in chosen})
+        raise SystemExit(OLD_CAMPAIGN_STEPS.format(ext=", ".join(exts), out=out,
+                                                   files="\n".join(f"  {i} {fn}" for i, fn, _ in chosen)))
+    for i, fn, data in chosen:
+        stem = re.sub(r"\.aoe2scenario$", "", fn, flags=re.I)
         with tempfile.TemporaryDirectory() as tmp:
             path = os.path.join(tmp, stem + ".aoe2scenario")
             with open(path, "wb") as f:
@@ -2116,7 +2149,7 @@ def convert_campaign(src, out, only=None, name=None, **kw):
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
     ap.add_argument("scenario", help=".aoe2scenario file, .aoe2record (the start state of a recorded game), or "
-                    ".aoe2campaign (one world per scenario)")
+                    ".aoe2campaign (one world per scenario; .cpx and .cpn: the steps for the DE editor)")
     ap.add_argument("output", help="output world folder (put it in .minecraft/saves/); for a campaign the folder of "
                     "the worlds")
     ap.add_argument("--scenario", dest="only", type=int_range(1, 999), metavar="N",
@@ -2152,10 +2185,10 @@ def main(argv=None):
               mc_version=a.mc_version, spawn=a.spawn, birds=not a.no_birds, orientation=a.orientation,
               verbose=a.verbose, garrison=a.garrison, border_design=a.border)
     try:
-        if a.scenario.lower().endswith(".aoe2campaign"):
+        if a.scenario.lower().endswith((".aoe2campaign", ".cpx", ".cpn")):
             convert_campaign(a.scenario, a.output, a.only, a.name, **kw)
         elif a.only is not None:
-            ap.error("--scenario needs a .aoe2campaign file")
+            ap.error("--scenario needs a campaign file (.aoe2campaign, .cpx, .cpn)")
         else:
             convert(a.scenario, a.output, name=a.name, **kw)
     except (OptionError, CampaignError) as e:
