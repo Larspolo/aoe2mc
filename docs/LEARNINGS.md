@@ -64,8 +64,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 - `aoe2mc.py` reads `tools/mcdata/1.21.1.json` at import (#19). The package ships it as `tools.mcdata`
   (`pyproject.toml`). A new runtime data file must go into the package data too (test: `pip install .` in a venv).
 - `terrain_style` checks names in sequence: an earlier rule wins (`ROAD_GRAVEL` matched `GRAVEL` until #5).
-- `.gitattributes` merges `docs/DESIGN.md` with `union`: a local merge keeps the new table lines of both sides; look for
-  one line in two versions and keep one. `union` is wrong for text that runs rewrite (LEARNINGS: both versions stay, #174).
+- The column "Used today in" of the feature table in `docs/DESIGN.md` is generated on main (`tools/feature_table.py`,
+  `coverage.yml`, #234). A PR adds rows, but does not edit the column.
 - PRs do not change `docs/coverage.md` or `MAX` in `tests/test_coverage.py`: the `coverage.yml` workflow updates them on
   main (#233). A conflict there (old PR): take main's side. Check `mergeable_state` after the push: a PR is "dirty"
   when main moved. `automerge.yml` merges green agent PRs (#232).

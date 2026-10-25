@@ -1,2 +1,0 @@
-# The feature table that parallel runs extend: keep the lines of both sides (see docs/LEARNINGS.md).
-docs/DESIGN.md merge=union
