@@ -1589,10 +1589,11 @@ def write_region(path, chunks):
         f.write(header + body)
 
 
-def write_objects(path, size, T, H, players, objects, cols):
+def write_objects(path, size, T, H, players, objects, cols, ground):
     """aoe2mc.json: the data that a game program needs (docs/research/gameplay.md). Tiles are in the turned grid
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
-    their footprint [x0, z0, x1, z1) in blocks. Objects that the converter did not place are not in the list."""
+    their footprint [x0, z0, x1, z1) in blocks. Objects that the converter did not place are not in the list.
+    "ground" has one string per block row z: for each x the y where a unit stands, or "-" for water."""
     kinds = {"U": "unit", "B": "building", "O": "other"}
     objs = []
     for o in objects:
@@ -1612,6 +1613,8 @@ def write_objects(path, size, T, H, players, objects, cols):
             "players": {str(pid): {"civ": p["civ"], "color": p["color"], "arch": p["arch"]}
                         for pid, p in sorted(players.items())},
             "objects": objs}
+    n, wet = cols.n, cols.wtop > cols.top
+    data["ground"] = [" ".join("-" if wet[x, z] else str(ground[x, z]) for x in range(n)) for z in range(n)]
     with open(path, "w") as f:
         json.dump(data, f, indent=1)
 
@@ -1801,6 +1804,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     nchunks = cols.width // 16
     regions = {}
     top_view = np.zeros((cols.width, cols.width), np.uint16)     # for icon.png and preview.png
+    ground = np.zeros((cols.width, cols.width), np.int16)        # y where a unit stands, for aoe2mc.json
+    ys = np.arange(MIN_Y, MAX_Y - 1)[:, None, None]
     for cx in range(nchunks):
         for cz in range(nchunks):
             data, vol = build_chunk(cx, cz, cols, per_chunk.get((cx, cz)))
@@ -1808,6 +1813,11 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
             solid = (vol != AIR) & (vol != BARRIER)
             hi = HEIGHT - 1 - np.argmax(solid[::-1], axis=0)
             top_view[cx * 16:cx * 16 + 16, cz * 16:cz * 16 + 16] = np.take_along_axis(vol, hi[None], 0)[0].T
+            top = cols.top[cx * 16:cx * 16 + 16, cz * 16:cz * 16 + 16].T                   # [z, x] as vol
+            lo = max(int(top.min()) + 1 - MIN_Y, 0)                    # the padding outside the map is void
+            p = passable[vol[lo:]]
+            stand = np.argmax(p[:-1] & p[1:] & (ys[lo:] > top), axis=0) + lo + MIN_Y   # first 2 free blocks over the ground
+            ground[cx * 16:cx * 16 + 16, cz * 16:cz * 16 + 16] = stand.T
             tick("chunks")
             if (cx, cz) in unit_chunks:
                 ed = entity_chunk(cx, cz, unit_chunks[(cx, cz)], cols, vol, passable)
@@ -1820,7 +1830,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         write_region(os.path.join(dim, "entities", f"r.{rx}.{rz}.mca"), chunks)
 
     write_level_dat(os.path.join(out, "level.dat"), name, spawn, yaw)
-    write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols)
+    write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground)
 
     from PIL import Image
     lut = np.array([block_color(s) for s in B.states], np.uint8)
