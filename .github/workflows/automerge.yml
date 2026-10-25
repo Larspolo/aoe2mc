@@ -3,6 +3,7 @@ name: Automerge
 # Merges an agent PR (branch agent/* or claude/*) when its CI is green, so that the runs do not wait for CI (#232).
 # GitHub auto-merge is not available (private repository on GitHub Free).
 # A merge with GITHUB_TOKEN starts no workflows, so this job starts CI on main, the dashboard and the claim clean-up.
+# A CI run with event workflow_dispatch on an agent branch comes from the Unconflict workflow (#280).
 on:
   workflow_run:
     workflows: [CI]
@@ -22,7 +23,7 @@ jobs:
   merge:
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'pull_request' &&
+      (github.event.workflow_run.event == 'pull_request' || github.event.workflow_run.event == 'workflow_dispatch') &&
       github.event.workflow_run.head_repository.full_name == github.repository &&
       (startsWith(github.event.workflow_run.head_branch, 'agent/') ||
        startsWith(github.event.workflow_run.head_branch, 'claude/'))
@@ -72,3 +73,4 @@ jobs:
           gh workflow run ci.yml --repo "$R" --ref main
           gh workflow run dashboard.yml --repo "$R" || true
           gh workflow run coverage.yml --repo "$R" --ref main || true     # report and MAX on main (#233)
+          gh workflow run unconflict.yml --repo "$R" || true             # main moved: merge it into conflicted PRs (#280)

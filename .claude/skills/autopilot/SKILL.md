@@ -83,6 +83,9 @@ owns (see "Runs can overlap"):
 - CI red or owner review comments → fix it now. That is the work of this cycle: continue at step 6.8.
 - Merge conflict (label `conflict`, or `mergeable_state` is `dirty`, often with no CI run) → step 6.10, then
   continue at step 6.8. Remove the label `conflict` when you push the fix.
+  The workflow `unconflict.yml` (after each merge and every 15 minutes) merges `origin/main` into a conflicted PR
+  whose head is older than 10 minutes when git solves the conflict alone (`merge=union` files), and starts CI (#280).
+  So a conflict that stays is a real one.
 
 ## 3. Read the owner's feedback
 
@@ -155,9 +158,8 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
    add `blocked` or `needs-human` and `hold`, remove `in-progress`, and go to step 8.
 10. Merge conflict (another PR changed the same lines) → merge `origin/main` into the branch, solve the
     conflict, verify again, push. Do not rebase or force-push a branch that has an open PR.
-    `docs/DESIGN.md` merges by itself in a local merge (`union` in `.gitattributes`; GitHub ignores it, so the
-    PR is "dirty" until you merge locally): remove a line that is now there twice in two versions
-    (`git diff origin/main -- docs/`).
+    A conflict in the column "Used today in" of `docs/DESIGN.md`: take main's side (`coverage.yml` writes it).
+    Two new rows of the feature table at the same place: keep both.
 11. CI green → the Automerge workflow merges. Add label `hold` to the PR if it must not merge yet.
 
 If the ticket is wrong or not possible: comment why, add `needs-human`, remove `in-progress`. Do not merge

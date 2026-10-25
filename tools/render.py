@@ -5,6 +5,7 @@ Isometric 3D image of a building design or of an area of a written world. To loo
 Usage:
     python3 tools/render.py building CASTLE --arch western OUT.png       # [--tile-size 4] [--view se] [--scale 8]
     python3 tools/render.py sheet HOUSE OUT.png                           # all architecture sets, 3 variants each
+    python3 tools/render.py building MILL OUT.png --cut 2                 # the inside: no blocks above floor + 2
     python3 tools/render.py world WORLD X0 Z0 X1 Z1 OUT.png               # [--view se] [--scale 8]
 
 The default view is from the south-east (the AoE2 camera side, the front of a building). Top faces are
@@ -123,9 +124,10 @@ def draw(xs, ys, zs, states, view="se", scale=8, background=(255, 255, 255, 0)):
     return Image.fromarray(img.reshape(H, W, 4), "RGBA")
 
 
-def building_blocks(name, arch, T=4, variant=0):
+def building_blocks(name, arch, T=4, variant=0, cut=None):
     """Blocks of one building design on flat grass: (xs, ys, zs, states).
-    The design seeds its random numbers from the position, so another variant number gives another variant."""
+    The design seeds its random numbers from the position, so another variant number gives another variant.
+    cut: remove the blocks higher than cut above the ground (a view of the inside)."""
     import buildings
     size = 16
     cols = aoe2mc.Columns(size, np.zeros((size, size), np.int16), np.zeros((size, size), np.float32),
@@ -146,6 +148,9 @@ def building_blocks(name, arch, T=4, variant=0):
     for gx in range(gx0, gx1):                              # the ground, so that the building stands on something
         for gz in range(gz0, gz1):
             last.setdefault((gx, cols.surface(gx, gz) - 1, gz), aoe2mc.B("grass_block[snowy=false]"))
+    if cut is not None:
+        top = cols.surface(gx0, gz0) - 1 + cut
+        last = {k: v for k, v in last.items() if k[1] <= top}
     pos = np.array(list(last), np.int64)
     return pos[:, 0], pos[:, 1], pos[:, 2], [aoe2mc.B.states[i] for i in last.values()]
 
@@ -173,11 +178,11 @@ def world_blocks(path, x0, z0, x1, z1, y0=aoe2mc.MIN_Y):
     return np.concatenate(out[0]), np.concatenate(out[1]), np.concatenate(out[2]), out[3]
 
 
-def sheet(name, out, view="se", scale=6, variants=3, T=4):
+def sheet(name, out, view="se", scale=6, variants=3, T=4, cut=None):
     """One image with the design in all architecture sets (rows) and some variants (columns)."""
     import buildings
     from PIL import ImageDraw
-    rows = [(arch, [draw(*building_blocks(name, arch, T, v), view=view, scale=scale) for v in range(variants)])
+    rows = [(arch, [draw(*building_blocks(name, arch, T, v, cut), view=view, scale=scale) for v in range(variants)])
             for arch in sorted(buildings.ARCH)]
     cw = max(i.width for _, r in rows for i in r) + 8
     ch = max(i.height for _, r in rows for i in r) + 16
@@ -198,11 +203,12 @@ def main():
     b.add_argument("name", help="AoE2 building name, for example CASTLE or HOUSE")
     b.add_argument("--arch", default="western", help="architecture set (see buildings.ARCH)")
     b.add_argument("--tile-size", type=int, default=4)
-    b.add_argument("--cut", type=int, help="draw only the lowest N block layers (a cut view of the rooms inside)")
     h = sub.add_parser("sheet", help="one building in all architecture sets and some variants")
     h.add_argument("name")
     h.add_argument("--variants", type=int, default=3)
     h.add_argument("--tile-size", type=int, default=4)
+    for p in (b, h):
+        p.add_argument("--cut", type=int, help="remove the blocks higher than CUT above the ground (the inside)")
     w = sub.add_parser("world", help="an area of a written world")
     w.add_argument("world")
     for k in ("x0", "z0", "x1", "z1"):
@@ -216,14 +222,11 @@ def main():
     if a.scale < 2 or a.scale % 2:
         ap.error("--scale must be an even number >= 2")
     if a.mode == "sheet":
-        W, H = sheet(a.name.upper(), a.out, a.view, a.scale, a.variants, a.tile_size)
+        W, H = sheet(a.name.upper(), a.out, a.view, a.scale, a.variants, a.tile_size, a.cut)
         print(f"Wrote {a.out}: {W}x{H} pixels")
         return
     if a.mode == "building":
-        blocks = building_blocks(a.name.upper(), a.arch, a.tile_size)
-        if a.cut:
-            keep = blocks[1] < blocks[1].min() + a.cut
-            blocks = tuple(np.asarray(v)[keep] for v in blocks)
+        blocks = building_blocks(a.name.upper(), a.arch, a.tile_size, cut=a.cut)
     else:
         blocks = world_blocks(a.world, min(a.x0, a.x1), min(a.z0, a.z1), max(a.x0, a.x1), max(a.z0, a.z1), a.y0)
     W, H = render(*blocks, a.out, view=a.view, scale=a.scale)

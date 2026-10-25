@@ -34,9 +34,9 @@ python3 tools/render.py sheet CASTLE $SCRATCH/before_sheet.png        # all 9 se
 python3 tools/render.py building CASTLE --arch western $SCRATCH/before_se.png
 python3 tools/render.py building CASTLE --arch western --view nw $SCRATCH/before_nw.png
 ```
-For the inside (furniture), add `--cut N`: it draws only the lowest N block layers.
 Check exact positions with `render.building_blocks` (see step 5.3). The default view (south-east) shows the front. To compare with a reference image, render `--view sw`
 too: it is the AoE2 camera (the bottom corner of the screen is the south-west corner, the front is on the right, #128). Look at the images with the Read tool.
+For the inside of a room add `--cut Y` (no blocks higher than Y above the ground; barriers are invisible).
 The default `--scale 8` is small for details: use `--scale 16` for one building. `sheet --variants 1` is faster.
 Furniture from a list of `(x, y, z, state)` goes in with `Canvas.furniture`: it fills only air and keeps the cells next to a door free.
 
@@ -52,8 +52,9 @@ For each feature, take the block from the table in `docs/DESIGN.md`, section 2.
   Use the `Canvas` tools (`room`, `timber_room`, `roof`, `gable`, `hip`, `dome`, `cylinder`, `door`, `windows` ...).
 - Use the fields of the `Style` for materials, so that all architecture sets still work.
 - Keep `vary()`, `weather()` and `decorate()`. The main block stays the large majority.
-- Add a line to the table in `docs/DESIGN.md` for each new feature block. Put it after a related line, not at the
-  end: GitHub ignores the `union` driver, so lines that parallel PRs add at the same place give a merge conflict.
+- Add a row to the table in `docs/DESIGN.md` for each new feature: the feature and the block names in backticks
+  (`*` is a wildcard). Put it after a related row, not at the end: rows that parallel PRs add at the same place give
+  a merge conflict. Do not edit the column "Used today in": `coverage.yml` writes it on main (`tools/feature_table.py`).
 - A new design on water (a pier on piles) must go into `is_dock` (`place_building`) and `NO_PROPS`, as `dock`,
   else it gets a foundation and no piles (#127).
 

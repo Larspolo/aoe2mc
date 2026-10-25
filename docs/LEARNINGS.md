@@ -28,7 +28,7 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   datapack file stops the server. A datapack `worldgen/` file makes the client warn "Experimental Settings" (#218).
 - Minecraft client (#178, #179): `tools/mc_shot.py` runs it in `Xvfb` (no window, offline, no sound). 1.21.1: Mesa OpenGL.
   26.3 finds no GLX visual in Xvfb: it needs `mesa-vulkan-drivers` (lavapipe) and Java 25, and a placeholder for the
-  title panorama (the asset host is blocked). Hidden chat (`chatVisibility:2`) stops the chat lines in the log too.
+  title panorama (the asset host is blocked). The view ends at about 100 blocks: put `--at` near the subject (#208).
 - AoE2 wiki: HTML pages give 403 (Cloudflare). Use `tools/refimage.py` (MediaWiki API, own `User-Agent`). Page text:
   `api.php?action=parse&page=Title&prop=wikitext&format=json&formatversion=2`.
 - AoE2 recorded games: the record hosts (`aoe.ms`, `data.aoe2companion.com`, `www.aoe2insights.com`) are blocked.
@@ -66,8 +66,8 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   `build_chunk` returns `(nbt, vol)`: test exact blocks of a chunk with `vol` (#19).
 - `aoe2mc.py` reads `tools/mcdata/1.21.1.json` at import (#19). The package ships it as `tools.mcdata`
   (`pyproject.toml`). A new runtime data file must go into the package data too (test: `pip install .` in a venv).
-- `.gitattributes` merges `docs/DESIGN.md` with `union`: a local merge keeps the new table lines of both sides; look for one
-  line in two versions and keep one. GitHub ignores `union` (the PR is "dirty", #210). Not for text that runs rewrite (#174).
+- The column "Used today in" of the feature table in `docs/DESIGN.md` is generated on main (`tools/feature_table.py`,
+  `coverage.yml`, #234). A PR adds rows, but does not edit the column. GitHub ignored the old `union` rule (#210).
 - PRs do not change `docs/coverage.md` or `MAX` in `tests/test_coverage.py`: the `coverage.yml` workflow updates them on
   main (#233). A conflict there (old PR): take main's side. Check `mergeable_state` after the push: a PR is "dirty"
   when main moved. `automerge.yml` merges green agent PRs (#232).
@@ -77,8 +77,8 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   that the server saved: read it with `tools/world_reader.py` (1.21.1 saves the loaded chunks again, 26.3 can skip them) (#27).
   26.3 saves a default state as the bare name and puts the properties in another order: normalize before you compare (#189).
 - New entity NBT: convert a map with one unit per type (`add_unit` in a loop) and run `tools/mc_check.py` (1 min).
-- Inside of a design (#255): `render.building_blocks` gives world y (the floor is the y of `grass_block`); drop `barrier`
-  and the blocks above a cut height, then call `render.render`. Exact local layers: run the design on a `Canvas` and read `c.get`.
+- Inside of a design: `tools/render.py building NAME OUT.png --cut 2` (#265). Exact local layers: run the design
+  function on a `Canvas` and read `c.get(x, y, z)` (#255).
 - `vary()` picks a `ROOF_ALT` material per variant: count blocks with `render.building_blocks(NAME, arch, variant=v)` (#146).
 - `tools/render.py world` draws only Y >= 50 (`--y0`): use `--y0 -64` for blocks under the map (`--border`). `--scale 4`
   gives about 800 px, the size of the images in `docs/images/` (#262).
