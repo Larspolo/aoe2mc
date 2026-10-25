@@ -51,6 +51,10 @@ one size (`size:S`, `size:M`, `size:L`). Add `needs-human` when only the owner c
 The owner reads them on a phone. Give numbered steps, the exact names of settings or files, and what the
 owner must reply. One ticket per decision.
 
+A research result that waits for the owner (options, milestones, "the owner decides") gets a `needs-human` ticket
+for each decision, with the options and your recommendation, before the research ticket closes. A decision that
+is only in a document is lost: milestones 2 and 3 of the replay research (#31) waited without a ticket until the owner asked (#371).
+
 ## Rules
 
 - One goal per ticket. If you write "and also", make two tickets.
