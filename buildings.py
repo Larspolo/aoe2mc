@@ -834,6 +834,8 @@ def mill(c, w, st, col, T, ctx):
             if i > 1:
                 c.set(mid + sx * i - sx, hub_y + sy * i, hz, "white_wool")
     c.banner(mid + 1, 3, zf, col)
+    c.set(0, 1, w - 1, "barrel[facing=up]"); c.set(1, 1, w - 1, "hay_block")             # flour and grain sacks
+    c.set(w - 1, 1, 1, "grindstone[face=floor,facing=south]")                          # millstone
 
 
 def granary(c, w, st, col, T, ctx):
@@ -852,37 +854,55 @@ def granary(c, w, st, col, T, ctx):
     c.banner(mid + 1, 3, zf, col)
 
 
-def camp(c, w, st, col, T, ctx, goods):
-    """Lumber camp / mining camp: an open shed with stores."""
-    c.box(0, w, 0, 1, 0, w, "coarse_dirt")
-    x0, x1, z0, z1 = 0, w, 0, max(4, w * 2 // 3)
+def log_pile(c, x0, x1, z0, n, logs):
+    """Logs along x, stacked as a pyramid: n logs at the bottom, one less on each layer."""
+    for y in range(n):
+        for k in range(n - y):
+            c.box(x0, x1, 1 + y, 2 + y, z0 + k, z0 + k + 1, logs[(y + k) % len(logs)] + "[axis=x]")
+
+
+def shelter(c, x0, x1, z0, z1, st):
+    """Open shelter: four posts and a small roof above head height."""
     for x in (x0, x1 - 1):
         for z in (z0, z1 - 1):
             c.box(x, x + 1, 1, 4, z, z + 1, st.timber)
     c.box(x0, x1, 3, 4, z0, z0 + 1, st.beam + "[axis=x]"); c.box(x0, x1, 3, 4, z1 - 1, z1, st.beam + "[axis=x]")
-    c.walls(x0, x1, 1, 3, z0, z0 + 1, st.wood)
     if st.shape == "flat":
         c.box(x0, x1, 4, 5, z0, z1, family(st.roof)[1] + "[type=bottom]")
     else:
-        c.gable(x0 - 1, x1 + 1, z0, z1, 4, st.roof, axis="x")
-    for i, g in enumerate(goods):
-        x = 1 + (i % (w - 2))
-        c.set(x, 1, 1, g)
-        if i % 2 == 0:
-            c.set(x, 2, 1, g)
-    c.flag(w - 1, 4, z1 - 1, col, 2)
+        c.gable(x0, x1, z0 - 1, z1 + 1, 4, st.roof, axis="z")
 
 
 def lumber_camp(c, w, st, col, T, ctx):
-    camp(c, w, st, col, T, ctx, ["oak_log[axis=x]", "oak_log[axis=x]", "spruce_log[axis=x]", "oak_log[axis=x]"])
-    c.set(1, 1, w - 2, "oak_log"); c.set(w - 2, 1, w - 2, "spruce_log[axis=z]"); c.set(w - 3, 1, w - 2, "spruce_log[axis=z]")
+    """An open yard (as in the game): log piles, a hoist with a hanging log, a sawhorse and a workbench."""
+    c.box(0, w, 0, 1, 0, w, "coarse_dirt")
+    logs = [st.timber.replace("stripped_", ""), "spruce_log", "oak_log"]
+    log_pile(c, 1, w - 3, w - 4, 3, logs)                                 # front: the large pile
+    log_pile(c, w - 2, w, 1, 2, logs[1:])                                  # east: a small pile
+    post = st.timber.replace("stripped_", "")
+    c.box(1, 2, 1, 6, 1, 2, post)                                          # hoist: post, arm, chain, log
+    c.box(1, 4, 6, 7, 1, 2, post + "[axis=x]")
+    c.set(3, 5, 1, "chain"); c.set(3, 4, 1, "oak_log[axis=x]")
+    c.set(4, 1, 2, "spruce_fence"); c.set(6, 1, 2, "spruce_fence")      # sawhorse with a log on it
+    c.box(4, 7, 2, 3, 2, 3, "stripped_spruce_log[axis=x]")
+    c.set(1, 1, 3, "crafting_table"); c.set(2, 1, 3, "oak_log")           # workbench, chopping block
+    c.flag(w - 1, 1, w - 1, col, 3)
 
 
 def mining_camp(c, w, st, col, T, ctx):
-    camp(c, w, st, col, T, ctx, ["cobblestone", "gold_ore", "cobblestone", "raw_gold_block", "andesite"])
-    for x in range(1, w - 1):
+    """An open yard (as in the game): a small shelter with tools, heaps of stone and gold, and a rail track."""
+    c.box(0, w, 0, 1, 0, w, "coarse_dirt")
+    shelter(c, 0, 5, 0, 4, st)
+    c.set(1, 1, 1, "barrel[facing=up]"); c.set(2, 1, 1, "grindstone[face=floor,facing=south]")
+    c.set(3, 1, 1, "chest[facing=south]")
+    for x, z, h, b in ((w - 2, 1, 2, "cobblestone"), (w - 1, 1, 1, "stone"), (w - 2, 2, 1, "andesite"),
+                       (w - 1, 2, 2, "cobblestone"), (w - 2, 3, 1, "cobblestone"),            # stone heap
+                       (1, w - 3, 1, "gold_ore"), (2, w - 3, 2, "raw_gold_block"), (1, w - 2, 1, "raw_gold_block")):
+        c.box(x, x + 1, 1, 1 + h, z, z + 1, b)
+    for x in range(3, w - 1):
         c.set(x, 1, w - 2, "rail[shape=east_west]")
-    c.set(1, 1, w - 3, "cobblestone"); c.set(1, 2, w - 3, "cobblestone"); c.set(2, 1, w - 3, "gold_ore")
+    c.set(w - 3, 1, w - 4, "cobblestone_slab[type=bottom]")
+    c.flag(w - 1, 1, w - 1, col, 3)
 
 
 def dock(c, w, st, col, T, ctx):

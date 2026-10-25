@@ -31,7 +31,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Bow and arrow work | `fletching_table` | `archery_range` |
 | Forge, smithy | `blast_furnace`, `anvil`, `smithing_table`, `cauldron` (water) | `blacksmith` |
 | Fire, cooking | `campfire`, `smoker` | `blacksmith`, `house`, `outpost`, `church`, `oracles_temple` |
-| Weapon rack, sharpening | `grindstone` | `barracks`, `granary` |
+| Weapon rack, sharpening, millstone | `grindstone` | `barracks`, `granary`, `mill`, `mining_camp` |
 | Bell | `bell` | `monastery`, `town_center` |
 | Loom, cloth | `loom`, wool | `church` |
 | Market goods | `barrel`, `chest`, `composter`, `hay_block` | `market`, `dock` |
@@ -49,13 +49,17 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Climbing plants | `vine`, `azalea_leaves` | `pillar` |
 | Charred timber | `coal_block`, `blackstone`, dark oak logs | `burned_building` |
 | Spire tip, finial | `lightning_rod` | `Canvas.spire`, `monastery`, `mosque` |
-| Chain, rope | `chain` | `dock`, `siege_workshop`, `shipyard`, `harbor_chain` |
+| Chain, rope | `chain` | `dock`, `siege_workshop`, `shipyard`, `harbor_chain`, `lumber_camp` (hoist) |
 | Portcullis, grille | `iron_bars` | `gate`, `castle` |
 | Lamp | `lantern` | `decorate()` |
 | Column | `quartz_pillar` | `arch_of_constantine`, `oracles_temple` |
 | Sacred tree | `oak_log`, `oak_leaves[persistent=true]` | `pagan_shrine` |
 | Sail | wool (player color) | `flagship` |
 | Hides | `brown_wool` | `helepolis` |
+| Log pile, cut timber | `*_log[axis=x]` stacked as a pyramid (`log_pile`) | `lumber_camp` |
+| Workbench | `crafting_table` | `lumber_camp` |
+| Ore, mined gold and stone | `gold_ore`, `raw_gold_block`, `cobblestone`, `stone`, `andesite` | `mining_camp` |
+| Mine cart track | `rail` | `mining_camp` |
 | Books, study | `bookshelf`, `lectern` | none yet (`university` needs them) |
 
 Add a line when a design uses a new feature block. Each new block state must pass `mcvalid`.
