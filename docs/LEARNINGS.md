@@ -26,7 +26,6 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   unless the task sets another model.
 - The repository is private: a workflow with a `permissions:` block also needs `contents: read`, or
   `actions/checkout` fails with "Repository not found".
-
 - Minecraft server: a bad property value (`facing=up`) loads silently as the default state. An unknown block
   name gives "Recoverable errors when loading section". A missing `level.dat` compound
   gives "key missing: <name>" (`DragonFight` until #60).
@@ -37,6 +36,7 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   on `static.wikia.nocookie.net` (WebP). Page text: `action=parse&page=Title&prop=wikitext&format=json&formatversion=2`.
   Python `urllib` with the default User-Agent gets 403: use `curl`, or send another `User-Agent`
   (see `tools/refimage.py`).
+- AoE2 recorded games: the record hosts (`aoe.ms`, `data.aoe2companion.com`, `www.aoe2insights.com`) are blocked. Only the owner can add a record (#134).
 
 ## Libraries
 
