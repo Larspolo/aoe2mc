@@ -72,8 +72,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Chhatri (small domed kiosk) | `quartz_pillar` posts and a small dome | `taj` (Wonder, South Asian) |
 | Chain, rope | `chain` | `dock`, `siege_workshop`, `shipyard`, `harbor_chain` |
 | Portcullis, grille | `iron_bars` | `gate`, `castle`, `krepost` |
-| Portcullis, grille | `iron_bars` | `gate`, `castle` |
-| Wooden hoarding | wood slab (top) with a `*_fence` rail | `donjon` |
+| Wooden hoarding | wood slab (top) or `spruce_planks` with a `*_fence` rail | `donjon`, `krepost` |
 | Coat of arms | `*_wall_banner` (player color) over the gate | `donjon` |
 | Lamp | `lantern` | `decorate()`, `blacksmith` (hanging) |
 | Siege engine under construction | spruce slabs, fences and logs | `siege_workshop` |
@@ -89,7 +88,6 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Scholar statue | `chiseled_stone_bricks` pedestal, `quartz_pillar`, `chiseled_quartz_block` | `university` |
 | Rose window | stained glass panes | `monastery` |
 | Orange roof tiles (Krepost) | `red_sandstone` stairs and blocks | `krepost` |
-| Wooden hoarding | `spruce_planks` deck, `spruce_fence` | `krepost` |
 | Cannon | `polished_basalt` barrel on its side | `tower` (bombard) |
 
 Add a line when a design uses a new feature block. Each new block state must pass `mcvalid`.
