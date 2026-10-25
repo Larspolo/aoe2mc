@@ -23,7 +23,9 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   `actions/checkout` fails with "Repository not found". The `pulls` API needs `pull-requests: read` (else 403).
 - Minecraft server: a bad property value (`facing=up`) loads silently as the default state. An unknown block gives
   "Recoverable errors when loading section". A missing `level.dat` compound gives "key missing: <name>" (#60).
-  The yggdrasil key error is normal: `api.minecraftservices.com` is not reachable.
+- Minecraft client (#178): it runs in `Xvfb` with Mesa (`LIBGL_ALWAYS_SOFTWARE=1`) and needs no asset download (no sound).
+  Class path: the Linux libraries of the version JSON + `client.jar`; `net.minecraft.client.main.Main --accessToken 0
+  --userType legacy --quickPlaySingleplayer W`; `options.txt` `onboardAccessibility:false`. In W after ~10 s.
 - AoE2 wiki: HTML pages give 403 (Cloudflare). Use `tools/refimage.py` (MediaWiki API, own `User-Agent`). Page text:
   `api.php?action=parse&page=Title&prop=wikitext&format=json&formatversion=2`.
 - AoE2 recorded games: the record hosts (`aoe.ms`, `data.aoe2companion.com`, `www.aoe2insights.com`) are blocked.
@@ -35,8 +37,7 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 
 - AoE2ScenarioParser 0.9.8 can make new scenarios: `AoE2DEScenario.from_default()`, then
   `map_manager.map_size = N`, `unit_manager.add_unit(PlayerId, ID, x=, y=)`, `write_to_file(path)`.
-  It prints much text: wrap calls in `contextlib.redirect_stdout(io.StringIO())`. In a default scenario all players
-  have civilization RANDOM, so all buildings use the `western` set.
+  It prints much text: wrap calls in `contextlib.redirect_stdout(io.StringIO())`. Default players are RANDOM (`western`).
 - The server drops entity tags that it does not know, without a log line. To check a new entity format, let the
   server save the world and compare the entity NBT before and after (method in `docs/minecraft-versions.md`).
   A tag with a wrong type gives "Serialization errors" (WARN), which `tools/mc_check.py` finds.
@@ -67,8 +68,7 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   one line in two versions and keep one. `union` is wrong for text that runs rewrite (LEARNINGS: both versions stay, #174).
 - A merge conflict in `docs/coverage.md`: take any side, run `python3 tools/coverage.py`, then set `MAX` in
   `tests/test_coverage.py` to the new counts. Parallel runs often change the same counts (#79). Check
-  `mergeable_state` before the merge: a green PR is "dirty" when main moved after the push. Merge in the CI poll
-  loop at once. Union both sides of a `docs/DESIGN.md` table conflict: all design PRs add rows there.
+  `mergeable_state` before the merge: a green PR is "dirty" when main moved after the push. Merge in the CI poll loop.
 - All 243 building types of one set draw in about 1 s; the gallery converts in about 23 s (`--verbose`: per phase, #26).
 - Block IDs in `B` depend on what was registered before (earlier tests or conversions). Code that draws random
   numbers per block ID must go in state-name order, not ID order (see #44). A test that passes alone but
