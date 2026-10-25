@@ -88,21 +88,39 @@ def java_major(java):
     return int(m.group(1)) if m else 0
 
 
-def java_for(version):
-    """A java binary with the major version that the version JSON asks for (or newer)."""
-    need = version_json(version).get("javaVersion", {}).get("majorVersion", 21)
+def find_java(need):
     for java in [shutil.which("java")] + sorted(glob.glob("/usr/lib/jvm/*/bin/java")) + \
             sorted(glob.glob(os.path.join(CACHE, "jdk-*", "*", "bin", "java"))):         # apt installs into /usr/lib/jvm
         if java and java_major(java) >= need:
             return java
+
+
+def java_for(version):
+    """A java binary with the major version that the version JSON asks for (or newer)."""
+    need = version_json(version).get("javaVersion", {}).get("majorVersion", 21)
+    if java := find_java(need):
+        return java
+    # apt works in cloud sessions; api.github.com (the Adoptium download below) gives 403 there (#195).
+    if os.geteuid() == 0 and shutil.which("apt-get"):
+        print(f"installing openjdk-{need}-jre-headless with apt-get", file=sys.stderr)
+        for cmd in (["apt-get", "update", "-q"], ["apt-get", "install", "-y", "-q", f"openjdk-{need}-jre-headless"]):
+            if subprocess.run(cmd, stdout=subprocess.DEVNULL).returncode:
+                break
+        if java := find_java(need):
+            return java
     # Download a Temurin JRE from the Adoptium releases on GitHub. Do not install it system-wide.
-    rel = json.loads(get(f"https://api.github.com/repos/adoptium/temurin{need}-binaries/releases/latest"))
-    asset = next(a for a in rel["assets"] if re.search(r"jre_x64_linux_hotspot_.*\.tar\.gz$", a["name"]))
-    dest = os.path.join(CACHE, f"jdk-{need}")
-    print(f"downloading {asset['name']}", file=sys.stderr)
-    with tarfile.open(fileobj=io.BytesIO(get(asset["browser_download_url"]))) as t:
-        t.extractall(dest, filter="data")
-    return glob.glob(os.path.join(dest, "*", "bin", "java"))[0]
+    try:
+        rel = json.loads(get(f"https://api.github.com/repos/adoptium/temurin{need}-binaries/releases/latest"))
+        asset = next(a for a in rel["assets"] if re.search(r"jre_x64_linux_hotspot_.*\.tar\.gz$", a["name"]))
+        dest = os.path.join(CACHE, f"jdk-{need}")
+        print(f"downloading {asset['name']}", file=sys.stderr)
+        with tarfile.open(fileobj=io.BytesIO(get(asset["browser_download_url"]))) as t:
+            t.extractall(dest, filter="data")
+        return glob.glob(os.path.join(dest, "*", "bin", "java"))[0]
+    except (OSError, StopIteration, IndexError, tarfile.TarError) as e:
+        sys.exit(f"Minecraft {version} needs Java {need}, and no Java {need} was found or installed ({e}).\n"
+                 f"Install it (as root: apt-get install -y openjdk-{need}-jre-headless), or put a Java {need} "
+                 f"JRE in {CACHE}/jdk-{need}/<name>/bin/java.")
 
 
 def chunks(world):

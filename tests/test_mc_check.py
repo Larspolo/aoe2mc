@@ -1,4 +1,5 @@
 """tools/mc_check.py: problem lines in a server log, and a real server run on the tiny world (marker mc)."""
+import urllib.error
 import urllib.request
 
 import pytest
@@ -16,6 +17,24 @@ Caused by: java.net.UnknownHostException: api.minecraftservices.com
 
 def test_problems_ignore_harmless_entries_with_their_stack_trace():
     assert mc_check.problems(LOG) == [LOG[5]]
+
+
+def test_java_for_tries_apt_then_download_then_explains(monkeypatch):
+    calls = []
+    monkeypatch.setattr(mc_check, "version_json", lambda v: {"javaVersion": {"majorVersion": 25}})
+    monkeypatch.setattr(mc_check, "find_java", lambda need: calls.append("find") and None)
+    monkeypatch.setattr(mc_check.os, "geteuid", lambda: 0)
+    monkeypatch.setattr(mc_check.shutil, "which", lambda name: "/usr/bin/" + name)
+    monkeypatch.setattr(mc_check.subprocess, "run", lambda cmd, **kw: calls.append(cmd[1]) or
+                        type("R", (), {"returncode": 0})())
+
+    def forbidden(url):
+        calls.append("download")
+        raise urllib.error.HTTPError(url, 403, "Forbidden", None, None)
+    monkeypatch.setattr(mc_check, "get", forbidden)
+    with pytest.raises(SystemExit, match="apt-get install -y openjdk-25-jre-headless"):
+        mc_check.java_for("26.3")
+    assert calls == ["find", "update", "install", "find", "download"]
 
 
 def mojang_reachable():
