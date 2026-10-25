@@ -41,9 +41,15 @@ SWORD = {1: "wooden", 2: "stone", 3: "iron", 4: "diamond", "unique": "golden", "
 HORSE_ARMOR = {1: "leather", 2: "leather", 3: "iron", 4: "diamond", "unique": "golden", "elite": "diamond", "hero": "golden"}
 
 SKIP = ("INVISIBLE", "MAP_REVEALER", "HINT_OBJECT", "DUMMY_TARGET", "TRICKLE", "RESOURCE_ENABLER", "DISABLED",
-        "TORCH_", "VMDL", "OUTLW", "RFARC", "BUTTERFLY", "SEAGULLS", "FALCON", "HAWK", "VULTURE", "STORK",
-        "MACAW", "CONDOR", "RAVEN", "OWL", "PEACOCK", "FLAMINGO", "CRANE", "FLAMING_BIRD", "PLACEHOLDER",
-        "TREASURE_CHEST", "PHOTONMAN", "SHARKATZOR", "NESSIE")
+        "OUTLW", "RFARC", "BUTTERFLY", "SEAGULLS", "FALCON", "HAWK", "VULTURE", "STORK",
+        "MACAW", "CONDOR", "RAVEN", "OWL", "PEACOCK", "FLAMINGO", "CRANE", "FLAMING_BIRD", "PLACEHOLDER")
+JOKES = {   # joke and special units -> entity
+    "TREASURE_CHEST": lambda: vehicle("chest_minecart", []),
+    "TORCH_": lambda: mob("armor_stand", Invisible=Byte(1), ShowArms=Byte(1), HandItems=hands("torch")),
+    "PHOTONMAN": lambda: soldier("zombie", 3, "crossbow"),      # white space suit, laser gun
+    "SHARKATZOR": lambda: mob("guardian"),                     # a shark with laser eyes
+    "NESSIE": lambda: mob("elder_guardian"),
+}
 
 ANIMALS = [   # (keywords, minecraft mob, extra tags)
     (("POLAR_BEAR",), "polar_bear", {}),
@@ -174,6 +180,11 @@ def classify(n, hero=False):
     """Return the entity description for unit name n, or None to skip it."""
     if has(n, *SKIP):
         return None
+    joke = next((f for k, f in JOKES.items() if k in n), None)
+    if joke:
+        return joke()
+    if n == "VMDL":                 # an old villager model
+        n = "VILLAGER_MALE"
     t = tier_of(n, hero)
 
     # Animals (but not war animals)
