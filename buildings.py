@@ -237,6 +237,12 @@ class Canvas:
         self.set(x, y + 1, z, f"{wood}_door[facing={facing},half=upper,hinge=left,open=false]")
         self.doors.append((x, z))
 
+    def bed(self, x, y, z, color, facing="north"):
+        """A bed with its head at (x, z) and its foot one block back from `facing`."""
+        dx, dz = {"north": (0, 1), "south": (0, -1), "west": (1, 0), "east": (-1, 0)}[facing]
+        self.set(x, y, z, f"{color}_bed[facing={facing},occupied=false,part=head]")
+        self.set(x + dx, y, z + dz, f"{color}_bed[facing={facing},occupied=false,part=foot]")
+
     def banner(self, x, y, z, color, facing="south"):
         """A wall banner in front of the wall block next to it."""
         self.set(x, y, z, f"{color}_wall_banner[facing={facing}]")
@@ -858,6 +864,26 @@ def barracks(c, w, st, col, T, ctx):
             c.set(x, 3, z1 + 1, "carved_pumpkin[facing=south]")
     c.set(w - 3, 1, w - 2, "grindstone[face=floor,facing=south]")
     c.flag(x0 + 1, top - 1, (z0 + z1) // 2, col, 3)
+    # Inside: bunks in the player color, weapon racks (grindstones), chests, lanterns, a ladder to the upper floor
+    ix0, ix1, iz0, iz1 = x0 + 1, x1 - 2, z0 + 1, z1 - 2                  # the free inside, inclusive
+    if ix1 - ix0 < 7 or iz1 - iz0 < 3:
+        for x in range(ix0, ix1 + 1, 2):
+            c.bed(x, 1, iz0, col)
+        c.set(ix1, 4, iz0, "lantern[hanging=false]")
+        return
+    for x in (ix0, ix0 + 1, ix1 - 1, ix1):
+        c.bed(x, 1, iz0, col)
+    c.set(mid - 1, 1, iz0, "grindstone[face=floor,facing=south]"); c.set(mid + 1, 1, iz0, "grindstone[face=floor,facing=south]")
+    c.set(mid, 1, iz0, "chest[facing=south,type=single,waterlogged=false]")
+    c.set(ix0, 1, iz1, "barrel[facing=up,open=false]")
+    for x in (ix0 + 2, ix1 - 2):
+        c.set(x, 2, iz0 + 2, "lantern[hanging=true]")
+    c.box(ix1, ix1 + 1, 1, 4, iz1, iz1 + 1, "ladder[facing=west]")         # through a hole in the upper floor
+    for x in range(ix0, ix1, 2):
+        c.bed(x, 4, iz0, col)
+    for x in range(ix0, ix1 - 1, 2):
+        c.bed(x, 4, iz1, col, "south")
+    c.set(ix1, 4, iz0, "lantern[hanging=false]")
 
 
 def archery_range(c, w, st, col, T, ctx):
@@ -867,6 +893,17 @@ def archery_range(c, w, st, col, T, ctx):
         c.set(x, 1, w - 2, "hay_block"); c.set(x, 2, w - 2, "target")
     c.set(w - 2, 1, 2, "fletching_table")
     c.banner(w // 2, 4, z1, col)
+    # Inside: barrels and a chest of arrows and bows, a bench that looks at the targets, torches on the back wall
+    ix1 = w - 3                                       # the last free x inside the hall
+    ix0 = max(2, ix1 - 4) if w >= 10 else 2           # east of the tower
+    c.set(ix0, 1, 2, "barrel[facing=up,open=false]"); c.set(ix0 + 1, 1, 2, "barrel[facing=up,open=false]")
+    c.set(ix1, 1, 2, "chest[facing=south,type=single,waterlogged=false]")
+    if z1 - 2 > 2:
+        c.set(ix0, 1, z1 - 2, "barrel[facing=up,open=false]")
+        for x in range(ix0 + 2, ix1):
+            c.set(x, 1, 3, "spruce_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]")
+    for x in (ix0, ix1):
+        c.set(x, 3, 2, "wall_torch[facing=south]")
     if w < 10:
         return
     r = 2                                             # round tower with a pointed roof
@@ -918,6 +955,22 @@ def stable(c, w, st, col, T, ctx):
         c.set(x, 1, z1, "hay_block")
     c.banner(mid - 2, hw - 1, z1, col)
     c.set(w - 1, 1, w - 2, "water_cauldron[level=3]")                     # water trough
+    # Inside: stalls with fence dividers and troughs under a hay loft, a chest for the saddles, torches
+    ix0, ix1, iz0, iz1 = x0 + 1, x1 - 2, z0 + 1, z1 - 2                  # the free inside, inclusive
+    if iz1 - iz0 < 3:
+        return
+    c.box(ix0, ix1 + 1, 3, 4, iz0, iz0 + 2, "spruce_slab[type=top,waterlogged=false]")        # the loft
+    for x in range(ix0 + 1, ix1, 2):
+        c.box(x, x + 1, 1, 2, iz0, iz0 + 3, "oak_fence")                   # stall dividers
+        if x + 1 < ix1:
+            c.set(x + 1, 1, iz0 + 1, "water_cauldron[level=3]")
+    for x in range(ix0, ix1 + 1):
+        if (x - ix0) % 3 != 2:
+            c.set(x, 4, iz0, "hay_block")
+    c.set(ix0, 5, iz0, "hay_block"); c.set(ix1, 5, iz0, "hay_block")
+    c.set(ix0, 1, iz1, "chest[facing=east,type=single,waterlogged=false]")
+    c.set(ix1, 1, iz1, "barrel[facing=up,open=false]")
+    c.set(ix0, 2, iz1 - 1, "wall_torch[facing=east]"); c.set(ix1, 2, iz1 - 1, "wall_torch[facing=west]")
 
 
 def siege_workshop(c, w, st, col, T, ctx):
@@ -1107,7 +1160,7 @@ def monastery(c, w, st, col, T, ctx):
     hn = max(5, round(w * 0.5))
     t = 3 if w < 12 else 4
     c.room(x0, x1, 1, w, 0, hn, stone, st.floor)
-    furnish_hall(c, x0 + 1, x1 - 1, 2, w - 1, 1, "mosque" if st.domes else "shrine" if st.shape == "asian" else "chapel", st,
+    furnish_worship(c, x0 + 1, x1 - 1, 2, w - 1, 1, "mosque" if st.domes else "shrine" if st.shape == "asian" else "chapel", st,
             aisle=w // 2)
     for z in range(3, w - t, 3):                                          # tall windows
         c.box(x0, x0 + 1, 2, hn - 1, z, z + 1, "yellow_stained_glass_pane")
@@ -1169,7 +1222,7 @@ def fortified_church(c, w, st, col, T, ctx):
     c.room(tx0, tx1, tz0, tz1, 0, h, wall, st.floor)
     c.box(nx0 + 1, nx1 - 1, 1, h + 1, nz0 + 1, nz1 - 1, "air")
     c.box(tx0 + 1, tx1 - 1, 1, h + 1, tz0 + 1, tz1 - 1, "air")
-    furnish_hall(c, nx0 + 1, nx1 - 1, nz0 + 1, nz1 - 1, 1, "chapel", st, aisle=(S(3) + w - S(3)) // 2 + 1)
+    furnish_worship(c, nx0 + 1, nx1 - 1, nz0 + 1, nz1 - 1, 1, "chapel", st, aisle=(S(3) + w - S(3)) // 2 + 1)
     c.gable(tx0 - 1, tx1 + 1, tz0 - 1, tz1 + 1, h + 1, roof, fill=(tx0, tx1, tz0, tz1, wall), axis="x")
     ridge = c.gable(nx0 - 1, nx1 + 1, nz0 - 1, nz1 + 1, h + 1, roof, fill=(nx0, nx1, nz0, nz1, wall), axis="z")
     for x, z in ((nx0, (nz0 + nz1) // 2 + 2), (nx1 - 1, (nz0 + nz1) // 2 + 2)):
@@ -1303,7 +1356,7 @@ def library(c, x0, x1, z, rows):
         c.set(x, 1, z + min(2, rows), "lectern[facing=north,has_book=true,powered=false]")
 
 
-def furnish_hall(c, x0, x1, z0, z1, y, kind, st, aisle=None):
+def furnish_worship(c, x0, x1, z0, z1, y, kind, st, aisle=None):
     """Furniture of a hall of worship (#253): the room inside the walls is x0..x1-1, z0..z1-1, the floor blocks
     are at y-1. The altar (chapel), the mihrab (mosque) or the statue (shrine) is at the back (z0), the main door
     in the south wall. The aisle (default: the middle) and the row in front of the door stay free. Lit candles
@@ -2124,7 +2177,7 @@ def cathedral(c, w, st, col, T, ctx):
     c.room(1, w - 1, tz0, tz1, 0, hn, stone, st.floor)
     c.box(x0 + 1, x1 - 1, 1, hn + 1, tz0, tz1, "air")
     c.box(2, w - 2, 1, hn + 1, tz0 + 1, tz1 - 1, "air")
-    furnish_hall(c, x0 + 1, x1 - 1, 2, w - 2, 1, "chapel", st, aisle=mid)
+    furnish_worship(c, x0 + 1, x1 - 1, 2, w - 2, 1, "chapel", st, aisle=mid)
     for z in range(tz1 + 1, w - t, 3):                                    # windows and buttresses
         c.box(x0, x0 + 1, 2, hn - 1, z, z + 1, "blue_stained_glass_pane")
         c.box(x1 - 1, x1, 2, hn - 1, z, z + 1, "red_stained_glass_pane")
@@ -2233,7 +2286,7 @@ def taj(c, w, st, col, T, ctx):
             c.box(x, x + 1, 2, h - 2, z, z + 1, st.dome if abs(d) == 2 else "air")
             c.set(x, h - 2, z, st.dome)
     c.door(mid, 2, b - 2)
-    furnish_hall(c, a + 1, b - 1, a + 1, b - 2, 2, "mosque", st, aisle=mid)
+    furnish_worship(c, a + 1, b - 1, a + 1, b - 2, 2, "mosque", st, aisle=mid)
     cx = (w - 1) / 2
     rd = (b - a) / 2 - 2
     c.cylinder(cx, cx, rd - 0.5, h + 1, h + 5, st.dome)                   # drum
@@ -2255,7 +2308,7 @@ def djenne(c, w, st, col, T, ctx):
     c.box(0, w, 0, 1, 0, w, st.stone2)
     a, b, h = 2, w - 2, max(7, round(w * 0.4))
     c.room(a, b, a, b, 0, h, st.stone, st.floor)
-    furnish_hall(c, a + 1, b - 1, a + 1, b - 3, 1, "mosque", st, aisle=w // 2)
+    furnish_worship(c, a + 1, b - 1, a + 1, b - 3, 1, "mosque", st, aisle=w // 2)
     c.flat_roof(a, b, a, b, h, st.roof)
     for k in range(a, b, 3):                                               # buttresses with pinnacles
         for x, z in ((k, a - 1), (k, b), (a - 1, k), (b, k)):
@@ -2387,7 +2440,7 @@ def temple(c, w, st, col, T, ctx):
             tower(x0, z0, small, 2, max(4, w // 3))
     m0 = mid - big // 2
     tower(m0, m0, big, 3, max(6, w * 3 // 4))
-    furnish_hall(c, m0 + 1, m0 + big - 1, m0 + 1, m0 + big - 1, top, "shrine", st, aisle=mid)
+    furnish_worship(c, m0 + 1, m0 + big - 1, m0 + 1, m0 + big - 1, top, "shrine", st, aisle=mid)
     c.door(mid, top, m0 + big - 1)
     c.banner(mid - 1, top + 2, m0 + big, col); c.banner(mid + 1, top + 2, m0 + big, col)
 

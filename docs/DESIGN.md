@@ -39,6 +39,9 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Table with a light (inside) | `*_slab[type=top]` with a `lantern` on it, a `*_stairs` stool | `furnish`, `town_hall`, `pagoda`, `blacksmith` +25 more |
 | Storage (inside) | `chest` at the back wall | `furnish`, `town_hall`, `decorate`, `keep_inside` +13 more |
 | Rug | `*_carpet` | `town_hall`, `keep_inside`, `cart`, `furnish` |
+| Bench (inside) | `*_stairs` in a row | `archery_range` |
+| Hay loft (inside) | `spruce_slab[type=top]` with `hay_block` on it | `stable` |
+| Light on a wall (inside) | `wall_torch` | `archery_range`, `stable` |
 | Loom, cloth | `loom`, wool | `decorate`, `command_tent`, `dock` |
 | Market goods | `barrel`, `chest`, `composter`, `hay_block`, `melon`, `pumpkin` | `market`, `decorate`, `settlement`, `harbor` +7 more |
 | Market stall | lean-to of roof stairs on `*_fence` posts; wool awning in stripes for flat-roof sets | `pasture`, `nine_bands`, `fish_trap`, `outpost` +37 more |

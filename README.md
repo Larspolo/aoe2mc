@@ -107,6 +107,13 @@ The converter cannot read them. It writes them to the output folder (`<number> <
 2. In the DE scenario editor, open each scenario and save it as `.aoe2scenario`.
 3. Convert each `.aoe2scenario` file, or make a campaign of them in the DE campaign editor and convert it.
 
+An old scenario of The Conquerors (`.scx`, format `1.21`) converts directly, without the DE editor:
+
+    aoe2mc OldScenario.scx OldWorld
+
+The converter reads the map, the players and the objects. It gives no book with the scenario texts. Other `.scx`
+format versions and `.scn` files give an error with the version: use the DE editor steps above for them.
+
 The file layouts are in [`docs/campaign-formats.md`](docs/campaign-formats.md).
 
 ## Buildings
