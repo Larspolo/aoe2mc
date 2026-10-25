@@ -7,23 +7,36 @@ Usage:
     python3 game/run.py WORLD --bench 1000        # measure the commands per second through RCON, then stop
     python3 game/run.py WORLD --play              # villagers gather wood (game/gather.py); Ctrl-C stops
 
+Join with Minecraft (multiplayer, localhost): players play in creative mode and get operator rights.
 The server plays the world in place (the game changes it). Server files (eula, properties, logs) go to .cache/.
 Platform choice: docs/research/gameplay.md (#135).
 """
 import argparse
 import json
 import os
+import re
 import secrets
 import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path[:0] = [HERE, os.path.join(os.path.dirname(HERE), "tools")]
 import mc_check  # noqa: E402
 from rcon import Rcon  # noqa: E402
+
+JOINED = re.compile(r"/INFO\]: (\w{1,16}) joined the game$")      # a chat line starts with "<name>", not with a name
+
+
+def properties(game_port, rcon_port, password):
+    """server.properties: only local players can join (127.0.0.1). They play in creative mode (#292)."""
+    return (f"online-mode=false\nserver-ip=127.0.0.1\nserver-port={game_port}\n"
+            f"enable-rcon=true\nrcon.port={rcon_port}\nrcon.password={password}\n"
+            "spawn-protection=0\nmax-tick-time=-1\nenable-query=false\nbroadcast-rcon-to-ops=false\n"
+            "gamemode=creative\nforce-gamemode=true\n")
 
 
 class Game:
@@ -32,6 +45,7 @@ class Game:
     def __init__(self, world, version=mc_check.DEFAULT_VERSION, timeout=300):
         self.world, self.version, self.timeout = os.path.abspath(world), version, timeout
         self.server = self.rcon = None
+        self.lock, self.seen = threading.Lock(), 0     # the op thread and the game send commands
 
     def start(self):
         jar, java = mc_check.server_jar(self.version), mc_check.java_for(self.version)
@@ -40,9 +54,7 @@ class Game:
         with open(os.path.join(self.folder, "eula.txt"), "w") as f:
             f.write("eula=true\n")
         with open(os.path.join(self.folder, "server.properties"), "w") as f:
-            f.write(f"online-mode=false\nserver-ip=127.0.0.1\nserver-port={self.game_port}\n"
-                    f"enable-rcon=true\nrcon.port={self.port}\nrcon.password={password}\n"
-                    "spawn-protection=0\nmax-tick-time=-1\nenable-query=false\nbroadcast-rcon-to-ops=false\n")
+            f.write(properties(self.game_port, self.port, password))
         # --universe and --world: the server uses the world folder where it is, not a copy
         self.server = mc_check.Server(java, jar, self.folder, ["--universe", os.path.dirname(self.world),
                                                                "--world", os.path.basename(self.world)])
@@ -52,10 +64,29 @@ class Game:
         except BaseException:
             self.stop()
             raise
+        threading.Thread(target=self._op_loop, daemon=True).start()
         return self
 
     def command(self, cmd):
-        return self.rcon.command(cmd)
+        with self.lock:
+            return self.rcon.command(cmd)
+
+    def op_joined(self):
+        """Give operator rights to each player who joined since the last call (/gamemode, /tp without RCON, #292).
+        The server listens only on 127.0.0.1, so only local players can join."""
+        log = self.server.log
+        new, self.seen = log[self.seen:], len(log)
+        for line in new:
+            if m := JOINED.search(line):
+                self.command(f"op {m.group(1)}")
+
+    def _op_loop(self):
+        try:
+            while self.rcon:
+                self.op_joined()
+                time.sleep(0.5)
+        except (OSError, AttributeError):         # the server stops
+            pass
 
     def forceload(self):
         """Load all chunks of the world, so that all units (entities) are there."""
