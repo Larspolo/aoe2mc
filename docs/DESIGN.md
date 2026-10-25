@@ -36,6 +36,11 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Training dummy | `oak_fence`, `hay_block`, `carved_pumpkin` | `barracks`, `pasture`, `settlement`, `decorate` +10 more |
 | Bell | `bell` | `town_center`, `fortified_church`, `monastery` |
 | Bed (inside) | `*_bed` (player color), head to the north | `furnish`, `barracks` |
+| Hearth in a hut or yurt | lit `campfire` in the middle (the smoke goes through the roof), `*_carpet` rugs around it | |
+| Bedroll in a tent | `*_bed` (player color) on the floor along the canvas | |
+| Spears in a rack | `lightning_rod` | |
+| Map table of a commander | `cartography_table` | |
+| Cushion | `red_wool` next to a low `*_slab[type=top]` table | |
 | Table with a light (inside) | `*_slab[type=top]` with a `lantern` on it, a `*_stairs` stool | `furnish`, `town_hall`, `pagoda`, `blacksmith` +26 more |
 | Storage (inside) | `chest` at the back wall | `furnish`, `town_hall`, `decorate`, `keep_inside` +16 more |
 | Rug | `*_carpet` | `furnish_worship`, `town_hall`, `keep_inside`, `cart` +1 more |

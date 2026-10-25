@@ -143,3 +143,15 @@ def test_no_function_name_twice(module):
     tree = ast.parse(open(os.path.join(os.path.dirname(os.path.dirname(__file__)), module)).read())
     names = [n.name for n in tree.body if isinstance(n, (ast.FunctionDef, ast.ClassDef))]
     assert sorted({n for n in names if names.count(n) > 1}) == []
+
+
+@pytest.mark.parametrize("name", ["YURT_A", "HUT_A", "PAVILION_A", "ARMY_TENT_A", "GREEK_COMMANDER_TENT"])
+def test_tents_and_huts_are_furnished(name):
+    """The yurt, the hut, the pavilion and the tents (#335) have furniture and a light inside."""
+    cols = flat_columns()
+    E = aoe2mc.Edits(cols)
+    o = dict(kind="B", name=name, player=1, x=8.0, y=8.0, rotation=0.0, hero=False, garrisoned=False)
+    buildings.place_building(E, cols, aoe2mc.B, o, {1: {"color": "blue", "arch": "western"}}, set(), {})
+    names = Counter(aoe2mc.B.states[i].split(":")[1].split("[")[0] for i in np.concatenate([p[3] for p in E.parts]))
+    assert names["campfire"] + names["lantern"] >= 1
+    assert names["blue_bed"] + names["cartography_table"] + names["spruce_slab"] >= 1
