@@ -206,11 +206,48 @@ def test_work_sounds(tiny_world, tmp_path, monkeypatch):
     monkeypatch.setattr(aoe2mc, "MC", aoe2mc.VERSIONS["1.21.1"])
     ground = np.full((32, 32), 70)
     smith = {"kind": "B", "name": "BLACKSMITH", "footprint": [4, 4, 12, 12]}
-    assert aoe2mc.write_datapack(str(tmp_path / "A"), [smith], ground) == 1
+    assert aoe2mc.write_datapack(str(tmp_path / "A"), [smith], ground) == (1, 0)
     with open(tmp_path / "A" / "datapacks" / "aoe2mc" / "pack.mcmeta") as f:
-        assert json.load(f) == {"pack": {"description": "aoe2mc: work sounds at buildings", "pack_format": 48}}
+        assert json.load(f) == {"pack": {"description": "aoe2mc: work sounds and ambience", "pack_format": 48}}
     with open(tmp_path / "A" / "datapacks" / "aoe2mc" / "data" / "aoe2mc" / "predicate" / "sometimes.json") as f:
         assert "condition" in json.load(f)
     house = dict(smith, name="HOUSE")
-    assert aoe2mc.write_datapack(str(tmp_path / "B"), [house], ground) == 0
+    assert aoe2mc.write_datapack(str(tmp_path / "B"), [house], ground) == (0, 0)
     assert not os.path.exists(tmp_path / "B" / "datapacks")
+
+
+def test_ambience(tiny_world, tmp_path, monkeypatch):
+    """Particles and sounds by the vanilla biome near each player; --ambience full adds custom biomes (#219)."""
+    path, out = tiny_world
+    with open(os.path.join(path, "datapacks", "aoe2mc", "data", "aoe2mc", "function", "pulse.mcfunction")) as f:
+        lines = f.read().splitlines()
+    amb = [line for line in lines if line.startswith("execute as @a at @s if biome ~ ~ ~ minecraft:")]
+    assert amb and "ambience (particles and sounds by biome): " in out
+    assert not os.path.exists(os.path.join(path, "datapacks", "aoe2mc", "data", "aoe2mc", "worldgen"))
+    biomes = {str(b) for c in world_reader.World(path).chunks().values() for s in c["sections"]
+              for b in s["biomes"]["palette"]}
+    assert {line.split()[10] for line in amb} <= biomes and all(b.startswith("minecraft:") for b in biomes)
+    # full: the columns use one custom biome per group, and the pack has their files
+    import contextlib
+    import io
+
+    import scenarios
+    src = scenarios.tiny(str(tmp_path / "tiny.aoe2scenario"))
+    with contextlib.redirect_stdout(io.StringIO()):
+        aoe2mc.convert(src, str(tmp_path / "F"), ambience="full")
+    biomes = {str(b) for c in world_reader.World(str(tmp_path / "F")).chunks().values() for s in c["sections"]
+              for b in s["biomes"]["palette"]}
+    groups = {b.split(":")[1] for b in biomes if b.startswith("aoe2mc:")}
+    assert groups and groups <= set(aoe2mc.AMBIENCE)
+    assert all(b.startswith("aoe2mc:") or b[10:] not in aoe2mc.AMBIENCE_GROUP for b in biomes)
+    folder = tmp_path / "F" / "datapacks" / "aoe2mc" / "data" / "aoe2mc" / "worldgen" / "biome"
+    assert {f.name for f in folder.iterdir()} == {g + ".json" for g in groups}
+    assert "attributes" in json.loads((folder / f"{sorted(groups)[0]}.json").read_text())   # 26.x format
+    pulse = (tmp_path / "F" / "datapacks" / "aoe2mc" / "data" / "aoe2mc" / "function" / "pulse.mcfunction").read_text()
+    assert {line.split()[10] for line in pulse.splitlines() if " if biome " in line} == {f"aoe2mc:{g}" for g in groups
+                                                                                       if any(aoe2mc.AMBIENCE[g][1:3])}
+    monkeypatch.setattr(aoe2mc, "MC", aoe2mc.VERSIONS["1.21.1"])
+    old = aoe2mc.biome_file("swamp")
+    assert old["effects"]["water_color"] == 0x617b64 and old["effects"]["grass_color_modifier"] == "swamp"
+    # off: no ambience lines
+    assert aoe2mc.write_datapack(str(tmp_path / "O"), [], None, ["minecraft:forest"], "off") == (0, 0)

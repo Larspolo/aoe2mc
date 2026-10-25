@@ -72,3 +72,22 @@ def test_server_loads_border_of_tiny_world(tmp_path, version):
     assert any("Saved the game" in line for line in log)
     assert any("world border is currently 96" in line for line in log)      # the map edge, #172
     assert bad == []
+
+
+@pytest.mark.mc
+@pytest.mark.parametrize("version", ["1.21.1", "26.3"])
+def test_server_loads_custom_biomes(tmp_path, version):
+    """--ambience full (#219): the biome files and the custom biome names in the chunks load without errors."""
+    import contextlib
+    import io
+
+    import aoe2mc
+    import scenarios
+    if not mojang_reachable():
+        pytest.skip("Mojang is not reachable")
+    src = scenarios.tiny(str(tmp_path / "tiny.aoe2scenario"))
+    with contextlib.redirect_stdout(io.StringIO()):
+        aoe2mc.convert(src, str(tmp_path / "W"), mc_version=version, ambience="full")
+    bad, log = mc_check.check(str(tmp_path / "W"), version)
+    assert any("Saved the game" in line for line in log)
+    assert bad == []
