@@ -113,6 +113,16 @@ def test_clicks_select_a_villager_and_send_it_to_a_tree(tiny_world):
     assert g.villagers[uuid].state == "to_tree" and g.villagers[uuid].tree == (tx, ty)
 
 
+def test_a_villager_that_chops_wood_looks_like_a_lumberjack(tiny_world):
+    data, uuid, server, g = tiny(tiny_world)
+    tree, = g.map.trees
+    g.select(uuid)
+    g.send(tree)
+    g.send(tree)                                                       # the second order sends no command
+    look = f'data merge entity {uuid} {{VillagerData:{{profession:"minecraft:fletcher"}}}}'
+    assert server.log.count(look) == 1
+
+
 @pytest.mark.mc
 def test_villager_gathers_wood_on_a_server(tiny_world, tmp_path):
     from test_mc_check import mojang_reachable
@@ -134,6 +144,8 @@ def test_villager_gathers_wood_on_a_server(tiny_world, tmp_path):
         tree, = g.map.trees
         g.select(uuid)
         g.send(tree)
+        look = game.command(f"data get entity {uuid} VillagerData")              # the merge keeps the level
+        assert 'profession: "minecraft:fletcher"' in look and "level: 2" in look, look
         end = time.time() + 60
         while "has 0 " in game.command("scoreboard players get Wood aoe_res"):
             assert time.time() < end, "no wood after 60 s"
