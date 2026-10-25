@@ -111,6 +111,11 @@ For each open issue without a priority label:
 Candidates: open issues without `needs-human`, `blocked`, `epic`, `agent-status`, `in-progress`, and whose
 "Depends on: #n" issues are all closed. Order: `P0`, `P1`, `P2`, `P3`, then the lowest issue number.
 `python3 tools/dashboard.py --next` prints the candidates in this order (the rule is `dashboard.candidates()`).
+Epics first: an epic is never a candidate, so its rest of the work needs sub-issues. Before you claim a ticket, look
+at the open epics (label `epic`, not `needs-human`) with a higher priority than the top candidate and no open
+sub-issue. For each one, read its acceptance criteria. Close the epic with a comment when the closed sub-issues meet
+all criteria (name the evidence for each). Else make one sub-issue (same priority) for the criteria that an agent
+can do. A criterion that needs the owner stays on the epic. Then pick again (#176, #155 waited while P3 tickets ran).
 Refill the queue when fewer candidates are ready than runs are active (tickets with `in-progress` that changed in
 the last 30 minutes), so that parallel runs always find work. Do this at most once per run, in about 10 minutes:
 1. Split each `size:L` ticket without open sub-issues (`ticket` skill), also when it is not a candidate yet.
