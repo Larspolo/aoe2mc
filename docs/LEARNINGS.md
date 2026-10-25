@@ -5,12 +5,17 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 
 ## Environment
 
-- The cloud network blocks Mojang hosts (`piston-meta.mojang.com` gives 403). GitHub raw files and PyPI work.
+- GitHub raw files, PyPI and the Mojang hosts (`piston-meta`, `piston-data`, `libraries.minecraft.net`) work.
 - `/root/.local/bin/pytest` uses another Python. Use `python3 -m pytest`.
-- Java 21 is installed in the cloud container (Minecraft 1.21.x and 26.x servers need Java 21).
+- Java 21 is installed in the cloud container. Minecraft 1.21.1 needs Java 21, 26.3 needs Java 25
+  (`javaVersion.majorVersion` in the version JSON). The Mojang hosts are allowed since #12.
 - GitHub in cloud sessions: `gh api repos/Larspolo/aoe2mc/...` (REST) works. GraphQL (`gh issue list`,
   `gh pr create`) and `search/...` give 403. CI job logs: only `mcp__github__get_job_logs`.
 - Scheduled runs can have no MCP connector tools. The `autopilot` skill has a REST table for that case.
+- A scheduled task that `create_trigger` made has no repository: its sessions have no `add_repo` tool and
+  cannot clone ("GitHub access to this repository is not enabled for this session"). The scheduled task
+  must have `Larspolo/aoe2mc` as its repository (set it in the claude.ai UI). Scheduled runs use Sonnet 5.5
+  unless the task sets another model.
 - The repository is private: a workflow with a `permissions:` block also needs `contents: read`, or
   `actions/checkout` fails with "Repository not found".
 
