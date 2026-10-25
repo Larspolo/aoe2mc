@@ -1574,29 +1574,39 @@ def pagoda(c, w, st, col, T, ctx):
 
 
 def pyramid(c, w, st, col, T, ctx):
-    """Stepped pyramid: terraces 2 blocks high, a staircase on the south side, a temple on top."""
+    """Stepped pyramid (Mayan and Aztec Wonders): steep terraces with relief panels and a painted band in the
+    player color, a wide staircase with balustrades on the south side, and a temple with a roof comb on top."""
     top_w = max(5, w // 3)
     n = (w - top_w) // 2
-    mats = [st.stone, "stone_bricks", "cracked_stone_bricks", st.stone]
+    k = 3 if w >= 15 else 2                                                # height of one terrace
     for L in range(n):
-        c.box(L, w - L, 2 * L, 2 * L + 2, L, w - L, mats[L % len(mats)])
-        c.walls(L, w - L, 2 * L + 1, 2 * L + 2, L, w - L, "chiseled_stone_bricks" if L % 2 else st.stone)
-    H = 2 * n
+        y = k * L
+        c.box(L, w - L, y, y + k, L, w - L, st.stone)
+        c.walls(L, w - L, y + k - 1, y + k, L, w - L, f"{col}_concrete")   # painted band
+        if k > 2:                                                          # relief panels
+            for i in range(L + 1, w - L - 1, 3):
+                for x, z in ((i, L), (i, w - L - 1), (L, i), (w - L - 1, i)):
+                    c.set(x, y + 1, z, "chiseled_stone_bricks")
+    H = k * n
     mid = w // 2
-    for L in range(n):                                                     # steep staircase
-        z = w - 1 - L
-        c.box(mid - 1, mid + 2, 2 * L, 2 * L + 1, z, z + 1, "stone_bricks")
-        c.box(mid - 1, mid + 2, 2 * L + 1, 2 * L + 2, z, z + 1, stair("stone_brick_stairs", "north"))
-        for x in (mid - 2, mid + 2):
-            c.box(x, x + 1, 2 * L, 2 * L + 2, z, z + 1, "polished_andesite")
+    for L in range(n):                                                     # steep staircase with balustrades
+        z, y = w - 1 - L, k * L
+        c.box(mid - 2, mid + 3, y, y + k - 1, z, z + 1, "stone_bricks")
+        c.box(mid - 2, mid + 3, y + k - 1, y + k, z, z + 1, stair("stone_brick_stairs", "north"))
+        c.box(mid - 2, mid + 3, y + k, H, z, z + 1, "air")
+        for x in (mid - 3, mid + 3):
+            c.box(x, x + 1, y, y + k + 1, z, z + 1, "polished_granite")
     a, b, y = n, w - n, H
     c.box(a - 1, b + 1, y - 1, y, a - 1, b + 1, "polished_andesite")
-    c.room(a, b, a, b, y - 1, 4, st.stone)
-    c.box(mid - 1, mid + 2, y, y + 3, b - 1, b, "air")
-    c.box(a, b, y + 3, y + 4, a, b, f"{col}_concrete")
-    c.box(a, b, y + 4, y + 5, a, b, st.stone)
-    c.box(a + 1, b - 1, y + 5, y + 8, mid, mid + 1, "chiseled_stone_bricks")    # roof comb
-    c.banner(mid - 2, y + 2, b, col); c.banner(mid + 2, y + 2, b, col)
+    th = 5
+    c.room(a, b, a, b - 1, y - 1, th, st.stone)
+    c.box(mid - 1, mid + 2, y, y + 3, b - 2, b - 1, "air")                 # temple entrance
+    c.walls(a, b, y + th - 1, y + th, a, b - 1, f"{col}_concrete")
+    c.box(a, b, y + th, y + th + 1, a, b - 1, st.stone)
+    c.box(a + 1, b - 1, y + th + 1, y + th + 5, mid, mid + 1, "chiseled_stone_bricks")    # roof comb
+    for x in (a, b - 1):
+        c.set(x, y, b - 1, "campfire")                                     # braziers
+    c.banner(mid - 2, y + 2, b - 1, col); c.banner(mid + 2, y + 2, b - 1, col)
 
 
 def temple(c, w, st, col, T, ctx):

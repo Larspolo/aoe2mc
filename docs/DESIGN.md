@@ -30,14 +30,16 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Archery target | `target` | `archery_range` |
 | Bow and arrow work | `fletching_table` | `archery_range` |
 | Forge, smithy | `blast_furnace`, `anvil`, `smithing_table`, `cauldron` (water) | `blacksmith` |
-| Fire, cooking | `campfire`, `smoker` | `blacksmith`, `house`, `outpost`, `church`, `oracles_temple` |
+| Fire, cooking | `campfire`, `smoker` | `blacksmith`, `house`, `outpost`, `church`, `oracles_temple`, `pyramid` (braziers) |
 | Weapon rack, sharpening | `grindstone` | `barracks`, `granary`, `blacksmith` |
 | Training dummy | `oak_fence`, `hay_block`, `carved_pumpkin` | `barracks` |
 | Bell | `bell` | `monastery`, `town_center` |
 | Loom, cloth | `loom`, wool | `church` |
 | Market goods | `barrel`, `chest`, `composter`, `hay_block`, `melon`, `pumpkin` | `market`, `dock` |
 | Market stall | lean-to of roof stairs on `*_fence` posts; wool awning in stripes for flat-roof sets | `market` |
-| Painted trim (deck edge) | `*_concrete` (player color) | `dock` |
+| Painted trim (deck edge, band) | `*_concrete` (player color) | `dock`, `pyramid` |
+| Relief panel, carving | `chiseled_stone_bricks` | `pyramid` |
+| Balustrade of a stair | `polished_granite` | `pyramid` |
 | Hoist | log beam with `chain` | `dock` |
 | Crop field | `wheat` rows (ages 5–7) on `farmland`, furrows of bare `farmland`, `dirt_path` edge | farm (`place_building`) |
 | Hay, fodder | `hay_block` | `stable`, `barracks`, `granary` |
