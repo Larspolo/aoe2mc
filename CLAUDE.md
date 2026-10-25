@@ -72,9 +72,10 @@ not change. Do not add a dependency without a ticket that asks for it. Keep func
 
 ## How to verify
 
-There is no Minecraft client here. Use, from cheap to expensive: lint and fast tests → slow tests → convert a
+There is no Minecraft window here. Use, from cheap to expensive: lint and fast tests → slow tests → convert a
 scenario with `--preview` and look at the PNG with the Read tool → `tools/world_reader.py` for exact blocks
-→ `tools/mc_check.py` for load errors in a real Minecraft server.
+→ `tools/mc_check.py` for load errors in a real Minecraft server → `tools/mc_shot.py` for in-game screenshots
+(before a `needs-human` ticket).
 Details: the `verify` skill.
 
 ## How to work
