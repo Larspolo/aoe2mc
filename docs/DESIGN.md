@@ -35,7 +35,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Training dummy | `oak_fence`, `hay_block`, `carved_pumpkin` | `barracks` |
 | Bell | `bell` | `monastery`, `town_center` |
 | Loom, cloth | `loom`, wool | `church` |
-| Market goods | `barrel`, `chest`, `composter`, `hay_block`, `melon`, `pumpkin` | `market`, `dock` |
+| Market goods | `barrel`, `chest`, `composter`, `hay_block`, `melon`, `pumpkin` | `market`, `dock`, `harbor` |
 | Market stall | lean-to of roof stairs on `*_fence` posts; wool awning in stripes for flat-roof sets | `market` |
 | Painted trim (deck edge, band) | `*_concrete` (player color) | `dock`, `pyramid` |
 | Relief panel, carving | `chiseled_stone_bricks` | `pyramid` |
@@ -91,6 +91,9 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Rose window | stained glass panes | `monastery` |
 | Orange roof tiles (Krepost) | `red_sandstone` stairs and blocks | `krepost` |
 | Cannon | `polished_basalt` barrel on its side | `tower` (bombard) |
+| Guardian lion statue | `stone_brick_stairs` on a `chiseled_sandstone` pedestal | `harbor` |
+| Clay pot, vase | `decorated_pot` | `harbor` |
+| Prang (Khmer lotus-bud tower) | rings of `stone_bricks` and `chiseled_stone_bricks`, `gold_block` tip | `temple`, `harbor` |
 
 Add a line when a design uses a new feature block. Each new block state must pass `mcvalid`.
 
