@@ -48,9 +48,15 @@ INVISIBLE = (("MAP_REVEAL", "map revealer"), ("INVISIBLE_OBJECT", "invisible obj
              ("PLACEHOLDER", "placeholder"), ("DISABLED", "disabled unit"), ("OUTLW", "unused unit"),
              ("RFARC", "unused unit"))
 
-SKIP = ("TORCH_", "VMDL", "BUTTERFLY", "SEAGULLS", "FALCON", "HAWK", "VULTURE", "STORK",
-        "MACAW", "CONDOR", "RAVEN", "OWL", "PEACOCK", "FLAMINGO", "CRANE", "FLAMING_BIRD",
-        "TREASURE_CHEST", "PHOTONMAN", "SHARKATZOR", "NESSIE")
+SKIP = ("BUTTERFLY", "SEAGULLS", "FALCON", "HAWK", "VULTURE", "STORK",
+        "MACAW", "CONDOR", "RAVEN", "OWL", "PEACOCK", "FLAMINGO", "CRANE", "FLAMING_BIRD")
+JOKES = {   # joke and special units -> entity
+    "TREASURE_CHEST": lambda: vehicle("chest_minecart", []),
+    "TORCH_": lambda: mob("armor_stand", Invisible=Byte(1), ShowArms=Byte(1), HandItems=hands("torch")),
+    "PHOTONMAN": lambda: soldier("zombie", 3, "crossbow"),      # white space suit, laser gun
+    "SHARKATZOR": lambda: mob("guardian"),                     # a shark with laser eyes
+    "NESSIE": lambda: mob("elder_guardian"),
+}
 
 ANIMALS = [   # (keywords, minecraft mob, extra tags)
     (("POLAR_BEAR",), "polar_bear", {}),
@@ -186,6 +192,11 @@ def classify(n, hero=False):
     """Return the entity description for unit name n, or None to skip it."""
     if invisible(n) or has(n, *SKIP):
         return None
+    joke = next((f for k, f in JOKES.items() if k in n), None)
+    if joke:
+        return joke()
+    if n == "VMDL":                 # an old villager model
+        n = "VILLAGER_MALE"
     t = tier_of(n, hero)
 
     # Animals (but not war animals)
