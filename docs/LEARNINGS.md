@@ -64,7 +64,6 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   `build_chunk` returns `(nbt, vol)`: test exact blocks of a chunk with `vol` (#19).
 - `aoe2mc.py` reads `tools/mcdata/1.21.1.json` at import (#19). The package ships it as `tools.mcdata`
   (`pyproject.toml`). A new runtime data file must go into the package data too (test: `pip install .` in a venv).
-- `terrain_style` checks names in sequence: an earlier rule wins (`ROAD_GRAVEL` matched `GRAVEL` until #5).
 - The column "Used today in" of the feature table in `docs/DESIGN.md` is generated on main (`tools/feature_table.py`,
   `coverage.yml`, #234). A PR adds rows, but does not edit the column. GitHub ignored the old `union` rule (#210).
 - PRs do not change `docs/coverage.md` or `MAX` in `tests/test_coverage.py`: the `coverage.yml` workflow updates them on
