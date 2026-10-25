@@ -1,0 +1,68 @@
+# Design guide
+
+These rules apply to all design work: buildings, objects, units and animals.
+The owner set them on 2026-10-25 (#40):
+
+> I want all the buildings to look as close to in-game as possible while also keeping it making sense. So if there
+> should be a door, use a door, for a target use the target block, etc. Also some noise should still exist so it
+> doesn't look so plain.
+
+The `design` skill (`.claude/skills/design/SKILL.md`) gives the steps of one design ticket.
+
+## 1. Like the game
+
+- Copy the shape, the proportions, the colors and the main features of the in-game model.
+- Use the model of the architecture set of the player (`Style` in `ARCH`, `CIV_ARCH`). A Western European castle
+  and an East Asian castle are different designs.
+- Use a reference image of the game (see the `design` skill). Do not design from memory when an image is available.
+- Keep the footprint of the AoE2 object (`FOOTPRINT`). Use the height for size: a castle is higher than a house.
+- When the game and Minecraft do not agree, keep the outline that a player knows from a distance:
+  roof shape, towers, domes and the main colors.
+
+## 2. Real blocks for real things
+
+A thing in the model is the Minecraft block of that thing. Do not paint it with a block that has a similar color.
+
+| AoE2 feature | Minecraft block | Used today in |
+|---|---|---|
+| Door, main entrance | `*_door` (front: south side), or an open arch for large gates | `Canvas.door`, `town_center` |
+| Window | `glass_pane`; `iron_bars` for fortified buildings | `Canvas.windows`, `house`, `monastery`; `castle`, `tower` |
+| Archery target | `target` | `archery_range` |
+| Bow and arrow work | `fletching_table` | `archery_range` |
+| Forge, smithy | `blast_furnace`, `anvil`, `smithing_table`, `cauldron` (water) | `blacksmith` |
+| Fire, cooking | `campfire`, `smoker` | `blacksmith`, `house`, `outpost`, `church` |
+| Weapon rack, sharpening | `grindstone` | `barracks`, `granary` |
+| Bell | `bell` | `monastery`, `town_center` |
+| Loom, cloth | `loom`, wool | `church` |
+| Market goods | `barrel`, `chest`, `composter`, `hay_block` | `market`, `dock` |
+| Hay, fodder | `hay_block` | `stable`, `barracks`, `granary` |
+| Water trough | `cauldron` (water) | `stable` |
+| Banner, flag | `*_banner` (player color), `Canvas.flag` | most designs |
+| Fence, pen | `*_fence` | `stable`, `market`, `outpost`, `wall_segment` |
+| Spire tip, finial | `lightning_rod` | `Canvas.spire`, `monastery`, `mosque` |
+| Chain, rope | `chain` | `dock`, `siege_workshop` |
+| Portcullis, grille | `iron_bars` | `gate`, `castle` |
+| Lamp | `lantern` | `decorate()` |
+| Books, study | `bookshelf`, `lectern` | none yet (`university` needs them) |
+
+Add a line when a design uses a new feature block. Each new block state must pass `mcvalid`.
+
+## 3. Some noise
+
+- Keep the variation of `vary()` (plaster, roof and timber per building), `weather()` (moss, cracks, similar
+  stones and tiles) and `decorate()` (barrels, hay, lanterns next to the walls).
+- The main block stays the large majority of each surface, so the building stays recognizable.
+  Noise is a detail, not a pattern.
+- New noise comes from the seeded `rng` (see rule 4). Never use `random` or a time-based seed.
+
+## 4. The existing rules
+
+- **Footprint and head height:** an object keeps its blocks inside its footprint up to 3 blocks above the ground.
+  `Edits` removes other blocks. Roofs and eaves may stick out above head height.
+- **Barriers:** `barriers()` fills the free space of the footprint. Units must never stand in a block: the
+  converter prints "units in a block (moved up): N" and N must be 0.
+- **Front on the south side:** the main door is at z = w-1. The default render view (`tools/render.py`,
+  south-east) shows the front.
+- **Deterministic output:** the same scenario and seed give the same world. Code that draws random numbers per
+  block ID goes in state-name order (see `docs/LEARNINGS.md`).
+- **Valid states:** each block state passes `mcvalid` (`tests/test_buildings.py` checks all designs).

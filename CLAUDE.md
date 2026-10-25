@@ -46,6 +46,8 @@ Find code by function name with Grep. Do not read the large files from start to 
 
 ## Rules of the domain
 
+Design work (buildings, objects, units, animals) follows `docs/DESIGN.md`. Do design tickets with the `design` skill.
+
 - Tile (x, y) → block (x × T, z = y × T). T = `--tile-size` (default 4). Elevation level → `--level-height` blocks.
 - A building design draws on a `Canvas` in local coordinates. The front (main door) is on the south side (z = w-1).
 - Footprint rule: an object keeps its blocks inside its footprint up to head height (3 blocks). `Edits` enforces this.
