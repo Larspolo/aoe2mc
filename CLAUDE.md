@@ -39,7 +39,7 @@ Find code by function name with Grep. Do not read the large files from start to 
 - `aoe2mc.py` – the pipeline, in this order:
   `read_scenario` (parser → terrain arrays, objects, players) → `Columns` (terrain per block column, `ground_detail`)
   → `place_objects` (trees, mines, cliffs, `decor`, calls `buildings.place_building`) → `Edits.by_chunk`
-  → `build_chunk` (sections, biomes, block entities) → `write_region` (Anvil `.mca`) and `write_level_dat`.
+  → `border` (`--border`, blocks outside the map) → `build_chunk` (sections, biomes, block entities) → `write_region` (Anvil `.mca`) and `write_level_dat`.
   Units: `plan_units` → `entity_chunk` (finds free space). `convert()` runs it all; `main()` is the CLI.
 - `buildings.py` – `Style` and `ARCH` (9 architecture sets), `CIV_ARCH`, `Canvas` (drawing tools: `room`,
   `timber_room`, `roof`, `gable`, `hip`, `dome`, `cylinder` ...), one function per design, `select()` (name → design),

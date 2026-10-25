@@ -209,6 +209,7 @@ def check(world, version=DEFAULT_VERSION, timeout=300, keep=None):
                 for cz in range(z0, z1 + 1, 16):
                     s.send(f"forceload add {cx * 16} {cz * 16} {min(cx + 15, x1) * 16} {min(cz + 15, z1) * 16}")
             n = (x1 - x0 + 1) * (z1 - z0 + 1)
+            s.send("worldborder get")              # the log shows the width of the vanilla border (#172)
             s.send(f"say forceload sent for {n} chunks")
             s.wait(r"forceload sent for", timeout)
             time.sleep(5 + n * 0.02)                 # chunks and entities load in other threads
