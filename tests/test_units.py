@@ -99,6 +99,12 @@ def test_each_militia_upgrade_looks_stronger():
     assert worn == sorted(worn) and len(set(worn)) == len(worn), worn
 
 
+@pytest.mark.parametrize("name,mob", [("THE_BLACK_PRINCE", "horse"), ("PORUS", "ravager"), ("LEONIDAS", "zombie"),
+                                      ("EINAR_PAUNCH_SHAKER", "skeleton"), ("HUNTING_WOLF", "wolf")])
+def test_hero_base_unit(name, mob):
+    assert units.classify(name, hero=True)["id"] == "minecraft:" + mob
+
+
 @pytest.mark.parametrize("name", ["ELITE_HUSKARL", "ELITE_URUMI_SWORDSMAN", "ELITE_KONA", "ELITE_JARL", "ELITE_SANNAHYA"])
 def test_elite_has_a_gold_trim_on_the_base_design(name):
     elite, base = units.classify(name), units.classify(name.removeprefix("ELITE_"))
