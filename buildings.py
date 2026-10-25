@@ -2128,6 +2128,7 @@ def place_building(E, cols, B, o, players, walls, gates):
         # Like the game: rows of crops with furrows of bare soil between them, along tile y (they turn with
         # --orientation), and a path around the plot. Some rows are not ripe yet.
         x0, z0 = int(round((ux - 1.5) * T)), int(round((uy - 1.5) * T))
+        o["footprint"] = [x0, z0, x0 + 3 * T, z0 + 3 * T]                   # for aoe2mc.json
         rng = np.random.default_rng(abs((x0 * 73856093) ^ (z0 * 19349663)) % (2 ** 32))
         for x in range(max(0, x0), min(cols.n, x0 + 3 * T)):
             for z in range(max(0, z0), min(cols.n, z0 + 3 * T)):
@@ -2178,6 +2179,7 @@ def place_building(E, cols, B, o, players, walls, gates):
     zs = range(max(0, z0), min(cols.n, z0 + fz))
     if not len(xs) or not len(zs):
         return
+    o["footprint"] = [x0, z0, x0 + fx, z0 + fz]                         # for aoe2mc.json
     area = cols.wtop[xs.start:xs.stop, zs.start:zs.stop]
     base = int(area.max())
     if fn not in (gate, bridge):

@@ -537,6 +537,12 @@ def to_nbt(desc, pos, yaw, rng):
     return Compound(tags)
 
 
+def uuid_str(ints):
+    """UUID int array (4 × int32, most significant first) -> the text form that commands use."""
+    h = "".join(f"{int(v) & 0xFFFFFFFF:08x}" for v in ints)
+    return f"{h[:8]}-{h[8:12]}-{h[12:16]}-{h[16:20]}-{h[20:]}"
+
+
 def top_entity(nbt):
     while "Passengers" in nbt and len(nbt["Passengers"]):
         nbt = nbt["Passengers"][0]
