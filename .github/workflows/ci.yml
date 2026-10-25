@@ -14,6 +14,7 @@ permissions:
 
 jobs:
   test:
+    if: github.event_name != 'schedule' || vars.PAUSE_SCHEDULES != 'true'   # the variable pauses the schedules (Actions minutes)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
