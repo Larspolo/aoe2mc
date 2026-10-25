@@ -556,9 +556,10 @@ def castle(c, w, st, col, T, ctx, small=False):
     c.walls(1, w - 1, 1, hw + 1, 1, w - 1, stone, t=th)
     if st.framing == "bands":
         c.walls(1, w - 1, 1, 2, 1, w - 1, st.accent)                     # base row
-        c.walls(1, w - 1, hw, hw + 1, 1, w - 1, st.accent)               # band under the merlons
+    c.walls(1, w - 1, hw, hw + 1, 1, w - 1, f"{col}_wool")               # player band under the merlons
     c.crenels(1, w - 1, 1, w - 1, hw + 1, (st.merlon or stone))
     roofed = st.shape in ("gable", "hip", "asian")
+    asian = st.shape == "asian"
     roof = family(st.roof)[2] if roofed else None
     # Round corner towers that stand out from the walls
     r = max(1.6, w / 7)
@@ -566,6 +567,7 @@ def castle(c, w, st, col, T, ctx, small=False):
         for cz in (r - 0.5, w - r - 0.5):
             c.cylinder(cx, cz, r, 1, hw + 4, stone)
             c.cylinder(cx, cz, r - 1, hw + 1, hw + 4, "air")
+            c.cylinder(cx, cz, r, hw + 2, hw + 3, f"{col}_wool", hollow=True)
             c.cylinder(cx, cz, r - 1, hw + 3, hw + 4, st.wood)
             for y in range(3, hw + 2, 3):
                 ix, iz = int(round(cx)), int(round(cz))
@@ -573,7 +575,9 @@ def castle(c, w, st, col, T, ctx, small=False):
                     c.set(ix, y, int(round(cz + r - 0.5)), "iron_bars")
                 else:
                     c.set(int(round(cx + r - 0.5)), y, iz, "iron_bars")
-            if roofed:
+            if asian:                   # square roofs with upturned corners
+                c.hip(int(cx - r) - 1, int(cx + r) + 2, int(cz - r) - 1, int(cz + r) + 2, hw + 4, st.roof, flare=True)
+            elif roofed:
                 c.cone(cx, cz, r + 0.5, hw + 4, roof)
             else:
                 c.cylinder(cx, cz, r, hw + 4, hw + 5, stone)
@@ -600,15 +604,36 @@ def castle(c, w, st, col, T, ctx, small=False):
     for y in (hw + 2, kh - 2):
         c.windows(k, w - k, k, w - k, y, b="iron_bars", step=2, height=2)
     c.box(mid - (gw // 2), mid - (gw // 2) + gw, 1, 4, w - k - 1, w - k, "air")
+    if asian:
+        # Tenshu: white plastered upper floors on the stone base, a flared roof skirt at each floor
+        c.walls(k, w - k, hw + 1, kh + 1, k, w - k, st.plaster)
+        for x in (k, w - k - 1):
+            for z in (k, w - k - 1):
+                c.box(x, x + 1, hw + 1, kh + 1, z, z + 1, st.timber)
+        c.windows(k, w - k, k, w - k, kh - 2, b="iron_bars", step=2, height=2)
+        for y in range(hw + 1, kh - 1, 4):
+            c.hip(k - 1, w - k + 1, k - 1, w - k + 1, y, st.roof, layers=1, flare=True)
+        top = c.hip(k - 1, w - k + 1, k - 1, w - k + 1, kh + 1, st.roof, flare=True)
+        for x in range(k + 1, w - k - 1, 3):
+            c.banner(x, hw - 1, w - k, col)
+        c.flag(mid, top + 1, mid, col, 3)
+        return
+    domed = st.torons or st.dome == "bricks"          # Malian and Byzantine castles: a dome on the keep
     for tx in (k, w - k - 2):
         for tz in (k, w - k - 2):
             c.box(tx, tx + 2, kh + 1, kh + 4, tz, tz + 2, stone)
-            if roofed:
+            if roofed and not domed:
                 c.spire(tx - 1, tx + 3, tz - 1, tz + 3, kh + 4, roof, steep=1, tip=None)
             else:
                 c.crenels(tx, tx + 2, tz, tz + 2, kh + 4, (st.merlon or stone))
     for x in range(k + 1, w - k - 1, 3):
         c.banner(x, kh - 3, w - k, col)
+    if domed:
+        rd = (w - 2 * k) / 2 - 1
+        c.cylinder(mid - 0.5, mid - 0.5, rd, kh + 1, kh + 3, st.accent)              # drum
+        top = c.dome(mid - 0.5, mid - 0.5, rd, kh + 3, st.dome)
+        c.flag(mid, top + 1, mid, col, 3)
+        return
     c.flag(mid, kh + 1, mid, col, 5)
 
 
