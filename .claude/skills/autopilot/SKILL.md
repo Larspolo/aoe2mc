@@ -29,6 +29,7 @@ Put the method after the path (`... -X PATCH`): the permission rules match the s
 | New PR | `/pulls -f title="..." -f head=BRANCH -f base=main -F body=@file.md` |
 | CI of a commit | `/commits/SHA/check-runs --jq '.check_runs[] \| "\(.name) \(.status) \(.conclusion)"'` |
 | Merge a PR | `/pulls/N/merge -X PUT -f merge_method=squash` |
+| Merge state of a PR | `/pulls/N --jq .mergeable_state` (`dirty` = merge conflict: CI does not start, merge `origin/main`) |
 | CI job log | not possible with `gh` in the cloud: use `mcp__github__get_job_logs`, or run the check locally |
 
 ## Labels

@@ -45,11 +45,13 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Thatch | `hay_block` | `hut`, `settlement` |
 | Palisade stakes | `*_log[axis=y]` of two heights | `wooden_fort` |
 | Spire tip, finial | `lightning_rod` | `Canvas.spire`, `monastery`, `mosque` |
-| Chain, rope | `chain` | `dock`, `siege_workshop` |
+| Chain, rope | `chain` | `dock`, `siege_workshop`, `shipyard`, `harbor_chain` |
 | Portcullis, grille | `iron_bars` | `gate`, `castle` |
 | Lamp | `lantern` | `decorate()` |
 | Column | `quartz_pillar` | `arch_of_constantine`, `oracles_temple` |
 | Sacred tree | `oak_log`, `oak_leaves[persistent=true]` | `pagan_shrine` |
+| Sail | wool (player color) | `flagship` |
+| Hides | `brown_wool` | `helepolis` |
 | Books, study | `bookshelf`, `lectern` | none yet (`university` needs them) |
 
 Add a line when a design uses a new feature block. Each new block state must pass `mcvalid`.
