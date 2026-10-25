@@ -35,6 +35,11 @@ swamp, water, grass) whose vanilla biomes are in the map. The owner chose (#219)
 `--ambience full`, default `basic` (no `worldgen/` file, no warning). `full` maps the vanilla biomes of a group to
 `aoe2mc:<group>` in the chunks and writes `worldgen/biome/<group>.json` in the format of the output version.
 
+Teams (#358, `team_lines` in `aoe2mc.py`): each unit of player N has the tag `aoe2mc.pN` (`units.make_entity`).
+`load.mcfunction` makes the team `pN` ("Player N (civilization)") in the nearest chat color of the player color
+(`units.TEAM_COLOR`). A load function reaches only the entities of loaded chunks, so the pulse puts each new unit in
+its team: `team join pN @e[tag=aoe2mc.pN,team=]`. Gaia has no team. `--ambience off` writes no pack, so no teams.
+
 ## Pack layout
 
 ```

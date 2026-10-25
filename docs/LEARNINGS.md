@@ -51,6 +51,8 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   "belongs to another run" although the claim is yours.
 - `tools/claim.py` names the run by the current local branch (`who()`): a beat from a helper branch fails with
   "belongs to another run". Stay on the session branch and push with `HEAD:<branch>` (#361).
+- The cloud clone is shallow (`git rev-parse --is-shallow-repository`): `git fetch --unshallow origin` before a scan
+  of the history or a `git log` of old files (#367).
 
 ## Libraries
 
@@ -105,5 +107,9 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   the ground of the free cells next to it (`Map.around`, #307). The parser stump names: `STUMP`, `*_STUMP` (no `TREE_STUMP`).
 - The `buildings` test scenario is about 1150 × 1570 blocks: to read one building of player 1 in the world, use the area
   around tile (4 + i % 40 × 7, 4 + i // 40 × 7), i = the index of the name in `BuildingInfo` (#251).
+- An "other" object in `MONUMENTS` goes to `place_building` as a copy (`dict(o, kind="B")`): it gets no `o["footprint"]`.
+  In a test, compute its block area from `buildings.footprint(name)` (#296).
 - Sibling sub-issues (#249-#256) run in parallel: before you add a helper or a tool option, `git fetch origin main` and
   grep for it. #252 and #265 both added `render.py --cut`, and two runs added a `furnish` (#252).
+- A datapack `load` function or an RCON `@e` selector sees only entities of loaded chunks: 26.3 loads none without a
+  player. In an RCON check, `forceload add X0 Z0 X1 Z1` (at most 256 chunks per command) first (#358).
