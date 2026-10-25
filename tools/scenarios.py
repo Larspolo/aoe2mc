@@ -5,13 +5,16 @@ Make synthetic AoE2 DE scenarios for tests (no real map files necessary).
 Usage:
     python tools/scenarios.py tiny OUT.aoe2scenario
     python tools/scenarios.py gallery OUT.aoe2scenario [--kinds BOU]
+    python tools/scenarios.py facing OUT.aoe2scenario
 
 tiny:    24x24 tiles with land, shallow and deep water, a hill, buildings, units, a tree, a mine and fish.
 gallery: every object type of the parser in a grid (B = buildings, O = other objects, U = units).
+facing:  units at the rotations 0, pi/4 ... 7pi/4, to compare the facing in AoE2 and in Minecraft (docs/facing.md).
 """
 import argparse
 import contextlib
 import io
+import math
 
 from AoE2ScenarioParser.datasets.buildings import BuildingInfo
 from AoE2ScenarioParser.datasets.other import OtherInfo
@@ -70,14 +73,30 @@ def gallery(path, kinds="BOU", step=7):
     return save(scn, path)
 
 
+def facing(path):
+    """8 knights in a circle: knight k has the rotation k*pi/4 and stands in the direction of that rotation from the
+    center (angle from +x to +y). If the converter is correct, each knight faces away from the center in both games.
+    8 archers in a row (west to east) with the same rotations. A flag at the north edge (tile y = 3)."""
+    scn = new_scenario(32)
+    um = scn.unit_manager
+    for k in range(8):
+        r = k * math.pi / 4
+        um.add_unit(PlayerId.ONE, UnitInfo.KNIGHT.ID, x=16.5 + 6 * math.cos(r), y=16.5 + 6 * math.sin(r), rotation=r)
+        um.add_unit(PlayerId.TWO, UnitInfo.ARCHER.ID, x=5.5 + 3 * k, y=27.5, rotation=r)
+    um.add_unit(PlayerId.GAIA, OtherInfo.FLAG_A.ID, x=16.5, y=3.5)
+    return save(scn, path)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("kind", choices=["tiny", "gallery"])
+    ap.add_argument("kind", choices=["tiny", "gallery", "facing"])
     ap.add_argument("output")
     ap.add_argument("--kinds", default="BOU", help="gallery: B, O and/or U (default BOU)")
     a = ap.parse_args()
     if a.kind == "tiny":
         tiny(a.output)
+    elif a.kind == "facing":
+        facing(a.output)
     else:
         gallery(a.output, a.kinds)
     print("Wrote", a.output)
