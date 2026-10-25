@@ -672,29 +672,29 @@ Most common results: decorations (92), trees (53), flags (39).
 | BUTTERFLY2 | skipped | yes |
 | BUTTERFLY3 | skipped | yes |
 | CROCODILE | hoglin | no |
-| DEER | goat | no |
+| DEER | horse | no |
 | DIRE_WOLF | wolf | no |
-| ELEPHANT | ravager | no |
+| ELEPHANT | polar_bear | no |
 | FALCON | skipped | yes |
 | HAWK | skipped | yes |
-| IBEX | goat | no |
+| IBEX | sheep | no |
 | IRON_BOAR | hoglin | no |
-| JAGUAR | sheep | no |
-| JAVELINA | hoglin | no |
+| JAGUAR | wolf | no |
+| JAVELINA | panda | no |
 | KOMODO_DRAGON | hoglin | no |
-| LION | sheep | no |
+| LION | wolf | no |
 | MACAW | skipped | yes |
-| OSTRICH | sheep | no |
+| OSTRICH | chicken | no |
 | RABID_WOLF | wolf | no |
-| RHINOCEROS | hoglin | no |
+| RHINOCEROS | panda | no |
 | SEAGULLS | skipped | yes |
-| SNOW_LEOPARD | sheep | no |
+| SNOW_LEOPARD | wolf | no |
 | STORK | skipped | yes |
 | STORMY_DOG | wolf | no |
-| TIGER | sheep | no |
+| TIGER | wolf | no |
 | VULTURE | skipped | yes |
 | WILD_BACTRIAN_CAMEL | camel | no |
-| WILD_BOAR | hoglin | no |
+| WILD_BOAR | panda | no |
 | WILD_CAMEL | camel | no |
 | WILD_HORSE_A | horse | no |
 | GREY_WOLF | wolf | no |
@@ -795,13 +795,13 @@ Most common results: decorations (92), trees (53), flags (39).
 | FISHING_SHIP | boat (villager) | no |
 | FLAMETHROWER | minecart (blaze) | no |
 | FLAMING_CAMEL | camel (blaze) | no |
-| FURIOUS_THE_MONKEY_BOY | sheep | no |
+| FURIOUS_THE_MONKEY_BOY | ocelot | no |
 | GALLEON | boat (skeleton, skeleton) | no |
 | GALLEY | boat (skeleton) | no |
 | GBETO | drowned | no |
 | GENITOUR | skeleton_horse (drowned) | no |
 | GENOESE_CROSSBOWMAN | skeleton | no |
-| GOAT | goat | no |
+| GOAT | sheep | no |
 | GOOSE | chicken | no |
 | HALBERDIER | zombie | no |
 | HAND_CANNONEER | pillager | no |
@@ -838,7 +838,7 @@ Most common results: decorations (92), trees (53), flags (39).
 | IMPERIAL_LEGIONARY | zombie – default infantry | no |
 | LEITIS | horse (zombie) | no |
 | LIGHT_CAVALRY | horse (zombie) | no |
-| LLAMA_A | llama | no |
+| LLAMA_A | camel | no |
 | LONG_SWORDSMAN | zombie – default infantry | no |
 | LONGSHIP | boat (zombie, skeleton) | no |
 | LONGBOWMAN | skeleton | no |
@@ -859,7 +859,7 @@ Most common results: decorations (92), trees (53), flags (39).
 | OX_CART | donkey | no |
 | OX_WAGON | donkey | no |
 | PALADIN | horse (zombie) | no |
-| WAR_PENGUIN | sheep | no |
+| WAR_PENGUIN | chicken | no |
 | PETARD | creeper | no |
 | PHOTONMAN | zombie | no |
 | PIG | pig | no |
@@ -988,7 +988,7 @@ Most common results: decorations (92), trees (53), flags (39).
 | ELITE_CENTURION | zombie – default infantry | no |
 | LEGIONARY | zombie – default infantry | no |
 | DROMON | boat (skeleton, skeleton) | no |
-| GAZELLE | sheep | no |
+| GAZELLE | horse | no |
 | COMPOSITE_BOWMAN | skeleton | no |
 | ELITE_COMPOSITE_BOWMAN | skeleton | no |
 | MONASPA | horse (zombie) | no |
@@ -1051,7 +1051,7 @@ Most common results: decorations (92), trees (53), flags (39).
 | LYSANDERS_RAIDER | zombie – default infantry | no |
 | HINT_OBJECT | skipped on purpose (editor hint) | no |
 | MOUFLON | sheep | no |
-| GOAT_UNCONVERTIBLE | goat | no |
+| GOAT_UNCONVERTIBLE | sheep | no |
 | MOUNTED_SAMURAI | horse (zombie) | no |
 | HUNNIC_HORSE | horse | no |
 | ARGALI | sheep | no |
@@ -1097,15 +1097,15 @@ Most common results: decorations (92), trees (53), flags (39).
 | WILD_HORSE_C | horse | no |
 | WILD_HORSE_D | horse | no |
 | WILD_HORSE_E | horse | no |
-| MONKEY | sheep | no |
-| PENGUIN_GAIA | sheep | no |
+| MONKEY | ocelot | no |
+| PENGUIN_GAIA | chicken | no |
 | RED_FOX | fox | no |
 | ARCTIC_FOX | fox | no |
-| LLAMA_B | llama | no |
+| LLAMA_B | camel | no |
 | ARCTIC_WOLF | wolf | no |
-| HARE_A | sheep | no |
-| HARE_B | sheep | no |
-| ARCTIC_HARE | sheep | no |
+| HARE_A | rabbit | no |
+| HARE_B | rabbit | no |
+| ARCTIC_HARE | rabbit | no |
 | COMPANION_CAVALRY | horse (zombie) | no |
 | ELITE_COMPANION_CAVALRY | horse (zombie) | no |
 | PHALANGITE | zombie | no |
@@ -1146,26 +1146,26 @@ Most common results: decorations (92), trees (53), flags (39).
 | TEMPLE_GUARD | zombie – default infantry | no |
 | ELITE_TEMPLE_GUARD | zombie – default infantry | no |
 | CHAMPI_RUNNER | zombie – default infantry | no |
-| TAPIR | cow | no |
-| CAPYBARA | sheep | no |
-| GUANACO | llama | no |
-| SNAKE | sheep | no |
+| TAPIR | panda | no |
+| CAPYBARA | pig | no |
+| GUANACO | camel | no |
+| SNAKE | silverfish | no |
 | CONDOR | skipped | yes |
 | CAIMAN | hoglin | no |
-| BLACK_PANTHER | sheep | no |
+| BLACK_PANTHER | wolf | no |
 | FLAMINGO | skipped | yes |
-| RHEA | sheep | no |
+| RHEA | chicken | no |
 | WAR_DOG | wolf | no |
 | ELITE_WAR_DOG | wolf | no |
-| ALPACA | llama | no |
-| WILD_ALPACA | llama | no |
+| ALPACA | camel | no |
+| WILD_ALPACA | camel | no |
 | HULK | boat (skeleton) | no |
 | WAR_HULK | boat (skeleton, skeleton) | no |
 | CARRACK | boat (skeleton, skeleton) | no |
 | WHALING_SHIP | boat (villager) | no |
 | CATAPULT_GALLEON | boat (pillager, skeleton) | no |
 | TREASURE_CHEST | chest_minecart | no |
-| WALRUS | cow | no |
+| WALRUS | polar_bear | no |
 | RAVEN | skipped | yes |
 | MOUNTED_CROSSBOWMAN | skeleton_horse (skeleton) | no |
 | HEAVY_MOUNTED_CROSSBOWMAN | skeleton_horse (skeleton) | no |
@@ -1180,9 +1180,9 @@ Most common results: decorations (92), trees (53), flags (39).
 | REPAIRER_MALE | villager | no |
 | REPAIRER_FEMALE | villager | no |
 | WHEELED_SHIP | boat (skeleton) | no |
-| SEAL | cow | no |
-| LYNX | sheep | no |
-| ELK | goat | no |
+| SEAL | turtle | no |
+| LYNX | wolf | no |
+| ELK | llama | no |
 | PHEASANT | chicken | no |
 | FLAMING_BIRD | skipped | yes |
 
