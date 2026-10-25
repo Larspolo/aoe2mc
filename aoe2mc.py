@@ -26,6 +26,7 @@ The world is saved with Minecraft data version 1.21.1. Newer Minecraft versions 
 import argparse
 import contextlib
 import io
+import json
 import os
 import time
 import zlib
@@ -37,6 +38,10 @@ from nbtlib.tag import Byte, Compound, Double, Float, Int, IntArray, List, Long,
 
 import buildings
 import units
+
+# Blocks with the 'waterlogged' property. A block of this list under the water surface gets waterlogged=true (#19).
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools", "mcdata", "1.21.1.json")) as _f:
+    WATERLOGGABLE = {"minecraft:" + k for k, v in json.load(_f)["blocks"].items() if "waterlogged" in v}
 
 # Output format per Minecraft Java version (docs/minecraft-versions.md). The 26.3 entity and world format: #57.
 VERSIONS = {
@@ -59,6 +64,7 @@ class Blocks:
     def __init__(self):
         self.states = ["minecraft:air"]
         self.index = {"minecraft:air": 0}
+        self.wets = {}
 
     def __call__(self, state):
         if not state.startswith("minecraft:"):
@@ -69,6 +75,14 @@ class Blocks:
             self.states.append(state)
             self.index[state] = i
         return i
+
+    def wet(self, i):
+        """Block id i with waterlogged=true, or i if the block has no 'waterlogged' property."""
+        if i not in self.wets:
+            name, _, props = self.states[i].partition("[")
+            p = [kv for kv in props[:-1].split(",") if kv and not kv.startswith("waterlogged=")]
+            self.wets[i] = self(f"{name}[{','.join(p + ['waterlogged=true'])}]") if name in WATERLOGGABLE else i
+        return self.wets[i]
 
     def nbt(self, i):
         """Palette entry for block id i: {Name, Properties}, with the block names of the output version."""
@@ -1177,6 +1191,12 @@ def build_chunk(cx, cz, cols, edits):
         ys, zs, xs = np.nonzero(vol[:-1] == lower)
         bad = vol[ys + 1, zs, xs] != upper
         vol[ys[bad], zs[bad], xs[bad]] = SHORT_GRASS
+
+    # Blocks under the water surface are waterlogged, else they leave a dry gap in the water
+    wet = water & (vol != WATER) & (vol != ICE)
+    if wet.any():
+        vals, inv = np.unique(vol[wet], return_inverse=True)
+        vol[wet] = np.array([B.wet(int(v)) for v in vals], np.uint16)[inv]
 
     # Biomes: one per 4x4 block cell, the same for all heights.
     cells = cols.biome[x0 + 2:x0 + 16:4, z0 + 2:z0 + 16:4].T            # (z, x) 4x4
