@@ -18,6 +18,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   (earlier input is lost). Do not use `pkill -f server.jar`: it also kills your own shell.
 - GitHub in cloud sessions: `gh api repos/Larspolo/aoe2mc/...` (REST) works. GraphQL (`gh issue list`,
   `gh pr create`) and `search/...` give 403. CI job logs: only `mcp__github__get_job_logs`.
+- Quote the heredoc tag (`<<'EOF'`) for GitHub text: in `<<EOF` the shell runs each `` `name` `` as a command
+  and the text loses the names. Pass paths as arguments instead of `$VAR` in the text.
 - Deleting a branch with `gh api .../git/refs/heads/B -X DELETE` gives 403 through the proxy. Skip it.
 - Scheduled runs can have no MCP connector tools. The `autopilot` skill has a REST table for that case.
 - A scheduled task that `create_trigger` made has no repository: its sessions have no `add_repo` tool and
