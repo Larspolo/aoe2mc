@@ -2,6 +2,20 @@
 
 Converts an Age of Empires II: Definitive Edition scenario (`.aoe2scenario`) into a Minecraft Java Edition world.
 
+## Gallery
+
+The example maps in `examples/` after the conversion. Click an image for a larger view. Download a converted world,
+unzip it and put the folder into the `saves` folder of Minecraft Java.
+
+| River town | Four civilizations | Battle |
+|---|---|---|
+| [![River town](docs/images/examples/river_town-3d.png)](docs/images/examples/river_town-3d.png) | [![Four civilizations](docs/images/examples/four_civs-3d.png)](docs/images/examples/four_civs-3d.png) | [![Battle](docs/images/examples/battle-3d.png)](docs/images/examples/battle-3d.png) |
+| [![River town in the game](docs/images/examples/river_town-game.png)](docs/images/examples/river_town-game.png) | [![Four civilizations in the game](docs/images/examples/four_civs-game.png)](docs/images/examples/four_civs-game.png) | [![Battle in the game](docs/images/examples/battle-game.png)](docs/images/examples/battle-game.png) |
+| A walled town, a river with a bridge and a dock, a castle on a hill. [Download](https://github.com/Larspolo/aoe2mc/releases/download/worlds/river_town.zip) | Four towns of four architecture sets around a lake, each with its wonder. [Download](https://github.com/Larspolo/aoe2mc/releases/download/worlds/four_civs.zip) | Two armies in formation, siege weapons and a castle. [Download](https://github.com/Larspolo/aoe2mc/releases/download/worlds/battle.zip) |
+
+The top row is a 3D image of the blocks (`tools/render.py`), the bottom row a screenshot of Minecraft (`tools/mc_shot.py`).
+The scenario files and how to make them again: `examples/README.md`.
+
 ## Files
 
 | File | Description |

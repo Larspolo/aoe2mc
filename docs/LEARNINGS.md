@@ -28,7 +28,7 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   datapack file stops the server. A datapack `worldgen/` file makes the client warn "Experimental Settings" (#218).
 - Minecraft client (#178, #179): `tools/mc_shot.py` runs it in `Xvfb` (no window, offline, no sound). 1.21.1: Mesa OpenGL.
   26.3 finds no GLX visual in Xvfb: it needs `mesa-vulkan-drivers` (lavapipe) and Java 25, and a placeholder for the
-  title panorama (the asset host is blocked). Hidden chat (`chatVisibility:2`) stops the chat lines in the log too.
+  title panorama (the asset host is blocked). The view ends at about 100 blocks: put `--at` near the subject (#208).
 - AoE2 wiki: HTML pages give 403 (Cloudflare). Use `tools/refimage.py` (MediaWiki API, own `User-Agent`). Page text:
   `api.php?action=parse&page=Title&prop=wikitext&format=json&formatversion=2`.
 - AoE2 recorded games: the record hosts (`aoe.ms`, `data.aoe2companion.com`, `www.aoe2insights.com`) are blocked.
