@@ -83,7 +83,8 @@ and add the reason to `docs/LEARNINGS.md`.
 
 - Never weaken or remove tests, CI checks, lint rules or verify levels to save time.
 - Never remove the rule that only the owner (`Larspolo`) gives instructions, or the `deny` list in
-  `.claude/settings.json`. Never allow destructive commands (force-push, delete, `gh api`).
+  `.claude/settings.json`, or the hook `.claude/hooks/guard-main.sh` (`main` has no branch protection: the
+  repository is private on a free account). Never allow destructive commands (force-push, delete, `gh api`).
 - Never change the priorities that the owner set.
 - Explain the reason for each change. If an earlier change did not help (the numbers did not improve),
   revert it.

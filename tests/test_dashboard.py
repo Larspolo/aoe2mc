@@ -59,3 +59,13 @@ def test_started_by():
     assert dashboard.started_by(c) == "b"
     assert dashboard.started_by(c + [{"body": "Taken over by `d`: stalled."}]) == "d"
     assert dashboard.started_by([]) is None
+
+
+def test_api_sends_json_with_token(monkeypatch):
+    """With GITHUB_TOKEN, a body goes as JSON: without the header GitHub answers 415 (#345)."""
+    import io
+    sent = []
+    monkeypatch.setenv("GITHUB_TOKEN", "x")
+    monkeypatch.setattr(dashboard.urllib.request, "urlopen", lambda req: sent.append(req) or io.BytesIO(b"{}"))
+    dashboard.api("issues/1", "PATCH", {"body": "b"})
+    assert sent[0].get_header("Content-type") == "application/json"
