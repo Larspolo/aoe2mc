@@ -17,6 +17,13 @@ def test_pick_order():
     assert [i["number"] for i in dashboard.candidates(issues)] == [8, 7, 3, 9, 11]
 
 
+def test_depends_on_open_pr():
+    # #21 waits for the open PR #12 (#243); a "Depends on:" in the middle of a sentence is no dependency
+    issues = [issue(12, "P0", pull_request={}), issue(21, "P1", body="Depends on: #12"),
+              issue(22, "P1", body='Text: "Depends on: #12" names a PR.'), issue(23, "P2", "in-progress")]
+    assert [i["number"] for i in dashboard.candidates(issues)] == [22]
+
+
 def test_render_sections():
     old = ('<!-- agent-state: {"last_run": "2026-10-25T19:00:00Z", "runs": 15} -->\n## Agent status\n'
            "**Last run:** old text\n\n### Next up\n1. #4 stale\n\n### Process changes\n- 2026-10-25: a change\n"
