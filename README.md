@@ -2,6 +2,20 @@
 
 Converts an Age of Empires II: Definitive Edition scenario (`.aoe2scenario`) into a Minecraft Java Edition world.
 
+## Gallery
+
+The example maps in `examples/` after the conversion. Click an image for a larger view. Download a converted world,
+unzip it and put the folder into the `saves` folder of Minecraft Java.
+
+| River town | Four civilizations | Battle |
+|---|---|---|
+| [![River town](docs/images/examples/river_town-3d.png)](docs/images/examples/river_town-3d.png) | [![Four civilizations](docs/images/examples/four_civs-3d.png)](docs/images/examples/four_civs-3d.png) | [![Battle](docs/images/examples/battle-3d.png)](docs/images/examples/battle-3d.png) |
+| [![River town in the game](docs/images/examples/river_town-game.png)](docs/images/examples/river_town-game.png) | [![Four civilizations in the game](docs/images/examples/four_civs-game.png)](docs/images/examples/four_civs-game.png) | [![Battle in the game](docs/images/examples/battle-game.png)](docs/images/examples/battle-game.png) |
+| A walled town, a river with a bridge and a dock, a castle on a hill. [Download](https://github.com/Larspolo/aoe2mc/releases/download/worlds/river_town.zip) | Four towns of four architecture sets around a lake, each with its wonder. [Download](https://github.com/Larspolo/aoe2mc/releases/download/worlds/four_civs.zip) | Two armies in formation, siege weapons and a castle. [Download](https://github.com/Larspolo/aoe2mc/releases/download/worlds/battle.zip) |
+
+The top row is a 3D image of the blocks (`tools/render.py`), the bottom row a screenshot of Minecraft (`tools/mc_shot.py`).
+The scenario files and how to make them again: `examples/README.md`.
+
 ## Files
 
 | File | Description |
@@ -48,6 +62,8 @@ The world is in creative mode. Outside the map there is only void. The world lis
 The file `aoe2mc.json` in the world folder lists the map size, the players and each object: AoE2 ID, name, owner,
 tile position and rotation, the UUID of the entity (units) and the footprint in blocks (buildings). It also has the
 height where a unit stands, for each block column ("ground", "-" for water). A game program can use it.
+Buildings make work sounds when you are near them (anvil at the blacksmith, bell at the town center, trade at the
+market and more): the world has a small datapack (`datapacks/aoe2mc`) with Minecraft sounds only.
 
 First game: `python3 game/run.py MyMapWorld --play` starts a server on the world. Join it at the address that it prints
 and hold the carrot on a stick. Right click a villager of player 1 to select it, then right click a tree: the
@@ -67,10 +83,30 @@ villager walks there, chops and carries the wood to the town center. The sidebar
 | `--no-birds` | off | Do not convert birds. Flying birds float 6 blocks above the ground (parrot or bat); peacocks, flamingos, storks and cranes are chickens |
 | `--no-barriers` | off | Do not fill building footprints with invisible barrier blocks |
 | `--verbose` | off | Print the time of each phase (read, columns, objects, units, chunks, write) |
+| `--scenario N` | all | Campaign: convert only scenario N (1 = the first) |
 | `--orientation C` | `ne` | Minecraft corner (`ne`, `se`, `sw`, `nw`) of the top corner of the AoE2 screen. The map, the building fronts and the units turn with it. |
 | `--spawn X,Z` | start view or town center of player 1 | Player spawn in AoE2 tiles. Without it the spawn is the start view of player 1, else the front of its first town center, else the map center. |
 | `--garrison {outside,skip}` | `outside` | Garrisoned units: `outside` puts each unit next to the building or unit that holds it (or in its ship, if a seat is free). `skip` does not convert them. |
 | `--border {diorama,island,natural,table,wall,none}` | `diorama` | Edge outside the map. `diorama`: the map stands on a plinth of stone bricks. `island`: the map floats on a cone of rock and earth. `natural`: the ground slopes down into a ring of sea. `table`: the map lies on a dark oak table with legs, lanterns and a banner in a player color on each corner. `wall`: a low wall with a tower in a player color at each corner. `none`: no blocks. All keep the vanilla world border at the map edge. Images: `docs/images/border-*.png`. |
+
+## Campaigns
+
+A campaign file gives one world for each scenario, in the output folder: `<number> <scenario name>/`.
+
+    aoe2mc MyCampaign.aoe2campaign CampaignWorlds                  (AoE2 DE: one world per scenario)
+    aoe2mc MyCampaign.aoe2campaign CampaignWorlds --scenario 2     (only the second scenario)
+
+An old campaign (`.cpx` from The Conquerors or AoE2 HD, `.cpn`) holds scenarios in the old format (`.scx`, `.scn`).
+The converter cannot read them. It writes them to the output folder (`<number> <file name>`) and stops with these steps:
+
+    aoe2mc OldCampaign.cpx OldScenarios
+
+1. Copy the files to the scenario folder of AoE2 DE
+   (`<Steam user folder>/Games/Age of Empires 2 DE/<number>/resources/_common/scenario`).
+2. In the DE scenario editor, open each scenario and save it as `.aoe2scenario`.
+3. Convert each `.aoe2scenario` file, or make a campaign of them in the DE campaign editor and convert it.
+
+The file layouts are in [`docs/campaign-formats.md`](docs/campaign-formats.md).
 
 ## Buildings
 

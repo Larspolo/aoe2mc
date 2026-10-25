@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 aoe2mc - Convert an Age of Empires II: DE scenario (.aoe2scenario) or the start state of a recorded game
-(.aoe2record) to a Minecraft Java world. A campaign (.aoe2campaign) gives one world per scenario.
+(.aoe2record) to a Minecraft Java world. A campaign (.aoe2campaign) gives one world per scenario; an old campaign
+(.cpx, .cpn) gives its old scenario files and the steps to save them in the DE editor.
 
 Usage:
     python aoe2mc.py MAP.aoe2scenario OUTPUT_WORLD_FOLDER [options]
@@ -54,8 +55,8 @@ WATERLOGGABLE = {k for k, v in BLOCK_PROPS.items() if "waterlogged" in v}
 
 # Output format per Minecraft Java version (docs/minecraft-versions.md). Entities: units.to_version().
 VERSIONS = {
-    "1.21.1": dict(name="1.21.1", data_version=3955, renames={}),
-    "26.3": dict(name="26.3", data_version=5023, renames={"minecraft:chain": "minecraft:iron_chain"}),
+    "1.21.1": dict(name="1.21.1", data_version=3955, pack_format=48, renames={}),
+    "26.3": dict(name="26.3", data_version=5023, pack_format=121, renames={"minecraft:chain": "minecraft:iron_chain"}),
 }
 VERSION_NAME = "26.3"        # the default output version. The code uses the 1.21.1 names (no renames).
 DATA_VERSION = VERSIONS[VERSION_NAME]["data_version"]
@@ -1688,6 +1689,59 @@ def write_objects(path, size, T, H, players, objects, cols, ground):
         json.dump(data, f, indent=1)
 
 
+# Work sounds at buildings (#220): name part -> (sound, predicate, particle). Only Minecraft sounds; the villager
+# work sounds exist in 1.21.1 and 26.3. The first matching rule wins.
+WORK_SOUNDS = [
+    ("BLACKSMITH", "block.anvil.use", "sometimes", "lava"), ("MARKET", "entity.villager.trade", "sometimes", None),
+    ("TOWN_CENTER", "block.bell.use", "rare", None), ("LUMBER_CAMP", "item.axe.strip", "sometimes", None),
+    ("MINING_CAMP", "block.stone.break", "sometimes", None), ("DOCK", "entity.villager.work_fisherman", "sometimes", None),
+    ("MONASTERY", "entity.villager.work_cleric", "sometimes", None), ("MILL", "entity.villager.work_farmer", "sometimes", None),
+    ("ARCHERY_RANGE", "entity.villager.work_fletcher", "sometimes", None),
+    ("UNIVERSITY", "entity.villager.work_librarian", "sometimes", None),
+    ("SIEGE_WORKSHOP", "entity.villager.work_mason", "sometimes", None),
+]
+CHANCE = {"sometimes": 0.25, "rare": 0.03}      # per pulse of 2 s
+
+
+def write_datapack(out, objects, ground):
+    """datapacks/aoe2mc: a function every 2 s plays a work sound at each building with a player near it
+    (docs/datapack.md). Fixed positions, no marker entities: the check costs nothing that /tick query shows."""
+    root = os.path.join(out, "datapacks", "aoe2mc")
+    lines = []
+    for o in objects:
+        rule = next((r for r in WORK_SOUNDS if r[0] in o["name"]), None) if o["kind"] == "B" else None
+        if rule is None or "footprint" not in o:
+            continue
+        x0, z0, x1, z1 = o["footprint"]
+        x, z = (x0 + x1) // 2, (z0 + z1) // 2
+        if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
+            continue
+        at = f"execute positioned {x} {int(ground[x, z]) + 1} {z} if entity @a[distance=..24] " \
+             f"if predicate aoe2mc:{rule[2]} run"
+        lines.append(f"{at} playsound minecraft:{rule[1]} ambient @a ~ ~ ~ 1 {0.9 + 0.1 * (x % 3):.1f}")
+        if rule[3]:
+            lines.append(f"{at} particle minecraft:{rule[3]} ~ ~1 ~ 0.4 0.2 0.4 0 4")
+    if not lines:           # the server finds a new pack by itself; level.dat needs no entry
+        return 0
+    files = {
+        "pack.mcmeta": {"pack": {"description": "aoe2mc: work sounds at buildings", "pack_format": MC["pack_format"]}
+                        | ({"min_format": MC["pack_format"], "max_format": MC["pack_format"]}
+                           if MC["data_version"] >= V26_1 else {})},
+        "data/minecraft/tags/function/load.json": {"values": ["aoe2mc:load"]},
+        "data/aoe2mc/function/load.mcfunction": "schedule function aoe2mc:pulse 40t replace\n",
+        "data/aoe2mc/function/pulse.mcfunction": "\n".join(lines + ["schedule function aoe2mc:pulse 40t replace"]) + "\n",
+    }
+    key = "type" if MC["data_version"] >= V26_1 else "condition"     # 26.x renamed the key of a predicate
+    for name, chance in CHANCE.items():
+        files[f"data/aoe2mc/predicate/{name}.json"] = {key: "minecraft:random_chance", "chance": chance}
+    for name, data in files.items():
+        path = os.path.join(root, name)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as f:
+            f.write(data if isinstance(data, str) else json.dumps(data))
+    return sum("playsound" in line for line in lines)
+
+
 def write_level_dat(path, name, spawn, yaw=SPAWN_YAW, size=None):
     """size: the map size in blocks; the vanilla world border goes around the map (#172)."""
     def dim(kind, gen):
@@ -2042,6 +2096,9 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
 
     write_level_dat(os.path.join(out, "level.dat"), name, spawn, yaw, cols.n)
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground)
+    n = write_datapack(out, objects, ground)
+    if n:
+        print(f"  work sounds at buildings: {n}")
 
     from PIL import Image
     lut = np.array([block_color(s) for s in B.states], np.uint8)
@@ -2104,49 +2161,81 @@ class CampaignError(ValueError):
 
 
 def read_campaign(path):
-    """.aoe2campaign -> (campaign name, [(scenario name, scenario bytes)]). Layout: docs/campaign-formats.md."""
+    """.aoe2campaign or .cpx/.cpn -> (version, campaign name, [(scenario file name, scenario bytes)]).
+    Layout: docs/campaign-formats.md."""
     import struct
     with open(path, "rb") as f:
         b = f.read()
+
+    def text(raw):                                                  # old files use the code page of the author
+        try:
+            return raw.decode("utf-8")
+        except UnicodeDecodeError:
+            return raw.decode("cp1252", "replace")
 
     def de_string(o):
         if b[o:o + 2] != b"\x60\x0a":
             raise CampaignError(f"{path}: no string at byte {o}: the file is not a valid campaign")
         n = struct.unpack_from("<H", b, o + 2)[0]
-        return b[o + 4:o + 4 + n].decode("utf-8", "replace"), o + 4 + n
+        return text(b[o + 4:o + 4 + n]), o + 4 + n
 
-    if b[:4] != b"2.00":
-        raise CampaignError(f"{path}: version {b[:4]!r} is not 2.00: only .aoe2campaign files (AoE2 DE) are supported")
+    version = b[:4]
+    if version not in (b"1.00", b"2.00"):
+        raise CampaignError(f"{path}: version {version!r} is not 1.00 (.cpx, .cpn) or 2.00 (.aoe2campaign)")
     try:
-        deps = struct.unpack_from("<I", b, 4)[0]
-        o = 8 + 4 * deps
-        name = b[o:o + 256].split(b"\0")[0].decode("utf-8", "replace")
+        o = 4 if version == b"1.00" else 8 + 4 * struct.unpack_from("<I", b, 4)[0]   # 2.00: DLC dependencies
+        name = text(b[o:o + 256].split(b"\0")[0])
         n = struct.unpack_from("<I", b, o + 256)[0]
         o += 260
         entries = []
         for _ in range(n):
             size, off = struct.unpack_from("<II", b, o)
-            title, o = de_string(o + 8)
-            _, o = de_string(o)                                     # the file name, the same as the title in DE
+            if version == b"1.00":                                   # fixed strings of 255 bytes, 2 bytes padding
+                file_name = text(b[o + 263:o + 518].split(b"\0")[0])
+                o += 520
+            else:
+                _, o = de_string(o + 8)                                 # the scenario name
+                file_name, o = de_string(o)
             if off + size > len(b):
-                raise CampaignError(f"{path}: scenario {title!r} ends after the end of the file")
-            entries.append((title, b[off:off + size]))
+                raise CampaignError(f"{path}: scenario {file_name!r} ends after the end of the file")
+            entries.append((file_name, b[off:off + size]))
     except struct.error:
         raise CampaignError(f"{path}: the file ends in the header: the file is not a valid campaign") from None
-    return name, entries
+    return version, name, entries
+
+
+OLD_CAMPAIGN_STEPS = """\
+The scenarios of this campaign use the old scenario format ({ext}). aoe2mc cannot read it.
+aoe2mc wrote the scenario files to {out}:
+{files}
+Do these steps to convert them:
+  1. Copy the files to the scenario folder of AoE2 DE:
+     <Steam user folder>/Games/Age of Empires 2 DE/<number>/resources/_common/scenario
+  2. Start AoE2 DE. In the scenario editor, open each scenario and save it. DE saves it as .aoe2scenario.
+  3. Convert each .aoe2scenario file with aoe2mc. Or, in the DE campaign editor, make a campaign of the
+     scenarios and convert the .aoe2campaign file."""
 
 
 def convert_campaign(src, out, only=None, name=None, **kw):
-    """One world per scenario: out/<number> <scenario name>/. only: the number of one scenario (1 = first)."""
+    """One world per scenario: out/<number> <scenario name>/. only: the number of one scenario (1 = first).
+    An old campaign (.cpx, .cpn): write the old scenario files to out/ and stop with the steps for the DE editor."""
     import tempfile
-    title, entries = read_campaign(src)
+    version, title, entries = read_campaign(src)
     if only is not None and not 1 <= only <= len(entries):
         raise OptionError(f"--scenario {only}: the campaign {title!r} has {len(entries)} scenarios")
     print(f"Campaign {title!r}: {len(entries)} scenarios")
-    for i, (scn_name, data) in enumerate(entries, 1):
-        if only is not None and i != only:
-            continue
-        stem = re.sub(r'[\\/:*?"<>|]', "_", re.sub(r"\.aoe2scenario$", "", scn_name, flags=re.I))
+    chosen = [(i, re.sub(r'[\\/:*?"<>|]', "_", fn), data) for i, (fn, data) in enumerate(entries, 1)
+              if only is None or i == only]
+    if version == b"1.00":
+        os.makedirs(out, exist_ok=True)
+        for i, fn, data in chosen:
+            with open(os.path.join(out, f"{i} {fn}"), "wb") as f:
+                f.write(data)
+        exts = sorted({os.path.splitext(fn)[1] or "?" for _, fn, _ in chosen})
+        raise SystemExit(OLD_CAMPAIGN_STEPS.format(ext=", ".join(exts), out=out,
+                                                   files="\n".join(f"  {i} {fn}" for i, fn, _ in chosen)))
+    for i, fn, data in chosen:
+        stem = re.sub(r"\.aoe2scenario$", "", fn, flags=re.I)
         with tempfile.TemporaryDirectory() as tmp:
             path = os.path.join(tmp, stem + ".aoe2scenario")
             with open(path, "wb") as f:
@@ -2157,7 +2246,7 @@ def convert_campaign(src, out, only=None, name=None, **kw):
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
     ap.add_argument("scenario", help=".aoe2scenario file, .aoe2record (the start state of a recorded game), or "
-                    ".aoe2campaign (one world per scenario)")
+                    ".aoe2campaign (one world per scenario; .cpx and .cpn: the steps for the DE editor)")
     ap.add_argument("output", help="output world folder (put it in .minecraft/saves/); for a campaign the folder of "
                     "the worlds")
     ap.add_argument("--scenario", dest="only", type=int_range(1, 999), metavar="N",
@@ -2193,10 +2282,10 @@ def main(argv=None):
               mc_version=a.mc_version, spawn=a.spawn, birds=not a.no_birds, orientation=a.orientation,
               verbose=a.verbose, garrison=a.garrison, border_design=a.border)
     try:
-        if a.scenario.lower().endswith(".aoe2campaign"):
+        if a.scenario.lower().endswith((".aoe2campaign", ".cpx", ".cpn")):
             convert_campaign(a.scenario, a.output, a.only, a.name, **kw)
         elif a.only is not None:
-            ap.error("--scenario needs a .aoe2campaign file")
+            ap.error("--scenario needs a campaign file (.aoe2campaign, .cpx, .cpn)")
         else:
             convert(a.scenario, a.output, name=a.name, **kw)
     except (OptionError, CampaignError) as e:

@@ -504,6 +504,31 @@ def house(c, w, st, col, T, ctx):
         c.banner(mid + 1 if mid + 1 < x1 - 1 else mid - 1, 3 if wall_top > 3 else 2, z1, col)
 
 
+def town_hall(c, x0, x1, z0, z1, y, door, st, col):
+    """Furniture of the town center hall (#250): a long table with benches, the lectern of the town clerk at the
+    back wall, chests and barrels, banners and a carpet in the player color, lanterns. Rooms x0..x1-1, z0..z1-1
+    with the floor under y; the door is at x = door in the front wall (z = z1), so that column stays free."""
+    wood = st.wood.replace("_planks", "")
+    stairs, slab, _ = family(wood)
+    mid = (z0 + z1) // 2
+    tx = [x for x in range(x0 + 1, x1 - 1) if x != door]
+    for x in tx:
+        c.set(x, y, mid, f"{slab}[type=top]")
+        c.set(x, y, mid - 1, stair(stairs, "north"))       # benches: the back faces away from the table
+        c.set(x, y, mid + 1, stair(stairs, "south"))
+    for x in tx[::2]:
+        c.set(x, y + 1, mid, "lantern[hanging=false]")
+    c.box(door, door + 1, y, y + 1, z0, z1, f"{col}_carpet")      # carpet from the door to the back wall
+    c.set(door, y, z0, "lectern[facing=south]")
+    c.set(x0, y, z0, "chest[facing=south]"); c.set(x1 - 1, y, z0, "barrel[facing=up]")
+    c.set(x0, y, z1 - 1, "barrel[facing=up]")
+    if x1 - 1 != door:
+        c.set(x1 - 1, y, z1 - 1, "chest[facing=north]")
+    for x in (x0 + 1, x1 - 2):
+        c.banner(x, y + 2, z0, col)                              # on the back wall, facing the door
+    c.set(x0, y + 2, mid, "wall_torch[facing=east]"); c.set(x1 - 1, y + 2, mid, "wall_torch[facing=west]")
+
+
 def furnish(c, x0, x1, z0, z1, y, st, col, door=None, bed=True, table=True):
     """Furniture of a home in the room x0..x1-1, z0..z1-1 (inside the walls) on floor y: a bed in the player color
     along a side wall, a chest at the back wall, a table with a lantern and a stool, a rug. The door is in the south
@@ -589,6 +614,8 @@ def town_center(c, w, st, col, T, ctx):
     c.door(sx, hp + 1, hz1 - 1)
     c.set(mid - 1, hp - 1, hz1 - 2, "bell[attachment=ceiling,facing=south]")       # the town bell
     c.set(hx0 + 1, 1, hz1 - 2, "barrel[facing=up]"); c.set(hx1 - 2, 1, hz0 + 1, "chest[facing=south]")
+    if hx1 - hx0 >= 6 and hz1 - hz0 >= 6:
+        town_hall(c, hx0 + 1, hx1 - 1, hz0 + 1, hz1 - 1, hp + 1, sx, st, col)
     for x in (hx0 + 1, hx1 - 2):
         if x != sx:
             c.banner(x, hp + 3, hz1, col)
@@ -652,6 +679,8 @@ def castle(c, w, st, col, T, ctx, small=False):
     for y in (hw + 2, kh - 2):
         c.windows(k, w - k, k, w - k, y, b="iron_bars", step=2, height=2)
     c.box(mid - (gw // 2), mid - (gw // 2) + gw, 1, 4, w - k - 1, w - k, "air")
+    if w - 2 * k >= 5:
+        keep_inside(c, k + 1, w - k - 1, [0, *range(hw, kh, 4)], kh, st, col)
     if asian:
         # Tenshu: white plastered upper floors on the stone base, a flared roof skirt at each floor
         c.walls(k, w - k, hw + 1, kh + 1, k, w - k, st.plaster)
@@ -683,6 +712,32 @@ def castle(c, w, st, col, T, ctx, small=False):
         c.flag(mid, top + 1, mid, col, 3)
         return
     c.flag(mid, kh + 1, mid, col, 5)
+
+
+def keep_inside(c, x0, x1, floors, top, st, col):
+    """Furniture of a keep with the inside x0..x1-1 (also z) and floor blocks at the y of `floors` (#256):
+    a throne room on the ground floor, then storage and an armory. A ladder on the east wall joins the floors."""
+    wood = st.wood.removesuffix("_planks")
+    wood = wood if wood in WOODS else "spruce"
+    mid = (x0 + x1) // 2
+    for i, f in enumerate(floors):
+        y = f + 1
+        ceil = floors[i + 1] if i + 1 < len(floors) else top
+        if i == 0:                                       # throne room: throne, carpet from the door, banners
+            c.set(mid, y, x0, stair(f"{wood}_stairs", "north"))
+            c.box(mid, mid + 1, y, y + 1, x0 + 1, x1, f"{col}_carpet")
+            c.banner(x0, y + 2, x0, col); c.banner(x1 - 1, y + 2, x0, col)
+        elif i % 2:                                      # storage
+            c.set(x0, y, x0, "chest[facing=east]")
+            c.box(x0, x0 + 1, y, y + 1, x0 + 1, x1 - 1, "barrel[facing=up]")
+        else:                                            # armory and study
+            c.set(x0, y, x0, "grindstone[face=floor,facing=east]")
+            c.set(x0, y, x0 + 1, "smithing_table")
+            c.set(x0, y, x1 - 1, "lectern[facing=east,has_book=true,powered=false]")
+        c.set(mid, ceil - 1, mid, "lantern[hanging=true]")
+        if i:
+            c.set(x0, y, mid, "lantern[hanging=false]")
+    c.box(x1 - 1, x1, 1, top, x0 + 1, x0 + 2, "ladder[facing=west]")   # through the floors, not the roof
 
 
 def krepost(c, w, st, col, T, ctx):
@@ -1678,7 +1733,12 @@ def tower(c, w, st, col, T, ctx, kind="watch"):
         else:
             c.walls(0, w, y, y + 1, 0, w, f"{col}_wool")
     c.door(mid - (w > 3), 1, w - 1, wood=st.wood.removesuffix("_planks"))
-    if st.shape == "flat" and not (st.torons and not high):              # stone lookout with merlons
+    stone_top = st.shape == "flat" and not (st.torons and not high)
+    if w >= 4:                                                            # hollow shaft, a ladder to the lookout (#256)
+        c.box(1, w - 1, 1, hb - 1, 1, w - 1, "air")
+        c.set(1, 1, 1, "barrel[facing=up]")
+        c.set(1, hb - 2, 1, "lantern[hanging=true]")
+    if stone_top:                                                         # stone lookout with merlons
         if rnd:
             c.cylinder(cc, cc, w / 2 + 0.8, hb, hb + 2, stone)
             c.cylinder(cc, cc, w / 2 - 0.2, hb + 1, hb + 2, st.wood)
@@ -1719,6 +1779,8 @@ def tower(c, w, st, col, T, ctx, kind="watch"):
             top = c.hip(-2, w + 2, -2, w + 2, hb + 3, st.roof, flare=st.shape == "asian")
     if top >= 0:
         c.flag(mid, top + 1, mid, col, 2)
+    if w >= 4:                                                            # through the lookout floor
+        c.box(w - 2, w - 1, 1, hb + stone_top + 1, 1, 2, "ladder[facing=south]")
     if kind == "bombard":                                                 # cannon barrels out of the lookout
         for x, z, ax in ((mid, w, "z"), (mid, w + 1, "z"), (w, mid, "x"), (w + 1, mid, "x"),
                          (mid, -1, "z"), (mid, -2, "z"), (-1, mid, "x"), (-2, mid, "x")):
