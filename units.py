@@ -10,6 +10,9 @@ import math
 from nbtlib.tag import Byte, Compound, Double, Float, Int, IntArray, List, Long, Short, String
 
 # AoE2 DE player colors
+# AoE2 player color -> the nearest of the 16 chat colors of a team (`team modify ... color`)
+TEAM_COLOR = {"blue": "blue", "red": "red", "green": "dark_green", "yellow": "yellow", "cyan": "aqua",
+              "purple": "dark_purple", "gray": "gray", "orange": "gold", "light_gray": "white"}
 HEX = {"blue": "#2D2DF5", "red": "#E0281E", "green": "#00B400", "yellow": "#F0F000", "cyan": "#00E0E0",
        "purple": "#A000F0", "gray": "#909090", "orange": "#FF8C00", "light_gray": "#FFFFFF"}
 
@@ -565,6 +568,8 @@ def make_entity(o, players, pos, rng, desc=None):
     label = top_entity(nbt)
     label["CustomName"] = String(json.dumps({"text": pretty(o["name"], o.get("hero")), "color": color}))
     label["CustomNameVisible"] = Byte(1)
+    if o["player"]:                                    # the datapack puts the tagged units in the player team (#358)
+        label["Tags"] = List[String]([String(f"aoe2mc.p{o['player']}")])
     return nbt
 
 

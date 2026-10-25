@@ -260,3 +260,23 @@ def test_ambience(tiny_world, tmp_path, monkeypatch):
     assert sheep and all(e.get("Silent") == 1 for e in sheep)
     loud = [e for e in world_reader.World(path).entities() if str(e["id"]) == "minecraft:sheep"]
     assert loud and not any(e.get("Silent") for e in loud)                  # basic: animal sounds (#227)
+
+
+def test_player_teams(tiny_world):
+    """Each player with units is a team in the player color; its units have the tag that the pulse joins (#358)."""
+    path, _ = tiny_world
+    func = os.path.join(path, "datapacks", "aoe2mc", "data", "aoe2mc", "function")
+    with open(os.path.join(func, "load.mcfunction")) as f:
+        load = f.read().splitlines()
+    with open(os.path.join(func, "pulse.mcfunction")) as f:
+        pulse = f.read().splitlines()
+    with open(os.path.join(path, "aoe2mc.json")) as f:
+        data = json.load(f)
+    owners = {o["player"] for o in data["objects"] if o["kind"] == "unit" and o["player"]}
+    assert owners and {int(line.split()[2][1:]) for line in load if line.startswith("team add")} == owners
+    for n in owners:
+        color = aoe2mc.units.TEAM_COLOR[data["players"][str(n)]["color"]]
+        assert f"team modify p{n} color {color}" in load and f"team join p{n} @e[tag=aoe2mc.p{n},team=]" in pulse
+    assert load[-1].startswith("schedule") and pulse[-1].startswith("schedule")
+    tags = {str(t) for e in world_reader.World(path).entities() for t in e.get("Tags", [])}
+    assert tags == {f"aoe2mc.p{n}" for n in owners}

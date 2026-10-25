@@ -1953,11 +1953,24 @@ def ambience_lines(biome_names):
     return lines
 
 
-def write_datapack(out, objects, ground, biome_names=(), ambience="basic"):
+def team_lines(objects, players):
+    """(load, pulse) commands: one team per player with units, in the player color (#358). The pulse puts new
+    units in their team: a load function reaches only the entities of loaded chunks."""
+    load, pulse = [], []
+    for n in sorted({o["player"] for o in objects if o["kind"] == "U" and o["player"]}):
+        p = players.get(n, {})
+        civ = "" if p.get("civ") in (None, "RANDOM") else str(p["civ"]).replace("_", " ").title()
+        load += [f'team add p{n} "Player {n}{f" ({civ})" if civ else ""}"',
+                 f"team modify p{n} color {units.TEAM_COLOR.get(p.get('color'), 'white')}"]
+        pulse.append(f"team join p{n} @e[tag=aoe2mc.p{n},team=]")
+    return load, pulse
+
+
+def write_datapack(out, objects, ground, biome_names=(), ambience="basic", players=None):
     """datapacks/aoe2mc: a function every 2 s plays a work sound at each building with a player near it
     (docs/datapack.md). Fixed positions, no marker entities: the check costs nothing that /tick query shows.
     Ambience (#219): particles and sounds near the players by biome; "full" also writes the custom biomes, "off"
-    writes no pack.
+    writes no pack (and so no teams). Teams: `team_lines`.
     Returns (work sounds, ambience lines)."""
     root = os.path.join(out, "datapacks", "aoe2mc")
     if ambience == "off":           # the world as before #188: no pack
@@ -1979,15 +1992,16 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic"):
     work = len(lines)
     lines += ambience_lines(biome_names)
     groups = sorted({n.split(":")[1] for n in biome_names if n.startswith("aoe2mc:")})
-    if not lines and not groups:    # the server finds a new pack by itself; level.dat needs no entry
+    team_load, team_pulse = team_lines(objects, players or {})
+    if not lines and not groups and not team_load:    # the server finds a new pack by itself; level.dat needs no entry
         return 0, 0
     files = {
         "pack.mcmeta": {"pack": {"description": "aoe2mc: work sounds and ambience", "pack_format": MC["pack_format"]}
                         | ({"min_format": MC["pack_format"], "max_format": MC["pack_format"]}
                            if MC["data_version"] >= V26_1 else {})},
         "data/minecraft/tags/function/load.json": {"values": ["aoe2mc:load"]},
-        "data/aoe2mc/function/load.mcfunction": "schedule function aoe2mc:pulse 40t replace\n",
-        "data/aoe2mc/function/pulse.mcfunction": "\n".join(lines + ["schedule function aoe2mc:pulse 40t replace"]) + "\n",
+        "data/aoe2mc/function/load.mcfunction": "\n".join(team_load + ["schedule function aoe2mc:pulse 40t replace"]) + "\n",
+        "data/aoe2mc/function/pulse.mcfunction": "\n".join(lines + team_pulse + ["schedule function aoe2mc:pulse 40t replace"]) + "\n",
     }
     key = "type" if MC["data_version"] >= V26_1 else "condition"     # 26.x renamed the key of a predicate
     for name, chance in CHANCE.items():
@@ -2358,7 +2372,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
 
     write_level_dat(os.path.join(out, "level.dat"), name, spawn, yaw, cols.n)
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground)
-    n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience)
+    n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players)
     if n:
         print(f"  work sounds at buildings: {n}")
     if amb:
