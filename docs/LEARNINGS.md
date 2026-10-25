@@ -9,10 +9,14 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 - `/root/.local/bin/pytest` and `/usr/bin/pip` use another Python. Use `python3 -m pytest` and `python3 -m pip`.
   Symptom: "cannot import name '_imaging' from 'PIL'" in the end-to-end tests. If it stays after the install,
   the old Debian pillow shadows it: `python3 -m pip install --ignore-installed pillow`.
-- `minecraft.wiki` is blocked (curl and WebFetch). The AoE2 wiki API (`ageofempires.fandom.com/api.php?action=parse
+- `minecraft.wiki`, `minecraft.net` and `papermc.io` are blocked (curl and WebFetch). For Minecraft facts use
+  the Mojang data reports in `misode/mcmeta` (GitHub raw, branch `<version>-summary`) and the real server
+  (see `docs/minecraft-versions.md`, "Method"). The AoE2 wiki API (`ageofempires.fandom.com/api.php?action=parse
   &page=Title&prop=wikitext&format=json&formatversion=2`) works with `curl`, but Python `urllib` gets 403.
 - Java 21 is installed in the cloud container. Minecraft 1.21.1 needs Java 21, 26.3 needs Java 25
-  (`javaVersion.majorVersion` in the version JSON). The Mojang hosts are allowed since #12.
+  (`javaVersion.majorVersion` in the version JSON): `apt-get install -y openjdk-25-jre-headless` works.
+  The Mojang hosts are allowed since #12. Send `stop` to a server only after "Done (" is in `logs/latest.log`
+  (earlier input is lost). Do not use `pkill -f server.jar`: it also kills your own shell.
 - GitHub in cloud sessions: `gh api repos/Larspolo/aoe2mc/...` (REST) works. GraphQL (`gh issue list`,
   `gh pr create`) and `search/...` give 403. CI job logs: only `mcp__github__get_job_logs`.
 - Deleting a branch with `gh api .../git/refs/heads/B -X DELETE` gives 403 through the proxy. Skip it.
