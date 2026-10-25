@@ -131,7 +131,8 @@ the last 30 minutes), so that parallel runs always find work. Do this at most on
 Then pick again. If there is no candidate, go to step 8 and report "No ticket is ready".
 If the top candidate has `size:L`, split it now (`ticket` skill), then pick again.
 Claim it with `python3 tools/claim.py N`. It pushes a unique commit to the ref `claim/N` without force, so only one
-run can win (#211). Exit 1: another run owns the ticket, pick the next candidate (do not comment).
+run can win (#211). Exit 1: another run owns the ticket, pick the next candidate (do not comment). It also exits 1
+when another branch commented "Started by" less than 30 minutes ago (#288). Never comment "Started by" before exit 0.
 Exit 0: add `in-progress` and comment "Started by `<your branch>`." (one line).
 Each time you remove `in-progress` without a merge (hand-off, `blocked`, `needs-human`), run
 `python3 tools/claim.py N --release` too, else no other run can claim the ticket again.
@@ -149,7 +150,11 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
 6. Commit: subject in STE imperative, body with what and why, and `Closes #<number>`.
    Commit only the files of the ticket: read `git status --short` first (no `logs/`, worlds or images).
    Do not commit `docs/coverage.md` or a `MAX` change in `tests/test_coverage.py`: the workflow `coverage.yml` does it on main.
-7. Push. Open a PR: title = ticket title, body = what changed, how you verified, `Closes #<number>`.
+7. Hard rule: just before each push run `python3 tools/claim.py N --guard`. It beats, and it fails when the
+   claim is not yours or another branch has an open or merged PR that closes #N (#288). On a failure do not push:
+   `python3 tools/claim.py N --release` (when the claim is yours), remove `in-progress` if you added it, comment the
+   reason in one line on the ticket and pick the next ticket.
+   Push. Open a PR: title = ticket title, body = what changed, how you verified, `Closes #<number>`.
 8. Read `mergeable_state` (`/pulls/N`; `unknown` means GitHub still computes it: read it again). If it is
    `dirty`, do step 10 first: GitHub runs no CI on a PR with a merge conflict, so no CI event comes.
    Do not wait for CI: the Automerge workflow merges the PR when CI is green, removes `in-progress` and deletes
