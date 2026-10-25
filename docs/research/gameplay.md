@@ -85,6 +85,10 @@ The milestone is done when a player can select a villager, send it to a tree, an
 6. Fog of war and line of sight (optional; hard in vanilla).
 7. Measure: commands per second through RCON, server tick time with 200, 500 and 1000 units.
 
+The owner chose the order in #357: A (item 1) #388, C (item 3) #394, D (item 4) #395, B (item 2) #396,
+E (item 5) #397, F (item 7) #398. Each epic gets its sub-issues when the epic before it is done.
+Item 6 (fog of war) has no ticket.
+
 ## Measured gather timing (#289)
 
 `python3 tools/measure_gather.py` plays a fixed map on a real server without a client: one villager of player 1,
