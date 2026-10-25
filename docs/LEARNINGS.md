@@ -11,8 +11,7 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   the old Debian pillow shadows it: `python3 -m pip install --ignore-installed pillow`.
 - `minecraft.wiki`, `minecraft.net` and `papermc.io` are blocked (curl and WebFetch). For Minecraft facts use
   the Mojang data reports in `misode/mcmeta` (GitHub raw, branch `<version>-summary`) and the real server
-  (see `docs/minecraft-versions.md`, "Method"). The AoE2 wiki API (`ageofempires.fandom.com/api.php?action=parse
-  &page=Title&prop=wikitext&format=json&formatversion=2`) works with `curl`, but Python `urllib` gets 403.
+  (see `docs/minecraft-versions.md`, "Method").
 - Java 21 is installed in the cloud container. Minecraft 1.21.1 needs Java 21, 26.3 needs Java 25
   (`javaVersion.majorVersion` in the version JSON): `apt-get install -y openjdk-25-jre-headless` works.
   The Mojang hosts are allowed since #12. Send `stop` to a server only after "Done (" is in `logs/latest.log`
@@ -34,7 +33,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 
 - AoE2 wiki: HTML pages give a Cloudflare challenge (403). The MediaWiki API works: `ageofempires.fandom.com/
   api.php?action=query&titles=File:Castle_aoe2DE.png&prop=imageinfo&iiprop=url&format=json` gives the image URL
-  on `static.wikia.nocookie.net` (WebP).
+  on `static.wikia.nocookie.net` (WebP). Page text: `action=parse&page=Title&prop=wikitext&format=json&formatversion=2`.
+  Use `curl`: Python `urllib` gets 403.
 
 ## Libraries
 
@@ -58,7 +58,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   `OtherInfo` name takes (#6).
 - `terrain_style` checks names in sequence: an earlier rule wins (`ROAD_GRAVEL` matched `GRAVEL` until #5).
 - A merge conflict in `docs/coverage.md`: take any side, run `python3 tools/coverage.py`, then set `MAX` in
-  `tests/test_coverage.py` to the new counts. Parallel runs often change the same counts (#79).
+  `tests/test_coverage.py` to the new counts. Parallel runs often change the same counts (#79). Check
+  `mergeable_state` before the merge: a green PR is "dirty" when main moved after the push.
 - Drawing all 243 building types for one architecture set takes about 1 s. A full gallery conversion takes
   about 30 s per set.
 - Block IDs in `B` depend on what was registered before (earlier tests or conversions). Code that draws random
@@ -66,6 +67,3 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   fails in the full suite often has this cause.
 - To check new entity NBT (items, variants, components), make a map with one unit per type
   (`unit_manager.add_unit` in a loop), convert it and run `tools/mc_check.py` on it: about 1 minute.
-- Parallel runs often conflict in `docs/coverage.md` and in `MAX` of `tests/test_coverage.py`. Fix: take main's
-  `docs/coverage.md` and run `python3 tools/coverage.py docs/coverage.md`; in `MAX` keep the lower value of each count.
-  Check `mergeable_state` before the merge: a green PR can be "dirty" when main moved.
