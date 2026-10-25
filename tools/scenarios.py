@@ -5,7 +5,7 @@ Make synthetic AoE2 DE scenarios for tests (no real map files necessary).
 Usage:
     python tools/scenarios.py tiny OUT.aoe2scenario
     python tools/scenarios.py gallery OUT.aoe2scenario [--kinds BOU]
-    python tools/scenarios.py stress|buildings|units|village|facing|walls|river|river_town|battle OUT.aoe2scenario
+    python tools/scenarios.py stress|buildings|units|village|facing|walls|river|river_town|four_civs|battle OUT.aoe2scenario
 
 tiny:      24x24 tiles with land, shallow and deep water, a hill, buildings, units, a tree, a mine and fish.
 gallery:   every object type of the parser in a grid (B = buildings, O = other objects, U = units).
@@ -17,6 +17,8 @@ river:     a river at elevation 2 between land at elevation 2, with a dock, a br
 facing:    units at the rotations 0, pi/4 ... 7pi/4, to compare the facing in AoE2 and in Minecraft (docs/facing.md).
 river_town: a 64x64 example map (examples/river_town.aoe2scenario): a walled town, a river with a bridge and a dock,
            a castle on a hill, forests, mines and animals (#204).
+four_civs: an 80x80 example map (examples/four_civs.aoe2scenario): four towns of four architecture sets around a lake,
+           each with its wonder (#205).
 battle:    a 64x64 example map (examples/battle.aoe2scenario): two armies in formation, siege and a castle (#206).
 walls:     palisade, stone and fortified walls with a gate and a corner, for 3 architecture sets (players 1, 4, 7).
 """
@@ -337,6 +339,52 @@ def river_town(path):
     return save(scn, path, "river_town.aoe2scenario")
 
 
+def four_civs(path):
+    """Example map: four towns around a lake, one per quarter, with mirrored layouts. Player p has the civilization,
+    ground, forest, trees and unique unit of FOUR_CIVS[p - 1]. No randomness: the file is the same on each run."""
+    scn = new_scenario(80)
+    scn.player_manager.active_players = 4
+    for p, (civ, *_) in enumerate(FOUR_CIVS, 1):
+        scn.player_manager.players[p].civilization = civ
+    quarter = lambda x, y: (x >= 40) + 2 * (y >= 40)                    # noqa: E731 - 0 NW, 1 NE, 2 SW, 3 SE
+    for t in scn.map_manager.terrain:
+        r, edge = math.hypot(t.x - 39.5, t.y - 39.5), min(t.x, t.y, 79 - t.x, 79 - t.y)
+        _, ground, forest, *_ = FOUR_CIVS[quarter(t.x, t.y)]
+        t.terrain_id = (TerrainId.WATER_DEEP if r <= 8 else TerrainId.WATER_SHALLOW if r <= 12 else
+                        TerrainId.BEACH if r <= 13.5 else forest if edge <= 3 else ground)
+        if r > 16:
+            t.elevation = 1
+    um = scn.unit_manager
+    for x, y in ((x, y) for x in range(80) for y in range(80)
+                 if min(x, y, 79 - x, 79 - y) <= 3 and (x * 7 + y * 3) % 5):
+        um.add_unit(PlayerId.GAIA, FOUR_CIVS[quarter(x, y)][3].ID, x=x + 0.5, y=y + 0.5)
+    for (sx, sy), (*_, unique), player in zip(((-1, -1), (1, -1), (-1, 1), (1, 1)), FOUR_CIVS, PlayerId.all()[1:]):
+        at = lambda d, e: dict(x=40 + sx * d, y=40 + sy * e)            # noqa: E731 - offsets toward the lake
+        for d, e, b in ((23, 23, BuildingInfo.TOWN_CENTER), (12.5, 12.5, BuildingInfo.WONDER),
+                        (8.5, 8.5, BuildingInfo.DOCK), (24, 14, BuildingInfo.MARKET),
+                        (14.5, 24.5, BuildingInfo.BARRACKS), (31.5, 31.5, BuildingInfo.MONASTERY),
+                        (30, 23, BuildingInfo.HOUSE), (30, 19, BuildingInfo.HOUSE), (23, 30, BuildingInfo.HOUSE),
+                        (19, 30, BuildingInfo.HOUSE), (17.5, 17.5, BuildingInfo.WATCH_TOWER)):
+            um.add_unit(player, b.ID, **at(d, e))
+        for d, e, u in ((20.5, 20.5, UnitInfo.VILLAGER_MALE), (21.5, 18.5, UnitInfo.VILLAGER_FEMALE),
+                        (18.5, 21.5, unique), (19.5, 22.5, unique), (11.5, 18.5, UnitInfo.MONK),
+                        (6.5, 3.5, UnitInfo.FISHING_SHIP)):
+            um.add_unit(player, u.ID, **at(d, e))
+        um.add_unit(PlayerId.GAIA, OtherInfo.FISH_TUNA.ID, **at(3.5, 6.5))
+        um.add_unit(PlayerId.GAIA, UnitInfo.SHEEP.ID, **at(26.5, 18.5))
+    return save(scn, path, "four_civs.aoe2scenario")
+
+
+# Per player of four_civs (NW, NE, SW, SE): civilization, ground, forest, tree, unique unit
+FOUR_CIVS = [(Civilization.BRITONS, TerrainId.GRASS_1, TerrainId.FOREST_OAK, OtherInfo.TREE_OAK, UnitInfo.LONGBOWMAN),
+             (Civilization.PERSIANS, TerrainId.DESERT_SAND, TerrainId.FOREST_PALM_DESERT, OtherInfo.TREE_PALM_FOREST,
+              UnitInfo.WAR_ELEPHANT),
+             (Civilization.JAPANESE, TerrainId.GRASS_3, TerrainId.FOREST_BAMBOO, OtherInfo.TREE_BAMBOO_FOREST,
+              UnitInfo.SAMURAI),
+             (Civilization.AZTECS, TerrainId.GRASS_JUNGLE, TerrainId.FOREST_JUNGLE, OtherInfo.TREE_JUNGLE,
+              UnitInfo.JAGUAR_WARRIOR)]
+
+
 MUD = ((19, 31, 8), (26, 34, 5), (33, 32, 12), (41, 30, 6), (46, 34, 9), (38, 36, 4), (12, 33, 3))   # x, y, r²
 
 
@@ -399,7 +447,7 @@ def battle(path):
 
 
 MAKERS = {"tiny": tiny, "stress": stress, "buildings": buildings_map, "units": units_map, "village": village, "facing": facing,
-          "walls": walls, "river": river, "river_town": river_town, "battle": battle}
+          "walls": walls, "river": river, "river_town": river_town, "four_civs": four_civs, "battle": battle}
 
 
 def main():

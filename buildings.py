@@ -474,7 +474,7 @@ def house(c, w, st, col, T, ctx):
     # stone chimney with smoke on a random corner: only the European half-timbered houses have one in the game
     cx = x0 + 1 if rng.random() < 0.5 else x1 - 2
     cz = z0 + 1 if rng.random() < 0.6 else z1 - 2
-    if kind == "jetty":
+    if kind == "jetty" or (cx, cz) == (mid, z1 - 2):                     # not in front of the door (shed)
         cz = z0 + 1
     if st.shape == "gable":
         c.box(cx, cx + 1, 1, top + 2, cz, cz + 1, st.stone2)
@@ -490,8 +490,11 @@ def house(c, w, st, col, T, ctx):
         c.set(rx, wall_top + 2, z1 - 1 - wall_top, "air")                 # a gap in the parapet
         c.box(mid - 1, mid + 2, 3, 4, z1, z1 + 1, f"{col}_wool")
     if kind == "jetty":
+        furnish(c, x0 + 1, x1 - 1, z0 + 1, z1 - 2, 1, st, col, door=mid, bed=False)
+        furnish(c, x0 + 1, x1 - 1, z0 + 1, z1 - 1, 4, st, col, table=False)
         c.banner(mid + 1, 1, z1 - 1, col)
     else:
+        furnish(c, x0 + 1, x1 - 1, z0 + 1, z1 - 1, 1, st, col, door=mid)
         c.banner(mid + 1 if mid + 1 < x1 - 1 else mid - 1, 3 if wall_top > 3 else 2, z1, col)
 
 
@@ -518,6 +521,45 @@ def town_hall(c, x0, x1, z0, z1, y, door, st, col):
     for x in (x0 + 1, x1 - 2):
         c.banner(x, y + 2, z0, col)                              # on the back wall, facing the door
     c.set(x0, y + 2, mid, "wall_torch[facing=east]"); c.set(x1 - 1, y + 2, mid, "wall_torch[facing=west]")
+
+
+def furnish(c, x0, x1, z0, z1, y, st, col, door=None, bed=True, table=True):
+    """Furniture of a home in the room x0..x1-1, z0..z1-1 (inside the walls) on floor y: a bed in the player color
+    along a side wall, a chest at the back wall, a table with a lantern and a stool, a rug. The door is in the south
+    wall at x = door: the two cells inside it stay free."""
+    rng = c.rng
+    air = c.id("air")
+    wood = st.wood.removesuffix("_planks")
+    keep = {(door, z1 - 1), (door, z1 - 2)}
+    free = lambda x, z: (x0 <= x < x1 and z0 <= z < z1 and (x, z) not in keep
+                         and c.get(x, y, z) == air and c.get(x, y + 1, z) == air)
+    sides = [x0, x1 - 1] if rng.random() < 0.5 else [x1 - 1, x0]
+    if bed:
+        for bx in sides:
+            if free(bx, z0) and free(bx, z0 + 1):
+                c.set(bx, y, z0, f"{col}_bed[facing=north,occupied=false,part=head]")
+                c.set(bx, y, z0 + 1, f"{col}_bed[facing=north,occupied=false,part=foot]")
+                break
+    for x in sorted(range(x0, x1), key=lambda x: -abs(x - sides[0])):          # far from the bed
+        if free(x, z0):
+            c.set(x, y, z0, "chest[facing=south,type=single,waterlogged=false]")
+            break
+    if table:
+        cells = [(x, z) for z in range(z0, z1) for x in range(x0, x1)]
+        for i in rng.permutation(len(cells)):
+            x, z = cells[i]
+            side = next((d for d in (("east", 1, 0), ("west", -1, 0), ("south", 0, 1), ("north", 0, -1))
+                         if free(x + d[1], z + d[2])), None)
+            if free(x, z) and side:                                             # the stool turns its back away
+                c.set(x, y, z, f"{wood}_slab[type=top,waterlogged=false]")
+                c.set(x, y + 1, z, "lantern[hanging=false,waterlogged=false]")
+                c.set(x + side[1], y, z + side[2], stair(f"{wood}_stairs", side[0]))
+                break
+    rug = ["red_carpet", "brown_carpet", "green_carpet", f"{col}_carpet"][int(rng.integers(4))]
+    for x in range(x0 + 1, x1 - 1):
+        for z in range(z0 + 1, z1 - 1):
+            if c.get(x, y, z) == air:
+                c.set(x, y, z, rug)
 
 
 def town_center(c, w, st, col, T, ctx):
