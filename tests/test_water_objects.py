@@ -1,7 +1,16 @@
-"""Bridges, gates and walls that cross water (#192)."""
+"""Bridges, gates and walls that cross water (#192), ships in a dock (#190)."""
+import contextlib
+import io
+
 import numpy as np
+from AoE2ScenarioParser.datasets.buildings import BuildingInfo
+from AoE2ScenarioParser.datasets.players import PlayerId
+from AoE2ScenarioParser.datasets.terrains import TerrainId
+from AoE2ScenarioParser.datasets.units import UnitInfo
 
 import aoe2mc
+import scenarios
+import world_reader
 
 T, H = 4, 3
 
@@ -48,3 +57,30 @@ def test_gate_on_water_keeps_its_opening_and_walls_get_a_footing():
             assert (x, y, 42) not in blocks, (x, y)
     top = int(cols.top[22, 58])                                          # a wall on water stands on the bed
     assert (22, top + 1, 58) in blocks and (22, int(cols.wtop[22, 58]), 58) in blocks
+
+
+def dock_map(path):
+    """Deep water with a shore in the north, a dock and a galley that stands in the dock (#190)."""
+    scn = scenarios.new_scenario(16)
+    for t in scn.map_manager.terrain:
+        t.terrain_id = TerrainId.GRASS_1 if t.y < 4 else TerrainId.WATER_DEEP
+    um = scn.unit_manager
+    um.add_unit(PlayerId.ONE, BuildingInfo.DOCK.ID, x=8.5, y=8.5)
+    um.add_unit(PlayerId.ONE, UnitInfo.GALLEY.ID, x=8.2, y=8.8)
+    return scenarios.save(scn, path)
+
+
+def test_ship_in_a_dock_moves_to_free_water(tmp_path):
+    log = io.StringIO()
+    with contextlib.redirect_stdout(log):
+        aoe2mc.convert(dock_map(str(tmp_path / "d.aoe2scenario")), str(tmp_path / "W"))
+    log = log.getvalue()
+    assert "  units in a block (moved up): 0" in log
+    assert "  units moved out of a building or obstacle: 1" in log
+    w = world_reader.World(str(tmp_path / "W"))
+    boats = [e for e in w.entities(flat=False) if "boat" in str(e["id"])]
+    assert len(boats) == 1 and boats[0].get("Passengers")         # the crew rides the boat
+    x, y, z = (float(v) for v in boats[0]["Pos"])
+    for yy in (int(y), int(y) + 1, int(y) + 2):                   # the boat and its crew are in water or air
+        name = w.block(int(x), yy, int(z)).split("[")[0]
+        assert name in ("minecraft:water", "minecraft:air"), (x, yy, z, name)
