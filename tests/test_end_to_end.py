@@ -63,7 +63,7 @@ def test_mc_version_26_3(tmp_path, monkeypatch):
     import io
 
     import scenarios
-    src = scenarios.tiny(str(tmp_path / "tiny.aoe2scenario"))
+    src = scenarios.tiny(str(tmp_path / "tiny.aoe2scenario"), {"instructions": "Defend the town center."})
     with contextlib.redirect_stdout(io.StringIO()):
         aoe2mc.main([src, str(tmp_path / "W"), "--mc-version", "26.3"])
     w = world_reader.World(str(tmp_path / "W"))
@@ -73,9 +73,23 @@ def test_mc_version_26_3(tmp_path, monkeypatch):
     assert {int(c["DataVersion"]) for c in w.chunks("entities").values()} == {5023}
     assert mcvalid.invalid_states(w.palette(), "26.3") == {}
     assert aoe2mc.MC["name"] == aoe2mc.VERSION_NAME               # convert() restores the default version
+    # 26.x world layout and level.dat (docs/minecraft-versions.md)
+    assert os.path.isdir(tmp_path / "W" / "dimensions" / "minecraft" / "overworld" / "region")
+    assert not os.path.exists(tmp_path / "W" / "region")
+    assert "spawn" in level and "SpawnX" not in level and "GameRules" not in level
+    assert float(level["spawn"]["yaw"]) == aoe2mc.SPAWN_YAW         # the AoE2 camera view, as in 1.21.1 (#23)
+    for f in ("game_rules", "world_gen_settings", "weather", "world_clocks"):
+        assert os.path.exists(tmp_path / "W" / "data" / "minecraft" / f"{f}.dat"), f
+    ents = w.entities()
+    assert ents and not any(k in e for e in ents for k in ("ArmorItems", "HandItems", "FallDistance"))
+    assert all(mcvalid.entity_error(str(e["id"]), "26.3") is None for e in ents)
+    book, = [be["Book"] for c in w.chunks().values() for be in c["block_entities"] if "Book" in be]
+    page = book["components"]["minecraft:written_book_content"]["pages"][0]["raw"]
+    assert str(page["extra"][1]["text"]) == "Defend the town center."    # text components are NBT (1.21.5)
     # block renames of the version profile
     monkeypatch.setattr(aoe2mc, "MC", aoe2mc.VERSIONS["26.3"])
-    assert str(aoe2mc.B.nbt(aoe2mc.B("chain[axis=y]"))["Name"]) == "minecraft:iron_chain"
+    assert dict(aoe2mc.B.nbt(aoe2mc.B("chain[axis=y]"))) == {"id": "minecraft:iron_chain",
+                                                           "properties": {"axis": "y"}}
 
 
 def test_book_of_scenario_texts(tmp_path):
