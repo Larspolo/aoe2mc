@@ -956,6 +956,75 @@ def monastery(c, w, st, col, T, ctx):
     c.banner(mid - 1 if t > 3 else mid - 2, 4, w, col); c.banner(mid + 1 if t > 3 else mid + 2, 4, w, col)
 
 
+def fortified_church(c, w, st, col, T, ctx):
+    """Armenian and Georgian Fortified Church (#128): a cross-domed stone church with a drum and a cone roof in the
+    middle, inside a wall with merlons, a round tower at the front west corner and an open bell tower at the front
+    east corner. The game has one model for all sets: light stone and orange tile roofs."""
+    s = w / 12                                                            # the design is drawn for 3 tiles
+    S = lambda v: max(1, round(v * s))
+    wall, roof, band = "stone_bricks", "red_sandstone", f"{col}_wool"   # red_sandstone: the orange roof tiles
+    c.box(0, w, 0, 1, 0, w, st.stone2)
+    # Curtain wall with merlons and a band in the player color
+    wh = S(4)
+    c.walls(0, w, 1, wh + 1, 0, w, wall)
+    c.walls(0, w, wh, wh + 1, 0, w, band)
+    c.crenels(0, w, 0, w, wh + 1, wall)
+    for z in range(S(2), w - S(4), 3):                                    # arrow slits
+        c.set(0, 2, z, "iron_bars"); c.set(w - 1, 2, z, "iron_bars")
+    # The church: a nave along z and a transept along x, gable roofs, a drum with a cone roof on the crossing
+    h = S(7)
+    nx0, nx1, nz0, nz1 = S(4), w - S(3), S(1), w - S(2)                   # nave
+    tx0, tx1, tz0, tz1 = S(2), w - S(1), S(2), S(7)                       # transept
+    c.room(nx0, nx1, nz0, nz1, 0, h, wall, st.floor)
+    c.room(tx0, tx1, tz0, tz1, 0, h, wall, st.floor)
+    c.box(nx0 + 1, nx1 - 1, 1, h + 1, nz0 + 1, nz1 - 1, "air")
+    c.box(tx0 + 1, tx1 - 1, 1, h + 1, tz0 + 1, tz1 - 1, "air")
+    c.gable(tx0 - 1, tx1 + 1, tz0 - 1, tz1 + 1, h + 1, roof, fill=(tx0, tx1, tz0, tz1, wall), axis="x")
+    ridge = c.gable(nx0 - 1, nx1 + 1, nz0 - 1, nz1 + 1, h + 1, roof, fill=(nx0, nx1, nz0, nz1, wall), axis="z")
+    for x, z in ((nx0, (nz0 + nz1) // 2 + 2), (nx1 - 1, (nz0 + nz1) // 2 + 2)):
+        c.box(x, x + 1, h - 3, h - 1, z, z + 1, "yellow_stained_glass_pane")
+    for x in ((tx0 + nx0) // 2, (nx1 + tx1 - 1) // 2):                    # tall windows in the transept
+        c.box(x, x + 1, h - 3, h - 1, tz1 - 1, tz1, "yellow_stained_glass_pane")
+        c.box(x, x + 1, h - 3, h - 1, tz0, tz0 + 1, "yellow_stained_glass_pane")
+    cx, cz, r = (nx0 + nx1 - 1) / 2, (tz0 + tz1 - 1) / 2, max(1.0, 1.5 * s)
+    dy = ridge + 1
+    c.cylinder(cx, cz, r, ridge - 1, dy + S(4), wall)
+    for ox, oz in ((r, 0), (-r, 0), (0, r), (0, -r)):                     # windows of the drum
+        c.box(round(cx + ox), round(cx + ox) + 1, dy, dy + S(2), round(cz + oz), round(cz + oz) + 1,
+              "yellow_stained_glass_pane")
+    c.cylinder(cx, cz, r + 0.5, dy + S(4), dy + S(4) + 1, band)
+    top = c.cone(cx, cz, r + 0.5, dy + S(4) + 1, roof, step=2)
+    c.set(int(cx), top + 1, int(cz), "lightning_rod")
+    # Round tower at the front west corner, with a cone roof
+    rr, rx, rz, rh = 1.8 * s, S(1.5), w - 1 - S(1.5), S(6)
+    c.cylinder(rx, rz, rr, 1, rh, wall)
+    c.cylinder(rx, rz, rr + 0.5, rh, rh + 1, band)
+    t = c.cone(rx, rz, rr + 0.5, rh + 1, roof, step=2)
+    c.set(int(rx), t + 1, int(rz), "lightning_rod")
+    c.set(int(rx + rr), S(4), int(rz), "iron_bars")
+    # Bell tower at the front east corner: a square tower, an open belfry and a hip roof
+    b0, bh = w - S(3), S(9)
+    c.box(b0, w, 1, bh, b0, w, wall)
+    c.walls(b0, w, bh - 1, bh, b0, w, band)
+    c.box(b0, w, bh, bh + 2, b0, w, "air")
+    for x in (b0, w - 1):
+        for z in (b0, w - 1):
+            c.box(x, x + 1, bh, bh + 2, z, z + 1, "stone_brick_wall")
+    c.set((b0 + w - 1) // 2, bh + 1, (b0 + w - 1) // 2, "bell[attachment=ceiling,facing=south]")
+    c.box(b0, w, bh + 2, bh + 3, b0, w, wall)
+    t = c.hip(b0 - 1, w + 1, b0 - 1, w + 1, bh + 3, roof)
+    c.set((b0 + w - 1) // 2, t + 1, (b0 + w - 1) // 2, "lightning_rod")
+    c.set((b0 + w - 1) // 2, S(5), w - 1, "yellow_stained_glass_pane")
+    # Gate in the front wall between the towers, the church door behind it
+    gx = (S(3) + b0) // 2 + 1
+    c.box(gx, gx + 1, 1, 4, w - 1, w, "air")
+    c.set(gx, 3, w - 1, "chiseled_stone_bricks")
+    c.door(gx, 1, w - 1, wood="dark_oak")
+    c.box(gx, gx + 1, 1, 3, nz1 - 1, nz1, "air")
+    c.door(gx, 1, nz1 - 1, wood="dark_oak")
+    c.banner(gx - 1, 3, w, col); c.banner(gx + 1, 3, w, col)
+
+
 def university(c, w, st, col, T, ctx):
     """Like the game: a hall of two floors at the back with a library inside, a higher block on the east side
     and a scholar statue in the front yard. Sets with domes keep a domed hall (the observatory) behind columns."""
@@ -1981,7 +2050,8 @@ def select(name):
         ("FENCE", wall_segment, {}), ("BARRICADE", barricade, {}), ("BARRACKS", barracks, {}), ("ARCHERY_RANGE", archery_range, {}),
         ("STABLE", stable, {}), ("SIEGE_WORKSHOP", siege_workshop, {}), ("BLACKSMITH", blacksmith, {}),
         ("MARKET", market, {}), ("CARAVANSERAI", market, {}), ("FEITORIA", feitoria, {}),
-        ("MONASTERY", monastery, {}), ("CHURCH", monastery, {}), ("UNIVERSITY", university, {}),
+        ("FORTIFIED_CHURCH", fortified_church, {}), ("MONASTERY", monastery, {}),
+        ("CHURCH", monastery, {}), ("UNIVERSITY", university, {}),
         ("FOLWARK", mill, {}), ("MILL", mill, {}), ("LUMBER_CAMP", lumber_camp, {}),
         ("MINING_CAMP", mining_camp, {}), ("DOCK", dock, {}), ("HARBOR", dock, {}),
         ("FARM", farm, {}), ("HOUSE", house, {}),
