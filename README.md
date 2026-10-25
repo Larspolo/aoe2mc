@@ -79,7 +79,7 @@ near the spawn. Each text is a chapter. There is no lectern when all texts are e
 
 ## Units
 
-All units stand still (no AI), do not despawn and are silent. Each unit has a name tag with its AoE2 name in the player color.
+All units stand still (no AI), do not despawn and are silent. Passive animals (sheep, cows, pigs and others) make their normal sounds. Each unit has a name tag with its AoE2 name in the player color.
 The world difficulty is Easy: on Peaceful, Minecraft removes the hostile mobs (the soldiers).
 
 | AoE2 | Minecraft |
