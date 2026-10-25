@@ -87,6 +87,12 @@ def test_objects_file(tiny_world):
     tc, = [o for o in blds if o["name"] == "TOWN_CENTER"]
     x0, z0, x1, z1 = tc["footprint"]
     assert x1 - x0 == z1 - z0 == 16 and x0 <= tc["tile"][0] * 4 <= x1
+    ground = [row.split() for row in data["ground"]]                # y where a unit stands, "-" for water (#138)
+    assert len(ground) == len(ground[0]) == data["map_size"] * 4 and any("-" in row for row in ground)
+    stand = [(int(float(e["Pos"][1])), ground[int(float(e["Pos"][2]))][int(float(e["Pos"][0]))])
+             for e in world_reader.World(path).entities() if "Pos" in e]
+    land = [(y, g) for y, g in stand if g != "-"]
+    assert land and all(y == int(g) for y, g in land)
 
 def test_mc_version_26_3(tmp_path, monkeypatch):
     import contextlib

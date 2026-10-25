@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
-aoe2mc - Convert an Age of Empires II: DE scenario (.aoe2scenario) to a Minecraft Java world.
+aoe2mc - Convert an Age of Empires II: DE scenario (.aoe2scenario) or the start state of a recorded game
+(.aoe2record) to a Minecraft Java world. A campaign (.aoe2campaign) gives one world per scenario; an old campaign
+(.cpx, .cpn) gives its old scenario files and the steps to save them in the DE editor.
 
 Usage:
     python aoe2mc.py MAP.aoe2scenario OUTPUT_WORLD_FOLDER [options]
@@ -17,6 +19,7 @@ Options:
     --no-birds         Do not convert birds
     --no-barriers      Do not fill building footprints with invisible barrier blocks
     --verbose          Print the time of each phase (read, columns, objects, units, chunks, write)
+    --scenario N       Campaign: convert only scenario N (1 = the first)
     --architecture X   Use one architecture set for all players (western, central, mediterranean,
                        middle_eastern, south_asian, african, east_asian, southeast_asian, mesoamerican)
 
@@ -216,12 +219,27 @@ def terrain_style(name):
 # --------------------------------------------------------------------------------------------
 # Read the AoE2 scenario.
 # --------------------------------------------------------------------------------------------
+def object_kinds():
+    """Object ID -> (kind prefix, name). Scenarios and recorded games use the same IDs."""
+    from AoE2ScenarioParser.datasets.buildings import BuildingInfo
+    from AoE2ScenarioParser.datasets.heroes import HeroInfo
+    from AoE2ScenarioParser.datasets.other import OtherInfo
+    from AoE2ScenarioParser.datasets.units import UnitInfo
+    kinds = {}
+    for prefix, enum in (("H", HeroInfo), ("U", UnitInfo), ("O", OtherInfo), ("B", BuildingInfo)):
+        for e in enum:          # later enums win: Building > Other > Unit > Hero
+            kinds[e.ID] = (prefix, e.name)
+    return kinds
+
+
+def read_map(path):
+    """read_record for .aoe2record files, else read_scenario."""
+    return (read_record if path.lower().endswith(".aoe2record") else read_scenario)(path)
+
+
 def read_scenario(path):
     from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
     from AoE2ScenarioParser.datasets.terrains import TerrainId
-    from AoE2ScenarioParser.datasets.buildings import BuildingInfo
-    from AoE2ScenarioParser.datasets.other import OtherInfo
-    from AoE2ScenarioParser.datasets.units import UnitInfo
 
     with contextlib.redirect_stdout(io.StringIO()):   # the parser prints a lot of status text
         scn = AoE2DEScenario.from_file(path)
@@ -236,11 +254,7 @@ def read_scenario(path):
 
     terrain_names = {t.value: t.name for t in TerrainId}
 
-    from AoE2ScenarioParser.datasets.heroes import HeroInfo
-    kinds = {}
-    for prefix, enum in (("H", HeroInfo), ("U", UnitInfo), ("O", OtherInfo), ("B", BuildingInfo)):
-        for e in enum:          # later enums win: Building > Other > Unit > Hero
-            kinds[e.ID] = (prefix, e.name)
+    kinds = object_kinds()
 
     players = {}
     for p in scn.player_manager.players:
@@ -269,6 +283,46 @@ def read_scenario(path):
                                 player=player, x=u.x, y=u.y, rotation=float(u.rotation or 0), garrisoned=garrisoned,
                                 ref=u.reference_id, holder=u.garrisoned_in_id if garrisoned else None))
     return size, terrain, elevation, terrain_names, texts, objects, players
+
+
+ANNEXES = {618, 619, 620}       # the three annex parts of a town center: the TC design draws them
+
+
+def read_record(path):
+    """The start state of a recorded game (the header snapshot), as read_scenario returns it. The mgz model
+    has no rotation (0) and no texts; the start view of a player is its start position."""
+    try:
+        from mgz.model import parse_match
+    except ImportError:
+        raise SystemExit("A .aoe2record file needs the mgz package: python3 -m pip install mgz") from None
+    from AoE2ScenarioParser.datasets.terrains import TerrainId
+    with open(path, "rb") as f:
+        match = parse_match(f)
+    size = match.map.dimension
+    terrain = np.zeros((size, size), np.int16)
+    elevation = np.zeros((size, size), np.float32)
+    for t in match.map.tiles:
+        terrain[t.position.x, t.position.y] = t.terrain
+        elevation[t.position.x, t.position.y] = t.elevation
+    terrain_names = {t.value: t.name for t in TerrainId}
+
+    players = {0: {"color": "light_gray", "arch": "western", "civ": "GAIA", "view": None}}
+    for p in match.players:
+        civ = (p.civilization or "?").upper()
+        players[p.number] = {"color": buildings.COLOR_NAMES[p.color_id] if 0 <= p.color_id < 8 else "light_gray",
+                             "arch": buildings.CIV_TO_ARCH.get(civ, "western"), "civ": civ,
+                             "view": (p.position.x, p.position.y) if p.position else None}
+
+    kinds, objects = object_kinds(), []
+    for player, objs in [(0, match.gaia)] + [(p.number, p.objects) for p in match.players]:
+        for o in objs:
+            if o.object_id in ANNEXES:
+                continue
+            prefix, name = kinds.get(o.object_id, ("?", f"UNKNOWN_{o.object_id}"))
+            objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name, player=player,
+                                x=o.position.x, y=o.position.y, rotation=0.0, garrisoned=False,
+                                ref=o.instance_id, holder=None))
+    return size, terrain, elevation, terrain_names, {k: "" for k in CHAPTERS}, objects, players
 
 
 def turn_tile(x, y, size, k):
@@ -1452,14 +1506,14 @@ PALETTE_CACHE = {}
 # Blocks that need a block entity, or Minecraft shows them wrong (banners are invisible without one).
 BE_TYPES = [("decorated_pot", "decorated_pot"), ("oak_sign", "sign"), ("wall_banner", "banner"), ("_banner", "banner"), ("bell", "bell"), ("campfire", "campfire"),
             ("barrel", "barrel"), ("chest", "chest"), ("blast_furnace", "blast_furnace"),
-            ("smoker", "smoker"), ("furnace", "furnace"), ("lectern", "lectern")]
+            ("smoker", "smoker"), ("furnace", "furnace"), ("lectern", "lectern"), ("_bed", "bed")]
 
 
 def block_entity_type(state):
     name = state.split(":")[1].split("[")[0]
     for key, be in BE_TYPES:
         if key in name:
-            return be
+            return None if be == "bed" and MC["data_version"] >= V26_3 else be    # 26.3 has no bed block entity
     return None
 
 
@@ -1491,7 +1545,7 @@ def build_chunk(cx, cz, cols, edits, origin=(0, 0)):
     water = (Y > top) & (Y <= wtop)
     vol = np.where(water, np.where(ice & (Y == wtop), ICE, WATER), vol)
     vol[0] = np.where(top[0] > NONE, BEDROCK, AIR)
-    if cols.floor > MIN_Y:              # --border diorama: the map stands on a plinth with air under it
+    if cols.floor > MIN_Y:              # --border diorama, island, table: the map stands on a floor with air under it
         vol[:cols.floor - MIN_Y] = AIR
     zz, xx = np.nonzero(deco)
     if len(zz):
@@ -1605,10 +1659,11 @@ def write_region(path, chunks):
         f.write(header + body)
 
 
-def write_objects(path, size, T, H, players, objects, cols):
+def write_objects(path, size, T, H, players, objects, cols, ground):
     """aoe2mc.json: the data that a game program needs (docs/research/gameplay.md). Tiles are in the turned grid
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
-    their footprint [x0, z0, x1, z1) in blocks. Objects that the converter did not place are not in the list."""
+    their footprint [x0, z0, x1, z1) in blocks. Objects that the converter did not place are not in the list.
+    "ground" has one string per block row z: for each x the y where a unit stands, or "-" for water."""
     kinds = {"U": "unit", "B": "building", "O": "other"}
     objs = []
     for o in objects:
@@ -1628,6 +1683,8 @@ def write_objects(path, size, T, H, players, objects, cols):
             "players": {str(pid): {"civ": p["civ"], "color": p["color"], "arch": p["arch"]}
                         for pid, p in sorted(players.items())},
             "objects": objs}
+    n, wet = cols.n, cols.wtop > cols.top
+    data["ground"] = [" ".join("-" if wet[x, z] else str(ground[x, z]) for x in range(n)) for z in range(n)]
     with open(path, "w") as f:
         json.dump(data, f, indent=1)
 
@@ -1710,7 +1767,7 @@ def write_level_dat(path, name, spawn, yaw=SPAWN_YAW, size=None):
 # --------------------------------------------------------------------------------------------
 # Border (#172): blocks outside the map square for --border. The map itself does not change.
 # --------------------------------------------------------------------------------------------
-BORDERS = {"none": 0, "diorama": 2, "natural": 16, "wall": 8}     # design -> width of the ring in blocks
+BORDERS = {"none": 0, "diorama": 2, "natural": 16, "wall": 8, "island": 1, "table": 3}  # design -> ring width
 
 
 def ring(n, r):
@@ -1766,6 +1823,47 @@ def border(cols, design, colors, E):
         fill(E, x, z, gy + 1, WATER_Y + 1, "water")
         o = d == r
         fill(E, x[o], z[o], gy[o] + 1, WATER_Y + 1, "barrier")
+    elif design == "island":
+        # A floating island (#262): a rim of earth holds the water, and a cone of rock and earth hangs under the
+        # map, deepest at the center. Hanging roots grow under the shallow parts.
+        f = cols.floor = int(cols.top[:n, :n].min()) - 6
+        land = h == g
+        fill(E, x, z, f, h + 1, np.where(land, cols.sub_id[ex, ez], B("dirt")))
+        fill(E, x, z, h, h + 1, np.where(land, cols.top_id[ex, ez], B("sand")))
+        mx, mz = (a.ravel() for a in np.meshgrid(np.arange(n), np.arange(n), indexing="ij"))
+        rr = np.hypot(mx - (n - 1) / 2, mz - (n - 1) / 2) / (n / 2 * 1.42)
+        e = np.minimum.reduce([mx, n - 1 - mx, mz, n - 1 - mz])        # distance to the map edge
+        rng = np.random.default_rng(n)
+        # steep sides (2 blocks down per block in), so that a view from above sees them; a round tip
+        depth = 3 + (np.minimum(2 * e, min(n * 0.6, f - MIN_Y - 8) * np.clip(1 - rr, 0, 1))
+                     + rng.integers(0, 3, mx.size)).astype(int)
+        bot = np.maximum(f - depth, MIN_Y + 2)
+        fill(E, mx, mz, f - 3, f, "dirt")
+        rock = np.where(rng.random(mx.size) < 0.15, B("andesite"), np.where(rng.random(mx.size) < 0.03,
+                                                                            B("coal_ore"), B("stone")))
+        fill(E, mx, mz, bot, f - 3, rock)
+        hang = (depth < 8) & (rng.random(mx.size) < 0.25)
+        fill(E, mx[hang], mz[hang], f - 4, f - 3, "rooted_dirt")
+        fill(E, mx[hang], mz[hang], f - 5, f - 4, "hanging_roots[waterlogged=false]")
+    elif design == "table":
+        # A map table (#262): a frame of dark oak with a raised lip, a leg under each corner, a banner in a player
+        # color on each corner and lanterns on the lip.
+        f = cols.floor = int(cols.top[:n, :n].min()) - 6
+        lip = d <= 2
+        fill(E, x[lip], z[lip], f, h[lip] + 2, "dark_oak_planks")
+        o = d == 3
+        fill(E, x[o], z[o], f, h[o] + 1, "dark_oak_planks")
+        fill(E, x[o], z[o], h[o] + 1, h[o] + 2, "dark_oak_slab[type=bottom,waterlogged=false]")
+        fill(E, x, z, f - 1, f, "stripped_dark_oak_log[axis=y]")
+        along = np.where((x < 0) | (x >= n), z, x)
+        lamp = (d == 2) & (along % 12 == 6) & (along > 0) & (along < n - 1)
+        fill(E, x[lamp], z[lamp], h[lamp] + 2, h[lamp] + 3, "lantern[hanging=false,waterlogged=false]")
+        for i, (cx, cz) in enumerate(((-2, -2), (n + 1, -2), (n + 1, n + 1), (-2, n + 1))):
+            t = (np.abs(x - cx) <= 1) & (np.abs(z - cz) <= 1)
+            fill(E, x[t], z[t], max(f - 40, MIN_Y + 1), f - 1, "dark_oak_log[axis=y]")
+            c = t & (x == cx) & (z == cz)
+            color = colors[i % len(colors)] if colors else "white"
+            fill(E, x[c], z[c], h[c] + 2, h[c] + 3, f"{color}_banner[rotation={(2 + 4 * i) % 16}]")
     elif design == "wall":
         # A low wall of stone bricks with merlons, and a tower in a player color at each corner.
         a = d <= 2
@@ -1857,7 +1955,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         times[phase] = times.get(phase, 0.0) + now - clock[0]
         clock[0] = now
 
-    size, terrain, elevation, tnames, texts, objects, players = read_scenario(src)
+    size, terrain, elevation, tnames, texts, objects, players = read_map(src)
     tick("read")
     name = name or os.path.splitext(os.path.basename(src))[0]
     terrain, elevation = turn_map(buildings.TURN, size, terrain, elevation, objects, players)
@@ -1914,6 +2012,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     rim = [c for c in per_chunk if not (0 <= c[0] < nchunks and 0 <= c[1] < nchunks)]     # chunks of the border
     regions = {}
     top_view = np.zeros((cols.width, cols.width), np.uint16)     # for icon.png and preview.png
+    ground = np.zeros((cols.width, cols.width), np.int16)        # y where a unit stands, for aoe2mc.json
+    ys = np.arange(MIN_Y, MAX_Y - 1)[:, None, None]
     for cx in range(nchunks):
         for cz in range(nchunks):
             data, vol = build_chunk(cx, cz, cols, per_chunk.get((cx, cz)))
@@ -1921,6 +2021,11 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
             solid = (vol != AIR) & (vol != BARRIER)
             hi = HEIGHT - 1 - np.argmax(solid[::-1], axis=0)
             top_view[cx * 16:cx * 16 + 16, cz * 16:cz * 16 + 16] = np.take_along_axis(vol, hi[None], 0)[0].T
+            top = cols.top[cx * 16:cx * 16 + 16, cz * 16:cz * 16 + 16].T                   # [z, x] as vol
+            lo = max(int(top.min()) + 1 - MIN_Y, 0)                    # the padding outside the map is void
+            p = passable[vol[lo:]]
+            stand = np.argmax(p[:-1] & p[1:] & (ys[lo:] > top), axis=0) + lo + MIN_Y   # first 2 free blocks over the ground
+            ground[cx * 16:cx * 16 + 16, cz * 16:cz * 16 + 16] = stand.T
             tick("chunks")
             if (cx, cz) in unit_chunks:
                 ed = entity_chunk(cx, cz, unit_chunks[(cx, cz)], cols, vol, passable)
@@ -1937,7 +2042,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         write_region(os.path.join(dim, "entities", f"r.{rx}.{rz}.mca"), chunks)
 
     write_level_dat(os.path.join(out, "level.dat"), name, spawn, yaw, cols.n)
-    write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols)
+    write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground)
 
     from PIL import Image
     lut = np.array([block_color(s) for s in B.states], np.uint8)
@@ -1995,10 +2100,101 @@ def spawn_spec(v):
     return x, z
 
 
+class CampaignError(ValueError):
+    """A campaign file that aoe2mc cannot read."""
+
+
+def read_campaign(path):
+    """.aoe2campaign or .cpx/.cpn -> (version, campaign name, [(scenario file name, scenario bytes)]).
+    Layout: docs/campaign-formats.md."""
+    import struct
+    with open(path, "rb") as f:
+        b = f.read()
+
+    def text(raw):                                                  # old files use the code page of the author
+        try:
+            return raw.decode("utf-8")
+        except UnicodeDecodeError:
+            return raw.decode("cp1252", "replace")
+
+    def de_string(o):
+        if b[o:o + 2] != b"\x60\x0a":
+            raise CampaignError(f"{path}: no string at byte {o}: the file is not a valid campaign")
+        n = struct.unpack_from("<H", b, o + 2)[0]
+        return text(b[o + 4:o + 4 + n]), o + 4 + n
+
+    version = b[:4]
+    if version not in (b"1.00", b"2.00"):
+        raise CampaignError(f"{path}: version {version!r} is not 1.00 (.cpx, .cpn) or 2.00 (.aoe2campaign)")
+    try:
+        o = 4 if version == b"1.00" else 8 + 4 * struct.unpack_from("<I", b, 4)[0]   # 2.00: DLC dependencies
+        name = text(b[o:o + 256].split(b"\0")[0])
+        n = struct.unpack_from("<I", b, o + 256)[0]
+        o += 260
+        entries = []
+        for _ in range(n):
+            size, off = struct.unpack_from("<II", b, o)
+            if version == b"1.00":                                   # fixed strings of 255 bytes, 2 bytes padding
+                file_name = text(b[o + 263:o + 518].split(b"\0")[0])
+                o += 520
+            else:
+                _, o = de_string(o + 8)                                 # the scenario name
+                file_name, o = de_string(o)
+            if off + size > len(b):
+                raise CampaignError(f"{path}: scenario {file_name!r} ends after the end of the file")
+            entries.append((file_name, b[off:off + size]))
+    except struct.error:
+        raise CampaignError(f"{path}: the file ends in the header: the file is not a valid campaign") from None
+    return version, name, entries
+
+
+OLD_CAMPAIGN_STEPS = """\
+The scenarios of this campaign use the old scenario format ({ext}). aoe2mc cannot read it.
+aoe2mc wrote the scenario files to {out}:
+{files}
+Do these steps to convert them:
+  1. Copy the files to the scenario folder of AoE2 DE:
+     <Steam user folder>/Games/Age of Empires 2 DE/<number>/resources/_common/scenario
+  2. Start AoE2 DE. In the scenario editor, open each scenario and save it. DE saves it as .aoe2scenario.
+  3. Convert each .aoe2scenario file with aoe2mc. Or, in the DE campaign editor, make a campaign of the
+     scenarios and convert the .aoe2campaign file."""
+
+
+def convert_campaign(src, out, only=None, name=None, **kw):
+    """One world per scenario: out/<number> <scenario name>/. only: the number of one scenario (1 = first).
+    An old campaign (.cpx, .cpn): write the old scenario files to out/ and stop with the steps for the DE editor."""
+    import tempfile
+    version, title, entries = read_campaign(src)
+    if only is not None and not 1 <= only <= len(entries):
+        raise OptionError(f"--scenario {only}: the campaign {title!r} has {len(entries)} scenarios")
+    print(f"Campaign {title!r}: {len(entries)} scenarios")
+    chosen = [(i, re.sub(r'[\\/:*?"<>|]', "_", fn), data) for i, (fn, data) in enumerate(entries, 1)
+              if only is None or i == only]
+    if version == b"1.00":
+        os.makedirs(out, exist_ok=True)
+        for i, fn, data in chosen:
+            with open(os.path.join(out, f"{i} {fn}"), "wb") as f:
+                f.write(data)
+        exts = sorted({os.path.splitext(fn)[1] or "?" for _, fn, _ in chosen})
+        raise SystemExit(OLD_CAMPAIGN_STEPS.format(ext=", ".join(exts), out=out,
+                                                   files="\n".join(f"  {i} {fn}" for i, fn, _ in chosen)))
+    for i, fn, data in chosen:
+        stem = re.sub(r"\.aoe2scenario$", "", fn, flags=re.I)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, stem + ".aoe2scenario")
+            with open(path, "wb") as f:
+                f.write(data)
+            convert(path, os.path.join(out, f"{i} {stem}"), name=f"{name} {i}" if name else stem, **kw)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
-    ap.add_argument("scenario", help=".aoe2scenario file")
-    ap.add_argument("output", help="output world folder (put it in .minecraft/saves/)")
+    ap.add_argument("scenario", help=".aoe2scenario file, .aoe2record (the start state of a recorded game), or "
+                    ".aoe2campaign (one world per scenario; .cpx and .cpn: the steps for the DE editor)")
+    ap.add_argument("output", help="output world folder (put it in .minecraft/saves/); for a campaign the folder of "
+                    "the worlds")
+    ap.add_argument("--scenario", dest="only", type=int_range(1, 999), metavar="N",
+                    help="campaign: convert only scenario N (1 = the first)")
     ap.add_argument("--tile-size", type=int_range(1, 16), default=4, help="blocks per tile (default 4)")
     ap.add_argument("--level-height", type=int_range(1, 16), default=3, help="blocks per elevation level (default 3)")
     ap.add_argument("--name", help="world name in the Minecraft menu")
@@ -2025,11 +2221,18 @@ def main(argv=None):
                     help="design of the edge outside the map (default diorama); all keep the vanilla world border at the edge")
     ap.add_argument("--verbose", action="store_true", help="print the time of each phase")
     a = ap.parse_args(argv)
+    kw = dict(T=a.tile_size, H=a.level_height, seed=a.seed, preview=a.preview, arch=a.architecture,
+              player_arch=a.player_architecture, with_units=not a.no_units, barriers=not a.no_barriers,
+              mc_version=a.mc_version, spawn=a.spawn, birds=not a.no_birds, orientation=a.orientation,
+              verbose=a.verbose, garrison=a.garrison, border_design=a.border)
     try:
-        convert(a.scenario, a.output, a.tile_size, a.level_height, a.name, a.seed, a.preview, a.architecture,
-                a.player_architecture, not a.no_units, not a.no_barriers, a.mc_version, a.spawn, not a.no_birds,
-                a.orientation, a.verbose, a.garrison, a.border)
-    except OptionError as e:
+        if a.scenario.lower().endswith((".aoe2campaign", ".cpx", ".cpn")):
+            convert_campaign(a.scenario, a.output, a.only, a.name, **kw)
+        elif a.only is not None:
+            ap.error("--scenario needs a campaign file (.aoe2campaign, .cpx, .cpn)")
+        else:
+            convert(a.scenario, a.output, name=a.name, **kw)
+    except (OptionError, CampaignError) as e:
         ap.error(str(e))
 
 

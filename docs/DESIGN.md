@@ -30,13 +30,19 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Archery target | `target` | `archery_range` |
 | Bow and arrow work | `fletching_table` | `archery_range` |
 | Forge, smithy | `blast_furnace`, `anvil`, `smithing_table`, `cauldron` (water) | `blacksmith` |
+| Forge hearth, quench tub (inside) | `lava_cauldron` beside the chimney, `water_cauldron[level=3]` | `blacksmith` |
 | Fire, cooking | `campfire`, `smoker` | `blacksmith`, `house`, `outpost`, `church`, `oracles_temple`, `pyramid` (braziers) |
 | Weapon rack, sharpening | `grindstone` | `barracks`, `granary`, `blacksmith` |
 | Training dummy | `oak_fence`, `hay_block`, `carved_pumpkin` | `barracks` |
 | Bell | `bell` | `monastery`, `town_center` |
+| Bed (inside) | `*_bed` (player color), head to the north | `house` (`furnish`) |
+| Table with a light (inside) | `*_slab[type=top]` with a `lantern` on it, a `*_stairs` stool | `house` (`furnish`) |
+| Storage (inside) | `chest` at the back wall | `house` (`furnish`) |
+| Rug | `*_carpet` | `house` (`furnish`) |
 | Loom, cloth | `loom`, wool | `church` |
 | Market goods | `barrel`, `chest`, `composter`, `hay_block`, `melon`, `pumpkin` | `market`, `dock`, `harbor` |
 | Market stall | lean-to of roof stairs on `*_fence` posts; wool awning in stripes for flat-roof sets | `market` |
+| Upper floor (inside) | `*_planks` floor and a `ladder` | `market` |
 | Painted trim (deck edge, band) | `*_concrete` (player color) | `dock`, `pyramid` |
 | Relief panel, carving | `chiseled_stone_bricks` | `pyramid` |
 | Balustrade of a stair | `polished_granite` | `pyramid` |
@@ -47,6 +53,9 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Hoist | a log post and arm, `chain`, a hanging log | `lumber_camp` |
 | Workbench | `crafting_table` | `lumber_camp` |
 | Millstone | `grindstone` | `mill`, `mining_camp` (tools) |
+| Drive shaft of a windmill | `stripped_spruce_log[axis=y]` above the millstone | `mill` (inside) |
+| Net loom, boat workbench | `loom`, `crafting_table`, `spruce_slab` | `dock` (inside) |
+| Light in a room or a yard | `lantern` on a barrel, or hanging under a beam | `mill`, `granary`, `dock`, `lumber_camp`, `mining_camp` |
 | Ore, mined gold and stone | `gold_ore`, `raw_gold_block`, `cobblestone`, `stone`, `andesite` | `mining_camp` |
 | Mine cart track | `rail` | `mining_camp` |
 | Water trough | `cauldron` (water) | `stable` |
@@ -77,6 +86,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Wooden hoarding | wood slab (top) or `spruce_planks` with a `*_fence` rail | `donjon`, `krepost` |
 | Coat of arms | `*_wall_banner` (player color) over the gate | `donjon` |
 | Lamp | `lantern` | `decorate()`, `blacksmith` (hanging), `pagoda` (under the eaves) |
+| Lamp inside a room | `lantern[hanging=true]` under a ceiling, or on a `chain` | `blacksmith`, `market` |
 | Siege engine under construction | spruce slabs, fences and logs | `siege_workshop` |
 | Cloth awning | `*_wool` in the player color | `house` (flat roofs) |
 | Stair to a roof terrace | stairs of the roof material | `house` (flat roofs) |
@@ -87,6 +97,8 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Band in the player color | `*_wool` (player color) | `town_center`, `castle`, `tower`, `temple`, `pagoda` |
 | Outside stairs to an upper floor | `*_stairs` of the wood of the set | `town_center` |
 | Books, study | `bookshelf`, `lectern` (with a book) | `university` |
+| Desks, light inside | `enchanting_table`, `cartography_table`, `candle` (lit, on shelves and desks), `lantern` on a `chain` (`hang()`) | `university` (`study()`) |
+| Ledger and trade maps (inside) | `lectern` (with a book) and `cartography_table` on a counter of top slabs | `market` |
 | Scholar statue | `chiseled_stone_bricks` pedestal, `quartz_pillar`, `chiseled_quartz_block` | `university` |
 | Rose window | stained glass panes | `monastery` |
 | Posts of an open belfry | `stone_brick_wall` | `fortified_church` |
@@ -102,12 +114,10 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Raised portal (pishtaq) of an arched gate | wall over the roof line, `chiseled_sandstone` frame, upside-down stairs as the arch | `caravanserai` |
 | Kitchen garden | `carrots`, `potatoes`, `wheat` (age 7) on `farmland`, `spruce_fence` with a `spruce_fence_gate` | `folwark` |
 | Windmill sails | `spruce_fence` arms with `white_wool` cloth, `stripped_spruce_log` hub | `mill`, `folwark` |
-| Forge hearth, quench tub (inside) | `lava_cauldron` beside the chimney, `water_cauldron[level=3]` | `blacksmith` |
-| Ledger and trade maps (inside) | `lectern` (with a book) and `cartography_table` on a counter of top slabs | `market` |
-| Upper floor (inside) | `*_planks` floor and a `ladder` | `market` |
-| Lamp inside a room | `lantern[hanging=true]` under a ceiling, or on a `chain` | `blacksmith`, `market` |
 
-Add a line when a design uses a new feature block. Each new block state must pass `mcvalid`.
+Add a line when a design uses a new feature block. Put it after a line of a related feature or design, not at the
+end of the table: parallel PRs that all add at the end get a merge conflict on GitHub. Each new block state must
+pass `mcvalid`.
 
 ## 3. Some noise
 

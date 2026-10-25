@@ -30,16 +30,16 @@ def labels(issue):
 
 
 def depends(issue):
-    """Numbers in the "Depends on: #a, #b" lines of the issue body."""
-    lines = re.findall(r"Depends on:([^\n]*)", issue.get("body") or "")
+    """Numbers in the "Depends on: #a, #b" lines of the issue body (only at the start of a line, not in text)."""
+    lines = re.findall(r"^Depends on:([^\n]*)", issue.get("body") or "", re.M)
     return [int(n) for line in lines for n in re.findall(r"#(\d+)", line)]
 
 
 def candidates(issues):
     """The ticket candidates in the pick order of the autopilot skill (step 5).
-    issues: the open issues (PRs are removed). A dependency is closed when it is not open."""
-    issues = [i for i in issues if "pull_request" not in i]
+    issues: the open issues and PRs. A dependency is closed when it is not open: an open PR is open too (#243)."""
     open_numbers = {i["number"] for i in issues}
+    issues = [i for i in issues if "pull_request" not in i]
 
     def rank(i):
         p = next((k for k, name in enumerate(PRIORITY) if name in labels(i)), len(PRIORITY))
@@ -96,6 +96,7 @@ def pr_for(number, branch, prs):
 def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now):
     """The new body of the status issue. comments: {issue number: comments} for the needs-human and
     in-progress issues."""
+    nxt = candidates(issues)[:5]
     issues = [i for i in issues if "pull_request" not in i]
     state = re.search(r"<!-- agent-state:.*?-->", old_body or "")
     process = re.search(r"### Process changes\n(.*?)(?=\n### |\n---\n|\n_Updated |\Z)", old_body or "", re.S)
@@ -118,7 +119,6 @@ def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now)
         out.append("- nothing")
 
     out += ["", "### Next up"]
-    nxt = candidates(issues)[:5]
     out += [f"{k}. #{i['number']} {i['title']} ({tag(i, 'P') or 'no priority'}, {tag(i, 'size:') or 'no size'})"
             for k, i in enumerate(nxt, 1)] or ["No ticket is ready."]
 
@@ -174,9 +174,10 @@ def main(argv=None):
     ap.add_argument("--dry-run", action="store_true", help="print the body, do not change the issue")
     ap.add_argument("--next", action="store_true", help="print the candidates in pick order")
     a = ap.parse_args(argv)
-    issues = [i for i in pages("issues?state=open") if "pull_request" not in i]
+    open_all = pages("issues?state=open")                       # issues and PRs
+    issues = [i for i in open_all if "pull_request" not in i]
     if a.next:
-        for i in candidates(issues):
+        for i in candidates(open_all):
             print(f"#{i['number']} {i['title']} ({tag(i, 'P')}, {tag(i, 'size:')})")
         return 0
     status = next((i for i in issues if "agent-status" in labels(i)), None)
@@ -187,7 +188,7 @@ def main(argv=None):
                 for i in issues if labels(i) & {"needs-human", "in-progress"}}
     closed = api("issues?state=closed&sort=updated&direction=desc&per_page=50")
     closed_prs = api("pulls?state=closed&sort=updated&direction=desc&per_page=100")
-    body = render(status["body"], issues, comments, api("pulls?state=open&per_page=100"), closed, closed_prs,
+    body = render(status["body"], open_all, comments, api("pulls?state=open&per_page=100"), closed, closed_prs,
                   datetime.datetime.now(datetime.timezone.utc))
     if a.dry_run:
         print(body)

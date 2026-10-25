@@ -245,7 +245,7 @@ class Canvas:
         self.box(x, x + 1, y, y + h, z, z + 1, "oak_fence")
         self.set(x, y + h, z, f"{color}_banner[rotation=4]")
 
-    def furnish(self, items):
+    def furniture(self, items):
         """Furniture (x, y, z, state) inside a room: only into air, and the cells next to a door stay free.
         Small sizes (--tile-size) have small rooms: things that hit a wall are left out."""
         air = self.id("air")
@@ -483,7 +483,7 @@ def house(c, w, st, col, T, ctx):
     # stone chimney with smoke on a random corner: only the European half-timbered houses have one in the game
     cx = x0 + 1 if rng.random() < 0.5 else x1 - 2
     cz = z0 + 1 if rng.random() < 0.6 else z1 - 2
-    if kind == "jetty":
+    if kind == "jetty" or (cx, cz) == (mid, z1 - 2):                     # not in front of the door (shed)
         cz = z0 + 1
     if st.shape == "gable":
         c.box(cx, cx + 1, 1, top + 2, cz, cz + 1, st.stone2)
@@ -499,9 +499,51 @@ def house(c, w, st, col, T, ctx):
         c.set(rx, wall_top + 2, z1 - 1 - wall_top, "air")                 # a gap in the parapet
         c.box(mid - 1, mid + 2, 3, 4, z1, z1 + 1, f"{col}_wool")
     if kind == "jetty":
+        furnish(c, x0 + 1, x1 - 1, z0 + 1, z1 - 2, 1, st, col, door=mid, bed=False)
+        furnish(c, x0 + 1, x1 - 1, z0 + 1, z1 - 1, 4, st, col, table=False)
         c.banner(mid + 1, 1, z1 - 1, col)
     else:
+        furnish(c, x0 + 1, x1 - 1, z0 + 1, z1 - 1, 1, st, col, door=mid)
         c.banner(mid + 1 if mid + 1 < x1 - 1 else mid - 1, 3 if wall_top > 3 else 2, z1, col)
+
+
+def furnish(c, x0, x1, z0, z1, y, st, col, door=None, bed=True, table=True):
+    """Furniture of a home in the room x0..x1-1, z0..z1-1 (inside the walls) on floor y: a bed in the player color
+    along a side wall, a chest at the back wall, a table with a lantern and a stool, a rug. The door is in the south
+    wall at x = door: the two cells inside it stay free."""
+    rng = c.rng
+    air = c.id("air")
+    wood = st.wood.removesuffix("_planks")
+    keep = {(door, z1 - 1), (door, z1 - 2)}
+    free = lambda x, z: (x0 <= x < x1 and z0 <= z < z1 and (x, z) not in keep
+                         and c.get(x, y, z) == air and c.get(x, y + 1, z) == air)
+    sides = [x0, x1 - 1] if rng.random() < 0.5 else [x1 - 1, x0]
+    if bed:
+        for bx in sides:
+            if free(bx, z0) and free(bx, z0 + 1):
+                c.set(bx, y, z0, f"{col}_bed[facing=north,occupied=false,part=head]")
+                c.set(bx, y, z0 + 1, f"{col}_bed[facing=north,occupied=false,part=foot]")
+                break
+    for x in sorted(range(x0, x1), key=lambda x: -abs(x - sides[0])):          # far from the bed
+        if free(x, z0):
+            c.set(x, y, z0, "chest[facing=south,type=single,waterlogged=false]")
+            break
+    if table:
+        cells = [(x, z) for z in range(z0, z1) for x in range(x0, x1)]
+        for i in rng.permutation(len(cells)):
+            x, z = cells[i]
+            side = next((d for d in (("east", 1, 0), ("west", -1, 0), ("south", 0, 1), ("north", 0, -1))
+                         if free(x + d[1], z + d[2])), None)
+            if free(x, z) and side:                                             # the stool turns its back away
+                c.set(x, y, z, f"{wood}_slab[type=top,waterlogged=false]")
+                c.set(x, y + 1, z, "lantern[hanging=false,waterlogged=false]")
+                c.set(x + side[1], y, z + side[2], stair(f"{wood}_stairs", side[0]))
+                break
+    rug = ["red_carpet", "brown_carpet", "green_carpet", f"{col}_carpet"][int(rng.integers(4))]
+    for x in range(x0 + 1, x1 - 1):
+        for z in range(z0 + 1, z1 - 1):
+            if c.get(x, y, z) == air:
+                c.set(x, y, z, rug)
 
 
 def town_center(c, w, st, col, T, ctx):
@@ -880,7 +922,7 @@ def blacksmith(c, w, st, col, T, ctx):
     c.banner(mid + 1, 3, hz, col)
     # The smithy inside: the hearth at the chimney, anvils, the quench tub, tools and stock along the walls
     e, n = w - m - 3, m + 1                                                # east of the room (beside the chimney), north wall
-    c.furnish([(e, 1, n, "lava_cauldron"), (e - 1, 1, n, "water_cauldron[level=3]"), (e - 1, 1, n + 2, "anvil[facing=east]"),
+    c.furniture([(e, 1, n, "lava_cauldron"), (e - 1, 1, n, "water_cauldron[level=3]"), (e - 1, 1, n + 2, "anvil[facing=east]"),
                (m + 1, 1, n, "grindstone[face=floor,facing=north]"), (m + 2, 1, n, "smithing_table"),
                (m + 3, 1, n, "barrel[facing=up]"), (m + 3, 2, n, "barrel[facing=up]"), (m + 4, 1, n, "chest[facing=south]"),
                (m + 1, 1, n + 2, "chipped_anvil[facing=north]"), (m + 1, 1, n + 4, "chest[facing=east]"),
@@ -906,16 +948,16 @@ def market(c, w, st, col, T, ctx):
     back = [(x, 1, 1, stock[int(c.rng.integers(len(stock)))]) for x in range(2, w - 3)]
     back += [(x, 2, 1, "barrel[facing=up]") for x in range(3, w - 3, 3)]
     counter = [(x, 1, d - 3, f"{wood}_slab[type=top]") for x in range(3, w - 3) if abs(x - w // 2) > 1]
-    c.furnish(back + counter + [(4, 2, d - 3, "cartography_table"),
+    c.furniture(back + counter + [(4, 2, d - 3, "cartography_table"),
                                 (w - 5, 2, d - 3, "lectern[facing=south,has_book=true,powered=false]")])
     if h >= 7:                                                             # upper floor over a ladder, lit from below
         c.box(2, w - 2, 4, 5, 1, d - 1, st.wood)
         c.box(w - 3, w - 2, 1, 5, 1, 2, "ladder[facing=south]")
-        c.furnish([(x, 3, 2, "lantern[hanging=true]") for x in (5, w - 6)]
+        c.furniture([(x, 3, 2, "lantern[hanging=true]") for x in (5, w - 6)]
                   + [(x, 5, z, stock[(x + z) % len(stock)]) for x in range(2, w - 4) for z in (1, 2) if x % 4]
                   + [(w // 2, 5, 3, "lantern[hanging=false]")])
     else:
-        c.furnish([(w // 2 - 2, h, 2, "lantern[hanging=true]")])
+        c.furniture([(w // 2 - 2, h, 2, "lantern[hanging=true]")])
     c.flag(w - 2, top + 1, d // 2, col, 2)
     # Lean-to stalls on the west, south and east sides; the gap in the middle of the south row is the entrance
     goods = ["barrel[facing=up]", "hay_block", "melon", "pumpkin", "chest[facing=south]", "composter"]
@@ -1126,11 +1168,13 @@ def university(c, w, st, col, T, ctx):
         c.room(1, w - 1, 1, w - 2, 0, h, st.stone if st.shape != "flat" else st.plaster, st.floor)
         c.windows(1, w - 1, 1, w - 2, 3, step=2, height=2)
         library(c, 2, w - 2, 2, 4)
+        study(c, 2, w - 3, 3, w - 4)
         for x in range(1, w - 1, 2):                                      # columns in front
             c.box(x, x + 1, 1, h + 1, w - 1, w, "quartz_pillar")
         c.box(0, w, h + 1, h + 2, 1, w, "smooth_quartz" if st.shape != "flat" else family(st.roof)[2])
         c.box(mid, mid + 1, 1, 3, w - 2, w - 1, "air")
-        c.door(mid, 1, w - 2)
+        c.door(mid, 1, w - 3)                                             # in the south wall of the hall
+        hang(c, mid, h - 1, (w - 1) // 2)
         r = max(1.5, w / 4 - 0.5)                                         # observatory dome
         cx = (w - 1) / 2
         c.cylinder(cx, cx - 1, r, h + 2, h + 4, st.plaster)
@@ -1147,8 +1191,10 @@ def university(c, w, st, col, T, ctx):
     c.windows(m, tx + 1, m, zb, h // 2 + 2, sides="nws", step=2)
     library(c, m + 1, tx, m + 1, zb - m - 3)
     dx = (m + tx) // 2
+    study(c, m + 1, tx - 1, m + 2, zb - 2)
     c.door(dx, 1, zb - 1)
     c.roof(m, tx + 1, m, zb, h + 1, st, axis="x")
+    hang(c, dx, h - 1, (m + zb) // 2)
     th = h + 2                                                            # the higher east block, to the front
     c.timber_room(tx, w - m, m, w - m - 1, 0, th, st)
     c.windows(tx, w - m, m, w - m - 1, 2, sides="es", step=2)
@@ -1158,11 +1204,38 @@ def university(c, w, st, col, T, ctx):
     else:
         c.roof(tx, w - m, m, w - m - 1, th + 1, st)
     c.door(tx + 1, 1, w - m - 2, facing="south")
+    if w - m - tx >= 4:                                                   # the reading room of the east block
+        ex = w - m - 2
+        c.box(ex, ex + 1, 1, 3, m + 1, w - m - 4, "bookshelf")
+        c.set(ex, 3, m + 1, "candle[candles=2,lit=true,waterlogged=false]")
+        c.set(tx + 1, 1, m + 1, "lectern[facing=north,has_book=true,powered=false]")
+        hang(c, tx + 1, th - 1, w // 2 - 1)
     sx, sz = (m + tx) // 2 - 1, (zb + w) // 2                             # scholar statue in the yard
     c.set(sx, 1, sz, "chiseled_stone_bricks")
     c.box(sx, sx + 1, 2, 4, sz, sz + 1, "quartz_pillar")
     c.set(sx, 4, sz, "chiseled_quartz_block")
     c.banner(dx + 1, 3, zb, col); c.banner(tx + 2, 4, w - m - 1, col)
+
+
+def hang(c, x, y, z):
+    """A hanging lantern at (x, y, z) on a chain up to the first block above it (none if there is no block)."""
+    air = (-1, c.B("air"))
+    top = next((t for t in range(y + 1, c.height) if c.get(x, t, z) not in air), None)
+    if top is not None:
+        c.box(x, x + 1, y + 1, top, z, z + 1, "chain")
+        c.set(x, y, z, "lantern[hanging=true]")
+
+
+def study(c, x0, x1, z0, z1):
+    """The desks of a library room (x0..x1, z0..z1 inside, the shelves behind z0): an enchanting table at the
+    shelves and a cartography table with candles in the front corner. Candles on the shelves light the room."""
+    if x1 - x0 < 3 or z1 - z0 < 1:
+        return
+    c.set(x1, 1, z0, "enchanting_table")
+    c.set(x1, 1, z1, "cartography_table")
+    c.set(x1, 2, z1, "candle[candles=3,lit=true,waterlogged=false]")
+    for x in (x0, x1):
+        c.set(x, 3, z0 - 1, "candle[candles=1,lit=true,waterlogged=false]")
 
 
 def library(c, x0, x1, z, rows):
@@ -1201,6 +1274,25 @@ def mill(c, w, st, col, T, ctx):
     c.banner(mid + 1, 3, zf, col)
     c.set(0, 1, w - 1, "barrel[facing=up]"); c.set(1, 1, w - 1, "hay_block")             # flour and grain sacks
     c.set(w - 1, 1, 1, "grindstone[face=floor,facing=south]")                          # millstone
+    mill_room(c, cx, mid, zf, shaft=hb - 1)
+
+
+def mill_room(c, cx, mid, zf, shaft=None, lamp=None):
+    """Inside of a round mill (#255): a millstone in the middle (with the drive shaft of a windmill above it),
+    grain sacks and barrels at the wall and a lantern. The way from the door to the millstone stays free."""
+    z = zf - 1
+    while z > cx and c.get(mid, 1, z) not in (-1, c.id("air")):           # the door leads into the room
+        c.box(mid, mid + 1, 1, 3, z, z + 1, "air")
+        z -= 1
+    lo, hi = int(cx) - 1, int(cx) + 2                                      # the free floor inside the wall
+    c.set(lo + 1, 1, lo + 1, "grindstone[face=floor,facing=south]")
+    if shaft:
+        c.box(lo + 1, lo + 2, 2, shaft + 1, lo + 1, lo + 2, "stripped_spruce_log[axis=y]")
+    c.set(lo, 1, lo, "hay_block"); c.set(lo, 2, lo, "hay_block"); c.set(lo, 1, lo + 1, "hay_block")
+    c.set(hi, 1, lo, "barrel[facing=up]"); c.set(lo, 1, hi, "barrel[facing=up]")
+    c.set(hi, 2, lo, "lantern[hanging=false]")
+    if lamp:
+        c.set(lo + 1, lamp, lo + 1, "lantern[hanging=true]")
 
 
 def folwark(c, w, st, col, T, ctx):
@@ -1270,6 +1362,7 @@ def granary(c, w, st, col, T, ctx):
     c.door(mid, 1, zf)
     c.set(0, 1, w - 1, "grindstone[face=floor,facing=south]"); c.set(w - 1, 1, w - 1, "hay_block")
     c.banner(mid + 1, 3, zf, col)
+    mill_room(c, cx, mid, zf, lamp=h)
 
 
 def log_pile(c, x0, x1, z0, n, logs):
@@ -1301,6 +1394,7 @@ def lumber_camp(c, w, st, col, T, ctx):
     c.box(1, 2, 1, 6, 1, 2, post)                                          # hoist: post, arm, chain, log
     c.box(1, 4, 6, 7, 1, 2, post + "[axis=x]")
     c.set(3, 5, 1, "chain"); c.set(3, 4, 1, "oak_log[axis=x]")
+    c.set(2, 5, 1, "lantern[hanging=true]")                               # light under the hoist arm
     c.set(4, 1, 2, "spruce_fence"); c.set(6, 1, 2, "spruce_fence")      # sawhorse with a log on it
     c.box(4, 7, 2, 3, 2, 3, "stripped_spruce_log[axis=x]")
     c.set(1, 1, 3, "crafting_table"); c.set(2, 1, 3, "oak_log")           # workbench, chopping block
@@ -1313,6 +1407,7 @@ def mining_camp(c, w, st, col, T, ctx):
     shelter(c, 0, 5, 0, 4, st)
     c.set(1, 1, 1, "barrel[facing=up]"); c.set(2, 1, 1, "grindstone[face=floor,facing=south]")
     c.set(3, 1, 1, "chest[facing=south]")
+    c.set(2, 2, 0, "lantern[hanging=true]")                               # light under the roof beam
     for x, z, h, b in ((w - 2, 1, 2, "cobblestone"), (w - 1, 1, 1, "stone"), (w - 2, 2, 1, "andesite"),
                        (w - 1, 2, 2, "cobblestone"), (w - 2, 3, 1, "cobblestone"),            # stone heap
                        (1, w - 3, 1, "gold_ore"), (2, w - 3, 2, "raw_gold_block"), (1, w - 2, 1, "raw_gold_block")):
@@ -1344,6 +1439,15 @@ def dock(c, w, st, col, T, ctx):
     c.set(m, 6, z1, "spruce_planks"); c.box(m, m + 1, 6, 7, z1 + 1, z1 + 2, "stripped_spruce_log[axis=z]")   # hoist
     c.set(m, 5, z1 + 1, "chain")
     c.flag(m, top + 1, (z0 + z1) // 2, col, 2)
+    # Inside (#255): goods and a lantern at the back wall, a net loom and a boat workbench at the side walls.
+    # The way from the door to the back wall stays free.
+    ix0, ix1, iz0 = x0 + 1, x1 - 2, z0 + 1
+    for x, b in ((ix0, "barrel[facing=up]"), (ix0 + 1, "barrel[facing=up]"), (ix0 + 2, "chest[facing=south]"),
+                 (ix1, "barrel[facing=up]")):
+        c.set(x, 2, iz0, b)
+    c.set(ix0 + 1, 3, iz0, "lantern[hanging=false]"); c.set(ix1, 3, iz0, "lantern[hanging=false]")
+    c.set(ix0, 2, iz0 + 2, "loom[facing=east]"); c.set(ix0, 2, iz0 + 3, "hay_block")             # nets, ropes
+    c.set(ix1, 2, iz0 + 2, "crafting_table"); c.set(ix1, 2, iz0 + 1, "spruce_slab[type=bottom]")  # boat work
     goods = ["barrel[facing=up]", "chest[facing=south]", "hay_block", "composter", "barrel[facing=up]"]
     for x, z in ((1, 1), (2, 1), (w - 2, 1), (w - 3, 1), (1, w - 2), (w - 2, w - 2), (w - 2, w - 3), (1, w - 3)):
         if c.rng.random() < 0.75:
