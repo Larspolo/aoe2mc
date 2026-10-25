@@ -2977,6 +2977,13 @@ def army_tent(c, w, st, col, T, ctx):
     c.box(x0, x0 + 1, 1, 2, 1, w - 1, "white_wool"); c.box(x1 - 1, x1, 1, 2, 1, w - 1, "white_wool")
     c.box(x1 - 1, x1, 1, 3, w // 2 - 1, w // 2 + 1, "air")
     c.flag(x0, (w + 1) // 2 + 1, w // 2, col, 2)
+    if w >= 6:                                             # inside (#335): bedrolls along the sides, spears, a lamp
+        for z, face in ((2, "west"), (w - 3, "west")):
+            for x in range(x0 + 1, x1 - 3, 2):
+                c.set(x, 1, z, f"{col}_bed[facing={face},occupied=false,part=head]")
+                c.set(x + 1, 1, z, f"{col}_bed[facing={face},occupied=false,part=foot]")
+        c.box(x0 + 1, x0 + 2, 1, 2, w // 2 - 1, w // 2 + 1, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+        c.set(x0 + 2, 1, w // 2 - 1, "lantern[hanging=false,waterlogged=false]")
 
 
 def command_tent(c, w, st, col, T, ctx, dropsite=False):
@@ -2997,6 +3004,12 @@ def command_tent(c, w, st, col, T, ctx, dropsite=False):
     c.set(w // 2 - 1, 1, w - 3, "loom[facing=south]" if not dropsite else "chest[facing=south]")
     if dropsite:
         c.set(w // 2, 1, w - 3, "barrel[facing=up]")
+    if w >= 6:                                             # inside (#335): the map table of the commander, a chest, light
+        c.set(w // 2 - 1, 1, 2, "cartography_table"); c.set(w // 2, 1, 2, "chest[facing=south,type=single,waterlogged=false]")
+        c.set(2, 1, 2, "lantern[hanging=false,waterlogged=false]"); c.set(w - 3, 1, 2, f"{col}_banner[rotation=0]")
+        c.box(2, w - 2, 1, 2, 3, w - 3, f"{col}_carpet")
+        c.box(w // 2 - 1, w // 2 + 1, 1, 2, w - 4, w - 2, "air")    # the way from the door stays free
+        c.set(w // 2 - 1, 1, w - 3, "loom[facing=south]" if not dropsite else "chest[facing=south]")
     c.flag(w // 2, 5 + k, w // 2, col, 2)
 
 
@@ -3106,6 +3119,13 @@ def pavilion(c, w, st, col, T, ctx):
         c.walls(a, b, 4 + k, 5 + k, a, b, f"{col}_wool" if k % 2 == 0 else "white_wool")
         a, b, k = a + 1, b - 1, k + 1
     c.flag(w // 2, 4 + k, w // 2, col, 2)
+    if w >= 6:                                             # inside (#335): a carpet, a low table with a lamp, cushions
+        m = w // 2
+        c.box(1, w - 1, 1, 2, 1, w - 1, f"{col}_carpet")
+        c.box(m - 1, m + 1, 1, 2, m - 1, m, "spruce_slab[type=top,waterlogged=false]")
+        c.set(m - 1, 2, m - 1, "lantern[hanging=false,waterlogged=false]")
+        c.set(m - 1, 1, m - 2, "red_wool"); c.set(m, 1, m - 2, "red_wool")    # cushions at the back
+        c.set(1, 1, 1, "chest[facing=south,type=single,waterlogged=false]")
 
 
 def yurt(c, w, st, col, T, ctx):
@@ -3115,6 +3135,23 @@ def yurt(c, w, st, col, T, ctx):
     c.cone(cx, cx, r + 0.3, 4, "brown_wool")
     c.box(w // 2, w // 2 + 1, 1, 3, int(cx + r), int(cx + r) + 1, "air")
     c.banner(w // 2 + 1, 3, int(cx + r) + 1, col)
+    hearth_room(c, w, int(cx + r), col, ["red_carpet", "orange_carpet"], "chest[facing=south,type=single,waterlogged=false]")
+
+
+def hearth_room(c, w, zd, col, rugs, store):
+    """Inside of a round hut or yurt (#335): a hearth in the middle (its smoke goes up through the roof), rugs around
+    it, a bed in the player color at the back and goods at the wall. The door is at (w // 2, zd)."""
+    if w < 6:
+        return
+    m, air = w // 2, c.id("air")
+    c.set(m - 1, 1, m - 1, "campfire[facing=south,lit=true,signal_fire=false,waterlogged=false]")
+    for x in range(1, w - 1):
+        for z in range(1, w - 1):
+            if c.get(x, 1, z) == air and abs(x - m + 0.5) + abs(z - m + 0.5) <= 3:
+                c.set(x, 1, z, rugs[(x + z) % len(rugs)])
+    c.set(m - 1, 1, 1, f"{col}_bed[facing=east,occupied=false,part=foot]"); c.set(m, 1, 1, f"{col}_bed[facing=east,occupied=false,part=head]")
+    c.set(1, 1, m, store); c.set(w - 2, 1, m - 1, "decorated_pot[cracked=false,facing=north,waterlogged=false]")
+    c.box(m, m + 1, 1, 3, zd - 2, zd, "air")                            # the way from the door stays free
 
 
 def hut(c, w, st, col, T, ctx):
@@ -3122,6 +3159,7 @@ def hut(c, w, st, col, T, ctx):
     c.cylinder(cx, cx, w / 2 - 0.5, 1, 4, "packed_mud", hollow=True)
     c.cone(cx, cx, w / 2 + 0.3, 4, "hay_block")
     c.box(w // 2, w // 2 + 1, 1, 3, w - 1, w, "air")
+    hearth_room(c, w, w - 1, col, ["brown_carpet", "yellow_carpet"], "barrel[facing=up,open=false]")
 
 
 def amphitheatre(c, w, st, col, T, ctx):
