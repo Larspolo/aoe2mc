@@ -18,7 +18,7 @@ The README already uses this style. Keep it.
 | Lint | `ruff check .` |
 | Fast tests (~15 s) | `python3 -m pytest` (use `python3 -m`: a `pytest` on the PATH can be another Python) |
 | Slow tests (~2 min) | `python3 -m pytest -m slow` |
-| Test scenario | `python3 tools/scenarios.py tiny OUT.aoe2scenario` (or `gallery`, `stress`, `buildings`, `units`, `village`, `facing`) |
+| Test scenario | `python3 tools/scenarios.py tiny OUT.aoe2scenario` (or `gallery`, `stress`, `buildings`, `units`, `village`, `facing`, `walls`) |
 | Convert | `python3 aoe2mc.py IN.aoe2scenario OUTWorld --preview` |
 | Look at a world | `python3 tools/world_reader.py OUTWorld [X Y Z]` |
 | 3D image | `python3 tools/render.py building CASTLE --arch western OUT.png` (or `world OUTWorld X0 Z0 X1 Z1 OUT.png`) |
@@ -58,7 +58,8 @@ Design work (buildings, objects, units, animals) follows `docs/DESIGN.md`. Do de
   the converter prints "units in a block (moved up): N" and N must be 0.
 - Block states are strings like `"oak_stairs[facing=north,half=bottom]"`. Each new state must pass `mcvalid`.
 - Output is deterministic: all randomness comes from seeded `numpy` generators. Keep it so.
-- Target: Minecraft Java 1.21.1 (`DATA_VERSION = 3955`). Newer versions upgrade the world on load.
+- Target: Minecraft Java 26.3 (`DATA_VERSION = 5023`); `--mc-version 1.21.1` writes the old format. The code uses
+  the 1.21.1 block and entity names: `mcvalid` checks code names with 1.21.1, and output worlds with the output version.
   `VERSIONS` in `aoe2mc.py` holds the profile per output version (`--mc-version`); format changes: `docs/minecraft-versions.md`.
 - Global state: `aoe2mc.B` (block registry), `aoe2mc.MOVED`, `aoe2mc.BLOCK_DATA` (extra block entity NBT), `buildings.BARRIERS`, `buildings.TURN` (`--orientation`), `buildings.BRIDGE_CELLS`.
   Tests share `B`, so `B.states` holds the states of all earlier tests.

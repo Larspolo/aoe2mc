@@ -11,7 +11,7 @@ Options:
     --name TEXT        World name in the Minecraft menu (default: file name)
     --seed N           Seed for the random details (tree heights, flowers) (default 1)
     --preview          Also write preview.png (top view) into the world folder
-    --mc-version V     Minecraft Java version of the output: 1.21.1 (default) or 26.3
+    --mc-version V     Minecraft Java version of the output: 26.3 (default) or 1.21.1
     --orientation C    Minecraft corner (ne, se, sw, nw) of the top corner of the AoE2 screen (default ne)
     --no-units         Do not convert units (mobs, boats, minecarts)
     --no-birds         Do not convert birds
@@ -47,14 +47,15 @@ import units
 
 # Blocks with the 'waterlogged' property. A block of this list under the water surface gets waterlogged=true (#19).
 with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools", "mcdata", "1.21.1.json")) as _f:
-    WATERLOGGABLE = {"minecraft:" + k for k, v in json.load(_f)["blocks"].items() if "waterlogged" in v}
+    BLOCK_PROPS = {"minecraft:" + k: v for k, v in json.load(_f)["blocks"].items()}
+WATERLOGGABLE = {k for k, v in BLOCK_PROPS.items() if "waterlogged" in v}
 
 # Output format per Minecraft Java version (docs/minecraft-versions.md). Entities: units.to_version().
 VERSIONS = {
     "1.21.1": dict(name="1.21.1", data_version=3955, renames={}),
     "26.3": dict(name="26.3", data_version=5023, renames={"minecraft:chain": "minecraft:iron_chain"}),
 }
-VERSION_NAME = "1.21.1"      # the default output version
+VERSION_NAME = "26.3"        # the default output version. The code uses the 1.21.1 names (no renames).
 DATA_VERSION = VERSIONS[VERSION_NAME]["data_version"]
 MC = VERSIONS[VERSION_NAME]  # the version of the running conversion; convert() sets it
 V26_1, V26_3 = 4786, 5023    # data versions of format changes (more in units.to_version)
@@ -305,6 +306,30 @@ def upsample(grid, T):
     return a * (1 - f)[:, None] + b * f[:, None]
 
 
+def water_bodies(wet, elevation):
+    """Label the 4-connected bodies of water tiles. Returns (label per tile, lowest elevation per label);
+    label 0 is land (elevation 0)."""
+    from collections import deque
+    n = wet.shape[0]
+    body = np.zeros(wet.shape, np.int32)
+    levels = [0.0]
+    for i, j in zip(*np.nonzero(wet)):
+        if body[i, j]:
+            continue
+        k = len(levels)
+        body[i, j] = k
+        low, q = float(elevation[i, j]), deque([(i, j)])
+        while q:
+            a, b = q.popleft()
+            low = min(low, float(elevation[a, b]))
+            for x, y in ((a + 1, b), (a - 1, b), (a, b + 1), (a, b - 1)):
+                if 0 <= x < n and 0 <= y < n and wet[x, y] and not body[x, y]:
+                    body[x, y] = k
+                    q.append((x, y))
+        levels.append(low)
+    return body, np.array(levels, np.float32)
+
+
 class Columns:
     def __init__(self, size, terrain, elevation, terrain_names, T, H, rng):
         styles, style_of_id = [], {}
@@ -324,7 +349,28 @@ class Columns:
         land = WATER_Y + 1 + np.rint(upsample(elevation, T) * H).astype(np.int16)
         depth = upsample(depth_tiles, T)
         is_water = np.repeat(np.repeat(depth_tiles > 0, T, 0), T, 1)
-        water_bottom = (WATER_Y - np.maximum(1, np.rint(depth))).astype(np.int16)
+        # One level per connected body of water (#165): AoE2 has no water level, and Minecraft water must be level.
+        # The lowest elevation of the body cannot spill over its own tiles (docs/research/water.md).
+        body, levels = water_bodies(depth_tiles > 0, elevation)
+        surface_tiles = WATER_Y + np.rint(levels[body] * H).astype(np.int16)
+        surface = np.repeat(np.repeat(surface_tiles, T, 0), T, 1)
+        water_bottom = (surface - np.maximum(1, np.rint(depth))).astype(np.int16)
+        # Shores (#166): land within 2 tiles of the water slopes down to it, 1 block per block in the first tile (a
+        # beach that units can walk), 2 in the second (AoE2 draws a slope of the height map there, never a wall).
+        # ws = the highest water surface near the column.
+        ws = np.where(is_water, surface, NONE).astype(np.int16)
+        cap = np.full((n, n), 32767, np.int16)
+        for d in range(1, 2 * T + 1):
+            p = np.full((n + 2, n + 2), NONE, np.int16)
+            p[1:-1, 1:-1] = ws
+            ws = np.maximum.reduce([p[a:a + n, b:b + n] for a in range(3) for b in range(3)])
+            cap = np.where((ws > NONE) & (cap == 32767), ws + d + max(0, d - T), cap)
+        land = np.minimum(land, cap)
+        # Land next to the water is at least as high as the surface, else the water flows out.
+        rim = np.full((n + 2, n + 2), NONE, np.int16)
+        rim[1:-1, 1:-1] = np.where(is_water, surface, NONE)
+        rim = np.maximum.reduce([rim[:-2, 1:-1], rim[2:, 1:-1], rim[1:-1, :-2], rim[1:-1, 2:]])
+        land = np.where(~is_water, np.maximum(land, rim), land)
 
         def full(fill, dtype):
             a = np.full((W, W), fill, dtype)
@@ -333,12 +379,18 @@ class Columns:
         self.top = full(NONE, np.int16)
         self.wtop = full(NONE, np.int16)
         self.top[:n, :n] = np.where(is_water, water_bottom, land)
-        self.wtop[:n, :n] = np.where(is_water, WATER_Y, self.top[:n, :n])
+        self.wtop[:n, :n] = np.where(is_water, surface, self.top[:n, :n])
 
         lut = lambda key: np.array([B(s[key]) for s in styles], np.uint16)
         sub_lut = np.array([B(s["bottom"] if s["depth"] else s["sub"]) for s in styles], np.uint16)
         self.top_id = full(AIR, np.uint16)
         self.sub_id = full(AIR, np.uint16)
+        # Blocks of `sub` under the top: at least 3, and down to the lowest neighbour, so that steep banks and
+        # steps show dirt or sand on their faces, not stone.
+        t = np.pad(self.top[:n, :n], 1, mode="edge")
+        low = np.minimum.reduce([t[:-2, 1:-1], t[2:, 1:-1], t[1:-1, :-2], t[1:-1, 2:]])
+        self.sub_depth = full(3, np.int16)
+        self.sub_depth[:n, :n] = np.clip(self.top[:n, :n] - low, 3, 64)
         self.ice = full(False, bool)
         self.top_id[:n, :n] = lut("top")[sid]
         self.sub_id[:n, :n] = sub_lut[sid]
@@ -487,6 +539,76 @@ class Columns:
 # Edits: blocks for trees, mines and buildings, stored as numpy arrays.
 # "soft" edits (leaves) go only into air. "hard" edits replace what is there.
 # --------------------------------------------------------------------------------------------
+# Connections of panes, iron bars, fences and walls (#189). Minecraft computes them only when a neighbour changes,
+# so the converter writes them. The rules follow IronBarsBlock, FenceBlock and WallBlock.
+SIDES = (("north", 0, -1), ("east", 1, 0), ("south", 0, 1), ("west", -1, 0))
+NOT_STURDY = ("slab", "stairs", "fence", "_wall", "pane", "bars", "door", "banner", "torch", "lantern", "sign", "button",
+              "lever", "plate", "carpet", "rail", "ladder", "vine", "chain", "rod", "campfire", "bell", "anvil",
+              "cauldron", "flower", "short_grass", "tall_grass", "fern", "bush", "sapling", "leaves", "air", "water",
+              "lava", "fire", "mushroom", "poppy", "dandelion", "orchid", "allium", "tulip", "daisy", "cornflower",
+              "lily", "rose", "peony", "lilac", "sunflower", "kelp", "seagrass", "coral", "pickle", "candle", "head",
+              "skull", "pot", "cake", "_bed", "chest", "lectern", "grindstone", "stonecutter", "enchanting", "dripstone",
+              "cluster", "_bud", "cobweb", "sugar_cane", "bamboo", "cactus", "egg", "conduit", "hopper", "brewing",
+              "farmland", "dirt_path", "scaffolding", "wheat", "carrots", "potatoes", "beetroots", "stem", "berry",
+              "cocoa", "wart", "frogspawn", "roots", "sprouts", "hanging", "spore", "dripleaf", "azalea", "lichen",
+              "vein", "tripwire", "redstone_wire", "repeater", "comparator", "daylight", "piston_head", "moving",
+              "structure_void", "barrier", "pumpkin", "melon", "shulker", "composter", "heavy_core",
+              "propagule", "petals", "snow", "turtle_egg", "end_portal", "nether_portal", "frame", "bubble", "fungus",
+              "chorus_plant", "bluet", "glow_berries", "spawner", "end_gateway")
+STURDY_PROPS = {"axis", "facing", "lit", "open", "snowy", "power", "triggered", "instrument", "note", "powered",
+                "has_record", "honey_level", "up", "down", "north", "east", "south", "west", "charges", "orientation",
+                "crafting", "extended", "bloom"}
+
+
+def connect_kind(state):
+    """'pane', 'fence', 'nether_fence', 'wall', 'gate_x' / 'gate_z' (axis of the gate), 'solid' or ''."""
+    name = state.partition("[")[0]
+    p = BLOCK_PROPS.get(name, {})
+    if name.endswith("_fence_gate"):
+        facing = re.search(r"facing=(\w+)", state)
+        return "gate_z" if facing and facing.group(1) in ("north", "south") else "gate_x"
+    if name.endswith("_pane") or name == "minecraft:iron_bars":
+        return "pane"
+    if name.endswith("_fence"):
+        return "nether_fence" if name == "minecraft:nether_brick_fence" else "fence"
+    if p.get("north") == ["none", "low", "tall"]:
+        return "wall"
+    short = name[10:]
+    if any(k in short for k in ("torch", "banner", "sign")):
+        return "post"                                                 # WALL_POST_OVERRIDE: a wall raises its post
+    if short == "light" or any(k in short for k in NOT_STURDY) and not short.endswith(
+            ("_block", "stone_bricks", "sea_lantern", "planks", "mosaic", "mushroom_stem")):
+        return ""
+    return "solid" if set(p) <= STURDY_PROPS else ""
+
+
+def connected_state(state, me, sides, above):
+    """State of a pane, fence or wall with the neighbour kinds of SIDES (north, east, south, west) and above."""
+    name, _, props = state.partition("[")
+    wet = "waterlogged=true" in props
+    c = []
+    for (d, _, _), k in zip(SIDES, sides):
+        gate = k == ("gate_x" if d in ("north", "south") else "gate_z")    # a gate connects across its own axis
+        if me == "pane":
+            c.append(k in ("solid", "pane", "wall"))
+        elif me in ("fence", "nether_fence"):
+            c.append(k in ("solid", me) or gate)
+        else:
+            c.append(k in ("solid", "wall", "pane") or gate)
+    w = ["true" if wet else "false"]
+    if me != "wall":
+        p = {d: "true" if v else "false" for (d, _, _), v in zip(SIDES, c)}
+    else:
+        tall = above in ("solid", "wall")
+        p = {d: ("tall" if tall else "low") if v else "none" for (d, _, _), v in zip(SIDES, c)}
+        n, e, s, wst = (p[d] for d in ("north", "east", "south", "west"))
+        straight = (n == s) and (e == wst) and not (n == e == "none")
+        up = above == "wall" or not straight or (not (n == s == "tall" or e == wst == "tall") and above in ("solid", "post"))
+        p["up"] = "true" if up else "false"
+    p["waterlogged"] = w[0]
+    return f"{name}[{','.join(f'{k}={v}' for k, v in sorted(p.items()))}]"
+
+
 class Edits:
     """Blocks of trees, mines, cliffs and buildings.
 
@@ -529,6 +651,56 @@ class Edits:
             return
         X, Y, Z = np.meshgrid(np.arange(x0, x1), np.arange(y0, y1), np.arange(z0, z1), indexing="ij")
         self.add(X, Y, Z, block, hard)
+
+    def connect(self):
+        """Set the connection states of panes, bars, fences and walls from their final neighbours (#189).
+        Call it after all objects are placed. A position keeps its last hard block, else its first soft block;
+        a neighbour without an edit is solid when it is in the ground of its column."""
+        if not self.parts:
+            return
+        x, y, z, ids, hard = (np.concatenate(p) for p in zip(*self.parts))
+        key = ((x.astype(np.int64) + 4096) << 40) | ((y.astype(np.int64) + 1024) << 20) | (z.astype(np.int64) + 4096)
+        rank = np.where(hard, np.arange(len(key)) + len(key), len(key) - np.arange(len(key)))   # last hard, first soft
+        order = np.lexsort((rank, key))
+        last = np.r_[key[order][1:] != key[order][:-1], True]
+        keys, fid, fhard = key[order][last], ids[order][last], hard[order][last]
+        kinds = {}
+        kind = lambda i: kinds.setdefault(int(i), connect_kind(B.states[int(i)]))
+        uniq = np.unique(fid)
+        conn = [int(i) for i in uniq if kind(i) in ("pane", "fence", "nether_fence", "wall")]
+        if not conn:
+            return
+        sel = np.flatnonzero(np.isin(fid, conn))
+        X, Y, Z = (keys[sel] >> 40) - 4096, ((keys[sel] >> 20) & 0xFFFFF) - 1024, (keys[sel] & 0xFFFFF) - 4096
+        top = self.cols.top if self.cols is not None else None
+
+        def at(dx, dy, dz):
+            """Kind of the final block next to each selected block, with the direction for fence gates."""
+            k = ((X + dx + 4096) << 40) | ((Y + dy + 1024) << 20) | (Z + dz + 4096)
+            j = np.clip(np.searchsorted(keys, k), 0, len(keys) - 1)
+            found = keys[j] == k
+            out = np.full(len(k), "", object)
+            for i in np.unique(fid[j[found]]):
+                out[np.flatnonzero(found)[fid[j[found]] == i]] = kind(i)
+            if top is not None:
+                n = top.shape[0]
+                nx, nz = np.clip(X + dx, 0, n - 1), np.clip(Z + dz, 0, n - 1)
+                ground = ~found & (Y + dy <= top[nx, nz])
+                out[ground] = "solid"
+            return out
+
+        side = {d: at(dx, 0, dz) for d, dx, dz in SIDES}
+        above = at(0, 1, 0)
+        new = np.empty(len(sel), np.uint16)
+        cache = {}
+        for n, i in enumerate(fid[sel]):
+            me = kind(i)
+            ks = tuple(side[d][n] for d, _, _ in SIDES)
+            ck = (int(i), ks, above[n])
+            if ck not in cache:
+                cache[ck] = B(connected_state(B.states[int(i)], me, ks, above[n]))
+            new[n] = cache[ck]
+        self.parts.append((X.astype(np.int32), Y.astype(np.int32), Z.astype(np.int32), new, fhard[sel]))
 
     def by_chunk(self, width):
         """Return {(cx, cz): (x, y, z, id, hard)} with local x/z, in the order of addition."""
@@ -1204,7 +1376,7 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
                 continue
             y = (top + wtop) / 2 + 0.3
         elif boat and wtop > top:
-            y = WATER_Y + 0.5
+            y = wtop + 0.5
         else:
             col = vol[:, bz & 15, bx & 15]
             y = top + 1
@@ -1284,11 +1456,11 @@ def build_chunk(cx, cz, cols, edits):
     sl = (slice(x0, x0 + 16), slice(z0, z0 + 16))
     g = lambda a: a[sl].T[None]          # (1, z, x) for broadcasting against Y
     top, wtop, top_id, sub_id = g(cols.top), g(cols.wtop), g(cols.top_id), g(cols.sub_id)
-    ice, deco = g(cols.ice), cols.deco[sl].T
+    ice, deco, sub = g(cols.ice), cols.deco[sl].T, top - g(cols.sub_depth)
     Y = np.arange(MIN_Y, MAX_Y, dtype=np.int32)[:, None, None]
 
-    vol = np.where(Y < top - 3, np.where(Y < 0, DEEPSLATE, STONE), AIR).astype(np.uint16)
-    vol = np.where((Y >= top - 3) & (Y < top), sub_id, vol)
+    vol = np.where(Y < sub, np.where(Y < 0, DEEPSLATE, STONE), AIR).astype(np.uint16)
+    vol = np.where((Y >= sub) & (Y < top), sub_id, vol)
     vol = np.where(Y == top, top_id, vol)
     water = (Y > top) & (Y <= wtop)
     vol = np.where(water, np.where(ice & (Y == wtop), ICE, WATER), vol)
@@ -1570,6 +1742,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     book = place_book(cols, edits, spawn, texts, name)
     if book:
         print(f"  book with the scenario texts: lectern at {book}")
+    edits.connect()
     per_chunk = edits.by_chunk(cols.width)
     tick("objects")
     before = set(stats)

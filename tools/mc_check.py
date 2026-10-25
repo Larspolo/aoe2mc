@@ -6,7 +6,8 @@ Usage:
     python3 tools/mc_check.py WORLD [--version 1.21.1]     # exit 0: no problems, 1: problem lines (printed)
     python3 tools/mc_check.py --reports 1.21.1              # write tools/mcdata/1.21.1.json from Mojang's data
 
-Downloads (server jars, a JDK when the installed Java is too old) go to .cache/ (ignored by git).
+Downloads (server jars, a JDK when the installed Java is too old) go to ~/.cache/aoe2mc/mc, so that they stay
+after a new clone (scripts/cloud-setup.sh fills it in the cloud snapshot). Server folders go to .cache/.
 The server works on a copy of the world. It force-loads all chunks of the world, saves and stops.
 """
 import argparse
@@ -29,9 +30,9 @@ import urllib.request
 import zipfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CACHE = os.path.join(ROOT, ".cache", "mc")
+CACHE = os.path.join(os.environ.get("XDG_CACHE_HOME") or os.path.expanduser("~/.cache"), "aoe2mc", "mc")
 MANIFEST = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
-DEFAULT_VERSION = "1.21.1"
+DEFAULT_VERSION = "26.3"        # the default output version of aoe2mc
 # Log lines with WARN or ERROR that a correct world also gives
 HARMLESS = ("OFFLINE/INSECURE MODE", "make no attempt to authenticate", "possible to play without internet",
             'set "online-mode"', "Ambiguity between arguments", "Can't keep up!", "yggdrasil public key",
@@ -72,6 +73,12 @@ def server_jar(version):
     return download(s["url"], os.path.join(CACHE, version, "server.jar"), s["sha1"])
 
 
+def workdir():
+    path = os.path.join(ROOT, ".cache")         # server folders: in the repository (ignored by git), not in /tmp
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
 def java_major(java):
     try:
         out = subprocess.run([java, "-version"], capture_output=True, text=True).stderr
@@ -84,7 +91,8 @@ def java_major(java):
 def java_for(version):
     """A java binary with the major version that the version JSON asks for (or newer)."""
     need = version_json(version).get("javaVersion", {}).get("majorVersion", 21)
-    for java in [shutil.which("java")] + sorted(glob.glob(os.path.join(CACHE, "jdk-*", "*", "bin", "java"))):
+    for java in [shutil.which("java")] + sorted(glob.glob("/usr/lib/jvm/*/bin/java")) + \
+            sorted(glob.glob(os.path.join(CACHE, "jdk-*", "*", "bin", "java"))):         # apt installs into /usr/lib/jvm
         if java and java_major(java) >= need:
             return java
     # Download a Temurin JRE from the Adoptium releases on GitHub. Do not install it system-wide.
@@ -169,7 +177,7 @@ def check(world, version=DEFAULT_VERSION, timeout=300, keep=None):
     keep: copy the world that the server saved to this folder (to read the NBT as Minecraft wrote it)."""
     jar, java = server_jar(version), java_for(version)
     x0, z0, x1, z1 = chunks(world)
-    with tempfile.TemporaryDirectory(dir=os.path.join(ROOT, ".cache")) as folder:
+    with tempfile.TemporaryDirectory(dir=workdir()) as folder:
         shutil.copytree(world, os.path.join(folder, "world"))
         with open(os.path.join(folder, "eula.txt"), "w") as f:
             f.write("eula=true\n")
@@ -204,7 +212,7 @@ def check(world, version=DEFAULT_VERSION, timeout=300, keep=None):
 def reports(version):
     """Write tools/mcdata/VERSION.json (format of fetch_mcdata.py) from Mojang's data reports."""
     jar, java = server_jar(version), java_for(version)
-    with tempfile.TemporaryDirectory(dir=os.path.join(ROOT, ".cache")) as folder:
+    with tempfile.TemporaryDirectory(dir=workdir()) as folder:
         subprocess.run([java, "-DbundlerMainClass=net.minecraft.data.Main", "-jar", jar, "--reports",
                         "--output", "gen"], cwd=folder, check=True, capture_output=True)
         with open(os.path.join(folder, "gen", "reports", "blocks.json")) as f:
