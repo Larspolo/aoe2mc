@@ -177,7 +177,7 @@ Do not change a priority that the owner set. Propose it.
 
 ## More tickets
 
-If the argument asks for more than 1 ticket, go back to step 3 after step 8 (read new owner feedback first). In a cloud session, reset the
+If the argument asks for more than 1 ticket, go back to step 2 after step 8 (finish stalled PRs of other runs, then read new owner feedback). In a cloud session, reset the
 branch first: `git fetch origin main && git checkout -B <branch> origin/main`, then `git push --force-with-lease`
 (a plain `git push -u` when the branch is not on the remote: `--force-with-lease` fails there).
 Stop when the context is more than half full.
