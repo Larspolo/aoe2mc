@@ -56,6 +56,8 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Sacred tree | `oak_log`, `oak_leaves[persistent=true]` | `pagan_shrine` |
 | Sail | wool (player color) | `flagship` |
 | Hides | `brown_wool` | `helepolis` |
+| Band in the player color | `*_wool` (player color) | `town_center` |
+| Outside stairs to an upper floor | `*_stairs` of the wood of the set | `town_center` |
 | Books, study | `bookshelf`, `lectern` | none yet (`university` needs them) |
 
 Add a line when a design uses a new feature block. Each new block state must pass `mcvalid`.
