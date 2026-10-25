@@ -28,7 +28,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   `actions/checkout` fails with "Repository not found".
 
 - Minecraft server: a bad property value (`facing=up`) loads silently as the default state. An unknown block
-  name gives "Recoverable errors when loading section". Each run logs "key missing: DragonFight" (#60).
+  name gives "Recoverable errors when loading section". A missing `level.dat` compound
+  gives "key missing: <name>" (`DragonFight` until #60).
   The yggdrasil key error is normal: `api.minecraftservices.com` is not reachable.
 
 - AoE2 wiki: HTML pages give a Cloudflare challenge (403). The MediaWiki API works: `ageofempires.fandom.com/

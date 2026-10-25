@@ -34,8 +34,7 @@ MANIFEST = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
 DEFAULT_VERSION = "1.21.1"
 # Log lines with WARN or ERROR that a correct world also gives
 HARMLESS = ("OFFLINE/INSECURE MODE", "make no attempt to authenticate", "possible to play without internet",
-            'set "online-mode"', "Ambiguity between arguments", "Can't keep up!", "yggdrasil public key",
-            "key missing: DragonFight")     # #60 removes this entry
+            'set "online-mode"', "Ambiguity between arguments", "Can't keep up!", "yggdrasil public key")
 PROBLEM = re.compile(r"/(WARN|ERROR|FATAL)\]|Exception|Invalid|Unknown block|Couldn't|Failed")
 
 
