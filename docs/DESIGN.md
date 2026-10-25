@@ -72,7 +72,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Chhatri (small domed kiosk) | `quartz_pillar` posts and a small dome | `taj` (Wonder, South Asian) |
 | Chain, rope | `chain` | `dock`, `siege_workshop`, `shipyard`, `harbor_chain` |
 | Bartizan (corner turret) | stone, `smooth_quartz` cap, `lightning_rod` | `feitoria` |
-| Terracotta roof (Portuguese, Sicilian) | `brick` stairs | `feitoria`, `donjon` |
+| Terracotta roof (Portuguese, Sicilian, Polish) | `brick` stairs | `feitoria`, `donjon`, `folwark` |
 | Portcullis, grille | `iron_bars` | `gate`, `castle`, `krepost` |
 | Wooden hoarding | wood slab (top) or `spruce_planks` with a `*_fence` rail | `donjon`, `krepost` |
 | Coat of arms | `*_wall_banner` (player color) over the gate | `donjon` |
@@ -91,6 +91,8 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Rose window | stained glass panes | `monastery` |
 | Orange roof tiles (Krepost) | `red_sandstone` stairs and blocks | `krepost` |
 | Cannon | `polished_basalt` barrel on its side | `tower` (bombard) |
+| Kitchen garden | `carrots`, `potatoes`, `wheat` (age 7) on `farmland`, `spruce_fence` with a `spruce_fence_gate` | `folwark` |
+| Windmill sails | `spruce_fence` arms with `white_wool` cloth, `stripped_spruce_log` hub | `mill`, `folwark` |
 
 Add a line when a design uses a new feature block. Each new block state must pass `mcvalid`.
 
