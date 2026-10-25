@@ -24,7 +24,7 @@ The README already uses this style. Keep it.
 | 3D image | `python3 tools/render.py building CASTLE --arch western OUT.png` (or `world OUTWorld X0 Z0 X1 Z1 OUT.png`) |
 | Check states | `tools/mcvalid.py` (`block_error`, `entity_error`, `biome_error`) |
 | Coverage of AoE2 types | `python3 tools/coverage.py` writes `docs/coverage.md` (designs, mappings, fallbacks) |
-| Server check | `python3 tools/mc_check.py OUTWorld` (headless Minecraft, load errors), `python3 -m pytest -m mc` |
+| Server check | `python3 tools/mc_check.py OUTWorld` (headless Minecraft, load errors; `--keep DIR` keeps the saved world), `python3 -m pytest -m mc` |
 | Minecraft data | `python3 tools/mc_check.py --reports VERSION` (exact, from Mojang) or `tools/fetch_mcdata.py VERSION` writes `tools/mcdata/VERSION.json` |
 | Block colors | `python3 tools/fetch_colors.py VERSION` writes `tools/mcdata/colors-VERSION.json` (for `render.py`) |
 
@@ -59,7 +59,7 @@ Design work (buildings, objects, units, animals) follows `docs/DESIGN.md`. Do de
 - Output is deterministic: all randomness comes from seeded `numpy` generators. Keep it so.
 - Target: Minecraft Java 1.21.1 (`DATA_VERSION = 3955`). Newer versions upgrade the world on load.
   `VERSIONS` in `aoe2mc.py` holds the profile per output version (`--mc-version`); format changes: `docs/minecraft-versions.md`.
-- Global state: `aoe2mc.B` (block registry), `aoe2mc.MOVED`, `buildings.BARRIERS`, `buildings.TURN` (`--orientation`), `buildings.BRIDGE_CELLS`.
+- Global state: `aoe2mc.B` (block registry), `aoe2mc.MOVED`, `aoe2mc.BLOCK_DATA` (extra block entity NBT), `buildings.BARRIERS`, `buildings.TURN` (`--orientation`), `buildings.BRIDGE_CELLS`.
   Tests share `B`, so `B.states` holds the states of all earlier tests.
 
 ## Code style

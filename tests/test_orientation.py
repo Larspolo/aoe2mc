@@ -97,3 +97,15 @@ def test_lone_diagonal_gate_turns():
         assert buildings.plan_walls([o])[1][id(o)] == "diag+"
     finally:
         buildings.TURN = 0
+
+
+def test_book_is_in_the_spawn_view():
+    """The lectern with the scenario texts is in front of the turned spawn view (south-west for sw)."""
+    for k, want in ((0, (42, 38)), (2, (38, 42))):
+        cols = aoe2mc.Columns(20, np.zeros((20, 20), np.int16), np.zeros((20, 20), np.float32), {0: "GRASS_1"}, 4, 3,
+                              np.random.default_rng(1))
+        buildings.TURN = k
+        try:
+            assert aoe2mc.place_book(cols, aoe2mc.Edits(), (40, 70, 40), {"instructions": "Win."}, "t")[::2] == want
+        finally:
+            buildings.TURN = 0

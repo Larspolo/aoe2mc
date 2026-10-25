@@ -72,6 +72,9 @@ The program reads the player color and civilization from the scenario. Each civi
 Other supported objects: bridges, aqueducts, army tents, pavilions, yurts, huts, the amphitheatre, monuments,
 landmark cathedrals, mountains, quarries, graves, ruins and shipwrecks.
 
+The scenario texts (instructions, hints, victory, loss, history, scouts) are in a written book on a lectern
+near the spawn. Each text is a chapter. There is no lectern when all texts are empty.
+
 ## Units
 
 All units stand still (no AI), do not despawn and are silent. Each unit has a name tag with its AoE2 name in the player color.
