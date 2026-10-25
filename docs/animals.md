@@ -128,3 +128,7 @@ lists the herdable animals and the huntable animals without an attack. Minecraft
 | `LYNX` | aggressive | [wiki](https://ageofempires.fandom.com/wiki/Lynx) | `wolf` | variant=rusty, AngerTime=2147483647 | neutral; with AngerTime it is angry | No hostile cat or wolf exists. An angry wolf (AngerTime) has red eyes; the variant gives the fur color. |
 | `ELK` | defensive | [wiki](https://ageofempires.fandom.com/wiki/Elk) | `llama` | Variant=2 | neutral (fights back when hit) | The llama spits back when hit, and has the size and the long neck of an elk. The goat rams on its own. |
 | `PHEASANT` | passive | [Animal](https://ageofempires.fandom.com/wiki/Animal) | `chicken` | – | passive |  |
+| `PEACOCK` | passive | [Animal](https://ageofempires.fandom.com/wiki/Animal) | `chicken` | – | passive | A bird that walks (#28). |
+| `FLAMINGO` | passive | [Animal](https://ageofempires.fandom.com/wiki/Animal) | `chicken` | – | passive | A bird that walks (#28). |
+| `STORK` | passive | [Animal](https://ageofempires.fandom.com/wiki/Animal) | `chicken` | – | passive | A bird that walks (#28). |
+| `RED_CROWN_CRANE` | passive | [Animal](https://ageofempires.fandom.com/wiki/Animal) | `chicken` | – | passive | A bird that walks (#28). |

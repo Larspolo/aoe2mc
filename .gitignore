@@ -14,3 +14,5 @@ preview.png
 # Package build output
 build/
 *.egg-info/
+# Git worktrees of agents and comparisons (never commit them)
+.claude/worktrees/

@@ -4,15 +4,18 @@ Isometric 3D image of a building design or of an area of a written world. To loo
 
 Usage:
     python3 tools/render.py building CASTLE --arch western OUT.png       # [--tile-size 4] [--view se] [--scale 8]
+    python3 tools/render.py sheet HOUSE OUT.png                           # all architecture sets, 3 variants each
     python3 tools/render.py world WORLD X0 Z0 X1 Z1 OUT.png               # [--view se] [--scale 8]
 
 The default view is from the south-east (the AoE2 camera side, the front of a building). Top faces are
-lighter, side faces darker. Barriers and air are invisible. Transparent blocks (glass, leaves ...) are lighter.
+lighter, side faces darker. Colors come from the textures (tools/fetch_colors.py). Barriers and air are invisible. Transparent blocks (glass, leaves ...) are lighter.
 
     import render
     render.render(xs, ys, zs, states, "out.png")        # states: one state name per block
 """
 import argparse
+import functools
+import json
 import os
 import sys
 
@@ -26,7 +29,7 @@ import aoe2mc  # noqa: E402
 
 INVISIBLE = ("air", "cave_air", "void_air", "barrier", "structure_void", "light")
 TRANSPARENT = ("glass", "leaves", "water", "ice", "iron_bars", "chain", "fence", "pane", "torch", "lantern",
-               "grass", "fern", "flower", "bush", "sapling", "seagrass", "carpet", "banner", "button", "rail")
+               "short_grass", "tall_grass", "fern", "flower", "bush", "sapling", "seagrass", "carpet", "banner", "button", "rail")
 SHADE = np.array([1.08, 0.82, 0.62])            # top, south (left) and east (right) faces, for the south-east view
 ROT = {"se": lambda x, z: (x, z), "sw": lambda x, z: (z, -x), "ne": lambda x, z: (-z, x), "nw": lambda x, z: (-x, -z)}
 
@@ -52,16 +55,35 @@ def sprite(s):
     return du, dv, f, edge
 
 
+@functools.lru_cache(maxsize=None)
+def texture_colors(version="1.21.1"):
+    """{block name: (top RGB, side RGB)} from the textures (tools/fetch_colors.py), or {} without the file."""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mcdata", f"colors-{version}.json")
+    if not os.path.exists(path):
+        return {}
+    with open(path) as f:
+        return json.load(f)["blocks"]
+
+
 def colors(states):
-    """RGB per state and a transparent flag. Unknown states keep the gray of block_color()."""
-    rgb = np.array([aoe2mc.block_color(s if ":" in s else "minecraft:" + s) for s in states], float)
+    """RGB per state and face (top, side), and a transparent flag. A block without texture colors uses block_color()."""
+    tex = texture_colors()
+    rgb = np.array([tex.get(base_name(s)) or [aoe2mc.block_color(s if ":" in s else "minecraft:" + s)] * 2
+                    for s in states], float)
     clear = np.array([any(k in base_name(s) for k in TRANSPARENT) for s in states])
     rgb[clear] = rgb[clear] * 0.6 + 255 * 0.4
     return rgb, clear
 
 
-def render(xs, ys, zs, states, out, view="se", scale=8, background=(255, 255, 255, 0)):
+def render(xs, ys, zs, states, out, **kw):
     """Draw blocks at (xs, ys, zs) with state names `states` as an isometric PNG. Return the image size."""
+    img = draw(xs, ys, zs, states, **kw)
+    img.save(out)
+    return img.size
+
+
+def draw(xs, ys, zs, states, view="se", scale=8, background=(255, 255, 255, 0)):
+    """The isometric image (PIL, RGBA) of blocks at (xs, ys, zs) with state names `states`."""
     names = sorted(set(states))
     idx = {n: i for i, n in enumerate(names)}
     sid = np.array([idx[s] for s in states], np.int32)
@@ -70,8 +92,7 @@ def render(xs, ys, zs, states, out, view="se", scale=8, background=(255, 255, 25
     show = ~np.array([base_name(n) in INVISIBLE for n in names])[sid]
     xs, ys, zs, sid = xs[show], ys[show], zs[show], sid[show]
     if not len(xs):
-        Image.new("RGBA", (1, 1), background).save(out)
-        return 1, 1
+        return Image.new("RGBA", (1, 1), background)
     rgb, clear = colors(names)
     # Hide blocks that have opaque blocks on all three visible sides
     lo = np.array([xs.min(), ys.min(), zs.min()])
@@ -94,24 +115,24 @@ def render(xs, ys, zs, states, out, view="se", scale=8, background=(255, 255, 25
     first = np.r_[True, pix[1:] != pix[:-1]]
     k = order[first]
     blk, f = k // len(du), k % len(du)
-    col = rgb[sid[blk]] * SHADE[face[f]][:, None] * np.where(edge[f], 0.85, 1.0)[:, None]
+    col = rgb[sid[blk], np.minimum(face[f], 1)] * SHADE[face[f]][:, None] * np.where(edge[f], 0.85, 1.0)[:, None]
     img = np.zeros((H * W, 4), np.uint8)
     img[:] = background
     img[pix[first], :3] = np.clip(col, 0, 255).astype(np.uint8)
     img[pix[first], 3] = 255
-    Image.fromarray(img.reshape(H, W, 4), "RGBA").save(out)
-    return W, H
+    return Image.fromarray(img.reshape(H, W, 4), "RGBA")
 
 
-def building_blocks(name, arch, T=4):
-    """Blocks of one building design on flat grass: (xs, ys, zs, states)."""
+def building_blocks(name, arch, T=4, variant=0):
+    """Blocks of one building design on flat grass: (xs, ys, zs, states).
+    The design seeds its random numbers from the position, so another variant number gives another variant."""
     import buildings
     size = 16
     cols = aoe2mc.Columns(size, np.zeros((size, size), np.int16), np.zeros((size, size), np.float32),
                           {0: "GRASS_1"}, T, 3, np.random.default_rng(1))
     E = aoe2mc.Edits(cols)
     players = {1: {"color": "blue", "arch": arch, "civ": "RENDER"}}
-    o = dict(kind="B", name=name, player=1, x=size / 2, y=size / 2, rotation=0.0, hero=False, garrisoned=False)
+    o = dict(kind="B", name=name, player=1, x=size / 2 + variant % 3, y=size / 2 + variant // 3, rotation=0.0, hero=False, garrisoned=False)
     walls, gates = buildings.plan_walls([o])
     buildings.place_building(E, cols, aoe2mc.B, o, players, walls, gates)
     if not E.parts:
@@ -152,6 +173,24 @@ def world_blocks(path, x0, z0, x1, z1, y0=aoe2mc.MIN_Y):
     return np.concatenate(out[0]), np.concatenate(out[1]), np.concatenate(out[2]), out[3]
 
 
+def sheet(name, out, view="se", scale=6, variants=3, T=4):
+    """One image with the design in all architecture sets (rows) and some variants (columns)."""
+    import buildings
+    from PIL import ImageDraw
+    rows = [(arch, [draw(*building_blocks(name, arch, T, v), view=view, scale=scale) for v in range(variants)])
+            for arch in sorted(buildings.ARCH)]
+    cw = max(i.width for _, r in rows for i in r) + 8
+    ch = max(i.height for _, r in rows for i in r) + 16
+    img = Image.new("RGB", (cw * variants, ch * len(rows)), (255, 255, 255))
+    d = ImageDraw.Draw(img)
+    for j, (arch, row) in enumerate(rows):
+        d.text((4, j * ch + 2), arch, fill=(0, 0, 0))
+        for i, im in enumerate(row):
+            img.paste(im, (i * cw, j * ch + 14), im)
+    img.save(out)
+    return img.size
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0], formatter_class=argparse.RawTextHelpFormatter)
     sub = ap.add_subparsers(dest="mode", required=True)
@@ -159,18 +198,26 @@ def main():
     b.add_argument("name", help="AoE2 building name, for example CASTLE or HOUSE")
     b.add_argument("--arch", default="western", help="architecture set (see buildings.ARCH)")
     b.add_argument("--tile-size", type=int, default=4)
+    h = sub.add_parser("sheet", help="one building in all architecture sets and some variants")
+    h.add_argument("name")
+    h.add_argument("--variants", type=int, default=3)
+    h.add_argument("--tile-size", type=int, default=4)
     w = sub.add_parser("world", help="an area of a written world")
     w.add_argument("world")
     for k in ("x0", "z0", "x1", "z1"):
         w.add_argument(k, type=int)
     w.add_argument("--y0", type=int, default=aoe2mc.WATER_Y - 12, help="lowest Y to draw (default: %(default)s)")
-    for p in (b, w):
+    for p in (b, h, w):
         p.add_argument("out")
         p.add_argument("--view", choices=sorted(ROT), default="se")
-        p.add_argument("--scale", type=int, default=8, help="pixels per half block edge (even number)")
+        p.add_argument("--scale", type=int, default=6 if p is h else 8, help="pixels per half block edge (even number)")
     a = ap.parse_args()
     if a.scale < 2 or a.scale % 2:
         ap.error("--scale must be an even number >= 2")
+    if a.mode == "sheet":
+        W, H = sheet(a.name.upper(), a.out, a.view, a.scale, a.variants, a.tile_size)
+        print(f"Wrote {a.out}: {W}x{H} pixels")
+        return
     if a.mode == "building":
         blocks = building_blocks(a.name.upper(), a.arch, a.tile_size)
     else:
