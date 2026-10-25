@@ -5,7 +5,7 @@ import coverage as cov
 
 # Allowed maximums (ratchet). Do not change them in a PR: the workflow coverage.yml lowers them on main (#233).
 MAX = {"Buildings": {"fallback": 0, "default": 0},
-       "Other objects": {"fallback": 33, "default": 0},
+       "Other objects": {"fallback": 23, "default": 0},
        "Units": {"fallback": 3, "default": 0},
        "Heroes": {"fallback": 0, "default": 0}}
 
