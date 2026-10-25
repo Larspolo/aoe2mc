@@ -36,6 +36,8 @@ Two ways:
 Copy the folder `MyMapWorld` into your Minecraft `saves` folder. Open it in Minecraft Java 26.3 or newer. For an older game (1.21.1 to 26.2), convert with `--mc-version 1.21.1`.
 The world is in creative mode. Outside the map there is only void. The world list shows a small top view of the map
 (`icon.png`).
+The file `aoe2mc.json` in the world folder lists the map size, the players and each object: AoE2 ID, name, owner,
+tile position and rotation, the UUID of the entity (units) and the footprint in blocks (buildings). A game program can use it.
 
 | Option | Default | Description |
 |---|---|---|
