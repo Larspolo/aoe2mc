@@ -83,6 +83,9 @@ owns (see "Runs can overlap"):
 - CI red or owner review comments → fix it now. That is the work of this cycle: continue at step 6.8.
 - Merge conflict (label `conflict`, or `mergeable_state` is `dirty`, often with no CI run) → step 6.10, then
   continue at step 6.8. Remove the label `conflict` when you push the fix.
+  The workflow `unconflict.yml` (after each merge and every 15 minutes) merges `origin/main` into a conflicted PR
+  whose head is older than 10 minutes when git solves the conflict alone (`merge=union` files), and starts CI (#280).
+  So a conflict that stays is a real one.
 
 ## 3. Read the owner's feedback
 
