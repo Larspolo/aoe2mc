@@ -53,6 +53,7 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   the right, (0, max) the bottom (`AoE2ScenarioParser` `area.py`, `CORNERS`). Tile x goes up-right, tile y
   down-right. Block x = east, z = south keeps the handedness: the world is turned 45°, not mirrored. The AoE2 top
   corner is the north-east corner. A 90° turn of the grid cannot make "screen up" more north than now.
+  The spawn view looks north-east like the AoE2 camera (`SPAWN_YAW`).
 
 - The tiny scenario has only a town center, a house and a barracks. To see the golden test fail, change a
   block that these designs draw last (for example the house chimney).
