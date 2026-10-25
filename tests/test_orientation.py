@@ -86,3 +86,14 @@ def test_convert_with_orientation(tmp_path):
     assert float(world_reader.World(str(tmp_path / "W")).level()["SpawnAngle"]) == 135
     assert "units in a block (moved up): 0" in out.getvalue() or "moved up" not in out.getvalue()
     assert buildings.TURN == 0
+
+
+def test_lone_diagonal_gate_turns():
+    """Without walls next to it, a diagonal gate takes its diagonal from the name; an odd turn swaps it."""
+    o = dict(kind="B", name="GATE_NORTH_TO_SOUTH", x=8.5, y=8.5)
+    assert buildings.plan_walls([o])[1][id(o)] == "diag-"
+    buildings.TURN = 1
+    try:
+        assert buildings.plan_walls([o])[1][id(o)] == "diag+"
+    finally:
+        buildings.TURN = 0

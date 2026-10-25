@@ -45,3 +45,36 @@ def test_weather_does_not_depend_on_the_order_of_block_ids():
     for s in sorted({v for opts in buildings.TEXTURE.values() for v, _ in opts} | set(buildings.TEXTURE)):
         other(s)
     assert weathered(aoe2mc.Blocks()) == weathered(other)
+
+
+def gate_solid(name, wall_tiles=()):
+    """Solid blocks at head height of a gate at tile (8, 8), as a set of block (x, z), and the gate direction."""
+    cols, B = flat_columns(), aoe2mc.B
+    E = aoe2mc.Edits(cols)
+    obj = lambda n, x, y: dict(kind="B", name=n, player=1, x=x, y=y, rotation=0.0, hero=False, garrisoned=False)
+    o = obj(name, 8.5, 8.5)
+    walls, gates = buildings.plan_walls([o] + [obj("STONE_WALL", x + 0.5, y + 0.5) for x, y in wall_tiles])
+    buildings.place_building(E, cols, B, o, {1: {"color": "blue", "arch": "western"}}, walls, gates)
+    x, y, z, ids, _ = (np.concatenate(p) for p in zip(*E.parts))
+    head = (y == int(cols.wtop.max()) + 2) & (ids != B("air"))
+    return {(int(a), int(b)) for a, b in zip(x[head], z[head])}, gates[id(o)]
+
+
+@pytest.mark.parametrize("name", ["GATE_WEST_TO_EAST", "PALISADE_GATE_NORTH_TO_SOUTH", "FORTIFIED_GATE_WEST_TO_EAST"])
+def test_diagonal_gates_are_drawn_on_the_diagonal(name):
+    """Screen west-east is the tile diagonal (+1, +1), screen north-south is (+1, -1) (#25)."""
+    solid, d = gate_solid(name)
+    x0 = 28                                              # (8.5 - 1.5) * T
+    if d == "diag-":
+        solid = {(x, 2 * x0 + 11 - z) for x, z in solid}  # mirror back
+    assert d == ("diag-" if "NORTH_TO_SOUTH" in name else "diag+")
+    assert {(x0 + 1, x0 + 1), (x0 + 10, x0 + 10)} <= solid           # the towers on the end tiles
+    assert not solid & {(x0 + 6, x0 + 6), (x0 + 5, x0 + 6), (x0 + 6, x0 + 5)}   # the opening in the middle
+    assert not solid & {(x0, x0 + 11), (x0 + 11, x0)}                 # the corners off the diagonal stay free
+    assert all(abs(x - z) <= T // 2 for x, z in solid)
+
+
+def test_wall_tiles_decide_the_diagonal_of_a_gate():
+    assert gate_solid("GATE_WEST_TO_EAST", [(10, 6), (6, 10)])[1] == "diag-"
+    assert gate_solid("GATE_NORTH_TO_SOUTH", [(10, 10), (6, 6)])[1] == "diag+"
+    assert gate_solid("GATE_SOUTHWEST_TO_NORTHEAST", [(10, 8), (5, 8)])[1] is False
