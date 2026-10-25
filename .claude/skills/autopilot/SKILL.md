@@ -209,7 +209,9 @@ If the argument asks for more than 1 ticket, go back to step 2 after step 8 (fin
 feedback). In a
 cloud session, reset the branch first: `git fetch origin main && git checkout -B <branch> origin/main`. Then push with
 `git fetch origin <branch> && git push --force-with-lease origin <branch> && git branch -u origin/<branch>`
-(a plain `git push -u origin <branch>` when the branch is not on the remote).
+(a plain `git push -u origin <branch>` when the branch is not on the remote). If the auto mode denies the force push
+("Git Destructive"), do not ask: `git merge --no-edit origin/<branch>` (its commits are on main already, so the PR diff
+stays the same), then `git push origin HEAD:<branch>`.
 The session branch can carry only one open PR: do the next ticket in a local commit, and push it only when the PR
 of the last ticket is merged or closed (`/pulls?head=Larspolo:<branch>&state=open` is empty). Else a push replaces
 the open PR. After `checkout -B` the upstream is
