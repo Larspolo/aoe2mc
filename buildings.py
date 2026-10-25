@@ -471,13 +471,24 @@ def house(c, w, st, col, T, ctx):
         c.box(sx0, sx1, 3, 4, z0, z1, family(st.roof)[1] + "[type=bottom]")
         c.box(sx0, sx1, 1, 3, z0 + 1, z1 - 1, "spruce_log[axis=z]" if rng.random() < 0.5 else "oak_log[axis=z]")
         c.box(sx0, sx1, 2, 3, z0 + 1 + (z1 - z0) // 2, z1 - 1, "air")
-    # chimney with smoke on a random corner
+    # stone chimney with smoke on a random corner: only the European half-timbered houses have one in the game
     cx = x0 + 1 if rng.random() < 0.5 else x1 - 2
     cz = z0 + 1 if rng.random() < 0.6 else z1 - 2
     if kind == "jetty":
         cz = z0 + 1
-    c.box(cx, cx + 1, 1, top + 2, cz, cz + 1, "bricks" if st.shape != "flat" else st.stone)
-    c.set(cx, top + 2, cz, "campfire[lit=true,signal_fire=false]")
+    if st.shape == "gable":
+        c.box(cx, cx + 1, 1, top + 2, cz, cz + 1, st.stone2)
+        c.set(cx, top + 2, cz, "campfire[lit=true,signal_fire=false]")
+    if st.shape == "flat" and m and z1 - z0 > wall_top + 1:
+        # flat roof terrace: an outside stair in the free margin (east, or west of a shed), and a cloth awning in
+        # the player color over the door
+        sx, rx = (x0 - 1, x0) if kind == "shed" else (x1, x1 - 1)
+        for k in range(wall_top + 1):
+            z = z1 - 1 - k
+            c.box(sx, sx + 1, 1, 1 + k, z, z + 1, st.stone)
+            c.set(sx, 1 + k, z, stair(family(st.roof)[0], "north"))
+        c.set(rx, wall_top + 2, z1 - 1 - wall_top, "air")                 # a gap in the parapet
+        c.box(mid - 1, mid + 2, 3, 4, z1, z1 + 1, f"{col}_wool")
     if kind == "jetty":
         c.banner(mid + 1, 1, z1 - 1, col)
     else:
