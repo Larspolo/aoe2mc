@@ -53,6 +53,9 @@ The file `.github/labels.txt` defines the labels. The Labels workflow creates th
   To set it: open claude.ai/code/routines → the task → menu next to its name → **Edit** → **Advanced
   settings** → **General** → **Repository** → `Larspolo/aoe2mc`. Below it, select the **Cloud environment**
   that allows the Mojang hosts. Select the model in the model selector of the prompt box. **Save changes**.
+  More runs can work at the same time (start them with **Run now**). They claim tickets with a comment, so two
+  runs do not do the same ticket. With the argument `max`, a run continues until no ticket is ready, and it
+  starts a fresh run when its context is half full. To stop all runs: add `paused` to the status issue.
 - **On your computer**: `scripts/autopilot.sh 3` runs 3 cycles, one ticket each.
   It needs the Claude Code CLI and the GitHub CLI (`gh auth login`).
 - **By hand**: open a Claude Code session in this repository and type `/autopilot`.

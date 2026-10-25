@@ -42,7 +42,7 @@ Put the method after the path (`... -X PATCH`): the permission rules match the s
 
 ## Runs can overlap
 
-A scheduled run starts every hour, so another run can be active. A ticket with `in-progress`, and its PR,
+Several runs work at the same time: the owner wants maximum use of the quota. A ticket with `in-progress`, and its PR,
 belong to the other run when the ticket or the PR changed less than 2 hours ago: do not touch them.
 After 2 hours without a change the other run is dead: take the ticket over and say so in a comment.
 A PR whose ticket has no `in-progress` label is free: any run can finish and merge it (hand-off, step 6.8).
@@ -92,7 +92,10 @@ Candidates: open issues without `needs-human`, `blocked`, `epic`, `agent-status`
 "Depends on: #n" issues are all closed. Order: `P0`, `P1`, `P2`, `P3`, then the lowest issue number.
 If there is no candidate, go to step 8 and report "No ticket is ready".
 If the top candidate has `size:L`, split it now (`ticket` skill), then pick again.
-Claim it: add `in-progress` and comment "Started." (one line).
+Claim it: add `in-progress` and comment "Started by `<your branch>`." (one line). Then read the comments of
+the ticket again. If an older "Started by" comment of another branch has no "Released" comment after it, the
+other run owns the ticket: comment "Released: claimed twice by `<your branch>`." and pick the next candidate.
+Do not remove the label: it belongs to the other run.
 
 ## 6. Do the ticket
 
@@ -171,3 +174,8 @@ If the argument asks for more than 1 ticket, go back to step 5 after step 8. In 
 branch first: `git fetch origin main && git checkout -B <branch> origin/main`, then `git push --force-with-lease`
 (a plain `git push -u` when the branch is not on the remote: `--force-with-lease` fails there).
 Stop when the context is more than half full.
+
+Argument `max`: continue until no ticket is ready or a usage limit stops you. When the context is more than half
+full and tickets are still ready, start a fresh run, then stop: fire the scheduled task that started this run
+(its ID is in the run prompt) once with `fire_trigger`. Never fire it when no ticket is ready, when the status
+issue has `paused`, or after a usage-limit error. A fresh run has a small context, so it works faster.
