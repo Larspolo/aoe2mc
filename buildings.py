@@ -1410,6 +1410,40 @@ def furnish_worship(c, x0, x1, z0, z1, y, kind, st, aisle=None):
                 c.set(x, y, z, stair(f"{wood}_stairs", "south"))
 
 
+def throne_hall(c, x0, x1, z0, z1, y, st, col, aisle=None):
+    """Furniture of a Wonder hall (#336), the same room convention as furnish_worship: a throne at the back (z0)
+    between two gold blocks with lanterns, banners in the player color over it, a carpet in the player color to
+    the door, the treasure (chests, gold) in the back corners, pillars along the carpet and lecterns in a large
+    hall. The aisle and the row in front of the door stay free."""
+    if x1 - x0 < 3 or z1 - z0 < 2:
+        return
+    mid = (x0 + x1 - 1) // 2 if aisle is None else aisle
+    wood = st.wood.replace("_planks", "")
+    wood = wood if wood in WOODS else "spruce"
+    chest = "chest[facing=south,type=single,waterlogged=false]"
+    for x, dx in ((x0, 1), (x1 - 1, -1)):                                 # the treasure
+        if abs(x - mid) >= 2:
+            c.set(x, y, z0, chest)
+        if abs(x + dx - mid) >= 2:
+            c.set(x + dx, y, z0, "gold_block")
+    c.set(mid, y, z0, stair(f"{wood}_stairs", "north"))                   # the throne: the backrest is on the north side
+    for x in (mid - 1, mid + 1):
+        c.set(x, y, z0, "gold_block"); c.set(x, y + 1, z0, "lantern[hanging=false,waterlogged=false]")
+    for x in {mid, max(x0, mid - 2), min(x1 - 1, mid + 2)}:
+        c.banner(x, y + 2, z0, col)
+    c.box(mid, mid + 1, y, y + 1, z0 + 1, z1 - 1, f"{col}_carpet")
+    if x1 - x0 < 7 or z1 - z0 < 5:
+        return
+    air = (-1, c.B("air"))
+    for z in range(z0 + 2, z1 - 1, 3):
+        for x in (mid - 2, mid + 2):
+            top = next((t for t in range(y, c.height) if c.get(x, t, z) not in air), y + 3)
+            c.box(x, x + 1, y, top, z, z + 1, "quartz_pillar")
+    zl = (z0 + z1) // 2
+    c.set(x0, y, zl, "lectern[facing=east,has_book=true,powered=false]")
+    c.set(x1 - 1, y, zl, "lectern[facing=west,has_book=true,powered=false]")
+
+
 def mill(c, w, st, col, T, ctx):
     if st.mill != "windmill":
         return granary(c, w, st, col, T, ctx)
@@ -2334,6 +2368,14 @@ def samarra(c, w, st, col, T, ctx):
             x, z = int(round(cx + (r + 0.4) * math.cos(a))), int(round(cx + (r + 0.4) * math.sin(a)))
             c.set(x, y + k // 4, z, st.stone2)
         y += th
+    # A hall in the lowest tier, with a door to the south through the ramp
+    hr = int(r0) - 1
+    c.cylinder(cx, cx, r0 - 1, 2, 1 + th, "air")
+    c.box(mid, mid + 1, 2, 4, mid + hr, w - 1, "air")
+    c.door(mid, 2, mid + hr)
+    q = (r0 - 1) / math.sqrt(2)                                           # the square inside the round wall
+    h0, h1 = math.ceil(cx - q), math.floor(cx + q) + 1
+    throne_hall(c, h0, h1, h0, h1, 2, st, col, aisle=mid)
     for x, z in ((mid - 1, mid - 1), (mid + 1, mid - 1), (mid - 1, mid + 1), (mid + 1, mid + 1)):
         c.box(x, x + 1, y, y + 2, z, z + 1, st.accent)                    # kiosk on the top
     top = c.dome(mid, mid, 1.6, y + 2, st.dome)
@@ -2423,6 +2465,7 @@ def pagoda(c, w, st, col, T, ctx):
             c.walls(a, b, y + 1, y + 2, a, b, f"{col}_wool")               # player band at the base
             c.box(mid - 1, mid + 2, y + 1, y + 3, b - 1, b, "air")
             c.banner(mid - 2, y + 2, b, col); c.banner(mid + 2, y + 2, b, col)
+            throne_hall(c, a + 1, b - 1, a + 1, b - 1, y + 1, st, col, aisle=mid)
         e = 2 if i < 2 else 1                                                 # deep eaves on the lower storeys
         c.hip(a - e, b + e, a - e, b + e, y + h + 1, st.roof, layers=e + 1, flare=True)
         c.box(a + 1, b - 1, y + h + 1 + e, y + h + 2 + e, a + 1, b - 1, f"{family(st.roof)[1]}[type=bottom]")
@@ -2461,6 +2504,7 @@ def pyramid(c, w, st, col, T, ctx):
     th = 5
     c.room(a, b, a, b - 1, y - 1, th, st.stone)
     c.box(mid - 1, mid + 2, y, y + 3, b - 2, b - 1, "air")                 # temple entrance
+    throne_hall(c, a + 1, b - 1, a + 1, b - 2, y, st, col, aisle=mid)
     c.walls(a, b, y + th - 1, y + th, a, b - 1, f"{col}_concrete")
     c.box(a, b, y + th, y + th + 1, a, b - 1, st.stone)
     c.box(a + 1, b - 1, y + th + 1, y + th + 5, mid, mid + 1, "chiseled_stone_bricks")    # roof comb
