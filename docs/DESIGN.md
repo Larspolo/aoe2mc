@@ -39,6 +39,11 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Water trough | `cauldron` (water) | `stable` |
 | Banner, flag | `*_banner` (player color), `Canvas.flag` | most designs |
 | Fence, pen | `*_fence` | `stable`, `market`, `outpost`, `wall_segment` |
+| Gate of a pen | `*_fence_gate` | `pasture` |
+| Wheel | open `*_trapdoor` on the side | `cart` |
+| Tent canvas | `white_wool`, a valance of wool in the player color | `army_tent`, `command_tent` |
+| Thatch | `hay_block` | `hut`, `settlement` |
+| Palisade stakes | `*_log[axis=y]` of two heights | `wooden_fort` |
 | Spire tip, finial | `lightning_rod` | `Canvas.spire`, `monastery`, `mosque` |
 | Chain, rope | `chain` | `dock`, `siege_workshop` |
 | Portcullis, grille | `iron_bars` | `gate`, `castle` |
