@@ -44,4 +44,7 @@ face you.").
 
 - A test must fail before a bug fix and pass after it.
 - Output must stay deterministic. Two conversions of the same scenario with the same seed give the same files.
+- `tests/test_golden.py` fails when the output of the tiny scenario changes. If the change is on purpose, write
+  a new golden file (`AOE2MC_UPDATE_GOLDEN=1 python3 -m pytest tests/test_golden.py`), commit it and explain in
+  the PR body which blocks or entities changed and why. A refactor must not change the golden file.
 - If a check fails for a reason outside your change, do not hide it. Make a ticket and say so in the PR.
