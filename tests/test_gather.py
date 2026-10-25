@@ -1,0 +1,143 @@
+"""game/gather.py: villagers gather wood (#138). The fast tests use a fake server; the mc test a real one."""
+import json
+import math
+import os
+import re
+import shutil
+import time
+
+import pytest
+
+from game import gather, run
+
+
+def grid(rows, objects=()):
+    """aoe2mc.json data from rows of ground heights ("-" = water) with tile size 1."""
+    return {"tile_size": 1, "ground": [" ".join(map(str, r)) for r in rows], "objects": list(objects)}
+
+
+def test_path_goes_around_water_buildings_and_cliffs():
+    rows = [[64] * 10 for _ in range(10)]
+    for z in range(8):
+        rows[z][5] = "-"                                               # a river with a ford at z = 8 and 9
+    rows[9][5] = 70                                                    # a cliff: only z = 8 is low
+    m = gather.Map(grid(rows, [{"kind": "building", "name": "HOUSE", "player": 1, "footprint": [2, 7, 4, 10]}]))
+    path = m.path((1, 1), {(8, 1)})
+    assert path[-1] == (8, 1) and (5, 8) in path
+    assert all(m.free(*c) for c in path) and not {(2, 8), (3, 8)} & set(path)
+    assert all(max(abs(a[0] - b[0]), abs(a[1] - b[1])) == 1 for a, b in zip([(1, 1)] + path, path))
+    rows[8][5] = "-"
+    assert gather.Map(grid(rows)).path((1, 1), {(8, 1)}) is None
+
+
+def test_pick_unit_and_tree():
+    m = gather.Map(grid([[64] * 20 for _ in range(20)], [{"kind": "other", "name": "TREE_OAK", "tile": [10.5, 4.5]}]))
+    eye = (10.5, 65.62, 15.5)
+    assert m.pick_tree(eye, gather.direction(180, 5)) == (10, 4)        # look north, a little down
+    assert m.pick_tree(eye, gather.direction(0, 10)) is None            # south: no tree
+    assert m.pick_tree(eye, gather.direction(180, 60)) is None          # the ray hits the ground first
+    units = {"a": (10.5, 64.0, 12.5), "b": (12.5, 64.0, 12.5)}
+    d = gather.direction(180, math.degrees(math.atan2(0.62, 3)))
+    assert gather.pick_unit(eye, d, units) == "a" and gather.pick_unit(eye, gather.direction(90, 0), units) is None
+
+
+class FakeServer:
+    """Answers the commands of Gather like a server; one player "Steve" can click."""
+
+    def __init__(self, entities):
+        self.entities, self.log, self.scores = entities, [], {}
+
+    def command(self, cmd):
+        self.log.append(cmd)
+        if m := re.fullmatch(r"data get entity (\S+) (Pos|Rotation)", cmd):
+            v = self.entities[m[1]][m[2]]
+            return f"{m[1]} has the following entity data: [{', '.join(f'{x}d' for x in v)}]"
+        if m := re.fullmatch(r"tp (\S+) (\S+) (\S+) (\S+) .*", cmd):
+            self.entities[m[1]]["Pos"] = tuple(map(float, m.groups()[1:]))
+        if m := re.fullmatch(r"execute if entity @a\[scores=\{(\w+)=1\.\.\}\]", cmd):
+            return "Test passed, count: 1" if self.scores.get(m[1]) else "Test failed"
+        if cmd == "list":
+            return "There are 1 of a max of 20 players online: Steve"
+        if m := re.fullmatch(r"scoreboard players get Steve (\w+)", cmd):
+            return f"Steve has {self.scores.get(m[1], 0)} [{m[1]}]"
+        if m := re.fullmatch(r"scoreboard players reset Steve (\w+)", cmd):
+            self.scores.pop(m[1], None)
+        return ""
+
+    def wood(self):
+        return sum(int(c.split()[-1]) for c in self.log if c.startswith("scoreboard players add Wood aoe_res"))
+
+
+def tiny(tiny_world):
+    with open(os.path.join(tiny_world[0], "aoe2mc.json")) as f:
+        data = json.load(f)
+    m = gather.Map(data)
+    vil, = [o for o in data["objects"] if o["kind"] == "unit" and "VILLAGER" in o["name"]]
+    x, z = int(vil["tile"][0] * 4), int(vil["tile"][1] * 4)
+    server = FakeServer({vil["uuid"]: {"Pos": (x + 0.5, m.y(x, z), z + 0.5)}})
+    return data, vil["uuid"], server, gather.Gather(server, data, tick=0.25, carry=3, chop=0.25).setup()
+
+
+def test_villager_carries_wood_to_the_town_center(tiny_world):
+    data, uuid, server, g = tiny(tiny_world)
+    tree, = g.map.trees
+    g.select(uuid)
+    g.send(tree)
+    for _ in range(400):
+        g.step()
+    assert server.wood() >= 6                                          # at least two trips of 3 wood
+    cells = [(math.floor(float(c.split()[2])), math.floor(float(c.split()[4]))) for c in server.log if c.startswith("tp ")]
+    assert cells and all(g.map.free(*c) for c in cells)
+    tc = set().union(*g.map.drops)
+    assert any(max(abs(x - a), abs(z - b)) == 1 for x, z in cells for a, b in tc)    # next to the town center
+    assert g.map.trees[tree] == gather.TREE_WOOD - server.wood() - g.villagers[uuid].load
+
+
+def test_clicks_select_a_villager_and_send_it_to_a_tree(tiny_world):
+    data, uuid, server, g = tiny(tiny_world)
+    vx, vy, vz = server.entities[uuid]["Pos"]
+    server.entities["Steve"] = {"Pos": (vx, vy, vz - 3), "Rotation": (0.0, math.degrees(math.atan2(0.62, 3)))}
+    server.scores["aoe_talk"] = 1                                      # a right click on the villager
+    for name in g.clicks():
+        g.click(name)
+    assert g.selected == {uuid} and f"data merge entity {uuid} {{Glowing:1b}}" in server.log
+    assert not server.scores
+    (tx, ty), = g.map.trees
+    T = g.map.T
+    px, pz = tx * T + T / 2, ty * T + T + 4                            # 4 blocks south of the tree, look north
+    y = g.map.y(int(px), int(pz))
+    server.entities["Steve"] = {"Pos": (px, y, pz), "Rotation": (180.0, 10.0)}
+    server.scores["aoe_use"] = 1
+    for name in g.clicks():
+        g.click(name)
+    assert g.villagers[uuid].state == "to_tree" and g.villagers[uuid].tree == (tx, ty)
+
+
+@pytest.mark.mc
+def test_villager_gathers_wood_on_a_server(tiny_world, tmp_path):
+    from test_mc_check import mojang_reachable
+    if not mojang_reachable():
+        pytest.skip("Mojang is not reachable")
+    world = shutil.copytree(tiny_world[0], tmp_path / "W")
+    with open(world / "aoe2mc.json") as f:
+        data = json.load(f)
+    with run.Game(world) as game:
+        game.forceload()
+        end = time.time() + 60                                         # entities load in other threads
+        while True:
+            g = gather.Gather(game, data, tick=0.05, carry=3, chop=0.05).setup()
+            if g.villagers:
+                break
+            assert time.time() < end, "the villager did not load"
+            time.sleep(1)
+        uuid, = g.villagers
+        tree, = g.map.trees
+        g.select(uuid)
+        g.send(tree)
+        end = time.time() + 60
+        while "has 0 " in game.command("scoreboard players get Wood aoe_res"):
+            assert time.time() < end, "no wood after 60 s"
+            g.step()
+        assert re.search(r"has [1-9]", game.command("scoreboard players get Wood aoe_res"))
+        x, y, z = g.pos(uuid)
+        assert (math.floor(x), math.floor(z)) == g.villagers[uuid].cell and y == g.map.y(*g.villagers[uuid].cell)

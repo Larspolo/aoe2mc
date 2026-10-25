@@ -13,7 +13,7 @@ Converts an Age of Empires II: Definitive Edition scenario (`.aoe2scenario`) int
 | `samples/unit_gallery.aoe2scenario` | Test map with every unit type |
 | `samples/gallery.aoe2scenario` | Test map: every building type, 8 civilizations |
 | `samples/test_village.aoe2scenario` | Small test map with terrain, water and a hill |
-| `samples/de-64.3.aoe2record` | A recorded AoE2 DE game (1 vs 1, Acropolis), test data for a record reader. License: `samples/de-64.3.aoe2record.LICENSE.txt` |
+| `samples/de-64.3.aoe2record` | A recorded AoE2 DE game (1 vs 1, Acropolis), test data for the record reader. License: `samples/de-64.3.aoe2record.LICENSE.txt` |
 | `tools/` | Tools for tests and debugging: test scenarios, world reader, 3D render, coverage report, Minecraft data and server check |
 | `tests/` | The tests (pytest) |
 | `docs/` | Design guide, roadmap, steering, coverage report and other notes |
@@ -36,11 +36,22 @@ Two ways:
     aoe2mc MyMap.aoe2scenario MyMapWorld --preview
     python aoe2mc.py MyMap.aoe2scenario MyMapWorld --preview      (the same, from the repository folder)
 
+The input can also be a recorded game (`.aoe2record`). The converter then converts its start state: the map, the
+start units and the start buildings, like a scenario. All units face the same way (a record has no rotation), and the spawn
+is at the town center of player 1. This needs the `mgz` package (in `requirements.txt`):
+
+    aoe2mc samples/de-64.3.aoe2record RecordWorld --preview
+
 Copy the folder `MyMapWorld` into your Minecraft `saves` folder. Open it in Minecraft Java 26.3 or newer. For an older game (1.21.1 to 26.2), convert with `--mc-version 1.21.1`.
 The world is in creative mode. Outside the map there is only void. The world list shows a small top view of the map
 (`icon.png`).
 The file `aoe2mc.json` in the world folder lists the map size, the players and each object: AoE2 ID, name, owner,
-tile position and rotation, the UUID of the entity (units) and the footprint in blocks (buildings). A game program can use it.
+tile position and rotation, the UUID of the entity (units) and the footprint in blocks (buildings). It also has the
+height where a unit stands, for each block column ("ground", "-" for water). A game program can use it.
+
+First game: `python3 game/run.py MyMapWorld --play` starts a server on the world. Join it at the address that it prints
+and hold the carrot on a stick. Right click a villager of player 1 to select it, then right click a tree: the
+villager walks there, chops and carries the wood to the town center. The sidebar shows the wood.
 
 | Option | Default | Description |
 |---|---|---|
