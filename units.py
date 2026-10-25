@@ -116,6 +116,41 @@ VILLAGER_JOBS = [("FARMER", "farmer"), ("FORAGER", "farmer"), ("FISHERMAN", "fis
                  ("REPAIRER", "toolsmith"), ("STONE_MINER", "mason"), ("GOLD_MINER", "toolsmith"),
                  ("LUMBERJACK", "fletcher"), ("MONASTERY", "cleric")]
 
+# Standard infantry lines: name -> (mob, (helmet, chestplate, leggings, boots), main hand, off hand).
+# Each upgrade step looks a bit stronger. A piece is a material, or (leather, RGB) for dyed leather.
+# Zombies burn in the sun, so each zombie has a helmet. "mounted": the unit rides a horse.
+EAGLE = 0xC89B3C    # feather yellow of the eagle warriors
+LINES = {
+    "MILITIA": ("zombie", ("leather", "leather", None, None), "wooden_sword", None),
+    "MAN_AT_ARMS": ("zombie", ("chainmail", "chainmail", None, None), "stone_sword", "shield"),
+    "LONG_SWORDSMAN": ("zombie", ("iron", "iron", "chainmail", None), "iron_sword", "shield"),
+    "TWO_HANDED_SWORDSMAN": ("zombie", ("iron", "iron", "iron", "iron"), "diamond_sword", None),
+    "CHAMPION": ("zombie", ("diamond", "diamond", "diamond", "diamond"), "diamond_sword", "shield"),
+    "HEAVY_SWORDSMAN": ("zombie", ("iron", "chainmail", "chainmail", None), "iron_sword", "shield"),
+    "EASTERN_SWORDSMAN": ("husk", (("leather", 0x8E2B2B), "iron", None, None), "iron_sword", None),
+    "EAGLE_SCOUT": ("husk", (("leather", EAGLE), None, None, None), "wooden_sword", None),
+    "EAGLE_WARRIOR": ("husk", (("leather", EAGLE), ("leather", EAGLE), None, None), "stone_sword", "shield"),
+    "ELITE_EAGLE_WARRIOR": ("husk", ("golden", ("leather", EAGLE), ("leather", EAGLE), ("leather", EAGLE)),
+                            "iron_sword", "shield"),
+    "CONDOTTIERO": ("zombie", ("iron", "chainmail", "chainmail", "iron"), "iron_sword", None),
+    "FLEMISH_MILITIA": ("zombie_villager", (("leather", 0x3B5E2B), None, None, None), "mace", None),
+    "FLEMISH_MILITIA_MALE": ("zombie_villager", (("leather", 0x3B5E2B), None, None, None), "mace", None),
+    "FLEMISH_MILITIA_FEMALE": ("zombie_villager", (("leather", 0x7A3B5E), None, None, None), "mace", None),
+    "SERJEANT": ("zombie", ("iron", "chainmail", None, None), "iron_sword", "shield"),
+    "SERJEANT_DONJON": ("zombie", ("iron", "chainmail", None, None), "iron_sword", "shield"),
+    "ELITE_SERJEANT": ("zombie", ("iron", "iron", "chainmail", "iron"), "iron_sword", "shield"),
+    "ELITE_SERJEANT_DONJON": ("zombie", ("iron", "iron", "chainmail", "iron"), "iron_sword", "shield"),
+    "LEGIONARY": ("zombie", ("iron", "iron", None, None), "iron_sword", "shield"),
+    "IMPERIAL_LEGIONARY": ("zombie", ("golden", "iron", "iron", "iron"), "iron_sword", "shield"),
+    "IMPERIAL_CENTURION": ("zombie", ("golden", "golden", "iron", "iron"), "diamond_sword", "shield"),
+    "CENTURION": ("mounted", ("golden", "iron", "iron", None), "iron_sword", None),
+    "ELITE_CENTURION": ("mounted", ("golden", "golden", "iron", "iron"), "diamond_sword", None),
+    "BANDIT": ("zombie", (("leather", 0x1D1D21), ("leather", 0x1D1D21), None, None), "stone_sword", None),
+    "INDIAN_TRIBESMAN": ("husk", (None, None, None, None), "stone_sword", None),
+    "HILL_TRIBESMAN": ("husk", (None, ("leather", 0x6B4A2B), None, None), "stone_axe", None),
+    "NORSE_WARRIOR": ("zombie", ("iron", ("leather", 0x6B4A2B), None, None), "iron_axe", "shield"),
+}
+
 MOUNTED_HEROES = ("RICHARD_THE_LIONHEART", "FREDERICK_BARBAROSSA", "SALADIN", "EL_CID", "CHARLEMAGNE", "GENGHIS_KHAN",
                   "ATTILA", "BLEDA", "TAMERLANE", "SUBOTAI", "BELISARIUS", "ROLAND", "LANCELOT", "GAWAIN",
                   "KING_ARTHUR", "SIEUR_", "CONSTABLE", "VYTAUTAS", "TSAR_KONSTANTIN", "JOHN_THE_FEARLESS",
@@ -140,9 +175,19 @@ def item(name, unbreakable=False):
 
 def armor(tier):
     """ArmorItems list: feet, legs, chest, head. Helmets never break (they protect from the sun)."""
-    h, c, l, b = ARMOR[tier]
-    return List[Compound]([item(b and f"{b}_boots"), item(l and f"{l}_leggings"),
-                           item(c and f"{c}_chestplate"), item(f"{h}_helmet" if h else None, unbreakable=True)])
+    return armor_items(ARMOR[tier])
+
+
+def armor_items(pieces):
+    """ArmorItems list from (helmet, chestplate, leggings, boots); a piece is a material or (leather, RGB)."""
+    out = []
+    for p, kind in zip(reversed(pieces), ("boots", "leggings", "chestplate", "helmet")):
+        mat, rgb = p if isinstance(p, tuple) else (p, None)
+        it = item(mat and f"{mat}_{kind}", unbreakable=kind == "helmet")
+        if rgb is not None:
+            it.setdefault("components", Compound({}))["minecraft:dyed_color"] = Compound({"rgb": Int(rgb)})
+        out.append(it)
+    return List[Compound](out)
 
 
 def hands(main=None, off=None):
@@ -344,6 +389,10 @@ def classify(n, hero=False):
         return soldier("skeleton", t, "crossbow")
     if has(n, "ARCHER", "BOWMAN", "LONGBOW", "PATTIYODHA", "IMMORTAL_RANGED"):
         return soldier("skeleton", t, "bow")
+    if n in LINES:
+        kind, pieces, main, off = LINES[n]
+        man = mob("zombie" if kind == "mounted" else kind, ArmorItems=armor_items(pieces), HandItems=hands(main, off))
+        return mounted("horse", man, 3, {"Variant": Int(4)}) if kind == "mounted" else man
     return infantry(n, t)
 
 
