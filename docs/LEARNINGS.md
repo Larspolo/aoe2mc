@@ -42,9 +42,9 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   `map_manager.map_size = N`, `unit_manager.add_unit(PlayerId, ID, x=, y=)`, `write_to_file(path)`.
   It prints much text: wrap calls in `contextlib.redirect_stdout(io.StringIO())`.
 - In a default scenario all players have civilization RANDOM, so all buildings use the `western` set.
-- PrismarineJS minecraft-data (GitHub raw) has block data up to 26.1. Its entity and biome data for 1.21.1
-  come from 1.20.5. Data versions of all releases are in `data/pc/common/protocolVersions.json`
-  (26.3 = 5023).
+- `tools/fetch_mcdata.py` reads the exact Mojang data of each release from `misode/mcmeta` (GitHub raw).
+  PrismarineJS lags behind (blocks up to 26.1). Its `data/pc/common/protocolVersions.json` has the data
+  versions of all releases (26.3 = 5023).
 
 ## Code
 
