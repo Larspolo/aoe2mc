@@ -16,6 +16,7 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   Send `stop` only after "Done (" is in `logs/latest.log`. Do not use `pkill -f server.jar`: it kills your own shell.
 - GitHub in cloud sessions: `gh api repos/Larspolo/aoe2mc/...` (REST) works. GraphQL (`gh issue list`, `gh pr create`),
   `search/...` and branch deletes give 403. CI job logs: only `mcp__github__get_job_logs`.
+- A push to a new ref (`claim/N`) works; a push of a non-fast-forward fails: `tools/claim.py` uses it as a lock (#211).
 - Quote the heredoc tag (`<<'EOF'`) for GitHub text: `<<EOF` runs each `` `name` `` as a command. Pass paths as arguments.
 - A scheduled task from `create_trigger` has no repository, so its sessions cannot clone: set `Larspolo/aoe2mc`
   as its repository in the claude.ai UI. Scheduled runs use Sonnet 5.5 unless the task sets another model.
@@ -35,9 +36,9 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 
 ## Libraries
 
-- AoE2ScenarioParser 0.9.8 can make new scenarios: `AoE2DEScenario.from_default()`, then
-  `map_manager.map_size = N`, `unit_manager.add_unit(PlayerId, ID, x=, y=)`, `write_to_file(path)`.
-  It prints much text: wrap calls in `contextlib.redirect_stdout(io.StringIO())`. Default players are RANDOM (`western`).
+- AoE2ScenarioParser 0.9.8 makes new scenarios (`tools/scenarios.py`: `new_scenario`, `add_unit`, `save`). It prints much
+  text (`redirect_stdout`), default players are RANDOM (`western`), and `write_to_file` writes the output file name into
+  the file: for the same bytes use `scenarios.save(..., name)` (#204).
 - The server drops entity tags that it does not know, without a log line. To check a new entity format, let the
   server save the world and compare the entity NBT before and after (method in `docs/minecraft-versions.md`).
   A tag with a wrong type gives "Serialization errors" (WARN), which `tools/mc_check.py` finds.
@@ -77,3 +78,4 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   that the server saved: read it with `tools/world_reader.py` (1.21.1 saves the loaded chunks again, 26.3 can skip them) (#27).
   26.3 saves a default state as the bare name and puts the properties in another order: normalize before you compare (#189).
 - New entity NBT: convert a map with one unit per type (`add_unit` in a loop) and run `tools/mc_check.py` (1 min).
+- `vary()` picks a `ROOF_ALT` material per variant: count blocks with `render.building_blocks(NAME, arch, variant=v)` (#146).

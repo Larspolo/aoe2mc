@@ -1254,8 +1254,9 @@ def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside
         bx, bz = int(x), int(z)
         if not cols.inside(bx, bz):
             continue
-        if (cols.blocked[bx, bz] or held) and boat is not True:
-            spot = free_spot(cols, bx, bz, 6 * T, water=boat == "fish", taken=taken if held else ())
+        blocked = cols.blocked[bx, bz]      # a ship in a dock moves to free water, else its crew suffocates (#190)
+        if (blocked or held) and (boat is not True or blocked):
+            spot = free_spot(cols, bx, bz, 6 * T, water=bool(boat), taken=taken if held else ())
             if spot is None:
                 stats["units (inside a building, no free space)"] += 1
                 continue
@@ -1388,7 +1389,14 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
                 continue
             y = (top + wtop) / 2 + 0.3
         elif boat and wtop > top:
-            y = wtop + 0.5
+            col = vol[:, bz & 15, bx & 15]
+            h = 3 if nbt.get("Passengers") else 2                # the boat and its crew need free space
+            y = wtop
+            while y < MAX_Y - 3 and not all(passable[col[y + k - MIN_Y]] for k in range(h)):
+                y += 1
+            if y > wtop:
+                MOVED[str(top_name(nbt))] += 1
+            y += 0.5
         else:
             col = vol[:, bz & 15, bx & 15]
             y = top + 1

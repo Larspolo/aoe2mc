@@ -57,6 +57,9 @@ For each feature, take the block from the table in `docs/DESIGN.md`, section 2.
 2. Render again from the south-east and from the north-west. Render the design in 2 other architecture
    sets (`--arch`), because the `Style` changes the materials.
 3. Look at all images. Compare them with the reference and with the "before" images.
+   A part that is not in the image: draw parts that rise over the roof (portals, gables) after the roof, because
+   the roof `box` replaces them. Check exact blocks with `render.building_blocks(NAME, ARCH)` (positions and
+   states, `sys.path.insert(0, "tools")`), not in the image: the render draws walls and panes as full cubes.
 4. Then the `verify` skill, level 3: convert a scenario with the building and check
    "units in a block (moved up): 0".
 
