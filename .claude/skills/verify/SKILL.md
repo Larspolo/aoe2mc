@@ -33,6 +33,8 @@ against `tools/mcdata/<output version>.json` (26.3 by default).
 4. For the 3D shape use `tools/render.py`: `building NAME --arch SET OUT.png` draws one design on flat grass,
    `sheet NAME OUT.png` draws it in all architecture sets, `world WORLD X0 Z0 X1 Z1 OUT.png` draws an area of a converted world. The default view is from the
    south-east (the front). `--view sw|ne|nw` shows the other sides. Look at the PNG with the Read tool.
+   An opening (gate, arch, the space under a bridge) can look closed from outside: the inner faces fill it.
+   Cut through it: start the `world` area inside the object (for example X0 = the middle of the gate).
 5. For exact checks use `tools/world_reader.py WORLD X Y Z` or `world_reader.World(path).block(x, y, z)`.
    Add a test for the exact check when the behavior must stay.
 
