@@ -77,3 +77,5 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   file `tests/test_<topic>.py`: tests appended at the end of a shared file conflict (3 times on #295).
 - A datapack `load` function or an RCON `@e` selector sees only entities of loaded chunks: 26.3 loads none without a
   player. In an RCON check, `forceload add X0 Z0 X1 Z1` (at most 256 chunks per command) first (#358).
+- A fruit bush of `place_objects` is at block `int(x * T)` (the tile center), not at `int(tile) * T`. In `aoe2mc.json`
+  the "ground" of a blocked footprint is the barrier top: take the ground of `Map.around()` (#391).
