@@ -1,0 +1,72 @@
+name: Unconflict
+
+# Merges main into an agent PR with a merge conflict when git solves the conflict alone (#280). GitHub ignores
+# `merge=union` in .gitattributes, so a new line in docs/LEARNINGS.md or docs/DESIGN.md on both sides makes the PR
+# "dirty" and GitHub starts no CI. A push with GITHUB_TOKEN starts no workflow: this job starts CI on the branch,
+# and Automerge accepts that CI run.
+on:
+  schedule:
+    - cron: "7,22,37,52 * * * *"
+  workflow_dispatch:      # Automerge starts it after each merge
+
+permissions:
+  contents: write         # push the merge commit
+  pull-requests: write
+  issues: write           # label and comment
+  actions: write          # gh workflow run
+
+concurrency:
+  group: unconflict
+  cancel-in-progress: false
+
+jobs:
+  merge-main:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Merge main into the conflicted agent PRs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          R: ${{ github.repository }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch -q origin main
+          now=$(date +%s)
+          for n in $(gh api "repos/$R/pulls?state=open&per_page=100" --jq ".[] | select(.head.repo.full_name == \"$R\")
+                     | select(.head.ref | test(\"^(agent|claude)/\")) | select([.labels[].name] | index(\"hold\") | not)
+                     | .number"); do
+            for try in 1 2 3; do                    # GitHub computes the merge state after the first request
+              pr=$(gh api "repos/$R/pulls/$n")
+              state=$(jq -r .mergeable_state <<<"$pr")
+              [ "$state" = unknown ] || break
+              sleep 5
+            done
+            label=$(jq '[.labels[].name] | index("conflict") != null' <<<"$pr")
+            [ "$state" = dirty ] || [ "$label" = true ] || continue
+            branch=$(jq -r .head.ref <<<"$pr"); sha=$(jq -r .head.sha <<<"$pr")
+            date=$(gh api "repos/$R/commits/$sha" --jq .commit.committer.date)
+            if [ $((now - $(date -d "$date" +%s))) -lt 600 ]; then  # the run that pushed it can still merge it
+              echo "#$n: the head is younger than 10 minutes"; continue
+            fi
+            git fetch -q origin "$branch"
+            git checkout -q -B "$branch" "origin/$branch"
+            if ! git merge -q --no-edit origin/main; then
+              git merge --abort
+              echo "#$n: a real conflict: the runs solve it (autopilot step 6.10)"; continue
+            fi
+            if [ "$(git rev-parse HEAD)" = "$sha" ]; then
+              echo "#$n: main is in the branch already"; continue
+            fi
+            if ! git push -q origin "HEAD:$branch"; then   # for example a change of .github/workflows on main
+              echo "#$n: the push failed"; continue
+            fi
+            echo "#$n: merged main into $branch"
+            gh api "repos/$R/issues/$n/labels/conflict" -X DELETE >/dev/null 2>&1 || true
+            printf 'Merged `main` into the branch: git solved the conflict alone (`merge=union`). CI runs again (#280).\n' > body.md
+            gh api "repos/$R/issues/$n/comments" -F body=@body.md >/dev/null
+            gh workflow run ci.yml --repo "$R" --ref "$branch"
+          done
