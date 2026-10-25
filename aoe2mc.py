@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 aoe2mc - Convert an Age of Empires II: DE scenario (.aoe2scenario) or the start state of a recorded game
-(.aoe2record) to a Minecraft Java world.
+(.aoe2record) to a Minecraft Java world. A campaign (.aoe2campaign) gives one world per scenario.
 
 Usage:
     python aoe2mc.py MAP.aoe2scenario OUTPUT_WORLD_FOLDER [options]
@@ -18,6 +18,7 @@ Options:
     --no-birds         Do not convert birds
     --no-barriers      Do not fill building footprints with invisible barrier blocks
     --verbose          Print the time of each phase (read, columns, objects, units, chunks, write)
+    --scenario N       Campaign: convert only scenario N (1 = the first)
     --architecture X   Use one architecture set for all players (western, central, mediterranean,
                        middle_eastern, south_asian, african, east_asian, southeast_asian, mesoamerican)
 
@@ -2047,10 +2048,69 @@ def spawn_spec(v):
     return x, z
 
 
+class CampaignError(ValueError):
+    """A campaign file that aoe2mc cannot read."""
+
+
+def read_campaign(path):
+    """.aoe2campaign -> (campaign name, [(scenario name, scenario bytes)]). Layout: docs/campaign-formats.md."""
+    import struct
+    with open(path, "rb") as f:
+        b = f.read()
+
+    def de_string(o):
+        if b[o:o + 2] != b"\x60\x0a":
+            raise CampaignError(f"{path}: no string at byte {o}: the file is not a valid campaign")
+        n = struct.unpack_from("<H", b, o + 2)[0]
+        return b[o + 4:o + 4 + n].decode("utf-8", "replace"), o + 4 + n
+
+    if b[:4] != b"2.00":
+        raise CampaignError(f"{path}: version {b[:4]!r} is not 2.00: only .aoe2campaign files (AoE2 DE) are supported")
+    try:
+        deps = struct.unpack_from("<I", b, 4)[0]
+        o = 8 + 4 * deps
+        name = b[o:o + 256].split(b"\0")[0].decode("utf-8", "replace")
+        n = struct.unpack_from("<I", b, o + 256)[0]
+        o += 260
+        entries = []
+        for _ in range(n):
+            size, off = struct.unpack_from("<II", b, o)
+            title, o = de_string(o + 8)
+            _, o = de_string(o)                                     # the file name, the same as the title in DE
+            if off + size > len(b):
+                raise CampaignError(f"{path}: scenario {title!r} ends after the end of the file")
+            entries.append((title, b[off:off + size]))
+    except struct.error:
+        raise CampaignError(f"{path}: the file ends in the header: the file is not a valid campaign") from None
+    return name, entries
+
+
+def convert_campaign(src, out, only=None, name=None, **kw):
+    """One world per scenario: out/<number> <scenario name>/. only: the number of one scenario (1 = first)."""
+    import tempfile
+    title, entries = read_campaign(src)
+    if only is not None and not 1 <= only <= len(entries):
+        raise OptionError(f"--scenario {only}: the campaign {title!r} has {len(entries)} scenarios")
+    print(f"Campaign {title!r}: {len(entries)} scenarios")
+    for i, (scn_name, data) in enumerate(entries, 1):
+        if only is not None and i != only:
+            continue
+        stem = re.sub(r'[\\/:*?"<>|]', "_", re.sub(r"\.aoe2scenario$", "", scn_name, flags=re.I))
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, stem + ".aoe2scenario")
+            with open(path, "wb") as f:
+                f.write(data)
+            convert(path, os.path.join(out, f"{i} {stem}"), name=f"{name} {i}" if name else stem, **kw)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
-    ap.add_argument("scenario", help=".aoe2scenario file, or .aoe2record (the start state of a recorded game)")
-    ap.add_argument("output", help="output world folder (put it in .minecraft/saves/)")
+    ap.add_argument("scenario", help=".aoe2scenario file, .aoe2record (the start state of a recorded game), or "
+                    ".aoe2campaign (one world per scenario)")
+    ap.add_argument("output", help="output world folder (put it in .minecraft/saves/); for a campaign the folder of "
+                    "the worlds")
+    ap.add_argument("--scenario", dest="only", type=int_range(1, 999), metavar="N",
+                    help="campaign: convert only scenario N (1 = the first)")
     ap.add_argument("--tile-size", type=int_range(1, 16), default=4, help="blocks per tile (default 4)")
     ap.add_argument("--level-height", type=int_range(1, 16), default=3, help="blocks per elevation level (default 3)")
     ap.add_argument("--name", help="world name in the Minecraft menu")
@@ -2077,11 +2137,18 @@ def main(argv=None):
                     help="design of the edge outside the map (default diorama); all keep the vanilla world border at the edge")
     ap.add_argument("--verbose", action="store_true", help="print the time of each phase")
     a = ap.parse_args(argv)
+    kw = dict(T=a.tile_size, H=a.level_height, seed=a.seed, preview=a.preview, arch=a.architecture,
+              player_arch=a.player_architecture, with_units=not a.no_units, barriers=not a.no_barriers,
+              mc_version=a.mc_version, spawn=a.spawn, birds=not a.no_birds, orientation=a.orientation,
+              verbose=a.verbose, garrison=a.garrison, border_design=a.border)
     try:
-        convert(a.scenario, a.output, a.tile_size, a.level_height, a.name, a.seed, a.preview, a.architecture,
-                a.player_architecture, not a.no_units, not a.no_barriers, a.mc_version, a.spawn, not a.no_birds,
-                a.orientation, a.verbose, a.garrison, a.border)
-    except OptionError as e:
+        if a.scenario.lower().endswith(".aoe2campaign"):
+            convert_campaign(a.scenario, a.output, a.only, a.name, **kw)
+        elif a.only is not None:
+            ap.error("--scenario needs a .aoe2campaign file")
+        else:
+            convert(a.scenario, a.output, name=a.name, **kw)
+    except (OptionError, CampaignError) as e:
         ap.error(str(e))
 
 
