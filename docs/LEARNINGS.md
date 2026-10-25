@@ -77,3 +77,4 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   that the server saved: read it with `tools/world_reader.py` (1.21.1 saves the loaded chunks again, 26.3 can skip them) (#27).
   26.3 saves a default state as the bare name and puts the properties in another order: normalize before you compare (#189).
 - New entity NBT: convert a map with one unit per type (`add_unit` in a loop) and run `tools/mc_check.py` (1 min).
+- `vary()` picks a `ROOF_ALT` material per variant: count blocks with `render.building_blocks(NAME, arch, variant=v)` (#146).
