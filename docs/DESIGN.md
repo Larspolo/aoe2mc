@@ -47,6 +47,9 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Hoist | a log post and arm, `chain`, a hanging log | `lumber_camp` |
 | Workbench | `crafting_table` | `lumber_camp` |
 | Millstone | `grindstone` | `mill`, `mining_camp` (tools) |
+| Drive shaft of a windmill | `stripped_spruce_log[axis=y]` above the millstone | `mill` (inside) |
+| Net loom, boat workbench | `loom`, `crafting_table`, `spruce_slab` | `dock` (inside) |
+| Light in a room or a yard | `lantern` on a barrel, or hanging under a beam | `mill`, `granary`, `dock`, `lumber_camp`, `mining_camp` |
 | Ore, mined gold and stone | `gold_ore`, `raw_gold_block`, `cobblestone`, `stone`, `andesite` | `mining_camp` |
 | Mine cart track | `rail` | `mining_camp` |
 | Water trough | `cauldron` (water) | `stable` |
@@ -87,6 +90,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Band in the player color | `*_wool` (player color) | `town_center`, `castle`, `tower`, `temple`, `pagoda` |
 | Outside stairs to an upper floor | `*_stairs` of the wood of the set | `town_center` |
 | Books, study | `bookshelf`, `lectern` (with a book) | `university` |
+| Desks, light inside | `enchanting_table`, `cartography_table`, `candle` (lit, on shelves and desks), `lantern` on a `chain` (`hang()`) | `university` (`study()`) |
 | Scholar statue | `chiseled_stone_bricks` pedestal, `quartz_pillar`, `chiseled_quartz_block` | `university` |
 | Rose window | stained glass panes | `monastery` |
 | Posts of an open belfry | `stone_brick_wall` | `fortified_church` |

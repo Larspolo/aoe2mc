@@ -198,6 +198,7 @@ def main():
     b.add_argument("name", help="AoE2 building name, for example CASTLE or HOUSE")
     b.add_argument("--arch", default="western", help="architecture set (see buildings.ARCH)")
     b.add_argument("--tile-size", type=int, default=4)
+    b.add_argument("--cut", type=int, help="draw only the lowest N block layers (a cut view of the rooms inside)")
     h = sub.add_parser("sheet", help="one building in all architecture sets and some variants")
     h.add_argument("name")
     h.add_argument("--variants", type=int, default=3)
@@ -220,6 +221,9 @@ def main():
         return
     if a.mode == "building":
         blocks = building_blocks(a.name.upper(), a.arch, a.tile_size)
+        if a.cut:
+            keep = blocks[1] < blocks[1].min() + a.cut
+            blocks = tuple(np.asarray(v)[keep] for v in blocks)
     else:
         blocks = world_blocks(a.world, min(a.x0, a.x1), min(a.z0, a.z1), max(a.x0, a.x1), max(a.z0, a.z1), a.y0)
     W, H = render(*blocks, a.out, view=a.view, scale=a.scale)
