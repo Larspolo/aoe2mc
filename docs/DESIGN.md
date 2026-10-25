@@ -91,6 +91,9 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Rose window | stained glass panes | `monastery` |
 | Orange roof tiles (Krepost) | `red_sandstone` stairs and blocks | `krepost` |
 | Cannon | `polished_basalt` barrel on its side | `tower` (bombard) |
+| Checkered stone base | `polished_deepslate` in a checker pattern in the main stone | `caravanserai` |
+| Gilded dome | `gold_block` | `caravanserai` |
+| Raised portal (pishtaq) of an arched gate | wall over the roof line, `chiseled_sandstone` frame, upside-down stairs as the arch | `caravanserai` |
 
 Add a line when a design uses a new feature block. Each new block state must pass `mcvalid`.
 
