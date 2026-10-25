@@ -26,7 +26,6 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   unless the task sets another model.
 - The repository is private: a workflow with a `permissions:` block also needs `contents: read`, or
   `actions/checkout` fails with "Repository not found".
-
 - Minecraft server: a bad property value (`facing=up`) loads silently as the default state. An unknown block
   name gives "Recoverable errors when loading section". A missing `level.dat` compound
   gives "key missing: <name>" (`DragonFight` until #60).
@@ -37,6 +36,7 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   on `static.wikia.nocookie.net` (WebP). Page text: `action=parse&page=Title&prop=wikitext&format=json&formatversion=2`.
   Python `urllib` with the default User-Agent gets 403: use `curl`, or send another `User-Agent`
   (see `tools/refimage.py`).
+- AoE2 recorded games: the record hosts (`aoe.ms`, `data.aoe2companion.com`, `www.aoe2insights.com`) are blocked. Only the owner can add a record (#134).
 
 ## Libraries
 
@@ -74,7 +74,7 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   `tests/test_coverage.py` to the new counts. Parallel runs often change the same counts (#79). Check
   `mergeable_state` before the merge: a green PR is "dirty" when main moved after the push.
 - Drawing all 243 building types for one architecture set takes about 1 s. A full gallery conversion takes
-  about 30 s per set.
+  about 23 s. `--verbose` prints the time per phase: `build_chunk` ("chunks") is about 70 % (#26).
 - Block IDs in `B` depend on what was registered before (earlier tests or conversions). Code that draws random
   numbers per block ID must go in state-name order, not ID order (see #44). A test that passes alone but
   fails in the full suite often has this cause.
