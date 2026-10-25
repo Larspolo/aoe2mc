@@ -723,30 +723,32 @@ def castle(c, w, st, col, T, ctx, small=False):
     c.flag(mid, kh + 1, mid, col, 5)
 
 
-def keep_inside(c, x0, x1, floors, top, st, col):
-    """Furniture of a keep with the inside x0..x1-1 (also z) and floor blocks at the y of `floors` (#256):
-    a throne room on the ground floor, then storage and an armory. A ladder on the east wall joins the floors."""
+def keep_inside(c, x0, x1, floors, top, st, col, z0=None, z1=None):
+    """Furniture of a keep with the inside x0..x1-1, z0..z1-1 (default: as x) and floor blocks at the y of
+    `floors` (#256): a throne room on the ground floor, then storage and an armory. A ladder on the east wall
+    joins the floors."""
+    z0, z1 = (x0, x1) if z0 is None else (z0, z1)
     wood = st.wood.removesuffix("_planks")
     wood = wood if wood in WOODS else "spruce"
-    mid = (x0 + x1) // 2
+    mid, mz = (x0 + x1) // 2, (z0 + z1) // 2
     for i, f in enumerate(floors):
         y = f + 1
         ceil = floors[i + 1] if i + 1 < len(floors) else top
         if i == 0:                                       # throne room: throne, carpet from the door, banners
-            c.set(mid, y, x0, stair(f"{wood}_stairs", "north"))
-            c.box(mid, mid + 1, y, y + 1, x0 + 1, x1, f"{col}_carpet")
-            c.banner(x0, y + 2, x0, col); c.banner(x1 - 1, y + 2, x0, col)
+            c.set(mid, y, z0, stair(f"{wood}_stairs", "north"))
+            c.box(mid, mid + 1, y, y + 1, z0 + 1, z1, f"{col}_carpet")
+            c.banner(x0, y + 2, z0, col); c.banner(x1 - 1, y + 2, z0, col)
         elif i % 2:                                      # storage
-            c.set(x0, y, x0, "chest[facing=east]")
-            c.box(x0, x0 + 1, y, y + 1, x0 + 1, x1 - 1, "barrel[facing=up]")
+            c.set(x0, y, z0, "chest[facing=east]")
+            c.box(x0, x0 + 1, y, y + 1, z0 + 1, z1 - 1, "barrel[facing=up]")
         else:                                            # armory and study
-            c.set(x0, y, x0, "grindstone[face=floor,facing=east]")
-            c.set(x0, y, x0 + 1, "smithing_table")
-            c.set(x0, y, x1 - 1, "lectern[facing=east,has_book=true,powered=false]")
-        c.set(mid, ceil - 1, mid, "lantern[hanging=true]")
+            c.set(x0, y, z0, "grindstone[face=floor,facing=east]")
+            c.set(x0, y, z0 + 1, "smithing_table")
+            c.set(x0, y, z1 - 1, "lectern[facing=east,has_book=true,powered=false]")
+        c.set(mid, ceil - 1, mz, "lantern[hanging=true]")
         if i:
-            c.set(x0, y, mid, "lantern[hanging=false]")
-    c.box(x1 - 1, x1, 1, top, x0 + 1, x0 + 2, "ladder[facing=west]")   # through the floors, not the roof
+            c.set(x0, y, mz, "lantern[hanging=false]")
+    c.box(x1 - 1, x1, 1, top, z0 + 1, z0 + 2, "ladder[facing=west]")   # through the floors, not the roof
 
 
 def krepost(c, w, st, col, T, ctx):
@@ -773,6 +775,12 @@ def krepost(c, w, st, col, T, ctx):
         for z in range(kz0 + 1, kz1 - 1, 2):
             c.set(kx1 - 1, y, z, "iron_bars"); c.set(kx0, y, z, "iron_bars")
     c.flag((kx0 + kx1) // 2, kh + 1, (kz0 + kz1) // 2, col, 3)
+    if kx1 - kx0 >= 6 and kz1 - kz0 >= 5:                                 # hollow keep with 3 floors (#330)
+        c.box(kx0 + 1, kx1 - 1, 1, kh, kz0 + 1, kz1 - 1, "air")
+        floors = [0, kh - 11, kh - 6]                                     # under the windows at kh - 8 and kh - 4
+        for f in floors[1:]:
+            c.box(kx0 + 1, kx1 - 1, f, f + 1, kz0 + 1, kz1 - 1, st.wood)
+        keep_inside(c, kx0 + 1, kx1 - 1, floors, kh, st, col, kz0 + 1, kz1 - 1)
     # Round tower in the west with a cone roof
     r, cx, cz, rh = 2.3 * s, S(2.5), S(3.5), S(11)
     c.cylinder(cx, cz, r, 1, rh, wall)
@@ -1887,6 +1895,12 @@ def donjon(c, w, st, col, T, ctx):
     c.crenels(1, w - 1, 1, w - 1, hk, st.merlon or stone)
     c.box(2, w - 2, hk - 1, hk, 2, w - 2, st.floor)                        # roof terrace with goods
     c.set(2, hk, w - 3, "barrel[facing=up]")
+    if w >= 8:                                                             # rooms in the keep (#330)
+        c.box(2, w - 2, 1, hk - 1, 2, w - 2, "air")
+        floors = [0, *range(6, hk - 4, 4)]                                 # between the arrow slits
+        for f in floors[1:]:
+            c.box(2, w - 2, f, f + 1, 2, w - 2, st.wood)
+        keep_inside(c, 2, w - 2, floors, hk - 1, st, col)
     if w >= 6:
         x0, x1, z0, z1 = w - 3, w, 0, 3                                   # stair turret on the north-east corner
         ht = hk + 4
