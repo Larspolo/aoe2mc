@@ -16,6 +16,7 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   Send `stop` only after "Done (" is in `logs/latest.log`. Do not use `pkill -f server.jar`: it kills your own shell.
 - GitHub in cloud sessions: `gh api repos/Larspolo/aoe2mc/...` (REST) works. GraphQL (`gh issue list`, `gh pr create`),
   `search/...` and branch deletes give 403. CI job logs: only `mcp__github__get_job_logs`.
+- A push to a new ref (`claim/N`) works; a push of a non-fast-forward fails: `tools/claim.py` uses it as a lock (#211).
 - Quote the heredoc tag (`<<'EOF'`) for GitHub text: `<<EOF` runs each `` `name` `` as a command. Pass paths as arguments.
 - A scheduled task from `create_trigger` has no repository, so its sessions cannot clone: set `Larspolo/aoe2mc`
   as its repository in the claude.ai UI. Scheduled runs use Sonnet 5.5 unless the task sets another model.
