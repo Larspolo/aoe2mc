@@ -23,7 +23,7 @@ The README already uses this style. Keep it.
 | Look at a world | `python3 tools/world_reader.py OUTWorld [X Y Z]` |
 | 3D image | `python3 tools/render.py building CASTLE --arch western OUT.png` (or `world OUTWorld X0 Z0 X1 Z1 OUT.png`) |
 | Check states | `tools/mcvalid.py` (`block_error`, `entity_error`, `biome_error`) |
-| Coverage of AoE2 types | `python3 tools/coverage.py` writes `docs/coverage.md` (designs, mappings, fallbacks) |
+| Coverage of AoE2 types | `python3 tools/coverage.py OUT.md` (designs, mappings, fallbacks). Do not commit `docs/coverage.md`: CI on main does it |
 | Dashboard of #1 | `python3 tools/dashboard.py --dry-run` (`--next`: ticket candidates in pick order) |
 | Server check | `python3 tools/mc_check.py OUTWorld` (headless Minecraft, load errors; `--keep DIR` keeps the saved world), `python3 -m pytest -m mc` |
 | Game program | `python3 game/run.py OUTWorld` (server with RCON, type commands; `--bench N`: commands per second; `--play`: gather wood) |
@@ -40,7 +40,7 @@ Find code by function name with Grep. Do not read the large files from start to 
 - `aoe2mc.py` – the pipeline, in this order:
   `read_scenario` (parser → terrain arrays, objects, players) → `Columns` (terrain per block column, `ground_detail`)
   → `place_objects` (trees, mines, cliffs, `decor`, calls `buildings.place_building`) → `Edits.by_chunk`
-  → `build_chunk` (sections, biomes, block entities) → `write_region` (Anvil `.mca`) and `write_level_dat`.
+  → `border` (`--border`, blocks outside the map) → `build_chunk` (sections, biomes, block entities) → `write_region` (Anvil `.mca`) and `write_level_dat`.
   Units: `plan_units` → `entity_chunk` (finds free space). `convert()` runs it all; `main()` is the CLI.
 - `buildings.py` – `Style` and `ARCH` (9 architecture sets), `CIV_ARCH`, `Canvas` (drawing tools: `room`,
   `timber_room`, `roof`, `gable`, `hip`, `dome`, `cylinder` ...), one function per design, `select()` (name → design),
@@ -92,11 +92,14 @@ Details: the `verify` skill.
 
 ## Improve the process
 
-You maintain this file, `docs/LEARNINGS.md`, the skills in `.claude/skills/` and the tools in `tools/`.
-The aim is more closed tickets for the same usage, with the same quality.
+You maintain the whole system, not only your own text: this file, `docs/LEARNINGS.md`, the skills in `.claude/skills/`,
+the tools in `tools/`, CI (`.github/workflows/`), the cloud setup script (`scripts/cloud-setup.sh`), the SessionStart
+hook, `.gitignore` and the claim and dashboard rules. The aim is more closed tickets for the same usage, with the same quality.
 - After each ticket (autopilot step 9): add a learning when something cost you time, correct an instruction
   that was wrong, and make a `tooling` ticket when a tool or test would have found a problem earlier.
-- Every 5th run: the `improve` skill measures the runs and makes one larger improvement.
+- Only the owner can change the environment settings (setup script, network, variables), the scheduled task and the
+  GitHub settings. When one of them costs time, make a `needs-human` ticket with numbered steps and the exact text.
+- Every 5th run: the `improve` skill measures the runs, CI and the environment and makes one larger improvement.
 - Never weaken tests, CI or safety rules to save time. List each process change on the status issue.
 Keep this file short: put details in skills or docs.
 
