@@ -11,9 +11,9 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 - `minecraft.wiki`, `minecraft.net` and `papermc.io` are blocked (curl and WebFetch). For Minecraft facts use
   the Mojang data reports in `misode/mcmeta` (GitHub raw, branch `<version>-summary`) and the real server
   (see `docs/minecraft-versions.md`, "Method").
-- Java 21 is installed. Minecraft 26.3 (the default) needs Java 25: `apt-get install -y openjdk-25-jre-headless`
-  (`tools/mc_check.py` finds it; its Temurin download gets 403 in the cloud). Send `stop` only
-  after "Done (" is in `logs/latest.log`. Do not use `pkill -f server.jar`: it also kills your own shell.
+- Java 21 is installed. Minecraft 26.3 (the default) needs Java 25: `scripts/cloud-setup.sh` installs it in the snapshot,
+  else `apt-get install -y openjdk-25-jre-headless` (`tools/mc_check.py` finds it; its Temurin download gets 403).
+  Send `stop` only after "Done (" is in `logs/latest.log`. Do not use `pkill -f server.jar`: it kills your own shell.
 - GitHub in cloud sessions: `gh api repos/Larspolo/aoe2mc/...` (REST) works. GraphQL (`gh issue list`, `gh pr create`),
   `search/...` and branch deletes give 403. CI job logs: only `mcp__github__get_job_logs`.
 - Quote the heredoc tag (`<<'EOF'`) for GitHub text: `<<EOF` runs each `` `name` `` as a command. Pass paths as arguments.
