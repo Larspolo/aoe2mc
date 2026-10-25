@@ -32,7 +32,7 @@ def test_level_dat(tiny_world):
 def test_chunks_have_valid_blocks_and_biomes(tiny_world):
     w = world_reader.World(tiny_world[0])
     chunks = w.chunks()
-    assert len(chunks) == 36                                      # 24 tiles * 4 blocks = 96 blocks = 6 x 6 chunks
+    assert len(chunks) == 64          # 24 tiles * 4 blocks = 96 blocks = 6 x 6 chunks, and a ring for the border
     for (cx, cz), c in chunks.items():
         assert int(c["DataVersion"]) == aoe2mc.DATA_VERSION
         assert (int(c["xPos"]), int(c["zPos"])) == (cx, cz)
@@ -46,7 +46,17 @@ def test_terrain_and_water(tiny_world):
     w = world_reader.World(tiny_world[0])
     assert w.block(90, aoe2mc.WATER_Y, 48) == "minecraft:water[level=0]"       # deep water at x >= 20 tiles
     assert w.block(90, aoe2mc.WATER_Y - 3, 48) == "minecraft:water[level=0]"
-    assert w.block(0, aoe2mc.MIN_Y, 0) == "minecraft:bedrock"
+
+
+def test_diorama_border(tiny_world):
+    """The default border (#172): the map stands on a plinth; the floor is 6 blocks under the lowest ground."""
+    w = world_reader.World(tiny_world[0])
+    column = [w.block(-1, y, 48) for y in range(aoe2mc.MIN_Y, aoe2mc.MAX_Y)]
+    floor = aoe2mc.MIN_Y + next(i for i, b in enumerate(column) if b != "minecraft:air")
+    assert column[floor - aoe2mc.MIN_Y] == "minecraft:polished_deepslate"
+    assert "minecraft:stone_bricks" in column and "minecraft:polished_andesite" in column
+    assert w.block(0, floor - 1, 48) == "minecraft:air" and w.block(0, floor, 48) != "minecraft:air"
+    assert w.block(0, aoe2mc.MIN_Y, 0) == "minecraft:air"
 
 
 def test_entities(tiny_world):

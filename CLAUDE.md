@@ -23,7 +23,7 @@ The README already uses this style. Keep it.
 | Look at a world | `python3 tools/world_reader.py OUTWorld [X Y Z]` |
 | 3D image | `python3 tools/render.py building CASTLE --arch western OUT.png` (or `world OUTWorld X0 Z0 X1 Z1 OUT.png`) |
 | Check states | `tools/mcvalid.py` (`block_error`, `entity_error`, `biome_error`) |
-| Coverage of AoE2 types | `python3 tools/coverage.py` writes `docs/coverage.md` (designs, mappings, fallbacks) |
+| Coverage of AoE2 types | `python3 tools/coverage.py OUT.md` (designs, mappings, fallbacks). Do not commit `docs/coverage.md`: CI on main does it |
 | System numbers | `python3 tools/health.py [--hours N]` (CI, setup, takeovers, conflicts, files in git; `improve` skill) |
 | Dashboard of #1 | `python3 tools/dashboard.py --dry-run` (`--next`: ticket candidates in pick order) |
 | Server check | `python3 tools/mc_check.py OUTWorld` (headless Minecraft, load errors; `--keep DIR` keeps the saved world), `python3 -m pytest -m mc` |
@@ -41,7 +41,7 @@ Find code by function name with Grep. Do not read the large files from start to 
 - `aoe2mc.py` – the pipeline, in this order:
   `read_scenario` (parser → terrain arrays, objects, players) → `Columns` (terrain per block column, `ground_detail`)
   → `place_objects` (trees, mines, cliffs, `decor`, calls `buildings.place_building`) → `Edits.by_chunk`
-  → `build_chunk` (sections, biomes, block entities) → `write_region` (Anvil `.mca`) and `write_level_dat`.
+  → `border` (`--border`, blocks outside the map) → `build_chunk` (sections, biomes, block entities) → `write_region` (Anvil `.mca`) and `write_level_dat`.
   Units: `plan_units` → `entity_chunk` (finds free space). `convert()` runs it all; `main()` is the CLI.
 - `buildings.py` – `Style` and `ARCH` (9 architecture sets), `CIV_ARCH`, `Canvas` (drawing tools: `room`,
   `timber_room`, `roof`, `gable`, `hip`, `dome`, `cylinder` ...), one function per design, `select()` (name → design),

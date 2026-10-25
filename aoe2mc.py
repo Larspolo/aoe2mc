@@ -415,6 +415,7 @@ class Columns:
         self.deco[:n, :n] = deco
         self.deco2 = full(AIR, np.uint16)             # upper half of tall plants
         self.blocked = np.zeros((n, n), bool)         # columns inside a building or obstacle footprint
+        self.floor = MIN_Y                            # air under this Y (--border diorama)
         self.ground_detail(styles, sid, depth_tiles, rng)
 
     def ground_detail(self, styles, sid, depth_tiles, rng):
@@ -525,6 +526,17 @@ class Columns:
         deco[dirt & ~steppe_grass & free & (r < 0.02)] = B("dead_bush")
         deco[dirt & ~steppe_grass & free & (r >= 0.02) & (r < 0.10)] = B("short_grass")
         deco[sand & free & (r < 0.012)] = B("dead_bush")
+
+    def outside(self):
+        """Columns of one chunk outside the map (--border): no ground, the most common biome of the map."""
+        c = object.__new__(Columns)
+        c.n, c.width, c.floor = 0, 16, MIN_Y
+        for k, v, dt in (("top", NONE, np.int16), ("wtop", NONE, np.int16), ("top_id", AIR, np.uint16),
+                         ("sub_id", AIR, np.uint16), ("sub_depth", 3, np.int16), ("ice", False, bool),
+                         ("deco", AIR, np.uint16), ("deco2", AIR, np.uint16), ("biome", 0, np.uint8)):
+            setattr(c, k, np.full((16, 16), v, dt))
+        c.biome_names = [self.biome_names[np.bincount(self.biome[:self.n, :self.n].ravel()).argmax()]]
+        return c
 
     def inside(self, x, z):
         return 0 <= x < self.n and 0 <= z < self.n
@@ -702,21 +714,21 @@ class Edits:
             new[n] = cache[ck]
         self.parts.append((X.astype(np.int32), Y.astype(np.int32), Z.astype(np.int32), new, fhard[sel]))
 
-    def by_chunk(self, width):
-        """Return {(cx, cz): (x, y, z, id, hard)} with local x/z, in the order of addition."""
+    def by_chunk(self, width, lo=0):
+        """Return {(cx, cz): (x, y, z, id, hard)} with local x/z, in the order of addition. x and z: lo..width-1."""
         if not self.parts:
             return {}
         x, y, z, ids, hard = (np.concatenate(p) for p in zip(*self.parts))
-        ok = (x >= 0) & (z >= 0) & (x < width) & (z < width) & (y >= MIN_Y) & (y < MAX_Y)
+        ok = (x >= lo) & (z >= lo) & (x < width) & (z < width) & (y >= MIN_Y) & (y < MAX_Y)
         x, y, z, ids, hard = x[ok], y[ok], z[ok], ids[ok], hard[ok]
-        key = (x >> 4) * 100000 + (z >> 4)
+        key = ((x >> 4) + 1000) * 100000 + (z >> 4) + 1000
         order = np.argsort(key, kind="stable")
         x, y, z, ids, hard, key = x[order], y[order], z[order], ids[order], hard[order], key[order]
         keys, starts = np.unique(key, return_index=True)
         ends = list(starts[1:]) + [len(key)]
         out = {}
         for k, s, e in zip(keys, starts, ends):
-            out[(int(k // 100000), int(k % 100000))] = (x[s:e] & 15, y[s:e], z[s:e] & 15, ids[s:e], hard[s:e])
+            out[(int(k // 100000) - 1000, int(k % 100000) - 1000)] = (x[s:e] & 15, y[s:e], z[s:e] & 15, ids[s:e], hard[s:e])
         return out
 
 
@@ -1463,9 +1475,11 @@ TALL_PLANTS = [(B("tall_grass[half=lower]"), B("tall_grass[half=upper]")),
                (B("large_fern[half=lower]"), B("large_fern[half=upper]"))]
 
 
-def build_chunk(cx, cz, cols, edits):
+def build_chunk(cx, cz, cols, edits, origin=(0, 0)):
+    """origin: the block x and z of cols[0, 0] (a chunk outside the map has its own 16 x 16 columns)."""
     x0, z0 = cx * 16, cz * 16
-    sl = (slice(x0, x0 + 16), slice(z0, z0 + 16))
+    ox, oz = x0 - origin[0], z0 - origin[1]
+    sl = (slice(ox, ox + 16), slice(oz, oz + 16))
     g = lambda a: a[sl].T[None]          # (1, z, x) for broadcasting against Y
     top, wtop, top_id, sub_id = g(cols.top), g(cols.wtop), g(cols.top_id), g(cols.sub_id)
     ice, deco, sub = g(cols.ice), cols.deco[sl].T, top - g(cols.sub_depth)
@@ -1477,6 +1491,8 @@ def build_chunk(cx, cz, cols, edits):
     water = (Y > top) & (Y <= wtop)
     vol = np.where(water, np.where(ice & (Y == wtop), ICE, WATER), vol)
     vol[0] = np.where(top[0] > NONE, BEDROCK, AIR)
+    if cols.floor > MIN_Y:              # --border diorama: the map stands on a plinth with air under it
+        vol[:cols.floor - MIN_Y] = AIR
     zz, xx = np.nonzero(deco)
     if len(zz):
         ys = top[0][zz, xx].astype(int) + 1 - MIN_Y
@@ -1517,7 +1533,7 @@ def build_chunk(cx, cz, cols, edits):
         vol[wet] = np.array([B.wet(int(v)) for v in vals], np.uint16)[inv]
 
     # Biomes: one per 4x4 block cell, the same for all heights.
-    cells = cols.biome[x0 + 2:x0 + 16:4, z0 + 2:z0 + 16:4].T            # (z, x) 4x4
+    cells = cols.biome[ox + 2:ox + 16:4, oz + 2:oz + 16:4].T            # (z, x) 4x4
     bvals, binv = np.unique(np.tile(cells.ravel(), 4), return_inverse=True)
     biomes = Compound({"palette": List[String]([String(cols.biome_names[v]) for v in bvals])})
     if len(bvals) > 1:
@@ -1616,7 +1632,8 @@ def write_objects(path, size, T, H, players, objects, cols):
         json.dump(data, f, indent=1)
 
 
-def write_level_dat(path, name, spawn, yaw=SPAWN_YAW):
+def write_level_dat(path, name, spawn, yaw=SPAWN_YAW, size=None):
+    """size: the map size in blocks; the vanilla world border goes around the map (#172)."""
     def dim(kind, gen):
         return Compound({"type": String(f"minecraft:{kind}"), "generator": gen})
     void = Compound({"type": String("minecraft:flat"), "settings": Compound({
@@ -1649,7 +1666,17 @@ def write_level_dat(path, name, spawn, yaw=SPAWN_YAW):
                                     "minecraft:the_nether": dim("the_nether", nether),
                                     "minecraft:the_end": dim("the_end", end)})}),
     })
+    c = size / 2 if size else 0.0
+    edge = {"center_x": Double(c), "center_z": Double(c), "size": Double(size or 5.9999968e7),
+            "lerp_time": Long(0), "lerp_target": Double(size or 5.9999968e7), "safe_zone": Double(5),
+            "damage_per_block": Double(0.2), "warning_blocks": Int(5), "warning_time": Int(15)}
     if MC["data_version"] < V26_1:
+        for k, old in (("center_x", "BorderCenterX"), ("center_z", "BorderCenterZ"), ("size", "BorderSize"),
+                       ("lerp_time", "BorderSizeLerpTime"), ("lerp_target", "BorderSizeLerpTarget"),
+                       ("safe_zone", "BorderSafeZone"), ("damage_per_block", "BorderDamagePerBlock"),
+                       ("warning_blocks", "BorderWarningBlocks"), ("warning_time", "BorderWarningTime")):
+            v = edge[k]
+            data[old] = Double(v) if isinstance(v, Int) else v        # 1.21.1 reads the warnings as doubles
         File({"Data": data}, gzipped=True).save(path)
         return
     # 26.1: most fields leave level.dat for files in data/minecraft/ (docs/minecraft-versions.md)
@@ -1673,6 +1700,88 @@ def write_level_dat(path, name, spawn, yaw=SPAWN_YAW):
     os.makedirs(d, exist_ok=True)
     for f, v in files.items():
         File({"data": Compound(v), "DataVersion": Int(MC["data_version"])}, gzipped=True).save(os.path.join(d, f + ".dat"))
+    # The world border is data of the overworld (DimensionStorageFileFix in the 26.3 server)
+    d = os.path.join(os.path.dirname(path), "dimensions", "minecraft", "overworld", "data", "minecraft")
+    os.makedirs(d, exist_ok=True)
+    File({"data": Compound(edge), "DataVersion": Int(MC["data_version"])}, gzipped=True).save(
+        os.path.join(d, "world_border.dat"))
+
+
+# --------------------------------------------------------------------------------------------
+# Border (#172): blocks outside the map square for --border. The map itself does not change.
+# --------------------------------------------------------------------------------------------
+BORDERS = {"none": 0, "diorama": 2, "natural": 16, "wall": 8}     # design -> width of the ring in blocks
+
+
+def ring(n, r):
+    """x, z and distance d (1..r) of the columns outside the map square 0..n-1."""
+    x, z = (a.ravel() for a in np.meshgrid(np.arange(-r, n + r), np.arange(-r, n + r), indexing="ij"))
+    d = np.maximum.reduce([-x, x - n + 1, -z, z - n + 1])
+    return x[d > 0], z[d > 0], d[d > 0]
+
+
+def fill(E, x, z, y0, y1, block):
+    """Fill y0..y1-1 of each column (x, z). block: a state, or block IDs per column."""
+    y0, y1 = (np.broadcast_to(np.asarray(v, np.int32), x.shape) for v in (y0, y1))
+    k = np.maximum(y1 - y0, 0)
+    i = np.repeat(np.arange(len(x)), k)
+    ys = y0[i] + np.arange(len(i)) - np.repeat(np.cumsum(k) - k, k)
+    ids = np.full(len(x), B(block), np.uint16) if isinstance(block, str) else np.broadcast_to(block, x.shape)
+    E.add(x[i], ys, z[i], ids[i])
+
+
+def border(cols, design, colors, E):
+    """Draw the edge design around the map into E. colors: one dye per player, for the corner towers.
+    Returns the width of the ring in blocks."""
+    r = BORDERS[design]
+    if not r:
+        return 0
+    n = cols.n
+    x, z, d = ring(n, r)
+    ex, ez = np.clip(x, 0, n - 1), np.clip(z, 0, n - 1)
+    h = cols.wtop[ex, ez].astype(np.int32)        # surface of the nearest map column (ground or water)
+    g = cols.top[ex, ez].astype(np.int32)
+    if design == "diorama":
+        # A model on a plinth: the faces are stone bricks with a trim, and the bottom is 6 blocks under the lowest
+        # ground of the map (build_chunk cuts the map there). The trim is flush with the ground and holds the water.
+        f = cols.floor = int(cols.top[:n, :n].min()) - 6
+        a, b = d == 1, d == 2
+        fill(E, x[a], z[a], f, h[a], "stone_bricks")
+        fill(E, x[a], z[a], h[a], h[a] + 1, "polished_andesite")
+        fill(E, x[a], z[a], f, f + 2, "polished_deepslate")
+        fill(E, x[b], z[b], f, f + 2, "polished_deepslate")
+        fill(E, x[b], z[b], f + 2, f + 3, "polished_deepslate_slab[type=bottom]")
+        fill(E, x[b], z[b], h[b] - 1, h[b], "stone_brick_slab[type=top]")
+    elif design == "natural":
+        # The ground slopes down into a ring of sea, like the dark edge of the AoE2 map. Barriers hold the water.
+        bed = WATER_Y - 4
+        gy = np.maximum(bed, g - d - np.maximum(0, d - 2))
+        land = gy >= WATER_Y
+        edge_land = h == g
+        top = np.where(land & edge_land, cols.top_id[ex, ez], np.where((x + z) % 5 == 0, B("gravel"), B("sand")))
+        sub = np.where(land & edge_land, cols.sub_id[ex, ez], B("sand"))
+        fill(E, x, z, gy - 8, gy - 3, "stone")
+        fill(E, x, z, gy - 3, gy, sub)
+        fill(E, x, z, gy, gy + 1, top)
+        fill(E, x, z, gy + 1, WATER_Y + 1, "water")
+        o = d == r
+        fill(E, x[o], z[o], gy[o] + 1, WATER_Y + 1, "barrier")
+    elif design == "wall":
+        # A low wall of stone bricks with merlons, and a tower in a player color at each corner.
+        a = d <= 2
+        fill(E, x[a], z[a], h[a] - 8, h[a] + 4, "stone_bricks")
+        along = np.where((x < 0) | (x >= n), z, x)
+        m = (d == 2) & (along % 2 == 0)
+        fill(E, x[m], z[m], h[m] + 4, h[m] + 5, "stone_bricks")
+        for i, (cx, cz) in enumerate(((-4, -4), (n + 3, -4), (n + 3, n + 3), (-4, n + 3))):
+            t = (np.abs(x - cx) <= 3) & (np.abs(z - cz) <= 3)
+            top = int(h[t].max()) + 8
+            fill(E, x[t], z[t], int(h[t].min()) - 8, top, "stone_bricks")
+            band = colors[i % len(colors)] + "_concrete" if colors else "chiseled_stone_bricks"
+            fill(E, x[t], z[t], top - 3, top - 1, band)
+            rim = (np.maximum(np.abs(x - cx), np.abs(z - cz)) == 3) & ((x + z) % 2 == 0) & t
+            fill(E, x[rim], z[rim], top, top + 1, "stone_bricks")
+    return r
 
 
 # --------------------------------------------------------------------------------------------
@@ -1720,13 +1829,13 @@ def block_color(state):
 # --------------------------------------------------------------------------------------------
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
             barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False,
-            garrison="outside"):
+            garrison="outside", border_design="diorama"):
     global MC
     MC = VERSIONS[mc_version]
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
     try:
         _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-                 verbose, garrison)
+                 verbose, garrison, border_design)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
@@ -1734,7 +1843,7 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
 
 
 def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-             verbose, garrison):
+             verbose, garrison, border_design):
     buildings.BARRIERS = barriers
     buildings.TURN, yaw = ORIENTATIONS[orientation]
     MOVED.clear()           # the counts of an earlier conversion in this process
@@ -1781,8 +1890,10 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     book = place_book(cols, edits, spawn, texts, name)
     if book:
         print(f"  book with the scenario texts: lectern at {book}")
+    colors = [player_color(pid, players) for pid in sorted(players) if pid and any(o["player"] == pid for o in objects)]
+    r = border(cols, border_design, colors, edits)
     edits.connect()
-    per_chunk = edits.by_chunk(cols.width)
+    per_chunk = edits.by_chunk(max(cols.width, cols.n + r), -r)
     tick("objects")
     before = set(stats)
     unit_chunks = plan_units(objects, players, cols, rng, stats, birds, garrison) if with_units else {}
@@ -1799,6 +1910,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         os.makedirs(os.path.join(dim, d), exist_ok=True)
     entity_regions = {}
     nchunks = cols.width // 16
+    outside = cols.outside()
+    rim = [c for c in per_chunk if not (0 <= c[0] < nchunks and 0 <= c[1] < nchunks)]     # chunks of the border
     regions = {}
     top_view = np.zeros((cols.width, cols.width), np.uint16)     # for icon.png and preview.png
     for cx in range(nchunks):
@@ -1814,12 +1927,16 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
                 if ed:
                     entity_regions.setdefault((cx >> 5, cz >> 5), {})[(cx & 31, cz & 31)] = ed
                 tick("units")
+    for cx, cz in sorted(rim):
+        data, _ = build_chunk(cx, cz, outside, per_chunk[(cx, cz)], (cx * 16, cz * 16))
+        regions.setdefault((cx >> 5, cz >> 5), {})[(cx & 31, cz & 31)] = data
+    tick("chunks")
     for (rx, rz), chunks in regions.items():
         write_region(os.path.join(dim, "region", f"r.{rx}.{rz}.mca"), chunks)
     for (rx, rz), chunks in entity_regions.items():
         write_region(os.path.join(dim, "entities", f"r.{rx}.{rz}.mca"), chunks)
 
-    write_level_dat(os.path.join(out, "level.dat"), name, spawn, yaw)
+    write_level_dat(os.path.join(out, "level.dat"), name, spawn, yaw, cols.n)
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols)
 
     from PIL import Image
@@ -1839,7 +1956,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     tick("write")
     if verbose:
         print("  time: " + ", ".join(f"{k} {v:.1f}s" for k, v in times.items()))
-    print(f"Wrote {nchunks * nchunks} chunks, {cols.n}x{cols.n} blocks, to {out} "
+    print(f"Wrote {sum(map(len, regions.values()))} chunks, {cols.n}x{cols.n} blocks, to {out} "
           f"({time.time() - t0:.1f}s). Spawn: {spawn}")
 
 
@@ -1904,12 +2021,14 @@ def main(argv=None):
                     help=f"Minecraft Java version of the output (default {VERSION_NAME})")
     ap.add_argument("--orientation", choices=sorted(ORIENTATIONS), default="ne",
                     help="Minecraft corner of the top corner of the AoE2 screen (default ne)")
+    ap.add_argument("--border", choices=sorted(BORDERS), default="diorama",
+                    help="design of the edge outside the map (default diorama); all keep the vanilla world border at the edge")
     ap.add_argument("--verbose", action="store_true", help="print the time of each phase")
     a = ap.parse_args(argv)
     try:
         convert(a.scenario, a.output, a.tile_size, a.level_height, a.name, a.seed, a.preview, a.architecture,
                 a.player_architecture, not a.no_units, not a.no_barriers, a.mc_version, a.spawn, not a.no_birds,
-                a.orientation, a.verbose, a.garrison)
+                a.orientation, a.verbose, a.garrison, a.border)
     except OptionError as e:
         ap.error(str(e))
 

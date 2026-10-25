@@ -71,3 +71,4 @@ jobs:
           fi
           gh workflow run ci.yml --repo "$R" --ref main
           gh workflow run dashboard.yml --repo "$R" || true
+          gh workflow run coverage.yml --repo "$R" --ref main || true     # report and MAX on main (#233)

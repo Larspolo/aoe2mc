@@ -89,7 +89,8 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Books, study | `bookshelf`, `lectern` (with a book) | `university` |
 | Scholar statue | `chiseled_stone_bricks` pedestal, `quartz_pillar`, `chiseled_quartz_block` | `university` |
 | Rose window | stained glass panes | `monastery` |
-| Orange roof tiles (Krepost; Central European, Southeast Asian sets) | `red_sandstone` stairs and blocks | `krepost`, `Style.roof` |
+| Posts of an open belfry | `stone_brick_wall` | `fortified_church` |
+| Orange roof tiles (Krepost; Central European, Southeast Asian sets) | `red_sandstone` stairs and blocks | `krepost`, `fortified_church`, `Style.roof` |
 | Stepped stone roof (Mesoamerican set) | `stone_brick` stairs (hip roof) | `Style.roof` |
 | Thatch or shingle roof (East Asian set) | `spruce` stairs | `Style.roof` |
 | Cannon | `polished_basalt` barrel on its side | `tower` (bombard) |
