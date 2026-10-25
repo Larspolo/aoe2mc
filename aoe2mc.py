@@ -1576,6 +1576,23 @@ PASSABLE = ("short_grass", "tall_grass", "large_fern", "petals", "moss_carpet", 
 
 
 SEATS = {"minecraft:boat": 2, "minecraft:chest_boat": 1}
+CHAIN = 4                   # units per boat seat: each garrisoned unit rides the unit below it (#382)
+SUN = ("minecraft:zombie", "minecraft:zombie_villager", "minecraft:skeleton", "minecraft:stray", "minecraft:drowned")
+
+
+def depth(nbt):
+    """Number of rider levels above an entity."""
+    return max((1 + depth(p) for p in nbt.get("Passengers", [])), default=0)
+
+
+def sun_helmet(nbt):
+    """A mob of a ship stack that burns in the sun gets a helmet if it has none."""
+    for p in nbt.get("Passengers", []):
+        sun_helmet(p)
+    if str(nbt["id"]) in SUN:
+        arm = nbt.setdefault("ArmorItems", List[Compound]([Compound({}) for _ in range(4)]))
+        if not arm[3].get("id"):
+            arm[3] = units.item("leather_helmet", unbreakable=True)
 
 
 def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside", silent=False):
@@ -1585,6 +1602,9 @@ def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside
     out = {}
     refs = {o["ref"]: o for o in objects if o.get("ref") is not None}
     boats = {}                  # reference ID of a ship -> its boat NBT
+    stacks = {}                 # reference ID of a ship -> units per seat
+    full = Counter()            # reference ID of a ship -> garrisoned units without room (on its name tag)
+    labels = {}                 # reference ID of a ship -> the entity with its name tag
     taken = set()               # columns that garrisoned units use, so that they do not stand in one column
     # The holders come first: a ship must exist before its passengers board it.
     for o in sorted(objects, key=lambda o: bool(o.get("garrisoned"))):
@@ -1607,18 +1627,28 @@ def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside
             if held:
                 holder = refs.get(o.get("holder"))
                 if o.get("holder") in boats:
-                    ship = boats[o["holder"]]
-                    if len(ship.get("Passengers", [])) < SEATS[str(ship["id"])]:
-                        ship.setdefault("Passengers", List[Compound]([])).append(nbt)
-                        src["uuid"] = units.uuid_str(nbt["UUID"])
-                        stats["units (garrisoned, in a ship)"] += 1
+                    ship, ref = boats[o["holder"]], o["holder"]
+                    seats, n = ship.setdefault("Passengers", List[Compound]([])), stacks[ref]
+                    sun_helmet(nbt)
+                    if len(seats) < SEATS[str(ship["id"])]:
+                        seats.append(nbt)
+                        n.append(1)
+                    elif n and min(n) < CHAIN:          # a full seat: ride the top of its stack
+                        i = n.index(min(n))
+                        units.top_entity(seats[i])["Passengers"] = List[Compound]([nbt])
+                        n[i] += 1
                     else:
-                        stats["units (garrisoned, no free seat in the ship, skipped)"] += 1
+                        full[ref] += 1
+                        stats["units (garrisoned, ship full, counted on its name tag)"] += 1
+                        continue
+                    src["uuid"] = units.uuid_str(nbt["UUID"])
+                    stats["units (garrisoned, in a ship)"] += 1
                     continue
                 o = dict(o, x=holder["x"], y=holder["y"]) if holder else o
                 stats["units (garrisoned, next to the holder)"] += 1
             elif boat and o.get("ref") is not None:
-                boats[o["ref"]] = nbt
+                boats[o["ref"]], labels[o["ref"]] = nbt, units.top_entity(nbt)
+                stacks[o["ref"]] = [1] * len(nbt.get("Passengers", []))      # the crew
             stats["units"] += 1
         elif o["kind"] == "O" and object_mob(o["name"]):
             kind = object_mob(o["name"])
@@ -1646,6 +1676,9 @@ def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside
         if o["kind"] == "U":
             src["uuid"] = units.uuid_str(nbt["UUID"])
         out.setdefault((bx >> 4, bz >> 4), []).append((nbt, x, z, boat))
+    for ref, k in full.items():                 # the units without room: "Transport Ship (+6)"
+        name = json.loads(str(labels[ref]["CustomName"]))
+        labels[ref]["CustomName"] = String(json.dumps(dict(name, text=f"{name['text']} (+{k})")))
     return out
 
 
@@ -1769,7 +1802,7 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
             y = (top + wtop) / 2 + 0.3
         elif boat and wtop > top:
             col = vol[:, bz & 15, bx & 15]
-            h = 3 if nbt.get("Passengers") else 2                # the boat and its crew need free space
+            h = 1 + 2 * depth(nbt) if nbt.get("Passengers") else 2   # the boat and its crew (or stacks) need free space
             y = wtop
             while y < MAX_Y - 3 and not all(passable[col[y + k - MIN_Y]] for k in range(h)):
                 y += 1
