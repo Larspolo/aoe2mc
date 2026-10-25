@@ -24,7 +24,8 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   `actions/checkout` fails with "Repository not found". The `pulls` API needs `pull-requests: read` (else 403).
   A new `workflow_dispatch` workflow runs only after the merge to `main` (`/actions/workflows/F.yml/dispatches`, #207).
 - Minecraft server: a bad property value (`facing=up`) loads silently as the default state. An unknown block gives
-  "Recoverable errors when loading section". A missing `level.dat` compound gives "key missing: <name>" (#60).
+  "Recoverable errors when loading section". A missing `level.dat` compound gives "key missing: <name>" (#60). A bad
+  datapack file stops the server. A datapack `worldgen/` file makes the client warn "Experimental Settings" (#218).
 - Minecraft client (#178, #179): `tools/mc_shot.py` runs it in `Xvfb` (no window, offline, no sound). 1.21.1: Mesa OpenGL.
   26.3 finds no GLX visual in Xvfb: it needs `mesa-vulkan-drivers` (lavapipe) and Java 25, and a placeholder for the
   title panorama (the asset host is blocked). Hidden chat (`chatVisibility:2`) stops the chat lines in the log too.
