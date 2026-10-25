@@ -56,5 +56,4 @@ the `improve` skill, which uses the metrics in the run comments on the status is
 
 ## Later ideas (no ticket yet)
 
-- Real map tests with the sample maps of #29.
 - A small datapack with the scenario name, the player colors as teams, and the triggers as text.
