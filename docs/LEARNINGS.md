@@ -42,6 +42,9 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 
 - Test terrain code without a scenario: `columns()` in `tests/test_terrain.py` makes `aoe2mc.Columns` from a
   small terrain array. Maps of the same size draw the same random numbers, so two maps can be compared per block.
+- `place_objects` without a scenario: call it with one object dict (`kind`, `name`, `player`, `x`, `y`,
+  `rotation`, `hero`, `garrisoned`) on a 16 × 16 `Columns`. With `sys.settrace` this shows which branch each
+  `OtherInfo` name takes (#6).
 - `terrain_style` checks names in sequence: an earlier rule wins (`ROAD_GRAVEL` matched `GRAVEL` until #5).
 - Drawing all 243 building types for one architecture set takes about 1 s. A full gallery conversion takes
   about 30 s per set.
