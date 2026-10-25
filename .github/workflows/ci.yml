@@ -33,3 +33,5 @@ jobs:
           key: mc-${{ hashFiles('tools/mc_check.py') }}
       - name: Minecraft server check
         run: pytest -m mc
+      - name: Package
+        run: pip install . && cd /tmp && aoe2mc --help

@@ -21,11 +21,16 @@ The repository has no converted worlds. Convert a sample map to get one (see "Us
 
 ## Install
 
-    pip install -r requirements.txt
+Two ways:
+
+- Install the command `aoe2mc`: `pip install .` in the repository folder, or
+  `pipx install git+https://github.com/Larspolo/aoe2mc`.
+- Run the script from the repository folder: `pip install -r requirements.txt`, then use `python aoe2mc.py`.
 
 ## Use
 
-    python aoe2mc.py MyMap.aoe2scenario MyMapWorld --preview
+    aoe2mc MyMap.aoe2scenario MyMapWorld --preview
+    python aoe2mc.py MyMap.aoe2scenario MyMapWorld --preview      (the same, from the repository folder)
 
 Copy the folder `MyMapWorld` into your Minecraft `saves` folder. Open it in Minecraft Java 1.21.1 or newer.
 The world is in creative mode. Outside the map there is only void. The world list shows a small top view of the map
