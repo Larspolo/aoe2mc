@@ -58,7 +58,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Tent canvas | `white_wool`, a valance of wool in the player color | `army_tent`, `command_tent` |
 | Thatch | `hay_block` | `hut`, `settlement`, `tower` (African) |
 | Palisade stakes | `*_log[axis=y]` of two heights, `spruce_fence` tips | `wooden_fort`, `wall_segment`, `gate` |
-| Gold statue, finial | `gold_block` | `buddha_statue`, `stupa`, `monument` |
+| Gold statue, finial | `gold_block` | `buddha_statue`, `stupa`, `monument`, `temple` |
 | Painted wood (torii) | `red_concrete`, black top beam | `torii` |
 | Climbing plants | `vine`, `azalea_leaves` | `pillar` |
 | Charred timber | `coal_block`, `blackstone`, dark oak logs | `burned_building` |
@@ -80,7 +80,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Sacred tree | `oak_log`, `oak_leaves[persistent=true]` | `pagan_shrine` |
 | Sail | wool (player color) | `flagship` |
 | Hides | `brown_wool` | `helepolis` |
-| Band in the player color | `*_wool` (player color) | `town_center`, `castle`, `tower` |
+| Band in the player color | `*_wool` (player color) | `town_center`, `castle`, `tower`, `temple` |
 | Outside stairs to an upper floor | `*_stairs` of the wood of the set | `town_center` |
 | Books, study | `bookshelf`, `lectern` (with a book) | `university` |
 | Scholar statue | `chiseled_stone_bricks` pedestal, `quartz_pillar`, `chiseled_quartz_block` | `university` |
