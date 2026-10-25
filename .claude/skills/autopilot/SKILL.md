@@ -157,7 +157,10 @@ other runs change it too):
 Then add one short comment on the status issue: what you did, what is next, and questions for the owner.
 End it with one metrics line for each ticket of the run (the `improve` skill reads these lines):
 
-    Metrics: ticket #<n> · <size> · <merged|blocked|needs-human|none> · <minutes> min · CI runs <k> · time sinks: <list or "none">
+    Metrics: ticket #<n> · <size> · <merged|blocked|needs-human|none> · <minutes> min · setup <m> min · CI runs <k> · CI <c> min · time sinks: <list or "none">
+
+`setup`: minutes from the start time (step 4) to the claim of the first ticket (0 for later tickets).
+`CI <c> min`: the duration of the last CI run of the PR.
 
 GitHub sends this comment to the owner as a notification. Do not comment when nothing changed.
 
@@ -169,6 +172,12 @@ Answer these questions. Do the action for each "yes". Spend little time.
 - Did you do the same kind of task for the second time? → write a skill for it in `.claude/skills/`.
 - Would a test or tool have found a problem earlier? → make a `tooling` ticket (`P1` if it blocks other tickets).
 - Did you see a bug outside the ticket? → make a ticket. Do not fix it in this PR.
+- Did you install a package or download a file by hand? → add it to `scripts/cloud-setup.sh` (raise `SETUP_VERSION`).
+- Was CI red or slow for a reason outside your code (install, download, cache, network, runner)? → fix the workflow
+  in this PR when the fix is small, else make a `tooling` ticket.
+- Did `git status` show files that do not belong in git (logs, worlds, images, caches)? → add them to `.gitignore`.
+- Did something block you that only the owner can change (a host, the environment, the scheduled task, a GitHub
+  setting)? → make a `needs-human` ticket with numbered steps and the exact values. Look for an open one first.
 
 After step 8, run the `improve` skill when `runs` is a multiple of 5, when this run failed, or when a
 ticket took more than 90 minutes. It finds the largest loss in the metrics and makes one improvement.
