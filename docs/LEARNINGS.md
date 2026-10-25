@@ -33,6 +33,7 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   `samples/de-64.3.aoe2record` is an `mgz` test record (MIT, #134; more in `happyleavesaoc/aoc-mgz/master/tests/recs/`):
   `mgz.model.parse_match(f).map.tiles` gives terrain and elevation of a real DE map. Install `mgz` after
   `python3 -m pip install --ignore-installed setuptools` (the Debian setuptools cannot build it).
+  A record has each town center 4 times (IDs 109 and the annex parts 618–620): `read_record` skips them (#139).
 
 ## Libraries
 

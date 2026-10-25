@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-aoe2mc - Convert an Age of Empires II: DE scenario (.aoe2scenario) to a Minecraft Java world.
+aoe2mc - Convert an Age of Empires II: DE scenario (.aoe2scenario) or the start state of a recorded game
+(.aoe2record) to a Minecraft Java world.
 
 Usage:
     python aoe2mc.py MAP.aoe2scenario OUTPUT_WORLD_FOLDER [options]
@@ -216,12 +217,27 @@ def terrain_style(name):
 # --------------------------------------------------------------------------------------------
 # Read the AoE2 scenario.
 # --------------------------------------------------------------------------------------------
+def object_kinds():
+    """Object ID -> (kind prefix, name). Scenarios and recorded games use the same IDs."""
+    from AoE2ScenarioParser.datasets.buildings import BuildingInfo
+    from AoE2ScenarioParser.datasets.heroes import HeroInfo
+    from AoE2ScenarioParser.datasets.other import OtherInfo
+    from AoE2ScenarioParser.datasets.units import UnitInfo
+    kinds = {}
+    for prefix, enum in (("H", HeroInfo), ("U", UnitInfo), ("O", OtherInfo), ("B", BuildingInfo)):
+        for e in enum:          # later enums win: Building > Other > Unit > Hero
+            kinds[e.ID] = (prefix, e.name)
+    return kinds
+
+
+def read_map(path):
+    """read_record for .aoe2record files, else read_scenario."""
+    return (read_record if path.lower().endswith(".aoe2record") else read_scenario)(path)
+
+
 def read_scenario(path):
     from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
     from AoE2ScenarioParser.datasets.terrains import TerrainId
-    from AoE2ScenarioParser.datasets.buildings import BuildingInfo
-    from AoE2ScenarioParser.datasets.other import OtherInfo
-    from AoE2ScenarioParser.datasets.units import UnitInfo
 
     with contextlib.redirect_stdout(io.StringIO()):   # the parser prints a lot of status text
         scn = AoE2DEScenario.from_file(path)
@@ -236,11 +252,7 @@ def read_scenario(path):
 
     terrain_names = {t.value: t.name for t in TerrainId}
 
-    from AoE2ScenarioParser.datasets.heroes import HeroInfo
-    kinds = {}
-    for prefix, enum in (("H", HeroInfo), ("U", UnitInfo), ("O", OtherInfo), ("B", BuildingInfo)):
-        for e in enum:          # later enums win: Building > Other > Unit > Hero
-            kinds[e.ID] = (prefix, e.name)
+    kinds = object_kinds()
 
     players = {}
     for p in scn.player_manager.players:
@@ -269,6 +281,46 @@ def read_scenario(path):
                                 player=player, x=u.x, y=u.y, rotation=float(u.rotation or 0), garrisoned=garrisoned,
                                 ref=u.reference_id, holder=u.garrisoned_in_id if garrisoned else None))
     return size, terrain, elevation, terrain_names, texts, objects, players
+
+
+ANNEXES = {618, 619, 620}       # the three annex parts of a town center: the TC design draws them
+
+
+def read_record(path):
+    """The start state of a recorded game (the header snapshot), as read_scenario returns it. The mgz model
+    has no rotation (0) and no texts; the start view of a player is its start position."""
+    try:
+        from mgz.model import parse_match
+    except ImportError:
+        raise SystemExit("A .aoe2record file needs the mgz package: python3 -m pip install mgz") from None
+    from AoE2ScenarioParser.datasets.terrains import TerrainId
+    with open(path, "rb") as f:
+        match = parse_match(f)
+    size = match.map.dimension
+    terrain = np.zeros((size, size), np.int16)
+    elevation = np.zeros((size, size), np.float32)
+    for t in match.map.tiles:
+        terrain[t.position.x, t.position.y] = t.terrain
+        elevation[t.position.x, t.position.y] = t.elevation
+    terrain_names = {t.value: t.name for t in TerrainId}
+
+    players = {0: {"color": "light_gray", "arch": "western", "civ": "GAIA", "view": None}}
+    for p in match.players:
+        civ = (p.civilization or "?").upper()
+        players[p.number] = {"color": buildings.COLOR_NAMES[p.color_id] if 0 <= p.color_id < 8 else "light_gray",
+                             "arch": buildings.CIV_TO_ARCH.get(civ, "western"), "civ": civ,
+                             "view": (p.position.x, p.position.y) if p.position else None}
+
+    kinds, objects = object_kinds(), []
+    for player, objs in [(0, match.gaia)] + [(p.number, p.objects) for p in match.players]:
+        for o in objs:
+            if o.object_id in ANNEXES:
+                continue
+            prefix, name = kinds.get(o.object_id, ("?", f"UNKNOWN_{o.object_id}"))
+            objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name, player=player,
+                                x=o.position.x, y=o.position.y, rotation=0.0, garrisoned=False,
+                                ref=o.instance_id, holder=None))
+    return size, terrain, elevation, terrain_names, {k: "" for k in CHAPTERS}, objects, players
 
 
 def turn_tile(x, y, size, k):
@@ -1857,7 +1909,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         times[phase] = times.get(phase, 0.0) + now - clock[0]
         clock[0] = now
 
-    size, terrain, elevation, tnames, texts, objects, players = read_scenario(src)
+    size, terrain, elevation, tnames, texts, objects, players = read_map(src)
     tick("read")
     name = name or os.path.splitext(os.path.basename(src))[0]
     terrain, elevation = turn_map(buildings.TURN, size, terrain, elevation, objects, players)
@@ -1997,7 +2049,7 @@ def spawn_spec(v):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
-    ap.add_argument("scenario", help=".aoe2scenario file")
+    ap.add_argument("scenario", help=".aoe2scenario file, or .aoe2record (the start state of a recorded game)")
     ap.add_argument("output", help="output world folder (put it in .minecraft/saves/)")
     ap.add_argument("--tile-size", type=int_range(1, 16), default=4, help="blocks per tile (default 4)")
     ap.add_argument("--level-height", type=int_range(1, 16), default=3, help="blocks per elevation level (default 3)")
