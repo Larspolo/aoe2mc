@@ -768,6 +768,9 @@ def player_color(p, players=None):
 # Place all objects of the scenario.
 # --------------------------------------------------------------------------------------------
 MOUNTAINS = ("MOUNTAIN", "SNOW_MOUNTAIN")
+MONUMENTS = ("BUDDHA_STATUE", "INDIAN_STATUES", "OLD_STONE_HEAD", "NINE_BANDS", "PAGODA_", "TORII_GATE", "STUPA",
+             "TROWULAN_GATE", "REKHA_DEUL_TEMPLE", "SVAN_TOWER", "MEDITERRANEAN_COURTYARD_WALLS",
+             "MESOPOTAMIAN_PILLAR", "MESOPOTAMIAN_GARDEN", "MESOPOTAMIAN_TOMB", "BURNED_BUILDING")    # buildings.py designs
 PASSABLE_OBJECTS = ("FLOWER", "FERN", "RUG", "GRASS", "PLANT", "OYSTER", "FISH", "RELIC", "GRAVE", "BONFIRE",
                     "PATH_", "BLACK_TILE", "ICE_NAVIGABLE", "DOLPHIN", "BOX_TURTLES")
 
@@ -816,6 +819,9 @@ def place_objects(objects, players, cols, rng):
         elif kind == "B":
             buildings.place_building(E, cols, B, o, players, walls, gates)
             stats["buildings"] += 1
+        elif kind == "O" and name.startswith(MONUMENTS):
+            buildings.place_building(E, cols, B, dict(o, kind="B"), players, set(), {})
+            stats["monuments"] += 1
         elif kind == "O" and "TREE" in name:
             make_tree(E, tree_kind(name), bx, y, bz, rng)
             stats["trees"] += 1
