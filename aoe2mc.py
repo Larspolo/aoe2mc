@@ -937,6 +937,23 @@ def decor(E, cols, name, rect, rng):
         put(-1, 0, 0, "oak_fence"); put(-1, 1, 0, "lightning_rod")
     elif "TARGET" in n:
         put(0, 0, 0, "hay_block"); put(0, 1, 0, "target")
+    elif n == "RUNESTONES":                            # one tall carved stone and two small ones
+        put(0, 0, 0, "tuff"); put(0, 1, 0, "chiseled_tuff"); put(0, 2, 0, "tuff_wall")
+        put(-1, 0, 1, "polished_andesite"); put(-1, 1, 1, "andesite_wall")
+        put(1, 0, -1, "mossy_cobblestone"); put(1, 1, 0, "red_carpet"); put(1, 0, 0, "chiseled_tuff_bricks")
+    elif n == "NORSE_COLUMN":                          # a carved wooden pole on a stone base
+        put(0, 0, 0, "stone_bricks")
+        for dy in range(1, 5):
+            put(0, dy, 0, "spruce_log[axis=y]" if dy % 2 == 0 else "stripped_spruce_log[axis=y]")
+        put(0, 5, 0, "lantern[hanging=false]")
+    elif n == "NORSE_BANNER":
+        put(0, 0, 0, "spruce_fence"); put(0, 1, 0, "spruce_fence"); put(0, 2, 0, "red_banner[rotation=8]")
+    elif n == "WOODEN_ROAD":                           # flat: planks in the ground, units walk on it
+        for x in range(x0, x1):
+            for z in range(z0, z1):
+                yy = cols.surface(x, z)
+                if yy - 1 == cols.top[min(max(x, 0), cols.n - 1), min(max(z, 0), cols.n - 1)]:
+                    E.add([x], [yy - 1], [z], "spruce_planks" if rng.random() < 0.8 else "stripped_spruce_wood[axis=x]")
     elif "RUG" in n:
         E.box(cx - 1, cx + 1, y, y + 1, cz - 1, cz + 1, f"{pick(['red', 'orange', 'purple', 'cyan'])}_carpet")
     elif "VASE" in n:
@@ -1070,7 +1087,7 @@ MONUMENTS = ("BUDDHA_STATUE", "INDIAN_STATUES", "OLD_STONE_HEAD", "NINE_BANDS", 
              "TROWULAN_GATE", "REKHA_DEUL_TEMPLE", "SVAN_TOWER", "MEDITERRANEAN_COURTYARD_WALLS",
              "MESOPOTAMIAN_PILLAR", "MESOPOTAMIAN_GARDEN", "MESOPOTAMIAN_TOMB", "BURNED_BUILDING")    # buildings.py designs
 PASSABLE_OBJECTS = ("FLOWER", "FERN", "RUG", "GRASS", "PLANT", "OYSTER", "FISH", "RELIC", "GRAVE", "BONFIRE",
-                    "PATH_", "BLACK_TILE", "ICE_NAVIGABLE", "DOLPHIN", "BOX_TURTLES")
+                    "PATH_", "BLACK_TILE", "ICE_NAVIGABLE", "DOLPHIN", "BOX_TURTLES", "WOODEN_ROAD")
 
 
 def object_footprint(o, T):
