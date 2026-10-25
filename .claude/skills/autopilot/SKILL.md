@@ -146,6 +146,8 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
 2. Beat (`python3 tools/claim.py N --beat`) at least every 20 minutes until the merge (see "Runs can overlap").
    Read the ticket body and all its comments first: the owner's comments win over the body. Read only the code that the ticket needs (see the code map in `CLAUDE.md`). Use Grep, not full-file reads.
 3. For a bug, write a failing test first. Then change the code. Keep the diff small and in the existing style.
+   Put new tests in a new file `tests/test_<topic>.py`: parallel tickets that append to the end of one test file
+   conflict (66 merge conflicts in 6 hours on 2026-10-25, 3 on #295 in `tests/test_objects.py`).
 4. Verify with the `verify` skill. The level depends on the change.
 5. Improve the process (step 9) now, so that the changes go into the same PR.
 6. Commit: subject in STE imperative, body with what and why, and `Closes #<number>`.

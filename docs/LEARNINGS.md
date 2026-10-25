@@ -7,73 +7,51 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 ## Environment
 
 - GitHub raw files, PyPI and the Mojang hosts (`piston-meta`, `piston-data`, `libraries.minecraft.net`) work.
+  Blocked: `minecraft.wiki`, `minecraft.net`, `papermc.io` (use `misode/mcmeta`, branch `<version>-summary`, and the
+  real server: `docs/minecraft-versions.md`, "Method"), AoE2 wiki HTML (use `tools/refimage.py`, MediaWiki API) and the
+  record hosts (`aoe.ms`, `data.aoe2companion.com`, `www.aoe2insights.com`).
 - `/root/.local/bin/pytest` and `/usr/bin/pip` use another Python: use `python3 -m pytest`, `python3 -m pip`. "cannot import
-  name '_imaging' from 'PIL'": the Debian pillow shadows it: `python3 -m pip install --ignore-installed pillow`.
-- `minecraft.wiki`, `minecraft.net` and `papermc.io` are blocked. For Minecraft facts use the Mojang data reports in
-  `misode/mcmeta` (GitHub raw, branch `<version>-summary`) and the real server (`docs/minecraft-versions.md`, "Method").
-- Minecraft 26.3 (the default) needs Java 25: `scripts/cloud-setup.sh` or `tools/mc_check.py` (apt-get as root) installs it (#195).
-  Send `stop` only after "Done (" is in `logs/latest.log`. Do not use `pkill -f server.jar`: it kills your own shell.
-  A `&` job ignores SIGINT: test Ctrl-C with `Popen(..., start_new_session=True)` and `os.killpg(pid, SIGINT)` (#137).
+  name '_imaging' from 'PIL'": `python3 -m pip install --ignore-installed pillow`. `mgz` needs
+  `python3 -m pip install --ignore-installed setuptools` first.
+- Minecraft 26.3 (the default) needs Java 25 (`scripts/cloud-setup.sh`, #195). Send `stop` only after "Done (" is in
+  `logs/latest.log`. Do not use `pkill -f server.jar`: it kills your own shell. A `&` job ignores SIGINT: test Ctrl-C
+  with `Popen(..., start_new_session=True)` and `os.killpg(pid, SIGINT)` (#137).
 - GitHub in cloud sessions: `gh api repos/Larspolo/aoe2mc/...` (REST) works. GraphQL (`gh issue list`, `gh pr create`),
-  `search/...` and branch deletes give 403. CI job logs: only `mcp__github__get_job_logs`. A push to a new ref works,
-  a non-fast-forward push fails: `tools/claim.py` uses it as a lock (#211). REST ref paths: `git/refs/heads/...`.
+  `search/...` and branch deletes give 403. A push to a new ref works, a non-fast-forward push fails: `tools/claim.py`
+  uses it as a lock (#211). REST ref paths: `git/refs/heads/...`. `urllib` with a JSON body needs
+  `Content-Type: application/json`, else 415 (#345).
 - Quote the heredoc tag (`<<'EOF'`) for GitHub text: `<<EOF` runs each `` `name` `` as a command. Pass paths as arguments.
-- A task from `create_trigger` has no repository: set `Larspolo/aoe2mc` in the claude.ai UI. Scheduled runs use
-  Sonnet 5.5 unless the task sets another model. Some sessions have no `fire_trigger` tool: skip the fan-out, report it.
-- The repository is private: a workflow with a `permissions:` block also needs `contents: read`, or
-  `actions/checkout` fails with "Repository not found". The `pulls` API needs `pull-requests: read` (else 403).
-  A new `workflow_dispatch` workflow runs only after the merge to `main` (`/actions/workflows/F.yml/dispatches`, #207).
+- Private repository: a workflow with a `permissions:` block also needs `contents: read`; the `pulls` API needs
+  `pull-requests: read`. A new `workflow_dispatch` workflow runs only after the merge to `main` (#207).
 - Minecraft server: a bad property value (`facing=up`) loads silently as the default state. An unknown block gives
-  "Recoverable errors when loading section". A missing `level.dat` compound gives "key missing: <name>" (#60). A bad
+  "Recoverable errors when loading section", an unknown block entity id "Skipping block entity with invalid type"
+  (26.3 has no `bed` block entity, #249). A missing `level.dat` compound gives "key missing: <name>" (#60). A bad
   datapack file stops the server. A datapack `worldgen/` file makes the client warn "Experimental Settings" (#218).
-- Minecraft client (#178, #179): `tools/mc_shot.py` runs it in `Xvfb` (no window, offline, no sound). 1.21.1: Mesa OpenGL.
-  26.3 finds no GLX visual in Xvfb: it needs `mesa-vulkan-drivers` (lavapipe) and Java 25, and a placeholder for the
-  title panorama (the asset host is blocked). The view ends at about 100 blocks: put `--at` near the subject (#208).
-- AoE2 wiki: HTML pages give 403 (Cloudflare). Use `tools/refimage.py` (MediaWiki API, own `User-Agent`). Page text:
-  `api.php?action=parse&page=Title&prop=wikitext&format=json&formatversion=2`.
-- AoE2 recorded games: the record hosts (`aoe.ms`, `data.aoe2companion.com`, `www.aoe2insights.com`) are blocked.
-  `samples/de-64.3.aoe2record` is an `mgz` test record (MIT, #134; more in `happyleavesaoc/aoc-mgz/master/tests/recs/`):
-  `mgz.model.parse_match(f).map.tiles` gives terrain and elevation of a real DE map. Install `mgz` after
-  `python3 -m pip install --ignore-installed setuptools` (the Debian setuptools cannot build it).
-  A record has each town center 4 times (IDs 109 and the annex parts 618–620): `read_record` skips them (#139).
-- An unknown block entity id gives "Skipping block entity with invalid type": 26.3 has no `bed` block entity (#249).
-- Parallel runs read the same new owner comment at once: just before you make a ticket from it, list the issues of
-  the last 15 minutes and reply in its thread first (3 copies of one epic: #306, #310, #313; lock: #320).
-- GitHub Actions: 2,000 free minutes per month (private repository), each job rounded up to 1 minute. CI on each PR and
-  the event workflows used about 900 minutes per hour with 16 runs: PRs have no CI now, only local checks (`docs/STEERING.md`).
-- Old scenarios for local checks (do not commit, no license): GitHub raw `SiegeEngineers/genie-rs/master/crates/genie-scx/
-  test/scenarios/` (`Age of Heroes b1-3-5.scx` is format 1.21; names in `format.rs` tests, #311).
-- The 26.3 server writes a missing `white-list` as `true`: no client can join. Write `white-list=false` in
-  `server.properties` (`game/run.py` `properties()`, #285).
-- Next ticket on the session branch after a squash merge: the remote branch still has the old commits, and the merge
-  fallback can conflict. Use `git merge -X ours --no-edit origin/<branch>` (its content is on main already).
-- Do not run `claim.py N --beat` in a background loop and in the foreground: two beats race, and one fails with
-  "belongs to another run" although the claim is yours.
-- `tools/claim.py` names the run by the current local branch (`who()`): a beat from a helper branch fails with
-  "belongs to another run". Stay on the session branch and push with `HEAD:<branch>` (#361).
-- The cloud clone is shallow (`git rev-parse --is-shallow-repository`): `git fetch --unshallow origin` before a scan
-  of the history or a `git log` of old files (#367).
+  The 26.3 server writes a missing `white-list` as `true`: write `white-list=false` (`game/run.py`, #285).
+- Minecraft client (#178, #179): `tools/mc_shot.py` runs it in `Xvfb`. 26.3 needs `mesa-vulkan-drivers` (lavapipe) and
+  a placeholder for the title panorama. The view ends at about 100 blocks: put `--at` near the subject (#208).
+- Test data: `samples/de-64.3.aoe2record` (`mgz`, MIT, #134; each town center 4 times, #139). Old `.scx` (no license, do not
+  commit): GitHub raw `SiegeEngineers/genie-rs/master/crates/genie-scx/test/scenarios/` (format 1.21: `Age of Heroes b1-3-5.scx`).
+- `tools/claim.py` names the run by the current local branch (`who()`): stay on the session branch (a beat from a helper
+  branch fails with "belongs to another run", #361). Do not beat in a background loop and in the foreground at once.
+- The cloud clone is shallow: `git fetch --unshallow origin` before a scan of the history (#367).
 
 ## Libraries
 
 - AoE2ScenarioParser 0.9.8 makes new scenarios (`tools/scenarios.py`: `new_scenario`, `add_unit`, `save`). It prints much
   text (`redirect_stdout`), default players are RANDOM (`western`), and `write_to_file` writes the output file name into
   the file: for the same bytes use `scenarios.save(..., name)` (#204).
-- The server drops entity tags that it does not know, without a log line. To check a new entity format, let the
-  server save the world and compare the entity NBT before and after (method in `docs/minecraft-versions.md`).
-  A tag with a wrong type gives "Serialization errors" (WARN), which `tools/mc_check.py` finds.
-- `tools/fetch_mcdata.py` reads the exact Mojang data from `misode/mcmeta`. PrismarineJS lags behind; its
-  `data/pc/common/protocolVersions.json` has the data versions of all releases (26.3 = 5023).
-- `urllib` with a JSON body needs the header `Content-Type: application/json`, else GitHub answers 415 (#345).
+- The server drops entity tags that it does not know, without a log line: let the server save the world and compare
+  the entity NBT (`docs/minecraft-versions.md`). A wrong tag type gives "Serialization errors" (`mc_check.py`).
+  New entity NBT: convert a map with one unit per type (`add_unit` in a loop) and run `tools/mc_check.py` (1 min).
+- PrismarineJS `data/pc/common/protocolVersions.json` has the data versions of all releases (26.3 = 5023).
 
 ## Code
 
-- AoE2 map orientation (#23): tile (0, 0) is the left corner of the screen, (max, 0) the top (parser `area.py`
-  `CORNERS`; openage: axes NE, SE). Block x = east, z = south: the world is turned 45°, not mirrored; the AoE2 top
-  corner is in the north-east. The spawn looks north-east like the AoE2 camera (`SPAWN_YAW`). Gates `WEST_TO_EAST`
-  and `NORTH_TO_SOUTH` are diagonal. Do not trust the axis gate names (`samples/gallery` has a `NORTHWEST_TO_SOUTHEAST`
-  gate along tile x): `plan_walls` uses the walls next to the gate. `--orientation` turns the tile grid (`turn_map`)
-  and each building canvas (`buildings.turn`); gates, walls and bridges follow their neighbours.
+- AoE2 map orientation (#23): tile (0, 0) is the left corner of the screen, (max, 0) the top. Block x = east, z = south:
+  the world is turned 45°, not mirrored; the AoE2 top corner is in the north-east (`SPAWN_YAW`). Do not trust the axis
+  gate names: `plan_walls` uses the walls next to the gate. `--orientation` turns the tile grid (`turn_map`) and each
+  building canvas (`buildings.turn`); gates, walls and bridges follow their neighbours.
 - Real maps have all water at elevation 0 (#164). `terrain_style`: an earlier rule wins (`ROAD_GRAVEL` matched `GRAVEL`, #5).
 - Golden test: change the house chimney of the tiny scenario to see it fail. `columns()` in `tests/test_terrain.py`
   makes `Columns` from a terrain array. Maps of one size draw the same random numbers: compare them per block.
@@ -109,5 +87,25 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   In a test, compute its block area from `buildings.footprint(name)` (#296).
 - Sibling sub-issues (#249-#256) run in parallel: before you add a helper or a tool option, `git fetch origin main` and
   grep for it. #252 and #265 both added `render.py --cut`, and two runs added a `furnish` (#252).
+- `place_objects` without a scenario: one object dict (`kind`, `name`, `player`, `x`, `y`, `rotation`, `hero`,
+  `garrisoned`) on a 16 × 16 `Columns`. Buildings (also `FISH_TRAP`, docks) need `kind="B"`. `build_chunk` returns
+  `(nbt, vol)`: test exact blocks with `vol` (#19). Footprint rule: `Edits.add` keeps a block outside the footprint
+  when `y >= cols.wtop + E.HEAD`. Match a block by its name before `[` (`water_cauldron` starts with `water`, #295).
+- `aoe2mc.py` reads `tools/mcdata/1.21.1.json` at import. A new runtime data file must go into the package data
+  (`pyproject.toml`; test: `pip install .` in a venv).
+- Generated on main, not in PRs: the column "Used today in" of `docs/DESIGN.md` (`tools/feature_table.py`), `docs/coverage.md`
+  and `MAX` in `tests/test_coverage.py` (`coverage.yml`, #233, #234). A conflict there: take main's side.
+- Block IDs in `B` depend on earlier tests: draw random numbers in state-name order, not ID order (a cause of full-suite-only failures, #44).
+- An invalid item in a block entity can vanish without a log line. `tools/mc_check.py W --keep DIR` keeps the saved world
+  (#27). 26.3 saves a default state as the bare name and in another property order: normalize before you compare (#189).
+- Inside of a design: `tools/render.py building NAME OUT.png --cut 2` (#265); exact layers: `c.get(x, y, z)` on a `Canvas`
+  (#255). `vary()` materials: `render.building_blocks(NAME, arch, variant=v)` (#146). `render.py world` draws Y >= 50
+  (`--y0 -64` for `--border`); `--scale 4` gives about 800 px like `docs/images/` (#262).
+- `aoe2mc.json`: object kind is `"unit"`; "ground" over a footprint is the top of the barriers: take the free cells next
+  to it (`Map.around`, #307). Stump names: `STUMP`, `*_STUMP`. The `buildings` scenario: building i of `BuildingInfo` is
+  near tile (4 + i % 40 × 7, 4 + i // 40 × 7) (#251).
+- Parallel sibling tickets: before you add a helper or a tool option, `git fetch origin main` and grep for it (two runs
+  added `render.py --cut` and a `furnish()`; the second `furnish()` broke main, #263). Put the tests of a ticket in a new
+  file `tests/test_<topic>.py`: tests appended at the end of a shared file conflict (3 times on #295).
 - A datapack `load` function or an RCON `@e` selector sees only entities of loaded chunks: 26.3 loads none without a
   player. In an RCON check, `forceload add X0 Z0 X1 Z1` (at most 256 chunks per command) first (#358).
