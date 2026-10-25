@@ -996,7 +996,8 @@ def decor(E, cols, name, rect, rng):
     elif "BONFIRE" in n or n.startswith(("FLAME", "FLARE")):     # a flare is a signal: tall smoke
         put(0, 0, 0, f"campfire[lit=true,signal_fire={str(n.startswith('FLARE')).lower()}]")
     elif "STUMP" in n:
-        put(0, 0, 0, "stripped_bamboo_block[axis=y]" if "BAMBOO" in n else "spruce_log[axis=y]")
+        put(0, -1, 0, "stripped_bamboo_block[axis=y]" if "BAMBOO" in n else "spruce_log[axis=y]")   # level: walk over it
+        put(0, 0, 0, "air")                                     # no grass or flower on the log
     elif n.startswith(("PATH_", "BLACK_TILE")):        # flat: a path in the ground, black carpet on it
         for x in range(x0, x1):
             for z in range(z0, z1):
@@ -1215,7 +1216,7 @@ MONUMENTS = ("BUDDHA_STATUE", "INDIAN_STATUES", "OLD_STONE_HEAD", "NINE_BANDS", 
              "MESOPOTAMIAN_PILLAR", "MESOPOTAMIAN_GARDEN", "MESOPOTAMIAN_TOMB", "BURNED_BUILDING")    # buildings.py designs
 PASSABLE_OBJECTS = ("FLOWER", "FERN", "RUG", "GRASS", "PLANT", "OYSTER", "FISH", "RELIC", "GRAVE", "BONFIRE",
                     "PATH_", "BLACK_TILE", "ICE_NAVIGABLE", "DOLPHIN", "BOX_TURTLES", "KELP", "WATER_LILY",
-                    "FALLEN_LEAVES")
+                    "FALLEN_LEAVES", "STUMP")
 
 
 def object_footprint(o, T):

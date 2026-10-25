@@ -73,6 +73,21 @@ def test_blocks_under_water_are_waterlogged():
     assert mcvalid.invalid_states(B.states) == {}
 
 
+def test_tree_stump_is_level_with_the_ground_and_free_for_units():
+    """A stump does not stop units or the player: the top of a log in the ground, no barrier, no block above (#307)."""
+    B = aoe2mc.B
+    for name in ("STUMP", "BAMBOO_STUMP", "BAOBAB_STUMP", "LUSH_BAMBOO_STUMP"):     # the stumps of the parser
+        cols = aoe2mc.Columns(16, np.zeros((16, 16), np.int16), np.zeros((16, 16), np.float32),
+                              {0: "GRASS_1"}, 4, 3, np.random.default_rng(1))
+        o = dict(kind="O", name=name, player=0, x=2.5, y=2.5, rotation=0.0, hero=False, garrisoned=False)
+        E, stats = aoe2mc.place_objects([o], {}, cols, np.random.default_rng(1))
+        assert not cols.blocked.any(), name
+        vol = aoe2mc.build_chunk(0, 0, cols, E.by_chunk(cols.n)[(0, 0)])[1]
+        y = cols.surface(10, 10) - aoe2mc.MIN_Y                       # the first free block above the ground
+        assert B.states[vol[y - 1, 10, 10]].endswith(("spruce_log[axis=y]", "stripped_bamboo_block[axis=y]")), name
+        assert (vol[y:, 8:12, 8:12] == 0).all(), name                  # nothing above the ground: air only
+
+
 SHORE = ["DRIFTWOOD_GROUND", "DRIFTWOOD_WATER", "FLOTSAM", "KELP_SEAWEEDS", "WATER_LILY", "BEACHED_WHALE",
          "SMALL_WATERFALL", "FALLEN_LEAVES_PEACH_BLOSSOM", "FALLEN_LEAVES_MAPLE", "FALLEN_LEAVES_MAPLE_AUTUMN"]
 
