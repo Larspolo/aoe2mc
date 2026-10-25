@@ -25,6 +25,7 @@ The README already uses this style. Keep it.
 | Check states | `tools/mcvalid.py` (`block_error`, `entity_error`, `biome_error`) |
 | Coverage of AoE2 types | `python3 tools/coverage.py` writes `docs/coverage.md` (designs, mappings, fallbacks) |
 | Minecraft data | `python3 tools/fetch_mcdata.py VERSION` writes `tools/mcdata/VERSION.json` |
+| Block colors | `python3 tools/fetch_colors.py VERSION` writes `tools/mcdata/colors-VERSION.json` (for `render.py`) |
 
 Put scratch output (worlds, scenarios, images) in the scratchpad or in `out/` (ignored by git). Never commit worlds.
 

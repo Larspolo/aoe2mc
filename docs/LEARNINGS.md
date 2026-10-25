@@ -24,6 +24,7 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 - AoE2 wiki: HTML pages give a Cloudflare challenge (403). The MediaWiki API works: `ageofempires.fandom.com/
   api.php?action=query&titles=File:Castle_aoe2DE.png&prop=imageinfo&iiprop=url&format=json` gives the image URL
   on `static.wikia.nocookie.net` (WebP).
+  `urllib` with the default User-Agent gets 403 there: send another `User-Agent` (see `tools/refimage.py`).
 
 ## Libraries
 
