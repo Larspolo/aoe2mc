@@ -72,6 +72,8 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Chhatri (small domed kiosk) | `quartz_pillar` posts and a small dome | `taj` (Wonder, South Asian) |
 | Chain, rope | `chain` | `dock`, `siege_workshop`, `shipyard`, `harbor_chain` |
 | Portcullis, grille | `iron_bars` | `gate`, `castle` |
+| Wooden hoarding | wood slab (top) with a `*_fence` rail | `donjon` |
+| Coat of arms | `*_wall_banner` (player color) over the gate | `donjon` |
 | Lamp | `lantern` | `decorate()`, `blacksmith` (hanging) |
 | Siege engine under construction | spruce slabs, fences and logs | `siege_workshop` |
 | Cloth awning | `*_wool` in the player color | `house` (flat roofs) |

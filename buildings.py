@@ -1215,8 +1215,7 @@ def helepolis(c, w, st, col, T, ctx):
 def tower(c, w, st, col, T, ctx, kind="watch"):
     """Slim shaft, a door, bands in the player color and an overhanging lookout with the roof of the set (#76)."""
     stone, mid, cc = st.stone, w // 2, (w - 1) / 2
-    hb = max({"watch": 3 * T, "guard": 3 * T + 2, "bombard": 3 * T + 2, "keep": 3 * T + 4,
-              "donjon": 3 * T + 6}.get(kind, 3 * T), 8)
+    hb = max({"watch": 3 * T, "guard": 3 * T + 2, "bombard": 3 * T + 2, "keep": 3 * T + 4}.get(kind, 3 * T), 8)
     high = kind != "watch"
     rnd = st.domes and not st.eaves and not st.torons                     # Middle Eastern towers are round
     c.box(0, w, 0, 1, 0, w, st.stone2)
@@ -1249,7 +1248,7 @@ def tower(c, w, st, col, T, ctx, kind="watch"):
         if st.eaves:                                                      # chhajja: a sloped overhang
             sl = family(st.roof)[1]
             c.walls(-2, w + 2, hb + 1, hb + 2, -2, w + 2, f"{sl}[type=top]")
-        if kind in ("keep", "donjon") or (st.eaves and high):            # a dome on the large towers
+        if kind == "keep" or (st.eaves and high):            # a dome on the large towers
             top = c.dome(cc, cc, max(1.2, w / 2 - 0.5), hb + 2, st.dome)
         else:
             c.flag(mid, hb + 2, mid, col, 3)
@@ -1279,6 +1278,47 @@ def tower(c, w, st, col, T, ctx, kind="watch"):
                          (mid, -1, "z"), (mid, -2, "z"), (-1, mid, "x"), (-2, mid, "x")):
             c.set(x, hb + 1, z, f"polished_basalt[axis={ax}]")
     c.banner(mid, hb - 4, w, col)
+
+
+def donjon(c, w, st, col, T, ctx):
+    """Donjon (Sicilians): a tall square keep on a low crenellated base, a flat top with merlons and a band in the
+    player color, a wooden hoarding, and a corner stair turret with the roof of the set."""
+    stone, mid = st.stone, w // 2
+    wood = st.wood.removesuffix("_planks")
+    wood = wood if wood in WOODS else "spruce"
+    hk = max(3 * T + 4, 9)                                                 # top of the keep walls
+    c.box(0, w, 0, 1, 0, w, st.stone2)
+    c.box(0, w, 1, 3, 0, w, st.stone2)                                     # base (talus) with a walkway
+    c.crenels(0, w, 0, w, 3, st.merlon or st.stone2)
+    c.box(1, w - 1, 1, hk, 1, w - 1, stone)                                # keep
+    c.box(mid - (w > 3), mid - (w > 3) + 1, 1, 3, w - 1, w, "air")         # gate in the base
+    c.door(mid - (w > 3), 1, w - 2, wood=wood)
+    c.banner(mid - (w > 3), 5, w - 1, col)                                 # coat of arms over the gate
+    for y in range(5, hk - 2, 3):                                          # arrow slits
+        for x, z in ((mid, 1), (1, mid), (w - 2, mid)):
+            c.set(x, y, z, "iron_bars")
+        if w > 4:
+            c.set(mid + 1, y, w - 2, "iron_bars")
+    c.walls(1, w - 1, hk - 1, hk, 1, w - 1, f"{col}_wool")                 # band in the player color
+    c.crenels(1, w - 1, 1, w - 1, hk, st.merlon or stone)
+    c.box(2, w - 2, hk - 1, hk, 2, w - 2, st.floor)                        # roof terrace with goods
+    c.set(2, hk, w - 3, "barrel[facing=up]")
+    if w >= 6:
+        x0, x1, z0, z1 = w - 3, w, 0, 3                                   # stair turret on the north-east corner
+        ht = hk + 4
+        c.box(x0, x1, 1, ht, z0, z1, stone)
+        c.walls(x0, x1, hk - 4, hk - 3, z0, z1, f"{col}_wool")
+        for y in range(6, ht - 3, 4):
+            c.set(x1 - 1, y, z0 + 1, "iron_bars")
+        if st.shape in ("gable", "hip"):                                   # the tiled hip roof of the game model
+            top = c.hip(x0 - 1, x1 + 1, z0 - 1, z1 + 1, ht - 1, "brick")
+        else:
+            top = c.roof(x0, x1, z0, z1, ht, st)
+        c.flag(x0 + 1, top + 1, z0 + 1, col, 2)
+        c.box(2, min(5, w - 2), hk - 3, hk - 2, w - 1, w, f"{wood}_slab[type=top]")   # wooden hoarding
+        c.box(2, min(5, w - 2), hk - 2, hk - 1, w - 1, w, f"{wood}_fence")
+    else:
+        c.flag(mid, hk, mid, col, 2)
 
 
 def outpost(c, w, st, col, T, ctx):
@@ -1797,7 +1837,7 @@ def select(name):
         ("PAVILION", pavilion, {}), ("YURT", yurt, {}), ("HUT", hut, {}), ("TRADE_WORKSHOP", blacksmith, {}),
         ("POENARI", castle, {}), ("TOWER_OF_LONDON", krepost, {}),
         ("WONDER", wonder, {}), ("TOWN_CENTER", town_center, {}), ("KREPOST", krepost, {}),
-        ("CASTLE", castle, {}), ("FORTRESS", castle, {}), ("DONJON", tower, {"kind": "donjon"}),
+        ("CASTLE", castle, {}), ("FORTRESS", castle, {}), ("DONJON", donjon, {}),
         ("BOMBARD_TOWER", tower, {"kind": "bombard"}), ("KEEP", tower, {"kind": "keep"}),
         ("GUARD_TOWER", tower, {"kind": "guard"}), ("GATE", gate, {}), ("OUTPOST", outpost, {}),
         ("TOWER", tower, {"kind": "watch"}), ("WALL", wall_segment, {}), ("PALISADE", wall_segment, {}),
