@@ -5,9 +5,7 @@ name: Unconflict
 # "dirty" and GitHub starts no CI. A push with GITHUB_TOKEN starts no workflow: this job starts CI on the branch,
 # and Automerge accepts that CI run.
 on:
-  schedule:
-    - cron: "*/5 * * * *"      # dirty PRs get no CI event, so they wait for this job
-  workflow_dispatch:      # Automerge starts it after each merge
+  workflow_dispatch:      # by hand only: each run merges main into its own PR (autopilot step 6.10)
 
 permissions:
   contents: write         # push the merge commit

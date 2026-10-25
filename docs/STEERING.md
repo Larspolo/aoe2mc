@@ -15,7 +15,7 @@ Each run does one work cycle (the `autopilot` skill):
    `Dashboard`): waiting for you, working on, next up, recently done. It updates on each label change and every
    15 minutes. Runs only add the process changes.
 5. It improves its own process: it writes learnings, corrects its instructions and makes tooling tickets.
-   Every 5th run, the `improve` skill measures the runs (minutes, CI runs, time sinks) and makes one larger
+   Every 5th run, the `improve` skill measures the runs (minutes, local checks, time sinks) and makes one larger
    improvement. The status issue lists each process change.
 
 The agent takes instructions only from comments and issues by `Larspolo`.
@@ -86,6 +86,15 @@ ticket that asks you to paste it again.
 The agent also improves CI, this script and the other parts of the system by itself (`improve` skill). For settings
 that only you can change (the environment, the network, the scheduled task, GitHub), it opens a `needs-human`
 ticket with numbered steps.
+
+## CI and Actions minutes
+
+The repository is private, so GitHub Actions has 2,000 free minutes per month, and each job counts as at least
+1 minute. On 2026-10-25, CI on each PR and the event workflows used about 900 minutes in one hour. Your decision:
+PRs have no GitHub CI. Each run checks its PR in its own cloud session (lint, tests, Minecraft tests when needed)
+and merges it. GitHub runs the full CI once a night on `main`. A red night run opens a `P0` ticket, and each run
+also tests `main` when it starts. The dashboard, coverage and claim workflows run on a schedule (each run also
+updates the dashboard). To get CI on each PR again: make the repository public (free minutes) or set a budget.
 
 ## Files that steer the agent
 
