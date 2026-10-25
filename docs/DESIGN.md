@@ -71,14 +71,12 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Glazed tile band, tile panel | `blue_terracotta`; `Style.dome` terracotta over arches | `taj`, `samarra` (Wonders) |
 | Chhatri (small domed kiosk) | `quartz_pillar` posts and a small dome | `taj` (Wonder, South Asian) |
 | Chain, rope | `chain` | `dock`, `siege_workshop`, `shipyard`, `harbor_chain` |
-| Portcullis, grille | `iron_bars` | `gate`, `castle` |
 | Bartizan (corner turret) | stone, `smooth_quartz` cap, `lightning_rod` | `feitoria` |
 | Terracotta roof (Portuguese, Sicilian) | `brick` stairs | `feitoria`, `donjon` |
-| Wooden hoarding | wood slab (top) with a `*_fence` rail | `donjon` |
 | Portcullis, grille | `iron_bars` | `gate`, `castle`, `krepost` |
 | Wooden hoarding | wood slab (top) or `spruce_planks` with a `*_fence` rail | `donjon`, `krepost` |
 | Coat of arms | `*_wall_banner` (player color) over the gate | `donjon` |
-| Lamp | `lantern` | `decorate()`, `blacksmith` (hanging) |
+| Lamp | `lantern` | `decorate()`, `blacksmith` (hanging), `pagoda` (under the eaves) |
 | Siege engine under construction | spruce slabs, fences and logs | `siege_workshop` |
 | Cloth awning | `*_wool` in the player color | `house` (flat roofs) |
 | Stair to a roof terrace | stairs of the roof material | `house` (flat roofs) |
@@ -86,7 +84,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Sacred tree | `oak_log`, `oak_leaves[persistent=true]` | `pagan_shrine` |
 | Sail | wool (player color) | `flagship` |
 | Hides | `brown_wool` | `helepolis` |
-| Band in the player color | `*_wool` (player color) | `town_center`, `castle`, `tower`, `temple` |
+| Band in the player color | `*_wool` (player color) | `town_center`, `castle`, `tower`, `temple`, `pagoda` |
 | Outside stairs to an upper floor | `*_stairs` of the wood of the set | `town_center` |
 | Books, study | `bookshelf`, `lectern` (with a book) | `university` |
 | Scholar statue | `chiseled_stone_bricks` pedestal, `quartz_pillar`, `chiseled_quartz_block` | `university` |
