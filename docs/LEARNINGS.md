@@ -49,6 +49,8 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   fallback can conflict. Use `git merge -X ours --no-edit origin/<branch>` (its content is on main already).
 - Do not run `claim.py N --beat` in a background loop and in the foreground: two beats race, and one fails with
   "belongs to another run" although the claim is yours.
+- `tools/claim.py` names the run by the current local branch (`who()`): a beat from a helper branch fails with
+  "belongs to another run". Stay on the session branch and push with `HEAD:<branch>` (#361).
 
 ## Libraries
 
