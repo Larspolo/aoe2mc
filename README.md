@@ -266,3 +266,8 @@ Read these files first:
   at the top of the screen. In Minecraft this corner is in the north-east: the map is the in-game view turned 45°
   clockwise, not mirrored. A turn of 45° is not possible on a block grid. At the spawn the player looks north-east,
   as the AoE2 camera does. Use `--orientation` to put the top corner in another corner (the spawn view turns too).
+
+## License
+
+aoe2mc is free software under the GNU General Public License version 3 (GPL-3.0): see [`LICENSE`](LICENSE).
+The licenses of the third-party files and packages are in [`docs/THIRD_PARTY.md`](docs/THIRD_PARTY.md).
