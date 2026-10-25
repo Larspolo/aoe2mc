@@ -39,6 +39,8 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Table with a light (inside) | `*_slab[type=top]` with a `lantern` on it, a `*_stairs` stool | `furnish`, `town_hall`, `pagoda`, `blacksmith` +26 more |
 | Storage (inside) | `chest` at the back wall | `furnish`, `town_hall`, `decorate`, `keep_inside` +16 more |
 | Rug | `*_carpet` | `furnish_worship`, `town_hall`, `keep_inside`, `cart` +1 more |
+| Throne (inside) | `*_stairs` (backrest north) between `gold_block`s, `*_wall_banner`s (player color) over it | `throne_hall` |
+| Treasure (inside) | `chest` and `gold_block` in the back corners | `throne_hall` |
 | Bench (inside) | `*_stairs` in a row | `storage`, `shelter`, `furnish_worship`, `town_hall` +37 more |
 | Hay loft (inside) | `spruce_slab[type=top]` with `hay_block` on it | `settlement`, `cart`, `stable`, `market` +22 more |
 | Light on a wall (inside) | `wall_torch` | `town_hall`, `archery_range`, `stable` |
