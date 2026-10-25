@@ -88,7 +88,8 @@ and do it first. The nightly CI makes the same ticket by itself.
 
 Read all comments after `last_run` (`/issues/comments?since=` and `/pulls/comments?since=`, see
 "GitHub access") and the issues that `Larspolo` opened after `last_run`. Keep the ones by `Larspolo`.
-For each new owner comment:
+For each new owner comment, lock it first: `python3 tools/claim.py ID --comment` (ID = the `id` of the comment).
+Exit 1: another run handles it, skip it (#320: three runs made three copies of one epic). Exit 0: act on it:
 - A question → answer it in the same thread.
 - A change to a ticket (scope, priority, "do this first") → change the labels or the body. Reply in one line.
 - A new idea → make a ticket (use the `ticket` skill). Reply with its number.

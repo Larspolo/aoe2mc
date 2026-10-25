@@ -128,3 +128,13 @@ def test_guard_before_the_push(clones, monkeypatch):
     monkeypatch.setattr(claim, "api", lambda path: [{"number": 283, "head": {"ref": "run-1"}, "body": "Closes #9",
                                                      "state": "closed", "merged_at": "2026-10-25T21:35:00Z"}])
     assert claim.main(["9", "--guard"]) == 1
+
+
+def test_one_run_handles_a_comment(clones):
+    """A second lock of the same owner comment exits 1, also at the same time (#320)."""
+    procs = [subprocess.Popen([sys.executable, TOOL, "123456", "--comment"], cwd=d, stdout=subprocess.PIPE, text=True)
+             for d in clones]
+    assert sorted(p.wait() for p in procs) == [0, 1, 1]
+    assert tool(clones[0], "123456", "--comment").returncode == 1
+    assert tool(clones[0], "123457", "--comment").stdout.strip() == "claimed comment 123457"
+    assert sorted(claim.refs(123456, str(clones[0] / ".." / "remote.git"))) == []     # no ticket claim
