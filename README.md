@@ -82,6 +82,7 @@ villager walks there, chops and carries the wood to the town center. The sidebar
 | `--no-units` | off | Do not convert units |
 | `--no-birds` | off | Do not convert birds. Flying birds float 6 blocks above the ground (parrot or bat); peacocks, flamingos, storks and cranes are chickens |
 | `--no-barriers` | off | Do not fill building footprints with invisible barrier blocks |
+| `--ambience` | basic | `basic`: particles and sounds by terrain near the player (falling spores in forests, snowflakes, desert dust, frogs, water). `full`: also one biome per terrain group with its own sky, fog and water colors; Minecraft then shows an "Experimental Settings" warning each time the world opens. `off`: none |
 | `--verbose` | off | Print the time of each phase (read, columns, objects, units, chunks, write) |
 | `--scenario N` | all | Campaign: convert only scenario N (1 = the first) |
 | `--orientation C` | `ne` | Minecraft corner (`ne`, `se`, `sw`, `nw`) of the top corner of the AoE2 screen. The map, the building fronts and the units turn with it. |

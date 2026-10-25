@@ -6,12 +6,14 @@ Usage:
     python3 game/run.py WORLD [--version 26.3]    # type commands (without "/"); Ctrl-C stops the server
     python3 game/run.py WORLD --bench 1000        # measure the commands per second through RCON, then stop
     python3 game/run.py WORLD --play              # villagers gather wood (game/gather.py); Ctrl-C stops
+    python3 game/run.py WORLD --play --log F.jsonl  # also write a timed event log (tools/measure_gather.py reads it)
 
 Join with Minecraft (multiplayer, localhost): players play in creative mode and get operator rights.
 The server plays the world in place (the game changes it). Server files (eula, properties, logs) go to .cache/.
 Platform choice: docs/research/gameplay.md (#135).
 """
 import argparse
+import contextlib
 import json
 import os
 import re
@@ -124,13 +126,13 @@ def bench(game, n=1000):
     return n / (time.perf_counter() - t)
 
 
-def play(game, world):
+def play(game, world, log=None):
     import gather
     with open(os.path.join(world, "aoe2mc.json")) as f:
         data = json.load(f)
     game.forceload()
     for _ in range(60):                              # entities load in other threads
-        g = gather.Gather(game, data).setup()
+        g = gather.Gather(game, data, log=log).setup()
         if len(g.villagers) == len(g.units):
             break
         time.sleep(1)
@@ -147,6 +149,7 @@ def main(argv=None):
     ap.add_argument("--version", default=mc_check.DEFAULT_VERSION, help="Minecraft version of the world")
     ap.add_argument("--bench", type=int, metavar="N", help="send N commands, print the commands per second, stop")
     ap.add_argument("--play", action="store_true", help="play: villagers of player 1 gather wood (aoe2mc.json)")
+    ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     a = ap.parse_args(argv)
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
         sys.exit(f"no level.dat in {a.world}")
@@ -158,7 +161,8 @@ def main(argv=None):
             print(f"{bench(game, a.bench):.0f} commands per second through RCON")
             return
         if a.play:
-            play(game, a.world)
+            with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
+                play(game, a.world, log)
             return
         while True:
             line = input("> ").strip().lstrip("/")
