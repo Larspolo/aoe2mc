@@ -26,7 +26,6 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   unless the task sets another model.
 - The repository is private: a workflow with a `permissions:` block also needs `contents: read`, or
   `actions/checkout` fails with "Repository not found".
-
 - Minecraft server: a bad property value (`facing=up`) loads silently as the default state. An unknown block
   name gives "Recoverable errors when loading section". A missing `level.dat` compound
   gives "key missing: <name>" (`DragonFight` until #60).
@@ -71,9 +70,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 - A merge conflict in `docs/coverage.md`: take any side, run `python3 tools/coverage.py`, then set `MAX` in
   `tests/test_coverage.py` to the new counts. Parallel runs often change the same counts (#79). Check
   `mergeable_state` before the merge: a green PR is "dirty" when main moved after the push.
-- `--orientation` (#23): `turn_world` turns the finished `Columns` and `Edits` after `place_objects`. A new
-  per-column array in `Columns` must have the shape (width, width) to turn with it; a new block-id array must be in
-  its id list. New direction properties need a rule in `turn_state`.
+- `turn_world` (#23) turns `Columns` and `Edits` after `place_objects`: a new `Columns` array must be (width, width),
+  a new block-id array must be in its id list, a new direction property needs a rule in `turn_state`.
 - Drawing all 243 building types for one architecture set takes about 1 s. A full gallery conversion takes
   about 30 s per set.
 - Block IDs in `B` depend on what was registered before (earlier tests or conversions). Code that draws random
