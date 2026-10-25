@@ -35,9 +35,18 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Training dummy | `oak_fence`, `hay_block`, `carved_pumpkin` | `barracks` |
 | Bell | `bell` | `monastery`, `town_center` |
 | Loom, cloth | `loom`, wool | `church` |
-| Market goods | `barrel`, `chest`, `composter`, `hay_block` | `market`, `dock` |
+| Market goods | `barrel`, `chest`, `composter`, `hay_block`, `melon`, `pumpkin` | `market`, `dock` |
+| Market stall | lean-to of roof stairs on `*_fence` posts; wool awning in stripes for flat-roof sets | `market` |
+| Painted trim (deck edge) | `*_concrete` (player color) | `dock` |
+| Hoist | log beam with `chain` | `dock` |
 | Crop field | `wheat` rows (ages 5–7) on `farmland`, furrows of bare `farmland`, `dirt_path` edge | farm (`place_building`) |
 | Hay, fodder | `hay_block` | `stable`, `barracks`, `granary` |
+| Log pile, cut timber | `*_log[axis=x]` stacked as a pyramid (`log_pile`) | `lumber_camp` |
+| Hoist | a log post and arm, `chain`, a hanging log | `lumber_camp` |
+| Workbench | `crafting_table` | `lumber_camp` |
+| Millstone | `grindstone` | `mill`, `mining_camp` (tools) |
+| Ore, mined gold and stone | `gold_ore`, `raw_gold_block`, `cobblestone`, `stone`, `andesite` | `mining_camp` |
+| Mine cart track | `rail` | `mining_camp` |
 | Water trough | `cauldron` (water) | `stable` |
 | Banner, flag | `*_banner` (player color), `Canvas.flag` | most designs |
 | Player color band (walls, gate towers) | `*_wool` (player color), one row | `wall_segment`, `gate` |
@@ -62,9 +71,11 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Sacred tree | `oak_log`, `oak_leaves[persistent=true]` | `pagan_shrine` |
 | Sail | wool (player color) | `flagship` |
 | Hides | `brown_wool` | `helepolis` |
-| Band in the player color | `*_wool` (player color) | `town_center` |
+| Band in the player color | `*_wool` (player color) | `town_center`, `castle` |
 | Outside stairs to an upper floor | `*_stairs` of the wood of the set | `town_center` |
-| Books, study | `bookshelf`, `lectern` | none yet (`university` needs them) |
+| Books, study | `bookshelf`, `lectern` (with a book) | `university` |
+| Scholar statue | `chiseled_stone_bricks` pedestal, `quartz_pillar`, `chiseled_quartz_block` | `university` |
+| Rose window | stained glass panes | `monastery` |
 
 Add a line when a design uses a new feature block. Each new block state must pass `mcvalid`.
 

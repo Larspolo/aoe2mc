@@ -55,8 +55,8 @@ If your usage limit stops you, the next run continues your work through this rul
 
 ## 1. Start
 
-1. Find the open issue with label `agent-status`. If there is none, make it (title "Agent status", body
-   from step 8).
+1. Find the open issue with label `agent-status`. If there is none, make it (title "Agent status", body: the
+   state comment of step 8 and an empty `### Process changes`). The dashboard workflow fills in the rest.
 2. If the status issue has label `paused`, stop now. Do not comment.
 3. Read the state comment in its body: `<!-- agent-state: {"last_run": "<ISO time>", "runs": N} -->`.
 4. Note the start time (`date -u +%FT%TZ`) and keep a short list of time sinks during the run
@@ -99,6 +99,7 @@ For each open issue without a priority label:
 
 Candidates: open issues without `needs-human`, `blocked`, `epic`, `agent-status`, `in-progress`, and whose
 "Depends on: #n" issues are all closed. Order: `P0`, `P1`, `P2`, `P3`, then the lowest issue number.
+`python3 tools/dashboard.py --next` prints the candidates in this order (the rule is `dashboard.candidates()`).
 If there is no candidate, go to step 8 and report "No ticket is ready".
 If the top candidate has `size:L`, split it now (`ticket` skill), then pick again.
 Claim it: add `in-progress` and comment "Started by `<your branch>`." (one line). Then read the comments of
@@ -138,26 +139,14 @@ precise check steps on the ticket and make a small `needs-human` ticket for the 
 
 ## 8. Report on the status issue
 
-Update the status issue body (keep this form; it is the owner's dashboard):
-
-```
-<!-- agent-state: {"last_run": "<now, ISO>", "runs": <N+1>} -->
-## Agent status
-**Last run:** <date UTC> – <one-line result>
-**State:** idle | waiting for CI | paused
-
-### Next up
-1. #<n> <title> (<priority>, <size>)   (the next 5 candidates in pick order)
-
-### Waiting for you
-- #<n> <title> – <what the owner must do, one line>
-
-### Recently done
-- #<n> <title> – PR #<pr> (<date>)     (the last 10)
-
-### Process changes
-- <date>: <what changed in the skills, CLAUDE.md or LEARNINGS>   (the last 5)
-```
+The dashboard in the body of the status issue is generated: `.github/workflows/dashboard.yml` runs
+`tools/dashboard.py` on each label change, each closed issue or PR and every 15 minutes. Do not write
+"Waiting for you", "Working on", "Next up" or "Recently done": the script makes them from GitHub.
+In the body, change only two parts and keep the rest as it is (read the body just before the change,
+other runs change it too):
+- The state comment: `<!-- agent-state: {"last_run": "<now, ISO>", "runs": <N+1>} -->`.
+- The section `### Process changes`: add a line `- <date>: <what changed in the skills, CLAUDE.md or
+  LEARNINGS> (PR #n)` at the top, keep the last 5.
 
 Then add one short comment on the status issue: what you did, what is next, and questions for the owner.
 End it with one metrics line for each ticket of the run (the `improve` skill reads these lines):
