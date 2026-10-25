@@ -4,7 +4,7 @@ Villagers gather wood: the first playable milestone of docs/research/gameplay.md
 The player holds the command stick (`carrot_on_a_stick`). A right click on a villager of player 1 selects it
 (glowing). A right click on a tree sends the selected villagers there. A villager walks on a path around
 buildings, trees and water (one /tp per block), chops, carries the wood to the nearest town center or lumber
-camp, and goes back to the tree. A sidebar scoreboard shows wood, food, gold and stone of player 1.
+camp, and goes back to the tree. It gets the lumberjack look (`units.VILLAGER_JOBS`, as in AoE2). A sidebar scoreboard shows wood, food, gold and stone of player 1.
 
 The program sees a click in two statistics: the use of the stick, and "talked to villager" (a right click on a
 villager is an interaction with the entity, not a use of the item). Then it reads the position and the view of
@@ -20,6 +20,7 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from aoe2mc import PASSABLE_OBJECTS, WOODS, object_footprint, tree_kind  # noqa: E402
+from units import VILLAGER_JOBS  # noqa: E402
 
 RESOURCES = ("Wood", "Food", "Gold", "Stone")
 DROP_SITES = ("TOWN_CENTER", "LUMBER_CAMP")
@@ -135,6 +136,7 @@ class Villager:
     def __init__(self, uuid, pos):
         self.uuid, self.pos = uuid, pos
         self.state, self.path, self.tree, self.load, self.timer = "idle", [], None, 0, 0.0
+        self.job = None                                                # profession that the program set
         self.walked = 0.0                                              # blocks, for the log
 
     @property
@@ -183,10 +185,18 @@ class Gather:
         self.selected = {uuid}
         self.command(f"data merge entity {uuid} {{Glowing:1b}}")
 
+    def task(self, v, name):
+        """Give the villager the look of its AoE2 task (`LUMBERJACK` ...), with the table of the converter."""
+        job = dict(VILLAGER_JOBS).get(name, "none")
+        if v.job != job:                                               # a merge keeps the level and the type
+            v.job = job
+            self.command(f'data merge entity {v.uuid} {{VillagerData:{{profession:"minecraft:{job}"}}}}')
+
     def send(self, tile):
         """Send the selected villagers to the tree on tile."""
         for u in self.selected:
             v = self.villagers[u]
+            self.task(v, "LUMBERJACK")
             v.tree = tile
             self.go(v, "to_tree", self.map.around(self.map.cells(tile)))
 

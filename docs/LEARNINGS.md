@@ -43,10 +43,14 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   the event workflows used about 900 minutes per hour with 16 runs: PRs have no CI now, only local checks (`docs/STEERING.md`).
 - Old scenarios for local checks (do not commit, no license): GitHub raw `SiegeEngineers/genie-rs/master/crates/genie-scx/
   test/scenarios/` (`Age of Heroes b1-3-5.scx` is format 1.21; names in `format.rs` tests, #311).
+- The 26.3 server writes a missing `white-list` as `true`: no client can join. Write `white-list=false` in
+  `server.properties` (`game/run.py` `properties()`, #285).
 - Next ticket on the session branch after a squash merge: the remote branch still has the old commits, and the merge
   fallback can conflict. Use `git merge -X ours --no-edit origin/<branch>` (its content is on main already).
 - Do not run `claim.py N --beat` in a background loop and in the foreground: two beats race, and one fails with
   "belongs to another run" although the claim is yours.
+- `tools/claim.py` names the run by the current local branch (`who()`): a beat from a helper branch fails with
+  "belongs to another run". Stay on the session branch and push with `HEAD:<branch>` (#361).
 
 ## Libraries
 

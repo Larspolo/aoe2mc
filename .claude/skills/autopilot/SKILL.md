@@ -55,7 +55,9 @@ A ticket with `in-progress` and no claim ref (older runs): the same rule with th
 PRs have no GitHub CI: each run checks its PR locally and merges it itself (step 6.8). So an open agent PR with no
 new commit and no new comment for 30 minutes is stalled. Take it over at once
 (`python3 tools/claim.py N --takeover` with the ticket number N, then comment "Taken over by `<your branch>`: stalled."), for example when its run stopped. Then read the PR comments again: if an older "Taken over by" comment of another branch is less than
-30 minutes old, leave the PR to that run.
+30 minutes old, leave the PR to that run. Work on the PR from your session branch (`claim.py` takes the run name
+from the current local branch), push with `git push origin HEAD:<branch of the PR>`, and run the guard with
+`--pr-branch <branch of the PR>` (#361).
 A PR whose ticket has no `in-progress` label is free: any run can fix it (hand-off).
 If your usage limit stops you, the next run continues your work through this rule.
 
