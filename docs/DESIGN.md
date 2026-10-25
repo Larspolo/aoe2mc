@@ -34,9 +34,13 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Weapon rack, sharpening | `grindstone` | `barracks`, `granary`, `blacksmith` |
 | Training dummy | `oak_fence`, `hay_block`, `carved_pumpkin` | `barracks` |
 | Bell | `bell` | `monastery`, `town_center` |
-| Bed (inside) | `*_bed` (player color), head to the north | `house` (`furnish`) |
+| Bed (inside) | `*_bed` (player color), head to the north | `house` (`furnish`), `barracks` (bunks, `Canvas.bed`) |
 | Table with a light (inside) | `*_slab[type=top]` with a `lantern` on it, a `*_stairs` stool | `house` (`furnish`) |
-| Storage (inside) | `chest` at the back wall | `house` (`furnish`) |
+| Storage (inside) | `chest` at the back wall | `house` (`furnish`), `barracks`, `archery_range`, `stable` (saddles) |
+| Ladder between floors (inside) | `ladder` through a hole in the floor | `barracks` |
+| Bench (inside) | `*_stairs` in a row | `archery_range` |
+| Hay loft (inside) | `spruce_slab[type=top]` with `hay_block` on it | `stable` |
+| Light on a wall (inside) | `wall_torch` | `archery_range`, `stable` |
 | Rug | `*_carpet` | `house` (`furnish`) |
 | Loom, cloth | `loom`, wool | `church` |
 | Market goods | `barrel`, `chest`, `composter`, `hay_block`, `melon`, `pumpkin` | `market`, `dock`, `harbor` |
@@ -56,7 +60,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Light in a room or a yard | `lantern` on a barrel, or hanging under a beam | `mill`, `granary`, `dock`, `lumber_camp`, `mining_camp` |
 | Ore, mined gold and stone | `gold_ore`, `raw_gold_block`, `cobblestone`, `stone`, `andesite` | `mining_camp` |
 | Mine cart track | `rail` | `mining_camp` |
-| Water trough | `cauldron` (water) | `stable` |
+| Water trough | `cauldron` (water) | `stable` (also in the stalls) |
 | Banner, flag | `*_banner` (player color), `Canvas.flag` | most designs |
 | Player color band (walls, gate towers) | `*_wool` (player color), one row | `wall_segment`, `gate` |
 | Fence, pen | `*_fence` | `stable`, `market`, `outpost`, `wall_segment` |
@@ -83,7 +87,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Portcullis, grille | `iron_bars` | `gate`, `castle`, `krepost` |
 | Wooden hoarding | wood slab (top) or `spruce_planks` with a `*_fence` rail | `donjon`, `krepost` |
 | Coat of arms | `*_wall_banner` (player color) over the gate | `donjon` |
-| Lamp | `lantern` | `decorate()`, `blacksmith` (hanging), `pagoda` (under the eaves) |
+| Lamp | `lantern` | `decorate()`, `blacksmith` and `barracks` (hanging), `pagoda` (under the eaves) |
 | Siege engine under construction | spruce slabs, fences and logs | `siege_workshop` |
 | Cloth awning | `*_wool` in the player color | `house` (flat roofs) |
 | Stair to a roof terrace | stairs of the roof material | `house` (flat roofs) |

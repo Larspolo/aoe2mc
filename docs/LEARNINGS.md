@@ -82,3 +82,5 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - `vary()` picks a `ROOF_ALT` material per variant: count blocks with `render.building_blocks(NAME, arch, variant=v)` (#146).
 - `tools/render.py world` draws only Y >= 50 (`--y0`): use `--y0 -64` for blocks under the map (`--border`). `--scale 4`
   gives about 800 px, the size of the images in `docs/images/` (#262).
+- The `buildings` test scenario is about 1150 × 1570 blocks: to read one building of player 1 in the world, use the area
+  around tile (4 + i % 40 × 7, 4 + i // 40 × 7), i = the index of the name in `BuildingInfo` (#251).
