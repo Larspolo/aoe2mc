@@ -128,6 +128,24 @@ def test_tree_stump_is_level_with_the_ground_and_free_for_units():
         assert (vol[y:, 8:12, 8:12] == 0).all(), name                  # nothing above the ground: air only
 
 
+def test_antiquity_and_construction_objects():
+    """The crane, scaffolding, theatre and Stonehenge get blocks inside their footprint (#296)."""
+    import buildings
+    for n in ("CONSTRUCTION_CRANE", "SCAFFOLDING", "SCAFFOLDING_WALKABLE", "THEATRE", "STONEHENGE"):
+        cols = aoe2mc.Columns(32, np.zeros((32, 32), np.int16), np.zeros((32, 32), np.float32),
+                              {0: "GRASS_1"}, 4, 3, np.random.default_rng(1))
+        o = dict(kind="O", name=n, player=1, x=16, y=16, rotation=0.0, hero=False, garrisoned=False)
+        E, stats = aoe2mc.place_objects([o], {}, cols, np.random.default_rng(1))
+        assert stats["monuments"] == 1 and stats["skipped (other objects)"] == 0, n
+        s = buildings.footprint(n) * 4
+        x0 = z0 = 64 - s // 2
+        x1 = z1 = x0 + s
+        x, _, z, ids, _ = (np.concatenate(p) for p in zip(*E.parts))
+        inside = (x >= x0) & (x < x1) & (z >= z0) & (z < z1) & ~np.isin(ids, [aoe2mc.B("air"), aoe2mc.B("barrier")])
+        assert inside.sum() > 20, n
+    assert mcvalid.invalid_states(aoe2mc.B.states) == {}
+
+
 SHORE = ["DRIFTWOOD_GROUND", "DRIFTWOOD_WATER", "FLOTSAM", "KELP_SEAWEEDS", "WATER_LILY", "BEACHED_WHALE",
          "SMALL_WATERFALL", "FALLEN_LEAVES_PEACH_BLOSSOM", "FALLEN_LEAVES_MAPLE", "FALLEN_LEAVES_MAPLE_AUTUMN"]
 
