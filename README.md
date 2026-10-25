@@ -9,15 +9,15 @@ Converts an Age of Empires II: Definitive Edition scenario (`.aoe2scenario`) int
 | `aoe2mc.py` | The converter (terrain, trees, resources, world writer) |
 | `buildings.py` | The building designs (must be in the same folder as `aoe2mc.py`) |
 | `units.py` | The unit mapping (must be in the same folder as `aoe2mc.py`) |
-| `nile_world.zip` | "Somewhere on the Nile", converted |
-| `mongolia_world.zip` | "Mongolia Map Town" by George Lewe, converted |
-| `stress.aoe2scenario` | Test map: units against every side of buildings, trees, mines, cliffs and a mountain, on slopes and on a bridge |
-| `unit_gallery.aoe2scenario`, `unit_gallery_world.zip` | Test map with every unit type (681 land units, 51 ships) |
-| `gallery.aoe2scenario` | Test map: every building type, 8 civilizations |
-| `gallery_world.zip` | The test map, converted |
-| `test_village.aoe2scenario` | Small test map with terrain, water and a hill |
-| `end_of_the_play_world.zip`, `bird_in_the_cage_world.zip` | Two maps of the fan campaign by Entarogan (GPL-3.0, https://github.com/Entarogan/AOE2-Campaign-Transfer), converted |
-| `duke_world.zip` | A real map, converted: "The Duke and His Serfs" by tdauth (https://github.com/tdauth/aoe2de-the-duke-and-his-serfs) |
+| `samples/stress.aoe2scenario` | Test map: units against every side of buildings, trees, mines, cliffs and a mountain, on slopes and on a bridge |
+| `samples/unit_gallery.aoe2scenario` | Test map with every unit type |
+| `samples/gallery.aoe2scenario` | Test map: every building type, 8 civilizations |
+| `samples/test_village.aoe2scenario` | Small test map with terrain, water and a hill |
+| `tools/` | Tools for tests and debugging: test scenarios, world reader, 3D render, coverage report, Minecraft data and server check |
+| `tests/` | The tests (pytest) |
+| `docs/` | Design guide, roadmap, steering, coverage report and other notes |
+
+The repository has no converted worlds. Convert a sample map to get one (see "Use").
 
 ## Install
 
@@ -155,6 +155,19 @@ If a scenario puts a unit on a building or an obstacle (possible in the AoE2 edi
 Eye-candy scenarios often place buildings on top of each other. A building that lies for more than 80% under one
 larger building is skipped (for example a wonder that is hidden under the Great Pyramid). Natural objects
 (trees, rocks, cliffs, mountains, mines) place no blocks inside building footprints.
+
+## Development
+
+    python3 -m pip install -r requirements-dev.txt
+    ruff check .
+    python3 -m pytest              # fast tests
+    python3 -m pytest -m slow      # slow tests
+
+Read these files first:
+- [`CLAUDE.md`](CLAUDE.md): commands, code map and the rules of the domain.
+- [`docs/STEERING.md`](docs/STEERING.md): how the owner steers the work with GitHub issues.
+- [`docs/ROADMAP.md`](docs/ROADMAP.md): the plan.
+- [`docs/DESIGN.md`](docs/DESIGN.md): the rules for building, object and unit designs.
 
 ## Known limits
 
