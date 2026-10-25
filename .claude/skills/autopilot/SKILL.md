@@ -177,7 +177,8 @@ GitHub sends this comment to the owner as a notification. Do not comment when no
 ## 9. Improve the process (before the commit in step 6)
 
 Answer these questions. Do the action for each "yes". Spend little time.
-- Did something cost you time that one line of text prevents? → add the line to `docs/LEARNINGS.md`.
+- Did something cost you time that one line of text prevents? → add the line to `docs/LEARNINGS.md`, at the end of
+  its section. Do not change other lines there, also not to stay below 80 lines: the `improve` skill does that.
 - Was an instruction in `CLAUDE.md` or a skill wrong or missing? → correct it.
 - Did you do the same kind of task for the second time? → write a skill for it in `.claude/skills/`.
 - Would a test or tool have found a problem earlier? → make a `tooling` ticket (`P1` if it blocks other tickets).
