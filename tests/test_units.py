@@ -1,11 +1,13 @@
 """Every AoE2 unit and hero gives a valid Minecraft entity (or is skipped on purpose)."""
 import os
+from collections import Counter
 
 import numpy as np
 import pytest
 from AoE2ScenarioParser.datasets.heroes import HeroInfo
 from AoE2ScenarioParser.datasets.units import UnitInfo
 
+import aoe2mc
 import mcvalid
 import units
 from conftest import entity_ids
@@ -122,3 +124,40 @@ def test_no_empty_item_has_components(name):
     for d in [desc, *desc.get("Passengers", [])]:
         for it in [*d.get("ArmorItems", []), *d.get("HandItems", [])]:
             assert "id" in it or not len(it), (name, it)
+
+
+def test_facing_map_knights_face_away_from_the_center(tmp_path):
+    """tools/scenarios.py facing: knight k stands in the direction of its rotation, so it faces away from the
+    center in Minecraft (#20). The owner compares this with the AoE2 editor (docs/facing.md)."""
+    import math
+
+    import aoe2mc
+    import scenarios
+    *_, objects, players = aoe2mc.read_scenario(scenarios.facing(str(tmp_path / "facing.aoe2scenario")))
+    knights = [o for o in objects if o["name"] == "KNIGHT"]
+    assert len(knights) == 8 and len([o for o in objects if o["name"] == "ARCHER"]) == 8
+    for o in knights:
+        yaw = math.radians(float(units.make_entity(o, players, (0, 64, 0), np.random.default_rng(0))["Rotation"][0]))
+        out = np.array([o["x"] - 16.5, o["y"] - 16.5]) / 6           # from the center to the knight (x, z)
+        assert np.dot([-math.sin(yaw), math.cos(yaw)], out) > 0.99    # Minecraft look direction of this yaw
+
+
+def test_birds_fly_or_walk_and_can_be_skipped():
+    """Flying birds float FLY_HEIGHT blocks above the ground, others are chickens; --no-birds skips them (#28)."""
+    assert units.classify("MACAW")["id"] == "minecraft:parrot" and units.classify("MACAW")["NoGravity"] == 1
+    assert units.classify("RAVEN")["id"] == "minecraft:bat"
+    assert units.classify("FLAMINGO")["id"] == "minecraft:chicken" and "NoGravity" not in units.classify("FLAMINGO")
+    assert units.classify("BUTTERFLY1") is None
+    cols = aoe2mc.Columns(16, np.zeros((16, 16), np.int16), np.zeros((16, 16), np.float32),
+                          {0: "GRASS_1"}, 4, 3, np.random.default_rng(1))
+    birds = [dict(kind="U", name=n, player=0, x=x, y=2.5, rotation=0.0, hero=False, garrisoned=False)
+             for n, x in (("HAWK", 2.5), ("PEACOCK", 6.5))]
+    stats = Counter()
+    assert aoe2mc.plan_units(birds, {}, cols, np.random.default_rng(1), stats, birds=False) == {}
+    assert stats["birds (skipped)"] == 2
+    ents = [e for c in aoe2mc.plan_units(birds, {}, cols, np.random.default_rng(1), stats).values() for e in c]
+    vol = np.zeros((aoe2mc.MAX_Y - aoe2mc.MIN_Y, 16, 16), np.int64)
+    aoe2mc.entity_chunk(0, 0, ents, cols, vol, np.ones(1, bool))
+    y = {str(units.top_entity(n)["id"]): float(units.top_entity(n)["Pos"][1]) for n, *_ in ents}
+    ground = int(cols.top[10, 10]) + 1
+    assert y == {"minecraft:parrot": ground + units.FLY_HEIGHT, "minecraft:chicken": ground}

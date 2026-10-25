@@ -28,13 +28,15 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   `actions/checkout` fails with "Repository not found".
 
 - Minecraft server: a bad property value (`facing=up`) loads silently as the default state. An unknown block
-  name gives "Recoverable errors when loading section". Each run logs "key missing: DragonFight" (#60).
+  name gives "Recoverable errors when loading section". A missing `level.dat` compound
+  gives "key missing: <name>" (`DragonFight` until #60).
   The yggdrasil key error is normal: `api.minecraftservices.com` is not reachable.
 
 - AoE2 wiki: HTML pages give a Cloudflare challenge (403). The MediaWiki API works: `ageofempires.fandom.com/
   api.php?action=query&titles=File:Castle_aoe2DE.png&prop=imageinfo&iiprop=url&format=json` gives the image URL
   on `static.wikia.nocookie.net` (WebP). Page text: `action=parse&page=Title&prop=wikitext&format=json&formatversion=2`.
-  Use `curl`: Python `urllib` gets 403.
+  Python `urllib` with the default User-Agent gets 403: use `curl`, or send another `User-Agent`
+  (see `tools/refimage.py`).
 
 ## Libraries
 
@@ -48,6 +50,12 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 
 ## Code
 
+- AoE2 map orientation (#23): tile (0, 0) is the left corner of the screen, (max, 0) the top (parser `area.py`
+  `CORNERS`; openage: axes NE, SE). Block x = east, z = south: the world is turned 45°, not mirrored; the AoE2 top
+  corner is in the north-east. The spawn looks north-east like the AoE2 camera (`SPAWN_YAW`). Gates `WEST_TO_EAST`
+  and `NORTH_TO_SOUTH` are diagonal. Do not trust the axis gate names (`samples/gallery` has a `NORTHWEST_TO_SOUTHEAST`
+  gate along tile x): `plan_walls` uses the walls next to the gate.
+
 - The tiny scenario has only a town center, a house and a barracks. To see the golden test fail, change a
   block that these designs draw last (for example the house chimney).
 
@@ -58,6 +66,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   `OtherInfo` name takes (#6).
   Buildings (also `FISH_TRAP`, docks) need `kind="B"`, else nothing is placed. `build_chunk` returns
   `(nbt, vol)`: test exact blocks of a chunk with `vol` (#19).
+- `aoe2mc.py` reads `tools/mcdata/1.21.1.json` at import (#19). The package ships it as `tools.mcdata`
+  (`pyproject.toml`). A new runtime data file must go into the package data too (test: `pip install .` in a venv).
 - `terrain_style` checks names in sequence: an earlier rule wins (`ROAD_GRAVEL` matched `GRAVEL` until #5).
 - A merge conflict in `docs/coverage.md`: take any side, run `python3 tools/coverage.py`, then set `MAX` in
   `tests/test_coverage.py` to the new counts. Parallel runs often change the same counts (#79). Check

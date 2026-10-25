@@ -1,3 +1,31 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aoe2mc"
+version = "0.1.0"
+description = "Convert an Age of Empires II: DE scenario to a Minecraft Java world"
+readme = "README.md"
+license = {text = "GPL-3.0"}
+requires-python = ">=3.10"
+dependencies = [          # the same as requirements.txt
+    "AoE2ScenarioParser>=0.9.8,<0.10",
+    "nbtlib>=2.0.4,<3",
+    "numpy>=1.26",
+    "pillow>=10",
+]
+
+[project.scripts]
+aoe2mc = "aoe2mc:main"
+
+[tool.setuptools]
+py-modules = ["aoe2mc", "buildings", "units"]
+packages = ["tools.mcdata"]      # aoe2mc.py reads tools/mcdata/1.21.1.json next to it
+
+[tool.setuptools.package-data]
+"tools.mcdata" = ["1.21.1.json"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q -m 'not slow and not mc'"
