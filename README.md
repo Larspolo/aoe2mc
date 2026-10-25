@@ -76,7 +76,9 @@ market and more): the world has a small datapack (`datapacks/aoe2mc`) with Minec
 
 First game: `python3 game/run.py MyMapWorld --play` starts a server on the world. Join it at the address that it prints
 and hold the carrot on a stick. Right click a villager of player 1 to select it, then right click a tree: the
-villager walks there, chops and carries the wood to the town center. The sidebar shows the wood.
+villager walks there, chops and carries the wood to the town center. Right click a fruit bush: the villager
+forages and carries the food to the town center or a mill, and goes on to the next bush when one is empty.
+The sidebar shows the wood and the food.
 
 | Option | Default | Description |
 |---|---|---|
