@@ -86,7 +86,12 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Hides | `brown_wool` | `helepolis` |
 | Band in the player color | `*_wool` (player color) | `town_center`, `castle`, `tower`, `temple`, `pagoda` |
 | Outside stairs to an upper floor | `*_stairs` of the wood of the set | `town_center` |
-| Books, study | `bookshelf`, `lectern` (with a book) | `university` |
+| Books, study | `bookshelf`, `lectern` (with a book) | `university`, `castle` (keep) |
+| Throne | stairs of the wood of the set, a carpet runner in the player color | `castle` (keep) |
+| Ladder between floors | `ladder` | `castle` (keep), `tower`, `town_center` |
+| Storage | `chest`, `barrel` | `castle` (keep), `tower` |
+| Armory | `grindstone`, `smithing_table` | `castle` (keep) |
+| Light inside | `lantern` (hanging under a floor, or on the floor) | `castle` (keep), `tower` |
 | Scholar statue | `chiseled_stone_bricks` pedestal, `quartz_pillar`, `chiseled_quartz_block` | `university` |
 | Rose window | stained glass panes | `monastery` |
 | Posts of an open belfry | `stone_brick_wall` | `fortified_church` |
