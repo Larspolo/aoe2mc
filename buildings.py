@@ -1661,6 +1661,17 @@ def harbor(c, w, st, col, T, ctx):
     c.box(0, 1, 3, 5, q + 1, q + 2, "jungle_planks"); c.set(0, 5, q + 1, "gold_block")
     c.box(2, 3, 2, 6, q + 1, q + 2, "stripped_jungle_log")
     c.flag(2, 6, q + 1, col, 2)
+    # Inside (#334): a trade room. Goods and a counting table at the back wall, nets and dried fish at the
+    # west wall, pots at the east wall, lanterns on the barrels and one from the roof. The door way stays free.
+    ix0, ix1, iz0, iz1, y = hx0 + 1, hx1 - 2, 1, hz1 - 2, 5
+    back = ["barrel[facing=up]", "chest[facing=south]", "cartography_table", "chest[facing=south]", "barrel[facing=up]"]
+    items = [(ix0 + k, y, iz0, b) for k, b in enumerate(back)]
+    items += [(ix0, y + 1, iz0, "lantern[hanging=false]"), (ix0 + 4, y + 1, iz0, "lantern[hanging=false]"),
+              (ix0, y, iz0 + 1, "loom[facing=east]"), (ix0, y, iz0 + 2, "dried_kelp_block"),
+              (ix1, y, iz0 + 1, "decorated_pot"), (ix1, y, iz0 + 2, "composter")]
+    c.furniture([(x, yy, z, b) for x, yy, z, b in items if ix0 <= x <= ix1 and iz0 <= z <= iz1])
+    if ix1 - ix0 >= 2 and iz1 > iz0:
+        hang(c, m, y + 3, iz0 + 1)
 
 
 def hull(c, x0, x1, zc, y, half, wood="oak", ribs=False):
@@ -1687,6 +1698,17 @@ def shipyard(c, w, st, col, T, ctx):
         c.box(x, x + 1, -8, 1, 0, 1, "spruce_log"); c.box(x, x + 1, -8, 1, q - 1, q, "spruce_log")
     c.timber_room(1, max(5, w // 3), 0, q, 1, 3, st)
     c.roof(1, max(5, w // 3), 0, q, 5, st, axis="x")
+    # Inside (#334): a door to the quay, a workbench, a barrel with a lantern and a plank of hull wood.
+    # Outside: a timber stack on the quay for the ship.
+    wx1 = max(5, w // 3) - 2
+    if q >= 4:
+        c.door(wx1 + 1, 2, q // 2, facing="east")
+        c.furniture([(x, y, z, b) for x, y, z, b in ((2, 2, 1, "crafting_table"), (2, 2, 2, "barrel[facing=up]"),
+                     (2, 3, 2, "lantern[hanging=false]"), (2, 2, 3, "stripped_spruce_log[axis=z]"),
+                     (wx1, 2, 1, "barrel[facing=up]")) if z < q - 1])
+    if w >= 12:
+        c.box(wx1 + 3, wx1 + 6, 2, 3, q - 3, q - 1, "stripped_spruce_log[axis=x]")
+        c.box(wx1 + 3, wx1 + 6, 3, 4, q - 3, q - 2, "stripped_spruce_log[axis=x]")
     hull(c, 1, w - 1, (q + w) // 2, 1, (w - q) // 2 - 1, ribs=True)
     mx, mh = w - 2, max(8, w // 2 + 4)                                     # crane over the hull
     c.box(mx, mx + 1, 2, mh, 1, 2, "stripped_spruce_log")
@@ -1706,6 +1728,18 @@ def port(c, w, st, col, T, ctx):
     c.room(1, w // 2 + 1, 0, q - 2, 1, 4, st.plaster, st.floor, corner=st.stone)
     c.roof(1, w // 2 + 1, 0, q - 2, 5, st, axis="x")
     c.door(w // 4, 2, q - 3)
+    # Inside (#334): a warehouse. Stacked barrels and chests at the back wall, sacks of grain at the west wall,
+    # a counting table with a lantern at the east wall, a lantern from the roof.
+    ix0, ix1, iz0, iz1 = 2, w // 2 - 1, 1, q - 4
+    items = [(ix0, 2, iz0, "barrel[facing=up]"), (ix0, 3, iz0, "barrel[facing=up]"), (ix0 + 1, 2, iz0, "barrel[facing=up]"),
+             (ix0 + 2, 2, iz0, "chest[facing=south]"), (ix1 - 1, 2, iz0, "chest[facing=south]"),
+             (ix1, 2, iz0, "barrel[facing=up]"), (ix1, 3, iz0, "barrel[facing=up]"),
+             (ix0, 2, iz0 + 1, "hay_block"), (ix0, 2, iz0 + 2, "hay_block"), (ix0, 3, iz0 + 1, "hay_block"),
+             (ix1, 2, iz0 + 1, "cartography_table"), (ix1, 3, iz0 + 1, "lantern[hanging=false]"),
+             (ix1, 2, iz0 + 2, "barrel[facing=up]")]
+    c.furniture([(x, y, z, b) for x, y, z, b in items if ix0 <= x <= ix1 and iz0 <= z <= iz1])
+    if ix1 - ix0 >= 2 and iz1 > iz0:
+        hang(c, (ix0 + ix1) // 2 + 1, 4, iz0 + 1)
     m = w * 3 // 4                                                         # pier
     c.box(m - 1, m + 2, 1, 2, q, w, "spruce_planks")
     for z in range(q + 1, w, 3):

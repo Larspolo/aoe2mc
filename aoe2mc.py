@@ -835,6 +835,10 @@ def leaves(wood):
     return f"{wood}_leaves[persistent=true]"
 
 
+WOODS = {"palm": "jungle", "jungle": "jungle", "acacia": "acacia", "spruce": "spruce", "birch": "birch",
+         "mangrove": "mangrove"}                         # tree kind -> wood (log and leaves); else oak
+
+
 def make_tree(E, kind, x, y, z, rng):
     """Put one tree with its trunk base at (x, y, z)."""
     h = int(rng.integers(4, 7))
@@ -848,8 +852,7 @@ def make_tree(E, kind, x, y, z, rng):
         E.box(x, x + 1, y, y + h - 1, z, z + 1, "oak_log")
         E.add([x + 1, x - 1], [y + h - 2, y + h - 3], [z, z], "oak_log[axis=x]")
         return
-    wood = {"palm": "jungle", "jungle": "jungle", "acacia": "acacia", "spruce": "spruce",
-            "birch": "birch", "mangrove": "mangrove"}.get(kind, "oak")
+    wood = WOODS.get(kind, "oak")
     log, leaf = f"{wood}_log", leaves(wood)
     if kind == "spruce":
         h += 2
@@ -1013,7 +1016,8 @@ def decor(E, cols, name, rect, rng):
     elif "BONFIRE" in n or n.startswith(("FLAME", "FLARE")):     # a flare is a signal: tall smoke
         put(0, 0, 0, f"campfire[lit=true,signal_fire={str(n.startswith('FLARE')).lower()}]")
     elif "STUMP" in n:
-        put(0, 0, 0, "stripped_bamboo_block[axis=y]" if "BAMBOO" in n else "spruce_log[axis=y]")
+        put(0, -1, 0, "stripped_bamboo_block[axis=y]" if "BAMBOO" in n else "spruce_log[axis=y]")   # level: walk over it
+        put(0, 0, 0, "air")                                     # no grass or flower on the log
     elif n.startswith(("PATH_", "BLACK_TILE")):        # flat: a path in the ground, black carpet on it
         for x in range(x0, x1):
             for z in range(z0, z1):
@@ -1232,7 +1236,7 @@ MONUMENTS = ("BUDDHA_STATUE", "INDIAN_STATUES", "OLD_STONE_HEAD", "NINE_BANDS", 
              "MESOPOTAMIAN_PILLAR", "MESOPOTAMIAN_GARDEN", "MESOPOTAMIAN_TOMB", "BURNED_BUILDING")    # buildings.py designs
 PASSABLE_OBJECTS = ("FLOWER", "FERN", "RUG", "GRASS", "PLANT", "OYSTER", "FISH", "RELIC", "GRAVE", "BONFIRE",
                     "PATH_", "BLACK_TILE", "ICE_NAVIGABLE", "DOLPHIN", "BOX_TURTLES", "KELP", "WATER_LILY",
-                    "FALLEN_LEAVES", "WOODEN_ROAD")
+                    "FALLEN_LEAVES", "STUMP", "WOODEN_ROAD")
 
 
 def object_footprint(o, T):

@@ -19,7 +19,7 @@ import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from aoe2mc import PASSABLE_OBJECTS  # noqa: E402
+from aoe2mc import PASSABLE_OBJECTS, WOODS, object_footprint, tree_kind  # noqa: E402
 
 RESOURCES = ("Wood", "Food", "Gold", "Stone")
 DROP_SITES = ("TOWN_CENTER", "LUMBER_CAMP")
@@ -36,7 +36,7 @@ class Map:
         self.T = data["tile_size"]
         self.ground = [[None if v == "-" else int(v) for v in row.split()] for row in data["ground"]]
         self.n = len(self.ground)
-        self.blocked, self.trees, self.drops = set(), {}, []
+        self.blocked, self.trees, self.drops, self.feet, self.woods = set(), {}, [], {}, {}
         for o in data["objects"]:
             if o["kind"] == "building":
                 x0, z0, x1, z1 = o["footprint"]
@@ -49,6 +49,11 @@ class Map:
                 self.blocked |= self.cells(tile)
                 if "TREE" in o["name"]:
                     self.trees[tile] = TREE_WOOD
+                    self.feet[tile] = object_footprint({"name": o["name"], "x": o["tile"][0], "y": o["tile"][1]}, self.T)
+                    kind = tree_kind(o["name"])                # log and leaves of the felled trunk (None: no crown)
+                    self.woods[tile] = ("minecraft:bamboo_block", None) if kind == "bamboo" else \
+                        ("minecraft:oak_log", None) if kind == "dead" else \
+                        (f"minecraft:{WOODS.get(kind, 'oak')}_log", f"minecraft:{WOODS.get(kind, 'oak')}_leaves[persistent=true]")
 
     def cells(self, tile):
         T = self.T
@@ -148,6 +153,7 @@ class Gather:
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
                       and "VILLAGER" in o["name"]]
         self.villagers, self.selected = {}, set()
+        self.trunks = {}                                               # tree tile -> logs of its trunk on the ground
 
     def command(self, cmd):
         return self.game.command(cmd)
@@ -260,15 +266,59 @@ class Gather:
                     self.map.trees[v.tree] -= 1
                     if self.map.trees[v.tree] == 0:
                         self.fell(v.tree)
+                    else:
+                        self.trunk(v.tree)
                 if v.load >= self.carry or self.map.trees.get(v.tree, 0) <= 0:
                     self.go(v, "to_drop", set().union(*map(self.map.around, self.map.drops)))
 
-    def fell(self, tile):
-        """An empty tree disappears (logs and leaves)."""
-        T, ys = self.map.T, [y for x, z in self.map.cells(tile) if (y := self.map.y(x, z)) is not None]
-        x0, z0, y0 = tile[0] * T, tile[1] * T, min(ys, default=0) - 2
-        for b in ("#minecraft:logs", "#minecraft:leaves"):
+    def site(self, tile):
+        """Footprint (x0, x1, z0, z1), ground heights next to it, stump cell and trunk row z of a tree."""
+        T = self.map.T
+        fx0, fx1, fz0, fz1 = self.map.feet.get(tile, (tile[0] * T, tile[0] * T + T, tile[1] * T, tile[1] * T + T))
+        feet = {(x, z) for x in range(fx0, fx1) for z in range(fz0, fz1)}
+        # "ground" over the footprint is the top of the barriers: take the ground of the free cells next to it
+        ys = [self.map.y(x, z) for x, z in self.map.around(feet)] or \
+             [y for x, z in feet if (y := self.map.y(x, z)) is not None] or [0]
+        sx, sz = (fx0 + fx1) // 2, (fz0 + fz1) // 2
+        return (fx0, fx1, fz0, fz1), ys, (sx, sz), max(fz0, sz - 1)
+
+    def clear(self, tile, ys):
+        """Remove the standing tree: logs, leaves and bamboo around the tile."""
+        T, y0 = self.map.T, min(ys) - 2
+        x0, z0 = tile[0] * T, tile[1] * T
+        for b in ("#minecraft:logs", "#minecraft:leaves", "minecraft:bamboo"):
             self.command(f"fill {x0 - 2} {y0} {z0 - 2} {x0 + T + 1} {y0 + 24} {z0 + T + 1} air replace {b}")
+
+    def trunk(self, tile):
+        """From the first chop the tree lies on the ground next to its stump, as in AoE2 (#308). The trunk is a row
+        of logs in the footprint, with leaves on its tip, and gets one log shorter per 25 wood (at most 4 logs)."""
+        (fx0, fx1, fz0, fz1), ys, (sx, sz), rz = self.site(tile)
+        n = math.ceil(self.map.trees[tile] * min(4, fx1 - fx0) / TREE_WOOD)
+        if self.trunks.get(tile) == n:
+            return
+        log, leaf = self.map.woods.get(tile, ("minecraft:oak_log", None))
+        y = min(ys)
+        if tile not in self.trunks:
+            self.clear(tile, ys)
+            self.command(f"setblock {sx} {y - 1} {sz} minecraft:spruce_log[axis=y]")
+        self.trunks[tile] = n
+        for old in (log, leaf) if leaf else (log,):                   # the row again as the converter made it
+            self.command(f"fill {fx0} {y} {rz} {fx1 - 1} {y + 1} {rz} minecraft:barrier replace {old.split('[')[0]}")
+        for keep in ("replace minecraft:barrier", "keep"):            # not into the ground of a slope
+            self.command(f"fill {fx1 - n} {y} {rz} {fx1 - 1} {y} {rz} {log}[axis=x] {keep}")
+            if leaf:
+                self.command(f"fill {fx1 - n} {y + 1} {rz} {fx1 - n} {y + 1} {rz} {leaf} {keep}")
+
+    def fell(self, tile):
+        """An empty tree disappears (logs, leaves, its trunk and the barriers of its footprint). A stump stays: the top
+        of a log level with the ground, so that nothing stops the player (#307)."""
+        (fx0, fx1, fz0, fz1), ys, (sx, sz), rz = self.site(tile)
+        self.clear(tile, ys)
+        log = self.map.woods.get(tile, ("minecraft:oak_log", None))[0]
+        self.command(f"fill {fx0} {min(ys)} {rz} {fx1 - 1} {min(ys) + 1} {rz} air replace {log}")
+        self.command(f"fill {fx0} {min(ys) - 2} {fz0} {fx1 - 1} {max(ys) + 3} {fz1 - 1} air replace minecraft:barrier")
+        self.command(f"setblock {sx} {min(ys) - 1} {sz} minecraft:spruce_log[axis=y]")
+        self.trunks.pop(tile, None)
 
     def run(self, seconds=None, until=None):
         """Play in real time until seconds passed or until() is true."""
