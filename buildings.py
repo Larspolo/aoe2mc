@@ -1533,27 +1533,49 @@ def pyramid(c, w, st, col, T, ctx):
 
 
 def temple(c, w, st, col, T, ctx):
-    """Angkor-style temple: three terraces and five towers, the middle one the tallest."""
-    for L in range(3):
-        c.box(L * 2, w - L * 2, L * 2, L * 2 + 2, L * 2, w - L * 2, st.stone if L % 2 == 0 else "cut_sandstone")
-        c.crenels(L * 2, w - L * 2, L * 2, w - L * 2, L * 2 + 2, "sandstone_wall")
+    """Angkor Wat (the Khmer Wonder): three grey stone terraces with a band in the player color and stairs on
+    all sides, a gallery on the top terrace, and five lotus-bud towers (prangs) with gold tips."""
+    stone, trim, wall = "stone_bricks", "chiseled_stone_bricks", "stone_brick_wall"
     mid = w // 2
-    for L in range(6):
-        c.box(mid - 1, mid + 2, L, L + 1, w - 1 - L, w - L, stair("sandstone_stairs", "north"))
-        c.box(mid - 1, mid + 2, L + 1, 8, w - 1 - L, w - L, "air")
-    base = 6
-    big = max(5, w // 4) | 1
-    small = max(3, big - 2)
+    step = max(1, w // 10)                           # inset of each terrace
+    for L in range(3):
+        a, b = L * step, w - L * step
+        c.box(a, b, L * 2, L * 2 + 2, a, b, stone)
+        c.walls(a, b, L * 2, L * 2 + 1, a, b, f"{col}_wool")
+        c.crenels(a, b, a, b, L * 2 + 2, wall)
+        for x in (a, b - 1):                         # pinnacles on the corners
+            for z in (a, b - 1):
+                c.set(x, L * 2 + 2, z, trim); c.set(x, L * 2 + 3, z, "gold_block")
+    top = 6
+    for L in range(top):                             # stairs up the middle of each side
+        for face, (x0, x1, z0, z1) in {"north": (mid - 1, mid + 2, w - 1 - L, w - L),
+                                       "south": (mid - 1, mid + 2, L, L + 1),
+                                       "west": (w - 1 - L, w - L, mid - 1, mid + 2),
+                                       "east": (L, L + 1, mid - 1, mid + 2)}.items():
+            c.box(x0, x1, L, L + 1, z0, z1, stair("stone_brick_stairs", face))
+            c.box(x0, x1, L + 1, top + 2, z0, z1, "air")
+
+    def tower(x0, z0, s, body, h):
+        c.room(x0, x0 + s, z0, z0 + s, top - 1, body, stone, corner=trim)
+        cx, cz = x0 + (s - 1) / 2, z0 + (s - 1) / 2
+        for k in range(h):                           # the bud: rings of stone, gold near the tip
+            r = max(0.5, (s / 2 + 0.5) * (1 - (k / h) ** 1.5) ** 0.8)
+            b = "gold_block" if k >= h - 2 else trim if k % 2 else stone
+            c.cylinder(cx, cz, r, top + body + k, top + body + k + 1, b)
+        c.box(x0 + s // 2, x0 + s // 2 + 1, top + body + h, top + body + h + 2, z0 + s // 2, z0 + s // 2 + 1,
+              "gold_block")
+        return top + body + h + 1
+
+    a = 2 * step                                     # the top terrace
+    small = max(3, (w - 2 * a) // 4) | 1
+    big = max(5, (w - 2 * a) // 2 - 1) | 1
+    for x0 in (a, w - a - small):
+        for z0 in (a, w - a - small):
+            tower(x0, z0, small, 2, max(4, w // 3))
     m0 = mid - big // 2
-    body = max(4, w // 4)
-    c.room(m0, m0 + big, m0, m0 + big, base - 1, body, "cut_sandstone")
-    c.box(mid, mid + 1, base, base + 2, m0 + big - 1, m0 + big, "air")
-    c.spire(m0, m0 + big, m0, m0 + big, base + body, "chiseled_sandstone", steep=4, tip="gold_block")
-    for tx in (7, w - 7 - small):
-        for tz in (7, w - 7 - small):
-            c.box(tx, tx + small, base, base + body - 2, tz, tz + small, "cut_sandstone")
-            c.spire(tx, tx + small, tz, tz + small, base + body - 2, "chiseled_sandstone", steep=3, tip="gold_block")
-    c.banner(mid - 1, base + 2, m0 + big, col); c.banner(mid + 1, base + 2, m0 + big, col)
+    tower(m0, m0, big, 3, max(6, w * 3 // 4))
+    c.door(mid, top, m0 + big - 1)
+    c.banner(mid - 1, top + 2, m0 + big, col); c.banner(mid + 1, top + 2, m0 + big, col)
 
 
 WONDERS = {"cathedral": cathedral, "mosque": mosque, "pagoda": pagoda, "pyramid": pyramid, "temple": temple}
