@@ -18,6 +18,13 @@ Follow each step in sequence. Do not skip the report (step 8).
 | Kind | `bug`, `feature`, `tooling`, `design`, `docs`, `cleanup` |
 | Flow | `needs-human` (waits for the owner), `blocked` (waits for another ticket), `in-progress`, `epic` (parent of sub-issues), `agent-status` (the status issue), `paused` |
 
+## Runs can overlap
+
+A scheduled run starts every hour, so another run can be active. A ticket with `in-progress`, and its PR,
+belong to the other run when the ticket or the PR changed less than 2 hours ago: do not touch them.
+After 2 hours without a change the other run is dead: take the ticket over and say so in a comment.
+If your usage limit stops you, the next run continues your work through this rule.
+
 ## 1. Start
 
 1. Find the open issue with label `agent-status`. If there is none, make it (title "Agent status", body
@@ -27,7 +34,8 @@ Follow each step in sequence. Do not skip the report (step 8).
 
 ## 2. Finish open work first
 
-List open PRs. For each PR that the agent opened (branch `claude/*` or `agent/*`):
+List open PRs. For each PR that the agent opened (branch `claude/*` or `agent/*`) and that no other run
+owns (see "Runs can overlap"):
 - CI green, no open owner comments → merge it (squash), do step 7 for its ticket, then continue with step 3.
 - CI red or owner review comments → fix it now. That is the work of this cycle: continue at step 6.8.
 
@@ -71,7 +79,9 @@ Claim it: add `in-progress` and comment "Started." (one line).
    Local: `gh pr checks <pr> --watch`.
 9. CI red → find the cause, fix, push. After 3 failed attempts stop: comment the cause on the ticket,
    add `blocked` or `needs-human`, remove `in-progress`, and go to step 8.
-10. CI green → merge with squash and delete the branch.
+10. Merge conflict (another PR changed the same lines) → merge `origin/main` into the branch, solve the
+    conflict, verify again, push. Do not rebase or force-push a branch that has an open PR.
+11. CI green → merge with squash and delete the branch.
 
 If the ticket is wrong or not possible: comment why, add `needs-human`, remove `in-progress`. Do not merge
 partial work.
