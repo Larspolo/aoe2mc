@@ -9,6 +9,11 @@ a second push of another claim commit is never a fast-forward. Later claims of t
     python3 tools/claim.py N --release    # give your claim back (needs-human, blocked, hand-off)
     python3 tools/claim.py N --takeover   # take the ticket from a dead run (autopilot "Runs can overlap")
     python3 tools/claim.py N --show       # print the claim refs and the owner
+    python3 tools/claim.py N --beat       # show that the own run is alive (at least every 20 minutes)
+    python3 tools/claim.py N --stale      # exit 0: the owner made no claim or beat for 30 minutes (stopped run)
+
+A usage limit stops all runs at about the same time, and a stopped run never continues (#231). Its last beat is
+before the stop, so its ticket is stale at most 30 minutes after the limit resets. A live run beats again.
 
 Exit 2: git failed for another reason (network, permission). The workflow `claims.yml` deletes the refs
 of a closed ticket: the session proxy gives 403 for branch deletes.
@@ -17,9 +22,11 @@ import argparse
 import re
 import subprocess
 import sys
+import time
 import uuid
 
 EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+STALE = 30 * 60             # seconds without a claim or beat: the run stopped (usage limit, crash)
 
 
 def git(*args, check=True):
@@ -46,6 +53,17 @@ def subject(ref, remote="origin"):
     """Subject of the tip commit of a remote ref ("Claim #N by ..." or "Release #N by ...")."""
     git("fetch", "-q", remote, f"refs/heads/{ref}")
     return git("log", "-1", "--format=%s", "FETCH_HEAD").stdout.strip()
+
+
+def changed(ref, remote="origin"):
+    """Commit time (Unix seconds) of the tip of a remote ref: the claim, the last beat or the release."""
+    git("fetch", "-q", remote, f"refs/heads/{ref}")
+    return int(git("log", "-1", "--format=%ct", "FETCH_HEAD").stdout.strip())
+
+
+def stale(subject_line, last, now, limit=STALE):
+    """True when an open claim (not released) had no beat for `limit` seconds."""
+    return not subject_line.startswith("Release") and now - last >= limit
 
 
 def who():
@@ -75,15 +93,15 @@ def claim(number, takeover=False, remote="origin"):
     return ref if push(sha, ref, remote) else None
 
 
-def release(number, remote="origin"):
-    """Add a release commit on top of the own claim (a fast-forward of the top ref)."""
+def release(number, remote="origin", word="Release"):
+    """Add a release (or beat) commit on top of the own claim (a fast-forward of the top ref)."""
     found = refs(number, remote)
     if not found:
         return None
     ref = slot(number, max(found))
-    if subject(ref, remote).split(" ")[3:4] != [who()]:      # "Claim #N by <branch> (...)"
+    if subject(ref, remote).split(" ")[3:4] != [who()]:      # "Claim #N by <branch> (...)", "Beat #N by <branch>"
         sys.exit(f"{ref} belongs to another run: {subject(ref, remote)}")
-    sha = git("commit-tree", EMPTY_TREE, "-p", "FETCH_HEAD", "-m", f"Release #{number} by {who()}").stdout.strip()
+    sha = git("commit-tree", EMPTY_TREE, "-p", "FETCH_HEAD", "-m", f"{word} #{number} by {who()}").stdout.strip()
     return ref if push(sha, ref, remote) else None
 
 
@@ -94,11 +112,23 @@ def main(argv=None):
     g.add_argument("--release", action="store_true", help="give the own claim back")
     g.add_argument("--takeover", action="store_true", help="claim the next slot also when the ticket is owned")
     g.add_argument("--show", action="store_true", help="print the claim refs and their tip commits")
+    g.add_argument("--beat", action="store_true", help="show that the own run is alive")
+    g.add_argument("--stale", action="store_true", help="exit 0 when the open claim had no beat for 30 minutes")
     ap.add_argument("--remote", default="origin")
     a = ap.parse_args(argv)
-    if a.show:
-        for k in sorted(refs(a.number, a.remote)):
-            print(slot(a.number, k), subject(slot(a.number, k), a.remote))
+    if a.show or a.stale:
+        found = refs(a.number, a.remote)
+        for k in sorted(found):
+            ref = slot(a.number, k)
+            age = (time.time() - changed(ref, a.remote)) / 60
+            print(ref, subject(ref, a.remote), f"({age:.0f} min ago)")
+        if a.stale:
+            ref = slot(a.number, max(found)) if found else None
+            return 0 if ref and stale(subject(ref, a.remote), changed(ref, a.remote), time.time()) else 1
+        return 0
+    if a.beat:
+        ref = release(a.number, a.remote, word="Beat")
+        print(f"beat {ref}" if ref else "nothing to beat")
         return 0
     if a.release:
         ref = release(a.number, a.remote)

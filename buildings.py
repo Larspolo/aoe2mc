@@ -1015,6 +1015,75 @@ def monastery(c, w, st, col, T, ctx):
     c.banner(mid - 1 if t > 3 else mid - 2, 4, w, col); c.banner(mid + 1 if t > 3 else mid + 2, 4, w, col)
 
 
+def fortified_church(c, w, st, col, T, ctx):
+    """Armenian and Georgian Fortified Church (#128): a cross-domed stone church with a drum and a cone roof in the
+    middle, inside a wall with merlons, a round tower at the front west corner and an open bell tower at the front
+    east corner. The game has one model for all sets: light stone and orange tile roofs."""
+    s = w / 12                                                            # the design is drawn for 3 tiles
+    S = lambda v: max(1, round(v * s))
+    wall, roof, band = "stone_bricks", "red_sandstone", f"{col}_wool"   # red_sandstone: the orange roof tiles
+    c.box(0, w, 0, 1, 0, w, st.stone2)
+    # Curtain wall with merlons and a band in the player color
+    wh = S(4)
+    c.walls(0, w, 1, wh + 1, 0, w, wall)
+    c.walls(0, w, wh, wh + 1, 0, w, band)
+    c.crenels(0, w, 0, w, wh + 1, wall)
+    for z in range(S(2), w - S(4), 3):                                    # arrow slits
+        c.set(0, 2, z, "iron_bars"); c.set(w - 1, 2, z, "iron_bars")
+    # The church: a nave along z and a transept along x, gable roofs, a drum with a cone roof on the crossing
+    h = S(7)
+    nx0, nx1, nz0, nz1 = S(4), w - S(3), S(1), w - S(2)                   # nave
+    tx0, tx1, tz0, tz1 = S(2), w - S(1), S(2), S(7)                       # transept
+    c.room(nx0, nx1, nz0, nz1, 0, h, wall, st.floor)
+    c.room(tx0, tx1, tz0, tz1, 0, h, wall, st.floor)
+    c.box(nx0 + 1, nx1 - 1, 1, h + 1, nz0 + 1, nz1 - 1, "air")
+    c.box(tx0 + 1, tx1 - 1, 1, h + 1, tz0 + 1, tz1 - 1, "air")
+    c.gable(tx0 - 1, tx1 + 1, tz0 - 1, tz1 + 1, h + 1, roof, fill=(tx0, tx1, tz0, tz1, wall), axis="x")
+    ridge = c.gable(nx0 - 1, nx1 + 1, nz0 - 1, nz1 + 1, h + 1, roof, fill=(nx0, nx1, nz0, nz1, wall), axis="z")
+    for x, z in ((nx0, (nz0 + nz1) // 2 + 2), (nx1 - 1, (nz0 + nz1) // 2 + 2)):
+        c.box(x, x + 1, h - 3, h - 1, z, z + 1, "yellow_stained_glass_pane")
+    for x in ((tx0 + nx0) // 2, (nx1 + tx1 - 1) // 2):                    # tall windows in the transept
+        c.box(x, x + 1, h - 3, h - 1, tz1 - 1, tz1, "yellow_stained_glass_pane")
+        c.box(x, x + 1, h - 3, h - 1, tz0, tz0 + 1, "yellow_stained_glass_pane")
+    cx, cz, r = (nx0 + nx1 - 1) / 2, (tz0 + tz1 - 1) / 2, max(1.0, 1.5 * s)
+    dy = ridge + 1
+    c.cylinder(cx, cz, r, ridge - 1, dy + S(4), wall)
+    for ox, oz in ((r, 0), (-r, 0), (0, r), (0, -r)):                     # windows of the drum
+        c.box(round(cx + ox), round(cx + ox) + 1, dy, dy + S(2), round(cz + oz), round(cz + oz) + 1,
+              "yellow_stained_glass_pane")
+    c.cylinder(cx, cz, r + 0.5, dy + S(4), dy + S(4) + 1, band)
+    top = c.cone(cx, cz, r + 0.5, dy + S(4) + 1, roof, step=2)
+    c.set(int(cx), top + 1, int(cz), "lightning_rod")
+    # Round tower at the front west corner, with a cone roof
+    rr, rx, rz, rh = 1.8 * s, S(1.5), w - 1 - S(1.5), S(6)
+    c.cylinder(rx, rz, rr, 1, rh, wall)
+    c.cylinder(rx, rz, rr + 0.5, rh, rh + 1, band)
+    t = c.cone(rx, rz, rr + 0.5, rh + 1, roof, step=2)
+    c.set(int(rx), t + 1, int(rz), "lightning_rod")
+    c.set(int(rx + rr), S(4), int(rz), "iron_bars")
+    # Bell tower at the front east corner: a square tower, an open belfry and a hip roof
+    b0, bh = w - S(3), S(9)
+    c.box(b0, w, 1, bh, b0, w, wall)
+    c.walls(b0, w, bh - 1, bh, b0, w, band)
+    c.box(b0, w, bh, bh + 2, b0, w, "air")
+    for x in (b0, w - 1):
+        for z in (b0, w - 1):
+            c.box(x, x + 1, bh, bh + 2, z, z + 1, "stone_brick_wall")
+    c.set((b0 + w - 1) // 2, bh + 1, (b0 + w - 1) // 2, "bell[attachment=ceiling,facing=south]")
+    c.box(b0, w, bh + 2, bh + 3, b0, w, wall)
+    t = c.hip(b0 - 1, w + 1, b0 - 1, w + 1, bh + 3, roof)
+    c.set((b0 + w - 1) // 2, t + 1, (b0 + w - 1) // 2, "lightning_rod")
+    c.set((b0 + w - 1) // 2, S(5), w - 1, "yellow_stained_glass_pane")
+    # Gate in the front wall between the towers, the church door behind it
+    gx = (S(3) + b0) // 2 + 1
+    c.box(gx, gx + 1, 1, 4, w - 1, w, "air")
+    c.set(gx, 3, w - 1, "chiseled_stone_bricks")
+    c.door(gx, 1, w - 1, wood="dark_oak")
+    c.box(gx, gx + 1, 1, 3, nz1 - 1, nz1, "air")
+    c.door(gx, 1, nz1 - 1, wood="dark_oak")
+    c.banner(gx - 1, 3, w, col); c.banner(gx + 1, 3, w, col)
+
+
 def university(c, w, st, col, T, ctx):
     """Like the game: a hall of two floors at the back with a library inside, a higher block on the east side
     and a scholar statue in the front yard. Sets with domes keep a domed hall (the observatory) behind columns."""
@@ -1250,6 +1319,60 @@ def dock(c, w, st, col, T, ctx):
     for x in (0, w - 1):                                                   # bollards with rope
         for z in (0, w - 1):
             c.set(x, 2, z, "spruce_fence")
+
+
+def harbor(c, w, st, col, T, ctx):
+    """Harbor (Khmer): a sandstone pier on piles. A plinth with a band in the player color carries a stone house
+    with an orange gable roof and a prang tower; stairs with guardian lions, a fish stall and a moored boat.
+    Only the Khmer build it, so all sets use the same Khmer design."""
+    sand, cut, chis = "smooth_sandstone", "cut_sandstone", "chiseled_sandstone"
+    stone, relief = "stone_bricks", "chiseled_stone_bricks"               # grey stone of the house and the prang
+    q = w - 3                                                              # water strip on the south-west side
+    c.box(0, w, 1, 2, 0, q, sand)                                          # deck above the water
+    c.box(w // 2, w, 1, 2, q, w, sand)                                     # pier for the fish stall
+    for x in list(range(0, w, 3)) + [w - 1]:
+        for z in list(range(0, w, 3)) + [w - 1]:
+            if z < q or x >= w // 2:
+                c.box(x, x + 1, -8, 1, z, z + 1, "sandstone")              # piles
+    # Plinth with a band in the player color, stairs up the front
+    px0, px1, pz1 = 1, w - 2, q - 1
+    c.box(px0, px1, 2, 4, 0, pz1, cut)
+    c.walls(px0, px1, 3, 4, 0, pz1, f"{col}_concrete")
+    m = (px0 + px1) // 2
+    c.box(m - 1, m + 2, 2, 3, pz1, pz1 + 1, "sandstone_stairs[facing=north,half=bottom,shape=straight]")
+    c.box(m - 1, m + 2, 3, 4, pz1 - 1, pz1, "sandstone_stairs[facing=north,half=bottom,shape=straight]")
+    for x in (m - 2, m + 2):                                               # guardian lions beside the stairs
+        c.set(x, 4, pz1 - 1, chis); c.set(x, 5, pz1 - 1, "stone_brick_stairs[facing=north,half=bottom,shape=straight]")
+    # House with an orange gable roof, and the prang tower on the back of the ridge
+    hx0, hx1, hz1 = px0 + 1, px1 - 1, pz1 - 2
+    c.room(hx0, hx1, 0, hz1, 4, 4, stone, sand, corner=relief)
+    c.windows(hx0, hx1, 0, hz1, 6, b="iron_bars", step=2, sides="ew")      # stone lattice windows
+    c.door(m, 4, hz1 - 1, wood="jungle")
+    c.banner(m - 2, 6, hz1, col); c.banner(m + 2, 6, hz1, col)
+    ridge = c.gable(hx0 - 1, hx1 + 1, 0, hz1 + 1, 8, "red_sandstone", fill=(hx0, hx1, 0, hz1, relief), axis="z")
+    s, cz = 5, 2
+    c.box(m - 2, m + 3, ridge - 1, ridge + 2, cz - 2, cz + 3, stone)
+    c.walls(m - 2, m + 3, ridge + 1, ridge + 2, cz - 2, cz + 3, relief)
+    y0, h = ridge + 2, max(7, 2 * T)
+    for k in range(h):                                                     # the lotus bud: rings, narrower each tier
+        r = max(0.5, (s / 2 + 0.5) * (1 - (k / h) ** 1.5) ** 0.8)
+        c.cylinder(m, cz, r, y0 + k, y0 + k + 1, relief if k % 2 else stone)
+    c.box(m, m + 1, y0 + h, y0 + h + 2, cz, cz + 1, "gold_block")
+    # Fish stall on the pier: an awning in the player color on posts, with goods
+    ax0 = w // 2 + 1
+    for x in (ax0, w - 1):
+        for z in (q, w - 1):
+            c.box(x, x + 1, 2, 4, z, z + 1, "jungle_fence")
+    c.box(ax0, w, 4, 5, q, w, f"{col}_wool")
+    goods = ["barrel[facing=up]", "melon", "decorated_pot", "chest[facing=south]", "composter", "decorated_pot"]
+    for x, z in ((ax0 + 1, q + 1), (ax0 + 2, q + 1), (ax0 + 1, w - 2), (1, q - 1), (w - 2, q - 1), (w - 1, 1)):
+        if c.rng.random() < 0.8:
+            c.set(x, 2, z, goods[int(c.rng.integers(len(goods)))])
+    # Moored boat with a high prow, and the player flag on its mast
+    hull(c, 0, w // 2, q + 1, 1, 1, wood="jungle")
+    c.box(0, 1, 3, 5, q + 1, q + 2, "jungle_planks"); c.set(0, 5, q + 1, "gold_block")
+    c.box(2, 3, 2, 6, q + 1, q + 2, "stripped_jungle_log")
+    c.flag(2, 6, q + 1, col, 2)
 
 
 def hull(c, x0, x1, zc, y, half, wood="oak", ribs=False):
@@ -2093,9 +2216,10 @@ def select(name):
         ("FENCE", wall_segment, {}), ("BARRICADE", barricade, {}), ("BARRACKS", barracks, {}), ("ARCHERY_RANGE", archery_range, {}),
         ("STABLE", stable, {}), ("SIEGE_WORKSHOP", siege_workshop, {}), ("BLACKSMITH", blacksmith, {}),
         ("MARKET", market, {}), ("CARAVANSERAI", caravanserai, {}), ("FEITORIA", feitoria, {}),
-        ("MONASTERY", monastery, {}), ("CHURCH", monastery, {}), ("UNIVERSITY", university, {}),
+        ("FORTIFIED_CHURCH", fortified_church, {}), ("MONASTERY", monastery, {}),
+        ("CHURCH", monastery, {}), ("UNIVERSITY", university, {}),
         ("FOLWARK", folwark, {}), ("MILL", mill, {}), ("LUMBER_CAMP", lumber_camp, {}),
-        ("MINING_CAMP", mining_camp, {}), ("DOCK", dock, {}), ("HARBOR", dock, {}),
+        ("MINING_CAMP", mining_camp, {}), ("DOCK", dock, {}), ("HARBOR", harbor, {}),
         ("FARM", farm, {}), ("HOUSE", house, {}),
     ]
     for word, fn, kw in rules:
@@ -2187,6 +2311,7 @@ def place_building(E, cols, B, o, players, walls, gates):
         # Like the game: rows of crops with furrows of bare soil between them, along tile y (they turn with
         # --orientation), and a path around the plot. Some rows are not ripe yet.
         x0, z0 = int(round((ux - 1.5) * T)), int(round((uy - 1.5) * T))
+        o["footprint"] = [x0, z0, x0 + 3 * T, z0 + 3 * T]                   # for aoe2mc.json
         rng = np.random.default_rng(abs((x0 * 73856093) ^ (z0 * 19349663)) % (2 ** 32))
         for x in range(max(0, x0), min(cols.n, x0 + 3 * T)):
             for z in range(max(0, z0), min(cols.n, z0 + 3 * T)):
@@ -2237,11 +2362,12 @@ def place_building(E, cols, B, o, players, walls, gates):
     zs = range(max(0, z0), min(cols.n, z0 + fz))
     if not len(xs) or not len(zs):
         return
+    o["footprint"] = [x0, z0, x0 + fx, z0 + fz]                         # for aoe2mc.json
     area = cols.wtop[xs.start:xs.stop, zs.start:zs.stop]
     base = int(area.max())
     if fn not in (gate, bridge):
         cols.blocked[xs.start:xs.stop, zs.start:zs.stop] = True
-    is_dock = fn in (dock, bridge, wooden_bridge, fish_trap, shipyard, port, mole, harbor_chain, flagship)
+    is_dock = fn in (dock, harbor, bridge, wooden_bridge, fish_trap, shipyard, port, mole, harbor_chain, flagship)
     wet = area > cols.top[xs.start:xs.stop, zs.start:zs.stop]
     water_y = int(area[wet].max()) if wet.any() else cols.water_y       # the surface of this water body (#165)
     if fn is bridge:                                                     # one deck height for all pieces (#192)
@@ -3263,7 +3389,7 @@ LANDMARKS = {arch_of_constantine, colosseum, gol_gumbaz, sanchi_stupa, temple_of
              mosque_landmark, hall_of_heroes, shrine, pagan_shrine}
 MONUMENTAL = LANDMARKS | {mole, harbor_chain, flagship, helepolis, great_pyramid, nubian_pyramid, dome_rock, sankore, wooden_bridge, fish_trap, wonder, castle, krepost, monastery, church, amphitheatre, monument, wall_segment, gate, tower,
               bridge, aqueduct}
-NO_PROPS = LANDMARKS | {shipyard, port, mole, harbor_chain, flagship, helepolis, great_pyramid, nubian_pyramid, dome_rock, wooden_bridge, fish_trap, barricade, wall_segment, gate, bridge, aqueduct, tower, outpost, wonder, dock, monument, amphitheatre}
+NO_PROPS = LANDMARKS | {shipyard, port, mole, harbor_chain, flagship, helepolis, great_pyramid, nubian_pyramid, dome_rock, wooden_bridge, fish_trap, barricade, wall_segment, gate, bridge, aqueduct, tower, outpost, wonder, dock, harbor, monument, amphitheatre}
 
 
 def building_rect(o):

@@ -18,7 +18,10 @@ Converts an Age of Empires II: Definitive Edition scenario (`.aoe2scenario`) int
 | `tests/` | The tests (pytest) |
 | `docs/` | Design guide, roadmap, steering, coverage report and other notes |
 
-The repository has no converted worlds. Convert a sample map to get one (see "Use").
+The repository has no converted worlds. Convert a sample map to get one (see "Use"), or download the converted
+worlds: the release `worlds` on the GitHub page of the repository ("Releases") has one zip per map of `examples/` and
+`samples/`. Unzip a world into the `saves` folder of Minecraft Java. The workflow `.github/workflows/worlds.yml` makes
+the zips: start it in the "Actions" tab, or push a tag `v*` for a release of that tag.
 
 ## Install
 
@@ -36,6 +39,8 @@ Two ways:
 Copy the folder `MyMapWorld` into your Minecraft `saves` folder. Open it in Minecraft Java 26.3 or newer. For an older game (1.21.1 to 26.2), convert with `--mc-version 1.21.1`.
 The world is in creative mode. Outside the map there is only void. The world list shows a small top view of the map
 (`icon.png`).
+The file `aoe2mc.json` in the world folder lists the map size, the players and each object: AoE2 ID, name, owner,
+tile position and rotation, the UUID of the entity (units) and the footprint in blocks (buildings). A game program can use it.
 
 | Option | Default | Description |
 |---|---|---|
@@ -54,6 +59,7 @@ The world is in creative mode. Outside the map there is only void. The world lis
 | `--orientation C` | `ne` | Minecraft corner (`ne`, `se`, `sw`, `nw`) of the top corner of the AoE2 screen. The map, the building fronts and the units turn with it. |
 | `--spawn X,Z` | start view or town center of player 1 | Player spawn in AoE2 tiles. Without it the spawn is the start view of player 1, else the front of its first town center, else the map center. |
 | `--garrison {outside,skip}` | `outside` | Garrisoned units: `outside` puts each unit next to the building or unit that holds it (or in its ship, if a seat is free). `skip` does not convert them. |
+| `--border {diorama,natural,wall,none}` | `diorama` | Edge outside the map. `diorama`: the map stands on a plinth of stone bricks. `natural`: the ground slopes down into a ring of sea. `wall`: a low wall with a tower in a player color at each corner. `none`: no blocks. All keep the vanilla world border at the map edge. Images: `docs/images/border-*.png`. |
 
 ## Buildings
 
@@ -80,7 +86,7 @@ near the spawn. Each text is a chapter. There is no lectern when all texts are e
 
 ## Units
 
-All units stand still (no AI), do not despawn and are silent. Each unit has a name tag with its AoE2 name in the player color.
+All units stand still (no AI), do not despawn and are silent. Passive animals (sheep, cows, pigs and others) make their normal sounds. Each unit has a name tag with its AoE2 name in the player color.
 The world difficulty is Easy: on Peaceful, Minecraft removes the hostile mobs (the soldiers).
 
 | AoE2 | Minecraft |

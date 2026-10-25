@@ -27,5 +27,5 @@ jobs:
           for ref in $(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/heads/claim/$N" --jq '.[].ref' \
                        | grep -E "^refs/heads/claim/$N(-[0-9]+)?$"); do
             echo "delete $ref"
-            gh api "repos/$GITHUB_REPOSITORY/git/${ref#refs/}" -X DELETE
+            gh api "repos/$GITHUB_REPOSITORY/git/$ref" -X DELETE   # git/refs/heads/claim/N
           done
