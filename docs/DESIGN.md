@@ -44,6 +44,10 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Tent canvas | `white_wool`, a valance of wool in the player color | `army_tent`, `command_tent` |
 | Thatch | `hay_block` | `hut`, `settlement` |
 | Palisade stakes | `*_log[axis=y]` of two heights | `wooden_fort` |
+| Gold statue, finial | `gold_block` | `buddha_statue`, `stupa`, `monument` |
+| Painted wood (torii) | `red_concrete`, black top beam | `torii` |
+| Climbing plants | `vine`, `azalea_leaves` | `pillar` |
+| Charred timber | `coal_block`, `blackstone`, dark oak logs | `burned_building` |
 | Spire tip, finial | `lightning_rod` | `Canvas.spire`, `monastery`, `mosque` |
 | Chain, rope | `chain` | `dock`, `siege_workshop` |
 | Portcullis, grille | `iron_bars` | `gate`, `castle` |

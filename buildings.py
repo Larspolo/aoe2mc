@@ -1230,7 +1230,9 @@ def wonder(c, w, st, col, T, ctx):
 # --------------------------------------------------------------------------------------------
 # Selection and placement
 # --------------------------------------------------------------------------------------------
-FOOTPRINT = [("WOODEN_BRIDGE", 1), ("GREAT_PYRAMID", 6), ("NUBIAN_PYRAMID", 3), ("PYRAMID", 5),
+FOOTPRINT = [("PAGODA_", 3), ("STUPA", 3), ("TROWULAN_GATE", 3), ("REKHA_DEUL_TEMPLE", 3), ("SVAN_TOWER", 1),
+             ("COURTYARD_WALLS", 3), ("MESOPOTAMIAN_PILLAR", 1), ("MESOPOTAMIAN_GARDEN", 3),
+             ("WOODEN_BRIDGE", 1), ("GREAT_PYRAMID", 6), ("NUBIAN_PYRAMID", 3), ("PYRAMID", 5),
              ("DOME_OF_THE_ROCK", 5), ("SANKORE", 3), ("FISH_TRAP", 3), ("RUINS", 3), ("ROCK_CHURCH", 3),
              ("CHAPEL", 3), ("BRIDGE", 3), ("AQUEDUCT", 1), ("AMPHITHEATRE", 5), ("CATHEDRAL", 4), ("MONUMENT", 3),
              ("ARMY_TENT", 2), ("PAVILION", 2), ("YURT", 2), ("HUT", 2), ("TRADE_WORKSHOP", 4),
@@ -1252,6 +1254,12 @@ def footprint(name):
 def select(name):
     """AoE2 building name -> (design function, extra arguments)."""
     rules = [
+        ("BUDDHA_STATUE_A", buddha_statue, {"gold": True}), ("BUDDHA_STATUE_B", buddha_statue, {"gold": True}),
+        ("BUDDHA_STATUE", buddha_statue, {}), ("INDIAN_STATUES", statues, {}), ("OLD_STONE_HEAD", stone_head, {}),
+        ("NINE_BANDS", nine_bands, {}), ("PAGODA_", small_pagoda, {}), ("TORII_GATE", torii, {}), ("STUPA", stupa, {}),
+        ("TROWULAN_GATE", split_gate, {}), ("REKHA_DEUL_TEMPLE", rekha_deul, {}), ("SVAN_TOWER", svan_tower, {}),
+        ("COURTYARD_WALLS", courtyard_walls, {}), ("MESOPOTAMIAN_PILLAR", pillar, {}),
+        ("MESOPOTAMIAN_GARDEN", garden, {}), ("MESOPOTAMIAN_TOMB", tomb, {}), ("BURNED_BUILDING", burned_building, {}),
         ("WOODEN_BRIDGE", wooden_bridge, {}), ("GREAT_PYRAMID", great_pyramid, {}),
         ("NUBIAN_PYRAMID", nubian_pyramid, {}), ("PYRAMID", great_pyramid, {}),
         ("DOME_OF_THE_ROCK", dome_rock, {}), ("SANKORE", sankore, {}), ("FISH_TRAP", fish_trap, {}),
@@ -1681,6 +1689,182 @@ def monument(c, w, st, col, T, ctx):
     c.box(m, m + 1, 3, h, m, m + 1, "smooth_quartz")
     c.set(m, h, m, "gold_block")
     c.banner(m, 4, m + 1, col)
+
+
+# --------------------------------------------------------------------------------------------
+# Monuments and statues (AoE2 "other objects" that place_objects draws with these designs)
+# --------------------------------------------------------------------------------------------
+def buddha_statue(c, w, st, col, T, ctx, gold=False):
+    """A seated Buddha on a lotus plinth: gold (A, B) or stone (C, D)."""
+    body = "gold_block" if gold else "smooth_stone"
+    m = w // 2
+    c.box(m - 2, m + 2, 0, 1, m - 2, m + 2, "polished_andesite")
+    c.box(m - 2, m + 2, 1, 2, m - 2, m + 2, "pink_terracotta")          # lotus
+    c.box(m - 2, m + 2, 2, 3, m - 2, m + 1, body)                       # crossed legs
+    c.box(m - 1, m + 1, 3, 5, m - 1, m + 1, body)                       # body
+    c.box(m - 1, m + 1, 5, 6, m - 1, m + 1, body)                       # head
+    c.set(m - 1, 6, m - 1, "smooth_stone_slab[type=bottom]" if not gold else "gold_block")    # hair knot
+
+
+def statues(c, w, st, col, T, ctx):
+    """Two standing temple statues of sandstone on plinths."""
+    for x in (1, w - 2):
+        m = w // 2
+        c.box(x - 1, x + 2, 0, 2, m - 1, m + 2, "cut_sandstone")
+        c.box(x, x + 1, 2, 4, m, m + 1, "smooth_sandstone")
+        c.set(x, 4, m, "chiseled_sandstone")
+        c.set(x, 5, m, "smooth_sandstone_slab[type=bottom]")
+
+
+def stone_head(c, w, st, col, T, ctx):
+    """A large carved stone head with eyes and a mouth to the south."""
+    a, b = 1, w - 1
+    c.box(a, b, 1, 6, a, b, "stone")
+    c.box(a + 1, b - 1, 6, 7, a + 1, b - 1, "stone")
+    c.box(a, b, 1, 2, a, b, "mossy_cobblestone")
+    for x in (a + 1, b - 2):
+        c.set(x, 4, b - 1, "polished_deepslate")                         # eyes
+    c.box(a + 2, b - 2, 2, 3, b - 1, b, "polished_andesite")             # mouth
+    c.set(w // 2, 3, b, "stone_button[face=wall,facing=south]")          # nose
+
+
+def nine_bands(c, w, st, col, T, ctx):
+    """The nine white horsetail banners of the Mongols: nine spears with white tassels."""
+    for i in range(9):
+        x, z = 1 + (i % 3) * (w - 3) // 2, 1 + (i // 3) * (w - 3) // 2
+        h = 4 if i == 4 else 3
+        c.box(x, x + 1, 1, 1 + h, z, z + 1, "oak_fence")
+        c.set(x, 1 + h, z, "white_wool")
+        c.set(x, 2 + h, z, "lightning_rod")
+
+
+def small_pagoda(c, w, st, col, T, ctx):
+    """A pagoda of the East Asian set."""
+    pagoda(c, w, ARCH["east_asian"], col, T, ctx)
+
+
+def torii(c, w, st, col, T, ctx):
+    """A red torii gate: two pillars, a tie beam and a black top beam that sticks out."""
+    m = w // 2
+    for x in (m - 2, m + 1):
+        c.set(x, 1, m, "black_concrete")
+        c.box(x, x + 1, 2, 5, m, m + 1, "red_concrete")
+    c.box(m - 2, m + 2, 4, 5, m, m + 1, "red_concrete")                 # tie beam
+    c.box(m - 3, m + 3, 5, 6, m, m + 1, "red_concrete")
+    c.box(m - 3, m + 3, 6, 7, m, m + 1, "blackstone_slab[type=bottom]")
+    c.set(m - 1, 4, m + 1, "black_wall_banner[facing=south]")
+
+
+def stupa(c, w, st, col, T, ctx):
+    """A white Buddhist stupa: square terrace, dome, small box and a gold spire."""
+    c.box(0, w, 0, 2, 0, w, "smooth_stone")
+    c.box(1, w - 1, 2, 3, 1, w - 1, "smooth_quartz")
+    m = (w - 1) / 2
+    top = c.dome(m, m, w / 2 - 1.5, 3, "white_concrete")
+    k = w // 2
+    c.box(k - 1, k + 1, top + 1, top + 2, k - 1, k + 1, "smooth_quartz")
+    c.box(k - 1, k, top + 2, top + 5, k - 1, k, "gold_block")
+    c.set(k - 1, top + 5, k - 1, "lightning_rod")
+    c.box(k - 1, k + 1, 1, 3, w - 1, w, "smooth_quartz_stairs[facing=north,half=bottom,shape=straight]")
+
+
+def split_gate(c, w, st, col, T, ctx):
+    """Trowulan split gate (candi bentar): two stepped red brick towers with a passage between them."""
+    m = w // 2
+    for x0, x1 in ((0, m - 1), (m + 1, w)):
+        for k in range(4):
+            c.box(x0 + (k if x0 else 0), x1 - (0 if x0 else k), 3 * k, 3 * k + 3, 2 + k // 2, w - 2 - k // 2, "bricks")
+        c.box(x0, x1, 3, 4, 2, w - 2, "mud_bricks")
+    c.box(m - 1, m + 1, 0, 1, 0, w, "brick_slab[type=top]")
+
+
+def rekha_deul(c, w, st, col, T, ctx):
+    """An Odisha temple: a tall curved sandstone tower with a ribbed disc (amalaka) on top, and a porch."""
+    c.box(0, w, 0, 1, 0, w, "cut_sandstone")
+    a, b, y = 2, w - 2, 1
+    for k in range(7):                                  # the tower narrows faster near the top
+        h = 3 if k < 4 else 2
+        c.box(a, b, y, y + h, a, b, "sandstone" if k % 2 == 0 else "cut_red_sandstone")
+        y += h
+        if k >= 2:
+            a, b = a + 1 if b - a > 3 else a, b - 1 if b - a > 3 else b
+    c.cylinder((w - 1) / 2, (w - 1) / 2, 1.6, y, y + 1, "chiseled_sandstone")
+    c.set(w // 2, y + 1, w // 2, "gold_block"); c.set(w // 2, y + 2, w // 2, "lightning_rod")
+    c.room(w // 2 - 2, w // 2 + 2, w - 3, w, 0, 3, "smooth_sandstone")
+    c.box(w // 2 - 1, w // 2 + 1, 1, 3, w - 1, w, "air")
+
+
+def svan_tower(c, w, st, col, T, ctx):
+    """A Svan defense tower: tall, narrow, of rough stone, with a pitched tile roof."""
+    h = max(12, 4 * T)
+    c.room(0, w, 0, w, 0, h, "cobblestone")
+    c.box(0, w, 1, 2, 0, w, "mossy_cobblestone")
+    c.door(w // 2, 1, w - 1)
+    for y in range(4, h - 1, 4):
+        c.set(w // 2, y, 0, "air"); c.set(w // 2, y, w - 1, "air")
+    c.windows(0, w, 0, w, h - 1, b="air", step=2)
+    c.gable(-1, w + 1, -1, w + 1, h + 1, "brick")
+
+
+def courtyard_walls(c, w, st, col, T, ctx):
+    """Low plastered walls around a paved courtyard, with an opening to the south."""
+    c.box(0, w, 0, 1, 0, w, "smooth_sandstone")
+    c.walls(0, w, 1, 3, 0, w, "sandstone")
+    c.walls(0, w, 3, 4, 0, w, "sandstone_wall")
+    c.box(w // 2 - 1, w // 2 + 1, 1, 4, w - 1, w, "air")
+    c.set(w // 2, 1, w // 2, "decorated_pot[facing=south,cracked=false]")
+
+
+def pillar(c, w, st, col, T, ctx):
+    """A tall brick column with plants on top and vines on its sides."""
+    m = w // 2
+    h = 3 * T
+    c.box(m - 1, m + 1, 1, 2, m - 1, m + 1, "mud_bricks")
+    c.box(m, m + 1, 2, h, m, m + 1, "mud_bricks")
+    c.set(m, h, m, "chiseled_sandstone")
+    c.set(m, h + 1, m, "azalea_leaves[persistent=true]")
+    for y in range(h - 3, h):
+        c.set(m + 1, y, m, "vine[east=false,north=false,south=false,up=false,west=true]")
+
+
+def garden(c, w, st, col, T, ctx):
+    """A walled garden: a water channel in the middle, hedges, flowers and palms of leaves."""
+    c.walls(0, w, 1, 2, 0, w, "mud_brick_wall")
+    c.box(w // 2 - 1, w // 2 + 1, 1, 2, w - 1, w, "air")
+    c.box(1, w - 1, 0, 1, w // 2, w // 2 + 1, "water[level=0]")
+    for x in range(1, w - 1):
+        for z in (1, w - 2):
+            c.set(x, 1, z, "azalea_leaves[persistent=true]" if x % 3 else "flowering_azalea_leaves[persistent=true]")
+        for z in (w // 2 - 2, w // 2 + 2):
+            c.set(x, 1, z, ["poppy", "dandelion", "allium", "cornflower"][x % 4])
+    for x in (2, w - 3):
+        c.box(x, x + 1, 1, 4, w // 2 - 1, w // 2, "jungle_log[axis=y]")
+        c.box(x - 1, x + 2, 4, 5, w // 2 - 2, w // 2 + 1, "jungle_leaves[persistent=true]")
+
+
+def tomb(c, w, st, col, T, ctx):
+    """A small mud brick tomb house with a wooden gable roof on a stepped platform."""
+    c.box(0, w, 0, 1, 0, w, "mud_bricks")
+    c.box(1, w - 1, 1, 2, 1, w - 1, "packed_mud")
+    c.room(2, w - 2, 2, w - 2, 1, 3, "mud_bricks")
+    c.door(w // 2, 2, w - 3)
+    c.gable(1, w - 1, 1, w - 1, 5, "spruce", fill=(2, w - 2, 2, w - 2, "mud_bricks"))
+    c.box(w // 2 - 1, w // 2 + 1, 1, 2, w - 1, w, stair("mud_brick_stairs", "north"))
+
+
+def burned_building(c, w, st, col, T, ctx):
+    """The black ruin of a burned timber house: broken walls, fallen beams, smoke."""
+    rng = c.rng
+    a, b = 1, w - 1
+    for x in range(a, b):
+        for z in range(a, b):
+            if x in (a, b - 1) or z in (a, b - 1):
+                c.box(x, x + 1, 1, 1 + int(rng.integers(0, 4)), z, z + 1,
+                      ["stripped_dark_oak_log[axis=y]", "blackstone", "coal_block", "dark_oak_log[axis=y]"][(x + z) % 4])
+    c.box(a, b, 0, 1, a, b, "coarse_dirt")
+    c.box(a + 1, b - 1, 3, 4, w // 2, w // 2 + 1, "dark_oak_log[axis=x]")    # one roof beam is left
+    c.set(w // 2 - 1, 1, w // 2 - 1, "campfire[lit=true,signal_fire=false]")
+    c.set(w // 2 + 1, 1, w // 2, "gravel")
 
 
 def church(c, w, st, col, T, ctx):
