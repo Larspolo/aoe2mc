@@ -22,6 +22,9 @@ set, for example `Arch set West European Castle Age AoE2DE.png`). Look at the PN
 For some buildings `<Building> aoe2DE.png` is only the icon (crossed swords, a horseshoe). Then use
 `<Building> Castle DE AoE2DE.png` (3 sets side by side) and the `Arch set` images.
 
+Look at each image before you use it: some names give another picture (`Towncenter aoe2DE.png` is a portrait).
+The `Arch set ...` images are reliable. Crop one building and scale it 2× with PIL to see the details.
+
 If no image of the architecture set exists, use the nearest set and say so in the PR.
 
 ## 2. Render the current design

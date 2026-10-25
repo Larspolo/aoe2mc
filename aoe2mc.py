@@ -11,11 +11,12 @@ Options:
     --name TEXT        World name in the Minecraft menu (default: file name)
     --seed N           Seed for the random details (tree heights, flowers) (default 1)
     --preview          Also write preview.png (top view) into the world folder
-    --mc-version V     Minecraft Java version of the output: 1.21.1 (default) or 26.3 (not complete yet)
+    --mc-version V     Minecraft Java version of the output: 1.21.1 (default) or 26.3
     --orientation C    Minecraft corner (ne, se, sw, nw) of the top corner of the AoE2 screen (default ne)
     --no-units         Do not convert units (mobs, boats, minecarts)
     --no-birds         Do not convert birds
     --no-barriers      Do not fill building footprints with invisible barrier blocks
+    --verbose          Print the time of each phase (read, columns, objects, units, chunks, write)
     --architecture X   Use one architecture set for all players (western, central, mediterranean,
                        middle_eastern, south_asian, african, east_asian, southeast_asian, mesoamerican)
 
@@ -48,7 +49,7 @@ import units
 with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools", "mcdata", "1.21.1.json")) as _f:
     WATERLOGGABLE = {"minecraft:" + k for k, v in json.load(_f)["blocks"].items() if "waterlogged" in v}
 
-# Output format per Minecraft Java version (docs/minecraft-versions.md). The 26.3 entity and world format: #57.
+# Output format per Minecraft Java version (docs/minecraft-versions.md). Entities: units.to_version().
 VERSIONS = {
     "1.21.1": dict(name="1.21.1", data_version=3955, renames={}),
     "26.3": dict(name="26.3", data_version=5023, renames={"minecraft:chain": "minecraft:iron_chain"}),
@@ -56,6 +57,7 @@ VERSIONS = {
 VERSION_NAME = "1.21.1"      # the default output version
 DATA_VERSION = VERSIONS[VERSION_NAME]["data_version"]
 MC = VERSIONS[VERSION_NAME]  # the version of the running conversion; convert() sets it
+V26_1, V26_3 = 4786, 5023    # data versions of format changes (more in units.to_version)
 MIN_Y, MAX_Y = -64, 320      # world height range (MAX_Y exclusive)
 HEIGHT = MAX_Y - MIN_Y
 WATER_Y = 62                 # Y of the highest water block (sea level)
@@ -100,11 +102,11 @@ class Blocks:
         """Palette entry for block id i: {Name, Properties}, with the block names of the output version."""
         name, _, props = self.states[i].partition("[")
         name = MC["renames"].get(name, name)
+        key, pkey = ("id", "properties") if MC["data_version"] >= V26_3 else ("Name", "Properties")
         if not props:
-            return Compound({"Name": String(name)})
+            return Compound({key: String(name)})
         p = dict(kv.split("=") for kv in props[:-1].split(","))
-        return Compound({"Name": String(name),
-                         "Properties": Compound({k: String(v) for k, v in p.items()})})
+        return Compound({key: String(name), pkey: Compound({k: String(v) for k, v in p.items()})})
 
 
 B = Blocks()
@@ -263,7 +265,8 @@ def read_scenario(path):
             prefix, name = kinds.get(u.unit_const, ("?", f"UNKNOWN_{u.unit_const}"))
             garrisoned = u.garrisoned_in_id not in (None, -1)
             objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name,
-                                player=player, x=u.x, y=u.y, rotation=float(u.rotation or 0), garrisoned=garrisoned))
+                                player=player, x=u.x, y=u.y, rotation=float(u.rotation or 0), garrisoned=garrisoned,
+                                ref=u.reference_id, holder=u.garrisoned_in_id if garrisoned else None))
     return size, terrain, elevation, terrain_names, texts, objects, players
 
 
@@ -1015,13 +1018,22 @@ PASSABLE = ("short_grass", "tall_grass", "large_fern", "petals", "moss_carpet", 
             "seagrass", "dead_bush", "sweet_berry", "rail", "carpet", "banner", "button", "lantern", "snow[")
 
 
-def plan_units(objects, players, cols, rng, stats, birds=True):
-    """Entities per chunk: {(cx, cz): [(nbt, x, z, is_boat)]}."""
+SEATS = {"minecraft:boat": 2, "minecraft:chest_boat": 1}
+
+
+def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside"):
+    """Entities per chunk: {(cx, cz): [(nbt, x, z, is_boat)]}.
+    garrison="outside": a garrisoned unit rides its ship if a seat is free, else stands next to its holder."""
     T = cols.T
     out = {}
-    for o in objects:
+    refs = {o["ref"]: o for o in objects if o.get("ref") is not None}
+    boats = {}                  # reference ID of a ship -> its boat NBT
+    taken = set()               # columns that garrisoned units use, so that they do not stand in one column
+    # The holders come first: a ship must exist before its passengers board it.
+    for o in sorted(objects, key=lambda o: bool(o.get("garrisoned"))):
+        held = bool(o.get("garrisoned")) and o["kind"] == "U"
         if o["kind"] == "U":
-            if o.get("garrisoned"):
+            if held and garrison == "skip":
                 stats["units (garrisoned, skipped)"] += 1
                 continue
             if not birds and units.is_bird(o["name"]):
@@ -1032,6 +1044,20 @@ def plan_units(objects, players, cols, rng, stats, birds=True):
                 continue
             nbt = units.make_entity(o, players, (0, 0, 0), rng, desc)
             boat = units.is_boat(desc)
+            if held:
+                holder = refs.get(o.get("holder"))
+                if o.get("holder") in boats:
+                    ship = boats[o["holder"]]
+                    if len(ship.get("Passengers", [])) < SEATS[str(ship["id"])]:
+                        ship.setdefault("Passengers", List[Compound]([])).append(nbt)
+                        stats["units (garrisoned, in a ship)"] += 1
+                    else:
+                        stats["units (garrisoned, no free seat in the ship, skipped)"] += 1
+                    continue
+                o = dict(o, x=holder["x"], y=holder["y"]) if holder else o
+                stats["units (garrisoned, next to the holder)"] += 1
+            elif boat and o.get("ref") is not None:
+                boats[o["ref"]] = nbt
             stats["units"] += 1
         elif o["kind"] == "O" and object_mob(o["name"]):
             kind = object_mob(o["name"])
@@ -1044,14 +1070,17 @@ def plan_units(objects, players, cols, rng, stats, birds=True):
         bx, bz = int(x), int(z)
         if not cols.inside(bx, bz):
             continue
-        if cols.blocked[bx, bz] and boat is not True:
-            spot = free_spot(cols, bx, bz, 6 * T, water=boat == "fish")
+        if (cols.blocked[bx, bz] or held) and boat is not True:
+            spot = free_spot(cols, bx, bz, 6 * T, water=boat == "fish", taken=taken if held else ())
             if spot is None:
                 stats["units (inside a building, no free space)"] += 1
                 continue
             x, z = spot[0] + 0.5, spot[1] + 0.5
             bx, bz = spot
-            stats["units moved out of a building or obstacle"] += 1
+            if held:
+                taken.add(spot)
+            else:
+                stats["units moved out of a building or obstacle"] += 1
         out.setdefault((bx >> 4, bz >> 4), []).append((nbt, x, z, boat))
     return out
 
@@ -1061,11 +1090,14 @@ def top_name(nbt):
     return t.get("CustomName", t["id"])
 
 
-def free_spot(cols, bx, bz, r, water=False):
-    """Nearest column that is not blocked (and on land, unless water=True), or None."""
+def free_spot(cols, bx, bz, r, water=False, taken=()):
+    """Nearest column that is not blocked or taken (and on land, unless water=True), or None."""
     x0, x1 = max(0, bx - r), min(cols.n, bx + r + 1)
     z0, z1 = max(0, bz - r), min(cols.n, bz + r + 1)
     ok = ~cols.blocked[x0:x1, z0:z1]
+    for tx, tz in taken:
+        if x0 <= tx < x1 and z0 <= tz < z1:
+            ok[tx - x0, tz - z0] = False
     wet = cols.wtop[x0:x1, z0:z1] - cols.top[x0:x1, z0:z1]
     ok &= (wet >= 2) if water else (wet <= 1)
     xs, zs = np.nonzero(ok)
@@ -1199,7 +1231,7 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
     if not out:
         return None
     root = Compound({"DataVersion": Int(MC["data_version"]), "Position": IntArray([cx, cz]),
-                     "Entities": List[Compound](out)})
+                     "Entities": List[Compound]([units.to_version(e, MC["data_version"]) for e in out])})
     buf = io.BytesIO()
     buf.write(b"\x0a\x00\x00")
     root.write(buf)
@@ -1283,7 +1315,10 @@ def build_chunk(cx, cz, cols, edits):
         vol[ey[hard], ez[hard], ex[hard]] = eid[hard]
 
     # Tall plants: remove an upper half without its lower half (when an object took the place of the lower half)
+    counts = np.bincount(vol.ravel(), minlength=len(B.states))
     for lower, upper in TALL_PLANTS:
+        if not (counts[lower] or counts[upper]):        # the full scans below are slow: skip them when possible
+            continue
         ys, zs, xs = np.nonzero(vol[1:] == upper)
         bad = vol[ys, zs, xs] != lower
         vol[ys[bad] + 1, zs[bad], xs[bad]] = AIR
@@ -1304,24 +1339,30 @@ def build_chunk(cx, cz, cols, edits):
     if len(bvals) > 1:
         biomes["data"] = LongArray(pack(binv, max(1, int(np.ceil(np.log2(len(bvals)))))))
 
+    # Sections: an empty or full section has one palette entry; else bincount is faster than np.unique
+    flat = vol.reshape(HEIGHT // 16, 4096)              # one row per section, index = y*256 + z*16 + x
+    lo, hi = flat.min(1), flat.max(1)
+    lut = np.zeros(len(B.states), np.int64)
+    present = set()
+    sections = []
+    for s in range(HEIGHT // 16):
+        vals = lo[s:s + 1] if lo[s] == hi[s] else np.flatnonzero(np.bincount(flat[s], minlength=len(B.states)))
+        present.update(vals.tolist())
+        states = Compound({"palette": List[Compound]([palette_entry(int(v)) for v in vals])})
+        if len(vals) > 1:
+            lut[vals] = np.arange(len(vals))
+            states["data"] = LongArray(pack(lut[flat[s]], max(4, int(np.ceil(np.log2(len(vals)))))))
+        sections.append(Compound({"Y": Byte(s + MIN_Y // 16), "block_states": states,
+                                  "biomes": biomes}))
+
     block_entities = []
-    be_ids = [i for i in np.unique(vol) if block_entity_type(B.states[i])]
+    be_ids = [i for i in sorted(present) if block_entity_type(B.states[i])]
     for i in be_ids:
         for y, z, x in zip(*np.nonzero(vol == i)):
             pos = (x0 + int(x), int(y) + MIN_Y, z0 + int(z))
             block_entities.append(Compound({
                 "id": String("minecraft:" + block_entity_type(B.states[i])), "keepPacked": Byte(0),
                 "x": Int(pos[0]), "y": Int(pos[1]), "z": Int(pos[2]), **BLOCK_DATA.get(pos, {})}))
-
-    sections = []
-    for s in range(HEIGHT // 16):
-        sec = vol[s * 16:(s + 1) * 16].ravel()            # index = y*256 + z*16 + x
-        vals, inv = np.unique(sec, return_inverse=True)
-        states = Compound({"palette": List[Compound]([palette_entry(int(v)) for v in vals])})
-        if len(vals) > 1:
-            states["data"] = LongArray(pack(inv, max(4, int(np.ceil(np.log2(len(vals)))))))
-        sections.append(Compound({"Y": Byte(s + MIN_Y // 16), "block_states": states,
-                                  "biomes": biomes}))
 
     chunk = Compound({
         "DataVersion": Int(MC["data_version"]), "xPos": Int(cx), "zPos": Int(cz), "yPos": Int(MIN_Y // 16),
@@ -1397,7 +1438,30 @@ def write_level_dat(path, name, spawn, yaw=SPAWN_YAW):
                                     "minecraft:the_nether": dim("the_nether", nether),
                                     "minecraft:the_end": dim("the_end", end)})}),
     })
-    File({"Data": data}, gzipped=True).save(path)
+    if MC["data_version"] < V26_1:
+        File({"Data": data}, gzipped=True).save(path)
+        return
+    # 26.1: most fields leave level.dat for files in data/minecraft/ (docs/minecraft-versions.md)
+    level = Compound({k: data[k] for k in ("DataVersion", "version", "Version", "LevelName", "GameType",
+                                           "allowCommands", "initialized", "LastPlayed", "Time", "WasModded",
+                                           "DataPacks")})
+    level["spawn"] = Compound({"pos": IntArray(list(spawn)), "dimension": String("minecraft:overworld"),
+                               "yaw": Float(yaw), "pitch": Float(0)})
+    level["difficulty_settings"] = Compound({"difficulty": String("easy"), "hardcore": Byte(0), "locked": Byte(0)})
+    File({"Data": level}, gzipped=True).save(path)
+    files = {
+        "game_rules": {"minecraft:advance_time": Byte(0), "minecraft:advance_weather": Byte(0),
+                       "minecraft:spawn_mobs": Byte(0), "minecraft:fire_spread_radius_around_player": Int(0)},
+        "world_gen_settings": {"seed": Long(0), "generate_structures": Byte(0), "bonus_chest": Byte(0),
+                               "dimensions": data["WorldGenSettings"]["dimensions"]},
+        "weather": {"raining": Byte(0), "thundering": Byte(0), "rain_time": Int(0), "thunder_time": Int(0),
+                    "clear_weather_time": Int(0)},
+        "world_clocks": {"minecraft:overworld": Compound({"total_ticks": Long(6000), "paused": Byte(0)})},
+    }
+    d = os.path.join(os.path.dirname(path), "data", "minecraft")
+    os.makedirs(d, exist_ok=True)
+    for f, v in files.items():
+        File({"data": Compound(v), "DataVersion": Int(MC["data_version"])}, gzipped=True).save(os.path.join(d, f + ".dat"))
 
 
 # --------------------------------------------------------------------------------------------
@@ -1444,26 +1508,37 @@ def block_color(state):
 # Main
 # --------------------------------------------------------------------------------------------
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
-            barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne"):
+            barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False,
+            garrison="outside"):
     global MC
     MC = VERSIONS[mc_version]
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
     try:
-        _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation)
+        _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
+                 verbose, garrison)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
         buildings.TURN = 0
 
 
-def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation):
+def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
+             verbose, garrison):
     buildings.BARRIERS = barriers
     buildings.TURN, yaw = ORIENTATIONS[orientation]
     MOVED.clear()           # the counts of an earlier conversion in this process
     BLOCK_DATA.clear()
     rng = np.random.default_rng(seed)
     t0 = time.time()
+    times, clock = {}, [t0]
+
+    def tick(phase):        # add the time since the last tick to the phase (--verbose)
+        now = time.time()
+        times[phase] = times.get(phase, 0.0) + now - clock[0]
+        clock[0] = now
+
     size, terrain, elevation, tnames, texts, objects, players = read_scenario(src)
+    tick("read")
     name = name or os.path.splitext(os.path.basename(src))[0]
     terrain, elevation = turn_map(buildings.TURN, size, terrain, elevation, objects, players)
     if spawn is not None:       # --spawn is in AoE2 tiles
@@ -1484,6 +1559,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         print("  unknown object IDs (skipped): " + ", ".join(f"{i} ×{n}" for i, n in sorted(unknown.items())))
 
     cols = Columns(size, terrain, elevation, tnames, T, H, rng)
+    tick("columns")
     for pid, p in sorted(players.items()):
         if pid and any(o["player"] == pid for o in objects):
             print(f"  player {pid}: {p['civ'].lower()}, {p['color']}, {p['arch']} buildings")
@@ -1495,14 +1571,20 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     if book:
         print(f"  book with the scenario texts: lectern at {book}")
     per_chunk = edits.by_chunk(cols.width)
-    unit_chunks = plan_units(objects, players, cols, rng, stats, birds) if with_units else {}
+    tick("objects")
+    before = set(stats)
+    unit_chunks = plan_units(objects, players, cols, rng, stats, birds, garrison) if with_units else {}
+    tick("units")
     print(f"  units: {stats['units']}, fish: {stats['fish']}")
+    for k in sorted(set(stats) - before - {"units", "fish"}):
+        print(f"  {k}: {stats[k]}")
     passable = np.array([st.split(":")[1].split("[")[0] in ("air", "cave_air") or
                          any(k in st.split(":")[1] for k in PASSABLE) and "grass_block" not in st
                          for st in B.states] + [True] * 1024)
 
-    os.makedirs(os.path.join(out, "region"), exist_ok=True)
-    os.makedirs(os.path.join(out, "entities"), exist_ok=True)
+    dim = os.path.join(out, "dimensions", "minecraft", "overworld") if MC["data_version"] >= V26_1 else out
+    for d in ("region", "entities"):
+        os.makedirs(os.path.join(dim, d), exist_ok=True)
     entity_regions = {}
     nchunks = cols.width // 16
     regions = {}
@@ -1511,17 +1593,19 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         for cz in range(nchunks):
             data, vol = build_chunk(cx, cz, cols, per_chunk.get((cx, cz)))
             regions.setdefault((cx >> 5, cz >> 5), {})[(cx & 31, cz & 31)] = data
+            solid = (vol != AIR) & (vol != BARRIER)
+            hi = HEIGHT - 1 - np.argmax(solid[::-1], axis=0)
+            top_view[cx * 16:cx * 16 + 16, cz * 16:cz * 16 + 16] = np.take_along_axis(vol, hi[None], 0)[0].T
+            tick("chunks")
             if (cx, cz) in unit_chunks:
                 ed = entity_chunk(cx, cz, unit_chunks[(cx, cz)], cols, vol, passable)
                 if ed:
                     entity_regions.setdefault((cx >> 5, cz >> 5), {})[(cx & 31, cz & 31)] = ed
-            solid = (vol != AIR) & (vol != BARRIER)
-            hi = HEIGHT - 1 - np.argmax(solid[::-1], axis=0)
-            top_view[cx * 16:cx * 16 + 16, cz * 16:cz * 16 + 16] = np.take_along_axis(vol, hi[None], 0)[0].T
+                tick("units")
     for (rx, rz), chunks in regions.items():
-        write_region(os.path.join(out, "region", f"r.{rx}.{rz}.mca"), chunks)
+        write_region(os.path.join(dim, "region", f"r.{rx}.{rz}.mca"), chunks)
     for (rx, rz), chunks in entity_regions.items():
-        write_region(os.path.join(out, "entities", f"r.{rx}.{rz}.mca"), chunks)
+        write_region(os.path.join(dim, "entities", f"r.{rx}.{rz}.mca"), chunks)
 
     write_level_dat(os.path.join(out, "level.dat"), name, spawn, yaw)
 
@@ -1539,6 +1623,9 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     if bridge:
         print(f"  units on bridges: {bridge}")
     print(f"  units in a block (moved up): {sum(MOVED.values())}")
+    tick("write")
+    if verbose:
+        print("  time: " + ", ".join(f"{k} {v:.1f}s" for k, v in times.items()))
     print(f"Wrote {nchunks * nchunks} chunks, {cols.n}x{cols.n} blocks, to {out} "
           f"({time.time() - t0:.1f}s). Spawn: {spawn}")
 
@@ -1598,15 +1685,18 @@ def main(argv=None):
                     help="architecture set for one player, for example 6=western (can be repeated)")
     ap.add_argument("--spawn", type=spawn_spec, metavar="X,Z",
                     help="player spawn in tiles (default: start view or town center of player 1)")
+    ap.add_argument("--garrison", choices=("outside", "skip"), default="outside",
+                    help="garrisoned units: ride their ship or stand next to their holder (default), or skip them")
     ap.add_argument("--mc-version", choices=sorted(VERSIONS), default=VERSION_NAME,
-                    help=f"Minecraft Java version of the output (default {VERSION_NAME}; 26.3 is not complete yet)")
+                    help=f"Minecraft Java version of the output (default {VERSION_NAME})")
     ap.add_argument("--orientation", choices=sorted(ORIENTATIONS), default="ne",
                     help="Minecraft corner of the top corner of the AoE2 screen (default ne)")
+    ap.add_argument("--verbose", action="store_true", help="print the time of each phase")
     a = ap.parse_args(argv)
     try:
         convert(a.scenario, a.output, a.tile_size, a.level_height, a.name, a.seed, a.preview, a.architecture,
                 a.player_architecture, not a.no_units, not a.no_barriers, a.mc_version, a.spawn, not a.no_birds,
-                a.orientation)
+                a.orientation, a.verbose, a.garrison)
     except OptionError as e:
         ap.error(str(e))
 

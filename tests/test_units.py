@@ -126,6 +126,21 @@ def test_no_empty_item_has_components(name):
             assert "id" in it or not len(it), (name, it)
 
 
+def test_to_version_26_3():
+    rider = units.soldier("zombie", 2, "iron_sword")
+    rider["ArmorItems"][2]["components"] = {"minecraft:dyed_color": {"rgb": 255}}
+    boat = units.to_nbt(units.boat("bamboo", [rider], chest=True), (0, 0, 0), 0.0, np.random.default_rng(1))
+    boat["Passengers"][0]["CustomName"] = '{"text": "Knight", "color": "#FF0000"}'
+    new = units.to_version(boat, 5023)
+    assert str(new["id"]) == "minecraft:bamboo_chest_raft" and "Type" not in new
+    r = new["Passengers"][0]
+    assert {"ArmorItems", "HandItems", "FallDistance"}.isdisjoint(r) and float(r["fall_distance"]) == 0.0
+    assert str(r["equipment"]["mainhand"]["id"]) == "minecraft:iron_sword"
+    assert int(r["equipment"]["chest"]["components"]["minecraft:dyed_color"]) == 255
+    assert dict(r["CustomName"]) == {"text": "Knight", "color": "#FF0000"}
+    assert units.to_version(boat, 3955) is boat                   # 1.21.1 stays as it is
+
+
 def test_facing_map_knights_face_away_from_the_center(tmp_path):
     """tools/scenarios.py facing: knight k stands in the direction of its rotation, so it faces away from the
     center in Minecraft (#20). The owner compares this with the AoE2 editor (docs/facing.md)."""

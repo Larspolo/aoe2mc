@@ -31,11 +31,12 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Bow and arrow work | `fletching_table` | `archery_range` |
 | Forge, smithy | `blast_furnace`, `anvil`, `smithing_table`, `cauldron` (water) | `blacksmith` |
 | Fire, cooking | `campfire`, `smoker` | `blacksmith`, `house`, `outpost`, `church`, `oracles_temple` |
-| Weapon rack, sharpening | `grindstone` | `barracks`, `granary` |
+| Weapon rack, sharpening | `grindstone` | `barracks`, `granary`, `blacksmith` |
 | Training dummy | `oak_fence`, `hay_block`, `carved_pumpkin` | `barracks` |
 | Bell | `bell` | `monastery`, `town_center` |
 | Loom, cloth | `loom`, wool | `church` |
 | Market goods | `barrel`, `chest`, `composter`, `hay_block` | `market`, `dock` |
+| Crop field | `wheat` rows (ages 5–7) on `farmland`, furrows of bare `farmland`, `dirt_path` edge | farm (`place_building`) |
 | Hay, fodder | `hay_block` | `stable`, `barracks`, `granary` |
 | Water trough | `cauldron` (water) | `stable` |
 | Banner, flag | `*_banner` (player color), `Canvas.flag` | most designs |
@@ -52,11 +53,16 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Spire tip, finial | `lightning_rod` | `Canvas.spire`, `monastery`, `mosque` |
 | Chain, rope | `chain` | `dock`, `siege_workshop`, `shipyard`, `harbor_chain` |
 | Portcullis, grille | `iron_bars` | `gate`, `castle` |
-| Lamp | `lantern` | `decorate()` |
+| Lamp | `lantern` | `decorate()`, `blacksmith` (hanging) |
+| Siege engine under construction | spruce slabs, fences and logs | `siege_workshop` |
+| Cloth awning | `*_wool` in the player color | `house` (flat roofs) |
+| Stair to a roof terrace | stairs of the roof material | `house` (flat roofs) |
 | Column | `quartz_pillar` | `arch_of_constantine`, `oracles_temple` |
 | Sacred tree | `oak_log`, `oak_leaves[persistent=true]` | `pagan_shrine` |
 | Sail | wool (player color) | `flagship` |
 | Hides | `brown_wool` | `helepolis` |
+| Band in the player color | `*_wool` (player color) | `town_center` |
+| Outside stairs to an upper floor | `*_stairs` of the wood of the set | `town_center` |
 | Books, study | `bookshelf`, `lectern` | none yet (`university` needs them) |
 
 Add a line when a design uses a new feature block. Each new block state must pass `mcvalid`.
