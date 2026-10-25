@@ -36,6 +36,7 @@ python3 tools/render.py building CASTLE --arch western --view nw $SCRATCH/before
 ```
 The default view (south-east) shows the front. To compare with a reference image, render `--view sw`
 too: it is the AoE2 camera (the bottom corner of the screen is the south-west corner, the front is on the right, #128). Look at the images with the Read tool.
+For the inside of a room add `--cut Y` (no blocks higher than Y above the ground; barriers are invisible).
 The default `--scale 8` is small for details: use `--scale 16` for one building. `sheet --variants 1` is faster.
 
 ## 3. List the differences

@@ -14,6 +14,15 @@ def test_render_a_house(tmp_path):
     assert (img[..., 3] == 255).mean() > 0.3                             # the house and its ground cover the image
 
 
+def test_cut_view_shows_the_inside(tmp_path):
+    xs, ys, zs, states = render.building_blocks("HOUSE", "western")
+    cx, cy, cz, cut = render.building_blocks("HOUSE", "western", cut=2)
+    ground = min(y for y, s in zip(ys, states) if "grass_block" in s)
+    assert cy.max() == ground + 2 and ys.max() > ground + 2 and len(cut) < len(states)
+    W, H = render.render(cx, cy, cz, cut, str(tmp_path / "cut.png"))
+    assert W > 50 and H > 50
+
+
 def test_barriers_are_invisible(tmp_path):
     out = str(tmp_path / "b.png")
     assert render.render([0], [0], [0], ["minecraft:barrier"], out) == (1, 1)
