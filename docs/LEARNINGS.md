@@ -37,6 +37,10 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   `python3 -m pip install --ignore-installed setuptools` (the Debian setuptools cannot build it).
   A record has each town center 4 times (IDs 109 and the annex parts 618–620): `read_record` skips them (#139).
 - An unknown block entity id gives "Skipping block entity with invalid type": 26.3 has no `bed` block entity (#249).
+- GitHub Actions: 2,000 free minutes per month (private repository), each job rounded up to 1 minute. CI on each PR and
+  the event workflows used about 900 minutes per hour with 16 runs: PRs have no CI now, only local checks (`docs/STEERING.md`).
+- Old scenarios for local checks (do not commit, no license): GitHub raw `SiegeEngineers/genie-rs/master/crates/genie-scx/
+  test/scenarios/` (`Age of Heroes b1-3-5.scx` is format 1.21; names in `format.rs` tests, #311).
 
 ## Libraries
 
@@ -84,3 +88,7 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   gives about 800 px, the size of the images in `docs/images/` (#262).
 - `aoe2mc.json` "ground" over a tree, mine or building footprint is the top of the barriers, not the terrain: take
   the ground of the free cells next to it (`Map.around`, #307). The parser stump names: `STUMP`, `*_STUMP` (no `TREE_STUMP`).
+- The `buildings` test scenario is about 1150 × 1570 blocks: to read one building of player 1 in the world, use the area
+  around tile (4 + i % 40 × 7, 4 + i // 40 × 7), i = the index of the name in `BuildingInfo` (#251).
+- Sibling sub-issues (#249-#256) run in parallel: before you add a helper or a tool option, `git fetch origin main` and
+  grep for it. #252 and #265 both added `render.py --cut`, and two runs added a `furnish` (#252).

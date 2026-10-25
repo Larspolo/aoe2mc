@@ -88,6 +88,38 @@ def test_tree_stump_is_level_with_the_ground_and_free_for_units():
         assert (vol[y:, 8:12, 8:12] == 0).all(), name                  # nothing above the ground: air only
 
 
+SHORE = ["DRIFTWOOD_GROUND", "DRIFTWOOD_WATER", "FLOTSAM", "KELP_SEAWEEDS", "WATER_LILY", "BEACHED_WHALE",
+         "SMALL_WATERFALL", "FALLEN_LEAVES_PEACH_BLOSSOM", "FALLEN_LEAVES_MAPLE", "FALLEN_LEAVES_MAPLE_AUTUMN"]
+
+
+def test_shore_and_ground_cover_objects():
+    """Water objects find the water: lily pads on the surface, kelp under it; leaves lie on land (#298)."""
+    B = aoe2mc.B
+    terrain = np.zeros((12, 12), np.int16)
+    terrain[6:] = 1                                    # tiles x >= 6: deep water, blocks x >= 24
+    cols = aoe2mc.Columns(12, terrain, np.zeros((12, 12), np.float32), {0: "GRASS_1", 1: "WATER_DEEP"},
+                          4, 3, np.random.default_rng(1))
+    water = ("DRIFTWOOD_WATER", "FLOTSAM", "KELP_SEAWEEDS", "WATER_LILY")
+    for n in SHORE:
+        o = dict(kind="O", name=n, player=0, x=9.5 if n in water else 2.5, y=6.5, rotation=0.0, hero=False,
+                 garrisoned=False)
+        E, stats = aoe2mc.place_objects([o], {}, cols, np.random.default_rng(1))
+        assert stats["skipped (other objects)"] == 0 and stats["decorations"] == 1, n
+        blocks = [(x, y, z, B.states[i]) for xs, ys, zs, ids, _ in E.parts for x, y, z, i in zip(xs, ys, zs, ids)]
+        assert blocks, n
+        for x, y, z, st in blocks:
+            floor, top = int(cols.top[x, z]), int(cols.wtop[x, z])
+            if "lily_pad" in st:
+                assert y == top + 1 and top > floor, n
+            elif "kelp" in st or "seagrass" in st:
+                assert floor < y <= top, n
+            elif n.startswith("FALLEN_LEAVES"):
+                assert y == top + 1 == floor + 1, n
+        if n in ("KELP_SEAWEEDS", "WATER_LILY"):
+            assert any(("kelp" if n == "KELP_SEAWEEDS" else "lily") in b[3] for b in blocks), n
+    assert mcvalid.invalid_states(B.states) == {}
+
+
 GARDEN = ["PAPER_LANTERN", "ASIAN_LANTERNS", "PAIFANG_GATE_SMALL", "PAIFANG_GATE_LARGE", "GARDEN_PAVILION",
           "GARDEN_BRIDGE", "HUABIAO_TOTEM", "QUE_TOWER"]
 
@@ -106,3 +138,19 @@ def test_chinese_garden_objects():
             low = ys < cols.surface(x0, z0) + aoe2mc.Edits.HEAD
             assert low.any() and ((xs[low] >= x0) & (xs[low] < x1) & (zs[low] >= z0) & (zs[low] < z1)).all(), n
     assert mcvalid.invalid_states(aoe2mc.B.states) == {}
+
+
+def test_last_animals_get_a_mob():
+    """Whales, howler monkeys and butterflies are mobs; a beached whale is not (#299)."""
+    import units
+    assert [aoe2mc.object_mob(n) for n in ("WHALE", "HOWLER_MONKEY", "BEACHED_WHALE")] == ["dolphin", "ocelot", None]
+    for n in ("BUTTERFLY1", "BUTTERFLY2", "BUTTERFLY3"):
+        assert units.classify(n)["id"] == "minecraft:bee" and units.classify(n)["NoGravity"] == 1, n
+    for kind in ("dolphin", "ocelot", "bee"):
+        assert mcvalid.entity_error("minecraft:" + kind) is None, kind
+    cols = aoe2mc.Columns(16, np.zeros((16, 16), np.int16), np.zeros((16, 16), np.float32),
+                          {0: "GRASS_1"}, 4, 3, np.random.default_rng(1))
+    o = dict(kind="O", name="HOWLER_MONKEY", player=0, x=6.5, y=6.5, rotation=0.0, hero=False, garrisoned=False)
+    stats = Counter()
+    ents = [e for c in aoe2mc.plan_units([o], {}, cols, np.random.default_rng(1), stats).values() for e in c]
+    assert stats["animals (objects)"] == 1 and ents[0][3] is False      # on land, not in water
