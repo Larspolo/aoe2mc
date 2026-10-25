@@ -39,6 +39,8 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - An unknown block entity id gives "Skipping block entity with invalid type": 26.3 has no `bed` block entity (#249).
 - Parallel runs read the same new owner comment at once: just before you make a ticket from it, list the issues of
   the last 15 minutes and reply in its thread first (3 copies of one epic: #306, #310, #313; lock: #320).
+- GitHub Actions: 2,000 free minutes per month (private repository), each job rounded up to 1 minute. CI on each PR and
+  the event workflows used about 900 minutes per hour with 16 runs: PRs have no CI now, only local checks (`docs/STEERING.md`).
 - Old scenarios for local checks (do not commit, no license): GitHub raw `SiegeEngineers/genie-rs/master/crates/genie-scx/
   test/scenarios/` (`Age of Heroes b1-3-5.scx` is format 1.21; names in `format.rs` tests, #311).
 

@@ -1,10 +1,16 @@
 name: CI
 
+# Nightly on main only (owner decision, 2026-10-25): the account has 2,000 Actions minutes per month, and CI on
+# each PR used about 500 minutes per hour. PRs use the local checks of the autopilot skill (step 6.8).
+# A red run opens a P0 ticket, so that the runs fix main first.
 on:
-  push:
-    branches: [main]
-  pull_request:
-  workflow_dispatch:    # the Automerge workflow starts CI on main after its merge (#232)
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
 
 jobs:
   test:
@@ -38,3 +44,14 @@ jobs:
         run: pytest -m mc
       - name: Package
         run: pip install . && cd /tmp && aoe2mc --help
+      - name: Open a P0 ticket when main is red
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Fix main: the nightly CI is red"
+          n=$(gh api "repos/$GITHUB_REPOSITORY/issues?state=open&labels=P0&per_page=50" --jq ".[] | select(.title == \"$title\") | .number" | head -1)
+          printf 'The nightly CI on main failed: %s\nRead the failed step (`mcp__github__get_job_logs`), run it locally, fix it.\n' "$URL" > body.md
+          if [ -n "$n" ]; then gh api "repos/$GITHUB_REPOSITORY/issues/$n/comments" -F body=@body.md >/dev/null
+          else gh api "repos/$GITHUB_REPOSITORY/issues" -f title="$title" -F body=@body.md -f "labels[]=P0" -f "labels[]=bug" -f "labels[]=size:S" >/dev/null; fi
