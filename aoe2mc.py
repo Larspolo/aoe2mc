@@ -1452,14 +1452,14 @@ PALETTE_CACHE = {}
 # Blocks that need a block entity, or Minecraft shows them wrong (banners are invisible without one).
 BE_TYPES = [("decorated_pot", "decorated_pot"), ("oak_sign", "sign"), ("wall_banner", "banner"), ("_banner", "banner"), ("bell", "bell"), ("campfire", "campfire"),
             ("barrel", "barrel"), ("chest", "chest"), ("blast_furnace", "blast_furnace"),
-            ("smoker", "smoker"), ("furnace", "furnace"), ("lectern", "lectern")]
+            ("smoker", "smoker"), ("furnace", "furnace"), ("lectern", "lectern"), ("_bed", "bed")]
 
 
 def block_entity_type(state):
     name = state.split(":")[1].split("[")[0]
     for key, be in BE_TYPES:
         if key in name:
-            return be
+            return None if be == "bed" and MC["data_version"] >= V26_3 else be    # 26.3 has no bed block entity
     return None
 
 

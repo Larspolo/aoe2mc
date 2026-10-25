@@ -34,6 +34,10 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Weapon rack, sharpening | `grindstone` | `barracks`, `granary`, `blacksmith` |
 | Training dummy | `oak_fence`, `hay_block`, `carved_pumpkin` | `barracks` |
 | Bell | `bell` | `monastery`, `town_center` |
+| Bed (inside) | `*_bed` (player color), head to the north | `house` (`furnish`) |
+| Table with a light (inside) | `*_slab[type=top]` with a `lantern` on it, a `*_stairs` stool | `house` (`furnish`) |
+| Storage (inside) | `chest` at the back wall | `house` (`furnish`) |
+| Rug | `*_carpet` | `house` (`furnish`) |
 | Loom, cloth | `loom`, wool | `church` |
 | Market goods | `barrel`, `chest`, `composter`, `hay_block`, `melon`, `pumpkin` | `market`, `dock`, `harbor` |
 | Market stall | lean-to of roof stairs on `*_fence` posts; wool awning in stripes for flat-roof sets | `market` |

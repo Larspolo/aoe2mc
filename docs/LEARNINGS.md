@@ -25,6 +25,7 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   A new `workflow_dispatch` workflow runs only after the merge to `main` (`/actions/workflows/F.yml/dispatches`, #207).
 - Minecraft server: a bad property value (`facing=up`) loads silently as the default state. An unknown block gives
   "Recoverable errors when loading section". A missing `level.dat` compound gives "key missing: <name>" (#60).
+  An unknown block entity id gives "Skipping block entity with invalid type": 26.3 has no `bed` (#249).
 - Minecraft client (#178, #179): `tools/mc_shot.py` runs it in `Xvfb` (no window, offline, no sound). 1.21.1: Mesa OpenGL.
   26.3 finds no GLX visual in Xvfb: it needs `mesa-vulkan-drivers` (lavapipe) and Java 25, and a placeholder for the
   title panorama (the asset host is blocked). Hidden chat (`chatVisibility:2`) stops the chat lines in the log too.
@@ -54,7 +55,6 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   and `NORTH_TO_SOUTH` are diagonal. Do not trust the axis gate names (`samples/gallery` has a `NORTHWEST_TO_SOUTHEAST`
   gate along tile x): `plan_walls` uses the walls next to the gate. `--orientation` turns the tile grid (`turn_map`)
   and each building canvas (`buildings.turn`); gates, walls and bridges follow their neighbours.
-- Water (#164, `docs/research/water.md`): AoE2 has no water level. Real maps have all water at elevation 0.
 - Golden test: change the house chimney of the tiny scenario to see it fail. `columns()` in `tests/test_terrain.py`
   makes `Columns` from a terrain array. Maps of one size draw the same random numbers: compare them per block.
 - `place_objects` without a scenario: call it with one object dict (`kind`, `name`, `player`, `x`, `y`,
@@ -63,7 +63,7 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   `build_chunk` returns `(nbt, vol)`: test exact blocks of a chunk with `vol` (#19).
 - `aoe2mc.py` reads `tools/mcdata/1.21.1.json` at import (#19). The package ships it as `tools.mcdata`
   (`pyproject.toml`). A new runtime data file must go into the package data too (test: `pip install .` in a venv).
-- `terrain_style` checks names in sequence: an earlier rule wins (`ROAD_GRAVEL` matched `GRAVEL` until #5).
+- `terrain_style`: an earlier rule wins (#5). AoE2 has no water level: real maps have all water at elevation 0 (#164).
 - `.gitattributes` merges `docs/DESIGN.md` with `union`: a local merge keeps the new table lines of both sides; look for
   one line in two versions and keep one. `union` is wrong for text that runs rewrite (LEARNINGS: both versions stay, #174).
 - PRs do not change `docs/coverage.md` or `MAX` in `tests/test_coverage.py`: the `coverage.yml` workflow updates them on
