@@ -265,7 +265,7 @@ def read_scenario(path):
         for u in player_units:
             prefix, name = kinds.get(u.unit_const, ("?", f"UNKNOWN_{u.unit_const}"))
             garrisoned = u.garrisoned_in_id not in (None, -1)
-            objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name,
+            objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name, id=u.unit_const,
                                 player=player, x=u.x, y=u.y, rotation=float(u.rotation or 0), garrisoned=garrisoned,
                                 ref=u.reference_id, holder=u.garrisoned_in_id if garrisoned else None))
     return size, terrain, elevation, terrain_names, texts, objects, players
@@ -1203,6 +1203,7 @@ def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside
     taken = set()               # columns that garrisoned units use, so that they do not stand in one column
     # The holders come first: a ship must exist before its passengers board it.
     for o in sorted(objects, key=lambda o: bool(o.get("garrisoned"))):
+        src = o                 # gets the UUID of the entity for aoe2mc.json
         held = bool(o.get("garrisoned")) and o["kind"] == "U"
         if o["kind"] == "U":
             if held and garrison == "skip":
@@ -1222,6 +1223,7 @@ def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside
                     ship = boats[o["holder"]]
                     if len(ship.get("Passengers", [])) < SEATS[str(ship["id"])]:
                         ship.setdefault("Passengers", List[Compound]([])).append(nbt)
+                        src["uuid"] = units.uuid_str(nbt["UUID"])
                         stats["units (garrisoned, in a ship)"] += 1
                     else:
                         stats["units (garrisoned, no free seat in the ship, skipped)"] += 1
@@ -1242,8 +1244,9 @@ def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside
         bx, bz = int(x), int(z)
         if not cols.inside(bx, bz):
             continue
-        if (cols.blocked[bx, bz] or held) and boat is not True:
-            spot = free_spot(cols, bx, bz, 6 * T, water=boat == "fish", taken=taken if held else ())
+        blocked = cols.blocked[bx, bz]      # a ship in a dock moves to free water, else its crew suffocates (#190)
+        if (blocked or held) and (boat is not True or blocked):
+            spot = free_spot(cols, bx, bz, 6 * T, water=bool(boat), taken=taken if held else ())
             if spot is None:
                 stats["units (inside a building, no free space)"] += 1
                 continue
@@ -1253,6 +1256,8 @@ def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside
                 taken.add(spot)
             else:
                 stats["units moved out of a building or obstacle"] += 1
+        if o["kind"] == "U":
+            src["uuid"] = units.uuid_str(nbt["UUID"])
         out.setdefault((bx >> 4, bz >> 4), []).append((nbt, x, z, boat))
     return out
 
@@ -1376,7 +1381,14 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
                 continue
             y = (top + wtop) / 2 + 0.3
         elif boat and wtop > top:
-            y = wtop + 0.5
+            col = vol[:, bz & 15, bx & 15]
+            h = 3 if nbt.get("Passengers") else 2                # the boat and its crew need free space
+            y = wtop
+            while y < MAX_Y - 3 and not all(passable[col[y + k - MIN_Y]] for k in range(h)):
+                y += 1
+            if y > wtop:
+                MOVED[str(top_name(nbt))] += 1
+            y += 0.5
         else:
             col = vol[:, bz & 15, bx & 15]
             y = top + 1
@@ -1575,6 +1587,33 @@ def write_region(path, chunks):
         body += payload
     with open(path, "wb") as f:
         f.write(header + body)
+
+
+def write_objects(path, size, T, H, players, objects, cols):
+    """aoe2mc.json: the data that a game program needs (docs/research/gameplay.md). Tiles are in the turned grid
+    (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
+    their footprint [x0, z0, x1, z1) in blocks. Objects that the converter did not place are not in the list."""
+    kinds = {"U": "unit", "B": "building", "O": "other"}
+    objs = []
+    for o in objects:
+        if o["kind"] not in kinds or not cols.inside(int(o["x"] * T), int(o["y"] * T)):
+            continue
+        if (o["kind"] == "U" and "uuid" not in o) or (o["kind"] == "B" and "footprint" not in o):
+            continue
+        e = {"id": o.get("id"), "name": o["name"], "kind": kinds[o["kind"]], "player": o["player"],
+             "tile": [round(float(o["x"]), 3), round(float(o["y"]), 3)], "rotation": round(o.get("rotation", 0.0), 4)}
+        if o.get("hero"):
+            e["hero"] = True
+        for k in ("uuid", "footprint"):
+            if k in o:
+                e[k] = o[k]
+        objs.append(e)
+    data = {"map_size": size, "tile_size": T, "level_height": H,
+            "players": {str(pid): {"civ": p["civ"], "color": p["color"], "arch": p["arch"]}
+                        for pid, p in sorted(players.items())},
+            "objects": objs}
+    with open(path, "w") as f:
+        json.dump(data, f, indent=1)
 
 
 def write_level_dat(path, name, spawn, yaw=SPAWN_YAW):
@@ -1781,6 +1820,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         write_region(os.path.join(dim, "entities", f"r.{rx}.{rz}.mca"), chunks)
 
     write_level_dat(os.path.join(out, "level.dat"), name, spawn, yaw)
+    write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols)
 
     from PIL import Image
     lut = np.array([block_color(s) for s in B.states], np.uint8)

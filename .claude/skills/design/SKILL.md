@@ -51,6 +51,8 @@ For each feature, take the block from the table in `docs/DESIGN.md`, section 2.
 - Use the fields of the `Style` for materials, so that all architecture sets still work.
 - Keep `vary()`, `weather()` and `decorate()`. The main block stays the large majority.
 - Add a line to the table in `docs/DESIGN.md` for each new feature block.
+- A new design on water (a pier on piles) must go into `is_dock` (`place_building`) and `NO_PROPS`, as `dock`,
+  else it gets a foundation and no piles (#127).
 
 ## 5. Check
 
@@ -58,6 +60,9 @@ For each feature, take the block from the table in `docs/DESIGN.md`, section 2.
 2. Render again from the south-east and from the north-west. Render the design in 2 other architecture
    sets (`--arch`), because the `Style` changes the materials.
 3. Look at all images. Compare them with the reference and with the "before" images.
+   A part that is not in the image: draw parts that rise over the roof (portals, gables) after the roof, because
+   the roof `box` replaces them. Check exact blocks with `render.building_blocks(NAME, ARCH)` (positions and
+   states, `sys.path.insert(0, "tools")`), not in the image: the render draws walls and panes as full cubes.
 4. Then the `verify` skill, level 3: convert a scenario with the building and check
    "units in a block (moved up): 0".
 

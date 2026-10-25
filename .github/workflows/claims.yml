@@ -1,0 +1,31 @@
+name: Claims
+
+# Deletes the claim refs (claim/N, claim/N-2 ...) of a closed ticket (tools/claim.py, #211).
+# The runs cannot do it: the session proxy gives 403 for branch deletes.
+on:
+  issues:
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      number:
+        description: "Ticket number"
+        required: true
+
+permissions:
+  contents: write    # delete refs
+
+jobs:
+  delete:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Delete the claim refs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          N: ${{ github.event.issue.number || inputs.number }}
+        run: |
+          for ref in $(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/heads/claim/$N" --jq '.[].ref' \
+                       | grep -E "^refs/heads/claim/$N(-[0-9]+)?$"); do
+            echo "delete $ref"
+            gh api "repos/$GITHUB_REPOSITORY/git/$ref" -X DELETE   # git/refs/heads/claim/N
+          done

@@ -5,7 +5,7 @@ Make synthetic AoE2 DE scenarios for tests (no real map files necessary).
 Usage:
     python tools/scenarios.py tiny OUT.aoe2scenario
     python tools/scenarios.py gallery OUT.aoe2scenario [--kinds BOU]
-    python tools/scenarios.py stress|buildings|units|village|facing|walls|river OUT.aoe2scenario
+    python tools/scenarios.py stress|buildings|units|village|facing|walls|river|river_town OUT.aoe2scenario
 
 tiny:      24x24 tiles with land, shallow and deep water, a hill, buildings, units, a tree, a mine and fish.
 gallery:   every object type of the parser in a grid (B = buildings, O = other objects, U = units).
@@ -15,6 +15,8 @@ units:     every land unit on land and every ship on water.
 village:   a small map with terrain types, water, a hill, a town and animals.
 river:     a river at elevation 2 between land at elevation 2, with a dock, a bridge, a ship and fish (#165).
 facing:    units at the rotations 0, pi/4 ... 7pi/4, to compare the facing in AoE2 and in Minecraft (docs/facing.md).
+river_town: a 64x64 example map (examples/river_town.aoe2scenario): a walled town, a river with a bridge and a dock,
+           a castle on a hill, forests, mines and animals (#204).
 walls:     palisade, stone and fortified walls with a gate and a corner, for 3 architecture sets (players 1, 4, 7).
 """
 import argparse
@@ -22,7 +24,9 @@ import contextlib
 import io
 import math
 import os
+import shutil
 import sys
+import tempfile
 
 from AoE2ScenarioParser.datasets.buildings import BuildingInfo
 from AoE2ScenarioParser.datasets.object_support import Civilization
@@ -47,9 +51,12 @@ def new_scenario(size):
     return scn
 
 
-def save(scn, path):
-    with contextlib.redirect_stdout(io.StringIO()):
-        scn.write_to_file(path)
+def save(scn, path, name=None):
+    """name: the file name in the file. The parser writes the name of path, so the bytes depend on it."""
+    with contextlib.redirect_stdout(io.StringIO()), tempfile.TemporaryDirectory() as tmp:
+        scn.write_to_file(os.path.join(tmp, name) if name else path)
+        if name:
+            shutil.move(os.path.join(tmp, name), path)
     return path
 
 
@@ -262,8 +269,75 @@ def river(path):
     return save(scn, path)
 
 
+def river_town(path):
+    """Example map: a town at elevation 1 north of a river at elevation 0, a castle on a hill at elevation 3 in the
+    south-east and a forest in the south-west. No randomness: the file is the same on each run."""
+    scn = new_scenario(64)
+    set_civs(scn, 1)                                                     # player 1: Britons (western)
+    for t in scn.map_manager.terrain:
+        x, y, hill = t.x, t.y, max(abs(t.x - 48), abs(t.y - 50))
+        if 30 <= y <= 35:                                                # the river along tile x
+            t.terrain_id = TerrainId.WATER_DEEP if 32 <= y <= 33 else TerrainId.WATER_SHALLOW
+        elif y in (29, 36):
+            t.terrain_id = TerrainId.BEACH
+        elif 20 <= x <= 21 and (y >= 26 or 37 <= y <= 42):              # the road to the bridge
+            t.terrain_id = TerrainId.ROAD
+        elif y <= 4 or (x <= 16 and y >= 42):
+            t.terrain_id = TerrainId.FOREST_OAK
+        elif hill <= 5:
+            t.terrain_id = TerrainId.GRASS_2
+        if y <= 4:
+            t.elevation = 2
+        elif y <= 25:
+            t.elevation = 1
+        elif y >= 40:
+            t.elevation = 3 if hill <= 4 else 2 if hill <= 5 else 1
+    um = scn.unit_manager
+    for x, y in ((x, y) for x in range(64) for y in [*range(5), *range(42, 64)]
+                 if (y <= 4 or x <= 16) and (x * 7 + y * 3) % 5 and not (14 <= x <= 16 and y < 44)):
+        um.add_unit(PlayerId.GAIA, OtherInfo.TREE_OAK.ID, x=x + 0.5, y=y + 0.5)
+    for y in [*range(8, 15), *range(19, 26)]:                            # the west wall with a gate
+        um.add_unit(PlayerId.ONE, BuildingInfo.STONE_WALL.ID, x=5.5, y=y + 0.5)
+    um.add_unit(PlayerId.ONE, BuildingInfo.GATE_NORTHWEST_TO_SOUTHEAST.ID, x=5.5, y=17.0)
+    for x in [*range(5, 22), *range(26, 45)]:                            # the north wall with a gate
+        um.add_unit(PlayerId.ONE, BuildingInfo.STONE_WALL.ID, x=x + 0.5, y=7.5)
+    um.add_unit(PlayerId.ONE, BuildingInfo.GATE_NORTHWEST_TO_SOUTHEAST.ID, x=24.0, y=7.5)
+    for x, y, b in ((24, 17, BuildingInfo.TOWN_CENTER), (38, 17, BuildingInfo.MARKET), (12, 12, BuildingInfo.MILL),
+                    (16, 10, BuildingInfo.HOUSE), (19, 10, BuildingInfo.HOUSE), (30, 10, BuildingInfo.HOUSE),
+                    (33, 10, BuildingInfo.HOUSE), (30, 23, BuildingInfo.HOUSE), (33, 23, BuildingInfo.HOUSE),
+                    (8.5, 12.5, BuildingInfo.FARM), (8.5, 21.5, BuildingInfo.FARM), (11.5, 21.5, BuildingInfo.FARM),
+                    (14.5, 21.5, BuildingInfo.FARM), (16.5, 15.5, BuildingInfo.BLACKSMITH),
+                    (40.5, 11.5, BuildingInfo.BARRACKS), (40.5, 30.5, BuildingInfo.DOCK),
+                    (48, 50, BuildingInfo.CASTLE), (23.5, 38.5, BuildingInfo.WATCH_TOWER),
+                    (18, 44, BuildingInfo.LUMBER_CAMP), (34, 50, BuildingInfo.MINING_CAMP)):
+        um.add_unit(PlayerId.ONE, b.ID, x=x, y=y)
+    for y, piece in ((30, BuildingInfo.BRIDGE_A_BOTTOM), (32, BuildingInfo.BRIDGE_A_MIDDLE),
+                     (34, BuildingInfo.BRIDGE_A_TOP)):
+        um.add_unit(PlayerId.GAIA, piece.ID, x=20.5, y=y + 1)
+    for x, y, o in ((30.5, 46.5, OtherInfo.GOLD_MINE), (31.5, 46.5, OtherInfo.GOLD_MINE),
+                    (30.5, 47.5, OtherInfo.GOLD_MINE), (34.5, 57.5, OtherInfo.STONE_MINE),
+                    (35.5, 57.5, OtherInfo.STONE_MINE), (28.5, 20.5, OtherInfo.FORAGE_BUSH),
+                    (28.5, 21.5, OtherInfo.FORAGE_BUSH), (50.5, 33.5, OtherInfo.FISH_PERCH),
+                    (12.5, 32.5, OtherInfo.FISH_PERCH), (58.5, 30.5, OtherInfo.SHORE_FISH)):
+        um.add_unit(PlayerId.GAIA, o.ID, x=x, y=y)
+    for x, y, u in ((22.5, 21.5, UnitInfo.VILLAGER_MALE), (26.5, 21.5, UnitInfo.VILLAGER_FEMALE),
+                    (8.5, 21.5, UnitInfo.VILLAGER_FEMALE_FARMER), (14.5, 21.5, UnitInfo.VILLAGER_MALE_FARMER),
+                    (29.5, 47.5, UnitInfo.VILLAGER_MALE_GOLD_MINER), (19.5, 44.5, UnitInfo.VILLAGER_MALE_LUMBERJACK),
+                    (36.5, 20.5, UnitInfo.TRADE_CART_FULL), (42.5, 15.5, UnitInfo.MAN_AT_ARMS),
+                    (43.5, 15.5, UnitInfo.MAN_AT_ARMS), (24.5, 9.5, UnitInfo.SPEARMAN),
+                    (46.5, 45.5, UnitInfo.KNIGHT), (49.5, 45.5, UnitInfo.KNIGHT), (52.5, 49.5, UnitInfo.LONGBOWMAN),
+                    (44.5, 32.5, UnitInfo.FISHING_SHIP), (56.5, 33.5, UnitInfo.WAR_GALLEY),
+                    (8.5, 33.5, UnitInfo.TRANSPORT_SHIP)):
+        um.add_unit(PlayerId.ONE, u.ID, x=x, y=y)
+    for x, y, u in ((28.5, 13.5, UnitInfo.SHEEP), (29.5, 14.5, UnitInfo.SHEEP), (27.5, 14.5, UnitInfo.SHEEP),
+                    (22.5, 50.5, UnitInfo.DEER), (23.5, 52.5, UnitInfo.DEER), (21.5, 53.5, UnitInfo.DEER),
+                    (26.5, 59.5, UnitInfo.WILD_BOAR), (40.5, 40.5, UnitInfo.TURKEY), (58.5, 22.5, UnitInfo.COW_A)):
+        um.add_unit(PlayerId.GAIA, u.ID, x=x, y=y)
+    return save(scn, path, "river_town.aoe2scenario")
+
+
 MAKERS = {"tiny": tiny, "stress": stress, "buildings": buildings_map, "units": units_map, "village": village, "facing": facing,
-          "walls": walls, "river": river}
+          "walls": walls, "river": river, "river_town": river_town}
 
 
 def main():
