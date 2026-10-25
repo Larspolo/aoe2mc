@@ -95,6 +95,9 @@ PRs have no GitHub CI. Each run checks its PR in its own cloud session (lint, te
 and merges it. GitHub runs the full CI once a night on `main`. A red night run opens a `P0` ticket, and each run
 also tests `main` when it starts. The dashboard, coverage and claim workflows run on a schedule (each run also
 updates the dashboard). To get CI on each PR again: make the repository public (free minutes) or set a budget.
+To pause all scheduled workflows (for example when the free minutes are used up), set the repository variable
+`PAUSE_SCHEDULES` to `true` (Settings → Secrets and variables → Actions → Variables). A skipped job uses no
+minutes, and a start by hand still runs. The agents set it on 2026-10-25 and delete it on 2026-11-01 (the reset).
 
 ## Files that steer the agent
 
