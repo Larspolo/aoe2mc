@@ -177,9 +177,11 @@ Do not change a priority that the owner set. Propose it.
 
 ## More tickets
 
-If the argument asks for more than 1 ticket, go back to step 3 after step 8 (read new owner feedback first). In a cloud session, reset the
-branch first: `git fetch origin main && git checkout -B <branch> origin/main`, then `git push --force-with-lease`
-(a plain `git push -u` when the branch is not on the remote: `--force-with-lease` fails there).
+If the argument asks for more than 1 ticket, go back to step 3 after step 8 (read new owner feedback first). In a
+cloud session, reset the branch first: `git fetch origin main && git checkout -B <branch> origin/main`. Then push with
+`git fetch origin <branch> && git push --force-with-lease origin <branch> && git branch -u origin/<branch>`
+(a plain `git push -u origin <branch>` when the branch is not on the remote). After `checkout -B` the upstream is
+`origin/main`, so a bare `git push` fails: check that the output shows `-> <branch>`, else the PR has old commits.
 Stop when the context is more than half full.
 
 Argument `max`: continue until no ticket is ready or a usage limit stops you. When the context is more than half
