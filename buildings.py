@@ -1102,6 +1102,59 @@ def mill(c, w, st, col, T, ctx):
     c.set(w - 1, 1, 1, "grindstone[face=floor,facing=south]")                          # millstone
 
 
+def folwark(c, w, st, col, T, ctx):
+    """Polish Folwark (#126): a farmstead. A two-storey half-timbered hall at the back, a barn wing with a stone base
+    and a wide door at the front right, a small post windmill on the west side and a fenced garden in front.
+    The game has one model for all sets: white plaster, dark timber and red tile roofs."""
+    import dataclasses
+    s = w / 12                                                            # the design is drawn for 3 tiles
+    S = lambda v: max(1, round(v * s))
+    fw = dataclasses.replace(st, plaster="white_terracotta", timber="dark_oak_log", beam="stripped_dark_oak_log",
+                             stone="cobblestone", floor="spruce_planks", framing="timber", torons=False)
+    roof = "brick"                                                        # terracotta roof tiles
+    c.box(0, w, 0, 1, 0, w, st.stone2)
+    # Hall: two storeys, ridge along x, windows on both floors
+    hx0, hx1, hz0, hz1, hh = S(4), w, S(1), S(6), S(7)
+    c.timber_room(hx0, hx1, hz0, hz1, 0, hh, fw)
+    for y in (3, hh - 1):
+        c.windows(hx0, hx1, hz0, hz1, y, step=2, sides="sn")
+    c.door(hx0 + 2, 1, hz1 - 1)
+    c.banner(hx0 + 1, hh // 2 + 1, hz1, col)
+    c.gable(hx0 - 1, hx1, hz0 - 1, hz1 + 1, hh + 1, roof, fill=(hx0, hx1, hz0, hz1, fw.plaster), axis="x")
+    # Barn wing at the front right: stone base, ridge along z, wide open door to the south
+    bx0, bz0, bh = S(8), hz1, S(5)
+    c.timber_room(bx0, w, bz0, w - 1, 0, bh, fw, low_stone=2)
+    c.box(bx0 + 1, w - 1, 1, 4, w - 2, w - 1, "air")
+    c.set(bx0 + 1, 1, w - 3, "hay_block"); c.set(w - 2, 1, w - 3, "hay_block"); c.set(w - 2, 2, w - 3, "hay_block")
+    c.windows(bx0, w, bz0, w - 1, bh - 1, step=2, sides="w")
+    c.gable(bx0 - 1, w + 1, bz0, w, bh + 1, roof, fill=(bx0, w, bz0, w - 1, fw.plaster), axis="z")
+    # Post windmill on the west side: a tower above the hall, large sails on its south face
+    mx0, mx1, mz0, mz1, mh = 0, S(4), S(4), S(8), S(11)
+    c.timber_room(mx0, mx1, mz0, mz1, 0, mh, fw)
+    c.door((mx0 + mx1) // 2, 1, mz1 - 1)
+    c.set(mx0, mh - 3, (mz0 + mz1) // 2, "glass_pane"); c.set(mx0, 4, (mz0 + mz1) // 2, "glass_pane")
+    c.gable(mx0 - 1, mx1 + 1, mz0 - 1, mz1 + 1, mh + 1, roof, fill=(mx0, mx1, mz0, mz1, fw.plaster), axis="z")
+    hub_x, hub_y, hz = (mx0 + mx1) // 2, mh - 2, mz1
+    c.set(hub_x, hub_y, hz, "stripped_spruce_log[axis=z]")
+    L = hub_y - 5                                                         # arms stay above head height
+    for sx, sy in ((1, 1), (-1, 1), (1, -1), (-1, -1)):
+        for i in range(1, L + 1):
+            c.set(hub_x + sx * i, hub_y + sy * i, hz, "spruce_fence")
+            if i > 1:
+                c.set(hub_x + sx * i - sx, hub_y + sy * i, hz, "white_wool")
+    # Garden with a fence in front, goods next to the doors
+    gx0, gx1, gz0 = S(1), S(7), S(9)
+    c.box(gx0, gx1, 0, 1, gz0, w - 1, "farmland[moisture=7]")
+    for x in range(gx0, gx1):
+        for z in range(gz0, w - 1):
+            c.set(x, 1, z, ["carrots[age=7]", "potatoes[age=7]", "wheat[age=7]"][(x + z) % 3])
+    c.walls(gx0 - 1, gx1 + 1, 1, 2, gz0 - 1, w, "spruce_fence")
+    c.set((gx0 + gx1) // 2, 1, gz0 - 1, "spruce_fence_gate[facing=north,in_wall=false,open=false,powered=false]")
+    c.set(mx1, 1, mz1, "barrel[facing=up]"); c.set(mx1 + 1, 1, mz1, "barrel[facing=up]")
+    c.set(0, 1, mz1, "spruce_trapdoor[facing=south,half=bottom,open=true]")   # cart wheel against the wall
+    c.set(bx0 - 1, 1, w - 2, "composter")
+
+
 def granary(c, w, st, col, T, ctx):
     """Mill for the other architecture sets: round store with a pointed roof and millstones."""
     c.box(0, w, 0, 1, 0, w, st.stone2)
@@ -2041,7 +2094,7 @@ def select(name):
         ("STABLE", stable, {}), ("SIEGE_WORKSHOP", siege_workshop, {}), ("BLACKSMITH", blacksmith, {}),
         ("MARKET", market, {}), ("CARAVANSERAI", caravanserai, {}), ("FEITORIA", feitoria, {}),
         ("MONASTERY", monastery, {}), ("CHURCH", monastery, {}), ("UNIVERSITY", university, {}),
-        ("FOLWARK", mill, {}), ("MILL", mill, {}), ("LUMBER_CAMP", lumber_camp, {}),
+        ("FOLWARK", folwark, {}), ("MILL", mill, {}), ("LUMBER_CAMP", lumber_camp, {}),
         ("MINING_CAMP", mining_camp, {}), ("DOCK", dock, {}), ("HARBOR", dock, {}),
         ("FARM", farm, {}), ("HOUSE", house, {}),
     ]
