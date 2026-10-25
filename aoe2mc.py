@@ -305,6 +305,30 @@ def upsample(grid, T):
     return a * (1 - f)[:, None] + b * f[:, None]
 
 
+def water_bodies(wet, elevation):
+    """Label the 4-connected bodies of water tiles. Returns (label per tile, lowest elevation per label);
+    label 0 is land (elevation 0)."""
+    from collections import deque
+    n = wet.shape[0]
+    body = np.zeros(wet.shape, np.int32)
+    levels = [0.0]
+    for i, j in zip(*np.nonzero(wet)):
+        if body[i, j]:
+            continue
+        k = len(levels)
+        body[i, j] = k
+        low, q = float(elevation[i, j]), deque([(i, j)])
+        while q:
+            a, b = q.popleft()
+            low = min(low, float(elevation[a, b]))
+            for x, y in ((a + 1, b), (a - 1, b), (a, b + 1), (a, b - 1)):
+                if 0 <= x < n and 0 <= y < n and wet[x, y] and not body[x, y]:
+                    body[x, y] = k
+                    q.append((x, y))
+        levels.append(low)
+    return body, np.array(levels, np.float32)
+
+
 class Columns:
     def __init__(self, size, terrain, elevation, terrain_names, T, H, rng):
         styles, style_of_id = [], {}
@@ -324,7 +348,17 @@ class Columns:
         land = WATER_Y + 1 + np.rint(upsample(elevation, T) * H).astype(np.int16)
         depth = upsample(depth_tiles, T)
         is_water = np.repeat(np.repeat(depth_tiles > 0, T, 0), T, 1)
-        water_bottom = (WATER_Y - np.maximum(1, np.rint(depth))).astype(np.int16)
+        # One level per connected body of water (#165): AoE2 has no water level, and Minecraft water must be level.
+        # The lowest elevation of the body cannot spill over its own tiles (docs/research/water.md).
+        body, levels = water_bodies(depth_tiles > 0, elevation)
+        surface_tiles = WATER_Y + np.rint(levels[body] * H).astype(np.int16)
+        surface = np.repeat(np.repeat(surface_tiles, T, 0), T, 1)
+        water_bottom = (surface - np.maximum(1, np.rint(depth))).astype(np.int16)
+        # Land next to the water is at least as high as the surface, else the water flows out.
+        rim = np.full((n + 2, n + 2), NONE, np.int16)
+        rim[1:-1, 1:-1] = np.where(is_water, surface, NONE)
+        rim = np.maximum.reduce([rim[:-2, 1:-1], rim[2:, 1:-1], rim[1:-1, :-2], rim[1:-1, 2:]])
+        land = np.where(~is_water, np.maximum(land, rim), land)
 
         def full(fill, dtype):
             a = np.full((W, W), fill, dtype)
@@ -333,7 +367,7 @@ class Columns:
         self.top = full(NONE, np.int16)
         self.wtop = full(NONE, np.int16)
         self.top[:n, :n] = np.where(is_water, water_bottom, land)
-        self.wtop[:n, :n] = np.where(is_water, WATER_Y, self.top[:n, :n])
+        self.wtop[:n, :n] = np.where(is_water, surface, self.top[:n, :n])
 
         lut = lambda key: np.array([B(s[key]) for s in styles], np.uint16)
         sub_lut = np.array([B(s["bottom"] if s["depth"] else s["sub"]) for s in styles], np.uint16)
@@ -1204,7 +1238,7 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
                 continue
             y = (top + wtop) / 2 + 0.3
         elif boat and wtop > top:
-            y = WATER_Y + 0.5
+            y = wtop + 0.5
         else:
             col = vol[:, bz & 15, bx & 15]
             y = top + 1

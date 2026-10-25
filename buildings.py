@@ -1849,7 +1849,9 @@ def place_building(E, cols, B, o, players, walls, gates):
             for z in zs:
                 E.box(x, x + 1, int(cols.wtop[x, z]) + 1, base + 1, z, z + 1, found)
 
-    ctx = {"name": name, "deck": max(1, cols.water_y + 2 - base), "diag": gates.get(id(o)) in ("diag+", "diag-"),
+    wet = area > cols.top[xs.start:xs.stop, zs.start:zs.stop]
+    water_y = int(area[wet].max()) if wet.any() else cols.water_y       # the surface of this water body (#165)
+    ctx = {"name": name, "deck": max(1, water_y + 2 - base), "diag": gates.get(id(o)) in ("diag+", "diag-"),
            "origin": (int(ux) * T if not along_z else int(uy) * T, 0)}
     if fn in (bridge, wooden_bridge):
         BRIDGE_CELLS.update((x, z) for x in xs for z in zs)
