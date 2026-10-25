@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:    # the Automerge workflow starts CI on main after its merge (#232)
 
 jobs:
   test:
