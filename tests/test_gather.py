@@ -138,6 +138,21 @@ def test_event_log_gives_the_configured_timing(tiny_world):
     assert "| Chop (wood/s) | 2.00 | 2.00 | 0.39 | 0.66 |" in measure_gather.table(m, conf, 4)
 
 
+def test_fell_removes_the_tree_and_its_barriers_and_leaves_a_flat_stump():
+    m = grid([], [{"kind": "other", "name": "TREE_OAK", "tile": [5.5, 6.5]}])
+    m["tile_size"] = 4
+    # the ground of the converter is on top of the barriers in the footprint (x 20..23, z 24..27)
+    m["ground"] = [" ".join("67" if 20 <= x < 24 and 24 <= z < 28 else "64" for x in range(48)) for z in range(48)]
+    server = FakeServer({})
+    g = gather.Gather(server, m)
+    g.fell((5, 6))
+    fills = [c for c in server.log if c.startswith("fill ")]
+    assert "fill 20 62 24 23 67 27 air replace minecraft:barrier" in fills                # the footprint only
+    assert any(c.endswith("air replace #minecraft:logs") for c in fills)
+    assert any(c.endswith("air replace #minecraft:leaves") for c in fills)
+    assert server.log[-1] == "setblock 22 63 26 minecraft:spruce_log[axis=y]"          # in the ground, after the fills
+
+
 @pytest.mark.mc
 def test_measured_gather_timing_is_near_the_configured_timing():
     from test_mc_check import mojang_reachable

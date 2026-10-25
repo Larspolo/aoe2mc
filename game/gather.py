@@ -19,7 +19,7 @@ import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from aoe2mc import PASSABLE_OBJECTS  # noqa: E402
+from aoe2mc import PASSABLE_OBJECTS, object_footprint  # noqa: E402
 
 RESOURCES = ("Wood", "Food", "Gold", "Stone")
 DROP_SITES = ("TOWN_CENTER", "LUMBER_CAMP")
@@ -36,7 +36,7 @@ class Map:
         self.T = data["tile_size"]
         self.ground = [[None if v == "-" else int(v) for v in row.split()] for row in data["ground"]]
         self.n = len(self.ground)
-        self.blocked, self.trees, self.drops = set(), {}, []
+        self.blocked, self.trees, self.drops, self.feet = set(), {}, [], {}
         for o in data["objects"]:
             if o["kind"] == "building":
                 x0, z0, x1, z1 = o["footprint"]
@@ -49,6 +49,7 @@ class Map:
                 self.blocked |= self.cells(tile)
                 if "TREE" in o["name"]:
                     self.trees[tile] = TREE_WOOD
+                    self.feet[tile] = object_footprint({"name": o["name"], "x": o["tile"][0], "y": o["tile"][1]}, self.T)
 
     def cells(self, tile):
         T = self.T
@@ -264,11 +265,20 @@ class Gather:
                     self.go(v, "to_drop", set().union(*map(self.map.around, self.map.drops)))
 
     def fell(self, tile):
-        """An empty tree disappears (logs and leaves)."""
-        T, ys = self.map.T, [y for x, z in self.map.cells(tile) if (y := self.map.y(x, z)) is not None]
-        x0, z0, y0 = tile[0] * T, tile[1] * T, min(ys, default=0) - 2
+        """An empty tree disappears (logs, leaves and the barriers of its footprint). A stump stays: the top of a log
+        level with the ground, so that nothing stops the player (#307)."""
+        T = self.map.T
+        x0, z0 = tile[0] * T, tile[1] * T
+        fx0, fx1, fz0, fz1 = self.map.feet.get(tile, (x0, x0 + T, z0, z0 + T))
+        feet = {(x, z) for x in range(fx0, fx1) for z in range(fz0, fz1)}
+        # "ground" over the footprint is the top of the barriers: take the ground of the free cells next to it
+        ys = [self.map.y(x, z) for x, z in self.map.around(feet)] or \
+             [y for x, z in feet if (y := self.map.y(x, z)) is not None] or [0]
+        y0 = min(ys) - 2
         for b in ("#minecraft:logs", "#minecraft:leaves"):
             self.command(f"fill {x0 - 2} {y0} {z0 - 2} {x0 + T + 1} {y0 + 24} {z0 + T + 1} air replace {b}")
+        self.command(f"fill {fx0} {y0} {fz0} {fx1 - 1} {max(ys) + 3} {fz1 - 1} air replace minecraft:barrier")
+        self.command(f"setblock {(fx0 + fx1) // 2} {min(ys) - 1} {(fz0 + fz1) // 2} minecraft:spruce_log[axis=y]")
 
     def run(self, seconds=None, until=None):
         """Play in real time until seconds passed or until() is true."""
