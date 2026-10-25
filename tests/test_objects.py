@@ -85,7 +85,7 @@ def test_norse_objects_have_blocks():
         for xs, ys, zs, *_ in E.parts:
             assert ((x0 <= xs) & (xs < x1) & (z0 <= zs) & (zs < z1)).all(), n
         assert cols.blocked[x0:x1, z0:z1].any() == (n != "WOODEN_ROAD"), n
-
+    assert mcvalid.invalid_states(aoe2mc.B.states) == {}
 
 
 SHORE = ["DRIFTWOOD_GROUND", "DRIFTWOOD_WATER", "FLOTSAM", "KELP_SEAWEEDS", "WATER_LILY", "BEACHED_WHALE",
@@ -118,6 +118,7 @@ def test_shore_and_ground_cover_objects():
         if n in ("KELP_SEAWEEDS", "WATER_LILY"):
             assert any(("kelp" if n == "KELP_SEAWEEDS" else "lily") in b[3] for b in blocks), n
     assert mcvalid.invalid_states(B.states) == {}
+
 
 GARDEN = ["PAPER_LANTERN", "ASIAN_LANTERNS", "PAIFANG_GATE_SMALL", "PAIFANG_GATE_LARGE", "GARDEN_PAVILION",
           "GARDEN_BRIDGE", "HUABIAO_TOTEM", "QUE_TOWER"]
