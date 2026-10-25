@@ -21,7 +21,7 @@ dependencies = [          # the same as requirements.txt
 aoe2mc = "aoe2mc:main"
 
 [tool.setuptools]
-py-modules = ["aoe2mc", "buildings", "units"]
+py-modules = ["aoe2mc", "buildings", "units", "scx"]
 packages = ["tools.mcdata"]      # aoe2mc.py reads tools/mcdata/1.21.1.json next to it
 
 [tool.setuptools.package-data]

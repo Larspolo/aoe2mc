@@ -37,6 +37,8 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   `python3 -m pip install --ignore-installed setuptools` (the Debian setuptools cannot build it).
   A record has each town center 4 times (IDs 109 and the annex parts 618–620): `read_record` skips them (#139).
 - An unknown block entity id gives "Skipping block entity with invalid type": 26.3 has no `bed` block entity (#249).
+- Old scenarios for local checks (do not commit, no license): GitHub raw `SiegeEngineers/genie-rs/master/crates/genie-scx/
+  test/scenarios/` (`Age of Heroes b1-3-5.scx` is format 1.21; names in `format.rs` tests, #311).
 
 ## Libraries
 
@@ -77,8 +79,8 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   that the server saved: read it with `tools/world_reader.py` (1.21.1 saves the loaded chunks again, 26.3 can skip them) (#27).
   26.3 saves a default state as the bare name and puts the properties in another order: normalize before you compare (#189).
 - New entity NBT: convert a map with one unit per type (`add_unit` in a loop) and run `tools/mc_check.py` (1 min).
-- Inside of a design (#255): `render.building_blocks` gives world y (the floor is the y of `grass_block`); drop `barrier`
-  and the blocks above a cut height, then call `render.render`. Exact local layers: run the design on a `Canvas` and read `c.get`.
+- Inside of a design: `tools/render.py building NAME OUT.png --cut 2` (#265). Exact local layers: run the design
+  function on a `Canvas` and read `c.get(x, y, z)` (#255).
 - `vary()` picks a `ROOF_ALT` material per variant: count blocks with `render.building_blocks(NAME, arch, variant=v)` (#146).
 - `tools/render.py world` draws only Y >= 50 (`--y0`): use `--y0 -64` for blocks under the map (`--border`). `--scale 4`
   gives about 800 px, the size of the images in `docs/images/` (#262).

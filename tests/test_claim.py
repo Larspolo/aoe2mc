@@ -81,3 +81,50 @@ def test_beat_moves_the_claim_time(clones, monkeypatch):
     assert tool(b, "6").returncode == 1                           # a beat is no release
     assert tool(a, "6", "--release").stdout.strip() == "released claim/6"
     assert tool(a, "6", "--stale").returncode == 1                # released: not stale
+
+
+def test_started_by_comment_of_another_branch():
+    """#288: a run commented "Started by" and worked without the claim ref. Its comment blocks the claim for 30 minutes."""
+    c = lambda body, at: {"body": body, "created_at": at}                    # noqa: E731
+    now = claim.datetime.datetime(2026, 10, 25, 21, 30, tzinfo=claim.datetime.timezone.utc).timestamp()
+    comments = [c("Started by `run-0`.\n\n---\nfooter", "2026-10-25T21:23:10Z"), c("A question", "2026-10-25T21:25:00Z")]
+    assert claim.started_by_other(comments, "run-1", now) == "run-0"
+    assert claim.started_by_other(comments, "run-0", now) is None             # the own comment
+    assert claim.started_by_other(comments, "run-1", now + 30 * 60) is None   # older than 30 minutes
+    assert claim.started_by_other([c("I started by `x` it", "2026-10-25T21:29:00Z")], "run-1", now) is None
+
+
+def test_claim_fails_after_a_started_by_comment(clones, monkeypatch):
+    a, b, _ = clones
+    now = claim.datetime.datetime.now(claim.datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    monkeypatch.setattr(claim, "on_github", lambda remote="origin": True)
+    monkeypatch.setattr(claim, "api", lambda path: [{"body": "Started by `run-0`.", "created_at": now}])
+    monkeypatch.chdir(b)
+    assert claim.main(["8"]) == 1                                  # run-0 commented, but has no claim ref
+    assert claim.refs(8) == {}
+    monkeypatch.chdir(a)
+    assert claim.main(["8"]) == 0                                  # the own comment does not block
+
+
+def test_other_pr_closes_the_ticket():
+    pr = lambda n, ref, body, state="open", merged=None: {"number": n, "head": {"ref": ref}, "body": body,  # noqa: E731
+                                                          "state": state, "merged_at": merged}
+    pulls = [pr(1, "run-1", "Closes #220"), pr(2, "run-0", "Fixes #2200"), pr(3, "run-0", "closes #22", "closed")]
+    assert claim.other_pr(pulls, 220, "run-1") is None              # the own PR
+    assert claim.other_pr(pulls, 220, "run-0") == 1
+    assert claim.other_pr(pulls, 22, "run-1") is None               # closed without a merge
+    assert claim.other_pr([pr(4, "run-0", "...\nCloses #22", "closed", "2026-10-25T21:35:00Z")], 22, "run-1") == 4
+    assert claim.other_pr([pr(5, "run-0", None)], 22, "run-1") is None
+
+
+def test_guard_before_the_push(clones, monkeypatch):
+    a, b, _ = clones
+    assert tool(a, "9", "--guard").returncode == 1                 # no claim: stop
+    assert tool(a, "9").returncode == 0
+    assert tool(b, "9", "--guard").returncode != 0                 # the claim of another run: stop
+    assert tool(a, "9", "--guard").stdout.strip() == "beat claim/9, no PR of another branch"
+    monkeypatch.chdir(a)
+    monkeypatch.setattr(claim, "on_github", lambda remote="origin": True)
+    monkeypatch.setattr(claim, "api", lambda path: [{"number": 283, "head": {"ref": "run-1"}, "body": "Closes #9",
+                                                     "state": "closed", "merged_at": "2026-10-25T21:35:00Z"}])
+    assert claim.main(["9", "--guard"]) == 1
