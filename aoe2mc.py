@@ -30,6 +30,8 @@ import io
 import json
 import math
 import os
+import re
+import textwrap
 import time
 import zlib
 from collections import Counter
@@ -248,6 +250,9 @@ def read_scenario(path):
                                 "civ": getattr(civ, "name", "?"),
                                 "view": view if view[0] is not None and min(view) >= 0 else None}
 
+    msg = scn.message_manager
+    texts = {k: getattr(msg, k, "") or "" for k in CHAPTERS}
+
     objects = []
     for player, player_units in enumerate(scn.unit_manager.units):
         for u in player_units:
@@ -255,7 +260,7 @@ def read_scenario(path):
             garrisoned = u.garrisoned_in_id not in (None, -1)
             objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name,
                                 player=player, x=u.x, y=u.y, rotation=float(u.rotation or 0), garrisoned=garrisoned))
-    return size, terrain, elevation, terrain_names, objects, players
+    return size, terrain, elevation, terrain_names, texts, objects, players
 
 
 # --------------------------------------------------------------------------------------------
@@ -556,7 +561,7 @@ def turn_xz(x, z, k, m):
 
 
 def turn_world(cols, edits, k):
-    """Turn the columns, the edits and the bridge cells of the map k × 90° clockwise."""
+    """Turn the columns, the edits, the bridge cells and the block entity data of the map k × 90° clockwise."""
     k %= 4
     if not k:
         return
@@ -573,6 +578,9 @@ def turn_world(cols, edits, k):
         x, z = turn_xz(xs[ok], zs[ok], k, n - 1)
         parts.append((x, ys[ok], z, lut[ids[ok]], hard[ok]))
     edits.parts = parts
+    data = {(*turn_xz(x, z, k, n - 1), y): v for (x, y, z), v in BLOCK_DATA.items()}
+    BLOCK_DATA.clear()
+    BLOCK_DATA.update(((x, y, z), v) for (x, z, y), v in data.items())
     cells = {turn_xz(x, z, k, n - 1) for x, z in buildings.BRIDGE_CELLS}
     buildings.BRIDGE_CELLS.clear()
     buildings.BRIDGE_CELLS.update(cells)
@@ -1109,10 +1117,9 @@ def free_spot(cols, bx, bz, r, water=False):
     return int(xs[i] + x0), int(zs[i] + z0)
 
 
-def find_spawn(cols, objects, players, tile=None, k=0):
+def find_spawn(cols, objects, players, tile=None):
     """Spawn block (x, y, z): the tile given (--spawn), else the start view of player 1, else in front of
-    (south of) the first town center of player 1, else the map center. Moved to the nearest free land column.
-    k: the clockwise quarter turns of the map (--orientation); the tiles are AoE2 tiles before the turn."""
+    (south of) the first town center of player 1, else the map center. Moved to the nearest free land column."""
     if tile is None:
         tile = players.get(1, {}).get("view")
     if tile is None:
@@ -1120,12 +1127,68 @@ def find_spawn(cols, objects, players, tile=None, k=0):
         if tc:
             tile = (tc["x"], tc["y"] + buildings.footprint(tc["name"]) / 2 + 0.5)
     T, n = cols.T, cols.n
-    if tile is not None:
-        tile = turn_xz(tile[0], tile[1], k, n / T)
     bx, bz = (n // 2, n // 2) if tile is None else (int(min(max(tile[0] * T, 0), n - 1)),
                                                     int(min(max(tile[1] * T, 0), n - 1)))
     bx, bz = free_spot(cols, bx, bz, 8 * T) or (bx, bz)
     return bx, cols.surface(bx, bz) + 2, bz
+
+
+CHAPTERS = {"instructions": "Instructions", "hints": "Hints", "victory": "Victory", "loss": "Loss",
+            "history": "History", "scouts": "Scouts"}
+BLOCK_DATA = {}        # (x, y, z) -> extra block entity fields (the book of the lectern)
+
+
+def book_pages(texts, cols=19, rows=14):
+    """Pages of the scenario texts: one chapter per text that is not empty, its title in bold.
+    A book page shows 14 lines of about 19 characters. AoE2 color tags (<BLUE>) are removed."""
+    pages = []
+    for key, title in CHAPTERS.items():
+        text = re.sub(r"<[^<>]*>", "", texts.get(key) or "").replace("\r", "").strip()
+        if not text:
+            continue
+        # wrap only to count the lines: the game wraps the text itself, so only the paragraphs keep "\n"
+        lines = [(w, i == len(ws) - 1) for para in text.split("\n")
+                 for ws in [textwrap.wrap(para, cols) or [""]] for i, w in enumerate(ws)]
+        first, n = True, rows - 2                     # the title and an empty line
+        while lines or first:
+            page = "".join(w + ("\n" if end else " ") for w, end in lines[:n]).rstrip()
+            pages.append((title if first else None, page))
+            lines, first, n = lines[n:], False, rows
+    return pages[:100]                                 # the maximum of a written book
+
+
+def text_nbt(parts):
+    """A text component of (text, bold) parts in the format of the target version."""
+    extra = [dict(text=t, bold=True) if b else dict(text=t) for t, b in parts]
+    if MC["data_version"] < 4325:                      # before 1.21.5 text components are JSON strings
+        return String(json.dumps({"text": "", "extra": extra}))
+    return Compound({"text": String(""), "extra": List[Compound](
+        [Compound({k: Byte(1) if k == "bold" else String(v) for k, v in e.items()}) for e in extra])})
+
+
+def place_book(cols, edits, spawn, texts, title):
+    """A lectern with the scenario texts as a written book, 2 blocks in front of the spawn view (north-east).
+    Returns the block position, or None when all texts are empty or no free land is near."""
+    pages = book_pages(texts)
+    if not pages:
+        return None
+    sx, _, sz = spawn
+    spot = free_spot(cols, min(sx + 2, cols.n - 1), max(sz - 2, 0), 4)
+    if spot is None or spot == (sx, sz) or cols.wtop[spot] > cols.top[spot]:
+        return None
+    x, z = spot
+    y = cols.surface(x, z)
+    facing = ("west" if x > sx else "east") if abs(x - sx) >= abs(z - sz) else ("north" if z > sz else "south")
+    edits.footprint = None
+    edits.add([x], [y], [z], f"lectern[facing={facing},has_book=true,powered=false]")
+    cols.blocked[x, z] = True                          # no unit stands in the lectern
+    book = Compound({"title": Compound({"raw": String(title[:32])}), "author": String("aoe2mc"),
+                     "pages": List[Compound]([Compound({"raw": text_nbt(([(t + "\n\n", True)] if t else []) + [(b, False)])})
+                                              for t, b in pages]), "resolved": Byte(1)})
+    BLOCK_DATA[(x, y, z)] = {"Page": Int(0), "Book": Compound({
+        "id": String("minecraft:written_book"), "count": Int(1),
+        "components": Compound({"minecraft:written_book_content": book})})}
+    return x, y, z
 
 
 def set_pos(nbt, x, y, z):
@@ -1284,9 +1347,10 @@ def build_chunk(cx, cz, cols, edits):
     be_ids = [i for i in np.unique(vol) if block_entity_type(B.states[i])]
     for i in be_ids:
         for y, z, x in zip(*np.nonzero(vol == i)):
+            pos = (x0 + int(x), int(y) + MIN_Y, z0 + int(z))
             block_entities.append(Compound({
                 "id": String("minecraft:" + block_entity_type(B.states[i])), "keepPacked": Byte(0),
-                "x": Int(x0 + int(x)), "y": Int(int(y) + MIN_Y), "z": Int(z0 + int(z))}))
+                "x": Int(pos[0]), "y": Int(pos[1]), "z": Int(pos[2]), **BLOCK_DATA.get(pos, {})}))
 
     sections = []
     for s in range(HEIGHT // 16):
@@ -1434,9 +1498,11 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
 def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds=True, turns=0):
     buildings.BARRIERS = barriers
     MOVED.clear()           # the counts of an earlier conversion in this process
+    BLOCK_DATA.clear()
     rng = np.random.default_rng(seed)
     t0 = time.time()
-    size, terrain, elevation, tnames, objects, players = read_scenario(src)
+    size, terrain, elevation, tnames, texts, objects, players = read_scenario(src)
+    name = name or os.path.splitext(os.path.basename(src))[0]
     if arch:
         for p in players.values():
             p["arch"] = arch
@@ -1459,7 +1525,14 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     edits, stats = place_objects(objects, players, cols, rng)
     for k, v in sorted(stats.items()):
         print(f"  {k}: {v}")
+    spawn = find_spawn(cols, objects, players, spawn)
+    book = place_book(cols, edits, spawn, texts, name)
     turn_world(cols, edits, turns)
+    sx, sz = turn_xz(spawn[0], spawn[2], turns, cols.n - 1)
+    spawn = (sx, spawn[1], sz)
+    if book:
+        bx, bz = turn_xz(book[0], book[2], turns, cols.n - 1)
+        print(f"  book with the scenario texts: lectern at {(bx, book[1], bz)}")
     per_chunk = edits.by_chunk(cols.width)
     turned = [dict(o, rotation=o["rotation"] + turns * math.pi / 2,
                    **dict(zip("xy", turn_xz(o["x"], o["y"], turns, size)))) for o in objects]
@@ -1491,9 +1564,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     for (rx, rz), chunks in entity_regions.items():
         write_region(os.path.join(out, "entities", f"r.{rx}.{rz}.mca"), chunks)
 
-    spawn = find_spawn(cols, objects, players, spawn, turns)
-    write_level_dat(os.path.join(out, "level.dat"), name or os.path.splitext(os.path.basename(src))[0], spawn,
-                    SPAWN_YAW + 90 * turns)
+    write_level_dat(os.path.join(out, "level.dat"), name, spawn, SPAWN_YAW + 90 * turns)
 
     from PIL import Image
     lut = np.array([block_color(s) for s in B.states], np.uint8)
