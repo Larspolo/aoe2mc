@@ -1282,6 +1282,9 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
         players[int(pid)]["arch"] = a
     print(f"Read {os.path.basename(src)}: {size}x{size} tiles, {len(objects)} objects "
           f"({time.time() - t0:.1f}s)")
+    unknown = Counter(int(o["name"][8:]) for o in objects if o["kind"] == "?")
+    if unknown:                 # users can report these IDs, so that the parser data can get them
+        print("  unknown object IDs (skipped): " + ", ".join(f"{i} ×{n}" for i, n in sorted(unknown.items())))
 
     cols = Columns(size, terrain, elevation, tnames, T, H, rng)
     for pid, p in sorted(players.items()):
