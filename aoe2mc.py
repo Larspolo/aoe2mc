@@ -358,6 +358,72 @@ def read_record(path):
     return size, terrain, elevation, terrain_names, {k: "" for k in CHAPTERS}, objects, players
 
 
+def de_queue(parse_action):
+    """mgz 1.8.51 reads DE_QUEUE of new records (an object count, 4 bytes, building type, unit, amount, the object
+    IDs) with 4 bytes too many before the IDs, and returns ERROR (469 times in samples/, #372). Read it here."""
+    import struct
+    from mgz.fast import Action
+
+    def parse(action_type, data):
+        try:
+            return parse_action(action_type, data)
+        except struct.error:
+            if action_type != Action.DE_QUEUE or len(data) < 15:
+                raise
+            player_id, n, _, unit_id, amount = struct.unpack_from("<bxxh4xhhh", data)
+            return dict(player_id=player_id, object_ids=list(struct.unpack_from(f"<{n}I", data, 15)),
+                        unit_id=unit_id, amount=amount)
+    return parse
+
+
+TIMELINE_KEYS = {"building_id": "type", "unit_id": "type", "technology_id": "technology_id", "object_ids": "objects",
+                 "target_id": "target", "amount": "amount", "resource": "resource", "stance": "stance",
+                 "formation": "formation", "order": "order", "command": "command"}
+
+
+def read_timeline(path):
+    """The commands of a recorded game in time order (#372): a list of events {"time": ms, "player": number or
+    None, "kind": "build", "wall", "queue", "research", "move", "order", "chat", "age" ..., and the data of the
+    kind: "type" and "name" (building or unit, as in read_record), "tile" [x, y], "end" [x, y] (wall),
+    "technology", "objects" (the object IDs that the command selects), "target" (object ID), "text" (chat)}.
+    Tiles are AoE2 tiles. Actions that mgz cannot read are left out."""
+    import mgz.fast as fast
+    from mgz.model import parse_match
+    names, parse = object_kinds(), fast.parse_action
+    fast.parse_action = de_queue(parse)
+    try:
+        with open(path, "rb") as f:
+            match = parse_match(f)
+    finally:
+        fast.parse_action = parse
+    ms = lambda t: int(round(t.total_seconds() * 1000))           # noqa: E731
+    events = []
+    for a in match.actions:
+        kind = a.type.name.lower().removeprefix("de_")
+        if kind == "error":
+            continue
+        e = {"time": ms(a.timestamp), "player": a.player.number if a.player else None, "kind": kind}
+        for k, v in a.payload.items():
+            if k in TIMELINE_KEYS and v is not None and v != -1:
+                e[TIMELINE_KEYS[k]] = v
+        if "type" in e:
+            e["name"] = names.get(e["type"], ("?", f"UNKNOWN_{e['type']}"))[1]
+        if a.payload.get("technology"):
+            e["technology"] = a.payload["technology"]
+        if a.position:
+            e["tile"] = [round(float(a.position.x), 3), round(float(a.position.y), 3)]
+        if "x_end" in a.payload:
+            e["end"] = [a.payload["x_end"], a.payload["y_end"]]
+        events.append(e)
+    for c in match.chat:
+        events.append({"time": ms(c.timestamp), "player": c.player.number if c.player else None, "kind": "chat",
+                       "text": c.message})
+    for u in match.uptimes:
+        events.append({"time": ms(u.timestamp), "player": u.player.number if u.player else None, "kind": "age",
+                       "age": u.age.name})
+    return sorted(events, key=lambda e: e["time"])
+
+
 def turn_tile(x, y, size, k):
     """Tile position (x, y) after k clockwise quarter turns of a size × size grid (size 0: turn a vector)."""
     for _ in range(k % 4):
@@ -1861,11 +1927,12 @@ def write_region(path, chunks):
         f.write(header + body)
 
 
-def write_objects(path, size, T, H, players, objects, cols, ground):
+def write_objects(path, size, T, H, players, objects, cols, ground, timeline=None):
     """aoe2mc.json: the data that a game program needs (docs/research/gameplay.md). Tiles are in the turned grid
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
     their footprint [x0, z0, x1, z1) in blocks. Objects that the converter did not place are not in the list.
-    "ground" has one string per block row z: for each x the y where a unit stands, or "-" for water."""
+    "ground" has one string per block row z: for each x the y where a unit stands, or "-" for water.
+    "timeline" (recorded games only): the events of read_timeline, with tiles in the turned grid."""
     kinds = {"U": "unit", "B": "building", "O": "other"}
     objs = []
     for o in objects:
@@ -1887,6 +1954,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground):
             "objects": objs}
     n, wet = cols.n, cols.wtop > cols.top
     data["ground"] = [" ".join("-" if wet[x, z] else str(ground[x, z]) for x in range(n)) for z in range(n)]
+    if timeline is not None:
+        data["timeline"] = timeline
     with open(path, "w") as f:
         json.dump(data, f, indent=1)
 
@@ -2272,6 +2341,11 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         clock[0] = now
 
     size, terrain, elevation, tnames, texts, objects, players = read_map(src)
+    timeline = read_timeline(src) if src.lower().endswith(".aoe2record") else None
+    for e in timeline or ():
+        for k in ("tile", "end"):
+            if k in e:
+                e[k] = [round(float(v), 3) for v in turn_tile(*e[k], size, buildings.TURN)]
     tick("read")
     name = name or os.path.splitext(os.path.basename(src))[0]
     terrain, elevation = turn_map(buildings.TURN, size, terrain, elevation, objects, players)
@@ -2360,7 +2434,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         write_region(os.path.join(dim, "entities", f"r.{rx}.{rz}.mca"), chunks)
 
     write_level_dat(os.path.join(out, "level.dat"), name, spawn, yaw, cols.n)
-    write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground)
+    write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline)
     n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience)
     if n:
         print(f"  work sounds at buildings: {n}")
