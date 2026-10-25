@@ -44,9 +44,9 @@ Aim of phase 6: a plan for replays and gameplay that the owner approves, with a 
 #22 unique buildings · #25 diagonal gates · #24 packaging · #26 speed · #27 scenario book · #28 birds ·
 #29 sample maps (owner)
 
+### 6. Vision: replays and gameplay (research first)
 #31 replay of a recorded game · #32 play AoE2 in Minecraft: [`docs/research/gameplay.md`](research/gameplay.md),
 waits for the platform decision #135, then #136, #137, #138 (villagers gather wood)
-#31 replay of a recorded game · #32 play AoE2 in Minecraft (game rules, players, bots)
 
 The research tickets make follow-up tickets. The owner decides on each milestone before work starts.
 
