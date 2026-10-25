@@ -1,0 +1,3 @@
+# Lists and tables that parallel runs extend: keep the lines of both sides (see docs/LEARNINGS.md).
+docs/LEARNINGS.md merge=union
+docs/DESIGN.md merge=union
