@@ -57,8 +57,8 @@ def other_rows():
         with contextlib.redirect_stdout(io.StringIO()):
             _, stats = aoe2mc.place_objects([o], {}, cols, np.random.default_rng(1))
         skipped = stats["skipped (other objects)"] > 0
-        if "FISH" in e.name:
-            result = "fish (entity)"
+        if aoe2mc.object_mob(e.name):
+            result = f"{aoe2mc.object_mob(e.name)} (entity)"
         else:
             result = ", ".join(sorted(k for k, v in stats.items() if v)) or "nothing (on purpose)"
         rows.append((e.name, result, skipped))

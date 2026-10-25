@@ -665,8 +665,45 @@ def decor(E, cols, name, rect, rng):
     elif "BROKEN_CART" in n:
         put(0, 0, 0, "spruce_slab[type=bottom]"); put(1, 0, 0, "spruce_slab[type=bottom]")
         put(-1, 0, 0, "spruce_trapdoor[facing=east,half=bottom,open=true]"); put(0, 1, 0, "barrel[facing=east]")
-    elif "BONFIRE" in n:
-        put(0, 0, 0, "campfire[lit=true,signal_fire=false]")
+    elif "BONFIRE" in n or n.startswith(("FLAME", "FLARE")):     # a flare is a signal: tall smoke
+        put(0, 0, 0, f"campfire[lit=true,signal_fire={str(n.startswith('FLARE')).lower()}]")
+    elif "STUMP" in n:
+        put(0, 0, 0, "stripped_bamboo_block[axis=y]" if "BAMBOO" in n else "spruce_log[axis=y]")
+    elif n.startswith(("PATH_", "BLACK_TILE")):        # flat: a path in the ground, black carpet on it
+        for x in range(x0, x1):
+            for z in range(z0, z1):
+                yy = cols.surface(x, z)
+                if n == "BLACK_TILE":
+                    E.add([x], [yy], [z], "black_carpet", hard=False)
+                elif rng.random() < 0.8 and yy - 1 == cols.top[min(max(x, 0), cols.n - 1), min(max(z, 0), cols.n - 1)]:
+                    E.add([x], [yy - 1], [z], "dirt_path")
+    elif n in ("HEAD", "IMPALED_CORPSE"):
+        h = 2 if n == "IMPALED_CORPSE" else 0
+        for dy in range(h):
+            put(0, dy, 0, "spruce_fence")
+        put(0, h, 0, "skeleton_skull[rotation=8]")
+        if h:
+            put(1, 0, 0, "bone_block[axis=x]")
+    elif n in ("TREASURE_CHEST", "LOOT"):
+        put(0, 0, 0, "chest[facing=south]" if n == "TREASURE_CHEST" else "barrel[facing=up]")
+        put(1, 0, 0, "gold_block" if n == "TREASURE_CHEST" else "raw_gold_block")
+    elif n == "LEATHERWORKING_EQUIPMENT":
+        put(0, 0, 0, "loom[facing=south]"); put(1, 0, 0, "spruce_fence"); put(1, 1, 0, "brown_carpet")
+    elif n in ("ARCHAIC_FENCE", "STAKE_BARRICADE"):
+        for x in range(x0, x1):
+            yy = cols.surface(x, cz)
+            if n == "ARCHAIC_FENCE":
+                E.add([x], [yy], [cz], f"oak_fence[east={str(x < x1 - 1).lower()},west={str(x > x0).lower()}]")
+            else:                                      # single sharp stakes of two heights
+                E.box(x, x + 1, yy, yy + 1 + (x % 2), cz, cz + 1, "spruce_fence")
+    elif n == "PIECE_OF_THE_TRUE_CROSS":
+        put(0, 0, 0, "dark_oak_fence"); put(0, 2, 0, "dark_oak_fence")
+        put(0, 1, 0, "dark_oak_fence[east=true,west=true]")
+        put(-1, 1, 0, "dark_oak_fence[east=true]"); put(1, 1, 0, "dark_oak_fence[west=true]")
+    elif n == "ICE_NAVIGABLE":
+        for x in range(x0, x1):
+            for z in range(z0, z1):
+                E.add([x], [cols.surface(x, z) - 1], [z], "ice")
     elif n == "SIGN":
         put(0, 0, 0, "oak_sign[rotation=8]")
     elif "GALLOW" in n:
@@ -730,13 +767,15 @@ def player_color(p, players=None):
 # --------------------------------------------------------------------------------------------
 # Place all objects of the scenario.
 # --------------------------------------------------------------------------------------------
-PASSABLE_OBJECTS = ("FLOWER", "FERN", "RUG", "GRASS", "PLANT", "OYSTER", "FISH", "RELIC", "GRAVE", "BONFIRE")
+MOUNTAINS = ("MOUNTAIN", "SNOW_MOUNTAIN")
+PASSABLE_OBJECTS = ("FLOWER", "FERN", "RUG", "GRASS", "PLANT", "OYSTER", "FISH", "RELIC", "GRAVE", "BONFIRE",
+                    "PATH_", "BLACK_TILE", "ICE_NAVIGABLE", "DOLPHIN", "BOX_TURTLES")
 
 
 def object_footprint(o, T):
     """Block area (x0, x1, z0, z1) of a non-building object. An object at x.0 has an even size, at x.5 an odd size."""
     n = o["name"]
-    big = 4 if n.startswith("MOUNTAIN") else 3 if n.startswith("CLIFF") or "QUARRY" in n or "TEMPLE" in n else 0
+    big = 4 if n.startswith(MOUNTAINS) else 3 if n.startswith("CLIFF") or "QUARRY" in n or "TEMPLE" in n else 0
 
     def axis(v):
         even = abs(v % 1) < 0.25
@@ -786,8 +825,9 @@ def place_objects(objects, players, cols, rng):
         elif kind == "O" and name == "STONE_MINE":
             tile_heap(E, cols, E.footprint, 3, ["cobblestone", "andesite", "stone", "tuff"], rng)
             stats["stone mines"] += 1
-        elif kind == "O" and name.startswith("MOUNTAIN"):
-            mound(E, cols, bx, bz, T * 2, T * 4, ["stone", "stone", "andesite", "cobblestone", "tuff"], rng)
+        elif kind == "O" and name.startswith(MOUNTAINS):
+            mound(E, cols, bx, bz, T * 2, T * 4, ["stone", "snow_block", "andesite", "snow_block", "packed_ice"]
+                  if name.startswith("SNOW") else ["stone", "stone", "andesite", "cobblestone", "tuff"], rng)
             for dx, dz in ((0, 0), (1, 0), (0, 1), (1, 1)):
                 if cols.inside(bx + dx, bz + dz):
                     top = max(cols.surface(bx + dx, bz + dz), y) + T * 4
@@ -881,10 +921,10 @@ def place_objects(objects, players, cols, rng):
         else:
             if name.startswith("UNKNOWN"):
                 stats["skipped (unknown to the parser)"] += 1
-            elif kind != "U" and "FISH" not in name:
+            elif kind != "U" and not object_mob(name):
                 stats["skipped (other objects)"] += 1
         if kind == "O" and (("TREE" in name and "STUMP" not in name) or name in ("GOLD_MINE", "STONE_MINE", "QUARRY")
-                            or "FORAGE" in name or "FRUIT_BUSH" in name or name.startswith(("CLIFF", "MOUNTAIN", "ROCK", "STATUE", "TROPAION",
+                            or "FORAGE" in name or "FRUIT_BUSH" in name or name.startswith(("CLIFF", *MOUNTAINS, "ROCK", "STATUE", "TROPAION",
                             "STELAE", "THOLOS", "HERO_SHRINE", "WELL", "HAY_STACK", "MARKET_STALL"))):
             obstacle(E, cols, E.footprint)
         elif kind == "O" and E.footprint and not any(k in name for k in PASSABLE_OBJECTS):
@@ -900,7 +940,13 @@ def place_objects(objects, players, cols, rng):
 # --------------------------------------------------------------------------------------------
 # Units -> entities
 # --------------------------------------------------------------------------------------------
-FISH = [("SALMON", "salmon"), ("DORADO", "tropical_fish"), ("SNAPPER", "tropical_fish"), ("FISH", "cod")]
+FISH = [("SALMON", "salmon"), ("DORADO", "tropical_fish"), ("SNAPPER", "tropical_fish"), ("FISH", "cod"),
+        ("DOLPHIN", "dolphin"), ("BOX_TURTLES", "turtle")]
+
+
+def object_mob(name):
+    """Minecraft mob for an AoE2 'other object' that is an animal (fish, dolphin, turtles), else None."""
+    return next((k for key, k in FISH if key in name), None)
 PASSABLE = ("short_grass", "tall_grass", "large_fern", "petals", "moss_carpet", "mushroom", "allium", "bluet",
             "tulip", "lily_of", "fern", "wheat", "poppy", "dandelion", "cornflower", "daisy", "water",
             "seagrass", "dead_bush", "sweet_berry", "rail", "carpet", "banner", "button", "lantern", "snow[")
@@ -921,11 +967,11 @@ def plan_units(objects, players, cols, rng, stats):
             nbt = units.make_entity(o, players, (0, 0, 0), rng, desc)
             boat = units.is_boat(desc)
             stats["units"] += 1
-        elif o["kind"] == "O" and "FISH" in o["name"]:
-            kind = next(k for key, k in FISH if key in o["name"])
+        elif o["kind"] == "O" and object_mob(o["name"]):
+            kind = object_mob(o["name"])
             nbt = units.to_nbt(units.mob(kind), (0, 0, 0), 0.0, rng)
-            boat = "fish"
-            stats["fish"] += 1
+            boat = "fish" if kind != "turtle" else False
+            stats["fish" if kind in ("cod", "salmon", "tropical_fish") else "animals (objects)"] += 1
         else:
             continue
         x, z = o["x"] * T, o["y"] * T
