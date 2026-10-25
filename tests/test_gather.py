@@ -88,7 +88,7 @@ def test_villager_carries_wood_to_the_town_center(tiny_world):
     assert server.wood() >= 6                                          # at least two trips of 3 wood
     cells = [(math.floor(float(c.split()[2])), math.floor(float(c.split()[4]))) for c in server.log if c.startswith("tp ")]
     assert cells and all(g.map.free(*c) for c in cells)
-    tc = set().union(*g.map.drops)
+    tc = set().union(*g.map.drops["wood"])
     assert any(max(abs(x - a), abs(z - b)) == 1 for x, z in cells for a, b in tc)    # next to the town center
     assert g.map.trees[tree] == gather.TREE_WOOD - server.wood() - g.villagers[uuid].load
 
