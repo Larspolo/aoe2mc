@@ -60,6 +60,10 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Climbing plants | `vine`, `azalea_leaves` | `pillar` |
 | Charred timber | `coal_block`, `blackstone`, dark oak logs | `burned_building` |
 | Spire tip, finial | `lightning_rod` | `Canvas.spire`, `monastery`, `mosque` |
+| Copper roof, copper dome | `weathered_cut_copper`, `weathered_copper` | `cathedral` |
+| Slate spire | `deepslate_tiles` | `cathedral` |
+| Pinnacle | the `accent_wall` of the style (`*_wall`) | `cathedral` |
+| Striped marble | rows of `polished_deepslate` in the main stone | `cathedral` (Mediterranean) |
 | Chain, rope | `chain` | `dock`, `siege_workshop`, `shipyard`, `harbor_chain` |
 | Portcullis, grille | `iron_bars` | `gate`, `castle` |
 | Lamp | `lantern` | `decorate()`, `blacksmith` (hanging) |
