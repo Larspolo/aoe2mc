@@ -496,64 +496,55 @@ def house(c, w, st, col, T, ctx):
 
 
 def town_center(c, w, st, col, T, ctx):
+    """The in-game model: a high main building at the back (open ground floor on posts, the hall above it,
+    stairs up at the front) and two L-shaped open sheds on posts at the front corners around an open yard."""
     c.box(0, w, 0, 1, 0, w, st.stone2)
-    k = max(2, w // 4)                               # depth of the porch
-    ph = 4
-    x0, x1 = k, w - k
-    ih = ph + k + 3                                  # height of the main building
-    # Porch: posts on the outline and a sloped roof down to the posts.
-    for x in list(range(0, w, 3)) + [w - 1]:
-        for z in (0, w - 1):
-            c.box(x, x + 1, 1, ph, z, z + 1, st.timber)
-    for z in list(range(0, w, 3)) + [w - 1]:
-        for x in (0, w - 1):
-            c.box(x, x + 1, 1, ph, z, z + 1, st.timber)
-    if st.shape == "flat":
-        c.box(0, w, ph, ph + 1, 0, w, st.plaster)
-        c.walls(0, w, ph, ph + 1, 0, w, st.accent)
-        c.walls(0, w, ph + 1, ph + 2, 0, w, st.accent_wall)
-        stairs = family(st.roof)[0]
-        for x in range(0, w - 1):                     # small arches between the posts
-            for z, face in ((0, "north"), (w - 1, "south")):
-                if c.get(x, ph - 1, z) == -1:
-                    c.set(x, ph - 1, z, stair(stairs, "east" if x % 3 == 1 else "west", half="top"))
-        for z in range(0, w - 1):
-            for x in (0, w - 1):
-                if c.get(x, ph - 1, z) == -1:
-                    c.set(x, ph - 1, z, stair(stairs, "south" if z % 3 == 1 else "north", half="top"))
-    else:
-        c.hip(0, w, 0, w, ph, st.roof, layers=k)
-    # Main building: stone below, half-timbered above.
-    c.timber_room(x0, x1, x0, x1, 0, ih, st, low_stone=3 if st.framing == "timber" else 1)
-    c.windows(x0, x1, x0, x1, ih - 2, step=2)
-    c.windows(x0, x1, x0, x1, 5, step=3)
-    top = c.roof(x0, x1, x0, x1, ih + 1, st)
+    a = max(1, w // 4)                               # width of the sheds
+    ph = 4 if w >= 8 else 3                          # height of the open ground floor
     mid = w // 2
-    c.box(mid - 1, mid + 1, 1, 4, x1 - 1, x1, "air")   # double door
-    c.door(mid - 1, 1, x1 - 1); c.set(mid, 1, x1 - 1, "spruce_door[facing=south,half=lower,hinge=right,open=false]")
-    c.set(mid, 2, x1 - 1, "spruce_door[facing=south,half=upper,hinge=right,open=false]")
-    c.box(mid - 1, mid + 1, 3, 4, x1 - 1, x1, st.beam + "[axis=x]")
-    # Central tower with a bell and a flag.
-    t = 4 if w >= 14 else 3
-    tx0, tx1 = mid - t // 2, mid - t // 2 + t
-    ty = top + 4
-    c.room(tx0, tx1, tx0, tx1, ih, ty - ih, st.stone if st.shape == "flat" else st.plaster, corner=st.timber)
-    c.box(tx0, tx1, ty - 2, ty - 1, tx0, tx1, "air")
-    c.walls(tx0, tx1, ty - 2, ty - 1, tx0, tx1, "air")
-    for x in (tx0, tx1 - 1):
-        for z in (tx0, tx1 - 1):
-            c.box(x, x + 1, ty - 2, ty - 1, z, z + 1, st.timber)
-    c.set(mid, ty - 1, mid, "bell[attachment=ceiling,facing=south]")
-    c.box(tx0, tx1, ty, ty + 1, tx0, tx1, st.wood)
+    hx0, hx1, hz0 = a, w - a, 1
+    hz1 = min(hz0 + hx1 - hx0, w - a)
+    # Sheds: posts on the outer edges, a roof in the style of the set, open to the yard.
+    for x0, x1 in ((0, a), (w - a, w)):
+        fx0, fx1 = (0, max(a, mid - 2)) if x0 == 0 else (min(w - a, mid + 2), w)
+        for ax0, ax1, az0, az1, axis in ((x0, x1, hz0 + 2, w, "z"), (fx0, fx1, w - a, w, "x")):
+            for x in sorted({ax0, ax1 - 1, *range(ax0, ax1, 3)}):
+                for z in sorted({az0, az1 - 1, *range(az0, az1, 3)}):
+                    if x in (0, w - 1) or z == w - 1 or (x, z) in ((ax0, az0), (ax1 - 1, az0)):
+                        c.box(x, x + 1, 1, ph, z, z + 1, st.timber)
+            if st.shape == "flat":                  # flat roof with a trim (MENA: arcades with a blue band)
+                c.flat_roof(ax0, ax1, az0, az1, ph, st.roof)
+                c.walls(ax0, ax1, ph - 1, ph, az0, az1, st.accent)
+            else:
+                c.roof(ax0, ax1, az0, az1, ph, st, fill_block=-1, axis=axis, over=0)
+        c.set(x0 + (1 if x0 == 0 else a - 2), 1, w - 2, "barrel[facing=up]")
+        c.set(fx0 + 1 if x0 == 0 else fx1 - 2, 1, w - 2, "hay_block")
+    # Main building: the hall stands on posts; a band in the player color at the floor line.
+    hp, hh = (ph + 1, 6) if w >= 8 else (ph, 3)     # floor and wall height of the hall
+    for x in sorted({hx0, hx1 - 1, *range(hx0, hx1, 3)}):
+        for z in sorted({hz0, hz1 - 1, *range(hz0, hz1, 3)}):
+            c.box(x, x + 1, 1, hp, z, z + 1, st.timber)
+    c.timber_room(hx0, hx1, hz0, hz1, hp, hh, st, low_stone=0)
+    c.walls(hx0, hx1, hp, hp + 1, hz0, hz1, f"{col}_wool")
+    c.windows(hx0, hx1, hz0, hz1, hp + 2, step=3)
+    top = c.roof(hx0, hx1, hz0, hz1, hp + hh + 1, st, axis="x")
+    if st.shape == "gable" and hx1 - hx0 >= 6:      # cross gable over the front
+        g0, g1 = hx0 + 1, hx1 - 1
+        top = max(top, c.gable(g0 - 1, g1 + 1, (hz0 + hz1) // 2, hz1 + 1, hp + hh, st.roof,
+                               fill=(g0, g1, hz0, hz1, st.plaster), axis="z"))
     if st.domes:
-        tip = c.dome(tx0 + (t - 1) / 2, tx0 + (t - 1) / 2, t / 2 + 0.5, ty + 1, st.dome)
-    elif st.shape == "flat":
-        tip = c.flat_roof(tx0, tx1, tx0, tx1, ty, st.roof, parapet=st.plaster)
-    else:
-        tip = c.hip(tx0 - 1, tx1 + 1, tx0 - 1, tx1 + 1, ty, st.roof, flare=st.shape == "asian")
-    c.flag(mid, tip + 1, mid, col, 3)
-    for x in (2, w - 3):
-        c.banner(x, ph - 1, w, col)
+        top = c.dome((hx0 + hx1 - 1) / 2, (hz0 + hz1 - 1) / 2, (hx1 - hx0) / 2 - 1, top, st.dome)
+    # Stairs from the yard up to the door of the hall.
+    sx = min(mid + 1, hx1 - 2)
+    for i in range(hp):
+        c.set(sx, 1 + i, hz1 + hp - 1 - i, stair(family(st.wood.replace("_planks", ""))[0], "north"))
+    c.door(sx, hp + 1, hz1 - 1)
+    c.set(mid - 1, hp - 1, hz1 - 2, "bell[attachment=ceiling,facing=south]")       # the town bell
+    c.set(hx0 + 1, 1, hz1 - 2, "barrel[facing=up]"); c.set(hx1 - 2, 1, hz0 + 1, "chest[facing=south]")
+    for x in (hx0 + 1, hx1 - 2):
+        if x != sx:
+            c.banner(x, hp + 3, hz1, col)
+    c.flag(mid, top + 1, (hz0 + hz1) // 2, col, 2)
 
 
 def castle(c, w, st, col, T, ctx, small=False):
@@ -707,6 +698,15 @@ def siege_workshop(c, w, st, col, T, ctx):
     c.box(cx, cx + 1, ch - 3, ch, w // 2, w // 2 + 1, "chain")
     c.set(cx, ch - 4, w // 2, "oak_log[axis=x]")
     c.box(hx + 1, hx + 3, 1, 2, w - 3, w - 1, "oak_log[axis=x]")           # timber pile
+    # A siege engine under construction in the yard: a wooden frame with a ram beam, and barrels at the hall
+    rx, rz = hx + 1, 3
+    c.box(rx, rx + 3, 1, 2, rz, rz + 2, "spruce_slab[type=bottom]")
+    for x in (rx, rx + 2):
+        for z in (rz, rz + 1):
+            c.set(x, 2, z, "oak_fence")
+    c.box(rx, rx + 3, 3, 4, rz, rz + 2, "spruce_slab[type=bottom]")
+    c.set(rx + 1, 2, rz, "oak_log[axis=x]"); c.set(rx + 1, 2, rz + 1, "oak_log[axis=x]")
+    c.set(hx, 1, 2, "barrel[facing=up]"); c.set(hx, 1, 3, "barrel[facing=up]"); c.set(hx, 2, 2, "barrel[facing=up]")
     c.set(hx + 1, 2, w - 2, "oak_log[axis=x]")
     c.banner(hx // 2 + 1, 4, w - 1, col)
     c.flag(cx, ch + 1, 2, col, 2)
@@ -719,7 +719,7 @@ def blacksmith(c, w, st, col, T, ctx):
     c.timber_room(m, w - m, m, hz, 0, 4, st, low_stone=2)
     c.windows(m, w - m, m, hz, 3, sides="new")
     top = c.roof(m, w - m, m, hz, 5, st, axis="x")
-    c.box(w - m - 2, w - m, 1, top + 2, m + 1, m + 3, "bricks")             # forge chimney
+    c.box(w - m - 2, w - m, 1, top + 2, m + 1, m + 3, st.stone2)            # forge chimney of rough stone, as in the game
     c.set(w - m - 2, top + 2, m + 1, "campfire[lit=true,signal_fire=false]")
     c.set(w - m - 2, 1, m + 3, "blast_furnace[facing=south,lit=true]")
     mid = w // 2
@@ -733,6 +733,9 @@ def blacksmith(c, w, st, col, T, ctx):
         c.box(m, w - m, 4, 5, hz, w, family(st.roof)[1] + "[type=bottom]")
     c.set(mid + 1, 1, hz + 1, "anvil[facing=east]")
     c.set(mid + 2, 1, hz, "smithing_table"); c.set(m + 1, 1, hz, "water_cauldron[level=3]")
+    c.set(w - m - 2, 1, hz + 1, "grindstone[face=floor,facing=east]")      # the workshop in front: tools and stock
+    c.set(m + 1, 1, hz + 1, "barrel[facing=up]")
+    c.set(mid + 1, 3, hz + 1, "lantern[hanging=true]")
     c.banner(mid + 1, 3, hz, col)
 
 
@@ -1576,15 +1579,20 @@ def place_building(E, cols, B, o, players, walls, gates):
     size = footprint(name)
 
     if fn is farm:
+        # Like the game: rows of crops with furrows of bare soil between them, along tile y (they turn with
+        # --orientation), and a path around the plot. Some rows are not ripe yet.
         x0, z0 = int(round((ux - 1.5) * T)), int(round((uy - 1.5) * T))
+        rng = np.random.default_rng(abs((x0 * 73856093) ^ (z0 * 19349663)) % (2 ** 32))
         for x in range(max(0, x0), min(cols.n, x0 + 3 * T)):
             for z in range(max(0, z0), min(cols.n, z0 + 3 * T)):
                 if cols.wtop[x, z] == cols.top[x, z]:
                     y = int(cols.top[x, z])
                     edge = x in (x0, x0 + 3 * T - 1) or z in (z0, z0 + 3 * T - 1)
+                    row = (x - x0 if TURN % 2 == 0 else z - z0) % 2 == 1
+                    age = rng.choice((7, 6, 5), p=(.7, .2, .1))
                     E.add([x, x], [y, y + 1], [z, z],
                           [B("farmland[moisture=7]") if not edge else B("dirt_path"),
-                           B("wheat[age=7]") if not edge else 0])
+                           B(f"wheat[age={age}]") if row and not edge else 0])
         return
 
     along_z = False
