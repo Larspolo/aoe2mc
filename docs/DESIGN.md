@@ -69,6 +69,9 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Painted wood (torii) | `red_concrete`, black top beam | `torii` |
 | Climbing plants | `vine`, `azalea_leaves` | `pillar`, `garden` |
 | Charred timber | `coal_block`, `blackstone`, dark oak logs | `burned_building` |
+| Scaffolding, building site | `scaffolding` posts, `spruce_slab` decks, `ladder` | `scaffolding`, `scaffold_walk` |
+| Standing stones with lintels | `stone`, `andesite`, `tuff` posts, a ring of `stone` on top | `stonehenge` |
+| Stone seats of a theatre | `stone_bricks` rising outward, `smooth_stone` and slabs on top | `theatre` |
 | Spire tip, finial | `lightning_rod` | `nine_bands`, `storage`, `shrine`, `feitoria` +20 more |
 | Copper roof, copper dome | `weathered_cut_copper`, `weathered_copper` | `cathedral` |
 | Slate spire | `deepslate_tiles` | `hall_of_heroes`, `cathedral` |

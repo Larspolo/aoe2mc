@@ -2330,7 +2330,7 @@ FOOTPRINT = [("SHIPYARD", 4), ("PORT", 4), ("MOLE", 2), ("CHAIN_", 1), ("FLAGSHI
              ("COURTYARD_WALLS", 3), ("MESOPOTAMIAN_PILLAR", 1), ("MESOPOTAMIAN_GARDEN", 3),
              ("GREAT_PYRAMID", 6), ("NUBIAN_PYRAMID", 3), ("PYRAMID", 5),
              ("DOME_OF_THE_ROCK", 5), ("SANKORE", 3), ("FISH_TRAP", 3), ("RUINS", 3), ("ROCK_CHURCH", 3),
-             ("CHAPEL", 3), ("BRIDGE", 3), ("AQUEDUCT", 1), ("AMPHITHEATRE", 5), ("CATHEDRAL", 4), ("MONUMENT", 3),
+             ("CHAPEL", 3), ("BRIDGE", 3), ("AQUEDUCT", 1), ("AMPHITHEATRE", 5), ("THEATRE", 5), ("STONEHENGE", 4), ("CONSTRUCTION_CRANE", 2), ("SCAFFOLDING", 2), ("CATHEDRAL", 4), ("MONUMENT", 3),
              ("ARMY_TENT", 2), ("PAVILION", 2), ("YURT", 2), ("HUT", 2), ("TRADE_WORKSHOP", 4),
              ("POENARI", 4), ("TOWER_OF_LONDON", 3), ("WONDER", 5), ("TOWN_CENTER", 4), ("CASTLE", 4), ("MARKET", 4), ("SIEGE_WORKSHOP", 4),
              ("FEITORIA", 4), ("MONASTERY", 3), ("FORTIFIED_CHURCH", 3), ("BARRACKS", 3), ("ARCHERY_RANGE", 3),
@@ -2367,6 +2367,8 @@ def select(name):
         ("MINARET_OF_JAM", minaret_of_jam, {}), ("ORACLES_TEMPLE", oracles_temple, {}), ("MOSQUE", mosque_landmark, {}),
         ("HALL_OF_HEROES", hall_of_heroes, {}), ("PAGAN_SHRINE", pagan_shrine, {}), ("SHRINE", shrine, {}),
         ("BRIDGE", bridge, {}), ("AQUEDUCT", aqueduct, {}), ("AMPHITHEATRE", amphitheatre, {}),
+        ("THEATRE", theatre, {}), ("STONEHENGE", stonehenge, {}), ("CONSTRUCTION_CRANE", crane, {}),
+        ("SCAFFOLDING_WALKABLE", scaffold_walk, {}), ("SCAFFOLDING", scaffolding, {}),
         ("CATHEDRAL", church, {}), ("CHAPEL", monastery, {}), ("MONUMENT", monument, {}), ("ARMY_TENT", army_tent, {}),
         ("COMMANDER_TENT_DROPSITE", command_tent, {"dropsite": True}), ("COMMANDER_TENT", command_tent, {}),
         ("COMMAND_POST", command_tent, {}), ("TENT_", army_tent, {}), ("STORAGE", storage, {}),
@@ -2587,7 +2589,7 @@ def place_building(E, cols, B, o, players, walls, gates):
         transpose(c)
     if gates.get(id(o)) == "diag-":
         c.a = c.a[:, :, ::-1].copy()                                     # mirror: the other diagonal
-    if BARRIERS and fn not in (gate, bridge, wooden_bridge, fish_trap):
+    if BARRIERS and fn not in (gate, bridge, wooden_bridge, fish_trap, scaffold_walk):
         barriers(c, fx, fz)
     ix, iy, iz = np.nonzero(c.a >= 0)
     # Outside the footprint only parts above head height (roof edges, tower tops, sails) are kept;
@@ -3068,6 +3070,114 @@ def burned_building(c, w, st, col, T, ctx):
     c.box(a + 1, b - 1, 3, 4, w // 2, w // 2 + 1, "dark_oak_log[axis=x]")    # one roof beam is left
     c.set(w // 2 - 1, 1, w // 2 - 1, "campfire[lit=true,signal_fire=false]")
     c.set(w // 2 + 1, 1, w // 2, "gravel")
+
+
+def crane(c, w, st, col, T, ctx):
+    """A Roman construction crane: a treadwheel, a tall mast with a jib, and a stone block on a chain."""
+    m = w // 2
+    h = max(8, 2 * w)
+    c.box(1, w - 1, 0, 1, 1, w - 1, "spruce_planks")                       # base frame
+    c.box(m, m + 1, 1, h, m, m + 1, "spruce_log[axis=y]")                  # mast
+    for dx in (-1, 1):                                                     # stays to the ground
+        c.set(m + dx, 1, m, "spruce_log[axis=y]")
+        c.set(m + dx, 2, m, "spruce_fence")
+    c.box(m, m + 1, h, h + 1, 1, w - 1, "stripped_spruce_log[axis=z]")     # jib
+    c.box(m, m + 1, 4, h, 1, 2, "chain[axis=y]")
+    c.set(m, 3, 1, "chiseled_stone_bricks")                                # the load
+    r = min(2.5, (w - 3) / 2)                                              # treadwheel at the back
+    for k in range(24):
+        a = 2 * math.pi * k / 24
+        c.set(int(round(m + r * math.cos(a))), int(round(1 + r + r * math.sin(a))), w - 2, "stripped_spruce_log[axis=z]")
+    c.box(m, m + 1, int(1 + r), int(2 + r), m + 1, w - 2, "spruce_log[axis=z]")    # axle to the mast
+
+
+def scaffolding(c, w, st, col, T, ctx):
+    """A house under construction: low stone walls in scaffolding with plank decks and a ladder."""
+    a, b = 1, w - 1
+    c.box(a, b, 0, 1, a, b, "coarse_dirt")
+    c.walls(a + 1, b - 1, 1, 3, a + 1, b - 1, "cobblestone")
+    c.box(a + 2, b - 2, 2, 3, b - 2, b - 1, "air")                         # the wall is not finished
+    for x in (a, b - 1):
+        for z in (a, b - 1):
+            c.box(x, x + 1, 1, 7, z, z + 1, "scaffolding[bottom=false,distance=0,waterlogged=false]")
+    for y in (3, 6):
+        c.walls(a, b, y, y + 1, a, b, "spruce_slab[type=bottom,waterlogged=false]")
+    c.box(a + 1, b - 1, 1, 6, b - 1, b, "air")
+    c.box(w // 2, w // 2 + 1, 1, 7, b - 1, b, "ladder[facing=south,waterlogged=false]")
+    c.set(b - 2, 1, a + 1, "stone_bricks")                                 # a pile of building stone
+    c.set(b - 3, 1, a + 1, "stone_brick_slab[type=bottom,waterlogged=false]")
+
+
+def scaffold_walk(c, w, st, col, T, ctx):
+    """Scaffolding that units walk through: posts at the corners and a plank deck above head height."""
+    a, b = 1, w - 1
+    for x in (a, b - 1):
+        for z in (a, b - 1):
+            c.box(x, x + 1, 1, 6, z, z + 1, "scaffolding[bottom=false,distance=0,waterlogged=false]")
+    c.box(a, b, 5, 6, a, b, "spruce_slab[type=bottom,waterlogged=false]")
+    c.box(a, a + 1, 1, 5, w // 2, w // 2 + 1, "ladder[facing=east,waterlogged=false]")
+
+
+def theatre(c, w, st, col, T, ctx):
+    """A Greek theatre: a half circle of stone seats around a round floor, and a stage house in the south."""
+    cx, cz = (w - 1) / 2, w * 0.6
+    R, r0 = w * 0.55, w * 0.2
+    xs = np.arange(w)
+    for x in xs:
+        for z in range(int(cz) + 1):
+            d = math.hypot(x - cx, z - cz)
+            if r0 + 1 <= d <= R:
+                h = 1 + int((d - r0 - 1) * 0.8)                            # the seats rise outward
+                c.box(x, x + 1, 1, h, z, z + 1, "stone_bricks")
+                c.set(x, h, z, "smooth_stone_slab[type=bottom,waterlogged=false]" if h % 2 else "smooth_stone")
+    c.cylinder(cx, cz, r0, 0, 1, "smooth_stone")                           # the orchestra
+    c.set(int(cx), 1, int(cz), "chiseled_stone_bricks")                    # the altar
+    for x in (int(cx), int(cx) + (w % 2 == 0)):                            # the aisle in the middle
+        for z in range(int(cz - r0 - 1)):
+            c.box(x, x + 1, 1, w, z, z + 1, "air")
+            c.set(x, 0, z, "stone_bricks")
+    z0 = w - 3                                                             # the stage house
+    c.box(1, w - 1, 0, 1, z0 - 1, w, "smooth_quartz")
+    c.box(2, w - 2, 1, 2, z0 - 1, z0, "spruce_planks")                     # the stage
+    c.box(2, w - 2, 1, 6, z0 + 1, w - 1, "smooth_quartz")
+    c.box(2, w - 2, 6, 7, z0 + 1, w - 1, "quartz_slab[type=bottom,waterlogged=false]")
+    for x in range(2, w - 2, 3):
+        c.box(x, x + 1, 2, 6, z0, z0 + 1, "quartz_pillar[axis=y]")
+    c.box(w // 2 - 1, w // 2 + 1, 2, 4, z0 + 1, w - 1, "air")              # doors through the stage house
+    c.door(w // 2, 1, w - 1)
+    c.door(w // 2 - 1, 1, w - 1)
+    c.banner(w // 2, 5, w - 1, col)
+
+
+def stonehenge(c, w, st, col, T, ctx):
+    """Stonehenge: a ring of standing stones with lintels, a horseshoe of tall trilithons and fallen stones."""
+    cx = (w - 1) / 2
+    R = w / 2 - 1.5
+    stones = ["stone", "andesite", "stone", "tuff"]
+    n = max(8, int(2 * math.pi * R / 2))
+    for k in range(n):                                                     # the outer ring
+        a = 2 * math.pi * k / n
+        x, z = int(round(cx + R * math.cos(a))), int(round(cx + R * math.sin(a)))
+        if k in (3, 4):                                                    # a fallen upright
+            c.box(x, x + 1, 1, 2, z, z + 1, "mossy_cobblestone")
+            continue
+        c.box(x, x + 1, 1, 4, z, z + 1, stones[k % 4])
+        if k not in (2, 5):
+            for t in (0, 0.5):                                             # the lintel to the next stone
+                b = 2 * math.pi * (k + t) / n
+                c.set(int(round(cx + R * math.cos(b))), 4, int(round(cx + R * math.sin(b))), "stone")
+    r = R * 0.55                                                           # the trilithons, open to the north-east
+    for k, a in enumerate((0.6, 1.4, 2.2, 3.0, 3.8)):
+        a += math.pi / 4
+        x, z = int(round(cx + r * math.cos(a))), int(round(cx + r * math.sin(a)))
+        c.box(x, x + 1, 1, 5, z, z + 1, "andesite")
+        x2, z2 = int(round(cx + r * math.cos(a + 0.35))), int(round(cx + r * math.sin(a + 0.35)))
+        c.box(x2, x2 + 1, 1, 5, z2, z2 + 1, "andesite")
+        c.set(x, 5, z, "polished_andesite")
+        c.set(x2, 5, z2, "polished_andesite")
+    c.set(int(cx), 1, int(cx), "smooth_stone_slab[type=bottom,waterlogged=false]")    # the altar stone
+    c.set(int(cx) + 1, 1, int(cx), "smooth_stone_slab[type=bottom,waterlogged=false]")
+    c.box(w - 2, w - 1, 1, 3, 1, 2, "mossy_stone_bricks")                  # the heel stone
 
 
 def church(c, w, st, col, T, ctx):
@@ -3553,9 +3663,9 @@ def fish_trap(c, w, st, col, T, ctx):
 # Sets of designs (defined after all designs)
 LANDMARKS = {arch_of_constantine, colosseum, gol_gumbaz, sanchi_stupa, temple_of_heaven, minaret_of_jam, oracles_temple,
              mosque_landmark, hall_of_heroes, shrine, pagan_shrine}
-MONUMENTAL = LANDMARKS | {mole, harbor_chain, flagship, helepolis, great_pyramid, nubian_pyramid, dome_rock, sankore, wooden_bridge, fish_trap, wonder, castle, krepost, monastery, church, amphitheatre, monument, wall_segment, gate, tower,
+MONUMENTAL = LANDMARKS | {theatre, stonehenge, mole, harbor_chain, flagship, helepolis, great_pyramid, nubian_pyramid, dome_rock, sankore, wooden_bridge, fish_trap, wonder, castle, krepost, monastery, church, amphitheatre, monument, wall_segment, gate, tower,
               bridge, aqueduct}
-NO_PROPS = LANDMARKS | {shipyard, port, mole, harbor_chain, flagship, helepolis, great_pyramid, nubian_pyramid, dome_rock, wooden_bridge, fish_trap, barricade, wall_segment, gate, bridge, aqueduct, tower, outpost, wonder, dock, harbor, monument, amphitheatre}
+NO_PROPS = LANDMARKS | {theatre, stonehenge, crane, scaffold_walk, shipyard, port, mole, harbor_chain, flagship, helepolis, great_pyramid, nubian_pyramid, dome_rock, wooden_bridge, fish_trap, barricade, wall_segment, gate, bridge, aqueduct, tower, outpost, wonder, dock, harbor, monument, amphitheatre}
 
 
 def building_rect(o):

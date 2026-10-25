@@ -82,3 +82,5 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - `vary()` picks a `ROOF_ALT` material per variant: count blocks with `render.building_blocks(NAME, arch, variant=v)` (#146).
 - `tools/render.py world` draws only Y >= 50 (`--y0`): use `--y0 -64` for blocks under the map (`--border`). `--scale 4`
   gives about 800 px, the size of the images in `docs/images/` (#262).
+- An "other" object in `MONUMENTS` goes to `place_building` as a copy (`dict(o, kind="B")`): it gets no `o["footprint"]`.
+  In a test, compute its block area from `buildings.footprint(name)` (#296).
