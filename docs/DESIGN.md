@@ -74,6 +74,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Fence, pen | `*_fence` | `pasture`, `nine_bands`, `fish_trap`, `outpost` +37 more |
 | Gate of a pen | `*_fence_gate` | `pasture`, `folwark` |
 | Wheel | open `*_trapdoor` on the side | `cart`, `university`, `market`, `dock` +9 more |
+| Siege engine in the making | `stripped_spruce_log` frame, `oak_fence` posts, a `stripped_oak_log` ram beam with an `iron_block` head | `siege_workshop` |
 | Tent canvas | `white_wool`, a valance of wool in the player color | `command_tent`, `army_tent`, `pavilion`, `yurt` +4 more |
 | Thatch | `hay_block` | `settlement`, `hut`, `mill_room`, `granary` +15 more |
 | Palisade stakes | `*_log[axis=y]` of two heights, `spruce_fence` tips | `barricade`, `fish_trap`, `outpost`, `wooden_fort` +39 more |
