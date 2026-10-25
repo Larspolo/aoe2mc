@@ -1483,27 +1483,33 @@ def mosque(c, w, st, col, T, ctx):
 
 
 def pagoda(c, w, st, col, T, ctx):
+    """Tall pagoda (Hwangnyongsa, the Korean Wonder): a stone podium with a roof skirt, slim storeys with
+    flared eaves and hanging lanterns, and a tall gold finial."""
     c.box(0, w, 0, 2, 0, w, st.stone)
     mid = w // 2
     c.box(mid - 1, mid + 2, 1, 2, w - 1, w, stair("stone_brick_stairs", "north"))
-    n = 5 if w >= 20 else 4
-    s0 = w / 2 - 2.5
+    n = 7 if w >= 20 else 5
+    s0 = w / 2 - 3.5
     y = 1
     for i in range(n):
         half = s0 - i * (s0 - 1.5) / max(1, n - 1)
         a = int(round(w / 2 - half))
         b = w - a
-        c.room(a, b, a, b, y, 3, st.plaster, st.wood, corner=st.timber)
-        c.windows(a, b, a, b, y + 2, b="air", step=2)
+        h = 4 if i == 0 else 3
+        c.room(a, b, a, b, y, h, st.plaster, st.wood, corner=st.timber)
+        c.windows(a, b, a, b, y + h, b="air", step=2)
         if i == 0:
+            c.walls(a, b, y + 1, y + 2, a, b, f"{col}_wool")               # player band at the base
             c.box(mid - 1, mid + 2, y + 1, y + 3, b - 1, b, "air")
-        c.hip(a - 2, b + 2, a - 2, b + 2, y + 4, st.roof, layers=2, flare=True)
-        c.box(a + 1, b - 1, y + 4, y + 5, a + 1, b - 1, st.wood)
-        if i == 0:
-            c.banner(mid, y + 2, b, col)
-        y += 5
-    c.box(mid, mid + 1, y, y + 3, mid, mid + 1, "gold_block")
-    c.set(mid, y + 3, mid, "lightning_rod")
+            c.banner(mid - 2, y + 2, b, col); c.banner(mid + 2, y + 2, b, col)
+        e = 2 if i < 2 else 1                                                 # deep eaves on the lower storeys
+        c.hip(a - e, b + e, a - e, b + e, y + h + 1, st.roof, layers=e + 1, flare=True)
+        c.box(a + 1, b - 1, y + h + 1 + e, y + h + 2 + e, a + 1, b - 1, f"{family(st.roof)[1]}[type=bottom]")
+        for x, z in ((a - e, a - e), (b + e - 1, a - e), (a - e, b + e - 1), (b + e - 1, b + e - 1)):
+            c.set(x, y + h, z, "lantern[hanging=true]")
+        y += h + 1 + e
+    c.box(mid, mid + 1, y - 1, y + 6, mid, mid + 1, "gold_block")            # finial (sangryun)
+    c.set(mid, y + 6, mid, "lightning_rod")
 
 
 def pyramid(c, w, st, col, T, ctx):

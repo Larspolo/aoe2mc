@@ -62,7 +62,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Spire tip, finial | `lightning_rod` | `Canvas.spire`, `monastery`, `mosque` |
 | Chain, rope | `chain` | `dock`, `siege_workshop`, `shipyard`, `harbor_chain` |
 | Portcullis, grille | `iron_bars` | `gate`, `castle` |
-| Lamp | `lantern` | `decorate()`, `blacksmith` (hanging) |
+| Lamp | `lantern` | `decorate()`, `blacksmith` (hanging), `pagoda` (under the eaves) |
 | Siege engine under construction | spruce slabs, fences and logs | `siege_workshop` |
 | Cloth awning | `*_wool` in the player color | `house` (flat roofs) |
 | Stair to a roof terrace | stairs of the roof material | `house` (flat roofs) |
@@ -70,7 +70,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Sacred tree | `oak_log`, `oak_leaves[persistent=true]` | `pagan_shrine` |
 | Sail | wool (player color) | `flagship` |
 | Hides | `brown_wool` | `helepolis` |
-| Band in the player color | `*_wool` (player color) | `town_center`, `castle` |
+| Band in the player color | `*_wool` (player color) | `town_center`, `castle`, `pagoda` |
 | Outside stairs to an upper floor | `*_stairs` of the wood of the set | `town_center` |
 | Books, study | `bookshelf`, `lectern` (with a book) | `university` |
 | Scholar statue | `chiseled_stone_bricks` pedestal, `quartz_pillar`, `chiseled_quartz_block` | `university` |
