@@ -9,9 +9,8 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - GitHub raw files, PyPI and the Mojang hosts (`piston-meta`, `piston-data`, `libraries.minecraft.net`) work.
 - `/root/.local/bin/pytest` and `/usr/bin/pip` use another Python: use `python3 -m pytest`, `python3 -m pip`. "cannot import
   name '_imaging' from 'PIL'": the Debian pillow shadows it: `python3 -m pip install --ignore-installed pillow`.
-- `minecraft.wiki`, `minecraft.net` and `papermc.io` are blocked (curl and WebFetch). For Minecraft facts use
-  the Mojang data reports in `misode/mcmeta` (GitHub raw, branch `<version>-summary`) and the real server
-  (see `docs/minecraft-versions.md`, "Method").
+- `minecraft.wiki`, `minecraft.net` and `papermc.io` are blocked. For Minecraft facts use the Mojang data reports in
+  `misode/mcmeta` (GitHub raw, branch `<version>-summary`) and the real server (`docs/minecraft-versions.md`, "Method").
 - Minecraft 26.3 (the default) needs Java 25: `scripts/cloud-setup.sh` or `tools/mc_check.py` (apt-get as root) installs it (#195).
   Send `stop` only after "Done (" is in `logs/latest.log`. Do not use `pkill -f server.jar`: it kills your own shell.
   A `&` job ignores SIGINT: test Ctrl-C with `Popen(..., start_new_session=True)` and `os.killpg(pid, SIGINT)` (#137).
@@ -67,10 +66,12 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   (`pyproject.toml`). A new runtime data file must go into the package data too (test: `pip install .` in a venv).
 - `.gitattributes` merges `docs/DESIGN.md` with `union`: a local merge keeps the new table lines of both sides; look for
   one line in two versions and keep one. `union` is wrong for lines that runs rewrite: both versions stay (#174).
+- `terrain_style` checks names in sequence: an earlier rule wins (`ROAD_GRAVEL` matched `GRAVEL` until #5).
+- `.gitattributes` merges `docs/DESIGN.md` with `union`: a local merge keeps the new table lines of both sides; look for one
+  line in two versions and keep one. GitHub ignores `union` (the PR is "dirty", #210). Not for text that runs rewrite (#174).
 - PRs do not change `docs/coverage.md` or `MAX` in `tests/test_coverage.py`: the `coverage.yml` workflow updates them on
   main (#233). A conflict there (old PR): take main's side. Check `mergeable_state` after the push: a PR is "dirty"
   when main moved. `automerge.yml` merges green agent PRs (#232).
-- All 243 building types of one set draw in about 1 s; the gallery converts in about 23 s (`--verbose`: per phase, #26).
 - Block IDs in `B` depend on earlier tests or conversions: draw random numbers per block in state-name order, not
   ID order (#44). A test that passes alone but fails in the full suite often has this cause.
 - An invalid item in a block entity can vanish without a log line. `tools/mc_check.py W --keep DIR` keeps the world
