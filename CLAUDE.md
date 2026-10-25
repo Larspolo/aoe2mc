@@ -57,6 +57,7 @@ Design work (buildings, objects, units, animals) follows `docs/DESIGN.md`. Do de
 - Block states are strings like `"oak_stairs[facing=north,half=bottom]"`. Each new state must pass `mcvalid`.
 - Output is deterministic: all randomness comes from seeded `numpy` generators. Keep it so.
 - Target: Minecraft Java 1.21.1 (`DATA_VERSION = 3955`). Newer versions upgrade the world on load.
+  `VERSIONS` in `aoe2mc.py` holds the profile per output version (`--mc-version`); format changes: `docs/minecraft-versions.md`.
 - Global state: `aoe2mc.B` (block registry), `aoe2mc.MOVED`, `buildings.BARRIERS`, `buildings.BRIDGE_CELLS`.
   Tests share `B`, so `B.states` holds the states of all earlier tests.
 
