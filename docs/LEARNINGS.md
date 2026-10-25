@@ -71,9 +71,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   `tests/test_coverage.py` to the new counts. Parallel runs often change the same counts (#79). Check
   `mergeable_state` before the merge: a green PR is "dirty" when main moved after the push. Merge in the CI poll loop.
 - All 243 building types of one set draw in about 1 s; the gallery converts in about 23 s (`--verbose`: per phase, #26).
-- Block IDs in `B` depend on what was registered before (earlier tests or conversions). Code that draws random
-  numbers per block ID must go in state-name order, not ID order (see #44). A test that passes alone but
-  fails in the full suite often has this cause.
+- Block IDs in `B` depend on earlier tests or conversions: draw random numbers per block in state-name order, not
+  ID order (#44). A test that passes alone but fails in the full suite often has this cause.
 - An invalid item in a block entity can vanish without a log line. `tools/mc_check.py W --keep DIR` keeps the world
   that the server saved: read it with `tools/world_reader.py` (1.21.1 saves the loaded chunks again, 26.3 can skip them) (#27).
   26.3 saves a default state as the bare name and puts the properties in another order: normalize before you compare (#189).
