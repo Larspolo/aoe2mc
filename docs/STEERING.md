@@ -10,8 +10,10 @@ Each run does one work cycle (the `autopilot` skill):
 1. It reads your new comments on issues and PRs, and does what they ask.
 2. It sorts new issues: priority, kind and size labels. It splits large tickets.
 3. It does the top ticket: code, tests, a PR. It merges the PR when CI passes.
-4. It reports on the **Agent status** issue (label `agent-status`): it updates the dashboard in the issue
-   body and adds a short comment. GitHub sends you a notification.
+4. It reports on the **Agent status** issue (label `agent-status`) with a short comment. GitHub sends you a
+   notification. The dashboard in the issue body is generated from GitHub (`tools/dashboard.py`, workflow
+   `Dashboard`): waiting for you, working on, next up, recently done. It updates on each label change and every
+   15 minutes. Runs only add the process changes.
 5. It improves its own process: it writes learnings, corrects its instructions and makes tooling tickets.
    Every 5th run, the `improve` skill measures the runs (minutes, CI runs, time sinks) and makes one larger
    improvement. The status issue lists each process change.
