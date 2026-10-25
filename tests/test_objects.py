@@ -73,6 +73,21 @@ def test_blocks_under_water_are_waterlogged():
     assert mcvalid.invalid_states(B.states) == {}
 
 
+def test_norse_objects_have_blocks():
+    """Runestones, column, banner and wooden road place blocks in their footprint; units walk on the road (#297)."""
+    for n in ("RUNESTONES", "NORSE_COLUMN", "NORSE_BANNER", "WOODEN_ROAD"):
+        cols = aoe2mc.Columns(12, np.zeros((12, 12), np.int16), np.zeros((12, 12), np.float32),
+                              {0: "GRASS_1"}, 4, 3, np.random.default_rng(1))
+        o = dict(kind="O", name=n, player=0, x=6, y=6, rotation=0.0, hero=False, garrisoned=False)
+        E, stats = aoe2mc.place_objects([o], {}, cols, np.random.default_rng(1))
+        assert stats["decorations"] == 1 and stats["skipped (other objects)"] == 0, n
+        x0, x1, z0, z1 = aoe2mc.object_footprint(o, 4)
+        for xs, ys, zs, *_ in E.parts:
+            assert ((x0 <= xs) & (xs < x1) & (z0 <= zs) & (zs < z1)).all(), n
+        assert cols.blocked[x0:x1, z0:z1].any() == (n != "WOODEN_ROAD"), n
+    assert mcvalid.invalid_states(aoe2mc.B.states) == {}
+
+
 def test_tree_stump_is_level_with_the_ground_and_free_for_units():
     """A stump does not stop units or the player: the top of a log in the ground, no barrier, no block above (#307)."""
     B = aoe2mc.B

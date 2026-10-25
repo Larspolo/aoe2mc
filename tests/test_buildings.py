@@ -132,3 +132,14 @@ def test_house_is_furnished(arch):
             if s.endswith("_door[facing=south,half=lower,hinge=left,open=false]"):
                 inside = [last.get((x, y, z - k), "air") for k in (1, 2)]
                 assert all(t in ("air", "barrier") or t.endswith("_carpet") for t in inside), (arch, v, inside)
+
+
+@pytest.mark.parametrize("module", ["buildings.py", "aoe2mc.py", "units.py"])
+def test_no_function_name_twice(module):
+    """Parallel PRs can each add a function with the same name without a merge conflict; the second one then hides
+    the first (#338: two `furnish` functions broke the house)."""
+    import ast
+    import os
+    tree = ast.parse(open(os.path.join(os.path.dirname(os.path.dirname(__file__)), module)).read())
+    names = [n.name for n in tree.body if isinstance(n, (ast.FunctionDef, ast.ClassDef))]
+    assert sorted({n for n in names if names.count(n) > 1}) == []

@@ -37,6 +37,8 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   `python3 -m pip install --ignore-installed setuptools` (the Debian setuptools cannot build it).
   A record has each town center 4 times (IDs 109 and the annex parts 618–620): `read_record` skips them (#139).
 - An unknown block entity id gives "Skipping block entity with invalid type": 26.3 has no `bed` block entity (#249).
+- Parallel runs read the same new owner comment at once: just before you make a ticket from it, list the issues of
+  the last 15 minutes and reply in its thread first (3 copies of one epic: #306, #310, #313; lock: #320).
 - GitHub Actions: 2,000 free minutes per month (private repository), each job rounded up to 1 minute. CI on each PR and
   the event workflows used about 900 minutes per hour with 16 runs: PRs have no CI now, only local checks (`docs/STEERING.md`).
 - Old scenarios for local checks (do not commit, no license): GitHub raw `SiegeEngineers/genie-rs/master/crates/genie-scx/
@@ -56,6 +58,7 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   A tag with a wrong type gives "Serialization errors" (WARN), which `tools/mc_check.py` finds.
 - `tools/fetch_mcdata.py` reads the exact Mojang data from `misode/mcmeta`. PrismarineJS lags behind; its
   `data/pc/common/protocolVersions.json` has the data versions of all releases (26.3 = 5023).
+- `urllib` with a JSON body needs the header `Content-Type: application/json`, else GitHub answers 415 (#345).
 
 ## Code
 

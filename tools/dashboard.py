@@ -153,7 +153,8 @@ def api(path, method="GET", data=None):
     req = urllib.request.Request(f"https://api.github.com/repos/{REPO}/{path}", method=method,
                                  data=json.dumps(data).encode() if data is not None else None,
                                  headers={"Authorization": f"Bearer {token}",
-                                          "Accept": "application/vnd.github+json"})
+                                          "Accept": "application/vnd.github+json",
+                                          "Content-Type": "application/json"})    # else urllib sends a form: 415
     with urllib.request.urlopen(req) as f:
         return json.load(f)
 
