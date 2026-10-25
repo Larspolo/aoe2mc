@@ -84,7 +84,8 @@ def java_major(java):
 def java_for(version):
     """A java binary with the major version that the version JSON asks for (or newer)."""
     need = version_json(version).get("javaVersion", {}).get("majorVersion", 21)
-    for java in [shutil.which("java")] + sorted(glob.glob(os.path.join(CACHE, "jdk-*", "*", "bin", "java"))):
+    for java in [shutil.which("java")] + sorted(glob.glob("/usr/lib/jvm/*/bin/java")) + \
+            sorted(glob.glob(os.path.join(CACHE, "jdk-*", "*", "bin", "java"))):         # apt installs into /usr/lib/jvm
         if java and java_major(java) >= need:
             return java
     # Download a Temurin JRE from the Adoptium releases on GitHub. Do not install it system-wide.

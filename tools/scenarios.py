@@ -5,7 +5,7 @@ Make synthetic AoE2 DE scenarios for tests (no real map files necessary).
 Usage:
     python tools/scenarios.py tiny OUT.aoe2scenario
     python tools/scenarios.py gallery OUT.aoe2scenario [--kinds BOU]
-    python tools/scenarios.py stress|buildings|units|village|facing|walls OUT.aoe2scenario
+    python tools/scenarios.py stress|buildings|units|village|facing|walls|river OUT.aoe2scenario
 
 tiny:      24x24 tiles with land, shallow and deep water, a hill, buildings, units, a tree, a mine and fish.
 gallery:   every object type of the parser in a grid (B = buildings, O = other objects, U = units).
@@ -13,6 +13,7 @@ stress:    units against every side of buildings, trees, mines, cliffs and a mou
 buildings: every building type for 8 civilizations with different architecture sets (players 1-8).
 units:     every land unit on land and every ship on water.
 village:   a small map with terrain types, water, a hill, a town and animals.
+river:     a river at elevation 2 between land at elevation 2, with a dock, a bridge, a ship and fish (#165).
 facing:    units at the rotations 0, pi/4 ... 7pi/4, to compare the facing in AoE2 and in Minecraft (docs/facing.md).
 walls:     palisade, stone and fortified walls with a gate and a corner, for 3 architecture sets (players 1, 4, 7).
 """
@@ -231,8 +232,33 @@ def walls(path):
     return save(scn, path)
 
 
+def river(path):
+    """Highland at elevation 2 with a river along tile x (deep in the middle), and a sea at elevation 0 in the south."""
+    scn = new_scenario(32)
+    for t in scn.map_manager.terrain:
+        if t.y >= 28:
+            t.terrain_id = TerrainId.WATER_DEEP                   # the sea at elevation 0
+        elif t.y >= 24:
+            t.elevation = 2 - (t.y - 24) // 2                     # a slope down to the sea
+        else:
+            t.elevation = 2
+            if 10 <= t.y <= 15:
+                t.terrain_id = TerrainId.WATER_DEEP if 12 <= t.y <= 13 else TerrainId.WATER_SHALLOW
+    um = scn.unit_manager
+    um.add_unit(PlayerId.ONE, BuildingInfo.TOWN_CENTER.ID, x=16, y=20)
+    um.add_unit(PlayerId.ONE, BuildingInfo.DOCK.ID, x=6.5, y=10.5)
+    for y, piece in ((10, BuildingInfo.BRIDGE_B_BOTTOM), (12, BuildingInfo.BRIDGE_B_MIDDLE),
+                     (14, BuildingInfo.BRIDGE_B_TOP)):
+        um.add_unit(PlayerId.GAIA, piece.ID, x=24.5, y=y + 1)
+    um.add_unit(PlayerId.ONE, UnitInfo.FISHING_SHIP.ID, x=14.5, y=12.5)
+    um.add_unit(PlayerId.ONE, UnitInfo.TRANSPORT_SHIP.ID, x=16.5, y=29.5)
+    um.add_unit(PlayerId.GAIA, OtherInfo.FISH_TUNA.ID, x=10.5, y=13.5)
+    um.add_unit(PlayerId.ONE, UnitInfo.VILLAGER_MALE.ID, x=16.5, y=17.5)
+    return save(scn, path)
+
+
 MAKERS = {"tiny": tiny, "stress": stress, "buildings": buildings_map, "units": units_map, "village": village, "facing": facing,
-          "walls": walls}
+          "walls": walls, "river": river}
 
 
 def main():

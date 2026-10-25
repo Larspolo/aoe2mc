@@ -1269,8 +1269,7 @@ def helepolis(c, w, st, col, T, ctx):
 def tower(c, w, st, col, T, ctx, kind="watch"):
     """Slim shaft, a door, bands in the player color and an overhanging lookout with the roof of the set (#76)."""
     stone, mid, cc = st.stone, w // 2, (w - 1) / 2
-    hb = max({"watch": 3 * T, "guard": 3 * T + 2, "bombard": 3 * T + 2, "keep": 3 * T + 4,
-              "donjon": 3 * T + 6}.get(kind, 3 * T), 8)
+    hb = max({"watch": 3 * T, "guard": 3 * T + 2, "bombard": 3 * T + 2, "keep": 3 * T + 4}.get(kind, 3 * T), 8)
     high = kind != "watch"
     rnd = st.domes and not st.eaves and not st.torons                     # Middle Eastern towers are round
     c.box(0, w, 0, 1, 0, w, st.stone2)
@@ -1303,7 +1302,7 @@ def tower(c, w, st, col, T, ctx, kind="watch"):
         if st.eaves:                                                      # chhajja: a sloped overhang
             sl = family(st.roof)[1]
             c.walls(-2, w + 2, hb + 1, hb + 2, -2, w + 2, f"{sl}[type=top]")
-        if kind in ("keep", "donjon") or (st.eaves and high):            # a dome on the large towers
+        if kind == "keep" or (st.eaves and high):            # a dome on the large towers
             top = c.dome(cc, cc, max(1.2, w / 2 - 0.5), hb + 2, st.dome)
         else:
             c.flag(mid, hb + 2, mid, col, 3)
@@ -1333,6 +1332,47 @@ def tower(c, w, st, col, T, ctx, kind="watch"):
                          (mid, -1, "z"), (mid, -2, "z"), (-1, mid, "x"), (-2, mid, "x")):
             c.set(x, hb + 1, z, f"polished_basalt[axis={ax}]")
     c.banner(mid, hb - 4, w, col)
+
+
+def donjon(c, w, st, col, T, ctx):
+    """Donjon (Sicilians): a tall square keep on a low crenellated base, a flat top with merlons and a band in the
+    player color, a wooden hoarding, and a corner stair turret with the roof of the set."""
+    stone, mid = st.stone, w // 2
+    wood = st.wood.removesuffix("_planks")
+    wood = wood if wood in WOODS else "spruce"
+    hk = max(3 * T + 4, 9)                                                 # top of the keep walls
+    c.box(0, w, 0, 1, 0, w, st.stone2)
+    c.box(0, w, 1, 3, 0, w, st.stone2)                                     # base (talus) with a walkway
+    c.crenels(0, w, 0, w, 3, st.merlon or st.stone2)
+    c.box(1, w - 1, 1, hk, 1, w - 1, stone)                                # keep
+    c.box(mid - (w > 3), mid - (w > 3) + 1, 1, 3, w - 1, w, "air")         # gate in the base
+    c.door(mid - (w > 3), 1, w - 2, wood=wood)
+    c.banner(mid - (w > 3), 5, w - 1, col)                                 # coat of arms over the gate
+    for y in range(5, hk - 2, 3):                                          # arrow slits
+        for x, z in ((mid, 1), (1, mid), (w - 2, mid)):
+            c.set(x, y, z, "iron_bars")
+        if w > 4:
+            c.set(mid + 1, y, w - 2, "iron_bars")
+    c.walls(1, w - 1, hk - 1, hk, 1, w - 1, f"{col}_wool")                 # band in the player color
+    c.crenels(1, w - 1, 1, w - 1, hk, st.merlon or stone)
+    c.box(2, w - 2, hk - 1, hk, 2, w - 2, st.floor)                        # roof terrace with goods
+    c.set(2, hk, w - 3, "barrel[facing=up]")
+    if w >= 6:
+        x0, x1, z0, z1 = w - 3, w, 0, 3                                   # stair turret on the north-east corner
+        ht = hk + 4
+        c.box(x0, x1, 1, ht, z0, z1, stone)
+        c.walls(x0, x1, hk - 4, hk - 3, z0, z1, f"{col}_wool")
+        for y in range(6, ht - 3, 4):
+            c.set(x1 - 1, y, z0 + 1, "iron_bars")
+        if st.shape in ("gable", "hip"):                                   # the tiled hip roof of the game model
+            top = c.hip(x0 - 1, x1 + 1, z0 - 1, z1 + 1, ht - 1, "brick")
+        else:
+            top = c.roof(x0, x1, z0, z1, ht, st)
+        c.flag(x0 + 1, top + 1, z0 + 1, col, 2)
+        c.box(2, min(5, w - 2), hk - 3, hk - 2, w - 1, w, f"{wood}_slab[type=top]")   # wooden hoarding
+        c.box(2, min(5, w - 2), hk - 2, hk - 1, w - 1, w, f"{wood}_fence")
+    else:
+        c.flag(mid, hk, mid, col, 2)
 
 
 def outpost(c, w, st, col, T, ctx):
@@ -1729,53 +1769,85 @@ def pagoda(c, w, st, col, T, ctx):
 
 
 def pyramid(c, w, st, col, T, ctx):
-    """Stepped pyramid: terraces 2 blocks high, a staircase on the south side, a temple on top."""
+    """Stepped pyramid (Mayan and Aztec Wonders): steep terraces with relief panels and a painted band in the
+    player color, a wide staircase with balustrades on the south side, and a temple with a roof comb on top."""
     top_w = max(5, w // 3)
     n = (w - top_w) // 2
-    mats = [st.stone, "stone_bricks", "cracked_stone_bricks", st.stone]
+    k = 3 if w >= 15 else 2                                                # height of one terrace
     for L in range(n):
-        c.box(L, w - L, 2 * L, 2 * L + 2, L, w - L, mats[L % len(mats)])
-        c.walls(L, w - L, 2 * L + 1, 2 * L + 2, L, w - L, "chiseled_stone_bricks" if L % 2 else st.stone)
-    H = 2 * n
+        y = k * L
+        c.box(L, w - L, y, y + k, L, w - L, st.stone)
+        c.walls(L, w - L, y + k - 1, y + k, L, w - L, f"{col}_concrete")   # painted band
+        if k > 2:                                                          # relief panels
+            for i in range(L + 1, w - L - 1, 3):
+                for x, z in ((i, L), (i, w - L - 1), (L, i), (w - L - 1, i)):
+                    c.set(x, y + 1, z, "chiseled_stone_bricks")
+    H = k * n
     mid = w // 2
-    for L in range(n):                                                     # steep staircase
-        z = w - 1 - L
-        c.box(mid - 1, mid + 2, 2 * L, 2 * L + 1, z, z + 1, "stone_bricks")
-        c.box(mid - 1, mid + 2, 2 * L + 1, 2 * L + 2, z, z + 1, stair("stone_brick_stairs", "north"))
-        for x in (mid - 2, mid + 2):
-            c.box(x, x + 1, 2 * L, 2 * L + 2, z, z + 1, "polished_andesite")
+    for L in range(n):                                                     # steep staircase with balustrades
+        z, y = w - 1 - L, k * L
+        c.box(mid - 2, mid + 3, y, y + k - 1, z, z + 1, "stone_bricks")
+        c.box(mid - 2, mid + 3, y + k - 1, y + k, z, z + 1, stair("stone_brick_stairs", "north"))
+        c.box(mid - 2, mid + 3, y + k, H, z, z + 1, "air")
+        for x in (mid - 3, mid + 3):
+            c.box(x, x + 1, y, y + k + 1, z, z + 1, "polished_granite")
     a, b, y = n, w - n, H
     c.box(a - 1, b + 1, y - 1, y, a - 1, b + 1, "polished_andesite")
-    c.room(a, b, a, b, y - 1, 4, st.stone)
-    c.box(mid - 1, mid + 2, y, y + 3, b - 1, b, "air")
-    c.box(a, b, y + 3, y + 4, a, b, f"{col}_concrete")
-    c.box(a, b, y + 4, y + 5, a, b, st.stone)
-    c.box(a + 1, b - 1, y + 5, y + 8, mid, mid + 1, "chiseled_stone_bricks")    # roof comb
-    c.banner(mid - 2, y + 2, b, col); c.banner(mid + 2, y + 2, b, col)
+    th = 5
+    c.room(a, b, a, b - 1, y - 1, th, st.stone)
+    c.box(mid - 1, mid + 2, y, y + 3, b - 2, b - 1, "air")                 # temple entrance
+    c.walls(a, b, y + th - 1, y + th, a, b - 1, f"{col}_concrete")
+    c.box(a, b, y + th, y + th + 1, a, b - 1, st.stone)
+    c.box(a + 1, b - 1, y + th + 1, y + th + 5, mid, mid + 1, "chiseled_stone_bricks")    # roof comb
+    for x in (a, b - 1):
+        c.set(x, y, b - 1, "campfire")                                     # braziers
+    c.banner(mid - 2, y + 2, b - 1, col); c.banner(mid + 2, y + 2, b - 1, col)
 
 
 def temple(c, w, st, col, T, ctx):
-    """Angkor-style temple: three terraces and five towers, the middle one the tallest."""
-    for L in range(3):
-        c.box(L * 2, w - L * 2, L * 2, L * 2 + 2, L * 2, w - L * 2, st.stone if L % 2 == 0 else "cut_sandstone")
-        c.crenels(L * 2, w - L * 2, L * 2, w - L * 2, L * 2 + 2, "sandstone_wall")
+    """Angkor Wat (the Khmer Wonder): three grey stone terraces with a band in the player color and stairs on
+    all sides, a gallery on the top terrace, and five lotus-bud towers (prangs) with gold tips."""
+    stone, trim, wall = "stone_bricks", "chiseled_stone_bricks", "stone_brick_wall"
     mid = w // 2
-    for L in range(6):
-        c.box(mid - 1, mid + 2, L, L + 1, w - 1 - L, w - L, stair("sandstone_stairs", "north"))
-        c.box(mid - 1, mid + 2, L + 1, 8, w - 1 - L, w - L, "air")
-    base = 6
-    big = max(5, w // 4) | 1
-    small = max(3, big - 2)
+    step = max(1, w // 10)                           # inset of each terrace
+    for L in range(3):
+        a, b = L * step, w - L * step
+        c.box(a, b, L * 2, L * 2 + 2, a, b, stone)
+        c.walls(a, b, L * 2, L * 2 + 1, a, b, f"{col}_wool")
+        c.crenels(a, b, a, b, L * 2 + 2, wall)
+        for x in (a, b - 1):                         # pinnacles on the corners
+            for z in (a, b - 1):
+                c.set(x, L * 2 + 2, z, trim); c.set(x, L * 2 + 3, z, "gold_block")
+    top = 6
+    for L in range(top):                             # stairs up the middle of each side
+        for face, (x0, x1, z0, z1) in {"north": (mid - 1, mid + 2, w - 1 - L, w - L),
+                                       "south": (mid - 1, mid + 2, L, L + 1),
+                                       "west": (w - 1 - L, w - L, mid - 1, mid + 2),
+                                       "east": (L, L + 1, mid - 1, mid + 2)}.items():
+            c.box(x0, x1, L, L + 1, z0, z1, stair("stone_brick_stairs", face))
+            c.box(x0, x1, L + 1, top + 2, z0, z1, "air")
+
+    def tower(x0, z0, s, body, h):
+        c.room(x0, x0 + s, z0, z0 + s, top - 1, body, stone, corner=trim)
+        cx, cz = x0 + (s - 1) / 2, z0 + (s - 1) / 2
+        for k in range(h):                           # the bud: rings of stone, gold near the tip
+            r = max(0.5, (s / 2 + 0.5) * (1 - (k / h) ** 1.5) ** 0.8)
+            b = "gold_block" if k >= h - 2 else trim if k % 2 else stone
+            c.cylinder(cx, cz, r, top + body + k, top + body + k + 1, b)
+        c.box(x0 + s // 2, x0 + s // 2 + 1, top + body + h, top + body + h + 2, z0 + s // 2, z0 + s // 2 + 1,
+              "gold_block")
+        return top + body + h + 1
+
+    a = 2 * step                                     # the top terrace
+    small = max(3, (w - 2 * a) // 4) | 1
+    big = max(5, (w - 2 * a) // 2 - 1) | 1
+    for x0 in (a, w - a - small):
+        for z0 in (a, w - a - small):
+            tower(x0, z0, small, 2, max(4, w // 3))
     m0 = mid - big // 2
-    body = max(4, w // 4)
-    c.room(m0, m0 + big, m0, m0 + big, base - 1, body, "cut_sandstone")
-    c.box(mid, mid + 1, base, base + 2, m0 + big - 1, m0 + big, "air")
-    c.spire(m0, m0 + big, m0, m0 + big, base + body, "chiseled_sandstone", steep=4, tip="gold_block")
-    for tx in (7, w - 7 - small):
-        for tz in (7, w - 7 - small):
-            c.box(tx, tx + small, base, base + body - 2, tz, tz + small, "cut_sandstone")
-            c.spire(tx, tx + small, tz, tz + small, base + body - 2, "chiseled_sandstone", steep=3, tip="gold_block")
-    c.banner(mid - 1, base + 2, m0 + big, col); c.banner(mid + 1, base + 2, m0 + big, col)
+    tower(m0, m0, big, 3, max(6, w * 3 // 4))
+    c.door(mid, top, m0 + big - 1)
+    c.banner(mid - 1, top + 2, m0 + big, col); c.banner(mid + 1, top + 2, m0 + big, col)
 
 
 WONDERS = {"cathedral": cathedral, "mosque": mosque, "pagoda": pagoda, "pyramid": pyramid, "temple": temple}
@@ -1841,7 +1913,7 @@ def select(name):
         ("PAVILION", pavilion, {}), ("YURT", yurt, {}), ("HUT", hut, {}), ("TRADE_WORKSHOP", blacksmith, {}),
         ("POENARI", castle, {}), ("TOWER_OF_LONDON", krepost, {}),
         ("WONDER", wonder, {}), ("TOWN_CENTER", town_center, {}), ("KREPOST", krepost, {}),
-        ("CASTLE", castle, {}), ("FORTRESS", castle, {}), ("DONJON", tower, {"kind": "donjon"}),
+        ("CASTLE", castle, {}), ("FORTRESS", castle, {}), ("DONJON", donjon, {}),
         ("BOMBARD_TOWER", tower, {"kind": "bombard"}), ("KEEP", tower, {"kind": "keep"}),
         ("GUARD_TOWER", tower, {"kind": "guard"}), ("GATE", gate, {}), ("OUTPOST", outpost, {}),
         ("TOWER", tower, {"kind": "watch"}), ("WALL", wall_segment, {}), ("PALISADE", wall_segment, {}),
@@ -2004,7 +2076,9 @@ def place_building(E, cols, B, o, players, walls, gates):
             for z in zs:
                 E.box(x, x + 1, int(cols.wtop[x, z]) + 1, base + 1, z, z + 1, found)
 
-    ctx = {"name": name, "deck": max(1, cols.water_y + 2 - base), "diag": gates.get(id(o)) in ("diag+", "diag-"),
+    wet = area > cols.top[xs.start:xs.stop, zs.start:zs.stop]
+    water_y = int(area[wet].max()) if wet.any() else cols.water_y       # the surface of this water body (#165)
+    ctx = {"name": name, "deck": max(1, water_y + 2 - base), "diag": gates.get(id(o)) in ("diag+", "diag-"),
            "origin": (int(ux) * T if not along_z else int(uy) * T, 0)}
     if fn in (bridge, wooden_bridge):
         BRIDGE_CELLS.update((x, z) for x in xs for z in zs)
