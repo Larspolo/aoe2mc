@@ -46,7 +46,12 @@ Copy the folder `MyMapWorld` into your Minecraft `saves` folder. Open it in Mine
 The world is in creative mode. Outside the map there is only void. The world list shows a small top view of the map
 (`icon.png`).
 The file `aoe2mc.json` in the world folder lists the map size, the players and each object: AoE2 ID, name, owner,
-tile position and rotation, the UUID of the entity (units) and the footprint in blocks (buildings). A game program can use it.
+tile position and rotation, the UUID of the entity (units) and the footprint in blocks (buildings). It also has the
+height where a unit stands, for each block column ("ground", "-" for water). A game program can use it.
+
+First game: `python3 game/run.py MyMapWorld --play` starts a server on the world. Join it at the address that it prints
+and hold the carrot on a stick. Right click a villager of player 1 to select it, then right click a tree: the
+villager walks there, chops and carries the wood to the town center. The sidebar shows the wood.
 
 | Option | Default | Description |
 |---|---|---|
