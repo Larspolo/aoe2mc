@@ -15,7 +15,7 @@ from conftest import entity_ids
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("kind", ["stress", "village", "units", "buildings"])
+@pytest.mark.parametrize("kind", ["stress", "village", "units", "buildings", "river_town"])
 def test_scenario_converts(kind, tmp_path):
     make = scenarios.MAKERS[kind]
     src = str(tmp_path / f"{kind}.aoe2scenario")

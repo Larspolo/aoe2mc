@@ -910,6 +910,65 @@ def market(c, w, st, col, T, ctx):
     c.set(tx, 2, tz, "barrel[facing=up]"); c.set(tx + 2, 2, tz + 1, "chest[facing=south]")
 
 
+def caravanserai(c, w, st, col, T, ctx):
+    """Caravanserai (Hindustanis): a square inn of sandstone around an open courtyard. A checkered base, rows of
+    small arched windows, arched gates in the south and north walls, an arcade around the court, small domes
+    along the flat roof and two large domes (one gilded) on the corners. The game has one model for all sets."""
+    wall, flat, mid = "cut_sandstone", "smooth_sandstone", w // 2
+    t = max(3, (w // 4) | 1)                                               # ring depth, odd: domes sit on its axis
+    h = 5 if w >= 12 else 4
+    c.box(0, w, 0, 1, 0, w, flat)
+    c.room(0, w, 0, w, 0, h, wall)
+    c.box(t, w - t, 1, h + 1, t, w - t, "air")                             # the courtyard
+    c.walls(t - 1, w - t + 1, 1, h + 1, t - 1, w - t + 1, wall)
+    for x in range(w):                                                     # checkered base of the outer walls
+        for z in range(w):
+            if (x in (0, w - 1) or z in (0, w - 1)) and (x + z) % 2 == 0:
+                c.box(x, x + 1, 1, 2, z, z + 1, "polished_deepslate")
+            if (x in (0, w - 1) or z in (0, w - 1)) and (x + z) % 2 == 1:
+                c.box(x, x + 1, 2, 3, z, z + 1, "polished_deepslate")
+    c.walls(0, w, h, h + 1, 0, w, "blue_terracotta")                       # glazed tile band under the roof
+    for k in range(2, w - 2, 2):                                           # small arched windows, no shutters
+        for x, z in ((k, 0), (k, w - 1), (0, k), (w - 1, k)):
+            c.box(x, x + 1, 3, h - 1, z, z + 1, "glass_pane")
+            c.set(x, h - 1, z, "chiseled_sandstone")
+    for k in range(t, w - t, 2):                                           # arcade around the court
+        for x, z in ((k, t - 1), (k, w - t), (t - 1, k), (w - t, k)):
+            c.box(x, x + 1, 1, 3, z, z + 1, "air")
+    for x, face in ((0, "east"), (w - 1, "west")):                         # doors east and west
+        c.box(x, x + 1, 1, 4, mid - 2, mid + 1, "chiseled_sandstone")
+        c.door(x, 1, mid - 1, face, wood="acacia")
+    # Flat roof over the ring with a parapet, small domes along its axis and two large domes on the corners
+    c.box(0, w, h + 1, h + 2, 0, w, flat)
+    c.box(t, w - t, h + 1, h + 2, t, w - t, "air")
+    c.walls(0, w, h + 2, h + 3, 0, w, "sandstone_wall")
+    a, b = t // 2, w - 1 - t // 2
+    for k in range(a + 3, b - 1, 3):
+        for x, z in ((k, a), (k, b), (a, k), (b, k)):
+            c.dome(x, z, 1.2, h + 2, flat)
+    c.cylinder(a, a, 1.6, h + 2, h + 3, wall)                              # drum
+    top = c.dome(a, a, 2.2, h + 3, flat)
+    c.set(a, top + 1, a, "lightning_rod")
+    top = c.dome(b, b, 2.2, h + 2, "gold_block")                           # the gilded dome
+    c.set(b, top + 1, b, "lightning_rod")
+    c.dome(a, b, 1.2, h + 2, flat); c.dome(b, a, 1.2, h + 2, flat)
+    for z0, z1, zo in ((0, t, 0), (w - t, w, w - 1)):                       # arched gates south and north
+        c.box(mid - 3, mid + 3, h, h + 4, zo, zo + 1, wall)                    # the portal rises over the roof
+        c.box(mid - 3, mid + 3, h + 4, h + 5, zo, zo + 1, "chiseled_sandstone")
+        c.box(mid - 2, mid + 2, h, h + 2, zo, zo + 1, "blue_terracotta")       # tile panel over the arch
+        c.box(mid - 1, mid + 1, 1, h - 1, z0, z1, "air")
+        for z in (z0, z1 - 1):
+            c.set(mid - 2, h - 1, z, "chiseled_sandstone"); c.set(mid + 1, h - 1, z, "chiseled_sandstone")
+            c.set(mid - 1, h - 1, z, stair("sandstone_stairs", "west", half="top"))
+            c.set(mid, h - 1, z, stair("sandstone_stairs", "east", half="top"))
+    c.flag(b, h + 2, a + 2, col, 2)
+    c.banner(mid - 3, h - 1, w, col); c.banner(mid + 2, h - 1, w, col)
+    # The court: a water trough and goods of the caravans
+    c.set(mid, 1, mid, "water_cauldron[level=3]")
+    for x, z, g in ((t, t, "barrel[facing=up]"), (w - t - 1, t, "hay_block"), (t, w - t - 1, "chest[facing=east]")):
+        c.set(x, 1, z, g)
+
+
 def monastery(c, w, st, col, T, ctx):
     stone = st.stone
     c.box(0, w, 0, 1, 0, w, st.stone2)
@@ -2087,7 +2146,7 @@ def select(name):
         ("TOWER", tower, {"kind": "watch"}), ("WALL", wall_segment, {}), ("PALISADE", wall_segment, {}),
         ("FENCE", wall_segment, {}), ("BARRICADE", barricade, {}), ("BARRACKS", barracks, {}), ("ARCHERY_RANGE", archery_range, {}),
         ("STABLE", stable, {}), ("SIEGE_WORKSHOP", siege_workshop, {}), ("BLACKSMITH", blacksmith, {}),
-        ("MARKET", market, {}), ("CARAVANSERAI", market, {}), ("FEITORIA", feitoria, {}),
+        ("MARKET", market, {}), ("CARAVANSERAI", caravanserai, {}), ("FEITORIA", feitoria, {}),
         ("MONASTERY", monastery, {}), ("CHURCH", monastery, {}), ("UNIVERSITY", university, {}),
         ("FOLWARK", folwark, {}), ("MILL", mill, {}), ("LUMBER_CAMP", lumber_camp, {}),
         ("MINING_CAMP", mining_camp, {}), ("DOCK", dock, {}), ("HARBOR", harbor, {}),

@@ -45,9 +45,10 @@ Put the method after the path (`... -X PATCH`): the permission rules match the s
 
 Several runs work at the same time: the owner wants maximum use of the quota. A ticket with `in-progress`, and its PR,
 belong to the other run when the ticket or the PR changed less than 2 hours ago: do not touch them.
-After 2 hours without a change the other run is dead: take the ticket over and say so in a comment.
+After 2 hours without a change the other run is dead: take the ticket over with `python3 tools/claim.py N --takeover`
+and say so in a comment. Exit 1 means that another run took it over first: leave it.
 Exception: a PR with no new commit and no new comment for 30 minutes is stalled. Take it over at once
-(comment "Taken over by `<your branch>`: stalled."), for example when it has a merge conflict and its run waits for a
+(`python3 tools/claim.py N --takeover` with the ticket number N, then comment "Taken over by `<your branch>`: stalled."), for example when it has a merge conflict and its run waits for a
 CI event. Then read the PR comments again: if an older "Taken over by" comment of another branch is less than
 30 minutes old, leave the PR to that run.
 A PR whose ticket has no `in-progress` label is free: any run can finish and merge it (hand-off, step 6.8).
@@ -102,10 +103,12 @@ Candidates: open issues without `needs-human`, `blocked`, `epic`, `agent-status`
 `python3 tools/dashboard.py --next` prints the candidates in this order (the rule is `dashboard.candidates()`).
 If there is no candidate, go to step 8 and report "No ticket is ready".
 If the top candidate has `size:L`, split it now (`ticket` skill), then pick again.
-Claim it: add `in-progress` and comment "Started by `<your branch>`." (one line). Then read the comments of
-the ticket again. If an older "Started by" comment of another branch has no "Released" comment after it, the
-other run owns the ticket: comment "Released: claimed twice by `<your branch>`." and pick the next candidate.
-Do not remove the label: it belongs to the other run.
+Claim it with `python3 tools/claim.py N`. It pushes a unique commit to the ref `claim/N` without force, so only one
+run can win (#211). Exit 1: another run owns the ticket, pick the next candidate (do not comment).
+Exit 0: add `in-progress` and comment "Started by `<your branch>`." (one line).
+Each time you remove `in-progress` without a merge (hand-off, `blocked`, `needs-human`), run
+`python3 tools/claim.py N --release` too, else no other run can claim the ticket again.
+The workflow `claims.yml` deletes the refs when the ticket closes.
 
 ## 6. Do the ticket
 

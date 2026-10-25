@@ -96,6 +96,9 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Guardian lion statue | `stone_brick_stairs` on a `chiseled_sandstone` pedestal | `harbor` |
 | Clay pot, vase | `decorated_pot` | `harbor` |
 | Prang (Khmer lotus-bud tower) | rings of `stone_bricks` and `chiseled_stone_bricks`, `gold_block` tip | `temple`, `harbor` |
+| Checkered stone base | `polished_deepslate` in a checker pattern in the main stone | `caravanserai` |
+| Gilded dome | `gold_block` | `caravanserai` |
+| Raised portal (pishtaq) of an arched gate | wall over the roof line, `chiseled_sandstone` frame, upside-down stairs as the arch | `caravanserai` |
 | Kitchen garden | `carrots`, `potatoes`, `wheat` (age 7) on `farmland`, `spruce_fence` with a `spruce_fence_gate` | `folwark` |
 | Windmill sails | `spruce_fence` arms with `white_wool` cloth, `stripped_spruce_log` hub | `mill`, `folwark` |
 

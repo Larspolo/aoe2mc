@@ -13,6 +13,7 @@ Converts an Age of Empires II: Definitive Edition scenario (`.aoe2scenario`) int
 | `samples/unit_gallery.aoe2scenario` | Test map with every unit type |
 | `samples/gallery.aoe2scenario` | Test map: every building type, 8 civilizations |
 | `samples/test_village.aoe2scenario` | Small test map with terrain, water and a hill |
+| `samples/de-64.3.aoe2record` | A recorded AoE2 DE game (1 vs 1, Acropolis), test data for a record reader. License: `samples/de-64.3.aoe2record.LICENSE.txt` |
 | `tools/` | Tools for tests and debugging: test scenarios, world reader, 3D render, coverage report, Minecraft data and server check |
 | `tests/` | The tests (pytest) |
 | `docs/` | Design guide, roadmap, steering, coverage report and other notes |
