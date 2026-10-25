@@ -50,9 +50,11 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 ## Code
 
 - AoE2 map orientation (#23): tile (0, 0) is the left (west) corner of the screen, (max, 0) the top, (max, max)
-  the right, (0, max) the bottom (`AoE2ScenarioParser` `area.py`, `CORNERS`). Tile x goes up-right, tile y
+  the right, (0, max) the bottom (`AoE2ScenarioParser` `area.py` `CORNERS`; openage: axes NE, SE). Tile x goes up-right, tile y
   down-right. Block x = east, z = south keeps the handedness: the world is turned 45°, not mirrored. The AoE2 top
   corner is the north-east corner. A 90° turn of the grid cannot make "screen up" more north than now.
+  Gate names: `WEST_TO_EAST` and `NORTH_TO_SOUTH` are the diagonal gates. Do not trust the other names for the
+  axis: `samples/gallery` has a `NORTHWEST_TO_SOUTHEAST` gate along tile x. `plan_walls` uses the walls next to it.
 
 - The tiny scenario has only a town center, a house and a barracks. To see the golden test fail, change a
   block that these designs draw last (for example the house chimney).
