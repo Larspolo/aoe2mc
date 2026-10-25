@@ -5,7 +5,7 @@
 # so later sessions start with these tools in place. It must not fail: each step ends with `|| true`.
 # It does not read the repository. The SessionStart hook installs what changed since the snapshot.
 set -u
-SETUP_VERSION=2   # raise it with each change: the SessionStart hook compares it with /etc/aoe2mc-setup-version
+SETUP_VERSION=3   # raise it with each change: the SessionStart hook compares it with /etc/aoe2mc-setup-version
 
 # Java 25 for the Minecraft 26.3 server (tools/mc_check.py). The image has Java 21 (for 1.21.1).
 # Software Vulkan for the 26.3 client in Xvfb (tools/mc_shot.py). The image has Xvfb and ImageMagick.
@@ -16,6 +16,9 @@ SETUP_VERSION=2   # raise it with each change: the SessionStart hook compares it
 PIP="python3 -m pip install --quiet --disable-pip-version-check --root-user-action=ignore"
 $PIP --ignore-installed pillow || true
 $PIP "AoE2ScenarioParser>=0.9.8,<0.10" "nbtlib>=2.0.4,<3" "numpy>=1.26" "pytest>=8" "ruff>=0.6" || true
+# mgz reads .aoe2record files. The Debian setuptools cannot build it: a pip setuptools first.
+$PIP --ignore-installed setuptools || true
+$PIP "mgz>=1.8.51,<2" || true
 
 # Minecraft server jars in the cache of tools/mc_check.py (same file layout).
 python3 - 1.21.1 26.3 <<'EOF' || true

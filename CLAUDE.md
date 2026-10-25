@@ -18,15 +18,16 @@ The README already uses this style. Keep it.
 | Lint | `ruff check .` |
 | Fast tests (~15 s) | `python3 -m pytest` (use `python3 -m`: a `pytest` on the PATH can be another Python) |
 | Slow tests (~2 min) | `python3 -m pytest -m slow` |
-| Test scenario | `python3 tools/scenarios.py tiny OUT.aoe2scenario` (or `gallery`, `stress`, `buildings`, `units`, `village`, `facing`, `walls`, `river_town`) |
+| Test scenario | `python3 tools/scenarios.py tiny OUT.aoe2scenario` (or `gallery`, `stress`, `buildings`, `units`, `village`, `facing`, `walls`, `river_town`, `four_civs`, `battle`) |
 | Convert | `python3 aoe2mc.py IN.aoe2scenario OUTWorld --preview` |
 | Look at a world | `python3 tools/world_reader.py OUTWorld [X Y Z]` |
 | 3D image | `python3 tools/render.py building CASTLE --arch western OUT.png` (or `world OUTWorld X0 Z0 X1 Z1 OUT.png`) |
 | Check states | `tools/mcvalid.py` (`block_error`, `entity_error`, `biome_error`) |
 | Coverage of AoE2 types | `python3 tools/coverage.py OUT.md` (designs, mappings, fallbacks). Do not commit `docs/coverage.md`: CI on main does it |
+| System numbers | `python3 tools/health.py [--hours N]` (CI, setup, takeovers, conflicts, files in git; `improve` skill) |
 | Dashboard of #1 | `python3 tools/dashboard.py --dry-run` (`--next`: ticket candidates in pick order) |
 | Server check | `python3 tools/mc_check.py OUTWorld` (headless Minecraft, load errors; `--keep DIR` keeps the saved world), `python3 -m pytest -m mc` |
-| Game program | `python3 game/run.py OUTWorld` (server with RCON, type commands; `--bench N`: commands per second) |
+| Game program | `python3 game/run.py OUTWorld` (server with RCON, type commands; `--bench N`: commands per second; `--play`: gather wood) |
 | In-game screenshot | `python3 tools/mc_shot.py OUTWorld OUT.png [--at X Y Z --look YAW PITCH] [--more X,Y,Z,YAW,PITCH]` (real client, ~25 s per world) |
 | Minecraft data | `python3 tools/mc_check.py --reports VERSION` (exact, from Mojang) or `tools/fetch_mcdata.py VERSION` writes `tools/mcdata/VERSION.json` |
 | Block colors | `python3 tools/fetch_colors.py VERSION` writes `tools/mcdata/colors-VERSION.json` (for `render.py`) |
@@ -47,7 +48,8 @@ Find code by function name with Grep. Do not read the large files from start to 
   `FOOTPRINT`, `place_building()`, `plan_walls()`, `vary()`, `weather()`, `decorate()`, `barriers()`.
 - `units.py` – `classify()` (AoE2 unit name → entity description), `make_entity()`, `pretty()`.
 - `tools/` – test and debug tools (scenarios, world reader, 3D render, Minecraft data, validation).
-- `game/` – the game program (#137): `run.Game` starts a server with RCON on the world, `rcon.Rcon` sends commands.
+- `game/` – the game program (#137): `run.Game` starts a server with RCON on the world, `rcon.Rcon` sends commands,
+  `gather.Gather` lets villagers gather wood (#138: clicks, paths on `aoe2mc.json` "ground", sidebar).
 - `tests/` – pytest. `conftest.py` has the `tiny_world` fixture (one conversion per session).
 
 ## Rules of the domain

@@ -110,3 +110,39 @@ def test_shores_slope_down_to_the_water():
     col = vol[:, z, x]
     face = range(top[x, 21] + 1 - aoe2mc.MIN_Y, top[x, z + 16] - aoe2mc.MIN_Y)   # the step down to the next column
     assert all(col[y] != aoe2mc.STONE for y in face)
+
+
+def border_blocks(design, colors=("blue", "red")):
+    """{(x, y, z): state} of one --border design around a 12 x 12 tile map (water in the east)."""
+    import numpy as np
+    t = np.zeros((12, 12), int)
+    t[9:] = 1
+    cols = columns(t)
+    E = aoe2mc.Edits(cols)
+    r = aoe2mc.border(cols, design, list(colors), E)
+    x, y, z, ids, _ = (np.concatenate(p) for p in zip(*E.parts))
+    return cols, r, {(a, b, c): aoe2mc.B.states[i] for a, b, c, i in zip(x, y, z, ids)}
+
+
+def test_border_island():
+    """The floating island (#262): a rim of earth at the edge, a cone under the map that is deepest at the center."""
+    cols, r, blocks = border_blocks("island")
+    n, f = cols.n, cols.floor
+    assert r == 1 and f == int(cols.top[:n, :n].min()) - 6
+    assert blocks[(-1, int(cols.wtop[0, 20]), 20)] == "minecraft:grass_block"
+    assert blocks[(n, int(cols.wtop[n - 1, 20]), 20)] == "minecraft:sand"          # the rim holds the water
+    bottom = lambda x, z: min(y for (a, y, c) in blocks if (a, c) == (x, z))
+    assert bottom(n // 2, n // 2) < bottom(n // 2, 3) < bottom(n // 2, 0) <= f - 3
+    assert "minecraft:hanging_roots[waterlogged=false]" in blocks.values()
+
+
+def test_border_table():
+    """The map table (#262): a lip above the ground, four legs and a banner in a player color on each corner."""
+    cols, r, blocks = border_blocks("table")
+    f = cols.floor
+    assert r == 3
+    assert blocks[(-1, int(cols.wtop[0, 20]) + 1, 20)] == "minecraft:dark_oak_planks"
+    assert blocks[(-2, f - 10, -2)] == "minecraft:dark_oak_log[axis=y]"
+    banners = sorted(s for s in blocks.values() if "banner" in s)
+    assert banners == ["minecraft:blue_banner[rotation=10]", "minecraft:blue_banner[rotation=2]",
+                       "minecraft:red_banner[rotation=14]", "minecraft:red_banner[rotation=6]"]

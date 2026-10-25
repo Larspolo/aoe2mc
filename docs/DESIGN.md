@@ -34,6 +34,10 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Weapon rack, sharpening | `grindstone` | `barracks`, `granary`, `blacksmith` |
 | Training dummy | `oak_fence`, `hay_block`, `carved_pumpkin` | `barracks` |
 | Bell | `bell` | `monastery`, `town_center` |
+| Bed (inside) | `*_bed` (player color), head to the north | `house` (`furnish`) |
+| Table with a light (inside) | `*_slab[type=top]` with a `lantern` on it, a `*_stairs` stool | `house` (`furnish`) |
+| Storage (inside) | `chest` at the back wall | `house` (`furnish`) |
+| Rug | `*_carpet` | `house` (`furnish`) |
 | Loom, cloth | `loom`, wool | `church` |
 | Market goods | `barrel`, `chest`, `composter`, `hay_block`, `melon`, `pumpkin` | `market`, `dock`, `harbor` |
 | Market stall | lean-to of roof stairs on `*_fence` posts; wool awning in stripes for flat-roof sets | `market` |
@@ -47,6 +51,9 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Hoist | a log post and arm, `chain`, a hanging log | `lumber_camp` |
 | Workbench | `crafting_table` | `lumber_camp` |
 | Millstone | `grindstone` | `mill`, `mining_camp` (tools) |
+| Drive shaft of a windmill | `stripped_spruce_log[axis=y]` above the millstone | `mill` (inside) |
+| Net loom, boat workbench | `loom`, `crafting_table`, `spruce_slab` | `dock` (inside) |
+| Light in a room or a yard | `lantern` on a barrel, or hanging under a beam | `mill`, `granary`, `dock`, `lumber_camp`, `mining_camp` |
 | Ore, mined gold and stone | `gold_ore`, `raw_gold_block`, `cobblestone`, `stone`, `andesite` | `mining_camp` |
 | Mine cart track | `rail` | `mining_camp` |
 | Water trough | `cauldron` (water) | `stable` |
@@ -92,6 +99,8 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Storage | `chest`, `barrel` | `castle` (keep), `tower` |
 | Armory | `grindstone`, `smithing_table` | `castle` (keep) |
 | Light inside | `lantern` (hanging under a floor, or on the floor) | `castle` (keep), `tower` |
+| Books, study | `bookshelf`, `lectern` (with a book) | `university` |
+| Desks, light inside | `enchanting_table`, `cartography_table`, `candle` (lit, on shelves and desks), `lantern` on a `chain` (`hang()`) | `university` (`study()`) |
 | Scholar statue | `chiseled_stone_bricks` pedestal, `quartz_pillar`, `chiseled_quartz_block` | `university` |
 | Rose window | stained glass panes | `monastery` |
 | Posts of an open belfry | `stone_brick_wall` | `fortified_church` |
@@ -108,7 +117,9 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Kitchen garden | `carrots`, `potatoes`, `wheat` (age 7) on `farmland`, `spruce_fence` with a `spruce_fence_gate` | `folwark` |
 | Windmill sails | `spruce_fence` arms with `white_wool` cloth, `stripped_spruce_log` hub | `mill`, `folwark` |
 
-Add a line when a design uses a new feature block. Each new block state must pass `mcvalid`.
+Add a line when a design uses a new feature block. Put it after a line of a related feature or design, not at the
+end of the table: parallel PRs that all add at the end get a merge conflict on GitHub. Each new block state must
+pass `mcvalid`.
 
 ## 3. Some noise
 

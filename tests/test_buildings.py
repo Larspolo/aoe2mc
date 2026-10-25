@@ -111,3 +111,24 @@ def test_university_has_a_library(arch):
     buildings.place_building(E, cols, aoe2mc.B, o, {1: {"color": "blue", "arch": arch}}, set(), {})
     names = Counter(aoe2mc.B.states[i].split(":")[1].split("[")[0] for i in np.concatenate([p[3] for p in E.parts]))
     assert names["bookshelf"] >= 4 and names["lectern"] >= 1
+
+
+@pytest.mark.parametrize("arch", sorted(buildings.ARCH))
+def test_house_is_furnished(arch):
+    """A house (#249) has a bed in the player color and a lantern inside, and the cells inside the door stay free."""
+    for v in range(4):
+        cols = flat_columns()
+        E = aoe2mc.Edits(cols)
+        o = dict(kind="B", name="HOUSE", player=1, x=8.0 + v % 2, y=8.0 + v // 2, rotation=0.0, hero=False,
+                 garrisoned=False)
+        buildings.place_building(E, cols, aoe2mc.B, o, {1: {"color": "blue", "arch": arch}}, set(), {})
+        last = {}
+        for x, y, z, ids, _ in E.parts:
+            for p in zip(x.tolist(), y.tolist(), z.tolist(), ids.tolist()):
+                last[p[:3]] = aoe2mc.B.states[p[3]].split(":")[1]
+        names = Counter(s.split("[")[0] for s in last.values())
+        assert names["blue_bed"] == 2 and names["lantern"] >= 1, (arch, v)
+        for (x, y, z), s in last.items():
+            if s.endswith("_door[facing=south,half=lower,hinge=left,open=false]"):
+                inside = [last.get((x, y, z - k), "air") for k in (1, 2)]
+                assert all(t in ("air", "barrier") or t.endswith("_carpet") for t in inside), (arch, v, inside)

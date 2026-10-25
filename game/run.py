@@ -5,11 +5,13 @@ The game program: start a vanilla server on a converted world, with RCON on loca
 Usage:
     python3 game/run.py WORLD [--version 26.3]    # type commands (without "/"); Ctrl-C stops the server
     python3 game/run.py WORLD --bench 1000        # measure the commands per second through RCON, then stop
+    python3 game/run.py WORLD --play              # villagers gather wood (game/gather.py); Ctrl-C stops
 
 The server plays the world in place (the game changes it). Server files (eula, properties, logs) go to .cache/.
 Platform choice: docs/research/gameplay.md (#135).
 """
 import argparse
+import json
 import os
 import secrets
 import shutil
@@ -34,11 +36,11 @@ class Game:
     def start(self):
         jar, java = mc_check.server_jar(self.version), mc_check.java_for(self.version)
         self.folder = tempfile.mkdtemp(dir=mc_check.workdir())
-        self.port, password = mc_check.free_port(), secrets.token_hex(16)
+        self.port, self.game_port, password = mc_check.free_port(), mc_check.free_port(), secrets.token_hex(16)
         with open(os.path.join(self.folder, "eula.txt"), "w") as f:
             f.write("eula=true\n")
         with open(os.path.join(self.folder, "server.properties"), "w") as f:
-            f.write(f"online-mode=false\nserver-ip=127.0.0.1\nserver-port={mc_check.free_port()}\n"
+            f.write(f"online-mode=false\nserver-ip=127.0.0.1\nserver-port={self.game_port}\n"
                     f"enable-rcon=true\nrcon.port={self.port}\nrcon.password={password}\n"
                     "spawn-protection=0\nmax-tick-time=-1\nenable-query=false\nbroadcast-rcon-to-ops=false\n")
         # --universe and --world: the server uses the world folder where it is, not a copy
@@ -91,12 +93,29 @@ def bench(game, n=1000):
     return n / (time.perf_counter() - t)
 
 
+def play(game, world):
+    import gather
+    with open(os.path.join(world, "aoe2mc.json")) as f:
+        data = json.load(f)
+    game.forceload()
+    for _ in range(60):                              # entities load in other threads
+        g = gather.Gather(game, data).setup()
+        if len(g.villagers) == len(g.units):
+            break
+        time.sleep(1)
+    print(f"Join the server localhost:{game.game_port} (Minecraft {game.version}, multiplayer, direct connection).\n"
+          f"{len(g.villagers)} villagers of player 1. Hold the carrot on a stick: right click a villager to select it,\n"
+          "then right click a tree. Ctrl-C stops.", file=sys.stderr)
+    g.run()
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0].strip(),
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("world")
     ap.add_argument("--version", default=mc_check.DEFAULT_VERSION, help="Minecraft version of the world")
     ap.add_argument("--bench", type=int, metavar="N", help="send N commands, print the commands per second, stop")
+    ap.add_argument("--play", action="store_true", help="play: villagers of player 1 gather wood (aoe2mc.json)")
     a = ap.parse_args(argv)
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
         sys.exit(f"no level.dat in {a.world}")
@@ -106,6 +125,9 @@ def main(argv=None):
         print(f"Server is ready. RCON on 127.0.0.1:{game.port}. Ctrl-C stops the server.", file=sys.stderr)
         if a.bench:
             print(f"{bench(game, a.bench):.0f} commands per second through RCON")
+            return
+        if a.play:
+            play(game, a.world)
             return
         while True:
             line = input("> ").strip().lstrip("/")

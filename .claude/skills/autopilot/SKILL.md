@@ -111,7 +111,21 @@ For each open issue without a priority label:
 Candidates: open issues without `needs-human`, `blocked`, `epic`, `agent-status`, `in-progress`, and whose
 "Depends on: #n" issues are all closed. Order: `P0`, `P1`, `P2`, `P3`, then the lowest issue number.
 `python3 tools/dashboard.py --next` prints the candidates in this order (the rule is `dashboard.candidates()`).
-If there is no candidate, go to step 8 and report "No ticket is ready".
+Epics first: an epic is never a candidate, so its rest of the work needs sub-issues. Before you claim a ticket, look
+at the open epics (label `epic`, not `needs-human`) with a higher priority than the top candidate and no open
+sub-issue. For each one, read its acceptance criteria. Close the epic with a comment when the closed sub-issues meet
+all criteria (name the evidence for each). Else make one sub-issue (same priority) for the criteria that an agent
+can do. A criterion that needs the owner stays on the epic. Then pick again (#176, #155 waited while P3 tickets ran).
+Refill the queue when fewer candidates are ready than runs are active (tickets with `in-progress` that changed in
+the last 30 minutes), so that parallel runs always find work. Do this at most once per run, in about 10 minutes:
+1. Split each `size:L` ticket without open sub-issues (`ticket` skill), also when it is not a candidate yet.
+2. For each open epic whose sub-issues are all closed: make a sub-issue for each acceptance criterion that is
+   still open and that an agent can do. A criterion that needs the owner stays on the epic.
+3. Make up to 5 new tickets for the remaining goals of the open epics and `docs/ROADMAP.md`, and for the
+   fallbacks in `docs/coverage.md`. Priority: that of the epic, else `P3`. Never `P0` or `P1`, except for
+   a `tooling` ticket that blocks other tickets. Look for duplicates first.
+4. Prefer tickets that depend on no open ticket and change other files than the claimed tickets (fewer conflicts).
+Then pick again. If there is no candidate, go to step 8 and report "No ticket is ready".
 If the top candidate has `size:L`, split it now (`ticket` skill), then pick again.
 Claim it with `python3 tools/claim.py N`. It pushes a unique commit to the ref `claim/N` without force, so only one
 run can win (#211). Exit 1: another run owns the ticket, pick the next candidate (do not comment).
@@ -141,8 +155,9 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
    add `blocked` or `needs-human` and `hold`, remove `in-progress`, and go to step 8.
 10. Merge conflict (another PR changed the same lines) → merge `origin/main` into the branch, solve the
     conflict, verify again, push. Do not rebase or force-push a branch that has an open PR.
-    `docs/DESIGN.md` merges by itself (`union` in `.gitattributes`): remove
-    a line that is now there twice in two versions (`git diff origin/main -- docs/`).
+    `docs/DESIGN.md` merges by itself in a local merge (`union` in `.gitattributes`; GitHub ignores it, so the
+    PR is "dirty" until you merge locally): remove a line that is now there twice in two versions
+    (`git diff origin/main -- docs/`).
 11. CI green → the Automerge workflow merges. Add label `hold` to the PR if it must not merge yet.
 
 If the ticket is wrong or not possible: comment why, add `needs-human`, remove `in-progress`. Do not merge
@@ -177,7 +192,8 @@ GitHub sends this comment to the owner as a notification. Do not comment when no
 ## 9. Improve the process (before the commit in step 6)
 
 Answer these questions. Do the action for each "yes". Spend little time.
-- Did something cost you time that one line of text prevents? → add the line to `docs/LEARNINGS.md`.
+- Did something cost you time that one line of text prevents? → add the line to `docs/LEARNINGS.md`, at the end of
+  its section. Do not change other lines there, also not to stay below 80 lines: the `improve` skill does that.
 - Was an instruction in `CLAUDE.md` or a skill wrong or missing? → correct it.
 - Did you do the same kind of task for the second time? → write a skill for it in `.claude/skills/`.
 - Would a test or tool have found a problem earlier? → make a `tooling` ticket (`P1` if it blocks other tickets).
@@ -199,7 +215,9 @@ If the argument asks for more than 1 ticket, go back to step 2 after step 8 (fin
 feedback). In a
 cloud session, reset the branch first: `git fetch origin main && git checkout -B <branch> origin/main`. Then push with
 `git fetch origin <branch> && git push --force-with-lease origin <branch> && git branch -u origin/<branch>`
-(a plain `git push -u origin <branch>` when the branch is not on the remote).
+(a plain `git push -u origin <branch>` when the branch is not on the remote). If the auto mode denies the force push
+("Git Destructive"), do not ask: `git merge --no-edit origin/<branch>` (its commits are on main already, so the PR diff
+stays the same), then `git push origin HEAD:<branch>`.
 The session branch can carry only one open PR: do the next ticket in a local commit, and push it only when the PR
 of the last ticket is merged or closed (`/pulls?head=Larspolo:<branch>&state=open` is empty). Else a push replaces
 the open PR. After `checkout -B` the upstream is

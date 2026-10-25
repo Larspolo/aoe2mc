@@ -74,7 +74,7 @@ Not planned: option E.
 ## Follow-up tickets (milestone 1)
 
 - #134 Add a short AoE2 DE recorded game to `samples/` (owner, `needs-human`).
-- #139 Convert the start state of a recorded game (`.aoe2record`) with `mgz` (depends on #134).
+- #139 Convert the start state of a recorded game (`.aoe2record`) with `mgz` (depends on #134). Done: `aoe2mc.read_record`.
 
 ## Sources
 
