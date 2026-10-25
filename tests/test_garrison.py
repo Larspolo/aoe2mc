@@ -57,16 +57,26 @@ def test_garrisoned_units_stand_next_to_the_holder(tmp_path):
     assert len(villagers(w)) == 1
 
 
-def test_garrisoned_units_ride_a_ship_with_a_free_seat():
+def test_garrisoned_units_stack_on_the_seats_of_a_ship():
+    """A ship takes its garrison in stacks of at most aoe2mc.CHAIN units per seat; the rest is on its name tag (#382)."""
     cols = columns([[1] * 8] * 8)
     o = dict(kind="U", player=1, x=4, y=4, rotation=0.0, hero=False, garrisoned=False, holder=None)
     objects = [dict(o, name="FISHING_SHIP", ref=1), dict(o, name="TRANSPORT_SHIP", ref=2)]
-    objects += [dict(o, name="ARCHER", ref=10 + i, garrisoned=True, holder=1 + i % 2) for i in range(4)]
+    objects += [dict(o, name="MAN_AT_ARMS", ref=10 + i, garrisoned=True, holder=1) for i in range(2)]
+    objects += [dict(o, name="ARCHER", ref=20 + i, garrisoned=True, holder=2) for i in range(10)]
     stats = Counter()
     out = aoe2mc.plan_units(objects, {}, cols, aoe2mc.np.random.default_rng(1), stats)
-    ships = [nbt for ents in out.values() for nbt, *_ in ents]
+    ships = {str(nbt["id"]): nbt for ents in out.values() for nbt, *_ in ents}
     assert len(ships) == 2
-    seats = {str(s["id"]): len(s["Passengers"]) for s in ships}
-    assert seats == {"minecraft:boat": 2, "minecraft:chest_boat": 1}   # the fishing ship had one free seat
-    assert stats["units (garrisoned, in a ship)"] == 1
-    assert stats["units (garrisoned, no free seat in the ship, skipped)"] == 3
+
+    def chain(e):
+        return [e] + (chain(e["Passengers"][0]) if e.get("Passengers") else [])
+    fishing, transport = ships["minecraft:boat"], ships["minecraft:chest_boat"]
+    assert [len(chain(s)) for s in fishing["Passengers"]] == [2, 1]      # crew + 1 unit, and 1 unit on the free seat
+    stack = chain(transport["Passengers"][0])                             # the crew and 3 archers
+    assert [str(e["id"]) for e in stack] == ["minecraft:villager"] + ["minecraft:skeleton"] * 3
+    assert all(e["ArmorItems"][3].get("id") for e in stack[1:])          # skeletons burn in the sun: a helmet
+    assert all("CustomName" in e for e in stack)
+    assert "(+7)" in str(stack[0]["CustomName"])                          # the crew carries the ship's name tag
+    assert stats["units (garrisoned, in a ship)"] == 5
+    assert stats["units (garrisoned, ship full, counted on its name tag)"] == 7

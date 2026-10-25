@@ -96,7 +96,7 @@ villager walks there, chops and carries the wood to the town center. The sidebar
 | `--scenario N` | all | Campaign: convert only scenario N (1 = the first) |
 | `--orientation C` | `ne` | Minecraft corner (`ne`, `se`, `sw`, `nw`) of the top corner of the AoE2 screen. The map, the building fronts and the units turn with it. |
 | `--spawn X,Z` | start view or town center of player 1 | Player spawn in AoE2 tiles. Without it the spawn is the start view of player 1, else the front of its first town center, else the map center. |
-| `--garrison {outside,skip}` | `outside` | Garrisoned units: `outside` puts each unit next to the building or unit that holds it (or in its ship, if a seat is free). `skip` does not convert them. |
+| `--garrison {outside,skip}` | `outside` | Garrisoned units: `outside` puts each unit next to the building or unit that holds it (a ship carries its units in stacks of up to 4 on each boat seat). `skip` does not convert them. |
 | `--border {diorama,island,natural,table,wall,none}` | `diorama` | Edge outside the map. `diorama`: the map stands on a plinth of stone bricks. `island`: the map floats on a cone of rock and earth. `natural`: the ground slopes down into a ring of sea. `table`: the map lies on a dark oak table with legs, lanterns and a banner in a player color on each corner. `wall`: a low wall with a tower in a player color at each corner. `none`: no blocks. All keep the vanilla world border at the map edge. Images: `docs/images/border-*.png`. |
 
 ## Campaigns
@@ -258,7 +258,8 @@ Read these files first:
 ## Known limits
 
 - Object types that the parser does not know (new IDs) are skipped.
-- Garrisoned units stand next to their holder. A ship takes them only if its boat has a free seat.
+- Garrisoned units stand next to their holder. A ship stacks them on its boat seats: each unit rides the unit below it,
+  up to 4 units on a seat. The name tag of a full ship shows the rest, for example "Transport Ship (+6)".
 - The direction that units face is not checked in the game yet. See [`docs/facing.md`](docs/facing.md) for the check.
 - In scenarios older than version 1.56 the architecture set field can be wrong, so the program uses the civilization.
 - Unique buildings use the design of a similar building (for example krepost → small castle).
