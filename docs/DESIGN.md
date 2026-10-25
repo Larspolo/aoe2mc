@@ -40,12 +40,13 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Hay, fodder | `hay_block` | `stable`, `barracks`, `granary` |
 | Water trough | `cauldron` (water) | `stable` |
 | Banner, flag | `*_banner` (player color), `Canvas.flag` | most designs |
+| Player color band (walls, gate towers) | `*_wool` (player color), one row | `wall_segment`, `gate` |
 | Fence, pen | `*_fence` | `stable`, `market`, `outpost`, `wall_segment` |
 | Gate of a pen | `*_fence_gate` | `pasture` |
 | Wheel | open `*_trapdoor` on the side | `cart` |
 | Tent canvas | `white_wool`, a valance of wool in the player color | `army_tent`, `command_tent` |
 | Thatch | `hay_block` | `hut`, `settlement` |
-| Palisade stakes | `*_log[axis=y]` of two heights | `wooden_fort` |
+| Palisade stakes | `*_log[axis=y]` of two heights, `spruce_fence` tips | `wooden_fort`, `wall_segment`, `gate` |
 | Gold statue, finial | `gold_block` | `buddha_statue`, `stupa`, `monument` |
 | Painted wood (torii) | `red_concrete`, black top beam | `torii` |
 | Climbing plants | `vine`, `azalea_leaves` | `pillar` |

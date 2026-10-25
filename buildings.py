@@ -1142,36 +1142,61 @@ def outpost(c, w, st, col, T, ctx):
     c.flag(0, hp + 2, 0, col, 1)
 
 
+def wall_shape(w, ctx, every=3):
+    """(x0, x1, z0, z1) of the wall body on a wall tile, and whether the tile has a pillar: wall ends, corners,
+    crossings and every 3rd tile of a straight line get a pillar of the full tile, the others a thinner wall."""
+    (n, s, wst, e), (gx, gz) = ctx["neighbours"], ctx["origin"]
+    t = w // 4
+    if (n or s) and not (wst or e):
+        return (t, w - t, 0, w), (gz // w) % every == 0 or not (n and s)
+    if (wst or e) and not (n or s):
+        return (0, w, t, w - t), (gx // w) % every == 0 or not (wst and e)
+    return (0, w, 0, w), True
+
+
 def wall_segment(c, w, st, col, T, ctx):
-    """One wall tile. ctx: name, neighbours (N, S, W, E booleans), global block offset."""
-    name, nb, (gx, gz) = ctx["name"], ctx["neighbours"], ctx["origin"]
+    """One wall tile. ctx: name, neighbours (N, S, W, E booleans), global block offset.
+    Like the game: a wall between square pillars that are higher and wider, with a band in the player color
+    at the base of the pillars. Palisades: a row of pointed stakes of two heights."""
+    name, (gx, gz) = ctx["name"], ctx["origin"]
     if "FENCE" in name:
         return fence(c, w, st, col, T, ctx)
+    (x0, x1, z0, z1), pillar = wall_shape(w, ctx)
     if "PALISADE" in name:
-        h = T + 1
-        c.box(0, w, 1, h + 1, 0, w, "spruce_log")
-        for x in range(w):
-            for z in range(w):
-                if (x + gx + z + gz) % 2 == 0:
-                    c.set(x, h + 1, z, "spruce_fence")
+        h = T + (2 if "FORTIFIED" in name else 1)
+        if pillar:                                    # a square palisade tower
+            x0, x1, z0, z1 = 0, w, 0, w
+            h += 1
+        if "FORTIFIED" in name:
+            c.box(x0, x1, 1, 2, z0, z1, st.stone2)    # stone foundation
+        for x in range(x0, x1):
+            for z in range(z0, z1):
+                top = h - (x + gx + 2 * (z + gz)) % 3 // 2
+                c.box(x, x + 1, 1 + ("FORTIFIED" in name), top + 1, z, z + 1, "spruce_log[axis=y]")
+                c.set(x, top + 1, z, "spruce_fence")  # the pointed tip of the stake
+        if pillar and w >= 4:
+            c.box(x0 + 1, x1 - 1, h - 1, h + 2, z0 + 1, z1 - 1, "air")
+            c.box(x0 + 1, x1 - 1, h - 1, h, z0 + 1, z1 - 1, "spruce_planks")
         wall_banners(c, w, ctx, h - 1, col)
         return
     fort = any(k in name for k in ("FORTIFIED", "CITY", "FORT_", "SEA_WALL"))
     h = T + (3 if fort else 2)
-    stone = (st.merlon or st.stone) if not fort else st.accent
-    c.box(0, w, 1, h + 1, 0, w, st.stone)
+    cap = st.accent if fort else (st.merlon or st.stone)
+    c.box(x0, x1, 1, h + 1, z0, z1, st.stone)
     if fort:
-        c.box(0, w, h, h + 1, 0, w, stone)
-    n, s, wst, e = nb
+        c.box(x0, x1, h, h + 1, z0, z1, st.accent)
+    for x in range(x0, x1):                           # merlons on the two long sides of the walkway
+        for z in range(z0, z1):
+            if (x + gx + z + gz) % 2 == 0 and (z in (z0, z1 - 1) if x1 - x0 == w else x in (x0, x1 - 1)):
+                c.set(x, h + 1, z, cap)
+    if pillar:
+        ph = h + 2
+        c.box(0, w, 1, ph + 1, 0, w, st.stone)
+        c.walls(0, w, 2, 3, 0, w, f"{col}_wool")      # the band in the player color
+        c.box(0, w, ph, ph + 1, 0, w, st.accent)
+        if w >= 3:
+            c.crenels(0, w, 0, w, ph + 1, cap, gx, gz)
     wall_banners(c, w, ctx, h - 1, col)
-    for x in range(w):                                   # merlons only on the open sides
-        if (x + gx) % 2 == 0:
-            if not n: c.set(x, h + 1, 0, stone)
-            if not s: c.set(x, h + 1, w - 1, stone)
-    for z in range(w):
-        if (z + gz) % 2 == 0:
-            if not wst: c.set(0, h + 1, z, stone)
-            if not e: c.set(w - 1, h + 1, z, stone)
 
 
 def fence(c, w, st, col, T, ctx):
@@ -1224,21 +1249,31 @@ def gate(c, w, st, col, T, ctx):
     z0, z1 = 0, T
     if "PALISADE" in name:
         h = T + 1
-        c.box(0, w, 1, h + 1, z0, z1, "spruce_log")
+        for x in range(w):
+            for z in range(z0, z1):
+                top = h + (2 if x < T or x >= w - T else 0) - (x + 2 * z) % 3 // 2
+                c.box(x, x + 1, 1, top + 1, z, z + 1, "spruce_log[axis=y]")
+                c.set(x, top + 1, z, "spruce_fence")
         c.box(T, w - T, 1, 4, z0, z1, "air")
         c.box(T, w - T, 4, h + 1, z0, z1, "stripped_spruce_log[axis=x]")
-        c.flag(T - 1, h + 1, z1 // 2, col, 2); c.flag(w - T, h + 1, z1 // 2, col, 2)
+        c.box(T, w - T, 4, 5, z0, z0 + 1, "iron_bars")                     # the raised grille
+        c.flag(T - 1, h + 3, z1 // 2, col, 2); c.flag(w - T, h + 3, z1 // 2, col, 2)
         return
     fort = any(k in name for k in ("FORTIFIED", "CITY", "FORT_"))
     h = T + (3 if fort else 2)
     th = h + 3
+    cap = st.accent if fort else (st.merlon or st.stone)
     c.box(0, w, 1, h + 1, z0, z1, st.stone)
     c.box(T, w - T, 1, 5, z0, z1, "air")
-    c.box(T, w - T, 4, 5, z0, z0 + 1, "iron_bars")
-    c.crenels(T, w - T, z0, z1, h + 1, (st.merlon or st.stone))
-    for x0 in (0, w - T):
+    c.box(T, w - T, 4, 5, z0, z0 + 1, "iron_bars")                         # the raised portcullis
+    c.box(T, w - T, 4, 5, z1 - 1, z1, "iron_bars")
+    c.crenels(T, w - T, z0, z1, h + 1, cap)
+    for x0 in (0, w - T):                                                   # the gate towers
         c.box(x0, x0 + T, 1, th, z0, z1, st.stone)
-        c.crenels(x0, x0 + T, z0, z1, th, (st.merlon or st.stone))
+        c.walls(x0, x0 + T, 2, 3, z0, z1, f"{col}_wool")
+        c.box(x0, x0 + T, th - 1, th, z0, z1, st.accent)
+        c.crenels(x0, x0 + T, z0, z1, th, cap)
+        c.flag(x0 + T // 2, th, z1 // 2, col, 2)
     c.banner(T // 2, h, z1, col); c.banner(w - T + T // 2, h, z1, col)
 
 
