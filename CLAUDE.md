@@ -18,7 +18,7 @@ The README already uses this style. Keep it.
 | Lint | `ruff check .` |
 | Fast tests (~15 s) | `python3 -m pytest` (use `python3 -m`: a `pytest` on the PATH can be another Python) |
 | Slow tests (~2 min) | `python3 -m pytest -m slow` |
-| Test scenario | `python3 tools/scenarios.py tiny OUT.aoe2scenario` (or `gallery`, `stress`, `buildings`, `units`, `village`, `facing`, `walls`, `river_town`, `four_civs`, `battle`) |
+| Test scenario | `python3 tools/scenarios.py tiny OUT.aoe2scenario` (or `gallery`, `stress`, `buildings`, `units`, `village`, `facing`, `walls`, `river` (raised river with dock, bridge, boats), `river_town`, `four_civs`, `battle`) |
 | Convert | `python3 aoe2mc.py IN.aoe2scenario OUTWorld --preview` |
 | Look at a world | `python3 tools/world_reader.py OUTWorld [X Y Z]` |
 | 3D image | `python3 tools/render.py building CASTLE --arch western OUT.png` (`--cut 3`: the rooms inside; or `world OUTWorld X0 Z0 X1 Z1 OUT.png`) |
@@ -47,7 +47,7 @@ Find code by function name with Grep. Do not read the large files from start to 
 - `buildings.py` – `Style` and `ARCH` (9 architecture sets), `CIV_ARCH`, `Canvas` (drawing tools: `room`,
   `timber_room`, `roof`, `gable`, `hip`, `dome`, `cylinder` ...), one function per design, `select()` (name → design),
   `FOOTPRINT`, `place_building()`, `plan_walls()`, `vary()`, `weather()`, `decorate()`, `barriers()`.
-- `scx.py` – reader of old scenarios (`.scx` format 1.21): map, terrain, elevation, players (#311).
+- `scx.py` – reader of old scenarios (`.scx` format 1.21): map, players, objects (#311); `aoe2mc.read_scx` converts it (#312).
 - `units.py` – `classify()` (AoE2 unit name → entity description), `make_entity()`, `pretty()`.
 - `tools/` – test and debug tools (scenarios, world reader, 3D render, Minecraft data, validation).
 - `game/` – the game program (#137): `run.Game` starts a server with RCON on the world, `rcon.Rcon` sends commands,

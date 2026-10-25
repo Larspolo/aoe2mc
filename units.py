@@ -48,14 +48,15 @@ INVISIBLE = (("MAP_REVEAL", "map revealer"), ("INVISIBLE_OBJECT", "invisible obj
              ("PLACEHOLDER", "placeholder"), ("DISABLED", "disabled unit"), ("OUTLW", "unused unit"),
              ("RFARC", "unused unit"))
 
-SKIP = ("BUTTERFLY",)
 FLYING = {   # flying birds -> mob; it floats FLY_HEIGHT blocks above the ground (NoGravity)
     "MACAW": ("parrot", 0), "FLAMING_BIRD": ("parrot", 0),                     # red parrot
     "FALCON": ("parrot", 4), "HAWK": ("parrot", 4), "VULTURE": ("parrot", 4),  # gray parrot
     "CONDOR": ("parrot", 4), "SEAGULLS": ("parrot", 4),
     "RAVEN": ("bat", None), "OWL": ("bat", None),
-}
+    "BUTTERFLY1": ("bee", None), "BUTTERFLY2": ("bee", None), "BUTTERFLY3": ("bee", None),   # no butterfly mob:
+}                                                                       # the bee is the nearest small insect
 FLY_HEIGHT = 6
+FLY_LOW = {"minecraft:bee": 2}  # insects fly near the flowers
 JOKES = {   # joke and special units -> entity
     "TREASURE_CHEST": lambda: vehicle("chest_minecart", []),
     "TORCH_": lambda: mob("armor_stand", Invisible=Byte(1), ShowArms=Byte(1), HandItems=hands("torch")),
@@ -372,11 +373,11 @@ def animal(n):
 
 def classify(n, hero=False):
     """Return the entity description for unit name n, or None to skip it."""
-    if invisible(n) or has(n, *SKIP):
+    if invisible(n):
         return None
     if n in FLYING:
         kind, variant = FLYING[n]
-        return mob(kind, NoGravity=Byte(1), **({"Variant": Int(variant)} if kind == "parrot" else {"BatFlags": Byte(0)}))
+        return mob(kind, NoGravity=Byte(1), **({"Variant": Int(variant)} if kind == "parrot" else {"BatFlags": Byte(0)} if kind == "bat" else {}))
     joke = next((f for k, f in JOKES.items() if k in n), None)
     if joke:
         return joke()
