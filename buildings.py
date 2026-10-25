@@ -1160,6 +1160,8 @@ def monastery(c, w, st, col, T, ctx):
     hn = max(5, round(w * 0.5))
     t = 3 if w < 12 else 4
     c.room(x0, x1, 1, w, 0, hn, stone, st.floor)
+    furnish(c, x0 + 1, x1 - 1, 2, w - 1, 1, "mosque" if st.domes else "shrine" if st.shape == "asian" else "chapel", st,
+            aisle=w // 2)
     for z in range(3, w - t, 3):                                          # tall windows
         c.box(x0, x0 + 1, 2, hn - 1, z, z + 1, "yellow_stained_glass_pane")
         c.box(x1 - 1, x1, 2, hn - 1, z, z + 1, "light_blue_stained_glass_pane")
@@ -1220,6 +1222,7 @@ def fortified_church(c, w, st, col, T, ctx):
     c.room(tx0, tx1, tz0, tz1, 0, h, wall, st.floor)
     c.box(nx0 + 1, nx1 - 1, 1, h + 1, nz0 + 1, nz1 - 1, "air")
     c.box(tx0 + 1, tx1 - 1, 1, h + 1, tz0 + 1, tz1 - 1, "air")
+    furnish(c, nx0 + 1, nx1 - 1, nz0 + 1, nz1 - 1, 1, "chapel", st, aisle=(S(3) + w - S(3)) // 2 + 1)
     c.gable(tx0 - 1, tx1 + 1, tz0 - 1, tz1 + 1, h + 1, roof, fill=(tx0, tx1, tz0, tz1, wall), axis="x")
     ridge = c.gable(nx0 - 1, nx1 + 1, nz0 - 1, nz1 + 1, h + 1, roof, fill=(nx0, nx1, nz0, nz1, wall), axis="z")
     for x, z in ((nx0, (nz0 + nz1) // 2 + 2), (nx1 - 1, (nz0 + nz1) // 2 + 2)):
@@ -1351,6 +1354,47 @@ def library(c, x0, x1, z, rows):
     c.box(x0, x1, 1, 3, z, z + 1, "bookshelf")
     for x in range(x0 + 1, x1 - 1, 3):
         c.set(x, 1, z + min(2, rows), "lectern[facing=north,has_book=true,powered=false]")
+
+
+def furnish(c, x0, x1, z0, z1, y, kind, st, aisle=None):
+    """Furniture of a hall of worship (#253): the room inside the walls is x0..x1-1, z0..z1-1, the floor blocks
+    are at y-1. The altar (chapel), the mihrab (mosque) or the statue (shrine) is at the back (z0), the main door
+    in the south wall. The aisle (default: the middle) and the row in front of the door stay free. Lit candles
+    and lanterns light the room."""
+    if x1 - x0 < 3 or z1 - z0 < (2 if kind == "shrine" else 4):
+        return
+    mid = (x0 + x1 - 1) // 2 if aisle is None else aisle
+    wood = st.wood.replace("_planks", "")
+    wood = wood if wood in WOODS else "spruce"
+    candles = "candle[candles=3,lit=true,waterlogged=false]"
+    lantern = "lantern[hanging=false,waterlogged=false]"
+    for x in (x0, x1 - 1):                                                # lanterns in the back corners
+        c.set(x, y, z0, lantern)
+    if kind == "mosque":
+        c.box(x0, x1, y, y + 1, z0 + 1, z1 - 1, "red_carpet")              # prayer carpets in rows
+        for z in range(z0 + 2, z1 - 1, 3):
+            c.box(x0, x1, y, y + 1, z, z + 1, "white_carpet")
+        c.box(mid, mid + 1, y, y + 2, z0, z0 + 1, st.dome)                # mihrab: a tiled niche in the qibla wall
+        c.set(mid - 1, y, z0, candles)
+        if mid + 3 < x1:                                                  # minbar: a stair to the west of it
+            c.set(mid + 1, y, z0, stair(f"{wood}_stairs", "east"))
+            c.set(mid + 2, y, z0, f"{wood}_planks"); c.set(mid + 2, y + 1, z0, stair(f"{wood}_stairs", "east"))
+        c.set(mid, y, z0 + 2, "lectern[facing=south,has_book=true,powered=false]")
+        return
+    if kind == "shrine":
+        c.set(mid, y, z0, "chiseled_stone_bricks")                         # statue with a gold head
+        c.set(mid, y + 1, z0, "gold_block")
+        for x in (mid - 1, mid + 1):
+            c.set(x, y, z0, candles)
+        return
+    a0, a1 = max(x0, mid - 1), min(x1, mid + 2)                            # chapel: altar with candles
+    c.box(a0, a1, y, y + 1, z0, z0 + 1, "chiseled_stone_bricks")
+    c.set(a0, y + 1, z0, candles); c.set(a1 - 1, y + 1, z0, candles)
+    c.set(mid, y, z0 + 1, "lectern[facing=south,has_book=true,powered=false]")
+    for z in range(z0 + 3, z1 - 1, 2):                                    # pews: the backrest is on the south side
+        for x in range(x0, x1):
+            if x != mid:
+                c.set(x, y, z, stair(f"{wood}_stairs", "south"))
 
 
 def mill(c, w, st, col, T, ctx):
@@ -2133,6 +2177,7 @@ def cathedral(c, w, st, col, T, ctx):
     c.room(1, w - 1, tz0, tz1, 0, hn, stone, st.floor)
     c.box(x0 + 1, x1 - 1, 1, hn + 1, tz0, tz1, "air")
     c.box(2, w - 2, 1, hn + 1, tz0 + 1, tz1 - 1, "air")
+    furnish(c, x0 + 1, x1 - 1, 2, w - 2, 1, "chapel", st, aisle=mid)
     for z in range(tz1 + 1, w - t, 3):                                    # windows and buttresses
         c.box(x0, x0 + 1, 2, hn - 1, z, z + 1, "blue_stained_glass_pane")
         c.box(x1 - 1, x1, 2, hn - 1, z, z + 1, "red_stained_glass_pane")
@@ -2241,6 +2286,7 @@ def taj(c, w, st, col, T, ctx):
             c.box(x, x + 1, 2, h - 2, z, z + 1, st.dome if abs(d) == 2 else "air")
             c.set(x, h - 2, z, st.dome)
     c.door(mid, 2, b - 2)
+    furnish(c, a + 1, b - 1, a + 1, b - 2, 2, "mosque", st, aisle=mid)
     cx = (w - 1) / 2
     rd = (b - a) / 2 - 2
     c.cylinder(cx, cx, rd - 0.5, h + 1, h + 5, st.dome)                   # drum
@@ -2262,6 +2308,7 @@ def djenne(c, w, st, col, T, ctx):
     c.box(0, w, 0, 1, 0, w, st.stone2)
     a, b, h = 2, w - 2, max(7, round(w * 0.4))
     c.room(a, b, a, b, 0, h, st.stone, st.floor)
+    furnish(c, a + 1, b - 1, a + 1, b - 3, 1, "mosque", st, aisle=w // 2)
     c.flat_roof(a, b, a, b, h, st.roof)
     for k in range(a, b, 3):                                               # buttresses with pinnacles
         for x, z in ((k, a - 1), (k, b), (a - 1, k), (b, k)):
@@ -2393,6 +2440,7 @@ def temple(c, w, st, col, T, ctx):
             tower(x0, z0, small, 2, max(4, w // 3))
     m0 = mid - big // 2
     tower(m0, m0, big, 3, max(6, w * 3 // 4))
+    furnish(c, m0 + 1, m0 + big - 1, m0 + 1, m0 + big - 1, top, "shrine", st, aisle=mid)
     c.door(mid, top, m0 + big - 1)
     c.banner(mid - 1, top + 2, m0 + big, col); c.banner(mid + 1, top + 2, m0 + big, col)
 

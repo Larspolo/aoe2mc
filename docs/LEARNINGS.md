@@ -86,3 +86,5 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   gives about 800 px, the size of the images in `docs/images/` (#262).
 - The `buildings` test scenario is about 1150 × 1570 blocks: to read one building of player 1 in the world, use the area
   around tile (4 + i % 40 × 7, 4 + i // 40 × 7), i = the index of the name in `BuildingInfo` (#251).
+- Sibling sub-issues (#249-#256) run in parallel: before you add a helper or a tool option, `git fetch origin main` and
+  grep for it. #252 and #265 both added `render.py --cut`, and two runs added a `furnish` (#252).
