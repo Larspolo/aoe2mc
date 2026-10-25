@@ -150,6 +150,54 @@ LINES = {
     "HILL_TRIBESMAN": ("husk", (None, ("leather", 0x6B4A2B), None, None), "stone_axe", None),
     "NORSE_WARRIOR": ("zombie", ("iron", ("leather", 0x6B4A2B), None, None), "iron_axe", "shield"),
 }
+L, BROWN, RED, WHITE, BLACK = "leather", 0x6B4A2B, 0x9B1B1B, 0xE8E0D0, 0x1D1D21
+# Unique infantry (#83). The elite version ("ELITE_" + name) gets a gold armor trim (see line_unit).
+LINES.update({
+    "AMAZON_WARRIOR": ("husk", ((L, 0x3F6B2A), None, (L, 0x3F6B2A), None), "stone_sword", "shield"),
+    "BERSERK": ("zombie", ((L, BROWN), None, (L, BROWN), None), "iron_axe", None),
+    "HUSKARL": ("zombie", ("iron", "chainmail", (L, BROWN), None), "iron_axe", "shield"),
+    "JAGUAR_WARRIOR": ("husk", ((L, 0xD4A017), (L, 0xD4A017), None, None), "stone_sword", None),
+    "KARAMBIT_WARRIOR": ("zombie", ((L, RED), None, None, None), "iron_sword", None, {"IsBaby": Byte(1)}),
+    "KONNIK_DISMOUNTED": ("zombie", ("iron", "iron", "chainmail", None), "mace", "shield"),
+    "NINJA": ("zombie", ((L, BLACK), (L, BLACK), (L, BLACK), (L, BLACK)), "iron_sword", None),
+    "SAMURAI": ("zombie", ("iron", (L, RED), (L, RED), None), "iron_sword", None),
+    "SHOTEL_WARRIOR": ("husk", ((L, WHITE), None, None, None), "iron_sword", "iron_sword"),
+    "TEUTONIC_KNIGHT": ("zombie", ("iron", "iron", "iron", "iron"), "iron_sword", "shield"),
+    "WOAD_RAIDER": ("zombie", ((L, 0x2B4A9B), None, (L, 0x2B4A9B), None), "iron_sword", None),
+    "IROQUOIS_WARRIOR": ("husk", ((L, BROWN), None, (L, BROWN), None), "stone_axe", None),
+    "XOLOTL_WARRIOR": ("mounted", ((L, EAGLE), (L, EAGLE), None, None), "stone_sword", None),
+    "OBUCH": ("zombie", ("iron", "chainmail", "chainmail", None), "mace", None),
+    "URUMI_SWORDSMAN": ("husk", (None, None, (L, WHITE), None), "golden_sword", None),
+    "GHULAM": ("husk", ("iron", (L, 0x2B6B6B), None, None), "trident", "shield"),
+    "QIZILBASH_WARRIOR": ("zombie", ((L, RED), "chainmail", None, None), "iron_sword", "shield"),
+    "IMMORTAL_MELEE": ("zombie", ("golden", (L, 0x5B2B7A), (L, 0x5B2B7A), None), "trident", "shield"),
+    "STRATEGOS": ("mounted", ("golden", "golden", None, None), "iron_sword", "shield"),
+    "STRATEGOS_WITH_TAXIARCHS": ("mounted", ("golden", "golden", "iron", None), "iron_sword", "shield"),
+    "SAKAN_AXEMAN": ("zombie", ((L, 0x8E5A2B), (L, 0x8E5A2B), None, None), "iron_axe", None),
+    "SICKLE_WARRIOR": ("husk", (None, (L, BROWN), None, None), "iron_hoe", None),
+    "LYSANDERS_RAIDER": ("zombie", ("iron", (L, RED), None, None), "iron_sword", "shield"),
+    "IRON_PAGODA": ("mounted", ("iron", "iron", "iron", "iron"), "mace", None),
+    "LIAO_DAO": ("zombie", ("iron", "chainmail", None, None), "iron_axe", None),
+    "WHITE_FEATHER_GUARD": ("zombie", ((L, 0xF0F0F0), "iron", None, None), "iron_sword", "shield"),
+    "JIAN_SWORDSMAN": ("zombie", ("iron", (L, 0x2B4A7A), None, None), "iron_sword", None),
+    "JIAN_SWORDSMAN_TWO_HANDED": ("zombie", ("iron", "iron", (L, 0x2B4A7A), None), "diamond_sword", None),
+    "RHOMPHAIA_WARRIOR": ("zombie", ("iron", (L, BROWN), (L, BROWN), None), "golden_sword", None),
+    "SANNAHYA": ("husk", ("golden", (L, WHITE), None, None), "iron_sword", "shield"),
+    "SACRED_BAND": ("zombie", ("golden", "iron", "iron", None), "trident", "shield"),
+    "CHAMPI_SCOUT": ("husk", ((L, 0x9B6B1B), None, None, None), "stone_axe", None),
+    "CHAMPI_WARRIOR": ("husk", ((L, 0x9B6B1B), (L, 0x9B6B1B), None, None), "mace", "shield"),
+    "CHAMPI_RUNNER": ("husk", (None, (L, 0x9B6B1B), None, None), "mace", None),
+    "GUECHA_WARRIOR": ("husk", ((L, 0xC03030), None, (L, 0xC03030), None), "stone_sword", None),
+    "KONA": ("husk", (None, None, (L, BROWN), None), "wooden_axe", None),
+    "IBIRAPEMA_WARRIOR": ("husk", ((L, 0xD4A017), None, None, None), "wooden_shovel", None),
+    "TEMPLE_GUARD": ("husk", ("golden", (L, 0x2B8B5B), None, None), "stone_sword", "shield"),
+    "VARANGIAN_GUARD": ("zombie", ("iron", "iron", "chainmail", "chainmail"), "iron_axe", "shield"),
+    "HEARTH_TROOP": ("zombie", ("chainmail", "chainmail", "chainmail", None), "iron_sword", "shield"),
+    "JARL": ("mounted", ("iron", "chainmail", "chainmail", None), "iron_axe", "shield"),
+    "JOMSVIKING": ("zombie", ("iron", (L, BLACK), "chainmail", None), "diamond_axe", None),
+})
+LINES["HUSKARL_BARRACKS"] = LINES["HUSKARL"]
+TRIM = Compound({"material": String("minecraft:gold"), "pattern": String("minecraft:sentry")})
 
 MOUNTED_HEROES = ("RICHARD_THE_LIONHEART", "FREDERICK_BARBAROSSA", "SALADIN", "EL_CID", "CHARLEMAGNE", "GENGHIS_KHAN",
                   "ATTILA", "BLEDA", "TAMERLANE", "SUBOTAI", "BELISARIUS", "ROLAND", "LANCELOT", "GAWAIN",
@@ -436,11 +484,21 @@ def classify(n, hero=False):
         return soldier("skeleton", t, "crossbow")
     if has(n, "ARCHER", "BOWMAN", "LONGBOW", "PATTIYODHA", "IMMORTAL_RANGED"):
         return soldier("skeleton", t, "bow")
-    if n in LINES:
-        kind, pieces, main, off = LINES[n]
-        man = mob("zombie" if kind == "mounted" else kind, ArmorItems=armor_items(pieces), HandItems=hands(main, off))
-        return mounted("horse", man, 3, {"Variant": Int(4)}) if kind == "mounted" else man
-    return infantry(n, t)
+    return line_unit(n) or infantry(n, t)
+
+
+def line_unit(n):
+    """The design of an infantry line or unique unit from LINES, else None. Elite: a gold trim on the armor."""
+    elite = n not in LINES and n.startswith("ELITE_") and n[6:] in LINES
+    if n not in LINES and not elite:
+        return None
+    kind, pieces, main, off, *tags = LINES[n[6:] if elite else n]
+    armor = armor_items(pieces if not elite or any(pieces) else ("golden", None, None, None))
+    if elite:
+        worn = next(armor[i] for i in (2, 3, 1, 0) if len(armor[i]))     # chestplate first
+        worn.setdefault("components", Compound({}))["minecraft:trim"] = TRIM
+    man = mob("zombie" if kind == "mounted" else kind, ArmorItems=armor, HandItems=hands(main, off), **(tags[0] if tags else {}))
+    return mounted("horse", man, 3, {"Variant": Int(4)}) if kind == "mounted" else man
 
 
 def infantry(n, t):

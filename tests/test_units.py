@@ -81,7 +81,7 @@ def test_invisible(name, reason):
 
 def test_infantry_lines_have_their_own_look():
     looks = {}
-    for name, (kind, pieces, _, _) in units.LINES.items():
+    for name, (kind, pieces, *_) in units.LINES.items():
         desc = units.classify(name)
         assert desc != units.infantry(name, units.tier_of(name, False)), name
         man = desc["Passengers"][0] if kind == "mounted" else desc
@@ -103,3 +103,22 @@ def test_each_militia_upgrade_looks_stronger():
                                       ("EINAR_PAUNCH_SHAKER", "skeleton"), ("HUNTING_WOLF", "wolf")])
 def test_hero_base_unit(name, mob):
     assert units.classify(name, hero=True)["id"] == "minecraft:" + mob
+
+
+@pytest.mark.parametrize("name", ["ELITE_HUSKARL", "ELITE_URUMI_SWORDSMAN", "ELITE_KONA", "ELITE_JARL", "ELITE_SANNAHYA"])
+def test_elite_has_a_gold_trim_on_the_base_design(name):
+    elite, base = units.classify(name), units.classify(name.removeprefix("ELITE_"))
+    if "Passengers" in elite:
+        elite, base = elite["Passengers"][0], base["Passengers"][0]
+    trims = [i for i in elite["ArmorItems"] if "minecraft:trim" in i.get("components", {})]
+    assert len(trims) == 1
+    assert elite["HandItems"] == base["HandItems"] and elite["id"] == base["id"]
+
+
+@pytest.mark.parametrize("name", sorted(n for n, _ in NAMES if units.line_unit(n)))
+def test_no_empty_item_has_components(name):
+    """An item without an id is invalid in Minecraft ("Tried to load invalid item")."""
+    desc = units.classify(name)
+    for d in [desc, *desc.get("Passengers", [])]:
+        for it in [*d.get("ArmorItems", []), *d.get("HandItems", [])]:
+            assert "id" in it or not len(it), (name, it)
