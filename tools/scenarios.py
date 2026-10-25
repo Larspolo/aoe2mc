@@ -233,7 +233,8 @@ def walls(path):
 
 
 def river(path):
-    """Highland at elevation 2 with a river along tile x (deep in the middle), and a sea at elevation 0 in the south."""
+    """Highland at elevation 2 with a river along tile x (deep in the middle), and a sea at elevation 0 in the south.
+    A bridge and a Persian wall with a gate cross the river."""
     scn = new_scenario(32)
     for t in scn.map_manager.terrain:
         if t.y >= 28:
@@ -247,6 +248,10 @@ def river(path):
     um = scn.unit_manager
     um.add_unit(PlayerId.ONE, BuildingInfo.TOWN_CENTER.ID, x=16, y=20)
     um.add_unit(PlayerId.ONE, BuildingInfo.DOCK.ID, x=6.5, y=10.5)
+    set_civs(scn, 4)                                                       # player 4: Persians (#192)
+    for y in [*range(6, 11), *range(15, 20)]:                              # a wall with a gate across the river
+        um.add_unit(PlayerId.FOUR, BuildingInfo.STONE_WALL.ID, x=12.5, y=y + 0.5)
+    um.add_unit(PlayerId.FOUR, BuildingInfo.GATE_NORTHWEST_TO_SOUTHEAST.ID, x=12.5, y=13.0)
     for y, piece in ((10, BuildingInfo.BRIDGE_B_BOTTOM), (12, BuildingInfo.BRIDGE_B_MIDDLE),
                      (14, BuildingInfo.BRIDGE_B_TOP)):
         um.add_unit(PlayerId.GAIA, piece.ID, x=24.5, y=y + 1)

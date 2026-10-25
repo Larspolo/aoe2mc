@@ -2124,15 +2124,24 @@ def place_building(E, cols, B, o, players, walls, gates):
     if fn not in (gate, bridge):
         cols.blocked[xs.start:xs.stop, zs.start:zs.stop] = True
     is_dock = fn in (dock, bridge, wooden_bridge, fish_trap, shipyard, port, mole, harbor_chain, flagship)
+    wet = area > cols.top[xs.start:xs.stop, zs.start:zs.stop]
+    water_y = int(area[wet].max()) if wet.any() else cols.water_y       # the surface of this water body (#165)
+    if fn is bridge:                                                     # one deck height for all pieces (#192)
+        base = bridge_deck(cols, x0 + fx // 2, z0 + fz // 2, along_z, water_y) - 1
+    opening = None                                                       # the passage of a gate stays open
+    if fn is gate and not str(gates.get(id(o))).startswith("diag"):
+        opening = (range(z0 + T, z0 + fz - T), None) if along_z else (None, range(x0 + T, x0 + fx - T))
     E.footprint = (x0, x0 + fx, z0, z0 + fz)
     if not is_dock:                                                      # foundation under the floor
         found = st.stone2
         for x in xs:
             for z in zs:
-                E.box(x, x + 1, int(cols.wtop[x, z]) + 1, base + 1, z, z + 1, found)
+                top, wtop = int(cols.top[x, z]), int(cols.wtop[x, z])
+                if wtop > top and opening and (z in opening[0] if along_z else x in opening[1]):
+                    continue                                             # water flows through the gate
+                # on water: a footing from the bed, not a block that floats on the surface
+                E.box(x, x + 1, (top if wtop > top else wtop) + 1, base + 1, z, z + 1, found)
 
-    wet = area > cols.top[xs.start:xs.stop, zs.start:zs.stop]
-    water_y = int(area[wet].max()) if wet.any() else cols.water_y       # the surface of this water body (#165)
     ctx = {"name": name, "deck": max(1, water_y + 2 - base), "diag": gates.get(id(o)) in ("diag+", "diag-"),
            "origin": (int(ux) * T if not along_z else int(uy) * T, 0)}
     if fn in (bridge, wooden_bridge):
@@ -2181,6 +2190,26 @@ def place_building(E, cols, B, o, players, walls, gates):
     if len(sx):
         E.add(x0 - c.m + sx, base - c.below + sy, z0 - c.m + sz, B("barrier"), hard=False)
     E.footprint = None
+
+
+def bridge_deck(cols, x, z, along_z, water_y):
+    """The deck height of the bridge through block (x, z). Find the nearest water on the line along the bridge axis,
+    go to its two banks, and take the land one tile behind each bank (behind the shore slope); the deck is at the
+    lower of the two, but 2 above the water at least. All pieces of a bridge get the same height."""
+    dx, dz = (0, 1) if along_z else (1, 0)
+    wet = lambda i: cols.inside(x + i * dx, z + i * dz) and cols.wtop[x + i * dx, z + i * dz] > cols.top[x + i * dx, z + i * dz]
+    near = next((i for d in range(4 * cols.T) for i in (d, -d) if wet(i)), None)
+    if near is None:
+        return water_y + 2
+    banks = []
+    for sgn in (-1, 1):
+        i = near
+        while wet(i):
+            i += sgn
+        i = i + sgn * cols.T if cols.inside(x + (i + sgn * cols.T) * dx, z + (i + sgn * cols.T) * dz) else i
+        if cols.inside(x + i * dx, z + i * dz):
+            banks.append(int(cols.top[x + i * dx, z + i * dz]))
+    return max(water_y + 2, min(banks) if banks else 0)
 
 
 WOOD_BRIDGE_TILES = set()
@@ -2238,10 +2267,11 @@ def bridge(c, w, st, col, T, ctx):
         c.box(L // 2, L, deck, deck + 1, z0, z1, "air")
     c.box(0, L, deck + 1, deck + 2, z0, z0 + 1, rail)
     c.box(0, L, deck + 1, deck + 2, z1 - 1, z1, rail)
-    c.box(0, L, 1 if deck > 1 else 0, deck, z0 + 1, z1 - 1, "air")
+    if deck > 1:
+        c.box(0, L, 1, deck, z0 + 1, z1 - 1, "air")
     for x in (0, L - 1):                                                # piers down to the bottom
-        c.box(x, x + 1, -10, deck, z0, z0 + 1, "stone_bricks" if stone else "spruce_log")
-        c.box(x, x + 1, -10, deck, z1 - 1, z1, "stone_bricks" if stone else "spruce_log")
+        c.box(x, x + 1, -12, deck, z0, z0 + 1, "stone_bricks" if stone else "spruce_log")
+        c.box(x, x + 1, -12, deck, z1 - 1, z1, "stone_bricks" if stone else "spruce_log")
     if stone:
         c.box(L // 2 - 1, L // 2 + 1, deck - 1, deck, z0, z1, "stone_bricks")
 
