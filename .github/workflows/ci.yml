@@ -23,3 +23,13 @@ jobs:
         run: pytest
       - name: Slow tests
         run: pytest -m slow
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: actions/cache@v4
+        with:
+          path: .cache/mc
+          key: mc-${{ hashFiles('tools/mc_check.py') }}
+      - name: Minecraft server check
+        run: pytest -m mc

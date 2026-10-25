@@ -35,7 +35,14 @@ against `tools/mcdata/1.21.1.json`.
 
 ## Level 4 – only the game can show it
 
-Examples: unit facing, light, entity behavior. Load errors: use `tools/mc_check.py` when it exists (#13).
+Load errors: `python3 tools/mc_check.py WORLD` (about 20 s, `python3 -m pytest -m mc` for the tiny world).
+It loads all chunks in a headless Minecraft server and exits with 1 when the log has problem lines (for
+example "Recoverable errors when loading section", unknown block names, entity or data fixer errors).
+`--log FILE` keeps the full log. The server replaces a bad property value (`facing=up`) with the default and
+does not log it: `mcvalid` finds those. `python3 tools/mc_check.py --reports VERSION` makes exact
+`tools/mcdata/VERSION.json` from Mojang's data reports.
+
+Examples for the game: unit facing, light, entity behavior.
 For what only a person can see, make a `needs-human` ticket with: the scenario or the command that makes the
 test world, and exact steps for the owner ("Open the world. Stand at X Y Z. Look north. The knight must
 face you.").
