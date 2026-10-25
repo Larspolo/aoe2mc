@@ -115,6 +115,11 @@ def test_other_pr_closes_the_ticket():
     assert claim.other_pr(pulls, 22, "run-1") is None               # closed without a merge
     assert claim.other_pr([pr(4, "run-0", "...\nCloses #22", "closed", "2026-10-25T21:35:00Z")], 22, "run-1") == 4
     assert claim.other_pr([pr(5, "run-0", None)], 22, "run-1") is None
+    assert claim.other_pr(pulls, 220, "run-0", taken="run-2") == 1                  # #361: only the taken-over PR
+    taken = [pr(6, "run-0", "Closes #22")]
+    assert claim.other_pr(taken, 22, "run-1", taken="run-0") is None
+    assert claim.other_pr([pr(7, "run-0", "Closes #22", "closed", "2026-10-25T21:35:00Z")], 22, "run-1",
+                          taken="run-0") == 7                                      # merged already: stop
 
 
 def test_guard_before_the_push(clones, monkeypatch):

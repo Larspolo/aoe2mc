@@ -12,6 +12,7 @@ a second push of another claim commit is never a fast-forward. Later claims of t
     python3 tools/claim.py N --beat       # show that the own run is alive (at least every 20 minutes)
     python3 tools/claim.py N --stale      # exit 0: the owner made no claim or beat for 30 minutes (stopped run)
     python3 tools/claim.py N --guard      # before each push: beat, and exit 1 when a PR of another branch closes N
+    python3 tools/claim.py N --guard --pr-branch B   # the same, but the open PR of branch B (taken over) is allowed
     python3 tools/claim.py ID --comment   # lock owner comment ID (autopilot step 3); exit 1: another run handles it
 
 Two runs did one ticket (#288): one commented "Started by" and worked without the claim ref. So a claim also fails
@@ -145,11 +146,13 @@ def started_by_other(comments, me, now, limit=RECENT):
     return None
 
 
-def other_pr(pulls, number, me):
-    """Number of an open or merged PR of another branch whose body closes ticket `number`, else None."""
+def other_pr(pulls, number, me, taken=None):
+    """Number of an open or merged PR of another branch whose body closes ticket `number`, else None.
+    taken: the branch of a PR that this run took over (#361): its open PR is the run's own."""
     closes = re.compile(rf"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?) #{number}\b", re.I)
     for p in pulls:
-        if p["head"]["ref"] != me and (p["state"] == "open" or p.get("merged_at")) and closes.search(p["body"] or ""):
+        own = p["head"]["ref"] == me or p["head"]["ref"] == taken and p["state"] == "open"
+        if not own and (p["state"] == "open" or p.get("merged_at")) and closes.search(p["body"] or ""):
             return p["number"]
     return None
 
@@ -165,6 +168,7 @@ def main(argv=None):
     g.add_argument("--stale", action="store_true", help="exit 0 when the open claim had no beat for 30 minutes")
     g.add_argument("--guard", action="store_true", help="before a push: beat; exit 1 when another branch has a PR")
     g.add_argument("--comment", action="store_true", help="lock the owner comment with this ID")
+    ap.add_argument("--pr-branch", metavar="BRANCH", help="--guard: the branch of a PR that this run took over")
     ap.add_argument("--remote", default="origin")
     a = ap.parse_args(argv)
     if a.comment:
@@ -192,7 +196,7 @@ def main(argv=None):
         if not ref:
             print(f"no claim of #{a.number}: stop")
             return 1
-        pr = on_github(a.remote) and other_pr(api("pulls?state=all&per_page=30"), a.number, who())
+        pr = on_github(a.remote) and other_pr(api("pulls?state=all&per_page=30"), a.number, who(), a.pr_branch)
         if pr:
             print(f"PR #{pr} of another branch closes #{a.number}: stop and release")
             return 1
