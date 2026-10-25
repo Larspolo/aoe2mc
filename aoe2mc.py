@@ -303,6 +303,9 @@ def read_scenario(path):
 
     msg = scn.message_manager
     texts = {k: getattr(msg, k, "") or "" for k in CHAPTERS}
+    goals = sorted((t.description_order, i, (t.description or t.name or "").strip())   # the objectives that the game lists
+                   for i, t in enumerate(scn.trigger_manager.triggers) if t.display_as_objective)
+    texts["objectives"] = "\n".join(f"- {g}" for _, _, g in goals if g)
 
     objects = []
     for player, player_units in enumerate(scn.unit_manager.units):
@@ -1567,8 +1570,8 @@ def find_spawn(cols, objects, players, tile=None):
     return bx, cols.surface(bx, bz) + 2, bz
 
 
-CHAPTERS = {"instructions": "Instructions", "hints": "Hints", "victory": "Victory", "loss": "Loss",
-            "history": "History", "scouts": "Scouts"}
+CHAPTERS = {"instructions": "Instructions", "objectives": "Objectives", "hints": "Hints", "victory": "Victory",
+            "loss": "Loss", "history": "History", "scouts": "Scouts"}          # objectives: from the triggers
 BLOCK_DATA = {}        # (x, y, z) -> extra block entity fields (the book of the lectern)
 
 
