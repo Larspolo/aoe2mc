@@ -29,3 +29,17 @@ def test_every_building_in_every_architecture_set(arch):
 
 def test_every_civilization_has_a_known_architecture_set():
     assert set(buildings.CIV_TO_ARCH.values()) <= set(buildings.ARCH)
+
+
+def test_weather_does_not_depend_on_the_order_of_block_ids():
+    def weathered(blocks):
+        c = buildings.Canvas(blocks, 8, height=8)
+        c.box(0, 8, 0, 3, 0, 8, "stone_bricks")
+        c.box(0, 8, 3, 6, 0, 8, "spruce_planks")
+        c.box(0, 8, 6, 8, 0, 8, "calcite")
+        buildings.weather(c)
+        return [blocks.states[i] if i >= 0 else None for i in c.a.ravel()]
+    other = aoe2mc.Blocks()             # an earlier conversion registered the variants first, in another order
+    for s in sorted({v for opts in buildings.TEXTURE.values() for v, _ in opts} | set(buildings.TEXTURE)):
+        other(s)
+    assert weathered(aoe2mc.Blocks()) == weathered(other)
