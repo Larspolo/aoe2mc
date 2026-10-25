@@ -31,7 +31,7 @@ against `tools/mcdata/1.21.1.json`.
 3. Scale small previews up (for example 4× with `PIL.Image.resize(..., Image.NEAREST)`). Look at both images
    with the Read tool. Describe the difference in the PR body.
 4. For the 3D shape use `tools/render.py`: `building NAME --arch SET OUT.png` draws one design on flat grass,
-   `world WORLD X0 Z0 X1 Z1 OUT.png` draws an area of a converted world. The default view is from the
+   `sheet NAME OUT.png` draws it in all architecture sets, `world WORLD X0 Z0 X1 Z1 OUT.png` draws an area of a converted world. The default view is from the
    south-east (the front). `--view sw|ne|nw` shows the other sides. Look at the PNG with the Read tool.
 5. For exact checks use `tools/world_reader.py WORLD X Y Z` or `world_reader.World(path).block(x, y, z)`.
    Add a test for the exact check when the behavior must stay.

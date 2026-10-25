@@ -47,6 +47,7 @@ The world is in creative mode. Outside the map there is only void. The world lis
 | `--preview` | off | Writes `preview.png` (top view) into the world folder |
 | `--mc-version` | 1.21.1 | Minecraft Java version of the output: `1.21.1` or `26.3`. The 26.3 output is not complete yet. |
 | `--no-units` | off | Do not convert units |
+| `--no-birds` | off | Do not convert birds. Flying birds float 6 blocks above the ground (parrot or bat); peacocks, flamingos, storks and cranes are chickens |
 | `--no-barriers` | off | Do not fill building footprints with invisible barrier blocks |
 | `--spawn X,Z` | start view or town center of player 1 | Player spawn in tiles. Without it the spawn is the start view of player 1, else the front of its first town center, else the map center. |
 | `--orientation` | `ne` | Minecraft corner of the top corner of the AoE2 screen: `ne`, `se`, `sw` or `nw`. The map, the buildings, the units and the spawn view turn with it. |
@@ -178,11 +179,10 @@ Read these files first:
 ## Known limits
 
 - Object types that the parser does not know (new IDs) are skipped.
-- Garrisoned units are not converted. Birds are not converted.
+- Garrisoned units are not converted.
 - The direction that units face is not checked in the game yet. See [`docs/facing.md`](docs/facing.md) for the check.
 - In scenarios older than version 1.56 the architecture set field can be wrong, so the program uses the civilization.
 - Unique buildings use the design of a similar building (for example krepost → small castle).
-- Diagonal gates are drawn along a tile axis.
 - Map tile (x, y) becomes block (x × tile-size, z = y × tile-size). AoE2 shows the map as a diamond with the top corner
   at the top of the screen. In Minecraft this corner is in the north-east: the map is the in-game view turned 45°
   clockwise, not mirrored. A turn of 45° is not possible on a block grid. At the spawn the player looks north-east,
