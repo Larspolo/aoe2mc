@@ -77,3 +77,23 @@ def test_war_animals_are_not_animals():
 def test_invisible(name, reason):
     assert units.invisible(name) == reason
     assert (units.classify(name) is None) == (reason is not None)
+
+
+def test_infantry_lines_have_their_own_look():
+    looks = {}
+    for name, (kind, pieces, _, _) in units.LINES.items():
+        desc = units.classify(name)
+        assert desc != units.infantry(name, units.tier_of(name, False)), name
+        man = desc["Passengers"][0] if kind == "mounted" else desc
+        if str(man["id"]) in ("minecraft:zombie", "minecraft:zombie_villager"):
+            assert pieces[0], f"{name}: a zombie without a helmet burns in the sun"
+        looks.setdefault(repr(desc), []).append(name)
+    same = [v for v in looks.values() if len(v) > 1]
+    assert all(v[0].removesuffix("_MALE") in n or n in v[0] for v in same for n in v), same   # only name variants
+
+
+def test_each_militia_upgrade_looks_stronger():
+    line = ["MILITIA", "MAN_AT_ARMS", "LONG_SWORDSMAN", "TWO_HANDED_SWORDSMAN", "CHAMPION"]
+    order = [None, "leather", "chainmail", "iron", "golden", "diamond"]
+    worn = [sum(order.index(p if not isinstance(p, tuple) else p[0]) for p in units.LINES[n][1]) for n in line]
+    assert worn == sorted(worn) and len(set(worn)) == len(worn), worn
