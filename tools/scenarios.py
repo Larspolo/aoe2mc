@@ -5,20 +5,36 @@ Make synthetic AoE2 DE scenarios for tests (no real map files necessary).
 Usage:
     python tools/scenarios.py tiny OUT.aoe2scenario
     python tools/scenarios.py gallery OUT.aoe2scenario [--kinds BOU]
+    python tools/scenarios.py stress|buildings|units|village OUT.aoe2scenario
 
-tiny:    24x24 tiles with land, shallow and deep water, a hill, buildings, units, a tree, a mine and fish.
-gallery: every object type of the parser in a grid (B = buildings, O = other objects, U = units).
+tiny:      24x24 tiles with land, shallow and deep water, a hill, buildings, units, a tree, a mine and fish.
+gallery:   every object type of the parser in a grid (B = buildings, O = other objects, U = units).
+stress:    units against every side of buildings, trees, mines, cliffs and a mountain; on slopes and on a bridge.
+buildings: every building type for 8 civilizations with different architecture sets (players 1-8).
+units:     every land unit on land and every ship on water.
+village:   a small map with terrain types, water, a hill, a town and animals.
 """
 import argparse
 import contextlib
 import io
 
+import os
+import sys
+
 from AoE2ScenarioParser.datasets.buildings import BuildingInfo
+from AoE2ScenarioParser.datasets.object_support import Civilization
 from AoE2ScenarioParser.datasets.other import OtherInfo
 from AoE2ScenarioParser.datasets.players import PlayerId
 from AoE2ScenarioParser.datasets.terrains import TerrainId
 from AoE2ScenarioParser.datasets.units import UnitInfo
 from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import units  # noqa: E402
+
+# One civilization per architecture set (players 1-8)
+CIVS = [Civilization.BRITONS, Civilization.GOTHS, Civilization.SPANISH, Civilization.PERSIANS,
+        Civilization.HINDUSTANIS, Civilization.MALIANS, Civilization.JAPANESE, Civilization.AZTECS]
 
 
 def new_scenario(size):
@@ -70,16 +86,122 @@ def gallery(path, kinds="BOU", step=7):
     return save(scn, path)
 
 
+def around(um, player, unit, x, y, size):
+    """Units next to all four sides and the four corners of an object of size tiles at (x, y)."""
+    d = size / 2 + 0.5
+    for dx, dy in ((0, -d), (0, d), (-d, 0), (d, 0), (-d, -d), (d, -d), (-d, d), (d, d)):
+        um.add_unit(player, unit, x=x + dx, y=y + dy)
+
+
+def stress(path):
+    scn = new_scenario(48)
+    for t in scn.map_manager.terrain:
+        if t.x < 16:
+            t.elevation = min(4, t.x // 3)          # a slope from west to east
+        if 34 <= t.x <= 39:
+            t.terrain_id = TerrainId.WATER_DEEP if 35 <= t.x <= 38 else TerrainId.WATER_SHALLOW
+    um = scn.unit_manager
+    things = [(PlayerId.ONE, BuildingInfo.TOWN_CENTER.ID, 8, 8, 4), (PlayerId.ONE, BuildingInfo.HOUSE.ID, 22, 8, 2),
+              (PlayerId.TWO, BuildingInfo.CASTLE.ID, 24, 22, 4), (PlayerId.TWO, BuildingInfo.BARRACKS.ID, 8, 24, 3),
+              (PlayerId.GAIA, OtherInfo.TREE_OAK.ID, 14.5, 38.5, 1), (PlayerId.GAIA, OtherInfo.GOLD_MINE.ID, 20.5, 38.5, 1),
+              (PlayerId.GAIA, OtherInfo.STONE_MINE.ID, 26.5, 38.5, 1),
+              (PlayerId.GAIA, OtherInfo.CLIFF_DEFAULT_1.ID, 6, 40, 3), (PlayerId.GAIA, OtherInfo.MOUNTAIN_1.ID, 28, 32, 4)]
+    for player, oid, x, y, size in things:
+        um.add_unit(player, oid, x=x, y=y)
+        around(um, PlayerId.ONE, UnitInfo.MAN_AT_ARMS.ID, x, y, size)
+    for x, piece in ((33, BuildingInfo.BRIDGE_A_BOTTOM), (35, BuildingInfo.BRIDGE_A_MIDDLE),
+                     (37, BuildingInfo.BRIDGE_A_MIDDLE), (39, BuildingInfo.BRIDGE_A_TOP)):
+        um.add_unit(PlayerId.GAIA, piece.ID, x=x, y=24.5)
+    for x in (34.5, 36.5, 38.5):
+        um.add_unit(PlayerId.ONE, UnitInfo.VILLAGER_MALE.ID, x=x, y=24.5)
+    return save(scn, path)
+
+
+def set_civs(scn, n=8):
+    scn.player_manager.active_players = n
+    for i, civ in enumerate(CIVS[:n], 1):
+        scn.player_manager.players[i].civilization = civ
+
+
+def buildings_map(path, n_civs=8, step=7, per_row=40):
+    names = [e for e in BuildingInfo]
+    rows = -(-len(names) // per_row)
+    scn = new_scenario(per_row * step + 8 if n_civs * rows < per_row else n_civs * rows * step + 8)
+    set_civs(scn, n_civs)
+    um = scn.unit_manager
+    for p in range(n_civs):                     # one band of rows per player
+        for i, e in enumerate(names):
+            x, y = 4 + (i % per_row) * step, 4 + (p * rows + i // per_row) * step
+            um.add_unit(PlayerId(p + 1), e.ID, x=x + 0.5, y=y + 0.5)
+    return save(scn, path)
+
+
+def units_map(path, step=3, per_row=30):
+    ships, land = [], []
+    for e in UnitInfo:
+        (ships if units.is_boat(units.classify(e.name)) else land).append(e)
+    rows_land, rows_ship = -(-len(land) // per_row), -(-len(ships) // per_row)
+    water_y = 4 + rows_land * step + 2
+    size = max(per_row * step + 8, water_y + rows_ship * step + 6)
+    scn = new_scenario(size)
+    for t in scn.map_manager.terrain:
+        if t.y >= water_y - 1:
+            t.terrain_id = TerrainId.WATER_DEEP
+    um = scn.unit_manager
+    for i, e in enumerate(land):
+        um.add_unit(PlayerId.ONE, e.ID, x=4.5 + (i % per_row) * step, y=4.5 + (i // per_row) * step)
+    for i, e in enumerate(ships):
+        um.add_unit(PlayerId.TWO, e.ID, x=4.5 + (i % per_row) * step, y=water_y + 1.5 + (i // per_row) * step)
+    return save(scn, path)
+
+
+def village(path):
+    scn = new_scenario(32)
+    for t in scn.map_manager.terrain:
+        if t.x >= 26:
+            t.terrain_id = TerrainId.WATER_DEEP if t.x >= 28 else TerrainId.WATER_SHALLOW
+        elif t.x >= 24:
+            t.terrain_id = TerrainId.BEACH
+        elif t.y < 6:
+            t.terrain_id = TerrainId.FOREST_OAK
+        elif t.y > 26:
+            t.terrain_id = TerrainId.SNOW
+        elif 10 <= t.x <= 14 and t.y == 16:
+            t.terrain_id = TerrainId.ROAD
+        elif t.x < 5:
+            t.terrain_id = TerrainId.DIRT_1
+        if 3 <= t.x <= 8 and 18 <= t.y <= 24:
+            t.elevation = 3 if 4 <= t.x <= 7 and 19 <= t.y <= 23 else 1
+    um = scn.unit_manager
+    for x, y, oid in ((16, 16, BuildingInfo.TOWN_CENTER), (10, 11, BuildingInfo.HOUSE), (13, 11, BuildingInfo.HOUSE),
+                      (20.5, 11.5, BuildingInfo.MILL), (20.5, 21.5, BuildingInfo.FARM), (11.5, 21.5, BuildingInfo.BLACKSMITH),
+                      (25.5, 16.5, BuildingInfo.DOCK)):
+        um.add_unit(PlayerId.ONE, oid.ID, x=x, y=y)
+    for x in range(2, 24, 3):
+        um.add_unit(PlayerId.GAIA, OtherInfo.TREE_OAK.ID, x=x + 0.5, y=2.5)
+    um.add_unit(PlayerId.GAIA, OtherInfo.GOLD_MINE.ID, x=5.5, y=21.5)
+    for x, y, uid in ((15.5, 19.5, UnitInfo.VILLAGER_MALE), (17.5, 19.5, UnitInfo.VILLAGER_FEMALE),
+                      (20.5, 18.5, UnitInfo.VILLAGER_FEMALE_FARMER), (8.5, 14.5, UnitInfo.SHEEP),
+                      (9.5, 14.5, UnitInfo.SHEEP), (12.5, 14.5, UnitInfo.SCOUT_CAVALRY)):
+        um.add_unit(PlayerId.ONE if "SHEEP" not in uid.name else PlayerId.GAIA, uid.ID, x=x, y=y)
+    um.add_unit(PlayerId.ONE, UnitInfo.FISHING_SHIP.ID, x=29.5, y=12.5)
+    um.add_unit(PlayerId.GAIA, OtherInfo.FISH_TUNA.ID, x=29.5, y=20.5)
+    return save(scn, path)
+
+
+MAKERS = {"tiny": tiny, "stress": stress, "buildings": buildings_map, "units": units_map, "village": village}
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("kind", choices=["tiny", "gallery"])
+    ap.add_argument("kind", choices=["gallery", *MAKERS])
     ap.add_argument("output")
     ap.add_argument("--kinds", default="BOU", help="gallery: B, O and/or U (default BOU)")
     a = ap.parse_args()
-    if a.kind == "tiny":
-        tiny(a.output)
-    else:
+    if a.kind == "gallery":
         gallery(a.output, a.kinds)
+    else:
+        MAKERS[a.kind](a.output)
     print("Wrote", a.output)
 
 
