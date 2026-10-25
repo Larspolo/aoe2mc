@@ -103,9 +103,11 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Kitchen garden | `carrots`, `potatoes`, `wheat` (age 7) on `farmland`, `spruce_fence` with a `spruce_fence_gate` | `folwark` |
 | Windmill sails | `spruce_fence` arms with `white_wool` cloth, `stripped_spruce_log` hub | `mill`, `folwark`, `market`, `command_tent` +4 more |
 
-Add a row when a design uses a new feature block, with the block names in backticks. Each new block state must pass
-`mcvalid`. Do not edit "Used today in": `tools/feature_table.py` writes it on main from the designs (the functions
-that place the most blocks of the row; a function that uses less than half of the names of the best one is not listed).
+Add a row when a design uses a new feature block, with the block names in backticks. Put it after a row of a related
+feature or design, not at the end of the table: parallel PRs that all add at the end get a merge conflict. Each new
+block state must pass `mcvalid`. Do not edit "Used today in": `tools/feature_table.py` writes it on main from the
+designs (the functions that place the most blocks of the row; a function that uses less than half of the names of the
+best one is not listed).
 
 ## 3. Some noise
 
