@@ -47,7 +47,9 @@ Several runs work at the same time: the owner wants maximum use of the quota. A 
 belong to the other run when the ticket or the PR changed less than 2 hours ago: do not touch them.
 After 2 hours without a change the other run is dead: take the ticket over and say so in a comment.
 Exception: a PR with no new commit and no new comment for 30 minutes is stalled. Take it over at once
-(comment "Taken over: stalled."), for example when it has a merge conflict and its run waits for a CI event.
+(comment "Taken over by `<your branch>`: stalled."), for example when it has a merge conflict and its run waits for a
+CI event. Then read the PR comments again: if an older "Taken over by" comment of another branch is less than
+30 minutes old, leave the PR to that run.
 A PR whose ticket has no `in-progress` label is free: any run can finish and merge it (hand-off, step 6.8).
 If your usage limit stops you, the next run continues your work through this rule.
 
@@ -65,6 +67,8 @@ If your usage limit stops you, the next run continues your work through this rul
 
 List open PRs. For each PR that the agent opened (branch `claude/*` or `agent/*`) and that no other run
 owns (see "Runs can overlap"):
+- Its ticket has `needs-human` or `blocked`, or is closed → skip the PR: it waits for the owner or another
+  ticket. When the ticket is closed as "not planned", close the PR with a one-line comment.
 - CI green, no open owner comments → merge it (squash), do step 7 for its ticket, then continue with step 3.
 - CI red or owner review comments → fix it now. That is the work of this cycle: continue at step 6.8.
 - Merge conflict (`mergeable_state` is `dirty`, often with no CI run) → step 6.10, then continue at step 6.8.
