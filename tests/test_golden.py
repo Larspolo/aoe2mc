@@ -12,6 +12,10 @@ import world_reader
 GOLDEN = os.path.join(os.path.dirname(os.path.abspath(__file__)), "golden", "tiny.json")
 
 
+def name_text(n):
+    return str(n["text"]) if hasattr(n, "keys") else json.loads(str(n))["text"]      # 26.3: NBT, 1.21.1: JSON
+
+
 def digest(path):
     """For each chunk the sorted counts of block states, and the list of entities (ID, position, name tag)."""
     w = world_reader.World(path)
@@ -23,7 +27,7 @@ def digest(path):
             n.update(names[i] for i in idx)
         chunks[f"{cx},{cz}"] = dict(sorted(n.items()))
     entities = sorted([str(e["id"]), [round(float(v), 1) for v in e["Pos"]],
-                       json.loads(str(e["CustomName"]))["text"] if "CustomName" in e else None]
+                       name_text(e["CustomName"]) if "CustomName" in e else None]
                       for e in w.entities())
     return {"chunks": chunks, "entities": entities}
 

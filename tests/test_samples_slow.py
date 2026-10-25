@@ -25,9 +25,9 @@ def test_sample_map_converts(name, tmp_path):
     log = out.getvalue()
     assert "units in a block (moved up): 0" in log, log
     w = world_reader.World(str(tmp_path / "World"))
-    assert mcvalid.invalid_states(w.palette()) == {}
+    assert mcvalid.invalid_states(w.palette(), aoe2mc.VERSION_NAME) == {}
     biomes = {str(b) for c in w.chunks().values() for s in c["sections"] for b in s["biomes"]["palette"]}
-    assert {b: mcvalid.biome_error(b) for b in biomes if mcvalid.biome_error(b)} == {}
+    assert {b: mcvalid.biome_error(b, aoe2mc.VERSION_NAME) for b in biomes if mcvalid.biome_error(b, aoe2mc.VERSION_NAME)} == {}
     for e in w.entities(flat=False):
         for i in entity_ids(e):
-            assert mcvalid.entity_error(i) is None, i
+            assert mcvalid.entity_error(i, aoe2mc.VERSION_NAME) is None, i
