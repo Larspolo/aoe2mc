@@ -60,6 +60,9 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Climbing plants | `vine`, `azalea_leaves` | `pillar` |
 | Charred timber | `coal_block`, `blackstone`, dark oak logs | `burned_building` |
 | Spire tip, finial | `lightning_rod` | `Canvas.spire`, `monastery`, `mosque` |
+| Mud-brick pinnacle | `mud_brick_wall` on a buttress | `djenne` (Wonder, African) |
+| Glazed tile band, tile panel | `blue_terracotta`; `Style.dome` terracotta over arches | `taj`, `samarra` (Wonders) |
+| Chhatri (small domed kiosk) | `quartz_pillar` posts and a small dome | `taj` (Wonder, South Asian) |
 | Chain, rope | `chain` | `dock`, `siege_workshop`, `shipyard`, `harbor_chain` |
 | Portcullis, grille | `iron_bars` | `gate`, `castle` |
 | Lamp | `lantern` | `decorate()`, `blacksmith` (hanging) |

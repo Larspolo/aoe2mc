@@ -77,7 +77,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 - `terrain_style` checks names in sequence: an earlier rule wins (`ROAD_GRAVEL` matched `GRAVEL` until #5).
 - A merge conflict in `docs/coverage.md`: take any side, run `python3 tools/coverage.py`, then set `MAX` in
   `tests/test_coverage.py` to the new counts. Parallel runs often change the same counts (#79). Check
-  `mergeable_state` before the merge: a green PR is "dirty" when main moved after the push.
+  `mergeable_state` before the merge: a green PR is "dirty" when main moved after the push. Merge in the CI poll
+  loop at once. Put new `docs/DESIGN.md` table rows next to a related row, not at the end: all design PRs add there.
 - Drawing all 243 building types for one architecture set takes about 1 s. A full gallery conversion takes
   about 23 s. `--verbose` prints the time per phase: `build_chunk` ("chunks") is about 70 % (#26).
 - Block IDs in `B` depend on what was registered before (earlier tests or conversions). Code that draws random

@@ -1428,33 +1428,99 @@ def cathedral(c, w, st, col, T, ctx):
 
 
 def mosque(c, w, st, col, T, ctx):
-    pl, dome = st.plaster, st.dome
+    """Mosque Wonder: the model of the game for each set (Djenne, Taj Mahal, Samarra)."""
+    (djenne if st.torons else taj if st.eaves else samarra)(c, w, st, col, T, ctx)
+
+
+def samarra(c, w, st, col, T, ctx):
+    """Saracen Wonder: the spiral minaret of Samarra in a court with a low arcade (Middle Eastern)."""
     c.box(0, w, 0, 1, 0, w, st.stone2)
-    h1 = max(5, round(w * 0.3))
-    a, b = 2, w - 2
-    c.room(a, b, a, b, 0, h1, pl, st.floor)
-    c.walls(a, b, h1, h1 + 1, a, b, dome)                                # colored band
-    c.windows(a, b, a, b, 3, b="iron_bars", step=2, height=2)
-    c.flat_roof(a, b, a, b, h1 + 1, st.roof if st.shape == "flat" else "smooth_sandstone", parapet=pl)
+    c.walls(0, w, 1, 4, 0, w, st.stone)                                 # arcade around the court
+    c.walls(0, w, 4, 5, 0, w, st.accent)
+    for k in range(2, w - 2, 3):
+        for x, z in ((k, 0), (k, w - 1), (0, k), (w - 1, k)):
+            c.box(x, x + 1, 1, 3, z, z + 1, "air")
+            c.set(x, 3, z, st.dome)                                       # blue tiles over each arch
+    mid = w // 2
+    c.box(mid - 1, mid + 2, 1, 4, w - 1, w, "air")                        # entrance
     cx = (w - 1) / 2
-    rd = (b - a) / 2 - 1.5
-    c.cylinder(cx, cx, rd, h1 + 2, h1 + 4, pl)
-    c.cylinder(cx, cx, rd - 1, h1 + 2, h1 + 4, "air")
-    top = c.dome(cx, cx, rd, h1 + 4, dome)
-    c.set(w // 2, top + 1, w // 2, "gold_block"); c.set(w // 2, top + 2, w // 2, "lightning_rod")
-    hm = max(h1 + 8, round(w * 1.0))
-    for mx in (1, w - 2):                                               # minarets
-        for mz in (1, w - 2):
-            c.cylinder(mx, mz, 1.2, 1, hm, pl)
-            c.cylinder(mx, mz, 2.0, hm - 3, hm - 2, family(st.roof)[1] + "[type=bottom]")
-            c.cylinder(mx, mz, 1.2, hm - 2, hm, pl)
-            c.dome(mx, mz, 1.3, hm, dome)
-    mid = w // 2                                                         # portal (iwan)
-    c.box(mid - 3, mid + 4, 1, h1 + 4, w - 3, w - 1, pl)
-    c.box(mid - 3, mid + 4, h1 + 3, h1 + 4, w - 3, w - 1, dome)
-    c.box(mid - 1, mid + 2, 1, h1 + 1, w - 3, w - 1, "air")
-    c.box(mid - 1, mid + 2, h1, h1 + 1, w - 2, w - 1, dome)
-    c.banner(mid - 2, h1, w - 1, col); c.banner(mid + 2, h1, w - 1, col)
+    r0, n, th = w * 0.3, 5, max(4, round(w * 0.25))
+    c.cylinder(cx, cx, r0 + 1, 1, 2, st.stone2)
+    y = 2
+    for i in range(n):                                                    # tapering tiers with a ramp ledge
+        r = r0 - i * (r0 - 1.8) / (n - 1)
+        c.cylinder(cx, cx, r, y, y + th, st.stone)
+        c.cylinder(cx, cx, r + 0.7, y, y + 1, st.stone2)
+        for k in range(th * 4):                                           # the spiral ramp
+            a = 2 * math.pi * (k / (th * 4) + i * 0.25)
+            x, z = int(round(cx + (r + 0.4) * math.cos(a))), int(round(cx + (r + 0.4) * math.sin(a)))
+            c.set(x, y + k // 4, z, st.stone2)
+        y += th
+    for x, z in ((mid - 1, mid - 1), (mid + 1, mid - 1), (mid - 1, mid + 1), (mid + 1, mid + 1)):
+        c.box(x, x + 1, y, y + 2, z, z + 1, st.accent)                    # kiosk on the top
+    top = c.dome(mid, mid, 1.6, y + 2, st.dome)
+    c.set(mid, top + 1, mid, "lightning_rod")
+    c.banner(mid - 2, 3, w, col); c.banner(mid + 2, 3, w, col)
+
+
+def taj(c, w, st, col, T, ctx):
+    """Wonder of the South Asian set (Taj Mahal): a block with iwan arches, a large white dome and small
+    domed kiosks on the corners."""
+    c.box(0, w, 0, 1, 0, w, st.stone2)
+    c.box(1, w - 1, 1, 2, 1, w - 1, st.stone)                             # plinth
+    a, b, h = 3, w - 3, max(7, round(w * 0.4))
+    c.room(a, b, a, b, 1, h, st.accent, st.floor)
+    c.walls(a, b, h - 1, h, a, b, "blue_terracotta")                      # tile band
+    c.box(a, b, h, h + 1, a, b, st.stone)
+    mid = w // 2
+    for side in "nesw":                                                   # one iwan arch on each side
+        for d in range(-2, 3):
+            x, z = {"n": (mid + d, a), "s": (mid + d, b - 1), "w": (a, mid + d), "e": (b - 1, mid + d)}[side]
+            c.box(x, x + 1, 2, h - 2, z, z + 1, st.dome if abs(d) == 2 else "air")
+            c.set(x, h - 2, z, st.dome)
+    c.door(mid, 2, b - 2)
+    cx = (w - 1) / 2
+    rd = (b - a) / 2 - 2
+    c.cylinder(cx, cx, rd - 0.5, h + 1, h + 5, st.dome)                   # drum
+    top = c.dome(cx, cx, rd + 0.5, h + 5, st.dome)
+    top = c.cone(cx, cx, 2, top + 1, st.dome)                              # the onion tip
+    c.set(mid, top + 1, mid, "gold_block"); c.set(mid, top + 2, mid, "lightning_rod")
+    for x in (a + 1, b - 2):                                               # chhatris on the corners
+        for z in (a + 1, b - 2):
+            for px, pz in ((x - 1, z - 1), (x + 1, z - 1), (x - 1, z + 1), (x + 1, z + 1)):
+                c.box(px, px + 1, h + 1, h + 3, pz, pz + 1, "quartz_pillar")
+            c.dome(x, z, 1.6, h + 3, st.dome)
+            c.set(x, h + 5, z, "lightning_rod")
+    c.banner(mid - 3, h - 2, b, col); c.banner(mid + 3, h - 2, b, col)
+
+
+def djenne(c, w, st, col, T, ctx):
+    """Malian Wonder (Great Mosque of Djenne): a mud-brick hall with buttresses, pinnacles, wooden beams
+    (torons) and three towers on the front."""
+    c.box(0, w, 0, 1, 0, w, st.stone2)
+    a, b, h = 2, w - 2, max(7, round(w * 0.4))
+    c.room(a, b, a, b, 0, h, st.stone, st.floor)
+    c.flat_roof(a, b, a, b, h, st.roof)
+    for k in range(a, b, 3):                                               # buttresses with pinnacles
+        for x, z in ((k, a - 1), (k, b), (a - 1, k), (b, k)):
+            c.box(x, x + 1, 1, h + 2, z, z + 1, st.stone)
+            c.set(x, h + 2, z, "mud_brick_wall")
+    for y in (3, 6):                                                       # torons
+        for k in range(a + 1, b - 1, 3):
+            c.set(k, y, a - 1, "stripped_oak_log[axis=z]"); c.set(k, y, b, "stripped_oak_log[axis=z]")
+            c.set(a - 1, y, k, "stripped_oak_log[axis=x]"); c.set(b, y, k, "stripped_oak_log[axis=x]")
+    mid = w // 2
+    for tx in (mid - 6, mid, mid + 5):                                     # three towers on the front
+        th = h + (12 if tx == mid else 9)
+        c.box(tx - 1, tx + 2, 1, th, b - 3, b, st.stone)
+        for x in (tx - 1, tx + 1):
+            c.set(x, th, b - 1, "mud_brick_wall")
+        c.set(tx, th, b - 1, "mud_brick_wall"); c.set(tx, th + 1, b - 1, "mud_brick_wall")
+        for y in range(4, th - 1, 3):
+            c.set(tx, y, b, "stripped_oak_log[axis=z]")
+    c.box(mid, mid + 1, 1, 4, b - 3, b, "air")                             # entrance in the middle tower
+    c.door(mid, 1, b - 3)
+    c.banner(mid - 2, 4, b, col); c.banner(mid + 2, 4, b, col)
 
 
 def pagoda(c, w, st, col, T, ctx):
