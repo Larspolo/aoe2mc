@@ -55,6 +55,10 @@ MIN_Y, MAX_Y = -64, 320      # world height range (MAX_Y exclusive)
 HEIGHT = MAX_Y - MIN_Y
 WATER_Y = 62                 # Y of the highest water block (sea level)
 NONE = -10000                # marker for "no column here" (outside the map)
+# AoE2 tile x goes to the top corner of the screen, tile y to the bottom corner. With x → +X and y → +Z the
+# top corner is in the north-east: the map is the in-game view turned 45° clockwise, not mirrored.
+# The player looks north-east at the spawn, like the AoE2 camera (yaw 0 = south, 90 = west, 180 = north).
+SPAWN_YAW = -135.0
 
 
 # --------------------------------------------------------------------------------------------
@@ -1282,7 +1286,7 @@ def write_level_dat(path, name, spawn):
                              "Series": String("main"), "Snapshot": Byte(0)}),
         "LevelName": String(name), "GameType": Int(1), "Difficulty": Byte(1),   # not peaceful: peaceful removes the soldiers
         "allowCommands": Byte(1), "hardcore": Byte(0), "initialized": Byte(1),
-        "SpawnX": Int(spawn[0]), "SpawnY": Int(spawn[1]), "SpawnZ": Int(spawn[2]), "SpawnAngle": Float(0),
+        "SpawnX": Int(spawn[0]), "SpawnY": Int(spawn[1]), "SpawnZ": Int(spawn[2]), "SpawnAngle": Float(SPAWN_YAW),
         "LastPlayed": Long(int(time.time() * 1000)), "Time": Long(0), "DayTime": Long(6000),
         "raining": Byte(0), "thundering": Byte(0), "rainTime": Int(0), "thunderTime": Int(0),
         "clearWeatherTime": Int(0), "WasModded": Byte(0),
