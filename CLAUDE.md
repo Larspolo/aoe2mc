@@ -64,7 +64,7 @@ not change. Do not add a dependency without a ticket that asks for it. Keep func
 
 There is no Minecraft client here. Use, from cheap to expensive: lint and fast tests → slow tests → convert a
 scenario with `--preview` and look at the PNG with the Read tool → `tools/world_reader.py` for exact blocks.
-The cloud network blocks Mojang servers (403), so a headless Minecraft server cannot run there yet.
+The Mojang hosts are reachable, so a headless Minecraft server check is possible (ticket #13).
 Details: the `verify` skill.
 
 ## How to work

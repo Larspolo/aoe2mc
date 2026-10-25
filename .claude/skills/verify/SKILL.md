@@ -35,8 +35,8 @@ against `tools/mcdata/1.21.1.json`.
 
 ## Level 4 – only the game can show it
 
-Examples: unit facing, light, entity behavior. A headless Minecraft server is not possible while the cloud
-network blocks Mojang hosts. Make a `needs-human` ticket with: the scenario or the command that makes the
+Examples: unit facing, light, entity behavior. Load errors: use `tools/mc_check.py` when it exists (#13).
+For what only a person can see, make a `needs-human` ticket with: the scenario or the command that makes the
 test world, and exact steps for the owner ("Open the world. Stand at X Y Z. Look north. The knight must
 face you.").
 

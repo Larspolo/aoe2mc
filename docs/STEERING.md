@@ -49,15 +49,18 @@ The file `.github/labels.txt` defines the labels. The Labels workflow creates th
 
 - **Scheduled cloud runs** (recommended): a scheduled task in Claude Code on the web starts a new session on
   a timer. Each run uses your Max quota. Change or stop the schedule at claude.ai/code (scheduled tasks).
+  The scheduled task must have the repository `Larspolo/aoe2mc`. Without it, the runs cannot clone the code.
+  To set it: open claude.ai/code/routines → the task → menu next to its name → **Edit** → **Advanced
+  settings** → **General** → **Repository** → `Larspolo/aoe2mc`. Below it, select the **Cloud environment**
+  that allows the Mojang hosts. Select the model in the model selector of the prompt box. **Save changes**.
 - **On your computer**: `scripts/autopilot.sh 3` runs 3 cycles, one ticket each.
   It needs the Claude Code CLI and the GitHub CLI (`gh auth login`).
 - **By hand**: open a Claude Code session in this repository and type `/autopilot`.
 
 ## Network for Minecraft tests
 
-The cloud network blocks the Mojang servers. To let the agent start a headless Minecraft server for tests,
-add these hosts to the environment: open the cloud environment menu in the session title bar → Edit →
-Network access → Allowed domains:
+The agent starts a headless Minecraft server for tests. For this, the environment allows these hosts
+(done in #12; cloud environment menu in the session title bar → Edit → Network access → Allowed domains):
 
     piston-meta.mojang.com
     piston-data.mojang.com
