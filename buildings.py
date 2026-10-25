@@ -1149,6 +1149,19 @@ def caravanserai(c, w, st, col, T, ctx):
     c.set(mid, 1, mid, "water_cauldron[level=3]")
     for x, z, g in ((t, t, "barrel[facing=up]"), (w - t - 1, t, "hay_block"), (t, w - t - 1, "chest[facing=east]")):
         c.set(x, 1, z, g)
+    # The rooms in the ring: bales of goods in the corners, barrels along the sides, a carpet and lanterns
+    ring = sorted({p for k in range(1, w - 1) for p in ((k, 1), (k, w - 2), (1, k), (w - 2, k))})
+    bales = ["white_wool", "orange_wool", "red_wool", "hay_block"]
+    items = []
+    for x, z in ring:
+        if x in (1, w - 2) and z in (1, w - 2):
+            items += [(x, 1, z, "hay_block"), (x, 2, z, bales[int(c.rng.integers(len(bales)))])]
+        elif (x + z) % 4 == 0:
+            items += [(x, 1, z, "barrel[facing=up]" if c.rng.random() < 0.6 else bales[int(c.rng.integers(len(bales)))])]
+        elif (x + z) % 4 == 2:
+            items += [(x, h, z, "lantern[hanging=true]")]
+    items += [(x, 1, z, "red_carpet") for x, z in ring]
+    c.furniture(items)
 
 
 def monastery(c, w, st, col, T, ctx):
@@ -1498,6 +1511,14 @@ def folwark(c, w, st, col, T, ctx):
     c.set(mx1, 1, mz1, "barrel[facing=up]"); c.set(mx1 + 1, 1, mz1, "barrel[facing=up]")
     c.set(0, 1, mz1, "spruce_trapdoor[facing=south,half=bottom,open=true]")   # cart wheel against the wall
     c.set(bx0 - 1, 1, w - 2, "composter")
+    # Inside: the home of the steward in the hall, sacks of grain in the barn, the millstone in the windmill
+    furnish(c, hx0 + 1, hx1 - 1, hz0 + 1, hz1 - 1, 1, fw, col, door=hx0 + 2)
+    c.furniture([(hx1 - 2, 1, hz0 + 1, "barrel[facing=up]"), (hx0 + 1, hh, (hz0 + hz1) // 2, "lantern[hanging=true]"),
+                 (hx1 - 2, hh, (hz0 + hz1) // 2, "lantern[hanging=true]"),
+                 (bx0 + 1, 1, bz0 + 1, "hay_block"), (bx0 + 1, 2, bz0 + 1, "hay_block"), (w - 2, 1, bz0 + 1, "hay_block"),
+                 ((bx0 + w) // 2, bh, bz0 + 2, "lantern[hanging=true]"),
+                 (mx0 + 1, 1, mz0 + 1, "grindstone[face=floor,facing=north]"), (mx1 - 2, 1, mz0 + 1, "hay_block"),
+                 (mx1 - 2, 2, mz0 + 1, "lantern[hanging=false]")])
 
 
 def granary(c, w, st, col, T, ctx):
@@ -1992,6 +2013,22 @@ def feitoria(c, w, st, col, T, ctx):
     for x, z in ((mid - 2, d + 2), (mid - 1, d + 2), (mid + 1, d + 3), (6, w - 3), (7, w - 3), (mid + 2, w - 3)):
         if c.rng.random() < 0.8:
             c.set(x, 1, z, goods[int(c.rng.integers(len(goods)))])
+    # Inside: crates and sacks in the warehouses and the small tower, the counting room in the main tower
+    stock = ["barrel[facing=up]", "chest[facing=south]", "brown_wool", "white_wool", "hay_block", "barrel[facing=up]"]
+    rooms = [(2, mid - 3, 2, d - 1, 4), (w - d + 1, w - 2, d + 1, w - 5, 4), (1, sx1 - 1, sz0 + 1, w - 1, hs)]
+    items = []
+    for rx0, rx1, rz0, rz1, ry in rooms:                                   # inside cells rx0..rx1-1, rz0..rz1-1
+        for x in range(rx0, rx1):
+            for z in range(rz0, rz1):
+                if (x in (rx0, rx1 - 1) or z == rz0) and c.rng.random() < 0.7:
+                    items += [(x, 1, z, stock[int(c.rng.integers(len(stock)))])]
+                    if c.rng.random() < 0.4:
+                        items += [(x, 2, z, stock[int(c.rng.integers(len(stock)))])]
+        items += [((rx0 + rx1) // 2, ry, (rz0 + rz1) // 2, "lantern[hanging=true]")]        # under the ceiling
+    items += [(x0 + 1, 1, z0 + 1, "cartography_table"), (x0 + 1, 2, z0 + 1, "lantern[hanging=false]"),
+              (x0 + 2, 1, z0 + 1, "lectern[facing=south,has_book=true,powered=false]"), (x1 - 2, 1, z0 + 1, "chest[facing=south]"),
+              (x0 + 1, 1, z0 + 2, stair(f"{wood if wood in WOODS else 'spruce'}_stairs", "south")), (x1 - 2, 1, z0 + 2, "barrel[facing=up]")]
+    c.furniture(items)
 
 
 def outpost(c, w, st, col, T, ctx):
