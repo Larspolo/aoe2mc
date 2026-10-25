@@ -33,6 +33,7 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   `samples/de-64.3.aoe2record` is an `mgz` test record (MIT, #134; more in `happyleavesaoc/aoc-mgz/master/tests/recs/`):
   `mgz.model.parse_match(f).map.tiles` gives terrain and elevation of a real DE map. Install `mgz` after
   `python3 -m pip install --ignore-installed setuptools` (the Debian setuptools cannot build it).
+  A record has each town center 4 times (IDs 109 and the annex parts 618–620): `read_record` skips them (#139).
 
 ## Libraries
 
@@ -70,7 +71,6 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 - A merge conflict in `docs/coverage.md`: take any side, run `python3 tools/coverage.py`, then set `MAX` in
   `tests/test_coverage.py` to the new counts. Parallel runs often change the same counts (#79). Check
   `mergeable_state` before the merge: a green PR is "dirty" when main moved after the push. Merge in the CI poll loop.
-- All 243 building types of one set draw in about 1 s; the gallery converts in about 23 s (`--verbose`: per phase, #26).
 - Block IDs in `B` depend on what was registered before (earlier tests or conversions). Code that draws random
   numbers per block ID must go in state-name order, not ID order (see #44). A test that passes alone but
   fails in the full suite often has this cause.
