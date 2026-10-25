@@ -11,7 +11,7 @@ Options:
     --name TEXT        World name in the Minecraft menu (default: file name)
     --seed N           Seed for the random details (tree heights, flowers) (default 1)
     --preview          Also write preview.png (top view) into the world folder
-    --mc-version V     Minecraft Java version of the output: 1.21.1 (default) or 26.3
+    --mc-version V     Minecraft Java version of the output: 26.3 (default) or 1.21.1
     --orientation C    Minecraft corner (ne, se, sw, nw) of the top corner of the AoE2 screen (default ne)
     --no-units         Do not convert units (mobs, boats, minecarts)
     --no-birds         Do not convert birds
@@ -54,7 +54,7 @@ VERSIONS = {
     "1.21.1": dict(name="1.21.1", data_version=3955, renames={}),
     "26.3": dict(name="26.3", data_version=5023, renames={"minecraft:chain": "minecraft:iron_chain"}),
 }
-VERSION_NAME = "1.21.1"      # the default output version
+VERSION_NAME = "26.3"        # the default output version. The code uses the 1.21.1 names (no renames).
 DATA_VERSION = VERSIONS[VERSION_NAME]["data_version"]
 MC = VERSIONS[VERSION_NAME]  # the version of the running conversion; convert() sets it
 V26_1, V26_3 = 4786, 5023    # data versions of format changes (more in units.to_version)

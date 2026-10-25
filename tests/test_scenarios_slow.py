@@ -28,7 +28,7 @@ def test_scenario_converts(kind, tmp_path):
     if kind == "stress":
         assert "units on bridges: 3" in log
     w = world_reader.World(str(tmp_path / "World"))
-    assert mcvalid.invalid_states(w.palette()) == {}
+    assert mcvalid.invalid_states(w.palette(), aoe2mc.VERSION_NAME) == {}
     for e in w.entities(flat=False):
         for i in entity_ids(e):
-            assert mcvalid.entity_error(i) is None, i
+            assert mcvalid.entity_error(i, aoe2mc.VERSION_NAME) is None, i

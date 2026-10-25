@@ -20,7 +20,7 @@ For changes in `buildings.py`, terrain, objects, units, the chunk writer or `lev
     python3 -m pytest -m slow
 
 This converts every object type of the parser and checks all block states, biomes and entity IDs
-against `tools/mcdata/1.21.1.json`.
+against `tools/mcdata/<output version>.json` (26.3 by default).
 
 ## Level 3 – the change affects how the world looks
 

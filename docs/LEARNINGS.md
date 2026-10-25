@@ -20,7 +20,7 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 - A scheduled task from `create_trigger` has no repository, so its sessions cannot clone: set `Larspolo/aoe2mc`
   as its repository in the claude.ai UI. Scheduled runs use Sonnet 5.5 unless the task sets another model.
 - The repository is private: a workflow with a `permissions:` block also needs `contents: read`, or
-  `actions/checkout` fails with "Repository not found".
+  `actions/checkout` fails with "Repository not found". The `pulls` API needs `pull-requests: read` (else 403).
 - Minecraft server: a bad property value (`facing=up`) loads silently as the default state. An unknown block gives
   "Recoverable errors when loading section". A missing `level.dat` compound gives "key missing: <name>" (#60).
   The yggdrasil key error is normal: `api.minecraftservices.com` is not reachable.

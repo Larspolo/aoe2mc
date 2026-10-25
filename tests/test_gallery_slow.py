@@ -21,7 +21,7 @@ def test_gallery_world(tmp_path):
     with contextlib.redirect_stdout(out):
         aoe2mc.convert(src, str(tmp_path / "GalleryWorld"))
     w = world_reader.World(str(tmp_path / "GalleryWorld"))
-    assert mcvalid.invalid_states(w.palette()) == {}
+    assert mcvalid.invalid_states(w.palette(), aoe2mc.VERSION_NAME) == {}
     for e in w.entities(flat=False):
         for i in entity_ids(e):
-            assert mcvalid.entity_error(i) is None, i
+            assert mcvalid.entity_error(i, aoe2mc.VERSION_NAME) is None, i

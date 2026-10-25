@@ -556,9 +556,10 @@ def castle(c, w, st, col, T, ctx, small=False):
     c.walls(1, w - 1, 1, hw + 1, 1, w - 1, stone, t=th)
     if st.framing == "bands":
         c.walls(1, w - 1, 1, 2, 1, w - 1, st.accent)                     # base row
-        c.walls(1, w - 1, hw, hw + 1, 1, w - 1, st.accent)               # band under the merlons
+    c.walls(1, w - 1, hw, hw + 1, 1, w - 1, f"{col}_wool")               # player band under the merlons
     c.crenels(1, w - 1, 1, w - 1, hw + 1, (st.merlon or stone))
     roofed = st.shape in ("gable", "hip", "asian")
+    asian = st.shape == "asian"
     roof = family(st.roof)[2] if roofed else None
     # Round corner towers that stand out from the walls
     r = max(1.6, w / 7)
@@ -566,6 +567,7 @@ def castle(c, w, st, col, T, ctx, small=False):
         for cz in (r - 0.5, w - r - 0.5):
             c.cylinder(cx, cz, r, 1, hw + 4, stone)
             c.cylinder(cx, cz, r - 1, hw + 1, hw + 4, "air")
+            c.cylinder(cx, cz, r, hw + 2, hw + 3, f"{col}_wool", hollow=True)
             c.cylinder(cx, cz, r - 1, hw + 3, hw + 4, st.wood)
             for y in range(3, hw + 2, 3):
                 ix, iz = int(round(cx)), int(round(cz))
@@ -573,7 +575,9 @@ def castle(c, w, st, col, T, ctx, small=False):
                     c.set(ix, y, int(round(cz + r - 0.5)), "iron_bars")
                 else:
                     c.set(int(round(cx + r - 0.5)), y, iz, "iron_bars")
-            if roofed:
+            if asian:                   # square roofs with upturned corners
+                c.hip(int(cx - r) - 1, int(cx + r) + 2, int(cz - r) - 1, int(cz + r) + 2, hw + 4, st.roof, flare=True)
+            elif roofed:
                 c.cone(cx, cz, r + 0.5, hw + 4, roof)
             else:
                 c.cylinder(cx, cz, r, hw + 4, hw + 5, stone)
@@ -600,15 +604,36 @@ def castle(c, w, st, col, T, ctx, small=False):
     for y in (hw + 2, kh - 2):
         c.windows(k, w - k, k, w - k, y, b="iron_bars", step=2, height=2)
     c.box(mid - (gw // 2), mid - (gw // 2) + gw, 1, 4, w - k - 1, w - k, "air")
+    if asian:
+        # Tenshu: white plastered upper floors on the stone base, a flared roof skirt at each floor
+        c.walls(k, w - k, hw + 1, kh + 1, k, w - k, st.plaster)
+        for x in (k, w - k - 1):
+            for z in (k, w - k - 1):
+                c.box(x, x + 1, hw + 1, kh + 1, z, z + 1, st.timber)
+        c.windows(k, w - k, k, w - k, kh - 2, b="iron_bars", step=2, height=2)
+        for y in range(hw + 1, kh - 1, 4):
+            c.hip(k - 1, w - k + 1, k - 1, w - k + 1, y, st.roof, layers=1, flare=True)
+        top = c.hip(k - 1, w - k + 1, k - 1, w - k + 1, kh + 1, st.roof, flare=True)
+        for x in range(k + 1, w - k - 1, 3):
+            c.banner(x, hw - 1, w - k, col)
+        c.flag(mid, top + 1, mid, col, 3)
+        return
+    domed = st.torons or st.dome == "bricks"          # Malian and Byzantine castles: a dome on the keep
     for tx in (k, w - k - 2):
         for tz in (k, w - k - 2):
             c.box(tx, tx + 2, kh + 1, kh + 4, tz, tz + 2, stone)
-            if roofed:
+            if roofed and not domed:
                 c.spire(tx - 1, tx + 3, tz - 1, tz + 3, kh + 4, roof, steep=1, tip=None)
             else:
                 c.crenels(tx, tx + 2, tz, tz + 2, kh + 4, (st.merlon or stone))
     for x in range(k + 1, w - k - 1, 3):
         c.banner(x, kh - 3, w - k, col)
+    if domed:
+        rd = (w - 2 * k) / 2 - 1
+        c.cylinder(mid - 0.5, mid - 0.5, rd, kh + 1, kh + 3, st.accent)              # drum
+        top = c.dome(mid - 0.5, mid - 0.5, rd, kh + 3, st.dome)
+        c.flag(mid, top + 1, mid, col, 3)
+        return
     c.flag(mid, kh + 1, mid, col, 5)
 
 
@@ -960,6 +985,8 @@ def mill(c, w, st, col, T, ctx):
             if i > 1:
                 c.set(mid + sx * i - sx, hub_y + sy * i, hz, "white_wool")
     c.banner(mid + 1, 3, zf, col)
+    c.set(0, 1, w - 1, "barrel[facing=up]"); c.set(1, 1, w - 1, "hay_block")             # flour and grain sacks
+    c.set(w - 1, 1, 1, "grindstone[face=floor,facing=south]")                          # millstone
 
 
 def granary(c, w, st, col, T, ctx):
@@ -978,37 +1005,55 @@ def granary(c, w, st, col, T, ctx):
     c.banner(mid + 1, 3, zf, col)
 
 
-def camp(c, w, st, col, T, ctx, goods):
-    """Lumber camp / mining camp: an open shed with stores."""
-    c.box(0, w, 0, 1, 0, w, "coarse_dirt")
-    x0, x1, z0, z1 = 0, w, 0, max(4, w * 2 // 3)
+def log_pile(c, x0, x1, z0, n, logs):
+    """Logs along x, stacked as a pyramid: n logs at the bottom, one less on each layer."""
+    for y in range(n):
+        for k in range(n - y):
+            c.box(x0, x1, 1 + y, 2 + y, z0 + k, z0 + k + 1, logs[(y + k) % len(logs)] + "[axis=x]")
+
+
+def shelter(c, x0, x1, z0, z1, st):
+    """Open shelter: four posts and a small roof above head height."""
     for x in (x0, x1 - 1):
         for z in (z0, z1 - 1):
             c.box(x, x + 1, 1, 4, z, z + 1, st.timber)
     c.box(x0, x1, 3, 4, z0, z0 + 1, st.beam + "[axis=x]"); c.box(x0, x1, 3, 4, z1 - 1, z1, st.beam + "[axis=x]")
-    c.walls(x0, x1, 1, 3, z0, z0 + 1, st.wood)
     if st.shape == "flat":
         c.box(x0, x1, 4, 5, z0, z1, family(st.roof)[1] + "[type=bottom]")
     else:
-        c.gable(x0 - 1, x1 + 1, z0, z1, 4, st.roof, axis="x")
-    for i, g in enumerate(goods):
-        x = 1 + (i % (w - 2))
-        c.set(x, 1, 1, g)
-        if i % 2 == 0:
-            c.set(x, 2, 1, g)
-    c.flag(w - 1, 4, z1 - 1, col, 2)
+        c.gable(x0, x1, z0 - 1, z1 + 1, 4, st.roof, axis="z")
 
 
 def lumber_camp(c, w, st, col, T, ctx):
-    camp(c, w, st, col, T, ctx, ["oak_log[axis=x]", "oak_log[axis=x]", "spruce_log[axis=x]", "oak_log[axis=x]"])
-    c.set(1, 1, w - 2, "oak_log"); c.set(w - 2, 1, w - 2, "spruce_log[axis=z]"); c.set(w - 3, 1, w - 2, "spruce_log[axis=z]")
+    """An open yard (as in the game): log piles, a hoist with a hanging log, a sawhorse and a workbench."""
+    c.box(0, w, 0, 1, 0, w, "coarse_dirt")
+    logs = [st.timber.replace("stripped_", ""), "spruce_log", "oak_log"]
+    log_pile(c, 1, w - 3, w - 4, 3, logs)                                 # front: the large pile
+    log_pile(c, w - 2, w, 1, 2, logs[1:])                                  # east: a small pile
+    post = st.timber.replace("stripped_", "")
+    c.box(1, 2, 1, 6, 1, 2, post)                                          # hoist: post, arm, chain, log
+    c.box(1, 4, 6, 7, 1, 2, post + "[axis=x]")
+    c.set(3, 5, 1, "chain"); c.set(3, 4, 1, "oak_log[axis=x]")
+    c.set(4, 1, 2, "spruce_fence"); c.set(6, 1, 2, "spruce_fence")      # sawhorse with a log on it
+    c.box(4, 7, 2, 3, 2, 3, "stripped_spruce_log[axis=x]")
+    c.set(1, 1, 3, "crafting_table"); c.set(2, 1, 3, "oak_log")           # workbench, chopping block
+    c.flag(w - 1, 1, w - 1, col, 3)
 
 
 def mining_camp(c, w, st, col, T, ctx):
-    camp(c, w, st, col, T, ctx, ["cobblestone", "gold_ore", "cobblestone", "raw_gold_block", "andesite"])
-    for x in range(1, w - 1):
+    """An open yard (as in the game): a small shelter with tools, heaps of stone and gold, and a rail track."""
+    c.box(0, w, 0, 1, 0, w, "coarse_dirt")
+    shelter(c, 0, 5, 0, 4, st)
+    c.set(1, 1, 1, "barrel[facing=up]"); c.set(2, 1, 1, "grindstone[face=floor,facing=south]")
+    c.set(3, 1, 1, "chest[facing=south]")
+    for x, z, h, b in ((w - 2, 1, 2, "cobblestone"), (w - 1, 1, 1, "stone"), (w - 2, 2, 1, "andesite"),
+                       (w - 1, 2, 2, "cobblestone"), (w - 2, 3, 1, "cobblestone"),            # stone heap
+                       (1, w - 3, 1, "gold_ore"), (2, w - 3, 2, "raw_gold_block"), (1, w - 2, 1, "raw_gold_block")):
+        c.box(x, x + 1, 1, 1 + h, z, z + 1, b)
+    for x in range(3, w - 1):
         c.set(x, 1, w - 2, "rail[shape=east_west]")
-    c.set(1, 1, w - 3, "cobblestone"); c.set(1, 2, w - 3, "cobblestone"); c.set(2, 1, w - 3, "gold_ore")
+    c.set(w - 3, 1, w - 4, "cobblestone_slab[type=bottom]")
+    c.flag(w - 1, 1, w - 1, col, 3)
 
 
 def dock(c, w, st, col, T, ctx):

@@ -20,7 +20,7 @@ faces +z (south in Minecraft). The owner must compare this with the game once.
 2. Open `facing.aoe2scenario` in the AoE2 DE scenario editor. Look at the 8 knights in the circle.
 3. Write down if all knights face away from the center. If not, write down the direction of one knight
    relative to the center (for example "toward the center", "clockwise along the circle").
-4. Open `FacingWorld` in Minecraft Java 1.21.1. The spawn is at the center of the circle. Look at the knights.
+4. Open `FacingWorld` in Minecraft Java 26.3. The spawn is at the center of the circle. Look at the knights.
 5. Compare. Also compare the row of archers: the first archer (west end) has rotation 0.
 6. Comment the result on the check ticket. If the directions are different, the agent changes the formula
    and the test `test_facing_map_knights_face_away_from_the_center`.
