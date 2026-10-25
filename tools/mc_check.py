@@ -31,7 +31,7 @@ import zipfile
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE = os.path.join(ROOT, ".cache", "mc")
 MANIFEST = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
-DEFAULT_VERSION = "1.21.1"
+DEFAULT_VERSION = "26.3"        # the default output version of aoe2mc
 # Log lines with WARN or ERROR that a correct world also gives
 HARMLESS = ("OFFLINE/INSECURE MODE", "make no attempt to authenticate", "possible to play without internet",
             'set "online-mode"', "Ambiguity between arguments", "Can't keep up!", "yggdrasil public key",

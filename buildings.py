@@ -556,9 +556,10 @@ def castle(c, w, st, col, T, ctx, small=False):
     c.walls(1, w - 1, 1, hw + 1, 1, w - 1, stone, t=th)
     if st.framing == "bands":
         c.walls(1, w - 1, 1, 2, 1, w - 1, st.accent)                     # base row
-        c.walls(1, w - 1, hw, hw + 1, 1, w - 1, st.accent)               # band under the merlons
+    c.walls(1, w - 1, hw, hw + 1, 1, w - 1, f"{col}_wool")               # player band under the merlons
     c.crenels(1, w - 1, 1, w - 1, hw + 1, (st.merlon or stone))
     roofed = st.shape in ("gable", "hip", "asian")
+    asian = st.shape == "asian"
     roof = family(st.roof)[2] if roofed else None
     # Round corner towers that stand out from the walls
     r = max(1.6, w / 7)
@@ -566,6 +567,7 @@ def castle(c, w, st, col, T, ctx, small=False):
         for cz in (r - 0.5, w - r - 0.5):
             c.cylinder(cx, cz, r, 1, hw + 4, stone)
             c.cylinder(cx, cz, r - 1, hw + 1, hw + 4, "air")
+            c.cylinder(cx, cz, r, hw + 2, hw + 3, f"{col}_wool", hollow=True)
             c.cylinder(cx, cz, r - 1, hw + 3, hw + 4, st.wood)
             for y in range(3, hw + 2, 3):
                 ix, iz = int(round(cx)), int(round(cz))
@@ -573,7 +575,9 @@ def castle(c, w, st, col, T, ctx, small=False):
                     c.set(ix, y, int(round(cz + r - 0.5)), "iron_bars")
                 else:
                     c.set(int(round(cx + r - 0.5)), y, iz, "iron_bars")
-            if roofed:
+            if asian:                   # square roofs with upturned corners
+                c.hip(int(cx - r) - 1, int(cx + r) + 2, int(cz - r) - 1, int(cz + r) + 2, hw + 4, st.roof, flare=True)
+            elif roofed:
                 c.cone(cx, cz, r + 0.5, hw + 4, roof)
             else:
                 c.cylinder(cx, cz, r, hw + 4, hw + 5, stone)
@@ -600,15 +604,36 @@ def castle(c, w, st, col, T, ctx, small=False):
     for y in (hw + 2, kh - 2):
         c.windows(k, w - k, k, w - k, y, b="iron_bars", step=2, height=2)
     c.box(mid - (gw // 2), mid - (gw // 2) + gw, 1, 4, w - k - 1, w - k, "air")
+    if asian:
+        # Tenshu: white plastered upper floors on the stone base, a flared roof skirt at each floor
+        c.walls(k, w - k, hw + 1, kh + 1, k, w - k, st.plaster)
+        for x in (k, w - k - 1):
+            for z in (k, w - k - 1):
+                c.box(x, x + 1, hw + 1, kh + 1, z, z + 1, st.timber)
+        c.windows(k, w - k, k, w - k, kh - 2, b="iron_bars", step=2, height=2)
+        for y in range(hw + 1, kh - 1, 4):
+            c.hip(k - 1, w - k + 1, k - 1, w - k + 1, y, st.roof, layers=1, flare=True)
+        top = c.hip(k - 1, w - k + 1, k - 1, w - k + 1, kh + 1, st.roof, flare=True)
+        for x in range(k + 1, w - k - 1, 3):
+            c.banner(x, hw - 1, w - k, col)
+        c.flag(mid, top + 1, mid, col, 3)
+        return
+    domed = st.torons or st.dome == "bricks"          # Malian and Byzantine castles: a dome on the keep
     for tx in (k, w - k - 2):
         for tz in (k, w - k - 2):
             c.box(tx, tx + 2, kh + 1, kh + 4, tz, tz + 2, stone)
-            if roofed:
+            if roofed and not domed:
                 c.spire(tx - 1, tx + 3, tz - 1, tz + 3, kh + 4, roof, steep=1, tip=None)
             else:
                 c.crenels(tx, tx + 2, tz, tz + 2, kh + 4, (st.merlon or stone))
     for x in range(k + 1, w - k - 1, 3):
         c.banner(x, kh - 3, w - k, col)
+    if domed:
+        rd = (w - 2 * k) / 2 - 1
+        c.cylinder(mid - 0.5, mid - 0.5, rd, kh + 1, kh + 3, st.accent)              # drum
+        top = c.dome(mid - 0.5, mid - 0.5, rd, kh + 3, st.dome)
+        c.flag(mid, top + 1, mid, col, 3)
+        return
     c.flag(mid, kh + 1, mid, col, 5)
 
 
@@ -1188,35 +1213,72 @@ def helepolis(c, w, st, col, T, ctx):
 
 
 def tower(c, w, st, col, T, ctx, kind="watch"):
-    stone = st.stone
-    hb = {"watch": 3 * T, "guard": 3 * T + 2, "keep": 3 * T + 4, "donjon": 3 * T + 6}.get(kind, 3 * T)
-    hb = max(hb, 8)
-    if kind == "bombard":
-        hb = 2 * T + 2
-        r = w / 2 + 0.3
-        c.cylinder((w - 1) / 2, (w - 1) / 2, r, 0, hb, stone)
-        c.cylinder((w - 1) / 2, (w - 1) / 2, r, hb, hb + 1, st.accent)
-        c.cylinder((w - 1) / 2, (w - 1) / 2, r - 1, hb, hb + 1, "air")
-        c.banner(w // 2, hb - 2, w, col)
-        return
-    c.box(0, w, 0, hb, 0, w, stone)
+    """Slim shaft, a door, bands in the player color and an overhanging lookout with the roof of the set (#76)."""
+    stone, mid, cc = st.stone, w // 2, (w - 1) / 2
+    hb = max({"watch": 3 * T, "guard": 3 * T + 2, "bombard": 3 * T + 2, "keep": 3 * T + 4,
+              "donjon": 3 * T + 6}.get(kind, 3 * T), 8)
+    high = kind != "watch"
+    rnd = st.domes and not st.eaves and not st.torons                     # Middle Eastern towers are round
+    c.box(0, w, 0, 1, 0, w, st.stone2)
+    if rnd:
+        c.cylinder(cc, cc, w / 2 - 0.2, 1, hb, stone)
+    else:
+        c.box(0, w, 1, hb, 0, w, stone)
     for y in range(4, hb - 1, 3):                                         # arrow slits
-        c.set(w // 2, y, w - 1, "iron_bars"); c.set(w - 1, y, w // 2, "iron_bars")
-    if kind in ("keep", "donjon") or st.shape == "flat":
-        c.box(-1, w + 1, hb, hb + 2, -1, w + 1, stone)
-        c.crenels(-1, w + 1, -1, w + 1, hb + 2, (st.merlon or stone))
-        c.box(0, w, hb + 1, hb + 2, 0, w, st.wood)
-        c.flag(w // 2, hb + 2, w // 2, col, 3)
-    else:   # wooden top with railing and a pointed roof
+        c.set(mid, y, w - 1, "iron_bars"); c.set(w - 1, y, mid, "iron_bars"); c.set(0, y, mid, "iron_bars")
+    band = [hb - 2] + ([hb // 2] if high else [])
+    for y in band:                                                        # bands in the player color
+        if rnd:
+            c.cylinder(cc, cc, w / 2 - 0.2, y, y + 1, f"{col}_wool", hollow=True)
+        else:
+            c.walls(0, w, y, y + 1, 0, w, f"{col}_wool")
+    c.door(mid - (w > 3), 1, w - 1, wood=st.wood.removesuffix("_planks"))
+    if st.shape == "flat" and not (st.torons and not high):              # stone lookout with merlons
+        if rnd:
+            c.cylinder(cc, cc, w / 2 + 0.8, hb, hb + 2, stone)
+            c.cylinder(cc, cc, w / 2 - 0.2, hb + 1, hb + 2, st.wood)
+            c.cylinder(cc, cc, w / 2 + 0.8, hb + 2, hb + 3, st.merlon or stone, hollow=True)
+            c.cylinder(cc, cc, w / 2 - 0.2, hb + 2, hb + 3, "air")
+        else:
+            c.box(-1, w + 1, hb, hb + 2, -1, w + 1, stone)
+            c.box(0, w, hb + 1, hb + 2, 0, w, st.wood)
+            c.crenels(-1, w + 1, -1, w + 1, hb + 2, st.merlon or stone)
+        for x, z in ((mid, -1), (mid, w), (-1, mid), (w, mid)):          # openings of the lookout
+            c.set(x, hb + 1, z, "iron_bars")
+        top = hb + 2
+        if st.eaves:                                                      # chhajja: a sloped overhang
+            sl = family(st.roof)[1]
+            c.walls(-2, w + 2, hb + 1, hb + 2, -2, w + 2, f"{sl}[type=top]")
+        if kind in ("keep", "donjon") or (st.eaves and high):            # a dome on the large towers
+            top = c.dome(cc, cc, max(1.2, w / 2 - 0.5), hb + 2, st.dome)
+        else:
+            c.flag(mid, hb + 2, mid, col, 3)
+            top = -1
+    else:                                                                 # wooden lookout on posts, roof over it
         c.box(-1, w + 1, hb, hb + 1, -1, w + 1, st.wood)
         c.walls(-1, w + 1, hb + 1, hb + 2, -1, w + 1, "spruce_fence")
         for x in (-1, w):
             for z in (-1, w):
                 c.box(x, x + 1, hb + 1, hb + 3, z, z + 1, st.timber)
-        top = c.hip(-2, w + 2, -2, w + 2, hb + 3, st.roof if st.shape != "flat" else "dark_oak",
-                    flare=st.shape == "asian")
-        c.flag(w // 2, top + 1, w // 2, col, 2)
-    c.banner(w // 2, hb - 2, w, col)
+        if st.shape == "flat":                                            # African: thatch
+            top = c.spire(-2, w + 2, -2, w + 2, hb + 3, "hay_block", steep=1, tip=None)
+        elif st.wonder == "pyramid":                                      # Mesoamerican: stepped stone crown
+            c.box(-1, w + 1, hb + 3, hb + 4, -1, w + 1, st.stone2)
+            top = c.spire(0, w, 0, w, hb + 4, stone, steep=1, tip=None)
+        elif st.wonder == "temple":                                       # Southeast Asian: stepped spire, gold tip
+            c.hip(-2, w + 2, -2, w + 2, hb + 3, st.roof, layers=1, flare=True)
+            top = c.spire(0, w, 0, w, hb + 4, stone, steep=1, tip="gold_block")
+        elif st.shape == "gable":                                         # European: tall pointed roof
+            top = c.spire(-2, w + 2, -2, w + 2, hb + 3, family(st.roof)[2], steep=2, tip="lightning_rod")
+        else:
+            top = c.hip(-2, w + 2, -2, w + 2, hb + 3, st.roof, flare=st.shape == "asian")
+    if top >= 0:
+        c.flag(mid, top + 1, mid, col, 2)
+    if kind == "bombard":                                                 # cannon barrels out of the lookout
+        for x, z, ax in ((mid, w, "z"), (mid, w + 1, "z"), (w, mid, "x"), (w + 1, mid, "x"),
+                         (mid, -1, "z"), (mid, -2, "z"), (-1, mid, "x"), (-2, mid, "x")):
+            c.set(x, hb + 1, z, f"polished_basalt[axis={ax}]")
+    c.banner(mid, hb - 4, w, col)
 
 
 def outpost(c, w, st, col, T, ctx):

@@ -3,8 +3,8 @@ import aoe2mc
 import mcvalid
 
 
-def test_default_version_is_the_output_version():
-    assert mcvalid.DEFAULT_VERSION == aoe2mc.VERSION_NAME
+def test_default_version_is_the_version_of_the_code_names():
+    assert aoe2mc.VERSIONS[mcvalid.DEFAULT_VERSION]["renames"] == {}   # the output versions rename from these names
 
 
 def test_version_data_differs():
