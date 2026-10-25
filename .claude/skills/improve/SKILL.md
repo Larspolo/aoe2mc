@@ -68,7 +68,7 @@ patterns and their fixes:
 
 ## 4. Clean up
 
-- `docs/LEARNINGS.md` below 80 lines, `CLAUDE.md` below 150 lines. Remove lines that are no longer true.
+- `docs/LEARNINGS.md` below 80 lines (only this skill merges and removes lines there; ticket runs only add), `CLAUDE.md` below 150 lines. Remove lines that are no longer true.
 - Read the skills for instructions that contradict each other. Correct them.
 
 ## 5. Report
