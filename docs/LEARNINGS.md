@@ -36,6 +36,7 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   `mgz.model.parse_match(f).map.tiles` gives terrain and elevation of a real DE map. Install `mgz` after
   `python3 -m pip install --ignore-installed setuptools` (the Debian setuptools cannot build it).
   A record has each town center 4 times (IDs 109 and the annex parts 618–620): `read_record` skips them (#139).
+- An unknown block entity id gives "Skipping block entity with invalid type": 26.3 has no `bed` block entity (#249).
 
 ## Libraries
 
@@ -65,8 +66,8 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   `build_chunk` returns `(nbt, vol)`: test exact blocks of a chunk with `vol` (#19).
 - `aoe2mc.py` reads `tools/mcdata/1.21.1.json` at import (#19). The package ships it as `tools.mcdata`
   (`pyproject.toml`). A new runtime data file must go into the package data too (test: `pip install .` in a venv).
-- `.gitattributes` merges `docs/DESIGN.md` with `union`: a local merge keeps the new table lines of both sides; look for one
-  line in two versions and keep one. GitHub ignores `union` (the PR is "dirty", #210). Not for text that runs rewrite (#174).
+- The column "Used today in" of the feature table in `docs/DESIGN.md` is generated on main (`tools/feature_table.py`,
+  `coverage.yml`, #234). A PR adds rows, but does not edit the column. GitHub ignored the old `union` rule (#210).
 - PRs do not change `docs/coverage.md` or `MAX` in `tests/test_coverage.py`: the `coverage.yml` workflow updates them on
   main (#233). A conflict there (old PR): take main's side. Check `mergeable_state` after the push: a PR is "dirty"
   when main moved. `automerge.yml` merges green agent PRs (#232).
@@ -79,3 +80,5 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - Inside of a design: `tools/render.py building NAME OUT.png --cut 2` (#265). Exact local layers: run the design
   function on a `Canvas` and read `c.get(x, y, z)` (#255).
 - `vary()` picks a `ROOF_ALT` material per variant: count blocks with `render.building_blocks(NAME, arch, variant=v)` (#146).
+- `tools/render.py world` draws only Y >= 50 (`--y0`): use `--y0 -64` for blocks under the map (`--border`). `--scale 4`
+  gives about 800 px, the size of the images in `docs/images/` (#262).

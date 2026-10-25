@@ -1,6 +1,7 @@
 name: Coverage
 
-# Updates docs/coverage.md and lowers MAX in tests/test_coverage.py on main (#233).
+# Updates docs/coverage.md, lowers MAX in tests/test_coverage.py and writes the column "Used today in" of
+# docs/DESIGN.md on main (#233, #234).
 # PRs do not change these files, so parallel PRs get no merge conflicts in them.
 # A push with GITHUB_TOKEN starts no other workflow, so this commit does not start CI again.
 # A merge by a workflow (GITHUB_TOKEN) starts no push workflow: start this one with `gh workflow run coverage.yml`.
@@ -32,14 +33,16 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Write the report and lower the maximums
         run: python3 tools/coverage.py --ratchet
+      - name: Write the column "Used today in" of docs/DESIGN.md
+        run: python3 tools/feature_table.py
       - name: Commit the changes to main
         run: |
-          if git diff --quiet -- docs/coverage.md tests/test_coverage.py; then
+          if git diff --quiet -- docs/coverage.md tests/test_coverage.py docs/DESIGN.md; then
             echo "no change"; exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -q -m "Update the coverage report and its maximums" -- docs/coverage.md tests/test_coverage.py
+          git commit -q -m "Update the generated files: coverage report, MAX, design table column" -- docs/coverage.md tests/test_coverage.py docs/DESIGN.md
           for i in 1 2 3; do
             git push origin HEAD:main && exit 0
             git pull -q --rebase origin main              # main moved: the next push of the CI starts this again

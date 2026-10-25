@@ -21,6 +21,14 @@ give most of the effect: `execute at @a if biome ~ ~ ~ minecraft:forest run part
 the player, with the vanilla biome that `terrain_style` already selects. Sky, fog and water colors and the
 biome's own ambient loop need a custom biome.
 
+## What aoe2mc writes
+
+`write_datapack` in `aoe2mc.py` (#220) writes `datapacks/aoe2mc` when the map has a building with a work sound
+(`WORK_SOUNDS`). `pulse.mcfunction` has one line per building at the center of its footprint, one block over the
+ground: `execute positioned X Y Z if entity @a[distance=..24] if predicate aoe2mc:sometimes run playsound ...`.
+It uses fixed positions, not marker entities: no entity must load, and the check costs nothing that `/tick query`
+shows. The pack has no `worldgen/` file, so the client shows no warning.
+
 ## Pack layout
 
 ```

@@ -182,3 +182,35 @@ def test_mc_version_1_21_1(tmp_path):
     assert mcvalid.invalid_states(w.palette(), "1.21.1") == {}
     ids = [i for e in w.entities(flat=False) for i in entity_ids(e)]
     assert ids and all(mcvalid.entity_error(i, "1.21.1") is None for i in ids)
+
+
+def test_work_sounds(tiny_world, tmp_path, monkeypatch):
+    """The datapack plays a work sound at a building with a player near it: the bell at the town center (#220)."""
+    path, out = tiny_world
+    pack = os.path.join(path, "datapacks", "aoe2mc")
+    with open(os.path.join(pack, "pack.mcmeta")) as f:
+        assert json.load(f)["pack"]["pack_format"] == 121
+    with open(os.path.join(pack, "data", "aoe2mc", "predicate", "rare.json")) as f:
+        assert json.load(f)["type"] == "minecraft:random_chance"            # 26.x key
+    with open(os.path.join(pack, "data", "aoe2mc", "function", "pulse.mcfunction")) as f:
+        lines = f.read().splitlines()
+    with open(os.path.join(path, "aoe2mc.json")) as f:
+        tc, = [o for o in json.load(f)["objects"] if o["name"] == "TOWN_CENTER"]
+    x0, z0, x1, z1 = tc["footprint"]
+    bell = [line.split() for line in lines if "block.bell.use" in line]
+    assert len(bell) == 1 and (int(bell[0][2]), int(bell[0][4])) == ((x0 + x1) // 2, (z0 + z1) // 2)
+    assert "if entity @a[distance=..24]" in lines[0] and lines[-1].startswith("schedule function aoe2mc:pulse")
+    assert "work sounds at buildings: " in out
+    # 1.21.1: another pack format and predicate key; no building with a sound: no pack
+    import numpy as np
+    monkeypatch.setattr(aoe2mc, "MC", aoe2mc.VERSIONS["1.21.1"])
+    ground = np.full((32, 32), 70)
+    smith = {"kind": "B", "name": "BLACKSMITH", "footprint": [4, 4, 12, 12]}
+    assert aoe2mc.write_datapack(str(tmp_path / "A"), [smith], ground) == 1
+    with open(tmp_path / "A" / "datapacks" / "aoe2mc" / "pack.mcmeta") as f:
+        assert json.load(f) == {"pack": {"description": "aoe2mc: work sounds at buildings", "pack_format": 48}}
+    with open(tmp_path / "A" / "datapacks" / "aoe2mc" / "data" / "aoe2mc" / "predicate" / "sometimes.json") as f:
+        assert "condition" in json.load(f)
+    house = dict(smith, name="HOUSE")
+    assert aoe2mc.write_datapack(str(tmp_path / "B"), [house], ground) == 0
+    assert not os.path.exists(tmp_path / "B" / "datapacks")

@@ -474,7 +474,7 @@ def house(c, w, st, col, T, ctx):
     # stone chimney with smoke on a random corner: only the European half-timbered houses have one in the game
     cx = x0 + 1 if rng.random() < 0.5 else x1 - 2
     cz = z0 + 1 if rng.random() < 0.6 else z1 - 2
-    if kind == "jetty":
+    if kind == "jetty" or (cx, cz) == (mid, z1 - 2):                     # not in front of the door (shed)
         cz = z0 + 1
     if st.shape == "gable":
         c.box(cx, cx + 1, 1, top + 2, cz, cz + 1, st.stone2)
@@ -490,9 +490,51 @@ def house(c, w, st, col, T, ctx):
         c.set(rx, wall_top + 2, z1 - 1 - wall_top, "air")                 # a gap in the parapet
         c.box(mid - 1, mid + 2, 3, 4, z1, z1 + 1, f"{col}_wool")
     if kind == "jetty":
+        furnish(c, x0 + 1, x1 - 1, z0 + 1, z1 - 2, 1, st, col, door=mid, bed=False)
+        furnish(c, x0 + 1, x1 - 1, z0 + 1, z1 - 1, 4, st, col, table=False)
         c.banner(mid + 1, 1, z1 - 1, col)
     else:
+        furnish(c, x0 + 1, x1 - 1, z0 + 1, z1 - 1, 1, st, col, door=mid)
         c.banner(mid + 1 if mid + 1 < x1 - 1 else mid - 1, 3 if wall_top > 3 else 2, z1, col)
+
+
+def furnish(c, x0, x1, z0, z1, y, st, col, door=None, bed=True, table=True):
+    """Furniture of a home in the room x0..x1-1, z0..z1-1 (inside the walls) on floor y: a bed in the player color
+    along a side wall, a chest at the back wall, a table with a lantern and a stool, a rug. The door is in the south
+    wall at x = door: the two cells inside it stay free."""
+    rng = c.rng
+    air = c.id("air")
+    wood = st.wood.removesuffix("_planks")
+    keep = {(door, z1 - 1), (door, z1 - 2)}
+    free = lambda x, z: (x0 <= x < x1 and z0 <= z < z1 and (x, z) not in keep
+                         and c.get(x, y, z) == air and c.get(x, y + 1, z) == air)
+    sides = [x0, x1 - 1] if rng.random() < 0.5 else [x1 - 1, x0]
+    if bed:
+        for bx in sides:
+            if free(bx, z0) and free(bx, z0 + 1):
+                c.set(bx, y, z0, f"{col}_bed[facing=north,occupied=false,part=head]")
+                c.set(bx, y, z0 + 1, f"{col}_bed[facing=north,occupied=false,part=foot]")
+                break
+    for x in sorted(range(x0, x1), key=lambda x: -abs(x - sides[0])):          # far from the bed
+        if free(x, z0):
+            c.set(x, y, z0, "chest[facing=south,type=single,waterlogged=false]")
+            break
+    if table:
+        cells = [(x, z) for z in range(z0, z1) for x in range(x0, x1)]
+        for i in rng.permutation(len(cells)):
+            x, z = cells[i]
+            side = next((d for d in (("east", 1, 0), ("west", -1, 0), ("south", 0, 1), ("north", 0, -1))
+                         if free(x + d[1], z + d[2])), None)
+            if free(x, z) and side:                                             # the stool turns its back away
+                c.set(x, y, z, f"{wood}_slab[type=top,waterlogged=false]")
+                c.set(x, y + 1, z, "lantern[hanging=false,waterlogged=false]")
+                c.set(x + side[1], y, z + side[2], stair(f"{wood}_stairs", side[0]))
+                break
+    rug = ["red_carpet", "brown_carpet", "green_carpet", f"{col}_carpet"][int(rng.integers(4))]
+    for x in range(x0 + 1, x1 - 1):
+        for z in range(z0 + 1, z1 - 1):
+            if c.get(x, y, z) == air:
+                c.set(x, y, z, rug)
 
 
 def town_center(c, w, st, col, T, ctx):
@@ -604,6 +646,8 @@ def castle(c, w, st, col, T, ctx, small=False):
     for y in (hw + 2, kh - 2):
         c.windows(k, w - k, k, w - k, y, b="iron_bars", step=2, height=2)
     c.box(mid - (gw // 2), mid - (gw // 2) + gw, 1, 4, w - k - 1, w - k, "air")
+    if w - 2 * k >= 5:
+        keep_inside(c, k + 1, w - k - 1, [0, *range(hw, kh, 4)], kh, st, col)
     if asian:
         # Tenshu: white plastered upper floors on the stone base, a flared roof skirt at each floor
         c.walls(k, w - k, hw + 1, kh + 1, k, w - k, st.plaster)
@@ -635,6 +679,32 @@ def castle(c, w, st, col, T, ctx, small=False):
         c.flag(mid, top + 1, mid, col, 3)
         return
     c.flag(mid, kh + 1, mid, col, 5)
+
+
+def keep_inside(c, x0, x1, floors, top, st, col):
+    """Furniture of a keep with the inside x0..x1-1 (also z) and floor blocks at the y of `floors` (#256):
+    a throne room on the ground floor, then storage and an armory. A ladder on the east wall joins the floors."""
+    wood = st.wood.removesuffix("_planks")
+    wood = wood if wood in WOODS else "spruce"
+    mid = (x0 + x1) // 2
+    for i, f in enumerate(floors):
+        y = f + 1
+        ceil = floors[i + 1] if i + 1 < len(floors) else top
+        if i == 0:                                       # throne room: throne, carpet from the door, banners
+            c.set(mid, y, x0, stair(f"{wood}_stairs", "north"))
+            c.box(mid, mid + 1, y, y + 1, x0 + 1, x1, f"{col}_carpet")
+            c.banner(x0, y + 2, x0, col); c.banner(x1 - 1, y + 2, x0, col)
+        elif i % 2:                                      # storage
+            c.set(x0, y, x0, "chest[facing=east]")
+            c.box(x0, x0 + 1, y, y + 1, x0 + 1, x1 - 1, "barrel[facing=up]")
+        else:                                            # armory and study
+            c.set(x0, y, x0, "grindstone[face=floor,facing=east]")
+            c.set(x0, y, x0 + 1, "smithing_table")
+            c.set(x0, y, x1 - 1, "lectern[facing=east,has_book=true,powered=false]")
+        c.set(mid, ceil - 1, mid, "lantern[hanging=true]")
+        if i:
+            c.set(x0, y, mid, "lantern[hanging=false]")
+    c.box(x1 - 1, x1, 1, top, x0 + 1, x0 + 2, "ladder[facing=west]")   # through the floors, not the roof
 
 
 def krepost(c, w, st, col, T, ctx):
@@ -1094,11 +1164,13 @@ def university(c, w, st, col, T, ctx):
         c.room(1, w - 1, 1, w - 2, 0, h, st.stone if st.shape != "flat" else st.plaster, st.floor)
         c.windows(1, w - 1, 1, w - 2, 3, step=2, height=2)
         library(c, 2, w - 2, 2, 4)
+        study(c, 2, w - 3, 3, w - 4)
         for x in range(1, w - 1, 2):                                      # columns in front
             c.box(x, x + 1, 1, h + 1, w - 1, w, "quartz_pillar")
         c.box(0, w, h + 1, h + 2, 1, w, "smooth_quartz" if st.shape != "flat" else family(st.roof)[2])
         c.box(mid, mid + 1, 1, 3, w - 2, w - 1, "air")
-        c.door(mid, 1, w - 2)
+        c.door(mid, 1, w - 3)                                             # in the south wall of the hall
+        hang(c, mid, h - 1, (w - 1) // 2)
         r = max(1.5, w / 4 - 0.5)                                         # observatory dome
         cx = (w - 1) / 2
         c.cylinder(cx, cx - 1, r, h + 2, h + 4, st.plaster)
@@ -1115,8 +1187,10 @@ def university(c, w, st, col, T, ctx):
     c.windows(m, tx + 1, m, zb, h // 2 + 2, sides="nws", step=2)
     library(c, m + 1, tx, m + 1, zb - m - 3)
     dx = (m + tx) // 2
+    study(c, m + 1, tx - 1, m + 2, zb - 2)
     c.door(dx, 1, zb - 1)
     c.roof(m, tx + 1, m, zb, h + 1, st, axis="x")
+    hang(c, dx, h - 1, (m + zb) // 2)
     th = h + 2                                                            # the higher east block, to the front
     c.timber_room(tx, w - m, m, w - m - 1, 0, th, st)
     c.windows(tx, w - m, m, w - m - 1, 2, sides="es", step=2)
@@ -1126,11 +1200,38 @@ def university(c, w, st, col, T, ctx):
     else:
         c.roof(tx, w - m, m, w - m - 1, th + 1, st)
     c.door(tx + 1, 1, w - m - 2, facing="south")
+    if w - m - tx >= 4:                                                   # the reading room of the east block
+        ex = w - m - 2
+        c.box(ex, ex + 1, 1, 3, m + 1, w - m - 4, "bookshelf")
+        c.set(ex, 3, m + 1, "candle[candles=2,lit=true,waterlogged=false]")
+        c.set(tx + 1, 1, m + 1, "lectern[facing=north,has_book=true,powered=false]")
+        hang(c, tx + 1, th - 1, w // 2 - 1)
     sx, sz = (m + tx) // 2 - 1, (zb + w) // 2                             # scholar statue in the yard
     c.set(sx, 1, sz, "chiseled_stone_bricks")
     c.box(sx, sx + 1, 2, 4, sz, sz + 1, "quartz_pillar")
     c.set(sx, 4, sz, "chiseled_quartz_block")
     c.banner(dx + 1, 3, zb, col); c.banner(tx + 2, 4, w - m - 1, col)
+
+
+def hang(c, x, y, z):
+    """A hanging lantern at (x, y, z) on a chain up to the first block above it (none if there is no block)."""
+    air = (-1, c.B("air"))
+    top = next((t for t in range(y + 1, c.height) if c.get(x, t, z) not in air), None)
+    if top is not None:
+        c.box(x, x + 1, y + 1, top, z, z + 1, "chain")
+        c.set(x, y, z, "lantern[hanging=true]")
+
+
+def study(c, x0, x1, z0, z1):
+    """The desks of a library room (x0..x1, z0..z1 inside, the shelves behind z0): an enchanting table at the
+    shelves and a cartography table with candles in the front corner. Candles on the shelves light the room."""
+    if x1 - x0 < 3 or z1 - z0 < 1:
+        return
+    c.set(x1, 1, z0, "enchanting_table")
+    c.set(x1, 1, z1, "cartography_table")
+    c.set(x1, 2, z1, "candle[candles=3,lit=true,waterlogged=false]")
+    for x in (x0, x1):
+        c.set(x, 3, z0 - 1, "candle[candles=1,lit=true,waterlogged=false]")
 
 
 def library(c, x0, x1, z, rows):
@@ -1552,7 +1653,12 @@ def tower(c, w, st, col, T, ctx, kind="watch"):
         else:
             c.walls(0, w, y, y + 1, 0, w, f"{col}_wool")
     c.door(mid - (w > 3), 1, w - 1, wood=st.wood.removesuffix("_planks"))
-    if st.shape == "flat" and not (st.torons and not high):              # stone lookout with merlons
+    stone_top = st.shape == "flat" and not (st.torons and not high)
+    if w >= 4:                                                            # hollow shaft, a ladder to the lookout (#256)
+        c.box(1, w - 1, 1, hb - 1, 1, w - 1, "air")
+        c.set(1, 1, 1, "barrel[facing=up]")
+        c.set(1, hb - 2, 1, "lantern[hanging=true]")
+    if stone_top:                                                         # stone lookout with merlons
         if rnd:
             c.cylinder(cc, cc, w / 2 + 0.8, hb, hb + 2, stone)
             c.cylinder(cc, cc, w / 2 - 0.2, hb + 1, hb + 2, st.wood)
@@ -1593,6 +1699,8 @@ def tower(c, w, st, col, T, ctx, kind="watch"):
             top = c.hip(-2, w + 2, -2, w + 2, hb + 3, st.roof, flare=st.shape == "asian")
     if top >= 0:
         c.flag(mid, top + 1, mid, col, 2)
+    if w >= 4:                                                            # through the lookout floor
+        c.box(w - 2, w - 1, 1, hb + stone_top + 1, 1, 2, "ladder[facing=south]")
     if kind == "bombard":                                                 # cannon barrels out of the lookout
         for x, z, ax in ((mid, w, "z"), (mid, w + 1, "z"), (w, mid, "x"), (w + 1, mid, "x"),
                          (mid, -1, "z"), (mid, -2, "z"), (-1, mid, "x"), (-2, mid, "x")):
