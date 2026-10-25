@@ -1321,6 +1321,61 @@ def donjon(c, w, st, col, T, ctx):
         c.flag(mid, hk, mid, col, 2)
 
 
+def feitoria(c, w, st, col, T, ctx):
+    """Feitoria (Portuguese): a walled trade post. A tall main tower with corner turrets at the back, a small
+    tower on the front corner, warehouses with tiled roofs, a yard with goods and a gate in the south wall."""
+    stone, pl, mid = st.stone, st.plaster, w // 2
+    tiled = st.shape != "flat"                                             # terracotta roofs, as in the game
+
+    def roof(x0, x1, z0, z1, y, axis=None):
+        if not tiled:
+            return c.roof(x0, x1, z0, z1, y, st)
+        if axis:
+            return c.gable(x0 - 1, x1 + 1, z0 - 1, z1 + 1, y - 1, "brick", fill=(x0, x1, z0, z1, pl), axis=axis)
+        return c.hip(x0 - 1, x1 + 1, z0 - 1, z1 + 1, y - 1, "brick")
+
+    c.box(0, w, 0, 1, 0, w, st.stone2)
+    c.walls(0, w, 1, 4, 0, w, stone)                                       # curtain wall
+    c.walls(0, w, 1, 2, 0, w, f"{col}_concrete")                           # painted band at the foot
+    c.box(mid - 1, mid + 1, 1, 3, w - 1, w, "air")                         # gate
+    c.box(mid - 1, mid + 1, 3, 4, w - 1, w, "chiseled_stone_bricks")
+    d = max(4, w // 3)                                                     # depth of the buildings
+    c.room(1, mid - 2, 1, d, 0, 4, pl, st.floor, corner=stone)
+    c.windows(1, mid - 2, 1, d, 3, step=3, sides="s")
+    roof(1, mid - 2, 1, d, 5, axis="x")                                    # warehouse on the north side
+    c.room(w - d, w - 1, d, w - 4, 0, 4, pl, st.floor, corner=stone)
+    c.windows(w - d, w - 1, d, w - 4, 3, step=3, sides="w")
+    c.door(w - d, 1, (d + w - 4) // 2, facing="west")
+    roof(w - d, w - 1, d, w - 4, 5, axis="z")                              # warehouse on the east side
+    # Main tower with corner turrets
+    x0, x1, z0, z1 = mid - 2, mid + 3, 0, 5
+    ht = max(10, 3 * T + 2)
+    c.room(x0, x1, z0, z1, 0, ht, stone, st.floor)
+    c.walls(x0, x1, ht - 1, ht, z0, z1, f"{col}_concrete")
+    for y in range(4, ht - 2, 3):
+        c.set(mid, y, z1 - 1, "glass_pane"); c.set(x0, y, (z0 + z1) // 2, "glass_pane")
+    wood = st.wood.removesuffix("_planks")
+    c.door(mid, 1, z1 - 1, wood=wood if wood in WOODS else "spruce")
+    top = roof(x0, x1, z0, z1, ht + 1)
+    for x in (x0 - 1, x1):
+        for z in (z0 - 1 if z0 else z0, z1):
+            c.box(x, x + 1, ht - 1, ht + 1, z, z + 1, stone)
+            c.set(x, ht + 1, z, "smooth_quartz"); c.set(x, ht + 2, z, "lightning_rod")
+    c.flag(mid, top + 1, (z0 + z1) // 2, col, 2)
+    # Small tower on the south-west corner
+    sx1, sz0 = 5, w - 5
+    hs = max(7, 2 * T)
+    c.room(0, sx1, sz0, w, 0, hs, stone, st.floor)
+    c.windows(0, sx1, sz0, w, hs - 2, step=2)
+    c.banner(sx1, 5, sz0 + 2, col, facing="east")
+    roof(0, sx1, sz0, w, hs + 1)
+    # Goods in the yard
+    goods = ["barrel[facing=up]", "chest[facing=south]", "hay_block", "gold_block", "barrel[facing=up]", "composter"]
+    for x, z in ((mid - 2, d + 2), (mid - 1, d + 2), (mid + 1, d + 3), (6, w - 3), (7, w - 3), (mid + 2, w - 3)):
+        if c.rng.random() < 0.8:
+            c.set(x, 1, z, goods[int(c.rng.integers(len(goods)))])
+
+
 def outpost(c, w, st, col, T, ctx):
     hp = 2 * T + 2
     for x in (0, w - 1):
@@ -1865,7 +1920,7 @@ def select(name):
         ("TOWER", tower, {"kind": "watch"}), ("WALL", wall_segment, {}), ("PALISADE", wall_segment, {}),
         ("FENCE", wall_segment, {}), ("BARRICADE", barricade, {}), ("BARRACKS", barracks, {}), ("ARCHERY_RANGE", archery_range, {}),
         ("STABLE", stable, {}), ("SIEGE_WORKSHOP", siege_workshop, {}), ("BLACKSMITH", blacksmith, {}),
-        ("MARKET", market, {}), ("CARAVANSERAI", market, {}), ("FEITORIA", market, {}),
+        ("MARKET", market, {}), ("CARAVANSERAI", market, {}), ("FEITORIA", feitoria, {}),
         ("MONASTERY", monastery, {}), ("CHURCH", monastery, {}), ("UNIVERSITY", university, {}),
         ("FOLWARK", mill, {}), ("MILL", mill, {}), ("LUMBER_CAMP", lumber_camp, {}),
         ("MINING_CAMP", mining_camp, {}), ("DOCK", dock, {}), ("HARBOR", dock, {}),
