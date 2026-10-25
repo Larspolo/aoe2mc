@@ -44,10 +44,14 @@ Put the method after the path (`... -X PATCH`): the permission rules match the s
 
 ## Runs can overlap
 
-Several runs work at the same time: the owner wants maximum use of the quota. A ticket with `in-progress`, and its PR,
-belong to the other run when the ticket or the PR changed less than 2 hours ago: do not touch them.
-After 2 hours without a change the other run is dead: take the ticket over with `python3 tools/claim.py N --takeover`
+Several runs work at the same time: the owner wants maximum use of the quota. Each run shows that it is alive:
+it runs `python3 tools/claim.py N --beat` for its ticket N at least every 20 minutes (after each verify level, before
+each push, and in each CI poll). A usage limit stops all runs at about the same time, and a stopped run never
+continues (#231). So a ticket with `in-progress`, and its PR, belong to the other run while
+`python3 tools/claim.py N --stale` exits 1, or the ticket, its branch or its PR changed less than 30 minutes ago:
+do not touch them. Else the other run stopped: take the ticket over with `python3 tools/claim.py N --takeover`
 and say so in a comment. Exit 1 means that another run took it over first: leave it.
+A ticket with `in-progress` and no claim ref (older runs): the same rule with the ticket, branch and PR times only.
 The workflow `automerge.yml` merges an agent PR when its CI is green (#232). A PR whose CI runs or is green waits
 for that workflow: it is not stalled. Exception: a PR with red CI, label `conflict` or a merge conflict, and with no new
 commit and no new comment for 30 minutes, is stalled. Take it over at once
@@ -120,7 +124,8 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
 
 1. Branch: use the branch that the session instructions name. Else `git fetch origin main` and
    `git checkout -b agent/<number>-<short-slug> origin/main`.
-2. Read the ticket body and all its comments first: the owner's comments win over the body. Read only the code that the ticket needs (see the code map in `CLAUDE.md`). Use Grep, not full-file reads.
+2. Beat (`python3 tools/claim.py N --beat`) at least every 20 minutes until the merge (see "Runs can overlap").
+   Read the ticket body and all its comments first: the owner's comments win over the body. Read only the code that the ticket needs (see the code map in `CLAUDE.md`). Use Grep, not full-file reads.
 3. For a bug, write a failing test first. Then change the code. Keep the diff small and in the existing style.
 4. Verify with the `verify` skill. The level depends on the change.
 5. Improve the process (step 9) now, so that the changes go into the same PR.
