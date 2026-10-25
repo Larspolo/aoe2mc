@@ -106,7 +106,8 @@ The layout (genie-scx `SCXFormat::read_from`):
 `scx.py` (#311) reads format `1.21` (data version 1.14 to 1.27): `scx.read(path)` gives the map size, terrain and
 elevation (`[x, y]`, as `read_scenario`) and the players (civilization, color, start view). It skips the header with its
 size field, skips `TribeScen` field by field, reads the map, skips the world data and the objects, and reads the
-scenario player data (the color is there). A test builds a file byte by byte (`tests/test_scx.py`). A check with the
+scenario player data (the color is there). It also reads the objects (#312): `aoe2mc.read_scx` gives the
+result to the pipeline in the form of `read_scenario`, so `aoe2mc.py IN.scx OUT` converts the scenario. A test builds a file byte by byte (`tests/test_scx.py`). A check with the
 genie-rs test file `Age of Heroes b1-3-5.scx` (format `1.21`, 200 × 200, not in this repository) read all 8 players,
 and the bytes after the player data are the trigger version 1.6.
 

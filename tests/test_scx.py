@@ -68,3 +68,37 @@ def test_unknown_format_names_the_version(tmp_path):
     path = build(tmp_path / "new.scx", np.zeros((2, 2), np.int16), np.zeros((2, 2)), {}, fmt=b"1.11")
     with pytest.raises(scx.ScxError, match="'1.11' is not supported"):
         scx.read(path)
+
+
+def test_convert_an_old_scenario(tmp_path):
+    """aoe2mc.py IN.scx OUT (#312): a 16 x 16 grass map with water, a town center, a villager and a tree."""
+    import contextlib
+    import io
+
+    import aoe2mc
+    import world_reader
+    terrain = np.zeros((16, 16), np.int16)
+    terrain[12:, :] = 22                                                     # deep water in the east
+    elevation = np.zeros((16, 16), np.float32)
+    elevation[:3, :3] = 1
+    path = build(tmp_path / "old.scx", terrain, elevation, {1: (1, 1, (6.0, 6.0))},
+                 objects=[(1, 6.0, 6.0, 109), (1, 9.5, 4.5, 83), (0, 2.5, 12.5, 399)])
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        aoe2mc.main([str(path), str(tmp_path / "W")])
+    text = out.getvalue()
+    assert "player 1: britons, red, western buildings" in text and "units in a block (moved up): 0" in text
+    w = world_reader.World(str(tmp_path / "W"))
+    states = {n for c in w.chunks().values() for s in c["sections"] for n in w.section_states(s)[0]}
+    assert {"minecraft:grass_block", "minecraft:water", "minecraft:bell"} <= {n.split("[")[0] for n in states}
+    assert any("log" in n for n in states)                                   # the tree
+    assert any(str(e["id"]) == "minecraft:villager" for e in w.entities())
+    assert w.block(13 * 4, aoe2mc.WATER_Y, 8 * 4).startswith("minecraft:water")
+
+
+def test_convert_an_unknown_format_gives_a_clear_error(tmp_path, capsys):
+    import aoe2mc
+    path = build(tmp_path / "new.scx", np.zeros((2, 2), np.int16), np.zeros((2, 2)), {}, fmt=b"1.18")
+    with pytest.raises(SystemExit):
+        aoe2mc.main([str(path), str(tmp_path / "W")])
+    assert "'1.18' is not supported" in capsys.readouterr().err
