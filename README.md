@@ -67,10 +67,30 @@ villager walks there, chops and carries the wood to the town center. The sidebar
 | `--no-birds` | off | Do not convert birds. Flying birds float 6 blocks above the ground (parrot or bat); peacocks, flamingos, storks and cranes are chickens |
 | `--no-barriers` | off | Do not fill building footprints with invisible barrier blocks |
 | `--verbose` | off | Print the time of each phase (read, columns, objects, units, chunks, write) |
+| `--scenario N` | all | Campaign: convert only scenario N (1 = the first) |
 | `--orientation C` | `ne` | Minecraft corner (`ne`, `se`, `sw`, `nw`) of the top corner of the AoE2 screen. The map, the building fronts and the units turn with it. |
 | `--spawn X,Z` | start view or town center of player 1 | Player spawn in AoE2 tiles. Without it the spawn is the start view of player 1, else the front of its first town center, else the map center. |
 | `--garrison {outside,skip}` | `outside` | Garrisoned units: `outside` puts each unit next to the building or unit that holds it (or in its ship, if a seat is free). `skip` does not convert them. |
 | `--border {diorama,island,natural,table,wall,none}` | `diorama` | Edge outside the map. `diorama`: the map stands on a plinth of stone bricks. `island`: the map floats on a cone of rock and earth. `natural`: the ground slopes down into a ring of sea. `table`: the map lies on a dark oak table with legs, lanterns and a banner in a player color on each corner. `wall`: a low wall with a tower in a player color at each corner. `none`: no blocks. All keep the vanilla world border at the map edge. Images: `docs/images/border-*.png`. |
+
+## Campaigns
+
+A campaign file gives one world for each scenario, in the output folder: `<number> <scenario name>/`.
+
+    aoe2mc MyCampaign.aoe2campaign CampaignWorlds                  (AoE2 DE: one world per scenario)
+    aoe2mc MyCampaign.aoe2campaign CampaignWorlds --scenario 2     (only the second scenario)
+
+An old campaign (`.cpx` from The Conquerors or AoE2 HD, `.cpn`) holds scenarios in the old format (`.scx`, `.scn`).
+The converter cannot read them. It writes them to the output folder (`<number> <file name>`) and stops with these steps:
+
+    aoe2mc OldCampaign.cpx OldScenarios
+
+1. Copy the files to the scenario folder of AoE2 DE
+   (`<Steam user folder>/Games/Age of Empires 2 DE/<number>/resources/_common/scenario`).
+2. In the DE scenario editor, open each scenario and save it as `.aoe2scenario`.
+3. Convert each `.aoe2scenario` file, or make a campaign of them in the DE campaign editor and convert it.
+
+The file layouts are in [`docs/campaign-formats.md`](docs/campaign-formats.md).
 
 ## Buildings
 
