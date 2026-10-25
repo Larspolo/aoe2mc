@@ -68,6 +68,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Millstone | `grindstone` | `mill_room`, `decorate`, `keep_inside`, `mining_camp` +4 more |
 | Drive shaft of a windmill | `stripped_spruce_log[axis=y]` above the millstone | `mill_room`, `settlement`, `sapper_tunnel`, `shipyard` +15 more |
 | Net loom, boat workbench | `loom`, `crafting_table`, `spruce_slab` | `dock` |
+| Dried fish, ship timber | `dried_kelp_block`, `stripped_spruce_log` (stack on the quay) | |
 | Light in a room or a yard | `lantern` on a barrel, or hanging under a beam | `hang`, `furnish`, `keep_inside`, `mill_room` +9 more |
 | Ore, mined gold and stone | `gold_ore`, `raw_gold_block`, `cobblestone`, `stone`, `andesite` | `mining_camp`, `mole` |
 | Mine cart track | `rail` | `mining_camp` |
