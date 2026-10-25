@@ -161,8 +161,9 @@ def problems(log):
             if any(PROBLEM.search(line) for line in e) and not any(h in e[0] for h in HARMLESS)]
 
 
-def check(world, version=DEFAULT_VERSION, timeout=300):
-    """Load all chunks of the world in a server. Returns (problem lines, full log)."""
+def check(world, version=DEFAULT_VERSION, timeout=300, keep=None):
+    """Load all chunks of the world in a server. Returns (problem lines, full log).
+    keep: copy the world that the server saved to this folder (to read the NBT as Minecraft wrote it)."""
     jar, java = server_jar(version), java_for(version)
     x0, z0, x1, z1 = chunks(world)
     with tempfile.TemporaryDirectory(dir=os.path.join(ROOT, ".cache")) as folder:
@@ -186,6 +187,8 @@ def check(world, version=DEFAULT_VERSION, timeout=300):
             s.wait(r"Saved the game", timeout)
             s.send("stop")
             s.p.wait(timeout)
+            if keep:
+                shutil.copytree(os.path.join(folder, "world"), keep, dirs_exist_ok=True)
         except (RuntimeError, TimeoutError) as e:
             s.log.append(f"[mc_check/ERROR]: {e}")
         finally:
@@ -227,13 +230,14 @@ def main(argv=None):
     ap.add_argument("--version", default=DEFAULT_VERSION, help="Minecraft version (default %(default)s)")
     ap.add_argument("--reports", metavar="VERSION", help="write tools/mcdata/VERSION.json from Mojang's reports")
     ap.add_argument("--log", help="write the full server log to this file")
+    ap.add_argument("--keep", metavar="DIR", help="copy the world as the server saved it to DIR")
     a = ap.parse_args(argv)
     if a.reports:
         reports(a.reports)
         return 0
     if not a.world:
         ap.error("give a WORLD or --reports VERSION")
-    bad, log = check(a.world, a.version)
+    bad, log = check(a.world, a.version, keep=a.keep)
     if a.log:
         with open(a.log, "w") as f:
             f.write("\n".join(log) + "\n")
