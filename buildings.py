@@ -904,6 +904,132 @@ def dock(c, w, st, col, T, ctx):
     c.flag(mx, mh + 1, mz, col, 2)
 
 
+def hull(c, x0, x1, zc, y, half, wood="oak", ribs=False):
+    """A ship hull along x with pointed ends; the deck is at y. ribs=True: a hull under construction."""
+    c.box(x0, x1, y - 2, y - 1, zc, zc + 1, f"stripped_{wood}_log[axis=x]")          # keel
+    for x in range(x0, x1):
+        hw = min(half, x - x0, x1 - 1 - x)
+        if ribs and x % 2:
+            continue
+        for z in (zc - hw, zc + hw):
+            c.box(x, x + 1, y - 1, y + 1, z, z + 1, f"{wood}_planks" if not ribs else f"stripped_{wood}_log")
+        if not ribs:
+            c.box(x, x + 1, y - 1, y, zc - hw + 1, zc + hw, f"{wood}_planks")
+            c.box(x, x + 1, y, y + 1, zc - hw + 1, zc + hw, "air")
+    for x in (x0, x1 - 1):                                                            # stem and stern posts
+        c.box(x, x + 1, y - 1, y + 2, zc, zc + 1, f"{wood}_planks")
+
+
+def shipyard(c, w, st, col, T, ctx):
+    """Shipyard: a wooden quay on piles with a workshop, a crane and a ship under construction on the slipway."""
+    q = w // 3
+    c.box(0, w, 1, 2, 0, q, "spruce_planks")                               # quay along the north side
+    for x in range(0, w, 3):
+        c.box(x, x + 1, -8, 1, 0, 1, "spruce_log"); c.box(x, x + 1, -8, 1, q - 1, q, "spruce_log")
+    c.timber_room(1, max(5, w // 3), 0, q, 1, 3, st)
+    c.roof(1, max(5, w // 3), 0, q, 5, st, axis="x")
+    hull(c, 1, w - 1, (q + w) // 2, 1, (w - q) // 2 - 1, ribs=True)
+    mx, mh = w - 2, max(8, w // 2 + 4)                                     # crane over the hull
+    c.box(mx, mx + 1, 2, mh, 1, 2, "stripped_spruce_log")
+    c.box(mx, mx + 1, mh, mh + 1, 1, (q + w) // 2 + 1, "stripped_spruce_log[axis=z]")
+    c.box(mx, mx + 1, mh - 3, mh, (q + w) // 2, (q + w) // 2 + 1, "chain")
+    c.set(w // 2, 2, 1, "barrel[facing=up]"); c.set(w // 2 + 1, 2, 1, "chest[facing=south]")
+    c.flag(mx, mh + 1, 1, col, 2)
+
+
+def port(c, w, st, col, T, ctx):
+    """Port: a stone quay with bollards and goods, a warehouse and a wooden pier into the water."""
+    q = w // 2
+    c.box(0, w, -8, 2, 0, q, st.stone)                                     # quay wall down into the water
+    c.box(0, w, 1, 2, q - 1, q, "polished_andesite")
+    for x in range(1, w, 3):
+        c.set(x, 2, q - 1, "stone_brick_wall")                             # bollards
+    c.room(1, w // 2 + 1, 0, q - 2, 1, 4, st.plaster, st.floor, corner=st.stone)
+    c.roof(1, w // 2 + 1, 0, q - 2, 5, st, axis="x")
+    c.door(w // 4, 2, q - 3)
+    m = w * 3 // 4                                                         # pier
+    c.box(m - 1, m + 2, 1, 2, q, w, "spruce_planks")
+    for z in range(q + 1, w, 3):
+        c.box(m - 1, m, -8, 1, z, z + 1, "spruce_log"); c.box(m + 1, m + 2, -8, 1, z, z + 1, "spruce_log")
+    c.set(w - 2, 2, 1, "barrel[facing=up]"); c.set(w - 3, 2, 1, "chest[facing=south]")
+    c.set(w - 2, 2, 2, "barrel[facing=up]")
+    c.flag(m + 1, 2, w - 1, col, 2)
+
+
+def mole(c, w, st, col, T, ctx, built=True):
+    """Mole (siege of Tyre): a causeway of rubble into the sea. Unfinished: a lower fill and a wooden frame."""
+    top = 1 if built else 0
+    for x in range(w):
+        for z in range(w):
+            c.box(x, x + 1, -10, top, z, z + 1, ["cobblestone", "stone", "andesite", "gravel"][int(c.rng.integers(4))])
+    c.box(0, w, top, top + 1, 0, w, "gravel" if built else "air")
+    c.box(0, w, top, top + 1, 1, w - 1, "coarse_dirt" if built else "air")
+    if not built:
+        for x in range(0, w, 3):
+            for z in (0, w - 1):
+                c.box(x, x + 1, 0, 3, z, z + 1, "spruce_log")
+        c.box(0, w, 2, 3, 0, 1, "spruce_log[axis=x]"); c.box(0, w, 2, 3, w - 1, w, "spruce_log[axis=x]")
+        c.set(w // 2, 1, w // 2, "barrel[facing=up]")
+
+
+CHAIN_DIRECTION = {"NORTHWEST_TO_SOUTHEAST": (1, 0), "SOUTHWEST_TO_NORTHEAST": (0, 1),
+                   "WEST_TO_EAST": (1, -1), "NORTH_TO_SOUTH": (1, 1)}
+
+
+def harbor_chain(c, w, st, col, T, ctx):
+    """Harbor chain on the water. It runs from edge to edge of the tile, so pieces next to each other connect.
+    AoE2 screen directions: map x runs to the south-east and map y to the south-west on the screen."""
+    dx, dz = next(d for k, d in CHAIN_DIRECTION.items() if ctx["name"].endswith(k))
+    if dz == 0:
+        c.box(0, w, 0, 1, w // 2, w // 2 + 1, "chain[axis=x]")
+    elif dx == 0:
+        c.box(w // 2, w // 2 + 1, 0, 1, 0, w, "chain[axis=z]")
+    else:
+        for i in range(w):                                                 # diagonal: a staircase of links
+            z = i if dz > 0 else w - 1 - i
+            c.set(i, 0, z, "chain[axis=x]")
+            if i < w - 1:
+                c.set(i + 1, 0, z, "chain[axis=z]")
+    c.set(w // 2, 0, w // 2, "barrel[facing=up]")                          # float in the middle
+
+
+def flagship(c, w, st, col, T, ctx):
+    """Flagship of Nearchos: a large galley with a mast, a square sail in the player color and oars."""
+    zc, half = w // 2, max(2, w // 4)
+    hull(c, 0, w, zc, 1, half)
+    c.box(1, 2, 2, 3, zc - 1, zc + 2, "oak_planks"); c.box(w - 2, w - 1, 2, 3, zc - 1, zc + 2, "oak_planks")
+    for x in range(2, w - 2, 2):                                           # oars
+        c.set(x, 0, zc - half - 1, "oak_fence"); c.set(x, 0, zc + half + 1, "oak_fence")
+    m, mh = w // 2, max(9, w)
+    c.box(m, m + 1, 1, mh, zc, zc + 1, "stripped_oak_log")
+    c.box(m, m + 1, mh - 1, mh, zc - half, zc + half + 1, "stripped_oak_log[axis=z]")
+    c.box(m, m + 1, mh - 5, mh - 1, zc - half + 1, zc + half, f"{col}_wool")
+    c.box(m, m + 1, mh - 5, mh - 1, zc, zc + 1, "stripped_oak_log")
+    c.flag(m, mh, zc, col, 2)
+
+
+def helepolis(c, w, st, col, T, ctx):
+    """Helepolis: a very tall siege tower on wheels, with hides on the walls and shutters on the front."""
+    for x in (0, w - 1):                                                   # wheels
+        for z in (1, w - 2):
+            c.box(x, x + 1, 0, 2, z - 1, z + 1, "stripped_spruce_log[axis=x]")
+    y, a, b, k = 1, 1, w - 1, 0
+    while b - a >= 3:
+        c.walls(a, b, y, y + 3, a, b, "spruce_planks")
+        c.box(a, a + 1, y, y + 3, a, a + 1, "spruce_log"); c.box(b - 1, b, y, y + 3, a, a + 1, "spruce_log")
+        c.box(a, a + 1, y, y + 3, b - 1, b, "spruce_log"); c.box(b - 1, b, y, y + 3, b - 1, b, "spruce_log")
+        if k < 2:
+            c.walls(a, b, y, y + 1, a, b, "brown_wool")                     # hides against fire
+        m = (a + b) // 2
+        c.set(m, y + 1, b - 1, "spruce_trapdoor[facing=south,half=top,open=true]")
+        c.box(a, b, y + 3, y + 4, a, b, "spruce_planks")
+        y, k = y + 4, k + 1
+        if k % 2 == 0:
+            a, b = a + 1, b - 1
+    c.crenels(a, b, a, b, y, "spruce_fence")
+    c.flag((a + b) // 2, y, (a + b) // 2, col, 2)
+
+
 def tower(c, w, st, col, T, ctx, kind="watch"):
     stone = st.stone
     hb = {"watch": 3 * T, "guard": 3 * T + 2, "keep": 3 * T + 4, "donjon": 3 * T + 6}.get(kind, 3 * T)
@@ -1230,7 +1356,8 @@ def wonder(c, w, st, col, T, ctx):
 # --------------------------------------------------------------------------------------------
 # Selection and placement
 # --------------------------------------------------------------------------------------------
-FOOTPRINT = [("WOODEN_BRIDGE", 1), ("ARCH_OF_CONSTANTINE", 3), ("COLOSSEUM", 5), ("GOL_GUMBAZ", 5),
+FOOTPRINT = [("SHIPYARD", 4), ("PORT", 4), ("MOLE", 2), ("CHAIN_", 1), ("FLAGSHIP_OF_NEARCHOS_MOVEABLE", 3),
+             ("WOODEN_BRIDGE", 1), ("ARCH_OF_CONSTANTINE", 3), ("COLOSSEUM", 5), ("GOL_GUMBAZ", 5),
              ("SANCHI_STUPA", 5), ("TEMPLE_OF_HEAVEN", 5), ("MINARET_OF_JAM", 4), ("ORACLES_TEMPLE", 4), ("MOSQUE", 4),
              ("HALL_OF_HEROES", 4), ("PAGAN_SHRINE", 3),
              ("PAGODA_", 3), ("STUPA", 3), ("TROWULAN_GATE", 3), ("REKHA_DEUL_TEMPLE", 3), ("SVAN_TOWER", 1),
@@ -1263,6 +1390,9 @@ def select(name):
         ("TROWULAN_GATE", split_gate, {}), ("REKHA_DEUL_TEMPLE", rekha_deul, {}), ("SVAN_TOWER", svan_tower, {}),
         ("COURTYARD_WALLS", courtyard_walls, {}), ("MESOPOTAMIAN_PILLAR", pillar, {}),
         ("MESOPOTAMIAN_GARDEN", garden, {}), ("MESOPOTAMIAN_TOMB", tomb, {}), ("BURNED_BUILDING", burned_building, {}),
+        ("SHIPYARD", shipyard, {}), ("PORT", port, {}), ("MOLE_CONSTRUCTED", mole, {}), ("MOLE_TOP", mole, {}),
+        ("MOLE_BOTTOM", mole, {}), ("MOLE", mole, {"built": False}), ("CHAIN_", harbor_chain, {}),
+        ("FLAGSHIP_OF_NEARCHOS_MOVEABLE", flagship, {}), ("HELEPOLIS", helepolis, {}),
         ("WOODEN_BRIDGE", wooden_bridge, {}), ("GREAT_PYRAMID", great_pyramid, {}),
         ("NUBIAN_PYRAMID", nubian_pyramid, {}), ("PYRAMID", great_pyramid, {}),
         ("DOME_OF_THE_ROCK", dome_rock, {}), ("SANKORE", sankore, {}), ("FISH_TRAP", fish_trap, {}),
@@ -1383,7 +1513,7 @@ def place_building(E, cols, B, o, players, walls, gates):
     base = int(area.max())
     if fn not in (gate, bridge):
         cols.blocked[xs.start:xs.stop, zs.start:zs.stop] = True
-    is_dock = fn in (dock, bridge, wooden_bridge, fish_trap)
+    is_dock = fn in (dock, bridge, wooden_bridge, fish_trap, shipyard, port, mole, harbor_chain, flagship)
     E.footprint = (x0, x0 + fx, z0, z0 + fz)
     if not is_dock:                                                      # foundation under the floor
         found = st.stone2
@@ -2357,9 +2487,9 @@ def fish_trap(c, w, st, col, T, ctx):
 # Sets of designs (defined after all designs)
 LANDMARKS = {arch_of_constantine, colosseum, gol_gumbaz, sanchi_stupa, temple_of_heaven, minaret_of_jam, oracles_temple,
              mosque_landmark, hall_of_heroes, shrine, pagan_shrine}
-MONUMENTAL = LANDMARKS | {great_pyramid, nubian_pyramid, dome_rock, sankore, wooden_bridge, fish_trap, wonder, castle, krepost, monastery, church, amphitheatre, monument, wall_segment, gate, tower,
+MONUMENTAL = LANDMARKS | {mole, harbor_chain, flagship, helepolis, great_pyramid, nubian_pyramid, dome_rock, sankore, wooden_bridge, fish_trap, wonder, castle, krepost, monastery, church, amphitheatre, monument, wall_segment, gate, tower,
               bridge, aqueduct}
-NO_PROPS = LANDMARKS | {great_pyramid, nubian_pyramid, dome_rock, wooden_bridge, fish_trap, barricade, wall_segment, gate, bridge, aqueduct, tower, outpost, wonder, dock, monument, amphitheatre}
+NO_PROPS = LANDMARKS | {shipyard, port, mole, harbor_chain, flagship, helepolis, great_pyramid, nubian_pyramid, dome_rock, wooden_bridge, fish_trap, barricade, wall_segment, gate, bridge, aqueduct, tower, outpost, wonder, dock, monument, amphitheatre}
 
 
 def building_rect(o):
