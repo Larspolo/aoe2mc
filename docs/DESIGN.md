@@ -40,16 +40,16 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Painted trim (deck edge, band) | `*_concrete` (player color) | `torii`, `stupa`, `pyramid`, `dock` +3 more |
 | Relief panel, carving | `chiseled_stone_bricks` | `harbor`, `temple`, `aqueduct`, `pyramid` +5 more |
 | Balustrade of a stair | `polished_granite` | `pyramid` |
-| Hoist | log beam with `chain` | `harbor_chain`, `lumber_camp`, `shipyard`, `siege_workshop` +1 more |
+| Hoist | log beam with `chain` | `harbor_chain`, `hang`, `lumber_camp`, `shipyard` +2 more |
 | Crop field | `wheat` rows (ages 5–7) on `farmland`, furrows of bare `farmland`, `dirt_path` edge | `folwark` |
 | Hay, fodder | `hay_block` | `settlement`, `hut`, `mill_room`, `granary` +15 more |
 | Log pile, cut timber | `*_log[axis=x]` stacked as a pyramid (`log_pile`) | `log_pile`, `barricade`, `wooden_bridge`, `fish_trap` +36 more |
-| Hoist | a log post and arm, `chain`, a hanging log | `harbor_chain`, `lumber_camp`, `shipyard`, `siege_workshop` +1 more |
+| Hoist | a log post and arm, `chain`, a hanging log | `harbor_chain`, `hang`, `lumber_camp`, `shipyard` +2 more |
 | Workbench | `crafting_table` | `lumber_camp`, `dock` |
 | Millstone | `grindstone` | `mill_room`, `decorate`, `mining_camp`, `granary` +3 more |
 | Drive shaft of a windmill | `stripped_spruce_log[axis=y]` above the millstone | `mill_room`, `settlement`, `sapper_tunnel`, `shipyard` +15 more |
 | Net loom, boat workbench | `loom`, `crafting_table`, `spruce_slab` | `dock` |
-| Light in a room or a yard | `lantern` on a barrel, or hanging under a beam | `mill_room`, `decorate`, `pagoda`, `lumber_camp` +3 more |
+| Light in a room or a yard | `lantern` on a barrel, or hanging under a beam | `hang`, `mill_room`, `decorate`, `pagoda` +4 more |
 | Ore, mined gold and stone | `gold_ore`, `raw_gold_block`, `cobblestone`, `stone`, `andesite` | `mining_camp`, `mole` |
 | Mine cart track | `rail` | `mining_camp` |
 | Water trough | `cauldron` (water) | `decorate` |
@@ -73,25 +73,26 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Mud-brick pinnacle | `mud_brick_wall` on a buttress | `garden`, `storage`, `sankore`, `djenne` +15 more |
 | Glazed tile band, tile panel | `blue_terracotta`; `Style.dome` terracotta over arches | `minaret_of_jam`, `caravanserai`, `dome_rock`, `gol_gumbaz` +1 more |
 | Chhatri (small domed kiosk) | `quartz_pillar` posts and a small dome | `oracles_temple`, `arch_of_constantine`, `taj`, `university` |
-| Chain, rope | `chain` | `harbor_chain`, `lumber_camp`, `shipyard`, `siege_workshop` +1 more |
+| Chain, rope | `chain` | `harbor_chain`, `hang`, `lumber_camp`, `shipyard` +2 more |
 | Bartizan (corner turret) | stone, `smooth_quartz` cap, `lightning_rod` | `temple_of_heaven`, `taj`, `stupa`, `dome_rock` +23 more |
 | Terracotta roof (Portuguese, Sicilian, Polish) | `brick` stairs | `oracles_temple`, `folwark`, `svan_tower`, `feitoria` +13 more |
 | Portcullis, grille | `iron_bars` | `tower`, `donjon`, `krepost`, `castle` +3 more |
 | Wooden hoarding | wood slab (top) or `spruce_planks` with a `*_fence` rail | `helepolis`, `outpost`, `shipyard`, `wooden_fort` +44 more |
 | Coat of arms | `*_wall_banner` (player color) over the gate | `torii`, `sapper_tunnel`, `yurt`, `archery_range` +39 more |
-| Lamp | `lantern` | `mill_room`, `decorate`, `pagoda`, `lumber_camp` +3 more |
-| Siege engine under construction | `spruce_slab`, `spruce_fence` and `spruce_log` | `dock`, `tower`, `market`, `barricade` +9 more |
+| Lamp | `lantern` | `hang`, `mill_room`, `decorate`, `pagoda` +4 more |
+| Siege engine under construction | spruce slabs, fences and logs | no design |
 | Cloth awning | `*_wool` in the player color | `pavilion`, `yurt`, `command_tent`, `army_tent` +19 more |
-| Stair to a roof terrace | `*_stairs` of the roof material | `storage`, `shelter`, `great_pyramid`, `pagoda` +32 more |
+| Stair to a roof terrace | stairs of the roof material | no design |
 | Column | `quartz_pillar` | `oracles_temple`, `arch_of_constantine`, `taj`, `university` |
 | Sacred tree | `oak_log`, `oak_leaves[persistent=true]` | `pagan_shrine`, `log_pile`, `decorate`, `settlement` +3 more |
-| Sail | `*_wool` (player color) | `pavilion`, `yurt`, `command_tent`, `army_tent` +19 more |
+| Sail | wool (player color) | no design |
 | Hides | `brown_wool` | `yurt`, `helepolis` |
 | Band in the player color | `*_wool` (player color) | `pavilion`, `yurt`, `command_tent`, `army_tent` +19 more |
 | Outside stairs to an upper floor | `*_stairs` of the wood of the set | `storage`, `shelter`, `great_pyramid`, `pagoda` +32 more |
-| Books, study | `bookshelf`, `lectern` (with a book) | `library` |
+| Books, study | `bookshelf`, `lectern` (with a book) | `library`, `university` |
+| Desks, light inside | `enchanting_table`, `cartography_table`, `candle` (lit, on shelves and desks), `lantern` on a `chain` (`hang()`) | `study`, `hang`, `lumber_camp`, `dock` |
 | Scholar statue | `chiseled_stone_bricks` pedestal, `quartz_pillar`, `chiseled_quartz_block` | `university`, `oracles_temple`, `arch_of_constantine` |
-| Rose window | `*_stained_glass_pane` | `monastery`, `fortified_church`, `cathedral` |
+| Rose window | stained glass panes | no design |
 | Posts of an open belfry | `stone_brick_wall` | `bridge`, `ring`, `temple`, `barracks` +3 more |
 | Orange roof tiles (Krepost; Central European, Southeast Asian sets) | `red_sandstone` stairs and blocks | `storage`, `fortified_church`, `shelter`, `taj` +25 more |
 | Stepped stone roof (Mesoamerican set) | `stone_brick` stairs (hip roof) | `shelter`, `storage`, `temple`, `hall_with_yard` +17 more |

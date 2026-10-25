@@ -1094,11 +1094,13 @@ def university(c, w, st, col, T, ctx):
         c.room(1, w - 1, 1, w - 2, 0, h, st.stone if st.shape != "flat" else st.plaster, st.floor)
         c.windows(1, w - 1, 1, w - 2, 3, step=2, height=2)
         library(c, 2, w - 2, 2, 4)
+        study(c, 2, w - 3, 3, w - 4)
         for x in range(1, w - 1, 2):                                      # columns in front
             c.box(x, x + 1, 1, h + 1, w - 1, w, "quartz_pillar")
         c.box(0, w, h + 1, h + 2, 1, w, "smooth_quartz" if st.shape != "flat" else family(st.roof)[2])
         c.box(mid, mid + 1, 1, 3, w - 2, w - 1, "air")
-        c.door(mid, 1, w - 2)
+        c.door(mid, 1, w - 3)                                             # in the south wall of the hall
+        hang(c, mid, h - 1, (w - 1) // 2)
         r = max(1.5, w / 4 - 0.5)                                         # observatory dome
         cx = (w - 1) / 2
         c.cylinder(cx, cx - 1, r, h + 2, h + 4, st.plaster)
@@ -1115,8 +1117,10 @@ def university(c, w, st, col, T, ctx):
     c.windows(m, tx + 1, m, zb, h // 2 + 2, sides="nws", step=2)
     library(c, m + 1, tx, m + 1, zb - m - 3)
     dx = (m + tx) // 2
+    study(c, m + 1, tx - 1, m + 2, zb - 2)
     c.door(dx, 1, zb - 1)
     c.roof(m, tx + 1, m, zb, h + 1, st, axis="x")
+    hang(c, dx, h - 1, (m + zb) // 2)
     th = h + 2                                                            # the higher east block, to the front
     c.timber_room(tx, w - m, m, w - m - 1, 0, th, st)
     c.windows(tx, w - m, m, w - m - 1, 2, sides="es", step=2)
@@ -1126,11 +1130,38 @@ def university(c, w, st, col, T, ctx):
     else:
         c.roof(tx, w - m, m, w - m - 1, th + 1, st)
     c.door(tx + 1, 1, w - m - 2, facing="south")
+    if w - m - tx >= 4:                                                   # the reading room of the east block
+        ex = w - m - 2
+        c.box(ex, ex + 1, 1, 3, m + 1, w - m - 4, "bookshelf")
+        c.set(ex, 3, m + 1, "candle[candles=2,lit=true,waterlogged=false]")
+        c.set(tx + 1, 1, m + 1, "lectern[facing=north,has_book=true,powered=false]")
+        hang(c, tx + 1, th - 1, w // 2 - 1)
     sx, sz = (m + tx) // 2 - 1, (zb + w) // 2                             # scholar statue in the yard
     c.set(sx, 1, sz, "chiseled_stone_bricks")
     c.box(sx, sx + 1, 2, 4, sz, sz + 1, "quartz_pillar")
     c.set(sx, 4, sz, "chiseled_quartz_block")
     c.banner(dx + 1, 3, zb, col); c.banner(tx + 2, 4, w - m - 1, col)
+
+
+def hang(c, x, y, z):
+    """A hanging lantern at (x, y, z) on a chain up to the first block above it (none if there is no block)."""
+    air = (-1, c.B("air"))
+    top = next((t for t in range(y + 1, c.height) if c.get(x, t, z) not in air), None)
+    if top is not None:
+        c.box(x, x + 1, y + 1, top, z, z + 1, "chain")
+        c.set(x, y, z, "lantern[hanging=true]")
+
+
+def study(c, x0, x1, z0, z1):
+    """The desks of a library room (x0..x1, z0..z1 inside, the shelves behind z0): an enchanting table at the
+    shelves and a cartography table with candles in the front corner. Candles on the shelves light the room."""
+    if x1 - x0 < 3 or z1 - z0 < 1:
+        return
+    c.set(x1, 1, z0, "enchanting_table")
+    c.set(x1, 1, z1, "cartography_table")
+    c.set(x1, 2, z1, "candle[candles=3,lit=true,waterlogged=false]")
+    for x in (x0, x1):
+        c.set(x, 3, z0 - 1, "candle[candles=1,lit=true,waterlogged=false]")
 
 
 def library(c, x0, x1, z, rows):
