@@ -50,6 +50,8 @@ For each feature, take the block from the table in `docs/DESIGN.md`, section 2.
 - Use the fields of the `Style` for materials, so that all architecture sets still work.
 - Keep `vary()`, `weather()` and `decorate()`. The main block stays the large majority.
 - Add a line to the table in `docs/DESIGN.md` for each new feature block.
+- A new design on water (a pier on piles) must go into `is_dock` (`place_building`) and `NO_PROPS`, as `dock`,
+  else it gets a foundation and no piles (#127).
 
 ## 5. Check
 

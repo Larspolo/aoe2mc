@@ -60,7 +60,6 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   `rotation`, `hero`, `garrisoned`) on a 16 × 16 `Columns`. With `sys.settrace` this shows which branch each
   `OtherInfo` name takes (#6). Buildings (also `FISH_TRAP`, docks) need `kind="B"`, else nothing is placed.
   `build_chunk` returns `(nbt, vol)`: test exact blocks of a chunk with `vol` (#19).
-- A new design on water must go into `is_dock` (`place_building`) and `NO_PROPS`, else it gets a foundation (#127).
 - `aoe2mc.py` reads `tools/mcdata/1.21.1.json` at import (#19). The package ships it as `tools.mcdata`
   (`pyproject.toml`). A new runtime data file must go into the package data too (test: `pip install .` in a venv).
 - `terrain_style` checks names in sequence: an earlier rule wins (`ROAD_GRAVEL` matched `GRAVEL` until #5).
