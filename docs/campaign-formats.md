@@ -126,6 +126,8 @@ type IDs of the old games are the same IDs as in DE for the units that both have
   2. In the DE scenario editor, open each scenario and save it (DE saves it as `.aoe2scenario`).
      Or, in the DE campaign editor, make a new campaign of the saved scenarios (`.aoe2campaign`).
   3. Convert the new files with aoe2mc.
+  Since #347 the converter converts the `.scx` scenarios of format `1.21` directly (`scx.py`, #311, #312) and gives
+  these steps only for the other scenarios.
 
   The owner must check step 2 in the game (it is not confirmed in a source that the DE editor opens `.scx` files):
   ask in #201 (`needs-human`). A minimal reader of old scenarios is a port of `TribeScen`, `Map` and the objects
