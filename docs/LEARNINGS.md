@@ -13,6 +13,7 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   (`javaVersion.majorVersion` in the version JSON). The Mojang hosts are allowed since #12.
 - GitHub in cloud sessions: `gh api repos/Larspolo/aoe2mc/...` (REST) works. GraphQL (`gh issue list`,
   `gh pr create`) and `search/...` give 403. CI job logs: only `mcp__github__get_job_logs`.
+- Deleting a branch with `gh api .../git/refs/heads/B -X DELETE` gives 403 through the proxy. Skip it.
 - Scheduled runs can have no MCP connector tools. The `autopilot` skill has a REST table for that case.
 - A scheduled task that `create_trigger` made has no repository: its sessions have no `add_repo` tool and
   cannot clone ("GitHub access to this repository is not enabled for this session"). The scheduled task
@@ -50,6 +51,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   `rotation`, `hero`, `garrisoned`) on a 16 × 16 `Columns`. With `sys.settrace` this shows which branch each
   `OtherInfo` name takes (#6).
 - `terrain_style` checks names in sequence: an earlier rule wins (`ROAD_GRAVEL` matched `GRAVEL` until #5).
+- A merge conflict in `docs/coverage.md`: take any side, run `python3 tools/coverage.py`, then set `MAX` in
+  `tests/test_coverage.py` to the new counts. Parallel runs often change the same counts (#79).
 - Drawing all 243 building types for one architecture set takes about 1 s. A full gallery conversion takes
   about 30 s per set.
 - Block IDs in `B` depend on what was registered before (earlier tests or conversions). Code that draws random

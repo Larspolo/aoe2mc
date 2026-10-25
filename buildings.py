@@ -1257,6 +1257,10 @@ def select(name):
         ("DOME_OF_THE_ROCK", dome_rock, {}), ("SANKORE", sankore, {}), ("FISH_TRAP", fish_trap, {}),
         ("BRIDGE", bridge, {}), ("AQUEDUCT", aqueduct, {}), ("AMPHITHEATRE", amphitheatre, {}),
         ("CATHEDRAL", church, {}), ("CHAPEL", monastery, {}), ("MONUMENT", monument, {}), ("ARMY_TENT", army_tent, {}),
+        ("COMMANDER_TENT_DROPSITE", command_tent, {"dropsite": True}), ("COMMANDER_TENT", command_tent, {}),
+        ("COMMAND_POST", command_tent, {}), ("TENT_", army_tent, {}), ("STORAGE", storage, {}),
+        ("PASTURE", pasture, {}), ("SETTLEMENT", settlement, {}), ("WOODEN_FORT", wooden_fort, {}),
+        ("SAPPER_TUNNEL", sapper_tunnel, {}), ("MULE_CART", cart, {}), ("SUPPLY_CART", cart, {"supply": True}),
         ("PAVILION", pavilion, {}), ("YURT", yurt, {}), ("HUT", hut, {}), ("TRADE_WORKSHOP", blacksmith, {}),
         ("POENARI", castle, {}), ("TOWER_OF_LONDON", krepost, {}),
         ("WONDER", wonder, {}), ("TOWN_CENTER", town_center, {}), ("KREPOST", krepost, {}),
@@ -1498,6 +1502,123 @@ def army_tent(c, w, st, col, T, ctx):
     c.box(x0, x0 + 1, 1, 2, 1, w - 1, "white_wool"); c.box(x1 - 1, x1, 1, 2, 1, w - 1, "white_wool")
     c.box(x1 - 1, x1, 1, 3, w // 2 - 1, w // 2 + 1, "air")
     c.flag(x0, (w + 1) // 2 + 1, w // 2, col, 2)
+
+
+def command_tent(c, w, st, col, T, ctx, dropsite=False):
+    """Greek commander tent, Macedonian command post: a square canvas tent on a low stone platform."""
+    c.box(0, w, 0, 1, 0, w, st.stone2)
+    a, b = 1, w - 1
+    c.walls(a, b, 1, 3, a, b, "white_wool")
+    for x in (a, b - 1):                                   # tent poles at the corners
+        for z in (a, b - 1):
+            c.box(x, x + 1, 1, 3, z, z + 1, "spruce_fence")
+    c.walls(a - 1, b + 1, 3, 4, a - 1, b + 1, f"{col}_wool")   # colored valance under the eaves
+    k = 0
+    while b - a > 1:                                      # canvas roof, steps of wool
+        c.walls(a, b, 4 + k, 5 + k, a, b, "white_wool")
+        a, b, k = a + 1, b - 1, k + 1
+    c.box(a, b, 4 + k, 5 + k, a, b, "white_wool")
+    c.box(w // 2 - 1, w // 2 + 1, 1, 3, w - 2, w - 1, "air")   # open front
+    c.set(w // 2 - 1, 1, w - 3, "loom[facing=south]" if not dropsite else "chest[facing=south]")
+    if dropsite:
+        c.set(w // 2, 1, w - 3, "barrel[facing=up]")
+    c.flag(w // 2, 5 + k, w // 2, col, 2)
+
+
+def storage(c, w, st, col, T, ctx):
+    """An open storehouse: a roof on posts over barrels, chests and sacks."""
+    m = inset(w)
+    c.box(m, w - m, 0, 1, m, w - m, st.floor)
+    for x in (m, w - m - 1):
+        for z in (m, w - m - 1):
+            c.box(x, x + 1, 1, 4, z, z + 1, st.timber)
+    c.walls(m + 1, w - m - 1, 1, 3, m, m + 1, st.wood)       # closed back wall
+    goods = ["barrel[facing=up]", "chest[facing=south]", "hay_block", "barrel[facing=up]", "composter"]
+    for i, x in enumerate(range(m + 1, w - m - 1)):
+        c.set(x, 1, m + 1, goods[i % len(goods)])
+        if i % 2 == 0:
+            c.set(x, 2, m + 1, "barrel[facing=up]")
+    top = c.roof(m - 1, w - m + 1, m - 1, w - m + 1, 4, st)
+    c.flag(w // 2, top + 1, w // 2, col, 2)
+
+
+def pasture(c, w, st, col, T, ctx):
+    """A fenced grass field with hay and a water trough."""
+    c.walls(0, w, 1, 2, 0, w, "oak_fence")
+    c.box(w // 2 - 1, w // 2 + 1, 1, 2, w - 1, w, "oak_fence_gate[facing=south,in_wall=false,open=false,powered=false]")
+    c.set(1, 1, 1, "hay_block"); c.set(2, 1, 1, "hay_block"); c.set(1, 2, 1, "hay_block")
+    c.set(w - 2, 1, 1, "water_cauldron[level=3]"); c.set(w - 3, 1, 1, "water_cauldron[level=3]")
+    c.flag(0, 2, w - 1, col, 1)
+
+
+def settlement(c, w, st, col, T, ctx):
+    """A goods stall under a thatched roof, with logs, stones and baskets of food next to it."""
+    a, b = 2, w - 2
+    for x in (a, b - 1):
+        for z in (a, b - 1):
+            c.box(x, x + 1, 1, 4, z, z + 1, "stripped_spruce_log")
+    for y in (1, 2):                                       # shelves with food
+        c.box(a + 1, b - 1, y, y + 1, a, a + 1, "spruce_slab[type=top]" if y == 2 else "barrel[facing=up]")
+    c.box(a + 1, b - 1, 3, 4, a, a + 1, "spruce_slab[type=bottom]")
+    c.set(a + 1, 1, a + 1, "melon"); c.set(b - 2, 1, a + 1, "pumpkin")
+    for k in range(3):                                     # thatch
+        c.box(a - 1 + k, b + 1 - k, 4 + k, 5 + k, a - 1 + k, b + 1 - k, "hay_block")
+    c.box(0, 1, 1, 3, 1, 3, "oak_log[axis=y]"); c.set(w - 1, 1, 2, "cobblestone"); c.set(w - 1, 1, 3, "mossy_cobblestone")
+    c.flag(w - 1, 1, w - 1, col, 2)
+
+
+def wooden_fort(c, w, st, col, T, ctx):
+    """A log tower with a shingle roof inside a palisade of sharp stakes."""
+    c.box(0, w, 0, 1, 0, w, "coarse_dirt")
+    for x in range(w):                                     # palisade, stakes of two heights
+        for z in range(w):
+            if x in (0, w - 1) or z in (0, w - 1):
+                c.box(x, x + 1, 1, 3 + (x + z) % 2, z, z + 1, "spruce_log[axis=y]")
+    c.box(w // 2 - 1, w // 2 + 1, 1, 3, w - 1, w, "air")       # gate
+    a, b = 2, w - 2
+    c.room(a, b, a, b, 0, 5, "spruce_log[axis=y]", floor=st.floor)
+    c.box(a - 1, b + 1, 5, 6, a - 1, b + 1, "spruce_planks")    # gallery
+    c.walls(a - 1, b + 1, 6, 7, a - 1, b + 1, "spruce_fence")
+    c.door(w // 2, 1, b - 1)
+    c.windows(a, b, a, b, 3, b="spruce_fence", step=2)
+    top = c.hip(a - 1, b + 1, a - 1, b + 1, 8, "spruce")
+    for x in (a, b - 1):
+        for z in (a, b - 1):
+            c.box(x, x + 1, 6, 8, z, z + 1, "spruce_fence")
+    c.flag(w // 2, top + 1, w // 2, col, 2)
+
+
+def sapper_tunnel(c, w, st, col, T, ctx):
+    """A timber-framed tunnel mouth in a mound of earth, with sharp stakes around it."""
+    for k in range(3):
+        c.box(k, w - k, 1 + k, 2 + k, k, w - 1 - k, ["coarse_dirt", "dirt", "rooted_dirt"][k])
+    c.box(w // 2 - 1, w // 2 + 1, 1, 3, 2, w - 1, "air")       # the tunnel
+    c.box(w // 2 - 1, w // 2 + 1, 0, 1, 2, w - 1, "dirt_path")
+    c.box(w // 2 - 2, w // 2 - 1, 1, 3, w - 3, w - 2, "stripped_spruce_log[axis=y]")
+    c.box(w // 2 + 1, w // 2 + 2, 1, 3, w - 3, w - 2, "stripped_spruce_log[axis=y]")
+    c.box(w // 2 - 2, w // 2 + 2, 3, 4, w - 3, w - 2, "stripped_spruce_log[axis=x]")
+    c.set(w // 2 - 1, 2, w - 2, f"{col}_wall_banner[facing=south]")
+    for x, z in ((0, w - 1), (w - 1, w - 1), (0, 1), (w - 1, 2)):
+        c.box(x, x + 1, 1, 3, z, z + 1, "spruce_fence")
+    c.set(w - 2, 1, w - 1, "barrel[facing=up]")
+
+
+def cart(c, w, st, col, T, ctx, supply=False):
+    """A wagon with a cover in the player color. The draught animal is not part of the building."""
+    x0, x1, z0, z1 = w // 2 - 1, w // 2 + 2, 2, w - 2
+    for z in (z0, z1 - 1):                                 # wheels on both sides
+        c.set(x0 - 1, 1, z, "spruce_trapdoor[facing=west,half=bottom,open=true]")
+        c.set(x1, 1, z, "spruce_trapdoor[facing=east,half=bottom,open=true]")
+    c.box(x0, x1, 1, 2, z0, z1, "spruce_slab[type=top]")
+    c.box(w // 2, w // 2 + 1, 1, 2, z1, w, "oak_fence")       # shafts to the front
+    if supply:
+        c.box(x0, x1, 2, 3, z0, z1, "barrel[facing=up]")
+        c.set(w // 2, 2, z0 + 1, "chest[facing=south]")
+        c.box(x0, x1, 3, 4, z0, z1 - 1, f"{col}_carpet")
+    else:
+        c.box(x0, x0 + 1, 2, 4, z0, z1, f"{col}_wool"); c.box(x1 - 1, x1, 2, 4, z0, z1, f"{col}_wool")
+        c.box(x0, x1, 4, 5, z0, z1, f"{col}_wool")
+        c.set(w // 2, 2, z0, "hay_block")
 
 
 def pavilion(c, w, st, col, T, ctx):
