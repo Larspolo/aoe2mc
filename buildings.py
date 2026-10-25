@@ -988,6 +988,28 @@ def siege_workshop(c, w, st, col, T, ctx):
     c.windows(1, hx, 1, w - 1, 3, sides="nsw")
     c.roof(1, hx, 1, w - 1, 6, st, axis="z")
     c.box(hx - 1, hx, 1, 5, w // 2 - 1, w // 2 + 2, "air")                 # wide door to the yard
+    # Inside (x 2..hx-2, z 2..w-3): a ram on wheels in the making, a carpenter bench, planks and pitch
+    a, b, zb = 2, hx - 2, w - 3
+    if b - a >= 3:
+        rz0, rz1 = 3, max(5, w // 2 - 2)                                   # the ram stays out of the door path
+        for x in (a + 1, b - 1):
+            c.box(x, x + 1, 1, 2, rz0, rz1 + 1, "stripped_spruce_log[axis=z]")
+            for z, f in ((rz0, "north"), (rz1, "south")):                  # an axle with a wheel on each side
+                c.set(x + (-1 if x == a + 1 else 1), 1, z, f"spruce_trapdoor[facing={'west' if x == a + 1 else 'east'},half=bottom,open=true]")
+        c.box(a + 2, b - 1, 2, 3, rz0, rz0 + 1, "oak_fence")
+        c.box(a + 2, b - 1, 2, 3, rz1, rz1 + 1, "oak_fence")
+        c.box((a + b) // 2, (a + b) // 2 + 1, 3, 4, rz0 - 1, rz1 + 2, "stripped_oak_log[axis=z]")    # the ram beam
+        c.set((a + b) // 2, 3, rz0 - 1, "iron_block")                      # its iron head
+        hang(c, (a + b) // 2, 5, rz1)
+        c.set(a, 1, zb - 2, "crafting_table")                              # the carpenter bench at the west wall
+        c.set(a, 1, zb - 1, "smithing_table")
+        c.set(a, 1, zb, "grindstone[face=floor,facing=north]")
+        c.box(b - 1, b + 1, 1, 2, zb - 1, zb + 1, st.wood)                 # a stack of planks
+        c.box(b - 1, b + 1, 2, 3, zb, zb + 1, "spruce_slab[type=bottom]")
+        c.set(b, 1, a, "barrel[facing=up]")                                # barrels of pitch
+        c.set(b, 2, a, "barrel[facing=up]")
+        c.set(b - 1, 1, a, "barrel[facing=north]")
+        hang(c, a + 1, 4, zb - 1)
     # Crane: an A-frame with a chain
     ch = max(7, round(w * 0.6))
     cx = w - 3
