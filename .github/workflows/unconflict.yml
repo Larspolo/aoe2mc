@@ -6,7 +6,7 @@ name: Unconflict
 # and Automerge accepts that CI run.
 on:
   schedule:
-    - cron: "7,22,37,52 * * * *"
+    - cron: "*/5 * * * *"      # dirty PRs get no CI event, so they wait for this job
   workflow_dispatch:      # Automerge starts it after each merge
 
 permissions:
@@ -49,8 +49,8 @@ jobs:
             [ "$state" = dirty ] || [ "$label" = true ] || continue
             branch=$(jq -r .head.ref <<<"$pr"); sha=$(jq -r .head.sha <<<"$pr")
             date=$(gh api "repos/$R/commits/$sha" --jq .commit.committer.date)
-            if [ $((now - $(date -d "$date" +%s))) -lt 600 ]; then  # the run that pushed it can still merge it
-              echo "#$n: the head is younger than 10 minutes"; continue
+            if [ $((now - $(date -d "$date" +%s))) -lt 300 ]; then  # the run that pushed it can still merge it
+              echo "#$n: the head is younger than 5 minutes"; continue
             fi
             git fetch -q origin "$branch"
             git checkout -q -B "$branch" "origin/$branch"
