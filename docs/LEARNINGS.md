@@ -42,7 +42,6 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 - The server drops entity tags that it does not know, without a log line. To check a new entity format, let the
   server save the world and compare the entity NBT before and after (method in `docs/minecraft-versions.md`).
   A tag with a wrong type gives "Serialization errors" (WARN), which `tools/mc_check.py` finds.
-- Undocumented 26.x save format: `strings` on the `*Fix.class` files in `META-INF/versions/V/server-V.jar` of the server jar (#172).
 - `tools/fetch_mcdata.py` reads the exact Mojang data from `misode/mcmeta`. PrismarineJS lags behind; its
   `data/pc/common/protocolVersions.json` has the data versions of all releases (26.3 = 5023).
 
