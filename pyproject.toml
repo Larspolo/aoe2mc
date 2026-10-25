@@ -10,8 +10,3 @@ extend-exclude = ["tools/mcdata"]
 
 [tool.ruff.lint]
 select = ["F"]        # pyflakes: undefined names, unused variables and imports
-
-[tool.ruff.lint.per-file-ignores]
-# Baseline: errors that were in the code before the lint check. Remove these lines when you fix them.
-"aoe2mc.py" = ["F402", "F841"]
-"buildings.py" = ["F541", "F841"]

@@ -220,8 +220,8 @@ def read_scenario(path):
                                 "civ": getattr(civ, "name", "?")}
 
     objects = []
-    for player, units in enumerate(scn.unit_manager.units):
-        for u in units:
+    for player, player_units in enumerate(scn.unit_manager.units):
+        for u in player_units:
             prefix, name = kinds.get(u.unit_const, ("?", f"UNKNOWN_{u.unit_const}"))
             garrisoned = u.garrisoned_in_id not in (None, -1)
             objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name,
@@ -308,7 +308,7 @@ class Columns:
     def ground_detail(self, styles, sid, depth_tiles, rng):
         """Patches of other ground blocks and plants, so large grass and dirt areas are not plain.
         Everything is decoration that cannot be used (no crops, no berries)."""
-        n, T = self.n, self.T
+        n = self.n
 
         def noise(scale):
             g = rng.random((n // scale + 2, n // scale + 2)).astype(np.float32)

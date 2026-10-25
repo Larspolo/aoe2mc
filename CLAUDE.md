@@ -14,7 +14,7 @@ The README already uses this style. Keep it.
 
 | Task | Command |
 |---|---|
-| Install | `pip install -r requirements-dev.txt` |
+| Install | `python3 -m pip install -r requirements-dev.txt` (a `pip` on the PATH can be another Python) |
 | Lint | `ruff check .` |
 | Fast tests (~15 s) | `python3 -m pytest` (use `python3 -m`: a `pytest` on the PATH can be another Python) |
 | Slow tests (~60 s) | `python3 -m pytest -m slow` |
