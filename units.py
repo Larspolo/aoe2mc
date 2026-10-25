@@ -285,6 +285,11 @@ def classify(n, hero=False):
         return soldier("skeleton", t, "crossbow")
     if has(n, "ARCHER", "BOWMAN", "LONGBOW", "PATTIYODHA", "IMMORTAL_RANGED"):
         return soldier("skeleton", t, "bow")
+    return infantry(n, t)
+
+
+def infantry(n, t):
+    """The default foot soldier. tools/coverage.py counts the units that end here."""
     return soldier("zombie", t, "iron_axe" if has(n, "AXE", "BERSERK", "HUSKARL") else sword(t))
 
 
