@@ -100,3 +100,14 @@ def test_farm_has_crop_rows():
         assert len(set(wx if turn == 0 else wz)) == 5 and len(set(wz if turn == 0 else wx)) == 10
         ages = Counter(aoe2mc.B.states[i] for i in ids[names == "wheat"])
         assert ages.most_common(1)[0][0].endswith("age=7]") and len(ages) > 1
+
+
+@pytest.mark.parametrize("arch", sorted(buildings.ARCH))
+def test_university_has_a_library(arch):
+    """The university (#73) has bookshelves and lecterns with books in every architecture set."""
+    cols = flat_columns()
+    E = aoe2mc.Edits(cols)
+    o = dict(kind="B", name="UNIVERSITY", player=1, x=8.5, y=8.5, rotation=0.0, hero=False, garrisoned=False)
+    buildings.place_building(E, cols, aoe2mc.B, o, {1: {"color": "blue", "arch": arch}}, set(), {})
+    names = Counter(aoe2mc.B.states[i].split(":")[1].split("[")[0] for i in np.concatenate([p[3] for p in E.parts]))
+    assert names["bookshelf"] >= 4 and names["lectern"] >= 1

@@ -19,6 +19,8 @@ python3 tools/refimage.py get "Aoe2de castle houses.png" $SCRATCH/ref.png
 Good names: `Aoe2de castle houses.png` (the houses of all sets), `<Building> aoe2DE.png` (the default Western
 European model, for example `Castle aoe2DE.png`) and `Arch set <set> <age> AoE2DE.png` (all buildings of one
 set, for example `Arch set West European Castle Age AoE2DE.png`). Look at the PNG with the Read tool.
+For some buildings `<Building> aoe2DE.png` is only the icon (crossed swords, a horseshoe). Then use
+`<Building> Castle DE AoE2DE.png` (3 sets side by side) and the `Arch set` images.
 
 Look at each image before you use it: some names give another picture (`Towncenter aoe2DE.png` is a portrait).
 The `Arch set ...` images are reliable. Crop one building and scale it 2× with PIL to see the details.
@@ -33,6 +35,7 @@ python3 tools/render.py building CASTLE --arch western $SCRATCH/before_se.png
 python3 tools/render.py building CASTLE --arch western --view nw $SCRATCH/before_nw.png
 ```
 The default view (south-east) shows the front, as the AoE2 camera does. Look at the images with the Read tool.
+The default `--scale 8` is small for details: use `--scale 16` for one building. `sheet --variants 1` is faster.
 
 ## 3. List the differences
 

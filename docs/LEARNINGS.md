@@ -18,6 +18,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   (earlier input is lost). Do not use `pkill -f server.jar`: it also kills your own shell.
 - GitHub in cloud sessions: `gh api repos/Larspolo/aoe2mc/...` (REST) works. GraphQL (`gh issue list`,
   `gh pr create`) and `search/...` give 403. CI job logs: only `mcp__github__get_job_logs`.
+- Quote the heredoc tag (`<<'EOF'`) for GitHub text: in `<<EOF` the shell runs each `` `name` `` as a command
+  and the text loses the names. Pass paths as arguments instead of `$VAR` in the text.
 - Deleting a branch with `gh api .../git/refs/heads/B -X DELETE` gives 403 through the proxy. Skip it.
 - Scheduled runs can have no MCP connector tools. The `autopilot` skill has a REST table for that case.
 - A scheduled task that `create_trigger` made has no repository: its sessions have no `add_repo` tool and
@@ -25,7 +27,7 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   must have `Larspolo/aoe2mc` as its repository (set it in the claude.ai UI). Scheduled runs use Sonnet 5.5
   unless the task sets another model.
 - The repository is private: a workflow with a `permissions:` block also needs `contents: read`, or
-  `actions/checkout` fails with "Repository not found".
+  `actions/checkout` fails with "Repository not found". The `pulls` API needs `pull-requests: read` (else 403).
 - Minecraft server: a bad property value (`facing=up`) loads silently as the default state. An unknown block
   name gives "Recoverable errors when loading section". A missing `level.dat` compound
   gives "key missing: <name>" (`DragonFight` until #60).
