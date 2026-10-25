@@ -74,6 +74,6 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   numbers per block ID must go in state-name order, not ID order (see #44). A test that passes alone but
   fails in the full suite often has this cause.
 - An invalid item in a block entity can vanish without a log line. `tools/mc_check.py W --keep DIR` keeps the world
-  that the server saved: read the block entity there (1.21.1 saves the loaded chunks again, 26.3 can skip them) (#27).
-- To check new entity NBT, make a map with one unit per type (`unit_manager.add_unit` in a loop), convert it and run
-  `tools/mc_check.py` on it: about 1 minute.
+  that the server saved: read it with `tools/world_reader.py` (1.21.1 saves the loaded chunks again, 26.3 can skip them) (#27).
+  26.3 saves a default state as the bare name and puts the properties in another order: normalize before you compare (#189).
+- New entity NBT: convert a map with one unit per type (`add_unit` in a loop) and run `tools/mc_check.py` (1 min).

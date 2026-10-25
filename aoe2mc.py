@@ -47,7 +47,8 @@ import units
 
 # Blocks with the 'waterlogged' property. A block of this list under the water surface gets waterlogged=true (#19).
 with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools", "mcdata", "1.21.1.json")) as _f:
-    WATERLOGGABLE = {"minecraft:" + k for k, v in json.load(_f)["blocks"].items() if "waterlogged" in v}
+    BLOCK_PROPS = {"minecraft:" + k: v for k, v in json.load(_f)["blocks"].items()}
+WATERLOGGABLE = {k for k, v in BLOCK_PROPS.items() if "waterlogged" in v}
 
 # Output format per Minecraft Java version (docs/minecraft-versions.md). Entities: units.to_version().
 VERSIONS = {
@@ -538,6 +539,76 @@ class Columns:
 # Edits: blocks for trees, mines and buildings, stored as numpy arrays.
 # "soft" edits (leaves) go only into air. "hard" edits replace what is there.
 # --------------------------------------------------------------------------------------------
+# Connections of panes, iron bars, fences and walls (#189). Minecraft computes them only when a neighbour changes,
+# so the converter writes them. The rules follow IronBarsBlock, FenceBlock and WallBlock.
+SIDES = (("north", 0, -1), ("east", 1, 0), ("south", 0, 1), ("west", -1, 0))
+NOT_STURDY = ("slab", "stairs", "fence", "_wall", "pane", "bars", "door", "banner", "torch", "lantern", "sign", "button",
+              "lever", "plate", "carpet", "rail", "ladder", "vine", "chain", "rod", "campfire", "bell", "anvil",
+              "cauldron", "flower", "short_grass", "tall_grass", "fern", "bush", "sapling", "leaves", "air", "water",
+              "lava", "fire", "mushroom", "poppy", "dandelion", "orchid", "allium", "tulip", "daisy", "cornflower",
+              "lily", "rose", "peony", "lilac", "sunflower", "kelp", "seagrass", "coral", "pickle", "candle", "head",
+              "skull", "pot", "cake", "_bed", "chest", "lectern", "grindstone", "stonecutter", "enchanting", "dripstone",
+              "cluster", "_bud", "cobweb", "sugar_cane", "bamboo", "cactus", "egg", "conduit", "hopper", "brewing",
+              "farmland", "dirt_path", "scaffolding", "wheat", "carrots", "potatoes", "beetroots", "stem", "berry",
+              "cocoa", "wart", "frogspawn", "roots", "sprouts", "hanging", "spore", "dripleaf", "azalea", "lichen",
+              "vein", "tripwire", "redstone_wire", "repeater", "comparator", "daylight", "piston_head", "moving",
+              "structure_void", "barrier", "pumpkin", "melon", "shulker", "composter", "heavy_core",
+              "propagule", "petals", "snow", "turtle_egg", "end_portal", "nether_portal", "frame", "bubble", "fungus",
+              "chorus_plant", "bluet", "glow_berries", "spawner", "end_gateway")
+STURDY_PROPS = {"axis", "facing", "lit", "open", "snowy", "power", "triggered", "instrument", "note", "powered",
+                "has_record", "honey_level", "up", "down", "north", "east", "south", "west", "charges", "orientation",
+                "crafting", "extended", "bloom"}
+
+
+def connect_kind(state):
+    """'pane', 'fence', 'nether_fence', 'wall', 'gate_x' / 'gate_z' (axis of the gate), 'solid' or ''."""
+    name = state.partition("[")[0]
+    p = BLOCK_PROPS.get(name, {})
+    if name.endswith("_fence_gate"):
+        facing = re.search(r"facing=(\w+)", state)
+        return "gate_z" if facing and facing.group(1) in ("north", "south") else "gate_x"
+    if name.endswith("_pane") or name == "minecraft:iron_bars":
+        return "pane"
+    if name.endswith("_fence"):
+        return "nether_fence" if name == "minecraft:nether_brick_fence" else "fence"
+    if p.get("north") == ["none", "low", "tall"]:
+        return "wall"
+    short = name[10:]
+    if any(k in short for k in ("torch", "banner", "sign")):
+        return "post"                                                 # WALL_POST_OVERRIDE: a wall raises its post
+    if short == "light" or any(k in short for k in NOT_STURDY) and not short.endswith(
+            ("_block", "stone_bricks", "sea_lantern", "planks", "mosaic", "mushroom_stem")):
+        return ""
+    return "solid" if set(p) <= STURDY_PROPS else ""
+
+
+def connected_state(state, me, sides, above):
+    """State of a pane, fence or wall with the neighbour kinds of SIDES (north, east, south, west) and above."""
+    name, _, props = state.partition("[")
+    wet = "waterlogged=true" in props
+    c = []
+    for (d, _, _), k in zip(SIDES, sides):
+        gate = k == ("gate_x" if d in ("north", "south") else "gate_z")    # a gate connects across its own axis
+        if me == "pane":
+            c.append(k in ("solid", "pane", "wall"))
+        elif me in ("fence", "nether_fence"):
+            c.append(k in ("solid", me) or gate)
+        else:
+            c.append(k in ("solid", "wall", "pane") or gate)
+    w = ["true" if wet else "false"]
+    if me != "wall":
+        p = {d: "true" if v else "false" for (d, _, _), v in zip(SIDES, c)}
+    else:
+        tall = above in ("solid", "wall")
+        p = {d: ("tall" if tall else "low") if v else "none" for (d, _, _), v in zip(SIDES, c)}
+        n, e, s, wst = (p[d] for d in ("north", "east", "south", "west"))
+        straight = (n == s) and (e == wst) and not (n == e == "none")
+        up = above == "wall" or not straight or (not (n == s == "tall" or e == wst == "tall") and above in ("solid", "post"))
+        p["up"] = "true" if up else "false"
+    p["waterlogged"] = w[0]
+    return f"{name}[{','.join(f'{k}={v}' for k, v in sorted(p.items()))}]"
+
+
 class Edits:
     """Blocks of trees, mines, cliffs and buildings.
 
@@ -580,6 +651,56 @@ class Edits:
             return
         X, Y, Z = np.meshgrid(np.arange(x0, x1), np.arange(y0, y1), np.arange(z0, z1), indexing="ij")
         self.add(X, Y, Z, block, hard)
+
+    def connect(self):
+        """Set the connection states of panes, bars, fences and walls from their final neighbours (#189).
+        Call it after all objects are placed. A position keeps its last hard block, else its first soft block;
+        a neighbour without an edit is solid when it is in the ground of its column."""
+        if not self.parts:
+            return
+        x, y, z, ids, hard = (np.concatenate(p) for p in zip(*self.parts))
+        key = ((x.astype(np.int64) + 4096) << 40) | ((y.astype(np.int64) + 1024) << 20) | (z.astype(np.int64) + 4096)
+        rank = np.where(hard, np.arange(len(key)) + len(key), len(key) - np.arange(len(key)))   # last hard, first soft
+        order = np.lexsort((rank, key))
+        last = np.r_[key[order][1:] != key[order][:-1], True]
+        keys, fid, fhard = key[order][last], ids[order][last], hard[order][last]
+        kinds = {}
+        kind = lambda i: kinds.setdefault(int(i), connect_kind(B.states[int(i)]))
+        uniq = np.unique(fid)
+        conn = [int(i) for i in uniq if kind(i) in ("pane", "fence", "nether_fence", "wall")]
+        if not conn:
+            return
+        sel = np.flatnonzero(np.isin(fid, conn))
+        X, Y, Z = (keys[sel] >> 40) - 4096, ((keys[sel] >> 20) & 0xFFFFF) - 1024, (keys[sel] & 0xFFFFF) - 4096
+        top = self.cols.top if self.cols is not None else None
+
+        def at(dx, dy, dz):
+            """Kind of the final block next to each selected block, with the direction for fence gates."""
+            k = ((X + dx + 4096) << 40) | ((Y + dy + 1024) << 20) | (Z + dz + 4096)
+            j = np.clip(np.searchsorted(keys, k), 0, len(keys) - 1)
+            found = keys[j] == k
+            out = np.full(len(k), "", object)
+            for i in np.unique(fid[j[found]]):
+                out[np.flatnonzero(found)[fid[j[found]] == i]] = kind(i)
+            if top is not None:
+                n = top.shape[0]
+                nx, nz = np.clip(X + dx, 0, n - 1), np.clip(Z + dz, 0, n - 1)
+                ground = ~found & (Y + dy <= top[nx, nz])
+                out[ground] = "solid"
+            return out
+
+        side = {d: at(dx, 0, dz) for d, dx, dz in SIDES}
+        above = at(0, 1, 0)
+        new = np.empty(len(sel), np.uint16)
+        cache = {}
+        for n, i in enumerate(fid[sel]):
+            me = kind(i)
+            ks = tuple(side[d][n] for d, _, _ in SIDES)
+            ck = (int(i), ks, above[n])
+            if ck not in cache:
+                cache[ck] = B(connected_state(B.states[int(i)], me, ks, above[n]))
+            new[n] = cache[ck]
+        self.parts.append((X.astype(np.int32), Y.astype(np.int32), Z.astype(np.int32), new, fhard[sel]))
 
     def by_chunk(self, width):
         """Return {(cx, cz): (x, y, z, id, hard)} with local x/z, in the order of addition."""
@@ -1621,6 +1742,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     book = place_book(cols, edits, spawn, texts, name)
     if book:
         print(f"  book with the scenario texts: lectern at {book}")
+    edits.connect()
     per_chunk = edits.by_chunk(cols.width)
     tick("objects")
     before = set(stats)
