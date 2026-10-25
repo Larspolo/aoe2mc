@@ -88,3 +88,5 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   around tile (4 + i % 40 × 7, 4 + i // 40 × 7), i = the index of the name in `BuildingInfo` (#251).
 - Sibling sub-issues (#249-#256) run in parallel: before you add a helper or a tool option, `git fetch origin main` and
   grep for it. #252 and #265 both added `render.py --cut`, and two runs added a `furnish` (#252).
+- `automerge.yml` merges only a head that contains `main` (`compare/main...SHA`, `behind_by == 0`). Else it updates the
+  branch (`update-branch`) and starts CI again: two PRs green alone made main red together (#263 + #250, #337).

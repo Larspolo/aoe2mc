@@ -53,6 +53,24 @@ jobs:
               echo "ticket #$ticket waits (needs-human or blocked)"; exit 0
             fi
           fi
+          # Two PRs that are green alone can make main red together (#337): merge only a head that contains main.
+          # Else merge main into the branch and start CI again (a push with GITHUB_TOKEN starts no workflow).
+          behind=$(gh api "repos/$R/compare/main...$SHA" --jq .behind_by)
+          if [ "$behind" != 0 ]; then
+            echo "#$n: the tested head $SHA is $behind commits behind main: update the branch, the new CI decides"
+            if ! gh api "repos/$R/pulls/$n/update-branch" -X PUT -f expected_head_sha="$SHA" > update.json 2> err.txt; then
+              cat update.json err.txt; echo "#$n: the update failed (a conflict?): Unconflict or the run solves it"; exit 0
+            fi
+            for try in $(seq 1 30); do             # GitHub merges main into the branch after the answer
+              head=$(gh api "repos/$R/pulls/$n" --jq .head.sha)
+              [ "$head" != "$SHA" ] && break
+              sleep 2
+            done
+            [ "$head" != "$SHA" ] || { echo "#$n: the branch did not move in 60 s"; exit 0; }
+            echo "#$n: new head $head: start CI"
+            gh workflow run ci.yml --repo "$R" --ref "$BRANCH"
+            exit 0
+          fi
           gh api "repos/$R/issues/$n/labels/conflict" -X DELETE >/dev/null 2>&1 || true
           if ! gh api "repos/$R/pulls/$n/merge" -X PUT -f merge_method=squash -f sha="$SHA" > merge.json 2> err.txt; then
             cat merge.json err.txt
