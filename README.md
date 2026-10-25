@@ -32,7 +32,7 @@ Two ways:
     aoe2mc MyMap.aoe2scenario MyMapWorld --preview
     python aoe2mc.py MyMap.aoe2scenario MyMapWorld --preview      (the same, from the repository folder)
 
-Copy the folder `MyMapWorld` into your Minecraft `saves` folder. Open it in Minecraft Java 1.21.1 or newer.
+Copy the folder `MyMapWorld` into your Minecraft `saves` folder. Open it in Minecraft Java 26.3 or newer. For an older game (1.21.1 to 26.2), convert with `--mc-version 1.21.1`.
 The world is in creative mode. Outside the map there is only void. The world list shows a small top view of the map
 (`icon.png`).
 
@@ -45,7 +45,7 @@ The world is in creative mode. Outside the map there is only void. The world lis
 | `--name` | file name | World name in the Minecraft menu |
 | `--seed` | 1 | Seed for random details (tree heights, flowers) |
 | `--preview` | off | Writes `preview.png` (top view) into the world folder |
-| `--mc-version` | 1.21.1 | Minecraft Java version of the output: `1.21.1` or `26.3` |
+| `--mc-version` | 26.3 | Minecraft Java version of the output: `26.3` or `1.21.1` |
 | `--no-units` | off | Do not convert units |
 | `--no-birds` | off | Do not convert birds. Flying birds float 6 blocks above the ground (parrot or bat); peacocks, flamingos, storks and cranes are chickens |
 | `--no-barriers` | off | Do not fill building footprints with invisible barrier blocks |

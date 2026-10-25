@@ -142,6 +142,13 @@ class World:
     def level(self):
         return nbtlib.load(os.path.join(self.root, "level.dat"))["Data"]
 
+    def spawn(self):
+        """(x, y, z, yaw) of the world spawn. 26.x has a "spawn" compound, 1.21.1 has SpawnX ... SpawnAngle."""
+        d = self.level()
+        if "spawn" in d:
+            return (*[int(v) for v in d["spawn"]["pos"]], float(d["spawn"]["yaw"]))
+        return int(d["SpawnX"]), int(d["SpawnY"]), int(d["SpawnZ"]), float(d["SpawnAngle"])
+
 
 def main():
     w = World(sys.argv[1])
