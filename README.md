@@ -13,6 +13,7 @@ Converts an Age of Empires II: Definitive Edition scenario (`.aoe2scenario`) int
 | `samples/unit_gallery.aoe2scenario` | Test map with every unit type |
 | `samples/gallery.aoe2scenario` | Test map: every building type, 8 civilizations |
 | `samples/test_village.aoe2scenario` | Small test map with terrain, water and a hill |
+| `samples/de-64.3.aoe2record` | A recorded AoE2 DE game (1 vs 1, Acropolis), test data for a record reader. License: `samples/de-64.3.aoe2record.LICENSE.txt` |
 | `tools/` | Tools for tests and debugging: test scenarios, world reader, 3D render, coverage report, Minecraft data and server check |
 | `tests/` | The tests (pytest) |
 | `docs/` | Design guide, roadmap, steering, coverage report and other notes |
@@ -35,6 +36,8 @@ Two ways:
 Copy the folder `MyMapWorld` into your Minecraft `saves` folder. Open it in Minecraft Java 26.3 or newer. For an older game (1.21.1 to 26.2), convert with `--mc-version 1.21.1`.
 The world is in creative mode. Outside the map there is only void. The world list shows a small top view of the map
 (`icon.png`).
+The file `aoe2mc.json` in the world folder lists the map size, the players and each object: AoE2 ID, name, owner,
+tile position and rotation, the UUID of the entity (units) and the footprint in blocks (buildings). A game program can use it.
 
 | Option | Default | Description |
 |---|---|---|

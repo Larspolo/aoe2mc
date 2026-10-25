@@ -5,8 +5,8 @@ description: Verify a change to aoe2mc before commit. Selects the check level (l
 
 # Verify a change
 
-There is no Minecraft client. Use the cheapest check that proves the change. Do all levels up to the one
-that the change needs. Write the result of each check in the PR body.
+Use the cheapest check that proves the change. Do all levels up to the one that the change needs.
+The Minecraft client runs only headless: it makes screenshots (level 5). Write the result of each check in the PR body.
 
 ## Level 1 – always (about 15 s)
 
@@ -46,6 +46,23 @@ example "Recoverable errors when loading section", unknown block names, entity o
 `--log FILE` keeps the full log. The server replaces a bad property value (`facing=up`) with the default and
 does not log it: `mcvalid` finds those. `python3 tools/mc_check.py --reports VERSION` makes exact
 `tools/mcdata/VERSION.json` from Mojang's data reports.
+
+## Level 5 – in-game screenshot (before you ask the owner)
+
+Use it when only the Minecraft client shows the answer: unit facing, map orientation, how a building looks
+in the game (light, textures, connected fences and panes), what the player sees at the spawn.
+
+    python3 tools/mc_shot.py WORLD OUT.png                                  # the spawn view (SpawnAngle)
+    python3 tools/mc_shot.py WORLD OUT.png --at X Y Z --look YAW PITCH --more X,Y,Z,YAW,PITCH
+
+- Convert with `--mc-version 1.21.1`: that client runs with Mesa OpenGL in Xvfb, about 25 s per world.
+  26.3 also works, but needs `mesa-vulkan-drivers` and Java 25 (see `docs/LEARNINGS.md`).
+- Yaw: 0 = south, 90 = west, 180 = north, -90 = east. Pitch: positive looks down (90 = top view).
+- Repeat `--more` for each extra view (OUT_2.png, OUT_3.png ...). The world loads once for all views.
+- Direction of a mob: look at it from the side, 8–10 blocks away, pitch 10. A top view does not show the head.
+- Look at each image with the Read tool and describe it in the PR body. Comment the result on the ticket.
+
+Only what the screenshot cannot show (the AoE2 side, feel, sound) goes to the owner.
 
 Examples for the game: unit facing, light, entity behavior.
 For what only a person can see, make a `needs-human` ticket with: the scenario or the command that makes the

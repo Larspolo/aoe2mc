@@ -18,7 +18,7 @@ The README already uses this style. Keep it.
 | Lint | `ruff check .` |
 | Fast tests (~15 s) | `python3 -m pytest` (use `python3 -m`: a `pytest` on the PATH can be another Python) |
 | Slow tests (~2 min) | `python3 -m pytest -m slow` |
-| Test scenario | `python3 tools/scenarios.py tiny OUT.aoe2scenario` (or `gallery`, `stress`, `buildings`, `units`, `village`, `facing`, `walls`) |
+| Test scenario | `python3 tools/scenarios.py tiny OUT.aoe2scenario` (or `gallery`, `stress`, `buildings`, `units`, `village`, `facing`, `walls`, `river_town`) |
 | Convert | `python3 aoe2mc.py IN.aoe2scenario OUTWorld --preview` |
 | Look at a world | `python3 tools/world_reader.py OUTWorld [X Y Z]` |
 | 3D image | `python3 tools/render.py building CASTLE --arch western OUT.png` (or `world OUTWorld X0 Z0 X1 Z1 OUT.png`) |
@@ -72,9 +72,10 @@ not change. Do not add a dependency without a ticket that asks for it. Keep func
 
 ## How to verify
 
-There is no Minecraft client here. Use, from cheap to expensive: lint and fast tests → slow tests → convert a
+There is no Minecraft window here. Use, from cheap to expensive: lint and fast tests → slow tests → convert a
 scenario with `--preview` and look at the PNG with the Read tool → `tools/world_reader.py` for exact blocks
-→ `tools/mc_check.py` for load errors in a real Minecraft server.
+→ `tools/mc_check.py` for load errors in a real Minecraft server → `tools/mc_shot.py` for in-game screenshots
+(before a `needs-human` ticket).
 Details: the `verify` skill.
 
 ## How to work
