@@ -11,7 +11,7 @@ Options:
     --name TEXT        World name in the Minecraft menu (default: file name)
     --seed N           Seed for the random details (tree heights, flowers) (default 1)
     --preview          Also write preview.png (top view) into the world folder
-    --mc-version V     Minecraft Java version of the output: 1.21.1 (default) or 26.3 (not complete yet)
+    --mc-version V     Minecraft Java version of the output: 1.21.1 (default) or 26.3
     --no-units         Do not convert units (mobs, boats, minecarts)
     --no-barriers      Do not fill building footprints with invisible barrier blocks
     --architecture X   Use one architecture set for all players (western, central, mediterranean,
@@ -38,7 +38,7 @@ from nbtlib.tag import Byte, Compound, Double, Float, Int, IntArray, List, Long,
 import buildings
 import units
 
-# Output format per Minecraft Java version (docs/minecraft-versions.md). The 26.3 entity and world format: #57.
+# Output format per Minecraft Java version (docs/minecraft-versions.md). Entities: units.to_version().
 VERSIONS = {
     "1.21.1": dict(name="1.21.1", data_version=3955, renames={}),
     "26.3": dict(name="26.3", data_version=5023, renames={"minecraft:chain": "minecraft:iron_chain"}),
@@ -46,6 +46,7 @@ VERSIONS = {
 VERSION_NAME = "1.21.1"      # the default output version
 DATA_VERSION = VERSIONS[VERSION_NAME]["data_version"]
 MC = VERSIONS[VERSION_NAME]  # the version of the running conversion; convert() sets it
+V26_1, V26_3 = 4786, 5023    # data versions of format changes (more in units.to_version)
 MIN_Y, MAX_Y = -64, 320      # world height range (MAX_Y exclusive)
 HEIGHT = MAX_Y - MIN_Y
 WATER_Y = 62                 # Y of the highest water block (sea level)
@@ -74,11 +75,11 @@ class Blocks:
         """Palette entry for block id i: {Name, Properties}, with the block names of the output version."""
         name, _, props = self.states[i].partition("[")
         name = MC["renames"].get(name, name)
+        key, pkey = ("id", "properties") if MC["data_version"] >= V26_3 else ("Name", "Properties")
         if not props:
-            return Compound({"Name": String(name)})
+            return Compound({key: String(name)})
         p = dict(kv.split("=") for kv in props[:-1].split(","))
-        return Compound({"Name": String(name),
-                         "Properties": Compound({k: String(v) for k, v in p.items()})})
+        return Compound({key: String(name), pkey: Compound({k: String(v) for k, v in p.items()})})
 
 
 B = Blocks()
@@ -1068,7 +1069,7 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
     if not out:
         return None
     root = Compound({"DataVersion": Int(MC["data_version"]), "Position": IntArray([cx, cz]),
-                     "Entities": List[Compound](out)})
+                     "Entities": List[Compound]([units.to_version(e, MC["data_version"]) for e in out])})
     buf = io.BytesIO()
     buf.write(b"\x0a\x00\x00")
     root.write(buf)
@@ -1257,7 +1258,30 @@ def write_level_dat(path, name, spawn):
                                     "minecraft:the_nether": dim("the_nether", nether),
                                     "minecraft:the_end": dim("the_end", end)})}),
     })
-    File({"Data": data}, gzipped=True).save(path)
+    if MC["data_version"] < V26_1:
+        File({"Data": data}, gzipped=True).save(path)
+        return
+    # 26.1: most fields leave level.dat for files in data/minecraft/ (docs/minecraft-versions.md)
+    level = Compound({k: data[k] for k in ("DataVersion", "version", "Version", "LevelName", "GameType",
+                                           "allowCommands", "initialized", "LastPlayed", "Time", "WasModded",
+                                           "DataPacks")})
+    level["spawn"] = Compound({"pos": IntArray(list(spawn)), "dimension": String("minecraft:overworld"),
+                               "yaw": Float(0), "pitch": Float(0)})
+    level["difficulty_settings"] = Compound({"difficulty": String("easy"), "hardcore": Byte(0), "locked": Byte(0)})
+    File({"Data": level}, gzipped=True).save(path)
+    files = {
+        "game_rules": {"minecraft:advance_time": Byte(0), "minecraft:advance_weather": Byte(0),
+                       "minecraft:spawn_mobs": Byte(0), "minecraft:fire_spread_radius_around_player": Int(0)},
+        "world_gen_settings": {"seed": Long(0), "generate_structures": Byte(0), "bonus_chest": Byte(0),
+                               "dimensions": data["WorldGenSettings"]["dimensions"]},
+        "weather": {"raining": Byte(0), "thundering": Byte(0), "rain_time": Int(0), "thunder_time": Int(0),
+                    "clear_weather_time": Int(0)},
+        "world_clocks": {"minecraft:overworld": Compound({"total_ticks": Long(6000), "paused": Byte(0)})},
+    }
+    d = os.path.join(os.path.dirname(path), "data", "minecraft")
+    os.makedirs(d, exist_ok=True)
+    for f, v in files.items():
+        File({"data": Compound(v), "DataVersion": Int(MC["data_version"])}, gzipped=True).save(os.path.join(d, f + ".dat"))
 
 
 # --------------------------------------------------------------------------------------------
@@ -1350,8 +1374,9 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
                          any(k in st.split(":")[1] for k in PASSABLE) and "grass_block" not in st
                          for st in B.states] + [True] * 1024)
 
-    os.makedirs(os.path.join(out, "region"), exist_ok=True)
-    os.makedirs(os.path.join(out, "entities"), exist_ok=True)
+    dim = os.path.join(out, "dimensions", "minecraft", "overworld") if MC["data_version"] >= V26_1 else out
+    for d in ("region", "entities"):
+        os.makedirs(os.path.join(dim, d), exist_ok=True)
     entity_regions = {}
     nchunks = cols.width // 16
     regions = {}
@@ -1368,9 +1393,9 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
             hi = HEIGHT - 1 - np.argmax(solid[::-1], axis=0)
             top_view[cx * 16:cx * 16 + 16, cz * 16:cz * 16 + 16] = np.take_along_axis(vol, hi[None], 0)[0].T
     for (rx, rz), chunks in regions.items():
-        write_region(os.path.join(out, "region", f"r.{rx}.{rz}.mca"), chunks)
+        write_region(os.path.join(dim, "region", f"r.{rx}.{rz}.mca"), chunks)
     for (rx, rz), chunks in entity_regions.items():
-        write_region(os.path.join(out, "entities", f"r.{rx}.{rz}.mca"), chunks)
+        write_region(os.path.join(dim, "entities", f"r.{rx}.{rz}.mca"), chunks)
 
     c = cols.n // 2
     spawn = (c, cols.surface(c, c) + 2, c)
@@ -1438,7 +1463,7 @@ def main(argv=None):
                     type=player_arch_spec,
                     help="architecture set for one player, for example 6=western (can be repeated)")
     ap.add_argument("--mc-version", choices=sorted(VERSIONS), default=VERSION_NAME,
-                    help=f"Minecraft Java version of the output (default {VERSION_NAME}; 26.3 is not complete yet)")
+                    help=f"Minecraft Java version of the output (default {VERSION_NAME})")
     a = ap.parse_args(argv)
     try:
         convert(a.scenario, a.output, a.tile_size, a.level_height, a.name, a.seed, a.preview, a.architecture,

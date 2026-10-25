@@ -71,6 +71,16 @@ def test_mc_version_26_3(tmp_path, monkeypatch):
     assert {int(c["DataVersion"]) for c in w.chunks("entities").values()} == {5023}
     assert mcvalid.invalid_states(w.palette(), "26.3") == {}
     assert aoe2mc.MC["name"] == aoe2mc.VERSION_NAME               # convert() restores the default version
+    # 26.x world layout and level.dat (docs/minecraft-versions.md)
+    assert os.path.isdir(tmp_path / "W" / "dimensions" / "minecraft" / "overworld" / "region")
+    assert not os.path.exists(tmp_path / "W" / "region")
+    assert "spawn" in level and "SpawnX" not in level and "GameRules" not in level
+    for f in ("game_rules", "world_gen_settings", "weather", "world_clocks"):
+        assert os.path.exists(tmp_path / "W" / "data" / "minecraft" / f"{f}.dat"), f
+    ents = w.entities()
+    assert ents and not any(k in e for e in ents for k in ("ArmorItems", "HandItems", "FallDistance"))
+    assert all(mcvalid.entity_error(str(e["id"]), "26.3") is None for e in ents)
     # block renames of the version profile
     monkeypatch.setattr(aoe2mc, "MC", aoe2mc.VERSIONS["26.3"])
-    assert str(aoe2mc.B.nbt(aoe2mc.B("chain[axis=y]"))["Name"]) == "minecraft:iron_chain"
+    assert dict(aoe2mc.B.nbt(aoe2mc.B("chain[axis=y]"))) == {"id": "minecraft:iron_chain",
+                                                           "properties": {"axis": "y"}}

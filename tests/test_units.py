@@ -122,3 +122,18 @@ def test_no_empty_item_has_components(name):
     for d in [desc, *desc.get("Passengers", [])]:
         for it in [*d.get("ArmorItems", []), *d.get("HandItems", [])]:
             assert "id" in it or not len(it), (name, it)
+
+
+def test_to_version_26_3():
+    rider = units.soldier("zombie", 2, "iron_sword")
+    rider["ArmorItems"][2]["components"] = {"minecraft:dyed_color": {"rgb": 255}}
+    boat = units.to_nbt(units.boat("bamboo", [rider], chest=True), (0, 0, 0), 0.0, np.random.default_rng(1))
+    boat["Passengers"][0]["CustomName"] = '{"text": "Knight", "color": "#FF0000"}'
+    new = units.to_version(boat, 5023)
+    assert str(new["id"]) == "minecraft:bamboo_chest_raft" and "Type" not in new
+    r = new["Passengers"][0]
+    assert {"ArmorItems", "HandItems", "FallDistance"}.isdisjoint(r) and float(r["fall_distance"]) == 0.0
+    assert str(r["equipment"]["mainhand"]["id"]) == "minecraft:iron_sword"
+    assert int(r["equipment"]["chest"]["components"]["minecraft:dyed_color"]) == 255
+    assert dict(r["CustomName"]) == {"text": "Knight", "color": "#FF0000"}
+    assert units.to_version(boat, 3955) is boat                   # 1.21.1 stays as it is

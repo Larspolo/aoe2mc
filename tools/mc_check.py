@@ -35,7 +35,8 @@ DEFAULT_VERSION = "1.21.1"
 # Log lines with WARN or ERROR that a correct world also gives
 HARMLESS = ("OFFLINE/INSECURE MODE", "make no attempt to authenticate", "possible to play without internet",
             'set "online-mode"', "Ambiguity between arguments", "Can't keep up!", "yggdrasil public key",
-            "key missing: DragonFight")     # #60 removes this entry
+            "key missing: DragonFight",     # #60 removes this entry
+            "[Minecraft Services Discovery/")   # 26.x: the services host is not reachable in the sandbox
 PROBLEM = re.compile(r"/(WARN|ERROR|FATAL)\]|Exception|Invalid|Unknown block|Couldn't|Failed")
 
 
@@ -100,7 +101,9 @@ def java_for(version):
 def chunks(world):
     """(min cx, min cz, max cx, max cz) of the chunks in the region files."""
     xs, zs = [], []
-    for path in glob.glob(os.path.join(world, "region", "r.*.*.mca")):
+    paths = glob.glob(os.path.join(world, "region", "r.*.*.mca")) + \
+        glob.glob(os.path.join(world, "dimensions", "minecraft", "overworld", "region", "r.*.*.mca"))   # 26.1+
+    for path in paths:
         rx, rz = map(int, os.path.basename(path).split(".")[1:3])
         with open(path, "rb") as f:
             head = f.read(4096)

@@ -59,8 +59,13 @@ def unpack(longs, bits, count):
 
 
 def state_name(entry):
-    name = str(entry["Name"])
-    props = entry.get("Properties")
+    """Palette entry -> "minecraft:name[k=v,...]". 26.3 writes {id, properties}, a string or {"": string}."""
+    if not hasattr(entry, "keys"):
+        return str(entry)
+    if "" in entry:
+        return str(entry[""])
+    name = str(entry["Name"] if "Name" in entry else entry["id"])
+    props = entry.get("Properties", entry.get("properties"))
     if props:
         name += "[" + ",".join(f"{k}={v}" for k, v in props.items()) + "]"
     return name
@@ -68,7 +73,9 @@ def state_name(entry):
 
 class World:
     def __init__(self, path):
-        self.path = path
+        self.root = path                                          # level.dat is here
+        dim = os.path.join(path, "dimensions", "minecraft", "overworld")
+        self.path = dim if os.path.isdir(dim) else path           # 26.1 moved region/ and entities/
         self._regions = {}
 
     def _region(self, folder, rx, rz):
@@ -133,7 +140,7 @@ class World:
         return out
 
     def level(self):
-        return nbtlib.load(os.path.join(self.path, "level.dat"))["Data"]
+        return nbtlib.load(os.path.join(self.root, "level.dat"))["Data"]
 
 
 def main():
