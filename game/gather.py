@@ -11,6 +11,7 @@ villager is an interaction with the entity, not a use of the item). Then it read
 the player, and finds the villager or the tree on that ray with the data of aoe2mc.json.
 """
 import heapq
+import json
 import math
 import os
 import re
@@ -25,6 +26,7 @@ DROP_SITES = ("TOWN_CENTER", "LUMBER_CAMP")
 TREE_WOOD = 100                                                    # wood in one tree, as in AoE2
 STEPS = [(dx, dz) for dx in (-1, 0, 1) for dz in (-1, 0, 1) if dx or dz]
 NUMBER = r"(-?[\d.]+(?:E-?\d+)?)[df]"
+EVENTS = {"idle": "idle", "to_tree": "walk", "chop": "chop", "to_drop": "carry"}    # state -> event in the log
 
 
 class Map:
@@ -128,6 +130,7 @@ class Villager:
     def __init__(self, uuid, pos):
         self.uuid, self.pos = uuid, pos
         self.state, self.path, self.tree, self.load, self.timer = "idle", [], None, 0, 0.0
+        self.walked = 0.0                                              # blocks, for the log
 
     @property
     def cell(self):
@@ -135,11 +138,13 @@ class Villager:
 
 
 class Gather:
-    """The gather game on a running server (game.command sends one command). Call setup(), then step() in a loop."""
+    """The gather game on a running server (game.command sends one command). Call setup(), then step() in a loop.
+    log: a text file that gets one JSON line per event (state change or drop), to measure the timing (#289)."""
 
-    def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=1.0):
+    def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=1.0, log=None, clock=time.monotonic):
         self.game, self.map, self.player = game, Map(data, player), player
         self.tick, self.carry, self.chop = tick, carry, chop
+        self.log, self.clock, self.t0, self.wood = log, clock, clock(), 0
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
                       and "VILLAGER" in o["name"]]
         self.villagers, self.selected = {}, set()
@@ -181,7 +186,19 @@ class Gather:
 
     def go(self, v, state, goals):
         path = self.map.path(v.cell, goals)
-        v.state, v.path = (state, path) if path is not None else ("idle", [])
+        v.path = path or []
+        self.set(v, state if path is not None else "idle")
+
+    def set(self, v, state):
+        v.state = state
+        self.event(v, EVENTS[state])
+
+    def event(self, v, name):
+        if self.log:
+            self.log.write(json.dumps({"t": round(self.clock() - self.t0, 3), "villager": v.uuid, "event": name,
+                                       "pos": [round(c, 2) for c in v.pos], "walked": round(v.walked, 2),
+                                       "load": v.load, "wood": self.wood}) + "\n")
+            self.log.flush()
 
     def clicks(self):
         """Players who clicked since the last call."""
@@ -220,17 +237,21 @@ class Gather:
                 x, z = v.path.pop(0)
                 dx, dz = x + 0.5 - v.pos[0], z + 0.5 - v.pos[2]
                 v.pos = (x + 0.5, float(self.map.y(x, z)), z + 0.5)
+                v.walked += math.hypot(dx, dz)
                 yaw = math.degrees(math.atan2(-dx, dz))
                 self.command(f"tp {v.uuid} {v.pos[0]} {v.pos[1]} {v.pos[2]} {yaw:.0f} 0")
             elif v.state == "to_tree":
-                v.state, v.timer = ("chop", 0.0) if self.map.trees.get(v.tree, 0) > 0 else ("idle", 0.0)
+                v.timer = 0.0
+                self.set(v, "chop" if self.map.trees.get(v.tree, 0) > 0 else "idle")
             elif v.state == "to_drop":
                 self.command(f"scoreboard players add Wood aoe_res {v.load}")
+                self.wood += v.load
                 v.load = 0
+                self.event(v, "drop")
                 if self.map.trees.get(v.tree, 0) > 0:
                     self.go(v, "to_tree", self.map.around(self.map.cells(v.tree)))
                 else:
-                    v.state = "idle"
+                    self.set(v, "idle")
             elif v.state == "chop":
                 v.timer += self.tick
                 while v.timer >= self.chop and v.load < self.carry and self.map.trees.get(v.tree, 0) > 0:
@@ -249,9 +270,10 @@ class Gather:
         for b in ("#minecraft:logs", "#minecraft:leaves"):
             self.command(f"fill {x0 - 2} {y0} {z0 - 2} {x0 + T + 1} {y0 + 24} {z0 + T + 1} air replace {b}")
 
-    def run(self, seconds=None):
+    def run(self, seconds=None, until=None):
+        """Play in real time until seconds passed or until() is true."""
         end = seconds and time.time() + seconds
-        while not end or time.time() < end:
+        while (not end or time.time() < end) and not (until and until()):
             t = time.time()
             for name in self.clicks():
                 self.click(name)
