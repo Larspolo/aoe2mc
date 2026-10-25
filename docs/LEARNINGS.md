@@ -65,6 +65,8 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - `tools/fetch_mcdata.py` reads the exact Mojang data from `misode/mcmeta`. PrismarineJS lags behind; its
   `data/pc/common/protocolVersions.json` has the data versions of all releases (26.3 = 5023).
 - `urllib` with a JSON body needs the header `Content-Type: application/json`, else GitHub answers 415 (#345).
+- `mgz` `parse_match(f).actions` has the commands with times; `ERROR` actions are commands that mgz could not read
+  (all `DE_QUEUE` in DE 64.3: `aoe2mc.de_queue`). Check the raw bytes with a wrapper of `mgz.fast.parse_action` (#372).
 
 ## Code
 

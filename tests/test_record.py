@@ -1,4 +1,5 @@
 """Convert the start state of the recorded game in samples/ (#139). Skip without `mgz`."""
+import json
 import os
 import subprocess
 import sys
@@ -46,3 +47,26 @@ def test_record_world_positions(tmp_path):
     scout = [e for e in w.entities() if e["id"] == "minecraft:horse"
              and [float(v) for v in e["Pos"]][::2] == [130.0, 422.0]]   # scout cavalry at tile (32.5, 105.5)
     assert scout
+    with open(tmp_path / "w" / "aoe2mc.json") as f:
+        timeline = json.load(f)["timeline"]
+    assert len(timeline) == 3063 and timeline[0]["time"] == 0
+
+
+def test_timeline_of_the_sample_record():
+    timeline = aoe2mc.read_timeline(REC)
+    kinds = Counter(e["kind"] for e in timeline)
+    assert {k: kinds[k] for k in ("build", "wall", "queue", "research", "move", "order", "delete", "resign", "chat",
+                                  "age")} == dict(build=211, wall=13, queue=469, research=44, move=1436, order=406,
+                                                  delete=10, resign=1, chat=7, age=5)
+    assert [e["time"] for e in timeline] == sorted(e["time"] for e in timeline)
+    build = next(e for e in timeline if e["kind"] == "build")
+    assert build == dict(time=3133, player=2, kind="build", type=70, name="HOUSE", tile=[85.0, 27.0], objects=[1663, 1662])
+    queue = next(e for e in timeline if e["kind"] == "queue")      # mgz itself gives ERROR for these (de_queue)
+    assert (queue["name"], queue["amount"], queue["objects"]) == ("VILLAGER_MALE", 1, [1652])
+    wall = next(e for e in timeline if e["kind"] == "wall")
+    assert (wall["name"], wall["tile"], wall["end"]) == ("PALISADE_WALL", [64.0, 54.0], [64, 54])
+    tech = next(e for e in timeline if e["kind"] == "research")
+    assert (tech["time"], tech["technology"], tech["technology_id"]) == (394563, "Loom", 22)
+    chat = [e for e in timeline if e["kind"] == "chat"]
+    assert chat[0]["player"] == 1 and chat[0]["text"].startswith("Rocky Forest or Acrop?")
+    assert next(e for e in timeline if e["kind"] == "age") == dict(time=620620, player=2, kind="age", age="FEUDAL_AGE")
