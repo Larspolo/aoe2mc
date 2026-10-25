@@ -14,6 +14,7 @@ dependencies = [          # the same as requirements.txt
     "nbtlib>=2.0.4,<3",
     "numpy>=1.26",
     "pillow>=10",
+    "mgz>=1.8.51,<2",
 ]
 
 [project.scripts]

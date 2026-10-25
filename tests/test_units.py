@@ -69,6 +69,13 @@ def test_animals_follow_the_owner_rule():
         assert cls == behavior, (name, mob)
 
 
+def test_only_passive_animals_make_sounds():
+    for name in ("SHEEP", "COW_A", "LLAMA", "TURKEY"):
+        assert "Silent" not in units.classify(name), name
+    for name in ("WOLF", "WAR_DOG", "ELK", "MILITIA", "VILLAGER_MALE", "KNIGHT"):
+        assert units.classify(name)["Silent"] == 1, name
+
+
 def test_war_animals_are_not_animals():
     for name in ("BATTLE_ELEPHANT", "CAMEL_RIDER", "JAGUAR_WARRIOR", "TIGER_CAVALRY", "STANDARD_BEARER"):
         assert units.animal(name) is None, name

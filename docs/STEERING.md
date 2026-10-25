@@ -79,7 +79,13 @@ Use one cloud environment for all runs. All tickets use the same tools.
 `scripts/cloud-setup.sh` installs Java 25, the Python packages and the Minecraft server jars.
 The cloud keeps the result as a snapshot for about 7 days, or until you change the script or the network
 settings. Then the script runs again one time. To use it: cloud environment menu in the session title bar → Edit →
-**Setup script** → paste the content of `scripts/cloud-setup.sh` → **Save**. Paste it again when the file changes.
+**Setup script** → paste the content of `scripts/cloud-setup.sh` → **Save**. When the file changes, the agent
+sees it at the start of a session (the SessionStart hook compares `SETUP_VERSION`) and opens a `needs-human`
+ticket that asks you to paste it again.
+
+The agent also improves CI, this script and the other parts of the system by itself (`improve` skill). For settings
+that only you can change (the environment, the network, the scheduled task, GitHub), it opens a `needs-human`
+ticket with numbered steps.
 
 ## Files that steer the agent
 

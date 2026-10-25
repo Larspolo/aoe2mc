@@ -32,7 +32,7 @@ def test_level_dat(tiny_world):
 def test_chunks_have_valid_blocks_and_biomes(tiny_world):
     w = world_reader.World(tiny_world[0])
     chunks = w.chunks()
-    assert len(chunks) == 36                                      # 24 tiles * 4 blocks = 96 blocks = 6 x 6 chunks
+    assert len(chunks) == 64          # 24 tiles * 4 blocks = 96 blocks = 6 x 6 chunks, and a ring for the border
     for (cx, cz), c in chunks.items():
         assert int(c["DataVersion"]) == aoe2mc.DATA_VERSION
         assert (int(c["xPos"]), int(c["zPos"])) == (cx, cz)
@@ -46,7 +46,17 @@ def test_terrain_and_water(tiny_world):
     w = world_reader.World(tiny_world[0])
     assert w.block(90, aoe2mc.WATER_Y, 48) == "minecraft:water[level=0]"       # deep water at x >= 20 tiles
     assert w.block(90, aoe2mc.WATER_Y - 3, 48) == "minecraft:water[level=0]"
-    assert w.block(0, aoe2mc.MIN_Y, 0) == "minecraft:bedrock"
+
+
+def test_diorama_border(tiny_world):
+    """The default border (#172): the map stands on a plinth; the floor is 6 blocks under the lowest ground."""
+    w = world_reader.World(tiny_world[0])
+    column = [w.block(-1, y, 48) for y in range(aoe2mc.MIN_Y, aoe2mc.MAX_Y)]
+    floor = aoe2mc.MIN_Y + next(i for i, b in enumerate(column) if b != "minecraft:air")
+    assert column[floor - aoe2mc.MIN_Y] == "minecraft:polished_deepslate"
+    assert "minecraft:stone_bricks" in column and "minecraft:polished_andesite" in column
+    assert w.block(0, floor - 1, 48) == "minecraft:air" and w.block(0, floor, 48) != "minecraft:air"
+    assert w.block(0, aoe2mc.MIN_Y, 0) == "minecraft:air"
 
 
 def test_entities(tiny_world):
@@ -58,6 +68,31 @@ def test_entities(tiny_world):
     assert "minecraft:horse" in ids and "minecraft:villager" in ids and "minecraft:skeleton" in ids
     assert "units in a block (moved up): 0" in out
 
+
+
+def test_objects_file(tiny_world):
+    """aoe2mc.json lists the map, the players and the objects; the unit UUIDs are the UUIDs of the entities."""
+    path, _ = tiny_world
+    with open(os.path.join(path, "aoe2mc.json")) as f:
+        data = json.load(f)
+    assert (data["tile_size"], data["level_height"]) == (4, 3) and data["map_size"] > 0
+    assert all({"civ", "color", "arch"} <= set(p) for p in data["players"].values())
+    objs = data["objects"]
+    assert all({"id", "name", "kind", "player", "tile", "rotation"} <= set(o) for o in objs)
+    world = {aoe2mc.units.uuid_str(e["UUID"]) for e in world_reader.World(path).entities()}
+    uuids = [o["uuid"] for o in objs if o["kind"] == "unit"]
+    assert uuids and set(uuids) <= world and len(set(uuids)) == len(uuids)
+    blds = [o for o in objs if o["kind"] == "building"]
+    assert blds and all(len(o["footprint"]) == 4 for o in blds)
+    tc, = [o for o in blds if o["name"] == "TOWN_CENTER"]
+    x0, z0, x1, z1 = tc["footprint"]
+    assert x1 - x0 == z1 - z0 == 16 and x0 <= tc["tile"][0] * 4 <= x1
+    ground = [row.split() for row in data["ground"]]                # y where a unit stands, "-" for water (#138)
+    assert len(ground) == len(ground[0]) == data["map_size"] * 4 and any("-" in row for row in ground)
+    stand = [(int(float(e["Pos"][1])), ground[int(float(e["Pos"][2]))][int(float(e["Pos"][0]))])
+             for e in world_reader.World(path).entities() if "Pos" in e]
+    land = [(y, g) for y, g in stand if g != "-"]
+    assert land and all(y == int(g) for y, g in land)
 
 def test_mc_version_26_3(tmp_path, monkeypatch):
     import contextlib

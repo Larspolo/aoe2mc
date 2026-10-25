@@ -1,7 +1,7 @@
 """
 Units for aoe2mc: AoE2 units -> Minecraft mobs, boats and minecarts.
 
-All mobs stand still (NoAI), do not despawn (PersistenceRequired) and are silent.
+All mobs stand still (NoAI), do not despawn (PersistenceRequired) and are silent, except passive animals.
 Each unit gets a name tag with its AoE2 name in the player color.
 """
 import json
@@ -392,8 +392,11 @@ def classify(n, hero=False):
     # Animals (but not war animals)
     a = animal(n) if not hero else None
     if a:
-        _, kind, extra = a
-        return mounted("camel", None) if kind == "camel" else mob(kind, **extra)
+        behavior, kind, extra = a
+        d = mounted("camel", None) if kind == "camel" else mob(kind, **extra)
+        if behavior == "passive":   # sheep and cows make their sounds (#221)
+            del d["Silent"]
+        return d
 
     # Villagers, monks, kings, traders
     if n.startswith("VILLAGER") or n.startswith("REPAIRER"):
@@ -535,6 +538,12 @@ def to_nbt(desc, pos, yaw, rng):
     if passengers:
         tags["Passengers"] = List[Compound]([to_nbt(p, pos, yaw, rng) for p in passengers])
     return Compound(tags)
+
+
+def uuid_str(ints):
+    """UUID int array (4 × int32, most significant first) -> the text form that commands use."""
+    h = "".join(f"{int(v) & 0xFFFFFFFF:08x}" for v in ints)
+    return f"{h[:8]}-{h[8:12]}-{h[12:16]}-{h[16:20]}-{h[20:]}"
 
 
 def top_entity(nbt):

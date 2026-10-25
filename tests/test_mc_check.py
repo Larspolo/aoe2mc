@@ -56,7 +56,8 @@ def test_server_loads_tiny_world(tiny_world):
 
 
 @pytest.mark.mc
-def test_server_26_3_loads_tiny_world(tmp_path):
+@pytest.mark.parametrize("version", ["1.21.1", "26.3"])
+def test_server_loads_border_of_tiny_world(tmp_path, version):
     import contextlib
     import io
 
@@ -66,7 +67,8 @@ def test_server_26_3_loads_tiny_world(tmp_path):
         pytest.skip("Mojang is not reachable")
     src = scenarios.tiny(str(tmp_path / "tiny.aoe2scenario"))
     with contextlib.redirect_stdout(io.StringIO()):
-        aoe2mc.convert(src, str(tmp_path / "W"), mc_version="26.3")
-    bad, log = mc_check.check(str(tmp_path / "W"), "26.3")
+        aoe2mc.convert(src, str(tmp_path / "W"), mc_version=version)
+    bad, log = mc_check.check(str(tmp_path / "W"), version)
     assert any("Saved the game" in line for line in log)
+    assert any("world border is currently 96" in line for line in log)      # the map edge, #172
     assert bad == []

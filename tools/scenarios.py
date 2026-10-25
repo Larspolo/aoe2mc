@@ -5,7 +5,7 @@ Make synthetic AoE2 DE scenarios for tests (no real map files necessary).
 Usage:
     python tools/scenarios.py tiny OUT.aoe2scenario
     python tools/scenarios.py gallery OUT.aoe2scenario [--kinds BOU]
-    python tools/scenarios.py stress|buildings|units|village|facing|walls|river|river_town|four_civs OUT.aoe2scenario
+    python tools/scenarios.py stress|buildings|units|village|facing|walls|river|river_town|four_civs|battle OUT.aoe2scenario
 
 tiny:      24x24 tiles with land, shallow and deep water, a hill, buildings, units, a tree, a mine and fish.
 gallery:   every object type of the parser in a grid (B = buildings, O = other objects, U = units).
@@ -19,6 +19,7 @@ river_town: a 64x64 example map (examples/river_town.aoe2scenario): a walled tow
            a castle on a hill, forests, mines and animals (#204).
 four_civs: an 80x80 example map (examples/four_civs.aoe2scenario): four towns of four architecture sets around a lake,
            each with its wonder (#205).
+battle:    a 64x64 example map (examples/battle.aoe2scenario): two armies in formation, siege and a castle (#206).
 walls:     palisade, stone and fortified walls with a gate and a corner, for 3 architecture sets (players 1, 4, 7).
 """
 import argparse
@@ -384,9 +385,69 @@ FOUR_CIVS = [(Civilization.BRITONS, TerrainId.GRASS_1, TerrainId.FOREST_OAK, Oth
               UnitInfo.JAGUAR_WARRIOR)]
 
 
+MUD = ((19, 31, 8), (26, 34, 5), (33, 32, 12), (41, 30, 6), (46, 34, 9), (38, 36, 4), (12, 33, 3))   # x, y, r²
+
+
+def battle(path):
+    """Example map: two armies in formation face each other on an open field. Britons (player 1) in the north
+    with a castle on a hill, Persians (player 2) in the south with a siege camp. No randomness."""
+    scn = new_scenario(64)
+    scn.player_manager.active_players = 2
+    scn.player_manager.players[1].civilization = Civilization.BRITONS                  # western
+    scn.player_manager.players[2].civilization = Civilization.PERSIANS                 # middle_eastern
+    for t in scn.map_manager.terrain:
+        x, y, hill = t.x, t.y, max(abs(t.x - 32), abs(t.y - 8))
+        if x <= 3 or x >= 60:
+            t.terrain_id = TerrainId.FOREST_OAK
+        elif any((x - cx) ** 2 + 2 * (y - cy) ** 2 <= r for cx, cy, r in MUD):          # trampled ground
+            t.terrain_id = TerrainId.DIRT_2
+        elif y >= 50:
+            t.terrain_id = TerrainId.DIRT_1
+        t.elevation = 2 if hill <= 5 else 1 if hill <= 7 else 0
+    um = scn.unit_manager
+    for x, y in ((x, y) for x in [*range(4), *range(60, 64)] for y in range(64) if (x * 3 + y * 7) % 4):
+        um.add_unit(PlayerId.GAIA, OtherInfo.TREE_OAK.ID, x=x + 0.5, y=y + 0.5)
+    for x, y, b in ((32, 8, BuildingInfo.CASTLE), (20.5, 12.5, BuildingInfo.GUARD_TOWER),
+                    (43.5, 12.5, BuildingInfo.GUARD_TOWER), (14, 5, BuildingInfo.BARRACKS),
+                    (50, 5, BuildingInfo.ARCHERY_RANGE)):
+        um.add_unit(PlayerId.ONE, b.ID, x=x, y=y)
+    for x, y, b in ((22, 58, BuildingInfo.SIEGE_WORKSHOP), (42, 58, BuildingInfo.STABLE),
+                    (32, 59, BuildingInfo.MONASTERY)):
+        um.add_unit(PlayerId.TWO, b.ID, x=x, y=y)
+    south, north = math.pi / 2, 3 * math.pi / 2                                       # rotation: angle from +x to +y
+    armies = ((PlayerId.ONE, south, ((24.5, 1.5, ((12, UnitInfo.HALBERDIER),)), (23.0, 1.5, ((12, UnitInfo.CHAMPION),)),
+                                     (21.5, 1.5, ((12, UnitInfo.LONGBOWMAN),)), (20.0, 1.5, ((12, UnitInfo.ARBALESTER),)),
+                                     (17.0, 2.5, ((3, UnitInfo.MANGONEL), (2, UnitInfo.SCORPION), (3, UnitInfo.MANGONEL))))),
+              (PlayerId.TWO, north, ((39.5, 1.5, ((12, UnitInfo.PIKEMAN),)), (41.0, 1.5, ((12, UnitInfo.TWO_HANDED_SWORDSMAN),)),
+                                     (42.5, 1.5, ((12, UnitInfo.CROSSBOWMAN),)), (44.0, 1.5, ((12, UnitInfo.ELITE_SKIRMISHER),)),
+                                     (48.0, 3.0, ((2, UnitInfo.BATTERING_RAM), (2, UnitInfo.SIEGE_TOWER), (2, UnitInfo.BATTERING_RAM))),
+                                     (51.5, 3.0, ((2, UnitInfo.TREBUCHET), (2, UnitInfo.BOMBARD_CANNON), (2, UnitInfo.TREBUCHET))))))
+    for player, rot, rows in armies:
+        for y, step, groups in rows:                                                   # one row along tile x, centered
+            line = [u for n, u in groups for _ in range(n)]
+            for i, u in enumerate(line):
+                um.add_unit(player, u.ID, x=32.5 + (i - (len(line) - 1) / 2) * step, y=y, rotation=rot)
+    for player, rot, y, u in ((PlayerId.ONE, south, (22.0, 23.5), UnitInfo.CAVALIER),
+                              (PlayerId.ONE, south, (19.0,), UnitInfo.LIGHT_CAVALRY),
+                              (PlayerId.TWO, north, (40.0, 42.0), UnitInfo.WAR_ELEPHANT),
+                              (PlayerId.TWO, north, (44.0,), UnitInfo.CAMEL_RIDER)):
+        for yy in y:                                                                   # cavalry on both wings
+            for x in (*range(8, 15, 2), *range(51, 58, 2)):
+                um.add_unit(player, u.ID, x=x + 0.5, y=yy, rotation=rot)
+    for player, rot, x, y, u in ((PlayerId.ONE, south, 32.5, 14.5, UnitInfo.KING),
+                                 (PlayerId.ONE, south, 30.5, 15.5, UnitInfo.MONK),
+                                 (PlayerId.ONE, south, 34.5, 15.5, UnitInfo.MONK),
+                                 (PlayerId.TWO, north, 32.5, 55.5, UnitInfo.KING),
+                                 (PlayerId.TWO, north, 30.5, 54.5, UnitInfo.MONK),
+                                 (PlayerId.TWO, north, 34.5, 54.5, UnitInfo.MONK)):
+        um.add_unit(player, u.ID, x=x, y=y, rotation=rot)
+    for x, y, o in ((26.5, 32.5, OtherInfo.SKELETON), (37.5, 31.5, OtherInfo.CRATER), (30.5, 34.5, OtherInfo.FLAG_A)):
+        um.add_unit(PlayerId.GAIA, o.ID, x=x, y=y)
+    return save(scn, path, "battle.aoe2scenario")
+
+
 MAKERS = {"tiny": tiny, "stress": stress, "buildings": buildings_map, "units": units_map, "village": village, "facing": facing,
-          "walls": walls, "river": river, "river_town": river_town,
-          "four_civs": four_civs}
+          "walls": walls, "river": river, "river_town": river_town, "four_civs": four_civs, "battle": battle}
 
 
 def main():

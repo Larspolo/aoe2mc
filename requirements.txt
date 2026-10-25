@@ -3,3 +3,4 @@ AoE2ScenarioParser>=0.9.8,<0.10   # the dataset enums change between minor versi
 nbtlib>=2.0.4,<3
 numpy>=1.26
 pillow>=10
+mgz>=1.8.51,<2                  # reads .aoe2record files (imported only for them)
