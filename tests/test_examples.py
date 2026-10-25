@@ -8,7 +8,7 @@ import scenarios
 EXAMPLES = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "examples")
 
 
-@pytest.mark.parametrize("kind", ["river_town"])
+@pytest.mark.parametrize("kind", ["river_town", "four_civs"])
 def test_example_is_made_again(kind, tmp_path):
     out = scenarios.MAKERS[kind](str(tmp_path / "out.aoe2scenario"))
     with open(out, "rb") as a, open(os.path.join(EXAMPLES, f"{kind}.aoe2scenario"), "rb") as b:
