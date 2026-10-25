@@ -84,12 +84,12 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Wooden hoarding | wood slab (top) or `spruce_planks` with a `*_fence` rail | `donjon`, `krepost` |
 | Coat of arms | `*_wall_banner` (player color) over the gate | `donjon` |
 | Lamp | `lantern` | `decorate()`, `blacksmith` (hanging), `pagoda` (under the eaves) |
-| Siege engine under construction | spruce slabs, fences and logs | `siege_workshop` |
+| Siege engine under construction | `spruce_slab`, `spruce_fence` and `spruce_log` | `siege_workshop` |
 | Cloth awning | `*_wool` in the player color | `house` (flat roofs) |
-| Stair to a roof terrace | stairs of the roof material | `house` (flat roofs) |
+| Stair to a roof terrace | `*_stairs` of the roof material | `house` (flat roofs) |
 | Column | `quartz_pillar` | `arch_of_constantine`, `oracles_temple` |
 | Sacred tree | `oak_log`, `oak_leaves[persistent=true]` | `pagan_shrine` |
-| Sail | wool (player color) | `flagship` |
+| Sail | `*_wool` (player color) | `flagship` |
 | Hides | `brown_wool` | `helepolis` |
 | Band in the player color | `*_wool` (player color) | `town_center`, `castle`, `tower`, `temple`, `pagoda` |
 | Outside stairs to an upper floor | `*_stairs` of the wood of the set | `town_center` |
@@ -102,7 +102,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Books, study | `bookshelf`, `lectern` (with a book) | `university` |
 | Desks, light inside | `enchanting_table`, `cartography_table`, `candle` (lit, on shelves and desks), `lantern` on a `chain` (`hang()`) | `university` (`study()`) |
 | Scholar statue | `chiseled_stone_bricks` pedestal, `quartz_pillar`, `chiseled_quartz_block` | `university` |
-| Rose window | stained glass panes | `monastery` |
+| Rose window | `*_stained_glass_pane` | `monastery` |
 | Posts of an open belfry | `stone_brick_wall` | `fortified_church` |
 | Orange roof tiles (Krepost; Central European, Southeast Asian sets) | `red_sandstone` stairs and blocks | `krepost`, `fortified_church`, `Style.roof` |
 | Stepped stone roof (Mesoamerican set) | `stone_brick` stairs (hip roof) | `Style.roof` |
@@ -117,9 +117,11 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Kitchen garden | `carrots`, `potatoes`, `wheat` (age 7) on `farmland`, `spruce_fence` with a `spruce_fence_gate` | `folwark` |
 | Windmill sails | `spruce_fence` arms with `white_wool` cloth, `stripped_spruce_log` hub | `mill`, `folwark` |
 
-Add a line when a design uses a new feature block. Put it after a line of a related feature or design, not at the
-end of the table: parallel PRs that all add at the end get a merge conflict on GitHub. Each new block state must
-pass `mcvalid`.
+Add a row when a design uses a new feature block, with the block names in backticks. Put it after a row of a related
+feature or design, not at the end of the table: parallel PRs that all add at the end get a merge conflict. Each new
+block state must pass `mcvalid`. Do not edit "Used today in": `tools/feature_table.py` writes it on main from the
+designs (the functions that place the most blocks of the row; a function that uses less than half of the names of the
+best one is not listed).
 
 ## 3. Some noise
 

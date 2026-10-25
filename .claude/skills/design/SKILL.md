@@ -51,8 +51,9 @@ For each feature, take the block from the table in `docs/DESIGN.md`, section 2.
   Use the `Canvas` tools (`room`, `timber_room`, `roof`, `gable`, `hip`, `dome`, `cylinder`, `door`, `windows` ...).
 - Use the fields of the `Style` for materials, so that all architecture sets still work.
 - Keep `vary()`, `weather()` and `decorate()`. The main block stays the large majority.
-- Add a line to the table in `docs/DESIGN.md` for each new feature block. Put it after a related line, not at the
-  end: GitHub ignores the `union` driver, so lines that parallel PRs add at the same place give a merge conflict.
+- Add a row to the table in `docs/DESIGN.md` for each new feature: the feature and the block names in backticks
+  (`*` is a wildcard). Put it after a related row, not at the end: rows that parallel PRs add at the same place give
+  a merge conflict. Do not edit the column "Used today in": `coverage.yml` writes it on main (`tools/feature_table.py`).
 - A new design on water (a pier on piles) must go into `is_dock` (`place_building`) and `NO_PROPS`, as `dock`,
   else it gets a foundation and no piles (#127).
 

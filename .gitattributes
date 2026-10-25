@@ -1,4 +1,2 @@
-# The feature table that parallel runs extend: keep the lines of both sides (see docs/LEARNINGS.md).
-docs/DESIGN.md merge=union
 # Ticket runs only add lines here, so a merge keeps the new lines of both sides; the improve skill cleans up.
 docs/LEARNINGS.md merge=union
