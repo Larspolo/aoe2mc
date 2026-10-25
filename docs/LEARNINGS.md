@@ -35,9 +35,9 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 
 ## Libraries
 
-- AoE2ScenarioParser 0.9.8 can make new scenarios: `AoE2DEScenario.from_default()`, then
-  `map_manager.map_size = N`, `unit_manager.add_unit(PlayerId, ID, x=, y=)`, `write_to_file(path)`.
-  It prints much text: wrap calls in `contextlib.redirect_stdout(io.StringIO())`. Default players are RANDOM (`western`).
+- AoE2ScenarioParser 0.9.8 makes new scenarios (`tools/scenarios.py`: `new_scenario`, `add_unit`, `save`). It prints much
+  text (`redirect_stdout`), default players are RANDOM (`western`), and `write_to_file` writes the output file name into
+  the file: for the same bytes use `scenarios.save(..., name)` (#204).
 - The server drops entity tags that it does not know, without a log line. To check a new entity format, let the
   server save the world and compare the entity NBT before and after (method in `docs/minecraft-versions.md`).
   A tag with a wrong type gives "Serialization errors" (WARN), which `tools/mc_check.py` finds.
