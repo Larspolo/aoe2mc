@@ -71,6 +71,10 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Glazed tile band, tile panel | `blue_terracotta`; `Style.dome` terracotta over arches | `taj`, `samarra` (Wonders) |
 | Chhatri (small domed kiosk) | `quartz_pillar` posts and a small dome | `taj` (Wonder, South Asian) |
 | Chain, rope | `chain` | `dock`, `siege_workshop`, `shipyard`, `harbor_chain` |
+| Portcullis, grille | `iron_bars` | `gate`, `castle` |
+| Bartizan (corner turret) | stone, `smooth_quartz` cap, `lightning_rod` | `feitoria` |
+| Terracotta roof (Portuguese, Sicilian) | `brick` stairs | `feitoria`, `donjon` |
+| Wooden hoarding | wood slab (top) with a `*_fence` rail | `donjon` |
 | Portcullis, grille | `iron_bars` | `gate`, `castle`, `krepost` |
 | Wooden hoarding | wood slab (top) or `spruce_planks` with a `*_fence` rail | `donjon`, `krepost` |
 | Coat of arms | `*_wall_banner` (player color) over the gate | `donjon` |
