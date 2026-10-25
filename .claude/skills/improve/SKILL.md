@@ -11,6 +11,10 @@ Make one good improvement per review. Do not make many small changes.
 
 ## 1. Collect the data
 
+Run `python3 tools/health.py` first (`--hours N`, default 24, about 25 s). It prints the CI runs per workflow,
+the slowest CI steps, the setup minutes, takeovers, releases, merge conflicts, claim-to-merge minutes and files
+that do not belong in git. Collect by hand only what it does not print.
+
 - Agent: the last 20 run comments by the agent on the status issue (label `agent-status`). Each has a line
   `Metrics: ticket #n · size · result · minutes · setup m min · CI runs k · CI c min · time sinks: ...`.
   Also the tickets and PRs closed in that period, and rework (tickets that the owner reopened, or that came
