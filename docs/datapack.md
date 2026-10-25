@@ -29,6 +29,12 @@ ground: `execute positioned X Y Z if entity @a[distance=..24] if predicate aoe2m
 It uses fixed positions, not marker entities: no entity must load, and the check costs nothing that `/tick query`
 shows. The pack has no `worldgen/` file, so the client shows no warning.
 
+Ambience (#219, `AMBIENCE` in `aoe2mc.py`): the pulse also has lines like `execute as @a at @s if biome ~ ~ ~
+minecraft:forest run particle ...` and `... playsound ... ambient @s`, for each terrain group (forest, snow, desert,
+swamp, water, grass) whose vanilla biomes are in the map. The owner chose (#219): custom biomes only with
+`--ambience full`, default `basic` (no `worldgen/` file, no warning). `full` maps the vanilla biomes of a group to
+`aoe2mc:<group>` in the chunks and writes `worldgen/biome/<group>.json` in the format of the output version.
+
 ## Pack layout
 
 ```

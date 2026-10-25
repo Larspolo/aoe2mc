@@ -1028,6 +1028,73 @@ def decor(E, cols, name, rect, rng):
         x, z = min(max(cx, 0), cols.n - 1), min(max(cz, 0), cols.n - 1)
         if cols.wtop[x, z] > cols.top[x, z]:
             E.add([x], [int(cols.top[x, z]) + 1], [z], "sea_pickle[pickles=3]")
+    elif chinese_garden(E, n, rect, y, put):
+        pass
+    else:
+        return False
+    return True
+
+
+def chinese_garden(E, n, rect, y, put):
+    """Chinese garden objects (#294): red wood, white stone and dark tile roofs. Returns False if unknown."""
+    x0, x1, z0, z1 = rect
+    W, cz = x1 - x0, (z0 + z1) // 2
+    i = 1 if W >= 6 else 0                              # inset of posts in a large footprint
+
+    def roof(a0, a1, b0, b1, yy):                      # stepped tile roof that ends in a ridge
+        for k in range(max(1, (min(a1 - a0, b1 - b0) + 1) // 2)):
+            E.box(a0 + k, a1 - k, yy + k, yy + k + 1, b0 + k, b1 - k, "deepslate_tile_slab[type=bottom]")
+        return yy + k + 1
+
+    if n == "PAPER_LANTERN":                            # a glowing paper lantern hangs from a post
+        for dy in range(3):
+            put(0, dy, 0, "dark_oak_fence")
+        put(1, 2, 0, "dark_oak_fence"); put(1, 1, 0, "shroomlight")
+    elif n == "ASIAN_LANTERNS":                         # a row of stone lanterns (toro)
+        for x in range(x0 + (W > 2), max(x0 + 1, x1 - (W > 2)), 2):
+            E.add([x] * 3, [y, y + 1, y + 2], [cz] * 3,
+                  [B("stone_brick_wall"), B("lantern[hanging=false]"), B("stone_brick_slab[type=bottom]")])
+    elif n == "HUABIAO_TOTEM":                          # white marble column with a cloud board near the top
+        E.box(x0 + (W > 2), x1 - (W > 2), y, y + 1, z0 + (W > 2), z1 - (W > 2), "polished_diorite")
+        for dy in range(1, 6):
+            put(0, dy, 0, "chiseled_quartz_block" if dy == 5 else "quartz_pillar")
+        put(-1, 4, 0, "smooth_quartz_slab[type=top]"); put(1, 4, 0, "smooth_quartz_slab[type=top]")
+        put(0, 6, 0, "smooth_quartz_slab[type=bottom]")
+    elif n.startswith("PAIFANG_GATE"):                  # red posts, beams and tile roofs along x
+        large = n.endswith("LARGE")
+        a, b, H = x0 + (W >= 4), x1 - 1 - (W >= 4), 5 if large else 4
+        k = (b - a) // 3 if large else 0
+        for x in sorted({a, b, a + k, b - k}):
+            E.add([x], [y], [cz], "polished_blackstone")
+            E.box(x, x + 1, y + 1, y + H, cz, cz + 1, "red_concrete")
+        E.box(a, b + 1, y + H - 1, y + H, cz, cz + 1, "red_concrete")
+        for r0, r1, yy in ((a, b, y + H), (a + k, b - k, y + H + 1)) if large else ((a, b, y + H),):
+            E.box(r0, r1 + 1, yy, yy + 1, cz - 1, cz, "deepslate_tile_stairs[facing=south,half=bottom,shape=straight]")
+            E.box(r0, r1 + 1, yy, yy + 1, cz + 1, cz + 2, "deepslate_tile_stairs[facing=north,half=bottom,shape=straight]")
+            E.box(r0, r1 + 1, yy, yy + 1, cz, cz + 1, "deepslate_tile_slab[type=double]")
+        if large:
+            E.box(a + k + 1, b - k, y + H - 2, y + H - 1, cz, cz + 1, "gold_block")    # name board
+    elif n == "GARDEN_PAVILION":                        # open pavilion: four red posts, a floor and a tile roof
+        E.box(x0 + i, x1 - i, y, y + 1, z0 + i, z1 - i, "smooth_stone_slab[type=bottom]")
+        for x, z in ((x0 + i, z0 + i), (x1 - 1 - i, z0 + i), (x0 + i, z1 - 1 - i), (x1 - 1 - i, z1 - 1 - i)):
+            E.box(x, x + 1, y, y + 3, z, z + 1, "stripped_mangrove_log[axis=y]")
+        top = roof(x0, x1, z0, z1, y + 3)
+        put(0, top - y, 0, "lightning_rod"); put(0, 2, 0, "lantern[hanging=true]")
+    elif n == "QUE_TOWER":                              # tall brick tower with a small pavilion on top
+        H = max(4, W)
+        E.box(x0 + i, x1 - i, y, y + H, z0 + i, z1 - i, "stone_bricks")
+        E.box(x0 + i, x1 - i, y + H - 1, y + H, z0 + i, z1 - i, "polished_andesite")
+        j = i + (W >= 4)
+        for x, z in ((x0 + j, z0 + j), (x1 - 1 - j, z0 + j), (x0 + j, z1 - 1 - j), (x1 - 1 - j, z1 - 1 - j)):
+            E.box(x, x + 1, y + H, y + H + 2, z, z + 1, "stripped_mangrove_log[axis=y]")
+        roof(x0, x1, z0, z1, y + H + 2)
+    elif n == "GARDEN_BRIDGE":                          # red arched bridge along x: deck of half steps, rails
+        for x in range(x0, x1):
+            h = min(x - x0, x1 - 1 - x, 3)
+            yy = y + h // 2
+            E.box(x, x + 1, yy, yy + 1, z0 + i, z1 - i, f"spruce_slab[type={'top' if h % 2 else 'bottom'}]")
+            for z in {z0 + i, z1 - 1 - i}:              # on a top slab, else in place of the low slab
+                E.add([x], [yy + h % 2], [z], "mangrove_fence")
     else:
         return False
     return True
@@ -1719,10 +1786,63 @@ WORK_SOUNDS = [
 ]
 CHANCE = {"sometimes": 0.25, "rare": 0.03}      # per pulse of 2 s
 
+# Ambience per terrain group (#219): vanilla biomes of `terrain_style` -> particle and sound near each player in such
+# a biome (datapack function, no warning), and the colors of the custom biome of `--ambience full` (the client shows
+# the "Experimental Settings" warning for it, docs/datapack.md). Particles: only types without options that exist in
+# 1.21.1 and 26.3. Colors: sky, fog, water, water fog (0xRRGGBB), then extra `effects` (the same in both versions).
+AMBIENCE = {
+    "forest": (("forest", "birch_forest", "taiga", "jungle", "bamboo_jungle"), "spore_blossom_air",
+               "entity.parrot.ambient", (0.7, 0.8, True), (0x79a6ff, 0xc0d8ff, 0x3f76e4, 0x050533), {}),
+    "snow": (("snowy_plains", "snowy_taiga", "frozen_ocean"), "snowflake", None, (0.0, 0.5, True),
+             (0x7fa1ff, 0xdde4f0, 0x3938c9, 0x050533), {}),
+    "desert": (("desert", "savanna"), "white_ash", None, (2.0, 0.0, False), (0x6eb1ff, 0xe2d3a8, 0x32a598, 0x050533), {}),
+    "swamp": (("swamp", "mangrove_swamp"), None, "entity.frog.ambient", (0.8, 0.9, True),
+              (0x78a7ff, 0xa4b3a0, 0x617b64, 0x232317), {"grass_color_modifier": "swamp"}),
+    "water": (("ocean", "deep_ocean", "warm_ocean", "river", "beach"), None, "block.water.ambient", (0.5, 0.5, True),
+              (0x7ba4ff, 0xc0d8ff, 0x3f76e4, 0x050533), {}),
+    "grass": (("plains", "meadow"), None, None, (0.8, 0.4, True), (0x78a7ff, 0xc0d8ff, 0x3f76e4, 0x050533), {}),
+}
+AMBIENCE_GROUP = {b: g for g, (biomes, *_) in AMBIENCE.items() for b in biomes}
 
-def write_datapack(out, objects, ground):
+
+def custom_biomes(names):
+    """--ambience full: minecraft:<biome> -> aoe2mc:<group> for the biomes of an AMBIENCE group."""
+    return [f"aoe2mc:{AMBIENCE_GROUP[n[10:]]}" if n[10:] in AMBIENCE_GROUP else n for n in names]
+
+
+def biome_file(group):
+    """The custom biome of a group in the format of the output version (docs/datapack.md, "Biome files")."""
+    (t, rain, precip), (sky, fog, water, water_fog), extra = AMBIENCE[group][3:]
+    data = {"has_precipitation": precip, "temperature": t, "downfall": rain}
+    if MC["data_version"] >= V26_1:             # 26.x: colors are "#rrggbb", sky and fog are attributes
+        hx = "#{:06x}".format
+        return data | {"effects": {"water_color": hx(water)} | extra,
+                       "attributes": {"minecraft:visual/sky_color": hx(sky), "minecraft:visual/fog_color": hx(fog),
+                                      "minecraft:visual/water_fog_color": hx(water_fog)},
+                       "features": [], "carvers": []}
+    return data | {"effects": {"sky_color": sky, "fog_color": fog, "water_color": water, "water_fog_color": water_fog}
+                   | extra, "spawners": {}, "spawn_costs": {}, "features": [], "carvers": {}}
+
+
+def ambience_lines(biome_names):
+    """Pulse lines: particles and sounds near each player in the biome of a group (the biomes of the map only)."""
+    lines = []
+    for group, (_, particle, sound, *_) in AMBIENCE.items():
+        names = [n for n in biome_names if n == f"aoe2mc:{group}" or AMBIENCE_GROUP.get(n[10:]) == group]
+        for n in sorted(set(names)):
+            at = f"execute as @a at @s if biome ~ ~ ~ {n}"
+            if particle:
+                lines.append(f"{at} run particle minecraft:{particle} ~ ~4 ~ 8 3 8 0 20")
+            if sound:
+                lines.append(f"{at} if predicate aoe2mc:sometimes run playsound minecraft:{sound} ambient @s ~ ~ ~ 0.5")
+    return lines
+
+
+def write_datapack(out, objects, ground, biome_names=(), ambience="basic"):
     """datapacks/aoe2mc: a function every 2 s plays a work sound at each building with a player near it
-    (docs/datapack.md). Fixed positions, no marker entities: the check costs nothing that /tick query shows."""
+    (docs/datapack.md). Fixed positions, no marker entities: the check costs nothing that /tick query shows.
+    Ambience (#219): particles and sounds near the players by biome; "full" also writes the custom biomes.
+    Returns (work sounds, ambience lines)."""
     root = os.path.join(out, "datapacks", "aoe2mc")
     lines = []
     for o in objects:
@@ -1738,10 +1858,13 @@ def write_datapack(out, objects, ground):
         lines.append(f"{at} playsound minecraft:{rule[1]} ambient @a ~ ~ ~ 1 {0.9 + 0.1 * (x % 3):.1f}")
         if rule[3]:
             lines.append(f"{at} particle minecraft:{rule[3]} ~ ~1 ~ 0.4 0.2 0.4 0 4")
-    if not lines:           # the server finds a new pack by itself; level.dat needs no entry
-        return 0
+    work = len(lines)
+    lines += ambience_lines(biome_names) if ambience != "off" else []
+    groups = sorted({n.split(":")[1] for n in biome_names if n.startswith("aoe2mc:")})
+    if not lines and not groups:    # the server finds a new pack by itself; level.dat needs no entry
+        return 0, 0
     files = {
-        "pack.mcmeta": {"pack": {"description": "aoe2mc: work sounds at buildings", "pack_format": MC["pack_format"]}
+        "pack.mcmeta": {"pack": {"description": "aoe2mc: work sounds and ambience", "pack_format": MC["pack_format"]}
                         | ({"min_format": MC["pack_format"], "max_format": MC["pack_format"]}
                            if MC["data_version"] >= V26_1 else {})},
         "data/minecraft/tags/function/load.json": {"values": ["aoe2mc:load"]},
@@ -1751,12 +1874,14 @@ def write_datapack(out, objects, ground):
     key = "type" if MC["data_version"] >= V26_1 else "condition"     # 26.x renamed the key of a predicate
     for name, chance in CHANCE.items():
         files[f"data/aoe2mc/predicate/{name}.json"] = {key: "minecraft:random_chance", "chance": chance}
+    for g in groups:
+        files[f"data/aoe2mc/worldgen/biome/{g}.json"] = biome_file(g)
     for name, data in files.items():
         path = os.path.join(root, name)
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w") as f:
             f.write(data if isinstance(data, str) else json.dumps(data))
-    return sum("playsound" in line for line in lines)
+    return sum("playsound" in line for line in lines[:work]), len(lines) - work
 
 
 def write_level_dat(path, name, spawn, yaw=SPAWN_YAW, size=None):
@@ -1997,13 +2122,13 @@ def block_color(state):
 # --------------------------------------------------------------------------------------------
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
             barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False,
-            garrison="outside", border_design="diorama"):
+            garrison="outside", border_design="diorama", ambience="basic"):
     global MC
     MC = VERSIONS[mc_version]
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
     try:
         _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-                 verbose, garrison, border_design)
+                 verbose, garrison, border_design, ambience)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
@@ -2011,7 +2136,7 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
 
 
 def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-             verbose, garrison, border_design):
+             verbose, garrison, border_design, ambience):
     buildings.BARRIERS = barriers
     buildings.TURN, yaw = ORIENTATIONS[orientation]
     MOVED.clear()           # the counts of an earlier conversion in this process
@@ -2047,6 +2172,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         print("  unknown object IDs (skipped): " + ", ".join(f"{i} ×{n}" for i, n in sorted(unknown.items())))
 
     cols = Columns(size, terrain, elevation, tnames, T, H, rng)
+    if ambience == "full":
+        cols.biome_names = custom_biomes(cols.biome_names)
     tick("columns")
     for pid, p in sorted(players.items()):
         if pid and any(o["player"] == pid for o in objects):
@@ -2113,9 +2240,12 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
 
     write_level_dat(os.path.join(out, "level.dat"), name, spawn, yaw, cols.n)
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground)
-    n = write_datapack(out, objects, ground)
+    n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience)
     if n:
         print(f"  work sounds at buildings: {n}")
+    if amb:
+        print(f"  ambience (particles and sounds by biome): {amb} lines"
+              + (", custom biomes (Minecraft shows the experimental warning)" if ambience == "full" else ""))
 
     from PIL import Image
     lut = np.array([block_color(s) for s in B.states], np.uint8)
@@ -2292,12 +2422,16 @@ def main(argv=None):
                     help="Minecraft corner of the top corner of the AoE2 screen (default ne)")
     ap.add_argument("--border", choices=sorted(BORDERS), default="diorama",
                     help="design of the edge outside the map (default diorama); all keep the vanilla world border at the edge")
+    ap.add_argument("--ambience", choices=("basic", "full", "off"), default="basic",
+                    help="particles and sounds by terrain (default basic); full also gives each terrain group a custom "
+                         "biome with its own sky, fog and water colors, but Minecraft then shows an \"Experimental "
+                         "Settings\" warning when the world opens")
     ap.add_argument("--verbose", action="store_true", help="print the time of each phase")
     a = ap.parse_args(argv)
     kw = dict(T=a.tile_size, H=a.level_height, seed=a.seed, preview=a.preview, arch=a.architecture,
               player_arch=a.player_architecture, with_units=not a.no_units, barriers=not a.no_barriers,
               mc_version=a.mc_version, spawn=a.spawn, birds=not a.no_birds, orientation=a.orientation,
-              verbose=a.verbose, garrison=a.garrison, border_design=a.border)
+              verbose=a.verbose, garrison=a.garrison, border_design=a.border, ambience=a.ambience)
     try:
         if a.scenario.lower().endswith((".aoe2campaign", ".cpx", ".cpn")):
             convert_campaign(a.scenario, a.output, a.only, a.name, **kw)
