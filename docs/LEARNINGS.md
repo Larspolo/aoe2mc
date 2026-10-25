@@ -67,9 +67,9 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 - `terrain_style` checks names in sequence: an earlier rule wins (`ROAD_GRAVEL` matched `GRAVEL` until #5).
 - `.gitattributes` merges `docs/DESIGN.md` with `union`: a local merge keeps the new table lines of both sides; look for
   one line in two versions and keep one. `union` is wrong for text that runs rewrite (LEARNINGS: both versions stay, #174).
-- A merge conflict in `docs/coverage.md`: take any side, run `python3 tools/coverage.py`, then set `MAX` in
-  `tests/test_coverage.py` to the new counts. Parallel runs often change the same counts (#79). Check
-  `mergeable_state` before the merge: a green PR is "dirty" when main moved after the push. Merge in the CI poll loop.
+- PRs do not change `docs/coverage.md` or `MAX` in `tests/test_coverage.py`: the `coverage.yml` workflow updates them on
+  main (#233). A conflict there (old PR): take main's side. Check `mergeable_state` before the merge: a green PR is
+  "dirty" when main moved after the push. Merge in the CI poll loop.
 - All 243 building types of one set draw in about 1 s; the gallery converts in about 23 s (`--verbose`: per phase, #26).
 - Block IDs in `B` depend on earlier tests or conversions: draw random numbers per block in state-name order, not
   ID order (#44). A test that passes alone but fails in the full suite often has this cause.
