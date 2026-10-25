@@ -35,7 +35,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 - AoE2 wiki: HTML pages give a Cloudflare challenge (403). The MediaWiki API works: `ageofempires.fandom.com/
   api.php?action=query&titles=File:Castle_aoe2DE.png&prop=imageinfo&iiprop=url&format=json` gives the image URL
   on `static.wikia.nocookie.net` (WebP). Page text: `action=parse&page=Title&prop=wikitext&format=json&formatversion=2`.
-  Use `curl`: Python `urllib` gets 403.
+  Python `urllib` with the default User-Agent gets 403: use `curl`, or send another `User-Agent`
+  (see `tools/refimage.py`).
 
 ## Libraries
 
@@ -49,11 +50,11 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 
 ## Code
 
-- AoE2 map orientation (#23): tile (0, 0) is the left (west) corner of the screen, (max, 0) the top, (max, max)
-  the right, (0, max) the bottom (`AoE2ScenarioParser` `area.py`, `CORNERS`). Tile x goes up-right, tile y
-  down-right. Block x = east, z = south keeps the handedness: the world is turned 45°, not mirrored. The AoE2 top
-  corner is the north-east corner. A 90° turn of the grid cannot make "screen up" more north than now.
-  The spawn view looks north-east like the AoE2 camera (`SPAWN_YAW`).
+- AoE2 map orientation (#23): tile (0, 0) is the left corner of the screen, (max, 0) the top (parser `area.py`
+  `CORNERS`; openage: axes NE, SE). Block x = east, z = south: the world is turned 45°, not mirrored; the AoE2 top
+  corner is in the north-east. The spawn looks north-east like the AoE2 camera (`SPAWN_YAW`). Gates `WEST_TO_EAST`
+  and `NORTH_TO_SOUTH` are diagonal. Do not trust the axis gate names (`samples/gallery` has a `NORTHWEST_TO_SOUTHEAST`
+  gate along tile x): `plan_walls` uses the walls next to the gate.
 
 - The tiny scenario has only a town center, a house and a barracks. To see the golden test fail, change a
   block that these designs draw last (for example the house chimney).
