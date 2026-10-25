@@ -4,7 +4,7 @@ import pytest
 import coverage as cov
 
 # Allowed maximums (ratchet). When a count goes down, lower its maximum here in the same PR.
-MAX = {"Buildings": {"fallback": 39, "default": 0},
+MAX = {"Buildings": {"fallback": 28, "default": 0},
        "Other objects": {"fallback": 101, "default": 0},
        "Units": {"fallback": 23, "default": 101},
        "Heroes": {"fallback": 0, "default": 196}}
