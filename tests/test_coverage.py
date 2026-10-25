@@ -7,7 +7,7 @@ import coverage as cov
 MAX = {"Buildings": {"fallback": 0, "default": 0},
        "Other objects": {"fallback": 41, "default": 0},
        "Units": {"fallback": 16, "default": 0},
-       "Heroes": {"fallback": 0, "default": 196}}
+       "Heroes": {"fallback": 0, "default": 0}}
 
 
 @pytest.fixture(scope="module")
@@ -22,7 +22,8 @@ def test_coverage_report(tmp_path):
     for title in ("## Buildings", "## Other objects", "## Units", "## Heroes"):
         assert title in text
     assert "| KREPOST | krepost | no |" in text
-    assert "| KHOSRAU | zombie – default infantry | no |" in text
+    assert "| KHOSRAU | horse (zombie) | no |" in text
+    assert "default infantry |" not in text   # every unit and hero has its own look
     assert "| generic | yes |" not in text   # every building has its own design
     assert "| BLOCKER | skipped on purpose (path blocker) | no |" in text
     assert "| HINT_OBJECT | skipped on purpose (editor hint) | no |" in text

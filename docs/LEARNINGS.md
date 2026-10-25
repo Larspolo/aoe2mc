@@ -66,3 +66,6 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   fails in the full suite often has this cause.
 - To check new entity NBT (items, variants, components), make a map with one unit per type
   (`unit_manager.add_unit` in a loop), convert it and run `tools/mc_check.py` on it: about 1 minute.
+- Parallel runs often conflict in `docs/coverage.md` and in `MAX` of `tests/test_coverage.py`. Fix: take main's
+  `docs/coverage.md` and run `python3 tools/coverage.py docs/coverage.md`; in `MAX` keep the lower value of each count.
+  Check `mergeable_state` before the merge: a green PR can be "dirty" when main moved.

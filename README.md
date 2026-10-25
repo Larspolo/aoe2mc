@@ -40,6 +40,7 @@ The world is in creative mode. Outside the map there is only void. The world lis
 | `--name` | file name | World name in the Minecraft menu |
 | `--seed` | 1 | Seed for random details (tree heights, flowers) |
 | `--preview` | off | Writes `preview.png` (top view) into the world folder |
+| `--mc-version` | 1.21.1 | Minecraft Java version of the output: `1.21.1` or `26.3`. The 26.3 output is not complete yet. |
 | `--no-units` | off | Do not convert units |
 | `--no-barriers` | off | Do not fill building footprints with invisible barrier blocks |
 | `--spawn X,Z` | start view or town center of player 1 | Player spawn in tiles. Without it the spawn is the start view of player 1, else the front of its first town center, else the map center. |
