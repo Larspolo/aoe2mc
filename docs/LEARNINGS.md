@@ -76,5 +76,7 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 - Block IDs in `B` depend on what was registered before (earlier tests or conversions). Code that draws random
   numbers per block ID must go in state-name order, not ID order (see #44). A test that passes alone but
   fails in the full suite often has this cause.
+- An invalid item in a block entity can vanish without a log line. `tools/mc_check.py W --keep DIR` keeps the world
+  that the server saved: read the block entity there (1.21.1 saves the loaded chunks again, 26.3 can skip them) (#27).
 - To check new entity NBT (items, variants, components), make a map with one unit per type
   (`unit_manager.add_unit` in a loop), convert it and run `tools/mc_check.py` on it: about 1 minute.

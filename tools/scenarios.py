@@ -51,8 +51,11 @@ def save(scn, path):
     return path
 
 
-def tiny(path):
+def tiny(path, texts=None):
+    """texts: {"instructions": "...", ...} for the message tab (the book at the spawn)."""
     scn = new_scenario(24)
+    for k, v in (texts or {}).items():
+        setattr(scn.message_manager, k, v)
     for t in scn.map_manager.terrain:
         if t.x >= 20:
             t.terrain_id = TerrainId.WATER_DEEP
