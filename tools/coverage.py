@@ -7,7 +7,8 @@ Usage:
 
 Fallbacks: buildings that use the `generic` design, other objects that `place_objects` skips, and units that
 `units.classify()` skips. The default foot soldier (`units.infantry`) is correct for many infantry units, so the
-report shows it as "default infantry", not as a fallback.
+report shows it as "default infantry", not as a fallback. Invisible types (`units.INVISIBLE`) are "skipped on
+purpose", not fallbacks.
 """
 import contextlib
 import io
@@ -37,12 +38,19 @@ def building_rows():
     return rows
 
 
+def invisible_row(n):
+    return n, f"skipped on purpose ({units.invisible(n)})", False
+
+
 def other_rows():
     """Place each object alone on a small flat map and read the counters of place_objects."""
     from AoE2ScenarioParser.datasets.other import OtherInfo
     size = 12
     rows = []
     for e in OtherInfo:
+        if units.invisible(e.name):
+            rows.append(invisible_row(e.name))
+            continue
         cols = aoe2mc.Columns(size, np.zeros((size, size), np.int16), np.zeros((size, size), np.float32),
                               {0: "GRASS_1"}, 4, 3, np.random.default_rng(1))
         o = dict(kind="O", name=e.name, player=0, x=size / 2, y=size / 2, rotation=0.0, hero=False, garrisoned=False)
@@ -75,7 +83,9 @@ def unit_rows(enum, hero):
     try:
         for e in enum:
             desc = units.classify(e.name, hero)
-            if desc is None:
+            if units.invisible(e.name):
+                rows.append(invisible_row(e.name))
+            elif desc is None:
                 rows.append((e.name, "skipped", True))
             else:
                 rows.append((e.name, summary(desc) + (" – default infantry" if e.name in default else ""), False))

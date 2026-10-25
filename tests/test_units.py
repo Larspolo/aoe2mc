@@ -36,3 +36,10 @@ def test_make_entity_has_name_tag_on_the_rider():
 ])
 def test_pretty(name, expected):
     assert units.pretty(name) == expected
+
+
+@pytest.mark.parametrize("name,reason", [("MOVEABLE_MAP_REVEALER_A", "map revealer"), ("INVISIBLE_OBJECT_C", "invisible object"),
+                                         ("HINT_OBJECT", "editor hint"), ("MILITIA", None)])
+def test_invisible(name, reason):
+    assert units.invisible(name) == reason
+    assert (units.classify(name) is None) == (reason is not None)
