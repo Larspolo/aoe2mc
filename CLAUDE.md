@@ -46,6 +46,7 @@ Find code by function name with Grep. Do not read the large files from start to 
 - `buildings.py` – `Style` and `ARCH` (9 architecture sets), `CIV_ARCH`, `Canvas` (drawing tools: `room`,
   `timber_room`, `roof`, `gable`, `hip`, `dome`, `cylinder` ...), one function per design, `select()` (name → design),
   `FOOTPRINT`, `place_building()`, `plan_walls()`, `vary()`, `weather()`, `decorate()`, `barriers()`.
+- `scx.py` – reader of old scenarios (`.scx` format 1.21): map, terrain, elevation, players (#311).
 - `units.py` – `classify()` (AoE2 unit name → entity description), `make_entity()`, `pretty()`.
 - `tools/` – test and debug tools (scenarios, world reader, 3D render, Minecraft data, validation).
 - `game/` – the game program (#137): `run.Game` starts a server with RCON on the world, `rcon.Rcon` sends commands,
