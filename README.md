@@ -28,7 +28,8 @@ Converts an Age of Empires II: Definitive Edition scenario (`.aoe2scenario`) int
     python aoe2mc.py MyMap.aoe2scenario MyMapWorld --preview
 
 Copy the folder `MyMapWorld` into your Minecraft `saves` folder. Open it in Minecraft Java 1.21.1 or newer.
-The world is in creative mode. Outside the map there is only void.
+The world is in creative mode. Outside the map there is only void. The world list shows a small top view of the map
+(`icon.png`).
 
 | Option | Default | Description |
 |---|---|---|
