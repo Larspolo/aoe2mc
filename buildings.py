@@ -1252,6 +1252,60 @@ def dock(c, w, st, col, T, ctx):
             c.set(x, 2, z, "spruce_fence")
 
 
+def harbor(c, w, st, col, T, ctx):
+    """Harbor (Khmer): a sandstone pier on piles. A plinth with a band in the player color carries a stone house
+    with an orange gable roof and a prang tower; stairs with guardian lions, a fish stall and a moored boat.
+    Only the Khmer build it, so all sets use the same Khmer design."""
+    sand, cut, chis = "smooth_sandstone", "cut_sandstone", "chiseled_sandstone"
+    stone, relief = "stone_bricks", "chiseled_stone_bricks"               # grey stone of the house and the prang
+    q = w - 3                                                              # water strip on the south-west side
+    c.box(0, w, 1, 2, 0, q, sand)                                          # deck above the water
+    c.box(w // 2, w, 1, 2, q, w, sand)                                     # pier for the fish stall
+    for x in list(range(0, w, 3)) + [w - 1]:
+        for z in list(range(0, w, 3)) + [w - 1]:
+            if z < q or x >= w // 2:
+                c.box(x, x + 1, -8, 1, z, z + 1, "sandstone")              # piles
+    # Plinth with a band in the player color, stairs up the front
+    px0, px1, pz1 = 1, w - 2, q - 1
+    c.box(px0, px1, 2, 4, 0, pz1, cut)
+    c.walls(px0, px1, 3, 4, 0, pz1, f"{col}_concrete")
+    m = (px0 + px1) // 2
+    c.box(m - 1, m + 2, 2, 3, pz1, pz1 + 1, "sandstone_stairs[facing=north,half=bottom,shape=straight]")
+    c.box(m - 1, m + 2, 3, 4, pz1 - 1, pz1, "sandstone_stairs[facing=north,half=bottom,shape=straight]")
+    for x in (m - 2, m + 2):                                               # guardian lions beside the stairs
+        c.set(x, 4, pz1 - 1, chis); c.set(x, 5, pz1 - 1, "stone_brick_stairs[facing=north,half=bottom,shape=straight]")
+    # House with an orange gable roof, and the prang tower on the back of the ridge
+    hx0, hx1, hz1 = px0 + 1, px1 - 1, pz1 - 2
+    c.room(hx0, hx1, 0, hz1, 4, 4, stone, sand, corner=relief)
+    c.windows(hx0, hx1, 0, hz1, 6, b="iron_bars", step=2, sides="ew")      # stone lattice windows
+    c.door(m, 4, hz1 - 1, wood="jungle")
+    c.banner(m - 2, 6, hz1, col); c.banner(m + 2, 6, hz1, col)
+    ridge = c.gable(hx0 - 1, hx1 + 1, 0, hz1 + 1, 8, "red_sandstone", fill=(hx0, hx1, 0, hz1, relief), axis="z")
+    s, cz = 5, 2
+    c.box(m - 2, m + 3, ridge - 1, ridge + 2, cz - 2, cz + 3, stone)
+    c.walls(m - 2, m + 3, ridge + 1, ridge + 2, cz - 2, cz + 3, relief)
+    y0, h = ridge + 2, max(7, 2 * T)
+    for k in range(h):                                                     # the lotus bud: rings, narrower each tier
+        r = max(0.5, (s / 2 + 0.5) * (1 - (k / h) ** 1.5) ** 0.8)
+        c.cylinder(m, cz, r, y0 + k, y0 + k + 1, relief if k % 2 else stone)
+    c.box(m, m + 1, y0 + h, y0 + h + 2, cz, cz + 1, "gold_block")
+    # Fish stall on the pier: an awning in the player color on posts, with goods
+    ax0 = w // 2 + 1
+    for x in (ax0, w - 1):
+        for z in (q, w - 1):
+            c.box(x, x + 1, 2, 4, z, z + 1, "jungle_fence")
+    c.box(ax0, w, 4, 5, q, w, f"{col}_wool")
+    goods = ["barrel[facing=up]", "melon", "decorated_pot", "chest[facing=south]", "composter", "decorated_pot"]
+    for x, z in ((ax0 + 1, q + 1), (ax0 + 2, q + 1), (ax0 + 1, w - 2), (1, q - 1), (w - 2, q - 1), (w - 1, 1)):
+        if c.rng.random() < 0.8:
+            c.set(x, 2, z, goods[int(c.rng.integers(len(goods)))])
+    # Moored boat with a high prow, and the player flag on its mast
+    hull(c, 0, w // 2, q + 1, 1, 1, wood="jungle")
+    c.box(0, 1, 3, 5, q + 1, q + 2, "jungle_planks"); c.set(0, 5, q + 1, "gold_block")
+    c.box(2, 3, 2, 6, q + 1, q + 2, "stripped_jungle_log")
+    c.flag(2, 6, q + 1, col, 2)
+
+
 def hull(c, x0, x1, zc, y, half, wood="oak", ribs=False):
     """A ship hull along x with pointed ends; the deck is at y. ribs=True: a hull under construction."""
     c.box(x0, x1, y - 2, y - 1, zc, zc + 1, f"stripped_{wood}_log[axis=x]")          # keel
@@ -2095,7 +2149,7 @@ def select(name):
         ("MARKET", market, {}), ("CARAVANSERAI", caravanserai, {}), ("FEITORIA", feitoria, {}),
         ("MONASTERY", monastery, {}), ("CHURCH", monastery, {}), ("UNIVERSITY", university, {}),
         ("FOLWARK", folwark, {}), ("MILL", mill, {}), ("LUMBER_CAMP", lumber_camp, {}),
-        ("MINING_CAMP", mining_camp, {}), ("DOCK", dock, {}), ("HARBOR", dock, {}),
+        ("MINING_CAMP", mining_camp, {}), ("DOCK", dock, {}), ("HARBOR", harbor, {}),
         ("FARM", farm, {}), ("HOUSE", house, {}),
     ]
     for word, fn, kw in rules:
@@ -2243,7 +2297,7 @@ def place_building(E, cols, B, o, players, walls, gates):
     base = int(area.max())
     if fn not in (gate, bridge):
         cols.blocked[xs.start:xs.stop, zs.start:zs.stop] = True
-    is_dock = fn in (dock, bridge, wooden_bridge, fish_trap, shipyard, port, mole, harbor_chain, flagship)
+    is_dock = fn in (dock, harbor, bridge, wooden_bridge, fish_trap, shipyard, port, mole, harbor_chain, flagship)
     wet = area > cols.top[xs.start:xs.stop, zs.start:zs.stop]
     water_y = int(area[wet].max()) if wet.any() else cols.water_y       # the surface of this water body (#165)
     if fn is bridge:                                                     # one deck height for all pieces (#192)
@@ -3265,7 +3319,7 @@ LANDMARKS = {arch_of_constantine, colosseum, gol_gumbaz, sanchi_stupa, temple_of
              mosque_landmark, hall_of_heroes, shrine, pagan_shrine}
 MONUMENTAL = LANDMARKS | {mole, harbor_chain, flagship, helepolis, great_pyramid, nubian_pyramid, dome_rock, sankore, wooden_bridge, fish_trap, wonder, castle, krepost, monastery, church, amphitheatre, monument, wall_segment, gate, tower,
               bridge, aqueduct}
-NO_PROPS = LANDMARKS | {shipyard, port, mole, harbor_chain, flagship, helepolis, great_pyramid, nubian_pyramid, dome_rock, wooden_bridge, fish_trap, barricade, wall_segment, gate, bridge, aqueduct, tower, outpost, wonder, dock, monument, amphitheatre}
+NO_PROPS = LANDMARKS | {shipyard, port, mole, harbor_chain, flagship, helepolis, great_pyramid, nubian_pyramid, dome_rock, wooden_bridge, fish_trap, barricade, wall_segment, gate, bridge, aqueduct, tower, outpost, wonder, dock, harbor, monument, amphitheatre}
 
 
 def building_rect(o):

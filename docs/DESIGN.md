@@ -35,7 +35,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Training dummy | `oak_fence`, `hay_block`, `carved_pumpkin` | `barracks` |
 | Bell | `bell` | `monastery`, `town_center` |
 | Loom, cloth | `loom`, wool | `church` |
-| Market goods | `barrel`, `chest`, `composter`, `hay_block`, `melon`, `pumpkin` | `market`, `dock` |
+| Market goods | `barrel`, `chest`, `composter`, `hay_block`, `melon`, `pumpkin` | `market`, `dock`, `harbor` |
 | Market stall | lean-to of roof stairs on `*_fence` posts; wool awning in stripes for flat-roof sets | `market` |
 | Painted trim (deck edge, band) | `*_concrete` (player color) | `dock`, `pyramid` |
 | Relief panel, carving | `chiseled_stone_bricks` | `pyramid` |
@@ -93,6 +93,9 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Stepped stone roof (Mesoamerican set) | `stone_brick` stairs (hip roof) | `Style.roof` |
 | Thatch or shingle roof (East Asian set) | `spruce` stairs | `Style.roof` |
 | Cannon | `polished_basalt` barrel on its side | `tower` (bombard) |
+| Guardian lion statue | `stone_brick_stairs` on a `chiseled_sandstone` pedestal | `harbor` |
+| Clay pot, vase | `decorated_pot` | `harbor` |
+| Prang (Khmer lotus-bud tower) | rings of `stone_bricks` and `chiseled_stone_bricks`, `gold_block` tip | `temple`, `harbor` |
 | Checkered stone base | `polished_deepslate` in a checker pattern in the main stone | `caravanserai` |
 | Gilded dome | `gold_block` | `caravanserai` |
 | Raised portal (pishtaq) of an arched gate | wall over the roof line, `chiseled_sandstone` frame, upside-down stairs as the arch | `caravanserai` |
