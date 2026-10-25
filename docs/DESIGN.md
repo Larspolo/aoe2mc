@@ -70,7 +70,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Sacred tree | `oak_log`, `oak_leaves[persistent=true]` | `pagan_shrine` |
 | Sail | wool (player color) | `flagship` |
 | Hides | `brown_wool` | `helepolis` |
-| Band in the player color | `*_wool` (player color) | `town_center` |
+| Band in the player color | `*_wool` (player color) | `town_center`, `castle` |
 | Outside stairs to an upper floor | `*_stairs` of the wood of the set | `town_center` |
 | Books, study | `bookshelf`, `lectern` (with a book) | `university` |
 | Scholar statue | `chiseled_stone_bricks` pedestal, `quartz_pillar`, `chiseled_quartz_block` | `university` |
