@@ -11,6 +11,7 @@ Options:
     --name TEXT        World name in the Minecraft menu (default: file name)
     --seed N           Seed for the random details (tree heights, flowers) (default 1)
     --preview          Also write preview.png (top view) into the world folder
+    --mc-version V     Minecraft Java version of the output: 1.21.1 (default) or 26.3 (not complete yet)
     --no-units         Do not convert units (mobs, boats, minecarts)
     --no-barriers      Do not fill building footprints with invisible barrier blocks
     --architecture X   Use one architecture set for all players (western, central, mediterranean,
@@ -37,8 +38,14 @@ from nbtlib.tag import Byte, Compound, Double, Float, Int, IntArray, List, Long,
 import buildings
 import units
 
-DATA_VERSION = 3955          # Minecraft Java 1.21.1
-VERSION_NAME = "1.21.1"
+# Output format per Minecraft Java version (docs/minecraft-versions.md). The 26.3 entity and world format: #57.
+VERSIONS = {
+    "1.21.1": dict(name="1.21.1", data_version=3955, renames={}),
+    "26.3": dict(name="26.3", data_version=5023, renames={"minecraft:chain": "minecraft:iron_chain"}),
+}
+VERSION_NAME = "1.21.1"      # the default output version
+DATA_VERSION = VERSIONS[VERSION_NAME]["data_version"]
+MC = VERSIONS[VERSION_NAME]  # the version of the running conversion; convert() sets it
 MIN_Y, MAX_Y = -64, 320      # world height range (MAX_Y exclusive)
 HEIGHT = MAX_Y - MIN_Y
 WATER_Y = 62                 # Y of the highest water block (sea level)
@@ -64,12 +71,12 @@ class Blocks:
         return i
 
     def nbt(self, i):
-        """Palette entry for block id i: {Name, Properties}."""
-        state = self.states[i]
-        if "[" not in state:
-            return Compound({"Name": String(state)})
-        name, props = state[:-1].split("[", 1)
-        p = dict(kv.split("=") for kv in props.split(","))
+        """Palette entry for block id i: {Name, Properties}, with the block names of the output version."""
+        name, _, props = self.states[i].partition("[")
+        name = MC["renames"].get(name, name)
+        if not props:
+            return Compound({"Name": String(name)})
+        p = dict(kv.split("=") for kv in props[:-1].split(","))
         return Compound({"Name": String(name),
                          "Properties": Compound({k: String(v) for k, v in p.items()})})
 
@@ -1060,7 +1067,7 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
         out.append(nbt)
     if not out:
         return None
-    root = Compound({"DataVersion": Int(DATA_VERSION), "Position": IntArray([cx, cz]),
+    root = Compound({"DataVersion": Int(MC["data_version"]), "Position": IntArray([cx, cz]),
                      "Entities": List[Compound](out)})
     buf = io.BytesIO()
     buf.write(b"\x0a\x00\x00")
@@ -1179,7 +1186,7 @@ def build_chunk(cx, cz, cols, edits):
                                   "biomes": biomes}))
 
     chunk = Compound({
-        "DataVersion": Int(DATA_VERSION), "xPos": Int(cx), "zPos": Int(cz), "yPos": Int(MIN_Y // 16),
+        "DataVersion": Int(MC["data_version"]), "xPos": Int(cx), "zPos": Int(cz), "yPos": Int(MIN_Y // 16),
         "Status": String("minecraft:full"), "LastUpdate": Long(0), "InhabitedTime": Long(0),
         "isLightOn": Byte(0),            # Minecraft calculates the light when it loads the chunk
         "sections": List[Compound](sections),
@@ -1232,8 +1239,8 @@ def write_level_dat(path, name, spawn):
     end = Compound({"type": String("minecraft:noise"), "settings": String("minecraft:end"),
                     "biome_source": Compound({"type": String("minecraft:the_end")})})
     data = Compound({
-        "DataVersion": Int(DATA_VERSION), "version": Int(19133),
-        "Version": Compound({"Id": Int(DATA_VERSION), "Name": String(VERSION_NAME),
+        "DataVersion": Int(MC["data_version"]), "version": Int(19133),
+        "Version": Compound({"Id": Int(MC["data_version"]), "Name": String(MC["name"]),
                              "Series": String("main"), "Snapshot": Byte(0)}),
         "LevelName": String(name), "GameType": Int(1), "Difficulty": Byte(1),   # not peaceful: peaceful removes the soldiers
         "allowCommands": Byte(1), "hardcore": Byte(0), "initialized": Byte(1),
@@ -1297,7 +1304,18 @@ def block_color(state):
 # Main
 # --------------------------------------------------------------------------------------------
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
-            barriers=True):
+            barriers=True, mc_version=VERSION_NAME):
+    global MC
+    MC = VERSIONS[mc_version]
+    PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
+    try:
+        _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers)
+    finally:
+        MC = VERSIONS[VERSION_NAME]
+        PALETTE_CACHE.clear()
+
+
+def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers):
     buildings.BARRIERS = barriers
     MOVED.clear()           # the counts of an earlier conversion in this process
     rng = np.random.default_rng(seed)
@@ -1419,10 +1437,12 @@ def main(argv=None):
     ap.add_argument("--player-architecture", action="append", default=[], metavar="P=SET",
                     type=player_arch_spec,
                     help="architecture set for one player, for example 6=western (can be repeated)")
+    ap.add_argument("--mc-version", choices=sorted(VERSIONS), default=VERSION_NAME,
+                    help=f"Minecraft Java version of the output (default {VERSION_NAME}; 26.3 is not complete yet)")
     a = ap.parse_args(argv)
     try:
         convert(a.scenario, a.output, a.tile_size, a.level_height, a.name, a.seed, a.preview, a.architecture,
-                a.player_architecture, not a.no_units, not a.no_barriers)
+                a.player_architecture, not a.no_units, not a.no_barriers, a.mc_version)
     except OptionError as e:
         ap.error(str(e))
 
