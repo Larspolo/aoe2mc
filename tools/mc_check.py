@@ -1,0 +1,249 @@
+#!/usr/bin/env python3
+"""
+Load a world in a headless Minecraft server and find load errors. Also make tools/mcdata files from Mojang's reports.
+
+Usage:
+    python3 tools/mc_check.py WORLD [--version 1.21.1]     # exit 0: no problems, 1: problem lines (printed)
+    python3 tools/mc_check.py --reports 1.21.1              # write tools/mcdata/1.21.1.json from Mojang's data
+
+Downloads (server jars, a JDK when the installed Java is too old) go to .cache/ (ignored by git).
+The server works on a copy of the world. It force-loads all chunks of the world, saves and stops.
+"""
+import argparse
+import glob
+import hashlib
+import io
+import json
+import os
+import queue
+import re
+import shutil
+import socket
+import subprocess
+import sys
+import tarfile
+import tempfile
+import threading
+import time
+import urllib.request
+import zipfile
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CACHE = os.path.join(ROOT, ".cache", "mc")
+MANIFEST = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
+DEFAULT_VERSION = "1.21.1"
+# Log lines with WARN or ERROR that a correct world also gives
+HARMLESS = ("OFFLINE/INSECURE MODE", "make no attempt to authenticate", "possible to play without internet",
+            'set "online-mode"', "Ambiguity between arguments", "Can't keep up!", "yggdrasil public key")
+PROBLEM = re.compile(r"/(WARN|ERROR|FATAL)\]|Exception|Invalid|Unknown block|Couldn't|Failed")
+
+
+def get(url):
+    with urllib.request.urlopen(url, timeout=60) as r:
+        return r.read()
+
+
+def download(url, path, sha1=None):
+    if not os.path.exists(path) or sha1 and hashlib.sha1(open(path, "rb").read()).hexdigest() != sha1:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        data = get(url)
+        if sha1 and hashlib.sha1(data).hexdigest() != sha1:
+            sys.exit(f"bad checksum: {url}")
+        with open(path + ".part", "wb") as f:
+            f.write(data)
+        os.replace(path + ".part", path)
+    return path
+
+
+def version_json(version):
+    path = os.path.join(CACHE, version, "version.json")
+    if not os.path.exists(path):
+        entry = next((v for v in json.loads(get(MANIFEST))["versions"] if v["id"] == version), None)
+        if entry is None:
+            sys.exit(f"Mojang has no version {version}")
+        download(entry["url"], path, entry["sha1"])
+    with open(path) as f:
+        return json.load(f)
+
+
+def server_jar(version):
+    s = version_json(version)["downloads"]["server"]
+    return download(s["url"], os.path.join(CACHE, version, "server.jar"), s["sha1"])
+
+
+def java_major(java):
+    try:
+        out = subprocess.run([java, "-version"], capture_output=True, text=True).stderr
+    except OSError:
+        return 0
+    m = re.search(r'version "(\d+)', out)
+    return int(m.group(1)) if m else 0
+
+
+def java_for(version):
+    """A java binary with the major version that the version JSON asks for (or newer)."""
+    need = version_json(version).get("javaVersion", {}).get("majorVersion", 21)
+    for java in [shutil.which("java")] + sorted(glob.glob(os.path.join(CACHE, "jdk-*", "*", "bin", "java"))):
+        if java and java_major(java) >= need:
+            return java
+    # Download a Temurin JRE from the Adoptium releases on GitHub. Do not install it system-wide.
+    rel = json.loads(get(f"https://api.github.com/repos/adoptium/temurin{need}-binaries/releases/latest"))
+    asset = next(a for a in rel["assets"] if re.search(r"jre_x64_linux_hotspot_.*\.tar\.gz$", a["name"]))
+    dest = os.path.join(CACHE, f"jdk-{need}")
+    print(f"downloading {asset['name']}", file=sys.stderr)
+    with tarfile.open(fileobj=io.BytesIO(get(asset["browser_download_url"]))) as t:
+        t.extractall(dest, filter="data")
+    return glob.glob(os.path.join(dest, "*", "bin", "java"))[0]
+
+
+def chunks(world):
+    """(min cx, min cz, max cx, max cz) of the chunks in the region files."""
+    xs, zs = [], []
+    for path in glob.glob(os.path.join(world, "region", "r.*.*.mca")):
+        rx, rz = map(int, os.path.basename(path).split(".")[1:3])
+        with open(path, "rb") as f:
+            head = f.read(4096)
+        for i in range(1024):
+            if head[4 * i:4 * i + 4] != b"\0\0\0\0":
+                xs.append(rx * 32 + i % 32)
+                zs.append(rz * 32 + i // 32)
+    if not xs:
+        sys.exit(f"no chunks in {world}")
+    return min(xs), min(zs), max(xs), max(zs)
+
+
+def free_port():
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        return s.getsockname()[1]
+
+
+class Server:
+    def __init__(self, java, jar, folder):
+        self.lines, self.log = queue.Queue(), []
+        self.p = subprocess.Popen([java, "-Xmx2G", "-jar", jar, "nogui"], cwd=folder, stdin=subprocess.PIPE,
+                                  stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
+        threading.Thread(target=self._read, daemon=True).start()
+
+    def _read(self):
+        for line in self.p.stdout:
+            self.log.append(line.rstrip("\n"))
+            self.lines.put(line)
+        self.lines.put(None)
+
+    def wait(self, pattern, timeout):
+        end = time.time() + timeout
+        while time.time() < end:
+            try:
+                line = self.lines.get(timeout=1)
+            except queue.Empty:
+                continue
+            if line is None:
+                raise RuntimeError("the server stopped")
+            if re.search(pattern, line):
+                return line
+        raise TimeoutError(f"no '{pattern}' after {timeout} s")
+
+    def send(self, command):
+        self.p.stdin.write(command + "\n")
+        self.p.stdin.flush()
+
+
+def problems(log):
+    """Problem log entries. An entry is a "[time] [thread/LEVEL]" line with its stack trace lines."""
+    entries = []
+    for line in log:
+        if line.startswith("[") or not entries:
+            entries.append([line])
+        else:
+            entries[-1].append(line)
+    return ["\n".join(e) for e in entries
+            if any(PROBLEM.search(line) for line in e) and not any(h in e[0] for h in HARMLESS)]
+
+
+def check(world, version=DEFAULT_VERSION, timeout=300):
+    """Load all chunks of the world in a server. Returns (problem lines, full log)."""
+    jar, java = server_jar(version), java_for(version)
+    x0, z0, x1, z1 = chunks(world)
+    with tempfile.TemporaryDirectory(dir=os.path.join(ROOT, ".cache")) as folder:
+        shutil.copytree(world, os.path.join(folder, "world"))
+        with open(os.path.join(folder, "eula.txt"), "w") as f:
+            f.write("eula=true\n")
+        with open(os.path.join(folder, "server.properties"), "w") as f:
+            f.write(f"online-mode=false\nlevel-name=world\nserver-port={free_port()}\nspawn-protection=0\n"
+                    "max-tick-time=-1\nsync-chunk-writes=false\nenable-query=false\nenable-rcon=false\n")
+        s = Server(java, jar, folder)
+        try:
+            s.wait(r"\]: Done \(", timeout)
+            for cx in range(x0, x1 + 1, 16):         # forceload takes at most 256 chunks per command
+                for cz in range(z0, z1 + 1, 16):
+                    s.send(f"forceload add {cx * 16} {cz * 16} {min(cx + 15, x1) * 16} {min(cz + 15, z1) * 16}")
+            n = (x1 - x0 + 1) * (z1 - z0 + 1)
+            s.send(f"say forceload sent for {n} chunks")
+            s.wait(r"forceload sent for", timeout)
+            time.sleep(5 + n * 0.02)                 # chunks and entities load in other threads
+            s.send("save-all flush")
+            s.wait(r"Saved the game", timeout)
+            s.send("stop")
+            s.p.wait(timeout)
+        except (RuntimeError, TimeoutError) as e:
+            s.log.append(f"[mc_check/ERROR]: {e}")
+        finally:
+            if s.p.poll() is None:
+                s.p.kill()
+                s.p.wait()
+    return problems(s.log), s.log
+
+
+def reports(version):
+    """Write tools/mcdata/VERSION.json (format of fetch_mcdata.py) from Mojang's data reports."""
+    jar, java = server_jar(version), java_for(version)
+    with tempfile.TemporaryDirectory(dir=os.path.join(ROOT, ".cache")) as folder:
+        subprocess.run([java, "-DbundlerMainClass=net.minecraft.data.Main", "-jar", jar, "--reports",
+                        "--output", "gen"], cwd=folder, check=True, capture_output=True)
+        with open(os.path.join(folder, "gen", "reports", "blocks.json")) as f:
+            raw = json.load(f)
+        with open(os.path.join(folder, "gen", "reports", "registries.json")) as f:
+            registries = json.load(f)
+    blocks = {k.removeprefix("minecraft:"): v.get("properties", {}) for k, v in raw.items()}
+    entities = sorted(k.removeprefix("minecraft:") for k in registries["minecraft:entity_type"]["entries"])
+    # Biomes are data, not a registry report: read their file names in the server jar inside the bundle
+    with zipfile.ZipFile(jar) as z:
+        inner = next(n for n in z.namelist() if n.startswith("META-INF/versions/") and n.endswith(".jar"))
+        with zipfile.ZipFile(io.BytesIO(z.read(inner))) as zz:
+            biomes = sorted(n.split("/")[-1][:-5] for n in zz.namelist()
+                            if n.startswith("data/minecraft/worldgen/biome/") and n.endswith(".json"))
+    data = {"version": version, "source": {k: f"mojang/{version}" for k in ("blocks", "entities", "biomes")},
+            "blocks": blocks, "entities": entities, "biomes": biomes}
+    path = os.path.join(ROOT, "tools", "mcdata", f"{version}.json")
+    with open(path, "w") as f:
+        json.dump(data, f, separators=(",", ":"), sort_keys=True)
+    print(f"Wrote {path}: {len(blocks)} blocks, {len(entities)} entities, {len(biomes)} biomes")
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0].strip())
+    ap.add_argument("world", nargs="?", help="world folder to load")
+    ap.add_argument("--version", default=DEFAULT_VERSION, help="Minecraft version (default %(default)s)")
+    ap.add_argument("--reports", metavar="VERSION", help="write tools/mcdata/VERSION.json from Mojang's reports")
+    ap.add_argument("--log", help="write the full server log to this file")
+    a = ap.parse_args(argv)
+    if a.reports:
+        reports(a.reports)
+        return 0
+    if not a.world:
+        ap.error("give a WORLD or --reports VERSION")
+    bad, log = check(a.world, a.version)
+    if a.log:
+        with open(a.log, "w") as f:
+            f.write("\n".join(log) + "\n")
+    if bad:
+        print(f"{len(bad)} problem lines in the server log:")
+        print("\n".join(bad[:50]))
+        return 1
+    print(f"OK: Minecraft {a.version} loaded {a.world} without problems ({len(log)} log lines)")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

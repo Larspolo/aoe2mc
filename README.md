@@ -9,23 +9,28 @@ Converts an Age of Empires II: Definitive Edition scenario (`.aoe2scenario`) int
 | `aoe2mc.py` | The converter (terrain, trees, resources, world writer) |
 | `buildings.py` | The building designs (must be in the same folder as `aoe2mc.py`) |
 | `units.py` | The unit mapping (must be in the same folder as `aoe2mc.py`) |
-| `nile_world.zip` | "Somewhere on the Nile", converted |
-| `mongolia_world.zip` | "Mongolia Map Town" by George Lewe, converted |
-| `stress.aoe2scenario` | Test map: units against every side of buildings, trees, mines, cliffs and a mountain, on slopes and on a bridge |
-| `unit_gallery.aoe2scenario`, `unit_gallery_world.zip` | Test map with every unit type (681 land units, 51 ships) |
-| `gallery.aoe2scenario` | Test map: every building type, 8 civilizations |
-| `gallery_world.zip` | The test map, converted |
-| `test_village.aoe2scenario` | Small test map with terrain, water and a hill |
-| `end_of_the_play_world.zip`, `bird_in_the_cage_world.zip` | Two maps of the fan campaign by Entarogan (GPL-3.0, https://github.com/Entarogan/AOE2-Campaign-Transfer), converted |
-| `duke_world.zip` | A real map, converted: "The Duke and His Serfs" by tdauth (https://github.com/tdauth/aoe2de-the-duke-and-his-serfs) |
+| `samples/stress.aoe2scenario` | Test map: units against every side of buildings, trees, mines, cliffs and a mountain, on slopes and on a bridge |
+| `samples/unit_gallery.aoe2scenario` | Test map with every unit type |
+| `samples/gallery.aoe2scenario` | Test map: every building type, 8 civilizations |
+| `samples/test_village.aoe2scenario` | Small test map with terrain, water and a hill |
+| `tools/` | Tools for tests and debugging: test scenarios, world reader, 3D render, coverage report, Minecraft data and server check |
+| `tests/` | The tests (pytest) |
+| `docs/` | Design guide, roadmap, steering, coverage report and other notes |
+
+The repository has no converted worlds. Convert a sample map to get one (see "Use").
 
 ## Install
 
-    pip install -r requirements.txt
+Two ways:
+
+- Install the command `aoe2mc`: `pip install .` in the repository folder, or
+  `pipx install git+https://github.com/Larspolo/aoe2mc`.
+- Run the script from the repository folder: `pip install -r requirements.txt`, then use `python aoe2mc.py`.
 
 ## Use
 
-    python aoe2mc.py MyMap.aoe2scenario MyMapWorld --preview
+    aoe2mc MyMap.aoe2scenario MyMapWorld --preview
+    python aoe2mc.py MyMap.aoe2scenario MyMapWorld --preview      (the same, from the repository folder)
 
 Copy the folder `MyMapWorld` into your Minecraft `saves` folder. Open it in Minecraft Java 1.21.1 or newer.
 The world is in creative mode. Outside the map there is only void. The world list shows a small top view of the map
@@ -40,8 +45,10 @@ The world is in creative mode. Outside the map there is only void. The world lis
 | `--name` | file name | World name in the Minecraft menu |
 | `--seed` | 1 | Seed for random details (tree heights, flowers) |
 | `--preview` | off | Writes `preview.png` (top view) into the world folder |
+| `--mc-version` | 1.21.1 | Minecraft Java version of the output: `1.21.1` or `26.3`. The 26.3 output is not complete yet. |
 | `--no-units` | off | Do not convert units |
 | `--no-barriers` | off | Do not fill building footprints with invisible barrier blocks |
+| `--spawn X,Z` | start view or town center of player 1 | Player spawn in tiles. Without it the spawn is the start view of player 1, else the front of its first town center, else the map center. |
 
 ## Buildings
 
@@ -154,12 +161,28 @@ Eye-candy scenarios often place buildings on top of each other. A building that 
 larger building is skipped (for example a wonder that is hidden under the Great Pyramid). Natural objects
 (trees, rocks, cliffs, mountains, mines) place no blocks inside building footprints.
 
+## Development
+
+    python3 -m pip install -r requirements-dev.txt
+    ruff check .
+    python3 -m pytest              # fast tests
+    python3 -m pytest -m slow      # slow tests
+
+Read these files first:
+- [`CLAUDE.md`](CLAUDE.md): commands, code map and the rules of the domain.
+- [`docs/STEERING.md`](docs/STEERING.md): how the owner steers the work with GitHub issues.
+- [`docs/ROADMAP.md`](docs/ROADMAP.md): the plan.
+- [`docs/DESIGN.md`](docs/DESIGN.md): the rules for building, object and unit designs.
+
 ## Known limits
 
 - Object types that the parser does not know (new IDs) are skipped.
 - Garrisoned units are not converted. Birds are not converted.
-- The direction that units face is not tested in the game yet.
+- The direction that units face is not checked in the game yet. See [`docs/facing.md`](docs/facing.md) for the check.
 - In scenarios older than version 1.56 the architecture set field can be wrong, so the program uses the civilization.
 - Unique buildings use the design of a similar building (for example krepost → small castle).
 - Diagonal gates are drawn along a tile axis.
-- Map tile (x, y) becomes block (x × tile-size, z = y × tile-size). The map can look rotated compared to the in-game view.
+- Map tile (x, y) becomes block (x × tile-size, z = y × tile-size). AoE2 shows the map as a diamond with the top corner
+  at the top of the screen. In Minecraft this corner is in the north-east: the map is the in-game view turned 45°
+  clockwise, not mirrored. A turn of 45° is not possible on a block grid. At the spawn the player looks north-east,
+  as the AoE2 camera does.

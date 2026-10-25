@@ -24,6 +24,7 @@ def test_level_dat(tiny_world):
     assert int(level["DataVersion"]) == aoe2mc.DATA_VERSION
     assert str(level["LevelName"]) == "tiny"
     assert int(level["GameType"]) == 1
+    assert float(level["SpawnAngle"]) == aoe2mc.SPAWN_YAW == -135  # look north-east, like the AoE2 camera (#23)
 
 
 def test_chunks_have_valid_blocks_and_biomes(tiny_world):
@@ -54,3 +55,23 @@ def test_entities(tiny_world):
         assert mcvalid.entity_error(i) is None, i
     assert "minecraft:horse" in ids and "minecraft:villager" in ids and "minecraft:skeleton" in ids
     assert "units in a block (moved up): 0" in out
+
+
+def test_mc_version_26_3(tmp_path, monkeypatch):
+    import contextlib
+    import io
+
+    import scenarios
+    src = scenarios.tiny(str(tmp_path / "tiny.aoe2scenario"))
+    with contextlib.redirect_stdout(io.StringIO()):
+        aoe2mc.main([src, str(tmp_path / "W"), "--mc-version", "26.3"])
+    w = world_reader.World(str(tmp_path / "W"))
+    level = w.level()
+    assert (int(level["DataVersion"]), str(level["Version"]["Name"])) == (5023, "26.3")
+    assert {int(c["DataVersion"]) for c in w.chunks().values()} == {5023}
+    assert {int(c["DataVersion"]) for c in w.chunks("entities").values()} == {5023}
+    assert mcvalid.invalid_states(w.palette(), "26.3") == {}
+    assert aoe2mc.MC["name"] == aoe2mc.VERSION_NAME               # convert() restores the default version
+    # block renames of the version profile
+    monkeypatch.setattr(aoe2mc, "MC", aoe2mc.VERSIONS["26.3"])
+    assert str(aoe2mc.B.nbt(aoe2mc.B("chain[axis=y]"))["Name"]) == "minecraft:iron_chain"

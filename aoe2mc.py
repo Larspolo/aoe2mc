@@ -11,6 +11,7 @@ Options:
     --name TEXT        World name in the Minecraft menu (default: file name)
     --seed N           Seed for the random details (tree heights, flowers) (default 1)
     --preview          Also write preview.png (top view) into the world folder
+    --mc-version V     Minecraft Java version of the output: 1.21.1 (default) or 26.3 (not complete yet)
     --no-units         Do not convert units (mobs, boats, minecarts)
     --no-barriers      Do not fill building footprints with invisible barrier blocks
     --architecture X   Use one architecture set for all players (western, central, mediterranean,
@@ -25,6 +26,7 @@ The world is saved with Minecraft data version 1.21.1. Newer Minecraft versions 
 import argparse
 import contextlib
 import io
+import json
 import os
 import time
 import zlib
@@ -37,12 +39,26 @@ from nbtlib.tag import Byte, Compound, Double, Float, Int, IntArray, List, Long,
 import buildings
 import units
 
-DATA_VERSION = 3955          # Minecraft Java 1.21.1
-VERSION_NAME = "1.21.1"
+# Blocks with the 'waterlogged' property. A block of this list under the water surface gets waterlogged=true (#19).
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools", "mcdata", "1.21.1.json")) as _f:
+    WATERLOGGABLE = {"minecraft:" + k for k, v in json.load(_f)["blocks"].items() if "waterlogged" in v}
+
+# Output format per Minecraft Java version (docs/minecraft-versions.md). The 26.3 entity and world format: #57.
+VERSIONS = {
+    "1.21.1": dict(name="1.21.1", data_version=3955, renames={}),
+    "26.3": dict(name="26.3", data_version=5023, renames={"minecraft:chain": "minecraft:iron_chain"}),
+}
+VERSION_NAME = "1.21.1"      # the default output version
+DATA_VERSION = VERSIONS[VERSION_NAME]["data_version"]
+MC = VERSIONS[VERSION_NAME]  # the version of the running conversion; convert() sets it
 MIN_Y, MAX_Y = -64, 320      # world height range (MAX_Y exclusive)
 HEIGHT = MAX_Y - MIN_Y
 WATER_Y = 62                 # Y of the highest water block (sea level)
 NONE = -10000                # marker for "no column here" (outside the map)
+# AoE2 tile x goes to the top corner of the screen, tile y to the bottom corner. With x → +X and y → +Z the
+# top corner is in the north-east: the map is the in-game view turned 45° clockwise, not mirrored.
+# The player looks north-east at the spawn, like the AoE2 camera (yaw 0 = south, 90 = west, 180 = north).
+SPAWN_YAW = -135.0
 
 
 # --------------------------------------------------------------------------------------------
@@ -52,6 +68,7 @@ class Blocks:
     def __init__(self):
         self.states = ["minecraft:air"]
         self.index = {"minecraft:air": 0}
+        self.wets = {}
 
     def __call__(self, state):
         if not state.startswith("minecraft:"):
@@ -63,13 +80,21 @@ class Blocks:
             self.index[state] = i
         return i
 
+    def wet(self, i):
+        """Block id i with waterlogged=true, or i if the block has no 'waterlogged' property."""
+        if i not in self.wets:
+            name, _, props = self.states[i].partition("[")
+            p = [kv for kv in props[:-1].split(",") if kv and not kv.startswith("waterlogged=")]
+            self.wets[i] = self(f"{name}[{','.join(p + ['waterlogged=true'])}]") if name in WATERLOGGABLE else i
+        return self.wets[i]
+
     def nbt(self, i):
-        """Palette entry for block id i: {Name, Properties}."""
-        state = self.states[i]
-        if "[" not in state:
-            return Compound({"Name": String(state)})
-        name, props = state[:-1].split("[", 1)
-        p = dict(kv.split("=") for kv in props.split(","))
+        """Palette entry for block id i: {Name, Properties}, with the block names of the output version."""
+        name, _, props = self.states[i].partition("[")
+        name = MC["renames"].get(name, name)
+        if not props:
+            return Compound({"Name": String(name)})
+        p = dict(kv.split("=") for kv in props[:-1].split(","))
         return Compound({"Name": String(name),
                          "Properties": Compound({k: String(v) for k, v in p.items()})})
 
@@ -216,8 +241,10 @@ def read_scenario(path):
             pass
         color = buildings.COLOR_NAMES[p.color] if 0 <= p.color < 8 else "light_gray"
         arch = buildings.CIV_TO_ARCH.get(getattr(civ, "name", ""), "western")
+        view = (getattr(p, "initial_player_view_x", -1), getattr(p, "initial_player_view_y", -1))
         players[p.player_id] = {"color": color if p.player_id else "light_gray", "arch": arch,
-                                "civ": getattr(civ, "name", "?")}
+                                "civ": getattr(civ, "name", "?"),
+                                "view": view if view[0] is not None and min(view) >= 0 else None}
 
     objects = []
     for player, player_units in enumerate(scn.unit_manager.units):
@@ -665,8 +692,45 @@ def decor(E, cols, name, rect, rng):
     elif "BROKEN_CART" in n:
         put(0, 0, 0, "spruce_slab[type=bottom]"); put(1, 0, 0, "spruce_slab[type=bottom]")
         put(-1, 0, 0, "spruce_trapdoor[facing=east,half=bottom,open=true]"); put(0, 1, 0, "barrel[facing=east]")
-    elif "BONFIRE" in n:
-        put(0, 0, 0, "campfire[lit=true,signal_fire=false]")
+    elif "BONFIRE" in n or n.startswith(("FLAME", "FLARE")):     # a flare is a signal: tall smoke
+        put(0, 0, 0, f"campfire[lit=true,signal_fire={str(n.startswith('FLARE')).lower()}]")
+    elif "STUMP" in n:
+        put(0, 0, 0, "stripped_bamboo_block[axis=y]" if "BAMBOO" in n else "spruce_log[axis=y]")
+    elif n.startswith(("PATH_", "BLACK_TILE")):        # flat: a path in the ground, black carpet on it
+        for x in range(x0, x1):
+            for z in range(z0, z1):
+                yy = cols.surface(x, z)
+                if n == "BLACK_TILE":
+                    E.add([x], [yy], [z], "black_carpet", hard=False)
+                elif rng.random() < 0.8 and yy - 1 == cols.top[min(max(x, 0), cols.n - 1), min(max(z, 0), cols.n - 1)]:
+                    E.add([x], [yy - 1], [z], "dirt_path")
+    elif n in ("HEAD", "IMPALED_CORPSE"):
+        h = 2 if n == "IMPALED_CORPSE" else 0
+        for dy in range(h):
+            put(0, dy, 0, "spruce_fence")
+        put(0, h, 0, "skeleton_skull[rotation=8]")
+        if h:
+            put(1, 0, 0, "bone_block[axis=x]")
+    elif n in ("TREASURE_CHEST", "LOOT"):
+        put(0, 0, 0, "chest[facing=south]" if n == "TREASURE_CHEST" else "barrel[facing=up]")
+        put(1, 0, 0, "gold_block" if n == "TREASURE_CHEST" else "raw_gold_block")
+    elif n == "LEATHERWORKING_EQUIPMENT":
+        put(0, 0, 0, "loom[facing=south]"); put(1, 0, 0, "spruce_fence"); put(1, 1, 0, "brown_carpet")
+    elif n in ("ARCHAIC_FENCE", "STAKE_BARRICADE"):
+        for x in range(x0, x1):
+            yy = cols.surface(x, cz)
+            if n == "ARCHAIC_FENCE":
+                E.add([x], [yy], [cz], f"oak_fence[east={str(x < x1 - 1).lower()},west={str(x > x0).lower()}]")
+            else:                                      # single sharp stakes of two heights
+                E.box(x, x + 1, yy, yy + 1 + (x % 2), cz, cz + 1, "spruce_fence")
+    elif n == "PIECE_OF_THE_TRUE_CROSS":
+        put(0, 0, 0, "dark_oak_fence"); put(0, 2, 0, "dark_oak_fence")
+        put(0, 1, 0, "dark_oak_fence[east=true,west=true]")
+        put(-1, 1, 0, "dark_oak_fence[east=true]"); put(1, 1, 0, "dark_oak_fence[west=true]")
+    elif n == "ICE_NAVIGABLE":
+        for x in range(x0, x1):
+            for z in range(z0, z1):
+                E.add([x], [cols.surface(x, z) - 1], [z], "ice")
     elif n == "SIGN":
         put(0, 0, 0, "oak_sign[rotation=8]")
     elif "GALLOW" in n:
@@ -730,13 +794,18 @@ def player_color(p, players=None):
 # --------------------------------------------------------------------------------------------
 # Place all objects of the scenario.
 # --------------------------------------------------------------------------------------------
-PASSABLE_OBJECTS = ("FLOWER", "FERN", "RUG", "GRASS", "PLANT", "OYSTER", "FISH", "RELIC", "GRAVE", "BONFIRE")
+MOUNTAINS = ("MOUNTAIN", "SNOW_MOUNTAIN")
+MONUMENTS = ("BUDDHA_STATUE", "INDIAN_STATUES", "OLD_STONE_HEAD", "NINE_BANDS", "PAGODA_", "TORII_GATE", "STUPA",
+             "TROWULAN_GATE", "REKHA_DEUL_TEMPLE", "SVAN_TOWER", "MEDITERRANEAN_COURTYARD_WALLS",
+             "MESOPOTAMIAN_PILLAR", "MESOPOTAMIAN_GARDEN", "MESOPOTAMIAN_TOMB", "BURNED_BUILDING")    # buildings.py designs
+PASSABLE_OBJECTS = ("FLOWER", "FERN", "RUG", "GRASS", "PLANT", "OYSTER", "FISH", "RELIC", "GRAVE", "BONFIRE",
+                    "PATH_", "BLACK_TILE", "ICE_NAVIGABLE", "DOLPHIN", "BOX_TURTLES")
 
 
 def object_footprint(o, T):
     """Block area (x0, x1, z0, z1) of a non-building object. An object at x.0 has an even size, at x.5 an odd size."""
     n = o["name"]
-    big = 4 if n.startswith("MOUNTAIN") else 3 if n.startswith("CLIFF") or "QUARRY" in n or "TEMPLE" in n else 0
+    big = 4 if n.startswith(MOUNTAINS) else 3 if n.startswith("CLIFF") or "QUARRY" in n or "TEMPLE" in n else 0
 
     def axis(v):
         even = abs(v % 1) < 0.25
@@ -777,6 +846,9 @@ def place_objects(objects, players, cols, rng):
         elif kind == "B":
             buildings.place_building(E, cols, B, o, players, walls, gates)
             stats["buildings"] += 1
+        elif kind == "O" and name.startswith(MONUMENTS):
+            buildings.place_building(E, cols, B, dict(o, kind="B"), players, set(), {})
+            stats["monuments"] += 1
         elif kind == "O" and "TREE" in name:
             make_tree(E, tree_kind(name), bx, y, bz, rng)
             stats["trees"] += 1
@@ -786,8 +858,9 @@ def place_objects(objects, players, cols, rng):
         elif kind == "O" and name == "STONE_MINE":
             tile_heap(E, cols, E.footprint, 3, ["cobblestone", "andesite", "stone", "tuff"], rng)
             stats["stone mines"] += 1
-        elif kind == "O" and name.startswith("MOUNTAIN"):
-            mound(E, cols, bx, bz, T * 2, T * 4, ["stone", "stone", "andesite", "cobblestone", "tuff"], rng)
+        elif kind == "O" and name.startswith(MOUNTAINS):
+            mound(E, cols, bx, bz, T * 2, T * 4, ["stone", "snow_block", "andesite", "snow_block", "packed_ice"]
+                  if name.startswith("SNOW") else ["stone", "stone", "andesite", "cobblestone", "tuff"], rng)
             for dx, dz in ((0, 0), (1, 0), (0, 1), (1, 1)):
                 if cols.inside(bx + dx, bz + dz):
                     top = max(cols.surface(bx + dx, bz + dz), y) + T * 4
@@ -876,13 +949,15 @@ def place_objects(objects, players, cols, rng):
         elif kind == "O" and ("BUSH" in name or "PLANT" in name or name.startswith("GRASS")):
             E.add([bx], [y], [bz], "fern" if "PLANT" in name else "short_grass", hard=False)
             stats["plants"] += 1
+        elif kind == "O" and units.invisible(name):
+            stats["invisible (skipped on purpose)"] += 1
         else:
             if name.startswith("UNKNOWN"):
                 stats["skipped (unknown to the parser)"] += 1
-            elif kind != "U" and "FISH" not in name:
+            elif kind != "U" and not object_mob(name):
                 stats["skipped (other objects)"] += 1
         if kind == "O" and (("TREE" in name and "STUMP" not in name) or name in ("GOLD_MINE", "STONE_MINE", "QUARRY")
-                            or "FORAGE" in name or "FRUIT_BUSH" in name or name.startswith(("CLIFF", "MOUNTAIN", "ROCK", "STATUE", "TROPAION",
+                            or "FORAGE" in name or "FRUIT_BUSH" in name or name.startswith(("CLIFF", *MOUNTAINS, "ROCK", "STATUE", "TROPAION",
                             "STELAE", "THOLOS", "HERO_SHRINE", "WELL", "HAY_STACK", "MARKET_STALL"))):
             obstacle(E, cols, E.footprint)
         elif kind == "O" and E.footprint and not any(k in name for k in PASSABLE_OBJECTS):
@@ -898,7 +973,13 @@ def place_objects(objects, players, cols, rng):
 # --------------------------------------------------------------------------------------------
 # Units -> entities
 # --------------------------------------------------------------------------------------------
-FISH = [("SALMON", "salmon"), ("DORADO", "tropical_fish"), ("SNAPPER", "tropical_fish"), ("FISH", "cod")]
+FISH = [("SALMON", "salmon"), ("DORADO", "tropical_fish"), ("SNAPPER", "tropical_fish"), ("FISH", "cod"),
+        ("DOLPHIN", "dolphin"), ("BOX_TURTLES", "turtle")]
+
+
+def object_mob(name):
+    """Minecraft mob for an AoE2 'other object' that is an animal (fish, dolphin, turtles), else None."""
+    return next((k for key, k in FISH if key in name), None)
 PASSABLE = ("short_grass", "tall_grass", "large_fern", "petals", "moss_carpet", "mushroom", "allium", "bluet",
             "tulip", "lily_of", "fern", "wheat", "poppy", "dandelion", "cornflower", "daisy", "water",
             "seagrass", "dead_bush", "sweet_berry", "rail", "carpet", "banner", "button", "lantern", "snow[")
@@ -919,11 +1000,11 @@ def plan_units(objects, players, cols, rng, stats):
             nbt = units.make_entity(o, players, (0, 0, 0), rng, desc)
             boat = units.is_boat(desc)
             stats["units"] += 1
-        elif o["kind"] == "O" and "FISH" in o["name"]:
-            kind = next(k for key, k in FISH if key in o["name"])
+        elif o["kind"] == "O" and object_mob(o["name"]):
+            kind = object_mob(o["name"])
             nbt = units.to_nbt(units.mob(kind), (0, 0, 0), 0.0, rng)
-            boat = "fish"
-            stats["fish"] += 1
+            boat = "fish" if kind != "turtle" else False
+            stats["fish" if kind in ("cod", "salmon", "tropical_fish") else "animals (objects)"] += 1
         else:
             continue
         x, z = o["x"] * T, o["y"] * T
@@ -960,6 +1041,22 @@ def free_spot(cols, bx, bz, r, water=False):
     d = (xs + x0 - bx) ** 2 + (zs + z0 - bz) ** 2
     i = int(np.argmin(d))
     return int(xs[i] + x0), int(zs[i] + z0)
+
+
+def find_spawn(cols, objects, players, tile=None):
+    """Spawn block (x, y, z): the tile given (--spawn), else the start view of player 1, else in front of
+    (south of) the first town center of player 1, else the map center. Moved to the nearest free land column."""
+    if tile is None:
+        tile = players.get(1, {}).get("view")
+    if tile is None:
+        tc = next((o for o in objects if o["kind"] == "B" and o["player"] == 1 and "TOWN_CENTER" in o["name"]), None)
+        if tc:
+            tile = (tc["x"], tc["y"] + buildings.footprint(tc["name"]) / 2 + 0.5)
+    T, n = cols.T, cols.n
+    bx, bz = (n // 2, n // 2) if tile is None else (int(min(max(tile[0] * T, 0), n - 1)),
+                                                    int(min(max(tile[1] * T, 0), n - 1)))
+    bx, bz = free_spot(cols, bx, bz, 8 * T) or (bx, bz)
+    return bx, cols.surface(bx, bz) + 2, bz
 
 
 def set_pos(nbt, x, y, z):
@@ -1006,7 +1103,7 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
         out.append(nbt)
     if not out:
         return None
-    root = Compound({"DataVersion": Int(DATA_VERSION), "Position": IntArray([cx, cz]),
+    root = Compound({"DataVersion": Int(MC["data_version"]), "Position": IntArray([cx, cz]),
                      "Entities": List[Compound](out)})
     buf = io.BytesIO()
     buf.write(b"\x0a\x00\x00")
@@ -1099,6 +1196,12 @@ def build_chunk(cx, cz, cols, edits):
         bad = vol[ys + 1, zs, xs] != upper
         vol[ys[bad], zs[bad], xs[bad]] = SHORT_GRASS
 
+    # Blocks under the water surface are waterlogged, else they leave a dry gap in the water
+    wet = water & (vol != WATER) & (vol != ICE)
+    if wet.any():
+        vals, inv = np.unique(vol[wet], return_inverse=True)
+        vol[wet] = np.array([B.wet(int(v)) for v in vals], np.uint16)[inv]
+
     # Biomes: one per 4x4 block cell, the same for all heights.
     cells = cols.biome[x0 + 2:x0 + 16:4, z0 + 2:z0 + 16:4].T            # (z, x) 4x4
     bvals, binv = np.unique(np.tile(cells.ravel(), 4), return_inverse=True)
@@ -1125,7 +1228,7 @@ def build_chunk(cx, cz, cols, edits):
                                   "biomes": biomes}))
 
     chunk = Compound({
-        "DataVersion": Int(DATA_VERSION), "xPos": Int(cx), "zPos": Int(cz), "yPos": Int(MIN_Y // 16),
+        "DataVersion": Int(MC["data_version"]), "xPos": Int(cx), "zPos": Int(cz), "yPos": Int(MIN_Y // 16),
         "Status": String("minecraft:full"), "LastUpdate": Long(0), "InhabitedTime": Long(0),
         "isLightOn": Byte(0),            # Minecraft calculates the light when it loads the chunk
         "sections": List[Compound](sections),
@@ -1141,13 +1244,19 @@ def build_chunk(cx, cz, cols, edits):
 
 
 def write_region(path, chunks):
-    """chunks: {(local_x, local_z): nbt_bytes}"""
+    """chunks: {(local_x, local_z): nbt_bytes}. A chunk of more than 255 sectors goes to c.<x>.<z>.mcc, as in
+    Minecraft: the region file then holds only the compression byte with the 'external' bit (0x82)."""
     header = bytearray(8192)
     body = bytearray()
     now = int(time.time())
+    rx, rz = (int(v) for v in os.path.basename(path).split(".")[1:3])
     for (lx, lz), data in chunks.items():
         comp = zlib.compress(data, 6)
         payload = (len(comp) + 1).to_bytes(4, "big") + b"\x02" + comp
+        if len(payload) > 255 * 4096:
+            with open(os.path.join(os.path.dirname(path), f"c.{rx * 32 + lx}.{rz * 32 + lz}.mcc"), "wb") as f:
+                f.write(comp)
+            payload = (1).to_bytes(4, "big") + b"\x82"
         payload += b"\x00" * (-len(payload) % 4096)
         offset = 2 + len(body) // 4096
         sectors = len(payload) // 4096
@@ -1172,15 +1281,17 @@ def write_level_dat(path, name, spawn):
     end = Compound({"type": String("minecraft:noise"), "settings": String("minecraft:end"),
                     "biome_source": Compound({"type": String("minecraft:the_end")})})
     data = Compound({
-        "DataVersion": Int(DATA_VERSION), "version": Int(19133),
-        "Version": Compound({"Id": Int(DATA_VERSION), "Name": String(VERSION_NAME),
+        "DataVersion": Int(MC["data_version"]), "version": Int(19133),
+        "Version": Compound({"Id": Int(MC["data_version"]), "Name": String(MC["name"]),
                              "Series": String("main"), "Snapshot": Byte(0)}),
         "LevelName": String(name), "GameType": Int(1), "Difficulty": Byte(1),   # not peaceful: peaceful removes the soldiers
         "allowCommands": Byte(1), "hardcore": Byte(0), "initialized": Byte(1),
-        "SpawnX": Int(spawn[0]), "SpawnY": Int(spawn[1]), "SpawnZ": Int(spawn[2]), "SpawnAngle": Float(0),
+        "SpawnX": Int(spawn[0]), "SpawnY": Int(spawn[1]), "SpawnZ": Int(spawn[2]), "SpawnAngle": Float(SPAWN_YAW),
         "LastPlayed": Long(int(time.time() * 1000)), "Time": Long(0), "DayTime": Long(6000),
         "raining": Byte(0), "thundering": Byte(0), "rainTime": Int(0), "thunderTime": Int(0),
         "clearWeatherTime": Int(0), "WasModded": Byte(0),
+        "DragonFight": Compound({"NeedsStateScanning": Byte(1), "DragonKilled": Byte(0),   # else "key missing" on load
+                                 "PreviouslyKilled": Byte(0)}),
         "GameRules": Compound({"doDaylightCycle": String("false"), "doWeatherCycle": String("false"),
                                "doMobSpawning": String("false"), "doFireTick": String("false")}),
         "DataPacks": Compound({"Enabled": List[String]([String("vanilla")]), "Disabled": List[String]([])}),
@@ -1237,7 +1348,18 @@ def block_color(state):
 # Main
 # --------------------------------------------------------------------------------------------
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
-            barriers=True):
+            barriers=True, mc_version=VERSION_NAME, spawn=None):
+    global MC
+    MC = VERSIONS[mc_version]
+    PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
+    try:
+        _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn)
+    finally:
+        MC = VERSIONS[VERSION_NAME]
+        PALETTE_CACHE.clear()
+
+
+def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn):
     buildings.BARRIERS = barriers
     MOVED.clear()           # the counts of an earlier conversion in this process
     rng = np.random.default_rng(seed)
@@ -1294,8 +1416,7 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
     for (rx, rz), chunks in entity_regions.items():
         write_region(os.path.join(out, "entities", f"r.{rx}.{rz}.mca"), chunks)
 
-    c = cols.n // 2
-    spawn = (c, cols.surface(c, c) + 2, c)
+    spawn = find_spawn(cols, objects, players, spawn)
     write_level_dat(os.path.join(out, "level.dat"), name or os.path.splitext(os.path.basename(src))[0], spawn)
 
     from PIL import Image
@@ -1342,6 +1463,15 @@ def player_arch_spec(v):
     return int(pid), a
 
 
+def spawn_spec(v):
+    """'12,30' -> (12.0, 30.0)."""
+    try:
+        x, z = (float(t) for t in v.split(","))
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"{v!r} is not X,Z, for example 12,30") from None
+    return x, z
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
     ap.add_argument("scenario", help=".aoe2scenario file")
@@ -1359,10 +1489,14 @@ def main(argv=None):
     ap.add_argument("--player-architecture", action="append", default=[], metavar="P=SET",
                     type=player_arch_spec,
                     help="architecture set for one player, for example 6=western (can be repeated)")
+    ap.add_argument("--spawn", type=spawn_spec, metavar="X,Z",
+                    help="player spawn in tiles (default: start view or town center of player 1)")
+    ap.add_argument("--mc-version", choices=sorted(VERSIONS), default=VERSION_NAME,
+                    help=f"Minecraft Java version of the output (default {VERSION_NAME}; 26.3 is not complete yet)")
     a = ap.parse_args(argv)
     try:
         convert(a.scenario, a.output, a.tile_size, a.level_height, a.name, a.seed, a.preview, a.architecture,
-                a.player_architecture, not a.no_units, not a.no_barriers)
+                a.player_architecture, not a.no_units, not a.no_barriers, a.mc_version, a.spawn)
     except OptionError as e:
         ap.error(str(e))
 

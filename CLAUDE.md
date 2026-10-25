@@ -17,14 +17,15 @@ The README already uses this style. Keep it.
 | Install | `python3 -m pip install -r requirements-dev.txt` (a `pip` on the PATH can be another Python) |
 | Lint | `ruff check .` |
 | Fast tests (~15 s) | `python3 -m pytest` (use `python3 -m`: a `pytest` on the PATH can be another Python) |
-| Slow tests (~60 s) | `python3 -m pytest -m slow` |
-| Test scenario | `python3 tools/scenarios.py tiny OUT.aoe2scenario` (or `gallery`, see `--help`) |
+| Slow tests (~2 min) | `python3 -m pytest -m slow` |
+| Test scenario | `python3 tools/scenarios.py tiny OUT.aoe2scenario` (or `gallery`, `stress`, `buildings`, `units`, `village`, `facing`) |
 | Convert | `python3 aoe2mc.py IN.aoe2scenario OUTWorld --preview` |
 | Look at a world | `python3 tools/world_reader.py OUTWorld [X Y Z]` |
 | 3D image | `python3 tools/render.py building CASTLE --arch western OUT.png` (or `world OUTWorld X0 Z0 X1 Z1 OUT.png`) |
 | Check states | `tools/mcvalid.py` (`block_error`, `entity_error`, `biome_error`) |
 | Coverage of AoE2 types | `python3 tools/coverage.py` writes `docs/coverage.md` (designs, mappings, fallbacks) |
-| Minecraft data | `python3 tools/fetch_mcdata.py VERSION` writes `tools/mcdata/VERSION.json` |
+| Server check | `python3 tools/mc_check.py OUTWorld` (headless Minecraft, load errors), `python3 -m pytest -m mc` |
+| Minecraft data | `python3 tools/mc_check.py --reports VERSION` (exact, from Mojang) or `tools/fetch_mcdata.py VERSION` writes `tools/mcdata/VERSION.json` |
 | Block colors | `python3 tools/fetch_colors.py VERSION` writes `tools/mcdata/colors-VERSION.json` (for `render.py`) |
 
 Put scratch output (worlds, scenarios, images) in the scratchpad or in `out/` (ignored by git). Never commit worlds.
@@ -57,6 +58,7 @@ Design work (buildings, objects, units, animals) follows `docs/DESIGN.md`. Do de
 - Block states are strings like `"oak_stairs[facing=north,half=bottom]"`. Each new state must pass `mcvalid`.
 - Output is deterministic: all randomness comes from seeded `numpy` generators. Keep it so.
 - Target: Minecraft Java 1.21.1 (`DATA_VERSION = 3955`). Newer versions upgrade the world on load.
+  `VERSIONS` in `aoe2mc.py` holds the profile per output version (`--mc-version`); format changes: `docs/minecraft-versions.md`.
 - Global state: `aoe2mc.B` (block registry), `aoe2mc.MOVED`, `buildings.BARRIERS`, `buildings.BRIDGE_CELLS`.
   Tests share `B`, so `B.states` holds the states of all earlier tests.
 
@@ -68,8 +70,8 @@ not change. Do not add a dependency without a ticket that asks for it. Keep func
 ## How to verify
 
 There is no Minecraft client here. Use, from cheap to expensive: lint and fast tests → slow tests → convert a
-scenario with `--preview` and look at the PNG with the Read tool → `tools/world_reader.py` for exact blocks.
-The Mojang hosts are reachable, so a headless Minecraft server check is possible (ticket #13).
+scenario with `--preview` and look at the PNG with the Read tool → `tools/world_reader.py` for exact blocks
+→ `tools/mc_check.py` for load errors in a real Minecraft server.
 Details: the `verify` skill.
 
 ## How to work

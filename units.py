@@ -40,35 +40,164 @@ ARMOR = {   # tier -> (helmet, chestplate, leggings, boots material); None = emp
 SWORD = {1: "wooden", 2: "stone", 3: "iron", 4: "diamond", "unique": "golden", "elite": "netherite", "hero": "netherite"}
 HORSE_ARMOR = {1: "leather", 2: "leather", 3: "iron", 4: "diamond", "unique": "golden", "elite": "diamond", "hero": "golden"}
 
-SKIP = ("INVISIBLE", "MAP_REVEALER", "HINT_OBJECT", "DUMMY_TARGET", "TRICKLE", "RESOURCE_ENABLER", "DISABLED",
-        "TORCH_", "VMDL", "OUTLW", "RFARC", "BUTTERFLY", "SEAGULLS", "FALCON", "HAWK", "VULTURE", "STORK",
-        "MACAW", "CONDOR", "RAVEN", "OWL", "PEACOCK", "FLAMINGO", "CRANE", "FLAMING_BIRD", "PLACEHOLDER",
-        "TREASURE_CHEST", "PHOTONMAN", "SHARKATZOR", "NESSIE")
+# Invisible markers and internal units: the game does not show them, so the converter skips them on purpose.
+# (keyword, reason). place_objects, classify() and tools/coverage.py use this list.
+INVISIBLE = (("MAP_REVEAL", "map revealer"), ("INVISIBLE_OBJECT", "invisible object"), ("BLOCKER", "path blocker"),
+             ("HINT_OBJECT", "editor hint"), ("DUMMY_TARGET", "attack target"), ("TRICKLE", "resource trickle"),
+             ("RESOURCE_ENABLER", "resource trickle"), ("AURA_QUEST_INDICATOR", "quest marker"),
+             ("PLACEHOLDER", "placeholder"), ("DISABLED", "disabled unit"), ("OUTLW", "unused unit"),
+             ("RFARC", "unused unit"))
 
-ANIMALS = [   # (keywords, minecraft mob, extra tags)
-    (("POLAR_BEAR",), "polar_bear", {}),
-    (("SHEEP", "MOUFLON", "ARGALI", "TIGER", "LION", "JAGUAR", "LEOPARD", "PANTHER", "LYNX", "OSTRICH", "RHEA",
-      "GAZELLE", "MONKEY", "SNAKE", "PENGUIN", "HARE", "CAPYBARA"), "sheep", {"Color": Byte(0)}),
-    (("RHINO", "CROCODILE", "CAIMAN", "KOMODO", "BEAR"), "hoglin",
-     {"IsImmuneToZombification": Byte(1), "CannotBeHunted": Byte(1)}),
-    (("COW_", "BUFFALO", "WALRUS", "TAPIR", "SEAL", "YAK"), "cow", {}),
-    (("RED_FOX",), "fox", {"Type": String("red")}),
-    (("ARCTIC_FOX",), "fox", {"Type": String("snow")}),
-    (("WOLF", "DOG"), "wolf", {}),
-    (("WILD_BOAR", "IRON_BOAR", "JAVELINA"), "hoglin", {"IsImmuneToZombification": Byte(1), "CannotBeHunted": Byte(1)}),
-    (("PIG",), "pig", {}),
-    (("DEER", "IBEX", "ELK", "GOAT"), "goat", {}),
-    (("TURKEY", "GOOSE", "CHICKEN", "PHEASANT"), "chicken", {}),
-    (("DONKEY",), "donkey", {"Tame": Byte(1)}),
-    (("LLAMA", "ALPACA", "GUANACO"), "llama", {"Variant": Int(0)}),
-    (("WILD_CAMEL", "BACTRIAN_CAMEL"), "camel", {}),
-    (("HORSE", "ZEBRA"), "horse", {"Variant": Int(0)}),
+SKIP = ("BUTTERFLY", "SEAGULLS", "FALCON", "HAWK", "VULTURE", "STORK",
+        "MACAW", "CONDOR", "RAVEN", "OWL", "PEACOCK", "FLAMINGO", "CRANE", "FLAMING_BIRD")
+JOKES = {   # joke and special units -> entity
+    "TREASURE_CHEST": lambda: vehicle("chest_minecart", []),
+    "TORCH_": lambda: mob("armor_stand", Invisible=Byte(1), ShowArms=Byte(1), HandItems=hands("torch")),
+    "PHOTONMAN": lambda: soldier("zombie", 3, "crossbow"),      # white space suit, laser gun
+    "SHARKATZOR": lambda: mob("guardian"),                     # a shark with laser eyes
+    "NESSIE": lambda: mob("elder_guardian"),
+}
+
+HOGLIN = {"IsImmuneToZombification": Byte(1), "CannotBeHunted": Byte(1)}
+ANGRY = {"AngerTime": Int(2 ** 31 - 1)}   # angry look; attacks all players only with gamerule universalAnger
+
+
+def wolf(variant):
+    return {"variant": String("minecraft:" + variant), **ANGRY}
+
+
+# AoE2 behavior -> a Minecraft mob of the same class (owner's rule in #43). docs/animals.md gives the source
+# and the reason of each row. "military": cheat units that fight for a player; the look wins.
+# The first row that matches wins.
+ANIMALS = [   # (keywords, AoE2 behavior, minecraft mob, extra tags)
+    (("ALFRED_THE_ALPACA",), "military", "llama", {"Variant": Int(1)}),
+    (("FURIOUS_THE_MONKEY_BOY",), "military", "ocelot", {}),
+    (("WAR_PENGUIN",), "military", "chicken", {}),
+    (("WAR_DOG", "STORMY_DOG"), "military", "wolf", wolf("black")),
+    (("POLAR_BEAR",), "aggressive", "polar_bear", ANGRY),
+    (("BROWN_BEAR", "BLACK_BEAR", "CROCODILE", "CAIMAN", "KOMODO", "IRON_BOAR"), "aggressive", "hoglin", HOGLIN),
+    (("SNAKE",), "aggressive", "silverfish", {}),
+    (("ARCTIC_WOLF", "SNOW_LEOPARD"), "aggressive", "wolf", wolf("snowy")),
+    (("ARABIAN_WOLF", "TIGER"), "aggressive", "wolf", wolf("striped")),
+    (("DIRE_WOLF", "PANTHER"), "aggressive", "wolf", wolf("black")),
+    (("RABID_WOLF",), "aggressive", "wolf", wolf("ashen")),
+    (("LION",), "aggressive", "wolf", wolf("chestnut")),
+    (("JAGUAR",), "aggressive", "wolf", wolf("spotted")),
+    (("LYNX",), "aggressive", "wolf", wolf("rusty")),
+    (("WOLF",), "aggressive", "wolf", wolf("pale")),
+    (("WILD_BOAR", "JAVELINA", "RHINO", "TAPIR"), "defensive", "panda",
+     {"MainGene": String("aggressive"), "HiddenGene": String("aggressive")}),
+    (("ELEPHANT", "WALRUS"), "defensive", "polar_bear", {}),
+    (("ELK",), "defensive", "llama", {"Variant": Int(2)}),
+    (("SHEEP",), "passive", "sheep", {"Color": Byte(0)}),
+    (("MOUFLON", "ARGALI", "IBEX"), "passive", "sheep", {"Color": Byte(12)}),
+    (("GOAT",), "passive", "sheep", {"Color": Byte(8)}),
+    (("COW_", "BUFFALO", "YAK"), "passive", "cow", {}),
+    (("SEAL",), "passive", "turtle", {}),
+    (("RED_FOX",), "passive", "fox", {"Type": String("red")}),
+    (("ARCTIC_FOX",), "passive", "fox", {"Type": String("snow")}),
+    (("PIG", "CAPYBARA"), "passive", "pig", {}),
+    (("TURKEY", "GOOSE", "CHICKEN", "PHEASANT", "OSTRICH", "RHEA", "PENGUIN"), "passive", "chicken", {}),
+    (("ARCTIC_HARE",), "passive", "rabbit", {"RabbitType": Int(1)}),
+    (("HARE",), "passive", "rabbit", {"RabbitType": Int(0)}),
+    (("MONKEY",), "passive", "ocelot", {}),
+    (("DONKEY",), "passive", "donkey", {"Tame": Byte(1)}),
+    (("LLAMA", "ALPACA", "GUANACO", "WILD_CAMEL", "BACTRIAN_CAMEL"), "passive", "camel", {}),
+    (("DEER",), "passive", "horse", {"Variant": Int(2 | 3 << 8)}),     # chestnut, white dots
+    (("GAZELLE",), "passive", "horse", {"Variant": Int(1)}),           # creamy
+    (("ZEBRA",), "passive", "horse", {"Variant": Int(0 | 4 << 8)}),    # white, black dots
+    (("HORSE",), "passive", "horse", {"Variant": Int(0)}),
 ]
+ANIMAL_EXACT = {"ELEPHANT"}    # "ELEPHANT" alone; the war elephants are units
+
 
 VILLAGER_JOBS = [("FARMER", "farmer"), ("FORAGER", "farmer"), ("FISHERMAN", "fisherman"), ("OYSTER", "fisherman"),
                  ("SHEPHERD", "shepherd"), ("HERDER", "shepherd"), ("HUNTER", "butcher"), ("BUILDER", "mason"),
                  ("REPAIRER", "toolsmith"), ("STONE_MINER", "mason"), ("GOLD_MINER", "toolsmith"),
                  ("LUMBERJACK", "fletcher"), ("MONASTERY", "cleric")]
+
+# Standard infantry lines: name -> (mob, (helmet, chestplate, leggings, boots), main hand, off hand).
+# Each upgrade step looks a bit stronger. A piece is a material, or (leather, RGB) for dyed leather.
+# Zombies burn in the sun, so each zombie has a helmet. "mounted": the unit rides a horse.
+EAGLE = 0xC89B3C    # feather yellow of the eagle warriors
+LINES = {
+    "MILITIA": ("zombie", ("leather", "leather", None, None), "wooden_sword", None),
+    "MAN_AT_ARMS": ("zombie", ("chainmail", "chainmail", None, None), "stone_sword", "shield"),
+    "LONG_SWORDSMAN": ("zombie", ("iron", "iron", "chainmail", None), "iron_sword", "shield"),
+    "TWO_HANDED_SWORDSMAN": ("zombie", ("iron", "iron", "iron", "iron"), "diamond_sword", None),
+    "CHAMPION": ("zombie", ("diamond", "diamond", "diamond", "diamond"), "diamond_sword", "shield"),
+    "HEAVY_SWORDSMAN": ("zombie", ("iron", "chainmail", "chainmail", None), "iron_sword", "shield"),
+    "EASTERN_SWORDSMAN": ("husk", (("leather", 0x8E2B2B), "iron", None, None), "iron_sword", None),
+    "EAGLE_SCOUT": ("husk", (("leather", EAGLE), None, None, None), "wooden_sword", None),
+    "EAGLE_WARRIOR": ("husk", (("leather", EAGLE), ("leather", EAGLE), None, None), "stone_sword", "shield"),
+    "ELITE_EAGLE_WARRIOR": ("husk", ("golden", ("leather", EAGLE), ("leather", EAGLE), ("leather", EAGLE)),
+                            "iron_sword", "shield"),
+    "CONDOTTIERO": ("zombie", ("iron", "chainmail", "chainmail", "iron"), "iron_sword", None),
+    "FLEMISH_MILITIA": ("zombie_villager", (("leather", 0x3B5E2B), None, None, None), "mace", None),
+    "FLEMISH_MILITIA_MALE": ("zombie_villager", (("leather", 0x3B5E2B), None, None, None), "mace", None),
+    "FLEMISH_MILITIA_FEMALE": ("zombie_villager", (("leather", 0x7A3B5E), None, None, None), "mace", None),
+    "SERJEANT": ("zombie", ("iron", "chainmail", None, None), "iron_sword", "shield"),
+    "SERJEANT_DONJON": ("zombie", ("iron", "chainmail", None, None), "iron_sword", "shield"),
+    "ELITE_SERJEANT": ("zombie", ("iron", "iron", "chainmail", "iron"), "iron_sword", "shield"),
+    "ELITE_SERJEANT_DONJON": ("zombie", ("iron", "iron", "chainmail", "iron"), "iron_sword", "shield"),
+    "LEGIONARY": ("zombie", ("iron", "iron", None, None), "iron_sword", "shield"),
+    "IMPERIAL_LEGIONARY": ("zombie", ("golden", "iron", "iron", "iron"), "iron_sword", "shield"),
+    "IMPERIAL_CENTURION": ("zombie", ("golden", "golden", "iron", "iron"), "diamond_sword", "shield"),
+    "CENTURION": ("mounted", ("golden", "iron", "iron", None), "iron_sword", None),
+    "ELITE_CENTURION": ("mounted", ("golden", "golden", "iron", "iron"), "diamond_sword", None),
+    "BANDIT": ("zombie", (("leather", 0x1D1D21), ("leather", 0x1D1D21), None, None), "stone_sword", None),
+    "INDIAN_TRIBESMAN": ("husk", (None, None, None, None), "stone_sword", None),
+    "HILL_TRIBESMAN": ("husk", (None, ("leather", 0x6B4A2B), None, None), "stone_axe", None),
+    "NORSE_WARRIOR": ("zombie", ("iron", ("leather", 0x6B4A2B), None, None), "iron_axe", "shield"),
+}
+L, BROWN, RED, WHITE, BLACK = "leather", 0x6B4A2B, 0x9B1B1B, 0xE8E0D0, 0x1D1D21
+# Unique infantry (#83). The elite version ("ELITE_" + name) gets a gold armor trim (see line_unit).
+LINES.update({
+    "AMAZON_WARRIOR": ("husk", ((L, 0x3F6B2A), None, (L, 0x3F6B2A), None), "stone_sword", "shield"),
+    "BERSERK": ("zombie", ((L, BROWN), None, (L, BROWN), None), "iron_axe", None),
+    "HUSKARL": ("zombie", ("iron", "chainmail", (L, BROWN), None), "iron_axe", "shield"),
+    "JAGUAR_WARRIOR": ("husk", ((L, 0xD4A017), (L, 0xD4A017), None, None), "stone_sword", None),
+    "KARAMBIT_WARRIOR": ("zombie", ((L, RED), None, None, None), "iron_sword", None, {"IsBaby": Byte(1)}),
+    "KONNIK_DISMOUNTED": ("zombie", ("iron", "iron", "chainmail", None), "mace", "shield"),
+    "NINJA": ("zombie", ((L, BLACK), (L, BLACK), (L, BLACK), (L, BLACK)), "iron_sword", None),
+    "SAMURAI": ("zombie", ("iron", (L, RED), (L, RED), None), "iron_sword", None),
+    "SHOTEL_WARRIOR": ("husk", ((L, WHITE), None, None, None), "iron_sword", "iron_sword"),
+    "TEUTONIC_KNIGHT": ("zombie", ("iron", "iron", "iron", "iron"), "iron_sword", "shield"),
+    "WOAD_RAIDER": ("zombie", ((L, 0x2B4A9B), None, (L, 0x2B4A9B), None), "iron_sword", None),
+    "IROQUOIS_WARRIOR": ("husk", ((L, BROWN), None, (L, BROWN), None), "stone_axe", None),
+    "XOLOTL_WARRIOR": ("mounted", ((L, EAGLE), (L, EAGLE), None, None), "stone_sword", None),
+    "OBUCH": ("zombie", ("iron", "chainmail", "chainmail", None), "mace", None),
+    "URUMI_SWORDSMAN": ("husk", (None, None, (L, WHITE), None), "golden_sword", None),
+    "GHULAM": ("husk", ("iron", (L, 0x2B6B6B), None, None), "trident", "shield"),
+    "QIZILBASH_WARRIOR": ("zombie", ((L, RED), "chainmail", None, None), "iron_sword", "shield"),
+    "IMMORTAL_MELEE": ("zombie", ("golden", (L, 0x5B2B7A), (L, 0x5B2B7A), None), "trident", "shield"),
+    "STRATEGOS": ("mounted", ("golden", "golden", None, None), "iron_sword", "shield"),
+    "STRATEGOS_WITH_TAXIARCHS": ("mounted", ("golden", "golden", "iron", None), "iron_sword", "shield"),
+    "SAKAN_AXEMAN": ("zombie", ((L, 0x8E5A2B), (L, 0x8E5A2B), None, None), "iron_axe", None),
+    "SICKLE_WARRIOR": ("husk", (None, (L, BROWN), None, None), "iron_hoe", None),
+    "LYSANDERS_RAIDER": ("zombie", ("iron", (L, RED), None, None), "iron_sword", "shield"),
+    "IRON_PAGODA": ("mounted", ("iron", "iron", "iron", "iron"), "mace", None),
+    "LIAO_DAO": ("zombie", ("iron", "chainmail", None, None), "iron_axe", None),
+    "WHITE_FEATHER_GUARD": ("zombie", ((L, 0xF0F0F0), "iron", None, None), "iron_sword", "shield"),
+    "JIAN_SWORDSMAN": ("zombie", ("iron", (L, 0x2B4A7A), None, None), "iron_sword", None),
+    "JIAN_SWORDSMAN_TWO_HANDED": ("zombie", ("iron", "iron", (L, 0x2B4A7A), None), "diamond_sword", None),
+    "RHOMPHAIA_WARRIOR": ("zombie", ("iron", (L, BROWN), (L, BROWN), None), "golden_sword", None),
+    "SANNAHYA": ("husk", ("golden", (L, WHITE), None, None), "iron_sword", "shield"),
+    "SACRED_BAND": ("zombie", ("golden", "iron", "iron", None), "trident", "shield"),
+    "CHAMPI_SCOUT": ("husk", ((L, 0x9B6B1B), None, None, None), "stone_axe", None),
+    "CHAMPI_WARRIOR": ("husk", ((L, 0x9B6B1B), (L, 0x9B6B1B), None, None), "mace", "shield"),
+    "CHAMPI_RUNNER": ("husk", (None, (L, 0x9B6B1B), None, None), "mace", None),
+    "GUECHA_WARRIOR": ("husk", ((L, 0xC03030), None, (L, 0xC03030), None), "stone_sword", None),
+    "KONA": ("husk", (None, None, (L, BROWN), None), "wooden_axe", None),
+    "IBIRAPEMA_WARRIOR": ("husk", ((L, 0xD4A017), None, None, None), "wooden_shovel", None),
+    "TEMPLE_GUARD": ("husk", ("golden", (L, 0x2B8B5B), None, None), "stone_sword", "shield"),
+    "VARANGIAN_GUARD": ("zombie", ("iron", "iron", "chainmail", "chainmail"), "iron_axe", "shield"),
+    "HEARTH_TROOP": ("zombie", ("chainmail", "chainmail", "chainmail", None), "iron_sword", "shield"),
+    "JARL": ("mounted", ("iron", "chainmail", "chainmail", None), "iron_axe", "shield"),
+    "JOMSVIKING": ("zombie", ("iron", (L, BLACK), "chainmail", None), "diamond_axe", None),
+})
+LINES["HUSKARL_BARRACKS"] = LINES["HUSKARL"]
+TRIM = Compound({"material": String("minecraft:gold"), "pattern": String("minecraft:sentry")})
 
 MOUNTED_HEROES = ("RICHARD_THE_LIONHEART", "FREDERICK_BARBAROSSA", "SALADIN", "EL_CID", "CHARLEMAGNE", "GENGHIS_KHAN",
                   "ATTILA", "BLEDA", "TAMERLANE", "SUBOTAI", "BELISARIUS", "ROLAND", "LANCELOT", "GAWAIN",
@@ -78,6 +207,48 @@ MOUNTED_HEROES = ("RICHARD_THE_LIONHEART", "FREDERICK_BARBAROSSA", "SALADIN", "E
 RELIGIOUS_HEROES = ("POPE", "ARCHBISHOP", "IMAM", "FRIAR", "PRIEST")
 RANGED_HEROES = ("ROBIN_HOOD", "ARCHER", "SHERIFF")
 SIEGE_HEROES = ("BAD_NEIGHBOR", "GODS_OWN_SLING", "WARWOLF", "TREBUCHET")
+# Heroes that the keyword lists above do not catch -> the base unit whose look they get (with hero armor).
+# SWORD and AXE: a foot hero with a netherite sword or axe. From the hero names and the AoE2 campaigns.
+HERO_BASE = {n: base for base, names in (
+    ("PALADIN", "KHOSRAU THE_BLACK_PRINCE THEODORIC_THE_GOTH MORDRED VLAD_DRACULA MINAMOTO KING_BELA_IV "
+                "CHARLES_MARTEL PRITHVIRAJ DUKE_D_ALENCON LORD_DE_GRAVILLE GUY_JOSSELYNE SIR_JOHN_FASTOLF "
+                "REYNALD_DE_CHATILLON MASTER_OF_THE_TEMPLAR KUSHLUK KING_SANCHO KING_ALFONSO HENRY_V "
+                "MUSA_IBN_NUSAYR TARIQ_IBN_ZIYAD RICHARD_DE_CLARE TRISTAN HENRY_II YEKUNO_AMLAK SU_DINGFANG "
+                "MIKLOS_TOLDI ZAWISZA_THE_BLACK WANG_TONG IVAYLO CUMAN_CHIEF PRITHVI OSMAN EDWARD_LONGSHANKS "
+                "GILBERT_DE_CLARE PHILIP_THE_GOOD ROBERT_GUISCARD ROGER_BOSSO BOHEMOND DAFYDD_AP_GRUFFYDD "
+                "BERNARD_D_ARMAGNAC JACQUELINE_OF_HAINAUT JADWIGA JOGAILA KESTUTIS ALGIRDAS DMITRY_OF_MOSCOW "
+                "MIKHAIL_OF_TVER MIHIRA_BHOJA SHAH_ISMAIL SELIM_THE_GRIM THOROS TAMAR YURY IVANE ZAKARE STEPHAN "
+                "MLEH ARTAPHERNES DATIS DARIUS ISMAIL SHAH CAO_CAO LIU_BEI SUN_JIAN ZHANG_FEI SUN_CE SUN_QUAN "
+                "DONG_ZHUO YUAN_SHAO CAO_CAO_CAMPAIGN LIU_BEI_CAMPAIGN SUN_JIAN_CAMPAIGN PHILIP PARMENION CLEITUS "
+                "HEPHAISTION LAUTARO"),
+    ("SCOUT_CAVALRY", "SCYTHIAN_SCOUT"),
+    ("CONQUISTADOR", "FRANCISCO_DE_ORELLANA GONZALO_PIZARRO"),
+    ("CAVALRY_ARCHER", "QUTLUGH"),
+    ("BATTLE_ELEPHANT", "DAGNAJAN GIDAJAN JAYANEGARA SURYAVARMAN_I UDAYADITYAVARMAN_I JAYAVIRAVARMAN BAYINNAUNG "
+                        "TABINSHWEHTI AMOGHAVARSHA RAJENDRA_CHOLA IBRAHIM_LODI PORUS"),
+    ("SWORD", "AETHELFRITH SIEGFRIED KITABATAKE VASCO_DA_GAMA CUAUHTEMOC JOAN_THE_MAID "
+              "WILLIAM_WALLACE FRANCESCO_SFORZA JOAN_OF_ARC LA_HIRE TOPA_YUPANQUI CUSI_YUPANQUI ADMIRAL_YI_SUN_SHIN "
+              "NOBUNAGA SUNDJATA PRINCESS_YODIT YODIT ITZCOATL PACAL_II PACHACUTI HUAYNA_CAPAC SUMANGURU GAJAH_MADA "
+              "RADEN_WIJAYA SUNDA_ROYAL_FIGHTER LE_LOI LE_LAI LE_TRIEN LUU_NHAN_CHU BUI_BI DINH_LE IVAYLO_DISMOUNTED "
+              "LLYWELYN_AP_GRUFFYDD STOERTEBEKER JAN_ZIZKA GENERAL_ARAIYAN ZHOU_YU WHITE_TIGER_YAN LIU_BIAO "
+              "ALEXANDER_DISMOUNTED NEARCHOS GALVARINO PACANCHIQUE CUNHAMBEBE TOSTIG_GODWINSON SCYTHIAN_WILD_WOMAN"),
+    ("AXE", "LEIF_ERIKSON ERIK_THE_RED ALARIC_THE_GOTH ATAULF HARALD_HARDRADA HROLF_THE_GANGER NORSE_CHIEFTAIN "
+            "LITTLE_JOHN THRACIAN_CHIEFTAIN HARALD ULF_OSPAKSSON HALLDOR_SNORRASON FINN_ARNASON KALF_ARNASON"),
+    ("HOPLITE", "SOSSO_GUARD POLEMARCH POLEMARCH_2 POLEMARCH_3 POLEMARCH_4 POLEMARCH_3_WITH_EPHORATE "
+                "POLEMARCH_4_WITH_EPHORATE POLEMARCH_3_WITH_MORAI POLEMARCH_4_WITH_MORAI ARISTAGORAS DIONYSIUS "
+                "ARISTIDES MILTIADES THEMISTOCLES LEONIDAS BRASIDAS LYSANDER POLYCRITUS CLEON PERDICCAS"),
+    ("ARCHER", "THE_MIDDLEBROOK ARTEMISIA GUACOLDA ARARIBOIA EINAR_PAUNCH_SHAKER"),
+    ("CROSSBOWMAN", "GUGLIELMO_EMBRIACO"),
+    ("JANISSARY", "MUSTAFA_PASHA"),
+    ("BOMBARD_CANNON", "JEAN_DE_LORRAIN JEAN_BUREAU"),
+    ("MONK", "YU_JI ZHANG_JUE ZHUGE_LIANG"),
+    ("VILLAGER_MALE", "ENVOY CHAND_BARDAI"),
+    ("VILLAGER_FEMALE", "SANYOGITA YOUNG_JADWIGA"),
+    ("LONGSHIP", "DREKI"),
+    ("PETARD", "SABOTEUR"),
+    ("DIRE_WOLF", "HUNTING_WOLF ORNLU_THE_WOLF"),
+    ("HORSE", "BUCEPHALUS"),
+) for n in names.split()}
 
 
 # --------------------------------------------------------------------------------------------
@@ -94,9 +265,19 @@ def item(name, unbreakable=False):
 
 def armor(tier):
     """ArmorItems list: feet, legs, chest, head. Helmets never break (they protect from the sun)."""
-    h, c, l, b = ARMOR[tier]
-    return List[Compound]([item(b and f"{b}_boots"), item(l and f"{l}_leggings"),
-                           item(c and f"{c}_chestplate"), item(f"{h}_helmet" if h else None, unbreakable=True)])
+    return armor_items(ARMOR[tier])
+
+
+def armor_items(pieces):
+    """ArmorItems list from (helmet, chestplate, leggings, boots); a piece is a material or (leather, RGB)."""
+    out = []
+    for p, kind in zip(reversed(pieces), ("boots", "leggings", "chestplate", "helmet")):
+        mat, rgb = p if isinstance(p, tuple) else (p, None)
+        it = item(mat and f"{mat}_{kind}", unbreakable=kind == "helmet")
+        if rgb is not None:
+            it.setdefault("components", Compound({}))["minecraft:dyed_color"] = Compound({"rgb": Int(rgb)})
+        out.append(it)
+    return List[Compound](out)
 
 
 def hands(main=None, off=None):
@@ -170,21 +351,39 @@ def tier_of(n, hero):
     return "elite" if n.startswith("ELITE_") else "unique"
 
 
+def invisible(n):
+    """The reason to skip the invisible type n, or None."""
+    return next((r for k, r in INVISIBLE if k in n), None)
+
+
+def animal(n):
+    """(AoE2 behavior, minecraft mob, extra tags) for an animal name, else None."""
+    if "ELEPHANT" in n and n not in ANIMAL_EXACT or has(n, "CAMEL_", "ARCHER", "RIDER", "CAVALRY", "_WARRIOR"):
+        return None
+    return next((row[1:] for row in ANIMALS if has(n, *row[0])), None)
+
+
 def classify(n, hero=False):
     """Return the entity description for unit name n, or None to skip it."""
-    if has(n, *SKIP):
+    if invisible(n) or has(n, *SKIP):
         return None
+    joke = next((f for k, f in JOKES.items() if k in n), None)
+    if joke:
+        return joke()
+    if hero and n in HERO_BASE:
+        base = HERO_BASE[n]
+        if base in ("SWORD", "AXE"):
+            return soldier("zombie", "hero", sword("hero") if base == "SWORD" else "netherite_axe")
+        return classify(base, base not in ("DIRE_WOLF", "HORSE", "VILLAGER_MALE", "VILLAGER_FEMALE"))
+    if n == "VMDL":                 # an old villager model
+        n = "VILLAGER_MALE"
     t = tier_of(n, hero)
 
     # Animals (but not war animals)
-    if not hero and n == "ELEPHANT":
-        return mob("ravager")
-    if not hero and not has(n, "CAMEL_", "ARCHER", "RIDER", "CAVALRY"):
-        for keys, kind, extra in ANIMALS:
-            if has(n, *keys) and not has(n, "_WARRIOR", "CAVALRY"):
-                if kind == "camel":
-                    return mounted("camel", None)
-                return mob(kind, **extra)
+    a = animal(n) if not hero else None
+    if a:
+        _, kind, extra = a
+        return mounted("camel", None) if kind == "camel" else mob(kind, **extra)
 
     # Villagers, monks, kings, traders
     if n.startswith("VILLAGER") or n.startswith("REPAIRER"):
@@ -285,7 +484,21 @@ def classify(n, hero=False):
         return soldier("skeleton", t, "crossbow")
     if has(n, "ARCHER", "BOWMAN", "LONGBOW", "PATTIYODHA", "IMMORTAL_RANGED"):
         return soldier("skeleton", t, "bow")
-    return infantry(n, t)
+    return line_unit(n) or infantry(n, t)
+
+
+def line_unit(n):
+    """The design of an infantry line or unique unit from LINES, else None. Elite: a gold trim on the armor."""
+    elite = n not in LINES and n.startswith("ELITE_") and n[6:] in LINES
+    if n not in LINES and not elite:
+        return None
+    kind, pieces, main, off, *tags = LINES[n[6:] if elite else n]
+    armor = armor_items(pieces if not elite or any(pieces) else ("golden", None, None, None))
+    if elite:
+        worn = next(armor[i] for i in (2, 3, 1, 0) if len(armor[i]))     # chestplate first
+        worn.setdefault("components", Compound({}))["minecraft:trim"] = TRIM
+    man = mob("zombie" if kind == "mounted" else kind, ArmorItems=armor, HandItems=hands(main, off), **(tags[0] if tags else {}))
+    return mounted("horse", man, 3, {"Variant": Int(4)}) if kind == "mounted" else man
 
 
 def infantry(n, t):

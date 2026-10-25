@@ -30,7 +30,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Archery target | `target` | `archery_range` |
 | Bow and arrow work | `fletching_table` | `archery_range` |
 | Forge, smithy | `blast_furnace`, `anvil`, `smithing_table`, `cauldron` (water) | `blacksmith` |
-| Fire, cooking | `campfire`, `smoker` | `blacksmith`, `house`, `outpost`, `church` |
+| Fire, cooking | `campfire`, `smoker` | `blacksmith`, `house`, `outpost`, `church`, `oracles_temple` |
 | Weapon rack, sharpening | `grindstone` | `barracks`, `granary` |
 | Bell | `bell` | `monastery`, `town_center` |
 | Loom, cloth | `loom`, wool | `church` |
@@ -39,10 +39,23 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Water trough | `cauldron` (water) | `stable` |
 | Banner, flag | `*_banner` (player color), `Canvas.flag` | most designs |
 | Fence, pen | `*_fence` | `stable`, `market`, `outpost`, `wall_segment` |
+| Gate of a pen | `*_fence_gate` | `pasture` |
+| Wheel | open `*_trapdoor` on the side | `cart` |
+| Tent canvas | `white_wool`, a valance of wool in the player color | `army_tent`, `command_tent` |
+| Thatch | `hay_block` | `hut`, `settlement` |
+| Palisade stakes | `*_log[axis=y]` of two heights | `wooden_fort` |
+| Gold statue, finial | `gold_block` | `buddha_statue`, `stupa`, `monument` |
+| Painted wood (torii) | `red_concrete`, black top beam | `torii` |
+| Climbing plants | `vine`, `azalea_leaves` | `pillar` |
+| Charred timber | `coal_block`, `blackstone`, dark oak logs | `burned_building` |
 | Spire tip, finial | `lightning_rod` | `Canvas.spire`, `monastery`, `mosque` |
-| Chain, rope | `chain` | `dock`, `siege_workshop` |
+| Chain, rope | `chain` | `dock`, `siege_workshop`, `shipyard`, `harbor_chain` |
 | Portcullis, grille | `iron_bars` | `gate`, `castle` |
 | Lamp | `lantern` | `decorate()` |
+| Column | `quartz_pillar` | `arch_of_constantine`, `oracles_temple` |
+| Sacred tree | `oak_log`, `oak_leaves[persistent=true]` | `pagan_shrine` |
+| Sail | wool (player color) | `flagship` |
+| Hides | `brown_wool` | `helepolis` |
 | Books, study | `bookshelf`, `lectern` | none yet (`university` needs them) |
 
 Add a line when a design uses a new feature block. Each new block state must pass `mcvalid`.
