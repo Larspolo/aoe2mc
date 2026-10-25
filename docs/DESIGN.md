@@ -30,6 +30,21 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Archery target | `target` | `archery_range` |
 | Bow and arrow work | `fletching_table` | `archery_range` |
 | Forge, smithy | `blast_furnace`, `anvil`, `smithing_table`, `cauldron` (water) | `blacksmith` |
+| Forge hearth, quench tub (inside) | `lava_cauldron` beside the chimney, `water_cauldron[level=3]` | `blacksmith` |
+| Fire, cooking | `campfire`, `smoker` | `blacksmith`, `house`, `outpost`, `church`, `oracles_temple`, `pyramid` (braziers) |
+| Weapon rack, sharpening | `grindstone` | `barracks`, `granary`, `blacksmith` |
+| Training dummy | `oak_fence`, `hay_block`, `carved_pumpkin` | `barracks` |
+| Bell | `bell` | `monastery`, `town_center` |
+| Bed (inside) | `*_bed` (player color), head to the north | `house` (`furnish`) |
+| Table with a light (inside) | `*_slab[type=top]` with a `lantern` on it, a `*_stairs` stool | `house` (`furnish`) |
+| Storage (inside) | `chest` at the back wall | `house` (`furnish`) |
+| Rug | `*_carpet` | `house` (`furnish`) |
+| Loom, cloth | `loom`, wool | `church` |
+| Market goods | `barrel`, `chest`, `composter`, `hay_block`, `melon`, `pumpkin` | `market`, `dock`, `harbor` |
+| Market stall | lean-to of roof stairs on `*_fence` posts; wool awning in stripes for flat-roof sets | `market` |
+| Upper floor (inside) | `*_planks` floor and a `ladder` | `market` |
+| Painted trim (deck edge, band) | `*_concrete` (player color) | `dock`, `pyramid` |
+| Relief panel, carving | `chiseled_stone_bricks` | `pyramid` |
 | Fire, cooking | `campfire`, `smoker` | `decorate`, `burned_building`, `outpost`, `blacksmith` +3 more |
 | Weapon rack, sharpening | `grindstone` | `mill_room`, `decorate`, `keep_inside`, `mining_camp` +4 more |
 | Training dummy | `oak_fence`, `hay_block`, `carved_pumpkin` | `barracks`, `pasture`, `settlement`, `decorate` +10 more |
@@ -71,6 +86,45 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Charred timber | `coal_block`, `blackstone`, dark oak logs | `burned_building` |
 | Spire tip, finial | `lightning_rod` | `nine_bands`, `storage`, `shrine`, `feitoria` +20 more |
 | Copper roof, copper dome | `weathered_cut_copper`, `weathered_copper` | `cathedral` |
+| Slate spire | `deepslate_tiles` | `cathedral` |
+| Pinnacle | the `accent_wall` of the style (`*_wall`) | `cathedral` |
+| Striped marble | rows of `polished_deepslate` in the main stone | `cathedral` (Mediterranean) |
+| Mud-brick pinnacle | `mud_brick_wall` on a buttress | `djenne` (Wonder, African) |
+| Glazed tile band, tile panel | `blue_terracotta`; `Style.dome` terracotta over arches | `taj`, `samarra` (Wonders) |
+| Chhatri (small domed kiosk) | `quartz_pillar` posts and a small dome | `taj` (Wonder, South Asian) |
+| Chain, rope | `chain` | `dock`, `siege_workshop`, `shipyard`, `harbor_chain` |
+| Bartizan (corner turret) | stone, `smooth_quartz` cap, `lightning_rod` | `feitoria` |
+| Terracotta roof (Portuguese, Sicilian, Polish) | `brick` stairs | `feitoria`, `donjon`, `folwark` |
+| Portcullis, grille | `iron_bars` | `gate`, `castle`, `krepost` |
+| Wooden hoarding | wood slab (top) or `spruce_planks` with a `*_fence` rail | `donjon`, `krepost` |
+| Coat of arms | `*_wall_banner` (player color) over the gate | `donjon` |
+| Lamp | `lantern` | `decorate()`, `blacksmith` (hanging), `pagoda` (under the eaves) |
+| Lamp inside a room | `lantern[hanging=true]` under a ceiling, or on a `chain` | `blacksmith`, `market` |
+| Siege engine under construction | spruce slabs, fences and logs | `siege_workshop` |
+| Cloth awning | `*_wool` in the player color | `house` (flat roofs) |
+| Stair to a roof terrace | stairs of the roof material | `house` (flat roofs) |
+| Column | `quartz_pillar` | `arch_of_constantine`, `oracles_temple` |
+| Sacred tree | `oak_log`, `oak_leaves[persistent=true]` | `pagan_shrine` |
+| Sail | wool (player color) | `flagship` |
+| Hides | `brown_wool` | `helepolis` |
+| Band in the player color | `*_wool` (player color) | `town_center`, `castle`, `tower`, `temple`, `pagoda` |
+| Outside stairs to an upper floor | `*_stairs` of the wood of the set | `town_center` |
+| Books, study | `bookshelf`, `lectern` (with a book) | `university` |
+| Desks, light inside | `enchanting_table`, `cartography_table`, `candle` (lit, on shelves and desks), `lantern` on a `chain` (`hang()`) | `university` (`study()`) |
+| Ledger and trade maps (inside) | `lectern` (with a book) and `cartography_table` on a counter of top slabs | `market` |
+| Scholar statue | `chiseled_stone_bricks` pedestal, `quartz_pillar`, `chiseled_quartz_block` | `university` |
+| Rose window | stained glass panes | `monastery` |
+| Posts of an open belfry | `stone_brick_wall` | `fortified_church` |
+| Orange roof tiles (Krepost; Central European, Southeast Asian sets) | `red_sandstone` stairs and blocks | `krepost`, `fortified_church`, `Style.roof` |
+| Stepped stone roof (Mesoamerican set) | `stone_brick` stairs (hip roof) | `Style.roof` |
+| Thatch or shingle roof (East Asian set) | `spruce` stairs | `Style.roof` |
+| Cannon | `polished_basalt` barrel on its side | `tower` (bombard) |
+| Guardian lion statue | `stone_brick_stairs` on a `chiseled_sandstone` pedestal | `harbor` |
+| Clay pot, vase | `decorated_pot` | `harbor` |
+| Prang (Khmer lotus-bud tower) | rings of `stone_bricks` and `chiseled_stone_bricks`, `gold_block` tip | `temple`, `harbor` |
+| Checkered stone base | `polished_deepslate` in a checker pattern in the main stone | `caravanserai` |
+| Gilded dome | `gold_block` | `caravanserai` |
+| Raised portal (pishtaq) of an arched gate | wall over the roof line, `chiseled_sandstone` frame, upside-down stairs as the arch | `caravanserai` |
 | Slate spire | `deepslate_tiles` | `hall_of_heroes`, `cathedral` |
 | Pinnacle | the `accent_wall` of the style (`*_wall`) | `ring`, `garden`, `courtyard_walls`, `bridge` +23 more |
 | Striped marble | rows of `polished_deepslate` in the main stone | `caravanserai`, `stone_head` |
