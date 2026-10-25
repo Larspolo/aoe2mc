@@ -49,7 +49,8 @@ For each feature, take the block from the table in `docs/DESIGN.md`, section 2.
   Use the `Canvas` tools (`room`, `timber_room`, `roof`, `gable`, `hip`, `dome`, `cylinder`, `door`, `windows` ...).
 - Use the fields of the `Style` for materials, so that all architecture sets still work.
 - Keep `vary()`, `weather()` and `decorate()`. The main block stays the large majority.
-- Add a line to the table in `docs/DESIGN.md` for each new feature block.
+- Add a line to the table in `docs/DESIGN.md` for each new feature block. Put it after a related line, not at the
+  end: GitHub ignores the `union` driver, so lines that parallel PRs add at the same place give a merge conflict.
 
 ## 5. Check
 

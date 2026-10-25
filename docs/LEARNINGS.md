@@ -8,9 +8,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 - GitHub raw files, PyPI and the Mojang hosts (`piston-meta`, `piston-data`, `libraries.minecraft.net`) work.
 - `/root/.local/bin/pytest` and `/usr/bin/pip` use another Python: use `python3 -m pytest`, `python3 -m pip`. "cannot import
   name '_imaging' from 'PIL'": the Debian pillow shadows it: `python3 -m pip install --ignore-installed pillow`.
-- `minecraft.wiki`, `minecraft.net` and `papermc.io` are blocked (curl and WebFetch). For Minecraft facts use
-  the Mojang data reports in `misode/mcmeta` (GitHub raw, branch `<version>-summary`) and the real server
-  (see `docs/minecraft-versions.md`, "Method").
+- `minecraft.wiki`, `minecraft.net` and `papermc.io` are blocked. For Minecraft facts use the Mojang data reports in
+  `misode/mcmeta` (GitHub raw, branch `<version>-summary`) and the real server (`docs/minecraft-versions.md`, "Method").
 - Java 21 is installed. Minecraft 26.3 (the default) needs Java 25: `scripts/cloud-setup.sh` installs it in the snapshot,
   else `apt-get install -y openjdk-25-jre-headless` (`tools/mc_check.py` finds it, or runs apt-get as root, #195).
   Send `stop` only after "Done (" is in `logs/latest.log`. Do not use `pkill -f server.jar`: it kills your own shell.
@@ -65,12 +64,11 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 - `aoe2mc.py` reads `tools/mcdata/1.21.1.json` at import (#19). The package ships it as `tools.mcdata`
   (`pyproject.toml`). A new runtime data file must go into the package data too (test: `pip install .` in a venv).
 - `terrain_style` checks names in sequence: an earlier rule wins (`ROAD_GRAVEL` matched `GRAVEL` until #5).
-- `.gitattributes` merges `docs/DESIGN.md` with `union`: a local merge keeps the new table lines of both sides; look for
-  one line in two versions and keep one. `union` is wrong for text that runs rewrite (LEARNINGS: both versions stay, #174).
+- `.gitattributes` merges `docs/DESIGN.md` with `union`: a local merge keeps the new table lines of both sides; look for one
+  line in two versions and keep one. GitHub ignores `union` (the PR is "dirty", #210). Not for text that runs rewrite (#174).
 - A merge conflict in `docs/coverage.md`: take any side, run `python3 tools/coverage.py`, then set `MAX` in
   `tests/test_coverage.py` to the new counts. Parallel runs often change the same counts (#79). Check
   `mergeable_state` before the merge: a green PR is "dirty" when main moved after the push. Merge in the CI poll loop.
-- All 243 building types of one set draw in about 1 s; the gallery converts in about 23 s (`--verbose`: per phase, #26).
 - Block IDs in `B` depend on what was registered before (earlier tests or conversions). Code that draws random
   numbers per block ID must go in state-name order, not ID order (see #44). A test that passes alone but
   fails in the full suite often has this cause.

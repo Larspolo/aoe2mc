@@ -131,8 +131,9 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
    add `blocked` or `needs-human`, remove `in-progress`, and go to step 8.
 10. Merge conflict (another PR changed the same lines) → merge `origin/main` into the branch, solve the
     conflict, verify again, push. Do not rebase or force-push a branch that has an open PR.
-    `docs/DESIGN.md` merges by itself (`union` in `.gitattributes`): remove
-    a line that is now there twice in two versions (`git diff origin/main -- docs/`).
+    `docs/DESIGN.md` merges by itself in a local merge (`union` in `.gitattributes`; GitHub ignores it, so the
+    PR is "dirty" until you merge locally): remove a line that is now there twice in two versions
+    (`git diff origin/main -- docs/`).
 11. CI green → merge with squash and delete the branch.
 
 If the ticket is wrong or not possible: comment why, add `needs-human`, remove `in-progress`. Do not merge

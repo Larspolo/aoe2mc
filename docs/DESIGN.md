@@ -99,7 +99,9 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Kitchen garden | `carrots`, `potatoes`, `wheat` (age 7) on `farmland`, `spruce_fence` with a `spruce_fence_gate` | `folwark` |
 | Windmill sails | `spruce_fence` arms with `white_wool` cloth, `stripped_spruce_log` hub | `mill`, `folwark` |
 
-Add a line when a design uses a new feature block. Each new block state must pass `mcvalid`.
+Add a line when a design uses a new feature block. Put it after a line of a related feature or design, not at the
+end of the table: parallel PRs that all add at the end get a merge conflict on GitHub. Each new block state must
+pass `mcvalid`.
 
 ## 3. Some noise
 
