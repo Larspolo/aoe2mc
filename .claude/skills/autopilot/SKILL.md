@@ -6,8 +6,30 @@ description: Do one automatic work cycle on aoe2mc. Read the owner's feedback, t
 # Autopilot: one work cycle
 
 Repository: `Larspolo/aoe2mc`, default branch `main`. Owner: GitHub login `Larspolo`.
-Use the GitHub MCP tools (`mcp__github__*`) in a cloud session. Use the `gh` CLI in a local session.
 Follow each step in sequence. Do not skip the report (step 8).
+
+## GitHub access
+
+Use the GitHub MCP tools (`mcp__github__*`) when the session has them. Else use the REST API with `gh api`:
+it works in cloud and local sessions. Cloud sessions block GraphQL and the search API, so `gh issue list`,
+`gh pr create` and `search/issues` fail there. Put long text in a file and pass it with `-F body=@file.md`.
+Put the method after the path (`... -X PATCH`): the permission rules match the start of the command.
+
+| Action | `gh api repos/Larspolo/aoe2mc` + |
+|---|---|
+| Open issues | `/issues?state=open&per_page=100` (entries with `pull_request` are PRs) |
+| New comments since T | `/issues/comments?since=T&per_page=100` and `/pulls/comments?since=T&per_page=100` |
+| Comment | `/issues/N/comments -F body=@file.md` |
+| Add a label | `/issues/N/labels -f "labels[]=in-progress"` |
+| Remove a label | `/issues/N/labels/in-progress -X DELETE` |
+| Change an issue | `/issues/N -X PATCH -F body=@file.md` (or `-f state=closed`) |
+| New issue | `/issues -f title="..." -F body=@file.md -f "labels[]=P2"` |
+| Add a sub-issue | `/issues/N/sub_issues -F sub_issue_id=<id of the child (not its number)>` |
+| Open PRs | `/pulls?state=open` |
+| New PR | `/pulls -f title="..." -f head=BRANCH -f base=main -F body=@file.md` |
+| CI of a commit | `/commits/SHA/check-runs --jq '.check_runs[] \| "\(.name) \(.status) \(.conclusion)"'` |
+| Merge a PR | `/pulls/N/merge -X PUT -f merge_method=squash` |
+| CI job log | not possible with `gh` in the cloud: use `mcp__github__get_job_logs`, or run the check locally |
 
 ## Labels
 
@@ -23,6 +45,7 @@ Follow each step in sequence. Do not skip the report (step 8).
 A scheduled run starts every hour, so another run can be active. A ticket with `in-progress`, and its PR,
 belong to the other run when the ticket or the PR changed less than 2 hours ago: do not touch them.
 After 2 hours without a change the other run is dead: take the ticket over and say so in a comment.
+A PR whose ticket has no `in-progress` label is free: any run can finish and merge it (hand-off, step 6.8).
 If your usage limit stops you, the next run continues your work through this rule.
 
 ## 1. Start
@@ -44,8 +67,9 @@ owns (see "Runs can overlap"):
 
 ## 3. Read the owner's feedback
 
-Find issues and PRs with comments by `Larspolo` after `last_run`
-(search: `repo:Larspolo/aoe2mc commenter:Larspolo updated:>=<last_run date>`). For each new owner comment:
+Read all comments after `last_run` (`/issues/comments?since=` and `/pulls/comments?since=`, see
+"GitHub access") and the issues that `Larspolo` opened after `last_run`. Keep the ones by `Larspolo`.
+For each new owner comment:
 - A question → answer it in the same thread.
 - A change to a ticket (scope, priority, "do this first") → change the labels or the body. Reply in one line.
 - A new idea → make a ticket (use the `ticket` skill). Reply with its number.
@@ -80,8 +104,10 @@ Claim it: add `in-progress` and comment "Started." (one line).
 5. Improve the process (step 9) now, so that the changes go into the same PR.
 6. Commit: subject in STE imperative, body with what and why, and `Closes #<number>`.
 7. Push. Open a PR: title = ticket title, body = what changed, how you verified, `Closes #<number>`.
-8. Wait for CI. Cloud: call `subscribe_pr_activity` and end the turn; the CI result wakes the session.
-   Local: `gh pr checks <pr> --watch`.
+8. Wait for CI. If the session has `subscribe_pr_activity`: call it and end the turn; the CI result wakes
+   the session. Local session: `gh pr checks <pr> --watch`. Else hand the PR off: remove `in-progress`
+   from the ticket, comment on the PR "Waiting for CI. A later run merges it.", and continue with a ticket
+   that does not depend on it (or go to step 8). A later run merges it in step 2.
 9. CI red → find the cause, fix, push. After 3 failed attempts stop: comment the cause on the ticket,
    add `blocked` or `needs-human`, remove `in-progress`, and go to step 8.
 10. Merge conflict (another PR changed the same lines) → merge `origin/main` into the branch, solve the
