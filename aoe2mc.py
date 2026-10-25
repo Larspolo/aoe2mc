@@ -2,7 +2,7 @@
 """
 aoe2mc - Convert an Age of Empires II: DE scenario (.aoe2scenario) or the start state of a recorded game
 (.aoe2record) or an old scenario (.scx, format 1.21) to a Minecraft Java world. A campaign (.aoe2campaign) gives one world per scenario; an old campaign
-(.cpx, .cpn) gives its old scenario files and the steps to save them in the DE editor.
+(.cpx, .cpn) too; its scenarios that are not .scx 1.21 give the files and the steps to save them in the DE editor.
 
 Usage:
     python aoe2mc.py MAP.aoe2scenario OUTPUT_WORLD_FOLDER [options]
@@ -835,6 +835,10 @@ def leaves(wood):
     return f"{wood}_leaves[persistent=true]"
 
 
+WOODS = {"palm": "jungle", "jungle": "jungle", "acacia": "acacia", "spruce": "spruce", "birch": "birch",
+         "mangrove": "mangrove"}                         # tree kind -> wood (log and leaves); else oak
+
+
 def make_tree(E, kind, x, y, z, rng):
     """Put one tree with its trunk base at (x, y, z)."""
     h = int(rng.integers(4, 7))
@@ -848,8 +852,7 @@ def make_tree(E, kind, x, y, z, rng):
         E.box(x, x + 1, y, y + h - 1, z, z + 1, "oak_log")
         E.add([x + 1, x - 1], [y + h - 2, y + h - 3], [z, z], "oak_log[axis=x]")
         return
-    wood = {"palm": "jungle", "jungle": "jungle", "acacia": "acacia", "spruce": "spruce",
-            "birch": "birch", "mangrove": "mangrove"}.get(kind, "oak")
+    wood = WOODS.get(kind, "oak")
     log, leaf = f"{wood}_log", leaves(wood)
     if kind == "spruce":
         h += 2
@@ -937,7 +940,7 @@ def decor(E, cols, name, rect, rng):
                 put(dx, dy, dz, "quartz_pillar")
         E.box(cx - 1, cx + 2, y + 4, y + 5, cz - 1, cz + 2, "smooth_quartz_slab[type=bottom]")
         put(0, 1, 0, "chiseled_quartz_block")
-    elif "MARKET_STALL" in n or "GOODS" in n:
+    elif "MARKET_STALL" in n or "GOODS" in n or n in ("MEDITERRANEAN_STALL", "MESOPOTAMIAN_STALL"):
         for dx, dz in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
             put(dx, 1, dz, "oak_fence"); put(dx, 2, dz, "oak_fence")
         wool = pick(["red", "yellow", "blue", "green", "orange", "white"])
@@ -967,6 +970,23 @@ def decor(E, cols, name, rect, rng):
         put(-1, 0, 0, "oak_fence"); put(-1, 1, 0, "lightning_rod")
     elif "TARGET" in n:
         put(0, 0, 0, "hay_block"); put(0, 1, 0, "target")
+    elif n == "RUNESTONES":                            # one tall carved stone and two small ones
+        put(0, 0, 0, "tuff"); put(0, 1, 0, "chiseled_tuff"); put(0, 2, 0, "tuff_wall")
+        put(-1, 0, 1, "polished_andesite"); put(-1, 1, 1, "andesite_wall")
+        put(1, 0, -1, "mossy_cobblestone"); put(1, 1, 0, "red_carpet"); put(1, 0, 0, "chiseled_tuff_bricks")
+    elif n == "NORSE_COLUMN":                          # a carved wooden pole on a stone base
+        put(0, 0, 0, "stone_bricks")
+        for dy in range(1, 5):
+            put(0, dy, 0, "spruce_log[axis=y]" if dy % 2 == 0 else "stripped_spruce_log[axis=y]")
+        put(0, 5, 0, "lantern[hanging=false]")
+    elif n == "NORSE_BANNER":
+        put(0, 0, 0, "spruce_fence"); put(0, 1, 0, "spruce_fence"); put(0, 2, 0, "red_banner[rotation=8]")
+    elif n == "WOODEN_ROAD":                           # flat: planks in the ground, units walk on it
+        for x in range(x0, x1):
+            for z in range(z0, z1):
+                yy = cols.surface(x, z)
+                if yy - 1 == cols.top[min(max(x, 0), cols.n - 1), min(max(z, 0), cols.n - 1)]:
+                    E.add([x], [yy - 1], [z], "spruce_planks" if rng.random() < 0.8 else "stripped_spruce_wood[axis=x]")
     elif "RUG" in n:
         E.box(cx - 1, cx + 1, y, y + 1, cz - 1, cz + 1, f"{pick(['red', 'orange', 'purple', 'cyan'])}_carpet")
     elif "VASE" in n:
@@ -996,7 +1016,8 @@ def decor(E, cols, name, rect, rng):
     elif "BONFIRE" in n or n.startswith(("FLAME", "FLARE")):     # a flare is a signal: tall smoke
         put(0, 0, 0, f"campfire[lit=true,signal_fire={str(n.startswith('FLARE')).lower()}]")
     elif "STUMP" in n:
-        put(0, 0, 0, "stripped_bamboo_block[axis=y]" if "BAMBOO" in n else "spruce_log[axis=y]")
+        put(0, -1, 0, "stripped_bamboo_block[axis=y]" if "BAMBOO" in n else "spruce_log[axis=y]")   # level: walk over it
+        put(0, 0, 0, "air")                                     # no grass or flower on the log
     elif n.startswith(("PATH_", "BLACK_TILE")):        # flat: a path in the ground, black carpet on it
         for x in range(x0, x1):
             for z in range(z0, z1):
@@ -1005,8 +1026,8 @@ def decor(E, cols, name, rect, rng):
                     E.add([x], [yy], [z], "black_carpet", hard=False)
                 elif rng.random() < 0.8 and yy - 1 == cols.top[min(max(x, 0), cols.n - 1), min(max(z, 0), cols.n - 1)]:
                     E.add([x], [yy - 1], [z], "dirt_path")
-    elif n in ("HEAD", "IMPALED_CORPSE"):
-        h = 2 if n == "IMPALED_CORPSE" else 0
+    elif n in ("HEAD", "IMPALED_CORPSE", "IMPALED_CORPSE_ANTIQUITY"):
+        h = 2 if n.startswith("IMPALED_CORPSE") else 0
         for dy in range(h):
             put(0, dy, 0, "spruce_fence")
         put(0, h, 0, "skeleton_skull[rotation=8]")
@@ -1034,6 +1055,33 @@ def decor(E, cols, name, rect, rng):
                 E.add([x], [cols.surface(x, z) - 1], [z], "ice")
     elif n == "SIGN":
         put(0, 0, 0, "oak_sign[rotation=8]")
+    elif n.startswith("FOUNTAIN"):                     # a basin: the rim around the source keeps the water in
+        rim = "smooth_quartz" if "ANTIQUITY" in n else "stone_bricks"
+        for dx in (-1, 0, 1):
+            for dz in (-1, 0, 1):
+                if dx or dz:
+                    put(dx, 0, dz, rim)
+        put(0, 0, 0, "water[level=0]" if min(x1 - x0, z1 - z0) >= 3 else rim)     # small tiles: no rim, no water
+        for dx, dz in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
+            put(dx, 1, dz, "quartz_pillar" if "ANTIQUITY" in n else "stone_brick_wall")
+    elif n in ("WATER_POTS", "AMPHORAE"):
+        pot = "decorated_pot[facing=south,cracked=false]"
+        for dx, dz in ((0, 0), (1, 0), (0, 1)):
+            put(dx, 0, dz, pot)
+        put(0, 1, 0, pot if n == "AMPHORAE" else "water_cauldron[level=3]")
+    elif n == "GRAIN_STORAGE":
+        put(0, 0, 0, "barrel[facing=up]"); put(1, 0, 0, "hay_block"); put(0, 0, 1, "hay_block")
+        put(0, 1, 0, "composter[level=8]")
+    elif n == "FURNACE":
+        put(0, 0, 0, "blast_furnace[facing=south,lit=true]"); put(0, 1, 0, "brick_wall")
+        put(1, 0, 0, "coal_block")
+    elif n == "WATER_TROUGH":
+        for dx in (-1, 0, 1):
+            put(dx, 0, 0, "water_cauldron[level=3]")
+    elif n.startswith("BENCH_"):
+        wood = n == "BENCH_WOODEN"
+        for dx in (-1, 0, 1):
+            put(dx, 0, 0, f"{'spruce' if wood else 'stone_brick'}_stairs[facing=north,half=bottom,shape=straight]")
     elif "GALLOW" in n:
         put(-1, 0, 0, "dark_oak_fence"); put(-1, 1, 0, "dark_oak_fence"); put(-1, 2, 0, "dark_oak_fence")
         E.box(cx - 1, cx + 2, y + 3, y + 4, cz, cz + 1, "dark_oak_log[axis=x]"); put(1, 2, 0, "chain")
@@ -1215,7 +1263,7 @@ MONUMENTS = ("BUDDHA_STATUE", "INDIAN_STATUES", "OLD_STONE_HEAD", "NINE_BANDS", 
              "MESOPOTAMIAN_PILLAR", "MESOPOTAMIAN_GARDEN", "MESOPOTAMIAN_TOMB", "BURNED_BUILDING")    # buildings.py designs
 PASSABLE_OBJECTS = ("FLOWER", "FERN", "RUG", "GRASS", "PLANT", "OYSTER", "FISH", "RELIC", "GRAVE", "BONFIRE",
                     "PATH_", "BLACK_TILE", "ICE_NAVIGABLE", "DOLPHIN", "BOX_TURTLES", "KELP", "WATER_LILY",
-                    "FALLEN_LEAVES")
+                    "FALLEN_LEAVES", "STUMP", "WOODEN_ROAD")
 
 
 def object_footprint(o, T):
@@ -1374,7 +1422,8 @@ def place_objects(objects, players, cols, rng):
                 stats["skipped (other objects)"] += 1
         if kind == "O" and (("TREE" in name and "STUMP" not in name) or name in ("GOLD_MINE", "STONE_MINE", "QUARRY")
                             or "FORAGE" in name or "FRUIT_BUSH" in name or name.startswith(("CLIFF", *MOUNTAINS, "ROCK", "STATUE", "TROPAION",
-                            "STELAE", "THOLOS", "HERO_SHRINE", "WELL", "HAY_STACK", "MARKET_STALL"))):
+                            "STELAE", "THOLOS", "HERO_SHRINE", "WELL", "HAY_STACK", "MARKET_STALL", "FOUNTAIN",
+                            "MEDITERRANEAN_STALL", "MESOPOTAMIAN_STALL"))):
             obstacle(E, cols, E.footprint)
         elif kind == "O" and E.footprint and not any(k in name for k in PASSABLE_OBJECTS):
             x0, x1, z0, z1 = E.footprint            # other objects with blocks: no units on top of them
@@ -2421,8 +2470,8 @@ def read_campaign(path):
 
 
 OLD_CAMPAIGN_STEPS = """\
-The scenarios of this campaign use the old scenario format ({ext}). aoe2mc cannot read it.
-aoe2mc wrote the scenario files to {out}:
+These scenarios of the campaign use an old scenario format ({ext}) that aoe2mc cannot read.
+aoe2mc wrote them to {out}:
 {files}
 Do these steps to convert them:
   1. Copy the files to the scenario folder of AoE2 DE:
@@ -2434,7 +2483,8 @@ Do these steps to convert them:
 
 def convert_campaign(src, out, only=None, name=None, **kw):
     """One world per scenario: out/<number> <scenario name>/. only: the number of one scenario (1 = first).
-    An old campaign (.cpx, .cpn): write the old scenario files to out/ and stop with the steps for the DE editor."""
+    An old campaign (.cpx, .cpn): convert its .scx scenarios of format 1.21 (#347); write the other scenario files to
+    out/ and stop with the steps for the DE editor."""
     import tempfile
     version, title, entries = read_campaign(src)
     if only is not None and not 1 <= only <= len(entries):
@@ -2443,13 +2493,29 @@ def convert_campaign(src, out, only=None, name=None, **kw):
     chosen = [(i, re.sub(r'[\\/:*?"<>|]', "_", fn), data) for i, (fn, data) in enumerate(entries, 1)
               if only is None or i == only]
     if version == b"1.00":
-        os.makedirs(out, exist_ok=True)
+        old = []
         for i, fn, data in chosen:
-            with open(os.path.join(out, f"{i} {fn}"), "wb") as f:
-                f.write(data)
-        exts = sorted({os.path.splitext(fn)[1] or "?" for _, fn, _ in chosen})
-        raise SystemExit(OLD_CAMPAIGN_STEPS.format(ext=", ".join(exts), out=out,
-                                                   files="\n".join(f"  {i} {fn}" for i, fn, _ in chosen)))
+            stem = os.path.splitext(fn)[0]
+            if fn.lower().endswith(".scx"):
+                with tempfile.TemporaryDirectory() as tmp:
+                    path = os.path.join(tmp, "s.scx")
+                    with open(path, "wb") as f:
+                        f.write(data)
+                    try:
+                        convert(path, os.path.join(out, f"{i} {stem}"), name=f"{name} {i}" if name else stem, **kw)
+                        continue
+                    except OptionError as e:      # another format version, or a file that scx.py cannot read
+                        print(f"{i} {fn}: {e}")
+            old.append((i, fn, data))
+        if old:
+            os.makedirs(out, exist_ok=True)
+            for i, fn, data in old:
+                with open(os.path.join(out, f"{i} {fn}"), "wb") as f:
+                    f.write(data)
+            exts = sorted({os.path.splitext(fn)[1] or "?" for _, fn, _ in old})
+            raise SystemExit(OLD_CAMPAIGN_STEPS.format(ext=", ".join(exts), out=out,
+                                                       files="\n".join(f"  {i} {fn}" for i, fn, _ in old)))
+        return
     for i, fn, data in chosen:
         stem = re.sub(r"\.aoe2scenario$", "", fn, flags=re.I)
         with tempfile.TemporaryDirectory() as tmp:
@@ -2463,7 +2529,8 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
     ap.add_argument("scenario", help=".aoe2scenario file, .aoe2record (the start state of a recorded game), .scx "
                     "(an old scenario, format 1.21), or "
-                    ".aoe2campaign (one world per scenario; .cpx and .cpn: the steps for the DE editor)")
+                    ".aoe2campaign, .cpx or .cpn (one world per scenario; old scenarios that are not .scx 1.21: the "
+                    "steps for the DE editor)")
     ap.add_argument("output", help="output world folder (put it in .minecraft/saves/); for a campaign the folder of "
                     "the worlds")
     ap.add_argument("--scenario", dest="only", type=int_range(1, 999), metavar="N",

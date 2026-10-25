@@ -73,6 +73,61 @@ def test_blocks_under_water_are_waterlogged():
     assert mcvalid.invalid_states(B.states) == {}
 
 
+PROPS = ["WATER_POTS", "GRAIN_STORAGE", "FURNACE", "WATER_TROUGH", "AMPHORAE", "BENCH_WOODEN", "BENCH_STONE",
+         "FOUNTAIN", "FOUNTAIN_ANTIQUITY", "MEDITERRANEAN_STALL", "MESOPOTAMIAN_STALL", "IMPALED_CORPSE_ANTIQUITY"]
+
+
+def test_camp_and_town_props_have_blocks():
+    """The small camp and town props keep their blocks in the footprint up to head height; fountain water has a rim on all sides (#295)."""
+    B = aoe2mc.B
+    for n in PROPS:
+        cols = aoe2mc.Columns(12, np.zeros((12, 12), np.int16), np.zeros((12, 12), np.float32),
+                              {0: "GRASS_1"}, 4, 3, np.random.default_rng(1))
+        o = dict(kind="O", name=n, player=0, x=1.5, y=1.5, rotation=0.0, hero=False, garrisoned=False)
+        E, stats = aoe2mc.place_objects([o], {}, cols, np.random.default_rng(1))
+        x0, x1, z0, z1 = aoe2mc.object_footprint(o, 4)
+        x, y, z, ids, _ = (np.concatenate(p) for p in zip(*E.parts))
+        names = [B.states[i] for i in ids]
+        solid = {(a, b, c) for a, b, c, s in zip(x, y, z, names) if "barrier" not in s}
+        assert stats["decorations"] == 1 and stats["skipped (other objects)"] == 0 and solid, n
+        assert all(x0 <= a < x1 and z0 <= c < z1 for a, b, c in solid if b < cols.wtop[a, c] + E.HEAD), n
+        water = [(a, b, c) for a, b, c, s in zip(x, y, z, names) if s.partition("[")[0] == "minecraft:water"]
+        assert bool(water) == n.startswith("FOUNTAIN"), n
+        for a, b, c in water:
+            assert all((a + dx, b, c + dz) in solid for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1))), n
+    assert mcvalid.invalid_states(B.states) == {}
+
+
+def test_norse_objects_have_blocks():
+    """Runestones, column, banner and wooden road place blocks in their footprint; units walk on the road (#297)."""
+    for n in ("RUNESTONES", "NORSE_COLUMN", "NORSE_BANNER", "WOODEN_ROAD"):
+        cols = aoe2mc.Columns(12, np.zeros((12, 12), np.int16), np.zeros((12, 12), np.float32),
+                              {0: "GRASS_1"}, 4, 3, np.random.default_rng(1))
+        o = dict(kind="O", name=n, player=0, x=6, y=6, rotation=0.0, hero=False, garrisoned=False)
+        E, stats = aoe2mc.place_objects([o], {}, cols, np.random.default_rng(1))
+        assert stats["decorations"] == 1 and stats["skipped (other objects)"] == 0, n
+        x0, x1, z0, z1 = aoe2mc.object_footprint(o, 4)
+        for xs, ys, zs, *_ in E.parts:
+            assert ((x0 <= xs) & (xs < x1) & (z0 <= zs) & (zs < z1)).all(), n
+        assert cols.blocked[x0:x1, z0:z1].any() == (n != "WOODEN_ROAD"), n
+    assert mcvalid.invalid_states(aoe2mc.B.states) == {}
+
+
+def test_tree_stump_is_level_with_the_ground_and_free_for_units():
+    """A stump does not stop units or the player: the top of a log in the ground, no barrier, no block above (#307)."""
+    B = aoe2mc.B
+    for name in ("STUMP", "BAMBOO_STUMP", "BAOBAB_STUMP", "LUSH_BAMBOO_STUMP"):     # the stumps of the parser
+        cols = aoe2mc.Columns(16, np.zeros((16, 16), np.int16), np.zeros((16, 16), np.float32),
+                              {0: "GRASS_1"}, 4, 3, np.random.default_rng(1))
+        o = dict(kind="O", name=name, player=0, x=2.5, y=2.5, rotation=0.0, hero=False, garrisoned=False)
+        E, stats = aoe2mc.place_objects([o], {}, cols, np.random.default_rng(1))
+        assert not cols.blocked.any(), name
+        vol = aoe2mc.build_chunk(0, 0, cols, E.by_chunk(cols.n)[(0, 0)])[1]
+        y = cols.surface(10, 10) - aoe2mc.MIN_Y                       # the first free block above the ground
+        assert B.states[vol[y - 1, 10, 10]].endswith(("spruce_log[axis=y]", "stripped_bamboo_block[axis=y]")), name
+        assert (vol[y:, 8:12, 8:12] == 0).all(), name                  # nothing above the ground: air only
+
+
 SHORE = ["DRIFTWOOD_GROUND", "DRIFTWOOD_WATER", "FLOTSAM", "KELP_SEAWEEDS", "WATER_LILY", "BEACHED_WHALE",
          "SMALL_WATERFALL", "FALLEN_LEAVES_PEACH_BLOSSOM", "FALLEN_LEAVES_MAPLE", "FALLEN_LEAVES_MAPLE_AUTUMN"]
 

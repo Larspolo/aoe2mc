@@ -6,8 +6,8 @@ name: Coverage
 # A push with GITHUB_TOKEN starts no other workflow, so this commit does not start CI again.
 # A merge by a workflow (GITHUB_TOKEN) starts no push workflow: start this one with `gh workflow run coverage.yml`.
 on:
-  push:
-    branches: [main]
+  schedule:
+    - cron: "41 4 * * *"     # once a day (Actions minutes, see ci.yml)
   workflow_dispatch:
 
 permissions:

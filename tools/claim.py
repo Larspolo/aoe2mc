@@ -12,6 +12,7 @@ a second push of another claim commit is never a fast-forward. Later claims of t
     python3 tools/claim.py N --beat       # show that the own run is alive (at least every 20 minutes)
     python3 tools/claim.py N --stale      # exit 0: the owner made no claim or beat for 30 minutes (stopped run)
     python3 tools/claim.py N --guard      # before each push: beat, and exit 1 when a PR of another branch closes N
+    python3 tools/claim.py ID --comment   # lock owner comment ID (autopilot step 3); exit 1: another run handles it
 
 Two runs did one ticket (#288): one commented "Started by" and worked without the claim ref. So a claim also fails
 when another branch commented "Started by" in the last 30 minutes, and `--guard` stops a run before its push when
@@ -19,6 +20,9 @@ it does not own the claim or another branch has a PR for the ticket. The GitHub 
 
 A usage limit stops all runs at about the same time, and a stopped run never continues (#231). Its last beat is
 before the stop, so its ticket is stale at most 30 minutes after the limit resets. A live run beats again.
+
+Three runs read one owner comment at the same time and made three copies of one epic (#320). So a run locks a
+comment before it acts on it: `--comment` pushes `claim/comment-ID` once (no slots, no release).
 
 Exit 2: git failed for another reason (network, permission). The workflow `claims.yml` deletes the refs
 of a closed ticket: the session proxy gives 403 for branch deletes.
@@ -100,6 +104,12 @@ def claim(number, takeover=False, remote="origin"):
     return ref if push(sha, ref, remote) else None
 
 
+def claim_comment(cid, remote="origin"):
+    """Lock comment `cid`: True when this run pushed `claim/comment-ID` first."""
+    sha = git("commit-tree", EMPTY_TREE, "-m", f"Claim comment {cid} by {who()} ({uuid.uuid4().hex})").stdout.strip()
+    return push(sha, f"claim/comment-{cid}", remote)
+
+
 def release(number, remote="origin", word="Release"):
     """Add a release (or beat) commit on top of the own claim (a fast-forward of the top ref)."""
     found = refs(number, remote)
@@ -146,7 +156,7 @@ def other_pr(pulls, number, me):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("number", type=int, help="ticket number")
+    ap.add_argument("number", type=int, help="ticket number (with --comment: the comment ID)")
     g = ap.add_mutually_exclusive_group()
     g.add_argument("--release", action="store_true", help="give the own claim back")
     g.add_argument("--takeover", action="store_true", help="claim the next slot also when the ticket is owned")
@@ -154,8 +164,15 @@ def main(argv=None):
     g.add_argument("--beat", action="store_true", help="show that the own run is alive")
     g.add_argument("--stale", action="store_true", help="exit 0 when the open claim had no beat for 30 minutes")
     g.add_argument("--guard", action="store_true", help="before a push: beat; exit 1 when another branch has a PR")
+    g.add_argument("--comment", action="store_true", help="lock the owner comment with this ID")
     ap.add_argument("--remote", default="origin")
     a = ap.parse_args(argv)
+    if a.comment:
+        if claim_comment(a.number, a.remote):
+            print(f"claimed comment {a.number}")
+            return 0
+        print(f"comment {a.number}: another run handles it")
+        return 1
     if a.show or a.stale:
         found = refs(a.number, a.remote)
         for k in sorted(found):

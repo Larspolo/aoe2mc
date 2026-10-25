@@ -98,9 +98,12 @@ A campaign file gives one world for each scenario, in the output folder: `<numbe
     aoe2mc MyCampaign.aoe2campaign CampaignWorlds --scenario 2     (only the second scenario)
 
 An old campaign (`.cpx` from The Conquerors or AoE2 HD, `.cpn`) holds scenarios in the old format (`.scx`, `.scn`).
-The converter cannot read them. It writes them to the output folder (`<number> <file name>`) and stops with these steps:
+The converter converts its `.scx` scenarios of format `1.21` directly: one world per scenario, as above.
 
-    aoe2mc OldCampaign.cpx OldScenarios
+    aoe2mc OldCampaign.cpx OldWorlds
+
+It cannot read the other scenarios (other format versions, `.scn`). It writes them to the output folder
+(`<number> <file name>`) and stops with these steps:
 
 1. Copy the files to the scenario folder of AoE2 DE
    (`<Steam user folder>/Games/Age of Empires 2 DE/<number>/resources/_common/scenario`).

@@ -138,6 +138,49 @@ def test_event_log_gives_the_configured_timing(tiny_world):
     assert "| Chop (wood/s) | 2.00 | 2.00 | 0.39 | 0.66 |" in measure_gather.table(m, conf, 4)
 
 
+def test_fell_removes_the_tree_and_its_barriers_and_leaves_a_flat_stump():
+    m = grid([], [{"kind": "other", "name": "TREE_OAK", "tile": [5.5, 6.5]}])
+    m["tile_size"] = 4
+    # the ground of the converter is on top of the barriers in the footprint (x 20..23, z 24..27)
+    m["ground"] = [" ".join("67" if 20 <= x < 24 and 24 <= z < 28 else "64" for x in range(48)) for z in range(48)]
+    server = FakeServer({})
+    g = gather.Gather(server, m)
+    g.fell((5, 6))
+    fills = [c for c in server.log if c.startswith("fill ")]
+    assert "fill 20 62 24 23 67 27 air replace minecraft:barrier" in fills                # the footprint only
+    assert any(c.endswith("air replace #minecraft:logs") for c in fills)
+    assert any(c.endswith("air replace #minecraft:leaves") for c in fills)
+    assert server.log[-1] == "setblock 22 63 26 minecraft:spruce_log[axis=y]"          # in the ground, after the fills
+
+
+def test_a_cut_tree_lies_on_the_ground_and_gets_shorter():
+    """From the first chop a trunk lies next to the stump: one log less per 25 wood, only the stump at 0 (#308)."""
+    m = grid([], [{"kind": "other", "name": "TREE_OAK", "tile": [5.5, 6.5]}])
+    m["tile_size"] = 4
+    m["ground"] = [" ".join("67" if 20 <= x < 24 and 24 <= z < 28 else "64" for x in range(48)) for z in range(48)]
+    server = FakeServer({})
+    g = gather.Gather(server, m)
+    tile = (5, 6)
+
+    def level(wood):
+        server.log.clear()
+        g.map.trees[tile] = wood
+        g.trunk(tile) if wood else g.fell(tile)
+        return [c for c in server.log if "oak_log[axis=x]" in c and c.endswith("barrier")]
+
+    assert level(99) == ["fill 20 64 25 23 64 25 minecraft:oak_log[axis=x] replace minecraft:barrier"]
+    assert "setblock 22 63 26 minecraft:spruce_log[axis=y]" in server.log                  # the stump
+    assert any(c.endswith("air replace #minecraft:logs") for c in server.log)            # the standing tree goes
+    assert "fill 20 65 25 20 65 25 minecraft:oak_leaves[persistent=true] keep" in server.log   # the crown on the tip
+    assert level(76) == [] and server.log == []                                          # no change: no command
+    for wood, x in ((75, 21), (50, 22), (26, None), (25, 23)):
+        assert level(wood) == ([f"fill {x} 64 25 23 64 25 minecraft:oak_log[axis=x] replace minecraft:barrier"]
+                               if x else []), wood
+        assert not x or "fill 20 64 25 23 65 25 minecraft:barrier replace minecraft:oak_log" in server.log
+    assert level(0) == [] and "fill 20 64 25 23 65 25 air replace minecraft:oak_log" in server.log
+    assert server.log[-1] == "setblock 22 63 26 minecraft:spruce_log[axis=y]"
+
+
 @pytest.mark.mc
 def test_measured_gather_timing_is_near_the_configured_timing():
     from test_mc_check import mojang_reachable
