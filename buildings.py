@@ -1451,8 +1451,51 @@ def transpose(c):
     c.a = a
 
 
+CLOCKWISE = {"north": "east", "east": "south", "south": "west", "west": "north"}
+
+
+def turn_state(s, k):
+    """Block state s after k clockwise quarter turns (seen from above): facing, axis, rotation, the side
+    properties of fences, walls and panes, and rail shapes."""
+    if "[" not in s:
+        return s
+    name, props = s[:-1].split("[", 1)
+    keys = [kv.split("=")[0] for kv in props.split(",")]
+    d = dict(kv.split("=") for kv in props.split(","))
+    for _ in range(k % 4):
+        t = {}
+        for key, v in d.items():
+            if key in ("facing", "axis") or key == "shape" and "_" in v and any(w in v for w in CLOCKWISE):
+                if v in ("north_south", "east_west"):
+                    v = "east_west" if v == "north_south" else "north_south"
+                elif v.startswith("ascending_"):
+                    v = "ascending_" + CLOCKWISE[v[10:]]
+                elif key == "shape":                                # rail curve: north/south part first
+                    a, b = (CLOCKWISE[w] for w in v.split("_"))
+                    v = f"{a}_{b}" if a in ("north", "south") else f"{b}_{a}"
+                else:
+                    v = {"x": "z", "z": "x"}.get(v, CLOCKWISE.get(v, v))
+            elif key == "rotation":                                 # signs, banners, skulls: 4 = a quarter
+                v = str((int(v) + 4) % 16)
+            t[CLOCKWISE.get(key, key)] = v
+        d = t
+    return f"{name}[" + ",".join(f"{key}={d[key]}" for key in keys + [x for x in d if x not in keys] if key in d) + "]"
+
+
+def turn(c, k):
+    """Turn a square canvas by k clockwise quarter turns (seen from above), with block directions."""
+    a = np.rot90(c.a, k, axes=(0, 2)).copy()
+    out = a.copy()
+    for i in np.unique(a[a >= 0]):
+        t = turn_state(c.B.states[i], k)
+        if t != c.B.states[i]:
+            out[a == i] = c.B(t)
+    c.a = out
+
+
 SOFT_BARRIER = -3    # canvas marker: barrier that only fills free space
 BARRIERS = True      # fill the free space of footprints with barrier blocks (option --no-barriers)
+TURN = 0             # clockwise quarter turns of the map (option --orientation); buildings turn with it
 
 
 def place_building(E, cols, B, o, players, walls, gates):
@@ -1478,7 +1521,7 @@ def place_building(E, cols, B, o, players, walls, gates):
     along_z = False
     if fn is bridge:
         letter = name.split("BRIDGE_")[1][:1]
-        along_z = letter in ("B", "D")
+        along_z = (letter in ("B", "D")) != (TURN % 2 == 1)
         w, L = 3 * T, 2 * T
         if along_z:
             x0, z0 = int(round((ux - 1.5) * T)), int(round((uy - 1) * T))
@@ -1550,6 +1593,8 @@ def place_building(E, cols, B, o, players, walls, gates):
     weather(c)
     if fn not in NO_PROPS:
         decorate(c, fx, fz)
+    if TURN and fn not in (gate, aqueduct, bridge, wooden_bridge, wall_segment):    # these follow their neighbours
+        turn(c, TURN)
     if along_z:
         transpose(c)
     if BARRIERS and fn not in (gate, bridge, wooden_bridge, fish_trap):

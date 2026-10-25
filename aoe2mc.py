@@ -12,6 +12,7 @@ Options:
     --seed N           Seed for the random details (tree heights, flowers) (default 1)
     --preview          Also write preview.png (top view) into the world folder
     --mc-version V     Minecraft Java version of the output: 1.21.1 (default) or 26.3 (not complete yet)
+    --orientation C    Minecraft corner (ne, se, sw, nw) of the top corner of the AoE2 screen (default ne)
     --no-units         Do not convert units (mobs, boats, minecarts)
     --no-barriers      Do not fill building footprints with invisible barrier blocks
     --architecture X   Use one architecture set for all players (western, central, mediterranean,
@@ -27,6 +28,7 @@ import argparse
 import contextlib
 import io
 import json
+import math
 import os
 import time
 import zlib
@@ -59,6 +61,9 @@ NONE = -10000                # marker for "no column here" (outside the map)
 # top corner is in the north-east: the map is the in-game view turned 45° clockwise, not mirrored.
 # The player looks north-east at the spawn, like the AoE2 camera (yaw 0 = south, 90 = west, 180 = north).
 SPAWN_YAW = -135.0
+# --orientation: the Minecraft corner that gets the top corner of the AoE2 screen. Value: clockwise quarter turns
+# of the tile grid (seen from above) and the spawn yaw (the player looks at that corner). "ne" is no turn.
+ORIENTATIONS = {"ne": (0, SPAWN_YAW), "se": (1, -45.0), "sw": (2, 45.0), "nw": (3, 135.0)}
 
 
 # --------------------------------------------------------------------------------------------
@@ -254,6 +259,25 @@ def read_scenario(path):
             objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name,
                                 player=player, x=u.x, y=u.y, rotation=float(u.rotation or 0), garrisoned=garrisoned))
     return size, terrain, elevation, terrain_names, objects, players
+
+
+def turn_tile(x, y, size, k):
+    """Tile position (x, y) after k clockwise quarter turns of a size × size grid (size 0: turn a vector)."""
+    for _ in range(k % 4):
+        x, y = size - y, x
+    return x, y
+
+
+def turn_map(k, size, terrain, elevation, objects, players):
+    """Turn the tile grid by k clockwise quarter turns (--orientation). It is a turn, not a mirror, so buildings
+    keep their hand. Unit rotation (direction cos r, sin r in tiles) and the start views turn with the map."""
+    for o in objects:
+        o["x"], o["y"] = turn_tile(o["x"], o["y"], size, k)
+        o["rotation"] = o.get("rotation", 0.0) + k * math.pi / 2
+    for p in players.values():
+        if p.get("view"):
+            p["view"] = turn_tile(*p["view"], size, k)
+    return np.rot90(terrain, k).copy(), np.rot90(elevation, k).copy()
 
 
 # --------------------------------------------------------------------------------------------
@@ -1051,7 +1075,8 @@ def find_spawn(cols, objects, players, tile=None):
     if tile is None:
         tc = next((o for o in objects if o["kind"] == "B" and o["player"] == 1 and "TOWN_CENTER" in o["name"]), None)
         if tc:
-            tile = (tc["x"], tc["y"] + buildings.footprint(tc["name"]) / 2 + 0.5)
+            dx, dy = turn_tile(0, buildings.footprint(tc["name"]) / 2 + 0.5, 0, buildings.TURN)   # the front
+            tile = (tc["x"] + dx, tc["y"] + dy)
     T, n = cols.T, cols.n
     bx, bz = (n // 2, n // 2) if tile is None else (int(min(max(tile[0] * T, 0), n - 1)),
                                                     int(min(max(tile[1] * T, 0), n - 1)))
@@ -1268,7 +1293,7 @@ def write_region(path, chunks):
         f.write(header + body)
 
 
-def write_level_dat(path, name, spawn):
+def write_level_dat(path, name, spawn, yaw=SPAWN_YAW):
     def dim(kind, gen):
         return Compound({"type": String(f"minecraft:{kind}"), "generator": gen})
     void = Compound({"type": String("minecraft:flat"), "settings": Compound({
@@ -1286,7 +1311,7 @@ def write_level_dat(path, name, spawn):
                              "Series": String("main"), "Snapshot": Byte(0)}),
         "LevelName": String(name), "GameType": Int(1), "Difficulty": Byte(1),   # not peaceful: peaceful removes the soldiers
         "allowCommands": Byte(1), "hardcore": Byte(0), "initialized": Byte(1),
-        "SpawnX": Int(spawn[0]), "SpawnY": Int(spawn[1]), "SpawnZ": Int(spawn[2]), "SpawnAngle": Float(SPAWN_YAW),
+        "SpawnX": Int(spawn[0]), "SpawnY": Int(spawn[1]), "SpawnZ": Int(spawn[2]), "SpawnAngle": Float(yaw),
         "LastPlayed": Long(int(time.time() * 1000)), "Time": Long(0), "DayTime": Long(6000),
         "raining": Byte(0), "thundering": Byte(0), "rainTime": Int(0), "thunderTime": Int(0),
         "clearWeatherTime": Int(0), "WasModded": Byte(0),
@@ -1348,23 +1373,28 @@ def block_color(state):
 # Main
 # --------------------------------------------------------------------------------------------
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
-            barriers=True, mc_version=VERSION_NAME, spawn=None):
+            barriers=True, mc_version=VERSION_NAME, spawn=None, orientation="ne"):
     global MC
     MC = VERSIONS[mc_version]
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
     try:
-        _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn)
+        _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, orientation)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
+        buildings.TURN = 0
 
 
-def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn):
+def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, orientation):
     buildings.BARRIERS = barriers
+    buildings.TURN, yaw = ORIENTATIONS[orientation]
     MOVED.clear()           # the counts of an earlier conversion in this process
     rng = np.random.default_rng(seed)
     t0 = time.time()
     size, terrain, elevation, tnames, objects, players = read_scenario(src)
+    terrain, elevation = turn_map(buildings.TURN, size, terrain, elevation, objects, players)
+    if spawn is not None:       # --spawn is in AoE2 tiles
+        spawn = turn_tile(*spawn, size, buildings.TURN)
     if arch:
         for p in players.values():
             p["arch"] = arch
@@ -1417,7 +1447,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         write_region(os.path.join(out, "entities", f"r.{rx}.{rz}.mca"), chunks)
 
     spawn = find_spawn(cols, objects, players, spawn)
-    write_level_dat(os.path.join(out, "level.dat"), name or os.path.splitext(os.path.basename(src))[0], spawn)
+    write_level_dat(os.path.join(out, "level.dat"), name or os.path.splitext(os.path.basename(src))[0], spawn, yaw)
 
     from PIL import Image
     lut = np.array([block_color(s) for s in B.states], np.uint8)
@@ -1493,10 +1523,12 @@ def main(argv=None):
                     help="player spawn in tiles (default: start view or town center of player 1)")
     ap.add_argument("--mc-version", choices=sorted(VERSIONS), default=VERSION_NAME,
                     help=f"Minecraft Java version of the output (default {VERSION_NAME}; 26.3 is not complete yet)")
+    ap.add_argument("--orientation", choices=sorted(ORIENTATIONS), default="ne",
+                    help="Minecraft corner of the top corner of the AoE2 screen (default ne)")
     a = ap.parse_args(argv)
     try:
         convert(a.scenario, a.output, a.tile_size, a.level_height, a.name, a.seed, a.preview, a.architecture,
-                a.player_architecture, not a.no_units, not a.no_barriers, a.mc_version, a.spawn)
+                a.player_architecture, not a.no_units, not a.no_barriers, a.mc_version, a.spawn, a.orientation)
     except OptionError as e:
         ap.error(str(e))
 
