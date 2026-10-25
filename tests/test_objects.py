@@ -19,6 +19,15 @@ def test_every_other_object():
     assert mcvalid.invalid_states(aoe2mc.B.states) == {}
 
 
+def test_invisible_objects_are_skipped_on_purpose():
+    cols = aoe2mc.Columns(12, np.zeros((12, 12), np.int16), np.zeros((12, 12), np.float32),
+                          {0: "GRASS_1"}, 4, 3, np.random.default_rng(1))
+    objects = [dict(kind="O", name=n, player=0, x=6, y=6, rotation=0.0, hero=False, garrisoned=False)
+               for n in ("BLOCKER", "MAP_REVEALER", "AURA_QUEST_INDICATOR_COINS")]
+    E, stats = aoe2mc.place_objects(objects, {}, cols, np.random.default_rng(1))
+    assert stats["invisible (skipped on purpose)"] == 3 and stats["skipped (other objects)"] == 0
+
+
 SMALL = ["FLAME1", "FLAME4", "FLARE", "FLARE_A_PERMANENT", "FLARE_B_PERMANENT", "STUMP", "BAMBOO_STUMP", "PATH_1",
          "PATH_4", "HEAD", "IMPALED_CORPSE", "TREASURE_CHEST", "LOOT", "LEATHERWORKING_EQUIPMENT", "ARCHAIC_FENCE",
          "STAKE_BARRICADE", "PIECE_OF_THE_TRUE_CROSS", "ICE_NAVIGABLE", "SNOW_MOUNTAIN_1", "SNOW_MOUNTAIN_3",

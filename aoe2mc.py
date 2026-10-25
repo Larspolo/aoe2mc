@@ -916,6 +916,8 @@ def place_objects(objects, players, cols, rng):
         elif kind == "O" and ("BUSH" in name or "PLANT" in name or name.startswith("GRASS")):
             E.add([bx], [y], [bz], "fern" if "PLANT" in name else "short_grass", hard=False)
             stats["plants"] += 1
+        elif kind == "O" and units.invisible(name):
+            stats["invisible (skipped on purpose)"] += 1
         else:
             if name.startswith("UNKNOWN"):
                 stats["skipped (unknown to the parser)"] += 1

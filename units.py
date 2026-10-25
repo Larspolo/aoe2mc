@@ -40,9 +40,16 @@ ARMOR = {   # tier -> (helmet, chestplate, leggings, boots material); None = emp
 SWORD = {1: "wooden", 2: "stone", 3: "iron", 4: "diamond", "unique": "golden", "elite": "netherite", "hero": "netherite"}
 HORSE_ARMOR = {1: "leather", 2: "leather", 3: "iron", 4: "diamond", "unique": "golden", "elite": "diamond", "hero": "golden"}
 
-SKIP = ("INVISIBLE", "MAP_REVEALER", "HINT_OBJECT", "DUMMY_TARGET", "TRICKLE", "RESOURCE_ENABLER", "DISABLED",
-        "OUTLW", "RFARC", "BUTTERFLY", "SEAGULLS", "FALCON", "HAWK", "VULTURE", "STORK",
-        "MACAW", "CONDOR", "RAVEN", "OWL", "PEACOCK", "FLAMINGO", "CRANE", "FLAMING_BIRD", "PLACEHOLDER")
+# Invisible markers and internal units: the game does not show them, so the converter skips them on purpose.
+# (keyword, reason). place_objects, classify() and tools/coverage.py use this list.
+INVISIBLE = (("MAP_REVEAL", "map revealer"), ("INVISIBLE_OBJECT", "invisible object"), ("BLOCKER", "path blocker"),
+             ("HINT_OBJECT", "editor hint"), ("DUMMY_TARGET", "attack target"), ("TRICKLE", "resource trickle"),
+             ("RESOURCE_ENABLER", "resource trickle"), ("AURA_QUEST_INDICATOR", "quest marker"),
+             ("PLACEHOLDER", "placeholder"), ("DISABLED", "disabled unit"), ("OUTLW", "unused unit"),
+             ("RFARC", "unused unit"))
+
+SKIP = ("BUTTERFLY", "SEAGULLS", "FALCON", "HAWK", "VULTURE", "STORK",
+        "MACAW", "CONDOR", "RAVEN", "OWL", "PEACOCK", "FLAMINGO", "CRANE", "FLAMING_BIRD")
 JOKES = {   # joke and special units -> entity
     "TREASURE_CHEST": lambda: vehicle("chest_minecart", []),
     "TORCH_": lambda: mob("armor_stand", Invisible=Byte(1), ShowArms=Byte(1), HandItems=hands("torch")),
@@ -176,9 +183,14 @@ def tier_of(n, hero):
     return "elite" if n.startswith("ELITE_") else "unique"
 
 
+def invisible(n):
+    """The reason to skip the invisible type n, or None."""
+    return next((r for k, r in INVISIBLE if k in n), None)
+
+
 def classify(n, hero=False):
     """Return the entity description for unit name n, or None to skip it."""
-    if has(n, *SKIP):
+    if invisible(n) or has(n, *SKIP):
         return None
     joke = next((f for k, f in JOKES.items() if k in n), None)
     if joke:
