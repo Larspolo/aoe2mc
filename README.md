@@ -49,7 +49,8 @@ The world is in creative mode. Outside the map there is only void. The world lis
 | `--no-units` | off | Do not convert units |
 | `--no-birds` | off | Do not convert birds. Flying birds float 6 blocks above the ground (parrot or bat); peacocks, flamingos, storks and cranes are chickens |
 | `--no-barriers` | off | Do not fill building footprints with invisible barrier blocks |
-| `--spawn X,Z` | start view or town center of player 1 | Player spawn in tiles. Without it the spawn is the start view of player 1, else the front of its first town center, else the map center. |
+| `--orientation C` | `ne` | Minecraft corner (`ne`, `se`, `sw`, `nw`) of the top corner of the AoE2 screen. The map, the building fronts and the units turn with it. |
+| `--spawn X,Z` | start view or town center of player 1 | Player spawn in AoE2 tiles. Without it the spawn is the start view of player 1, else the front of its first town center, else the map center. |
 
 ## Buildings
 
@@ -70,6 +71,9 @@ The program reads the player color and civilization from the scenario. Each civi
 
 Other supported objects: bridges, aqueducts, army tents, pavilions, yurts, huts, the amphitheatre, monuments,
 landmark cathedrals, mountains, quarries, graves, ruins and shipwrecks.
+
+The scenario texts (instructions, hints, victory, loss, history, scouts) are in a written book on a lectern
+near the spawn. Each text is a chapter. There is no lectern when all texts are empty.
 
 ## Units
 
@@ -185,4 +189,4 @@ Read these files first:
 - Map tile (x, y) becomes block (x × tile-size, z = y × tile-size). AoE2 shows the map as a diamond with the top corner
   at the top of the screen. In Minecraft this corner is in the north-east: the map is the in-game view turned 45°
   clockwise, not mirrored. A turn of 45° is not possible on a block grid. At the spawn the player looks north-east,
-  as the AoE2 camera does.
+  as the AoE2 camera does. Use `--orientation` to put the top corner in another corner (the spawn view turns too).

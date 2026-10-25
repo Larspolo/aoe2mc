@@ -1,4 +1,5 @@
 """Convert the synthetic tiny scenario and read the world back."""
+import json
 import os
 
 import aoe2mc
@@ -62,7 +63,7 @@ def test_mc_version_26_3(tmp_path, monkeypatch):
     import io
 
     import scenarios
-    src = scenarios.tiny(str(tmp_path / "tiny.aoe2scenario"))
+    src = scenarios.tiny(str(tmp_path / "tiny.aoe2scenario"), {"instructions": "Defend the town center."})
     with contextlib.redirect_stdout(io.StringIO()):
         aoe2mc.main([src, str(tmp_path / "W"), "--mc-version", "26.3"])
     w = world_reader.World(str(tmp_path / "W"))
@@ -82,7 +83,43 @@ def test_mc_version_26_3(tmp_path, monkeypatch):
     ents = w.entities()
     assert ents and not any(k in e for e in ents for k in ("ArmorItems", "HandItems", "FallDistance"))
     assert all(mcvalid.entity_error(str(e["id"]), "26.3") is None for e in ents)
+    book, = [be["Book"] for c in w.chunks().values() for be in c["block_entities"] if "Book" in be]
+    page = book["components"]["minecraft:written_book_content"]["pages"][0]["raw"]
+    assert str(page["extra"][1]["text"]) == "Defend the town center."    # text components are NBT (1.21.5)
     # block renames of the version profile
     monkeypatch.setattr(aoe2mc, "MC", aoe2mc.VERSIONS["26.3"])
     assert dict(aoe2mc.B.nbt(aoe2mc.B("chain[axis=y]"))) == {"id": "minecraft:iron_chain",
                                                            "properties": {"axis": "y"}}
+
+
+def test_book_of_scenario_texts(tmp_path):
+    import contextlib
+    import io
+
+    import scenarios
+    long = " ".join(f"word{i}" for i in range(200))
+    src = scenarios.tiny(str(tmp_path / "book.aoe2scenario"),
+                         {"instructions": "Defend the <BLUE>town center</BLUE>.", "history": long})
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        aoe2mc.convert(src, str(tmp_path / "BookWorld"))
+    assert "units in a block (moved up): 0" in out.getvalue()
+    w = world_reader.World(str(tmp_path / "BookWorld"))
+    sx, sz = int(w.level()["SpawnX"]), int(w.level()["SpawnZ"])
+    lecterns = [be for c in w.chunks().values() for be in c["block_entities"] if str(be["id"]) == "minecraft:lectern"]
+    assert len(lecterns) == 1
+    be = lecterns[0]
+    x, y, z = int(be["x"]), int(be["y"]), int(be["z"])
+    assert w.block(x, y, z).startswith("minecraft:lectern[") and "has_book=true" in w.block(x, y, z)
+    assert w.block(x, y - 1, z) != "minecraft:air" and max(abs(x - sx), abs(z - sz)) <= 6
+    book = be["Book"]["components"]["minecraft:written_book_content"]
+    assert str(book["title"]["raw"]) == "book"
+    pages = [json.loads(str(p["raw"])) for p in book["pages"]]
+    assert pages[0]["extra"] == [{"text": "Instructions\n\n", "bold": True}, {"text": "Defend the town center."}]
+    assert pages[1]["extra"][0]["text"] == "History\n\n" and len(pages) > 3      # the long text has more pages
+    assert all(len(p["extra"][-1]["text"]) <= 14 * 19 for p in pages)
+
+
+def test_no_book_without_texts(tiny_world):
+    w = world_reader.World(tiny_world[0])
+    assert not any(str(be["id"]) == "minecraft:lectern" for c in w.chunks().values() for be in c["block_entities"])
