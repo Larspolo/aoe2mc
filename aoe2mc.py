@@ -13,6 +13,7 @@ Options:
     --preview          Also write preview.png (top view) into the world folder
     --mc-version V     Minecraft Java version of the output: 1.21.1 (default) or 26.3
     --no-units         Do not convert units (mobs, boats, minecarts)
+    --no-birds         Do not convert birds
     --no-barriers      Do not fill building footprints with invisible barrier blocks
     --architecture X   Use one architecture set for all players (western, central, mediterranean,
                        middle_eastern, south_asian, african, east_asian, southeast_asian, mesoamerican)
@@ -26,6 +27,7 @@ The world is saved with Minecraft data version 1.21.1. Newer Minecraft versions 
 import argparse
 import contextlib
 import io
+import json
 import os
 import time
 import zlib
@@ -37,6 +39,10 @@ from nbtlib.tag import Byte, Compound, Double, Float, Int, IntArray, List, Long,
 
 import buildings
 import units
+
+# Blocks with the 'waterlogged' property. A block of this list under the water surface gets waterlogged=true (#19).
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools", "mcdata", "1.21.1.json")) as _f:
+    WATERLOGGABLE = {"minecraft:" + k for k, v in json.load(_f)["blocks"].items() if "waterlogged" in v}
 
 # Output format per Minecraft Java version (docs/minecraft-versions.md). Entities: units.to_version().
 VERSIONS = {
@@ -51,6 +57,10 @@ MIN_Y, MAX_Y = -64, 320      # world height range (MAX_Y exclusive)
 HEIGHT = MAX_Y - MIN_Y
 WATER_Y = 62                 # Y of the highest water block (sea level)
 NONE = -10000                # marker for "no column here" (outside the map)
+# AoE2 tile x goes to the top corner of the screen, tile y to the bottom corner. With x → +X and y → +Z the
+# top corner is in the north-east: the map is the in-game view turned 45° clockwise, not mirrored.
+# The player looks north-east at the spawn, like the AoE2 camera (yaw 0 = south, 90 = west, 180 = north).
+SPAWN_YAW = -135.0
 
 
 # --------------------------------------------------------------------------------------------
@@ -60,6 +70,7 @@ class Blocks:
     def __init__(self):
         self.states = ["minecraft:air"]
         self.index = {"minecraft:air": 0}
+        self.wets = {}
 
     def __call__(self, state):
         if not state.startswith("minecraft:"):
@@ -70,6 +81,14 @@ class Blocks:
             self.states.append(state)
             self.index[state] = i
         return i
+
+    def wet(self, i):
+        """Block id i with waterlogged=true, or i if the block has no 'waterlogged' property."""
+        if i not in self.wets:
+            name, _, props = self.states[i].partition("[")
+            p = [kv for kv in props[:-1].split(",") if kv and not kv.startswith("waterlogged=")]
+            self.wets[i] = self(f"{name}[{','.join(p + ['waterlogged=true'])}]") if name in WATERLOGGABLE else i
+        return self.wets[i]
 
     def nbt(self, i):
         """Palette entry for block id i: {Name, Properties}, with the block names of the output version."""
@@ -968,7 +987,7 @@ PASSABLE = ("short_grass", "tall_grass", "large_fern", "petals", "moss_carpet", 
             "seagrass", "dead_bush", "sweet_berry", "rail", "carpet", "banner", "button", "lantern", "snow[")
 
 
-def plan_units(objects, players, cols, rng, stats):
+def plan_units(objects, players, cols, rng, stats, birds=True):
     """Entities per chunk: {(cx, cz): [(nbt, x, z, is_boat)]}."""
     T = cols.T
     out = {}
@@ -976,6 +995,9 @@ def plan_units(objects, players, cols, rng, stats):
         if o["kind"] == "U":
             if o.get("garrisoned"):
                 stats["units (garrisoned, skipped)"] += 1
+                continue
+            if not birds and units.is_bird(o["name"]):
+                stats["birds (skipped)"] += 1
                 continue
             desc = units.classify(o["name"], o.get("hero", False))
             if desc is None:
@@ -1082,6 +1104,8 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
                 if os.environ.get("AOE2MC_DEBUG"):
                     print("   in block:", str(top_name(nbt)), bx, top + 1, bz, B.states[col[top + 1 - MIN_Y]],
                           B.states[col[top + 2 - MIN_Y]])
+        if units.top_entity(nbt).get("NoGravity"):               # a flying bird
+            y += units.FLY_HEIGHT
         set_pos(nbt, x, float(y), z)
         out.append(nbt)
     if not out:
@@ -1179,6 +1203,12 @@ def build_chunk(cx, cz, cols, edits):
         bad = vol[ys + 1, zs, xs] != upper
         vol[ys[bad], zs[bad], xs[bad]] = SHORT_GRASS
 
+    # Blocks under the water surface are waterlogged, else they leave a dry gap in the water
+    wet = water & (vol != WATER) & (vol != ICE)
+    if wet.any():
+        vals, inv = np.unique(vol[wet], return_inverse=True)
+        vol[wet] = np.array([B.wet(int(v)) for v in vals], np.uint16)[inv]
+
     # Biomes: one per 4x4 block cell, the same for all heights.
     cells = cols.biome[x0 + 2:x0 + 16:4, z0 + 2:z0 + 16:4].T            # (z, x) 4x4
     bvals, binv = np.unique(np.tile(cells.ravel(), 4), return_inverse=True)
@@ -1263,10 +1293,12 @@ def write_level_dat(path, name, spawn):
                              "Series": String("main"), "Snapshot": Byte(0)}),
         "LevelName": String(name), "GameType": Int(1), "Difficulty": Byte(1),   # not peaceful: peaceful removes the soldiers
         "allowCommands": Byte(1), "hardcore": Byte(0), "initialized": Byte(1),
-        "SpawnX": Int(spawn[0]), "SpawnY": Int(spawn[1]), "SpawnZ": Int(spawn[2]), "SpawnAngle": Float(0),
+        "SpawnX": Int(spawn[0]), "SpawnY": Int(spawn[1]), "SpawnZ": Int(spawn[2]), "SpawnAngle": Float(SPAWN_YAW),
         "LastPlayed": Long(int(time.time() * 1000)), "Time": Long(0), "DayTime": Long(6000),
         "raining": Byte(0), "thundering": Byte(0), "rainTime": Int(0), "thunderTime": Int(0),
         "clearWeatherTime": Int(0), "WasModded": Byte(0),
+        "DragonFight": Compound({"NeedsStateScanning": Byte(1), "DragonKilled": Byte(0),   # else "key missing" on load
+                                 "PreviouslyKilled": Byte(0)}),
         "GameRules": Compound({"doDaylightCycle": String("false"), "doWeatherCycle": String("false"),
                                "doMobSpawning": String("false"), "doFireTick": String("false")}),
         "DataPacks": Compound({"Enabled": List[String]([String("vanilla")]), "Disabled": List[String]([])}),
@@ -1284,7 +1316,7 @@ def write_level_dat(path, name, spawn):
                                            "allowCommands", "initialized", "LastPlayed", "Time", "WasModded",
                                            "DataPacks")})
     level["spawn"] = Compound({"pos": IntArray(list(spawn)), "dimension": String("minecraft:overworld"),
-                               "yaw": Float(0), "pitch": Float(0)})
+                               "yaw": Float(SPAWN_YAW), "pitch": Float(0)})
     level["difficulty_settings"] = Compound({"difficulty": String("easy"), "hardcore": Byte(0), "locked": Byte(0)})
     File({"Data": level}, gzipped=True).save(path)
     files = {
@@ -1346,18 +1378,18 @@ def block_color(state):
 # Main
 # --------------------------------------------------------------------------------------------
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
-            barriers=True, mc_version=VERSION_NAME, spawn=None):
+            barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True):
     global MC
     MC = VERSIONS[mc_version]
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
     try:
-        _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn)
+        _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
 
 
-def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn):
+def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds=True):
     buildings.BARRIERS = barriers
     MOVED.clear()           # the counts of an earlier conversion in this process
     rng = np.random.default_rng(seed)
@@ -1386,7 +1418,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     for k, v in sorted(stats.items()):
         print(f"  {k}: {v}")
     per_chunk = edits.by_chunk(cols.width)
-    unit_chunks = plan_units(objects, players, cols, rng, stats) if with_units else {}
+    unit_chunks = plan_units(objects, players, cols, rng, stats, birds) if with_units else {}
     print(f"  units: {stats['units']}, fish: {stats['fish']}")
     passable = np.array([st.split(":")[1].split("[")[0] in ("air", "cave_air") or
                          any(k in st.split(":")[1] for k in PASSABLE) and "grass_block" not in st
@@ -1483,6 +1515,7 @@ def main(argv=None):
     ap.add_argument("--architecture", choices=sorted(buildings.ARCH),
                     help="use one architecture set for all players (default: from each player's civilization)")
     ap.add_argument("--no-units", action="store_true", help="do not convert units (mobs, boats, minecarts)")
+    ap.add_argument("--no-birds", action="store_true", help="do not convert birds")
     ap.add_argument("--no-barriers", action="store_true",
                     help="do not fill building footprints with invisible barrier blocks")
     ap.add_argument("--player-architecture", action="append", default=[], metavar="P=SET",
@@ -1495,7 +1528,7 @@ def main(argv=None):
     a = ap.parse_args(argv)
     try:
         convert(a.scenario, a.output, a.tile_size, a.level_height, a.name, a.seed, a.preview, a.architecture,
-                a.player_architecture, not a.no_units, not a.no_barriers, a.mc_version, a.spawn)
+                a.player_architecture, not a.no_units, not a.no_barriers, a.mc_version, a.spawn, not a.no_birds)
     except OptionError as e:
         ap.error(str(e))
 

@@ -24,6 +24,7 @@ def test_level_dat(tiny_world):
     assert int(level["DataVersion"]) == aoe2mc.DATA_VERSION
     assert str(level["LevelName"]) == "tiny"
     assert int(level["GameType"]) == 1
+    assert float(level["SpawnAngle"]) == aoe2mc.SPAWN_YAW == -135  # look north-east, like the AoE2 camera (#23)
 
 
 def test_chunks_have_valid_blocks_and_biomes(tiny_world):
@@ -75,6 +76,7 @@ def test_mc_version_26_3(tmp_path, monkeypatch):
     assert os.path.isdir(tmp_path / "W" / "dimensions" / "minecraft" / "overworld" / "region")
     assert not os.path.exists(tmp_path / "W" / "region")
     assert "spawn" in level and "SpawnX" not in level and "GameRules" not in level
+    assert float(level["spawn"]["yaw"]) == aoe2mc.SPAWN_YAW         # the AoE2 camera view, as in 1.21.1 (#23)
     for f in ("game_rules", "world_gen_settings", "weather", "world_clocks"):
         assert os.path.exists(tmp_path / "W" / "data" / "minecraft" / f"{f}.dat"), f
     ents = w.entities()

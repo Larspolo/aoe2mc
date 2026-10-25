@@ -17,8 +17,8 @@ The README already uses this style. Keep it.
 | Install | `python3 -m pip install -r requirements-dev.txt` (a `pip` on the PATH can be another Python) |
 | Lint | `ruff check .` |
 | Fast tests (~15 s) | `python3 -m pytest` (use `python3 -m`: a `pytest` on the PATH can be another Python) |
-| Slow tests (~60 s) | `python3 -m pytest -m slow` |
-| Test scenario | `python3 tools/scenarios.py tiny OUT.aoe2scenario` (or `gallery`, see `--help`) |
+| Slow tests (~2 min) | `python3 -m pytest -m slow` |
+| Test scenario | `python3 tools/scenarios.py tiny OUT.aoe2scenario` (or `gallery`, `stress`, `buildings`, `units`, `village`, `facing`) |
 | Convert | `python3 aoe2mc.py IN.aoe2scenario OUTWorld --preview` |
 | Look at a world | `python3 tools/world_reader.py OUTWorld [X Y Z]` |
 | 3D image | `python3 tools/render.py building CASTLE --arch western OUT.png` (or `world OUTWorld X0 Z0 X1 Z1 OUT.png`) |
@@ -26,6 +26,7 @@ The README already uses this style. Keep it.
 | Coverage of AoE2 types | `python3 tools/coverage.py` writes `docs/coverage.md` (designs, mappings, fallbacks) |
 | Server check | `python3 tools/mc_check.py OUTWorld` (headless Minecraft, load errors), `python3 -m pytest -m mc` |
 | Minecraft data | `python3 tools/mc_check.py --reports VERSION` (exact, from Mojang) or `tools/fetch_mcdata.py VERSION` writes `tools/mcdata/VERSION.json` |
+| Block colors | `python3 tools/fetch_colors.py VERSION` writes `tools/mcdata/colors-VERSION.json` (for `render.py`) |
 
 Put scratch output (worlds, scenarios, images) in the scratchpad or in `out/` (ignored by git). Never commit worlds.
 

@@ -48,8 +48,14 @@ INVISIBLE = (("MAP_REVEAL", "map revealer"), ("INVISIBLE_OBJECT", "invisible obj
              ("PLACEHOLDER", "placeholder"), ("DISABLED", "disabled unit"), ("OUTLW", "unused unit"),
              ("RFARC", "unused unit"))
 
-SKIP = ("BUTTERFLY", "SEAGULLS", "FALCON", "HAWK", "VULTURE", "STORK",
-        "MACAW", "CONDOR", "RAVEN", "OWL", "PEACOCK", "FLAMINGO", "CRANE", "FLAMING_BIRD")
+SKIP = ("BUTTERFLY",)
+FLYING = {   # flying birds -> mob; it floats FLY_HEIGHT blocks above the ground (NoGravity)
+    "MACAW": ("parrot", 0), "FLAMING_BIRD": ("parrot", 0),                     # red parrot
+    "FALCON": ("parrot", 4), "HAWK": ("parrot", 4), "VULTURE": ("parrot", 4),  # gray parrot
+    "CONDOR": ("parrot", 4), "SEAGULLS": ("parrot", 4),
+    "RAVEN": ("bat", None), "OWL": ("bat", None),
+}
+FLY_HEIGHT = 6
 JOKES = {   # joke and special units -> entity
     "TREASURE_CHEST": lambda: vehicle("chest_minecart", []),
     "TORCH_": lambda: mob("armor_stand", Invisible=Byte(1), ShowArms=Byte(1), HandItems=hands("torch")),
@@ -97,7 +103,8 @@ ANIMALS = [   # (keywords, AoE2 behavior, minecraft mob, extra tags)
     (("RED_FOX",), "passive", "fox", {"Type": String("red")}),
     (("ARCTIC_FOX",), "passive", "fox", {"Type": String("snow")}),
     (("PIG", "CAPYBARA"), "passive", "pig", {}),
-    (("TURKEY", "GOOSE", "CHICKEN", "PHEASANT", "OSTRICH", "RHEA", "PENGUIN"), "passive", "chicken", {}),
+    (("TURKEY", "GOOSE", "CHICKEN", "PHEASANT", "OSTRICH", "RHEA", "PENGUIN", "PEACOCK", "FLAMINGO", "STORK",
+      "RED_CROWN_CRANE"), "passive", "chicken", {}),
     (("ARCTIC_HARE",), "passive", "rabbit", {"RabbitType": Int(1)}),
     (("HARE",), "passive", "rabbit", {"RabbitType": Int(0)}),
     (("MONKEY",), "passive", "ocelot", {}),
@@ -367,6 +374,9 @@ def classify(n, hero=False):
     """Return the entity description for unit name n, or None to skip it."""
     if invisible(n) or has(n, *SKIP):
         return None
+    if n in FLYING:
+        kind, variant = FLYING[n]
+        return mob(kind, NoGravity=Byte(1), **({"Variant": Int(variant)} if kind == "parrot" else {"BatFlags": Byte(0)}))
     joke = next((f for k, f in JOKES.items() if k in n), None)
     if joke:
         return joke()
@@ -546,6 +556,10 @@ def make_entity(o, players, pos, rng, desc=None):
     label["CustomName"] = String(json.dumps({"text": pretty(o["name"], o.get("hero")), "color": color}))
     label["CustomNameVisible"] = Byte(1)
     return nbt
+
+
+def is_bird(n):
+    return n in FLYING or n in ("PEACOCK", "FLAMINGO", "STORK", "RED_CROWN_CRANE")
 
 
 def is_boat(desc):
