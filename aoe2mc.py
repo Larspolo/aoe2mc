@@ -54,8 +54,8 @@ WATERLOGGABLE = {k for k, v in BLOCK_PROPS.items() if "waterlogged" in v}
 
 # Output format per Minecraft Java version (docs/minecraft-versions.md). Entities: units.to_version().
 VERSIONS = {
-    "1.21.1": dict(name="1.21.1", data_version=3955, renames={}),
-    "26.3": dict(name="26.3", data_version=5023, renames={"minecraft:chain": "minecraft:iron_chain"}),
+    "1.21.1": dict(name="1.21.1", data_version=3955, pack_format=48, renames={}),
+    "26.3": dict(name="26.3", data_version=5023, pack_format=121, renames={"minecraft:chain": "minecraft:iron_chain"}),
 }
 VERSION_NAME = "26.3"        # the default output version. The code uses the 1.21.1 names (no renames).
 DATA_VERSION = VERSIONS[VERSION_NAME]["data_version"]
@@ -1688,6 +1688,59 @@ def write_objects(path, size, T, H, players, objects, cols, ground):
         json.dump(data, f, indent=1)
 
 
+# Work sounds at buildings (#220): name part -> (sound, predicate, particle). Only Minecraft sounds; the villager
+# work sounds exist in 1.21.1 and 26.3. The first matching rule wins.
+WORK_SOUNDS = [
+    ("BLACKSMITH", "block.anvil.use", "sometimes", "lava"), ("MARKET", "entity.villager.trade", "sometimes", None),
+    ("TOWN_CENTER", "block.bell.use", "rare", None), ("LUMBER_CAMP", "item.axe.strip", "sometimes", None),
+    ("MINING_CAMP", "block.stone.break", "sometimes", None), ("DOCK", "entity.villager.work_fisherman", "sometimes", None),
+    ("MONASTERY", "entity.villager.work_cleric", "sometimes", None), ("MILL", "entity.villager.work_farmer", "sometimes", None),
+    ("ARCHERY_RANGE", "entity.villager.work_fletcher", "sometimes", None),
+    ("UNIVERSITY", "entity.villager.work_librarian", "sometimes", None),
+    ("SIEGE_WORKSHOP", "entity.villager.work_mason", "sometimes", None),
+]
+CHANCE = {"sometimes": 0.25, "rare": 0.03}      # per pulse of 2 s
+
+
+def write_datapack(out, objects, ground):
+    """datapacks/aoe2mc: a function every 2 s plays a work sound at each building with a player near it
+    (docs/datapack.md). Fixed positions, no marker entities: the check costs nothing that /tick query shows."""
+    root = os.path.join(out, "datapacks", "aoe2mc")
+    lines = []
+    for o in objects:
+        rule = next((r for r in WORK_SOUNDS if r[0] in o["name"]), None) if o["kind"] == "B" else None
+        if rule is None or "footprint" not in o:
+            continue
+        x0, z0, x1, z1 = o["footprint"]
+        x, z = (x0 + x1) // 2, (z0 + z1) // 2
+        if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
+            continue
+        at = f"execute positioned {x} {int(ground[x, z]) + 1} {z} if entity @a[distance=..24] " \
+             f"if predicate aoe2mc:{rule[2]} run"
+        lines.append(f"{at} playsound minecraft:{rule[1]} ambient @a ~ ~ ~ 1 {0.9 + 0.1 * (x % 3):.1f}")
+        if rule[3]:
+            lines.append(f"{at} particle minecraft:{rule[3]} ~ ~1 ~ 0.4 0.2 0.4 0 4")
+    if not lines:           # the server finds a new pack by itself; level.dat needs no entry
+        return 0
+    files = {
+        "pack.mcmeta": {"pack": {"description": "aoe2mc: work sounds at buildings", "pack_format": MC["pack_format"]}
+                        | ({"min_format": MC["pack_format"], "max_format": MC["pack_format"]}
+                           if MC["data_version"] >= V26_1 else {})},
+        "data/minecraft/tags/function/load.json": {"values": ["aoe2mc:load"]},
+        "data/aoe2mc/function/load.mcfunction": "schedule function aoe2mc:pulse 40t replace\n",
+        "data/aoe2mc/function/pulse.mcfunction": "\n".join(lines + ["schedule function aoe2mc:pulse 40t replace"]) + "\n",
+    }
+    key = "type" if MC["data_version"] >= V26_1 else "condition"     # 26.x renamed the key of a predicate
+    for name, chance in CHANCE.items():
+        files[f"data/aoe2mc/predicate/{name}.json"] = {key: "minecraft:random_chance", "chance": chance}
+    for name, data in files.items():
+        path = os.path.join(root, name)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as f:
+            f.write(data if isinstance(data, str) else json.dumps(data))
+    return sum("playsound" in line for line in lines)
+
+
 def write_level_dat(path, name, spawn, yaw=SPAWN_YAW, size=None):
     """size: the map size in blocks; the vanilla world border goes around the map (#172)."""
     def dim(kind, gen):
@@ -2001,6 +2054,9 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
 
     write_level_dat(os.path.join(out, "level.dat"), name, spawn, yaw, cols.n)
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground)
+    n = write_datapack(out, objects, ground)
+    if n:
+        print(f"  work sounds at buildings: {n}")
 
     from PIL import Image
     lut = np.array([block_color(s) for s in B.states], np.uint8)

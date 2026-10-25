@@ -48,6 +48,8 @@ The world is in creative mode. Outside the map there is only void. The world lis
 The file `aoe2mc.json` in the world folder lists the map size, the players and each object: AoE2 ID, name, owner,
 tile position and rotation, the UUID of the entity (units) and the footprint in blocks (buildings). It also has the
 height where a unit stands, for each block column ("ground", "-" for water). A game program can use it.
+Buildings make work sounds when you are near them (anvil at the blacksmith, bell at the town center, trade at the
+market and more): the world has a small datapack (`datapacks/aoe2mc`) with Minecraft sounds only.
 
 First game: `python3 game/run.py MyMapWorld --play` starts a server on the world. Join it at the address that it prints
 and hold the carrot on a stick. Right click a villager of player 1 to select it, then right click a tree: the
