@@ -3,7 +3,11 @@
 Coverage report of the AoE2 object types: which types get their own design or mapping, and which use a fallback.
 
 Usage:
-    python3 tools/coverage.py [OUT.md]        # default: docs/coverage.md
+    python3 tools/coverage.py [OUT.md]             # default: docs/coverage.md
+    python3 tools/coverage.py --ratchet            # also lower MAX in tests/test_coverage.py to the counts
+
+The workflow `coverage.yml` runs it with `--ratchet` on main and commits both files (#233). PRs do not change them,
+so parallel PRs get no merge conflicts there. Look at the report of a PR with `python3 tools/coverage.py OUT.md`.
 
 Fallbacks: buildings that use the `generic` design, other objects that `place_objects` skips, and units that
 `units.classify()` skips. The default foot soldier (`units.infantry`) is correct for many infantry units, so the
@@ -13,6 +17,7 @@ purpose", not fallbacks.
 import contextlib
 import io
 import os
+import re
 import sys
 from collections import Counter
 
@@ -126,12 +131,41 @@ def report(groups):
     return "\n".join(lines) + "\n"
 
 
+def ratchet(c, path=os.path.join(ROOT, "tests", "test_coverage.py")):
+    """Lower the maximums in MAX of the test to the counts c. A maximum never goes up. Returns the changes."""
+    with open(path) as f:
+        lines = f.read().splitlines(keepends=True)
+    changes, inside = [], False
+    for i, line in enumerate(lines):
+        inside = inside or line.startswith("MAX = {")                # only the lines of the MAX dict
+        m = re.search(r'"([^"]+)": \{([^}]*)\}', line) if inside else None   # "Units": {"fallback": 3, ...}
+        inside = inside and not line.rstrip().endswith("}}")
+        if not m or m.group(1) not in c:
+            continue
+        title = m.group(1)
+
+        def lower(k):
+            key, old = k.group(1), int(k.group(2))
+            new = min(old, c[title][key])
+            if new != old:
+                changes.append(f"{title} {key}: {old} -> {new}")
+            return f'"{key}": {new}'
+        lines[i] = line[:m.start(2)] + re.sub(r'"(\w+)": (\d+)', lower, m.group(2)) + line[m.end(2):]
+    with open(path, "w") as f:
+        f.write("".join(lines))
+    return changes
+
+
 def main(argv):
-    out = argv[1] if len(argv) > 1 else os.path.join(ROOT, "docs", "coverage.md")
-    text = report(groups())
+    args = [a for a in argv[1:] if a != "--ratchet"]
+    out = args[0] if args else os.path.join(ROOT, "docs", "coverage.md")
+    g = groups()
     with open(out, "w") as f:
-        f.write(text)
+        f.write(report(g))
     print(f"wrote {out}")
+    if "--ratchet" in argv:
+        for line in ratchet(counts(g)) or ["MAX: no change"]:
+            print(line)
 
 
 if __name__ == "__main__":

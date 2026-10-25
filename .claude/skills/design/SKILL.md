@@ -34,7 +34,8 @@ python3 tools/render.py sheet CASTLE $SCRATCH/before_sheet.png        # all 9 se
 python3 tools/render.py building CASTLE --arch western $SCRATCH/before_se.png
 python3 tools/render.py building CASTLE --arch western --view nw $SCRATCH/before_nw.png
 ```
-The default view (south-east) shows the front, as the AoE2 camera does. Look at the images with the Read tool.
+The default view (south-east) shows the front. To compare with a reference image, render `--view sw`
+too: it is the AoE2 camera (the bottom corner of the screen is the south-west corner, the front is on the right, #128). Look at the images with the Read tool.
 The default `--scale 8` is small for details: use `--scale 16` for one building. `sheet --variants 1` is faster.
 
 ## 3. List the differences
@@ -50,6 +51,8 @@ For each feature, take the block from the table in `docs/DESIGN.md`, section 2.
 - Use the fields of the `Style` for materials, so that all architecture sets still work.
 - Keep `vary()`, `weather()` and `decorate()`. The main block stays the large majority.
 - Add a line to the table in `docs/DESIGN.md` for each new feature block.
+- A new design on water (a pier on piles) must go into `is_dock` (`place_building`) and `NO_PROPS`, as `dock`,
+  else it gets a foundation and no piles (#127).
 
 ## 5. Check
 

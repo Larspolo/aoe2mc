@@ -56,3 +56,28 @@ def test_release_and_takeover(clones, monkeypatch):
     assert claim.subject("claim/5").startswith("Release #5 by run-0")
     assert sorted(claim.refs(5)) == [1, 2, 3]
     assert sorted(claim.refs(50)) == []                         # claim/5 is no prefix match of claim/50
+
+
+def test_stale_rule_with_fixed_times():
+    """A run that a usage limit stopped at 20:17 (last beat 20:10) is free 30 minutes after its last beat (#231),
+    which is before the limit reset (20:30) + 30 minutes. A live run beats again and keeps its ticket."""
+    t = lambda hh, mm: (hh * 60 + mm) * 60                                    # noqa: E731
+    claim_line, beat = "Claim #9 by run-0 (abc)", t(20, 10)
+    assert not claim.stale(claim_line, beat, t(20, 39))
+    assert claim.stale(claim_line, beat, t(20, 40))
+    assert claim.stale("Beat #9 by run-0", beat, t(21, 0))
+    assert not claim.stale("Beat #9 by run-0", t(20, 45), t(21, 0))          # beat after the reset: alive
+    assert not claim.stale("Release #9 by run-0", beat, t(23, 0))            # released: free anyway, no takeover
+
+
+def test_beat_moves_the_claim_time(clones, monkeypatch):
+    a, b, _ = clones
+    assert tool(a, "6").returncode == 0
+    assert tool(b, "6", "--beat").returncode != 0                 # not the claim of run-1
+    assert tool(a, "6", "--stale").returncode == 1                # just claimed
+    assert tool(a, "6", "--beat").stdout.strip() == "beat claim/6"
+    monkeypatch.chdir(a)
+    assert claim.subject("claim/6") == "Beat #6 by run-0"
+    assert tool(b, "6").returncode == 1                           # a beat is no release
+    assert tool(a, "6", "--release").stdout.strip() == "released claim/6"
+    assert tool(a, "6", "--stale").returncode == 1                # released: not stale

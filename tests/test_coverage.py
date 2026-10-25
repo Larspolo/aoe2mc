@@ -3,7 +3,7 @@ import pytest
 
 import coverage as cov
 
-# Allowed maximums (ratchet). When a count goes down, lower its maximum here in the same PR.
+# Allowed maximums (ratchet). Do not change them in a PR: the workflow coverage.yml lowers them on main (#233).
 MAX = {"Buildings": {"fallback": 0, "default": 0},
        "Other objects": {"fallback": 41, "default": 0},
        "Units": {"fallback": 3, "default": 0},
@@ -33,6 +33,13 @@ def test_coverage_report(tmp_path):
 def test_fallbacks_do_not_go_up(groups, title):
     c = cov.counts(groups)[title]
     for key, limit in MAX[title].items():
-        assert c[key] <= limit, f"{title}: {c[key]} {key} > {limit}. See docs/coverage.md (python3 tools/coverage.py)."
-        assert c[key] == limit, (f"{title}: {key} went down from {limit} to {c[key]}. Good! Lower MAX['{title}']"
-                                 f"['{key}'] in tests/test_coverage.py to {c[key]} and run python3 tools/coverage.py.")
+        assert c[key] <= limit, f"{title}: {c[key]} {key} > {limit}. See the report: python3 tools/coverage.py OUT.md"
+
+
+def test_ratchet_only_lowers(tmp_path):
+    src = tmp_path / "t.py"
+    src.write_text('MAX = {"Units": {"fallback": 3, "default": 0},\n       "Heroes": {"fallback": 2, "default": 1}}\n')
+    c = {"Units": {"fallback": 1, "default": 4}, "Heroes": {"fallback": 2, "default": 0}}
+    assert cov.ratchet(c, str(src)) == ["Units fallback: 3 -> 1", "Heroes default: 1 -> 0"]
+    assert src.read_text() == ('MAX = {"Units": {"fallback": 1, "default": 0},\n'
+                               '       "Heroes": {"fallback": 2, "default": 0}}\n')
