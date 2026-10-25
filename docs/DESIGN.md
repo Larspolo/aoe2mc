@@ -61,7 +61,9 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Hides | `brown_wool` | `helepolis` |
 | Band in the player color | `*_wool` (player color) | `town_center` |
 | Outside stairs to an upper floor | `*_stairs` of the wood of the set | `town_center` |
-| Books, study | `bookshelf`, `lectern` | none yet (`university` needs them) |
+| Books, study | `bookshelf`, `lectern` (with a book) | `university` |
+| Scholar statue | `chiseled_stone_bricks` pedestal, `quartz_pillar`, `chiseled_quartz_block` | `university` |
+| Rose window | stained glass panes | `monastery` |
 
 Add a line when a design uses a new feature block. Each new block state must pass `mcvalid`.
 

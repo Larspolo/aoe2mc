@@ -769,10 +769,13 @@ def monastery(c, w, st, col, T, ctx):
         c.cylinder(x0 + 0.5, w - 1.5, 1, 1, hn + 6, st.plaster)            # minaret
         c.cone(x0 + 0.5, w - 1.5, 1.5, hn + 6, st.dome)
     else:
-        c.gable(x0 - 1, x1 + 1, 0, w - t + 1, hn, st.roof if st.shape != "flat" else "deepslate_tile",
+        c.gable(x0 - 1, x1 + 1, 0, w + 1, hn, st.roof if st.shape != "flat" else "deepslate_tile",
                 fill=(x0, x1, 1, w, stone), axis="z")
-        # Bell tower at the front
-        tx0 = mid - t // 2
+        rc, ry = (x0 + x1 - 1) // 2, hn + 2                                 # rose window in the front gable
+        for dx, dy in ((0, 0), (-1, 0), (1, 0), (0, -1), (0, 1)):
+            c.set(rc + dx, ry + dy, w - 1, "yellow_stained_glass_pane" if dx or dy else "red_stained_glass_pane")
+        # Bell tower at the front west corner, as in the game: the facade with the door stays free
+        tx0 = max(0, x0 - 1)
         th = hn + nw // 2 + 4
         c.room(tx0, tx0 + t, w - t, w, 0, th, stone)
         c.box(tx0 + 1, tx0 + t - 1, th - 2, th, w - t, w, "air")
@@ -791,22 +794,59 @@ def monastery(c, w, st, col, T, ctx):
 
 
 def university(c, w, st, col, T, ctx):
+    """Like the game: a hall of two floors at the back with a library inside, a higher block on the east side
+    and a scholar statue in the front yard. Sets with domes keep a domed hall (the observatory) behind columns."""
     c.box(0, w, 0, 1, 0, w, st.stone2)
-    h = max(5, round(w * 0.45))
-    c.room(1, w - 1, 1, w - 2, 0, h, st.stone if st.shape != "flat" else st.plaster, st.floor)
-    c.windows(1, w - 1, 1, w - 2, 3, step=2, height=2)
-    for x in range(1, w - 1, 2):                                          # columns in front
-        c.box(x, x + 1, 1, h + 1, w - 1, w, "quartz_pillar")
-    c.box(0, w, h + 1, h + 2, 1, w, "smooth_quartz" if st.shape != "flat" else family(st.roof)[2])
     mid = w // 2
-    c.box(mid, mid + 1, 1, 3, w - 2, w - 1, "air")
-    c.door(mid, 1, w - 2)
-    r = max(1.5, w / 4 - 0.5)                                             # observatory dome
-    cx = (w - 1) / 2
-    c.cylinder(cx, cx - 1, r, h + 2, h + 4, st.plaster)
-    top = c.dome(cx, cx - 1, r, h + 4, st.dome if st.domes else "oxidized_cut_copper")
-    c.set(mid, top + 1, int(cx - 1), "lightning_rod")
-    c.banner(1, h - 1, w, col); c.banner(w - 2, h - 1, w, col)
+    if st.domes:
+        h = max(5, round(w * 0.45))
+        c.room(1, w - 1, 1, w - 2, 0, h, st.stone if st.shape != "flat" else st.plaster, st.floor)
+        c.windows(1, w - 1, 1, w - 2, 3, step=2, height=2)
+        library(c, 2, w - 2, 2, 4)
+        for x in range(1, w - 1, 2):                                      # columns in front
+            c.box(x, x + 1, 1, h + 1, w - 1, w, "quartz_pillar")
+        c.box(0, w, h + 1, h + 2, 1, w, "smooth_quartz" if st.shape != "flat" else family(st.roof)[2])
+        c.box(mid, mid + 1, 1, 3, w - 2, w - 1, "air")
+        c.door(mid, 1, w - 2)
+        r = max(1.5, w / 4 - 0.5)                                         # observatory dome
+        cx = (w - 1) / 2
+        c.cylinder(cx, cx - 1, r, h + 2, h + 4, st.plaster)
+        top = c.dome(cx, cx - 1, r, h + 4, st.dome)
+        c.set(mid, top + 1, int(cx - 1), "lightning_rod")
+        c.banner(1, h - 1, w, col); c.banner(w - 2, h - 1, w, col)
+        return
+    m = inset(w)
+    h = max(6, round(w * 0.5))                                            # two floors
+    zb = m + max(4, w // 2)                                               # hall: z m .. zb-1
+    tx = w - m - max(4, w // 3)                                           # east block: x tx .. w-m-1
+    c.timber_room(m, tx + 1, m, zb, 0, h, st)
+    c.windows(m, tx + 1, m, zb, 2, sides="nws", step=2)
+    c.windows(m, tx + 1, m, zb, h // 2 + 2, sides="nws", step=2)
+    library(c, m + 1, tx, m + 1, zb - m - 3)
+    dx = (m + tx) // 2
+    c.door(dx, 1, zb - 1)
+    c.roof(m, tx + 1, m, zb, h + 1, st, axis="x")
+    th = h + 2                                                            # the higher east block, to the front
+    c.timber_room(tx, w - m, m, w - m - 1, 0, th, st)
+    c.windows(tx, w - m, m, w - m - 1, 2, sides="es", step=2)
+    c.windows(tx, w - m, m, w - m - 1, th // 2 + 2, sides="es", step=2)
+    if st.shape in ("gable", "hip", "asian"):
+        c.hip(tx - 1, w - m + 1, m - 1, w - m, th, st.roof, flare=st.shape == "asian")
+    else:
+        c.roof(tx, w - m, m, w - m - 1, th + 1, st)
+    c.door(tx + 1, 1, w - m - 2, facing="south")
+    sx, sz = (m + tx) // 2 - 1, (zb + w) // 2                             # scholar statue in the yard
+    c.set(sx, 1, sz, "chiseled_stone_bricks")
+    c.box(sx, sx + 1, 2, 4, sz, sz + 1, "quartz_pillar")
+    c.set(sx, 4, sz, "chiseled_quartz_block")
+    c.banner(dx + 1, 3, zb, col); c.banner(tx + 2, 4, w - m - 1, col)
+
+
+def library(c, x0, x1, z, rows):
+    """Bookshelves along the back wall (z) and lecterns with books in front of them."""
+    c.box(x0, x1, 1, 3, z, z + 1, "bookshelf")
+    for x in range(x0 + 1, x1 - 1, 3):
+        c.set(x, 1, z + min(2, rows), "lectern[facing=north,has_book=true,powered=false]")
 
 
 def mill(c, w, st, col, T, ctx):
