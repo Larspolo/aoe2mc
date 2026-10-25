@@ -167,6 +167,21 @@ def test_no_book_without_texts(tiny_world):
                    for c in w.chunks().values() for be in c["block_entities"])
 
 
+def test_book_has_the_objectives(tmp_path):
+    """The triggers that the game lists as objectives go into the book, in their order; other triggers do not (#360)."""
+    import scenarios
+    scn = scenarios.new_scenario(16)
+    tm = scn.trigger_manager
+    tm.add_trigger("Second", description="Keep the <RED>castle</RED>.", display_as_objective=True, description_order=2)
+    tm.add_trigger("Spawn wolves", description="internal")
+    tm.add_trigger("Find the relic", display_as_objective=True, description_order=1)
+    src = str(tmp_path / "goals.aoe2scenario")
+    scenarios.save(scn, src)
+    texts = aoe2mc.read_scenario(src)[4]
+    assert texts["objectives"] == "- Find the relic\n- Keep the <RED>castle</RED>."
+    assert aoe2mc.book_pages(texts) == [("Objectives", "- Find the relic\n- Keep the castle.")]
+
+
 def test_mc_version_1_21_1(tmp_path):
     import contextlib
     import io
