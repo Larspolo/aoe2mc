@@ -36,6 +36,7 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   `mgz.model.parse_match(f).map.tiles` gives terrain and elevation of a real DE map. Install `mgz` after
   `python3 -m pip install --ignore-installed setuptools` (the Debian setuptools cannot build it).
   A record has each town center 4 times (IDs 109 and the annex parts 618–620): `read_record` skips them (#139).
+- An unknown block entity id gives "Skipping block entity with invalid type": 26.3 has no `bed` block entity (#249).
 
 ## Libraries
 
