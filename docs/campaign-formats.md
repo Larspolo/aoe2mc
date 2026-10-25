@@ -103,6 +103,13 @@ The layout (genie-scx `SCXFormat::read_from`):
       `f32` angle, `i16` frame (format ≥ `1.15`), `i32` garrisoned in (format ≥ `1.13`).
    6. Triggers (format ≥ `1.14`) and AI files. The converter does not need them.
 
+`scx.py` (#311) reads format `1.21` (data version 1.14 to 1.27): `scx.read(path)` gives the map size, terrain and
+elevation (`[x, y]`, as `read_scenario`) and the players (civilization, color, start view). It skips the header with its
+size field, skips `TribeScen` field by field, reads the map, skips the world data and the objects, and reads the
+scenario player data (the color is there). A test builds a file byte by byte (`tests/test_scx.py`). A check with the
+genie-rs test file `Age of Heroes b1-3-5.scx` (format `1.21`, 200 × 200, not in this repository) read all 8 players,
+and the bytes after the player data are the trigger version 1.6.
+
 The civilization of a player is in `TribeScen`, so a reader must read all of `TribeScen` to get to the map. The unit
 type IDs of the old games are the same IDs as in DE for the units that both have.
 

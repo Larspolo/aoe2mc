@@ -39,6 +39,8 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - An unknown block entity id gives "Skipping block entity with invalid type": 26.3 has no `bed` block entity (#249).
 - Parallel runs read the same new owner comment at once: just before you make a ticket from it, list the issues of
   the last 15 minutes and reply in its thread first (3 copies of one epic: #306, #310, #313; lock: #320).
+- Old scenarios for local checks (do not commit, no license): GitHub raw `SiegeEngineers/genie-rs/master/crates/genie-scx/
+  test/scenarios/` (`Age of Heroes b1-3-5.scx` is format 1.21; names in `format.rs` tests, #311).
 
 ## Libraries
 
