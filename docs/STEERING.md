@@ -13,6 +13,8 @@ Each run does one work cycle (the `autopilot` skill):
 4. It reports on the **Agent status** issue (label `agent-status`): it updates the dashboard in the issue
    body and adds a short comment. GitHub sends you a notification.
 5. It improves its own process: it writes learnings, corrects its instructions and makes tooling tickets.
+   Every 5th run, the `improve` skill measures the runs (minutes, CI runs, time sinks) and makes one larger
+   improvement. The status issue lists each process change.
 
 The agent takes instructions only from comments and issues by `Larspolo`.
 
@@ -28,6 +30,8 @@ The agent takes instructions only from comments and issues by `Larspolo`.
 | Answer a question | Answer in the `needs-human` ticket. The agent removes the label. |
 | Stop the agent | Add label `paused` to the status issue. Remove it to continue. |
 | Cancel a ticket | Close it as "not planned". |
+| Reject a process change | Comment on the status issue. The agent reverts it and notes why. |
+| Ask for a process review | Comment "process review" on the status issue. |
 
 Order of work: `P0` → `P1` → `P2` → `P3`. With the same priority, the lowest issue number goes first.
 Tickets with `needs-human`, `blocked` or `epic` wait.
@@ -71,5 +75,6 @@ Keep "Allow package managers" on. Steps: https://code.claude.com/docs/en/cloud-e
 | `.claude/skills/autopilot/` | The work cycle. |
 | `.claude/skills/verify/` | How to test a change. |
 | `.claude/skills/ticket/` | How to write and split tickets. |
+| `.claude/skills/improve/` | How the agent measures and improves its own process. |
 
 You can edit these files. The agent follows the version on `main`.

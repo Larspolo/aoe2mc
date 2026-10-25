@@ -6,9 +6,15 @@ or when the owner changes the direction.
 
 ## Aim
 
+The repository description gives the vision: convert AoE2 games to Minecraft. Start with the maps.
+Later: fully accurate replays, bots that play AoE2 in Minecraft, and players that play AoE2 in Minecraft.
+
+Aim of phases 1–5 (the map converter):
 - Every AoE2 object type has a recognizable form in Minecraft.
 - The worlds load without errors in the newest Minecraft Java version.
 - The known limits in the README are solved, or the README explains them.
+
+Aim of phase 6: a plan for replays and gameplay that the owner approves, with a small first milestone.
 
 ## Principles
 
@@ -37,6 +43,16 @@ or when the owner changes the direction.
 ### 5. Designs and features
 #22 unique buildings · #25 diagonal gates · #24 packaging · #26 speed · #27 scenario book · #28 birds ·
 #29 sample maps (owner)
+
+### 6. Vision: replays and gameplay (research first)
+#31 replay of a recorded game · #32 play AoE2 in Minecraft (game rules, players, bots)
+
+The research tickets make follow-up tickets. The owner decides on each milestone before work starts.
+
+## Process
+
+The agent improves its own way of work: after each ticket (autopilot step 9) and every 5th run with
+the `improve` skill, which uses the metrics in the run comments on the status issue.
 
 ## Later ideas (no ticket yet)
 

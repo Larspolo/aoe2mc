@@ -78,8 +78,12 @@ Details: the `verify` skill.
 
 ## Improve the process
 
-You maintain this file, `docs/LEARNINGS.md` and the skills in `.claude/skills/`. After each ticket:
-add a learning when something cost you time, correct an instruction that was wrong, and make a `tooling` ticket
-when a tool or test would have found a problem earlier. Keep this file short: put details in skills or docs.
+You maintain this file, `docs/LEARNINGS.md`, the skills in `.claude/skills/` and the tools in `tools/`.
+The aim is more closed tickets for the same usage, with the same quality.
+- After each ticket (autopilot step 9): add a learning when something cost you time, correct an instruction
+  that was wrong, and make a `tooling` ticket when a tool or test would have found a problem earlier.
+- Every 5th run: the `improve` skill measures the runs and makes one larger improvement.
+- Never weaken tests, CI or safety rules to save time. List each process change on the status issue.
+Keep this file short: put details in skills or docs.
 
 @docs/LEARNINGS.md
