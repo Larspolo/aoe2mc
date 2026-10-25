@@ -50,16 +50,16 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   `CORNERS`; openage: axes NE, SE). Block x = east, z = south: the world is turned 45°, not mirrored; the AoE2 top
   corner is in the north-east. The spawn looks north-east like the AoE2 camera (`SPAWN_YAW`). Gates `WEST_TO_EAST`
   and `NORTH_TO_SOUTH` are diagonal. Do not trust the axis gate names (`samples/gallery` has a `NORTHWEST_TO_SOUTHEAST`
-  gate along tile x): `plan_walls` uses the walls next to the gate. `--orientation` turns the
-  tile grid (`turn_map`) and each building canvas (`buildings.turn`); gates, walls and bridges follow their neighbours.
+  gate along tile x): `plan_walls` uses the walls next to the gate. `--orientation` turns the tile grid (`turn_map`)
+  and each building canvas (`buildings.turn`); gates, walls and bridges follow their neighbours.
 - Water (#164, `docs/research/water.md`): AoE2 has no water level. Real maps have all water at elevation 0.
-- The tiny scenario has a town center, a house and a barracks: change the house chimney to see the golden test fail.
-- Test terrain code without a scenario: `columns()` in `tests/test_terrain.py` makes `aoe2mc.Columns` from a
-  small terrain array. Maps of the same size draw the same random numbers, so two maps can be compared per block.
+- Golden test: change the house chimney of the tiny scenario to see it fail. `columns()` in `tests/test_terrain.py`
+  makes `Columns` from a terrain array. Maps of one size draw the same random numbers: compare them per block.
 - `place_objects` without a scenario: call it with one object dict (`kind`, `name`, `player`, `x`, `y`,
   `rotation`, `hero`, `garrisoned`) on a 16 × 16 `Columns`. With `sys.settrace` this shows which branch each
   `OtherInfo` name takes (#6). Buildings (also `FISH_TRAP`, docks) need `kind="B"`, else nothing is placed.
   `build_chunk` returns `(nbt, vol)`: test exact blocks of a chunk with `vol` (#19).
+- A new design on water must go into `is_dock` (`place_building`) and `NO_PROPS`, else it gets a foundation (#127).
 - `aoe2mc.py` reads `tools/mcdata/1.21.1.json` at import (#19). The package ships it as `tools.mcdata`
   (`pyproject.toml`). A new runtime data file must go into the package data too (test: `pip install .` in a venv).
 - `terrain_style` checks names in sequence: an earlier rule wins (`ROAD_GRAVEL` matched `GRAVEL` until #5).
@@ -75,5 +75,5 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 - An invalid item in a block entity can vanish without a log line. `tools/mc_check.py W --keep DIR` keeps the world
   that the server saved: read it with `tools/world_reader.py` (1.21.1 saves the loaded chunks again, 26.3 can skip them) (#27).
   26.3 saves a default state as the bare name and puts the properties in another order: normalize before you compare (#189).
-- A new design on water must go into `is_dock` (`place_building`) and `NO_PROPS`, else it gets a foundation (#127).
 - New entity NBT: convert a map with one unit per type (`add_unit` in a loop) and run `tools/mc_check.py` (1 min).
+- `vary()` picks a `ROOF_ALT` material per variant: count blocks with `render.building_blocks(NAME, arch, variant=v)` (#146).

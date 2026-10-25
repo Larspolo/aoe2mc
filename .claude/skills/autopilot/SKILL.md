@@ -185,3 +185,4 @@ Argument `max`: continue until no ticket is ready or a usage limit stops you. Wh
 full and tickets are still ready, start a fresh run, then stop: fire the scheduled task that started this run
 (its ID is in the run prompt) once with `fire_trigger`. Never fire it when no ticket is ready, when the status
 issue has `paused`, or after a usage-limit error. A fresh run has a small context, so it works faster.
+Some sessions have no `fire_trigger` tool (`ToolSearch` finds none): then do not fire, continue alone and say so in the report.
