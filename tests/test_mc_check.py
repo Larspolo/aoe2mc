@@ -1,0 +1,36 @@
+"""tools/mc_check.py: problem lines in a server log, and a real server run on the tiny world (marker mc)."""
+import urllib.request
+
+import pytest
+
+import mc_check
+
+LOG = """[17:14:40] [Server thread/INFO]: Starting minecraft server version 1.21.1
+[17:14:40] [Yggdrasil Key Fetcher/ERROR]: Failed to request yggdrasil public key
+com.mojang.authlib.exceptions.MinecraftClientException: Failed to read from https://api.minecraftservices.com/publickeys
+Caused by: java.net.UnknownHostException: api.minecraftservices.com
+[17:14:42] [Server thread/WARN]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[17:17:13] [Server thread/ERROR]: Recoverable errors when loading section [2, 3, 2]: (Unknown registry key)
+[17:17:14] [Server thread/INFO]: Done (1.533s)! For help, type "help\"""".split("\n")
+
+
+def test_problems_ignore_harmless_entries_with_their_stack_trace():
+    assert mc_check.problems(LOG) == [LOG[5]]
+
+
+def mojang_reachable():
+    try:
+        urllib.request.urlopen(mc_check.MANIFEST, timeout=10).close()
+        return True
+    except OSError:
+        return False
+
+
+@pytest.mark.mc
+def test_server_loads_tiny_world(tiny_world):
+    if not mojang_reachable():
+        pytest.skip("Mojang is not reachable")
+    bad, log = mc_check.check(tiny_world[0])
+    assert any("Done (" in line for line in log)
+    assert any("Saved the game" in line for line in log)
+    assert bad == []
