@@ -1,7 +1,8 @@
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q -m 'not slow'"
-markers = ["slow: long tests (full gallery conversion); run with: pytest -m slow"]
+addopts = "-q -m 'not slow and not mc'"
+markers = ["slow: long tests (full gallery conversion); run with: pytest -m slow",
+           "mc: load a world in a real Minecraft server (downloads 50 MB); run with: pytest -m mc"]
 filterwarnings = ["ignore::DeprecationWarning:AoE2ScenarioParser.*"]
 
 [tool.ruff]

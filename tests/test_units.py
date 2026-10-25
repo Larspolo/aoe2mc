@@ -70,3 +70,10 @@ def test_animals_follow_the_owner_rule():
 def test_war_animals_are_not_animals():
     for name in ("BATTLE_ELEPHANT", "CAMEL_RIDER", "JAGUAR_WARRIOR", "TIGER_CAVALRY", "STANDARD_BEARER"):
         assert units.animal(name) is None, name
+
+
+@pytest.mark.parametrize("name,reason", [("MOVEABLE_MAP_REVEALER_A", "map revealer"), ("INVISIBLE_OBJECT_C", "invisible object"),
+                                         ("HINT_OBJECT", "editor hint"), ("MILITIA", None)])
+def test_invisible(name, reason):
+    assert units.invisible(name) == reason
+    assert (units.classify(name) is None) == (reason is not None)

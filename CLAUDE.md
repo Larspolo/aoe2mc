@@ -24,7 +24,8 @@ The README already uses this style. Keep it.
 | 3D image | `python3 tools/render.py building CASTLE --arch western OUT.png` (or `world OUTWorld X0 Z0 X1 Z1 OUT.png`) |
 | Check states | `tools/mcvalid.py` (`block_error`, `entity_error`, `biome_error`) |
 | Coverage of AoE2 types | `python3 tools/coverage.py` writes `docs/coverage.md` (designs, mappings, fallbacks) |
-| Minecraft data | `python3 tools/fetch_mcdata.py VERSION` writes `tools/mcdata/VERSION.json` |
+| Server check | `python3 tools/mc_check.py OUTWorld` (headless Minecraft, load errors), `python3 -m pytest -m mc` |
+| Minecraft data | `python3 tools/mc_check.py --reports VERSION` (exact, from Mojang) or `tools/fetch_mcdata.py VERSION` writes `tools/mcdata/VERSION.json` |
 
 Put scratch output (worlds, scenarios, images) in the scratchpad or in `out/` (ignored by git). Never commit worlds.
 
@@ -67,8 +68,8 @@ not change. Do not add a dependency without a ticket that asks for it. Keep func
 ## How to verify
 
 There is no Minecraft client here. Use, from cheap to expensive: lint and fast tests → slow tests → convert a
-scenario with `--preview` and look at the PNG with the Read tool → `tools/world_reader.py` for exact blocks.
-The Mojang hosts are reachable, so a headless Minecraft server check is possible (ticket #13).
+scenario with `--preview` and look at the PNG with the Read tool → `tools/world_reader.py` for exact blocks
+→ `tools/mc_check.py` for load errors in a real Minecraft server.
 Details: the `verify` skill.
 
 ## How to work
