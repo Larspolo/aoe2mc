@@ -24,6 +24,7 @@ def test_level_dat(tiny_world):
     assert int(level["DataVersion"]) == aoe2mc.DATA_VERSION
     assert str(level["LevelName"]) == "tiny"
     assert int(level["GameType"]) == 1
+    assert float(level["SpawnAngle"]) == aoe2mc.SPAWN_YAW == -135  # look north-east, like the AoE2 camera (#23)
 
 
 def test_chunks_have_valid_blocks_and_biomes(tiny_world):

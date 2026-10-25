@@ -21,11 +21,16 @@ The repository has no converted worlds. Convert a sample map to get one (see "Us
 
 ## Install
 
-    pip install -r requirements.txt
+Two ways:
+
+- Install the command `aoe2mc`: `pip install .` in the repository folder, or
+  `pipx install git+https://github.com/Larspolo/aoe2mc`.
+- Run the script from the repository folder: `pip install -r requirements.txt`, then use `python aoe2mc.py`.
 
 ## Use
 
-    python aoe2mc.py MyMap.aoe2scenario MyMapWorld --preview
+    aoe2mc MyMap.aoe2scenario MyMapWorld --preview
+    python aoe2mc.py MyMap.aoe2scenario MyMapWorld --preview      (the same, from the repository folder)
 
 Copy the folder `MyMapWorld` into your Minecraft `saves` folder. Open it in Minecraft Java 1.21.1 or newer.
 The world is in creative mode. Outside the map there is only void. The world list shows a small top view of the map
@@ -176,5 +181,7 @@ Read these files first:
 - The direction that units face is not checked in the game yet. See [`docs/facing.md`](docs/facing.md) for the check.
 - In scenarios older than version 1.56 the architecture set field can be wrong, so the program uses the civilization.
 - Unique buildings use the design of a similar building (for example krepost → small castle).
-- Map tile (x, y) becomes block (x × tile-size, z = y × tile-size). The map is turned 45° compared to the in-game view,
-  but it is not mirrored: the top corner of the AoE2 screen is the north-east corner in Minecraft.
+- Map tile (x, y) becomes block (x × tile-size, z = y × tile-size). AoE2 shows the map as a diamond with the top corner
+  at the top of the screen. In Minecraft this corner is in the north-east: the map is the in-game view turned 45°
+  clockwise, not mirrored. A turn of 45° is not possible on a block grid. At the spawn the player looks north-east,
+  as the AoE2 camera does.

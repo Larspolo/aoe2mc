@@ -49,12 +49,11 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
 
 ## Code
 
-- AoE2 map orientation (#23): tile (0, 0) is the left (west) corner of the screen, (max, 0) the top, (max, max)
-  the right, (0, max) the bottom (`AoE2ScenarioParser` `area.py` `CORNERS`; openage: axes NE, SE). Tile x goes up-right, tile y
-  down-right. Block x = east, z = south keeps the handedness: the world is turned 45°, not mirrored. The AoE2 top
-  corner is the north-east corner. A 90° turn of the grid cannot make "screen up" more north than now.
-  Gate names: `WEST_TO_EAST` and `NORTH_TO_SOUTH` are the diagonal gates. Do not trust the other names for the
-  axis: `samples/gallery` has a `NORTHWEST_TO_SOUTHEAST` gate along tile x. `plan_walls` uses the walls next to it.
+- AoE2 map orientation (#23): tile (0, 0) is the left corner of the screen, (max, 0) the top (parser `area.py`
+  `CORNERS`; openage: axes NE, SE). Block x = east, z = south: the world is turned 45°, not mirrored; the AoE2 top
+  corner is in the north-east. The spawn looks north-east like the AoE2 camera (`SPAWN_YAW`). Gates `WEST_TO_EAST`
+  and `NORTH_TO_SOUTH` are diagonal. Do not trust the axis gate names (`samples/gallery` has a `NORTHWEST_TO_SOUTHEAST`
+  gate along tile x): `plan_walls` uses the walls next to the gate.
 
 - The tiny scenario has only a town center, a house and a barracks. To see the golden test fail, change a
   block that these designs draw last (for example the house chimney).
@@ -66,6 +65,8 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   `OtherInfo` name takes (#6).
   Buildings (also `FISH_TRAP`, docks) need `kind="B"`, else nothing is placed. `build_chunk` returns
   `(nbt, vol)`: test exact blocks of a chunk with `vol` (#19).
+- `aoe2mc.py` reads `tools/mcdata/1.21.1.json` at import (#19). The package ships it as `tools.mcdata`
+  (`pyproject.toml`). A new runtime data file must go into the package data too (test: `pip install .` in a venv).
 - `terrain_style` checks names in sequence: an earlier rule wins (`ROAD_GRAVEL` matched `GRAVEL` until #5).
 - A merge conflict in `docs/coverage.md`: take any side, run `python3 tools/coverage.py`, then set `MAX` in
   `tests/test_coverage.py` to the new counts. Parallel runs often change the same counts (#79). Check

@@ -11,3 +11,6 @@ tmp/
 preview.png
 # Minecraft server files that tools download (large)
 .cache/
+# Package build output
+build/
+*.egg-info/
