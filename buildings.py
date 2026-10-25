@@ -644,42 +644,95 @@ def hall_with_yard(c, w, st, col, depth=0.6, hw=4, open_front=False):
 
 
 def barracks(c, w, st, col, T, ctx):
-    z1, top = hall_with_yard(c, w, st, col)
+    """Western model: a stone ground floor with a timber upper floor and a gable roof, and a yard with a low
+    stone wall in front (training dummies, a grindstone)."""
+    if w < 8:
+        z1, top = hall_with_yard(c, w, st, col)
+        c.door(w // 2, 1, z1 - 1)
+        c.flag(1, top - 1, z1 - 2, col, 3)
+        return
+    x0, x1, z0, z1 = 1, w - 1, 1, max(5, round(w * 0.55))
     mid = w // 2
+    c.room(x0, x1, z0, z1, 0, 3, st.stone, st.floor)                       # stone ground floor
+    c.timber_room(x0, x1, z0, z1, 3, 4, st, low_stone=0)                   # timber upper floor
+    c.windows(x0, x1, z0, z1, 2, b="iron_bars", sides="ew")
+    c.windows(x0, x1, z0, z1, 5, sides="news")
+    top = c.roof(x0, x1, z0, z1, 8, st, axis="x")
     c.door(mid, 1, z1 - 1)
-    c.banner(mid + 1, 3, z1, col); c.banner(mid - 1, 3, z1, col)
+    c.banner(mid + 1, 3, z1, col); c.banner(mid - 2, 3, z1, col)
+    # Yard: a low stone wall with a gate opening in the middle of the south side
+    c.box(0, w, 0, 1, z1, w, st.stone2)
+    c.walls(0, w, 1, 2, z1 - 1, w, st.stone)
+    c.box(1, w - 1, 1, 2, z1, w - 1, "air")
+    c.box(0, w, 2, 3, w - 1, w, st.accent_wall); c.box(0, 1, 2, 3, z1, w, st.accent_wall)
+    c.box(w - 1, w, 2, 3, z1, w, st.accent_wall)
+    c.box(mid - 1, mid + 1, 1, 3, w - 1, w, "air")
     for x in (2, w - 3):                              # training dummies
-        if z1 + 1 < w - 1:
-            c.set(x, 1, z1 + 1, "oak_fence"); c.set(x, 2, z1 + 1, "hay_block"); c.set(x, 3, z1 + 1, "carved_pumpkin[facing=south]")
-    c.set(mid + 2, 1, w - 2, "grindstone[face=floor,facing=south]")
-    c.flag(1, top - 1, z1 - 2, col, 3)
+        if z1 + 1 < w - 2:
+            c.set(x, 1, z1 + 1, "oak_fence"); c.set(x, 2, z1 + 1, "hay_block")
+            c.set(x, 3, z1 + 1, "carved_pumpkin[facing=south]")
+    c.set(w - 3, 1, w - 2, "grindstone[face=floor,facing=south]")
+    c.flag(x0 + 1, top - 1, (z0 + z1) // 2, col, 3)
 
 
 def archery_range(c, w, st, col, T, ctx):
+    """Western model: a long open shed, a round tower on the west end and a row of targets in front."""
     z1, top = hall_with_yard(c, w, st, col, depth=0.5, hw=3, open_front=True)
     for x in range(2, w - 2, 3):                      # targets at the south side
         c.set(x, 1, w - 2, "hay_block"); c.set(x, 2, w - 2, "target")
-    c.set(1, 1, 2, "barrel[facing=up]"); c.set(w - 2, 1, 2, "fletching_table")
+    c.set(w - 2, 1, 2, "fletching_table")
     c.banner(w // 2, 4, z1, col)
+    if w < 10:
+        return
+    r = 2                                             # round tower with a pointed roof
+    cx = cz = r + 0.5
+    th = top + 2
+    c.cylinder(cx, cz, r, 1, th, st.plaster)
+    c.cylinder(cx, cz, r, 1, 3, st.stone)
+    c.cylinder(cx, cz, r - 1, 1, th, "air")
+    c.box(int(cx) - 1, int(cx) + 2, th - 1, th, int(cz) - 1, int(cz) + 2, st.wood)
+    for y in (4, th - 2):
+        c.set(int(cx), y, int(cz + r), "glass_pane"); c.set(int(cx + r), y, int(cz), "glass_pane")
+    if st.shape == "flat":
+        c.cylinder(cx, cz, r, th, th + 1, st.accent_wall)
+        c.cylinder(cx, cz, r - 1, th, th + 1, "air")
+    else:
+        c.cone(cx, cz, r + 1, th, family(st.roof)[2])
+    c.flag(int(cx), th + (1 if st.shape == "flat" else 3), int(cz), col, 2)
 
 
 def stable(c, w, st, col, T, ctx):
+    """Western model: a timber barn with a gable roof and a long lean-to over the horse stalls on the south
+    side (hay, a water trough)."""
     m = 1 if w >= 8 else 0
-    hz = max(5, round(w * 0.65))
+    hz = max(4, round(w * 0.55)) if w >= 8 else max(3, w - 2)
     x0, x1, z0, z1 = m, w - m, m, hz
-    c.room(x0, x1, z0, z1, 0, 4, st.wood, st.floor, corner=st.timber)
-    c.box(x0, x1, 5, 6, z0, z1, st.beam + "[axis=x]")
-    c.box(x0 + 1, x1 - 1, 5, 6, z0 + 1, z1 - 1, "air")
-    c.windows(x0, x1, z0, z1, 3, b="air", sides="ew", step=2)
-    c.roof(x0, x1, z0, z1, 6, st, fill_block=st.wood, axis="x")
+    hw = 6 if w >= 8 else 4
+    c.timber_room(x0, x1, z0, z1, 0, hw, st)
+    c.windows(x0, x1, z0, z1, 4, sides="ew")
+    c.roof(x0, x1, z0, z1, hw + 1, st, fill_block=st.wood, axis="x")
     mid = w // 2
-    c.box(mid - 1, mid + 2, 1, 4, z1 - 1, z1, "air")                       # big barn door
+    c.box(mid - 1, mid + 1, 1, 4, z1 - 1, z1, "air")                       # barn door to the stalls
     for x in range(x0 + 1, x1 - 1, 2):
         c.set(x, 1, z0 + 1, "hay_block")
-    c.banner(mid - 2, 3, z1, col)
-    c.box(0, 1, 1, 2, z1, w, "oak_fence"); c.box(w - 1, w, 1, 2, z1, w, "oak_fence")
-    c.box(0, w, 1, 2, w - 1, w, "oak_fence"); c.box(mid - 1, mid + 2, 1, 2, w - 1, w, "air")
-    c.box(1, 3, 1, 2, w - 2, w - 1, "water_cauldron[level=3]")
+    if w < 8:
+        c.banner(mid - 1, 3, z1, col)
+        return
+    # Lean-to: posts on the front, a roof that slopes down to the south, stalls with fence dividers
+    stairs = family(st.roof)[0] if st.shape != "flat" else family(st.roof)[1]
+    for z in range(z1 + 1, w):                                             # z1: the eave of the barn roof
+        y = hw - 1 - (z - z1 - 1) // 2
+        b = stair(stairs, "north") if st.shape != "flat" else f"{stairs}[type=bottom]"
+        c.box(x0, x1, max(y, 4), max(y, 4) + 1, z, z + 1, b)
+    c.box(x0, x1, 0, 1, z1, w, st.floor)
+    for x in list(range(x0, x1 - 1, 3)) + [x1 - 1]:
+        c.box(x, x + 1, 1, 4, w - 1, w, st.timber)
+        if x0 < x < x1 - 1:
+            c.box(x, x + 1, 1, 2, z1, w - 2, "oak_fence")                   # stall dividers
+    for x in range(x0 + 1, x1 - 1, 3):
+        c.set(x, 1, z1, "hay_block")
+    c.banner(mid - 2, hw - 1, z1, col)
+    c.set(w - 1, 1, w - 2, "water_cauldron[level=3]")                     # water trough
 
 
 def siege_workshop(c, w, st, col, T, ctx):

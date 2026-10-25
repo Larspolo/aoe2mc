@@ -31,12 +31,19 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Bow and arrow work | `fletching_table` | `archery_range` |
 | Forge, smithy | `blast_furnace`, `anvil`, `smithing_table`, `cauldron` (water) | `blacksmith` |
 | Fire, cooking | `campfire`, `smoker` | `blacksmith`, `house`, `outpost`, `church`, `oracles_temple` |
-| Weapon rack, sharpening, millstone | `grindstone` | `barracks`, `granary`, `blacksmith`, `mill`, `mining_camp` |
+| Weapon rack, sharpening | `grindstone` | `barracks`, `granary`, `blacksmith` |
+| Training dummy | `oak_fence`, `hay_block`, `carved_pumpkin` | `barracks` |
 | Bell | `bell` | `monastery`, `town_center` |
 | Loom, cloth | `loom`, wool | `church` |
 | Market goods | `barrel`, `chest`, `composter`, `hay_block` | `market`, `dock` |
 | Crop field | `wheat` rows (ages 5–7) on `farmland`, furrows of bare `farmland`, `dirt_path` edge | farm (`place_building`) |
 | Hay, fodder | `hay_block` | `stable`, `barracks`, `granary` |
+| Log pile, cut timber | `*_log[axis=x]` stacked as a pyramid (`log_pile`) | `lumber_camp` |
+| Hoist | a log post and arm, `chain`, a hanging log | `lumber_camp` |
+| Workbench | `crafting_table` | `lumber_camp` |
+| Millstone | `grindstone` | `mill`, `mining_camp` (tools) |
+| Ore, mined gold and stone | `gold_ore`, `raw_gold_block`, `cobblestone`, `stone`, `andesite` | `mining_camp` |
+| Mine cart track | `rail` | `mining_camp` |
 | Water trough | `cauldron` (water) | `stable` |
 | Banner, flag | `*_banner` (player color), `Canvas.flag` | most designs |
 | Fence, pen | `*_fence` | `stable`, `market`, `outpost`, `wall_segment` |
@@ -50,7 +57,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Climbing plants | `vine`, `azalea_leaves` | `pillar` |
 | Charred timber | `coal_block`, `blackstone`, dark oak logs | `burned_building` |
 | Spire tip, finial | `lightning_rod` | `Canvas.spire`, `monastery`, `mosque` |
-| Chain, rope | `chain` | `dock`, `siege_workshop`, `shipyard`, `harbor_chain`, `lumber_camp` (hoist) |
+| Chain, rope | `chain` | `dock`, `siege_workshop`, `shipyard`, `harbor_chain` |
 | Portcullis, grille | `iron_bars` | `gate`, `castle` |
 | Lamp | `lantern` | `decorate()`, `blacksmith` (hanging) |
 | Siege engine under construction | spruce slabs, fences and logs | `siege_workshop` |
@@ -60,10 +67,6 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Sacred tree | `oak_log`, `oak_leaves[persistent=true]` | `pagan_shrine` |
 | Sail | wool (player color) | `flagship` |
 | Hides | `brown_wool` | `helepolis` |
-| Log pile, cut timber | `*_log[axis=x]` stacked as a pyramid (`log_pile`) | `lumber_camp` |
-| Workbench | `crafting_table` | `lumber_camp` |
-| Ore, mined gold and stone | `gold_ore`, `raw_gold_block`, `cobblestone`, `stone`, `andesite` | `mining_camp` |
-| Mine cart track | `rail` | `mining_camp` |
 | Band in the player color | `*_wool` (player color) | `town_center` |
 | Outside stairs to an upper floor | `*_stairs` of the wood of the set | `town_center` |
 | Books, study | `bookshelf`, `lectern` | none yet (`university` needs them) |
