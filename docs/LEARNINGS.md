@@ -86,3 +86,4 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   gives about 800 px, the size of the images in `docs/images/` (#262).
 - Sibling sub-issues (#249-#256) run in parallel: before you add a helper or a tool option, `git fetch origin main` and
   grep for it. #252 and #265 both added `render.py --cut`, and two runs added a `furnish` (#252).
+- Two PRs can each pass CI and still break main together: #263 added a second `furnish()` in `buildings.py`, so ruff F811 and the house tests failed on main. Before you name a new function, Grep for `def <name>(` on the latest `origin/main`.
