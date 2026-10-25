@@ -471,13 +471,24 @@ def house(c, w, st, col, T, ctx):
         c.box(sx0, sx1, 3, 4, z0, z1, family(st.roof)[1] + "[type=bottom]")
         c.box(sx0, sx1, 1, 3, z0 + 1, z1 - 1, "spruce_log[axis=z]" if rng.random() < 0.5 else "oak_log[axis=z]")
         c.box(sx0, sx1, 2, 3, z0 + 1 + (z1 - z0) // 2, z1 - 1, "air")
-    # chimney with smoke on a random corner
+    # stone chimney with smoke on a random corner: only the European half-timbered houses have one in the game
     cx = x0 + 1 if rng.random() < 0.5 else x1 - 2
     cz = z0 + 1 if rng.random() < 0.6 else z1 - 2
     if kind == "jetty":
         cz = z0 + 1
-    c.box(cx, cx + 1, 1, top + 2, cz, cz + 1, "bricks" if st.shape != "flat" else st.stone)
-    c.set(cx, top + 2, cz, "campfire[lit=true,signal_fire=false]")
+    if st.shape == "gable":
+        c.box(cx, cx + 1, 1, top + 2, cz, cz + 1, st.stone2)
+        c.set(cx, top + 2, cz, "campfire[lit=true,signal_fire=false]")
+    if st.shape == "flat" and m and z1 - z0 > wall_top + 1:
+        # flat roof terrace: an outside stair in the free margin (east, or west of a shed), and a cloth awning in
+        # the player color over the door
+        sx, rx = (x0 - 1, x0) if kind == "shed" else (x1, x1 - 1)
+        for k in range(wall_top + 1):
+            z = z1 - 1 - k
+            c.box(sx, sx + 1, 1, 1 + k, z, z + 1, st.stone)
+            c.set(sx, 1 + k, z, stair(family(st.roof)[0], "north"))
+        c.set(rx, wall_top + 2, z1 - 1 - wall_top, "air")                 # a gap in the parapet
+        c.box(mid - 1, mid + 2, 3, 4, z1, z1 + 1, f"{col}_wool")
     if kind == "jetty":
         c.banner(mid + 1, 1, z1 - 1, col)
     else:
@@ -1499,8 +1510,51 @@ def transpose(c):
     c.a = a
 
 
+CLOCKWISE = {"north": "east", "east": "south", "south": "west", "west": "north"}
+
+
+def turn_state(s, k):
+    """Block state s after k clockwise quarter turns (seen from above): facing, axis, rotation, the side
+    properties of fences, walls and panes, and rail shapes."""
+    if "[" not in s:
+        return s
+    name, props = s[:-1].split("[", 1)
+    keys = [kv.split("=")[0] for kv in props.split(",")]
+    d = dict(kv.split("=") for kv in props.split(","))
+    for _ in range(k % 4):
+        t = {}
+        for key, v in d.items():
+            if key in ("facing", "axis") or key == "shape" and "_" in v and any(w in v for w in CLOCKWISE):
+                if v in ("north_south", "east_west"):
+                    v = "east_west" if v == "north_south" else "north_south"
+                elif v.startswith("ascending_"):
+                    v = "ascending_" + CLOCKWISE[v[10:]]
+                elif key == "shape":                                # rail curve: north/south part first
+                    a, b = (CLOCKWISE[w] for w in v.split("_"))
+                    v = f"{a}_{b}" if a in ("north", "south") else f"{b}_{a}"
+                else:
+                    v = {"x": "z", "z": "x"}.get(v, CLOCKWISE.get(v, v))
+            elif key == "rotation":                                 # signs, banners, skulls: 4 = a quarter
+                v = str((int(v) + 4) % 16)
+            t[CLOCKWISE.get(key, key)] = v
+        d = t
+    return f"{name}[" + ",".join(f"{key}={d[key]}" for key in keys + [x for x in d if x not in keys] if key in d) + "]"
+
+
+def turn(c, k):
+    """Turn a square canvas by k clockwise quarter turns (seen from above), with block directions."""
+    a = np.rot90(c.a, k, axes=(0, 2)).copy()
+    out = a.copy()
+    for i in np.unique(a[a >= 0]):
+        t = turn_state(c.B.states[i], k)
+        if t != c.B.states[i]:
+            out[a == i] = c.B(t)
+    c.a = out
+
+
 SOFT_BARRIER = -3    # canvas marker: barrier that only fills free space
 BARRIERS = True      # fill the free space of footprints with barrier blocks (option --no-barriers)
+TURN = 0             # clockwise quarter turns of the map (option --orientation); buildings turn with it
 
 
 def place_building(E, cols, B, o, players, walls, gates):
@@ -1526,7 +1580,7 @@ def place_building(E, cols, B, o, players, walls, gates):
     along_z = False
     if fn is bridge:
         letter = name.split("BRIDGE_")[1][:1]
-        along_z = letter in ("B", "D")
+        along_z = (letter in ("B", "D")) != (TURN % 2 == 1)
         w, L = 3 * T, 2 * T
         if along_z:
             x0, z0 = int(round((ux - 1.5) * T)), int(round((uy - 1) * T))
@@ -1601,6 +1655,8 @@ def place_building(E, cols, B, o, players, walls, gates):
     weather(c)
     if fn not in NO_PROPS:
         decorate(c, fx, fz)
+    if TURN and fn not in (gate, aqueduct, bridge, wooden_bridge, wall_segment):    # these follow their neighbours
+        turn(c, TURN)
     if along_z:
         transpose(c)
     if gates.get(id(o)) == "diag-":
@@ -1648,7 +1704,8 @@ def plan_walls(objects):
                 # (#23); the wall tiles next to the gate decide first.
                 up = any((tx + d, ty + d) in walls for d in (-2, 2))
                 down = any((tx + d, ty - d) in walls for d in (-2, 2))
-                s = -1 if down and not up or not up and "NORTH_TO_SOUTH" in o["name"] else 1
+                ns = ("NORTH_TO_SOUTH" in o["name"]) != (TURN % 2 == 1)        # an odd turn swaps the diagonals
+                s = -1 if down and not up or not up and ns else 1
                 gates[id(o)] = "diag+" if s > 0 else "diag-"
                 walls.update((tx + d, ty + s * d) for d in (-1, 0, 1))
                 continue

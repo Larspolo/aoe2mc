@@ -52,6 +52,8 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Chain, rope | `chain` | `dock`, `siege_workshop`, `shipyard`, `harbor_chain`, `lumber_camp` (hoist) |
 | Portcullis, grille | `iron_bars` | `gate`, `castle` |
 | Lamp | `lantern` | `decorate()` |
+| Cloth awning | `*_wool` in the player color | `house` (flat roofs) |
+| Stair to a roof terrace | stairs of the roof material | `house` (flat roofs) |
 | Column | `quartz_pillar` | `arch_of_constantine`, `oracles_temple` |
 | Sacred tree | `oak_log`, `oak_leaves[persistent=true]` | `pagan_shrine` |
 | Sail | wool (player color) | `flagship` |
