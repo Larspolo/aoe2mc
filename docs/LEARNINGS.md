@@ -52,6 +52,7 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   A tag with a wrong type gives "Serialization errors" (WARN), which `tools/mc_check.py` finds.
 - `tools/fetch_mcdata.py` reads the exact Mojang data from `misode/mcmeta`. PrismarineJS lags behind; its
   `data/pc/common/protocolVersions.json` has the data versions of all releases (26.3 = 5023).
+- `urllib` with a JSON body needs the header `Content-Type: application/json`, else GitHub answers 415 (#345).
 
 ## Code
 
