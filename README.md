@@ -42,6 +42,7 @@ The world is in creative mode. Outside the map there is only void. The world lis
 | `--preview` | off | Writes `preview.png` (top view) into the world folder |
 | `--no-units` | off | Do not convert units |
 | `--no-barriers` | off | Do not fill building footprints with invisible barrier blocks |
+| `--spawn X,Z` | start view or town center of player 1 | Player spawn in tiles. Without it the spawn is the start view of player 1, else the front of its first town center, else the map center. |
 
 ## Buildings
 
