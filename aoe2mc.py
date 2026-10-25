@@ -354,6 +354,17 @@ class Columns:
         surface_tiles = WATER_Y + np.rint(levels[body] * H).astype(np.int16)
         surface = np.repeat(np.repeat(surface_tiles, T, 0), T, 1)
         water_bottom = (surface - np.maximum(1, np.rint(depth))).astype(np.int16)
+        # Shores (#166): land within 2 tiles of the water slopes down to it, 1 block per block in the first tile (a
+        # beach that units can walk), 2 in the second (AoE2 draws a slope of the height map there, never a wall).
+        # ws = the highest water surface near the column.
+        ws = np.where(is_water, surface, NONE).astype(np.int16)
+        cap = np.full((n, n), 32767, np.int16)
+        for d in range(1, 2 * T + 1):
+            p = np.full((n + 2, n + 2), NONE, np.int16)
+            p[1:-1, 1:-1] = ws
+            ws = np.maximum.reduce([p[a:a + n, b:b + n] for a in range(3) for b in range(3)])
+            cap = np.where((ws > NONE) & (cap == 32767), ws + d + max(0, d - T), cap)
+        land = np.minimum(land, cap)
         # Land next to the water is at least as high as the surface, else the water flows out.
         rim = np.full((n + 2, n + 2), NONE, np.int16)
         rim[1:-1, 1:-1] = np.where(is_water, surface, NONE)
@@ -373,6 +384,12 @@ class Columns:
         sub_lut = np.array([B(s["bottom"] if s["depth"] else s["sub"]) for s in styles], np.uint16)
         self.top_id = full(AIR, np.uint16)
         self.sub_id = full(AIR, np.uint16)
+        # Blocks of `sub` under the top: at least 3, and down to the lowest neighbour, so that steep banks and
+        # steps show dirt or sand on their faces, not stone.
+        t = np.pad(self.top[:n, :n], 1, mode="edge")
+        low = np.minimum.reduce([t[:-2, 1:-1], t[2:, 1:-1], t[1:-1, :-2], t[1:-1, 2:]])
+        self.sub_depth = full(3, np.int16)
+        self.sub_depth[:n, :n] = np.clip(self.top[:n, :n] - low, 3, 64)
         self.ice = full(False, bool)
         self.top_id[:n, :n] = lut("top")[sid]
         self.sub_id[:n, :n] = sub_lut[sid]
@@ -1318,11 +1335,11 @@ def build_chunk(cx, cz, cols, edits):
     sl = (slice(x0, x0 + 16), slice(z0, z0 + 16))
     g = lambda a: a[sl].T[None]          # (1, z, x) for broadcasting against Y
     top, wtop, top_id, sub_id = g(cols.top), g(cols.wtop), g(cols.top_id), g(cols.sub_id)
-    ice, deco = g(cols.ice), cols.deco[sl].T
+    ice, deco, sub = g(cols.ice), cols.deco[sl].T, top - g(cols.sub_depth)
     Y = np.arange(MIN_Y, MAX_Y, dtype=np.int32)[:, None, None]
 
-    vol = np.where(Y < top - 3, np.where(Y < 0, DEEPSLATE, STONE), AIR).astype(np.uint16)
-    vol = np.where((Y >= top - 3) & (Y < top), sub_id, vol)
+    vol = np.where(Y < sub, np.where(Y < 0, DEEPSLATE, STONE), AIR).astype(np.uint16)
+    vol = np.where((Y >= sub) & (Y < top), sub_id, vol)
     vol = np.where(Y == top, top_id, vol)
     water = (Y > top) & (Y <= wtop)
     vol = np.where(water, np.where(ice & (Y == wtop), ICE, WATER), vol)

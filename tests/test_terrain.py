@@ -88,3 +88,25 @@ def test_one_level_per_body():
         w = np.roll(np.roll(wet, dx, 0), dz, 1)
         lvl = np.roll(np.roll(c.wtop[:48, :48], dx, 0), dz, 1)
         assert (c.top[:48, :48][w & ~wet] >= lvl[w & ~wet]).all()
+
+
+def test_shores_slope_down_to_the_water():
+    """High land next to water slopes down to it: no column next to the water is more than 2 blocks above the
+    surface, and the faces of the steps show dirt, not stone (#166)."""
+    import numpy as np
+    t = np.zeros((12, 12), int)
+    t[:, 6:] = 1                                     # the sea in the south
+    e = np.where(t == 1, 0, 6)                       # land at elevation 6 (12 blocks above the sea with H = 2)
+    c = raised(t, e)
+    top, wtop = c.top[:48, :48], c.wtop[:48, :48]
+    wet = wtop > top
+    for d in (1, -1):
+        nxt = np.roll(wet, d, 1)
+        nxt[:, 0 if d == 1 else -1] = False
+        assert (top[nxt & ~wet] <= np.roll(wtop, d, 1)[nxt & ~wet] + 2).all()
+    assert top[:, 23].max() == aoe2mc.WATER_Y + 1 and top[:, 10].max() == aoe2mc.WATER_Y + 1 + 12
+    vol = aoe2mc.build_chunk(0, 1, c, None)[1]       # blocks of the chunk at z 16..31 (the shore)
+    z, x = 20 - 16, 5
+    col = vol[:, z, x]
+    face = range(top[x, 21] + 1 - aoe2mc.MIN_Y, top[x, z + 16] - aoe2mc.MIN_Y)   # the step down to the next column
+    assert all(col[y] != aoe2mc.STONE for y in face)
