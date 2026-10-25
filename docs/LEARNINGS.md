@@ -84,3 +84,5 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - `vary()` picks a `ROOF_ALT` material per variant: count blocks with `render.building_blocks(NAME, arch, variant=v)` (#146).
 - `tools/render.py world` draws only Y >= 50 (`--y0`): use `--y0 -64` for blocks under the map (`--border`). `--scale 4`
   gives about 800 px, the size of the images in `docs/images/` (#262).
+- Sibling sub-issues (#249-#256) run in parallel: before you add a helper or a tool option, `git fetch origin main` and
+  grep for it. #252 and #265 both added `render.py --cut`, and two runs added a `furnish` (#252).

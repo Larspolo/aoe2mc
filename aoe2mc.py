@@ -1041,6 +1041,53 @@ def decor(E, cols, name, rect, rng):
         x, z = min(max(cx, 0), cols.n - 1), min(max(cz, 0), cols.n - 1)
         if cols.wtop[x, z] > cols.top[x, z]:
             E.add([x], [int(cols.top[x, z]) + 1], [z], "sea_pickle[pickles=3]")
+    elif n.startswith(("DRIFTWOOD", "FLOTSAM")):      # in water: at the water level, so that it floats half under
+        x, z = min(max(cx, 0), cols.n - 1), min(max(cz, 0), cols.n - 1)
+        wet = cols.wtop[x, z] > cols.top[x, z]
+        yy = int(cols.wtop[x, z]) if wet else y
+        if n == "FLOTSAM":
+            E.add([cx, cx + 1, cx - 1], [yy] * 3, [cz, cz, cz - 1],
+                  [B("spruce_slab[type=top]"), B("barrel[facing=up]" if wet else "spruce_slab[type=bottom]"),
+                   B("spruce_trapdoor[facing=north,half=top,open=false]")])
+        else:
+            E.add([cx - 1, cx, cx + 1], [yy] * 3, [cz] * 3, "stripped_oak_log[axis=x]")
+            put(0, yy - y, 1, "stripped_birch_log[axis=z]")
+    elif n == "KELP_SEAWEEDS" or n == "WATER_LILY":
+        for x in range(max(0, x0), min(cols.n, x1)):
+            for z in range(max(0, z0), min(cols.n, z1)):
+                floor, top = int(cols.top[x, z]), int(cols.wtop[x, z])
+                if top <= floor or rng.random() > 0.6:
+                    continue
+                if n == "WATER_LILY":
+                    E.add([x], [top + 1], [z], "lily_pad", hard=False)
+                elif top - floor < 2:
+                    E.add([x], [floor + 1], [z], "seagrass", hard=False)
+                else:                                  # a kelp column of random height, at most up to the surface
+                    h = int(rng.integers(1, top - floor + 1))
+                    E.add([x] * h, list(range(floor + 1, floor + h + 1)), [z] * h,
+                          [B("kelp_plant")] * (h - 1) + [B("kelp[age=25]")], hard=False)
+    elif n == "BEACHED_WHALE":                        # a skeleton: spine, ribs and skull of bone blocks
+        for dx in range(-2, 2):
+            put(dx, 1, 0, "bone_block[axis=x]")
+            if dx > -2:
+                for dz in (-1, 1):
+                    put(dx, 0, dz, "bone_block[axis=y]")
+        put(-2, 0, 0, "bone_block[axis=x]")
+    elif n == "SMALL_WATERFALL":                      # a water source on a rock step falls down its east side
+        for dx, dz, h in ((0, 0, 2), (-1, 0, 3), (0, -1, 3), (-1, -1, 3), (1, -1, 2), (-1, 1, 2), (0, 1, 1)):
+            E.box(cx + dx, cx + dx + 1, y, y + h, cz + dz, cz + dz + 1,
+                  "mossy_cobblestone" if (dx + dz) % 2 else "stone")
+        put(0, 2, 0, "water[level=0]"); put(1, 2, 0, "water[level=1]")
+        put(1, 1, 0, "water[level=8]"); put(1, 0, 0, "water[level=8]")
+    elif n.startswith("FALLEN_LEAVES"):               # flat ground cover on land
+        leaves = (["pink_petals[facing=north,flower_amount=4]", "pink_petals[facing=east,flower_amount=2]",
+                   "pink_petals[facing=south,flower_amount=3]"] if "PEACH" in n else
+                  ["orange_carpet", "red_carpet", "yellow_carpet", "brown_carpet"] if "AUTUMN" in n else
+                  ["moss_carpet", "moss_carpet", "lime_carpet"])
+        for x in range(max(0, x0), min(cols.n, x1)):
+            for z in range(max(0, z0), min(cols.n, z1)):
+                if cols.wtop[x, z] == cols.top[x, z] and rng.random() < 0.6:
+                    E.add([x], [cols.surface(x, z)], [z], pick(leaves), hard=False)
     elif chinese_garden(E, n, rect, y, put):
         pass
     else:
@@ -1167,7 +1214,8 @@ MONUMENTS = ("BUDDHA_STATUE", "INDIAN_STATUES", "OLD_STONE_HEAD", "NINE_BANDS", 
              "TROWULAN_GATE", "REKHA_DEUL_TEMPLE", "SVAN_TOWER", "MEDITERRANEAN_COURTYARD_WALLS",
              "MESOPOTAMIAN_PILLAR", "MESOPOTAMIAN_GARDEN", "MESOPOTAMIAN_TOMB", "BURNED_BUILDING")    # buildings.py designs
 PASSABLE_OBJECTS = ("FLOWER", "FERN", "RUG", "GRASS", "PLANT", "OYSTER", "FISH", "RELIC", "GRAVE", "BONFIRE",
-                    "PATH_", "BLACK_TILE", "ICE_NAVIGABLE", "DOLPHIN", "BOX_TURTLES")
+                    "PATH_", "BLACK_TILE", "ICE_NAVIGABLE", "DOLPHIN", "BOX_TURTLES", "KELP", "WATER_LILY",
+                    "FALLEN_LEAVES")
 
 
 def object_footprint(o, T):
@@ -1350,7 +1398,8 @@ def object_mob(name):
     return next((k for key, k in FISH if key in name), None)
 PASSABLE = ("short_grass", "tall_grass", "large_fern", "petals", "moss_carpet", "mushroom", "allium", "bluet",
             "tulip", "lily_of", "fern", "wheat", "poppy", "dandelion", "cornflower", "daisy", "water",
-            "seagrass", "dead_bush", "sweet_berry", "rail", "carpet", "banner", "button", "lantern", "snow[")
+            "seagrass", "dead_bush", "sweet_berry", "rail", "carpet", "banner", "button", "lantern", "snow[", "kelp",
+            "lily_pad")
 
 
 SEATS = {"minecraft:boat": 2, "minecraft:chest_boat": 1}
