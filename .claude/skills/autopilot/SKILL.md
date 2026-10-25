@@ -116,6 +116,7 @@ Do not remove the label: it belongs to the other run.
 4. Verify with the `verify` skill. The level depends on the change.
 5. Improve the process (step 9) now, so that the changes go into the same PR.
 6. Commit: subject in STE imperative, body with what and why, and `Closes #<number>`.
+   Commit only the files of the ticket: read `git status --short` first (no `logs/`, worlds or images).
 7. Push. Open a PR: title = ticket title, body = what changed, how you verified, `Closes #<number>`.
 8. Read `mergeable_state` (`/pulls/N`; `unknown` means GitHub still computes it: read it again). If it is
    `dirty`, do step 10 first: GitHub runs no CI on a PR with a merge conflict, so no CI event comes.

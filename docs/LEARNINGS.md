@@ -23,9 +23,9 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   `actions/checkout` fails with "Repository not found". The `pulls` API needs `pull-requests: read` (else 403).
 - Minecraft server: a bad property value (`facing=up`) loads silently as the default state. An unknown block gives
   "Recoverable errors when loading section". A missing `level.dat` compound gives "key missing: <name>" (#60).
-- Minecraft client (#178): it runs in `Xvfb` with Mesa (`LIBGL_ALWAYS_SOFTWARE=1`) and needs no asset download (no sound).
-  Class path: the Linux libraries of the version JSON + `client.jar`; `net.minecraft.client.main.Main --accessToken 0
-  --userType legacy --quickPlaySingleplayer W`; `options.txt` `onboardAccessibility:false`. In W after ~10 s.
+- Minecraft client (#178, #179): `tools/mc_shot.py` runs it in `Xvfb` (no window, offline, no sound). 1.21.1: Mesa OpenGL.
+  26.3 finds no GLX visual in Xvfb: it needs `mesa-vulkan-drivers` (lavapipe) and Java 25, and a placeholder for the
+  title panorama (the asset host is blocked). Hidden chat (`chatVisibility:2`) stops the chat lines in the log too.
 - AoE2 wiki: HTML pages give 403 (Cloudflare). Use `tools/refimage.py` (MediaWiki API, own `User-Agent`). Page text:
   `api.php?action=parse&page=Title&prop=wikitext&format=json&formatversion=2`.
 - AoE2 recorded games: the record hosts (`aoe.ms`, `data.aoe2companion.com`, `www.aoe2insights.com`) are blocked.
