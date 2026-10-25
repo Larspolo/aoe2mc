@@ -22,6 +22,7 @@ The README already uses this style. Keep it.
 | Convert | `python3 aoe2mc.py IN.aoe2scenario OUTWorld --preview` |
 | Look at a world | `python3 tools/world_reader.py OUTWorld [X Y Z]` |
 | Check states | `tools/mcvalid.py` (`block_error`, `entity_error`, `biome_error`) |
+| Coverage of AoE2 types | `python3 tools/coverage.py` writes `docs/coverage.md` (designs, mappings, fallbacks) |
 | Minecraft data | `python3 tools/fetch_mcdata.py VERSION` writes `tools/mcdata/VERSION.json` |
 
 Put scratch output (worlds, scenarios, images) in the scratchpad or in `out/` (ignored by git). Never commit worlds.
