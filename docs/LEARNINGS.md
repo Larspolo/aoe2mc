@@ -80,3 +80,5 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - Inside of a design (#255): `render.building_blocks` gives world y (the floor is the y of `grass_block`); drop `barrier`
   and the blocks above a cut height, then call `render.render`. Exact local layers: run the design on a `Canvas` and read `c.get`.
 - `vary()` picks a `ROOF_ALT` material per variant: count blocks with `render.building_blocks(NAME, arch, variant=v)` (#146).
+- `tools/render.py world` draws only Y >= 50 (`--y0`): use `--y0 -64` for blocks under the map (`--border`). `--scale 4`
+  gives about 800 px, the size of the images in `docs/images/` (#262).
