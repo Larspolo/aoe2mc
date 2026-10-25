@@ -46,3 +46,12 @@ def test_player_not_in_scenario(tmp_path):
 def test_good_options():
     assert aoe2mc.int_range(1, 16)("16") == 16
     assert aoe2mc.player_arch_spec("6=western") == (6, "western")
+
+
+def test_verbose_prints_the_time_of_each_phase(tmp_path):
+    src = scenarios.tiny(str(tmp_path / "tiny.aoe2scenario"))
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        aoe2mc.main([src, str(tmp_path / "W"), "--verbose"])
+    line = next(ln for ln in out.getvalue().splitlines() if ln.startswith("  time: "))
+    assert [p.split()[0] for p in line[8:].split(", ")] == ["read", "columns", "objects", "units", "chunks", "write"]

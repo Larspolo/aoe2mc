@@ -74,7 +74,7 @@ Keep this file below 80 lines: merge similar lines and remove lines that are no 
   `tests/test_coverage.py` to the new counts. Parallel runs often change the same counts (#79). Check
   `mergeable_state` before the merge: a green PR is "dirty" when main moved after the push.
 - Drawing all 243 building types for one architecture set takes about 1 s. A full gallery conversion takes
-  about 30 s per set.
+  about 23 s. `--verbose` prints the time per phase: `build_chunk` ("chunks") is about 70 % (#26).
 - Block IDs in `B` depend on what was registered before (earlier tests or conversions). Code that draws random
   numbers per block ID must go in state-name order, not ID order (see #44). A test that passes alone but
   fails in the full suite often has this cause.
