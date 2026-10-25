@@ -1,6 +1,7 @@
 # Research: replay a recorded game in Minecraft
 
-Ticket #31. Status: proposal. The owner decides on each milestone before work starts.
+Ticket #31. Status: the owner decided on 2026-10-25: full support (epic #371); milestones 2 and 3 are tickets
+(see "Follow-up tickets (full replay)").
 
 ## Summary
 
@@ -75,6 +76,16 @@ Not planned: option E.
 
 - #134 Add a short AoE2 DE recorded game to `samples/` (owner, `needs-human`).
 - #139 Convert the start state of a recorded game (`.aoe2record`) with `mgz` (depends on #134). Done: `aoe2mc.read_record`.
+
+## Follow-up tickets (full replay)
+
+- #372 Read the commands into a timeline. Done: `aoe2mc.read_timeline`, the key `timeline` of `aoe2mc.json`.
+  mgz 1.8.51 gives `ERROR` for each `DE_QUEUE` (train units) of a DE 64.3 record: `aoe2mc.de_queue` reads them.
+  Each `WALL` command of the sample is one tile (start = end).
+- Milestone 2 (build timeline): #373 Convert a recorded game at a chosen time (`--at MM:SS`),
+  #374 Replay a recorded game live in the game program.
+- Milestone 3 (approximate units): #375 Move the units of a recorded game in the live replay.
+- #376 Read recorded games of other game versions.
 
 ## Sources
 
