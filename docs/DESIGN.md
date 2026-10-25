@@ -76,6 +76,9 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Ore, mined gold and stone | `gold_ore`, `raw_gold_block`, `cobblestone`, `stone`, `andesite` | `mining_camp`, `mole` |
 | Mine cart track | `rail` | `mining_camp` |
 | Water trough | `cauldron` (water) | `decorate` |
+| Fountain | `water` source in a 3 × 3 rim of `stone_bricks` (`smooth_quartz` for antiquity), posts on the corners |  |
+| Bench | three `*_stairs` in a row |  |
+| Clay pots, amphorae, water pots | `decorated_pot`, `water_cauldron` |  |
 | Banner, flag | `*_banner` (player color), `Canvas.flag` | `town_hall`, `keep_inside`, `torii`, `pasture` +59 more |
 | Player color band (walls, gate towers) | `*_wool` (player color), one row | `pavilion`, `yurt`, `command_tent`, `army_tent` +19 more |
 | Fence, pen | `*_fence` | `pasture`, `nine_bands`, `fish_trap`, `outpost` +37 more |

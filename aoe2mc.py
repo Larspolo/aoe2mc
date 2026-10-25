@@ -940,7 +940,7 @@ def decor(E, cols, name, rect, rng):
                 put(dx, dy, dz, "quartz_pillar")
         E.box(cx - 1, cx + 2, y + 4, y + 5, cz - 1, cz + 2, "smooth_quartz_slab[type=bottom]")
         put(0, 1, 0, "chiseled_quartz_block")
-    elif "MARKET_STALL" in n or "GOODS" in n:
+    elif "MARKET_STALL" in n or "GOODS" in n or n in ("MEDITERRANEAN_STALL", "MESOPOTAMIAN_STALL"):
         for dx, dz in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
             put(dx, 1, dz, "oak_fence"); put(dx, 2, dz, "oak_fence")
         wool = pick(["red", "yellow", "blue", "green", "orange", "white"])
@@ -1026,8 +1026,8 @@ def decor(E, cols, name, rect, rng):
                     E.add([x], [yy], [z], "black_carpet", hard=False)
                 elif rng.random() < 0.8 and yy - 1 == cols.top[min(max(x, 0), cols.n - 1), min(max(z, 0), cols.n - 1)]:
                     E.add([x], [yy - 1], [z], "dirt_path")
-    elif n in ("HEAD", "IMPALED_CORPSE"):
-        h = 2 if n == "IMPALED_CORPSE" else 0
+    elif n in ("HEAD", "IMPALED_CORPSE", "IMPALED_CORPSE_ANTIQUITY"):
+        h = 2 if n.startswith("IMPALED_CORPSE") else 0
         for dy in range(h):
             put(0, dy, 0, "spruce_fence")
         put(0, h, 0, "skeleton_skull[rotation=8]")
@@ -1055,6 +1055,33 @@ def decor(E, cols, name, rect, rng):
                 E.add([x], [cols.surface(x, z) - 1], [z], "ice")
     elif n == "SIGN":
         put(0, 0, 0, "oak_sign[rotation=8]")
+    elif n.startswith("FOUNTAIN"):                     # a basin: the rim around the source keeps the water in
+        rim = "smooth_quartz" if "ANTIQUITY" in n else "stone_bricks"
+        for dx in (-1, 0, 1):
+            for dz in (-1, 0, 1):
+                if dx or dz:
+                    put(dx, 0, dz, rim)
+        put(0, 0, 0, "water[level=0]" if min(x1 - x0, z1 - z0) >= 3 else rim)     # small tiles: no rim, no water
+        for dx, dz in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
+            put(dx, 1, dz, "quartz_pillar" if "ANTIQUITY" in n else "stone_brick_wall")
+    elif n in ("WATER_POTS", "AMPHORAE"):
+        pot = "decorated_pot[facing=south,cracked=false]"
+        for dx, dz in ((0, 0), (1, 0), (0, 1)):
+            put(dx, 0, dz, pot)
+        put(0, 1, 0, pot if n == "AMPHORAE" else "water_cauldron[level=3]")
+    elif n == "GRAIN_STORAGE":
+        put(0, 0, 0, "barrel[facing=up]"); put(1, 0, 0, "hay_block"); put(0, 0, 1, "hay_block")
+        put(0, 1, 0, "composter[level=8]")
+    elif n == "FURNACE":
+        put(0, 0, 0, "blast_furnace[facing=south,lit=true]"); put(0, 1, 0, "brick_wall")
+        put(1, 0, 0, "coal_block")
+    elif n == "WATER_TROUGH":
+        for dx in (-1, 0, 1):
+            put(dx, 0, 0, "water_cauldron[level=3]")
+    elif n.startswith("BENCH_"):
+        wood = n == "BENCH_WOODEN"
+        for dx in (-1, 0, 1):
+            put(dx, 0, 0, f"{'spruce' if wood else 'stone_brick'}_stairs[facing=north,half=bottom,shape=straight]")
     elif "GALLOW" in n:
         put(-1, 0, 0, "dark_oak_fence"); put(-1, 1, 0, "dark_oak_fence"); put(-1, 2, 0, "dark_oak_fence")
         E.box(cx - 1, cx + 2, y + 3, y + 4, cz, cz + 1, "dark_oak_log[axis=x]"); put(1, 2, 0, "chain")
@@ -1395,7 +1422,8 @@ def place_objects(objects, players, cols, rng):
                 stats["skipped (other objects)"] += 1
         if kind == "O" and (("TREE" in name and "STUMP" not in name) or name in ("GOLD_MINE", "STONE_MINE", "QUARRY")
                             or "FORAGE" in name or "FRUIT_BUSH" in name or name.startswith(("CLIFF", *MOUNTAINS, "ROCK", "STATUE", "TROPAION",
-                            "STELAE", "THOLOS", "HERO_SHRINE", "WELL", "HAY_STACK", "MARKET_STALL"))):
+                            "STELAE", "THOLOS", "HERO_SHRINE", "WELL", "HAY_STACK", "MARKET_STALL", "FOUNTAIN",
+                            "MEDITERRANEAN_STALL", "MESOPOTAMIAN_STALL"))):
             obstacle(E, cols, E.footprint)
         elif kind == "O" and E.footprint and not any(k in name for k in PASSABLE_OBJECTS):
             x0, x1, z0, z1 = E.footprint            # other objects with blocks: no units on top of them
