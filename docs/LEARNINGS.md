@@ -37,6 +37,16 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   `python3 -m pip install --ignore-installed setuptools` (the Debian setuptools cannot build it).
   A record has each town center 4 times (IDs 109 and the annex parts 618–620): `read_record` skips them (#139).
 - An unknown block entity id gives "Skipping block entity with invalid type": 26.3 has no `bed` block entity (#249).
+- Parallel runs read the same new owner comment at once: just before you make a ticket from it, list the issues of
+  the last 15 minutes and reply in its thread first (3 copies of one epic: #306, #310, #313; lock: #320).
+- GitHub Actions: 2,000 free minutes per month (private repository), each job rounded up to 1 minute. CI on each PR and
+  the event workflows used about 900 minutes per hour with 16 runs: PRs have no CI now, only local checks (`docs/STEERING.md`).
+- Old scenarios for local checks (do not commit, no license): GitHub raw `SiegeEngineers/genie-rs/master/crates/genie-scx/
+  test/scenarios/` (`Age of Heroes b1-3-5.scx` is format 1.21; names in `format.rs` tests, #311).
+- Next ticket on the session branch after a squash merge: the remote branch still has the old commits, and the merge
+  fallback can conflict. Use `git merge -X ours --no-edit origin/<branch>` (its content is on main already).
+- Do not run `claim.py N --beat` in a background loop and in the foreground: two beats race, and one fails with
+  "belongs to another run" although the claim is yours.
 
 ## Libraries
 
@@ -48,6 +58,7 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   A tag with a wrong type gives "Serialization errors" (WARN), which `tools/mc_check.py` finds.
 - `tools/fetch_mcdata.py` reads the exact Mojang data from `misode/mcmeta`. PrismarineJS lags behind; its
   `data/pc/common/protocolVersions.json` has the data versions of all releases (26.3 = 5023).
+- `urllib` with a JSON body needs the header `Content-Type: application/json`, else GitHub answers 415 (#345).
 
 ## Code
 
@@ -82,3 +93,11 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - `vary()` picks a `ROOF_ALT` material per variant: count blocks with `render.building_blocks(NAME, arch, variant=v)` (#146).
 - `tools/render.py world` draws only Y >= 50 (`--y0`): use `--y0 -64` for blocks under the map (`--border`). `--scale 4`
   gives about 800 px, the size of the images in `docs/images/` (#262).
+- Footprint rule in a test: `Edits.add` keeps a block outside the footprint when `y >= cols.wtop + E.HEAD` (not the
+  surface). Match a block by its name before `[`: `minecraft:water_cauldron` starts with `minecraft:water` (#295).
+- `aoe2mc.json` "ground" over a tree, mine or building footprint is the top of the barriers, not the terrain: take
+  the ground of the free cells next to it (`Map.around`, #307). The parser stump names: `STUMP`, `*_STUMP` (no `TREE_STUMP`).
+- The `buildings` test scenario is about 1150 × 1570 blocks: to read one building of player 1 in the world, use the area
+  around tile (4 + i % 40 × 7, 4 + i // 40 × 7), i = the index of the name in `BuildingInfo` (#251).
+- Sibling sub-issues (#249-#256) run in parallel: before you add a helper or a tool option, `git fetch origin main` and
+  grep for it. #252 and #265 both added `render.py --cut`, and two runs added a `furnish` (#252).

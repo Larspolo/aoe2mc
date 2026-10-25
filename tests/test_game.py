@@ -1,4 +1,5 @@
 """game/: the RCON client against a fake server, and the game program on a real server (marker mc, #137)."""
+import os
 import re
 import shutil
 import socket
@@ -47,6 +48,27 @@ def test_rcon_wrong_password():
         rcon.Rcon("127.0.0.1", fake_server({}), "wrong")
 
 
+def test_players_play_in_creative_mode_on_a_local_server():
+    props = dict(line.split("=", 1) for line in run.properties(25565, 25575, "pw").splitlines())
+    assert props["gamemode"] == "creative" and props["force-gamemode"] == "true"
+    assert props["server-ip"] == "127.0.0.1"                        # only local players can join and get op
+
+
+def test_a_player_who_joins_gets_operator_rights():
+    sent = []
+    game = run.Game(".")
+    game.rcon = type("R", (), {"command": lambda self, c: sent.append(c) or ""})()
+    game.server = type("S", (), {"log": [
+        "[21:44:16] [Server thread/INFO]: Larspolo joined the game",
+        "[21:44:20] [Server thread/INFO]: <Larspolo> Bob joined the game",          # chat: no op
+        "[21:44:21] [Server thread/INFO]: Larspolo[/127.0.0.1:50000] logged in with entity id 1"]})()
+    game.op_joined()
+    game.server.log.append("[21:45:00] [Server thread/INFO]: Alex_2 joined the game")
+    game.op_joined()
+    game.op_joined()
+    assert sent == ["op Larspolo", "op Alex_2"]                     # each join once
+
+
 def position(game):
     m = re.search(r"\[(-?[\d.]+)d, (-?[\d.]+)d, (-?[\d.]+)d\]", game.command("data get entity @e[tag=t137,limit=1] Pos"))
     return tuple(map(float, m.groups())) if m else None
@@ -61,6 +83,9 @@ def test_game_moves_a_unit_with_tp(tiny_world, tmp_path):
         pytest.skip("Mojang is not reachable")
     world = shutil.copytree(tiny_world[0], tmp_path / "W")
     with run.Game(world) as game:
+        with open(os.path.join(game.folder, "server.properties")) as f:      # the server keeps the values (#292)
+            props = f.read()
+        assert "gamemode=creative" in props and "force-gamemode=true" in props
         game.forceload()
         end = time.time() + 60                      # entities load in other threads
         while "Added tag" not in game.command("tag @e[nbt={NoAI:1b},limit=1] add t137"):

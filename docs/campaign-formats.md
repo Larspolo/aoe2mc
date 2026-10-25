@@ -103,6 +103,14 @@ The layout (genie-scx `SCXFormat::read_from`):
       `f32` angle, `i16` frame (format ≥ `1.15`), `i32` garrisoned in (format ≥ `1.13`).
    6. Triggers (format ≥ `1.14`) and AI files. The converter does not need them.
 
+`scx.py` (#311) reads format `1.21` (data version 1.14 to 1.27): `scx.read(path)` gives the map size, terrain and
+elevation (`[x, y]`, as `read_scenario`) and the players (civilization, color, start view). It skips the header with its
+size field, skips `TribeScen` field by field, reads the map, skips the world data and the objects, and reads the
+scenario player data (the color is there). It also reads the objects (#312): `aoe2mc.read_scx` gives the
+result to the pipeline in the form of `read_scenario`, so `aoe2mc.py IN.scx OUT` converts the scenario. A test builds a file byte by byte (`tests/test_scx.py`). A check with the
+genie-rs test file `Age of Heroes b1-3-5.scx` (format `1.21`, 200 × 200, not in this repository) read all 8 players,
+and the bytes after the player data are the trigger version 1.6.
+
 The civilization of a player is in `TribeScen`, so a reader must read all of `TribeScen` to get to the map. The unit
 type IDs of the old games are the same IDs as in DE for the units that both have.
 
@@ -118,6 +126,8 @@ type IDs of the old games are the same IDs as in DE for the units that both have
   2. In the DE scenario editor, open each scenario and save it (DE saves it as `.aoe2scenario`).
      Or, in the DE campaign editor, make a new campaign of the saved scenarios (`.aoe2campaign`).
   3. Convert the new files with aoe2mc.
+  Since #347 the converter converts the `.scx` scenarios of format `1.21` directly (`scx.py`, #311, #312) and gives
+  these steps only for the other scenarios.
 
   The owner must check step 2 in the game (it is not confirmed in a source that the DE editor opens `.scx` files):
   ask in #201 (`needs-human`). A minimal reader of old scenarios is a port of `TribeScen`, `Map` and the objects

@@ -115,3 +115,34 @@ def test_cpx_one_scenario(tmp_path):
     with pytest.raises(SystemExit), contextlib.redirect_stdout(io.StringIO()):
         aoe2mc.main([str(cpx(tmp_path / "old.cpx", OLD)), str(tmp_path / "out"), "--scenario", "2"])
     assert [p.name for p in (tmp_path / "out").iterdir()] == ["2 Zwei.scx"]
+
+
+def scx_bytes(tmp_path, name, players):
+    import numpy as np
+    from test_scx import build
+    t = np.zeros((16, 16), np.uint8)
+    return open(build(tmp_path / name, t, np.zeros((16, 16), int), players, [(1, 8.5, 8.5, 83)]), "rb").read()
+
+
+def test_cpx_converts_its_scx_scenarios(tmp_path):
+    """The .scx scenarios of format 1.21 give one world each, without the DE editor steps (#347)."""
+    a, b = scx_bytes(tmp_path, "a.scx", {1: (1, 0, (8, 8))}), scx_bytes(tmp_path, "b.scx", {1: (2, 1, (4, 4))})
+    c = cpx(tmp_path / "old.cpx", [("Erste.scx", a), ("Zweite.scx", b)])
+    run(c, tmp_path / "out")
+    assert sorted(p.name for p in (tmp_path / "out").iterdir()) == ["1 Erste", "2 Zweite"]
+    assert (tmp_path / "out" / "2 Zweite" / "level.dat").exists()
+    run(c, tmp_path / "one", "--scenario", "2")
+    assert [p.name for p in (tmp_path / "one").iterdir()] == ["2 Zweite"]
+
+
+def test_cpx_with_other_formats_converts_the_rest_and_gives_the_steps(tmp_path):
+    a = scx_bytes(tmp_path, "a.scx", {1: (1, 0, (8, 8))})
+    c = cpx(tmp_path / "old.cpx", [("Gut.scx", a), ("Alt.scx", b"1.18" + bytes(100)), ("Karte.scn", b"1.10" + bytes(9))])
+    out = io.StringIO()
+    with pytest.raises(SystemExit) as e, contextlib.redirect_stdout(out):
+        aoe2mc.main([str(c), str(tmp_path / "out")])
+    msg = str(e.value.code)
+    assert "(.scn, .scx)" in msg and "  2 Alt.scx\n  3 Karte.scn" in msg and "Gut" not in msg
+    assert "2 Alt.scx: " in out.getvalue() and "1.18" in out.getvalue()
+    assert sorted(p.name for p in (tmp_path / "out").iterdir()) == ["1 Gut", "2 Alt.scx", "3 Karte.scn"]
+    assert (tmp_path / "out" / "1 Gut" / "level.dat").exists()

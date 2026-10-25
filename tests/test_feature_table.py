@@ -42,3 +42,13 @@ def test_rewrite_with_designs():
     assert "| Rose window | `*_stained_glass_pane` | no design |" in text
     assert text.startswith("## 2. Real blocks\n") and text.endswith("Text after the table.\n")
     assert len(text.split("\n")) == len(TABLE.split("\n"))
+
+
+def test_each_feature_has_one_row():
+    """A merge of parallel PRs copied rows of the table (#349): each feature name must be in it once."""
+    import os
+    text = open(os.path.join(ft.ROOT, "docs", "DESIGN.md")).read()
+    table = text.split("## 2. ", 1)[1].split("\n## ", 1)[0]
+    names = Counter(r.split("|")[1].strip() for r in table.splitlines() if r.startswith("| "))
+    assert names["AoE2 feature"] == 1 and len(names) > 50
+    assert [n for n, k in names.items() if k > 1] == []

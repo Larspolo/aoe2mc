@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 aoe2mc - Convert an Age of Empires II: DE scenario (.aoe2scenario) or the start state of a recorded game
-(.aoe2record) to a Minecraft Java world. A campaign (.aoe2campaign) gives one world per scenario; an old campaign
-(.cpx, .cpn) gives its old scenario files and the steps to save them in the DE editor.
+(.aoe2record) or an old scenario (.scx, format 1.21) to a Minecraft Java world. A campaign (.aoe2campaign) gives one world per scenario; an old campaign
+(.cpx, .cpn) too; its scenarios that are not .scx 1.21 give the files and the steps to save them in the DE editor.
 
 Usage:
     python aoe2mc.py MAP.aoe2scenario OUTPUT_WORLD_FOLDER [options]
@@ -233,8 +233,38 @@ def object_kinds():
 
 
 def read_map(path):
-    """read_record for .aoe2record files, else read_scenario."""
-    return (read_record if path.lower().endswith(".aoe2record") else read_scenario)(path)
+    """read_record for .aoe2record files, read_scx for old .scx scenarios, else read_scenario."""
+    p = path.lower()
+    return (read_record if p.endswith(".aoe2record") else read_scx if p.endswith(".scx") else read_scenario)(path)
+
+
+def read_scx(path):
+    """An old scenario (.scx format 1.21, #312), as read_scenario returns it. The old terrain and object IDs are the
+    DE IDs. A map that is not square gets the edge tiles repeated to a square. Old scenarios give no texts here."""
+    import scx
+    from AoE2ScenarioParser.datasets.terrains import TerrainId
+    try:
+        s = scx.read(path)
+    except scx.ScxError as e:
+        raise OptionError(str(e)) from None
+    w, h = s["width"], s["height"]
+    size = max(w, h)
+    terrain, elevation = (np.pad(a, ((0, size - w), (0, size - h)), mode="edge") for a in (s["terrain"], s["elevation"]))
+    kinds = object_kinds()
+    players = {}
+    for pid, p in s["players"].items():
+        color = buildings.COLOR_NAMES[p["color"]] if pid and p["color"] is not None and 0 <= p["color"] < 8 else "light_gray"
+        players[pid] = {"color": color, "arch": buildings.CIV_TO_ARCH.get(p["civ"], "western"), "civ": p["civ"],
+                        "view": p["view"]}
+    objects = []
+    for o in s["objects"]:
+        prefix, name = kinds.get(o["type"], ("?", f"UNKNOWN_{o['type']}"))
+        holder = o["garrisoned_in"]
+        objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name, id=o["type"],
+                            player=o["player"], x=o["x"], y=o["y"], rotation=float(o["angle"]),
+                            garrisoned=holder is not None, ref=o["id"], holder=holder))
+    texts = {k: "" for k in CHAPTERS}
+    return size, terrain, elevation, {t.value: t.name for t in TerrainId}, texts, objects, players
 
 
 def read_scenario(path):
@@ -805,6 +835,10 @@ def leaves(wood):
     return f"{wood}_leaves[persistent=true]"
 
 
+WOODS = {"palm": "jungle", "jungle": "jungle", "acacia": "acacia", "spruce": "spruce", "birch": "birch",
+         "mangrove": "mangrove"}                         # tree kind -> wood (log and leaves); else oak
+
+
 def make_tree(E, kind, x, y, z, rng):
     """Put one tree with its trunk base at (x, y, z)."""
     h = int(rng.integers(4, 7))
@@ -818,8 +852,7 @@ def make_tree(E, kind, x, y, z, rng):
         E.box(x, x + 1, y, y + h - 1, z, z + 1, "oak_log")
         E.add([x + 1, x - 1], [y + h - 2, y + h - 3], [z, z], "oak_log[axis=x]")
         return
-    wood = {"palm": "jungle", "jungle": "jungle", "acacia": "acacia", "spruce": "spruce",
-            "birch": "birch", "mangrove": "mangrove"}.get(kind, "oak")
+    wood = WOODS.get(kind, "oak")
     log, leaf = f"{wood}_log", leaves(wood)
     if kind == "spruce":
         h += 2
@@ -907,7 +940,7 @@ def decor(E, cols, name, rect, rng):
                 put(dx, dy, dz, "quartz_pillar")
         E.box(cx - 1, cx + 2, y + 4, y + 5, cz - 1, cz + 2, "smooth_quartz_slab[type=bottom]")
         put(0, 1, 0, "chiseled_quartz_block")
-    elif "MARKET_STALL" in n or "GOODS" in n:
+    elif "MARKET_STALL" in n or "GOODS" in n or n in ("MEDITERRANEAN_STALL", "MESOPOTAMIAN_STALL"):
         for dx, dz in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
             put(dx, 1, dz, "oak_fence"); put(dx, 2, dz, "oak_fence")
         wool = pick(["red", "yellow", "blue", "green", "orange", "white"])
@@ -937,6 +970,23 @@ def decor(E, cols, name, rect, rng):
         put(-1, 0, 0, "oak_fence"); put(-1, 1, 0, "lightning_rod")
     elif "TARGET" in n:
         put(0, 0, 0, "hay_block"); put(0, 1, 0, "target")
+    elif n == "RUNESTONES":                            # one tall carved stone and two small ones
+        put(0, 0, 0, "tuff"); put(0, 1, 0, "chiseled_tuff"); put(0, 2, 0, "tuff_wall")
+        put(-1, 0, 1, "polished_andesite"); put(-1, 1, 1, "andesite_wall")
+        put(1, 0, -1, "mossy_cobblestone"); put(1, 1, 0, "red_carpet"); put(1, 0, 0, "chiseled_tuff_bricks")
+    elif n == "NORSE_COLUMN":                          # a carved wooden pole on a stone base
+        put(0, 0, 0, "stone_bricks")
+        for dy in range(1, 5):
+            put(0, dy, 0, "spruce_log[axis=y]" if dy % 2 == 0 else "stripped_spruce_log[axis=y]")
+        put(0, 5, 0, "lantern[hanging=false]")
+    elif n == "NORSE_BANNER":
+        put(0, 0, 0, "spruce_fence"); put(0, 1, 0, "spruce_fence"); put(0, 2, 0, "red_banner[rotation=8]")
+    elif n == "WOODEN_ROAD":                           # flat: planks in the ground, units walk on it
+        for x in range(x0, x1):
+            for z in range(z0, z1):
+                yy = cols.surface(x, z)
+                if yy - 1 == cols.top[min(max(x, 0), cols.n - 1), min(max(z, 0), cols.n - 1)]:
+                    E.add([x], [yy - 1], [z], "spruce_planks" if rng.random() < 0.8 else "stripped_spruce_wood[axis=x]")
     elif "RUG" in n:
         E.box(cx - 1, cx + 1, y, y + 1, cz - 1, cz + 1, f"{pick(['red', 'orange', 'purple', 'cyan'])}_carpet")
     elif "VASE" in n:
@@ -966,7 +1016,8 @@ def decor(E, cols, name, rect, rng):
     elif "BONFIRE" in n or n.startswith(("FLAME", "FLARE")):     # a flare is a signal: tall smoke
         put(0, 0, 0, f"campfire[lit=true,signal_fire={str(n.startswith('FLARE')).lower()}]")
     elif "STUMP" in n:
-        put(0, 0, 0, "stripped_bamboo_block[axis=y]" if "BAMBOO" in n else "spruce_log[axis=y]")
+        put(0, -1, 0, "stripped_bamboo_block[axis=y]" if "BAMBOO" in n else "spruce_log[axis=y]")   # level: walk over it
+        put(0, 0, 0, "air")                                     # no grass or flower on the log
     elif n.startswith(("PATH_", "BLACK_TILE")):        # flat: a path in the ground, black carpet on it
         for x in range(x0, x1):
             for z in range(z0, z1):
@@ -975,8 +1026,8 @@ def decor(E, cols, name, rect, rng):
                     E.add([x], [yy], [z], "black_carpet", hard=False)
                 elif rng.random() < 0.8 and yy - 1 == cols.top[min(max(x, 0), cols.n - 1), min(max(z, 0), cols.n - 1)]:
                     E.add([x], [yy - 1], [z], "dirt_path")
-    elif n in ("HEAD", "IMPALED_CORPSE"):
-        h = 2 if n == "IMPALED_CORPSE" else 0
+    elif n in ("HEAD", "IMPALED_CORPSE", "IMPALED_CORPSE_ANTIQUITY"):
+        h = 2 if n.startswith("IMPALED_CORPSE") else 0
         for dy in range(h):
             put(0, dy, 0, "spruce_fence")
         put(0, h, 0, "skeleton_skull[rotation=8]")
@@ -1004,6 +1055,33 @@ def decor(E, cols, name, rect, rng):
                 E.add([x], [cols.surface(x, z) - 1], [z], "ice")
     elif n == "SIGN":
         put(0, 0, 0, "oak_sign[rotation=8]")
+    elif n.startswith("FOUNTAIN"):                     # a basin: the rim around the source keeps the water in
+        rim = "smooth_quartz" if "ANTIQUITY" in n else "stone_bricks"
+        for dx in (-1, 0, 1):
+            for dz in (-1, 0, 1):
+                if dx or dz:
+                    put(dx, 0, dz, rim)
+        put(0, 0, 0, "water[level=0]" if min(x1 - x0, z1 - z0) >= 3 else rim)     # small tiles: no rim, no water
+        for dx, dz in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
+            put(dx, 1, dz, "quartz_pillar" if "ANTIQUITY" in n else "stone_brick_wall")
+    elif n in ("WATER_POTS", "AMPHORAE"):
+        pot = "decorated_pot[facing=south,cracked=false]"
+        for dx, dz in ((0, 0), (1, 0), (0, 1)):
+            put(dx, 0, dz, pot)
+        put(0, 1, 0, pot if n == "AMPHORAE" else "water_cauldron[level=3]")
+    elif n == "GRAIN_STORAGE":
+        put(0, 0, 0, "barrel[facing=up]"); put(1, 0, 0, "hay_block"); put(0, 0, 1, "hay_block")
+        put(0, 1, 0, "composter[level=8]")
+    elif n == "FURNACE":
+        put(0, 0, 0, "blast_furnace[facing=south,lit=true]"); put(0, 1, 0, "brick_wall")
+        put(1, 0, 0, "coal_block")
+    elif n == "WATER_TROUGH":
+        for dx in (-1, 0, 1):
+            put(dx, 0, 0, "water_cauldron[level=3]")
+    elif n.startswith("BENCH_"):
+        wood = n == "BENCH_WOODEN"
+        for dx in (-1, 0, 1):
+            put(dx, 0, 0, f"{'spruce' if wood else 'stone_brick'}_stairs[facing=north,half=bottom,shape=straight]")
     elif "GALLOW" in n:
         put(-1, 0, 0, "dark_oak_fence"); put(-1, 1, 0, "dark_oak_fence"); put(-1, 2, 0, "dark_oak_fence")
         E.box(cx - 1, cx + 2, y + 3, y + 4, cz, cz + 1, "dark_oak_log[axis=x]"); put(1, 2, 0, "chain")
@@ -1011,6 +1089,120 @@ def decor(E, cols, name, rect, rng):
         x, z = min(max(cx, 0), cols.n - 1), min(max(cz, 0), cols.n - 1)
         if cols.wtop[x, z] > cols.top[x, z]:
             E.add([x], [int(cols.top[x, z]) + 1], [z], "sea_pickle[pickles=3]")
+    elif n.startswith(("DRIFTWOOD", "FLOTSAM")):      # in water: at the water level, so that it floats half under
+        x, z = min(max(cx, 0), cols.n - 1), min(max(cz, 0), cols.n - 1)
+        wet = cols.wtop[x, z] > cols.top[x, z]
+        yy = int(cols.wtop[x, z]) if wet else y
+        if n == "FLOTSAM":
+            E.add([cx, cx + 1, cx - 1], [yy] * 3, [cz, cz, cz - 1],
+                  [B("spruce_slab[type=top]"), B("barrel[facing=up]" if wet else "spruce_slab[type=bottom]"),
+                   B("spruce_trapdoor[facing=north,half=top,open=false]")])
+        else:
+            E.add([cx - 1, cx, cx + 1], [yy] * 3, [cz] * 3, "stripped_oak_log[axis=x]")
+            put(0, yy - y, 1, "stripped_birch_log[axis=z]")
+    elif n == "KELP_SEAWEEDS" or n == "WATER_LILY":
+        for x in range(max(0, x0), min(cols.n, x1)):
+            for z in range(max(0, z0), min(cols.n, z1)):
+                floor, top = int(cols.top[x, z]), int(cols.wtop[x, z])
+                if top <= floor or rng.random() > 0.6:
+                    continue
+                if n == "WATER_LILY":
+                    E.add([x], [top + 1], [z], "lily_pad", hard=False)
+                elif top - floor < 2:
+                    E.add([x], [floor + 1], [z], "seagrass", hard=False)
+                else:                                  # a kelp column of random height, at most up to the surface
+                    h = int(rng.integers(1, top - floor + 1))
+                    E.add([x] * h, list(range(floor + 1, floor + h + 1)), [z] * h,
+                          [B("kelp_plant")] * (h - 1) + [B("kelp[age=25]")], hard=False)
+    elif n == "BEACHED_WHALE":                        # a skeleton: spine, ribs and skull of bone blocks
+        for dx in range(-2, 2):
+            put(dx, 1, 0, "bone_block[axis=x]")
+            if dx > -2:
+                for dz in (-1, 1):
+                    put(dx, 0, dz, "bone_block[axis=y]")
+        put(-2, 0, 0, "bone_block[axis=x]")
+    elif n == "SMALL_WATERFALL":                      # a water source on a rock step falls down its east side
+        for dx, dz, h in ((0, 0, 2), (-1, 0, 3), (0, -1, 3), (-1, -1, 3), (1, -1, 2), (-1, 1, 2), (0, 1, 1)):
+            E.box(cx + dx, cx + dx + 1, y, y + h, cz + dz, cz + dz + 1,
+                  "mossy_cobblestone" if (dx + dz) % 2 else "stone")
+        put(0, 2, 0, "water[level=0]"); put(1, 2, 0, "water[level=1]")
+        put(1, 1, 0, "water[level=8]"); put(1, 0, 0, "water[level=8]")
+    elif n.startswith("FALLEN_LEAVES"):               # flat ground cover on land
+        leaves = (["pink_petals[facing=north,flower_amount=4]", "pink_petals[facing=east,flower_amount=2]",
+                   "pink_petals[facing=south,flower_amount=3]"] if "PEACH" in n else
+                  ["orange_carpet", "red_carpet", "yellow_carpet", "brown_carpet"] if "AUTUMN" in n else
+                  ["moss_carpet", "moss_carpet", "lime_carpet"])
+        for x in range(max(0, x0), min(cols.n, x1)):
+            for z in range(max(0, z0), min(cols.n, z1)):
+                if cols.wtop[x, z] == cols.top[x, z] and rng.random() < 0.6:
+                    E.add([x], [cols.surface(x, z)], [z], pick(leaves), hard=False)
+    elif chinese_garden(E, n, rect, y, put):
+        pass
+    else:
+        return False
+    return True
+
+
+def chinese_garden(E, n, rect, y, put):
+    """Chinese garden objects (#294): red wood, white stone and dark tile roofs. Returns False if unknown."""
+    x0, x1, z0, z1 = rect
+    W, cz = x1 - x0, (z0 + z1) // 2
+    i = 1 if W >= 6 else 0                              # inset of posts in a large footprint
+
+    def roof(a0, a1, b0, b1, yy):                      # stepped tile roof that ends in a ridge
+        for k in range(max(1, (min(a1 - a0, b1 - b0) + 1) // 2)):
+            E.box(a0 + k, a1 - k, yy + k, yy + k + 1, b0 + k, b1 - k, "deepslate_tile_slab[type=bottom]")
+        return yy + k + 1
+
+    if n == "PAPER_LANTERN":                            # a glowing paper lantern hangs from a post
+        for dy in range(3):
+            put(0, dy, 0, "dark_oak_fence")
+        put(1, 2, 0, "dark_oak_fence"); put(1, 1, 0, "shroomlight")
+    elif n == "ASIAN_LANTERNS":                         # a row of stone lanterns (toro)
+        for x in range(x0 + (W > 2), max(x0 + 1, x1 - (W > 2)), 2):
+            E.add([x] * 3, [y, y + 1, y + 2], [cz] * 3,
+                  [B("stone_brick_wall"), B("lantern[hanging=false]"), B("stone_brick_slab[type=bottom]")])
+    elif n == "HUABIAO_TOTEM":                          # white marble column with a cloud board near the top
+        E.box(x0 + (W > 2), x1 - (W > 2), y, y + 1, z0 + (W > 2), z1 - (W > 2), "polished_diorite")
+        for dy in range(1, 6):
+            put(0, dy, 0, "chiseled_quartz_block" if dy == 5 else "quartz_pillar")
+        put(-1, 4, 0, "smooth_quartz_slab[type=top]"); put(1, 4, 0, "smooth_quartz_slab[type=top]")
+        put(0, 6, 0, "smooth_quartz_slab[type=bottom]")
+    elif n.startswith("PAIFANG_GATE"):                  # red posts, beams and tile roofs along x
+        large = n.endswith("LARGE")
+        a, b, H = x0 + (W >= 4), x1 - 1 - (W >= 4), 5 if large else 4
+        k = (b - a) // 3 if large else 0
+        for x in sorted({a, b, a + k, b - k}):
+            E.add([x], [y], [cz], "polished_blackstone")
+            E.box(x, x + 1, y + 1, y + H, cz, cz + 1, "red_concrete")
+        E.box(a, b + 1, y + H - 1, y + H, cz, cz + 1, "red_concrete")
+        for r0, r1, yy in ((a, b, y + H), (a + k, b - k, y + H + 1)) if large else ((a, b, y + H),):
+            E.box(r0, r1 + 1, yy, yy + 1, cz - 1, cz, "deepslate_tile_stairs[facing=south,half=bottom,shape=straight]")
+            E.box(r0, r1 + 1, yy, yy + 1, cz + 1, cz + 2, "deepslate_tile_stairs[facing=north,half=bottom,shape=straight]")
+            E.box(r0, r1 + 1, yy, yy + 1, cz, cz + 1, "deepslate_tile_slab[type=double]")
+        if large:
+            E.box(a + k + 1, b - k, y + H - 2, y + H - 1, cz, cz + 1, "gold_block")    # name board
+    elif n == "GARDEN_PAVILION":                        # open pavilion: four red posts, a floor and a tile roof
+        E.box(x0 + i, x1 - i, y, y + 1, z0 + i, z1 - i, "smooth_stone_slab[type=bottom]")
+        for x, z in ((x0 + i, z0 + i), (x1 - 1 - i, z0 + i), (x0 + i, z1 - 1 - i), (x1 - 1 - i, z1 - 1 - i)):
+            E.box(x, x + 1, y, y + 3, z, z + 1, "stripped_mangrove_log[axis=y]")
+        top = roof(x0, x1, z0, z1, y + 3)
+        put(0, top - y, 0, "lightning_rod"); put(0, 2, 0, "lantern[hanging=true]")
+    elif n == "QUE_TOWER":                              # tall brick tower with a small pavilion on top
+        H = max(4, W)
+        E.box(x0 + i, x1 - i, y, y + H, z0 + i, z1 - i, "stone_bricks")
+        E.box(x0 + i, x1 - i, y + H - 1, y + H, z0 + i, z1 - i, "polished_andesite")
+        j = i + (W >= 4)
+        for x, z in ((x0 + j, z0 + j), (x1 - 1 - j, z0 + j), (x0 + j, z1 - 1 - j), (x1 - 1 - j, z1 - 1 - j)):
+            E.box(x, x + 1, y + H, y + H + 2, z, z + 1, "stripped_mangrove_log[axis=y]")
+        roof(x0, x1, z0, z1, y + H + 2)
+    elif n == "GARDEN_BRIDGE":                          # red arched bridge along x: deck of half steps, rails
+        for x in range(x0, x1):
+            h = min(x - x0, x1 - 1 - x, 3)
+            yy = y + h // 2
+            E.box(x, x + 1, yy, yy + 1, z0 + i, z1 - i, f"spruce_slab[type={'top' if h % 2 else 'bottom'}]")
+            for z in {z0 + i, z1 - 1 - i}:              # on a top slab, else in place of the low slab
+                E.add([x], [yy + h % 2], [z], "mangrove_fence")
     else:
         return False
     return True
@@ -1070,7 +1262,8 @@ MONUMENTS = ("BUDDHA_STATUE", "INDIAN_STATUES", "OLD_STONE_HEAD", "NINE_BANDS", 
              "TROWULAN_GATE", "REKHA_DEUL_TEMPLE", "SVAN_TOWER", "MEDITERRANEAN_COURTYARD_WALLS",
              "MESOPOTAMIAN_PILLAR", "MESOPOTAMIAN_GARDEN", "MESOPOTAMIAN_TOMB", "BURNED_BUILDING")    # buildings.py designs
 PASSABLE_OBJECTS = ("FLOWER", "FERN", "RUG", "GRASS", "PLANT", "OYSTER", "FISH", "RELIC", "GRAVE", "BONFIRE",
-                    "PATH_", "BLACK_TILE", "ICE_NAVIGABLE", "DOLPHIN", "BOX_TURTLES")
+                    "PATH_", "BLACK_TILE", "ICE_NAVIGABLE", "DOLPHIN", "BOX_TURTLES", "KELP", "WATER_LILY",
+                    "FALLEN_LEAVES", "STUMP", "WOODEN_ROAD")
 
 
 def object_footprint(o, T):
@@ -1229,7 +1422,8 @@ def place_objects(objects, players, cols, rng):
                 stats["skipped (other objects)"] += 1
         if kind == "O" and (("TREE" in name and "STUMP" not in name) or name in ("GOLD_MINE", "STONE_MINE", "QUARRY")
                             or "FORAGE" in name or "FRUIT_BUSH" in name or name.startswith(("CLIFF", *MOUNTAINS, "ROCK", "STATUE", "TROPAION",
-                            "STELAE", "THOLOS", "HERO_SHRINE", "WELL", "HAY_STACK", "MARKET_STALL"))):
+                            "STELAE", "THOLOS", "HERO_SHRINE", "WELL", "HAY_STACK", "MARKET_STALL", "FOUNTAIN",
+                            "MEDITERRANEAN_STALL", "MESOPOTAMIAN_STALL"))):
             obstacle(E, cols, E.footprint)
         elif kind == "O" and E.footprint and not any(k in name for k in PASSABLE_OBJECTS):
             x0, x1, z0, z1 = E.footprint            # other objects with blocks: no units on top of them
@@ -1245,22 +1439,25 @@ def place_objects(objects, players, cols, rng):
 # Units -> entities
 # --------------------------------------------------------------------------------------------
 FISH = [("SALMON", "salmon"), ("DORADO", "tropical_fish"), ("SNAPPER", "tropical_fish"), ("FISH", "cod"),
-        ("DOLPHIN", "dolphin"), ("BOX_TURTLES", "turtle")]
+        ("DOLPHIN", "dolphin"), ("BOX_TURTLES", "turtle"), ("HOWLER_MONKEY", "ocelot")]
+OBJECT_MOBS = {"WHALE": "dolphin"}    # exact names: BEACHED_WHALE is a carcass, not a mob. No whale mob: the dolphin
+LAND_MOBS = ("turtle", "ocelot")      # is the nearest large sea animal
 
 
 def object_mob(name):
-    """Minecraft mob for an AoE2 'other object' that is an animal (fish, dolphin, turtles), else None."""
-    return next((k for key, k in FISH if key in name), None)
+    """Minecraft mob for an AoE2 'other object' that is an animal (fish, dolphin, whale, turtles, monkey), else None."""
+    return OBJECT_MOBS.get(name) or next((k for key, k in FISH if key in name), None)
 PASSABLE = ("short_grass", "tall_grass", "large_fern", "petals", "moss_carpet", "mushroom", "allium", "bluet",
             "tulip", "lily_of", "fern", "wheat", "poppy", "dandelion", "cornflower", "daisy", "water",
-            "seagrass", "dead_bush", "sweet_berry", "rail", "carpet", "banner", "button", "lantern", "snow[")
+            "seagrass", "dead_bush", "sweet_berry", "rail", "carpet", "banner", "button", "lantern", "snow[", "kelp",
+            "lily_pad")
 
 
 SEATS = {"minecraft:boat": 2, "minecraft:chest_boat": 1}
 
 
-def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside"):
-    """Entities per chunk: {(cx, cz): [(nbt, x, z, is_boat)]}.
+def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside", silent=False):
+    """Entities per chunk: {(cx, cz): [(nbt, x, z, is_boat)]}. silent: also the passive animals (--ambience off).
     garrison="outside": a garrisoned unit rides its ship if a seat is free, else stands next to its holder."""
     T = cols.T
     out = {}
@@ -1282,6 +1479,8 @@ def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside
             if desc is None:
                 continue
             nbt = units.make_entity(o, players, (0, 0, 0), rng, desc)
+            if silent:
+                nbt["Silent"] = Byte(1)
             boat = units.is_boat(desc)
             if held:
                 holder = refs.get(o.get("holder"))
@@ -1302,7 +1501,7 @@ def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside
         elif o["kind"] == "O" and object_mob(o["name"]):
             kind = object_mob(o["name"])
             nbt = units.to_nbt(units.mob(kind), (0, 0, 0), 0.0, rng)
-            boat = "fish" if kind != "turtle" else False
+            boat = "fish" if kind not in LAND_MOBS else False
             stats["fish" if kind in ("cod", "salmon", "tropical_fish") else "animals (objects)"] += 1
         else:
             continue
@@ -1475,7 +1674,7 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
                     print("   in block:", str(top_name(nbt)), bx, top + 1, bz, B.states[col[top + 1 - MIN_Y]],
                           B.states[col[top + 2 - MIN_Y]])
         if units.top_entity(nbt).get("NoGravity"):               # a flying bird
-            y += units.FLY_HEIGHT
+            y += units.FLY_LOW.get(str(units.top_entity(nbt)["id"]), units.FLY_HEIGHT)
         set_pos(nbt, x, float(y), z)
         out.append(nbt)
     if not out:
@@ -1702,11 +1901,67 @@ WORK_SOUNDS = [
 ]
 CHANCE = {"sometimes": 0.25, "rare": 0.03}      # per pulse of 2 s
 
+# Ambience per terrain group (#219): vanilla biomes of `terrain_style` -> particle and sound near each player in such
+# a biome (datapack function, no warning), and the colors of the custom biome of `--ambience full` (the client shows
+# the "Experimental Settings" warning for it, docs/datapack.md). Particles: only types without options that exist in
+# 1.21.1 and 26.3. Colors: sky, fog, water, water fog (0xRRGGBB), then extra `effects` (the same in both versions).
+AMBIENCE = {
+    "forest": (("forest", "birch_forest", "taiga", "jungle", "bamboo_jungle"), "spore_blossom_air",
+               "entity.parrot.ambient", (0.7, 0.8, True), (0x79a6ff, 0xc0d8ff, 0x3f76e4, 0x050533), {}),
+    "snow": (("snowy_plains", "snowy_taiga", "frozen_ocean"), "snowflake", None, (0.0, 0.5, True),
+             (0x7fa1ff, 0xdde4f0, 0x3938c9, 0x050533), {}),
+    "desert": (("desert", "savanna"), "white_ash", None, (2.0, 0.0, False), (0x6eb1ff, 0xe2d3a8, 0x32a598, 0x050533), {}),
+    "swamp": (("swamp", "mangrove_swamp"), None, "entity.frog.ambient", (0.8, 0.9, True),
+              (0x78a7ff, 0xa4b3a0, 0x617b64, 0x232317), {"grass_color_modifier": "swamp"}),
+    "water": (("ocean", "deep_ocean", "warm_ocean", "river", "beach"), None, "block.water.ambient", (0.5, 0.5, True),
+              (0x7ba4ff, 0xc0d8ff, 0x3f76e4, 0x050533), {}),
+    "grass": (("plains", "meadow"), None, None, (0.8, 0.4, True), (0x78a7ff, 0xc0d8ff, 0x3f76e4, 0x050533), {}),
+}
+AMBIENCE_GROUP = {b: g for g, (biomes, *_) in AMBIENCE.items() for b in biomes}
 
-def write_datapack(out, objects, ground):
+
+def custom_biomes(names):
+    """--ambience full: minecraft:<biome> -> aoe2mc:<group> for the biomes of an AMBIENCE group."""
+    return [f"aoe2mc:{AMBIENCE_GROUP[n[10:]]}" if n[10:] in AMBIENCE_GROUP else n for n in names]
+
+
+def biome_file(group):
+    """The custom biome of a group in the format of the output version (docs/datapack.md, "Biome files")."""
+    (t, rain, precip), (sky, fog, water, water_fog), extra = AMBIENCE[group][3:]
+    data = {"has_precipitation": precip, "temperature": t, "downfall": rain}
+    if MC["data_version"] >= V26_1:             # 26.x: colors are "#rrggbb", sky and fog are attributes
+        hx = "#{:06x}".format
+        return data | {"effects": {"water_color": hx(water)} | extra,
+                       "attributes": {"minecraft:visual/sky_color": hx(sky), "minecraft:visual/fog_color": hx(fog),
+                                      "minecraft:visual/water_fog_color": hx(water_fog)},
+                       "features": [], "carvers": []}
+    return data | {"effects": {"sky_color": sky, "fog_color": fog, "water_color": water, "water_fog_color": water_fog}
+                   | extra, "spawners": {}, "spawn_costs": {}, "features": [], "carvers": {}}
+
+
+def ambience_lines(biome_names):
+    """Pulse lines: particles and sounds near each player in the biome of a group (the biomes of the map only)."""
+    lines = []
+    for group, (_, particle, sound, *_) in AMBIENCE.items():
+        names = [n for n in biome_names if n == f"aoe2mc:{group}" or AMBIENCE_GROUP.get(n[10:]) == group]
+        for n in sorted(set(names)):
+            at = f"execute as @a at @s if biome ~ ~ ~ {n}"
+            if particle:
+                lines.append(f"{at} run particle minecraft:{particle} ~ ~4 ~ 8 3 8 0 20")
+            if sound:
+                lines.append(f"{at} if predicate aoe2mc:sometimes run playsound minecraft:{sound} ambient @s ~ ~ ~ 0.5")
+    return lines
+
+
+def write_datapack(out, objects, ground, biome_names=(), ambience="basic"):
     """datapacks/aoe2mc: a function every 2 s plays a work sound at each building with a player near it
-    (docs/datapack.md). Fixed positions, no marker entities: the check costs nothing that /tick query shows."""
+    (docs/datapack.md). Fixed positions, no marker entities: the check costs nothing that /tick query shows.
+    Ambience (#219): particles and sounds near the players by biome; "full" also writes the custom biomes, "off"
+    writes no pack.
+    Returns (work sounds, ambience lines)."""
     root = os.path.join(out, "datapacks", "aoe2mc")
+    if ambience == "off":           # the world as before #188: no pack
+        return 0, 0
     lines = []
     for o in objects:
         rule = next((r for r in WORK_SOUNDS if r[0] in o["name"]), None) if o["kind"] == "B" else None
@@ -1721,10 +1976,13 @@ def write_datapack(out, objects, ground):
         lines.append(f"{at} playsound minecraft:{rule[1]} ambient @a ~ ~ ~ 1 {0.9 + 0.1 * (x % 3):.1f}")
         if rule[3]:
             lines.append(f"{at} particle minecraft:{rule[3]} ~ ~1 ~ 0.4 0.2 0.4 0 4")
-    if not lines:           # the server finds a new pack by itself; level.dat needs no entry
-        return 0
+    work = len(lines)
+    lines += ambience_lines(biome_names)
+    groups = sorted({n.split(":")[1] for n in biome_names if n.startswith("aoe2mc:")})
+    if not lines and not groups:    # the server finds a new pack by itself; level.dat needs no entry
+        return 0, 0
     files = {
-        "pack.mcmeta": {"pack": {"description": "aoe2mc: work sounds at buildings", "pack_format": MC["pack_format"]}
+        "pack.mcmeta": {"pack": {"description": "aoe2mc: work sounds and ambience", "pack_format": MC["pack_format"]}
                         | ({"min_format": MC["pack_format"], "max_format": MC["pack_format"]}
                            if MC["data_version"] >= V26_1 else {})},
         "data/minecraft/tags/function/load.json": {"values": ["aoe2mc:load"]},
@@ -1734,12 +1992,14 @@ def write_datapack(out, objects, ground):
     key = "type" if MC["data_version"] >= V26_1 else "condition"     # 26.x renamed the key of a predicate
     for name, chance in CHANCE.items():
         files[f"data/aoe2mc/predicate/{name}.json"] = {key: "minecraft:random_chance", "chance": chance}
+    for g in groups:
+        files[f"data/aoe2mc/worldgen/biome/{g}.json"] = biome_file(g)
     for name, data in files.items():
         path = os.path.join(root, name)
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w") as f:
             f.write(data if isinstance(data, str) else json.dumps(data))
-    return sum("playsound" in line for line in lines)
+    return sum("playsound" in line for line in lines[:work]), len(lines) - work
 
 
 def write_level_dat(path, name, spawn, yaw=SPAWN_YAW, size=None):
@@ -1980,13 +2240,13 @@ def block_color(state):
 # --------------------------------------------------------------------------------------------
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
             barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False,
-            garrison="outside", border_design="diorama"):
+            garrison="outside", border_design="diorama", ambience="basic"):
     global MC
     MC = VERSIONS[mc_version]
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
     try:
         _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-                 verbose, garrison, border_design)
+                 verbose, garrison, border_design, ambience)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
@@ -1994,7 +2254,7 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
 
 
 def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-             verbose, garrison, border_design):
+             verbose, garrison, border_design, ambience):
     buildings.BARRIERS = barriers
     buildings.TURN, yaw = ORIENTATIONS[orientation]
     MOVED.clear()           # the counts of an earlier conversion in this process
@@ -2030,6 +2290,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         print("  unknown object IDs (skipped): " + ", ".join(f"{i} ×{n}" for i, n in sorted(unknown.items())))
 
     cols = Columns(size, terrain, elevation, tnames, T, H, rng)
+    if ambience == "full":
+        cols.biome_names = custom_biomes(cols.biome_names)
     tick("columns")
     for pid, p in sorted(players.items()):
         if pid and any(o["player"] == pid for o in objects):
@@ -2047,7 +2309,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     per_chunk = edits.by_chunk(max(cols.width, cols.n + r), -r)
     tick("objects")
     before = set(stats)
-    unit_chunks = plan_units(objects, players, cols, rng, stats, birds, garrison) if with_units else {}
+    unit_chunks = plan_units(objects, players, cols, rng, stats, birds, garrison, ambience == "off") if with_units else {}
     tick("units")
     print(f"  units: {stats['units']}, fish: {stats['fish']}")
     for k in sorted(set(stats) - before - {"units", "fish"}):
@@ -2096,9 +2358,12 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
 
     write_level_dat(os.path.join(out, "level.dat"), name, spawn, yaw, cols.n)
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground)
-    n = write_datapack(out, objects, ground)
+    n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience)
     if n:
         print(f"  work sounds at buildings: {n}")
+    if amb:
+        print(f"  ambience (particles and sounds by biome): {amb} lines"
+              + (", custom biomes (Minecraft shows the experimental warning)" if ambience == "full" else ""))
 
     from PIL import Image
     lut = np.array([block_color(s) for s in B.states], np.uint8)
@@ -2205,8 +2470,8 @@ def read_campaign(path):
 
 
 OLD_CAMPAIGN_STEPS = """\
-The scenarios of this campaign use the old scenario format ({ext}). aoe2mc cannot read it.
-aoe2mc wrote the scenario files to {out}:
+These scenarios of the campaign use an old scenario format ({ext}) that aoe2mc cannot read.
+aoe2mc wrote them to {out}:
 {files}
 Do these steps to convert them:
   1. Copy the files to the scenario folder of AoE2 DE:
@@ -2218,7 +2483,8 @@ Do these steps to convert them:
 
 def convert_campaign(src, out, only=None, name=None, **kw):
     """One world per scenario: out/<number> <scenario name>/. only: the number of one scenario (1 = first).
-    An old campaign (.cpx, .cpn): write the old scenario files to out/ and stop with the steps for the DE editor."""
+    An old campaign (.cpx, .cpn): convert its .scx scenarios of format 1.21 (#347); write the other scenario files to
+    out/ and stop with the steps for the DE editor."""
     import tempfile
     version, title, entries = read_campaign(src)
     if only is not None and not 1 <= only <= len(entries):
@@ -2227,13 +2493,29 @@ def convert_campaign(src, out, only=None, name=None, **kw):
     chosen = [(i, re.sub(r'[\\/:*?"<>|]', "_", fn), data) for i, (fn, data) in enumerate(entries, 1)
               if only is None or i == only]
     if version == b"1.00":
-        os.makedirs(out, exist_ok=True)
+        old = []
         for i, fn, data in chosen:
-            with open(os.path.join(out, f"{i} {fn}"), "wb") as f:
-                f.write(data)
-        exts = sorted({os.path.splitext(fn)[1] or "?" for _, fn, _ in chosen})
-        raise SystemExit(OLD_CAMPAIGN_STEPS.format(ext=", ".join(exts), out=out,
-                                                   files="\n".join(f"  {i} {fn}" for i, fn, _ in chosen)))
+            stem = os.path.splitext(fn)[0]
+            if fn.lower().endswith(".scx"):
+                with tempfile.TemporaryDirectory() as tmp:
+                    path = os.path.join(tmp, "s.scx")
+                    with open(path, "wb") as f:
+                        f.write(data)
+                    try:
+                        convert(path, os.path.join(out, f"{i} {stem}"), name=f"{name} {i}" if name else stem, **kw)
+                        continue
+                    except OptionError as e:      # another format version, or a file that scx.py cannot read
+                        print(f"{i} {fn}: {e}")
+            old.append((i, fn, data))
+        if old:
+            os.makedirs(out, exist_ok=True)
+            for i, fn, data in old:
+                with open(os.path.join(out, f"{i} {fn}"), "wb") as f:
+                    f.write(data)
+            exts = sorted({os.path.splitext(fn)[1] or "?" for _, fn, _ in old})
+            raise SystemExit(OLD_CAMPAIGN_STEPS.format(ext=", ".join(exts), out=out,
+                                                       files="\n".join(f"  {i} {fn}" for i, fn, _ in old)))
+        return
     for i, fn, data in chosen:
         stem = re.sub(r"\.aoe2scenario$", "", fn, flags=re.I)
         with tempfile.TemporaryDirectory() as tmp:
@@ -2245,8 +2527,10 @@ def convert_campaign(src, out, only=None, name=None, **kw):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
-    ap.add_argument("scenario", help=".aoe2scenario file, .aoe2record (the start state of a recorded game), or "
-                    ".aoe2campaign (one world per scenario; .cpx and .cpn: the steps for the DE editor)")
+    ap.add_argument("scenario", help=".aoe2scenario file, .aoe2record (the start state of a recorded game), .scx "
+                    "(an old scenario, format 1.21), or "
+                    ".aoe2campaign, .cpx or .cpn (one world per scenario; old scenarios that are not .scx 1.21: the "
+                    "steps for the DE editor)")
     ap.add_argument("output", help="output world folder (put it in .minecraft/saves/); for a campaign the folder of "
                     "the worlds")
     ap.add_argument("--scenario", dest="only", type=int_range(1, 999), metavar="N",
@@ -2275,12 +2559,17 @@ def main(argv=None):
                     help="Minecraft corner of the top corner of the AoE2 screen (default ne)")
     ap.add_argument("--border", choices=sorted(BORDERS), default="diorama",
                     help="design of the edge outside the map (default diorama); all keep the vanilla world border at the edge")
+    ap.add_argument("--ambience", choices=("basic", "full", "off"), default="basic",
+                    help="work sounds at buildings, animal sounds, and particles and sounds by terrain (default basic); "
+                         "full also gives each terrain group a custom biome with its own sky, fog and water colors, but "
+                         "Minecraft then shows an \"Experimental Settings\" warning when the world opens; off: a "
+                         "silent world without a datapack")
     ap.add_argument("--verbose", action="store_true", help="print the time of each phase")
     a = ap.parse_args(argv)
     kw = dict(T=a.tile_size, H=a.level_height, seed=a.seed, preview=a.preview, arch=a.architecture,
               player_arch=a.player_architecture, with_units=not a.no_units, barriers=not a.no_barriers,
               mc_version=a.mc_version, spawn=a.spawn, birds=not a.no_birds, orientation=a.orientation,
-              verbose=a.verbose, garrison=a.garrison, border_design=a.border)
+              verbose=a.verbose, garrison=a.garrison, border_design=a.border, ambience=a.ambience)
     try:
         if a.scenario.lower().endswith((".aoe2campaign", ".cpx", ".cpn")):
             convert_campaign(a.scenario, a.output, a.only, a.name, **kw)
