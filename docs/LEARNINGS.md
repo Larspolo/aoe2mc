@@ -82,3 +82,5 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - `vary()` picks a `ROOF_ALT` material per variant: count blocks with `render.building_blocks(NAME, arch, variant=v)` (#146).
 - `tools/render.py world` draws only Y >= 50 (`--y0`): use `--y0 -64` for blocks under the map (`--border`). `--scale 4`
   gives about 800 px, the size of the images in `docs/images/` (#262).
+- Footprint rule in a test: `Edits.add` keeps a block outside the footprint when `y >= cols.wtop + E.HEAD` (not the
+  surface). Match a block by its name before `[`: `minecraft:water_cauldron` starts with `minecraft:water` (#295).
