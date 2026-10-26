@@ -100,3 +100,4 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - The free space of a design is `-1` (unset) or `air`: an open hall (the western `TOWN_CENTER`) has no `air` cell inside. `buildings.rooms()` takes both, the `air` cells first (#807).
 - `test_gather_attack.click` puts the eye at the ground height (y 64): its ray cannot hit the ground, so `pick_ground` and `build.pick` give the wrong cell. For a ground click put the eye 2 blocks up (`tests/test_order_marker.py` `look`, #796).
 - `Replay.run` gives `control["time"]` as a float (ms): a test of a poll action with an int time hides a format error like `:02d` (#803). Test with a float time, or with `Replay.run` and the `Clock` fake of `tests/test_replay_control.py`.
+- `Gather.__new__` adapters (`tests/test_menu.py`, `Replay.crew`) have no attribute of `Gather.__init__`: a new attribute that `clicks()` or `setup()` reads also needs a class default (`cheats = False`, #816).
