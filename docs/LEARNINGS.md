@@ -37,29 +37,13 @@ of its document (named below): this file loads into each run. The `improve` skil
   `timeout 580 bash -c 'until [ -s OUT ]; do sleep 5; done'` (#413, #514).
 - `mcp__github__get_job_logs` gives HTTP 404 for the jobs of `ci.yml` (2026-10-26, #443): do not retry. Run its steps
   (`ruff`, fast, `-m slow`, `-m mc`) locally on the run's `head_sha`; main is red only when one fails there.
-
-- Paper: `fill.papermc.io/v3/projects/paper/versions/V/builds/latest` lists the builds, but the jar URL is on `fill-data.papermc.io`, which the proxy blocked on 2026-10-26 (#439). Test a download host with `curl`, not only the API.
-- The Paper API answers 403 to the `Python-urllib` User-Agent (`curl` works): send a User-Agent (`game/run.py` `AGENT`). `-DbundlerRepoDir=DIR` keeps the patched Mojang jar of Paper in DIR; Paper writes `usercache.json` next to the `--universe` world (#434).
-- Paper plugin (#435): `game/run.py` builds `game/plugin` with `./gradlew --no-daemon -q jar` and `JAVA_HOME` = the JDK 25 (`openjdk-25-jdk-headless`: the paper-api 26.3 classes are Java 25, javac 21 cannot read them); first build 30 s. A NoAI mob finds no path before its first AI tick; the path search ends at about `follow_range` (cow: 16). The world border stops paths: test inside the map. `fill ... hollow` also fills the bottom and top faces.
-- `pytest -m mc` needs `javac` since the Paper plugin (#493): without it 14 tests fail with "no javac". Until the owner pastes setup v6 (#495), run `apt-get install -y openjdk-25-jdk-headless` (works in the cloud, 1 min, #497).
-- `-m mc` takes about 21 minutes, and 14 of its tests stop with "no javac" when `/etc/aoe2mc-setup-version` is below 6: `apt-get install -y openjdk-25-jdk-headless` first (1 min, #536).
-- A world that the Paper server saved does not open in the vanilla client ("Overworld settings missing"): Paper moves
-  `data/minecraft/world_gen_settings.dat` into each dimension folder. Copy the `.dat` files of `data/minecraft/` of a fresh
-  conversion into the saved copy before `tools/mc_shot.py` (#420, #580).
-- Images of a check ticket (no PR): push an orphan commit (`git mktree`, `git commit-tree`) to `refs/heads/checks/N` and
-  link `https://raw.githubusercontent.com/Larspolo/aoe2mc/checks/N/NAME.png` in the comment (#614).
-
-## Libraries
-
-- `-m mc` takes about 21 minutes, and 14 of its tests stop with "no javac" when `/etc/aoe2mc-setup-version` is below 6:
-  `apt-get install -y openjdk-25-jdk-headless` first (1 min, #536).
-- Wait for a `run_in_background` job in the foreground: `timeout 580 bash -c 'until [ -s OUT ]; do sleep 5; done'` works; a bare `sleep` is blocked (#514).
-- Records (`mgz`, test records, command pitfalls): `docs/research/replays.md`, "Pitfalls".
 - `-m mc` takes about 21 minutes and needs `javac` (setup version 6, #493): when `/etc/aoe2mc-setup-version` is below 6,
   run `apt-get install -y openjdk-25-jdk-headless` first (1 min, #536).
 - AoE2ScenarioParser 0.9.8 makes new scenarios (`tools/scenarios.py`: `new_scenario`, `add_unit`, `save`). It prints much
   text (`redirect_stdout`), default players are RANDOM (`western`), and `write_to_file` writes the output file name into
   the file: for the same bytes use `scenarios.save(..., name)` (#204).
+- Images of a check ticket (no PR): push an orphan commit (`git mktree`, `git commit-tree`) to `refs/heads/checks/N` and
+  link `https://raw.githubusercontent.com/Larspolo/aoe2mc/checks/N/NAME.png` in the comment (#614).
 
 ## Code
 
