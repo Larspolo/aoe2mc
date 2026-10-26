@@ -50,6 +50,8 @@ def test_release_and_takeover(clones, monkeypatch):
     assert tool(a, "5", "--release").stdout.strip() == "released claim/5"
     assert tool(b, "5").stdout.strip() == "claimed claim/5-2"   # free again: the next slot
     assert tool(c, "5").returncode == 1
+    assert tool(c, "5", "--takeover").returncode == 1           # a live claim: no takeover (#502)
+    assert tool(b, "5", "--release").stdout.strip() == "released claim/5-2"
     assert tool(c, "5", "--takeover").stdout.strip() == "claimed claim/5-3"
     monkeypatch.chdir(c)
     assert claim.subject("claim/5-3").startswith("Claim #5 by run-2")
@@ -98,7 +100,8 @@ def test_claim_fails_after_a_started_by_comment(clones, monkeypatch):
     a, b, _ = clones
     now = claim.datetime.datetime.now(claim.datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     monkeypatch.setattr(claim, "on_github", lambda remote="origin": True)
-    monkeypatch.setattr(claim, "api", lambda path: [{"body": "Started by `run-0`.", "created_at": now}])
+    monkeypatch.setattr(claim, "api", lambda path: [] if path.startswith("pulls") else
+                        [{"body": "Started by `run-0`.", "created_at": now}])
     monkeypatch.chdir(b)
     assert claim.main(["8"]) == 1                                  # run-0 commented, but has no claim ref
     assert claim.refs(8) == {}

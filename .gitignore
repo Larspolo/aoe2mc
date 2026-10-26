@@ -14,6 +14,8 @@ preview.png
 logs/
 # Package build output
 build/
+# Gradle files of the Paper plugin (game/plugin)
+.gradle/
 *.egg-info/
 # Git worktrees of agents and comparisons (never commit them)
 .claude/worktrees/

@@ -18,7 +18,8 @@ Body:
 <One or two sentences: what changes for the user or the developer.>
 
 ## Context
-<Where in the code (function names), why, and the evidence (output, image, test).
+<Where in the code: the files and functions that the ticket will change, in backticks (`buildings.py`, `furnish()`),
+ why, and the evidence (output, image, test).
  The Minecraft feature that does the job (CLAUDE.md: "Minecraft features first"), or why there is none.>
 
 ## Acceptance criteria
@@ -29,10 +30,14 @@ Body:
 <The verify level (1-4) and the commands or checks.>
 
 Depends on: #<n>, #<m>        (only when another ticket must close first)
+Start after: <YYYY-MM-DD HH:MM> UTC   (only when the ticket must wait for a time, for example to measure 24 hours)
 ```
 
 Labels: one priority (`P0`-`P3`), one kind (`bug`, `feature`, `tooling`, `design`, `docs`, `cleanup`),
 one size (`size:S`, `size:M`, `size:L`). Add `needs-human` when only the owner can do it.
+
+`dashboard.py --next` puts the tickets that share fewer files and functions with the work in progress first (#487):
+name each file and function that the ticket changes, and no others (tools that only check, such as `render.py`, do not count).
 
 ## Size
 
