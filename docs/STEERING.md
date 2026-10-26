@@ -94,7 +94,7 @@ as the Claude Code CLI reports them) and computes the number of runs: fast to 90
 its reset, then slower to 98 % at the reset (your decision, 2026-10-26), and not the week faster than it passes.
 You do not need to send percentages.
 A run of the scheduled task cannot start other runs (#566). So one pacer session ("aoe2mc pacer", skill `pacer`)
-runs `python3 tools/usage.py --fire` every 20 minutes and starts the runs that the target misses (at most 4 at a
+runs `python3 tools/usage.py --fire` every 10 minutes and starts the runs that the target misses (at most 4 at a
 time). The scheduled task also starts one run each hour. To stop all runs: add `paused` to the status issue.
 
 ## CI and the merge
