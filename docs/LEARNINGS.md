@@ -108,3 +108,4 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - `render.py --cut` does not show the inside of a narrow tower (#452): filter `render.building_blocks()` by x, y, z
   (drop barriers and one side of the walls) and call `render.render()` for a section view.
 - `render.building_blocks` gives states with the `minecraft:` prefix and world y (the ground is y 63, canvas y 1 is y 64): strip the prefix before you match a name (#449).
+- `tests/test_objects.py::test_blocks_under_water_are_waterlogged` names the blocks of `fish_trap`: change it with the fish trap materials (#486). Grep `tests/` for the design name before the full run.

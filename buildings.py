@@ -4325,13 +4325,20 @@ def wooden_bridge(c, w, st, col, T, ctx):
 
 
 def fish_trap(c, w, st, col, T, ctx):
-    """A fish trap in the water: a ring of posts with a net."""
-    cx = (w - 1) / 2
-    for k in range(24):
-        a = 2 * math.pi * k / 24
-        x, z = int(round(cx + (w / 2 - 0.6) * math.cos(a))), int(round(cx + (w / 2 - 0.6) * math.sin(a)))
-        c.box(x, x + 1, -6, 2, z, z + 1, "spruce_fence" if k % 2 else "spruce_log")
-    c.set(int(cx), 1, int(cx), "barrel[facing=up]")
+    """A fish trap like the game model: a basket tunnel on the water. Long bamboo rods along x on three
+    half-round hoops (dark ends, a light middle hoop), held by stakes at the feet of the hoops (#486)."""
+    cz, r = (w - 1) / 2, max(1.5, (w - 1) / 2 - 2)
+    def ring(angles):                                                            # (z, y) cells, symmetric to z = cz
+        half = {(int(cz + r * math.cos(a) + 0.5), int(r * math.sin(a) + 0.5)) for a in angles}
+        return sorted(half | {(w - 1 - z, y) for z, y in half})
+    arc = ring(np.linspace(0, math.pi / 2, 2 * w))
+    for z, y in ring(np.linspace(0, math.pi / 2, 4)):                            # the rods, from end to end
+        c.box(0, w, y, y + 1, z, z + 1, "bamboo_fence")
+    for x, b in ((1, "dark_oak_wood[axis=x]"), (w // 2, "stripped_oak_wood[axis=x]"), (w - 2, "dark_oak_wood[axis=x]")):
+        for z, y in arc:
+            c.set(x, y, z, b)
+        for z in (arc[0][0], arc[-1][0]):                                        # stakes in the bed
+            c.box(x, x + 1, -6, 0, z, z + 1, "dark_oak_fence")
 
 
 # Sets of designs (defined after all designs)
