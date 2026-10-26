@@ -160,6 +160,33 @@ Normal speed (`gather.WORK_SECONDS` = 1 / (`AOE2_WORK` × 1.7) seconds per unit;
 - The work rates are now within 2 % of AoE2 at Normal speed. The villager walks 26 % slower than in AoE2, so the
   trips of this distance take 15 % to 18 % longer.
 
+## Measured unit count (#398)
+
+`python3 tools/measure_units.py` (#943) on the cloud machine (4 cores, 15 GB, Paper 26.3, no client, the `battle`
+scenario with its 170 units that stand still): husks (the mob of most units) on free cells near the map center, each
+with its own `aoe moveto` to a cell up to 12 blocks away every 5 s (2 RCON commands: the walk speed and the order).
+All orders reached their unit. 2026-10-26:
+
+| Units | Commands per second | Mean tick ms | P99 tick ms | Ticks per second |
+|---|---|---|---|---|
+| 200 | 1314 | 7.35 | 48.3 | 20.0 |
+| 500 | 2134 | 12.40 | 37.5 | 20.0 |
+| 1000 | 1346 – 1896 | 24.35 – 25.35 | 52.7 – 109.2 | 20.0 |
+| 1500 | 817 | 37.60 | 74.2 | 20.0 |
+| 2000 | 317 | 45.30 | 74.2 | 20.0 |
+| 3000 | 19 | 56.70 | 108.1 | 17.6 |
+
+Without `datapacks/aoe2mc`: 200 units 6.95 ms, 500 units 12.20 ms, 1000 units 23.95 ms: the datapack costs less
+than 1 ms per tick.
+
+- **Largest count at 20 ticks per second: 2000 units** (mean 45 ms of the 50 ms of a tick). The tick time grows by
+  about 0.024 ms per walking unit: the entity ticks and the Minecraft path finding of the mobs.
+- **Largest count that gets its orders in time: about 1500.** RCON commands run on the main thread between the
+  ticks, so the command rate falls when the ticks get long. 1500 units need 600 commands per second for an order
+  every 5 s and get 817; 2000 units need 800 and get 317, so a round of orders takes 13 s.
+- AoE2 has at most 200 units per player (8 players: 1600). The game program keeps 20 ticks per second with that
+  count; with more than about 1500 units that get orders often, send the orders of a group in one plugin command.
+
 ## Connection to the converter
 
 - The converted world is the start map. The converter stays the first step and needs only one change:
