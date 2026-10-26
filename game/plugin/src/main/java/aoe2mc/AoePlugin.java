@@ -93,7 +93,9 @@ import net.kyori.adventure.text.Component;
  * 1024 of max_health) in the scoreboard aoe_hp, cancels all other damage to it and from it (no suffocation in the
  * walls, no slime touch), and at 0 removes it and fills the box of the building with air. The vanilla melee goal
  * hits only a target in sight, and the eye of the slime is in the walls: so a unit next to the slime that has it as
- * target hits it each second (Mob#attack, the vanilla hit with the swing), as a zombie hits.
+ * target hits it each second (Mob#attack, the vanilla hit with the swing), as a zombie hits. A ranged unit shoots
+ * a building from its range to the nearest side of the target, without sight of the eye (#608). Its arrow sticks
+ * in the walls, so the goal takes the hit points for each shot, and an arrow that hits the slime does nothing.
  * Vanilla has no clickable item menu: "aoe menu" opens an inventory with the items (#619). A click on an item is
  * cancelled (the player takes nothing) and sets the score aoe_menu of the player to slot + 1 (a shift click: -(slot + 1),
  * #620); the menu stays open, so the player can click again. "aoe menu" on an open menu of the same title and size only changes the items.
@@ -165,8 +167,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         @Override
         public void tick() {
             LivingEntity t = mob.getTarget();
-            boolean near = mob.getLocation().distanceSquared(t.getLocation()) <= range.blocks * range.blocks
-                    && mob.hasLineOfSight(t);
+            // a building: the range to its nearest side, and no sight of the eye of its target in the walls (#608)
+            boolean wall = buildings.containsKey(t.getUniqueId());
+            boolean near = (wall ? gap(mob, t) : mob.getLocation().distanceSquared(t.getLocation()))
+                    <= range.blocks * range.blocks && (wall || mob.hasLineOfSight(t));
             if (near) {
                 mob.getPathfinder().stopPathfinding();
             } else if (!mob.getPathfinder().hasPath() || ++ticks % 10 == 0) {     // the target can move
@@ -182,6 +186,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     r.rangedAttack(t, 1.0f);
                 }
                 next = now + range.ticks;
+                Stats a = stats.get(mob.getUniqueId());
+                Building b = buildings.get(t.getUniqueId());
+                if (a != null && b != null) {           // the arrow sticks in the walls: the shot hits (#608)
+                    hit(t, b, a.damage(b.stats));
+                    hitEffect(t, b, mob);
+                }
             }
         }
 
@@ -194,6 +204,16 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         public EnumSet<GoalType> getTypes() {
             return EnumSet.of(GoalType.MOVE, GoalType.LOOK);
         }
+    }
+
+    // The squared distance from the feet of the mob to the nearest point of the box of the target.
+    private static double gap(Mob mob, Entity t) {
+        var b = t.getBoundingBox();
+        var p = mob.getLocation();
+        double dx = Math.max(0, Math.max(b.getMinX() - p.getX(), p.getX() - b.getMaxX()));
+        double dy = Math.max(0, Math.max(b.getMinY() - p.getY(), p.getY() - b.getMaxY()));
+        double dz = Math.max(0, Math.max(b.getMinZ() - p.getZ(), p.getZ() - b.getMaxZ()));
+        return dx * dx + dy * dy + dz * dz;
     }
 
     // A vanilla arrow. The vanilla bow shot has a spread of 14 - 4 × difficulty and a slow arrow: at 20 blocks most
@@ -348,7 +368,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Building b = buildings.get(ev.getEntity().getUniqueId());
         if (buildings.containsKey(from.getUniqueId()) || b != null) {
             ev.setCancelled(true);
-            if (a != null && b != null) {
+            if (a != null && b != null && !(ev.getDamager() instanceof Projectile)) {   // RangeGoal counts a shot
                 lastHit.put(from.getUniqueId(), Bukkit.getCurrentTick());
                 hit(ev.getEntity(), b, a.damage(b.stats));
                 hitEffect(ev.getEntity(), b, from);
