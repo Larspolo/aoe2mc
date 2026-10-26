@@ -1106,8 +1106,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (args.length >= 2 && args[0].equals("label")) {
             int n = 0;
             for (Entity e : select(sender, args[1])) {
-                if (args.length > 2) {
-                    names.put(e.getUniqueId(), Component.text(String.join(" ", List.of(args).subList(2, args.length))));
+                if (args.length > 2) {                       // a new name keeps the player color of the old one (#941)
+                    Component old = names.get(e.getUniqueId());
+                    names.put(e.getUniqueId(), Component.text(String.join(" ", List.of(args).subList(2, args.length)),
+                            old == null ? (e.customName() == null ? null : e.customName().color()) : old.color()));
                 }
                 if (names.containsKey(e.getUniqueId())) {
                     nameLine(e);
