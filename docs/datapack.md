@@ -53,7 +53,8 @@ Area triggers (#649): a trigger with only "Objects in Area" conditions gets a li
 the tiles, all heights; an area of -1 is the whole map) `unless score #<id> aoe_trig matches 1 run function ...`.
 The function sets `#<id>` to 1, so the trigger fires once. A looping trigger resets the score when its units leave an
 area, so it fires again when they enter. A quantity above 1 counts the units with `execute store result score`.
-The object type filter of the condition is not used yet. A trigger with other or mixed conditions is not written yet.
+A unit type filter (`object_list`) adds `tag=aoe2mc.t<id>`: each unit of a player has the tag of its AoE2 type (#681).
+A filter by unit class or group skips the trigger for now. A trigger with other or mixed conditions is not written yet.
 Cost: +0.1 ms per tick on the `triggers` scenario (`tools/tick_cost.py`).
 
 ## Pack layout
