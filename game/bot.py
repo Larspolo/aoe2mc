@@ -123,7 +123,7 @@ class Bot:
         unit = len(self.g.villagers) >= self.villagers and self.army()
         if not unit:
             return SHARE
-        cost = train.COSTS[unit]
+        cost = train.price(self.g, unit)
         total = sum(cost.values())
         return {r: (WOOD if r == "wood" else 0) + (1 - WOOD) * cost.get(r, 0) / total for r in SHARE}
 
@@ -195,7 +195,7 @@ class Bot:
                 [n for n in train.trains(g, name) if gather.military(n) and n not in train.TECHS and not build.locked(g, n)]
             for n in units[:1]:
                 while len(g.queues.get(rect, [])) < QUEUED and (n != "VILLAGER_MALE" or more < self.villagers) \
-                        and all(g.stock[r] >= v for r, v in train.COSTS[n].items()) \
+                        and all(g.stock[r] >= v for r, v in train.price(g, n).items()) \
                         and train.queue(g, self.nobody, (rect[0], rect[2]), n):
                     more += n == "VILLAGER_MALE"
 
@@ -213,7 +213,7 @@ class Bot:
         hungry = not any(k > 0 for k in self.sources("food").values()) and farms < math.ceil(self.shares()["food"] * len(g.villagers))
         name = "HOUSE" if g.pop >= cap - HOUSE_GAP and cap < train.LIMIT else "FARM" if hungry else \
             next((n for n in ORDER if n not in have), None)
-        if name is None or any(g.stock[r] < v for r, v in build.COSTS[name].items()):
+        if name is None or any(g.stock[r] < v for r, v in build.price(g, name).items()):
             return
         center = self.center()
         if (res := NEAR.get(name)) and (full := [t for t, k in self.sources(res).items() if k > 0]):

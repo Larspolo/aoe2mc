@@ -432,8 +432,9 @@ def repeatable(g, name):
 
 
 def price(g, name):
-    """The cost of unit or technology name; a technology is free with the cheat "tech tech one two free" (#968)."""
-    return {} if name in TECHS and getattr(g, "free_techs", False) else COSTS[name]
+    """The cost of unit or technology name with the bonuses of the civilization (civs.COSTS, #1091); a technology is
+    free with the cheat "tech tech one two free" (#968)."""
+    return {} if name in TECHS and getattr(g, "free_techs", False) else civs.cost(g, name, COSTS[name])
 
 
 def queued(g, name):
