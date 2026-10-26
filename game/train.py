@@ -431,9 +431,7 @@ def spawn(g, rect, name):
     """Summon unit name on a free cell in front of the building rect (south side first, the middle first; the units
     take the cells one after the other) and add it to the villagers of g (a military unit: to g.soldiers, #654).
     Returns the gather.Villager, the UUID of a military unit, or None."""
-    x0, x1, z0, z1 = rect
-    cells = sorted(g.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)}),
-                   key=lambda c: (abs(c[1] - z1), abs(2 * c[0] + 1 - x0 - x1), c))
+    cells = g.map.front(rect, "Passengers" in (units.classify(name) or {}))
     if not cells:
         return None
     k = g.trained[rect] = g.trained.get(rect, -1) + 1

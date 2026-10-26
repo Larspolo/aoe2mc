@@ -161,6 +161,17 @@ class Map:
         """The free cells next to a group of cells (a tree tile, a footprint)."""
         return {(x + dx, z + dz) for x, z in cells for dx, dz in STEPS if self.free(x + dx, z + dz)} - cells
 
+    def front(self, rect, mounted=False):
+        """The spawn cells of a unit trained at the building with block footprint rect: the free cells next to it,
+        south side first, the middle first. A mounted unit (a horse with a rider) one cell farther out: the rider
+        sits about 0.7 blocks behind the middle of the horse, so next to the walls its head is in them (#767)."""
+        x0, x1, z0, z1 = rect
+        cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
+        ring = self.around(cells)
+        if mounted:
+            ring = {c for c in self.around(cells | ring) if all(self.free(c[0] + dx, c[1] + dz) for dx, dz in STEPS)}
+        return sorted(ring, key=lambda c: (abs(c[1] - z1 - mounted), abs(2 * c[0] + 1 - x0 - x1), c))
+
     def path(self, start, goals, limit=None):
         """Shortest path (list of cells after start) to one of goals. 8 neighbours, no cut corners, steps of at
         most 1 block up or down. A* with the distance to the box of the goals. None: no path, or no path after
