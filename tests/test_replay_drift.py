@@ -15,11 +15,12 @@ def test_stuck_stray_and_died_units():
     samples += [s(0, "d", 0, 0, 0, 0), s(10, "d", None, None, 0, 0)]                 # gone: died
     samples += [s(0, "e", 0, 0, 10, 0, "KNIGHT"), s(20, "e", 0, 0, 10, 0, "KNIGHT")]  # 20 s far: not stuck yet
     k = replay_drift.analyze(samples)
-    assert k["VILLAGER"] == {"units": 4, "stuck": 1, "stray": 1, "died": 1, "median": 0.0, "max": 10.0}
+    assert k["VILLAGER"] == {"units": 4, "stuck": 1, "stray": 1, "died": 1, "median": 0.0, "max": 10.0,
+                              "still": 0}
     assert k["KNIGHT"]["stuck"] == 0 and k["KNIGHT"]["median"] == 10.0
     lines = replay_drift.table(k).splitlines()
-    assert lines[0].split() == ["Unit", "Units", "Median", "Max", "Stuck", "Stray", "Died"]
-    assert lines[1].split() == ["VILLAGER", "4", "0.0", "10.0", "1", "1", "1"]
+    assert lines[0].split() == ["Unit", "Units", "Median", "Max", "Stuck", "Stray", "Died", "Still"]
+    assert lines[1].split() == ["VILLAGER", "4", "0.0", "10.0", "1", "1", "1", "0"]
 
 
 def test_a_new_replay_target_an_order_or_a_fight_is_not_stray():
