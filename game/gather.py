@@ -51,6 +51,7 @@ import replay  # noqa: E402  (build imports it too)
 import bossbar  # noqa: E402
 import cheats  # noqa: E402
 import civs  # noqa: E402
+import conquest  # noqa: E402
 import garrison  # noqa: E402
 import hints  # noqa: E402
 import menu  # noqa: E402
@@ -1276,4 +1277,5 @@ class Gather:
             self.step()
             for b in self.bots:
                 b.step()
+            conquest.tick(self)                                        # not in step(): the bot steps its own Gather
             time.sleep(max(0.0, self.tick - (time.time() - t)))
