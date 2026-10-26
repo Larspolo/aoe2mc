@@ -111,6 +111,9 @@ Item 6 (fog of war) has no ticket.
 Selection of many units (#742): the owner chose in #745 a selection wand with two corners for the AoE2 selection box
 (option A, #778: `Gather.box`, item `warped_fungus_on_a_stick` with its own "used" statistic `aoe_box`), and hotbar
 items for the control groups later (option C, #779). A radius selection (option B) was not chosen.
+Control groups (#779, `Gather.group`): carrots on a stick "Group 1" to "Group 5" in hotbar slots 5 to 9
+(`custom_data` `{aoe_group:N}`). A shift right click (vanilla predicate `is_sneaking`) saves the selection as group N,
+a right click selects the live units of group N. The click item is `carrot_on_a_stick[!custom_data]`.
 
 ## Measured gather timing (#289)
 
