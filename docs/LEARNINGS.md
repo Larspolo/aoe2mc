@@ -36,6 +36,8 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   `SiegeEngineers/genie-rs/master/crates/genie-scx/test/scenarios/` (format 1.21: `Age of Heroes b1-3-5.scx`).
 - `tools/claim.py` names the run by the local branch (`who()`): beat only from the session branch, never in parallel (#361).
 - The cloud clone is shallow: `git fetch --unshallow origin` before a scan of the history (#367).
+- Starting runs: `mcp__claude-code-remote__fire_trigger` is in every run's tool list but can be deferred. Load it with
+  `ToolSearch` (`select:mcp__claude-code-remote__fire_trigger`); runs that skipped this did not start successors (2026-10-26).
 - Quota usage: `claude -p ... --output-format stream-json --verbose` prints a `rate_limit_event` with
   `unifiedWindows.five_hour/seven_day.utilization` and `resetsAt` (`tools/usage.py`). A `statusLine` does not run in cloud sessions.
 - `pyproject.toml` `addopts` has `-q`: `python3 -m pytest -q` gives `-qq`, without the "N passed" line. Wait for the
@@ -108,3 +110,4 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - `render.py --cut` does not show the inside of a narrow tower (#452): filter `render.building_blocks()` by x, y, z
   (drop barriers and one side of the walls) and call `render.render()` for a section view.
 - `render.building_blocks` gives states with the `minecraft:` prefix and world y (the ground is y 63, canvas y 1 is y 64): strip the prefix before you match a name (#449).
+- `tests/test_objects.py::test_blocks_under_water_are_waterlogged` names the blocks of `fish_trap`: change it with the fish trap materials (#486). Grep `tests/` for the design name before the full run.

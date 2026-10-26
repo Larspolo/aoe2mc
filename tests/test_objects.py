@@ -66,10 +66,10 @@ def test_blocks_under_water_are_waterlogged():
         y = np.arange(aoe2mc.MIN_Y, aoe2mc.MAX_Y)[:, None, None]
         under = (y <= cols.wtop[cx * 16:cx * 16 + 16, cz * 16:cz * 16 + 16].T[None])
         names.update(B.states[i] for i in vol[under & (vol != aoe2mc.WATER)].ravel())
-    assert names["minecraft:spruce_fence[waterlogged=true]"] > 0
+    assert names["minecraft:dark_oak_fence[waterlogged=true]"] > 0
     assert names["minecraft:sea_pickle[pickles=3,waterlogged=true]"] == 1
     assert not [n for n in names if n.partition("[")[0] in aoe2mc.WATERLOGGABLE and "waterlogged=true" not in n]
-    assert names["minecraft:spruce_log"] > 0               # no waterlogged property: no change
+    assert names["minecraft:dark_oak_wood[axis=x]"] > 0    # no waterlogged property: no change
     assert mcvalid.invalid_states(B.states) == {}
 
 
