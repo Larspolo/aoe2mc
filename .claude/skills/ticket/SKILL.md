@@ -84,7 +84,9 @@ the `human` skill gives them to `game/watch.py` (#1123). The place is `chopper`,
     Watch: end | building:TOWN_CENTER | Is the end clear?
 
 A check ticket ("check X in the game") starts without `needs-human`: an agent runs the check first (`verify`, level 4),
-comments the results and screenshots, and then adds `needs-human` with the list of what only a person can check (#580).
+comments the results and screenshots, and then adds `needs-human` with the list of what only a person can check (#580): real input by hand, the look, sound.
+No owner point for times, speeds, values or texts: the agent measures them against AoE2 (#1159). A look point links an
+image before and an image after.
 When the check finds bugs, the check ticket depends on the bug tickets and gets `needs-human` only after a check without bugs (#668).
 
 ## Decision tickets

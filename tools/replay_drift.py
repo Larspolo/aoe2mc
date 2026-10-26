@@ -14,7 +14,11 @@ position, the replay position `v.pos` (the end of its leg while it walks), the b
 that leg ("slack"), the order of the plugin and the target of the mob AI.
 The table has one row per unit kind: units, median and maximum distance (blocks, without height, less the slack), "stuck" (more than
 STUCK_BLOCKS from the replay position for more than STUCK_SECONDS of game time), "stray" (moved more than STRAY_BLOCKS
-between two samples with no plugin order, no mob target and the same replay position) and "died" (the entity is gone, the replay still has the unit).
+between two samples with no plugin order, no mob target or fight since the last sample, the same replay position, and
+not nearer to it: #1169, the end of a walk or a jump to the position is no stray), "died" (the entity is gone, the replay still has the unit)
+and "still" (#1139: seconds of game time between two samples with a plugin order in both, more than STUCK_BLOCKS from
+the replay position in both, and less than STILL_BLOCKS of move between them: a unit that the plugin holds in place.
+In #851 a plugin change held villagers for 120 s, and the other columns did not show it).
 The second table (#829) has the walk speed of the units that walk behind their replay position: blocks per game second
 between two samples with a plugin order in both and more than FAR_BLOCKS of distance, as a median and as a part of
 the replay speed ("need": the AoE2 speed times the tile size). Use `--every 2` for it: with 10 s between two samples a
@@ -38,6 +42,7 @@ sys.path[:0] = [ROOT, HERE, os.path.join(ROOT, "game")]
 
 STUCK_BLOCKS, STUCK_SECONDS, STRAY_BLOCKS = 4, 30, 2
 FAR_BLOCKS = 20
+STILL_BLOCKS = 0.3
 
 
 class Done(Exception):
@@ -82,15 +87,16 @@ def kind(name):
 
 
 def analyze(samples):
-    """kind -> {units, median, max, stuck, stray, died}: the values of the table (see the module text)."""
+    """kind -> {units, median, max, stuck, stray, died, still}: the values of the table (see the module text)."""
     by = {}
     for s in sorted(samples, key=lambda s: s["t"]):
         by.setdefault(s["uuid"], []).append(s)
     out = {}
     for u, rows in by.items():
-        k = out.setdefault(kind(rows[0]["name"]), {"units": 0, "d": [], "stuck": 0, "stray": 0, "died": 0})
+        k = out.setdefault(kind(rows[0]["name"]), {"units": 0, "d": [], "stuck": 0, "stray": 0, "died": 0,
+                                                     "still": 0.0})
         k["units"] += 1
-        far, stuck, stray, died, last = None, False, False, False, None
+        far, stuck, stray, died, last, last_d = None, False, False, False, None, 0.0
         for s in rows:
             if s["x"] is None:
                 died |= last is not None                           # gone after it was seen
@@ -101,14 +107,19 @@ def analyze(samples):
             stuck |= far is not None and s["t"] - far > STUCK_SECONDS * 1000
             if last and (last["rx"], last["rz"]) == (s["rx"], s["rz"]) and not any(
                     r.get(k) for r in (last, s) for k in ("order", "target")):    # no order, no fight, no new leg
-                stray |= ((s["x"] - last["x"]) ** 2 + (s["z"] - last["z"]) ** 2) ** 0.5 > STRAY_BLOCKS
-            last = s
+                stray |= ((s["x"] - last["x"]) ** 2 + (s["z"] - last["z"]) ** 2) ** 0.5 > STRAY_BLOCKS and \
+                    d >= last_d                                    # nearer the replay position: the end of a walk
+            if last and last.get("order") and s.get("order") and min(d, last_d) > STUCK_BLOCKS and \
+                    ((s["x"] - last["x"]) ** 2 + (s["z"] - last["z"]) ** 2) ** 0.5 < STILL_BLOCKS:
+                k["still"] += (s["t"] - last["t"]) / 1000              # held in place with an order
+            last, last_d = s, d
         k["stuck"] += stuck
         k["stray"] += stray
         k["died"] += died
     for k in out.values():
         d = k.pop("d")
         k["median"], k["max"] = (round(statistics.median(d), 1), round(max(d), 1)) if d else (None, None)
+        k["still"] = round(k["still"])
     return out
 
 
@@ -141,8 +152,8 @@ def walk_table(stats):
 
 
 def table(stats):
-    rows = [("Unit", "Units", "Median", "Max", "Stuck", "Stray", "Died")] + [
-        (n, k["units"], k["median"], k["max"], k["stuck"], k["stray"], k["died"])
+    rows = [("Unit", "Units", "Median", "Max", "Stuck", "Stray", "Died", "Still")] + [
+        (n, k["units"], k["median"], k["max"], k["stuck"], k["stray"], k["died"], k.get("still", 0))
         for n, k in sorted(stats.items(), key=lambda kv: (-kv[1]["units"], kv[0]))]
     w = [max(len(str(r[i])) for r in rows) for i in range(len(rows[0]))]
     return "\n".join("  ".join(str(c).ljust(w[0]) if i == 0 else str(c).rjust(w[i]) for i, c in enumerate(r))

@@ -32,15 +32,30 @@ from replay import Replay  # noqa: E402
 COSTS = {"HOUSE": {"wood": 25}, "LUMBER_CAMP": {"wood": 100}, "MINING_CAMP": {"wood": 100},   # as in AoE2
          "MILL": {"wood": 100}, "FARM": {"wood": 60}, "BARRACKS": {"wood": 175},
          "BLACKSMITH": {"wood": 150},
-         "ARCHERY_RANGE": {"wood": 175}, "STABLE": {"wood": 175}, "TOWN_CENTER": {"wood": 275, "stone": 100}}
+         "ARCHERY_RANGE": {"wood": 175}, "STABLE": {"wood": 175}, "TOWN_CENTER": {"wood": 275, "stone": 100},
+         "CASTLE": {"stone": 650},                                 # the Castle Age: the Imperial Age needs them (#1162)
+         "MONASTERY": {"wood": 175},
+         "SIEGE_WORKSHOP": {"wood": 200},
+         "UNIVERSITY": {"wood": 200},
+         "WONDER": {"wood": 1000, "gold": 1000, "stone": 1000}}
 BUILD_TIMES = {"HOUSE": 25, "LUMBER_CAMP": 35, "MINING_CAMP": 35, "MILL": 35, "FARM": 15,   # AoE2 seconds,
                "BARRACKS": 50, "ARCHERY_RANGE": 50, "STABLE": 50, "TOWN_CENTER": 150,                              # one builder
-               "BLACKSMITH": 40}
+               "BLACKSMITH": 40,
+               "CASTLE": 200,
+               "MONASTERY": 40,
+               "SIEGE_WORKSHOP": 40,
+               "UNIVERSITY": 60,
+               "WONDER": 3500}
 MENU = list(COSTS)                                                 # trigger value N -> MENU[N - 1]
 OBJECTIVE = "aoe_build"
 ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw_gold_block",   # a block of the
          "MILL": "white_wool", "FARM": "wheat", "BARRACKS": "stone_brick_wall", "ARCHERY_RANGE": "target",
          "BLACKSMITH": "anvil", "STABLE": "hay_block",
+         "CASTLE": "stone_bricks",
+         "MONASTERY": "bell",
+         "SIEGE_WORKSHOP": "grindstone",
+         "UNIVERSITY": "bookshelf",
+         "WONDER": "weathered_cut_copper_stairs",                       # the copper roof
          "TOWN_CENTER": "cobblestone"}                                  # design
 AGE_TECHS = ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE")           # the technologies of the ages, in order
 AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_TOWER",   # the AoE2 age of each
@@ -79,6 +94,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "SIEGE_RAM",
         "TREBUCHET",
         "TWO_HANDED_SWORDSMAN",
+        "WONDER",
     ), 3)                                                              # (0: Dark)
 GHOST = 400                                                        # block displays of one ghost: a coarser shape above
 LOCKED = "gray_dye"                                                # the item of a locked building or unit

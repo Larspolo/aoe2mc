@@ -42,6 +42,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
+import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
@@ -96,7 +97,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe label <selector> [name]                show the name line again (after a selection change); a name sets
  *                                              the name of a building target (#661)
  *   aoe where <selector> [from]                "Where <count>: <uuid> <x> <y> <z> <order 0|1> <target 0|1>, ..." for
- *                                              WHERE_PAGE units from index `from` in UUID order (#813, tools/replay_drift.py)
+ *                                              WHERE_PAGE units from index `from` in UUID order (#813, tools/replay_drift.py);
+ *                                              target 1 also after a target or a hit since the last answer (#1169)
  *   aoe speed <selector> <speed>               the movement_speed of each unit; a siege unit (a minecart) gets its
  *                                              carrier first (#836): an invisible small pig that walks for it
  *   aoe box <player> <x> <z> <dye>             draw the selection box from this corner to the look (#795, Border.java)
@@ -193,6 +195,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private static final int HEARTS = 5;
     private static final int WHERE_PAGE = 40;                          // aoe where: about 3000 bytes per answer
     private final Map<UUID, Integer> lastHit = new HashMap<>();      // tick of the last melee hit of a unit
+    private final Set<UUID> fought = new HashSet<>();                 // a target or a hit since the last aoe where (#1169)
     private static final double REACH = Math.sqrt(2.04) - 0.6;       // vanilla melee reach past the hit box
     private static final double WALK = 43.4;      // blocks per second of movement_speed 1 on flat ground (game/ai.py)
     private static final double GROUND = 0.6 * 0.91;  // ground drag per tick (the friction of most blocks)
@@ -596,8 +599,25 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         harm(victim, t, a, fort != null ? ev.getDamager() : from);     // a unit does not attack back at a building
     }
 
+    // A fight between two samples of aoe where (#1169): tools/replay_drift.py does not count the moves of a fight as
+    // "stray". A mounted unit: the rider and its horse.
+    private void fight(Entity e) {
+        Entity u = e.getVehicle() == null ? e : e.getVehicle();
+        fought.add(u.getUniqueId());
+        u.getPassengers().forEach(p -> fought.add(p.getUniqueId()));
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onTarget(EntityTargetEvent ev) {
+        if (ev.getTarget() != null && ev.getEntity() instanceof Mob) {
+            fight(ev.getEntity());
+        }
+    }
+
     // The AoE2 damage of attacker values a on the victim with values t (#514), and the attack back.
     private void harm(LivingEntity victim, Stats t, Stats a, Entity from) {
+        fight(victim);
+        fight(from);
         victim.playHurtAnimation(0);
         victim.setHealth(Math.max(0, victim.getHealth() - a.damage(t)));     // 0 kills it
         nameLine(victim);
@@ -1517,7 +1537,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 Location l = e.getLocation();
                 parts.add(String.format(java.util.Locale.ROOT, "%s %.2f %.2f %.2f %d %d", e.getUniqueId(), l.getX(),
                         l.getY(), l.getZ(), orders.containsKey(e.getUniqueId()) ? 1 : 0,
-                        e instanceof Mob mob && mob.getTarget() != null ? 1 : 0));
+                        fought.remove(e.getUniqueId()) | (e instanceof Mob mob && mob.getTarget() != null) ? 1 : 0));
             }
             sender.sendMessage("Where " + found.size() + ": " + String.join(", ", parts));
             return true;
