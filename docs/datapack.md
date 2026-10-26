@@ -56,6 +56,12 @@ area, so it fires again when they enter. A quantity above 1 counts the units wit
 The object type filter of the condition is not used yet. A trigger with other or mixed conditions is not written yet.
 Cost: +0.1 ms per tick on the `triggers` scenario (`tools/tick_cost.py`).
 
+Objects (#656): "Create Object" → `summon` of the entity of `units.make_entity` at the middle of the tile, on the
+ground, with the tag of the player and no UUID (Minecraft gives a new one). "Remove Object" → `kill` with the area
+selector of the area triggers and the mob type; a rider also kills its mount (`execute ... on vehicle`). Buildings and
+other objects are not supported yet: the converter counts them ("create (not supported yet)"). The effect tiles and
+areas turn with `--orientation`.
+
 ## Pack layout
 
 ```
