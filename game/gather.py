@@ -29,6 +29,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from aoe2mc import PASSABLE_OBJECTS, WOODS, object_footprint, tree_kind  # noqa: E402
 from units import VILLAGER_JOBS  # noqa: E402
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import build  # noqa: E402
+
 RESOURCES = ("Wood", "Food", "Gold", "Stone")
 DROP_SITES = {"wood": ("TOWN_CENTER", "LUMBER_CAMP"), "food": ("TOWN_CENTER", "MILL"),   # as in AoE2 (#389)
               "gold": ("TOWN_CENTER", "MINING_CAMP"), "stone": ("TOWN_CENTER", "MINING_CAMP")}
@@ -147,6 +150,18 @@ class Map:
                     heapq.heappush(todo, (nd, n))
         return None
 
+    def pick_ground(self, eye, d, reach=64):
+        """The block cell (x, z) of the ground that the ray from eye in direction d hits first, or None."""
+        for k in range(1, reach * 4):
+            x, y, z = (eye[i] + d[i] * k / 4 for i in range(3))
+            bx, bz = math.floor(x), math.floor(z)
+            if not (0 <= bx < self.n and 0 <= bz < self.n):
+                return None
+            g = self.y(bx, bz)
+            if g is not None and y < g:
+                return bx, bz
+        return None
+
     def pick_tree(self, eye, d, reach=64):
         """The tree, fruit bush, mine or farm tile that the ray from eye in direction d hits first, or None."""
         for k in range(1, reach * 4):
@@ -213,6 +228,7 @@ class Gather:
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
                       and "VILLAGER" in o["name"]]
         self.villagers, self.selected = {}, set()
+        self.players, self.sites = data.get("players", {}), []         # construction sites (#417)
         self.farmers, self.crops = {}, {}                              # farm tile -> UUID of its farmer, wheat age
         self.trunks = {}                                               # tree tile -> logs of its trunk on the ground
         self.bushes = {}                                               # bush tile -> the block of its last look
@@ -236,6 +252,7 @@ class Gather:
             self.command(cmd)
         for r in RESOURCES:
             self.command(f"scoreboard players add {r} aoe_res 0")
+        build.setup(self)
         for o in self.units:                                           # the entities must be loaded (forceload)
             pos = self.pos(o["uuid"])
             if pos:
@@ -316,6 +333,7 @@ class Gather:
 
     def clicks(self):
         """Players who clicked since the last call."""
+        build.tick(self)
         self.command("execute as @a unless items entity @s container.* minecraft:carrot_on_a_stick "
                      "run give @s minecraft:carrot_on_a_stick")
         if "passed" not in self.command("execute if entity @a[scores={aoe_use=1..}]") + \
@@ -339,6 +357,10 @@ class Gather:
         u = pick_unit(eye, d, {k: v.pos for k, v in self.villagers.items()})
         if u:
             self.select(u)
+            return
+        building = build.chosen(self, name)
+        if building:                                                   # a chosen building: place its foundation
+            build.place(self, name, building, eye, d)
             return
         tile = self.map.pick_tree(eye, d)
         if tile and self.selected:

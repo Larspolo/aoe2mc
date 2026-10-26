@@ -52,7 +52,7 @@ Find code by function name with Grep. Do not read the large files from start to 
 - `tools/` – test and debug tools (scenarios, world reader, 3D render, Minecraft data, validation).
 - `game/` – the game program (#137): `run.Game` starts a server with RCON on the world, `rcon.Rcon` sends commands,
   `gather.Gather` lets villagers gather wood, food, gold and stone (#138, #391, #390, #392: clicks, paths on `aoe2mc.json` "ground", sidebar),
-  `replay.Replay` plays the "timeline" of a recorded game (#374: buildings, chat, ages).
+  `build` places construction sites (#417), `replay.Replay` plays the "timeline" of a recorded game (#374: buildings, chat, ages).
 - `tests/` – pytest. `conftest.py` has the `tiny_world` fixture (one conversion per session).
 
 ## Rules of the domain
