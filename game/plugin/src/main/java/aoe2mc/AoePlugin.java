@@ -42,6 +42,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
+import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
@@ -86,6 +87,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe sight <selector> <blocks>              an idle unit attacks an enemy in this line of sight (#775)
  *   aoe building <selector> <hp> <melee armor> <pierce armor> <x0> <y0> <z0> <x1> <y1> <z1>
  *                                              make the entity the target of a building (#517, combat.building)
+ *   aoe building ... <attack> <range> <reload> the building shoots arrows: range in blocks, reload in ticks (#1111)
  *   aoe menu <player> <title> <slot>:<material>:<name>:<lore>[:<count>] ...
  *                                              open a chest menu (#619, game/menu.py; the texts are URL-encoded)
  *   aoe menu-close <player>                    close the menu of the player
@@ -94,8 +96,12 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe destroy <selector>                     the buildings fall as at 0 hit points: "Destroy: <n> buildings" (#819)
  *   aoe label <selector> [name]                show the name line again (after a selection change); a name sets
  *                                              the name of a building target (#661)
+ *   aoe lore <material> <name> <text>          the last lore line of each menu item with this material and name: the
+ *                                              AoE2 help text (#1160, train.HELP; URL-encoded). Sent once at the
+ *                                              setup, so the menu commands stay below the RCON limit
  *   aoe where <selector> [from]                "Where <count>: <uuid> <x> <y> <z> <order 0|1> <target 0|1>, ..." for
- *                                              WHERE_PAGE units from index `from` in UUID order (#813, tools/replay_drift.py)
+ *                                              WHERE_PAGE units from index `from` in UUID order (#813, tools/replay_drift.py);
+ *                                              target 1 also after a target or a hit since the last answer (#1169)
  *   aoe speed <selector> <speed>               the movement_speed of each unit; a siege unit (a minecart) gets its
  *                                              carrier first (#836): an invisible small pig that walks for it
  *   aoe box <player> <x> <z> <dye>             draw the selection box from this corner to the look (#795, Border.java)
@@ -184,13 +190,15 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Viewer viewer = new Viewer(this);                 // the game mode switch of a replay viewer (#910)
     private final Border border = new Border();
 
-    private record Building(Stats stats, String box, int max, int[] b) {}   // b: x0 y0 z0 x1 y1 z1 of box
+    // b: x0 y0 z0 x1 y1 z1 of box; range: the blocks from the footprint that its arrows reach, 0: no attack (#1111)
+    private record Building(Stats stats, String box, int max, int[] b, double range) {}
 
     private final Map<UUID, Building> buildings = new HashMap<>();
     private final Map<UUID, Component> names = new HashMap<>();      // the name in the name line (#661)
     private static final int HEARTS = 5;
     private static final int WHERE_PAGE = 40;                          // aoe where: about 3000 bytes per answer
     private final Map<UUID, Integer> lastHit = new HashMap<>();      // tick of the last melee hit of a unit
+    private final Set<UUID> fought = new HashSet<>();                 // a target or a hit since the last aoe where (#1169)
     private static final double REACH = Math.sqrt(2.04) - 0.6;       // vanilla melee reach past the hit box
     private static final double WALK = 43.4;      // blocks per second of movement_speed 1 on flat ground (game/ai.py)
     private static final double GROUND = 0.6 * 0.91;  // ground drag per tick (the friction of most blocks)
@@ -368,6 +376,54 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         mob.getWorld().playSound(mob, bow ? Sound.ENTITY_SKELETON_SHOOT : Sound.ITEM_CROSSBOW_SHOOT, 1.0f, 1.0f);
     }
 
+    // Each 2 ticks: a building with an attack (aoe building with attack, range and reload: a town center, a castle,
+    // #1111) shoots one arrow per reload at the nearest unit of another team in its range. As in AoE2, the range counts
+    // from the edge of its footprint. Not at a rider (its horse is the target), a garrisoned unit or a building.
+    private void towers() {
+        for (var en : buildings.entrySet()) {
+            Building f = en.getValue();
+            if (f.range <= 0 || !(Bukkit.getEntity(en.getKey()) instanceof LivingEntity fort) || !fort.isValid()
+                    || !ready(fort, f.stats)) {
+                continue;
+            }
+            int[] b = f.b;
+            double half = Math.max(b[3] - b[0], b[5] - b[2]) / 2.0 + 1;
+            Location c = new Location(fort.getWorld(), (b[0] + b[3] + 1) / 2.0, b[1], (b[2] + b[5] + 1) / 2.0);
+            LivingEntity best = null;
+            double bestD = f.range * f.range;
+            for (Entity o : fort.getWorld().getNearbyEntities(c, f.range + half, f.range + 16, f.range + half)) {
+                if (o instanceof LivingEntity le && le.isValid() && stats.containsKey(le.getUniqueId())
+                        && !buildings.containsKey(le.getUniqueId()) && !le.isInvulnerable() && le.getVehicle() == null
+                        && !sameTeam(fort, le)) {
+                    var p = le.getLocation();
+                    double dx = Math.max(0, Math.max(b[0] - p.getX(), p.getX() - b[3] - 1));
+                    double dz = Math.max(0, Math.max(b[2] - p.getZ(), p.getZ() - b[5] - 1));
+                    if (dx * dx + dz * dz <= bestD) {
+                        best = le;
+                        bestD = dx * dx + dz * dz;
+                    }
+                }
+            }
+            if (best != null) {
+                lastHit.put(fort.getUniqueId(), Bukkit.getCurrentTick());
+                volley(fort, c, best);
+            }
+        }
+    }
+
+    // An arrow from above the roof at the center of the footprint, aimed as the arrow of an archer (shoot).
+    private static void volley(LivingEntity fort, Location c, LivingEntity t) {
+        Location from = c.clone();
+        from.setY(fort.getWorld().getHighestBlockYAt(c, HeightMap.MOTION_BLOCKING) + 1.5);
+        Vector to = t.getLocation().toVector().add(new Vector(0, t.getHeight() * 0.5, 0)).subtract(from.toVector());
+        double ticks = to.length() / ARROW_SPEED;
+        to.setY(to.getY() + 0.5 * ARROW_GRAVITY * ticks * ticks);
+        Arrow a = fort.getWorld().spawnArrow(from, to, (float) ARROW_SPEED, 0f);
+        a.setShooter(fort);
+        a.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
+        fort.getWorld().playSound(from, Sound.ENTITY_ARROW_SHOOT, 1.0f, 1.0f);
+    }
+
     /** The holder of a chest menu: it tells a menu from the other inventories. */
     private static final class Menu implements InventoryHolder {
         final String title;
@@ -382,6 +438,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             return inventory;
         }
     }
+
+    private static final Map<String, String> HELP = new HashMap<>();   // "material:name" -> help line (aoe lore)
 
     private static String text(String s) {
         return URLDecoder.decode(s, StandardCharsets.UTF_8);
@@ -405,8 +463,16 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         ItemStack it = new ItemStack(m, count);
         it.editMeta(meta -> {
             meta.displayName(Component.text(text(p[2])));
+            var lines = new ArrayList<Component>();
             if (p.length > 3 && !p[3].isEmpty()) {
-                meta.lore(text(p[3]).lines().map(l -> (Component) Component.text(l)).toList());
+                text(p[3]).lines().forEach(l -> lines.add(Component.text(l)));
+            }
+            String help = HELP.get(p[1] + ":" + text(p[2]));
+            if (help != null) {
+                lines.add(Component.text(help, NamedTextColor.GRAY));
+            }
+            if (!lines.isEmpty()) {
+                meta.lore(lines);
             }
         });
         return Map.entry(slot, it);
@@ -497,6 +563,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, this::siege, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::burn, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, this::watch, 20L, 20L);
+        Bukkit.getScheduler().runTaskTimer(this, this::towers, 2L, 2L);
         Bukkit.getScheduler().runTaskTimer(this, this::hold, 4L, 4L);
         Bukkit.getPluginManager().registerEvents(this, this);
         Bukkit.getPluginManager().registerEvents(cheats, this);
@@ -512,7 +579,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         Stats a = stats.get(from.getUniqueId()), t = stats.get(ev.getEntity().getUniqueId());
         Building b = buildings.get(ev.getEntity().getUniqueId());
-        if (buildings.containsKey(from.getUniqueId()) || b != null) {
+        Building fort = ev.getDamager() instanceof Projectile ? buildings.get(from.getUniqueId()) : null;
+        if (fort != null && b == null && !sameTeam(from, ev.getEntity())) {
+            a = fort.stats;                                   // the arrow of a town center or castle on a unit (#1111)
+        } else if (buildings.containsKey(from.getUniqueId()) || b != null) {
             ev.setCancelled(true);
             if (a != null && b != null && !(ev.getDamager() instanceof Projectile) && ready(from, a)) {   // RangeGoal counts a shot
                 lastHit.put(from.getUniqueId(), Bukkit.getCurrentTick());
@@ -539,11 +609,28 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (ev.getDamager() instanceof Projectile p) {     // a cancelled hit lets the arrow fly on: one hit per arrow
             p.remove();
         }
-        harm(victim, t, a, from);
+        harm(victim, t, a, fort != null ? ev.getDamager() : from);     // a unit does not attack back at a building
+    }
+
+    // A fight between two samples of aoe where (#1169): tools/replay_drift.py does not count the moves of a fight as
+    // "stray". A mounted unit: the rider and its horse.
+    private void fight(Entity e) {
+        Entity u = e.getVehicle() == null ? e : e.getVehicle();
+        fought.add(u.getUniqueId());
+        u.getPassengers().forEach(p -> fought.add(p.getUniqueId()));
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onTarget(EntityTargetEvent ev) {
+        if (ev.getTarget() != null && ev.getEntity() instanceof Mob) {
+            fight(ev.getEntity());
+        }
     }
 
     // The AoE2 damage of attacker values a on the victim with values t (#514), and the attack back.
     private void harm(LivingEntity victim, Stats t, Stats a, Entity from) {
+        fight(victim);
+        fight(from);
         victim.playHurtAnimation(0);
         victim.setHealth(Math.max(0, victim.getHealth() - a.damage(t)));     // 0 kills it
         nameLine(victim);
@@ -1347,15 +1434,19 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Sight: " + n + " units");
             return true;
         }
-        if (args.length == 11 && args[0].equals("building")) {
+        if ((args.length == 11 || args.length == 14) && args[0].equals("building")) {
             int hp;
+            double range = 0;
             Stats st;
             String box;
             int[] b = new int[6];
             try {
                 hp = Integer.parseInt(args[2]);
-                st = new Stats(0, Integer.parseInt(args[3]), Integer.parseInt(args[4]), false, false, Set.of("building"),
-                        Map.of(), 0);
+                boolean shoots = args.length == 14;          // attack, range in blocks, reload in ticks (#1111)
+                st = new Stats(shoots ? Integer.parseInt(args[11]) : 0, Integer.parseInt(args[3]),
+                        Integer.parseInt(args[4]), shoots, true, Set.of("building"), Map.of(),
+                        shoots ? Integer.parseInt(args[13]) : 0);
+                range = shoots ? Double.parseDouble(args[12]) : 0;
                 var c = new ArrayList<String>();
                 for (int i = 5; i < 11; i++) {
                     b[i - 5] = Integer.parseInt(args[i]);
@@ -1370,7 +1461,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             for (Entity e : select(sender, args[1])) {
                 if (e instanceof LivingEntity le) {
                     le.setCollidable(false);                  // units walk up to the walls, not off the slime
-                    buildings.put(le.getUniqueId(), new Building(st, box, hp, b));
+                    buildings.put(le.getUniqueId(), new Building(st, box, hp, b, range));
                     hp().getScoreFor(le).setScore(hp);
                     n++;
                 }
@@ -1459,7 +1550,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 Location l = e.getLocation();
                 parts.add(String.format(java.util.Locale.ROOT, "%s %.2f %.2f %.2f %d %d", e.getUniqueId(), l.getX(),
                         l.getY(), l.getZ(), orders.containsKey(e.getUniqueId()) ? 1 : 0,
-                        e instanceof Mob mob && mob.getTarget() != null ? 1 : 0));
+                        fought.remove(e.getUniqueId()) | (e instanceof Mob mob && mob.getTarget() != null) ? 1 : 0));
             }
             sender.sendMessage("Where " + found.size() + ": " + String.join(", ", parts));
             return true;
@@ -1478,6 +1569,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
             }
             sender.sendMessage("Label: " + n + " units");
+            return true;
+        }
+        if (args.length == 4 && args[0].equals("lore")) {
+            HELP.put(args[1] + ":" + text(args[2]), text(args[3]));
+            sender.sendMessage("Lore: " + HELP.size() + " items");
             return true;
         }
         if (args.length == 3 && args[0].equals("attack")) {

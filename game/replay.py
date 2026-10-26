@@ -1288,7 +1288,9 @@ class Replay:
     def skipped(self, i, t0, t1):
         """Add to the estimate the resources that unit i gathers at its resource from game time t0 to t1 (ms) in a
         jump: the jump runs no gather steps, so without it the costs of the skipped time take the estimate below 0
-        (#1056). At most what the resource has; the resource itself keeps its amount (the world shows no gather)."""
+        (#1056). The AoE2 rate for the whole skipped time, with no cap of the one resource: in play the villager walks
+        to the next resource when its resource is empty (#1147). The resource itself keeps its amount (the world shows
+        no gather)."""
         v = self.units.get(i)
         if t0 is None or t1 <= t0 or v is None or not v.name.startswith("VILLAGER") or v.tree is None:
             return
@@ -1299,7 +1301,7 @@ class Replay:
         left = (self.map.farms if farm else self.map.bushes if res == "food" else self.map.trees if res == "wood"
                 else self.map.mines.get(res, {})).get(v.tree, 0)
         rate = self.gather.AOE2_WORK["farm" if farm else res]
-        n = min(left, int(rate * (t1 - t0) / 1000))
+        n = int(rate * (t1 - t0) / 1000) if left > 0 else 0         # left 0: no resource, `res` is not sure
         self.resources(v.player)[res] += n
         self.gathered.setdefault(v.player, dict.fromkeys(START, 0))[res] += n     # the summary (#1097)
 
