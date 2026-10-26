@@ -39,6 +39,11 @@ import units  # noqa: E402
 # Dye color of a player (aoe2mc.PLAYER_COLORS) -> text color of /tellraw and /title
 TEXT_COLORS = {"light_gray": "gray", "blue": "blue", "red": "red", "green": "green", "yellow": "yellow",
                "cyan": "aqua", "purple": "light_purple", "gray": "dark_gray", "orange": "gold"}
+# The firework color of each dye (DyeColor.getFireworkColor), for the age-up fireworks (#844).
+FIREWORK_COLORS = {"black": 0x1E1B1B, "blue": 0x253192, "brown": 0x51301A, "cyan": 0x287697, "gray": 0x434343,
+                   "green": 0x3B511A, "light_blue": 0x6689D3, "light_gray": 0xABABAB, "lime": 0x41CD34,
+                   "magenta": 0xC354CD, "orange": 0xEB8844, "pink": 0xD88198, "purple": 0x7B2FBE, "red": 0xB3312C,
+                   "white": 0xF0F0F0, "yellow": 0xDECF2A}
 FLAT = 16                   # tiles of the flat map that draws one design
 MAX_FILL = 32768            # blocks of one /fill command
 FORMATION = 2              # blocks between the units of a group in a formation (#410)
@@ -150,7 +155,7 @@ class Replay:
         name, color = self.player(e.get("player"))
         if kind == "age" and e.get("age"):
             return ["title @a subtitle " + json.dumps(text(name, color)),
-                    "title @a title " + json.dumps(text(pretty(e["age"])))]
+                    "title @a title " + json.dumps(text(pretty(e["age"])))] + self.fireworks(e.get("player"))
         if kind == "research" and e.get("technology"):
             return ["title @a actionbar " + json.dumps([text(name, color), text(f" researches {e['technology']}")])]
         if kind == "resign":
@@ -322,6 +327,32 @@ class Replay:
         return [{"time": end, "player": e["player"], "kind": "spawn", "type": e["type"], "name": e["name"],
                  "building": b, "where": (e.get("names") or [None] * len(e["objects"]))[e["objects"].index(b)]}
                 for end, e, b in aoe2mc.training(self.data.get("timeline", ())) if "type" in e and e.get("name")]
+
+    def fireworks(self, player):
+        """Three firework rockets in the player color above the first town center of the player, and one sound for
+        all (#844): a spectator sees which player advanced. No town center: no fireworks (the title stays)."""
+        rect = next((r for p, n, r in [s[1:] for s in self.starts] + self.placed
+                     if p == player and n == "TOWN_CENTER"), None)
+        if rect is None:
+            return []
+        x0, x1, z0, z1 = rect
+        ys = [g for z in range(max(0, z0), min(self.n, z1)) for x in range(max(0, x0), min(self.n, x1))
+              if (g := self.ground[z][x]) is not None]
+        if not ys:
+            return []
+        y = self.tops.get(rect) or max(ys)
+        info = self.data["players"].get(str(player), {})
+        rgb = FIREWORK_COLORS.get(info.get("color"), FIREWORK_COLORS["white"])
+        out = []
+        for k, (dx, dz) in enumerate(((0, 0), (-2, 1), (2, -1))):
+            fw = {"explosions": [{"shape": ("large_ball", "star", "burst")[k], "colors": [rgb],
+                                  "fade_colors": [FIREWORK_COLORS["white"]], "has_trail": True, "has_twinkle": True}],
+                  "flight_duration": 1}
+            item = {"id": "minecraft:firework_rocket", "count": 1, "components": {"minecraft:fireworks": fw}}
+            nbt = json.dumps({"LifeTime": 25 + 5 * k, "FireworksItem": item}).replace('"colors": [', '"colors": [I; ') \
+                .replace('"fade_colors": [', '"fade_colors": [I; ')
+            out.append(f"summon minecraft:firework_rocket {(x0 + x1) / 2 + dx} {y + 2} {(z0 + z1) / 2 + dz} {nbt}")
+        return out + ["playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1"]
 
     def home(self, e):
         """The block footprint (x0, x1, z0, z1) of the building that trains the unit of a spawn event: a start
