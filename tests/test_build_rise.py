@@ -60,10 +60,11 @@ def test_the_house_rises_from_the_bottom_up_in_the_build_time():
     site, ticks, log = build_with(server, g, ["v0"])
     assert site["progress"] == 1 and g.villagers["v0"].site is None
     assert ticks == pytest.approx(25 / gather.NORMAL / g.tick, abs=1)      # 25 s of AoE2 at Normal speed
-    sent = [c for c in log if c in site["commands"]]
-    assert sent == site["commands"]                                    # each command once, in order
+    sent, n = [c for c in log if c in site["commands"]], len(site["commands"])
+    assert sent[:n] == site["commands"]                                # each command once, in order
+    assert all(build.box(c)[0][:3] in site["ring"] for c in sent[n:])  # then the ring cells get their design block
     assert sent[0].startswith("fill 4 64 4 11 ") and sent[0].endswith(" air")
-    ys = [int(c.split()[2]) for c in sent[1:]]
+    ys = [int(c.split()[2]) for c in sent[1:n]]
     assert ys == sorted(ys) and ys[0] < 64 < ys[-1]
     for _ in range(20):                                                # the builder stays idle
         g.step()
