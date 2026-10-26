@@ -275,9 +275,7 @@ class Replay:
         if rect is None:
             return []
         self.grid()
-        x0, x1, z0, z1 = rect
-        cells = sorted(self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)}),
-                       key=lambda c: (abs(c[1] - z1), abs(2 * c[0] + 1 - x0 - x1), c))
+        cells = self.map.front(rect, "Passengers" in (units.classify(e["name"]) or {}))
         if not cells:
             return []
         k = self.trained[rect] = self.trained.get(rect, -1) + 1
