@@ -878,6 +878,8 @@ class Replay:
             out.append("tp {} {} {} {}".format(v.uuid, *v.pos))
             if self.ai:                                             # ends the walk order of the plugin at once
                 out.append("aoe moveto {} {} {} {}".format(v.uuid, *v.pos))
+            else:                                                   # at its resource: it gathers (#887)
+                self.start(i, v, to)
         return out + [self.gather.profession(v.uuid, v.job) for i, v in self.units.items() if v.job != jobs.get(i)]
 
     def run(self, speed=1.0, start=0, clock=time.monotonic, sleep=time.sleep, log=print, bar=False, poll=None):
