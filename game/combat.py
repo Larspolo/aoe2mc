@@ -7,6 +7,7 @@ base unit: no Blacksmith or University upgrades, no civilization bonuses. `range
 for each armor class of the target. `damage` is the AoE2 damage rule (#514); the Paper plugin applies it
 (`aoe stats` gives a mob its values, `stats_command`).
 A ranged unit shoots from its AoE2 range, one shot per reload time (#515, `aoe range`, `range_command`).
+The Mangonel line hits all units in its blast radius around the target (#1050, `BLAST`).
 A melee unit hits once per reload time too (#848, the last value of `stats_command`).
 An idle soldier attacks the nearest enemy unit in its AoE2 line of sight (#775, `aoe sight`, `sight_command`).
 """
@@ -237,6 +238,11 @@ MELEE_RANGED = {"ELITE_GBETO",
                 "SIEGE_ONAGER",
                 "THROWING_AXEMAN",
                 "TRACTION_TREBUCHET"}
+# Blast radius in tiles of the units whose shot hits all units near the target, also own units (AoE2 DE, wiki "AOE";
+# AoE2 tapers the damage at the edge, here each unit in the radius takes the full damage() hit, #1050).
+BLAST = {"MANGONEL": 1.0,
+         "ONAGER": 1.25,
+         "SIEGE_ONAGER": 1.5}
 DEFAULT, BUILDING = Stats(40, 4, 0, 0, 0, 2.0), Stats(1000, 0, 0, 7, 0, 0.0, {}, ("building",))
 SLIME = 0.52                    # blocks of width and height per slime size: the target of a building (#517)
 INVISIBLE = 'active_effects:[{id:"minecraft:invisibility",duration:-1,show_particles:0b}]'   # for ever, no particles
@@ -279,9 +285,11 @@ def label_command(uuid, name=None):
 def range_command(uuid, name, T, rate=NORMAL, s=None):
     """The plugin command that lets a ranged unit shoot from its AoE2 range (tiles * T blocks), with one shot per
     reload time at `rate` game seconds per real second (default: Normal game speed, as the walk speed). None for a
-    melee unit. s: the values with technologies (Fletching, #724), default those of AoE2 unit name."""
+    melee unit. s: the values with technologies (Fletching, #724), default those of AoE2 unit name. A unit of BLAST
+    gets its blast radius in blocks last: the plugin then lets the siege unit (a minecart) shoot too (#1050)."""
     s = s or stats(name)
-    return s.range and s.reload and f"aoe range {uuid} {s.range * T} {max(1, round(s.reload / rate * 20))}" or None
+    blast = f" {BLAST[name] * T}" if name in BLAST else ""
+    return s.range and s.reload and f"aoe range {uuid} {s.range * T} {max(1, round(s.reload / rate * 20))}{blast}" or None
 
 
 def sight(name, s=None):
