@@ -941,7 +941,7 @@ def connect_kind(state):
     if name.endswith("_fence_gate"):
         facing = re.search(r"facing=(\w+)", state)
         return "gate_z" if facing and facing.group(1) in ("north", "south") else "gate_x"
-    if name.endswith("_pane") or name == "minecraft:iron_bars":
+    if name.endswith(("_pane", "copper_bars")) or name == "minecraft:iron_bars":
         return "pane"
     if name.endswith("_fence"):
         return "nether_fence" if name == "minecraft:nether_brick_fence" else "fence"
