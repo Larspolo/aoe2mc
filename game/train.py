@@ -26,6 +26,8 @@ Horse Collar at the mill (#726): the live and the new farms of the player have 7
 Wheelbarrow at the town center in the Feudal Age (#728, TECH_AGE): villagers carry 3 more resources and walk 10 % faster (gather.CARRY, gather.PACE).
 Rally points (#707): the menu item "Rally point" (RALLY) and the next right click on the ground set the rally point of
 the building; each new unit walks there (Minecraft path finding), a new villager gathers at a tree, bush, mine or farm.
+The castle (#708) trains the unique unit of the civilization of its player (UNIQUE, trains()). Only the units with AoE2
+combat values (combat.STATS) are in its menu.
 """
 import json
 import math
@@ -48,8 +50,10 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "FORGING": {"food": 150},
          "GOLD_MINING": {"food": 100, "wood": 75},
          "HORSE_COLLAR": {"food": 75, "wood": 75},
+         "LONGBOWMAN": {"wood": 35, "gold": 40},
          "SCALE_MAIL_ARMOR": {"food": 100},
          "SCOUT_CAVALRY": {"food": 80},
+         "WAR_ELEPHANT": {"food": 170, "gold": 85},
          "WHEELBARROW": {"food": 175, "wood": 50}}
 TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130,   # AoE2 seconds
                "DOUBLE_BIT_AXE": 25,
@@ -57,16 +61,33 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "FORGING": 50,
                "GOLD_MINING": 30,
                "HORSE_COLLAR": 20,
+               "LONGBOWMAN": 17,
                "SCALE_MAIL_ARMOR": 40,
                "SCOUT_CAVALRY": 30,
+               "WAR_ELEPHANT": 25,
                "WHEELBARROW": 75}
 TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW"), "BARRACKS": ("MILITIA",),   # the units and technologies of each
           "ARCHERY_RANGE": ("ARCHER",),                                         # building (#654, #670, #655)
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING"),           # (#675, #725, #724)
+          "CASTLE": (),                                                         # the unique unit: trains() (#708)
           "STABLE": ("SCOUT_CAVALRY",),                                         # (#671)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
           "MILL": ("HORSE_COLLAR",),                                            # (#726)
           "MINING_CAMP": ("GOLD_MINING",)}                                      # (#727)
+# The unique unit of each civilization (AoE2 DE), trained at its castle. A unit without COSTS is not in the menu yet:
+# it has no AoE2 combat values in combat.STATS.
+UNIQUE = {"BRITONS": "LONGBOWMAN", "PERSIANS": "WAR_ELEPHANT", "BYZANTINES": "CATAPHRACT", "CELTS": "WOAD_RAIDER",
+          "CHINESE": "CHU_KO_NU", "FRANKS": "THROWING_AXEMAN", "GOTHS": "HUSKARL", "JAPANESE": "SAMURAI",
+          "MONGOLS": "MANGUDAI", "SARACENS": "MAMELUKE", "TEUTONS": "TEUTONIC_KNIGHT", "TURKS": "JANISSARY",
+          "VIKINGS": "BERSERK", "AZTECS": "JAGUAR_WARRIOR", "HUNS": "TARKAN", "KOREANS": "WAR_WAGON",
+          "MAYANS": "PLUMED_ARCHER", "SPANISH": "CONQUISTADOR", "INCAS": "KAMAYUK", "ITALIANS": "GENOESE_CROSSBOWMAN",
+          "MAGYARS": "MAGYAR_HUSZAR", "SLAVS": "BOYAR", "BERBERS": "CAMEL_ARCHER", "ETHIOPIANS": "SHOTEL_WARRIOR",
+          "MALIANS": "GBETO", "PORTUGUESE": "ORGAN_GUN", "BURMESE": "ARAMBAI", "KHMER": "BALLISTA_ELEPHANT",
+          "MALAY": "KARAMBIT_WARRIOR", "VIETNAMESE": "RATTAN_ARCHER", "BULGARIANS": "KONNIK", "CUMANS": "KIPCHAK",
+          "LITHUANIANS": "LEITIS", "TATARS": "KESHIK", "BURGUNDIANS": "COUSTILLIER", "SICILIANS": "SERJEANT",
+          "POLES": "OBUCH", "BOHEMIANS": "HUSSITE_WAGON", "HINDUSTANIS": "GHULAM", "DRAVIDIANS": "URUMI_SWORDSMAN",
+          "BENGALIS": "RATHA", "GURJARAS": "SHRIVAMSHA_RIDER", "ROMANS": "CENTURION", "ARMENIANS": "COMPOSITE_BOWMAN",
+          "GEORGIANS": "MONASPA"}
 TECHS = {"DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
          "FLETCHING": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if "archer" in s.classes else s,
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
@@ -97,8 +118,10 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "FORGING": (0, "book", "Forging"),
          "GOLD_MINING": (0, "book", "Gold Mining"),
          "HORSE_COLLAR": (0, "book", "Horse Collar"),
+         "LONGBOWMAN": (0, "skeleton_spawn_egg", "Longbowman"),
          "LOOM": (1, "book", "Loom"),                               # a book for a technology (#618)
          "SCALE_MAIL_ARMOR": (1, "book", "Scale Mail Armor"),
+         "WAR_ELEPHANT": (0, "ravager_spawn_egg", "War Elephant"),
          "FEUDAL_AGE": (2, "bell", "Feudal Age"),
          "WHEELBARROW": (3, "book", "Wheelbarrow")}
 SHIFT = 5                                                          # units of a shift click, as in AoE2
@@ -127,6 +150,14 @@ def homes(g):
     return out | {tuple(s["footprint"]): s["name"] for s in g.sites if s["name"] in TRAINS and s.get("done")}
 
 
+def trains(g, building):
+    """The units and technologies of the own building: a castle trains the unique unit of the player's civilization."""
+    if building != "CASTLE":
+        return TRAINS[building]
+    civ = g.data.get("players", {}).get(str(g.player), {}).get("civ")
+    return tuple(n for n in [UNIQUE.get(civ)] if n in COSTS)
+
+
 def home(g, cell):
     """The footprint of the own training building that has the block cell (x, z) in it, or None."""
     return next((r for r in homes(g) if cell and r[0] <= cell[0] < r[1] and r[2] <= cell[1] < r[3]), None)
@@ -153,7 +184,7 @@ def show(g, player, rect):
         return f"queue {n}/{QUEUE}"
     items = [(slot, build.LOCKED if build.locked(g, name) else item, label,
               " · ".join(f"{v} {r}" for r, v in COSTS[name].items()) + f" · {TRAIN_TIMES[name]} s · " + state(name))
-             for name in TRAINS[building] if name not in g.techs and unlocked(g, name) for slot, item, label in [ITEMS[name]]]
+             for name in trains(g, building) if name not in g.techs and unlocked(g, name) for slot, item, label in [ITEMS[name]]]
     items += [RALLY] if units_of(building) else []
     q = g.queues.get(rect, [])                                         # the queue row first: the plugin sets the
     items = [(ROW + i, ITEMS[name][1], ITEMS[name][2] + (f" {int(100 * q[0]['progress'])} %" if start == 0 else ""),
@@ -207,7 +238,7 @@ def order(g, player, rect, slot, shift=False):
         cancel(g, player, rect, slot - ROW)
         show(g, player, rect)
         return 0
-    name = next((n for n in TRAINS[homes(g)[rect]] if ITEMS[n][0] == slot), None)
+    name = next((n for n in trains(g, homes(g)[rect]) if ITEMS[n][0] == slot), None)
     n = 0
     while name and n < (SHIFT if shift else 1) and queue(g, player, rect[::2], name):
         n += 1
@@ -248,7 +279,7 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
     Returns the footprint of the building, or None (no building there that trains name, a full queue, not enough
     resources)."""
     rect = home(g, cell)
-    if rect is None or name not in TRAINS[homes(g)[rect]]:
+    if rect is None or name not in trains(g, homes(g)[rect]):
         return None
     if name in TECHS and (name in g.techs or queued(g, name)) or not unlocked(g, name):   # a technology only once
         return None
