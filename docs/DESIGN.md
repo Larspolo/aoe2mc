@@ -116,6 +116,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Wheel | open `*_trapdoor` on the side | `cart`, `university`, `market`, `dock` +9 more |
 | Siege engine in the making | `stripped_spruce_log` frame, `oak_fence` posts, a `stripped_oak_log` ram beam with an `iron_block` head | `siege_workshop` |
 | Tent canvas | `white_wool`, a valance of wool in the player color | `command_tent`, `army_tent`, `pavilion`, `yurt` +4 more |
+| Tent poles of a pavilion | `stripped_spruce_log[axis=y]` at the corners, up to the roof edge | |
 | Yurt felt | `blue_wool` with a zig-zag of `white_wool` (or the inverse), a flat dome with a `spruce_trapdoor` crown ring | |
 | Thatch | `hay_block` | `settlement`, `hut`, `mill_room`, `granary` +15 more |
 | Wicker wall of a hut | `mangrove_roots` between `spruce_log[axis=y]` posts | |
@@ -147,6 +148,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Column | `quartz_pillar` | `oracles_temple`, `arch_of_constantine`, `taj`, `university` |
 | Sacred tree | `oak_log`, `oak_leaves[persistent=true]` | `pagan_shrine`, `log_pile`, `decorate`, `settlement` +3 more |
 | Hides | `brown_wool` | `yurt`, `helepolis`, `market` |
+| Nomad hide tent | `brown_wool` dome and peak, an ornament band of `white_wool` and `orange_wool`, `red_carpet` rug | |
 | Band in the player color | `*_wool` (player color) | `pavilion`, `yurt`, `command_tent`, `army_tent` +19 more |
 | Outside stairs to an upper floor | `*_stairs` of the wood of the set | `storage`, `shelter`, `furnish_worship`, `town_hall` +37 more |
 | Books, study | `bookshelf`, `lectern` (with a book) | `library`, `university`, `town_hall`, `keep_inside` +2 more |
