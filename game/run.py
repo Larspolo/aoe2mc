@@ -7,6 +7,7 @@ Usage:
     python3 game/run.py WORLD --bench 1000        # measure the commands per second through RCON, then stop
     python3 game/run.py WORLD --play              # villagers gather wood (game/gather.py); Ctrl-C stops
     python3 game/run.py WORLD --play --log F.jsonl  # also write a timed event log (tools/measure_gather.py reads it)
+    python3 game/run.py WORLD --replay [--speed 4]  # replay the recorded game of the world (game/replay.py), then stop
 
 Join with Minecraft (multiplayer, localhost): players play in creative mode and get operator rights.
 The server plays the world in place (the game changes it). Server files (eula, properties, logs) go to .cache/.
@@ -143,6 +144,22 @@ def play(game, world, log=None):
     g.run()
 
 
+def replay(game, world, speed=1.0, start="0:00"):
+    import replay
+    start = replay.aoe2mc.game_time(start)
+    with open(os.path.join(world, "aoe2mc.json")) as f:
+        data = json.load(f)
+    if "timeline" not in data:
+        sys.exit("--replay needs a world of a recorded game (.aoe2record)")
+    game.forceload()
+    print(f"Join the server localhost:{game.game_port} (Minecraft {game.version}). The replay starts now "
+          f"at speed {speed}.", file=sys.stderr)
+    stats = replay.Replay(game, data, game.version).run(speed, start)
+    print(f"{stats['events']} events, {stats['commands']} commands in {stats['busy']} s "
+          f"({stats['rate']} commands per second, the timeline needs {stats['need']}), largest lag {stats['lag']} s")
+    return stats
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0].strip(),
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -150,6 +167,9 @@ def main(argv=None):
     ap.add_argument("--version", default=mc_check.DEFAULT_VERSION, help="Minecraft version of the world")
     ap.add_argument("--bench", type=int, metavar="N", help="send N commands, print the commands per second, stop")
     ap.add_argument("--play", action="store_true", help="play: villagers of player 1 gather wood (aoe2mc.json)")
+    ap.add_argument("--replay", action="store_true", help="replay the timeline of a recorded game (aoe2mc.json)")
+    ap.add_argument("--speed", type=float, default=1.0, help="--replay: times the game speed (default 1)")
+    ap.add_argument("--from", dest="start", default="0:00", metavar="MM:SS", help="--replay: start at this game time")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     a = ap.parse_args(argv)
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
@@ -160,6 +180,9 @@ def main(argv=None):
         print(f"Server is ready. RCON on 127.0.0.1:{game.port}. Ctrl-C stops the server.", file=sys.stderr)
         if a.bench:
             print(f"{bench(game, a.bench):.0f} commands per second through RCON")
+            return
+        if a.replay:
+            replay(game, a.world, a.speed, a.start)
             return
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
