@@ -17,6 +17,7 @@ AoE2, but needs no population room. A click queues it once; when it is complete 
 and changes the values of the live and the new units (stats()). Loom: villagers get 15 hit points and 1/2 armor.
 Ages (#672): the Feudal Age is a technology of the town center that needs 2 types of Dark Age buildings (REQUIRES). The
 sidebar title shows the age of the player; all players see a title and hear a sound when a player advances.
+Forging at the blacksmith (#675): infantry and cavalry get +1 attack.
 """
 import json
 import math
@@ -33,11 +34,15 @@ import build  # noqa: E402
 import menu  # noqa: E402
 
 COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   # as in AoE2
-         "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}, "FEUDAL_AGE": {"food": 500}}
-TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130}   # AoE2 seconds
+         "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}, "FEUDAL_AGE": {"food": 500},
+         "FORGING": {"food": 150}}
+TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130,   # AoE2 seconds
+               "FORGING": 50}
 TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE"), "BARRACKS": ("MILITIA",),   # the units and technologies of each
-          "ARCHERY_RANGE": ("ARCHER",)}                                         # building (#654, #670, #655)
-TECHS = {"LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
+          "ARCHERY_RANGE": ("ARCHER",),                                         # building (#654, #670, #655)
+          "BLACKSMITH": ("FORGING",)}                                           # (#675)
+TECHS = {"FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
+         "LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
          if "VILLAGER" in name else s, "FEUDAL_AGE": lambda name, s: s}   # the change of each technology to the AoE2 values
 REQUIRES = {"FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP", "DOCK"))}   # n types of these buildings
 AGES = ("Dark Age", "Feudal Age")                                  # the age after each researched age (index: ages)
@@ -48,9 +53,16 @@ CENSUS = 2.0                                                       # AoE2 second
 ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, item and name of each unit (#620)
          "MILITIA": (0, "zombie_spawn_egg", "Militia"),             # the mob of units.classify
          "ARCHER": (0, "skeleton_spawn_egg", "Archer"),
+         "FORGING": (0, "book", "Forging"),
          "LOOM": (1, "book", "Loom"),                               # a book for a technology (#618)
          "FEUDAL_AGE": (2, "bell", "Feudal Age")}
 SHIFT = 5                                                          # units of a shift click, as in AoE2
+
+
+def melee(s):
+    """True for the combat values s of an infantry or cavalry unit (also camels and elephants): the units of the melee
+    attack upgrades of the AoE2 blacksmith. Cavalry archers get the archer upgrades."""
+    return bool({"infantry", "cavalry", "camel", "elephant"} & set(s.classes)) and "archer" not in s.classes
 
 
 def homes(g):
