@@ -289,6 +289,7 @@ class Gather:
         self.trunks = {}                                               # tree tile -> logs of its trunk on the ground
         self.bushes = {}                                               # bush tile -> the block of its last look
         self.queues, self.trained = {}, {}                             # town center -> its queue, units it trained
+        self.pop, self.census, self.shown = 0, 0.0, {}                 # live units, AoE2 seconds since the count, sidebar
 
     @property
     def wood(self):
@@ -314,6 +315,7 @@ class Gather:
             pos = self.pos(o["uuid"])
             if pos:
                 self.villagers[o["uuid"]] = Villager(o["uuid"], pos)
+        train.census(self)                                             # the population and the limit (#613)
         return self
 
     def select(self, uuid):

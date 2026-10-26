@@ -32,7 +32,7 @@ def test_a_click_on_the_town_center_queues_a_villager_and_takes_50_food():
     for name in g.clicks():
         g.click(name)
     assert g.stock["food"] == 10 and "scoreboard players remove Food aoe_res 50" in server.log
-    assert g.queues == {(2, 5, 2, 5): [{"name": "VILLAGER_MALE", "progress": 0.0}]}
+    assert g.queues == {(2, 5, 2, 5): [{"name": "VILLAGER_MALE", "progress": 0.0, "player": "Steve"}]}
     g.click("Steve")                                                   # 10 food: no second villager
     assert g.stock["food"] == 10 and len(g.queues[2, 5, 2, 5]) == 1
     assert any(c.startswith("tellraw Steve") and "50 food" in c for c in server.log)
