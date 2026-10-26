@@ -26,6 +26,8 @@ Double-Bit Axe at the lumber camp (#723): villagers chop wood 20 % faster (gathe
 Gold Mining at the mining camp (#727): villagers mine gold 15 % faster.
 Horse Collar at the mill (#726): the live and the new farms of the player have 75 more food (gather.FARM_TECHS).
 Wheelbarrow at the town center in the Feudal Age (#728, TECH_AGE): villagers carry 3 more resources and walk 10 % faster (gather.CARRY, gather.PACE).
+Scale Barding Armor at the blacksmith in the Feudal Age (#938): cavalry (also camels and elephants, not cavalry archers)
+gets +1 melee and +1 pierce armor (barding()).
 Rally points (#707): the menu item "Rally point" (RALLY) and the next right click on the ground set the rally point of
 the building; each new unit walks there (Minecraft path finding), a new villager gathers at a tree, bush, mine or farm.
 The castle (#708) trains the unique unit of the civilization of its player (UNIQUE, trains()). Only the units with AoE2
@@ -62,6 +64,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "MAMELUKE": {"food": 55, "gold": 85},
          "MANGUDAI": {"wood": 55, "gold": 65},
          "SAMURAI": {"food": 45, "gold": 30},
+         "SCALE_BARDING_ARMOR": {"food": 150},
          "SCALE_MAIL_ARMOR": {"food": 100},
          "SCOUT_CAVALRY": {"food": 80},
          "SKIRMISHER": {"food": 25, "wood": 35},
@@ -86,6 +89,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "MAMELUKE": 23,
                "MANGUDAI": 26,
                "SAMURAI": 9,
+               "SCALE_BARDING_ARMOR": 45,
                "SCALE_MAIL_ARMOR": 40,
                "SCOUT_CAVALRY": 30,
                "SKIRMISHER": 22,
@@ -97,7 +101,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "WOAD_RAIDER": 10}
 TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW"), "BARRACKS": ("MILITIA", "SPEARMAN"),   # the units and technologies of each
           "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER"),                                         # building (#654, #670, #655)
-          "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING"),           # (#675, #725, #724)
+          "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING",            # (#675, #725, #724, #938)
+                         "SCALE_BARDING_ARMOR"),
           "CASTLE": (),                                                         # the unique unit: trains() (#708)
           "STABLE": ("SCOUT_CAVALRY",),                                         # (#671)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
@@ -124,6 +129,8 @@ TECHS = {"DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy 
          "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
          "LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
          if "VILLAGER" in name else s,
+         "SCALE_BARDING_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
+         if barding(s) else s,
          "SCALE_MAIL_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "infantry" in s.classes else s,
          "FEUDAL_AGE": lambda name, s: s,   # the change of each technology to the AoE2 values
@@ -131,6 +138,7 @@ TECHS = {"DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy 
 REQUIRES = {"FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP", "DOCK"))}   # n types of these buildings
 TECH_AGE = {                                                       # the age of a technology (build.AGE): hidden before
     "DOUBLE_BIT_AXE": 1,
+    "SCALE_BARDING_ARMOR": 1,
     "WHEELBARROW": 1,
 }
 AGES = ("Dark Age", "Feudal Age")                                  # the age after each researched age (index: ages)
@@ -159,6 +167,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "MAMELUKE": (0, "camel_spawn_egg", "Mameluke"),
          "MANGUDAI": (0, "skeleton_horse_spawn_egg", "Mangudai"),
          "SAMURAI": (0, "zombie_spawn_egg", "Samurai"),
+         "SCALE_BARDING_ARMOR": (3, "book", "Scale Barding Armor"),
          "SCALE_MAIL_ARMOR": (1, "book", "Scale Mail Armor"),
          "TEUTONIC_KNIGHT": (0, "zombie_spawn_egg", "Teutonic Knight"),
          "THROWING_AXEMAN": (0, "drowned_spawn_egg", "Throwing Axeman"),
@@ -176,6 +185,13 @@ def melee(s):
     """True for the combat values s of an infantry or cavalry unit (also camels and elephants): the units of the melee
     attack upgrades of the AoE2 blacksmith. Cavalry archers get the archer upgrades."""
     return bool({"infantry", "cavalry", "camel", "elephant"} & set(s.classes)) and "archer" not in s.classes
+
+
+def barding(s):
+    """True for the combat values s of a cavalry unit (also camels and elephants): the units of the barding armor
+    upgrades of the AoE2 blacksmith. Cavalry archers get the archer armor upgrades. A mounted unit keeps its values
+    on the horse (its UUID in aoe2mc.json), so the horse gets the armor (#850)."""
+    return bool({"cavalry", "camel", "elephant"} & set(s.classes)) and "archer" not in s.classes
 
 
 def unlocked(g, name):
