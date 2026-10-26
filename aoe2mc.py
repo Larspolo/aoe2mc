@@ -1973,7 +1973,9 @@ def plan_units(objects, players, cols, rng, stats, birds=True, garrison="inside"
             continue
         blocked = cols.blocked[bx, bz]      # a ship in a dock moves to free water, else its crew suffocates (#190)
         if (blocked or held) and (boat is not True or blocked):
-            spot = free_spot(cols, bx, bz, 6 * T, water=bool(boat), taken=taken if held else ())
+            feet = holder.get("footprint") if held and holder else None     # next to it, not under it (#865)
+            near = {(x, z) for x in range(feet[0], feet[2]) for z in range(feet[1], feet[3])} if feet else set()
+            spot = free_spot(cols, bx, bz, 6 * T, water=bool(boat), taken=taken | near if held else ())
             if spot is None:
                 stats["units (inside a building, no free space)"] += 1
                 continue
@@ -2357,7 +2359,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
     their footprint [x0, z0, x1, z1) in blocks. Objects of a recorded game have their object ID ("ref").
     Objects that the converter did not place are not in the list.
-    A building has the free cells of its ground floor and their y ("inside", buildings.INSIDE) for a garrison.
+    A building has the free cells of its ground floor and their y ("inside", buildings.INSIDE) for a garrison,
+    and the cells of its footprint that units walk through ("open": the town center, #865).
     "ground" has one string per block row z: for each x the y where a unit stands, or "-" for water.
     "timeline" (recorded games only): the events of read_timeline, with tiles in the turned grid
     and the "names" of the selected objects (name_timeline)."""
@@ -2372,7 +2375,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
              "tile": [round(float(o["x"]), 3), round(float(o["y"]), 3)], "rotation": round(o.get("rotation", 0.0), 4)}
         if o.get("hero"):
             e["hero"] = True
-        for k in ("uuid", "footprint"):
+        for k in ("uuid", "footprint", "open"):
             if k in o:
                 e[k] = o[k]
         if o.get("ref") is not None:                    # the object ID of a recorded game (#407, #408)

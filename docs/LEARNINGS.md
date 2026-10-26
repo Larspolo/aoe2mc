@@ -46,6 +46,7 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - The auto mode classifier can deny `gh api .../issues/N -X PATCH -f state=closed` (closing a finished epic: "External System Writes"). Do not send the same close through another tool: add `needs-human` to the epic and a comment with the evidence for `@Larspolo` (#862).
 - A second check of a check ticket: build the tree of `checks/N` from the old tree and the new files (`git ls-tree OLD` piped into `git mktree`). A tree with only the new files breaks the image links of the first check (#718).
 - `tp PLAYER X Y Z facing X Y Z` aims from the feet, not from the eyes: `Gather.click` then picks nothing. For a click check compute the yaw and the pitch from the eye (y + 1.62) yourself (#823, script on `checks/823`).
+- `S=dir && cmd1 & cmd2 $S/x`: the `&` puts the whole `S=... && cmd1` list in a background subshell, so `cmd2` sees an empty `S` and writes to `/x` (#865). Set the variable on its own line first.
 
 ## Code
 
