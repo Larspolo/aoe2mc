@@ -1909,6 +1909,17 @@ def helepolis(c, w, st, col, T, ctx):
         m = (a + b) // 2
         c.set(m, y + 1, b - 1, "spruce_trapdoor[facing=south,half=top,open=true]")
         c.box(a, b, y + 3, y + 4, a, b, "spruce_planks")
+        inner = lambda x, z: a < x < b - 1 and a < z < b - 1
+        c.box(m, m + 1, y, y + 4, m, m + 1, "spruce_log")                 # a mast through all floors with a ladder (#501)
+        if inner(m, m - 1):
+            c.box(m, m + 1, y, y + 4, m - 1, m, "ladder[facing=north]")
+        stuff = [(a + 1, y + 2, b - 2, "lantern[hanging=true]"), (b - 2, y + 2, a + 1, "lantern[hanging=true]"),
+                 (b - 2, y, b - 2, "barrel[facing=up]"), (a + 1, y, a + 1, "barrel[facing=up]")]   # arrows
+        if k == 0:
+            stuff += [(m + 1, y, m, "grindstone[face=floor,facing=east]"), (a + 1, y, b - 2, "chest[facing=east]")]
+        for x, yy, z, s in stuff:
+            if inner(x, z) and c.get(x, yy, z) == -1:
+                c.set(x, yy, z, s)
         y, k = y + 4, k + 1
         if k % 2 == 0:
             a, b = a + 1, b - 1
