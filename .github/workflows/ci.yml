@@ -42,6 +42,22 @@ jobs:
       - name: Fast tests
         run: pytest
 
+  # A CI run that GITHUB_TOKEN started (Unconflict) gives no workflow_run event, and GitHub drops the cron sweep of
+  # Automerge: start the sweep after a green quick job, so that the PR merges (#734). A dispatch of GITHUB_TOKEN starts
+  # a workflow. A job after `quick`: the sweep needs its check run completed.
+  sweep:
+    needs: quick
+    if: github.event_name == 'workflow_dispatch' && (startsWith(github.ref_name, 'agent/') || startsWith(github.ref_name, 'claude/'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write         # gh workflow run
+    steps:
+      - name: Start the Automerge sweep
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run automerge.yml --ref main -R "$GITHUB_REPOSITORY"
+
   # The full suite: two parallel jobs, so that a red slow test does not stop the Minecraft tests.
   slow:
     if: github.event_name == 'schedule' || inputs.full == true
