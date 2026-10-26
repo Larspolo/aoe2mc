@@ -188,7 +188,8 @@ center, 3 villagers, a scout, sheep, berry bushes, gold and stone mines, boars a
 `--random-map arena` closes each player in a circle of stone walls with a forest inside it, and has open land
 between the circles. `--random-map black_forest` covers most of the map with forest, with open player lands, an open
 middle and open paths between them. `--random-map nomad` has a sea in the middle and no town center: the 3 villagers
-of each player stand apart, and the player builds the town center.
+of each player stand apart, and the player builds the town center. `--random-map islands` gives each player an own
+island with a beach, and water between the islands.
 
 ## Buildings
 
