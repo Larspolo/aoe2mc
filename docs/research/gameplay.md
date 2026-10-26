@@ -213,3 +213,4 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
   and the server removes the mob ("No entity was found" right after the order). Give
   `equipment:{mainhand:{id:"minecraft:bow",count:1}}`. A Java exception of the plugin is only in `game.server.log` (#608).
 - An arrow at the stand-in slime of a building sticks in the walls first (#608): the range goal counts each shot itself.
+- A horse has no attack goal, and `aoe attack` on it does nothing. Give the target to the rider: a riding mob walks with the navigation of its vehicle (vanilla `Mob#getNavigation`), so the horse follows, and its follow range limits the path search (#710).
