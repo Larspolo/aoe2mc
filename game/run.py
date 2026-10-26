@@ -42,6 +42,35 @@ FILL = "https://fill.papermc.io/v3/projects/paper/versions"
 AGENT = {"User-Agent": "aoe2mc (https://github.com/Larspolo/aoe2mc)"}   # the Paper API refuses Python-urllib (403)
 
 
+PLUGIN = os.path.join(HERE, "plugin")                               # the Paper plugin: aoe moveto, aoe attack (#435)
+
+
+def plugin_jar(version):
+    """The jar of game/plugin: built with the Gradle wrapper when its source changed (the name has its hash).
+    Gradle needs a JDK of the server's Java version (javac): openjdk-25-jdk-headless for 26.3."""
+    files = [os.path.join(PLUGIN, f) for f in ("build.gradle.kts", "settings.gradle.kts",
+                                               "gradle/wrapper/gradle-wrapper.properties")]
+    files += sorted(glob.glob(os.path.join(PLUGIN, "src", "**", "*.*"), recursive=True))
+    h = hashlib.sha256()
+    for f in files:
+        h.update(os.path.relpath(f, PLUGIN).encode() + b"\0" + open(f, "rb").read())
+    path = os.path.join(os.path.dirname(mc_check.CACHE), "plugin", f"aoe2mc-{h.hexdigest()[:16]}.jar")
+    if not os.path.exists(path):
+        build_plugin(version, path)
+    return path
+
+
+def build_plugin(version, path):
+    jdk = os.path.dirname(os.path.dirname(os.path.realpath(mc_check.java_for(version))))
+    if not os.path.exists(os.path.join(jdk, "bin", "javac")):
+        sys.exit(f"no javac in {jdk}: install the JDK (apt-get install openjdk-25-jdk-headless)")
+    subprocess.run([os.path.join(PLUGIN, "gradlew"), "--no-daemon", "-q", "jar"], cwd=PLUGIN, check=True,
+                   env={**os.environ, "JAVA_HOME": jdk})
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    shutil.copy(os.path.join(PLUGIN, "build", "libs", "aoe2mc-plugin.jar"), path + ".part")
+    os.replace(path + ".part", path)
+
+
 def get(url):
     with urllib.request.urlopen(urllib.request.Request(url, headers=AGENT), timeout=300) as r:
         return r.read()
@@ -88,9 +117,9 @@ class Game:
         self.lock, self.seen = threading.Lock(), 0     # the op thread and the game send commands
 
     def start(self):
-        java, jvm = mc_check.java_for(self.version), []
+        java, jvm, plugins = mc_check.java_for(self.version), [], []
         if self.kind == "paper":                     # Paper patches the Mojang jar once, into the cache
-            jar = paper_jar(self.version)
+            jar, plugins = paper_jar(self.version), [plugin_jar(self.version)]
             jvm = [f"-DbundlerRepoDir={os.path.dirname(jar)}"]
         else:
             jar = mc_check.server_jar(self.version)
@@ -101,6 +130,9 @@ class Game:
         self.port, self.game_port, password = mc_check.free_port(), mc_check.free_port(), secrets.token_hex(16)
         with open(os.path.join(self.folder, "eula.txt"), "w") as f:
             f.write("eula=true\n")
+        for p in plugins:
+            os.makedirs(os.path.join(self.folder, "plugins"), exist_ok=True)
+            shutil.copy(p, os.path.join(self.folder, "plugins", "aoe2mc-plugin.jar"))
         with open(os.path.join(self.folder, "server.properties"), "w") as f:
             f.write(properties(self.game_port, self.port, password))
         # --universe and --world: the server uses the world folder where it is, not a copy

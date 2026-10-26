@@ -1,0 +1,13 @@
+name: aoe2mc
+version: '1'
+main: aoe2mc.AoePlugin
+api-version: '26.3'
+description: Orders of the aoe2mc game program with Minecraft path finding (#435).
+commands:
+  aoe:
+    description: Orders for units.
+    usage: /aoe moveto <selector> <x> <y> <z> [speed] | /aoe attack <selector> <target selector>
+    permission: aoe2mc.order
+permissions:
+  aoe2mc.order:
+    default: op
