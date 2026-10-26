@@ -2251,12 +2251,13 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
         elif boat and wtop > top:
             col = vol[:, bz & 15, bx & 15]
             h = 1 + 2 * depth(nbt) if nbt.get("Passengers") else 2   # the boat and its crew (or stacks) need free space
-            y = wtop
+            ice = bool(cols.ice[bx, bz])          # frozen water: the boat stands on the ice block at wtop (#1024)
+            y = base = wtop + ice
             while y < MAX_Y - 3 and not all(passable[col[y + k - MIN_Y]] for k in range(h)):
                 y += 1
-            if y > wtop:
-                moved(str(top_name(nbt)), nbt, bx, wtop, bz, col)
-            y += 0.5
+            if y > base:
+                moved(str(top_name(nbt)), nbt, bx, base, bz, col)
+            y += 0 if ice and y == base else 0.5
         else:
             col = vol[:, bz & 15, bx & 15]
             y = top + 1
