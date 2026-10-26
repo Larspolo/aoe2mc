@@ -18,6 +18,5 @@ in-progress|0e8a16|The agent works on it now
 epic|3e4b9e|Parent ticket with sub-issues
 agent-status|1d76db|The dashboard of the agent
 paused|b60205|On the status issue: the agent stops
-hold|fbca04|On a PR: do not merge it yet
-ready-to-merge|0e8a16|Local checks pass; auto mode refused the self-merge: the owner merges or approves it (#507)
+hold|fbca04|On a PR: the Automerge workflow does not merge it
 conflict|b60205|On a PR: the Automerge workflow could not merge it

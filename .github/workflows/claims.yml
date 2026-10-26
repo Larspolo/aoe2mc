@@ -4,16 +4,17 @@ name: Claims
 # The runs cannot do it: the session proxy gives 403 for branch deletes.
 # It also deletes the comment locks (claim/comment-ID, #320) that are older than one day.
 on:
+  issues:
+    types: [closed]
   schedule:
-    - cron: "53 5 * * *"     # once a day: the refs of all closed tickets (Actions minutes, see ci.yml)
-  workflow_dispatch:
+    - cron: "53 5 * * *"     # once a day: the comment locks, and refs that an event missed
+  workflow_dispatch:        # Automerge starts it after each merge (a close by GITHUB_TOKEN starts no workflow)
 
 permissions:
   contents: write    # delete refs
 
 jobs:
   delete:
-    if: github.event_name != 'schedule' || vars.PAUSE_SCHEDULES != 'true'   # the variable pauses the schedules (Actions minutes)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

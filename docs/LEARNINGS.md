@@ -21,7 +21,7 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   uses it as a lock (#211). REST ref paths: `git/refs/heads/...`. `urllib` with a JSON body needs
   `Content-Type: application/json`, else 415 (#345).
 - Quote the heredoc tag (`<<'EOF'`) for GitHub text: `<<EOF` runs each `` `name` `` as a command.
-- Private repository: a workflow with a `permissions:` block also needs `contents: read`; the `pulls` API needs
+- A workflow with a `permissions:` block also needs `contents: read` (checkout); the `pulls` API needs
   `pull-requests: read`. A new `workflow_dispatch` workflow runs only after the merge to `main` (#207).
 - Minecraft server: a bad property value (`facing=up`) loads silently as the default state. An unknown block gives
   "Recoverable errors when loading section", an unknown block entity id "Skipping block entity with invalid type"

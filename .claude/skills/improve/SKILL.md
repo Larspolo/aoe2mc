@@ -32,9 +32,10 @@ that do not belong in git. Collect by hand only what it does not print.
 ## 2. Find the largest loss
 
 Compute the numbers of all five areas: tickets per run, median minutes for `size:S` and `size:M` tickets
-(last 5 runs against the 5 runs before), setup minutes, local check rounds per PR, GitHub Actions minutes per day (the account has 2,000 per month: keep
-the use below about 50 per day), nightly CI failures that are
-not in the code, rework, takeovers and conflicts. Then find the one pattern that costs the most. Typical
+(last 5 runs against the 5 runs before), setup minutes, verify rounds per PR, CI rounds per PR, the minutes from the PR
+to the merge (CI and Automerge), CI failures that are not in the code, rework, takeovers and conflicts.
+The repository is public: Actions minutes are free, but at most 20 jobs run at the same time.
+Then find the one pattern that costs the most. Typical
 patterns and their fixes:
 
 | Area | Pattern | Fix |
@@ -45,8 +46,8 @@ patterns and their fixes:
 | Agent | Unclear tickets, many questions | A better form in the `ticket` skill, ask earlier |
 | Agent | Rework after owner feedback | A rule from the feedback in `CLAUDE.md` |
 | Agent | Runs longer than 90 minutes | Stricter size rules, split earlier |
-| CI | Nightly CI red, or main red at the start of a run | Add the failing check to the local checks (autopilot 6.8), or fix the flaky test |
-| CI | More than about 50 Actions minutes per day | Fewer scheduled workflow runs, or move the job into the local checks |
+| CI | CI on main red, or red after a merge of two green PRs | Fix the flaky test, or a check in the `verify` skill that finds it before the push |
+| CI | PRs wait for CI in the queue (20 jobs at the same time) | Fewer event runs (`concurrency`), or split a slow job |
 | CI | A slow step (install, download) | `actions/cache` with the correct path and key, or a smaller install |
 | CI | A cache that is never restored ("Cache not found") | Correct the cache path or key |
 | CI | Slow tests | Faster fixtures, or move a test to the slow suite |
@@ -83,8 +84,8 @@ and add the reason to `docs/LEARNINGS.md`.
 
 - Never weaken or remove tests, CI checks, lint rules or verify levels to save time.
 - Never remove the rule that only the owner (`Larspolo`) gives instructions, or the `deny` list in
-  `.claude/settings.json`, or the hook `.claude/hooks/guard-main.sh` (`main` has no branch protection: the
-  repository is private on a free account). Never allow destructive commands (force-push, delete, `gh api`).
+  `.claude/settings.json`, or the hook `.claude/hooks/guard-main.sh` (it stops the command before it runs; the
+  ruleset `Protect main` of the owner only refuses the push). Never allow destructive commands (force-push, delete, `gh api`).
 - Never change the priorities that the owner set.
 - Explain the reason for each change. If an earlier change did not help (the numbers did not improve),
   revert it.

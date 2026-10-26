@@ -28,7 +28,7 @@ Put the method after the path (`... -X PATCH`): the permission rules match the s
 | Open PRs | `/pulls?state=open` |
 | New PR | `/pulls -f title="..." -f head=BRANCH -f base=main -F body=@file.md` |
 | CI of a commit | `/commits/SHA/check-runs --jq '.check_runs[] \| "\(.name) \(.status) \(.conclusion)"'` |
-| Merge a PR | `/pulls/N/merge -X PUT -f merge_method=squash` |
+| Start CI on a branch | `/actions/workflows/ci.yml/dispatches -f ref=BRANCH` (CI on `main` after a merge by hand) |
 | Merge state of a PR | `/pulls/N --jq .mergeable_state` (`dirty` = merge conflict: CI does not start, merge `origin/main`) |
 | CI job log | not possible with `gh` in the cloud: use `mcp__github__get_job_logs`, or run the check locally |
 
@@ -40,7 +40,7 @@ Put the method after the path (`... -X PATCH`): the permission rules match the s
 | Size | `size:S` (one short PR), `size:M` (one PR), `size:L` (too large: split first) |
 | Kind | `bug`, `feature`, `tooling`, `design`, `docs`, `cleanup` |
 | Flow | `needs-human` (waits for the owner), `blocked` (waits for another ticket), `in-progress`, `epic` (parent of sub-issues), `agent-status` (the status issue), `paused` |
-| PR | `hold` (do not merge it yet), `conflict` (a run could not solve the merge conflict: fix it in step 2) |
+| PR | `hold` (the Automerge workflow does not merge it), `conflict` (the workflow could not merge it: fix it in step 2) |
 
 ## Runs can overlap
 
@@ -52,8 +52,9 @@ continues (#231). So a ticket with `in-progress`, and its PR, belong to the othe
 do not touch them. Else the other run stopped: take the ticket over with `python3 tools/claim.py N --takeover`
 and say so in a comment. Exit 1 means that another run took it over first: leave it.
 A ticket with `in-progress` and no claim ref (older runs): the same rule with the ticket, branch and PR times only.
-PRs have no GitHub CI: each run checks its PR locally and merges it itself (step 6.8). So an open agent PR with no
-new commit and no new comment for 30 minutes is stalled. Take it over at once
+The workflow `automerge.yml` merges an agent PR when its CI is green (#232, #370). A PR whose CI runs or is green waits
+for that workflow: it is not stalled. Exception: a PR with red CI, label `conflict` or a merge conflict, and with no new
+commit and no new comment for 30 minutes, is stalled. Take it over at once
 (`python3 tools/claim.py N --takeover` with the ticket number N, then comment "Taken over by `<your branch>`: stalled."), for example when its run stopped. Then read the PR comments again: if an older "Taken over by" comment of another branch is less than
 30 minutes old, leave the PR to that run. Work on the PR from your session branch (`claim.py` takes the run name
 from the current local branch), push with `git push origin HEAD:<branch of the PR>`, and run the guard with
@@ -77,17 +78,19 @@ List open PRs. For each PR that the agent opened (branch `claude/*` or `agent/*`
 owns (see "Runs can overlap"):
 - Its ticket has `needs-human` or `blocked`, or is closed → skip the PR: it waits for the owner or another
   ticket. When the ticket is closed as "not planned", close the PR with a one-line comment.
-- Not stalled (see "Runs can overlap") → skip it: its run checks and merges it.
-- Stalled, or owner review comments → take it over and finish it now: step 6.10 when `mergeable_state` is `dirty`,
-  then the local checks and the merge of step 6.8. That is the work of this cycle.
+- CI green or running, no label → skip it: the Automerge workflow merges it. Do not merge it by hand.
+  Exception: CI was green more than 15 minutes ago and the PR is still open (the workflow failed) → read the last
+  Automerge run (`/actions/workflows/automerge.yml/runs?per_page=5`) and say why on the status issue.
+- CI red, stalled (see "Runs can overlap") or owner review comments → take it over and fix it now: continue at
+  step 6.8. That is the work of this cycle.
+- Merge conflict (label `conflict`, or `mergeable_state` is `dirty`, often with no CI run) → step 6.10, then
+  continue at step 6.8. Remove the label `conflict` when you push the fix.
+  The workflow `unconflict.yml` (after each merge and every 20 minutes) merges `origin/main` into a conflicted PR
+  when git solves the conflict alone (`merge=union` files), and starts CI (#280). So a conflict that stays is a real one.
 
-Then check main (it has no CI on each merge): run `ruff check .` and `python3 -m pytest` on a fresh `origin/main`,
-and read the last nightly CI run (`/actions/workflows/ci.yml/runs?per_page=1`, `conclusion`). If one is red, find the
-open `P0` ticket "Fix main: ..." or make one (`P0`, `bug`, `size:S`: the failing test and the commit that broke it),
-and do it first. The nightly CI makes the same ticket by itself.
-While GitHub Actions cannot run (the free minutes are used up until the 1st of the month, #460), the first run after
-03:00 UTC each day also runs `python3 -m pytest -m slow` and `python3 -m pytest -m mc` on `origin/main`, and writes the
-result in its report ("Daily main check"). Look for that line in today's reports on the status issue first.
+Then read the last CI run on main (`/actions/workflows/ci.yml/runs?branch=main&per_page=1`, `conclusion`;
+Automerge starts one after each merge). If it is red, find the open `P0` ticket "Fix main: ..." or make one (`P0`,
+`bug`, `size:S`: the failing test and the commit that broke it), and do it first. CI makes the same ticket by itself.
 
 ## 3. Read the owner's feedback
 
@@ -149,7 +152,7 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
 
 1. Branch: use the branch that the session instructions name. Else `git fetch origin main` and
    `git checkout -b agent/<number>-<short-slug> origin/main`.
-2. Beat (`python3 tools/claim.py N --beat`) at least every 20 minutes until the merge (see "Runs can overlap").
+2. Beat (`python3 tools/claim.py N --beat`) at least every 20 minutes until you open the PR (see "Runs can overlap").
    Read the ticket body and all its comments first: the owner's comments win over the body. Read only the code that the ticket needs (see the code map in `CLAUDE.md`). Use Grep, not full-file reads.
 3. For a bug, write a failing test first. Then change the code. Keep the diff small and in the existing style.
    Put new tests in a new file `tests/test_<topic>.py`: parallel tickets that append to the end of one test file
@@ -164,37 +167,32 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
    `python3 tools/claim.py N --release` (when the claim is yours), remove `in-progress` if you added it, comment the
    reason in one line on the ticket and pick the next ticket.
    Push. Open a PR: title = ticket title, body = what changed, how you verified, `Closes #<number>`.
-8. Local checks instead of CI (owner decision, 2026-10-25: the account has 2,000 GitHub Actions minutes per month,
-   and CI on each PR used about 500 per hour). Before the merge run, on the branch with the latest `origin/main`:
-   `ruff check .` and `python3 -m pytest` always; `python3 -m pytest -m slow` when the change touches `aoe2mc.py`,
-   `buildings.py`, `units.py` or `tools/scenarios.py`; `python3 -m pytest -m mc` when it changes NBT, entities,
-   block entities or the world format. Put the commands and the result lines in the PR body ("Local checks").
-   Then merge the PR yourself: `gh api repos/Larspolo/aoe2mc/pulls/N/merge -X put -f merge_method=squash -f sha=<head>`.
-   A 405 (main moved, or a conflict) → step 10, the checks again, push, merge again. Remove `in-progress`.
-   If auto mode refuses the merge ("Merge Without Review", #507), do not try another way. Leave the PR open with its
-   "Local checks" section, add the label `ready-to-merge`, comment "Hand-off: local checks pass, auto mode refused the
-   merge", release the claim and continue with the next ticket. The owner merges these PRs, or approves them: a PR
-   with an approving review of the owner may be merged by any run (step 2). The public repository (#369, #370) ends this.
-9. A check fails → find the cause, fix, check again. After 3 failed attempts stop: comment the cause on the ticket,
+8. Read `mergeable_state` (`/pulls/N`; `unknown` means GitHub still computes it: read it again). If it is
+   `dirty`, do step 10 first: GitHub runs no CI on a PR with a merge conflict, so no CI event comes.
+   Do not wait for CI and do not merge by hand: CI runs on each PR (lint, fast and slow tests; the `mc` tests when
+   the PR changes a file that they use), and the Automerge workflow merges the PR when CI is green, removes
+   `in-progress` and deletes the branch. Continue with step 7 and the next ticket. Step 2 of a later cycle finds a
+   red or conflicted PR.
+9. CI red → find the cause, fix, push. After 3 failed attempts stop: comment the cause on the ticket,
    add `blocked` or `needs-human` and `hold`, remove `in-progress`, and go to step 8 of the skill (report).
 10. Merge conflict (another PR changed the same lines) → merge `origin/main` into the branch, solve the
     conflict, verify again, push. Do not rebase or force-push a branch that has an open PR.
     A conflict in the column "Used today in" of `docs/DESIGN.md`: take main's side (`coverage.yml` writes it).
     Two new rows of the feature table at the same place: keep both.
-11. Do not merge a PR with the label `hold`.
+11. CI green → the Automerge workflow merges. Add label `hold` to the PR if it must not merge yet.
 
 If the ticket is wrong or not possible: comment why, add `needs-human`, remove `in-progress`. Do not merge
-partial work: add `hold` to its PR. Never merge a PR whose ticket has `needs-human` or `blocked`.
+partial work: add `hold` to its PR (the workflow also skips a PR whose ticket has `needs-human` or `blocked`).
 
 ## 7. Close the ticket
 
-The merge closes the ticket (`Closes #N`). If the owner must check something in the game, comment
+The merge closes the ticket (`Closes #N`), and the Automerge workflow removes `in-progress`. If the owner must check something in the game, comment
 precise check steps on the ticket and make a small `needs-human` ticket for the check.
 
 ## 8. Report on the status issue
 
 The dashboard in the body of the status issue is generated by `tools/dashboard.py`. Run `python3 tools/dashboard.py`
-after your report (the workflow `dashboard.yml` runs it only every 6 hours, to save Actions minutes). Do not write
+after your report (the workflow `dashboard.yml` runs it on label changes, closed issues and PRs, and each hour). Do not write
 "Waiting for you", "Working on", "Next up" or "Recently done": the script makes them from GitHub.
 In the body, change only two parts and keep the rest as it is (read the body just before the change,
 other runs change it too):
@@ -210,7 +208,7 @@ End it with one metrics line for each ticket of the run (the `improve` skill rea
 Put the `Usage:` line of step 1.4 above the metrics lines, unchanged: `tools/health.py` measures the quota use of one
 run per hour from pairs of these lines, and `tools/usage.py --target` uses that value (#462).
 `setup`: minutes from the start time (step 4) to the claim of the first ticket (0 for later tickets).
-`checks <k>`: rounds of local checks before the merge; `checks <c> min`: their minutes in total.
+`checks <k>`: rounds of the `verify` skill before the push; `checks <c> min`: their minutes in total.
 
 GitHub sends this comment to the owner as a notification. Do not comment when nothing changed.
 
@@ -226,7 +224,7 @@ Answer these questions. Do the action for each "yes". Spend little time.
 - Did you write own logic where Minecraft has a feature for it (CLAUDE.md: "Minecraft features first")? → use the
   feature in this PR when it is small, else make a ticket.
 - Did you install a package or download a file by hand? → add it to `scripts/cloud-setup.sh` (raise `SETUP_VERSION`).
-- Was a check slow, or the nightly CI red, for a reason outside your code (install, download, cache, network)? → fix it
+- Was a check slow, or CI red, for a reason outside your code (install, download, cache, network)? → fix it
   in this PR when the fix is small, else make a `tooling` ticket.
 - Did `git status` show files that do not belong in git (logs, worlds, images, caches)? → add them to `.gitignore`.
 - Did something block you that only the owner can change (a host, the environment, the scheduled task, a GitHub
