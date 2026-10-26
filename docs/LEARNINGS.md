@@ -94,3 +94,4 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - A ticket can name a new test file that exists already (`tests/test_replay_jump_gather.py`, #1147): run `ls` on the name before you write it, else `cat >` overwrites the old tests.
 - AoE2 terrain 1 is `WATER_SHALLOW` (the normal DE water, rmap `WATER`), terrain 4 is `SHALLOWS` (walkable): `terrain_style` matches "SHALLOW" in both and makes both 1 block deep until #1198. Check a river with `world_reader.py --section`, not the preview (no depth shade).
 - An AoE2 value in a ticket can be wrong (#1113 said an empty town center shoots 1 arrow; the wiki infobox says 0, #1201): check each AoE2 number of a ticket with the MediaWiki API before the code.
+- `pgrep -f "java -Xmx2G" | xargs kill` also matches its own shell command line and kills the tool call (exit 144): write the pattern as `"[j]ava -Xmx2G"` (#1213).
