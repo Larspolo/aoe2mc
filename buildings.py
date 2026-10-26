@@ -243,6 +243,20 @@ class Canvas:
         self.set(x, y, z, f"{color}_bed[facing={facing},occupied=false,part=head]")
         self.set(x + dx, y, z + dz, f"{color}_bed[facing={facing},occupied=false,part=foot]")
 
+    def free_bed(self, y, spots, color="straw", open_=False):
+        """The bed of the first spot (x, z, facing of the head) whose two cells are air (`open_`: also empty, for
+        an open yard), with air above, on a floor and not next to a door. Returns False when no spot fits (small --tile-size)."""
+        ok = (self.id("air"), -1) if open_ else (self.id("air"),)
+        near = {(x + dx, z + dz) for x, z in self.doors for dx in (-1, 0, 1) for dz in (-1, 0, 1)}
+        for x, z, f in spots:
+            dx, dz = {"north": (0, 1), "south": (0, -1), "west": (1, 0), "east": (-1, 0)}[f]
+            cells = ((x, z), (x + dx, z + dz))
+            if all(0 <= a < self.w and 0 <= b < self.w and (a, b) not in near and self.get(a, y, b) in ok
+                   and self.get(a, y - 1, b) not in ok and self.get(a, y + 1, b) in ok for a, b in cells):
+                self.bed(x, y, z, color, f)
+                return True
+        return False
+
     def banner(self, x, y, z, color, facing="south"):
         """A wall banner in front of the wall block next to it."""
         self.set(x, y, z, f"{color}_wall_banner[facing={facing}]")
@@ -872,15 +886,15 @@ def barracks(c, w, st, col, T, ctx):
             c.set(x, 3, z1 + 1, "carved_pumpkin[facing=south]")
     c.set(w - 3, 1, w - 2, "grindstone[face=floor,facing=south]")
     c.flag(x0 + 1, top - 1, (z0 + z1) // 2, col, 3)
-    # Inside: bunks in the player color, weapon racks (grindstones), chests, lanterns, a ladder to the upper floor
+    # Inside: straw bunks (#541), weapon racks (grindstones), chests, lanterns, a ladder to the upper floor
     ix0, ix1, iz0, iz1 = x0 + 1, x1 - 2, z0 + 1, z1 - 2                  # the free inside, inclusive
     if ix1 - ix0 < 7 or iz1 - iz0 < 3:
         for x in range(ix0, ix1 + 1, 2):
-            c.bed(x, 1, iz0, col)
+            c.bed(x, 1, iz0, "straw")
         c.set(ix1, 4, iz0, "lantern[hanging=false]")
         return
     for x in (ix0, ix0 + 1, ix1 - 1, ix1):
-        c.bed(x, 1, iz0, col)
+        c.bed(x, 1, iz0, "straw")
     c.set(mid - 1, 1, iz0, "grindstone[face=floor,facing=south]"); c.set(mid + 1, 1, iz0, "grindstone[face=floor,facing=south]")
     c.set(mid, 1, iz0, "chest[facing=south,type=single,waterlogged=false]")
     c.set(ix0, 1, iz1, "barrel[facing=up,open=false]")
@@ -888,9 +902,9 @@ def barracks(c, w, st, col, T, ctx):
         c.set(x, 2, iz0 + 2, "lantern[hanging=true]")
     c.box(ix1, ix1 + 1, 1, 4, iz1, iz1 + 1, "ladder[facing=west]")         # through a hole in the upper floor
     for x in range(ix0, ix1, 2):
-        c.bed(x, 4, iz0, col)
+        c.bed(x, 4, iz0, "straw")
     for x in range(ix0, ix1 - 1, 2):
-        c.bed(x, 4, iz1, col, "south")
+        c.bed(x, 4, iz1, "straw", "south")
     c.set(ix1, 4, iz0, "lantern[hanging=false]")
 
 
@@ -1528,6 +1542,8 @@ def mill_room(c, cx, mid, zf, shaft=None, lamp=None):
     c.set(lo, 1, lo, "hay_block"); c.set(lo, 2, lo, "hay_block"); c.set(lo, 1, lo + 1, "hay_block")
     c.set(hi, 1, lo, "barrel[facing=up]"); c.set(lo, 1, hi, "barrel[facing=up]")
     c.set(hi, 2, lo, "lantern[hanging=false]")
+    c.free_bed(1, [(x, z, f) for f in ("west", "north") for x in (hi, lo, hi - 1) for z in range(lo, hi + 1)
+                   if mid not in (x, x + (f == "west"))])                  # the miller's straw bed, off the way in
     if lamp:
         c.set(lo + 1, lamp, lo + 1, "lantern[hanging=true]")
 
@@ -1643,6 +1659,8 @@ def lumber_camp(c, w, st, col, T, ctx):
     c.set(4, 1, 2, "spruce_fence"); c.set(6, 1, 2, "spruce_fence")      # sawhorse with a log on it
     c.box(4, 7, 2, 3, 2, 3, "stripped_spruce_log[axis=x]")
     c.set(1, 1, 3, "crafting_table"); c.set(2, 1, 3, "oak_log")           # workbench, chopping block
+    c.free_bed(1, [(x, z, f) for z in range(2, w - 1) for x in range(w - 1, 0, -1) for f in ("west", "north")],
+               open_=True)                                                 # a straw bed in the yard
     c.flag(w - 1, 1, w - 1, col, 3)
 
 
@@ -1653,6 +1671,7 @@ def mining_camp(c, w, st, col, T, ctx):
     c.set(1, 1, 1, "barrel[facing=up]"); c.set(2, 1, 1, "grindstone[face=floor,facing=south]")
     c.set(3, 1, 1, "chest[facing=south]")
     c.set(2, 2, 0, "lantern[hanging=true]")                               # light under the roof beam
+    c.free_bed(1, [(x, z, f) for z in (2, 1) for x in (3, 2, 1) for f in ("north", "west")], open_=True)  # under the roof
     for x, z, h, b in ((w - 2, 1, 2, "cobblestone"), (w - 1, 1, 1, "stone"), (w - 2, 2, 1, "andesite"),
                        (w - 1, 2, 2, "cobblestone"), (w - 2, 3, 1, "cobblestone"),            # stone heap
                        (1, w - 3, 1, "gold_ore"), (2, w - 3, 2, "raw_gold_block"), (1, w - 2, 1, "raw_gold_block")):
