@@ -8,6 +8,7 @@ from urllib.parse import unquote
 
 import pytest
 from test_gather import FakeServer, grid
+from test_train_menu import FEUDAL
 
 from game import combat, gather, run, train
 
@@ -44,7 +45,8 @@ def test_a_right_click_on_the_barracks_opens_its_menu():
 def test_the_town_center_menu_does_not_change():
     server, g = setup()
     train.open_menu(g, "Steve", (3, 3))
-    assert menus(server) == ["aoe menu Steve Town Center 0:villager_spawn_egg:Villager:50 food · 25 s · queue 0/15"]
+    assert menus(server) == ["aoe menu Steve Town Center 0:villager_spawn_egg:Villager:50 food · 25 s · queue 0/15 "
+                             "1:book:Loom:50 gold · 25 s · research" + FEUDAL.replace("0/2", "1/2")]   # the barracks
 
 
 def test_no_menu_at_a_barracks_that_is_not_complete():

@@ -36,6 +36,7 @@ import json
 import math
 import os
 import re
+import sys
 import textwrap
 import time
 import zlib
@@ -320,10 +321,17 @@ def read_scenario(path):
                    for i, t in enumerate(scn.trigger_manager.triggers) if t.display_as_objective)
     texts["objectives"] = "\n".join(f"- {g}" for _, _, g in goals if g)
     texts["triggers"] = [dict(id=t.trigger_id, name=t.name, enabled=bool(t.enabled), looping=bool(t.looping),
-                              conditions=[dict(type=c.condition_type, timer=c.timer, inverted=bool(c.inverted))
+                              conditions=[dict(type=c.condition_type, timer=c.timer, inverted=bool(c.inverted),
+                                               **({"quantity": c.quantity, "player": c.source_player,
+                                                   "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2],
+                                                   "object": c.object_list, "group": c.object_group,
+                                                   "class": c.object_type}
+                                                  if c.condition_type == IN_AREA else {}))
                                           for c in t.conditions],
                               effects=[dict(type=e.effect_type, message=e.message or "", player=e.source_player,
-                                            time=e.display_time) for e in t.effects])
+                                            time=e.display_time, object=kinds.get(e.object_list_unit_id),
+                                            tile=[e.location_x, e.location_y],
+                                            area=[e.area_x1, e.area_y1, e.area_x2, e.area_y2]) for e in t.effects])
                          for t in scn.trigger_manager.triggers]
 
     objects = []
@@ -2022,6 +2030,7 @@ def set_pos(nbt, x, y, z):
 
 
 MOVED = Counter()
+TICKS = []                  # (time, phase) of each phase end of the last convert(): tools/measure_convert.py (#690)
 
 
 def entity_chunk(cx, cz, ents, cols, vol, passable):
@@ -2134,13 +2143,16 @@ def build_chunk(cx, cz, cols, edits, origin=(0, 0)):
     g = lambda a: a[sl].T[None]          # (1, z, x) for broadcasting against Y
     top, wtop, top_id, sub_id = g(cols.top), g(cols.wtop), g(cols.top_id), g(cols.sub_id)
     ice, deco, sub = g(cols.ice), cols.deco[sl].T, top - g(cols.sub_depth)
-    Y = np.arange(MIN_Y, MAX_Y, dtype=np.int32)[:, None, None]
+    # the terrain passes run only up to the highest ground or water: above it all is air (#701, 2× faster)
+    n = int(np.clip(max(top.max(), wtop.max()) + 1 - MIN_Y, 1, HEIGHT))
+    Y = np.arange(MIN_Y, MIN_Y + n, dtype=np.int32)[:, None, None]
 
-    vol = np.where(Y < sub, np.where(Y < 0, DEEPSLATE, STONE), AIR).astype(np.uint16)
-    vol = np.where((Y >= sub) & (Y < top), sub_id, vol)
-    vol = np.where(Y == top, top_id, vol)
+    vol = np.zeros((HEIGHT, 16, 16), np.uint16)         # AIR
+    low = np.where(Y < sub, np.where(Y < 0, DEEPSLATE, STONE), AIR).astype(np.uint16)
+    low = np.where((Y >= sub) & (Y < top), sub_id, low)
+    low = np.where(Y == top, top_id, low)
     water = (Y > top) & (Y <= wtop)
-    vol = np.where(water, np.where(ice & (Y == wtop), ICE, WATER), vol)
+    vol[:n] = np.where(water, np.where(ice & (Y == wtop), ICE, WATER), low)
     vol[0] = np.where(top[0] > NONE, BEDROCK, AIR)
     if cols.floor > MIN_Y:              # --border diorama, island, table: the map stands on a floor with air under it
         vol[:cols.floor - MIN_Y] = AIR
@@ -2165,23 +2177,29 @@ def build_chunk(cx, cz, cols, edits, origin=(0, 0)):
         vol[ey[soft][free], ez[soft][free], ex[soft][free]] = eid[soft][free]
         vol[ey[hard], ez[hard], ex[hard]] = eid[hard]
 
+    # the scans below look only at the sections with blocks and one row of air over them (AIR = 0: the maximum of
+    # an empty section is 0), so that a lower half of a plant at the top still sees the air above it
+    full = np.flatnonzero(vol.reshape(HEIGHT // 16, 4096).max(1))
+    used = vol[:min(HEIGHT, 16 * (int(full[-1]) + 1) + 1) if len(full) else 16]
+
     # Tall plants: remove an upper half without its lower half (when an object took the place of the lower half)
-    counts = np.bincount(vol.ravel(), minlength=len(B.states))
+    counts = np.bincount(used.ravel(), minlength=len(B.states))
     for lower, upper in TALL_PLANTS:
         if not (counts[lower] or counts[upper]):        # the full scans below are slow: skip them when possible
             continue
-        ys, zs, xs = np.nonzero(vol[1:] == upper)
-        bad = vol[ys, zs, xs] != lower
-        vol[ys[bad] + 1, zs[bad], xs[bad]] = AIR
-        ys, zs, xs = np.nonzero(vol[:-1] == lower)
-        bad = vol[ys + 1, zs, xs] != upper
-        vol[ys[bad], zs[bad], xs[bad]] = SHORT_GRASS
+        ys, zs, xs = np.nonzero(used[1:] == upper)
+        bad = used[ys, zs, xs] != lower
+        used[ys[bad] + 1, zs[bad], xs[bad]] = AIR
+        ys, zs, xs = np.nonzero(used[:-1] == lower)
+        bad = used[ys + 1, zs, xs] != upper
+        used[ys[bad], zs[bad], xs[bad]] = SHORT_GRASS
 
     # Blocks under the water surface are waterlogged, else they leave a dry gap in the water
-    wet = water & (vol != WATER) & (vol != ICE)
+    low = vol[:n]                                       # a view: the water is below n
+    wet = water & (low != WATER) & (low != ICE)
     if wet.any():
-        vals, inv = np.unique(vol[wet], return_inverse=True)
-        vol[wet] = np.array([B.wet(int(v)) for v in vals], np.uint16)[inv]
+        vals, inv = np.unique(low[wet], return_inverse=True)
+        low[wet] = np.array([B.wet(int(v)) for v in vals], np.uint16)[inv]
 
     # Biomes: one per 4x4 block cell, the same for all heights.
     cells = cols.biome[ox + 2:ox + 16:4, oz + 2:oz + 16:4].T            # (z, x) 4x4
@@ -2209,7 +2227,7 @@ def build_chunk(cx, cz, cols, edits, origin=(0, 0)):
     block_entities = []
     be_ids = [i for i in sorted(present) if block_entity_type(B.states[i])]
     for i in be_ids:
-        for y, z, x in zip(*np.nonzero(vol == i)):
+        for y, z, x in zip(*np.nonzero(used == i)):
             pos = (x0 + int(x), int(y) + MIN_Y, z0 + int(z))
             block_entities.append(Compound({
                 "id": String("minecraft:" + block_entity_type(B.states[i])), "keepPacked": Byte(0),
@@ -2369,20 +2387,93 @@ def team_lines(objects, players):
     return load, pulse
 
 
-TIMER, SEND_CHAT, DISPLAY_INSTRUCTIONS = 10, 3, 20      # AoE2 condition and effect IDs (AoE2ScenarioParser)
+TIMER, SEND_CHAT, DISPLAY_INSTRUCTIONS, IN_AREA = 10, 3, 20, 5   # AoE2 condition and effect IDs (AoE2ScenarioParser)
+CREATE_OBJECT, REMOVE_OBJECT = 11, 15
 
 
-def trigger_files(triggers):
-    """(load lines, files) for the triggers that only have timer conditions (#648): one function per trigger,
-    which the load function schedules at the AoE2 time (all timers must pass: the largest). "Send Chat" is a
-    tellraw, "Display Instructions" a subtitle for its display time. A disabled trigger does not run."""
-    load, files = [], {}
+def turn_area(area, size, k):
+    """The tile area [x1, y1, x2, y2] (both ends included, -1: the whole map) after k quarter turns (turn_tile)."""
+    if min(area) < 0:
+        return area
+    (a, b), (c, d) = (turn_tile(x + 0.5, y + 0.5, size, k) for x, y in (area[:2], area[2:]))
+    return [int(min(a, c)), int(min(b, d)), int(max(a, c)), int(max(b, d))]
+
+
+def area_selector(c, T):
+    """The entity selector of the units of the player of an "Objects in Area" condition: the blocks of the tiles
+    x1..x2, y1..y2 (z), all heights. An area of -1 is the whole map. A unit type filter is the tag aoe2mc.t<id>
+    of the units (#681); the "object" of an effect (a name, #656) is not a filter here."""
+    obj = c.get("object")
+    sel = [f"tag=aoe2mc.p{c['player']}"] + [f"tag=aoe2mc.t{obj}"] * (isinstance(obj, int) and obj >= 0)
+    if min(c["area"]) >= 0:
+        x1, y1, x2, y2 = c["area"]
+        x1, x2, y1, y2 = min(x1, x2), max(x1, x2), min(y1, y2), max(y1, y2)
+        sel.append(f"x={x1 * T},y={MIN_Y},z={y1 * T},dx={(x2 - x1 + 1) * T - 1},dy={HEIGHT - 1},"
+                   f"dz={(y2 - y1 + 1) * T - 1}")
+    return f"@e[{','.join(sel)}]"
+
+
+def object_lines(t, e, T, ground, players, stats):
+    """The commands of "Create Object" and "Remove Object" (#656): a summon of the entity of units.make_entity at
+    the middle of the tile, or a kill of the units of the player and type in the area (area_selector).
+    Buildings and other objects are not supported yet: they count in stats."""
+    kind, name = e.get("object") or (None, None)
+    if e["type"] == CREATE_OBJECT and min(e.get("tile", [-1])) >= 0:
+        x, z = (int((v + 0.5) * T) for v in e["tile"])
+        o = dict(name=name, player=max(e["player"], 0), rotation=math.pi / 2)
+        nbt = units.make_entity(o, players or {}, (x + 0.5, 0.0, z + 0.5), np.random.default_rng(t["id"])) \
+            if kind in ("U", "H") and 0 <= x < ground.shape[0] and 0 <= z < ground.shape[1] else None
+        if nbt is None:
+            stats["create (not supported yet)"] += 1
+            return []
+        stats["create"] += 1
+        kind = str(nbt.pop("id"))
+        del nbt["Pos"]
+        parts = [nbt]                                                  # Minecraft gives new UUIDs: a looping
+        while parts:                                                   # trigger or two effects never clash
+            part = parts.pop()
+            part.pop("UUID", None)
+            parts += list(part.get("Passengers", []))
+        return [f"summon {kind} {x + 0.5} {int(ground[x, z])} {z + 0.5} {nbt.snbt()}"]
+    if e["type"] == REMOVE_OBJECT and min(e.get("area", [-1])) >= 0:
+        at, top = area_selector(e, T), None
+        if e["player"] <= 0:                                           # Gaia units have no player tag
+            at = re.sub(r"tag=aoe2mc\.p-?\d+,?", "", at)
+        if name is not None:
+            nbt = units.make_entity(dict(name=name, player=0), {}, (0.0, 0.0, 0.0), np.random.default_rng(0)) \
+                if kind in ("U", "H") else None
+            if nbt is None:
+                stats["remove (not supported yet)"] += 1
+                return []
+            top = units.top_entity(nbt)
+            at = f"@e[type={top['id']},{at[3:]}" if at != "@e[]" else f"@e[type={top['id']}]"
+        stats["remove"] += 1
+        ride = [f"execute as {at} on vehicle run kill @s"] if top is not None and top is not nbt else []
+        return ride + [f"kill {at}"]                                       # a rider: its mount goes too
+    return []
+
+
+def trigger_files(triggers, T=4, ground=None, players=None, stats=None):
+    """(load lines, files) for the triggers that only have timer conditions (#648) or only "Objects in Area"
+    conditions (#649): one function per trigger. The load function schedules a timer trigger at the AoE2 time (all
+    timers must pass: the largest). The tick function runs an area trigger when units of its player are in all its
+    areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
+    the units leave an area. "Send Chat" is a tellraw, "Display Instructions" a subtitle for its display time;
+    "Create Object" and "Remove Object": object_lines (#656). A disabled trigger does not run."""
+    load, files, tick = [], {}, []
+    stats = Counter() if stats is None else stats
+    ground = np.zeros((0, 0), np.int16) if ground is None else ground
     for t in triggers:
         conds = t["conditions"]
-        if not t["enabled"] or not conds or any(c["type"] != TIMER or c["inverted"] for c in conds):
+        kinds = {(c["type"], c["inverted"]) for c in conds}
+        if not t["enabled"] or not conds or kinds not in ({(TIMER, False)}, {(IN_AREA, False)}) or \
+                any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds):   # unit classes: not yet
             continue
         lines = []
         for e in t["effects"]:
+            if e["type"] in (CREATE_OBJECT, REMOVE_OBJECT):
+                lines += object_lines(t, e, T, ground, players, stats)
+                continue
             msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()   # AoE2 color tags
             if not msg:
                 continue
@@ -2394,18 +2485,41 @@ def trigger_files(triggers):
                 lines += [f"title @a times 10 {ticks} 20", f"title @a subtitle {text}", 'title @a title ""']
         if not lines:
             continue
+        fn, n = f"aoe2mc:trigger/{t['id']}", t["id"]
+        if conds[0]["type"] == IN_AREA:
+            tests, unless = [], []
+            for i, c in enumerate(conds):
+                sel, q = area_selector(c, T), max(c["quantity"], 1)
+                if q == 1:
+                    tests.append(f"if entity {sel}")
+                    unless.append(f"unless entity {sel}")
+                else:                                                  # count the units: q or more
+                    tick.append(f"execute store result score #{n}.{i} aoe_trig if entity {sel}")
+                    tests.append(f"if score #{n}.{i} aoe_trig matches {q}..")
+                    unless.append(f"unless score #{n}.{i} aoe_trig matches {q}..")
+            tick.append(f"execute {' '.join(tests)} unless score #{n} aoe_trig matches 1 run function {fn}")
+            if t["looping"]:
+                tick += [f"execute {u} run scoreboard players reset #{n} aoe_trig" for u in unless]
+            lines.append(f"scoreboard players set #{n} aoe_trig 1")
+            files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines) + "\n"
+            continue
         ticks = max(20 * max(c["timer"] for c in conds), 1)          # a schedule needs at least 1 tick
-        run = f"schedule function aoe2mc:trigger/{t['id']} {ticks}t replace"
-        files[f"data/aoe2mc/function/trigger/{t['id']}.mcfunction"] = "\n".join(lines + [run] * t["looping"]) + "\n"
+        run = f"schedule function {fn} {ticks}t replace"
+        files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines + [run] * t["looping"]) + "\n"
         load.append(run)
+    if tick:
+        load.insert(0, "scoreboard objectives add aoe_trig dummy")
+        files["data/minecraft/tags/function/tick.json"] = {"values": ["aoe2mc:tick"]}
+        files["data/aoe2mc/function/tick.mcfunction"] = "\n".join(tick) + "\n"
     return load, files
 
 
-def write_datapack(out, objects, ground, biome_names=(), ambience="basic", players=None, triggers=()):
+def write_datapack(out, objects, ground, biome_names=(), ambience="basic", players=None, triggers=(), T=4,
+                   trigger_stats=None):
     """datapacks/aoe2mc: a function every 2 s plays a work sound at each building with a player near it
     (docs/datapack.md). Fixed positions, no marker entities: the check costs nothing that /tick query shows.
     Ambience (#219): particles and sounds near the players by biome; "full" also writes the custom biomes, "off"
-    writes no pack (and so no teams). Teams: `team_lines`. Timer triggers: `trigger_files`.
+    writes no pack (and so no teams). Teams: `team_lines`. Timer and area triggers: `trigger_files`.
     Returns (work sounds, ambience lines)."""
     root = os.path.join(out, "datapacks", "aoe2mc")
     if ambience == "off":           # the world as before #188: no pack
@@ -2435,7 +2549,7 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
     lines += ambience_lines(biome_names)
     groups = sorted({n.split(":")[1] for n in biome_names if n.startswith("aoe2mc:")})
     team_load, team_pulse = team_lines(objects, players or {})
-    trigger_load, trigger_fns = trigger_files(triggers)
+    trigger_load, trigger_fns = trigger_files(triggers, T, ground, players, trigger_stats)
     if not lines and not groups and not team_load and not trigger_load:   # the server finds a new pack by itself
         return 0, 0
     files = {
@@ -2673,6 +2787,32 @@ def block_color(state):
 # --------------------------------------------------------------------------------------------
 # Main
 # --------------------------------------------------------------------------------------------
+class Progress:
+    """One line that changes in place (\\r) during a long phase, at most each `every` s, so that a large map does not
+    look stuck (#691). Nothing when the output is not a terminal (CI, tests, a pipe): the output stays the same."""
+
+    def __init__(self, label, total, out=None, every=2.0, clock=time.time):
+        self.out = out or sys.stdout
+        self.label, self.total, self.every, self.clock = label, total, every, clock
+        self.on = total > 0 and self.out.isatty()
+        self.t0 = self.last = clock()
+        self.width = 0
+
+    def step(self, done):
+        if not self.on or self.clock() - self.last < self.every:
+            return
+        self.last = now = self.clock()
+        text = f"\r  {self.label} {done}/{self.total} ({100 * done // self.total} %), {now - self.t0:.0f} s"
+        self.width = max(self.width, len(text))
+        self.out.write(text)
+        self.out.flush()
+
+    def close(self):        # clear the line, so that the next print starts at column 0
+        if self.width:
+            self.out.write("\r" + " " * self.width + "\r")
+            self.out.flush()
+
+
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
             barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False,
             garrison="outside", border_design="diorama", ambience="basic", at=None):
@@ -2699,9 +2839,11 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     rng = np.random.default_rng(seed)
     t0 = time.time()
     times, clock = {}, [t0]
+    TICKS[:] = [(t0, "start")]
 
     def tick(phase):        # add the time since the last tick to the phase (--verbose)
         now = time.time()
+        TICKS.append((now, phase))
         times[phase] = times.get(phase, 0.0) + now - clock[0]
         clock[0] = now
 
@@ -2716,6 +2858,10 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
             raise OptionError("--at needs a recorded game (.aoe2record)" if not record else
                               "--at: mgz cannot read the commands of this recorded game (only its start state)")
         objects, at_stats = apply_timeline(objects, timeline, at)
+    for c in (c for t in texts.get("triggers", ()) for c in t["conditions"] + t["effects"] if "area" in c):
+        c["area"] = turn_area(c["area"], size, buildings.TURN)
+    for e in (e for t in texts.get("triggers", ()) for e in t["effects"] if min(e.get("tile", [-1])) >= 0):
+        e["tile"] = [int(v) for v in turn_tile(e["tile"][0] + 0.5, e["tile"][1] + 0.5, size, buildings.TURN)]
     for e in timeline or ():
         for k in ("tile", "end"):
             if k in e:
@@ -2781,8 +2927,10 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     top_view = np.zeros((cols.width, cols.width), np.uint16)     # for icon.png and preview.png
     ground = np.zeros((cols.width, cols.width), np.int16)        # y where a unit stands, for aoe2mc.json
     ys = np.arange(MIN_Y, MAX_Y - 1)[:, None, None]
+    progress = Progress("chunks", nchunks * nchunks + len(rim))
     for cx in range(nchunks):
         for cz in range(nchunks):
+            progress.step(cx * nchunks + cz)
             data, vol = build_chunk(cx, cz, cols, per_chunk.get((cx, cz)))
             regions.setdefault((cx >> 5, cz >> 5), {})[(cx & 31, cz & 31)] = data
             solid = (vol != AIR) & (vol != BARRIER)
@@ -2799,9 +2947,11 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
                 if ed:
                     entity_regions.setdefault((cx >> 5, cz >> 5), {})[(cx & 31, cz & 31)] = ed
                 tick("units")
-    for cx, cz in sorted(rim):
+    for i, (cx, cz) in enumerate(sorted(rim)):
+        progress.step(nchunks * nchunks + i)
         data, _ = build_chunk(cx, cz, outside, per_chunk[(cx, cz)], (cx * 16, cz * 16))
         regions.setdefault((cx >> 5, cz >> 5), {})[(cx & 31, cz & 31)] = data
+    progress.close()
     tick("chunks")
     for (rx, rz), chunks in regions.items():
         write_region(os.path.join(dim, "region", f"r.{rx}.{rz}.mca"), chunks)
@@ -2810,11 +2960,12 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
 
     write_level_dat(os.path.join(out, "level.dat"), name, spawn, yaw, cols.n)
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline)
-    triggers = texts.get("triggers", [])
-    n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers)
-    k = len(trigger_files(triggers)[1]) if ambience != "off" else 0
+    triggers, tstats = texts.get("triggers", []), Counter()
+    n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats)
+    k = sum("/trigger/" in f for f in trigger_files(triggers, T, ground, players)[1]) if ambience != "off" else 0
     if k:
-        print(f"  timer triggers (chat and instructions): {k}")
+        print(f"  timer and area triggers (chat, instructions, objects): {k}"
+              + "".join(f", {v} {w}" for w, v in sorted(tstats.items())))
     if n:
         print(f"  work sounds at buildings: {n}")
     if amb:

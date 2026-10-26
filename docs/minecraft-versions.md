@@ -156,3 +156,7 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - The entity tag `Invisible` is only for armor stands (and item frames): the server drops it on a slime or another mob
   without an error (#636). Hide a mob with `active_effects:[{id:"minecraft:invisibility",duration:-1,show_particles:0b}]`.
   A spectator sees invisible mobs: check them with `tools/mc_shot.py --player` (adventure mode).
+- A world that the Paper server of `game/run.py` opened fails `tools/mc_check.py` ("Missing data pack paper",
+  "Overworld settings missing"): Paper changes `level.dat`. Convert again before a vanilla check (#656).
+- RCON `data get entity U CustomName` cuts deep compounds (`{extra: [{...}, " ", {...`): read one part with a path,
+  for example `CustomName.extra[2].text`. The answer starts with the display name of the entity (#661).

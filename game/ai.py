@@ -22,7 +22,7 @@ from replay import SPEEDS  # noqa: E402
 
 # Walk speed on a Minecraft path, blocks per second = WALK * movement_speed ** 2 (the mob input is the speed, and
 # the step is the input times the speed). Measured on Paper 26.3 on flat stone, attribute 0.15 to 0.6: zombie 43.1
-# to 44.1, cow 43.0, horse 39.8 (#436). Villagers walk with their brain, not with goals: about 4 times slower.
+# to 44.1, cow 43.0, horse 39.8 (#436), villager 42.3 to 44.3 (#437: NoAI villagers on stone bricks, as the zombies).
 WALK = 43.4
 
 
@@ -40,9 +40,9 @@ def speed_command(uuid, name, T, rate=NORMAL):
     return f"attribute {uuid} minecraft:movement_speed base set {movement_speed(name, T, rate)}"
 
 
-def move(game, uuid, name, T, x, y, z):
+def move(game, uuid, name, T, x, y, z, rate=NORMAL):
     """Walk unit `uuid` (AoE2 unit `name`) to block position (x, y, z). Returns the answer of the plugin."""
-    game.command(speed_command(uuid, name, T))
+    game.command(speed_command(uuid, name, T, rate))
     return game.command(f"aoe moveto {uuid} {x} {y} {z}")
 
 

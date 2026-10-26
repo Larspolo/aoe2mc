@@ -185,11 +185,15 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - Paper 26.3 (#436): remove mob goals by `GoalKey` (`MobGoals.removeGoal(mob, key)`), on each order: removal by the
   goal object, and a removal only after `setAI(true)`, missed goals. `Zombie#setShouldBurnInDay(false)` does nothing:
   set the attribute `burning_time` to 0. `aoe goals <selector>` lists the goal keys of a unit.
-- Mob walk speed on a path: blocks per second = 43.4 * `movement_speed` ** 2 (zombie, cow, horse). Villagers walk
-  with their brain (no goals): 4 times slower, and the MobGoals API does not stop their wandering (#436).
+- Mob walk speed on a path: blocks per second = 43.4 * `movement_speed` ** 2 (zombie, cow, horse, and villager: 42 to 44
+  at 0.15 to 0.6 on stone bricks, #437; the "4 times slower" of #436 did not repeat). Villagers have a brain, not
+  goals: the MobGoals API does not stop them. After an order they walk to each other: the plugin sets NoAI at the goal (#438), `aoe stop` too.
 - `aoe moveto` of many units in a live replay (#438): an arrived villager strolls away (its brain), so the plugin sets
   NoAI on it at the goal; a goal more than about 100 blocks away gets no path (follow range 128): the replay sends
   legs of `replay.LEG` path cells. Check walks on a real server with `data get entity <uuid> Pos` after the replay.
+- Paper (Spigot) entity activation range: without a player near, a unit ticks only now and then. A villager then does
+  not walk or fall after `aoe moveto`, at random (#437: a farmer at the far end of its farm). `run.Game` writes a
+  `spigot.yml` with all ranges 0 (always active, as in vanilla).
 - A Paper `Goal` (MobGoals API) gets `tick()` only on each 2nd server tick: time a cooldown with
   `Bukkit.getCurrentTick()`, not with a counter in `tick()` (#515: the archer shot each 2.4 s, not 1.2 s).
 - A vanilla melee goal hits only a target in sight of its eye (#517): the stand-in slime of a building has its eye in
@@ -202,3 +206,11 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - A real client joins the Paper server of `run.Game` (`online-mode=false`) with `--quickPlayMultiplayer 127.0.0.1:PORT`
   (`mc_shot.Client`, #627). In an open inventory the pointer is free: `xdotool mousemove` + `click` hits the slots.
   A Paper display name of an item is italic by default (Adventure).
+- A building target (#660): `damage <uuid> 1 ... by <mob>` answers "Target is invulnerable" and the plugin counts no hit
+  (most runs): hit it with `aoe attack`. `execute if entity <uuid>[tag=T]` is not valid syntax and never passes:
+  use `@e[type=slime,tag=T]`. A NoAI zombie burns in the sun at y 200: use a `husk`.
+- `summon skeleton` with NBT gets no bow: `RangedEntity#rangedAttack` then throws "Invalid weapon firing an arrow"
+  and the server removes the mob ("No entity was found" right after the order). Give
+  `equipment:{mainhand:{id:"minecraft:bow",count:1}}`. A Java exception of the plugin is only in `game.server.log` (#608).
+- An arrow at the stand-in slime of a building sticks in the walls first (#608): the range goal counts each shot itself.
+- A horse has no attack goal, and `aoe attack` on it does nothing. Give the target to the rider: a riding mob walks with the navigation of its vehicle (vanilla `Mob#getNavigation`), so the horse follows, and its follow range limits the path search (#710).

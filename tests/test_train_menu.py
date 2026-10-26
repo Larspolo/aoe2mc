@@ -6,6 +6,8 @@ from test_train import setup
 
 from game import train
 
+FEUDAL = " 2:bell:Feudal Age:500 food · 130 s · needs 2 of barracks, mill, lumber camp, mining camp, dock (0/2)"   # the age item without its buildings (#672)
+
 
 def menus(server):
     """The decoded "aoe menu" commands that the server got."""
@@ -16,7 +18,8 @@ def test_a_right_click_on_the_town_center_opens_its_menu():
     server, g = setup()
     for name in g.clicks():
         g.click(name)
-    assert menus(server) == ["aoe menu Steve Town Center 0:villager_spawn_egg:Villager:50 food · 25 s · queue 0/15"]
+    assert menus(server) == ["aoe menu Steve Town Center 0:villager_spawn_egg:Villager:50 food · 25 s · queue 0/15 "
+                             "1:book:Loom:50 gold · 25 s · research" + FEUDAL]
     assert "Steve" in g.menus and g.stock["food"] == 60 and not any(g.queues.values())
 
 
@@ -31,8 +34,8 @@ def test_a_click_queues_one_and_the_menu_shows_the_new_count():
     train.open_menu(g, "Steve", (3, 3))
     server.scores["aoe_menu"] = 1
     g.clicks()
-    assert len(g.queues[2, 5, 2, 5]) == 1 and g.stock["food"] == 950
-    assert menus(server)[-1].endswith("queue 1/15") and "Steve" in g.menus   # the menu stays open
+    assert " queue 1/15 1:book:Loom" in menus(server)[-1] and "Steve" in g.menus   # the menu stays open
+    assert menus(server)[-1].endswith("queue 1/15 1:book:Loom:50 gold · 25 s · research" + FEUDAL) and "Steve" in g.menus   # the menu stays open
 
 
 def test_a_shift_click_queues_five():
@@ -41,7 +44,7 @@ def test_a_shift_click_queues_five():
     server.scores["aoe_menu"] = -1                                     # the plugin: -(slot + 1) for a shift click
     g.clicks()
     assert len(g.queues[2, 5, 2, 5]) == 5 and g.stock["food"] == 750
-    assert menus(server)[-1].endswith("queue 5/15")
+    assert menus(server)[-1].endswith("queue 5/15 1:book:Loom:50 gold · 25 s · research" + FEUDAL)
 
 
 def test_a_shift_click_queues_as_many_as_the_food_and_the_queue_allow():
@@ -54,7 +57,7 @@ def test_a_shift_click_queues_as_many_as_the_food_and_the_queue_allow():
         train.order(g, "Steve", rect, 0, shift=True)
     assert len(g.queues[rect]) == train.QUEUE == 15
     assert train.order(g, "Steve", rect, 0) == 0 and any("queue is full" in c for c in server.log)
-    assert menus(server)[-1].endswith("queue 15/15")
+    assert menus(server)[-1].endswith("queue 15/15 1:book:Loom:50 gold · 25 s · research" + FEUDAL)
 
 
 def test_a_click_on_an_empty_slot_queues_nothing():
