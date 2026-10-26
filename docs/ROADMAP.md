@@ -30,7 +30,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:fight` Military units fight: AoE2 attack, armor, range and hit points (epic #395)
 - [x] `play:train` Train villagers at the town center: cost, queue, population limit (epic #396)
 - [ ] `play:bot` A scripted bot plays player 2 (epic #397)
-- [ ] `play:scale` Measure and raise the number of units that the program can move (epic #398)
+- [x] `play:scale` Measure and raise the number of units that the program can move (epic #398)
 - [x] `play:menu` Choose the options of a building and the build menu in a chest menu (epic #618, owner decision)
 - [x] `play:health` Health indication: hit points over each unit and building, a boss bar for the selected unit, damage effects (#657)
 - [x] `play:military-train` Train all units at their buildings (barracks, archery range, stable, castle) with a queue and a rally point (epic #704)
@@ -40,7 +40,8 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `play:feedback` Show what the player points at and the result of each action (epic #793)
 - [ ] `play:control` Select and order many units: a selection box, groups, formations, an idle villager item (epic #742)
 - [ ] `play:stances` Unit stances (aggressive, defensive, stand ground, no attack): an idle unit attacks the enemies in its line of sight and comes back
-- [ ] `play:garrison` Garrison units in buildings; the town center and castles shoot arrows (epic #810)
+- [x] `play:garrison` Garrison units in buildings (epic #810)
+- [ ] `play:arrows` The town center, towers and castles shoot arrows at enemies in range, more arrows with a garrison
 - [ ] `play:win` Win and lose: destroy all buildings, a wonder, relics; a title for the end of the game
 - [ ] `play:monks` Monks heal and convert, relics in monasteries
 - [ ] `play:market` Market trade and trade carts

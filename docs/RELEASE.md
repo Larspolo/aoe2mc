@@ -62,6 +62,7 @@ Bug reserve: 0.3
 | `play:feedback` | B | | | |
 | `play:control` | B | | | |
 | `play:garrison` | B | | | |
+| `play:arrows` | C | | | |
 | `play:win` | B | 3 | | |
 | `play:walls` | A | 5 | | |
 | `play:civs` | C | | | |
