@@ -2861,6 +2861,9 @@ def place_building(E, cols, B, o, players, walls, gates):
             if cols.inside(bx, bz) and cols.wtop[bx, bz] > cols.top[bx, bz]:
                 rails.append(side)
         ctx["rails"] = rails
+        ns = sum((tx, ty + d) in WOOD_BRIDGE_TILES for d in (-1, 1))
+        ew = sum((tx + d, ty) in WOOD_BRIDGE_TILES for d in (-1, 1))
+        ctx["along_z"] = ns > ew or (ns == ew and ("w" in rails or "e" in rails))
     if fn is wall_segment:
         tx, ty = int(ux), int(uy)
         ctx["neighbours"] = ((tx, ty - 1) in walls, (tx, ty + 1) in walls, (tx - 1, ty) in walls, (tx + 1, ty) in walls)
@@ -4008,16 +4011,21 @@ def pagan_shrine(c, w, st, col, T, ctx):
 
 
 def wooden_bridge(c, w, st, col, T, ctx):
-    """One tile of a wooden bridge: a plank deck on posts, railings on open water sides."""
-    deck = ctx["deck"]
-    c.box(0, w, deck, deck + 1, 0, w, "spruce_planks")
+    """One tile of a wooden bridge: a deck of boards across the bridge on piles. Like the game, no railings:
+    on open water sides the piles rise over the deck as posts, every second block."""
+    deck, along_z = ctx["deck"], ctx.get("along_z", False)
+    for k in range(w):                                    # boards across the bridge: the seams show the direction
+        board = "spruce_planks" if k % 2 else f"stripped_spruce_log[axis={'x' if along_z else 'z'}]"
+        if along_z:
+            c.box(0, w, deck, deck + 1, k, k + 1, board)
+        else:
+            c.box(k, k + 1, deck, deck + 1, 0, w, board)
     for x, z in ((0, 0), (w - 1, 0), (0, w - 1), (w - 1, w - 1)):
-        c.box(x, x + 1, -10, deck, z, z + 1, "spruce_log")
+        c.box(x, x + 1, -10, deck, z, z + 1, "stripped_oak_log")
     for side in ctx.get("rails", ()):
-        if side == "n": c.box(0, w, deck + 1, deck + 2, 0, 1, "spruce_fence[east=true,west=true]")
-        if side == "s": c.box(0, w, deck + 1, deck + 2, w - 1, w, "spruce_fence[east=true,west=true]")
-        if side == "w": c.box(0, 1, deck + 1, deck + 2, 0, w, "spruce_fence[north=true,south=true]")
-        if side == "e": c.box(w - 1, w, deck + 1, deck + 2, 0, w, "spruce_fence[north=true,south=true]")
+        for k in range(0, w, 2):
+            x, z = {"n": (k, 0), "s": (k, w - 1), "w": (0, k), "e": (w - 1, k)}[side]
+            c.box(x, x + 1, -10, deck + 2, z, z + 1, "stripped_oak_log")
 
 
 def fish_trap(c, w, st, col, T, ctx):
