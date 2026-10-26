@@ -4,7 +4,7 @@ timer wins. A wonder of the scenario (it has the target entity of combat.buildin
 WONDER of a player (tick() gives it a target, so units can destroy it) start a countdown. Each wonder has its own
 countdown; the boss bar of a player shows the lowest one to all players, as AoE2 shows it (Minecraft feature: one
 `bossbar` per player). When the target of a wonder is gone (the plugin removes it at 0 hit points, or cheats.destroy),
-its countdown stops; without another wonder the bar of the player goes.
+its countdown stops; without another wonder the bar of the player goes. At the end of the game all bars go (close).
 The timer is in AoE2 years (1 year = 5 game seconds) and depends on the map size (AoE2 wiki, "Wonder": 200 years up to
 Medium, 300 Normal, 350 Large, 400 Huge). The program counts game time: tick() adds dt (game seconds) at each call,
 gather.Gather.run gives it tick × NORMAL, as for the training queues. At the end, the owner wins: the human player sees
@@ -43,6 +43,12 @@ def found(g):
             x0, x1, z0, z1 = s["footprint"]
             out[combat.target_uuid([x0, z0, x1, z1])] = (s["player"], s)
     return out
+
+
+def close(g):
+    """Remove the boss bars of all players: the game ended (cheats.end), no countdown goes on (#1178)."""
+    for n in vars(g).pop("wonder_shown", {}):
+        g.command(f"bossbar remove {bar(n)}")
 
 
 def tick(g, dt):
