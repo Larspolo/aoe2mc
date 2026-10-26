@@ -82,6 +82,7 @@ def test_the_classic_unique_units_exist_on_a_server(tmp_path):
         for civ, name in sorted(CLASSIC.items()):
             data["players"]["1"]["civ"] = civ
             g = gather.Gather(game, data, tick=0.25, start={}).setup()
+            g.techs.update(train.build.AGE_TECHS[:2])                    # the Castle Age (#1082)
             g.stock.update(food=500, wood=500, gold=500)
             rect, = [r for r, b in train.homes(g).items() if b == "CASTLE"]
             answers.clear()

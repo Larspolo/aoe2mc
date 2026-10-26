@@ -44,7 +44,41 @@ ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw
 AGE_TECHS = ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE")           # the technologies of the ages, in order
 AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_TOWER",   # the AoE2 age of each
                      "ARCHER", "SKIRMISHER", "SPEARMAN", "SCOUT_CAVALRY",                # building, unit and age
-                     "CASTLE_AGE"), 1) | {"IMPERIAL_AGE": 2}                             # (0: Dark)
+                     "CASTLE_AGE"), 1) | {"IMPERIAL_AGE": 2} \
+    | dict.fromkeys((                                                  # the Castle Age (#1082): buildings and units
+        "BATTERING_RAM",
+        "CAMEL_RIDER",
+        "CASTLE",
+        "CROSSBOWMAN",
+        "ELITE_SKIRMISHER",
+        "HEAVY_CAVALRY_ARCHER",
+        "KNIGHT",
+        "LIGHT_CAVALRY",
+        "LONG_SWORDSMAN",
+        "MANGONEL",
+        "MONASTERY",
+        "MONK",
+        "PIKEMAN",
+        "SCORPION",
+        "SIEGE_WORKSHOP",
+        "UNIVERSITY",
+    ), 2) | dict.fromkeys((                                           # the Imperial Age (unique units: train.UNIQUE)
+        "ARBALESTER",
+        "BOMBARD_CANNON",
+        "BOMBARD_TOWER",
+        "CAPPED_RAM",
+        "CAVALIER",
+        "CHAMPION",
+        "HALBERDIER",
+        "HEAVY_CAMEL_RIDER",
+        "HUSSAR",
+        "KEEP",
+        "ONAGER",
+        "PALADIN",
+        "SIEGE_RAM",
+        "TREBUCHET",
+        "TWO_HANDED_SWORDSMAN",
+    ), 3)                                                              # (0: Dark)
 GHOST = 400                                                        # block displays of one ghost: a coarser shape above
 LOCKED = "gray_dye"                                                # the item of a locked building or unit
 

@@ -75,6 +75,13 @@ can prepare and guide it:
     Reply: <what the owner must write on the ticket>
 
 Leave out `World` and `Start` when the ticket needs no world.
+A check of a live replay gives one line per moment that the owner watches, and one per task without a time;
+the `human` skill gives them to `game/watch.py` (#1123). The place is `chopper`, `unit:NAME`, `building:NAME` or
+`tile:X,Y`; `end` is the end of the replay:
+
+    Watch: 3:00 | chopper | Do the walk, the turn to the tree and the particles look right?
+    Task: Right click the ender pearl, then click a jump in the menu | Is the wait with "Jump to ..." acceptable?
+    Watch: end | building:TOWN_CENTER | Is the end clear?
 
 A check ticket ("check X in the game") starts without `needs-human`: an agent runs the check first (`verify`, level 4),
 comments the results and screenshots, and then adds `needs-human` with the list of what only a person can check (#580).
