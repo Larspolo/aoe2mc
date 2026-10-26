@@ -52,7 +52,8 @@ Find code by function name with Grep. Do not read the large files from start to 
 - `scx.py` – reader of old scenarios (`.scx` format 1.21): map, players, objects (#311); `aoe2mc.read_scx` converts it (#312).
 - `units.py` – `classify()` (AoE2 unit name → entity description), `make_entity()`, `pretty()`.
 - `tools/` – test and debug tools (scenarios, world reader, 3D render, Minecraft data, validation).
-- `game/` – the game program (#137): `run.Game` starts a server with RCON on the world, `rcon.Rcon` sends commands,
+- `game/` – the game program (#137): `run.Game` starts a Paper server with RCON on the world, `rcon.Rcon` sends commands,
+  `plugin/` is the Paper plugin (Java, Gradle wrapper; `run.py` builds it): `aoe moveto`, `aoe attack` with Minecraft path finding (#435),
   `gather.Gather` lets villagers gather wood, food, gold and stone (#138, #391, #390, #392: clicks, paths on `aoe2mc.json` "ground", sidebar),
   `build` places construction sites (#417), `replay.Replay` plays the "timeline" of a recorded game (#374: buildings, chat, ages).
 - `tests/` – pytest. `conftest.py` has the `tiny_world` fixture (one conversion per session).
