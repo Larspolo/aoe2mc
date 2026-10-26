@@ -340,6 +340,8 @@ GENERATORS = {"arabia": ARABIA,
 WALLS = {"arena": 23}           # the radius in tiles of the stone wall circle around each player (outside START)
 BAND = 6                        # the forest inside the wall: tiles of width, on the half away from the map middle
 PATHS = {"black_forest": 1}     # the half width in tiles of the open path from each player to the middle
+WOODS = {"arabia": (10, 30, 3)} # the wood line of each player (tiles from the town center, forest tiles) and its
+                                # single trees (stragglers, at 4 to 6 tiles), as in AoE2 (#1144)
 
 
 def walls(d, r, rng):
@@ -392,7 +394,10 @@ def random_map(kind, seed, players=2):
         cx, cy = st["x"], st["y"]
         used[max(0, cx - 3):cx + 3, max(0, cy - 3):cy + 3] = True       # the 4 × 4 town center and a path around it
         objects.append({"name": "TOWN_CENTER", "player": st["player"], "x": cx, "y": cy})
-        for name, count, dist, own in START:
+        if kind in WOODS:
+            woodline(terrain, used, (cx, cy), WOODS[kind][:2], rng)
+        start = START + (((FOREST_TREES[TERRAINS["FOREST"]], 1, 5, 0),) * WOODS[kind][2] if kind in WOODS else ())
+        for name, count, dist, own in start:
             turn = rng.uniform(0, 2 * np.pi)
             for k in range(36):                                          # 36 directions, from a random one
                 a = turn + k * np.pi / 18
@@ -405,5 +410,27 @@ def random_map(kind, seed, players=2):
             for t in cells:
                 used[max(0, t[0] - 1):t[0] + 2, max(0, t[1] - 1):t[1] + 2] = True
                 objects.append({"name": name, "player": st["player"] * own, "x": t[0] + 0.5, "y": t[1] + 0.5})
+    d["terrain"] = terrain.tolist()
     d["objects"] = objects + trees(terrain)
     return d
+
+
+def woodline(terrain, used, tc, wood, rng):
+    """A forest clump of wood[1] tiles that grows (grow) from a free tile at wood[0] tiles from the town center tc,
+    only on free land 7 to 13 tiles from it: the near wood of a player."""
+    n, (dist, count) = terrain.shape[0], wood
+    x, y = np.mgrid[0:n, 0:n] + 0.5
+    r = np.hypot(x - tc[0], y - tc[1])
+    free = (r >= 7) & (r <= 13) & ~used
+    turn = rng.uniform(0, 2 * np.pi)
+    for k in range(36):
+        a = turn + k * np.pi / 18
+        c = (int(tc[0] + dist * np.cos(a)), int(tc[1] + dist * np.sin(a)))
+        if 0 <= min(c) and max(c) < n and free[max(0, c[0] - 2):c[0] + 3, max(0, c[1] - 2):c[1] + 3].all():
+            break
+    else:
+        return                                                           # no space: no wood line
+    mark = np.full((n, n), -1, np.int32)
+    grow(mark, [{"id": 0, "cells": [c], "target": count, "clump": 15}], free, rng)
+    terrain[mark >= 0] = TERRAINS["FOREST"]
+    used[mark >= 0] = True
