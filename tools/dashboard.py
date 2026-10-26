@@ -147,9 +147,9 @@ def process_changes(prs, now, hours=24):
                and datetime.datetime.fromisoformat(p["merged_at"].replace("Z", "+00:00")) >= since)
 
 
-def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now):
+def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now, unanswered=None):
     """The new body of the status issue. comments: {issue number: comments} for the needs-human and
-    in-progress issues."""
+    in-progress issues. unanswered: the owner comments without a lock (`tools/feedback.py`, #971)."""
     nxt = candidates(issues, now=now)[:5]
     issues = [i for i in issues if "pull_request" not in i]
     state = re.search(r"<!-- agent-state:.*?-->", old_body or "")
@@ -189,6 +189,11 @@ def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now)
     if out[-1] == "### Recently done":
         out.append("- nothing")
     out += ["", f"Process changes (24 h): {process_changes(closed_prs, now)} merged PRs with the label `process`"]
+    if unanswered is not None:
+        from feedback import HOURS, issue_number           # feedback imports this module: import at the call
+        out.append(f"Owner comments without an answer ({HOURS:g} h): {len(unanswered)}" + "".join(
+            f" #{n}" for n in dict.fromkeys(issue_number(c) for c in unanswered)) +
+            " (`tools/feedback.py`: the next run answers them)" * bool(unanswered))
 
     out += ["", "### Process changes", process.group(1).strip() if process else "- none"]
     out += ["", f"_Updated {now:%Y-%m-%d %H:%M} UTC by the dashboard workflow (`tools/dashboard.py`). Runs write only "
@@ -251,8 +256,9 @@ def main(argv=None):
                 for i in issues if labels(i) & {"needs-human", "in-progress"}}
     closed = api("issues?state=closed&sort=updated&direction=desc&per_page=50")
     closed_prs = pages("pulls?state=closed&sort=updated&direction=desc", 5)    # about 24 h of merges (#901)
+    from feedback import fetch as unanswered               # owner comments without a lock (#971)
     body = render(status["body"], open_all, comments, api("pulls?state=open&per_page=100"), closed, closed_prs,
-                  datetime.datetime.now(datetime.timezone.utc))
+                  datetime.datetime.now(datetime.timezone.utc), unanswered())
     if a.dry_run:
         print(body)
     elif re.sub(r"_Updated .*?_", "", body) != re.sub(r"_Updated .*?_", "", status["body"] or ""):

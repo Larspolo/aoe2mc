@@ -266,7 +266,8 @@ def conflict_files(files_of, n=5):
     return Counter(f for fs in files_of.values() for f in set(fs)).most_common(n)
 
 
-def report(since, runs, jobs, status_comments, comments, prs, files, files_of=None, issues=(), issue_events=()):
+def report(since, runs, jobs, status_comments, comments, prs, files, files_of=None, issues=(), issue_events=(),
+           unanswered=None):
     out = [f"Health since {since:%Y-%m-%d %H:%M} UTC", "", "CI runs (count, median min, max min, failures):"]
     for name, (k, m, mx, fail) in ci_runs(runs, since).items():
         out.append(f"  {name}: {k}, {fmt(m)}, {fmt(mx)}, {fail}")
@@ -302,6 +303,8 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
     bad = bad_files(files)
     out.append(f"Files that do not belong in git: {len(bad)}")
     out += [f"  {p} ({size // 1024} KiB)" for p, size in bad]
+    if unanswered is not None:                  # a quality number: each owner comment gets an answer (#971)
+        out.append(f"Owner comments without an answer (tools/feedback.py): {len(unanswered)}")
     return "\n".join(out)
 
 
@@ -351,7 +354,9 @@ def main(argv=None):
     since = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=a.hours)
     runs, jobs, status_comments, comments, prs, issues, events = fetch(since)
     files_of = {n: [f["filename"] for f in api(f"pulls/{n}/files?per_page=100")] for n in conflicted(comments)}
-    print(report(since, runs, jobs, status_comments, comments, prs, git_files(), files_of, issues, events))
+    from feedback import fetch as unanswered
+    print(report(since, runs, jobs, status_comments, comments, prs, git_files(), files_of, issues, events,
+                 unanswered()))
     return 0
 
 
