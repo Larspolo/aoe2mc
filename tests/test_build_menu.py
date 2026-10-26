@@ -59,7 +59,7 @@ def test_a_click_on_a_selected_villager_opens_the_menu_and_a_choice_closes_it():
     cmd = next(c for c in server.log if c.startswith("aoe menu Steve "))
     assert cmd.startswith("aoe menu Steve Build 0:spruce_stairs:House:25%20wood%0A25%20s ")
     assert len(cmd.split(" ")) == 4 + len(build.MENU)
-    g.menus["Steve"]("Steve", 0)                                       # the player clicks the house
+    g.menus["Steve"]("Steve", 0, False)                                # the player clicks the house
     assert server.chosen == 1 and build.chosen(g, "Steve") == "HOUSE"
     assert "aoe menu-close Steve" in server.log and not g.menus
 
@@ -68,7 +68,7 @@ def test_after_the_choice_the_next_click_on_the_ground_places_the_building():
     server, g = villager_map()
     g.select("v")
     build.open_menu(g, "Steve")
-    g.menus["Steve"]("Steve", 0)
+    g.menus["Steve"]("Steve", 0, False)
     server.entities["Steve"]["Rotation"] = (180.0, 30.0)              # look north, at the ground
     g.click("Steve")
     site, = g.sites
@@ -78,7 +78,7 @@ def test_after_the_choice_the_next_click_on_the_ground_places_the_building():
 def test_a_click_on_an_empty_slot_chooses_nothing():
     server, g = villager_map()
     build.open_menu(g, "Steve")
-    g.menus["Steve"]("Steve", 53)
+    g.menus["Steve"]("Steve", 53, False)
     assert server.chosen == 0 and "Steve" in g.menus
 
 

@@ -63,7 +63,7 @@ def items():
 
 def open_menu(g, player):
     """Show the build menu. A click sets the trigger score, as /trigger aoe_build set N does, and closes the menu."""
-    def choose(p, slot):
+    def choose(p, slot, shift):                                        # shift: one building all the same
         if slot < len(MENU):
             g.command(f"scoreboard players set {p} {OBJECTIVE} {slot + 1}")
             chest.close(g, p)

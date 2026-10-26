@@ -14,10 +14,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.AbstractSkeleton;
+import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
@@ -38,6 +41,7 @@ import org.bukkit.scoreboard.Criteria;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
+import org.bukkit.util.Vector;
 
 import com.destroystokyo.paper.entity.RangedEntity;
 import com.destroystokyo.paper.entity.ai.Goal;
@@ -85,8 +89,8 @@ import net.kyori.adventure.text.Component;
  * hits only a target in sight, and the eye of the slime is in the walls: so a unit next to the slime that has it as
  * target hits it each second (Mob#attack, the vanilla hit with the swing), as a zombie hits.
  * Vanilla has no clickable item menu: "aoe menu" opens an inventory with the items (#619). A click on an item is
- * cancelled (the player takes nothing) and sets the score aoe_menu of the player to slot + 1; the menu stays open, so
- * the player can click again. "aoe menu" on an open menu of the same title and size only changes the items.
+ * cancelled (the player takes nothing) and sets the score aoe_menu of the player to slot + 1 (a shift click: -(slot + 1),
+ * #620); the menu stays open, so the player can click again. "aoe menu" on an open menu of the same title and size only changes the items.
  */
 public final class AoePlugin extends JavaPlugin implements Listener {
     private record Stats(int attack, int melee, int pierce, boolean ranged, Set<String> classes,
@@ -166,7 +170,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             mob.lookAt(t);
             int now = Bukkit.getCurrentTick();
             if (now >= next && near && mob instanceof RangedEntity r) {
-                r.rangedAttack(t, 1.0f);
+                if (mob instanceof AbstractSkeleton && mob.getEquipment().getItemInMainHand().getType() != Material.BOW) {
+                    shoot(mob, t);            // the skeleton shot throws "Invalid weapon" for a crossbow (#633)
+                } else {
+                    r.rangedAttack(t, 1.0f);
+                }
                 next = now + range.ticks;
             }
         }
@@ -180,6 +188,16 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         public EnumSet<GoalType> getTypes() {
             return EnumSet.of(GoalType.MOVE, GoalType.LOOK);
         }
+    }
+
+    // A vanilla arrow with the aim of AbstractSkeleton.performRangedAttack: at a third of the target height,
+    // raised by 0.2 per block of distance, speed 1.6. The damage handler (onHit) gives the AoE2 damage.
+    private static void shoot(Mob mob, LivingEntity t) {
+        Location from = mob.getEyeLocation().subtract(0, 0.1, 0);
+        Vector v = t.getLocation().add(0, t.getHeight() / 3, 0).toVector().subtract(from.toVector());
+        v.setY(v.getY() + 0.2 * Math.hypot(v.getX(), v.getZ()));
+        mob.launchProjectile(Arrow.class, v.normalize().multiply(1.6));
+        mob.getWorld().playSound(mob, Sound.ITEM_CROSSBOW_SHOOT, 1.0f, 1.0f);
     }
 
     /** The holder of a chest menu: it tells a menu from the other inventories. */
@@ -289,7 +307,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         int slot = ev.getRawSlot();
         if (slot >= 0 && slot < ev.getView().getTopInventory().getSize() && ev.getCurrentItem() != null
                 && !ev.getCurrentItem().isEmpty()) {
-            menuScore().getScore(ev.getWhoClicked().getName()).setScore(slot + 1);
+            menuScore().getScore(ev.getWhoClicked().getName()).setScore(ev.isShiftClick() ? -(slot + 1) : slot + 1);
         }
     }
 
