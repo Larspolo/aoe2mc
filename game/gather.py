@@ -498,6 +498,8 @@ class Gather:
         self.command(f'scoreboard players display name Idle {self.board} "Idle villagers"')   # a name has no space
         build.setup(self)
         menu.setup(self)
+        if self.paper:
+            train.lore(self)                                           # the help lines of the menus (#1160)
         cheats.setup(self)
         bossbar.setup(self)
         for o in self.units:                                           # the entities must be loaded (forceload)

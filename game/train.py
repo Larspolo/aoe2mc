@@ -225,6 +225,43 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "FEUDAL_AGE": (2, "bell", "Feudal Age"),
          "WHEELBARROW": (3, "book", "Wheelbarrow"),
          "WOAD_RAIDER": (0, "zombie_spawn_egg", "Woad Raider")}
+# The AoE2 help text of each menu item, short (#1160): the plugin shows it as the last lore line of the item (help()).
+HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
+        "BERSERK": "Viking infantry. Heals itself.",
+        "BLOODLINES": "Cavalry +20 HP.",
+        "CASTLE_AGE": "Advance to the Castle Age.",
+        "CATAPHRACT": "Byzantine cavalry. Strong vs. infantry.",
+        "CHU_KO_NU": "Chinese archer. Shoots many arrows.",
+        "DOUBLE_BIT_AXE": "Villagers chop wood 20 % faster.",
+        "FEUDAL_AGE": "Advance to the Feudal Age.",
+        "FLETCHING": "Archers, towers, town center +1 attack, +1 range.",
+        "FORGING": "Infantry and cavalry +1 attack.",
+        "GOLD_MINING": "Villagers mine gold 15 % faster.",
+        "HORSE_COLLAR": "Farms +75 food.",
+        "HUSKARL": "Gothic infantry. Strong vs. archers.",
+        "IMPERIAL_AGE": "Advance to the Imperial Age.",
+        "JANISSARY": "Turkish gunner. Strong vs. infantry.",
+        "LONGBOWMAN": "Briton archer. Long range.",
+        "LOOM": "Villagers +15 HP, +1/+2 armor.",
+        "MAMELUKE": "Saracen camel. Strong vs. cavalry.",
+        "MAN_AT_ARMS": "Infantry. Strong vs. eagles, buildings.",
+        "MAN_AT_ARMS_UPGRADE": "Upgrades militia to man-at-arms.",
+        "MANGUDAI": "Mongol horse archer. Strong vs. siege.",
+        "MILITIA": "Infantry. Strong vs. eagles; weak vs. archers.",
+        "PADDED_ARCHER_ARMOR": "Archers +1 melee armor, +1 pierce armor.",
+        "SAMURAI": "Japanese infantry. Strong vs. unique units.",
+        "SCALE_BARDING_ARMOR": "Cavalry +1 melee armor, +1 pierce armor.",
+        "SCALE_MAIL_ARMOR": "Infantry +1 melee armor, +1 pierce armor.",
+        "SCOUT_CAVALRY": "Fast. Strong vs. monks, siege; weak vs. spears.",
+        "SKIRMISHER": "Strong vs. archers, spears; weak vs. cavalry.",
+        "SPEARMAN": "Strong vs. cavalry; weak vs. archers.",
+        "STONE_MINING": "Villagers mine stone 15 % faster.",
+        "TEUTONIC_KNIGHT": "Teutonic infantry. Slow, strong armor.",
+        "THROWING_AXEMAN": "Frankish infantry. Melee attack at range.",
+        "VILLAGER_MALE": "Gathers, builds and repairs.",
+        "WAR_ELEPHANT": "Persian elephant. Slow, very strong.",
+        "WHEELBARROW": "Villagers +10 % speed, +25 % carry.",
+        "WOAD_RAIDER": "Celtic infantry. Fast."}
 SHIFT = 5                                                          # units of a shift click, as in AoE2
 RALLY = (8, "white_banner", "Rally point", "Click, then right click the ground")   # last slot of the first row
 MARK = 17.0                                                        # AoE2 seconds of the rally marker: 10 s at Normal
@@ -269,6 +306,14 @@ def trains(g, building):
 def home(g, cell):
     """The footprint of the own training building that has the block cell (x, z) in it, or None."""
     return next((r for r in homes(g) if cell and r[0] <= cell[0] < r[1] and r[2] <= cell[1] < r[3]), None)
+
+
+def lore(g):
+    """Send the help line of each menu item to the plugin (#1160), also for its gray item of a later age. Sorted: the
+    gray "Man-at-Arms" is the upgrade (the unit is never gray), so the help of the upgrade comes last."""
+    for name in sorted(HELP):
+        for material in (ITEMS[name][1], build.LOCKED):
+            menu.lore(g, material, ITEMS[name][2], HELP[name])
 
 
 def open_menu(g, player, cell):

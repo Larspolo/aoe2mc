@@ -94,6 +94,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe destroy <selector>                     the buildings fall as at 0 hit points: "Destroy: <n> buildings" (#819)
  *   aoe label <selector> [name]                show the name line again (after a selection change); a name sets
  *                                              the name of a building target (#661)
+ *   aoe lore <material> <name> <text>          the last lore line of each menu item with this material and name: the
+ *                                              AoE2 help text (#1160, train.HELP; URL-encoded). Sent once at the
+ *                                              setup, so the menu commands stay below the RCON limit
  *   aoe where <selector> [from]                "Where <count>: <uuid> <x> <y> <z> <order 0|1> <target 0|1>, ..." for
  *                                              WHERE_PAGE units from index `from` in UUID order (#813, tools/replay_drift.py)
  *   aoe speed <selector> <speed>               the movement_speed of each unit; a siege unit (a minecart) gets its
@@ -383,6 +386,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
     }
 
+    private static final Map<String, String> HELP = new HashMap<>();   // "material:name" -> help line (aoe lore)
+
     private static String text(String s) {
         return URLDecoder.decode(s, StandardCharsets.UTF_8);
     }
@@ -405,8 +410,16 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         ItemStack it = new ItemStack(m, count);
         it.editMeta(meta -> {
             meta.displayName(Component.text(text(p[2])));
+            var lines = new ArrayList<Component>();
             if (p.length > 3 && !p[3].isEmpty()) {
-                meta.lore(text(p[3]).lines().map(l -> (Component) Component.text(l)).toList());
+                text(p[3]).lines().forEach(l -> lines.add(Component.text(l)));
+            }
+            String help = HELP.get(p[1] + ":" + text(p[2]));
+            if (help != null) {
+                lines.add(Component.text(help, NamedTextColor.GRAY));
+            }
+            if (!lines.isEmpty()) {
+                meta.lore(lines);
             }
         });
         return Map.entry(slot, it);
@@ -1478,6 +1491,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
             }
             sender.sendMessage("Label: " + n + " units");
+            return true;
+        }
+        if (args.length == 4 && args[0].equals("lore")) {
+            HELP.put(args[1] + ":" + text(args[2]), text(args[3]));
+            sender.sendMessage("Lore: " + HELP.size() + " items");
             return true;
         }
         if (args.length == 3 && args[0].equals("attack")) {
