@@ -87,6 +87,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * arrives or 50 tries (5 s) found no path.
  * The path search reaches only about the follow range of the mob (16 blocks for a cow): an order raises the
  * attribute follow_range to twice the distance + 32, at most 128. Longer ways need waypoints.
+ * An order also sets the attribute step_height to 1 (as a horse): the ground of a map has many steps of one block,
+ * and a jump on each made the replay units walk at 64 % of their speed (#829).
  * With the AI on, a unit keeps only the goals that fit AoE2 (#436): its attack goals and "float" (it swims).
  * Wandering, looking around, panic, the choice of its own targets (a zombie attacks each villager), despawning and
  * the burning in the sun go. So a unit stands still without an order and attacks only the target of an order,
@@ -697,6 +699,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             mob.setAI(true);
         }
         tame(mob);                  // each order: tame() only after setAI() missed the goals of some units (#436)
+        AttributeInstance step = mob.getAttribute(Attribute.STEP_HEIGHT);
+        if (step != null && step.getBaseValue() < 1) {
+            step.setBaseValue(1);                                      // no jump on a step of one block (#829)
+        }
         Range r = ranges.get(mob.getUniqueId());
         var goals = Bukkit.getMobGoals();
         if (r != null && mob instanceof RangedEntity) {
