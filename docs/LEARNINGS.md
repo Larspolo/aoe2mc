@@ -3,7 +3,7 @@
 The agent writes here what it learned the hard way. Each line must save time in a later session.
 Ticket runs: add new lines at the end of a section and do not change other lines (`merge=union` in `.gitattributes`
 keeps the lines of both sides). A pitfall of one topic (server, Paper, records, a design) goes into the "Pitfalls" section
-of its document (named below): this file loads into each run. The `improve` skill merges lines and keeps it below 80 lines.
+of its document (named below; add at its end, do not change other lines: `merge=union` too): this file loads into each run. The `improve` skill merges lines and keeps it below 80 lines.
 
 ## Environment and libraries
 
