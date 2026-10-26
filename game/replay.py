@@ -56,6 +56,7 @@ RECENT = 10000              # ms: a unit whose last leg ended this short a time 
 TALL = 48                   # blocks above the ground that a DELETE clears for a start building (no height in aoe2mc.json)
 BAR = "aoe2mc:replay"       # the boss bar with the game time (#684)
 POP = "aoe_pop"             # the sidebar objective with the population of each player (#741)
+TEAM_STEP = 10000           # sidebar score of a team game: team key × TEAM_STEP + population, the panel sorts by it (#1189)
 COUNTED = "aoe2mc.pop"      # entity tag of the units that the population counts (#787)
 EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
@@ -178,6 +179,21 @@ class Replay:
         info = self.data["players"].get(str(p), {})
         return f"Player {p}" + (f" ({pretty(info['civ'])})" if info.get("civ") else ""), \
             TEXT_COLORS.get(info.get("color"), "white")
+
+    def team(self, p):
+        """The team number of player p, or None when no team has two players (a game of one player per team, #1189)."""
+        teams = [info.get("team") for q, info in self.data["players"].items() if q != "0"]
+        return self.data["players"].get(str(p), {}).get("team") if any(
+            t is not None and teams.count(t) > 1 for t in teams) else None
+
+    def label(self, p):
+        """The name (with "Team N" in a team game) and the text color of player p for the panel and the summary."""
+        name, color = self.player(p)
+        return (f"Team {t} · {name}" if (t := self.team(p)) else name), color
+
+    def ranked(self, players):
+        """The players in panel order: the players of one team together, team 1 first (#1189)."""
+        return sorted(players, key=lambda p: (self.team(p) or 0, p))
 
     def age(self, e):
         self.ages[e.get("player")] = pretty(e["age"]).removesuffix(" Age")
@@ -1121,9 +1137,9 @@ class Replay:
         trained villagers and the resources of the gather steps (estimated: the record has no resources); the military
         (#1066): trained military units, lost units (DELETE, and the fights of the plugin: census) and lost buildings."""
         out = ['tellraw @a {"text": "Summary (est.)", "bold": true}']
-        for p in sorted(self.pop.keys() | self.villagers.keys() | self.gathered.keys() | self.army.keys()
-                        | self.lost.keys() | self.razed.keys()):
-            name, color = self.player(p)
+        for p in self.ranked(self.pop.keys() | self.villagers.keys() | self.gathered.keys() | self.army.keys()
+                             | self.lost.keys() | self.razed.keys()):
+            name, color = self.label(p)
             g = self.gathered.get(p, dict.fromkeys(START, 0))
             res = ", ".join(f"{r} {v}" for r, v in g.items())
             out.append("tellraw @a " + json.dumps([text(name, color), text(
@@ -1137,8 +1153,8 @@ class Replay:
         """One chat line per player with the game time of each age-up (MM:SS, "-": not reached) and the number of
         researched technologies (#1067)."""
         out = []
-        for p in sorted(self.pop.keys() | self.reached.keys() | self.researched.keys()):
-            name, color = self.player(p)
+        for p in self.ranked(self.pop.keys() | self.reached.keys() | self.researched.keys()):
+            name, color = self.label(p)
             times = self.reached.get(p, {})
             ages = ", ".join(f"{pretty(a).removesuffix(' Age')} {mmss(times[a]) if a in times else '-'}"
                              for a in ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE"))
@@ -1161,10 +1177,9 @@ class Replay:
                 n = sum(e.get(r, 0) for r in START) or int(e.get("amount", 0))   # old records: one resource
                 sent[p], got[e["to"]] = sent.get(p, 0) + n, got.get(e["to"], 0) + n
         out = []
-        for p in sorted(self.pop.keys() | self.vhigh.keys() | sent.keys() | got.keys() | {q for q, _ in built}):
-            if p is None:
-                continue
-            name, color = self.player(p)
+        for p in self.ranked(self.pop.keys() | self.vhigh.keys() | sent.keys() | got.keys() | {q for q, _ in built}
+                             - {None}):
+            name, color = self.label(p)
             out.append("tellraw @a " + json.dumps([text(name, color), text(
                 f": castles {built.get((p, 'CASTLE'), 0)}, wonders {built.get((p, 'WONDER'), 0)}, tribute sent "
                 f"{sent.get(p, 0)}, received {got.get(p, 0)}, villager high {self.vhigh.get(p, 0)} (est.)")]))
@@ -1218,20 +1233,25 @@ class Replay:
     def score_commands(self):
         """The sidebar commands for the population of each player that changed since the last call (#741). The score
         holder is "P<n>" (a holder name has no space); its display name is the player name in the player color, the
-        age of the player (#805) and its estimated resources (#932)."""
-        out = []
+        age of the player (#805) and its estimated resources (#932). In a team game the score is a team key plus the
+        population, so the sidebar shows each team together, and a fixed number format shows the population (#1189)."""
+        out, top = [], max((self.team(p) or 0 for p in self.pop), default=0)
         if self.shown is None:
             self.shown, out = {}, [f'scoreboard objectives add {POP} dummy "Population"',
                                    f"scoreboard objectives setdisplay sidebar {POP}"]
         for p in sorted(self.pop):
-            name, color = self.player(p)
+            name, color = self.label(p)
             res = " ".join(f"{r[0].upper()} {max(0, v)}" for r, v in self.resources(p).items())
             if self.named.get(p) != (line := f"{name} · {self.ages.get(p, 'Dark')} · {res} (est.)"):
                 out.append(f"scoreboard players display name P{p} {POP} {json.dumps(text(line, color))}")
                 self.named[p] = line
             if self.shown.get(p) != self.pop[p]:
                 self.shown[p] = self.pop[p]
-                out.append(f"scoreboard players set P{p} {POP} {self.pop[p]}")
+                if (t := self.team(p)) is None:
+                    out.append(f"scoreboard players set P{p} {POP} {self.pop[p]}")
+                    continue
+                out += [f"scoreboard players set P{p} {POP} {(top - t + 1) * TEAM_STEP + self.pop[p]}",
+                        f"scoreboard players display numberformat P{p} {POP} fixed {json.dumps(text(str(self.pop[p])))}"]
         return out
 
     def census(self):
