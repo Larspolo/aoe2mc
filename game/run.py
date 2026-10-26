@@ -99,6 +99,12 @@ def paper_jar(version):
     return path
 
 
+# Paper (Spigot) ticks a unit far from all players only now and then: such a villager does not walk (#437). Vanilla
+# has no such range, and the units of a game must move where no player is: 0 turns the range off.
+SPIGOT = "world-settings:\n  default:\n    entity-activation-range:\n" + "".join(
+    f"      {k}: 0\n" for k in ("animals", "monsters", "raiders", "misc", "water", "villagers", "flying-monsters"))
+
+
 def properties(game_port, rcon_port, password):
     """server.properties: only local players can join (127.0.0.1). They play in creative mode (#292).
     A missing white-list becomes "true" in 26.3: then no player can join (#285)."""
@@ -135,6 +141,9 @@ class Game:
             shutil.copy(p, os.path.join(self.folder, "plugins", "aoe2mc-plugin.jar"))
         with open(os.path.join(self.folder, "server.properties"), "w") as f:
             f.write(properties(self.game_port, self.port, password))
+        if self.kind == "paper":
+            with open(os.path.join(self.folder, "spigot.yml"), "w") as f:
+                f.write(SPIGOT)
         # --universe and --world: the server uses the world folder where it is, not a copy
         self.server = mc_check.Server(java, jar, self.folder, ["--universe", os.path.dirname(self.world),
                                                                "--world", os.path.basename(self.world)], jvm)
@@ -233,6 +242,9 @@ def replay(game, world, speed=1.0, start="0:00"):
     if "timeline" not in data:
         sys.exit("--replay needs a world of a recorded game (.aoe2record)")
     game.forceload()
+    if game.kind == "paper":                         # the start units and buildings fight with AoE2 values (#632)
+        import combat
+        combat.setup(game, data)
     print(f"Join the server localhost:{game.game_port} (Minecraft {game.version}). The replay starts now "
           f"at speed {speed}.", file=sys.stderr)
     stats = replay.Replay(game, data, game.version, ai=game.kind == "paper").run(speed, start, bar=True)

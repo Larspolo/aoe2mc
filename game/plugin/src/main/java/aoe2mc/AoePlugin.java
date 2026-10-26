@@ -65,6 +65,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe goals <selector>                       the goals of the first unit (#436), for checks
  *   aoe stats <selector> <hp> <attack> <melee armor> <pierce armor> <ranged 0|1> <classes|-> <class:bonus,...|->
  *                                              the AoE2 values of a unit (#514, game/combat.py stats_command)
+ *   aoe stop <selector>                        stop the walk and turn the AI off: the unit stands still (#437)
  *   aoe range <selector> <blocks> <ticks>      a ranged unit shoots from this range, one shot per ticks (#515)
  *   aoe building <selector> <hp> <melee armor> <pierce armor> <x0> <y0> <z0> <x1> <y1> <z1>
  *                                              make the entity the target of a building (#517, combat.building)
@@ -75,7 +76,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              the name of a building target (#661)
  * Converted units have no AI (NoAI): an order turns it on. Such a unit finds no path before its first AI tick
  * (it is not "on the ground" yet), and vanilla goals (a random stroll) can take the navigation of a walking unit:
- * so the order sends the path again every 10 ticks, until the unit arrives or 10 tries found no path.
+ * so the order sends the path again every 2 ticks (#437: 10 ticks made each walk 0.5 s longer), until the unit
+ * arrives or 50 tries (5 s) found no path.
  * The path search reaches only about the follow range of the mob (16 blocks for a cow): an order raises the
  * attribute follow_range to twice the distance + 32, at most 128. Longer ways need waypoints.
  * With the AI on, a unit keeps only the goals that fit AoE2 (#436): its attack goals and "float" (it swims).
@@ -83,6 +85,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * the burning in the sun go. So a unit stands still without an order and attacks only the target of an order,
  * and an attack order skips the units of the team of the target (scoreboard teams of the datapack, #358).
  * A villager walks with its brain, not with goals: it gets NoAI when it arrives, else it strolls away (#438).
+ * `aoe stop` stops a walk and sets NoAI (#437: a villager without a path).
  * A hit of a unit with AoE2 values on another one takes the AoE2 damage (#514, combat.damage): max(1, attack - armor
  * + bonus). The plugin cancels the vanilla damage and sets the health: so vanilla armor items, enchantments, effects,
  * difficulty and knockback (AoE2 has none) do not change it. Max health is the attribute max_health.
@@ -360,7 +363,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        Bukkit.getScheduler().runTaskTimer(this, this::follow, 10L, 10L);
+        Bukkit.getScheduler().runTaskTimer(this, this::follow, 2L, 2L);
         Bukkit.getScheduler().runTaskTimer(this, this::siege, 10L, 10L);
         Bukkit.getScheduler().runTaskTimer(this, this::burn, 20L, 20L);
         Bukkit.getPluginManager().registerEvents(this, this);
@@ -550,7 +553,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             var path = pf.getCurrentPath();
             if (path == null || path.getFinalPoint() == null
                     || path.getFinalPoint().distanceSquared(o.goal) > 1.5 * 1.5) {
-                return !pf.moveTo(o.goal, o.speed) && ++o.fails >= 10;   // no path 10 times: drop the order
+                return !pf.moveTo(o.goal, o.speed) && ++o.fails >= 50;   // no path for 5 s: drop the order
             }
             return false;
         });
@@ -748,6 +751,19 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 keys.add(g.getKey().getNamespacedKey().getKey());
             }
             sender.sendMessage("Goals: " + String.join(" ", keys));
+            return true;
+        }
+        if (args.length == 2 && args[0].equals("stop")) {
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                if (e instanceof Mob mob) {
+                    orders.remove(mob.getUniqueId());
+                    mob.getPathfinder().stopPathfinding();
+                    mob.setAI(false);
+                    n++;
+                }
+            }
+            sender.sendMessage("Stopped " + n + " units");
             return true;
         }
         if (args.length >= 3 && args[0].equals("menu")) {

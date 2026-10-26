@@ -55,7 +55,7 @@ Find code by function name with Grep. Do not read the large files from start to 
 - `tools/` – test and debug tools (scenarios, world reader, 3D render, Minecraft data, validation).
 - `game/` – the game program (#137): `run.Game` starts a Paper server with RCON on the world, `rcon.Rcon` sends commands,
   `plugin/` is the Paper plugin (Java, Gradle wrapper; `run.py` builds it): `aoe moveto`, `aoe attack` with Minecraft path finding (#435),
-  `gather.Gather` lets villagers gather wood, food, gold and stone (#138, #391, #390, #392: clicks, paths on `aoe2mc.json` "ground", sidebar),
+  `gather.Gather` lets villagers gather wood, food, gold and stone (#138, #391, #390, #392: clicks, sidebar; walks with `aoe moveto` on Paper, #437, own paths on `aoe2mc.json` "ground" only for vanilla),
   `build` places construction sites (#417), `replay.Replay` plays the "timeline" of a recorded game (#374: buildings, chat, ages).
   `ai` gives orders to units with their Minecraft AI through the Paper plugin `game/plugin` (#435, #436: `aoe moveto`, `aoe attack`, `aoe goals`).
 - `tests/` – pytest. `conftest.py` has the `tiny_world` fixture (one conversion per session).
@@ -88,6 +88,8 @@ Design work (buildings, objects, units, animals) follows `docs/DESIGN.md`. Do de
 
 Match the existing code: compact, numpy-vectorized, short comments that say why. Do not reformat code that you do
 not change. Do not add a dependency without a ticket that asks for it. Keep functions in their present file.
+When you add an entry to a table keyed by a name (`COSTS`, `TRAINS`, `STATS` ...), put each entry that you add on its
+own line, in alphabetical order, not at the end: parallel tickets that add to the same last line conflict (#655, #670).
 
 ## How to verify
 

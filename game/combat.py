@@ -80,8 +80,9 @@ HEIGHT = 40                     # blocks above the ground that a fallen building
 
 
 def stats(name):
-    """The combat values of an AoE2 unit or building; an unknown name gets a militia-like unit."""
-    return STATS.get(name) or BUILDINGS.get(name) or (BUILDING if name.endswith(("_WALL", "_GATE", "_TOWER")) else DEFAULT)
+    """The combat values of an AoE2 unit or building; an unknown name gets a militia-like unit. All villager names
+    (VILLAGER_MALE, VILLAGER_FEMALE_FARMER ...) get the villager values (#655)."""
+    return STATS.get("VILLAGER" if name.startswith("VILLAGER") else name) or BUILDINGS.get(name) or (BUILDING if name.endswith(("_WALL", "_GATE", "_TOWER")) else DEFAULT)
 
 
 def damage(attacker, target):
@@ -91,10 +92,11 @@ def damage(attacker, target):
     return max(1, max(0, a.attack - armor) + sum(a.bonus.get(c, 0) for c in t.classes))
 
 
-def stats_command(uuid, name):
-    """The plugin command that gives entity `uuid` the values of AoE2 unit `name`: max_health = hit points (at most
-    1024, the limit of the attribute), full health, and the values of `damage` (the same rule in AoePlugin.java)."""
-    s = stats(name)
+def stats_command(uuid, name, s=None):
+    """The plugin command that gives entity `uuid` the values of AoE2 unit `name` (or the values s, for example with
+    technologies, #655): max_health = hit points (at most 1024, the limit of the attribute), full health, and the
+    values of `damage` (the same rule in AoePlugin.java)."""
+    s = s or stats(name)
     bonus = ",".join(f"{c}:{n}" for c, n in sorted(s.bonus.items())) or "-"
     return (f"aoe stats {uuid} {min(s.hp, 1024)} {s.attack} {s.melee} {s.pierce} {int(s.range > 0)} "
             f"{','.join(s.classes) or '-'} {bonus}")

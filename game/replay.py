@@ -6,6 +6,10 @@ A trained unit appears in front of its building when its training ends (#408, ao
 MOVE or ORDER command selects walk to its target: on Paper the plugin walks them on a Minecraft path at their walk speed
 (`aoe moveto`, game/ai.py, #438), else one /tp per block on the path of gather.Map (#409, gather.walk);
 a group that goes to a tile stops there in rows (#410).
+Fights (#632): on Paper an ORDER on a unit or a start building of another player sends the military units of the
+selection to attack it (`aoe attack`, the mob AI and the AoE2 values of game/combat.py); a unit at 0 hit points dies by
+itself. A trained unit gets its AoE2 values at its spawn (`aoe stats`, `aoe range`); game/run.py gives them to the
+units and buildings of the start state (combat.setup).
 
 Replay(game, data).run(speed) plays it; commands(e) gives the commands of one event (the unit tests use it).
 With bar=True (game/run.py --replay) a boss bar shows the game time, the speed and the progress (#684).
@@ -34,6 +38,7 @@ FORMATION = 2              # blocks between the units of a group in a formation 
 LEG = 48                    # path cells of one plugin order: within the reach of a Minecraft path search (#438)
 TALL = 48                   # blocks above the ground that a DELETE clears for a start building (no height in aoe2mc.json)
 BAR = "aoe2mc:replay"       # the boss bar with the game time (#684)
+POLL = 0.2                  # seconds between two calls of the poll of Replay.run while it waits (#685)
 PATH_CELLS = 20000          # cells that one path search may look at: a unit with no path stays (no time lag)
 SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, "PIKEMAN": 1.0, "EAGLE": 1.1,
           "ARCHER": 0.96, "SKIRMISHER": 0.96, "CROSSBOWMAN": 0.96, "CAVALRY_ARCHER": 1.4, "SCOUT": 1.2,
@@ -53,7 +58,7 @@ class Replay:
     """The timeline of aoe2mc.json `data` on a server (game.command sends one command)."""
 
     def __init__(self, game, data, version=aoe2mc.VERSION_NAME, ai=False):
-        self.game, self.data, self.ai, self.speed = game, data, ai, 1.0     # ai: walks through the plugin (Paper)
+        self.game, self.data, self.ai, self.speed, self.paused = game, data, ai, 1.0, False  # ai: plugin walks
         self.T, self.n = data["tile_size"], len(data["ground"])
         self.ground = [[None if v == "-" else int(v) for v in row.split()] for row in data["ground"]]
         self.starts = [(o.get("ref"), o["player"], o["name"], (o["footprint"][0], o["footprint"][2], o["footprint"][1],
@@ -269,9 +274,13 @@ class Replay:
         kind = str(nbt.pop("id"))
         del nbt["Pos"]
         v = self.gather.Villager(units.uuid_str(nbt["UUID"]), pos)
-        v.name = e["name"]
+        v.name, v.player = e["name"], e["player"]
         self.new.append((e["player"], v))
-        return [f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}"]
+        out = [f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}"]
+        if self.ai:                                                 # the AoE2 values: plugin commands (#632)
+            import combat                                           # combat -> gather -> build -> replay
+            out += [combat.stats_command(v.uuid, v.name)] + [c for c in [combat.range_command(v.uuid, v.name, self.T)] if c]
+        return out
 
     def grid(self):
         """The gather.Map of the world with the buildings of the replay. The first call also finds the units of the
@@ -283,7 +292,7 @@ class Replay:
                 if o["kind"] == "unit" and "uuid" in o and o.get("ref") is not None:
                     x, z = o["tile"][0] * T, o["tile"][1] * T
                     self.units[o["ref"]] = v = gather.Villager(o["uuid"], (x, float(self.map.y(int(x), int(z)) or 0), z))
-                    v.name = o["name"]
+                    v.name, v.player = o["name"], o["player"]
         for _, name, r in self.placed[self.added:]:
             if "FARM" not in name:
                 self.map.building(name, r, None, False)
@@ -318,6 +327,33 @@ class Replay:
         c = int(e["tile"][0] * T), int(e["tile"][1] * T)
         return {c} if m.free(*c) else m.around(m.cells((c[0] // T, c[1] // T)))
 
+    def enemy(self, e):
+        """The entity UUID of the target of an ORDER when it is a unit or a start building (with a target of
+        combat.building) of another player than e["player"], else None."""
+        import combat
+        t, p = e.get("target"), e["player"]
+        if e["kind"] != "order" or t is None:
+            return None
+        if t in self.units:
+            return self.units[t].uuid if self.units[t].player not in (0, p) else None
+        o = self.refs.get(t, {})
+        if o.get("kind") == "building" and "footprint" in o and o["name"] in combat.BUILDINGS and o["player"] not in (0, p):
+            return combat.target_uuid(o["footprint"])
+        return None
+
+    def attack(self, group, target):
+        """The military units of group attack entity target, with their AoE2 walk speed; they walk no more legs.
+        Returns the commands and the rest of the group."""
+        import ai
+        out, rest = [], []
+        for i, v in group:
+            if self.gather.military(v.name):
+                out += [ai.speed_command(v.uuid, v.name, self.T, self.speed), f"aoe attack {v.uuid} {target}"]
+                self.moving.pop(i, None)
+            else:
+                rest.append((i, v))
+        return out, rest
+
     def move(self, e):
         """MOVE and ORDER: each selected unit gets a path to the target. Its steps come later (steps()). A group
         that goes to a tile stops in a formation there (formation()), a unit with no path to its cell goes to the
@@ -331,7 +367,7 @@ class Replay:
         to_tile = not (e["kind"] == "order" and e.get("target") is not None)
         slots = self.formation([v for _, v in group], e["tile"]) if to_tile else {}
         if self.ai:
-            out = []
+            out, group = self.attack(group, target) if (target := self.enemy(e)) else ([], group)
             for i, v in group:
                 end = slots.get(v) or min(goals, key=lambda c: (math.dist(c, v.cell), c))
                 path = self.map.path(v.cell, {end}, PATH_CELLS) or []
@@ -451,15 +487,33 @@ class Replay:
         self.sent += len(cmds)
         self.busy += time.perf_counter() - t
 
-    def run(self, speed=1.0, start=0, clock=time.monotonic, sleep=time.sleep, log=print, bar=False):
+    def retime(self, g0, r0, r):
+        """Apply a change of `self.control` at real time r: returns the new anchor (game time g0 at real time r0).
+        The game time stays where it is, so no event plays twice; a pause stops it (#685). Walking units of the
+        plugin get the new walk speed (0 in a pause)."""
+        speed, paused = self.control["speed"], self.control["paused"]
+        if (speed, paused) == (self.speed, self.paused):
+            return g0, r0
+        g = g0 if self.paused else g0 + (r - r0) * 1000 * self.speed
+        self.speed, self.paused = speed, paused
+        if self.ai:
+            import ai                                               # ai -> replay: import it late
+            self.send([ai.speed_command(v.uuid, v.name, self.T, 0 if paused else speed)
+                       for v in map(self.units.get, self.moving) if v and v.uuid])
+        return g, r
+
+    def run(self, speed=1.0, start=0, clock=time.monotonic, sleep=time.sleep, log=print, bar=False, poll=None):
         """Play the timeline from game time `start` (ms) at `speed` times the game speed; `bar`: show the game time
         in a boss bar (`clock_commands`). Returns the stats:
         commands, events, the seconds of sending, the largest lag behind the timeline (s), commands per second
-        (rate) and the commands per second that the timeline needs on average (need)."""
+        (rate) and the commands per second that the timeline needs on average (need).
+        poll(control) may change `self.control` ("speed", "paused") while the replay runs: run calls it before
+        each event and each POLL seconds while it waits (#685)."""
         events = sorted((e for e in self.data.get("timeline", []) + self.spawns() if e["time"] >= start),
                         key=lambda e: e["time"])
-        t0, lag, n, k = clock(), 0.0, 0, 0
-        self.speed = speed
+        g0, r0, lag, n, k = start, clock(), 0.0, 0, 0                 # game time g0 (ms) at real time r0
+        self.speed, self.paused = speed, False
+        self.control = {"speed": speed, "paused": False}
         end, shown = events[-1]["time"] if events else start, None
         send = self.send if bar else lambda cmds: None
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
@@ -469,14 +523,20 @@ class Replay:
             e = events[k] if k < len(events) and events[k]["time"] <= step else None
             k += e is not None
             now = e["time"] if e else step
-            due = (now - start) / 1000 / speed
-            wait = due - (clock() - t0)
-            if wait > 0:
-                sleep(wait)
-            lag = max(lag, clock() - t0 - due)
+            while True:
+                if poll:
+                    poll(self.control)
+                    g0, r0 = self.retime(g0, r0, clock())
+                wait = POLL if self.paused else (now - g0) / 1000 / self.speed - (clock() - r0)
+                if wait <= 1e-6:                                    # rounding: no endless wait
+                    break
+                sleep(min(wait, POLL) if poll else wait)
+                if not poll:
+                    break
+            lag = max(lag, clock() - r0 - (now - g0) / 1000 / self.speed)
             if int(now) // 1000 != shown:                              # at most once per game second
                 shown = int(now) // 1000
-                send(self.clock_commands(now, end, speed))
+                send(self.clock_commands(now, end, self.speed))
             if e is None:
                 self.send(self.steps(now))
                 continue
@@ -489,6 +549,6 @@ class Replay:
                     log(f"{m:02d}:{s:02d} {e['kind']} {e.get('name') or e.get('age') or ''} "
                         f"player {e.get('player')}: {len(cmds)} commands")
         send(self.clock_commands(end, end, speed, done=True))
-        span = (events[-1]["time"] - start) / 1000 / speed if events else 0
+        span = (events[-1]["time"] - start) / 1000 / speed if events else 0                 # at the start speed
         return {"events": n, "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2),
                 "rate": round(self.sent / self.busy) if self.busy else 0, "need": round(self.sent / span) if span else 0}
