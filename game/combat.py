@@ -7,6 +7,7 @@ base unit: no Blacksmith or University upgrades, no civilization bonuses. `range
 for each armor class of the target. `damage` is the AoE2 damage rule (#514); the Paper plugin applies it
 (`aoe stats` gives a mob its values, `stats_command`).
 A ranged unit shoots from its AoE2 range, one shot per reload time (#515, `aoe range`, `range_command`).
+A melee unit hits once per reload time too (#848, the last value of `stats_command`).
 An idle soldier attacks the nearest enemy unit in its AoE2 line of sight (#775, `aoe sight`, `sight_command`).
 """
 import math
@@ -42,7 +43,7 @@ STATS = {
     "ARBALESTER": Stats(40, 6, 0, 0, 5, 2.0, {SPE: 3}, (ARC,)),
     "SKIRMISHER": Stats(30, 2, 0, 3, 4, 3.0, {ARC: 3, SPE: 3}, (ARC,)),
     "ELITE_SKIRMISHER": Stats(35, 3, 0, 4, 5, 3.0, {ARC: 4, SPE: 3}, (ARC,)),
-    "LONGBOWMAN": Stats(35, 6, 0, 1, 5, 2.0, {SPE: 3}, (ARC, UNI)),
+    "LONGBOWMAN": Stats(35, 6, 0, 0, 5, 2.0, {SPE: 3}, (ARC, UNI)),
     "CAVALRY_ARCHER": Stats(50, 6, 0, 0, 4, 2.0, {SPE: 2}, (ARC, CAV)),
     # cavalry
     "SCOUT_CAVALRY": Stats(45, 3, 0, 2, 0, 2.0, {}, (CAV,)),
@@ -71,6 +72,15 @@ STATS = {
     "SIEGE_TOWER": Stats(220, 0, 0, 100, 0, 0.0, {}, (SIE,)),
     "TREBUCHET": Stats(200, 200, 2, 150, 16, 10.0, {"building": 250}, (SIE,)),
     "BOMBARD_CANNON": Stats(80, 40, 2, 5, 12, 6.5, {"building": 200}, (SIE,)),
+    # cheat units (#818, AoE2 DE values of the wiki; the Cobra car shoots: a ranged unit)
+    "ALFRED_THE_ALPACA": Stats(140, 120, 20, 20, 0, 2.0, {"building": 100}, (CAV,)),
+    "COBRA_CAR": Stats(500, 10, 10, 10, 10, 0.25, {"building": 10}, (SIE,)),
+    "FURIOUS_THE_MONKEY_BOY": Stats(9, 99, 99, 99, 0, 0.9, {"building": 999}),
+    "PHOTONMAN": Stats(80, 30, 2, 2, 10, 2.0, {"building": 5}, (ARC, UNI)),
+    "SABOTEUR": Stats(45, 100, 1, 3, 0, 2.0, {"building": 500}, (SIE,)),
+    "SHARKATZOR": Stats(600, 33, 1, 0, 10, 2.1, {SIE: 5}, (SIE,)),
+    "VMDL": Stats(25, 0, 0, 0, 0, 0.0),
+    "WAR_PENGUIN": Stats(64, 16, 4, 4, 0, 2.0, {"building": 8}, (INF,)),
     # others: no fight, but they can die
     "VILLAGER": Stats(25, 3, 0, 0, 0, 2.0),
     "KING": Stats(75, 0, 0, 0, 0, 0.0),
@@ -93,6 +103,9 @@ SIGHT = {
     "LIGHT_CAVALRY": 8,
     "TWO_HANDED_SWORDSMAN": 5,
 }
+# Units that attack from a range with melee damage (AoE2): their hit takes the melee armor of the target (#800).
+MELEE_RANGED = {"MAMELUKE",
+                "THROWING_AXEMAN"}
 DEFAULT, BUILDING = Stats(40, 4, 0, 0, 0, 2.0), Stats(1000, 0, 0, 7, 0, 0.0, {}, ("building",))
 SLIME = 0.52                    # blocks of width and height per slime size: the target of a building (#517)
 INVISIBLE = 'active_effects:[{id:"minecraft:invisibility",duration:-1,show_particles:0b}]'   # for ever, no particles
@@ -106,20 +119,23 @@ def stats(name):
 
 
 def damage(attacker, target):
-    """AoE2 damage of one hit: max(1, attack - armor + bonus). Melee hits the melee armor, a ranged unit the pierce armor."""
+    """AoE2 damage of one hit: max(1, attack - armor + bonus). Melee hits the melee armor, a ranged unit the pierce armor
+    (but a MELEE_RANGED unit the melee armor)."""
     a, t = stats(attacker), stats(target)
-    armor = t.pierce if a.range else t.melee
+    armor = t.pierce if a.range and attacker not in MELEE_RANGED else t.melee
     return max(1, max(0, a.attack - armor) + sum(a.bonus.get(c, 0) for c in t.classes))
 
 
 def stats_command(uuid, name, s=None):
     """The plugin command that gives entity `uuid` the values of AoE2 unit `name` (or the values s, for example with
-    technologies, #655): max_health = hit points (at most 1024, the limit of the attribute), full health, and the
-    values of `damage` (the same rule in AoePlugin.java)."""
+    technologies, #655): max_health = hit points (at most 1024, the limit of the attribute), the lost hit points stay lost
+    (a new unit has full health, #940), and the values of `damage` (the same rule in AoePlugin.java). The range kind:
+    0 melee, 1 ranged, 2 ranged with melee damage (MELEE_RANGED, #800). Last the reload in ticks at Normal speed: a melee unit hits once per reload (#848)."""
     s = s or stats(name)
     bonus = ",".join(f"{c}:{n}" for c, n in sorted(s.bonus.items())) or "-"
-    return (f"aoe stats {uuid} {min(s.hp, 1024)} {s.attack} {s.melee} {s.pierce} {int(s.range > 0)} "
-            f"{','.join(s.classes) or '-'} {bonus}")
+    kind = 0 if s.range <= 0 else 2 if name in MELEE_RANGED else 1
+    return (f"aoe stats {uuid} {min(s.hp, 1024)} {s.attack} {s.melee} {s.pierce} {kind} "
+            f"{','.join(s.classes) or '-'} {bonus} {round(s.reload / NORMAL * 20) or 20}")
 
 
 def label_command(uuid, name=None):
@@ -169,6 +185,9 @@ def setup(game, data):
     for o in units:                                  # after the stats: the plugin needs them for the sight
         if cmd := sight_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
+    import ai                                        # ai -> gather -> build -> replay -> combat: import it late
+    for o in units:                                  # the AoE2 walk speed also without an order (#849)
+        game.command(ai.speed_command(o["uuid"], o["name"], data.get("tile_size", 4)))
     return n
 
 

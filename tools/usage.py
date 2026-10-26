@@ -6,7 +6,7 @@ reset, so that each window reaches the limit (#587).
     python3 tools/usage.py              # five_hour 30% (resets 06:30 UTC, 2.0 h) · seven_day 30% ... · target 12 runs
     python3 tools/usage.py --target     # only the number of runs (rule 4 of the scheduled task)
     python3 tools/usage.py --json
-    python3 tools/usage.py --sample     # Usage: <now> · usage 30.0% · resets <time> · runs 9 (for the run report)
+    python3 tools/usage.py --sample     # Usage: <now> · usage 30.0% · resets <time> · runs 9 · week 56.0% · release 61.2%
     python3 tools/usage.py --fire       # the number of runs that the pacer session starts now (skill `pacer`, #566)
 
 BURN is the default. When the run reports on the status issue have enough `Usage:` lines (at least 5 pairs in the
@@ -91,11 +91,24 @@ def measured_burn():
         return None
 
 
-def sample_line(usage, now, claims):
-    """The `Usage:` line of a run report, which `tools/health.py` reads."""
+def sample_line(usage, now, claims, release=None):
+    """The `Usage:` line of a run report, which `tools/health.py` reads: also the 7-day usage and the release percent
+    of all goals (tools/release.py), for the release progress per quota (#899)."""
     iso = lambda t: f"{datetime.datetime.fromtimestamp(t, datetime.timezone.utc):%Y-%m-%dT%H:%M:%SZ}"
     used, reset, _ = usage["five_hour"]
-    return f"Usage: {iso(now)} · usage {used * 100:.1f}% · resets {iso(reset)} · runs {claims}"
+    line = f"Usage: {iso(now)} · usage {used * 100:.1f}% · resets {iso(reset)} · runs {claims}"
+    if "seven_day" in usage:
+        line += f" · week {usage['seven_day'][0] * 100:.1f}%" + ("" if release is None else f" · release {release:.1f}%")
+    return line
+
+
+def release_percent():
+    """The percent of milestone C over all goals (tools/release.py), or None without GitHub access."""
+    try:
+        import release
+        return release.total(release.current())
+    except Exception:
+        return None
 
 
 def describe(usage, now, burn=BURN):
@@ -119,14 +132,15 @@ def main(argv=None):
         sys.exit("no rate_limit_event in the CLI output (no subscription, or the CLI changed)")
     if a.sample:
         import health
-        print(sample_line(usage, now, health.active_claims(datetime.datetime.now(datetime.timezone.utc))))
+        print(sample_line(usage, now, health.active_claims(datetime.datetime.now(datetime.timezone.utc)),
+                          release_percent()))
         return
     burn = a.burn or measured_burn() or BURN
     if a.fire:
         import dashboard
         import health
         open_all = dashboard.pages("issues?state=open")
-        paused = any({"agent-status", "paused"} <= set(dashboard.labels(i)) for i in open_all)
+        paused = any({dashboard.STATUS, dashboard.PAUSED} <= set(dashboard.labels(i)) for i in open_all)
         ready = len(dashboard.candidates(open_all))
         claims = health.active_claims(datetime.datetime.now(datetime.timezone.utc))
         target = target_runs(usage, now, burn)

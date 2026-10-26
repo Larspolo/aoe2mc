@@ -5,7 +5,7 @@ description: Write, size and split GitHub issues (tickets) for aoe2mc in the pro
 
 # Write a ticket
 
-Tickets are GitHub Issues in `Larspolo/aoe2mc`. Write in ASD-STE100 Simplified Technical English.
+Tickets are GitHub Issues in the repository `repo` of `agent.toml`. Write in ASD-STE100 Simplified Technical English.
 
 ## Form
 
@@ -35,6 +35,8 @@ Start after: <YYYY-MM-DD HH:MM> UTC   (only when the ticket must wait for a time
 
 Labels: one priority (`P0`-`P3`), one kind (`bug`, `feature`, `tooling`, `design`, `docs`, `cleanup`),
 one size (`size:S`, `size:M`, `size:L`). Add `needs-human` when only the owner can do it.
+A ticket that changes the agent system (skills, `CLAUDE.md`, the agent tools in `tools/`, workflows, the setup) also
+gets `process` (#901): the dashboard counts the merged PRs with it.
 
 `dashboard.py --next` puts the tickets that share fewer files and functions with the work in progress first (#487):
 name each file and function that the ticket changes, and no others (tools that only check, such as `render.py`, do not count).
@@ -83,3 +85,4 @@ is only in a document is lost: milestones 2 and 3 of the replay research (#31) w
 - One goal per ticket. If you write "and also", make two tickets.
 - Search the open issues first. Do not make a duplicate.
 - Do not change the priority of a ticket that the owner set. Propose the change in a comment.
+- A ticket that uses a tool, file or function of a ticket that is not merged yet gets "Depends on: #<that ticket>": else it is a candidate at once, and a run claims it without the tool (#829 needed `tools/replay_drift.py` of the open PR #830).

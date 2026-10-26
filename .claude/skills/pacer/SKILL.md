@@ -11,7 +11,7 @@ So one pacer session starts them. It does no ticket work, it does not comment on
 ## One cycle
 
 1. `git -C /home/user/aoe2mc pull -q origin main` (the rules in this file can change). If the repository is not
-   there, attach it with `add_repo` (owner Larspolo, repo aoe2mc) and clone it as the tool says.
+   there, attach it with `add_repo` (the owner and name of `repo` in `agent.toml`: Larspolo, aoe2mc) and clone it as the tool says.
 2. Run `python3 tools/usage.py --fire` in the repository. Its first output line (stdout) is K, the number of runs to
    start now. The line on stderr shows the inputs: usage, target, claims, ready tickets, `paused`.
 3. Call `mcp__claude-code-remote__fire_trigger` K times with `trigger_id` `trig_01QTrgkK5PZmqPwQ96rKp3QE`.

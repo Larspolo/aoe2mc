@@ -72,6 +72,12 @@ open, so a player clicks again to queue more (no separate "x5" button). The buil
 next click is on the ground.
 Epic #618.
 
+**Owner decision (2026-10-26): the hints of the available actions** (#797). The game program shows the actions that
+the player can do now (for example "Right click: walk · Sneak + right click: deselect" while units are selected) in the
+**action bar**, the line above the hotbar where Minecraft shows "Press Shift to dismount". The action bar fades after
+about 2 s, so the program sends the hint again while the state lasts. The boss bar stays for the selected unit (#659),
+the sidebar for the numbers (#744). Epic #793, work: #798.
+
 ### Smallest playable milestone: "villagers gather wood"
 
 1. The converter writes `aoe2mc.json` into the world folder: each object with its AoE2 ID, name, owner,
@@ -105,6 +111,9 @@ Item 6 (fog of war) has no ticket.
 Selection of many units (#742): the owner chose in #745 a selection wand with two corners for the AoE2 selection box
 (option A, #778: `Gather.box`, item `warped_fungus_on_a_stick` with its own "used" statistic `aoe_box`), and hotbar
 items for the control groups later (option C, #779). A radius selection (option B) was not chosen.
+Control groups (#779, `Gather.group`): carrots on a stick "Group 1" to "Group 5" in hotbar slots 5 to 9
+(`custom_data` `{aoe_group:N}`). A shift right click (vanilla predicate `is_sneaking`) saves the selection as group N,
+a right click selects the live units of group N. The click item is `carrot_on_a_stick[!custom_data]`.
 
 ## Measured gather timing (#289)
 
@@ -221,3 +230,42 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - A horse has no attack goal, and `aoe attack` on it does nothing. Give the target to the rider: a riding mob walks with the navigation of its vehicle (vanilla `Mob#getNavigation`), so the horse follows, and its follow range limits the path search (#710).
 - A cancelled `EntityDamageByEntityEvent` of an arrow lets the arrow fly on, and it can hit the next entity on its way (a moving horse under the hit rider: two hits in one tick, #733). Remove the projectile after the hit.
 - A RCON command of more than 1446 bytes: the server closes the connection ("the server closed the RCON connection"). Keep long `tellraw` texts short (`separators=(",", ":")`, style of the parent in `extra`) and test the length (#688).
+- A `block_display` takes the light of the block at its position: a ghost whose anchor is inside a slope draws black. Set `Display.Brightness(15, 15)` (#794). A `tp` of a creative player in the air lets it fall before a screenshot: use spectator mode.
+- On Paper, a unit of `aoe moveto` walks slower than `ai.WALK` on slopes and around trees (villager 9935 of `de-64.3`: about 5.6 instead of 12.8 blocks per second at speed 4): the replay position is ahead of the entity. `Replay.arrived` reads it before the first gather step (#766).
+- The `uuid` of a mounted unit or a ship in `aoe2mc.json` is its vehicle (horse, ravager, boat): it has no team and no `aoe2mc.pN` tag, so `kill @e[tag=aoe2mc.pN]` leaves it. Kill it first: `execute as @e[tag=aoe2mc.pN] on vehicle run kill @s` (#819). A killed mob stays 20 ticks: `execute if entity` passes for 1 s.
+- A mob jumps at each step of one block (attribute `step_height` 0.6) and loses speed in the air: on the bumpy ground of a converted map the replay villagers walked at 64 % of their speed. The plugin sets `step_height` 1 on each order (#829). Measure a walk speed with `tools/replay_drift.py --every 2`: with 10 s between samples a detour looks like a slow walk (82 % instead of 91 %).
+- A wait loop with a fake clock (`now += s`) runs forever when the wait is about 1e-15: `now + 1e-15 == now`. Break on `wait <= 1e-6`, not `<= 0` (#685).
+- Screenshots of a game check: join `mc_shot.Client(game.game_port, game.version)` to the running `run.Game`, `gamemode spectator aoe2mc`, then `tp aoe2mc X Y Z facing entity <uuid>` and `client.shot()`: no saved world, no copy of the `.dat` files. The server log is `game.folder/logs/latest.log`: read it before the `with` ends (#603).
+- `run.Game(world)` plays on the world folder itself (`--universe`, no copy): the game saves its changes there. Copy the converted world for each check run, else the second run starts with felled trees and empty bushes (#718). A live replay at `--speed 8` leaves the real villagers far behind the replay positions: check at speed 4.
+- `mc_shot.Client` hides the chat (`chatScale` 0): pass `chat=True` for an image of a message. The client log (`client.text()`, `[CHAT]`) has each chat line; the server log has no `tellraw` text. `Gather.setup` reads no stock from the sidebar: set `scoreboard players set Food aoe_res N` with `g.stock` (#780).
+- `execute if entity @e[...]` on 26.3 answers "Test passed. Count: N" (a capital C, a full stop); the `FakeServer` of `tests/test_gather.py` writes "Test passed, count: 1". Match `Count: (\d+)` and check a new answer on a real server (#787).
+- A fruit bush of `place_objects` is at block `int(x * T)` (the tile center), not at `int(tile) * T` (#391).
+- `game/build.py` has a function `menu()` (the chat text of /trigger): it imports `game/menu.py` as `chest` (#621).
+- A train test (`game/train.py`) needs an own `TOWN_CENTER` or `HOUSE`: without them the population limit is 0 and `tick()` spawns nothing (#654).
+- `game/combat.py` `stats()`: a name that is not a `STATS` key gets `DEFAULT` (40 hit points) without a warning. The units of `aoe2mc.json` have names like `VILLAGER_MALE`: compare with `units.classify` names, not the table keys (#655).
+- A new item of a building menu (`train.show()`) changes the exact menu strings in 5 test files (`grep -n "aoe menu Steve\|endswith(\"queue" tests/`): add it as a constant next to `FEUDAL` and `RALLY` in `tests/test_train_menu.py` (#672, #707).
+- `game/replay.py` uses the resource looks of `gather.Gather` through `Replay.crew` (`Gather.__new__` with `map`, `trunks`, `bushes` and a `command` attribute): no copy of the look code (#631).
+- `test_gather_attack.click` puts the eye at the ground height (y 64): its ray cannot hit the ground, so `pick_ground` and `build.pick` give the wrong cell. For a ground click put the eye 2 blocks up (`tests/test_order_marker.py` `look`, #796).
+- `Replay.run` gives `control["time"]` as a float (ms): a test of a poll action with an int time hides a format error like `:02d` (#803). Test with a float time, or with `Replay.run` and the `Clock` fake of `tests/test_replay_control.py`.
+- `Gather.__new__` adapters (`tests/test_menu.py`, `Replay.crew`) have no attribute of `Gather.__init__`: a new attribute that `clicks()` or `setup()` reads also needs a class default (`cheats = False`, #816).
+- `Replay.run(..., bar=False)` sends no `tag ... add aoe2mc.pop` for the start units (the `send` of the bar): a tool that selects `@e[tag=aoe2mc.pop]` must pass `bar=True`, as `run.py --replay`. `v.pos` of a walking unit is the end of its leg, not the place where it is due now (#813).
+- `tests/test_menu.py` `test_gather_reads_the_menu_clicks` makes a `Gather.__new__` with only the attributes of `clicks()`: a new attribute that `clicks()` reads (`calls`, #779) needs a line there too.
+- A minecart that rides a mob pushes that mob: the carrier pig of a siege unit creeps on at about 0.5 blocks per second after its walk. `follow()` turns its AI off on arrival, as for villagers (#836). Vanilla `attribute` fails on a minecart: `ai.speed_command` sends `aoe speed` for `units.siege` names.
+- A moss carpet or `snow[layers=2]` on a ground step makes it 1.06 or 1.25 blocks high: at `step_height` 1 a husk stood still in front of it for 10 s, so the plugin sets 1.25 (#851). Down a slope a mob walks at most about 5.7 blocks per second, whatever its speed (#888). Find such a cause with one unit on the real world: summon it, `aoe moveto`, read `Pos` every 0.25 s.
+- `~` in an RCON command is relative to the world spawn, not to the target entity: keep the y of a boat with `execute as U at @s run tp @s X ~ Z` (`replay.sail`, #866). A `/tp` of a boat keeps its crew. `data get entity BOAT Passengers` shows the crew NBT without its `id`: test the crew with `execute as @e[tag=T] on vehicle`.
+- A replay unit of the plugin stands up to `replay.NEAR` blocks from `v.pos`: a command aimed from `v.pos` (the point of the tree next to it) can be 40° off for the entity. Aim at the middle of the target, and read `Rotation` and `Pos` of the entity in a Paper check (#867).
+- A slow walk of a replay unit in `tools/replay_drift.py`: first print the ground height along its way (`gather.Map.y`). The "town" of player 1 of `samples/de-64.3.aoe2record` (x 110 to 175, z 327 to 353) is a slope of 1 block per block, so its slow horse was the descent of #888, not the width of the horse (#889). One horse on flat ground walks at its full speed (4.81 of 4.8 blocks per second).
+- `tp PLAYER X Y Z facing X Y Z` aims from the feet, not from the eyes: `Gather.click` then picks nothing. For a click check compute the yaw and the pitch from the eye (y + 1.62) yourself (#823, script on `checks/823`).
+- `test_gather_attack.click` puts the eye at the ground height (y 64): its ray cannot hit the ground, so `pick_ground` and `build.pick` give the wrong cell. For a ground click put the eye 2 blocks up (`tests/test_order_marker.py` `look`, #796).
+- `Replay.run` gives `control["time"]` as a float (ms): a test of a poll action with an int time hides a format error like `:02d` (#803). Test with a float time, or with `Replay.run` and the `Clock` fake of `tests/test_replay_control.py`.
+- `FakeServer` of `tests/test_gather.py` moves an entity only on `tp U X Y Z <more>` (a `tp` without `facing` keeps its Pos): check the `tp` text in `server.log`. A fake answer for `execute if entity X` must skip `@a[scores=...]`: `Gather.clicks` asks that (#808).
+- Two equal melee units in a duel: the result depends on the tick of the first hit. A defender that hits back in the same tick ties (both die); `attackBack` gives it half a reload of reaction (#848).
+- A screenshot of an order marker in Xvfb: dust and the glowing effect last about 1 second, and the software renderer
+  draws few frames, so one `client.shot` after the commands shows nothing. Send the marker commands again each 0.2 s
+  in a thread and take the shot after about 1.5 s (#845). The plugin sets the AoE2 hit points itself: `effect give
+  resistance` does not keep an attacked unit alive for the shot, so put the attacker far from the target.
+- A test server with no player: an entity that RCON summons in an unloaded chunk is gone at once ("Summoned", then `data get` finds nothing). `forceload add` the area first, wait 2 s, and `kill` the older entities of the type before `@e[...,limit=1]` (#844).
+- `Pathfinder.moveTo` to the same target keeps the old path (Minecraft `createPath` returns the current path for the same target): call `stopPathfinding()` first to get a new path from the place of the mob (#888). So the `moveTo` of `follow()` every 2 ticks does not search again while the path is not done.
+- A `text_display` with scale 1 is a few pixels high from 35 blocks (1280 × 720): give a text that a spectator must read from far a `transformation` with `scale:[4f,4f,4f]` (all four keys of `transformation`, #843).
+- `run.Game(world)` runs the server on the world folder itself and saves into it: units that died or walked stay so in the next run. Copy the world (`shutil.copytree`) before each check run, else a second run finds dead units (#934).
+- `tests/test_replay_control.py` `Clock` and the client test of `tests/test_replay_input.py` take each `tellraw @a` as a chat event of the timeline (a list with a `t<N>` text): a new `tellraw @a` of `Replay.run` (the view text of #737) broke them. Mark the event texts, or match only `tellraw @a [` (#737, #910).

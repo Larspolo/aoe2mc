@@ -16,10 +16,12 @@ a second push of another claim commit is never a fast-forward. Later claims of t
     python3 tools/claim.py N --guard --pr-branch B   # the same, but the open PR of branch B (taken over) is allowed
     python3 tools/claim.py ID --comment   # lock owner comment ID (autopilot step 3); exit 1: another run handles it
     python3 tools/claim.py E --refill     # lock the sub-issues of epic E (0: the whole queue refill, autopilot step 5)
+    python3 tools/claim.py 0 --review     # lock the process review of this time slot (`improve` skill, #898)
+    python3 tools/claim.py 0 --reviewed change   # after the review: "change" or "none" sets the next slot length
+    python3 tools/claim.py 0 --roadmap    # lock the review of docs/ROADMAP.md of this 2-hour slot (`roadmap` skill)
 
 Two runs did one ticket (#288): one commented "Started by" and worked without the claim ref. So a claim also fails
-when another branch commented "Started by" in the last 30 minutes or has an active PR for the ticket (#491), when
-an open hand-off PR (`ready-to-merge`) closes the ticket (#546), and `--guard` stops a run before its push when it does not own the claim or another branch has a PR for the ticket. The GitHub checks run only for a GitHub remote.
+when another branch commented "Started by" in the last 30 minutes or has an active PR for the ticket (#491), and `--guard` stops a run before its push when it does not own the claim or another branch has a PR for the ticket. The GitHub checks run only for a GitHub remote.
 
 A usage limit stops all runs at about the same time, and a stopped run never continues (#231). Its last beat is
 before the stop, so its ticket is stale at most 30 minutes after the limit resets. A live run beats again.
@@ -28,20 +30,32 @@ Three runs read one owner comment at the same time and made three copies of one 
 comment before it acts on it: `--comment` pushes `claim/comment-ID` once (no slots, no release).
 Three runs refilled the queue of one epic within 2 minutes and made copies of tickets (#505). So a run locks the
 refill before it makes tickets: `--refill` pushes `claim/refill-E-S` once. S is the state of the work: the number of
-closed sub-issues of epic E (a new lock when a sub-issue closes), or the UTC hour for E = 0 (the whole refill).
+closed sub-issues of epic E (a new lock when a sub-issue closes), or the UTC hour for E = 0 (the whole refill) and for
+a ticket E with no sub-issue (#855).
+
+Parallel runs read the same `runs` counter of the status issue, so "every 5th run" lost 7 of 10 process reviews
+(#898). So `--review` locks the review of a time slot: `claim/review-<minutes>m-<slot>`, and only when the last
+review (`last_review` in the state comment of #1) is at least one slot length ago. A review with no change doubles
+the slot length (45, 90, 180, 360 minutes), a change sets it back to 45 (`--reviewed`).
 
 Exit 2: git failed for another reason (network, permission). The workflow `claims.yml` deletes the refs
 of a closed ticket: the session proxy gives 403 for branch deletes.
 """
 import argparse
 import datetime
+import json
 import re
 import subprocess
 import sys
 import time
 import uuid
 
+from agent_config import CONFIG
+
 EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+REVIEW, REVIEW_MAX = 45, 360    # minutes: the first and the longest slot of the process review (#898)
+ROADMAP = 120               # minutes: the slot of the review of docs/ROADMAP.md
+STATUS = CONFIG["status"]["issue"]   # the status issue: its state comment holds the review slot
 STALE = 30 * 60             # seconds without a claim or beat: the run stopped (usage limit, crash)
 RECENT = 30 * 60            # seconds: a "Started by" comment of another branch owns the ticket for this time (#288)
 
@@ -123,17 +137,54 @@ def claim_comment(cid, remote="origin"):
 def refill_state(epic, remote="origin", now=None):
     """The state part of the refill lock: closed sub-issues of the epic on GitHub, else the UTC hour and its 10-minute
     slot: the runs close about 25 tickets per hour, so one refill per hour, then per 15 minutes, left the queue empty
-    (#609, #650)."""
-    if epic and on_github(remote):
-        return str(api(f"issues/{epic}").get("sub_issues_summary", {}).get("completed", 0))
+    (#609, #650). A ticket with no sub-issue gets the slot too: else the lock of a run that did not split it stays
+    for ever (#855: #397 waited 5 hours)."""
     t = datetime.datetime.fromtimestamp(now or time.time(), datetime.timezone.utc)
-    return t.strftime("%Y%m%d%H") + str(t.minute // 10)
+    slot = t.strftime("%Y%m%d%H") + str(t.minute // 10)
+    if epic and on_github(remote):
+        s = api(f"issues/{epic}").get("sub_issues_summary") or {}
+        return str(s.get("completed", 0)) if s.get("total") else "0-" + slot
+    return slot
 
 
 def claim_refill(epic, state, remote="origin"):
     """Lock the refill of epic `epic` in state `state`: True when this run pushed `claim/refill-E-S` first."""
     msg = f"Claim refill {epic}-{state} by {who()} ({uuid.uuid4().hex})"
     return push(git("commit-tree", EMPTY_TREE, "-m", msg).stdout.strip(), f"claim/refill-{epic}-{state}", remote)
+
+
+def agent_state(body):
+    """The JSON of the state comment `<!-- agent-state: {...} -->` of the status issue, or {}."""
+    m = re.search(r"<!-- agent-state: (\{.*?\}) -->", body or "")
+    return json.loads(m[1]) if m else {}
+
+
+def review_slot(state, now=None):
+    """The lock key of the process review at time `now` for the agent state, or None when the last review is less
+    than one slot length ago."""
+    now, minutes = now or time.time(), state.get("review_minutes", REVIEW)
+    last = state.get("last_review")
+    if last and now - datetime.datetime.fromisoformat(last.replace("Z", "+00:00")).timestamp() < minutes * 60:
+        return None
+    return f"{minutes}m-{int(now // (minutes * 60))}"
+
+
+def reviewed(body, changed, now=None):
+    """The body of the status issue after a review: a change sets the slot back to REVIEW minutes, no change doubles
+    it (at most REVIEW_MAX). The other keys of the state comment stay."""
+    state = agent_state(body)
+    t = datetime.datetime.fromtimestamp(now or time.time(), datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    state.update(last_review=t, review_minutes=REVIEW if changed else
+                 min(2 * state.get("review_minutes", REVIEW), REVIEW_MAX))
+    new = f"<!-- agent-state: {json.dumps(state)} -->"
+    old = re.search(r"<!-- agent-state: \{.*?\} -->", body or "")
+    return body.replace(old[0], new) if old else new + "\n" + (body or "")
+
+
+def claim_lock(kind, key, remote="origin"):
+    """Push `claim/<kind>-<key>` once: True when this run was first."""
+    msg = f"Claim {kind} {key} by {who()} ({uuid.uuid4().hex})"
+    return push(git("commit-tree", EMPTY_TREE, "-m", msg).stdout.strip(), f"claim/{kind}-{key}", remote)
 
 
 def release(number, remote="origin", word="Release"):
@@ -148,7 +199,7 @@ def release(number, remote="origin", word="Release"):
     return ref if push(sha, ref, remote) else None
 
 
-def revived(path="docs/LEARNINGS.md", base="origin/main"):
+def revived(path=CONFIG["docs"]["learnings"], base=f"origin/{CONFIG['branch']}"):
     """Lines of `path` that a `merge=union` merge of `base` brought back after `base` removed them (#563).
 
     M is the last merged state of `base` (the merge base). A line of HEAD that is not in M and that no own commit
@@ -216,16 +267,6 @@ def active_pr(pulls, number, me, now, limit=RECENT):
     return None
 
 
-def handoff_pr(pulls, number):
-    """Number of an open PR with the label ready-to-merge that closes ticket `number`, else None (#546):
-    the hand-off of autopilot step 6.8 waits for the owner, so no run does the ticket again."""
-    for p in pulls:
-        if p["state"] == "open" and "ready-to-merge" in {lb["name"] for lb in p.get("labels", [])} \
-                and closes(number).search(prose(p["body"])):
-            return p["number"]
-    return None
-
-
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("number", type=int, help="ticket number (--comment: the comment ID, --refill: the epic)")
@@ -238,6 +279,9 @@ def main(argv=None):
     g.add_argument("--guard", action="store_true", help="before a push: beat; exit 1 when another branch has a PR")
     g.add_argument("--comment", action="store_true", help="lock the owner comment with this ID")
     g.add_argument("--refill", action="store_true", help="lock the new sub-issues of this epic (0: the whole refill)")
+    g.add_argument("--review", action="store_true", help="lock the process review of this time slot (number 0)")
+    g.add_argument("--reviewed", choices=("change", "none"), help="after the review: set the next slot length")
+    g.add_argument("--roadmap", action="store_true", help="lock the roadmap review of this 2-hour slot (number 0)")
     ap.add_argument("--state", help="--refill: the state part of the lock (default: closed sub-issues, or the hour)")
     ap.add_argument("--pr-branch", metavar="BRANCH", help="--guard: the branch of a PR that this run took over")
     ap.add_argument("--remote", default="origin")
@@ -248,6 +292,20 @@ def main(argv=None):
             return 0
         print(f"comment {a.number}: another run handles it")
         return 1
+    if a.review or a.roadmap:
+        key = review_slot(agent_state(api(f"issues/{STATUS}")["body"]) if on_github(a.remote) else {}) \
+            if a.review else str(int(time.time() // (ROADMAP * 60)))
+        if key and claim_lock("review" if a.review else "roadmap", key, a.remote):
+            print(f"claimed {'review' if a.review else 'roadmap'} {key}")
+            return 0
+        print("no review now: the last one is less than one slot ago, or another run does it")
+        return 1
+    if a.reviewed:
+        from dashboard import api as call
+        body = reviewed(api(f"issues/{STATUS}")["body"], a.reviewed == "change")
+        call(f"issues/{STATUS}", "PATCH", {"body": body})
+        print(agent_state(body))
+        return 0
     if a.refill:
         state = a.state or refill_state(a.number, a.remote)
         key = f"{a.number}-{state}"
@@ -296,10 +354,6 @@ def main(argv=None):
             print(f"owned by another run: {other} commented \"Started by\" less than 30 minutes ago")
             return 1
         pulls = api("pulls?state=open&per_page=100")
-        pr = handoff_pr(pulls, a.number)
-        if pr:
-            print(f"hand-off PR #{pr} (ready-to-merge) closes #{a.number}: it waits for the owner")
-            return 1
         pr = active_pr(pulls, a.number, who(), time.time())
         if pr:
             print(f"owned by another run: its PR #{pr} closes #{a.number} and changed less than 30 minutes ago")

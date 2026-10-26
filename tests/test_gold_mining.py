@@ -26,7 +26,7 @@ def menus(server):
 def test_the_mining_camp_menu_has_gold_mining():
     server, g = setup()
     assert train.open_menu(g, "Steve", (2, 3)) == (2, 4, 2, 4)
-    assert menus(server) == ["aoe menu Steve Mining Camp 0:book:Gold Mining:100 food · 75 wood · 30 s · research"]
+    assert menus(server)[-1].startswith("aoe menu Steve Mining Camp 0:book:Gold Mining:100 food · 75 wood · 30 s · research ")
 
 
 def test_a_click_queues_gold_mining_once_and_takes_its_cost():
@@ -34,7 +34,7 @@ def test_a_click_queues_gold_mining_once_and_takes_its_cost():
     rect = train.open_menu(g, "Steve", (3, 3))
     assert train.order(g, "Steve", rect, 0, shift=True) == 1 and (g.stock["food"], g.stock["wood"]) == (400, 425)
     assert train.order(g, "Steve", rect, 0) == 0 and (g.stock["food"], g.stock["wood"]) == (400, 425)
-    assert menus(server)[-1].endswith("0:book:Gold Mining:100 food · 75 wood · 30 s · researching")
+    assert " 0:book:Gold Mining:100 food · 75 wood · 30 s · researching " in menus(server)[-1] + " "
 
 
 def test_after_the_research_gold_is_15_percent_faster():

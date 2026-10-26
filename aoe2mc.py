@@ -44,7 +44,7 @@ from collections import Counter
 
 import numpy as np
 from nbtlib import File
-from nbtlib.tag import Byte, Compound, Double, Float, Int, IntArray, List, Long, LongArray, String
+from nbtlib.tag import Byte, ByteArray, Compound, Double, Float, Int, IntArray, List, Long, LongArray, String
 
 import buildings
 import units
@@ -217,8 +217,10 @@ def terrain_style(name):
 # --------------------------------------------------------------------------------------------
 # Read the AoE2 scenario.
 # --------------------------------------------------------------------------------------------
-def object_kinds():
-    """Object ID -> (kind prefix, name). Scenarios and recorded games use the same IDs."""
+def object_kinds(old=True):
+    """Object ID -> (kind prefix, name). Scenarios and recorded games use the same IDs. old: also the IDs that DE
+    keeps only in its data file (OLD_IDS), with the name of the DE object: a recorded game builds a town center
+    as 621 (#876)."""
     from AoE2ScenarioParser.datasets.buildings import BuildingInfo
     from AoE2ScenarioParser.datasets.heroes import HeroInfo
     from AoE2ScenarioParser.datasets.other import OtherInfo
@@ -227,6 +229,9 @@ def object_kinds():
     for prefix, enum in (("H", HeroInfo), ("U", UnitInfo), ("O", OtherInfo), ("B", BuildingInfo)):
         for e in enum:          # later enums win: Building > Other > Unit > Hero
             kinds[e.ID] = (prefix, e.name)
+    prefixes = {name: prefix for prefix, name in kinds.values()}
+    for i, name in OLD_IDS.items() if old else ():
+        kinds.setdefault(i, (prefixes.get(name, "O"), name))
     return kinds
 
 
@@ -234,9 +239,11 @@ RECORDS = (".aoe2record", ".mgz", ".mgx", ".mgl")      # recorded games: DE, HD;
 
 
 def read_map(path):
-    """read_record for recorded games (RECORDS), read_scx for old .scx scenarios, else read_scenario."""
+    """read_record for recorded games (RECORDS), read_scx for old .scx scenarios, read_json for a map in JSON,
+    else read_scenario."""
     p = path.lower()
-    return (read_record if p.endswith(RECORDS) else read_scx if p.endswith(".scx") else read_scenario)(path)
+    return (read_record if p.endswith(RECORDS) else read_scx if p.endswith(".scx") else
+            read_json if p.endswith(".json") else read_scenario)(path)
 
 
 # Object IDs of old scenarios that DE keeps only in its data file (the DE editor hides them, #576) -> the DE object of
@@ -264,7 +271,7 @@ def read_scx(path):
     w, h = s["width"], s["height"]
     size = max(w, h)
     terrain, elevation = (np.pad(a, ((0, size - w), (0, size - h)), mode="edge") for a in (s["terrain"], s["elevation"]))
-    kinds = object_kinds()
+    kinds = object_kinds(old=False)                                  # OLD_IDS go to the DE IDs below
     ids = {name: i for i, (_, name) in kinds.items()}
     players = {}
     for pid, p in s["players"].items():
@@ -284,6 +291,47 @@ def read_scx(path):
                             garrisoned=holder is not None, ref=o["id"], holder=holder))
     texts = {k: "" for k in CHAPTERS}
     return size, terrain, elevation, {t.value: t.name for t in TerrainId}, texts, objects, players
+
+
+def read_json(path):
+    """A map description in JSON (#960), as read_scenario returns it: {"size": N, "terrain": N × N terrain IDs,
+    "elevation": N × N levels (default 0), "objects": [{"name", "player", "x", "y", "rotation"} ...],
+    "players": {"1": {"civ": "BRITONS", "color": 0} ...}}. The IDs and names are those of AoE2ScenarioParser
+    (TerrainId, object_kinds). The color is an index of buildings.COLOR_NAMES (default: the player number - 1)."""
+    from AoE2ScenarioParser.datasets.terrains import TerrainId
+    with open(path) as f:
+        d = json.load(f)
+    size = d.get("size")
+    if not isinstance(size, int) or size < 1:
+        raise OptionError(f"{path}: \"size\" must be a positive integer")
+    terrain_names = {t.value: t.name for t in TerrainId}
+    arrays = {}
+    for key, default in (("terrain", None), ("elevation", 0)):
+        a = np.array(d.get(key, default if default is None else [[default] * size] * size))
+        if a.shape != (size, size):
+            raise OptionError(f"{path}: \"{key}\" must be {size} lists of {size} numbers, not shape {a.shape}")
+        arrays[key] = a
+    if (bad := sorted(set(arrays["terrain"].ravel().tolist()) - set(terrain_names))):
+        raise OptionError(f"{path}: unknown terrain IDs {bad[:10]} (see AoE2ScenarioParser TerrainId)")
+    kinds = object_kinds(old=False)
+    ids = {name: (i, prefix) for i, (prefix, name) in kinds.items()}
+    objects = []
+    for ref, o in enumerate(d.get("objects", ())):
+        if o.get("name") not in ids:
+            raise OptionError(f"{path}: object {ref}: unknown name {o.get('name')!r} (see aoe2mc.object_kinds)")
+        t, prefix = ids[o["name"]]
+        objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=o["name"], id=t,
+                            player=int(o.get("player", 0)), x=float(o["x"]), y=float(o["y"]),
+                            rotation=float(o.get("rotation", 0)), garrisoned=False, ref=ref, holder=None))
+    players = {0: {"color": "light_gray", "arch": "western", "civ": "GAIA", "view": None}}
+    for pid, p in d.get("players", {}).items():
+        pid, civ, color = int(pid), p.get("civ", "?").upper(), p.get("color", int(pid) - 1)
+        players[pid] = {"color": buildings.COLOR_NAMES[color] if pid and 0 <= color < 8 else "light_gray",
+                        "arch": buildings.CIV_TO_ARCH.get(civ, "western"), "civ": civ, "view": None}
+    for pid in {o["player"] for o in objects} - set(players):          # an object of a player without an entry
+        players[pid] = {"color": buildings.COLOR_NAMES[(pid - 1) % 8], "arch": "western", "civ": "?", "view": None}
+    return (size, arrays["terrain"].astype(np.int16), arrays["elevation"].astype(np.float32), terrain_names,
+            {k: "" for k in CHAPTERS}, objects, players)
 
 
 def read_scenario(path):
@@ -465,6 +513,30 @@ def de_queue(parse_action):
     return parse
 
 
+@contextlib.contextmanager
+def own_selection():
+    """mgz 1.8.51 (model.inputs.Inputs.add_action) gives a command without own object IDs the last IDs of its action
+    type of any player: so player 2 moved the villagers of player 1 (#828). In this block the last IDs of the same
+    player and action type fill them."""
+    from mgz.model.inputs import Inputs
+    add = Inputs.add_action
+
+    def add_action(self, action):
+        last = self.__dict__.setdefault("own_ids", {})
+        key = (action.player.number if action.player else None, action.type)
+        if action.payload.get("object_ids"):
+            last[key] = action.payload["object_ids"]
+        elif "object_ids" in action.payload and key in last:
+            action.payload["object_ids"] = last[key]
+        self._oid_cache = {}                                       # mgz copies no IDs of other players
+        add(self, action)
+    Inputs.add_action = add_action
+    try:
+        yield
+    finally:
+        Inputs.add_action = add
+
+
 TIMELINE_KEYS = {"building_id": "type", "unit_id": "type", "technology_id": "technology_id", "object_ids": "objects",
                  "target_id": "target", "amount": "amount", "resource": "resource", "stance": "stance",
                  "formation": "formation", "order": "order", "command": "command"}
@@ -472,7 +544,7 @@ TIMELINE_KEYS = {"building_id": "type", "unit_id": "type", "technology_id": "tec
 
 def read_timeline(path):
     """The commands of a recorded game in time order (#372): a list of events {"time": ms, "player": number or
-    None, "kind": "build", "wall", "queue", "research", "move", "order", "chat", "age" ..., and the data of the
+    None, "kind": "build", "wall", "queue", "research", "move", "order", "garrison", "chat" ..., and the data of the
     kind: "type" and "name" (building or unit, as in read_record), "tile" [x, y], "end" [x, y] (wall),
     "technology", "objects" (the object IDs that the command selects), "target" (object ID), "text" (chat)}.
     Tiles are AoE2 tiles. Actions that mgz cannot read are left out. None for the games that the mgz model
@@ -482,7 +554,7 @@ def read_timeline(path):
     names, parse = object_kinds(), fast.parse_action
     fast.parse_action = de_queue(parse)
     try:
-        with open(path, "rb") as f:
+        with open(path, "rb") as f, own_selection():
             match = parse_match(f)
     except RuntimeError:
         return None
@@ -506,6 +578,9 @@ def read_timeline(path):
             e["tile"] = [round(float(a.position.x), 3), round(float(a.position.y), 3)]
         if "x_end" in a.payload:
             e["end"] = [a.payload["x_end"], a.payload["y_end"]]
+        if kind == "special" and e.get("order") == "Garrison":     # the garrison command of AoE2 DE (#809)
+            ids = e.get("objects", [])                              # mgz reads the IDs one byte early
+            e["kind"], e["objects"] = "garrison", [i >> 8 for i in ids] if all(i & 255 == 0 for i in ids) else ids
         events.append(e)
     for c in match.chat:
         events.append({"time": ms(c.timestamp), "player": c.player.number if c.player else None, "kind": "chat",
@@ -577,7 +652,8 @@ TRAIN = {"VILLAGER": (25, "TOWN_CENTER"), "MILITIA": (21, "BARRACKS"), "MAN_AT_A
          "MONK": (51, "MONASTERY"), "TRADE_CART": (50, "MARKET")}   # common units: seconds of training (DE), building
 RESEARCH_S = {"Loom": 25, "Town Watch": 25, "Town Patrol": 40, "Wheelbarrow": 75, "Hand Cart": 55,
               "Feudal Age": 130, "Castle Age": 160, "Imperial Age": 190}   # the town center researches: they delay units
-UNIT_USE = {"move", "order", "build", "wall", "patrol", "follow", "formation", "attack_move", "back_to_work", "stance"}
+UNIT_USE = {"move", "order", "build", "wall", "patrol", "follow", "formation", "attack_move", "back_to_work", "stance",
+            "garrison"}
 BUILDING_USE = {"queue", "research", "gather_point", "ungarrison", "sell", "buy"}
 WORK = re.compile(r"TREE|.*BUSH|.*_MINE|.*FARM")                     # an ORDER on these: a villager gathers
 
@@ -612,8 +688,9 @@ def name_timeline(objects, timeline, window=16):
     building, TRAIN_S and RESEARCH_S). Objects that the record does not show (for example dead animals) take IDs
     too, so match each predicted object to the first ID in the next `window` IDs that the commands use in the same
     way (a building ID in QUEUE and RESEARCH, of the building that trains its units; a unit ID in MOVE, ORDER and
-    BUILD) and not before the object exists. A building that is not matched gets the name of its units' building.
-    Adds "names" (a name or None per ID of "objects") to the events and returns {id: name}."""
+    BUILD; a building or ship ID as the target of GARRISON) and not before the object exists. A building that is not matched gets the name of its units' building.
+    Adds "names" (a name or None per ID of "objects") and the "target_name" of a new target ID to the events and
+    returns {id: name}."""
     names = {o["ref"]: o["name"] for o in objects if o.get("ref") is not None}
     top = max(names, default=0)
     used = {}             # new ID -> [time of its first use, "B", "U" or None, {building of its units}, a worker]
@@ -627,7 +704,9 @@ def name_timeline(objects, timeline, window=16):
                 if e["kind"] == "queue" and train(e.get("name", "")):
                     u[2].add(train(e["name"])[1])
         if role == "U" and e.get("target", 0) > top:
-            used.setdefault(e["target"], [e["time"], None, set(), False])
+            u = used.setdefault(e["target"], [e["time"], None, set(), False])
+            if e["kind"] == "garrison":                  # its target is a building or a ship (#912)
+                u[1] = u[1] or "G"
     made, seen = [], set()               # (time ms, command time, "B" or "U", name)
     for e in timeline:
         kind, t = e["kind"], e["time"]
@@ -644,18 +723,22 @@ def name_timeline(objects, timeline, window=16):
         while k < len(firsts) and firsts[k][0] < cmd:   # an ID in use before the command is older than the object
             below, k = max(below, firsts[k][1]), k + 1
         nxt = max(nxt, below + 1)
-        ids = [i for i in range(nxt, nxt + window) if i in used and used[i][1] in (role, None) and
+        ids = [i for i in range(nxt, nxt + window) if i in used and i not in names and
+               (used[i][1] in (role, None) or used[i][1] == "G" and (role == "B" or "SHIP" in name)) and
                used[i][0] >= t - 5000 and used[i][2] <= {name} and   # 5 s: the training times are estimates
                not (used[i][3] and "VILLAGER" not in name)]         # only villagers build and gather on land (#765)
         i = ids[0] if ids else nxt if nxt not in used else None
         if i is not None:
-            names[i], nxt = name, i + 1
+            names[i] = name             # a unit skips a GARRISON target: a later building can take it
+            nxt = next((j for j in range(nxt, i) if used.get(j, (0, None))[1] == "G" and j not in names), i + 1)
     for i, u in used.items():
         if i not in names and len(u[2]) == 1:
             names[i] = next(iter(u[2]))
     for e in timeline:
         if e.get("objects"):
             e["names"] = [names.get(i) for i in e["objects"]]
+        if names.get(e.get("target")) and e["target"] > top:          # a new building: GARRISON in it (#876)
+            e["target_name"] = names[e["target"]]
     return names
 
 
@@ -1839,6 +1922,8 @@ def passable_states(states):
 def seat_count(ship):
     return 1 if "_chest_" in str(ship["id"]) else 2      # a chest boat has one seat
 CHAIN = 4                   # units per boat seat: each garrisoned unit rides the unit below it (#382)
+GARRISONED = "aoe2mc.garrisoned"    # entity tag of a unit inside its building (#807; the game program: #808)
+GARRISON_CELLS = 20         # free cells of a building in aoe2mc.json: the largest AoE2 garrison (castle, #808)
 SUN = ("minecraft:zombie", "minecraft:zombie_villager", "minecraft:skeleton", "minecraft:stray", "minecraft:drowned")
 
 
@@ -1857,9 +1942,10 @@ def sun_helmet(nbt):
             eq["head"] = units.item("leather_helmet", unbreakable=True)
 
 
-def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside", silent=False):
+def plan_units(objects, players, cols, rng, stats, birds=True, garrison="inside", silent=False):
     """Entities per chunk: {(cx, cz): [(nbt, x, z, is_boat)]}. silent: also the passive animals (--ambience off).
-    garrison="outside": a garrisoned unit rides its ship if a seat is free, else stands next to its holder."""
+    A garrisoned unit rides its ship if a seat is free. Else garrison="inside": it stands in the rooms of its building
+    (is_boat = ("inside", y)), invulnerable and without a visible name (#807); "outside": it stands next to its holder."""
     T = cols.T
     out = {}
     refs = {o["ref"]: o for o in objects if o.get("ref") is not None}
@@ -1868,6 +1954,7 @@ def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside
     full = Counter()            # reference ID of a ship -> garrisoned units without room (on its name tag)
     labels = {}                 # reference ID of a ship -> the entity with its name tag
     taken = set()               # columns that garrisoned units use, so that they do not stand in one column
+    garrisons = Counter()       # reference ID of a building -> units inside it
     # The holders come first: a ship must exist before its passengers board it.
     for o in sorted(objects, key=lambda o: bool(o.get("garrisoned"))):
         src = o                 # gets the UUID of the entity for aoe2mc.json
@@ -1906,6 +1993,22 @@ def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside
                     src["uuid"] = units.uuid_str(nbt["UUID"])
                     stats["units (garrisoned, in a ship)"] += 1
                     continue
+                if garrison == "inside" and o.get("holder") in buildings.INSIDE:
+                    cells, y, center = buildings.INSIDE[o["holder"]]
+                    bx, bz = cells[garrisons[o["holder"]] % len(cells)] if cells else center   # more units share cells
+                    garrisons[o["holder"]] += 1
+                    label = units.top_entity(nbt)
+                    label["CustomNameVisible"] = Byte(0)            # a name tag shows through the walls
+                    label["Tags"] = List[String](list(label.get("Tags", [])) + [String(GARRISONED)])
+                    e = nbt
+                    while e is not None:                            # no damage in the barrier blocks of the rooms
+                        e["Invulnerable"], e["NoAI"] = Byte(1), Byte(1)
+                        e = e["Passengers"][0] if e.get("Passengers") else None
+                    src["uuid"] = units.uuid_str(nbt["UUID"])
+                    out.setdefault((bx >> 4, bz >> 4), []).append((nbt, bx + 0.5, bz + 0.5, ("inside", y)))
+                    stats["units (garrisoned, inside the holder)"] += 1
+                    stats["units"] += 1
+                    continue
                 o = dict(o, x=holder["x"], y=holder["y"]) if holder else o
                 stats["units (garrisoned, next to the holder)"] += 1
             elif boat and o.get("ref") is not None:
@@ -1925,7 +2028,9 @@ def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside
             continue
         blocked = cols.blocked[bx, bz]      # a ship in a dock moves to free water, else its crew suffocates (#190)
         if (blocked or held) and (boat is not True or blocked):
-            spot = free_spot(cols, bx, bz, 6 * T, water=bool(boat), taken=taken if held else ())
+            feet = holder.get("footprint") if held and holder else None     # next to it, not under it (#865)
+            near = {(x, z) for x in range(feet[0], feet[2]) for z in range(feet[1], feet[3])} if feet else set()
+            spot = free_spot(cols, bx, bz, 6 * T, water=bool(boat), taken=taken | near if held else ())
             if spot is None:
                 stats["units (inside a building, no free space)"] += 1
                 continue
@@ -2040,6 +2145,36 @@ def place_book(cols, edits, spawn, texts, title):
     return x, y, z
 
 
+def place_map(cols, edits, spawn, book):
+    """A glow item frame with the map of write_map (map id 0, #839) on the ground next to the lectern `book`, or in
+    its place (2 blocks in front of the spawn view) when there is no book: it shows also at night. Fixed 1b: no
+    player takes it, and it needs no support block.
+    Returns the entity (nbt, x, z, (None, y)) for entity_chunk, or None when no free land is near."""
+    sx, _, sz = spawn
+    if book:
+        x, _, z = book
+        spot = next(((x + dx, z + dz) for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1))
+                     if 0 <= x + dx < cols.n and 0 <= z + dz < cols.n and not cols.blocked[x + dx, z + dz]
+                     and cols.wtop[x + dx, z + dz] <= cols.top[x + dx, z + dz]), None)
+    else:
+        dx, dz = turn_tile(2, -2, 0, buildings.TURN)
+        spot = free_spot(cols, min(max(sx + dx, 0), cols.n - 1), min(max(sz + dz, 0), cols.n - 1), 4)
+    if spot is None or spot == (sx, sz) or cols.wtop[spot] > cols.top[spot]:
+        return None
+    fx, fz = spot
+    fy = cols.surface(fx, fz)
+    edits.footprint = None
+    edits.add([fx], [fy], [fz], "air")                 # grass and flowers hide the map
+    cols.blocked[fx, fz] = True                        # no unit stands in the frame
+    item = Compound({"id": String("minecraft:filled_map"), "count": Int(1),
+                     "components": Compound({"minecraft:map_id": Int(0)})})
+    nbt = units.to_nbt({"id": String("minecraft:glow_item_frame"), "Facing": Byte(1), "Item": item, "Fixed": Byte(1),
+                        "block_pos": IntArray([fx, fy, fz]), "ItemRotation": Byte(0), "ItemDropChance": Float(0)},
+                       (fx + 0.5, fy, fz + 0.5), 0, np.random.default_rng(839))
+    nbt["Invulnerable"] = Byte(1)
+    return nbt, fx + 0.5, fz + 0.5, (None, fy + 1 / 32)
+
+
 def shelf_data(items):
     """Block entity fields of a shelf (26.3) with one item in each of its 3 slots (#526)."""
     return {"Items": List[Compound]([Compound({"Slot": Byte(i), "id": String("minecraft:" + n), "count": Int(1)})
@@ -2071,7 +2206,9 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
     for nbt, x, z, boat in ents:
         bx, bz = int(x), int(z)
         top, wtop = int(cols.top[bx, bz]), int(cols.wtop[bx, bz])
-        if boat == "fish":
+        if isinstance(boat, tuple):                 # a garrisoned unit in the rooms of its building (#807)
+            y = boat[1]
+        elif boat == "fish":
             if wtop - top < 2:
                 continue
             y = (top + wtop) / 2 + 0.3
@@ -2307,6 +2444,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
     their footprint [x0, z0, x1, z1) in blocks. Objects of a recorded game have their object ID ("ref").
     Objects that the converter did not place are not in the list.
+    A building has the free cells of its ground floor and their y ("inside", buildings.INSIDE) for a garrison,
+    and the cells of its footprint that units walk through ("open": the town center, #865).
     "ground" has one string per block row z: for each x the y where a unit stands, or "-" for water.
     "timeline" (recorded games only): the events of read_timeline, with tiles in the turned grid
     and the "names" of the selected objects (name_timeline)."""
@@ -2321,11 +2460,16 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
              "tile": [round(float(o["x"]), 3), round(float(o["y"]), 3)], "rotation": round(o.get("rotation", 0.0), 4)}
         if o.get("hero"):
             e["hero"] = True
-        for k in ("uuid", "footprint"):
+        for k in ("uuid", "footprint", "open"):
             if k in o:
                 e[k] = o[k]
         if o.get("ref") is not None:                    # the object ID of a recorded game (#407, #408)
             e["ref"] = o["ref"]
+        if o["kind"] == "U" and o.get("garrisoned") and o.get("holder") is not None:
+            e["holder"] = o["holder"]                   # the reference ID of its building or ship (#807)
+        if o["kind"] == "B" and o.get("ref") in buildings.INSIDE:    # where the game program puts a garrison (#808)
+            cells, y, _ = buildings.INSIDE[o["ref"]]
+            e["inside"] = {"y": int(y), "cells": [[int(x), int(z)] for x, z in cells[:GARRISON_CELLS]]}
         objs.append(e)
     data = {"map_size": size, "tile_size": T, "level_height": H,
             "players": {str(pid): {"civ": p["civ"], "color": p["color"], "arch": p["arch"]}
@@ -2653,6 +2797,96 @@ def write_level_dat(path, name, spawn, yaw=SPAWN_YAW, size=None):
         os.path.join(d, "world_border.dat"))
 
 
+# The base colors of the map items (MapColor.java of the 26.3 server jar, ids 0 to 61; 0 = no color). A map byte is
+# id * 4 + shade, and the shades multiply the color by 180, 220, 255 or 135 / 255 (MapColor$Brightness).
+MAP_COLORS = [
+    0x000000, 0x7FB238, 0xF7E9A3, 0xC7C7C7, 0xFF0000, 0xA0A0FF, 0xA7A7A7, 0x007C00,
+    0xFFFFFF, 0xA4A8B8, 0x976D4D, 0x707070, 0x4040FF, 0x8F7748, 0xFFFCF5, 0xD87F33,
+    0xB24CD8, 0x6699D8, 0xE5E533, 0x7FCC19, 0xF27FA5, 0x4C4C4C, 0x999999, 0x4C7F99,
+    0x7F3FB2, 0x334CB2, 0x664C33, 0x667F33, 0x993333, 0x191919, 0xFAEE4D, 0x5CDBD5,
+    0x4A80FF, 0x00D93A, 0x815631, 0x700200, 0xD1B1A1, 0x9F5224, 0x95576C, 0x706C8A,
+    0xBA8524, 0x677535, 0xA04D4E, 0x392923, 0x876B62, 0x575C5C, 0x7A4958, 0x4C3E5C,
+    0x4C3223, 0x4C522A, 0x8E3C2E, 0x251610, 0xBD3031, 0x943F61, 0x5C191D, 0x167E86,
+    0x3A8E8C, 0x562C3E, 0x14B485, 0x646464, 0xD8AF93, 0x7FA796,
+]
+MAP_SHADES = (180, 220, 255, 135)
+
+
+def map_palette():
+    """RGB of each map byte (index = id * 4 + shade), as float rows."""
+    rgb = np.array([[(c >> 16) & 255, (c >> 8) & 255, c & 255] for c in MAP_COLORS], float)
+    return (rgb[:, None, :] * np.array(MAP_SHADES)[None, :, None] / 255).reshape(-1, 3)
+
+
+def map_scale(n):
+    """The smallest map scale (0 to 4) whose 128 * 2^scale blocks hold a world of n blocks."""
+    return next((s for s in range(5) if 128 << s >= n), 4)
+
+
+def map_colors(img):
+    """The 128 x 128 map bytes (row z, column x) of the top view img (RGB array [z, x, 3] of an n x n world), and
+    the scale and the center (x = z) in blocks. One block in the middle of each map pixel gives its color, and the
+    nearest map color (all shades) its byte. Pixels outside the world have no color (0)."""
+    n = img.shape[0]
+    s = map_scale(n)
+    f = 1 << s
+    c = round(n / 2 / f) * f                                     # the server draws the pixels from a multiple of f
+    pos = c - 64 * f + np.arange(128) * f + f // 2
+    inside = (pos >= 0) & (pos < n)
+    px = img[np.clip(pos, 0, n - 1)][:, np.clip(pos, 0, n - 1)].reshape(-1, 3).astype(float)
+    pal = map_palette()
+    pal[:4] = np.inf                                             # id 0 is transparent
+    out = np.argmin(((px[:, None, :] - pal[None]) ** 2).sum(-1), axis=1).reshape(128, 128)
+    return np.where(inside[:, None] & inside[None, :], out, 0).astype(np.uint8), s, c
+
+
+# The map color id of each dye (MapColor.COLOR_*), and of the gaia mines: GOLD and STONE, so that they differ from
+# the yellow and gray players (#840).
+MAP_DYES = {"black": 29, "blue": 25, "brown": 26, "cyan": 23, "gray": 21, "green": 27, "light_blue": 17,
+            "light_gray": 22, "lime": 19, "magenta": 16, "orange": 15, "pink": 20, "purple": 24, "red": 28,
+            "white": 8, "yellow": 18}
+MAP_MINES = {"GOLD_MINE": 30, "STONE_MINE": 11}
+
+
+def map_objects(colors, s, c, objects, players=None, T=4):
+    """Draw the objects on the map bytes, as on the AoE2 minimap (#840): a building is the square of its footprint
+    in its player color, a unit one pixel, a gold or stone mine of gaia one pixel. Other gaia objects keep the
+    terrain color. Shade 2 (the full color); units go on top of buildings."""
+    f, base = 1 << s, c - (64 << s)
+    def put(x0, z0, x1, z1, cid):                                # blocks [x0, x1) x [z0, z1); at least one pixel
+        (i0, i1), (j0, j1) = ((max(0, (a - base) // f), min(128, (max(a, b - 1) - base) // f + 1)) for a, b in
+                              ((z0, z1), (x0, x1)))
+        colors[i0:i1, j0:j1] = cid * 4 + 2
+    order = {"O": 0, "B": 1, "U": 2}
+    for o in sorted(objects, key=lambda o: order.get(o["kind"], 3)):
+        p, name = o.get("player", 0), o["name"]
+        if o["kind"] == "O" and name in MAP_MINES:
+            x, z = int(o["x"] * T), int(o["y"] * T)
+            put(x, z, x + 1, z + 1, MAP_MINES[name])
+        elif p and o["kind"] == "B" and "footprint" in o:
+            put(*o["footprint"], MAP_DYES.get(player_color(p, players), 8))
+        elif p and o["kind"] == "U" and not o.get("garrisoned"):
+            x, z = int(o["x"] * T), int(o["y"] * T)
+            put(x, z, x + 1, z + 1, MAP_DYES.get(player_color(p, players), 8))
+    return colors
+
+
+def write_map(out, img, objects=(), players=None, T=4):
+    """Write a locked map of the world (map id 0, #838) with its objects (#840): `give @p filled_map[map_id=0]`
+    shows it. The 26.3 server keeps maps in data/minecraft/maps/ (DimensionStorageFileFix: data/map_N.dat -> N.dat,
+    idcounts.dat -> last_id.dat)."""
+    colors, s, c = map_colors(np.asarray(img))
+    colors = map_objects(colors, s, c, objects, players, T)
+    d = os.path.join(out, "data", "minecraft", "maps")
+    os.makedirs(d, exist_ok=True)
+    data = {"colors": ByteArray(colors.reshape(-1).astype(np.int8)), "scale": Byte(s), "xCenter": Int(c),
+            "zCenter": Int(c), "dimension": String("minecraft:overworld"), "locked": Byte(1),
+            "trackingPosition": Byte(0), "unlimitedTracking": Byte(0), "banners": List[Compound]([]),
+            "frames": List[Compound]([])}
+    for f, v in (("0", data), ("last_id", {"map": Int(0)})):
+        File({"data": Compound(v), "DataVersion": Int(MC["data_version"])}, gzipped=True).save(os.path.join(d, f + ".dat"))
+
+
 # --------------------------------------------------------------------------------------------
 # Border (#172): blocks outside the map square for --border. The map itself does not change.
 # --------------------------------------------------------------------------------------------
@@ -2843,7 +3077,7 @@ class Progress:
 
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
             barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False,
-            garrison="outside", border_design="diorama", ambience="basic", at=None):
+            garrison="inside", border_design="diorama", ambience="basic", at=None):
     """at: recorded games only, the time in ms (--at): convert the state at that time (apply_timeline)."""
     global MC
     MC = VERSIONS[mc_version]
@@ -2931,6 +3165,9 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     book = place_book(cols, edits, spawn, texts, name)
     if book:
         print(f"  book with the scenario texts: lectern at {book}")
+    frame = place_map(cols, edits, spawn, book)   # before the units: they keep out of its column
+    if frame:
+        print("  map of the world: glow item frame at", tuple(int(v) for v in frame[0]["block_pos"]))
     colors = [player_color(pid, players) for pid in sorted(players) if pid and any(o["player"] == pid for o in objects)]
     r = border(cols, border_design, colors, edits)
     edits.connect()
@@ -2938,6 +3175,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     tick("objects")
     before = set(stats)
     unit_chunks = plan_units(objects, players, cols, rng, stats, birds, garrison, ambience == "off") if with_units else {}
+    if frame:
+        unit_chunks.setdefault((int(frame[1]) >> 4, int(frame[2]) >> 4), []).append(frame)
     tick("units")
     print(f"  units: {stats['units']}, fish: {stats['fish']}")
     for k in sorted(set(stats) - before - {"units", "fish"}):
@@ -3007,6 +3246,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     img = Image.fromarray(np.clip(img * shade[..., None], 0, 255).astype(np.uint8))
     if preview:
         img.save(os.path.join(out, "preview.png"))
+    write_map(out, img, objects, players, T)
     # the world list shows icon.png; keep the pixels sharp when the map is smaller than the icon
     img.resize((64, 64), Image.LANCZOS if cols.n >= 64 else Image.NEAREST).save(os.path.join(out, "icon.png"))
 
@@ -3172,7 +3412,7 @@ def game_time(text):
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
     ap.add_argument("scenario", help=".aoe2scenario file, .aoe2record, .mgz, .mgx or .mgl (the start state of a recorded game), .scx "
-                    "(an old scenario, format 1.21), or "
+                    "(an old scenario, format 1.21), .json (a map description, README), or "
                     ".aoe2campaign, .cpx or .cpn (one world per scenario; old scenarios that are not .scx 1.21: the "
                     "steps for the DE editor)")
     ap.add_argument("output", help="output world folder (put it in .minecraft/saves/); for a campaign the folder of "
@@ -3195,8 +3435,9 @@ def main(argv=None):
                     help="architecture set for one player, for example 6=western (can be repeated)")
     ap.add_argument("--spawn", type=spawn_spec, metavar="X,Z",
                     help="player spawn in tiles (default: start view or town center of player 1)")
-    ap.add_argument("--garrison", choices=("outside", "skip"), default="outside",
-                    help="garrisoned units: ride their ship or stand next to their holder (default), or skip them")
+    ap.add_argument("--garrison", choices=("inside", "outside", "skip"), default="inside",
+                    help="garrisoned units: ride their ship, or stand inside their building (default) or next to it, "
+                         "or skip them")
     ap.add_argument("--mc-version", choices=sorted(VERSIONS), default=VERSION_NAME,
                     help=f"Minecraft Java version of the output (default {VERSION_NAME})")
     ap.add_argument("--orientation", choices=sorted(ORIENTATIONS), default="ne",

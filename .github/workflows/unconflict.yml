@@ -7,7 +7,7 @@ name: Unconflict
 on:
   schedule:
     - cron: "*/20 * * * *"     # dirty PRs get no CI event, so they wait for this job
-  workflow_dispatch:      # Automerge starts it after each merge
+  workflow_dispatch:      # Automerge starts it after each merge and after each failed merge
 
 permissions:
   contents: write         # push the merge commit

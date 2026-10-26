@@ -1,0 +1,170 @@
+"""A bot plays a player of the game program without a human (#397). First step (#856): its villagers gather food,
+wood, gold and stone. It trains villagers up to a number, then soldiers at its military buildings (#858).
+
+The bot has its own gather.Gather for its player. That Gather gets no clicks, and it writes its resources to its own
+objective (Gather.board), which no sidebar shows: the sidebar of player 1 does not change. Each step sends the idle
+villagers to the nearest source of the resource with the largest gap to SHARE. The villagers walk with the plugin
+(`aoe moveto`) on Paper, as the villagers of player 1.
+
+Build (#857): a house when the population is 2 below the limit, then the buildings of ORDER when the bot has their
+cost. One villager builds each site (an idle one, else the nearest), next to the source of the building (NEAR) or
+the town center. Each building of ORDER once, as the first buildings of an AoE2 build order.
+
+Attack (#859): until the game time `attack` (AoE2 seconds) the soldiers stay at their buildings. Then each soldier
+without a live target attacks the nearest unit of player `foe`, else its nearest building, with the mob AI of the
+plugin (`ai.attack`, `aoe attack`). A soldier gets a new target when its target dies.
+"""
+import math
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import ai  # noqa: E402
+import build  # noqa: E402
+import combat  # noqa: E402
+import gather  # noqa: E402
+import train  # noqa: E402
+
+SHARE = {"food": 0.4, "wood": 0.3, "gold": 0.2, "stone": 0.1}     # the villagers on each resource (a simple AoE2 bot)
+QUEUED = 2                                                         # units in the queue of each building of the bot
+ORDER = ("LUMBER_CAMP", "MILL", "MINING_CAMP", "BARRACKS")         # the build order after the houses
+NEAR = {"LUMBER_CAMP": "wood", "MILL": "food", "MINING_CAMP": "gold"}   # a drop site goes next to its resource
+HOUSE_GAP = 2                                                      # a new house at this many units below the limit
+ATTACK = 600.0                                                     # AoE2 seconds: the first attack at 10:00
+LOOK = 2.0                                                         # AoE2 seconds between two looks for targets
+
+
+class Bot:
+    def __init__(self, game, data, player=2, share=None, villagers=20, attack=ATTACK, foe=1, **kw):
+        """share: the Gather of the human player. Both then use the same trees, bushes and mines.
+        villagers: the bot trains villagers up to this number, then soldiers.
+        attack: the game time (AoE2 seconds) of the first attack on player foe."""
+        self.g = gather.Gather(game, data, player=player, **kw)
+        self.villagers, self.attack, self.foe, self.share = villagers, attack, foe, share
+        self.time, self.looked, self.targets = 0.0, -LOOK, {}          # AoE2 seconds of the game, soldier -> target
+        self.nobody = f"@a[tag=aoe2mc.bot{player}]"                     # the texts of the queues go to no player
+        if share:
+            self.g.map.trees, self.g.map.bushes, self.g.map.mines = share.map.trees, share.map.bushes, share.map.mines
+        self.g.board = f"aoe_bot{player}"                              # not aoe_res: the sidebar of player 1
+        self.failed = set()                                            # sources that a villager could not reach
+
+    def setup(self):
+        """Find the villagers of the player (the entities must be loaded) and make the objective of the resources."""
+        g = self.g
+        g.command(f'scoreboard objectives add {g.board} dummy "Player {g.player}"')
+        for o in g.units:
+            if pos := g.pos(o["uuid"]):
+                g.villagers[o["uuid"]] = gather.Villager(o["uuid"], pos)
+        return self
+
+    def sources(self, res):
+        """{tile: amount} of the trees, fruit bushes or mines of res."""
+        m = self.g.map
+        return m.trees if res == "wood" else m.bushes if res == "food" else m.mines[res]
+
+    def step(self):
+        """One tick of the gather game of the player, then orders for the idle villagers."""
+        g = self.g
+        g.step()
+        self.build()
+        work = {r: 0 for r in SHARE}
+        idle = []
+        for v in g.villagers.values():
+            if v.state != "idle":
+                work[v.res] += 1
+            elif v.tree is not None and self.sources(v.res).get(v.tree, 0) > 0:
+                self.failed.add(v.tree)                                # idle next to a full source: no path
+                v.tree = None
+                idle.append(v)
+            else:
+                idle.append(v)
+        n = len(g.villagers)
+        for v in sorted(idle, key=lambda v: v.uuid):
+            for res in sorted(SHARE, key=lambda r: (work[r] - SHARE[r] * n, r)):     # the largest gap first
+                full = [t for t, k in self.sources(res).items() if k > 0 and t not in self.failed]
+                if full:
+                    T = g.map.T
+                    tile = min(full, key=lambda t: (math.dist(v.cell, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), t))
+                    g.send(tile, {v.uuid})
+                    work[res] += 1
+                    break
+        self.recruit()
+        self.time += g.tick * gather.NORMAL
+        if self.time >= self.attack and self.time >= self.looked + LOOK:   # each look costs RCON commands
+            self.looked = self.time
+            self.fight()
+
+    def fight(self):
+        """Send each soldier without a live target to the nearest unit of the foe, else to its nearest building."""
+        g = self.g
+        mine = g.positions(sorted(g.soldiers))                         # a dead soldier is not in it
+        live = {t for t in set(self.targets.values()) if "passed" in g.command(f"execute if entity {t}")}
+        self.targets = {u: t for u, t in self.targets.items() if u in mine and t in live}
+        free = sorted(mine.keys() - self.targets.keys())
+        if not free:
+            return
+        units = {o["uuid"] for o in g.data["objects"] if o["kind"] == "unit" and o["player"] == self.foe and o.get("uuid")}
+        if self.share:                                                 # also the units that player 1 trained
+            units |= self.share.villagers.keys() | self.share.soldiers.keys()
+        near = g.positions(sorted(units)) or \
+            {u: ((b[0] + b[3] + 1) / 2, b[1], (b[2] + b[5] + 1) / 2) for u, b in self.forts().items()}
+        orders = {}
+        for u in free if near else ():
+            t = min(near, key=lambda k: (math.dist(near[k], mine[u]), k))
+            self.targets[u] = t
+            orders.setdefault(t, []).append(u)
+        for t, us in sorted(orders.items()):
+            if t in g.forts:
+                g.sieged.add(t)                                        # Gather.fall frees its footprint
+            ai.attack(g.game, us, [g.soldiers[u] for u in us], g.map.T, t)
+
+    def forts(self):
+        """{target UUID: box} of the buildings of the foe whose target entity lives."""
+        g = self.g
+        boxes = {combat.target_uuid(o["footprint"]): o for o in g.data["objects"] if o["kind"] == "building"
+                 and o["player"] == self.foe and "footprint" in o and o["name"] in combat.BUILDINGS}
+        ground = [r.split() for r in g.data["ground"]]
+        return {u: combat.building_box(o, ground) for u, o in sorted(boxes.items())
+                if "passed" in g.command(f"execute if entity {u}")}
+
+    def recruit(self):
+        """Keep QUEUED units in the queue of each training building: villagers at the town centers up to
+        self.villagers, and the first military unit of the age at the other buildings, when the resources are there.
+        A town center comes first: the villagers get the resources first."""
+        g = self.g
+        for rect, name in sorted(train.homes(g).items(), key=lambda kv: (kv[1] != "TOWN_CENTER", kv[0])):
+            more = len(g.villagers) + sum(e["name"] == "VILLAGER_MALE" for q in g.queues.values() for e in q)
+            units = ["VILLAGER_MALE"] if name == "TOWN_CENTER" else \
+                [n for n in train.trains(g, name) if gather.military(n) and n not in train.TECHS and not build.locked(g, n)]
+            for n in units[:1]:
+                while len(g.queues.get(rect, [])) < QUEUED and (n != "VILLAGER_MALE" or more < self.villagers) \
+                        and all(g.stock[r] >= v for r, v in train.COSTS[n].items()) \
+                        and train.queue(g, self.nobody, (rect[0], rect[2]), n):
+                    more += n == "VILLAGER_MALE"
+
+    def build(self):
+        """Start the next house or building of ORDER when the bot can pay for it and no site of it is unfinished."""
+        g = self.g
+        if any(not s.get("done") for s in g.sites):                    # one site at a time
+            return
+        cap, have = train.limit(g), train.owned(g)
+        name = "HOUSE" if g.pop >= cap - HOUSE_GAP and cap < train.LIMIT else \
+            next((n for n in ORDER if n not in have), None)
+        if name is None or any(g.stock[r] < v for r, v in build.COSTS[name].items()):
+            return
+        center = self.center()
+        if (res := NEAR.get(name)) and (full := [t for t, k in self.sources(res).items() if k > 0]):
+            T = g.map.T
+            center = min(((t[0] * T + T // 2, t[1] * T + T // 2) for t in full), key=lambda c: (math.dist(c, center), c))
+        if center is None or (rect := build.near(g, name, center)) is None or not g.villagers:
+            return
+        site = build.found(g, name, rect)
+        x, z = (rect[0] + rect[1]) / 2, (rect[2] + rect[3]) / 2
+        v = min(g.villagers.values(), key=lambda v: (v.state != "idle", math.dist(v.cell, (x, z)), v.uuid))
+        g.build(site, {v.uuid})
+
+    def center(self):
+        """The middle block cell of the first own town center, or None."""
+        tc = next((o["footprint"] for o in self.g.data["objects"] if o["kind"] == "building"
+                   and o["player"] == self.g.player and o["name"] == "TOWN_CENTER"), None)
+        return tc and ((tc[0] + tc[2]) // 2, (tc[1] + tc[3]) // 2)

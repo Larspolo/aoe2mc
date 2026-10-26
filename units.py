@@ -4,6 +4,7 @@ Units for aoe2mc: AoE2 units -> Minecraft mobs, boats and minecarts.
 All mobs stand still (NoAI), do not despawn (PersistenceRequired) and are silent, except passive animals.
 Each unit gets a name tag with its AoE2 name in the player color.
 """
+import functools
 import math
 
 from nbtlib.tag import Byte, Compound, Double, Float, Int, IntArray, List, Long, Short, String
@@ -374,6 +375,13 @@ def animal(n):
     if "ELEPHANT" in n and n not in ANIMAL_EXACT or has(n, "CAMEL_", "ARCHER", "RIDER", "CAVALRY", "_WARRIOR"):
         return None
     return next((row[1:] for row in ANIMALS if has(n, *row[0])), None)
+
+
+@functools.lru_cache(maxsize=None)
+def siege(n):
+    """A siege unit: a minecart with a crew. The game program walks it on a carrier mob of the plugin (#836)."""
+    d = classify(n)
+    return bool(d) and d["id"] == "minecraft:minecart"
 
 
 def classify(n, hero=False):

@@ -5,7 +5,8 @@ description: Do one automatic work cycle on aoe2mc. Read the owner's feedback, t
 
 # Autopilot: one work cycle
 
-Repository: `Larspolo/aoe2mc`, default branch `main`. Owner: GitHub login `Larspolo`.
+The project values are in `agent.toml` at the root (#905): `repo` (`OWNER/NAME` below), `owner` (the GitHub login of
+the owner), `branch` (the default branch, `main` below), the status issue and its label, the commands.
 Follow each step in sequence. Do not skip the report (step 8).
 
 ## GitHub access
@@ -15,7 +16,7 @@ it works in cloud and local sessions. Cloud sessions block GraphQL and the searc
 `gh pr create` and `search/issues` fail there. Put long text in a file and pass it with `-F body=@file.md`.
 Put the method after the path (`... -X PATCH`): the permission rules match the start of the command.
 
-| Action | `gh api repos/Larspolo/aoe2mc` + |
+| Action | `gh api repos/OWNER/NAME` (`repo` in `agent.toml`) + |
 |---|---|
 | Open issues | `/issues?state=open&per_page=100` (entries with `pull_request` are PRs) |
 | New comments since T | `/issues/comments?since=T&per_page=100` and `/pulls/comments?since=T&per_page=100` |
@@ -98,7 +99,7 @@ find the open `P0` ticket "Fix main: ..." or make one (`P0`,
 ## 3. Read the owner's feedback
 
 Read all comments after `last_run` (`/issues/comments?since=` and `/pulls/comments?since=`, see
-"GitHub access") and the issues that `Larspolo` opened after `last_run`. Keep the ones by `Larspolo`.
+"GitHub access") and the issues that the owner opened after `last_run`. Keep the ones by the owner.
 For each new owner comment, lock it first: `python3 tools/claim.py ID --comment` (ID = the `id` of the comment).
 Exit 1: another run handles it, skip it (#320: three runs made three copies of one epic). Exit 0: act on it:
 - A question → answer it in the same thread.
@@ -121,8 +122,7 @@ For each open issue without a priority label:
 ## 5. Pick and claim one ticket
 
 Candidates: open issues without `needs-human`, `blocked`, `epic`, `agent-status`, `in-progress`, and whose
-"Depends on: #n" issues are all closed, whose "Start after:" time is past (#496), and that no open hand-off PR
-(`ready-to-merge`) closes (#546: it waits for the owner). Order: `P0`, `P1`, `P2`, `P3`, then the
+"Depends on: #n" issues are all closed, whose "Start after:" time is past (#496). Order: `P0`, `P1`, `P2`, `P3`, then the
 least overlap with the work in progress (files and functions that open PRs change or claimed tickets name, #487),
 then the lowest issue number.
 `python3 tools/dashboard.py --next` prints the candidates in this order (the rule is `dashboard.candidates()`).
@@ -130,7 +130,7 @@ Epics first: an epic is never a candidate, so its rest of the work needs sub-iss
 at the open epics (label `epic`, not `needs-human`, any priority) with no open sub-issue, at most 3 per run. The
 priority does not matter here: a check of `P2` and `P3` epics was skipped, and six finished epics stayed open (#799).
 For each one, read its acceptance criteria. Close the epic with a comment when the closed sub-issues meet
-all criteria (name the evidence for each). Else lock the epic first: `python3 tools/claim.py E --refill`
+all criteria (name the evidence for each; a denied close: "Ask the owner" in step 6, #862). Else lock the epic first: `python3 tools/claim.py E --refill`
 (E = the epic; exit 1: another run makes its sub-issue, skip the epic, #505). Then make one sub-issue (same priority)
 for the criteria that an agent can do. A criterion that needs the owner stays on the epic. Then pick again (#176, #155 waited while P3 tickets ran).
 Refill the queue when fewer candidates are ready than the target number of runs, so that parallel runs always find
@@ -202,6 +202,12 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
     and names them (#563): remove them from the branch, commit, and run the guard again.
 11. CI green → the Automerge workflow merges. Add label `hold` to the PR if it must not merge yet.
 
+Ask the owner (owner rule, #862): only with the label `needs-human` and a comment on the issue that needs the answer.
+The comment mentions the owner (`@` and `owner` of `agent.toml`) and says exactly what the owner must do. Never ask with PushNotification, in the
+session, or only in the status report. When the auto mode denies an action (for example closing an issue), do not send
+it through another tool: add `needs-human` to that issue and comment the evidence and the action. When the owner did
+it, remove the label.
+
 If the ticket is wrong or not possible: comment why, add `needs-human`, remove `in-progress`. Do not merge
 partial work: add `hold` to its PR (the workflow also skips a PR whose ticket has `needs-human` or `blocked`).
 
@@ -221,27 +227,44 @@ after your report (the workflow `dashboard.yml` runs it on label changes, closed
 "Waiting for you", "Working on", "Next up" or "Recently done": the script makes them from GitHub.
 In the body, change only two parts and keep the rest as it is (read the body just before the change,
 other runs change it too):
-- The state comment: `<!-- agent-state: {"last_run": "<now, ISO>", "runs": <N+1>} -->`.
+- The state comment: `<!-- agent-state: {"last_run": "<now, ISO>", "runs": <N+1>, ...} -->`. Change only these two
+  keys and keep the others (`last_review`, `review_minutes`: the review slot, #898).
 - The section `### Process changes`: add a line `- <date>: <what changed in the skills, CLAUDE.md or
   LEARNINGS> (PR #n)` at the top, keep the last 5.
 
-Then add one short comment on the status issue: what you did, what is next, and questions for the owner.
+Then add one short comment on the status issue: what you did and what is next. A question for the owner goes on its
+issue, not here (see "Ask the owner" in step 6).
 End it with one metrics line for each ticket of the run (the `improve` skill reads these lines):
 
-    Metrics: ticket #<n> · <size> · <merged|blocked|needs-human|none> · <minutes> min · setup <m> min · checks <k> · checks <c> min · time sinks: <list or "none">
+    Metrics: ticket #<n> · <size> · <merged|pr #n|blocked|needs-human|none> · <minutes> min · setup <m> min · checks <k> · checks <c> min · time sinks: <list or "none"> · phases read <m> · claim <m> · code <m> · verify <m> · ci <m> · conflict <m> · report <m>
 
+Example: `Metrics: ticket #876 · size:S · merged · 45 min · setup 0 min · checks 2 · checks 6 min · time sinks: none ·
+phases read 8 · claim 1 · code 18 · verify 9 · ci 0 · conflict 5 · report 4` (one line).
+
+Result: `pr #n` when you pushed PR #n and Automerge merges it later (the usual case: you report before the merge);
+`none` only when the run stopped without a PR. `tools/health.py` counts the `pr #n` lines by the present PR state (#902).
+Put the output of `python3 tools/release.py` (the release bar of each goal, #879) above the `Usage:` line.
 Put the `Usage:` line of step 1.4 above the metrics lines, unchanged: `tools/health.py` measures the quota use of one
 run per hour from pairs of these lines, and `tools/usage.py --target` uses that value (#462).
 `setup`: minutes from the start time (step 4) to the claim of the first ticket (0 for later tickets).
 `checks <k>`: rounds of the `verify` skill before the push; `checks <c> min`: their minutes in total.
+`phases` (#899): whole minutes of the ticket in each phase, from the times that you note (`date -u +%T`) when a phase
+starts: `read` (feedback, triage, the ticket and the code), `claim` (pick and claim), `code` (change and tests),
+`verify` (the checks of the `verify` skill), `ci` (wait for or fix CI after the push), `conflict` (merges with main),
+`report` (PR text, status comment, process step 9). Keep the fields in this order: `tools/health.py` sums them.
 
 GitHub sends this comment to the owner as a notification. Do not comment when nothing changed.
 
 ## 9. Improve the process (before the commit in step 6)
 
 Answer these questions. Do the action for each "yes". Spend little time.
-- Did something cost you time that one line of text prevents? → add the line to `docs/LEARNINGS.md`, at the end of
-  its section. Do not change other lines there, also not to stay below 80 lines: the `improve` skill does that.
+A PR that changes the agent system gets the label `process` (`/issues/N/labels -f "labels[]=process"`, #901): the
+dashboard counts them.
+- Did something cost you time that one line of text prevents? → a pitfall of one topic (the game program, the replay,
+  Paper, the server, records, a design) goes to the end of the "Pitfalls" section of its document (the list in
+  `docs/LEARNINGS.md`, "Environment and libraries"); only a line for all runs goes to the end of its section in
+  `docs/LEARNINGS.md`: each run loads that file (run 135 moved 16 topic lines out). Do not change other lines
+  there, also not to stay below 80 lines: the `improve` skill does that.
 - Was an instruction in `CLAUDE.md` or a skill wrong or missing? → correct it.
 - Did you do the same kind of task for the second time? → write a skill for it in `.claude/skills/`.
 - Would a test or tool have found a problem earlier? → make a `tooling` ticket (`P1` if it blocks other tickets).
@@ -255,23 +278,27 @@ Answer these questions. Do the action for each "yes". Spend little time.
 - Did something block you that only the owner can change (a host, the environment, the scheduled task, a GitHub
   setting)? → make a `needs-human` ticket with numbered steps and the exact values. Look for an open one first.
 
-After step 8, run the `improve` skill when `runs` is a multiple of 5, when this run failed, or when a
-ticket took more than 90 minutes. It finds the largest loss in the metrics and makes one improvement.
-When `runs` is a multiple of 10, also review the feature list of `docs/ROADMAP.md` (the `roadmap` skill).
+After step 8, run `python3 tools/claim.py 0 --review`: exit 0 means that this run does the process review of the
+time slot (#898; the slot is 45 minutes, and longer after reviews with no change). Then run the `improve` skill.
+Run it also when this run failed, or when a ticket took more than 90 minutes. The `improve` skill reviews the whole
+system (how runs start, the loop, time and quota, quality, weak spots, reuse), checks the last change, and makes one
+change only when a loss is above its threshold (#900). The questions above stay the small check of each ticket. Then run `python3 tools/claim.py 0 --roadmap`: exit 0 means that this run
+reviews the feature list of `docs/ROADMAP.md` (the `roadmap` skill, one review per 2 hours).
 Do not change a priority that the owner set. Propose it.
 
 ## More tickets
 
 If the argument asks for more than 1 ticket, go back to step 2 after step 8 (finish stalled PRs of other runs, then read new owner
 feedback). In a
-cloud session, reset the branch first: `git fetch origin main && git checkout -B <branch> origin/main`. Then push with
-`git fetch origin <branch> && git push --force-with-lease origin <branch> && git branch -u origin/<branch>`
-(a plain `git push -u origin <branch>` when the branch is not on the remote). If the auto mode denies the force push
-("Git Destructive"), do not ask: `git merge --no-edit origin/<branch>` (its commits are on main already, so the PR diff
-stays the same), then `git push origin HEAD:<branch>`. A conflict in that merge: take your side (`git checkout --ours FILE`):
+cloud session, reset the branch first: `git fetch origin main && git checkout -B <branch> origin/main` (fetch `main` alone:
+a fetch that also names a deleted branch fails as a whole, and `origin/main` stays old). Never force-push: the auto mode denies it
+("Git Destructive"; 33 runs lost a step on it on 2026-10-26). Push with
+`git ls-remote --exit-code --heads origin <branch>` first: exit 2 (the usual case: Automerge deletes the branch after
+the merge) → `git push -u origin <branch>`. Exit 0 → `git fetch origin <branch> && git merge --no-edit origin/<branch>`
+(its commits are on main already, so the PR diff stays the same), then `git push origin HEAD:<branch>`. A conflict in that merge: take your side (`git checkout --ours FILE`):
 main has the squashed old commits, so check that `git diff --stat origin/main` shows only your ticket (#523).
 The session branch can carry only one open PR: do the next ticket in a local commit, and push it only when the PR
-of the last ticket is merged or closed (`/pulls?head=Larspolo:<branch>&state=open` is empty). Else a push replaces
+of the last ticket is merged or closed (`/pulls?head=OWNER:<branch>&state=open` is empty). Else a push replaces
 the open PR. After `checkout -B` the upstream is
 `origin/main`, so a bare `git push` fails: check that the output shows `-> <branch>`, else the PR has old commits.
 Stop when the context is more than half full.

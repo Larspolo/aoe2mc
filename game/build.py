@@ -11,10 +11,13 @@ A right click on a selected villager opens the build menu (#621): a chest menu (
 A click chooses the building as /trigger does and closes the menu, so the next right click places it.
 Ages (#674): a Feudal Age building or unit (AGE) is locked until the player researches the Feudal Age (train.py):
 its item is gray, says "Needs the Feudal Age", and a click does nothing.
+Ghost (#794): while a player has a building chosen, a ghost of its design follows the ground that he looks at (block
+displays of the Paper plugin, Ghost.java): green where it can stand, red where not. ghosts() sends the shape once.
 """
 import json
 import math
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -41,6 +44,7 @@ ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw
 AGE_TECHS = ("FEUDAL_AGE",)                                        # the technologies of the ages, in order
 AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_TOWER",   # the AoE2 age of each
                      "ARCHER", "SKIRMISHER", "SPEARMAN", "SCOUT_CAVALRY"), 1)            # building and unit (0: Dark)
+GHOST = 400                                                        # block displays of one ghost: a coarser shape above
 LOCKED = "gray_dye"                                                # the item of a locked building or unit
 
 
@@ -50,6 +54,7 @@ def pretty(name):
 
 def setup(g):
     g.command(f"scoreboard objectives add {OBJECTIVE} trigger")
+    g.ghosts, g.shapes = {}, {}                                        # player -> [building, color]; building -> shape
 
 
 def tick(g):
@@ -57,6 +62,87 @@ def tick(g):
     g.command(f"execute as @a unless score @s {OBJECTIVE} matches 0.. run tellraw @s {menu()}")
     g.command(f"scoreboard players add @a {OBJECTIVE} 0")
     g.command(f"scoreboard players enable @a {OBJECTIVE}")
+    if getattr(g, "paper", False):
+        ghosts(g)
+
+
+def shape(blocks, limit=GHOST):
+    """The ghost of a design: its outer blocks {(x, y, z): state} (a block with a free side), and the scale. Above
+    limit blocks, each cell of k × k × k blocks becomes one block of size k (k = 2, 4 ...)."""
+    k, cells = 1, dict(blocks)
+    while True:
+        out = {p: v for p, v in cells.items()
+               if any((p[0] + a, p[1] + b, p[2] + c) not in cells for a, b, c in
+                      ((1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)))}
+        if len(out) <= limit:
+            return out, k
+        k *= 2
+        cells = {}
+        for (x, y, z), v in sorted(blocks.items()):
+            cells.setdefault((x // k, y // k, z // k), v)
+
+
+def ghost_commands(g, player, name, rect):
+    """The plugin commands that give player the ghost of building name: its design at rect (x0, x1, z0, z1) without
+    the cleared air and the foundation, relative to the floor of the north-west corner. At most 1446 bytes per RCON
+    command: the shape goes in parts. An empty list where the design does not stand (outside the map, on water)."""
+    if name not in g.shapes:
+        cmds = Replay(g, g.data, getattr(g.game, "version", VERSION_NAME)).building(
+            name, g.player, rect[0] / g.map.T + footprint(name) / 2, rect[2] / g.map.T + footprint(name) / 2)
+        blocks, base = {}, None
+        for c in cmds:
+            b, state = box(c) or (None, None)
+            if b is None or c.endswith(" keep"):                       # the foundation under the floor
+                continue
+            if base is None:                                           # the first fill clears the footprint
+                base = b[1]
+            if state.split("[")[0] in ("air", "minecraft:air", "barrier", "minecraft:barrier"):
+                continue
+            for x in range(b[0], b[3] + 1):
+                blocks[x - rect[0], b[1] - base, b[2] - rect[2]] = state.removeprefix("minecraft:")
+        if not blocks:
+            return []
+        g.shapes[name] = shape(blocks)
+    parts, k = g.shapes[name]
+    out, line = [f"aoe ghost-clear {player}"], ""
+    for (x, y, z), state in sorted(parts.items()):
+        t = f" {x}/{y}/{z}/{state}"
+        if len(line) + len(t) > 1300:
+            out.append(f"aoe ghost-shape {player} {k}{line}")
+            line = ""
+        line += t
+    return out + [f"aoe ghost-shape {player} {k}{line}"] * bool(line) + [f"aoe ghost {player} {g.map.T} {footprint(name)}"]
+
+
+def ghosts(g):
+    """Each tick: the players who chose a building see its ghost (#794), green over a free footprint and red over a
+    blocked one, as place() tests it; the ghost goes away when the choice ends (placed, cancelled)."""
+    import gather                                                      # gather imports build
+    who = {}
+    if "passed" in g.command(f"execute if entity @a[scores={{{OBJECTIVE}=1..}}]"):
+        for p in (n.strip() for n in g.command("list").split(":", 1)[-1].split(",")):
+            if p and (name := chosen(g, p)) and not locked(g, name):
+                who[p] = name
+    for p in [p for p in g.ghosts if p not in who]:
+        g.command(f"aoe ghost-clear {p}")
+        del g.ghosts[p]
+    for p, name in who.items():
+        pos = g.pos(p)
+        rot = [float(v) for v in re.findall(gather.NUMBER, g.command(f"data get entity {p} Rotation").rsplit(":", 1)[-1])]
+        cell = pos and len(rot) == 2 and g.map.pick_ground((pos[0], pos[1] + 1.62, pos[2]), gather.direction(*rot))
+        if not cell:
+            continue
+        rect = area(g, name, cell)
+        if g.ghosts.get(p, [None])[0] != name:
+            if not (cmds := ghost_commands(g, p, name, rect)):
+                continue
+            for c in cmds:
+                g.command(c)
+            g.ghosts[p] = [name, None]
+        color = "green" if free(g, rect) else "red"
+        if g.ghosts[p][1] != color:
+            g.command(f"aoe ghost-color {p} {color}")
+            g.ghosts[p][1] = color
 
 
 def ages(g):
@@ -133,9 +219,30 @@ def place(g, player, name, eye, d):
         say(g, player, f"Not enough resources: a {pretty(name).lower()} costs "
                        + ", ".join(f"{v} {r}" for r, v in cost.items()) + ".")
         return None
-    for r, v in cost.items():
+    site = found(g, name, rect)
+    g.command(f"scoreboard players set {player} {OBJECTIVE} 0")
+    return site
+
+
+def near(g, name, cell, reach=12):
+    """A free footprint of name whose middle tile is next to the block cell (a source or the town center), with one
+    free block around it for the paths, or None. The nearest tile first, the same order each time."""
+    T, (cx, cz) = g.map.T, (cell[0] // g.map.T, cell[1] // g.map.T)
+    for r in range(1, reach + 1):
+        for tx, tz in sorted(((x, z) for x in range(cx - r, cx + r + 1) for z in range(cz - r, cz + r + 1)
+                              if max(abs(x - cx), abs(z - cz)) == r), key=lambda t: (math.dist(t, (cx, cz)), t)):
+            x0, x1, z0, z1 = rect = area(g, name, (tx * T, tz * T))
+            if x0 > 0 and z0 > 0 and free(g, (x0 - 1, x1 + 1, z0 - 1, z1 + 1)):
+                return rect
+    return None
+
+
+def found(g, name, rect):
+    """Pay for name and put its foundation (a wool ring in the player color) on the free footprint rect. Returns
+    the construction site."""
+    for r, v in COSTS[name].items():
         g.stock[r] -= v
-        g.command(f"scoreboard players remove {r.capitalize()} aoe_res {v}")
+        g.command(f"scoreboard players remove {r.capitalize()} {g.board} {v}")
     x0, x1, z0, z1 = rect
     color = g.players.get(str(g.player), {}).get("color", "light_gray")
     ring = [(x, g.map.y(x, z), z) for x in range(x0, x1) for z in range(z0, z1) if x in (x0, x1 - 1) or z in (z0, z1 - 1)]
@@ -147,7 +254,6 @@ def place(g, player, name, eye, d):
     site = {"name": name, "player": g.player, "footprint": rect, "commands": cmds, "sent": 0, "progress": 0.0,
             "ring": dict.fromkeys(ring, f"minecraft:{color}_wool"), "under": {}}   # under: the design blocks on the ring
     g.sites.append(site)
-    g.command(f"scoreboard players set {player} {OBJECTIVE} 0")
     return site
 
 

@@ -1,61 +1,81 @@
 # Roadmap
 
-The project has three goals. This file lists the features of each goal: done (`[x]`) or missing (`[ ]`).
+The project has three goals for the game and a fourth for the agent system that does the work. This file lists the features of each goal: done (`[x]`) or missing (`[ ]`).
 The `roadmap` skill makes the next epic from a missing feature when the queue has no other work, and every 10th
 run reviews this list (owner decisions, 2026-10-26: the agents make the epics themselves, at `P3`; the goals take
 turns). The owner changes the priority of an epic or adds a feature here at any time.
 
-Each missing feature has a key in backticks. An epic names its key in its body ("Roadmap: `play:health`"), so a run
+Each feature has a key in backticks (`tools/release.py` and `docs/RELEASE.md` use it). An epic names its key in its body ("Roadmap: `play:health`"), so a run
 can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?labels=epic&state=all&per_page=100"`.
 
 ## 1. Convert maps to Minecraft (`aoe2mc.py`, `buildings.py`, `units.py`)
 
-- [x] Terrain, elevation, cliffs, water at its height with natural shores (#155)
-- [x] A recognizable form for each building, unit, hero and object (#42, #41, #22), furniture inside (#186)
-- [x] Units with facing and garrisons, walls and gates, ships with passengers
-- [x] Campaigns (#149), old `.scx` scenarios (#310), recorded games at a time (#373)
-- [x] Minecraft Java 26.3 only (#14, #426); example worlds and a gallery (#181)
-- [x] The scenario texts in a book at the spawn (#27); one team per player in the player color (#358)
-- [x] Sounds and ambient effects in the world (#188)
-- [ ] `convert:triggers` Scenario triggers as datapack functions: messages, objectives, timers
-- [ ] `convert:large` Large maps (480 × 480) in less time and memory, with a progress line
-- [ ] `convert:minimap` A filled Minecraft map item of the whole AoE2 map at the spawn, as the AoE2 minimap
+- [x] `convert:terrain` Terrain, elevation, cliffs, water at its height with natural shores (#155)
+- [x] `convert:designs` A recognizable form for each building, unit, hero and object (#42, #41, #22), furniture inside (#186)
+- [x] `convert:units` Units with facing and garrisons, walls and gates, ships with passengers
+- [x] `convert:inputs` Campaigns (#149), old `.scx` scenarios (#310, #313), recorded games at a time (#373)
+- [x] `convert:version` Minecraft Java 26.3 only (#14, #426); example worlds and a gallery (#181)
+- [x] `convert:texts` The scenario texts in a book at the spawn (#27); one team per player in the player color (#358)
+- [x] `convert:sounds` Sounds and ambient effects in the world (#188)
+- [x] `convert:triggers` Scenario triggers as datapack functions: messages, objectives, timers (epic #645)
+- [x] `convert:large` Large maps (480 × 480) in less time and memory, with a progress line (epic #689)
+- [ ] `convert:minimap` A filled Minecraft map item of the whole AoE2 map at the spawn, as the AoE2 minimap (epic #837)
+- [ ] `convert:random-maps` Make a world from an AoE2 random map script (`.rms`: Arabia, Arena, Black Forest) and a seed, with no scenario file
 
 ## 2. Play AoE2 in Minecraft (`game/`)
 
-- [x] A game program on a Paper server with Minecraft path finding (#433)
-- [x] Gather wood, food, gold and stone, with drop sites and AoE2 work rates (#388)
-- [x] Place and build a construction site; a finished building works (#394)
+- [x] `play:program` A game program on a Paper server with Minecraft path finding (#433)
+- [x] `play:gather` Gather wood, food, gold and stone, with drop sites and AoE2 work rates (#388)
+- [x] `play:build` Place and build a construction site; a finished building works (#394)
 - [ ] `play:fight` Military units fight: AoE2 attack, armor, range and hit points (epic #395)
-- [ ] `play:train` Train villagers at the town center: cost, queue, population limit (epic #396)
+- [x] `play:train` Train villagers at the town center: cost, queue, population limit (epic #396)
 - [ ] `play:bot` A scripted bot plays player 2 (epic #397)
 - [ ] `play:scale` Measure and raise the number of units that the program can move (epic #398)
-- [ ] `play:menu` Choose the options of a building and the build menu in a chest menu (epic #618, owner decision)
-- [x] Health indication: hit points over each unit and building, a boss bar for the selected unit, damage effects (#657)
-- [ ] `play:military-train` Train all units at their buildings (barracks, archery range, stable, castle) with a queue and a rally point
+- [x] `play:menu` Choose the options of a building and the build menu in a chest menu (epic #618, owner decision)
+- [x] `play:health` Health indication: hit points over each unit and building, a boss bar for the selected unit, damage effects (#657)
+- [x] `play:military-train` Train all units at their buildings (barracks, archery range, stable, castle) with a queue and a rally point (epic #704)
 - [ ] `play:tech` Technologies and upgrades (blacksmith, university, unit lines) with cost, time and effect on the Minecraft attributes
 - [ ] `play:ages` Age up from the Dark Age to the Imperial Age: cost, time, the buildings and units that each age unlocks
-- [ ] `play:control` Select and order many units: a selection box, groups, formations, an idle villager item
-- [ ] `play:garrison` Garrison units in buildings; the town center and castles shoot arrows
+- [ ] `play:civs` Civilizations: the bonuses, unique technologies and team bonus of each civilization change costs and attributes
+- [x] `play:feedback` Show what the player points at and the result of each action (epic #793)
+- [ ] `play:control` Select and order many units: a selection box, groups, formations, an idle villager item (epic #742)
+- [ ] `play:stances` Unit stances (aggressive, defensive, stand ground, no attack): an idle unit attacks the enemies in its line of sight and comes back
+- [ ] `play:garrison` Garrison units in buildings; the town center and castles shoot arrows (epic #810)
 - [ ] `play:win` Win and lose: destroy all buildings, a wonder, relics; a title for the end of the game
 - [ ] `play:monks` Monks heal and convert, relics in monasteries
 - [ ] `play:market` Market trade and trade carts
 - [ ] `play:two-players` Two human players against each other on one server
+- [ ] `play:diplomacy` Teams and diplomacy: allied, neutral and enemy players, shared line of sight, tribute of resources
 - [ ] `play:walls` Build walls and gates; a gate opens for own units and stays closed for enemies
+- [ ] `play:repair` Villagers repair damaged buildings and siege units for a part of the cost; a damaged building shows fire
 - [ ] `play:siege` Siege units: rams against buildings, mangonels with area damage, trebuchets that pack and unpack
+- [ ] `play:naval` Docks and ships: fishing ships and fish traps gather food, warships fight on water, transport ships carry units (Minecraft boats)
+- [ ] `play:cheats` The AoE2 cheat codes in the chat when cheats are on (epic #820)
+- [ ] `play:fog` The explored area and the fog of war: a player sees only what the own units and buildings see
+- [ ] `play:save` Save a game of the game program and load it again (units, resources, queues, ages)
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
-- [x] The start state of a record (#139) and its command timeline (#372)
-- [x] A world at a time (`--at MM:SS`, #373) and a live replay: buildings, chat, ages, research (#374)
-- [x] Trained units appear and walk to their targets with Minecraft path finding (#375, #408, #409, #410, #438)
-- [x] Records of other game versions (#376)
-- [ ] `replay:simulate` Simulate what the record does not contain with the rules of the game program: gathering, fights, deaths, destroyed buildings
-- [ ] `replay:control` Control the replay in the game (today only `--speed` and `--from` at the start): pause, speed, jump to a time, a boss bar with the game time
-- [ ] `replay:view` A spectator view: follow a player or a unit, an overview from above
-- [ ] `replay:score` A score panel for each player: age, population, resources (estimated), military
-- [ ] `replay:effects` Show events on the map: research and age-up at the building, attacks, a marker where units die
+- [x] `replay:start` The start state of a record (#139) and its command timeline (#372)
+- [x] `replay:live` A world at a time (`--at MM:SS`, #373) and a live replay: buildings, chat, ages, research (#374)
+- [x] `replay:units` Trained units appear and walk to their targets with Minecraft path finding (#375, #408, #409, #410, #438)
+- [x] `replay:versions` Records of other game versions (#376)
+- [x] `replay:record` Replay a recorded game as fully as the file allows (epic #371)
+- [ ] `replay:simulate` Simulate what the record does not contain with the rules of the game program: gathering, fights, deaths, destroyed buildings (epic #629)
+- [x] `replay:control` Control the replay in the game: pause, speed, jump to a time, a boss bar with the game time (epic #683)
+- [ ] `replay:follow` The units of the live replay follow the record: positions, gathering, no stuck units (epic #814)
+- [ ] `replay:view` A spectator view: follow a player or a unit, an overview from above (epic #736)
+- [ ] `replay:score` A score panel for each player: age, population, resources (estimated), military (epic #740)
+- [ ] `replay:effects` Show events on the map: research and age-up at the building, attacks, a marker where units die (epic #842)
 - [ ] `replay:postgame` A summary at the end of the replay, as the AoE2 achievements screen: military, economy, technology, timeline
+
+## 4. The agent system (`.claude/skills/`, `tools/`, `.github/workflows/`)
+
+Owner (2026-10-26): "reach the final goals efficiently while keeping up the quality and leaving behind a system to do
+other projects with". The `roadmap` skill makes no epics for this goal: the `improve` skill and the owner do.
+
+- [ ] `system:improve` The system improves itself in its own loop, over the whole system, and only where it pays (epic #908)
+- [ ] `system:reuse` The system can be set up for another project (epic #909)
 
 ## Principles
 

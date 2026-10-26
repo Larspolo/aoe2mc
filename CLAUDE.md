@@ -2,7 +2,7 @@
 
 aoe2mc converts an Age of Empires II: DE scenario (`.aoe2scenario`) into a Minecraft Java world.
 The owner is **Larspolo** (one person, one Claude Max account). The agent works on the project automatically.
-The owner steers asynchronously through GitHub Issues (see `docs/STEERING.md`).
+The owner steers asynchronously through GitHub Issues (see `docs/STEERING.md`). The whole agent system (parts, locks, pacing, setup): `docs/SYSTEM.md`.
 
 ## Language
 
@@ -27,10 +27,13 @@ The README already uses this style. Keep it.
 | System numbers | `python3 tools/health.py [--hours N]` (CI, setup, takeovers, conflicts, files in git; `improve` skill) |
 | Quota and pacing | `python3 tools/usage.py` (5-hour and 7-day usage, resets; `--target`: the number of runs (90 % of the 5-hour window 2 hours before the reset, then 98 %); `--sample`: the `Usage:` line of the run report; `--fire`: the runs that the pacer session starts now) |
 | Dashboard of #1 | `python3 tools/dashboard.py --dry-run` (`--next`: ticket candidates in pick order) |
+| Release bar | `python3 tools/release.py` (percent of each goal for the milestones C = 100 %, A and B: `docs/RELEASE.md`, #878) |
 | Server check | `python3 tools/mc_check.py OUTWorld` (headless Minecraft, load errors; `--keep DIR` keeps the saved world), `python3 -m pytest -m mc` |
-| Game program | `python3 game/run.py OUTWorld` (Paper server with RCON, `--server vanilla`: Mojang's; type commands; `--bench N`: commands per second; `--play`: gather resources; `--replay [--speed N]`: replay a recorded game) |
+| Game program | `python3 game/run.py OUTWorld` (Paper server with RCON, `--server vanilla`: Mojang's; type commands; `--bench N`: commands per second; `--play`: gather resources, `--cheats`: the AoE2 cheat codes in the chat; `--replay [--speed N]`: replay a recorded game) |
 | Gather timing | `python3 tools/measure_gather.py` (server, no client: walk, chop and trip times next to AoE2; `--read F.jsonl` reads a `game/run.py --play --log` file) |
+| Replay drift | `python3 tools/replay_drift.py samples/de-64.3.aoe2record --speed 4 --until 10:00 --log F.jsonl` (Paper, no client: distance of each unit to its replay position, stuck, stray and dead units per kind; `--read F.jsonl`, #813) |
 | Conversion cost | `python3 tools/measure_convert.py IN.aoe2scenario` (seconds and peak memory of each phase; `docs/research/large-maps.md`) |
+| Unit count cost | `python3 tools/measure_units.py [--units 200,500,1000]` (Paper, no client: RCON commands per second and `/tick query` with many units that walk with `aoe moveto`, #943) |
 | Datapack cost | `python3 tools/tick_cost.py` (server, no client: `/tick query` with and without `datapacks/aoe2mc`; `--world W`, `--ambience full`) |
 | In-game screenshot | `python3 tools/mc_shot.py OUTWorld OUT.png [--at X Y Z --look YAW PITCH] [--more X,Y,Z,YAW,PITCH]` (real client, ~25 s per world; `mc_shot.Client`: a player on the Paper server that clicks menus; `--player`: adventure mode, a spectator sees invisible mobs) |
 | Minecraft data | `python3 tools/mc_check.py --reports VERSION` (exact, from Mojang) or `tools/fetch_mcdata.py VERSION` writes `tools/mcdata/VERSION.json` |
@@ -58,6 +61,7 @@ Find code by function name with Grep. Do not read the large files from start to 
   `gather.Gather` lets villagers gather wood, food, gold and stone (#138, #391, #390, #392: clicks, sidebar; walks with `aoe moveto` on Paper, #437, own paths on `aoe2mc.json` "ground" only for vanilla),
   `build` places construction sites (#417), `replay.Replay` plays the "timeline" of a recorded game (#374: buildings, chat, ages).
   `ai` gives orders to units with their Minecraft AI through the Paper plugin `game/plugin` (#435, #436: `aoe moveto`, `aoe attack`, `aoe goals`).
+  `garrison` sends the selection into an own building and lets it out (#808: `SIZES`, the "inside" cells of `aoe2mc.json`, the menu item "Ungarrison").
 - `tests/` – pytest. `conftest.py` has the `tiny_world` fixture (one conversion per session).
 
 ## Rules of the domain
@@ -75,7 +79,8 @@ Design work (buildings, objects, units, animals) follows `docs/DESIGN.md`. Do de
 - A building design draws on a `Canvas` in local coordinates. The front (main door) is on the south side (z = w-1).
 - Footprint rule: an object keeps its blocks inside its footprint up to head height (3 blocks). `Edits` enforces this.
 - Barrier rule: free space in footprints gets `barrier` blocks. Units must never stand in a block:
-  the converter prints "units in a block (moved up): N" and N must be 0.
+  the converter prints "units in a block (moved up): N" and N must be 0. Exception: a garrisoned unit stands in the
+  barrier blocks of its building, with `Invulnerable` 1 ("units (garrisoned, inside the holder)", #807).
 - Block states are strings like `"oak_stairs[facing=north,half=bottom]"`. Each new state must pass `mcvalid`.
 - Output is deterministic: all randomness comes from seeded `numpy` generators. Keep it so.
 - Target: Minecraft Java 26.3 (`DATA_VERSION = 5023`), the only output (#427). The code uses the 26.3 block and
@@ -90,6 +95,8 @@ Match the existing code: compact, numpy-vectorized, short comments that say why.
 not change. Do not add a dependency without a ticket that asks for it. Keep functions in their present file.
 When you add an entry to a table keyed by a name (`COSTS`, `TRAINS`, `STATS` ...), put each entry that you add on its
 own line, in alphabetical order, not at the end: parallel tickets that add to the same last line conflict (#655, #670).
+The same for a new command of the Paper plugin: its line in the command list at the top of `AoePlugin.java` and its
+`if` block in `onCommand` go in alphabetical order of the command name, not after the last one (#795 and #813 conflicted).
 
 ## How to verify
 
@@ -108,6 +115,9 @@ Details: the `verify` skill.
 - One ticket per PR. Keep the diff small. Write a failing test first for a bug. Put the new tests of a ticket in a new
   file `tests/test_<topic>.py`, not at the end of a shared test file: parallel runs append there and conflict.
 - If a ticket is not clear, ask the owner in the ticket (label `needs-human`) and continue with the next ticket.
+- **Ask the owner only on the issue** (owner rule, 2026-10-26, #862): a question or a task for the owner goes on the
+  issue that needs it: add `needs-human` and a comment that mentions `@Larspolo` and says exactly what to do.
+  Never ask with PushNotification, in the session, or only in the status report.
 - **Decisions with several good options go to the owner** (owner rule, 2026-10-26): when a design has two or more
   clear options and no single best one (for example the interface of a feature or a game rule), do not choose. Make a
   decision ticket (`ticket` skill, "Decision tickets"), let the work that needs it depend on it, and continue with
@@ -122,7 +132,7 @@ hook, `.gitignore` and the claim and dashboard rules. The aim is more closed tic
   that was wrong, and make a `tooling` ticket when a tool or test would have found a problem earlier.
 - Only the owner can change the environment settings (setup script, network, variables), the scheduled task and the
   GitHub settings. When one of them costs time, make a `needs-human` ticket with numbered steps and the exact text.
-- Every 5th run: the `improve` skill measures the runs, CI and the environment and makes one larger improvement.
+- One run per review slot (`tools/claim.py 0 --review`, 45 minutes, longer after reviews with no change): the `improve` skill measures the runs, CI and the environment and makes one larger improvement.
 - Never weaken tests, CI or safety rules to save time. List each process change on the status issue.
 Keep this file short: put details in skills or docs.
 

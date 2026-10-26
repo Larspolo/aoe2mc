@@ -42,8 +42,8 @@ def test_sample_record():
     objects, timeline = aoe2mc.read_record(REC)[5], aoe2mc.read_timeline(REC)
     names = aoe2mc.name_timeline(objects, timeline)
     early = {i: n for e in timeline if e["time"] < 300000 and e["player"] == 1 and e["kind"] in aoe2mc.UNIT_USE
-             for i, n in zip(e.get("objects", ()), e["names"])}
-    assert len(early) >= 30 and sum(n is not None for n in early.values()) >= 0.9 * len(early)
+             for i, n in zip(e.get("objects", ()), e["names"])}       # 33 before #828: 14 were units of player 2
+    assert len(early) >= 18 and sum(n is not None for n in early.values()) >= 0.9 * len(early)
     assert names[9918] == names[9919] == "VILLAGER_MALE" and names[9933] == "LUMBER_CAMP" and names[1646] == "TOWN_CENTER"
     for e in timeline:                      # each training building has the name of the building of its units
         if e["kind"] == "queue" and aoe2mc.train(e["name"]):
