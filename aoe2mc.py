@@ -2102,6 +2102,13 @@ def place_book(cols, edits, spawn, texts, title):
     return x, y, z
 
 
+def map_item():
+    """The item of the locked map of the world (map id 0, #838): in the frame at the spawn (#839) and in the
+    off-hand of a new player (#966)."""
+    return Compound({"id": String("minecraft:filled_map"), "count": Int(1),
+                     "components": Compound({"minecraft:map_id": Int(0)})})
+
+
 def place_map(cols, edits, spawn, book):
     """A glow item frame with the map of write_map (map id 0, #839) on the ground next to the lectern `book`, or in
     its place (2 blocks in front of the spawn view) when there is no book: it shows also at night. Fixed 1b: no
@@ -2123,9 +2130,7 @@ def place_map(cols, edits, spawn, book):
     edits.footprint = None
     edits.add([fx], [fy], [fz], "air")                 # grass and flowers hide the map
     cols.blocked[fx, fz] = True                        # no unit stands in the frame
-    item = Compound({"id": String("minecraft:filled_map"), "count": Int(1),
-                     "components": Compound({"minecraft:map_id": Int(0)})})
-    nbt = units.to_nbt({"id": String("minecraft:glow_item_frame"), "Facing": Byte(1), "Item": item, "Fixed": Byte(1),
+    nbt = units.to_nbt({"id": String("minecraft:glow_item_frame"), "Facing": Byte(1), "Item": map_item(), "Fixed": Byte(1),
                         "block_pos": IntArray([fx, fy, fz]), "ItemRotation": Byte(0), "ItemDropChance": Float(0)},
                        (fx + 0.5, fy, fz + 0.5), 0, np.random.default_rng(839))
     nbt["Invulnerable"] = Byte(1)
@@ -2643,6 +2648,12 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None):
     return load, files
 
 
+# The map of the world goes into the off-hand of each player once, through the tag aoe2mc_map (#966).
+MAP_PULSE = ["execute as @a[tag=!aoe2mc_map] run item replace entity @s weapon.offhand with "
+             "minecraft:filled_map[minecraft:map_id=0]",
+             "tag @a[tag=!aoe2mc_map] add aoe2mc_map"]
+
+
 def write_datapack(out, objects, ground, biome_names=(), ambience="basic", players=None, triggers=(), T=4,
                    trigger_stats=None):
     """datapacks/aoe2mc: a function every 2 s plays a work sound at each building with a player near it
@@ -2678,6 +2689,8 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
     lines += ambience_lines(biome_names)
     groups = sorted({n.split(":")[1] for n in biome_names if n.startswith("aoe2mc:")})
     team_load, team_pulse = team_lines(objects, players or {})
+    # each player gets the map of the world in the off-hand once, so the minimap is there without a search (#966)
+    team_pulse = team_pulse + MAP_PULSE
     trigger_load, trigger_fns = trigger_files(triggers, T, ground, players, trigger_stats)
     if not lines and not groups and not team_load and not trigger_load:   # the server finds a new pack by itself
         return 0, 0

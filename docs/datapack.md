@@ -161,6 +161,11 @@ last 100 ticks), tiny world, headless server:
 The budget is 50 ms per tick. Even the worst case (every tick, 1000 markers) costs about 1 ms. A pulse every
 2 s near the players costs nothing that `/tick query` can measure.
 
+The pulse also gives each player the map of the world in the off-hand once (#966): `item replace entity @s
+weapon.offhand` for `@a[tag=!aoe2mc_map]`, then the tag `aoe2mc_map`. The tag stays in the player data, so a
+player gets the map one time only. `level.dat` `Data.Player` does not work for this: the 26.3 client ignored it
+in a single player world (#966).
+
 `python3 tools/tick_cost.py` measures this again on the `village` scenario (#458): a server on the world with and
 without `datapacks/aoe2mc`, the median of the `/tick query` means over 60 s. A `mc` test (`tests/test_tick_cost.py`)
 fails when the pack costs 2 ms per tick or more. Village, 26.3, no players: 14 pulse lines, 1.00 ms without and
