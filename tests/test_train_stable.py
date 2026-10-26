@@ -22,7 +22,7 @@ def setup(food=80, done=True):
         objects.append({"kind": "building", "name": "STABLE", "player": 1, "tile": [11.5, 3.5],
                         "footprint": [10, 2, 13, 5]})
     server = FakeServer({"v": {"Pos": (7.5, 64.0, 7.5)}, "Steve": {"Pos": (11.5, 64.0, 9.5), "Rotation": (180, 15)}})
-    g = gather.Gather(server, grid([[64] * 24 for _ in range(24)], objects)).setup()
+    g = gather.Gather(server, grid([[64] * 24 for _ in range(24)], objects), start={}).setup()
     if done is not None:
         g.sites.append({"name": "STABLE", "player": 1, "footprint": [10, 13, 2, 5], "done": done})
     g.stock.update(food=food)
@@ -101,7 +101,7 @@ def test_a_trained_scout_is_a_rider_on_a_server(tmp_path):
         data = json.load(f)
     with run.Game(tmp_path / "W") as game:
         game.forceload()
-        g = gather.Gather(game, data, tick=0.25).setup()
+        g = gather.Gather(game, data, tick=0.25, start={}).setup()
         g.stock.update(food=80)
         g.techs.add("FEUDAL_AGE")
         rect, = train.homes(g)

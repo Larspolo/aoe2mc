@@ -19,7 +19,7 @@ def food_map():
                {"kind": "unit", "name": "VILLAGER_MALE", "player": 1, "uuid": "v", "tile": [7.5, 7.5]}]
     objects += [{"kind": "other", "name": "FRUIT_BUSH", "tile": [x + 0.5, z + 0.5]} for x, z in BUSHES]
     server = FakeServer({"v": {"Pos": (7.5, 64.0, 7.5)}})
-    return server, gather.Gather(server, grid([[64] * 20 for _ in range(20)], objects), carry=10, chop=0.25).setup()
+    return server, gather.Gather(server, grid([[64] * 20 for _ in range(20)], objects), carry=10, chop=0.25, start={}).setup()
 
 
 def food(server):
@@ -92,7 +92,7 @@ def test_villager_forages_on_a_server(tmp_path):
         game.forceload()
         end = time.time() + 60                                         # entities load in other threads
         while True:
-            g = gather.Gather(game, data, tick=0.05, carry=10, chop=0.01).setup()
+            g = gather.Gather(game, data, tick=0.05, carry=10, chop=0.01, start={}).setup()
             if g.villagers:
                 break
             assert time.time() < end, "the villager did not load"
