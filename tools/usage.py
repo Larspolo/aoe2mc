@@ -3,6 +3,10 @@
     python3 tools/usage.py              # five_hour 30% (resets 06:30 UTC, 2.0 h) · seven_day 30% ... · target 12 runs
     python3 tools/usage.py --target     # only the number of runs (rule 4 of the scheduled task)
     python3 tools/usage.py --json
+    python3 tools/usage.py --sample     # Usage: <now> · usage 30.0% · resets <time> · claims 9 (for the run report)
+
+BURN is the default. When the run reports on the status issue have enough `Usage:` lines (at least 5 pairs in the
+last 24 hours), `tools/health.py` measures the burn from them and this tool uses that value (#462).
 
 The CLI reports the usage of the subscription in a `rate_limit_event` of its stream-json output. One tiny Haiku
 call reads it, about 1 s and a few tokens. All runs share one quota, so each run sees the same numbers.
@@ -57,28 +61,51 @@ def target_runs(usage, now, burn=BURN, end=END, lo=LO, hi=HI):
     return max(lo, min(hi, n))
 
 
-def describe(usage, now):
+def measured_burn():
+    """The burn that `tools/health.py` measures from the `Usage:` lines of the status issue, or None."""
+    try:
+        import health
+        return health.measured_burn(health.status_comments(), datetime.datetime.now(datetime.timezone.utc))
+    except Exception:                                           # no GitHub access: use the default
+        return None
+
+
+def sample_line(usage, now, claims):
+    """The `Usage:` line of a run report, which `tools/health.py` reads."""
+    iso = lambda t: f"{datetime.datetime.fromtimestamp(t, datetime.timezone.utc):%Y-%m-%dT%H:%M:%SZ}"
+    used, reset, _ = usage["five_hour"]
+    return f"Usage: {iso(now)} · usage {used * 100:.1f}% · resets {iso(reset)} · claims {claims}"
+
+
+def describe(usage, now, burn=BURN):
     out = []
     for k, (used, reset, status) in sorted(usage.items()):
         at = datetime.datetime.fromtimestamp(reset, datetime.timezone.utc)
         out.append(f"{k} {used:.0%} (resets {at:%a %H:%M} UTC, {(reset - now) / 3600:.1f} h, {status})")
-    return " · ".join(out) + f" · target {target_runs(usage, now)} runs"
+    return " · ".join(out) + f" · burn {burn:.3f} · target {target_runs(usage, now, burn)} runs"
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--target", action="store_true", help="print only the number of runs")
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--sample", action="store_true", help="print the Usage: line for the run report")
+    ap.add_argument("--burn", type=float, help="share of the 5-hour quota per run-hour (default: measured, else BURN)")
     a = ap.parse_args(argv)
     usage, now = read_usage(), datetime.datetime.now(datetime.timezone.utc).timestamp()
     if not usage:
         sys.exit("no rate_limit_event in the CLI output (no subscription, or the CLI changed)")
+    if a.sample:
+        import health
+        print(sample_line(usage, now, health.active_claims(datetime.datetime.now(datetime.timezone.utc))))
+        return
+    burn = a.burn or measured_burn() or BURN
     if a.target:
-        print(target_runs(usage, now))
+        print(target_runs(usage, now, burn))
     elif a.json:
-        print(json.dumps({"usage": usage, "target": target_runs(usage, now)}))
+        print(json.dumps({"usage": usage, "burn": burn, "target": target_runs(usage, now, burn)}))
     else:
-        print(describe(usage, now))
+        print(describe(usage, now, burn))
 
 
 if __name__ == "__main__":
