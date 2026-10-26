@@ -69,6 +69,7 @@ NUMBER = r"(-?[\d.]+(?:E-?\d+)?)[df]"
 CIVILIANS = ("VILLAGER", "REPAIRER", "MONK", "KING", "TRADE", "FISHING_SHIP", "TRANSPORT")
 SELECT = "aoe2mc.selected"                                         # entity tag of the selected units
 TYPE_REACH = 16                                                    # blocks: a second click selects its type this near (#743)
+WAND = "warped_fungus_on_a_stick"     # the selection wand: a second item with its own "used" statistic (#778)
 # The look and sound of one gather step at the resource (#592): block particles and a vanilla sound. A villager has
 # no arm swing, so it turns to the resource (`rotate ... facing`). 26.3 block particles take
 # `{id:...,Properties:{...}}`, not `Name`.
@@ -320,6 +321,7 @@ class Gather:
                       if o["kind"] == "building" and o["player"] not in (0, player) and "footprint" in o
                       and o["name"] in combat.BUILDINGS}               # target UUID -> box of an enemy building
         self.sieged = set()                                            # the targets of attack orders
+        self.wands, self.corners = set(), {}                           # players who clicked the wand, player -> corner 1
 
     @property
     def wood(self):
@@ -334,6 +336,7 @@ class Gather:
 
     def setup(self):
         for cmd in ("scoreboard objectives add aoe_use minecraft.used:minecraft.carrot_on_a_stick",
+                    f"scoreboard objectives add aoe_box minecraft.used:minecraft.{WAND}",
                     "scoreboard objectives add aoe_talk minecraft.custom:minecraft.talked_to_villager",
                     'scoreboard objectives add aoe_res dummy "Resources"',
                     "scoreboard objectives setdisplay sidebar aoe_res"):
@@ -388,6 +391,38 @@ class Gather:
         self.selected &= near
         for u in sorted(near - self.selected - {uuid}) + [uuid]:      # the clicked unit last: its boss bar
             self.select(u)
+
+    def choose(self, uuids, last=None):
+        """Make uuids the selection: the other units leave it, the new ones glow. The boss bar shows unit last."""
+        for u in sorted(self.selected - uuids):
+            self.command(f"data merge entity {u} {{Glowing:0b}}")
+            self.command(f"tag {u} remove {SELECT}")
+        for u in sorted(uuids - self.selected):
+            self.command(f"data merge entity {u} {{Glowing:1b}}")
+            self.command(f"tag {u} add {SELECT}")
+        for u in sorted(self.selected ^ uuids):                        # the name line shows the selection (#661)
+            self.command(f"aoe label {u}")
+        self.selected = set(uuids)
+        bossbar.show(self, last)
+
+    def box(self, name, cell):
+        """A click of player name with the selection wand on the ground cell (#778, owner choice #745). The first click
+        sets a corner, the second selects the own units whose feet are in the rectangle of the two corners, as the
+        selection box of AoE2: military units win over villagers, and an empty box clears the selection."""
+        if cell is None:
+            return
+        if (first := self.corners.pop(name, None)) is None:
+            self.corners[name], (x, z) = cell, cell
+            self.command(f"particle minecraft:happy_villager {x + 0.5} {(self.map.y(x, z) or 0) + 0.5} {z + 0.5} "
+                         f"0.3 0.3 0.3 0 12 force {name}")
+            self.command(f"title {name} actionbar " + json.dumps({"text": "Selection box: click the other corner"}))
+            return
+        (x0, x1), (z0, z1) = sorted((first[0], cell[0])), sorted((first[1], cell[1]))
+        pos = {k: v.pos for k, v in self.villagers.items()} | self.positions(list(self.soldiers))
+        inside = {u for u, p in pos.items() if x0 <= p[0] < x1 + 1 and z0 <= p[2] < z1 + 1}
+        pick = inside & self.soldiers.keys() or inside
+        self.choose(pick, min(pick, default=None))
+        self.command(f"title {name} actionbar " + json.dumps({"text": f"Selected: {len(pick)} units"}))
 
     def attack(self, target):
         """Send the selected military units to attack the unit target, with their AoE2 walk speed (ai.py)."""
@@ -490,15 +525,19 @@ class Gather:
         menu.clicks(self)
         self.command("execute as @a unless items entity @s container.* minecraft:carrot_on_a_stick "
                      "run give @s minecraft:carrot_on_a_stick")
-        if "passed" not in self.command("execute if entity @a[scores={aoe_use=1..}]") + \
-                self.command("execute if entity @a[scores={aoe_talk=1..}]"):
+        self.command(f"execute as @a unless items entity @s container.* minecraft:{WAND} "
+                     f'run give @s minecraft:{WAND}[item_name="Selection box"]')
+        objs = ("aoe_use", "aoe_talk", "aoe_box")
+        if "passed" not in "".join(self.command(f"execute if entity @a[scores={{{o}=1..}}]") for o in objs):
             return []
         out = []
         for name in (n.strip() for n in self.command("list").split(":", 1)[-1].split(",")):
-            if name and any(re.search(r"has [1-9]", self.command(f"scoreboard players get {name} {obj}"))
-                            for obj in ("aoe_use", "aoe_talk")):
+            used = [o for o in objs if name and re.search(r"has [1-9]", self.command(f"scoreboard players get {name} {o}"))]
+            if used:
                 out.append(name)
-                for obj in ("aoe_use", "aoe_talk"):
+                if "aoe_box" in used:
+                    self.wands.add(name)
+                for obj in objs:
                     self.command(f"scoreboard players reset {name} {obj}")
         return out
 
@@ -508,6 +547,10 @@ class Gather:
         if not pos or len(rot) != 2:
             return
         eye, d = (pos[0], pos[1] + 1.62, pos[2]), direction(*map(float, rot))
+        if name in self.wands:                                        # the selection wand (#778)
+            self.wands.discard(name)
+            self.box(name, self.map.pick_ground(eye, d))
+            return
         if (rect := self.rallying.pop(name, None)) and (cell := self.map.pick_ground(eye, d)):   # the menu item (#707)
             train.rally(self, rect, cell, self.map.pick_tree(eye, d))
             return
