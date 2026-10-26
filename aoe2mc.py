@@ -11,7 +11,8 @@ Options:
     --tile-size N      Minecraft blocks per AoE2 tile, in each direction (default 4)
     --level-height N   Minecraft blocks per AoE2 elevation level (default 3)
     --name TEXT        World name in the Minecraft menu (default: file name)
-    --seed N           Seed for the random details (tree heights, flowers) (default 1)
+    --seed N           Seed for the random details (tree heights, flowers) and of a random map script (.rms)
+                       (default 1)
     --preview          Also write preview.png (top view) into the world folder
     --mc-version V     Minecraft Java version of the output: 26.3 (default, the only one)
     --orientation C    Minecraft corner (ne, se, sw, nw) of the top corner of the AoE2 screen (default ne)
@@ -238,12 +239,25 @@ def object_kinds(old=True):
 RECORDS = (".aoe2record", ".mgz", ".mgx", ".mgl")      # recorded games: DE, HD; UserPatch, AoC; AoK
 
 
-def read_map(path):
+def read_map(path, seed=1):
     """read_record for recorded games (RECORDS), read_scx for old .scx scenarios, read_json for a map in JSON,
-    else read_scenario."""
+    read_rms for a random map script (the land of seed), else read_scenario."""
     p = path.lower()
+    if p.endswith(".rms"):
+        return read_rms(path, seed)
     return (read_record if p.endswith(RECORDS) else read_scx if p.endswith(".scx") else
             read_json if p.endswith(".json") else read_scenario)(path)
+
+
+def read_rms(path, seed):
+    """The land of a random map script (#963): rmap.generate makes a map description of the seed (read_json)."""
+    import rmap
+    with open(path, encoding="utf-8", errors="replace") as f:
+        text = f.read()
+    try:
+        return map_description(rmap.generate(text, seed), path)
+    except rmap.RmsError as e:
+        raise OptionError(f"{path}: {e}") from None
 
 
 # Object IDs of old scenarios that DE keeps only in its data file (the DE editor hides them, #576) -> the DE object of
@@ -298,9 +312,13 @@ def read_json(path):
     "elevation": N × N levels (default 0), "objects": [{"name", "player", "x", "y", "rotation"} ...],
     "players": {"1": {"civ": "BRITONS", "color": 0} ...}}. The IDs and names are those of AoE2ScenarioParser
     (TerrainId, object_kinds). The color is an index of buildings.COLOR_NAMES (default: the player number - 1)."""
-    from AoE2ScenarioParser.datasets.terrains import TerrainId
     with open(path) as f:
-        d = json.load(f)
+        return map_description(json.load(f), path)
+
+
+def map_description(d, path):
+    """read_json of the description d (a dict); path names the source in the errors."""
+    from AoE2ScenarioParser.datasets.terrains import TerrainId
     size = d.get("size")
     if not isinstance(size, int) or size < 1:
         raise OptionError(f"{path}: \"size\" must be a positive integer")
@@ -3122,7 +3140,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         times[phase] = times.get(phase, 0.0) + now - clock[0]
         clock[0] = now
 
-    size, terrain, elevation, tnames, texts, objects, players = read_map(src)
+    size, terrain, elevation, tnames, texts, objects, players = read_map(src, seed)
     record = src.lower().endswith(RECORDS)
     timeline = read_timeline(src) if record else None
     if timeline is not None:
@@ -3425,7 +3443,8 @@ def game_time(text):
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
     ap.add_argument("scenario", help=".aoe2scenario file, .aoe2record, .mgz, .mgx or .mgl (the start state of a recorded game), .scx "
-                    "(an old scenario, format 1.21), .json (a map description, README), or "
+                    "(an old scenario, format 1.21), .json (a map description, README), .rms (the land of a random map "
+                    "script, with --seed), or "
                     ".aoe2campaign, .cpx or .cpn (one world per scenario; old scenarios that are not .scx 1.21: the "
                     "steps for the DE editor)")
     ap.add_argument("output", help="output world folder (put it in .minecraft/saves/); for a campaign the folder of "

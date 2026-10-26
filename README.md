@@ -167,6 +167,18 @@ A map description in JSON converts without an AoE2 file. Use it for generated ma
 
 An unknown terrain ID or object name gives an error.
 
+## Random map scripts
+
+A random map script (`.rms`) of your own AoE2 install gives the land of one random map. The seed selects the map:
+the same seed gives the same map.
+
+    aoe2mc Arabia.rms ArabiaWorld --seed 7 --preview
+
+The converter reads the land part of the script: the player lands on a circle, the other lands, and the terrains of
+`<TERRAIN_GENERATION>` (forests get their trees). It makes a map for 2 players, with elevation 0 and no other
+objects yet. It prints a warning for each section and attribute that it does not read yet. The repository has no
+script of the game.
+
 ## Buildings
 
 Each building fills its AoE2 footprint. The front (main door) is on the south side, as in the AoE2 camera view.
