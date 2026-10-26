@@ -71,6 +71,7 @@ class Replay:
         self.starts = [(o.get("ref"), o["player"], o["name"], (o["footprint"][0], o["footprint"][2], o["footprint"][1],
                         o["footprint"][3])) for o in data["objects"] if o["kind"] == "building" and "footprint" in o]
         self.placed, self.map, self.added = [], None, 0        # buildings of the replay, gather.Map, placed in the map
+        self.open = {}                                          # footprint -> cells that units walk through (#865)
         self.tops = {}                                          # top block y per footprint of a replay building
         self.trained = {}                                       # units per building footprint
         self.units, self.new = {}, []           # object ID -> gather.Villager; spawned units without a known ID
@@ -147,6 +148,7 @@ class Replay:
         cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
         self.grid()
         free = self.map.around(cells)
+        cells -= self.open.get(rect, set())                         # units under a town center stay (#865)
         out = []
         for i, v in list(self.units.items()) + [(None, v) for _, v in self.new]:
             if v.cell in cells and free and "FARM" not in self.placed[-1][1]:
@@ -190,6 +192,7 @@ class Replay:
         x0, x1, z0, z1 = fx0 + dx, fx1 + dx - 1, fz0 + dz, fz1 + dz - 1
         self.placed.append((player, name, (x0, x1 + 1, z0, z1 + 1)))
         self.tops[self.placed[-1][2]] = top
+        self.open[self.placed[-1][2]] = {(x + dx, z + dz) for x, z in o.get("open", ())}
         out = self.fill(x0, base, z0, x1, top, z1, "air")
         if low < base - 1:                                          # the floor replaces the top ground block
             out += self.fill(x0, low, z0, x1, base - 2, z1, self.state(aoe2mc.B(buildings.ARCH[players[player][
@@ -323,7 +326,7 @@ class Replay:
                     v.name, v.player = o["name"], o["player"]
         for _, name, r in self.placed[self.added:]:              # a farm: its center tile is its key (#719)
             self.map.building(name, r, ((r[0] + r[1]) // 2 // T, (r[2] + r[3]) // 2 // T) if "FARM" in name else None,
-                              False)
+                              False, self.open.get(r, ()))
         self.added = len(self.placed)
         return self.map
 
