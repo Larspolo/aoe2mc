@@ -127,8 +127,9 @@ least overlap with the work in progress (files and functions that open PRs chang
 then the lowest issue number.
 `python3 tools/dashboard.py --next` prints the candidates in this order (the rule is `dashboard.candidates()`).
 Epics first: an epic is never a candidate, so its rest of the work needs sub-issues. Before you claim a ticket, look
-at the open epics (label `epic`, not `needs-human`) with a higher priority than the top candidate and no open
-sub-issue. For each one, read its acceptance criteria. Close the epic with a comment when the closed sub-issues meet
+at the open epics (label `epic`, not `needs-human`, any priority) with no open sub-issue, at most 3 per run. The
+priority does not matter here: a check of `P2` and `P3` epics was skipped, and six finished epics stayed open (#799).
+For each one, read its acceptance criteria. Close the epic with a comment when the closed sub-issues meet
 all criteria (name the evidence for each). Else lock the epic first: `python3 tools/claim.py E --refill`
 (E = the epic; exit 1: another run makes its sub-issue, skip the epic, #505). Then make one sub-issue (same priority)
 for the criteria that an agent can do. A criterion that needs the owner stays on the epic. Then pick again (#176, #155 waited while P3 tickets ran).
