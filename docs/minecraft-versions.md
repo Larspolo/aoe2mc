@@ -161,3 +161,4 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - RCON `data get entity U CustomName` cuts deep compounds (`{extra: [{...}, " ", {...`): read one part with a path,
   for example `CustomName.extra[2].text`. The answer starts with the display name of the entity (#661).
 - A mob with AI has no `NoAI` tag: `data get entity U NoAI` answers "Found no elements matching NoAI", not `0b`. Test for `1b` only (#811).
+- Paths of saved data files in 26.3: `strings` on `net/minecraft/util/filefix/fixes/DimensionStorageFileFix.class` of the server jar. Maps: `data/minecraft/maps/N.dat` and `last_id.dat` (`{data: {map: N}}`), not `data/map_N.dat` and `idcounts.dat`. The map colors: `MapColor.class` (`javap -c`, #838).
