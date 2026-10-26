@@ -27,6 +27,12 @@ def command(player, title, items):
                      for slot, material, name, lore, *more in items])
 
 
+def lore(g, material, name, text):
+    """The last lore line of each later menu item with this material and name (#1160): the plugin keeps it, so the
+    menu commands stay short (one RCON command holds a whole menu)."""
+    return g.command(f"aoe lore {material} {quote(name, safe='')} {quote(text, safe='')}")
+
+
 def show(g, player, title, items, handler):
     """Open (or refresh) a menu for player; handler(player, slot, shift) gets each click."""
     g.menus[player] = handler
