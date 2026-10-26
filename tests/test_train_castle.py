@@ -9,18 +9,19 @@ from urllib.parse import unquote
 import pytest
 from test_gather import FakeServer, grid
 
-from game import combat, gather, run, train
+from game import build, combat, gather, run, train
 
 
-def setup(civ="BRITONS", food=0, wood=35, gold=40):
+def setup(civ="BRITONS", food=0, wood=35, gold=40, ages=2):
     """A flat 24 × 24 map (tile size 1): a castle of player 1 at blocks x 10-13, z 2-5 and a town center for the
-    population. Steve stands south of the castle."""
+    population. Steve stands south of the castle. The player has researched ages ages (2: the Castle Age, #1082)."""
     objects = [{"kind": "building", "name": "TOWN_CENTER", "player": 1, "tile": [3.5, 3.5], "footprint": [2, 2, 5, 5]},
                {"kind": "building", "name": "CASTLE", "player": 1, "tile": [12.0, 4.0], "footprint": [10, 2, 14, 6]}]
     data = grid([[64] * 24 for _ in range(24)], objects) | {"players": {"1": {"civ": civ, "color": "blue"}}}
     server = FakeServer({"Steve": {"Pos": (12.0, 64.0, 9.5), "Rotation": (180, 15)}})
     g = gather.Gather(server, data, start={}).setup()
     g.stock.update(food=food, wood=wood, gold=gold)
+    g.techs.update(build.AGE_TECHS[:ages])
     return server, g
 
 
@@ -95,6 +96,7 @@ def test_a_trained_war_elephant_and_longbowman_exist_on_a_server(tmp_path):
         for civ, name in [("PERSIANS", "WAR_ELEPHANT"), ("BRITONS", "LONGBOWMAN")]:
             data["players"]["1"]["civ"] = civ
             g = gather.Gather(game, data, tick=0.25, start={}).setup()
+            g.techs.update(train.build.AGE_TECHS[:2])                    # the Castle Age (#1082)
             g.stock.update(food=170, wood=35, gold=85)
             rect, = [r for r, b in train.homes(g).items() if b == "CASTLE"]
             assert train.queue(g, "nobody", rect[::2], name)

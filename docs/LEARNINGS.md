@@ -89,3 +89,4 @@ of its document (named below; add at its end, do not change other lines: `merge=
   wrote (#966). The datapack also works on a server, where `level.dat` has no player.
 - `tests/test_menu.py` `test_gather_reads_the_menu_clicks` builds a bare `Gather.__new__` with only the attributes that `clicks()` uses: a new attribute that `clicks()` reads must go there too, else the full suite fails with AttributeError (#992).
 - `python3 -m pytest -m mc tests/A.py tests/B.py` can stop with "No module named 'bossbar'" (a test file imports a `game/` module by its bare name): run it with `PYTHONPATH=game:tools:.` (#1045).
+- In tests, `from game import build` and the bare `build` that `game/*.py` import are two module objects: a table that `train.py` changes at import (`build.AGE |= ...`, #1082) is only in the bare one. Read it through the importer (`train.build`).
