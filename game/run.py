@@ -5,7 +5,7 @@ The game program: start a vanilla server on a converted world, with RCON on loca
 Usage:
     python3 game/run.py WORLD [--version 26.3]    # type commands (without "/"); Ctrl-C stops the server
     python3 game/run.py WORLD --bench 1000        # measure the commands per second through RCON, then stop
-    python3 game/run.py WORLD --play              # villagers gather wood (game/gather.py); Ctrl-C stops
+    python3 game/run.py WORLD --play              # villagers gather wood, food, gold, stone (game/gather.py); Ctrl-C stops
     python3 game/run.py WORLD --play --log F.jsonl  # also write a timed event log (tools/measure_gather.py reads it)
     python3 game/run.py WORLD --replay [--speed 4]  # replay the recorded game of the world (game/replay.py), then stop
 
@@ -140,7 +140,7 @@ def play(game, world, log=None):
         time.sleep(1)
     print(f"Join the server localhost:{game.game_port} (Minecraft {game.version}, multiplayer, direct connection).\n"
           f"{len(g.villagers)} villagers of player 1. Hold the carrot on a stick: right click a villager to select it,\n"
-          "then right click a tree. Ctrl-C stops.", file=sys.stderr)
+          "then right click a tree, a fruit bush or a mine. Ctrl-C stops.", file=sys.stderr)
     g.run()
 
 
@@ -166,7 +166,7 @@ def main(argv=None):
     ap.add_argument("world")
     ap.add_argument("--version", default=mc_check.DEFAULT_VERSION, help="Minecraft version of the world")
     ap.add_argument("--bench", type=int, metavar="N", help="send N commands, print the commands per second, stop")
-    ap.add_argument("--play", action="store_true", help="play: villagers of player 1 gather wood (aoe2mc.json)")
+    ap.add_argument("--play", action="store_true", help="play: villagers of player 1 gather resources (aoe2mc.json)")
     ap.add_argument("--replay", action="store_true", help="replay the timeline of a recorded game (aoe2mc.json)")
     ap.add_argument("--speed", type=float, default=1.0, help="--replay: times the game speed (default 1)")
     ap.add_argument("--from", dest="start", default="0:00", metavar="MM:SS", help="--replay: start at this game time")
