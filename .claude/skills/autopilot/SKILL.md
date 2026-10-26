@@ -130,17 +130,20 @@ sub-issue. For each one, read its acceptance criteria. Close the epic with a com
 all criteria (name the evidence for each). Else lock the epic first: `python3 tools/claim.py E --refill`
 (E = the epic; exit 1: another run makes its sub-issue, skip the epic, #505). Then make one sub-issue (same priority)
 for the criteria that an agent can do. A criterion that needs the owner stays on the epic. Then pick again (#176, #155 waited while P3 tickets ran).
-Refill the queue when fewer candidates are ready than runs are active (the claims of `python3 tools/usage.py --fire`:
-runs with a claim beat, #635), so that parallel runs always find work. Do this at most once per run, in about 10 minutes.
+Refill the queue when fewer candidates are ready than the target number of runs, so that parallel runs always find
+work: N = the target and R = the ready tickets of `python3 tools/usage.py --fire` (its stderr line). Refill only when
+R < N, and make at most 2 × N − R tickets, so the queue stays at most twice the target (owner, #664: when fewer runs work
+again, a large queue only waits). Do this at most once per run, in about 10 minutes.
 Lock it first: `python3 tools/claim.py 0 --refill` (one run per 10 minutes). Exit 1: another run makes the whole
 refill; then refill one open epic instead (the first one with open goals that an agent can do, under its lock below):
-up to 5 sub-issues for its open goals, then pick again (#650: 10 runs closed tickets faster than one refill made them).
+up to 5 sub-issues (within the cap) for its open goals, then pick again (#650: 10 runs closed tickets faster than one
+refill made them).
 Also lock each epic E with `python3 tools/claim.py E --refill` before you make its tickets (exit 1: skip that epic, #505):
 1. Split each `size:L` ticket N without open sub-issues (`ticket` skill), also when it is not a candidate yet. Lock it
    first with `python3 tools/claim.py N --refill` (exit 1: skip it).
 2. For each open epic whose sub-issues are all closed: make a sub-issue for each acceptance criterion that is
    still open and that an agent can do. A criterion that needs the owner stays on the epic.
-3. Make up to 12 new tickets for the remaining goals of the open epics, and for the fallbacks in
+3. Make up to 12 new tickets (within the cap) for the remaining goals of the open epics, and for the fallbacks in
    `docs/coverage.md`. When the open epics have no goal left that an agent can do, make the next epic from the
    feature list of `docs/ROADMAP.md` with the `roadmap` skill (the goals take turns). Priority: that of the epic, else `P3`. Never `P0` or `P1`, except for
    a `tooling` ticket that blocks other tickets. Look for duplicates first, and list the open issues again just
@@ -186,7 +189,10 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
 9. CI red → find the cause, fix, push. After 3 failed attempts stop: comment the cause on the ticket,
    add `blocked` or `needs-human` and `hold`, remove `in-progress`, and go to step 8 of the skill (report).
 10. Merge conflict (another PR changed the same lines) → merge `origin/main` into the branch, solve the
-    conflict, verify again, push. Do not rebase or force-push a branch that has an open PR.
+    conflict, run `ruff check .`, the fast tests and only the `mc` tests of the files of your ticket, and push at
+    once. Do not run other `mc` tests for a merge: while they run, main moves again and the PR stays without CI
+    (#604 waited an hour, #669). The quick CI checks the PR, the night CI runs the full suite. A test failure after the
+    push: fix it in the next push. Do not rebase or force-push a branch that has an open PR.
     A conflict in the column "Used today in" of `docs/DESIGN.md`: take main's side (`coverage.yml` writes it).
     Two new rows of the feature table at the same place: keep both.
     `docs/LEARNINGS.md` has `merge=union`: the merge keeps lines that main removed. `claim.py N --guard` fails
@@ -201,7 +207,9 @@ partial work: add `hold` to its PR (the workflow also skips a PR whose ticket ha
 The merge closes the ticket (`Closes #N`), and the Automerge workflow removes `in-progress`. If the owner must check something in the game, make
 a small check ticket without `needs-human` first (#580). An agent runs the check itself (level 4 of `verify`: real server,
 simulated clicks through the same functions as the player input, `tools/mc_shot.py`) and comments the results and the
-images. Then it adds `needs-human` with a short list of what only a person can check (real input, feel, sound, speed).
+images. When the check finds a bug, it makes a bug ticket for each one, adds "Depends on: #bug" to the check ticket, and does
+not add `needs-human`: when the bugs are closed, the check ticket is a candidate again and a later run checks again (owner, #668).
+Only after a check without bugs it adds `needs-human` with a short list of what only a person can check (real input, feel, sound, speed).
 
 ## 8. Report on the status issue
 

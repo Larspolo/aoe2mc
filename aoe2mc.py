@@ -320,10 +320,15 @@ def read_scenario(path):
                    for i, t in enumerate(scn.trigger_manager.triggers) if t.display_as_objective)
     texts["objectives"] = "\n".join(f"- {g}" for _, _, g in goals if g)
     texts["triggers"] = [dict(id=t.trigger_id, name=t.name, enabled=bool(t.enabled), looping=bool(t.looping),
-                              conditions=[dict(type=c.condition_type, timer=c.timer, inverted=bool(c.inverted))
+                              conditions=[dict(type=c.condition_type, timer=c.timer, inverted=bool(c.inverted),
+                                               **({"quantity": c.quantity, "player": c.source_player,
+                                                   "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2]}
+                                                  if c.condition_type == IN_AREA else {}))
                                           for c in t.conditions],
                               effects=[dict(type=e.effect_type, message=e.message or "", player=e.source_player,
-                                            time=e.display_time) for e in t.effects])
+                                            time=e.display_time, object=kinds.get(e.object_list_unit_id),
+                                            tile=[e.location_x, e.location_y],
+                                            area=[e.area_x1, e.area_y1, e.area_x2, e.area_y2]) for e in t.effects])
                          for t in scn.trigger_manager.triggers]
 
     objects = []
@@ -2369,20 +2374,90 @@ def team_lines(objects, players):
     return load, pulse
 
 
-TIMER, SEND_CHAT, DISPLAY_INSTRUCTIONS = 10, 3, 20      # AoE2 condition and effect IDs (AoE2ScenarioParser)
+TIMER, SEND_CHAT, DISPLAY_INSTRUCTIONS, IN_AREA = 10, 3, 20, 5   # AoE2 condition and effect IDs (AoE2ScenarioParser)
+CREATE_OBJECT, REMOVE_OBJECT = 11, 15
 
 
-def trigger_files(triggers):
-    """(load lines, files) for the triggers that only have timer conditions (#648): one function per trigger,
-    which the load function schedules at the AoE2 time (all timers must pass: the largest). "Send Chat" is a
-    tellraw, "Display Instructions" a subtitle for its display time. A disabled trigger does not run."""
-    load, files = [], {}
+def turn_area(area, size, k):
+    """The tile area [x1, y1, x2, y2] (both ends included, -1: the whole map) after k quarter turns (turn_tile)."""
+    if min(area) < 0:
+        return area
+    (a, b), (c, d) = (turn_tile(x + 0.5, y + 0.5, size, k) for x, y in (area[:2], area[2:]))
+    return [int(min(a, c)), int(min(b, d)), int(max(a, c)), int(max(b, d))]
+
+
+def area_selector(c, T):
+    """The entity selector of the units of the player of an "Objects in Area" condition: the blocks of the tiles
+    x1..x2, y1..y2 (z), all heights. An area of -1 is the whole map. The object type filter is not used yet."""
+    sel = [f"tag=aoe2mc.p{c['player']}"]
+    if min(c["area"]) >= 0:
+        x1, y1, x2, y2 = c["area"]
+        x1, x2, y1, y2 = min(x1, x2), max(x1, x2), min(y1, y2), max(y1, y2)
+        sel.append(f"x={x1 * T},y={MIN_Y},z={y1 * T},dx={(x2 - x1 + 1) * T - 1},dy={HEIGHT - 1},"
+                   f"dz={(y2 - y1 + 1) * T - 1}")
+    return f"@e[{','.join(sel)}]"
+
+
+def object_lines(t, e, T, ground, players, stats):
+    """The commands of "Create Object" and "Remove Object" (#656): a summon of the entity of units.make_entity at
+    the middle of the tile, or a kill of the units of the player and type in the area (area_selector).
+    Buildings and other objects are not supported yet: they count in stats."""
+    kind, name = e.get("object") or (None, None)
+    if e["type"] == CREATE_OBJECT and min(e.get("tile", [-1])) >= 0:
+        x, z = (int((v + 0.5) * T) for v in e["tile"])
+        o = dict(name=name, player=max(e["player"], 0), rotation=math.pi / 2)
+        nbt = units.make_entity(o, players or {}, (x + 0.5, 0.0, z + 0.5), np.random.default_rng(t["id"])) \
+            if kind in ("U", "H") and 0 <= x < ground.shape[0] and 0 <= z < ground.shape[1] else None
+        if nbt is None:
+            stats["create (not supported yet)"] += 1
+            return []
+        stats["create"] += 1
+        kind = str(nbt.pop("id"))
+        del nbt["Pos"]
+        parts = [nbt]                                                  # Minecraft gives new UUIDs: a looping
+        while parts:                                                   # trigger or two effects never clash
+            part = parts.pop()
+            part.pop("UUID", None)
+            parts += list(part.get("Passengers", []))
+        return [f"summon {kind} {x + 0.5} {int(ground[x, z])} {z + 0.5} {nbt.snbt()}"]
+    if e["type"] == REMOVE_OBJECT and min(e.get("area", [-1])) >= 0:
+        at, top = area_selector(e, T), None
+        if e["player"] <= 0:                                           # Gaia units have no player tag
+            at = re.sub(r"tag=aoe2mc\.p-?\d+,?", "", at)
+        if name is not None:
+            nbt = units.make_entity(dict(name=name, player=0), {}, (0.0, 0.0, 0.0), np.random.default_rng(0)) \
+                if kind in ("U", "H") else None
+            if nbt is None:
+                stats["remove (not supported yet)"] += 1
+                return []
+            top = units.top_entity(nbt)
+            at = f"@e[type={top['id']},{at[3:]}" if at != "@e[]" else f"@e[type={top['id']}]"
+        stats["remove"] += 1
+        ride = [f"execute as {at} on vehicle run kill @s"] if top is not None and top is not nbt else []
+        return ride + [f"kill {at}"]                                       # a rider: its mount goes too
+    return []
+
+
+def trigger_files(triggers, T=4, ground=None, players=None, stats=None):
+    """(load lines, files) for the triggers that only have timer conditions (#648) or only "Objects in Area"
+    conditions (#649): one function per trigger. The load function schedules a timer trigger at the AoE2 time (all
+    timers must pass: the largest). The tick function runs an area trigger when units of its player are in all its
+    areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
+    the units leave an area. "Send Chat" is a tellraw, "Display Instructions" a subtitle for its display time;
+    "Create Object" and "Remove Object": object_lines (#656). A disabled trigger does not run."""
+    load, files, tick = [], {}, []
+    stats = Counter() if stats is None else stats
+    ground = np.zeros((0, 0), np.int16) if ground is None else ground
     for t in triggers:
         conds = t["conditions"]
-        if not t["enabled"] or not conds or any(c["type"] != TIMER or c["inverted"] for c in conds):
+        kinds = {(c["type"], c["inverted"]) for c in conds}
+        if not t["enabled"] or not conds or kinds not in ({(TIMER, False)}, {(IN_AREA, False)}):
             continue
         lines = []
         for e in t["effects"]:
+            if e["type"] in (CREATE_OBJECT, REMOVE_OBJECT):
+                lines += object_lines(t, e, T, ground, players, stats)
+                continue
             msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()   # AoE2 color tags
             if not msg:
                 continue
@@ -2394,18 +2469,41 @@ def trigger_files(triggers):
                 lines += [f"title @a times 10 {ticks} 20", f"title @a subtitle {text}", 'title @a title ""']
         if not lines:
             continue
+        fn, n = f"aoe2mc:trigger/{t['id']}", t["id"]
+        if conds[0]["type"] == IN_AREA:
+            tests, unless = [], []
+            for i, c in enumerate(conds):
+                sel, q = area_selector(c, T), max(c["quantity"], 1)
+                if q == 1:
+                    tests.append(f"if entity {sel}")
+                    unless.append(f"unless entity {sel}")
+                else:                                                  # count the units: q or more
+                    tick.append(f"execute store result score #{n}.{i} aoe_trig if entity {sel}")
+                    tests.append(f"if score #{n}.{i} aoe_trig matches {q}..")
+                    unless.append(f"unless score #{n}.{i} aoe_trig matches {q}..")
+            tick.append(f"execute {' '.join(tests)} unless score #{n} aoe_trig matches 1 run function {fn}")
+            if t["looping"]:
+                tick += [f"execute {u} run scoreboard players reset #{n} aoe_trig" for u in unless]
+            lines.append(f"scoreboard players set #{n} aoe_trig 1")
+            files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines) + "\n"
+            continue
         ticks = max(20 * max(c["timer"] for c in conds), 1)          # a schedule needs at least 1 tick
-        run = f"schedule function aoe2mc:trigger/{t['id']} {ticks}t replace"
-        files[f"data/aoe2mc/function/trigger/{t['id']}.mcfunction"] = "\n".join(lines + [run] * t["looping"]) + "\n"
+        run = f"schedule function {fn} {ticks}t replace"
+        files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines + [run] * t["looping"]) + "\n"
         load.append(run)
+    if tick:
+        load.insert(0, "scoreboard objectives add aoe_trig dummy")
+        files["data/minecraft/tags/function/tick.json"] = {"values": ["aoe2mc:tick"]}
+        files["data/aoe2mc/function/tick.mcfunction"] = "\n".join(tick) + "\n"
     return load, files
 
 
-def write_datapack(out, objects, ground, biome_names=(), ambience="basic", players=None, triggers=()):
+def write_datapack(out, objects, ground, biome_names=(), ambience="basic", players=None, triggers=(), T=4,
+                   trigger_stats=None):
     """datapacks/aoe2mc: a function every 2 s plays a work sound at each building with a player near it
     (docs/datapack.md). Fixed positions, no marker entities: the check costs nothing that /tick query shows.
     Ambience (#219): particles and sounds near the players by biome; "full" also writes the custom biomes, "off"
-    writes no pack (and so no teams). Teams: `team_lines`. Timer triggers: `trigger_files`.
+    writes no pack (and so no teams). Teams: `team_lines`. Timer and area triggers: `trigger_files`.
     Returns (work sounds, ambience lines)."""
     root = os.path.join(out, "datapacks", "aoe2mc")
     if ambience == "off":           # the world as before #188: no pack
@@ -2435,7 +2533,7 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
     lines += ambience_lines(biome_names)
     groups = sorted({n.split(":")[1] for n in biome_names if n.startswith("aoe2mc:")})
     team_load, team_pulse = team_lines(objects, players or {})
-    trigger_load, trigger_fns = trigger_files(triggers)
+    trigger_load, trigger_fns = trigger_files(triggers, T, ground, players, trigger_stats)
     if not lines and not groups and not team_load and not trigger_load:   # the server finds a new pack by itself
         return 0, 0
     files = {
@@ -2716,6 +2814,10 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
             raise OptionError("--at needs a recorded game (.aoe2record)" if not record else
                               "--at: mgz cannot read the commands of this recorded game (only its start state)")
         objects, at_stats = apply_timeline(objects, timeline, at)
+    for c in (c for t in texts.get("triggers", ()) for c in t["conditions"] + t["effects"] if "area" in c):
+        c["area"] = turn_area(c["area"], size, buildings.TURN)
+    for e in (e for t in texts.get("triggers", ()) for e in t["effects"] if min(e.get("tile", [-1])) >= 0):
+        e["tile"] = [int(v) for v in turn_tile(e["tile"][0] + 0.5, e["tile"][1] + 0.5, size, buildings.TURN)]
     for e in timeline or ():
         for k in ("tile", "end"):
             if k in e:
@@ -2810,11 +2912,12 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
 
     write_level_dat(os.path.join(out, "level.dat"), name, spawn, yaw, cols.n)
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline)
-    triggers = texts.get("triggers", [])
-    n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers)
-    k = len(trigger_files(triggers)[1]) if ambience != "off" else 0
+    triggers, tstats = texts.get("triggers", []), Counter()
+    n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats)
+    k = sum("/trigger/" in f for f in trigger_files(triggers, T, ground, players)[1]) if ambience != "off" else 0
     if k:
-        print(f"  timer triggers (chat and instructions): {k}")
+        print(f"  timer and area triggers (chat, instructions, objects): {k}"
+              + "".join(f", {v} {w}" for w, v in sorted(tstats.items())))
     if n:
         print(f"  work sounds at buildings: {n}")
     if amb:

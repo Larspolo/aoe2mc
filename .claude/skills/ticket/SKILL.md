@@ -59,6 +59,7 @@ owner must reply. One ticket per decision.
 
 A check ticket ("check X in the game") starts without `needs-human`: an agent runs the check first (`verify`, level 4),
 comments the results and screenshots, and then adds `needs-human` with the list of what only a person can check (#580).
+When the check finds bugs, the check ticket depends on the bug tickets and gets `needs-human` only after a check without bugs (#668).
 
 ## Decision tickets
 

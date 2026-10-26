@@ -9,14 +9,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.bukkit.Bukkit;
+import org.bukkit.HeightMap;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.AbstractArrow;
@@ -92,7 +96,9 @@ import net.kyori.adventure.text.Component;
  * 1024 of max_health) in the scoreboard aoe_hp, cancels all other damage to it and from it (no suffocation in the
  * walls, no slime touch), and at 0 removes it and fills the box of the building with air. The vanilla melee goal
  * hits only a target in sight, and the eye of the slime is in the walls: so a unit next to the slime that has it as
- * target hits it each second (Mob#attack, the vanilla hit with the swing), as a zombie hits.
+ * target hits it each second (Mob#attack, the vanilla hit with the swing), as a zombie hits. A ranged unit shoots
+ * a building from its range to the nearest side of the target, without sight of the eye (#608). Its arrow sticks
+ * in the walls, so the goal takes the hit points for each shot, and an arrow that hits the slime does nothing.
  * Vanilla has no clickable item menu: "aoe menu" opens an inventory with the items (#619). A click on an item is
  * cancelled (the player takes nothing) and sets the score aoe_menu of the player to slot + 1 (a shift click: -(slot + 1),
  * #620); the menu stays open, so the player can click again. "aoe menu" on an open menu of the same title and size only changes the items.
@@ -111,7 +117,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     private final Map<UUID, Stats> stats = new HashMap<>();
 
-    private record Building(Stats stats, String box) {}
+    private record Building(Stats stats, String box, int max, int[] b) {}   // b: x0 y0 z0 x1 y1 z1 of box
 
     private final Map<UUID, Building> buildings = new HashMap<>();
     private final Map<UUID, Integer> lastHit = new HashMap<>();      // tick of the last hit of a unit on a building
@@ -164,8 +170,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         @Override
         public void tick() {
             LivingEntity t = mob.getTarget();
-            boolean near = mob.getLocation().distanceSquared(t.getLocation()) <= range.blocks * range.blocks
-                    && mob.hasLineOfSight(t);
+            // a building: the range to its nearest side, and no sight of the eye of its target in the walls (#608)
+            boolean wall = buildings.containsKey(t.getUniqueId());
+            boolean near = (wall ? gap(mob, t) : mob.getLocation().distanceSquared(t.getLocation()))
+                    <= range.blocks * range.blocks && (wall || mob.hasLineOfSight(t));
             if (near) {
                 mob.getPathfinder().stopPathfinding();
             } else if (!mob.getPathfinder().hasPath() || ++ticks % 10 == 0) {     // the target can move
@@ -181,6 +189,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     r.rangedAttack(t, 1.0f);
                 }
                 next = now + range.ticks;
+                Stats a = stats.get(mob.getUniqueId());
+                Building b = buildings.get(t.getUniqueId());
+                if (a != null && b != null) {           // the arrow sticks in the walls: the shot hits (#608)
+                    hit(t, b, a.damage(b.stats));
+                    hitEffect(t, b, mob);
+                }
             }
         }
 
@@ -193,6 +207,16 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         public EnumSet<GoalType> getTypes() {
             return EnumSet.of(GoalType.MOVE, GoalType.LOOK);
         }
+    }
+
+    // The squared distance from the feet of the mob to the nearest point of the box of the target.
+    private static double gap(Mob mob, Entity t) {
+        var b = t.getBoundingBox();
+        var p = mob.getLocation();
+        double dx = Math.max(0, Math.max(b.getMinX() - p.getX(), p.getX() - b.getMaxX()));
+        double dy = Math.max(0, Math.max(b.getMinY() - p.getY(), p.getY() - b.getMaxY()));
+        double dz = Math.max(0, Math.max(b.getMinZ() - p.getZ(), p.getZ() - b.getMaxZ()));
+        return dx * dx + dy * dy + dz * dz;
     }
 
     // A vanilla arrow. The vanilla bow shot has a spread of 14 - 4 × difficulty and a slow arrow: at 20 blocks most
@@ -333,6 +357,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     public void onEnable() {
         Bukkit.getScheduler().runTaskTimer(this, this::follow, 2L, 2L);
         Bukkit.getScheduler().runTaskTimer(this, this::siege, 10L, 10L);
+        Bukkit.getScheduler().runTaskTimer(this, this::burn, 20L, 20L);
         Bukkit.getPluginManager().registerEvents(this, this);
     }
 
@@ -346,9 +371,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Building b = buildings.get(ev.getEntity().getUniqueId());
         if (buildings.containsKey(from.getUniqueId()) || b != null) {
             ev.setCancelled(true);
-            if (a != null && b != null) {
+            if (a != null && b != null && !(ev.getDamager() instanceof Projectile)) {   // RangeGoal counts a shot
                 lastHit.put(from.getUniqueId(), Bukkit.getCurrentTick());
                 hit(ev.getEntity(), b, a.damage(b.stats));
+                hitEffect(ev.getEntity(), b, from);
             }
             return;
         }
@@ -384,6 +410,64 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             score.resetScore();
             target.remove();
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "fill " + b.box + " minecraft:air");
+        }
+    }
+
+    /** The roof block over column (x, z) of a building, or null when the column is empty (#660). */
+    private static org.bukkit.block.Block roof(Entity target, int x, int z) {
+        var block = target.getWorld().getHighestBlockAt(x, z, HeightMap.MOTION_BLOCKING);
+        return block.getType().isAir() ? null : block;
+    }
+
+    /** Block particles and the hit sound of the block at the point of the building next to the attacker (#660). */
+    private static void hitEffect(Entity target, Building b, Entity from) {
+        if (!target.isValid()) {                              // the building fell
+            return;
+        }
+        var at = from.getLocation().add(0, 1, 0);
+        int x = Math.clamp(at.getBlockX(), b.b[0], b.b[3]), z = Math.clamp(at.getBlockZ(), b.b[2], b.b[5]);
+        int y = Math.clamp(at.getBlockY(), b.b[1], b.b[4]);
+        var block = target.getWorld().getBlockAt(x, y, z);
+        if (block.getType().isAir() || block.getType() == Material.BARRIER) {
+            block = roof(target, (b.b[0] + b.b[3]) / 2, (b.b[2] + b.b[5]) / 2);
+        }
+        if (block == null) {
+            return;
+        }
+        BlockData data = block.getBlockData();
+        var loc = new Location(target.getWorld(), x + 0.5, Math.min(y, block.getY()) + 0.5, z + 0.5);
+        target.getWorld().spawnParticle(Particle.BLOCK, loc, 12, 0.3, 0.3, 0.3, 0, data);
+        target.getWorld().playSound(loc, data.getSoundGroup().getHitSound(), 1.0f, 0.8f);
+    }
+
+    /** Each second: smoke and flames at the roof of each building below half of its hit points, more at fewer hit
+     * points, as in AoE2 (#660). Not fire blocks: they spread and burn the design. Tag aoe2mc.burning while it burns. */
+    private void burn() {
+        for (var e : buildings.entrySet()) {
+            Entity t = Bukkit.getEntity(e.getKey());
+            Building b = e.getValue();
+            if (t == null) {
+                continue;
+            }
+            var score = hp().getScoreFor(t);
+            boolean burning = score.isScoreSet() && score.getScore() * 2 < b.max;
+            if (!burning) {
+                t.removeScoreboardTag("aoe2mc.burning");
+                continue;
+            }
+            t.addScoreboardTag("aoe2mc.burning");
+            var rnd = ThreadLocalRandom.current();
+            int fires = 1 + (int) (3 * (1 - 2.0 * score.getScore() / b.max));   // 1 fire at half, 4 near 0
+            for (int i = 0; i < fires; i++) {
+                int x = rnd.nextInt(b.b[0], b.b[3] + 1), z = rnd.nextInt(b.b[2], b.b[5] + 1);
+                var top = roof(t, x, z);
+                if (top == null) {
+                    continue;
+                }
+                var loc = top.getLocation().add(0.5, 1.1, 0.5);
+                t.getWorld().spawnParticle(Particle.FLAME, loc, 6, 0.3, 0.2, 0.3, 0.01);
+                t.getWorld().spawnParticle(Particle.LARGE_SMOKE, loc.add(0, 0.5, 0), 4, 0.3, 0.4, 0.3, 0.02);
+            }
         }
     }
 
@@ -587,13 +671,15 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             int hp;
             Stats st;
             String box;
+            int[] b = new int[6];
             try {
                 hp = Integer.parseInt(args[2]);
                 st = new Stats(0, Integer.parseInt(args[3]), Integer.parseInt(args[4]), false, Set.of("building"),
                         Map.of());
                 var c = new ArrayList<String>();
                 for (int i = 5; i < 11; i++) {
-                    c.add(Integer.toString(Integer.parseInt(args[i])));
+                    b[i - 5] = Integer.parseInt(args[i]);
+                    c.add(Integer.toString(b[i - 5]));
                 }
                 box = String.join(" ", c);
             } catch (NumberFormatException e) {
@@ -604,7 +690,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             for (Entity e : select(sender, args[1])) {
                 if (e instanceof LivingEntity le) {
                     le.setCollidable(false);                  // units walk up to the walls, not off the slime
-                    buildings.put(le.getUniqueId(), new Building(st, box));
+                    buildings.put(le.getUniqueId(), new Building(st, box, hp, b));
                     hp().getScoreFor(le).setScore(hp);
                     n++;
                 }

@@ -9,6 +9,9 @@ the head of a queue does not start; the sidebar shows the population and the lim
 The menu (#620): a right click on an own town center opens its chest menu (menu.py) with the item "Villager"; a click
 on it queues 1 villager, a shift click 5 (as many as the food and the queue allow), and the menu stays open with the
 new queue count. gather.Gather.click calls open_menu().
+Military units (#654): a right click on an own barracks opens its menu with "Militia" (TRAINS); a trained militia
+joins the military units of the player (g.soldiers), so a click can select it and send it to attack. An own archery
+range trains archers (#670): they shoot from their AoE2 range (combat.range_command).
 """
 import math
 import os
@@ -23,30 +26,36 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import menu  # noqa: E402
 
-COSTS = {"VILLAGER_MALE": {"food": 50}}                            # as in AoE2
-TRAIN_TIMES = {"VILLAGER_MALE": 25}                                # AoE2 seconds
+COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   # as in AoE2
+         "ARCHER": {"wood": 25, "gold": 45}}
+TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35}   # AoE2 seconds
+TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE",), "BARRACKS": ("MILITIA",),   # the units of each building (#654, #670)
+          "ARCHERY_RANGE": ("ARCHER",)}
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
 HOUSING = {"TOWN_CENTER": 5, "HOUSE": 5}                           # population of a complete building, as in AoE2
 LIMIT = 200                                                        # the AoE2 population limit
 CENSUS = 2.0                                                       # AoE2 seconds between two counts of the live units
-ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager")}  # menu slot, item and name of each unit (#620)
+ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, item and name of each unit (#620)
+         "MILITIA": (0, "zombie_spawn_egg", "Militia"),             # the mob of units.classify
+         "ARCHER": (0, "skeleton_spawn_egg", "Archer")}
 SHIFT = 5                                                          # units of a shift click, as in AoE2
 
 
 def homes(g):
-    """The block footprints (x0, x1, z0, z1) of the complete own town centers: the start ones and the built ones."""
-    out = [(x0, x1, z0, z1) for o in g.data["objects"] if o["kind"] == "building" and o["name"] == "TOWN_CENTER"
-           and o["player"] == g.player for x0, z0, x1, z1 in [o["footprint"]]]
-    return out + [tuple(s["footprint"]) for s in g.sites if s["name"] == "TOWN_CENTER" and s.get("done")]
+    """{block footprint (x0, x1, z0, z1): building name} of the complete own buildings that train units (TRAINS):
+    the start ones and the built ones."""
+    out = {(x0, x1, z0, z1): o["name"] for o in g.data["objects"] if o["kind"] == "building" and o["name"] in TRAINS
+           and o["player"] == g.player for x0, z0, x1, z1 in [o["footprint"]]}
+    return out | {tuple(s["footprint"]): s["name"] for s in g.sites if s["name"] in TRAINS and s.get("done")}
 
 
 def home(g, cell):
-    """The footprint of the own town center that has the block cell (x, z) in it, or None."""
+    """The footprint of the own training building that has the block cell (x, z) in it, or None."""
     return next((r for r in homes(g) if cell and r[0] <= cell[0] < r[1] and r[2] <= cell[1] < r[3]), None)
 
 
 def open_menu(g, player, cell):
-    """Open the menu of the own town center at the block cell (x, z) for player. Returns its footprint, or None."""
+    """Open the menu of the own training building at the block cell (x, z) for player. Returns its footprint, or None."""
     rect = home(g, cell)
     if rect is not None:
         show(g, player, rect)
@@ -54,17 +63,17 @@ def open_menu(g, player, cell):
 
 
 def show(g, player, rect):
-    """Show (or refresh) the menu of the town center rect: one item per unit, with its cost, time and queue."""
-    n = len(g.queues.get(rect, []))
-    items = [(slot, item, text, " · ".join(f"{v} {r}" for r, v in COSTS[name].items())
-              + f" · {TRAIN_TIMES[name]} s · queue {n}/{QUEUE}") for name, (slot, item, text) in ITEMS.items()]
-    menu.show(g, player, "Town Center", items, lambda p, slot, shift: order(g, p, rect, slot, shift))
+    """Show (or refresh) the menu of the building rect: one item per unit, with its cost, time and queue."""
+    n, building = len(g.queues.get(rect, [])), homes(g)[rect]
+    items = [(*ITEMS[name], " · ".join(f"{v} {r}" for r, v in COSTS[name].items())
+              + f" · {TRAIN_TIMES[name]} s · queue {n}/{QUEUE}") for name in TRAINS[building]]
+    menu.show(g, player, build.pretty(building), items, lambda p, slot, shift: order(g, p, rect, slot, shift))
 
 
 def order(g, player, rect, slot, shift=False):
     """A click on the menu item in slot: queue 1 unit (a shift click: SHIFT, as many as the resources and the queue
-    allow) at the town center rect, and refresh the menu. Returns the number of queued units."""
-    name = next((n for n, (s, *_) in ITEMS.items() if s == slot), None)
+    allow) at the building rect, and refresh the menu. Returns the number of queued units."""
+    name = next((n for n in TRAINS[homes(g)[rect]] if ITEMS[n][0] == slot), None)
     n = 0
     while name and n < (SHIFT if shift else 1) and queue(g, player, rect[::2], name):
         n += 1
@@ -73,10 +82,11 @@ def order(g, player, rect, slot, shift=False):
 
 
 def queue(g, player, cell, name="VILLAGER_MALE"):
-    """Queue unit name at the own town center that has the block cell (x, z) in its footprint, and take its cost.
-    Returns the footprint of the town center, or None (no town center there, a full queue, not enough resources)."""
+    """Queue unit name at the own building that has the block cell (x, z) in its footprint, and take its cost.
+    Returns the footprint of the building, or None (no building there that trains name, a full queue, not enough
+    resources)."""
     rect = home(g, cell)
-    if rect is None:
+    if rect is None or name not in TRAINS[homes(g)[rect]]:
         return None
     q = g.queues.setdefault(rect, [])
     if len(q) >= QUEUE:
@@ -117,7 +127,7 @@ def sidebar(g):
 
 def tick(g, work):
     """Add work (AoE2 seconds) to the first unit of each queue; a unit that is complete appears. Returns the new
-    gather.Villager objects. A unit starts only when the population and the started units are below the limit."""
+    units (spawn()). A unit starts only when the population and the started units are below the limit."""
     g.census += work
     if g.census >= CENSUS:
         census(g)
@@ -145,7 +155,8 @@ def tick(g, work):
 
 def spawn(g, rect, name):
     """Summon unit name on a free cell in front of the building rect (south side first, the middle first; the units
-    take the cells one after the other) and add it to the villagers of g. Returns the gather.Villager or None."""
+    take the cells one after the other) and add it to the villagers of g (a military unit: to g.soldiers, #654).
+    Returns the gather.Villager, the UUID of a military unit, or None."""
     x0, x1, z0, z1 = rect
     cells = sorted(g.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)}),
                    key=lambda c: (abs(c[1] - z1), abs(2 * c[0] + 1 - x0 - x1), c))
@@ -165,6 +176,11 @@ def spawn(g, rect, name):
     g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}")
     import combat, gather                                          # both import gather, gather imports this module
     g.command(combat.stats_command(uuid, name))
+    if cmd := combat.range_command(uuid, name, g.map.T):              # an archer shoots from its range (#670)
+        g.command(cmd)
+    if gather.military(name):
+        g.soldiers[uuid] = name
+        return uuid
     v = g.villagers[uuid] = gather.Villager(uuid, pos)
     g.units.append({"kind": "unit", "name": name, "player": g.player, "uuid": uuid, "tile": [x / g.map.T, z / g.map.T]})
     return v
