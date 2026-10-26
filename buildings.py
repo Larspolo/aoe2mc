@@ -4131,6 +4131,11 @@ def sankore(c, w, st, col, T, ctx):
     m = w // 2
     c.box(m, m + 1, 1, 3, w - 1, w, "air")
     c.doors.append((m, w - 1))
+    # yellow ochre trim (#556): the cornice under the parapet and the frame of the door
+    c.walls(0, w, 5, 6, 0, w, "polished_sulfur")
+    c.box(m - 1, m + 2, 3, 4, w - 1, w, "chiseled_sulfur")
+    for x in (m - 1, m + 1):
+        c.box(x, x + 1, 1, 3, w - 1, w, "sulfur_bricks")
     # inside (#449): a school with bookshelves on the side walls, the teacher's lectern at the back, benches for
     # the students, chests of manuscripts and hanging lanterns
     lectern = "lectern[facing=south,has_book=true,powered=false]"
@@ -4150,7 +4155,7 @@ def sankore(c, w, st, col, T, ctx):
         y += 3
         if y % 6 == 0:
             a, b = a + 1, b - 1
-    c.set(m, y, m, "mud_brick_wall")
+    c.set(m, y, m, "polished_sulfur_wall")
     c.banner(m + 1, 3, w, col)
 
 
