@@ -121,6 +121,10 @@ class Replay:
                 out += self.building(name, e["player"], x, y)
                 if len(self.placed) > k:
                     out += self.push_out(self.placed[-1][2])
+                    if "FARM" in name and e.get("objects"):       # AoE2: the builders of a farm farm it (#719)
+                        x0, x1, z0, z1 = self.placed[-1][2]
+                        out += self.move(dict(e, kind="order", target=-1,
+                                              tile=[(x0 + x1) / 2 / self.T, (z0 + z1) / 2 / self.T]))
         return out
 
     def push_out(self, rect):
@@ -226,6 +230,9 @@ class Replay:
         cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
         m = self.map
         m.blocked -= cells
+        for t in [t for t in m.farms if m.feet.get(t) == rect]:    # a deleted farm: no food, its farmer stops
+            del m.farms[t]
+            m.farm_at = {c: f for c, f in m.farm_at.items() if f != t}
         for r in m.drops:
             m.drops[r] = [d for d in m.drops[r] if d != cells]
         ys = [y for x, z in cells | m.around(cells) if (y := m.y(x, z)) is not None]
@@ -292,15 +299,15 @@ class Replay:
             import gather                                           # gather -> build -> replay: import it late
             self.gather, self.map, T = gather, gather.Map(self.data), self.T
             self.crew = gather.Gather.__new__(gather.Gather)       # adapter: the resource looks of gather.Gather
-            self.crew.map, self.crew.trunks, self.crew.bushes = self.map, {}, {}
+            self.crew.map, self.crew.trunks, self.crew.bushes, self.crew.crops = self.map, {}, {}, {}
             for o in self.data["objects"]:
                 if o["kind"] == "unit" and "uuid" in o and o.get("ref") is not None:
                     x, z = o["tile"][0] * T, o["tile"][1] * T
                     self.units[o["ref"]] = v = gather.Villager(o["uuid"], (x, float(self.map.y(int(x), int(z)) or 0), z))
                     v.name, v.player = o["name"], o["player"]
-        for _, name, r in self.placed[self.added:]:
-            if "FARM" not in name:
-                self.map.building(name, r, None, False)
+        for _, name, r in self.placed[self.added:]:              # a farm: its center tile is its key (#719)
+            self.map.building(name, r, ((r[0] + r[1]) // 2 // T, (r[2] + r[3]) // 2 // T) if "FARM" in name else None,
+                              False)
         self.added = len(self.placed)
         return self.map
 
@@ -368,6 +375,8 @@ class Replay:
         group = [(i, v) for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"]))
                  if (v := self.unit(i, name, e["player"])) is not None]
         tile = self.resource(e)
+        if tile in self.map.farms:                                  # a farmer stands on the farm
+            goals = self.crew.goals(tile)
         for i, v in group:                                          # a new MOVE or ORDER stops the work
             self.working.pop(i, None)
             v.tree = tile
@@ -481,7 +490,10 @@ class Replay:
                 src[v.tree] -= 1
                 v.load += 1
                 self.crew.work(v)
-                if v.res == "food":
+                if v.tree in self.map.farms:                            # the wheat gets younger, the farmer walks
+                    self.crew.harvest(v.tree)
+                    self.crew.tend(v)
+                elif v.res == "food":
                     self.crew.berries(v.tree)
                 elif v.res != "wood":
                     if src[v.tree] == 0:
@@ -490,7 +502,7 @@ class Replay:
                     self.crew.fell(v.tree)
                 else:
                     self.crew.trunk(v.tree)
-                due += 1000 / self.gather.AOE2_WORK[v.res]
+                due += 1000 / self.rate(v)
             if src.get(v.tree, 0) > 0:
                 self.working[i] = due
             else:
@@ -527,22 +539,34 @@ class Replay:
         return []
 
     def resource(self, e):
-        """The tile of the tree, fruit bush or mine that an ORDER targets, else None."""
-        o = self.refs.get(e.get("target")) if e["kind"] == "order" else None
-        if not o or o["kind"] != "other" or "tile" not in o:
+        """The tile of the tree, fruit bush, mine or farm that an ORDER targets, else None. A target that the replay
+        does not know (a farm of the replay: the record has no IDs of new objects) is the farm under the order tile."""
+        t, m = e.get("target"), self.map
+        o = self.refs.get(t) if e["kind"] == "order" else None
+        if e["kind"] == "order" and t is not None and o is None and t not in self.units and "tile" in e:
+            return m.farm_at.get((int(e["tile"][0] * self.T), int(e["tile"][1] * self.T)))
+        if not o or "tile" not in o:
             return None
         tile = int(o["tile"][0]), int(o["tile"][1])
-        m = self.map
+        if o["kind"] == "building":
+            return tile if "FARM" in o["name"] and tile in m.farms else None
+        if o["kind"] != "other":
+            return None
         return tile if tile in m.trees or tile in m.bushes or any(tile in s for s in m.mines.values()) else None
 
     def start(self, i, v, t):
         """A unit with a resource that ends its walk next to it gathers from game time t on, at the AoE2 work rate
-        of the resource (gather.AOE2_WORK, per game second). The record has no drop-off: it does not carry."""
-        if v.tree is None or v.cell not in self.map.around(self.map.spot(v.tree)):
+        of the resource (gather.AOE2_WORK, per game second). The record has no drop-off: it does not carry.
+        A farmer works on its farm (gather.Gather.goals)."""
+        if v.tree is None or v.cell not in self.crew.goals(v.tree):
             return
         v.res, v.load = self.map.resource(v.tree), 0
         if self.crew.source(v).get(v.tree, 0) > 0:
-            self.working[i] = t + 1000 / self.gather.AOE2_WORK[v.res]
+            self.working[i] = t + 1000 / self.rate(v)
+
+    def rate(self, v):
+        """The AoE2 work rate of unit v at its resource (per game second): a farm has its own rate."""
+        return self.gather.AOE2_WORK["farm" if v.tree in self.map.farms else v.res]
 
     def state(self, i):
         return aoe2mc.B.states[i]
