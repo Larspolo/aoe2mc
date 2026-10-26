@@ -2198,14 +2198,30 @@ def fence(c, w, st, col, T, ctx):
     c.set(m, 1, m, post({d for d, v in (("north", n), ("south", s_), ("west", wst), ("east", e)) if v}))
 
 
+BARRICADE_DEBRIS = ["cobblestone", "andesite", "mossy_cobblestone", "spruce_log[axis=x]", "spruce_log[axis=z]",
+                    "stripped_spruce_log[axis=x]", "stripped_spruce_log[axis=z]", "spruce_planks", "spruce_slab[type=bottom]"]
+BARRICADE_TOP = ["mangrove_roots", "mangrove_roots", "spruce_fence", "oak_leaves[persistent=true]", "barrel[facing=up]",
+                 "decorated_pot[facing=south,cracked=false]", "stone_button[face=floor,facing=north]"]
+
+
 def barricade(c, w, st, col, T, ctx):
-    """A wooden barricade: crossed logs and sharpened stakes."""
-    for x in range(w):
-        c.set(x, 1, x % w, "spruce_log[axis=x]")
-        c.set(x, 1, w - 1 - x, "spruce_log[axis=z]")
-    for x in range(0, w, 2):
-        c.set(x, 2, w // 2, "spruce_fence")
-    c.set(w // 2, 2, w // 2, "spruce_log")
+    """A barricade like the game: a low heap of debris (stones, logs, planks, bare branches, crates, pots and ivy).
+    BARRICADE_A is a round heap; B, C and D are long heaps along x and along the two diagonals."""
+    k = "ABCD".find(ctx.get("name", "BARRICADE_A")[-1])
+    x, z = np.mgrid[0:w, 0:w] - (w - 1) / 2
+    u, v = [(x, z), (x, z), (x + z, z - x), (x - z, x + z)][max(k, 0)]
+    if k >= 2:
+        u, v = u / 1.6, v / 1.6
+    rx, rz = (w / 2, w / 2) if k <= 0 else (w / 2 + .5, w / 3)
+    d = (u / rx) ** 2 + (v / rz) ** 2 + c.rng.uniform(-.2, .2, (w, w))       # a ragged edge
+    h = (d < 1).astype(int) + (d < .45)                                       # 1 block at the edge, 2 in the middle
+    pick = c.rng.integers(0, len(BARRICADE_DEBRIS), (w, w, 2))
+    top = c.rng.integers(0, 3 * len(BARRICADE_TOP), (w, w))                   # one top cell in three gets a part
+    for i, j in zip(*np.nonzero(h)):
+        for y in range(h[i, j]):
+            c.set(i, y + 1, j, BARRICADE_DEBRIS[pick[i, j, y]])
+        if top[i, j] < len(BARRICADE_TOP):
+            c.set(i, h[i, j] + 1, j, BARRICADE_TOP[top[i, j]])
 
 
 def wall_banners(c, w, ctx, y, col, every=4):
