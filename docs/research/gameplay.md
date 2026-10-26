@@ -78,6 +78,19 @@ the player can do now (for example "Right click: walk · Sneak + right click: de
 about 2 s, so the program sends the hint again while the state lasts. The boss bar stays for the selected unit (#659),
 the sidebar for the numbers (#744). Epic #793, work: #798.
 
+**Owner decision (2026-10-26): the size of the horses** (#1096). The converter gives each cavalry horse the attribute
+`minecraft:scale` 0.7 (`units.mounted`), in each converted world and in the game. A horse of scale 1.0 is 1.4 blocks
+wide: up a slope it stands 1 block above its path point, misses it and walks at 4.2 blocks per second. At scale 0.7 it
+is less than 1 block wide and walks up at its flat speed (16.4 to 17.3 blocks per second). Not chosen: a scale only in
+the game program (two sizes of one unit) and an own path follower (own logic in place of Minecraft path finding).
+Work: #1022.
+
+**Owner decision (2026-10-26): the stance of the selected units** (#1106). The stance (aggressive, defensive, stand
+ground, no attack) has a **chest menu of the Paper plugin**, with the same behaviour as the build menu of a villager
+(#621): a right click on a selected military unit opens a menu with four items (sword, shield, iron bars, white
+banner), a click sets the stance of the selection, and the menu closes. The menu has room for more unit commands
+later (formations, delete). Not chosen: a hotbar item that goes to the next stance, and a chat command. Epic #1103.
+
 ### Smallest playable milestone: "villagers gather wood"
 
 1. The converter writes `aoe2mc.json` into the world folder: each object with its AoE2 ID, name, owner,
@@ -312,3 +325,4 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - `Replay.run(to=T)` jumps to T at the start; it is not an end time (#1056). A unit test that stops at a time puts a chat event there. With the fake RCON a plugin unit (`ai=True`) gathers only after `LATE`: patch `Replay.arrived` to `True`.
 - AoE2 wiki infoboxes show some unit values with the civilization bonus (#1041): the tooltip `{{tt|65|base 54 - increased by civilization bonus}}` names the base value that `combat.STATS` takes. The MediaWiki API needs the `User-Agent` of `refimage.HEADERS` (the urllib default gets 403).
 - A horse that `steer()` or `glide()` moved past path points still has them in its Minecraft path: after the arrival it walked back up the slope to them. `follow()` stops the path of a horse at the arrival (#1078). A goal at a block corner (x, z integers) puts a horse 1.4 blocks from it (its path point center is the corner + 1): the replay sends block centers, and a test must do the same. A tamed horse with a NoAI zombie rider at rest moves 0.27 blocks forward and back each tick.
+- A mob wider than 1 block (a horse: 1.4) misses its path points up a slope on Paper: it stands 1 block above the point and turns back (#1022). The attribute `minecraft:scale` 0.7 (width < 1) walks up at the flat speed; the owner decides the look in #1096. Measure a climb with a stone slope in the air and `ai.move`, not with the record.

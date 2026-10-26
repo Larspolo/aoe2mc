@@ -118,10 +118,11 @@ STATS = {
     "WAR_WAGON": Stats(150, 9, 0, 2, 4, 2.5, {"building": 2}, (ARC, CAV, UNI)),
     "WOAD_RAIDER": Stats(70, 11, 0, 1, 0, 2.0, {"building": 2}, (INF, UNI)),
     # elite unique units (#1008, AoE2 wiki, DE, no upgrades): the wiki lists one bonus per class; "building" sums the bonus
-    # vs standard buildings and vs all buildings. No class here: shock infantry, ships, cavalry archers
+    # vs standard buildings and vs all buildings. No class here: shock infantry, ships, cavalry archers. #1075: without the
+    # civilization bonus, as the base units (#1041)
     "ELITE_ARAMBAI": Stats(65, 14, 0, 2, 5, 2.0, {SIE: 2}, (ARC, CAV, UNI)),
     "ELITE_BALLISTA_ELEPHANT": Stats(280, 10, 0, 3, 5, 2.5, {"building": 8}, (CAV, ELE, SIE, UNI)),
-    "ELITE_BERSERK": Stats(74, 14, 2, 1, 0, 2.0, {"building": 3}, (INF, UNI)),
+    "ELITE_BERSERK": Stats(62, 14, 2, 1, 0, 2.0, {"building": 3}, (INF, UNI)),
     "ELITE_BOYAR": Stats(130, 14, 8, 3, 0, 1.9, {}, (CAV, UNI)),
     "ELITE_CAMEL_ARCHER": Stats(60, 8, 1, 1, 4, 2.0, {}, (ARC, CAM, UNI)),
     "ELITE_CATAPHRACT": Stats(150, 12, 2, 1, 0, 1.7, {INF: 18}, (CAV, UNI)),
@@ -131,28 +132,28 @@ STATS = {
     "ELITE_CONQUISTADOR": Stats(70, 19, 2, 2, 6, 2.9, {SIE: 6, "building": 2}, (ARC, CAV, UNI)),
     "ELITE_COUSTILLIER": Stats(145, 11, 2, 2, 0, 1.9, {}, (CAV, UNI)),
     "ELITE_GBETO": Stats(50, 13, 0, 0, 6, 2.0, {}, (INF, UNI)),
-    "ELITE_GENOESE_CROSSBOWMAN": Stats(50, 6, 2, 1, 4, 2.0, {CAV: 7, CAM: 6, ELE: 7}, (ARC, UNI)),
+    "ELITE_GENOESE_CROSSBOWMAN": Stats(50, 6, 1, 0, 4, 2.0, {CAV: 7, CAM: 6, ELE: 7}, (ARC, UNI)),
     "ELITE_GHULAM": Stats(70, 11, 0, 6, 0, 2.0, {ARC: 6, "building": 2}, (INF, UNI)),
-    "ELITE_HUSKARL": Stats(70, 12, 0, 8, 0, 2.0, {ARC: 10, "building": 6}, (INF, UNI)),
+    "ELITE_HUSKARL": Stats(70, 12, 0, 8, 0, 2.0, {ARC: 10, "building": 3}, (INF, UNI)),
     "ELITE_HUSSITE_WAGON": Stats(230, 13, 1, 10, 6, 3.45, {SIE: 3, "building": 2}, (SIE, UNI)),
     "ELITE_JAGUAR_WARRIOR": Stats(75, 19, 2, 2, 0, 2.0, {INF: 6, "building": 2}, (INF, UNI)),
-    "ELITE_JANISSARY": Stats(50, 22, 2, 0, 8, 3.45, {SIE: 3}, (ARC, GUN, UNI)),
+    "ELITE_JANISSARY": Stats(40, 22, 2, 0, 8, 3.45, {SIE: 3}, (ARC, GUN, UNI)),
     "ELITE_KAMAYUK": Stats(80, 8, 1, 1, 0, 2.0, {CAV: 12, CAM: 10, ELE: 20}, (INF, UNI)),
     "ELITE_KARAMBIT_WARRIOR": Stats(40, 8, 1, 1, 0, 2.0, {"building": 1}, (INF, UNI)),
     "ELITE_KESHIK": Stats(145, 11, 1, 3, 0, 1.9, {}, (CAV, UNI)),
     "ELITE_KIPCHAK": Stats(45, 5, 0, 0, 4, 2.2, {SPE: 1}, (ARC, CAV, UNI)),
-    "ELITE_KONNIK": Stats(120, 14, 2, 2, 0, 2.4, {"building": 4}, (CAV, UNI)),
+    "ELITE_KONNIK": Stats(120, 14, 2, 2, 0, 2.4, {}, (CAV, UNI)),
     "ELITE_LEITIS": Stats(130, 16, 2, 1, 0, 1.9, {}, (CAV, UNI)),
     "ELITE_LONGBOWMAN": Stats(40, 7, 0, 1, 6, 2.0, {SPE: 2}, (ARC, UNI)),
     "ELITE_MAGYAR_HUSZAR": Stats(90, 11, 0, 2, 0, 1.8, {SIE: 8}, (CAV, UNI)),
-    "ELITE_MAMELUKE": Stats(80, 10, 1, 0, 3, 2.0, {CAV: 12}, (CAM, UNI)),
-    "ELITE_MANGUDAI": Stats(60, 8, 1, 0, 4, 1.68, {SIE: 5, SPE: 1}, (ARC, CAV, UNI)),
+    "ELITE_MAMELUKE": Stats(90, 10, 1, 0, 3, 2.0, {CAV: 12}, (CAM, UNI)),
+    "ELITE_MANGUDAI": Stats(60, 8, 1, 0, 4, 2.1, {SIE: 5, SPE: 1}, (ARC, CAV, UNI)),
     "ELITE_MONASPA": Stats(80, 14, 5, 2, 0, 1.8, {}, (CAV, UNI)),
     "ELITE_OBUCH": Stats(95, 10, 2, 2, 0, 2.0, {"building": 6}, (INF, UNI)),
     "ELITE_ORGAN_GUN": Stats(70, 8, 2, 6, 7, 3.45, {INF: 2, SIE: 1, "building": 1}, (GUN, SIE, UNI)),
     "ELITE_PLUMED_ARCHER": Stats(65, 5, 0, 2, 5, 1.9, {INF: 2, SPE: 2}, (ARC, UNI)),
-    "ELITE_RATTAN_ARCHER": Stats(48, 7, 0, 6, 5, 2.0, {SPE: 2}, (ARC, UNI)),
-    "ELITE_SAMURAI": Stats(80, 12, 1, 1, 0, 1.43, {"building": 3, UNI: 12}, (INF, UNI)),
+    "ELITE_RATTAN_ARCHER": Stats(40, 7, 0, 6, 5, 2.0, {SPE: 2}, (ARC, UNI)),
+    "ELITE_SAMURAI": Stats(80, 12, 1, 1, 0, 1.9, {"building": 3, UNI: 12}, (INF, UNI)),
     "ELITE_SERJEANT": Stats(85, 11, 6, 3, 0, 2.0, {"building": 3}, (INF, UNI)),
     "ELITE_SHOTEL_WARRIOR": Stats(50, 18, 0, 1, 0, 2.0, {"building": 1}, (INF, UNI)),
     "ELITE_SHRIVAMSHA_RIDER": Stats(70, 11, 0, 1, 0, 1.9, {}, (CAV, UNI)),
@@ -177,7 +178,9 @@ STATS = {
     "ARMORED_ELEPHANT": Stats(180, 4, -2, 140, 0, 3.0, {"building": 90, SIE: 25}, (CAV, ELE, SIE)),
     "FIRE_LANCER": Stats(65, 9, 1, 0, 0, 2.0, {"building": 1, CAV: 5, CAM: 4, ELE: 5}, (INF, GUN)),
     "GRENADIER": Stats(40, 12, 1, 1, 6, 3.45, {"building": 4, INF: 9, SIE: 3, SPE: 1}, (ARC, GUN, UNI)),
+    "HEAVY_ROCKET_CART": Stats(65, 5, 0, 8, 8, 5.35, {"building": 12, SIE: 2}, (GUN, SIE)),
     "HEI_GUANG_CAVALRY": Stats(60, 11, 4, 3, 0, 1.8, {}, (CAV,)),
+    "HOUFNICE": Stats(90, 50, 2, 6, 12, 6.5, {"building": 250, SIE: 20}, (GUN, SIE)),
     "IRON_PAGODA": Stats(115, 12, 1, 3, 0, 2.16, {}, (CAV, UNI)),
     "LEGIONARY": Stats(75, 12, 2, 2, 0, 2.0, {"building": 4, INF: 4}, (INF,)),
     "ROCKET_CART": Stats(45, 5, 0, 6, 7, 5.5, {"building": 7, SIE: 2}, (GUN, SIE)),
@@ -233,6 +236,7 @@ MELEE_RANGED = {"ELITE_GBETO",
                 "ELITE_MAMELUKE",
                 "ELITE_THROWING_AXEMAN",
                 "GBETO",
+                "HEAVY_ROCKET_CART",
                 "MAMELUKE",
                 "MANGONEL",
                 "ONAGER",
@@ -243,8 +247,11 @@ MELEE_RANGED = {"ELITE_GBETO",
 # Blast radius in tiles of the units whose shot hits all units near the target, also own units (AoE2 DE, wiki "AOE";
 # AoE2 tapers the damage at the edge, here each unit in the radius takes the full damage() hit, #1050).
 BLAST = {"BOMBARD_CANNON": 0.5,
+         "HEAVY_ROCKET_CART": 1.25,
+         "HOUFNICE": 0.7,
          "MANGONEL": 1.0,
          "ONAGER": 1.25,
+         "ROCKET_CART": 1.0,
          "SIEGE_ONAGER": 1.5}
 DEFAULT, BUILDING = Stats(40, 4, 0, 0, 0, 2.0), Stats(1000, 0, 0, 7, 0, 0.0, {}, ("building",))
 SLIME = 0.52                    # blocks of width and height per slime size: the target of a building (#517)
@@ -309,6 +316,17 @@ def sight_command(uuid, name, T, s=None):
     blocks, #775). None for a unit that does not fight (villager, monk, king)."""
     s = s or stats(name)
     return f"aoe sight {uuid} {sight(name, s) * T}" if s.classes and s.attack else None
+
+
+STANCES = ("aggressive", "defensive", "stand_ground", "no_attack")
+
+
+def stance_command(uuid, stance):
+    """The plugin command that sets the AoE2 stance of a unit (#1104): "no_attack" never attacks without an order,
+    "stand_ground" attacks only an enemy in its range and keeps its place; "aggressive" is the default."""
+    if stance not in STANCES:
+        raise ValueError(f"unknown stance: {stance}")
+    return f"aoe stance {uuid} {stance}"
 
 
 def setup(game, data):

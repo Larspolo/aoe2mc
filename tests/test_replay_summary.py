@@ -31,7 +31,7 @@ def play(timeline, **kw):
 def summary(sent):
     """The player lines after the summary header."""
     rest = sent[sent.index(HEAD) + 1:]
-    return ["".join(t["text"] for t in json.loads(c.split(" ", 2)[2])) for c in rest if c.startswith("tellraw @a [")]
+    return ["".join(t["text"] for t in json.loads(c.split(" ", 2)[2])) for c in rest if c.startswith("tellraw @a [") and "villagers" in c]
 
 
 def test_the_end_shows_the_villagers_and_the_gathered_resources():
