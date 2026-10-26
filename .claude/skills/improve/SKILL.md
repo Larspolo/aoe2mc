@@ -121,7 +121,7 @@ minutes), or `--reviewed none` when no loss was large enough for a change (the s
 ## Guardrails
 
 - Never weaken or remove tests, CI checks, lint rules or verify levels to save time.
-- Never remove the rule that only the owner (`Larspolo`) gives instructions, or the `deny` list in
+- Never remove the rule that only the owner (`owner` in `agent.toml`) gives instructions, or the `deny` list in
   `.claude/settings.json`, or the hook `.claude/hooks/guard-main.sh` (it stops the command before it runs; the
   ruleset `Protect main` of the owner only refuses the push). Never allow destructive commands (force-push, delete, `gh api`).
 - Never change the priorities that the owner set.

@@ -20,8 +20,11 @@ import subprocess
 import sys
 import urllib.request
 
-REPO = os.environ.get("GITHUB_REPOSITORY", "Larspolo/aoe2mc")
-SKIP = {"needs-human", "blocked", "epic", "agent-status", "in-progress"}
+from agent_config import CONFIG
+
+REPO = os.environ.get("GITHUB_REPOSITORY") or CONFIG["repo"]
+STATUS, PAUSED = CONFIG["status"]["label"], CONFIG["status"]["paused"]
+SKIP = {"needs-human", "blocked", "epic", STATUS, "in-progress"}
 PRIORITY = ["P0", "P1", "P2", "P3"]
 # Names in ticket text that do not count for the overlap: tools for checks, and LEARNINGS.md (merge=union: no conflicts).
 # A PR that changes them still counts (work() takes the files of the PRs as they are).
@@ -78,14 +81,10 @@ def candidates(issues, busy=frozenset(), now=None):
     """The ticket candidates in the pick order of the autopilot skill (step 5): priority, then the overlap with the
     work in progress (busy, from work(); fewer merge conflicts, #487), then the ticket number.
     issues: the open issues and PRs. A dependency is closed when it is not open: an open PR is open too (#243).
-    A ticket waits until the time of its "Start after:" line (#496), and a ticket with an open ready-to-merge PR
-    is no candidate (#546)."""
+    A ticket waits until the time of its "Start after:" line (#496)."""
     now = now or datetime.datetime.now(datetime.timezone.utc)
     open_numbers = {i["number"] for i in issues}
-    # A hand-off PR (ready-to-merge, autopilot step 6.8) waits for the owner: its ticket is done (#546).
-    handoff = {int(n) for i in issues if "pull_request" in i and "ready-to-merge" in labels(i)
-               for n in re.findall(r"(?i)\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)", i.get("body") or "")}
-    issues = [i for i in issues if "pull_request" not in i and i["number"] not in handoff]
+    issues = [i for i in issues if "pull_request" not in i]
 
     def rank(i):
         p = next((k for k, name in enumerate(PRIORITY) if name in labels(i)), len(PRIORITY))
@@ -155,7 +154,7 @@ def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now)
     state = re.search(r"<!-- agent-state:.*?-->", old_body or "")
     process = re.search(r"### Process changes\n(.*?)(?=\n### |\n---\n|\n_Updated |\Z)", old_body or "", re.S)
     out = [state.group(0) if state else '<!-- agent-state: {"last_run": null, "runs": 0} -->', "## Agent status"]
-    if any("paused" in labels(i) for i in issues if "agent-status" in labels(i)):
+    if any(PAUSED in labels(i) for i in issues if STATUS in labels(i)):
         out.append("**State:** paused (remove the label `paused` from this issue to continue)")
 
     out += ["", "### Waiting for you"]
@@ -240,9 +239,9 @@ def main(argv=None):
             print(f"#{i['number']} {i['title']} ({tag(i, 'P')}, {tag(i, 'size:')}, overlap {len(ov)}"
                   + (f": {' '.join(ov)}" if ov else "") + ")")
         return 0
-    status = next((i for i in issues if "agent-status" in labels(i)), None)
+    status = next((i for i in issues if STATUS in labels(i)), None)
     if status is None:
-        print("no open issue with label agent-status", file=sys.stderr)
+        print(f"no open issue with label {STATUS}", file=sys.stderr)
         return 1
     comments = {i["number"]: pages(f"issues/{i['number']}/comments")
                 for i in issues if labels(i) & {"needs-human", "in-progress"}}

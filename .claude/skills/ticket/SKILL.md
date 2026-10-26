@@ -5,7 +5,7 @@ description: Write, size and split GitHub issues (tickets) for aoe2mc in the pro
 
 # Write a ticket
 
-Tickets are GitHub Issues in `Larspolo/aoe2mc`. Write in ASD-STE100 Simplified Technical English.
+Tickets are GitHub Issues in the repository `repo` of `agent.toml`. Write in ASD-STE100 Simplified Technical English.
 
 ## Form
 

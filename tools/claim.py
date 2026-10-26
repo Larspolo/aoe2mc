@@ -21,8 +21,7 @@ a second push of another claim commit is never a fast-forward. Later claims of t
     python3 tools/claim.py 0 --roadmap    # lock the review of docs/ROADMAP.md of this 2-hour slot (`roadmap` skill)
 
 Two runs did one ticket (#288): one commented "Started by" and worked without the claim ref. So a claim also fails
-when another branch commented "Started by" in the last 30 minutes or has an active PR for the ticket (#491), when
-an open hand-off PR (`ready-to-merge`) closes the ticket (#546), and `--guard` stops a run before its push when it does not own the claim or another branch has a PR for the ticket. The GitHub checks run only for a GitHub remote.
+when another branch commented "Started by" in the last 30 minutes or has an active PR for the ticket (#491), and `--guard` stops a run before its push when it does not own the claim or another branch has a PR for the ticket. The GitHub checks run only for a GitHub remote.
 
 A usage limit stops all runs at about the same time, and a stopped run never continues (#231). Its last beat is
 before the stop, so its ticket is stale at most 30 minutes after the limit resets. A live run beats again.
@@ -51,10 +50,12 @@ import sys
 import time
 import uuid
 
+from agent_config import CONFIG
+
 EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 REVIEW, REVIEW_MAX = 45, 360    # minutes: the first and the longest slot of the process review (#898)
 ROADMAP = 120               # minutes: the slot of the review of docs/ROADMAP.md
-STATUS = 1                  # the status issue: its state comment holds the review slot
+STATUS = CONFIG["status"]["issue"]   # the status issue: its state comment holds the review slot
 STALE = 30 * 60             # seconds without a claim or beat: the run stopped (usage limit, crash)
 RECENT = 30 * 60            # seconds: a "Started by" comment of another branch owns the ticket for this time (#288)
 
@@ -198,7 +199,7 @@ def release(number, remote="origin", word="Release"):
     return ref if push(sha, ref, remote) else None
 
 
-def revived(path="docs/LEARNINGS.md", base="origin/main"):
+def revived(path=CONFIG["docs"]["learnings"], base=f"origin/{CONFIG['branch']}"):
     """Lines of `path` that a `merge=union` merge of `base` brought back after `base` removed them (#563).
 
     M is the last merged state of `base` (the merge base). A line of HEAD that is not in M and that no own commit
@@ -262,16 +263,6 @@ def active_pr(pulls, number, me, now, limit=RECENT):
     for p in pulls:
         t = datetime.datetime.fromisoformat(p["updated_at"].replace("Z", "+00:00")).timestamp()
         if p["head"]["ref"] != me and p["state"] == "open" and now - t < limit and closes(number).search(prose(p["body"])):
-            return p["number"]
-    return None
-
-
-def handoff_pr(pulls, number):
-    """Number of an open PR with the label ready-to-merge that closes ticket `number`, else None (#546):
-    the hand-off of autopilot step 6.8 waits for the owner, so no run does the ticket again."""
-    for p in pulls:
-        if p["state"] == "open" and "ready-to-merge" in {lb["name"] for lb in p.get("labels", [])} \
-                and closes(number).search(prose(p["body"])):
             return p["number"]
     return None
 
@@ -363,10 +354,6 @@ def main(argv=None):
             print(f"owned by another run: {other} commented \"Started by\" less than 30 minutes ago")
             return 1
         pulls = api("pulls?state=open&per_page=100")
-        pr = handoff_pr(pulls, a.number)
-        if pr:
-            print(f"hand-off PR #{pr} (ready-to-merge) closes #{a.number}: it waits for the owner")
-            return 1
         pr = active_pr(pulls, a.number, who(), time.time())
         if pr:
             print(f"owned by another run: its PR #{pr} closes #{a.number} and changed less than 30 minutes ago")

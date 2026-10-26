@@ -140,7 +140,7 @@ def main(argv=None):
         import dashboard
         import health
         open_all = dashboard.pages("issues?state=open")
-        paused = any({"agent-status", "paused"} <= set(dashboard.labels(i)) for i in open_all)
+        paused = any({dashboard.STATUS, dashboard.PAUSED} <= set(dashboard.labels(i)) for i in open_all)
         ready = len(dashboard.candidates(open_all))
         claims = health.active_claims(datetime.datetime.now(datetime.timezone.utc))
         target = target_runs(usage, now, burn)
