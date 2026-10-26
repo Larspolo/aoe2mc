@@ -323,7 +323,8 @@ STANCES = ("aggressive", "defensive", "stand_ground", "no_attack")
 
 def stance_command(uuid, stance):
     """The plugin command that sets the AoE2 stance of a unit (#1104): "no_attack" never attacks without an order,
-    "stand_ground" attacks only an enemy in its range and keeps its place; "aggressive" is the default."""
+    "stand_ground" attacks only an enemy in its range and keeps its place, "defensive" chases an enemy only a short
+    way and walks back to its place (#1105); "aggressive" is the default."""
     if stance not in STANCES:
         raise ValueError(f"unknown stance: {stance}")
     return f"aoe stance {uuid} {stance}"
