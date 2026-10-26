@@ -37,6 +37,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
@@ -69,7 +70,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe range <selector> <blocks> <ticks>      a ranged unit shoots from this range, one shot per ticks (#515)
  *   aoe building <selector> <hp> <melee armor> <pierce armor> <x0> <y0> <z0> <x1> <y1> <z1>
  *                                              make the entity the target of a building (#517, combat.building)
- *   aoe menu <player> <title> <slot>:<material>:<name>:<lore> ...
+ *   aoe menu <player> <title> <slot>:<material>:<name>:<lore>[:<count>] ...
  *                                              open a chest menu (#619, game/menu.py; the texts are URL-encoded)
  *   aoe menu-close <player>                    close the menu of the player
  *   aoe label <selector> [name]                show the name line again (after a selection change); a name sets
@@ -96,6 +97,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * A mounted unit (#710) is a horse (its UUID in aoe2mc.json) with a rider: a horse has no attack goal. The rider gets
  * the values of "aoe stats", the range of "aoe range" and the target of "aoe attack", and the horse gets AI without goals:
  * a riding mob walks with the navigation of its vehicle (vanilla Mob#getNavigation), so the horse follows the rider.
+ * A hit on the rider takes the hit points of the horse, and the rider dies with the horse (#732).
  * A building is blocks, and a mob attacks only a living entity: an invisible mob without AI (a slime of the size of
  * the footprint, game/combat.py building) stands in the building and takes the attacks, so that the vanilla attack
  * goals and paths work (#517). The plugin keeps the hit points of the building (a building has more than the
@@ -265,20 +267,22 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         return URLDecoder.decode(s, StandardCharsets.UTF_8);
     }
 
-    /** The item of "slot:material:name:lore" (lore lines split by a new line), or null for a bad slot or material. */
+    /** The item of "slot:material:name:lore[:count]" (lore lines split by a new line; count 1 to 99, #706), or null
+     *  for a bad slot, material or count. */
     static Map.Entry<Integer, ItemStack> item(String spec) {
         String[] p = spec.split(":", -1);
         Material m = p.length >= 3 ? Material.matchMaterial(p[1]) : null;
-        int slot;
+        int slot, count;
         try {
             slot = Integer.parseInt(p[0]);
+            count = p.length > 4 && !p[4].isEmpty() ? Integer.parseInt(p[4]) : 1;
         } catch (NumberFormatException e) {
             return null;
         }
-        if (m == null || !m.isItem() || m.isAir() || slot < 0 || slot >= 54) {
+        if (m == null || !m.isItem() || m.isAir() || slot < 0 || slot >= 54 || count < 1 || count > 99) {
             return null;
         }
-        ItemStack it = new ItemStack(m);
+        ItemStack it = new ItemStack(m, count);
         it.editMeta(meta -> {
             meta.displayName(Component.text(text(p[2])));
             if (p.length > 3 && !p[3].isEmpty()) {
@@ -389,13 +393,29 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             return;
         }
-        if (a == null || t == null || !(ev.getEntity() instanceof LivingEntity victim)) {
+        Entity hurt = ev.getEntity();
+        if (hurt.getVehicle() instanceof LivingEntity horse && stats.containsKey(horse.getUniqueId())) {
+            hurt = horse;                        // a mounted unit has the hit points of its horse (#732)
+            t = stats.get(horse.getUniqueId());
+        }
+        if (a == null || t == null || !(hurt instanceof LivingEntity victim)) {
             return;
         }
         ev.setCancelled(true);
         victim.playHurtAnimation(0);
         victim.setHealth(Math.max(0, victim.getHealth() - a.damage(t)));     // 0 kills it
         nameLine(victim);
+    }
+
+    @EventHandler
+    public void onDeath(EntityDeathEvent ev) {               // the rider dies with its horse, else it stays (#732)
+        if (stats.containsKey(ev.getEntity().getUniqueId())) {
+            for (Entity p : ev.getEntity().getPassengers()) {
+                if (p instanceof LivingEntity r && stats.containsKey(r.getUniqueId())) {
+                    r.setHealth(0);
+                }
+            }
+        }
     }
 
     @EventHandler(ignoreCancelled = true)
