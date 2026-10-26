@@ -256,6 +256,8 @@ GitHub sends this comment to the owner as a notification. Do not comment when no
 ## 9. Improve the process (before the commit in step 6)
 
 Answer these questions. Do the action for each "yes". Spend little time.
+A PR that changes the agent system gets the label `process` (`/issues/N/labels -f "labels[]=process"`, #901): the
+dashboard counts them.
 - Did something cost you time that one line of text prevents? → a pitfall of one topic (the game program, the replay,
   Paper, the server, records, a design) goes to the end of the "Pitfalls" section of its document (the list in
   `docs/LEARNINGS.md`, "Environment and libraries"); only a line for all runs goes to the end of its section in
