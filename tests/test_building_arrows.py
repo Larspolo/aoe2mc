@@ -43,7 +43,7 @@ def test_town_center_shoots_the_enemy_in_range(tiny_world, tmp_path):
             assert game.command(combat.stats_command(f"@e[tag={tag},limit=1]", "MILITIA")).strip() == "Stats: 1 units"
         game.command("aoe stats @e[tag=e,limit=1] 1000 4 0 1 0 infantry - 20")    # pierce armor 1, many hit points
         assert health(game, "e") == 1000.0
-        for c in combat.building(uuid, "TOWN_CENTER", 1, box):                 # after the values of the units
+        for c in combat.building(uuid, "TOWN_CENTER", 1, box, inside=["VILLAGER"]):   # 1 arrow (#1201); after the units
             game.command(c)
         hp = []
         while len(hp) < 30 and (not hp or hp[-1] == 1000.0):

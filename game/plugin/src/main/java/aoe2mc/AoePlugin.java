@@ -68,8 +68,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * Orders for the units of the game program, with Minecraft path finding (#435). Vanilla has no command for
  * "walk to this point", so this plugin gives one to RCON:
  *   aoe moveto <selector> <x> <y> <z> [speed]   walk on the path of Mob#getPathfinder
- *   aoe arrows <uuid> <n>                      the arrows of each shot of a building: 1 and 1 for each garrisoned
- *                                              villager or foot archer (#1113, game/garrison.py)
+ *   aoe arrows <uuid> <n>                      the arrows of each shot of a building: its base (an empty town center
+ *                                              0, #1201) and 1 for each garrisoned villager or foot archer (#1113,
+ *                                              game/garrison.py); 0: it does not shoot. Default 1
  *   aoe attack <selector> <target selector>    Mob#setTarget: the mob attacks with its own AI
  *   aoe goals <selector>                       the goals of the first unit (#436), for checks
  *   aoe stance <selector> <aggressive|defensive|stand_ground|no_attack>
@@ -386,7 +387,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private void towers() {
         for (var en : buildings.entrySet()) {
             Building f = en.getValue();
-            if (f.range <= 0 || !(Bukkit.getEntity(en.getKey()) instanceof LivingEntity fort) || !fort.isValid()
+            if (f.range <= 0 || arrows.getOrDefault(en.getKey(), 1) <= 0 || !(Bukkit.getEntity(en.getKey()) instanceof LivingEntity fort) || !fort.isValid()
                     || !ready(fort, f.stats)) {
                 continue;
             }
@@ -1281,7 +1282,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         if (args.length == 3 && args[0].equals("arrows")) {            // a garrison adds arrows (#1113)
             try {
-                arrows.put(UUID.fromString(args[1]), Math.max(1, Integer.parseInt(args[2])));
+                arrows.put(UUID.fromString(args[1]), Math.max(0, Integer.parseInt(args[2])));
             } catch (IllegalArgumentException e) {                    // also NumberFormatException
                 sender.sendMessage("Bad value: " + e.getMessage());
                 return true;

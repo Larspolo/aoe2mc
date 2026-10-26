@@ -10,11 +10,10 @@ from game import combat, garrison, run
 from test_damage import health
 
 
-def test_town_center_with_3_villagers_shoots_4_arrows():
-    assert garrison.arrows([]) == 1
-    assert garrison.arrows(["VILLAGER_MALE", "VILLAGER_FEMALE", "VILLAGER"]) == 4
-    assert garrison.arrows(["ARCHER", "HAND_CANNONEER"]) == 3                # foot archers
-    assert garrison.arrows(["CAVALRY_ARCHER", "MILITIA", "KNIGHT"]) == 1      # no foot archer
+def test_town_center_with_3_villagers_shoots_3_arrows():
+    assert garrison.arrows("TOWN_CENTER", ["VILLAGER_MALE", "VILLAGER_FEMALE", "VILLAGER"]) == 3   # empty: 0 (#1201)
+    assert garrison.arrows("WATCH_TOWER", ["ARCHER", "HAND_CANNONEER"]) == 3      # foot archers
+    assert garrison.arrows("WATCH_TOWER", ["CAVALRY_ARCHER", "MILITIA", "KNIGHT"]) == 1   # no foot archer
 
 
 def test_garrison_and_ungarrison_send_the_arrows():
@@ -23,13 +22,13 @@ def test_garrison_and_ungarrison_send_the_arrows():
     g.choose({"v0", "v1", "v2"}, "v0")
     garrison.order(g, "Steve", (3, 3))
     arrive(server, g, TC)
-    assert [c for c in server.log if c.startswith("aoe arrows")] == [f"aoe arrows {uuid} {n}" for n in (2, 3, 4)]
+    assert [c for c in server.log if c.startswith("aoe arrows")] == [f"aoe arrows {uuid} {n}" for n in (1, 2, 3)]
     garrison.out(g, TC)
-    assert server.log.count(f"aoe arrows {uuid} 1") == 1
+    assert server.log.count(f"aoe arrows {uuid} 0") == 1
 
 
 @pytest.mark.mc
-def test_town_center_with_3_villagers_does_4_times_the_damage(tiny_world, tmp_path):
+def test_town_center_with_4_villagers_does_4_times_the_damage_of_1(tiny_world, tmp_path):
     from test_paper import paper_reachable
     if not paper_reachable():
         pytest.skip("Paper is not reachable")
@@ -46,7 +45,7 @@ def test_town_center_with_3_villagers_does_4_times_the_damage(tiny_world, tmp_pa
         game.command(f'summon zombie 48.5 {y} 28.5 {{NoAI:1b,IsBaby:0b,Tags:["e"]}}')   # 12 blocks from the edge
         game.command("team join p2 @e[tag=e]")
         game.command("aoe stats @e[tag=e,limit=1] 1000 4 0 1 0 infantry - 20")    # pierce armor 1, many hit points
-        for c in combat.building(uuid, "TOWN_CENTER", 1, box):
+        for c in combat.building(uuid, "TOWN_CENTER", 1, box, inside=["VILLAGER"]):
             game.command(c)
 
         def rate():
@@ -61,6 +60,6 @@ def test_town_center_with_3_villagers_does_4_times_the_damage(tiny_world, tmp_pa
             return (h0 - health(game, "e")) / (time.time() - t0)
 
         alone = rate()
-        assert game.command(f"aoe arrows {uuid} {garrison.arrows(['VILLAGER'] * 3)}").strip() == "Arrows: 4"
+        assert game.command(f"aoe arrows {uuid} {garrison.arrows('TOWN_CENTER', ['VILLAGER'] * 4)}").strip() == "Arrows: 4"
         full = rate()
         assert alone > 0 and 3.2 <= full / alone <= 4.8, (alone, full)        # 4 per arrow: attack 5 - pierce 1

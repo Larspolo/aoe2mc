@@ -19,6 +19,7 @@ from collections import namedtuple
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from gather import NORMAL  # noqa: E402
+import garrison  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import units  # noqa: E402
@@ -342,11 +343,15 @@ def setup(game, data):
     Each building of a player with AoE2 hit points gets a target of attacks (`building`).
     The entities must be loaded (forceload). Returns the number of units that got the values."""
     ground = [r.split() for r in data.get("ground", ())]
+    held = {}                                        # the units that the converter put inside (#807): their arrows
+    for o in data["objects"]:
+        if o["kind"] == "unit" and o.get("holder") is not None:
+            held.setdefault(o["holder"], []).append(o["name"])
     for o in data["objects"]:
         if o["kind"] == "building" and o["player"] and "footprint" in o and o["name"] in BUILDINGS:
             uuid = target_uuid(o["footprint"])
-            for c in building(uuid, o["name"], o["player"], building_box(o, ground), data.get("tile_size", 4)) + \
-                    [label_command(uuid, o["name"])]:
+            for c in building(uuid, o["name"], o["player"], building_box(o, ground), data.get("tile_size", 4),
+                              held.get(o.get("ref"), ())) + [label_command(uuid, o["name"])]:
                 game.command(c)
     units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] and o.get("uuid")]
     for o in units:                                  # the plugin answers "Range: 0 units" for a mob that cannot shoot
@@ -367,12 +372,13 @@ def target_uuid(footprint):
     return str(uuids.uuid5(uuids.NAMESPACE_OID, "aoe2mc.building." + ".".join(map(str, footprint))))
 
 
-def building(uuid, name, player, box, T=4):
+def building(uuid, name, player, box, T=4, inside=()):
     """The commands that make building `name` of `player` a target of attacks (#517): an invisible slime without AI
     that fills the footprint takes the attacks (a mob attacks only a living entity: AoePlugin.java), and the plugin
     keeps the AoE2 hit points. box: the blocks (x0, y0, z0, x1, y1, z1), both ends included, y0 the ground.
     A building with an attack (town center, castle) also gets its attack, its range (tiles * T blocks) and its reload
-    in ticks at Normal speed: the plugin lets it shoot arrows at the enemies in its range (#1111).
+    in ticks at Normal speed: the plugin lets it shoot arrows at the enemies in its range (#1111), with the AoE2
+    number of arrows of the units `inside` (garrison.arrows: an empty town center shoots none, #1201).
     At 0 hit points the plugin fills the box with air. The invisibility effect hides the slime: the tag Invisible is
     only for armor stands, the server drops it on a slime (#636)."""
     x0, y0, z0, x1, y1, z1 = box
@@ -381,8 +387,10 @@ def building(uuid, name, player, box, T=4):
     ints = ",".join(str((n >> k & 0xFFFFFFFF) - ((n >> k & 0x80000000) << 1)) for k in (96, 64, 32, 0))
     return [f"summon slime {(x0 + x1 + 1) / 2} {y0} {(z0 + z1 + 1) / 2} {{Size:{size - 1},NoAI:1b,Silent:1b,"
             f"NoGravity:1b,PersistenceRequired:1b,{INVISIBLE},Tags:[\"aoe2mc.building\"],UUID:[I;{ints}]}}",
-            f"team join p{player} {uuid}", f"aoe building {uuid} {s.hp} {s.melee} {s.pierce} {' '.join(map(str, box))}"
-            + (f" {s.attack} {s.range * T} {round(s.reload / NORMAL * 20)}" if s.attack and s.range else "")]
+            f"team join p{player} {uuid}"] + \
+        [f"aoe arrows {uuid} {garrison.arrows(name, inside)}"] * bool(s.attack and s.range) + \
+        [f"aoe building {uuid} {s.hp} {s.melee} {s.pierce} {' '.join(map(str, box))}"   # after the arrows: no shot of 1
+         + (f" {s.attack} {s.range * T} {round(s.reload / NORMAL * 20)}" if s.attack and s.range else "")]
 
 
 def building_box(o, ground):
