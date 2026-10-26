@@ -620,6 +620,7 @@ class Replay:
                 if due - self.arriving[i] < LATE and not self.arrived(v):
                     self.working[i] = due + WAIT
                     continue
+                out.append(f"aoe stop {v.uuid}")                     # ends its walk order: no brain turns it (#867)
                 if due - self.arriving[i] >= LATE:
                     out.append("tp {} {} {} {}".format(v.uuid, *v.pos))
                 del self.arriving[i]
