@@ -37,7 +37,7 @@ def test_command_encodes_the_texts():
 
 def test_clicks_go_to_the_handler_of_the_open_menu():
     g, got = Game({"Steve": 3, "Alex": 1}), []
-    menu.show(g, "Steve", "Town Center", [(2, "villager_spawn_egg", "Villager", "")], lambda p, s: got.append((p, s)))
+    menu.show(g, "Steve", "Town Center", [(2, "villager_spawn_egg", "Villager", "")], lambda p, s, shift: got.append((p, s)))
     assert g.sent[-1].startswith("aoe menu Steve Town%20Center 2:")
     assert menu.clicks(g) == [("Steve", 2)] == got                     # Alex has no open menu: not read
     assert g.scores == {"Alex": 1} and "scoreboard players reset Steve aoe_menu" in g.sent
@@ -55,7 +55,7 @@ def test_gather_reads_the_menu_clicks():
     g, got = Game({"Steve": 1}), []
     me = gather.Gather.__new__(gather.Gather)                          # only the parts that clicks() uses
     me.game, me.menus, me.sites, me.players = g, {}, [], {}
-    menu.show(me, "Steve", "Menu", [(0, "stone", "Stone", "")], lambda p, s: got.append(s))
+    menu.show(me, "Steve", "Menu", [(0, "stone", "Stone", "")], lambda p, s, shift: got.append(s))
     me.clicks()
     assert got == [0] and "Steve" not in g.scores
 
