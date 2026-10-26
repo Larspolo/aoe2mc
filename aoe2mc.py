@@ -238,6 +238,17 @@ def read_map(path):
     return (read_record if p.endswith(RECORDS) else read_scx if p.endswith(".scx") else read_scenario)(path)
 
 
+# Object IDs of old scenarios that DE keeps only in its data file (the DE editor hides them, #576) -> the DE object of
+# the same look. Buildings of later ages take the base building. Not here: FLAGX (162, invisible), projectiles, the
+# shallows (447, terrain), a part of a palisade gate (795) and the town center parts (617, 621): no own object.
+OLD_IDS = {248: "STONE_MINE", 262: "FORAGE_BUSH", 415: "STUMP", 737: "STUMP",
+           144: "RUBBLE_2_X_2", 146: "RUBBLE_3_X_3", 147: "RUBBLE_1_X_1", 817: "STATUE_CIVILIZATION",
+           178: "BROKEN_CART", 443: "BROKEN_CART", 735: "TREBUCHET_PACKED", 451: "DOLPHIN",
+           10: "ARCHERY_RANGE", 20: "BARRACKS", 498: "BARRACKS", 30: "MONASTERY", 32: "MONASTERY", 116: "MARKET",
+           137: "MARKET", 129: "MILL", 133: "DOCK", 807: "DOCK", 150: "SIEGE_WORKSHOP", 210: "UNIVERSITY",
+           464: "HOUSE", 465: "HOUSE", 563: "BLACKSMITH", 585: "MINING_CAMP", 586: "MINING_CAMP"}
+
+
 def read_scx(path):
     """An old scenario (.scx format 1.21, #312), as read_scenario returns it. The old terrain and object IDs are the
     DE IDs. A map that is not square gets the edge tiles repeated to a square. Old scenarios give no texts here."""
@@ -251,6 +262,7 @@ def read_scx(path):
     size = max(w, h)
     terrain, elevation = (np.pad(a, ((0, size - w), (0, size - h)), mode="edge") for a in (s["terrain"], s["elevation"]))
     kinds = object_kinds()
+    ids = {name: i for i, (_, name) in kinds.items()}
     players = {}
     for pid, p in s["players"].items():
         color = buildings.COLOR_NAMES[p["color"]] if pid and p["color"] is not None and 0 <= p["color"] < 8 else "light_gray"
@@ -258,9 +270,10 @@ def read_scx(path):
                         "view": p["view"]}
     objects = []
     for o in s["objects"]:
-        prefix, name = kinds.get(o["type"], ("?", f"UNKNOWN_{o['type']}"))
+        t = ids[OLD_IDS[o["type"]]] if o["type"] not in kinds and o["type"] in OLD_IDS else o["type"]
+        prefix, name = kinds.get(t, ("?", f"UNKNOWN_{t}"))
         holder = o["garrisoned_in"]
-        objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name, id=o["type"],
+        objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name, id=t,
                             player=o["player"], x=o["x"], y=o["y"], rotation=float(o["angle"]),
                             garrisoned=holder is not None, ref=o["id"], holder=holder))
     texts = {k: "" for k in CHAPTERS}
