@@ -21,6 +21,7 @@ sidebar title shows the age of the player; all players see a title and hear a so
 Forging at the blacksmith (#675): infantry and cavalry get +1 attack. Fletching (#724): archers (also cavalry archers and
 skirmishers) get +1 attack and +1 range.
 Double-Bit Axe at the lumber camp (#723): villagers chop wood 20 % faster (gather.WORK_TECHS, gather.Gather.work_time).
+Gold Mining at the mining camp (#727): villagers mine gold 15 % faster.
 Horse Collar at the mill (#726): the live and the new farms of the player have 75 more food (gather.FARM_TECHS).
 Wheelbarrow at the town center in the Feudal Age (#728, TECH_AGE): villagers carry 3 more resources and walk 10 % faster (gather.CARRY, gather.PACE).
 """
@@ -43,6 +44,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "DOUBLE_BIT_AXE": {"food": 100, "wood": 50},
          "FLETCHING": {"food": 100, "gold": 50},
          "FORGING": {"food": 150},
+         "GOLD_MINING": {"food": 100, "wood": 75},
          "HORSE_COLLAR": {"food": 75, "wood": 75},
          "SCALE_MAIL_ARMOR": {"food": 100},
          "SCOUT_CAVALRY": {"food": 80},
@@ -51,6 +53,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "DOUBLE_BIT_AXE": 25,
                "FLETCHING": 30,
                "FORGING": 50,
+               "GOLD_MINING": 30,
                "HORSE_COLLAR": 20,
                "SCALE_MAIL_ARMOR": 40,
                "SCOUT_CAVALRY": 30,
@@ -60,10 +63,12 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW"),
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING"),           # (#675, #725, #724)
           "STABLE": ("SCOUT_CAVALRY",),                                         # (#671)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
-          "MILL": ("HORSE_COLLAR",)}                                            # (#726)
+          "MILL": ("HORSE_COLLAR",),                                            # (#726)
+          "MINING_CAMP": ("GOLD_MINING",)}                                      # (#727)
 TECHS = {"DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
          "FLETCHING": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if "archer" in s.classes else s,
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
+         "GOLD_MINING": lambda name, s: s,                         # an economy technology: gather.WORK_TECHS
          "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
          "LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
          if "VILLAGER" in name else s,
@@ -85,6 +90,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "DOUBLE_BIT_AXE": (0, "book", "Double-Bit Axe"),
          "FLETCHING": (2, "book", "Fletching"),
          "FORGING": (0, "book", "Forging"),
+         "GOLD_MINING": (0, "book", "Gold Mining"),
          "HORSE_COLLAR": (0, "book", "Horse Collar"),
          "LOOM": (1, "book", "Loom"),                               # a book for a technology (#618)
          "SCALE_MAIL_ARMOR": (1, "book", "Scale Mail Armor"),
