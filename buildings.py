@@ -2570,7 +2570,7 @@ def pagoda(c, w, st, col, T, ctx):
         a = int(round(w / 2 - half))
         b = w - a
         h = 4 if i == 0 else 3
-        c.room(a, b, a, b, y, h, st.plaster, st.wood, corner=st.timber)
+        c.room(a, b, a, b, y, h, st.plaster, st.wood, corner="polished_cinnabar")      # red-painted posts (dancheong)
         c.windows(a, b, a, b, y + h, b="air", step=2)
         if i == 0:
             c.walls(a, b, y + 1, y + 2, a, b, f"{col}_wool")               # player band at the base
@@ -3654,7 +3654,7 @@ def rekha_deul(c, w, st, col, T, ctx):
     a, b, y = 2, w - 2, 1
     for k in range(7):                                  # the tower narrows faster near the top
         h = 3 if k < 4 else 2
-        c.box(a, b, y, y + h, a, b, "sandstone" if k % 2 == 0 else "cut_red_sandstone")
+        c.box(a, b, y, y + h, a, b, "sandstone" if k % 2 == 0 else "cinnabar_bricks")    # red-painted bands
         y += h
         if k >= 2:
             a, b = a + 1 if b - a > 3 else a, b - 1 if b - a > 3 else b
@@ -3667,7 +3667,7 @@ def rekha_deul(c, w, st, col, T, ctx):
         c.box(m - 2, m + 2, 1, 4, z0, w - 3, "air")
         c.box(m - 1, m + 1, 1, 3, w - 3, w - 2, "air")
         candles = "candle[candles=3,lit=true,waterlogged=false]"
-        items = [(m - 1, 1, z0, "chiseled_red_sandstone"), (m, 1, z0, "chiseled_red_sandstone"),   # the idol on its altar
+        items = [(m - 1, 1, z0, "chiseled_cinnabar"), (m, 1, z0, "chiseled_cinnabar"),   # the idol on its altar
                  (m - 1, 2, z0, "gold_block"), (m, 2, z0, "gold_block"),
                  (m - 2, 1, z0, candles), (m + 1, 1, z0, candles),
                  (m - 2, 1, z0 + 2, "potted_red_tulip"), (m + 1, 1, z0 + 2, "potted_orange_tulip")]
