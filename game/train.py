@@ -471,13 +471,18 @@ def census(g):
     sidebar(g)
 
 
+LABELS = {"Limit": "Pop. limit"}                                  # the shown name of a sidebar line (owner, #990)
+
+
 def sidebar(g):
     """Show the population and the limit as two lines of the sidebar (g.board) and the age in its title, only when
     they changed."""
     for name, n in (("Population", g.pop), ("Limit", limit(g))):
         if g.shown.get(name) != n:
-            g.shown[name] = n
+            first, g.shown[name] = name not in g.shown, n
             g.command(f"scoreboard players set {name} {g.board} {n}")
+            if first and name in LABELS:                               # a holder name has no space (#990)
+                g.command(f"scoreboard players display name {name} {g.board} {json.dumps(LABELS[name])}")
     if g.shown.get("Age") != age(g):
         g.shown["Age"] = age(g)
         g.command(f'scoreboard objectives modify {g.board} displayname "Resources ({age(g)})"')
