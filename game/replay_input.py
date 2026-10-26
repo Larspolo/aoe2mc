@@ -57,7 +57,7 @@ def apply(n, control):
         return f"Speed {control['speed']:g}×"
     if n in JUMPS:
         control["jump"] = control.get("time", 0) + JUMPS[n]
-        m, s = divmod(control["jump"] // 1000, 60)
+        m, s = divmod(int(control["jump"]) // 1000, 60)                # the time of Replay.run is a float (#803)
         return f"Jump to {m:02d}:{s:02d}"
     return None
 
