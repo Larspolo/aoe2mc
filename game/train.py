@@ -21,6 +21,7 @@ sidebar title shows the age of the player; all players see a title and hear a so
 Forging at the blacksmith (#675): infantry and cavalry get +1 attack. Fletching (#724): archers (also cavalry archers and
 skirmishers) get +1 attack and +1 range.
 Double-Bit Axe at the lumber camp (#723): villagers chop wood 20 % faster (gather.WORK_TECHS, gather.Gather.work_time).
+Horse Collar at the mill (#726): the live and the new farms of the player have 75 more food (gather.FARM_TECHS).
 Wheelbarrow at the town center in the Feudal Age (#728, TECH_AGE): villagers carry 3 more resources and walk 10 % faster (gather.CARRY, gather.PACE).
 """
 import json
@@ -42,6 +43,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "DOUBLE_BIT_AXE": {"food": 100, "wood": 50},
          "FLETCHING": {"food": 100, "gold": 50},
          "FORGING": {"food": 150},
+         "HORSE_COLLAR": {"food": 75, "wood": 75},
          "SCALE_MAIL_ARMOR": {"food": 100},
          "SCOUT_CAVALRY": {"food": 80},
          "WHEELBARROW": {"food": 175, "wood": 50}}
@@ -49,6 +51,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "DOUBLE_BIT_AXE": 25,
                "FLETCHING": 30,
                "FORGING": 50,
+               "HORSE_COLLAR": 20,
                "SCALE_MAIL_ARMOR": 40,
                "SCOUT_CAVALRY": 30,
                "WHEELBARROW": 75}
@@ -56,10 +59,12 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW"),
           "ARCHERY_RANGE": ("ARCHER",),                                         # building (#654, #670, #655)
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING"),           # (#675, #725, #724)
           "STABLE": ("SCOUT_CAVALRY",),                                         # (#671)
-          "LUMBER_CAMP": ("DOUBLE_BIT_AXE",)}                                   # (#723)
+          "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
+          "MILL": ("HORSE_COLLAR",)}                                            # (#726)
 TECHS = {"DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
          "FLETCHING": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if "archer" in s.classes else s,
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
+         "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
          "LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
          if "VILLAGER" in name else s,
          "SCALE_MAIL_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
@@ -80,6 +85,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "DOUBLE_BIT_AXE": (0, "book", "Double-Bit Axe"),
          "FLETCHING": (2, "book", "Fletching"),
          "FORGING": (0, "book", "Forging"),
+         "HORSE_COLLAR": (0, "book", "Horse Collar"),
          "LOOM": (1, "book", "Loom"),                               # a book for a technology (#618)
          "SCALE_MAIL_ARMOR": (1, "book", "Scale Mail Armor"),
          "FEUDAL_AGE": (2, "bell", "Feudal Age"),
@@ -249,8 +255,13 @@ def stats(g, name):
 
 def research(g, entry):
     """A technology is complete: keep it in g.techs and give the live villagers and military units the new values."""
-    import combat
+    import combat, gather                                          # gather imports this module
     g.techs.add(entry["name"])
+    if (more := gather.FARM_TECHS.get(entry["name"])):             # the new and the live own farms get more food
+        g.map.farm_food += more
+        for t in g.map.own_farms:
+            if g.map.farms.get(t, 0) > 0:
+                g.map.farms[t] += more
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
         if stats(g, name) != combat.stats(name):
             g.command(combat.stats_command(uuid, name, stats(g, name)))
