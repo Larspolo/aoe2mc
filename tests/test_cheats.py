@@ -29,12 +29,12 @@ def test_lumberjack_gives_wood_with_cheats_on(tiny_world):
     assert g.stock["wood"] == 10000
 
 
-def test_ninjalui_gives_each_resource_and_marco_answers(tiny_world):
+def test_ninjalui_gives_each_resource_and_polo_answers(tiny_world):
     server, g = game(tiny_world, True)
     server.scores["aoe_cheat"] = cheats.NAMES.index("ninjalui") + 1
     assert cheats.clicks(g) == [("Steve", "ninjalui")]
     assert g.stock == {"wood": 100000, "food": 100000, "gold": 100000, "stone": 100000}
-    server.scores["aoe_cheat"] = cheats.NAMES.index("marco") + 1
+    server.scores["aoe_cheat"] = cheats.NAMES.index("polo") + 1
     cheats.clicks(g)
     assert server.log[-1].startswith('tellraw Steve {"text":"The map is open')
 
