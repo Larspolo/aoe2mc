@@ -147,3 +147,6 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - PrismarineJS `data/pc/common/protocolVersions.json` has the data versions of all releases (26.3 = 5023).
 - An invalid item in a block entity can vanish without a log line. `tools/mc_check.py W --keep DIR` keeps the saved world
   (#27). 26.3 saves a default state as the bare name and in another property order: normalize before you compare (#189).
+- 26.3 `particle minecraft:block{block_state:...}`: a block id string or `{id:"minecraft:wheat",Properties:{age:"7"}}`;
+  `Name` and `wheat[age=7]` fail ("No key id"). A wrong property value passes silently. `rotate UUID facing X Y Z`
+  turns a NoAI mob. Sound names: `registries/data.json` `sound_event` of `misode/mcmeta` `26.3-summary` (#592).
