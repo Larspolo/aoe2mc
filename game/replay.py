@@ -2,10 +2,12 @@
 Replay a recorded game live (#374): play the "timeline" of aoe2mc.json (aoe2mc.read_timeline, #372) on a running
 server. Each building appears at its command time (the blocks of its design, as with --at, #373), chat lines are
 /tellraw in the player color, age-ups are a title, research is an action bar line, and RESIGN is a title.
+A trained unit appears in front of its building when its training ends (#408, aoe2mc.training).
 
 Replay(game, data).run(speed) plays it; commands(e) gives the commands of one event (the unit tests use it).
 """
 import json
+import math
 import os
 import sys
 import time
@@ -16,6 +18,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 import aoe2mc  # noqa: E402
 import buildings  # noqa: E402
+import units  # noqa: E402
 
 # Dye color of a player (aoe2mc.PLAYER_COLORS) -> text color of /tellraw and /title
 TEXT_COLORS = {"light_gray": "gray", "blue": "blue", "red": "red", "green": "green", "yellow": "yellow",
@@ -40,6 +43,12 @@ class Replay:
         self.T, self.n = data["tile_size"], len(data["ground"])
         self.ground = [[None if v == "-" else int(v) for v in row.split()] for row in data["ground"]]
         self.renames = aoe2mc.VERSIONS[version]["renames"]
+        self.data_version = aoe2mc.VERSIONS[version]["data_version"]
+        self.starts = [(o.get("ref"), o["player"], o["name"], (o["footprint"][0], o["footprint"][2], o["footprint"][1],
+                        o["footprint"][3])) for o in data["objects"] if o["kind"] == "building" and "footprint" in o]
+        self.placed, self.map, self.added = [], None, 0        # buildings of the replay, gather.Map, placed in the map
+        self.trained = {}                                       # units per building footprint
+        self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
         self.sent, self.busy = 0, 0.0           # commands sent, seconds spent sending them
 
@@ -53,6 +62,8 @@ class Replay:
         kind = e["kind"]
         if kind in ("build", "wall") and "type" in e and "tile" in e:
             return self.build(e)
+        if kind == "spawn":
+            return self.spawn(e)
         if kind == "chat" and e.get("text"):
             name, color = self.player(e["player"]) if e.get("player") else ("Game", "white")
             return ["tellraw @a " + json.dumps([text(f"<{name}> ", color), text(e["text"])])]
@@ -115,6 +126,7 @@ class Replay:
             return []
         top = max(k[1] for k in blocks)
         x0, x1, z0, z1 = fx0 + dx, fx1 + dx - 1, fz0 + dz, fz1 + dz - 1
+        self.placed.append((player, name, (x0, x1 + 1, z0, z1 + 1)))
         out = self.fill(x0, base, z0, x1, top, z1, "air")
         if low < base - 1:                                          # the floor replaces the top ground block
             out += self.fill(x0, low, z0, x1, base - 2, z1, self.state(aoe2mc.B(buildings.ARCH[players[player][
@@ -132,6 +144,57 @@ class Replay:
                     out.append(f"setblock {ax} {by} {bz} {s}" if ax == bx else f"fill {ax} {by} {bz} {bx} {by} {bz} {s}")
                     start = k
         return out
+
+    def spawns(self):
+        """A "spawn" event for each unit that a QUEUE command trains, at the end of its training."""
+        return [{"time": end, "player": e["player"], "kind": "spawn", "type": e["type"], "name": e["name"],
+                 "building": b, "where": (e.get("names") or [None] * len(e["objects"]))[e["objects"].index(b)]}
+                for end, e, b in aoe2mc.training(self.data.get("timeline", ())) if "type" in e and e.get("name")]
+
+    def home(self, e):
+        """The block footprint (x0, x1, z0, z1) of the building that trains the unit of a spawn event: a start
+        building by its ID, else the last building of the player with the name of its ID (name_timeline) or of the
+        building of the unit (aoe2mc.TRAIN), else the first building of the player."""
+        start = next((r for i, _, _, r in self.starts if i == e["building"]), None)
+        if start:
+            return start
+        own = [(n, r) for p, n, r in [s[1:] for s in self.starts] + self.placed if p == e["player"]]
+        for name in (e.get("where"), (aoe2mc.train(e["name"]) or (0, None))[1]):
+            rects = [r for n, r in own if n == name]
+            if name and rects:
+                return rects[-1]
+        return own[0][1] if own else None
+
+    def spawn(self, e):
+        """The summon command of a trained unit, on a free cell in front of its building (south side first). The
+        units of one building take the cells one after the other."""
+        prefix, _ = self.kinds.get(e["type"], ("?", ""))
+        rect = self.home(e) if prefix in ("U", "H") else None
+        if rect is None:
+            return []
+        if self.map is None:
+            import gather                                           # gather -> build -> replay: import it late
+            self.map = gather.Map(self.data)
+        for _, name, r in self.placed[self.added:]:
+            if "FARM" not in name:
+                self.map.building(name, r, None, False)
+        self.added = len(self.placed)
+        x0, x1, z0, z1 = rect
+        cells = sorted(self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)}),
+                       key=lambda c: (abs(c[1] - z1), abs(2 * c[0] + 1 - x0 - x1), c))
+        if not cells:
+            return []
+        k = self.trained[rect] = self.trained.get(rect, -1) + 1
+        x, z = cells[k % len(cells)]
+        pos = (x + 0.5, float(self.map.y(x, z)), z + 0.5)
+        o = dict(name=e["name"], player=e["player"], rotation=math.pi / 2, hero=prefix == "H")   # it faces south
+        nbt = units.make_entity(o, {int(p): v for p, v in self.data["players"].items()}, pos, self.rng)
+        if nbt is None:
+            return []
+        nbt = units.to_version(nbt, self.data_version)
+        kind = str(nbt.pop("id"))
+        del nbt["Pos"]
+        return [f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}"]
 
     def state(self, i):
         name, _, props = aoe2mc.B.states[i].partition("[")
@@ -154,7 +217,8 @@ class Replay:
         """Play the timeline from game time `start` (ms) at `speed` times the game speed. Returns the stats:
         commands, events, the seconds of sending, the largest lag behind the timeline (s), commands per second
         (rate) and the commands per second that the timeline needs on average (need)."""
-        events = [e for e in self.data.get("timeline", ()) if e["time"] >= start]
+        events = sorted((e for e in self.data.get("timeline", []) + self.spawns() if e["time"] >= start),
+                        key=lambda e: e["time"])
         t0, lag, n = clock(), 0.0, 0
         for e in events:
             due = (e["time"] - start) / 1000 / speed

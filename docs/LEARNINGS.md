@@ -88,3 +88,5 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   the "ground" of a blocked footprint is the barrier top: take the ground of `Map.around()` (#391).
 - `build.place` draws the design with `replay.Replay.building`: fake `aoe2mc.json` data in tests needs `level_height`
   and a tile size of 4 (at tile size 1 most designs give no blocks). The site keeps the commands, bottom up (#418).
+- `aoe2mc.json` objects: `"id"` is the AoE2 type constant, not the object ID of a record: that is `"ref"` (#408).
+  Import cycle `gather` → `build` → `replay`: `replay` imports `gather` inside a function.

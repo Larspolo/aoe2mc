@@ -557,6 +557,24 @@ def train(unit):
     return next((v for k, v in TRAIN.items() if unit.startswith(k)), None)
 
 
+def training(timeline):
+    """The trainings of a recorded game: (end time ms, QUEUE event, building ID) for each unit, in the order of the
+    QUEUE commands. A building trains one unit after the other; its research (RESEARCH_S) delays them. The record
+    does not show a cancelled queue or the population limit."""
+    busy, out = {}, []                   # building -> free at
+    for e in timeline:
+        kind, t = e["kind"], e["time"]
+        if kind in ("queue", "research") and e.get("objects"):
+            name = e.get("name", "") if kind == "queue" else e.get("technology", "")
+            s = ((train(name) or (30,))[0] if kind == "queue" else RESEARCH_S.get(name, 0)) * 1000
+            for n in range(max(1, int(e.get("amount", 1))) if kind == "queue" else 1):
+                b = e["objects"][n % len(e["objects"])]
+                busy[b] = max(busy.get(b, 0), t) + s
+                if kind == "queue":
+                    out.append((busy[b], e, b))
+    return out
+
+
 def name_timeline(objects, timeline, window=16):
     """The object IDs of a recorded game (#407). Start objects keep the ID of the record (`ref`, also GAIA animals
     that a player takes). The game gives each new object the next free ID, in the order that it makes them:
@@ -579,7 +597,7 @@ def name_timeline(objects, timeline, window=16):
                     u[2].add(train(e["name"])[1])
         if role == "U" and e.get("target", 0) > top:
             used.setdefault(e["target"], [e["time"], None, set()])
-    made, busy, seen = [], {}, set()     # (time ms, command time, "B" or "U", name); busy: building -> free at
+    made, seen = [], set()               # (time ms, command time, "B" or "U", name)
     for e in timeline:
         kind, t = e["kind"], e["time"]
         if kind in ("build", "wall") and "tile" in e and e.get("name"):
@@ -588,14 +606,7 @@ def name_timeline(objects, timeline, window=16):
                 if (e["name"], *tile) not in seen:       # the same foundation again (a second click)
                     seen.add((e["name"], *tile))
                     made.append((t, t, "B", e["name"]))
-        elif kind in ("queue", "research") and e.get("objects"):
-            name = e.get("name", "") if kind == "queue" else e.get("technology", "")
-            s = ((train(name) or (30,))[0] if kind == "queue" else RESEARCH_S.get(name, 0)) * 1000
-            for n in range(max(1, int(e.get("amount", 1))) if kind == "queue" else 1):
-                b = e["objects"][n % len(e["objects"])]
-                busy[b] = max(busy.get(b, 0), t) + s
-                if kind == "queue":
-                    made.append((busy[b], t, "U", name))
+    made += [(end, e["time"], "U", e.get("name", "")) for end, e, _ in training(timeline)]
     firsts = sorted((u[0], i) for i, u in used.items())
     nxt, k, below = top + 1, 0, top
     for t, cmd, role, name in sorted(made):
@@ -2156,7 +2167,8 @@ def write_region(path, chunks):
 def write_objects(path, size, T, H, players, objects, cols, ground, timeline=None):
     """aoe2mc.json: the data that a game program needs (docs/research/gameplay.md). Tiles are in the turned grid
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
-    their footprint [x0, z0, x1, z1) in blocks. Objects that the converter did not place are not in the list.
+    their footprint [x0, z0, x1, z1) in blocks. Objects of a recorded game have their object ID ("ref").
+    Objects that the converter did not place are not in the list.
     "ground" has one string per block row z: for each x the y where a unit stands, or "-" for water.
     "timeline" (recorded games only): the events of read_timeline, with tiles in the turned grid
     and the "names" of the selected objects (name_timeline)."""
@@ -2174,6 +2186,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         for k in ("uuid", "footprint"):
             if k in o:
                 e[k] = o[k]
+        if o.get("ref") is not None:                    # the object ID of a recorded game (#407, #408)
+            e["ref"] = o["ref"]
         objs.append(e)
     data = {"map_size": size, "tile_size": T, "level_height": H,
             "players": {str(pid): {"civ": p["civ"], "color": p["color"], "arch": p["arch"]}
