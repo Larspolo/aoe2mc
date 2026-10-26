@@ -74,11 +74,12 @@ def target_runs(usage, now, burn=BURN, end=END, lo=LO, hi=HI, mid=MID, mid_left=
 
 
 def runs_to_start(target, claims, ready, paused, hi=MAX_FIRE):
-    """The number of runs that the pacer starts now: the runs that the target misses, not more than the ready tickets.
+    """The number of runs that the pacer starts now: the runs that the target misses, not more than the ready tickets,
+    but 1 when no ticket is ready: that run refills the queue (#609).
     Runs that the scheduled task starts cannot start other runs (no `fire_trigger`, #566)."""
     if paused or not target:
         return 0
-    return max(0, min(target - claims, ready, hi))
+    return max(0, min(target - claims, max(ready, 1), hi))
 
 
 def measured_burn():
