@@ -305,6 +305,7 @@ class Gather:
     chop: seconds per unit, one number for all resources or {resource: seconds} ("farm" for farms); default
     WORK_SECONDS, the AoE2 rates at Normal speed (#413)."""
     cheats = False                                                     # also for the adapters of Gather.__new__
+    aegis = False                                                      # the cheat "aegis": all work is instant (#817)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
                  cheats=False):
@@ -708,7 +709,7 @@ class Gather:
         for site in self.sites:
             builders = [v for v in self.villagers.values() if v.state == "build" and v.site is site]
             # AoE2: n builders need 3 / (n + 2) of the time of one
-            if builders and build.rise(self, site, self.tick * NORMAL * (len(builders) + 2) / 3):
+            if builders and build.rise(self, site, math.inf if self.aegis else self.tick * NORMAL * (len(builders) + 2) / 3):
                 for v in builders:                                     # complete: the builders stop
                     v.site = None
                     self.set(v, "idle")
@@ -716,6 +717,8 @@ class Gather:
 
     def work_time(self, res):
         """Real seconds per unit of resource res ("farm" for farms) with the technologies of the player (WORK_TECHS)."""
+        if self.aegis:
+            return 0.0                                                 # a full load in one work step
         return self.chop[res] / math.prod(WORK_TECHS.get(t, {}).get(res, 1) for t in self.techs)
 
     def move(self, v):

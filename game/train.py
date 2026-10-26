@@ -450,7 +450,7 @@ def tick(g, work):
                 continue
             room -= 1
             q[0]["waits"] = False
-        q[0]["progress"] += work / TRAIN_TIMES[q[0]["name"]]
+        q[0]["progress"] += 1 if getattr(g, "aegis", False) else work / TRAIN_TIMES[q[0]["name"]]   # cheats.aegis
         if q[0]["progress"] >= 1 and q[0]["name"] in TECHS:
             research(g, q.pop(0))
         elif q[0]["progress"] >= 1 and (v := spawn(g, rect, q.pop(0)["name"])):
