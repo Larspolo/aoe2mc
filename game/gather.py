@@ -11,6 +11,7 @@ on a gold or stone mine sends them to mine (#390): they carry the gold or stone 
 with the miner look. An empty mine disappears, and they go on to the nearest mine of the same kind. A right click
 on a farm sends one villager onto it (#392): one farmer per farm, as in AoE2. The wheat gets younger as the food
 goes down, and an empty farm is dirt.
+A right click on a construction site (build.py) sends them to build it, with the builder look (#418).
 A sidebar scoreboard shows wood, food, gold and stone of player 1.
 
 The program sees a click in two statistics: the use of the stick, and "talked to villager" (a right click on a
@@ -47,7 +48,8 @@ MINE_BLOCKS = {"gold": ("gold_ore", "raw_gold_block", "stone"),                #
                "stone": ("cobblestone", "andesite", "stone", "tuff")}
 STEPS = [(dx, dz) for dx in (-1, 0, 1) for dz in (-1, 0, 1) if dx or dz]
 NUMBER = r"(-?[\d.]+(?:E-?\d+)?)[df]"
-EVENTS = {"idle": "idle", "to_tree": "walk", "chop": "chop", "to_drop": "carry"}    # state -> event in the log
+EVENTS = {"idle": "idle", "to_tree": "walk", "chop": "chop", "to_drop": "carry",    # state -> event in the log
+          "to_site": "walk", "build": "build"}
 
 
 class Map:
@@ -206,6 +208,7 @@ class Villager:
         self.job = None                                                # profession that the program set
         self.walked = 0.0                                              # blocks, for the log
         self.res = "wood"                                              # the resource of the load
+        self.site = None                                               # the construction site that it builds
 
     @property
     def cell(self):
@@ -219,7 +222,7 @@ class Gather:
     WORK_SECONDS, the AoE2 rates at Normal speed (#413)."""
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic):
-        self.game, self.map, self.player = game, Map(data, player), player
+        self.game, self.data, self.map, self.player = game, data, Map(data, player), player
         chop = WORK_SECONDS if chop is None else chop
         self.tick, self.carry = tick, carry
         self.chop = dict(chop) if isinstance(chop, dict) else dict.fromkeys(WORK_SECONDS, chop)
@@ -295,8 +298,21 @@ class Gather:
             self.task(v, job)
             if v.load and v.res != res:
                 v.load = 0                                             # AoE2 drops a load of another resource
-            v.res, v.tree = res, to
+            v.res, v.tree, v.site = res, to, None
             self.go(v, "to_tree", self.goals(to))
+
+    def build(self, site):
+        """Send the selected villagers to build the construction site, with the builder look (#418). They keep
+        their load, as in AoE2."""
+        x0, x1, z0, z1 = site["footprint"]
+        goals = self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)})
+        for u in sorted(self.selected):
+            v = self.villagers[u]
+            for t in [t for t, f in self.farmers.items() if f == u]:
+                del self.farmers[t]
+            v.tree, v.site = None, site
+            self.task(v, "BUILDER")
+            self.go(v, "to_site", goals)
 
     def goals(self, tile):
         """The cells where a villager works a resource: on a farm, else next to it."""
@@ -365,17 +381,21 @@ class Gather:
         tile = self.map.pick_tree(eye, d)
         if tile and self.selected:
             self.send(tile)
+        elif self.selected and (site := build.pick(self, eye, d)):
+            self.build(site)
 
     def step(self):
-        """One tick: walk one block, chop, or drop the wood."""
+        """One tick: walk one block, chop, drop the wood, or build."""
         for v in self.villagers.values():
-            if v.state in ("to_tree", "to_drop") and v.path:
+            if v.state in ("to_tree", "to_drop", "to_site") and v.path:
                 x, z = v.path.pop(0)
                 dx, dz = x + 0.5 - v.pos[0], z + 0.5 - v.pos[2]
                 v.pos = (x + 0.5, float(self.map.y(x, z)), z + 0.5)
                 v.walked += math.hypot(dx, dz)
                 yaw = math.degrees(math.atan2(-dx, dz))
                 self.command(f"tp {v.uuid} {v.pos[0]} {v.pos[1]} {v.pos[2]} {yaw:.0f} 0")
+            elif v.state == "to_site":
+                self.set(v, "build" if v.site["progress"] < 1 else "idle")
             elif v.state == "to_tree":
                 v.timer = 0.0
                 self.set(v, "chop" if self.source(v).get(v.tree, 0) > 0 else "idle")
@@ -415,6 +435,13 @@ class Gather:
                         self.trunk(v.tree)
                 if v.load >= self.carry or src.get(v.tree, 0) <= 0:
                     self.go(v, "to_drop", set().union(*map(self.map.around, self.map.drops[v.res])))
+        for site in self.sites:
+            builders = [v for v in self.villagers.values() if v.state == "build" and v.site is site]
+            # AoE2: n builders need 3 / (n + 2) of the time of one
+            if builders and build.rise(self, site, self.tick * NORMAL * (len(builders) + 2) / 3):
+                for v in builders:                                     # complete: the builders stop
+                    v.site = None
+                    self.set(v, "idle")
 
     def site(self, tile):
         """Footprint (x0, x1, z0, z1), ground heights next to it, stump cell and trunk row z of a tree."""
