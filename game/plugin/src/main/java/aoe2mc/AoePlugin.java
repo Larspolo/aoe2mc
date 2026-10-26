@@ -931,9 +931,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 Entity t = e instanceof Minecart && !e.getPassengers().isEmpty() ? e.getPassengers().get(0) : e;
                 if (t instanceof LivingEntity le) {                // a siege unit: its crew takes the hits (#836)
                     AttributeInstance max = le.getAttribute(Attribute.MAX_HEALTH);
-                    if (max != null) {
+                    if (max != null) {                     // keep the lost hit points, as AoE2 does for Bloodlines (#940)
+                        double lost = Math.max(0, max.getValue() - le.getHealth());
                         max.setBaseValue(hp);
-                        le.setHealth(hp);
+                        le.setHealth(Math.min(max.getValue(), Math.max(Math.min(1, hp), hp - lost)));
                     }
                     stats.put(le.getUniqueId(), st);
                     nameLine(le);

@@ -26,6 +26,8 @@ Double-Bit Axe at the lumber camp (#723): villagers chop wood 20 % faster (gathe
 Gold Mining at the mining camp (#727): villagers mine gold 15 % faster.
 Horse Collar at the mill (#726): the live and the new farms of the player have 75 more food (gather.FARM_TECHS).
 Wheelbarrow at the town center in the Feudal Age (#728, TECH_AGE): villagers carry 3 more resources and walk 10 % faster (gather.CARRY, gather.PACE).
+Bloodlines at the stable in the Feudal Age (#940): cavalry gets 20 more hit points, also a live unit (it keeps its lost
+hit points: `aoe stats`).
 Rally points (#707): the menu item "Rally point" (RALLY) and the next right click on the ground set the rally point of
 the building; each new unit walks there (Minecraft path finding), a new villager gathers at a tree, bush, mine or farm.
 The castle (#708) trains the unique unit of the civilization of its player (UNIQUE, trains()). Only the units with AoE2
@@ -49,6 +51,7 @@ import menu  # noqa: E402
 COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   # as in AoE2
          "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}, "FEUDAL_AGE": {"food": 500},
          "BERSERK": {"food": 65, "gold": 20},
+         "BLOODLINES": {"food": 150, "gold": 100},
          "CATAPHRACT": {"food": 70, "gold": 75},
          "CHU_KO_NU": {"wood": 40, "gold": 35},
          "DOUBLE_BIT_AXE": {"food": 100, "wood": 50},
@@ -73,6 +76,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "WOAD_RAIDER": {"food": 70, "gold": 25}}
 TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130,   # AoE2 seconds
                "BERSERK": 14,
+               "BLOODLINES": 50,
                "CATAPHRACT": 20,
                "CHU_KO_NU": 16,
                "DOUBLE_BIT_AXE": 25,
@@ -99,7 +103,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW"),
           "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER"),                                         # building (#654, #670, #655)
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING"),           # (#675, #725, #724)
           "CASTLE": (),                                                         # the unique unit: trains() (#708)
-          "STABLE": ("SCOUT_CAVALRY",),                                         # (#671)
+          "STABLE": ("SCOUT_CAVALRY", "BLOODLINES"),                           # (#671, #940)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
           "MILL": ("HORSE_COLLAR",),                                            # (#726)
           "MINING_CAMP": ("GOLD_MINING",)}                                      # (#727)
@@ -117,7 +121,8 @@ UNIQUE = {"BRITONS": "LONGBOWMAN", "PERSIANS": "WAR_ELEPHANT", "BYZANTINES": "CA
           "POLES": "OBUCH", "BOHEMIANS": "HUSSITE_WAGON", "HINDUSTANIS": "GHULAM", "DRAVIDIANS": "URUMI_SWORDSMAN",
           "BENGALIS": "RATHA", "GURJARAS": "SHRIVAMSHA_RIDER", "ROMANS": "CENTURION", "ARMENIANS": "COMPOSITE_BOWMAN",
           "GEORGIANS": "MONASPA"}
-TECHS = {"DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
+TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
+         "DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
          "FLETCHING": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if "archer" in s.classes else s,
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
          "GOLD_MINING": lambda name, s: s,                         # an economy technology: gather.WORK_TECHS
@@ -130,6 +135,7 @@ TECHS = {"DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy 
          "WHEELBARROW": lambda name, s: s}                         # no combat change: gather.CARRY and gather.PACE
 REQUIRES = {"FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP", "DOCK"))}   # n types of these buildings
 TECH_AGE = {                                                       # the age of a technology (build.AGE): hidden before
+    "BLOODLINES": 1,
     "DOUBLE_BIT_AXE": 1,
     "WHEELBARROW": 1,
 }
@@ -145,6 +151,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "SKIRMISHER": (1, "drowned_spawn_egg", "Skirmisher"),
          "SPEARMAN": (1, "zombie_spawn_egg", "Spearman"),
          "BERSERK": (0, "zombie_spawn_egg", "Berserk"),
+         "BLOODLINES": (1, "book", "Bloodlines"),
          "CATAPHRACT": (0, "horse_spawn_egg", "Cataphract"),
          "CHU_KO_NU": (0, "skeleton_spawn_egg", "Chu Ko Nu"),
          "DOUBLE_BIT_AXE": (0, "book", "Double-Bit Axe"),
