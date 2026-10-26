@@ -25,8 +25,9 @@ def test_scenario_triggers_are_read(tmp_path):
     assert [e["type"] for e in welcome["effects"]] == [aoe2mc.SEND_CHAT, aoe2mc.DISPLAY_INSTRUCTIONS]
     assert welcome["effects"][0]["message"] == "Welcome to the tiny map."
     load, files = aoe2mc.trigger_files(texts["triggers"])
-    assert load == ["schedule function aoe2mc:trigger/0 100t replace"]   # the knight: an area; the archer: no text
-    assert list(files) == ["data/aoe2mc/function/trigger/0.mcfunction"]
+    assert load == ["schedule function aoe2mc:trigger/0 100t replace",   # the knight: an area condition
+                    "schedule function aoe2mc:trigger/2 1200t replace"]  # the archer: "Remove Object" (#656)
+    assert list(files) == ["data/aoe2mc/function/trigger/0.mcfunction", "data/aoe2mc/function/trigger/2.mcfunction"]
 
 
 def test_timer_chat_gives_a_function_and_a_schedule(tmp_path):

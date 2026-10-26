@@ -47,6 +47,10 @@ timer conditions gets `function/trigger/<id>.mcfunction`. `load.mcfunction` star
 `schedule function aoe2mc:trigger/<id> <20 × largest timer>t replace`. "Send Chat" → `tellraw @a`, "Display
 Instructions" → `title @a times` (its display time), `subtitle` and an empty `title`. AoE2 color tags are removed.
 A looping trigger schedules itself again. A trigger with other conditions is not written yet.
+"Create Object" (#656) → `summon` of the entity of `units.make_entity` at the middle of the tile, on the ground, with
+the tag of the player. "Remove Object" → `kill @e[tag=aoe2mc.pN,type=..]` in the area (blocks, all heights); a rider
+also kills its mount (`execute ... on vehicle`). Buildings and other objects are not supported yet: the converter
+counts them ("create (not supported yet)"). The effect tiles turn with `--orientation` (`turn_effects`).
 
 ## Pack layout
 
