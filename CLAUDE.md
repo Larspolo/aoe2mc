@@ -75,7 +75,8 @@ Design work (buildings, objects, units, animals) follows `docs/DESIGN.md`. Do de
 - A building design draws on a `Canvas` in local coordinates. The front (main door) is on the south side (z = w-1).
 - Footprint rule: an object keeps its blocks inside its footprint up to head height (3 blocks). `Edits` enforces this.
 - Barrier rule: free space in footprints gets `barrier` blocks. Units must never stand in a block:
-  the converter prints "units in a block (moved up): N" and N must be 0.
+  the converter prints "units in a block (moved up): N" and N must be 0. Exception: a garrisoned unit stands in the
+  barrier blocks of its building, with `Invulnerable` 1 ("units (garrisoned, inside the holder)", #807).
 - Block states are strings like `"oak_stairs[facing=north,half=bottom]"`. Each new state must pass `mcvalid`.
 - Output is deterministic: all randomness comes from seeded `numpy` generators. Keep it so.
 - Target: Minecraft Java 26.3 (`DATA_VERSION = 5023`), the only output (#427). The code uses the 26.3 block and
