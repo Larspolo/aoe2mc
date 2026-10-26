@@ -55,6 +55,7 @@ BAR = "aoe2mc:replay"       # the boss bar with the game time (#684)
 POP = "aoe_pop"             # the sidebar objective with the population of each player (#741)
 COUNTED = "aoe2mc.pop"      # entity tag of the units that the population counts (#787)
 EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
+FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
 FOLLOW_MS = 15000           # ms of game time: the camera of --follow changes its unit at most this often (#738)
 EFFECT_MS = 10000           # ms of game time that the research text stays
 SCALE = 4                   # size of the research text: a spectator sees it from 40 blocks
@@ -436,7 +437,9 @@ class Replay:
     def spectate(self, e):
         """--follow N (#738): the spectators look through the first unit of a MOVE, ORDER or spawn of player N
         (vanilla /spectate; it takes one player, so `execute as` each spectator). The camera changes at most once per
-        FOLLOW_MS of game time, at once when its unit is gone (DELETE)."""
+        FOLLOW_MS of game time, at once when its unit is gone (DELETE). A unit with a rider (a horse, a siege crew):
+        the spectators look through the rider, else its legs fill the screen (#1095). `execute on passengers` finds
+        it: the replay does not know the UUID of the rider."""
         if self.follow is None or e.get("player") != self.follow or e["kind"] not in ("move", "order", "spawn"):
             return []
         uuid, at = self.followed
@@ -450,7 +453,10 @@ class Replay:
         if v is None or v.uuid == uuid:
             return []
         self.followed = (v.uuid, e["time"])
-        return [f"execute as @a[gamemode=spectator] run spectate {v.uuid} @s"]
+        return [f"tag @e[tag={FOLLOWED}] remove {FOLLOWED}", f"tag {v.uuid} add {FOLLOWED}",
+                f"execute as {v.uuid} on passengers run tag {v.uuid} remove {FOLLOWED}",
+                f"execute as {v.uuid} on passengers run tag @s add {FOLLOWED}",
+                f"execute as @a[gamemode=spectator] run spectate @e[tag={FOLLOWED},limit=1] @s"]
 
     def spawns(self):
         """A "spawn" event for each unit that a QUEUE command trains, at the end of its training."""
