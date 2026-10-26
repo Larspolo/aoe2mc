@@ -65,16 +65,33 @@ STATS = {
     "WAR_ELEPHANT": Stats(450, 15, 1, 2, 0, 2.0, {"building": 30}, (ELE, UNI)),
     "ELITE_WAR_ELEPHANT": Stats(600, 20, 1, 3, 0, 2.0, {"building": 30}, (ELE, UNI)),
     # unique units of the castle (#712; Throwing Axeman and Mameluke hit with melee damage in AoE2: here pierce). #1006:
-    # the first projectile of Kipchak and Organ Gun, the ranged mode of the Ratha, the Castle Age Serjeant
+    # the first projectile of Kipchak and Organ Gun, the ranged mode of the Ratha, the Castle Age Serjeant.
+    # #1005: a Kamayuk hits from AoE2 range 1: a melee hit
+    "ARAMBAI": Stats(60, 12, 0, 1, 5, 2.0, {SIE: 2}, (ARC, CAV, UNI)),
+    "BALLISTA_ELEPHANT": Stats(250, 9, 0, 3, 5, 2.5, {"building": 5}, (CAV, ELE, SIE, UNI)),
     "BERSERK": Stats(54, 12, 1, 1, 0, 2.0, {"building": 2}, (INF, UNI)),
+    "BOYAR": Stats(100, 12, 4, 2, 0, 1.9, {}, (CAV, UNI)),
+    "CAMEL_ARCHER": Stats(55, 7, 0, 1, 4, 2.0, {}, (ARC, CAM, UNI)),
     "CATAPHRACT": Stats(110, 9, 2, 1, 0, 1.8, {INF: 13}, (CAV, UNI)),
+    "CENTURION": Stats(110, 13, 2, 3, 0, 1.9, {}, (CAV, UNI)),
     "CHU_KO_NU": Stats(45, 8, 0, 0, 4, 3.0, {SPE: 2}, (ARC, UNI)),
+    "COMPOSITE_BOWMAN": Stats(40, 4, 1, 0, 4, 2.0, {SPE: 2}, (ARC, UNI)),
+    "CONQUISTADOR": Stats(55, 16, 2, 1, 6, 2.9, {SIE: 4}, (ARC, CAV, UNI)),
+    "COUSTILLIER": Stats(115, 8, 2, 2, 0, 1.9, {}, (CAV, UNI)),
     "ELITE_TEUTONIC_KNIGHT": Stats(110, 17, 10, 2, 0, 2.0, {"building": 4}, (INF, UNI)),
     "FLAMING_CAMEL": Stats(55, 20, 0, 0, 0, 2.0, {"building": 200, CAV: 50, CAM: 50, ELE: 130, SIE: 25}, (CAM, UNI)),
     "FLEMISH_MILITIA": Stats(40, 5, 1, 1, 0, 2.0, {CAV: 6, CAM: 4, ELE: 6}, (INF, UNI)),
+    "GBETO": Stats(40, 10, 0, 0, 5, 2.0, {}, (INF, UNI)),
     "GENGHIS_KHAN": Stats(300, 25, 2, 2, 5, 2.0, {SIE: 3}, (ARC, CAV, UNI)),
+    "GENOESE_CROSSBOWMAN": Stats(45, 6, 2, 1, 4, 2.0, {CAV: 5, CAM: 4, ELE: 5}, (ARC, UNI)),
+    "GHULAM": Stats(60, 9, 0, 3, 0, 2.0, {ARC: 5, "building": 2}, (INF, UNI)),
     "HUSKARL": Stats(60, 10, 0, 6, 0, 2.0, {"building": 2}, (INF, UNI)),
+    "HUSSITE_WAGON": Stats(160, 10, 0, 7, 6, 3.45, {SIE: 3, "building": 1}, (SIE, UNI)),
+    "JAGUAR_WARRIOR": Stats(65, 15, 1, 2, 0, 2.0, {INF: 5, "building": 2}, (INF, UNI)),
     "JANISSARY": Stats(35, 17, 1, 0, 7, 3.45, {}, (ARC, GUN, UNI)),
+    "KAMAYUK": Stats(70, 7, 1, 0, 0, 2.0, {CAV: 8, CAM: 6, ELE: 20}, (INF, UNI)),
+    "KARAMBIT_WARRIOR": Stats(30, 7, 0, 1, 0, 2.0, {}, (INF, UNI)),
+    "KESHIK": Stats(120, 9, 1, 2, 0, 1.9, {}, (CAV, UNI)),
     "KIPCHAK": Stats(40, 4, 0, 0, 4, 2.2, {SPE: 1}, (ARC, CAV, UNI)),
     "KONNIK": Stats(100, 12, 2, 2, 0, 2.4, {"building": 4}, (CAV, UNI)),
     "LEITIS": Stats(100, 13, 1, 1, 0, 1.9, {}, (CAV, UNI)),
@@ -152,7 +169,8 @@ SIGHT = {
     "TWO_HANDED_SWORDSMAN": 5,
 }
 # Units that attack from a range with melee damage (AoE2): their hit takes the melee armor of the target (#800).
-MELEE_RANGED = {"MAMELUKE",
+MELEE_RANGED = {"GBETO",
+                "MAMELUKE",
                 "THROWING_AXEMAN"}
 DEFAULT, BUILDING = Stats(40, 4, 0, 0, 0, 2.0), Stats(1000, 0, 0, 7, 0, 0.0, {}, ("building",))
 SLIME = 0.52                    # blocks of width and height per slime size: the target of a building (#517)

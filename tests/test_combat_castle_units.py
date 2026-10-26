@@ -1,0 +1,33 @@
+"""game/combat.py: the castle units Arambai to Keshik fight with their AoE2 DE values (#1005, epic #395)."""
+import re
+
+from game import combat
+
+UNITS = ("ARAMBAI", "BALLISTA_ELEPHANT", "BOYAR", "CAMEL_ARCHER", "CENTURION", "COMPOSITE_BOWMAN", "CONQUISTADOR",
+         "COUSTILLIER", "GBETO", "GENOESE_CROSSBOWMAN", "GHULAM", "HUSSITE_WAGON", "JAGUAR_WARRIOR", "KAMAYUK",
+         "KARAMBIT_WARRIOR", "KESHIK")
+
+
+def test_each_unit_has_values_and_is_a_unique_unit():
+    for name in UNITS:
+        assert name in combat.STATS and combat.stats(name) != combat.DEFAULT, name
+        assert combat.UNI in combat.stats(name).classes, name
+
+
+def test_values_of_the_wiki():
+    """AoE2 wiki (DE, base unit): Jaguar Warrior 65 HP, 15 attack, 1/2 armor, +5 vs infantry; Genoese Crossbowman 45 HP,
+    6 attack, range 4, 2/1 armor, +5 vs cavalry."""
+    assert combat.stats("JAGUAR_WARRIOR") == combat.Stats(65, 15, 1, 2, 0, 2.0, {combat.INF: 5, "building": 2},
+                                                           (combat.INF, combat.UNI))
+    s = combat.stats("GENOESE_CROSSBOWMAN")
+    assert (s.hp, s.attack, s.melee, s.pierce, s.range, s.bonus[combat.CAV]) == (45, 6, 2, 1, 4, 5)
+    assert combat.damage("JAGUAR_WARRIOR", "MILITIA") == 15 - 0 + 5
+    assert combat.damage("GENOESE_CROSSBOWMAN", "KNIGHT") == 6 - 2 + 5
+
+
+def test_a_valid_stats_command_for_each_unit():
+    for name in UNITS:
+        cmd = combat.stats_command("u", name)
+        assert re.fullmatch(r"aoe stats u \d+ \d+ -?\d+ -?\d+ [012] [a-z,]+ (-|([a-z]+:\d+,?)+) \d+", cmd), cmd
+    assert combat.stats_command("u", "GBETO").split()[7] == "2"                 # a thrown melee attack (#800)
+    assert combat.stats_command("u", "KAMAYUK").split()[7] == "0"               # melee
