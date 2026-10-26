@@ -267,7 +267,8 @@ def restore(saved, world):
     shutil.copytree(saved, world, dirs_exist_ok=True)
 
 
-def replay(game, world, speed=1.0, start="0:00", follow=None):
+def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None):
+    """guide: a poll(control) next to the hotbar input that gets `input` and the replay `r` (game/watch.py, #1123)."""
     import replay
     start = replay.aoe2mc.game_time(start)
     with open(os.path.join(world, "aoe2mc.json")) as f:
@@ -276,6 +277,8 @@ def replay(game, world, speed=1.0, start="0:00", follow=None):
         sys.exit("--replay needs a world of a recorded game (.aoe2record)")
     import replay_input
     control = replay_input.Input(game)              # hotbar items, menu and /trigger aoe_replay (#688)
+    if guide:
+        guide.input = control
 
     def setup():
         game.forceload()
@@ -294,10 +297,13 @@ def replay(game, world, speed=1.0, start="0:00", follow=None):
         setup()
     print(f"Join the server localhost:{game.game_port} (Minecraft {game.version}). The replay starts now "
           f"at speed {speed}. Right click the items in your hotbar, or /trigger aoe_replay set N.", file=sys.stderr)
+    def make():
+        r = replay.Replay(game, data, game.version, ai=game.kind == "paper", follow=follow)
+        if guide:
+            guide.r = r
+        return r
     try:
-        stats = replay.live(lambda: replay.Replay(game, data, game.version, ai=game.kind == "paper",
-                                                          follow=follow), speed, start,
-                            restart, bar=True, poll=control)
+        stats = replay.live(make, speed, start, restart, bar=True, poll=guide or control)
     finally:
         shutil.rmtree(saved, ignore_errors=True)
     print(f"{stats['events']} events, {stats['commands']} commands in {stats['busy']} s "
