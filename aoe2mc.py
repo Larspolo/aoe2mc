@@ -2143,13 +2143,16 @@ def build_chunk(cx, cz, cols, edits, origin=(0, 0)):
     g = lambda a: a[sl].T[None]          # (1, z, x) for broadcasting against Y
     top, wtop, top_id, sub_id = g(cols.top), g(cols.wtop), g(cols.top_id), g(cols.sub_id)
     ice, deco, sub = g(cols.ice), cols.deco[sl].T, top - g(cols.sub_depth)
-    Y = np.arange(MIN_Y, MAX_Y, dtype=np.int32)[:, None, None]
+    # the terrain passes run only up to the highest ground or water: above it all is air (#701, 2× faster)
+    n = int(np.clip(max(top.max(), wtop.max()) + 1 - MIN_Y, 1, HEIGHT))
+    Y = np.arange(MIN_Y, MIN_Y + n, dtype=np.int32)[:, None, None]
 
-    vol = np.where(Y < sub, np.where(Y < 0, DEEPSLATE, STONE), AIR).astype(np.uint16)
-    vol = np.where((Y >= sub) & (Y < top), sub_id, vol)
-    vol = np.where(Y == top, top_id, vol)
+    vol = np.zeros((HEIGHT, 16, 16), np.uint16)         # AIR
+    low = np.where(Y < sub, np.where(Y < 0, DEEPSLATE, STONE), AIR).astype(np.uint16)
+    low = np.where((Y >= sub) & (Y < top), sub_id, low)
+    low = np.where(Y == top, top_id, low)
     water = (Y > top) & (Y <= wtop)
-    vol = np.where(water, np.where(ice & (Y == wtop), ICE, WATER), vol)
+    vol[:n] = np.where(water, np.where(ice & (Y == wtop), ICE, WATER), low)
     vol[0] = np.where(top[0] > NONE, BEDROCK, AIR)
     if cols.floor > MIN_Y:              # --border diorama, island, table: the map stands on a floor with air under it
         vol[:cols.floor - MIN_Y] = AIR
@@ -2174,23 +2177,29 @@ def build_chunk(cx, cz, cols, edits, origin=(0, 0)):
         vol[ey[soft][free], ez[soft][free], ex[soft][free]] = eid[soft][free]
         vol[ey[hard], ez[hard], ex[hard]] = eid[hard]
 
+    # the scans below look only at the sections with blocks and one row of air over them (AIR = 0: the maximum of
+    # an empty section is 0), so that a lower half of a plant at the top still sees the air above it
+    full = np.flatnonzero(vol.reshape(HEIGHT // 16, 4096).max(1))
+    used = vol[:min(HEIGHT, 16 * (int(full[-1]) + 1) + 1) if len(full) else 16]
+
     # Tall plants: remove an upper half without its lower half (when an object took the place of the lower half)
-    counts = np.bincount(vol.ravel(), minlength=len(B.states))
+    counts = np.bincount(used.ravel(), minlength=len(B.states))
     for lower, upper in TALL_PLANTS:
         if not (counts[lower] or counts[upper]):        # the full scans below are slow: skip them when possible
             continue
-        ys, zs, xs = np.nonzero(vol[1:] == upper)
-        bad = vol[ys, zs, xs] != lower
-        vol[ys[bad] + 1, zs[bad], xs[bad]] = AIR
-        ys, zs, xs = np.nonzero(vol[:-1] == lower)
-        bad = vol[ys + 1, zs, xs] != upper
-        vol[ys[bad], zs[bad], xs[bad]] = SHORT_GRASS
+        ys, zs, xs = np.nonzero(used[1:] == upper)
+        bad = used[ys, zs, xs] != lower
+        used[ys[bad] + 1, zs[bad], xs[bad]] = AIR
+        ys, zs, xs = np.nonzero(used[:-1] == lower)
+        bad = used[ys + 1, zs, xs] != upper
+        used[ys[bad], zs[bad], xs[bad]] = SHORT_GRASS
 
     # Blocks under the water surface are waterlogged, else they leave a dry gap in the water
-    wet = water & (vol != WATER) & (vol != ICE)
+    low = vol[:n]                                       # a view: the water is below n
+    wet = water & (low != WATER) & (low != ICE)
     if wet.any():
-        vals, inv = np.unique(vol[wet], return_inverse=True)
-        vol[wet] = np.array([B.wet(int(v)) for v in vals], np.uint16)[inv]
+        vals, inv = np.unique(low[wet], return_inverse=True)
+        low[wet] = np.array([B.wet(int(v)) for v in vals], np.uint16)[inv]
 
     # Biomes: one per 4x4 block cell, the same for all heights.
     cells = cols.biome[ox + 2:ox + 16:4, oz + 2:oz + 16:4].T            # (z, x) 4x4
@@ -2218,7 +2227,7 @@ def build_chunk(cx, cz, cols, edits, origin=(0, 0)):
     block_entities = []
     be_ids = [i for i in sorted(present) if block_entity_type(B.states[i])]
     for i in be_ids:
-        for y, z, x in zip(*np.nonzero(vol == i)):
+        for y, z, x in zip(*np.nonzero(used == i)):
             pos = (x0 + int(x), int(y) + MIN_Y, z0 + int(z))
             block_entities.append(Compound({
                 "id": String("minecraft:" + block_entity_type(B.states[i])), "keepPacked": Byte(0),
