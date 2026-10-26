@@ -67,7 +67,10 @@ converted worlds stay vanilla. See CLAUDE.md, "Minecraft features first".
 **Owner decision (2026-10-26): the interface for choices.** A building with several options (train a unit, research,
 age up) and the build menu of a villager open a **chest menu of the Paper plugin** (an inventory with item icons and
 the cost in the item text), not the vanilla `/dialog` window and not clickable chat. A right click with the command
-stick on an own building opens its menu; a click on an option queues 1, a shift click 5. Epic #618.
+stick on an own building opens its menu; a click on an option queues 1, a shift click queues 5, and the menu stays
+open, so a player clicks again to queue more (no separate "x5" button). The build menu closes after the choice: the
+next click is on the ground.
+Epic #618.
 
 ### Smallest playable milestone: "villagers gather wood"
 
@@ -174,7 +177,9 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
   path before its first AI tick; a path ends at about `follow_range` (cow: 16); the world border stops paths.
 - `build.place` draws the design with `replay.Replay.building`: fake `aoe2mc.json` data in tests needs `level_height`
   and a tile size of 4 (at tile size 1 most designs give no blocks). The site keeps the commands, bottom up (#418).
-- Import cycle `gather` → `build` → `replay`: `replay` imports `gather` inside a function (#408).
+- Import cycle `gather` → `build` → `replay`: `replay` imports `gather` inside a function (#408). `gather` imports `build`
+  and `train` at the top, and `combat`, `ai`, `replay` import `gather`: a module that `gather` imports must import `combat`
+  or `gather` inside its function (#612).
 - `gather.Map.path` on a whole record map (480 × 480): A* with a cell limit, about 45 ms per path, 0.3 s across the
   map. Replay paths cost 18 s per 200 s of game in samples/ (one search per unit of a group, #409).
 - Paper 26.3 (#436): remove mob goals by `GoalKey` (`MobGoals.removeGoal(mob, key)`), on each order: removal by the
@@ -190,6 +195,13 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - A vanilla melee goal hits only a target in sight of its eye (#517): the stand-in slime of a building has its eye in
   the walls, so the zombie walks to the wall and never hits. The plugin hits for it (`siege()`, `Mob#attack`).
   Debug an attack on a server with `data get entity <uuid> Pos` and `aoe goals` once per second.
+- The server cannot open an inventory without a joined player (#619): an `mc` test of a chest menu checks only the
+  command answers ("Menu: 0 players", "Bad item"). Real clicks need a client on the server (#627).
+  `scoreboard objectives list` shows the display names (`[Menu]`), not the objective names.
+- After `/kill <UUID>` the server still finds the entity by its UUID for 20 ticks (the death animation): `execute if entity <UUID>` gives "Test passed" at once. Poll for about 2 s in a test (#630).
+- A real client joins the Paper server of `run.Game` (`online-mode=false`) with `--quickPlayMultiplayer 127.0.0.1:PORT`
+  (`mc_shot.Client`, #627). In an open inventory the pointer is free: `xdotool mousemove` + `click` hits the slots.
+  A Paper display name of an item is italic by default (Adventure).
 - `summon skeleton` with NBT gets no bow: `RangedEntity#rangedAttack` then throws "Invalid weapon firing an arrow"
   and the server removes the mob ("No entity was found" right after the order). Give
   `equipment:{mainhand:{id:"minecraft:bow",count:1}}`. A Java exception of the plugin is only in `game.server.log` (#608).

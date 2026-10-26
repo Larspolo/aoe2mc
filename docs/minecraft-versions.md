@@ -150,3 +150,6 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - 26.3 `particle minecraft:block{block_state:...}`: a block id string or `{id:"minecraft:wheat",Properties:{age:"7"}}`;
   `Name` and `wheat[age=7]` fail ("No key id"). A wrong property value passes silently. `rotate UUID facing X Y Z`
   turns a NoAI mob. Sound names: `registries/data.json` `sound_event` of `misode/mcmeta` `26.3-summary` (#592).
+- A world that the Paper server saved does not open in the vanilla client ("Overworld settings missing"): Paper moves
+  `data/minecraft/world_gen_settings.dat` into each dimension folder. Copy the `.dat` files of `data/minecraft/` of a fresh
+  conversion into the saved copy before `tools/mc_shot.py` (#420, #580).

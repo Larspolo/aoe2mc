@@ -21,7 +21,9 @@ epics have no goal left that an agent can do.
 4. Make the epic with the `ticket` skill: the title is an instruction, the body has the goal (what the player sees),
    the acceptance criteria, the Minecraft feature that does the job (CLAUDE.md), the line "Roadmap: `<key>`", and
    the labels `epic`, `feature`, `size:L`, `P3`.
-5. Make its first 1–3 sub-issues (`size:S` or `size:M`, `P3`, `sub_issue_write`). The first one is small and useful
+   When the feature has two or more good ways with no single best one (the interface, a game rule), make a decision
+   ticket first (`ticket` skill, "Decision tickets") and let the sub-issues that need it depend on it.
+5. Make its first 3–5 sub-issues (`size:S` or `size:M`, `P3`, `sub_issue_write`). The first one is small and useful
    alone. Name the files and functions that each one changes.
 6. Do not change `docs/ROADMAP.md` for a new epic: the key in the epic body is enough (no merge conflicts).
 
