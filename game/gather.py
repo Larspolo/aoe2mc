@@ -339,7 +339,7 @@ class Gather:
         res = self.map.resource(tile)
         job = "FARMER" if tile in self.map.farms else {"wood": "LUMBERJACK", "food": "FORAGER"}.get(res) or \
             next(j for r, _, j in MINES.values() if r == res)
-        for u in sorted(self.selected):
+        for u in sorted(self.selected & self.villagers.keys()):         # a scout cannot gather or build (#589)
             v = self.villagers[u]
             for t in [t for t, f in self.farmers.items() if f == u]:
                 del self.farmers[t]
@@ -363,7 +363,7 @@ class Gather:
         their load, as in AoE2."""
         x0, x1, z0, z1 = site["footprint"]
         goals = self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)})
-        for u in sorted(self.selected):
+        for u in sorted(self.selected & self.villagers.keys()):         # a scout cannot gather or build (#589)
             v = self.villagers[u]
             for t in [t for t, f in self.farmers.items() if f == u]:
                 del self.farmers[t]
