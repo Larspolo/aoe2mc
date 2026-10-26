@@ -3,7 +3,8 @@ Replay a recorded game live (#374): play the "timeline" of aoe2mc.json (aoe2mc.r
 server. Each building appears at its command time (the blocks of its design, as with --at, #373), chat lines are
 /tellraw in the player color, age-ups are a title, research is an action bar line, and RESIGN is a title.
 A trained unit appears in front of its building when its training ends (#408, aoe2mc.training). The units that a
-MOVE or ORDER command selects walk on a path to its target, one /tp per block at their walk speed (#409, gather.walk);
+MOVE or ORDER command selects walk to its target: on Paper the plugin walks them on a Minecraft path at their walk speed
+(`aoe moveto`, game/ai.py, #438), else one /tp per block on the path of gather.Map (#409, gather.walk);
 a group that goes to a tile stops there in rows (#410).
 
 Replay(game, data).run(speed) plays it; commands(e) gives the commands of one event (the unit tests use it).
@@ -29,6 +30,7 @@ TEXT_COLORS = {"light_gray": "gray", "blue": "blue", "red": "red", "green": "gre
 FLAT = 16                   # tiles of the flat map that draws one design
 MAX_FILL = 32768            # blocks of one /fill command
 FORMATION = 2              # blocks between the units of a group in a formation (#410)
+LEG = 48                    # path cells of one plugin order: within the reach of a Minecraft path search (#438)
 PATH_CELLS = 20000          # cells that one path search may look at: a unit with no path stays (no time lag)
 SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, "PIKEMAN": 1.0, "EAGLE": 1.1,
           "ARCHER": 0.96, "SKIRMISHER": 0.96, "CROSSBOWMAN": 0.96, "CAVALRY_ARCHER": 1.4, "SCOUT": 1.2,
@@ -47,8 +49,8 @@ def text(s, color=None):
 class Replay:
     """The timeline of aoe2mc.json `data` on a server (game.command sends one command)."""
 
-    def __init__(self, game, data, version=aoe2mc.VERSION_NAME):
-        self.game, self.data = game, data
+    def __init__(self, game, data, version=aoe2mc.VERSION_NAME, ai=False):
+        self.game, self.data, self.ai, self.speed = game, data, ai, 1.0     # ai: walks through the plugin (Paper)
         self.T, self.n = data["tile_size"], len(data["ground"])
         self.ground = [[None if v == "-" else int(v) for v in row.split()] for row in data["ground"]]
         self.starts = [(o.get("ref"), o["player"], o["name"], (o["footprint"][0], o["footprint"][2], o["footprint"][1],
@@ -279,6 +281,18 @@ class Replay:
             return []
         to_tile = not (e["kind"] == "order" and e.get("target") is not None)
         slots = self.formation([v for _, v in group], e["tile"]) if to_tile else {}
+        if self.ai:
+            out = []
+            for i, v in group:
+                end = slots.get(v) or min(goals, key=lambda c: (math.dist(c, v.cell), c))
+                path = self.map.path(v.cell, {end}, PATH_CELLS) or []
+                cmds, due = self.order(v, path[LEG - 1:-1:LEG] + [end], e["time"])
+                out += cmds
+                if due is None:
+                    self.moving.pop(i, None)
+                else:
+                    self.moving[i] = due
+            return out
         for i, v in group:
             v.path = (self.map.path(v.cell, {slots[v]}, PATH_CELLS) if v in slots else None) or \
                 self.map.path(v.cell, goals, PATH_CELLS) or []
@@ -288,6 +302,20 @@ class Replay:
             else:
                 self.moving[i] = due
         return []
+
+    def order(self, v, legs, t):
+        """The plugin walks unit v on a Minecraft path to the first cell of `legs`, at its walk speed times the replay
+        speed (#438). The path search of Minecraft reaches only about 128 blocks, so a long way goes in legs of
+        LEG cells of the path of gather.Map: the next leg starts when the unit is due at the end of this one.
+        The replay does not read the positions back: it takes the unit at the end of its leg. Returns the commands
+        and the game time (ms) of the next leg, or None."""
+        import ai                                                   # ai -> replay: import it late
+        x, z = legs[0]
+        x0, _, z0 = v.pos
+        v.pos, v.path = (x + 0.5, float(self.map.y(x, z)), z + 0.5), legs[1:]
+        speed = next((s for k, s in SPEEDS.items() if v.name.startswith(k)), 1.0) * self.T    # blocks per second
+        due = t + 1000 * math.hypot(v.pos[0] - x0, v.pos[2] - z0) / speed if v.path else None
+        return [ai.speed_command(v.uuid, v.name, self.T, self.speed), "aoe moveto {} {} {} {}".format(v.uuid, *v.pos)], due
 
     def formation(self, group, tile):
         """The end cell of each unit of a group that walks to a tile (#410): rows across the walk direction, the
@@ -325,12 +353,16 @@ class Replay:
         return t + 1000 * math.hypot(x + 0.5 - v.pos[0], z + 0.5 - v.pos[2]) / speed
 
     def steps(self, t):
-        """The /tp commands of the steps that are due at game time t (ms)."""
+        """The commands of the steps (/tp) and legs (plugin orders) that are due at game time t (ms)."""
         out = []
         sink = types.SimpleNamespace(map=self.map, command=out.append)
         for i, due in list(self.moving.items()):
             v = self.units[i]
-            while due is not None and due <= t:
+            if self.ai and due <= t:
+                legs = [c for c in v.path if self.map.free(*c)]        # a new building on a leg end: skip it
+                cmds, due = self.order(v, legs, due) if legs else ([], None)
+                out += cmds
+            while not self.ai and due is not None and due <= t:
                 if not self.map.free(*v.path[0]):                       # a new building on the way: a new path
                     goal = v.path[-1]
                     v.path = (self.map.path(v.cell, {goal}, PATH_CELLS) or []) if self.map.free(*goal) else []
@@ -368,6 +400,7 @@ class Replay:
         events = sorted((e for e in self.data.get("timeline", []) + self.spawns() if e["time"] >= start),
                         key=lambda e: e["time"])
         t0, lag, n, k = clock(), 0.0, 0, 0
+        self.speed = speed
         while k < len(events) or self.moving:
             step = min(self.moving.values(), default=math.inf)        # the next step of a walking unit
             e = events[k] if k < len(events) and events[k]["time"] <= step else None

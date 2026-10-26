@@ -17,6 +17,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -41,6 +42,7 @@ import org.bukkit.scoreboard.Team;
  * Wandering, looking around, panic, the choice of its own targets (a zombie attacks each villager), despawning and
  * the burning in the sun go. So a unit stands still without an order and attacks only the target of an order,
  * and an attack order skips the units of the team of the target (scoreboard teams of the datapack, #358).
+ * A villager walks with its brain, not with goals: it gets NoAI when it arrives, else it strolls away (#438).
  * A hit of a unit with AoE2 values on another one takes the AoE2 damage (#514, combat.damage): max(1, attack - armor
  * + bonus). The plugin cancels the vanilla damage and sets the health: so vanilla armor items, enchantments, effects,
  * difficulty and knockback (AoE2 has none) do not change it. Max health is the attribute max_health.
@@ -112,6 +114,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             Order o = e.getValue();
             if (mob.getLocation().distanceSquared(o.goal) < 1.5 * 1.5) {
+                if (mob instanceof Villager) {      // its brain has no goals to drop: it strolls away (#438)
+                    mob.setAI(false);               // so it stands still until the next order
+                }
                 return true;                                          // arrived
             }
             var pf = mob.getPathfinder();
