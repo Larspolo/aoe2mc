@@ -8,6 +8,7 @@ MOVE or ORDER command selects walk to its target: on Paper the plugin walks them
 a group that goes to a tile stops there in rows (#410).
 
 Replay(game, data).run(speed) plays it; commands(e) gives the commands of one event (the unit tests use it).
+With bar=True (game/run.py --replay) a boss bar shows the game time, the speed and the progress (#684).
 """
 import json
 import math
@@ -32,6 +33,7 @@ MAX_FILL = 32768            # blocks of one /fill command
 FORMATION = 2              # blocks between the units of a group in a formation (#410)
 LEG = 48                    # path cells of one plugin order: within the reach of a Minecraft path search (#438)
 TALL = 48                   # blocks above the ground that a DELETE clears for a start building (no height in aoe2mc.json)
+BAR = "aoe2mc:replay"       # the boss bar with the game time (#684)
 PATH_CELLS = 20000          # cells that one path search may look at: a unit with no path stays (no time lag)
 SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, "PIKEMAN": 1.0, "EAGLE": 1.1,
           "ARCHER": 0.96, "SKIRMISHER": 0.96, "CROSSBOWMAN": 0.96, "CAVALRY_ARCHER": 1.4, "SCOUT": 1.2,
@@ -433,6 +435,15 @@ class Replay:
         step = max(1, MAX_FILL // ((x1 - x0 + 1) * (z1 - z0 + 1)))
         return [f"fill {x0} {y} {z0} {x1} {min(y + step - 1, y1)} {z1} {what}" for y in range(y0, y1 + 1, step)]
 
+    @staticmethod
+    def clock_commands(now, end, speed, done=False):
+        """The boss bar commands for game time `now` (ms) of a replay that ends at `end` (ms): the time and speed as
+        its name, the game seconds as its value (#684). `players @a` also adds the players who joined later."""
+        m, s = divmod(int(now) // 1000, 60)
+        name = f"End {m:02d}:{s:02d}" if done else f"{m:02d}:{s:02d} · speed {speed:g}×"
+        return [f"bossbar set {BAR} name {json.dumps(text(name), ensure_ascii=False)}",
+                f"bossbar set {BAR} value {min(int(now) // 1000, max(1, int(end) // 1000))}", f"bossbar set {BAR} players @a"]
+
     def send(self, cmds):
         t = time.perf_counter()
         for c in cmds:
@@ -440,14 +451,19 @@ class Replay:
         self.sent += len(cmds)
         self.busy += time.perf_counter() - t
 
-    def run(self, speed=1.0, start=0, clock=time.monotonic, sleep=time.sleep, log=print):
-        """Play the timeline from game time `start` (ms) at `speed` times the game speed. Returns the stats:
+    def run(self, speed=1.0, start=0, clock=time.monotonic, sleep=time.sleep, log=print, bar=False):
+        """Play the timeline from game time `start` (ms) at `speed` times the game speed; `bar`: show the game time
+        in a boss bar (`clock_commands`). Returns the stats:
         commands, events, the seconds of sending, the largest lag behind the timeline (s), commands per second
         (rate) and the commands per second that the timeline needs on average (need)."""
         events = sorted((e for e in self.data.get("timeline", []) + self.spawns() if e["time"] >= start),
                         key=lambda e: e["time"])
         t0, lag, n, k = clock(), 0.0, 0, 0
         self.speed = speed
+        end, shown = events[-1]["time"] if events else start, None
+        send = self.send if bar else lambda cmds: None
+        send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
+                   f"bossbar set {BAR} max {max(1, int(end) // 1000)}"])
         while k < len(events) or self.moving:
             step = min(self.moving.values(), default=math.inf)        # the next step of a walking unit
             e = events[k] if k < len(events) and events[k]["time"] <= step else None
@@ -458,6 +474,9 @@ class Replay:
             if wait > 0:
                 sleep(wait)
             lag = max(lag, clock() - t0 - due)
+            if int(now) // 1000 != shown:                              # at most once per game second
+                shown = int(now) // 1000
+                send(self.clock_commands(now, end, speed))
             if e is None:
                 self.send(self.steps(now))
                 continue
@@ -469,6 +488,7 @@ class Replay:
                     m, s = divmod(e["time"] // 1000, 60)
                     log(f"{m:02d}:{s:02d} {e['kind']} {e.get('name') or e.get('age') or ''} "
                         f"player {e.get('player')}: {len(cmds)} commands")
+        send(self.clock_commands(end, end, speed, done=True))
         span = (events[-1]["time"] - start) / 1000 / speed if events else 0
         return {"events": n, "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2),
                 "rate": round(self.sent / self.busy) if self.busy else 0, "need": round(self.sent / span) if span else 0}
