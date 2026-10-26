@@ -3961,7 +3961,7 @@ def barriers(c, fx, fz):
 # Egyptian and other landmarks, wooden bridges, fish traps, ruins
 # --------------------------------------------------------------------------------------------
 def great_pyramid(c, w, st, col, T, ctx):
-    """A true pyramid with smooth faces (stairs on every layer) and a golden top."""
+    """A true pyramid with smooth faces (stairs on every layer), a golden top and a passage to a burial chamber."""
     L = 0
     while w - 2 * L > 0:
         c.box(L, w - L, L, L + 1, L, w - L, "sandstone" if L % 3 else "smooth_sandstone")
@@ -3972,6 +3972,26 @@ def great_pyramid(c, w, st, col, T, ctx):
     m = w // 2                                                  # entrance on the north side
     c.box(m - 1, m + 1, 2, 4, 2, 3, "air")
     c.set(m - 1, 1, 1, "chiseled_sandstone"); c.set(m, 1, 1, "chiseled_sandstone")
+    r = w // 8
+    if r < 2:
+        return
+    x0, x1, z0, z1, s = m - r, m + r + 1, m - r, m + r + 1, r            # burial chamber in the centre (#528)
+    c.box(x0 - 1, x1 + 1, s - 1, s + 4, z0 - 1, z1 + 1, "polished_granite")
+    c.box(x0, x1, s, s + 3, z0, z1, "air")
+    y = 2                                                        # passage: level, then up a gallery of stairs
+    for z in range(2, z0):
+        if z0 - z <= s - 2:
+            c.box(m - 1, m + 1, y, y + 1, z, z + 1, "sandstone_stairs[facing=south,half=bottom]")
+            y += 1
+        c.box(m - 1, m + 1, y, y + 3, z, z + 1, "air")
+        if z == (2 + z0) // 2:
+            c.set(m, y + 2, z, "lantern[hanging=true]")
+    c.box(m, m + 1, s, s + 1, m - 1, m + 1, "polished_blackstone")                      # sarcophagus with a lid
+    c.box(m, m + 1, s + 1, s + 2, m - 1, m + 1, "polished_blackstone_slab[type=bottom]")
+    for x, z, b in ((x0, z1 - 1, "gold_block"), (x1 - 1, z1 - 1, "gold_block"),
+                    (x0, z0, "decorated_pot[facing=south,cracked=false]"), (x1 - 1, z0, "decorated_pot[facing=south,cracked=false]"),
+                    (x0, m, "lantern[hanging=false]"), (x1 - 1, m, "lantern[hanging=false]")):
+        c.set(x, s, z, b)
 
 
 def nubian_pyramid(c, w, st, col, T, ctx):
