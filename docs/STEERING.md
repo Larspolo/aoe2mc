@@ -87,6 +87,13 @@ The agent also improves CI, this script and the other parts of the system by its
 that only you can change (the environment, the network, the scheduled task, GitHub), it opens a `needs-human`
 ticket with numbered steps.
 
+## Pacing (no steering needed)
+
+The runs pace themselves. `tools/usage.py` reads the usage of your subscription (the 5-hour and 7-day windows, as
+the Claude Code CLI reports them) and computes the number of runs that uses the 5-hour window evenly until its reset,
+and not the week faster than it passes. Rule 4 of the scheduled task uses this number. You do not need to send
+percentages.
+
 ## CI and Actions minutes
 
 The repository is private, so GitHub Actions has 2,000 free minutes per month, and each job counts as at least

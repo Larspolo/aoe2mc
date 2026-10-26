@@ -74,6 +74,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Oracle's tripod (inside) | `cauldron` before the statue of the god, `decorated_pot`s (gifts) in the corners | |
 | Spiral stair in a tower (inside) | `*_stairs` around a 2 × 2 shaft, one step per block, a hanging `lantern` under every 6th step | |
 | Bench (inside) | `*_stairs` in a row | `storage`, `shelter`, `furnish_worship`, `town_hall` +37 more |
+| Sacred rock in a shrine (inside) | `stone`, `andesite` and `tuff` in a low mound, lit `candle`s around it, a ring of `quartz_pillar` columns | |
 | Hay loft (inside) | `spruce_slab[type=top]` with `hay_block` on it | `settlement`, `cart`, `stable`, `market` +22 more |
 | Light on a wall (inside) | `wall_torch` | `town_hall`, `archery_range`, `stable` |
 | Loom, cloth | `loom`, wool | `decorate`, `command_tent`, `dock` |
