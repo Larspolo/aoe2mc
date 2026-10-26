@@ -236,11 +236,13 @@ Then add one short comment on the status issue: what you did and what is next. A
 issue, not here (see "Ask the owner" in step 6).
 End it with one metrics line for each ticket of the run (the `improve` skill reads these lines):
 
-    Metrics: ticket #<n> · <size> · <merged|blocked|needs-human|none> · <minutes> min · setup <m> min · checks <k> · checks <c> min · time sinks: <list or "none"> · phases read <m> · claim <m> · code <m> · verify <m> · ci <m> · conflict <m> · report <m>
+    Metrics: ticket #<n> · <size> · <merged|pr #n|blocked|needs-human|none> · <minutes> min · setup <m> min · checks <k> · checks <c> min · time sinks: <list or "none"> · phases read <m> · claim <m> · code <m> · verify <m> · ci <m> · conflict <m> · report <m>
 
 Example: `Metrics: ticket #876 · size:S · merged · 45 min · setup 0 min · checks 2 · checks 6 min · time sinks: none ·
 phases read 8 · claim 1 · code 18 · verify 9 · ci 0 · conflict 5 · report 4` (one line).
 
+Result: `pr #n` when you pushed PR #n and Automerge merges it later (the usual case: you report before the merge);
+`none` only when the run stopped without a PR. `tools/health.py` counts the `pr #n` lines by the present PR state (#902).
 Put the output of `python3 tools/release.py` (the release bar of each goal, #879) above the `Usage:` line.
 Put the `Usage:` line of step 1.4 above the metrics lines, unchanged: `tools/health.py` measures the quota use of one
 run per hour from pairs of these lines, and `tools/usage.py --target` uses that value (#462).
@@ -256,6 +258,8 @@ GitHub sends this comment to the owner as a notification. Do not comment when no
 ## 9. Improve the process (before the commit in step 6)
 
 Answer these questions. Do the action for each "yes". Spend little time.
+A PR that changes the agent system gets the label `process` (`/issues/N/labels -f "labels[]=process"`, #901): the
+dashboard counts them.
 - Did something cost you time that one line of text prevents? → a pitfall of one topic (the game program, the replay,
   Paper, the server, records, a design) goes to the end of the "Pitfalls" section of its document (the list in
   `docs/LEARNINGS.md`, "Environment and libraries"); only a line for all runs goes to the end of its section in
@@ -276,8 +280,9 @@ Answer these questions. Do the action for each "yes". Spend little time.
 
 After step 8, run `python3 tools/claim.py 0 --review`: exit 0 means that this run does the process review of the
 time slot (#898; the slot is 45 minutes, and longer after reviews with no change). Then run the `improve` skill.
-Run it also when this run failed, or when a ticket took more than 90 minutes. It finds the largest loss in the
-metrics and makes one improvement. Then run `python3 tools/claim.py 0 --roadmap`: exit 0 means that this run
+Run it also when this run failed, or when a ticket took more than 90 minutes. The `improve` skill reviews the whole
+system (how runs start, the loop, time and quota, quality, weak spots, reuse), checks the last change, and makes one
+change only when a loss is above its threshold (#900). The questions above stay the small check of each ticket. Then run `python3 tools/claim.py 0 --roadmap`: exit 0 means that this run
 reviews the feature list of `docs/ROADMAP.md` (the `roadmap` skill, one review per 2 hours).
 Do not change a priority that the owner set. Propose it.
 

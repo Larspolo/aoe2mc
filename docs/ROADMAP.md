@@ -1,6 +1,6 @@
 # Roadmap
 
-The project has three goals. This file lists the features of each goal: done (`[x]`) or missing (`[ ]`).
+The project has three goals for the game and a fourth for the agent system that does the work. This file lists the features of each goal: done (`[x]`) or missing (`[ ]`).
 The `roadmap` skill makes the next epic from a missing feature when the queue has no other work, and every 10th
 run reviews this list (owner decisions, 2026-10-26: the agents make the epics themselves, at `P3`; the goals take
 turns). The owner changes the priority of an epic or adds a feature here at any time.
@@ -35,6 +35,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `play:military-train` Train all units at their buildings (barracks, archery range, stable, castle) with a queue and a rally point (epic #704)
 - [ ] `play:tech` Technologies and upgrades (blacksmith, university, unit lines) with cost, time and effect on the Minecraft attributes
 - [ ] `play:ages` Age up from the Dark Age to the Imperial Age: cost, time, the buildings and units that each age unlocks
+- [ ] `play:civs` Civilizations: the bonuses, unique technologies and team bonus of each civilization change costs and attributes
 - [x] `play:feedback` Show what the player points at and the result of each action (epic #793)
 - [ ] `play:control` Select and order many units: a selection box, groups, formations, an idle villager item (epic #742)
 - [ ] `play:garrison` Garrison units in buildings; the town center and castles shoot arrows (epic #810)
@@ -44,6 +45,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:two-players` Two human players against each other on one server
 - [ ] `play:walls` Build walls and gates; a gate opens for own units and stays closed for enemies
 - [ ] `play:siege` Siege units: rams against buildings, mangonels with area damage, trebuchets that pack and unpack
+- [ ] `play:naval` Docks and ships: fishing ships and fish traps gather food, warships fight on water, transport ships carry units (Minecraft boats)
 - [ ] `play:cheats` The AoE2 cheat codes in the chat when cheats are on (epic #820)
 - [ ] `play:fog` The explored area and the fog of war: a player sees only what the own units and buildings see
 - [ ] `play:save` Save a game of the game program and load it again (units, resources, queues, ages)
@@ -62,6 +64,14 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `replay:score` A score panel for each player: age, population, resources (estimated), military (epic #740)
 - [ ] `replay:effects` Show events on the map: research and age-up at the building, attacks, a marker where units die (epic #842)
 - [ ] `replay:postgame` A summary at the end of the replay, as the AoE2 achievements screen: military, economy, technology, timeline
+
+## 4. The agent system (`.claude/skills/`, `tools/`, `.github/workflows/`)
+
+Owner (2026-10-26): "reach the final goals efficiently while keeping up the quality and leaving behind a system to do
+other projects with". The `roadmap` skill makes no epics for this goal: the `improve` skill and the owner do.
+
+- [ ] `system:improve` The system improves itself in its own loop, over the whole system, and only where it pays (epic #908)
+- [ ] `system:reuse` The system can be set up for another project (epic #909)
 
 ## Principles
 

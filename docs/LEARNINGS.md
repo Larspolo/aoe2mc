@@ -20,16 +20,13 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - GitHub in cloud sessions: `gh api repos/Larspolo/aoe2mc/...` (REST) works. GraphQL (`gh issue list`, `gh pr create`),
   `search/...` and branch deletes give 403. A push to a new ref works, a non-fast-forward push fails: `tools/claim.py`
   uses it as a lock (#211). REST ref paths: `git/refs/heads/...`. `urllib` with a JSON body needs
-  `Content-Type: application/json`, else 415 (#345). GitHub text: quote the heredoc tag (`<<'EOF'`), `<<EOF` runs `` `name` ``.
+  `Content-Type: application/json`, else 415 (#345). GitHub text: quote the heredoc tag (`<<'EOF'`), `<<EOF` runs `` `name` ``. The clone is shallow: `git fetch --unshallow origin` before a scan of the history (#367).
 - Pitfalls of the Minecraft server, client and NBT (silent defaults, dropped tags): `docs/minecraft-versions.md`; of Paper
   and the game program: `docs/research/gameplay.md`; of RCON `@e`: `docs/datapack.md`; of records (`mgz`, test records):
   `docs/research/replays.md`; of designs (cylinders, furniture, renders, shelf items): the `design` skill ("Pitfalls").
 - `tools/claim.py` names the run by the local branch (`who()`): beat only from the session branch, never in parallel (#361).
   Run `claim.py N --guard` alone and read its exit code before the push: `guard; echo g=$? && git push` pushes also after
   a failed guard (#540).
-- The cloud clone is shallow: `git fetch --unshallow origin` before a scan of the history (#367).
-- A run of the scheduled task has only `subscribe_pr_activity` and `unsubscribe_pr_activity` of `claude-code-remote`:
-  no `fire_trigger`, `send_later` or `list_triggers` (checked 2026-10-26, #566). The pacer session starts the runs.
 - `addopts` has `-q`: `python3 -m pytest -q` gives no "N passed" line, so wait for the exit code. Foreground `sleep` is blocked:
   `run_in_background`, then `timeout 580 bash -c 'until [ -s OUT ]; do sleep 5; done'` (#413, #514).
 - `mcp__github__get_job_logs` gives HTTP 404 for the jobs of `ci.yml` (2026-10-26, #443): do not retry. Run its steps
@@ -40,12 +37,11 @@ of its document (named below; add at its end, do not change other lines: `merge=
   text (`redirect_stdout`), default players are RANDOM (`western`), `write_to_file` writes the output file name into the file
   (same bytes: `scenarios.save(..., name)`, #204), and it refuses to write over the file that it read: read a temporary copy
   (`scenarios.triggers`). No scenario in `examples/` and `samples/` has triggers: use the `triggers` scenario (#646).
-- Images of a check ticket (no PR): push an orphan commit (`git mktree`, `git commit-tree`) to `refs/heads/checks/N` and
-  link `https://raw.githubusercontent.com/Larspolo/aoe2mc/checks/N/NAME.png` in the comment (#614).
+- Images of a check ticket or a PR: push an orphan commit (`git mktree`, `git commit-tree`) to `refs/heads/checks/N` and
+  link `https://raw.githubusercontent.com/Larspolo/aoe2mc/checks/N/NAME.png` (#614). A second check: build the tree from
+  the old tree and the new files (`git ls-tree OLD` piped into `git mktree`), else the old image links break (#718).
 - Same output of a conversion: compare two worlds with `tools/world_diff.py A B`. `diff -r` and `cmp` always differ: the .mca time tables, gzip headers and `LastPlayed` hold the time (#702).
 - The auto mode classifier can deny `gh api .../issues/N -X PATCH -f state=closed` (closing a finished epic: "External System Writes"). Do not send the same close through another tool: add `needs-human` to the epic and a comment with the evidence for `@Larspolo` (#862).
-- A second check of a check ticket: build the tree of `checks/N` from the old tree and the new files (`git ls-tree OLD` piped into `git mktree`). A tree with only the new files breaks the image links of the first check (#718).
-- `tp PLAYER X Y Z facing X Y Z` aims from the feet, not from the eyes: `Gather.click` then picks nothing. For a click check compute the yaw and the pitch from the eye (y + 1.62) yourself (#823, script on `checks/823`).
 - `S=dir && cmd1 & cmd2 $S/x`: the `&` puts the whole `S=... && cmd1` list in a background subshell, so `cmd2` sees an empty `S` and writes to `/x` (#865). Set the variable on its own line first.
 
 ## Code
@@ -73,16 +69,11 @@ of its document (named below; add at its end, do not change other lines: `merge=
   added a `furnish()`; the second broke main, #263).
 - "units in a block": `AOE2MC_DEBUG=1` names the block; list the `aoe2mc.json` objects with a `tile` near the unit to
   find its source (#415: a `PLANT_SHRUB` on the same block, not the tree that the ticket named).
-- A gate footprint is not in `cols.blocked` (units walk through the passage): `place_building` blocks only the columns with a solid block at head height (#577). Reproduce "units in a block" of a campaign with `tests/test_scx.py` `build()` and random units on the wall line.
+- A gate footprint is not in `cols.blocked` (units walk through the passage): `place_building` blocks only the columns with a solid block at head height (#577). Reproduce "units in a block" of a campaign with `tests/test_scx.py` `build()` and random units on the wall line. With a step under a gate, the foundation lifts the passage floor: `buildings.FLOORS` holds the stand height (#773); a slope: `elevation` in `build()` (`tests/test_scx_walls.py`).
 - A change to the blocks of an object: also run the `-m mc` tests of the files that name it (`grep -l NAME tests/`): the fast suite skips them, and #590 broke `test_villager_forages_on_a_server` (fixed in #602).
 - A merge conflict between two new code blocks: do not join the two sides by a script. A hunk can cut through a block (#517: the Java of the plugin did not compile). Apply your change again on main's file, then build.
 - The full test suite has `tools/` and `game/` on `sys.path`: a new `game/X.py` with the name of a `tools/X.py` (`health`) imports the wrong module there, but its own test file passes alone (#659). Check `ls tools/X.py` first.
 - `[f"...{o['id']}"] * ("id" in o)` evaluates the f-string also when the factor is 0 (KeyError): use `o.get('id')` in it (#681).
 - `place_objects` tests `"FLAG" in name` before `units.invisible(name)`: an invisible object named `*FLAG*` becomes a flag. Give it a name of `units.INVISIBLE` without `FLAG` (`INVISIBLE_OBJECT`, #772).
-- Before #773 the ship and bridge paths of `entity_chunk` counted "units in a block" without a debug line. With a step under a gate, the foundation lifts the passage floor: `buildings.FLOORS` holds the stand height. Reproduce a slope with `elevation` in `tests/test_scx.py` `build()` (`tests/test_scx_walls.py`).
 - The free space of a design is `-1` (unset) or `air`: an open hall (the western `TOWN_CENTER`) has no `air` cell inside. `buildings.rooms()` takes both, the `air` cells first (#807).
-- `test_gather_attack.click` puts the eye at the ground height (y 64): its ray cannot hit the ground, so `pick_ground` and `build.pick` give the wrong cell. For a ground click put the eye 2 blocks up (`tests/test_order_marker.py` `look`, #796).
-- `Replay.run` gives `control["time"]` as a float (ms): a test of a poll action with an int time hides a format error like `:02d` (#803). Test with a float time, or with `Replay.run` and the `Clock` fake of `tests/test_replay_control.py`.
-- `FakeServer` of `tests/test_gather.py` moves an entity only on `tp U X Y Z <more>` (a `tp` without `facing` keeps its Pos): check the `tp` text in `server.log`. A fake answer for `execute if entity X` must skip `@a[scores=...]`: `Gather.clicks` asks that (#808).
-- Two equal melee units in a duel: the result depends on the tick of the first hit. A defender that hits back in the same tick ties (both die); `attackBack` gives it half a reload of reaction (#848).
-- After Automerge deleted the session branch, `git fetch origin main <branch>` fails as a whole ("couldn't find remote ref") and does not update `origin/main`: a `&&` chain after it stops, and a later `checkout -B` takes the old main. Fetch `main` alone first.
+
