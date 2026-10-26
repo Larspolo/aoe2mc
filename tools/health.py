@@ -118,10 +118,23 @@ def burn_pairs(samples, min_hours=0.25):
     return out
 
 
+def burn_ratio(samples, need=5):
+    """Share of the 5-hour quota that one run uses per hour: the sum of the usage rises divided by the sum of the
+    claim-hours (hours x mean claims) of consecutive samples in the same window, or None with fewer than `need` such
+    intervals. Not a median of pairs: a pair with few claims gives a large value, because the runs between tickets
+    and the other sessions also use the quota (0.111 against 0.059 on 2026-10-26, #582)."""
+    rise = claim_hours = 0.0
+    n = 0
+    for a, b in zip(samples, samples[1:]):
+        h = (b[0] - a[0]).total_seconds() / 3600
+        if abs((b[2] - a[2]).total_seconds()) < 600 and b[1] >= a[1] and h > 0 and a[3] + b[3] > 0:
+            rise, claim_hours, n = rise + b[1] - a[1], claim_hours + h * (a[3] + b[3]) / 2, n + 1
+    return rise / claim_hours if n >= need else None
+
+
 def measured_burn(comments, now, hours=24, need=5):
-    """The median burn of the pairs of the last `hours`, or None when there are fewer than `need` pairs."""
-    pairs = burn_pairs([s for s in samples(comments) if s[0] >= now - datetime.timedelta(hours=hours)])
-    return med(pairs) if len(pairs) >= need else None
+    """The burn ratio of the samples of the last `hours`, or None when there are fewer than `need` intervals."""
+    return burn_ratio([s for s in samples(comments) if s[0] >= now - datetime.timedelta(hours=hours)], need)
 
 
 def status_comments(hours=24):
@@ -150,8 +163,10 @@ def report(since, runs, jobs, status_comments, comments, prs, files):
     out.append(f"Setup (median min of {len(setup)} Metrics lines): {fmt(med(setup))}")
     e = events(comments)
     out.append(f"Takeovers {e['takeovers']}, releases {e['releases']}, merge conflicts {e['conflicts']}")
-    b = burn_pairs([x for x in samples(status_comments) if x[0] >= since])
-    out.append(f"Burn per run-hour (median of {len(b)} pairs of Usage lines): {'-' if not b else f'{med(b):.3f}'}")
+    s = [x for x in samples(status_comments) if x[0] >= since]
+    b, r = burn_pairs(s), burn_ratio(s)
+    out.append(f"Burn per run-hour (ratio of sums of {len(s)} Usage lines, used by usage.py): "
+               f"{'-' if r is None else f'{r:.3f}'} · median of {len(b)} pairs: {'-' if not b else f'{med(b):.3f}'}")
     c2m = claim_to_merge(prs, comments, since)
     out.append(f"Claim to merge (median min of {len(c2m)} PRs): {fmt(med(c2m))}")
     bad = bad_files(files)
