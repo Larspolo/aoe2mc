@@ -136,7 +136,9 @@ class Game:
         cache = os.path.join(os.path.dirname(self.world), "usercache.json")
         self.usercache = None if os.path.exists(cache) else cache
         self.folder = tempfile.mkdtemp(dir=mc_check.workdir())
-        self.port, self.game_port, password = mc_check.free_port(), mc_check.free_port(), secrets.token_hex(16)
+        if getattr(self, "port", None) is None:      # a restart keeps the ports: the players join again (#979)
+            self.port, self.game_port = mc_check.free_port(), mc_check.free_port()
+        password = secrets.token_hex(16)
         with open(os.path.join(self.folder, "eula.txt"), "w") as f:
             f.write("eula=true\n")
         for p in plugins:
@@ -244,6 +246,27 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     return g
 
 
+KEEP = ("playerdata", "stats", "advancements", "session.lock")   # the players stay where they are after a restart
+
+
+def save(game):
+    """A copy of the world of the running server (save-all flush first). Returns its folder."""
+    game.command("save-off")                         # no autosave while it copies
+    game.command("save-all flush")
+    folder = tempfile.mkdtemp(dir=mc_check.workdir())
+    shutil.copytree(game.world, folder, dirs_exist_ok=True, ignore=lambda d, names: [n for n in names if n in KEEP])
+    game.command("save-on")
+    return folder
+
+
+def restore(saved, world):
+    """Put the world back to the copy of `save` (the server is stopped). The player files stay."""
+    for name in set(os.listdir(world)) - set(KEEP):
+        path = os.path.join(world, name)
+        shutil.rmtree(path) if os.path.isdir(path) and not os.path.islink(path) else os.remove(path)
+    shutil.copytree(saved, world, dirs_exist_ok=True)
+
+
 def replay(game, world, speed=1.0, start="0:00"):
     import replay
     start = replay.aoe2mc.game_time(start)
@@ -251,16 +274,31 @@ def replay(game, world, speed=1.0, start="0:00"):
         data = json.load(f)
     if "timeline" not in data:
         sys.exit("--replay needs a world of a recorded game (.aoe2record)")
-    game.forceload()
-    if game.kind == "paper":                         # the start units and buildings fight with AoE2 values (#632)
-        import combat
-        combat.setup(game, data)
     import replay_input
     control = replay_input.Input(game)              # hotbar items, menu and /trigger aoe_replay (#688)
-    control.setup()
+
+    def setup():
+        game.forceload()
+        if game.kind == "paper":                     # the start units and buildings fight with AoE2 values (#632)
+            import combat
+            combat.setup(game, data)
+        control.setup()
+    setup()
+    saved = save(game)                               # the start state for a jump back (#979)
+
+    def restart():
+        print("Jump back: the server restarts on the start world.", file=sys.stderr)
+        game.stop()
+        restore(saved, game.world)
+        game.start()
+        setup()
     print(f"Join the server localhost:{game.game_port} (Minecraft {game.version}). The replay starts now "
           f"at speed {speed}. Right click the items in your hotbar, or /trigger aoe_replay set N.", file=sys.stderr)
-    stats = replay.Replay(game, data, game.version, ai=game.kind == "paper").run(speed, start, bar=True, poll=control)
+    try:
+        stats = replay.live(lambda: replay.Replay(game, data, game.version, ai=game.kind == "paper"), speed, start,
+                            restart, bar=True, poll=control)
+    finally:
+        shutil.rmtree(saved, ignore_errors=True)
     print(f"{stats['events']} events, {stats['commands']} commands in {stats['busy']} s "
           f"({stats['rate']} commands per second, the timeline needs {stats['need']}), largest lag {stats['lag']} s")
     return stats
