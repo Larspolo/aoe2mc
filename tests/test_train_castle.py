@@ -31,7 +31,7 @@ def menus(server):
 def test_the_castle_menu_has_the_unique_unit_of_the_civilization():
     server, g = setup()
     assert train.open_menu(g, "Steve", (12, 4)) == (10, 14, 2, 6)
-    assert menus(server) == ["aoe menu Steve Castle 0:skeleton_spawn_egg:Longbowman:35 wood · 40 gold · 17 s · queue 0/15"]
+    assert menus(server) == ["aoe menu Steve Castle 0:skeleton_spawn_egg:Longbowman:35 wood · 40 gold · 18 s · queue 0/15"]
     server, g = setup("PERSIANS")
     train.open_menu(g, "Steve", (12, 4))
     assert menus(server)[-1].startswith("aoe menu Steve Castle 0:ravager_spawn_egg:War Elephant:170 food · 85 gold")
@@ -55,7 +55,7 @@ def test_the_longbowman_appears_with_the_converter_look_and_the_aoe2_values():
     server, g = setup()
     rect = train.open_menu(g, "Steve", (12, 4))
     train.order(g, "Steve", rect, 0)
-    assert train.tick(g, 16) == []
+    assert train.tick(g, 17) == []
     uuid, = train.tick(g, 1)
     summon, = [c for c in server.log if c.startswith("summon")]
     assert re.match(r"summon minecraft:skeleton \S+ 64.0 6.5 ", summon)

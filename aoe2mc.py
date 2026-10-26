@@ -465,6 +465,30 @@ def de_queue(parse_action):
     return parse
 
 
+@contextlib.contextmanager
+def own_selection():
+    """mgz 1.8.51 (model.inputs.Inputs.add_action) gives a command without own object IDs the last IDs of its action
+    type of any player: so player 2 moved the villagers of player 1 (#828). In this block the last IDs of the same
+    player and action type fill them."""
+    from mgz.model.inputs import Inputs
+    add = Inputs.add_action
+
+    def add_action(self, action):
+        last = self.__dict__.setdefault("own_ids", {})
+        key = (action.player.number if action.player else None, action.type)
+        if action.payload.get("object_ids"):
+            last[key] = action.payload["object_ids"]
+        elif "object_ids" in action.payload and key in last:
+            action.payload["object_ids"] = last[key]
+        self._oid_cache = {}                                       # mgz copies no IDs of other players
+        add(self, action)
+    Inputs.add_action = add_action
+    try:
+        yield
+    finally:
+        Inputs.add_action = add
+
+
 TIMELINE_KEYS = {"building_id": "type", "unit_id": "type", "technology_id": "technology_id", "object_ids": "objects",
                  "target_id": "target", "amount": "amount", "resource": "resource", "stance": "stance",
                  "formation": "formation", "order": "order", "command": "command"}
@@ -482,7 +506,7 @@ def read_timeline(path):
     names, parse = object_kinds(), fast.parse_action
     fast.parse_action = de_queue(parse)
     try:
-        with open(path, "rb") as f:
+        with open(path, "rb") as f, own_selection():
             match = parse_match(f)
     except RuntimeError:
         return None

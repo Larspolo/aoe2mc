@@ -111,6 +111,9 @@ Item 6 (fog of war) has no ticket.
 Selection of many units (#742): the owner chose in #745 a selection wand with two corners for the AoE2 selection box
 (option A, #778: `Gather.box`, item `warped_fungus_on_a_stick` with its own "used" statistic `aoe_box`), and hotbar
 items for the control groups later (option C, #779). A radius selection (option B) was not chosen.
+Control groups (#779, `Gather.group`): carrots on a stick "Group 1" to "Group 5" in hotbar slots 5 to 9
+(`custom_data` `{aoe_group:N}`). A shift right click (vanilla predicate `is_sneaking`) saves the selection as group N,
+a right click selects the live units of group N. The click item is `carrot_on_a_stick[!custom_data]`.
 
 ## Measured gather timing (#289)
 
@@ -244,3 +247,4 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - `Replay.run` gives `control["time"]` as a float (ms): a test of a poll action with an int time hides a format error like `:02d` (#803). Test with a float time, or with `Replay.run` and the `Clock` fake of `tests/test_replay_control.py`.
 - `Gather.__new__` adapters (`tests/test_menu.py`, `Replay.crew`) have no attribute of `Gather.__init__`: a new attribute that `clicks()` or `setup()` reads also needs a class default (`cheats = False`, #816).
 - `Replay.run(..., bar=False)` sends no `tag ... add aoe2mc.pop` for the start units (the `send` of the bar): a tool that selects `@e[tag=aoe2mc.pop]` must pass `bar=True`, as `run.py --replay`. `v.pos` of a walking unit is the end of its leg, not the place where it is due now (#813).
+- `tests/test_menu.py` `test_gather_reads_the_menu_clicks` makes a `Gather.__new__` with only the attributes of `clicks()`: a new attribute that `clicks()` reads (`calls`, #779) needs a line there too.

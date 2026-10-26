@@ -81,7 +81,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "HORSE_COLLAR": 20,
                "HUSKARL": 13,
                "JANISSARY": 21,
-               "LONGBOWMAN": 17,
+               "LONGBOWMAN": 18,
                "MAMELUKE": 23,
                "MANGUDAI": 26,
                "SAMURAI": 9,
@@ -450,7 +450,7 @@ def tick(g, work):
                 continue
             room -= 1
             q[0]["waits"] = False
-        q[0]["progress"] += work / TRAIN_TIMES[q[0]["name"]]
+        q[0]["progress"] += 1 if getattr(g, "aegis", False) else work / TRAIN_TIMES[q[0]["name"]]   # cheats.aegis
         if q[0]["progress"] >= 1 and q[0]["name"] in TECHS:
             research(g, q.pop(0))
         elif q[0]["progress"] >= 1 and (v := spawn(g, rect, q.pop(0)["name"])):

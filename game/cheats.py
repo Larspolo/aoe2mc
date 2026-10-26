@@ -6,6 +6,8 @@ aoe_cheat of the player to the number of the code in NAMES (1 = the first). gath
 reads and resets the score and does the effect. Vanilla has no event for a chat text, so the plugin is necessary.
 The codes and amounts of AoE2 DE: the AoE2 wiki, "Cheat code (Age of Empires II)" (10,000 of one resource since
 The Forgotten, before it 1,000). Minecraft has no fog of war: "marco" and "polo" only answer in the chat.
+"aegis" (#817) is a toggle: g.aegis makes building (gather.Gather.step), training and research (train.tick) and
+gathering (gather.Gather.work_time) instant, for all players as in AoE2.
 """
 import re
 from urllib.parse import quote
@@ -13,7 +15,15 @@ from urllib.parse import quote
 OBJECTIVE = "aoe_cheat"
 ALL = {"food": 100000, "wood": 100000, "gold": 100000, "stone": 100000}
 MAP = "The map is open already: Minecraft has no fog of war."
-CODES = {                                     # code -> the resources that it gives, or the chat answer
+
+
+def aegis(g, player):
+    g.aegis = not g.aegis
+    g.command(f'tellraw {player} {{"text":"Aegis {"on" if g.aegis else "off"}"}}')
+
+
+CODES = {                                     # code -> the resources that it gives, the chat answer or a function
+    "aegis": aegis,
     "cheese steak jimmy's": {"food": 10000},
     "lumberjack": {"wood": 10000},
     "marco": MAP,
@@ -36,6 +46,8 @@ def setup(g):
 
 def apply(g, player, code):
     effect = CODES[code]
+    if callable(effect):
+        return effect(g, player)
     if isinstance(effect, str):
         g.command(f'tellraw {player} {{"text":"{effect}"}}')
         return
