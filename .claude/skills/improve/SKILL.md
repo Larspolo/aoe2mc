@@ -62,6 +62,11 @@ patterns and their fixes:
 
 ## 3. Make the improvement
 
+First list the open `tooling` and process tickets (`/issues?state=open&labels=tooling`, and titles that start with
+"Process:"). When one already names the pattern, do not make a second change: claim that ticket (`tools/claim.py N`)
+and do it as this improvement, or, when another run owns it, choose the next pattern. PR #917 of a review and the
+ticket #903 made the same change of the autopilot skill at the same time: one PR conflicted and was wasted.
+
 - Small (text in a skill, `CLAUDE.md`, `LEARNINGS.md`, a setting, a workflow step, the setup script): do it now,
   in one PR with the title "Process: <what>". Verify level 1. Merge it like a ticket.
 - Large (a new tool, a test framework change): make a `tooling` ticket with priority `P1`.
