@@ -44,6 +44,8 @@ of its document (named below): this file loads into each run. The `improve` skil
   the file: for the same bytes use `scenarios.save(..., name)` (#204).
 - Images of a check ticket (no PR): push an orphan commit (`git mktree`, `git commit-tree`) to `refs/heads/checks/N` and
   link `https://raw.githubusercontent.com/Larspolo/aoe2mc/checks/N/NAME.png` in the comment (#614).
+- AoE2ScenarioParser refuses to write over the file that it read ("Overwriting the source scenario file"): read a
+  temporary copy (`scenarios.triggers`). No scenario in `examples/` and `samples/` has triggers: use the `triggers` scenario (#646).
 
 ## Code
 
@@ -78,3 +80,4 @@ of its document (named below): this file loads into each run. The `improve` skil
 - A gate footprint is not in `cols.blocked` (units walk through the passage): `place_building` blocks only the columns with a solid block at head height (#577). Reproduce "units in a block" of a campaign with `tests/test_scx.py` `build()` and random units on the wall line.
 - A change to the blocks of an object: also run the `-m mc` tests of the files that name it (`grep -l NAME tests/`): the fast suite skips them, and #590 broke `test_villager_forages_on_a_server` (fixed in #602).
 - A merge conflict between two new code blocks: do not join the two sides by a script. A hunk can cut through a block (#517: the Java of the plugin did not compile). Apply your change again on main's file, then build.
+- `game/build.py` has a function `menu()` (the chat text of /trigger): it imports `game/menu.py` as `chest` (#621).
