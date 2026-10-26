@@ -4,6 +4,8 @@ an own town center queues a villager and takes its cost from the stock, as in Ao
 a time, in the AoE2 train time; then the villager appears on a free cell in front of it, with the NBT of the converter
 (units.make_entity) and the AoE2 hit points (combat.stats_command), and a click can select it and send it to gather.
 gather.Gather.click calls queue(), gather.Gather.step calls tick().
+The population limit (#613): each complete own town center and house gives 5, at most 200. At the limit the unit at
+the head of a queue does not start; the sidebar shows the population and the limit.
 """
 import math
 import os
@@ -20,6 +22,9 @@ import build  # noqa: E402
 COSTS = {"VILLAGER_MALE": {"food": 50}}                            # as in AoE2
 TRAIN_TIMES = {"VILLAGER_MALE": 25}                                # AoE2 seconds
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
+HOUSING = {"TOWN_CENTER": 5, "HOUSE": 5}                           # population of a complete building, as in AoE2
+LIMIT = 200                                                        # the AoE2 population limit
+CENSUS = 2.0                                                       # AoE2 seconds between two counts of the live units
 
 
 def homes(g):
@@ -47,19 +52,56 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
     for r, v in cost.items():
         g.stock[r] -= v
         g.command(f"scoreboard players remove {r.capitalize()} aoe_res {v}")
-    q.append({"name": name, "progress": 0.0})
+    q.append({"name": name, "progress": 0.0, "player": player})
     return rect
+
+
+def limit(g):
+    """The population limit: 5 per complete own town center and house, at most 200."""
+    names = [o["name"] for o in g.data["objects"] if o["kind"] == "building" and o["player"] == g.player]
+    names += [s["name"] for s in g.sites if s.get("done") and s["player"] == g.player]
+    return min(LIMIT, sum(HOUSING.get(n, 0) for n in names))
+
+
+def census(g):
+    """Count the live villagers and military units of the player (a dead unit has no position) and show the counts."""
+    g.pop, g.census = len(g.positions(list(g.villagers) + list(g.soldiers))), 0.0
+    sidebar(g)
+
+
+def sidebar(g):
+    """Show the population and the limit as two lines of the sidebar (aoe_res), only when they changed."""
+    for name, n in (("Population", g.pop), ("Limit", limit(g))):
+        if g.shown.get(name) != n:
+            g.shown[name] = n
+            g.command(f"scoreboard players set {name} aoe_res {n}")
 
 
 def tick(g, work):
     """Add work (AoE2 seconds) to the first unit of each queue; a unit that is complete appears. Returns the new
-    gather.Villager objects."""
-    out = []
+    gather.Villager objects. A unit starts only when the population and the started units are below the limit."""
+    g.census += work
+    if g.census >= CENSUS:
+        census(g)
+    cap, out = limit(g), []
+    room = cap - g.pop - sum(1 for q in g.queues.values() if q and q[0]["progress"] > 0)
     for rect, q in g.queues.items():
-        if q:
-            q[0]["progress"] += work / TRAIN_TIMES[q[0]["name"]]
-            if q[0]["progress"] >= 1:
-                out += [v for v in [spawn(g, rect, q.pop(0)["name"])] if v]
+        if not q:
+            continue
+        if q[0]["progress"] == 0:
+            if room <= 0:
+                if not q[0].get("waits"):                              # as the "need more houses" message of AoE2
+                    q[0]["waits"] = True
+                    build.say(g, q[0]["player"], f"The population is at the limit ({g.pop}/{cap}): "
+                              + ("build more houses." if cap < LIMIT else "no more units."))
+                continue
+            room -= 1
+            q[0]["waits"] = False
+        q[0]["progress"] += work / TRAIN_TIMES[q[0]["name"]]
+        if q[0]["progress"] >= 1 and (v := spawn(g, rect, q.pop(0)["name"])):
+            out.append(v)
+            g.pop += 1
+    sidebar(g)
     return out
 
 
