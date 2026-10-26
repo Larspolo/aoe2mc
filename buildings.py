@@ -3010,22 +3010,99 @@ def aqueduct(c, w, st, col, T, ctx):
 
 
 def army_tent(c, w, st, col, T, ctx):
-    x0, x1 = 0, w
+    """Tents (#454), like the game models: ARMY_TENT_A, C, E are round with upright canvas walls, player color trim and
+    a low dome (the large army tent), B, D, F are square pavilions with wooden poles and a pyramid roof (the small one).
+    GREEK_ARMY_TENT is a ridge tent of canvas, TENT_A to E are nomad tents of brown hide with a peak. The door is
+    in the south."""
+    name = ctx.get("name", "ARMY_TENT_A")
+    if "GREEK" in name:
+        return ridge_tent(c, w, col)
+    if name.startswith("TENT"):
+        return hide_tent(c, w, col, name)
+    m, cx = w // 2, (w - 1) / 2
+    if w < 4:
+        c.box(0, w, 1, 2, 0, w, "white_wool")
+        c.flag(m, 2, m, col, 1)
+        return
+    if name[-1:] in "BDF":                                 # the small army tent: a square pavilion
+        a, b = 1, w - 1
+        c.walls(a, b, 1, 5, a, b, "white_wool")
+        for x in (a, b - 1):
+            for z in (a, b - 1):
+                c.box(x, x + 1, 1, 6, z, z + 1, "stripped_spruce_log[axis=y]")   # poles up to the roof edge
+        k = 1
+        while b - a > 1:                                   # canvas roof, steps of wool
+            c.walls(a, b, 4 + k, 5 + k, a, b, "white_wool")
+            a, b, k = a + 1, b - 1, k + 1
+        c.box(a, b, 4 + k, 5 + k, a, b, "white_wool")
+        c.box(m - 1, m + 1, 1, 4, w - 2, w - 1, "air")       # open front with flaps in the player color
+        c.box(m - 2, m - 1, 1, 4, w - 2, w - 1, f"{col}_wool"); c.box(m + 1, m + 2, 1, 4, w - 2, w - 1, f"{col}_wool")
+        c.box(2, w - 2, 1, 2, 2, w - 2, "yellow_carpet")    # the yellow lining inside
+        c.set(0, 1, w - 1, "barrel[facing=up,open=false]")
+        c.flag(m, 5 + k, m, col, 1)
+    else:                                                  # the large army tent: round, upright walls, low dome
+        r = w / 2 - 0.3
+        c.cylinder(cx, cx, r, 1, 4, "white_wool", hollow=True)
+        c.cylinder(cx, cx, r, 1, 2, f"{col}_wool", hollow=True)       # trim at the ground and under the roof
+        c.cylinder(cx, cx, r, 4, 5, f"{col}_wool", hollow=True)
+        c.cylinder(cx, cx, r - 1, 4, 5, "white_wool")
+        c.cylinder(cx, cx, r - 2, 5, 6, "white_wool")
+        c.box(m - 1, m + 1, 1, 3, int(cx + r) - 1, w, "air")           # the open door flap
+        c.flag(m, 6, m, col, 2)                                       # the center pole
+    if w >= 6:                                             # inside (#335): bedrolls along the sides, spears, a lamp
+        for x, z in ((2, 2), (w - 3, 2)):
+            c.furniture([(x, 1, z, f"{col}_bed[facing=north,occupied=false,part=head]"),
+                         (x, 1, z + 1, f"{col}_bed[facing=north,occupied=false,part=foot]")])
+        c.furniture([(m, 1, 2, "lightning_rod[facing=up,powered=false,waterlogged=false]"),
+                     (m - 1, 1, 2, "lantern[hanging=false,waterlogged=false]")])
+
+
+def ridge_tent(c, w, col):
+    """Greek army tent: a canvas ridge tent (the ridge runs north to south), the door in the south gable, and the
+    shield and pots of the player in front."""
+    m = w // 2
+    z1 = max(w - 1, 2)                                     # the front row stays free for the shield and the pots
     for i in range((w + 1) // 2):
         y = 1 + i
-        for z in (i, w - 1 - i):
-            c.box(x0, x1, y, y + 1, z, z + 1, f"{col}_wool" if i == 0 else "white_wool")
-        c.box(x0 + 1, x1 - 1, 1, y, i + 1, w - 1 - i, "air")
-    c.box(x0, x0 + 1, 1, 2, 1, w - 1, "white_wool"); c.box(x1 - 1, x1, 1, 2, 1, w - 1, "white_wool")
-    c.box(x1 - 1, x1, 1, 3, w // 2 - 1, w // 2 + 1, "air")
-    c.flag(x0, (w + 1) // 2 + 1, w // 2, col, 2)
-    if w >= 6:                                             # inside (#335): bedrolls along the sides, spears, a lamp
-        for z, face in ((2, "west"), (w - 3, "west")):
-            for x in range(x0 + 1, x1 - 3, 2):
-                c.set(x, 1, z, f"{col}_bed[facing={face},occupied=false,part=head]")
-                c.set(x + 1, 1, z, f"{col}_bed[facing={face},occupied=false,part=foot]")
-        c.box(x0 + 1, x0 + 2, 1, 2, w // 2 - 1, w // 2 + 1, "lightning_rod[facing=up,powered=false,waterlogged=false]")
-        c.set(x0 + 2, 1, w // 2 - 1, "lantern[hanging=false,waterlogged=false]")
+        for x in (i, w - 1 - i):
+            c.box(x, x + 1, y, y + 1, 0, z1, "white_wool")
+        c.box(i + 1, w - 1 - i, 1, y + 1, 1, z1 - 1, "air")
+    c.box(1, w - 1, 1, (w + 1) // 2, 0, 1, "white_wool")    # the back gable
+    for i in range((w + 1) // 2 - 1):
+        c.box(i + 1, w - 1 - i, 1 + i, 2 + i, z1 - 1, z1, "light_gray_wool")   # the front gable
+    c.box(m - 1, m + 1, 1, 3, z1 - 1, z1, "air")
+    if w >= 6:
+        c.set(1, 1, w - 1, "decorated_pot[cracked=false,facing=south,waterlogged=false]")
+        c.set(w - 2, 1, w - 1, "lightning_rod[facing=up,powered=false,waterlogged=false]")   # a spear
+        c.set(m - 2, 2, z1, f"{col}_wall_banner[facing=south]")        # the round shield in the player color
+        for x in (2, w - 3):
+            c.furniture([(x, 1, 2, f"{col}_bed[facing=north,occupied=false,part=head]"),
+                         (x, 1, 3, f"{col}_bed[facing=north,occupied=false,part=foot]")])
+        c.furniture([(m, 1, 1, "lantern[hanging=false,waterlogged=false]")])
+
+
+def hide_tent(c, w, col, name):
+    """Nomad tent: a dome of brown hide with a band of ornaments and a peak, a wide door in the south, rugs, cushions
+    and pots in front. The letter changes the height of the peak."""
+    m, cx = w // 2, (w - 1) / 2
+    r = w / 2 - 0.3
+    c.cylinder(cx, cx, r, 1, 3, "brown_wool", hollow=True)
+    ring, _, _ = c.disc_mask(cx, cx, r)
+    top = c.cone(cx, cx, r - 0.5, 3, "brown_wool")
+    for x in range(w):                                     # the ornament band: light stitches on the hide
+        for z in range(w):
+            if (x + z) % 2 and c.get(x, 2, z) == c.id("brown_wool"):
+                c.set(x, 2, z, "white_wool" if (x * 3 + z) % 4 < 2 else "orange_wool")
+    peak = 1 + (ord(name[-1]) - ord("A")) % 2
+    c.box(m, m + 1, top + 1, top + 1 + peak, m, m + 1, "brown_wool")
+    c.set(m, top + 1 + peak, m, "spruce_fence")
+    c.box(m - 1, m + 2, 1, 3, int(cx + r) - 1, w, "air")             # the wide door
+    if w >= 6:
+        c.box(2, w - 2, 1, 2, 2, w - 3, "red_carpet")
+        c.furniture([(2, 1, 2, "blue_wool"), (w - 3, 1, 2, "orange_wool"),       # cushions at the back
+                     (m, 1, 2, "lantern[hanging=false,waterlogged=false]")])
+        c.set(0, 1, w - 1, "decorated_pot[cracked=false,facing=south,waterlogged=false]")
+        c.set(w - 1, 1, w - 1, "barrel[facing=up,open=false]")
 
 
 def command_tent(c, w, st, col, T, ctx, dropsite=False):
