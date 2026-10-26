@@ -73,6 +73,12 @@ CIVILIANS = ("VILLAGER", "REPAIRER", "MONK", "KING", "TRADE", "FISHING_SHIP", "T
 SELECT = "aoe2mc.selected"                                         # entity tag of the selected units
 TYPE_REACH = 16                                                    # blocks: a second click selects its type this near (#743)
 WAND = "warped_fungus_on_a_stick"     # the selection wand: a second item with its own "used" statistic (#778)
+# Control groups (#779, owner choice #745): carrots on a stick with custom_data {aoe_group:N} in hotbar slots 4..8
+# (keys 5-9), with the model of a dye. A shift right click saves the selection as group N, a right click selects it.
+GROUPS = {n: (3 + n, dye) for n, dye in enumerate(("red_dye", "yellow_dye", "lime_dye", "light_blue_dye",
+                                                     "magenta_dye"), 1)}   # group: hotbar slot, item model
+GROUP_GIVE = 20                                                    # clicks() calls between two checks of the items
+SNEAK = '{condition:"minecraft:entity_properties",entity:"this",predicate:{flags:{is_sneaking:true}}}'
 MARK = {"go": "[0.2,1.0,0.2]", "attack": "[1.0,0.15,0.15]"}       # dust colors of the order marker (#796): green, red
 MARK_POINTS = 12                                                   # dust points on the ring of the order marker
 # The look and sound of one gather step at the resource (#592): block particles and a vanilla sound. A villager has
@@ -85,6 +91,12 @@ WORK_LOOK = {"wood": ("minecraft:oak_log", "minecraft:block.wood.hit"),
              "stone": ("minecraft:stone", "minecraft:block.stone.hit")}
 EVENTS = {"idle": "idle", "to_tree": "walk", "chop": "chop", "to_drop": "carry",    # state -> event in the log
           "to_site": "walk", "build": "build", "to_rally": "walk"}
+
+
+def group_item(n):
+    """The hotbar item of control group n."""
+    return (f'minecraft:carrot_on_a_stick[item_model="minecraft:{GROUPS[n][1]}",item_name="Group {n}",'
+            f"custom_data={{aoe_group:{n}}}]")
 
 
 class Map:
@@ -342,6 +354,7 @@ class Gather:
                       and o["name"] in combat.BUILDINGS}               # target UUID -> box of an enemy building
         self.sieged = set()                                            # the targets of attack orders
         self.wands, self.corners = set(), {}                           # players who clicked the wand, player -> corner 1
+        self.groups, self.grouping, self.calls = {}, {}, 0             # group -> units, player -> (group, shift)
         self.hints = {}                                                # target -> (hint text, time) (hints.py, #798)
 
     @property
@@ -553,8 +566,13 @@ class Gather:
         hints.tick(self)
         menu.clicks(self)
         cheats.clicks(self)
-        self.command("execute as @a unless items entity @s container.* minecraft:carrot_on_a_stick "
-                     "run give @s minecraft:carrot_on_a_stick")
+        self.command("execute as @a unless items entity @s container.* minecraft:carrot_on_a_stick[!custom_data] "
+                     "run give @s minecraft:carrot_on_a_stick")       # not a group item
+        if self.calls % GROUP_GIVE == 0:
+            for n, (slot, _) in GROUPS.items():
+                self.command(f"execute as @a unless items entity @s hotbar.{slot} *[custom_data={{aoe_group:{n}}}] "
+                             f"run item replace entity @s hotbar.{slot} with {group_item(n)}")
+        self.calls += 1
         self.command(f"execute as @a unless items entity @s container.* minecraft:{WAND} "
                      f'run give @s minecraft:{WAND}[item_name="Selection box"]')
         objs = ("aoe_use", "aoe_talk", "aoe_box")
@@ -567,11 +585,33 @@ class Gather:
                 out.append(name)
                 if "aoe_box" in used:
                     self.wands.add(name)
+                if "aoe_use" in used and (n := self.group_in_hand(name)):
+                    self.grouping[name] = n, "passed" in self.command(f"execute as {name} if predicate {SNEAK}")
                 for obj in objs:
                     self.command(f"scoreboard players reset {name} {obj}")
         return out
 
+    def group_in_hand(self, name):
+        """The control group of the item in the main hand of player name, or None."""
+        return next((n for n in GROUPS if "passed" in self.command(
+            f"execute if items entity {name} weapon.mainhand *[custom_data={{aoe_group:{n}}}]")), None)
+
+    def group(self, name, n, save):
+        """Control group n, as Ctrl+N and N in AoE2 (#779): save the selection as group n, or select the live units
+        of group n (a dead unit leaves its group). The boss bar shows the first unit of the group."""
+        if save:
+            self.groups[n] = set(self.selected)
+            text = f"Group {n}: {len(self.selected)} units saved"
+        else:
+            self.groups[n] = set(self.positions(sorted(self.groups.get(n, ()))))
+            self.choose(self.groups[n], min(self.groups[n], default=None))
+            text = f"Group {n}: {len(self.groups[n])} units"
+        self.command(f"title {name} actionbar " + json.dumps({"text": text}))
+
     def click(self, name):
+        if (n := self.grouping.pop(name, None)) is not None:          # a group item (#779): no ray
+            self.group(name, *n)
+            return
         pos = self.pos(name)
         rot = re.findall(NUMBER, self.command(f"data get entity {name} Rotation").rsplit(":", 1)[-1])
         if not pos or len(rot) != 2:

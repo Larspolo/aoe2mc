@@ -111,6 +111,9 @@ Item 6 (fog of war) has no ticket.
 Selection of many units (#742): the owner chose in #745 a selection wand with two corners for the AoE2 selection box
 (option A, #778: `Gather.box`, item `warped_fungus_on_a_stick` with its own "used" statistic `aoe_box`), and hotbar
 items for the control groups later (option C, #779). A radius selection (option B) was not chosen.
+Control groups (#779, `Gather.group`): carrots on a stick "Group 1" to "Group 5" in hotbar slots 5 to 9
+(`custom_data` `{aoe_group:N}`). A shift right click (vanilla predicate `is_sneaking`) saves the selection as group N,
+a right click selects the live units of group N. The click item is `carrot_on_a_stick[!custom_data]`.
 
 ## Measured gather timing (#289)
 
@@ -229,3 +232,4 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - A RCON command of more than 1446 bytes: the server closes the connection ("the server closed the RCON connection"). Keep long `tellraw` texts short (`separators=(",", ":")`, style of the parent in `extra`) and test the length (#688).
 - A `block_display` takes the light of the block at its position: a ghost whose anchor is inside a slope draws black. Set `Display.Brightness(15, 15)` (#794). A `tp` of a creative player in the air lets it fall before a screenshot: use spectator mode.
 - On Paper, a unit of `aoe moveto` walks slower than `ai.WALK` on slopes and around trees (villager 9935 of `de-64.3`: about 5.6 instead of 12.8 blocks per second at speed 4): the replay position is ahead of the entity. `Replay.arrived` reads it before the first gather step (#766).
+- `tests/test_menu.py` `test_gather_reads_the_menu_clicks` makes a `Gather.__new__` with only the attributes of `clicks()`: a new attribute that `clicks()` reads (`calls`, #779) needs a line there too.
