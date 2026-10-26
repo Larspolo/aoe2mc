@@ -631,6 +631,9 @@ def town_center(c, w, st, col, T, ctx):
     c.flag(mid, top + 1, (hz0 + hz1) // 2, col, 2)
 
 
+COPPER = {"lantern": "waxed_copper_lantern", "iron_chain": "waxed_copper_chain", "iron_bars": "waxed_copper_bars"}
+
+
 def castle(c, w, st, col, T, ctx, small=False):
     stone = st.stone
     th = 2 if w >= 14 else 1                         # wall thickness
@@ -686,7 +689,7 @@ def castle(c, w, st, col, T, ctx, small=False):
     c.box(k + 1, w - k - 1, kh, kh + 1, k + 1, w - k - 1, st.wood)
     c.crenels(k, w - k, k, w - k, kh + 1, (st.merlon or stone))
     for y in (hw + 2, kh - 2):
-        c.windows(k, w - k, k, w - k, y, b="iron_bars", step=2, height=2)
+        c.windows(k, w - k, k, w - k, y, b=COPPER["iron_bars"], step=2, height=2)
     c.box(mid - (gw // 2), mid - (gw // 2) + gw, 1, 4, w - k - 1, w - k, "air")
     if w - 2 * k >= 5:
         keep_inside(c, k + 1, w - k - 1, [0, *range(hw, kh, 4)], kh, st, col)
@@ -696,7 +699,7 @@ def castle(c, w, st, col, T, ctx, small=False):
         for x in (k, w - k - 1):
             for z in (k, w - k - 1):
                 c.box(x, x + 1, hw + 1, kh + 1, z, z + 1, st.timber)
-        c.windows(k, w - k, k, w - k, kh - 2, b="iron_bars", step=2, height=2)
+        c.windows(k, w - k, k, w - k, kh - 2, b=COPPER["iron_bars"], step=2, height=2)
         for y in range(hw + 1, kh - 1, 4):
             c.hip(k - 1, w - k + 1, k - 1, w - k + 1, y, st.roof, layers=1, flare=True)
         top = c.hip(k - 1, w - k + 1, k - 1, w - k + 1, kh + 1, st.roof, flare=True)
@@ -2675,6 +2678,22 @@ def wonder(c, w, st, col, T, ctx):
     WONDERS.get(st.wonder, cathedral)(c, w, st, col, T, ctx)
 
 
+def copper_fittings(c, bars=True):
+    """Copper lanterns, chains and bars (bars=False: keep iron bars, as on a portcullis) for the rich buildings
+    (#543): waxed, so they do not oxidize in the game. A hanging lantern under a high ceiling hangs on a copper chain."""
+    for i in np.unique(c.a[c.a >= 0]):
+        name, br, props = c.B.states[i].split(":")[-1].partition("[")
+        if name in COPPER and (bars or name != "iron_bars"):
+            c.a[c.a == i] = c.id(COPPER[name] + br + props)
+    hang, empty = c.id(COPPER["lantern"] + "[hanging=true]"), (-1, c.id("air"))
+    for x, y, z in zip(*np.nonzero(c.a == hang)):
+        top = y + 1
+        while top < min(y + 8, c.a.shape[1]) and c.a[x, top, z] in empty:
+            top += 1
+        if y + 1 < top < c.a.shape[1] and c.a[x, top, z] not in empty:             # a ceiling within reach
+            c.a[x, y + 1:top, z] = c.id(COPPER["iron_chain"] + "[axis=y]")
+
+
 # --------------------------------------------------------------------------------------------
 # Selection and placement
 # --------------------------------------------------------------------------------------------
@@ -2942,6 +2961,8 @@ def place_building(E, cols, B, o, players, walls, gates):
     weather(c)
     if fn not in NO_PROPS:
         decorate(c, fx, fz)
+    if fn in (castle, wonder):                                           # the rich buildings (#543)
+        copper_fittings(c, bars=fn is wonder)
     if TURN and fn not in (gate, aqueduct, bridge, wooden_bridge, wall_segment):    # these follow their neighbours
         turn(c, TURN)
     if along_z:
