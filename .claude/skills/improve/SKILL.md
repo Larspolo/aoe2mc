@@ -69,7 +69,7 @@ and do it as this improvement, or, when another run owns it, choose the next pat
 ticket #903 made the same change of the autopilot skill at the same time: one PR conflicted and was wasted.
 
 - Small (text in a skill, `CLAUDE.md`, `LEARNINGS.md`, a setting, a workflow step, the setup script): do it now,
-  in one PR with the title "Process: <what>". Verify level 1. Merge it like a ticket.
+  in one PR with the title "Process: <what>" and the label `process`. Verify level 1. Merge it like a ticket.
 - Large (a new tool, a test framework change): make a `tooling` ticket with priority `P1`.
 - Owner only (environment settings, the scheduled task, GitHub settings): make the change in the repository
   first (for example `scripts/cloud-setup.sh`), then a `needs-human` ticket with numbered steps and the exact
