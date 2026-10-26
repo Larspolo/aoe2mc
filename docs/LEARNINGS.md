@@ -97,3 +97,5 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   map. Replay paths cost 18 s per 200 s of game in samples/ (one search per unit of a group, #409).
 - "units in a block": `AOE2MC_DEBUG=1` names the block; list the `aoe2mc.json` objects with a `tile` near the unit to
   find its source (#415: a `PLANT_SHRUB` on the same block, not the tree that the ticket named).
+- Stacked `cylinder`s of falling height make a flat top (the outer disc covers the inner ones): use `seats()`, which
+  carves air above each row (#451). Find the edge of a round room by a scan with `c.get` from the centre (`arena_inside`).
