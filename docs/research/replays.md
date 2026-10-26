@@ -192,3 +192,4 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
   `happyleavesaoc/aoc-mgz/master/tests/recs/` (table in `docs/research/replays.md`, #376). `construct` 2.8: `IfThenElse` is a `Switch`.
 - Record commands: the `player` of an mgz action is not always right (a MOVE shows for both players), and the
   `objects` of SPECIAL are not IDs. New objects take the next free ID: `aoe2mc.name_timeline` (#407).
+- mgz `Inputs.add_action` fills a command without object IDs with the last IDs of its action type of any player: player 2 "moved" the villagers of player 1 (#828). `read_timeline` parses in `aoe2mc.own_selection()` (the last IDs of the same player). The selection of a player is its own: check the owners of the IDs (`tests/test_record_selection.py`).

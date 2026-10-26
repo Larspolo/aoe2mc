@@ -64,7 +64,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe moveto <selector> <x> <y> <z> [speed]   walk on the path of Mob#getPathfinder
  *   aoe attack <selector> <target selector>    Mob#setTarget: the mob attacks with its own AI
  *   aoe goals <selector>                       the goals of the first unit (#436), for checks
- *   aoe stats <selector> <hp> <attack> <melee armor> <pierce armor> <ranged 0|1> <classes|-> <class:bonus,...|->
+ *   aoe stats <selector> <hp> <attack> <melee armor> <pierce armor> <ranged 0|1|2> <classes|-> <class:bonus,...|->
  *                                              the AoE2 values of a unit (#514, game/combat.py stats_command)
  *   aoe stop <selector>                        stop the walk and turn the AI off: the unit stands still (#437)
  *   aoe range <selector> <blocks> <ticks>      a ranged unit shoots from this range, one shot per ticks (#515)
@@ -130,14 +130,15 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * selected one (tag aoe2mc.selected, game/gather.py), as the bars in AoE2. Each hit and "aoe stats" update it.
  */
 public final class AoePlugin extends JavaPlugin implements Listener {
-    private record Stats(int attack, int melee, int pierce, boolean ranged, Set<String> classes,
+    // ranged: the unit shoots; pierces: its hit takes the pierce armor (not so for a Throwing Axeman, #800)
+    private record Stats(int attack, int melee, int pierce, boolean ranged, boolean pierces, Set<String> classes,
                          Map<String, Integer> bonus) {
         int damage(Stats t) {                                 // the same rule as game/combat.py damage()
             int bonus = 0;
             for (String c : t.classes) {
                 bonus += this.bonus.getOrDefault(c, 0);
             }
-            return Math.max(1, Math.max(0, attack - (ranged ? t.pierce : t.melee)) + bonus);
+            return Math.max(1, Math.max(0, attack - (pierces ? t.pierce : t.melee)) + bonus);
         }
     }
 
@@ -807,7 +808,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             try {
                 hp = Double.parseDouble(args[2]);
                 st = new Stats(Integer.parseInt(args[3]), Integer.parseInt(args[4]), Integer.parseInt(args[5]),
-                        args[6].equals("1"), args[7].equals("-") ? Set.of() : Set.of(args[7].split(",")),
+                        !args[6].equals("0"), args[6].equals("1"), args[7].equals("-") ? Set.of() : Set.of(args[7].split(",")),
                         bonus(args[8]));
             } catch (RuntimeException e) {                 // a bad number or a bonus without ":"
                 sender.sendMessage("Bad value: " + e.getMessage());
@@ -880,7 +881,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             int[] b = new int[6];
             try {
                 hp = Integer.parseInt(args[2]);
-                st = new Stats(0, Integer.parseInt(args[3]), Integer.parseInt(args[4]), false, Set.of("building"),
+                st = new Stats(0, Integer.parseInt(args[3]), Integer.parseInt(args[4]), false, false, Set.of("building"),
                         Map.of());
                 var c = new ArrayList<String>();
                 for (int i = 5; i < 11; i++) {
