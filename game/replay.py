@@ -52,6 +52,9 @@ TALL = 48                   # blocks above the ground that a DELETE clears for a
 BAR = "aoe2mc:replay"       # the boss bar with the game time (#684)
 POP = "aoe_pop"             # the sidebar objective with the population of each player (#741)
 COUNTED = "aoe2mc.pop"      # entity tag of the units that the population counts (#787)
+VIEWER = "aoe_viewer"        # player tag: the player got the overview of the map (#737)
+VIEW_PITCH = 60             # degrees down of the overview
+VIEW_FALL = 60              # seconds of slow falling after the overview
 POLL = 0.2                  # seconds between two calls of the poll of Replay.run while it waits (#685)
 NEXT = 5                    # tiles: an empty resource sends its villager to the next one this near (#720)
 NEAR = 2                    # blocks: a unit of the plugin this near to its replay position is at its resource (#766)
@@ -118,6 +121,7 @@ class Replay:
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
         self.sent, self.busy = 0, 0.0           # commands sent, seconds spent sending them
         self.pop, self.shown = {}, None         # player -> live units (no animals), the value in the sidebar (#741)
+        self.ages, self.named = {}, {}          # player -> age ("Feudal"); the age in its sidebar name (#805)
         self.counted = []                       # UUIDs of the start units that the population counts
         for o in data["objects"]:
             if o["kind"] == "unit" and o.get("player") and not units.animal(o["name"]):
@@ -128,6 +132,9 @@ class Replay:
         info = self.data["players"].get(str(p), {})
         return f"Player {p}" + (f" ({pretty(info['civ'])})" if info.get("civ") else ""), \
             TEXT_COLORS.get(info.get("color"), "white")
+
+    def age(self, e):
+        self.ages[e.get("player")] = pretty(e["age"]).removesuffix(" Age")
 
     def commands(self, e):
         """The commands of one timeline event (an empty list for the events that change nothing visible)."""
@@ -154,6 +161,7 @@ class Replay:
             return ["tellraw @a " + json.dumps([text(f"<{name}> ", color), text(e["text"])])]
         name, color = self.player(e.get("player"))
         if kind == "age" and e.get("age"):
+            self.age(e)
             return ["title @a subtitle " + json.dumps(text(name, color)),
                     "title @a title " + json.dumps(text(pretty(e["age"])))] + self.fireworks(e.get("player"))
         if kind == "research" and e.get("technology"):
@@ -859,6 +867,26 @@ class Replay:
         return [f"bossbar set {BAR} name {json.dumps(text(name), ensure_ascii=False)}",
                 f"bossbar set {BAR} value {min(int(now) // 1000, max(1, int(end) // 1000))}", f"bossbar set {BAR} players @a"]
 
+    def overview(self, join=False):
+        """The view of a player at the start of the replay (#737, owner decision #782): adventure mode, a text about
+        the spectator view, and a place high above the map that looks down at its center (VIEW_PITCH) in the
+        direction of the spawn of the converter. join: only for the players without the tag VIEWER (a player who
+        joins later gets it once, and keeps the game mode that it selects after it, #910). Adventure mode has no
+        flight before #910: slow falling (VIEW_FALL s) brings the player down with no fall damage."""
+        if getattr(self, "view", None) is None:                    # once: each game second calls it
+            c = self.n / 2
+            top = max([y for row in self.ground for y in row if y is not None] or [64])
+            y = min(319, top + self.n // 3)
+            d = (y - top) / math.tan(math.radians(VIEW_PITCH))     # the center is this far in front
+            yaw = math.radians(aoe2mc.SPAWN_YAW)
+            self.view = f"{c + d * math.sin(yaw):.1f} {y} {c - d * math.cos(yaw):.1f} facing {c:.1f} {top} {c:.1f}"
+        say = text("Double-tap Shift: spectator view (fly through blocks). Right click the hotbar items: replay control.")
+        sel, run = (f"@a[tag=!{VIEWER}]", f"execute as @a[tag=!{VIEWER}] run ") if join else ("@a", "")
+        me = "@s" if join else "@a"
+        return [f"{run}gamemode adventure {me}", f"{run}effect give {me} minecraft:slow_falling {VIEW_FALL} 0 true",
+                f"{run}tellraw {me} {json.dumps(say)}",
+                f"{run}tp {me} {self.view}", f"tag {sel} add {VIEWER}"]
+
     @staticmethod
     def end_commands(end):
         """A title, the end time as subtitle and one sound when the replay is over (#872): the boss bar alone was not
@@ -870,16 +898,18 @@ class Replay:
 
     def score_commands(self):
         """The sidebar commands for the population of each player that changed since the last call (#741). The score
-        holder is "P<n>" (a holder name has no space); its display name is the player name in the player color."""
+        holder is "P<n>" (a holder name has no space); its display name is the player name in the player color and
+        the age of the player (#805)."""
         out = []
         if self.shown is None:
             self.shown, out = {}, [f'scoreboard objectives add {POP} dummy "Population"',
                                    f"scoreboard objectives setdisplay sidebar {POP}"]
         for p in sorted(self.pop):
+            if self.named.get(p) != (age := self.ages.get(p, "Dark")):
+                name, color = self.player(p)
+                out.append(f"scoreboard players display name P{p} {POP} {json.dumps(text(f'{name} · {age}', color))}")
+                self.named[p] = age
             if self.shown.get(p) != self.pop[p]:
-                if p not in self.shown:
-                    name, color = self.player(p)
-                    out.append(f"scoreboard players display name P{p} {POP} {json.dumps(text(name, color))}")
                 self.shown[p] = self.pop[p]
                 out.append(f"scoreboard players set P{p} {POP} {self.pop[p]}")
         return out
@@ -917,7 +947,7 @@ class Replay:
     def jump(self, events, to):
         """Apply the events up to game time `to` (ms) at once (#687): buildings appear, deletes remove, trained units
         appear, and each unit that a MOVE or ORDER sent, or that walks now, stands at its target (tp, no walk). The
-        chat, age and research texts of the skipped time do not show. Returns the commands."""
+        chat, age and research texts of the skipped time do not show (the sidebar shows the age, #805). Returns the commands."""
         out, moved = [], set()
         jobs = {i: v.job for i, v in self.units.items()}            # move() gives the looks: send the last ones
         for e in events:
@@ -928,6 +958,8 @@ class Replay:
                     self.entering[i][2] = e["time"]
             elif e["kind"] in ("build", "wall", "spawn", "delete", "ungarrison"):
                 out += self.enter(e["time"]) + self.commands(e)
+            elif e["kind"] == "age" and e.get("age"):                 # the sidebar shows it, no title
+                self.age(e)
         out += self.enter(to)
         inside = {u for us in self.garrisons.values() for u in us}
         for i in sorted(moved | self.moving.keys()):
@@ -960,7 +992,8 @@ class Replay:
         send = self.send if bar else lambda cmds: None
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
                    f"bossbar set {BAR} max {max(1, int(end) // 1000)}"] +
-             ([f"tag {u} add {COUNTED}" for u in self.counted] + ["aoe deathmarks on"]) * self.ai)   # marks: #846
+             ([f"tag {u} add {COUNTED}" for u in self.counted] + ["aoe deathmarks on"]) * self.ai +   # marks: #846
+             self.overview())
         census = self.census if bar and self.ai else lambda: None
         while k < len(events) or self.moving:
             step = min([*self.moving.values(), *self.working.values(),                       # walk or gather step
@@ -997,7 +1030,7 @@ class Replay:
             if int(now) // 1000 != shown:                              # at most once per game second
                 shown = int(now) // 1000
                 census()
-                send(self.clock_commands(now, end, self.speed) + self.score_commands())
+                send(self.clock_commands(now, end, self.speed) + self.score_commands() + self.overview(join=True))
             if e is None:
                 self.send(self.steps(now))
                 continue

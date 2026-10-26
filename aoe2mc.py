@@ -2797,10 +2797,43 @@ def map_colors(img):
     return np.where(inside[:, None] & inside[None, :], out, 0).astype(np.uint8), s, c
 
 
-def write_map(out, img):
-    """Write a locked map of the world (map id 0, #838): `give @p filled_map[map_id=0]` shows it. The 26.3 server
-    keeps maps in data/minecraft/maps/ (DimensionStorageFileFix: data/map_N.dat -> N.dat, idcounts.dat -> last_id.dat)."""
+# The map color id of each dye (MapColor.COLOR_*), and of the gaia mines: GOLD and STONE, so that they differ from
+# the yellow and gray players (#840).
+MAP_DYES = {"black": 29, "blue": 25, "brown": 26, "cyan": 23, "gray": 21, "green": 27, "light_blue": 17,
+            "light_gray": 22, "lime": 19, "magenta": 16, "orange": 15, "pink": 20, "purple": 24, "red": 28,
+            "white": 8, "yellow": 18}
+MAP_MINES = {"GOLD_MINE": 30, "STONE_MINE": 11}
+
+
+def map_objects(colors, s, c, objects, players=None, T=4):
+    """Draw the objects on the map bytes, as on the AoE2 minimap (#840): a building is the square of its footprint
+    in its player color, a unit one pixel, a gold or stone mine of gaia one pixel. Other gaia objects keep the
+    terrain color. Shade 2 (the full color); units go on top of buildings."""
+    f, base = 1 << s, c - (64 << s)
+    def put(x0, z0, x1, z1, cid):                                # blocks [x0, x1) x [z0, z1); at least one pixel
+        (i0, i1), (j0, j1) = ((max(0, (a - base) // f), min(128, (max(a, b - 1) - base) // f + 1)) for a, b in
+                              ((z0, z1), (x0, x1)))
+        colors[i0:i1, j0:j1] = cid * 4 + 2
+    order = {"O": 0, "B": 1, "U": 2}
+    for o in sorted(objects, key=lambda o: order.get(o["kind"], 3)):
+        p, name = o.get("player", 0), o["name"]
+        if o["kind"] == "O" and name in MAP_MINES:
+            x, z = int(o["x"] * T), int(o["y"] * T)
+            put(x, z, x + 1, z + 1, MAP_MINES[name])
+        elif p and o["kind"] == "B" and "footprint" in o:
+            put(*o["footprint"], MAP_DYES.get(player_color(p, players), 8))
+        elif p and o["kind"] == "U" and not o.get("garrisoned"):
+            x, z = int(o["x"] * T), int(o["y"] * T)
+            put(x, z, x + 1, z + 1, MAP_DYES.get(player_color(p, players), 8))
+    return colors
+
+
+def write_map(out, img, objects=(), players=None, T=4):
+    """Write a locked map of the world (map id 0, #838) with its objects (#840): `give @p filled_map[map_id=0]`
+    shows it. The 26.3 server keeps maps in data/minecraft/maps/ (DimensionStorageFileFix: data/map_N.dat -> N.dat,
+    idcounts.dat -> last_id.dat)."""
     colors, s, c = map_colors(np.asarray(img))
+    colors = map_objects(colors, s, c, objects, players, T)
     d = os.path.join(out, "data", "minecraft", "maps")
     os.makedirs(d, exist_ok=True)
     data = {"colors": ByteArray(colors.reshape(-1).astype(np.int8)), "scale": Byte(s), "xCenter": Int(c),
@@ -3170,7 +3203,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     img = Image.fromarray(np.clip(img * shade[..., None], 0, 255).astype(np.uint8))
     if preview:
         img.save(os.path.join(out, "preview.png"))
-    write_map(out, img)
+    write_map(out, img, objects, players, T)
     # the world list shows icon.png; keep the pixels sharp when the map is smaller than the icon
     img.resize((64, 64), Image.LANCZOS if cols.n >= 64 else Image.NEAREST).save(os.path.join(out, "icon.png"))
 

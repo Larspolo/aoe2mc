@@ -5,7 +5,8 @@ description: Do one automatic work cycle on aoe2mc. Read the owner's feedback, t
 
 # Autopilot: one work cycle
 
-Repository: `Larspolo/aoe2mc`, default branch `main`. Owner: GitHub login `Larspolo`.
+The project values are in `agent.toml` at the root (#905): `repo` (`OWNER/NAME` below), `owner` (the GitHub login of
+the owner), `branch` (the default branch, `main` below), the status issue and its label, the commands.
 Follow each step in sequence. Do not skip the report (step 8).
 
 ## GitHub access
@@ -15,7 +16,7 @@ it works in cloud and local sessions. Cloud sessions block GraphQL and the searc
 `gh pr create` and `search/issues` fail there. Put long text in a file and pass it with `-F body=@file.md`.
 Put the method after the path (`... -X PATCH`): the permission rules match the start of the command.
 
-| Action | `gh api repos/Larspolo/aoe2mc` + |
+| Action | `gh api repos/OWNER/NAME` (`repo` in `agent.toml`) + |
 |---|---|
 | Open issues | `/issues?state=open&per_page=100` (entries with `pull_request` are PRs) |
 | New comments since T | `/issues/comments?since=T&per_page=100` and `/pulls/comments?since=T&per_page=100` |
@@ -98,7 +99,7 @@ find the open `P0` ticket "Fix main: ..." or make one (`P0`,
 ## 3. Read the owner's feedback
 
 Read all comments after `last_run` (`/issues/comments?since=` and `/pulls/comments?since=`, see
-"GitHub access") and the issues that `Larspolo` opened after `last_run`. Keep the ones by `Larspolo`.
+"GitHub access") and the issues that the owner opened after `last_run`. Keep the ones by the owner.
 For each new owner comment, lock it first: `python3 tools/claim.py ID --comment` (ID = the `id` of the comment).
 Exit 1: another run handles it, skip it (#320: three runs made three copies of one epic). Exit 0: act on it:
 - A question → answer it in the same thread.
@@ -121,8 +122,7 @@ For each open issue without a priority label:
 ## 5. Pick and claim one ticket
 
 Candidates: open issues without `needs-human`, `blocked`, `epic`, `agent-status`, `in-progress`, and whose
-"Depends on: #n" issues are all closed, whose "Start after:" time is past (#496), and that no open hand-off PR
-(`ready-to-merge`) closes (#546: it waits for the owner). Order: `P0`, `P1`, `P2`, `P3`, then the
+"Depends on: #n" issues are all closed, whose "Start after:" time is past (#496). Order: `P0`, `P1`, `P2`, `P3`, then the
 least overlap with the work in progress (files and functions that open PRs change or claimed tickets name, #487),
 then the lowest issue number.
 `python3 tools/dashboard.py --next` prints the candidates in this order (the rule is `dashboard.candidates()`).
@@ -203,7 +203,7 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
 11. CI green → the Automerge workflow merges. Add label `hold` to the PR if it must not merge yet.
 
 Ask the owner (owner rule, #862): only with the label `needs-human` and a comment on the issue that needs the answer.
-The comment mentions `@Larspolo` and says exactly what the owner must do. Never ask with PushNotification, in the
+The comment mentions the owner (`@` and `owner` of `agent.toml`) and says exactly what the owner must do. Never ask with PushNotification, in the
 session, or only in the status report. When the auto mode denies an action (for example closing an issue), do not send
 it through another tool: add `needs-human` to that issue and comment the evidence and the action. When the owner did
 it, remove the label.
@@ -236,11 +236,13 @@ Then add one short comment on the status issue: what you did and what is next. A
 issue, not here (see "Ask the owner" in step 6).
 End it with one metrics line for each ticket of the run (the `improve` skill reads these lines):
 
-    Metrics: ticket #<n> · <size> · <merged|blocked|needs-human|none> · <minutes> min · setup <m> min · checks <k> · checks <c> min · time sinks: <list or "none"> · phases read <m> · claim <m> · code <m> · verify <m> · ci <m> · conflict <m> · report <m>
+    Metrics: ticket #<n> · <size> · <merged|pr #n|blocked|needs-human|none> · <minutes> min · setup <m> min · checks <k> · checks <c> min · time sinks: <list or "none"> · phases read <m> · claim <m> · code <m> · verify <m> · ci <m> · conflict <m> · report <m>
 
 Example: `Metrics: ticket #876 · size:S · merged · 45 min · setup 0 min · checks 2 · checks 6 min · time sinks: none ·
 phases read 8 · claim 1 · code 18 · verify 9 · ci 0 · conflict 5 · report 4` (one line).
 
+Result: `pr #n` when you pushed PR #n and Automerge merges it later (the usual case: you report before the merge);
+`none` only when the run stopped without a PR. `tools/health.py` counts the `pr #n` lines by the present PR state (#902).
 Put the output of `python3 tools/release.py` (the release bar of each goal, #879) above the `Usage:` line.
 Put the `Usage:` line of step 1.4 above the metrics lines, unchanged: `tools/health.py` measures the quota use of one
 run per hour from pairs of these lines, and `tools/usage.py --target` uses that value (#462).
@@ -256,6 +258,8 @@ GitHub sends this comment to the owner as a notification. Do not comment when no
 ## 9. Improve the process (before the commit in step 6)
 
 Answer these questions. Do the action for each "yes". Spend little time.
+A PR that changes the agent system gets the label `process` (`/issues/N/labels -f "labels[]=process"`, #901): the
+dashboard counts them.
 - Did something cost you time that one line of text prevents? → a pitfall of one topic (the game program, the replay,
   Paper, the server, records, a design) goes to the end of the "Pitfalls" section of its document (the list in
   `docs/LEARNINGS.md`, "Environment and libraries"); only a line for all runs goes to the end of its section in
@@ -276,8 +280,9 @@ Answer these questions. Do the action for each "yes". Spend little time.
 
 After step 8, run `python3 tools/claim.py 0 --review`: exit 0 means that this run does the process review of the
 time slot (#898; the slot is 45 minutes, and longer after reviews with no change). Then run the `improve` skill.
-Run it also when this run failed, or when a ticket took more than 90 minutes. It finds the largest loss in the
-metrics and makes one improvement. Then run `python3 tools/claim.py 0 --roadmap`: exit 0 means that this run
+Run it also when this run failed, or when a ticket took more than 90 minutes. The `improve` skill reviews the whole
+system (how runs start, the loop, time and quota, quality, weak spots, reuse), checks the last change, and makes one
+change only when a loss is above its threshold (#900). The questions above stay the small check of each ticket. Then run `python3 tools/claim.py 0 --roadmap`: exit 0 means that this run
 reviews the feature list of `docs/ROADMAP.md` (the `roadmap` skill, one review per 2 hours).
 Do not change a priority that the owner set. Propose it.
 
@@ -293,7 +298,7 @@ the merge) → `git push -u origin <branch>`. Exit 0 → `git fetch origin <bran
 (its commits are on main already, so the PR diff stays the same), then `git push origin HEAD:<branch>`. A conflict in that merge: take your side (`git checkout --ours FILE`):
 main has the squashed old commits, so check that `git diff --stat origin/main` shows only your ticket (#523).
 The session branch can carry only one open PR: do the next ticket in a local commit, and push it only when the PR
-of the last ticket is merged or closed (`/pulls?head=Larspolo:<branch>&state=open` is empty). Else a push replaces
+of the last ticket is merged or closed (`/pulls?head=OWNER:<branch>&state=open` is empty). Else a push replaces
 the open PR. After `checkout -B` the upstream is
 `origin/main`, so a bare `git push` fails: check that the output shows `-> <branch>`, else the PR has old commits.
 Stop when the context is more than half full.

@@ -16,6 +16,7 @@ import sys
 from collections import Counter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from agent_config import CONFIG  # noqa: E402
 from dashboard import api, closes  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -24,7 +25,8 @@ CI_JOB_RUNS = 20                          # read the step times of this many CI 
 DENY = (".log", ".mca", ".png")           # suffixes that do not belong in git ...
 DENY_OK = ("docs/", "samples/")           # ... except .png in these folders
 BIG = 1 << 20
-OWNER = "Larspolo"                        # a reopen by the owner is rework (#899)
+OWNER = CONFIG["owner"]                   # a reopen by the owner is rework (#899)
+STATUS = CONFIG["status"]["label"]
 
 
 def ts(s):
@@ -201,7 +203,7 @@ def weak_spots(issues, events, prs, runs, since):
 
 def status_comments(hours=24):
     """The comments on the status issue of the last `hours`."""
-    status = api("issues?state=open&labels=agent-status")
+    status = api(f"issues?state=open&labels={STATUS}")
     since = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=hours)
     return api_pages(f"issues/{status[0]['number']}/comments?since={since:%Y-%m-%dT%H:%M:%SZ}") if status else []
 
@@ -241,6 +243,14 @@ def active_claims(now, minutes=30):
                for i in api("issues?state=open&labels=in-progress&per_page=100") if "pull_request" not in i)
 
 
+def pr_results(comments, prs):
+    """The `pr #n` results of the `Metrics:` lines: (merged PRs, not merged PRs) by the present PR state (#902)."""
+    merged = {p["number"] for p in prs if p.get("merged_at")}
+    ns = sorted({int(n) for c in comments for line in (c.get("body") or "").splitlines() if line.startswith("Metrics:")
+                 for n in re.findall(r"· pr #(\d+) ·", line)})
+    return [n for n in ns if n in merged], [n for n in ns if n not in merged]
+
+
 def fmt(x):
     return "-" if x is None else f"{x:.1f}"
 
@@ -263,6 +273,9 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
     out.append("Slowest CI steps (median min): " + "; ".join(f"{k} {fmt(m)}" for m, k in slow_steps(jobs)))
     setup = setup_minutes(status_comments)
     out.append(f"Setup (median min of {len(setup)} Metrics lines): {fmt(med(setup))}")
+    ok, lost = pr_results(status_comments, prs)
+    out.append(f"Metrics lines with pr #n: merged {len(ok)}, not merged {len(lost)}"
+               + (f" ({', '.join(f'#{n}' for n in lost)})" if lost else ""))
     e = events(comments)
     out.append(f"Takeovers {e['takeovers']}, releases {e['releases']}, merge conflicts {e['conflicts']} (solved by Unconflict {e['solved']})")
     if files_of:
@@ -309,7 +322,7 @@ def fetch(since):
             break
     ci = [r for r in runs if r["name"] == "CI" and r.get("status") == "completed"][:CI_JOB_RUNS]
     jobs = [j for r in ci for j in api(f"actions/runs/{r['id']}/jobs")["jobs"]]
-    status = api("issues?state=open&labels=agent-status")
+    status = api(f"issues?state=open&labels={STATUS}")
     # one day more: the "Started by" comment of a ticket that merged in the period can be older
     comments = api_pages(f"issues/comments?since={since - datetime.timedelta(days=1):%Y-%m-%dT%H:%M:%SZ}")
     status_comments = [c for c in comments if status and c["issue_url"].endswith(f"/{status[0]['number']}")

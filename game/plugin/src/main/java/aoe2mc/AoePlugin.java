@@ -40,6 +40,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
@@ -52,6 +53,7 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Vector;
 
+import com.destroystokyo.paper.entity.Pathfinder;
 import com.destroystokyo.paper.entity.RangedEntity;
 import com.destroystokyo.paper.entity.ai.Goal;
 import com.destroystokyo.paper.entity.ai.GoalKey;
@@ -121,6 +123,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * the values of "aoe stats", the range of "aoe range" and the target of "aoe attack", and the horse gets AI without goals:
  * a riding mob walks with the navigation of its vehicle (vanilla Mob#getNavigation), so the horse follows the rider.
  * A hit on the rider takes the hit points of the horse, and the rider dies with the horse (#732).
+ * A horse regenerates by itself in vanilla, an AoE2 unit does not: the plugin cancels the REGEN healing of a unit
+ * with AoE2 values (#850). Other reasons (a later Monk heal) stay.
  * A building is blocks, and a mob attacks only a living entity: an invisible mob without AI (a slime of the size of
  * the footprint, game/combat.py building) stands in the building and takes the attacks, so that the vanilla attack
  * goals and paths work (#517). The plugin keeps the hit points of the building (a building has more than the
@@ -534,6 +538,14 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onRegain(EntityRegainHealthEvent ev) {        // a horse heals by itself, an AoE2 unit does not (#850)
+        if (ev.getRegainReason() == EntityRegainHealthEvent.RegainReason.REGEN
+                && stats.containsKey(ev.getEntity().getUniqueId())) {
+            ev.setCancelled(true);
+        }
+    }
+
     private static Objective hp() {
         Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
         Objective o = sb.getObjective("aoe_hp");
@@ -699,8 +711,25 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                         + " " + o.goal.getZ());
                 return true;
             }
+            if (passed(mob, path)) {
+                pf.stopPathfinding();                   // else moveTo keeps the path: same target (createPath)
+                pf.moveTo(o.goal, o.speed);
+            }
             return false;
         });
+    }
+
+    // The mob is on the ground beyond the next point of its path. Down a slope it lands past the point after each
+    // drop of one block, and Minecraft walks back to it: a scout walked at 5.7 of 17.6 blocks per second (#888).
+    // A new path starts where the mob is.
+    private static boolean passed(Mob mob, Pathfinder.PathResult path) {
+        int i = path.getNextPointIndex();
+        List<Location> points = path.getPoints();
+        if (!mob.isOnGround() || i <= 0 || i + 1 >= points.size()) {
+            return false;
+        }
+        Location a = points.get(i), b = points.get(i + 1), m = mob.getLocation();
+        return (a.getX() + 0.5 - m.getX()) * (b.getX() - a.getX()) + (a.getZ() + 0.5 - m.getZ()) * (b.getZ() - a.getZ()) < 0;
     }
 
     // The path search reaches only about the follow range: raise it for a goal at this location. A rider searches
