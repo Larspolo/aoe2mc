@@ -70,6 +70,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Throne (inside) | `*_stairs` (backrest north) between `gold_block`s, `*_wall_banner`s (player color) over it | `throne_hall` |
 | Treasure (inside) | `chest` and `gold_block` in the back corners | `throne_hall` |
 | Bench (inside) | `*_stairs` in a row | `storage`, `shelter`, `furnish_worship`, `town_hall` +37 more |
+| Sacred rock in a shrine (inside) | `stone`, `andesite` and `tuff` in a low mound, lit `candle`s around it, a ring of `quartz_pillar` columns | |
 | Hay loft (inside) | `spruce_slab[type=top]` with `hay_block` on it | `settlement`, `cart`, `stable`, `market` +22 more |
 | Light on a wall (inside) | `wall_torch` | `town_hall`, `archery_range`, `stable` |
 | Loom, cloth | `loom`, wool | `decorate`, `command_tent`, `dock` |
