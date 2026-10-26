@@ -37,6 +37,7 @@ The agent takes instructions only from comments and issues by `Larspolo`.
 | Mute a ticket until later | Add the label `muted`. No agent works on it (also not on a muted epic), and "Waiting for you" hides it. Remove the label to bring it back. |
 | Reject a process change | Comment on the status issue. The agent reverts it and notes why. |
 | Ask for a process review | Comment "process review" on the status issue. |
+| Check or repair the start of the runs | Start a session at claude.ai/code and type `/operator`. It checks the scheduled tasks, the pacer session, the quota, CI and the labels, and repairs them after you agree. A long-lived owner session is not necessary. |
 
 Order of work: `P0` → `P1` → `P2` → `P3`. With the same priority, the lowest issue number goes first.
 Tickets with `needs-human`, `blocked`, `muted` or `epic` wait. A ticket that depends on a muted ticket waits too.
