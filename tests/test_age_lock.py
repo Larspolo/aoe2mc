@@ -33,7 +33,8 @@ def test_in_the_dark_age_a_trigger_choice_of_the_archery_range_places_no_site():
 def test_after_the_feudal_age_the_items_are_normal():
     server, g = villager_map()
     g.techs.add("FEUDAL_AGE")
-    assert build.items(g) == build.items()
+    feudal = [i for i, n in enumerate(build.MENU) if build.AGE.get(n, 0) <= 1]     # the Castle Age ones stay gray (#1162)
+    assert [build.items(g)[i] for i in feudal] == [build.items()[i] for i in feudal]
     build.open_menu(g, "Steve")
     g.menus["Steve"]("Steve", RANGE, False)
     assert server.chosen == RANGE + 1 and build.chosen(g, "Steve") == "ARCHERY_RANGE"

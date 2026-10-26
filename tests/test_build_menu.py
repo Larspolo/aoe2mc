@@ -40,7 +40,7 @@ def test_the_menu_has_one_item_per_building_with_cost_and_time():
     assert [unquote(name) for _, _, name, _ in items] == [build.pretty(n) for n in build.MENU]
     assert [s for s, *_ in items] == list(range(len(build.MENU)))
     assert items[0] == (0, "spruce_stairs", "House", "25 wood\n25 s")
-    assert items[-1][3] == "275 wood, 100 stone\n150 s"
+    assert items[build.MENU.index("TOWN_CENTER")][3] == "275 wood, 100 stone\n150 s"
 
 
 def test_each_icon_is_a_block_of_the_design():
