@@ -1550,6 +1550,19 @@ def object_footprint(o, T):
     return x0, x1, z0, z1
 
 
+DRY_GROUND = ("sand", "red_sand", "coarse_dirt", "dirt", "terracotta")
+
+
+def bush_block(cols, x, z, name):
+    """The bush block of 26.3 for an AoE2 bush or shrub: a firefly bush next to water, a red shrub on dry ground
+    (or for a "DRY" or "RED" name), else a green bush (#524)."""
+    x0, z0 = max(x - 2, 0), max(z - 2, 0)
+    if (cols.wtop[x0:x + 3, z0:z + 3] > cols.top[x0:x + 3, z0:z + 3]).any():
+        return "firefly_bush"
+    ground = B.states[cols.top_id[min(x, cols.n - 1), min(z, cols.n - 1)]].split(":")[-1].split("[")[0]
+    return "red_shrub" if "DRY" in name or "RED" in name or ground in DRY_GROUND else "bush"
+
+
 def place_objects(objects, players, cols, rng):
     E = Edits(cols)
     T = cols.T
@@ -1641,7 +1654,7 @@ def place_objects(objects, players, cols, rng):
             stats["plants"] += 1
         elif kind == "O" and name.startswith("PLANT"):
             plant = "fern" if ("FERN" in name or "JUNGLE" in name or "UNDERBRUSH" in name) else \
-                "oak_leaves[persistent=true]" if ("SHRUB" in name or "BUSH" in name) else \
+                bush_block(cols, bx, bz, name) if ("SHRUB" in name or "BUSH" in name) else \
                 ["poppy", "dandelion", "cornflower", "allium"][int(rng.integers(4))] if "FLOWER" in name else \
                 "dead_bush" if "DEAD" in name else "short_grass"
             E.add([bx], [y], [bz], plant, hard=False)
@@ -1677,8 +1690,10 @@ def place_objects(objects, players, cols, rng):
             E.box(bx, bx + 1, y, y + 3, bz, bz + 1, "oak_fence")
             E.add([bx], [y + 3], [bz], f"{player_color(o['player'], players)}_wool")
             stats["flags"] += 1
-        elif kind == "O" and name.startswith("BUSH"):
-            E.add([bx, bx + 1, bx], [y, y, y + 1], [bz, bz, bz], "oak_leaves[persistent=true]", hard=False)
+        elif kind == "O" and name.startswith("BUSH"):                 # a bush with leaves around it
+            E.add([bx, bx + 1, bx + 1], [y, y, y + 1], [bz, bz, bz],
+                  [B(bush_block(cols, bx, bz, name)), B("oak_leaves[persistent=true]"), B("oak_leaves[persistent=true]")],
+                  hard=False)
             stats["plants"] += 1
         elif kind == "O" and ("BUSH" in name or "PLANT" in name or name.startswith("GRASS")):
             E.add([bx], [y], [bz], "fern" if "PLANT" in name else "short_grass", hard=False)
@@ -1720,7 +1735,14 @@ def object_mob(name):
 PASSABLE = ("short_grass", "tall_grass", "large_fern", "petals", "moss_carpet", "mushroom", "allium", "bluet",
             "tulip", "lily_of", "fern", "wheat", "poppy", "dandelion", "cornflower", "daisy", "water",
             "seagrass", "dead_bush", "sweet_berry", "rail", "carpet", "banner", "button", "lantern", "snow[", "kelp",
-            "lily_pad")
+            "lily_pad", "bush[", "shrub")
+
+
+def passable_states(states):
+    """True for each state that a unit can stand in (air, plants, carpets ...), with spare room for new ids."""
+    return np.array([st.split(":")[1].split("[")[0] in ("air", "cave_air") or       # the name only: a fence has
+                     any(k in st.split(":")[1].split("[")[0] + "[" for k in PASSABLE)  # "waterlogged=false" (#465)
+                     and "grass_block" not in st for st in states] + [True] * 1024)
 
 
 def seat_count(ship):
@@ -2636,9 +2658,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     print(f"  units: {stats['units']}, fish: {stats['fish']}")
     for k in sorted(set(stats) - before - {"units", "fish"}):
         print(f"  {k}: {stats[k]}")
-    passable = np.array([st.split(":")[1].split("[")[0] in ("air", "cave_air") or       # the name only: a fence has
-                         any(k in st.split(":")[1].split("[")[0] + "[" for k in PASSABLE)  # "waterlogged=false" (#465)
-                         and "grass_block" not in st for st in B.states] + [True] * 1024)
+    passable = passable_states(B.states)
 
     dim = os.path.join(out, "dimensions", "minecraft", "overworld")
     for d in ("region", "entities"):
