@@ -190,6 +190,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Ghost ghost = new Ghost(this);
     private final Cheats cheats = new Cheats(this);
     private final Deaths deaths = new Deaths(this);
+    private final Alerts alerts = new Alerts(this, AoePlugin::side);   // "under attack" for the team of the target (#1231)
     private final Viewer viewer = new Viewer(this);                 // the game mode switch of a replay viewer (#910)
     private final Border border = new Border();
 
@@ -297,6 +298,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 if (a != null && b != null) {           // the arrow sticks in the walls: the shot hits (#608)
                     hit(t, b, a.damage(b.stats));
                     hitEffect(t, b, mob);
+                    alerts.hit(t, true, mob);
                 }
             }
         }
@@ -332,6 +334,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (b != null) {                                  // a building takes the shot alone
             hit(t, b, a.damage(b.stats));
             hitEffect(t, b, mob);
+            alerts.hit(t, true, mob);
         } else if (r <= 0) {
             LivingEntity v = t.getVehicle() instanceof LivingEntity h && stats.containsKey(h.getUniqueId()) ? h : t;
             if (v.isValid() && stats.containsKey(v.getUniqueId())) {
@@ -607,6 +610,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 lastHit.put(from.getUniqueId(), Bukkit.getCurrentTick());
                 hit(ev.getEntity(), b, a.damage(b.stats));
                 hitEffect(ev.getEntity(), b, from);
+                alerts.hit(ev.getEntity(), true, from);
             }
             return;
         }
@@ -648,6 +652,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     // The AoE2 damage of attacker values a on the victim with values t (#514), and the attack back.
     private void harm(LivingEntity victim, Stats t, Stats a, Entity from) {
+        alerts.hit(victim, false, from);                  // before the hit: a unit that dies of it is attacked too
         fight(victim);
         fight(from);
         victim.playHurtAnimation(0);
@@ -1268,7 +1273,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     // The team name, else the player tag aoe2mc.pN: the pulse of the datapack puts a unit in its team only when its
     // chunk is loaded, and two units without a team are not enemies (#986: idle soldiers killed their neighbours).
-    private static String side(Entity e) {
+    static String side(Entity e) {
         Team t = Bukkit.getScoreboardManager().getMainScoreboard().getEntityTeam(e);
         if (t != null) {
             return t.getName();
