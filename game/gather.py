@@ -55,6 +55,8 @@ BUSH_FOOD = 125                                                    # food in one
 # DE gather rates. Normal game speed is 1.7 game seconds per real second (#413).
 AOE2_WORK, NORMAL = {"wood": 0.39, "food": 0.31, "farm": 0.33, "gold": 0.38, "stone": 0.36}, 1.7
 WORK_SECONDS = {r: 1 / (w * NORMAL) for r, w in AOE2_WORK.items()}    # real seconds per unit, as at Normal speed
+CARRY = {"WHEELBARROW": 3}                                         # more resources per trip, as in AoE2 (#728)
+PACE = {"WHEELBARROW": 1.1}                                        # the villager walk speed factor, as in AoE2
 WORK_TECHS = {"DOUBLE_BIT_AXE": {"wood": 1.2}}                     # work rate factors of the economy technologies (AoE2)
 FARM_FOOD = 175                                                    # food in one farm, as in AoE2 DE (no upgrades)
 MINES = {"GOLD_MINE": ("gold", 800, "GOLD_MINER"), "STONE_MINE": ("stone", 350, "STONE_MINER")}   # as in AoE2
@@ -64,6 +66,7 @@ STEPS = [(dx, dz) for dx in (-1, 0, 1) for dz in (-1, 0, 1) if dx or dz]
 NUMBER = r"(-?[\d.]+(?:E-?\d+)?)[df]"
 CIVILIANS = ("VILLAGER", "REPAIRER", "MONK", "KING", "TRADE", "FISHING_SHIP", "TRANSPORT")
 SELECT = "aoe2mc.selected"                                         # entity tag of the selected units
+TYPE_REACH = 16                                                    # blocks: a second click selects its type this near (#743)
 # The look and sound of one gather step at the resource (#592): block particles and a vanilla sound. A villager has
 # no arm swing, so it turns to the resource (`rotate ... facing`). 26.3 block particles take
 # `{id:...,Properties:{...}}`, not `Name`.
@@ -356,6 +359,21 @@ class Gather:
         self.selected = keep
         bossbar.show(self, uuid)                                        # the boss bar of the selection (#659)
 
+    def select_type(self, uuid):
+        """Select all own military units with the name of unit uuid within TYPE_REACH blocks of it, as a double
+        click in AoE2 does (#743). The other units leave the selection."""
+        pos = self.positions([u for u, n in self.soldiers.items() if n == self.soldiers[uuid]])
+        if uuid not in pos:
+            return
+        near = {u for u, p in pos.items() if math.dist(p, pos[uuid]) <= TYPE_REACH}
+        for u in sorted(self.selected - near):
+            self.command(f"data merge entity {u} {{Glowing:0b}}")
+            self.command(f"tag {u} remove {SELECT}")
+            self.command(f"aoe label {u}")
+        self.selected &= near
+        for u in sorted(near - self.selected - {uuid}) + [uuid]:      # the clicked unit last: its boss bar
+            self.select(u)
+
     def attack(self, target):
         """Send the selected military units to attack the unit target, with their AoE2 walk speed (ai.py)."""
         import ai                                                      # ai imports this module
@@ -487,6 +505,9 @@ class Gather:
         if u and u in self.selected and u in self.villagers:         # a click on a selected villager (#621)
             build.open_menu(self, name)
             return
+        if u and u in self.selected and u in self.soldiers:          # a second click on a soldier (#743)
+            self.select_type(u)
+            return
         if u:
             self.select(u)
             return
@@ -558,7 +579,7 @@ class Gather:
                 v.timer += self.tick
                 src = self.source(v)
                 work = self.work_time("farm" if v.tree in self.map.farms else v.res)
-                while v.timer >= work and v.load < self.carry and src.get(v.tree, 0) > 0:
+                while v.timer >= work and v.load < self.limit() and src.get(v.tree, 0) > 0:
                     v.timer -= work
                     v.load += 1
                     src[v.tree] -= 1
@@ -575,7 +596,7 @@ class Gather:
                         self.fell(v.tree)
                     else:
                         self.trunk(v.tree)
-                if v.load >= self.carry or src.get(v.tree, 0) <= 0:
+                if v.load >= self.limit() or src.get(v.tree, 0) <= 0:
                     self.go(v, "to_drop", set().union(*map(self.map.around, self.map.drops[v.res])))
         train.tick(self, self.tick * NORMAL)
         bossbar.tick(self)
@@ -595,8 +616,13 @@ class Gather:
         import ai                                                      # ai imports gather
         if v.goal:
             x, z = v.goal
-            ai.move(self, v.uuid, "VILLAGER", self.map.T, x + 0.5, self.map.y(x, z), z + 0.5)
+            ai.move(self, v.uuid, "VILLAGER", self.map.T, x + 0.5, self.map.y(x, z), z + 0.5,
+                    NORMAL * math.prod(PACE.get(t, 1) for t in self.techs))
         v.moved, v.tries = self.clock(), v.tries + 1
+
+    def limit(self):
+        """The resources that a villager carries, with the technologies of the player (CARRY)."""
+        return self.carry + sum(CARRY.get(t, 0) for t in self.techs)
 
     def follow(self, v):
         """Paper: read the position of a walking villager. It arrives 1.5 blocks from the center of its goal cell (there
