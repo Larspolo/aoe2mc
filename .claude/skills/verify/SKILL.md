@@ -84,3 +84,8 @@ face you.").
   a new golden file (`AOE2MC_UPDATE_GOLDEN=1 python3 -m pytest tests/test_golden.py`), commit it and explain in
   the PR body which blocks or entities changed and why. A refactor must not change the golden file.
 - If a check fails for a reason outside your change, do not hide it. Make a ticket and say so in the PR.
+- Parallel tickets change the same file (`AoePlugin.java`, `game/gather.py`, `game/replay.py`): before the last check
+  round, `git fetch origin main` and `git diff --stat HEAD...origin/main -- <the files of your diff>`. When main changed
+  one of them, merge `origin/main` and also run the `-m mc` tests that the merged commits added or changed
+  (`git diff --name-only ORIG_HEAD HEAD -- tests/`). Your own tests do not see the new behavior: #770 (attack back)
+  broke `test_mounted_death.py` of #732, which merged 20 minutes before; the night run finds it only hours later.
