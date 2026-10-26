@@ -8,11 +8,14 @@ Usage:
 The conversion runs in this process. A thread reads the resident memory (RSS, /proc/self/statm) every 10 ms, and
 aoe2mc.TICKS gives the end of each phase: a sample belongs to the phase that ends next. "units" and "chunks" take
 turns in the chunk loop: their rows add all their parts. Prints a Markdown table: phase, seconds, peak MB.
+Without /proc (macOS, #1043) the thread reads resource.getrusage: the peak RSS of the process up to now, not the
+current RSS. Then the peak of a phase is the peak up to the end of that phase.
 """
 import argparse
 import contextlib
 import io
 import os
+import resource
 import sys
 import tempfile
 import threading
@@ -22,11 +25,15 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import aoe2mc  # noqa: E402
 
 PAGE = os.sysconf("SC_PAGE_SIZE")
+STATM = "/proc/self/statm"
 
 
 def rss():
-    with open("/proc/self/statm") as f:
-        return int(f.read().split()[1]) * PAGE
+    """The resident memory in bytes; without /proc the peak up to now (ru_maxrss: bytes on macOS, KiB on Linux)."""
+    if os.path.exists(STATM):
+        with open(STATM) as f:
+            return int(f.read().split()[1]) * PAGE
+    return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * (1 if sys.platform == "darwin" else 1024)
 
 
 def measure(src, out, period=0.01, **kw):

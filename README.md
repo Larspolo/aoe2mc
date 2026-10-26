@@ -179,6 +179,16 @@ The converter reads the land part of the script: the player lands on a circle, t
 objects yet. It prints a warning for each section and attribute that it does not read yet. The repository has no
 script of the game.
 
+Without AoE2, use an own generator of the program. It needs no game file:
+
+    aoe2mc --random-map arabia ArabiaWorld --seed 7 --preview
+
+Arabia gives open grass and dirt land, small forests and ponds, and 2 players on a circle. Each player gets a town
+center, 3 villagers, a scout, sheep, berry bushes, gold and stone mines, boars and deer.
+`--random-map arena` closes each player in a circle of stone walls with a forest inside it, and has open land
+between the circles. `--random-map black_forest` covers most of the map with forest, with open player lands, an open
+middle and open paths between them.
+
 ## Buildings
 
 Each building fills its AoE2 footprint. The front (main door) is on the south side, as in the AoE2 camera view.

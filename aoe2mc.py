@@ -11,8 +11,10 @@ Options:
     --tile-size N      Minecraft blocks per AoE2 tile, in each direction (default 4)
     --level-height N   Minecraft blocks per AoE2 elevation level (default 3)
     --name TEXT        World name in the Minecraft menu (default: file name)
-    --seed N           Seed for the random details (tree heights, flowers) and of a random map script (.rms)
-                       (default 1)
+    --seed N           Seed for the random details (tree heights, flowers), of a random map script (.rms) and
+                       of --random-map (default 1)
+    --random-map KIND  Make the map with an own generator (arabia, arena, black_forest), no input file:
+                       aoe2mc.py --random-map arabia OUT
     --preview          Also write preview.png (top view) into the world folder
     --mc-version V     Minecraft Java version of the output: 26.3 (default, the only one)
     --orientation C    Minecraft corner (ne, se, sw, nw) of the top corner of the AoE2 screen (default ne)
@@ -237,12 +239,16 @@ def object_kinds(old=True):
 
 
 RECORDS = (".aoe2record", ".mgz", ".mgx", ".mgl")      # recorded games: DE, HD; UserPatch, AoC; AoK
+RANDOM_MAP = "random-map:"          # the source name of --random-map KIND (#993): read_map makes the map of the seed
 
 
 def read_map(path, seed=1):
     """read_record for recorded games (RECORDS), read_scx for old .scx scenarios, read_json for a map in JSON,
-    read_rms for a random map script (the land of seed), else read_scenario."""
+    read_rms for a random map script (the land of seed), rmap.random_map for RANDOM_MAP + kind, else read_scenario."""
     p = path.lower()
+    if p.startswith(RANDOM_MAP):
+        import rmap
+        return map_description(rmap.random_map(p[len(RANDOM_MAP):], seed), path)
     if p.endswith(".rms"):
         return read_rms(path, seed)
     return (read_record if p.endswith(RECORDS) else read_scx if p.endswith(".scx") else
@@ -2251,12 +2257,13 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
         elif boat and wtop > top:
             col = vol[:, bz & 15, bx & 15]
             h = 1 + 2 * depth(nbt) if nbt.get("Passengers") else 2   # the boat and its crew (or stacks) need free space
-            y = wtop
+            ice = bool(cols.ice[bx, bz])          # frozen water: the boat stands on the ice block at wtop (#1024)
+            y = base = wtop + ice
             while y < MAX_Y - 3 and not all(passable[col[y + k - MIN_Y]] for k in range(h)):
                 y += 1
-            if y > wtop:
-                moved(str(top_name(nbt)), nbt, bx, wtop, bz, col)
-            y += 0.5
+            if y > base:
+                moved(str(top_name(nbt)), nbt, bx, base, bz, col)
+            y += 0 if ice and y == base else 0.5
         else:
             col = vol[:, bz & 15, bx & 15]
             y = top + 1
@@ -2621,9 +2628,10 @@ def turn_area(area, size, k):
 def area_selector(c, T):
     """The entity selector of the units of the player of an "Objects in Area" condition: the blocks of the tiles
     x1..x2, y1..y2 (z), all heights. An area of -1 is the whole map. A unit type filter is the tag aoe2mc.t<id>
-    of the units (#681); the "object" of an effect (a name, #656) is not a filter here."""
+    of the units (#681); the "object" of an effect (a name, #656) is not a filter here. The horse of a unit has the player
+    tag too (units.MOUNT, #1045): it does not count."""
     obj = c.get("object")
-    sel = [f"tag=aoe2mc.p{c['player']}"] + [f"tag=aoe2mc.t{obj}"] * (isinstance(obj, int) and obj >= 0)
+    sel = [f"tag=aoe2mc.p{c['player']}", f"tag=!{units.MOUNT}"] + [f"tag=aoe2mc.t{obj}"] * (isinstance(obj, int) and obj >= 0)
     if min(c["area"]) >= 0:
         x1, y1, x2, y2 = c["area"]
         x1, x2, y1, y2 = min(x1, x2), max(x1, x2), min(y1, y2), max(y1, y2)
@@ -3466,19 +3474,22 @@ def game_time(text):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
-    ap.add_argument("scenario", help=".aoe2scenario file, .aoe2record, .mgz, .mgx or .mgl (the start state of a recorded game), .scx "
+    ap.add_argument("scenario", nargs="?", help=".aoe2scenario file, .aoe2record, .mgz, .mgx or .mgl (the start state of a recorded game), .scx "
                     "(an old scenario, format 1.21), .json (a map description, README), .rms (the land of a random map "
                     "script, with --seed), or "
                     ".aoe2campaign, .cpx or .cpn (one world per scenario; old scenarios that are not .scx 1.21: the "
                     "steps for the DE editor)")
-    ap.add_argument("output", help="output world folder (put it in .minecraft/saves/); for a campaign the folder of "
-                    "the worlds")
+    ap.add_argument("output", nargs="?", help="output world folder (put it in .minecraft/saves/); for a campaign the "
+                    "folder of the worlds")
+    ap.add_argument("--random-map", choices=("arabia", "arena", "black_forest"), metavar="KIND",
+                    help="make the map with an own generator of the seed, no input file (arabia, arena, black_forest); "
+                    "give only the output")
     ap.add_argument("--scenario", dest="only", type=int_range(1, 999), metavar="N",
                     help="campaign: convert only scenario N (1 = the first)")
     ap.add_argument("--tile-size", type=int_range(1, 16), default=4, help="blocks per tile (default 4)")
     ap.add_argument("--level-height", type=int_range(1, 16), default=3, help="blocks per elevation level (default 3)")
     ap.add_argument("--name", help="world name in the Minecraft menu")
-    ap.add_argument("--seed", type=int, default=1, help="seed for random details (default 1)")
+    ap.add_argument("--seed", type=int, default=1, help="seed for random details and random maps (default 1)")
     ap.add_argument("--preview", action="store_true", help="also write preview.png")
     ap.add_argument("--architecture", choices=sorted(buildings.ARCH),
                     help="use one architecture set for all players (default: from each player's civilization)")
@@ -3510,6 +3521,13 @@ def main(argv=None):
                          "commands until then; default: the start)")
     ap.add_argument("--verbose", action="store_true", help="print the time of each phase")
     a = ap.parse_args(argv)
+    if a.random_map:
+        if a.output is not None:
+            ap.error("--random-map takes no input file: give only the output world folder")
+        a.output, a.scenario = a.scenario, RANDOM_MAP + a.random_map
+        a.name = a.name or f"{a.random_map.title()} {a.seed}"
+    if a.output is None:
+        ap.error("give the input file and the output world folder")
     kw = dict(T=a.tile_size, H=a.level_height, seed=a.seed, preview=a.preview, arch=a.architecture,
               player_arch=a.player_architecture, with_units=not a.no_units, barriers=not a.no_barriers,
               mc_version=a.mc_version, spawn=a.spawn, birds=not a.no_birds, orientation=a.orientation,

@@ -15,6 +15,11 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import health  # noqa: E402
 
+DATASETS = {"merges": "aoe2mc-merged-prs.json", "tickets": "aoe2mc-tickets.json", "epics": "aoe2mc-epics.json",
+            "roadmap": "aoe2mc-roadmap.json", "release_bar": "aoe2mc-release-bar.json", "usage": "aoe2mc-usage.json",
+            "setup": "aoe2mc-setup.json"}
+ROWS = re.compile(r"\s*\.(filter|find|some|every|forEach|map|flatMap|sort)\(\s*\(?\s*(\w+)(?:\s*,\s*(\w+))?\s*\)?\s*=>")
+
 GOALS = {"1": "convert", "2": "play", "3": "replay", "4": "system"}
 SECTIONS = {"Convert maps": "convert", "Play AoE2": "play", "Replay a game": "replay", "The agent system": "system"}
 KEY = re.compile(r"Roadmap:\s*`([a-z0-9:-]+)`")
@@ -110,6 +115,64 @@ def usage(hours=72):
             for t, u, r, k in health.samples(health.status_comments(hours=hours))]
 
 
+def close(text, i):
+    """The index after the parenthesis that closes the one before index i."""
+    depth = 1
+    while depth and i < len(text):
+        depth += {"(": 1, ")": -1}.get(text[i], 0)
+        i += 1
+    return i
+
+
+def fields(body, rows):
+    """The fields that the lambdas of `rows.filter((r) => ...)` (and the filters and sorts after it) read of a row."""
+    out = set()
+    for m in re.finditer(r"(?<![\w.])" + re.escape(rows) + r"(?=\.\w+\()", body):
+        i, rest = m.end(), re.match(r"\.(concat|slice)\(", body[m.end():]) is not None  # keep the rows
+        while (f := ROWS.match(body, i)):
+            end = close(body, body.index("(", i) + 1)
+            for v in filter(None, f.groups()[1:]):
+                out |= set(re.findall(r"(?<![\w.])" + v + r"\.(\w+)", body[f.end():end]))
+            rest, i = f[1] in ("filter", "sort"), end
+            if not rest:
+                break
+        alias = re.search(r"const (\w+) = $", body[:m.start()])
+        if rest and alias and alias[1] != rows:  # const open = tickets.filter(...): the rows of `open` too
+            out |= fields(body, alias[1])
+    return out
+
+
+def page_columns(page):
+    """{dataset: the columns that the dashboard page reads} for the data files (#1031): the inputs of `dash.calc`,
+    `dash.data('NAME').data`, and the `data-field` heads of a table with `data-source`."""
+    out = {name: set() for name in DATASETS}
+    calcs = list(re.finditer(r"dash\.calc\('\w+',\s*\{\s*inputs:\s*\[([^\]]*)\].*?fn:\s*\(([^)]*)\)\s*=>", page, re.S))
+    for m, after in zip(calcs, calcs[1:] + [None]):
+        body = page[m.end():after.start() if after else len(page)]
+        for name, param in zip(re.findall(r"\w+", m[1]), re.findall(r"\w+", m[2])):
+            if name in out:
+                out[name] |= fields(body, param)
+    for m in re.finditer(r"const (\w+) = dash\.data\('(\w+)'\)", page):
+        if m[2] in out:
+            end = page.find("\n  function ", m.end())
+            out[m[2]] |= fields(page[m.end():end if end > 0 else len(page)], m[1] + ".data")
+    for m in re.finditer(r'<table[^>]*data-source="(\w+)".*?</table>', page, re.S):
+        if m[1] in out:
+            out[m[1]] |= set(re.findall(r'data-field="(\w+)"', m[0]))
+    return out
+
+
+def check(out_dir, page):
+    """The columns that the page reads and a data file does not have: [(file, [column, ...])]."""
+    missing = []
+    for name, cols in page_columns(page).items():
+        rows = json.load(open(os.path.join(out_dir, DATASETS[name])))
+        have = set().union(*(r.keys() for r in rows)) if rows else cols
+        if cols - have:
+            missing.append((DATASETS[name], sorted(cols - have)))
+    return missing
+
+
 def main(out_dir):
     os.makedirs(out_dir, exist_ok=True)
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -127,7 +190,12 @@ def main(out_dir):
         with open(os.path.join(out_dir, name), "w") as f:
             json.dump(rows, f, ensure_ascii=False)
         print(f"{name}: {len(rows)} rows")
+    missing = check(out_dir, open(os.path.join(root, "tools", "dashboard_artifact", "index.html")).read())
+    for name, cols in missing:
+        print(f"{name}: the page reads missing columns: {', '.join(cols)}")
+    print("columns: missing" if missing else "columns: OK")
+    return 1 if missing else 0
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "out/dashboard")
+    sys.exit(main(sys.argv[1] if len(sys.argv) > 1 else "out/dashboard"))

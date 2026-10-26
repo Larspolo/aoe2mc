@@ -38,7 +38,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:ages` Age up from the Dark Age to the Imperial Age: cost, time, the buildings and units that each age unlocks
 - [ ] `play:civs` Civilizations: the bonuses, unique technologies and team bonus of each civilization change costs and attributes
 - [x] `play:feedback` Show what the player points at and the result of each action (epic #793)
-- [ ] `play:control` Select and order many units: a selection box, groups, formations, an idle villager item (epic #742)
+- [x] `play:control` Select and order many units: a selection box, groups, formations, an idle villager item (epic #742)
 - [ ] `play:stances` Unit stances (aggressive, defensive, stand ground, no attack): an idle unit attacks the enemies in its line of sight and comes back
 - [x] `play:garrison` Garrison units in buildings (epic #810)
 - [ ] `play:arrows` The town center, towers and castles shoot arrows at enemies in range, more arrows with a garrison
@@ -54,6 +54,8 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:cheats` The AoE2 cheat codes in the chat when cheats are on (epic #820)
 - [ ] `play:fog` The explored area and the fog of war: a player sees only what the own units and buildings see
 - [ ] `play:save` Save a game of the game program and load it again (units, resources, queues, ages)
+- [ ] `play:hunt` Hunt and herd: villagers kill deer, lure and kill boars, and herd sheep that the first player who sees them owns
+- [ ] `play:setup` Set up a game before it starts: the starting age, starting resources, population limit, the civilizations and the number of bots
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 

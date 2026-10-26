@@ -10,6 +10,10 @@ Build (#857): a house when the population is 2 below the limit, then the buildin
 cost. One villager builds each site (an idle one, else the nearest), next to the source of the building (NEAR) or
 the town center. Each building of ORDER once, as the first buildings of an AoE2 build order.
 
+Army shares (#1049): when the bot has its villager number and a building that trains a soldier, the shares follow the
+cost of that soldier (train.COSTS), with WOOD for farms and houses; stone gets no new villagers. Each step moves at
+most one working villager from a resource above its share to the resource most below its share, as an AoE2 bot does.
+
 Attack (#859): until the game time `attack` (AoE2 seconds) the soldiers stay at their buildings. Then each soldier
 without a live target attacks the nearest unit of player `foe`, else its nearest building, with the mob AI of the
 plugin (`ai.attack`, `aoe attack`). A soldier gets a new target when its target dies.
@@ -26,21 +30,25 @@ import gather  # noqa: E402
 import train  # noqa: E402
 
 SHARE = {"food": 0.4, "wood": 0.3, "gold": 0.2, "stone": 0.1}     # the villagers on each resource (a simple AoE2 bot)
+WOOD = 0.2                                                         # the wood share for farms and houses with an army
 QUEUED = 2                                                         # units in the queue of each building of the bot
 ORDER = ("LUMBER_CAMP", "MILL", "MINING_CAMP", "BARRACKS")         # the build order after the houses
 NEAR = {"LUMBER_CAMP": "wood", "MILL": "food", "MINING_CAMP": "gold"}   # a drop site goes next to its resource
 HOUSE_GAP = 2                                                      # a new house at this many units below the limit
 ATTACK = 600.0                                                     # AoE2 seconds: the first attack at 10:00
 LOOK = 2.0                                                         # AoE2 seconds between two looks for targets
+GROUP = 5                                                          # soldiers of a wave, as an AoE2 bot army
 
 
 class Bot:
-    def __init__(self, game, data, player=2, share=None, villagers=20, attack=ATTACK, foe=1, **kw):
+    def __init__(self, game, data, player=2, share=None, villagers=20, attack=ATTACK, foe=1, group=GROUP, **kw):
         """share: the Gather of the human player. Both then use the same trees, bushes and mines.
         villagers: the bot trains villagers up to this number, then soldiers.
-        attack: the game time (AoE2 seconds) of the first attack on player foe."""
+        attack: the game time (AoE2 seconds) of the first attack on player foe.
+        group: the soldiers of the first wave; until then they stay at their buildings (#1051)."""
         self.g = gather.Gather(game, data, player=player, **kw)
-        self.villagers, self.attack, self.foe, self.share = villagers, attack, foe, share
+        self.villagers, self.attack, self.foe, self.share, self.group = villagers, attack, foe, share, group
+        self.charged = False                                           # the wave attacks: new soldiers join it
         self.time, self.looked, self.targets = 0.0, -LOOK, {}          # AoE2 seconds of the game, soldier -> target
         self.nobody = f"@a[tag=aoe2mc.bot{player}]"                     # the texts of the queues go to no player
         if share:
@@ -58,15 +66,18 @@ class Bot:
         return self
 
     def sources(self, res):
-        """{tile: amount} of the trees, fruit bushes or mines of res."""
+        """{tile: amount} of the trees, the fruit bushes and the own farms without a farmer, or the mines of res."""
         m = self.g.map
-        return m.trees if res == "wood" else m.bushes if res == "food" else m.mines[res]
+        if res == "food":                                              # a farm takes one farmer (Gather.send)
+            return {**m.bushes, **{t: k for t, k in m.farms.items() if t in m.own_farms and t not in self.g.farmers}}
+        return m.trees if res == "wood" else m.mines[res]
 
     def step(self):
         """One tick of the gather game of the player, then orders for the idle villagers."""
         g = self.g
         g.step()
         self.build()
+        share = self.shares()
         work = {r: 0 for r in SHARE}
         idle = []
         for v in g.villagers.values():
@@ -80,24 +91,64 @@ class Bot:
                 idle.append(v)
         n = len(g.villagers)
         for v in sorted(idle, key=lambda v: v.uuid):
-            for res in sorted(SHARE, key=lambda r: (work[r] - SHARE[r] * n, r)):     # the largest gap first
-                full = [t for t, k in self.sources(res).items() if k > 0 and t not in self.failed]
-                if full:
-                    T = g.map.T
-                    tile = min(full, key=lambda t: (math.dist(v.cell, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), t))
-                    g.send(tile, {v.uuid})
+            for res in sorted(SHARE, key=lambda r: (work[r] - share[r] * n, r)):     # the largest gap first
+                if self.go(v, res):
                     work[res] += 1
                     break
+        self.move(share, work)
         self.recruit()
         self.time += g.tick * gather.NORMAL
         if self.time >= self.attack and self.time >= self.looked + LOOK:   # each look costs RCON commands
             self.looked = self.time
             self.fight()
 
+    def go(self, v, res):
+        """Send villager v to the nearest source of res that has some left. False when there is none."""
+        g = self.g
+        full = [t for t, k in self.sources(res).items() if k > 0 and t not in self.failed]
+        if full:
+            T = g.map.T
+            g.send(min(full, key=lambda t: (math.dist(v.cell, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), t)), {v.uuid})
+        return bool(full)
+
+    def army(self):
+        """The military unit that the first own training building (not a town center) trains, or None."""
+        g = self.g
+        return next((n for rect, name in sorted(train.homes(self.g).items()) if name != "TOWN_CENTER"
+                     for n in train.trains(g, name) if gather.military(n) and n not in train.TECHS
+                     and not build.locked(g, n)), None)
+
+    def shares(self):
+        """SHARE, or the shares of the army (#1049) when the bot has its villager number and trains a soldier."""
+        unit = len(self.g.villagers) >= self.villagers and self.army()
+        if not unit:
+            return SHARE
+        cost = train.COSTS[unit]
+        total = sum(cost.values())
+        return {r: (WOOD if r == "wood" else 0) + (1 - WOOD) * cost.get(r, 0) / total for r in SHARE}
+
+    def move(self, share, work):
+        """Move one working villager from the resource most above its share to the resource most below it, when the
+        first has a whole villager too many: then the move never goes back."""
+        g, n = self.g, len(self.g.villagers)
+        gap = {r: work[r] - share[r] * n for r in SHARE}
+        high, low = max(SHARE, key=lambda r: (gap[r], r)), min(SHARE, key=lambda r: (gap[r], r))
+        if gap[high] < 1 or gap[low] >= 0:
+            return
+        busy = sorted(u for u, v in g.villagers.items() if v.state != "idle" and v.res == high and v.site is None)
+        for v in [g.villagers[u] for u in busy[:1]]:                   # a builder stays at its site
+            if self.go(v, low):
+                work[high] -= 1
+                work[low] += 1
+
     def fight(self):
-        """Send each soldier without a live target to the nearest unit of the foe, else to its nearest building."""
+        """Send each soldier without a live target to the nearest unit of the foe, else to its nearest building. A wave
+        starts with self.group soldiers; when all of it is dead, the next wave waits for a full group again (#1051)."""
         g = self.g
         mine = g.positions(sorted(g.soldiers))                         # a dead soldier is not in it
+        self.charged = len(mine) >= self.group or self.charged and bool(mine)
+        if not self.charged:
+            return
         live = {t for t in set(self.targets.values()) if "passed" in g.command(f"execute if entity {t}")}
         self.targets = {u: t for u, t in self.targets.items() if u in mine and t in live}
         free = sorted(mine.keys() - self.targets.keys())
@@ -143,12 +194,15 @@ class Bot:
                     more += n == "VILLAGER_MALE"
 
     def build(self):
-        """Start the next house or building of ORDER when the bot can pay for it and no site of it is unfinished."""
+        """Start the next house, farm or building of ORDER when the bot can pay for it and no site of it is unfinished.
+        A farm when no food source is left (#1026), at most one for each food villager of the shares."""
         g = self.g
         if any(not s.get("done") for s in g.sites):                    # one site at a time
             return
         cap, have = train.limit(g), train.owned(g)
-        name = "HOUSE" if g.pop >= cap - HOUSE_GAP and cap < train.LIMIT else \
+        farms = sum(k > 0 for t, k in g.map.farms.items() if t in g.map.own_farms)
+        hungry = not any(k > 0 for k in self.sources("food").values()) and farms < math.ceil(self.shares()["food"] * len(g.villagers))
+        name = "HOUSE" if g.pop >= cap - HOUSE_GAP and cap < train.LIMIT else "FARM" if hungry else \
             next((n for n in ORDER if n not in have), None)
         if name is None or any(g.stock[r] < v for r, v in build.COSTS[name].items()):
             return

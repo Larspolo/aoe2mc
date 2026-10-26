@@ -5,7 +5,8 @@ game/plugin Cheats.java): a chat text that is a code (also "/code") does not go 
 aoe_cheat of the player to the number of the code in NAMES (1 = the first). gather.Gather.clicks calls clicks(): it
 reads and resets the score and does the effect. Vanilla has no event for a chat text, so the plugin is necessary.
 The codes and amounts of AoE2 DE: the AoE2 wiki, "Cheat code (Age of Empires II)" (10,000 of one resource since
-The Forgotten, before it 1,000). Minecraft has no fog of war: "marco" and "polo" only answer in the chat.
+The Forgotten, before it 1,000). Minecraft has no fog of war: "polo" only answers in the chat, and "marco" answers
+"polo", an easter egg with the name of the owner (Larspolo, #1057).
 "aegis" (#817) is a toggle: g.aegis makes building (gather.Gather.step), training and research (train.tick) and
 gathering (gather.Gather.work_time) instant, for all players as in AoE2.
 A unit cheat (#818; the DE list of the wiki, "Units") summons its unit at the town center of the player, as a trained
@@ -23,7 +24,7 @@ research a technology up to train.REPEAT times with stacked effects (train.count
 bar and the hints, or shows them again.
 Excluded and partial codes (owner, #820, #985):
 - "!mute", "!nomute": excluded. The game program has no taunts, so the codes have nothing to silence.
-- "marco", "polo": done as they are. Minecraft has no fog of war, so the codes only answer in the chat.
+- "marco", "polo": done as they are. Minecraft has no fog of war, so the codes only answer in the chat ("marco": "polo").
 - "aegis": the part "animals die at once" has no effect. The game program has no hunting yet.
 - "sharing is caring": waits for allies (#969). The game program has no allies yet.
 """
@@ -175,7 +176,7 @@ CODES = {                                     # code -> the resources, the chat 
     "i love the monkey head": Unit("VMDL"),
     "i r winner": end("Victory", "gold"),
     "lumberjack": {"wood": 10000},
-    "marco": MAP,
+    "marco": "polo",                          # an easter egg (#1057)
     "my cpu can handle it": cpu,
     "natural wonders": wonders,
     "ninjaconnor": ALL,

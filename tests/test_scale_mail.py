@@ -24,9 +24,9 @@ def test_scale_mail_armor_gives_infantry_one_melee_and_pierce_armor():
     rect = train.open_menu(g, "Steve", (11, 3))
     train.order(g, "Steve", rect, 1)
     train.tick(g, 39)
-    assert not g.techs
+    assert g.techs == {"FEUDAL_AGE"}
     train.tick(g, 1)
-    assert g.techs == {"SCALE_MAIL_ARMOR"}
+    assert g.techs == {"FEUDAL_AGE", "SCALE_MAIL_ARMOR"}
     for name in ("MILITIA", "SPEARMAN"):
         s = combat.stats(name)
         assert train.stats(g, name) == s._replace(melee=s.melee + 1, pierce=s.pierce + 1), name

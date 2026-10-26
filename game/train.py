@@ -160,9 +160,15 @@ REQUIRES = {"FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP",
 TECH_AGE = {                                                       # the age of a technology (build.AGE): hidden before
     "BLOODLINES": 1,
     "DOUBLE_BIT_AXE": 1,
+    "FLETCHING": 1,
+    "FORGING": 1,
+    "GOLD_MINING": 1,
+    "HORSE_COLLAR": 1,
     "MAN_AT_ARMS_UPGRADE": 1,
     "PADDED_ARCHER_ARMOR": 1,
     "SCALE_BARDING_ARMOR": 1,
+    "SCALE_MAIL_ARMOR": 1,
+    "STONE_MINING": 1,
     "WHEELBARROW": 1,
 }
 AGES = ("Dark Age", "Feudal Age")                                  # the age after each researched age (index: ages)
@@ -493,8 +499,15 @@ def max_pop(g):
 
 
 def census(g):
-    """Count the live villagers and military units of the player (a dead unit has no position) and show the counts."""
-    g.pop, g.census = len(g.positions(list(g.villagers) + list(g.soldiers))), 0.0
+    """Count the live villagers and military units of the player (a dead unit has no position) and show the counts.
+    A dead villager leaves g.villagers, the selection and its farm: the idle count and the bot see only live ones (#1039)."""
+    live = g.positions(list(g.villagers) + list(g.soldiers))
+    for u in [u for u in g.villagers if u not in live]:
+        del g.villagers[u]
+        g.selected.discard(u)
+        for t in [t for t, f in g.farmers.items() if f == u]:
+            del g.farmers[t]
+    g.pop, g.census = len(live), 0.0
     sidebar(g)
 
 

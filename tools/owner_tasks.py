@@ -4,6 +4,7 @@ and question. The skill `human` (a local session of the owner, `/human`) lists t
     python3 tools/owner_tasks.py             # decision tickets first, then the oldest first
     python3 tools/owner_tasks.py --show N    # the section "## For the owner" of ticket N (else its last question)
     python3 tools/owner_tasks.py --json      # the list as JSON
+    python3 tools/owner_tasks.py --wait      # wait for a new ticket (#1025): exit 0 and print it, exit 1 after --hours
 
 Kinds: `decision` ("Decide: ..."), `play` (a play test in Minecraft: "Check ..."), `setting` (the environment, the
 scheduled task or GitHub), `outside` (a step outside the cloud), `close` (close an issue that the auto mode did not let
@@ -15,6 +16,7 @@ import json
 import os
 import re
 import sys
+import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from dashboard import MUTED, api, labels, pages, question  # noqa: E402
@@ -81,11 +83,43 @@ def show(issue, comments):
     return (last.get("body") or "").split("\n---\n")[0].strip() if last else (issue.get("body") or "").strip()
 
 
+def waiting():
+    """The open needs-human tickets that are not muted (one GitHub request for up to 100)."""
+    return {i["number"]: i for i in pages("issues?state=open&labels=needs-human")
+            if "pull_request" not in i and MUTED not in labels(i)}
+
+
+def wait(every=300, hours=12.0, clock=time.monotonic, sleep=time.sleep):
+    """Wait for a needs-human ticket that was not open at the start (#1025). The skill `human` runs it in the
+    background: the session uses no model turn while it waits. Returns the task of the new ticket, or None after
+    `hours`. Only the new ticket's comments are read."""
+    seen, end = set(waiting()), clock() + hours * 3600
+    while clock() < end:
+        sleep(every)
+        now = waiting()
+        new = sorted(set(now) - seen)
+        if new:
+            i = now[new[0]]
+            return tasks([i], {i["number"]: pages(f"issues/{i['number']}/comments")})[0]
+    return None
+
+
+def line(t):
+    return f"#{t['number']} [{t['kind']}{', epic' * t['epic']}] {t['title']} – {t['question']}"
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--show", type=int, metavar="N", help="print what the owner must do for ticket N")
     ap.add_argument("--json", action="store_true", help="print the list as JSON")
+    ap.add_argument("--wait", action="store_true", help="wait for a new ticket: exit 0 and print it, else exit 1")
+    ap.add_argument("--every", type=float, default=300, help="seconds between two checks of --wait (default 300)")
+    ap.add_argument("--hours", type=float, default=12, help="hours that --wait waits at most (default 12)")
     a = ap.parse_args(argv)
+    if a.wait:
+        t = wait(a.every, a.hours)
+        print(line(t) if t else f"No new ticket in {a.hours:g} hours.")
+        return 0 if t else 1
     if a.show:
         issue = api(f"issues/{a.show}")
         comments = pages(f"issues/{a.show}/comments")
@@ -99,7 +133,7 @@ def main(argv=None):
         print(json.dumps(found, indent=1))
         return 0
     for t in found:
-        print(f"#{t['number']} [{t['kind']}{', epic' * t['epic']}] {t['title']} – {t['question']}")
+        print(line(t))
     if not found:
         print("No ticket waits for the owner.")
     return 0

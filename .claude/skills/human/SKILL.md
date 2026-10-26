@@ -20,18 +20,28 @@ the checks that the chosen ticket needs (a decision needs only GitHub).
 | Check | Command | Fix |
 |---|---|---|
 | Latest code | `git pull --ff-only origin main` | Commit or stash local changes first. |
-| Python 3.10+ with the packages | `python3 -c "import numpy, nbtlib, PIL, AoE2ScenarioParser"` | `python3 -m pip install -r requirements-dev.txt` |
-| Java 25 (Paper server, plugin) | `java -version` | Install a JDK 25 (for example Eclipse Temurin 25). |
+| Python 3.10+ with the packages | `PY=python3; [ -x .venv/bin/python ] && PY=.venv/bin/python; $PY -c "import numpy, nbtlib, PIL, AoE2ScenarioParser"` | `python3 -m pip install -r requirements-dev.txt`. When `pip` gives "externally-managed-environment" (Homebrew Python, PEP 668): `python3 -m venv .venv && .venv/bin/python -m pip install -r requirements-dev.txt` (#1044) |
+| Java 25 (Paper server, plugin) | `java -version` | Install a JDK 25 (for example Eclipse Temurin 25). macOS: the owner types `brew install --cask temurin@25` in a terminal (the installer asks for the password with `sudo`). |
 | Minecraft 26.3 | Ask the owner. | Minecraft launcher → Installations → New → version 26.3. |
 | GitHub access | `gh auth status`, or the GitHub MCP tools | `gh auth login` |
 | Commit email (a ticket with a PR, for example a close) | `git config user.email` ends with `@users.noreply.github.com`. GitHub refuses a push with a private email (#1020). | `git config user.email "$(gh api user --jq '"\(.id)+\(.login)@users.noreply.github.com"')"` (this clone only) |
-| A `.aoe2record` file (replay tickets) | `python3 -c "import mgz"` | `python3 -m pip install mgz` |
+| A `.aoe2record` file (replay tickets) | `python3 -c "import mgz"` (`.venv/bin/python` when it exists) | `python3 -m pip install mgz` (`.venv/bin/python -m pip install mgz` when `.venv` exists) |
+
+When `.venv/bin/python` exists, use it in place of `python3` for each command of this skill (`tools/scenarios.py`,
+`aoe2mc.py`, `game/run.py`, `tools/owner_tasks.py`): the Bash tool does not keep `source .venv/bin/activate` between
+two calls. Tell the owner to type `source .venv/bin/activate` in each new terminal.
 
 ## 2. List the tickets
 
 Run `python3 tools/owner_tasks.py`. It prints the open `needs-human` tickets that are not muted, decision tickets
 first, then the oldest first, each with its kind and its question. Show the list and ask the owner which ticket to
-do (`AskUserQuestion` with the first four tickets, plus "other"). With no ticket: say so and stop.
+do (`AskUserQuestion` with the first four tickets, plus "other"). With no ticket: say so and offer "Wait for the
+next ticket" (below); if the owner does not want to wait, stop.
+
+Wait for the next ticket (#1025): start `python3 tools/owner_tasks.py --wait` with `run_in_background` and end the
+turn. While it waits, the session uses no model turn (one GitHub request each 5 minutes, at most 12 hours). Exit 0:
+it printed the new ticket in the format of the list: show it and ask the owner with `AskUserQuestion` whether to do
+it now (step 3). Exit 1 ("No new ticket in 12 hours."): say so and offer to wait again.
 
 ## 3. Prepare the chosen ticket
 
@@ -78,4 +88,5 @@ the tree from the old tree, #718).
 3. Remove `needs-human` when the answer is complete. For a decision: write the decision into the document of the
    topic and close the decision ticket (`ticket` skill, "Decision tickets"). Keep `needs-human` and say what is open
    when the answer is not complete.
-4. Stop the server (Ctrl-C in `game/run.py`) and offer the next ticket of the list (step 2).
+4. Stop the server (Ctrl-C in `game/run.py`) and offer the next ticket of the list (step 2). After the last ticket:
+   offer "Wait for the next ticket" (step 2).

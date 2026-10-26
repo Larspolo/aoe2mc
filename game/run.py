@@ -11,7 +11,7 @@ Usage:
     python3 game/run.py WORLD --play --bot        # also a bot plays player 2: its villagers gather (game/bot.py)
     python3 game/run.py WORLD --play --bot --bot-attack 5:00   # its soldiers attack player 1 from 5:00 (default 10:00)
     python3 game/run.py WORLD --play --log F.jsonl  # also write a timed event log (tools/measure_gather.py reads it)
-    python3 game/run.py WORLD --replay [--speed 4]  # replay the recorded game of the world (game/replay.py), then wait for Ctrl-C
+    python3 game/run.py WORLD --replay [--speed 4] [--follow N]  # replay the recorded game of the world (game/replay.py), then wait for Ctrl-C
 
 Join with Minecraft (multiplayer, localhost): players play in creative mode and get operator rights.
 The server plays the world in place (the game changes it). Server files (eula, properties, logs) go to .cache/.
@@ -136,7 +136,9 @@ class Game:
         cache = os.path.join(os.path.dirname(self.world), "usercache.json")
         self.usercache = None if os.path.exists(cache) else cache
         self.folder = tempfile.mkdtemp(dir=mc_check.workdir())
-        self.port, self.game_port, password = mc_check.free_port(), mc_check.free_port(), secrets.token_hex(16)
+        if getattr(self, "port", None) is None:      # a restart keeps the ports: the players join again (#979)
+            self.port, self.game_port = mc_check.free_port(), mc_check.free_port()
+        password = secrets.token_hex(16)
         with open(os.path.join(self.folder, "eula.txt"), "w") as f:
             f.write("eula=true\n")
         for p in plugins:
@@ -244,23 +246,60 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     return g
 
 
-def replay(game, world, speed=1.0, start="0:00"):
+KEEP = ("playerdata", "stats", "advancements", "session.lock")   # the players stay where they are after a restart
+
+
+def save(game):
+    """A copy of the world of the running server (save-all flush first). Returns its folder."""
+    game.command("save-off")                         # no autosave while it copies
+    game.command("save-all flush")
+    folder = tempfile.mkdtemp(dir=mc_check.workdir())
+    shutil.copytree(game.world, folder, dirs_exist_ok=True, ignore=lambda d, names: [n for n in names if n in KEEP])
+    game.command("save-on")
+    return folder
+
+
+def restore(saved, world):
+    """Put the world back to the copy of `save` (the server is stopped). The player files stay."""
+    for name in set(os.listdir(world)) - set(KEEP):
+        path = os.path.join(world, name)
+        shutil.rmtree(path) if os.path.isdir(path) and not os.path.islink(path) else os.remove(path)
+    shutil.copytree(saved, world, dirs_exist_ok=True)
+
+
+def replay(game, world, speed=1.0, start="0:00", follow=None):
     import replay
     start = replay.aoe2mc.game_time(start)
     with open(os.path.join(world, "aoe2mc.json")) as f:
         data = json.load(f)
     if "timeline" not in data:
         sys.exit("--replay needs a world of a recorded game (.aoe2record)")
-    game.forceload()
-    if game.kind == "paper":                         # the start units and buildings fight with AoE2 values (#632)
-        import combat
-        combat.setup(game, data)
     import replay_input
     control = replay_input.Input(game)              # hotbar items, menu and /trigger aoe_replay (#688)
-    control.setup()
+
+    def setup():
+        game.forceload()
+        if game.kind == "paper":                     # the start units and buildings fight with AoE2 values (#632)
+            import combat
+            combat.setup(game, data)
+        control.setup()
+    setup()
+    saved = save(game)                               # the start state for a jump back (#979)
+
+    def restart():
+        print("Jump back: the server restarts on the start world.", file=sys.stderr)
+        game.stop()
+        restore(saved, game.world)
+        game.start()
+        setup()
     print(f"Join the server localhost:{game.game_port} (Minecraft {game.version}). The replay starts now "
           f"at speed {speed}. Right click the items in your hotbar, or /trigger aoe_replay set N.", file=sys.stderr)
-    stats = replay.Replay(game, data, game.version, ai=game.kind == "paper").run(speed, start, bar=True, poll=control)
+    try:
+        stats = replay.live(lambda: replay.Replay(game, data, game.version, ai=game.kind == "paper",
+                                                          follow=follow), speed, start,
+                            restart, bar=True, poll=control)
+    finally:
+        shutil.rmtree(saved, ignore_errors=True)
     print(f"{stats['events']} events, {stats['commands']} commands in {stats['busy']} s "
           f"({stats['rate']} commands per second, the timeline needs {stats['need']}), largest lag {stats['lag']} s")
     return stats
@@ -277,6 +316,7 @@ def main(argv=None):
     ap.add_argument("--replay", action="store_true", help="replay the timeline of a recorded game (aoe2mc.json)")
     ap.add_argument("--speed", type=float, default=1.0, help="--replay: times the game speed (default 1)")
     ap.add_argument("--from", dest="start", default="0:00", metavar="MM:SS", help="--replay: start at this game time")
+    ap.add_argument("--follow", type=int, metavar="N", help="--replay: the spectators follow the units of player N")
     ap.add_argument("--cheats", action="store_true", help="--play: the AoE2 cheat codes in the chat (off as in AoE2)")
     ap.add_argument("--bot", action="store_true", help="--play: a bot plays player 2 (game/bot.py)")
     ap.add_argument("--bot-attack", default="10:00", metavar="MM:SS", help="--bot: its soldiers attack player 1 "
@@ -293,7 +333,7 @@ def main(argv=None):
             print(f"{bench(game, a.bench):.0f} commands per second through RCON")
             return
         if a.replay:                                 # after the end the player can look around (#978)
-            replay(game, a.world, a.speed, a.start)
+            replay(game, a.world, a.speed, a.start, a.follow)
             print("The replay ended. The server stays up: type commands, Ctrl-C stops it.", file=sys.stderr)
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:

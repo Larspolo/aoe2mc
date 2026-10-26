@@ -8,7 +8,7 @@ from test_gather import FakeServer, grid
 from game import combat, gather, train
 
 
-def setup(food=100, gold=50):
+def setup(food=100, gold=50, age=1):
     """A flat 24 × 24 map (tile size 1): a town center of player 1 at blocks x 2-4, z 2-4 (population room), an
     archery range at x 16-18, z 2-4, a built blacksmith at x 10-12, z 2-4, a militia, a scout and an archer."""
     objects = [{"kind": "building", "name": "TOWN_CENTER", "player": 1, "tile": [3.5, 3.5], "footprint": [2, 2, 5, 5]},
@@ -20,6 +20,7 @@ def setup(food=100, gold=50):
     g = gather.Gather(server, grid([[64] * 24 for _ in range(24)], objects)).setup()
     g.sites.append({"name": "BLACKSMITH", "player": 1, "footprint": [10, 13, 2, 5], "done": True})
     g.stock.update(food=food, gold=gold)
+    g.techs.update({"FEUDAL_AGE"} if age else ())                   # a Feudal Age technology (TECH_AGE, #1046)
     return server, g
 
 
@@ -47,9 +48,9 @@ def test_fletching_gives_archers_one_attack_and_one_range():
     rect = train.open_menu(g, "Steve", (11, 3))
     train.order(g, "Steve", rect, 2)
     train.tick(g, 29)
-    assert not g.techs and not [c for c in server.log if c.startswith(("aoe stats", "aoe range"))]
+    assert g.techs == {"FEUDAL_AGE"} and not [c for c in server.log if c.startswith(("aoe stats", "aoe range"))]
     train.tick(g, 1)
-    assert g.techs == {"FLETCHING"} and not any(g.queues.values())
+    assert g.techs == {"FEUDAL_AGE", "FLETCHING"} and not any(g.queues.values())
     for name in ("ARCHER", "CROSSBOWMAN", "SKIRMISHER", "CAVALRY_ARCHER", "LONGBOWMAN"):
         s = combat.stats(name)
         assert train.stats(g, name) == s._replace(attack=s.attack + 1, range=s.range + 1), name

@@ -28,7 +28,7 @@ def research(g):
 
 
 def test_no_upgrade_in_the_dark_age():
-    server, g = setup(food=100)
+    server, g = setup(food=100, age=0)
     g.stock.update(gold=40)
     train.open_menu(g, "Steve", BARRACKS)
     assert "Man-at-Arms" not in menus(server)[-1]

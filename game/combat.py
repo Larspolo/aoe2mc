@@ -7,6 +7,7 @@ base unit: no Blacksmith or University upgrades, no civilization bonuses. `range
 for each armor class of the target. `damage` is the AoE2 damage rule (#514); the Paper plugin applies it
 (`aoe stats` gives a mob its values, `stats_command`).
 A ranged unit shoots from its AoE2 range, one shot per reload time (#515, `aoe range`, `range_command`).
+The Mangonel line hits all units in its blast radius around the target (#1050, `BLAST`).
 A melee unit hits once per reload time too (#848, the last value of `stats_command`).
 An idle soldier attacks the nearest enemy unit in its AoE2 line of sight (#775, `aoe sight`, `sight_command`).
 """
@@ -114,6 +115,50 @@ STATS = {
     "URUMI_SWORDSMAN": Stats(55, 9, 1, 0, 0, 2.0, {"building": 1}, (INF, UNI)),
     "WAR_WAGON": Stats(150, 9, 0, 2, 4, 2.5, {"building": 2}, (ARC, CAV, UNI)),
     "WOAD_RAIDER": Stats(70, 11, 0, 1, 0, 2.0, {"building": 2}, (INF, UNI)),
+    # elite unique units (#1008, AoE2 wiki, DE, no upgrades): the wiki lists one bonus per class; "building" sums the bonus
+    # vs standard buildings and vs all buildings. No class here: shock infantry, ships, cavalry archers
+    "ELITE_ARAMBAI": Stats(65, 14, 0, 2, 5, 2.0, {SIE: 2}, (ARC, CAV, UNI)),
+    "ELITE_BALLISTA_ELEPHANT": Stats(280, 10, 0, 3, 5, 2.5, {"building": 8}, (CAV, ELE, SIE, UNI)),
+    "ELITE_BERSERK": Stats(74, 14, 2, 1, 0, 2.0, {"building": 3}, (INF, UNI)),
+    "ELITE_BOYAR": Stats(130, 14, 8, 3, 0, 1.9, {}, (CAV, UNI)),
+    "ELITE_CAMEL_ARCHER": Stats(60, 8, 1, 1, 4, 2.0, {}, (ARC, CAM, UNI)),
+    "ELITE_CATAPHRACT": Stats(150, 12, 2, 1, 0, 1.7, {INF: 18}, (CAV, UNI)),
+    "ELITE_CENTURION": Stats(155, 15, 3, 3, 0, 1.9, {}, (CAV, UNI)),
+    "ELITE_CHU_KO_NU": Stats(50, 10, 0, 0, 4, 3.0, {SPE: 2}, (ARC, UNI)),
+    "ELITE_COMPOSITE_BOWMAN": Stats(50, 4, 2, 0, 4, 2.0, {SPE: 2}, (ARC, UNI)),
+    "ELITE_CONQUISTADOR": Stats(70, 19, 2, 2, 6, 2.9, {SIE: 6, "building": 2}, (ARC, CAV, UNI)),
+    "ELITE_COUSTILLIER": Stats(145, 11, 2, 2, 0, 1.9, {}, (CAV, UNI)),
+    "ELITE_GBETO": Stats(50, 13, 0, 0, 6, 2.0, {}, (INF, UNI)),
+    "ELITE_GENOESE_CROSSBOWMAN": Stats(50, 6, 2, 1, 4, 2.0, {CAV: 7, CAM: 6, ELE: 7}, (ARC, UNI)),
+    "ELITE_GHULAM": Stats(70, 11, 0, 6, 0, 2.0, {ARC: 6, "building": 2}, (INF, UNI)),
+    "ELITE_HUSKARL": Stats(70, 12, 0, 8, 0, 2.0, {ARC: 10, "building": 6}, (INF, UNI)),
+    "ELITE_HUSSITE_WAGON": Stats(230, 13, 1, 10, 6, 3.45, {SIE: 3, "building": 2}, (SIE, UNI)),
+    "ELITE_JAGUAR_WARRIOR": Stats(75, 19, 2, 2, 0, 2.0, {INF: 6, "building": 2}, (INF, UNI)),
+    "ELITE_JANISSARY": Stats(50, 22, 2, 0, 8, 3.45, {SIE: 3}, (ARC, GUN, UNI)),
+    "ELITE_KAMAYUK": Stats(80, 8, 1, 1, 0, 2.0, {CAV: 12, CAM: 10, ELE: 20}, (INF, UNI)),
+    "ELITE_KARAMBIT_WARRIOR": Stats(40, 8, 1, 1, 0, 2.0, {"building": 1}, (INF, UNI)),
+    "ELITE_KESHIK": Stats(145, 11, 1, 3, 0, 1.9, {}, (CAV, UNI)),
+    "ELITE_KIPCHAK": Stats(45, 5, 0, 0, 4, 2.2, {SPE: 1}, (ARC, CAV, UNI)),
+    "ELITE_KONNIK": Stats(120, 14, 2, 2, 0, 2.4, {"building": 4}, (CAV, UNI)),
+    "ELITE_LEITIS": Stats(130, 16, 2, 1, 0, 1.9, {}, (CAV, UNI)),
+    "ELITE_LONGBOWMAN": Stats(40, 7, 0, 1, 6, 2.0, {SPE: 2}, (ARC, UNI)),
+    "ELITE_MAGYAR_HUSZAR": Stats(90, 11, 0, 2, 0, 1.8, {SIE: 8}, (CAV, UNI)),
+    "ELITE_MAMELUKE": Stats(80, 10, 1, 0, 3, 2.0, {CAV: 12}, (CAM, UNI)),
+    "ELITE_MANGUDAI": Stats(60, 8, 1, 0, 4, 1.68, {SIE: 5, SPE: 1}, (ARC, CAV, UNI)),
+    "ELITE_MONASPA": Stats(80, 14, 5, 2, 0, 1.8, {}, (CAV, UNI)),
+    "ELITE_OBUCH": Stats(95, 10, 2, 2, 0, 2.0, {"building": 6}, (INF, UNI)),
+    "ELITE_ORGAN_GUN": Stats(70, 8, 2, 6, 7, 3.45, {INF: 2, SIE: 1, "building": 1}, (GUN, SIE, UNI)),
+    "ELITE_PLUMED_ARCHER": Stats(65, 5, 0, 2, 5, 1.9, {INF: 2, SPE: 2}, (ARC, UNI)),
+    "ELITE_RATTAN_ARCHER": Stats(48, 7, 0, 6, 5, 2.0, {SPE: 2}, (ARC, UNI)),
+    "ELITE_SAMURAI": Stats(80, 12, 1, 1, 0, 1.43, {"building": 3, UNI: 12}, (INF, UNI)),
+    "ELITE_SERJEANT": Stats(85, 11, 6, 3, 0, 2.0, {"building": 3}, (INF, UNI)),
+    "ELITE_SHOTEL_WARRIOR": Stats(50, 18, 0, 1, 0, 2.0, {"building": 1}, (INF, UNI)),
+    "ELITE_SHRIVAMSHA_RIDER": Stats(70, 11, 0, 1, 0, 1.9, {}, (CAV, UNI)),
+    "ELITE_TARKAN": Stats(150, 11, 1, 4, 0, 1.9, {"building": 10}, (CAV, UNI)),
+    "ELITE_THROWING_AXEMAN": Stats(70, 8, 1, 0, 6, 2.0, {"building": 2}, (INF, UNI)),
+    "ELITE_URUMI_SWORDSMAN": Stats(65, 11, 1, 0, 0, 2.0, {"building": 2}, (INF, UNI)),
+    "ELITE_WAR_WAGON": Stats(200, 9, 0, 4, 5, 2.5, {"building": 2}, (ARC, CAV, UNI)),
+    "ELITE_WOAD_RAIDER": Stats(85, 15, 0, 1, 0, 2.0, {"building": 3}, (INF, UNI)),
     # regional units (#1007). The steppe lancers hit from AoE2 range 1: a melee hit in Minecraft (the vanilla reach)
     "BATTLE_ELEPHANT": Stats(250, 12, 1, 2, 0, 2.0, {"building": 4}, (ELE,)),
     "CONDOTTIERO": Stats(80, 10, 1, 0, 0, 1.9, {GUN: 10, "building": 2}, (INF, UNI)),
@@ -124,6 +169,19 @@ STATS = {
     "SLINGER": Stats(35, 4, 0, 0, 5, 2.0, {INF: 4, SIE: 3, SPE: 1}, (ARC,)),
     "STEPPE_LANCER": Stats(60, 9, 0, 1, 0, 2.0, {}, (CAV,)),
     "WINGED_HUSSAR": Stats(80, 9, 1, 2, 0, 1.9, {GUN: 4}, (CAV,)),
+    # units of the DLCs Dynasties of India, Return of Rome and The Three Kingdoms (#1009, AoE2 wiki, DE, base unit, no civilization bonus;
+    # Iron Pagoda: reload 2.16 without the Jurchen bonus). No class here: shock infantry, rams, ships; the charged
+    # attacks (Fire Lancer) and "ignores armor" (Rocket Cart) are not modeled
+    "ARMORED_ELEPHANT": Stats(180, 4, -2, 140, 0, 3.0, {"building": 90, SIE: 25}, (CAV, ELE, SIE)),
+    "FIRE_LANCER": Stats(65, 9, 1, 0, 0, 2.0, {"building": 1, CAV: 5, CAM: 4, ELE: 5}, (INF, GUN)),
+    "GRENADIER": Stats(40, 12, 1, 1, 6, 3.45, {"building": 4, INF: 9, SIE: 3, SPE: 1}, (ARC, GUN, UNI)),
+    "HEI_GUANG_CAVALRY": Stats(60, 11, 4, 3, 0, 1.8, {}, (CAV,)),
+    "IRON_PAGODA": Stats(115, 12, 1, 3, 0, 2.16, {}, (CAV, UNI)),
+    "LEGIONARY": Stats(75, 12, 2, 2, 0, 2.0, {"building": 4, INF: 4}, (INF,)),
+    "ROCKET_CART": Stats(45, 5, 0, 6, 7, 5.5, {"building": 7, SIE: 2}, (GUN, SIE)),
+    "SIEGE_ELEPHANT": Stats(220, 4, -2, 150, 0, 3.0, {"building": 105, SIE: 35}, (CAV, ELE, SIE)),
+    "TRACTION_TREBUCHET": Stats(115, 50, 1, 8, 14, 11.0, {"building": 230}, (SIE,)),
+    "WHITE_FEATHER_GUARD": Stats(95, 7, 0, 2, 0, 2.0, {"building": 2, CAV: 8, CAM: 6, ELE: 8}, (INF, UNI)),
     # siege
     "MANGONEL": Stats(50, 40, 0, 6, 7, 6.0, {"building": 35}, (SIE,)),
     "ONAGER": Stats(60, 55, 0, 8, 8, 6.0, {"building": 45, SIE: 12}, (SIE,)),
@@ -169,9 +227,22 @@ SIGHT = {
     "TWO_HANDED_SWORDSMAN": 5,
 }
 # Units that attack from a range with melee damage (AoE2): their hit takes the melee armor of the target (#800).
-MELEE_RANGED = {"GBETO",
+MELEE_RANGED = {"ELITE_GBETO",
+                "ELITE_MAMELUKE",
+                "ELITE_THROWING_AXEMAN",
+                "GBETO",
                 "MAMELUKE",
-                "THROWING_AXEMAN"}
+                "MANGONEL",
+                "ONAGER",
+                "ROCKET_CART",
+                "SIEGE_ONAGER",
+                "THROWING_AXEMAN",
+                "TRACTION_TREBUCHET"}
+# Blast radius in tiles of the units whose shot hits all units near the target, also own units (AoE2 DE, wiki "AOE";
+# AoE2 tapers the damage at the edge, here each unit in the radius takes the full damage() hit, #1050).
+BLAST = {"MANGONEL": 1.0,
+         "ONAGER": 1.25,
+         "SIEGE_ONAGER": 1.5}
 DEFAULT, BUILDING = Stats(40, 4, 0, 0, 0, 2.0), Stats(1000, 0, 0, 7, 0, 0.0, {}, ("building",))
 SLIME = 0.52                    # blocks of width and height per slime size: the target of a building (#517)
 INVISIBLE = 'active_effects:[{id:"minecraft:invisibility",duration:-1,show_particles:0b}]'   # for ever, no particles
@@ -214,9 +285,11 @@ def label_command(uuid, name=None):
 def range_command(uuid, name, T, rate=NORMAL, s=None):
     """The plugin command that lets a ranged unit shoot from its AoE2 range (tiles * T blocks), with one shot per
     reload time at `rate` game seconds per real second (default: Normal game speed, as the walk speed). None for a
-    melee unit. s: the values with technologies (Fletching, #724), default those of AoE2 unit name."""
+    melee unit. s: the values with technologies (Fletching, #724), default those of AoE2 unit name. A unit of BLAST
+    gets its blast radius in blocks last: the plugin then lets the siege unit (a minecart) shoot too (#1050)."""
     s = s or stats(name)
-    return s.range and s.reload and f"aoe range {uuid} {s.range * T} {max(1, round(s.reload / rate * 20))}" or None
+    blast = f" {BLAST[name] * T}" if name in BLAST else ""
+    return s.range and s.reload and f"aoe range {uuid} {s.range * T} {max(1, round(s.reload / rate * 20))}{blast}" or None
 
 
 def sight(name, s=None):

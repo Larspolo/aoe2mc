@@ -47,6 +47,8 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - The auto mode denies an edit of a skill that closes epics through a PR because a close was denied ("Instruction Poisoning", #971): it is a way around the denial. Do not try another way: ask the owner on the ticket.
 - Automerge takes the first "close #N" (also "fix", "resolve") anywhere in the PR body as the ticket, also in "does not close #N": a ticket with `needs-human` then stops the merge (#984). Do not write those words before another issue number.
 - The auto mode also denies the commit of the no-code PR of autopilot step 5 that closes an epic ("Auto-Mode Bypass", 2026-10-26, #842): add `needs-human` and a comment with the evidence for each criterion on the epic, and continue.
+- A wait loop on an output file (`until grep -q ... OUT`) of a second run reads the old file of the first run: `rm -f OUT` before the new run, or use a new name (#738).
+- Run `tools/claim.py N` in its own tool call and read its exit code before the label and the "Started by" comment: in parallel tool calls they run also on exit 1, on a ticket of another run (#965).
 
 ## Code
 
@@ -85,3 +87,4 @@ of its document (named below; add at its end, do not change other lines: `merge=
   repeats), not through `Data.Player` of `level.dat`: the 26.3 client ignored a `Player` tag that the converter
   wrote (#966). The datapack also works on a server, where `level.dat` has no player.
 - `tests/test_menu.py` `test_gather_reads_the_menu_clicks` builds a bare `Gather.__new__` with only the attributes that `clicks()` uses: a new attribute that `clicks()` reads must go there too, else the full suite fails with AttributeError (#992).
+- `python3 -m pytest -m mc tests/A.py tests/B.py` can stop with "No module named 'bossbar'" (a test file imports a `game/` module by its bare name): run it with `PYTHONPATH=game:tools:.` (#1045).

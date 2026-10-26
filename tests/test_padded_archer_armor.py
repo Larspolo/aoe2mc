@@ -13,7 +13,7 @@ def feudal(food=100):
 
 
 def test_no_padded_archer_armor_in_the_dark_age():
-    server, g = setup(food=100)
+    server, g = setup(food=100, age=0)
     train.open_menu(g, "Steve", (11, 3))
     assert "Padded Archer Armor" not in menus(server)[-1]                # a technology shows from its age (unlocked)
     assert train.queue(g, "Steve", (11, 3), "PADDED_ARCHER_ARMOR") is None and g.stock["food"] == 100

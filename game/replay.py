@@ -54,6 +54,7 @@ BAR = "aoe2mc:replay"       # the boss bar with the game time (#684)
 POP = "aoe_pop"             # the sidebar objective with the population of each player (#741)
 COUNTED = "aoe2mc.pop"      # entity tag of the units that the population counts (#787)
 EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
+FOLLOW_MS = 15000           # ms of game time: the camera of --follow changes its unit at most this often (#738)
 EFFECT_MS = 10000           # ms of game time that the research text stays
 SCALE = 4                   # size of the research text: a spectator sees it from 40 blocks
 START = {"food": 200, "wood": 200, "gold": 100, "stone": 200}   # the AoE2 standard start resources (#932)
@@ -100,11 +101,26 @@ def sail(g, v):
     g.command(f"execute as {v.uuid} at @s run tp @s {v.pos[0]} ~ {v.pos[2]} {math.degrees(math.atan2(-dx, dz)):.0f} 0")
 
 
+def live(make, speed=1.0, start=0, restart=None, **kw):
+    """Play a replay that can jump back (#979). make() gives a fresh Replay. A jump back to time T calls restart()
+    (it puts the world back to its start state), then a fresh replay from `start` jumps forward to T: the same state
+    as a new replay with a jump to T. Speed and pause stay. Without restart a jump back changes nothing. Returns the
+    stats of the last run."""
+    to, paused = None, False
+    while True:
+        stats = make().run(speed, start, to=to, paused=paused, rewind=restart is not None, **kw)
+        if stats.get("rewind") is None:
+            return stats
+        to, speed, paused = max(start, stats["rewind"]), stats["speed"], stats["paused"]
+        restart()
+
+
 class Replay:
     """The timeline of aoe2mc.json `data` on a server (game.command sends one command)."""
 
-    def __init__(self, game, data, version=aoe2mc.VERSION_NAME, ai=False):
+    def __init__(self, game, data, version=aoe2mc.VERSION_NAME, ai=False, follow=None):
         self.game, self.data, self.ai, self.speed, self.paused = game, data, ai, 1.0, False  # ai: plugin walks
+        self.follow, self.followed = follow, (None, -math.inf)  # the spectators follow player N: (UUID, game time)
         self.T, self.n = data["tile_size"], len(data["ground"])
         self.ground = [[None if v == "-" else int(v) for v in row.split()] for row in data["ground"]]
         self.starts = [(o.get("ref"), o["player"], o["name"], (o["footprint"][0], o["footprint"][2], o["footprint"][1],
@@ -130,6 +146,7 @@ class Replay:
         self.ages, self.named = {}, {}          # player -> age ("Feudal"); the age in its sidebar name (#805)
         self.counted = []                       # UUIDs of the start units that the population counts
         self.stock = {}                         # player -> estimated resources: START + gather steps - costs (#932)
+        self.gathered, self.villagers = {}, {}  # player -> resources of the gather steps, trained villagers (#1065)
         for o in data["objects"]:
             if o["kind"] == "unit" and o.get("player") and not units.animal(o["name"]):
                 self.pop[o["player"]] = self.pop.get(o["player"], 0) + 1
@@ -400,6 +417,25 @@ class Replay:
         top = self.tops.pop(rect, None) or max(ys) + TALL
         return self.fill(max(0, x0), min(ys), max(0, z0), min(self.n, x1) - 1, top, min(self.n, z1) - 1, "air destroy")
 
+    def spectate(self, e):
+        """--follow N (#738): the spectators look through the first unit of a MOVE, ORDER or spawn of player N
+        (vanilla /spectate; it takes one player, so `execute as` each spectator). The camera changes at most once per
+        FOLLOW_MS of game time, at once when its unit is gone (DELETE)."""
+        if self.follow is None or e.get("player") != self.follow or e["kind"] not in ("move", "order", "spawn"):
+            return []
+        uuid, at = self.followed
+        alive = {v.uuid for v in self.units.values()} | {v.uuid for _, v in self.new}
+        if uuid in alive and e["time"] - at < FOLLOW_MS:
+            return []
+        if e["kind"] == "spawn":
+            v = self.new[-1][1] if self.new and self.new[-1][0] == self.follow else None
+        else:
+            v = next((self.units[i] for i in e["objects"] if i in self.units), None)
+        if v is None or v.uuid == uuid:
+            return []
+        self.followed = (v.uuid, e["time"])
+        return [f"execute as @a[gamemode=spectator] run spectate {v.uuid} @s"]
+
     def spawns(self):
         """A "spawn" event for each unit that a QUEUE command trains, at the end of its training."""
         return [{"time": end, "player": e["player"], "kind": "spawn", "type": e["type"], "name": e["name"],
@@ -451,6 +487,8 @@ class Replay:
         units of one building take the cells one after the other."""
         prefix, _ = self.kinds.get(e["type"], ("?", ""))
         self.pay(e["player"], e["name"])
+        if e["name"].startswith("VILLAGER"):
+            self.villagers[e["player"]] = self.villagers.get(e["player"], 0) + 1
         rect = self.home(e) if prefix in ("U", "H") else None
         if rect is None:
             return []
@@ -757,6 +795,8 @@ class Replay:
                 src[v.tree] -= 1
                 v.load += 1
                 self.resources(v.player)[v.res] += 1
+                g = self.gathered.setdefault(v.player, dict.fromkeys(START, 0))
+                g[v.res] += 1
                 self.crew.work(v)
                 if v.tree in self.map.farms:                            # the wheat gets younger, the farmer walks
                     self.crew.harvest(v.tree)
@@ -977,6 +1017,18 @@ class Replay:
                 "title @a title " + json.dumps(text("Replay ended")),
                 "playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1"]
 
+    def summary_commands(self):
+        """One chat line per player with its economy at the end of the replay, as the AoE2 achievements screen
+        (#1065): trained villagers and the resources of the gather steps (estimated: the record has no resources)."""
+        out = ['tellraw @a {"text": "Summary (est.)", "bold": true}']
+        for p in sorted(self.pop.keys() | self.villagers.keys() | self.gathered.keys()):
+            name, color = self.player(p)
+            g = self.gathered.get(p, dict.fromkeys(START, 0))
+            res = ", ".join(f"{r} {v}" for r, v in g.items())
+            out.append("tellraw @a " + json.dumps([text(name, color), text(
+                f": villagers trained {self.villagers.get(p, 0)}, gathered {res}")]))
+        return out
+
     def score_commands(self):
         """The sidebar commands for the population of each player that changed since the last call (#741). The score
         holder is "P<n>" (a holder name has no space); its display name is the player name in the player color, the
@@ -1026,16 +1078,24 @@ class Replay:
                        for v in map(self.units.get, self.moving) if v and v.uuid])
         return g, r
 
-    def jump(self, events, to):
+    def jump(self, events, to, start=None):
         """Apply the events up to game time `to` (ms) at once (#687): buildings appear, deletes remove, trained units
         appear, and each unit that a MOVE or ORDER sent, or that walks now, stands at its target (tp, no walk). The
-        chat, age and research texts of the skipped time do not show (the sidebar shows the age, #805). Returns the commands."""
+        chat, age and research texts of the skipped time do not show (the sidebar shows the age, #805). The estimate
+        of the resources gets the gather of the skipped time (skipped()). Returns the commands."""
         out, moved = [], set()
         jobs = {i: v.job for i, v in self.units.items()}            # move() gives the looks: send the last ones
+        since = {} if start is None else {i: start if i in self.working else self.walk_end(v, start)
+                                          for i, v in self.units.items()
+                                          if (i in self.moving or i in self.working) and v.tree is not None}
         for e in events:
             if e["kind"] in ("move", "order", "garrison") and e.get("objects"):
+                for i in e["objects"]:                              # a new order ends the work at the old resource
+                    self.skipped(i, since.pop(i, None), e["time"])
                 self.commands(e) if e["kind"] == "garrison" else self.move(e)   # the paths and the targets; no walks
                 moved.update(e["objects"])
+                since.update((i, self.walk_end(v, e["time"])) for i in e["objects"]
+                             if (v := self.units.get(i)) is not None and v.tree is not None)
                 for i in set(e["objects"]) & self.entering.keys():  # it is at its building at once
                     self.entering[i][2] = e["time"]
             elif e["kind"] in ("build", "wall", "spawn", "delete", "ungarrison"):
@@ -1043,12 +1103,16 @@ class Replay:
             elif e["kind"] == "age" and e.get("age"):                 # the sidebar shows it, no title
                 self.age(e)
         out += self.enter(to) + self.expire(to)
+        for i, t in since.items():                                  # a unit that still works: steps() catch up
+            if i not in self.working or (i in moved and not self.ai):
+                self.skipped(i, t, to)
         inside = {u for us in self.garrisons.values() for u in us}
         for i in sorted(moved | self.moving.keys()):
             if (v := self.units.get(i)) is None or i in inside:
                 continue
             x, z = v.path[-1] if v.path else v.cell
-            v.pos, v.path = (x + 0.5, float(self.map.y(x, z)), z + 0.5), []
+            y = self.map.sea(x, z) if ship(v.name) else self.map.y(x, z)    # water has no ground height (#1030)
+            v.pos, v.path = (x + 0.5, float(v.pos[1] if y is None else y), z + 0.5), []
             self.moving.pop(i, None)
             out.append("tp {} {} {} {}".format(v.uuid, *v.pos))
             if self.ai:                                             # ends the walk order of the plugin at once
@@ -1057,23 +1121,46 @@ class Replay:
                 self.start(i, v, to)
         return out + [self.gather.profession(v.uuid, v.job) for i, v in self.units.items() if v.job != jobs.get(i)]
 
+    def walk_end(self, v, t):
+        """The game time (ms) at which unit v ends its walk to the last cell of its path when it leaves at t."""
+        speed = next((s for k, s in SPEEDS.items() if v.name.startswith(k)), 1.0) * self.T    # blocks per second
+        return t + (1000 * math.dist(v.cell, v.path[-1]) / speed if v.path else 0)
+
+    def skipped(self, i, t0, t1):
+        """Add to the estimate the resources that unit i gathers at its resource from game time t0 to t1 (ms) in a
+        jump: the jump runs no gather steps, so without it the costs of the skipped time take the estimate below 0
+        (#1056). At most what the resource has; the resource itself keeps its amount (the world shows no gather)."""
+        v = self.units.get(i)
+        if t0 is None or t1 <= t0 or v is None or not v.name.startswith("VILLAGER") or v.tree is None:
+            return
+        res = self.map.resource(v.tree)
+        if res not in self.gather.AOE2_WORK:
+            return
+        farm = v.tree in self.map.farms
+        left = (self.map.farms if farm else self.map.bushes if res == "food" else self.map.trees if res == "wood"
+                else self.map.mines.get(res, {})).get(v.tree, 0)
+        rate = self.gather.AOE2_WORK["farm" if farm else res]
+        self.resources(v.player)[res] += min(left, int(rate * (t1 - t0) / 1000))
+
     def run(self, speed=1.0, start=0, clock=time.monotonic, sleep=time.sleep, log=print, bar=False, poll=None,
-            finish=False):
+            finish=False, to=None, paused=False, rewind=False):
         """Play the timeline from game time `start` (ms) at `speed` times the game speed; `bar`: show the game time
         in a boss bar (`clock_commands`). Returns the stats:
         commands, events, the seconds of sending, the largest lag behind the timeline (s), commands per second
         (rate) and the commands per second that the timeline needs on average (need).
         poll(control) may change `self.control` ("speed", "paused") while the replay runs: run calls it before
         each event and each POLL seconds while it waits (#685). "jump" (game time, ms) skips forward to that time
-        (`jump`, #687); a time before the game time now changes nothing. "time" is the game time now (ms) for poll.
-        The replay ends at the time of its last event, as the record (#978); `finish`: play the walks and the
-        trainings to their end (tests of one walk or one queue)."""
+        (`jump`, #687); a time before the game time now changes nothing, except with `rewind`: then run stops and
+        the stats have "rewind" (the time), "speed" and "paused" (#979: the replay keeps no earlier states, `live`
+        starts a fresh replay). "time" is the game time now (ms) for poll. `to`: jump to this time at the start;
+        `paused`: start in a pause. The replay ends at the time of its last event, as the record (#978); `finish`:
+        play the walks and the trainings to their end (tests of one walk or one queue)."""
         last = math.inf if finish else max((e["time"] for e in self.data.get("timeline", [])), default=start)
         events = sorted((e for e in self.data.get("timeline", []) + self.spawns() if start <= e["time"] <= last),
                         key=lambda e: e["time"])                     # the record ends at `last`: no spawn after it
         g0, r0, lag, n, k = start, clock(), 0.0, 0, 0                 # game time g0 (ms) at real time r0
-        self.speed, self.paused = speed, False
-        self.control = {"speed": speed, "paused": False}
+        self.speed, self.paused = speed, paused
+        self.control = {"speed": speed, "paused": paused} | ({"jump": to} if to is not None else {})
         end, shown = events[-1]["time"] if events else start, None
         send = self.send if bar else lambda cmds: None
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
@@ -1095,8 +1182,8 @@ class Replay:
                     self.control["time"] = g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed
                     poll(self.control)
                     g0, r0 = self.retime(g0, r0, clock())
-                    if (to := self.control.pop("jump", None)) is not None:
-                        break
+                if (to := self.control.pop("jump", None)) is not None:
+                    break
                 wait = POLL if self.paused else (now - g0) / 1000 / self.speed - (clock() - r0)
                 if wait <= 1e-6:                                    # rounding: no endless wait
                     break
@@ -1105,11 +1192,16 @@ class Replay:
                     break
             if to is not None:
                 k -= e is not None                                  # the event waits for the jump
-                if to > (g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed):
+                if rewind and to < (g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed):
+                    say = text("The server restarts for the jump back: join it again.", "yellow")
+                    send(self.clock_commands(to, end, self.speed, jump=True) + [f"tellraw @a {json.dumps(say)}"])
+                    return {"rewind": to, "speed": self.speed, "paused": self.paused, "events": n,
+                            "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2)}
+                if to > (at := g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed):
                     skip = [x for x in events[k:] if x["time"] <= to]
                     k += len(skip)
                     send(self.clock_commands(to, end, self.speed, jump=True))    # the player sees why it waits
-                    self.send(self.jump(skip, to))
+                    self.send(self.jump(skip, to, at))
                     g0, r0 = to, clock()
                     shown = int(to) // 1000
                     send(self.clock_commands(to, end, self.speed) + self.score_commands())
@@ -1122,7 +1214,7 @@ class Replay:
             if e is None:
                 self.send(self.steps(now))
                 continue
-            cmds = self.commands(e)
+            cmds = self.commands(e) + self.spectate(e)
             if cmds:
                 n += 1
                 self.send(cmds)
@@ -1132,7 +1224,8 @@ class Replay:
                         f"player {e.get('player')}: {len(cmds)} commands")
         census()
         self.send(self.expire(math.inf))
-        send(self.clock_commands(end, end, speed, done=True) + self.score_commands() + self.end_commands(end))
+        send(self.clock_commands(end, end, speed, done=True) + self.score_commands() + self.end_commands(end) +
+             self.summary_commands())
         span = (events[-1]["time"] - start) / 1000 / speed if events else 0                 # at the start speed
         return {"events": n, "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2),
                 "rate": round(self.sent / self.busy) if self.busy else 0, "need": round(self.sent / span) if span else 0}
