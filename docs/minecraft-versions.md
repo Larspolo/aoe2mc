@@ -160,3 +160,4 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
   "Overworld settings missing"): Paper changes `level.dat`. Convert again before a vanilla check (#656).
 - RCON `data get entity U CustomName` cuts deep compounds (`{extra: [{...}, " ", {...`): read one part with a path,
   for example `CustomName.extra[2].text`. The answer starts with the display name of the entity (#661).
+- A mob with AI has no `NoAI` tag: `data get entity U NoAI` answers "Found no elements matching NoAI", not `0b`. Test for `1b` only (#811).
