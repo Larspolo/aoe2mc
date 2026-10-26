@@ -67,7 +67,10 @@ converted worlds stay vanilla. See CLAUDE.md, "Minecraft features first".
 **Owner decision (2026-10-26): the interface for choices.** A building with several options (train a unit, research,
 age up) and the build menu of a villager open a **chest menu of the Paper plugin** (an inventory with item icons and
 the cost in the item text), not the vanilla `/dialog` window and not clickable chat. A right click with the command
-stick on an own building opens its menu; a click on an option queues 1, a shift click 5. Epic #618.
+stick on an own building opens its menu; a click on an option queues 1, a shift click queues 5, and the menu stays
+open, so a player clicks again to queue more (no separate "x5" button). The build menu closes after the choice: the
+next click is on the ground.
+Epic #618.
 
 ### Smallest playable milestone: "villagers gather wood"
 
