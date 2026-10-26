@@ -1119,6 +1119,9 @@ class Gather:
         # "ground" over the footprint is the top of the barriers: take the ground of the free cells next to it
         ys = [self.map.y(x, z) for x, z in self.map.around(feet)] or \
              [y for x, z in feet if (y := self.map.y(x, z)) is not None] or [0]
+        tops = {y for x, z in feet if (y := self.map.y(x, z)) is not None}
+        if len(tops) > 1:   # a hill: in a forest the few free cells can all be at its foot (#1157); barriers 3 high
+            ys += [y - 3 for y in tops]
         sx, sz = (fx0 + fx1) // 2, (fz0 + fz1) // 2
         return (fx0, fx1, fz0, fz1), ys, (sx, sz), max(fz0, sz - 1)
 
