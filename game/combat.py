@@ -24,6 +24,7 @@ from units import pretty  # noqa: E402
 Stats = namedtuple("Stats", "hp attack melee pierce range reload bonus classes", defaults=({}, ()))
 
 INF, ARC, CAV, CAM, ELE, SIE, SPE = "infantry", "archer", "cavalry", "camel", "elephant", "siege", "spearman"
+UNI = "unique"                                        # the unique units of the castles (the Samurai bonus)
 SPEAR = {CAV: 15, CAM: 12, ELE: 15}                   # spearman bonus, more in the later ages of the line
 STATS = {
     # infantry: militia line and spearman line
@@ -41,7 +42,7 @@ STATS = {
     "ARBALESTER": Stats(40, 6, 0, 0, 5, 2.0, {SPE: 3}, (ARC,)),
     "SKIRMISHER": Stats(30, 2, 0, 3, 4, 3.0, {ARC: 3, SPE: 3}, (ARC,)),
     "ELITE_SKIRMISHER": Stats(35, 3, 0, 4, 5, 3.0, {ARC: 4, SPE: 3}, (ARC,)),
-    "LONGBOWMAN": Stats(35, 6, 0, 1, 5, 2.0, {SPE: 3}, (ARC,)),
+    "LONGBOWMAN": Stats(35, 6, 0, 1, 5, 2.0, {SPE: 3}, (ARC, UNI)),
     "CAVALRY_ARCHER": Stats(50, 6, 0, 0, 4, 2.0, {SPE: 2}, (ARC, CAV)),
     # cavalry
     "SCOUT_CAVALRY": Stats(45, 3, 0, 2, 0, 2.0, {}, (CAV,)),
@@ -50,7 +51,19 @@ STATS = {
     "CAVALIER": Stats(120, 12, 2, 2, 0, 1.8, {}, (CAV,)),
     "PALADIN": Stats(160, 14, 2, 3, 0, 1.8, {}, (CAV,)),
     "CAMEL_RIDER": Stats(100, 6, 0, 0, 0, 2.0, {CAV: 9}, (CAM,)),
-    "WAR_ELEPHANT": Stats(450, 15, 1, 2, 0, 2.0, {"building": 7}, (ELE,)),
+    "WAR_ELEPHANT": Stats(450, 15, 1, 2, 0, 2.0, {"building": 7}, (ELE, UNI)),
+    # unique units of the castle (#712; Throwing Axeman and Mameluke hit with melee damage in AoE2: here pierce)
+    "BERSERK": Stats(54, 12, 1, 1, 0, 2.0, {"building": 2}, (INF, UNI)),
+    "CATAPHRACT": Stats(110, 9, 2, 1, 0, 1.8, {INF: 13}, (CAV, UNI)),
+    "CHU_KO_NU": Stats(45, 8, 0, 0, 4, 3.0, {SPE: 2}, (ARC, UNI)),
+    "HUSKARL": Stats(60, 10, 0, 6, 0, 2.0, {"building": 2}, (INF, UNI)),
+    "JANISSARY": Stats(35, 17, 1, 0, 7, 3.45, {}, (ARC, UNI)),
+    "MAMELUKE": Stats(80, 8, 0, 0, 3, 2.0, {CAV: 9}, (CAM, UNI)),
+    "MANGUDAI": Stats(60, 6, 0, 0, 4, 2.1, {SIE: 3, SPE: 1}, (ARC, CAV, UNI)),
+    "SAMURAI": Stats(70, 10, 1, 1, 0, 1.9, {"building": 2, UNI: 10}, (INF, UNI)),
+    "TEUTONIC_KNIGHT": Stats(90, 14, 7, 2, 0, 2.0, {"building": 4}, (INF, UNI)),
+    "THROWING_AXEMAN": Stats(60, 7, 0, 0, 5, 2.0, {"building": 1}, (INF, UNI)),
+    "WOAD_RAIDER": Stats(70, 11, 0, 1, 0, 2.0, {"building": 2}, (INF, UNI)),
     # siege
     "MANGONEL": Stats(50, 40, 0, 6, 7, 6.0, {"building": 35}, (SIE,)),
     "SCORPION": Stats(40, 12, 0, 6, 7, 3.6, {ELE: 6}, (SIE,)),
