@@ -236,8 +236,10 @@ Then add one short comment on the status issue: what you did and what is next. A
 issue, not here (see "Ask the owner" in step 6).
 End it with one metrics line for each ticket of the run (the `improve` skill reads these lines):
 
-    Metrics: ticket #<n> · <size> · <merged|blocked|needs-human|none> · <minutes> min · setup <m> min · checks <k> · checks <c> min · time sinks: <list or "none">
+    Metrics: ticket #<n> · <size> · <merged|pr #n|blocked|needs-human|none> · <minutes> min · setup <m> min · checks <k> · checks <c> min · time sinks: <list or "none">
 
+Result: `pr #n` when you pushed PR #n and Automerge merges it later (the usual case: you report before the merge);
+`none` only when the run stopped without a PR. `tools/health.py` counts the `pr #n` lines by the present PR state (#902).
 Put the output of `python3 tools/release.py` (the release bar of each goal, #879) above the `Usage:` line.
 Put the `Usage:` line of step 1.4 above the metrics lines, unchanged: `tools/health.py` measures the quota use of one
 run per hour from pairs of these lines, and `tools/usage.py --target` uses that value (#462).
