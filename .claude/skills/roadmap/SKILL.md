@@ -14,7 +14,8 @@ Do this in the refill of autopilot step 5 (you hold its lock, `python3 tools/cla
 epics have no goal left that an agent can do.
 
 1. List the epics: `gh api "repos/OWNER/NAME/issues?labels=epic&state=all&per_page=100"` (`repo` in `agent.toml`). A feature has an
-   epic when an epic body names its key ("Roadmap: `<key>`") or the roadmap line names an epic number.
+   epic when an epic body names its key ("Roadmap: `<key>`") or the roadmap line names an epic number. A `muted` epic
+   counts too: do not make a second epic for its feature, and do not give it sub-issues.
 2. Pick the goal: the goal whose newest epic is the oldest (the lowest issue number of the newest epics of the
    three goals; a goal without an epic first). Tie: the order of the file. Goal 4 (the agent system) takes no turn:
    its epics come from the `improve` skill and the owner.
