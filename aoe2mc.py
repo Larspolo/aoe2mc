@@ -2529,7 +2529,7 @@ DYE = {"white": (240, 240, 240), "light_gray": (160, 160, 160), "gray": (80, 80,
 
 
 def block_color(state):
-    n = state.split(":")[1].split("[")[0]
+    n = state.split(":")[1].split("[")[0].removesuffix("_stairs").removesuffix("_slab")   # white_wool_stairs: as white_wool
     for key, col in COLORS:
         if key in n:
             if col is None:
