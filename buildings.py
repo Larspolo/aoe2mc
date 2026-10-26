@@ -3001,11 +3001,12 @@ def place_building(E, cols, B, o, players, walls, gates):
         INSIDE[o["ref"]] = ([(x0 + x, z0 + z) for x, z in rooms(c, fx, fz) if cols.inside(x0 + x, z0 + z)],
                             base + 1, (x0 + fx // 2, z0 + fz // 2))
     if BARRIERS and fn not in (gate, bridge, wooden_bridge, fish_trap, scaffold_walk):
-        barriers(c, fx, fz)
-    if fn is gate:                          # only the passage is free: units on the towers move out (#577)
+        barriers(c, fx, fz, under=fn is town_center)
+    if fn in (gate, town_center):           # only the passage is free: units on the towers move out (#577, #865)
         head = c.a[c.m:c.m + fx, c.below + 1:c.below + 3, c.m:c.m + fz]
         solid = ((head >= 0) & (head != B("air"))).any(1)
-        cols.blocked[xs.start:xs.stop, zs.start:zs.stop] |= solid[xs.start - x0:xs.stop - x0, zs.start - z0:zs.stop - z0]
+        cols.blocked[xs.start:xs.stop, zs.start:zs.stop] = solid[xs.start - x0:xs.stop - x0, zs.start - z0:zs.stop - z0]
+        o["open"] = [[x, z] for x in xs for z in zs if not solid[x - x0, z - z0]]     # for aoe2mc.json and the replay
         for x in xs:                        # on a slope the foundation lifts the floor: units stand on it (#773)
             for z in zs:
                 if not solid[x - x0, z - z0]:
@@ -4048,9 +4049,10 @@ def rooms(c, fx, fz):
     return [(int(xs[i]), int(zs[i])) for i in order]
 
 
-def barriers(c, fx, fz):
+def barriers(c, fx, fz, under=False):
     """Invisible barrier blocks in all free space of the footprint, up to 1 block above the building.
-    Like in AoE2, nothing can walk into, through or over the building."""
+    Like in AoE2, nothing can walk into, through or over the building. under: units walk under it (the town center,
+    #865): a column with 2 free blocks over the floor keeps its free space up to its first solid block."""
     m, b = c.m, c.below
     air = c.B("air")
     sub = c.a[m:m + fx, :, m:m + fz]
@@ -4059,8 +4061,13 @@ def barriers(c, fx, fz):
         return
     top = min(sub.shape[1], used.max() + 2)
     region = sub[:, b + 1:top, :]
-    region[region == air] = c.B("barrier")          # inside the building: replaces anything (plants)
-    region[region == -1] = SOFT_BARRIER              # outside the walls: only fills free space
+    keep = np.zeros(region.shape, bool)
+    if under:
+        low = np.cumprod((region == air) | (region == -1), axis=1).astype(bool)    # free from the floor up
+        keep = low & low[:, :2].all(1)[:, None, :]
+        region[keep] = air                              # no plants in the passage
+    region[(region == air) & ~keep] = c.B("barrier")    # inside the building: replaces anything (plants)
+    region[(region == -1) & ~keep] = SOFT_BARRIER        # outside the walls: only fills free space
 
 
 

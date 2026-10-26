@@ -117,7 +117,7 @@ class Map:
             if o["kind"] == "building":
                 x0, z0, x1, z1 = o["footprint"]
                 self.building(o["name"], (x0, x1, z0, z1), (int(o["tile"][0]), int(o["tile"][1])) if "tile" in o
-                              else None, o["player"] == player)
+                              else None, o["player"] == player, o.get("open", ()))
             elif o["kind"] == "other" and not any(k in o["name"] for k in PASSABLE_OBJECTS):
                 tile = int(o["tile"][0]), int(o["tile"][1])
                 if o["name"] in MINES:                                 # a mine at x.0 covers 2 tiles
@@ -138,9 +138,10 @@ class Map:
                         ("minecraft:oak_log", None) if kind == "dead" else \
                         (f"minecraft:{WOODS.get(kind, 'oak')}_log", f"minecraft:{WOODS.get(kind, 'oak')}_leaves[persistent=true]")
 
-    def building(self, name, rect, tile, own):
+    def building(self, name, rect, tile, own, open_cells=()):
         """Add a building with the block footprint rect = (x0, x1, z0, z1) and its center tile. A farm is ground
-        that a farmer stands on; own buildings are drop sites. Construction sites call it when they are complete."""
+        that a farmer stands on; own buildings are drop sites. Construction sites call it when they are complete.
+        open_cells: the cells that units walk through (under a town center, #865)."""
         x0, x1, z0, z1 = rect
         cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
         if "FARM" in name:                                             # no barriers: the farmer stands on it
@@ -149,7 +150,7 @@ class Map:
                 self.own_farms.add(tile)
             self.farm_at.update(dict.fromkeys(cells, tile))
             return
-        self.blocked |= cells
+        self.blocked |= cells - {tuple(c) for c in open_cells}
         for r, names in DROP_SITES.items():
             if own and any(k in name for k in names):
                 self.drops[r].append(cells)
@@ -295,6 +296,18 @@ def pick_unit(eye, d, units, reach=64, radius=0.8):
         if 0 < t < reach and math.dist(v, [t * d[i] for i in range(3)]) < radius and (best is None or t < best[0]):
             best = t, key
     return best and best[1]
+
+
+def profession(uuid, job):
+    """The command that gives villager uuid the Minecraft profession job: the clothes change at once."""
+    return f'data merge entity {uuid} {{VillagerData:{{profession:"minecraft:{job}"}}}}'
+
+
+def job_of(m, tile):
+    """The AoE2 task (`LUMBERJACK` ..., units.VILLAGER_JOBS) of a villager at the resource on tile of gather.Map m."""
+    res = m.resource(tile)
+    return "FARMER" if tile in m.farms else {"wood": "LUMBERJACK", "food": "FORAGER"}.get(res) or \
+        next(j for r, _, j in MINES.values() if r == res)
 
 
 def military(name):
@@ -503,14 +516,12 @@ class Gather:
         job = dict(VILLAGER_JOBS).get(name, "none")
         if v.job != job:                                               # a merge keeps the level and the type
             v.job = job
-            self.command(f'data merge entity {v.uuid} {{VillagerData:{{profession:"minecraft:{job}"}}}}')
+            self.command(profession(v.uuid, job))
 
     def send(self, tile, who=None):
         """Send the selected villagers (or the villagers who) to the tree, the fruit bush, the mine or the farm on tile.
         A farm takes one farmer: the next villagers go to the nearest free farms, or stop."""
-        res = self.map.resource(tile)
-        job = "FARMER" if tile in self.map.farms else {"wood": "LUMBERJACK", "food": "FORAGER"}.get(res) or \
-            next(j for r, _, j in MINES.values() if r == res)
+        res, job = self.map.resource(tile), job_of(self.map, tile)
         for u in sorted((self.selected if who is None else who) & self.villagers.keys()):   # a scout cannot (#589)
             v = self.villagers[u]
             for t in [t for t, f in self.farmers.items() if f == u]:
