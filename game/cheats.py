@@ -17,15 +17,25 @@ at 0 hit points (the plugin, `aoe destroy`), its units die (`kill` with the team
 A transformation cheat (#967) turns each own unit of its "from" kind into its "to" unit: the new unit appears at the place
 of the old one with the same share of hit points, and the old one (with its riders) goes. The selection keeps the rest.
 "natural wonders" gives the control of the Gaia animals and takes the control of the own units (not reversible).
+More codes (#968): "woof woof" turns the birds into Stormy Dogs of Gaia, "my cpu can handle it" raises the highest
+population limit to 1000, "tech tech one two free" makes technologies free, "going above and beyond" lets the player
+research a technology up to train.REPEAT times with stacked effects (train.count), and "noui" hides the sidebar, the boss
+bar and the hints, or shows them again.
 Excluded and partial codes (owner, #820, #985):
 - "!mute", "!nomute": excluded. The game program has no taunts, so the codes have nothing to silence.
 - "marco", "polo": done as they are. Minecraft has no fog of war, so the codes only answer in the chat.
 - "aegis": the part "animals die at once" has no effect. The game program has no hunting yet.
 - "sharing is caring": waits for allies (#969). The game program has no allies yet.
 """
+import os
 import re
+import sys
 from collections import namedtuple
 from urllib.parse import quote
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import bossbar  # noqa: E402
+from units import is_bird  # noqa: E402
 
 Unit = namedtuple("Unit", "name")             # the effect of a unit cheat
 Transform = namedtuple("Transform", "to units")   # a transformation cheat: own units with units(name) become unit `to`
@@ -68,6 +78,36 @@ def destroy(g, n):
         g.enemies = {u: k for u, k in g.enemies.items() if u not in dead}
 
 
+def flag(attr, text):
+    """A cheat that turns the attribute attr of g on (for ever, as in AoE2) and answers text."""
+    def effect(g, player):
+        setattr(g, attr, True)
+        g.command(f'tellraw {player} {{"text":"{text}"}}')
+    return effect
+
+
+def cpu(g, player):
+    g.pop_cap = 1000
+    g.command(f'tellraw {player} {{"text":"Population limit: 1000"}}')
+
+
+def noui(g, player):
+    """Hide the user interface of the game program (the sidebar, the boss bar, the hints), or show it again."""
+    g.noui = not g.noui
+    g.command("scoreboard objectives setdisplay sidebar" + f" {g.board}" * (not g.noui))
+    g.command(f"bossbar set {bossbar.bar(g)} players" + " @a" * (not g.noui))
+
+
+def woof(g, player):
+    """Each bird becomes a Stormy Dog of Gaia on the ground under it."""
+    import train                                                # train -> gather -> cheats: import it late
+    for o in [o for o in g.data["objects"] if o["kind"] == "unit" and o.get("uuid") and is_bird(o["name"])]:
+        if not (pos := g.pos(o["uuid"])):
+            continue
+        x, z = int(pos[0] // 1), int(pos[2] // 1)
+        if uuid := train.summon(g, "STORMY_DOG", (x + 0.5, float(g.map.y(x, z) or pos[1]), z + 0.5), player=0):
+            g.command(f"tp {o['uuid']} {pos[0]} -200 {pos[2]}")      # gone without a death and its drops
+            o["name"], o["uuid"] = "STORMY_DOG", uuid
 def infantry(name):
     import combat                                                  # combat imports gather, gather imports this module
     return combat.INF in combat.stats(name).classes
@@ -128,6 +168,7 @@ CODES = {                                     # code -> the resources, the chat 
     "cheese steak jimmy's": {"food": 10000},
     "flemish reformation": Transform("MONK", villager),
     "furious the monkey boy": Unit("FURIOUS_THE_MONKEY_BOY"),
+    "going above and beyond": flag("beyond", "Technologies: up to 256 researches"),
     "grab your pitchforks": Transform("FLEMISH_MILITIA", villager),
     "how do you turn this on": Unit("COBRA_CAR"),
     "i don't exist": Unit("WAR_PENGUIN"),
@@ -135,9 +176,11 @@ CODES = {                                     # code -> the resources, the chat 
     "i r winner": end("Victory", "gold"),
     "lumberjack": {"wood": 10000},
     "marco": MAP,
+    "my cpu can handle it": cpu,
     "natural wonders": wonders,
     "ninjaconnor": ALL,
     "ninjalui": ALL,
+    "noui": noui,
     "photon man": Unit("PHOTONMAN"),
     "polo": MAP,
     "put on your capes": Transform("ELITE_TEUTONIC_KNIGHT", infantry),
@@ -145,6 +188,7 @@ CODES = {                                     # code -> the resources, the chat 
     "robin hood": {"gold": 10000},
     "rock on": {"stone": 10000},
     "rowshep": ALL,
+    "tech tech one two free": flag("free_techs", "Technologies are free"),
     "to smithereens": Unit("SABOTEUR"),
     "torpedo1": lambda g, player: destroy(g, 1),
     "torpedo2": lambda g, player: destroy(g, 2),
@@ -155,6 +199,7 @@ CODES = {                                     # code -> the resources, the chat 
     "torpedo7": lambda g, player: destroy(g, 7),
     "torpedo8": lambda g, player: destroy(g, 8),
     "wimpywimpywimpy": lambda g, player: destroy(g, g.player) or end("Defeat", "red")(g, player),
+    "woof woof": woof,
     "yes we khan": Transform("GENGHIS_KHAN", {"ELITE_MANGUDAI", "MANGUDAI"}.__contains__),
 }
 NAMES = sorted(CODES)                         # the score of a code is its index + 1

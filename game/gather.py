@@ -387,6 +387,8 @@ class Gather:
     a missing resource starts at 0 ({} for none)."""
     cheats = False                                                     # also for the adapters of Gather.__new__
     aegis = False                                                      # the cheat "aegis": all work is instant (#817)
+    beyond = free_techs = noui = False                                 # cheats: repeat and free technologies, no UI (#968)
+    pop_cap = None                                                     # the cheat "my cpu can handle it" (#968): 1000
     ended = None                                                       # "Victory" or "Defeat": run() stops (#819)
     board = "aoe_res"                                                  # the objective of the resources (the sidebar)
     bots = ()                                                          # run() steps them too (bot.Bot, #856)
@@ -416,6 +418,7 @@ class Gather:
         self.bar = None                                                # the unit on the boss bar (bossbar.py, #659)
         self.queues, self.trained = {}, {}                             # town center -> its queue, units it trained
         self.techs = set()                                             # the researched technologies (train.TECHS)
+        self.repeats = {}                                              # technology -> researches after the first (#968)
         self.rally, self.rallying, self.marks = {}, {}, {}             # building -> rally point, player -> building,
         #                                                                tag of a rally marker -> AoE2 seconds left
         self.pop, self.census, self.shown = 0, 0.0, {}                 # live units, AoE2 seconds since the count, sidebar
@@ -953,19 +956,19 @@ class Gather:
         """Real seconds per unit of resource res ("farm" for farms) with the technologies of the player (WORK_TECHS)."""
         if self.aegis:
             return 0.0                                                 # a full load in one work step
-        return self.chop[res] / math.prod(WORK_TECHS.get(t, {}).get(res, 1) for t in self.techs)
+        return self.chop[res] / math.prod(WORK_TECHS.get(t, {}).get(res, 1) ** train.count(self, t) for t in self.techs)
 
     def move(self, v):
         import ai                                                      # ai imports gather
         if v.goal:
             x, z = v.goal
             ai.move(self, v.uuid, "VILLAGER", self.map.T, x + 0.5, self.map.y(x, z), z + 0.5,
-                    NORMAL * math.prod(PACE.get(t, 1) for t in self.techs))
+                    NORMAL * math.prod(PACE.get(t, 1) ** train.count(self, t) for t in self.techs))
         v.moved, v.tries = self.clock(), v.tries + 1
 
     def limit(self):
         """The resources that a villager carries, with the technologies of the player (CARRY)."""
-        return self.carry + sum(CARRY.get(t, 0) for t in self.techs)
+        return self.carry + sum(CARRY.get(t, 0) * train.count(self, t) for t in self.techs)
 
     def follow(self, v):
         """Paper: read the position of a walking villager. It arrives 1.5 blocks from the center of its goal cell (there

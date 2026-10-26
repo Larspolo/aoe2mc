@@ -44,6 +44,8 @@ def state(g, player=None):
 def tick(g):
     """Send the hint of each state: one command for the players with an own state (a corner, a chosen building), one
     for all others. Again after REPEAT seconds, at once after a change."""
+    if getattr(g, "noui", False):                                     # the cheat "noui" (#968)
+        return
     own = sorted(set(g.corners) | set(getattr(g, "ghosts", {})) | set(getattr(g, "pointing", {})))
     targets = {p: state(g, p)[1] for p in own}
     targets["@a" + ("[" + ",".join(f"name=!{p}" for p in own) + "]") * bool(own)] = state(g)[1]

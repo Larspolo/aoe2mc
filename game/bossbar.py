@@ -33,7 +33,7 @@ def show(g, uuid):
         return hide(g)
     g.bar, n = uuid, len(g.selected)
     text = pretty(name(g, uuid)) + (f" ({n})" if n > 1 else "")
-    for c in (f"bossbar set {bar(g)} name {json.dumps(text)}", f"bossbar set {bar(g)} players @a",
+    for c in (f"bossbar set {bar(g)} name {json.dumps(text)}", f"bossbar set {bar(g)} players" + " @a" * (not g.noui),
               f"execute store result bossbar {bar(g)} max run attribute {uuid} minecraft:max_health get"):
         g.command(c)
     if tick(g):
