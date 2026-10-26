@@ -1,6 +1,6 @@
 ---
 name: roadmap
-description: Turn the three goals of aoe2mc (convert maps, play AoE2 in Minecraft, replay a recorded game) into epics. Use in the queue refill (autopilot step 5) when the open epics have no work left, and every 10th run to review the feature list in docs/ROADMAP.md.
+description: Turn the three goals of aoe2mc (convert maps, play AoE2 in Minecraft, replay a recorded game) into epics. Use in the queue refill (autopilot step 5) when the open epics have no work left, and when `python3 tools/claim.py 0 --roadmap` gives the roadmap review to the run (once per 2 hours) to review the feature list in docs/ROADMAP.md.
 ---
 
 # Plan toward the goals
@@ -30,15 +30,15 @@ epics have no goal left that an agent can do.
 ## Release checks (`docs/RELEASE.md`, owner decision #878)
 
 Do not change the order of the work for the release bar: the priority labels alone decide it. Look at the bar in the
-review of every 10th run (below).
+roadmap review (below).
 When all features of a milestone (B, A or C) of a goal are done (`python3 tools/release.py`: 0 features left in that
 milestone), make each release check of the goal that has no ticket yet as a check ticket ("Check X in the game",
 `ticket` skill, level 4 of `verify`), at the priority of the goal's epics, and write its number in the `ticket`
 column of `docs/RELEASE.md`.
 
-## Review the feature list (every 10th run)
+## Review the feature list (the roadmap review)
 
-When `runs` (the agent state of the status issue) is a multiple of 10, after step 8 of the autopilot skill:
+When `python3 tools/claim.py 0 --roadmap` exits 0 (one run per 2-hour slot, #898), after step 8 of the autopilot skill:
 
 1. Mark a feature done (`[x]`, with the epic number) when its epic is closed.
 2. Compare each goal with AoE2 DE and with the code: what does a player see or do in AoE2 that the converter, the

@@ -1,6 +1,6 @@
 ---
 name: improve
-description: Review how efficiently the agent works on aoe2mc and make one concrete improvement to the whole system (CLAUDE.md, skills, tools, tests, CI workflows, the cloud setup script, settings). Use every 5th autopilot run, after a run that failed or took more than 90 minutes, or when the owner asks for a process review.
+description: Review how efficiently the agent works on aoe2mc and make one concrete improvement to the whole system (CLAUDE.md, skills, tools, tests, CI workflows, the cloud setup script, settings). Use when `python3 tools/claim.py 0 --review` gives the review slot to the run (autopilot step 9), after a run that failed or took more than 90 minutes, or when the owner asks for a process review.
 ---
 
 # Improve the process
@@ -79,6 +79,9 @@ patterns and their fixes:
 Add the change to "Process changes" on the status issue. Comment 3–5 lines: the numbers, the pattern you
 found, what you changed, and what you expect. The owner can reject the change in a comment. Then revert it
 and add the reason to `docs/LEARNINGS.md`.
+
+Then set the next review slot: `python3 tools/claim.py 0 --reviewed change` after a change (the next slot is 45
+minutes), or `--reviewed none` when no loss was large enough for a change (the slot doubles, at most 6 hours, #898).
 
 ## Guardrails
 
