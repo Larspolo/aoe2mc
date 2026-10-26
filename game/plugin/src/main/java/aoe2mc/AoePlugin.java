@@ -65,7 +65,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe attack <selector> <target selector>    Mob#setTarget: the mob attacks with its own AI
  *   aoe goals <selector>                       the goals of the first unit (#436), for checks
  *   aoe stats <selector> <hp> <attack> <melee armor> <pierce armor> <ranged 0|1|2> <classes|-> <class:bonus,...|->
- *                                              the AoE2 values of a unit (#514, game/combat.py stats_command)
+ *             [reload ticks]                   the AoE2 values of a unit (#514, game/combat.py stats_command); a melee
+ *                                              unit hits once per reload (#848, default 20: the vanilla cooldown)
  *   aoe stop <selector>                        stop the walk and turn the AI off: the unit stands still (#437)
  *   aoe range <selector> <blocks> <ticks>      a ranged unit shoots from this range, one shot per ticks (#515)
  *   aoe sight <selector> <blocks>              an idle unit attacks an enemy in this line of sight (#775)
@@ -117,7 +118,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * 1024 of max_health) in the scoreboard aoe_hp, cancels all other damage to it and from it (no suffocation in the
  * walls, no slime touch), and at 0 removes it and fills the box of the building with air. The vanilla melee goal
  * hits only a target in sight, and the eye of the slime is in the walls: so a unit next to the slime that has it as
- * target hits it each second (Mob#attack, the vanilla hit with the swing), as a zombie hits. A ranged unit shoots
+ * target hits it once per AoE2 reload (Mob#attack, the vanilla hit with the swing; #848). A ranged unit shoots
  * a building from its range to the nearest side of the target, without sight of the eye (#608). Its arrow sticks
  * in the walls, so the goal takes the hit points for each shot, and an arrow that hits the slime does nothing.
  * Vanilla has no clickable item menu: "aoe menu" opens an inventory with the items (#619). A click on an item is
@@ -128,9 +129,10 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * selected one (tag aoe2mc.selected, game/gather.py), as the bars in AoE2. Each hit and "aoe stats" update it.
  */
 public final class AoePlugin extends JavaPlugin implements Listener {
-    // ranged: the unit shoots; pierces: its hit takes the pierce armor (not so for a Throwing Axeman, #800)
+    // ranged: the unit shoots; pierces: its hit takes the pierce armor (not so for a Throwing Axeman, #800);
+    // reload: the ticks between two melee hits (#848)
     private record Stats(int attack, int melee, int pierce, boolean ranged, boolean pierces, Set<String> classes,
-                         Map<String, Integer> bonus) {
+                         Map<String, Integer> bonus, int reload) {
         int damage(Stats t) {                                 // the same rule as game/combat.py damage()
             int bonus = 0;
             for (String c : t.classes) {
@@ -151,7 +153,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Component> names = new HashMap<>();      // the name in the name line (#661)
     private static final int HEARTS = 5;
     private static final int WHERE_PAGE = 40;                          // aoe where: about 3000 bytes per answer
-    private final Map<UUID, Integer> lastHit = new HashMap<>();      // tick of the last hit of a unit on a building
+    private final Map<UUID, Integer> lastHit = new HashMap<>();      // tick of the last melee hit of a unit
     private static final double REACH = Math.sqrt(2.04) - 0.6;       // vanilla melee reach past the hit box
 
     private static final class Order {
@@ -392,7 +394,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, this::follow, 2L, 2L);
         Bukkit.getScheduler().runTaskTimer(this, ghost::tick, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, border::tick, 4L, 4L);
-        Bukkit.getScheduler().runTaskTimer(this, this::siege, 10L, 10L);
+        Bukkit.getScheduler().runTaskTimer(this, this::siege, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::burn, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, this::watch, 20L, 20L);
         Bukkit.getPluginManager().registerEvents(this, this);
@@ -409,7 +411,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Building b = buildings.get(ev.getEntity().getUniqueId());
         if (buildings.containsKey(from.getUniqueId()) || b != null) {
             ev.setCancelled(true);
-            if (a != null && b != null && !(ev.getDamager() instanceof Projectile)) {   // RangeGoal counts a shot
+            if (a != null && b != null && !(ev.getDamager() instanceof Projectile) && ready(from, a)) {   // RangeGoal counts a shot
                 lastHit.put(from.getUniqueId(), Bukkit.getCurrentTick());
                 hit(ev.getEntity(), b, a.damage(b.stats));
                 hitEffect(ev.getEntity(), b, from);
@@ -425,6 +427,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             return;
         }
         ev.setCancelled(true);
+        if (!(ev.getDamager() instanceof Projectile)) {      // a melee hit: once per AoE2 reload (#848)
+            if (!ready(from, a)) {
+                return;
+            }
+            lastHit.put(from.getUniqueId(), Bukkit.getCurrentTick());
+        }
         victim.playHurtAnimation(0);
         victim.setHealth(Math.max(0, victim.getHealth() - a.damage(t)));     // 0 kills it
         if (ev.getDamager() instanceof Projectile p) {     // a cancelled hit lets the arrow fly on: one hit per arrow
@@ -441,6 +449,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private void attackBack(LivingEntity victim, LivingEntity attacker, Stats t) {
         if (victim instanceof Mob mob && idle(mob, t) && !sameTeam(mob, attacker)) {
             engage(mob, attacker);
+            Mob fighter = rider(mob) != null ? rider(mob) : mob;      // it turns and swings first: its first hit
+            lastHit.putIfAbsent(fighter.getUniqueId(), Bukkit.getCurrentTick() - t.reload() / 2);   // after half a reload
         }
     }
 
@@ -617,13 +627,19 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         le.setCustomNameVisible(hp < max || le.getScoreboardTags().contains("aoe2mc.selected"));
     }
 
+    private boolean ready(Entity unit, Stats a) {
+        return Bukkit.getCurrentTick() - lastHit.getOrDefault(unit.getUniqueId(), -1000) >= a.reload;
+    }
+
+    // Each tick: a melee unit next to its target hits when its reload is over. The vanilla melee goal hits each 20
+    // ticks and only a living target (a building target is a slime): onHit drops its hits before the reload (#848).
     private void siege() {
         int now = Bukkit.getCurrentTick();
-        lastHit.values().removeIf(t -> now - t > 100);
+        lastHit.values().removeIf(t -> now - t > 400);
         for (UUID id : List.copyOf(stats.keySet())) {
             if (Bukkit.getEntity(id) instanceof Mob mob && !stats.get(id).ranged && mob.getTarget() instanceof LivingEntity t
-                    && buildings.containsKey(t.getUniqueId()) && now - lastHit.getOrDefault(id, -100) >= 20
-                    && mob.getBoundingBox().expand(REACH, 0, REACH).overlaps(t.getBoundingBox())) {
+                    && t.isValid() && (buildings.containsKey(t.getUniqueId()) || stats.containsKey(t.getUniqueId()))
+                    && ready(mob, stats.get(id)) && mob.getBoundingBox().expand(REACH, 0, REACH).overlaps(t.getBoundingBox())) {
                 mob.swingMainHand();
                 mob.attack(t);
             }
@@ -796,14 +812,14 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Moved " + n + " units");
             return true;
         }
-        if (args.length == 9 && args[0].equals("stats")) {
+        if ((args.length == 9 || args.length == 10) && args[0].equals("stats")) {
             double hp;
             Stats st;
             try {
                 hp = Double.parseDouble(args[2]);
                 st = new Stats(Integer.parseInt(args[3]), Integer.parseInt(args[4]), Integer.parseInt(args[5]),
                         !args[6].equals("0"), args[6].equals("1"), args[7].equals("-") ? Set.of() : Set.of(args[7].split(",")),
-                        bonus(args[8]));
+                        bonus(args[8]), args.length == 10 ? Integer.parseInt(args[9]) : 20);
             } catch (RuntimeException e) {                 // a bad number or a bonus without ":"
                 sender.sendMessage("Bad value: " + e.getMessage());
                 return true;
@@ -876,7 +892,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             try {
                 hp = Integer.parseInt(args[2]);
                 st = new Stats(0, Integer.parseInt(args[3]), Integer.parseInt(args[4]), false, false, Set.of("building"),
-                        Map.of());
+                        Map.of(), 0);
                 var c = new ArrayList<String>();
                 for (int i = 5; i < 11; i++) {
                     b[i - 5] = Integer.parseInt(args[i]);
