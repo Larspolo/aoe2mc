@@ -10,6 +10,8 @@ Fights (#632): on Paper an ORDER on a unit or a start building of another player
 selection to attack it (`aoe attack`, the mob AI and the AoE2 values of game/combat.py); a unit at 0 hit points dies by
 itself. A trained unit gets its AoE2 values at its spawn (`aoe stats`, `aoe range`); game/run.py gives them to the
 units and buildings of the start state (combat.setup).
+A villager gets the look of its AoE2 task (#868, gather.Gather.task): an ORDER on a resource, a BUILD (builder);
+a MOVE, an ORDER on something else, or the end of its work without a next resource gives it no profession.
 Garrisons (#809): a GARRISON command, or an ORDER on an own start building with garrison room (game/garrison.py SIZES),
 puts the units inside it when they arrive (the state of the converter, #807), and UNGARRISON lets them out next to it.
 A villager with resources and an ORDER on a drop site drops them and does not go in.
@@ -59,6 +61,11 @@ SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, 
 
 def pretty(name):
     return name.replace("_", " ").title()
+
+
+def start_job(name):
+    """The profession that units.make_entity gives a unit of this name (gather.Villager.job)."""
+    return next((j for k, j in units.VILLAGER_JOBS if k in name), "none")
 
 
 def text(s, color=None):
@@ -158,7 +165,9 @@ class Replay:
                 k = len(self.placed)
                 out += self.building(name, e["player"], x, y)
                 if len(self.placed) > k:
-                    out += self.push_out(self.placed[-1][2])
+                    out += self.push_out(self.placed[-1][2])               # it finds the units (grid())
+                    for i, n in zip(e.get("objects", ()), e.get("names") or [None] * len(e.get("objects", ()))):
+                        out += self.look(self.unit(i, n, e["player"]), "BUILDER")
                     if "FARM" in name and e.get("objects"):       # AoE2: the builders of a farm farm it (#719)
                         x0, x1, z0, z1 = self.placed[-1][2]
                         out += self.move(dict(e, kind="order", target=-1,
@@ -327,7 +336,7 @@ class Replay:
         kind = str(nbt.pop("id"))
         del nbt["Pos"]
         v = self.gather.Villager(units.uuid_str(nbt["UUID"]), pos)
-        v.name, v.player = e["name"], e["player"]
+        v.name, v.player, v.job = e["name"], e["player"], start_job(e["name"])
         self.new.append((e["player"], v))
         self.pop[e["player"]] = self.pop.get(e["player"], 0) + 1
         out = [f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}"]
@@ -350,7 +359,7 @@ class Replay:
                 if o["kind"] == "unit" and "uuid" in o and o.get("ref") is not None:
                     x, z = o["tile"][0] * T, o["tile"][1] * T
                     self.units[o["ref"]] = v = gather.Villager(o["uuid"], (x, float(self.map.y(int(x), int(z)) or 0), z))
-                    v.name, v.player = o["name"], o["player"]
+                    v.name, v.player, v.job = o["name"], o["player"], start_job(o["name"])
         for _, name, r in self.placed[self.added:]:              # a farm: its center tile is its key (#719)
             self.map.building(name, r, ((r[0] + r[1]) // 2 // T, (r[2] + r[3]) // 2 // T) if "FARM" in name else None,
                               False)
@@ -445,6 +454,7 @@ class Replay:
         boats = boats if wet else []
         if not group and not boats:
             return []
+        looks = [c for _, v in group for c in self.look(v, self.gather.job_of(self.map, tile) if tile else "none")]
         to_tile = not (e["kind"] == "order" and e.get("target") is not None)
         slots = self.formation([v for _, v in group], e["tile"]) if to_tile and group else {}
         out = []
@@ -471,6 +481,17 @@ class Replay:
                 self.start(i, v, e["time"])
             else:
                 self.moving[i] = due
+        return looks + out
+
+    def look(self, v, task):
+        """The command that gives villager v the look of the AoE2 task (`LUMBERJACK` ..., "none": no work), when it
+        changes (gather.Gather.task)."""
+        if v is None or not v.name.startswith("VILLAGER"):
+            return []
+        out, keep = [], getattr(self.crew, "command", None)         # steps() sends the gather looks to its list
+        self.crew.command = out.append
+        self.crew.task(v, task)
+        self.crew.command = keep
         return out
 
     def order(self, v, legs, t):
@@ -593,11 +614,11 @@ class Replay:
         far = {k: math.dist((x / T, z / T), (k[0] + 0.5, k[1] + 0.5)) for k, n in self.crew.source(v).items() if n > 0}
         near = sorted((d, k) for k, d in far.items() if d <= NEXT)
         if not near:
-            return []
+            return self.look(v, "none")
         v.tree = near[0][1]
         path = self.map.path(v.cell, self.map.around(self.map.spot(v.tree)), PATH_CELLS)
         if path is None:
-            return []
+            return self.look(v, "none")
         if self.ai and path:
             cmds, due = self.order(v, path[LEG - 1:-1:LEG] + [path[-1]], t)
             if v.path:
@@ -764,6 +785,7 @@ class Replay:
         appear, and each unit that a MOVE or ORDER sent, or that walks now, stands at its target (tp, no walk). The
         chat, age and research texts of the skipped time do not show. Returns the commands."""
         out, moved = [], set()
+        jobs = {i: v.job for i, v in self.units.items()}            # move() gives the looks: send the last ones
         for e in events:
             if e["kind"] in ("move", "order", "garrison") and e.get("objects"):
                 self.commands(e) if e["kind"] == "garrison" else self.move(e)   # the paths and the targets; no walks
@@ -783,7 +805,7 @@ class Replay:
             out.append("tp {} {} {} {}".format(v.uuid, *v.pos))
             if self.ai:                                             # ends the walk order of the plugin at once
                 out.append("aoe moveto {} {} {} {}".format(v.uuid, *v.pos))
-        return out
+        return out + [self.gather.profession(v.uuid, v.job) for i, v in self.units.items() if v.job != jobs.get(i)]
 
     def run(self, speed=1.0, start=0, clock=time.monotonic, sleep=time.sleep, log=print, bar=False, poll=None):
         """Play the timeline from game time `start` (ms) at `speed` times the game speed; `bar`: show the game time

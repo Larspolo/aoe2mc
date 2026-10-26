@@ -297,6 +297,18 @@ def pick_unit(eye, d, units, reach=64, radius=0.8):
     return best and best[1]
 
 
+def profession(uuid, job):
+    """The command that gives villager uuid the Minecraft profession job: the clothes change at once."""
+    return f'data merge entity {uuid} {{VillagerData:{{profession:"minecraft:{job}"}}}}'
+
+
+def job_of(m, tile):
+    """The AoE2 task (`LUMBERJACK` ..., units.VILLAGER_JOBS) of a villager at the resource on tile of gather.Map m."""
+    res = m.resource(tile)
+    return "FARMER" if tile in m.farms else {"wood": "LUMBERJACK", "food": "FORAGER"}.get(res) or \
+        next(j for r, _, j in MINES.values() if r == res)
+
+
 def military(name):
     """True for an AoE2 unit that fights: not a villager, monk, king, trade or transport unit, and no animal."""
     return not name.startswith(CIVILIANS) and (animal(name) or ("military",))[0] == "military"
@@ -503,14 +515,12 @@ class Gather:
         job = dict(VILLAGER_JOBS).get(name, "none")
         if v.job != job:                                               # a merge keeps the level and the type
             v.job = job
-            self.command(f'data merge entity {v.uuid} {{VillagerData:{{profession:"minecraft:{job}"}}}}')
+            self.command(profession(v.uuid, job))
 
     def send(self, tile, who=None):
         """Send the selected villagers (or the villagers who) to the tree, the fruit bush, the mine or the farm on tile.
         A farm takes one farmer: the next villagers go to the nearest free farms, or stop."""
-        res = self.map.resource(tile)
-        job = "FARMER" if tile in self.map.farms else {"wood": "LUMBERJACK", "food": "FORAGER"}.get(res) or \
-            next(j for r, _, j in MINES.values() if r == res)
+        res, job = self.map.resource(tile), job_of(self.map, tile)
         for u in sorted((self.selected if who is None else who) & self.villagers.keys()):   # a scout cannot (#589)
             v = self.villagers[u]
             for t in [t for t, f in self.farmers.items() if f == u]:
