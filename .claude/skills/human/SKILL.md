@@ -20,12 +20,16 @@ the checks that the chosen ticket needs (a decision needs only GitHub).
 | Check | Command | Fix |
 |---|---|---|
 | Latest code | `git pull --ff-only origin main` | Commit or stash local changes first. |
-| Python 3.10+ with the packages | `python3 -c "import numpy, nbtlib, PIL, AoE2ScenarioParser"` | `python3 -m pip install -r requirements-dev.txt` |
-| Java 25 (Paper server, plugin) | `java -version` | Install a JDK 25 (for example Eclipse Temurin 25). |
+| Python 3.10+ with the packages | `PY=python3; [ -x .venv/bin/python ] && PY=.venv/bin/python; $PY -c "import numpy, nbtlib, PIL, AoE2ScenarioParser"` | `python3 -m pip install -r requirements-dev.txt`. When `pip` gives "externally-managed-environment" (Homebrew Python, PEP 668): `python3 -m venv .venv && .venv/bin/python -m pip install -r requirements-dev.txt` (#1044) |
+| Java 25 (Paper server, plugin) | `java -version` | Install a JDK 25 (for example Eclipse Temurin 25). macOS: the owner types `brew install --cask temurin@25` in a terminal (the installer asks for the password with `sudo`). |
 | Minecraft 26.3 | Ask the owner. | Minecraft launcher → Installations → New → version 26.3. |
 | GitHub access | `gh auth status`, or the GitHub MCP tools | `gh auth login` |
 | Commit email (a ticket with a PR, for example a close) | `git config user.email` ends with `@users.noreply.github.com`. GitHub refuses a push with a private email (#1020). | `git config user.email "$(gh api user --jq '"\(.id)+\(.login)@users.noreply.github.com"')"` (this clone only) |
-| A `.aoe2record` file (replay tickets) | `python3 -c "import mgz"` | `python3 -m pip install mgz` |
+| A `.aoe2record` file (replay tickets) | `python3 -c "import mgz"` (`.venv/bin/python` when it exists) | `python3 -m pip install mgz` (`.venv/bin/python -m pip install mgz` when `.venv` exists) |
+
+When `.venv/bin/python` exists, use it in place of `python3` for each command of this skill (`tools/scenarios.py`,
+`aoe2mc.py`, `game/run.py`, `tools/owner_tasks.py`): the Bash tool does not keep `source .venv/bin/activate` between
+two calls. Tell the owner to type `source .venv/bin/activate` in each new terminal.
 
 ## 2. List the tickets
 
