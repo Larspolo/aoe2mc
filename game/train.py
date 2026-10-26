@@ -10,7 +10,8 @@ The menu (#620): a right click on an own town center opens its chest menu (menu.
 on it queues 1 villager, a shift click 5 (as many as the food and the queue allow), and the menu stays open with the
 new queue count. gather.Gather.click calls open_menu().
 Military units (#654): a right click on an own barracks opens its menu with "Militia" (TRAINS); a trained militia
-joins the military units of the player (g.soldiers), so a click can select it and send it to attack.
+joins the military units of the player (g.soldiers), so a click can select it and send it to attack. An own archery
+range trains archers (#670): they shoot from their AoE2 range (combat.range_command).
 Technologies (#655): a technology (TECHS) is an item of the menu of its building and uses the queue of the units, as in
 AoE2, but needs no population room. A click queues it once; when it is complete it goes into g.techs, leaves the menu
 and changes the values of the live and the new units (stats()). Loom: villagers get 15 hit points and 1/2 armor.
@@ -29,9 +30,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import menu  # noqa: E402
 
-COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20}, "LOOM": {"gold": 50}}   # as in AoE2
-TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "LOOM": 25}     # AoE2 seconds
-TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM"), "BARRACKS": ("MILITIA",)}   # the units and technologies of each building
+COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   # as in AoE2
+         "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}}
+TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25}   # AoE2 seconds
+TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM"), "BARRACKS": ("MILITIA",),   # the units and technologies of each
+          "ARCHERY_RANGE": ("ARCHER",)}                                         # building (#654, #670, #655)
 TECHS = {"LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
          if "VILLAGER" in name else s}                             # the change of each technology to the AoE2 values
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
@@ -40,6 +43,7 @@ LIMIT = 200                                                        # the AoE2 po
 CENSUS = 2.0                                                       # AoE2 seconds between two counts of the live units
 ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, item and name of each unit (#620)
          "MILITIA": (0, "zombie_spawn_egg", "Militia"),             # the mob of units.classify
+         "ARCHER": (0, "skeleton_spawn_egg", "Archer"),
          "LOOM": (1, "book", "Loom")}                               # a book for a technology (#618)
 SHIFT = 5                                                          # units of a shift click, as in AoE2
 
@@ -209,6 +213,8 @@ def spawn(g, rect, name):
     g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}")
     import combat, gather                                          # both import gather, gather imports this module
     g.command(combat.stats_command(uuid, name, stats(g, name)))
+    if cmd := combat.range_command(uuid, name, g.map.T):              # an archer shoots from its range (#670)
+        g.command(cmd)
     if gather.military(name):
         g.soldiers[uuid] = name
         return uuid
