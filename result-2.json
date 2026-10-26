@@ -1,0 +1,248 @@
+{
+ "ages": {
+  "FEUDAL_AGE": {
+   "refused": [
+    0,
+    {},
+    [
+     "{\"text\": \"Feudal Age needs 2 of barracks, mill, lumber camp, mining camp, dock (1/2).\", \"color\": \"red\"}"
+    ],
+    [
+     "2:bell:Feudal Age:500 food \u00b7 130 s \u00b7 needs 2 of barracks, mill, lumber camp, mining camp, dock (1/2)",
+     "4:gray_dye:Castle Age:800 food \u00b7 200 gold \u00b7 160 s \u00b7 Needs the Feudal Age"
+    ]
+   ],
+   "while_site": [
+    "needs 2 of barracks, mill, lumber camp, mining camp, dock (1/2)"
+   ],
+   "queued": [
+    1,
+    {
+     "food": 500
+    },
+    [],
+    [
+     "2:bell:Feudal Age:500 food \u00b7 130 s \u00b7 research",
+     "4:gray_dye:Castle Age:800 food \u00b7 200 gold \u00b7 160 s \u00b7 Needs the Feudal Age"
+    ]
+   ],
+   "real_s": 76.7,
+   "aoe2_s": 76.5,
+   "done": true
+  },
+  "CASTLE_AGE": {
+   "refused": [
+    0,
+    {},
+    [
+     "{\"text\": \"Castle Age needs 2 of archery range, stable, blacksmith, market (0/2).\", \"color\": \"red\"}"
+    ],
+    [
+     "4:bell:Castle Age:800 food \u00b7 200 gold \u00b7 160 s \u00b7 needs 2 of archery range, stable, blacksmith, market (0/2)",
+     "5:gray_dye:Imperial Age:1000 food \u00b7 800 gold \u00b7 190 s \u00b7 Needs the Castle Age"
+    ]
+   ],
+   "while_site": [
+    "needs 2 of archery range, stable, blacksmith, market (0/2)",
+    "needs 2 of archery range, stable, blacksmith, market (1/2)",
+    null
+   ],
+   "queued": [
+    1,
+    {
+     "food": 800,
+     "gold": 200
+    },
+    [],
+    [
+     "4:bell:Castle Age:800 food \u00b7 200 gold \u00b7 160 s \u00b7 research",
+     "5:gray_dye:Imperial Age:1000 food \u00b7 800 gold \u00b7 190 s \u00b7 Needs the Castle Age"
+    ]
+   ],
+   "real_s": 94.5,
+   "aoe2_s": 94.1,
+   "done": true
+  },
+  "IMPERIAL_AGE": {
+   "refused": [
+    0,
+    {},
+    [
+     "{\"text\": \"Imperial Age needs a castle or 2 of monastery, university, siege workshop (0/2).\", \"color\": \"red\"}"
+    ],
+    [
+     "5:bell:Imperial Age:1000 food \u00b7 800 gold \u00b7 190 s \u00b7 needs a castle or 2 of monastery, university, siege workshop (0/2)"
+    ]
+   ],
+   "while_site": [
+    "needs a castle or 2 of monastery, university, siege workshop (0/2)"
+   ],
+   "queued": [
+    1,
+    {
+     "food": 1000,
+     "gold": 800
+    },
+    [],
+    [
+     "5:bell:Imperial Age:1000 food \u00b7 800 gold \u00b7 190 s \u00b7 research"
+    ]
+   ],
+   "real_s": 112.3,
+   "aoe2_s": 111.8,
+   "done": true
+  }
+ },
+ "menus": {
+  "Dark": {
+   "BARRACKS": [
+    "Barracks",
+    "0:zombie_spawn_egg:Militia:60 food \u00b7 20 gold \u00b7 21 s \u00b7 queue 0/15",
+    "1:gray_dye:Spearman:35 food \u00b7 25 wood \u00b7 22 s \u00b7 Needs the Feudal Age",
+    "8:white_banner:Rally point:Click, then right click the ground"
+   ],
+   "ARCHERY_RANGE": null,
+   "STABLE": null,
+   "BLACKSMITH": null,
+   "BUILD": [
+    "Build",
+    "0:spruce_stairs:House:25 wood\n25 s",
+    "1:oak_log:Lumber Camp:100 wood\n35 s",
+    "2:raw_gold_block:Mining Camp:100 wood\n35 s",
+    "3:white_wool:Mill:100 wood\n35 s",
+    "4:wheat:Farm:60 wood\n15 s",
+    "5:stone_brick_wall:Barracks:175 wood\n50 s",
+    "6:gray_dye:Blacksmith:150 wood\n40 s\nNeeds the Feudal Age",
+    "7:gray_dye:Archery Range:175 wood\n50 s\nNeeds the Feudal Age",
+    "8:gray_dye:Stable:175 wood\n50 s\nNeeds the Feudal Age",
+    "9:cobblestone:Town Center:275 wood, 100 stone\n150 s",
+    "10:gray_dye:Castle:650 stone\n200 s\nNeeds the Castle Age",
+    "11:gray_dye:Monastery:175 wood\n40 s\nNeeds the Castle Age",
+    "12:gray_dye:Siege Workshop:200 wood\n40 s\nNeeds the Castle Age",
+    "13:gray_dye:University:200 wood\n60 s\nNeeds the Castle Age"
+   ]
+  },
+  "Feudal": {
+   "BARRACKS": [
+    "Barracks",
+    "0:zombie_spawn_egg:Militia:60 food \u00b7 20 gold \u00b7 21 s \u00b7 queue 0/15",
+    "1:zombie_spawn_egg:Spearman:35 food \u00b7 25 wood \u00b7 22 s \u00b7 queue 0/15",
+    "2:book:Man-at-Arms:100 food \u00b7 40 gold \u00b7 40 s \u00b7 research",
+    "8:white_banner:Rally point:Click, then right click the ground"
+   ],
+   "ARCHERY_RANGE": null,
+   "STABLE": null,
+   "BLACKSMITH": null,
+   "BUILD": [
+    "Build",
+    "0:spruce_stairs:House:25 wood\n25 s",
+    "1:oak_log:Lumber Camp:100 wood\n35 s",
+    "2:raw_gold_block:Mining Camp:100 wood\n35 s",
+    "3:white_wool:Mill:100 wood\n35 s",
+    "4:wheat:Farm:60 wood\n15 s",
+    "5:stone_brick_wall:Barracks:175 wood\n50 s",
+    "6:anvil:Blacksmith:150 wood\n40 s",
+    "7:target:Archery Range:175 wood\n50 s",
+    "8:hay_block:Stable:175 wood\n50 s",
+    "9:cobblestone:Town Center:275 wood, 100 stone\n150 s",
+    "10:gray_dye:Castle:650 stone\n200 s\nNeeds the Castle Age",
+    "11:gray_dye:Monastery:175 wood\n40 s\nNeeds the Castle Age",
+    "12:gray_dye:Siege Workshop:200 wood\n40 s\nNeeds the Castle Age",
+    "13:gray_dye:University:200 wood\n60 s\nNeeds the Castle Age"
+   ]
+  },
+  "Castle": {
+   "BARRACKS": [
+    "Barracks",
+    "0:zombie_spawn_egg:Militia:60 food \u00b7 20 gold \u00b7 21 s \u00b7 queue 0/15",
+    "1:zombie_spawn_egg:Spearman:35 food \u00b7 25 wood \u00b7 22 s \u00b7 queue 0/15",
+    "2:book:Man-at-Arms:100 food \u00b7 40 gold \u00b7 40 s \u00b7 research",
+    "8:white_banner:Rally point:Click, then right click the ground"
+   ],
+   "ARCHERY_RANGE": [
+    "Archery Range",
+    "0:skeleton_spawn_egg:Archer:25 wood \u00b7 45 gold \u00b7 35 s \u00b7 queue 0/15",
+    "1:drowned_spawn_egg:Skirmisher:25 food \u00b7 35 wood \u00b7 22 s \u00b7 queue 0/15",
+    "8:white_banner:Rally point:Click, then right click the ground"
+   ],
+   "STABLE": [
+    "Stable",
+    "0:horse_spawn_egg:Scout Cavalry:80 food \u00b7 30 s \u00b7 queue 0/15",
+    "1:book:Bloodlines:150 food \u00b7 100 gold \u00b7 50 s \u00b7 research",
+    "8:white_banner:Rally point:Click, then right click the ground"
+   ],
+   "BLACKSMITH": [
+    "Blacksmith",
+    "0:book:Forging:150 food \u00b7 50 s \u00b7 research",
+    "1:book:Scale Mail Armor:100 food \u00b7 40 s \u00b7 research",
+    "2:book:Fletching:100 food \u00b7 50 gold \u00b7 30 s \u00b7 research",
+    "3:book:Padded Archer Armor:100 food \u00b7 40 s \u00b7 research",
+    "4:book:Scale Barding Armor:150 food \u00b7 45 s \u00b7 research"
+   ],
+   "BUILD": [
+    "Build",
+    "0:spruce_stairs:House:25 wood\n25 s",
+    "1:oak_log:Lumber Camp:100 wood\n35 s",
+    "2:raw_gold_block:Mining Camp:100 wood\n35 s",
+    "3:white_wool:Mill:100 wood\n35 s",
+    "4:wheat:Farm:60 wood\n15 s",
+    "5:stone_brick_wall:Barracks:175 wood\n50 s",
+    "6:anvil:Blacksmith:150 wood\n40 s",
+    "7:target:Archery Range:175 wood\n50 s",
+    "8:hay_block:Stable:175 wood\n50 s",
+    "9:cobblestone:Town Center:275 wood, 100 stone\n150 s",
+    "10:stone_bricks:Castle:650 stone\n200 s",
+    "11:bell:Monastery:175 wood\n40 s",
+    "12:grindstone:Siege Workshop:200 wood\n40 s",
+    "13:bookshelf:University:200 wood\n60 s"
+   ]
+  },
+  "Imperial": {
+   "BARRACKS": [
+    "Barracks",
+    "0:zombie_spawn_egg:Militia:60 food \u00b7 20 gold \u00b7 21 s \u00b7 queue 0/15",
+    "1:zombie_spawn_egg:Spearman:35 food \u00b7 25 wood \u00b7 22 s \u00b7 queue 0/15",
+    "2:book:Man-at-Arms:100 food \u00b7 40 gold \u00b7 40 s \u00b7 research",
+    "8:white_banner:Rally point:Click, then right click the ground"
+   ],
+   "ARCHERY_RANGE": [
+    "Archery Range",
+    "0:skeleton_spawn_egg:Archer:25 wood \u00b7 45 gold \u00b7 35 s \u00b7 queue 0/15",
+    "1:drowned_spawn_egg:Skirmisher:25 food \u00b7 35 wood \u00b7 22 s \u00b7 queue 0/15",
+    "8:white_banner:Rally point:Click, then right click the ground"
+   ],
+   "STABLE": [
+    "Stable",
+    "0:horse_spawn_egg:Scout Cavalry:80 food \u00b7 30 s \u00b7 queue 0/15",
+    "1:book:Bloodlines:150 food \u00b7 100 gold \u00b7 50 s \u00b7 research",
+    "8:white_banner:Rally point:Click, then right click the ground"
+   ],
+   "BLACKSMITH": [
+    "Blacksmith",
+    "0:book:Forging:150 food \u00b7 50 s \u00b7 research",
+    "1:book:Scale Mail Armor:100 food \u00b7 40 s \u00b7 research",
+    "2:book:Fletching:100 food \u00b7 50 gold \u00b7 30 s \u00b7 research",
+    "3:book:Padded Archer Armor:100 food \u00b7 40 s \u00b7 research",
+    "4:book:Scale Barding Armor:150 food \u00b7 45 s \u00b7 research"
+   ],
+   "BUILD": [
+    "Build",
+    "0:spruce_stairs:House:25 wood\n25 s",
+    "1:oak_log:Lumber Camp:100 wood\n35 s",
+    "2:raw_gold_block:Mining Camp:100 wood\n35 s",
+    "3:white_wool:Mill:100 wood\n35 s",
+    "4:wheat:Farm:60 wood\n15 s",
+    "5:stone_brick_wall:Barracks:175 wood\n50 s",
+    "6:anvil:Blacksmith:150 wood\n40 s",
+    "7:target:Archery Range:175 wood\n50 s",
+    "8:hay_block:Stable:175 wood\n50 s",
+    "9:cobblestone:Town Center:275 wood, 100 stone\n150 s",
+    "10:stone_bricks:Castle:650 stone\n200 s",
+    "11:bell:Monastery:175 wood\n40 s",
+    "12:grindstone:Siege Workshop:200 wood\n40 s",
+    "13:bookshelf:University:200 wood\n60 s"
+   ]
+  }
+ },
+ "sidebar": "There are 8 objective(s): [Menu], [aoe_talk], [Cheat], [Resources (Imperial Age)], [aoe_use], [aoe_box], [aoe_build], [Hit points..."
+}
