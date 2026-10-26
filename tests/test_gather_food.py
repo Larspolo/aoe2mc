@@ -108,6 +108,8 @@ def test_villager_forages_on_a_server(tmp_path):
             g.step()
         assert "has 125 " in game.command("scoreboard players get Food aoe_res")
         T = g.map.T
-        x, z = int((bush[0] + 0.5) * T), int((bush[1] + 0.5) * T)      # the converter's bush blocks
+        x, z = bush[0] * T, bush[1] * T                                # a berry bush of the ring (#590)
         y = min(g.map.y(*c) for c in g.map.around(g.map.cells(bush)))
         assert "passed" in game.command(f"execute if block {x} {y} {z} minecraft:dead_bush"), "no dead bush"
+        mid = int((bush[0] + 0.5) * T), int((bush[1] + 0.5) * T)      # the leaves in the middle: free now (#602)
+        assert "passed" in game.command(f"execute if block {mid[0]} {y} {mid[1]} minecraft:air"), "not free"
