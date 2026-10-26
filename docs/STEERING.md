@@ -96,9 +96,11 @@ percentages.
 
 ## CI and the merge
 
-The repository is public, so GitHub Actions minutes are free (#370). CI runs on each PR: lint, fast and slow tests,
-and the Minecraft tests when the PR changes a file that they use. The workflow `automerge.yml` merges an agent PR
-when its CI is green. It does not merge a PR with the label `hold`, or a PR whose ticket has `needs-human` or
+The repository is public, so GitHub Actions minutes are free (#370). CI runs only the quick checks on each PR (lint
+and fast tests, about 1 minute), so that a PR merges soon. The full suite (slow tests, Minecraft tests, package)
+runs each night on `main` (your decision, 2026-10-26); start it by hand with Actions → CI → Run workflow → "full".
+The runs do the slow and Minecraft checks that a change needs in their own session. The workflow `automerge.yml`
+merges an agent PR when its CI is green. It does not merge a PR with the label `hold`, or a PR whose ticket has `needs-human` or
 `blocked`. After each merge it starts CI on `main`; a red run on `main` opens a `P0` ticket, and the runs fix it first.
 To stop one PR, add `hold` to it. To stop all runs, add `paused` to the status issue.
 The ruleset `Protect main` (Settings → Rules) refuses force pushes and deletes of `main`.

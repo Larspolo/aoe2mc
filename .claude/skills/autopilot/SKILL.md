@@ -88,8 +88,9 @@ owns (see "Runs can overlap"):
   The workflow `unconflict.yml` (after each merge and every 20 minutes) merges `origin/main` into a conflicted PR
   when git solves the conflict alone (`merge=union` files), and starts CI (#280). So a conflict that stays is a real one.
 
-Then read the last CI run on main (`/actions/workflows/ci.yml/runs?branch=main&per_page=1`, `conclusion`;
-Automerge starts one after each merge). If it is red, find the open `P0` ticket "Fix main: ..." or make one (`P0`,
+Then read the last CI run on main (`/actions/workflows/ci.yml/runs?branch=main&per_page=1`, `conclusion`: the quick
+checks, after each merge) and the last night run (`...&event=schedule&per_page=1`: the full suite). If one is red,
+find the open `P0` ticket "Fix main: ..." or make one (`P0`,
 `bug`, `size:S`: the failing test and the commit that broke it), and do it first. CI makes the same ticket by itself.
 
 ## 3. Read the owner's feedback
@@ -173,10 +174,11 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
    Push. Open a PR: title = ticket title, body = what changed, how you verified, `Closes #<number>`.
 8. Read `mergeable_state` (`/pulls/N`; `unknown` means GitHub still computes it: read it again). If it is
    `dirty`, do step 10 first: GitHub runs no CI on a PR with a merge conflict, so no CI event comes.
-   Do not wait for CI and do not merge by hand: CI runs on each PR (lint, fast and slow tests; the `mc` tests when
-   the PR changes a file that they use), and the Automerge workflow merges the PR when CI is green, removes
-   `in-progress` and deletes the branch. Continue with step 7 and the next ticket. Step 2 of a later cycle finds a
-   red or conflicted PR.
+   Do not wait for CI and do not merge by hand: CI runs only the quick checks on each PR (lint and fast tests,
+   about 1 minute), and the Automerge workflow merges the PR when CI is green, removes `in-progress` and deletes the
+   branch. The slow and Minecraft tests run only each night on main: do the levels of the `verify` skill that the
+   change needs (slow tests, server check) before the push. Continue with step 7 and the next ticket. Step 2 of a
+   later cycle finds a red or conflicted PR.
 9. CI red → find the cause, fix, push. After 3 failed attempts stop: comment the cause on the ticket,
    add `blocked` or `needs-human` and `hold`, remove `in-progress`, and go to step 8 of the skill (report).
 10. Merge conflict (another PR changed the same lines) → merge `origin/main` into the branch, solve the

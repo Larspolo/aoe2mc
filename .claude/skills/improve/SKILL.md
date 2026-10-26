@@ -46,7 +46,7 @@ patterns and their fixes:
 | Agent | Unclear tickets, many questions | A better form in the `ticket` skill, ask earlier |
 | Agent | Rework after owner feedback | A rule from the feedback in `CLAUDE.md` |
 | Agent | Runs longer than 90 minutes | Stricter size rules, split earlier |
-| CI | CI on main red, or red after a merge of two green PRs | Fix the flaky test, or a check in the `verify` skill that finds it before the push |
+| CI | The night run (full suite) red after green PRs | A check in the `verify` skill that finds it before the push, or fix the flaky test |
 | CI | PRs wait for CI in the queue (20 jobs at the same time) | Fewer event runs (`concurrency`), or split a slow job |
 | CI | A slow step (install, download) | `actions/cache` with the correct path and key, or a smaller install |
 | CI | A cache that is never restored ("Cache not found") | Correct the cache path or key |
