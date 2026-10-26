@@ -78,6 +78,13 @@ the player can do now (for example "Right click: walk · Sneak + right click: de
 about 2 s, so the program sends the hint again while the state lasts. The boss bar stays for the selected unit (#659),
 the sidebar for the numbers (#744). Epic #793, work: #798.
 
+**Owner decision (2026-10-26): the size of the horses** (#1096). The converter gives each cavalry horse the attribute
+`minecraft:scale` 0.7 (`units.mounted`), in each converted world and in the game. A horse of scale 1.0 is 1.4 blocks
+wide: up a slope it stands 1 block above its path point, misses it and walks at 4.2 blocks per second. At scale 0.7 it
+is less than 1 block wide and walks up at its flat speed (16.4 to 17.3 blocks per second). Not chosen: a scale only in
+the game program (two sizes of one unit) and an own path follower (own logic in place of Minecraft path finding).
+Work: #1022.
+
 ### Smallest playable milestone: "villagers gather wood"
 
 1. The converter writes `aoe2mc.json` into the world folder: each object with its AoE2 ID, name, owner,
