@@ -10,6 +10,8 @@ Fights (#632): on Paper an ORDER on a unit or a start building of another player
 selection to attack it (`aoe attack`, the mob AI and the AoE2 values of game/combat.py); a unit at 0 hit points dies by
 itself. A trained unit gets its AoE2 values at its spawn (`aoe stats`, `aoe range`); game/run.py gives them to the
 units and buildings of the start state (combat.setup).
+A villager gets the look of its AoE2 task (#868, gather.Gather.task): an ORDER on a resource, a BUILD (builder);
+a MOVE, an ORDER on something else, or the end of its work without a next resource gives it no profession.
 Garrisons (#809): a GARRISON command, or an ORDER on an own start building with garrison room (game/garrison.py SIZES),
 puts the units inside it when they arrive (the state of the converter, #807), and UNGARRISON lets them out next to it.
 A villager with resources and an ORDER on a drop site drops them and does not go in.
@@ -61,6 +63,11 @@ def pretty(name):
     return name.replace("_", " ").title()
 
 
+def start_job(name):
+    """The profession that units.make_entity gives a unit of this name (gather.Villager.job)."""
+    return next((j for k, j in units.VILLAGER_JOBS if k in name), "none")
+
+
 def text(s, color=None):
     return {"text": s, "color": color} if color else {"text": s}
 
@@ -90,6 +97,7 @@ class Replay:
         self.starts = [(o.get("ref"), o["player"], o["name"], (o["footprint"][0], o["footprint"][2], o["footprint"][1],
                         o["footprint"][3])) for o in data["objects"] if o["kind"] == "building" and "footprint" in o]
         self.placed, self.map, self.added = [], None, 0        # buildings of the replay, gather.Map, placed in the map
+        self.lifted = None                                      # cells where "ground" is the top of an object (#870)
         self.tops = {}                                          # top block y per footprint of a replay building
         self.trained = {}                                       # units per building footprint
         self.units, self.new = {}, []           # object ID -> gather.Villager; spawned units without a known ID
@@ -158,7 +166,9 @@ class Replay:
                 k = len(self.placed)
                 out += self.building(name, e["player"], x, y)
                 if len(self.placed) > k:
-                    out += self.push_out(self.placed[-1][2])
+                    out += self.push_out(self.placed[-1][2])               # it finds the units (grid())
+                    for i, n in zip(e.get("objects", ()), e.get("names") or [None] * len(e.get("objects", ()))):
+                        out += self.look(self.unit(i, n, e["player"]), "BUILDER")
                     if "FARM" in name and e.get("objects"):       # AoE2: the builders of a farm farm it (#719)
                         x0, x1, z0, z1 = self.placed[-1][2]
                         out += self.move(dict(e, kind="order", target=-1,
@@ -196,11 +206,18 @@ class Replay:
             return []
         fx0, fz0, fx1, fz1 = o["footprint"]
         dx, dz = ox * T, oy * T
-        cells = [self.ground[z][x] for x in range(max(0, fx0 + dx), min(self.n, fx1 + dx))
-                 for z in range(max(0, fz0 + dz), min(self.n, fz1 + dz))]
-        cells = [g for g in cells if g is not None]
+        m = self.grid()
+        if self.lifted is None:                                     # the cells of the trees, bushes and mines
+            self.lifted = set().union(*map(m.spot, [*m.trees, *m.bushes, *(t for r in m.mines.values() for t in r)]))
+        foot = {(x, z) for x in range(max(0, fx0 + dx), min(self.n, fx1 + dx))
+                for z in range(max(0, fz0 + dz), min(self.n, fz1 + dz))}
+        # "ground" over a tree is the top of its barriers and trunk (#870): take the other cells, else the free cells
+        # next to the footprint
+        free = foot - self.lifted or m.around(foot) or foot
+        cells = [g for x, z in free if (g := self.ground[z][x]) is not None]
         if not cells:                                               # outside the map or on water only
             return []
+        trees = [t for t in m.trees if m.cells(t) & foot]          # in AoE2 the tree is gone (chopped)
         flat = cols.surface(fx0, fz0)                               # the floor of the flat map
         base, low = max(cells), min(cells)
         dy = base - flat
@@ -215,7 +232,13 @@ class Replay:
         x0, x1, z0, z1 = fx0 + dx, fx1 + dx - 1, fz0 + dz, fz1 + dz - 1
         self.placed.append((player, name, (x0, x1 + 1, z0, z1 + 1)))
         self.tops[self.placed[-1][2]] = top
-        out = self.fill(x0, base, z0, x1, top, z1, "air")
+        out = []
+        for t in trees:                                             # as gather.Gather.clear: logs, leaves and bamboo
+            m.trees.pop(t)
+            tx, tz = t[0] * T, t[1] * T
+            out += [f"fill {tx - 2} {low - 2} {tz - 2} {tx + T + 1} {low + 22} {tz + T + 1} air replace {b}"
+                    for b in ("#minecraft:logs", "#minecraft:leaves", "minecraft:bamboo")]
+        out += self.fill(x0, base, z0, x1, top, z1, "air")
         if low < base - 1:                                          # the floor replaces the top ground block
             out += self.fill(x0, low, z0, x1, base - 2, z1, self.state(aoe2mc.B(buildings.ARCH[players[player][
                 "arch"]].stone2)) + " keep")
@@ -327,7 +350,7 @@ class Replay:
         kind = str(nbt.pop("id"))
         del nbt["Pos"]
         v = self.gather.Villager(units.uuid_str(nbt["UUID"]), pos)
-        v.name, v.player = e["name"], e["player"]
+        v.name, v.player, v.job = e["name"], e["player"], start_job(e["name"])
         self.new.append((e["player"], v))
         self.pop[e["player"]] = self.pop.get(e["player"], 0) + 1
         out = [f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}"]
@@ -350,7 +373,7 @@ class Replay:
                 if o["kind"] == "unit" and "uuid" in o and o.get("ref") is not None:
                     x, z = o["tile"][0] * T, o["tile"][1] * T
                     self.units[o["ref"]] = v = gather.Villager(o["uuid"], (x, float(self.map.y(int(x), int(z)) or 0), z))
-                    v.name, v.player = o["name"], o["player"]
+                    v.name, v.player, v.job = o["name"], o["player"], start_job(o["name"])
         for _, name, r in self.placed[self.added:]:              # a farm: its center tile is its key (#719)
             self.map.building(name, r, ((r[0] + r[1]) // 2 // T, (r[2] + r[3]) // 2 // T) if "FARM" in name else None,
                               False)
@@ -445,6 +468,7 @@ class Replay:
         boats = boats if wet else []
         if not group and not boats:
             return []
+        looks = [c for _, v in group for c in self.look(v, self.gather.job_of(self.map, tile) if tile else "none")]
         to_tile = not (e["kind"] == "order" and e.get("target") is not None)
         slots = self.formation([v for _, v in group], e["tile"]) if to_tile and group else {}
         out = []
@@ -471,6 +495,17 @@ class Replay:
                 self.start(i, v, e["time"])
             else:
                 self.moving[i] = due
+        return looks + out
+
+    def look(self, v, task):
+        """The command that gives villager v the look of the AoE2 task (`LUMBERJACK` ..., "none": no work), when it
+        changes (gather.Gather.task)."""
+        if v is None or not v.name.startswith("VILLAGER"):
+            return []
+        out, keep = [], getattr(self.crew, "command", None)         # steps() sends the gather looks to its list
+        self.crew.command = out.append
+        self.crew.task(v, task)
+        self.crew.command = keep
         return out
 
     def order(self, v, legs, t):
@@ -593,11 +628,11 @@ class Replay:
         far = {k: math.dist((x / T, z / T), (k[0] + 0.5, k[1] + 0.5)) for k, n in self.crew.source(v).items() if n > 0}
         near = sorted((d, k) for k, d in far.items() if d <= NEXT)
         if not near:
-            return []
+            return self.look(v, "none")
         v.tree = near[0][1]
         path = self.map.path(v.cell, self.map.around(self.map.spot(v.tree)), PATH_CELLS)
         if path is None:
-            return []
+            return self.look(v, "none")
         if self.ai and path:
             cmds, due = self.order(v, path[LEG - 1:-1:LEG] + [path[-1]], t)
             if v.path:
@@ -764,6 +799,7 @@ class Replay:
         appear, and each unit that a MOVE or ORDER sent, or that walks now, stands at its target (tp, no walk). The
         chat, age and research texts of the skipped time do not show. Returns the commands."""
         out, moved = [], set()
+        jobs = {i: v.job for i, v in self.units.items()}            # move() gives the looks: send the last ones
         for e in events:
             if e["kind"] in ("move", "order", "garrison") and e.get("objects"):
                 self.commands(e) if e["kind"] == "garrison" else self.move(e)   # the paths and the targets; no walks
@@ -783,7 +819,7 @@ class Replay:
             out.append("tp {} {} {} {}".format(v.uuid, *v.pos))
             if self.ai:                                             # ends the walk order of the plugin at once
                 out.append("aoe moveto {} {} {} {}".format(v.uuid, *v.pos))
-        return out
+        return out + [self.gather.profession(v.uuid, v.job) for i, v in self.units.items() if v.job != jobs.get(i)]
 
     def run(self, speed=1.0, start=0, clock=time.monotonic, sleep=time.sleep, log=print, bar=False, poll=None):
         """Play the timeline from game time `start` (ms) at `speed` times the game speed; `bar`: show the game time
