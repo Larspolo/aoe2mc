@@ -11,6 +11,8 @@ The wiki HTML pages give a Cloudflare challenge (403); the API and the image ser
 import argparse
 import io
 import json
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -20,9 +22,15 @@ API = "https://ageofempires.fandom.com/api.php"
 HEADERS = {"User-Agent": "aoe2mc-refimage/1.0 (https://github.com/Larspolo/aoe2mc)"}   # the default urllib agent gets 403
 
 
-def fetch(url, timeout=30):
-    with urllib.request.urlopen(urllib.request.Request(url, headers=HEADERS), timeout=timeout) as r:
-        return r.read()
+def fetch(url, timeout=30, tries=4):
+    for k in range(tries):          # the image host sometimes gives 503 for some seconds (#456)
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=HEADERS), timeout=timeout) as r:
+                return r.read()
+        except urllib.error.HTTPError as e:
+            if e.code < 500 or k == tries - 1:
+                raise
+            time.sleep(5 * (k + 1))
 
 
 def query(**params):
