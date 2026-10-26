@@ -17,6 +17,7 @@ A villager with resources and an ORDER on a drop site drops them and does not go
 Replay(game, data).run(speed) plays it; commands(e) gives the commands of one event (the unit tests use it).
 With bar=True (game/run.py --replay) a boss bar shows the game time, the speed and the progress (#684).
 """
+import functools
 import json
 import math
 import os
@@ -62,6 +63,21 @@ def pretty(name):
 
 def text(s, color=None):
     return {"text": s, "color": color} if color else {"text": s}
+
+
+@functools.lru_cache(maxsize=None)
+def ship(name):
+    """True for a unit that the converter makes a boat (a fishing ship, a galley ...): it stays on the water (#866)."""
+    return units.is_boat(units.classify(name or ""))
+
+
+def sail(g, v):
+    """Move ship v one cell on its water path with /tp, facing the step. The y of the boat stays (`at @s`, `~`):
+    the water carries it, and aoe2mc.json has no height for the water."""
+    x, z = v.path.pop(0)
+    dx, dz = x + 0.5 - v.pos[0], z + 0.5 - v.pos[2]
+    v.pos = (x + 0.5, v.pos[1], z + 0.5)
+    g.command(f"execute as {v.uuid} at @s run tp @s {v.pos[0]} ~ {v.pos[2]} {math.degrees(math.atan2(-dx, dz)):.0f} 0")
 
 
 class Replay:
@@ -297,12 +313,13 @@ class Replay:
         if rect is None:
             return []
         self.grid()
-        cells = self.map.front(rect, "Passengers" in (units.classify(e["name"]) or {}))
+        boat = ship(e["name"])                                      # a dock puts its ships on the water (#866)
+        cells = self.map.front(rect, "Passengers" in (units.classify(e["name"]) or {}) and not boat, boat)
         if not cells:
             return []
         k = self.trained[rect] = self.trained.get(rect, -1) + 1
         x, z = cells[k % len(cells)]
-        pos = (x + 0.5, float(self.map.y(x, z)), z + 0.5)
+        pos = (x + 0.5, self.map.sea(x, z) if boat else float(self.map.y(x, z)), z + 0.5)
         o = dict(name=e["name"], player=e["player"], rotation=math.pi / 2, hero=prefix == "H")   # it faces south
         nbt = units.make_entity(o, {int(p): v for p, v in self.data["players"].items()}, pos, self.rng)
         if nbt is None:
@@ -349,9 +366,10 @@ class Replay:
                 self.units[i] = self.new.pop(k)[1]
         return self.units.get(i)
 
-    def goals(self, e):
+    def goals(self, e, water=False):
         """The cells that the units of a MOVE or ORDER go to: next to the target object of an ORDER, else the
-        target tile (or next to it, when it is blocked)."""
+        target tile (or next to it, when it is blocked). water: the water cells for a ship, next to the target
+        object, else the water cell nearest to the target tile within 3 tiles (#866)."""
         m, T, t = self.map, self.T, e.get("target")
         if e["kind"] == "order" and t is not None and (t in self.units or t in self.refs):
             o = self.refs.get(t, {})
@@ -362,10 +380,15 @@ class Replay:
                 cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
             else:
                 cells = m.cells((int(o["tile"][0]), int(o["tile"][1])))
-            return m.around(cells)
+            if (near := m.around(cells, water)) or not water:
+                return near
         if "tile" not in e:
             return set()
         c = int(e["tile"][0] * T), int(e["tile"][1] * T)
+        if water:
+            r = 3 * T
+            wet = [(x, z) for x in range(c[0] - r, c[0] + r + 1) for z in range(c[1] - r, c[1] + r + 1) if m.wet(x, z)]
+            return {min(wet, key=lambda w: (math.dist(w, c), w))} if wet else set()
         return {c} if m.free(*c) else m.around(m.cells((c[0] // T, c[1] // T)))
 
     def enemy(self, e):
@@ -416,10 +439,15 @@ class Replay:
             if home and not (not e.get("garrison") and v.load and v.name.startswith("VILLAGER")
                              and home[1]["name"] in self.gather.DROP_SITES.get(v.res, ())):   # it drops its load
                 self.entering[i] = [*home, None]
-        if not goals or not group:
+        boats = [(i, v) for i, v in group if ship(v.name)]          # ships sail on the water (#866)
+        wet = self.goals(e, True) if boats else set()
+        group = [(i, v) for i, v in group if not ship(v.name)] if goals else []
+        boats = boats if wet else []
+        if not group and not boats:
             return []
         to_tile = not (e["kind"] == "order" and e.get("target") is not None)
-        slots = self.formation([v for _, v in group], e["tile"]) if to_tile else {}
+        slots = self.formation([v for _, v in group], e["tile"]) if to_tile and group else {}
+        out = []
         if self.ai:
             out, group = self.attack(group, target) if (target := self.enemy(e)) else ([], group)
             for i, v in group:
@@ -432,17 +460,18 @@ class Replay:
                 else:
                     self.moving.pop(i, None)
                     self.start(i, v, due)
-            return out
-        for i, v in group:
+            group = []
+        for i, v in group + boats:                                  # a boat has no path finding: /tp steps
+            w = ship(v.name)
             v.path = (self.map.path(v.cell, {slots[v]}, PATH_CELLS) if v in slots else None) or \
-                self.map.path(v.cell, goals, PATH_CELLS) or []
+                self.map.path(v.cell, wet if w else goals, PATH_CELLS, w) or []
             due = self.moving[i] if i in self.moving and v.path else self.next_step(v, e["time"])
             if due is None:
                 self.moving.pop(i, None)
                 self.start(i, v, e["time"])
             else:
                 self.moving[i] = due
-        return []
+        return out
 
     def order(self, v, legs, t):
         """The plugin walks unit v on a Minecraft path to the first cell of `legs`, at its walk speed times the replay
@@ -499,19 +528,21 @@ class Replay:
         sink = types.SimpleNamespace(map=self.map, command=out.append)
         for i, due in list(self.moving.items()):
             v, at = self.units[i], due
-            if self.ai and due <= t:
+            w = ship(v.name)
+            ok = self.map.wet if w else self.map.free
+            if self.ai and not w and due <= t:
                 legs = [c for c in v.path if self.map.free(*c)]        # a new building on a leg end: skip it
                 cmds, at = self.order(v, legs, due) if legs else ([], due)
                 due = at if v.path and legs else None
                 out += cmds
-            while not self.ai and due is not None and due <= t:
-                if not self.map.free(*v.path[0]):                       # a new building on the way: a new path
+            while (not self.ai or w) and due is not None and due <= t:
+                if not ok(*v.path[0]):                                  # a new building on the way: a new path
                     goal = v.path[-1]
-                    v.path = (self.map.path(v.cell, {goal}, PATH_CELLS) or []) if self.map.free(*goal) else []
+                    v.path = (self.map.path(v.cell, {goal}, PATH_CELLS, w) or []) if ok(*goal) else []
                     if not v.path:
                         due = None
                         break
-                self.gather.walk(sink, v)
+                (sail if w else self.gather.walk)(sink, v)
                 at, due = due, self.next_step(v, due)
             if due is None:
                 del self.moving[i]
