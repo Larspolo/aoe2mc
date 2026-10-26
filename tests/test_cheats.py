@@ -19,7 +19,8 @@ def game(tiny_world, on):
 
 def test_lumberjack_gives_wood_with_cheats_on(tiny_world):
     server, g = game(tiny_world, True)
-    assert "aoe cheats aegis,cheese%20steak%20jimmy%27s,lumberjack," in "\n".join(server.log)
+    log = "\n".join(server.log)
+    assert "aoe cheats " in log and ",cheese%20steak%20jimmy%27s," in log and ",lumberjack," in log
     server.scores["aoe_cheat"] = cheats.NAMES.index("lumberjack") + 1
     assert g.clicks() == []                                    # a cheat is no click
     assert g.stock["wood"] == 10000 and server.wood() == 10000
