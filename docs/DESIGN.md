@@ -130,6 +130,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Player color band (walls, gate towers) | `*_wool` (player color), one row | `pavilion`, `yurt`, `command_tent`, `army_tent` +19 more |
 | Fence, pen | `*_fence` | `pasture`, `nine_bands`, `fish_trap`, `outpost` +37 more |
 | Gate of a pen | `*_fence_gate` | `pasture`, `folwark` |
+| Trodden ground of a pasture | patches of `coarse_dirt` and `rooted_dirt`, low `spruce_fence` stakes |  |
 | Fish trap basket | `bamboo_fence` rods on half-round hoops of `dark_oak_wood` and `stripped_oak_wood` |  |
 | Wheel | open `*_trapdoor` on the side | `cart`, `university`, `market`, `dock` +9 more |
 | Siege engine in the making | `stripped_spruce_log` frame, `oak_fence` posts, a `stripped_oak_log` ram beam with an `iron_block` head | `siege_workshop` |
