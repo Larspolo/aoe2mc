@@ -44,7 +44,7 @@ from collections import Counter
 
 import numpy as np
 from nbtlib import File
-from nbtlib.tag import Byte, Compound, Double, Float, Int, IntArray, List, Long, LongArray, String
+from nbtlib.tag import Byte, ByteArray, Compound, Double, Float, Int, IntArray, List, Long, LongArray, String
 
 import buildings
 import units
@@ -2705,6 +2705,63 @@ def write_level_dat(path, name, spawn, yaw=SPAWN_YAW, size=None):
         os.path.join(d, "world_border.dat"))
 
 
+# The base colors of the map items (MapColor.java of the 26.3 server jar, ids 0 to 61; 0 = no color). A map byte is
+# id * 4 + shade, and the shades multiply the color by 180, 220, 255 or 135 / 255 (MapColor$Brightness).
+MAP_COLORS = [
+    0x000000, 0x7FB238, 0xF7E9A3, 0xC7C7C7, 0xFF0000, 0xA0A0FF, 0xA7A7A7, 0x007C00,
+    0xFFFFFF, 0xA4A8B8, 0x976D4D, 0x707070, 0x4040FF, 0x8F7748, 0xFFFCF5, 0xD87F33,
+    0xB24CD8, 0x6699D8, 0xE5E533, 0x7FCC19, 0xF27FA5, 0x4C4C4C, 0x999999, 0x4C7F99,
+    0x7F3FB2, 0x334CB2, 0x664C33, 0x667F33, 0x993333, 0x191919, 0xFAEE4D, 0x5CDBD5,
+    0x4A80FF, 0x00D93A, 0x815631, 0x700200, 0xD1B1A1, 0x9F5224, 0x95576C, 0x706C8A,
+    0xBA8524, 0x677535, 0xA04D4E, 0x392923, 0x876B62, 0x575C5C, 0x7A4958, 0x4C3E5C,
+    0x4C3223, 0x4C522A, 0x8E3C2E, 0x251610, 0xBD3031, 0x943F61, 0x5C191D, 0x167E86,
+    0x3A8E8C, 0x562C3E, 0x14B485, 0x646464, 0xD8AF93, 0x7FA796,
+]
+MAP_SHADES = (180, 220, 255, 135)
+
+
+def map_palette():
+    """RGB of each map byte (index = id * 4 + shade), as float rows."""
+    rgb = np.array([[(c >> 16) & 255, (c >> 8) & 255, c & 255] for c in MAP_COLORS], float)
+    return (rgb[:, None, :] * np.array(MAP_SHADES)[None, :, None] / 255).reshape(-1, 3)
+
+
+def map_scale(n):
+    """The smallest map scale (0 to 4) whose 128 * 2^scale blocks hold a world of n blocks."""
+    return next((s for s in range(5) if 128 << s >= n), 4)
+
+
+def map_colors(img):
+    """The 128 x 128 map bytes (row z, column x) of the top view img (RGB array [z, x, 3] of an n x n world), and
+    the scale and the center (x = z) in blocks. One block in the middle of each map pixel gives its color, and the
+    nearest map color (all shades) its byte. Pixels outside the world have no color (0)."""
+    n = img.shape[0]
+    s = map_scale(n)
+    f = 1 << s
+    c = round(n / 2 / f) * f                                     # the server draws the pixels from a multiple of f
+    pos = c - 64 * f + np.arange(128) * f + f // 2
+    inside = (pos >= 0) & (pos < n)
+    px = img[np.clip(pos, 0, n - 1)][:, np.clip(pos, 0, n - 1)].reshape(-1, 3).astype(float)
+    pal = map_palette()
+    pal[:4] = np.inf                                             # id 0 is transparent
+    out = np.argmin(((px[:, None, :] - pal[None]) ** 2).sum(-1), axis=1).reshape(128, 128)
+    return np.where(inside[:, None] & inside[None, :], out, 0).astype(np.uint8), s, c
+
+
+def write_map(out, img):
+    """Write a locked map of the world (map id 0, #838): `give @p filled_map[map_id=0]` shows it. The 26.3 server
+    keeps maps in data/minecraft/maps/ (DimensionStorageFileFix: data/map_N.dat -> N.dat, idcounts.dat -> last_id.dat)."""
+    colors, s, c = map_colors(np.asarray(img))
+    d = os.path.join(out, "data", "minecraft", "maps")
+    os.makedirs(d, exist_ok=True)
+    data = {"colors": ByteArray(colors.reshape(-1).astype(np.int8)), "scale": Byte(s), "xCenter": Int(c),
+            "zCenter": Int(c), "dimension": String("minecraft:overworld"), "locked": Byte(1),
+            "trackingPosition": Byte(0), "unlimitedTracking": Byte(0), "banners": List[Compound]([]),
+            "frames": List[Compound]([])}
+    for f, v in (("0", data), ("last_id", {"map": Int(0)})):
+        File({"data": Compound(v), "DataVersion": Int(MC["data_version"])}, gzipped=True).save(os.path.join(d, f + ".dat"))
+
+
 # --------------------------------------------------------------------------------------------
 # Border (#172): blocks outside the map square for --border. The map itself does not change.
 # --------------------------------------------------------------------------------------------
@@ -3059,6 +3116,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     img = Image.fromarray(np.clip(img * shade[..., None], 0, 255).astype(np.uint8))
     if preview:
         img.save(os.path.join(out, "preview.png"))
+    write_map(out, img)
     # the world list shows icon.png; keep the pixels sharp when the map is smaller than the icon
     img.resize((64, 64), Image.LANCZOS if cols.n >= 64 else Image.NEAREST).save(os.path.join(out, "icon.png"))
 
