@@ -33,7 +33,8 @@ def play(timeline, jump=None):
             control["jump"] = jump[1]
             done.append(game.now)
     replay.Replay(game, d).run(clock=lambda: game.now, sleep=game.sleep, log=None, bar=True, poll=poll)
-    return [json.loads(c.split(" ", 6)[6])["text"] for c in game.sent if c.startswith("scoreboard players display name")]
+    names = [json.loads(c.split(" ", 6)[6])["text"] for c in game.sent if c.startswith("scoreboard players display name")]
+    return [n.split(" · F ")[0] for n in names]   # without the resources (#932)
 
 
 def test_the_sidebar_starts_in_the_dark_age_and_an_age_up_changes_the_line():
