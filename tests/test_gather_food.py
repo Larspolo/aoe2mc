@@ -36,7 +36,7 @@ def test_a_click_on_a_fruit_bush_sends_a_forager():
     g.send((10, 10))
     v = g.villagers["v"]
     assert v.state == "to_tree" and v.res == "food" and v.tree == (10, 10)
-    assert 'data merge entity v {VillagerData:{profession:"minecraft:farmer"}}' in server.log
+    assert 'data merge entity v {VillagerData:{profession:"minecraft:farmer"},Offers:{Recipes:[]}}' in server.log
 
 
 def test_villagers_forage_a_bush_empty_and_go_to_the_next_one():

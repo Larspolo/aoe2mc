@@ -46,7 +46,7 @@ def test_one_farmer_per_farm():
     assert (a.tree, b.tree, c.tree) == ((10, 10), (16, 10), None)       # the next free farm, then nothing
     assert a.state == b.state == "to_tree" and c.state == "idle"
     assert g.farmers == {(10, 10): "a", (16, 10): "b"}
-    assert 'data merge entity a {VillagerData:{profession:"minecraft:farmer"}}' in server.log
+    assert 'data merge entity a {VillagerData:{profession:"minecraft:farmer"},Offers:{Recipes:[]}}' in server.log
     assert a.path[-1] in g.map.spot((10, 10))                            # it walks onto the farm
     g.selected = {"a"}
     g.send((16, 10))                                                     # taken: a goes back to its own farm

@@ -296,6 +296,12 @@ def hands(main=None, off=None):
     return {slot: item(n) for slot, n in (("mainhand", main), ("offhand", off)) if n}
 
 
+def no_trades():
+    """An empty trade list: a right click on the villager opens no trade menu, and the statistic
+    talked_to_villager still counts the click (the selection of the game program, #988)."""
+    return Compound({"Recipes": List[Compound]([])})
+
+
 def mob(kind, gear=None, **tags):
     """A mob that stands still. gear: the `equipment` slots {feet, ..., mainhand, offhand, saddle, body}."""
     d = {"id": String("minecraft:" + kind), "NoAI": Byte(1), "PersistenceRequired": Byte(1), "Silent": Byte(1)}
@@ -417,7 +423,7 @@ def classify(n, hero=False):
         job = next((j for k, j in VILLAGER_JOBS if k in n), "none")
         return mob("villager", VillagerData=Compound({"profession": String("minecraft:" + job),
                                                        "type": String("minecraft:plains"), "level": Int(2)}),
-                   Xp=Int(1))
+                   Xp=Int(1), Offers=no_trades())
     if has(n, "MONK", "MISSIONARY", "PRIEST", "MERCHANT") and "SHIP" not in n or hero and has(n, *RELIGIOUS_HEROES):
         return mob("evoker")
     if n in ("KING", "QUEEN", "KHAN") or has(n, "EMPEROR"):
