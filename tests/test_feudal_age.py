@@ -1,7 +1,7 @@
 """game/train.py: the town center menu has "Feudal Age" (500 food, 130 AoE2 seconds). It needs 2 types of Dark Age
 buildings; after the research the sidebar title shows the age, all players see it, and the item leaves the menu (#672)."""
 from test_loom import menus, setup
-from test_train_menu import RALLY
+from test_train_menu import CASTLE, RALLY
 
 from game import train
 
@@ -17,7 +17,7 @@ def test_without_two_dark_age_buildings_the_item_says_what_is_missing_and_a_clic
     add(g, "LUMBER_CAMP", "LUMBER_CAMP", "HOUSE")                       # one type, and a house does not count
     rect = train.open_menu(g, "Steve", (3, 3))
     assert menus(server)[-1].endswith(" 2:bell:Feudal Age:500 food · 130 s · "
-                                      "needs 2 of barracks, mill, lumber camp, mining camp, dock (1/2)" + RALLY)
+                                      "needs 2 of barracks, mill, lumber camp, mining camp, dock (1/2)" + CASTLE + RALLY)
     assert train.order(g, "Steve", rect, 2) == 0 and g.stock["food"] == 1000 and not g.queues.get(rect)
     assert any("Feudal Age needs 2 of" in c for c in server.log)
 
@@ -27,10 +27,10 @@ def test_a_built_mill_completes_the_need_and_a_click_queues_the_age_once():
     add(g, "BARRACKS")
     g.sites.append({"name": "MILL", "player": 1, "footprint": [11, 10, 13, 12], "done": True})
     rect = train.open_menu(g, "Steve", (3, 3))
-    assert menus(server)[-1].endswith(" 2:bell:Feudal Age:500 food · 130 s · research" + RALLY)
+    assert menus(server)[-1].endswith(" 2:bell:Feudal Age:500 food · 130 s · research" + CASTLE + RALLY)
     assert train.order(g, "Steve", rect, 2, shift=True) == 1 and g.stock["food"] == 500
     assert train.order(g, "Steve", rect, 2) == 0 and g.stock["food"] == 500
-    assert menus(server)[-1].endswith(" 2:bell:Feudal Age:500 food · 130 s · researching" + RALLY)
+    assert menus(server)[-1].endswith(" 2:bell:Feudal Age:500 food · 130 s · researching" + CASTLE + RALLY)
 
 
 def test_after_130_seconds_the_player_is_in_the_feudal_age():

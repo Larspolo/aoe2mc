@@ -7,6 +7,8 @@ from test_train_menu import RALLY
 
 from game import ai, gather, train
 
+CASTLE = " 4:bell:Castle Age:800 food · 200 gold · 160 s · needs 2 of archery range, stable, blacksmith, market (0/2)"   # the next age (#1080)
+
 
 def setup(food=175, wood=50):
     """A flat 16 × 16 map (tile size 1): a town center of player 1 at blocks x 2-4, z 2-4 and a villager."""
@@ -34,7 +36,7 @@ def test_no_wheelbarrow_in_the_dark_age():
 def test_the_town_center_menu_has_wheelbarrow():
     server, g = setup()
     train.open_menu(g, "Steve", (3, 3))
-    assert menus(server)[-1].endswith(" 3:book:Wheelbarrow:175 food · 50 wood · 75 s · research" + RALLY)
+    assert menus(server)[-1].endswith(" 3:book:Wheelbarrow:175 food · 50 wood · 75 s · research" + CASTLE + RALLY)
 
 
 def test_a_click_queues_wheelbarrow_once_and_takes_its_cost():
@@ -42,7 +44,7 @@ def test_a_click_queues_wheelbarrow_once_and_takes_its_cost():
     rect = train.open_menu(g, "Steve", (3, 3))
     assert train.order(g, "Steve", rect, 3, shift=True) == 1 and (g.stock["food"], g.stock["wood"]) == (825, 950)
     assert train.order(g, "Steve", rect, 3) == 0 and g.stock["food"] == 825
-    assert menus(server)[-1].endswith(" 3:book:Wheelbarrow:175 food · 50 wood · 75 s · researching" + RALLY)
+    assert menus(server)[-1].endswith(" 3:book:Wheelbarrow:175 food · 50 wood · 75 s · researching" + CASTLE + RALLY)
 
 
 def test_wheelbarrow_gives_more_carry_after_75_seconds():
