@@ -169,6 +169,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private static final int WHERE_PAGE = 40;                          // aoe where: about 3000 bytes per answer
     private final Map<UUID, Integer> lastHit = new HashMap<>();      // tick of the last melee hit of a unit
     private static final double REACH = Math.sqrt(2.04) - 0.6;       // vanilla melee reach past the hit box
+    private static final double WALK = 43.4;      // blocks per second of movement_speed 1 on flat ground (game/ai.py)
+    private static final double AIR = 1 - 0.91;   // air drag per tick: a speed v in the air goes v / AIR blocks
 
     private static final class Order {
         final Location goal;
@@ -714,6 +716,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             if (passed(mob, path)) {
                 pf.stopPathfinding();                   // else moveTo keeps the path: same target (createPath)
                 pf.moveTo(o.goal, o.speed);
+            } else {
+                glide(mob, path, o.speed);
             }
             return false;
         });
@@ -730,6 +734,42 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         Location a = points.get(i), b = points.get(i + 1), m = mob.getLocation();
         return (a.getX() + 0.5 - m.getX()) * (b.getX() - a.getX()) + (a.getZ() + 0.5 - m.getZ()) * (b.getZ() - a.getZ()) < 0;
+    }
+
+    // Down a slope a mob is in the air most of the time, and a mob has almost no control in the air (0.02 blocks per
+    // tick, drag 0.91): a fast unit flew at about 5 blocks per second for each movement_speed (#888). On the way down
+    // to the first point of its path that is still ahead, it keeps its walk speed (game/ai.py: WALK x attribute^2
+    // blocks per second), at most the speed that stops in the air at the end of the path. The path finder plans no drop larger than the
+    // safe fall distance, so the glide along it does not hurt either: the fall distance and the height above the point
+    // are together at most that.
+    private static void glide(Mob mob, Pathfinder.PathResult path, double speed) {
+        Vector v = mob.getVelocity();
+        AttributeInstance attr = mob.getAttribute(Attribute.MOVEMENT_SPEED);
+        List<Location> points = path.getPoints();
+        if (mob.isOnGround() || mob.isInWater() || attr == null || points.isEmpty()) {
+            return;
+        }
+        Location m = mob.getLocation(), f = points.get(points.size() - 1), n = f;
+        for (int i = Math.max(path.getNextPointIndex(), 1); i < points.size(); i++) {
+            Location a = points.get(i - 1), p = points.get(i);
+            double dx = p.getX() + 0.5 - m.getX(), dz = p.getZ() + 0.5 - m.getZ();
+            if (dx * (p.getX() - a.getX()) + dz * (p.getZ() - a.getZ()) > 0 && Math.hypot(dx, dz) >= 0.05) {
+                n = p;                                  // the first point that is still ahead
+                break;
+            }
+        }
+        AttributeInstance safe = mob.getAttribute(Attribute.SAFE_FALL_DISTANCE);
+        double most = (safe == null ? 3 : safe.getValue()) - Math.max(0, m.getY() - n.getY());   // with the rest of the fall
+        mob.setFallDistance((float) Math.max(0, Math.min(mob.getFallDistance(), most)));
+        double dx = n.getX() + 0.5 - m.getX(), dz = n.getZ() + 0.5 - m.getZ(), d = Math.hypot(dx, dz);
+        if (v.getY() >= 0 || n.getY() >= m.getY() || d < 0.05) {
+            return;
+        }
+        double w = Math.min(AIR * Math.hypot(f.getX() + 0.5 - m.getX(), f.getZ() + 0.5 - m.getZ()),
+                            WALK * attr.getValue() * attr.getValue() * speed / 20);
+        if (w > Math.hypot(v.getX(), v.getZ())) {
+            mob.setVelocity(new Vector(dx / d * w, v.getY(), dz / d * w));
+        }
     }
 
     // The path search reaches only about the follow range: raise it for a goal at this location. A rider searches
