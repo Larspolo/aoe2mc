@@ -227,7 +227,8 @@ after your report (the workflow `dashboard.yml` runs it on label changes, closed
 "Waiting for you", "Working on", "Next up" or "Recently done": the script makes them from GitHub.
 In the body, change only two parts and keep the rest as it is (read the body just before the change,
 other runs change it too):
-- The state comment: `<!-- agent-state: {"last_run": "<now, ISO>", "runs": <N+1>} -->`.
+- The state comment: `<!-- agent-state: {"last_run": "<now, ISO>", "runs": <N+1>, ...} -->`. Change only these two
+  keys and keep the others (`last_review`, `review_minutes`: the review slot, #898).
 - The section `### Process changes`: add a line `- <date>: <what changed in the skills, CLAUDE.md or
   LEARNINGS> (PR #n)` at the top, keep the last 5.
 
@@ -266,9 +267,11 @@ Answer these questions. Do the action for each "yes". Spend little time.
 - Did something block you that only the owner can change (a host, the environment, the scheduled task, a GitHub
   setting)? → make a `needs-human` ticket with numbered steps and the exact values. Look for an open one first.
 
-After step 8, run the `improve` skill when `runs` is a multiple of 5, when this run failed, or when a
-ticket took more than 90 minutes. It finds the largest loss in the metrics and makes one improvement.
-When `runs` is a multiple of 10, also review the feature list of `docs/ROADMAP.md` (the `roadmap` skill).
+After step 8, run `python3 tools/claim.py 0 --review`: exit 0 means that this run does the process review of the
+time slot (#898; the slot is 45 minutes, and longer after reviews with no change). Then run the `improve` skill.
+Run it also when this run failed, or when a ticket took more than 90 minutes. It finds the largest loss in the
+metrics and makes one improvement. Then run `python3 tools/claim.py 0 --roadmap`: exit 0 means that this run
+reviews the feature list of `docs/ROADMAP.md` (the `roadmap` skill, one review per 2 hours).
 Do not change a priority that the owner set. Propose it.
 
 ## More tickets
