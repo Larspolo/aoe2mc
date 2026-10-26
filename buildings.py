@@ -2110,16 +2110,37 @@ def feitoria(c, w, st, col, T, ctx):
 
 
 def outpost(c, w, st, col, T, ctx):
-    hp = 2 * T + 2
+    """Like the game (#485): a lookout hut on four stilts with rails as braces, a ladder at the front, a low wall in
+    the player color and a canvas roof with a valance in the player color. The fortified outpost stands on stone."""
+    hp, y0 = 2 * T + 2, 1
+    if "FORTIFIED" in ctx.get("name", ""):
+        c.box(0, w, 1, 3, 0, w, st.stone2)
+        y0 = 3
     for x in (0, w - 1):
         for z in (0, w - 1):
-            c.box(x, x + 1, 1, hp, z, z + 1, st.timber)
+            c.box(x, x + 1, y0, hp + 4, z, z + 1, st.timber)          # stilts, up to the roof
+    for y in (y0 + 1, (y0 + hp) // 2 + 1):
+        c.walls(0, w, y, y + 1, 0, w, "spruce_fence")                 # braces between the stilts
+        for x in (0, w - 1):
+            for z in (0, w - 1):
+                c.set(x, y, z, st.timber)
     c.box(0, w, hp, hp + 1, 0, w, st.wood)
-    c.walls(0, w, hp + 1, hp + 2, 0, w, "spruce_fence")
-    c.box(w // 2, w // 2 + 1, 1, hp, w - 1, w, "ladder[facing=south]")
-    c.box(w // 2, w // 2 + 1, hp, hp + 2, w - 1, w, "air")
-    c.set(w // 2, hp + 1, w // 2, "campfire[lit=true,signal_fire=false]")
-    c.flag(0, hp + 2, 0, col, 1)
+    c.walls(0, w, hp + 1, hp + 2, 0, w, f"{col}_wool")                # the hut: a band, cloth, then open
+    c.walls(0, w, hp + 2, hp + 3, 0, w, "white_wool")
+    for x in (0, w - 1):
+        for z in (0, w - 1):
+            c.box(x, x + 1, hp + 1, hp + 3, z, z + 1, st.timber)
+    c.box(-1, w + 1, hp + 4, hp + 5, -1, w + 1, f"{col}_wool")        # the valance of the roof
+    c.box(0, w, hp + 4, hp + 5, 0, w, "white_wool")                   # canvas
+    c.box(1, w - 1, hp + 5, hp + 6, 1, w - 1, "white_wool")
+    if w >= 3:
+        x = w // 2
+        c.box(x, x + 1, y0, hp, w - 2, w - 1, st.timber)              # the ladder leans on a pole
+        c.box(x, x + 1, y0, hp + 1, w - 1, w, "ladder[facing=south]")
+        c.box(x, x + 1, hp + 1, hp + 4, w - 1, w, "air")              # the way in
+        c.set(x, hp + 1, w - 2, "air")
+        c.set(1, hp + 1, 1, "campfire[lit=true,signal_fire=false]")   # the signal fire
+    c.flag(w // 2, hp + 6 - (w < 3), w // 2, col, 1)
 
 
 def wall_shape(w, ctx, every=3):
