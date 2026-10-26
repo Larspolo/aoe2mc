@@ -58,6 +58,8 @@ def end(text, color):
     def effect(g, player):
         g.command(f'title @a title {{"text":"{text}","color":"{color}"}}')
         g.ended = text
+        import wonder                                                  # wonder -> cheats: import it late
+        wonder.close(g)
     return effect
 
 
