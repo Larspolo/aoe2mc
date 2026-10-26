@@ -27,7 +27,7 @@ def test_the_castle_menu_shows_the_unique_unit_with_its_cost_and_time(civ):
     server, g = setup(civ, food=500, wood=500, gold=500)
     train.open_menu(g, "Steve", (12, 4))
     _, item, name = train.ITEMS[unit]
-    cost = " · ".join(f"{v} {r}" for r, v in train.COSTS[unit].items())
+    cost = " · ".join(f"{v} {r}" for r, v in train.price(g, unit).items())   # the civilization cost (#1091)
     assert menus(server)[-1].startswith(f"aoe menu Steve Castle 0:{item}:{name}:{cost} · {train.TRAIN_TIMES[unit]} s")
 
 

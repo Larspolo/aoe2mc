@@ -25,6 +25,7 @@ from aoe2mc import VERSION_NAME  # noqa: E402
 from buildings import footprint  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import civs  # noqa: E402
 import menu as chest  # noqa: E402  (menu() below is the chat text)
 from replay import Replay  # noqa: E402
 
@@ -197,11 +198,16 @@ def menu():
     return json.dumps({"text": "Build: " + "\n".join(lines), "color": "gray"})
 
 
+def price(g, name):
+    """The cost of building name for the player of g, with the bonuses of the civilization (civs.COSTS, #1091)."""
+    return civs.cost(g, name, COSTS[name]) if g is not None else COSTS[name]
+
+
 def items(g=None):
-    """The items of the build menu: (slot, icon, name, lore) with the cost and the build time. With g: a building of
-    a later age is gray and says which age it needs."""
+    """The items of the build menu: (slot, icon, name, lore) with the cost and the build time. With g: the cost of the
+    civilization, and a building of a later age is gray and says which age it needs."""
     return [(i, LOCKED if locked(g, n) else ICONS[n], pretty(n),
-             "\n".join([", ".join(f"{v} {r}" for r, v in COSTS[n].items()), f"{BUILD_TIMES[n]} s"]
+             "\n".join([", ".join(f"{v} {r}" for r, v in price(g, n).items()) or "free", f"{BUILD_TIMES[n]} s"]
                        + [locked(g, n)] * bool(locked(g, n)))) for i, n in enumerate(MENU)]
 
 
@@ -249,7 +255,7 @@ def place(g, player, name, eye, d):
     if not free(g, rect):
         say(g, player, f"No space for the {pretty(name).lower()} here.")
         return None
-    cost = COSTS[name]
+    cost = price(g, name)
     if any(g.stock[r] < v for r, v in cost.items()):
         say(g, player, f"Not enough resources: a {pretty(name).lower()} costs "
                        + ", ".join(f"{v} {r}" for r, v in cost.items()) + ".")
@@ -275,7 +281,7 @@ def near(g, name, cell, reach=12):
 def found(g, name, rect):
     """Pay for name and put its foundation (a wool ring in the player color) on the free footprint rect. Returns
     the construction site."""
-    for r, v in COSTS[name].items():
+    for r, v in price(g, name).items():
         g.stock[r] -= v
         g.command(f"scoreboard players remove {r.capitalize()} {g.board} {v}")
     x0, x1, z0, z1 = rect
