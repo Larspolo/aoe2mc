@@ -1099,6 +1099,7 @@ class Edits:
 # --------------------------------------------------------------------------------------------
 def tree_kind(n):
     if "BAMBOO" in n: return "bamboo"
+    if "AUTUMN" in n: return "poplar"                    # 26.3 poplar: yellow, orange and red leaves
     if "PINE" in n or "SPRUCE" in n or "CYPRESS" in n: return "spruce"
     if "BIRCH" in n: return "birch"
     if "PALM" in n: return "palm"
@@ -1114,7 +1115,7 @@ def leaves(wood):
 
 
 WOODS = {"palm": "jungle", "jungle": "jungle", "acacia": "acacia", "spruce": "spruce", "birch": "birch",
-         "mangrove": "mangrove"}                         # tree kind -> wood (log and leaves); else oak
+         "mangrove": "mangrove", "poplar": "poplar"}                         # tree kind -> wood (log and leaves); else oak
 
 
 def make_tree(E, kind, x, y, z, rng):
@@ -1132,6 +1133,8 @@ def make_tree(E, kind, x, y, z, rng):
         return
     wood = WOODS.get(kind, "oak")
     log, leaf = f"{wood}_log", leaves(wood)
+    if kind == "poplar":                                 # one autumn color per tree
+        leaf = leaves(f"{('yellow', 'orange', 'red')[int(rng.integers(3))]}_poplar")
     if kind == "spruce":
         h += 2
         for i, dy in enumerate(range(2, h + 1)):
@@ -1149,7 +1152,7 @@ def make_tree(E, kind, x, y, z, rng):
             E.add([x + dx, x + 2 * dx, x + 3 * dx], [y + h, y + h, y + h - 1],
                   [z + dz, z + 2 * dz, z + 3 * dz], leaf, hard=False)
         E.add([x], [y + h], [z], leaf, hard=False)
-    else:  # round trees: oak, birch, jungle, mangrove
+    else:  # round trees: oak, birch, jungle, mangrove, poplar
         if kind == "jungle":
             h += 3
         for dy, r in ((h - 2, 2), (h - 1, 2), (h, 1), (h + 1, 1)):
@@ -2536,7 +2539,8 @@ def border(cols, design, colors, E):
 # --------------------------------------------------------------------------------------------
 # Preview image (top view)
 # --------------------------------------------------------------------------------------------
-COLORS = [("leaves", (40, 110, 40)), ("snow[", (240, 240, 245)), ("tall_grass", (95, 150, 65)), ("large_fern", (75, 130, 55)), ("moss", (90, 115, 45)), ("petals", (235, 165, 200)), ("poppy", (200, 30, 30)), ("tulip", (220, 120, 60)),
+COLORS = [("yellow_poplar_leaves", (215, 180, 40)), ("orange_poplar_leaves", (215, 115, 30)), ("red_poplar_leaves", (170, 40, 30)),
+          ("leaves", (40, 110, 40)), ("snow[", (240, 240, 245)), ("tall_grass", (95, 150, 65)), ("large_fern", (75, 130, 55)), ("moss", (90, 115, 45)), ("petals", (235, 165, 200)), ("poppy", (200, 30, 30)), ("tulip", (220, 120, 60)),
           ("dandelion", (240, 220, 50)), ("cornflower", (70, 100, 220)), ("allium", (180, 110, 220)),
           ("bluet", (225, 230, 235)), ("daisy", (235, 235, 225)), ("lily_of", (235, 240, 235)),
           ("mushroom", (160, 110, 80)), ("stone_brick", (122, 122, 122)), ("cobblestone", (110, 110, 110)), ("white_terracotta", (215, 200, 190)),
