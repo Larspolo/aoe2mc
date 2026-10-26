@@ -236,13 +236,20 @@ Then add one short comment on the status issue: what you did and what is next. A
 issue, not here (see "Ask the owner" in step 6).
 End it with one metrics line for each ticket of the run (the `improve` skill reads these lines):
 
-    Metrics: ticket #<n> · <size> · <merged|blocked|needs-human|none> · <minutes> min · setup <m> min · checks <k> · checks <c> min · time sinks: <list or "none">
+    Metrics: ticket #<n> · <size> · <merged|blocked|needs-human|none> · <minutes> min · setup <m> min · checks <k> · checks <c> min · time sinks: <list or "none"> · phases read <m> · claim <m> · code <m> · verify <m> · ci <m> · conflict <m> · report <m>
+
+Example: `Metrics: ticket #876 · size:S · merged · 45 min · setup 0 min · checks 2 · checks 6 min · time sinks: none ·
+phases read 8 · claim 1 · code 18 · verify 9 · ci 0 · conflict 5 · report 4` (one line).
 
 Put the output of `python3 tools/release.py` (the release bar of each goal, #879) above the `Usage:` line.
 Put the `Usage:` line of step 1.4 above the metrics lines, unchanged: `tools/health.py` measures the quota use of one
 run per hour from pairs of these lines, and `tools/usage.py --target` uses that value (#462).
 `setup`: minutes from the start time (step 4) to the claim of the first ticket (0 for later tickets).
 `checks <k>`: rounds of the `verify` skill before the push; `checks <c> min`: their minutes in total.
+`phases` (#899): whole minutes of the ticket in each phase, from the times that you note (`date -u +%T`) when a phase
+starts: `read` (feedback, triage, the ticket and the code), `claim` (pick and claim), `code` (change and tests),
+`verify` (the checks of the `verify` skill), `ci` (wait for or fix CI after the push), `conflict` (merges with main),
+`report` (PR text, status comment, process step 9). Keep the fields in this order: `tools/health.py` sums them.
 
 GitHub sends this comment to the owner as a notification. Do not comment when nothing changed.
 

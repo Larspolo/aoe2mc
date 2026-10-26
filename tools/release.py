@@ -91,7 +91,15 @@ def lines(result):
     return out
 
 
-def main():
+def total(result, m="C"):
+    """The percent of milestone m over all goals together: done ÷ (done + left) of their tickets (#899)."""
+    done = sum(r[m][1] for r in result.values() if m in r)
+    rest = sum(r[m][2] + r[m][3] + r[m][4] for r in result.values() if m in r)
+    return 100 * done / (done + rest) if done + rest else 100.0
+
+
+def current():
+    """progress() of the files on disk and the epics on GitHub."""
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     from dashboard import api, pages
     with open(os.path.join(ROOT, "docs", "ROADMAP.md")) as f:
@@ -100,8 +108,12 @@ def main():
         share, rows = release(f.read())
     epics = pages("issues?labels=epic&state=all")
     closed = {r[4] for r in rows if r[4] and api(f"issues/{r[4]}")["state"] == "closed"}
+    return progress(features, rows, share, epics, closed)
+
+
+def main():
     print("Release bar (C = 100 %, milestones A and B; left = features + checks + bug reserve):")
-    print("\n".join(lines(progress(features, rows, share, epics, closed))))
+    print("\n".join(lines(current())))
 
 
 if __name__ == "__main__":
