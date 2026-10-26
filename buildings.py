@@ -3190,12 +3190,38 @@ def storage(c, w, st, col, T, ctx):
 
 
 def pasture(c, w, st, col, T, ctx):
-    """A fenced grass field with hay and a water trough."""
-    c.walls(0, w, 1, 2, 0, w, "oak_fence")
-    c.box(w // 2 - 1, w // 2 + 1, 1, 2, w - 1, w, "oak_fence_gate[facing=south,in_wall=false,open=false,powered=false]")
-    c.set(1, 1, 1, "hay_block"); c.set(2, 1, 1, "hay_block"); c.set(1, 2, 1, "hay_block")
-    c.set(w - 2, 1, 1, "water_cauldron[level=3]"); c.set(w - 3, 1, 1, "water_cauldron[level=3]")
-    c.flag(0, 2, w - 1, col, 1)
+    """Like the game (#518): no fence, but a field of trodden grass with low stakes, tall posts at the corners and a
+    small felt yurt in the middle (white felt, bands in the player color, a wooden crown), with hay and a trough."""
+    rng = c.rng
+    cx = (w - 1) / 2
+    for x in range(w):                                     # trodden ground, more dirt near the yurt
+        for z in range(w):
+            d = math.hypot(x - cx, z - cx) / (w / 2)
+            if d < 1 and rng.random() < 0.7 - 0.4 * d:
+                c.set(x, 0, z, "coarse_dirt" if rng.random() < 0.6 else "rooted_dirt")
+    for k in range(12):                                    # low stakes on a ring
+        a = 2 * math.pi * (k + rng.random() * 0.4) / 12
+        x, z = int(round(cx + (w / 2 - 1.5) * math.cos(a))), int(round(cx + (w / 2 - 1.5) * math.sin(a)))
+        c.set(x, 1, z, "spruce_fence")
+    for x in (0, w - 1):                                   # tall posts at the corners
+        for z in (0, w - 1):
+            c.box(x, x + 1, 1, 3, z, z + 1, "spruce_fence")
+            c.set(x, 3, z, "white_wool")
+    r = max(1.5, w / 5)
+    c.cylinder(cx, cx, r, 1, 3, "white_wool", hollow=True)
+    ring, X, Z = c.disc_mask(cx, cx, r)
+    c._fill_mask(ring & ~c.disc_mask(cx, cx, r - 1)[0], 1, 2, f"{col}_wool")     # the lower band
+    c.cylinder(cx, cx, r + 0.3, 3, 4, "white_wool")
+    rim = c.disc_mask(cx, cx, r + 0.3)[0] & ~c.disc_mask(cx, cx, r - 0.7)[0] & ((X + Z) % 2 == 1)
+    c._fill_mask(rim, 3, 4, f"{col}_wool")                 # a zig-zag at the edge of the roof
+    c.cylinder(cx, cx, r - 0.9, 4, 5, "white_wool")
+    c.set(w // 2, 5 if r < 2 else 4, w // 2, "spruce_trapdoor[facing=north,half=bottom,open=false]")    # the crown
+    zd = int(cx + r)
+    c.door(w // 2, 1, zd, "south", "spruce")
+    xe = int(cx + r) + 1                                   # a hay rack and a trough at the east side
+    if xe < w - 1:
+        c.set(xe, 1, w // 2 - 1, "hay_block"); c.set(xe, 1, w // 2, "hay_block")
+        c.set(xe, 1, w // 2 + 1, "water_cauldron[level=3]")
 
 
 def settlement(c, w, st, col, T, ctx):
