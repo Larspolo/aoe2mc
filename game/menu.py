@@ -1,7 +1,7 @@
 """
 Chest menus in the game program (#619, part of #618). Vanilla has no clickable item menu, so the Paper plugin
 (game/plugin) opens one: `aoe menu <player> <title> <slot>:<material>:<name>:<lore> ...` shows the items in an
-inventory, and a click on an item sets the score aoe_menu of the player to slot + 1. The player takes no item, and the
+inventory, and a click on an item sets the score aoe_menu of the player to slot + 1 (a shift click: -(slot + 1)). The player takes no item, and the
 menu stays open, so a second click queues one more (owner, 2026-10-26). `aoe menu-close <player>` closes it.
 The texts are URL-encoded: RCON splits the arguments at spaces, and ":" splits the fields of an item.
 gather.Gather.clicks calls clicks(): it reads and resets the score and calls the handler of the open menu.
@@ -27,7 +27,7 @@ def command(player, title, items):
 
 
 def show(g, player, title, items, handler):
-    """Open (or refresh) a menu for player; handler(player, slot) gets each click."""
+    """Open (or refresh) a menu for player; handler(player, slot, shift) gets each click."""
     g.menus[player] = handler
     return g.command(command(player, title, items))
 
@@ -42,9 +42,10 @@ def clicks(g):
     pairs."""
     out = []
     for player, handler in list(g.menus.items()):
-        m = re.search(r" has (\d+) ", g.command(f"scoreboard players get {player} {OBJECTIVE}"))
-        if m and int(m.group(1)) > 0:
+        m = re.search(r" has (-?\d+) ", g.command(f"scoreboard players get {player} {OBJECTIVE}"))
+        if m and int(m.group(1)) != 0:
             g.command(f"scoreboard players reset {player} {OBJECTIVE}")
-            out.append((player, int(m.group(1)) - 1))
-            handler(player, int(m.group(1)) - 1)
+            slot = abs(int(m.group(1))) - 1
+            out.append((player, slot))
+            handler(player, slot, int(m.group(1)) < 0)
     return out

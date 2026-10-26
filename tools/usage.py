@@ -6,7 +6,7 @@ reset, so that each window reaches the limit (#587).
     python3 tools/usage.py              # five_hour 30% (resets 06:30 UTC, 2.0 h) · seven_day 30% ... · target 12 runs
     python3 tools/usage.py --target     # only the number of runs (rule 4 of the scheduled task)
     python3 tools/usage.py --json
-    python3 tools/usage.py --sample     # Usage: <now> · usage 30.0% · resets <time> · claims 9 (for the run report)
+    python3 tools/usage.py --sample     # Usage: <now> · usage 30.0% · resets <time> · runs 9 (for the run report)
     python3 tools/usage.py --fire       # the number of runs that the pacer session starts now (skill `pacer`, #566)
 
 BURN is the default. When the run reports on the status issue have enough `Usage:` lines (at least 5 pairs in the
@@ -95,7 +95,7 @@ def sample_line(usage, now, claims):
     """The `Usage:` line of a run report, which `tools/health.py` reads."""
     iso = lambda t: f"{datetime.datetime.fromtimestamp(t, datetime.timezone.utc):%Y-%m-%dT%H:%M:%SZ}"
     used, reset, _ = usage["five_hour"]
-    return f"Usage: {iso(now)} · usage {used * 100:.1f}% · resets {iso(reset)} · claims {claims}"
+    return f"Usage: {iso(now)} · usage {used * 100:.1f}% · resets {iso(reset)} · runs {claims}"
 
 
 def describe(usage, now, burn=BURN):

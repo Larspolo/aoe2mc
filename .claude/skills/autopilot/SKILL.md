@@ -265,4 +265,4 @@ Stop when the context is more than half full.
 
 Argument `max`: continue until no ticket is ready, a usage limit stops you, or the context is more than half full.
 Do not start other runs: a run of the scheduled task has no `fire_trigger` (#566). The pacer session (skill `pacer`)
-starts the runs that the quota target misses, every 20 minutes. A fresh run has a small context, so it works faster.
+starts the runs that the quota target misses, every 10 minutes. A fresh run has a small context, so it works faster.
