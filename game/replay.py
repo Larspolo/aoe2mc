@@ -97,6 +97,7 @@ class Replay:
         self.starts = [(o.get("ref"), o["player"], o["name"], (o["footprint"][0], o["footprint"][2], o["footprint"][1],
                         o["footprint"][3])) for o in data["objects"] if o["kind"] == "building" and "footprint" in o]
         self.placed, self.map, self.added = [], None, 0        # buildings of the replay, gather.Map, placed in the map
+        self.open = {}                                          # footprint -> cells that units walk through (#865)
         self.lifted = None                                      # cells where "ground" is the top of an object (#870)
         self.tops = {}                                          # top block y per footprint of a replay building
         self.trained = {}                                       # units per building footprint
@@ -182,6 +183,7 @@ class Replay:
         cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
         self.grid()
         free = self.map.around(cells)
+        cells -= self.open.get(rect, set())                         # units under a town center stay (#865)
         out = []
         for i, v in list(self.units.items()) + [(None, v) for _, v in self.new]:
             if v.cell in cells and free and "FARM" not in self.placed[-1][1]:
@@ -232,6 +234,7 @@ class Replay:
         x0, x1, z0, z1 = fx0 + dx, fx1 + dx - 1, fz0 + dz, fz1 + dz - 1
         self.placed.append((player, name, (x0, x1 + 1, z0, z1 + 1)))
         self.tops[self.placed[-1][2]] = top
+        self.open[self.placed[-1][2]] = {(x + dx, z + dz) for x, z in o.get("open", ())}
         out = []
         for t in trees:                                             # as gather.Gather.clear: logs, leaves and bamboo
             m.trees.pop(t)
@@ -376,7 +379,7 @@ class Replay:
                     v.name, v.player, v.job = o["name"], o["player"], start_job(o["name"])
         for _, name, r in self.placed[self.added:]:              # a farm: its center tile is its key (#719)
             self.map.building(name, r, ((r[0] + r[1]) // 2 // T, (r[2] + r[3]) // 2 // T) if "FARM" in name else None,
-                              False)
+                              False, self.open.get(r, ()))
         self.added = len(self.placed)
         return self.map
 
@@ -773,13 +776,24 @@ class Replay:
         return [f"fill {x0} {y} {z0} {x1} {min(y + step - 1, y1)} {z1} {what}" for y in range(y0, y1 + 1, step)]
 
     @staticmethod
-    def clock_commands(now, end, speed, done=False):
+    def clock_commands(now, end, speed, done=False, jump=False):
         """The boss bar commands for game time `now` (ms) of a replay that ends at `end` (ms): the time and speed as
-        its name, the game seconds as its value (#684). `players @a` also adds the players who joined later."""
+        its name, the game seconds as its value (#684). `players @a` also adds the players who joined later.
+        jump: the loading text while a jump to `now` sends its commands (#871)."""
         m, s = divmod(int(now) // 1000, 60)
-        name = f"End {m:02d}:{s:02d}" if done else f"{m:02d}:{s:02d} · speed {speed:g}×"
+        name = (f"End {m:02d}:{s:02d}" if done else f"Jump to {m:02d}:{s:02d} ..." if jump else
+                f"{m:02d}:{s:02d} · speed {speed:g}×")
         return [f"bossbar set {BAR} name {json.dumps(text(name), ensure_ascii=False)}",
                 f"bossbar set {BAR} value {min(int(now) // 1000, max(1, int(end) // 1000))}", f"bossbar set {BAR} players @a"]
+
+    @staticmethod
+    def end_commands(end):
+        """A title, the end time as subtitle and one sound when the replay is over (#872): the boss bar alone was not
+        seen. The title stays 5 s (a resign title just before it shows only 3.5 s)."""
+        m, s = divmod(int(end) // 1000, 60)
+        return ["title @a times 10 100 20", "title @a subtitle " + json.dumps(text(f"Game time {m:02d}:{s:02d}")),
+                "title @a title " + json.dumps(text("Replay ended")),
+                "playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1"]
 
     def score_commands(self):
         """The sidebar commands for the population of each player that changed since the last call (#741). The score
@@ -898,8 +912,11 @@ class Replay:
                 if to > (g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed):
                     skip = [x for x in events[k:] if x["time"] <= to]
                     k += len(skip)
+                    send(self.clock_commands(to, end, self.speed, jump=True))    # the player sees why it waits
                     self.send(self.jump(skip, to))
                     g0, r0 = to, clock()
+                    shown = int(to) // 1000
+                    send(self.clock_commands(to, end, self.speed) + self.score_commands())
                 continue
             lag = max(lag, clock() - r0 - (now - g0) / 1000 / self.speed)
             if int(now) // 1000 != shown:                              # at most once per game second
@@ -918,7 +935,7 @@ class Replay:
                     log(f"{m:02d}:{s:02d} {e['kind']} {e.get('name') or e.get('age') or ''} "
                         f"player {e.get('player')}: {len(cmds)} commands")
         census()
-        send(self.clock_commands(end, end, speed, done=True) + self.score_commands())
+        send(self.clock_commands(end, end, speed, done=True) + self.score_commands() + self.end_commands(end))
         span = (events[-1]["time"] - start) / 1000 / speed if events else 0                 # at the start speed
         return {"events": n, "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2),
                 "rate": round(self.sent / self.busy) if self.busy else 0, "need": round(self.sent / span) if span else 0}
