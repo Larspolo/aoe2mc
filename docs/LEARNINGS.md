@@ -48,6 +48,9 @@ of its document (named below; add at its end, do not change other lines: `merge=
   temporary copy (`scenarios.triggers`). No scenario in `examples/` and `samples/` has triggers: use the `triggers` scenario (#646).
 - A wait loop with a fake clock (`now += s`) runs forever when the wait is about 1e-15: `now + 1e-15 == now`. Break on `wait <= 1e-6`, not `<= 0` (#685).
 - Screenshots of a game check: join `mc_shot.Client(game.game_port, game.version)` to the running `run.Game`, `gamemode spectator aoe2mc`, then `tp aoe2mc X Y Z facing entity <uuid>` and `client.shot()`: no saved world, no copy of the `.dat` files. The server log is `game.folder/logs/latest.log`: read it before the `with` ends (#603).
+- Same output of a conversion: compare two worlds with `tools/world_diff.py A B`. `diff -r` and `cmp` always differ: the .mca time tables, gzip headers and `LastPlayed` hold the time (#702).
+- `-m mc` skips `tests/test_menu_client.py` (a real client) without `xdotool` (setup below v7, #638): `apt-get install -y xdotool` first; the skip hid a broken handler there until #706.
+- `run.Game(world)` plays on the world folder itself (`--universe`, no copy): the game saves its changes there. Copy the converted world for each check run, else the second run starts with felled trees and empty bushes (#718). A live replay at `--speed 8` leaves the real villagers far behind the replay positions: check at speed 4.
 
 ## Code
 
@@ -87,4 +90,5 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - A train test (`game/train.py`) needs an own `TOWN_CENTER` or `HOUSE`: without them the population limit is 0 and `tick()` spawns nothing (#654).
 - `[f"...{o['id']}"] * ("id" in o)` evaluates the f-string also when the factor is 0 (KeyError): use `o.get('id')` in it (#681).
 - `game/combat.py` `stats()`: a name that is not a `STATS` key gets `DEFAULT` (40 hit points) without a warning. The units of `aoe2mc.json` have names like `VILLAGER_MALE`: compare with `units.classify` names, not the table keys (#655).
+- A new item of a building menu (`train.show()`) changes the exact menu strings in 5 test files (`grep -n "aoe menu Steve\|endswith(\"queue" tests/`): add it as a constant next to `FEUDAL` and `RALLY` in `tests/test_train_menu.py` (#672, #707).
 - `game/replay.py` uses the resource looks of `gather.Gather` through `Replay.crew` (`Gather.__new__` with `map`, `trunks`, `bushes` and a `command` attribute): no copy of the look code (#631).

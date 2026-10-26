@@ -637,7 +637,7 @@ class Replay:
         (rate) and the commands per second that the timeline needs on average (need).
         poll(control) may change `self.control` ("speed", "paused") while the replay runs: run calls it before
         each event and each POLL seconds while it waits (#685). "jump" (game time, ms) skips forward to that time
-        (`jump`, #687); a time before the game time now changes nothing."""
+        (`jump`, #687); a time before the game time now changes nothing. "time" is the game time now (ms) for poll."""
         events = sorted((e for e in self.data.get("timeline", []) + self.spawns() if e["time"] >= start),
                         key=lambda e: e["time"])
         g0, r0, lag, n, k = start, clock(), 0.0, 0, 0                 # game time g0 (ms) at real time r0
@@ -655,6 +655,7 @@ class Replay:
             to = None
             while True:
                 if poll:
+                    self.control["time"] = g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed
                     poll(self.control)
                     g0, r0 = self.retime(g0, r0, clock())
                     if (to := self.control.pop("jump", None)) is not None:
