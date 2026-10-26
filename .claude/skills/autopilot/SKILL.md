@@ -189,7 +189,10 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
 9. CI red → find the cause, fix, push. After 3 failed attempts stop: comment the cause on the ticket,
    add `blocked` or `needs-human` and `hold`, remove `in-progress`, and go to step 8 of the skill (report).
 10. Merge conflict (another PR changed the same lines) → merge `origin/main` into the branch, solve the
-    conflict, verify again, push. Do not rebase or force-push a branch that has an open PR.
+    conflict, run `ruff check .`, the fast tests and only the `mc` tests of the files of your ticket, and push at
+    once. Do not run other `mc` tests for a merge: while they run, main moves again and the PR stays without CI
+    (#604 waited an hour, #669). The quick CI checks the PR, the night CI runs the full suite. A test failure after the
+    push: fix it in the next push. Do not rebase or force-push a branch that has an open PR.
     A conflict in the column "Used today in" of `docs/DESIGN.md`: take main's side (`coverage.yml` writes it).
     Two new rows of the feature table at the same place: keep both.
     `docs/LEARNINGS.md` has `merge=union`: the merge keeps lines that main removed. `claim.py N --guard` fails
