@@ -538,6 +538,84 @@ def apply_timeline(objects, timeline, at):
     return [o for o in out if o.get("ref") is None or o["ref"] not in deleted], stats
 
 
+TRAIN = {"VILLAGER": (25, "TOWN_CENTER"), "MILITIA": (21, "BARRACKS"), "MAN_AT_ARMS": (21, "BARRACKS"),
+         "SPEARMAN": (22, "BARRACKS"), "PIKEMAN": (22, "BARRACKS"), "EAGLE": (35, "BARRACKS"),
+         "ARCHER": (35, "ARCHERY_RANGE"), "SKIRMISHER": (22, "ARCHERY_RANGE"), "CROSSBOWMAN": (27, "ARCHERY_RANGE"),
+         "CAVALRY_ARCHER": (34, "ARCHERY_RANGE"), "SCOUT_CAVALRY": (30, "STABLE"), "LIGHT_CAVALRY": (30, "STABLE"),
+         "CAMEL": (30, "STABLE"), "KNIGHT": (30, "STABLE"), "FISHING_SHIP": (40, "DOCK"), "GALLEY": (60, "DOCK"),
+         "FIRE_GALLEY": (36, "DOCK"), "TRANSPORT_SHIP": (36, "DOCK"), "TRADE_COG": (36, "DOCK"),
+         "BATTERING_RAM": (36, "SIEGE_WORKSHOP"), "MANGONEL": (46, "SIEGE_WORKSHOP"), "SCORPION": (30, "SIEGE_WORKSHOP"),
+         "MONK": (51, "MONASTERY"), "TRADE_CART": (50, "MARKET")}   # common units: seconds of training (DE), building
+RESEARCH_S = {"Loom": 25, "Town Watch": 25, "Town Patrol": 40, "Wheelbarrow": 75, "Hand Cart": 55,
+              "Feudal Age": 130, "Castle Age": 160, "Imperial Age": 190}   # the town center researches: they delay units
+UNIT_USE = {"move", "order", "build", "wall", "patrol", "follow", "formation", "attack_move", "back_to_work", "stance"}
+BUILDING_USE = {"queue", "research", "gather_point", "ungarrison", "sell", "buy"}
+
+
+def train(unit):
+    """(seconds, building) of TRAIN for a unit name, or None."""
+    return next((v for k, v in TRAIN.items() if unit.startswith(k)), None)
+
+
+def name_timeline(objects, timeline, window=16):
+    """The object IDs of a recorded game (#407). Start objects keep the ID of the record (`ref`, also GAIA animals
+    that a player takes). The game gives each new object the next free ID, in the order that it makes them:
+    a foundation at its BUILD or WALL command (one per wall tile), a unit when its training ends (the queue of its
+    building, TRAIN_S and RESEARCH_S). Objects that the record does not show (for example dead animals) take IDs
+    too, so match each predicted object to the first ID in the next `window` IDs that the commands use in the same
+    way (a building ID in QUEUE and RESEARCH, of the building that trains its units; a unit ID in MOVE, ORDER and
+    BUILD) and not before the object exists. A building that is not matched gets the name of its units' building.
+    Adds "names" (a name or None per ID of "objects") to the events and returns {id: name}."""
+    names = {o["ref"]: o["name"] for o in objects if o.get("ref") is not None}
+    top = max(names, default=0)
+    used = {}                     # new ID -> [time of its first use, "B", "U" or None, {building of its units}]
+    for e in timeline:                                   # not SPECIAL and others: their numbers are not all IDs
+        role = "U" if e["kind"] in UNIT_USE else "B" if e["kind"] in BUILDING_USE else None
+        for i in e.get("objects", ()) if role else ():
+            if i > top:
+                u = used.setdefault(i, [e["time"], None, set()])
+                u[1] = u[1] or role
+                if e["kind"] == "queue" and train(e.get("name", "")):
+                    u[2].add(train(e["name"])[1])
+        if role == "U" and e.get("target", 0) > top:
+            used.setdefault(e["target"], [e["time"], None, set()])
+    made, busy, seen = [], {}, set()     # (time ms, command time, "B" or "U", name); busy: building -> free at
+    for e in timeline:
+        kind, t = e["kind"], e["time"]
+        if kind in ("build", "wall") and "tile" in e and e.get("name"):
+            tiles = wall_tiles(*e["tile"], *e["end"]) if kind == "wall" else [tuple(e["tile"])]
+            for tile in tiles:
+                if (e["name"], *tile) not in seen:       # the same foundation again (a second click)
+                    seen.add((e["name"], *tile))
+                    made.append((t, t, "B", e["name"]))
+        elif kind in ("queue", "research") and e.get("objects"):
+            name = e.get("name", "") if kind == "queue" else e.get("technology", "")
+            s = ((train(name) or (30,))[0] if kind == "queue" else RESEARCH_S.get(name, 0)) * 1000
+            for n in range(max(1, int(e.get("amount", 1))) if kind == "queue" else 1):
+                b = e["objects"][n % len(e["objects"])]
+                busy[b] = max(busy.get(b, 0), t) + s
+                if kind == "queue":
+                    made.append((busy[b], t, "U", name))
+    firsts = sorted((u[0], i) for i, u in used.items())
+    nxt, k, below = top + 1, 0, top
+    for t, cmd, role, name in sorted(made):
+        while k < len(firsts) and firsts[k][0] < cmd:   # an ID in use before the command is older than the object
+            below, k = max(below, firsts[k][1]), k + 1
+        nxt = max(nxt, below + 1)
+        ids = [i for i in range(nxt, nxt + window) if i in used and used[i][1] in (role, None) and
+               used[i][0] >= t - 5000 and used[i][2] <= {name}]   # 5 s: the training times are estimates
+        i = ids[0] if ids else nxt if nxt not in used else None
+        if i is not None:
+            names[i], nxt = name, i + 1
+    for i, u in used.items():
+        if i not in names and len(u[2]) == 1:
+            names[i] = next(iter(u[2]))
+    for e in timeline:
+        if e.get("objects"):
+            e["names"] = [names.get(i) for i in e["objects"]]
+    return names
+
+
 def turn_tile(x, y, size, k):
     """Tile position (x, y) after k clockwise quarter turns of a size × size grid (size 0: turn a vector)."""
     for _ in range(k % 4):
@@ -2080,7 +2158,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
     their footprint [x0, z0, x1, z1) in blocks. Objects that the converter did not place are not in the list.
     "ground" has one string per block row z: for each x the y where a unit stands, or "-" for water.
-    "timeline" (recorded games only): the events of read_timeline, with tiles in the turned grid."""
+    "timeline" (recorded games only): the events of read_timeline, with tiles in the turned grid
+    and the "names" of the selected objects (name_timeline)."""
     kinds = {"U": "unit", "B": "building", "O": "other"}
     objs = []
     for o in objects:
@@ -2506,6 +2585,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     size, terrain, elevation, tnames, texts, objects, players = read_map(src)
     record = src.lower().endswith(RECORDS)
     timeline = read_timeline(src) if record else None
+    if timeline is not None:
+        name_timeline(objects, timeline)
     at_stats = Counter()
     if at is not None:
         if timeline is None:

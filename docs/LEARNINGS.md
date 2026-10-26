@@ -51,6 +51,8 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - `mgz.model.parse_match` reads only DE 13.34 and later; `mgz.summary.full.FullSummary` reads HD, UserPatch and older DE
   but skips the GAIA trees (`aoe2mc.read_old_record` turns the skip off). More test records: GitHub raw
   `happyleavesaoc/aoc-mgz/master/tests/recs/` (table in `docs/research/replays.md`, #376). `construct` 2.8: `IfThenElse` is a `Switch`.
+- Record commands: the `player` of an mgz action is not always right (a MOVE shows for both players), and the
+  `objects` of SPECIAL are not IDs. New objects take the next free ID: `aoe2mc.name_timeline` (#407).
 
 ## Code
 
