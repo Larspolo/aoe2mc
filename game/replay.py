@@ -97,6 +97,7 @@ class Replay:
         self.starts = [(o.get("ref"), o["player"], o["name"], (o["footprint"][0], o["footprint"][2], o["footprint"][1],
                         o["footprint"][3])) for o in data["objects"] if o["kind"] == "building" and "footprint" in o]
         self.placed, self.map, self.added = [], None, 0        # buildings of the replay, gather.Map, placed in the map
+        self.lifted = None                                      # cells where "ground" is the top of an object (#870)
         self.tops = {}                                          # top block y per footprint of a replay building
         self.trained = {}                                       # units per building footprint
         self.units, self.new = {}, []           # object ID -> gather.Villager; spawned units without a known ID
@@ -205,11 +206,18 @@ class Replay:
             return []
         fx0, fz0, fx1, fz1 = o["footprint"]
         dx, dz = ox * T, oy * T
-        cells = [self.ground[z][x] for x in range(max(0, fx0 + dx), min(self.n, fx1 + dx))
-                 for z in range(max(0, fz0 + dz), min(self.n, fz1 + dz))]
-        cells = [g for g in cells if g is not None]
+        m = self.grid()
+        if self.lifted is None:                                     # the cells of the trees, bushes and mines
+            self.lifted = set().union(*map(m.spot, [*m.trees, *m.bushes, *(t for r in m.mines.values() for t in r)]))
+        foot = {(x, z) for x in range(max(0, fx0 + dx), min(self.n, fx1 + dx))
+                for z in range(max(0, fz0 + dz), min(self.n, fz1 + dz))}
+        # "ground" over a tree is the top of its barriers and trunk (#870): take the other cells, else the free cells
+        # next to the footprint
+        free = foot - self.lifted or m.around(foot) or foot
+        cells = [g for x, z in free if (g := self.ground[z][x]) is not None]
         if not cells:                                               # outside the map or on water only
             return []
+        trees = [t for t in m.trees if m.cells(t) & foot]          # in AoE2 the tree is gone (chopped)
         flat = cols.surface(fx0, fz0)                               # the floor of the flat map
         base, low = max(cells), min(cells)
         dy = base - flat
@@ -224,7 +232,13 @@ class Replay:
         x0, x1, z0, z1 = fx0 + dx, fx1 + dx - 1, fz0 + dz, fz1 + dz - 1
         self.placed.append((player, name, (x0, x1 + 1, z0, z1 + 1)))
         self.tops[self.placed[-1][2]] = top
-        out = self.fill(x0, base, z0, x1, top, z1, "air")
+        out = []
+        for t in trees:                                             # as gather.Gather.clear: logs, leaves and bamboo
+            m.trees.pop(t)
+            tx, tz = t[0] * T, t[1] * T
+            out += [f"fill {tx - 2} {low - 2} {tz - 2} {tx + T + 1} {low + 22} {tz + T + 1} air replace {b}"
+                    for b in ("#minecraft:logs", "#minecraft:leaves", "minecraft:bamboo")]
+        out += self.fill(x0, base, z0, x1, top, z1, "air")
         if low < base - 1:                                          # the floor replaces the top ground block
             out += self.fill(x0, low, z0, x1, base - 2, z1, self.state(aoe2mc.B(buildings.ARCH[players[player][
                 "arch"]].stone2)) + " keep")
