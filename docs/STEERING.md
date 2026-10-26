@@ -89,10 +89,12 @@ ticket with numbered steps.
 
 ## Pacing (no steering needed)
 
-The runs pace themselves. `tools/usage.py` reads the usage of your subscription (the 5-hour and 7-day windows, as
-the Claude Code CLI reports them) and computes the number of runs that uses the 5-hour window evenly until its reset,
-and not the week faster than it passes. Rule 4 of the scheduled task uses this number. You do not need to send
-percentages.
+The runs are paced without you. `tools/usage.py` reads the usage of your subscription (the 5-hour and 7-day windows,
+as the Claude Code CLI reports them) and computes the number of runs that uses the 5-hour window evenly until its
+reset, and not the week faster than it passes. You do not need to send percentages.
+A run of the scheduled task cannot start other runs (#566). So one pacer session ("aoe2mc pacer", skill `pacer`)
+runs `python3 tools/usage.py --fire` every 20 minutes and starts the runs that the target misses (at most 4 at a
+time). The scheduled task also starts one run each hour. To stop all runs: add `paused` to the status issue.
 
 ## CI and the merge
 

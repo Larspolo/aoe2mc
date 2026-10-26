@@ -3673,13 +3673,13 @@ def stupa(c, w, st, col, T, ctx):
 
 
 def split_gate(c, w, st, col, T, ctx):
-    """Trowulan split gate (candi bentar): two stepped red brick towers with a passage between them."""
+    """Trowulan split gate (candi bentar): two stepped towers of orange fired brick with a passage between them."""
     m = w // 2
     for x0, x1 in ((0, m - 1), (m + 1, w)):
         for k in range(4):
-            c.box(x0 + (k if x0 else 0), x1 - (0 if x0 else k), 3 * k, 3 * k + 3, 2 + k // 2, w - 2 - k // 2, "bricks")
-        c.box(x0, x1, 3, 4, 2, w - 2, "mud_bricks")
-    c.box(m - 1, m + 1, 0, 1, 0, w, "brick_slab[type=top]")
+            c.box(x0 + (k if x0 else 0), x1 - (0 if x0 else k), 3 * k, 3 * k + 3, 2 + k // 2, w - 2 - k // 2, "resin_bricks")
+        c.box(x0, x1, 3, 4, 2, w - 2, "chiseled_resin_bricks")           # carved band of the base
+    c.box(m - 1, m + 1, 0, 1, 0, w, "resin_brick_slab[type=top]")
 
 
 def rekha_deul(c, w, st, col, T, ctx):
@@ -3785,6 +3785,13 @@ def tomb(c, w, st, col, T, ctx):
     c.door(w // 2, 2, w - 3)
     c.gable(1, w - 1, 1, w - 1, 5, "spruce", fill=(2, w - 2, 2, w - 2, "mud_bricks"))
     c.box(w // 2 - 1, w // 2 + 1, 1, 2, w - 1, w, stair("mud_brick_stairs", "north"))
+    # the burial room: a stone sarcophagus at the back wall with candles and a grave pot, a rug at the door
+    c.furniture([(3, 2, 3, "smooth_stone"), (w - 4, 2, 3, "smooth_stone"),
+                 (3, 3, 3, "candle[candles=3,lit=true,waterlogged=false]"),
+                 (w - 4, 3, 3, "decorated_pot[cracked=false,facing=south,waterlogged=false]")])
+    for x in range(3, w - 3):
+        if c.get(x, 2, w - 4) == c.id("air"):
+            c.set(x, 2, w - 4, "red_carpet")
 
 
 def burned_building(c, w, st, col, T, ctx):
@@ -4131,6 +4138,11 @@ def sankore(c, w, st, col, T, ctx):
     m = w // 2
     c.box(m, m + 1, 1, 3, w - 1, w, "air")
     c.doors.append((m, w - 1))
+    # yellow ochre trim (#556): the cornice under the parapet and the frame of the door
+    c.walls(0, w, 5, 6, 0, w, "polished_sulfur")
+    c.box(m - 1, m + 2, 3, 4, w - 1, w, "chiseled_sulfur")
+    for x in (m - 1, m + 1):
+        c.box(x, x + 1, 1, 3, w - 1, w, "sulfur_bricks")
     # inside (#449): a school with bookshelves on the side walls, the teacher's lectern at the back, benches for
     # the students, chests of manuscripts and hanging lanterns
     lectern = "lectern[facing=south,has_book=true,powered=false]"
@@ -4150,7 +4162,7 @@ def sankore(c, w, st, col, T, ctx):
         y += 3
         if y % 6 == 0:
             a, b = a + 1, b - 1
-    c.set(m, y, m, "mud_brick_wall")
+    c.set(m, y, m, "polished_sulfur_wall")
     c.banner(m + 1, 3, w, col)
 
 

@@ -186,6 +186,8 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
     conflict, verify again, push. Do not rebase or force-push a branch that has an open PR.
     A conflict in the column "Used today in" of `docs/DESIGN.md`: take main's side (`coverage.yml` writes it).
     Two new rows of the feature table at the same place: keep both.
+    `docs/LEARNINGS.md` has `merge=union`: the merge keeps lines that main removed. `claim.py N --guard` fails
+    and names them (#563): remove them from the branch, commit, and run the guard again.
 11. CI green → the Automerge workflow merges. Add label `hold` to the PR if it must not merge yet.
 
 If the ticket is wrong or not possible: comment why, add `needs-human`, remove `in-progress`. Do not merge
@@ -257,10 +259,6 @@ the open PR. After `checkout -B` the upstream is
 `origin/main`, so a bare `git push` fails: check that the output shows `-> <branch>`, else the PR has old commits.
 Stop when the context is more than half full.
 
-Argument `max`: continue until no ticket is ready or a usage limit stops you. When the context is more than half
-full and tickets are still ready, start a fresh run, then stop: fire the scheduled task that started this run
-(its ID is in the run prompt) once with `fire_trigger`. Never fire it when no ticket is ready, when the status
-issue has `paused`, or after a usage-limit error. A fresh run has a small context, so it works faster.
-The tool is `mcp__claude-code-remote__fire_trigger`. Every run has it, but it can be deferred: load it with `ToolSearch`,
-query `select:mcp__claude-code-remote__fire_trigger`, then call it. On 2026-10-26 runs reported "no fire_trigger tool"
-although their tool list had it, so the number of runs fell below the target of `tools/usage.py`.
+Argument `max`: continue until no ticket is ready, a usage limit stops you, or the context is more than half full.
+Do not start other runs: a run of the scheduled task has no `fire_trigger` (#566). The pacer session (skill `pacer`)
+starts the runs that the quota target misses, every 20 minutes. A fresh run has a small context, so it works faster.

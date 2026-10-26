@@ -28,16 +28,25 @@ of its document (named below): this file loads into each run. The `improve` skil
   Run `claim.py N --guard` alone and read its exit code before the push: `guard; echo g=$? && git push` pushes also after
   a failed guard (#540).
 - The cloud clone is shallow: `git fetch --unshallow origin` before a scan of the history (#367).
-- `fire_trigger`: load it with `ToolSearch` (`select:mcp__claude-code-remote__fire_trigger`). Some runs do not have it at
-  all (nothing for `select:` or keywords, #539, #546): say so in the report, do not search again.
+- A run of the scheduled task has only `subscribe_pr_activity` and `unsubscribe_pr_activity` of `claude-code-remote`:
+  no `fire_trigger`, `send_later` or `list_triggers` (checked 2026-10-26, #566). The pacer session starts the runs.
 - Quota usage: `claude -p ... --output-format stream-json --verbose` prints a `rate_limit_event` with
   `unifiedWindows.five_hour/seven_day.utilization` and `resetsAt` (`tools/usage.py`). A `statusLine` does not run in cloud sessions.
 - `pyproject.toml` `addopts` has `-q`: `python3 -m pytest -q` gives `-qq`, without the "N passed" line. Wait for the
   exit code, not for "passed" in the output; foreground `sleep` is blocked: use `run_in_background` (#413).
 - `mcp__github__get_job_logs` gives HTTP 404 for the jobs of `ci.yml` (2026-10-26, #443): do not retry. Run its steps
   (`ruff`, fast, `-m slow`, `-m mc`) locally on the run's `head_sha`; main is red only when one fails there.
+
+- Paper: `fill.papermc.io/v3/projects/paper/versions/V/builds/latest` lists the builds, but the jar URL is on `fill-data.papermc.io`, which the proxy blocked on 2026-10-26 (#439). Test a download host with `curl`, not only the API.
+- The Paper API answers 403 to the `Python-urllib` User-Agent (`curl` works): send a User-Agent (`game/run.py` `AGENT`). `-DbundlerRepoDir=DIR` keeps the patched Mojang jar of Paper in DIR; Paper writes `usercache.json` next to the `--universe` world (#434).
+- Paper plugin (#435): `game/run.py` builds `game/plugin` with `./gradlew --no-daemon -q jar` and `JAVA_HOME` = the JDK 25 (`openjdk-25-jdk-headless`: the paper-api 26.3 classes are Java 25, javac 21 cannot read them); first build 30 s. A NoAI mob finds no path before its first AI tick; the path search ends at about `follow_range` (cow: 16). The world border stops paths: test inside the map. `fill ... hollow` also fills the bottom and top faces.
+- `pytest -m mc` needs `javac` since the Paper plugin (#493): without it 14 tests fail with "no javac". Until the owner pastes setup v6 (#495), run `apt-get install -y openjdk-25-jdk-headless` (works in the cloud, 1 min, #497).
+- `-m mc` takes about 21 minutes, and 14 of its tests stop with "no javac" when `/etc/aoe2mc-setup-version` is below 6: `apt-get install -y openjdk-25-jdk-headless` first (1 min, #536).
+## Libraries
+
 - `-m mc` takes about 21 minutes, and 14 of its tests stop with "no javac" when `/etc/aoe2mc-setup-version` is below 6:
   `apt-get install -y openjdk-25-jdk-headless` first (1 min, #536).
+- Wait for a `run_in_background` job in the foreground: `timeout 580 bash -c 'until [ -s OUT ]; do sleep 5; done'` works; a bare `sleep` is blocked (#514).
 - Records (`mgz`, test records, command pitfalls): `docs/research/replays.md`, "Pitfalls".
 - AoE2ScenarioParser 0.9.8 makes new scenarios (`tools/scenarios.py`: `new_scenario`, `add_unit`, `save`). It prints much
   text (`redirect_stdout`), default players are RANDOM (`western`), and `write_to_file` writes the output file name into
