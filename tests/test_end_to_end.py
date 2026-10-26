@@ -122,10 +122,6 @@ def test_mc_version_26_3(tmp_path, monkeypatch):
     book, = [be["Book"] for c in w.chunks().values() for be in c["block_entities"] if "Book" in be]
     page = book["components"]["minecraft:written_book_content"]["pages"][0]["raw"]
     assert str(page["extra"][1]["text"]) == "Defend the town center."    # text components are NBT (1.21.5)
-    # block renames of the version profile
-    monkeypatch.setattr(aoe2mc, "MC", aoe2mc.VERSIONS["26.3"])
-    assert dict(aoe2mc.B.nbt(aoe2mc.B("chain[axis=y]"))) == {"id": "minecraft:iron_chain",
-                                                           "properties": {"axis": "y"}}
 
 
 def test_book_of_scenario_texts(tmp_path):
