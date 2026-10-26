@@ -193,3 +193,9 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - A vanilla melee goal hits only a target in sight of its eye (#517): the stand-in slime of a building has its eye in
   the walls, so the zombie walks to the wall and never hits. The plugin hits for it (`siege()`, `Mob#attack`).
   Debug an attack on a server with `data get entity <uuid> Pos` and `aoe goals` once per second.
+- The server cannot open an inventory without a joined player (#619): an `mc` test of a chest menu checks only the
+  command answers ("Menu: 0 players", "Bad item"). Real clicks need a client on the server (#627).
+  `scoreboard objectives list` shows the display names (`[Menu]`), not the objective names.
+- A real client joins the Paper server of `run.Game` (`online-mode=false`) with `--quickPlayMultiplayer 127.0.0.1:PORT`
+  (`mc_shot.Client`, #627). In an open inventory the pointer is free: `xdotool mousemove` + `click` hits the slots.
+  A Paper display name of an item is italic by default (Adventure).

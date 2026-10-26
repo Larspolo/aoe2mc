@@ -1,5 +1,7 @@
 package aoe2mc;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -10,6 +12,7 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
@@ -23,12 +26,18 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Pillager;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Criteria;
 import org.bukkit.scoreboard.Objective;
@@ -41,6 +50,8 @@ import com.destroystokyo.paper.entity.ai.Goal;
 import com.destroystokyo.paper.entity.ai.GoalKey;
 import com.destroystokyo.paper.entity.ai.GoalType;
 
+import net.kyori.adventure.text.Component;
+
 /**
  * Orders for the units of the game program, with Minecraft path finding (#435). Vanilla has no command for
  * "walk to this point", so this plugin gives one to RCON:
@@ -52,6 +63,9 @@ import com.destroystokyo.paper.entity.ai.GoalType;
  *   aoe range <selector> <blocks> <ticks>      a ranged unit shoots from this range, one shot per ticks (#515)
  *   aoe building <selector> <hp> <melee armor> <pierce armor> <x0> <y0> <z0> <x1> <y1> <z1>
  *                                              make the entity the target of a building (#517, combat.building)
+ *   aoe menu <player> <title> <slot>:<material>:<name>:<lore> ...
+ *                                              open a chest menu (#619, game/menu.py; the texts are URL-encoded)
+ *   aoe menu-close <player>                    close the menu of the player
  * Converted units have no AI (NoAI): an order turns it on. Such a unit finds no path before its first AI tick
  * (it is not "on the ground" yet), and vanilla goals (a random stroll) can take the navigation of a walking unit:
  * so the order sends the path again every 10 ticks, until the unit arrives or 10 tries found no path.
@@ -68,7 +82,7 @@ import com.destroystokyo.paper.entity.ai.GoalType;
  * A ranged unit (#515) gets the goal "aoe_range" in place of the vanilla bow, crossbow and trident goals: their
  * range and interval are fixed in the goal objects, and the API cannot set them (no NMS in the plugin). It walks
  * on a Minecraft path to the target until the target is in range and in sight, stops, and shoots with the vanilla
- * shot of the mob (RangedEntity#rangedAttack: the arrow of a skeleton, the trident of a drowned).
+ * shot of the mob (RangedEntity#rangedAttack: the trident of a drowned), or with an aimed arrow (shoot: a skeleton or pillager).
  * A building is blocks, and a mob attacks only a living entity: an invisible mob without AI (a slime of the size of
  * the footprint, game/combat.py building) stands in the building and takes the attacks, so that the vanilla attack
  * goals and paths work (#517). The plugin keeps the hit points of the building (a building has more than the
@@ -76,6 +90,9 @@ import com.destroystokyo.paper.entity.ai.GoalType;
  * walls, no slime touch), and at 0 removes it and fills the box of the building with air. The vanilla melee goal
  * hits only a target in sight, and the eye of the slime is in the walls: so a unit next to the slime that has it as
  * target hits it each second (Mob#attack, the vanilla hit with the swing), as a zombie hits.
+ * Vanilla has no clickable item menu: "aoe menu" opens an inventory with the items (#619). A click on an item is
+ * cancelled (the player takes nothing) and sets the score aoe_menu of the player to slot + 1; the menu stays open, so
+ * the player can click again. "aoe menu" on an open menu of the same title and size only changes the items.
  */
 public final class AoePlugin extends JavaPlugin implements Listener {
     private record Stats(int attack, int melee, int pierce, boolean ranged, Set<String> classes,
@@ -154,11 +171,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             mob.lookAt(t);
             int now = Bukkit.getCurrentTick();
-            if (now >= next && near && (mob instanceof AbstractSkeleton || mob instanceof Pillager)) {
-                shoot(mob, t);
-                next = now + range.ticks;
-            } else if (now >= next && near && mob instanceof RangedEntity r) {
-                r.rangedAttack(t, 1.0f);
+            if (now >= next && near && mob instanceof RangedEntity r) {
+                if (mob instanceof AbstractSkeleton || mob instanceof Pillager) {
+                    shoot(mob, t);            // the vanilla shot misses (#634), and fails for a crossbow (#633)
+                } else {
+                    r.rangedAttack(t, 1.0f);
+                }
                 next = now + range.ticks;
             }
         }
@@ -174,20 +192,138 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
     }
 
-    // The vanilla bow shot has a spread of 14 - 4 × difficulty and a slow arrow: at 20 blocks most
+    // A vanilla arrow. The vanilla bow shot has a spread of 14 - 4 × difficulty and a slow arrow: at 20 blocks most
     // arrows miss (#634). An AoE2 archer hits a standing target almost always: aim at the middle of the target, with
-    // a fast arrow that rises by the fall of its flight time.
+    // a fast arrow that rises by the fall of its flight time. The damage handler (onHit) gives the AoE2 damage.
     private static final double ARROW_SPEED = 3.0, ARROW_GRAVITY = 0.05;     // blocks per tick, blocks per tick²
 
-    static void shoot(Mob mob, LivingEntity t) {
+    private static void shoot(Mob mob, LivingEntity t) {
         Location from = mob.getEyeLocation();
         Vector to = t.getLocation().toVector().add(new Vector(0, t.getHeight() * 0.5, 0)).subtract(from.toVector());
         double ticks = to.length() / ARROW_SPEED;
         to.setY(to.getY() + 0.5 * ARROW_GRAVITY * ticks * ticks);
         Arrow a = mob.launchProjectile(Arrow.class, to.normalize().multiply(ARROW_SPEED));
         a.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
-        mob.getWorld().playSound(mob, mob instanceof Pillager ? Sound.ITEM_CROSSBOW_SHOOT : Sound.ENTITY_SKELETON_SHOOT,
-                1.0f, 1.0f);
+        boolean bow = mob.getEquipment().getItemInMainHand().getType() == Material.BOW;
+        mob.getWorld().playSound(mob, bow ? Sound.ENTITY_SKELETON_SHOOT : Sound.ITEM_CROSSBOW_SHOOT, 1.0f, 1.0f);
+    }
+
+    /** The holder of a chest menu: it tells a menu from the other inventories. */
+    private static final class Menu implements InventoryHolder {
+        final String title;
+        Inventory inventory;
+
+        Menu(String title) {
+            this.title = title;
+        }
+
+        @Override
+        public Inventory getInventory() {
+            return inventory;
+        }
+    }
+
+    private static String text(String s) {
+        return URLDecoder.decode(s, StandardCharsets.UTF_8);
+    }
+
+    /** The item of "slot:material:name:lore" (lore lines split by a new line), or null for a bad slot or material. */
+    static Map.Entry<Integer, ItemStack> item(String spec) {
+        String[] p = spec.split(":", -1);
+        Material m = p.length >= 3 ? Material.matchMaterial(p[1]) : null;
+        int slot;
+        try {
+            slot = Integer.parseInt(p[0]);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+        if (m == null || !m.isItem() || m.isAir() || slot < 0 || slot >= 54) {
+            return null;
+        }
+        ItemStack it = new ItemStack(m);
+        it.editMeta(meta -> {
+            meta.displayName(Component.text(text(p[2])));
+            if (p.length > 3 && !p[3].isEmpty()) {
+                meta.lore(text(p[3]).lines().map(l -> (Component) Component.text(l)).toList());
+            }
+        });
+        return Map.entry(slot, it);
+    }
+
+    private static Objective menuScore() {
+        Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
+        Objective o = sb.getObjective("aoe_menu");
+        return o != null ? o : sb.registerNewObjective("aoe_menu", Criteria.DUMMY, Component.text("Menu"));
+    }
+
+    private static Menu menuOf(Player p) {
+        return p.getOpenInventory().getTopInventory().getHolder(false) instanceof Menu m ? m : null;
+    }
+
+    private static List<Player> players(CommandSender sender, String selector) {
+        var out = new ArrayList<Player>();
+        for (Entity e : select(sender, selector)) {
+            if (e instanceof Player p) {
+                out.add(p);
+            }
+        }
+        return out;
+    }
+
+    private static boolean menu(CommandSender sender, String[] args) {
+        var items = new ArrayList<Map.Entry<Integer, ItemStack>>();
+        int size = 9;
+        for (int i = 3; i < args.length; i++) {
+            var it = item(args[i]);
+            if (it == null) {
+                sender.sendMessage("Bad item: " + args[i]);
+                return true;
+            }
+            items.add(it);
+            size = Math.max(size, (it.getKey() / 9 + 1) * 9);             // rows of 9, at most 6
+        }
+        String title = text(args[2]);
+        int n = 0;
+        for (Player p : players(sender, args[1])) {
+            Menu open = menuOf(p);
+            Inventory inv;
+            if (open != null && open.title.equals(title) && open.inventory.getSize() == size) {
+                inv = open.inventory;                                     // refresh: no close and open again
+                inv.clear();
+            } else {
+                Menu m = new Menu(title);
+                inv = m.inventory = Bukkit.createInventory(m, size, Component.text(title));
+            }
+            for (var it : items) {
+                inv.setItem(it.getKey(), it.getValue());
+            }
+            if (inv != (open != null ? open.inventory : null)) {
+                p.openInventory(inv);
+            }
+            n++;
+        }
+        sender.sendMessage("Menu: " + n + " players");
+        return true;
+    }
+
+    @EventHandler
+    public void onMenuClick(InventoryClickEvent ev) {
+        if (!(ev.getView().getTopInventory().getHolder(false) instanceof Menu)) {
+            return;
+        }
+        ev.setCancelled(true);                                         // also shift clicks from the own inventory
+        int slot = ev.getRawSlot();
+        if (slot >= 0 && slot < ev.getView().getTopInventory().getSize() && ev.getCurrentItem() != null
+                && !ev.getCurrentItem().isEmpty()) {
+            menuScore().getScore(ev.getWhoClicked().getName()).setScore(slot + 1);
+        }
+    }
+
+    @EventHandler
+    public void onMenuDrag(InventoryDragEvent ev) {
+        if (ev.getView().getTopInventory().getHolder(false) instanceof Menu) {
+            ev.setCancelled(true);
+        }
     }
 
     @Override
@@ -484,6 +620,20 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 keys.add(g.getKey().getNamespacedKey().getKey());
             }
             sender.sendMessage("Goals: " + String.join(" ", keys));
+            return true;
+        }
+        if (args.length >= 3 && args[0].equals("menu")) {
+            return menu(sender, args);
+        }
+        if (args.length == 2 && args[0].equals("menu-close")) {
+            int n = 0;
+            for (Player p : players(sender, args[1])) {
+                if (menuOf(p) != null) {
+                    p.closeInventory();
+                    n++;
+                }
+            }
+            sender.sendMessage("Closed: " + n + " menus");
             return true;
         }
         if (args.length == 3 && args[0].equals("attack")) {

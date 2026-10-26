@@ -36,6 +36,7 @@ from units import VILLAGER_JOBS, animal  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
+import menu  # noqa: E402
 import train  # noqa: E402
 
 RESOURCES = ("Wood", "Food", "Gold", "Stone")
@@ -288,6 +289,7 @@ class Gather:
         self.farmers, self.crops = {}, {}                              # farm tile -> UUID of its farmer, wheat age
         self.trunks = {}                                               # tree tile -> logs of its trunk on the ground
         self.bushes = {}                                               # bush tile -> the block of its last look
+        self.menus = {}                                                # player -> handler of its open menu (#619)
         self.queues, self.trained = {}, {}                             # town center -> its queue, units it trained
         self.pop, self.census, self.shown = 0, 0.0, {}                 # live units, AoE2 seconds since the count, sidebar
 
@@ -311,6 +313,7 @@ class Gather:
         for r in RESOURCES:
             self.command(f"scoreboard players add {r} aoe_res 0")
         build.setup(self)
+        menu.setup(self)
         for o in self.units:                                           # the entities must be loaded (forceload)
             pos = self.pos(o["uuid"])
             if pos:
@@ -419,8 +422,9 @@ class Gather:
             self.log.flush()
 
     def clicks(self):
-        """Players who clicked since the last call."""
+        """Players who clicked since the last call. Clicks in a chest menu go to the handler of the menu (#619)."""
         build.tick(self)
+        menu.clicks(self)
         self.command("execute as @a unless items entity @s container.* minecraft:carrot_on_a_stick "
                      "run give @s minecraft:carrot_on_a_stick")
         if "passed" not in self.command("execute if entity @a[scores={aoe_use=1..}]") + \
