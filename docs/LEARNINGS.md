@@ -92,3 +92,5 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   Import cycle `gather` → `build` → `replay`: `replay` imports `gather` inside a function.
 - `gather.Map.path` on a whole record map (480 × 480): A* with a cell limit, about 45 ms per path, 0.3 s across the
   map. Replay paths cost 18 s per 200 s of game in samples/ (one search per unit of a group, #409).
+- "units in a block": `AOE2MC_DEBUG=1` names the block; list the `aoe2mc.json` objects with a `tile` near the unit to
+  find its source (#415: a `PLANT_SHRUB` on the same block, not the tree that the ticket named).
