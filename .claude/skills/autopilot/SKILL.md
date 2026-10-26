@@ -195,8 +195,10 @@ partial work: add `hold` to its PR (the workflow also skips a PR whose ticket ha
 
 ## 7. Close the ticket
 
-The merge closes the ticket (`Closes #N`), and the Automerge workflow removes `in-progress`. If the owner must check something in the game, comment
-precise check steps on the ticket and make a small `needs-human` ticket for the check.
+The merge closes the ticket (`Closes #N`), and the Automerge workflow removes `in-progress`. If the owner must check something in the game, make
+a small check ticket without `needs-human` first (#580). An agent runs the check itself (level 4 of `verify`: real server,
+simulated clicks through the same functions as the player input, `tools/mc_shot.py`) and comments the results and the
+images. Then it adds `needs-human` with a short list of what only a person can check (real input, feel, sound, speed).
 
 ## 8. Report on the status issue
 
