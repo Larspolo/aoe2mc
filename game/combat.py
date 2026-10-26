@@ -318,6 +318,17 @@ def sight_command(uuid, name, T, s=None):
     return f"aoe sight {uuid} {sight(name, s) * T}" if s.classes and s.attack else None
 
 
+STANCES = ("aggressive", "defensive", "stand_ground", "no_attack")
+
+
+def stance_command(uuid, stance):
+    """The plugin command that sets the AoE2 stance of a unit (#1104): "no_attack" never attacks without an order,
+    "stand_ground" attacks only an enemy in its range and keeps its place; "aggressive" is the default."""
+    if stance not in STANCES:
+        raise ValueError(f"unknown stance: {stance}")
+    return f"aoe stance {uuid} {stance}"
+
+
 def setup(game, data):
     """Give each unit of the players in `aoe2mc.json` data its AoE2 values; Gaia animals keep the vanilla values.
     Each building of a player with AoE2 hit points gets a target of attacks (`building`).
