@@ -79,7 +79,10 @@ TECHS = {"DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy 
          "FEUDAL_AGE": lambda name, s: s,   # the change of each technology to the AoE2 values
          "WHEELBARROW": lambda name, s: s}                         # no combat change: gather.CARRY and gather.PACE
 REQUIRES = {"FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP", "DOCK"))}   # n types of these buildings
-TECH_AGE = {"WHEELBARROW": 1}                                      # the age of a technology (build.AGE): hidden before
+TECH_AGE = {                                                       # the age of a technology (build.AGE): hidden before
+    "DOUBLE_BIT_AXE": 1,
+    "WHEELBARROW": 1,
+}
 AGES = ("Dark Age", "Feudal Age")                                  # the age after each researched age (index: ages)
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
 HOUSING = {"TOWN_CENTER": 5, "HOUSE": 5, "CASTLE": 20}             # population of a complete building, as in AoE2
