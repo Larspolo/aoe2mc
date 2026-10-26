@@ -11,7 +11,7 @@ starts a server without a client on each copy. It forceloads the map, waits unti
 reads `/tick query` (the mean of the last 100 ticks) every 5 s. It prints the median of the means and the highest
 P99 of both worlds and the difference. Minecraft measures the ticks itself: no own profiler.
 No player is on the server, so this is the cost of the pack far from players: each line of `aoe2mc:pulse` stops at
-its `if entity @a[distance=..24]` (docs/datapack.md).
+its `if entity @a[distance=..16]` (docs/datapack.md).
 """
 import argparse
 import contextlib
