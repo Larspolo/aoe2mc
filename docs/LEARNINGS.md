@@ -50,6 +50,7 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - A check ticket that waits for a fix: `git fetch origin main && git checkout -B <branch> origin/main` just before the level-4 run, and name the commit in the result. A run that checked out main earlier checks the old code (#964: 10 minutes lost).
 - A wait loop on an output file (`until grep -q ... OUT`) of a second run reads the old file of the first run: `rm -f OUT` before the new run, or use a new name (#738).
 - Run `tools/claim.py N` in its own tool call and read its exit code before the label and the "Started by" comment: in parallel tool calls they run also on exit 1, on a ticket of another run (#965).
+- AoE2 values (hit points, attack, `ROF`, armor) of a unit or building: the MediaWiki API `api.php?action=parse&page=NAME&prop=wikitext&format=json&redirects=1` (User-Agent of `tools/refimage.py`) gives the infobox fields. A name of several games is a disambiguation page: use `Watch_Tower_(Age_of_Empires_II)` (#1112).
 
 ## Code
 

@@ -222,6 +222,12 @@ BUILDINGS = {
     "STABLE": Stats(1500, 0, 0, 7, 0, 0.0, {}, ("building",)),
     "MONASTERY": Stats(2100, 0, 0, 7, 0, 0.0, {}, ("building",)),
     "SIEGE_WORKSHOP": Stats(2100, 0, 0, 7, 0, 0.0, {}, ("building",)),
+    # the towers (AoE2 DE, wiki): a watch tower of the Castle Age (850 hit points in the Feudal Age), #1112
+    "BOMBARD_TOWER": Stats(2220, 120, 3, 9, 8, 6.0, {}, ("building",)),
+    "FORTIFIED_TOWER": Stats(1900, 8, 4, 7, 13, 3.0, {}, ("building",)),
+    "GUARD_TOWER": Stats(1500, 7, 2, 8, 8, 2.0, {}, ("building",)),
+    "KEEP": Stats(2250, 8, 3, 9, 8, 2.0, {}, ("building",)),
+    "WATCH_TOWER": Stats(1020, 5, 1, 7, 8, 2.0, {}, ("building",)),
     "TOWN_CENTER": Stats(2400, 5, 3, 5, 6, 2.0, {}, ("building",)),
     "CASTLE": Stats(4800, 11, 8, 11, 8, 2.0, {}, ("building",)),
     "WONDER": Stats(4800, 0, 3, 10, 0, 0.0, {}, ("building",)),
