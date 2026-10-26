@@ -10,7 +10,8 @@ from test_siege_walk import summon
 
 
 def test_the_mangonel_line_has_the_blast_radius_of_the_wiki():
-    assert combat.BLAST == {"MANGONEL": 1.0, "ONAGER": 1.25, "SIEGE_ONAGER": 1.5}   # tiles, AoE2 DE ("AOE")
+    assert combat.BLAST == {"BOMBARD_CANNON": 0.5, "MANGONEL": 1.0, "ONAGER": 1.25,   # tiles, AoE2 DE ("AOE")
+                            "SIEGE_ONAGER": 1.5}
 
 
 def test_the_range_command_gives_the_blast_in_blocks():

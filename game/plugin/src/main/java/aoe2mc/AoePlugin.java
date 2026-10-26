@@ -75,7 +75,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe range <selector> <blocks> <ticks> [blast]
  *                                              a ranged unit shoots from this range, one shot per ticks (#515); a
  *                                              shot with a blast radius in blocks hits all units near the target, and
- *                                              a siege unit (a minecart) shoots too (#1050)
+ *                                              a siege unit (a minecart) shoots too (#1050); blast 0: a siege shot
+ *                                              that hits only the target (the Scorpion, #1062)
  *   aoe sight <selector> <blocks>              an idle unit attacks an enemy in this line of sight (#775)
  *   aoe building <selector> <hp> <melee armor> <pierce armor> <x0> <y0> <z0> <x1> <y1> <z1>
  *                                              make the entity the target of a building (#517, combat.building)
@@ -125,6 +126,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * A siege unit with a blast (the Mangonel line, #1050) has no mob that shoots: its carrier gets the goal "aoe_range".
  * The shot hits at once (as at a building) each unit with AoE2 values within the blast radius of the target, also own
  * units (AoE2 friendly fire), each with the damage rule; an explosion particle shows it, and no block breaks.
+ * A siege unit with blast 0 (the Scorpion, Trebuchet, Organ Gun, #1062) hits only its target at once.
  * A mounted unit (#710) is a horse (its UUID in aoe2mc.json) with a rider: a horse has no attack goal. The rider gets
  * the values of "aoe stats", the range of "aoe range" and the target of "aoe attack", and the horse gets AI without goals:
  * a riding mob walks with the navigation of its vehicle (vanilla Mob#getNavigation), so the horse follows the rider.
@@ -192,7 +194,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     private final Map<UUID, Order> orders = new HashMap<>();
 
-    private record Range(double blocks, int ticks, double blast) {
+    private record Range(double blocks, int ticks, double blast, boolean siege) {
     }
 
     private final Map<UUID, Range> ranges = new HashMap<>();
@@ -242,7 +244,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             mob.lookAt(t);
             int now = Bukkit.getCurrentTick();
-            if (now >= next && near && range.blast > 0) {
+            if (now >= next && near && range.siege) {
                 next = now + range.ticks;
                 blast(mob, t, range.blast);
             } else if (now >= next && near && mob instanceof RangedEntity r) {
@@ -280,6 +282,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     // A blast shot (#1050): each unit with AoE2 values within r blocks of the target takes the AoE2 damage of the
     // shooter, also its own units. A mounted unit has the hit points of its horse (#732): only the horse counts.
+    // r 0: a siege shot that hits only the target (#1062).
     private void blast(Mob mob, LivingEntity t, double r) {
         Entity from = crew(mob);
         Stats a = stats.get(from.getUniqueId());
@@ -291,6 +294,14 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (b != null) {                                  // a building takes the shot alone
             hit(t, b, a.damage(b.stats));
             hitEffect(t, b, mob);
+        } else if (r <= 0) {
+            LivingEntity v = t.getVehicle() instanceof LivingEntity h && stats.containsKey(h.getUniqueId()) ? h : t;
+            if (v.isValid() && stats.containsKey(v.getUniqueId())) {
+                harm(v, stats.get(v.getUniqueId()), a, from);
+            }
+            t.getWorld().spawnParticle(Particle.CRIT, at.clone().add(0, 1, 0), 8);
+            t.getWorld().playSound(at, Sound.ENTITY_ARROW_HIT, 1.0f, 1.0f);
+            return;
         } else {
             for (Entity e : t.getWorld().getNearbyEntities(at, r, r, r)) {
                 if (e instanceof LivingEntity le && le.isValid() && stats.containsKey(le.getUniqueId())
@@ -907,7 +918,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             r = ranges.get(mob.getPassengers().get(0).getUniqueId());      // the range of its siege unit (#1050)
         }
         var goals = Bukkit.getMobGoals();
-        if (r != null && (mob instanceof RangedEntity || r.blast > 0)) {
+        if (r != null && (mob instanceof RangedEntity || r.siege)) {
             for (var g : goals.getAllGoals(mob)) {
                 if (SHOTS.contains(g.getKey().getNamespacedKey().getKey())) {
                     goals.removeGoal(mob, g.getKey());
@@ -1070,7 +1081,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             Range r;
             try {
                 r = new Range(Double.parseDouble(args[2]), Integer.parseInt(args[3]),
-                        args.length == 5 ? Double.parseDouble(args[4]) : 0);
+                        args.length == 5 ? Double.parseDouble(args[4]) : 0, args.length == 5);
             } catch (NumberFormatException e) {
                 sender.sendMessage("Bad number: " + e.getMessage());
                 return true;
@@ -1080,14 +1091,14 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 if (rider(e) instanceof RangedEntity) {
                     e = rider(e);                                // a mounted archer: the rider shoots (#710)
                 }
-                if (e instanceof Minecart cart && r.blast > 0) {
+                if (e instanceof Minecart cart && r.siege) {
                     ranges.put(cart.getUniqueId(), r);           // its carrier shoots (unit())
                     Mob c = carrier(cart, false);
                     if (c != null) {
                         Bukkit.getMobGoals().removeGoal(c, rangeKey);
                     }
                     n++;
-                } else if (e instanceof Mob mob && (mob instanceof RangedEntity || r.blast > 0)) {
+                } else if (e instanceof Mob mob && (mob instanceof RangedEntity || r.siege)) {
                     ranges.put(mob.getUniqueId(), r);
                     Bukkit.getMobGoals().removeGoal(mob, rangeKey);    // the next order adds it with the new range
                     n++;

@@ -21,6 +21,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from gather import NORMAL  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import units  # noqa: E402
 from units import pretty  # noqa: E402
 
 Stats = namedtuple("Stats", "hp attack melee pierce range reload bonus classes", defaults=({}, ()))
@@ -241,7 +242,8 @@ MELEE_RANGED = {"ELITE_GBETO",
                 "TRACTION_TREBUCHET"}
 # Blast radius in tiles of the units whose shot hits all units near the target, also own units (AoE2 DE, wiki "AOE";
 # AoE2 tapers the damage at the edge, here each unit in the radius takes the full damage() hit, #1050).
-BLAST = {"MANGONEL": 1.0,
+BLAST = {"BOMBARD_CANNON": 0.5,
+         "MANGONEL": 1.0,
          "ONAGER": 1.25,
          "SIEGE_ONAGER": 1.5}
 DEFAULT, BUILDING = Stats(40, 4, 0, 0, 0, 2.0), Stats(1000, 0, 0, 7, 0, 0.0, {}, ("building",))
@@ -286,10 +288,12 @@ def label_command(uuid, name=None):
 def range_command(uuid, name, T, rate=NORMAL, s=None):
     """The plugin command that lets a ranged unit shoot from its AoE2 range (tiles * T blocks), with one shot per
     reload time at `rate` game seconds per real second (default: Normal game speed, as the walk speed). None for a
-    melee unit. s: the values with technologies (Fletching, #724), default those of AoE2 unit name. A unit of BLAST
-    gets its blast radius in blocks last: the plugin then lets the siege unit (a minecart) shoot too (#1050)."""
+    melee unit. s: the values with technologies (Fletching, #724), default those of AoE2 unit name. A siege unit (a
+    minecart) gets its blast radius in blocks last, 0 when its shot hits only the target (the Scorpion, #1062): the
+    plugin then lets the minecart shoot too (#1050)."""
     s = s or stats(name)
-    blast = f" {BLAST[name] * T}" if name in BLAST else ""
+    cart = (units.classify(name) or {}).get("id") == "minecraft:minecart"
+    blast = f" {BLAST.get(name, 0) * T}" if name in BLAST or cart else ""
     return s.range and s.reload and f"aoe range {uuid} {s.range * T} {max(1, round(s.reload / rate * 20))}{blast}" or None
 
 
