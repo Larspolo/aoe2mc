@@ -3982,6 +3982,14 @@ def shrine(c, w, st, col, T, ctx):
     top = c.spire(a, b, a, b, 5, "sandstone", steep=2, tip="gold_block")
     c.set(m, top + 1, m, "lightning_rod")
     c.banner(m + 1, 3, b, col)
+    candles, lantern = "candle[candles=3,lit=true,waterlogged=false]", "lantern[hanging=false,waterlogged=false]"
+    z0, z1 = a + 1, b - 3                             # the cella; the row b - 2 behind the opening stays free
+    items = [(m, 1, z0, "chiseled_sandstone"), (m, 2, z0, "gold_block"),     # the idol on its altar
+             (m - 1, 1, z0, candles), (m + 1, 1, z0, candles)]
+    items += [(m, 1, z, f"{col}_carpet") for z in range(z0 + 1, b - 1)]
+    for x in (a + 1, b - 2):                                               # offerings and light at the side walls
+        items += [(x, 1, z0 + 1, "potted_poppy"), (x, 1, z1, lantern)]
+    c.furniture(items)
 
 
 def pagan_shrine(c, w, st, col, T, ctx):
@@ -4005,6 +4013,17 @@ def pagan_shrine(c, w, st, col, T, ctx):
     for x, z in ((3, w - 2), (w - 4, 2), (m + 3, 3)):
         c.set(x, 1, z, "cobblestone")
     c.banner(m, 3, w - 1, col)
+    skull = "skeleton_skull[powered=false,rotation=0]"
+    items = [(m, 1, m + 2, "mossy_cobblestone"), (m, 2, m + 2, skull),         # the offering stone at the tree
+             (m - 1, 1, m + 2, "candle[candles=4,lit=true,waterlogged=false]"),
+             (m + 1, 1, m + 2, "potted_red_mushroom"),
+             (m, 1, w - 2, "campfire[facing=south,lit=true,signal_fire=false,waterlogged=false]"),
+             (m - 3, 4, 0, skull), (m + 3, 4, w - 1, skull)]                 # skulls on the carved posts
+    items += [(x, 2, z, "lantern[hanging=true,waterlogged=false]") for x in (2, w - 3) for z in (4, w - 4)]
+    empty = (-1, c.id("air"))                                              # an open place: no room, no door
+    for x, y, z, b in items:
+        if c.get(x, y, z) in empty:
+            c.set(x, y, z, b)
 
 
 def wooden_bridge(c, w, st, col, T, ctx):

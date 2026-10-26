@@ -97,3 +97,5 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   map. Replay paths cost 18 s per 200 s of game in samples/ (one search per unit of a group, #409).
 - "units in a block": `AOE2MC_DEBUG=1` names the block; list the `aoe2mc.json` objects with a `tile` near the unit to
   find its source (#415: a `PLANT_SHRUB` on the same block, not the tree that the ticket named).
+- `Canvas.furniture` sets only into `air` cells: an open design without `room()` has empty cells (`-1`), so its
+  furniture vanishes without an error. Set those cells with `c.get(...) in (-1, air)` (`pagan_shrine`, #450).
