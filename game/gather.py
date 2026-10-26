@@ -53,6 +53,14 @@ STEPS = [(dx, dz) for dx in (-1, 0, 1) for dz in (-1, 0, 1) if dx or dz]
 NUMBER = r"(-?[\d.]+(?:E-?\d+)?)[df]"
 CIVILIANS = ("VILLAGER", "REPAIRER", "MONK", "KING", "TRADE", "FISHING_SHIP", "TRANSPORT")
 SELECT = "aoe2mc.selected"                                         # entity tag of the selected units
+# The look and sound of one gather step at the resource (#592): block particles and a vanilla sound. A villager has
+# no arm swing, so it turns to the resource (`rotate ... facing`). 26.3 block particles take
+# `{id:...,Properties:{...}}`, not `Name`.
+WORK_LOOK = {"wood": ("minecraft:oak_log", "minecraft:block.wood.hit"),
+             "food": ("minecraft:sweet_berry_bush[age=3]", "minecraft:block.sweet_berry_bush.pick_berries"),
+             "farm": ("minecraft:wheat[age=7]", "minecraft:item.hoe.till"),
+             "gold": ("minecraft:gold_ore", "minecraft:block.stone.hit"),
+             "stone": ("minecraft:stone", "minecraft:block.stone.hit")}
 EVENTS = {"idle": "idle", "to_tree": "walk", "chop": "chop", "to_drop": "carry",    # state -> event in the log
           "to_site": "walk", "build": "build"}
 
@@ -479,6 +487,7 @@ class Gather:
                     v.timer -= work
                     v.load += 1
                     src[v.tree] -= 1
+                    self.work(v)
                     if v.tree in self.map.farms:
                         self.harvest(v.tree)
                     elif v.res == "food":
@@ -499,6 +508,24 @@ class Gather:
                 for v in builders:                                     # complete: the builders stop
                     v.site = None
                     self.set(v, "idle")
+
+    def work(self, v):
+        """One gather step shows: the villager turns to the point of the resource next to it, block particles of the
+        resource fly there, and the work sound plays (#592)."""
+        tile, T = v.tree, self.map.T
+        x0, x1, z0, z1 = self.map.feet.get(tile, (tile[0] * T, tile[0] * T + T, tile[1] * T, tile[1] * T + T))
+        x, y, z = min(max(v.pos[0], x0 + 0.5), x1 - 0.5), v.pos[1] + 1, min(max(v.pos[2], z0 + 0.5), z1 - 0.5)
+        kind = "farm" if tile in self.map.farms else v.res
+        block, sound = WORK_LOOK[kind]
+        if kind == "wood":
+            block = self.map.woods.get(tile, (block,))[0]
+        name, _, props = block.partition("[")
+        props = ",".join(f'{k}:"{w}"' for k, w in (p.split("=") for p in props.rstrip("]").split(",") if p))
+        state = f'{{id:"{name}"' + (f",Properties:{{{props}}}" if props else "") + "}"
+        at = f"{x:.2f} {y:.2f} {z:.2f}"
+        self.command(f"rotate {v.uuid} facing {at}")
+        self.command(f"particle minecraft:block{{block_state:{state}}} {at} 0.2 0.2 0.2 0 8")
+        self.command(f"playsound {sound} block @a {at} 1 {0.9 + 0.2 * (v.load % 2):.1f}")
 
     def site(self, tile):
         """Footprint (x0, x1, z0, z1), ground heights next to it, stump cell and trunk row z of a tree."""
