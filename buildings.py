@@ -3104,6 +3104,14 @@ def wooden_fort(c, w, st, col, T, ctx):
         for z in (a, b - 1):
             c.box(x, x + 1, 6, 8, z, z + 1, "spruce_fence")
     c.flag(w // 2, top + 1, w // 2, col, 2)
+    if b - a >= 4:                                         # inside (#441): a ladder to the gallery, stores, a camp
+        c.box(a + 1, a + 2, 1, 6, a + 1, a + 2, "ladder[facing=south,waterlogged=false]")
+        c.furniture([(b - 2, 1, a + 1, "chest[facing=west,type=single,waterlogged=false]")])
+        for x, z, s in ((1, 1, "campfire[facing=south,lit=true,signal_fire=false,waterlogged=false]"),
+                        (w - 2, 1, "barrel[facing=up,open=false]"), (w - 2, 2, "barrel[facing=up,open=false]"),
+                        (1, w - 3, "grindstone[face=floor,facing=east]"), (1, w - 2, "hay_block[axis=y]")):
+            c.set(x, 1, z, s)                              # the yard between the palisade and the tower
+        c.set(b - 2, 4, b - 2, "lantern[hanging=true,waterlogged=false]")
 
 
 def sapper_tunnel(c, w, st, col, T, ctx):
@@ -3378,12 +3386,31 @@ def svan_tower(c, w, st, col, T, ctx):
     """A Svan defense tower: tall, narrow, of rough stone, with a pitched tile roof."""
     h = max(12, 4 * T)
     c.room(0, w, 0, w, 0, h, "cobblestone")
-    c.box(0, w, 1, 2, 0, w, "mossy_cobblestone")
+    c.walls(0, w, 1, 2, 0, w, "mossy_cobblestone")
     c.door(w // 2, 1, w - 1)
     for y in range(4, h - 1, 4):
         c.set(w // 2, y, 0, "air"); c.set(w // 2, y, w - 1, "air")
     c.windows(0, w, 0, w, h - 1, b="air", step=2)
     c.gable(-1, w + 1, -1, w + 1, h + 1, "brick")
+    if w < 4:
+        return
+    # inside (#441): a wooden floor under each row of windows and a ladder through them. The family and the hay
+    # live at the bottom, stores, the hearth with its cauldron and a lookout above.
+    a, b = 1, w - 1
+    floors = list(range(5, h - 2, 4))
+    for y in floors:
+        c.box(a, b, y, y + 1, a, b, "spruce_planks")
+    c.box(a, a + 1, 1, floors[-1] + 2, a, a + 1, "ladder[facing=south,waterlogged=false]")
+    c.furniture([(b - 1, 1, a, "hay_block[axis=y]")])
+    c.set(b - 1, 4, b - 1, "lantern[hanging=true,waterlogged=false]")
+    rooms = [["chest[facing=west,type=single,waterlogged=false]", "barrel[facing=up,open=false]"],
+             ["cauldron", "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]"],
+             ["barrel[facing=up,open=false]", "lantern[hanging=false,waterlogged=false]"]]
+    for k, y in enumerate(floors):                         # upper floors: the cells at the ladder stay free
+        back, side = rooms[-1] if k == len(floors) - 1 else rooms[min(k, 1)]
+        c.set(b - 1, y + 1, a, back); c.set(b - 1, y + 1, b - 1, side)
+        if y + 4 < h and "lantern" not in side:
+            c.set(a, y + 3, b - 1, "lantern[hanging=true,waterlogged=false]")
 
 
 def courtyard_walls(c, w, st, col, T, ctx):
@@ -3722,6 +3749,26 @@ def dome_rock(c, w, st, col, T, ctx):
     m = int(round(cx))
     for x, z in ((m, 0), (m, w - 1), (0, m), (w - 1, m)):     # four doors
         c.box(x, x + 1, 1, 3, z, z + 1, "air")
+        c.doors.append((x, z))
+    # inside (#449): the rock on the floor in the middle, a ring of columns around it, carpets, candles and lanterns
+    for x in range(w):
+        for z in range(w):
+            d = math.hypot(x - cx, z - cx)
+            if d < max(1.2, w / 9):
+                c.set(x, 1, z, c.rng.choice(["stone", "stone", "andesite", "tuff"]))
+                if d < max(0.8, w / 14):
+                    c.set(x, 2, z, c.rng.choice(["stone", "andesite"]))
+    items = []
+    for k in range(8):
+        a = 2 * math.pi * (k + 0.5) / 8                          # off the door axes
+        x, z = int(round(cx + w / 4 * math.cos(a))), int(round(cx + w / 4 * math.sin(a)))
+        c.box(x, x + 1, 1, 8, z, z + 1, "quartz_pillar")
+        x, z = int(round(cx + (R - 1.5) * math.cos(a))), int(round(cx + (R - 1.5) * math.sin(a)))
+        items.append((x, 7, z, "lantern[hanging=true,waterlogged=false]"))
+        x, z = int(round(cx + (w / 9 + 1) * math.cos(a))), int(round(cx + (w / 9 + 1) * math.sin(a)))
+        items.append((x, 1, z, "candle[candles=3,lit=true,waterlogged=false]"))
+    items += [(x, 1, z, "red_carpet") for x in range(w) for z in range(w) if w / 9 + 1.5 < math.hypot(x - cx, z - cx) < R - 0.5]
+    c.furniture(items)
     c.banner(m + 1, 3, w, col)
 
 
@@ -3735,6 +3782,17 @@ def sankore(c, w, st, col, T, ctx):
         c.set(x, 6, 0, "mud_brick_wall"); c.set(x, 6, w - 1, "mud_brick_wall")
     m = w // 2
     c.box(m, m + 1, 1, 3, w - 1, w, "air")
+    c.doors.append((m, w - 1))
+    # inside (#449): a school with bookshelves on the side walls, the teacher's lectern at the back, benches for
+    # the students, chests of manuscripts and hanging lanterns
+    lectern = "lectern[facing=south,has_book=true,powered=false]"
+    items = [(x, y, z, "bookshelf") for x in (1, w - 2) for z in range(2, w - 3) for y in (1, 2)]
+    items += [(1, 1, 1, "chest[facing=south,type=single,waterlogged=false]"), (w - 2, 1, 1, "chest[facing=south,type=single,waterlogged=false]"),
+              (m, 1, 1, lectern), (m - 1, 1, 1, "candle[candles=2,lit=true,waterlogged=false]")]
+    items += [(x, 1, z, stair("spruce_stairs", "south")) for z in range(3, w - 3, 2) for x in range(3, w - 3) if x != m]
+    items += [(m, 1, z, "brown_carpet") for z in range(2, w - 1)]
+    items += [(x, 4, z, "lantern[hanging=true,waterlogged=false]") for x in (2, w - 3) for z in (2, w - 3)]
+    c.furniture(items)
     # tapering tower with beams that stick out
     a, b, y = m - 2, m + 2, 6
     while b - a >= 1 and y < 6 + 3 * w:
