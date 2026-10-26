@@ -255,6 +255,7 @@ class Villager:
         self.walked = 0.0                                              # blocks, for the log
         self.res = "wood"                                              # the resource of the load
         self.site = None                                               # the construction site that it builds
+        self.lap = 0                                                   # step of a farmer over its farm (#591)
 
     @property
     def cell(self):
@@ -490,6 +491,7 @@ class Gather:
                     self.work(v)
                     if v.tree in self.map.farms:
                         self.harvest(v.tree)
+                        self.tend(v)
                     elif v.res == "food":
                         self.berries(v.tree)
                     elif v.res != "wood":
@@ -602,6 +604,20 @@ class Gather:
             self.map.ground[z][x] = min(ys)
             self.map.mine_at.pop((x, z), None)
         self.map.blocked -= spot
+
+    def tend(self, v):
+        """A farmer walks over its farm while it works, as in AoE2 (#591): one cell per food, row by row (the rows
+        in turn east and west), and at the last cell back the same way, so that each step goes to a next cell."""
+        cells = sorted(self.goals(v.tree), key=lambda c: (c[1], c[0] if c[1] % 2 == 0 else -c[0]))
+        if len(cells) < 2:
+            return
+        cycle = cells + cells[-2:0:-1]
+        if cycle[v.lap % len(cycle)] != v.cell:                        # a new farm or another start cell
+            v.lap = min(range(len(cycle)), key=lambda i: math.dist(cycle[i], v.cell))
+        v.lap += 1
+        walked, v.path = v.walked, [cycle[v.lap % len(cycle)]]
+        walk(self, v)
+        v.walked = walked                                              # work, not a walk (tools/measure_gather.py)
 
     def harvest(self, tile):
         """A farm shows its food: the wheat gets younger (age 7 when full), and an empty farm is dirt."""
