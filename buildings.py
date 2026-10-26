@@ -3003,6 +3003,10 @@ def place_building(E, cols, B, o, players, walls, gates):
         head = c.a[c.m:c.m + fx, c.below + 1:c.below + 3, c.m:c.m + fz]
         solid = ((head >= 0) & (head != B("air"))).any(1)
         cols.blocked[xs.start:xs.stop, zs.start:zs.stop] |= solid[xs.start - x0:xs.stop - x0, zs.start - z0:zs.stop - z0]
+        for x in xs:                        # on a slope the foundation lifts the floor: units stand on it (#773)
+            for z in zs:
+                if not solid[x - x0, z - z0]:
+                    FLOORS[(x, z)] = base + 1
     ix, iy, iz = np.nonzero(c.a >= 0)
     # Outside the footprint only parts above head height (roof edges, tower tops, sails) are kept;
     # Edits checks this against the real ground of each column.
@@ -3044,12 +3048,14 @@ def bridge_deck(cols, x, z, along_z, water_y):
 WOOD_BRIDGE_TILES = set()
 SHELVES = {}             # (x, y, z) of a shelf block -> its 3 item names (#526)
 BRIDGE_CELLS = set()     # block columns with a bridge deck (units there stand on the deck)
+FLOORS = {}              # (x, z) of a gate passage -> the y where units stand on its floor (#773)
 
 
 def plan_walls(objects):
     """Tiles with walls, and the direction of each gate (True = along z, "diag+" / "diag-" = diagonal)."""
     WOOD_BRIDGE_TILES.clear()
     BRIDGE_CELLS.clear()
+    FLOORS.clear()
     WOOD_BRIDGE_TILES.update((int(o["x"]), int(o["y"])) for o in objects if "WOODEN_BRIDGE" in o["name"])
     walls = set()
     for o in objects:

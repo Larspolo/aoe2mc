@@ -2053,6 +2053,15 @@ def set_pos(nbt, x, y, z):
 
 
 MOVED = Counter()
+
+
+def moved(key, nbt, x, y, z, col):
+    """Count a unit that stands above the ground (key: its name, or "(on a bridge)"); AOE2MC_DEBUG=1 names it,
+    with the two blocks above the ground (#773)."""
+    MOVED[key] += 1
+    if os.environ.get("AOE2MC_DEBUG"):
+        print("   on a bridge:" if key == "(on a bridge)" else "   in block:", str(top_name(nbt)), x, y, z,
+              B.states[col[y - MIN_Y]], B.states[col[y + 1 - MIN_Y]])
 TICKS = []                  # (time, phase) of each phase end of the last convert(): tools/measure_convert.py (#690)
 
 
@@ -2073,7 +2082,7 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
             while y < MAX_Y - 3 and not all(passable[col[y + k - MIN_Y]] for k in range(h)):
                 y += 1
             if y > wtop:
-                MOVED[str(top_name(nbt))] += 1
+                moved(str(top_name(nbt)), nbt, bx, wtop, bz, col)
             y += 0.5
         else:
             col = vol[:, bz & 15, bx & 15]
@@ -2082,10 +2091,12 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
                 for yy in range(wtop + 1, min(wtop + 40, MAX_Y - 2)):
                     if not passable[col[yy - 1 - MIN_Y]] and passable[col[yy - MIN_Y]] and passable[col[yy + 1 - MIN_Y]]:
                         y = yy
-                        MOVED["(on a bridge)"] += 1
+                        moved("(on a bridge)", nbt, bx, yy, bz, col)
                         break
             while y < MAX_Y - 2 and not (passable[col[y - MIN_Y]] and passable[col[y + 1 - MIN_Y]]):
                 y += 1
+            if y == buildings.FLOORS.get((bx, bz)):         # on the raised floor of a gate passage (#773)
+                top = y - 1
             if y > top + 1 and not wtop > top and (bx, bz) not in buildings.BRIDGE_CELLS:
                 for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)):   # a shrub or leaves in the block: stand next to it (#415)
                     nx, nz = bx + dx, bz + dz
@@ -2096,13 +2107,7 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
                         x, z, bx, bz, top, col, y = x + dx, z + dz, nx, nz, nt, ncol, nt + 1
                         break
             if y > top + 1 and not wtop > top:
-                if (bx, bz) in buildings.BRIDGE_CELLS:
-                    MOVED["(on a bridge)"] += 1
-                else:
-                    MOVED[str(top_name(nbt))] += 1
-                if os.environ.get("AOE2MC_DEBUG"):
-                    print("   in block:", str(top_name(nbt)), bx, top + 1, bz, B.states[col[top + 1 - MIN_Y]],
-                          B.states[col[top + 2 - MIN_Y]])
+                moved("(on a bridge)" if (bx, bz) in buildings.BRIDGE_CELLS else str(top_name(nbt)), nbt, bx, top + 1, bz, col)
         if units.top_entity(nbt).get("NoGravity"):               # a flying bird
             y += units.FLY_LOW.get(str(units.top_entity(nbt)["id"]), units.FLY_HEIGHT)
         set_pos(nbt, x, float(y), z)
