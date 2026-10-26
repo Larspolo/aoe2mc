@@ -157,6 +157,8 @@ class Replay:
         self.counted = []                       # UUIDs of the start units that the population counts
         self.stock = {}                         # player -> estimated resources: START + gather steps - costs (#932)
         self.gathered, self.villagers = {}, {}  # player -> resources of the gather steps, trained villagers (#1065)
+        self.army, self.lost, self.razed = {}, {}, {}   # player -> military units trained, units lost, buildings lost (#1066)
+        self.censused = False                   # a census counted the live units (the base of the units lost)
         self.reached, self.researched = {}, {}  # player -> {age: game time (ms)}, researched technologies (#1067)
         self.vills, self.vhigh = {}, {}         # player -> live villagers (est.), the highest count (#1086)
         for o in data["objects"]:
@@ -405,6 +407,7 @@ class Replay:
                 self.refs.pop(i, None)                              # no ORDER goes to it
                 rect = start[3] if start else self.placed[new][2]
                 out += self.release(rect)                           # AoE2: the units come out alive
+                self.razed[e["player"]] = self.razed.get(e["player"], 0) + 1
                 if start:
                     self.starts.remove(start)
                 else:
@@ -421,6 +424,7 @@ class Replay:
                 for us in self.garrisons.values():
                     us[:] = [u for u in us if u != i]
                 self.pop[e["player"]] = max(0, self.pop.get(e["player"], 0) - 1)
+                self.lost[v.player] = self.lost.get(v.player, 0) + 1
                 out.append(f"kill {v.uuid}")
         return out
 
@@ -520,6 +524,9 @@ class Replay:
         if e["name"].startswith("VILLAGER"):
             self.villagers[e["player"]] = self.villagers.get(e["player"], 0) + 1
             self.villager(e["player"], 1)
+        import gather                                               # gather -> build -> replay: import it late
+        if gather.military(e["name"]):
+            self.army[e["player"]] = self.army.get(e["player"], 0) + 1
         rect = self.home(e) if prefix in ("U", "H") else None
         if rect is None:
             return []
@@ -1049,15 +1056,20 @@ class Replay:
                 "playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1"]
 
     def summary_commands(self):
-        """One chat line per player with its economy at the end of the replay, as the AoE2 achievements screen
-        (#1065): trained villagers and the resources of the gather steps (estimated: the record has no resources)."""
+        """Two chat lines per player at the end of the replay, as the AoE2 achievements screen: the economy (#1065):
+        trained villagers and the resources of the gather steps (estimated: the record has no resources); the military
+        (#1066): trained military units, lost units (DELETE, and the fights of the plugin: census) and lost buildings."""
         out = ['tellraw @a {"text": "Summary (est.)", "bold": true}']
-        for p in sorted(self.pop.keys() | self.villagers.keys() | self.gathered.keys()):
+        for p in sorted(self.pop.keys() | self.villagers.keys() | self.gathered.keys() | self.army.keys()
+                        | self.lost.keys() | self.razed.keys()):
             name, color = self.player(p)
             g = self.gathered.get(p, dict.fromkeys(START, 0))
             res = ", ".join(f"{r} {v}" for r, v in g.items())
             out.append("tellraw @a " + json.dumps([text(name, color), text(
                 f": villagers trained {self.villagers.get(p, 0)}, gathered {res}")]))
+            out.append("tellraw @a " + json.dumps([text(name, color), text(              # military (#1066)
+                f": military units trained {self.army.get(p, 0)}, units lost {self.lost.get(p, 0)}, "
+                f"buildings lost {self.razed.get(p, 0)}")]))
         return out + self.tech_commands() + self.society_commands()
 
     def tech_commands(self):
@@ -1167,10 +1179,14 @@ class Replay:
         (run.py --replay: forceload)."""
         for p in self.pop:
             m = re.search(r"Count: (\d+)", self.game.command(f"execute if entity @e[tag={COUNTED},tag=aoe2mc.p{p}]"))
-            self.pop[p] = int(m[1]) if m else 0
+            n = int(m[1]) if m else 0
+            if self.censused and n < self.pop[p]:                   # died in a fight (#1066); the first census sets
+                self.lost[p] = self.lost.get(p, 0) + self.pop[p] - n    # the base: a start unit can have no entity
+            self.pop[p] = n
             m = re.search(r"Count: (\d+)", self.game.command(
                 f"execute if entity @e[tag={COUNTED},tag=aoe2mc.p{p},type=minecraft:villager]"))
             self.villager(p, 0, int(m[1]) if m else 0)               # the record has no deaths (#1086)
+        self.censused = True
 
     def send(self, cmds):
         t = time.perf_counter()
