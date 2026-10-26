@@ -18,13 +18,13 @@ def test_parse_reads_the_windows():
 
 def test_target_fills_the_window():
     u = usage.parse([json.dumps(EVENT)])
-    assert usage.target_runs(u, NOW) == round((0.95 - 0.3) / 2 / usage.BURN)      # 0.325 per hour: 11 runs
+    assert usage.target_runs(u, NOW) == round((usage.END - 0.3) / 2 / usage.BURN)   # the last 2 hours: 11 runs
 
 
 def test_target_slows_down_when_ahead_and_speeds_up_near_the_reset():
-    early = {"five_hour": (0.6, NOW + 4 * 3600, "allowed")}
+    early = {"five_hour": (0.85, NOW + 4 * 3600, "allowed")}                   # ahead of 90 % at 2 hours before the reset
     late = {"five_hour": (0.6, NOW + 900, "allowed")}
-    assert usage.target_runs(early, NOW) == 3
+    assert usage.target_runs(early, NOW) == 1
     assert usage.target_runs(late, NOW) == usage.HI
     assert usage.target_runs({"five_hour": (0.97, NOW + 3600, "allowed")}, NOW) == usage.LO
 
