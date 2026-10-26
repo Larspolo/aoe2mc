@@ -21,9 +21,9 @@ def order(t, target):
 
 
 def play(timeline, target, end, ai=False):
-    """Play the timeline until game time `end` (ms): the last event is a chat line then."""
+    """Play the timeline until game time `end` (ms): the last event is a chat line then. target: one object or a list."""
     d = data(timeline + [dict(time=end, player=1, kind="chat", text="end")])
-    d["objects"] += [VIL, target]
+    d["objects"] += [VIL] + (target if isinstance(target, list) else [target])
     now, game = [0.0], Fake()
 
     def sleep(s):
