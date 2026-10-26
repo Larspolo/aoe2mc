@@ -113,26 +113,26 @@ Result (Minecraft 26.3 server in the cloud, `--tile-size` 4, `gather.py` default
 - Each state change costs one tick (0.25 s), and a walk of n blocks takes n ticks.
 
 Per resource (#393): `python3 tools/measure_gather.py --resource {wood,food,farm,gold,stone}` puts a tree, a fruit
-bush, a farm, a gold mine or a stone mine at the same place. `gather.py` has one work rate for all resources
-(`chop` 1.0 s per unit). Work rates in resource/s, trips in s (the farm trip is shorter: the farmer stands on the farm):
+bush, a farm, a gold mine or a stone mine at the same place. Since #413 each resource has its AoE2 work rate at
+Normal speed (`gather.WORK_SECONDS` = 1 / (`AOE2_WORK` × 1.7) seconds per unit; the table above is from before, with
+`chop` 1.0 s for all). Work rates in resource/s, trips in s (the farm trip is shorter: the farmer stands on the farm):
 
 | Resource | work measured | work configured | AoE2 work, per game second | AoE2 work at Normal speed | trip measured | trip configured | AoE2 trip at Normal speed |
 |---|---|---|---|---|---|---|---|
-| Wood (tree) | 0.99 | 1.00 | 0.39 | 0.66 | 26.0 (62 blocks) | 26.0 | 26.5 |
-| Food (fruit bush) | 1.00 | 1.00 | 0.31 | 0.53 | 26.0 (62 blocks) | 26.0 | 30.4 |
-| Food (farm) | 1.00 | 1.00 | 0.33 | 0.56 | 24.5 (56 blocks) | 24.5 | 28.1 |
-| Gold (mine) | 1.00 | 1.00 | 0.38 | 0.65 | 26.0 (62 blocks) | 26.0 | 26.9 |
-| Stone (mine) | 1.00 | 1.00 | 0.36 | 0.61 | 26.0 (62 blocks) | 26.0 | 27.7 |
+| Wood (tree) | 0.65 | 0.66 | 0.39 | 0.66 | 31.3 (62 blocks) | 31.1 | 26.5 |
+| Food (fruit bush) | 0.53 | 0.53 | 0.31 | 0.53 | 35.0 (62 blocks) | 35.0 | 30.4 |
+| Food (farm) | 0.55 | 0.56 | 0.33 | 0.56 | 32.5 (56 blocks) | 32.3 | 28.1 |
+| Gold (mine) | 0.64 | 0.65 | 0.38 | 0.65 | 31.5 (62 blocks) | 31.5 | 26.9 |
+| Stone (mine) | 0.60 | 0.61 | 0.36 | 0.61 | 32.6 (62 blocks) | 32.3 | 27.7 |
 
-- The walk speed is 3.91 to 3.93 blocks/s for all resources (configured 4.00).
-- AoE2 work rates: lumberjack 0.39 from #267 (`empires2_x2_p1.dat`); forager 0.31, farmer 0.33, gold miner 0.38 and
-  stone miner 0.36 are the published AoE2 DE gather rates, not read from the `.dat` file here (the file is not in
-  the cloud environment).
+- The walk speed is 3.92 to 3.93 blocks/s for all resources (configured 4.00).
+- AoE2 work rates (`gather.AOE2_WORK`): lumberjack 0.39 from #267 (`empires2_x2_p1.dat`); forager 0.31, farmer 0.33,
+  gold miner 0.38 and stone miner 0.36 are the published AoE2 DE gather rates, not read from the `.dat` file here
+  (the file is not in the cloud environment).
 - The `mc` tests `test_measured_gather_timing_is_near_the_configured_timing` (wood) and
   `test_measured_rates_per_resource` (`tests/test_measure_gather.py`) fail above 10 %.
-- All resources are 1.5× to 1.9× faster to gather than in AoE2 at Normal speed, and the slower walk makes the
-  trips of this distance 2 % to 14 % shorter than in AoE2. One work rate per resource (from `AOE2_WORK`) would
-  make the economy like AoE2: a follow-up can set it in `Gather`.
+- The work rates are now within 2 % of AoE2 at Normal speed. The villager walks 26 % slower than in AoE2, so the
+  trips of this distance take 15 % to 18 % longer.
 
 ## Connection to the converter
 
