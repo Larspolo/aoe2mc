@@ -146,6 +146,7 @@ class Replay:
         self.ages, self.named = {}, {}          # player -> age ("Feudal"); the age in its sidebar name (#805)
         self.counted = []                       # UUIDs of the start units that the population counts
         self.stock = {}                         # player -> estimated resources: START + gather steps - costs (#932)
+        self.gathered, self.villagers = {}, {}  # player -> resources of the gather steps, trained villagers (#1065)
         for o in data["objects"]:
             if o["kind"] == "unit" and o.get("player") and not units.animal(o["name"]):
                 self.pop[o["player"]] = self.pop.get(o["player"], 0) + 1
@@ -486,6 +487,8 @@ class Replay:
         units of one building take the cells one after the other."""
         prefix, _ = self.kinds.get(e["type"], ("?", ""))
         self.pay(e["player"], e["name"])
+        if e["name"].startswith("VILLAGER"):
+            self.villagers[e["player"]] = self.villagers.get(e["player"], 0) + 1
         rect = self.home(e) if prefix in ("U", "H") else None
         if rect is None:
             return []
@@ -792,6 +795,8 @@ class Replay:
                 src[v.tree] -= 1
                 v.load += 1
                 self.resources(v.player)[v.res] += 1
+                g = self.gathered.setdefault(v.player, dict.fromkeys(START, 0))
+                g[v.res] += 1
                 self.crew.work(v)
                 if v.tree in self.map.farms:                            # the wheat gets younger, the farmer walks
                     self.crew.harvest(v.tree)
@@ -1012,6 +1017,18 @@ class Replay:
                 "title @a title " + json.dumps(text("Replay ended")),
                 "playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1"]
 
+    def summary_commands(self):
+        """One chat line per player with its economy at the end of the replay, as the AoE2 achievements screen
+        (#1065): trained villagers and the resources of the gather steps (estimated: the record has no resources)."""
+        out = ['tellraw @a {"text": "Summary (est.)", "bold": true}']
+        for p in sorted(self.pop.keys() | self.villagers.keys() | self.gathered.keys()):
+            name, color = self.player(p)
+            g = self.gathered.get(p, dict.fromkeys(START, 0))
+            res = ", ".join(f"{r} {v}" for r, v in g.items())
+            out.append("tellraw @a " + json.dumps([text(name, color), text(
+                f": villagers trained {self.villagers.get(p, 0)}, gathered {res}")]))
+        return out
+
     def score_commands(self):
         """The sidebar commands for the population of each player that changed since the last call (#741). The score
         holder is "P<n>" (a holder name has no space); its display name is the player name in the player color, the
@@ -1175,7 +1192,8 @@ class Replay:
                         f"player {e.get('player')}: {len(cmds)} commands")
         census()
         self.send(self.expire(math.inf))
-        send(self.clock_commands(end, end, speed, done=True) + self.score_commands() + self.end_commands(end))
+        send(self.clock_commands(end, end, speed, done=True) + self.score_commands() + self.end_commands(end) +
+             self.summary_commands())
         span = (events[-1]["time"] - start) / 1000 / speed if events else 0                 # at the start speed
         return {"events": n, "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2),
                 "rate": round(self.sent / self.busy) if self.busy else 0, "need": round(self.sent / span) if span else 0}
