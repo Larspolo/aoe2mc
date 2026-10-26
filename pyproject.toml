@@ -22,10 +22,10 @@ aoe2mc = "aoe2mc:main"
 
 [tool.setuptools]
 py-modules = ["aoe2mc", "buildings", "units", "scx"]
-packages = ["tools.mcdata"]      # aoe2mc.py reads tools/mcdata/1.21.1.json next to it
+packages = ["tools.mcdata"]      # aoe2mc.py reads tools/mcdata/26.3.json next to it
 
 [tool.setuptools.package-data]
-"tools.mcdata" = ["1.21.1.json"]
+"tools.mcdata" = ["26.3.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

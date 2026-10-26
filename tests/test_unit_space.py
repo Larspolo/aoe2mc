@@ -1,4 +1,4 @@
-"""A unit on the block of a shrub stands next to it, not on its leaves (#415)."""
+"""A unit on the block of a shrub stands on the ground: in the bush block, not on leaves (#415, #524)."""
 from collections import Counter
 
 import numpy as np
@@ -15,12 +15,12 @@ def test_unit_next_to_a_shrub_stands_on_the_ground():
     leopard = dict(shrub, kind="U", name="SNOW_LEOPARD")
     E, _ = aoe2mc.place_objects([shrub], {}, cols, np.random.default_rng(1))
     vol = aoe2mc.build_chunk(0, 0, cols, E.by_chunk(cols.n)[(0, 0)])[1]
-    assert "leaves" in aoe2mc.B.states[vol[cols.surface(6, 6) - aoe2mc.MIN_Y, 6, 6]]
+    assert aoe2mc.B.states[vol[cols.surface(6, 6) - aoe2mc.MIN_Y, 6, 6]] == "minecraft:bush"
     ents = [e for c in aoe2mc.plan_units([leopard], {}, cols, np.random.default_rng(1), Counter()).values()
             for e in c]
-    passable = np.array([s.split(":")[1].split("[")[0] in ("air", "cave_air") for s in aoe2mc.B.states])
+    passable = aoe2mc.passable_states(aoe2mc.B.states)
     before = sum(aoe2mc.MOVED.values())
     aoe2mc.entity_chunk(0, 0, ents, cols, vol, passable)
     assert sum(aoe2mc.MOVED.values()) == before
     x, y, z = (float(v) for v in units.top_entity(ents[0][0])["Pos"])
-    assert y == cols.surface(6, 6) and (int(x), int(z)) != (6, 6)
+    assert y == cols.surface(int(x), int(z)) == cols.surface(6, 6)

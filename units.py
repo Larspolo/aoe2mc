@@ -4,7 +4,6 @@ Units for aoe2mc: AoE2 units -> Minecraft mobs, boats and minecarts.
 All mobs stand still (NoAI), do not despawn (PersistenceRequired) and are silent, except passive animals.
 Each unit gets a name tag with its AoE2 name in the player color.
 """
-import json
 import math
 
 from nbtlib.tag import Byte, Compound, Double, Float, Int, IntArray, List, Long, Short, String
@@ -62,14 +61,14 @@ FLY_HEIGHT = 6
 FLY_LOW = {"minecraft:bee": 2}  # insects fly near the flowers
 JOKES = {   # joke and special units -> entity
     "TREASURE_CHEST": lambda: vehicle("chest_minecart", []),
-    "TORCH_": lambda: mob("armor_stand", Invisible=Byte(1), ShowArms=Byte(1), HandItems=hands("torch")),
+    "TORCH_": lambda: mob("armor_stand", hands("torch"), Invisible=Byte(1), ShowArms=Byte(1)),
     "PHOTONMAN": lambda: soldier("zombie", 3, "crossbow"),      # white space suit, laser gun
     "SHARKATZOR": lambda: mob("guardian"),                     # a shark with laser eyes
     "NESSIE": lambda: mob("elder_guardian"),
 }
 
 HOGLIN = {"IsImmuneToZombification": Byte(1), "CannotBeHunted": Byte(1)}
-ANGRY = {"AngerTime": Int(2 ** 31 - 1)}   # angry look; attacks all players only with gamerule universalAnger
+ANGRY = {"anger_end_time": Long(2 ** 31 - 1)}   # angry look (game time of the end); attacks all players only with gamerule universalAnger
 
 
 def wolf(variant):
@@ -275,35 +274,38 @@ def item(name, unbreakable=False):
 
 
 def armor(tier):
-    """ArmorItems list: feet, legs, chest, head. Helmets never break (they protect from the sun)."""
+    """Armor slots {feet, legs, chest, head} of the `equipment`. Helmets never break (they protect from the sun)."""
     return armor_items(ARMOR[tier])
 
 
 def armor_items(pieces):
-    """ArmorItems list from (helmet, chestplate, leggings, boots); a piece is a material or (leather, RGB)."""
-    out = []
-    for p, kind in zip(reversed(pieces), ("boots", "leggings", "chestplate", "helmet")):
+    """Armor slots from (helmet, chestplate, leggings, boots); a piece is a material or (leather, RGB). No empty slots."""
+    out = {}
+    for p, kind, slot in zip(reversed(pieces), ("boots", "leggings", "chestplate", "helmet"),
+                             ("feet", "legs", "chest", "head")):
         mat, rgb = p if isinstance(p, tuple) else (p, None)
-        it = item(mat and f"{mat}_{kind}", unbreakable=kind == "helmet")
-        if rgb is not None:
-            it.setdefault("components", Compound({}))["minecraft:dyed_color"] = Compound({"rgb": Int(rgb)})
-        out.append(it)
-    return List[Compound](out)
+        if mat:
+            it = out[slot] = item(f"{mat}_{kind}", unbreakable=kind == "helmet")
+            if rgb is not None:
+                it.setdefault("components", Compound({}))["minecraft:dyed_color"] = Int(rgb)
+    return out
 
 
 def hands(main=None, off=None):
-    return List[Compound]([item(main), item(off)])
+    return {slot: item(n) for slot, n in (("mainhand", main), ("offhand", off)) if n}
 
 
-def mob(kind, **tags):
-    """A mob that stands still."""
+def mob(kind, gear=None, **tags):
+    """A mob that stands still. gear: the `equipment` slots {feet, ..., mainhand, offhand, saddle, body}."""
     d = {"id": String("minecraft:" + kind), "NoAI": Byte(1), "PersistenceRequired": Byte(1), "Silent": Byte(1)}
     d.update(tags)
+    if gear:
+        d["equipment"] = Compound(gear)
     return d
 
 
 def soldier(kind, tier, weapon=None):
-    return mob(kind, ArmorItems=armor(tier), HandItems=hands(weapon))
+    return mob(kind, armor(tier) | hands(weapon))
 
 
 def sword(tier):
@@ -311,11 +313,10 @@ def sword(tier):
 
 
 def mounted(mount, rider, tier=None, mount_tags=None):
-    m = mob(mount, Tame=Byte(1), **(mount_tags or {}))
-    if mount in ("horse", "skeleton_horse", "zombie_horse", "camel", "donkey"):
-        m["SaddleItem"] = item("saddle")
+    gear = {"saddle": item("saddle")} if mount in ("horse", "skeleton_horse", "zombie_horse", "camel", "donkey") else {}
     if mount == "horse" and tier is not None:
-        m["body_armor_item"] = item(f"{HORSE_ARMOR.get(tier, 'iron')}_horse_armor")
+        gear["body"] = item(f"{HORSE_ARMOR.get(tier, 'iron')}_horse_armor")
+    m = mob(mount, gear, Tame=Byte(1), **(mount_tags or {}))
     if rider:
         m["Passengers"] = [rider]
     return m
@@ -330,7 +331,8 @@ def vehicle(kind, crew, **tags):
 
 
 def boat(wood, crew, chest=False):
-    return vehicle("chest_boat" if chest else "boat", crew, Type=String(wood))
+    """Since 1.21.2 each wood is an own entity type (bamboo: a raft)."""
+    return vehicle(f"{wood}_{'chest_' if chest else ''}{'raft' if wood == 'bamboo' else 'boat'}", crew)
 
 
 def pretty(name, hero=False):
@@ -411,8 +413,7 @@ def classify(n, hero=False):
     if has(n, "MONK", "MISSIONARY", "PRIEST", "MERCHANT") and "SHIP" not in n or hero and has(n, *RELIGIOUS_HEROES):
         return mob("evoker")
     if n in ("KING", "QUEEN", "KHAN") or has(n, "EMPEROR"):
-        return mob("zombie", ArmorItems=List[Compound]([item(None), item(None), item(None),
-                                                        item("golden_helmet", True)]), HandItems=hands())
+        return mob("zombie", {"head": item("golden_helmet", True)})
     if has(n, "TRADE_CART", "OX_CART", "OX_WAGON", "RELIC_CART") or n == "CART":
         return mob("donkey", Tame=Byte(1), ChestedHorse=Byte(1))
 
@@ -429,7 +430,7 @@ def classify(n, hero=False):
         if has(n, "DEMOLITION"):
             return boat("bamboo", [mob("creeper")])
         if has(n, "CANNON", "TURTLE", "CATAPULT", "ONAGER", "LEVIATHAN"):
-            return boat("dark_oak", [mob("pillager", HandItems=hands("crossbow")), crew])
+            return boat("dark_oak", [mob("pillager", hands("crossbow")), crew])
         if has(n, "LONGSHIP", "DRAGON_SHIP"):
             return boat("spruce", [soldier("zombie", "crew", "iron_axe"), crew])
         if has(n, "CANOE"):
@@ -448,11 +449,11 @@ def classify(n, hero=False):
         elif has(n, "SCORPION", "WAR_WAGON", "HUSSITE", "CHARIOT", "RATHA"):
             crew = soldier("skeleton", "crew", "crossbow" if "SCORPION" in n else "bow")
         elif has(n, "BOMBARD", "ORGAN", "HOUFNICE", "ROCKET", "COBRA"):
-            crew = mob("pillager", HandItems=hands("crossbow"))
+            crew = mob("pillager", hands("crossbow"))
         elif "FLAMETHROWER" in n:
             crew = mob("blaze")
         else:
-            crew = mob("vindicator", HandItems=hands("iron_axe"))
+            crew = mob("vindicator", hands("iron_axe"))
         return vehicle("minecart", [crew])
     if "PETARD" in n:
         return mob("creeper")
@@ -475,7 +476,7 @@ def classify(n, hero=False):
                                                 "MOUNTED_CROSSBOWMAN", "CONQUISTADOR", "GENITOUR", "BOLAS_RIDER",
                                                 "ARAMBAI", "XIANBEI"):
         if "CONQUISTADOR" in n:
-            rider = mob("pillager", HandItems=hands("crossbow"))
+            rider = mob("pillager", hands("crossbow"))
         elif has(n, "GENITOUR", "ARAMBAI", "BOLAS"):
             rider = soldier("drowned", t, "trident")
         else:
@@ -496,7 +497,7 @@ def classify(n, hero=False):
     if has(n, "SPEAR", "PIKE", "HALBERD", "KAMAYUK", "HOPLITE", "PHALANGITE", "SPARABARA"):
         return soldier("zombie", t, "trident")
     if has(n, "CANNONEER", "JANISSARY", "GRENADIER", "ARQUEBUS", "FIRE_LANCER"):
-        return mob("pillager", HandItems=hands("crossbow"))
+        return mob("pillager", hands("crossbow"))
     if has(n, "CROSSBOW", "ARBALEST", "CHU_KO_NU"):
         return soldier("skeleton", t, "crossbow")
     if has(n, "ARCHER", "BOWMAN", "LONGBOW", "PATTIYODHA", "IMMORTAL_RANGED"):
@@ -512,9 +513,9 @@ def line_unit(n):
     kind, pieces, main, off, *tags = LINES[n[6:] if elite else n]
     armor = armor_items(pieces if not elite or any(pieces) else ("golden", None, None, None))
     if elite:
-        worn = next(armor[i] for i in (2, 3, 1, 0) if len(armor[i]))     # chestplate first
+        worn = next(armor[k] for k in ("chest", "head", "legs", "feet") if k in armor)     # chestplate first
         worn.setdefault("components", Compound({}))["minecraft:trim"] = TRIM
-    man = mob("zombie" if kind == "mounted" else kind, ArmorItems=armor, HandItems=hands(main, off), **(tags[0] if tags else {}))
+    man = mob("zombie" if kind == "mounted" else kind, armor | hands(main, off), **(tags[0] if tags else {}))
     return mounted("horse", man, 3, {"Variant": Int(4)}) if kind == "mounted" else man
 
 
@@ -536,7 +537,7 @@ def to_nbt(desc, pos, yaw, rng):
         "Motion": List[Double]([Double(0), Double(0), Double(0)]),
         "Rotation": List[Float]([Float(yaw), Float(0)]),
         "UUID": IntArray([int(v) for v in u]),
-        "FallDistance": Float(0), "Fire": Short(-1), "Air": Short(300), "OnGround": Byte(1),
+        "fall_distance": Double(0), "Fire": Short(-1), "Air": Short(300), "OnGround": Byte(1),
         "Invulnerable": Byte(0), "PortalCooldown": Int(0),
     })
     if passengers:
@@ -566,7 +567,7 @@ def make_entity(o, players, pos, rng, desc=None):
     nbt = to_nbt(desc, pos, yaw, rng)
     color = HEX.get(players.get(o["player"], {}).get("color", "light_gray"), "#FFFFFF")
     label = top_entity(nbt)
-    label["CustomName"] = String(json.dumps({"text": pretty(o["name"], o.get("hero")), "color": color}))
+    label["CustomName"] = Compound({"text": String(pretty(o["name"], o.get("hero"))), "color": String(color)})
     label["CustomNameVisible"] = Byte(1)
     if o["player"]:                                    # the datapack puts the tagged units in the player team (#358)
         label["Tags"] = List[String]([String(f"aoe2mc.p{o['player']}")])
@@ -578,44 +579,4 @@ def is_bird(n):
 
 
 def is_boat(desc):
-    return desc is not None and desc["id"] in ("minecraft:boat", "minecraft:chest_boat")
-
-
-def item_to_version(it):
-    """Item of 1.21.1 -> 1.21.5: dyed_color is a plain int."""
-    c = it.get("components", {})
-    if "minecraft:dyed_color" not in c:
-        return it
-    it = Compound(it)
-    it["components"] = Compound(c)
-    it["components"]["minecraft:dyed_color"] = Int(int(c["minecraft:dyed_color"]["rgb"]))
-    return it
-
-
-def to_version(nbt, data_version):
-    """Entity NBT in the 1.21.1 format -> the format of a later data version (docs/minecraft-versions.md)."""
-    if data_version < 4080:
-        return nbt
-    t = Compound(nbt)
-    kind = str(t["id"])
-    if kind in ("minecraft:boat", "minecraft:chest_boat"):                    # 1.21.2: one entity type per wood
-        wood, chest = str(t.pop("Type")), "chest_" if kind == "minecraft:chest_boat" else ""
-        t["id"] = String(f"minecraft:{wood}_{chest}{'raft' if wood == 'bamboo' else 'boat'}")
-    if data_version >= 4325:                                                    # 1.21.5
-        eq = dict(zip(("feet", "legs", "chest", "head"), t.pop("ArmorItems", [])))
-        eq.update(zip(("mainhand", "offhand"), t.pop("HandItems", [])))
-        for old, slot in (("SaddleItem", "saddle"), ("body_armor_item", "body")):
-            if old in t:
-                eq[slot] = t.pop(old)
-        eq = {k: item_to_version(v) for k, v in eq.items() if len(v)}          # no empty slots
-        if eq:
-            t["equipment"] = Compound(eq)
-        if "CustomName" in t:                                                   # text components are NBT
-            t["CustomName"] = Compound({k: String(v) for k, v in json.loads(str(t["CustomName"])).items()})
-        if "FallDistance" in t:
-            t["fall_distance"] = Double(float(t.pop("FallDistance")))
-    if data_version >= 5023 and "AngerTime" in t:                             # 26.3 saves the end as game time
-        t["anger_end_time"] = Long(int(t.pop("AngerTime")))
-    if "Passengers" in t:
-        t["Passengers"] = List[Compound]([to_version(p, data_version) for p in t["Passengers"]])
-    return t
+    return desc is not None and str(desc["id"]).endswith(("_boat", "_raft"))

@@ -115,18 +115,22 @@ For each open issue without a priority label:
 ## 5. Pick and claim one ticket
 
 Candidates: open issues without `needs-human`, `blocked`, `epic`, `agent-status`, `in-progress`, and whose
-"Depends on: #n" issues are all closed. Order: `P0`, `P1`, `P2`, `P3`, then the
+"Depends on: #n" issues are all closed, and whose "Start after:" time is past (#496). Order: `P0`, `P1`, `P2`, `P3`, then the
 least overlap with the work in progress (files and functions that open PRs change or claimed tickets name, #487),
 then the lowest issue number.
 `python3 tools/dashboard.py --next` prints the candidates in this order (the rule is `dashboard.candidates()`).
 Epics first: an epic is never a candidate, so its rest of the work needs sub-issues. Before you claim a ticket, look
 at the open epics (label `epic`, not `needs-human`) with a higher priority than the top candidate and no open
 sub-issue. For each one, read its acceptance criteria. Close the epic with a comment when the closed sub-issues meet
-all criteria (name the evidence for each). Else make one sub-issue (same priority) for the criteria that an agent
-can do. A criterion that needs the owner stays on the epic. Then pick again (#176, #155 waited while P3 tickets ran).
+all criteria (name the evidence for each). Else lock the epic first: `python3 tools/claim.py E --refill`
+(E = the epic; exit 1: another run makes its sub-issue, skip the epic, #505). Then make one sub-issue (same priority)
+for the criteria that an agent can do. A criterion that needs the owner stays on the epic. Then pick again (#176, #155 waited while P3 tickets ran).
 Refill the queue when fewer candidates are ready than runs are active (tickets with `in-progress` that changed in
-the last 30 minutes), so that parallel runs always find work. Do this at most once per run, in about 10 minutes:
-1. Split each `size:L` ticket without open sub-issues (`ticket` skill), also when it is not a candidate yet.
+the last 30 minutes), so that parallel runs always find work. Do this at most once per run, in about 10 minutes.
+Lock it first: `python3 tools/claim.py 0 --refill` (one run per UTC hour; exit 1: another run refills, skip the refill).
+Also lock each epic E with `python3 tools/claim.py E --refill` before you make its tickets (exit 1: skip that epic, #505):
+1. Split each `size:L` ticket N without open sub-issues (`ticket` skill), also when it is not a candidate yet. Lock it
+   first with `python3 tools/claim.py N --refill` (exit 1: skip it).
 2. For each open epic whose sub-issues are all closed: make a sub-issue for each acceptance criterion that is
    still open and that an agent can do. A criterion that needs the owner stays on the epic.
 3. Make up to 5 new tickets for the remaining goals of the open epics and `docs/ROADMAP.md`, and for the
@@ -171,6 +175,10 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
    block entities or the world format. Put the commands and the result lines in the PR body ("Local checks").
    Then merge the PR yourself: `gh api repos/Larspolo/aoe2mc/pulls/N/merge -X put -f merge_method=squash -f sha=<head>`.
    A 405 (main moved, or a conflict) → step 10, the checks again, push, merge again. Remove `in-progress`.
+   If auto mode refuses the merge ("Merge Without Review", #507), do not try another way. Leave the PR open with its
+   "Local checks" section, add the label `ready-to-merge`, comment "Hand-off: local checks pass, auto mode refused the
+   merge", release the claim and continue with the next ticket. The owner merges these PRs, or approves them: a PR
+   with an approving review of the owner may be merged by any run (step 2). The public repository (#369, #370) ends this.
 9. A check fails → find the cause, fix, check again. After 3 failed attempts stop: comment the cause on the ticket,
    add `blocked` or `needs-human` and `hold`, remove `in-progress`, and go to step 8 of the skill (report).
 10. Merge conflict (another PR changed the same lines) → merge `origin/main` into the branch, solve the
@@ -251,4 +259,6 @@ Argument `max`: continue until no ticket is ready or a usage limit stops you. Wh
 full and tickets are still ready, start a fresh run, then stop: fire the scheduled task that started this run
 (its ID is in the run prompt) once with `fire_trigger`. Never fire it when no ticket is ready, when the status
 issue has `paused`, or after a usage-limit error. A fresh run has a small context, so it works faster.
-Some sessions have no `fire_trigger` tool (`ToolSearch` finds none): then do not fire, continue alone and say so in the report.
+The tool is `mcp__claude-code-remote__fire_trigger`. Every run has it, but it can be deferred: load it with `ToolSearch`,
+query `select:mcp__claude-code-remote__fire_trigger`, then call it. On 2026-10-26 runs reported "no fire_trigger tool"
+although their tool list had it, so the number of runs fell below the target of `tools/usage.py`.
