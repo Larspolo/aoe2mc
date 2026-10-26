@@ -2825,7 +2825,7 @@ def place_building(E, cols, B, o, players, walls, gates):
     o["footprint"] = [x0, z0, x0 + fx, z0 + fz]                         # for aoe2mc.json
     area = cols.wtop[xs.start:xs.stop, zs.start:zs.stop]
     base = int(area.max())
-    if fn not in (gate, bridge):
+    if fn not in (gate, bridge, wooden_bridge):                      # units on a bridge stand on its deck
         cols.blocked[xs.start:xs.stop, zs.start:zs.stop] = True
     is_dock = fn in (dock, harbor, bridge, wooden_bridge, fish_trap, shipyard, port, mole, harbor_chain, flagship)
     wet = area > cols.top[xs.start:xs.stop, zs.start:zs.stop]
