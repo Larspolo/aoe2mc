@@ -83,3 +83,4 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - A new player gets an item through the datapack pulse (`item replace entity @s weapon.offhand`, a tag against
   repeats), not through `Data.Player` of `level.dat`: the 26.3 client ignored a `Player` tag that the converter
   wrote (#966). The datapack also works on a server, where `level.dat` has no player.
+- `tests/test_menu.py` `test_gather_reads_the_menu_clicks` builds a bare `Gather.__new__` with only the attributes that `clicks()` uses: a new attribute that `clicks()` reads must go there too, else the full suite fails with AttributeError (#992).

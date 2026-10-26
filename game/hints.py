@@ -11,6 +11,7 @@ REPEAT = 1.5                                                       # seconds: be
 TEXTS = {                                                          # short: the action bar is one line
     "building": "Place the {building}: right click the ground · Cancel: /trigger aoe_build set 0",
     "corner": "Selection box: right click the other corner",
+    "drag": "Selection box: hold right click, look at the other corner, release · Release here: cancel",
     "military": "{n} military unit{s} · Right click: attack an enemy, select all of a type · Empty box: deselect",
     "none": "Right click: select a unit · Wand: selection box",
     "villagers": "{n} villager{s} · Right click: gather, build, build menu · Empty box: deselect",
@@ -20,6 +21,8 @@ TEXTS = {                                                          # short: the 
 def state(g, player=None):
     """The hint state of player (None: a player with no own state) and its text."""
     from build import pretty
+    if player in getattr(g, "holds", {}):                          # Paper: a held right click (#992)
+        return "drag", TEXTS["drag"]
     if player in g.corners:
         return "corner", TEXTS["corner"]
     if building := getattr(g, "ghosts", {}).get(player, [None])[0]:

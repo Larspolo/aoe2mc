@@ -75,6 +75,7 @@ CIVILIANS = ("VILLAGER", "REPAIRER", "MONK", "KING", "TRADE", "FISHING_SHIP", "T
 SELECT = "aoe2mc.selected"                                         # entity tag of the selected units
 TYPE_REACH = 16                                                    # blocks: a second click selects its type this near (#743)
 WAND = "warped_fungus_on_a_stick"     # the selection wand: a second item with its own "used" statistic (#778)
+RELEASE = 0.45   # seconds without a wand use: the player released the held right click (uses come each 0.2 s, #992)
 # Control groups (#779, owner choice #745): carrots on a stick with custom_data {aoe_group:N} in hotbar slots 4..8
 # (keys 5-9), with the model of a dye. A shift right click saves the selection as group N, a right click selects it.
 GROUPS = {n: (3 + n, dye) for n, dye in enumerate(("red_dye", "yellow_dye", "lime_dye", "light_blue_dye",
@@ -408,6 +409,7 @@ class Gather:
                       and o["name"] in combat.BUILDINGS}               # target UUID -> box of an enemy building
         self.sieged = set()                                            # the targets of attack orders
         self.wands, self.corners = set(), {}                           # players who clicked the wand, player -> corner 1
+        self.holds = {}                                                # player -> time of the last wand use of a drag
         self.groups, self.grouping, self.calls = {}, {}, 0             # group -> units, player -> (group, shift)
         self.hints = {}                                                # target -> (hint text, time) (hints.py, #798)
         self.garrisons, self.entering = garrison.start(self), {}       # building -> units inside, unit -> building (#808)
@@ -499,14 +501,17 @@ class Gather:
         """A click of player name with the selection wand on the ground cell (#778, owner choice #745). The first click
         sets a corner, the second selects the own units whose feet are in the rectangle of the two corners, as the
         selection box of AoE2: military units win over villagers, and an empty box clears the selection. Between the
-        clicks the Paper plugin draws the border of the box to the ground under the look (Border.java, #795)."""
+        clicks the Paper plugin draws the border of the box to the ground under the look (Border.java, #795). On Paper
+        the player holds the right click instead (owner choice A, #992): see drag."""
         if cell is None:
             return
         if (first := self.corners.pop(name, None)) is None:
             self.corners[name], (x, z) = cell, cell
             self.command(f"particle minecraft:happy_villager {x + 0.5} {(self.map.y(x, z) or 0) + 0.5} {z + 0.5} "
                          f"0.3 0.3 0.3 0 12 force {name}")
-            self.command(f"title {name} actionbar " + json.dumps({"text": "Selection box: click the other corner"}))
+            text = "Selection box: look at the other corner and release" if self.paper else \
+                "Selection box: click the other corner"
+            self.command(f"title {name} actionbar " + json.dumps({"text": text}))
             if self.paper:                                             # the border follows the look (#795)
                 color = self.players.get(str(self.player), {}).get("color") or player_color(self.player)
                 self.command(f"aoe box {name} {x} {z} {color}")
@@ -519,6 +524,36 @@ class Gather:
         pick = inside & self.soldiers.keys() or inside
         self.choose(pick, min(pick, default=None))
         self.command(f"title {name} actionbar " + json.dumps({"text": f"Selected: {len(pick)} units"}))
+
+    def drag(self, name, cell):
+        """A wand use on Paper: a held right click sends a use each 4 ticks, so the first use sets corner 1 and the next
+        ones only show that the player still holds the button. release ends the drag (#992)."""
+        if name not in self.holds:
+            self.box(name, cell)
+            if name not in self.corners:                               # no ground under the look: no drag
+                return
+        self.holds[name] = self.clock()
+
+    def release(self):
+        """End the drags with no wand use for RELEASE seconds: the cell under the look is corner 2, as the release of
+        the mouse in AoE2. A release on corner 1 cancels the box (a click with no drag)."""
+        for name in sorted(n for n, t in self.holds.items() if self.clock() - t > RELEASE):
+            del self.holds[name]
+            cell = (look := self.look(name)) and self.map.pick_ground(*look)
+            if cell and cell != self.corners.get(name):
+                self.box(name, cell)
+                continue
+            self.corners.pop(name, None)
+            self.command(f"aoe box-clear {name}")
+            self.command(f"title {name} actionbar " + json.dumps({"text": "Selection box: cancelled"}))
+
+    def look(self, name):
+        """(eye, direction) of player name, or None."""
+        pos = self.pos(name)
+        rot = re.findall(NUMBER, self.command(f"data get entity {name} Rotation").rsplit(":", 1)[-1])
+        if not pos or len(rot) != 2:
+            return None
+        return (pos[0], pos[1] + 1.62, pos[2]), direction(*map(float, rot))
 
     def attack(self, target):
         """Send the selected military units to attack the unit target, with their AoE2 walk speed (ai.py)."""
@@ -628,6 +663,7 @@ class Gather:
         self.calls += 1
         self.command(f"execute as @a unless items entity @s container.* minecraft:{WAND} "
                      f'run give @s minecraft:{WAND}[item_name="Selection box"]')
+        self.release()                                                 # the drags of the selection box (#992)
         objs = ("aoe_use", "aoe_talk", "aoe_box")
         if "passed" not in "".join(self.command(f"execute if entity @a[scores={{{o}=1..}}]") for o in objs):
             return []
@@ -666,14 +702,12 @@ class Gather:
         if (n := self.grouping.pop(name, None)) is not None:          # a group item (#779): no ray
             self.group(name, *n)
             return
-        pos = self.pos(name)
-        rot = re.findall(NUMBER, self.command(f"data get entity {name} Rotation").rsplit(":", 1)[-1])
-        if not pos or len(rot) != 2:
+        if not (look := self.look(name)):
             return
-        eye, d = (pos[0], pos[1] + 1.62, pos[2]), direction(*map(float, rot))
+        eye, d = look
         if name in self.wands:                                        # the selection wand (#778)
             self.wands.discard(name)
-            self.box(name, self.map.pick_ground(eye, d))
+            (self.drag if self.paper else self.box)(name, self.map.pick_ground(eye, d))
             return
         if (rect := self.rallying.pop(name, None)) and (cell := self.map.pick_ground(eye, d)):   # the menu item (#707)
             train.rally(self, rect, cell, self.map.pick_tree(eye, d))
