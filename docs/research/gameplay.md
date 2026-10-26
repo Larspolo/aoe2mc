@@ -180,3 +180,5 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - `aoe moveto` of many units in a live replay (#438): an arrived villager strolls away (its brain), so the plugin sets
   NoAI on it at the goal; a goal more than about 100 blocks away gets no path (follow range 128): the replay sends
   legs of `replay.LEG` path cells. Check walks on a real server with `data get entity <uuid> Pos` after the replay.
+- A Paper `Goal` (MobGoals API) gets `tick()` only on each 2nd server tick: time a cooldown with
+  `Bukkit.getCurrentTick()`, not with a counter in `tick()` (#515: the archer shot each 2.4 s, not 1.2 s).
