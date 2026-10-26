@@ -65,7 +65,10 @@ in the game (light, textures, connected fences and panes), what the player sees 
 - Direction of a mob: look at it from the side, 8–10 blocks away, pitch 10. A top view does not show the head.
 - Look at each image with the Read tool and describe it in the PR body. Comment the result on the ticket.
 
-Only what the screenshot cannot show (the AoE2 side, feel, sound) goes to the owner.
+Only what no tool can judge (real input by hand, the look, sound) goes to the owner (owner, #1159). An agent measures
+times, speeds and values and reads the texts in the game (menu items, lore, chat) itself, and compares them with AoE2:
+never ask the owner about them. A look question ("does X look different enough from Y?") links the image before next
+to the image after, or the AoE2 image next to the Minecraft image.
 
 Examples for the game: unit facing, light, entity behavior.
 For what only a person can see, make a check ticket with: the scenario or the command that makes the

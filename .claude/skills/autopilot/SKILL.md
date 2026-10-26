@@ -227,7 +227,9 @@ a small check ticket without `needs-human` first (#580). An agent runs the check
 simulated clicks through the same functions as the player input, `tools/mc_shot.py`) and comments the results and the
 images. When the check finds a bug, it makes a bug ticket for each one, adds "Depends on: #bug" to the check ticket, and does
 not add `needs-human`: when the bugs are closed, the check ticket is a candidate again and a later run checks again (owner, #668).
-Only after a check without bugs it adds `needs-human` with a short list of what only a person can check (real input, feel, sound, speed).
+Only after a check without bugs it adds `needs-human` with a short list of what only a person can check (real input by hand, the look, sound). Never ask the owner about
+times, speeds, values or texts: measure them and compare them with AoE2 (owner, #1159). A look question links the image
+before next to the image after (or AoE2 next to Minecraft).
 
 ## 8. Report on the status issue
 
