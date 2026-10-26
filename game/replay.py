@@ -26,6 +26,7 @@ import math
 import os
 import re
 import sys
+import textwrap
 import time
 import types
 
@@ -54,6 +55,7 @@ BAR = "aoe2mc:replay"       # the boss bar with the game time (#684)
 POP = "aoe_pop"             # the sidebar objective with the population of each player (#741)
 COUNTED = "aoe2mc.pop"      # entity tag of the units that the population counts (#787)
 EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
+FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
 FOLLOW_MS = 15000           # ms of game time: the camera of --follow changes its unit at most this often (#738)
 EFFECT_MS = 10000           # ms of game time that the research text stays
 SCALE = 4                   # size of the research text: a spectator sees it from 40 blocks
@@ -61,6 +63,8 @@ START = {"food": 200, "wood": 200, "gold": 100, "stone": 200}   # the AoE2 stand
 VIEWER = "aoe_viewer"        # player tag: the player got the overview of the map (#737)
 VIEW_PITCH = 60             # degrees down of the overview
 VIEW_FALL = 60              # seconds of slow falling after the overview
+RCON_MAX = 1446             # bytes of one RCON command: the server closes the connection after a longer one
+BOOK_COLS, BOOK_ROWS = 19, 14   # characters per line and lines of a book page (aoe2mc.book_pages)
 POLL = 0.2                  # seconds between two calls of the poll of Replay.run while it waits (#685)
 NEXT = 5                    # tiles: an empty resource sends its villager to the next one this near (#720)
 NEAR = 2                    # blocks: a unit of the plugin this near to its replay position is at its resource (#766)
@@ -84,6 +88,12 @@ def start_job(name):
 
 def text(s, color=None):
     return {"text": s, "color": color} if color else {"text": s}
+
+
+def mmss(ms):
+    """Game time in ms -> "MM:SS"."""
+    m, s = divmod(int(ms) // 1000, 60)
+    return f"{m:02d}:{s:02d}"
 
 
 @functools.lru_cache(maxsize=None)
@@ -149,6 +159,7 @@ class Replay:
         self.gathered, self.villagers = {}, {}  # player -> resources of the gather steps, trained villagers (#1065)
         self.army, self.lost, self.razed = {}, {}, {}   # player -> military units trained, units lost, buildings lost (#1066)
         self.censused = False                   # a census counted the live units (the base of the units lost)
+        self.reached, self.researched = {}, {}  # player -> {age: game time (ms)}, researched technologies (#1067)
         for o in data["objects"]:
             if o["kind"] == "unit" and o.get("player") and not units.animal(o["name"]):
                 self.pop[o["player"]] = self.pop.get(o["player"], 0) + 1
@@ -161,7 +172,12 @@ class Replay:
 
     def age(self, e):
         self.ages[e.get("player")] = pretty(e["age"]).removesuffix(" Age")
+        self.reached.setdefault(e.get("player"), {})[e["age"]] = e.get("time", 0)
         self.pay(e.get("player"), e["age"])
+
+    def learn(self, e):
+        """Count a research of the timeline for the summary (#1067)."""
+        self.researched[e.get("player")] = self.researched.get(e.get("player"), 0) + 1
 
     def resources(self, p):
         return self.stock.setdefault(p, dict(START))
@@ -202,6 +218,7 @@ class Replay:
             return ["title @a subtitle " + json.dumps(text(name, color)),
                     "title @a title " + json.dumps(text(pretty(e["age"])))] + self.fireworks(e.get("player"))
         if kind == "research" and e.get("technology"):
+            self.learn(e)
             return ["title @a actionbar " + json.dumps([text(name, color), text(f" researches {e['technology']}")])] + \
                 self.research(e, color)
         if kind == "resign":
@@ -424,7 +441,9 @@ class Replay:
     def spectate(self, e):
         """--follow N (#738): the spectators look through the first unit of a MOVE, ORDER or spawn of player N
         (vanilla /spectate; it takes one player, so `execute as` each spectator). The camera changes at most once per
-        FOLLOW_MS of game time, at once when its unit is gone (DELETE)."""
+        FOLLOW_MS of game time, at once when its unit is gone (DELETE). A unit with a rider (a horse, a siege crew):
+        the spectators look through the rider, else its legs fill the screen (#1095). `execute on passengers` finds
+        it: the replay does not know the UUID of the rider."""
         if self.follow is None or e.get("player") != self.follow or e["kind"] not in ("move", "order", "spawn"):
             return []
         uuid, at = self.followed
@@ -438,7 +457,10 @@ class Replay:
         if v is None or v.uuid == uuid:
             return []
         self.followed = (v.uuid, e["time"])
-        return [f"execute as @a[gamemode=spectator] run spectate {v.uuid} @s"]
+        return [f"tag @e[tag={FOLLOWED}] remove {FOLLOWED}", f"tag {v.uuid} add {FOLLOWED}",
+                f"execute as {v.uuid} on passengers run tag {v.uuid} remove {FOLLOWED}",
+                f"execute as {v.uuid} on passengers run tag @s add {FOLLOWED}",
+                f"execute as @a[gamemode=spectator] run spectate @e[tag={FOLLOWED},limit=1] @s"]
 
     def spawns(self):
         """A "spawn" event for each unit that a QUEUE command trains, at the end of its training."""
@@ -1039,7 +1061,65 @@ class Replay:
             out.append("tellraw @a " + json.dumps([text(name, color), text(              # military (#1066)
                 f": military units trained {self.army.get(p, 0)}, units lost {self.lost.get(p, 0)}, "
                 f"buildings lost {self.razed.get(p, 0)}")]))
+        return out + self.tech_commands()
+
+    def tech_commands(self):
+        """One chat line per player with the game time of each age-up (MM:SS, "-": not reached) and the number of
+        researched technologies (#1067)."""
+        out = []
+        for p in sorted(self.pop.keys() | self.reached.keys() | self.researched.keys()):
+            name, color = self.player(p)
+            times = self.reached.get(p, {})
+            ages = ", ".join(f"{pretty(a).removesuffix(' Age')} {mmss(times[a]) if a in times else '-'}"
+                             for a in ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE"))
+            out.append("tellraw @a " + json.dumps([text(name, color), text(
+                f": {ages}, technologies {self.researched.get(p, 0)}")]))
         return out
+
+    def timeline_commands(self, end):
+        """A written book "Timeline" for each viewer at the end of the replay (#1068): per player its age-ups, its
+        first military unit, its first castle and its resign, in time order, from the whole timeline (also the time
+        of a jump) up to `end` (ms). Each player starts a page; a long list goes on to the next page. One RCON
+        command holds at most RCON_MAX bytes: the last lines go first."""
+        import gather                                               # gather -> build -> replay: import it late
+        lines, army, castle = {}, set(), set()
+        for e in sorted(self.data.get("timeline", []) + self.spawns(), key=lambda e: e["time"]):
+            p, line = e.get("player"), None
+            if e["time"] > end or p is None:
+                continue
+            if e["kind"] == "age" and e.get("age"):
+                line = pretty(e["age"])
+            elif e["kind"] == "spawn" and p not in army and gather.military(e["name"]):
+                army.add(p)
+                line = f"1st military: {units.pretty(e['name'])}"
+            elif e["kind"] == "build" and p not in castle and self.kinds.get(e.get("type"), ("?", ""))[1] == "CASTLE":
+                castle.add(p)
+                line = "Castle"
+            elif e["kind"] == "resign":
+                line = "Resigns"
+            if line:
+                lines.setdefault(p, []).append(f"{mmss(e['time'])} {line}")
+        if not lines:
+            return []
+        while True:
+            pages = []
+            for p in sorted(lines):
+                name = self.player(p)[0]                                # the name and an empty line
+                rows, page = BOOK_ROWS - 1 - len(textwrap.wrap(name, BOOK_COLS)), name + "\n"
+                for line in lines[p]:
+                    n = len(textwrap.wrap(line, BOOK_COLS))
+                    if n > rows:
+                        pages.append(page.rstrip("\n"))
+                        rows, page = BOOK_ROWS, ""
+                    rows, page = rows - n, page + "\n" + line
+                pages.append(page.strip("\n"))
+            book = {"title": "Timeline", "author": "aoe2mc", "pages": pages}
+            cmd = "give @a minecraft:written_book[minecraft:written_book_content=" + \
+                json.dumps(book, ensure_ascii=False, separators=(",", ":")) + "]"
+            if len(cmd.encode()) <= RCON_MAX:
+                return [cmd]
+            longest = max(lines, key=lambda p: len(lines[p]))
+            lines[longest].pop()
 
     def score_commands(self):
         """The sidebar commands for the population of each player that changed since the last call (#741). The score
@@ -1118,6 +1198,8 @@ class Replay:
                 out += self.enter(e["time"]) + self.commands(e)
             elif e["kind"] == "age" and e.get("age"):                 # the sidebar shows it, no title
                 self.age(e)
+            elif e["kind"] == "research" and e.get("technology"):     # no text, but the summary counts it
+                self.learn(e)
         out += self.enter(to) + self.expire(to)
         for i, t in since.items():                                  # a unit that still works: steps() catch up
             if i not in self.working or (i in moved and not self.ai):
@@ -1241,7 +1323,7 @@ class Replay:
         census()
         self.send(self.expire(math.inf))
         send(self.clock_commands(end, end, speed, done=True) + self.score_commands() + self.end_commands(end) +
-             self.summary_commands())
+             self.summary_commands() + self.timeline_commands(end))
         span = (events[-1]["time"] - start) / 1000 / speed if events else 0                 # at the start speed
         return {"events": n, "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2),
                 "rate": round(self.sent / self.busy) if self.busy else 0, "need": round(self.sent / span) if span else 0}

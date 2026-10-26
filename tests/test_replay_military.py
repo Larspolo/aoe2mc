@@ -1,5 +1,6 @@
 """Live replay: the military line of each player in the summary at the end (#1066): military units trained, units
 lost, buildings lost. Fake RCON and a fake clock."""
+import json
 import os
 import sys
 
@@ -8,7 +9,14 @@ import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 from test_replay_delete import delete  # noqa: E402
 from test_replay_spawn import queue  # noqa: E402
-from test_replay_summary import play, summary  # noqa: E402
+from test_replay_summary import HEAD, play  # noqa: E402
+
+
+def military(sent):
+    """The military lines after the summary header."""
+    rest = sent[sent.index(HEAD) + 1:]
+    return ["".join(t["text"] for t in json.loads(c.split(" ", 2)[2])) for c in rest
+            if c.startswith("tellraw @a [") and "military" in c]
 
 
 def test_the_end_shows_the_military_of_each_player():
@@ -17,7 +25,7 @@ def test_the_end_shows_the_military_of_each_player():
           dict(time=120_000, player=1, kind="chat", text="gg")]
     r, sent = play(tl)
     assert (r.army, r.lost, r.razed) == ({1: 2}, {1: 1, 2: 1}, {1: 1})
-    lines = summary(sent)
+    lines = military(sent)
     assert "Player 1 (Britons): military units trained 2, units lost 1, buildings lost 1" in lines
     assert "Player 2 (Aztecs): military units trained 0, units lost 1, buildings lost 0" in lines
 

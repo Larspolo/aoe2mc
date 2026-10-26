@@ -26,7 +26,7 @@ def play(timeline, follow):
     def sleep(s):
         now[0] += s
     replay.Replay(game, d, follow=follow).run(clock=lambda: now[0], sleep=sleep, log=None, finish=True)
-    return [c.split()[-2] for c in game.sent if " spectate " in c]
+    return [c.split()[1] for c in game.sent if c == f"tag {c.split()[1]} add {replay.FOLLOWED}"]
 
 
 def test_follow_names_only_units_of_the_player_at_most_once_per_15_seconds():
@@ -39,7 +39,7 @@ def test_the_command_goes_to_each_spectator():
     r = replay.Replay(Fake(), data([]), follow=1)
     r.grid()
     r.units[7] = r.gather.Villager("u1", (0.0, 70.0, 0.0))
-    assert r.spectate(move(0, 1, 7)) == ["execute as @a[gamemode=spectator] run spectate u1 @s"]
+    assert r.spectate(move(0, 1, 7))[-1] == f"execute as @a[gamemode=spectator] run spectate @e[tag={replay.FOLLOWED},limit=1] @s"
 
 
 def test_a_deleted_unit_gives_the_camera_to_the_next_event():

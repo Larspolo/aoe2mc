@@ -31,7 +31,7 @@ def play(timeline, **kw):
 def summary(sent):
     """The player lines after the summary header."""
     rest = sent[sent.index(HEAD) + 1:]
-    return ["".join(t["text"] for t in json.loads(c.split(" ", 2)[2])) for c in rest if c.startswith("tellraw @a [")]
+    return ["".join(t["text"] for t in json.loads(c.split(" ", 2)[2])) for c in rest if c.startswith("tellraw @a [") and "villagers" in c]
 
 
 def test_the_end_shows_the_villagers_and_the_gathered_resources():
@@ -39,7 +39,7 @@ def test_the_end_shows_the_villagers_and_the_gathered_resources():
                     dict(time=60_000, player=1, kind="chat", text="gg")])
     wood = 100 - r.map.trees[(5, 10)]
     assert wood > 10 and r.villagers == {1: 1}
-    assert [s for s in summary(sent) if "villagers" in s] == [f"Player 1 (Britons): villagers trained 1, gathered food 0, wood {wood}, gold 0, stone 0",
+    assert summary(sent) == [f"Player 1 (Britons): villagers trained 1, gathered food 0, wood {wood}, gold 0, stone 0",
                              "Player 2 (Aztecs): villagers trained 0, gathered food 0, wood 0, gold 0, stone 0"]
     assert sent.index(HEAD) > sent.index('title @a title {"text": "Replay ended"}')
 
