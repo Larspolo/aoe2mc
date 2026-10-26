@@ -1062,7 +1062,8 @@ class Replay:
             if (v := self.units.get(i)) is None or i in inside:
                 continue
             x, z = v.path[-1] if v.path else v.cell
-            v.pos, v.path = (x + 0.5, float(self.map.y(x, z)), z + 0.5), []
+            y = self.map.sea(x, z) if ship(v.name) else self.map.y(x, z)    # water has no ground height (#1030)
+            v.pos, v.path = (x + 0.5, float(v.pos[1] if y is None else y), z + 0.5), []
             self.moving.pop(i, None)
             out.append("tp {} {} {} {}".format(v.uuid, *v.pos))
             if self.ai:                                             # ends the walk order of the plugin at once
