@@ -64,6 +64,7 @@ STEPS = [(dx, dz) for dx in (-1, 0, 1) for dz in (-1, 0, 1) if dx or dz]
 NUMBER = r"(-?[\d.]+(?:E-?\d+)?)[df]"
 CIVILIANS = ("VILLAGER", "REPAIRER", "MONK", "KING", "TRADE", "FISHING_SHIP", "TRANSPORT")
 SELECT = "aoe2mc.selected"                                         # entity tag of the selected units
+TYPE_REACH = 16                                                    # blocks: a second click selects its type this near (#743)
 # The look and sound of one gather step at the resource (#592): block particles and a vanilla sound. A villager has
 # no arm swing, so it turns to the resource (`rotate ... facing`). 26.3 block particles take
 # `{id:...,Properties:{...}}`, not `Name`.
@@ -354,6 +355,21 @@ class Gather:
         self.selected = keep
         bossbar.show(self, uuid)                                        # the boss bar of the selection (#659)
 
+    def select_type(self, uuid):
+        """Select all own military units with the name of unit uuid within TYPE_REACH blocks of it, as a double
+        click in AoE2 does (#743). The other units leave the selection."""
+        pos = self.positions([u for u, n in self.soldiers.items() if n == self.soldiers[uuid]])
+        if uuid not in pos:
+            return
+        near = {u for u, p in pos.items() if math.dist(p, pos[uuid]) <= TYPE_REACH}
+        for u in sorted(self.selected - near):
+            self.command(f"data merge entity {u} {{Glowing:0b}}")
+            self.command(f"tag {u} remove {SELECT}")
+            self.command(f"aoe label {u}")
+        self.selected &= near
+        for u in sorted(near - self.selected - {uuid}) + [uuid]:      # the clicked unit last: its boss bar
+            self.select(u)
+
     def attack(self, target):
         """Send the selected military units to attack the unit target, with their AoE2 walk speed (ai.py)."""
         import ai                                                      # ai imports this module
@@ -481,6 +497,9 @@ class Gather:
             return
         if u and u in self.selected and u in self.villagers:         # a click on a selected villager (#621)
             build.open_menu(self, name)
+            return
+        if u and u in self.selected and u in self.soldiers:          # a second click on a soldier (#743)
+            self.select_type(u)
             return
         if u:
             self.select(u)
