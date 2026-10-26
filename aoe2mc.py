@@ -323,7 +323,9 @@ def read_scenario(path):
     texts["triggers"] = [dict(id=t.trigger_id, name=t.name, enabled=bool(t.enabled), looping=bool(t.looping),
                               conditions=[dict(type=c.condition_type, timer=c.timer, inverted=bool(c.inverted),
                                                **({"quantity": c.quantity, "player": c.source_player,
-                                                   "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2]}
+                                                   "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2],
+                                                   "object": c.object_list, "group": c.object_group,
+                                                   "class": c.object_type}
                                                   if c.condition_type == IN_AREA else {}))
                                           for c in t.conditions],
                               effects=[dict(type=e.effect_type, message=e.message or "", player=e.source_player,
@@ -2405,8 +2407,10 @@ def turn_area(area, size, k):
 
 def area_selector(c, T):
     """The entity selector of the units of the player of an "Objects in Area" condition: the blocks of the tiles
-    x1..x2, y1..y2 (z), all heights. An area of -1 is the whole map. The object type filter is not used yet."""
-    sel = [f"tag=aoe2mc.p{c['player']}"]
+    x1..x2, y1..y2 (z), all heights. An area of -1 is the whole map. A unit type filter is the tag aoe2mc.t<id>
+    of the units (#681); the "object" of an effect (a name, #656) is not a filter here."""
+    obj = c.get("object")
+    sel = [f"tag=aoe2mc.p{c['player']}"] + [f"tag=aoe2mc.t{obj}"] * (isinstance(obj, int) and obj >= 0)
     if min(c["area"]) >= 0:
         x1, y1, x2, y2 = c["area"]
         x1, x2, y1, y2 = min(x1, x2), max(x1, x2), min(y1, y2), max(y1, y2)
@@ -2468,7 +2472,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None):
     for t in triggers:
         conds = t["conditions"]
         kinds = {(c["type"], c["inverted"]) for c in conds}
-        if not t["enabled"] or not conds or kinds not in ({(TIMER, False)}, {(IN_AREA, False)}):
+        if not t["enabled"] or not conds or kinds not in ({(TIMER, False)}, {(IN_AREA, False)}) or \
+                any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds):   # unit classes: not yet
             continue
         lines = []
         for e in t["effects"]:

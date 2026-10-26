@@ -569,8 +569,9 @@ def make_entity(o, players, pos, rng, desc=None):
     label = top_entity(nbt)
     label["CustomName"] = Compound({"text": String(pretty(o["name"], o.get("hero"))), "color": String(color)})
     label["CustomNameVisible"] = Byte(1)
-    if o["player"]:                                    # the datapack puts the tagged units in the player team (#358)
-        label["Tags"] = List[String]([String(f"aoe2mc.p{o['player']}")])
+    if o["player"]:                # the datapack puts the tagged units in the player team (#358); area triggers (#681)
+        label["Tags"] = List[String]([String(f"aoe2mc.p{o['player']}")] +
+                                     [String(f"aoe2mc.t{o.get('id')}")] * ("id" in o))
     return nbt
 
 

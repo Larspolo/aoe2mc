@@ -6,6 +6,10 @@ A trained unit appears in front of its building when its training ends (#408, ao
 MOVE or ORDER command selects walk to its target: on Paper the plugin walks them on a Minecraft path at their walk speed
 (`aoe moveto`, game/ai.py, #438), else one /tp per block on the path of gather.Map (#409, gather.walk);
 a group that goes to a tile stops there in rows (#410).
+Fights (#632): on Paper an ORDER on a unit or a start building of another player sends the military units of the
+selection to attack it (`aoe attack`, the mob AI and the AoE2 values of game/combat.py); a unit at 0 hit points dies by
+itself. A trained unit gets its AoE2 values at its spawn (`aoe stats`, `aoe range`); game/run.py gives them to the
+units and buildings of the start state (combat.setup).
 
 Replay(game, data).run(speed) plays it; commands(e) gives the commands of one event (the unit tests use it).
 With bar=True (game/run.py --replay) a boss bar shows the game time, the speed and the progress (#684).
@@ -34,6 +38,8 @@ FORMATION = 2              # blocks between the units of a group in a formation 
 LEG = 48                    # path cells of one plugin order: within the reach of a Minecraft path search (#438)
 TALL = 48                   # blocks above the ground that a DELETE clears for a start building (no height in aoe2mc.json)
 BAR = "aoe2mc:replay"       # the boss bar with the game time (#684)
+POLL = 0.2                  # seconds between two calls of the poll of Replay.run while it waits (#685)
+NEXT = 5                    # tiles: an empty resource sends its villager to the next one this near (#720)
 PATH_CELLS = 20000          # cells that one path search may look at: a unit with no path stays (no time lag)
 SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, "PIKEMAN": 1.0, "EAGLE": 1.1,
           "ARCHER": 0.96, "SKIRMISHER": 0.96, "CROSSBOWMAN": 0.96, "CAVALRY_ARCHER": 1.4, "SCOUT": 1.2,
@@ -53,7 +59,7 @@ class Replay:
     """The timeline of aoe2mc.json `data` on a server (game.command sends one command)."""
 
     def __init__(self, game, data, version=aoe2mc.VERSION_NAME, ai=False):
-        self.game, self.data, self.ai, self.speed = game, data, ai, 1.0     # ai: walks through the plugin (Paper)
+        self.game, self.data, self.ai, self.speed, self.paused = game, data, ai, 1.0, False  # ai: plugin walks
         self.T, self.n = data["tile_size"], len(data["ground"])
         self.ground = [[None if v == "-" else int(v) for v in row.split()] for row in data["ground"]]
         self.starts = [(o.get("ref"), o["player"], o["name"], (o["footprint"][0], o["footprint"][2], o["footprint"][1],
@@ -63,6 +69,7 @@ class Replay:
         self.trained = {}                                       # units per building footprint
         self.units, self.new = {}, []           # object ID -> gather.Villager; spawned units without a known ID
         self.moving = {}                        # object ID -> game time (ms) of its next step
+        self.working = {}                       # object ID -> game time (ms) of its next gather step (#631)
         self.refs = {o["ref"]: o for o in data["objects"] if o.get("ref") is not None}
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
@@ -208,6 +215,7 @@ class Replay:
                 del self.units[i]
                 self.refs.pop(i, None)
                 self.moving.pop(i, None)
+                self.working.pop(i, None)
                 out.append(f"kill {v.uuid}")
         return out
 
@@ -269,9 +277,13 @@ class Replay:
         kind = str(nbt.pop("id"))
         del nbt["Pos"]
         v = self.gather.Villager(units.uuid_str(nbt["UUID"]), pos)
-        v.name = e["name"]
+        v.name, v.player = e["name"], e["player"]
         self.new.append((e["player"], v))
-        return [f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}"]
+        out = [f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}"]
+        if self.ai:                                                 # the AoE2 values: plugin commands (#632)
+            import combat                                           # combat -> gather -> build -> replay
+            out += [combat.stats_command(v.uuid, v.name)] + [c for c in [combat.range_command(v.uuid, v.name, self.T)] if c]
+        return out
 
     def grid(self):
         """The gather.Map of the world with the buildings of the replay. The first call also finds the units of the
@@ -279,11 +291,13 @@ class Replay:
         if self.map is None:
             import gather                                           # gather -> build -> replay: import it late
             self.gather, self.map, T = gather, gather.Map(self.data), self.T
+            self.crew = gather.Gather.__new__(gather.Gather)       # adapter: the resource looks of gather.Gather
+            self.crew.map, self.crew.trunks, self.crew.bushes = self.map, {}, {}
             for o in self.data["objects"]:
                 if o["kind"] == "unit" and "uuid" in o and o.get("ref") is not None:
                     x, z = o["tile"][0] * T, o["tile"][1] * T
                     self.units[o["ref"]] = v = gather.Villager(o["uuid"], (x, float(self.map.y(int(x), int(z)) or 0), z))
-                    v.name = o["name"]
+                    v.name, v.player = o["name"], o["player"]
         for _, name, r in self.placed[self.added:]:
             if "FARM" not in name:
                 self.map.building(name, r, None, False)
@@ -318,6 +332,33 @@ class Replay:
         c = int(e["tile"][0] * T), int(e["tile"][1] * T)
         return {c} if m.free(*c) else m.around(m.cells((c[0] // T, c[1] // T)))
 
+    def enemy(self, e):
+        """The entity UUID of the target of an ORDER when it is a unit or a start building (with a target of
+        combat.building) of another player than e["player"], else None."""
+        import combat
+        t, p = e.get("target"), e["player"]
+        if e["kind"] != "order" or t is None:
+            return None
+        if t in self.units:
+            return self.units[t].uuid if self.units[t].player not in (0, p) else None
+        o = self.refs.get(t, {})
+        if o.get("kind") == "building" and "footprint" in o and o["name"] in combat.BUILDINGS and o["player"] not in (0, p):
+            return combat.target_uuid(o["footprint"])
+        return None
+
+    def attack(self, group, target):
+        """The military units of group attack entity target, with their AoE2 walk speed; they walk no more legs.
+        Returns the commands and the rest of the group."""
+        import ai
+        out, rest = [], []
+        for i, v in group:
+            if self.gather.military(v.name):
+                out += [ai.speed_command(v.uuid, v.name, self.T, self.speed), f"aoe attack {v.uuid} {target}"]
+                self.moving.pop(i, None)
+            else:
+                rest.append((i, v))
+        return out, rest
+
     def move(self, e):
         """MOVE and ORDER: each selected unit gets a path to the target. Its steps come later (steps()). A group
         that goes to a tile stops in a formation there (formation()), a unit with no path to its cell goes to the
@@ -326,21 +367,26 @@ class Replay:
         goals = self.goals(e)
         group = [(i, v) for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"]))
                  if (v := self.unit(i, name, e["player"])) is not None]
+        tile = self.resource(e)
+        for i, v in group:                                          # a new MOVE or ORDER stops the work
+            self.working.pop(i, None)
+            v.tree = tile
         if not goals or not group:
             return []
         to_tile = not (e["kind"] == "order" and e.get("target") is not None)
         slots = self.formation([v for _, v in group], e["tile"]) if to_tile else {}
         if self.ai:
-            out = []
+            out, group = self.attack(group, target) if (target := self.enemy(e)) else ([], group)
             for i, v in group:
                 end = slots.get(v) or min(goals, key=lambda c: (math.dist(c, v.cell), c))
                 path = self.map.path(v.cell, {end}, PATH_CELLS) or []
                 cmds, due = self.order(v, path[LEG - 1:-1:LEG] + [end], e["time"])
                 out += cmds
-                if due is None:
-                    self.moving.pop(i, None)
-                else:
+                if v.path:
                     self.moving[i] = due
+                else:
+                    self.moving.pop(i, None)
+                    self.start(i, v, due)
             return out
         for i, v in group:
             v.path = (self.map.path(v.cell, {slots[v]}, PATH_CELLS) if v in slots else None) or \
@@ -348,6 +394,7 @@ class Replay:
             due = self.moving[i] if i in self.moving and v.path else self.next_step(v, e["time"])
             if due is None:
                 self.moving.pop(i, None)
+                self.start(i, v, e["time"])
             else:
                 self.moving[i] = due
         return []
@@ -357,13 +404,13 @@ class Replay:
         speed (#438). The path search of Minecraft reaches only about 128 blocks, so a long way goes in legs of
         LEG cells of the path of gather.Map: the next leg starts when the unit is due at the end of this one.
         The replay does not read the positions back: it takes the unit at the end of its leg. Returns the commands
-        and the game time (ms) of the next leg, or None."""
+        and the game time (ms) at the end of the leg (the next leg starts then, if v.path has one)."""
         import ai                                                   # ai -> replay: import it late
         x, z = legs[0]
         x0, _, z0 = v.pos
         v.pos, v.path = (x + 0.5, float(self.map.y(x, z)), z + 0.5), legs[1:]
         speed = next((s for k, s in SPEEDS.items() if v.name.startswith(k)), 1.0) * self.T    # blocks per second
-        due = t + 1000 * math.hypot(v.pos[0] - x0, v.pos[2] - z0) / speed if v.path else None
+        due = t + 1000 * math.hypot(v.pos[0] - x0, v.pos[2] - z0) / speed
         return [ai.speed_command(v.uuid, v.name, self.T, self.speed), "aoe moveto {} {} {} {}".format(v.uuid, *v.pos)], due
 
     def formation(self, group, tile):
@@ -402,14 +449,15 @@ class Replay:
         return t + 1000 * math.hypot(x + 0.5 - v.pos[0], z + 0.5 - v.pos[2]) / speed
 
     def steps(self, t):
-        """The commands of the steps (/tp) and legs (plugin orders) that are due at game time t (ms)."""
+        """The commands of the steps (/tp), legs (plugin orders) and gather steps that are due at game time t (ms)."""
         out = []
         sink = types.SimpleNamespace(map=self.map, command=out.append)
         for i, due in list(self.moving.items()):
-            v = self.units[i]
+            v, at = self.units[i], due
             if self.ai and due <= t:
                 legs = [c for c in v.path if self.map.free(*c)]        # a new building on a leg end: skip it
-                cmds, due = self.order(v, legs, due) if legs else ([], None)
+                cmds, at = self.order(v, legs, due) if legs else ([], due)
+                due = at if v.path and legs else None
                 out += cmds
             while not self.ai and due is not None and due <= t:
                 if not self.map.free(*v.path[0]):                       # a new building on the way: a new path
@@ -419,12 +467,82 @@ class Replay:
                         due = None
                         break
                 self.gather.walk(sink, v)
-                due = self.next_step(v, due)
+                at, due = due, self.next_step(v, due)
             if due is None:
                 del self.moving[i]
+                self.start(i, v, at)
             else:
                 self.moving[i] = due
+        self.crew.command = out.append
+        for i, due in list(self.working.items()):
+            v = self.units[i]
+            src = self.crew.source(v)
+            while due <= t and src.get(v.tree, 0) > 0:
+                src[v.tree] -= 1
+                v.load += 1
+                self.crew.work(v)
+                if v.res == "food":
+                    self.crew.berries(v.tree)
+                elif v.res != "wood":
+                    if src[v.tree] == 0:
+                        self.crew.dig(v.tree, v.res)
+                elif src[v.tree] == 0:
+                    self.crew.fell(v.tree)
+                else:
+                    self.crew.trunk(v.tree)
+                due += 1000 / self.gather.AOE2_WORK[v.res]
+            if src.get(v.tree, 0) > 0:
+                self.working[i] = due
+            else:
+                del self.working[i]
+                out += self.next_resource(i, v, due - 1000 / self.gather.AOE2_WORK[v.res])
         return out
+
+    def next_resource(self, i, v, t):
+        """Unit i gathered the last of its resource at game time t: as in AoE2 it walks to the nearest resource of
+        the same kind within NEXT tiles that has something left, and gathers there. Else it stays (the record has no
+        drop-off). Returns the commands (Paper: the first leg)."""
+        T, (x, z) = self.T, v.cell
+        far = {k: math.dist((x / T, z / T), (k[0] + 0.5, k[1] + 0.5)) for k, n in self.crew.source(v).items() if n > 0}
+        near = sorted((d, k) for k, d in far.items() if d <= NEXT)
+        if not near:
+            return []
+        v.tree = near[0][1]
+        path = self.map.path(v.cell, self.map.around(self.map.spot(v.tree)), PATH_CELLS)
+        if path is None:
+            return []
+        if self.ai and path:
+            cmds, due = self.order(v, path[LEG - 1:-1:LEG] + [path[-1]], t)
+            if v.path:
+                self.moving[i] = due
+            else:
+                self.start(i, v, due)
+            return cmds
+        v.path = path
+        due = self.next_step(v, t)
+        if due is None:
+            self.start(i, v, t)
+        else:
+            self.moving[i] = due
+        return []
+
+    def resource(self, e):
+        """The tile of the tree, fruit bush or mine that an ORDER targets, else None."""
+        o = self.refs.get(e.get("target")) if e["kind"] == "order" else None
+        if not o or o["kind"] != "other" or "tile" not in o:
+            return None
+        tile = int(o["tile"][0]), int(o["tile"][1])
+        m = self.map
+        return tile if tile in m.trees or tile in m.bushes or any(tile in s for s in m.mines.values()) else None
+
+    def start(self, i, v, t):
+        """A unit with a resource that ends its walk next to it gathers from game time t on, at the AoE2 work rate
+        of the resource (gather.AOE2_WORK, per game second). The record has no drop-off: it does not carry."""
+        if v.tree is None or v.cell not in self.map.around(self.map.spot(v.tree)):
+            return
+        v.res, v.load = self.map.resource(v.tree), 0
+        if self.crew.source(v).get(v.tree, 0) > 0:
+            self.working[i] = t + 1000 / self.gather.AOE2_WORK[v.res]
 
     def state(self, i):
         return aoe2mc.B.states[i]
@@ -451,32 +569,90 @@ class Replay:
         self.sent += len(cmds)
         self.busy += time.perf_counter() - t
 
-    def run(self, speed=1.0, start=0, clock=time.monotonic, sleep=time.sleep, log=print, bar=False):
+    def retime(self, g0, r0, r):
+        """Apply a change of `self.control` at real time r: returns the new anchor (game time g0 at real time r0).
+        The game time stays where it is, so no event plays twice; a pause stops it (#685). Walking units of the
+        plugin get the new walk speed (0 in a pause)."""
+        speed, paused = self.control["speed"], self.control["paused"]
+        if (speed, paused) == (self.speed, self.paused):
+            return g0, r0
+        g = g0 if self.paused else g0 + (r - r0) * 1000 * self.speed
+        self.speed, self.paused = speed, paused
+        if self.ai:
+            import ai                                               # ai -> replay: import it late
+            self.send([ai.speed_command(v.uuid, v.name, self.T, 0 if paused else speed)
+                       for v in map(self.units.get, self.moving) if v and v.uuid])
+        return g, r
+
+    def jump(self, events, to):
+        """Apply the events up to game time `to` (ms) at once (#687): buildings appear, deletes remove, trained units
+        appear, and each unit that a MOVE or ORDER sent, or that walks now, stands at its target (tp, no walk). The
+        chat, age and research texts of the skipped time do not show. Returns the commands."""
+        out, moved = [], set()
+        for e in events:
+            if e["kind"] in ("move", "order") and e.get("objects"):
+                self.move(e)                                        # the paths and the targets; no walk orders
+                moved.update(e["objects"])
+            elif e["kind"] in ("build", "wall", "spawn", "delete"):
+                out += self.commands(e)
+        for i in sorted(moved | self.moving.keys()):
+            if (v := self.units.get(i)) is None:
+                continue
+            x, z = v.path[-1] if v.path else v.cell
+            v.pos, v.path = (x + 0.5, float(self.map.y(x, z)), z + 0.5), []
+            self.moving.pop(i, None)
+            out.append("tp {} {} {} {}".format(v.uuid, *v.pos))
+            if self.ai:                                             # ends the walk order of the plugin at once
+                out.append("aoe moveto {} {} {} {}".format(v.uuid, *v.pos))
+        return out
+
+    def run(self, speed=1.0, start=0, clock=time.monotonic, sleep=time.sleep, log=print, bar=False, poll=None):
         """Play the timeline from game time `start` (ms) at `speed` times the game speed; `bar`: show the game time
         in a boss bar (`clock_commands`). Returns the stats:
         commands, events, the seconds of sending, the largest lag behind the timeline (s), commands per second
-        (rate) and the commands per second that the timeline needs on average (need)."""
+        (rate) and the commands per second that the timeline needs on average (need).
+        poll(control) may change `self.control` ("speed", "paused") while the replay runs: run calls it before
+        each event and each POLL seconds while it waits (#685). "jump" (game time, ms) skips forward to that time
+        (`jump`, #687); a time before the game time now changes nothing."""
         events = sorted((e for e in self.data.get("timeline", []) + self.spawns() if e["time"] >= start),
                         key=lambda e: e["time"])
-        t0, lag, n, k = clock(), 0.0, 0, 0
-        self.speed = speed
+        g0, r0, lag, n, k = start, clock(), 0.0, 0, 0                 # game time g0 (ms) at real time r0
+        self.speed, self.paused = speed, False
+        self.control = {"speed": speed, "paused": False}
         end, shown = events[-1]["time"] if events else start, None
         send = self.send if bar else lambda cmds: None
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
                    f"bossbar set {BAR} max {max(1, int(end) // 1000)}"])
         while k < len(events) or self.moving:
-            step = min(self.moving.values(), default=math.inf)        # the next step of a walking unit
+            step = min([*self.moving.values(), *self.working.values()], default=math.inf)   # walk or gather step
             e = events[k] if k < len(events) and events[k]["time"] <= step else None
             k += e is not None
             now = e["time"] if e else step
-            due = (now - start) / 1000 / speed
-            wait = due - (clock() - t0)
-            if wait > 0:
-                sleep(wait)
-            lag = max(lag, clock() - t0 - due)
+            to = None
+            while True:
+                if poll:
+                    poll(self.control)
+                    g0, r0 = self.retime(g0, r0, clock())
+                    if (to := self.control.pop("jump", None)) is not None:
+                        break
+                wait = POLL if self.paused else (now - g0) / 1000 / self.speed - (clock() - r0)
+                if wait <= 1e-6:                                    # rounding: no endless wait
+                    break
+                sleep(min(wait, POLL) if poll else wait)
+                if not poll:
+                    break
+            if to is not None:
+                k -= e is not None                                  # the event waits for the jump
+                if to > (g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed):
+                    skip = [x for x in events[k:] if x["time"] <= to]
+                    k += len(skip)
+                    self.send(self.jump(skip, to))
+                    g0, r0 = to, clock()
+                continue
+            lag = max(lag, clock() - r0 - (now - g0) / 1000 / self.speed)
             if int(now) // 1000 != shown:                              # at most once per game second
                 shown = int(now) // 1000
-                send(self.clock_commands(now, end, speed))
+                send(self.clock_commands(now, end, self.speed))
             if e is None:
                 self.send(self.steps(now))
                 continue
@@ -489,6 +665,6 @@ class Replay:
                     log(f"{m:02d}:{s:02d} {e['kind']} {e.get('name') or e.get('age') or ''} "
                         f"player {e.get('player')}: {len(cmds)} commands")
         send(self.clock_commands(end, end, speed, done=True))
-        span = (events[-1]["time"] - start) / 1000 / speed if events else 0
+        span = (events[-1]["time"] - start) / 1000 / speed if events else 0                 # at the start speed
         return {"events": n, "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2),
                 "rate": round(self.sent / self.busy) if self.busy else 0, "need": round(self.sent / span) if span else 0}

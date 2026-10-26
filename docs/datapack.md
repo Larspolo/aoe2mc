@@ -53,7 +53,8 @@ Area triggers (#649): a trigger with only "Objects in Area" conditions gets a li
 the tiles, all heights; an area of -1 is the whole map) `unless score #<id> aoe_trig matches 1 run function ...`.
 The function sets `#<id>` to 1, so the trigger fires once. A looping trigger resets the score when its units leave an
 area, so it fires again when they enter. A quantity above 1 counts the units with `execute store result score`.
-The object type filter of the condition is not used yet. A trigger with other or mixed conditions is not written yet.
+A unit type filter (`object_list`) adds `tag=aoe2mc.t<id>`: each unit of a player has the tag of its AoE2 type (#681).
+A filter by unit class or group skips the trigger for now. A trigger with other or mixed conditions is not written yet.
 Cost: +0.1 ms per tick on the `triggers` scenario (`tools/tick_cost.py`).
 
 Objects (#656): "Create Object" → `summon` of the entity of `units.make_entity` at the middle of the tile, on the
@@ -183,3 +184,7 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 
 - A datapack `load` function or an RCON `@e` selector sees only entities of loaded chunks: 26.3 loads none without a
   player. In an RCON check, `forceload add X0 Z0 X1 Z1` (at most 256 chunks per command) first (#358).
+- RCON `execute if entity SEL` answers "Test passed. Count: N" (capital C) or "Test failed": match with `re.I` (#676).
+- A timer trigger fires from the server start, before a client joins (about 30 s). To see its chat in a client
+  (`mc_shot.Client`), send `tick freeze` first and `tick unfreeze` after the join: the `schedule` timers wait, and
+  the chunks and entities load in a frozen game (#676).

@@ -242,6 +242,9 @@ def replay(game, world, speed=1.0, start="0:00"):
     if "timeline" not in data:
         sys.exit("--replay needs a world of a recorded game (.aoe2record)")
     game.forceload()
+    if game.kind == "paper":                         # the start units and buildings fight with AoE2 values (#632)
+        import combat
+        combat.setup(game, data)
     print(f"Join the server localhost:{game.game_port} (Minecraft {game.version}). The replay starts now "
           f"at speed {speed}.", file=sys.stderr)
     stats = replay.Replay(game, data, game.version, ai=game.kind == "paper").run(speed, start, bar=True)
