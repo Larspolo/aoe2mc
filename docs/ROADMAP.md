@@ -16,9 +16,10 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] Campaigns (#149), old `.scx` scenarios (#310), recorded games at a time (#373)
 - [x] Minecraft Java 26.3 only (#14, #426); example worlds and a gallery (#181)
 - [x] The scenario texts in a book at the spawn (#27); one team per player in the player color (#358)
-- [ ] `convert:ambience` Sounds and ambient effects in the world (epic #188)
+- [x] Sounds and ambient effects in the world (#188)
 - [ ] `convert:triggers` Scenario triggers as datapack functions: messages, objectives, timers
 - [ ] `convert:large` Large maps (480 × 480) in less time and memory, with a progress line
+- [ ] `convert:minimap` A filled Minecraft map item of the whole AoE2 map at the spawn, as the AoE2 minimap
 
 ## 2. Play AoE2 in Minecraft (`game/`)
 
@@ -30,7 +31,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:bot` A scripted bot plays player 2 (epic #397)
 - [ ] `play:scale` Measure and raise the number of units that the program can move (epic #398)
 - [ ] `play:menu` Choose the options of a building and the build menu in a chest menu (epic #618, owner decision)
-- [ ] `play:health` Health indication: hit points over each unit and building, a boss bar for the selected unit, damage effects
+- [x] Health indication: hit points over each unit and building, a boss bar for the selected unit, damage effects (#657)
 - [ ] `play:military-train` Train all units at their buildings (barracks, archery range, stable, castle) with a queue and a rally point
 - [ ] `play:tech` Technologies and upgrades (blacksmith, university, unit lines) with cost, time and effect on the Minecraft attributes
 - [ ] `play:ages` Age up from the Dark Age to the Imperial Age: cost, time, the buildings and units that each age unlocks
@@ -40,6 +41,8 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:monks` Monks heal and convert, relics in monasteries
 - [ ] `play:market` Market trade and trade carts
 - [ ] `play:two-players` Two human players against each other on one server
+- [ ] `play:walls` Build walls and gates; a gate opens for own units and stays closed for enemies
+- [ ] `play:siege` Siege units: rams against buildings, mangonels with area damage, trebuchets that pack and unpack
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
@@ -52,6 +55,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `replay:view` A spectator view: follow a player or a unit, an overview from above
 - [ ] `replay:score` A score panel for each player: age, population, resources (estimated), military
 - [ ] `replay:effects` Show events on the map: research and age-up at the building, attacks, a marker where units die
+- [ ] `replay:postgame` A summary at the end of the replay, as the AoE2 achievements screen: military, economy, technology, timeline
 
 ## Principles
 
