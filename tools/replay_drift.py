@@ -14,7 +14,8 @@ position, the replay position `v.pos` (the end of its leg while it walks), the b
 that leg ("slack"), the order of the plugin and the target of the mob AI.
 The table has one row per unit kind: units, median and maximum distance (blocks, without height, less the slack), "stuck" (more than
 STUCK_BLOCKS from the replay position for more than STUCK_SECONDS of game time), "stray" (moved more than STRAY_BLOCKS
-between two samples with no plugin order, no mob target and the same replay position), "died" (the entity is gone, the replay still has the unit)
+between two samples with no plugin order, no mob target or fight since the last sample, the same replay position, and
+not nearer to it: #1169, the end of a walk or a jump to the position is no stray), "died" (the entity is gone, the replay still has the unit)
 and "still" (#1139: seconds of game time between two samples with a plugin order in both, more than STUCK_BLOCKS from
 the replay position in both, and less than STILL_BLOCKS of move between them: a unit that the plugin holds in place.
 In #851 a plugin change held villagers for 120 s, and the other columns did not show it).
@@ -106,7 +107,8 @@ def analyze(samples):
             stuck |= far is not None and s["t"] - far > STUCK_SECONDS * 1000
             if last and (last["rx"], last["rz"]) == (s["rx"], s["rz"]) and not any(
                     r.get(k) for r in (last, s) for k in ("order", "target")):    # no order, no fight, no new leg
-                stray |= ((s["x"] - last["x"]) ** 2 + (s["z"] - last["z"]) ** 2) ** 0.5 > STRAY_BLOCKS
+                stray |= ((s["x"] - last["x"]) ** 2 + (s["z"] - last["z"]) ** 2) ** 0.5 > STRAY_BLOCKS and \
+                    d >= last_d                                    # nearer the replay position: the end of a walk
             if last and last.get("order") and s.get("order") and min(d, last_d) > STUCK_BLOCKS and \
                     ((s["x"] - last["x"]) ** 2 + (s["z"] - last["z"]) ** 2) ** 0.5 < STILL_BLOCKS:
                 k["still"] += (s["t"] - last["t"]) / 1000              # held in place with an order
