@@ -58,10 +58,10 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Weapon rack, sharpening | `grindstone` | `mill_room`, `decorate`, `keep_inside`, `mining_camp` +8 more |
 | Training dummy | `oak_fence`, `hay_block`, `carved_pumpkin` | `barracks`, `settlement`, `flagship`, `decorate` +12 more |
 | Bell | `bell` | `town_center`, `fortified_church`, `monastery` |
-| Bed (inside) | `*_bed` (player color), head to the north | `furnish`, `hearth_room`, `barracks`, `army_tent` |
-| Straw bed of a poor house, a camp or a barracks (inside) | `straw_bed` | no design |
+| Bed (inside) | `*_bed` (player color), head to the north | `furnish`, `mill_room`, `hearth_room`, `lumber_camp` +3 more |
+| Straw bed of a poor house, a camp or a barracks (inside) | `straw_bed` | `mill_room`, `lumber_camp`, `mining_camp`, `barracks` |
 | Hearth in a hut or yurt | lit `campfire` in the middle (the smoke goes through the roof), `*_carpet` rugs around it | `hearth_room`, `furnish_worship`, `furnish`, `throne_hall` +23 more |
-| Bedroll in a tent | `*_bed` (player color) on the floor along the canvas | `furnish`, `hearth_room`, `barracks`, `army_tent` |
+| Bedroll in a tent | `*_bed` (player color) on the floor along the canvas | `furnish`, `mill_room`, `hearth_room`, `lumber_camp` +3 more |
 | Spears in a rack | `lightning_rod` | `nine_bands`, `storage`, `army_tent`, `shrine` +21 more |
 | Map table of a commander | `cartography_table` | `study`, `command_tent`, `harbor`, `market` +2 more |
 | Cushion | `red_wool` next to a low `*_slab[type=top]` table | `pavilion`, `scaffold_walk`, `scaffolding`, `cart` +46 more |
@@ -119,7 +119,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Drive shaft of a windmill | `stripped_spruce_log[axis=y]` above the millstone | `crane`, `mill_room`, `barricade`, `settlement` +18 more |
 | Net loom, boat workbench | `loom`, `crafting_table`, `spruce_slab` | `dock`, `siege_workshop` |
 | Dried fish, ship timber | `dried_kelp_block`, `stripped_spruce_log` (stack on the quay) | `crane`, `mill_room`, `barricade`, `settlement` +19 more |
-| Light in a room or a yard | `lantern` on a barrel, or hanging under a beam | `hang`, `keep_inside`, `mill_room`, `furnish` +36 more |
+| Light in a room or a yard | `lantern` on a barrel, or hanging under a beam | `hang`, `keep_inside`, `furnish`, `mill_room` +36 more |
 | Ore, mined gold and stone | `gold_ore`, `raw_gold_block`, `cobblestone`, `stone`, `andesite` | `mining_camp`, `mole` |
 | Mine cart track | `rail` | `mining_camp` |
 | Water trough | `cauldron` (water) | `decorate`, `svan_tower`, `oracles_temple` |
@@ -164,7 +164,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Portcullis, grille | `iron_bars` | `arena_inside`, `tower`, `donjon`, `krepost` +4 more |
 | Wooden hoarding | wood slab (top) or `spruce_planks` with a `*_fence` rail | `helepolis`, `crane`, `shipyard`, `wooden_fort` +48 more |
 | Coat of arms | `*_wall_banner` (player color) over the gate | `throne_hall`, `town_hall`, `keep_inside`, `arena_inside` +42 more |
-| Lamp | `lantern` | `hang`, `keep_inside`, `mill_room`, `furnish` +36 more |
+| Lamp | `lantern` | `hang`, `keep_inside`, `furnish`, `mill_room` +36 more |
 | Lamp inside a room | `lantern[hanging=true]` under a ceiling, or on an `iron_chain` | `hang`, `lumber_camp`, `shipyard`, `blacksmith` +39 more |
 | Copper lamp, grille and chain (rich buildings; they turn green with age) | `copper_lantern`, `copper_bars`, `copper_chain`, `copper_torch`, and the `exposed_*`, `weathered_*`, `oxidized_*` forms | `cathedral` |
 | Cloth awning | `*_wool` in the player color | `yurt`, `pavilion`, `command_tent`, `pasture` +23 more |
@@ -196,7 +196,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Ladder between floors | `ladder` | `keep_inside`, `scaffold_walk`, `outpost`, `scaffolding` +6 more |
 | Storage | `chest`, `barrel` | `decorate`, `town_hall`, `cart`, `keep_inside` +36 more |
 | Armory | `grindstone`, `smithing_table` | `keep_inside`, `blacksmith`, `siege_workshop`, `mill_room` +8 more |
-| Light inside | `lantern` (hanging under a floor, or on the floor) | `hang`, `keep_inside`, `mill_room`, `furnish` +36 more |
+| Light inside | `lantern` (hanging under a floor, or on the floor) | `hang`, `keep_inside`, `furnish`, `mill_room` +36 more |
 | Rose window | `*_stained_glass_pane` | `torii`, `monastery`, `fortified_church`, `cathedral` |
 | Kitchen garden | `carrots`, `potatoes`, `wheat` (age 7) on `farmland`, `spruce_fence` with a `spruce_fence_gate` | `folwark` |
 | Windmill sails | `spruce_fence` arms with `white_wool` cloth, `stripped_spruce_log` hub | `mill`, `folwark`, `market`, `pasture` +8 more |
