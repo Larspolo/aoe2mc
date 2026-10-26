@@ -13,9 +13,9 @@ Each run does one work cycle (the `autopilot` skill):
 4. It reports on the **Agent status** issue (label `agent-status`) with a short comment. GitHub sends you a
    notification. The dashboard in the issue body is generated from GitHub (`tools/dashboard.py`, workflow
    `Dashboard`): waiting for you, working on, next up, recently done. It updates on each label change and every
-   15 minutes. Runs only add the process changes.
+   hour. Runs only add the process changes.
 5. It improves its own process: it writes learnings, corrects its instructions and makes tooling tickets.
-   Every 5th run, the `improve` skill measures the runs (minutes, local checks, time sinks) and makes one larger
+   Every 5th run, the `improve` skill measures the runs (minutes, CI rounds, time sinks) and makes one larger
    improvement. The status issue lists each process change.
 
 The agent takes instructions only from comments and issues by `Larspolo`.
@@ -89,22 +89,23 @@ ticket with numbered steps.
 
 ## Pacing (no steering needed)
 
-The runs pace themselves. `tools/usage.py` reads the usage of your subscription (the 5-hour and 7-day windows, as
-the Claude Code CLI reports them) and computes the number of runs that uses the 5-hour window evenly until its reset,
-and not the week faster than it passes. Rule 4 of the scheduled task uses this number. You do not need to send
-percentages.
+The runs are paced without you. `tools/usage.py` reads the usage of your subscription (the 5-hour and 7-day windows,
+as the Claude Code CLI reports them) and computes the number of runs that uses the 5-hour window evenly until its
+reset, and not the week faster than it passes. You do not need to send percentages.
+A run of the scheduled task cannot start other runs (#566). So one pacer session ("aoe2mc pacer", skill `pacer`)
+runs `python3 tools/usage.py --fire` every 20 minutes and starts the runs that the target misses (at most 4 at a
+time). The scheduled task also starts one run each hour. To stop all runs: add `paused` to the status issue.
 
-## CI and Actions minutes
+## CI and the merge
 
-The repository is private, so GitHub Actions has 2,000 free minutes per month, and each job counts as at least
-1 minute. On 2026-10-25, CI on each PR and the event workflows used about 900 minutes in one hour. Your decision:
-PRs have no GitHub CI. Each run checks its PR in its own cloud session (lint, tests, Minecraft tests when needed)
-and merges it. GitHub runs the full CI once a night on `main`. A red night run opens a `P0` ticket, and each run
-also tests `main` when it starts. The dashboard, coverage and claim workflows run on a schedule (each run also
-updates the dashboard). To get CI on each PR again: make the repository public (free minutes) or set a budget.
-To pause all scheduled workflows (for example when the free minutes are used up), set the repository variable
-`PAUSE_SCHEDULES` to `true` (Settings → Secrets and variables → Actions → Variables). A skipped job uses no
-minutes, and a start by hand still runs. The agents set it on 2026-10-25 and delete it on 2026-11-01 (the reset).
+The repository is public, so GitHub Actions minutes are free (#370). CI runs only the quick checks on each PR (lint
+and fast tests, about 1 minute), so that a PR merges soon. The full suite (slow tests, Minecraft tests, package)
+runs each night on `main` (your decision, 2026-10-26); start it by hand with Actions → CI → Run workflow → "full".
+The runs do the slow and Minecraft checks that a change needs in their own session. The workflow `automerge.yml`
+merges an agent PR when its CI is green. It does not merge a PR with the label `hold`, or a PR whose ticket has `needs-human` or
+`blocked`. After each merge it starts CI on `main`; a red run on `main` opens a `P0` ticket, and the runs fix it first.
+To stop one PR, add `hold` to it. To stop all runs, add `paused` to the status issue.
+The ruleset `Protect main` (Settings → Rules) refuses force pushes and deletes of `main`.
 
 ## Files that steer the agent
 

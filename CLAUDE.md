@@ -25,7 +25,7 @@ The README already uses this style. Keep it.
 | Check states | `tools/mcvalid.py` (`block_error`, `entity_error`, `biome_error`) |
 | Coverage of AoE2 types | `python3 tools/coverage.py OUT.md` (designs, mappings, fallbacks). Do not commit `docs/coverage.md`: CI on main does it, and `tools/feature_table.py` for `docs/DESIGN.md` |
 | System numbers | `python3 tools/health.py [--hours N]` (CI, setup, takeovers, conflicts, files in git; `improve` skill) |
-| Quota and pacing | `python3 tools/usage.py` (5-hour and 7-day usage, resets; `--target`: the number of runs that uses the window evenly; `--sample`: the `Usage:` line of the run report) |
+| Quota and pacing | `python3 tools/usage.py` (5-hour and 7-day usage, resets; `--target`: the number of runs that uses the window evenly; `--sample`: the `Usage:` line of the run report; `--fire`: the runs that the pacer session starts now) |
 | Dashboard of #1 | `python3 tools/dashboard.py --dry-run` (`--next`: ticket candidates in pick order) |
 | Server check | `python3 tools/mc_check.py OUTWorld` (headless Minecraft, load errors; `--keep DIR` keeps the saved world), `python3 -m pytest -m mc` |
 | Game program | `python3 game/run.py OUTWorld` (Paper server with RCON, `--server vanilla`: Mojang's; type commands; `--bench N`: commands per second; `--play`: gather resources; `--replay [--speed N]`: replay a recorded game) |
@@ -56,6 +56,7 @@ Find code by function name with Grep. Do not read the large files from start to 
   `plugin/` is the Paper plugin (Java, Gradle wrapper; `run.py` builds it): `aoe moveto`, `aoe attack` with Minecraft path finding (#435),
   `gather.Gather` lets villagers gather wood, food, gold and stone (#138, #391, #390, #392: clicks, paths on `aoe2mc.json` "ground", sidebar),
   `build` places construction sites (#417), `replay.Replay` plays the "timeline" of a recorded game (#374: buildings, chat, ages).
+  `ai` gives orders to units with their Minecraft AI through the Paper plugin `game/plugin` (#435, #436: `aoe moveto`, `aoe attack`, `aoe goals`).
 - `tests/` – pytest. `conftest.py` has the `tiny_world` fixture (one conversion per session).
 
 ## Rules of the domain
@@ -79,7 +80,7 @@ Design work (buildings, objects, units, animals) follows `docs/DESIGN.md`. Do de
 - Target: Minecraft Java 26.3 (`DATA_VERSION = 5023`), the only output (#427). The code uses the 26.3 block and
   entity names and writes the 26.3 entity NBT directly (#428): `mcvalid` checks with 26.3.
   `VERSIONS` in `aoe2mc.py` holds the output profile (`--mc-version`); format changes: `docs/minecraft-versions.md`.
-- Global state: `aoe2mc.B` (block registry), `aoe2mc.MOVED`, `aoe2mc.BLOCK_DATA` (extra block entity NBT), `buildings.BARRIERS`, `buildings.TURN` (`--orientation`), `buildings.BRIDGE_CELLS`.
+- Global state: `aoe2mc.B` (block registry), `aoe2mc.MOVED`, `aoe2mc.BLOCK_DATA` (extra block entity NBT), `buildings.BARRIERS`, `buildings.TURN` (`--orientation`), `buildings.BRIDGE_CELLS`, `buildings.SHELVES` (items of the shelves).
   Tests share `B`, so `B.states` holds the states of all earlier tests.
 
 ## Code style

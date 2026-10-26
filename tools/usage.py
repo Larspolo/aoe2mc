@@ -4,6 +4,7 @@
     python3 tools/usage.py --target     # only the number of runs (rule 4 of the scheduled task)
     python3 tools/usage.py --json
     python3 tools/usage.py --sample     # Usage: <now> · usage 30.0% · resets <time> · claims 9 (for the run report)
+    python3 tools/usage.py --fire       # the number of runs that the pacer session starts now (skill `pacer`, #566)
 
 BURN is the default. When the run reports on the status issue have enough `Usage:` lines (at least 5 pairs in the
 last 24 hours), `tools/health.py` measures the burn from them and this tool uses that value (#462).
@@ -21,6 +22,7 @@ import sys
 BURN = 0.03         # share of the 5-hour quota that one run uses per hour (16 runs used about 50 % per hour, 2026-10-25)
 END = 0.95          # aim: this share is used when the 5-hour window resets
 LO, HI = 1, 16      # bounds of the number of runs
+MAX_FIRE = 4        # runs that the pacer starts per cycle: each run needs a few minutes to claim its ticket
 CALL = ["claude", "-p", "Reply with OK.", "--model", "claude-haiku-5-5", "--output-format", "stream-json", "--verbose"]
 
 
@@ -61,6 +63,14 @@ def target_runs(usage, now, burn=BURN, end=END, lo=LO, hi=HI):
     return max(lo, min(hi, n))
 
 
+def runs_to_start(target, claims, ready, paused, hi=MAX_FIRE):
+    """The number of runs that the pacer starts now: the runs that the target misses, not more than the ready tickets.
+    Runs that the scheduled task starts cannot start other runs (no `fire_trigger`, #566)."""
+    if paused or not target:
+        return 0
+    return max(0, min(target - claims, ready, hi))
+
+
 def measured_burn():
     """The burn that `tools/health.py` measures from the `Usage:` lines of the status issue, or None."""
     try:
@@ -91,6 +101,7 @@ def main(argv=None):
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--sample", action="store_true", help="print the Usage: line for the run report")
     ap.add_argument("--burn", type=float, help="share of the 5-hour quota per run-hour (default: measured, else BURN)")
+    ap.add_argument("--fire", action="store_true", help="print the number of runs that the pacer starts now")
     a = ap.parse_args(argv)
     usage, now = read_usage(), datetime.datetime.now(datetime.timezone.utc).timestamp()
     if not usage:
@@ -100,7 +111,17 @@ def main(argv=None):
         print(sample_line(usage, now, health.active_claims(datetime.datetime.now(datetime.timezone.utc))))
         return
     burn = a.burn or measured_burn() or BURN
-    if a.target:
+    if a.fire:
+        import dashboard
+        import health
+        open_all = dashboard.pages("issues?state=open")
+        paused = any({"agent-status", "paused"} <= set(dashboard.labels(i)) for i in open_all)
+        ready = len(dashboard.candidates(open_all))
+        claims = health.active_claims(datetime.datetime.now(datetime.timezone.utc))
+        target = target_runs(usage, now, burn)
+        print(runs_to_start(target, claims, ready, paused))
+        print(f"{describe(usage, now, burn)} · claims {claims} · ready {ready} · paused {paused}", file=sys.stderr)
+    elif a.target:
         print(target_runs(usage, now, burn))
     elif a.json:
         print(json.dumps({"usage": usage, "burn": burn, "target": target_runs(usage, now, burn)}))

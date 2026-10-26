@@ -815,8 +815,10 @@ class Columns:
         field = grass & free & (n3 > 0.8) & (r < 0.35)
         ids = np.array([B(f) for f in flowers], np.uint16)
         deco[field] = ids[kind[field]]
+        deco[field & (r2 < 0.06)] = B("golden_dandelion")               # a few of the new 26.3 flower in each field
         petals = grass & free & (n3 < 0.1) & (r < 0.5)
         deco[petals] = B("pink_petals[facing=north,flower_amount=3]")
+        deco2[field | petals] = AIR                                     # no tall grass top above a flower
         faces = ("east", "north", "south", "west")
         def clumps(name, prop, mask):                   # a random facing and amount (1-4) for each clump
             ids = np.array([B(f"{name}[facing={f},{prop}={k}]") for f in faces for k in range(1, 5)], np.uint16)
@@ -1130,6 +1132,7 @@ def make_tree(E, kind, x, y, z, rng):
     if kind == "dead":
         E.box(x, x + 1, y, y + h - 1, z, z + 1, "oak_log")
         E.add([x + 1, x - 1], [y + h - 2, y + h - 3], [z, z], "oak_log[axis=x]")
+        fungus(E, x, y, z, h - 1, ("north", "south"))   # the branches are on the east and west sides
         return
     wood = WOODS.get(kind, "oak")
     log, leaf = f"{wood}_log", leaves(wood)
@@ -1158,6 +1161,24 @@ def make_tree(E, kind, x, y, z, rng):
         for dy, r in ((h - 2, 2), (h - 1, 2), (h, 1), (h + 1, 1)):
             disc(E, x, y + dy, z, r, leaf)
         E.box(x, x + 1, y, y + h, z, z + 1, log)
+        if kind == "oak":
+            fungus(E, x, y, z, h - 2, ("north", "south", "west", "east"))
+
+
+FACE = {"north": (0, -1), "south": (0, 1), "west": (-1, 0), "east": (1, 0)}
+
+
+def fungus(E, x, y, z, top, faces):
+    """Bracket fungus (shelf_mushroom) on 1 old tree in 10: 1 or 2 on the trunk, 1 to 3 blocks up, below `top`.
+
+    Its own generator, seeded by the position: the trees after it keep their random numbers."""
+    r = np.random.default_rng([x % 65536, y % 65536, z % 65536, 558])
+    if r.random() >= 0.1:
+        return
+    for f in r.permutation(faces)[:int(r.integers(1, 3))]:
+        dx, dz = FACE[f]
+        E.add([x + dx], [y + int(r.integers(1, max(2, min(4, top))))], [z + dz],
+              f"shelf_mushroom[age={int(r.integers(2))},facing={f}]")
 
 
 def disc(E, x, y, z, r, block):
@@ -1963,6 +1984,12 @@ def place_book(cols, edits, spawn, texts, title):
     return x, y, z
 
 
+def shelf_data(items):
+    """Block entity fields of a shelf (26.3) with one item in each of its 3 slots (#526)."""
+    return {"Items": List[Compound]([Compound({"Slot": Byte(i), "id": String("minecraft:" + n), "count": Int(1)})
+                                     for i, n in enumerate(items)])}
+
+
 def set_pos(nbt, x, y, z):
     nbt["Pos"] = List[Double]([Double(x), Double(y), Double(z)])
     for p in nbt.get("Passengers", []):
@@ -2051,7 +2078,7 @@ PALETTE_CACHE = {}
 # Blocks that need a block entity, or Minecraft shows them wrong (banners are invisible without one).
 BE_TYPES = [("decorated_pot", "decorated_pot"), ("oak_sign", "sign"), ("wall_banner", "banner"), ("_banner", "banner"), ("bell", "bell"), ("campfire", "campfire"),
             ("barrel", "barrel"), ("chest", "chest"), ("blast_furnace", "blast_furnace"),
-            ("smoker", "smoker"), ("furnace", "furnace"), ("lectern", "lectern"), ("_bed", "bed")]
+            ("smoker", "smoker"), ("furnace", "furnace"), ("lectern", "lectern"), ("_shelf", "shelf"), ("_bed", "bed")]
 
 
 def block_entity_type(state):
@@ -2545,7 +2572,7 @@ COLORS = [("yellow_poplar_leaves", (215, 180, 40)), ("orange_poplar_leaves", (21
           ("bluet", (225, 230, 235)), ("daisy", (235, 235, 225)), ("lily_of", (235, 240, 235)),
           ("mushroom", (160, 110, 80)), ("stone_brick", (122, 122, 122)), ("cobblestone", (110, 110, 110)), ("white_terracotta", (215, 200, 190)),
           ("glass", (170, 200, 220)), ("banner", None), ("terracotta", (200, 180, 160)),
-          ("calcite", (225, 225, 220)), ("quartz", (235, 230, 225)), ("bricks", (150, 70, 55)),
+          ("calcite", (225, 225, 220)), ("quartz", (235, 230, 225)), ("cinnabar", (170, 55, 45)), ("sulfur", (195, 165, 70)), ("chiseled_resin", (175, 75, 30)), ("resin_brick", (205, 95, 35)), ("bricks", (150, 70, 55)),
           ("brick", (150, 70, 55)), ("deepslate_tile", (55, 55, 60)), ("dark_oak", (65, 45, 25)),
           ("spruce", (105, 75, 45)), ("acacia", (170, 90, 50)), ("jungle", (160, 115, 80)),
           ("crimson", (140, 50, 60)), ("mud_brick", (140, 105, 80)), ("packed_mud", (140, 105, 80)),
@@ -2602,6 +2629,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     buildings.TURN, yaw = ORIENTATIONS[orientation]
     MOVED.clear()           # the counts of an earlier conversion in this process
     BLOCK_DATA.clear()
+    buildings.SHELVES.clear()
     rng = np.random.default_rng(seed)
     t0 = time.time()
     times, clock = {}, [t0]
@@ -2656,6 +2684,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         if pid and any(o["player"] == pid for o in objects):
             print(f"  player {pid}: {p['civ'].lower()}, {p['color']}, {p['arch']} buildings")
     edits, stats = place_objects(objects, players, cols, rng)
+    BLOCK_DATA.update({p: shelf_data(items) for p, items in buildings.SHELVES.items()})
     for k, v in sorted(stats.items()):
         print(f"  {k}: {v}")
     spawn = find_spawn(cols, objects, players, spawn)
@@ -2855,7 +2884,7 @@ def convert_campaign(src, out, only=None, name=None, **kw):
             stem = os.path.splitext(fn)[0]
             if fn.lower().endswith(".scx"):
                 with tempfile.TemporaryDirectory() as tmp:
-                    path = os.path.join(tmp, "s.scx")
+                    path = os.path.join(tmp, fn)       # "Read <fn>" names the scenario (#578)
                     with open(path, "wb") as f:
                         f.write(data)
                     try:

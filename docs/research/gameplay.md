@@ -156,3 +156,24 @@ The owner decides on the platform first (decision ticket). The other tickets dep
 - #136 Write `aoe2mc.json` with the objects of the world.
 - #137 Start a game program that controls the server through RCON.
 - #138 Let villagers gather wood on the player's command (the milestone).
+
+## Pitfalls of the game program
+
+Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
+
+- Paper: the jar host `fill-data.papermc.io` was blocked on 2026-10-26 (#439): test a download host with `curl`. The Paper
+  API answers 403 to the `Python-urllib` User-Agent: send one (`game/run.py` `AGENT`). `-DbundlerRepoDir=DIR` keeps the
+  patched Mojang jar; Paper writes `usercache.json` next to the `--universe` world (#434).
+- Paper plugin (#435): `game/run.py` builds `game/plugin` with `./gradlew --no-daemon -q jar` and `JAVA_HOME` = JDK 25
+  (`openjdk-25-jdk-headless`; javac 21 cannot read the paper-api 26.3 classes); first build 30 s. A NoAI mob finds no
+  path before its first AI tick; a path ends at about `follow_range` (cow: 16); the world border stops paths.
+- `build.place` draws the design with `replay.Replay.building`: fake `aoe2mc.json` data in tests needs `level_height`
+  and a tile size of 4 (at tile size 1 most designs give no blocks). The site keeps the commands, bottom up (#418).
+- Import cycle `gather` → `build` → `replay`: `replay` imports `gather` inside a function (#408).
+- `gather.Map.path` on a whole record map (480 × 480): A* with a cell limit, about 45 ms per path, 0.3 s across the
+  map. Replay paths cost 18 s per 200 s of game in samples/ (one search per unit of a group, #409).
+- Paper 26.3 (#436): remove mob goals by `GoalKey` (`MobGoals.removeGoal(mob, key)`), on each order: removal by the
+  goal object, and a removal only after `setAI(true)`, missed goals. `Zombie#setShouldBurnInDay(false)` does nothing:
+  set the attribute `burning_time` to 0. `aoe goals <selector>` lists the goal keys of a unit.
+- Mob walk speed on a path: blocks per second = 43.4 * `movement_speed` ** 2 (zombie, cow, horse). Villagers walk
+  with their brain (no goals): 4 times slower, and the MobGoals API does not stop their wandering (#436).
