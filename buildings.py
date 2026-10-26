@@ -2999,6 +2999,10 @@ def place_building(E, cols, B, o, players, walls, gates):
         c.a = c.a[:, :, ::-1].copy()                                     # mirror: the other diagonal
     if BARRIERS and fn not in (gate, bridge, wooden_bridge, fish_trap, scaffold_walk):
         barriers(c, fx, fz)
+    if fn is gate:                          # only the passage is free: units on the towers move out (#577)
+        head = c.a[c.m:c.m + fx, c.below + 1:c.below + 3, c.m:c.m + fz]
+        solid = ((head >= 0) & (head != B("air"))).any(1)
+        cols.blocked[xs.start:xs.stop, zs.start:zs.stop] |= solid[xs.start - x0:xs.stop - x0, zs.start - z0:zs.stop - z0]
     ix, iy, iz = np.nonzero(c.a >= 0)
     # Outside the footprint only parts above head height (roof edges, tower tops, sails) are kept;
     # Edits checks this against the real ground of each column.

@@ -53,6 +53,14 @@ STEPS = [(dx, dz) for dx in (-1, 0, 1) for dz in (-1, 0, 1) if dx or dz]
 NUMBER = r"(-?[\d.]+(?:E-?\d+)?)[df]"
 CIVILIANS = ("VILLAGER", "REPAIRER", "MONK", "KING", "TRADE", "FISHING_SHIP", "TRANSPORT")
 SELECT = "aoe2mc.selected"                                         # entity tag of the selected units
+# The look and sound of one gather step at the resource (#592): block particles and a vanilla sound. A villager has
+# no arm swing, so it turns to the resource (`rotate ... facing`). 26.3 block particles take
+# `{id:...,Properties:{...}}`, not `Name`.
+WORK_LOOK = {"wood": ("minecraft:oak_log", "minecraft:block.wood.hit"),
+             "food": ("minecraft:sweet_berry_bush[age=3]", "minecraft:block.sweet_berry_bush.pick_berries"),
+             "farm": ("minecraft:wheat[age=7]", "minecraft:item.hoe.till"),
+             "gold": ("minecraft:gold_ore", "minecraft:block.stone.hit"),
+             "stone": ("minecraft:stone", "minecraft:block.stone.hit")}
 EVENTS = {"idle": "idle", "to_tree": "walk", "chop": "chop", "to_drop": "carry",    # state -> event in the log
           "to_site": "walk", "build": "build"}
 
@@ -247,6 +255,7 @@ class Villager:
         self.walked = 0.0                                              # blocks, for the log
         self.res = "wood"                                              # the resource of the load
         self.site = None                                               # the construction site that it builds
+        self.lap = 0                                                   # step of a farmer over its farm (#591)
 
     @property
     def cell(self):
@@ -339,7 +348,7 @@ class Gather:
         res = self.map.resource(tile)
         job = "FARMER" if tile in self.map.farms else {"wood": "LUMBERJACK", "food": "FORAGER"}.get(res) or \
             next(j for r, _, j in MINES.values() if r == res)
-        for u in sorted(self.selected):
+        for u in sorted(self.selected & self.villagers.keys()):         # a scout cannot gather or build (#589)
             v = self.villagers[u]
             for t in [t for t, f in self.farmers.items() if f == u]:
                 del self.farmers[t]
@@ -363,7 +372,7 @@ class Gather:
         their load, as in AoE2."""
         x0, x1, z0, z1 = site["footprint"]
         goals = self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)})
-        for u in sorted(self.selected):
+        for u in sorted(self.selected & self.villagers.keys()):         # a scout cannot gather or build (#589)
             v = self.villagers[u]
             for t in [t for t, f in self.farmers.items() if f == u]:
                 del self.farmers[t]
@@ -479,8 +488,10 @@ class Gather:
                     v.timer -= work
                     v.load += 1
                     src[v.tree] -= 1
+                    self.work(v)
                     if v.tree in self.map.farms:
                         self.harvest(v.tree)
+                        self.tend(v)
                     elif v.res == "food":
                         self.berries(v.tree)
                     elif v.res != "wood":
@@ -499,6 +510,24 @@ class Gather:
                 for v in builders:                                     # complete: the builders stop
                     v.site = None
                     self.set(v, "idle")
+
+    def work(self, v):
+        """One gather step shows: the villager turns to the point of the resource next to it, block particles of the
+        resource fly there, and the work sound plays (#592)."""
+        tile, T = v.tree, self.map.T
+        x0, x1, z0, z1 = self.map.feet.get(tile, (tile[0] * T, tile[0] * T + T, tile[1] * T, tile[1] * T + T))
+        x, y, z = min(max(v.pos[0], x0 + 0.5), x1 - 0.5), v.pos[1] + 1, min(max(v.pos[2], z0 + 0.5), z1 - 0.5)
+        kind = "farm" if tile in self.map.farms else v.res
+        block, sound = WORK_LOOK[kind]
+        if kind == "wood":
+            block = self.map.woods.get(tile, (block,))[0]
+        name, _, props = block.partition("[")
+        props = ",".join(f'{k}:"{w}"' for k, w in (p.split("=") for p in props.rstrip("]").split(",") if p))
+        state = f'{{id:"{name}"' + (f",Properties:{{{props}}}" if props else "") + "}"
+        at = f"{x:.2f} {y:.2f} {z:.2f}"
+        self.command(f"rotate {v.uuid} facing {at}")
+        self.command(f"particle minecraft:block{{block_state:{state}}} {at} 0.2 0.2 0.2 0 8")
+        self.command(f"playsound {sound} block @a {at} 1 {0.9 + 0.2 * (v.load % 2):.1f}")
 
     def site(self, tile):
         """Footprint (x0, x1, z0, z1), ground heights next to it, stump cell and trunk row z of a tree."""
@@ -550,7 +579,9 @@ class Gather:
         self.trunks.pop(tile, None)
 
     def berries(self, tile):
-        """A fruit bush shows its food: full berries, fewer berries below half, a dead bush when it is empty."""
+        """A fruit bush shows its food: full berries, fewer berries below half, a dead bush when it is empty. Only a full
+        bush has the leaves in its middle: they become barriers, so the bush is small and still blocks (#590). An empty
+        bush loses its barriers: its cells are free ground again."""
         food = self.map.bushes[tile]
         look = "minecraft:sweet_berry_bush[age=3]" if food > BUSH_FOOD // 2 else \
             "minecraft:sweet_berry_bush[age=2]" if food > 0 else "minecraft:dead_bush"
@@ -561,6 +592,12 @@ class Gather:
         (x0, z0), (x1, z1) = min(cells), max(cells)
         ys = [y for x, z in self.map.around(cells) if (y := self.map.y(x, z)) is not None] or [0]
         self.command(f"fill {x0} {min(ys) - 2} {z0} {x1} {max(ys) + 2} {z1} {look} replace minecraft:sweet_berry_bush")
+        self.command(f"fill {x0} {min(ys) - 2} {z0} {x1} {max(ys) + 2} {z1} minecraft:barrier replace minecraft:oak_leaves")
+        if food <= 0:                                  # as in AoE2, an empty bush frees its tile (#602)
+            self.command(f"fill {x0} {min(ys) - 2} {z0} {x1} {max(ys) + 4} {z1} air replace minecraft:barrier")
+            for x, z in cells:
+                self.map.ground[z][x] = min(ys)
+            self.map.blocked -= cells
 
     def dig(self, tile, res):
         """An empty mine disappears: its heap and the barriers of its footprint. Its cells are free ground again."""
@@ -573,6 +610,20 @@ class Gather:
             self.map.ground[z][x] = min(ys)
             self.map.mine_at.pop((x, z), None)
         self.map.blocked -= spot
+
+    def tend(self, v):
+        """A farmer walks over its farm while it works, as in AoE2 (#591): one cell per food, row by row (the rows
+        in turn east and west), and at the last cell back the same way, so that each step goes to a next cell."""
+        cells = sorted(self.goals(v.tree), key=lambda c: (c[1], c[0] if c[1] % 2 == 0 else -c[0]))
+        if len(cells) < 2:
+            return
+        cycle = cells + cells[-2:0:-1]
+        if cycle[v.lap % len(cycle)] != v.cell:                        # a new farm or another start cell
+            v.lap = min(range(len(cycle)), key=lambda i: math.dist(cycle[i], v.cell))
+        v.lap += 1
+        walked, v.path = v.walked, [cycle[v.lap % len(cycle)]]
+        walk(self, v)
+        v.walked = walked                                              # work, not a walk (tools/measure_gather.py)
 
     def harvest(self, tile):
         """A farm shows its food: the wheat gets younger (age 7 when full), and an empty farm is dirt."""

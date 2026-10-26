@@ -1,6 +1,7 @@
 package aoe2mc;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +10,7 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.command.Command;
@@ -25,6 +27,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
+import com.destroystokyo.paper.entity.RangedEntity;
+import com.destroystokyo.paper.entity.ai.Goal;
+import com.destroystokyo.paper.entity.ai.GoalKey;
+import com.destroystokyo.paper.entity.ai.GoalType;
+
 /**
  * Orders for the units of the game program, with Minecraft path finding (#435). Vanilla has no command for
  * "walk to this point", so this plugin gives one to RCON:
@@ -33,6 +40,7 @@ import org.bukkit.scoreboard.Team;
  *   aoe goals <selector>                       the goals of the first unit (#436), for checks
  *   aoe stats <selector> <hp> <attack> <melee armor> <pierce armor> <ranged 0|1> <classes|-> <class:bonus,...|->
  *                                              the AoE2 values of a unit (#514, game/combat.py stats_command)
+ *   aoe range <selector> <blocks> <ticks>      a ranged unit shoots from this range, one shot per ticks (#515)
  * Converted units have no AI (NoAI): an order turns it on. Such a unit finds no path before its first AI tick
  * (it is not "on the ground" yet), and vanilla goals (a random stroll) can take the navigation of a walking unit:
  * so the order sends the path again every 10 ticks, until the unit arrives or 10 tries found no path.
@@ -46,6 +54,10 @@ import org.bukkit.scoreboard.Team;
  * A hit of a unit with AoE2 values on another one takes the AoE2 damage (#514, combat.damage): max(1, attack - armor
  * + bonus). The plugin cancels the vanilla damage and sets the health: so vanilla armor items, enchantments, effects,
  * difficulty and knockback (AoE2 has none) do not change it. Max health is the attribute max_health.
+ * A ranged unit (#515) gets the goal "aoe_range" in place of the vanilla bow, crossbow and trident goals: their
+ * range and interval are fixed in the goal objects, and the API cannot set them (no NMS in the plugin). It walks
+ * on a Minecraft path to the target until the target is in range and in sight, stops, and shoots with the vanilla
+ * shot of the mob (RangedEntity#rangedAttack: the arrow of a skeleton, the trident of a drowned).
  */
 public final class AoePlugin extends JavaPlugin implements Listener {
     private record Stats(int attack, int melee, int pierce, boolean ranged, Set<String> classes,
@@ -73,6 +85,67 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     private final Map<UUID, Order> orders = new HashMap<>();
+
+    private record Range(double blocks, int ticks) {
+    }
+
+    private final Map<UUID, Range> ranges = new HashMap<>();
+    private final GoalKey<Mob> rangeKey = GoalKey.of(Mob.class, new NamespacedKey("aoe2mc", "aoe_range"));
+    // the vanilla ranged goals that "aoe_range" replaces
+    private static final Set<String> SHOTS = Set.of("ranged_attack", "ranged_bow_attack", "ranged_crossbow_attack",
+            "skeleton_melee");
+
+    /** Shoot the target of the mob from the AoE2 range: walk until it is in range and in sight, then stop. */
+    private final class RangeGoal implements Goal<Mob> {
+        private final Mob mob;
+        private final Range range;
+        private int next, ticks;                  // server tick of the next shot: tick() runs only each 2nd tick
+
+        RangeGoal(Mob mob, Range range) {
+            this.mob = mob;
+            this.range = range;
+        }
+
+        @Override
+        public boolean shouldActivate() {
+            LivingEntity t = mob.getTarget();
+            return t != null && t.isValid() && !t.isDead();
+        }
+
+        @Override
+        public void stop() {
+            mob.getPathfinder().stopPathfinding();
+        }
+
+        @Override
+        public void tick() {
+            LivingEntity t = mob.getTarget();
+            boolean near = mob.getLocation().distanceSquared(t.getLocation()) <= range.blocks * range.blocks
+                    && mob.hasLineOfSight(t);
+            if (near) {
+                mob.getPathfinder().stopPathfinding();
+            } else if (!mob.getPathfinder().hasPath() || ++ticks % 10 == 0) {     // the target can move
+                reach(mob, t.getLocation());
+                mob.getPathfinder().moveTo(t);
+            }
+            mob.lookAt(t);
+            int now = Bukkit.getCurrentTick();
+            if (now >= next && near && mob instanceof RangedEntity r) {
+                r.rangedAttack(t, 1.0f);
+                next = now + range.ticks;
+            }
+        }
+
+        @Override
+        public GoalKey<Mob> getKey() {
+            return rangeKey;
+        }
+
+        @Override
+        public EnumSet<GoalType> getTypes() {
+            return EnumSet.of(GoalType.MOVE, GoalType.LOOK);
+        }
+    }
 
     @Override
     public void onEnable() {
@@ -129,7 +202,16 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         });
     }
 
-    private static Mob unit(Entity e) {
+    // The path search reaches only about the follow range: raise it for a goal at this location.
+    private static void reach(Mob mob, Location goal) {
+        AttributeInstance range = mob.getAttribute(Attribute.FOLLOW_RANGE);
+        if (range != null) {
+            double need = Math.min(128, 2 * mob.getLocation().distance(goal) + 32);
+            range.setBaseValue(Math.max(range.getBaseValue(), need));
+        }
+    }
+
+    private Mob unit(Entity e) {
         if (!(e instanceof Mob mob)) {
             return null;
         }
@@ -137,13 +219,25 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             mob.setAI(true);
         }
         tame(mob);                  // each order: tame() only after setAI() missed the goals of some units (#436)
+        Range r = ranges.get(mob.getUniqueId());
+        var goals = Bukkit.getMobGoals();
+        if (r != null && mob instanceof RangedEntity) {
+            for (var g : goals.getAllGoals(mob)) {
+                if (SHOTS.contains(g.getKey().getNamespacedKey().getKey())) {
+                    goals.removeGoal(mob, g.getKey());
+                }
+            }
+            if (!goals.hasGoal(mob, rangeKey)) {
+                goals.addGoal(mob, 4, new RangeGoal(mob, r));          // the priority of the vanilla bow goal
+            }
+        }
         return mob;
     }
 
     // The goals that a unit keeps: swim, and attack the target of an order. The keys of the other goals (26.3):
     // nearest_attackable and hurt_by choose targets, random_stroll, look_at_player, panic, tempt, breed, flee_sun ...
     private static final Set<String> KEEP = Set.of("float", "melee_attack", "zombie_attack", "skeleton_melee",
-            "spear_use", "ranged_attack", "ranged_bow_attack", "ranged_crossbow_attack");
+            "spear_use", "ranged_attack", "ranged_bow_attack", "ranged_crossbow_attack", "aoe_range");
 
     static boolean keep(String goal) {
         return KEEP.contains(goal);
@@ -202,11 +296,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     continue;
                 }
                 Location goal = new Location(mob.getWorld(), x, y, z);
-                AttributeInstance range = mob.getAttribute(Attribute.FOLLOW_RANGE);
-                if (range != null) {
-                    double need = Math.min(128, 2 * mob.getLocation().distance(goal) + 32);
-                    range.setBaseValue(Math.max(range.getBaseValue(), need));
-                }
+                reach(mob, goal);
                 mob.setTarget(null);
                 mob.getPathfinder().moveTo(goal, speed);
                 orders.put(mob.getUniqueId(), new Order(goal, speed));
@@ -240,6 +330,25 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
             }
             sender.sendMessage("Stats: " + n + " units");
+            return true;
+        }
+        if (args.length == 4 && args[0].equals("range")) {
+            Range r;
+            try {
+                r = new Range(Double.parseDouble(args[2]), Integer.parseInt(args[3]));
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                if (e instanceof Mob mob && mob instanceof RangedEntity) {
+                    ranges.put(mob.getUniqueId(), r);
+                    Bukkit.getMobGoals().removeGoal(mob, rangeKey);    // the next order adds it with the new range
+                    n++;
+                }
+            }
+            sender.sendMessage("Range: " + n + " units");
             return true;
         }
         if (args.length == 2 && args[0].equals("goals")) {

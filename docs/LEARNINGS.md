@@ -42,6 +42,10 @@ of its document (named below): this file loads into each run. The `improve` skil
 - Paper plugin (#435): `game/run.py` builds `game/plugin` with `./gradlew --no-daemon -q jar` and `JAVA_HOME` = the JDK 25 (`openjdk-25-jdk-headless`: the paper-api 26.3 classes are Java 25, javac 21 cannot read them); first build 30 s. A NoAI mob finds no path before its first AI tick; the path search ends at about `follow_range` (cow: 16). The world border stops paths: test inside the map. `fill ... hollow` also fills the bottom and top faces.
 - `pytest -m mc` needs `javac` since the Paper plugin (#493): without it 14 tests fail with "no javac". Until the owner pastes setup v6 (#495), run `apt-get install -y openjdk-25-jdk-headless` (works in the cloud, 1 min, #497).
 - `-m mc` takes about 21 minutes, and 14 of its tests stop with "no javac" when `/etc/aoe2mc-setup-version` is below 6: `apt-get install -y openjdk-25-jdk-headless` first (1 min, #536).
+- A world that the Paper server saved does not open in the vanilla client ("Overworld settings missing"): Paper moves
+  `data/minecraft/world_gen_settings.dat` into each dimension folder. Copy the `.dat` files of `data/minecraft/` of a fresh
+  conversion into the saved copy before `tools/mc_shot.py` (#420, #580).
+
 ## Libraries
 
 - `-m mc` takes about 21 minutes, and 14 of its tests stop with "no javac" when `/etc/aoe2mc-setup-version` is below 6:
@@ -95,3 +99,5 @@ of its document (named below): this file loads into each run. The `improve` skil
 - Furniture inside a closed design: a text map of each layer (one character per state name of `render.building_blocks`, rows by z) shows the positions faster than an isometric render, which hides small blocks behind walls (#501).
 - `tests/test_objects.py::test_blocks_under_water_are_waterlogged` names the blocks of `fish_trap`: change it with the fish trap materials (#486). Grep `tests/` for the design name before the full run.
 - `docs/coverage.md` on main can be stale (#460): for the real fallbacks run `python3 tools/coverage.py OUT.md` (#500).
+- A gate footprint is not in `cols.blocked` (units walk through the passage): `place_building` blocks only the columns with a solid block at head height (#577). Reproduce "units in a block" of a campaign with `tests/test_scx.py` `build()` and random units on the wall line.
+- A change to the blocks of an object: also run the `-m mc` tests of the files that name it (`grep -l NAME tests/`): the fast suite skips them, and #590 broke `test_villager_forages_on_a_server` (fixed in #602).

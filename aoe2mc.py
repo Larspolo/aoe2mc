@@ -1727,9 +1727,15 @@ def place_objects(objects, players, cols, rng):
             mound(E, cols, bx, bz, T * 0.4, 2, ["mossy_cobblestone", "cobblestone", "stone"], rng)
             stats["rocks"] += 1
         elif kind == "O" and ("FORAGE" in name or "FRUIT_BUSH" in name):
-            for dx, dz in ((0, 0), (1, 0), (0, 1)):
-                if cols.inside(bx + dx, bz + dz):
-                    E.add([bx + dx], [cols.surface(bx + dx, bz + dz)], [bz + dz], "sweet_berry_bush[age=3]")
+            x0, z0 = bx // T * T, bz // T * T          # a full bush fills its tile, 2 blocks high (#590): berries
+            for x in range(x0, x0 + T):                 # around, leaves in the middle (a berry bush needs dirt below)
+                for z in range(z0, z0 + T):
+                    if cols.inside(x, z):
+                        ring = x in (x0, x0 + T - 1) or z in (z0, z0 + T - 1)
+                        mid = not ring or T <= 2 and (x, z) == (x0, z0)
+                        y = cols.surface(x, z)
+                        E.add([x] * (1 + mid), [y, y + 1][:1 + mid], [z] * (1 + mid),
+                              "oak_leaves[persistent=true]" if mid else "sweet_berry_bush[age=3]")
             stats["berry bushes"] += 1
         elif kind == "O" and "RELIC" in name:
             E.add([bx], [y], [bz], "decorated_pot[facing=south,cracked=false]")
@@ -2375,7 +2381,14 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
         x, z = (x0 + x1) // 2, (z0 + z1) // 2
         if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
             continue
-        at = f"execute positioned {x} {int(ground[x, z]) + 1} {z} if entity @a[distance=..24] " \
+        # the feet height next to the building (the ground in the footprint is the roof or barrier top, #588)
+        xa, za = max(x0 - 1, 0), max(z0 - 1, 0)
+        edge = ground[xa:x1 + 1, za:z1 + 1]
+        outer = np.ones(edge.shape, bool)
+        outer[x0 - xa:x1 - xa, z0 - za:z1 - za] = False
+        y = int(np.median(edge[outer])) if outer.any() else int(ground[x, z]) + 1
+        # playsound at volume 1 is heard up to 16 blocks: a larger check plays it for nobody
+        at = f"execute positioned {x} {y} {z} if entity @a[distance=..16] " \
              f"if predicate aoe2mc:{rule[2]} run"
         lines.append(f"{at} playsound minecraft:{rule[1]} ambient @a ~ ~ ~ 1 {0.9 + 0.1 * (x % 3):.1f}")
         if rule[3]:

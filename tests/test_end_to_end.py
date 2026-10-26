@@ -191,7 +191,7 @@ def test_work_sounds(tiny_world, tmp_path):
     x0, z0, x1, z1 = tc["footprint"]
     bell = [line.split() for line in lines if "block.bell.use" in line]
     assert len(bell) == 1 and (int(bell[0][2]), int(bell[0][4])) == ((x0 + x1) // 2, (z0 + z1) // 2)
-    assert "if entity @a[distance=..24]" in lines[0] and lines[-1].startswith("schedule function aoe2mc:pulse")
+    assert "if entity @a[distance=..16]" in lines[0] and lines[-1].startswith("schedule function aoe2mc:pulse")
     assert "work sounds at buildings: " in out
     # no building with a sound: no pack
     import numpy as np
