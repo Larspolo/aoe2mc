@@ -713,6 +713,15 @@ class Replay:
         return [f"bossbar set {BAR} name {json.dumps(text(name), ensure_ascii=False)}",
                 f"bossbar set {BAR} value {min(int(now) // 1000, max(1, int(end) // 1000))}", f"bossbar set {BAR} players @a"]
 
+    @staticmethod
+    def end_commands(end):
+        """A title, the end time as subtitle and one sound when the replay is over (#872): the boss bar alone was not
+        seen. The title stays 5 s (a resign title just before it shows only 3.5 s)."""
+        m, s = divmod(int(end) // 1000, 60)
+        return ["title @a times 10 100 20", "title @a subtitle " + json.dumps(text(f"Game time {m:02d}:{s:02d}")),
+                "title @a title " + json.dumps(text("Replay ended")),
+                "playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1"]
+
     def score_commands(self):
         """The sidebar commands for the population of each player that changed since the last call (#741). The score
         holder is "P<n>" (a holder name has no space); its display name is the player name in the player color."""
@@ -849,7 +858,7 @@ class Replay:
                     log(f"{m:02d}:{s:02d} {e['kind']} {e.get('name') or e.get('age') or ''} "
                         f"player {e.get('player')}: {len(cmds)} commands")
         census()
-        send(self.clock_commands(end, end, speed, done=True) + self.score_commands())
+        send(self.clock_commands(end, end, speed, done=True) + self.score_commands() + self.end_commands(end))
         span = (events[-1]["time"] - start) / 1000 / speed if events else 0                 # at the start speed
         return {"events": n, "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2),
                 "rate": round(self.sent / self.busy) if self.busy else 0, "need": round(self.sent / span) if span else 0}
