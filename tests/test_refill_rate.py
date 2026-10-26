@@ -5,10 +5,10 @@ import usage
 T = 1793000000                                                                  # 2026-10-26 07:33:20 UTC
 
 
-def test_the_whole_refill_lock_changes_each_quarter_hour():
+def test_the_whole_refill_lock_changes_with_its_slot():
     assert claim.refill_state(0, now=T) == claim.refill_state(0, now=T + 60)    # 07:34: the same lock
-    assert claim.refill_state(0, now=T) != claim.refill_state(0, now=T + 900)   # 07:48: a new lock
-    assert claim.refill_state(0, now=T + 1600)[-1] == "0"                        # 08:00: the first quarter
+    assert claim.refill_state(0, now=T) != claim.refill_state(0, now=T + 900)   # 07:48: a new lock (#650: 10 minutes)
+    assert claim.refill_state(0, now=T + 1600)[-1] == "0"                        # 08:00: the first slot
 
 
 def test_a_refill_run_when_no_ticket_is_ready():

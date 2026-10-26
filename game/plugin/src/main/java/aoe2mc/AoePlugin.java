@@ -91,8 +91,8 @@ import net.kyori.adventure.text.Component;
  * hits only a target in sight, and the eye of the slime is in the walls: so a unit next to the slime that has it as
  * target hits it each second (Mob#attack, the vanilla hit with the swing), as a zombie hits.
  * Vanilla has no clickable item menu: "aoe menu" opens an inventory with the items (#619). A click on an item is
- * cancelled (the player takes nothing) and sets the score aoe_menu of the player to slot + 1; the menu stays open, so
- * the player can click again. "aoe menu" on an open menu of the same title and size only changes the items.
+ * cancelled (the player takes nothing) and sets the score aoe_menu of the player to slot + 1 (a shift click: -(slot + 1),
+ * #620); the menu stays open, so the player can click again. "aoe menu" on an open menu of the same title and size only changes the items.
  */
 public final class AoePlugin extends JavaPlugin implements Listener {
     private record Stats(int attack, int melee, int pierce, boolean ranged, Set<String> classes,
@@ -315,7 +315,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         int slot = ev.getRawSlot();
         if (slot >= 0 && slot < ev.getView().getTopInventory().getSize() && ev.getCurrentItem() != null
                 && !ev.getCurrentItem().isEmpty()) {
-            menuScore().getScore(ev.getWhoClicked().getName()).setScore(slot + 1);
+            menuScore().getScore(ev.getWhoClicked().getName()).setScore(ev.isShiftClick() ? -(slot + 1) : slot + 1);
         }
     }
 

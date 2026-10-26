@@ -20,10 +20,10 @@ of its document (named below): this file loads into each run. The `improve` skil
 - GitHub in cloud sessions: `gh api repos/Larspolo/aoe2mc/...` (REST) works. GraphQL (`gh issue list`, `gh pr create`),
   `search/...` and branch deletes give 403. A push to a new ref works, a non-fast-forward push fails: `tools/claim.py`
   uses it as a lock (#211). REST ref paths: `git/refs/heads/...`. `urllib` with a JSON body needs
-  `Content-Type: application/json`, else 415 (#345).
-- Quote the heredoc tag (`<<'EOF'`) for GitHub text: `<<EOF` runs each `` `name` `` as a command.
+  `Content-Type: application/json`, else 415 (#345). GitHub text: quote the heredoc tag (`<<'EOF'`), `<<EOF` runs `` `name` ``.
 - Pitfalls of the Minecraft server, client and NBT (silent defaults, dropped tags): `docs/minecraft-versions.md`; of Paper
-  and the game program: `docs/research/gameplay.md`; of RCON `@e`: `docs/datapack.md` (sections "Pitfalls").
+  and the game program: `docs/research/gameplay.md`; of RCON `@e`: `docs/datapack.md`; of records (`mgz`, test records):
+  `docs/research/replays.md`; of designs (cylinders, furniture, renders, shelf items): the `design` skill ("Pitfalls").
 - `tools/claim.py` names the run by the local branch (`who()`): beat only from the session branch, never in parallel (#361).
   Run `claim.py N --guard` alone and read its exit code before the push: `guard; echo g=$? && git push` pushes also after
   a failed guard (#540).
@@ -33,7 +33,8 @@ of its document (named below): this file loads into each run. The `improve` skil
 - Quota usage: `claude -p ... --output-format stream-json --verbose` prints a `rate_limit_event` with
   `unifiedWindows.five_hour/seven_day.utilization` and `resetsAt` (`tools/usage.py`). A `statusLine` does not run in cloud sessions.
 - `pyproject.toml` `addopts` has `-q`: `python3 -m pytest -q` gives `-qq`, without the "N passed" line. Wait for the
-  exit code, not for "passed" in the output; foreground `sleep` is blocked: use `run_in_background` (#413).
+  exit code, not for "passed" in the output; foreground `sleep` is blocked: use `run_in_background` and wait with
+  `timeout 580 bash -c 'until [ -s OUT ]; do sleep 5; done'` (#413, #514).
 - `mcp__github__get_job_logs` gives HTTP 404 for the jobs of `ci.yml` (2026-10-26, #443): do not retry. Run its steps
   (`ruff`, fast, `-m slow`, `-m mc`) locally on the run's `head_sha`; main is red only when one fails there.
 
@@ -54,6 +55,8 @@ of its document (named below): this file loads into each run. The `improve` skil
   `apt-get install -y openjdk-25-jdk-headless` first (1 min, #536).
 - Wait for a `run_in_background` job in the foreground: `timeout 580 bash -c 'until [ -s OUT ]; do sleep 5; done'` works; a bare `sleep` is blocked (#514).
 - Records (`mgz`, test records, command pitfalls): `docs/research/replays.md`, "Pitfalls".
+- `-m mc` takes about 21 minutes and needs `javac` (setup version 6, #493): when `/etc/aoe2mc-setup-version` is below 6,
+  run `apt-get install -y openjdk-25-jdk-headless` first (1 min, #536).
 - AoE2ScenarioParser 0.9.8 makes new scenarios (`tools/scenarios.py`: `new_scenario`, `add_unit`, `save`). It prints much
   text (`redirect_stdout`), default players are RANDOM (`western`), and `write_to_file` writes the output file name into
   the file: for the same bytes use `scenarios.save(..., name)` (#204).
@@ -73,10 +76,9 @@ of its document (named below): this file loads into each run. The `improve` skil
   A `MONUMENTS` object goes to `place_building` as a copy without `o["footprint"]`: use `buildings.footprint(name)` (#296).
 - A new runtime data file (like `tools/mcdata/26.3.json`) must go into the package data (`pyproject.toml`).
 - Generated on main, not in PRs: the column "Used today in" of `docs/DESIGN.md` (`tools/feature_table.py`), `docs/coverage.md`
-  and `MAX` in `tests/test_coverage.py` (`coverage.yml`, #233, #234). A conflict there: take main's side.
+  and `MAX` in `tests/test_coverage.py` (`coverage.yml`, #233, #234). A conflict there: take main's side. `docs/coverage.md`
+  can be stale (#460): for the real fallbacks run `python3 tools/coverage.py OUT.md` into the scratchpad (#500).
 - Block IDs in `B` depend on earlier tests: draw random numbers in state-name order, not ID order (a cause of full-suite-only failures, #44).
-- Design pitfalls (stacked cylinders, furniture in open designs, render limits, tests that name design blocks):
-  the `design` skill, "Pitfalls".
 - Inside of a design: `tools/render.py building NAME OUT.png --cut 2` (#265); exact layers: `c.get(x, y, z)` on a `Canvas`
   (#255). `vary()` materials: `render.building_blocks(NAME, arch, variant=v)` (#146). `render.py world` draws Y >= 50
   (`--y0 -64` for `--border`); `--scale 4` gives about 800 px like `docs/images/` (#262).
@@ -89,19 +91,6 @@ of its document (named below): this file loads into each run. The `improve` skil
 - A fruit bush of `place_objects` is at block `int(x * T)` (the tile center), not at `int(tile) * T` (#391).
 - "units in a block": `AOE2MC_DEBUG=1` names the block; list the `aoe2mc.json` objects with a `tile` near the unit to
   find its source (#415: a `PLANT_SHRUB` on the same block, not the tree that the ticket named).
-- Stacked `cylinder`s of falling height make a flat top (the outer disc covers the inner ones): use `seats()`, which
-  carves air above each row (#451). Find the edge of a round room by a scan with `c.get` from the centre (`arena_inside`).
-- `Canvas.furniture` sets only into `air` cells: an open design without `room()` has empty cells (`-1`), so its
-  furniture vanishes without an error. Set those cells with `c.get(...) in (-1, air)` (`pagan_shrine`, #450).
-- `render.py --cut` does not show the inside of a narrow tower (#452): filter `render.building_blocks()` by x, y, z
-  (drop barriers and one side of the walls) and call `render.render()` for a section view.
-- `render.building_blocks` gives states with the `minecraft:` prefix and world y (the ground is y 63, canvas y 1 is y 64): strip the prefix before you match a name (#449).
-- Items in a block of a design: the canvas turns after the design, so set the item data after `E.add` in `place_building` by world position (`buildings.SHELVES` -> `aoe2mc.BLOCK_DATA`). 26.3 shelf: block entity `shelf`, `Items` with `Slot` 0-2; the server keeps them (#526).
-- `docs/coverage.md` on main is stale while GitHub Actions cannot run (#460): it listed 21 fallbacks that the code already handles. For the real fallbacks, run `python3 tools/coverage.py OUT.md` into the scratchpad (#500).
-- Furniture inside a closed design: a text map of each layer (one character per state name of `render.building_blocks`, rows by z) shows the positions faster than an isometric render, which hides small blocks behind walls (#501).
-- `tests/test_objects.py::test_blocks_under_water_are_waterlogged` names the blocks of `fish_trap`: change it with the fish trap materials (#486). Grep `tests/` for the design name before the full run.
-- `docs/coverage.md` on main can be stale (#460): for the real fallbacks run `python3 tools/coverage.py OUT.md` (#500).
 - A gate footprint is not in `cols.blocked` (units walk through the passage): `place_building` blocks only the columns with a solid block at head height (#577). Reproduce "units in a block" of a campaign with `tests/test_scx.py` `build()` and random units on the wall line.
 - A change to the blocks of an object: also run the `-m mc` tests of the files that name it (`grep -l NAME tests/`): the fast suite skips them, and #590 broke `test_villager_forages_on_a_server` (fixed in #602).
-- `game/gather.py` imports `build` and `train` at the top, and `combat`, `ai`, `replay` import `gather`: a module that `gather` imports must import `combat` or `gather` inside its function (#612).
 - A merge conflict between two new code blocks: do not join the two sides by a script. A hunk can cut through a block (#517: the Java of the plugin did not compile). Apply your change again on main's file, then build.

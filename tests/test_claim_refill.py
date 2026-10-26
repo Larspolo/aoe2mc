@@ -22,6 +22,6 @@ def test_one_run_refills_an_epic(clones):  # noqa: F811
 
 def test_whole_refill_locks_one_hour(clones):  # noqa: F811
     """Epic 0 (the whole refill) without --state locks the UTC hour and its quarter of a local remote (#609)."""
-    assert claim.refill_state(0, now=1793000000) == "20261026072"                 # 07:33 UTC
+    assert claim.refill_state(0, now=1793000000) == "20261026073"                 # 07:33 UTC: slot 3 of the hour
     assert tool(clones[0], "0", "--refill").returncode == 0
     assert tool(clones[1], "0", "--refill").returncode == 1
