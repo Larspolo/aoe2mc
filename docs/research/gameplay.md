@@ -72,6 +72,12 @@ open, so a player clicks again to queue more (no separate "x5" button). The buil
 next click is on the ground.
 Epic #618.
 
+**Owner decision (2026-10-26): the hints of the available actions** (#797). The game program shows the actions that
+the player can do now (for example "Right click: walk · Sneak + right click: deselect" while units are selected) in the
+**action bar**, the line above the hotbar where Minecraft shows "Press Shift to dismount". The action bar fades after
+about 2 s, so the program sends the hint again while the state lasts. The boss bar stays for the selected unit (#659),
+the sidebar for the numbers (#744). Epic #793, work: #798.
+
 ### Smallest playable milestone: "villagers gather wood"
 
 1. The converter writes `aoe2mc.json` into the world folder: each object with its AoE2 ID, name, owner,
