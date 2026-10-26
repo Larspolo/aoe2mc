@@ -705,7 +705,13 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             var path = pf.getCurrentPath();
             if (path == null || path.getFinalPoint() == null
                     || path.getFinalPoint().distanceSquared(o.goal) > 1.5 * 1.5) {
-                if (pf.moveTo(o.goal, o.speed) || ++o.fails < 50) {
+                boolean found = pf.moveTo(o.goal, o.speed);
+                Location end = pf.getCurrentPath() == null ? null : pf.getCurrentPath().getFinalPoint();
+                double c = center(mob);
+                // a part of a path that ends at the mob leads nowhere: a builder of a dock stood still with its order
+                // for a minute (#889). Drop such an order after 1 s.
+                boolean stays = found && end != null && end.clone().add(c, 0, c).distanceSquared(mob.getLocation()) <= 1.5 * 1.5;
+                if (found && !stays || (o.fails += stays ? 5 : 1) < 50) {
                     return false;
                 }
                 if (mob instanceof Villager) {          // no path for 5 s: drop the order, and stop the brain (#811)
@@ -735,7 +741,14 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             return false;
         }
         Location a = points.get(i), b = points.get(i + 1), m = mob.getLocation();
-        return (a.getX() + 0.5 - m.getX()) * (b.getX() - a.getX()) + (a.getZ() + 0.5 - m.getZ()) * (b.getZ() - a.getZ()) < 0;
+        double c = center(mob);
+        return (a.getX() + c - m.getX()) * (b.getX() - a.getX()) + (a.getZ() + c - m.getZ()) * (b.getZ() - a.getZ()) < 0;
+    }
+
+    // The mob walks to this offset of the corner of a path point: 1 for a horse (2 x 2 blocks), else 0.5 (vanilla
+    // Path#getEntityPosAtNode)
+    private static double center(Mob mob) {
+        return (int) (mob.getWidth() + 1) * 0.5;
     }
 
     // Down a slope a mob is in the air most of the time, and a mob has almost no control in the air (0.02 blocks per
@@ -743,7 +756,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // to the first point of its path that is still ahead, it keeps its walk speed (game/ai.py: WALK x attribute^2
     // blocks per second), at most the speed that stops in the air at the end of the path. The path finder plans no drop larger than the
     // safe fall distance, so the glide along it does not hurt either: the fall distance and the height above the point
-    // are together at most that.
+    // are together at most that. It aims at a point at least one tick of the glide ahead: a horse aimed at a point
+    // closer than that, passed it in one tick and turned back the next tick, at half its speed (#889).
     private static void glide(Mob mob, Pathfinder.PathResult path, double speed) {
         Vector v = mob.getVelocity();
         AttributeInstance attr = mob.getAttribute(Attribute.MOVEMENT_SPEED);
@@ -752,10 +766,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             return;
         }
         Location m = mob.getLocation(), f = points.get(points.size() - 1), n = f;
+        double c = center(mob), step = Math.max(0.05, WALK * attr.getValue() * attr.getValue() * speed / 20);
         for (int i = Math.max(path.getNextPointIndex(), 1); i < points.size(); i++) {
             Location a = points.get(i - 1), p = points.get(i);
-            double dx = p.getX() + 0.5 - m.getX(), dz = p.getZ() + 0.5 - m.getZ();
-            if (dx * (p.getX() - a.getX()) + dz * (p.getZ() - a.getZ()) > 0 && Math.hypot(dx, dz) >= 0.05) {
+            double dx = p.getX() + c - m.getX(), dz = p.getZ() + c - m.getZ();
+            if (dx * (p.getX() - a.getX()) + dz * (p.getZ() - a.getZ()) > 0 && Math.hypot(dx, dz) >= step) {
                 n = p;                                  // the first point that is still ahead
                 break;
             }
@@ -763,12 +778,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         AttributeInstance safe = mob.getAttribute(Attribute.SAFE_FALL_DISTANCE);
         double most = (safe == null ? 3 : safe.getValue()) - Math.max(0, m.getY() - n.getY());   // with the rest of the fall
         mob.setFallDistance((float) Math.max(0, Math.min(mob.getFallDistance(), most)));
-        double dx = n.getX() + 0.5 - m.getX(), dz = n.getZ() + 0.5 - m.getZ(), d = Math.hypot(dx, dz);
+        double dx = n.getX() + c - m.getX(), dz = n.getZ() + c - m.getZ(), d = Math.hypot(dx, dz);
         if (v.getY() >= 0 || n.getY() >= m.getY() || d < 0.05) {
             return;
         }
-        double w = Math.min(AIR * Math.hypot(f.getX() + 0.5 - m.getX(), f.getZ() + 0.5 - m.getZ()),
-                            WALK * attr.getValue() * attr.getValue() * speed / 20);
+        double w = Math.min(AIR * Math.hypot(f.getX() + c - m.getX(), f.getZ() + c - m.getZ()), Math.min(step, d));
         if (w > Math.hypot(v.getX(), v.getZ())) {
             mob.setVelocity(new Vector(dx / d * w, v.getY(), dz / d * w));
         }

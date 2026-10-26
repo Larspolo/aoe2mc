@@ -70,10 +70,10 @@ def sample(r, now, found):
         e = found.get(v.uuid)
         speed = next((s for k, s in replay.SPEEDS.items() if v.name.startswith(k)), 1.0) * r.T     # blocks per second
         rows.append({"t": int(now), "ref": key, "uuid": v.uuid, "name": v.name, "player": v.player,
-                     "rx": round(v.pos[0], 2), "rz": round(v.pos[2], 2), "walking": id(v) in due,
+                     "rx": round(v.pos[0], 2), "ry": v.pos[1], "rz": round(v.pos[2], 2), "walking": id(v) in due,
                      "slack": round(math.dist(r.at(v, now)[::2], v.pos[::2]), 2),    # the rest of its leg (#851)
                      "need": speed,
-                     **({"x": e[0], "z": e[2], "order": e[3], "target": e[4]} if e else {"x": None, "z": None})})
+                     **({"x": e[0], "y": e[1], "z": e[2], "order": e[3], "target": e[4]} if e else {"x": None, "z": None})})
     return rows
 
 
