@@ -42,6 +42,8 @@ of its document (named below): this file loads into each run. The `improve` skil
 - AoE2ScenarioParser 0.9.8 makes new scenarios (`tools/scenarios.py`: `new_scenario`, `add_unit`, `save`). It prints much
   text (`redirect_stdout`), default players are RANDOM (`western`), and `write_to_file` writes the output file name into
   the file: for the same bytes use `scenarios.save(..., name)` (#204).
+- AoE2ScenarioParser refuses to write over the file that it read ("Overwriting the source scenario file"): read a
+  temporary copy (`scenarios.triggers`). No scenario in `examples/` and `samples/` has triggers: use the `triggers` scenario (#646).
 
 ## Code
 
