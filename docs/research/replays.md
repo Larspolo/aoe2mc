@@ -147,6 +147,13 @@ Usage: README, section "Use". Two outputs use the timeline of a record (`aoe2mc.
   of `MOVE` and `ORDER` walk on a path to the target at their AoE2 speed (#409), a group stops in a line formation
   (#410). Old game versions: #376.
 
+Control of a live replay (decision of the owner in #686: hotbar items, a chest for more actions, and a command
+for each action; #688, `game/replay_input.py`): a right click with the clock pauses and continues, the feather sets
+the next speed (0.5, 1, 2, 4, 8×), the ender pearl jumps 1 minute forward, and the chest in the last slot opens a chest
+menu with all actions (Paper only). `/trigger aoe_replay set N` does action N (1 pause, 2 next speed, 3, 5, 6 jump 1, 5,
+10 minutes, 10-14 speed 0.5-8×); a clickable chat line lists them. The items are carrots on a stick with an
+`item_model`: Minecraft counts their right clicks (`minecraft.used`), not those of a clock.
+
 Not possible from the record alone: fights and deaths, gathering, destroyed or unfinished buildings, cut trees,
 used mines and farms, and the exact unit paths. Next: #438 lets Minecraft path finding walk the units (epic #433).
 
