@@ -59,6 +59,7 @@ CARRY = {"WHEELBARROW": 3}                                         # more resour
 PACE = {"WHEELBARROW": 1.1}                                        # the villager walk speed factor, as in AoE2
 WORK_TECHS = {"DOUBLE_BIT_AXE": {"wood": 1.2}}                     # work rate factors of the economy technologies (AoE2)
 FARM_FOOD = 175                                                    # food in one farm, as in AoE2 DE (no upgrades)
+FARM_TECHS = {"HORSE_COLLAR": 75}                                  # food that a farm technology adds to each farm (AoE2 DE)
 MINES = {"GOLD_MINE": ("gold", 800, "GOLD_MINER"), "STONE_MINE": ("stone", 350, "STONE_MINER")}   # as in AoE2
 MINE_BLOCKS = {"gold": ("gold_ore", "raw_gold_block", "stone"),                # the blocks of the converter's heap
                "stone": ("cobblestone", "andesite", "stone", "tuff")}
@@ -91,6 +92,7 @@ class Map:
         self.mines = {r: {} for r, _, _ in MINES.values()}             # resource -> {tile: amount}
         self.mine_at = {}                                              # block cell -> tile of its mine
         self.farms, self.farm_at = {}, {}                              # farm tile -> food; block cell -> farm tile
+        self.farm_food, self.own_farms = FARM_FOOD, set()              # food of a new farm (FARM_TECHS), own farm tiles
         for o in data["objects"]:
             if o["kind"] == "building":
                 x0, z0, x1, z1 = o["footprint"]
@@ -122,7 +124,9 @@ class Map:
         x0, x1, z0, z1 = rect
         cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
         if "FARM" in name:                                             # no barriers: the farmer stands on it
-            self.farms[tile], self.feet[tile] = FARM_FOOD, rect
+            self.farms[tile], self.feet[tile] = self.farm_food, rect
+            if own:
+                self.own_farms.add(tile)
             self.farm_at.update(dict.fromkeys(cells, tile))
             return
         self.blocked |= cells
@@ -771,7 +775,7 @@ class Gather:
     def harvest(self, tile):
         """A farm shows its food: the wheat gets younger (age 7 when full), and an empty farm is dirt."""
         food = self.map.farms[tile]
-        age = math.ceil(7 * food / FARM_FOOD)
+        age = min(7, math.ceil(7 * food / self.map.farm_food))
         if self.crops.get(tile, 7) == age:                             # the converter's farm: mostly age 7
             return
         self.crops[tile] = age

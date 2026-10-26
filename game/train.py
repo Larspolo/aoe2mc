@@ -20,6 +20,7 @@ Ages (#672): the Feudal Age is a technology of the town center that needs 2 type
 sidebar title shows the age of the player; all players see a title and hear a sound when a player advances.
 Forging at the blacksmith (#675): infantry and cavalry get +1 attack.
 Double-Bit Axe at the lumber camp (#723): villagers chop wood 20 % faster (gather.WORK_TECHS, gather.Gather.work_time).
+Horse Collar at the mill (#726): the live and the new farms of the player have 75 more food (gather.FARM_TECHS).
 Wheelbarrow at the town center in the Feudal Age (#728, TECH_AGE): villagers carry 3 more resources and walk 10 % faster (gather.CARRY, gather.PACE).
 Rally points (#707): the menu item "Rally point" (RALLY) and the next right click on the ground set the rally point of
 the building; each new unit walks there (Minecraft path finding), a new villager gathers at a tree, bush, mine or farm.
@@ -42,21 +43,25 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}, "FEUDAL_AGE": {"food": 500},
          "DOUBLE_BIT_AXE": {"food": 100, "wood": 50},
          "FORGING": {"food": 150},
+         "HORSE_COLLAR": {"food": 75, "wood": 75},
          "SCALE_MAIL_ARMOR": {"food": 100},
          "SCOUT_CAVALRY": {"food": 80},
          "WHEELBARROW": {"food": 175, "wood": 50}}
 TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130,   # AoE2 seconds
                "DOUBLE_BIT_AXE": 25,
                "FORGING": 50,
+               "HORSE_COLLAR": 20,
                "SCALE_MAIL_ARMOR": 40,
                "SCOUT_CAVALRY": 30,
                "WHEELBARROW": 75}
 TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW"), "BARRACKS": ("MILITIA",),   # the units and technologies of each
           "ARCHERY_RANGE": ("ARCHER",),                                         # building (#654, #670, #655)
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR"), "STABLE": ("SCOUT_CAVALRY",),   # (#675, #671, #725)
-          "LUMBER_CAMP": ("DOUBLE_BIT_AXE",)}                                   # (#723)
+          "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
+          "MILL": ("HORSE_COLLAR",)}                                            # (#726)
 TECHS = {"DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
+         "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
          "LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
          if "VILLAGER" in name else s,
          "SCALE_MAIL_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
@@ -76,6 +81,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "SCOUT_CAVALRY": (0, "horse_spawn_egg", "Scout Cavalry"),
          "DOUBLE_BIT_AXE": (0, "book", "Double-Bit Axe"),
          "FORGING": (0, "book", "Forging"),
+         "HORSE_COLLAR": (0, "book", "Horse Collar"),
          "LOOM": (1, "book", "Loom"),                               # a book for a technology (#618)
          "SCALE_MAIL_ARMOR": (1, "book", "Scale Mail Armor"),
          "FEUDAL_AGE": (2, "bell", "Feudal Age"),
@@ -83,6 +89,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
 SHIFT = 5                                                          # units of a shift click, as in AoE2
 RALLY = (8, "white_banner", "Rally point", "Click, then right click the ground")   # last slot of the first row
 MARK = 17.0                                                        # AoE2 seconds of the rally marker: 10 s at Normal
+ROW = 9                                                            # the first slot of the queue row of the menu (#706)
 
 
 def melee(s):
@@ -119,7 +126,9 @@ def open_menu(g, player, cell):
 
 
 def show(g, player, rect):
-    """Show (or refresh) the menu of the building rect: one item per unit, with its cost, time and queue."""
+    """Show (or refresh) the menu of the building rect: one item per unit, with its cost, time and queue. The second
+    row shows the queue (#706): one item per group of the same unit (groups(), item count: the units), the first one
+    with its progress; a click on it cancels a unit (cancel())."""
     n, building = len(g.queues.get(rect, [])), homes(g)[rect]
     def state(name):
         if need := build.locked(g, name):                              # a unit of a later age: a gray item (#674)
@@ -131,6 +140,9 @@ def show(g, player, rect):
               " · ".join(f"{v} {r}" for r, v in COSTS[name].items()) + f" · {TRAIN_TIMES[name]} s · " + state(name))
              for name in TRAINS[building] if name not in g.techs and unlocked(g, name) for slot, item, label in [ITEMS[name]]]
     items += [RALLY] if units_of(building) else []
+    q = g.queues.get(rect, [])                                         # the queue row first: the plugin sets the
+    items = [(ROW + i, ITEMS[name][1], ITEMS[name][2] + (f" {int(100 * q[0]['progress'])} %" if start == 0 else ""),
+              "Click: cancel 1", k) for i, (name, start, k) in enumerate(groups(q)[:ROW])] + items   # items by slot
     menu.show(g, player, build.pretty(building), items, lambda p, slot, shift: order(g, p, rect, slot, shift))
 
 
@@ -139,15 +151,46 @@ def units_of(building):
     return [n for n in TRAINS[building] if n not in TECHS]
 
 
+def groups(q):
+    """The queue q as (name, index of the first, count) of the same unit next to each other."""
+    out = []
+    for i, e in enumerate(q):
+        if out and out[-1][0] == e["name"]:
+            out[-1] = (e["name"], out[-1][1], out[-1][2] + 1)
+        else:
+            out.append((e["name"], i, 1))
+    return out
+
+
+def cancel(g, player, rect, group):
+    """Remove the last unit of queue group `group` (groups()) of the building rect and give back its full cost, as in
+    AoE2 (also for the unit in training). Returns its name, or None."""
+    q = g.queues.get(rect, [])
+    gs = groups(q)
+    if not 0 <= group < len(gs):
+        return None
+    name, start, k = gs[group]
+    q.pop(start + k - 1)
+    for r, v in COSTS[name].items():
+        g.stock[r] += v
+        g.command(f"scoreboard players add {r.capitalize()} aoe_res {v}")
+    return name
+
+
 def order(g, player, rect, slot, shift=False):
     """A click on the menu item in slot: queue 1 unit (a shift click: SHIFT, as many as the resources and the queue
-    allow) at the building rect, and refresh the menu. Returns the number of queued units. A click on RALLY closes
-    the menu: the next right click on the ground sets the rally point (gather.Gather.click calls rally())."""
+    allow) at the building rect, or cancel a unit of the queue row (cancel()), and refresh the menu. Returns the
+    number of queued units. A click on RALLY closes the menu: the next right click on the ground sets the rally point
+    (gather.Gather.click calls rally())."""
     if slot == RALLY[0] and units_of(homes(g)[rect]):
         g.rallying[player] = rect
         menu.close(g, player)
         g.command(f"tellraw {player} " + json.dumps({"text": "Right click the ground for the rally point.",
                                                       "color": "gray"}))
+        return 0
+    if slot >= ROW:
+        cancel(g, player, rect, slot - ROW)
+        show(g, player, rect)
         return 0
     name = next((n for n in TRAINS[homes(g)[rect]] if ITEMS[n][0] == slot), None)
     n = 0
@@ -251,8 +294,13 @@ def stats(g, name):
 
 def research(g, entry):
     """A technology is complete: keep it in g.techs and give the live villagers and military units the new values."""
-    import combat
+    import combat, gather                                          # gather imports this module
     g.techs.add(entry["name"])
+    if (more := gather.FARM_TECHS.get(entry["name"])):             # the new and the live own farms get more food
+        g.map.farm_food += more
+        for t in g.map.own_farms:
+            if g.map.farms.get(t, 0) > 0:
+                g.map.farms[t] += more
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
         if stats(g, name) != combat.stats(name):
             g.command(combat.stats_command(uuid, name, stats(g, name)))

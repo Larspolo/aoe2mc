@@ -34,7 +34,7 @@ def test_a_player_clicks_a_menu_and_it_stays_open(tiny_world, tmp_path):
         time.sleep(5)                                                  # the world is drawn
         game.menus, got = {}, []
         menu.setup(game)
-        assert menu.show(game, "aoe2mc", "Town Center", items, lambda p, s: got.append(s)).strip() == "Menu: 1 players"
+        assert menu.show(game, "aoe2mc", "Town Center", items, lambda p, s, shift: got.append(s)).strip() == "Menu: 1 players"
         time.sleep(2)
         for slot in (0, 13, 5, 0):                                     # slot 5 is empty: no click
             client.click(*client.slot(slot, 2))
