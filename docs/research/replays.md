@@ -111,6 +111,23 @@ The converter reads `.aoe2record`, `.mgz` (UserPatch), `.mgx` (AoC) and `.mgl` (
 timeline: for a game without one it stops with "mgz cannot read the commands of this recorded game". Only
 `hd-4.6` is in `samples/`: the other records are larger than 1 MB (`tools/health.py`).
 
+### Team games (#1190)
+
+The records of the table that `mgz.model.parse_match` reads, by players (`mgz` 1.8.51, `aoe2mc.read_timeline`):
+
+| Record | Players | Teams | Map | Length | Size |
+|---|---|---|---|---|---|
+| `de-13.34.aoe2record` | 2 | 1 vs 1 | Arabia | 44:42 | 4.5 MB |
+| `de-25.01.aoe2record` | 2 | 1 vs 1 | Arabia | 44:01 | 3.0 MB |
+| `de-61.5.aoe2record` | 2 | 1 vs 1 | Arabia | 27:54 | 3.8 MB |
+| `de-62.0.aoe2record` | 2 | 1 vs 1 | Arabia | 18:07 | 2.2 MB |
+| `de-63.0.aoe2record` | 4 | 2 vs 2 (players 1 + 3, 2 + 4) | Arena (Medium, 168 tiles) | 23:28 | 3.0 MB |
+| `de-64.3.aoe2record` | 2 | 1 vs 1 | Acropolis | 44:22 | 5.7 MB |
+
+Result: `de-63.0` is the team game for the tests (`samples/`, MIT, `tests/test_record_team.py`). Its timeline has
+2347 commands of all 4 players (build commands of each player) and ends with a resign of player 4. The converter
+makes 672 × 672 blocks in 15 s, with 84 units and 0 units in a block. No test record has 8 players.
+
 ## Options for the replay in Minecraft
 
 | Option | What the player sees | Accuracy | Cost |
