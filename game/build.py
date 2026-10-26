@@ -2,6 +2,7 @@
 Construction sites in the game program (#417, part of #394). A player chooses a building with `/trigger aoe_build
 set N` (players without operator rights can run /trigger), then right clicks the ground with the command stick.
 When the footprint is free and the stock pays the cost, a foundation appears: a ring of wool in the player color.
+The ring stays until the building is complete, so a player sees which buildings are not finished.
 The footprint is blocked for paths. gather.Gather.click calls place().
 A right click on a foundation sends the selected villagers there to build it (#418): the blocks of the design
 (replay.Replay.building) appear from the bottom up, in the AoE2 build time. gather.Gather.step calls rise().
@@ -91,14 +92,14 @@ def place(g, player, name, eye, d):
         g.command(f"scoreboard players remove {r.capitalize()} aoe_res {v}")
     x0, x1, z0, z1 = rect
     color = g.players.get(str(g.player), {}).get("color", "light_gray")
-    for x in range(x0, x1):
-        for z in range(z0, z1):
-            if x in (x0, x1 - 1) or z in (z0, z1 - 1):
-                g.command(f"setblock {x} {g.map.y(x, z)} {z} minecraft:{color}_wool")
+    ring = [(x, g.map.y(x, z), z) for x in range(x0, x1) for z in range(z0, z1) if x in (x0, x1 - 1) or z in (z0, z1 - 1)]
+    for c in ring:
+        g.command("setblock {} {} {} ".format(*c) + f"minecraft:{color}_wool")
     g.map.blocked |= {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
     s = footprint(name)                                                # the design, bottom up (one command each)
     cmds = Replay(g, g.data, getattr(g.game, "version", VERSION_NAME)).building(name, g.player, x0 / g.map.T + s / 2, z0 / g.map.T + s / 2)
-    site = {"name": name, "player": g.player, "footprint": rect, "commands": cmds, "sent": 0, "progress": 0.0}
+    site = {"name": name, "player": g.player, "footprint": rect, "commands": cmds, "sent": 0, "progress": 0.0,
+            "ring": dict.fromkeys(ring, f"minecraft:{color}_wool"), "under": {}}   # under: the design blocks on the ring
     g.sites.append(site)
     g.command(f"scoreboard players set {player} {OBJECTIVE} 0")
     return site
@@ -111,17 +112,39 @@ def pick(g, eye, d):
                  and s["footprint"][2] <= cell[1] < s["footprint"][3]), None)
 
 
+def box(cmd):
+    """The box (x0, y0, z0, x1, y1, z1) and the block state of a /setblock or /fill command, or None."""
+    t = cmd.split()
+    if t[0] == "setblock":
+        return (*map(int, t[1:4]), *map(int, t[1:4])), t[4]
+    if t[0] == "fill":
+        return tuple(map(int, t[1:7])), t[7]
+    return None
+
+
 def rise(g, site, work):
     """Add work (game seconds of one builder) to the site and send the commands of the blocks that are due.
-    Returns True when the building is complete."""
+    The wool ring stays on top of the design until the building is complete. Returns True when it is complete."""
     site["progress"] = min(1.0, site["progress"] + work / BUILD_TIMES[site["name"]])
-    cmds = site["commands"]
+    cmds, ring = site["commands"], site.get("ring", {})
     k = len(cmds) if site["progress"] >= 1 else math.floor(site["progress"] * len(cmds))
+    hit = set()
     for c in cmds[site["sent"]:k]:
         g.command(c)
+        if ring and (b := box(c)):                                     # remember the design block, keep the wool
+            (x0, y0, z0, x1, y1, z1), state = b
+            for p in ring:
+                if x0 <= p[0] <= x1 and y0 <= p[1] <= y1 and z0 <= p[2] <= z1:
+                    site["under"][p] = state
+                    hit.add(p)
     site["sent"] = max(site["sent"], k)
+    if site["progress"] < 1:
+        for p in sorted(hit):
+            g.command("setblock {} {} {} ".format(*p) + ring[p])
     if site["progress"] >= 1 and not site.get("done"):                 # complete: the building works (#419)
         site["done"] = True
+        for p in [p for p in ring if p not in hit]:                    # the ring goes: the design or air
+            g.command("setblock {} {} {} ".format(*p) + site["under"].get(p, "minecraft:air"))
         x0, x1, z0, z1 = site["footprint"]
         s, T = footprint(site["name"]), g.map.T
         if "FARM" in site["name"]:                                     # free ground again: the farmer stands on it
