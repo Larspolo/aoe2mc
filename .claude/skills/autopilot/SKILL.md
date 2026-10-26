@@ -125,11 +125,15 @@ then the lowest issue number.
 Epics first: an epic is never a candidate, so its rest of the work needs sub-issues. Before you claim a ticket, look
 at the open epics (label `epic`, not `needs-human`) with a higher priority than the top candidate and no open
 sub-issue. For each one, read its acceptance criteria. Close the epic with a comment when the closed sub-issues meet
-all criteria (name the evidence for each). Else make one sub-issue (same priority) for the criteria that an agent
-can do. A criterion that needs the owner stays on the epic. Then pick again (#176, #155 waited while P3 tickets ran).
+all criteria (name the evidence for each). Else lock the epic first: `python3 tools/claim.py E --refill`
+(E = the epic; exit 1: another run makes its sub-issue, skip the epic, #505). Then make one sub-issue (same priority)
+for the criteria that an agent can do. A criterion that needs the owner stays on the epic. Then pick again (#176, #155 waited while P3 tickets ran).
 Refill the queue when fewer candidates are ready than runs are active (tickets with `in-progress` that changed in
-the last 30 minutes), so that parallel runs always find work. Do this at most once per run, in about 10 minutes:
-1. Split each `size:L` ticket without open sub-issues (`ticket` skill), also when it is not a candidate yet.
+the last 30 minutes), so that parallel runs always find work. Do this at most once per run, in about 10 minutes.
+Lock it first: `python3 tools/claim.py 0 --refill` (one run per UTC hour; exit 1: another run refills, skip the refill).
+Also lock each epic E with `python3 tools/claim.py E --refill` before you make its tickets (exit 1: skip that epic, #505):
+1. Split each `size:L` ticket N without open sub-issues (`ticket` skill), also when it is not a candidate yet. Lock it
+   first with `python3 tools/claim.py N --refill` (exit 1: skip it).
 2. For each open epic whose sub-issues are all closed: make a sub-issue for each acceptance criterion that is
    still open and that an agent can do. A criterion that needs the owner stays on the epic.
 3. Make up to 5 new tickets for the remaining goals of the open epics and `docs/ROADMAP.md`, and for the
@@ -242,7 +246,8 @@ cloud session, reset the branch first: `git fetch origin main && git checkout -B
 `git fetch origin <branch> && git push --force-with-lease origin <branch> && git branch -u origin/<branch>`
 (a plain `git push -u origin <branch>` when the branch is not on the remote). If the auto mode denies the force push
 ("Git Destructive"), do not ask: `git merge --no-edit origin/<branch>` (its commits are on main already, so the PR diff
-stays the same), then `git push origin HEAD:<branch>`.
+stays the same), then `git push origin HEAD:<branch>`. A conflict in that merge: take your side (`git checkout --ours FILE`):
+main has the squashed old commits, so check that `git diff --stat origin/main` shows only your ticket (#523).
 The session branch can carry only one open PR: do the next ticket in a local commit, and push it only when the PR
 of the last ticket is merged or closed (`/pulls?head=Larspolo:<branch>&state=open` is empty). Else a push replaces
 the open PR. After `checkout -B` the upstream is

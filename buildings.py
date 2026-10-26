@@ -1892,6 +1892,19 @@ def flagship(c, w, st, col, T, ctx):
     c.box(m, m + 1, mh - 5, mh - 1, zc - half + 1, zc + half, f"{col}_wool")
     c.box(m, m + 1, mh - 5, mh - 1, zc, zc + 1, "stripped_oak_log")
     c.flag(m, mh, zc, col, 2)
+    # Deck (#500): the hull has one level above the water, so the cargo stands on the open deck.
+    # Rowing benches at the oars, cargo (barrels, a chest, sacks) on both sides of the mast and a lantern.
+    items = []
+    for x in range(2, w - 2, 2):
+        hw = min(half, x, w - 1 - x)
+        if hw >= 2:
+            items += [(x, 1, zc - hw + 1, "spruce_slab[type=bottom]"), (x, 1, zc + hw - 1, "spruce_slab[type=bottom]")]
+    items += [(m - 1, 1, zc, "barrel[facing=up]"), (m - 2, 1, zc, "barrel[facing=up]"),
+              (m + 1, 1, zc, "chest[facing=west,type=single,waterlogged=false]"), (m + 2, 1, zc, "hay_block[axis=x]"),
+              (m - 1, 1, zc - 1, "barrel[facing=up]"), (m + 1, 1, zc + 1, "hay_block[axis=x]")]
+    c.furniture(items)
+    if c.get(m - 2, 1, zc) == c.id("barrel[facing=up]"):                 # above the deck the cells are empty, not air
+        c.set(m - 2, 2, zc, "lantern[hanging=false]")
 
 
 def helepolis(c, w, st, col, T, ctx):
@@ -3116,10 +3129,10 @@ def ridge_tent(c, w, col):
     shield and pots of the player in front."""
     m = w // 2
     z1 = max(w - 1, 2)                                     # the front row stays free for the shield and the pots
-    for i in range((w + 1) // 2):
+    for i in range((w + 1) // 2):                         # cloth slopes of wool stairs, a wool slab on the ridge (#525)
         y = 1 + i
-        for x in (i, w - 1 - i):
-            c.box(x, x + 1, y, y + 1, 0, z1, "white_wool")
+        for x, f in ((i, "east"), (w - 1 - i, "west")):
+            c.box(x, x + 1, y, y + 1, 0, z1, "white_wool_slab[type=bottom]" if 2 * i == w - 1 else stair("white_wool_stairs", f))
         c.box(i + 1, w - 1 - i, 1, y + 1, 1, z1 - 1, "air")
     c.box(1, w - 1, 1, (w + 1) // 2, 0, 1, "white_wool")    # the back gable
     for i in range((w + 1) // 2 - 1):
@@ -3133,6 +3146,23 @@ def ridge_tent(c, w, col):
             c.furniture([(x, 1, 2, f"{col}_bed[facing=north,occupied=false,part=head]"),
                          (x, 1, 3, f"{col}_bed[facing=north,occupied=false,part=foot]")])
         c.furniture([(m, 1, 1, "lantern[hanging=false,waterlogged=false]")])
+
+
+def cloth_slopes(c, wool, y0, cx, cz):
+    """Turn the open steps (nothing above, nothing outside) of a round wool roof from y0 up into wool stairs that rise
+    to the centre, so the cloth slopes smoothly (#525)."""
+    full, empty = c.id(wool), (-1, c.id("air"))
+    n = c.a.shape[0] - c.m - 1                             # keep x + ox inside the canvas (no negative index)
+    for x in range(1 - c.m, n):
+        for z in range(1 - c.m, n):
+            dx, dz = cx - x, cz - z
+            if max(abs(dx), abs(dz)) < 0.5:
+                continue
+            f, ox, oz = (("east", -1, 0) if dx > 0 else ("west", 1, 0)) if abs(dx) >= abs(dz) else \
+                (("south", 0, -1) if dz > 0 else ("north", 0, 1))
+            for y in range(y0, c.a.shape[1] - c.below - 1):
+                if c.get(x, y, z) == full and c.get(x, y + 1, z) in empty and c.get(x + ox, y, z + oz) in empty:
+                    c.set(x, y, z, stair(f"{wool}_stairs", f))
 
 
 def hide_tent(c, w, col, name):
@@ -3150,6 +3180,7 @@ def hide_tent(c, w, col, name):
     peak = 1 + (ord(name[-1]) - ord("A")) % 2
     c.box(m, m + 1, top + 1, top + 1 + peak, m, m + 1, "brown_wool")
     c.set(m, top + 1 + peak, m, "spruce_fence")
+    cloth_slopes(c, "brown_wool", 3, cx, cx)
     c.box(m - 1, m + 2, 1, 3, int(cx + r) - 1, w, "air")             # the wide door
     if w >= 6:
         c.box(2, w - 2, 1, 2, 2, w - 3, "red_carpet")
@@ -3204,12 +3235,38 @@ def storage(c, w, st, col, T, ctx):
 
 
 def pasture(c, w, st, col, T, ctx):
-    """A fenced grass field with hay and a water trough."""
-    c.walls(0, w, 1, 2, 0, w, "oak_fence")
-    c.box(w // 2 - 1, w // 2 + 1, 1, 2, w - 1, w, "oak_fence_gate[facing=south,in_wall=false,open=false,powered=false]")
-    c.set(1, 1, 1, "hay_block"); c.set(2, 1, 1, "hay_block"); c.set(1, 2, 1, "hay_block")
-    c.set(w - 2, 1, 1, "water_cauldron[level=3]"); c.set(w - 3, 1, 1, "water_cauldron[level=3]")
-    c.flag(0, 2, w - 1, col, 1)
+    """Like the game (#518): no fence, but a field of trodden grass with low stakes, tall posts at the corners and a
+    small felt yurt in the middle (white felt, bands in the player color, a wooden crown), with hay and a trough."""
+    rng = c.rng
+    cx = (w - 1) / 2
+    for x in range(w):                                     # trodden ground, more dirt near the yurt
+        for z in range(w):
+            d = math.hypot(x - cx, z - cx) / (w / 2)
+            if d < 1 and rng.random() < 0.7 - 0.4 * d:
+                c.set(x, 0, z, "coarse_dirt" if rng.random() < 0.6 else "rooted_dirt")
+    for k in range(12):                                    # low stakes on a ring
+        a = 2 * math.pi * (k + rng.random() * 0.4) / 12
+        x, z = int(round(cx + (w / 2 - 1.5) * math.cos(a))), int(round(cx + (w / 2 - 1.5) * math.sin(a)))
+        c.set(x, 1, z, "spruce_fence")
+    for x in (0, w - 1):                                   # tall posts at the corners
+        for z in (0, w - 1):
+            c.box(x, x + 1, 1, 3, z, z + 1, "spruce_fence")
+            c.set(x, 3, z, "white_wool")
+    r = max(1.5, w / 5)
+    c.cylinder(cx, cx, r, 1, 3, "white_wool", hollow=True)
+    ring, X, Z = c.disc_mask(cx, cx, r)
+    c._fill_mask(ring & ~c.disc_mask(cx, cx, r - 1)[0], 1, 2, f"{col}_wool")     # the lower band
+    c.cylinder(cx, cx, r + 0.3, 3, 4, "white_wool")
+    rim = c.disc_mask(cx, cx, r + 0.3)[0] & ~c.disc_mask(cx, cx, r - 0.7)[0] & ((X + Z) % 2 == 1)
+    c._fill_mask(rim, 3, 4, f"{col}_wool")                 # a zig-zag at the edge of the roof
+    c.cylinder(cx, cx, r - 0.9, 4, 5, "white_wool")
+    c.set(w // 2, 5 if r < 2 else 4, w // 2, "spruce_trapdoor[facing=north,half=bottom,open=false]")    # the crown
+    zd = int(cx + r)
+    c.door(w // 2, 1, zd, "south", "spruce")
+    xe = int(cx + r) + 1                                   # a hay rack and a trough at the east side
+    if xe < w - 1:
+        c.set(xe, 1, w // 2 - 1, "hay_block"); c.set(xe, 1, w // 2, "hay_block")
+        c.set(xe, 1, w // 2 + 1, "water_cauldron[level=3]")
 
 
 def settlement(c, w, st, col, T, ctx):
@@ -3532,15 +3589,19 @@ def small_pagoda(c, w, st, col, T, ctx):
 
 
 def torii(c, w, st, col, T, ctx):
-    """A red torii gate: two pillars, a tie beam and a black top beam that sticks out."""
+    """A red torii gate on a stone slab, as in AoE2 DE: two pillars with black feet, a tie beam (nuki) that
+    sticks out, a blue name plaque in the gap, and a top beam (kasagi) with a brown bark top and upturned ends."""
     m = w // 2
+    c.box(0, w, 0, 1, 0, w, "smooth_stone")                             # the stone slab
     for x in (m - 2, m + 1):
         c.set(x, 1, m, "black_concrete")
-        c.box(x, x + 1, 2, 5, m, m + 1, "red_concrete")
-    c.box(m - 2, m + 2, 4, 5, m, m + 1, "red_concrete")                 # tie beam
-    c.box(m - 3, m + 3, 5, 6, m, m + 1, "red_concrete")
-    c.box(m - 3, m + 3, 6, 7, m, m + 1, "blackstone_slab[type=bottom]")
-    c.set(m - 1, 4, m + 1, "black_wall_banner[facing=south]")
+        c.box(x, x + 1, 2, 6, m, m + 1, "red_concrete")
+    c.box(m - 3, m + 3, 4, 5, m, m + 1, "red_concrete")                 # tie beam
+    c.box(m - 1, m + 1, 5, 6, m, m + 1, "blue_stained_glass_pane[east=true,west=true]")   # name plaque
+    c.box(m - 3, m + 3, 6, 7, m, m + 1, "red_concrete")
+    c.box(m - 3, m + 3, 7, 8, m, m + 1, "spruce_planks")                # bark top
+    c.set(m - 4, 7, m, "spruce_stairs[facing=west,half=bottom,shape=straight]")   # upturned ends
+    c.set(m + 3, 7, m, "spruce_stairs[facing=east,half=bottom,shape=straight]")
 
 
 def stupa(c, w, st, col, T, ctx):
@@ -3918,7 +3979,7 @@ def barriers(c, fx, fz):
 # Egyptian and other landmarks, wooden bridges, fish traps, ruins
 # --------------------------------------------------------------------------------------------
 def great_pyramid(c, w, st, col, T, ctx):
-    """A true pyramid with smooth faces (stairs on every layer) and a golden top."""
+    """A true pyramid with smooth faces (stairs on every layer), a golden top and a passage to a burial chamber."""
     L = 0
     while w - 2 * L > 0:
         c.box(L, w - L, L, L + 1, L, w - L, "sandstone" if L % 3 else "smooth_sandstone")
@@ -3929,6 +3990,26 @@ def great_pyramid(c, w, st, col, T, ctx):
     m = w // 2                                                  # entrance on the north side
     c.box(m - 1, m + 1, 2, 4, 2, 3, "air")
     c.set(m - 1, 1, 1, "chiseled_sandstone"); c.set(m, 1, 1, "chiseled_sandstone")
+    r = w // 8
+    if r < 2:
+        return
+    x0, x1, z0, z1, s = m - r, m + r + 1, m - r, m + r + 1, r            # burial chamber in the centre (#528)
+    c.box(x0 - 1, x1 + 1, s - 1, s + 4, z0 - 1, z1 + 1, "polished_granite")
+    c.box(x0, x1, s, s + 3, z0, z1, "air")
+    y = 2                                                        # passage: level, then up a gallery of stairs
+    for z in range(2, z0):
+        if z0 - z <= s - 2:
+            c.box(m - 1, m + 1, y, y + 1, z, z + 1, "sandstone_stairs[facing=south,half=bottom]")
+            y += 1
+        c.box(m - 1, m + 1, y, y + 3, z, z + 1, "air")
+        if z == (2 + z0) // 2:
+            c.set(m, y + 2, z, "lantern[hanging=true]")
+    c.box(m, m + 1, s, s + 1, m - 1, m + 1, "polished_blackstone")                      # sarcophagus with a lid
+    c.box(m, m + 1, s + 1, s + 2, m - 1, m + 1, "polished_blackstone_slab[type=bottom]")
+    for x, z, b in ((x0, z1 - 1, "gold_block"), (x1 - 1, z1 - 1, "gold_block"),
+                    (x0, z0, "decorated_pot[facing=south,cracked=false]"), (x1 - 1, z0, "decorated_pot[facing=south,cracked=false]"),
+                    (x0, m, "lantern[hanging=false]"), (x1 - 1, m, "lantern[hanging=false]")):
+        c.set(x, s, z, b)
 
 
 def nubian_pyramid(c, w, st, col, T, ctx):
@@ -4393,7 +4474,7 @@ LANDMARKS = {arch_of_constantine, colosseum, gol_gumbaz, sanchi_stupa, temple_of
              mosque_landmark, hall_of_heroes, shrine, pagan_shrine}
 MONUMENTAL = LANDMARKS | {theatre, stonehenge, mole, harbor_chain, flagship, helepolis, great_pyramid, nubian_pyramid, dome_rock, sankore, wooden_bridge, fish_trap, wonder, castle, krepost, monastery, church, amphitheatre, monument, wall_segment, gate, tower,
               bridge, aqueduct}
-NO_PROPS = LANDMARKS | {theatre, stonehenge, crane, scaffold_walk, shipyard, port, mole, harbor_chain, flagship, helepolis, great_pyramid, nubian_pyramid, dome_rock, wooden_bridge, fish_trap, barricade, wall_segment, gate, bridge, aqueduct, tower, outpost, wonder, dock, harbor, monument, amphitheatre}
+NO_PROPS = LANDMARKS | {torii, theatre, stonehenge, crane, scaffold_walk, shipyard, port, mole, harbor_chain, flagship, helepolis, great_pyramid, nubian_pyramid, dome_rock, wooden_bridge, fish_trap, barricade, wall_segment, gate, bridge, aqueduct, tower, outpost, wonder, dock, harbor, monument, amphitheatre}
 
 
 def building_rect(o):
