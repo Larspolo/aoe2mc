@@ -752,8 +752,8 @@ class Gather:
             x0, _, z0, x1, _, z1 = self.forts[u]
             self.mark(name, {(x0, z0), (x1, z1)}, "attack")
             import combat                                              # combat imports this module
-            kind = self.fort_names.get(fort, "")
-            for c in siege_mark(fort, kind, combat.stats(kind).hp, name):
+            what = self.fort_names.get(u, "")
+            for c in siege_mark(u, what, combat.stats(what).hp, name):
                 self.command(c)
             return
         building = build.chosen(self, name)
@@ -811,7 +811,7 @@ class Gather:
             act = "attack" if kind == "enemy" else "build menu" if key in workers else \
                 "select all of the type" if key in self.selected and key in self.soldiers else "select"
         elif kind == "fort":
-            name, act = "Enemy building", "attack"
+            name, act = "Enemy " + (pretty(self.fort_names[key]) if key in self.fort_names else "building"), "attack"
         elif kind == "building":
             homes, holders = train.homes(self), garrison.holders(self)
             name = pretty(homes.get(key) or holders[key]["name"])
