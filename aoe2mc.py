@@ -13,7 +13,7 @@ Options:
     --name TEXT        World name in the Minecraft menu (default: file name)
     --seed N           Seed for the random details (tree heights, flowers), of a random map script (.rms) and
                        of --random-map (default 1)
-    --random-map KIND  Make the map with an own generator (arabia, arena, black_forest), no input file:
+    --random-map KIND  Make the map with an own generator (arabia, arena, black_forest, gold_rush), no input file:
                        aoe2mc.py --random-map arabia OUT
     --preview          Also write preview.png (top view) into the world folder
     --mc-version V     Minecraft Java version of the output: 26.3 (default, the only one)
@@ -3486,7 +3486,7 @@ def main(argv=None):
                     "steps for the DE editor)")
     ap.add_argument("output", nargs="?", help="output world folder (put it in .minecraft/saves/); for a campaign the "
                     "folder of the worlds")
-    ap.add_argument("--random-map", choices=("arabia", "arena", "black_forest"), metavar="KIND",
+    ap.add_argument("--random-map", choices=("arabia", "arena", "black_forest", "gold_rush"), metavar="KIND",
                     help="make the map with an own generator of the seed, no input file (arabia, arena, black_forest); "
                     "give only the output")
     ap.add_argument("--scenario", dest="only", type=int_range(1, 999), metavar="N",
