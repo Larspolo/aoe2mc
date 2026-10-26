@@ -102,8 +102,10 @@ def section(text, title):
 
 
 def rename(text, repo, name, owner):
-    """The text with the repository, the owner login and the project name of the new project."""
-    return text.replace(CONFIG["repo"], repo).replace(CONFIG["owner"], owner).replace(CONFIG["repo"].split("/")[1], name)
+    """The text with the repository, the owner login and the project name of the new project. One pass, the longest
+    old value first: a new value that contains an old one is not replaced again (#953)."""
+    new = {CONFIG["repo"]: repo, CONFIG["owner"]: owner, CONFIG["repo"].split("/")[1]: name}
+    return re.sub("|".join(map(re.escape, sorted(new, key=len, reverse=True))), lambda m: new[m[0]], text)
 
 
 def github_calls(repo, labels, title="Agent status"):
