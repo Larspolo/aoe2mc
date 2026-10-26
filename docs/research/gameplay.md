@@ -264,3 +264,6 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
   draws few frames, so one `client.shot` after the commands shows nothing. Send the marker commands again each 0.2 s
   in a thread and take the shot after about 1.5 s (#845). The plugin sets the AoE2 hit points itself: `effect give
   resistance` does not keep an attacked unit alive for the shot, so put the attacker far from the target.
+- A test server with no player: an entity that RCON summons in an unloaded chunk is gone at once ("Summoned", then `data get` finds nothing). `forceload add` the area first, wait 2 s, and `kill` the older entities of the type before `@e[...,limit=1]` (#844).
+- `Pathfinder.moveTo` to the same target keeps the old path (Minecraft `createPath` returns the current path for the same target): call `stopPathfinding()` first to get a new path from the place of the mob (#888). So the `moveTo` of `follow()` every 2 ticks does not search again while the path is not done.
+- `tests/test_replay_control.py` `Clock` and the client test of `tests/test_replay_input.py` take each `tellraw @a` as a chat event of the timeline (a list with a `t<N>` text): a new `tellraw @a` of `Replay.run` (the view text of #737) broke them. Mark the event texts, or match only `tellraw @a [` (#737, #910).

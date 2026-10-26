@@ -1,7 +1,8 @@
 """
 The in-game input of a live replay (#688). The owner chose hotbar items, a chest menu for more actions and a command
 for each action (#686): a right click with the clock pauses and continues, the feather sets the next speed, the ender
-pearl jumps 1 minute forward, and the chest in the last slot opens a menu with all actions (Paper plugin, game/menu.py).
+pearl jumps 1 minute forward, the ender eye changes to spectator mode (Paper plugin: a double tap of Shift changes
+back, #910), and the chest in the last slot opens a menu with all actions (Paper plugin, game/menu.py).
 `/trigger aoe_replay set N` does action N without the items, also on a vanilla server.
 
 The items are carrots on a stick with the model of a clock, a feather, an ender pearl and a chest (`item_model`):
@@ -17,10 +18,12 @@ import menu
 OBJECTIVE = "aoe_replay"             # the trigger: /trigger aoe_replay set N
 USE = "aoe_replay_use"                # right clicks with a carrot on a stick
 SPEEDS = (0.5, 1.0, 2.0, 4.0, 8.0)
-PAUSE, NEXT, JUMP, MENU, JUMP5, JUMP10, SPEED = 1, 2, 3, 4, 5, 6, 10      # SPEED + i: SPEEDS[i]
+PAUSE, NEXT, JUMP, MENU, JUMP5, JUMP10, SPECTATE, SPEED = 1, 2, 3, 4, 5, 6, 7, 10      # SPEED + i: SPEEDS[i]
 JUMPS = {JUMP: 60000, JUMP5: 300000, JUMP10: 600000}
 ITEMS = {PAUSE: (0, "clock", "Pause / continue"), NEXT: (1, "feather", "Next speed"),
-         JUMP: (2, "ender_pearl", "Jump 1 minute"), MENU: (8, "chest", "Replay menu")}     # action: hotbar slot, model, name
+         JUMP: (2, "ender_pearl", "Jump 1 minute"), SPECTATE: (7, "ender_eye", "Spectator view"),
+         MENU: (8, "chest", "Replay menu")}                                    # action: hotbar slot, model, name
+PLUGIN_ONLY = (MENU, SPECTATE)        # the menu, and the way back from spectator mode (a double tap of Shift, #910)
 
 
 def actions():
@@ -83,8 +86,8 @@ class Input:
         """Players who joined since the last call get the items and the help text; all may use the trigger."""
         g = self.game
         for n, (slot, _, _) in ITEMS.items():
-            if n == MENU and getattr(g, "kind", "") != "paper":
-                continue                                           # the menu needs the plugin
+            if n in PLUGIN_ONLY and getattr(g, "kind", "") != "paper":
+                continue                                           # they need the plugin
             g.command(f"execute as @a unless items entity @s hotbar.{slot} *[custom_data={{{OBJECTIVE}:{n}}}] "
                       f"run item replace entity @s hotbar.{slot} with {item(n)}")
         g.command(f"execute as @a unless score @s {USE} matches 0.. run tellraw @s {help_text()}")
@@ -110,6 +113,8 @@ class Input:
         menu.clicks(g)                                             # a click in the menu sets the trigger score
         if not self.passed(f"@a[scores={{{OBJECTIVE}=1..}}]"):
             return
+        if self.passed(f"@a[scores={{{OBJECTIVE}={SPECTATE}}}]"):        # only the player who clicked (#910)
+            g.command(f"gamemode spectator @a[scores={{{OBJECTIVE}={SPECTATE}}}]")
         if self.passed(f"@a[scores={{{OBJECTIVE}={MENU}}}]"):
             for player in (p.strip() for p in g.command("list").split(":", 1)[-1].split(",")):
                 if player and re.search(rf" has {MENU}\b", g.command(f"scoreboard players get {player} {OBJECTIVE}")):

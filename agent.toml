@@ -1,0 +1,25 @@
+# Project values of the agent system (#905). The tools in tools/ read this file (tools/agent_config.py), and the
+# skills name it in place of the values. For another repository, change this file. The workflows take the repository
+# from GitHub ($GITHUB_REPOSITORY). The permission rules in .claude/settings.json cannot read a file: change them too.
+
+repo = "Larspolo/aoe2mc"        # owner/name on GitHub
+owner = "Larspolo"              # the GitHub login that gives instructions
+branch = "main"                 # the default branch
+
+[status]
+issue = 1                       # the status issue: the dashboard and the state comment of the runs
+label = "agent-status"
+paused = "paused"               # this label on the status issue stops all runs
+
+[commands]
+install = "python3 -m pip install -r requirements-dev.txt"
+lint = "ruff check ."
+fast = "python3 -m pytest"
+slow = "python3 -m pytest -m slow"
+server = "python3 -m pytest -m mc"
+
+[docs]
+system = "docs/SYSTEM.md"
+steering = "docs/STEERING.md"
+learnings = "docs/LEARNINGS.md"
+roadmap = "docs/ROADMAP.md"
