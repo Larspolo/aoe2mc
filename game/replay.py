@@ -484,6 +484,7 @@ class Replay:
         if self.ai:
             out, group = self.attack(group, target) if (target := self.enemy(e)) else ([], group)
             for i, v in group:
+                v.pos = self.at(v, e["time"])                       # it stops its leg where it is
                 end = slots.get(v) or min(goals, key=lambda c: (math.dist(c, v.cell), c))
                 path = self.map.path(v.cell, {end}, PATH_CELLS)
                 if path is None and (cmds := self.detour(i, v, tile, e["time"])) is not None:
@@ -532,11 +533,22 @@ class Replay:
         and the game time (ms) at the end of the leg (the next leg starts then, if v.path has one)."""
         import ai                                                   # ai -> replay: import it late
         x, z = legs[0]
-        x0, _, z0 = v.pos
+        start = x0, _, z0 = v.pos
         v.pos, v.path = (x + 0.5, float(self.map.y(x, z)), z + 0.5), legs[1:]
         speed = next((s for k, s in SPEEDS.items() if v.name.startswith(k)), 1.0) * self.T    # blocks per second
         due = t + 1000 * math.hypot(v.pos[0] - x0, v.pos[2] - z0) / speed
+        v.leg = (start, t, due)                                     # at() reads it
         return [ai.speed_command(v.uuid, v.name, self.T, self.speed), "aoe moveto {} {} {} {}".format(v.uuid, *v.pos)], due
+
+    def at(self, v, t):
+        """The replay position of unit v at game time t (ms): on the line of its leg while it walks, else v.pos.
+        A new order starts there, not at the end of the leg: a scout gets a new order every 2 to 5 s, and its
+        replay position jumped up to 250 blocks ahead of it (#851)."""
+        start, t0, t1 = getattr(v, "leg", None) or (v.pos, 0, 0)
+        if not t0 <= t < t1:
+            return v.pos
+        f = (t - t0) / (t1 - t0)
+        return tuple(a + f * (b - a) for a, b in zip(start, v.pos))
 
     def formation(self, group, tile):
         """The end cell of each unit of a group that walks to a tile (#410): rows across the walk direction, the

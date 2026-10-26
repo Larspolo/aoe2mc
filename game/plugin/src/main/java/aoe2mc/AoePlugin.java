@@ -93,8 +93,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * arrives or 50 tries (5 s) found no path.
  * The path search reaches only about the follow range of the mob (16 blocks for a cow): an order raises the
  * attribute follow_range to twice the distance + 32, at most 128. Longer ways need waypoints.
- * An order also sets the attribute step_height to 1 (as a horse): the ground of a map has many steps of one block,
- * and a jump on each made the replay units walk at 64 % of their speed (#829).
+ * An order also sets the attribute step_height to STEP: the ground of a map has many steps of one block,
+ * and a jump on each made the replay units walk at 64 % of their speed (#829). A step with a moss carpet or snow on it
+ * is higher than 1 block: at 1, a scout stood still in front of it (#851).
  * With the AI on, a unit keeps only the goals that fit AoE2 (#436): its attack goals and "float" (it swims).
  * Wandering, looking around, panic, the choice of its own targets (a zombie attacks each villager), despawning and
  * the burning in the sun go. So a unit stands still without an order and attacks only the target of an order,
@@ -182,6 +183,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Range> ranges = new HashMap<>();
     private final Map<UUID, Double> sights = new HashMap<>();       // the line of sight of a unit in blocks (#775)
     static final String CARRIER = "aoe2mc.carrier";                  // the tag of the mob that carries a siege unit
+    private static final double STEP = 1.25;                         // a step of 1 block with snow[layers=2] (#851)
     private static final double CARRIER_SCALE = 0.3;                 // a pig of 0.27 blocks: the minecart stays low
     private final GoalKey<Mob> rangeKey = GoalKey.of(Mob.class, new NamespacedKey("aoe2mc", "aoe_range"));
     // the vanilla ranged goals that "aoe_range" replaces
@@ -737,7 +739,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             AttributeInstance step = p.getAttribute(Attribute.STEP_HEIGHT);
             if (step != null) {
-                step.setBaseValue(1.0);             // up one block, as the other units
+                step.setBaseValue(STEP);            // up one block, as the other units
             }
         });
         pig.addPassenger(cart);
@@ -762,8 +764,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         tame(mob);                  // each order: tame() only after setAI() missed the goals of some units (#436)
         AttributeInstance step = mob.getAttribute(Attribute.STEP_HEIGHT);
-        if (step != null && step.getBaseValue() < 1) {
-            step.setBaseValue(1);                                      // no jump on a step of one block (#829)
+        if (step != null && step.getBaseValue() < STEP) {
+            step.setBaseValue(STEP);                                   // no jump on a step of one block (#829)
         }
         Range r = ranges.get(mob.getUniqueId());
         var goals = Bukkit.getMobGoals();
