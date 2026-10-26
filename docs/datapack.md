@@ -46,7 +46,15 @@ Timer triggers (#648, `trigger_files` in `aoe2mc.py`, epic #645): a trigger that
 timer conditions gets `function/trigger/<id>.mcfunction`. `load.mcfunction` starts it with
 `schedule function aoe2mc:trigger/<id> <20 × largest timer>t replace`. "Send Chat" → `tellraw @a`, "Display
 Instructions" → `title @a times` (its display time), `subtitle` and an empty `title`. AoE2 color tags are removed.
-A looping trigger schedules itself again. A trigger with other conditions is not written yet.
+A looping trigger schedules itself again.
+
+Area triggers (#649): a trigger with only "Objects in Area" conditions gets a line in `function/tick.mcfunction`
+(tag `minecraft:tick`): `execute if entity @e[tag=aoe2mc.p<player>,x=..,y=-64,z=..,dx=..,dy=383,dz=..]` (the blocks of
+the tiles, all heights; an area of -1 is the whole map) `unless score #<id> aoe_trig matches 1 run function ...`.
+The function sets `#<id>` to 1, so the trigger fires once. A looping trigger resets the score when its units leave an
+area, so it fires again when they enter. A quantity above 1 counts the units with `execute store result score`.
+The object type filter of the condition is not used yet. A trigger with other or mixed conditions is not written yet.
+Cost: +0.1 ms per tick on the `triggers` scenario (`tools/tick_cost.py`).
 
 ## Pack layout
 

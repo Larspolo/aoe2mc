@@ -71,6 +71,8 @@ Examples for the game: unit facing, light, entity behavior.
 For what only a person can see, make a check ticket with: the scenario or the command that makes the
 test world, and exact steps for the owner. It gets `needs-human` only after an agent ran the check (server, simulated
 clicks, screenshots), commented the results and the images, and listed the points that only a person can check (#580).
+A check that finds a bug does not go to the owner: make the bug tickets, add "Depends on: #bug" to the check ticket and
+check again when they are closed (#668).
 Example steps: ("Open the world. Stand at X Y Z. Look north. The knight must
 face you.").
 

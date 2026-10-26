@@ -202,6 +202,9 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - A real client joins the Paper server of `run.Game` (`online-mode=false`) with `--quickPlayMultiplayer 127.0.0.1:PORT`
   (`mc_shot.Client`, #627). In an open inventory the pointer is free: `xdotool mousemove` + `click` hits the slots.
   A Paper display name of an item is italic by default (Adventure).
+- A building target (#660): `damage <uuid> 1 ... by <mob>` answers "Target is invulnerable" and the plugin counts no hit
+  (most runs): hit it with `aoe attack`. `execute if entity <uuid>[tag=T]` is not valid syntax and never passes:
+  use `@e[type=slime,tag=T]`. A NoAI zombie burns in the sun at y 200: use a `husk`.
 - `summon skeleton` with NBT gets no bow: `RangedEntity#rangedAttack` then throws "Invalid weapon firing an arrow"
   and the server removes the mob ("No entity was found" right after the order). Give
   `equipment:{mainhand:{id:"minecraft:bow",count:1}}`. A Java exception of the plugin is only in `game.server.log` (#608).
