@@ -8,6 +8,8 @@ The codes and amounts of AoE2 DE: the AoE2 wiki, "Cheat code (Age of Empires II)
 The Forgotten, before it 1,000). Minecraft has no fog of war: "marco" and "polo" only answer in the chat.
 "aegis" (#817) is a toggle: g.aegis makes building (gather.Gather.step), training and research (train.tick) and
 gathering (gather.Gather.work_time) instant, for all players as in AoE2.
+A unit cheat (#818; the DE list of the wiki, "Units") summons its unit at the town center of the player, as a trained
+unit (train.spawn): it costs nothing and counts in the population. Without a town center no unit appears, as in AoE2.
 The end and destroy codes (#819): "i r winner" and "resign" show the title "Victory" or "Defeat" to all players and set
 g.ended, which ends gather.Gather.run. "torpedo<n>" destroys player n, "black death" all other players (AoE2 has a bug
 here: it kills only one player) and "wimpywimpywimpy" the own player (a defeat). The buildings of the player fall as
@@ -15,7 +17,10 @@ at 0 hit points (the plugin, `aoe destroy`), its units die (`kill` with the team
 "natural wonders" gives the control of the Gaia animals and takes the control of the own units (not reversible).
 """
 import re
+from collections import namedtuple
 from urllib.parse import quote
+
+Unit = namedtuple("Unit", "name")             # the effect of a unit cheat
 
 OBJECTIVE = "aoe_cheat"
 ALL = {"food": 100000, "wood": 100000, "gold": 100000, "stone": 100000}
@@ -64,21 +69,29 @@ def wonders(g, player):
     g.command(f'tellraw {player} {{"text":"You control nature: {len(g.soldiers)} animals"}}')
 
 
-CODES = {                                     # code -> the resources that it gives, the chat answer or a function
+CODES = {                                     # code -> the resources, the chat answer, a function or a Unit
     "aegis": aegis,
+    "alpaca simulator": Unit("ALFRED_THE_ALPACA"),
     "black death": lambda g, player: [destroy(g, n) for n in others(g)],
+    "catzor": Unit("SHARKATZOR"),
     "cheese steak jimmy's": {"food": 10000},
+    "furious the monkey boy": Unit("FURIOUS_THE_MONKEY_BOY"),
+    "how do you turn this on": Unit("COBRA_CAR"),
+    "i don't exist": Unit("WAR_PENGUIN"),
+    "i love the monkey head": Unit("VMDL"),
     "i r winner": end("Victory", "gold"),
     "lumberjack": {"wood": 10000},
     "marco": MAP,
     "natural wonders": wonders,
     "ninjaconnor": ALL,
     "ninjalui": ALL,
+    "photon man": Unit("PHOTONMAN"),
     "polo": MAP,
     "resign": end("Defeat", "red"),
     "robin hood": {"gold": 10000},
     "rock on": {"stone": 10000},
     "rowshep": ALL,
+    "to smithereens": Unit("SABOTEUR"),
     "torpedo1": lambda g, player: destroy(g, 1),
     "torpedo2": lambda g, player: destroy(g, 2),
     "torpedo3": lambda g, player: destroy(g, 3),
@@ -103,6 +116,12 @@ def apply(g, player, code):
     effect = CODES[code]
     if callable(effect):
         return effect(g, player)
+    if isinstance(effect, Unit):
+        import train                                                # train -> gather -> cheats: import it late
+        tc = sorted(r for r, n in train.homes(g).items() if n == "TOWN_CENTER")
+        if tc:
+            train.spawn(g, tc[0], effect.name)
+        return
     if isinstance(effect, str):
         g.command(f'tellraw {player} {{"text":"{effect}"}}')
         return

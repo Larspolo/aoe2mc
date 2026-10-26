@@ -240,8 +240,11 @@ GitHub sends this comment to the owner as a notification. Do not comment when no
 ## 9. Improve the process (before the commit in step 6)
 
 Answer these questions. Do the action for each "yes". Spend little time.
-- Did something cost you time that one line of text prevents? → add the line to `docs/LEARNINGS.md`, at the end of
-  its section. Do not change other lines there, also not to stay below 80 lines: the `improve` skill does that.
+- Did something cost you time that one line of text prevents? → a pitfall of one topic (the game program, the replay,
+  Paper, the server, records, a design) goes to the end of the "Pitfalls" section of its document (the list in
+  `docs/LEARNINGS.md`, "Environment and libraries"); only a line for all runs goes to the end of its section in
+  `docs/LEARNINGS.md`: each run loads that file (run 135 moved 16 topic lines out). Do not change other lines
+  there, also not to stay below 80 lines: the `improve` skill does that.
 - Was an instruction in `CLAUDE.md` or a skill wrong or missing? → correct it.
 - Did you do the same kind of task for the second time? → write a skill for it in `.claude/skills/`.
 - Would a test or tool have found a problem earlier? → make a `tooling` ticket (`P1` if it blocks other tickets).

@@ -75,6 +75,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              open a chest menu (#619, game/menu.py; the texts are URL-encoded)
  *   aoe menu-close <player>                    close the menu of the player
  *   aoe cheats <code>,<code>,...|-             the AoE2 cheat codes in the chat (#816, Cheats.java; URL-encoded)
+ *   aoe destroy <selector>                     the buildings fall as at 0 hit points: "Destroy: <n> buildings" (#819)
  *   aoe label <selector> [name]                show the name line again (after a selection change); a name sets
  *                                              the name of a building target (#661)
  *   aoe where <selector> [from]                "Where <count>: <uuid> <x> <y> <z> <order 0|1> <target 0|1>, ..." for
@@ -763,6 +764,18 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (args.length == 2 && args[0].equals("cheats")) {
             return cheats.command(sender, args);
         }
+        if (args.length == 2 && args[0].equals("destroy")) {           // the cheats torpedo, black death (#819)
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                Building b = buildings.get(e.getUniqueId());
+                if (b != null) {                                  // it falls as at 0 hit points
+                    hit(e, b, b.max());
+                    n++;
+                }
+            }
+            sender.sendMessage("Destroy: " + n + " buildings");
+            return true;
+        }
         if (args.length >= 2 && args[0].startsWith("box")) {            // the border of the selection box (#795)
             return border.command(sender, args, players(sender, args[1]));
         }
@@ -976,18 +989,6 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
             }
             sender.sendMessage("Label: " + n + " units");
-            return true;
-        }
-        if (args.length == 2 && args[0].equals("destroy")) {           // the cheats torpedo, black death (#819)
-            int n = 0;
-            for (Entity e : select(sender, args[1])) {
-                Building b = buildings.get(e.getUniqueId());
-                if (b != null) {                                  // it falls as at 0 hit points
-                    hit(e, b, b.max());
-                    n++;
-                }
-            }
-            sender.sendMessage("Destroy: " + n + " buildings");
             return true;
         }
         if (args.length == 3 && args[0].equals("attack")) {
