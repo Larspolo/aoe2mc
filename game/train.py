@@ -38,7 +38,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM"), "BARRACKS": ("MILITIA",),   
 TECHS = {"LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
          if "VILLAGER" in name else s}                             # the change of each technology to the AoE2 values
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
-HOUSING = {"TOWN_CENTER": 5, "HOUSE": 5}                           # population of a complete building, as in AoE2
+HOUSING = {"TOWN_CENTER": 5, "HOUSE": 5, "CASTLE": 20}             # population of a complete building, as in AoE2
 LIMIT = 200                                                        # the AoE2 population limit
 CENSUS = 2.0                                                       # AoE2 seconds between two counts of the live units
 ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, item and name of each unit (#620)
@@ -140,7 +140,7 @@ def research(g, entry):
 
 
 def limit(g):
-    """The population limit: 5 per complete own town center and house, at most 200."""
+    """The population limit: 5 per complete own town center and house, 20 per castle, at most 200."""
     names = [o["name"] for o in g.data["objects"] if o["kind"] == "building" and o["player"] == g.player]
     names += [s["name"] for s in g.sites if s.get("done") and s["player"] == g.player]
     return min(LIMIT, sum(HOUSING.get(n, 0) for n in names))
