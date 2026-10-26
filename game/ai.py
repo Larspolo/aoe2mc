@@ -19,6 +19,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from gather import NORMAL  # noqa: E402
 from replay import SPEEDS  # noqa: E402
+from units import siege  # noqa: E402
 
 # Walk speed on a Minecraft path, blocks per second = WALK * movement_speed ** 2 (the mob input is the speed, and
 # the step is the input times the speed). Measured on Paper 26.3 on flat stone, attribute 0.15 to 0.6: zombie 43.1
@@ -37,6 +38,8 @@ def movement_speed(name, T, rate=NORMAL):
 
 
 def speed_command(uuid, name, T, rate=NORMAL):
+    if siege(name):                                    # a minecart: the attribute is on its carrier (plugin, #836)
+        return f"aoe speed {uuid} {movement_speed(name, T, rate)}"
     return f"attribute {uuid} minecraft:movement_speed base set {movement_speed(name, T, rate)}"
 
 
