@@ -1,6 +1,6 @@
 # Roadmap
 
-The project has three goals. This file lists the features of each goal: done (`[x]`) or missing (`[ ]`).
+The project has three goals for the game and a fourth for the agent system that does the work. This file lists the features of each goal: done (`[x]`) or missing (`[ ]`).
 The `roadmap` skill makes the next epic from a missing feature when the queue has no other work, and every 10th
 run reviews this list (owner decisions, 2026-10-26: the agents make the epics themselves, at `P3`; the goals take
 turns). The owner changes the priority of an epic or adds a feature here at any time.
@@ -62,6 +62,14 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `replay:score` A score panel for each player: age, population, resources (estimated), military (epic #740)
 - [ ] `replay:effects` Show events on the map: research and age-up at the building, attacks, a marker where units die (epic #842)
 - [ ] `replay:postgame` A summary at the end of the replay, as the AoE2 achievements screen: military, economy, technology, timeline
+
+## 4. The agent system (`.claude/skills/`, `tools/`, `.github/workflows/`)
+
+Owner (2026-10-26): "reach the final goals efficiently while keeping up the quality and leaving behind a system to do
+other projects with". The `roadmap` skill makes no epics for this goal: the `improve` skill and the owner do.
+
+- [ ] `system:improve` The system improves itself in its own loop, over the whole system, and only where it pays (epic #908)
+- [ ] `system:reuse` The system can be set up for another project (epic #909)
 
 ## Principles
 

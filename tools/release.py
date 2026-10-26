@@ -78,7 +78,7 @@ def progress(features, rows, share, epics, closed=frozenset()):
     return out
 
 
-GOALS = {1: "Convert maps", 2: "Play AoE2", 3: "Replay a game"}
+GOALS = {1: "Convert maps", 2: "Play AoE2", 3: "Replay a game", 4: "Agent system"}
 
 
 def lines(result):
@@ -92,9 +92,11 @@ def lines(result):
 
 
 def total(result, m="C"):
-    """The percent of milestone m over all goals together: done ÷ (done + left) of their tickets (#899)."""
-    done = sum(r[m][1] for r in result.values() if m in r)
-    rest = sum(r[m][2] + r[m][3] + r[m][4] for r in result.values() if m in r)
+    """The percent of milestone m over the game goals together: done ÷ (done + left) of their tickets (#899). Goal 4
+    (the agent system, #900) is not a game goal: it does not count."""
+    game = [r for g, r in result.items() if g != 4 and m in r]
+    done = sum(r[m][1] for r in game)
+    rest = sum(r[m][2] + r[m][3] + r[m][4] for r in game)
     return 100 * done / (done + rest) if done + rest else 100.0
 
 

@@ -16,7 +16,8 @@ epics have no goal left that an agent can do.
 1. List the epics: `gh api "repos/Larspolo/aoe2mc/issues?labels=epic&state=all&per_page=100"`. A feature has an
    epic when an epic body names its key ("Roadmap: `<key>`") or the roadmap line names an epic number.
 2. Pick the goal: the goal whose newest epic is the oldest (the lowest issue number of the newest epics of the
-   three goals; a goal without an epic first). Tie: the order of the file.
+   three goals; a goal without an epic first). Tie: the order of the file. Goal 4 (the agent system) takes no turn:
+   its epics come from the `improve` skill and the owner.
 3. In that goal, take the first missing feature without an epic.
 4. Make the epic with the `ticket` skill: the title is an instruction, the body has the goal (what the player sees),
    the acceptance criteria, the Minecraft feature that does the job (CLAUDE.md), the line "Roadmap: `<key>`", and
