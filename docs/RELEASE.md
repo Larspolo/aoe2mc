@@ -63,10 +63,12 @@ Bug reserve: 0.3
 | `play:garrison` | B | | | |
 | `play:win` | B | 3 | | |
 | `play:walls` | A | 5 | | |
+| `play:civs` | C | | | |
 | `play:monks` | C | | | |
 | `play:market` | C | | | |
 | `play:two-players` | C | | | |
 | `play:siege` | C | | | |
+| `play:naval` | C | | | |
 | `play:cheats` | C | | | |
 | `play:fog` | C | | | |
 | `play:save` | C | | | |
