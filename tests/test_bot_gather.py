@@ -28,6 +28,7 @@ def bot_map():
         pos[f"b{i}"] = {"Pos": (24.5, 64.0, 19.5 + i)}
     server = FakeServer(pos)
     data = grid([[64] * 32 for _ in range(32)], objects)
+    data.update(level_height=1, players={"2": {"color": "blue", "arch": "western"}})   # the bot builds too (#857)
     me = gather.Gather(server, data, carry=10, chop=0.05).setup()
     return server, me, bot.Bot(server, data, share=me, carry=10, chop=0.05).setup()
 

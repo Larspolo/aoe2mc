@@ -541,12 +541,12 @@ class Gather:
             v.res, v.tree, v.site = res, to, None
             self.go(v, "to_tree", self.goals(to))
 
-    def build(self, site):
-        """Send the selected villagers to build the construction site, with the builder look (#418). They keep
-        their load, as in AoE2."""
+    def build(self, site, who=None):
+        """Send the selected villagers (or the villagers who) to build the construction site, with the builder look
+        (#418). They keep their load, as in AoE2."""
         x0, x1, z0, z1 = site["footprint"]
         goals = self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)})
-        for u in sorted(self.selected & self.villagers.keys()):         # a scout cannot gather or build (#589)
+        for u in sorted((self.selected if who is None else who) & self.villagers.keys()):   # not a scout (#589)
             v = self.villagers[u]
             for t in [t for t, f in self.farmers.items() if f == u]:
                 del self.farmers[t]
