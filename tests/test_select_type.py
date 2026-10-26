@@ -1,5 +1,6 @@
-"""game/gather.py: a second click on a selected military unit selects all own units of its type near it (#743)."""
-from game import gather
+"""game/gather.py: a second click on a selected military unit opens the stance menu (#1107); its last item selects all
+own units of its type near it (#743)."""
+from game import gather, stance
 
 from test_gather import FakeServer, grid
 from test_gather_attack import click
@@ -21,6 +22,8 @@ def test_a_second_click_selects_the_militia_near_it():
     click(server, g, (5.5, 13.5), (5.5, 10.5))
     assert g.selected == {"m-1"}
     log = click(server, g, (5.5, 13.5), (5.5, 10.5))
+    assert g.selected == {"m-1"} and "Steve" in g.menus               # the stance menu
+    g.menus["Steve"]("Steve", stance.TYPE, False)
     assert g.selected == {"m-1", "m-2", "m-3"}                         # not the archer, not the far militia
     assert all(f"tag {u} add {gather.SELECT}" in log for u in ("m-2", "m-3"))
     assert not any(u in c for c in log for u in ("a-1", "m-far") if "add" in c)
@@ -32,6 +35,7 @@ def test_other_units_leave_the_selection():
     click(server, g, (5.5, 13.5), (5.5, 10.5))                         # a militia: added
     assert g.selected == {"a-1", "m-1"}
     log = click(server, g, (5.5, 13.5), (5.5, 10.5))
+    g.menus["Steve"]("Steve", stance.TYPE, False)
     assert g.selected == {"m-1", "m-2", "m-3"}
     assert f"tag a-1 remove {gather.SELECT}" in log and "data merge entity a-1 {Glowing:0b}" in log
 

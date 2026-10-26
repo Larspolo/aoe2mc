@@ -73,6 +73,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              the AoE2 stance of a unit (#1104): no_attack never attacks without an
  *                                              order, stand_ground attacks only an enemy in its range and does not walk,
  *                                              defensive chases an enemy only CHASE blocks past its range (#1105)
+ *   aoe stance <selector>                      the stance of the first unit (#1107), for checks
  *   aoe stats <selector> <hp> <attack> <melee armor> <pierce armor> <ranged 0|1|2> <classes|-> <class:bonus,...|->
  *             [reload ticks]                   the AoE2 values of a unit (#514, game/combat.py stats_command); a melee
  *                                              unit hits once per reload (#848, default 20: the vanilla cooldown)
@@ -1233,6 +1234,14 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 n++;
             }
             sender.sendMessage("Moved " + n + " units");
+            return true;
+        }
+        if (args.length == 2 && args[0].equals("stance")) {
+            for (Entity e : select(sender, args[1])) {
+                sender.sendMessage("Stance: " + stances.getOrDefault(e.getUniqueId(), "aggressive"));
+                return true;
+            }
+            sender.sendMessage("Stance: no unit");
             return true;
         }
         if (args.length == 3 && args[0].equals("stance")) {
