@@ -8,8 +8,10 @@ for each armor class of the target. `damage` is the AoE2 damage rule (#514); the
 (`aoe stats` gives a mob its values, `stats_command`).
 A ranged unit shoots from its AoE2 range, one shot per reload time (#515, `aoe range`, `range_command`).
 """
+import math
 import os
 import sys
+import uuid as uuids
 from collections import namedtuple
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -69,6 +71,8 @@ BUILDINGS = {
     "CASTLE": Stats(4800, 11, 8, 11, 8, 2.0, {}, ("building",)),
 }
 DEFAULT, BUILDING = Stats(40, 4, 0, 0, 0, 2.0), Stats(1000, 0, 0, 7, 0, 0.0, {}, ("building",))
+SLIME = 0.52                    # blocks of width and height per slime size: the target of a building (#517)
+HEIGHT = 40                     # blocks above the ground that a fallen building clears
 
 
 def stats(name):
@@ -102,9 +106,45 @@ def range_command(uuid, name, T, rate=NORMAL):
 
 def setup(game, data):
     """Give each unit of the players in `aoe2mc.json` data its AoE2 values; Gaia animals keep the vanilla values.
+    Each building of a player with AoE2 hit points gets a target of attacks (`building`).
     The entities must be loaded (forceload). Returns the number of units that got the values."""
+    ground = [r.split() for r in data.get("ground", ())]
+    for o in data["objects"]:
+        if o["kind"] == "building" and o["player"] and "footprint" in o and o["name"] in BUILDINGS:
+            for c in building(target_uuid(o["footprint"]), o["name"], o["player"], building_box(o, ground)):
+                game.command(c)
     units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] and o.get("uuid")]
     for o in units:                                  # the plugin answers "Range: 0 units" for a mob that cannot shoot
         if cmd := range_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
     return sum(game.command(stats_command(o["uuid"], o["name"])).strip() == "Stats: 1 units" for o in units)
+
+
+def target_uuid(footprint):
+    """The UUID of the target entity of the building with block footprint [x0, z0, x1, z1): the same in each run."""
+    return str(uuids.uuid5(uuids.NAMESPACE_OID, "aoe2mc.building." + ".".join(map(str, footprint))))
+
+
+def building(uuid, name, player, box):
+    """The commands that make building `name` of `player` a target of attacks (#517): an invisible slime without AI
+    that fills the footprint takes the attacks (a mob attacks only a living entity: AoePlugin.java), and the plugin
+    keeps the AoE2 hit points. box: the blocks (x0, y0, z0, x1, y1, z1), both ends included, y0 the ground.
+    At 0 hit points the plugin fills the box with air."""
+    x0, y0, z0, x1, y1, z1 = box
+    s, size = stats(name), math.ceil((max(x1 - x0, z1 - z0) + 1) / SLIME)
+    n = uuids.UUID(uuid).int
+    ints = ",".join(str((n >> k & 0xFFFFFFFF) - ((n >> k & 0x80000000) << 1)) for k in (96, 64, 32, 0))
+    return [f"summon slime {(x0 + x1 + 1) / 2} {y0} {(z0 + z1 + 1) / 2} {{Size:{size - 1},NoAI:1b,Silent:1b,"
+            f"NoGravity:1b,PersistenceRequired:1b,Invisible:1b,Tags:[\"aoe2mc.building\"],UUID:[I;{ints}]}}",
+            f"team join p{player} {uuid}", f"aoe building {uuid} {s.hp} {s.melee} {s.pierce} {' '.join(map(str, box))}"]
+
+
+def building_box(o, ground):
+    """The box (x0, y0, z0, x1, y1, z1) of a building of aoe2mc.json: its footprint from the lowest ground next to
+    it ("ground" over a footprint is the top of its barriers) up HEIGHT blocks."""
+    x0, z0, x1, z1 = o["footprint"]
+    ring = [(x, z) for x in range(x0 - 1, x1 + 1) for z in (z0 - 1, z1)] + \
+        [(x, z) for x in (x0 - 1, x1) for z in range(z0, z1)]
+    ys = [int(ground[z][x]) for x, z in ring if 0 <= z < len(ground) and 0 <= x < len(ground[z])
+          and ground[z][x] != "-"] or [64]
+    return x0, min(ys), z0, x1 - 1, min(ys) + HEIGHT, z1 - 1

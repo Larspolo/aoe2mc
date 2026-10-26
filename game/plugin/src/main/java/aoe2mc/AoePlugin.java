@@ -23,7 +23,10 @@ import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scoreboard.Criteria;
+import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
@@ -41,6 +44,8 @@ import com.destroystokyo.paper.entity.ai.GoalType;
  *   aoe stats <selector> <hp> <attack> <melee armor> <pierce armor> <ranged 0|1> <classes|-> <class:bonus,...|->
  *                                              the AoE2 values of a unit (#514, game/combat.py stats_command)
  *   aoe range <selector> <blocks> <ticks>      a ranged unit shoots from this range, one shot per ticks (#515)
+ *   aoe building <selector> <hp> <melee armor> <pierce armor> <x0> <y0> <z0> <x1> <y1> <z1>
+ *                                              make the entity the target of a building (#517, combat.building)
  * Converted units have no AI (NoAI): an order turns it on. Such a unit finds no path before its first AI tick
  * (it is not "on the ground" yet), and vanilla goals (a random stroll) can take the navigation of a walking unit:
  * so the order sends the path again every 10 ticks, until the unit arrives or 10 tries found no path.
@@ -58,6 +63,13 @@ import com.destroystokyo.paper.entity.ai.GoalType;
  * range and interval are fixed in the goal objects, and the API cannot set them (no NMS in the plugin). It walks
  * on a Minecraft path to the target until the target is in range and in sight, stops, and shoots with the vanilla
  * shot of the mob (RangedEntity#rangedAttack: the arrow of a skeleton, the trident of a drowned).
+ * A building is blocks, and a mob attacks only a living entity: an invisible mob without AI (a slime of the size of
+ * the footprint, game/combat.py building) stands in the building and takes the attacks, so that the vanilla attack
+ * goals and paths work (#517). The plugin keeps the hit points of the building (a building has more than the
+ * 1024 of max_health) in the scoreboard aoe_hp, cancels all other damage to it and from it (no suffocation in the
+ * walls, no slime touch), and at 0 removes it and fills the box of the building with air. The vanilla melee goal
+ * hits only a target in sight, and the eye of the slime is in the walls: so a unit next to the slime that has it as
+ * target hits it each second (Mob#attack, the vanilla hit with the swing), as a zombie hits.
  */
 public final class AoePlugin extends JavaPlugin implements Listener {
     private record Stats(int attack, int melee, int pierce, boolean ranged, Set<String> classes,
@@ -72,6 +84,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     private final Map<UUID, Stats> stats = new HashMap<>();
+
+    private record Building(Stats stats, String box) {}
+
+    private final Map<UUID, Building> buildings = new HashMap<>();
+    private final Map<UUID, Integer> lastHit = new HashMap<>();      // tick of the last hit of a unit on a building
+    private static final double REACH = Math.sqrt(2.04) - 0.6;       // vanilla melee reach past the hit box
 
     private static final class Order {
         final Location goal;
@@ -150,6 +168,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         Bukkit.getScheduler().runTaskTimer(this, this::follow, 10L, 10L);
+        Bukkit.getScheduler().runTaskTimer(this, this::siege, 10L, 10L);
         Bukkit.getPluginManager().registerEvents(this, this);
     }
 
@@ -160,12 +179,61 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             from = shooter;
         }
         Stats a = stats.get(from.getUniqueId()), t = stats.get(ev.getEntity().getUniqueId());
+        Building b = buildings.get(ev.getEntity().getUniqueId());
+        if (buildings.containsKey(from.getUniqueId()) || b != null) {
+            ev.setCancelled(true);
+            if (a != null && b != null) {
+                lastHit.put(from.getUniqueId(), Bukkit.getCurrentTick());
+                hit(ev.getEntity(), b, a.damage(b.stats));
+            }
+            return;
+        }
         if (a == null || t == null || !(ev.getEntity() instanceof LivingEntity victim)) {
             return;
         }
         ev.setCancelled(true);
         victim.playHurtAnimation(0);
         victim.setHealth(Math.max(0, victim.getHealth() - a.damage(t)));     // 0 kills it
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onHurt(EntityDamageEvent ev) {               // suffocation in its walls, fire, fall ...
+        if (!(ev instanceof EntityDamageByEntityEvent) && buildings.containsKey(ev.getEntity().getUniqueId())) {
+            ev.setCancelled(true);
+        }
+    }
+
+    private static Objective hp() {
+        Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
+        Objective o = sb.getObjective("aoe_hp");
+        return o != null ? o : sb.registerNewObjective("aoe_hp", Criteria.DUMMY, "Hit points");
+    }
+
+    private void hit(Entity target, Building b, int damage) {
+        var score = hp().getScoreFor(target);
+        score.setScore(Math.max(0, score.getScore() - damage));
+        if (target instanceof LivingEntity le) {
+            le.playHurtAnimation(0);
+        }
+        if (score.getScore() == 0) {                          // the building falls
+            buildings.remove(target.getUniqueId());
+            score.resetScore();
+            target.remove();
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "fill " + b.box + " minecraft:air");
+        }
+    }
+
+    private void siege() {
+        int now = Bukkit.getCurrentTick();
+        lastHit.values().removeIf(t -> now - t > 100);
+        for (UUID id : List.copyOf(stats.keySet())) {
+            if (Bukkit.getEntity(id) instanceof Mob mob && !stats.get(id).ranged && mob.getTarget() instanceof LivingEntity t
+                    && buildings.containsKey(t.getUniqueId()) && now - lastHit.getOrDefault(id, -100) >= 20
+                    && mob.getBoundingBox().expand(REACH, 0, REACH).overlaps(t.getBoundingBox())) {
+                mob.swingMainHand();
+                mob.attack(t);
+            }
+        }
     }
 
     private static Map<String, Integer> bonus(String text) {
@@ -349,6 +417,35 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
             }
             sender.sendMessage("Range: " + n + " units");
+            return true;
+        }
+        if (args.length == 11 && args[0].equals("building")) {
+            int hp;
+            Stats st;
+            String box;
+            try {
+                hp = Integer.parseInt(args[2]);
+                st = new Stats(0, Integer.parseInt(args[3]), Integer.parseInt(args[4]), false, Set.of("building"),
+                        Map.of());
+                var c = new ArrayList<String>();
+                for (int i = 5; i < 11; i++) {
+                    c.add(Integer.toString(Integer.parseInt(args[i])));
+                }
+                box = String.join(" ", c);
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                if (e instanceof LivingEntity le) {
+                    le.setCollidable(false);                  // units walk up to the walls, not off the slime
+                    buildings.put(le.getUniqueId(), new Building(st, box));
+                    hp().getScoreFor(le).setScore(hp);
+                    n++;
+                }
+            }
+            sender.sendMessage("Buildings: " + n);
             return true;
         }
         if (args.length == 2 && args[0].equals("goals")) {
