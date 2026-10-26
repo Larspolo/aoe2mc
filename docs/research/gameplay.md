@@ -213,3 +213,4 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
   and the server removes the mob ("No entity was found" right after the order). Give
   `equipment:{mainhand:{id:"minecraft:bow",count:1}}`. A Java exception of the plugin is only in `game.server.log` (#608).
 - An arrow at the stand-in slime of a building sticks in the walls first (#608): the range goal counts each shot itself.
+- One hit of a unit in an `-m mc` test, without a chase: `damage <victim> 1 minecraft:mob_attack by <attacker>` fires `EntityDamageByEntityEvent`, so the plugin takes the AoE2 damage of the attacker (#733). Since #733 a hit unit without an order hits back: a test of one-sided damage gives the target an order or no AoE2 values.

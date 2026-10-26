@@ -84,6 +84,10 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * Wandering, looking around, panic, the choice of its own targets (a zombie attacks each villager), despawning and
  * the burning in the sun go. So a unit stands still without an order and attacks only the target of an order,
  * and an attack order skips the units of the team of the target (scoreboard teams of the datapack, #358).
+ * A military unit without an order and without a target attacks back when a unit of another team hits it, as with
+ * the AoE2 default stance (#733). The vanilla goal hurt_by also hits back at its own team and calls the mobs of its kind,
+ * so the hit handler sets the target. A unit that walks (aoe moveto) continues; villagers, monks and kings
+ * (no unit classes or no attack) and Gaia animals (no AoE2 values) do not attack back.
  * A villager walks with its brain, not with goals: it gets NoAI when it arrives, else it strolls away (#438).
  * `aoe stop` stops a walk and sets NoAI (#437: a villager without a path).
  * A hit of a unit with AoE2 values on another one takes the AoE2 damage (#514, combat.damage): max(1, attack - armor
@@ -393,6 +397,19 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         victim.playHurtAnimation(0);
         victim.setHealth(Math.max(0, victim.getHealth() - a.damage(t)));     // 0 kills it
         nameLine(victim);
+        if (victim.getHealth() > 0 && from instanceof LivingEntity attacker) {
+            attackBack(victim, attacker, t);
+        }
+    }
+
+    // The AoE2 default stance (#733): a military unit without an order and without a target attacks its attacker.
+    private void attackBack(LivingEntity victim, LivingEntity attacker, Stats t) {
+        if (!(victim instanceof Mob mob) || t.classes().isEmpty() || t.attack() == 0
+                || orders.containsKey(mob.getUniqueId()) || sameTeam(mob, attacker)
+                || mob.getTarget() != null && mob.getTarget().isValid()) {
+            return;
+        }
+        unit(mob).setTarget(attacker);
     }
 
     @EventHandler(ignoreCancelled = true)
