@@ -65,8 +65,10 @@ in the game (light, textures, connected fences and panes), what the player sees 
 Only what the screenshot cannot show (the AoE2 side, feel, sound) goes to the owner.
 
 Examples for the game: unit facing, light, entity behavior.
-For what only a person can see, make a `needs-human` ticket with: the scenario or the command that makes the
-test world, and exact steps for the owner ("Open the world. Stand at X Y Z. Look north. The knight must
+For what only a person can see, make a check ticket with: the scenario or the command that makes the
+test world, and exact steps for the owner. It gets `needs-human` only after an agent ran the check (server, simulated
+clicks, screenshots), commented the results and the images, and listed the points that only a person can check (#580).
+Example steps: ("Open the world. Stand at X Y Z. Look north. The knight must
 face you.").
 
 ## Rules
