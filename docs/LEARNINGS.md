@@ -36,17 +36,6 @@ of its document (named below): this file loads into each run. The `improve` skil
   exit code, not for "passed" in the output; foreground `sleep` is blocked: use `run_in_background` (#413).
 - `mcp__github__get_job_logs` gives HTTP 404 for the jobs of `ci.yml` (2026-10-26, #443): do not retry. Run its steps
   (`ruff`, fast, `-m slow`, `-m mc`) locally on the run's `head_sha`; main is red only when one fails there.
-
-- Paper: `fill.papermc.io/v3/projects/paper/versions/V/builds/latest` lists the builds, but the jar URL is on `fill-data.papermc.io`, which the proxy blocked on 2026-10-26 (#439). Test a download host with `curl`, not only the API.
-- The Paper API answers 403 to the `Python-urllib` User-Agent (`curl` works): send a User-Agent (`game/run.py` `AGENT`). `-DbundlerRepoDir=DIR` keeps the patched Mojang jar of Paper in DIR; Paper writes `usercache.json` next to the `--universe` world (#434).
-- Paper plugin (#435): `game/run.py` builds `game/plugin` with `./gradlew --no-daemon -q jar` and `JAVA_HOME` = the JDK 25 (`openjdk-25-jdk-headless`: the paper-api 26.3 classes are Java 25, javac 21 cannot read them); first build 30 s. A NoAI mob finds no path before its first AI tick; the path search ends at about `follow_range` (cow: 16). The world border stops paths: test inside the map. `fill ... hollow` also fills the bottom and top faces.
-- `-m mc` takes about 21 minutes, and 14 of its tests stop with "no javac" when `/etc/aoe2mc-setup-version` is below 6: `apt-get install -y openjdk-25-jdk-headless` first (1 min, #536).- Some runs have no `fire_trigger` at all: `ToolSearch` finds nothing for `select:` and for the bare name (2026-10-26, #539). Then report it on the status issue and continue; do not search again.
-- Run `claim.py N --guard` alone and read its exit code before the push: `guard; echo g=$? && git push` pushes also after a failed guard (#540: a push to the branch of a PR that another run had merged a minute before).
-- `-m mc` takes about 21 minutes, and 14 of its tests stop with "no javac" when `/etc/aoe2mc-setup-version` is below 6: `apt-get install -y openjdk-25-jdk-headless` first (1 min, #536).
-- Some runs have no `fire_trigger`: `ToolSearch` `select:mcp__claude-code-remote__fire_trigger` gives "No matching deferred tools" (2026-10-26, #542). Say it in the report; do not search further.
-- Run `claude/gallant-fermat-zhmyki` (2026-10-26 05:51): `ToolSearch` found no `fire_trigger` (neither `select:` nor keywords), so the tool can be truly absent. Say so in the report; do not retry (#546).
-## Libraries
-
 - `-m mc` takes about 21 minutes, and 14 of its tests stop with "no javac" when `/etc/aoe2mc-setup-version` is below 6:
   `apt-get install -y openjdk-25-jdk-headless` first (1 min, #536).
 - Records (`mgz`, test records, command pitfalls): `docs/research/replays.md`, "Pitfalls".
@@ -85,17 +74,4 @@ of its document (named below): this file loads into each run. The `improve` skil
 - A fruit bush of `place_objects` is at block `int(x * T)` (the tile center), not at `int(tile) * T` (#391).
 - "units in a block": `AOE2MC_DEBUG=1` names the block; list the `aoe2mc.json` objects with a `tile` near the unit to
   find its source (#415: a `PLANT_SHRUB` on the same block, not the tree that the ticket named).
-- Stacked `cylinder`s of falling height make a flat top (the outer disc covers the inner ones): use `seats()`, which
-  carves air above each row (#451). Find the edge of a round room by a scan with `c.get` from the centre (`arena_inside`).
-- `Canvas.furniture` sets only into `air` cells: an open design without `room()` has empty cells (`-1`), so its
-  furniture vanishes without an error. Set those cells with `c.get(...) in (-1, air)` (`pagan_shrine`, #450).
-- `render.py --cut` does not show the inside of a narrow tower (#452): filter `render.building_blocks()` by x, y, z
-  (drop barriers and one side of the walls) and call `render.render()` for a section view.
-- `render.building_blocks` gives states with the `minecraft:` prefix and world y (the ground is y 63, canvas y 1 is y 64): strip the prefix before you match a name (#449).
-- `docs/coverage.md` on main is stale while GitHub Actions cannot run (#460): it listed 21 fallbacks that the code already handles. For the real fallbacks, run `python3 tools/coverage.py OUT.md` into the scratchpad (#500).
-- Furniture inside a closed design: a text map of each layer (one character per state name of `render.building_blocks`, rows by z) shows the positions faster than an isometric render, which hides small blocks behind walls (#501).
-- `tests/test_objects.py::test_blocks_under_water_are_waterlogged` names the blocks of `fish_trap`: change it with the fish trap materials (#486). Grep `tests/` for the design name before the full run.
-- `render.py` draws each block as a cube: a roof of stairs looks like steps. Check stair facings with a text section of `blocks()` (`tests/test_furnish_landmarks.py`). Stairs and slabs new in 26.3 take the colour of their full block (#525).
-- `render.py` takes colors from `colors-1.21.1.json`: a block new in 26.3 (cinnabar) uses `aoe2mc.block_color` and is grey (150, 150, 150) without a key in `COLORS` (#542).
-- `render.py` and `--preview` show a 26.3 block that `colors-1.21.1.json` lacks (poplar leaves) in the `COLORS` fallback of `aoe2mc.block_color`: add an entry there before the general one, else it renders grey or green (#539).
 - `docs/coverage.md` on main can be stale (#460): for the real fallbacks run `python3 tools/coverage.py OUT.md` (#500).
