@@ -159,6 +159,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Ghost ghost = new Ghost(this);
     private final Cheats cheats = new Cheats(this);
     private final Deaths deaths = new Deaths(this);
+    private final Viewer viewer = new Viewer(this);                 // the game mode switch of a replay viewer (#910)
     private final Border border = new Border();
 
     private record Building(Stats stats, String box, int max, int[] b) {}   // b: x0 y0 z0 x1 y1 z1 of box
@@ -417,6 +418,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(this, this);
         Bukkit.getPluginManager().registerEvents(cheats, this);
         Bukkit.getPluginManager().registerEvents(deaths, this);
+        Bukkit.getPluginManager().registerEvents(viewer, this);
     }
 
     @EventHandler(ignoreCancelled = true)
