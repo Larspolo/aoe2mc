@@ -1892,6 +1892,19 @@ def flagship(c, w, st, col, T, ctx):
     c.box(m, m + 1, mh - 5, mh - 1, zc - half + 1, zc + half, f"{col}_wool")
     c.box(m, m + 1, mh - 5, mh - 1, zc, zc + 1, "stripped_oak_log")
     c.flag(m, mh, zc, col, 2)
+    # Deck (#500): the hull has one level above the water, so the cargo stands on the open deck.
+    # Rowing benches at the oars, cargo (barrels, a chest, sacks) on both sides of the mast and a lantern.
+    items = []
+    for x in range(2, w - 2, 2):
+        hw = min(half, x, w - 1 - x)
+        if hw >= 2:
+            items += [(x, 1, zc - hw + 1, "spruce_slab[type=bottom]"), (x, 1, zc + hw - 1, "spruce_slab[type=bottom]")]
+    items += [(m - 1, 1, zc, "barrel[facing=up]"), (m - 2, 1, zc, "barrel[facing=up]"),
+              (m + 1, 1, zc, "chest[facing=west,type=single,waterlogged=false]"), (m + 2, 1, zc, "hay_block[axis=x]"),
+              (m - 1, 1, zc - 1, "barrel[facing=up]"), (m + 1, 1, zc + 1, "hay_block[axis=x]")]
+    c.furniture(items)
+    if c.get(m - 2, 1, zc) == c.id("barrel[facing=up]"):                 # above the deck the cells are empty, not air
+        c.set(m - 2, 2, zc, "lantern[hanging=false]")
 
 
 def helepolis(c, w, st, col, T, ctx):
