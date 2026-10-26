@@ -2,7 +2,7 @@
 from test_build_menu import villager_map
 from test_train_archery import menus
 from test_train_archery import setup as archery
-from test_train_menu import RALLY
+from test_train_menu import RALLY, SKIRM
 
 from game import build, train
 
@@ -44,7 +44,8 @@ def test_in_the_dark_age_a_start_archery_range_shows_a_gray_archer_and_trains_no
     g.techs.discard("FEUDAL_AGE")
     rect = train.open_menu(g, "Steve", (11, 3))
     assert menus(server)[-1] == "aoe menu Steve Archery Range 0:gray_dye:Archer:25 wood · 45 gold · 35 s · " \
-                                "Needs the Feudal Age" + RALLY
+                                "Needs the Feudal Age" + SKIRM.replace("drowned_spawn_egg", "gray_dye").replace(
+                                    "queue 0/15", "Needs the Feudal Age") + RALLY
     assert train.order(g, "Steve", rect, 0) == 0 and g.stock["wood"] == 25 and not g.queues.get(rect)
     g.techs.add("FEUDAL_AGE")
     assert train.order(g, "Steve", rect, 0) == 1

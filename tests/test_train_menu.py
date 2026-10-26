@@ -9,6 +9,7 @@ from game import train
 FEUDAL = " 2:bell:Feudal Age:500 food · 130 s · needs 2 of barracks, mill, lumber camp, mining camp, dock (0/2)"   # the age item without its buildings (#672)
 RALLY = " 8:white_banner:Rally point:Click, then right click the ground"   # the last item (#707)
 SPEAR = " 1:gray_dye:Spearman:35 food · 25 wood · 22 s · Needs the Feudal Age"   # in the Dark Age barracks menu (#729)
+SKIRM = " 1:drowned_spawn_egg:Skirmisher:25 food · 35 wood · 22 s · queue 0/15"   # in the archery range menu (#730)
 
 
 def menus(server):
