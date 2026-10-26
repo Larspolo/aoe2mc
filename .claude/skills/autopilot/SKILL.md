@@ -132,13 +132,13 @@ all criteria (name the evidence for each). Else lock the epic first: `python3 to
 for the criteria that an agent can do. A criterion that needs the owner stays on the epic. Then pick again (#176, #155 waited while P3 tickets ran).
 Refill the queue when fewer candidates are ready than runs are active (tickets with `in-progress` that changed in
 the last 30 minutes), so that parallel runs always find work. Do this at most once per run, in about 10 minutes.
-Lock it first: `python3 tools/claim.py 0 --refill` (one run per UTC hour; exit 1: another run refills, skip the refill).
+Lock it first: `python3 tools/claim.py 0 --refill` (one run per 15 minutes; exit 1: another run refills, skip the refill).
 Also lock each epic E with `python3 tools/claim.py E --refill` before you make its tickets (exit 1: skip that epic, #505):
 1. Split each `size:L` ticket N without open sub-issues (`ticket` skill), also when it is not a candidate yet. Lock it
    first with `python3 tools/claim.py N --refill` (exit 1: skip it).
 2. For each open epic whose sub-issues are all closed: make a sub-issue for each acceptance criterion that is
    still open and that an agent can do. A criterion that needs the owner stays on the epic.
-3. Make up to 5 new tickets for the remaining goals of the open epics and `docs/ROADMAP.md`, and for the
+3. Make up to 8 new tickets for the remaining goals of the open epics and `docs/ROADMAP.md`, and for the
    fallbacks in `docs/coverage.md`. Priority: that of the epic, else `P3`. Never `P0` or `P1`, except for
    a `tooling` ticket that blocks other tickets. Look for duplicates first, and list the open issues again just
    before you make the tickets: parallel runs make the same follow-ups at the same time (#300, #301).
