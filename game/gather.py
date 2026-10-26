@@ -23,6 +23,7 @@ On a Paper server, the villagers walk with Minecraft path finding (`aoe moveto` 
 speed of game/ai.py), and `aoe stop` stops them when they arrive (#437). The own path code (Map.path, one /tp per
 block) is only for the vanilla server.
 A sidebar scoreboard shows wood, food, gold and stone of player 1. A boss bar shows the selected unit (bossbar.py, #659).
+The action bar shows the actions that the player can do in the selection state now (hints.py, #798).
 
 The program sees a click in two statistics: the use of the stick, and "talked to villager" (a right click on a
 villager is an interaction with the entity, not a use of the item). Then it reads the position and the view of
@@ -43,6 +44,7 @@ from units import VILLAGER_JOBS, animal  # noqa: E402
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import bossbar  # noqa: E402
+import hints  # noqa: E402
 import menu  # noqa: E402
 import train  # noqa: E402
 
@@ -335,6 +337,7 @@ class Gather:
                       and o["name"] in combat.BUILDINGS}               # target UUID -> box of an enemy building
         self.sieged = set()                                            # the targets of attack orders
         self.wands, self.corners = set(), {}                           # players who clicked the wand, player -> corner 1
+        self.hints = {}                                                # target -> (hint text, time) (hints.py, #798)
 
     @property
     def wood(self):
@@ -541,6 +544,7 @@ class Gather:
     def clicks(self):
         """Players who clicked since the last call. Clicks in a chest menu go to the handler of the menu (#619)."""
         build.tick(self)
+        hints.tick(self)
         menu.clicks(self)
         self.command("execute as @a unless items entity @s container.* minecraft:carrot_on_a_stick "
                      "run give @s minecraft:carrot_on_a_stick")
