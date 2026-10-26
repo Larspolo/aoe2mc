@@ -19,8 +19,8 @@ def scenario(tmp_path):
 def test_old_ids_get_de_names(tmp_path):
     objects = aoe2mc.read_scx(str(scenario(tmp_path)))[5]
     assert sorted((o["id"], o["kind"], o["name"]) for o in objects) == [
-        (59, "O", "FORAGE_BUSH"), (87, "B", "ARCHERY_RANGE"), (102, "O", "STONE_MINE"), (162, "?", "UNKNOWN_162"),
-        (809, "O", "STUMP"), (809, "O", "STUMP")]                     # FLAGX (162) stays skipped
+        (59, "O", "FORAGE_BUSH"), (87, "B", "ARCHERY_RANGE"), (102, "O", "STONE_MINE"), (162, "O", "INVISIBLE_OBJECT"),
+        (809, "O", "STUMP"), (809, "O", "STUMP")]                     # FLAGX (162): invisible, skipped (#772)
 
 
 def test_convert_places_the_old_objects(tmp_path):
@@ -28,6 +28,5 @@ def test_convert_places_the_old_objects(tmp_path):
     with contextlib.redirect_stdout(out):
         aoe2mc.main([str(scenario(tmp_path)), str(tmp_path / "W")])
     text = out.getvalue()
-    skipped = [line for line in text.splitlines() if "unknown to the parser" in line]
-    assert skipped and skipped[0].split(":")[-1].strip() == "1", text  # only FLAGX
+    assert "unknown to the parser" not in text and "invisible (skipped on purpose): 1" in text, text   # FLAGX (#772)
     assert "units in a block (moved up): 0" in text
