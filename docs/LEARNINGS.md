@@ -22,19 +22,6 @@ of its document (named below): this file loads into each run. The `improve` skil
   uses it as a lock (#211). REST ref paths: `git/refs/heads/...`. `urllib` with a JSON body needs
   `Content-Type: application/json`, else 415 (#345).
 - Quote the heredoc tag (`<<'EOF'`) for GitHub text: `<<EOF` runs each `` `name` `` as a command.
-- A workflow with a `permissions:` block also needs `contents: read` (checkout); the `pulls` API needs
-  `pull-requests: read`. A new `workflow_dispatch` workflow runs only after the merge to `main` (#207).
-- Minecraft server: a bad property value (`facing=up`) loads silently as the default state. An unknown block gives
-  "Recoverable errors when loading section", an unknown block entity id "Skipping block entity with invalid type"
-  (26.3 has no `bed` block entity, #249). A missing `level.dat` compound gives "key missing: <name>" (#60). A bad
-  datapack file stops the server. A datapack `worldgen/` file makes the client warn "Experimental Settings" (#218).
-  The 26.3 server writes a missing `white-list` as `true`: write `white-list=false` (`game/run.py`, #285).
-- Minecraft client (#178, #179): `tools/mc_shot.py` runs it in `Xvfb`. 26.3 needs `mesa-vulkan-drivers` (lavapipe) and
-  a placeholder for the title panorama. The view ends at about 100 blocks: put `--at` near the subject (#208).
-- Test data: `samples/de-64.3.aoe2record` (`mgz`, MIT, #134; each town center 4 times, #139). `parse_match(f).actions`:
-  `ERROR` actions are commands mgz could not read (all `DE_QUEUE` in DE 64.3: `aoe2mc.de_queue`; raw bytes: a wrapper
-  of `mgz.fast.parse_action`, #372). Old `.scx` (no license, do not commit): GitHub raw
-  `SiegeEngineers/genie-rs/master/crates/genie-scx/test/scenarios/` (format 1.21: `Age of Heroes b1-3-5.scx`).
 - Pitfalls of the Minecraft server, client and NBT (silent defaults, dropped tags): `docs/minecraft-versions.md`; of Paper
   and the game program: `docs/research/gameplay.md`; of RCON `@e`: `docs/datapack.md` (sections "Pitfalls").
 - `tools/claim.py` names the run by the local branch (`who()`): beat only from the session branch, never in parallel (#361).
