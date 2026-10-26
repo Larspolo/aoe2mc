@@ -87,6 +87,9 @@ itself and lists each change on the status issue.
 ## Setup steps of the owner
 
 Only the owner can do these steps. An agent that needs a change makes a `needs-human` ticket with numbered steps.
+For a new project, `python3 tools/bootstrap.py DIR --repo OWNER/NAME` copies the generic files, writes `agent.toml` and
+the starts of the specific files, and prints these steps for the new repository (`--github`: also the labels and the
+status issue).
 
 1. **GitHub.** Install the Claude GitHub app on the repository. Make the repository public (free Actions minutes).
    Add the ruleset `Protect main` (Settings → Rules): no force push, no delete of `main`. Give the workflows write
@@ -132,6 +135,8 @@ the owner login, the default branch, the status issue, the commands, the doc pat
 | `.claude/hooks/guard-main.sh` | generic | None. |
 | `scripts/cloud-setup.sh` | specific | Java, the Minecraft server jars, the Vulkan and X tools of the client. |
 | `scripts/autopilot.sh` | generic | None (runs on the owner's computer). |
+| `tools/agent_config.py` | generic | None (reads `agent.toml`). |
+| `tools/bootstrap.py` | generic | None (sets up this system in a new repository, #906). |
 | `tools/claim.py` | generic | None (`agent.toml`). |
 | `tools/usage.py` | generic | None. |
 | `tools/dashboard.py` | generic | None (`agent.toml`). |

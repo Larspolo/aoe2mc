@@ -169,7 +169,7 @@ def test_a_right_click_pauses_and_continues_a_replay_on_a_server(tiny_world, tmp
         at, command = {}, game.command
 
         def timed(c):
-            if c.startswith("tellraw @a "):
+            if c.startswith("tellraw @a ["):                           # a chat event, not the view text (#737)
                 at[json.loads(c[len("tellraw @a "):])[-1]["text"]] = time.monotonic() - t0
             return command(c)
         game.command = timed
