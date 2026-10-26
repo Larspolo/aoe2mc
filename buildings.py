@@ -3888,6 +3888,19 @@ def minaret_of_jam(c, w, st, col, T, ctx):
     c.cylinder(tx, tz, 1.1, H + 1, H + 3, "cut_sandstone")
     top = c.dome(tx, tz, 1.1, H + 3, "smooth_quartz")
     c.set(int(tx), top + 1, int(tz), "lightning_rod")
+    if w >= 8:                                                            # a spiral stair up to the top balcony
+        i, j = int(tx), int(tz)                                           # the shaft is 2 x 2 blocks
+        c.box(i, i + 2, 1, H + 1, j, j + 2, "air")
+        c.door(i, 1, j + 2, wood="jungle")
+        steps = [(i + 1, j + 1, "east"), (i + 1, j, "north"), (i, j, "west"), (i, j + 1, "south")]
+        for y in range(1, H):                                             # one turn every 4 blocks: 3 blocks headroom
+            x, z, f = steps[(y - 1) % 4]
+            c.set(x, y, z, stair("smooth_sandstone_stairs", f))
+            if y % 6 == 0:
+                c.set(x, y - 1, z, "lantern[hanging=true]")             # under the stair, over the head
+        for y in (H - 2, H - 1):                                          # out through the drum onto the balcony
+            x, z, f = steps[(y - 1) % 4]
+            c.box(x, x + 1, H, H + 3, z, z + 1, "air")
     c.banner(m, 3, w, col)
 
 
