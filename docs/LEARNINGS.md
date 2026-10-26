@@ -36,11 +36,14 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   `SiegeEngineers/genie-rs/master/crates/genie-scx/test/scenarios/` (format 1.21: `Age of Heroes b1-3-5.scx`).
 - `tools/claim.py` names the run by the local branch (`who()`): beat only from the session branch, never in parallel (#361).
 - The cloud clone is shallow: `git fetch --unshallow origin` before a scan of the history (#367).
+- Quota usage: `claude -p ... --output-format stream-json --verbose` prints a `rate_limit_event` with
+  `unifiedWindows.five_hour/seven_day.utilization` and `resetsAt` (`tools/usage.py`). A `statusLine` does not run in cloud sessions.
 - `pyproject.toml` `addopts` has `-q`: `python3 -m pytest -q` gives `-qq`, without the "N passed" line. Wait for the
   exit code, not for "passed" in the output; foreground `sleep` is blocked: use `run_in_background` (#413).
 - `mcp__github__get_job_logs` gives HTTP 404 for the jobs of `ci.yml` (2026-10-26, #443): do not retry. Run its steps
   (`ruff`, fast, `-m slow`, `-m mc`) locally on the run's `head_sha`; main is red only when one fails there.
 
+- Paper: `fill.papermc.io/v3/projects/paper/versions/V/builds/latest` lists the builds, but the jar URL is on `fill-data.papermc.io`, which the proxy blocked on 2026-10-26 (#439). Test a download host with `curl`, not only the API.
 ## Libraries
 
 - AoE2ScenarioParser 0.9.8 makes new scenarios (`tools/scenarios.py`: `new_scenario`, `add_unit`, `save`). It prints much
@@ -96,3 +99,6 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   map. Replay paths cost 18 s per 200 s of game in samples/ (one search per unit of a group, #409).
 - "units in a block": `AOE2MC_DEBUG=1` names the block; list the `aoe2mc.json` objects with a `tile` near the unit to
   find its source (#415: a `PLANT_SHRUB` on the same block, not the tree that the ticket named).
+- `render.py --cut` does not show the inside of a narrow tower (#452): filter `render.building_blocks()` by x, y, z
+  (drop barriers and one side of the walls) and call `render.render()` for a section view.
+- `render.building_blocks` gives states with the `minecraft:` prefix and world y (the ground is y 63, canvas y 1 is y 64): strip the prefix before you match a name (#449).

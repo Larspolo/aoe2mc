@@ -42,8 +42,11 @@ def test_bridge_deck_at_bank_height_with_water_below():
     deck = {x: max(y for (bx, y, bz) in blocks if bx == x and bz == zc) for x in range(16, 56)}
     assert len(set(deck.values())) == 1                                  # one flat deck ...
     assert bank - 1 <= deck[16] <= bank                                  # ... at the height of the banks
-    for x in range(26, 46):                                              # water flows under the deck
-        assert not any(bx == x and bz == zc and y <= water for (bx, y, bz) in blocks)
+    wet = {x for (x, y, z) in blocks if z == zc and y <= water and 26 <= x < 46}
+    assert wet == set(range(28, 46, 4))                     # only the piers stand in the water, every tile (#455)
+    for x in range(26, 46):                                 # water flows under the arches between the piers
+        if x % 4:
+            assert not any(bx == x and bz == zc and y <= water + 1 for (bx, y, bz) in blocks)
 
 
 def test_gate_on_water_keeps_its_opening_and_walls_get_a_footing():

@@ -69,7 +69,12 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Rug | `*_carpet` | `furnish_worship`, `town_hall`, `keep_inside`, `cart` +1 more |
 | Throne (inside) | `*_stairs` (backrest north) between `gold_block`s, `*_wall_banner`s (player color) over it | `throne_hall` |
 | Treasure (inside) | `chest` and `gold_block` in the back corners | `throne_hall` |
+| Statue in a hall (inside) | `chiseled_stone_bricks` base, `waxed_copper_block` and `waxed_cut_copper` (bronze) or `quartz_pillar` and `gold_block` (marble), lit `candle`s at its sides | |
+| Tomb (inside) | `smooth_quartz` cenotaph with a `green_carpet` cloth on a `red_carpet`, lit `candle`s around it | |
+| Oracle's tripod (inside) | `cauldron` before the statue of the god, `decorated_pot`s (gifts) in the corners | |
+| Spiral stair in a tower (inside) | `*_stairs` around a 2 × 2 shaft, one step per block, a hanging `lantern` under every 6th step | |
 | Bench (inside) | `*_stairs` in a row | `storage`, `shelter`, `furnish_worship`, `town_hall` +37 more |
+| Sacred rock in a shrine (inside) | `stone`, `andesite` and `tuff` in a low mound, lit `candle`s around it, a ring of `quartz_pillar` columns | |
 | Hay loft (inside) | `spruce_slab[type=top]` with `hay_block` on it | `settlement`, `cart`, `stable`, `market` +22 more |
 | Light on a wall (inside) | `wall_torch` | `town_hall`, `archery_range`, `stable` |
 | Loom, cloth | `loom`, wool | `decorate`, `command_tent`, `dock` |
@@ -81,6 +86,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Painted trim (deck edge, band) | `*_concrete` (player color) | `torii`, `stupa`, `pyramid`, `dock` +3 more |
 | Relief panel, carving | `chiseled_stone_bricks` | `harbor`, `temple`, `aqueduct`, `furnish_worship` +6 more |
 | Balustrade of a stair | `polished_granite` | `pyramid` |
+| Stone bridge (#455) | `stone_bricks` piers with cutwaters every tile, `stone_brick_stairs[half=top]` vault, `stone_brick_wall` balustrade with `chiseled_stone_bricks` posts, `cracked_stone_bricks` on cracked and broken pieces | |
 | Crop field | `wheat` rows (ages 5–7) on `farmland`, furrows of bare `farmland`, `dirt_path` edge | `folwark` |
 | Hay, fodder | `hay_block` | `settlement`, `hut`, `mill_room`, `granary` +15 more |
 | Log pile, cut timber | `*_log[axis=x]` stacked as a pyramid (`log_pile`) | `log_pile`, `barricade`, `wooden_bridge`, `fish_trap` +36 more |
