@@ -98,9 +98,11 @@ find the open `P0` ticket "Fix main: ..." or make one (`P0`,
 
 ## 3. Read the owner's feedback
 
-Read all comments after `last_run` (`/issues/comments?since=` and `/pulls/comments?since=`, see
-"GitHub access") and the issues that the owner opened after `last_run`. Keep the ones by the owner.
-For each new owner comment, lock it first: `python3 tools/claim.py ID --comment` (ID = the `id` of the comment).
+Run `python3 tools/feedback.py` (#971): it lists the owner comments of the last 6 hours (issues and PR reviews)
+without a comment lock. Do not read only the comments after `last_run`: each run moves `last_run`, so a comment
+between the start of one run and the report of another was never read (#820). Also read the issues that the owner
+opened after `last_run`. An agent comment shows only when it has no footer and no app: lock it and do nothing.
+For each listed comment, read its thread, then lock it first: `python3 tools/claim.py ID --comment` (ID = the `id` of the comment).
 Exit 1: another run handles it, skip it (#320: three runs made three copies of one epic). Exit 0: act on it:
 - A question → answer it in the same thread.
 - A change to a ticket (scope, priority, "do this first") → change the labels or the body. Reply in one line.
@@ -129,7 +131,9 @@ then the lowest issue number.
 Epics first: an epic is never a candidate, so its rest of the work needs sub-issues. Before you claim a ticket, look
 at the open epics (label `epic`, not `needs-human`, not `muted`, any priority) with no open sub-issue, at most 3 per run. The
 priority does not matter here: a check of `P2` and `P3` epics was skipped, and six finished epics stayed open (#799).
-For each one, read its acceptance criteria and all its comments. An epic without a criterion that checks that the
+For each one, read its acceptance criteria and all its comments. An owner comment after the last agent comment comes
+first: handle it as in step 3 (lock, answer). Do not post a request that the epic already has (#820: two runs asked
+the same thing, and no run answered the owner's question between them). An epic without a criterion that checks that the
 whole goal is covered (owner rule, #820: never only "All sub-issues are closed") gets one first (`ticket` skill, "Split
 an L ticket"). Check that criterion against the full scope (for "all X": the full list, for example the AoE2 wiki) and
 name each missing item. Close the epic with a comment only when all criteria are met
@@ -294,7 +298,7 @@ Do not change a priority that the owner set. Propose it.
 ## More tickets
 
 If the argument asks for more than 1 ticket, go back to step 2 after step 8 (finish stalled PRs of other runs, then read new owner
-feedback). In a
+feedback with `python3 tools/feedback.py`, step 3). In a
 cloud session, reset the branch first: `git fetch origin main && git checkout -B <branch> origin/main` (fetch `main` alone:
 a fetch that also names a deleted branch fails as a whole, and `origin/main` stays old). Never force-push: the auto mode denies it
 ("Git Destructive"; 33 runs lost a step on it on 2026-10-26). Push with
