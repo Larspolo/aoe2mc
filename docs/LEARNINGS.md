@@ -48,7 +48,11 @@ of its document (named below; add at its end, do not change other lines: `merge=
   temporary copy (`scenarios.triggers`). No scenario in `examples/` and `samples/` has triggers: use the `triggers` scenario (#646).
 - A wait loop with a fake clock (`now += s`) runs forever when the wait is about 1e-15: `now + 1e-15 == now`. Break on `wait <= 1e-6`, not `<= 0` (#685).
 - Screenshots of a game check: join `mc_shot.Client(game.game_port, game.version)` to the running `run.Game`, `gamemode spectator aoe2mc`, then `tp aoe2mc X Y Z facing entity <uuid>` and `client.shot()`: no saved world, no copy of the `.dat` files. The server log is `game.folder/logs/latest.log`: read it before the `with` ends (#603).
+- Same output of a conversion: compare two worlds with `tools/world_diff.py A B`. `diff -r` and `cmp` always differ: the .mca time tables, gzip headers and `LastPlayed` hold the time (#702).
 - `-m mc` skips `tests/test_menu_client.py` (a real client) without `xdotool` (setup below v7, #638): `apt-get install -y xdotool` first; the skip hid a broken handler there until #706.
+- `run.Game(world)` plays on the world folder itself (`--universe`, no copy): the game saves its changes there. Copy the converted world for each check run, else the second run starts with felled trees and empty bushes (#718). A live replay at `--speed 8` leaves the real villagers far behind the replay positions: check at speed 4.
+- `mc_shot.Client` hides the chat (`chatScale` 0): pass `chat=True` for an image of a message. The client log (`client.text()`, `[CHAT]`) has each chat line; the server log has no `tellraw` text. `Gather.setup` reads no stock from the sidebar: set `scoreboard players set Food aoe_res N` with `g.stock` (#780).
+- `execute if entity @e[...]` on 26.3 answers "Test passed. Count: N" (a capital C, a full stop); the `FakeServer` of `tests/test_gather.py` writes "Test passed, count: 1". Match `Count: (\d+)` and check a new answer on a real server (#787).
 
 ## Code
 
@@ -88,4 +92,7 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - A train test (`game/train.py`) needs an own `TOWN_CENTER` or `HOUSE`: without them the population limit is 0 and `tick()` spawns nothing (#654).
 - `[f"...{o['id']}"] * ("id" in o)` evaluates the f-string also when the factor is 0 (KeyError): use `o.get('id')` in it (#681).
 - `game/combat.py` `stats()`: a name that is not a `STATS` key gets `DEFAULT` (40 hit points) without a warning. The units of `aoe2mc.json` have names like `VILLAGER_MALE`: compare with `units.classify` names, not the table keys (#655).
+- A new item of a building menu (`train.show()`) changes the exact menu strings in 5 test files (`grep -n "aoe menu Steve\|endswith(\"queue" tests/`): add it as a constant next to `FEUDAL` and `RALLY` in `tests/test_train_menu.py` (#672, #707).
 - `game/replay.py` uses the resource looks of `gather.Gather` through `Replay.crew` (`Gather.__new__` with `map`, `trunks`, `bushes` and a `command` attribute): no copy of the look code (#631).
+- `place_objects` tests `"FLAG" in name` before `units.invisible(name)`: an invisible object named `*FLAG*` becomes a flag. Give it a name of `units.INVISIBLE` without `FLAG` (`INVISIBLE_OBJECT`, #772).
+- Before #773 the ship and bridge paths of `entity_chunk` counted "units in a block" without a debug line. With a step under a gate, the foundation lifts the passage floor: `buildings.FLOORS` holds the stand height. Reproduce a slope with `elevation` in `tests/test_scx.py` `build()` (`tests/test_scx_walls.py`).

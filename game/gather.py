@@ -57,7 +57,8 @@ AOE2_WORK, NORMAL = {"wood": 0.39, "food": 0.31, "farm": 0.33, "gold": 0.38, "st
 WORK_SECONDS = {r: 1 / (w * NORMAL) for r, w in AOE2_WORK.items()}    # real seconds per unit, as at Normal speed
 CARRY = {"WHEELBARROW": 3}                                         # more resources per trip, as in AoE2 (#728)
 PACE = {"WHEELBARROW": 1.1}                                        # the villager walk speed factor, as in AoE2
-WORK_TECHS = {"DOUBLE_BIT_AXE": {"wood": 1.2}}                     # work rate factors of the economy technologies (AoE2)
+WORK_TECHS = {"DOUBLE_BIT_AXE": {"wood": 1.2},                     # work rate factors of the economy technologies (AoE2)
+              "GOLD_MINING": {"gold": 1.15}}
 FARM_FOOD = 175                                                    # food in one farm, as in AoE2 DE (no upgrades)
 FARM_TECHS = {"HORSE_COLLAR": 75}                                  # food that a farm technology adds to each farm (AoE2 DE)
 MINES = {"GOLD_MINE": ("gold", 800, "GOLD_MINER"), "STONE_MINE": ("stone", 350, "STONE_MINER")}   # as in AoE2
@@ -68,6 +69,7 @@ NUMBER = r"(-?[\d.]+(?:E-?\d+)?)[df]"
 CIVILIANS = ("VILLAGER", "REPAIRER", "MONK", "KING", "TRADE", "FISHING_SHIP", "TRANSPORT")
 SELECT = "aoe2mc.selected"                                         # entity tag of the selected units
 TYPE_REACH = 16                                                    # blocks: a second click selects its type this near (#743)
+WAND = "warped_fungus_on_a_stick"     # the selection wand: a second item with its own "used" statistic (#778)
 # The look and sound of one gather step at the resource (#592): block particles and a vanilla sound. A villager has
 # no arm swing, so it turns to the resource (`rotate ... facing`). 26.3 block particles take
 # `{id:...,Properties:{...}}`, not `Name`.
@@ -77,7 +79,7 @@ WORK_LOOK = {"wood": ("minecraft:oak_log", "minecraft:block.wood.hit"),
              "gold": ("minecraft:gold_ore", "minecraft:block.stone.hit"),
              "stone": ("minecraft:stone", "minecraft:block.stone.hit")}
 EVENTS = {"idle": "idle", "to_tree": "walk", "chop": "chop", "to_drop": "carry",    # state -> event in the log
-          "to_site": "walk", "build": "build"}
+          "to_site": "walk", "build": "build", "to_rally": "walk"}
 
 
 class Map:
@@ -159,6 +161,17 @@ class Map:
     def around(self, cells):
         """The free cells next to a group of cells (a tree tile, a footprint)."""
         return {(x + dx, z + dz) for x, z in cells for dx, dz in STEPS if self.free(x + dx, z + dz)} - cells
+
+    def front(self, rect, mounted=False):
+        """The spawn cells of a unit trained at the building with block footprint rect: the free cells next to it,
+        south side first, the middle first. A mounted unit (a horse with a rider) one cell farther out: the rider
+        sits about 0.7 blocks behind the middle of the horse, so next to the walls its head is in them (#767)."""
+        x0, x1, z0, z1 = rect
+        cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
+        ring = self.around(cells)
+        if mounted:
+            ring = {c for c in self.around(cells | ring) if all(self.free(c[0] + dx, c[1] + dz) for dx, dz in STEPS)}
+        return sorted(ring, key=lambda c: (abs(c[1] - z1 - mounted), abs(2 * c[0] + 1 - x0 - x1), c))
 
     def path(self, start, goals, limit=None):
         """Shortest path (list of cells after start) to one of goals. 8 neighbours, no cut corners, steps of at
@@ -310,6 +323,8 @@ class Gather:
         self.bar = None                                                # the unit on the boss bar (bossbar.py, #659)
         self.queues, self.trained = {}, {}                             # town center -> its queue, units it trained
         self.techs = set()                                             # the researched technologies (train.TECHS)
+        self.rally, self.rallying, self.marks = {}, {}, {}             # building -> rally point, player -> building,
+        #                                                                tag of a rally marker -> AoE2 seconds left
         self.pop, self.census, self.shown = 0, 0.0, {}                 # live units, AoE2 seconds since the count, sidebar
         import combat                                                  # combat imports this module
         ground = [r.split() for r in data["ground"]]
@@ -317,6 +332,7 @@ class Gather:
                       if o["kind"] == "building" and o["player"] not in (0, player) and "footprint" in o
                       and o["name"] in combat.BUILDINGS}               # target UUID -> box of an enemy building
         self.sieged = set()                                            # the targets of attack orders
+        self.wands, self.corners = set(), {}                           # players who clicked the wand, player -> corner 1
 
     @property
     def wood(self):
@@ -331,6 +347,7 @@ class Gather:
 
     def setup(self):
         for cmd in ("scoreboard objectives add aoe_use minecraft.used:minecraft.carrot_on_a_stick",
+                    f"scoreboard objectives add aoe_box minecraft.used:minecraft.{WAND}",
                     "scoreboard objectives add aoe_talk minecraft.custom:minecraft.talked_to_villager",
                     'scoreboard objectives add aoe_res dummy "Resources"',
                     "scoreboard objectives setdisplay sidebar aoe_res"):
@@ -386,6 +403,38 @@ class Gather:
         for u in sorted(near - self.selected - {uuid}) + [uuid]:      # the clicked unit last: its boss bar
             self.select(u)
 
+    def choose(self, uuids, last=None):
+        """Make uuids the selection: the other units leave it, the new ones glow. The boss bar shows unit last."""
+        for u in sorted(self.selected - uuids):
+            self.command(f"data merge entity {u} {{Glowing:0b}}")
+            self.command(f"tag {u} remove {SELECT}")
+        for u in sorted(uuids - self.selected):
+            self.command(f"data merge entity {u} {{Glowing:1b}}")
+            self.command(f"tag {u} add {SELECT}")
+        for u in sorted(self.selected ^ uuids):                        # the name line shows the selection (#661)
+            self.command(f"aoe label {u}")
+        self.selected = set(uuids)
+        bossbar.show(self, last)
+
+    def box(self, name, cell):
+        """A click of player name with the selection wand on the ground cell (#778, owner choice #745). The first click
+        sets a corner, the second selects the own units whose feet are in the rectangle of the two corners, as the
+        selection box of AoE2: military units win over villagers, and an empty box clears the selection."""
+        if cell is None:
+            return
+        if (first := self.corners.pop(name, None)) is None:
+            self.corners[name], (x, z) = cell, cell
+            self.command(f"particle minecraft:happy_villager {x + 0.5} {(self.map.y(x, z) or 0) + 0.5} {z + 0.5} "
+                         f"0.3 0.3 0.3 0 12 force {name}")
+            self.command(f"title {name} actionbar " + json.dumps({"text": "Selection box: click the other corner"}))
+            return
+        (x0, x1), (z0, z1) = sorted((first[0], cell[0])), sorted((first[1], cell[1]))
+        pos = {k: v.pos for k, v in self.villagers.items()} | self.positions(list(self.soldiers))
+        inside = {u for u, p in pos.items() if x0 <= p[0] < x1 + 1 and z0 <= p[2] < z1 + 1}
+        pick = inside & self.soldiers.keys() or inside
+        self.choose(pick, min(pick, default=None))
+        self.command(f"title {name} actionbar " + json.dumps({"text": f"Selected: {len(pick)} units"}))
+
     def attack(self, target):
         """Send the selected military units to attack the unit target, with their AoE2 walk speed (ai.py)."""
         import ai                                                      # ai imports this module
@@ -404,13 +453,13 @@ class Gather:
             v.job = job
             self.command(f'data merge entity {v.uuid} {{VillagerData:{{profession:"minecraft:{job}"}}}}')
 
-    def send(self, tile):
-        """Send the selected villagers to the tree, the fruit bush, the mine or the farm on tile. A farm takes one
-        farmer: the next villagers go to the nearest free farms, or stop."""
+    def send(self, tile, who=None):
+        """Send the selected villagers (or the villagers who) to the tree, the fruit bush, the mine or the farm on tile.
+        A farm takes one farmer: the next villagers go to the nearest free farms, or stop."""
         res = self.map.resource(tile)
         job = "FARMER" if tile in self.map.farms else {"wood": "LUMBERJACK", "food": "FORAGER"}.get(res) or \
             next(j for r, _, j in MINES.values() if r == res)
-        for u in sorted(self.selected & self.villagers.keys()):         # a scout cannot gather or build (#589)
+        for u in sorted((self.selected if who is None else who) & self.villagers.keys()):   # a scout cannot (#589)
             v = self.villagers[u]
             for t in [t for t, f in self.farmers.items() if f == u]:
                 del self.farmers[t]
@@ -487,15 +536,19 @@ class Gather:
         menu.clicks(self)
         self.command("execute as @a unless items entity @s container.* minecraft:carrot_on_a_stick "
                      "run give @s minecraft:carrot_on_a_stick")
-        if "passed" not in self.command("execute if entity @a[scores={aoe_use=1..}]") + \
-                self.command("execute if entity @a[scores={aoe_talk=1..}]"):
+        self.command(f"execute as @a unless items entity @s container.* minecraft:{WAND} "
+                     f'run give @s minecraft:{WAND}[item_name="Selection box"]')
+        objs = ("aoe_use", "aoe_talk", "aoe_box")
+        if "passed" not in "".join(self.command(f"execute if entity @a[scores={{{o}=1..}}]") for o in objs):
             return []
         out = []
         for name in (n.strip() for n in self.command("list").split(":", 1)[-1].split(",")):
-            if name and any(re.search(r"has [1-9]", self.command(f"scoreboard players get {name} {obj}"))
-                            for obj in ("aoe_use", "aoe_talk")):
+            used = [o for o in objs if name and re.search(r"has [1-9]", self.command(f"scoreboard players get {name} {o}"))]
+            if used:
                 out.append(name)
-                for obj in ("aoe_use", "aoe_talk"):
+                if "aoe_box" in used:
+                    self.wands.add(name)
+                for obj in objs:
                     self.command(f"scoreboard players reset {name} {obj}")
         return out
 
@@ -505,6 +558,13 @@ class Gather:
         if not pos or len(rot) != 2:
             return
         eye, d = (pos[0], pos[1] + 1.62, pos[2]), direction(*map(float, rot))
+        if name in self.wands:                                        # the selection wand (#778)
+            self.wands.discard(name)
+            self.box(name, self.map.pick_ground(eye, d))
+            return
+        if (rect := self.rallying.pop(name, None)) and (cell := self.map.pick_ground(eye, d)):   # the menu item (#707)
+            train.rally(self, rect, cell, self.map.pick_tree(eye, d))
+            return
         army = self.selected and self.selected <= set(self.soldiers)
         u = pick_unit(eye, d, {k: v.pos for k, v in self.villagers.items()} |
                       self.positions(list(self.soldiers) + (list(self.enemies) if army else [])))
@@ -560,8 +620,10 @@ class Gather:
         """One tick: walk one block, chop, drop the wood, or build."""
         self.fall()
         for v in self.villagers.values():
-            if v.state in ("to_tree", "to_drop", "to_site") and v.path:
+            if v.state in ("to_tree", "to_drop", "to_site", "to_rally") and v.path:
                 self.follow(v) if self.paper else walk(self, v)
+            elif v.state == "to_rally":
+                self.set(v, "idle")
             elif v.state == "to_site":
                 self.set(v, "build" if v.site["progress"] < 1 else "idle")
             elif v.state == "to_tree":

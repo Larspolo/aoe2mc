@@ -240,14 +240,16 @@ def read_map(path):
 
 
 # Object IDs of old scenarios that DE keeps only in its data file (the DE editor hides them, #576) -> the DE object of
-# the same look. Buildings of later ages take the base building. Not here: FLAGX (162, invisible), projectiles, the
-# shallows (447, terrain), a part of a palisade gate (795) and the town center parts (617, 621): no own object.
+# the same look. Buildings of later ages take the base building. Not here: projectiles. The corner of a palisade gate
+# (795) is a palisade post, the battering ram (35) has a new ID in DE (#772).
 OLD_IDS = {248: "STONE_MINE", 262: "FORAGE_BUSH", 415: "STUMP", 737: "STUMP",
+           35: "BATTERING_RAM", 617: "TOWN_CENTER", 621: "TOWN_CENTER", 795: "PALISADE_WALL",
            144: "RUBBLE_2_X_2", 146: "RUBBLE_3_X_3", 147: "RUBBLE_1_X_1", 817: "STATUE_CIVILIZATION",
            178: "BROKEN_CART", 443: "BROKEN_CART", 735: "TREBUCHET_PACKED", 451: "DOLPHIN",
            10: "ARCHERY_RANGE", 20: "BARRACKS", 498: "BARRACKS", 30: "MONASTERY", 32: "MONASTERY", 116: "MARKET",
            137: "MARKET", 129: "MILL", 133: "DOCK", 807: "DOCK", 150: "SIEGE_WORKSHOP", 210: "UNIVERSITY",
            464: "HOUSE", 465: "HOUSE", 563: "BLACKSMITH", 585: "MINING_CAMP", 586: "MINING_CAMP"}
+FLAGX, SHALLOWS_OBJECT = 162, 447   # an invisible editor flag (units.INVISIBLE); shallows: the terrain of its tile
 
 
 def read_scx(path):
@@ -271,8 +273,11 @@ def read_scx(path):
                         "view": p["view"]}
     objects = []
     for o in s["objects"]:
+        if o["type"] == SHALLOWS_OBJECT and 0 <= o["x"] < size and 0 <= o["y"] < size:
+            terrain[int(o["x"]), int(o["y"])] = TerrainId.SHALLOWS.value
+            continue
         t = ids[OLD_IDS[o["type"]]] if o["type"] not in kinds and o["type"] in OLD_IDS else o["type"]
-        prefix, name = kinds.get(t, ("?", f"UNKNOWN_{t}"))
+        prefix, name = ("O", "INVISIBLE_OBJECT") if t == FLAGX else kinds.get(t, ("?", f"UNKNOWN_{t}"))
         holder = o["garrisoned_in"]
         objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name, id=t,
                             player=o["player"], x=o["x"], y=o["y"], rotation=float(o["angle"]),
@@ -574,6 +579,7 @@ RESEARCH_S = {"Loom": 25, "Town Watch": 25, "Town Patrol": 40, "Wheelbarrow": 75
               "Feudal Age": 130, "Castle Age": 160, "Imperial Age": 190}   # the town center researches: they delay units
 UNIT_USE = {"move", "order", "build", "wall", "patrol", "follow", "formation", "attack_move", "back_to_work", "stance"}
 BUILDING_USE = {"queue", "research", "gather_point", "ungarrison", "sell", "buy"}
+WORK = re.compile(r"TREE|.*BUSH|.*_MINE|.*FARM")                     # an ORDER on these: a villager gathers
 
 
 def train(unit):
@@ -610,17 +616,18 @@ def name_timeline(objects, timeline, window=16):
     Adds "names" (a name or None per ID of "objects") to the events and returns {id: name}."""
     names = {o["ref"]: o["name"] for o in objects if o.get("ref") is not None}
     top = max(names, default=0)
-    used = {}                     # new ID -> [time of its first use, "B", "U" or None, {building of its units}]
+    used = {}             # new ID -> [time of its first use, "B", "U" or None, {building of its units}, a worker]
     for e in timeline:                                   # not SPECIAL and others: their numbers are not all IDs
         role = "U" if e["kind"] in UNIT_USE else "B" if e["kind"] in BUILDING_USE else None
+        work = e["kind"] in ("build", "wall") or e["kind"] == "order" and WORK.match(names.get(e.get("target"), ""))
         for i in e.get("objects", ()) if role else ():
             if i > top:
-                u = used.setdefault(i, [e["time"], None, set()])
-                u[1] = u[1] or role
+                u = used.setdefault(i, [e["time"], None, set(), False])
+                u[1], u[3] = u[1] or role, u[3] or bool(work)
                 if e["kind"] == "queue" and train(e.get("name", "")):
                     u[2].add(train(e["name"])[1])
         if role == "U" and e.get("target", 0) > top:
-            used.setdefault(e["target"], [e["time"], None, set()])
+            used.setdefault(e["target"], [e["time"], None, set(), False])
     made, seen = [], set()               # (time ms, command time, "B" or "U", name)
     for e in timeline:
         kind, t = e["kind"], e["time"]
@@ -638,7 +645,8 @@ def name_timeline(objects, timeline, window=16):
             below, k = max(below, firsts[k][1]), k + 1
         nxt = max(nxt, below + 1)
         ids = [i for i in range(nxt, nxt + window) if i in used and used[i][1] in (role, None) and
-               used[i][0] >= t - 5000 and used[i][2] <= {name}]   # 5 s: the training times are estimates
+               used[i][0] >= t - 5000 and used[i][2] <= {name} and   # 5 s: the training times are estimates
+               not (used[i][3] and "VILLAGER" not in name)]         # only villagers build and gather on land (#765)
         i = ids[0] if ids else nxt if nxt not in used else None
         if i is not None:
             names[i], nxt = name, i + 1
@@ -1031,12 +1039,13 @@ class Edits:
         xs, ys, zs = (np.asarray(a, np.int32).ravel() for a in (xs, ys, zs))
         ids = np.broadcast_to(np.asarray(block, np.uint16), xs.shape).copy() \
             if not isinstance(block, str) else np.full(xs.shape, B(block), np.uint16)
+        hard = np.broadcast_to(np.asarray(hard, bool), xs.shape)        # one flag, or one for each block
         if self.natural and self.blocked is not None and len(xs):
             n = self.blocked.shape[0]
             inside = (xs >= 0) & (zs >= 0) & (xs < n) & (zs < n)
             keep = ~inside.copy()
             keep[inside] = ~self.blocked[xs[inside], zs[inside]]
-            xs, ys, zs, ids = xs[keep], ys[keep], zs[keep], ids[keep]
+            xs, ys, zs, ids, hard = xs[keep], ys[keep], zs[keep], ids[keep], hard[keep]
         if self.footprint is not None and self.cols is not None and len(xs):
             x0, x1, z0, z1 = self.footprint
             outside = (xs < x0) | (xs >= x1) | (zs < z0) | (zs >= z1)
@@ -1045,8 +1054,8 @@ class Edits:
                 cx, cz = np.clip(xs, 0, n - 1), np.clip(zs, 0, n - 1)
                 ground = self.cols.wtop[cx, cz].astype(np.int32)
                 keep = ~outside | (ys >= ground + self.HEAD)
-                xs, ys, zs, ids = xs[keep], ys[keep], zs[keep], ids[keep]
-        self.parts.append((xs, ys, zs, ids, np.full(xs.shape, hard, bool)))
+                xs, ys, zs, ids, hard = xs[keep], ys[keep], zs[keep], ids[keep], hard[keep]
+        self.parts.append((xs, ys, zs, ids, hard.copy()))
 
     def box(self, x0, x1, y0, y1, z0, z1, block, hard=True):
         """Fill the box x0..x1-1, y0..y1-1, z0..z1-1."""
@@ -1147,6 +1156,9 @@ WOODS = {"palm": "jungle", "jungle": "jungle", "acacia": "acacia", "spruce": "sp
          "mangrove": "mangrove", "poplar": "poplar"}                         # tree kind -> wood (log and leaves); else oak
 
 
+TREE_SHAPES = {}        # (kind, h, leaf) -> (dx, dy, dz, ids, hard): the blocks of a tree at (0, 0, 0)
+
+
 def make_tree(E, kind, x, y, z, rng):
     """Put one tree with its trunk base at (x, y, z)."""
     h = int(rng.integers(4, 7))
@@ -1165,6 +1177,20 @@ def make_tree(E, kind, x, y, z, rng):
     log, leaf = f"{wood}_log", leaves(wood)
     if kind == "poplar":                                 # one autumn color per tree
         leaf = leaves(f"{('yellow', 'orange', 'red')[int(rng.integers(3))]}_poplar")
+    shape = TREE_SHAPES.get((kind, h, leaf))
+    if shape is None:                                    # one add for each tree: a large map has 30 000 (#702)
+        S = Edits()
+        tree_shape(S, kind, h, log, leaf)
+        shape = TREE_SHAPES[kind, h, leaf] = tuple(np.concatenate(p) for p in zip(*S.parts))
+    dx, dy, dz, ids, hard = shape
+    E.add(x + dx, y + dy, z + dz, ids, hard)
+    if kind == "oak":
+        fungus(E, x, y, z, h - 2, ("north", "south", "west", "east"))
+
+
+def tree_shape(E, kind, h, log, leaf):
+    """Draw the blocks of a tree without random numbers at (0, 0, 0)."""
+    x = y = z = 0
     if kind == "spruce":
         h += 2
         for i, dy in enumerate(range(2, h + 1)):
@@ -1188,8 +1214,6 @@ def make_tree(E, kind, x, y, z, rng):
         for dy, r in ((h - 2, 2), (h - 1, 2), (h, 1), (h + 1, 1)):
             disc(E, x, y + dy, z, r, leaf)
         E.box(x, x + 1, y, y + h, z, z + 1, log)
-        if kind == "oak":
-            fungus(E, x, y, z, h - 2, ("north", "south", "west", "east"))
 
 
 FACE = {"north": (0, -1), "south": (0, 1), "west": (-1, 0), "east": (1, 0)}
@@ -1571,10 +1595,9 @@ def obstacle(E, cols, rect, height=3):
     cols.blocked[max(0, x0):max(0, x1), max(0, z0):max(0, z1)] = True
     if not buildings.BARRIERS:
         return
-    for x in range(max(0, x0), min(cols.n, x1)):
-        for z in range(max(0, z0), min(cols.n, z1)):
-            y = cols.surface(x, z)
-            E.add([x] * height, list(range(y, y + height)), [z] * height, "barrier", hard=False)
+    X, Z = np.meshgrid(np.arange(max(0, x0), min(cols.n, x1)), np.arange(max(0, z0), min(cols.n, z1)), indexing="ij")
+    Y = cols.wtop[X, Z].astype(np.int32)[..., None] + 1 + np.arange(height)      # one add: columns in x, z order
+    E.add(np.repeat(X, height), Y, np.repeat(Z, height), "barrier", hard=False)
 
 
 def player_color(p, players=None):
@@ -2030,6 +2053,15 @@ def set_pos(nbt, x, y, z):
 
 
 MOVED = Counter()
+
+
+def moved(key, nbt, x, y, z, col):
+    """Count a unit that stands above the ground (key: its name, or "(on a bridge)"); AOE2MC_DEBUG=1 names it,
+    with the two blocks above the ground (#773)."""
+    MOVED[key] += 1
+    if os.environ.get("AOE2MC_DEBUG"):
+        print("   on a bridge:" if key == "(on a bridge)" else "   in block:", str(top_name(nbt)), x, y, z,
+              B.states[col[y - MIN_Y]], B.states[col[y + 1 - MIN_Y]])
 TICKS = []                  # (time, phase) of each phase end of the last convert(): tools/measure_convert.py (#690)
 
 
@@ -2050,7 +2082,7 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
             while y < MAX_Y - 3 and not all(passable[col[y + k - MIN_Y]] for k in range(h)):
                 y += 1
             if y > wtop:
-                MOVED[str(top_name(nbt))] += 1
+                moved(str(top_name(nbt)), nbt, bx, wtop, bz, col)
             y += 0.5
         else:
             col = vol[:, bz & 15, bx & 15]
@@ -2059,10 +2091,12 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
                 for yy in range(wtop + 1, min(wtop + 40, MAX_Y - 2)):
                     if not passable[col[yy - 1 - MIN_Y]] and passable[col[yy - MIN_Y]] and passable[col[yy + 1 - MIN_Y]]:
                         y = yy
-                        MOVED["(on a bridge)"] += 1
+                        moved("(on a bridge)", nbt, bx, yy, bz, col)
                         break
             while y < MAX_Y - 2 and not (passable[col[y - MIN_Y]] and passable[col[y + 1 - MIN_Y]]):
                 y += 1
+            if y == buildings.FLOORS.get((bx, bz)):         # on the raised floor of a gate passage (#773)
+                top = y - 1
             if y > top + 1 and not wtop > top and (bx, bz) not in buildings.BRIDGE_CELLS:
                 for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)):   # a shrub or leaves in the block: stand next to it (#415)
                     nx, nz = bx + dx, bz + dz
@@ -2073,13 +2107,7 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
                         x, z, bx, bz, top, col, y = x + dx, z + dz, nx, nz, nt, ncol, nt + 1
                         break
             if y > top + 1 and not wtop > top:
-                if (bx, bz) in buildings.BRIDGE_CELLS:
-                    MOVED["(on a bridge)"] += 1
-                else:
-                    MOVED[str(top_name(nbt))] += 1
-                if os.environ.get("AOE2MC_DEBUG"):
-                    print("   in block:", str(top_name(nbt)), bx, top + 1, bz, B.states[col[top + 1 - MIN_Y]],
-                          B.states[col[top + 2 - MIN_Y]])
+                moved("(on a bridge)" if (bx, bz) in buildings.BRIDGE_CELLS else str(top_name(nbt)), nbt, bx, top + 1, bz, col)
         if units.top_entity(nbt).get("NoGravity"):               # a flying bird
             y += units.FLY_LOW.get(str(units.top_entity(nbt)["id"]), units.FLY_HEIGHT)
         set_pos(nbt, x, float(y), z)

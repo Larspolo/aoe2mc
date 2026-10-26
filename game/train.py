@@ -13,6 +13,8 @@ Military units (#654): a right click on an own barracks opens its menu with "Mil
 joins the military units of the player (g.soldiers), so a click can select it and send it to attack. An own archery
 range trains archers (#670): they shoot from their AoE2 range (combat.range_command). An own stable trains scout
 cavalry (#671): a rider on a horse (the Passengers of units.make_entity); the horse is the unit.
+The barracks trains spearmen (#729) and the archery range skirmishers (#730, a drowned that throws tridents) in the
+Feudal Age: before it, the menu shows a gray item (build.locked).
 Technologies (#655): a technology (TECHS) is an item of the menu of its building and uses the queue of the units, as in
 AoE2, but needs no population room. A click queues it once; when it is complete it goes into g.techs, leaves the menu
 and changes the values of the live and the new units (stats()). Loom: villagers get 15 hit points and 1/2 armor.
@@ -21,8 +23,13 @@ sidebar title shows the age of the player; all players see a title and hear a so
 Forging at the blacksmith (#675): infantry and cavalry get +1 attack. Fletching (#724): archers (also cavalry archers and
 skirmishers) get +1 attack and +1 range.
 Double-Bit Axe at the lumber camp (#723): villagers chop wood 20 % faster (gather.WORK_TECHS, gather.Gather.work_time).
+Gold Mining at the mining camp (#727): villagers mine gold 15 % faster.
 Horse Collar at the mill (#726): the live and the new farms of the player have 75 more food (gather.FARM_TECHS).
 Wheelbarrow at the town center in the Feudal Age (#728, TECH_AGE): villagers carry 3 more resources and walk 10 % faster (gather.CARRY, gather.PACE).
+Rally points (#707): the menu item "Rally point" (RALLY) and the next right click on the ground set the rally point of
+the building; each new unit walks there (Minecraft path finding), a new villager gathers at a tree, bush, mine or farm.
+The castle (#708) trains the unique unit of the civilization of its player (UNIQUE, trains()). Only the units with AoE2
+combat values (combat.STATS) are in its menu.
 """
 import json
 import math
@@ -43,27 +50,54 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "DOUBLE_BIT_AXE": {"food": 100, "wood": 50},
          "FLETCHING": {"food": 100, "gold": 50},
          "FORGING": {"food": 150},
+         "GOLD_MINING": {"food": 100, "wood": 75},
          "HORSE_COLLAR": {"food": 75, "wood": 75},
+         "LONGBOWMAN": {"wood": 35, "gold": 40},
          "SCALE_MAIL_ARMOR": {"food": 100},
          "SCOUT_CAVALRY": {"food": 80},
+         "SKIRMISHER": {"food": 25, "wood": 35},
+         "SPEARMAN": {"food": 35, "wood": 25},
+         "WAR_ELEPHANT": {"food": 170, "gold": 85},
          "WHEELBARROW": {"food": 175, "wood": 50}}
 TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130,   # AoE2 seconds
                "DOUBLE_BIT_AXE": 25,
                "FLETCHING": 30,
                "FORGING": 50,
+               "GOLD_MINING": 30,
                "HORSE_COLLAR": 20,
+               "LONGBOWMAN": 17,
                "SCALE_MAIL_ARMOR": 40,
                "SCOUT_CAVALRY": 30,
+               "SKIRMISHER": 22,
+               "SPEARMAN": 22,
+               "WAR_ELEPHANT": 25,
                "WHEELBARROW": 75}
-TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW"), "BARRACKS": ("MILITIA",),   # the units and technologies of each
-          "ARCHERY_RANGE": ("ARCHER",),                                         # building (#654, #670, #655)
+TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW"), "BARRACKS": ("MILITIA", "SPEARMAN"),   # the units and technologies of each
+          "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER"),                                         # building (#654, #670, #655)
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING"),           # (#675, #725, #724)
+          "CASTLE": (),                                                         # the unique unit: trains() (#708)
           "STABLE": ("SCOUT_CAVALRY",),                                         # (#671)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
-          "MILL": ("HORSE_COLLAR",)}                                            # (#726)
+          "MILL": ("HORSE_COLLAR",),                                            # (#726)
+          "MINING_CAMP": ("GOLD_MINING",)}                                      # (#727)
+# The unique unit of each civilization (AoE2 DE), trained at its castle. A unit without COSTS is not in the menu yet:
+# it has no AoE2 combat values in combat.STATS.
+UNIQUE = {"BRITONS": "LONGBOWMAN", "PERSIANS": "WAR_ELEPHANT", "BYZANTINES": "CATAPHRACT", "CELTS": "WOAD_RAIDER",
+          "CHINESE": "CHU_KO_NU", "FRANKS": "THROWING_AXEMAN", "GOTHS": "HUSKARL", "JAPANESE": "SAMURAI",
+          "MONGOLS": "MANGUDAI", "SARACENS": "MAMELUKE", "TEUTONS": "TEUTONIC_KNIGHT", "TURKS": "JANISSARY",
+          "VIKINGS": "BERSERK", "AZTECS": "JAGUAR_WARRIOR", "HUNS": "TARKAN", "KOREANS": "WAR_WAGON",
+          "MAYANS": "PLUMED_ARCHER", "SPANISH": "CONQUISTADOR", "INCAS": "KAMAYUK", "ITALIANS": "GENOESE_CROSSBOWMAN",
+          "MAGYARS": "MAGYAR_HUSZAR", "SLAVS": "BOYAR", "BERBERS": "CAMEL_ARCHER", "ETHIOPIANS": "SHOTEL_WARRIOR",
+          "MALIANS": "GBETO", "PORTUGUESE": "ORGAN_GUN", "BURMESE": "ARAMBAI", "KHMER": "BALLISTA_ELEPHANT",
+          "MALAY": "KARAMBIT_WARRIOR", "VIETNAMESE": "RATTAN_ARCHER", "BULGARIANS": "KONNIK", "CUMANS": "KIPCHAK",
+          "LITHUANIANS": "LEITIS", "TATARS": "KESHIK", "BURGUNDIANS": "COUSTILLIER", "SICILIANS": "SERJEANT",
+          "POLES": "OBUCH", "BOHEMIANS": "HUSSITE_WAGON", "HINDUSTANIS": "GHULAM", "DRAVIDIANS": "URUMI_SWORDSMAN",
+          "BENGALIS": "RATHA", "GURJARAS": "SHRIVAMSHA_RIDER", "ROMANS": "CENTURION", "ARMENIANS": "COMPOSITE_BOWMAN",
+          "GEORGIANS": "MONASPA"}
 TECHS = {"DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
          "FLETCHING": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if "archer" in s.classes else s,
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
+         "GOLD_MINING": lambda name, s: s,                         # an economy technology: gather.WORK_TECHS
          "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
          "LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
          if "VILLAGER" in name else s,
@@ -72,7 +106,10 @@ TECHS = {"DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy 
          "FEUDAL_AGE": lambda name, s: s,   # the change of each technology to the AoE2 values
          "WHEELBARROW": lambda name, s: s}                         # no combat change: gather.CARRY and gather.PACE
 REQUIRES = {"FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP", "DOCK"))}   # n types of these buildings
-TECH_AGE = {"WHEELBARROW": 1}                                      # the age of a technology (build.AGE): hidden before
+TECH_AGE = {                                                       # the age of a technology (build.AGE): hidden before
+    "DOUBLE_BIT_AXE": 1,
+    "WHEELBARROW": 1,
+}
 AGES = ("Dark Age", "Feudal Age")                                  # the age after each researched age (index: ages)
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
 HOUSING = {"TOWN_CENTER": 5, "HOUSE": 5, "CASTLE": 20}             # population of a complete building, as in AoE2
@@ -82,15 +119,22 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "MILITIA": (0, "zombie_spawn_egg", "Militia"),             # the mob of units.classify
          "ARCHER": (0, "skeleton_spawn_egg", "Archer"),
          "SCOUT_CAVALRY": (0, "horse_spawn_egg", "Scout Cavalry"),
+         "SKIRMISHER": (1, "drowned_spawn_egg", "Skirmisher"),
+         "SPEARMAN": (1, "zombie_spawn_egg", "Spearman"),
          "DOUBLE_BIT_AXE": (0, "book", "Double-Bit Axe"),
          "FLETCHING": (2, "book", "Fletching"),
          "FORGING": (0, "book", "Forging"),
+         "GOLD_MINING": (0, "book", "Gold Mining"),
          "HORSE_COLLAR": (0, "book", "Horse Collar"),
+         "LONGBOWMAN": (0, "skeleton_spawn_egg", "Longbowman"),
          "LOOM": (1, "book", "Loom"),                               # a book for a technology (#618)
          "SCALE_MAIL_ARMOR": (1, "book", "Scale Mail Armor"),
+         "WAR_ELEPHANT": (0, "ravager_spawn_egg", "War Elephant"),
          "FEUDAL_AGE": (2, "bell", "Feudal Age"),
          "WHEELBARROW": (3, "book", "Wheelbarrow")}
 SHIFT = 5                                                          # units of a shift click, as in AoE2
+RALLY = (8, "white_banner", "Rally point", "Click, then right click the ground")   # last slot of the first row
+MARK = 17.0                                                        # AoE2 seconds of the rally marker: 10 s at Normal
 ROW = 9                                                            # the first slot of the queue row of the menu (#706)
 
 
@@ -112,6 +156,14 @@ def homes(g):
     out = {(x0, x1, z0, z1): o["name"] for o in g.data["objects"] if o["kind"] == "building" and o["name"] in TRAINS
            and o["player"] == g.player for x0, z0, x1, z1 in [o["footprint"]]}
     return out | {tuple(s["footprint"]): s["name"] for s in g.sites if s["name"] in TRAINS and s.get("done")}
+
+
+def trains(g, building):
+    """The units and technologies of the own building: a castle trains the unique unit of the player's civilization."""
+    if building != "CASTLE":
+        return TRAINS[building]
+    civ = g.data.get("players", {}).get(str(g.player), {}).get("civ")
+    return tuple(n for n in [UNIQUE.get(civ)] if n in COSTS)
 
 
 def home(g, cell):
@@ -140,11 +192,17 @@ def show(g, player, rect):
         return f"queue {n}/{QUEUE}"
     items = [(slot, build.LOCKED if build.locked(g, name) else item, label,
               " · ".join(f"{v} {r}" for r, v in COSTS[name].items()) + f" · {TRAIN_TIMES[name]} s · " + state(name))
-             for name in TRAINS[building] if name not in g.techs and unlocked(g, name) for slot, item, label in [ITEMS[name]]]
+             for name in trains(g, building) if name not in g.techs and unlocked(g, name) for slot, item, label in [ITEMS[name]]]
+    items += [RALLY] if units_of(building) else []
     q = g.queues.get(rect, [])                                         # the queue row first: the plugin sets the
     items = [(ROW + i, ITEMS[name][1], ITEMS[name][2] + (f" {int(100 * q[0]['progress'])} %" if start == 0 else ""),
               "Click: cancel 1", k) for i, (name, start, k) in enumerate(groups(q)[:ROW])] + items   # items by slot
     menu.show(g, player, build.pretty(building), items, lambda p, slot, shift: order(g, p, rect, slot, shift))
+
+
+def units_of(building):
+    """The units (not the technologies) that building trains: only such a building has a rally point."""
+    return [n for n in TRAINS[building] if n not in TECHS]
 
 
 def groups(q):
@@ -176,12 +234,19 @@ def cancel(g, player, rect, group):
 def order(g, player, rect, slot, shift=False):
     """A click on the menu item in slot: queue 1 unit (a shift click: SHIFT, as many as the resources and the queue
     allow) at the building rect, or cancel a unit of the queue row (cancel()), and refresh the menu. Returns the
-    number of queued units."""
+    number of queued units. A click on RALLY closes the menu: the next right click on the ground sets the rally point
+    (gather.Gather.click calls rally())."""
+    if slot == RALLY[0] and units_of(homes(g)[rect]):
+        g.rallying[player] = rect
+        menu.close(g, player)
+        g.command(f"tellraw {player} " + json.dumps({"text": "Right click the ground for the rally point.",
+                                                      "color": "gray"}))
+        return 0
     if slot >= ROW:
         cancel(g, player, rect, slot - ROW)
         show(g, player, rect)
         return 0
-    name = next((n for n in TRAINS[homes(g)[rect]] if ITEMS[n][0] == slot), None)
+    name = next((n for n in trains(g, homes(g)[rect]) if ITEMS[n][0] == slot), None)
     n = 0
     while name and n < (SHIFT if shift else 1) and queue(g, player, rect[::2], name):
         n += 1
@@ -189,12 +254,40 @@ def order(g, player, rect, slot, shift=False):
     return n
 
 
+def rally(g, rect, cell, tile=None):
+    """Set the rally point of the own building rect at the block cell (x, z); tile: the tree, bush, mine or farm tile
+    there, or None. A banner in the player color and the text "Rally point" show it for MARK AoE2 seconds."""
+    g.rally[rect] = cell, tile
+    tag, (x, z) = f"aoe2mc.rally.{rect[0]}.{rect[2]}", cell
+    y, color = g.map.y(x, z), g.players.get(str(g.player), {}).get("color", "white")
+    g.command(f"kill @e[tag={tag}]")                                   # the marker of the last point
+    g.command(f'summon item_display {x + 0.5} {y + 0.7} {z + 0.5} {{item:{{id:"minecraft:{color}_banner",count:1}},'
+              f'billboard:"vertical",Tags:["{tag}"]}}')
+    g.command(f'summon text_display {x + 0.5} {y + 1.6} {z + 0.5} {{text:"Rally point",billboard:"center",'
+              f'Tags:["{tag}"]}}')
+    g.marks[tag] = MARK
+
+
+def go(g, rect, uuid, name):
+    """Send the new unit uuid (AoE2 unit name) of the building rect to its rally point, if it has one."""
+    if rect not in g.rally:
+        return
+    (x, z), tile = g.rally[rect]
+    if uuid not in g.villagers:                                        # a military unit walks with the plugin
+        import ai                                                      # ai imports gather, gather imports this module
+        ai.move(g, uuid, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5)
+    elif tile:
+        g.send(tile, {uuid})
+    else:
+        g.go(g.villagers[uuid], "to_rally", {(x, z)} if g.map.free(x, z) else g.map.around({(x, z)}))
+
+
 def queue(g, player, cell, name="VILLAGER_MALE"):
     """Queue unit name at the own building that has the block cell (x, z) in its footprint, and take its cost.
     Returns the footprint of the building, or None (no building there that trains name, a full queue, not enough
     resources)."""
     rect = home(g, cell)
-    if rect is None or name not in TRAINS[homes(g)[rect]]:
+    if rect is None or name not in trains(g, homes(g)[rect]):
         return None
     if name in TECHS and (name in g.techs or queued(g, name)) or not unlocked(g, name):   # a technology only once
         return None
@@ -305,6 +398,11 @@ def tick(g, work):
     g.census += work
     if g.census >= CENSUS:
         census(g)
+    for tag in list(g.marks):                                          # rally markers end
+        g.marks[tag] -= work
+        if g.marks[tag] <= 0:
+            del g.marks[tag]
+            g.command(f"kill @e[tag={tag}]")
     cap, out = limit(g), []
     room = cap - g.pop - sum(1 for q in g.queues.values() if q and q[0]["progress"] > 0 and q[0]["name"] not in TECHS)
     for rect, q in g.queues.items():
@@ -333,9 +431,7 @@ def spawn(g, rect, name):
     """Summon unit name on a free cell in front of the building rect (south side first, the middle first; the units
     take the cells one after the other) and add it to the villagers of g (a military unit: to g.soldiers, #654).
     Returns the gather.Villager, the UUID of a military unit, or None."""
-    x0, x1, z0, z1 = rect
-    cells = sorted(g.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)}),
-                   key=lambda c: (abs(c[1] - z1), abs(2 * c[0] + 1 - x0 - x1), c))
+    cells = g.map.front(rect, "Passengers" in (units.classify(name) or {}))
     if not cells:
         return None
     k = g.trained[rect] = g.trained.get(rect, -1) + 1
@@ -354,9 +450,13 @@ def spawn(g, rect, name):
     g.command(combat.stats_command(uuid, name, stats(g, name)))
     if cmd := combat.range_command(uuid, name, g.map.T, s=stats(g, name)):   # an archer shoots from its range (#670)
         g.command(cmd)
+    if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name)):   # it attacks enemies in sight (#775)
+        g.command(cmd)
     if gather.military(name):
         g.soldiers[uuid] = name
+        go(g, rect, uuid, name)
         return uuid
     v = g.villagers[uuid] = gather.Villager(uuid, pos)
     g.units.append({"kind": "unit", "name": name, "player": g.player, "uuid": uuid, "tile": [x / g.map.T, z / g.map.T]})
+    go(g, rect, uuid, name)
     return v

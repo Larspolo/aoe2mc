@@ -17,6 +17,7 @@ With bar=True (game/run.py --replay) a boss bar shows the game time, the speed a
 import json
 import math
 import os
+import re
 import sys
 import time
 import types
@@ -38,6 +39,8 @@ FORMATION = 2              # blocks between the units of a group in a formation 
 LEG = 48                    # path cells of one plugin order: within the reach of a Minecraft path search (#438)
 TALL = 48                   # blocks above the ground that a DELETE clears for a start building (no height in aoe2mc.json)
 BAR = "aoe2mc:replay"       # the boss bar with the game time (#684)
+POP = "aoe_pop"             # the sidebar objective with the population of each player (#741)
+COUNTED = "aoe2mc.pop"      # entity tag of the units that the population counts (#787)
 POLL = 0.2                  # seconds between two calls of the poll of Replay.run while it waits (#685)
 NEXT = 5                    # tiles: an empty resource sends its villager to the next one this near (#720)
 PATH_CELLS = 20000          # cells that one path search may look at: a unit with no path stays (no time lag)
@@ -74,6 +77,12 @@ class Replay:
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
         self.sent, self.busy = 0, 0.0           # commands sent, seconds spent sending them
+        self.pop, self.shown = {}, None         # player -> live units (no animals), the value in the sidebar (#741)
+        self.counted = []                       # UUIDs of the start units that the population counts
+        for o in data["objects"]:
+            if o["kind"] == "unit" and o.get("player") and not units.animal(o["name"]):
+                self.pop[o["player"]] = self.pop.get(o["player"], 0) + 1
+                self.counted += [o["uuid"]] * ("uuid" in o)
 
     def player(self, p):
         info = self.data["players"].get(str(p), {})
@@ -220,6 +229,7 @@ class Replay:
                 self.refs.pop(i, None)
                 self.moving.pop(i, None)
                 self.working.pop(i, None)
+                self.pop[e["player"]] = max(0, self.pop.get(e["player"], 0) - 1)
                 out.append(f"kill {v.uuid}")
         return out
 
@@ -269,9 +279,7 @@ class Replay:
         if rect is None:
             return []
         self.grid()
-        x0, x1, z0, z1 = rect
-        cells = sorted(self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)}),
-                       key=lambda c: (abs(c[1] - z1), abs(2 * c[0] + 1 - x0 - x1), c))
+        cells = self.map.front(rect, "Passengers" in (units.classify(e["name"]) or {}))
         if not cells:
             return []
         k = self.trained[rect] = self.trained.get(rect, -1) + 1
@@ -286,18 +294,21 @@ class Replay:
         v = self.gather.Villager(units.uuid_str(nbt["UUID"]), pos)
         v.name, v.player = e["name"], e["player"]
         self.new.append((e["player"], v))
+        self.pop[e["player"]] = self.pop.get(e["player"], 0) + 1
         out = [f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}"]
         if self.ai:                                                 # the AoE2 values: plugin commands (#632)
             import combat                                           # combat -> gather -> build -> replay
             out += [combat.stats_command(v.uuid, v.name)] + [c for c in [combat.range_command(v.uuid, v.name, self.T)] if c]
+            out.append(f"tag {v.uuid} add {COUNTED}")              # census() counts it
         return out
 
     def grid(self):
         """The gather.Map of the world with the buildings of the replay. The first call also finds the units of the
         start state (the entities of aoe2mc.json with an object ID)."""
+        T = self.T                                                  # also for the buildings of later calls (#788)
         if self.map is None:
             import gather                                           # gather -> build -> replay: import it late
-            self.gather, self.map, T = gather, gather.Map(self.data), self.T
+            self.gather, self.map = gather, gather.Map(self.data)
             self.crew = gather.Gather.__new__(gather.Gather)       # adapter: the resource looks of gather.Gather
             self.crew.map, self.crew.trunks, self.crew.bushes, self.crew.crops = self.map, {}, {}, {}
             for o in self.data["objects"]:
@@ -586,6 +597,30 @@ class Replay:
         return [f"bossbar set {BAR} name {json.dumps(text(name), ensure_ascii=False)}",
                 f"bossbar set {BAR} value {min(int(now) // 1000, max(1, int(end) // 1000))}", f"bossbar set {BAR} players @a"]
 
+    def score_commands(self):
+        """The sidebar commands for the population of each player that changed since the last call (#741). The score
+        holder is "P<n>" (a holder name has no space); its display name is the player name in the player color."""
+        out = []
+        if self.shown is None:
+            self.shown, out = {}, [f'scoreboard objectives add {POP} dummy "Population"',
+                                   f"scoreboard objectives setdisplay sidebar {POP}"]
+        for p in sorted(self.pop):
+            if self.shown.get(p) != self.pop[p]:
+                if p not in self.shown:
+                    name, color = self.player(p)
+                    out.append(f"scoreboard players display name P{p} {POP} {json.dumps(text(name, color))}")
+                self.shown[p] = self.pop[p]
+                out.append(f"scoreboard players set P{p} {POP} {self.pop[p]}")
+        return out
+
+    def census(self):
+        """With the fights of the plugin (ai) a unit dies without a timeline event (#787): count the live units of
+        each player with the entity selector of their tags (a dead entity does not match). The chunks are loaded
+        (run.py --replay: forceload)."""
+        for p in self.pop:
+            m = re.search(r"Count: (\d+)", self.game.command(f"execute if entity @e[tag={COUNTED},tag=aoe2mc.p{p}]"))
+            self.pop[p] = int(m[1]) if m else 0
+
     def send(self, cmds):
         t = time.perf_counter()
         for c in cmds:
@@ -637,7 +672,7 @@ class Replay:
         (rate) and the commands per second that the timeline needs on average (need).
         poll(control) may change `self.control` ("speed", "paused") while the replay runs: run calls it before
         each event and each POLL seconds while it waits (#685). "jump" (game time, ms) skips forward to that time
-        (`jump`, #687); a time before the game time now changes nothing."""
+        (`jump`, #687); a time before the game time now changes nothing. "time" is the game time now (ms) for poll."""
         events = sorted((e for e in self.data.get("timeline", []) + self.spawns() if e["time"] >= start),
                         key=lambda e: e["time"])
         g0, r0, lag, n, k = start, clock(), 0.0, 0, 0                 # game time g0 (ms) at real time r0
@@ -646,7 +681,9 @@ class Replay:
         end, shown = events[-1]["time"] if events else start, None
         send = self.send if bar else lambda cmds: None
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
-                   f"bossbar set {BAR} max {max(1, int(end) // 1000)}"])
+                   f"bossbar set {BAR} max {max(1, int(end) // 1000)}"] +
+             [f"tag {u} add {COUNTED}" for u in self.counted] * self.ai)
+        census = self.census if bar and self.ai else lambda: None
         while k < len(events) or self.moving:
             step = min([*self.moving.values(), *self.working.values()], default=math.inf)   # walk or gather step
             e = events[k] if k < len(events) and events[k]["time"] <= step else None
@@ -655,6 +692,7 @@ class Replay:
             to = None
             while True:
                 if poll:
+                    self.control["time"] = g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed
                     poll(self.control)
                     g0, r0 = self.retime(g0, r0, clock())
                     if (to := self.control.pop("jump", None)) is not None:
@@ -676,7 +714,8 @@ class Replay:
             lag = max(lag, clock() - r0 - (now - g0) / 1000 / self.speed)
             if int(now) // 1000 != shown:                              # at most once per game second
                 shown = int(now) // 1000
-                send(self.clock_commands(now, end, self.speed))
+                census()
+                send(self.clock_commands(now, end, self.speed) + self.score_commands())
             if e is None:
                 self.send(self.steps(now))
                 continue
@@ -688,7 +727,8 @@ class Replay:
                     m, s = divmod(e["time"] // 1000, 60)
                     log(f"{m:02d}:{s:02d} {e['kind']} {e.get('name') or e.get('age') or ''} "
                         f"player {e.get('player')}: {len(cmds)} commands")
-        send(self.clock_commands(end, end, speed, done=True))
+        census()
+        send(self.clock_commands(end, end, speed, done=True) + self.score_commands())
         span = (events[-1]["time"] - start) / 1000 / speed if events else 0                 # at the start speed
         return {"events": n, "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2),
                 "rate": round(self.sent / self.busy) if self.busy else 0, "need": round(self.sent / span) if span else 0}

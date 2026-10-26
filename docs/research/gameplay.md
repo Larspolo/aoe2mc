@@ -102,6 +102,10 @@ The owner chose the order in #357: A (item 1) #388, C (item 3) #394, D (item 4) 
 E (item 5) #397, F (item 7) #398. Each epic gets its sub-issues when the epic before it is done.
 Item 6 (fog of war) has no ticket.
 
+Selection of many units (#742): the owner chose in #745 a selection wand with two corners for the AoE2 selection box
+(option A, #778: `Gather.box`, item `warped_fungus_on_a_stick` with its own "used" statistic `aoe_box`), and hotbar
+items for the control groups later (option C, #779). A radius selection (option B) was not chosen.
+
 ## Measured gather timing (#289)
 
 `python3 tools/measure_gather.py` plays a fixed map on a real server without a client: one villager of player 1,
@@ -213,4 +217,7 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
   and the server removes the mob ("No entity was found" right after the order). Give
   `equipment:{mainhand:{id:"minecraft:bow",count:1}}`. A Java exception of the plugin is only in `game.server.log` (#608).
 - An arrow at the stand-in slime of a building sticks in the walls first (#608): the range goal counts each shot itself.
+- One hit of a unit in an `-m mc` test, without a chase: `damage <victim> 1 minecraft:mob_attack by <attacker>` fires `EntityDamageByEntityEvent`, so the plugin takes the AoE2 damage of the attacker (#733). Since #733 a hit unit without an order hits back: a test of one-sided damage gives the target an order or no AoE2 values.
 - A horse has no attack goal, and `aoe attack` on it does nothing. Give the target to the rider: a riding mob walks with the navigation of its vehicle (vanilla `Mob#getNavigation`), so the horse follows, and its follow range limits the path search (#710).
+- A cancelled `EntityDamageByEntityEvent` of an arrow lets the arrow fly on, and it can hit the next entity on its way (a moving horse under the hit rider: two hits in one tick, #733). Remove the projectile after the hit.
+- A RCON command of more than 1446 bytes: the server closes the connection ("the server closed the RCON connection"). Keep long `tellraw` texts short (`separators=(",", ":")`, style of the parent in `extra`) and test the length (#688).

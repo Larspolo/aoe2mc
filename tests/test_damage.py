@@ -33,7 +33,7 @@ def test_stats_command():
     data = {"objects": [{"kind": "unit", "player": 1, "name": "MILITIA", "uuid": "a"},
                         {"kind": "unit", "player": 0, "name": "DEER", "uuid": "b"},       # Gaia keeps vanilla
                         {"kind": "building", "player": 1, "name": "HOUSE"}]}
-    assert combat.setup(Game(), data) == 1 and Game.sent == [combat.stats_command("a", "MILITIA")]
+    assert combat.setup(Game(), data) == 1 and Game.sent == [combat.stats_command("a", "MILITIA"), "aoe sight a 16"]
 
 
 def health(game, tag):
@@ -74,4 +74,4 @@ def test_militia_kills_militia_in_10_hits(tiny_world, tmp_path):
         assert health(game, "b") is None, seen
         assert seen[0] == 40.0 and all(a - b == 4 for a, b in zip(seen, seen[1:])), seen   # 4 per hit
         assert seen[-1] == 4.0, seen          # the 10th hit (4 -> 0) kills it
-        assert health(game, "a") == 40.0      # the target does not hit back without an order
+        assert 0 < health(game, "a") < 40.0   # the target hits back without an order (#733), but dies first

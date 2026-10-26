@@ -8,6 +8,7 @@ from urllib.parse import unquote
 
 import pytest
 from test_gather import FakeServer, grid
+from test_train_menu import RALLY
 
 from game import build, gather, run, train
 
@@ -43,7 +44,7 @@ def test_a_right_click_on_the_stable_opens_its_menu():
     server, g = setup(done=None)
     for name in g.clicks():
         g.click(name)
-    assert menus(server) == ["aoe menu Steve Stable 0:horse_spawn_egg:Scout Cavalry:80 food · 30 s · queue 0/15"]
+    assert menus(server) == ["aoe menu Steve Stable 0:horse_spawn_egg:Scout Cavalry:80 food · 30 s · queue 0/15" + RALLY]
 
 
 def test_no_menu_at_a_stable_that_is_not_complete():
@@ -64,7 +65,7 @@ def test_a_shift_click_queues_5():
     server, g = setup(food=1000)
     rect = train.open_menu(g, "Steve", (11, 3))
     assert train.order(g, "Steve", rect, 0, shift=True) == 5 and g.stock["food"] == 1000 - 5 * 80
-    assert menus(server)[-1].endswith("queue 5/15")
+    assert menus(server)[-1].endswith("queue 5/15" + RALLY)
 
 
 def test_the_scout_appears_after_30_seconds_as_a_rider_on_a_horse():
@@ -74,7 +75,7 @@ def test_the_scout_appears_after_30_seconds_as_a_rider_on_a_horse():
     assert train.tick(g, 29) == [] and not [c for c in server.log if c.startswith("summon")]
     uuid, = train.tick(g, 1)
     summon, = [c for c in server.log if c.startswith("summon")]
-    assert re.match(r"summon minecraft:horse 11.5 64.0 5.5 ", summon)
+    assert re.match(r"summon minecraft:horse 11.5 64.0 6.5 ", summon)   # one cell out: the rider sits back (#767)
     flat = re.sub(r"\s", "", summon)
     assert "Passengers:[{" in flat and "minecraft:zombie" in flat and 'Tags:["aoe2mc.p1"]' in flat   # the rider
     assert g.soldiers == {uuid: "SCOUT_CAVALRY"}

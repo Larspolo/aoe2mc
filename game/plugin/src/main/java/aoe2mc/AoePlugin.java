@@ -68,6 +68,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              the AoE2 values of a unit (#514, game/combat.py stats_command)
  *   aoe stop <selector>                        stop the walk and turn the AI off: the unit stands still (#437)
  *   aoe range <selector> <blocks> <ticks>      a ranged unit shoots from this range, one shot per ticks (#515)
+ *   aoe sight <selector> <blocks>              an idle unit attacks an enemy in this line of sight (#775)
  *   aoe building <selector> <hp> <melee armor> <pierce armor> <x0> <y0> <z0> <x1> <y1> <z1>
  *                                              make the entity the target of a building (#517, combat.building)
  *   aoe menu <player> <title> <slot>:<material>:<name>:<lore>[:<count>] ...
@@ -85,6 +86,13 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * Wandering, looking around, panic, the choice of its own targets (a zombie attacks each villager), despawning and
  * the burning in the sun go. So a unit stands still without an order and attacks only the target of an order,
  * and an attack order skips the units of the team of the target (scoreboard teams of the datapack, #358).
+ * A military unit without an order and without a target attacks back when a unit of another team hits it, as with
+ * the AoE2 default stance (#733). The vanilla goal hurt_by also hits back at its own team and calls the mobs of its kind,
+ * so the hit handler sets the target. A unit that walks (aoe moveto) continues; villagers, monks and kings
+ * (no unit classes or no attack) and Gaia animals (no AoE2 values) do not attack back.
+ * A unit with a line of sight (aoe sight) and the same rules also attacks the nearest enemy unit in its sight, each
+ * second (#775). The vanilla goal nearest_attackable_target also chooses units of the own team, players and animals,
+ * and has no AoE2 sight: tame() drops it.
  * A villager walks with its brain, not with goals: it gets NoAI when it arrives, else it strolls away (#438).
  * `aoe stop` stops a walk and sets NoAI (#437: a villager without a path).
  * A hit of a unit with AoE2 values on another one takes the AoE2 damage (#514, combat.damage): max(1, attack - armor
@@ -153,6 +161,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     private final Map<UUID, Range> ranges = new HashMap<>();
+    private final Map<UUID, Double> sights = new HashMap<>();       // the line of sight of a unit in blocks (#775)
     private final GoalKey<Mob> rangeKey = GoalKey.of(Mob.class, new NamespacedKey("aoe2mc", "aoe_range"));
     // the vanilla ranged goals that "aoe_range" replaces
     private static final Set<String> SHOTS = Set.of("ranged_attack", "ranged_bow_attack", "ranged_crossbow_attack",
@@ -373,6 +382,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, this::follow, 2L, 2L);
         Bukkit.getScheduler().runTaskTimer(this, this::siege, 10L, 10L);
         Bukkit.getScheduler().runTaskTimer(this, this::burn, 20L, 20L);
+        Bukkit.getScheduler().runTaskTimer(this, this::watch, 20L, 20L);
         Bukkit.getPluginManager().registerEvents(this, this);
     }
 
@@ -404,7 +414,66 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         ev.setCancelled(true);
         victim.playHurtAnimation(0);
         victim.setHealth(Math.max(0, victim.getHealth() - a.damage(t)));     // 0 kills it
+        if (ev.getDamager() instanceof Projectile p) {     // a cancelled hit lets the arrow fly on: one hit per arrow
+            p.remove();
+        }
         nameLine(victim);
+        if (victim.getHealth() > 0 && from instanceof LivingEntity attacker) {
+            attackBack(victim, attacker, t);
+        }
+    }
+
+    // The AoE2 default stance (#733): a military unit without an order and without a target attacks its attacker.
+    // A mounted unit: the horse has the order, the rider the target (#710).
+    private void attackBack(LivingEntity victim, LivingEntity attacker, Stats t) {
+        if (victim instanceof Mob mob && idle(mob, t) && !sameTeam(mob, attacker)) {
+            engage(mob, attacker);
+        }
+    }
+
+    // A military unit without an order and without a target: the units of the AoE2 default stance (#733, #775).
+    private boolean idle(Mob mob, Stats t) {
+        Mob fighter = rider(mob) != null ? rider(mob) : mob;
+        return t != null && !t.classes().isEmpty() && t.attack() > 0 && !orders.containsKey(mob.getUniqueId())
+                && (fighter.getTarget() == null || !fighter.getTarget().isValid());
+    }
+
+    private void engage(Mob mob, LivingEntity enemy) {
+        Mob fighter = rider(mob) != null ? rider(mob) : mob;
+        if (fighter != mob) {
+            unit(mob).getPathfinder().stopPathfinding();
+        }
+        reach(fighter, enemy.getLocation());
+        unit(fighter).setTarget(enemy);
+    }
+
+    // Each second: an idle unit with a line of sight attacks the nearest unit of another team in it (#775). Only
+    // units with AoE2 values are enemies: Gaia animals, players and building targets are not.
+    private void watch() {
+        sights.entrySet().removeIf(en -> {
+            Entity e = Bukkit.getEntity(en.getKey());
+            if (e == null || !e.isValid()) {
+                return e == null || e.isDead();                       // an unloaded unit keeps its sight
+            }
+            if (!(e instanceof Mob mob) || !idle(mob, stats.get(mob.getUniqueId()))) {
+                return false;
+            }
+            double r = en.getValue();
+            LivingEntity best = null;
+            double bestD = r * r;
+            for (Entity o : mob.getNearbyEntities(r, r, r)) {
+                if (o instanceof LivingEntity le && le.isValid() && stats.containsKey(le.getUniqueId())
+                        && !buildings.containsKey(le.getUniqueId()) && !sameTeam(mob, le)
+                        && le.getVehicle() == null && mob.getLocation().distanceSquared(le.getLocation()) <= bestD) {
+                    best = le;
+                    bestD = mob.getLocation().distanceSquared(le.getLocation());
+                }
+            }
+            if (best != null) {
+                engage(mob, best);
+            }
+            return false;
+        });
     }
 
     @EventHandler
@@ -749,6 +818,24 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
             }
             sender.sendMessage("Range: " + n + " units");
+            return true;
+        }
+        if (args.length == 3 && args[0].equals("sight")) {
+            double r;
+            try {
+                r = Double.parseDouble(args[2]);
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                if (e instanceof Mob mob && stats.containsKey(mob.getUniqueId())) {
+                    sights.put(mob.getUniqueId(), r);
+                    n++;
+                }
+            }
+            sender.sendMessage("Sight: " + n + " units");
             return true;
         }
         if (args.length == 11 && args[0].equals("building")) {

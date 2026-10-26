@@ -181,23 +181,25 @@ def shoot(world, out, views=None, version=None, size=(1280, 720), settle=8.0, ti
 
 class Client:
     """The client as player "aoe2mc" on the server at 127.0.0.1:port (online-mode=false), in Xvfb. A context manager:
-    the client is in the world when wait_join() returns (or the test sees the player in "list")."""
+    the client is in the world when wait_join() returns (or the test sees the player in "list").
+    chat: draw the chat (OPTIONS hides it), for a screenshot of a message (#780)."""
 
     SCALE = 3                       # GUI scale: slot() needs a fixed one
 
-    def __init__(self, port, version, size=(1280, 720), name="aoe2mc"):
+    def __init__(self, port, version, size=(1280, 720), name="aoe2mc", chat=False):
         for tool in ("Xvfb", "import", "xdotool"):
             if not shutil.which(tool):
                 sys.exit(f"{tool} is not installed (apt-get install xvfb imagemagick xdotool)")
-        self.port, self.version, self.size, self.name = port, version, size, name
+        self.port, self.version, self.size, self.name, self.chat = port, version, size, name, chat
         self.client = self.xvfb = self.log = None
 
     def __enter__(self):
         cp, vj = client_files(self.version)
         os.makedirs(os.path.join(mc_check.ROOT, ".cache"), exist_ok=True)
         self.game = tempfile.mkdtemp(dir=os.path.join(mc_check.ROOT, ".cache"))
+        opts = OPTIONS | {"guiScale": self.SCALE} | ({"chatScale": "1.0"} if self.chat else {})
         with open(os.path.join(self.game, "options.txt"), "w") as f:
-            f.writelines(f"{k}:{v}\n" for k, v in (OPTIONS | {"guiScale": self.SCALE}).items())
+            f.writelines(f"{k}:{v}\n" for k, v in opts.items())
         disp = free_display()
         self.env = dict(os.environ, DISPLAY=f":{disp}", LIBGL_ALWAYS_SOFTWARE="1")
         self.xvfb = subprocess.Popen(["Xvfb", f":{disp}", "-screen", "0", f"{self.size[0]}x{self.size[1]}x24"],
