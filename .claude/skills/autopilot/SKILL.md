@@ -138,8 +138,9 @@ Also lock each epic E with `python3 tools/claim.py E --refill` before you make i
    first with `python3 tools/claim.py N --refill` (exit 1: skip it).
 2. For each open epic whose sub-issues are all closed: make a sub-issue for each acceptance criterion that is
    still open and that an agent can do. A criterion that needs the owner stays on the epic.
-3. Make up to 8 new tickets for the remaining goals of the open epics and `docs/ROADMAP.md`, and for the
-   fallbacks in `docs/coverage.md`. Priority: that of the epic, else `P3`. Never `P0` or `P1`, except for
+3. Make up to 8 new tickets for the remaining goals of the open epics, and for the fallbacks in
+   `docs/coverage.md`. When the open epics have no goal left that an agent can do, make the next epic from the
+   feature list of `docs/ROADMAP.md` with the `roadmap` skill (the goals take turns). Priority: that of the epic, else `P3`. Never `P0` or `P1`, except for
    a `tooling` ticket that blocks other tickets. Look for duplicates first, and list the open issues again just
    before you make the tickets: parallel runs make the same follow-ups at the same time (#300, #301).
 4. Prefer tickets that depend on no open ticket and change other files than the claimed tickets (fewer conflicts).
@@ -243,6 +244,7 @@ Answer these questions. Do the action for each "yes". Spend little time.
 
 After step 8, run the `improve` skill when `runs` is a multiple of 5, when this run failed, or when a
 ticket took more than 90 minutes. It finds the largest loss in the metrics and makes one improvement.
+When `runs` is a multiple of 10, also review the feature list of `docs/ROADMAP.md` (the `roadmap` skill).
 Do not change a priority that the owner set. Propose it.
 
 ## More tickets

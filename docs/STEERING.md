@@ -114,10 +114,11 @@ The ruleset `Protect main` (Settings → Rules) refuses force pushes and deletes
 |---|---|
 | `CLAUDE.md` | Project guide and rules. Every session reads it. |
 | `docs/LEARNINGS.md` | What the agent learned. It updates this file itself. |
-| `docs/ROADMAP.md` | Phases and goals of the project. |
+| `docs/ROADMAP.md` | The features of the three goals (done or missing). Add a line to get a feature built: the agents make an epic from it (`roadmap` skill). |
 | `.claude/skills/autopilot/` | The work cycle. |
 | `.claude/skills/verify/` | How to test a change. |
 | `.claude/skills/ticket/` | How to write and split tickets. |
 | `.claude/skills/improve/` | How the agent measures and improves its own process. |
+| `.claude/skills/roadmap/` | How the agent makes epics from the roadmap and reviews it. |
 
 You can edit these files. The agent follows the version on `main`.
