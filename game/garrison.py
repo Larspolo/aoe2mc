@@ -8,6 +8,10 @@ the fall of the building (its target entity of the plugin is gone), alive, as in
     garrison.order(g, player, cell)     # gather.Gather.click: the selection goes into the building at cell
     garrison.tick(g)                    # gather.Gather.step: units at the door go in, a fallen building lets them out
     garrison.out(g, rect)               # the menu item
+    garrison.setup(g)                   # gather.Gather.setup: the arrows of the start garrisons
+
+Each garrisoned villager or foot archer adds one arrow to the shot of its town center, tower or castle, as in AoE2
+(#1113): `aoe arrows` of the plugin.
 
 The live replay (game/replay.py, #809) uses SIZES, cell(), enter() and leave().
 """
@@ -46,6 +50,28 @@ def start(g):
         if o["kind"] == "unit" and o.get("uuid") and o.get("holder") in refs:
             out.setdefault(refs[o["holder"]], []).append(o["uuid"])
     return out
+
+
+def arrows(names):
+    """The arrows of one shot of a building with the units `names` inside: 1, and 1 more for each villager or foot
+    archer (an archer that is not cavalry, a camel or an elephant), as in AoE2."""
+    import combat                                                  # combat imports gather
+    riders = {combat.CAV, combat.CAM, combat.ELE}
+    return 1 + sum(n.startswith("VILLAGER") or combat.ARC in (c := set(combat.stats(n).classes)) and not c & riders
+                   for n in names)
+
+
+def arrows_command(g, rect):
+    """The plugin command that gives the building rect the arrows of its garrison (#1113)."""
+    import combat
+    names = ["VILLAGER" if u in g.villagers else g.soldiers.get(u, "") for u in g.garrisons.get(rect, [])]
+    return f"aoe arrows {combat.target_uuid([rect[0], rect[2], rect[1], rect[3]])} {arrows(names)}"
+
+
+def setup(g):
+    """The arrows of the units that the converter put inside the own buildings."""
+    for rect in g.garrisons:
+        g.command(arrows_command(g, rect))
 
 
 def door(g, rect):
@@ -107,7 +133,7 @@ def go_in(g, u, rect, o):
     x, y, z = cell(g.map, rect, o, len(units))
     units.append(u)
     g.command(f"aoe stop {u}")
-    for c in enter(u, x, y, z):
+    for c in enter(u, x, y, z) + [arrows_command(g, rect)]:
         g.command(c)
     if (v := g.villagers.get(u)) is not None:
         v.pos, v.state = (x + 0.5, float(y), z + 0.5), "garrison"
@@ -118,6 +144,8 @@ def go_in(g, u, rect, o):
 def out(g, rect):
     """All units of the building rect come out on the free cells next to it, the door side first. Returns them."""
     units = g.garrisons.pop(rect, [])
+    if units and g.paper:
+        g.command(arrows_command(g, rect))                         # one arrow again
     ring = g.map.front(rect) or [((rect[0] + rect[1]) // 2, rect[3])]
     for k, u in enumerate(units):
         x, z = ring[k % len(ring)]
