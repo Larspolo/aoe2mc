@@ -1195,6 +1195,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         if (!mob.hasAI()) {
             mob.setAI(true);
+            // a mob without AI does not move, but the pushes of the units on its place add to its velocity: 8 villagers
+            // that stood on one cell for 12 s flew 20 to 40 blocks at their next order (#1168)
+            mob.setVelocity(new Vector(0, mob.getVelocity().getY(), 0));
         }
         tame(mob);                  // each order: tame() only after setAI() missed the goals of some units (#436)
         AttributeInstance step = mob.getAttribute(Attribute.STEP_HEIGHT);

@@ -33,7 +33,7 @@ def orders(sent):
 
 def test_a_move_is_one_plugin_order_with_the_walk_speed():
     r, sent, _ = play([dict(time=1000, player=1, kind="move", objects=[7], tile=[10.5, 10.5], names=["VILLAGER_MALE"])])
-    assert sent == [ai.speed_command("u1", "VILLAGER_MALE", 4, 4.0), "aoe moveto u1 42.5 70.0 42.5"]
+    assert sent == [ai.speed_command("u1", "VILLAGER_MALE", 4, 4.0 * replay.PATH), "aoe moveto u1 42.5 70.0 42.5"]
     assert not any(c.startswith("tp ") for c in sent) and not r.moving
     assert r.units[7].pos == (42.5, 70.0, 42.5)                          # the replay takes the unit at its goal
     assert ai.walk_speed("VILLAGER_MALE", 4, 4.0) == 4 * 0.8 * 4         # 4 times the game speed
@@ -44,7 +44,7 @@ def test_a_group_goes_to_the_cells_of_its_formation():
     goals = orders(sent)
     assert set(goals) == {"u1", "u2"} and goals["u1"] != goals["u2"]
     assert all(r.map.free(int(x), int(z)) for x, _, z in goals.values())
-    assert ai.speed_command("u2", "MILITIA", 4, 4.0) in sent
+    assert ai.speed_command("u2", "MILITIA", 4, 4.0 * replay.PATH) in sent
 
 
 def test_an_order_goes_next_to_its_target():
