@@ -76,7 +76,7 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   `(nbt, vol)`: test exact blocks with `vol` (#19). Footprint rule: `Edits.add` keeps a block outside the footprint
   when `y >= cols.wtop + E.HEAD`. Match a block by its name before `[` (`water_cauldron` starts with `water`, #295).
   A `MONUMENTS` object goes to `place_building` as a copy without `o["footprint"]`: use `buildings.footprint(name)` (#296).
-- A new runtime data file (like `tools/mcdata/1.21.1.json`) must go into the package data (`pyproject.toml`).
+- A new runtime data file (like `tools/mcdata/26.3.json`) must go into the package data (`pyproject.toml`).
 - Generated on main, not in PRs: the column "Used today in" of `docs/DESIGN.md` (`tools/feature_table.py`), `docs/coverage.md`
   and `MAX` in `tests/test_coverage.py` (`coverage.yml`, #233, #234). A conflict there: take main's side.
 - Block IDs in `B` depend on earlier tests: draw random numbers in state-name order, not ID order (a cause of full-suite-only failures, #44).

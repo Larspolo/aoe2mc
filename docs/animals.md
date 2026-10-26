@@ -22,7 +22,8 @@ So no animal uses it.
 
 ## Can NBT make a neutral mob aggressive?
 
-Wolves and polar bears have the tags `AngerTime` (ticks) and `AngryAt` (UUID of the target).
+Wolves and polar bears have the tags `AngerTime` (ticks) and `AngryAt` (UUID of the target). 26.3 saves `AngerTime` as
+`anger_end_time` (game time of the end): the converter writes that tag.
 From the Minecraft 1.21.1 code (`NeutralMob`, not tested in the game yet):
 - `AngerTime > 0` makes the mob angry. An angry wolf has red eyes and a raised tail, so it looks hostile.
 - The mob attacks a player only if `AngryAt` is the UUID of that player, or if the gamerule `universalAnger`
