@@ -186,6 +186,8 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
     conflict, verify again, push. Do not rebase or force-push a branch that has an open PR.
     A conflict in the column "Used today in" of `docs/DESIGN.md`: take main's side (`coverage.yml` writes it).
     Two new rows of the feature table at the same place: keep both.
+    `docs/LEARNINGS.md` has `merge=union`: the merge keeps lines that main removed. `claim.py N --guard` fails
+    and names them (#563): remove them from the branch, commit, and run the guard again.
 11. CI green → the Automerge workflow merges. Add label `hold` to the PR if it must not merge yet.
 
 If the ticket is wrong or not possible: comment why, add `needs-human`, remove `in-progress`. Do not merge

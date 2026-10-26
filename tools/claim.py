@@ -12,6 +12,7 @@ a second push of another claim commit is never a fast-forward. Later claims of t
     python3 tools/claim.py N --beat       # show that the own run is alive (at least every 20 minutes)
     python3 tools/claim.py N --stale      # exit 0: the owner made no claim or beat for 30 minutes (stopped run)
     python3 tools/claim.py N --guard      # before each push: beat, and exit 1 when a PR of another branch closes N
+                                          # or a union merge brought back LEARNINGS lines that main removed (#563)
     python3 tools/claim.py N --guard --pr-branch B   # the same, but the open PR of branch B (taken over) is allowed
     python3 tools/claim.py ID --comment   # lock owner comment ID (autopilot step 3); exit 1: another run handles it
     python3 tools/claim.py E --refill     # lock the sub-issues of epic E (0: the whole queue refill, autopilot step 5)
@@ -144,6 +145,21 @@ def release(number, remote="origin", word="Release"):
     return ref if push(sha, ref, remote) else None
 
 
+def revived(path="docs/LEARNINGS.md", base="origin/main"):
+    """Lines of `path` that a `merge=union` merge of `base` brought back after `base` removed them (#563).
+
+    M is the last merged state of `base` (the merge base). A line of HEAD that is not in M and that no own commit
+    after M added came from an older version through the union merge."""
+    m = git("merge-base", "HEAD", base, check=False).stdout.strip()
+    if not m:
+        return []
+    old = set(git("show", f"{m}:{path}", check=False).stdout.splitlines())
+    own = {line[1:] for line in git("log", "-p", "--no-merges", "--format=", f"{m}..HEAD", "--", path).stdout.splitlines()
+           if line.startswith("+") and not line.startswith("+++")}
+    head = git("show", f"HEAD:{path}", check=False).stdout.splitlines()
+    return [line for line in head if line.strip() and line not in old and line not in own]
+
+
 def on_github(remote="origin"):
     """The comment and PR checks need the GitHub API: the tests use a local bare remote."""
     return "github.com" in git("remote", "get-url", remote, check=False).stdout
@@ -255,6 +271,11 @@ def main(argv=None):
         ref = release(a.number, a.remote, word="Beat")      # exits with an error on the claim of another run
         if not ref:
             print(f"no claim of #{a.number}: stop")
+            return 1
+        back = revived(base=f"{a.remote}/main")
+        if back:
+            print(f"docs/LEARNINGS.md keeps {len(back)} lines that main removed (union merge, #563): remove them")
+            print("\n".join(back))
             return 1
         pr = on_github(a.remote) and other_pr(api("pulls?state=all&per_page=30"), a.number, who(), a.pr_branch)
         if pr:
