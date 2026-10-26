@@ -177,3 +177,6 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
   set the attribute `burning_time` to 0. `aoe goals <selector>` lists the goal keys of a unit.
 - Mob walk speed on a path: blocks per second = 43.4 * `movement_speed` ** 2 (zombie, cow, horse). Villagers walk
   with their brain (no goals): 4 times slower, and the MobGoals API does not stop their wandering (#436).
+- `aoe moveto` of many units in a live replay (#438): an arrived villager strolls away (its brain), so the plugin sets
+  NoAI on it at the goal; a goal more than about 100 blocks away gets no path (follow range 128): the replay sends
+  legs of `replay.LEG` path cells. Check walks on a real server with `data get entity <uuid> Pos` after the replay.
