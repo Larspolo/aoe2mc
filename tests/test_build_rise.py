@@ -23,7 +23,7 @@ def rise_map(villagers=1):
         data["objects"].append({"kind": "unit", "name": "VILLAGER_MALE", "player": 1, "uuid": uuid})
         ents[uuid] = {"Pos": (30.5 + i, 64.0, 30.5)}
     server = Server(ents, chosen=1)
-    g = gather.Gather(server, data).setup()
+    g = gather.Gather(server, data, start={}).setup()
     g.stock["wood"] = 100
     g.click("Steve")                                                   # a house at blocks 4..11
     return server, g
@@ -109,7 +109,7 @@ def test_villager_builds_a_house_on_a_server(tmp_path):
         game.forceload()
         end = time.time() + 60                                         # entities load in other threads
         while True:
-            g = gather.Gather(game, data, tick=0.25).setup()
+            g = gather.Gather(game, data, tick=0.25, start={}).setup()
             if g.villagers:
                 break
             assert time.time() < end, "the villager did not load"

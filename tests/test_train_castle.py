@@ -19,7 +19,7 @@ def setup(civ="BRITONS", food=0, wood=35, gold=40):
                {"kind": "building", "name": "CASTLE", "player": 1, "tile": [12.0, 4.0], "footprint": [10, 2, 14, 6]}]
     data = grid([[64] * 24 for _ in range(24)], objects) | {"players": {"1": {"civ": civ, "color": "blue"}}}
     server = FakeServer({"Steve": {"Pos": (12.0, 64.0, 9.5), "Rotation": (180, 15)}})
-    g = gather.Gather(server, data).setup()
+    g = gather.Gather(server, data, start={}).setup()
     g.stock.update(food=food, wood=wood, gold=gold)
     return server, g
 
@@ -94,7 +94,7 @@ def test_a_trained_war_elephant_and_longbowman_exist_on_a_server(tmp_path):
         game.forceload()
         for civ, name in [("PERSIANS", "WAR_ELEPHANT"), ("BRITONS", "LONGBOWMAN")]:
             data["players"]["1"]["civ"] = civ
-            g = gather.Gather(game, data, tick=0.25).setup()
+            g = gather.Gather(game, data, tick=0.25, start={}).setup()
             g.stock.update(food=170, wood=35, gold=85)
             rect, = [r for r, b in train.homes(g).items() if b == "CASTLE"]
             assert train.queue(g, "nobody", rect[::2], name)

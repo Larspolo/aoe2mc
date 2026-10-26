@@ -12,9 +12,9 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 | Two scheduled tasks (owner's account) | "aoe2mc autopilot" starts one run each hour at :06. "aoe2mc pacer heartbeat" wakes the pacer session each hour at :36. |
 | Pacer session | One long-lived cloud session. Every 10 minutes it starts the runs that the quota target misses (skill `pacer`). It does no ticket work. |
 | Runs | Cloud sessions of the autopilot task. Each run follows the skill `autopilot` with the argument `max`: tickets, one PR each. Many runs work at the same time. |
-| Skills (`.claude/skills/`) | The procedures: `autopilot` (the work cycle), `verify` (checks before a push), `ticket` (write and split tickets), `design` (design tickets), `improve` (process review), `roadmap` (epics from `docs/ROADMAP.md`), `pacer`. |
+| Skills (`.claude/skills/`) | The procedures: `autopilot` (the work cycle), `verify` (checks before a push), `ticket` (write and split tickets), `design` (design tickets), `improve` (process review), `roadmap` (epics from `docs/ROADMAP.md`), `pacer`, `operator` (checks and repairs the start of the runs, only in an owner session), `human` (guides the owner through the `needs-human` tickets on the owner's computer), `dashboard-refresh` (the data files of the owner's dashboard artifact, #982). |
 | Rules (`CLAUDE.md`, `docs/LEARNINGS.md`) | Each session loads them. `CLAUDE.md` has the commands, the code map and the rules. `docs/LEARNINGS.md` has the lessons for all runs. |
-| Tools (`tools/`) | `claim.py` (locks), `usage.py` (quota and the number of runs), `dashboard.py` (the status issue and the pick order), `health.py` (numbers for the review). |
+| Tools (`tools/`) | `claim.py` (locks), `usage.py` (quota and the number of runs), `dashboard.py` (the status issue and the pick order), `health.py` (numbers for the review), `operator_check.py` (the checks of the `operator` skill), `owner_tasks.py` (the tickets of the `human` skill). |
 | GitHub | The issues are the tickets. Issue #1 (label `agent-status`) is the status issue: the dashboard in its body, the run reports as comments. The labels are in `.github/labels.txt`. |
 | Workflows (`.github/workflows/`) | CI, Automerge, Unconflict, Claims, Dashboard, Coverage, Labels (see below). |
 | Cloud environment | The setup script `scripts/cloud-setup.sh` (Java, packages, server jars), the network access, the SessionStart hook. |
@@ -110,6 +110,10 @@ status issue).
 6. **Scheduled task "aoe2mc pacer heartbeat".** Hourly at :36. Its prompt: "Pacer heartbeat: follow
    .claude/skills/pacer/SKILL.md." It wakes the pacer session when its own loop stopped.
 
+To check or repair steps 4–6, start a session and type `/operator` (skill `operator`, #981). It checks the two
+scheduled tasks, the pacer session, the quota, CI, the PRs and the labels, and repairs them after you agree (for
+example a new pacer session when the old one has a full context). A long-lived owner session is not necessary.
+
 ## Generic and specific files
 
 "Generic" files work for another project with no change, or with a change of `agent.toml` only (#905: the repository,
@@ -129,7 +133,10 @@ the owner login, the default branch, the status issue, the commands, the doc pat
 | `.claude/skills/design/SKILL.md` | specific | The design of buildings, units and animals. |
 | `.claude/skills/improve/SKILL.md` | generic | The project name. |
 | `.claude/skills/roadmap/SKILL.md` | specific | The three goals of aoe2mc. |
+| `.claude/skills/operator/SKILL.md` | generic | The task and session names (`aoe2mc autopilot`, `aoe2mc pacer`). |
+| `.claude/skills/human/SKILL.md` | specific | The preparation of a play test (worlds, `game/run.py`, Minecraft 26.3). |
 | `.claude/skills/pacer/SKILL.md` | generic | The trigger ID, the repository path and name (it runs before the clone, so it cannot read `agent.toml`). |
+| `.claude/skills/dashboard-refresh/SKILL.md` | specific | The datasets and tabs of the owner's dashboard page (`tools/dashboard_artifact/`, `tools/dashboard_data.py`). |
 | `.claude/settings.json` | generic | The permission rules name the repository (they cannot read `agent.toml`). |
 | `.claude/hooks/session-start.sh` | generic | The Python packages and the setup version file name. |
 | `.claude/hooks/guard-main.sh` | generic | None. |
@@ -140,7 +147,10 @@ the owner login, the default branch, the status issue, the commands, the doc pat
 | `tools/claim.py` | generic | None (`agent.toml`). |
 | `tools/usage.py` | generic | None. |
 | `tools/dashboard.py` | generic | None (`agent.toml`). |
+| `tools/feedback.py` | generic | None (`agent.toml`). |
 | `tools/health.py` | generic | None (`agent.toml`). |
+| `tools/operator_check.py` | generic | None (`agent.toml`). |
+| `tools/owner_tasks.py` | generic | None (`agent.toml`). |
 | `.github/workflows/ci.yml` | specific | The Python, Java and Minecraft steps, the test markers. The red-`main` ticket is generic. |
 | `.github/workflows/automerge.yml` | generic | The branch prefixes `claude/*` and `agent/*`. |
 | `.github/workflows/unconflict.yml` | generic | None. |

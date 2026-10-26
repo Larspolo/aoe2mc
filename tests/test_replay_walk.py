@@ -28,7 +28,7 @@ def play(timeline, objects=(VIL, HOUSE), n=64, water=()):
     def sleep(s):
         now[0] += s
     r = replay.Replay(game, d)
-    r.run(clock=lambda: now[0], sleep=sleep, log=None)
+    r.run(clock=lambda: now[0], sleep=sleep, log=None, finish=True)
     return r, game.sent, now[0]
 
 

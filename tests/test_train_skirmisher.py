@@ -67,7 +67,7 @@ def test_a_trained_skirmisher_can_shoot_on_a_server(tmp_path):
         data = json.load(f)
     with run.Game(tmp_path / "W") as game:
         game.forceload()
-        g = gather.Gather(game, data, tick=0.25).setup()
+        g = gather.Gather(game, data, tick=0.25, start={}).setup()
         stock(g)
         g.techs.add("FEUDAL_AGE")
         rect, = train.homes(g)

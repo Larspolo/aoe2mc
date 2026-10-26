@@ -43,6 +43,7 @@ from units import VILLAGER_JOBS, animal, pretty  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
+import replay  # noqa: E402  (build imports it too)
 import bossbar  # noqa: E402
 import cheats  # noqa: E402
 import garrison  # noqa: E402
@@ -53,6 +54,7 @@ import train  # noqa: E402
 RESOURCES = ("Wood", "Food", "Gold", "Stone")
 DROP_SITES = {"wood": ("TOWN_CENTER", "LUMBER_CAMP"), "food": ("TOWN_CENTER", "MILL"),   # as in AoE2 (#389)
               "gold": ("TOWN_CENTER", "MINING_CAMP"), "stone": ("TOWN_CENTER", "MINING_CAMP")}
+START = replay.START                                               # the AoE2 standard start resources (#973)
 TREE_WOOD = 100                                                    # wood in one tree, as in AoE2
 BUSH_FOOD = 125                                                    # food in one fruit bush, as in AoE2 DE
 # AoE2 DE work rates per game second (#393): lumberjack 0.39 (empires2_x2_p1.dat, #267), the others the published
@@ -83,6 +85,7 @@ GROUPS = {n: (3 + n, dye) for n, dye in enumerate(("red_dye", "yellow_dye", "lim
 GROUP_GIVE = 20                                                    # clicks() calls between two checks of the items
 SNEAK = '{condition:"minecraft:entity_properties",entity:"this",predicate:{flags:{is_sneaking:true}}}'
 MARK = {"go": "[0.2,1.0,0.2]", "attack": "[1.0,0.15,0.15]"}       # dust colors of the order marker (#796): green, red
+SIEGE_GLOW = 3                                                     # seconds of the glow of an attacked building (#991)
 MARK_POINTS = 12                                                   # dust points on the ring of the order marker
 # The pointing mark (#989): a smaller ring than the order marker, in the color of the target under the crosshair.
 POINT = {"own": "[0.3,0.7,1.0]", "enemy": "[1.0,0.15,0.15]", "resource": "[1.0,0.85,0.2]", "ground": "[0.9,0.9,0.9]"}
@@ -362,16 +365,26 @@ def marker(m, cells, kind, who, colors=MARK, points=MARK_POINTS, scale=1.5):
             for a in (2 * math.pi * k / points for k in range(points))]
 
 
-def glow(uuid):
+def glow(uuid, seconds=1):
     """The order marker of an attack on a unit (#796): the target glows for a moment (Minecraft effect)."""
-    return f"effect give {uuid} minecraft:glowing 1 0 true"
+    return f"effect give {uuid} minecraft:glowing {seconds} 0 true"
+
+
+def siege_mark(uuid, name, hp, who):
+    """The mark of an attack order on building `name` (#991), as the flash of AoE2: its target (an invisible slime that
+    fills the footprint) glows SIEGE_GLOW seconds (an invisible mob shows its outline in the team color), and the action
+    bar of player who shows the name and the hit points (the score aoe_hp of the plugin) of the full hp."""
+    text = [{"text": f"Attack: {build.pretty(name)} (", "color": "red"}, {"score": {"name": uuid, "objective": "aoe_hp"}},
+            {"text": f"/{hp})"}]
+    return [glow(uuid, SIEGE_GLOW), f"title {who} actionbar " + json.dumps(text)]
 
 
 class Gather:
     """The gather game on a running server (game.command sends one command). Call setup(), then step() in a loop.
     log: a text file that gets one JSON line per event (state change or drop), to measure the timing (#289).
     chop: seconds per unit, one number for all resources or {resource: seconds} ("farm" for farms); default
-    WORK_SECONDS, the AoE2 rates at Normal speed (#413)."""
+    WORK_SECONDS, the AoE2 rates at Normal speed (#413). start: the start resources, default START as in AoE2 (#973);
+    a missing resource starts at 0 ({} for none)."""
     cheats = False                                                     # also for the adapters of Gather.__new__
     aegis = False                                                      # the cheat "aegis": all work is instant (#817)
     ended = None                                                       # "Victory" or "Defeat": run() stops (#819)
@@ -379,7 +392,7 @@ class Gather:
     bots = ()                                                          # run() steps them too (bot.Bot, #856)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
-                 cheats=False):
+                 cheats=False, start=None):
         self.game, self.data, self.map, self.player = game, data, Map(data, player), player
         self.paper = getattr(game, "kind", None) == "paper"           # walks with the plugin (#437)
         chop = WORK_SECONDS if chop is None else chop
@@ -387,7 +400,7 @@ class Gather:
         self.chop = dict(chop) if isinstance(chop, dict) else dict.fromkeys(WORK_SECONDS, chop)
         self.log, self.clock, self.t0 = log, clock, clock()
         self.cheats = cheats                                           # the AoE2 cheat codes in the chat (#816)
-        self.stock = dict.fromkeys(DROP_SITES, 0)                      # resources at the drop sites
+        self.stock = {**dict.fromkeys(DROP_SITES, 0), **(START if start is None else start)}   # at the drop sites (#973)
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
                       and "VILLAGER" in o["name"]]
         self.villagers, self.selected = {}, set()
@@ -411,6 +424,8 @@ class Gather:
         self.forts = {combat.target_uuid(o["footprint"]): combat.building_box(o, ground) for o in data["objects"]
                       if o["kind"] == "building" and o["player"] not in (0, player) and "footprint" in o
                       and o["name"] in combat.BUILDINGS}               # target UUID -> box of an enemy building
+        self.fort_names = {combat.target_uuid(o["footprint"]): o["name"] for o in data["objects"]
+                           if o["kind"] == "building" and "footprint" in o}   # target UUID -> AoE2 name (#991)
         self.sieged = set()                                            # the targets of attack orders
         self.wands, self.corners = set(), {}                           # players who clicked the wand, player -> corner 1
         self.holds = {}                                                # player -> time of the last wand use of a drag
@@ -438,7 +453,7 @@ class Gather:
                     f"scoreboard objectives setdisplay sidebar {self.board}"):
             self.command(cmd)
         for r in RESOURCES:
-            self.command(f"scoreboard players add {r} {self.board} 0")
+            self.command(f"scoreboard players set {r} {self.board} {self.stock[r.lower()]}")   # the start resources
         self.command(f'scoreboard players display name Idle {self.board} "Idle villagers"')   # a name has no space
         build.setup(self)
         menu.setup(self)
@@ -736,6 +751,10 @@ class Gather:
             self.attack(u)
             x0, _, z0, x1, _, z1 = self.forts[u]
             self.mark(name, {(x0, z0), (x1, z1)}, "attack")
+            import combat                                              # combat imports this module
+            kind = self.fort_names.get(fort, "")
+            for c in siege_mark(fort, kind, combat.stats(kind).hp, name):
+                self.command(c)
             return
         building = build.chosen(self, name)
         if building:                                                   # a chosen building: place its foundation
