@@ -27,6 +27,15 @@ epics have no goal left that an agent can do.
    alone. Name the files and functions that each one changes.
 6. Do not change `docs/ROADMAP.md` for a new epic: the key in the epic body is enough (no merge conflicts).
 
+## Release checks (`docs/RELEASE.md`, owner decision #878)
+
+Do not change the order of the work for the release bar: the priority labels alone decide it. Look at the bar in the
+review of every 10th run (below).
+When all features of a milestone (B, A or C) of a goal are done (`python3 tools/release.py`: 0 features left in that
+milestone), make each release check of the goal that has no ticket yet as a check ticket ("Check X in the game",
+`ticket` skill, level 4 of `verify`), at the priority of the goal's epics, and write its number in the `ticket`
+column of `docs/RELEASE.md`.
+
 ## Review the feature list (every 10th run)
 
 When `runs` (the agent state of the status issue) is a multiple of 10, after step 8 of the autopilot skill:
@@ -35,4 +44,6 @@ When `runs` (the agent state of the status issue) is a multiple of 10, after ste
 2. Compare each goal with AoE2 DE and with the code: what does a player see or do in AoE2 that the converter, the
    game program or the replay cannot do yet? Add at most 5 missing features, each with a new key and one line.
 3. Keep the order: the features that the next features need come first.
-4. Put the change into the PR of your ticket. The owner can change the list at any time.
+4. Give each new feature a row in `docs/RELEASE.md` (milestone C, unless the owner says otherwise), and correct the
+   estimates there: a feature whose epic has more sub-issues than its estimate needs no estimate.
+5. Put the change into the PR of your ticket. The owner can change the list at any time.
