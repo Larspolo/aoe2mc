@@ -300,8 +300,9 @@ def pick_unit(eye, d, units, reach=64, radius=0.8):
 
 
 def profession(uuid, job):
-    """The command that gives villager uuid the Minecraft profession job: the clothes change at once."""
-    return f'data merge entity {uuid} {{VillagerData:{{profession:"minecraft:{job}"}}}}'
+    """The command that gives villager uuid the Minecraft profession job: the clothes change at once. A new profession
+    clears the trade list, so the command sets it empty again: no trade menu on a right click (#988)."""
+    return f'data merge entity {uuid} {{VillagerData:{{profession:"minecraft:{job}"}},Offers:{{Recipes:[]}}}}'
 
 
 def job_of(m, tile):

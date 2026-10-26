@@ -51,7 +51,7 @@ def test_a_click_on_a_foundation_sends_a_builder():
     g.click("Steve")
     v = g.villagers["v0"]
     assert v.state == "to_site" and v.site is site
-    assert 'data merge entity v0 {VillagerData:{profession:"minecraft:mason"}}' in server.log
+    assert 'data merge entity v0 {VillagerData:{profession:"minecraft:mason"},Offers:{Recipes:[]}}' in server.log
     assert v.path[-1] in g.map.around({(x, z) for x in range(4, 12) for z in range(4, 12)})
 
 

@@ -121,7 +121,7 @@ def test_a_villager_that_chops_wood_looks_like_a_lumberjack(tiny_world):
     g.select(uuid)
     g.send(tree)
     g.send(tree)                                                       # the second order sends no command
-    look = f'data merge entity {uuid} {{VillagerData:{{profession:"minecraft:fletcher"}}}}'
+    look = gather.profession(uuid, "fletcher")
     assert server.log.count(look) == 1
 
 

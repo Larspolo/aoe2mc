@@ -54,7 +54,7 @@ def test_a_click_on_a_mine_sends_a_miner_and_the_load_goes_to_the_camp():
     g.send((12, 12))
     v = g.villagers["v"]
     assert v.state == "to_tree" and v.res == "gold" and v.tree == (12, 12)
-    assert 'data merge entity v {VillagerData:{profession:"minecraft:toolsmith"}}' in server.log
+    assert 'data merge entity v {VillagerData:{profession:"minecraft:toolsmith"},Offers:{Recipes:[]}}' in server.log
     mine(g, until=lambda: g.stock["gold"] >= 30)
     assert g.stock["gold"] == score(server, "Gold") == 30 and g.map.mines["gold"][(12, 12)] <= 770
     camp = set().union(*g.map.drops["gold"])
@@ -63,7 +63,7 @@ def test_a_click_on_a_mine_sends_a_miner_and_the_load_goes_to_the_camp():
     tc = {(x, z) for x in range(2, 5) for z in range(2, 5)}
     assert not any(max(abs(x - a), abs(z - b)) == 1 for x, z in cells for a, b in tc)   # the camp is nearer
     g.send((12, 18))
-    assert 'data merge entity v {VillagerData:{profession:"minecraft:mason"}}' in server.log and v.res == "stone"
+    assert 'data merge entity v {VillagerData:{profession:"minecraft:mason"},Offers:{Recipes:[]}}' in server.log and v.res == "stone"
 
 
 def test_an_empty_mine_goes_away_and_the_miner_goes_to_the_next_one():
