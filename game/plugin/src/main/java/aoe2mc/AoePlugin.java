@@ -406,6 +406,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         ev.setCancelled(true);
         victim.playHurtAnimation(0);
         victim.setHealth(Math.max(0, victim.getHealth() - a.damage(t)));     // 0 kills it
+        if (ev.getDamager() instanceof Projectile p) {     // a cancelled hit lets the arrow fly on: one hit per arrow
+            p.remove();
+        }
         nameLine(victim);
         if (victim.getHealth() > 0 && from instanceof LivingEntity attacker) {
             attackBack(victim, attacker, t);
@@ -413,13 +416,20 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     // The AoE2 default stance (#733): a military unit without an order and without a target attacks its attacker.
+    // A mounted unit: the horse has the order, the rider the target (#710).
     private void attackBack(LivingEntity victim, LivingEntity attacker, Stats t) {
         if (!(victim instanceof Mob mob) || t.classes().isEmpty() || t.attack() == 0
-                || orders.containsKey(mob.getUniqueId()) || sameTeam(mob, attacker)
-                || mob.getTarget() != null && mob.getTarget().isValid()) {
+                || orders.containsKey(mob.getUniqueId()) || sameTeam(mob, attacker)) {
             return;
         }
-        unit(mob).setTarget(attacker);
+        Mob fighter = rider(mob) != null ? rider(mob) : mob;
+        if (fighter.getTarget() == null || !fighter.getTarget().isValid()) {
+            if (fighter != mob) {
+                unit(mob).getPathfinder().stopPathfinding();
+            }
+            reach(fighter, attacker.getLocation());
+            unit(fighter).setTarget(attacker);
+        }
     }
 
     @EventHandler
