@@ -90,3 +90,5 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   and a tile size of 4 (at tile size 1 most designs give no blocks). The site keeps the commands, bottom up (#418).
 - `aoe2mc.json` objects: `"id"` is the AoE2 type constant, not the object ID of a record: that is `"ref"` (#408).
   Import cycle `gather` → `build` → `replay`: `replay` imports `gather` inside a function.
+- `gather.Map.path` on a whole record map (480 × 480): A* with a cell limit, about 45 ms per path, 0.3 s across the
+  map. Replay paths cost 18 s per 200 s of game in samples/ (one search per unit of a group, #409).

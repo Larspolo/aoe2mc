@@ -129,14 +129,22 @@ class Map:
         """The free cells next to a group of cells (a tree tile, a footprint)."""
         return {(x + dx, z + dz) for x, z in cells for dx, dz in STEPS if self.free(x + dx, z + dz)} - cells
 
-    def path(self, start, goals):
+    def path(self, start, goals, limit=None):
         """Shortest path (list of cells after start) to one of goals. 8 neighbours, no cut corners, steps of at
-        most 1 block up or down. None: no path."""
+        most 1 block up or down. A* with the distance to the box of the goals. None: no path, or no path after
+        `limit` cells (a far or unreachable goal on a large map)."""
         if not goals:
             return None
-        dist, prev, todo = {start: 0}, {}, [(0, start)]
+        gx0, gx1 = min(x for x, _ in goals), max(x for x, _ in goals)
+        gz0, gz1 = min(z for _, z in goals), max(z for _, z in goals)
+
+        def h(x, z):
+            dx, dz = max(gx0 - x, 0, x - gx1), max(gz0 - z, 0, z - gz1)
+            return max(dx, dz) + 0.414 * min(dx, dz)
+        dist, prev, todo, seen = {start: 0}, {}, [(h(*start), 0, start)], 0
         while todo:
-            d, c = heapq.heappop(todo)
+            _, d, c = heapq.heappop(todo)
+            d = -d                                                     # equal sums: the longest walk first
             if c in goals:
                 out = []
                 while c != start:
@@ -145,6 +153,9 @@ class Map:
                 return out[::-1]
             if d > dist[c]:
                 continue
+            seen += 1
+            if limit and seen > limit:
+                return None
             x, z = c
             for dx, dz in STEPS:
                 n = (x + dx, z + dz)
@@ -155,7 +166,7 @@ class Map:
                 nd = d + (1.414 if dx and dz else 1)
                 if nd < dist.get(n, 1e9):
                     dist[n], prev[n] = nd, c
-                    heapq.heappush(todo, (nd, n))
+                    heapq.heappush(todo, (nd + h(*n), -nd, n))
         return None
 
     def pick_ground(self, eye, d, reach=64):
@@ -205,6 +216,17 @@ def pick_unit(eye, d, units, reach=64, radius=0.8):
         if 0 < t < reach and math.dist(v, [t * d[i] for i in range(3)]) < radius and (best is None or t < best[0]):
             best = t, key
     return best and best[1]
+
+
+def walk(g, v):
+    """Move unit v one cell on its path with /tp, facing the step (g.map, g.command: Gather or replay.Replay)."""
+    x, z = v.path.pop(0)
+    dx, dz = x + 0.5 - v.pos[0], z + 0.5 - v.pos[2]
+    v.pos = (x + 0.5, float(g.map.y(x, z)), z + 0.5)
+    v.walked += math.hypot(dx, dz)
+    yaw = math.degrees(math.atan2(-dx, dz))
+    g.command(f"tp {v.uuid} {v.pos[0]} {v.pos[1]} {v.pos[2]} {yaw:.0f} 0")
+    return math.hypot(dx, dz)
 
 
 class Villager:
@@ -394,12 +416,7 @@ class Gather:
         """One tick: walk one block, chop, drop the wood, or build."""
         for v in self.villagers.values():
             if v.state in ("to_tree", "to_drop", "to_site") and v.path:
-                x, z = v.path.pop(0)
-                dx, dz = x + 0.5 - v.pos[0], z + 0.5 - v.pos[2]
-                v.pos = (x + 0.5, float(self.map.y(x, z)), z + 0.5)
-                v.walked += math.hypot(dx, dz)
-                yaw = math.degrees(math.atan2(-dx, dz))
-                self.command(f"tp {v.uuid} {v.pos[0]} {v.pos[1]} {v.pos[2]} {yaw:.0f} 0")
+                walk(self, v)
             elif v.state == "to_site":
                 self.set(v, "build" if v.site["progress"] < 1 else "idle")
             elif v.state == "to_tree":
