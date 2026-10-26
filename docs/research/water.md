@@ -43,7 +43,7 @@ The trench that the owner saw (#155) has two possible causes:
 - Give each 4-connected body of water one surface: `WATER_Y + H × e`, with `e` = the **lowest** elevation of its
   tiles. The lowest value never puts water above the ground of one of its own tiles, so water cannot spill. Tiles of
   a higher elevation in the same body become deeper water; the shore ticket smooths the land around them.
-- Count the depth (shallow 1, water 4, deep 7) from this surface. Keep `WATER_Y` as the surface of bodies at
+- Count the depth (walkable shallows 1, "Water, Shallow" 2 (#1198), water 4, deep 7) from this surface. Keep `WATER_Y` as the surface of bodies at
   elevation 0, so maps like the samples do not change.
 - Where two bodies at different levels touch, they are not 4-connected (else they are one body); a diagonal touch
   needs a shore block between them.

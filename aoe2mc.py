@@ -146,6 +146,8 @@ def terrain_style(name):
         return S("mud", "mud", 1, "mud", "mangrove_swamp")
     if "DEEP" in n and "WATER" in n:
         return S("gravel", "gravel", 7, "gravel", "deep_ocean")
+    if "SHALLOW" in n and n.startswith("WATER"):    # "Water, Shallow": only ships go on it, not the shallows (#1198)
+        return S("sand", "sand", 2, "sand", "river", [("seagrass", .05)])
     if "SHALLOW" in n:
         return S("sand", "sand", 1, "sand", "river", [("seagrass", .1)])
     if "WATER" in n:
@@ -3319,6 +3321,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     lut = np.array([block_color(s) for s in B.states], np.uint8)
     img = lut[top_view[:cols.n, :cols.n].T]                     # rows = z, columns = x
     shade = np.clip(1 + (cols.wtop[:cols.n, :cols.n].T - WATER_Y) * 0.02, 0.6, 1.4)
+    depth = (cols.wtop - cols.top)[:cols.n, :cols.n].T
+    shade *= np.where(depth > 0, np.clip(1.6 - 0.2 * depth, 1, 1.4), 1)     # shallow water is lighter, as on a map item
     img = Image.fromarray(np.clip(img * shade[..., None], 0, 255).astype(np.uint8))
     if preview:
         img.save(os.path.join(out, "preview.png"))
