@@ -184,6 +184,9 @@ def setup(game, data):
     for o in units:                                  # after the stats: the plugin needs them for the sight
         if cmd := sight_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
+    import ai                                        # ai -> gather -> build -> replay -> combat: import it late
+    for o in units:                                  # the AoE2 walk speed also without an order (#849)
+        game.command(ai.speed_command(o["uuid"], o["name"], data.get("tile_size", 4)))
     return n
 
 

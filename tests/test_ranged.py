@@ -6,7 +6,7 @@ import time
 
 import pytest
 
-from game import combat, run
+from game import ai, combat, run
 
 
 def test_range_command():
@@ -25,7 +25,8 @@ def test_range_command():
                                         {"kind": "unit", "player": 2, "name": "MILITIA", "uuid": "m"}]}
     assert combat.setup(Game(), data) == 2
     assert Game.sent == ["aoe range a 12 24", combat.stats_command("a", "ARCHER"), combat.stats_command("m", "MILITIA"),
-                         "aoe sight a 18", "aoe sight m 12"]   # line of sight 6 and 4 tiles (#775)
+                         "aoe sight a 18", "aoe sight m 12",   # line of sight 6 and 4 tiles (#775)
+                         ai.speed_command("a", "ARCHER", 3), ai.speed_command("m", "MILITIA", 3)]
 
 
 def data(game, tag, path):

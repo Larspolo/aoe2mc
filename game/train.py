@@ -262,7 +262,7 @@ def cancel(g, player, rect, group):
     q.pop(start + k - 1)
     for r, v in COSTS[name].items():
         g.stock[r] += v
-        g.command(f"scoreboard players add {r.capitalize()} aoe_res {v}")
+        g.command(f"scoreboard players add {r.capitalize()} {g.board} {v}")
     return name
 
 
@@ -347,7 +347,7 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
         return None
     for r, v in cost.items():
         g.stock[r] -= v
-        g.command(f"scoreboard players remove {r.capitalize()} aoe_res {v}")
+        g.command(f"scoreboard players remove {r.capitalize()} {g.board} {v}")
     q.append({"name": name, "progress": 0.0, "player": player})
     return rect
 
@@ -420,15 +420,15 @@ def census(g):
 
 
 def sidebar(g):
-    """Show the population and the limit as two lines of the sidebar (aoe_res) and the age in its title, only when
+    """Show the population and the limit as two lines of the sidebar (g.board) and the age in its title, only when
     they changed."""
     for name, n in (("Population", g.pop), ("Limit", limit(g))):
         if g.shown.get(name) != n:
             g.shown[name] = n
-            g.command(f"scoreboard players set {name} aoe_res {n}")
+            g.command(f"scoreboard players set {name} {g.board} {n}")
     if g.shown.get("Age") != age(g):
         g.shown["Age"] = age(g)
-        g.command(f'scoreboard objectives modify aoe_res displayname "Resources ({age(g)})"')
+        g.command(f'scoreboard objectives modify {g.board} displayname "Resources ({age(g)})"')
 
 
 def tick(g, work):
@@ -491,6 +491,8 @@ def spawn(g, rect, name):
         g.command(cmd)
     if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name)):   # it attacks enemies in sight (#775)
         g.command(cmd)
+    import ai                                                      # ai imports gather, gather imports this module
+    g.command(ai.speed_command(uuid, name, g.map.T))               # its AoE2 walk speed also without an order (#849)
     if gather.military(name):
         g.soldiers[uuid] = name
         go(g, rect, uuid, name)
