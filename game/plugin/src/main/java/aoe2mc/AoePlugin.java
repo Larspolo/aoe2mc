@@ -102,6 +102,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * An order also sets the attribute step_height to STEP: the ground of a map has many steps of one block,
  * and a jump on each made the replay units walk at 64 % of their speed (#829). A step with a moss carpet or snow on it
  * is higher than 1 block: at 1, a scout stood still in front of it (#851).
+ * The path of a horse (2 x 2 blocks) on a slope at an angle goes in L steps: steer() aims a horse on the ground at a
+ * path point up to LOOK blocks ahead, and glide() does the same in the air (#1022).
  * With the AI on, a unit keeps only the goals that fit AoE2 (#436): its attack goals and "float" (it swims).
  * Wandering, looking around, panic, the choice of its own targets (a zombie attacks each villager), despawning and
  * the burning in the sun go. So a unit stands still without an order and attacks only the target of an order,
@@ -178,6 +180,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private static final double REACH = Math.sqrt(2.04) - 0.6;       // vanilla melee reach past the hit box
     private static final double WALK = 43.4;      // blocks per second of movement_speed 1 on flat ground (game/ai.py)
     private static final double AIR = 1 - 0.91;   // air drag per tick: a speed v in the air goes v / AIR blocks
+    private static final double GROUND = 0.6 * 0.91;  // ground drag per tick (the friction of most blocks)
+    private static final double LOOK = 3, OFF = 0.75;   // steer(): blocks ahead, blocks off the line (#1022)
 
     private static final class Order {
         final Location goal;
@@ -454,6 +458,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         Bukkit.getScheduler().runTaskTimer(this, this::follow, 2L, 2L);
+        Bukkit.getScheduler().runTaskTimer(this, this::steer, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, ghost::tick, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, border::tick, 4L, 4L);
         Bukkit.getScheduler().runTaskTimer(this, this::siege, 1L, 1L);
@@ -814,12 +819,17 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         Location m = mob.getLocation(), f = points.get(points.size() - 1), n = f;
         double c = center(mob), step = Math.max(0.05, WALK * attr.getValue() * attr.getValue() * speed / 20);
-        for (int i = Math.max(path.getNextPointIndex(), 1); i < points.size(); i++) {
-            Location a = points.get(i - 1), p = points.get(i);
-            double dx = p.getX() + c - m.getX(), dz = p.getZ() + c - m.getZ();
-            if (dx * (p.getX() - a.getX()) + dz * (p.getZ() - a.getZ()) > 0 && Math.hypot(dx, dz) >= step) {
-                n = p;                                  // the first point that is still ahead
-                break;
+        int k = c < 1 ? -1 : ahead(points, Math.max(path.getNextPointIndex(), 0), m.getX() - c, m.getZ() - c);
+        if (k >= 0 && Math.hypot(points.get(k).getX() + c - m.getX(), points.get(k).getZ() + c - m.getZ()) >= step) {
+            n = points.get(k);                          // a horse: no zigzag in the air either (#1022)
+        } else {
+            for (int i = Math.max(path.getNextPointIndex(), 1); i < points.size(); i++) {
+                Location a = points.get(i - 1), p = points.get(i);
+                double dx = p.getX() + c - m.getX(), dz = p.getZ() + c - m.getZ();
+                if (dx * (p.getX() - a.getX()) + dz * (p.getZ() - a.getZ()) > 0 && Math.hypot(dx, dz) >= step) {
+                    n = p;                              // the first point that is still ahead
+                    break;
+                }
             }
         }
         AttributeInstance safe = mob.getAttribute(Attribute.SAFE_FALL_DISTANCE);
@@ -833,6 +843,71 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (w > Math.hypot(v.getX(), v.getZ())) {
             mob.setVelocity(new Vector(dx / d * w, v.getY(), dz / d * w));
         }
+    }
+
+    private void steer() {
+        for (var e : orders.entrySet()) {
+            if (Bukkit.getEntity(e.getKey()) instanceof Mob mob && mob.isValid()) {
+                var path = mob.getPathfinder().getCurrentPath();
+                if (path != null) {
+                    steer(mob, path, e.getValue().speed);
+                }
+            }
+        }
+    }
+
+    // The path of a horse (2 x 2 blocks) goes up and down a slope in L steps: a fast horse swung from side to side,
+    // stepped up onto the corner of a block and fell back (#1022). On the ground it aims at the last path point up
+    // to LOOK blocks ahead of the point next to it, whose points between are at most OFF blocks off the line. Each
+    // tick the input of the mob (Minecraft MoveControl) pushes toward its next point n with step x (1 - GROUND): the
+    // velocity takes that push away again.
+    private static void steer(Mob mob, Pathfinder.PathResult path, double speed) {
+        AttributeInstance attr = mob.getAttribute(Attribute.MOVEMENT_SPEED);
+        List<Location> points = path.getPoints();
+        int i = path.getNextPointIndex();
+        if (!mob.isOnGround() || mob.isInWater() || attr == null || center(mob) < 1 || i < 0 || i + 1 >= points.size()) {
+            return;
+        }
+        Location m = mob.getLocation(), n = points.get(i);
+        double c = center(mob), mx = m.getX() - c, mz = m.getZ() - c;      // the mob as a corner of a path point
+        int k = ahead(points, i, mx, mz);
+        Location p = points.get(k);
+        double step = WALK * attr.getValue() * attr.getValue() * speed / 20, push = step * (1 - GROUND);
+        double dx = p.getX() - mx, dz = p.getZ() - mz, d = Math.hypot(dx, dz);
+        double nx = n.getX() - mx, nz = n.getZ() - mz, e = Math.hypot(nx, nz);
+        if (d < 0.05) {
+            return;
+        }
+        double w = Math.min(step, d);
+        mob.setVelocity(new Vector(dx / d * w - (e < 0.01 ? 0 : nx / e * push), mob.getVelocity().getY(),
+                dz / d * w - (e < 0.01 ? 0 : nz / e * push)));
+    }
+
+    // The index of the last path point up to LOOK blocks ahead of the point next to the mob (at the corner mx, mz)
+    // whose points between are at most OFF blocks off the line from the mob, at least the one after it.
+    private static int ahead(List<Location> points, int i, double mx, double mz) {
+        int s = i;
+        for (int j = i + 1; j < points.size() - 1; j++) {   // Minecraft can count a steered mob many points back
+            Location p = points.get(j), q = points.get(s);
+            if (Math.hypot(p.getX() - mx, p.getZ() - mz) < Math.hypot(q.getX() - mx, q.getZ() - mz)) {
+                s = j;                                  // the point next to the mob
+            }
+        }
+        int k = Math.min(s + 1, points.size() - 1);
+        for (int j = s + 2; j < points.size(); j++) {
+            Location p = points.get(j);
+            double dx = p.getX() - mx, dz = p.getZ() - mz, d = Math.hypot(dx, dz);
+            boolean near = d <= LOOK;
+            for (int q = s + 1; q < j && near; q++) {
+                Location o = points.get(q);
+                near = Math.abs((o.getX() - mx) * dz - (o.getZ() - mz) * dx) / d <= OFF;
+            }
+            if (!near) {
+                break;
+            }
+            k = j;
+        }
+        return k;
     }
 
     // The path search reaches only about the follow range: raise it for a goal at this location. A rider searches
