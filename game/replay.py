@@ -100,6 +100,20 @@ def sail(g, v):
     g.command(f"execute as {v.uuid} at @s run tp @s {v.pos[0]} ~ {v.pos[2]} {math.degrees(math.atan2(-dx, dz)):.0f} 0")
 
 
+def live(make, speed=1.0, start=0, restart=None, **kw):
+    """Play a replay that can jump back (#979). make() gives a fresh Replay. A jump back to time T calls restart()
+    (it puts the world back to its start state), then a fresh replay from `start` jumps forward to T: the same state
+    as a new replay with a jump to T. Speed and pause stay. Without restart a jump back changes nothing. Returns the
+    stats of the last run."""
+    to, paused = None, False
+    while True:
+        stats = make().run(speed, start, to=to, paused=paused, rewind=restart is not None, **kw)
+        if stats.get("rewind") is None:
+            return stats
+        to, speed, paused = max(start, stats["rewind"]), stats["speed"], stats["paused"]
+        restart()
+
+
 class Replay:
     """The timeline of aoe2mc.json `data` on a server (game.command sends one command)."""
 
@@ -1058,22 +1072,24 @@ class Replay:
         return out + [self.gather.profession(v.uuid, v.job) for i, v in self.units.items() if v.job != jobs.get(i)]
 
     def run(self, speed=1.0, start=0, clock=time.monotonic, sleep=time.sleep, log=print, bar=False, poll=None,
-            finish=False):
+            finish=False, to=None, paused=False, rewind=False):
         """Play the timeline from game time `start` (ms) at `speed` times the game speed; `bar`: show the game time
         in a boss bar (`clock_commands`). Returns the stats:
         commands, events, the seconds of sending, the largest lag behind the timeline (s), commands per second
         (rate) and the commands per second that the timeline needs on average (need).
         poll(control) may change `self.control` ("speed", "paused") while the replay runs: run calls it before
         each event and each POLL seconds while it waits (#685). "jump" (game time, ms) skips forward to that time
-        (`jump`, #687); a time before the game time now changes nothing. "time" is the game time now (ms) for poll.
-        The replay ends at the time of its last event, as the record (#978); `finish`: play the walks and the
-        trainings to their end (tests of one walk or one queue)."""
+        (`jump`, #687); a time before the game time now changes nothing, except with `rewind`: then run stops and
+        the stats have "rewind" (the time), "speed" and "paused" (#979: the replay keeps no earlier states, `live`
+        starts a fresh replay). "time" is the game time now (ms) for poll. `to`: jump to this time at the start;
+        `paused`: start in a pause. The replay ends at the time of its last event, as the record (#978); `finish`:
+        play the walks and the trainings to their end (tests of one walk or one queue)."""
         last = math.inf if finish else max((e["time"] for e in self.data.get("timeline", [])), default=start)
         events = sorted((e for e in self.data.get("timeline", []) + self.spawns() if start <= e["time"] <= last),
                         key=lambda e: e["time"])                     # the record ends at `last`: no spawn after it
         g0, r0, lag, n, k = start, clock(), 0.0, 0, 0                 # game time g0 (ms) at real time r0
-        self.speed, self.paused = speed, False
-        self.control = {"speed": speed, "paused": False}
+        self.speed, self.paused = speed, paused
+        self.control = {"speed": speed, "paused": paused} | ({"jump": to} if to is not None else {})
         end, shown = events[-1]["time"] if events else start, None
         send = self.send if bar else lambda cmds: None
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
@@ -1095,8 +1111,8 @@ class Replay:
                     self.control["time"] = g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed
                     poll(self.control)
                     g0, r0 = self.retime(g0, r0, clock())
-                    if (to := self.control.pop("jump", None)) is not None:
-                        break
+                if (to := self.control.pop("jump", None)) is not None:
+                    break
                 wait = POLL if self.paused else (now - g0) / 1000 / self.speed - (clock() - r0)
                 if wait <= 1e-6:                                    # rounding: no endless wait
                     break
@@ -1105,6 +1121,11 @@ class Replay:
                     break
             if to is not None:
                 k -= e is not None                                  # the event waits for the jump
+                if rewind and to < (g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed):
+                    say = text("The server restarts for the jump back: join it again.", "yellow")
+                    send(self.clock_commands(to, end, self.speed, jump=True) + [f"tellraw @a {json.dumps(say)}"])
+                    return {"rewind": to, "speed": self.speed, "paused": self.paused, "events": n,
+                            "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2)}
                 if to > (g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed):
                     skip = [x for x in events[k:] if x["time"] <= to]
                     k += len(skip)

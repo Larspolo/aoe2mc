@@ -3,7 +3,8 @@ The in-game input of a live replay (#688). The owner chose hotbar items, a chest
 for each action (#686): a right click with the clock pauses and continues, the feather sets the next speed, the ender
 pearl jumps 1 minute forward, the ender eye changes to spectator mode (Paper plugin: a double tap of Shift changes
 back, #910), and the chest in the last slot opens a menu with all actions (Paper plugin, game/menu.py).
-`/trigger aoe_replay set N` does action N without the items, also on a vanilla server.
+`/trigger aoe_replay set N` does action N without the items, also on a vanilla server. The menu and the trigger also
+jump back 1 or 5 minutes (#979): Replay.run stops, and run.py restarts the server on the saved start world.
 
 The items are carrots on a stick with the model of a clock, a feather, an ender pearl and a chest (`item_model`):
 Minecraft counts a right click with a carrot on a stick (the statistic `minecraft.used`), but not with a clock.
@@ -18,8 +19,8 @@ import menu
 OBJECTIVE = "aoe_replay"             # the trigger: /trigger aoe_replay set N
 USE = "aoe_replay_use"                # right clicks with a carrot on a stick
 SPEEDS = (0.5, 1.0, 2.0, 4.0, 8.0)
-PAUSE, NEXT, JUMP, MENU, JUMP5, JUMP10, SPECTATE, SPEED = 1, 2, 3, 4, 5, 6, 7, 10      # SPEED + i: SPEEDS[i]
-JUMPS = {JUMP: 60000, JUMP5: 300000, JUMP10: 600000}
+PAUSE, NEXT, JUMP, MENU, JUMP5, JUMP10, SPECTATE, BACK, BACK5, SPEED = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10   # SPEED + i: SPEEDS[i]
+JUMPS = {JUMP: 60000, JUMP5: 300000, JUMP10: 600000, BACK: -60000, BACK5: -300000}   # BACK: a jump back (#979)
 ITEMS = {PAUSE: (0, "clock", "Pause / continue"), NEXT: (1, "feather", "Next speed"),
          JUMP: (2, "ender_pearl", "Jump 1 minute"), SPECTATE: (7, "ender_eye", "Spectator view"),
          MENU: (8, "chest", "Replay menu")}                                    # action: hotbar slot, model, name
@@ -29,7 +30,7 @@ PLUGIN_ONLY = (MENU, SPECTATE)        # the menu, and the way back from spectato
 def actions():
     """All actions: number -> name."""
     return {PAUSE: "Pause / continue", NEXT: "Next speed", JUMP: "Jump 1 minute", JUMP5: "Jump 5 minutes",
-            JUMP10: "Jump 10 minutes"} | {SPEED + i: f"Speed {s:g}×" for i, s in enumerate(SPEEDS)}
+            JUMP10: "Jump 10 minutes", BACK: "Back 1 minute", BACK5: "Back 5 minutes"} | {SPEED + i: f"Speed {s:g}×" for i, s in enumerate(SPEEDS)}
 
 
 def item(n):
@@ -41,12 +42,12 @@ def item(n):
 
 def help_text():
     """The chat line of the input: each action is a clickable /trigger command. Short: a RCON command has at
-    most 1446 bytes (the server closes the connection)."""
-    extra = [{"text": f"[{name}] ", "color": "aqua",
-              "click_event": {"action": "run_command", "command": f"/trigger {OBJECTIVE} set {n}"}}
+    most 1446 bytes (the server closes the connection): the clicks get their color from the root."""
+    extra = [{"text": f"[{name}] ", "click_event": {"action": "run_command", "command": f"/trigger {OBJECTIVE} set {n}"}}
              for n, name in actions().items()]
-    return json.dumps({"text": "Replay: right click the items in your hotbar, or click: ", "color": "gray",
-                       "extra": extra}, ensure_ascii=False, separators=(",", ":"))
+    return json.dumps({"text": "", "color": "aqua", "extra": [
+        {"text": "Replay: right click the items in your hotbar, or click: ", "color": "gray"}] + extra},
+        ensure_ascii=False, separators=(",", ":"))
 
 
 def apply(n, control):
@@ -59,9 +60,9 @@ def apply(n, control):
         control["speed"] = SPEEDS[n - SPEED] if n != NEXT else next((v for v in SPEEDS if v > s), SPEEDS[0])
         return f"Speed {control['speed']:g}×"
     if n in JUMPS:
-        control["jump"] = control.get("time", 0) + JUMPS[n]
+        control["jump"] = max(0, control.get("time", 0) + JUMPS[n])
         m, s = divmod(int(control["jump"]) // 1000, 60)                # the time of Replay.run is a float (#803)
-        return f"Jump to {m:02d}:{s:02d}"
+        return f"{'Back' if JUMPS[n] < 0 else 'Jump'} to {m:02d}:{s:02d}"
     return None
 
 
@@ -127,10 +128,10 @@ class Input:
 
     def open_menu(self, player):
         """The chest menu with all actions. It stays open: a click sets the trigger score of the player."""
-        icons = {PAUSE: "clock", NEXT: "feather"} | {n: "ender_pearl" for n in JUMPS} | \
-            {SPEED + i: "feather" for i in range(len(SPEEDS))}
-        slots = [PAUSE, NEXT, JUMP, JUMP5, JUMP10] + [SPEED + i for i in range(len(SPEEDS))]
-        cells = dict(zip(slots, (0, 1, 3, 4, 5, 9, 10, 11, 12, 13)))
+        icons = {PAUSE: "clock", NEXT: "feather"} | {n: "ender_pearl" if JUMPS[n] > 0 else "recovery_compass"
+                                                      for n in JUMPS} | {SPEED + i: "feather" for i in range(len(SPEEDS))}
+        slots = [PAUSE, NEXT, JUMP, JUMP5, JUMP10, BACK, BACK5] + [SPEED + i for i in range(len(SPEEDS))]
+        cells = dict(zip(slots, (0, 1, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13)))
         names = actions()
 
         def choose(p, slot, shift):
