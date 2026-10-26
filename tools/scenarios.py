@@ -5,7 +5,7 @@ Make synthetic AoE2 DE scenarios for tests (no real map files necessary).
 Usage:
     python tools/scenarios.py tiny OUT.aoe2scenario
     python tools/scenarios.py gallery OUT.aoe2scenario [--kinds BOU]
-    python tools/scenarios.py stress|buildings|units|village|facing|walls|river|river_town|four_civs|battle OUT.aoe2scenario
+    python tools/scenarios.py stress|buildings|units|village|facing|walls|river|river_town|four_civs|battle|large OUT.aoe2scenario
 
 tiny:      24x24 tiles with land, shallow and deep water, a hill, buildings, units, a tree, a mine and fish.
 gallery:   every object type of the parser in a grid (B = buildings, O = other objects, U = units).
@@ -20,6 +20,8 @@ river_town: a 64x64 example map (examples/river_town.aoe2scenario): a walled tow
 four_civs: an 80x80 example map (examples/four_civs.aoe2scenario): four towns of four architecture sets around a lake,
            each with its wonder (#205).
 battle:    a 64x64 example map (examples/battle.aoe2scenario): two armies in formation, siege and a castle (#206).
+large:     a 480x480 map with hills, lakes, forests, mines and 8 players with a town, to measure the time and memory of
+           a conversion (tools/measure_convert.py, #690).
 walls:     palisade, stone and fortified walls with a gate and a corner, for 3 architecture sets (players 1, 4, 7).
 """
 import argparse
@@ -30,6 +32,8 @@ import os
 import shutil
 import sys
 import tempfile
+
+import numpy as np
 
 from AoE2ScenarioParser.datasets.buildings import BuildingInfo
 from AoE2ScenarioParser.datasets.object_support import Civilization
@@ -470,9 +474,51 @@ def battle(path):
     return save(scn, path, "battle.aoe2scenario")
 
 
+def large(path, size=480, players=8):
+    """A large map (#690): smooth hills (elevation 0-4), lakes, forests of trees, gold and stone mines, berries, and
+    per player a town center, 4 houses and 30 units, as a real 8-player map has them. Seeded: the same bytes each run."""
+    rng = np.random.default_rng(690)
+    k = rng.uniform(0.01, 0.04, (4, 2)) * 480 / size   # a smaller map is a scaled copy (tests)
+    def field(x, y):                                # a smooth noise of 4 waves, about -1 .. 1
+        return sum(math.sin(a * x + 3 * i) * math.cos(b * y + i) for i, (a, b) in enumerate(k)) / 2
+    scn = new_scenario(size)
+    set_civs(scn, players)
+    um, forest = scn.unit_manager, []
+    for t in scn.map_manager.terrain:
+        f = field(t.x, t.y)
+        if f < -0.75:
+            t.terrain_id = TerrainId.WATER_DEEP if f < -0.9 else TerrainId.WATER_SHALLOW
+        elif f > 0.55:
+            t.terrain_id, t.elevation = TerrainId.FOREST_OAK, 2
+            forest.append((t.x, t.y))
+        else:
+            t.terrain_id = (TerrainId.GRASS_1, TerrainId.GRASS_2, TerrainId.DIRT_1)[(t.x // 24 + t.y // 24) % 3]
+            t.elevation = int(max(0, f + 0.6) * 4)
+    for x, y in forest:
+        um.add_unit(PlayerId.GAIA, OtherInfo.TREE_OAK_FOREST.ID, x=x + 0.5, y=y + 0.5)
+    for i in range(players):                        # the towns on a circle, as a real map places the players
+        a = 2 * math.pi * i / players
+        cx, cy = int(size / 2 + size * 0.38 * math.cos(a)), int(size / 2 + size * 0.38 * math.sin(a))
+        for t in scn.map_manager.terrain:
+            if abs(t.x - cx) < 14 and abs(t.y - cy) < 14:
+                t.terrain_id, t.elevation = TerrainId.GRASS_1, 1
+        p = PlayerId(i + 1)
+        um.add_unit(p, BuildingInfo.TOWN_CENTER.ID, x=cx, y=cy)
+        for dx, dy in ((-7, -7), (7, -7), (-7, 7), (7, 7)):
+            um.add_unit(p, BuildingInfo.HOUSE.ID, x=cx + dx, y=cy + dy)
+        for j in range(30):
+            unit = UnitInfo.VILLAGER_MALE if j < 20 else UnitInfo.MILITIA
+            um.add_unit(p, unit.ID, x=cx - 9.5 + j % 10 * 2, y=cy + 4.5 + j // 10 * 1.5)
+        for oid, d in ((OtherInfo.GOLD_MINE.ID, (10, -11)), (OtherInfo.STONE_MINE.ID, (-11, 10)),
+                       (OtherInfo.FORAGE_BUSH.ID, (11, 10))):
+            for n in range(5):
+                um.add_unit(PlayerId.GAIA, oid, x=cx + d[0] + n % 3 + 0.5, y=cy + d[1] + n // 3 + 0.5)
+    return save(scn, path, "large.aoe2scenario")
+
+
 MAKERS = {"tiny": tiny, "stress": stress, "buildings": buildings_map, "units": units_map, "village": village, "facing": facing,
           "walls": walls, "river": river, "river_town": river_town, "four_civs": four_civs, "battle": battle,
-          "triggers": triggers}
+          "triggers": triggers, "large": large}
 
 
 def main():
