@@ -491,6 +491,8 @@ def spawn(g, rect, name):
         g.command(cmd)
     if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name)):   # it attacks enemies in sight (#775)
         g.command(cmd)
+    import ai                                                      # ai imports gather, gather imports this module
+    g.command(ai.speed_command(uuid, name, g.map.T))               # its AoE2 walk speed also without an order (#849)
     if gather.military(name):
         g.soldiers[uuid] = name
         go(g, rect, uuid, name)
