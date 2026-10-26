@@ -7,7 +7,7 @@ from test_gather import FakeServer, grid
 from game import gather, train
 
 
-def setup(food=75, wood=75):
+def setup(food=75, wood=75, age=1):
     """A flat 24 × 24 map (tile size 1): a mill of player 1 at blocks x 2-3, z 2-3, an own farm, a farm of player 2
     and a villager."""
     objects = [{"kind": "building", "name": "MILL", "player": 1, "tile": [3.0, 3.0], "footprint": [2, 2, 4, 4]},
@@ -17,6 +17,7 @@ def setup(food=75, wood=75):
     server = FakeServer({"v": {"Pos": (5.5, 64.0, 5.5)}})
     g = gather.Gather(server, grid([[64] * 24 for _ in range(24)], objects)).setup()
     g.stock.update(food=food, wood=wood)
+    g.techs.update({"FEUDAL_AGE"} if age else ())                   # a Feudal Age technology (TECH_AGE, #1046)
     return server, g
 
 
@@ -27,9 +28,9 @@ def menus(server):
 def research(g):
     train.queue(g, "Steve", (3, 3), "HORSE_COLLAR")
     train.tick(g, 19)
-    assert not g.techs
+    assert g.techs == {"FEUDAL_AGE"}
     train.tick(g, 1)
-    assert g.techs == {"HORSE_COLLAR"} and not any(g.queues.values())
+    assert g.techs == {"FEUDAL_AGE", "HORSE_COLLAR"} and not any(g.queues.values())
 
 
 def test_the_mill_menu_has_horse_collar():

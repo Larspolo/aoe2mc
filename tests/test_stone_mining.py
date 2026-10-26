@@ -19,9 +19,9 @@ def test_after_the_research_stone_is_15_percent_faster():
     assert train.queue(g, "Steve", (3, 3), "STONE_MINING")
     assert (g.stock["food"], g.stock["wood"]) == (0, 0)
     train.tick(g, 29)
-    assert not g.techs and g.work_time("stone") == before["stone"]
+    assert g.techs == {"FEUDAL_AGE"} and g.work_time("stone") == before["stone"]
     train.tick(g, 1)
-    assert g.techs == {"STONE_MINING"}
+    assert g.techs == {"FEUDAL_AGE", "STONE_MINING"}
     assert g.work_time("stone") == pytest.approx(before["stone"] / 1.15)
     assert {r: g.work_time(r) for r in gather.WORK_SECONDS if r != "stone"} == \
         {r: t for r, t in before.items() if r != "stone"}                   # gold and the others stay

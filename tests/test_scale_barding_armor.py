@@ -12,7 +12,7 @@ def feudal(**stock):
 
 
 def test_no_scale_barding_armor_in_the_dark_age():
-    server, g = setup()
+    server, g = setup(age=0)
     train.open_menu(g, "Steve", (11, 3))
     assert "Scale Barding" not in menus(server)[-1] and train.queue(g, "Steve", (11, 3), "SCALE_BARDING_ARMOR") is None
     assert g.stock["food"] == 150

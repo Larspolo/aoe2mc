@@ -160,9 +160,15 @@ REQUIRES = {"FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP",
 TECH_AGE = {                                                       # the age of a technology (build.AGE): hidden before
     "BLOODLINES": 1,
     "DOUBLE_BIT_AXE": 1,
+    "FLETCHING": 1,
+    "FORGING": 1,
+    "GOLD_MINING": 1,
+    "HORSE_COLLAR": 1,
     "MAN_AT_ARMS_UPGRADE": 1,
     "PADDED_ARCHER_ARMOR": 1,
     "SCALE_BARDING_ARMOR": 1,
+    "SCALE_MAIL_ARMOR": 1,
+    "STONE_MINING": 1,
     "WHEELBARROW": 1,
 }
 AGES = ("Dark Age", "Feudal Age")                                  # the age after each researched age (index: ages)
