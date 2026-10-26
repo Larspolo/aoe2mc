@@ -13,7 +13,7 @@ on:
     tags: ["v*"]
 
 permissions:
-  contents: write    # make the release (also read: the repository is private)
+  contents: write    # make the release
 
 jobs:
   release:

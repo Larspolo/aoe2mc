@@ -6,9 +6,9 @@ name: Coverage
 # A push with GITHUB_TOKEN starts no other workflow, so this commit does not start CI again.
 # A merge by a workflow (GITHUB_TOKEN) starts no push workflow: start this one with `gh workflow run coverage.yml`.
 on:
-  schedule:
-    - cron: "41 4 * * *"     # once a day (Actions minutes, see ci.yml)
-  workflow_dispatch:
+  push:
+    branches: [main]
+  workflow_dispatch:        # Automerge starts it after each merge
 
 permissions:
   contents: write    # commit to main
@@ -19,7 +19,6 @@ concurrency:
 
 jobs:
   coverage:
-    if: github.event_name != 'schedule' || vars.PAUSE_SCHEDULES != 'true'   # the variable pauses the schedules (Actions minutes)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
