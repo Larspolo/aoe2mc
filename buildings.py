@@ -3522,6 +3522,18 @@ def rekha_deul(c, w, st, col, T, ctx):
     c.set(w // 2, y + 1, w // 2, "gold_block"); c.set(w // 2, y + 2, w // 2, "lightning_rod")
     c.room(w // 2 - 2, w // 2 + 2, w - 3, w, 0, 3, "smooth_sandstone")
     c.box(w // 2 - 1, w // 2 + 1, 1, 3, w - 1, w, "air")
+    if w >= 10:                                         # the sanctum (garbhagriha) in the tower behind the porch
+        m, z0 = w // 2, 4
+        c.box(m - 2, m + 2, 1, 4, z0, w - 3, "air")
+        c.box(m - 1, m + 1, 1, 3, w - 3, w - 2, "air")
+        candles = "candle[candles=3,lit=true,waterlogged=false]"
+        items = [(m - 1, 1, z0, "chiseled_red_sandstone"), (m, 1, z0, "chiseled_red_sandstone"),   # the idol on its altar
+                 (m - 1, 2, z0, "gold_block"), (m, 2, z0, "gold_block"),
+                 (m - 2, 1, z0, candles), (m + 1, 1, z0, candles),
+                 (m - 2, 1, z0 + 2, "potted_red_tulip"), (m + 1, 1, z0 + 2, "potted_orange_tulip")]
+        items += [(x, 1, z, "orange_carpet") for x in (m - 1, m) for z in range(z0 + 1, w - 2)]
+        c.furniture(items)
+        hang(c, m - 1, 3, z0 + 2)
 
 
 def svan_tower(c, w, st, col, T, ctx):

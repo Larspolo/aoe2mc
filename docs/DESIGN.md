@@ -75,6 +75,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Theatre stage (inside) | `dark_oak_slab` stage, `*_wall_banner`s behind it, `potted_fern`, `flower_pot`, `lantern`s | |
 | Oracle's tripod (inside) | `cauldron` before the statue of the god, `decorated_pot`s (gifts) in the corners | |
 | Idol on an altar (inside) | `gold_block` on `chiseled_sandstone`, lit `candle`s at its sides, `potted_poppy` offerings | |
+| Sanctum in a temple tower (inside) | `gold_block` idol on `chiseled_red_sandstone`, a path of `orange_carpet`, lit `candle`s, `potted_red_tulip` and `potted_orange_tulip` offerings | |
 | Offering stone (outside) | `mossy_cobblestone` with a `skeleton_skull`, lit `candle`s, a `campfire` before it, skulls on carved posts | |
 | Spiral stair in a tower (inside) | `*_stairs` around a 2 × 2 shaft, one step per block, a hanging `lantern` under every 6th step | |
 | Bench (inside) | `*_stairs` in a row | `storage`, `shelter`, `furnish_worship`, `town_hall` +37 more |
