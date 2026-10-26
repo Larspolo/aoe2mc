@@ -47,31 +47,53 @@ import menu  # noqa: E402
 
 COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   # as in AoE2
          "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}, "FEUDAL_AGE": {"food": 500},
+         "BERSERK": {"food": 65, "gold": 20},
+         "CATAPHRACT": {"food": 70, "gold": 75},
+         "CHU_KO_NU": {"wood": 40, "gold": 35},
          "DOUBLE_BIT_AXE": {"food": 100, "wood": 50},
          "FLETCHING": {"food": 100, "gold": 50},
          "FORGING": {"food": 150},
          "GOLD_MINING": {"food": 100, "wood": 75},
          "HORSE_COLLAR": {"food": 75, "wood": 75},
+         "HUSKARL": {"food": 75, "gold": 35},
+         "JANISSARY": {"food": 60, "gold": 55},
          "LONGBOWMAN": {"wood": 35, "gold": 40},
+         "MAMELUKE": {"food": 55, "gold": 85},
+         "MANGUDAI": {"wood": 55, "gold": 65},
+         "SAMURAI": {"food": 45, "gold": 30},
          "SCALE_MAIL_ARMOR": {"food": 100},
          "SCOUT_CAVALRY": {"food": 80},
          "SKIRMISHER": {"food": 25, "wood": 35},
          "SPEARMAN": {"food": 35, "wood": 25},
+         "TEUTONIC_KNIGHT": {"food": 85, "gold": 30},
+         "THROWING_AXEMAN": {"food": 55, "gold": 25},
          "WAR_ELEPHANT": {"food": 170, "gold": 85},
-         "WHEELBARROW": {"food": 175, "wood": 50}}
+         "WHEELBARROW": {"food": 175, "wood": 50},
+         "WOAD_RAIDER": {"food": 70, "gold": 25}}
 TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130,   # AoE2 seconds
+               "BERSERK": 14,
+               "CATAPHRACT": 20,
+               "CHU_KO_NU": 16,
                "DOUBLE_BIT_AXE": 25,
                "FLETCHING": 30,
                "FORGING": 50,
                "GOLD_MINING": 30,
                "HORSE_COLLAR": 20,
+               "HUSKARL": 13,
+               "JANISSARY": 21,
                "LONGBOWMAN": 17,
+               "MAMELUKE": 23,
+               "MANGUDAI": 26,
+               "SAMURAI": 9,
                "SCALE_MAIL_ARMOR": 40,
                "SCOUT_CAVALRY": 30,
                "SKIRMISHER": 22,
                "SPEARMAN": 22,
+               "TEUTONIC_KNIGHT": 12,
+               "THROWING_AXEMAN": 13,
                "WAR_ELEPHANT": 25,
-               "WHEELBARROW": 75}
+               "WHEELBARROW": 75,
+               "WOAD_RAIDER": 10}
 TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW"), "BARRACKS": ("MILITIA", "SPEARMAN"),   # the units and technologies of each
           "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER"),                                         # building (#654, #670, #655)
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING"),           # (#675, #725, #724)
@@ -121,17 +143,28 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "SCOUT_CAVALRY": (0, "horse_spawn_egg", "Scout Cavalry"),
          "SKIRMISHER": (1, "drowned_spawn_egg", "Skirmisher"),
          "SPEARMAN": (1, "zombie_spawn_egg", "Spearman"),
+         "BERSERK": (0, "zombie_spawn_egg", "Berserk"),
+         "CATAPHRACT": (0, "horse_spawn_egg", "Cataphract"),
+         "CHU_KO_NU": (0, "skeleton_spawn_egg", "Chu Ko Nu"),
          "DOUBLE_BIT_AXE": (0, "book", "Double-Bit Axe"),
          "FLETCHING": (2, "book", "Fletching"),
          "FORGING": (0, "book", "Forging"),
          "GOLD_MINING": (0, "book", "Gold Mining"),
          "HORSE_COLLAR": (0, "book", "Horse Collar"),
+         "HUSKARL": (0, "zombie_spawn_egg", "Huskarl"),
+         "JANISSARY": (0, "pillager_spawn_egg", "Janissary"),
          "LONGBOWMAN": (0, "skeleton_spawn_egg", "Longbowman"),
          "LOOM": (1, "book", "Loom"),                               # a book for a technology (#618)
+         "MAMELUKE": (0, "camel_spawn_egg", "Mameluke"),
+         "MANGUDAI": (0, "skeleton_horse_spawn_egg", "Mangudai"),
+         "SAMURAI": (0, "zombie_spawn_egg", "Samurai"),
          "SCALE_MAIL_ARMOR": (1, "book", "Scale Mail Armor"),
+         "TEUTONIC_KNIGHT": (0, "zombie_spawn_egg", "Teutonic Knight"),
+         "THROWING_AXEMAN": (0, "drowned_spawn_egg", "Throwing Axeman"),
          "WAR_ELEPHANT": (0, "ravager_spawn_egg", "War Elephant"),
          "FEUDAL_AGE": (2, "bell", "Feudal Age"),
-         "WHEELBARROW": (3, "book", "Wheelbarrow")}
+         "WHEELBARROW": (3, "book", "Wheelbarrow"),
+         "WOAD_RAIDER": (0, "zombie_spawn_egg", "Woad Raider")}
 SHIFT = 5                                                          # units of a shift click, as in AoE2
 RALLY = (8, "white_banner", "Rally point", "Click, then right click the ground")   # last slot of the first row
 MARK = 17.0                                                        # AoE2 seconds of the rally marker: 10 s at Normal
