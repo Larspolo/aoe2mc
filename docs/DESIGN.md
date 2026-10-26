@@ -118,6 +118,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Tent canvas | `white_wool`, a valance of wool in the player color | `command_tent`, `army_tent`, `pavilion`, `yurt` +4 more |
 | Tent poles of a pavilion | `stripped_spruce_log[axis=y]` at the corners, up to the roof edge | |
 | Yurt felt | `blue_wool` with a zig-zag of `white_wool` (or the inverse), a flat dome with a `spruce_trapdoor` crown ring | |
+| Pavilion cloth | stripes of `*_wool` (player color) on `white_wool`, a `yellow_wool` valance, a white cone | |
 | Thatch | `hay_block` | `settlement`, `hut`, `mill_room`, `granary` +15 more |
 | Wicker wall of a hut | `mangrove_roots` between `spruce_log[axis=y]` posts | |
 | Palisade stakes | `*_log[axis=y]` of two heights, `spruce_fence` tips | `barricade`, `fish_trap`, `outpost`, `wooden_fort` +39 more |

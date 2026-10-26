@@ -3259,22 +3259,45 @@ def cart(c, w, st, col, T, ctx, supply=False):
 
 
 def pavilion(c, w, st, col, T, ctx):
-    for x in (0, w - 1):
-        for z in (0, w - 1):
-            c.box(x, x + 1, 1, 4, z, z + 1, "oak_fence")
-    k = 0
-    a, b = -1, w + 1
-    while b - a > 0:
-        c.walls(a, b, 4 + k, 5 + k, a, b, f"{col}_wool" if k % 2 == 0 else "white_wool")
-        a, b, k = a + 1, b - 1, k + 1
-    c.flag(w // 2, 4 + k, w // 2, col, 2)
-    if w >= 6:                                             # inside (#335): a carpet, a low table with a lamp, cushions
-        m = w // 2
-        c.box(1, w - 1, 1, 2, 1, w - 1, f"{col}_carpet")
+    """Like the game (#484): a round cloth tent with stripes in the player color, a yellow valance, a band in the
+    player color under a white cone and a colored tip. A: wavy stripes, B: vertical stripes, C: the large pavilion
+    (a low drum with diagonal stripes, a flat white roof and a pole with a flag)."""
+    cx, r, m = (w - 1) / 2, w / 2 - 0.3, w // 2
+    k = (ord(ctx.get("name", "PAVILION_A")[-1]) - ord("A")) % 3
+    hw = 2 if k == 2 else 3                                             # wall height
+    disc, X, Z = c.disc_mask(cx, cx, r)
+    ring = disc & ~c.disc_mask(cx, cx, r - 1)[0]
+    sec = np.floor((np.arctan2(Z - cx, X - cx) + math.pi) / (2 * math.pi) * 12).astype(int)    # 12 sectors around
+    c.cylinder(cx, cx, r, 1, hw + 1, "white_wool", hollow=True)
+    for y in range(1, hw + 1):
+        stripe = [(y + sec // 2) % 2 == 0, sec % 2 == 0, (sec + y) % 2 == 0][k]
+        c._fill_mask(ring & stripe, y, y + 1, f"{col}_wool")
+    if k == 2:
+        c.cylinder(cx, cx, r + 0.3, hw + 1, hw + 2, f"{col}_wool")     # the band at the edge of the flat roof
+        c.cylinder(cx, cx, r - 0.7, hw + 1, hw + 2, "white_wool")
+        top = hw + 2
+        for rr in (r - 1.2, 0.8):
+            c.cylinder(cx, cx, rr, top, top + 1, "white_wool" if rr > 1 else f"{col}_wool")
+            top += 1
+        if w >= 6:
+            c.flag(m, top, m, col, 3)
+    else:
+        c._fill_mask(ring, hw + 1, hw + 2, "yellow_wool")               # the valance
+        c.cylinder(cx, cx, r + 0.3, hw + 2, hw + 3, f"{col}_wool")
+        top = hw + 3
+        for rr in (r - 0.7, r - 1.7, r - 2.7):
+            if rr > 0.3:
+                c.cylinder(cx, cx, rr, top, top + 1, "white_wool")
+                top += 1
+        c.set(m, top, m, f"{col}_wool")                                 # the tip
+    zd = int(cx + r)
+    c.box(m, m + 1, 1, 3, zd, zd + 1, "air")                            # the door flap is open
+    if w >= 6:                                                          # inside (#335): a carpet, a low table with a lamp, cushions
+        c._fill_mask(c.disc_mask(cx, cx, r - 1)[0], 1, 2, f"{col}_carpet")
         c.box(m - 1, m + 1, 1, 2, m - 1, m, "spruce_slab[type=top,waterlogged=false]")
         c.set(m - 1, 2, m - 1, "lantern[hanging=false,waterlogged=false]")
         c.set(m - 1, 1, m - 2, "red_wool"); c.set(m, 1, m - 2, "red_wool")    # cushions at the back
-        c.set(1, 1, 1, "chest[facing=south,type=single,waterlogged=false]")
+        c.set(1, 1, m, "chest[facing=east,type=single,waterlogged=false]")
 
 
 def yurt(c, w, st, col, T, ctx):
