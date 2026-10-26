@@ -24,7 +24,8 @@ def test_range_command():
     data = {"tile_size": 3, "objects": [{"kind": "unit", "player": 1, "name": "ARCHER", "uuid": "a"},
                                         {"kind": "unit", "player": 2, "name": "MILITIA", "uuid": "m"}]}
     assert combat.setup(Game(), data) == 2
-    assert Game.sent == ["aoe range a 12 24", combat.stats_command("a", "ARCHER"), combat.stats_command("m", "MILITIA")]
+    assert Game.sent == ["aoe range a 12 24", combat.stats_command("a", "ARCHER"), combat.stats_command("m", "MILITIA"),
+                         "aoe sight a 18", "aoe sight m 12"]   # line of sight 6 and 4 tiles (#775)
 
 
 def data(game, tag, path):

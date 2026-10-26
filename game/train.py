@@ -444,6 +444,8 @@ def spawn(g, rect, name):
     g.command(combat.stats_command(uuid, name, stats(g, name)))
     if cmd := combat.range_command(uuid, name, g.map.T, s=stats(g, name)):   # an archer shoots from its range (#670)
         g.command(cmd)
+    if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name)):   # it attacks enemies in sight (#775)
+        g.command(cmd)
     if gather.military(name):
         g.soldiers[uuid] = name
         go(g, rect, uuid, name)

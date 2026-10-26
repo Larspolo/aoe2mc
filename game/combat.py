@@ -7,6 +7,7 @@ base unit: no Blacksmith or University upgrades, no civilization bonuses. `range
 for each armor class of the target. `damage` is the AoE2 damage rule (#514); the Paper plugin applies it
 (`aoe stats` gives a mob its values, `stats_command`).
 A ranged unit shoots from its AoE2 range, one shot per reload time (#515, `aoe range`, `range_command`).
+An idle soldier attacks the nearest enemy unit in its AoE2 line of sight (#775, `aoe sight`, `sight_command`).
 """
 import math
 import os
@@ -73,6 +74,12 @@ BUILDINGS = {
     "TOWN_CENTER": Stats(2400, 5, 3, 5, 6, 2.0, {}, ("building",)),
     "CASTLE": Stats(4800, 11, 8, 11, 8, 2.0, {}, ("building",)),
 }
+# Line of sight in tiles (AoE2 DE, base unit) where it is not max(4, range + 2) (sight()).
+SIGHT = {
+    "CHAMPION": 5,
+    "LIGHT_CAVALRY": 8,
+    "TWO_HANDED_SWORDSMAN": 5,
+}
 DEFAULT, BUILDING = Stats(40, 4, 0, 0, 0, 2.0), Stats(1000, 0, 0, 7, 0, 0.0, {}, ("building",))
 SLIME = 0.52                    # blocks of width and height per slime size: the target of a building (#517)
 INVISIBLE = 'active_effects:[{id:"minecraft:invisibility",duration:-1,show_particles:0b}]'   # for ever, no particles
@@ -117,6 +124,20 @@ def range_command(uuid, name, T, rate=NORMAL, s=None):
     return s.range and s.reload and f"aoe range {uuid} {s.range * T} {max(1, round(s.reload / rate * 20))}" or None
 
 
+def sight(name, s=None):
+    """The AoE2 line of sight of unit name in tiles: an idle soldier attacks an enemy in it. Most units see 4 tiles,
+    a ranged unit about 2 tiles more than its range."""
+    s = s or stats(name)
+    return SIGHT.get(name, max(4, s.range + 2))
+
+
+def sight_command(uuid, name, T, s=None):
+    """The plugin command that lets an idle soldier attack the nearest enemy unit in its line of sight (tiles * T
+    blocks, #775). None for a unit that does not fight (villager, monk, king)."""
+    s = s or stats(name)
+    return f"aoe sight {uuid} {sight(name, s) * T}" if s.classes and s.attack else None
+
+
 def setup(game, data):
     """Give each unit of the players in `aoe2mc.json` data its AoE2 values; Gaia animals keep the vanilla values.
     Each building of a player with AoE2 hit points gets a target of attacks (`building`).
@@ -131,7 +152,11 @@ def setup(game, data):
     for o in units:                                  # the plugin answers "Range: 0 units" for a mob that cannot shoot
         if cmd := range_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
-    return sum(game.command(stats_command(o["uuid"], o["name"])).strip() == "Stats: 1 units" for o in units)
+    n = sum(game.command(stats_command(o["uuid"], o["name"])).strip() == "Stats: 1 units" for o in units)
+    for o in units:                                  # after the stats: the plugin needs them for the sight
+        if cmd := sight_command(o["uuid"], o["name"], data.get("tile_size", 4)):
+            game.command(cmd)
+    return n
 
 
 def target_uuid(footprint):
