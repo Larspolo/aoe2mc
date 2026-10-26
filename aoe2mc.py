@@ -496,7 +496,7 @@ TIMELINE_KEYS = {"building_id": "type", "unit_id": "type", "technology_id": "tec
 
 def read_timeline(path):
     """The commands of a recorded game in time order (#372): a list of events {"time": ms, "player": number or
-    None, "kind": "build", "wall", "queue", "research", "move", "order", "chat", "age" ..., and the data of the
+    None, "kind": "build", "wall", "queue", "research", "move", "order", "garrison", "chat" ..., and the data of the
     kind: "type" and "name" (building or unit, as in read_record), "tile" [x, y], "end" [x, y] (wall),
     "technology", "objects" (the object IDs that the command selects), "target" (object ID), "text" (chat)}.
     Tiles are AoE2 tiles. Actions that mgz cannot read are left out. None for the games that the mgz model
@@ -530,6 +530,9 @@ def read_timeline(path):
             e["tile"] = [round(float(a.position.x), 3), round(float(a.position.y), 3)]
         if "x_end" in a.payload:
             e["end"] = [a.payload["x_end"], a.payload["y_end"]]
+        if kind == "special" and e.get("order") == "Garrison":     # the garrison command of AoE2 DE (#809)
+            ids = e.get("objects", [])                              # mgz reads the IDs one byte early
+            e["kind"], e["objects"] = "garrison", [i >> 8 for i in ids] if all(i & 255 == 0 for i in ids) else ids
         events.append(e)
     for c in match.chat:
         events.append({"time": ms(c.timestamp), "player": c.player.number if c.player else None, "kind": "chat",
@@ -601,7 +604,8 @@ TRAIN = {"VILLAGER": (25, "TOWN_CENTER"), "MILITIA": (21, "BARRACKS"), "MAN_AT_A
          "MONK": (51, "MONASTERY"), "TRADE_CART": (50, "MARKET")}   # common units: seconds of training (DE), building
 RESEARCH_S = {"Loom": 25, "Town Watch": 25, "Town Patrol": 40, "Wheelbarrow": 75, "Hand Cart": 55,
               "Feudal Age": 130, "Castle Age": 160, "Imperial Age": 190}   # the town center researches: they delay units
-UNIT_USE = {"move", "order", "build", "wall", "patrol", "follow", "formation", "attack_move", "back_to_work", "stance"}
+UNIT_USE = {"move", "order", "build", "wall", "patrol", "follow", "formation", "attack_move", "back_to_work", "stance",
+            "garrison"}
 BUILDING_USE = {"queue", "research", "gather_point", "ungarrison", "sell", "buy"}
 WORK = re.compile(r"TREE|.*BUSH|.*_MINE|.*FARM")                     # an ORDER on these: a villager gathers
 

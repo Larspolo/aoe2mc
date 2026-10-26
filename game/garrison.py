@@ -8,6 +8,8 @@ the fall of the building (its target entity of the plugin is gone), alive, as in
     garrison.order(g, player, cell)     # gather.Gather.click: the selection goes into the building at cell
     garrison.tick(g)                    # gather.Gather.step: units at the door go in, a fallen building lets them out
     garrison.out(g, rect)               # the menu item
+
+The live replay (game/replay.py, #809) uses SIZES, cell(), enter() and leave().
 """
 import json
 import math
@@ -101,15 +103,11 @@ def go_in(g, u, rect, o):
         if (v := g.villagers.get(u)) is not None:
             v.state = "idle"
         return
-    inside = o.get("inside") or {}
-    cells = inside.get("cells") or [[(rect[0] + rect[1]) // 2, (rect[2] + rect[3]) // 2]]
-    x, z = cells[len(units) % len(cells)]
-    y = inside.get("y", g.map.y(x, z) or 0)
+    x, y, z = cell(g.map, rect, o, len(units))
     units.append(u)
     g.command(f"aoe stop {u}")
-    g.command(f"tp {u} {x + 0.5} {y} {z + 0.5}")
-    g.command(f"data merge entity {u} {INSIDE}")
-    g.command(f"tag {u} add {GARRISONED}")
+    for c in enter(u, x, y, z):
+        g.command(c)
     if (v := g.villagers.get(u)) is not None:
         v.pos, v.state = (x + 0.5, float(y), z + 0.5), "garrison"
     if u in g.selected:                                            # it leaves the selection
@@ -123,15 +121,32 @@ def out(g, rect):
     for k, u in enumerate(units):
         x, z = ring[k % len(ring)]
         y = g.map.y(x, z) or 0
-        g.command(f"tp {u} {x + 0.5} {y} {z + 0.5}")
-        g.command(f"data merge entity {u} {OUTSIDE}")
-        g.command(f"tag {u} remove {GARRISONED}")
-        g.command(f"aoe label {u}")                                # the plugin shows the name line again
+        for c in leave(u, x, y, z) + [f"aoe label {u}"]:           # the plugin shows the name line again
+            g.command(c)
         if (v := g.villagers.get(u)) is not None:
             v.pos, v.state = (x + 0.5, float(y), z + 0.5), "idle"
     if units:
         g.command("tellraw @a " + json.dumps({"text": f"{len(units)} units came out", "color": "gray"}))
     return units
+
+
+def cell(m, rect, o, k):
+    """(x, y, z) of the k-th unit inside the building rect (entry o, gather.Map m): its "inside" cells of aoe2mc.json
+    one after the other, else the center of the footprint."""
+    inside = o.get("inside") or {}
+    cells = inside.get("cells") or [[(rect[0] + rect[1]) // 2, (rect[2] + rect[3]) // 2]]
+    x, z = cells[k % len(cells)]
+    return x, inside.get("y", m.y(x, z) or 0), z
+
+
+def enter(u, x, y, z):
+    """The commands that put unit u inside its building, at cell (x, z) and height y."""
+    return [f"tp {u} {x + 0.5} {y} {z + 0.5}", f"data merge entity {u} {INSIDE}", f"tag {u} add {GARRISONED}"]
+
+
+def leave(u, x, y, z):
+    """The commands that put unit u out of its building, at cell (x, z) and height y."""
+    return [f"tp {u} {x + 0.5} {y} {z + 0.5}", f"data merge entity {u} {OUTSIDE}", f"tag {u} remove {GARRISONED}"]
 
 
 def inside(g):
