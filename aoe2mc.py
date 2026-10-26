@@ -1660,6 +1660,8 @@ def place_objects(objects, players, cols, rng):
             stats["rocks"] += 1
         elif kind == "O" and name == "CACTUS":
             E.box(bx, bx + 1, y, y + 2, bz, bz + 1, "cactus")
+            if (bx * 7 + bz * 13) % 3 == 0:     # one in three blooms; from the position, so the rng stream stays the same
+                E.box(bx, bx + 1, y + 2, y + 3, bz, bz + 1, "cactus_flower")
             stats["plants"] += 1
         elif kind == "O" and name.startswith("PLANT"):
             plant = "fern" if ("FERN" in name or "JUNGLE" in name or "UNDERBRUSH" in name) else \
