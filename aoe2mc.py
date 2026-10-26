@@ -446,10 +446,11 @@ def read_record(path):
         elevation[t.position.x, t.position.y] = t.elevation
     terrain_names = {t.value: t.name for t in TerrainId}
 
-    players = {0: {"color": "light_gray", "arch": "western", "civ": "GAIA", "view": None}}
+    players = {0: {"color": "light_gray", "arch": "western", "civ": "GAIA", "view": None, "team": None}}
+    teams = team_numbers([[q.number for q in t] for t in match.teams])        # for the live replay (#1188)
     for p in match.players:
         civ = (p.civilization or "?").upper()
-        players[p.number] = {"color": buildings.COLOR_NAMES[p.color_id] if 0 <= p.color_id < 8 else "light_gray",
+        players[p.number] = {"team": teams.get(p.number), "color": buildings.COLOR_NAMES[p.color_id] if 0 <= p.color_id < 8 else "light_gray",
                              "arch": buildings.CIV_TO_ARCH.get(civ, "western"), "civ": civ,
                              "view": (p.position.x, p.position.y) if p.position else None}
 
@@ -463,6 +464,12 @@ def read_record(path):
                                 x=o.position.x, y=o.position.y, rotation=0.0, garrisoned=False,
                                 ref=o.instance_id, holder=None))
     return size, terrain, elevation, terrain_names, {k: "" for k in CHAPTERS}, objects, players
+
+
+def team_numbers(teams):
+    """{player: team number} of the teams of a record (lists of player numbers). The team of the lowest player
+    number is team 1: mgz gives the teams in no fixed order (a set in the header parser)."""
+    return {p: n for n, t in enumerate(sorted(teams, key=min), 1) for p in t}
 
 
 def read_old_record(path, error):
@@ -489,10 +496,11 @@ def read_old_record(path, error):
     terrain = np.array([t.terrain_type for t in tiles], np.int16).reshape(size, size).T.copy()
     elevation = np.array([t.elevation for t in tiles], np.float32).reshape(size, size).T.copy()
     civs = s.reference.get("civilizations", {})
-    players = {0: {"color": "light_gray", "arch": "western", "civ": "GAIA", "view": None}}
+    players = {0: {"color": "light_gray", "arch": "western", "civ": "GAIA", "view": None, "team": None}}
+    teams = team_numbers(s.get_teams())
     for p in s.get_players():
         civ = civs.get(str(p["civilization"]), {}).get("name", "?").upper()
-        players[p["number"]] = {"color": buildings.COLOR_NAMES[p["color_id"]] if 0 <= p["color_id"] < 8 else
+        players[p["number"]] = {"team": teams.get(p["number"]), "color": buildings.COLOR_NAMES[p["color_id"]] if 0 <= p["color_id"] < 8 else
                                 "light_gray", "arch": buildings.CIV_TO_ARCH.get(civ, "western"), "civ": civ,
                                 "view": p["position"]}
     kinds, objects = object_kinds(), []
@@ -2532,7 +2540,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         objs.append(e)
     data = {"map_size": size, "tile_size": T, "level_height": H,
             "players": {str(pid): {"civ": p["civ"], "color": p["color"], "arch": p["arch"]}
-                        for pid, p in sorted(players.items())},
+                        | {k: p[k] for k in ("team",) if k in p} for pid, p in sorted(players.items())},
             "objects": objs}
     n, wet = cols.n, cols.wtop > cols.top
     data["ground"] = [" ".join("-" if wet[x, z] else str(ground[x, z]) for x in range(n)) for z in range(n)]
