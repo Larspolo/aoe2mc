@@ -36,7 +36,8 @@ def test_the_build_menu_has_the_blacksmith():
 def test_the_blacksmith_menu_has_forging():
     server, g = setup()
     train.open_menu(g, "Steve", (11, 3))
-    assert menus(server) == ["aoe menu Steve Blacksmith 0:book:Forging:150 food · 50 s · research"]
+    assert menus(server) == ["aoe menu Steve Blacksmith 0:book:Forging:150 food · 50 s · research "
+                             "1:book:Fletching:100 food · 50 gold · 30 s · research"]   # Fletching: #724
 
 
 def test_a_click_queues_forging_once_and_takes_its_cost():
@@ -45,7 +46,7 @@ def test_a_click_queues_forging_once_and_takes_its_cost():
     assert train.order(g, "Steve", rect, 0, shift=True) == 1 and g.stock["food"] == 850
     assert train.order(g, "Steve", rect, 0) == 0 and g.stock["food"] == 850
     assert "scoreboard players remove Food aoe_res 150" in server.log
-    assert menus(server)[-1].endswith("0:book:Forging:150 food · 50 s · researching")
+    assert "0:book:Forging:150 food · 50 s · researching " in menus(server)[-1]
 
 
 def test_forging_gives_infantry_and_cavalry_one_attack():

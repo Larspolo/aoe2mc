@@ -18,7 +18,8 @@ AoE2, but needs no population room. A click queues it once; when it is complete 
 and changes the values of the live and the new units (stats()). Loom: villagers get 15 hit points and 1/2 armor.
 Ages (#672): the Feudal Age is a technology of the town center that needs 2 types of Dark Age buildings (REQUIRES). The
 sidebar title shows the age of the player; all players see a title and hear a sound when a player advances.
-Forging at the blacksmith (#675): infantry and cavalry get +1 attack.
+Forging at the blacksmith (#675): infantry and cavalry get +1 attack. Fletching (#724): archers (also cavalry archers and
+skirmishers) get +1 attack and +1 range.
 Double-Bit Axe at the lumber camp (#723): villagers chop wood 20 % faster (gather.WORK_TECHS, gather.Gather.work_time).
 """
 import json
@@ -38,15 +39,18 @@ import menu  # noqa: E402
 COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   # as in AoE2
          "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}, "FEUDAL_AGE": {"food": 500},
          "DOUBLE_BIT_AXE": {"food": 100, "wood": 50},
+         "FLETCHING": {"food": 100, "gold": 50},
          "FORGING": {"food": 150}, "SCOUT_CAVALRY": {"food": 80}}
 TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130,   # AoE2 seconds
                "DOUBLE_BIT_AXE": 25,
+               "FLETCHING": 30,
                "FORGING": 50, "SCOUT_CAVALRY": 30}
 TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE"), "BARRACKS": ("MILITIA",),   # the units and technologies of each
           "ARCHERY_RANGE": ("ARCHER",),                                         # building (#654, #670, #655)
-          "BLACKSMITH": ("FORGING",), "STABLE": ("SCOUT_CAVALRY",),             # (#675, #671)
+          "BLACKSMITH": ("FORGING", "FLETCHING"), "STABLE": ("SCOUT_CAVALRY",),  # (#675, #671, #724)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",)}                                   # (#723)
 TECHS = {"DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
+         "FLETCHING": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if "archer" in s.classes else s,
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
          "LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
          if "VILLAGER" in name else s, "FEUDAL_AGE": lambda name, s: s}   # the change of each technology to the AoE2 values
@@ -61,6 +65,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "ARCHER": (0, "skeleton_spawn_egg", "Archer"),
          "SCOUT_CAVALRY": (0, "horse_spawn_egg", "Scout Cavalry"),
          "DOUBLE_BIT_AXE": (0, "book", "Double-Bit Axe"),
+         "FLETCHING": (1, "book", "Fletching"),
          "FORGING": (0, "book", "Forging"),
          "LOOM": (1, "book", "Loom"),                               # a book for a technology (#618)
          "FEUDAL_AGE": (2, "bell", "Feudal Age")}
@@ -183,6 +188,8 @@ def research(g, entry):
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
         if stats(g, name) != combat.stats(name):
             g.command(combat.stats_command(uuid, name, stats(g, name)))
+        if stats(g, name).range != combat.stats(name).range:          # Fletching (#724)
+            g.command(combat.range_command(uuid, name, g.map.T, s=stats(g, name)))
     if entry["name"] in REQUIRES:                                  # an age: all players see it, as in AoE2
         g.command("title @a title " + json.dumps({"text": age(g), "color": "gold"}))
         g.command("tellraw @a " + json.dumps({"text": f"Player {g.player} advances to the {age(g)}.", "color": "gold"}))
@@ -268,7 +275,7 @@ def spawn(g, rect, name):
     g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}")
     import combat, gather                                          # both import gather, gather imports this module
     g.command(combat.stats_command(uuid, name, stats(g, name)))
-    if cmd := combat.range_command(uuid, name, g.map.T):              # an archer shoots from its range (#670)
+    if cmd := combat.range_command(uuid, name, g.map.T, s=stats(g, name)):   # an archer shoots from its range (#670)
         g.command(cmd)
     if gather.military(name):
         g.soldiers[uuid] = name
