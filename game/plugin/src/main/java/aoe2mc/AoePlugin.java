@@ -68,6 +68,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * Orders for the units of the game program, with Minecraft path finding (#435). Vanilla has no command for
  * "walk to this point", so this plugin gives one to RCON:
  *   aoe moveto <selector> <x> <y> <z> [speed]   walk on the path of Mob#getPathfinder
+ *   aoe arrows <uuid> <n>                      the arrows of each shot of a building: 1 and 1 for each garrisoned
+ *                                              villager or foot archer (#1113, game/garrison.py)
  *   aoe attack <selector> <target selector>    Mob#setTarget: the mob attacks with its own AI
  *   aoe goals <selector>                       the goals of the first unit (#436), for checks
  *   aoe stance <selector> <aggressive|defensive|stand_ground|no_attack>
@@ -194,6 +196,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private record Building(Stats stats, String box, int max, int[] b, double range) {}
 
     private final Map<UUID, Building> buildings = new HashMap<>();
+    private final Map<UUID, Integer> arrows = new HashMap<>();       // the arrows of a shot of a building (#1113)
     private final Map<UUID, Component> names = new HashMap<>();      // the name in the name line (#661)
     private static final int HEARTS = 5;
     private static final int WHERE_PAGE = 40;                          // aoe where: about 3000 bytes per answer
@@ -378,7 +381,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     // Each 2 ticks: a building with an attack (aoe building with attack, range and reload: a town center, a castle,
     // #1111) shoots one arrow per reload at the nearest unit of another team in its range. As in AoE2, the range counts
-    // from the edge of its footprint. Not at a rider (its horse is the target), a garrisoned unit or a building.
+    // from the edge of its footprint. Each garrisoned villager or foot archer adds an arrow (aoe arrows, #1113): all
+    // arrows of a shot go to the same target, as in AoE2. Not at a rider (its horse is the target), a garrisoned unit or a building.
     private void towers() {
         for (var en : buildings.entrySet()) {
             Building f = en.getValue();
@@ -406,15 +410,18 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             if (best != null) {
                 lastHit.put(fort.getUniqueId(), Bukkit.getCurrentTick());
-                volley(fort, c, best);
+                for (int k = 0, n = arrows.getOrDefault(fort.getUniqueId(), 1); k < n; k++) {
+                    volley(fort, c, best, k);
+                }
             }
         }
     }
 
-    // An arrow from above the roof at the center of the footprint, aimed as the arrow of an archer (shoot).
-    private static void volley(LivingEntity fort, Location c, LivingEntity t) {
-        Location from = c.clone();
-        from.setY(fort.getWorld().getHighestBlockYAt(c, HeightMap.MOTION_BLOCKING) + 1.5);
+    // An arrow from above the roof at the center of the footprint, aimed as the arrow of an archer (shoot). Arrow k
+    // starts on a ring around the center, so that the arrows of one shot do not fly as one.
+    private static void volley(LivingEntity fort, Location c, LivingEntity t, int k) {
+        Location from = c.clone().add(k == 0 ? 0 : 0.6 * Math.cos(k * 2.4), 0, k == 0 ? 0 : 0.6 * Math.sin(k * 2.4));
+        from.setY(fort.getWorld().getHighestBlockYAt(c, HeightMap.MOTION_BLOCKING) + 1.5 + 0.2 * (k % 3));
         Vector to = t.getLocation().toVector().add(new Vector(0, t.getHeight() * 0.5, 0)).subtract(from.toVector());
         double ticks = to.length() / ARROW_SPEED;
         to.setY(to.getY() + 0.5 * ARROW_GRAVITY * ticks * ticks);
@@ -1271,6 +1278,16 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length >= 2 && args[0].startsWith("ghost")) {          // the ghost of a building (#794)
             return ghost.command(sender, args, players(sender, args[1]));
+        }
+        if (args.length == 3 && args[0].equals("arrows")) {            // a garrison adds arrows (#1113)
+            try {
+                arrows.put(UUID.fromString(args[1]), Math.max(1, Integer.parseInt(args[2])));
+            } catch (IllegalArgumentException e) {                    // also NumberFormatException
+                sender.sendMessage("Bad value: " + e.getMessage());
+                return true;
+            }
+            sender.sendMessage("Arrows: " + args[2]);
+            return true;
         }
         if (args.length == 2 && args[0].equals("cheats")) {
             return cheats.command(sender, args);
