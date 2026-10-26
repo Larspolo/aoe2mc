@@ -108,3 +108,4 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - `render.py --cut` does not show the inside of a narrow tower (#452): filter `render.building_blocks()` by x, y, z
   (drop barriers and one side of the walls) and call `render.render()` for a section view.
 - `render.building_blocks` gives states with the `minecraft:` prefix and world y (the ground is y 63, canvas y 1 is y 64): strip the prefix before you match a name (#449).
+- `docs/coverage.md` on main is stale while GitHub Actions cannot run (#460): it listed 21 fallbacks that the code already handles. For the real fallbacks, run `python3 tools/coverage.py OUT.md` into the scratchpad (#500).
