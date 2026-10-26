@@ -7,6 +7,7 @@ base unit: no Blacksmith or University upgrades, no civilization bonuses. `range
 for each armor class of the target. `damage` is the AoE2 damage rule (#514); the Paper plugin applies it
 (`aoe stats` gives a mob its values, `stats_command`).
 A ranged unit shoots from its AoE2 range, one shot per reload time (#515, `aoe range`, `range_command`).
+A melee unit hits once per reload time too (#848, the last value of `stats_command`).
 An idle soldier attacks the nearest enemy unit in its AoE2 line of sight (#775, `aoe sight`, `sight_command`).
 """
 import math
@@ -129,12 +130,12 @@ def stats_command(uuid, name, s=None):
     """The plugin command that gives entity `uuid` the values of AoE2 unit `name` (or the values s, for example with
     technologies, #655): max_health = hit points (at most 1024, the limit of the attribute), full health, and the
     values of `damage` (the same rule in AoePlugin.java). The range kind: 0 melee, 1 ranged, 2 ranged with melee
-    damage (MELEE_RANGED, #800)."""
+    damage (MELEE_RANGED, #800). Last the reload in ticks at Normal speed: a melee unit hits once per reload (#848)."""
     s = s or stats(name)
     bonus = ",".join(f"{c}:{n}" for c, n in sorted(s.bonus.items())) or "-"
     kind = 0 if s.range <= 0 else 2 if name in MELEE_RANGED else 1
     return (f"aoe stats {uuid} {min(s.hp, 1024)} {s.attack} {s.melee} {s.pierce} {kind} "
-            f"{','.join(s.classes) or '-'} {bonus}")
+            f"{','.join(s.classes) or '-'} {bonus} {round(s.reload / NORMAL * 20) or 20}")
 
 
 def label_command(uuid, name=None):
@@ -184,6 +185,9 @@ def setup(game, data):
     for o in units:                                  # after the stats: the plugin needs them for the sight
         if cmd := sight_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
+    import ai                                        # ai -> gather -> build -> replay -> combat: import it late
+    for o in units:                                  # the AoE2 walk speed also without an order (#849)
+        game.command(ai.speed_command(o["uuid"], o["name"], data.get("tile_size", 4)))
     return n
 
 

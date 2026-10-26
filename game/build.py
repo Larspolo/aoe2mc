@@ -221,7 +221,7 @@ def place(g, player, name, eye, d):
         return None
     for r, v in cost.items():
         g.stock[r] -= v
-        g.command(f"scoreboard players remove {r.capitalize()} aoe_res {v}")
+        g.command(f"scoreboard players remove {r.capitalize()} {g.board} {v}")
     x0, x1, z0, z1 = rect
     color = g.players.get(str(g.player), {}).get("color", "light_gray")
     ring = [(x, g.map.y(x, z), z) for x in range(x0, x1) for z in range(z0, z1) if x in (x0, x1 - 1) or z in (z0, z1 - 1)]

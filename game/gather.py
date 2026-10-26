@@ -117,7 +117,7 @@ class Map:
             if o["kind"] == "building":
                 x0, z0, x1, z1 = o["footprint"]
                 self.building(o["name"], (x0, x1, z0, z1), (int(o["tile"][0]), int(o["tile"][1])) if "tile" in o
-                              else None, o["player"] == player)
+                              else None, o["player"] == player, o.get("open", ()))
             elif o["kind"] == "other" and not any(k in o["name"] for k in PASSABLE_OBJECTS):
                 tile = int(o["tile"][0]), int(o["tile"][1])
                 if o["name"] in MINES:                                 # a mine at x.0 covers 2 tiles
@@ -138,9 +138,10 @@ class Map:
                         ("minecraft:oak_log", None) if kind == "dead" else \
                         (f"minecraft:{WOODS.get(kind, 'oak')}_log", f"minecraft:{WOODS.get(kind, 'oak')}_leaves[persistent=true]")
 
-    def building(self, name, rect, tile, own):
+    def building(self, name, rect, tile, own, open_cells=()):
         """Add a building with the block footprint rect = (x0, x1, z0, z1) and its center tile. A farm is ground
-        that a farmer stands on; own buildings are drop sites. Construction sites call it when they are complete."""
+        that a farmer stands on; own buildings are drop sites. Construction sites call it when they are complete.
+        open_cells: the cells that units walk through (under a town center, #865)."""
         x0, x1, z0, z1 = rect
         cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
         if "FARM" in name:                                             # no barriers: the farmer stands on it
@@ -149,7 +150,7 @@ class Map:
                 self.own_farms.add(tile)
             self.farm_at.update(dict.fromkeys(cells, tile))
             return
-        self.blocked |= cells
+        self.blocked |= cells - {tuple(c) for c in open_cells}
         for r, names in DROP_SITES.items():
             if own and any(k in name for k in names):
                 self.drops[r].append(cells)
@@ -176,25 +177,42 @@ class Map:
     def free(self, x, z):
         return self.y(x, z) is not None and (x, z) not in self.blocked
 
-    def around(self, cells):
-        """The free cells next to a group of cells (a tree tile, a footprint)."""
-        return {(x + dx, z + dz) for x, z in cells for dx, dz in STEPS if self.free(x + dx, z + dz)} - cells
+    def wet(self, x, z):
+        """True for a water cell where a ship can be: in the map, no ground and no building (a dock, #866)."""
+        return 0 <= x < self.n and 0 <= z < self.n and self.ground[z][x] is None and (x, z) not in self.blocked
 
-    def front(self, rect, mounted=False):
+    def sea(self, x, z, reach=16):
+        """The y of a boat on the water cell (x, z): one block under the lowest land next to the water within reach
+        blocks (the shore is 1 to 2 blocks above the water surface, #166). A boat floats up or falls on the water."""
+        for r in range(1, reach + 1):
+            ys = [y for d in range(-r, r + 1) for c in ((x + d, z - r), (x + d, z + r), (x - r, z + d), (x + r, z + d))
+                  if (y := self.y(*c)) is not None]
+            if ys:
+                return float(min(ys) - 1)
+        return float(min((y for row in self.ground for y in row if y is not None), default=64) - 1)
+
+    def around(self, cells, water=False):
+        """The free cells next to a group of cells (a tree tile, a footprint); water: the water cells (wet)."""
+        ok = self.wet if water else self.free
+        return {(x + dx, z + dz) for x, z in cells for dx, dz in STEPS if ok(x + dx, z + dz)} - cells
+
+    def front(self, rect, mounted=False, water=False):
         """The spawn cells of a unit trained at the building with block footprint rect: the free cells next to it,
         south side first, the middle first. A mounted unit (a horse with a rider) one cell farther out: the rider
-        sits about 0.7 blocks behind the middle of the horse, so next to the walls its head is in them (#767)."""
+        sits about 0.7 blocks behind the middle of the horse, so next to the walls its head is in them (#767).
+        water: the water cells, for a ship of a dock (#866)."""
         x0, x1, z0, z1 = rect
         cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
-        ring = self.around(cells)
-        if mounted:
+        ring = self.around(cells, water)
+        if mounted and not water:
             ring = {c for c in self.around(cells | ring) if all(self.free(c[0] + dx, c[1] + dz) for dx, dz in STEPS)}
         return sorted(ring, key=lambda c: (abs(c[1] - z1 - mounted), abs(2 * c[0] + 1 - x0 - x1), c))
 
-    def path(self, start, goals, limit=None):
+    def path(self, start, goals, limit=None, water=False):
         """Shortest path (list of cells after start) to one of goals. 8 neighbours, no cut corners, steps of at
         most 1 block up or down. A* with the distance to the box of the goals. None: no path, or no path after
-        `limit` cells (a far or unreachable goal on a large map)."""
+        `limit` cells (a far or unreachable goal on a large map). water: on water cells (wet), for a ship (#866)."""
+        ok = self.wet if water else self.free
         if not goals:
             return None
         gx0, gx1 = min(x for x, _ in goals), max(x for x, _ in goals)
@@ -221,9 +239,9 @@ class Map:
             x, z = c
             for dx, dz in STEPS:
                 n = (x + dx, z + dz)
-                if not self.free(*n) or c != start and abs(self.y(*n) - self.y(x, z)) > 1:
+                if not ok(*n) or c != start and not water and abs(self.y(*n) - self.y(x, z)) > 1:
                     continue
-                if dx and dz and not (self.free(x + dx, z) and self.free(x, z + dz)):
+                if dx and dz and not (ok(x + dx, z) and ok(x, z + dz)):
                     continue
                 nd = d + (1.414 if dx and dz else 1)
                 if nd < dist.get(n, 1e9):
@@ -280,6 +298,18 @@ def pick_unit(eye, d, units, reach=64, radius=0.8):
     return best and best[1]
 
 
+def profession(uuid, job):
+    """The command that gives villager uuid the Minecraft profession job: the clothes change at once."""
+    return f'data merge entity {uuid} {{VillagerData:{{profession:"minecraft:{job}"}}}}'
+
+
+def job_of(m, tile):
+    """The AoE2 task (`LUMBERJACK` ..., units.VILLAGER_JOBS) of a villager at the resource on tile of gather.Map m."""
+    res = m.resource(tile)
+    return "FARMER" if tile in m.farms else {"wood": "LUMBERJACK", "food": "FORAGER"}.get(res) or \
+        next(j for r, _, j in MINES.values() if r == res)
+
+
 def military(name):
     """True for an AoE2 unit that fights: not a villager, monk, king, trade or transport unit, and no animal."""
     return not name.startswith(CIVILIANS) and (animal(name) or ("military",))[0] == "military"
@@ -320,6 +350,8 @@ class Gather:
     cheats = False                                                     # also for the adapters of Gather.__new__
     aegis = False                                                      # the cheat "aegis": all work is instant (#817)
     ended = None                                                       # "Victory" or "Defeat": run() stops (#819)
+    board = "aoe_res"                                                  # the objective of the resources (the sidebar)
+    bots = ()                                                          # run() steps them too (bot.Bot, #856)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
                  cheats=False):
@@ -375,12 +407,12 @@ class Gather:
         for cmd in ("scoreboard objectives add aoe_use minecraft.used:minecraft.carrot_on_a_stick",
                     f"scoreboard objectives add aoe_box minecraft.used:minecraft.{WAND}",
                     "scoreboard objectives add aoe_talk minecraft.custom:minecraft.talked_to_villager",
-                    'scoreboard objectives add aoe_res dummy "Resources"',
-                    "scoreboard objectives setdisplay sidebar aoe_res"):
+                    f'scoreboard objectives add {self.board} dummy "Resources"',
+                    f"scoreboard objectives setdisplay sidebar {self.board}"):
             self.command(cmd)
         for r in RESOURCES:
-            self.command(f"scoreboard players add {r} aoe_res 0")
-        self.command('scoreboard players display name Idle aoe_res "Idle villagers"')   # a name has no space
+            self.command(f"scoreboard players add {r} {self.board} 0")
+        self.command(f'scoreboard players display name Idle {self.board} "Idle villagers"')   # a name has no space
         build.setup(self)
         menu.setup(self)
         cheats.setup(self)
@@ -399,7 +431,7 @@ class Gather:
         n = sum(v.state == "idle" for v in self.villagers.values())
         if self.shown.get("Idle") != n:
             self.shown["Idle"] = n
-            self.command(f"scoreboard players set Idle aoe_res {n}")
+            self.command(f"scoreboard players set Idle {self.board} {n}")
 
     def select(self, uuid):
         """Select one villager (glowing), as a click in AoE2 does. A click on a military unit adds it to selected
@@ -484,14 +516,12 @@ class Gather:
         job = dict(VILLAGER_JOBS).get(name, "none")
         if v.job != job:                                               # a merge keeps the level and the type
             v.job = job
-            self.command(f'data merge entity {v.uuid} {{VillagerData:{{profession:"minecraft:{job}"}}}}')
+            self.command(profession(v.uuid, job))
 
     def send(self, tile, who=None):
         """Send the selected villagers (or the villagers who) to the tree, the fruit bush, the mine or the farm on tile.
         A farm takes one farmer: the next villagers go to the nearest free farms, or stop."""
-        res = self.map.resource(tile)
-        job = "FARMER" if tile in self.map.farms else {"wood": "LUMBERJACK", "food": "FORAGER"}.get(res) or \
-            next(j for r, _, j in MINES.values() if r == res)
+        res, job = self.map.resource(tile), job_of(self.map, tile)
         for u in sorted((self.selected if who is None else who) & self.villagers.keys()):   # a scout cannot (#589)
             v = self.villagers[u]
             for t in [t for t, f in self.farmers.items() if f == u]:
@@ -715,7 +745,7 @@ class Gather:
                 v.timer = 0.0
                 self.set(v, "chop" if self.source(v).get(v.tree, 0) > 0 else "idle")
             elif v.state == "to_drop":
-                self.command(f"scoreboard players add {v.res.capitalize()} aoe_res {v.load}")
+                self.command(f"scoreboard players add {v.res.capitalize()} {self.board} {v.load}")
                 self.stock[v.res] += v.load
                 v.load = 0
                 self.event(v, "drop")
@@ -938,4 +968,6 @@ class Gather:
             for name in self.clicks():
                 self.click(name)
             self.step()
+            for b in self.bots:
+                b.step()
             time.sleep(max(0.0, self.tick - (time.time() - t)))
