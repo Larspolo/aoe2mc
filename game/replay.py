@@ -113,6 +113,7 @@ class Replay:
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
         self.sent, self.busy = 0, 0.0           # commands sent, seconds spent sending them
         self.pop, self.shown = {}, None         # player -> live units (no animals), the value in the sidebar (#741)
+        self.ages, self.named = {}, {}          # player -> age ("Feudal"); the age in its sidebar name (#805)
         self.counted = []                       # UUIDs of the start units that the population counts
         for o in data["objects"]:
             if o["kind"] == "unit" and o.get("player") and not units.animal(o["name"]):
@@ -123,6 +124,9 @@ class Replay:
         info = self.data["players"].get(str(p), {})
         return f"Player {p}" + (f" ({pretty(info['civ'])})" if info.get("civ") else ""), \
             TEXT_COLORS.get(info.get("color"), "white")
+
+    def age(self, e):
+        self.ages[e.get("player")] = pretty(e["age"]).removesuffix(" Age")
 
     def commands(self, e):
         """The commands of one timeline event (an empty list for the events that change nothing visible)."""
@@ -149,6 +153,7 @@ class Replay:
             return ["tellraw @a " + json.dumps([text(f"<{name}> ", color), text(e["text"])])]
         name, color = self.player(e.get("player"))
         if kind == "age" and e.get("age"):
+            self.age(e)
             return ["title @a subtitle " + json.dumps(text(name, color)),
                     "title @a title " + json.dumps(text(pretty(e["age"])))]
         if kind == "research" and e.get("technology"):
@@ -839,16 +844,18 @@ class Replay:
 
     def score_commands(self):
         """The sidebar commands for the population of each player that changed since the last call (#741). The score
-        holder is "P<n>" (a holder name has no space); its display name is the player name in the player color."""
+        holder is "P<n>" (a holder name has no space); its display name is the player name in the player color and
+        the age of the player (#805)."""
         out = []
         if self.shown is None:
             self.shown, out = {}, [f'scoreboard objectives add {POP} dummy "Population"',
                                    f"scoreboard objectives setdisplay sidebar {POP}"]
         for p in sorted(self.pop):
+            if self.named.get(p) != (age := self.ages.get(p, "Dark")):
+                name, color = self.player(p)
+                out.append(f"scoreboard players display name P{p} {POP} {json.dumps(text(f'{name} · {age}', color))}")
+                self.named[p] = age
             if self.shown.get(p) != self.pop[p]:
-                if p not in self.shown:
-                    name, color = self.player(p)
-                    out.append(f"scoreboard players display name P{p} {POP} {json.dumps(text(name, color))}")
                 self.shown[p] = self.pop[p]
                 out.append(f"scoreboard players set P{p} {POP} {self.pop[p]}")
         return out
@@ -886,7 +893,7 @@ class Replay:
     def jump(self, events, to):
         """Apply the events up to game time `to` (ms) at once (#687): buildings appear, deletes remove, trained units
         appear, and each unit that a MOVE or ORDER sent, or that walks now, stands at its target (tp, no walk). The
-        chat, age and research texts of the skipped time do not show. Returns the commands."""
+        chat, age and research texts of the skipped time do not show (the sidebar shows the age, #805). Returns the commands."""
         out, moved = [], set()
         jobs = {i: v.job for i, v in self.units.items()}            # move() gives the looks: send the last ones
         for e in events:
@@ -897,6 +904,8 @@ class Replay:
                     self.entering[i][2] = e["time"]
             elif e["kind"] in ("build", "wall", "spawn", "delete", "ungarrison"):
                 out += self.enter(e["time"]) + self.commands(e)
+            elif e["kind"] == "age" and e.get("age"):                 # the sidebar shows it, no title
+                self.age(e)
         out += self.enter(to)
         inside = {u for us in self.garrisons.values() for u in us}
         for i in sorted(moved | self.moving.keys()):
