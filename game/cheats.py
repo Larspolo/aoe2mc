@@ -127,7 +127,7 @@ def apply(g, player, code):
         return
     for r, v in effect.items():
         g.stock[r] += v
-        g.command(f"scoreboard players add {r.capitalize()} aoe_res {v}")
+        g.command(f"scoreboard players add {r.capitalize()} {g.board} {v}")
 
 
 def clicks(g):

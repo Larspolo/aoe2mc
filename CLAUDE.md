@@ -113,6 +113,9 @@ Details: the `verify` skill.
 - One ticket per PR. Keep the diff small. Write a failing test first for a bug. Put the new tests of a ticket in a new
   file `tests/test_<topic>.py`, not at the end of a shared test file: parallel runs append there and conflict.
 - If a ticket is not clear, ask the owner in the ticket (label `needs-human`) and continue with the next ticket.
+- **Ask the owner only on the issue** (owner rule, 2026-10-26, #862): a question or a task for the owner goes on the
+  issue that needs it: add `needs-human` and a comment that mentions `@Larspolo` and says exactly what to do.
+  Never ask with PushNotification, in the session, or only in the status report.
 - **Decisions with several good options go to the owner** (owner rule, 2026-10-26): when a design has two or more
   clear options and no single best one (for example the interface of a feature or a game rule), do not choose. Make a
   decision ticket (`ticket` skill, "Decision tickets"), let the work that needs it depend on it, and continue with
