@@ -40,8 +40,10 @@ def test_events():
     comments = [{"body": "Taken over by `claude/a`: stalled."}, {"body": "Released: claimed twice."},
                 {"body": "Released: usage limit."},
                 {"body": "CI is green, but the merge failed (Pull Request is not mergeable). Merge ..."},
-                {"body": "Started by `claude/b`."}, {"body": None}]
-    assert health.events(comments) == {"takeovers": 1, "releases": 2, "conflicts": 1}
+                {"body": "Started by `claude/b`."}, {"body": None},
+                {"body": "Merged `main` into the branch: git solved the conflict alone (`merge=union`). CI runs again."},
+                {"body": "Run of `claude/c`: PR #9 had a merge conflict, merged main."}]       # a report: no count
+    assert health.events(comments) == {"takeovers": 1, "releases": 2, "conflicts": 1, "solved": 1}
 
 
 def test_claim_to_merge():
