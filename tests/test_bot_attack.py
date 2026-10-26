@@ -15,7 +15,7 @@ def armed(n=2, attack=60.0):
     """bot_map with n militia of player 2 at its town center. The fake server answers `execute if entity` for each
     entity with a position and for the targets of the buildings in `server.forts`."""
     server, me, b = bot_map()
-    b.attack = attack
+    b.attack, b.group = attack, n                                      # all n soldiers are one wave (#1051)
     for i in range(n):
         u = f"m{i}"
         server.entities[u] = {"Pos": (19.5, 64.0, 24.5 + i), "Rotation": (0.0, 0.0)}
@@ -124,7 +124,7 @@ def test_two_soldiers_of_the_bot_attack_on_a_server(tmp_path):
         end = time.time() + 60                                         # entities load in other threads
         while True:
             me = gather.Gather(game, data, tick=0.1, start={}).setup()
-            b = bot.Bot(game, data, share=me, tick=0.1, attack=1.0, start={}).setup()
+            b = bot.Bot(game, data, share=me, tick=0.1, attack=1.0, group=2, start={}).setup()
             if me.villagers and len(b.g.positions(list(b.g.soldiers))) == 2:
                 break
             assert time.time() < end, "the units did not load"

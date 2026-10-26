@@ -32,15 +32,18 @@ NEAR = {"LUMBER_CAMP": "wood", "MILL": "food", "MINING_CAMP": "gold"}   # a drop
 HOUSE_GAP = 2                                                      # a new house at this many units below the limit
 ATTACK = 600.0                                                     # AoE2 seconds: the first attack at 10:00
 LOOK = 2.0                                                         # AoE2 seconds between two looks for targets
+GROUP = 5                                                          # soldiers of a wave, as an AoE2 bot army
 
 
 class Bot:
-    def __init__(self, game, data, player=2, share=None, villagers=20, attack=ATTACK, foe=1, **kw):
+    def __init__(self, game, data, player=2, share=None, villagers=20, attack=ATTACK, foe=1, group=GROUP, **kw):
         """share: the Gather of the human player. Both then use the same trees, bushes and mines.
         villagers: the bot trains villagers up to this number, then soldiers.
-        attack: the game time (AoE2 seconds) of the first attack on player foe."""
+        attack: the game time (AoE2 seconds) of the first attack on player foe.
+        group: the soldiers of the first wave; until then they stay at their buildings (#1051)."""
         self.g = gather.Gather(game, data, player=player, **kw)
-        self.villagers, self.attack, self.foe, self.share = villagers, attack, foe, share
+        self.villagers, self.attack, self.foe, self.share, self.group = villagers, attack, foe, share, group
+        self.charged = False                                           # the wave attacks: new soldiers join it
         self.time, self.looked, self.targets = 0.0, -LOOK, {}          # AoE2 seconds of the game, soldier -> target
         self.nobody = f"@a[tag=aoe2mc.bot{player}]"                     # the texts of the queues go to no player
         if share:
@@ -97,9 +100,13 @@ class Bot:
             self.fight()
 
     def fight(self):
-        """Send each soldier without a live target to the nearest unit of the foe, else to its nearest building."""
+        """Send each soldier without a live target to the nearest unit of the foe, else to its nearest building. A wave
+        starts with self.group soldiers; when all of it is dead, the next wave waits for a full group again (#1051)."""
         g = self.g
         mine = g.positions(sorted(g.soldiers))                         # a dead soldier is not in it
+        self.charged = len(mine) >= self.group or self.charged and bool(mine)
+        if not self.charged:
+            return
         live = {t for t in set(self.targets.values()) if "passed" in g.command(f"execute if entity {t}")}
         self.targets = {u: t for u, t in self.targets.items() if u in mine and t in live}
         free = sorted(mine.keys() - self.targets.keys())
