@@ -57,6 +57,12 @@ the kind:
      or `--replay --speed N` when the section says so). It builds the plugin the first time. Wait for the line
      "Join the server localhost:PORT" and give the owner that address.
   3. Tell the owner: start the Minecraft launcher with version 26.3 → Multiplayer → Direct Connection → paste the address.
+  4. A replay ticket with `Watch:` lines (the owner watches moments of a live replay, #1123): start the guide instead,
+     in the background: `python3 game/watch.py out/World --watch FILE --speed 4 --out out/watch.json` (FILE: the
+     ticket body or a JSON list of stages, see the docstring of `game/watch.py`). It plays to 5 real seconds before
+     each moment, pauses, teleports the owner to the place when the owner joins, plays the moment at speed 1 and asks
+     the question in the chat. Wait for its `READY`, `JOINED`, `ASK`, `ANSWER` and `DONE` lines with a loop and a
+     counter (macOS has no `timeout`), and tell the owner what comes next. The answers are in `out/watch.json`.
 - **decision**: show the options table of the ticket and the agent's recommendation. Ask with `AskUserQuestion`:
   one option per row (A, B, ...), the recommended one first with "(recommended)". The owner can also type an own idea.
 - **setting** (environment, network, variables, scheduled task, GitHub settings): give the exact place (the page and
