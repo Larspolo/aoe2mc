@@ -33,7 +33,7 @@ def test_stats_command():
     data = {"objects": [{"kind": "unit", "player": 1, "name": "MILITIA", "uuid": "a"},
                         {"kind": "unit", "player": 0, "name": "DEER", "uuid": "b"},       # Gaia keeps vanilla
                         {"kind": "building", "player": 1, "name": "HOUSE"}]}
-    assert combat.setup(Game(), data) == 1 and Game.sent == [combat.stats_command("a", "MILITIA")]
+    assert combat.setup(Game(), data) == 1 and Game.sent == [combat.stats_command("a", "MILITIA"), "aoe sight a 16"]
 
 
 def health(game, tag):
