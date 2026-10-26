@@ -121,12 +121,13 @@ def claim_comment(cid, remote="origin"):
 
 
 def refill_state(epic, remote="origin", now=None):
-    """The state part of the refill lock: closed sub-issues of the epic on GitHub, else the UTC hour and its quarter:
-    the runs close about 25 tickets per hour, so one refill per hour left the queue empty (#609)."""
+    """The state part of the refill lock: closed sub-issues of the epic on GitHub, else the UTC hour and its 10-minute
+    slot: the runs close about 25 tickets per hour, so one refill per hour, then per 15 minutes, left the queue empty
+    (#609, #650)."""
     if epic and on_github(remote):
         return str(api(f"issues/{epic}").get("sub_issues_summary", {}).get("completed", 0))
     t = datetime.datetime.fromtimestamp(now or time.time(), datetime.timezone.utc)
-    return t.strftime("%Y%m%d%H") + str(t.minute // 15)
+    return t.strftime("%Y%m%d%H") + str(t.minute // 10)
 
 
 def claim_refill(epic, state, remote="origin"):

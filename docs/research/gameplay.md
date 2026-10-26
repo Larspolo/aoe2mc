@@ -177,7 +177,9 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
   path before its first AI tick; a path ends at about `follow_range` (cow: 16); the world border stops paths.
 - `build.place` draws the design with `replay.Replay.building`: fake `aoe2mc.json` data in tests needs `level_height`
   and a tile size of 4 (at tile size 1 most designs give no blocks). The site keeps the commands, bottom up (#418).
-- Import cycle `gather` → `build` → `replay`: `replay` imports `gather` inside a function (#408).
+- Import cycle `gather` → `build` → `replay`: `replay` imports `gather` inside a function (#408). `gather` imports `build`
+  and `train` at the top, and `combat`, `ai`, `replay` import `gather`: a module that `gather` imports must import `combat`
+  or `gather` inside its function (#612).
 - `gather.Map.path` on a whole record map (480 × 480): A* with a cell limit, about 45 ms per path, 0.3 s across the
   map. Replay paths cost 18 s per 200 s of game in samples/ (one search per unit of a group, #409).
 - Paper 26.3 (#436): remove mob goals by `GoalKey` (`MobGoals.removeGoal(mob, key)`), on each order: removal by the
@@ -196,3 +198,7 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - The server cannot open an inventory without a joined player (#619): an `mc` test of a chest menu checks only the
   command answers ("Menu: 0 players", "Bad item"). Real clicks need a client on the server (#627).
   `scoreboard objectives list` shows the display names (`[Menu]`), not the objective names.
+- After `/kill <UUID>` the server still finds the entity by its UUID for 20 ticks (the death animation): `execute if entity <UUID>` gives "Test passed" at once. Poll for about 2 s in a test (#630).
+- A real client joins the Paper server of `run.Game` (`online-mode=false`) with `--quickPlayMultiplayer 127.0.0.1:PORT`
+  (`mc_shot.Client`, #627). In an open inventory the pointer is free: `xdotool mousemove` + `click` hits the slots.
+  A Paper display name of an item is italic by default (Adventure).

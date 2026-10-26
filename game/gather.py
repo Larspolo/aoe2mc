@@ -12,7 +12,8 @@ with the miner look. An empty mine disappears, and they go on to the nearest min
 on a farm sends one villager onto it (#392): one farmer per farm, as in AoE2. The wheat gets younger as the food
 goes down, and an empty farm is dirt.
 A right click on a construction site (build.py) sends them to build it, with the builder look (#418).
-A right click on an own town center queues a villager for 50 food (train.py, #612).
+A right click on an own town center opens its menu: a click queues a villager for 50 food, a shift click 5 (train.py, #612, #620).
+A right click on a selected villager opens the build menu, a chest menu (build.py, #621).
 A right click on a military unit of player 1 selects it; more clicks add more military units (#516). A right
 click on a unit of another player then sends them to attack it (`aoe attack` of the plugin, ai.py): one command
 for the selection, by the tag `SELECT`. A unit of player 1 is no target: a click on it selects it.
@@ -451,6 +452,9 @@ class Gather:
         if u in self.enemies:
             self.attack(u)
             return
+        if u and u in self.selected and u in self.villagers:         # a click on a selected villager (#621)
+            build.open_menu(self, name)
+            return
         if u:
             self.select(u)
             return
@@ -458,7 +462,7 @@ class Gather:
         if building:                                                   # a chosen building: place its foundation
             build.place(self, name, building, eye, d)
             return
-        if train.queue(self, name, self.map.pick_ground(eye, d)):     # a click on an own town center (#612)
+        if train.open_menu(self, name, self.map.pick_ground(eye, d)):  # a click on an own town center (#612, #620)
             return
         tile = self.map.pick_tree(eye, d)
         if tile and self.selected:

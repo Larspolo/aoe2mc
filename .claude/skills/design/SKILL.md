@@ -89,3 +89,6 @@ The GitHub REST API cannot upload images. Describe them in the PR body:
   entry in the `COLORS` fallback of `aoe2mc.block_color` before the general one (#539).
 - Grep `tests/` for a design name before you change its materials: `test_blocks_under_water_are_waterlogged` names the
   `fish_trap` blocks (#486).
+- Items in a block of a design: the canvas turns after the design, so set the item data after `E.add` in `place_building`
+  by world position (`buildings.SHELVES` -> `aoe2mc.BLOCK_DATA`). 26.3 shelf: block entity `shelf`, `Items` with `Slot`
+  0-2; the server keeps them (#526).

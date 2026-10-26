@@ -12,6 +12,8 @@ Without --at the camera stands 2 blocks above the spawn and looks in the spawn d
 Yaw: 0 = south, 90 = west, 180 = north, -90 = east. Pitch: positive looks down.
 Downloads (client jar, libraries) go to .cache/mc/VERSION/client/. The version comes from level.dat.
 OUT.png gets the first view; the views of --more go to OUT_2.png, OUT_3.png ...
+Client(port) joins the same client to a server on 127.0.0.1 (the Paper server of game/run.py, #627): a test sees
+and clicks the game as a player (shot(), click(), key(): xdotool on the X screen).
 """
 import argparse
 import glob
@@ -175,6 +177,89 @@ def shoot(world, out, views=None, version=None, size=(1280, 720), settle=8.0, ti
                         p.kill()
             log.close()
     return outs
+
+
+class Client:
+    """The client as player "aoe2mc" on the server at 127.0.0.1:port (online-mode=false), in Xvfb. A context manager:
+    the client is in the world when wait_join() returns (or the test sees the player in "list")."""
+
+    SCALE = 3                       # GUI scale: slot() needs a fixed one
+
+    def __init__(self, port, version, size=(1280, 720), name="aoe2mc"):
+        for tool in ("Xvfb", "import", "xdotool"):
+            if not shutil.which(tool):
+                sys.exit(f"{tool} is not installed (apt-get install xvfb imagemagick xdotool)")
+        self.port, self.version, self.size, self.name = port, version, size, name
+        self.client = self.xvfb = self.log = None
+
+    def __enter__(self):
+        cp, vj = client_files(self.version)
+        os.makedirs(os.path.join(mc_check.ROOT, ".cache"), exist_ok=True)
+        self.game = tempfile.mkdtemp(dir=os.path.join(mc_check.ROOT, ".cache"))
+        with open(os.path.join(self.game, "options.txt"), "w") as f:
+            f.writelines(f"{k}:{v}\n" for k, v in (OPTIONS | {"guiScale": self.SCALE}).items())
+        disp = free_display()
+        self.env = dict(os.environ, DISPLAY=f":{disp}", LIBGL_ALWAYS_SOFTWARE="1")
+        self.xvfb = subprocess.Popen(["Xvfb", f":{disp}", "-screen", "0", f"{self.size[0]}x{self.size[1]}x24"],
+                                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        self.log_path = os.path.join(self.game, "client.log")
+        self.log = open(self.log_path, "w")
+        time.sleep(1)
+        base = os.path.join(mc_check.CACHE, self.version, "client")
+        self.client = subprocess.Popen(
+            [mc_check.java_for(self.version), "-Xmx2G", "-cp", ":".join(cp), vj["mainClass"], "--username", self.name,
+             "--version", self.version, "--gameDir", self.game, "--assetsDir", os.path.join(base, "assets"),
+             "--assetIndex", vj["assetIndex"]["id"], "--uuid", "00000000-0000-0000-0000-000000000001",
+             "--accessToken", "0", "--userType", "legacy", "--width", str(self.size[0]), "--height", str(self.size[1]),
+             "--quickPlayMultiplayer", f"127.0.0.1:{self.port}"],
+            cwd=self.game, env=self.env, stdout=self.log, stderr=subprocess.STDOUT)
+        return self
+
+    def __exit__(self, *exc):
+        for p in (self.client, self.xvfb):
+            if p and p.poll() is None:
+                p.terminate()
+                try:
+                    p.wait(10)
+                except subprocess.TimeoutExpired:
+                    p.kill()
+        if self.log:
+            self.log.close()
+        shutil.rmtree(self.game, ignore_errors=True)
+
+    def text(self):
+        return open(self.log_path, errors="replace").read()
+
+    def wait_join(self, joined, timeout=240):
+        """Wait until joined() is true (for example: the name is in the "list" of the server)."""
+        t0 = time.time()
+        while not joined():
+            if self.client.poll() is not None or time.time() - t0 > timeout:
+                raise RuntimeError(f"the client did not join ({time.time() - t0:.0f} s): {self.text()[-2000:]}")
+            time.sleep(1)
+
+    def shot(self, path):
+        subprocess.run(["import", "-window", "root", path], env=self.env, check=True)
+        return path
+
+    def xdo(self, *args):
+        subprocess.run(["xdotool", *map(str, args)], env=self.env, check=True)
+
+    def click(self, x, y, button=1):
+        """A mouse click at the screen pixel (x, y): in an open inventory the pointer is free (no grab)."""
+        self.xdo("mousemove", x, y)
+        time.sleep(0.3)
+        self.xdo("click", button)
+
+    def slot(self, i, rows):
+        """The screen pixel of the middle of slot i of an open chest menu with rows rows: the vanilla container
+        screen is 176 x (114 + 18 rows) GUI pixels in the middle of the screen, slots of 18 from (8, 18)."""
+        w, h = self.size[0] // self.SCALE, self.size[1] // self.SCALE
+        left, top = (w - 176) // 2, (h - 114 - 18 * rows) // 2
+        return (left + 8 + i % 9 * 18 + 8) * self.SCALE, (top + 18 + i // 9 * 18 + 8) * self.SCALE
+
+    def key(self, name):
+        self.xdo("key", name)
 
 
 def view_spec(v):
