@@ -3,7 +3,7 @@ name: Automerge
 # Merges an agent PR (branch agent/* or claude/*) when its CI is green, so that the runs do not wait for CI (#232).
 # A merge with GITHUB_TOKEN starts no workflows, so this job starts CI on main, the dashboard and the claim clean-up.
 # CI runs on a head that Unconflict pushed with GITHUB_TOKEN start no workflow_run event, also not after a re-run:
-# the sweep every 5 minutes merges those PRs (#581).
+# the sweep merges those PRs. The job `sweep` of ci.yml starts it (#734): GitHub drops the cron runs (#581).
 on:
   workflow_run:
     workflows: [CI]

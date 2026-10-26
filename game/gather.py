@@ -57,6 +57,7 @@ AOE2_WORK, NORMAL = {"wood": 0.39, "food": 0.31, "farm": 0.33, "gold": 0.38, "st
 WORK_SECONDS = {r: 1 / (w * NORMAL) for r, w in AOE2_WORK.items()}    # real seconds per unit, as at Normal speed
 CARRY = {"WHEELBARROW": 3}                                         # more resources per trip, as in AoE2 (#728)
 PACE = {"WHEELBARROW": 1.1}                                        # the villager walk speed factor, as in AoE2
+WORK_TECHS = {"DOUBLE_BIT_AXE": {"wood": 1.2}}                     # work rate factors of the economy technologies (AoE2)
 FARM_FOOD = 175                                                    # food in one farm, as in AoE2 DE (no upgrades)
 MINES = {"GOLD_MINE": ("gold", 800, "GOLD_MINER"), "STONE_MINE": ("stone", 350, "STONE_MINER")}   # as in AoE2
 MINE_BLOCKS = {"gold": ("gold_ore", "raw_gold_block", "stone"),                # the blocks of the converter's heap
@@ -551,7 +552,7 @@ class Gather:
             elif v.state == "chop":
                 v.timer += self.tick
                 src = self.source(v)
-                work = self.chop["farm" if v.tree in self.map.farms else v.res]
+                work = self.work_time("farm" if v.tree in self.map.farms else v.res)
                 while v.timer >= work and v.load < self.limit() and src.get(v.tree, 0) > 0:
                     v.timer -= work
                     v.load += 1
@@ -580,6 +581,10 @@ class Gather:
                 for v in builders:                                     # complete: the builders stop
                     v.site = None
                     self.set(v, "idle")
+
+    def work_time(self, res):
+        """Real seconds per unit of resource res ("farm" for farms) with the technologies of the player (WORK_TECHS)."""
+        return self.chop[res] / math.prod(WORK_TECHS.get(t, {}).get(res, 1) for t in self.techs)
 
     def move(self, v):
         import ai                                                      # ai imports gather
