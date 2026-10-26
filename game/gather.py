@@ -77,7 +77,7 @@ WORK_LOOK = {"wood": ("minecraft:oak_log", "minecraft:block.wood.hit"),
              "gold": ("minecraft:gold_ore", "minecraft:block.stone.hit"),
              "stone": ("minecraft:stone", "minecraft:block.stone.hit")}
 EVENTS = {"idle": "idle", "to_tree": "walk", "chop": "chop", "to_drop": "carry",    # state -> event in the log
-          "to_site": "walk", "build": "build"}
+          "to_site": "walk", "build": "build", "to_rally": "walk"}
 
 
 class Map:
@@ -310,6 +310,8 @@ class Gather:
         self.bar = None                                                # the unit on the boss bar (bossbar.py, #659)
         self.queues, self.trained = {}, {}                             # town center -> its queue, units it trained
         self.techs = set()                                             # the researched technologies (train.TECHS)
+        self.rally, self.rallying, self.marks = {}, {}, {}             # building -> rally point, player -> building,
+        #                                                                tag of a rally marker -> AoE2 seconds left
         self.pop, self.census, self.shown = 0, 0.0, {}                 # live units, AoE2 seconds since the count, sidebar
         import combat                                                  # combat imports this module
         ground = [r.split() for r in data["ground"]]
@@ -404,13 +406,13 @@ class Gather:
             v.job = job
             self.command(f'data merge entity {v.uuid} {{VillagerData:{{profession:"minecraft:{job}"}}}}')
 
-    def send(self, tile):
-        """Send the selected villagers to the tree, the fruit bush, the mine or the farm on tile. A farm takes one
-        farmer: the next villagers go to the nearest free farms, or stop."""
+    def send(self, tile, who=None):
+        """Send the selected villagers (or the villagers who) to the tree, the fruit bush, the mine or the farm on tile.
+        A farm takes one farmer: the next villagers go to the nearest free farms, or stop."""
         res = self.map.resource(tile)
         job = "FARMER" if tile in self.map.farms else {"wood": "LUMBERJACK", "food": "FORAGER"}.get(res) or \
             next(j for r, _, j in MINES.values() if r == res)
-        for u in sorted(self.selected & self.villagers.keys()):         # a scout cannot gather or build (#589)
+        for u in sorted((self.selected if who is None else who) & self.villagers.keys()):   # a scout cannot (#589)
             v = self.villagers[u]
             for t in [t for t, f in self.farmers.items() if f == u]:
                 del self.farmers[t]
@@ -505,6 +507,9 @@ class Gather:
         if not pos or len(rot) != 2:
             return
         eye, d = (pos[0], pos[1] + 1.62, pos[2]), direction(*map(float, rot))
+        if (rect := self.rallying.pop(name, None)) and (cell := self.map.pick_ground(eye, d)):   # the menu item (#707)
+            train.rally(self, rect, cell, self.map.pick_tree(eye, d))
+            return
         army = self.selected and self.selected <= set(self.soldiers)
         u = pick_unit(eye, d, {k: v.pos for k, v in self.villagers.items()} |
                       self.positions(list(self.soldiers) + (list(self.enemies) if army else [])))
@@ -560,8 +565,10 @@ class Gather:
         """One tick: walk one block, chop, drop the wood, or build."""
         self.fall()
         for v in self.villagers.values():
-            if v.state in ("to_tree", "to_drop", "to_site") and v.path:
+            if v.state in ("to_tree", "to_drop", "to_site", "to_rally") and v.path:
                 self.follow(v) if self.paper else walk(self, v)
+            elif v.state == "to_rally":
+                self.set(v, "idle")
             elif v.state == "to_site":
                 self.set(v, "build" if v.site["progress"] < 1 else "idle")
             elif v.state == "to_tree":

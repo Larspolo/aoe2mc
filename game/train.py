@@ -23,6 +23,8 @@ skirmishers) get +1 attack and +1 range.
 Double-Bit Axe at the lumber camp (#723): villagers chop wood 20 % faster (gather.WORK_TECHS, gather.Gather.work_time).
 Horse Collar at the mill (#726): the live and the new farms of the player have 75 more food (gather.FARM_TECHS).
 Wheelbarrow at the town center in the Feudal Age (#728, TECH_AGE): villagers carry 3 more resources and walk 10 % faster (gather.CARRY, gather.PACE).
+Rally points (#707): the menu item "Rally point" (RALLY) and the next right click on the ground set the rally point of
+the building; each new unit walks there (Minecraft path finding), a new villager gathers at a tree, bush, mine or farm.
 """
 import json
 import math
@@ -91,6 +93,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "FEUDAL_AGE": (2, "bell", "Feudal Age"),
          "WHEELBARROW": (3, "book", "Wheelbarrow")}
 SHIFT = 5                                                          # units of a shift click, as in AoE2
+RALLY = (8, "white_banner", "Rally point", "Click, then right click the ground")   # last slot of the first row
+MARK = 17.0                                                        # AoE2 seconds of the rally marker: 10 s at Normal
 ROW = 9                                                            # the first slot of the queue row of the menu (#706)
 
 
@@ -141,10 +145,16 @@ def show(g, player, rect):
     items = [(slot, build.LOCKED if build.locked(g, name) else item, label,
               " · ".join(f"{v} {r}" for r, v in COSTS[name].items()) + f" · {TRAIN_TIMES[name]} s · " + state(name))
              for name in TRAINS[building] if name not in g.techs and unlocked(g, name) for slot, item, label in [ITEMS[name]]]
+    items += [RALLY] if units_of(building) else []
     q = g.queues.get(rect, [])                                         # the queue row first: the plugin sets the
     items = [(ROW + i, ITEMS[name][1], ITEMS[name][2] + (f" {int(100 * q[0]['progress'])} %" if start == 0 else ""),
               "Click: cancel 1", k) for i, (name, start, k) in enumerate(groups(q)[:ROW])] + items   # items by slot
     menu.show(g, player, build.pretty(building), items, lambda p, slot, shift: order(g, p, rect, slot, shift))
+
+
+def units_of(building):
+    """The units (not the technologies) that building trains: only such a building has a rally point."""
+    return [n for n in TRAINS[building] if n not in TECHS]
 
 
 def groups(q):
@@ -176,7 +186,14 @@ def cancel(g, player, rect, group):
 def order(g, player, rect, slot, shift=False):
     """A click on the menu item in slot: queue 1 unit (a shift click: SHIFT, as many as the resources and the queue
     allow) at the building rect, or cancel a unit of the queue row (cancel()), and refresh the menu. Returns the
-    number of queued units."""
+    number of queued units. A click on RALLY closes the menu: the next right click on the ground sets the rally point
+    (gather.Gather.click calls rally())."""
+    if slot == RALLY[0] and units_of(homes(g)[rect]):
+        g.rallying[player] = rect
+        menu.close(g, player)
+        g.command(f"tellraw {player} " + json.dumps({"text": "Right click the ground for the rally point.",
+                                                      "color": "gray"}))
+        return 0
     if slot >= ROW:
         cancel(g, player, rect, slot - ROW)
         show(g, player, rect)
@@ -187,6 +204,34 @@ def order(g, player, rect, slot, shift=False):
         n += 1
     show(g, player, rect)
     return n
+
+
+def rally(g, rect, cell, tile=None):
+    """Set the rally point of the own building rect at the block cell (x, z); tile: the tree, bush, mine or farm tile
+    there, or None. A banner in the player color and the text "Rally point" show it for MARK AoE2 seconds."""
+    g.rally[rect] = cell, tile
+    tag, (x, z) = f"aoe2mc.rally.{rect[0]}.{rect[2]}", cell
+    y, color = g.map.y(x, z), g.players.get(str(g.player), {}).get("color", "white")
+    g.command(f"kill @e[tag={tag}]")                                   # the marker of the last point
+    g.command(f'summon item_display {x + 0.5} {y + 0.7} {z + 0.5} {{item:{{id:"minecraft:{color}_banner",count:1}},'
+              f'billboard:"vertical",Tags:["{tag}"]}}')
+    g.command(f'summon text_display {x + 0.5} {y + 1.6} {z + 0.5} {{text:"Rally point",billboard:"center",'
+              f'Tags:["{tag}"]}}')
+    g.marks[tag] = MARK
+
+
+def go(g, rect, uuid, name):
+    """Send the new unit uuid (AoE2 unit name) of the building rect to its rally point, if it has one."""
+    if rect not in g.rally:
+        return
+    (x, z), tile = g.rally[rect]
+    if uuid not in g.villagers:                                        # a military unit walks with the plugin
+        import ai                                                      # ai imports gather, gather imports this module
+        ai.move(g, uuid, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5)
+    elif tile:
+        g.send(tile, {uuid})
+    else:
+        g.go(g.villagers[uuid], "to_rally", {(x, z)} if g.map.free(x, z) else g.map.around({(x, z)}))
 
 
 def queue(g, player, cell, name="VILLAGER_MALE"):
@@ -305,6 +350,11 @@ def tick(g, work):
     g.census += work
     if g.census >= CENSUS:
         census(g)
+    for tag in list(g.marks):                                          # rally markers end
+        g.marks[tag] -= work
+        if g.marks[tag] <= 0:
+            del g.marks[tag]
+            g.command(f"kill @e[tag={tag}]")
     cap, out = limit(g), []
     room = cap - g.pop - sum(1 for q in g.queues.values() if q and q[0]["progress"] > 0 and q[0]["name"] not in TECHS)
     for rect, q in g.queues.items():
@@ -356,7 +406,9 @@ def spawn(g, rect, name):
         g.command(cmd)
     if gather.military(name):
         g.soldiers[uuid] = name
+        go(g, rect, uuid, name)
         return uuid
     v = g.villagers[uuid] = gather.Villager(uuid, pos)
     g.units.append({"kind": "unit", "name": name, "player": g.player, "uuid": uuid, "tile": [x / g.map.T, z / g.map.T]})
+    go(g, rect, uuid, name)
     return v
