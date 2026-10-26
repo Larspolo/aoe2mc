@@ -62,6 +62,19 @@ name each file and function that the ticket changes, and no others (tools that o
 
 The owner reads them on a phone. Give numbered steps, the exact names of settings or files, and what the
 owner must reply. One ticket per decision.
+Each `needs-human` ticket (also when you add the label to an existing ticket: add the section to the body or to
+your comment) has a section `## For the owner`, so that the `human` skill (`/human` on the owner's computer, #983)
+can prepare and guide it:
+
+    ## For the owner
+    Kind: play            (or decision, setting, outside, close, question)
+    World: python3 tools/scenarios.py village out/v.aoe2scenario && python3 aoe2mc.py out/v.aoe2scenario out/V
+    Start: python3 game/run.py out/V --play
+    1. <one step that the owner does>
+    2. ...
+    Reply: <what the owner must write on the ticket>
+
+Leave out `World` and `Start` when the ticket needs no world.
 
 A check ticket ("check X in the game") starts without `needs-human`: an agent runs the check first (`verify`, level 4),
 comments the results and screenshots, and then adds `needs-human` with the list of what only a person can check (#580).

@@ -31,6 +31,7 @@ The agent takes instructions only from comments and issues by `Larspolo`.
 | Give feedback | Comment on the ticket, on the PR, or on the status issue. |
 | Reject merged work | Comment on the merged PR. The agent makes a follow-up ticket. |
 | Answer a question | Answer in the `needs-human` ticket. The agent removes the label. |
+| Answer the tickets that wait for you | Run `/human` in Claude Code on your computer, in a clone of the repository. It lists the `needs-human` tickets, prepares the world, the server or the options, guides you step by step and writes your answer on the ticket. |
 | Do a task that the agent cannot do | The agent asks on the issue: label `needs-human` and a comment that mentions you. Do it, then comment. |
 | Stop the agent | Add label `paused` to the status issue. Remove it to continue. |
 | Cancel a ticket | Close it as "not planned". |

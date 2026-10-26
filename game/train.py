@@ -532,8 +532,17 @@ def spawn(g, rect, name):
         return None
     k = g.trained[rect] = g.trained.get(rect, -1) + 1
     x, z = cells[k % len(cells)]
-    pos = (x + 0.5, float(g.map.y(x, z)), z + 0.5)
-    o = dict(name=name, player=g.player, rotation=math.pi / 2)        # it faces south
+    uuid = summon(g, name, (x + 0.5, float(g.map.y(x, z)), z + 0.5))  # it faces south
+    if uuid is None:
+        return None
+    go(g, rect, uuid, name)
+    return g.villagers.get(uuid, uuid)
+
+
+def summon(g, name, pos, rotation=math.pi / 2):
+    """Summon unit name of g.player at pos with its AoE2 values, and add it to g.soldiers (a military unit) or to the
+    villagers of g. Returns its UUID, or None. Also for the transformation cheats (cheats.transform, #967)."""
+    o = dict(name=name, player=g.player, rotation=rotation)
     players = {int(p): v for p, v in g.data.get("players", {}).items()}
     nbt = units.make_entity(o, players, pos, np.random.default_rng())  # a new random UUID
     if nbt is None:
@@ -552,9 +561,8 @@ def spawn(g, rect, name):
     g.command(ai.speed_command(uuid, name, g.map.T))               # its AoE2 walk speed also without an order (#849)
     if gather.military(name):
         g.soldiers[uuid] = name
-        go(g, rect, uuid, name)
         return uuid
-    v = g.villagers[uuid] = gather.Villager(uuid, pos)
-    g.units.append({"kind": "unit", "name": name, "player": g.player, "uuid": uuid, "tile": [x / g.map.T, z / g.map.T]})
-    go(g, rect, uuid, name)
-    return v
+    g.villagers[uuid] = gather.Villager(uuid, pos)
+    g.units.append({"kind": "unit", "name": name, "player": g.player, "uuid": uuid,
+                    "tile": [math.floor(pos[0]) / g.map.T, math.floor(pos[2]) / g.map.T]})
+    return uuid
