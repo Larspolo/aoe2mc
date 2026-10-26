@@ -39,7 +39,7 @@ def walk(game):
 def test_a_unit_on_time_walks_at_its_walk_speed():
     game = Entity()
     speeds = walk(game)
-    assert len(speeds) >= 4 and set(speeds) == {ai.speed_command("u1", "VILLAGER_MALE", 4, 4.0)}
+    assert len(speeds) >= 4 and set(speeds) == {ai.speed_command("u1", "VILLAGER_MALE", 4, 4.0 * replay.PATH)}
     assert game.sent.count("data get entity u1 Pos") == len(speeds) - 1   # not for the first leg
 
 
@@ -55,13 +55,13 @@ def test_a_walk_right_after_a_walk_catches_up():
     r.run(4.0, clock=lambda: now[0], sleep=lambda s: now.__setitem__(0, now[0] + s), log=None, finish=True)
     speeds = [c for c in game.sent if c.startswith("attribute u1 ")]
     assert game.sent.count("data get entity u1 Pos") == 1          # the third walk starts long after the second
-    assert speeds[0] == speeds[2] == ai.speed_command("u1", "VILLAGER_MALE", 4, 4.0)
-    assert speeds[1] == ai.speed_command("u1", "VILLAGER_MALE", 4, 4.0 * 48 / 40)   # 48 blocks in the time of 40
+    assert speeds[0] == speeds[2] == ai.speed_command("u1", "VILLAGER_MALE", 4, 4.0 * replay.PATH)
+    assert speeds[1] == ai.speed_command("u1", "VILLAGER_MALE", 4, 4.0 * replay.PATH * 48 / 40)   # 48 blocks in the time of 40
 
 
 def test_a_unit_behind_walks_the_next_leg_faster_up_to_the_cap():
     speeds = walk(Entity(at=(10.5, 42.5)))                          # it stays at the start: far behind
-    assert speeds[0] == ai.speed_command("u1", "VILLAGER_MALE", 4, 4.0)
+    assert speeds[0] == ai.speed_command("u1", "VILLAGER_MALE", 4, 4.0 * replay.PATH)
     assert set(speeds[1:]) == {ai.speed_command("u1", "VILLAGER_MALE", 4, 4.0 * replay.CATCH_UP)}
 
 

@@ -51,6 +51,7 @@ MAX_FILL = 32768            # blocks of one /fill command
 FORMATION = 2              # blocks between the units of a group in a formation (#410)
 LEG = 48                    # path cells of one plugin order: within the reach of a Minecraft path search (#438)
 CATCH_UP = 1.5              # the largest factor of the walk speed of a unit behind its replay position (#1168)
+PATH = 1.15                 # the walk speed factor of each plugin leg: a Minecraft path is longer than the leg (#1168)
 RECENT = 10000              # ms: a unit whose last leg ended this short a time ago can still walk it (catch_up)
 TALL = 48                   # blocks above the ground that a DELETE clears for a start building (no height in aoe2mc.json)
 BAR = "aoe2mc:replay"       # the boss bar with the game time (#684)
@@ -749,7 +750,8 @@ class Replay:
         d = math.hypot(v.pos[0] - x0, v.pos[2] - z0)
         due = t + 1000 * d / speed
         v.leg = (start, t, due)                                     # at() reads it
-        return [ai.speed_command(v.uuid, v.name, self.T, self.speed * (self.catch_up(v, d) if behind else 1.0)),
+        f = min(CATCH_UP, PATH * (self.catch_up(v, d) if behind else 1.0))
+        return [ai.speed_command(v.uuid, v.name, self.T, self.speed * f),
                 "aoe moveto {} {} {} {}".format(v.uuid, *v.pos)], due
 
     def catch_up(self, v, d):

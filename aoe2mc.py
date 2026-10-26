@@ -14,7 +14,7 @@ Options:
     --seed N           Seed for the random details (tree heights, flowers), of a random map script (.rms) and
                        of --random-map (default 1)
     --random-map KIND  Make the map with an own generator (arabia, arena, black_forest, gold_rush, highland,
-                       mediterranean, nomad), no input file:
+                       islands, mediterranean, nomad), no input file:
                        aoe2mc.py --random-map arabia OUT
     --preview          Also write preview.png (top view) into the world folder
     --mc-version V     Minecraft Java version of the output: 26.3 (default, the only one)
@@ -3500,10 +3500,10 @@ def main(argv=None):
     ap.add_argument("output", nargs="?", help="output world folder (put it in .minecraft/saves/); for a campaign the "
                     "folder of the worlds")
     ap.add_argument("--random-map", choices=("arabia", "arena", "black_forest", "gold_rush", "highland",
-                                         "mediterranean", "nomad"),
+                                         "islands", "mediterranean", "nomad"),
                     metavar="KIND",
                     help="make the map with an own generator of the seed, no input file (arabia, arena, black_forest, "
-                    "gold_rush, highland: a river with fords, mediterranean: a sea in the middle, nomad: no town "
+                    "gold_rush, highland: a river with fords, islands: one island for each player, mediterranean: a sea in the middle, nomad: no town "
                     "center); give only the output")
     ap.add_argument("--scenario", dest="only", type=int_range(1, 999), metavar="N",
                     help="campaign: convert only scenario N (1 = the first)")
