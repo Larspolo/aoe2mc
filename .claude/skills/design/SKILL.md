@@ -76,3 +76,16 @@ The GitHub REST API cannot upload images. Describe them in the PR body:
 - The reference: file name and URL.
 - The differences from step 3, and what changed for each one.
 - What still differs, and why (a Minecraft limit, or a later ticket).
+
+## Pitfalls
+
+- Stacked `cylinder`s of falling height make a flat top (the outer disc covers the inner ones): use `seats()`, which
+  carves air above each row (#451). Find the edge of a round room by a scan with `c.get` from the centre (`arena_inside`).
+- `Canvas.furniture` sets only into `air` cells: an open design without `room()` has empty cells (`-1`), so its
+  furniture vanishes without an error. Set those cells with `c.get(...) in (-1, air)` (`pagan_shrine`, #450).
+- Render checks: `render.py` draws each block as a cube (stairs look like steps, panes like walls) and `--cut` does not show
+  a narrow tower (#452). For exact positions use a text map of each layer from `render.building_blocks()` (states with the
+  `minecraft:` prefix, world y: canvas y 1 is y 64; #449, #501, #525). A 26.3 block that `colors-1.21.1.json` lacks needs an
+  entry in the `COLORS` fallback of `aoe2mc.block_color` before the general one (#539).
+- Grep `tests/` for a design name before you change its materials: `test_blocks_under_water_are_waterlogged` names the
+  `fish_trap` blocks (#486).

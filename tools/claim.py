@@ -17,8 +17,8 @@ a second push of another claim commit is never a fast-forward. Later claims of t
     python3 tools/claim.py E --refill     # lock the sub-issues of epic E (0: the whole queue refill, autopilot step 5)
 
 Two runs did one ticket (#288): one commented "Started by" and worked without the claim ref. So a claim also fails
-when another branch commented "Started by" in the last 30 minutes or has an active PR for the ticket (#491), and
-`--guard` stops a run before its push when it does not own the claim or another branch has a PR for the ticket. The GitHub checks run only for a GitHub remote.
+when another branch commented "Started by" in the last 30 minutes or has an active PR for the ticket (#491), when
+an open hand-off PR (`ready-to-merge`) closes the ticket (#546), and `--guard` stops a run before its push when it does not own the claim or another branch has a PR for the ticket. The GitHub checks run only for a GitHub remote.
 
 A usage limit stops all runs at about the same time, and a stopped run never continues (#231). Its last beat is
 before the stop, so its ticket is stale at most 30 minutes after the limit resets. A live run beats again.
@@ -197,6 +197,16 @@ def active_pr(pulls, number, me, now, limit=RECENT):
     return None
 
 
+def handoff_pr(pulls, number):
+    """Number of an open PR with the label ready-to-merge that closes ticket `number`, else None (#546):
+    the hand-off of autopilot step 6.8 waits for the owner, so no run does the ticket again."""
+    for p in pulls:
+        if p["state"] == "open" and "ready-to-merge" in {lb["name"] for lb in p.get("labels", [])} \
+                and closes(number).search(prose(p["body"])):
+            return p["number"]
+    return None
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("number", type=int, help="ticket number (--comment: the comment ID, --refill: the epic)")
@@ -261,7 +271,12 @@ def main(argv=None):
         if other:
             print(f"owned by another run: {other} commented \"Started by\" less than 30 minutes ago")
             return 1
-        pr = active_pr(api("pulls?state=open&per_page=100"), a.number, who(), time.time())
+        pulls = api("pulls?state=open&per_page=100")
+        pr = handoff_pr(pulls, a.number)
+        if pr:
+            print(f"hand-off PR #{pr} (ready-to-merge) closes #{a.number}: it waits for the owner")
+            return 1
+        pr = active_pr(pulls, a.number, who(), time.time())
         if pr:
             print(f"owned by another run: its PR #{pr} closes #{a.number} and changed less than 30 minutes ago")
             return 1
