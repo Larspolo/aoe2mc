@@ -1919,6 +1919,19 @@ def passable_states(states):
                      and "grass_block" not in st for st in states] + [True] * 1024)
 
 
+GROUND_MASKS = {}
+
+
+def ground_masks():
+    """(carpet, passable): bool arrays over the block ids of B (cached for the present number of states)."""
+    n = len(B.states)
+    if n not in GROUND_MASKS:
+        GROUND_MASKS.clear()
+        carpet = [st.split(":")[1].split("[")[0].endswith("carpet") for st in B.states] + [False] * 1024
+        GROUND_MASKS[n] = np.array(carpet), passable_states(B.states)
+    return GROUND_MASKS[n]
+
+
 def seat_count(ship):
     return 1 if "_chest_" in str(ship["id"]) else 2      # a chest boat has one seat
 CHAIN = 4                   # units per boat seat: each garrisoned unit rides the unit below it (#382)
@@ -2363,6 +2376,17 @@ def build_chunk(cx, cz, cols, edits, origin=(0, 0)):
         ys, zs, xs = np.nonzero(used[:-1] == lower)
         bad = used[ys + 1, zs, xs] != upper
         used[ys[bad], zs[bad], xs[bad]] = SHORT_GRASS
+
+    # A carpet on the ground with room above it but a solid block or leaves 2 above it: a unit (1.95 high) does not
+    # fit on the 1/16 carpet, so Minecraft finds no path through the cell (moss under the low leaves of a forest, #889).
+    # A barrier over it is a footprint: no unit walks there, and a rug stays
+    carpet, passable = ground_masks()
+    if counts[carpet[:len(counts)]].any():
+        gy = np.clip(top[0].astype(int) + 1 - MIN_Y, 0, HEIGHT - 3)
+        zs, xs = np.indices(gy.shape)
+        over = vol[gy + 2, zs, xs]
+        low = carpet[vol[gy, zs, xs]] & passable[vol[gy + 1, zs, xs]] & ~passable[over] & (over != BARRIER)
+        vol[gy[low], zs[low], xs[low]] = AIR
 
     # Blocks under the water surface are waterlogged, else they leave a dry gap in the water
     low = vol[:n]                                       # a view: the water is below n

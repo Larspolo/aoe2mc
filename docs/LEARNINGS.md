@@ -46,6 +46,7 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - `tools/claim.py` fetches, so it overwrites `FETCH_HEAD`: fetch a `checks/N` ref into a named ref (`git fetch origin +refs/heads/checks/N:refs/remotes/origin/checks/N`) before you build its next commit, else the push is non-fast-forward.
 - The auto mode denies an edit of a skill that closes epics through a PR because a close was denied ("Instruction Poisoning", #971): it is a way around the denial. Do not try another way: ask the owner on the ticket.
 - Automerge takes the first "close #N" (also "fix", "resolve") anywhere in the PR body as the ticket, also in "does not close #N": a ticket with `needs-human` then stops the merge (#984). Do not write those words before another issue number.
+- The auto mode also denied the commit of a PR that only marks finished epics done in `docs/ROADMAP.md` with "Closes #epic" ("Auto-Mode Bypass", 2026-10-26, #837, #740): ask the owner on the epic (`needs-human`, evidence), do not try another way.
 
 ## Code
 
