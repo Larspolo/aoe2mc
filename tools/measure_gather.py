@@ -3,15 +3,16 @@
 Measure the gather timing of game/gather.py on a real server and compare it with AoE2 (#289, #393).
 
 Usage:
-    python3 tools/measure_gather.py [--resource wood] [--distance 10] [--loads 2] [--log OUT.jsonl] [--version 26.3]
+    python3 tools/measure_gather.py [--resource wood] [--distance 10] [--loads 2] [--log OUT.jsonl] [--version 26.3] [--server vanilla]
     python3 tools/measure_gather.py --read F.jsonl     # only read a log of game/run.py --play --log F.jsonl
 
 The tool makes a flat map with one villager of player 1, a town center and one resource in one row (`--distance`
 tiles from the center of the town center): a tree (wood), a fruit bush (food), a farm, a gold mine or a stone mine.
 It converts the map, starts a server without a client, sends the villager to the resource (no click) and plays in
 real time until the villager dropped `--loads` loads. Then it prints the measured walk speed, work rate and trip
-time next to the configured values and AoE2. A row is straight, so no step is diagonal: a diagonal step is 1.41
-blocks in one tick.
+time next to the configured values and AoE2. On Paper (the default) the villager walks with Minecraft path finding
+at the AoE2 speed (#437). With `--server vanilla` it walks one block per tick: a row is straight, so no step is
+diagonal (a diagonal step is 1.41 blocks in one tick).
 """
 import argparse
 import contextlib
@@ -28,6 +29,8 @@ sys.path[:0] = [ROOT, HERE, os.path.join(ROOT, "game")]
 # AoE2 DE villagers, per game second: speed 0.8 tiles/s, carry 10 (unit 123 VMLUM, owner's data in #267). The work
 # rates per resource are in game/gather.py (AOE2_WORK, #393).
 from gather import AOE2_WORK, NORMAL, WORK_SECONDS  # noqa: E402
+
+import ai  # noqa: E402
 
 AOE2_SPEED, AOE2_CARRY = 0.8, 10                                   # tiles/s, resource
 RESOURCES = {"wood": ("TREE_OAK", "wood"), "food": ("FRUIT_BUSH", "food"), "farm": ("FARM", "food"),
@@ -78,9 +81,11 @@ def analyze(events):
             "trip_blocks": sum(w for _, w in trips) / len(trips) if trips else None}
 
 
-def configured(tick, chop, carry, trip_blocks):
-    """The values that the settings of Gather give (straight steps). A trip has 2 ticks for state changes."""
-    return {"walk": 1 / tick, "chop": 1 / chop, "trip": trip_blocks * tick + carry * chop + 2 * tick}
+def configured(tick, chop, carry, trip_blocks, walk=None):
+    """The values that the settings of Gather give (straight steps). A trip has 2 ticks for state changes.
+    walk: blocks per second on Paper (the AoE2 speed of game/ai.py, #437); None: one block per tick (vanilla)."""
+    walk = walk or 1 / tick
+    return {"walk": walk, "chop": 1 / chop, "trip": trip_blocks / walk + carry * chop + 2 * tick}
 
 
 def aoe2(T, trip_blocks, speed=1.0, resource="wood"):
@@ -103,7 +108,7 @@ def table(m, conf, T, resource="wood"):
 
 
 def measure(distance=10, loads=2, tick=0.25, chop=None, carry=10, log=None, version=None, timeout=300,
-            resource="wood"):
+            resource="wood", server="paper"):
     """Convert the measure map, play on a server until loads loads are dropped. Returns (events, tile size)."""
     import time
 
@@ -119,7 +124,7 @@ def measure(distance=10, loads=2, tick=0.25, chop=None, carry=10, log=None, vers
         with open(os.path.join(world, "aoe2mc.json")) as f:
             data = json.load(f)
         buf = io.StringIO()
-        with run.Game(world, version or mc_check.DEFAULT_VERSION) as game:
+        with run.Game(world, version or mc_check.DEFAULT_VERSION, server=server) as game:
             game.forceload()
             end = time.time() + 60                                 # entities load in other threads
             while True:
@@ -151,6 +156,7 @@ def main(argv=None):
     ap.add_argument("--log", metavar="FILE", help="write the event log (JSON lines)")
     ap.add_argument("--read", metavar="FILE", help="only read the event log of game/run.py --play --log FILE")
     ap.add_argument("--version", help="Minecraft version of the server")
+    ap.add_argument("--server", choices=["paper", "vanilla"], default="paper", help="server program (default: Paper)")
     ap.add_argument("--tile-size", type=int, default=4, help="--read: tile size of the world (default 4)")
     a = ap.parse_args(argv)
     tick, chop, carry = 0.25, WORK_SECONDS[a.resource], 10         # the defaults of gather.Gather
@@ -158,9 +164,11 @@ def main(argv=None):
         with open(a.read) as f:
             events, T = [json.loads(line) for line in f if line.strip()], a.tile_size
     else:
-        events, T = measure(a.distance, a.loads, tick, chop, carry, a.log, a.version, resource=a.resource)
+        events, T = measure(a.distance, a.loads, tick, chop, carry, a.log, a.version, resource=a.resource,
+                            server=a.server)
     m = analyze(events)
-    print(table(m, configured(tick, chop, carry, m["trip_blocks"] or 0), T, a.resource))
+    walk = ai.walk_speed("VILLAGER", T) if a.server == "paper" else None
+    print(table(m, configured(tick, chop, carry, m["trip_blocks"] or 0, walk), T, a.resource))
 
 
 if __name__ == "__main__":

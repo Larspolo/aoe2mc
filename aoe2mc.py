@@ -2028,6 +2028,7 @@ def set_pos(nbt, x, y, z):
 
 
 MOVED = Counter()
+TICKS = []                  # (time, phase) of each phase end of the last convert(): tools/measure_convert.py (#690)
 
 
 def entity_chunk(cx, cz, ents, cols, vol, passable):
@@ -2824,9 +2825,11 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     rng = np.random.default_rng(seed)
     t0 = time.time()
     times, clock = {}, [t0]
+    TICKS[:] = [(t0, "start")]
 
     def tick(phase):        # add the time since the last tick to the phase (--verbose)
         now = time.time()
+        TICKS.append((now, phase))
         times[phase] = times.get(phase, 0.0) + now - clock[0]
         clock[0] = now
 

@@ -19,6 +19,9 @@ click on a unit of another player then sends them to attack it (`aoe attack` of 
 for the selection, by the tag `SELECT`. A unit of player 1 is no target: a click on it selects it.
 A click with selected military units on a building of another player sends them to attack its target (#608,
 combat.building). When the plugin removes the target (0 hit points), its footprint is free ground for paths.
+On a Paper server, the villagers walk with Minecraft path finding (`aoe moveto` of game/plugin, at the AoE2 walk
+speed of game/ai.py), and `aoe stop` stops them when they arrive (#437). The own path code (Map.path, one /tp per
+block) is only for the vanilla server.
 A sidebar scoreboard shows wood, food, gold and stone of player 1. A boss bar shows the selected unit (bossbar.py, #659).
 
 The program sees a click in two statistics: the use of the stick, and "talked to villager" (a right click on a
@@ -262,6 +265,7 @@ class Villager:
         self.walked = 0.0                                              # blocks, for the log
         self.res = "wood"                                              # the resource of the load
         self.site = None                                               # the construction site that it builds
+        self.goal, self.moved, self.tries = None, 0.0, 0               # Paper: walk cell, time of the last step, orders
         self.lap = 0                                                   # step of a farmer over its farm (#591)
 
     @property
@@ -277,6 +281,7 @@ class Gather:
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic):
         self.game, self.data, self.map, self.player = game, data, Map(data, player), player
+        self.paper = getattr(game, "kind", None) == "paper"           # walks with the plugin (#437)
         chop = WORK_SECONDS if chop is None else chop
         self.tick, self.carry = tick, carry
         self.chop = dict(chop) if isinstance(chop, dict) else dict.fromkeys(WORK_SECONDS, chop)
@@ -296,6 +301,7 @@ class Gather:
         self.menus = {}                                                # player -> handler of its open menu (#619)
         self.bar = None                                                # the unit on the boss bar (bossbar.py, #659)
         self.queues, self.trained = {}, {}                             # town center -> its queue, units it trained
+        self.techs = set()                                             # the researched technologies (train.TECHS)
         self.pop, self.census, self.shown = 0, 0.0, {}                 # live units, AoE2 seconds since the count, sidebar
         import combat                                                  # combat imports this module
         ground = [r.split() for r in data["ground"]]
@@ -419,6 +425,12 @@ class Gather:
         return min(full, key=lambda t: math.dist(v.cell, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), default=None)
 
     def go(self, v, state, goals):
+        if self.paper:                                                 # Minecraft finds the path (#437)
+            v.goal = min(goals, key=lambda c: (math.dist(c, v.cell), c), default=None)
+            v.path, v.tries = [v.goal] if v.goal else [], 0
+            self.move(v)
+            self.set(v, state if v.goal else "idle")
+            return
         path = self.map.path(v.cell, goals)
         v.path = path or []
         self.set(v, state if path is not None else "idle")
@@ -511,7 +523,7 @@ class Gather:
         self.fall()
         for v in self.villagers.values():
             if v.state in ("to_tree", "to_drop", "to_site") and v.path:
-                walk(self, v)
+                self.follow(v) if self.paper else walk(self, v)
             elif v.state == "to_site":
                 self.set(v, "build" if v.site["progress"] < 1 else "idle")
             elif v.state == "to_tree":
@@ -564,6 +576,32 @@ class Gather:
                 for v in builders:                                     # complete: the builders stop
                     v.site = None
                     self.set(v, "idle")
+
+    def move(self, v):
+        import ai                                                      # ai imports gather
+        if v.goal:
+            x, z = v.goal
+            ai.move(self, v.uuid, "VILLAGER", self.map.T, x + 0.5, self.map.y(x, z), z + 0.5)
+        v.moved, v.tries = self.clock(), v.tries + 1
+
+    def follow(self, v):
+        """Paper: read the position of a walking villager. It arrives 1.5 blocks from the center of its goal cell (there
+        the plugin stops a villager, #438), or when it stands still for 1 s near it; still for 5 s far from it after
+        two orders, it found no path and stops (#437)."""
+        pos = self.pos(v.uuid)
+        if not pos:
+            return
+        step, v.pos, now = math.dist(pos, v.pos), pos, self.clock()
+        v.walked += step
+        v.moved = now if step >= 0.05 else v.moved
+        far, still = math.dist((pos[0], pos[2]), (v.goal[0] + 0.5, v.goal[1] + 0.5)), now - v.moved
+        if still >= 5 and far >= 2 and v.tries < 2:                    # a second order, as the plugin drops one
+            self.move(v)
+        elif far < 1.5 or still >= 1 and far < 2 or still >= 5:
+            self.command(f"aoe stop {v.uuid}")
+            v.path = []
+            if far >= 2:
+                self.set(v, "idle")
 
     def work(self, v):
         """One gather step shows: the villager turns to the point of the resource next to it, block particles of the
