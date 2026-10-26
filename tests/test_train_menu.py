@@ -35,7 +35,7 @@ def test_a_click_queues_one_and_the_menu_shows_the_new_count():
     server.scores["aoe_menu"] = 1
     g.clicks()
     assert " queue 1/15 1:book:Loom" in menus(server)[-1] and "Steve" in g.menus   # the menu stays open
-    assert menus(server)[-1].endswith("queue 1/15 1:book:Loom:50 gold · 25 s · research" + FEUDAL) and "Steve" in g.menus   # the menu stays open
+    assert ("queue 1/15 1:book:Loom:50 gold · 25 s · research" + FEUDAL) in menus(server)[-1] and "Steve" in g.menus   # the menu stays open
 
 
 def test_a_shift_click_queues_five():
@@ -44,7 +44,7 @@ def test_a_shift_click_queues_five():
     server.scores["aoe_menu"] = -1                                     # the plugin: -(slot + 1) for a shift click
     g.clicks()
     assert len(g.queues[2, 5, 2, 5]) == 5 and g.stock["food"] == 750
-    assert menus(server)[-1].endswith("queue 5/15 1:book:Loom:50 gold · 25 s · research" + FEUDAL)
+    assert ("queue 5/15 1:book:Loom:50 gold · 25 s · research" + FEUDAL) in menus(server)[-1]
 
 
 def test_a_shift_click_queues_as_many_as_the_food_and_the_queue_allow():
@@ -57,7 +57,7 @@ def test_a_shift_click_queues_as_many_as_the_food_and_the_queue_allow():
         train.order(g, "Steve", rect, 0, shift=True)
     assert len(g.queues[rect]) == train.QUEUE == 15
     assert train.order(g, "Steve", rect, 0) == 0 and any("queue is full" in c for c in server.log)
-    assert menus(server)[-1].endswith("queue 15/15 1:book:Loom:50 gold · 25 s · research" + FEUDAL)
+    assert ("queue 15/15 1:book:Loom:50 gold · 25 s · research" + FEUDAL) in menus(server)[-1]
 
 
 def test_a_click_on_an_empty_slot_queues_nothing():

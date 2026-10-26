@@ -19,6 +19,9 @@ and changes the values of the live and the new units (stats()). Loom: villagers 
 Ages (#672): the Feudal Age is a technology of the town center that needs 2 types of Dark Age buildings (REQUIRES). The
 sidebar title shows the age of the player; all players see a title and hear a sound when a player advances.
 Forging at the blacksmith (#675): infantry and cavalry get +1 attack.
+The queue in the menu (#706): the second row shows the queue, one item per group of the same unit next to each other
+(item count: the units), the first one with its progress. A click on a group cancels its last unit and gives back
+its full cost, as in AoE2.
 """
 import json
 import math
@@ -59,6 +62,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "LOOM": (1, "book", "Loom"),                               # a book for a technology (#618)
          "FEUDAL_AGE": (2, "bell", "Feudal Age")}
 SHIFT = 5                                                          # units of a shift click, as in AoE2
+ROW = 9                                                            # the first slot of the queue row of the menu (#706)
 
 
 def melee(s):
@@ -95,12 +99,47 @@ def show(g, player, rect):
               + (missing(g, name) or ("researching" if queued(g, name) else "research") if name in TECHS
                  else f"queue {n}/{QUEUE}"))
              for name in TRAINS[building] if name not in g.techs]
+    q = g.queues.get(rect, [])
+    for i, (name, start, k) in enumerate(groups(q)[:ROW]):
+        done = f" {int(100 * q[0]['progress'])} %" if start == 0 else ""
+        items.append((ROW + i, ITEMS[name][1], ITEMS[name][2] + done, "Click: cancel 1", k))
     menu.show(g, player, build.pretty(building), items, lambda p, slot, shift: order(g, p, rect, slot, shift))
+
+
+def groups(q):
+    """The queue q as (name, index of the first, count) of the same unit next to each other."""
+    out = []
+    for i, e in enumerate(q):
+        if out and out[-1][0] == e["name"]:
+            out[-1] = (e["name"], out[-1][1], out[-1][2] + 1)
+        else:
+            out.append((e["name"], i, 1))
+    return out
+
+
+def cancel(g, player, rect, group):
+    """Remove the last unit of queue group `group` (groups()) of the building rect and give back its full cost, as in
+    AoE2 (also for the unit in training). Returns its name, or None."""
+    q = g.queues.get(rect, [])
+    gs = groups(q)
+    if not 0 <= group < len(gs):
+        return None
+    name, start, k = gs[group]
+    q.pop(start + k - 1)
+    for r, v in COSTS[name].items():
+        g.stock[r] += v
+        g.command(f"scoreboard players add {r.capitalize()} aoe_res {v}")
+    return name
 
 
 def order(g, player, rect, slot, shift=False):
     """A click on the menu item in slot: queue 1 unit (a shift click: SHIFT, as many as the resources and the queue
-    allow) at the building rect, and refresh the menu. Returns the number of queued units."""
+    allow) at the building rect, or cancel a unit of the queue row (cancel()), and refresh the menu. Returns the
+    number of queued units."""
+    if slot >= ROW:
+        cancel(g, player, rect, slot - ROW)
+        show(g, player, rect)
+        return 0
     name = next((n for n in TRAINS[homes(g)[rect]] if ITEMS[n][0] == slot), None)
     n = 0
     while name and n < (SHIFT if shift else 1) and queue(g, player, rect[::2], name):

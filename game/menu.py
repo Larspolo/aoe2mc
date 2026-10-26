@@ -17,13 +17,14 @@ def setup(g):
 
 
 def command(player, title, items):
-    """The plugin command that opens a menu. items: (slot, material, name, lore) with lore "" for none,
-    and lines of the lore split by a new line."""
+    """The plugin command that opens a menu. items: (slot, material, name, lore) or (slot, material, name, lore,
+    count) with lore "" for none, and lines of the lore split by a new line. count: the item count (#706)."""
     def q(s):
         return quote(str(s), safe="")
     return " ".join([f"aoe menu {player} {q(title)}"] +
                     [f"{int(slot)}:{material.removeprefix('minecraft:')}:{q(name)}:{q(lore)}"
-                     for slot, material, name, lore in items])
+                     + (f":{int(more[0])}" if more and more[0] != 1 else "")
+                     for slot, material, name, lore, *more in items])
 
 
 def show(g, player, title, items, handler):
