@@ -24,7 +24,8 @@ from agent_config import CONFIG
 
 REPO = os.environ.get("GITHUB_REPOSITORY") or CONFIG["repo"]
 STATUS, PAUSED = CONFIG["status"]["label"], CONFIG["status"]["paused"]
-SKIP = {"needs-human", "blocked", "epic", STATUS, "in-progress"}
+MUTED = "muted"                # the owner mutes a ticket: no agent works on it, and "Waiting for you" hides it
+SKIP = {"needs-human", "blocked", "epic", STATUS, "in-progress", MUTED}
 PRIORITY = ["P0", "P1", "P2", "P3"]
 # Names in ticket text that do not count for the overlap: tools for checks, and LEARNINGS.md (merge=union: no conflicts).
 # A PR that changes them still counts (work() takes the files of the PRs as they are).
@@ -158,8 +159,11 @@ def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now)
         out.append("**State:** paused (remove the label `paused` from this issue to continue)")
 
     out += ["", "### Waiting for you"]
-    wait = [i for i in sorted(issues, key=lambda i: i["number"]) if "needs-human" in labels(i)]
+    wait = [i for i in sorted(issues, key=lambda i: i["number"]) if "needs-human" in labels(i) and MUTED not in labels(i)]
     out += [f"- #{i['number']} {i['title']} – {question(comments.get(i['number'], []))}" for i in wait] or ["- nothing"]
+    muted = sum(MUTED in labels(i) for i in issues)
+    if muted:
+        out.append(f"- Muted: {muted} ticket{'s' * (muted != 1)} (label `{MUTED}`: no agent works on them; remove the label to bring one back)")
 
     out += ["", "### Working on"]
     for i in sorted(issues, key=lambda i: i["number"]):
