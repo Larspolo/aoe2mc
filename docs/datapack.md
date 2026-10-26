@@ -138,6 +138,11 @@ last 100 ticks), tiny world, headless server:
 The budget is 50 ms per tick. Even the worst case (every tick, 1000 markers) costs about 1 ms. A pulse every
 2 s near the players costs nothing that `/tick query` can measure.
 
+`python3 tools/tick_cost.py` measures this again on the `village` scenario (#458): a server on the world with and
+without `datapacks/aoe2mc`, the median of the `/tick query` means over 60 s. A `mc` test (`tests/test_tick_cost.py`)
+fails when the pack costs 2 ms per tick or more. Village, 26.3, no players: 14 pulse lines, 1.00 ms without and
+1.15 ms with the pack (`--ambience basic`).
+
 ## Method
 
 1. `python3 tools/scenarios.py tiny T.aoe2scenario`, then convert it with `--mc-version 1.21.1` and `26.3`.
