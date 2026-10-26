@@ -59,6 +59,13 @@ Find code by function name with Grep. Do not read the large files from start to 
 
 Design work (buildings, objects, units, animals) follows `docs/DESIGN.md`. Do design tickets with the `design` skill.
 
+- **Minecraft features first** (owner rule, 2026-10-26). Before you write own logic, look for the Minecraft feature that
+  does the job, and use it: mob AI and path finding, riders (`Passengers`) and boats, the behavior class of a mob
+  (passive, neutral, hostile: `docs/animals.md`), teams, scoreboards, attributes, block states, block entities, redstone,
+  datapack functions. Write own logic only when Minecraft has no feature for it, and say why in the PR.
+  Converted worlds stay vanilla. The game program may use a Paper plugin where vanilla has no command (for example
+  "walk to this point": `Mob#getPathfinder().moveTo`). Details: `docs/DESIGN.md`, section 0.
+
 - Tile (x, y) → block (x × T, z = y × T). T = `--tile-size` (default 4). Elevation level → `--level-height` blocks.
 - A building design draws on a `Canvas` in local coordinates. The front (main door) is on the south side (z = w-1).
 - Footprint rule: an object keeps its blocks inside its footprint up to head height (3 blocks). `Edits` enforces this.

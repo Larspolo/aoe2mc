@@ -59,6 +59,11 @@ milestones. Reasons:
 Change to a Paper plugin or a mod later only if the RCON program is too slow or the player needs an RTS
 camera. The game state and the rules can then move to Java with the same design.
 
+**Owner decision (2026-10-26):** use Minecraft path finding. The game program changes to a Paper server with a small
+plugin, so that units keep their AI and walk with `Mob#getPathfinder().moveTo(...)` (orders) and their own goals
+(fights). The players already join the server of the game program, so no single-player world is lost. The
+converted worlds stay vanilla. See CLAUDE.md, "Minecraft features first".
+
 ### Smallest playable milestone: "villagers gather wood"
 
 1. The converter writes `aoe2mc.json` into the world folder: each object with its AoE2 ID, name, owner,
