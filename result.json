@@ -1,0 +1,125 @@
+{
+ "dark": {
+  "BARRACKS": [
+   "Barracks",
+   "0:zombie_spawn_egg:Militia:60 food \u00b7 20 gold \u00b7 21 s \u00b7 queue 0/15",
+   "1:gray_dye:Spearman:35 food \u00b7 25 wood \u00b7 22 s \u00b7 Needs the Feudal Age",
+   "8:white_banner:Rally point:Click, then right click the ground"
+  ],
+  "BLACKSMITH": [
+   "Blacksmith",
+   "0:book:Forging:150 food \u00b7 50 s \u00b7 research",
+   "1:book:Scale Mail Armor:100 food \u00b7 40 s \u00b7 research",
+   "2:book:Fletching:100 food \u00b7 50 gold \u00b7 30 s \u00b7 research"
+  ],
+  "STABLE": [
+   "Stable",
+   "0:gray_dye:Scout Cavalry:80 food \u00b7 30 s \u00b7 Needs the Feudal Age",
+   "8:white_banner:Rally point:Click, then right click the ground"
+  ],
+  "MINING_CAMP": [
+   "Mining Camp",
+   "0:book:Gold Mining:100 food \u00b7 75 wood \u00b7 30 s \u00b7 research",
+   "1:book:Stone Mining:100 food \u00b7 75 wood \u00b7 30 s \u00b7 research"
+  ]
+ },
+ "feudal": {
+  "BARRACKS": [
+   "Barracks",
+   "0:zombie_spawn_egg:Militia:60 food \u00b7 20 gold \u00b7 21 s \u00b7 queue 0/15",
+   "1:zombie_spawn_egg:Spearman:35 food \u00b7 25 wood \u00b7 22 s \u00b7 queue 0/15",
+   "2:book:Man-at-Arms:100 food \u00b7 40 gold \u00b7 40 s \u00b7 research",
+   "8:white_banner:Rally point:Click, then right click the ground"
+  ],
+  "BLACKSMITH": [
+   "Blacksmith",
+   "0:book:Forging:150 food \u00b7 50 s \u00b7 research",
+   "1:book:Scale Mail Armor:100 food \u00b7 40 s \u00b7 research",
+   "2:book:Fletching:100 food \u00b7 50 gold \u00b7 30 s \u00b7 research",
+   "3:book:Padded Archer Armor:100 food \u00b7 40 s \u00b7 research",
+   "4:book:Scale Barding Armor:150 food \u00b7 45 s \u00b7 research"
+  ],
+  "STABLE": [
+   "Stable",
+   "0:horse_spawn_egg:Scout Cavalry:80 food \u00b7 30 s \u00b7 queue 0/15",
+   "1:book:Bloodlines:150 food \u00b7 100 gold \u00b7 50 s \u00b7 research",
+   "8:white_banner:Rally point:Click, then right click the ground"
+  ],
+  "MINING_CAMP": [
+   "Mining Camp",
+   "0:book:Gold Mining:100 food \u00b7 75 wood \u00b7 30 s \u00b7 research",
+   "1:book:Stone Mining:100 food \u00b7 75 wood \u00b7 30 s \u00b7 research"
+  ]
+ },
+ "before": {
+  "archer_hit": 4.0,
+  "scout_hit": 4.0,
+  "scout_hp": 45.0,
+  "militia_hp": 40.0,
+  "stone_s": 1.6339869281045751,
+  "militia_name": "Militia \u2764\u2764\u2764\u2764\u2764 has the following entity data: {extra: [{color: \"#2D2DF5\", text: \"Militia\"}, \" \", {..."
+ },
+ "after": {
+  "archer_hit": 3.0,
+  "scout_hit": 3.0,
+  "scout_hp": 65.0,
+  "militia_hp": 45.0,
+  "stone_s": 1.4208581983518045,
+  "militia_name": "Man At Arms \u2764\u2764\u2764\u2764\u2764 has the following entity data: {extra: [{color: \"#2D2DF5\", text: \"Man At Arms\"}, \" \", {...",
+  "soldiers": {
+   "17baf583-a420-58a1-b36b-909b64a4295f": "MAN_AT_ARMS",
+   "117ab833-a03b-510f-f6b1-3f9083928985": "ARCHER",
+   "e27c4789-74a6-7f98-320a-6b6c5fa1aaa1": "SCOUT_CAVALRY"
+  },
+  "barracks_trains": [
+   "MAN_AT_ARMS",
+   "SPEARMAN",
+   "MAN_AT_ARMS_UPGRADE"
+  ]
+ },
+ "rows": {
+  "PADDED_ARCHER_ARMOR": {
+   "queued": 1,
+   "cost": {
+    "food": 100
+   },
+   "real_s": 24.4,
+   "done": true
+  },
+  "SCALE_BARDING_ARMOR": {
+   "queued": 1,
+   "cost": {
+    "food": 150
+   },
+   "real_s": 26.6,
+   "done": true
+  },
+  "STONE_MINING": {
+   "queued": 1,
+   "cost": {
+    "wood": 75,
+    "food": 100
+   },
+   "real_s": 17.8,
+   "done": true
+  },
+  "BLOODLINES": {
+   "queued": 1,
+   "cost": {
+    "food": 150,
+    "gold": 100
+   },
+   "real_s": 29.6,
+   "done": true
+  },
+  "MAN_AT_ARMS_UPGRADE": {
+   "queued": 1,
+   "cost": {
+    "food": 100,
+    "gold": 40
+   },
+   "real_s": 23.8,
+   "done": true
+  }
+ }
+}
