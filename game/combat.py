@@ -17,6 +17,9 @@ from collections import namedtuple
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from gather import NORMAL  # noqa: E402
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from units import pretty  # noqa: E402
+
 Stats = namedtuple("Stats", "hp attack melee pierce range reload bonus classes", defaults=({}, ()))
 
 INF, ARC, CAV, CAM, ELE, SIE, SPE = "infantry", "archer", "cavalry", "camel", "elephant", "siege", "spearman"
@@ -99,6 +102,13 @@ def stats_command(uuid, name, s=None):
             f"{','.join(s.classes) or '-'} {bonus}")
 
 
+def label_command(uuid, name=None):
+    """The plugin command that shows the name line of a unit again (after a selection change), or with a name sets the name
+    of a building target (#661): the name and 5 hearts, visible only when the unit is hurt or selected (AoePlugin.java).
+    The units keep the name of the converter: `aoe stats` takes it."""
+    return f"aoe label {uuid}" + (f" {pretty(name)}" if name else "")
+
+
 def range_command(uuid, name, T, rate=NORMAL):
     """The plugin command that lets a ranged unit shoot from its AoE2 range (tiles * T blocks), with one shot per
     reload time at `rate` game seconds per real second (default: Normal game speed, as the walk speed). None for a
@@ -114,7 +124,8 @@ def setup(game, data):
     ground = [r.split() for r in data.get("ground", ())]
     for o in data["objects"]:
         if o["kind"] == "building" and o["player"] and "footprint" in o and o["name"] in BUILDINGS:
-            for c in building(target_uuid(o["footprint"]), o["name"], o["player"], building_box(o, ground)):
+            uuid = target_uuid(o["footprint"])
+            for c in building(uuid, o["name"], o["player"], building_box(o, ground)) + [label_command(uuid, o["name"])]:
                 game.command(c)
     units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] and o.get("uuid")]
     for o in units:                                  # the plugin answers "Range: 0 units" for a mob that cannot shoot
