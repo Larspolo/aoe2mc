@@ -81,7 +81,7 @@ def test_the_classic_unique_units_exist_on_a_server(tmp_path):
         game.command = lambda c: answers.append((c, command(c))) or answers[-1][1]
         for civ, name in sorted(CLASSIC.items()):
             data["players"]["1"]["civ"] = civ
-            g = gather.Gather(game, data, tick=0.25).setup()
+            g = gather.Gather(game, data, tick=0.25, start={}).setup()
             g.stock.update(food=500, wood=500, gold=500)
             rect, = [r for r, b in train.homes(g).items() if b == "CASTLE"]
             answers.clear()

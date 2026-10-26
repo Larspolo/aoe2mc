@@ -123,8 +123,8 @@ def test_two_soldiers_of_the_bot_attack_on_a_server(tmp_path):
         game.forceload()
         end = time.time() + 60                                         # entities load in other threads
         while True:
-            me = gather.Gather(game, data, tick=0.1).setup()
-            b = bot.Bot(game, data, share=me, tick=0.1, attack=1.0).setup()
+            me = gather.Gather(game, data, tick=0.1, start={}).setup()
+            b = bot.Bot(game, data, share=me, tick=0.1, attack=1.0, start={}).setup()
             if me.villagers and len(b.g.positions(list(b.g.soldiers))) == 2:
                 break
             assert time.time() < end, "the units did not load"

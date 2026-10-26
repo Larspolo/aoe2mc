@@ -31,12 +31,14 @@ The agent takes instructions only from comments and issues by `Larspolo`.
 | Give feedback | Comment on the ticket, on the PR, or on the status issue. |
 | Reject merged work | Comment on the merged PR. The agent makes a follow-up ticket. |
 | Answer a question | Answer in the `needs-human` ticket. The agent removes the label. |
+| Answer the tickets that wait for you | Run `/human` in Claude Code on your computer, in a clone of the repository. It lists the `needs-human` tickets, prepares the world, the server or the options, guides you step by step and writes your answer on the ticket. |
 | Do a task that the agent cannot do | The agent asks on the issue: label `needs-human` and a comment that mentions you. Do it, then comment. |
 | Stop the agent | Add label `paused` to the status issue. Remove it to continue. |
 | Cancel a ticket | Close it as "not planned". |
 | Mute a ticket until later | Add the label `muted`. No agent works on it (also not on a muted epic), and "Waiting for you" hides it. Remove the label to bring it back. |
 | Reject a process change | Comment on the status issue. The agent reverts it and notes why. |
 | Ask for a process review | Comment "process review" on the status issue. |
+| Check or repair the start of the runs | Start a session at claude.ai/code and type `/operator`. It checks the scheduled tasks, the pacer session, the quota, CI and the labels, and repairs them after you agree. A long-lived owner session is not necessary. |
 
 Order of work: `P0` → `P1` → `P2` → `P3`. With the same priority, the lowest issue number goes first.
 Tickets with `needs-human`, `blocked`, `muted` or `epic` wait. A ticket that depends on a muted ticket waits too.

@@ -21,7 +21,7 @@ def farm_map(villagers=("v",)):
     objects += [{"kind": "unit", "name": "VILLAGER_MALE", "player": 1, "uuid": u, "tile": [7.5, 7.5 + i]}
                 for i, u in enumerate(villagers)]
     server = FakeServer({u: {"Pos": (7.5, 64.0, 7.5 + i)} for i, u in enumerate(villagers)})
-    g = gather.Gather(server, grid([[64] * 24 for _ in range(24)], objects), carry=10, chop=0.25).setup()
+    g = gather.Gather(server, grid([[64] * 24 for _ in range(24)], objects), carry=10, chop=0.25, start={}).setup()
     return server, g
 
 
@@ -97,7 +97,7 @@ def test_villager_farms_on_a_server(tmp_path):
         game.forceload()
         end = time.time() + 60                                         # entities load in other threads
         while True:
-            g = gather.Gather(game, data, tick=0.05, carry=10, chop=0.01).setup()
+            g = gather.Gather(game, data, tick=0.05, carry=10, chop=0.01, start={}).setup()
             if g.villagers:
                 break
             assert time.time() < end, "the villager did not load"

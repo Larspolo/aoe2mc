@@ -39,10 +39,11 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from aoe2mc import PASSABLE_OBJECTS, WOODS, object_footprint, player_color, tree_kind  # noqa: E402
-from units import VILLAGER_JOBS, animal  # noqa: E402
+from units import VILLAGER_JOBS, animal, pretty  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
+import replay  # noqa: E402  (build imports it too)
 import bossbar  # noqa: E402
 import cheats  # noqa: E402
 import garrison  # noqa: E402
@@ -53,6 +54,7 @@ import train  # noqa: E402
 RESOURCES = ("Wood", "Food", "Gold", "Stone")
 DROP_SITES = {"wood": ("TOWN_CENTER", "LUMBER_CAMP"), "food": ("TOWN_CENTER", "MILL"),   # as in AoE2 (#389)
               "gold": ("TOWN_CENTER", "MINING_CAMP"), "stone": ("TOWN_CENTER", "MINING_CAMP")}
+START = replay.START                                               # the AoE2 standard start resources (#973)
 TREE_WOOD = 100                                                    # wood in one tree, as in AoE2
 BUSH_FOOD = 125                                                    # food in one fruit bush, as in AoE2 DE
 # AoE2 DE work rates per game second (#393): lumberjack 0.39 (empires2_x2_p1.dat, #267), the others the published
@@ -83,7 +85,12 @@ GROUPS = {n: (3 + n, dye) for n, dye in enumerate(("red_dye", "yellow_dye", "lim
 GROUP_GIVE = 20                                                    # clicks() calls between two checks of the items
 SNEAK = '{condition:"minecraft:entity_properties",entity:"this",predicate:{flags:{is_sneaking:true}}}'
 MARK = {"go": "[0.2,1.0,0.2]", "attack": "[1.0,0.15,0.15]"}       # dust colors of the order marker (#796): green, red
+SIEGE_GLOW = 3                                                     # seconds of the glow of an attacked building (#991)
 MARK_POINTS = 12                                                   # dust points on the ring of the order marker
+# The pointing mark (#989): a smaller ring than the order marker, in the color of the target under the crosshair.
+POINT = {"own": "[0.3,0.7,1.0]", "enemy": "[1.0,0.15,0.15]", "resource": "[1.0,0.85,0.2]", "ground": "[0.9,0.9,0.9]"}
+POINT_POINTS, POINT_SCALE, POINT_GROW = 8, 0.8, 0.05            # dust points, least scale, scale per block away
+WHERE_PAGE = 40                                                    # units in one answer of `aoe where` (AoePlugin)
 # The look and sound of one gather step at the resource (#592): block particles and a vanilla sound. A villager has
 # no arm swing, so it turns to the resource (`rotate ... facing`). 26.3 block particles take
 # `{id:...,Properties:{...}}`, not `Name`.
@@ -345,37 +352,49 @@ class Villager:
         return math.floor(self.pos[0]), math.floor(self.pos[2])
 
 
-def marker(m, cells, kind, who):
+def marker(m, cells, kind, who, colors=MARK, points=MARK_POINTS, scale=1.5):
     """The commands of the order marker (#796) for player selector who: a ring of dust particles on the ground of
     gather.Map m around the block cells. Dust fades in about 1 second by itself (Minecraft feature): no remove command.
-    The live replay uses it too (#845)."""
+    The live replay uses it too (#845), and the pointing mark with other colors, points and scale (#989)."""
     xs, zs = [c[0] for c in cells], [c[1] for c in cells]
     cx, cz = (min(xs) + max(xs) + 1) / 2, (min(zs) + max(zs) + 1) / 2
     r = max(max(xs) - min(xs) + 1, max(zs) - min(zs) + 1) / 2 + 0.5
     y = m.y(int(cx), int(cz)) or 0
-    return [f"particle minecraft:dust{{color:{MARK[kind]},scale:1.5}} {cx + r * math.cos(a):.2f} {y + 0.2:.2f} "
+    return [f"particle minecraft:dust{{color:{colors[kind]},scale:{scale}}} {cx + r * math.cos(a):.2f} {y + 0.2:.2f} "
             f"{cz + r * math.sin(a):.2f} 0 0 0 0 1 force {who}"
-            for a in (2 * math.pi * k / MARK_POINTS for k in range(MARK_POINTS))]
+            for a in (2 * math.pi * k / points for k in range(points))]
 
 
-def glow(uuid):
+def glow(uuid, seconds=1):
     """The order marker of an attack on a unit (#796): the target glows for a moment (Minecraft effect)."""
-    return f"effect give {uuid} minecraft:glowing 1 0 true"
+    return f"effect give {uuid} minecraft:glowing {seconds} 0 true"
+
+
+def siege_mark(uuid, name, hp, who):
+    """The mark of an attack order on building `name` (#991), as the flash of AoE2: its target (an invisible slime that
+    fills the footprint) glows SIEGE_GLOW seconds (an invisible mob shows its outline in the team color), and the action
+    bar of player who shows the name and the hit points (the score aoe_hp of the plugin) of the full hp."""
+    text = [{"text": f"Attack: {build.pretty(name)} (", "color": "red"}, {"score": {"name": uuid, "objective": "aoe_hp"}},
+            {"text": f"/{hp})"}]
+    return [glow(uuid, SIEGE_GLOW), f"title {who} actionbar " + json.dumps(text)]
 
 
 class Gather:
     """The gather game on a running server (game.command sends one command). Call setup(), then step() in a loop.
     log: a text file that gets one JSON line per event (state change or drop), to measure the timing (#289).
     chop: seconds per unit, one number for all resources or {resource: seconds} ("farm" for farms); default
-    WORK_SECONDS, the AoE2 rates at Normal speed (#413)."""
+    WORK_SECONDS, the AoE2 rates at Normal speed (#413). start: the start resources, default START as in AoE2 (#973);
+    a missing resource starts at 0 ({} for none)."""
     cheats = False                                                     # also for the adapters of Gather.__new__
     aegis = False                                                      # the cheat "aegis": all work is instant (#817)
+    beyond = free_techs = noui = False                                 # cheats: repeat and free technologies, no UI (#968)
+    pop_cap = None                                                     # the cheat "my cpu can handle it" (#968): 1000
     ended = None                                                       # "Victory" or "Defeat": run() stops (#819)
     board = "aoe_res"                                                  # the objective of the resources (the sidebar)
     bots = ()                                                          # run() steps them too (bot.Bot, #856)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
-                 cheats=False):
+                 cheats=False, start=None):
         self.game, self.data, self.map, self.player = game, data, Map(data, player), player
         self.paper = getattr(game, "kind", None) == "paper"           # walks with the plugin (#437)
         chop = WORK_SECONDS if chop is None else chop
@@ -383,7 +402,7 @@ class Gather:
         self.chop = dict(chop) if isinstance(chop, dict) else dict.fromkeys(WORK_SECONDS, chop)
         self.log, self.clock, self.t0 = log, clock, clock()
         self.cheats = cheats                                           # the AoE2 cheat codes in the chat (#816)
-        self.stock = dict.fromkeys(DROP_SITES, 0)                      # resources at the drop sites
+        self.stock = {**dict.fromkeys(DROP_SITES, 0), **(START if start is None else start)}   # at the drop sites (#973)
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
                       and "VILLAGER" in o["name"]]
         self.villagers, self.selected = {}, set()
@@ -399,6 +418,7 @@ class Gather:
         self.bar = None                                                # the unit on the boss bar (bossbar.py, #659)
         self.queues, self.trained = {}, {}                             # town center -> its queue, units it trained
         self.techs = set()                                             # the researched technologies (train.TECHS)
+        self.repeats = {}                                              # technology -> researches after the first (#968)
         self.rally, self.rallying, self.marks = {}, {}, {}             # building -> rally point, player -> building,
         #                                                                tag of a rally marker -> AoE2 seconds left
         self.pop, self.census, self.shown = 0, 0.0, {}                 # live units, AoE2 seconds since the count, sidebar
@@ -407,11 +427,14 @@ class Gather:
         self.forts = {combat.target_uuid(o["footprint"]): combat.building_box(o, ground) for o in data["objects"]
                       if o["kind"] == "building" and o["player"] not in (0, player) and "footprint" in o
                       and o["name"] in combat.BUILDINGS}               # target UUID -> box of an enemy building
+        self.fort_names = {combat.target_uuid(o["footprint"]): o["name"] for o in data["objects"]
+                           if o["kind"] == "building" and "footprint" in o}   # target UUID -> AoE2 name (#991)
         self.sieged = set()                                            # the targets of attack orders
         self.wands, self.corners = set(), {}                           # players who clicked the wand, player -> corner 1
         self.holds = {}                                                # player -> time of the last wand use of a drag
         self.groups, self.grouping, self.calls = {}, {}, 0             # group -> units, player -> (group, shift)
         self.hints = {}                                                # target -> (hint text, time) (hints.py, #798)
+        self.pointing = {}                                             # player -> text of its pointed target (#989)
         self.garrisons, self.entering = garrison.start(self), {}       # building -> units inside, unit -> building (#808)
 
     @property
@@ -433,7 +456,7 @@ class Gather:
                     f"scoreboard objectives setdisplay sidebar {self.board}"):
             self.command(cmd)
         for r in RESOURCES:
-            self.command(f"scoreboard players add {r} {self.board} 0")
+            self.command(f"scoreboard players set {r} {self.board} {self.stock[r.lower()]}")   # the start resources
         self.command(f'scoreboard players display name Idle {self.board} "Idle villagers"')   # a name has no space
         build.setup(self)
         menu.setup(self)
@@ -712,28 +735,29 @@ class Gather:
         if (rect := self.rallying.pop(name, None)) and (cell := self.map.pick_ground(eye, d)):   # the menu item (#707)
             train.rally(self, rect, cell, self.map.pick_tree(eye, d))
             return
-        army = self.selected and self.selected <= set(self.soldiers)
-        held = garrison.inside(self)                                   # units inside a building take no click (#808)
-        u = pick_unit(eye, d, {k: v.pos for k, v in self.villagers.items() if k not in held} |
-                      self.positions([u for u in self.soldiers if u not in held] + (list(self.enemies) if army else [])))
-        if u in self.enemies:
+        kind, u, _ = self.target(eye, d, self.positions(sorted(self.pickable()))) or (None, None, None)
+        if kind == "enemy":
             self.attack(u)
             self.command(glow(u))                                     # the order marker of an attack (#796)
             return
-        if u and u in self.selected and u in self.villagers:         # a click on a selected villager (#621)
+        if kind == "unit" and u in self.selected and u in self.villagers:   # a click on a selected villager (#621)
             build.open_menu(self, name)
             return
-        if u and u in self.selected and u in self.soldiers:          # a second click on a soldier (#743)
+        if kind == "unit" and u in self.selected and u in self.soldiers:    # a second click on a soldier (#743)
             self.select_type(u)
             return
-        if u:
+        if kind == "unit":
             self.select(u)
             return
-        if army and (fort := self.pick_fort(eye, d)):
-            self.sieged.add(fort)
-            self.attack(fort)
-            x0, _, z0, x1, _, z1 = self.forts[fort]
+        if kind == "fort":
+            self.sieged.add(u)
+            self.attack(u)
+            x0, _, z0, x1, _, z1 = self.forts[u]
             self.mark(name, {(x0, z0), (x1, z1)}, "attack")
+            import combat                                              # combat imports this module
+            what = self.fort_names.get(u, "")
+            for c in siege_mark(u, what, combat.stats(what).hp, name):
+                self.command(c)
             return
         building = build.chosen(self, name)
         if building:                                                   # a chosen building: place its foundation
@@ -751,6 +775,94 @@ class Gather:
             self.build(site)
             x0, x1, z0, z1 = site["footprint"]
             self.mark(name, {(x0, z0), (x1 - 1, z1 - 1)})
+
+    def pickable(self):
+        """The UUIDs of the soldiers and enemies that a right click can pick (villagers: their own positions). Units
+        inside a building take no click (#808); an enemy only with an army selected."""
+        army = self.selected and self.selected <= set(self.soldiers)
+        return (set(self.soldiers) | (set(self.enemies) if army else set())) - garrison.inside(self)
+
+    def target(self, eye, d, places):
+        """What a right click from eye in the view direction d picks, in the order of click(): (kind, key, block cells
+        of the mark) or None. kind: "enemy" or "unit" (key: UUID), "fort" (target UUID), "building" (an own footprint
+        that takes a garrison or trains units), "tree", "mine", "bush", "farm" (tile) or "ground" (block cell).
+        places: {UUID: feet} of pickable(). The click and the pointing mark use it, so both pick the same (#989)."""
+        held = garrison.inside(self)
+        at = {k: v.pos for k, v in self.villagers.items() if k not in held} | \
+            {k: p for k, p in places.items() if k in self.pickable()}
+        if u := pick_unit(eye, d, at):
+            return "enemy" if u in self.enemies else "unit", u, {(math.floor(at[u][0]), math.floor(at[u][2]))}
+        if self.selected and self.selected <= set(self.soldiers) and (fort := self.pick_fort(eye, d)):
+            x0, _, z0, x1, _, z1 = self.forts[fort]
+            return "fort", fort, {(x0, z0), (x1, z1)}
+        cell = self.map.pick_ground(eye, d)
+        if rect := next((r for r in garrison.holders(self) | train.homes(self)
+                         if cell and r[0] <= cell[0] < r[1] and r[2] <= cell[1] < r[3]), None):
+            return "building", rect, {(rect[0], rect[2]), (rect[1] - 1, rect[3] - 1)}
+        if tile := self.map.pick_tree(eye, d):
+            m = self.map
+            kind = "farm" if tile in m.farms else "bush" if tile in m.bushes else "tree" if tile in m.trees else "mine"
+            return kind, tile, m.spot(tile)
+        return cell and ("ground", cell, {cell})
+
+    def says(self, kind, key):
+        """The action bar text of a pointed target (#989): its name and what a right click on it does now."""
+        workers = self.selected & self.villagers.keys()
+        if kind in ("enemy", "unit"):
+            name = ("Enemy " if kind == "enemy" else "") + pretty(self.enemies.get(key) or self.soldiers.get(key)
+                                                                  or "VILLAGER")
+            act = "attack" if kind == "enemy" else "build menu" if key in workers else \
+                "select all of the type" if key in self.selected and key in self.soldiers else "select"
+        elif kind == "fort":
+            name, act = "Enemy " + (pretty(self.fort_names[key]) if key in self.fort_names else "building"), "attack"
+        elif kind == "building":
+            homes, holders = train.homes(self), garrison.holders(self)
+            name = pretty(homes.get(key) or holders[key]["name"])
+            act = "garrison" if key in holders and self.selected and self.paper else "train" if key in homes else None
+        elif kind == "ground":
+            name, act = "Ground", None
+        else:
+            res = self.map.resource(key)
+            name = {"tree": "Tree", "bush": "Berry bush", "farm": "Farm"}.get(kind, f"{res.capitalize()} mine")
+            act = "gather" if workers else None
+        return name + f" · Right click: {act}" * bool(act)
+
+    def places(self):
+        """{UUID: feet} of pickable() for the pointing mark. On Paper one `aoe where` answer has WHERE_PAGE units
+        (#813): the units of the players are on their teams (the pulse of the datapack, #358). Else one `data get`
+        for each unit."""
+        want = self.pickable()
+        if not self.paper:
+            return self.positions(sorted(want))
+        out, start = {}, 0
+        while m := re.search(r"Where (\d+): ?(.*)", self.command(f"aoe where @e[type=!player,team=!] {start}")):
+            for part in filter(None, m[2].split(", ")):
+                u, x, y, z = part.split()[:4]
+                if u in want:
+                    out[u] = float(x), float(y), float(z)
+            start += WHERE_PAGE
+            if start >= int(m[1]):
+                break
+        return out
+
+    def point(self):
+        """Mark the target that a right click of each player picks now (#989): a small ring of dust that only this
+        player sees, in the color of the target (POINT), up to the reach of the click; far away the dust is larger.
+        hints.py writes its name and action into the action bar. Minecraft outlines a block only up to about 5
+        blocks, and the order marker (#796) shows only after the click."""
+        names = [n for n in (n.strip() for n in self.command("list").split(":", 1)[-1].split(",")) if n]
+        self.pointing = {}
+        places = self.places() if names else {}
+        for name in names:
+            if not (look := self.look(name)) or not (t := self.target(*look, places)):
+                continue
+            kind, key, cells = t
+            self.pointing[name] = self.says(kind, key)
+            color = {"enemy": "enemy", "fort": "enemy", "unit": "own", "building": "own", "ground": "ground"}
+            far = math.dist((look[0][0], look[0][2]), [sum(c[i] for c in cells) / len(cells) + 0.5 for i in (0, 1)])
+            scale = round(min(4.0, max(POINT_SCALE, far * POINT_GROW)), 1)   # the dust stays visible far away
+            for c in marker(self.map, cells, color.get(kind, "resource"), name, POINT, POINT_POINTS, scale):
+                self.command(c)
 
     def mark(self, name, cells, kind="go"):
         """Show the target of an order to player name, as the flag of AoE2 (#796): marker() around the block cells."""
@@ -844,19 +956,19 @@ class Gather:
         """Real seconds per unit of resource res ("farm" for farms) with the technologies of the player (WORK_TECHS)."""
         if self.aegis:
             return 0.0                                                 # a full load in one work step
-        return self.chop[res] / math.prod(WORK_TECHS.get(t, {}).get(res, 1) for t in self.techs)
+        return self.chop[res] / math.prod(WORK_TECHS.get(t, {}).get(res, 1) ** train.count(self, t) for t in self.techs)
 
     def move(self, v):
         import ai                                                      # ai imports gather
         if v.goal:
             x, z = v.goal
             ai.move(self, v.uuid, "VILLAGER", self.map.T, x + 0.5, self.map.y(x, z), z + 0.5,
-                    NORMAL * math.prod(PACE.get(t, 1) for t in self.techs))
+                    NORMAL * math.prod(PACE.get(t, 1) ** train.count(self, t) for t in self.techs))
         v.moved, v.tries = self.clock(), v.tries + 1
 
     def limit(self):
         """The resources that a villager carries, with the technologies of the player (CARRY)."""
-        return self.carry + sum(CARRY.get(t, 0) for t in self.techs)
+        return self.carry + sum(CARRY.get(t, 0) * train.count(self, t) for t in self.techs)
 
     def follow(self, v):
         """Paper: read the position of a walking villager. It arrives 1.5 blocks from the center of its goal cell (there
@@ -1015,6 +1127,7 @@ class Gather:
         end = seconds and time.time() + seconds
         while (not end or time.time() < end) and not (until and until()) and not self.ended:
             t = time.time()
+            self.point()                                               # before clicks(): hints.tick shows its text
             for name in self.clicks():
                 self.click(name)
             self.step()

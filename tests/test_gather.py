@@ -77,7 +77,7 @@ def tiny(tiny_world):
     vil, = [o for o in data["objects"] if o["kind"] == "unit" and "VILLAGER" in o["name"]]
     x, z = int(vil["tile"][0] * 4), int(vil["tile"][1] * 4)
     server = FakeServer({vil["uuid"]: {"Pos": (x + 0.5, m.y(x, z), z + 0.5)}})
-    return data, vil["uuid"], server, gather.Gather(server, data, tick=0.25, carry=3, chop=0.25).setup()
+    return data, vil["uuid"], server, gather.Gather(server, data, tick=0.25, carry=3, chop=0.25, start={}).setup()
 
 
 def test_villager_carries_wood_to_the_town_center(tiny_world):
@@ -131,7 +131,7 @@ def test_event_log_gives_the_configured_timing(tiny_world):
     import measure_gather
     data, uuid, server, _ = tiny(tiny_world)
     now, log = [0.0], io.StringIO()
-    g = gather.Gather(server, data, tick=0.25, carry=3, chop=0.5, log=log, clock=lambda: now[0]).setup()
+    g = gather.Gather(server, data, tick=0.25, carry=3, chop=0.5, log=log, clock=lambda: now[0], start={}).setup()
     tree, = g.map.trees
     g.select(uuid)
     g.send(tree)
@@ -156,7 +156,7 @@ def test_fell_removes_the_tree_and_its_barriers_and_leaves_a_flat_stump():
     # the ground of the converter is on top of the barriers in the footprint (x 20..23, z 24..27)
     m["ground"] = [" ".join("67" if 20 <= x < 24 and 24 <= z < 28 else "64" for x in range(48)) for z in range(48)]
     server = FakeServer({})
-    g = gather.Gather(server, m)
+    g = gather.Gather(server, m, start={})
     g.fell((5, 6))
     fills = [c for c in server.log if c.startswith("fill ")]
     assert "fill 20 62 24 23 67 27 air replace minecraft:barrier" in fills                # the footprint only
@@ -171,7 +171,7 @@ def test_a_cut_tree_lies_on_the_ground_and_gets_shorter():
     m["tile_size"] = 4
     m["ground"] = [" ".join("67" if 20 <= x < 24 and 24 <= z < 28 else "64" for x in range(48)) for z in range(48)]
     server = FakeServer({})
-    g = gather.Gather(server, m)
+    g = gather.Gather(server, m, start={})
     tile = (5, 6)
 
     def level(wood):
@@ -220,7 +220,7 @@ def test_villager_gathers_wood_on_a_server(tiny_world, tmp_path):
         game.forceload()
         end = time.time() + 60                                         # entities load in other threads
         while True:
-            g = gather.Gather(game, data, tick=0.05, carry=3, chop=0.05).setup()
+            g = gather.Gather(game, data, tick=0.05, carry=3, chop=0.05, start={}).setup()
             if g.villagers:
                 break
             assert time.time() < end, "the villager did not load"
