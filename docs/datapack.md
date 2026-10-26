@@ -42,6 +42,12 @@ Teams (#358, `team_lines` in `aoe2mc.py`): each unit of player N has the tag `ao
 (`units.TEAM_COLOR`). A load function reaches only the entities of loaded chunks, so the pulse puts each new unit in
 its team: `team join pN @e[tag=aoe2mc.pN,team=]`. Gaia has no team. `--ambience off` writes no pack, so no teams.
 
+Timer triggers (#648, `trigger_files` in `aoe2mc.py`, epic #645): a trigger that is enabled at the start and has only
+timer conditions gets `function/trigger/<id>.mcfunction`. `load.mcfunction` starts it with
+`schedule function aoe2mc:trigger/<id> <20 × largest timer>t replace`. "Send Chat" → `tellraw @a`, "Display
+Instructions" → `title @a times` (its display time), `subtitle` and an empty `title`. AoE2 color tags are removed.
+A looping trigger schedules itself again. A trigger with other conditions is not written yet.
+
 ## Pack layout
 
 ```
