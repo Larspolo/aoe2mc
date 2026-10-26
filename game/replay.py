@@ -32,6 +32,7 @@ MAX_FILL = 32768            # blocks of one /fill command
 FORMATION = 2              # blocks between the units of a group in a formation (#410)
 LEG = 48                    # path cells of one plugin order: within the reach of a Minecraft path search (#438)
 TALL = 48                   # blocks above the ground that a DELETE clears for a start building (no height in aoe2mc.json)
+POLL = 0.2                  # seconds between two calls of the poll of Replay.run while it waits (#685)
 PATH_CELLS = 20000          # cells that one path search may look at: a unit with no path stays (no time lag)
 SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, "PIKEMAN": 1.0, "EAGLE": 1.1,
           "ARCHER": 0.96, "SKIRMISHER": 0.96, "CROSSBOWMAN": 0.96, "CAVALRY_ARCHER": 1.4, "SCOUT": 1.2,
@@ -51,7 +52,7 @@ class Replay:
     """The timeline of aoe2mc.json `data` on a server (game.command sends one command)."""
 
     def __init__(self, game, data, version=aoe2mc.VERSION_NAME, ai=False):
-        self.game, self.data, self.ai, self.speed = game, data, ai, 1.0     # ai: walks through the plugin (Paper)
+        self.game, self.data, self.ai, self.speed, self.paused = game, data, ai, 1.0, False  # ai: plugin walks
         self.T, self.n = data["tile_size"], len(data["ground"])
         self.ground = [[None if v == "-" else int(v) for v in row.split()] for row in data["ground"]]
         self.starts = [(o.get("ref"), o["player"], o["name"], (o["footprint"][0], o["footprint"][2], o["footprint"][1],
@@ -440,24 +441,48 @@ class Replay:
         self.sent += len(cmds)
         self.busy += time.perf_counter() - t
 
-    def run(self, speed=1.0, start=0, clock=time.monotonic, sleep=time.sleep, log=print):
+    def retime(self, g0, r0, r):
+        """Apply a change of `self.control` at real time r: returns the new anchor (game time g0 at real time r0).
+        The game time stays where it is, so no event plays twice; a pause stops it (#685). Walking units of the
+        plugin get the new walk speed (0 in a pause)."""
+        speed, paused = self.control["speed"], self.control["paused"]
+        if (speed, paused) == (self.speed, self.paused):
+            return g0, r0
+        g = g0 if self.paused else g0 + (r - r0) * 1000 * self.speed
+        self.speed, self.paused = speed, paused
+        if self.ai:
+            import ai                                               # ai -> replay: import it late
+            self.send([ai.speed_command(v.uuid, v.name, self.T, 0 if paused else speed)
+                       for v in map(self.units.get, self.moving) if v and v.uuid])
+        return g, r
+
+    def run(self, speed=1.0, start=0, clock=time.monotonic, sleep=time.sleep, log=print, poll=None):
         """Play the timeline from game time `start` (ms) at `speed` times the game speed. Returns the stats:
         commands, events, the seconds of sending, the largest lag behind the timeline (s), commands per second
-        (rate) and the commands per second that the timeline needs on average (need)."""
+        (rate) and the commands per second that the timeline needs on average (need).
+        poll(control) may change `self.control` ("speed", "paused") while the replay runs: run calls it before
+        each event and each POLL seconds while it waits (#685)."""
         events = sorted((e for e in self.data.get("timeline", []) + self.spawns() if e["time"] >= start),
                         key=lambda e: e["time"])
-        t0, lag, n, k = clock(), 0.0, 0, 0
-        self.speed = speed
+        g0, r0, lag, n, k = start, clock(), 0.0, 0, 0                 # game time g0 (ms) at real time r0
+        self.speed, self.paused = speed, False
+        self.control = {"speed": speed, "paused": False}
         while k < len(events) or self.moving:
             step = min(self.moving.values(), default=math.inf)        # the next step of a walking unit
             e = events[k] if k < len(events) and events[k]["time"] <= step else None
             k += e is not None
             now = e["time"] if e else step
-            due = (now - start) / 1000 / speed
-            wait = due - (clock() - t0)
-            if wait > 0:
-                sleep(wait)
-            lag = max(lag, clock() - t0 - due)
+            while True:
+                if poll:
+                    poll(self.control)
+                    g0, r0 = self.retime(g0, r0, clock())
+                wait = POLL if self.paused else (now - g0) / 1000 / self.speed - (clock() - r0)
+                if wait <= 1e-6:                                    # rounding: no endless wait
+                    break
+                sleep(min(wait, POLL) if poll else wait)
+                if not poll:
+                    break
+            lag = max(lag, clock() - r0 - (now - g0) / 1000 / self.speed)
             if e is None:
                 self.send(self.steps(now))
                 continue
@@ -469,6 +494,6 @@ class Replay:
                     m, s = divmod(e["time"] // 1000, 60)
                     log(f"{m:02d}:{s:02d} {e['kind']} {e.get('name') or e.get('age') or ''} "
                         f"player {e.get('player')}: {len(cmds)} commands")
-        span = (events[-1]["time"] - start) / 1000 / speed if events else 0
+        span = (events[-1]["time"] - start) / 1000 / speed if events else 0                 # at the start speed
         return {"events": n, "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2),
                 "rate": round(self.sent / self.busy) if self.busy else 0, "need": round(self.sent / span) if span else 0}
