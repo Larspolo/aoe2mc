@@ -27,6 +27,7 @@ def setup(wood=25, gold=45, done=True):
     if done is not None:
         g.sites.append({"name": "ARCHERY_RANGE", "player": 1, "footprint": [10, 13, 2, 5], "done": done})
     g.stock.update(wood=wood, gold=gold)
+    g.techs.add("FEUDAL_AGE")                                          # archers are a Feudal Age unit (#674)
     server.scores["aoe_use"] = 1
     return server, g
 
@@ -101,6 +102,7 @@ def test_a_trained_archer_can_shoot_on_a_server(tmp_path):
         game.forceload()
         g = gather.Gather(game, data, tick=0.25).setup()
         g.stock.update(wood=25, gold=45)
+        g.techs.add("FEUDAL_AGE")
         rect, = train.homes(g)
         assert train.queue(g, "nobody", rect[::2], "ARCHER")
         uuid, = train.tick(g, train.TRAIN_TIMES["ARCHER"])
