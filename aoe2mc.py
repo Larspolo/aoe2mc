@@ -1863,6 +1863,8 @@ def passable_states(states):
 def seat_count(ship):
     return 1 if "_chest_" in str(ship["id"]) else 2      # a chest boat has one seat
 CHAIN = 4                   # units per boat seat: each garrisoned unit rides the unit below it (#382)
+GARRISONED = "aoe2mc.garrisoned"    # entity tag of a unit inside its building (#807; the game program: #808)
+GARRISON_CELLS = 20         # free cells of a building in aoe2mc.json: the largest AoE2 garrison (castle, #808)
 SUN = ("minecraft:zombie", "minecraft:zombie_villager", "minecraft:skeleton", "minecraft:stray", "minecraft:drowned")
 
 
@@ -1938,7 +1940,7 @@ def plan_units(objects, players, cols, rng, stats, birds=True, garrison="inside"
                     garrisons[o["holder"]] += 1
                     label = units.top_entity(nbt)
                     label["CustomNameVisible"] = Byte(0)            # a name tag shows through the walls
-                    label["Tags"] = List[String](list(label.get("Tags", [])) + [String("aoe2mc.garrisoned")])
+                    label["Tags"] = List[String](list(label.get("Tags", [])) + [String(GARRISONED)])
                     e = nbt
                     while e is not None:                            # no damage in the barrier blocks of the rooms
                         e["Invulnerable"], e["NoAI"] = Byte(1), Byte(1)
@@ -2351,6 +2353,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
     their footprint [x0, z0, x1, z1) in blocks. Objects of a recorded game have their object ID ("ref").
     Objects that the converter did not place are not in the list.
+    A building has the free cells of its ground floor and their y ("inside", buildings.INSIDE) for a garrison.
     "ground" has one string per block row z: for each x the y where a unit stands, or "-" for water.
     "timeline" (recorded games only): the events of read_timeline, with tiles in the turned grid
     and the "names" of the selected objects (name_timeline)."""
@@ -2372,6 +2375,9 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
             e["ref"] = o["ref"]
         if o["kind"] == "U" and o.get("garrisoned") and o.get("holder") is not None:
             e["holder"] = o["holder"]                   # the reference ID of its building or ship (#807)
+        if o["kind"] == "B" and o.get("ref") in buildings.INSIDE:    # where the game program puts a garrison (#808)
+            cells, y, _ = buildings.INSIDE[o["ref"]]
+            e["inside"] = {"y": int(y), "cells": [[int(x), int(z)] for x, z in cells[:GARRISON_CELLS]]}
         objs.append(e)
     data = {"map_size": size, "tile_size": T, "level_height": H,
             "players": {str(pid): {"civ": p["civ"], "color": p["color"], "arch": p["arch"]}

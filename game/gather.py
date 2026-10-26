@@ -45,6 +45,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import bossbar  # noqa: E402
 import cheats  # noqa: E402
+import garrison  # noqa: E402
 import hints  # noqa: E402
 import menu  # noqa: E402
 import train  # noqa: E402
@@ -356,6 +357,7 @@ class Gather:
         self.wands, self.corners = set(), {}                           # players who clicked the wand, player -> corner 1
         self.groups, self.grouping, self.calls = {}, {}, 0             # group -> units, player -> (group, shift)
         self.hints = {}                                                # target -> (hint text, time) (hints.py, #798)
+        self.garrisons, self.entering = garrison.start(self), {}       # building -> units inside, unit -> building (#808)
 
     @property
     def wood(self):
@@ -460,7 +462,7 @@ class Gather:
             self.command(f"aoe box-clear {name}")
         (x0, x1), (z0, z1) = sorted((first[0], cell[0])), sorted((first[1], cell[1]))
         pos = {k: v.pos for k, v in self.villagers.items()} | self.positions(list(self.soldiers))
-        inside = {u for u, p in pos.items() if x0 <= p[0] < x1 + 1 and z0 <= p[2] < z1 + 1}
+        inside = {u for u, p in pos.items() if x0 <= p[0] < x1 + 1 and z0 <= p[2] < z1 + 1} - garrison.inside(self)
         pick = inside & self.soldiers.keys() or inside
         self.choose(pick, min(pick, default=None))
         self.command(f"title {name} actionbar " + json.dumps({"text": f"Selected: {len(pick)} units"}))
@@ -604,8 +606,9 @@ class Gather:
             text = f"Group {n}: {len(self.selected)} units saved"
         else:
             self.groups[n] = set(self.positions(sorted(self.groups.get(n, ()))))
-            self.choose(self.groups[n], min(self.groups[n], default=None))
-            text = f"Group {n}: {len(self.groups[n])} units"
+            out = self.groups[n] - garrison.inside(self)                # units inside a building stay there (#808)
+            self.choose(out, min(out, default=None))
+            text = f"Group {n}: {len(out)} units"
         self.command(f"title {name} actionbar " + json.dumps({"text": text}))
 
     def click(self, name):
@@ -625,8 +628,9 @@ class Gather:
             train.rally(self, rect, cell, self.map.pick_tree(eye, d))
             return
         army = self.selected and self.selected <= set(self.soldiers)
-        u = pick_unit(eye, d, {k: v.pos for k, v in self.villagers.items()} |
-                      self.positions(list(self.soldiers) + (list(self.enemies) if army else [])))
+        held = garrison.inside(self)                                   # units inside a building take no click (#808)
+        u = pick_unit(eye, d, {k: v.pos for k, v in self.villagers.items() if k not in held} |
+                      self.positions([u for u in self.soldiers if u not in held] + (list(self.enemies) if army else [])))
         if u in self.enemies:
             self.attack(u)
             self.command(f"effect give {u} minecraft:glowing 1 0 true")   # the order marker of an attack (#796)
@@ -649,6 +653,8 @@ class Gather:
         building = build.chosen(self, name)
         if building:                                                   # a chosen building: place its foundation
             build.place(self, name, building, eye, d)
+            return
+        if garrison.order(self, name, self.map.pick_ground(eye, d)):   # the selection goes into an own building (#808)
             return
         if train.open_menu(self, name, self.map.pick_ground(eye, d)):  # an own town center or barracks (#620, #654)
             return
@@ -696,6 +702,7 @@ class Gather:
     def step(self):
         """One tick: walk one block, chop, drop the wood, or build."""
         self.fall()
+        garrison.tick(self)
         for v in self.villagers.values():
             if v.state in ("to_tree", "to_drop", "to_site", "to_rally") and v.path:
                 self.follow(v) if self.paper else walk(self, v)
