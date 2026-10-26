@@ -18,7 +18,7 @@ The README already uses this style. Keep it.
 | Lint | `ruff check .` |
 | Fast tests (~15 s) | `python3 -m pytest` (use `python3 -m`: a `pytest` on the PATH can be another Python) |
 | Slow tests (~2 min) | `python3 -m pytest -m slow` |
-| Test scenario | `python3 tools/scenarios.py tiny OUT.aoe2scenario` (or `gallery`, `stress`, `buildings`, `units`, `village`, `facing`, `walls`, `river` (raised river with dock, bridge, boats), `river_town`, `four_civs`, `battle`, `triggers` (timer, area, create and remove triggers; count with `tools/triggers.py FILE...`)) |
+| Test scenario | `python3 tools/scenarios.py tiny OUT.aoe2scenario` (or `gallery`, `stress`, `buildings`, `units`, `village`, `facing`, `walls`, `river` (raised river with dock, bridge, boats), `river_town`, `four_civs`, `battle`, `triggers` (timer, area, create and remove triggers; count with `tools/triggers.py FILE...`), `large` (480 × 480 tiles, #690)) |
 | Convert | `python3 aoe2mc.py IN.aoe2scenario OUTWorld --preview` |
 | Look at a world | `python3 tools/world_reader.py OUTWorld [X Y Z]` (`--section x\|z C A0 A1 Y0 Y1`: a vertical section as text) |
 | 3D image | `python3 tools/render.py building CASTLE --arch western OUT.png` (`--cut 3`: the rooms inside; or `world OUTWorld X0 Z0 X1 Z1 OUT.png`) |
@@ -30,6 +30,7 @@ The README already uses this style. Keep it.
 | Server check | `python3 tools/mc_check.py OUTWorld` (headless Minecraft, load errors; `--keep DIR` keeps the saved world), `python3 -m pytest -m mc` |
 | Game program | `python3 game/run.py OUTWorld` (Paper server with RCON, `--server vanilla`: Mojang's; type commands; `--bench N`: commands per second; `--play`: gather resources; `--replay [--speed N]`: replay a recorded game) |
 | Gather timing | `python3 tools/measure_gather.py` (server, no client: walk, chop and trip times next to AoE2; `--read F.jsonl` reads a `game/run.py --play --log` file) |
+| Conversion cost | `python3 tools/measure_convert.py IN.aoe2scenario` (seconds and peak memory of each phase; `docs/research/large-maps.md`) |
 | Datapack cost | `python3 tools/tick_cost.py` (server, no client: `/tick query` with and without `datapacks/aoe2mc`; `--world W`, `--ambience full`) |
 | In-game screenshot | `python3 tools/mc_shot.py OUTWorld OUT.png [--at X Y Z --look YAW PITCH] [--more X,Y,Z,YAW,PITCH]` (real client, ~25 s per world; `mc_shot.Client`: a player on the Paper server that clicks menus; `--player`: adventure mode, a spectator sees invisible mobs) |
 | Minecraft data | `python3 tools/mc_check.py --reports VERSION` (exact, from Mojang) or `tools/fetch_mcdata.py VERSION` writes `tools/mcdata/VERSION.json` |
@@ -54,7 +55,7 @@ Find code by function name with Grep. Do not read the large files from start to 
 - `tools/` – test and debug tools (scenarios, world reader, 3D render, Minecraft data, validation).
 - `game/` – the game program (#137): `run.Game` starts a Paper server with RCON on the world, `rcon.Rcon` sends commands,
   `plugin/` is the Paper plugin (Java, Gradle wrapper; `run.py` builds it): `aoe moveto`, `aoe attack` with Minecraft path finding (#435),
-  `gather.Gather` lets villagers gather wood, food, gold and stone (#138, #391, #390, #392: clicks, paths on `aoe2mc.json` "ground", sidebar),
+  `gather.Gather` lets villagers gather wood, food, gold and stone (#138, #391, #390, #392: clicks, sidebar; walks with `aoe moveto` on Paper, #437, own paths on `aoe2mc.json` "ground" only for vanilla),
   `build` places construction sites (#417), `replay.Replay` plays the "timeline" of a recorded game (#374: buildings, chat, ages).
   `ai` gives orders to units with their Minecraft AI through the Paper plugin `game/plugin` (#435, #436: `aoe moveto`, `aoe attack`, `aoe goals`).
 - `tests/` – pytest. `conftest.py` has the `tiny_world` fixture (one conversion per session).

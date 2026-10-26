@@ -10,8 +10,13 @@ The menu (#620): a right click on an own town center opens its chest menu (menu.
 on it queues 1 villager, a shift click 5 (as many as the food and the queue allow), and the menu stays open with the
 new queue count. gather.Gather.click calls open_menu().
 Military units (#654): a right click on an own barracks opens its menu with "Militia" (TRAINS); a trained militia
-joins the military units of the player (g.soldiers), so a click can select it and send it to attack.
+joins the military units of the player (g.soldiers), so a click can select it and send it to attack. An own archery
+range trains archers (#670): they shoot from their AoE2 range (combat.range_command).
+Technologies (#655): a technology (TECHS) is an item of the menu of its building and uses the queue of the units, as in
+AoE2, but needs no population room. A click queues it once; when it is complete it goes into g.techs, leaves the menu
+and changes the values of the live and the new units (stats()). Loom: villagers get 15 hit points and 1/2 armor.
 """
+import json
 import math
 import os
 import sys
@@ -25,15 +30,21 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import menu  # noqa: E402
 
-COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20}}   # as in AoE2
-TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21}                 # AoE2 seconds
-TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE",), "BARRACKS": ("MILITIA",)}   # the units of each building (#654)
+COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   # as in AoE2
+         "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}}
+TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25}   # AoE2 seconds
+TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM"), "BARRACKS": ("MILITIA",),   # the units and technologies of each
+          "ARCHERY_RANGE": ("ARCHER",)}                                         # building (#654, #670, #655)
+TECHS = {"LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
+         if "VILLAGER" in name else s}                             # the change of each technology to the AoE2 values
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
-HOUSING = {"TOWN_CENTER": 5, "HOUSE": 5}                           # population of a complete building, as in AoE2
+HOUSING = {"TOWN_CENTER": 5, "HOUSE": 5, "CASTLE": 20}             # population of a complete building, as in AoE2
 LIMIT = 200                                                        # the AoE2 population limit
 CENSUS = 2.0                                                       # AoE2 seconds between two counts of the live units
 ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, item and name of each unit (#620)
-         "MILITIA": (0, "zombie_spawn_egg", "Militia")}             # the mob of units.classify
+         "MILITIA": (0, "zombie_spawn_egg", "Militia"),             # the mob of units.classify
+         "ARCHER": (0, "skeleton_spawn_egg", "Archer"),
+         "LOOM": (1, "book", "Loom")}                               # a book for a technology (#618)
 SHIFT = 5                                                          # units of a shift click, as in AoE2
 
 
@@ -61,8 +72,9 @@ def open_menu(g, player, cell):
 def show(g, player, rect):
     """Show (or refresh) the menu of the building rect: one item per unit, with its cost, time and queue."""
     n, building = len(g.queues.get(rect, [])), homes(g)[rect]
-    items = [(*ITEMS[name], " · ".join(f"{v} {r}" for r, v in COSTS[name].items())
-              + f" · {TRAIN_TIMES[name]} s · queue {n}/{QUEUE}") for name in TRAINS[building]]
+    items = [(*ITEMS[name], " · ".join(f"{v} {r}" for r, v in COSTS[name].items()) + f" · {TRAIN_TIMES[name]} s · "
+              + (("researching" if queued(g, name) else "research") if name in TECHS else f"queue {n}/{QUEUE}"))
+             for name in TRAINS[building] if name not in g.techs]
     menu.show(g, player, build.pretty(building), items, lambda p, slot, shift: order(g, p, rect, slot, shift))
 
 
@@ -84,6 +96,8 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
     rect = home(g, cell)
     if rect is None or name not in TRAINS[homes(g)[rect]]:
         return None
+    if name in TECHS and (name in g.techs or queued(g, name)):        # a technology only once
+        return None
     q = g.queues.setdefault(rect, [])
     if len(q) >= QUEUE:
         build.say(g, player, f"The queue is full ({QUEUE} units).")
@@ -100,8 +114,33 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
     return rect
 
 
+def queued(g, name):
+    """True when a queue of the player has name in it."""
+    return any(e["name"] == name for q in g.queues.values() for e in q)
+
+
+def stats(g, name):
+    """The combat values of AoE2 unit name with the technologies of the player (combat.stats and TECHS)."""
+    import combat                                                  # combat imports gather, gather imports this module
+    s = combat.stats(name)
+    for t in sorted(g.techs):
+        s = TECHS[t](name, s)
+    return s
+
+
+def research(g, entry):
+    """A technology is complete: keep it in g.techs and give the live villagers and military units the new values."""
+    import combat
+    g.techs.add(entry["name"])
+    for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
+        if stats(g, name) != combat.stats(name):
+            g.command(combat.stats_command(uuid, name, stats(g, name)))
+    g.command(f"tellraw {entry['player']} " + json.dumps({"text": f"{build.pretty(entry['name'])} is researched.",
+                                                          "color": "green"}))
+
+
 def limit(g):
-    """The population limit: 5 per complete own town center and house, at most 200."""
+    """The population limit: 5 per complete own town center and house, 20 per castle, at most 200."""
     names = [o["name"] for o in g.data["objects"] if o["kind"] == "building" and o["player"] == g.player]
     names += [s["name"] for s in g.sites if s.get("done") and s["player"] == g.player]
     return min(LIMIT, sum(HOUSING.get(n, 0) for n in names))
@@ -128,11 +167,11 @@ def tick(g, work):
     if g.census >= CENSUS:
         census(g)
     cap, out = limit(g), []
-    room = cap - g.pop - sum(1 for q in g.queues.values() if q and q[0]["progress"] > 0)
+    room = cap - g.pop - sum(1 for q in g.queues.values() if q and q[0]["progress"] > 0 and q[0]["name"] not in TECHS)
     for rect, q in g.queues.items():
         if not q:
             continue
-        if q[0]["progress"] == 0:
+        if q[0]["progress"] == 0 and q[0]["name"] not in TECHS:      # a technology needs no population room
             if room <= 0:
                 if not q[0].get("waits"):                              # as the "need more houses" message of AoE2
                     q[0]["waits"] = True
@@ -142,7 +181,9 @@ def tick(g, work):
             room -= 1
             q[0]["waits"] = False
         q[0]["progress"] += work / TRAIN_TIMES[q[0]["name"]]
-        if q[0]["progress"] >= 1 and (v := spawn(g, rect, q.pop(0)["name"])):
+        if q[0]["progress"] >= 1 and q[0]["name"] in TECHS:
+            research(g, q.pop(0))
+        elif q[0]["progress"] >= 1 and (v := spawn(g, rect, q.pop(0)["name"])):
             out.append(v)
             g.pop += 1
     sidebar(g)
@@ -171,7 +212,9 @@ def spawn(g, rect, name):
     uuid = units.uuid_str(nbt["UUID"])
     g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}")
     import combat, gather                                          # both import gather, gather imports this module
-    g.command(combat.stats_command(uuid, name))
+    g.command(combat.stats_command(uuid, name, stats(g, name)))
+    if cmd := combat.range_command(uuid, name, g.map.T):              # an archer shoots from its range (#670)
+        g.command(cmd)
     if gather.military(name):
         g.soldiers[uuid] = name
         return uuid

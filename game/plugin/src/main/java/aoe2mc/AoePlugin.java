@@ -64,6 +64,7 @@ import net.kyori.adventure.text.Component;
  *   aoe goals <selector>                       the goals of the first unit (#436), for checks
  *   aoe stats <selector> <hp> <attack> <melee armor> <pierce armor> <ranged 0|1> <classes|-> <class:bonus,...|->
  *                                              the AoE2 values of a unit (#514, game/combat.py stats_command)
+ *   aoe stop <selector>                        stop the walk and turn the AI off: the unit stands still (#437)
  *   aoe range <selector> <blocks> <ticks>      a ranged unit shoots from this range, one shot per ticks (#515)
  *   aoe building <selector> <hp> <melee armor> <pierce armor> <x0> <y0> <z0> <x1> <y1> <z1>
  *                                              make the entity the target of a building (#517, combat.building)
@@ -72,7 +73,8 @@ import net.kyori.adventure.text.Component;
  *   aoe menu-close <player>                    close the menu of the player
  * Converted units have no AI (NoAI): an order turns it on. Such a unit finds no path before its first AI tick
  * (it is not "on the ground" yet), and vanilla goals (a random stroll) can take the navigation of a walking unit:
- * so the order sends the path again every 10 ticks, until the unit arrives or 10 tries found no path.
+ * so the order sends the path again every 2 ticks (#437: 10 ticks made each walk 0.5 s longer), until the unit
+ * arrives or 50 tries (5 s) found no path.
  * The path search reaches only about the follow range of the mob (16 blocks for a cow): an order raises the
  * attribute follow_range to twice the distance + 32, at most 128. Longer ways need waypoints.
  * With the AI on, a unit keeps only the goals that fit AoE2 (#436): its attack goals and "float" (it swims).
@@ -80,6 +82,7 @@ import net.kyori.adventure.text.Component;
  * the burning in the sun go. So a unit stands still without an order and attacks only the target of an order,
  * and an attack order skips the units of the team of the target (scoreboard teams of the datapack, #358).
  * A villager walks with its brain, not with goals: it gets NoAI when it arrives, else it strolls away (#438).
+ * `aoe stop` stops a walk and sets NoAI (#437: a villager without a path).
  * A hit of a unit with AoE2 values on another one takes the AoE2 damage (#514, combat.damage): max(1, attack - armor
  * + bonus). The plugin cancels the vanilla damage and sets the health: so vanilla armor items, enchantments, effects,
  * difficulty and knockback (AoE2 has none) do not change it. Max health is the attribute max_health.
@@ -93,7 +96,9 @@ import net.kyori.adventure.text.Component;
  * 1024 of max_health) in the scoreboard aoe_hp, cancels all other damage to it and from it (no suffocation in the
  * walls, no slime touch), and at 0 removes it and fills the box of the building with air. The vanilla melee goal
  * hits only a target in sight, and the eye of the slime is in the walls: so a unit next to the slime that has it as
- * target hits it each second (Mob#attack, the vanilla hit with the swing), as a zombie hits.
+ * target hits it each second (Mob#attack, the vanilla hit with the swing), as a zombie hits. A ranged unit shoots
+ * a building from its range to the nearest side of the target, without sight of the eye (#608). Its arrow sticks
+ * in the walls, so the goal takes the hit points for each shot, and an arrow that hits the slime does nothing.
  * Vanilla has no clickable item menu: "aoe menu" opens an inventory with the items (#619). A click on an item is
  * cancelled (the player takes nothing) and sets the score aoe_menu of the player to slot + 1 (a shift click: -(slot + 1),
  * #620); the menu stays open, so the player can click again. "aoe menu" on an open menu of the same title and size only changes the items.
@@ -165,8 +170,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         @Override
         public void tick() {
             LivingEntity t = mob.getTarget();
-            boolean near = mob.getLocation().distanceSquared(t.getLocation()) <= range.blocks * range.blocks
-                    && mob.hasLineOfSight(t);
+            // a building: the range to its nearest side, and no sight of the eye of its target in the walls (#608)
+            boolean wall = buildings.containsKey(t.getUniqueId());
+            boolean near = (wall ? gap(mob, t) : mob.getLocation().distanceSquared(t.getLocation()))
+                    <= range.blocks * range.blocks && (wall || mob.hasLineOfSight(t));
             if (near) {
                 mob.getPathfinder().stopPathfinding();
             } else if (!mob.getPathfinder().hasPath() || ++ticks % 10 == 0) {     // the target can move
@@ -182,6 +189,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     r.rangedAttack(t, 1.0f);
                 }
                 next = now + range.ticks;
+                Stats a = stats.get(mob.getUniqueId());
+                Building b = buildings.get(t.getUniqueId());
+                if (a != null && b != null) {           // the arrow sticks in the walls: the shot hits (#608)
+                    hit(t, b, a.damage(b.stats));
+                    hitEffect(t, b, mob);
+                }
             }
         }
 
@@ -194,6 +207,16 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         public EnumSet<GoalType> getTypes() {
             return EnumSet.of(GoalType.MOVE, GoalType.LOOK);
         }
+    }
+
+    // The squared distance from the feet of the mob to the nearest point of the box of the target.
+    private static double gap(Mob mob, Entity t) {
+        var b = t.getBoundingBox();
+        var p = mob.getLocation();
+        double dx = Math.max(0, Math.max(b.getMinX() - p.getX(), p.getX() - b.getMaxX()));
+        double dy = Math.max(0, Math.max(b.getMinY() - p.getY(), p.getY() - b.getMaxY()));
+        double dz = Math.max(0, Math.max(b.getMinZ() - p.getZ(), p.getZ() - b.getMaxZ()));
+        return dx * dx + dy * dy + dz * dz;
     }
 
     // A vanilla arrow. The vanilla bow shot has a spread of 14 - 4 × difficulty and a slow arrow: at 20 blocks most
@@ -332,7 +355,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        Bukkit.getScheduler().runTaskTimer(this, this::follow, 10L, 10L);
+        Bukkit.getScheduler().runTaskTimer(this, this::follow, 2L, 2L);
         Bukkit.getScheduler().runTaskTimer(this, this::siege, 10L, 10L);
         Bukkit.getScheduler().runTaskTimer(this, this::burn, 20L, 20L);
         Bukkit.getPluginManager().registerEvents(this, this);
@@ -348,7 +371,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Building b = buildings.get(ev.getEntity().getUniqueId());
         if (buildings.containsKey(from.getUniqueId()) || b != null) {
             ev.setCancelled(true);
-            if (a != null && b != null) {
+            if (a != null && b != null && !(ev.getDamager() instanceof Projectile)) {   // RangeGoal counts a shot
                 lastHit.put(from.getUniqueId(), Bukkit.getCurrentTick());
                 hit(ev.getEntity(), b, a.damage(b.stats));
                 hitEffect(ev.getEntity(), b, from);
@@ -489,7 +512,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             var path = pf.getCurrentPath();
             if (path == null || path.getFinalPoint() == null
                     || path.getFinalPoint().distanceSquared(o.goal) > 1.5 * 1.5) {
-                return !pf.moveTo(o.goal, o.speed) && ++o.fails >= 10;   // no path 10 times: drop the order
+                return !pf.moveTo(o.goal, o.speed) && ++o.fails >= 50;   // no path for 5 s: drop the order
             }
             return false;
         });
@@ -686,6 +709,19 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 keys.add(g.getKey().getNamespacedKey().getKey());
             }
             sender.sendMessage("Goals: " + String.join(" ", keys));
+            return true;
+        }
+        if (args.length == 2 && args[0].equals("stop")) {
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                if (e instanceof Mob mob) {
+                    orders.remove(mob.getUniqueId());
+                    mob.getPathfinder().stopPathfinding();
+                    mob.setAI(false);
+                    n++;
+                }
+            }
+            sender.sendMessage("Stopped " + n + " units");
             return true;
         }
         if (args.length >= 3 && args[0].equals("menu")) {
