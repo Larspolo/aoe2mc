@@ -3182,13 +3182,29 @@ def pavilion(c, w, st, col, T, ctx):
 
 
 def yurt(c, w, st, col, T, ctx):
+    """Like the game (#453): a low felt wall with a band, a flat dome roof and a wooden crown ring at the top.
+    The variants A to M have blue felt with white zig-zags, or plain white felt with a blue zig-zag band."""
     cx = (w - 1) / 2
     r = w / 2 - 0.3
-    c.cylinder(cx, cx, r, 1, 4, "white_wool", hollow=True)
-    c.cone(cx, cx, r + 0.3, 4, "brown_wool")
-    c.box(w // 2, w // 2 + 1, 1, 3, int(cx + r), int(cx + r) + 1, "air")
-    c.banner(w // 2 + 1, 3, int(cx + r) + 1, col)
-    hearth_room(c, w, int(cx + r), col, ["red_carpet", "orange_carpet"], "chest[facing=south,type=single,waterlogged=false]")
+    k = ord(ctx.get("name", "YURT_A")[-1]) - ord("A")
+    blue = "CHIEF" in ctx.get("name", "") or k % 3 != 2
+    felt, trim = ("blue_wool", "white_wool") if blue else ("white_wool", "blue_wool")
+    c.cylinder(cx, cx, r, 1, 4, felt, hollow=True)
+    ring, X, Z = c.disc_mask(cx, cx, r)
+    zig = ring & ((X + Z) % 2 == 0) & ~c.disc_mask(cx, cx, r - 1)[0]    # every second block: a zig-zag at this size
+    c._fill_mask(zig, 2 + (not blue), 3 + (not blue), trim)             # blue: the middle band, white: the top band
+    c.cylinder(cx, cx, r + 0.3, 4, 5, felt)                             # the dome: 3 discs, flat like the game
+    c._fill_mask(c.disc_mask(cx, cx, r + 0.3)[0] & ~c.disc_mask(cx, cx, r - 0.7)[0] & ((X + Z) % 2 == 1), 4, 5, trim)
+    c.cylinder(cx, cx, r - 0.7, 5, 6, felt)
+    if w >= 6:
+        c.cylinder(cx, cx, r - 1.9, 6, 7, felt)
+        crown = "spruce_trapdoor[facing=north,half=top,open=false]" if blue else "brown_wool"     # tied hides
+        c.box(w // 2 - 1, w // 2 + 1, 6, 7, w // 2 - 1, w // 2 + 1, crown)
+    zd = int(cx + r)
+    c.door(w // 2, 1, zd, "south", "spruce")
+    if "CHIEF" in ctx.get("name", ""):
+        c.flag(w // 2, 7 if w >= 6 else 6, w // 2, col)
+    hearth_room(c, w, zd, col, ["red_carpet", "orange_carpet"], "chest[facing=south,type=single,waterlogged=false]")
 
 
 def hearth_room(c, w, zd, col, rugs, store):
