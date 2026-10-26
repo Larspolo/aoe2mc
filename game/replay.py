@@ -50,6 +50,8 @@ FLAT = 16                   # tiles of the flat map that draws one design
 MAX_FILL = 32768            # blocks of one /fill command
 FORMATION = 2              # blocks between the units of a group in a formation (#410)
 LEG = 48                    # path cells of one plugin order: within the reach of a Minecraft path search (#438)
+CATCH_UP = 1.5              # the largest factor of the walk speed of a unit behind its replay position (#1168)
+RECENT = 10000              # ms: a unit whose last leg ended this short a time ago can still walk it (catch_up)
 TALL = 48                   # blocks above the ground that a DELETE clears for a start building (no height in aoe2mc.json)
 BAR = "aoe2mc:replay"       # the boss bar with the game time (#684)
 POP = "aoe_pop"             # the sidebar objective with the population of each player (#741)
@@ -731,20 +733,36 @@ class Replay:
         self.crew.command = keep
         return out
 
-    def order(self, v, legs, t):
+    def order(self, v, legs, t, behind=False):
         """The plugin walks unit v on a Minecraft path to the first cell of `legs`, at its walk speed times the replay
         speed (#438). The path search of Minecraft reaches only about 128 blocks, so a long way goes in legs of
         LEG cells of the path of gather.Map: the next leg starts when the unit is due at the end of this one.
         The replay takes the unit at the end of its leg (only the first gather step reads the entity, #766). Returns the commands
-        and the game time (ms) at the end of the leg (the next leg starts then, if v.path has one)."""
+        and the game time (ms) at the end of the leg (the next leg starts then, if v.path has one). behind: the next
+        leg of a long walk. It and a walk less than RECENT ms after the last leg read the entity to catch up (catch_up)."""
         import ai                                                   # ai -> replay: import it late
         x, z = legs[0]
+        behind = behind or (getattr(v, "leg", None) or (0, 0, -RECENT))[2] > t - RECENT
         start = x0, _, z0 = v.pos
         v.pos, v.path = (x + 0.5, float(self.map.y(x, z)), z + 0.5), legs[1:]
         speed = next((s for k, s in SPEEDS.items() if v.name.startswith(k)), 1.0) * self.T    # blocks per second
-        due = t + 1000 * math.hypot(v.pos[0] - x0, v.pos[2] - z0) / speed
+        d = math.hypot(v.pos[0] - x0, v.pos[2] - z0)
+        due = t + 1000 * d / speed
         v.leg = (start, t, due)                                     # at() reads it
-        return [ai.speed_command(v.uuid, v.name, self.T, self.speed), "aoe moveto {} {} {} {}".format(v.uuid, *v.pos)], due
+        return [ai.speed_command(v.uuid, v.name, self.T, self.speed * (self.catch_up(v, d) if behind else 1.0)),
+                "aoe moveto {} {} {} {}".format(v.uuid, *v.pos)], due
+
+    def catch_up(self, v, d):
+        """The factor of the walk speed of unit v on a leg of d blocks to v.pos (1 to CATCH_UP): the entity distance to
+        v.pos over d. The Minecraft path is longer than the straight leg (trees, steps on a slope), and each leg starts
+        at the replay time, not at the arrival: without it, villagers of de-64.3 walked at 89 to 94 % of their AoE2
+        speed (#1168). One command per leg that order() gives as behind."""
+        if d < 1:
+            return 1.0
+        m = re.findall(self.gather.NUMBER, self.game.command(f"data get entity {v.uuid} Pos").rsplit(":", 1)[-1])
+        if len(m) != 3:
+            return 1.0
+        return min(CATCH_UP, max(1.0, math.dist((float(m[0]), float(m[2])), (v.pos[0], v.pos[2])) / d))
 
     def at(self, v, t):
         """The replay position of unit v at game time t (ms): on the line of its leg while it walks, else v.pos.
@@ -801,7 +819,7 @@ class Replay:
             ok = self.map.wet if w else self.map.free
             if self.ai and not w and due <= t:
                 legs = [c for c in v.path if self.map.free(*c)]        # a new building on a leg end: skip it
-                cmds, at = self.order(v, legs, due) if legs else ([], due)
+                cmds, at = self.order(v, legs, due, behind=True) if legs else ([], due)
                 due = at if v.path and legs else None
                 out += cmds
             while (not self.ai or w) and due is not None and due <= t:

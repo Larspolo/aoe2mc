@@ -69,10 +69,12 @@ def test_a_long_walk_goes_in_legs():
 
 
 def test_the_replay_needs_few_commands_for_walks():
-    """A short walk is 2 commands, not one /tp per block: the replay keeps up at speed 4."""
+    """A short walk is 2 commands, not one /tp per block: the replay keeps up at speed 4. A walk right after a walk
+    also reads the entity position once (Replay.catch_up, #1168)."""
     tl = [dict(time=1000 * k, player=1, kind="move", objects=[7, 8], tile=[2.5 + 10 * (k % 2), 10.5]) for k in range(20)]
     _, sent, stats = play(tl, (VIL, MIL, HOUSE))
-    assert len(sent) == 20 * 2 * 2 and stats["lag"] < 0.1
+    reads = [c for c in sent if c.startswith("data get entity ")]
+    assert len(sent) - len(reads) == 20 * 2 * 2 and len(reads) == 19 * 2 and stats["lag"] < 0.1
 
 
 def test_without_the_plugin_the_units_walk_with_tp():
