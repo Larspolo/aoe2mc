@@ -319,6 +319,12 @@ def read_scenario(path):
     goals = sorted((t.description_order, i, (t.description or t.name or "").strip())   # the objectives that the game lists
                    for i, t in enumerate(scn.trigger_manager.triggers) if t.display_as_objective)
     texts["objectives"] = "\n".join(f"- {g}" for _, _, g in goals if g)
+    texts["triggers"] = [dict(id=t.trigger_id, name=t.name, enabled=bool(t.enabled), looping=bool(t.looping),
+                              conditions=[dict(type=c.condition_type, timer=c.timer, inverted=bool(c.inverted))
+                                          for c in t.conditions],
+                              effects=[dict(type=e.effect_type, message=e.message or "", player=e.source_player,
+                                            time=e.display_time) for e in t.effects])
+                         for t in scn.trigger_manager.triggers]
 
     objects = []
     for player, player_units in enumerate(scn.unit_manager.units):
@@ -2363,11 +2369,43 @@ def team_lines(objects, players):
     return load, pulse
 
 
-def write_datapack(out, objects, ground, biome_names=(), ambience="basic", players=None):
+TIMER, SEND_CHAT, DISPLAY_INSTRUCTIONS = 10, 3, 20      # AoE2 condition and effect IDs (AoE2ScenarioParser)
+
+
+def trigger_files(triggers):
+    """(load lines, files) for the triggers that only have timer conditions (#648): one function per trigger,
+    which the load function schedules at the AoE2 time (all timers must pass: the largest). "Send Chat" is a
+    tellraw, "Display Instructions" a subtitle for its display time. A disabled trigger does not run."""
+    load, files = [], {}
+    for t in triggers:
+        conds = t["conditions"]
+        if not t["enabled"] or not conds or any(c["type"] != TIMER or c["inverted"] for c in conds):
+            continue
+        lines = []
+        for e in t["effects"]:
+            msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()   # AoE2 color tags
+            if not msg:
+                continue
+            text = json.dumps({"text": msg}, ensure_ascii=False)
+            if e["type"] == SEND_CHAT:
+                lines.append(f"tellraw @a {text}")
+            elif e["type"] == DISPLAY_INSTRUCTIONS:
+                ticks = 20 * (e["time"] if e["time"] > 0 else 10)          # AoE2 default: 10 s
+                lines += [f"title @a times 10 {ticks} 20", f"title @a subtitle {text}", 'title @a title ""']
+        if not lines:
+            continue
+        ticks = max(20 * max(c["timer"] for c in conds), 1)          # a schedule needs at least 1 tick
+        run = f"schedule function aoe2mc:trigger/{t['id']} {ticks}t replace"
+        files[f"data/aoe2mc/function/trigger/{t['id']}.mcfunction"] = "\n".join(lines + [run] * t["looping"]) + "\n"
+        load.append(run)
+    return load, files
+
+
+def write_datapack(out, objects, ground, biome_names=(), ambience="basic", players=None, triggers=()):
     """datapacks/aoe2mc: a function every 2 s plays a work sound at each building with a player near it
     (docs/datapack.md). Fixed positions, no marker entities: the check costs nothing that /tick query shows.
     Ambience (#219): particles and sounds near the players by biome; "full" also writes the custom biomes, "off"
-    writes no pack (and so no teams). Teams: `team_lines`.
+    writes no pack (and so no teams). Teams: `team_lines`. Timer triggers: `trigger_files`.
     Returns (work sounds, ambience lines)."""
     root = os.path.join(out, "datapacks", "aoe2mc")
     if ambience == "off":           # the world as before #188: no pack
@@ -2397,15 +2435,17 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
     lines += ambience_lines(biome_names)
     groups = sorted({n.split(":")[1] for n in biome_names if n.startswith("aoe2mc:")})
     team_load, team_pulse = team_lines(objects, players or {})
-    if not lines and not groups and not team_load:    # the server finds a new pack by itself; level.dat needs no entry
+    trigger_load, trigger_fns = trigger_files(triggers)
+    if not lines and not groups and not team_load and not trigger_load:   # the server finds a new pack by itself
         return 0, 0
     files = {
         "pack.mcmeta": {"pack": {"description": "aoe2mc: work sounds and ambience", "pack_format": MC["pack_format"],
                                  "min_format": MC["pack_format"], "max_format": MC["pack_format"]}},
         "data/minecraft/tags/function/load.json": {"values": ["aoe2mc:load"]},
-        "data/aoe2mc/function/load.mcfunction": "\n".join(team_load + ["schedule function aoe2mc:pulse 40t replace"]) + "\n",
+        "data/aoe2mc/function/load.mcfunction": "\n".join(team_load + trigger_load + ["schedule function aoe2mc:pulse 40t replace"]) + "\n",
         "data/aoe2mc/function/pulse.mcfunction": "\n".join(lines + team_pulse + ["schedule function aoe2mc:pulse 40t replace"]) + "\n",
     }
+    files.update(trigger_fns)
     for name, chance in CHANCE.items():
         files[f"data/aoe2mc/predicate/{name}.json"] = {"type": "minecraft:random_chance", "chance": chance}
     for g in groups:
@@ -2770,7 +2810,11 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
 
     write_level_dat(os.path.join(out, "level.dat"), name, spawn, yaw, cols.n)
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline)
-    n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players)
+    triggers = texts.get("triggers", [])
+    n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers)
+    k = len(trigger_files(triggers)[1]) if ambience != "off" else 0
+    if k:
+        print(f"  timer triggers (chat and instructions): {k}")
     if n:
         print(f"  work sounds at buildings: {n}")
     if amb:

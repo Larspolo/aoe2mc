@@ -19,11 +19,13 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.AbstractSkeleton;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
+import org.bukkit.entity.Pillager;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Villager;
@@ -80,7 +82,7 @@ import net.kyori.adventure.text.Component;
  * A ranged unit (#515) gets the goal "aoe_range" in place of the vanilla bow, crossbow and trident goals: their
  * range and interval are fixed in the goal objects, and the API cannot set them (no NMS in the plugin). It walks
  * on a Minecraft path to the target until the target is in range and in sight, stops, and shoots with the vanilla
- * shot of the mob (RangedEntity#rangedAttack: the arrow of a skeleton, the trident of a drowned).
+ * shot of the mob (RangedEntity#rangedAttack: the trident of a drowned), or with an aimed arrow (shoot: a skeleton or pillager).
  * A building is blocks, and a mob attacks only a living entity: an invisible mob without AI (a slime of the size of
  * the footprint, game/combat.py building) stands in the building and takes the attacks, so that the vanilla attack
  * goals and paths work (#517). The plugin keeps the hit points of the building (a building has more than the
@@ -170,8 +172,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             mob.lookAt(t);
             int now = Bukkit.getCurrentTick();
             if (now >= next && near && mob instanceof RangedEntity r) {
-                if (mob instanceof AbstractSkeleton && mob.getEquipment().getItemInMainHand().getType() != Material.BOW) {
-                    shoot(mob, t);            // the skeleton shot throws "Invalid weapon" for a crossbow (#633)
+                if (mob instanceof AbstractSkeleton || mob instanceof Pillager) {
+                    shoot(mob, t);            // the vanilla shot misses (#634), and fails for a crossbow (#633)
                 } else {
                     r.rangedAttack(t, 1.0f);
                 }
@@ -190,14 +192,20 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
     }
 
-    // A vanilla arrow with the aim of AbstractSkeleton.performRangedAttack: at a third of the target height,
-    // raised by 0.2 per block of distance, speed 1.6. The damage handler (onHit) gives the AoE2 damage.
+    // A vanilla arrow. The vanilla bow shot has a spread of 14 - 4 × difficulty and a slow arrow: at 20 blocks most
+    // arrows miss (#634). An AoE2 archer hits a standing target almost always: aim at the middle of the target, with
+    // a fast arrow that rises by the fall of its flight time. The damage handler (onHit) gives the AoE2 damage.
+    private static final double ARROW_SPEED = 3.0, ARROW_GRAVITY = 0.05;     // blocks per tick, blocks per tick²
+
     private static void shoot(Mob mob, LivingEntity t) {
-        Location from = mob.getEyeLocation().subtract(0, 0.1, 0);
-        Vector v = t.getLocation().add(0, t.getHeight() / 3, 0).toVector().subtract(from.toVector());
-        v.setY(v.getY() + 0.2 * Math.hypot(v.getX(), v.getZ()));
-        mob.launchProjectile(Arrow.class, v.normalize().multiply(1.6));
-        mob.getWorld().playSound(mob, Sound.ITEM_CROSSBOW_SHOOT, 1.0f, 1.0f);
+        Location from = mob.getEyeLocation();
+        Vector to = t.getLocation().toVector().add(new Vector(0, t.getHeight() * 0.5, 0)).subtract(from.toVector());
+        double ticks = to.length() / ARROW_SPEED;
+        to.setY(to.getY() + 0.5 * ARROW_GRAVITY * ticks * ticks);
+        Arrow a = mob.launchProjectile(Arrow.class, to.normalize().multiply(ARROW_SPEED));
+        a.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
+        boolean bow = mob.getEquipment().getItemInMainHand().getType() == Material.BOW;
+        mob.getWorld().playSound(mob, bow ? Sound.ENTITY_SKELETON_SHOOT : Sound.ITEM_CROSSBOW_SHOOT, 1.0f, 1.0f);
     }
 
     /** The holder of a chest menu: it tells a menu from the other inventories. */

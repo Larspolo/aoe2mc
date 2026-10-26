@@ -466,7 +466,7 @@ class Gather:
         if building:                                                   # a chosen building: place its foundation
             build.place(self, name, building, eye, d)
             return
-        if train.open_menu(self, name, self.map.pick_ground(eye, d)):  # a click on an own town center (#612, #620)
+        if train.open_menu(self, name, self.map.pick_ground(eye, d)):  # an own town center or barracks (#620, #654)
             return
         tile = self.map.pick_tree(eye, d)
         if tile and self.selected:

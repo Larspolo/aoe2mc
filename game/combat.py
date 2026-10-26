@@ -72,6 +72,7 @@ BUILDINGS = {
 }
 DEFAULT, BUILDING = Stats(40, 4, 0, 0, 0, 2.0), Stats(1000, 0, 0, 7, 0, 0.0, {}, ("building",))
 SLIME = 0.52                    # blocks of width and height per slime size: the target of a building (#517)
+INVISIBLE = 'active_effects:[{id:"minecraft:invisibility",duration:-1,show_particles:0b}]'   # for ever, no particles
 HEIGHT = 40                     # blocks above the ground that a fallen building clears
 
 
@@ -129,13 +130,14 @@ def building(uuid, name, player, box):
     """The commands that make building `name` of `player` a target of attacks (#517): an invisible slime without AI
     that fills the footprint takes the attacks (a mob attacks only a living entity: AoePlugin.java), and the plugin
     keeps the AoE2 hit points. box: the blocks (x0, y0, z0, x1, y1, z1), both ends included, y0 the ground.
-    At 0 hit points the plugin fills the box with air."""
+    At 0 hit points the plugin fills the box with air. The invisibility effect hides the slime: the tag Invisible is
+    only for armor stands, the server drops it on a slime (#636)."""
     x0, y0, z0, x1, y1, z1 = box
     s, size = stats(name), math.ceil((max(x1 - x0, z1 - z0) + 1) / SLIME)
     n = uuids.UUID(uuid).int
     ints = ",".join(str((n >> k & 0xFFFFFFFF) - ((n >> k & 0x80000000) << 1)) for k in (96, 64, 32, 0))
     return [f"summon slime {(x0 + x1 + 1) / 2} {y0} {(z0 + z1 + 1) / 2} {{Size:{size - 1},NoAI:1b,Silent:1b,"
-            f"NoGravity:1b,PersistenceRequired:1b,Invisible:1b,Tags:[\"aoe2mc.building\"],UUID:[I;{ints}]}}",
+            f"NoGravity:1b,PersistenceRequired:1b,{INVISIBLE},Tags:[\"aoe2mc.building\"],UUID:[I;{ints}]}}",
             f"team join p{player} {uuid}", f"aoe building {uuid} {s.hp} {s.melee} {s.pierce} {' '.join(map(str, box))}"]
 
 
