@@ -238,6 +238,17 @@ def read_map(path):
     return (read_record if p.endswith(RECORDS) else read_scx if p.endswith(".scx") else read_scenario)(path)
 
 
+# Object IDs of old scenarios that DE keeps only in its data file (the DE editor hides them, #576) -> the DE object of
+# the same look. Buildings of later ages take the base building. Not here: FLAGX (162, invisible), projectiles, the
+# shallows (447, terrain), a part of a palisade gate (795) and the town center parts (617, 621): no own object.
+OLD_IDS = {248: "STONE_MINE", 262: "FORAGE_BUSH", 415: "STUMP", 737: "STUMP",
+           144: "RUBBLE_2_X_2", 146: "RUBBLE_3_X_3", 147: "RUBBLE_1_X_1", 817: "STATUE_CIVILIZATION",
+           178: "BROKEN_CART", 443: "BROKEN_CART", 735: "TREBUCHET_PACKED", 451: "DOLPHIN",
+           10: "ARCHERY_RANGE", 20: "BARRACKS", 498: "BARRACKS", 30: "MONASTERY", 32: "MONASTERY", 116: "MARKET",
+           137: "MARKET", 129: "MILL", 133: "DOCK", 807: "DOCK", 150: "SIEGE_WORKSHOP", 210: "UNIVERSITY",
+           464: "HOUSE", 465: "HOUSE", 563: "BLACKSMITH", 585: "MINING_CAMP", 586: "MINING_CAMP"}
+
+
 def read_scx(path):
     """An old scenario (.scx format 1.21, #312), as read_scenario returns it. The old terrain and object IDs are the
     DE IDs. A map that is not square gets the edge tiles repeated to a square. Old scenarios give no texts here."""
@@ -251,6 +262,7 @@ def read_scx(path):
     size = max(w, h)
     terrain, elevation = (np.pad(a, ((0, size - w), (0, size - h)), mode="edge") for a in (s["terrain"], s["elevation"]))
     kinds = object_kinds()
+    ids = {name: i for i, (_, name) in kinds.items()}
     players = {}
     for pid, p in s["players"].items():
         color = buildings.COLOR_NAMES[p["color"]] if pid and p["color"] is not None and 0 <= p["color"] < 8 else "light_gray"
@@ -258,9 +270,10 @@ def read_scx(path):
                         "view": p["view"]}
     objects = []
     for o in s["objects"]:
-        prefix, name = kinds.get(o["type"], ("?", f"UNKNOWN_{o['type']}"))
+        t = ids[OLD_IDS[o["type"]]] if o["type"] not in kinds and o["type"] in OLD_IDS else o["type"]
+        prefix, name = kinds.get(t, ("?", f"UNKNOWN_{t}"))
         holder = o["garrisoned_in"]
-        objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name, id=o["type"],
+        objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name, id=t,
                             player=o["player"], x=o["x"], y=o["y"], rotation=float(o["angle"]),
                             garrisoned=holder is not None, ref=o["id"], holder=holder))
     texts = {k: "" for k in CHAPTERS}
@@ -815,8 +828,10 @@ class Columns:
         field = grass & free & (n3 > 0.8) & (r < 0.35)
         ids = np.array([B(f) for f in flowers], np.uint16)
         deco[field] = ids[kind[field]]
+        deco[field & (r2 < 0.06)] = B("golden_dandelion")               # a few of the new 26.3 flower in each field
         petals = grass & free & (n3 < 0.1) & (r < 0.5)
         deco[petals] = B("pink_petals[facing=north,flower_amount=3]")
+        deco2[field | petals] = AIR                                     # no tall grass top above a flower
         faces = ("east", "north", "south", "west")
         def clumps(name, prop, mask):                   # a random facing and amount (1-4) for each clump
             ids = np.array([B(f"{name}[facing={f},{prop}={k}]") for f in faces for k in range(1, 5)], np.uint16)
@@ -1130,6 +1145,7 @@ def make_tree(E, kind, x, y, z, rng):
     if kind == "dead":
         E.box(x, x + 1, y, y + h - 1, z, z + 1, "oak_log")
         E.add([x + 1, x - 1], [y + h - 2, y + h - 3], [z, z], "oak_log[axis=x]")
+        fungus(E, x, y, z, h - 1, ("north", "south"))   # the branches are on the east and west sides
         return
     wood = WOODS.get(kind, "oak")
     log, leaf = f"{wood}_log", leaves(wood)
@@ -1158,6 +1174,24 @@ def make_tree(E, kind, x, y, z, rng):
         for dy, r in ((h - 2, 2), (h - 1, 2), (h, 1), (h + 1, 1)):
             disc(E, x, y + dy, z, r, leaf)
         E.box(x, x + 1, y, y + h, z, z + 1, log)
+        if kind == "oak":
+            fungus(E, x, y, z, h - 2, ("north", "south", "west", "east"))
+
+
+FACE = {"north": (0, -1), "south": (0, 1), "west": (-1, 0), "east": (1, 0)}
+
+
+def fungus(E, x, y, z, top, faces):
+    """Bracket fungus (shelf_mushroom) on 1 old tree in 10: 1 or 2 on the trunk, 1 to 3 blocks up, below `top`.
+
+    Its own generator, seeded by the position: the trees after it keep their random numbers."""
+    r = np.random.default_rng([x % 65536, y % 65536, z % 65536, 558])
+    if r.random() >= 0.1:
+        return
+    for f in r.permutation(faces)[:int(r.integers(1, 3))]:
+        dx, dz = FACE[f]
+        E.add([x + dx], [y + int(r.integers(1, max(2, min(4, top))))], [z + dz],
+              f"shelf_mushroom[age={int(r.integers(2))},facing={f}]")
 
 
 def disc(E, x, y, z, r, block):
@@ -1693,9 +1727,15 @@ def place_objects(objects, players, cols, rng):
             mound(E, cols, bx, bz, T * 0.4, 2, ["mossy_cobblestone", "cobblestone", "stone"], rng)
             stats["rocks"] += 1
         elif kind == "O" and ("FORAGE" in name or "FRUIT_BUSH" in name):
-            for dx, dz in ((0, 0), (1, 0), (0, 1)):
-                if cols.inside(bx + dx, bz + dz):
-                    E.add([bx + dx], [cols.surface(bx + dx, bz + dz)], [bz + dz], "sweet_berry_bush[age=3]")
+            x0, z0 = bx // T * T, bz // T * T          # a full bush fills its tile, 2 blocks high (#590): berries
+            for x in range(x0, x0 + T):                 # around, leaves in the middle (a berry bush needs dirt below)
+                for z in range(z0, z0 + T):
+                    if cols.inside(x, z):
+                        ring = x in (x0, x0 + T - 1) or z in (z0, z0 + T - 1)
+                        mid = not ring or T <= 2 and (x, z) == (x0, z0)
+                        y = cols.surface(x, z)
+                        E.add([x] * (1 + mid), [y, y + 1][:1 + mid], [z] * (1 + mid),
+                              "oak_leaves[persistent=true]" if mid else "sweet_berry_bush[age=3]")
             stats["berry bushes"] += 1
         elif kind == "O" and "RELIC" in name:
             E.add([bx], [y], [bz], "decorated_pot[facing=south,cracked=false]")
@@ -2341,7 +2381,14 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
         x, z = (x0 + x1) // 2, (z0 + z1) // 2
         if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
             continue
-        at = f"execute positioned {x} {int(ground[x, z]) + 1} {z} if entity @a[distance=..24] " \
+        # the feet height next to the building (the ground in the footprint is the roof or barrier top, #588)
+        xa, za = max(x0 - 1, 0), max(z0 - 1, 0)
+        edge = ground[xa:x1 + 1, za:z1 + 1]
+        outer = np.ones(edge.shape, bool)
+        outer[x0 - xa:x1 - xa, z0 - za:z1 - za] = False
+        y = int(np.median(edge[outer])) if outer.any() else int(ground[x, z]) + 1
+        # playsound at volume 1 is heard up to 16 blocks: a larger check plays it for nobody
+        at = f"execute positioned {x} {y} {z} if entity @a[distance=..16] " \
              f"if predicate aoe2mc:{rule[2]} run"
         lines.append(f"{at} playsound minecraft:{rule[1]} ambient @a ~ ~ ~ 1 {0.9 + 0.1 * (x % 3):.1f}")
         if rule[3]:
@@ -2551,7 +2598,7 @@ COLORS = [("yellow_poplar_leaves", (215, 180, 40)), ("orange_poplar_leaves", (21
           ("bluet", (225, 230, 235)), ("daisy", (235, 235, 225)), ("lily_of", (235, 240, 235)),
           ("mushroom", (160, 110, 80)), ("stone_brick", (122, 122, 122)), ("cobblestone", (110, 110, 110)), ("white_terracotta", (215, 200, 190)),
           ("glass", (170, 200, 220)), ("banner", None), ("terracotta", (200, 180, 160)),
-          ("calcite", (225, 225, 220)), ("quartz", (235, 230, 225)), ("cinnabar", (170, 55, 45)), ("bricks", (150, 70, 55)),
+          ("calcite", (225, 225, 220)), ("quartz", (235, 230, 225)), ("cinnabar", (170, 55, 45)), ("sulfur", (195, 165, 70)), ("chiseled_resin", (175, 75, 30)), ("resin_brick", (205, 95, 35)), ("bricks", (150, 70, 55)),
           ("brick", (150, 70, 55)), ("deepslate_tile", (55, 55, 60)), ("dark_oak", (65, 45, 25)),
           ("spruce", (105, 75, 45)), ("acacia", (170, 90, 50)), ("jungle", (160, 115, 80)),
           ("crimson", (140, 50, 60)), ("mud_brick", (140, 105, 80)), ("packed_mud", (140, 105, 80)),
@@ -2863,7 +2910,7 @@ def convert_campaign(src, out, only=None, name=None, **kw):
             stem = os.path.splitext(fn)[0]
             if fn.lower().endswith(".scx"):
                 with tempfile.TemporaryDirectory() as tmp:
-                    path = os.path.join(tmp, "s.scx")
+                    path = os.path.join(tmp, fn)       # "Read <fn>" names the scenario (#578)
                     with open(path, "wb") as f:
                         f.write(data)
                     try:

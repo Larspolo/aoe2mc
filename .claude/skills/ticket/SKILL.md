@@ -57,6 +57,9 @@ name each file and function that the ticket changes, and no others (tools that o
 The owner reads them on a phone. Give numbered steps, the exact names of settings or files, and what the
 owner must reply. One ticket per decision.
 
+A check ticket ("check X in the game") starts without `needs-human`: an agent runs the check first (`verify`, level 4),
+comments the results and screenshots, and then adds `needs-human` with the list of what only a person can check (#580).
+
 A research result that waits for the owner (options, milestones, "the owner decides") gets a `needs-human` ticket
 for each decision, with the options and your recommendation, before the research ticket closes. A decision that
 is only in a document is lost: milestones 2 and 3 of the replay research (#31) waited without a ticket until the owner asked (#371).

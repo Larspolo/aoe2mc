@@ -12,6 +12,9 @@ with the miner look. An empty mine disappears, and they go on to the nearest min
 on a farm sends one villager onto it (#392): one farmer per farm, as in AoE2. The wheat gets younger as the food
 goes down, and an empty farm is dirt.
 A right click on a construction site (build.py) sends them to build it, with the builder look (#418).
+A right click on a military unit of player 1 selects it; more clicks add more military units (#516). A right
+click on a unit of another player then sends them to attack it (`aoe attack` of the plugin, ai.py): one command
+for the selection, by the tag `SELECT`. A unit of player 1 is no target: a click on it selects it.
 On a Paper server, the villagers walk with Minecraft path finding (`aoe moveto` of game/plugin, at the AoE2 walk
 speed of game/ai.py), and `aoe stop` stops them when they arrive (#437). The own path code (Map.path, one /tp per
 block) is only for the vanilla server.
@@ -31,7 +34,7 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from aoe2mc import PASSABLE_OBJECTS, WOODS, object_footprint, tree_kind  # noqa: E402
-from units import VILLAGER_JOBS  # noqa: E402
+from units import VILLAGER_JOBS, animal  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
@@ -51,6 +54,16 @@ MINE_BLOCKS = {"gold": ("gold_ore", "raw_gold_block", "stone"),                #
                "stone": ("cobblestone", "andesite", "stone", "tuff")}
 STEPS = [(dx, dz) for dx in (-1, 0, 1) for dz in (-1, 0, 1) if dx or dz]
 NUMBER = r"(-?[\d.]+(?:E-?\d+)?)[df]"
+CIVILIANS = ("VILLAGER", "REPAIRER", "MONK", "KING", "TRADE", "FISHING_SHIP", "TRANSPORT")
+SELECT = "aoe2mc.selected"                                         # entity tag of the selected units
+# The look and sound of one gather step at the resource (#592): block particles and a vanilla sound. A villager has
+# no arm swing, so it turns to the resource (`rotate ... facing`). 26.3 block particles take
+# `{id:...,Properties:{...}}`, not `Name`.
+WORK_LOOK = {"wood": ("minecraft:oak_log", "minecraft:block.wood.hit"),
+             "food": ("minecraft:sweet_berry_bush[age=3]", "minecraft:block.sweet_berry_bush.pick_berries"),
+             "farm": ("minecraft:wheat[age=7]", "minecraft:item.hoe.till"),
+             "gold": ("minecraft:gold_ore", "minecraft:block.stone.hit"),
+             "stone": ("minecraft:stone", "minecraft:block.stone.hit")}
 EVENTS = {"idle": "idle", "to_tree": "walk", "chop": "chop", "to_drop": "carry",    # state -> event in the log
           "to_site": "walk", "build": "build"}
 
@@ -221,6 +234,11 @@ def pick_unit(eye, d, units, reach=64, radius=0.8):
     return best and best[1]
 
 
+def military(name):
+    """True for an AoE2 unit that fights: not a villager, monk, king, trade or transport unit, and no animal."""
+    return not name.startswith(CIVILIANS) and (animal(name) or ("military",))[0] == "military"
+
+
 def walk(g, v):
     """Move unit v one cell on its path with /tp, facing the step (g.map, g.command: Gather or replay.Replay)."""
     x, z = v.path.pop(0)
@@ -241,6 +259,7 @@ class Villager:
         self.res = "wood"                                              # the resource of the load
         self.site = None                                               # the construction site that it builds
         self.goal, self.moved, self.tries = None, 0.0, 0               # Paper: walk cell, time of the last step, orders
+        self.lap = 0                                                   # step of a farmer over its farm (#591)
 
     @property
     def cell(self):
@@ -264,6 +283,10 @@ class Gather:
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
                       and "VILLAGER" in o["name"]]
         self.villagers, self.selected = {}, set()
+        self.soldiers = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit"
+                         and o["player"] == player and military(o["name"])}       # military units of the player
+        self.enemies = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit"
+                        and o["player"] not in (0, player)}                     # units of the other players
         self.players, self.sites = data.get("players", {}), []         # construction sites (#417)
         self.farmers, self.crops = {}, {}                              # farm tile -> UUID of its farmer, wheat age
         self.trunks = {}                                               # tree tile -> logs of its trunk on the ground
@@ -296,11 +319,26 @@ class Gather:
         return self
 
     def select(self, uuid):
-        """Select one villager (glowing), as a click in AoE2 does."""
-        for u in self.selected - {uuid}:
+        """Select one villager (glowing), as a click in AoE2 does. A click on a military unit adds it to selected
+        military units, as a shift click in AoE2 does."""
+        keep = {uuid} | (self.selected if uuid in self.soldiers and self.selected <= set(self.soldiers) else set())
+        for u in self.selected - keep:
             self.command(f"data merge entity {u} {{Glowing:0b}}")
-        self.selected = {uuid}
+            self.command(f"tag {u} remove {SELECT}")
         self.command(f"data merge entity {uuid} {{Glowing:1b}}")
+        self.command(f"tag {uuid} add {SELECT}")
+        self.selected = keep
+
+    def attack(self, target):
+        """Send the selected military units to attack the unit target, with their AoE2 walk speed (ai.py)."""
+        import ai                                                      # ai imports this module
+        for u in sorted(self.selected):
+            self.command(ai.speed_command(u, self.soldiers[u], self.map.T))
+        return self.command(f"aoe attack @e[tag={SELECT}] {target}")
+
+    def positions(self, uuids):
+        """{uuid: feet position} of the loaded units; a dead unit is not in it."""
+        return {u: p for u in uuids if (p := self.pos(u))}
 
     def task(self, v, name):
         """Give the villager the look of its AoE2 task (`LUMBERJACK` ...), with the table of the converter."""
@@ -315,7 +353,7 @@ class Gather:
         res = self.map.resource(tile)
         job = "FARMER" if tile in self.map.farms else {"wood": "LUMBERJACK", "food": "FORAGER"}.get(res) or \
             next(j for r, _, j in MINES.values() if r == res)
-        for u in sorted(self.selected):
+        for u in sorted(self.selected & self.villagers.keys()):         # a scout cannot gather or build (#589)
             v = self.villagers[u]
             for t in [t for t, f in self.farmers.items() if f == u]:
                 del self.farmers[t]
@@ -339,7 +377,7 @@ class Gather:
         their load, as in AoE2."""
         x0, x1, z0, z1 = site["footprint"]
         goals = self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)})
-        for u in sorted(self.selected):
+        for u in sorted(self.selected & self.villagers.keys()):         # a scout cannot gather or build (#589)
             v = self.villagers[u]
             for t in [t for t, f in self.farmers.items() if f == u]:
                 del self.farmers[t]
@@ -409,7 +447,12 @@ class Gather:
         if not pos or len(rot) != 2:
             return
         eye, d = (pos[0], pos[1] + 1.62, pos[2]), direction(*map(float, rot))
-        u = pick_unit(eye, d, {k: v.pos for k, v in self.villagers.items()})
+        army = self.selected and self.selected <= set(self.soldiers)
+        u = pick_unit(eye, d, {k: v.pos for k, v in self.villagers.items()} |
+                      self.positions(list(self.soldiers) + (list(self.enemies) if army else [])))
+        if u in self.enemies:
+            self.attack(u)
+            return
         if u:
             self.select(u)
             return
@@ -456,8 +499,10 @@ class Gather:
                     v.timer -= work
                     v.load += 1
                     src[v.tree] -= 1
+                    self.work(v)
                     if v.tree in self.map.farms:
                         self.harvest(v.tree)
+                        self.tend(v)
                     elif v.res == "food":
                         self.berries(v.tree)
                     elif v.res != "wood":
@@ -485,8 +530,9 @@ class Gather:
         v.moved, v.tries = self.clock(), v.tries + 1
 
     def follow(self, v):
-        """Paper: read the position of a walking villager. It arrives near the center of its goal cell, or when it
-        stands still for 1 s near it; still for 5 s far from it after two orders, it found no path and stops (#437)."""
+        """Paper: read the position of a walking villager. It arrives 1.5 blocks from the center of its goal cell (there
+        the plugin stops a villager, #438), or when it stands still for 1 s near it; still for 5 s far from it after
+        two orders, it found no path and stops (#437)."""
         pos = self.pos(v.uuid)
         if not pos:
             return
@@ -496,11 +542,29 @@ class Gather:
         far, still = math.dist((pos[0], pos[2]), (v.goal[0] + 0.5, v.goal[1] + 0.5)), now - v.moved
         if still >= 5 and far >= 2 and v.tries < 2:                    # a second order, as the plugin drops one
             self.move(v)
-        elif far < 0.8 or still >= 1 and far < 2 or still >= 5:
+        elif far < 1.5 or still >= 1 and far < 2 or still >= 5:
             self.command(f"aoe stop {v.uuid}")
             v.path = []
             if far >= 2:
                 self.set(v, "idle")
+
+    def work(self, v):
+        """One gather step shows: the villager turns to the point of the resource next to it, block particles of the
+        resource fly there, and the work sound plays (#592)."""
+        tile, T = v.tree, self.map.T
+        x0, x1, z0, z1 = self.map.feet.get(tile, (tile[0] * T, tile[0] * T + T, tile[1] * T, tile[1] * T + T))
+        x, y, z = min(max(v.pos[0], x0 + 0.5), x1 - 0.5), v.pos[1] + 1, min(max(v.pos[2], z0 + 0.5), z1 - 0.5)
+        kind = "farm" if tile in self.map.farms else v.res
+        block, sound = WORK_LOOK[kind]
+        if kind == "wood":
+            block = self.map.woods.get(tile, (block,))[0]
+        name, _, props = block.partition("[")
+        props = ",".join(f'{k}:"{w}"' for k, w in (p.split("=") for p in props.rstrip("]").split(",") if p))
+        state = f'{{id:"{name}"' + (f",Properties:{{{props}}}" if props else "") + "}"
+        at = f"{x:.2f} {y:.2f} {z:.2f}"
+        self.command(f"rotate {v.uuid} facing {at}")
+        self.command(f"particle minecraft:block{{block_state:{state}}} {at} 0.2 0.2 0.2 0 8")
+        self.command(f"playsound {sound} block @a {at} 1 {0.9 + 0.2 * (v.load % 2):.1f}")
 
     def site(self, tile):
         """Footprint (x0, x1, z0, z1), ground heights next to it, stump cell and trunk row z of a tree."""
@@ -552,7 +616,8 @@ class Gather:
         self.trunks.pop(tile, None)
 
     def berries(self, tile):
-        """A fruit bush shows its food: full berries, fewer berries below half, a dead bush when it is empty."""
+        """A fruit bush shows its food: full berries, fewer berries below half, a dead bush when it is empty. Only a full
+        bush has the leaves in its middle: they become barriers, so the bush is small and still blocks (#590)."""
         food = self.map.bushes[tile]
         look = "minecraft:sweet_berry_bush[age=3]" if food > BUSH_FOOD // 2 else \
             "minecraft:sweet_berry_bush[age=2]" if food > 0 else "minecraft:dead_bush"
@@ -563,6 +628,7 @@ class Gather:
         (x0, z0), (x1, z1) = min(cells), max(cells)
         ys = [y for x, z in self.map.around(cells) if (y := self.map.y(x, z)) is not None] or [0]
         self.command(f"fill {x0} {min(ys) - 2} {z0} {x1} {max(ys) + 2} {z1} {look} replace minecraft:sweet_berry_bush")
+        self.command(f"fill {x0} {min(ys) - 2} {z0} {x1} {max(ys) + 2} {z1} minecraft:barrier replace minecraft:oak_leaves")
 
     def dig(self, tile, res):
         """An empty mine disappears: its heap and the barriers of its footprint. Its cells are free ground again."""
@@ -575,6 +641,20 @@ class Gather:
             self.map.ground[z][x] = min(ys)
             self.map.mine_at.pop((x, z), None)
         self.map.blocked -= spot
+
+    def tend(self, v):
+        """A farmer walks over its farm while it works, as in AoE2 (#591): one cell per food, row by row (the rows
+        in turn east and west), and at the last cell back the same way, so that each step goes to a next cell."""
+        cells = sorted(self.goals(v.tree), key=lambda c: (c[1], c[0] if c[1] % 2 == 0 else -c[0]))
+        if len(cells) < 2:
+            return
+        cycle = cells + cells[-2:0:-1]
+        if cycle[v.lap % len(cycle)] != v.cell:                        # a new farm or another start cell
+            v.lap = min(range(len(cycle)), key=lambda i: math.dist(cycle[i], v.cell))
+        v.lap += 1
+        walked, v.path = v.walked, [cycle[v.lap % len(cycle)]]
+        walk(self, v)
+        v.walked = walked                                              # work, not a walk (tools/measure_gather.py)
 
     def harvest(self, tile):
         """A farm shows its food: the wheat gets younger (age 7 when full), and an empty farm is dirt."""

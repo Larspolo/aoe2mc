@@ -60,23 +60,23 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Bell | `bell` | `town_center`, `fortified_church`, `monastery` |
 | Bed (inside) | `*_bed` (player color), head to the north | `furnish`, `mill_room`, `hearth_room`, `lumber_camp` +3 more |
 | Straw bed of a poor house, a camp or a barracks (inside) | `straw_bed` | `mill_room`, `lumber_camp`, `mining_camp`, `barracks` |
-| Hearth in a hut or yurt | lit `campfire` in the middle (the smoke goes through the roof), `*_carpet` rugs around it | `hearth_room`, `furnish_worship`, `furnish`, `throne_hall` +23 more |
+| Hearth in a hut or yurt | lit `campfire` in the middle (the smoke goes through the roof), `*_carpet` rugs around it | `hearth_room`, `furnish_worship`, `furnish`, `throne_hall` +24 more |
 | Bedroll in a tent | `*_bed` (player color) on the floor along the canvas | `furnish`, `mill_room`, `hearth_room`, `lumber_camp` +3 more |
 | Spears in a rack | `lightning_rod` | `nine_bands`, `storage`, `army_tent`, `shrine` +21 more |
 | Map table of a commander | `cartography_table` | `study`, `command_tent`, `harbor`, `market` +2 more |
 | Cushion | `red_wool` next to a low `*_slab[type=top]` table | `pavilion`, `scaffold_walk`, `scaffolding`, `cart` +46 more |
 | Table with a light (inside) | `*_slab[type=top]` with a `lantern` on it, a `*_stairs` stool | `town_hall`, `furnish`, `pagoda`, `hall_of_heroes` +41 more |
-| Storage (inside) | `chest` at the back wall | `furnish`, `throne_hall`, `town_hall`, `decorate` +25 more |
+| Storage (inside) | `chest` at the back wall | `furnish`, `throne_hall`, `decorate`, `town_hall` +25 more |
 | Shelf with goods or tools (inside) | `*_shelf` on the wall (holds items, like a stall) | `market`, `blacksmith` |
 | Strongbox of a market or a treasury (inside) | `copper_chest` | no design |
-| Rug | `*_carpet` | `hearth_room`, `furnish_worship`, `furnish`, `throne_hall` +14 more |
+| Rug | `*_carpet` | `hearth_room`, `furnish_worship`, `furnish`, `throne_hall` +15 more |
 | Throne (inside) | `*_stairs` (backrest north) between `gold_block`s, `*_wall_banner`s (player color) over it | `throne_hall`, `pagoda`, `oracles_temple`, `feitoria` +37 more |
 | Treasure (inside) | `chest` and `gold_block` in the back corners | `throne_hall`, `caravanserai`, `hall_of_heroes`, `harbor` +41 more |
 | Statue in a hall (inside) | `chiseled_stone_bricks` base, `waxed_copper_block` and `waxed_cut_copper` (bronze) or `quartz_pillar` and `gold_block` (marble), lit `candle`s at its sides | `hall_of_heroes`, `dome_rock`, `furnish_worship`, `oracles_temple` +1 more |
-| Tomb (inside) | `smooth_quartz` cenotaph with a `green_carpet` cloth on a `red_carpet`, lit `candle`s around it | `gol_gumbaz`, `temple_of_heaven`, `furnish_worship`, `dome_rock` +2 more |
+| Tomb (inside) | `smooth_quartz` cenotaph with a `green_carpet` cloth on a `red_carpet`, lit `candle`s around it | `gol_gumbaz`, `temple_of_heaven`, `furnish_worship`, `dome_rock` +3 more |
 | Arena (inside) | `sand` floor, seats that step down to it, a gate passage from the south, cells under the seats behind `iron_bars` with `hay_block`, `*_wall_banner`s and a `smooth_quartz_stairs` seat at the box of the emperor | `arena_inside`, `tower`, `barracks`, `granary` +14 more |
 | Theatre stage (inside) | `dark_oak_slab` stage, `*_wall_banner`s behind it, `potted_fern`, `flower_pot`, `lantern`s | `arena_inside`, `market`, `town_hall`, `barracks` +4 more |
-| Oracle's tripod (inside) | `cauldron` before the statue of the god, `decorated_pot`s (gifts) in the corners | `oracles_temple`, `decorate`, `barricade`, `hearth_room` +4 more |
+| Oracle's tripod (inside) | `cauldron` before the statue of the god, `decorated_pot`s (gifts) in the corners | `oracles_temple`, `decorate`, `barricade`, `hearth_room` +5 more |
 | Idol on an altar (inside) | `gold_block` on `chiseled_sandstone`, lit `candle`s at its sides, `potted_poppy` offerings | `shrine`, `rekha_deul`, `dome_rock`, `furnish_worship` +9 more |
 | Sanctum in a temple tower (inside) | `gold_block` idol on `chiseled_red_sandstone`, a path of `orange_carpet`, lit `candle`s, `potted_red_tulip` and `potted_orange_tulip` offerings | `rekha_deul` |
 | Offering stone (outside) | `mossy_cobblestone` with a `skeleton_skull`, lit `candle`s, a `campfire` before it, skulls on carved posts | `pagan_shrine`, `svan_tower`, `oracles_temple` |
@@ -95,8 +95,8 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Painted trim (deck edge, band) | `*_concrete` (player color) | `torii`, `stupa`, `pyramid`, `dock` +3 more |
 | Painted plaster roof or ledge | `*_concrete_stairs` and `*_concrete_slab` | no design |
 | Red-painted stone (Indian, Mesoamerican, East Asian temples) | `cinnabar`, `cinnabar_bricks`, `polished_cinnabar`, `chiseled_cinnabar` | `rekha_deul`, `pagoda` |
-| Yellow ochre stone (African, Middle Eastern sets) | `sulfur_bricks`, `polished_sulfur`, `chiseled_sulfur` | no design |
-| Fired orange brick | `resin_bricks`, `chiseled_resin_bricks` | no design |
+| Yellow ochre stone (African, Middle Eastern sets) | `sulfur_bricks`, `polished_sulfur`, `chiseled_sulfur` | `sankore` |
+| Fired orange brick | `resin_bricks`, `chiseled_resin_bricks` | `split_gate` |
 | Relief panel, carving | `chiseled_stone_bricks` | `harbor`, `temple`, `aqueduct`, `furnish_worship` +9 more |
 | Balustrade of a stair | `polished_granite` | `great_pyramid`, `pyramid` |
 | Stone bridge (#455) | `stone_bricks` piers with cutwaters every tile, `stone_brick_stairs[half=top]` vault, `stone_brick_wall` balustrade with `chiseled_stone_bricks` posts, `cracked_stone_bricks` on cracked and broken pieces | `bridge`, `temple`, `cathedral`, `fortified_church` +18 more |
@@ -125,7 +125,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Water trough | `cauldron` (water) | `decorate`, `svan_tower`, `oracles_temple` |
 | Fountain | `water` source in a 3 × 3 rim of `stone_bricks` (`smooth_quartz` for antiquity), posts on the corners | `theatre`, `tower`, `monastery`, `feitoria` +40 more |
 | Bench | three `*_stairs` in a row | `storage`, `shelter`, `furnish_worship`, `town_hall` +43 more |
-| Clay pots, amphorae, water pots | `decorated_pot`, `water_cauldron` | `barricade`, `hearth_room`, `pasture`, `stable` +6 more |
+| Clay pots, amphorae, water pots | `decorated_pot`, `water_cauldron` | `barricade`, `hearth_room`, `pasture`, `tomb` +7 more |
 | Banner, flag | `*_banner` (player color), `Canvas.flag` | `throne_hall`, `town_hall`, `keep_inside`, `arena_inside` +58 more |
 | Player color band (walls, gate towers) | `*_wool` (player color), one row | `yurt`, `pavilion`, `command_tent`, `pasture` +23 more |
 | Fence, pen | `*_fence` | `fish_trap`, `nine_bands`, `outpost`, `flagship` +38 more |
@@ -149,7 +149,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Charred timber | `coal_block`, `blackstone`, dark oak logs | `burned_building` |
 | Scaffolding, building site | `scaffolding` posts, `spruce_slab` decks, `ladder` | `scaffold_walk`, `scaffolding`, `tower`, `market` |
 | Standing stones with lintels | `stone`, `andesite`, `tuff` posts, a ring of `stone` on top | `stonehenge`, `dome_rock`, `mole`, `mining_camp` +7 more |
-| Stone seats of a theatre | `stone_bricks` rising outward, `smooth_stone` and slabs on top | `theatre`, `fortified_church`, `port`, `donjon` +42 more |
+| Stone seats of a theatre | `stone_bricks` rising outward, `smooth_stone` and slabs on top | `theatre`, `fortified_church`, `port`, `donjon` +43 more |
 | Spire tip, finial | `lightning_rod` | `nine_bands`, `storage`, `army_tent`, `shrine` +21 more |
 | Copper roof, copper dome | `weathered_cut_copper`, `weathered_copper` | `cathedral` |
 | Slate spire | `deepslate_tiles` | `hall_of_heroes`, `cathedral` |
@@ -184,7 +184,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Thatch or shingle roof (East Asian set) | `spruce` stairs | `pagoda`, `tomb`, `furnish_worship`, `wooden_fort` +15 more |
 | Cannon | `polished_basalt` barrel on its side | `tower` |
 | Guardian lion statue | `stone_brick_stairs` on a `chiseled_sandstone` pedestal | `barracks`, `monastery`, `cathedral`, `harbor` +27 more |
-| Clay pot, vase | `decorated_pot` | `barricade`, `hearth_room`, `courtyard_walls`, `oracles_temple` +2 more |
+| Clay pot, vase | `decorated_pot` | `barricade`, `hearth_room`, `tomb`, `courtyard_walls` +3 more |
 | Prang (Khmer lotus-bud tower) | rings of `stone_bricks` and `chiseled_stone_bricks`, `gold_block` tip | `temple`, `harbor`, `hall_of_heroes`, `feitoria` +10 more |
 | Checkered stone base | `polished_deepslate` in a checker pattern in the main stone | `caravanserai`, `stone_head` |
 | Gilded dome | `gold_block` | `buddha_statue`, `throne_hall`, `dome_rock`, `ring` +17 more |

@@ -216,6 +216,8 @@ def play(game, world, log=None):
         if len(g.villagers) == len(g.units):
             break
         time.sleep(1)
+    import combat
+    combat.setup(game, data)                         # AoE2 hit points and damage (#514)
     print(f"Join the server localhost:{game.game_port} (Minecraft {game.version}, multiplayer, direct connection).\n"
           f"{len(g.villagers)} villagers of player 1. Hold the carrot on a stick: right click a villager to select it,\n"
           "then right click a tree, a fruit bush or a mine. To build: /trigger aoe_build set N (the menu is in the chat),\n"
@@ -233,7 +235,7 @@ def replay(game, world, speed=1.0, start="0:00"):
     game.forceload()
     print(f"Join the server localhost:{game.game_port} (Minecraft {game.version}). The replay starts now "
           f"at speed {speed}.", file=sys.stderr)
-    stats = replay.Replay(game, data, game.version).run(speed, start)
+    stats = replay.Replay(game, data, game.version, ai=game.kind == "paper").run(speed, start)
     print(f"{stats['events']} events, {stats['commands']} commands in {stats['busy']} s "
           f"({stats['rate']} commands per second, the timeline needs {stats['need']}), largest lag {stats['lag']} s")
     return stats

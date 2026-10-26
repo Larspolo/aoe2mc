@@ -50,6 +50,8 @@ class FakeServer:
     def command(self, cmd):
         self.log.append(cmd)
         if m := re.fullmatch(r"data get entity (\S+) (Pos|Rotation)", cmd):
+            if m[1] not in self.entities:
+                return "No entity was found"
             v = self.entities[m[1]][m[2]]
             return f"{m[1]} has the following entity data: [{', '.join(f'{x}d' for x in v)}]"
         if m := re.fullmatch(r"tp (\S+) (\S+) (\S+) (\S+) .*", cmd):
