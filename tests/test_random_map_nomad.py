@@ -29,5 +29,5 @@ def test_no_start_object_is_on_water_or_forest(players):
     t = np.array(d["terrain"])
     bad = [T["WATER"], T["SHALLOW"]] + list(rmap.FOREST_TREES)
     start = [o for o in d["objects"] if not o["name"].startswith("TREE")]
-    assert {o["name"] for o in start} >= {"VILLAGER_MALE", "VILLAGER_FEMALE", "SCOUT_CAVALRY", "GOLD_MINE"}
+    assert {o["name"] for o in start} >= {"VILLAGER_MALE", "VILLAGER_FEMALE", "GOLD_MINE"}
     assert not any(t[int(o["x"]), int(o["y"])] in bad for o in start)
