@@ -334,14 +334,28 @@ create_terrain DIRT3 { base_terrain GRASS number_of_clumps 8 land_percent 2 }
 create_terrain FOREST { base_terrain GRASS number_of_clumps 6 number_of_tiles 10 set_avoid_player_start_areas 15
   spacing_to_other_terrain_types 2 }
 """
+# Gold Rush: open land, a dirt land with many gold mines in the middle (GOLDS) and a forest ring around it.
+GOLD_RUSH = """
+<LAND_GENERATION>
+base_terrain GRASS
+create_player_lands { terrain_type GRASS2 land_percent 30 base_size 12 clumping_factor 15 }
+create_land { terrain_type DIRT land_position 50 50 base_size 8 number_of_tiles 450 clumping_factor 20 }
+<TERRAIN_GENERATION>
+create_terrain DIRT3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
+create_terrain FOREST { base_terrain GRASS number_of_clumps 8 number_of_tiles 25 set_avoid_player_start_areas 16
+  spacing_to_other_terrain_types 2 }
+"""
 GENERATORS = {"arabia": ARABIA,
               "arena": ARENA,
-              "black_forest": BLACK_FOREST}
+              "black_forest": BLACK_FOREST,
+              "gold_rush": GOLD_RUSH}
 WALLS = {"arena": 23}           # the radius in tiles of the stone wall circle around each player (outside START)
 BAND = 6                        # the forest inside the wall: tiles of width, on the half away from the map middle
 PATHS = {"black_forest": 1}     # the half width in tiles of the open path from each player to the middle
-WOODS = {"arabia": (10, 30, 3)} # the wood line of each player (tiles from the town center, forest tiles) and its
-                                # single trees (stragglers, at 4 to 6 tiles), as in AoE2 (#1144)
+GOLDS = {"gold_rush": (10, 6, 5)}  # the gold of the middle: radius in tiles, clumps of gold mines, mines in a clump
+RINGS = {"gold_rush": (14, 5)}  # the forest ring around the gold: inner radius and width in tiles, gaps between players
+WOODS = {"arabia": (10, 30, 3), # the wood line of each player (tiles from the town center, forest tiles) and its
+         "gold_rush": (10, 30, 3)}  # single trees (stragglers, at 4 to 6 tiles), as in AoE2 (#1144)
 
 
 def walls(d, r, rng):
@@ -362,6 +376,38 @@ def walls(d, r, rng):
         terrain[edge] = TERRAINS["GRASS2"]
         out += [{"name": "STONE_WALL", "player": st["player"], "x": i + 0.5, "y": j + 0.5} for i, j in np.argwhere(edge)]
     d["terrain"] = terrain.tolist()
+    return out
+
+
+def goldfield(d, gold, ring, rng):
+    """The gold of the middle: gold[1] clumps of gold[2] gold mines within gold[0] tiles of the map middle, and a forest
+    ring (inner radius ring[0] with an uneven edge, ring[1] tiles wide) around it, with a gap of 5 tiles half way
+    between each two players: the player lands do not see the gold, and the gaps let the units in."""
+    n, terrain = d["size"], np.array(d["terrain"])
+    x, y = np.mgrid[0:n, 0:n] + 0.5
+    dx, dy = x - n / 2, y - n / 2
+    dist, a = np.hypot(dx, dy), np.arctan2(dy, dx)
+    inner = ring[0] + 1.5 * np.sin(5 * a + rng.uniform(0, 2 * np.pi))
+    band = (dist >= inner) & (dist < inner + ring[1])
+    turns = sorted(np.arctan2(st["y"] - n / 2, st["x"] - n / 2) for st in d["lands"])
+    for t0, t1 in zip(turns, turns[1:] + [turns[0] + 2 * np.pi]):
+        gap = (t0 + t1) / 2
+        band &= (abs(dx * np.sin(gap) - dy * np.cos(gap)) > 2.5) | (dx * np.cos(gap) + dy * np.sin(gap) < 0)
+    terrain[band] = TERRAINS["FOREST"]
+    d["terrain"] = terrain.tolist()
+    out, used = [], dist > gold[0]
+    for _ in range(gold[1]):
+        for _ in range(36):                                              # a free spot for the clump
+            r, b = gold[0] * np.sqrt(rng.uniform(0, 0.8)), rng.uniform(0, 2 * np.pi)
+            c = (int(n / 2 + r * np.cos(b)), int(n / 2 + r * np.sin(b)))
+            cells = sorted(square(c, 2, n), key=lambda t: (t[0] - c[0]) ** 2 + (t[1] - c[1]) ** 2)[:gold[2]]
+            if not any(used[t] for t in cells):
+                break
+        else:
+            continue
+        for t in cells:
+            used[max(0, t[0] - 1):t[0] + 2, max(0, t[1] - 1):t[1] + 2] = True
+        out += [{"name": "GOLD_MINE", "player": 0, "x": t[0] + 0.5, "y": t[1] + 0.5} for t in cells]
     return out
 
 
@@ -386,9 +432,11 @@ def random_map(kind, seed, players=2):
     if kind in PATHS:
         paths(d, PATHS[kind])
     objects = walls(d, WALLS[kind], rng) if kind in WALLS else []
+    if kind in GOLDS:
+        objects += goldfield(d, GOLDS[kind], RINGS[kind], rng)
     n, terrain = d["size"], np.array(d["terrain"])
     used = np.isin(terrain, list(FOREST_TREES) + [TERRAINS["WATER"]])
-    for o in objects:                                                    # no start object next to a wall
+    for o in objects:                                      # no start object next to a wall or a gold mine
         used[max(0, int(o["x"]) - 1):int(o["x"]) + 2, max(0, int(o["y"]) - 1):int(o["y"]) + 2] = True
     for st in d["lands"]:
         cx, cy = st["x"], st["y"]
