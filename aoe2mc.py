@@ -240,14 +240,16 @@ def read_map(path):
 
 
 # Object IDs of old scenarios that DE keeps only in its data file (the DE editor hides them, #576) -> the DE object of
-# the same look. Buildings of later ages take the base building. Not here: FLAGX (162, invisible), projectiles, the
-# shallows (447, terrain), a part of a palisade gate (795) and the town center parts (617, 621): no own object.
+# the same look. Buildings of later ages take the base building. Not here: projectiles. The corner of a palisade gate
+# (795) is a palisade post, the battering ram (35) has a new ID in DE (#772).
 OLD_IDS = {248: "STONE_MINE", 262: "FORAGE_BUSH", 415: "STUMP", 737: "STUMP",
+           35: "BATTERING_RAM", 617: "TOWN_CENTER", 621: "TOWN_CENTER", 795: "PALISADE_WALL",
            144: "RUBBLE_2_X_2", 146: "RUBBLE_3_X_3", 147: "RUBBLE_1_X_1", 817: "STATUE_CIVILIZATION",
            178: "BROKEN_CART", 443: "BROKEN_CART", 735: "TREBUCHET_PACKED", 451: "DOLPHIN",
            10: "ARCHERY_RANGE", 20: "BARRACKS", 498: "BARRACKS", 30: "MONASTERY", 32: "MONASTERY", 116: "MARKET",
            137: "MARKET", 129: "MILL", 133: "DOCK", 807: "DOCK", 150: "SIEGE_WORKSHOP", 210: "UNIVERSITY",
            464: "HOUSE", 465: "HOUSE", 563: "BLACKSMITH", 585: "MINING_CAMP", 586: "MINING_CAMP"}
+FLAGX, SHALLOWS_OBJECT = 162, 447   # an invisible editor flag (units.INVISIBLE); shallows: the terrain of its tile
 
 
 def read_scx(path):
@@ -271,8 +273,11 @@ def read_scx(path):
                         "view": p["view"]}
     objects = []
     for o in s["objects"]:
+        if o["type"] == SHALLOWS_OBJECT and 0 <= o["x"] < size and 0 <= o["y"] < size:
+            terrain[int(o["x"]), int(o["y"])] = TerrainId.SHALLOWS.value
+            continue
         t = ids[OLD_IDS[o["type"]]] if o["type"] not in kinds and o["type"] in OLD_IDS else o["type"]
-        prefix, name = kinds.get(t, ("?", f"UNKNOWN_{t}"))
+        prefix, name = ("O", "INVISIBLE_OBJECT") if t == FLAGX else kinds.get(t, ("?", f"UNKNOWN_{t}"))
         holder = o["garrisoned_in"]
         objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name, id=t,
                             player=o["player"], x=o["x"], y=o["y"], rotation=float(o["angle"]),
