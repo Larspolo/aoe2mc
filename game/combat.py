@@ -26,6 +26,7 @@ Stats = namedtuple("Stats", "hp attack melee pierce range reload bonus classes",
 
 INF, ARC, CAV, CAM, ELE, SIE, SPE = "infantry", "archer", "cavalry", "camel", "elephant", "siege", "spearman"
 UNI = "unique"                                        # the unique units of the castles (the Samurai bonus)
+GUN = "gunpowder"                                     # the targets of the Condottiero and Winged Hussar bonus (#1007)
 SPEAR = {CAV: 15, CAM: 12, ELE: 15}                   # spearman bonus, more in the later ages of the line
 STATS = {
     # infantry: militia line and spearman line
@@ -50,7 +51,7 @@ STATS = {
     "LONGBOWMAN": Stats(35, 6, 0, 0, 5, 2.0, {SPE: 3}, (ARC, UNI)),
     "CAVALRY_ARCHER": Stats(50, 6, 0, 0, 4, 2.0, {SPE: 2}, (ARC, CAV)),
     "HEAVY_CAVALRY_ARCHER": Stats(60, 7, 1, 0, 4, 2.0, {SPE: 4}, (ARC, CAV)),
-    "HAND_CANNONEER": Stats(40, 17, 1, 0, 7, 3.45, {INF: 10, SPE: 1}, (ARC,)),
+    "HAND_CANNONEER": Stats(40, 17, 1, 0, 7, 3.45, {INF: 10, SPE: 1}, (ARC, GUN)),
     # cavalry
     "SCOUT_CAVALRY": Stats(45, 3, 0, 2, 0, 2.0, {}, (CAV,)),
     "LIGHT_CAVALRY": Stats(60, 7, 0, 2, 0, 2.0, {}, (CAV,)),
@@ -62,6 +63,7 @@ STATS = {
     "HEAVY_CAMEL_RIDER": Stats(120, 7, 0, 0, 0, 2.0, {CAM: 9, CAV: 18}, (CAM,)),
     "IMPERIAL_CAMEL_RIDER": Stats(140, 8, 0, 0, 0, 1.667, {"building": 2, CAM: 9, CAV: 18}, (CAM,)),
     "WAR_ELEPHANT": Stats(450, 15, 1, 2, 0, 2.0, {"building": 7}, (ELE, UNI)),
+    "ELITE_WAR_ELEPHANT": Stats(600, 20, 1, 3, 0, 2.0, {"building": 30}, (ELE, UNI)),
     # unique units of the castle (#712; Throwing Axeman and Mameluke hit with melee damage in AoE2: here pierce). #1006:
     # the first projectile of Kipchak and Organ Gun, the ranged mode of the Ratha, the Castle Age Serjeant
     "BERSERK": Stats(54, 12, 1, 1, 0, 2.0, {"building": 2}, (INF, UNI)),
@@ -72,7 +74,7 @@ STATS = {
     "FLEMISH_MILITIA": Stats(40, 5, 1, 1, 0, 2.0, {CAV: 6, CAM: 4, ELE: 6}, (INF, UNI)),
     "GENGHIS_KHAN": Stats(300, 25, 2, 2, 5, 2.0, {SIE: 3}, (ARC, CAV, UNI)),
     "HUSKARL": Stats(60, 10, 0, 6, 0, 2.0, {"building": 2}, (INF, UNI)),
-    "JANISSARY": Stats(35, 17, 1, 0, 7, 3.45, {}, (ARC, UNI)),
+    "JANISSARY": Stats(35, 17, 1, 0, 7, 3.45, {}, (ARC, GUN, UNI)),
     "KIPCHAK": Stats(40, 4, 0, 0, 4, 2.2, {SPE: 1}, (ARC, CAV, UNI)),
     "KONNIK": Stats(100, 12, 2, 2, 0, 2.4, {"building": 4}, (CAV, UNI)),
     "LEITIS": Stats(100, 13, 1, 1, 0, 1.9, {}, (CAV, UNI)),
@@ -81,7 +83,7 @@ STATS = {
     "MANGUDAI": Stats(60, 6, 0, 0, 4, 2.1, {SIE: 3, SPE: 1}, (ARC, CAV, UNI)),
     "MONASPA": Stats(70, 12, 3, 2, 0, 1.8, {}, (CAV, UNI)),
     "OBUCH": Stats(80, 8, 2, 2, 0, 2.0, {"building": 4}, (INF, UNI)),
-    "ORGAN_GUN": Stats(50, 6, 2, 4, 7, 3.45, {INF: 2}, (SIE, UNI)),
+    "ORGAN_GUN": Stats(50, 6, 2, 4, 7, 3.45, {INF: 2}, (GUN, SIE, UNI)),
     "PLUMED_ARCHER": Stats(50, 5, 0, 1, 4, 1.9, {INF: 1, SPE: 2}, (ARC, UNI)),
     "RATHA": Stats(100, 5, 3, 1, 4, 2.0, {SPE: 1}, (ARC, CAV, UNI)),
     "RATTAN_ARCHER": Stats(42, 6, 0, 4, 4, 2.0, {SPE: 2}, (ARC, UNI)),
@@ -95,6 +97,16 @@ STATS = {
     "URUMI_SWORDSMAN": Stats(55, 9, 1, 0, 0, 2.0, {"building": 1}, (INF, UNI)),
     "WAR_WAGON": Stats(150, 9, 0, 2, 4, 2.5, {"building": 2}, (ARC, CAV, UNI)),
     "WOAD_RAIDER": Stats(70, 11, 0, 1, 0, 2.0, {"building": 2}, (INF, UNI)),
+    # regional units (#1007). The steppe lancers hit from AoE2 range 1: a melee hit in Minecraft (the vanilla reach)
+    "BATTLE_ELEPHANT": Stats(250, 12, 1, 2, 0, 2.0, {"building": 4}, (ELE,)),
+    "CONDOTTIERO": Stats(80, 10, 1, 0, 0, 1.9, {GUN: 10, "building": 2}, (INF, UNI)),
+    "ELITE_BATTLE_ELEPHANT": Stats(300, 14, 1, 3, 0, 2.0, {"building": 7}, (ELE,)),
+    "ELITE_GENITOUR": Stats(55, 4, 0, 4, 4, 3.0, {ARC: 5, SPE: 3}, (ARC, CAV, UNI)),
+    "ELITE_STEPPE_LANCER": Stats(80, 11, 0, 2, 0, 2.0, {}, (CAV,)),
+    "GENITOUR": Stats(50, 3, 0, 4, 4, 3.0, {ARC: 4, SPE: 3}, (ARC, CAV, UNI)),
+    "SLINGER": Stats(35, 4, 0, 0, 5, 2.0, {INF: 4, SIE: 3, SPE: 1}, (ARC,)),
+    "STEPPE_LANCER": Stats(60, 9, 0, 1, 0, 2.0, {}, (CAV,)),
+    "WINGED_HUSSAR": Stats(80, 9, 1, 2, 0, 1.9, {GUN: 4}, (CAV,)),
     # siege
     "MANGONEL": Stats(50, 40, 0, 6, 7, 6.0, {"building": 35}, (SIE,)),
     "ONAGER": Stats(60, 55, 0, 8, 8, 6.0, {"building": 45, SIE: 12}, (SIE,)),
@@ -106,7 +118,7 @@ STATS = {
     "SIEGE_RAM": Stats(270, 4, -1, 195, 0, 5.0, {"building": 200, SIE: 65}, (SIE,)),
     "SIEGE_TOWER": Stats(220, 0, 0, 100, 0, 0.0, {}, (SIE,)),
     "TREBUCHET": Stats(200, 200, 2, 150, 16, 10.0, {"building": 250}, (SIE,)),
-    "BOMBARD_CANNON": Stats(80, 40, 2, 5, 12, 6.5, {"building": 200}, (SIE,)),
+    "BOMBARD_CANNON": Stats(80, 40, 2, 5, 12, 6.5, {"building": 200}, (GUN, SIE)),
     "PETARD": Stats(50, 25, 0, 2, 0, 2.0, {"building": 500, SIE: 60}),
     # cheat units (#818, AoE2 DE values of the wiki; the Cobra car shoots: a ranged unit)
     "ALFRED_THE_ALPACA": Stats(140, 120, 20, 20, 0, 2.0, {"building": 100}, (CAV,)),

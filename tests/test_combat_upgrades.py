@@ -18,7 +18,7 @@ def test_each_upgrade_has_values_and_a_valid_stats_command():
 def test_values_of_the_wiki():
     assert combat.STATS["HUSSAR"] == combat.Stats(75, 7, 0, 2, 0, 1.9, {}, (combat.CAV,))
     assert combat.STATS["HAND_CANNONEER"] == combat.Stats(40, 17, 1, 0, 7, 3.45, {combat.INF: 10, combat.SPE: 1},
-                                                          (combat.ARC,))
+                                                          (combat.ARC, combat.GUN))   # wiki class "Gunpowder Units" (#1007)
     assert combat.STATS["SIEGE_RAM"].pierce == 195 and combat.STATS["SIEGE_RAM"].bonus["building"] == 200
 
 
