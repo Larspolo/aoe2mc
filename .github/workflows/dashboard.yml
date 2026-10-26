@@ -3,12 +3,16 @@ name: Dashboard
 # Writes the dashboard in the body of the status issue (#1) from the labels, comments and PRs.
 # Not on "edited": the script edits the status issue.
 on:
+  issues:
+    types: [opened, closed, reopened, labeled, unlabeled]
+  pull_request:
+    types: [closed]
   schedule:
-    - cron: "23 */6 * * *"   # each run also writes it with `python3 tools/dashboard.py` (Actions minutes, see ci.yml)
+    - cron: "23 * * * *"     # the times in the dashboard (claims, stalled PRs) change without an event
   workflow_dispatch:
 
 permissions:
-  contents: read     # checkout needs it (the repository is private)
+  contents: read     # checkout needs it
   issues: write
   pull-requests: read   # the pulls API (open PRs, merged PRs) gives 403 without it
 
@@ -18,7 +22,6 @@ concurrency:
 
 jobs:
   dashboard:
-    if: github.event_name != 'schedule' || vars.PAUSE_SCHEDULES != 'true'   # the variable pauses the schedules (Actions minutes)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

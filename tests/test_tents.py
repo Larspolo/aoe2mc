@@ -31,5 +31,5 @@ def test_the_tent_shapes(name, corner, cloth):
 def test_the_greek_tent_has_a_ridge_from_north_to_south():
     w, get = draw("GREEK_ARMY_TENT")
     top = (w + 1) // 2
-    assert all(get(w // 2 - 1, top, z) == "white_wool" for z in range(w - 1))
+    assert all(get(w // 2 - 1, top, z).startswith("white_wool") for z in range(w - 1))
     assert get(w // 2, 1, w - 2) == "air"

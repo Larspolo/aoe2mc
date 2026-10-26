@@ -1,6 +1,6 @@
 #!/bin/bash
-# PreToolUse hook: block a force push, a history rewrite or a delete of main. The repository is private on a free
-# account, so GitHub has no branch protection for it, and the agents use the owner's account (no bypass rule helps).
+# PreToolUse hook: block a force push, a history rewrite or a delete of main. The ruleset `Protect main` refuses
+# them on GitHub too, but this hook stops the command before it runs (the agents use the owner's account).
 # Exit 2 blocks the command and shows the message to the agent.
 exec python3 -c '
 import json, re, shlex, subprocess, sys
@@ -34,7 +34,7 @@ for seg in re.split(r"&&|\|\||[;|\n]", cmd):
         break
 else:
     sys.exit(0)
-print("Blocked by .claude/hooks/guard-main.sh: no force push, history rewrite or delete of main (no branch protection "
-      "on this private repository). Push to your own branch and merge with a PR.", file=sys.stderr)
+print("Blocked by .claude/hooks/guard-main.sh: no force push, history rewrite or delete of main. "
+      "Push to your own branch and open a PR.", file=sys.stderr)
 sys.exit(2)
 '

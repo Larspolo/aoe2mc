@@ -171,3 +171,17 @@ used mines and farms, and the exact unit paths. Next: #438 lets Minecraft path f
 - `mgz` README, sections "Support" and "Frequently Asked Questions": https://github.com/happyleavesaoc/aoc-mgz
 - `mgz` source: `mgz/model/definitions.py` (the `Match`, `Map`, `Tile`, `Object`, `Action` classes) and
   `mgz/fast/actions.py` (the payload of `MOVE`, `ORDER`, `BUILD`, `WALL`).
+
+## Pitfalls
+
+Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
+
+- Test data: `samples/de-64.3.aoe2record` (`mgz`, MIT, #134; each town center 4 times, #139). `parse_match(f).actions`:
+  `ERROR` actions are commands mgz could not read (all `DE_QUEUE` in DE 64.3: `aoe2mc.de_queue`; raw bytes: a wrapper
+  of `mgz.fast.parse_action`, #372). Old `.scx` (no license, do not commit): GitHub raw
+  `SiegeEngineers/genie-rs/master/crates/genie-scx/test/scenarios/` (format 1.21: `Age of Heroes b1-3-5.scx`).
+- `mgz.model.parse_match` reads only DE 13.34 and later; `mgz.summary.full.FullSummary` reads HD, UserPatch and older DE
+  but skips the GAIA trees (`aoe2mc.read_old_record` turns the skip off). More test records: GitHub raw
+  `happyleavesaoc/aoc-mgz/master/tests/recs/` (table in `docs/research/replays.md`, #376). `construct` 2.8: `IfThenElse` is a `Switch`.
+- Record commands: the `player` of an mgz action is not always right (a MOVE shows for both players), and the
+  `objects` of SPECIAL are not IDs. New objects take the next free ID: `aoe2mc.name_timeline` (#407).
