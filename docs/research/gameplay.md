@@ -260,3 +260,7 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - `Replay.run` gives `control["time"]` as a float (ms): a test of a poll action with an int time hides a format error like `:02d` (#803). Test with a float time, or with `Replay.run` and the `Clock` fake of `tests/test_replay_control.py`.
 - `FakeServer` of `tests/test_gather.py` moves an entity only on `tp U X Y Z <more>` (a `tp` without `facing` keeps its Pos): check the `tp` text in `server.log`. A fake answer for `execute if entity X` must skip `@a[scores=...]`: `Gather.clicks` asks that (#808).
 - Two equal melee units in a duel: the result depends on the tick of the first hit. A defender that hits back in the same tick ties (both die); `attackBack` gives it half a reload of reaction (#848).
+- A screenshot of an order marker in Xvfb: dust and the glowing effect last about 1 second, and the software renderer
+  draws few frames, so one `client.shot` after the commands shows nothing. Send the marker commands again each 0.2 s
+  in a thread and take the shot after about 1.5 s (#845). The plugin sets the AoE2 hit points itself: `effect give
+  resistance` does not keep an attacked unit alive for the shot, so put the attacker far from the target.

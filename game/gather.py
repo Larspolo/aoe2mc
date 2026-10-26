@@ -342,6 +342,24 @@ class Villager:
         return math.floor(self.pos[0]), math.floor(self.pos[2])
 
 
+def marker(m, cells, kind, who):
+    """The commands of the order marker (#796) for player selector who: a ring of dust particles on the ground of
+    gather.Map m around the block cells. Dust fades in about 1 second by itself (Minecraft feature): no remove command.
+    The live replay uses it too (#845)."""
+    xs, zs = [c[0] for c in cells], [c[1] for c in cells]
+    cx, cz = (min(xs) + max(xs) + 1) / 2, (min(zs) + max(zs) + 1) / 2
+    r = max(max(xs) - min(xs) + 1, max(zs) - min(zs) + 1) / 2 + 0.5
+    y = m.y(int(cx), int(cz)) or 0
+    return [f"particle minecraft:dust{{color:{MARK[kind]},scale:1.5}} {cx + r * math.cos(a):.2f} {y + 0.2:.2f} "
+            f"{cz + r * math.sin(a):.2f} 0 0 0 0 1 force {who}"
+            for a in (2 * math.pi * k / MARK_POINTS for k in range(MARK_POINTS))]
+
+
+def glow(uuid):
+    """The order marker of an attack on a unit (#796): the target glows for a moment (Minecraft effect)."""
+    return f"effect give {uuid} minecraft:glowing 1 0 true"
+
+
 class Gather:
     """The gather game on a running server (game.command sends one command). Call setup(), then step() in a loop.
     log: a text file that gets one JSON line per event (state change or drop), to measure the timing (#289).
@@ -664,7 +682,7 @@ class Gather:
                       self.positions([u for u in self.soldiers if u not in held] + (list(self.enemies) if army else [])))
         if u in self.enemies:
             self.attack(u)
-            self.command(f"effect give {u} minecraft:glowing 1 0 true")   # the order marker of an attack (#796)
+            self.command(glow(u))                                     # the order marker of an attack (#796)
             return
         if u and u in self.selected and u in self.villagers:         # a click on a selected villager (#621)
             build.open_menu(self, name)
@@ -699,16 +717,9 @@ class Gather:
             self.mark(name, {(x0, z0), (x1 - 1, z1 - 1)})
 
     def mark(self, name, cells, kind="go"):
-        """Show the target of an order to player name, as the flag of AoE2 (#796): a ring of dust particles on the
-        ground around the block cells. Dust fades in about 1 second by itself (Minecraft feature): no remove command."""
-        xs, zs = [c[0] for c in cells], [c[1] for c in cells]
-        cx, cz = (min(xs) + max(xs) + 1) / 2, (min(zs) + max(zs) + 1) / 2
-        r = max(max(xs) - min(xs) + 1, max(zs) - min(zs) + 1) / 2 + 0.5
-        y = self.map.y(int(cx), int(cz)) or 0
-        for k in range(MARK_POINTS):
-            a = 2 * math.pi * k / MARK_POINTS
-            self.command(f"particle minecraft:dust{{color:{MARK[kind]},scale:1.5}} {cx + r * math.cos(a):.2f} "
-                         f"{y + 0.2:.2f} {cz + r * math.sin(a):.2f} 0 0 0 0 1 force {name}")
+        """Show the target of an order to player name, as the flag of AoE2 (#796): marker() around the block cells."""
+        for c in marker(self.map, cells, kind, name):
+            self.command(c)
 
     def pick_fort(self, eye, d, reach=64):
         """The target UUID of the enemy building that the ray from eye in direction d hits first (up to 3 tiles
