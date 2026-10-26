@@ -171,6 +171,9 @@ SIGHT = {
 # Units that attack from a range with melee damage (AoE2): their hit takes the melee armor of the target (#800).
 MELEE_RANGED = {"GBETO",
                 "MAMELUKE",
+                "MANGONEL",
+                "ONAGER",
+                "SIEGE_ONAGER",
                 "THROWING_AXEMAN"}
 DEFAULT, BUILDING = Stats(40, 4, 0, 0, 0, 2.0), Stats(1000, 0, 0, 7, 0, 0.0, {}, ("building",))
 SLIME = 0.52                    # blocks of width and height per slime size: the target of a building (#517)
