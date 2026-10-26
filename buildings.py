@@ -3277,14 +3277,59 @@ def amphitheatre(c, w, st, col, T, ctx):
             if k % 2 == 0:
                 x, z = int(round(cx + R * math.cos(a))), int(round(cx + R * math.sin(a)))
                 c.box(x, x + 1, y, y + 2, z, z + 1, "air")
-    rows = max(3, int(R) - 3)
-    for i in range(rows):                                               # seating, rising outward
-        r = R - 1 - i
-        c.cylinder(cx, cx, r, 1, max(2, h - 1 - i * (h - 2) // rows), "polished_andesite")
-    c.cylinder(cx, cx, R - 1 - rows, 1, h + 1, "air")
+    rows = max(3, int(R) - 5)
+    seats(c, cx, R, [max(2, h - 1 - i * (h - 2) // rows) for i in range(rows)], h, "polished_andesite")
     c.cylinder(cx, cx, R - 1 - rows, 0, 1, "sand")
-    c.box(w // 2 - 1, w // 2 + 2, 1, 4, w - 3, w + 1, "air")
+    arena_inside(c, w, cx, col, stage=True)
     c.flag(w // 2, h + 1, 0, col, 3)
+
+
+def seats(c, cx, R, tops, h, mat):
+    """Rows of seats inside a round wall: row i goes up to tops[i] and steps down to the arena."""
+    for i, t in enumerate(tops):
+        c.cylinder(cx, cx, R - 1 - i, 1, t, mat)
+        c.cylinder(cx, cx, R - 1 - i, t, h + 1, "air")
+    c.cylinder(cx, cx, R - 1 - len(tops), 1, h + 1, "air")
+
+
+def arena_inside(c, w, cx, col, stage=False):
+    """Inside of a round arena (#451): a gate passage from the south, cells with iron bars under the seats
+    (east and west), banners at the box of the emperor or behind a stage (north), and lanterns."""
+    m = w // 2
+    c.box(m - 1, m + 2, 1, 4, m, w + 1, "air")                          # the gate passage
+    air = c.id("air")
+
+    def edge(dx, dz):                                                    # the first seat block from the centre
+        x, z = m, m
+        while 0 < x < w - 1 and 0 < z < w - 1 and c.get(x, 1, z) == air:
+            x, z = x + dx, z + dz
+        return x, z
+    xe, _ = edge(1, 0)
+    xw, _ = edge(-1, 0)
+    _, zn = edge(0, -1)
+    if xe - xw < 4:                                                      # small sizes (--tile-size): no arena
+        return
+    lantern = "lantern[hanging=false,waterlogged=false]"
+    items = [(x, 1, m + 1, lantern) for x in (xw + 1, xe - 1)]
+    items += [(x, 2 if stage else 1, zn + 1, lantern) for x in (m - 2, m + 2 if stage else w + 1 - m)]
+    items += [(m + dx, 3, z, "lantern[hanging=true,waterlogged=false]") for dx in (-1, 1)   # under the seats
+              for z in range(m + 2, w - 2, 3) if c.get(m + dx, 4, z) != air]
+    bars = "iron_bars[east=false,north=true,south=true,waterlogged=false,west=false]"
+    for x, d in ((xe, 1), (xw, -1)):                                     # cells under the seats
+        c.box(min(x, x + 2 * d), max(x, x + 2 * d) + 1, 1, 3, m - 1, m, "air")
+        c.box(x, x + 1, 1, 3, m - 1, m, bars)
+        items += [(x + 2 * d, 1, m - 1, lantern), (x + d, 1, m - 1, "hay_block[axis=y]")]
+    if stage:                                                            # a wooden stage with props
+        slab = "dark_oak_slab[type=bottom,waterlogged=false]"
+        items = [(x, 1, z, slab) for x in range(xw + 1, xe) for z in (zn + 1, zn + 2)] + items
+        items += [(m - 1, 2, zn + 2, "potted_fern"), (m + 1, 2, zn + 2, "flower_pot")]
+        items += [(x, 2, zn + 1, f"{col}_wall_banner[facing=south]") for x in (m - 1, m + 1)]
+    else:                                                                # the box of the emperor
+        top = next(y for y in range(1, 64) if c.get(m, y, zn) == air)
+        items += [(m, top, zn, "smooth_quartz_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]")]
+        items += [(x, top, zn, "red_carpet") for x in (m - 1, m + 1)]
+        items += [(x, top - 1, zn + 1, f"{col}_wall_banner[facing=south]") for x in (m - 1, m + 1)]
+    c.furniture(items)
 
 
 def monument(c, w, st, col, T, ctx):
@@ -3871,10 +3916,9 @@ def colosseum(c, w, st, col, T, ctx):
             x, z = int(round(cx + R * math.cos(a))), int(round(cx + R * math.sin(a)))
             c.box(x, x + 1, y, y + 2, z, z + 1, "air")
     rows = max(3, int(R) - 4)
-    for i in range(rows):                                                 # seating, rising outward
-        c.cylinder(cx, cx, R - 1 - i, 1, max(2, h - 3 - i * (h - 4) // rows), "sandstone")
-    c.cylinder(cx, cx, R - 1 - rows, 1, h, "air")
+    seats(c, cx, R, [max(2, h - 3 - i * (h - 4) // rows) for i in range(rows)], h - 1, "sandstone")
     c.cylinder(cx, cx, R - 1 - rows, 0, 1, "sand")
+    arena_inside(c, w, cx, col)
     m, X, Z = c.disc_mask(cx, cx, R + 1)
     c._fill_mask(m & (X + Z > w + 1), h - 4, h, "air")                      # the fallen part (front right)
     c.flag(w // 2, h, 0, col, 3)

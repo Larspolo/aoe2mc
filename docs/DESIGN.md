@@ -71,6 +71,8 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Treasure (inside) | `chest` and `gold_block` in the back corners | `throne_hall` |
 | Statue in a hall (inside) | `chiseled_stone_bricks` base, `waxed_copper_block` and `waxed_cut_copper` (bronze) or `quartz_pillar` and `gold_block` (marble), lit `candle`s at its sides | |
 | Tomb (inside) | `smooth_quartz` cenotaph with a `green_carpet` cloth on a `red_carpet`, lit `candle`s around it | |
+| Arena (inside) | `sand` floor, seats that step down to it, a gate passage from the south, cells under the seats behind `iron_bars` with `hay_block`, `*_wall_banner`s and a `smooth_quartz_stairs` seat at the box of the emperor | |
+| Theatre stage (inside) | `dark_oak_slab` stage, `*_wall_banner`s behind it, `potted_fern`, `flower_pot`, `lantern`s | |
 | Oracle's tripod (inside) | `cauldron` before the statue of the god, `decorated_pot`s (gifts) in the corners | |
 | Idol on an altar (inside) | `gold_block` on `chiseled_sandstone`, lit `candle`s at its sides, `potted_poppy` offerings | |
 | Offering stone (outside) | `mossy_cobblestone` with a `skeleton_skull`, lit `candle`s, a `campfire` before it, skulls on carved posts | |
