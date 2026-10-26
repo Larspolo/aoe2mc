@@ -42,7 +42,7 @@ jobs:
           BRANCH: ${{ github.event.workflow_run.head_branch }}
           SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
-          merged=0
+          merged=0 conflict=0
           merge() {   # merge PR_JSON SHA: SHA is the head that CI tested
             local pr=$1 sha=$2 n branch ticket t
             n=$(jq -r .number <<<"$pr"); branch=$(jq -r .head.ref <<<"$pr")
@@ -70,6 +70,7 @@ jobs:
                 printf 'CI is green, but the merge failed (%s). Merge `origin/main` into the branch and push (autopilot step 2).\n' \
                   "$(jq -r '.message // empty' merge.json 2>/dev/null || true)" > body.md
                 gh api "repos/$R/issues/$n/comments" -F body=@body.md >/dev/null
+                conflict=1
               fi
               return
             fi
@@ -103,5 +104,7 @@ jobs:
             gh workflow run ci.yml --repo "$R" --ref main
             gh workflow run dashboard.yml --repo "$R" || true
             gh workflow run coverage.yml --repo "$R" --ref main || true     # report and MAX on main (#233)
+          fi
+          if [ "$merged" = 1 ] || [ "$conflict" = 1 ]; then              # GitHub ignores merge=union: do not wait 20 min
             gh workflow run unconflict.yml --repo "$R" || true             # main moved: merge it into conflicted PRs (#280)
           fi

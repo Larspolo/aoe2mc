@@ -35,7 +35,7 @@ def test_the_cheat_units_have_their_aoe2_values():
     server.scores["aoe_cheat"] = cheats.NAMES.index("how do you turn this on") + 1
     cheats.clicks(g)
     stats = next(c for c in server.log if c.startswith("aoe stats "))
-    assert re.fullmatch(r"aoe stats \S+ 500 10 10 10 1 siege building:10", stats)
+    assert re.fullmatch(r"aoe stats \S+ 500 10 10 10 1 siege building:10 \d+", stats)
 
 
 def test_no_unit_without_a_town_center():
