@@ -574,6 +574,7 @@ RESEARCH_S = {"Loom": 25, "Town Watch": 25, "Town Patrol": 40, "Wheelbarrow": 75
               "Feudal Age": 130, "Castle Age": 160, "Imperial Age": 190}   # the town center researches: they delay units
 UNIT_USE = {"move", "order", "build", "wall", "patrol", "follow", "formation", "attack_move", "back_to_work", "stance"}
 BUILDING_USE = {"queue", "research", "gather_point", "ungarrison", "sell", "buy"}
+WORK = re.compile(r"TREE|.*BUSH|.*_MINE|.*FARM")                     # an ORDER on these: a villager gathers
 
 
 def train(unit):
@@ -610,17 +611,18 @@ def name_timeline(objects, timeline, window=16):
     Adds "names" (a name or None per ID of "objects") to the events and returns {id: name}."""
     names = {o["ref"]: o["name"] for o in objects if o.get("ref") is not None}
     top = max(names, default=0)
-    used = {}                     # new ID -> [time of its first use, "B", "U" or None, {building of its units}]
+    used = {}             # new ID -> [time of its first use, "B", "U" or None, {building of its units}, a worker]
     for e in timeline:                                   # not SPECIAL and others: their numbers are not all IDs
         role = "U" if e["kind"] in UNIT_USE else "B" if e["kind"] in BUILDING_USE else None
+        work = e["kind"] in ("build", "wall") or e["kind"] == "order" and WORK.match(names.get(e.get("target"), ""))
         for i in e.get("objects", ()) if role else ():
             if i > top:
-                u = used.setdefault(i, [e["time"], None, set()])
-                u[1] = u[1] or role
+                u = used.setdefault(i, [e["time"], None, set(), False])
+                u[1], u[3] = u[1] or role, u[3] or bool(work)
                 if e["kind"] == "queue" and train(e.get("name", "")):
                     u[2].add(train(e["name"])[1])
         if role == "U" and e.get("target", 0) > top:
-            used.setdefault(e["target"], [e["time"], None, set()])
+            used.setdefault(e["target"], [e["time"], None, set(), False])
     made, seen = [], set()               # (time ms, command time, "B" or "U", name)
     for e in timeline:
         kind, t = e["kind"], e["time"]
@@ -638,7 +640,8 @@ def name_timeline(objects, timeline, window=16):
             below, k = max(below, firsts[k][1]), k + 1
         nxt = max(nxt, below + 1)
         ids = [i for i in range(nxt, nxt + window) if i in used and used[i][1] in (role, None) and
-               used[i][0] >= t - 5000 and used[i][2] <= {name}]   # 5 s: the training times are estimates
+               used[i][0] >= t - 5000 and used[i][2] <= {name} and   # 5 s: the training times are estimates
+               not (used[i][3] and "VILLAGER" not in name)]         # only villagers build and gather on land (#765)
         i = ids[0] if ids else nxt if nxt not in used else None
         if i is not None:
             names[i], nxt = name, i + 1
