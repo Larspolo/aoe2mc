@@ -3,7 +3,7 @@
 The agent writes here what it learned the hard way. Each line must save time in a later session.
 Ticket runs: add new lines at the end of a section and do not change other lines (`merge=union` in `.gitattributes`
 keeps the lines of both sides). A pitfall of one topic (server, Paper, records, a design) goes into the "Pitfalls" section
-of its document (named below): this file loads into each run. The `improve` skill merges lines and keeps it below 80 lines.
+of its document (named below; add at its end, do not change other lines: `merge=union` too): this file loads into each run. The `improve` skill merges lines and keeps it below 80 lines.
 
 ## Environment and libraries
 
@@ -46,6 +46,7 @@ of its document (named below): this file loads into each run. The `improve` skil
   link `https://raw.githubusercontent.com/Larspolo/aoe2mc/checks/N/NAME.png` in the comment (#614).
 - AoE2ScenarioParser refuses to write over the file that it read ("Overwriting the source scenario file"): read a
   temporary copy (`scenarios.triggers`). No scenario in `examples/` and `samples/` has triggers: use the `triggers` scenario (#646).
+- A wait loop with a fake clock (`now += s`) runs forever when the wait is about 1e-15: `now + 1e-15 == now`. Break on `wait <= 1e-6`, not `<= 0` (#685).
 - Screenshots of a game check: join `mc_shot.Client(game.game_port, game.version)` to the running `run.Game`, `gamemode spectator aoe2mc`, then `tp aoe2mc X Y Z facing entity <uuid>` and `client.shot()`: no saved world, no copy of the `.dat` files. The server log is `game.folder/logs/latest.log`: read it before the `with` ends (#603).
 
 ## Code
