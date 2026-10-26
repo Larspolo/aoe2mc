@@ -21,8 +21,8 @@ def test_the_second_row_shows_the_queue_in_order():
     train.order(g, "Steve", rect, 0)
     g.queues[rect][0]["progress"] = 0.4
     train.show(g, "Steve", rect)
-    assert menus(server)[-1].endswith(" 9:villager_spawn_egg:Villager 40 %:Click: cancel 1:2"
-                                      " 10:book:Loom:Click: cancel 1 11:villager_spawn_egg:Villager:Click: cancel 1")
+    assert (" 9:villager_spawn_egg:Villager 40 %:Click: cancel 1:2 10:book:Loom:Click: cancel 1"
+            " 11:villager_spawn_egg:Villager:Click: cancel 1 0:") in menus(server)[-1]   # the queue row first
     assert train.groups(g.queues[rect]) == [("VILLAGER_MALE", 0, 2), ("LOOM", 2, 1), ("VILLAGER_MALE", 3, 1)]
 
 
@@ -35,7 +35,7 @@ def test_a_click_on_a_queued_unit_cancels_the_last_of_its_group_and_gives_back_i
     g.clicks()
     assert len(g.queues[rect]) == 4 and g.queues[rect][0]["progress"] == 0.5   # the unit in training goes on
     assert g.stock["food"] == 800 and "scoreboard players add Food aoe_res 50" in server.log
-    assert menus(server)[-1].endswith(":Click: cancel 1:4") and "Steve" in g.menus   # the menu shows the new queue
+    assert ":Click: cancel 1:4 0:" in menus(server)[-1] and "Steve" in g.menus   # the menu shows the new queue
 
 
 def test_the_unit_in_training_gives_back_its_full_cost():
