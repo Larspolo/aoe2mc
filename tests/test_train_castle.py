@@ -61,8 +61,9 @@ def test_the_longbowman_appears_with_the_converter_look_and_the_aoe2_values():
     summon, = [c for c in server.log if c.startswith("summon")]
     assert re.match(r"summon minecraft:skeleton \S+ 64.0 6.5 ", summon)
     assert g.soldiers == {uuid: "LONGBOWMAN"}
-    assert combat.stats_command(uuid, "LONGBOWMAN", combat.stats("LONGBOWMAN")) in server.log
-    assert combat.range_command(uuid, "LONGBOWMAN", 1) in server.log  # it shoots from its AoE2 range
+    s = train.stats(g, "LONGBOWMAN")                                  # Britons in the Castle Age: +1 range (#1090)
+    assert s.range == combat.stats("LONGBOWMAN").range + 1 and combat.stats_command(uuid, "LONGBOWMAN", s) in server.log
+    assert combat.range_command(uuid, "LONGBOWMAN", 1, s=s) in server.log  # it shoots from its AoE2 range
 
 
 def test_the_war_elephant_is_a_ravager_with_its_rider():

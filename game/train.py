@@ -380,7 +380,7 @@ def go(g, rect, uuid, name):
     (x, z), tile = g.rally[rect]
     if uuid not in g.villagers:                                        # a military unit walks with the plugin
         import ai                                                      # ai imports gather, gather imports this module
-        ai.move(g, uuid, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5)
+        ai.move(g, uuid, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * civs.speed(g, name))
     elif tile:
         g.send(tile, {uuid})
     else:
@@ -461,9 +461,10 @@ def age(g):
 
 
 def stats(g, name):
-    """The combat values of AoE2 unit name with the technologies of the player (combat.stats and TECHS)."""
+    """The combat values of AoE2 unit name with the bonuses of the civilization (civs.UNITS) and the technologies of
+    the player (combat.stats and TECHS)."""
     import combat                                                  # combat imports gather, gather imports this module
-    s = combat.stats(name)
+    s = civs.units(g, name, combat.stats(name))
     for t in sorted(g.techs):
         for _ in range(count(g, t)):                                   # "going above and beyond" stacks (#968)
             s = TECHS[t](name, s)
@@ -493,6 +494,10 @@ def research(g, entry):
         if stats(g, name).range != combat.stats(name).range:          # Fletching (#724)
             g.command(combat.range_command(uuid, name, g.map.T, s=stats(g, name)))
     if entry["name"] in REQUIRES:                                  # an age: all players see it, as in AoE2
+        import ai                                                  # ai imports gather, gather imports this module
+        for uuid, name in g.soldiers.items():                      # the walk speed of the age (civs.UNITS, Celts)
+            if civs.speed(g, name) != 1:
+                g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * civs.speed(g, name)))
         g.command("title @a title " + json.dumps({"text": age(g), "color": "gold"}))
         g.command("tellraw @a " + json.dumps({"text": f"Player {g.player} advances to the {age(g)}.", "color": "gold"}))
         g.command("playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1")
@@ -612,7 +617,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name)):   # it attacks enemies in sight (#775)
         g.command(cmd)
     import ai                                                      # ai imports gather, gather imports this module
-    g.command(ai.speed_command(uuid, name, g.map.T))               # its AoE2 walk speed also without an order (#849)
+    g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * civs.speed(g, name)))   # also without an order (#849)
     if player not in (None, g.player):
         return uuid
     if gather.military(name):
