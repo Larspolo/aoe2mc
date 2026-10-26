@@ -43,6 +43,7 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - Same output of a conversion: compare two worlds with `tools/world_diff.py A B`. `diff -r` and `cmp` always differ: the .mca time tables, gzip headers and `LastPlayed` hold the time (#702).
 - The auto mode classifier can deny `gh api .../issues/N -X PATCH -f state=closed` (closing a finished epic: "External System Writes"). Do not send the same close through another tool: add `needs-human` to the epic and a comment with the evidence for `@Larspolo` (#862).
 - `S=dir && cmd1 & cmd2 $S/x`: the `&` puts the whole `S=... && cmd1` list in a background subshell, so `cmd2` sees an empty `S` and writes to `/x` (#865). Set the variable on its own line first.
+- `tools/claim.py` fetches, so it overwrites `FETCH_HEAD`: fetch a `checks/N` ref into a named ref (`git fetch origin +refs/heads/checks/N:refs/remotes/origin/checks/N`) before you build its next commit, else the push is non-fast-forward.
 
 ## Code
 
