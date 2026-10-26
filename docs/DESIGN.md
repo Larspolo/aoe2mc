@@ -74,6 +74,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Arena (inside) | `sand` floor, seats that step down to it, a gate passage from the south, cells under the seats behind `iron_bars` with `hay_block`, `*_wall_banner`s and a `smooth_quartz_stairs` seat at the box of the emperor | |
 | Theatre stage (inside) | `dark_oak_slab` stage, `*_wall_banner`s behind it, `potted_fern`, `flower_pot`, `lantern`s | |
 | Oracle's tripod (inside) | `cauldron` before the statue of the god, `decorated_pot`s (gifts) in the corners | |
+| Spiral stair in a tower (inside) | `*_stairs` around a 2 × 2 shaft, one step per block, a hanging `lantern` under every 6th step | |
 | Bench (inside) | `*_stairs` in a row | `storage`, `shelter`, `furnish_worship`, `town_hall` +37 more |
 | Sacred rock in a shrine (inside) | `stone`, `andesite` and `tuff` in a low mound, lit `candle`s around it, a ring of `quartz_pillar` columns | |
 | Hay loft (inside) | `spruce_slab[type=top]` with `hay_block` on it | `settlement`, `cart`, `stable`, `market` +22 more |
@@ -87,9 +88,11 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Painted trim (deck edge, band) | `*_concrete` (player color) | `torii`, `stupa`, `pyramid`, `dock` +3 more |
 | Relief panel, carving | `chiseled_stone_bricks` | `harbor`, `temple`, `aqueduct`, `furnish_worship` +6 more |
 | Balustrade of a stair | `polished_granite` | `pyramid` |
+| Stone bridge (#455) | `stone_bricks` piers with cutwaters every tile, `stone_brick_stairs[half=top]` vault, `stone_brick_wall` balustrade with `chiseled_stone_bricks` posts, `cracked_stone_bricks` on cracked and broken pieces | |
 | Crop field | `wheat` rows (ages 5–7) on `farmland`, furrows of bare `farmland`, `dirt_path` edge | `folwark` |
 | Hay, fodder | `hay_block` | `settlement`, `hut`, `mill_room`, `granary` +15 more |
 | Log pile, cut timber | `*_log[axis=x]` stacked as a pyramid (`log_pile`) | `log_pile`, `barricade`, `wooden_bridge`, `fish_trap` +36 more |
+| Wooden bridge: boards across the bridge, posts over the deck | `stripped_spruce_log[axis=*]` and `spruce_planks` in turn, `stripped_oak_log` posts every second block, no railing |  |
 | Hoist | a log post and arm, `chain`, a hanging log | `harbor_chain`, `hang`, `lumber_camp`, `shipyard` +3 more |
 | Workbench | `crafting_table` | `lumber_camp`, `dock` |
 | Millstone | `grindstone` | `mill_room`, `decorate`, `keep_inside`, `mining_camp` +4 more |

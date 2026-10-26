@@ -101,4 +101,6 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   find its source (#415: a `PLANT_SHRUB` on the same block, not the tree that the ticket named).
 - Stacked `cylinder`s of falling height make a flat top (the outer disc covers the inner ones): use `seats()`, which
   carves air above each row (#451). Find the edge of a round room by a scan with `c.get` from the centre (`arena_inside`).
+- `render.py --cut` does not show the inside of a narrow tower (#452): filter `render.building_blocks()` by x, y, z
+  (drop barriers and one side of the walls) and call `render.render()` for a section view.
 - `render.building_blocks` gives states with the `minecraft:` prefix and world y (the ground is y 63, canvas y 1 is y 64): strip the prefix before you match a name (#449).

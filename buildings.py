@@ -2846,7 +2846,7 @@ def place_building(E, cols, B, o, players, walls, gates):
                 # on water: a footing from the bed, not a block that floats on the surface
                 E.box(x, x + 1, (top if wtop > top else wtop) + 1, base + 1, z, z + 1, found)
 
-    ctx = {"name": name, "deck": max(1, water_y + 2 - base), "diag": gates.get(id(o)) in ("diag+", "diag-"),
+    ctx = {"name": name, "deck": max(1, water_y + 2 - base), "water": water_y - base, "diag": gates.get(id(o)) in ("diag+", "diag-"),
            "origin": (int(ux) * T if not along_z else int(uy) * T, 0)}
     if fn in (bridge, wooden_bridge):
         BRIDGE_CELLS.update((x, z) for x in xs for z in zs)
@@ -2861,6 +2861,9 @@ def place_building(E, cols, B, o, players, walls, gates):
             if cols.inside(bx, bz) and cols.wtop[bx, bz] > cols.top[bx, bz]:
                 rails.append(side)
         ctx["rails"] = rails
+        ns = sum((tx, ty + d) in WOOD_BRIDGE_TILES for d in (-1, 1))
+        ew = sum((tx + d, ty) in WOOD_BRIDGE_TILES for d in (-1, 1))
+        ctx["along_z"] = ns > ew or (ns == ew and ("w" in rails or "e" in rails))
     if fn is wall_segment:
         tx, ty = int(ux), int(uy)
         ctx["neighbours"] = ((tx, ty - 1) in walls, (tx, ty + 1) in walls, (tx - 1, ty) in walls, (tx + 1, ty) in walls)
@@ -2961,23 +2964,35 @@ def plan_walls(objects):
 # Special and decorative buildings (bridges, aqueducts, tents, landmarks)
 # --------------------------------------------------------------------------------------------
 def bridge(c, w, st, col, T, ctx):
-    """One bridge piece along the x axis: 2 tiles long, 3 tiles wide (w = 3 tiles)."""
+    """One stone bridge piece along the x axis: 2 tiles long, 3 tiles wide (w = 3 tiles). Like the game (#455):
+    piers with cutwaters every tile, vaulted arches between them, a balustrade with posts over the piers."""
     L, deck = 2 * T, ctx["deck"]
-    stone = not ctx["name"].startswith("WOODEN")
-    mat, rail = ("stone_bricks", "stone_brick_wall") if stone else ("spruce_planks", "spruce_fence")
+    wl = ctx.get("water", deck - 2)                                     # the top water block (local y)
     z0, z1 = 2, w - 2
-    c.box(0, L, deck, deck + 1, z0, z1, mat)
-    if "BROKEN" in ctx["name"]:                                     # broken: the deck stops halfway
-        c.box(L // 2, L, deck, deck + 1, z0, z1, "air")
-    c.box(0, L, deck + 1, deck + 2, z0, z0 + 1, rail)
-    c.box(0, L, deck + 1, deck + 2, z1 - 1, z1, rail)
-    if deck > 1:
-        c.box(0, L, 1, deck, z0 + 1, z1 - 1, "air")
-    for x in (0, L - 1):                                                # piers down to the bottom
-        c.box(x, x + 1, -12, deck, z0, z0 + 1, "stone_bricks" if stone else "spruce_log")
-        c.box(x, x + 1, -12, deck, z1 - 1, z1, "stone_bricks" if stone else "spruce_log")
-    if stone:
-        c.box(L // 2 - 1, L // 2 + 1, deck - 1, deck, z0, z1, "stone_bricks")
+    sp = T if T >= 3 else L                                             # pier spacing: same at the joins of pieces
+    piers = range(0, L, sp)
+    c.box(0, L, deck, deck + 1, z0, z1, "stone_bricks")
+    c.box(0, L, max(1, wl + 1), deck, z0, z1, "air")
+    for p in piers:
+        c.box(p, p + 1, -12, deck, z0, z1, "stone_bricks")              # pier down to the bed
+        for z in (z0 - 1, z1):                                          # cutwater on each side, up to the deck
+            c.box(p, p + 1, -12, deck + 1, z, z + 1, "stone_bricks")
+            c.set(p, deck + 1, z, "stone_brick_slab[type=bottom]")
+        if deck - 1 > wl and sp > 2:                                    # vault: the arch springs from the pier
+            c.box(p + 1, p + 2, deck - 1, deck, z0, z1, "stone_brick_stairs[facing=west,half=top]")
+            c.box(p + sp - 1, p + sp, deck - 1, deck, z0, z1, "stone_brick_stairs[facing=east,half=top]")
+    for z in (z0, z1 - 1):                                              # balustrade, a post over each pier
+        c.box(0, L, deck + 1, deck + 2, z, z + 1, "stone_brick_wall")
+        for p in piers:
+            c.set(p, deck + 1, z, "chiseled_stone_bricks")
+    name = ctx["name"]
+    if "CRACKED" in name:                                               # cracked: split stones, a gap in the rail
+        c.box(L // 2 - 1, L // 2 + 1, deck, deck + 1, z0, z1, "cracked_stone_bricks")
+        c.box(L // 2, L // 2 + 2, deck + 1, deck + 2, z1 - 1, z1, "air")
+    if "BROKEN" in name:                                                # broken: the deck stops halfway
+        c.box(L // 2, L, deck, deck + 2, z0 - 1, z1 + 1, "air")
+        c.box(L // 2, L // 2 + 1, deck, deck + 1, z0, z1, "cracked_stone_bricks")
+        c.set(L // 2, deck, z0 + 1, "air"); c.set(L // 2, deck, z1 - 3, "air")
 
 
 def aqueduct(c, w, st, col, T, ctx):
@@ -3990,6 +4005,19 @@ def minaret_of_jam(c, w, st, col, T, ctx):
     c.cylinder(tx, tz, 1.1, H + 1, H + 3, "cut_sandstone")
     top = c.dome(tx, tz, 1.1, H + 3, "smooth_quartz")
     c.set(int(tx), top + 1, int(tz), "lightning_rod")
+    if w >= 8:                                                            # a spiral stair up to the top balcony
+        i, j = int(tx), int(tz)                                           # the shaft is 2 x 2 blocks
+        c.box(i, i + 2, 1, H + 1, j, j + 2, "air")
+        c.door(i, 1, j + 2, wood="jungle")
+        steps = [(i + 1, j + 1, "east"), (i + 1, j, "north"), (i, j, "west"), (i, j + 1, "south")]
+        for y in range(1, H):                                             # one turn every 4 blocks: 3 blocks headroom
+            x, z, f = steps[(y - 1) % 4]
+            c.set(x, y, z, stair("smooth_sandstone_stairs", f))
+            if y % 6 == 0:
+                c.set(x, y - 1, z, "lantern[hanging=true]")             # under the stair, over the head
+        for y in (H - 2, H - 1):                                          # out through the drum onto the balcony
+            x, z, f = steps[(y - 1) % 4]
+            c.box(x, x + 1, H, H + 3, z, z + 1, "air")
     c.banner(m, 3, w, col)
 
 
@@ -4110,16 +4138,21 @@ def pagan_shrine(c, w, st, col, T, ctx):
 
 
 def wooden_bridge(c, w, st, col, T, ctx):
-    """One tile of a wooden bridge: a plank deck on posts, railings on open water sides."""
-    deck = ctx["deck"]
-    c.box(0, w, deck, deck + 1, 0, w, "spruce_planks")
+    """One tile of a wooden bridge: a deck of boards across the bridge on piles. Like the game, no railings:
+    on open water sides the piles rise over the deck as posts, every second block."""
+    deck, along_z = ctx["deck"], ctx.get("along_z", False)
+    for k in range(w):                                    # boards across the bridge: the seams show the direction
+        board = "spruce_planks" if k % 2 else f"stripped_spruce_log[axis={'x' if along_z else 'z'}]"
+        if along_z:
+            c.box(0, w, deck, deck + 1, k, k + 1, board)
+        else:
+            c.box(k, k + 1, deck, deck + 1, 0, w, board)
     for x, z in ((0, 0), (w - 1, 0), (0, w - 1), (w - 1, w - 1)):
-        c.box(x, x + 1, -10, deck, z, z + 1, "spruce_log")
+        c.box(x, x + 1, -10, deck, z, z + 1, "stripped_oak_log")
     for side in ctx.get("rails", ()):
-        if side == "n": c.box(0, w, deck + 1, deck + 2, 0, 1, "spruce_fence[east=true,west=true]")
-        if side == "s": c.box(0, w, deck + 1, deck + 2, w - 1, w, "spruce_fence[east=true,west=true]")
-        if side == "w": c.box(0, 1, deck + 1, deck + 2, 0, w, "spruce_fence[north=true,south=true]")
-        if side == "e": c.box(w - 1, w, deck + 1, deck + 2, 0, w, "spruce_fence[north=true,south=true]")
+        for k in range(0, w, 2):
+            x, z = {"n": (k, 0), "s": (k, w - 1), "w": (0, k), "e": (w - 1, k)}[side]
+            c.box(x, x + 1, -10, deck + 2, z, z + 1, "stripped_oak_log")
 
 
 def fish_trap(c, w, st, col, T, ctx):
