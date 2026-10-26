@@ -61,6 +61,9 @@ DROP_SITES = {"wood": ("TOWN_CENTER", "LUMBER_CAMP"), "food": ("TOWN_CENTER", "M
               "gold": ("TOWN_CENTER", "MINING_CAMP"), "stone": ("TOWN_CENTER", "MINING_CAMP")}
 START = replay.START                                               # the AoE2 standard start resources (#973)
 TREE_WOOD = 100                                                    # wood in one tree, as in AoE2
+# plants of the ground that are not in #minecraft:replaceable: the trunk on a slope removes them from its row (#1124)
+PLANTS = ("#minecraft:buttons", "#minecraft:flowers", "#minecraft:saplings", "#minecraft:wool_carpets",
+          "minecraft:brown_mushroom", "minecraft:moss_carpet", "minecraft:pale_moss_carpet", "minecraft:red_mushroom")
 BUSH_FOOD = 125                                                    # food in one fruit bush, as in AoE2 DE
 # AoE2 DE work rates per game second (#393): lumberjack 0.39 (empires2_x2_p1.dat, #267), the others the published
 # DE gather rates. Normal game speed is 1.7 game seconds per real second (#413).
@@ -1124,35 +1127,74 @@ class Gather:
         for b in ("#minecraft:logs", "#minecraft:leaves", "minecraft:bamboo"):
             self.command(f"fill {x0 - 2} {y0} {z0 - 2} {x0 + T + 1} {y0 + 24} {z0 + T + 1} air replace {b}")
 
+    def ground(self, x, z, ys, run, top=False, down=0):
+        """Commands that run `run` (with {y}) at the first free block over the ground of column (x, z) of a footprint.
+        Its "ground" in aoe2mc.json is the barrier top, so on a slope (#1124) a probe per height finds the ground
+        block: the block is free (air, a plant or a barrier) and the block under it is not. top: the probe goes from
+        the top down; down: `run` gets the y of that many blocks lower. Flat ground (one height next to the footprint)
+        needs no probe: the ground is min(ys) - 1."""
+        if min(ys) == max(ys):
+            return [run.format(y=min(ys) - down)]
+        hs = range(min(ys) - 1, max(ys) + 2)
+        return [f"execute if block {x} {y} {z} {free} unless block {x} {y - 1} {z} #minecraft:replaceable "
+                f"unless block {x} {y - 1} {z} minecraft:barrier run {run.format(y=y - down)}"
+                for y in (reversed(hs) if top else hs) for free in ("#minecraft:replaceable", "minecraft:barrier")]
+
     def trunk(self, tile):
         """From the first chop the tree lies on the ground next to its stump, as in AoE2 (#308). The trunk is a row
-        of logs in the footprint, with leaves on its tip, and gets one log shorter per 25 wood (at most 4 logs)."""
+        of logs in the footprint, with leaves on its tip, and gets one log shorter per 25 wood (at most 4 logs).
+        On a slope each log lies on the ground of its column (#1124)."""
         (fx0, fx1, fz0, fz1), ys, (sx, sz), rz = self.site(tile)
         n = math.ceil(self.map.trees[tile] * min(4, fx1 - fx0) / TREE_WOOD)
         if self.trunks.get(tile) == n:
             return
         log, leaf = self.map.woods.get(tile, ("minecraft:oak_log", None))
-        y = min(ys)
+        y, flat = min(ys), min(ys) == max(ys)
+        y0, y1 = (y, y + 1) if flat else (min(ys) - 1, max(ys) + 2)
         if tile not in self.trunks:
             self.clear(tile, ys)
-            self.command(f"setblock {sx} {y - 1} {sz} minecraft:spruce_log[axis=y]")
+            self.stump(sx, sz, ys)
+            for plant in () if flat else PLANTS:                     # the probe takes them for the ground
+                self.command(f"fill {fx0} {y0} {rz} {fx1 - 1} {y1} {rz} air replace {plant}")
         self.trunks[tile] = n
         for old in (log, leaf) if leaf else (log,):                   # the row again as the converter made it
-            self.command(f"fill {fx0} {y} {rz} {fx1 - 1} {y + 1} {rz} minecraft:barrier replace {old.split('[')[0]}")
-        for keep in ("replace minecraft:barrier", "keep"):            # not into the ground of a slope
-            self.command(f"fill {fx1 - n} {y} {rz} {fx1 - 1} {y} {rz} {log}[axis=x] {keep}")
-            if leaf:
-                self.command(f"fill {fx1 - n} {y + 1} {rz} {fx1 - n} {y + 1} {rz} {leaf} {keep}")
+            self.command(f"fill {fx0} {y0} {rz} {fx1 - 1} {y1} {rz} minecraft:barrier replace {old.split('[')[0]}")
+        if flat:
+            for keep in ("replace minecraft:barrier", "keep"):        # not into the ground of a slope
+                self.command(f"fill {fx1 - n} {y} {rz} {fx1 - 1} {y} {rz} {log}[axis=x] {keep}")
+                if leaf:
+                    self.command(f"fill {fx1 - n} {y + 1} {rz} {fx1 - n} {y + 1} {rz} {leaf} {keep}")
+            return
+        for x in range(fx1 - n, fx1):
+            for c in self.ground(x, rz, ys, f"setblock {x} {{y}} {rz} {log}[axis=x]", top=True):
+                self.command(c)
+        if leaf:                                                      # the crown on the log of the tip
+            for h in range(y0, y1 + 1):
+                for free in ("#minecraft:replaceable", "minecraft:barrier"):
+                    self.command(f"execute if block {fx1 - n} {h} {rz} {free} if block {fx1 - n} {h - 1} {rz} "
+                                 f"{log}[axis=x] run setblock {fx1 - n} {h} {rz} {leaf}")
+
+    def stump(self, sx, sz, ys):
+        """The stump: the top of a log level with the ground of the footprint, so that nothing stops the player."""
+        for c in self.ground(sx, sz, ys, f"setblock {sx} {{y}} {sz} minecraft:spruce_log[axis=y]", down=1):
+            self.command(c)
 
     def fell(self, tile):
         """An empty tree disappears (logs, leaves, its trunk and the barriers of its footprint). A stump stays: the top
-        of a log level with the ground, so that nothing stops the player (#307)."""
+        of a log level with the ground, so that nothing stops the player (#307). The first chop (trunk) removed the
+        standing tree and made the stump: on a slope fell keeps them, as a new clear removes the stump and the
+        probe then finds the hole under it (#1124)."""
         (fx0, fx1, fz0, fz1), ys, (sx, sz), rz = self.site(tile)
-        self.clear(tile, ys)
-        log = self.map.woods.get(tile, ("minecraft:oak_log", None))[0]
-        self.command(f"fill {fx0} {min(ys)} {rz} {fx1 - 1} {min(ys) + 1} {rz} air replace {log}")
+        felled, flat = tile in self.trunks, min(ys) == max(ys)
+        if not felled:
+            self.clear(tile, ys)
+        log, leaf = self.map.woods.get(tile, ("minecraft:oak_log", None))
+        y0, y1 = (min(ys), min(ys) + 1) if flat else (min(ys) - 1, max(ys) + 2)
+        for b in (log, leaf) if leaf else (log,):
+            self.command(f"fill {fx0} {y0} {rz} {fx1 - 1} {y1} {rz} air replace {b.split('[')[0]}")
         self.command(f"fill {fx0} {min(ys) - 2} {fz0} {fx1 - 1} {max(ys) + 3} {fz1 - 1} air replace minecraft:barrier")
-        self.command(f"setblock {sx} {min(ys) - 1} {sz} minecraft:spruce_log[axis=y]")
+        if flat or not felled:
+            self.stump(sx, sz, ys)
         self.trunks.pop(tile, None)
 
     def berries(self, tile):
