@@ -2884,7 +2884,7 @@ def convert_campaign(src, out, only=None, name=None, **kw):
             stem = os.path.splitext(fn)[0]
             if fn.lower().endswith(".scx"):
                 with tempfile.TemporaryDirectory() as tmp:
-                    path = os.path.join(tmp, "s.scx")
+                    path = os.path.join(tmp, fn)       # "Read <fn>" names the scenario (#578)
                     with open(path, "wb") as f:
                         f.write(data)
                     try:
