@@ -21,6 +21,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `convert:large` Large maps (480 × 480) in less time and memory, with a progress line (epic #689)
 - [x] `convert:minimap` A filled Minecraft map item of the whole AoE2 map at the spawn, as the AoE2 minimap (epic #837)
 - [ ] `convert:random-maps` Make a world from an AoE2 random map script (`.rms`: Arabia, Arena, Black Forest) and a seed, with no scenario file
+- [ ] `convert:random-maps-more` More random map scripts of the ranked pool and the classic ones (Nomad, Islands, Gold Rush, Highland, Mediterranean) with their player starts
 
 ## 2. Play AoE2 in Minecraft (`game/`)
 
@@ -38,6 +39,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:ages` Age up from the Dark Age to the Imperial Age: cost, time, the buildings and units that each age unlocks
 - [ ] `play:civs` Civilizations: the bonuses, unique technologies and team bonus of each civilization change costs and attributes
 - [x] `play:feedback` Show what the player points at and the result of each action (epic #793)
+- [ ] `play:alerts` Alerts as in AoE2: a sound and a chat line with the place when own units or buildings are attacked, and a flare that a player puts on the map
 - [x] `play:control` Select and order many units: a selection box, groups, formations, an idle villager item (epic #742)
 - [ ] `play:stances` Unit stances (aggressive, defensive, stand ground, no attack): an idle unit attacks the enemies in its line of sight and comes back
 - [x] `play:garrison` Garrison units in buildings (epic #810)
@@ -56,6 +58,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:save` Save a game of the game program and load it again (units, resources, queues, ages)
 - [ ] `play:hunt` Hunt and herd: villagers kill deer, lure and kill boars, and herd sheep that the first player who sees them owns
 - [ ] `play:setup` Set up a game before it starts: the starting age, starting resources, population limit, the civilizations and the number of bots
+- [ ] `play:scenario` Play a converted scenario in the game program: its objectives, triggers and victory conditions work, the scenario AI players are bots
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
@@ -71,6 +74,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `replay:score` A score panel for each player: age, population, resources (estimated), military (epic #740)
 - [x] `replay:effects` Show events on the map: research and age-up at the building, attacks, a marker where units die (epic #842)
 - [ ] `replay:postgame` A summary at the end of the replay, as the AoE2 achievements screen: military, economy, technology, timeline
+- [ ] `replay:team-games` Team games of up to 8 players: the score panel, the colors, the views and the summary work with all players
 
 ## 4. The agent system (`.claude/skills/`, `tools/`, `.github/workflows/`)
 
