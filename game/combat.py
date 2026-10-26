@@ -6,8 +6,14 @@ base unit: no Blacksmith or University upgrades, no civilization bonuses. `range
 `reload` in game seconds. `bonus` is extra attack against the units of a class (`classes`): AoE2 adds it
 for each armor class of the target. `damage` is the AoE2 damage rule (#514); the Paper plugin applies it
 (`aoe stats` gives a mob its values, `stats_command`).
+A ranged unit shoots from its AoE2 range, one shot per reload time (#515, `aoe range`, `range_command`).
 """
+import os
+import sys
 from collections import namedtuple
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from gather import NORMAL  # noqa: E402
 
 Stats = namedtuple("Stats", "hp attack melee pierce range reload bonus classes", defaults=({}, ()))
 
@@ -86,8 +92,19 @@ def stats_command(uuid, name):
             f"{','.join(s.classes) or '-'} {bonus}")
 
 
+def range_command(uuid, name, T, rate=NORMAL):
+    """The plugin command that lets a ranged unit shoot from its AoE2 range (tiles * T blocks), with one shot per
+    reload time at `rate` game seconds per real second (default: Normal game speed, as the walk speed). None for a
+    melee unit."""
+    s = stats(name)
+    return s.range and s.reload and f"aoe range {uuid} {s.range * T} {max(1, round(s.reload / rate * 20))}" or None
+
+
 def setup(game, data):
     """Give each unit of the players in `aoe2mc.json` data its AoE2 values; Gaia animals keep the vanilla values.
     The entities must be loaded (forceload). Returns the number of units that got the values."""
-    return sum(game.command(stats_command(o["uuid"], o["name"])).strip() == "Stats: 1 units"
-               for o in data["objects"] if o["kind"] == "unit" and o["player"] and o.get("uuid"))
+    units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] and o.get("uuid")]
+    for o in units:                                  # the plugin answers "Range: 0 units" for a mob that cannot shoot
+        if cmd := range_command(o["uuid"], o["name"], data.get("tile_size", 4)):
+            game.command(cmd)
+    return sum(game.command(stats_command(o["uuid"], o["name"])).strip() == "Stats: 1 units" for o in units)
