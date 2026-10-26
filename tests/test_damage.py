@@ -74,4 +74,4 @@ def test_militia_kills_militia_in_10_hits(tiny_world, tmp_path):
         assert health(game, "b") is None, seen
         assert seen[0] == 40.0 and all(a - b == 4 for a, b in zip(seen, seen[1:])), seen   # 4 per hit
         assert seen[-1] == 4.0, seen          # the 10th hit (4 -> 0) kills it
-        assert health(game, "a") == 40.0      # the target does not hit back without an order
+        assert 0 < health(game, "a") < 40.0   # the target hits back without an order (#733), but dies first

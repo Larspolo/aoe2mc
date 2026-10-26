@@ -213,5 +213,7 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
   and the server removes the mob ("No entity was found" right after the order). Give
   `equipment:{mainhand:{id:"minecraft:bow",count:1}}`. A Java exception of the plugin is only in `game.server.log` (#608).
 - An arrow at the stand-in slime of a building sticks in the walls first (#608): the range goal counts each shot itself.
+- One hit of a unit in an `-m mc` test, without a chase: `damage <victim> 1 minecraft:mob_attack by <attacker>` fires `EntityDamageByEntityEvent`, so the plugin takes the AoE2 damage of the attacker (#733). Since #733 a hit unit without an order hits back: a test of one-sided damage gives the target an order or no AoE2 values.
 - A horse has no attack goal, and `aoe attack` on it does nothing. Give the target to the rider: a riding mob walks with the navigation of its vehicle (vanilla `Mob#getNavigation`), so the horse follows, and its follow range limits the path search (#710).
+- A cancelled `EntityDamageByEntityEvent` of an arrow lets the arrow fly on, and it can hit the next entity on its way (a moving horse under the hit rider: two hits in one tick, #733). Remove the projectile after the hit.
 - A RCON command of more than 1446 bytes: the server closes the connection ("the server closed the RCON connection"). Keep long `tellraw` texts short (`separators=(",", ":")`, style of the parent in `extra`) and test the length (#688).
