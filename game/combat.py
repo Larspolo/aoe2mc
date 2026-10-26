@@ -109,11 +109,11 @@ def label_command(uuid, name=None):
     return f"aoe label {uuid}" + (f" {pretty(name)}" if name else "")
 
 
-def range_command(uuid, name, T, rate=NORMAL):
+def range_command(uuid, name, T, rate=NORMAL, s=None):
     """The plugin command that lets a ranged unit shoot from its AoE2 range (tiles * T blocks), with one shot per
     reload time at `rate` game seconds per real second (default: Normal game speed, as the walk speed). None for a
-    melee unit."""
-    s = stats(name)
+    melee unit. s: the values with technologies (Fletching, #724), default those of AoE2 unit name."""
+    s = s or stats(name)
     return s.range and s.reload and f"aoe range {uuid} {s.range * T} {max(1, round(s.reload / rate * 20))}" or None
 
 
