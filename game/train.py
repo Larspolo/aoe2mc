@@ -52,6 +52,7 @@ import units  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
+import civs  # noqa: E402
 import garrison  # noqa: E402
 import menu  # noqa: E402
 
@@ -261,8 +262,7 @@ def trains(g, building):
     if building != "CASTLE":
         new = {old: unit for t, (old, unit) in UPGRADES.items() if t in g.techs}     # the barracks trains the new unit
         return tuple(new.get(n, n) for n in TRAINS[building])
-    civ = g.data.get("players", {}).get(str(g.player), {}).get("civ")
-    return tuple(n for n in [UNIQUE.get(civ)] if n in COSTS)
+    return tuple(n for n in [UNIQUE.get(civs.civ(g))] if n in COSTS)
 
 
 def home(g, cell):

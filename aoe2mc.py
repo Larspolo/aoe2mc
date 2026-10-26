@@ -563,7 +563,8 @@ def own_selection():
 
 TIMELINE_KEYS = {"building_id": "type", "unit_id": "type", "technology_id": "technology_id", "object_ids": "objects",
                  "target_id": "target", "amount": "amount", "resource": "resource", "stance": "stance",
-                 "formation": "formation", "order": "order", "command": "command"}
+                 "formation": "formation", "order": "order", "command": "command",
+                 "player_id_to": "to"}                               # the receiver of a tribute (#1086)
 
 
 def read_timeline(path):
@@ -602,6 +603,10 @@ def read_timeline(path):
             e["tile"] = [round(float(a.position.x), 3), round(float(a.position.y), 3)]
         if "x_end" in a.payload:
             e["end"] = [a.payload["x_end"], a.payload["y_end"]]
+        if kind == "tribute" and "target_player_id" in a.payload:   # AoE2 DE: the receiver is one byte (#1086)
+            to = a.payload["target_player_id"]
+            e["to"] = int.from_bytes(to, "little") if isinstance(to, bytes) else int(to)
+            e.update((r, int(round(a.payload.get(r) or 0))) for r in ("food", "wood", "gold", "stone"))
         if kind == "special" and e.get("order") == "Garrison":     # the garrison command of AoE2 DE (#809)
             ids = e.get("objects", [])                              # mgz reads the IDs one byte early
             e["kind"], e["objects"] = "garrison", [i >> 8 for i in ids] if all(i & 255 == 0 for i in ids) else ids

@@ -129,11 +129,17 @@ class Bot:
 
     def move(self, share, work):
         """Move one working villager from the resource most above its share to the resource most below it, when the
-        first has a whole villager too many: then the move never goes back."""
+        first has a whole villager too many: then the move never goes back. Food with no free farm: to wood, the cost
+        of the next farm (#1083)."""
         g, n = self.g, len(self.g.villagers)
         gap = {r: work[r] - share[r] * n for r in SHARE}
-        high, low = max(SHARE, key=lambda r: (gap[r], r)), min(SHARE, key=lambda r: (gap[r], r))
-        if gap[high] < 1 or gap[low] >= 0:
+        low = min(SHARE, key=lambda r: (gap[r], r))
+        if gap[low] >= 0:
+            return
+        if low == "food" and not any(k > 0 for k in self.sources("food").values()):
+            low = "wood"
+        high = max((r for r in SHARE if r != low), key=lambda r: (gap[r], r))
+        if gap[high] < 1:
             return
         busy = sorted(u for u, v in g.villagers.items() if v.state != "idle" and v.res == high and v.site is None)
         for v in [g.villagers[u] for u in busy[:1]]:                   # a builder stays at its site
