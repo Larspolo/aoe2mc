@@ -3589,15 +3589,19 @@ def small_pagoda(c, w, st, col, T, ctx):
 
 
 def torii(c, w, st, col, T, ctx):
-    """A red torii gate: two pillars, a tie beam and a black top beam that sticks out."""
+    """A red torii gate on a stone slab, as in AoE2 DE: two pillars with black feet, a tie beam (nuki) that
+    sticks out, a blue name plaque in the gap, and a top beam (kasagi) with a brown bark top and upturned ends."""
     m = w // 2
+    c.box(0, w, 0, 1, 0, w, "smooth_stone")                             # the stone slab
     for x in (m - 2, m + 1):
         c.set(x, 1, m, "black_concrete")
-        c.box(x, x + 1, 2, 5, m, m + 1, "red_concrete")
-    c.box(m - 2, m + 2, 4, 5, m, m + 1, "red_concrete")                 # tie beam
-    c.box(m - 3, m + 3, 5, 6, m, m + 1, "red_concrete")
-    c.box(m - 3, m + 3, 6, 7, m, m + 1, "blackstone_slab[type=bottom]")
-    c.set(m - 1, 4, m + 1, "black_wall_banner[facing=south]")
+        c.box(x, x + 1, 2, 6, m, m + 1, "red_concrete")
+    c.box(m - 3, m + 3, 4, 5, m, m + 1, "red_concrete")                 # tie beam
+    c.box(m - 1, m + 1, 5, 6, m, m + 1, "blue_stained_glass_pane[east=true,west=true]")   # name plaque
+    c.box(m - 3, m + 3, 6, 7, m, m + 1, "red_concrete")
+    c.box(m - 3, m + 3, 7, 8, m, m + 1, "spruce_planks")                # bark top
+    c.set(m - 4, 7, m, "spruce_stairs[facing=west,half=bottom,shape=straight]")   # upturned ends
+    c.set(m + 3, 7, m, "spruce_stairs[facing=east,half=bottom,shape=straight]")
 
 
 def stupa(c, w, st, col, T, ctx):
@@ -3975,7 +3979,7 @@ def barriers(c, fx, fz):
 # Egyptian and other landmarks, wooden bridges, fish traps, ruins
 # --------------------------------------------------------------------------------------------
 def great_pyramid(c, w, st, col, T, ctx):
-    """A true pyramid with smooth faces (stairs on every layer) and a golden top."""
+    """A true pyramid with smooth faces (stairs on every layer), a golden top and a passage to a burial chamber."""
     L = 0
     while w - 2 * L > 0:
         c.box(L, w - L, L, L + 1, L, w - L, "sandstone" if L % 3 else "smooth_sandstone")
@@ -3986,6 +3990,26 @@ def great_pyramid(c, w, st, col, T, ctx):
     m = w // 2                                                  # entrance on the north side
     c.box(m - 1, m + 1, 2, 4, 2, 3, "air")
     c.set(m - 1, 1, 1, "chiseled_sandstone"); c.set(m, 1, 1, "chiseled_sandstone")
+    r = w // 8
+    if r < 2:
+        return
+    x0, x1, z0, z1, s = m - r, m + r + 1, m - r, m + r + 1, r            # burial chamber in the centre (#528)
+    c.box(x0 - 1, x1 + 1, s - 1, s + 4, z0 - 1, z1 + 1, "polished_granite")
+    c.box(x0, x1, s, s + 3, z0, z1, "air")
+    y = 2                                                        # passage: level, then up a gallery of stairs
+    for z in range(2, z0):
+        if z0 - z <= s - 2:
+            c.box(m - 1, m + 1, y, y + 1, z, z + 1, "sandstone_stairs[facing=south,half=bottom]")
+            y += 1
+        c.box(m - 1, m + 1, y, y + 3, z, z + 1, "air")
+        if z == (2 + z0) // 2:
+            c.set(m, y + 2, z, "lantern[hanging=true]")
+    c.box(m, m + 1, s, s + 1, m - 1, m + 1, "polished_blackstone")                      # sarcophagus with a lid
+    c.box(m, m + 1, s + 1, s + 2, m - 1, m + 1, "polished_blackstone_slab[type=bottom]")
+    for x, z, b in ((x0, z1 - 1, "gold_block"), (x1 - 1, z1 - 1, "gold_block"),
+                    (x0, z0, "decorated_pot[facing=south,cracked=false]"), (x1 - 1, z0, "decorated_pot[facing=south,cracked=false]"),
+                    (x0, m, "lantern[hanging=false]"), (x1 - 1, m, "lantern[hanging=false]")):
+        c.set(x, s, z, b)
 
 
 def nubian_pyramid(c, w, st, col, T, ctx):
@@ -4450,7 +4474,7 @@ LANDMARKS = {arch_of_constantine, colosseum, gol_gumbaz, sanchi_stupa, temple_of
              mosque_landmark, hall_of_heroes, shrine, pagan_shrine}
 MONUMENTAL = LANDMARKS | {theatre, stonehenge, mole, harbor_chain, flagship, helepolis, great_pyramid, nubian_pyramid, dome_rock, sankore, wooden_bridge, fish_trap, wonder, castle, krepost, monastery, church, amphitheatre, monument, wall_segment, gate, tower,
               bridge, aqueduct}
-NO_PROPS = LANDMARKS | {theatre, stonehenge, crane, scaffold_walk, shipyard, port, mole, harbor_chain, flagship, helepolis, great_pyramid, nubian_pyramid, dome_rock, wooden_bridge, fish_trap, barricade, wall_segment, gate, bridge, aqueduct, tower, outpost, wonder, dock, harbor, monument, amphitheatre}
+NO_PROPS = LANDMARKS | {torii, theatre, stonehenge, crane, scaffold_walk, shipyard, port, mole, harbor_chain, flagship, helepolis, great_pyramid, nubian_pyramid, dome_rock, wooden_bridge, fish_trap, barricade, wall_segment, gate, bridge, aqueduct, tower, outpost, wonder, dock, harbor, monument, amphitheatre}
 
 
 def building_rect(o):
