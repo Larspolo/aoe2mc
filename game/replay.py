@@ -302,9 +302,10 @@ class Replay:
     def grid(self):
         """The gather.Map of the world with the buildings of the replay. The first call also finds the units of the
         start state (the entities of aoe2mc.json with an object ID)."""
+        T = self.T                                                  # also for the buildings of later calls (#788)
         if self.map is None:
             import gather                                           # gather -> build -> replay: import it late
-            self.gather, self.map, T = gather, gather.Map(self.data), self.T
+            self.gather, self.map = gather, gather.Map(self.data)
             self.crew = gather.Gather.__new__(gather.Gather)       # adapter: the resource looks of gather.Gather
             self.crew.map, self.crew.trunks, self.crew.bushes, self.crew.crops = self.map, {}, {}, {}
             for o in self.data["objects"]:
