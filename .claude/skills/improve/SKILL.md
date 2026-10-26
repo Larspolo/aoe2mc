@@ -12,8 +12,9 @@ Make one good improvement per review. Do not make many small changes.
 ## 1. Collect the data
 
 Run `python3 tools/health.py` first (`--hours N`, default 24, about 25 s). It prints the CI runs per workflow,
-the slowest CI steps, the setup minutes, takeovers, releases, merge conflicts, claim-to-merge minutes and files
-that do not belong in git. Collect by hand only what it does not print.
+the slowest CI steps, the setup minutes, takeovers, releases, merge conflicts (and their files), the minutes of each
+phase, the quota per merged PR, the release points per 1 % of 7-day quota (the main number: progress to the goals per
+quota), weak spots (rework, bugs of check tickets, red night runs), claim-to-merge minutes and files that do not belong in git. Collect by hand only what it does not print.
 
 - Agent: the last 20 run comments by the agent on the status issue (label `agent-status`). Each has a line
   `Metrics: ticket #n · size · result · minutes · setup m min · checks k · checks c min · time sinks: ...`.
@@ -61,6 +62,11 @@ patterns and their fixes:
 | Local | Permission denials in local runs | Add the safe command to `.claude/settings.json` |
 
 ## 3. Make the improvement
+
+First list the open `tooling` and process tickets (`/issues?state=open&labels=tooling`, and titles that start with
+"Process:"). When one already names the pattern, do not make a second change: claim that ticket (`tools/claim.py N`)
+and do it as this improvement, or, when another run owns it, choose the next pattern. PR #917 of a review and the
+ticket #903 made the same change of the autopilot skill at the same time: one PR conflicted and was wasted.
 
 - Small (text in a skill, `CLAUDE.md`, `LEARNINGS.md`, a setting, a workflow step, the setup script): do it now,
   in one PR with the title "Process: <what>". Verify level 1. Merge it like a ticket.
