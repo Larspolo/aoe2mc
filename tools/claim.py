@@ -7,7 +7,7 @@ a second push of another claim commit is never a fast-forward. Later claims of t
 
     python3 tools/claim.py N              # claim ticket N; exit 0: yours, exit 1: another run owns it
     python3 tools/claim.py N --release    # give your claim back (needs-human, blocked, hand-off)
-    python3 tools/claim.py N --takeover   # take the ticket from a dead run (autopilot "Runs can overlap")
+    python3 tools/claim.py N --takeover   # take the ticket from a dead run (stale or released claim, #502)
     python3 tools/claim.py N --show       # print the claim refs and the owner
     python3 tools/claim.py N --beat       # show that the own run is alive (at least every 20 minutes)
     python3 tools/claim.py N --stale      # exit 0: the owner made no claim or beat for 30 minutes (stopped run)
@@ -93,12 +93,16 @@ def push(sha, ref, remote="origin"):
 
 
 def claim(number, takeover=False, remote="origin"):
-    """Push a new claim commit to the next free slot. Without takeover, the slot is free only when there is
-    no claim yet or the last claim was released."""
+    """Push a new claim commit to the next free slot. The slot is free only when there is no claim yet or the
+    last claim was released. A takeover also takes a stale claim, but never a live one: three runs took over
+    one hand-off in 15 seconds, and each pushed the next slot (#502)."""
     found = refs(number, remote)
     top = max(found, default=0)
-    if top and not takeover and not subject(slot(number, top), remote).startswith("Release"):
-        return None
+    if top:
+        line = subject(slot(number, top), remote)
+        if not line.startswith("Release") and not (takeover and stale(line, changed(slot(number, top), remote),
+                                                                     time.time())):
+            return None
     msg = f"Claim #{number} by {who()} ({uuid.uuid4().hex})"     # unique: two runs never push the same SHA
     sha = git("commit-tree", EMPTY_TREE, "-m", msg).stdout.strip()
     ref = slot(number, top + 1)
@@ -176,7 +180,7 @@ def main(argv=None):
     ap.add_argument("number", type=int, help="ticket number (with --comment: the comment ID)")
     g = ap.add_mutually_exclusive_group()
     g.add_argument("--release", action="store_true", help="give the own claim back")
-    g.add_argument("--takeover", action="store_true", help="claim the next slot also when the ticket is owned")
+    g.add_argument("--takeover", action="store_true", help="claim the next slot also when the open claim is stale")
     g.add_argument("--show", action="store_true", help="print the claim refs and their tip commits")
     g.add_argument("--beat", action="store_true", help="show that the own run is alive")
     g.add_argument("--stale", action="store_true", help="exit 0 when the open claim had no beat for 30 minutes")

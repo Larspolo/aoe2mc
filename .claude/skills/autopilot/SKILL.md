@@ -115,7 +115,7 @@ For each open issue without a priority label:
 ## 5. Pick and claim one ticket
 
 Candidates: open issues without `needs-human`, `blocked`, `epic`, `agent-status`, `in-progress`, and whose
-"Depends on: #n" issues are all closed. Order: `P0`, `P1`, `P2`, `P3`, then the
+"Depends on: #n" issues are all closed, and whose "Start after:" time is past (#496). Order: `P0`, `P1`, `P2`, `P3`, then the
 least overlap with the work in progress (files and functions that open PRs change or claimed tickets name, #487),
 then the lowest issue number.
 `python3 tools/dashboard.py --next` prints the candidates in this order (the rule is `dashboard.candidates()`).
@@ -251,4 +251,6 @@ Argument `max`: continue until no ticket is ready or a usage limit stops you. Wh
 full and tickets are still ready, start a fresh run, then stop: fire the scheduled task that started this run
 (its ID is in the run prompt) once with `fire_trigger`. Never fire it when no ticket is ready, when the status
 issue has `paused`, or after a usage-limit error. A fresh run has a small context, so it works faster.
-Some sessions have no `fire_trigger` tool (`ToolSearch` finds none): then do not fire, continue alone and say so in the report.
+The tool is `mcp__claude-code-remote__fire_trigger`. Every run has it, but it can be deferred: load it with `ToolSearch`,
+query `select:mcp__claude-code-remote__fire_trigger`, then call it. On 2026-10-26 runs reported "no fire_trigger tool"
+although their tool list had it, so the number of runs fell below the target of `tools/usage.py`.

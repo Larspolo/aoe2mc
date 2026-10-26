@@ -75,6 +75,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Theatre stage (inside) | `dark_oak_slab` stage, `*_wall_banner`s behind it, `potted_fern`, `flower_pot`, `lantern`s | |
 | Oracle's tripod (inside) | `cauldron` before the statue of the god, `decorated_pot`s (gifts) in the corners | |
 | Idol on an altar (inside) | `gold_block` on `chiseled_sandstone`, lit `candle`s at its sides, `potted_poppy` offerings | |
+| Sanctum in a temple tower (inside) | `gold_block` idol on `chiseled_red_sandstone`, a path of `orange_carpet`, lit `candle`s, `potted_red_tulip` and `potted_orange_tulip` offerings | |
 | Offering stone (outside) | `mossy_cobblestone` with a `skeleton_skull`, lit `candle`s, a `campfire` before it, skulls on carved posts | |
 | Spiral stair in a tower (inside) | `*_stairs` around a 2 × 2 shaft, one step per block, a hanging `lantern` under every 6th step | |
 | Bench (inside) | `*_stairs` in a row | `storage`, `shelter`, `furnish_worship`, `town_hall` +37 more |
@@ -113,10 +114,12 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Player color band (walls, gate towers) | `*_wool` (player color), one row | `pavilion`, `yurt`, `command_tent`, `army_tent` +19 more |
 | Fence, pen | `*_fence` | `pasture`, `nine_bands`, `fish_trap`, `outpost` +37 more |
 | Gate of a pen | `*_fence_gate` | `pasture`, `folwark` |
+| Fish trap basket | `bamboo_fence` rods on half-round hoops of `dark_oak_wood` and `stripped_oak_wood` |  |
 | Wheel | open `*_trapdoor` on the side | `cart`, `university`, `market`, `dock` +9 more |
 | Siege engine in the making | `stripped_spruce_log` frame, `oak_fence` posts, a `stripped_oak_log` ram beam with an `iron_block` head | `siege_workshop` |
 | Tent canvas | `white_wool`, a valance of wool in the player color | `command_tent`, `army_tent`, `pavilion`, `yurt` +4 more |
 | Tent poles of a pavilion | `stripped_spruce_log[axis=y]` at the corners, up to the roof edge | |
+| Lookout hut on stilts (outpost) | `*_log` stilts with `spruce_fence` braces, a `*_wool` band (player color) and `white_wool` cloth, a `white_wool` roof with a valance (player color) | |
 | Yurt felt | `blue_wool` with a zig-zag of `white_wool` (or the inverse), a flat dome with a `spruce_trapdoor` crown ring | |
 | Pavilion cloth | stripes of `*_wool` (player color) on `white_wool`, a `yellow_wool` valance, a white cone | |
 | Thatch | `hay_block` | `settlement`, `hut`, `mill_room`, `granary` +15 more |
