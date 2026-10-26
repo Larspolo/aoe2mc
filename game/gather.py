@@ -34,6 +34,10 @@ DROP_SITES = {"wood": ("TOWN_CENTER", "LUMBER_CAMP"), "food": ("TOWN_CENTER", "M
               "gold": ("TOWN_CENTER", "MINING_CAMP"), "stone": ("TOWN_CENTER", "MINING_CAMP")}
 TREE_WOOD = 100                                                    # wood in one tree, as in AoE2
 BUSH_FOOD = 125                                                    # food in one fruit bush, as in AoE2 DE
+# AoE2 DE work rates per game second (#393): lumberjack 0.39 (empires2_x2_p1.dat, #267), the others the published
+# DE gather rates. Normal game speed is 1.7 game seconds per real second (#413).
+AOE2_WORK, NORMAL = {"wood": 0.39, "food": 0.31, "farm": 0.33, "gold": 0.38, "stone": 0.36}, 1.7
+WORK_SECONDS = {r: 1 / (w * NORMAL) for r, w in AOE2_WORK.items()}    # real seconds per unit, as at Normal speed
 FARM_FOOD = 175                                                    # food in one farm, as in AoE2 DE (no upgrades)
 MINES = {"GOLD_MINE": ("gold", 800, "GOLD_MINER"), "STONE_MINE": ("stone", 350, "STONE_MINER")}   # as in AoE2
 MINE_BLOCKS = {"gold": ("gold_ore", "raw_gold_block", "stone"),                # the blocks of the converter's heap
@@ -195,11 +199,15 @@ class Villager:
 
 class Gather:
     """The gather game on a running server (game.command sends one command). Call setup(), then step() in a loop.
-    log: a text file that gets one JSON line per event (state change or drop), to measure the timing (#289)."""
+    log: a text file that gets one JSON line per event (state change or drop), to measure the timing (#289).
+    chop: seconds per unit, one number for all resources or {resource: seconds} ("farm" for farms); default
+    WORK_SECONDS, the AoE2 rates at Normal speed (#413)."""
 
-    def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=1.0, log=None, clock=time.monotonic):
+    def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic):
         self.game, self.map, self.player = game, Map(data, player), player
-        self.tick, self.carry, self.chop = tick, carry, chop
+        chop = WORK_SECONDS if chop is None else chop
+        self.tick, self.carry = tick, carry
+        self.chop = dict(chop) if isinstance(chop, dict) else dict.fromkeys(WORK_SECONDS, chop)
         self.log, self.clock, self.t0 = log, clock, clock()
         self.stock = dict.fromkeys(DROP_SITES, 0)                      # resources at the drop sites
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
@@ -367,8 +375,9 @@ class Gather:
             elif v.state == "chop":
                 v.timer += self.tick
                 src = self.source(v)
-                while v.timer >= self.chop and v.load < self.carry and src.get(v.tree, 0) > 0:
-                    v.timer -= self.chop
+                work = self.chop["farm" if v.tree in self.map.farms else v.res]
+                while v.timer >= work and v.load < self.carry and src.get(v.tree, 0) > 0:
+                    v.timer -= work
                     v.load += 1
                     src[v.tree] -= 1
                     if v.tree in self.map.farms:

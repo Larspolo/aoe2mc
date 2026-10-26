@@ -23,7 +23,7 @@ def test_measured_rates_per_resource(resource):
         pytest.skip("Mojang is not reachable")
     events, T = measure_gather.measure(distance=10, loads=2, resource=resource)
     m = measure_gather.analyze(events)
-    conf = measure_gather.configured(0.25, 1.0, 10, m["trip_blocks"])
+    conf = measure_gather.configured(0.25, measure_gather.WORK_SECONDS[resource], 10, m["trip_blocks"])
     print(measure_gather.table(m, conf, T, resource))
     for k in ("walk", "chop", "trip"):
         assert m[k] == pytest.approx(conf[k], rel=0.1), (k, m[k], conf[k])
