@@ -2090,6 +2090,36 @@ def place_book(cols, edits, spawn, texts, title):
     return x, y, z
 
 
+def place_map(cols, edits, spawn, book):
+    """A glow item frame with the map of write_map (map id 0, #839) on the ground next to the lectern `book`, or in
+    its place (2 blocks in front of the spawn view) when there is no book: it shows also at night. Fixed 1b: no
+    player takes it, and it needs no support block.
+    Returns the entity (nbt, x, z, (None, y)) for entity_chunk, or None when no free land is near."""
+    sx, _, sz = spawn
+    if book:
+        x, _, z = book
+        spot = next(((x + dx, z + dz) for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1))
+                     if 0 <= x + dx < cols.n and 0 <= z + dz < cols.n and not cols.blocked[x + dx, z + dz]
+                     and cols.wtop[x + dx, z + dz] <= cols.top[x + dx, z + dz]), None)
+    else:
+        dx, dz = turn_tile(2, -2, 0, buildings.TURN)
+        spot = free_spot(cols, min(max(sx + dx, 0), cols.n - 1), min(max(sz + dz, 0), cols.n - 1), 4)
+    if spot is None or spot == (sx, sz) or cols.wtop[spot] > cols.top[spot]:
+        return None
+    fx, fz = spot
+    fy = cols.surface(fx, fz)
+    edits.footprint = None
+    edits.add([fx], [fy], [fz], "air")                 # grass and flowers hide the map
+    cols.blocked[fx, fz] = True                        # no unit stands in the frame
+    item = Compound({"id": String("minecraft:filled_map"), "count": Int(1),
+                     "components": Compound({"minecraft:map_id": Int(0)})})
+    nbt = units.to_nbt({"id": String("minecraft:glow_item_frame"), "Facing": Byte(1), "Item": item, "Fixed": Byte(1),
+                        "block_pos": IntArray([fx, fy, fz]), "ItemRotation": Byte(0), "ItemDropChance": Float(0)},
+                       (fx + 0.5, fy, fz + 0.5), 0, np.random.default_rng(839))
+    nbt["Invulnerable"] = Byte(1)
+    return nbt, fx + 0.5, fz + 0.5, (None, fy + 1 / 32)
+
+
 def shelf_data(items):
     """Block entity fields of a shelf (26.3) with one item in each of its 3 slots (#526)."""
     return {"Items": List[Compound]([Compound({"Slot": Byte(i), "id": String("minecraft:" + n), "count": Int(1)})
@@ -3047,6 +3077,9 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     book = place_book(cols, edits, spawn, texts, name)
     if book:
         print(f"  book with the scenario texts: lectern at {book}")
+    frame = place_map(cols, edits, spawn, book)   # before the units: they keep out of its column
+    if frame:
+        print("  map of the world: glow item frame at", tuple(int(v) for v in frame[0]["block_pos"]))
     colors = [player_color(pid, players) for pid in sorted(players) if pid and any(o["player"] == pid for o in objects)]
     r = border(cols, border_design, colors, edits)
     edits.connect()
@@ -3054,6 +3087,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     tick("objects")
     before = set(stats)
     unit_chunks = plan_units(objects, players, cols, rng, stats, birds, garrison, ambience == "off") if with_units else {}
+    if frame:
+        unit_chunks.setdefault((int(frame[1]) >> 4, int(frame[2]) >> 4), []).append(frame)
     tick("units")
     print(f"  units: {stats['units']}, fish: {stats['fish']}")
     for k in sorted(set(stats) - before - {"units", "fish"}):
