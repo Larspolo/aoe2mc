@@ -817,6 +817,11 @@ class Columns:
         deco[field] = ids[kind[field]]
         petals = grass & free & (n3 < 0.1) & (r < 0.5)
         deco[petals] = B("pink_petals[facing=north,flower_amount=3]")
+        faces = ("east", "north", "south", "west")
+        def clumps(name, prop, mask):                   # a random facing and amount (1-4) for each clump
+            ids = np.array([B(f"{name}[facing={f},{prop}={k}]") for f in faces for k in range(1, 5)], np.uint16)
+            deco[mask] = ids[(r2[mask] * len(ids)).astype(int)]
+        clumps("wildflowers", "flower_amount", grass & (deco == AIR) & (n3 >= 0.1) & (n3 < 0.16) & (r < 0.4))
         # forest floor: ferns, moss, mushrooms
         floor = forest & free
         deco[floor & (r < 0.18)] = B("fern")
@@ -826,6 +831,7 @@ class Columns:
         deco[floor & (r >= 0.24) & (r < 0.25)] = B("red_mushroom")
         deco[floor & (r >= 0.25) & (r < 0.45) & (n2 > 0.6)] = B("moss_carpet")
         deco[floor & (r >= 0.45) & (r < 0.6)] = B("short_grass")
+        clumps("leaf_litter", "segment_amount", floor & (r >= 0.6) & (r < 0.6 + 0.35 * n1))   # fallen leaves
         def near(mask):                                 # 4 neighbors, no wrap-around at the map edge
             m = np.zeros_like(mask)
             m[1:] |= mask[:-1]; m[:-1] |= mask[1:]; m[:, 1:] |= mask[:, :-1]; m[:, :-1] |= mask[:, 1:]
