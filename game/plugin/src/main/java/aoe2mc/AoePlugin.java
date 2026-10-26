@@ -52,6 +52,7 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Vector;
 
+import com.destroystokyo.paper.entity.Pathfinder;
 import com.destroystokyo.paper.entity.RangedEntity;
 import com.destroystokyo.paper.entity.ai.Goal;
 import com.destroystokyo.paper.entity.ai.GoalKey;
@@ -699,8 +700,25 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                         + " " + o.goal.getZ());
                 return true;
             }
+            if (passed(mob, path)) {
+                pf.stopPathfinding();                   // else moveTo keeps the path: same target (createPath)
+                pf.moveTo(o.goal, o.speed);
+            }
             return false;
         });
+    }
+
+    // The mob is on the ground beyond the next point of its path. Down a slope it lands past the point after each
+    // drop of one block, and Minecraft walks back to it: a scout walked at 5.7 of 17.6 blocks per second (#888).
+    // A new path starts where the mob is.
+    private static boolean passed(Mob mob, Pathfinder.PathResult path) {
+        int i = path.getNextPointIndex();
+        List<Location> points = path.getPoints();
+        if (!mob.isOnGround() || i <= 0 || i + 1 >= points.size()) {
+            return false;
+        }
+        Location a = points.get(i), b = points.get(i + 1), m = mob.getLocation();
+        return (a.getX() + 0.5 - m.getX()) * (b.getX() - a.getX()) + (a.getZ() + 0.5 - m.getZ()) * (b.getZ() - a.getZ()) < 0;
     }
 
     // The path search reaches only about the follow range: raise it for a goal at this location. A rider searches
