@@ -33,6 +33,7 @@ The README already uses this style. Keep it.
 | Gather timing | `python3 tools/measure_gather.py` (server, no client: walk, chop and trip times next to AoE2; `--read F.jsonl` reads a `game/run.py --play --log` file) |
 | Replay drift | `python3 tools/replay_drift.py samples/de-64.3.aoe2record --speed 4 --until 10:00 --log F.jsonl` (Paper, no client: distance of each unit to its replay position, stuck, stray and dead units per kind; `--read F.jsonl`, #813) |
 | Conversion cost | `python3 tools/measure_convert.py IN.aoe2scenario` (seconds and peak memory of each phase; `docs/research/large-maps.md`) |
+| Unit count cost | `python3 tools/measure_units.py [--units 200,500,1000]` (Paper, no client: RCON commands per second and `/tick query` with many units that walk with `aoe moveto`, #943) |
 | Datapack cost | `python3 tools/tick_cost.py` (server, no client: `/tick query` with and without `datapacks/aoe2mc`; `--world W`, `--ambience full`) |
 | In-game screenshot | `python3 tools/mc_shot.py OUTWorld OUT.png [--at X Y Z --look YAW PITCH] [--more X,Y,Z,YAW,PITCH]` (real client, ~25 s per world; `mc_shot.Client`: a player on the Paper server that clicks menus; `--player`: adventure mode, a spectator sees invisible mobs) |
 | Minecraft data | `python3 tools/mc_check.py --reports VERSION` (exact, from Mojang) or `tools/fetch_mcdata.py VERSION` writes `tools/mcdata/VERSION.json` |
@@ -121,6 +122,8 @@ Details: the `verify` skill.
   clear options and no single best one (for example the interface of a feature or a game rule), do not choose. Make a
   decision ticket (`ticket` skill, "Decision tickets"), let the work that needs it depend on it, and continue with
   other work. When one option is clearly best, choose it and say why in the PR.
+- **An epic checks its whole goal** (owner rule, 2026-10-26, #820): its acceptance criteria always check that the full
+  scope is covered (each item works, or the owner excluded it), never only that the sub-issues are closed (`ticket` skill).
 
 ## Improve the process
 

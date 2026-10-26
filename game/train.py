@@ -22,12 +22,17 @@ Ages (#672): the Feudal Age is a technology of the town center that needs 2 type
 sidebar title shows the age of the player; all players see a title and hear a sound when a player advances.
 Forging at the blacksmith (#675): infantry and cavalry get +1 attack. Fletching (#724): archers (also cavalry archers and
 skirmishers) get +1 attack and +1 range.
+Padded Archer Armor at the blacksmith in the Feudal Age (#937, TECH_AGE): archers get +1 melee and +1 pierce armor.
 Double-Bit Axe at the lumber camp (#723): villagers chop wood 20 % faster (gather.WORK_TECHS, gather.Gather.work_time).
-Gold Mining at the mining camp (#727): villagers mine gold 15 % faster.
+Gold Mining at the mining camp (#727): villagers mine gold 15 % faster. Stone Mining (#939): stone 15 % faster.
 Horse Collar at the mill (#726): the live and the new farms of the player have 75 more food (gather.FARM_TECHS).
 Wheelbarrow at the town center in the Feudal Age (#728, TECH_AGE): villagers carry 3 more resources and walk 10 % faster (gather.CARRY, gather.PACE).
 Scale Barding Armor at the blacksmith in the Feudal Age (#938): cavalry (also camels and elephants, not cavalry archers)
 gets +1 melee and +1 pierce armor (barding()).
+Bloodlines at the stable in the Feudal Age (#940): cavalry gets 20 more hit points, also a live unit (it keeps its lost
+hit points: `aoe stats`).
+Man-at-Arms at the barracks in the Feudal Age (#941, UPGRADES): the live militia of the player become men-at-arms
+(name and values), and the barracks trains men-at-arms instead of militia.
 Rally points (#707): the menu item "Rally point" (RALLY) and the next right click on the ground set the rally point of
 the building; each new unit walks there (Minecraft path finding), a new villager gathers at a tree, bush, mine or farm.
 The castle (#708) trains the unique unit of the civilization of its player (UNIQUE, trains()). Only the units with AoE2
@@ -51,6 +56,7 @@ import menu  # noqa: E402
 COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   # as in AoE2
          "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}, "FEUDAL_AGE": {"food": 500},
          "BERSERK": {"food": 65, "gold": 20},
+         "BLOODLINES": {"food": 150, "gold": 100},
          "CATAPHRACT": {"food": 70, "gold": 75},
          "CHU_KO_NU": {"wood": 40, "gold": 35},
          "DOUBLE_BIT_AXE": {"food": 100, "wood": 50},
@@ -62,12 +68,16 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "JANISSARY": {"food": 60, "gold": 55},
          "LONGBOWMAN": {"wood": 35, "gold": 40},
          "MAMELUKE": {"food": 55, "gold": 85},
+         "MAN_AT_ARMS": {"food": 60, "gold": 20},
+         "MAN_AT_ARMS_UPGRADE": {"food": 100, "gold": 40},
          "MANGUDAI": {"wood": 55, "gold": 65},
+         "PADDED_ARCHER_ARMOR": {"food": 100},
          "SAMURAI": {"food": 45, "gold": 30},
          "SCALE_BARDING_ARMOR": {"food": 150},
          "SCALE_MAIL_ARMOR": {"food": 100},
          "SCOUT_CAVALRY": {"food": 80},
          "SKIRMISHER": {"food": 25, "wood": 35},
+         "STONE_MINING": {"food": 100, "wood": 75},
          "SPEARMAN": {"food": 35, "wood": 25},
          "TEUTONIC_KNIGHT": {"food": 85, "gold": 30},
          "THROWING_AXEMAN": {"food": 55, "gold": 25},
@@ -76,6 +86,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "WOAD_RAIDER": {"food": 70, "gold": 25}}
 TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130,   # AoE2 seconds
                "BERSERK": 14,
+               "BLOODLINES": 50,
                "CATAPHRACT": 20,
                "CHU_KO_NU": 16,
                "DOUBLE_BIT_AXE": 25,
@@ -87,27 +98,31 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "JANISSARY": 21,
                "LONGBOWMAN": 18,
                "MAMELUKE": 23,
+               "MAN_AT_ARMS": 21,
+               "MAN_AT_ARMS_UPGRADE": 40,
                "MANGUDAI": 26,
+               "PADDED_ARCHER_ARMOR": 40,
                "SAMURAI": 9,
                "SCALE_BARDING_ARMOR": 45,
                "SCALE_MAIL_ARMOR": 40,
                "SCOUT_CAVALRY": 30,
                "SKIRMISHER": 22,
                "SPEARMAN": 22,
+               "STONE_MINING": 30,
                "TEUTONIC_KNIGHT": 12,
                "THROWING_AXEMAN": 13,
                "WAR_ELEPHANT": 25,
                "WHEELBARROW": 75,
                "WOAD_RAIDER": 10}
-TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW"), "BARRACKS": ("MILITIA", "SPEARMAN"),   # the units and technologies of each
+TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW"), "BARRACKS": ("MILITIA", "SPEARMAN", "MAN_AT_ARMS_UPGRADE"),   # the units and technologies of each
           "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER"),                                         # building (#654, #670, #655)
-          "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING",            # (#675, #725, #724, #938)
-                         "SCALE_BARDING_ARMOR"),
+          "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING",            # (#675, #725, #724, #937, #938)
+                         "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR"),
           "CASTLE": (),                                                         # the unique unit: trains() (#708)
-          "STABLE": ("SCOUT_CAVALRY",),                                         # (#671)
+          "STABLE": ("SCOUT_CAVALRY", "BLOODLINES"),                           # (#671, #940)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
           "MILL": ("HORSE_COLLAR",),                                            # (#726)
-          "MINING_CAMP": ("GOLD_MINING",)}                                      # (#727)
+          "MINING_CAMP": ("GOLD_MINING", "STONE_MINING")}                      # (#727, #939)
 # The unique unit of each civilization (AoE2 DE), trained at its castle. A unit without COSTS is not in the menu yet:
 # it has no AoE2 combat values in combat.STATS.
 UNIQUE = {"BRITONS": "LONGBOWMAN", "PERSIANS": "WAR_ELEPHANT", "BYZANTINES": "CATAPHRACT", "CELTS": "WOAD_RAIDER",
@@ -122,22 +137,31 @@ UNIQUE = {"BRITONS": "LONGBOWMAN", "PERSIANS": "WAR_ELEPHANT", "BYZANTINES": "CA
           "POLES": "OBUCH", "BOHEMIANS": "HUSSITE_WAGON", "HINDUSTANIS": "GHULAM", "DRAVIDIANS": "URUMI_SWORDSMAN",
           "BENGALIS": "RATHA", "GURJARAS": "SHRIVAMSHA_RIDER", "ROMANS": "CENTURION", "ARMENIANS": "COMPOSITE_BOWMAN",
           "GEORGIANS": "MONASPA"}
-TECHS = {"DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
+TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
+         "DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
          "FLETCHING": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if "archer" in s.classes else s,
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
          "GOLD_MINING": lambda name, s: s,                         # an economy technology: gather.WORK_TECHS
          "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
          "LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
          if "VILLAGER" in name else s,
+         "MAN_AT_ARMS_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
+         "PADDED_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
+         if "archer" in s.classes else s,
          "SCALE_BARDING_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if barding(s) else s,
          "SCALE_MAIL_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "infantry" in s.classes else s,
+         "STONE_MINING": lambda name, s: s,                        # an economy technology: gather.WORK_TECHS
          "FEUDAL_AGE": lambda name, s: s,   # the change of each technology to the AoE2 values
          "WHEELBARROW": lambda name, s: s}                         # no combat change: gather.CARRY and gather.PACE
+UPGRADES = {"MAN_AT_ARMS_UPGRADE": ("MILITIA", "MAN_AT_ARMS")}  # technology: the unit and its new unit (#941)
 REQUIRES = {"FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP", "DOCK"))}   # n types of these buildings
 TECH_AGE = {                                                       # the age of a technology (build.AGE): hidden before
+    "BLOODLINES": 1,
     "DOUBLE_BIT_AXE": 1,
+    "MAN_AT_ARMS_UPGRADE": 1,
+    "PADDED_ARCHER_ARMOR": 1,
     "SCALE_BARDING_ARMOR": 1,
     "WHEELBARROW": 1,
 }
@@ -153,6 +177,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "SKIRMISHER": (1, "drowned_spawn_egg", "Skirmisher"),
          "SPEARMAN": (1, "zombie_spawn_egg", "Spearman"),
          "BERSERK": (0, "zombie_spawn_egg", "Berserk"),
+         "BLOODLINES": (1, "book", "Bloodlines"),
          "CATAPHRACT": (0, "horse_spawn_egg", "Cataphract"),
          "CHU_KO_NU": (0, "skeleton_spawn_egg", "Chu Ko Nu"),
          "DOUBLE_BIT_AXE": (0, "book", "Double-Bit Axe"),
@@ -165,10 +190,14 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "LONGBOWMAN": (0, "skeleton_spawn_egg", "Longbowman"),
          "LOOM": (1, "book", "Loom"),                               # a book for a technology (#618)
          "MAMELUKE": (0, "camel_spawn_egg", "Mameluke"),
+         "MAN_AT_ARMS": (0, "zombie_spawn_egg", "Man-at-Arms"),
+         "MAN_AT_ARMS_UPGRADE": (2, "book", "Man-at-Arms"),
          "MANGUDAI": (0, "skeleton_horse_spawn_egg", "Mangudai"),
+         "PADDED_ARCHER_ARMOR": (3, "book", "Padded Archer Armor"),
          "SAMURAI": (0, "zombie_spawn_egg", "Samurai"),
-         "SCALE_BARDING_ARMOR": (3, "book", "Scale Barding Armor"),
+         "SCALE_BARDING_ARMOR": (4, "book", "Scale Barding Armor"),
          "SCALE_MAIL_ARMOR": (1, "book", "Scale Mail Armor"),
+         "STONE_MINING": (1, "book", "Stone Mining"),
          "TEUTONIC_KNIGHT": (0, "zombie_spawn_egg", "Teutonic Knight"),
          "THROWING_AXEMAN": (0, "drowned_spawn_egg", "Throwing Axeman"),
          "WAR_ELEPHANT": (0, "ravager_spawn_egg", "War Elephant"),
@@ -211,7 +240,8 @@ def homes(g):
 def trains(g, building):
     """The units and technologies of the own building: a castle trains the unique unit of the player's civilization."""
     if building != "CASTLE":
-        return TRAINS[building]
+        new = {old: unit for t, (old, unit) in UPGRADES.items() if t in g.techs}     # the barracks trains the new unit
+        return tuple(new.get(n, n) for n in TRAINS[building])
     civ = g.data.get("players", {}).get(str(g.player), {}).get("civ")
     return tuple(n for n in [UNIQUE.get(civ)] if n in COSTS)
 
@@ -410,6 +440,12 @@ def research(g, entry):
         for t in g.map.own_farms:
             if g.map.farms.get(t, 0) > 0:
                 g.map.farms[t] += more
+    if entry["name"] in UPGRADES:                                  # the live units of the line get the new name
+        old, new = UPGRADES[entry["name"]]
+        for uuid in [u for u, n in g.soldiers.items() if n == old]:
+            g.soldiers[uuid] = new
+            g.command(combat.stats_command(uuid, new, stats(g, new)))
+            g.command(combat.label_command(uuid, new))               # the name of a new unit (units.pretty)
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
         if stats(g, name) != combat.stats(name):
             g.command(combat.stats_command(uuid, name, stats(g, name)))

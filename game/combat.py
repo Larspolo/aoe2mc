@@ -128,9 +128,9 @@ def damage(attacker, target):
 
 def stats_command(uuid, name, s=None):
     """The plugin command that gives entity `uuid` the values of AoE2 unit `name` (or the values s, for example with
-    technologies, #655): max_health = hit points (at most 1024, the limit of the attribute), full health, and the
-    values of `damage` (the same rule in AoePlugin.java). The range kind: 0 melee, 1 ranged, 2 ranged with melee
-    damage (MELEE_RANGED, #800). Last the reload in ticks at Normal speed: a melee unit hits once per reload (#848)."""
+    technologies, #655): max_health = hit points (at most 1024, the limit of the attribute), the lost hit points stay lost
+    (a new unit has full health, #940), and the values of `damage` (the same rule in AoePlugin.java). The range kind:
+    0 melee, 1 ranged, 2 ranged with melee damage (MELEE_RANGED, #800). Last the reload in ticks at Normal speed: a melee unit hits once per reload (#848)."""
     s = s or stats(name)
     bonus = ",".join(f"{c}:{n}" for c, n in sorted(s.bonus.items())) or "-"
     kind = 0 if s.range <= 0 else 2 if name in MELEE_RANGED else 1

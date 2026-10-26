@@ -160,6 +160,33 @@ Normal speed (`gather.WORK_SECONDS` = 1 / (`AOE2_WORK` × 1.7) seconds per unit;
 - The work rates are now within 2 % of AoE2 at Normal speed. The villager walks 26 % slower than in AoE2, so the
   trips of this distance take 15 % to 18 % longer.
 
+## Measured unit count (#398)
+
+`python3 tools/measure_units.py` (#943) on the cloud machine (4 cores, 15 GB, Paper 26.3, no client, the `battle`
+scenario with its 170 units that stand still): husks (the mob of most units) on free cells near the map center, each
+with its own `aoe moveto` to a cell up to 12 blocks away every 5 s (2 RCON commands: the walk speed and the order).
+All orders reached their unit. 2026-10-26:
+
+| Units | Commands per second | Mean tick ms | P99 tick ms | Ticks per second |
+|---|---|---|---|---|
+| 200 | 1314 | 7.35 | 48.3 | 20.0 |
+| 500 | 2134 | 12.40 | 37.5 | 20.0 |
+| 1000 | 1346 – 1896 | 24.35 – 25.35 | 52.7 – 109.2 | 20.0 |
+| 1500 | 817 | 37.60 | 74.2 | 20.0 |
+| 2000 | 317 | 45.30 | 74.2 | 20.0 |
+| 3000 | 19 | 56.70 | 108.1 | 17.6 |
+
+Without `datapacks/aoe2mc`: 200 units 6.95 ms, 500 units 12.20 ms, 1000 units 23.95 ms: the datapack costs less
+than 1 ms per tick.
+
+- **Largest count at 20 ticks per second: 2000 units** (mean 45 ms of the 50 ms of a tick). The tick time grows by
+  about 0.024 ms per walking unit: the entity ticks and the Minecraft path finding of the mobs.
+- **Largest count that gets its orders in time: about 1500.** RCON commands run on the main thread between the
+  ticks, so the command rate falls when the ticks get long. 1500 units need 600 commands per second for an order
+  every 5 s and get 817; 2000 units need 800 and get 317, so a round of orders takes 13 s.
+- AoE2 has at most 200 units per player (8 players: 1600). The game program keeps 20 ticks per second with that
+  count; with more than about 1500 units that get orders often, send the orders of a group in one plugin command.
+
 ## Connection to the converter
 
 - The converted world is the start map. The converter stays the first step and needs only one change:
@@ -260,6 +287,13 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - `Replay.run` gives `control["time"]` as a float (ms): a test of a poll action with an int time hides a format error like `:02d` (#803). Test with a float time, or with `Replay.run` and the `Clock` fake of `tests/test_replay_control.py`.
 - `FakeServer` of `tests/test_gather.py` moves an entity only on `tp U X Y Z <more>` (a `tp` without `facing` keeps its Pos): check the `tp` text in `server.log`. A fake answer for `execute if entity X` must skip `@a[scores=...]`: `Gather.clicks` asks that (#808).
 - Two equal melee units in a duel: the result depends on the tick of the first hit. A defender that hits back in the same tick ties (both die); `attackBack` gives it half a reload of reaction (#848).
+- A screenshot of an order marker in Xvfb: dust and the glowing effect last about 1 second, and the software renderer
+  draws few frames, so one `client.shot` after the commands shows nothing. Send the marker commands again each 0.2 s
+  in a thread and take the shot after about 1.5 s (#845). The plugin sets the AoE2 hit points itself: `effect give
+  resistance` does not keep an attacked unit alive for the shot, so put the attacker far from the target.
 - A test server with no player: an entity that RCON summons in an unloaded chunk is gone at once ("Summoned", then `data get` finds nothing). `forceload add` the area first, wait 2 s, and `kill` the older entities of the type before `@e[...,limit=1]` (#844).
 - `Pathfinder.moveTo` to the same target keeps the old path (Minecraft `createPath` returns the current path for the same target): call `stopPathfinding()` first to get a new path from the place of the mob (#888). So the `moveTo` of `follow()` every 2 ticks does not search again while the path is not done.
+- A mob has almost no control in the air (0.02 blocks per tick, drag 0.91): down a 1:1 slope a fast unit is in the air most of the time and flew at about 5 blocks per second for each `movement_speed`. The plugin `glide()` keeps its walk speed in the air (#888). To measure a walk, read `Pos`, `Motion` and `OnGround` with one `data get entity ... KEY` each: the whole entity NBT is too long for one RCON answer.
+- A `text_display` with scale 1 is a few pixels high from 35 blocks (1280 × 720): give a text that a spectator must read from far a `transformation` with `scale:[4f,4f,4f]` (all four keys of `transformation`, #843).
+- `run.Game(world)` runs the server on the world folder itself and saves into it: units that died or walked stay so in the next run. Copy the world (`shutil.copytree`) before each check run, else a second run finds dead units (#934).
 - `tests/test_replay_control.py` `Clock` and the client test of `tests/test_replay_input.py` take each `tellraw @a` as a chat event of the timeline (a list with a `t<N>` text): a new `tellraw @a` of `Replay.run` (the view text of #737) broke them. Mark the event texts, or match only `tellraw @a [` (#737, #910).

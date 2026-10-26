@@ -239,9 +239,11 @@ RECORDS = (".aoe2record", ".mgz", ".mgx", ".mgl")      # recorded games: DE, HD;
 
 
 def read_map(path):
-    """read_record for recorded games (RECORDS), read_scx for old .scx scenarios, else read_scenario."""
+    """read_record for recorded games (RECORDS), read_scx for old .scx scenarios, read_json for a map in JSON,
+    else read_scenario."""
     p = path.lower()
-    return (read_record if p.endswith(RECORDS) else read_scx if p.endswith(".scx") else read_scenario)(path)
+    return (read_record if p.endswith(RECORDS) else read_scx if p.endswith(".scx") else
+            read_json if p.endswith(".json") else read_scenario)(path)
 
 
 # Object IDs of old scenarios that DE keeps only in its data file (the DE editor hides them, #576) -> the DE object of
@@ -289,6 +291,47 @@ def read_scx(path):
                             garrisoned=holder is not None, ref=o["id"], holder=holder))
     texts = {k: "" for k in CHAPTERS}
     return size, terrain, elevation, {t.value: t.name for t in TerrainId}, texts, objects, players
+
+
+def read_json(path):
+    """A map description in JSON (#960), as read_scenario returns it: {"size": N, "terrain": N × N terrain IDs,
+    "elevation": N × N levels (default 0), "objects": [{"name", "player", "x", "y", "rotation"} ...],
+    "players": {"1": {"civ": "BRITONS", "color": 0} ...}}. The IDs and names are those of AoE2ScenarioParser
+    (TerrainId, object_kinds). The color is an index of buildings.COLOR_NAMES (default: the player number - 1)."""
+    from AoE2ScenarioParser.datasets.terrains import TerrainId
+    with open(path) as f:
+        d = json.load(f)
+    size = d.get("size")
+    if not isinstance(size, int) or size < 1:
+        raise OptionError(f"{path}: \"size\" must be a positive integer")
+    terrain_names = {t.value: t.name for t in TerrainId}
+    arrays = {}
+    for key, default in (("terrain", None), ("elevation", 0)):
+        a = np.array(d.get(key, default if default is None else [[default] * size] * size))
+        if a.shape != (size, size):
+            raise OptionError(f"{path}: \"{key}\" must be {size} lists of {size} numbers, not shape {a.shape}")
+        arrays[key] = a
+    if (bad := sorted(set(arrays["terrain"].ravel().tolist()) - set(terrain_names))):
+        raise OptionError(f"{path}: unknown terrain IDs {bad[:10]} (see AoE2ScenarioParser TerrainId)")
+    kinds = object_kinds(old=False)
+    ids = {name: (i, prefix) for i, (prefix, name) in kinds.items()}
+    objects = []
+    for ref, o in enumerate(d.get("objects", ())):
+        if o.get("name") not in ids:
+            raise OptionError(f"{path}: object {ref}: unknown name {o.get('name')!r} (see aoe2mc.object_kinds)")
+        t, prefix = ids[o["name"]]
+        objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=o["name"], id=t,
+                            player=int(o.get("player", 0)), x=float(o["x"]), y=float(o["y"]),
+                            rotation=float(o.get("rotation", 0)), garrisoned=False, ref=ref, holder=None))
+    players = {0: {"color": "light_gray", "arch": "western", "civ": "GAIA", "view": None}}
+    for pid, p in d.get("players", {}).items():
+        pid, civ, color = int(pid), p.get("civ", "?").upper(), p.get("color", int(pid) - 1)
+        players[pid] = {"color": buildings.COLOR_NAMES[color] if pid and 0 <= color < 8 else "light_gray",
+                        "arch": buildings.CIV_TO_ARCH.get(civ, "western"), "civ": civ, "view": None}
+    for pid in {o["player"] for o in objects} - set(players):          # an object of a player without an entry
+        players[pid] = {"color": buildings.COLOR_NAMES[(pid - 1) % 8], "arch": "western", "civ": "?", "view": None}
+    return (size, arrays["terrain"].astype(np.int16), arrays["elevation"].astype(np.float32), terrain_names,
+            {k: "" for k in CHAPTERS}, objects, players)
 
 
 def read_scenario(path):
@@ -2102,6 +2145,13 @@ def place_book(cols, edits, spawn, texts, title):
     return x, y, z
 
 
+def map_item():
+    """The item of the locked map of the world (map id 0, #838): in the frame at the spawn (#839) and in the
+    off-hand of a new player (#966)."""
+    return Compound({"id": String("minecraft:filled_map"), "count": Int(1),
+                     "components": Compound({"minecraft:map_id": Int(0)})})
+
+
 def place_map(cols, edits, spawn, book):
     """A glow item frame with the map of write_map (map id 0, #839) on the ground next to the lectern `book`, or in
     its place (2 blocks in front of the spawn view) when there is no book: it shows also at night. Fixed 1b: no
@@ -2123,9 +2173,7 @@ def place_map(cols, edits, spawn, book):
     edits.footprint = None
     edits.add([fx], [fy], [fz], "air")                 # grass and flowers hide the map
     cols.blocked[fx, fz] = True                        # no unit stands in the frame
-    item = Compound({"id": String("minecraft:filled_map"), "count": Int(1),
-                     "components": Compound({"minecraft:map_id": Int(0)})})
-    nbt = units.to_nbt({"id": String("minecraft:glow_item_frame"), "Facing": Byte(1), "Item": item, "Fixed": Byte(1),
+    nbt = units.to_nbt({"id": String("minecraft:glow_item_frame"), "Facing": Byte(1), "Item": map_item(), "Fixed": Byte(1),
                         "block_pos": IntArray([fx, fy, fz]), "ItemRotation": Byte(0), "ItemDropChance": Float(0)},
                        (fx + 0.5, fy, fz + 0.5), 0, np.random.default_rng(839))
     nbt["Invulnerable"] = Byte(1)
@@ -2643,6 +2691,12 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None):
     return load, files
 
 
+# The map of the world goes into the off-hand of each player once, through the tag aoe2mc_map (#966).
+MAP_PULSE = ["execute as @a[tag=!aoe2mc_map] run item replace entity @s weapon.offhand with "
+             "minecraft:filled_map[minecraft:map_id=0]",
+             "tag @a[tag=!aoe2mc_map] add aoe2mc_map"]
+
+
 def write_datapack(out, objects, ground, biome_names=(), ambience="basic", players=None, triggers=(), T=4,
                    trigger_stats=None):
     """datapacks/aoe2mc: a function every 2 s plays a work sound at each building with a player near it
@@ -2678,6 +2732,8 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
     lines += ambience_lines(biome_names)
     groups = sorted({n.split(":")[1] for n in biome_names if n.startswith("aoe2mc:")})
     team_load, team_pulse = team_lines(objects, players or {})
+    # each player gets the map of the world in the off-hand once, so the minimap is there without a search (#966)
+    team_pulse = team_pulse + MAP_PULSE
     trigger_load, trigger_fns = trigger_files(triggers, T, ground, players, trigger_stats)
     if not lines and not groups and not team_load and not trigger_load:   # the server finds a new pack by itself
         return 0, 0
@@ -3369,7 +3425,7 @@ def game_time(text):
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
     ap.add_argument("scenario", help=".aoe2scenario file, .aoe2record, .mgz, .mgx or .mgl (the start state of a recorded game), .scx "
-                    "(an old scenario, format 1.21), or "
+                    "(an old scenario, format 1.21), .json (a map description, README), or "
                     ".aoe2campaign, .cpx or .cpn (one world per scenario; old scenarios that are not .scx 1.21: the "
                     "steps for the DE editor)")
     ap.add_argument("output", help="output world folder (put it in .minecraft/saves/); for a campaign the folder of "

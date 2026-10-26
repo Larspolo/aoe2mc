@@ -21,13 +21,13 @@ def test_no_scale_barding_armor_in_the_dark_age():
 def test_the_blacksmith_menu_has_scale_barding_armor_in_the_feudal_age():
     server, g = feudal()
     train.open_menu(g, "Steve", (11, 3))
-    assert " 3:book:Scale Barding Armor:150 food · 45 s · research " in menus(server)[-1] + " "
+    assert " 4:book:Scale Barding Armor:150 food · 45 s · research " in menus(server)[-1] + " "
 
 
 def test_scale_barding_armor_gives_cavalry_one_melee_and_pierce_armor():
     server, g = feudal()
     rect = train.open_menu(g, "Steve", (11, 3))
-    assert train.order(g, "Steve", rect, 3) == 1 and g.stock["food"] == 0
+    assert train.order(g, "Steve", rect, 4) == 1 and g.stock["food"] == 0
     train.tick(g, 44)
     assert g.techs == {"FEUDAL_AGE"}
     train.tick(g, 1)
