@@ -52,6 +52,6 @@ def test_the_build_order_when_the_bot_has_the_resources():
     b.g.stock["wood"] = 1000
     for _ in range(50):
         b.step()
-    assert [n for n in sites(b) if n != "HOUSE"] == built              # each building once
+    assert [n for n in sites(b) if n not in ("FARM", "HOUSE")] == built   # each building once (farms: #1026)
     camp = next(s for s in b.g.sites if s["name"] == "LUMBER_CAMP")["footprint"]
     assert abs((camp[0] + camp[1]) / 2 - 26.5) + abs((camp[2] + camp[3]) / 2 - 21.5) < 6   # next to the trees
