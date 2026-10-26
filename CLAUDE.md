@@ -2,7 +2,7 @@
 
 aoe2mc converts an Age of Empires II: DE scenario (`.aoe2scenario`) into a Minecraft Java world.
 The owner is **Larspolo** (one person, one Claude Max account). The agent works on the project automatically.
-The owner steers asynchronously through GitHub Issues (see `docs/STEERING.md`).
+The owner steers asynchronously through GitHub Issues (see `docs/STEERING.md`). The whole agent system (parts, locks, pacing, setup): `docs/SYSTEM.md`.
 
 ## Language
 
@@ -27,6 +27,7 @@ The README already uses this style. Keep it.
 | System numbers | `python3 tools/health.py [--hours N]` (CI, setup, takeovers, conflicts, files in git; `improve` skill) |
 | Quota and pacing | `python3 tools/usage.py` (5-hour and 7-day usage, resets; `--target`: the number of runs (90 % of the 5-hour window 2 hours before the reset, then 98 %); `--sample`: the `Usage:` line of the run report; `--fire`: the runs that the pacer session starts now) |
 | Dashboard of #1 | `python3 tools/dashboard.py --dry-run` (`--next`: ticket candidates in pick order) |
+| Release bar | `python3 tools/release.py` (percent of each goal for the milestones C = 100 %, A and B: `docs/RELEASE.md`, #878) |
 | Server check | `python3 tools/mc_check.py OUTWorld` (headless Minecraft, load errors; `--keep DIR` keeps the saved world), `python3 -m pytest -m mc` |
 | Game program | `python3 game/run.py OUTWorld` (Paper server with RCON, `--server vanilla`: Mojang's; type commands; `--bench N`: commands per second; `--play`: gather resources, `--cheats`: the AoE2 cheat codes in the chat; `--replay [--speed N]`: replay a recorded game) |
 | Gather timing | `python3 tools/measure_gather.py` (server, no client: walk, chop and trip times next to AoE2; `--read F.jsonl` reads a `game/run.py --play --log` file) |
@@ -130,7 +131,7 @@ hook, `.gitignore` and the claim and dashboard rules. The aim is more closed tic
   that was wrong, and make a `tooling` ticket when a tool or test would have found a problem earlier.
 - Only the owner can change the environment settings (setup script, network, variables), the scheduled task and the
   GitHub settings. When one of them costs time, make a `needs-human` ticket with numbered steps and the exact text.
-- Every 5th run: the `improve` skill measures the runs, CI and the environment and makes one larger improvement.
+- One run per review slot (`tools/claim.py 0 --review`, 45 minutes, longer after reviews with no change): the `improve` skill measures the runs, CI and the environment and makes one larger improvement.
 - Never weaken tests, CI or safety rules to save time. List each process change on the status issue.
 Keep this file short: put details in skills or docs.
 

@@ -3,6 +3,7 @@ test_gather; the mc test a real one."""
 import contextlib
 import io
 import json
+import re
 import time
 
 import pytest
@@ -27,7 +28,17 @@ def bot_map():
         objects.append({"kind": "unit", "name": "VILLAGER_FEMALE", "player": 2, "uuid": f"b{i}", "tile": [24.5, 19.5 + i]})
         pos[f"b{i}"] = {"Pos": (24.5, 64.0, 19.5 + i)}
     server = FakeServer(pos)
+    command, at = server.command, []
+
+    def track(cmd):                                                    # a trained unit gets a position (#858)
+        if m := re.match(r"summon \S+ (\S+) (\S+) (\S+) ", cmd):
+            at[:] = [tuple(map(float, m.groups()))]
+        elif (m := re.match(r"aoe stats (\S+) ", cmd)) and at and m[1] not in server.entities:
+            server.entities[m[1]] = {"Pos": at[0], "Rotation": (0.0, 0.0)}
+        return command(cmd)
+    server.command = track
     data = grid([[64] * 32 for _ in range(32)], objects)
+    data.update(level_height=1, players={"2": {"color": "blue", "arch": "western"}})   # the bot builds too (#857)
     me = gather.Gather(server, data, carry=10, chop=0.05).setup()
     return server, me, bot.Bot(server, data, share=me, carry=10, chop=0.05).setup()
 

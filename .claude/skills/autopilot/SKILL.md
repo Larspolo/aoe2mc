@@ -227,7 +227,8 @@ after your report (the workflow `dashboard.yml` runs it on label changes, closed
 "Waiting for you", "Working on", "Next up" or "Recently done": the script makes them from GitHub.
 In the body, change only two parts and keep the rest as it is (read the body just before the change,
 other runs change it too):
-- The state comment: `<!-- agent-state: {"last_run": "<now, ISO>", "runs": <N+1>} -->`.
+- The state comment: `<!-- agent-state: {"last_run": "<now, ISO>", "runs": <N+1>, ...} -->`. Change only these two
+  keys and keep the others (`last_review`, `review_minutes`: the review slot, #898).
 - The section `### Process changes`: add a line `- <date>: <what changed in the skills, CLAUDE.md or
   LEARNINGS> (PR #n)` at the top, keep the last 5.
 
@@ -235,18 +236,30 @@ Then add one short comment on the status issue: what you did and what is next. A
 issue, not here (see "Ask the owner" in step 6).
 End it with one metrics line for each ticket of the run (the `improve` skill reads these lines):
 
-    Metrics: ticket #<n> · <size> · <merged|blocked|needs-human|none> · <minutes> min · setup <m> min · checks <k> · checks <c> min · time sinks: <list or "none">
+    Metrics: ticket #<n> · <size> · <merged|pr #n|blocked|needs-human|none> · <minutes> min · setup <m> min · checks <k> · checks <c> min · time sinks: <list or "none"> · phases read <m> · claim <m> · code <m> · verify <m> · ci <m> · conflict <m> · report <m>
 
+Example: `Metrics: ticket #876 · size:S · merged · 45 min · setup 0 min · checks 2 · checks 6 min · time sinks: none ·
+phases read 8 · claim 1 · code 18 · verify 9 · ci 0 · conflict 5 · report 4` (one line).
+
+Result: `pr #n` when you pushed PR #n and Automerge merges it later (the usual case: you report before the merge);
+`none` only when the run stopped without a PR. `tools/health.py` counts the `pr #n` lines by the present PR state (#902).
+Put the output of `python3 tools/release.py` (the release bar of each goal, #879) above the `Usage:` line.
 Put the `Usage:` line of step 1.4 above the metrics lines, unchanged: `tools/health.py` measures the quota use of one
 run per hour from pairs of these lines, and `tools/usage.py --target` uses that value (#462).
 `setup`: minutes from the start time (step 4) to the claim of the first ticket (0 for later tickets).
 `checks <k>`: rounds of the `verify` skill before the push; `checks <c> min`: their minutes in total.
+`phases` (#899): whole minutes of the ticket in each phase, from the times that you note (`date -u +%T`) when a phase
+starts: `read` (feedback, triage, the ticket and the code), `claim` (pick and claim), `code` (change and tests),
+`verify` (the checks of the `verify` skill), `ci` (wait for or fix CI after the push), `conflict` (merges with main),
+`report` (PR text, status comment, process step 9). Keep the fields in this order: `tools/health.py` sums them.
 
 GitHub sends this comment to the owner as a notification. Do not comment when nothing changed.
 
 ## 9. Improve the process (before the commit in step 6)
 
 Answer these questions. Do the action for each "yes". Spend little time.
+A PR that changes the agent system gets the label `process` (`/issues/N/labels -f "labels[]=process"`, #901): the
+dashboard counts them.
 - Did something cost you time that one line of text prevents? → a pitfall of one topic (the game program, the replay,
   Paper, the server, records, a design) goes to the end of the "Pitfalls" section of its document (the list in
   `docs/LEARNINGS.md`, "Environment and libraries"); only a line for all runs goes to the end of its section in
@@ -265,20 +278,24 @@ Answer these questions. Do the action for each "yes". Spend little time.
 - Did something block you that only the owner can change (a host, the environment, the scheduled task, a GitHub
   setting)? → make a `needs-human` ticket with numbered steps and the exact values. Look for an open one first.
 
-After step 8, run the `improve` skill when `runs` is a multiple of 5, when this run failed, or when a
-ticket took more than 90 minutes. It finds the largest loss in the metrics and makes one improvement.
-When `runs` is a multiple of 10, also review the feature list of `docs/ROADMAP.md` (the `roadmap` skill).
+After step 8, run `python3 tools/claim.py 0 --review`: exit 0 means that this run does the process review of the
+time slot (#898; the slot is 45 minutes, and longer after reviews with no change). Then run the `improve` skill.
+Run it also when this run failed, or when a ticket took more than 90 minutes. The `improve` skill reviews the whole
+system (how runs start, the loop, time and quota, quality, weak spots, reuse), checks the last change, and makes one
+change only when a loss is above its threshold (#900). The questions above stay the small check of each ticket. Then run `python3 tools/claim.py 0 --roadmap`: exit 0 means that this run
+reviews the feature list of `docs/ROADMAP.md` (the `roadmap` skill, one review per 2 hours).
 Do not change a priority that the owner set. Propose it.
 
 ## More tickets
 
 If the argument asks for more than 1 ticket, go back to step 2 after step 8 (finish stalled PRs of other runs, then read new owner
 feedback). In a
-cloud session, reset the branch first: `git fetch origin main && git checkout -B <branch> origin/main`. Then push with
-`git fetch origin <branch> && git push --force-with-lease origin <branch> && git branch -u origin/<branch>`
-(a plain `git push -u origin <branch>` when the branch is not on the remote). If the auto mode denies the force push
-("Git Destructive"), do not ask: `git merge --no-edit origin/<branch>` (its commits are on main already, so the PR diff
-stays the same), then `git push origin HEAD:<branch>`. A conflict in that merge: take your side (`git checkout --ours FILE`):
+cloud session, reset the branch first: `git fetch origin main && git checkout -B <branch> origin/main` (fetch `main` alone:
+a fetch that also names a deleted branch fails as a whole, and `origin/main` stays old). Never force-push: the auto mode denies it
+("Git Destructive"; 33 runs lost a step on it on 2026-10-26). Push with
+`git ls-remote --exit-code --heads origin <branch>` first: exit 2 (the usual case: Automerge deletes the branch after
+the merge) → `git push -u origin <branch>`. Exit 0 → `git fetch origin <branch> && git merge --no-edit origin/<branch>`
+(its commits are on main already, so the PR diff stays the same), then `git push origin HEAD:<branch>`. A conflict in that merge: take your side (`git checkout --ours FILE`):
 main has the squashed old commits, so check that `git diff --stat origin/main` shows only your ticket (#523).
 The session branch can carry only one open PR: do the next ticket in a local commit, and push it only when the PR
 of the last ticket is merged or closed (`/pulls?head=Larspolo:<branch>&state=open` is empty). Else a push replaces

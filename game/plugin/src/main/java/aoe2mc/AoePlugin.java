@@ -40,6 +40,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
@@ -78,6 +79,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              open a chest menu (#619, game/menu.py; the texts are URL-encoded)
  *   aoe menu-close <player>                    close the menu of the player
  *   aoe cheats <code>,<code>,...|-             the AoE2 cheat codes in the chat (#816, Cheats.java; URL-encoded)
+ *   aoe deathmarks on|off                      a short mark where a replay unit dies (#846, Deaths.java)
  *   aoe destroy <selector>                     the buildings fall as at 0 hit points: "Destroy: <n> buildings" (#819)
  *   aoe label <selector> [name]                show the name line again (after a selection change); a name sets
  *                                              the name of a building target (#661)
@@ -93,8 +95,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * arrives or 50 tries (5 s) found no path.
  * The path search reaches only about the follow range of the mob (16 blocks for a cow): an order raises the
  * attribute follow_range to twice the distance + 32, at most 128. Longer ways need waypoints.
- * An order also sets the attribute step_height to 1 (as a horse): the ground of a map has many steps of one block,
- * and a jump on each made the replay units walk at 64 % of their speed (#829).
+ * An order also sets the attribute step_height to STEP: the ground of a map has many steps of one block,
+ * and a jump on each made the replay units walk at 64 % of their speed (#829). A step with a moss carpet or snow on it
+ * is higher than 1 block: at 1, a scout stood still in front of it (#851).
  * With the AI on, a unit keeps only the goals that fit AoE2 (#436): its attack goals and "float" (it swims).
  * Wandering, looking around, panic, the choice of its own targets (a zombie attacks each villager), despawning and
  * the burning in the sun go. So a unit stands still without an order and attacks only the target of an order,
@@ -119,6 +122,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * the values of "aoe stats", the range of "aoe range" and the target of "aoe attack", and the horse gets AI without goals:
  * a riding mob walks with the navigation of its vehicle (vanilla Mob#getNavigation), so the horse follows the rider.
  * A hit on the rider takes the hit points of the horse, and the rider dies with the horse (#732).
+ * A horse regenerates by itself in vanilla, an AoE2 unit does not: the plugin cancels the REGEN healing of a unit
+ * with AoE2 values (#850). Other reasons (a later Monk heal) stay.
  * A building is blocks, and a mob attacks only a living entity: an invisible mob without AI (a slime of the size of
  * the footprint, game/combat.py building) stands in the building and takes the attacks, so that the vanilla attack
  * goals and paths work (#517). The plugin keeps the hit points of the building (a building has more than the
@@ -152,6 +157,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Stats> stats = new HashMap<>();
     private final Ghost ghost = new Ghost(this);
     private final Cheats cheats = new Cheats(this);
+    private final Deaths deaths = new Deaths(this);
     private final Border border = new Border();
 
     private record Building(Stats stats, String box, int max, int[] b) {}   // b: x0 y0 z0 x1 y1 z1 of box
@@ -182,6 +188,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Range> ranges = new HashMap<>();
     private final Map<UUID, Double> sights = new HashMap<>();       // the line of sight of a unit in blocks (#775)
     static final String CARRIER = "aoe2mc.carrier";                  // the tag of the mob that carries a siege unit
+    private static final double STEP = 1.25;                         // a step of 1 block with snow[layers=2] (#851)
     private static final double CARRIER_SCALE = 0.3;                 // a pig of 0.27 blocks: the minecart stays low
     private final GoalKey<Mob> rangeKey = GoalKey.of(Mob.class, new NamespacedKey("aoe2mc", "aoe_range"));
     // the vanilla ranged goals that "aoe_range" replaces
@@ -408,6 +415,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, this::watch, 20L, 20L);
         Bukkit.getPluginManager().registerEvents(this, this);
         Bukkit.getPluginManager().registerEvents(cheats, this);
+        Bukkit.getPluginManager().registerEvents(deaths, this);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -526,6 +534,14 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             ev.setCancelled(true);
         } else if (names.containsKey(e.getUniqueId())) {      // the new health is set after the event
             Bukkit.getScheduler().runTask(this, () -> nameLine(e));
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onRegain(EntityRegainHealthEvent ev) {        // a horse heals by itself, an AoE2 unit does not (#850)
+        if (ev.getRegainReason() == EntityRegainHealthEvent.RegainReason.REGEN
+                && stats.containsKey(ev.getEntity().getUniqueId())) {
+            ev.setCancelled(true);
         }
     }
 
@@ -737,7 +753,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             AttributeInstance step = p.getAttribute(Attribute.STEP_HEIGHT);
             if (step != null) {
-                step.setBaseValue(1.0);             // up one block, as the other units
+                step.setBaseValue(STEP);            // up one block, as the other units
             }
         });
         pig.addPassenger(cart);
@@ -762,8 +778,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         tame(mob);                  // each order: tame() only after setAI() missed the goals of some units (#436)
         AttributeInstance step = mob.getAttribute(Attribute.STEP_HEIGHT);
-        if (step != null && step.getBaseValue() < 1) {
-            step.setBaseValue(1);                                      // no jump on a step of one block (#829)
+        if (step != null && step.getBaseValue() < STEP) {
+            step.setBaseValue(STEP);                                   // no jump on a step of one block (#829)
         }
         Range r = ranges.get(mob.getUniqueId());
         var goals = Bukkit.getMobGoals();
@@ -829,6 +845,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         if (args.length == 2 && args[0].equals("cheats")) {
             return cheats.command(sender, args);
+        }
+        if (args.length == 2 && args[0].equals("deathmarks")) {        // the marks of the live replay (#846)
+            return deaths.command(sender, args);
         }
         if (args.length == 2 && args[0].equals("destroy")) {           // the cheats torpedo, black death (#819)
             int n = 0;

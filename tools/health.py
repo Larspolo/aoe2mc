@@ -24,6 +24,7 @@ CI_JOB_RUNS = 20                          # read the step times of this many CI 
 DENY = (".log", ".mca", ".png")           # suffixes that do not belong in git ...
 DENY_OK = ("docs/", "samples/")           # ... except .png in these folders
 BIG = 1 << 20
+OWNER = "Larspolo"                        # a reopen by the owner is rework (#899)
 
 
 def ts(s):
@@ -144,6 +145,60 @@ def measured_burn(comments, now, hours=24, need=5):
     return burn_ratio([s for s in samples(comments) if s[0] >= now - datetime.timedelta(hours=hours)], need)
 
 
+PHASES = ("read", "claim", "code", "verify", "ci", "conflict", "report")    # the phase minutes of a Metrics line (#899)
+WEEK = re.compile(r"^Usage: (\S+) · .*?· week (\d+(?:\.\d+)?)%(?: · release (\d+(?:\.\d+)?)%)?", re.M)
+
+
+def phase_minutes(comments):
+    """{phase: minutes} summed over the `phases read N · claim N ...` parts of the `Metrics:` lines. Old lines have no
+    phases and add nothing."""
+    out = dict.fromkeys(PHASES, 0.0)
+    for c in comments:
+        for line in (c.get("body") or "").splitlines():
+            if line.startswith("Metrics:") and " phases " in line:
+                for k, v in re.findall(r"\b([a-z]+) (\d+(?:\.\d+)?)\b", line.split(" phases ", 1)[1]):
+                    if k in out:
+                        out[k] += float(v)
+    return out
+
+
+def quota_per_merge(samples, merged):
+    """The rise of the 5-hour usage (0..1) over the samples, summed over consecutive samples in the same window, per
+    merged PR; None without merges or rises."""
+    rise = sum(b[1] - a[1] for a, b in zip(samples, samples[1:])
+               if abs((b[2] - a[2]).total_seconds()) < 600 and b[1] >= a[1])
+    return rise / merged if merged and rise else None
+
+
+def weekly(comments):
+    """[(time, 7-day usage %, release % or None)] of the `Usage:` lines that have the week (usage.py --sample), by time."""
+    return sorted((ts(t), float(w), float(r) if r else None) for c in comments for t, w, r in WEEK.findall(c.get("body") or ""))
+
+
+def release_per_week(points):
+    """(release points per 1 % of 7-day quota, first release %, last release %) from weekly(), or None. The quota is
+    the sum of the rises of the 7-day usage (a drop is its reset)."""
+    pts = [p for p in points if p[2] is not None]
+    used = sum(b[1] - a[1] for a, b in zip(pts, pts[1:]) if b[1] > a[1])
+    return ((pts[-1][2] - pts[0][2]) / used, pts[0][2], pts[-1][2]) if len(pts) > 1 and used else None
+
+
+def weak_spots(issues, events, prs, runs, since):
+    """Counts that cost quality: issues that the owner reopened, bug tickets that name a PR merged since `since`
+    (rework), bug tickets that name a check ticket ("Check ..."), and failed night runs of CI."""
+    new = [i for i in issues if "pull_request" not in i and ts(i["created_at"]) >= since]
+    bugs = [i for i in new if "bug" in {lb["name"] for lb in i.get("labels", [])}]
+    merged = {p["number"] for p in prs if p.get("merged_at") and ts(p["merged_at"]) >= since}
+    checks = {i["number"] for i in issues if i["title"].startswith("Check ")}
+    named = lambda i: {int(n) for n in re.findall(r"#(\d+)", i.get("body") or "")}
+    return {"reopened": sum(e["event"] == "reopened" and (e.get("actor") or {}).get("login") == OWNER
+                            and ts(e["created_at"]) >= since for e in events),
+            "rework": sum(bool(named(i) & merged) for i in bugs),
+            "check bugs": sum(bool(named(i) & checks) for i in bugs),
+            "red nights": sum(r["name"] == "CI" and r.get("event") == "schedule" and r.get("conclusion") == "failure"
+                              and ts(r["run_started_at"]) >= since for r in runs)}
+
+
 def status_comments(hours=24):
     """The comments on the status issue of the last `hours`."""
     status = api("issues?state=open&labels=agent-status")
@@ -186,6 +241,14 @@ def active_claims(now, minutes=30):
                for i in api("issues?state=open&labels=in-progress&per_page=100") if "pull_request" not in i)
 
 
+def pr_results(comments, prs):
+    """The `pr #n` results of the `Metrics:` lines: (merged PRs, not merged PRs) by the present PR state (#902)."""
+    merged = {p["number"] for p in prs if p.get("merged_at")}
+    ns = sorted({int(n) for c in comments for line in (c.get("body") or "").splitlines() if line.startswith("Metrics:")
+                 for n in re.findall(r"· pr #(\d+) ·", line)})
+    return [n for n in ns if n in merged], [n for n in ns if n not in merged]
+
+
 def fmt(x):
     return "-" if x is None else f"{x:.1f}"
 
@@ -201,13 +264,16 @@ def conflict_files(files_of, n=5):
     return Counter(f for fs in files_of.values() for f in set(fs)).most_common(n)
 
 
-def report(since, runs, jobs, status_comments, comments, prs, files, files_of=None):
+def report(since, runs, jobs, status_comments, comments, prs, files, files_of=None, issues=(), issue_events=()):
     out = [f"Health since {since:%Y-%m-%d %H:%M} UTC", "", "CI runs (count, median min, max min, failures):"]
     for name, (k, m, mx, fail) in ci_runs(runs, since).items():
         out.append(f"  {name}: {k}, {fmt(m)}, {fmt(mx)}, {fail}")
     out.append("Slowest CI steps (median min): " + "; ".join(f"{k} {fmt(m)}" for m, k in slow_steps(jobs)))
     setup = setup_minutes(status_comments)
     out.append(f"Setup (median min of {len(setup)} Metrics lines): {fmt(med(setup))}")
+    ok, lost = pr_results(status_comments, prs)
+    out.append(f"Metrics lines with pr #n: merged {len(ok)}, not merged {len(lost)}"
+               + (f" ({', '.join(f'#{n}' for n in lost)})" if lost else ""))
     e = events(comments)
     out.append(f"Takeovers {e['takeovers']}, releases {e['releases']}, merge conflicts {e['conflicts']} (solved by Unconflict {e['solved']})")
     if files_of:
@@ -217,6 +283,18 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
     b, r = burn_pairs(s), burn_ratio(s)
     out.append(f"Burn per run-hour (ratio of sums of {len(s)} Usage lines, used by usage.py): "
                f"{'-' if r is None else f'{r:.3f}'} · median of {len(b)} pairs: {'-' if not b else f'{med(b):.3f}'}")
+    ph = phase_minutes(status_comments)
+    total = sum(ph.values())
+    out.append("Phases (min, share of the Metrics lines with phases): " + ("; ".join(
+        f"{k} {fmt(v)} ({v / total:.0%})" for k, v in ph.items()) if total else "-"))
+    merged = sum(1 for p in prs if p.get("merged_at") and ts(p["merged_at"]) >= since)
+    q = quota_per_merge(s, merged)
+    out.append(f"Quota per merged PR: {'-' if q is None else f'{q:.1%}'} of the 5-hour window ({merged} merged)")
+    rw = release_per_week([p for p in weekly(status_comments) if p[0] >= since])
+    out.append("Release per 1 % of 7-day quota: " + ("-" if rw is None else
+               f"{rw[0]:.2f} points ({rw[1]:g} % to {rw[2]:g} %)"))
+    w = weak_spots(issues, issue_events, prs, runs, since)
+    out.append("Weak spots: " + ", ".join(f"{k} {v}" for k, v in w.items()))
     c2m = claim_to_merge(prs, comments, since)
     out.append(f"Claim to merge (median min of {len(c2m)} PRs): {fmt(med(c2m))}")
     bad = bad_files(files)
@@ -249,7 +327,9 @@ def fetch(since):
                        and c["created_at"] >= iso]
     recent = [c for c in comments if c["created_at"] >= iso or c["body"].startswith("Started by")]
     prs = api_pages("pulls?state=closed&sort=updated&direction=desc", stop=lambda p: p["updated_at"] < iso)
-    return runs, jobs, status_comments, recent, prs
+    issues = api_pages(f"issues?state=all&since={iso}")
+    events = api_pages("issues/events?", limit=5, stop=lambda e: e["created_at"] < iso)
+    return runs, jobs, status_comments, recent, prs, issues, events
 
 
 def api_pages(path, limit=20, stop=None):
@@ -267,9 +347,9 @@ def main(argv=None):
     ap.add_argument("--hours", type=float, default=24)
     a = ap.parse_args(argv)
     since = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=a.hours)
-    runs, jobs, status_comments, comments, prs = fetch(since)
+    runs, jobs, status_comments, comments, prs, issues, events = fetch(since)
     files_of = {n: [f["filename"] for f in api(f"pulls/{n}/files?per_page=100")] for n in conflicted(comments)}
-    print(report(since, runs, jobs, status_comments, comments, prs, git_files(), files_of))
+    print(report(since, runs, jobs, status_comments, comments, prs, git_files(), files_of, issues, events))
     return 0
 
 

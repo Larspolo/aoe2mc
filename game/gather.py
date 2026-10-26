@@ -541,12 +541,12 @@ class Gather:
             v.res, v.tree, v.site = res, to, None
             self.go(v, "to_tree", self.goals(to))
 
-    def build(self, site):
-        """Send the selected villagers to build the construction site, with the builder look (#418). They keep
-        their load, as in AoE2."""
+    def build(self, site, who=None):
+        """Send the selected villagers (or the villagers who) to build the construction site, with the builder look
+        (#418). They keep their load, as in AoE2."""
         x0, x1, z0, z1 = site["footprint"]
         goals = self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)})
-        for u in sorted(self.selected & self.villagers.keys()):         # a scout cannot gather or build (#589)
+        for u in sorted((self.selected if who is None else who) & self.villagers.keys()):   # not a scout (#589)
             v = self.villagers[u]
             for t in [t for t, f in self.farmers.items() if f == u]:
                 del self.farmers[t]
@@ -831,8 +831,8 @@ class Gather:
                 self.set(v, "idle")
 
     def work(self, v):
-        """One gather step shows: the villager turns to the point of the resource next to it, block particles of the
-        resource fly there, and the work sound plays (#592)."""
+        """One gather step shows: the villager turns to the middle of the resource, block particles of the resource
+        fly to its point next to the villager, and the work sound plays (#592)."""
         tile, T = v.tree, self.map.T
         x0, x1, z0, z1 = self.map.feet.get(tile, (tile[0] * T, tile[0] * T + T, tile[1] * T, tile[1] * T + T))
         x, y, z = min(max(v.pos[0], x0 + 0.5), x1 - 0.5), v.pos[1] + 1, min(max(v.pos[2], z0 + 0.5), z1 - 0.5)
@@ -844,7 +844,10 @@ class Gather:
         props = ",".join(f'{k}:"{w}"' for k, w in (p.split("=") for p in props.rstrip("]").split(",") if p))
         state = f'{{id:"{name}"' + (f",Properties:{{{props}}}" if props else "") + "}"
         at = f"{x:.2f} {y:.2f} {z:.2f}"
-        self.command(f"rotate {v.uuid} facing {at}")
+        # face the middle of the resource: a replay unit of the plugin stands up to replay.NEAR blocks from v.pos,
+        # and from there the point next to v.pos can be 40° off the tree (#867). A farmer stands on its farm.
+        fx, fz = (x, z) if kind == "farm" else ((x0 + x1) / 2, (z0 + z1) / 2)
+        self.command(f"rotate {v.uuid} facing {fx:.2f} {y:.2f} {fz:.2f}")
         self.command(f"particle minecraft:block{{block_state:{state}}} {at} 0.2 0.2 0.2 0 8")
         self.command(f"playsound {sound} block @a {at} 1 {0.9 + 0.2 * (v.load % 2):.1f}")
 

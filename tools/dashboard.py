@@ -140,6 +140,13 @@ def pr_for(number, branch, prs):
         next((p for p in prs if branch and p["head"]["ref"] == branch), None)
 
 
+def process_changes(prs, now, hours=24):
+    """The PRs with the label `process` (a change of the agent system) merged in the last `hours` (#901)."""
+    since = now - datetime.timedelta(hours=hours)
+    return sum(1 for p in prs if p.get("merged_at") and "process" in labels(p)
+               and datetime.datetime.fromisoformat(p["merged_at"].replace("Z", "+00:00")) >= since)
+
+
 def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now):
     """The new body of the status issue. comments: {issue number: comments} for the needs-human and
     in-progress issues."""
@@ -178,6 +185,7 @@ def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now)
                    f" ({i['closed_at'][:10]})")
     if out[-1] == "### Recently done":
         out.append("- nothing")
+    out += ["", f"Process changes (24 h): {process_changes(closed_prs, now)} merged PRs with the label `process`"]
 
     out += ["", "### Process changes", process.group(1).strip() if process else "- none"]
     out += ["", f"_Updated {now:%Y-%m-%d %H:%M} UTC by the dashboard workflow (`tools/dashboard.py`). Runs write only "
@@ -239,7 +247,7 @@ def main(argv=None):
     comments = {i["number"]: pages(f"issues/{i['number']}/comments")
                 for i in issues if labels(i) & {"needs-human", "in-progress"}}
     closed = api("issues?state=closed&sort=updated&direction=desc&per_page=50")
-    closed_prs = api("pulls?state=closed&sort=updated&direction=desc&per_page=100")
+    closed_prs = pages("pulls?state=closed&sort=updated&direction=desc", 5)    # about 24 h of merges (#901)
     body = render(status["body"], open_all, comments, api("pulls?state=open&per_page=100"), closed, closed_prs,
                   datetime.datetime.now(datetime.timezone.utc))
     if a.dry_run:

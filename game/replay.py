@@ -107,11 +107,13 @@ class Replay:
         self.arriving = {}                      # object ID -> game time (ms) of its work start, until it is there (#766)
         self.entering = {}                      # object ID -> [footprint, building entry, arrival (ms) or None] (#809)
         self.garrisons = {}                     # building footprint -> object IDs of the units inside it
+        self.ids = {}                           # new object ID of a building -> footprint of its replay building (#876)
         self.refs = {o["ref"]: o for o in data["objects"] if o.get("ref") is not None}
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
         self.sent, self.busy = 0, 0.0           # commands sent, seconds spent sending them
         self.pop, self.shown = {}, None         # player -> live units (no animals), the value in the sidebar (#741)
+        self.ages, self.named = {}, {}          # player -> age ("Feudal"); the age in its sidebar name (#805)
         self.counted = []                       # UUIDs of the start units that the population counts
         for o in data["objects"]:
             if o["kind"] == "unit" and o.get("player") and not units.animal(o["name"]):
@@ -122,6 +124,9 @@ class Replay:
         info = self.data["players"].get(str(p), {})
         return f"Player {p}" + (f" ({pretty(info['civ'])})" if info.get("civ") else ""), \
             TEXT_COLORS.get(info.get("color"), "white")
+
+    def age(self, e):
+        self.ages[e.get("player")] = pretty(e["age"]).removesuffix(" Age")
 
     def commands(self, e):
         """The commands of one timeline event (an empty list for the events that change nothing visible)."""
@@ -135,7 +140,12 @@ class Replay:
         if kind == "garrison" and e.get("objects"):
             return self.move(dict(e, kind="order", garrison=True))
         if kind == "ungarrison" and e.get("objects"):
-            return [c for i in e["objects"] for s in self.starts if s[0] == i for c in self.release(s[3])]
+            import garrison
+            starts = {s[0]: s[3] for s in self.starts}
+            rects = [starts[i] if i in starts else name in garrison.SIZES and self.new_building(i, name, e["player"],
+                                                                                              full=True)
+                     for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"]))]
+            return [c for r in rects if r for c in self.release(r)]
         if kind == "delete" and e.get("objects"):
             return self.delete(e)
         if kind == "chat" and e.get("text"):
@@ -143,6 +153,7 @@ class Replay:
             return ["tellraw @a " + json.dumps([text(f"<{name}> ", color), text(e["text"])])]
         name, color = self.player(e.get("player"))
         if kind == "age" and e.get("age"):
+            self.age(e)
             return ["title @a subtitle " + json.dumps(text(name, color)),
                     "title @a title " + json.dumps(text(pretty(e["age"])))]
         if kind == "research" and e.get("technology"):
@@ -457,6 +468,9 @@ class Replay:
         if tile in self.map.farms:                                  # a farmer stands on the farm
             goals = self.crew.goals(tile)
         home = self.holder(e)
+        if home and e.get("target") not in self.refs:              # a building of the replay: next to it (#876)
+            x0, x1, z0, z1 = home[0]
+            goals = self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)})
         for i, v in group:                                          # a new MOVE or ORDER stops the work
             self.working.pop(i, None)
             self.arriving.pop(i, None)
@@ -484,6 +498,7 @@ class Replay:
         if self.ai:
             out, group = self.attack(group, target) if (target := self.enemy(e)) else ([], group)
             for i, v in group:
+                v.pos = self.at(v, e["time"])                       # it stops its leg where it is
                 end = slots.get(v) or min(goals, key=lambda c: (math.dist(c, v.cell), c))
                 path = self.map.path(v.cell, {end}, PATH_CELLS)
                 if path is None and (cmds := self.detour(i, v, tile, e["time"])) is not None:
@@ -532,11 +547,22 @@ class Replay:
         and the game time (ms) at the end of the leg (the next leg starts then, if v.path has one)."""
         import ai                                                   # ai -> replay: import it late
         x, z = legs[0]
-        x0, _, z0 = v.pos
+        start = x0, _, z0 = v.pos
         v.pos, v.path = (x + 0.5, float(self.map.y(x, z)), z + 0.5), legs[1:]
         speed = next((s for k, s in SPEEDS.items() if v.name.startswith(k)), 1.0) * self.T    # blocks per second
         due = t + 1000 * math.hypot(v.pos[0] - x0, v.pos[2] - z0) / speed
+        v.leg = (start, t, due)                                     # at() reads it
         return [ai.speed_command(v.uuid, v.name, self.T, self.speed), "aoe moveto {} {} {} {}".format(v.uuid, *v.pos)], due
+
+    def at(self, v, t):
+        """The replay position of unit v at game time t (ms): on the line of its leg while it walks, else v.pos.
+        A new order starts there, not at the end of the leg: a scout gets a new order every 2 to 5 s, and its
+        replay position jumped up to 250 blocks ahead of it (#851)."""
+        start, t0, t1 = getattr(v, "leg", None) or (v.pos, 0, 0)
+        if not t0 <= t < t1:
+            return v.pos
+        f = (t - t0) / (t1 - t0)
+        return tuple(a + f * (b - a) for a, b in zip(start, v.pos))
 
     def formation(self, group, tile):
         """The end cell of each unit of a group that walks to a tile (#410): rows across the walk direction, the
@@ -608,6 +634,7 @@ class Replay:
                 if due - self.arriving[i] < LATE and not self.arrived(v):
                     self.working[i] = due + WAIT
                     continue
+                out.append(f"aoe stop {v.uuid}")                     # ends its walk order: no brain turns it (#867)
                 if due - self.arriving[i] >= LATE:
                     out.append("tp {} {} {} {}".format(v.uuid, *v.pos))
                 del self.arriving[i]
@@ -688,10 +715,30 @@ class Replay:
         """(footprint, entry of aoe2mc.json) of the own start building with garrison room that an ORDER targets, or
         None. The record has no IDs of the buildings of the replay."""
         import garrison
-        o = self.refs.get(e.get("target")) if e["kind"] == "order" else None
+        t = e.get("target") if e["kind"] == "order" else None
+        o = self.refs.get(t)
+        if o is None and t is not None and t not in self.units and e.get("target_name") in garrison.SIZES:
+            r = self.new_building(t, e["target_name"], e["player"], e.get("tile"))   # a building of the replay (#876)
+            return (r, {"name": e["target_name"], "player": e["player"]}) if r else None
         if not o or o["kind"] != "building" or o["name"] not in garrison.SIZES or o["player"] != e["player"]:
             return None
         return next(((s[3], o) for s in self.starts if s[0] == o["ref"]), None)
+
+    def new_building(self, i, name, player, tile=None, full=False):
+        """The footprint of the replay building with the new object ID i (aoe2mc.name_timeline gives its name), or
+        None. The record has no IDs of new buildings (#876): the first command on i takes the building of the player
+        with that name under the tile of the click, else the newest one that no other ID has (full: one with units
+        inside first, for UNGARRISON). Later commands on i take the same building."""
+        rects = [r for p, n, r in self.placed if (p, n) == (player, name)]
+        if self.ids.get(i) in rects:
+            return self.ids[i]
+        c = (int(tile[0] * self.T), int(tile[1] * self.T)) if tile else None
+        under = [r for r in rects if c and r[0] <= c[0] < r[1] and r[2] <= c[1] < r[3]]
+        free = [r for r in rects if r not in self.ids.values()]
+        r = (under or [r for r in free if r in self.garrisons] * full or free or [None])[-1]
+        if r:
+            self.ids[i] = r
+        return r
 
     def enter(self, t):
         """The units that arrived at their building until game time t (ms) go inside (garrison.enter). A full
@@ -797,16 +844,18 @@ class Replay:
 
     def score_commands(self):
         """The sidebar commands for the population of each player that changed since the last call (#741). The score
-        holder is "P<n>" (a holder name has no space); its display name is the player name in the player color."""
+        holder is "P<n>" (a holder name has no space); its display name is the player name in the player color and
+        the age of the player (#805)."""
         out = []
         if self.shown is None:
             self.shown, out = {}, [f'scoreboard objectives add {POP} dummy "Population"',
                                    f"scoreboard objectives setdisplay sidebar {POP}"]
         for p in sorted(self.pop):
+            if self.named.get(p) != (age := self.ages.get(p, "Dark")):
+                name, color = self.player(p)
+                out.append(f"scoreboard players display name P{p} {POP} {json.dumps(text(f'{name} · {age}', color))}")
+                self.named[p] = age
             if self.shown.get(p) != self.pop[p]:
-                if p not in self.shown:
-                    name, color = self.player(p)
-                    out.append(f"scoreboard players display name P{p} {POP} {json.dumps(text(name, color))}")
                 self.shown[p] = self.pop[p]
                 out.append(f"scoreboard players set P{p} {POP} {self.pop[p]}")
         return out
@@ -844,7 +893,7 @@ class Replay:
     def jump(self, events, to):
         """Apply the events up to game time `to` (ms) at once (#687): buildings appear, deletes remove, trained units
         appear, and each unit that a MOVE or ORDER sent, or that walks now, stands at its target (tp, no walk). The
-        chat, age and research texts of the skipped time do not show. Returns the commands."""
+        chat, age and research texts of the skipped time do not show (the sidebar shows the age, #805). Returns the commands."""
         out, moved = [], set()
         jobs = {i: v.job for i, v in self.units.items()}            # move() gives the looks: send the last ones
         for e in events:
@@ -855,6 +904,8 @@ class Replay:
                     self.entering[i][2] = e["time"]
             elif e["kind"] in ("build", "wall", "spawn", "delete", "ungarrison"):
                 out += self.enter(e["time"]) + self.commands(e)
+            elif e["kind"] == "age" and e.get("age"):                 # the sidebar shows it, no title
+                self.age(e)
         out += self.enter(to)
         inside = {u for us in self.garrisons.values() for u in us}
         for i in sorted(moved | self.moving.keys()):
@@ -866,6 +917,8 @@ class Replay:
             out.append("tp {} {} {} {}".format(v.uuid, *v.pos))
             if self.ai:                                             # ends the walk order of the plugin at once
                 out.append("aoe moveto {} {} {} {}".format(v.uuid, *v.pos))
+            else:                                                   # at its resource: it gathers (#887)
+                self.start(i, v, to)
         return out + [self.gather.profession(v.uuid, v.job) for i, v in self.units.items() if v.job != jobs.get(i)]
 
     def run(self, speed=1.0, start=0, clock=time.monotonic, sleep=time.sleep, log=print, bar=False, poll=None):
@@ -885,7 +938,7 @@ class Replay:
         send = self.send if bar else lambda cmds: None
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
                    f"bossbar set {BAR} max {max(1, int(end) // 1000)}"] +
-             [f"tag {u} add {COUNTED}" for u in self.counted] * self.ai)
+             ([f"tag {u} add {COUNTED}" for u in self.counted] + ["aoe deathmarks on"]) * self.ai)   # marks: #846
         census = self.census if bar and self.ai else lambda: None
         while k < len(events) or self.moving:
             step = min([*self.moving.values(), *self.working.values(),                       # walk or gather step

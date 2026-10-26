@@ -217,8 +217,10 @@ def terrain_style(name):
 # --------------------------------------------------------------------------------------------
 # Read the AoE2 scenario.
 # --------------------------------------------------------------------------------------------
-def object_kinds():
-    """Object ID -> (kind prefix, name). Scenarios and recorded games use the same IDs."""
+def object_kinds(old=True):
+    """Object ID -> (kind prefix, name). Scenarios and recorded games use the same IDs. old: also the IDs that DE
+    keeps only in its data file (OLD_IDS), with the name of the DE object: a recorded game builds a town center
+    as 621 (#876)."""
     from AoE2ScenarioParser.datasets.buildings import BuildingInfo
     from AoE2ScenarioParser.datasets.heroes import HeroInfo
     from AoE2ScenarioParser.datasets.other import OtherInfo
@@ -227,6 +229,9 @@ def object_kinds():
     for prefix, enum in (("H", HeroInfo), ("U", UnitInfo), ("O", OtherInfo), ("B", BuildingInfo)):
         for e in enum:          # later enums win: Building > Other > Unit > Hero
             kinds[e.ID] = (prefix, e.name)
+    prefixes = {name: prefix for prefix, name in kinds.values()}
+    for i, name in OLD_IDS.items() if old else ():
+        kinds.setdefault(i, (prefixes.get(name, "O"), name))
     return kinds
 
 
@@ -264,7 +269,7 @@ def read_scx(path):
     w, h = s["width"], s["height"]
     size = max(w, h)
     terrain, elevation = (np.pad(a, ((0, size - w), (0, size - h)), mode="edge") for a in (s["terrain"], s["elevation"]))
-    kinds = object_kinds()
+    kinds = object_kinds(old=False)                                  # OLD_IDS go to the DE IDs below
     ids = {name: i for i, (_, name) in kinds.items()}
     players = {}
     for pid, p in s["players"].items():
@@ -640,8 +645,9 @@ def name_timeline(objects, timeline, window=16):
     building, TRAIN_S and RESEARCH_S). Objects that the record does not show (for example dead animals) take IDs
     too, so match each predicted object to the first ID in the next `window` IDs that the commands use in the same
     way (a building ID in QUEUE and RESEARCH, of the building that trains its units; a unit ID in MOVE, ORDER and
-    BUILD) and not before the object exists. A building that is not matched gets the name of its units' building.
-    Adds "names" (a name or None per ID of "objects") to the events and returns {id: name}."""
+    BUILD; a building or ship ID as the target of GARRISON) and not before the object exists. A building that is not matched gets the name of its units' building.
+    Adds "names" (a name or None per ID of "objects") and the "target_name" of a new target ID to the events and
+    returns {id: name}."""
     names = {o["ref"]: o["name"] for o in objects if o.get("ref") is not None}
     top = max(names, default=0)
     used = {}             # new ID -> [time of its first use, "B", "U" or None, {building of its units}, a worker]
@@ -655,7 +661,9 @@ def name_timeline(objects, timeline, window=16):
                 if e["kind"] == "queue" and train(e.get("name", "")):
                     u[2].add(train(e["name"])[1])
         if role == "U" and e.get("target", 0) > top:
-            used.setdefault(e["target"], [e["time"], None, set(), False])
+            u = used.setdefault(e["target"], [e["time"], None, set(), False])
+            if e["kind"] == "garrison":                  # its target is a building or a ship (#912)
+                u[1] = u[1] or "G"
     made, seen = [], set()               # (time ms, command time, "B" or "U", name)
     for e in timeline:
         kind, t = e["kind"], e["time"]
@@ -672,18 +680,22 @@ def name_timeline(objects, timeline, window=16):
         while k < len(firsts) and firsts[k][0] < cmd:   # an ID in use before the command is older than the object
             below, k = max(below, firsts[k][1]), k + 1
         nxt = max(nxt, below + 1)
-        ids = [i for i in range(nxt, nxt + window) if i in used and used[i][1] in (role, None) and
+        ids = [i for i in range(nxt, nxt + window) if i in used and i not in names and
+               (used[i][1] in (role, None) or used[i][1] == "G" and (role == "B" or "SHIP" in name)) and
                used[i][0] >= t - 5000 and used[i][2] <= {name} and   # 5 s: the training times are estimates
                not (used[i][3] and "VILLAGER" not in name)]         # only villagers build and gather on land (#765)
         i = ids[0] if ids else nxt if nxt not in used else None
         if i is not None:
-            names[i], nxt = name, i + 1
+            names[i] = name             # a unit skips a GARRISON target: a later building can take it
+            nxt = next((j for j in range(nxt, i) if used.get(j, (0, None))[1] == "G" and j not in names), i + 1)
     for i, u in used.items():
         if i not in names and len(u[2]) == 1:
             names[i] = next(iter(u[2]))
     for e in timeline:
         if e.get("objects"):
             e["names"] = [names.get(i) for i in e["objects"]]
+        if names.get(e.get("target")) and e["target"] > top:          # a new building: GARRISON in it (#876)
+            e["target_name"] = names[e["target"]]
     return names
 
 
@@ -2090,6 +2102,36 @@ def place_book(cols, edits, spawn, texts, title):
     return x, y, z
 
 
+def place_map(cols, edits, spawn, book):
+    """A glow item frame with the map of write_map (map id 0, #839) on the ground next to the lectern `book`, or in
+    its place (2 blocks in front of the spawn view) when there is no book: it shows also at night. Fixed 1b: no
+    player takes it, and it needs no support block.
+    Returns the entity (nbt, x, z, (None, y)) for entity_chunk, or None when no free land is near."""
+    sx, _, sz = spawn
+    if book:
+        x, _, z = book
+        spot = next(((x + dx, z + dz) for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1))
+                     if 0 <= x + dx < cols.n and 0 <= z + dz < cols.n and not cols.blocked[x + dx, z + dz]
+                     and cols.wtop[x + dx, z + dz] <= cols.top[x + dx, z + dz]), None)
+    else:
+        dx, dz = turn_tile(2, -2, 0, buildings.TURN)
+        spot = free_spot(cols, min(max(sx + dx, 0), cols.n - 1), min(max(sz + dz, 0), cols.n - 1), 4)
+    if spot is None or spot == (sx, sz) or cols.wtop[spot] > cols.top[spot]:
+        return None
+    fx, fz = spot
+    fy = cols.surface(fx, fz)
+    edits.footprint = None
+    edits.add([fx], [fy], [fz], "air")                 # grass and flowers hide the map
+    cols.blocked[fx, fz] = True                        # no unit stands in the frame
+    item = Compound({"id": String("minecraft:filled_map"), "count": Int(1),
+                     "components": Compound({"minecraft:map_id": Int(0)})})
+    nbt = units.to_nbt({"id": String("minecraft:glow_item_frame"), "Facing": Byte(1), "Item": item, "Fixed": Byte(1),
+                        "block_pos": IntArray([fx, fy, fz]), "ItemRotation": Byte(0), "ItemDropChance": Float(0)},
+                       (fx + 0.5, fy, fz + 0.5), 0, np.random.default_rng(839))
+    nbt["Invulnerable"] = Byte(1)
+    return nbt, fx + 0.5, fz + 0.5, (None, fy + 1 / 32)
+
+
 def shelf_data(items):
     """Block entity fields of a shelf (26.3) with one item in each of its 3 slots (#526)."""
     return {"Items": List[Compound]([Compound({"Slot": Byte(i), "id": String("minecraft:" + n), "count": Int(1)})
@@ -2755,10 +2797,43 @@ def map_colors(img):
     return np.where(inside[:, None] & inside[None, :], out, 0).astype(np.uint8), s, c
 
 
-def write_map(out, img):
-    """Write a locked map of the world (map id 0, #838): `give @p filled_map[map_id=0]` shows it. The 26.3 server
-    keeps maps in data/minecraft/maps/ (DimensionStorageFileFix: data/map_N.dat -> N.dat, idcounts.dat -> last_id.dat)."""
+# The map color id of each dye (MapColor.COLOR_*), and of the gaia mines: GOLD and STONE, so that they differ from
+# the yellow and gray players (#840).
+MAP_DYES = {"black": 29, "blue": 25, "brown": 26, "cyan": 23, "gray": 21, "green": 27, "light_blue": 17,
+            "light_gray": 22, "lime": 19, "magenta": 16, "orange": 15, "pink": 20, "purple": 24, "red": 28,
+            "white": 8, "yellow": 18}
+MAP_MINES = {"GOLD_MINE": 30, "STONE_MINE": 11}
+
+
+def map_objects(colors, s, c, objects, players=None, T=4):
+    """Draw the objects on the map bytes, as on the AoE2 minimap (#840): a building is the square of its footprint
+    in its player color, a unit one pixel, a gold or stone mine of gaia one pixel. Other gaia objects keep the
+    terrain color. Shade 2 (the full color); units go on top of buildings."""
+    f, base = 1 << s, c - (64 << s)
+    def put(x0, z0, x1, z1, cid):                                # blocks [x0, x1) x [z0, z1); at least one pixel
+        (i0, i1), (j0, j1) = ((max(0, (a - base) // f), min(128, (max(a, b - 1) - base) // f + 1)) for a, b in
+                              ((z0, z1), (x0, x1)))
+        colors[i0:i1, j0:j1] = cid * 4 + 2
+    order = {"O": 0, "B": 1, "U": 2}
+    for o in sorted(objects, key=lambda o: order.get(o["kind"], 3)):
+        p, name = o.get("player", 0), o["name"]
+        if o["kind"] == "O" and name in MAP_MINES:
+            x, z = int(o["x"] * T), int(o["y"] * T)
+            put(x, z, x + 1, z + 1, MAP_MINES[name])
+        elif p and o["kind"] == "B" and "footprint" in o:
+            put(*o["footprint"], MAP_DYES.get(player_color(p, players), 8))
+        elif p and o["kind"] == "U" and not o.get("garrisoned"):
+            x, z = int(o["x"] * T), int(o["y"] * T)
+            put(x, z, x + 1, z + 1, MAP_DYES.get(player_color(p, players), 8))
+    return colors
+
+
+def write_map(out, img, objects=(), players=None, T=4):
+    """Write a locked map of the world (map id 0, #838) with its objects (#840): `give @p filled_map[map_id=0]`
+    shows it. The 26.3 server keeps maps in data/minecraft/maps/ (DimensionStorageFileFix: data/map_N.dat -> N.dat,
+    idcounts.dat -> last_id.dat)."""
     colors, s, c = map_colors(np.asarray(img))
+    colors = map_objects(colors, s, c, objects, players, T)
     d = os.path.join(out, "data", "minecraft", "maps")
     os.makedirs(d, exist_ok=True)
     data = {"colors": ByteArray(colors.reshape(-1).astype(np.int8)), "scale": Byte(s), "xCenter": Int(c),
@@ -3047,6 +3122,9 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     book = place_book(cols, edits, spawn, texts, name)
     if book:
         print(f"  book with the scenario texts: lectern at {book}")
+    frame = place_map(cols, edits, spawn, book)   # before the units: they keep out of its column
+    if frame:
+        print("  map of the world: glow item frame at", tuple(int(v) for v in frame[0]["block_pos"]))
     colors = [player_color(pid, players) for pid in sorted(players) if pid and any(o["player"] == pid for o in objects)]
     r = border(cols, border_design, colors, edits)
     edits.connect()
@@ -3054,6 +3132,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     tick("objects")
     before = set(stats)
     unit_chunks = plan_units(objects, players, cols, rng, stats, birds, garrison, ambience == "off") if with_units else {}
+    if frame:
+        unit_chunks.setdefault((int(frame[1]) >> 4, int(frame[2]) >> 4), []).append(frame)
     tick("units")
     print(f"  units: {stats['units']}, fish: {stats['fish']}")
     for k in sorted(set(stats) - before - {"units", "fish"}):
@@ -3123,7 +3203,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     img = Image.fromarray(np.clip(img * shade[..., None], 0, 255).astype(np.uint8))
     if preview:
         img.save(os.path.join(out, "preview.png"))
-    write_map(out, img)
+    write_map(out, img, objects, players, T)
     # the world list shows icon.png; keep the pixels sharp when the map is smaller than the icon
     img.resize((64, 64), Image.LANCZOS if cols.n >= 64 else Image.NEAREST).save(os.path.join(out, "icon.png"))
 

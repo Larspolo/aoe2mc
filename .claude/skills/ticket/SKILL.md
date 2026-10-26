@@ -35,6 +35,8 @@ Start after: <YYYY-MM-DD HH:MM> UTC   (only when the ticket must wait for a time
 
 Labels: one priority (`P0`-`P3`), one kind (`bug`, `feature`, `tooling`, `design`, `docs`, `cleanup`),
 one size (`size:S`, `size:M`, `size:L`). Add `needs-human` when only the owner can do it.
+A ticket that changes the agent system (skills, `CLAUDE.md`, the agent tools in `tools/`, workflows, the setup) also
+gets `process` (#901): the dashboard counts the merged PRs with it.
 
 `dashboard.py --next` puts the tickets that share fewer files and functions with the work in progress first (#487):
 name each file and function that the ticket changes, and no others (tools that only check, such as `render.py`, do not count).

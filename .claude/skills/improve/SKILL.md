@@ -1,19 +1,29 @@
 ---
 name: improve
-description: Review how efficiently the agent works on aoe2mc and make one concrete improvement to the whole system (CLAUDE.md, skills, tools, tests, CI workflows, the cloud setup script, settings). Use every 5th autopilot run, after a run that failed or took more than 90 minutes, or when the owner asks for a process review.
+description: Review how efficiently the agent works on aoe2mc and make one concrete improvement to the whole system (CLAUDE.md, skills, tools, tests, CI workflows, the cloud setup script, settings). Use when `python3 tools/claim.py 0 --review` gives the review slot to the run (autopilot step 9), after a run that failed or took more than 90 minutes, or when the owner asks for a process review.
 ---
 
 # Improve the process
 
 The aim: more closed tickets for the same usage, with the same quality. Look at the whole system, not only
 the skills: the agent process, CI, the cloud environment, the repository and the scheduling of the runs.
-Make one good improvement per review. Do not make many small changes.
+Make at most one improvement per review, only where it pays, and stop changing things when the system is efficient
+(owner, #900: "only where it makes sense ... in the broadest sense"). The main number is the release progress per
+quota (`tools/health.py`, #899): the game goals 1 to 3 of `docs/ROADMAP.md`. Goal 4 of that file is this system.
+
+## 0. Check the last change
+
+Read the newest line of "Process changes" on the status issue that has `before:` numbers. Compute the same numbers
+now (step 1). Did they get better?
+- Yes, or too early to say (less than 10 Metrics lines since the change) → keep it. Say so in the report.
+- No → undo it or try another way to fix the same loss. This is the change of this review. Say so in the report.
 
 ## 1. Collect the data
 
 Run `python3 tools/health.py` first (`--hours N`, default 24, about 25 s). It prints the CI runs per workflow,
-the slowest CI steps, the setup minutes, takeovers, releases, merge conflicts, claim-to-merge minutes and files
-that do not belong in git. Collect by hand only what it does not print.
+the slowest CI steps, the setup minutes, takeovers, releases, merge conflicts (and their files), the minutes of each
+phase, the quota per merged PR, the release points per 1 % of 7-day quota (the main number: progress to the goals per
+quota), weak spots (rework, bugs of check tickets, red night runs), claim-to-merge minutes and files that do not belong in git. Collect by hand only what it does not print.
 
 - Agent: the last 20 run comments by the agent on the status issue (label `agent-status`). Each has a line
   `Metrics: ticket #n · size · result · minutes · setup m min · checks k · checks c min · time sinks: ...`.
@@ -31,7 +41,23 @@ that do not belong in git. Collect by hand only what it does not print.
 
 ## 2. Find the largest loss
 
-Compute the numbers of all five areas: tickets per run, median minutes for `size:S` and `size:M` tickets
+Go through the six areas. For each one, note its largest loss in minutes of run time (or tickets) per day:
+
+1. **How runs start:** the scheduled task prompt, the pacer (`tools/usage.py`, `.claude/skills/pacer`), the quota
+   target, idle runs (no ticket ready, stopped at once), runs that hit the usage limit.
+2. **The loop:** the steps of `.claude/skills/autopilot` and the phase minutes of the `Metrics:` lines
+   (`read`, `claim`, `code`, `verify`, `ci`, `conflict`, `report`); steps that cost time and change nothing.
+3. **Time and quota:** the phase shares, the quota per merged ticket, the release progress per quota.
+4. **Quality:** rework (owner corrections, reopened tickets, follow-ups of merged work), bugs found by check tickets,
+   red night CI runs.
+5. **Weak spots:** merge conflicts, takeovers, refused commands, slow tests, tools missing in the environment.
+6. **Reuse:** what is aoe2mc-specific in the skills, tools and workflows, and how hard it is to set it up for
+   another project (epic #909).
+
+The threshold: change something only when the largest loss is above about 5 % of the run minutes of the period,
+or one ticket per day, or a quality problem that a person would see. Else make no change ("no change" in step 5).
+
+Compute the numbers of all areas: tickets per run, median minutes for `size:S` and `size:M` tickets
 (last 5 runs against the 5 runs before), setup minutes, verify rounds per PR, CI rounds per PR, the minutes from the PR
 to the merge (CI and Automerge), CI failures that are not in the code, rework, takeovers and conflicts.
 The repository is public: Actions minutes are free, but at most 20 jobs run at the same time.
@@ -62,8 +88,15 @@ patterns and their fixes:
 
 ## 3. Make the improvement
 
+One change per review, for the largest loss above the threshold. Write down the numbers that the change must make
+better ("before" numbers) before you change something.
+First list the open `tooling` and process tickets (`/issues?state=open&labels=tooling`, and titles that start with
+"Process:"). When one already names the pattern, do not make a second change: claim that ticket (`tools/claim.py N`)
+and do it as this improvement, or, when another run owns it, choose the next pattern. PR #917 of a review and the
+ticket #903 made the same change of the autopilot skill at the same time: one PR conflicted and was wasted.
+
 - Small (text in a skill, `CLAUDE.md`, `LEARNINGS.md`, a setting, a workflow step, the setup script): do it now,
-  in one PR with the title "Process: <what>". Verify level 1. Merge it like a ticket.
+  in one PR with the title "Process: <what>" and the label `process`. Verify level 1. Merge it like a ticket.
 - Large (a new tool, a test framework change): make a `tooling` ticket with priority `P1`.
 - Owner only (environment settings, the scheduled task, GitHub settings): make the change in the repository
   first (for example `scripts/cloud-setup.sh`), then a `needs-human` ticket with numbered steps and the exact
@@ -76,9 +109,14 @@ patterns and their fixes:
 
 ## 5. Report
 
-Add the change to "Process changes" on the status issue. Comment 3–5 lines: the numbers, the pattern you
-found, what you changed, and what you expect. The owner can reject the change in a comment. Then revert it
+Add the change to "Process changes" on the status issue with its before-numbers:
+`- <date>: <change> (PR #n) — before: <numbers>` (for example "conflict 12 % of the run minutes, 14 conflicts / 6 h").
+Comment 3–5 lines: the result of step 0, the numbers of the six areas, the largest loss, what you changed (or
+"no change: largest loss X, below the threshold"), and what you expect. The owner can reject the change in a comment. Then revert it
 and add the reason to `docs/LEARNINGS.md`.
+
+Then set the next review slot: `python3 tools/claim.py 0 --reviewed change` after a change (the next slot is 45
+minutes), or `--reviewed none` when no loss was large enough for a change (the slot doubles, at most 6 hours, #898).
 
 ## Guardrails
 

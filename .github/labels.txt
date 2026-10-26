@@ -20,3 +20,4 @@ agent-status|1d76db|The dashboard of the agent
 paused|b60205|On the status issue: the agent stops
 hold|fbca04|On a PR: the Automerge workflow does not merge it
 conflict|b60205|On a PR: the Automerge workflow could not merge it
+process|5319e7|Improves the agent system itself: the loop, the tools, the setup

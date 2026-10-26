@@ -2,6 +2,7 @@
 
 The agent (Claude Code) works on this project automatically. You steer it asynchronously through GitHub
 Issues. You can do all of this in the GitHub app on your phone.
+`docs/SYSTEM.md` describes the whole system: its parts, the locks, the pacing and your setup steps.
 
 ## How the agent works
 
@@ -15,7 +16,7 @@ Each run does one work cycle (the `autopilot` skill):
    `Dashboard`): waiting for you, working on, next up, recently done. It updates on each label change and every
    hour. Runs only add the process changes.
 5. It improves its own process: it writes learnings, corrects its instructions and makes tooling tickets.
-   Every 5th run, the `improve` skill measures the runs (minutes, CI rounds, time sinks) and makes one larger
+   One run per review slot (45 minutes, longer when there is nothing large to improve), the `improve` skill measures the runs (minutes, CI rounds, time sinks) and makes one larger
    improvement. The status issue lists each process change.
 
 The agent takes instructions only from comments and issues by `Larspolo`.

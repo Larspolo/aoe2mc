@@ -1,6 +1,4 @@
 """game/bot.py: the bot of player 2 trains villagers up to a number, then soldiers at its barracks (#858)."""
-import re
-
 from test_bot_gather import bot_map
 
 from game import bot, train
@@ -9,15 +7,6 @@ from game import bot, train
 def with_buildings(*names):
     """bot_map with more complete buildings of player 2 (3 houses: room for 20 units)."""
     server, me, b = bot_map()
-    command, at = server.command, []
-
-    def track(cmd):                                                    # a trained unit gets a position
-        if m := re.match(r"summon \S+ (\S+) (\S+) (\S+) ", cmd):
-            at[:] = [tuple(map(float, m.groups()))]
-        elif (m := re.match(r"aoe stats (\S+) ", cmd)) and at and m[1] not in server.entities:
-            server.entities[m[1]] = {"Pos": at[0], "Rotation": (0.0, 0.0)}
-        return command(cmd)
-    server.command = track
     spots = {"HOUSE": [[24, 24, 26, 26], [27, 24, 29, 26], [24, 27, 26, 29]], "BARRACKS": [[14, 24, 17, 27]]}
     for name in names:
         b.g.data["objects"].append({"kind": "building", "name": name, "player": 2, "footprint": spots[name].pop(0)})
