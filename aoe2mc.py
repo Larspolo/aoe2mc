@@ -645,7 +645,7 @@ def name_timeline(objects, timeline, window=16):
     building, TRAIN_S and RESEARCH_S). Objects that the record does not show (for example dead animals) take IDs
     too, so match each predicted object to the first ID in the next `window` IDs that the commands use in the same
     way (a building ID in QUEUE and RESEARCH, of the building that trains its units; a unit ID in MOVE, ORDER and
-    BUILD) and not before the object exists. A building that is not matched gets the name of its units' building.
+    BUILD; a building or ship ID as the target of GARRISON) and not before the object exists. A building that is not matched gets the name of its units' building.
     Adds "names" (a name or None per ID of "objects") and the "target_name" of a new target ID to the events and
     returns {id: name}."""
     names = {o["ref"]: o["name"] for o in objects if o.get("ref") is not None}
@@ -661,7 +661,9 @@ def name_timeline(objects, timeline, window=16):
                 if e["kind"] == "queue" and train(e.get("name", "")):
                     u[2].add(train(e["name"])[1])
         if role == "U" and e.get("target", 0) > top:
-            used.setdefault(e["target"], [e["time"], None, set(), False])
+            u = used.setdefault(e["target"], [e["time"], None, set(), False])
+            if e["kind"] == "garrison":                  # its target is a building or a ship (#912)
+                u[1] = u[1] or "G"
     made, seen = [], set()               # (time ms, command time, "B" or "U", name)
     for e in timeline:
         kind, t = e["kind"], e["time"]
@@ -678,12 +680,14 @@ def name_timeline(objects, timeline, window=16):
         while k < len(firsts) and firsts[k][0] < cmd:   # an ID in use before the command is older than the object
             below, k = max(below, firsts[k][1]), k + 1
         nxt = max(nxt, below + 1)
-        ids = [i for i in range(nxt, nxt + window) if i in used and used[i][1] in (role, None) and
+        ids = [i for i in range(nxt, nxt + window) if i in used and i not in names and
+               (used[i][1] in (role, None) or used[i][1] == "G" and (role == "B" or "SHIP" in name)) and
                used[i][0] >= t - 5000 and used[i][2] <= {name} and   # 5 s: the training times are estimates
                not (used[i][3] and "VILLAGER" not in name)]         # only villagers build and gather on land (#765)
         i = ids[0] if ids else nxt if nxt not in used else None
         if i is not None:
-            names[i], nxt = name, i + 1
+            names[i] = name             # a unit skips a GARRISON target: a later building can take it
+            nxt = next((j for j in range(nxt, i) if used.get(j, (0, None))[1] == "G" and j not in names), i + 1)
     for i, u in used.items():
         if i not in names and len(u[2]) == 1:
             names[i] = next(iter(u[2]))
