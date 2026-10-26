@@ -90,6 +90,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Crop field | `wheat` rows (ages 5–7) on `farmland`, furrows of bare `farmland`, `dirt_path` edge | `folwark` |
 | Hay, fodder | `hay_block` | `settlement`, `hut`, `mill_room`, `granary` +15 more |
 | Log pile, cut timber | `*_log[axis=x]` stacked as a pyramid (`log_pile`) | `log_pile`, `barricade`, `wooden_bridge`, `fish_trap` +36 more |
+| Debris heap of a barricade | `cobblestone`, `andesite`, `spruce_log`, `stripped_spruce_log`, `spruce_planks`, `spruce_slab`; on top `mangrove_roots` (branches), `spruce_fence`, `oak_leaves` (ivy), `barrel`, `decorated_pot` |  |
 | Wooden bridge: boards across the bridge, posts over the deck | `stripped_spruce_log[axis=*]` and `spruce_planks` in turn, `stripped_oak_log` posts every second block, no railing |  |
 | Hoist | a log post and arm, `chain`, a hanging log | `harbor_chain`, `hang`, `lumber_camp`, `shipyard` +3 more |
 | Workbench | `crafting_table` | `lumber_camp`, `dock` |
