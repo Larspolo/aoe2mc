@@ -166,7 +166,7 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
    `ruff check .` and `python3 -m pytest` always; `python3 -m pytest -m slow` when the change touches `aoe2mc.py`,
    `buildings.py`, `units.py` or `tools/scenarios.py`; `python3 -m pytest -m mc` when it changes NBT, entities,
    block entities or the world format. Put the commands and the result lines in the PR body ("Local checks").
-   Then merge the PR yourself: `gh api -X PUT repos/Larspolo/aoe2mc/pulls/N/merge -f merge_method=squash -f sha=<head>`.
+   Then merge the PR yourself: `gh api repos/Larspolo/aoe2mc/pulls/N/merge -X put -f merge_method=squash -f sha=<head>`.
    A 405 (main moved, or a conflict) → step 10, the checks again, push, merge again. Remove `in-progress`.
 9. A check fails → find the cause, fix, check again. After 3 failed attempts stop: comment the cause on the ticket,
    add `blocked` or `needs-human` and `hold`, remove `in-progress`, and go to step 8 of the skill (report).

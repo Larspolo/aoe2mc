@@ -20,7 +20,7 @@ The README already uses this style. Keep it.
 | Slow tests (~2 min) | `python3 -m pytest -m slow` |
 | Test scenario | `python3 tools/scenarios.py tiny OUT.aoe2scenario` (or `gallery`, `stress`, `buildings`, `units`, `village`, `facing`, `walls`, `river` (raised river with dock, bridge, boats), `river_town`, `four_civs`, `battle`) |
 | Convert | `python3 aoe2mc.py IN.aoe2scenario OUTWorld --preview` |
-| Look at a world | `python3 tools/world_reader.py OUTWorld [X Y Z]` |
+| Look at a world | `python3 tools/world_reader.py OUTWorld [X Y Z]` (`--section x\|z C A0 A1 Y0 Y1`: a vertical section as text) |
 | 3D image | `python3 tools/render.py building CASTLE --arch western OUT.png` (`--cut 3`: the rooms inside; or `world OUTWorld X0 Z0 X1 Z1 OUT.png`) |
 | Check states | `tools/mcvalid.py` (`block_error`, `entity_error`, `biome_error`) |
 | Coverage of AoE2 types | `python3 tools/coverage.py OUT.md` (designs, mappings, fallbacks). Do not commit `docs/coverage.md`: CI on main does it, and `tools/feature_table.py` for `docs/DESIGN.md` |
@@ -28,7 +28,7 @@ The README already uses this style. Keep it.
 | Quota and pacing | `python3 tools/usage.py` (5-hour and 7-day usage, resets; `--target`: the number of runs that uses the window evenly; `--sample`: the `Usage:` line of the run report) |
 | Dashboard of #1 | `python3 tools/dashboard.py --dry-run` (`--next`: ticket candidates in pick order) |
 | Server check | `python3 tools/mc_check.py OUTWorld` (headless Minecraft, load errors; `--keep DIR` keeps the saved world), `python3 -m pytest -m mc` |
-| Game program | `python3 game/run.py OUTWorld` (server with RCON, type commands; `--bench N`: commands per second; `--play`: gather resources; `--replay [--speed N]`: replay a recorded game) |
+| Game program | `python3 game/run.py OUTWorld` (Paper server with RCON, `--server vanilla`: Mojang's; type commands; `--bench N`: commands per second; `--play`: gather resources; `--replay [--speed N]`: replay a recorded game) |
 | Gather timing | `python3 tools/measure_gather.py` (server, no client: walk, chop and trip times next to AoE2; `--read F.jsonl` reads a `game/run.py --play --log` file) |
 | In-game screenshot | `python3 tools/mc_shot.py OUTWorld OUT.png [--at X Y Z --look YAW PITCH] [--more X,Y,Z,YAW,PITCH]` (real client, ~25 s per world) |
 | Minecraft data | `python3 tools/mc_check.py --reports VERSION` (exact, from Mojang) or `tools/fetch_mcdata.py VERSION` writes `tools/mcdata/VERSION.json` |

@@ -44,6 +44,7 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   (`ruff`, fast, `-m slow`, `-m mc`) locally on the run's `head_sha`; main is red only when one fails there.
 
 - Paper: `fill.papermc.io/v3/projects/paper/versions/V/builds/latest` lists the builds, but the jar URL is on `fill-data.papermc.io`, which the proxy blocked on 2026-10-26 (#439). Test a download host with `curl`, not only the API.
+- The Paper API answers 403 to the `Python-urllib` User-Agent (`curl` works): send a User-Agent (`game/run.py` `AGENT`). `-DbundlerRepoDir=DIR` keeps the patched Mojang jar of Paper in DIR; Paper writes `usercache.json` next to the `--universe` world (#434).
 ## Libraries
 
 - AoE2ScenarioParser 0.9.8 makes new scenarios (`tools/scenarios.py`: `new_scenario`, `add_unit`, `save`). It prints much
@@ -99,4 +100,8 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   map. Replay paths cost 18 s per 200 s of game in samples/ (one search per unit of a group, #409).
 - "units in a block": `AOE2MC_DEBUG=1` names the block; list the `aoe2mc.json` objects with a `tile` near the unit to
   find its source (#415: a `PLANT_SHRUB` on the same block, not the tree that the ticket named).
+- `Canvas.furniture` sets only into `air` cells: an open design without `room()` has empty cells (`-1`), so its
+  furniture vanishes without an error. Set those cells with `c.get(...) in (-1, air)` (`pagan_shrine`, #450).
+- `render.py --cut` does not show the inside of a narrow tower (#452): filter `render.building_blocks()` by x, y, z
+  (drop barriers and one side of the walls) and call `render.render()` for a section view.
 - `render.building_blocks` gives states with the `minecraft:` prefix and world y (the ground is y 63, canvas y 1 is y 64): strip the prefix before you match a name (#449).
