@@ -7,6 +7,8 @@ The footprint is blocked for paths. gather.Gather.click calls place().
 A right click on a foundation sends the selected villagers there to build it (#418): the blocks of the design
 (replay.Replay.building) appear from the bottom up, in the AoE2 build time. gather.Gather.step calls rise().
 A complete building works (#419): a camp, mill or town center is a drop site, a farm can be farmed.
+A right click on a selected villager opens the build menu (#621): a chest menu (menu.py) with one item per building.
+A click chooses the building as /trigger does and closes the menu, so the next right click places it.
 """
 import json
 import math
@@ -18,6 +20,7 @@ from aoe2mc import VERSION_NAME  # noqa: E402
 from buildings import footprint  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import menu as chest  # noqa: E402  (menu() below is the chat text)
 from replay import Replay  # noqa: E402
 
 COSTS = {"HOUSE": {"wood": 25}, "LUMBER_CAMP": {"wood": 100}, "MINING_CAMP": {"wood": 100},   # as in AoE2
@@ -27,6 +30,8 @@ BUILD_TIMES = {"HOUSE": 25, "LUMBER_CAMP": 35, "MINING_CAMP": 35, "MILL": 35, "F
                "BARRACKS": 50, "TOWN_CENTER": 150}                                # one builder
 MENU = list(COSTS)                                                 # trigger value N -> MENU[N - 1]
 OBJECTIVE = "aoe_build"
+ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw_gold_block",   # a block of the
+         "MILL": "white_wool", "FARM": "wheat", "BARRACKS": "stone_brick_wall", "TOWN_CENTER": "cobblestone"}  # design
 
 
 def pretty(name):
@@ -48,6 +53,21 @@ def menu():
     lines = [f"/trigger {OBJECTIVE} set {i}: {pretty(n)} ({', '.join(f'{v} {r}' for r, v in COSTS[n].items())})"
              for i, n in enumerate(MENU, 1)]
     return json.dumps({"text": "Build: " + "\n".join(lines), "color": "gray"})
+
+
+def items():
+    """The items of the build menu: (slot, icon, name, lore) with the cost and the build time."""
+    return [(i, ICONS[n], pretty(n), "\n".join([", ".join(f"{v} {r}" for r, v in COSTS[n].items()),
+                                                 f"{BUILD_TIMES[n]} s"])) for i, n in enumerate(MENU)]
+
+
+def open_menu(g, player):
+    """Show the build menu. A click sets the trigger score, as /trigger aoe_build set N does, and closes the menu."""
+    def choose(p, slot):
+        if slot < len(MENU):
+            g.command(f"scoreboard players set {p} {OBJECTIVE} {slot + 1}")
+            chest.close(g, p)
+    return chest.show(g, player, "Build", items(), choose)
 
 
 def chosen(g, player):
