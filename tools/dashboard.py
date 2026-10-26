@@ -78,10 +78,14 @@ def candidates(issues, busy=frozenset(), now=None):
     """The ticket candidates in the pick order of the autopilot skill (step 5): priority, then the overlap with the
     work in progress (busy, from work(); fewer merge conflicts, #487), then the ticket number.
     issues: the open issues and PRs. A dependency is closed when it is not open: an open PR is open too (#243).
-    A ticket waits until the time of its "Start after:" line (#496)."""
+    A ticket waits until the time of its "Start after:" line (#496), and a ticket with an open ready-to-merge PR
+    is no candidate (#546)."""
     now = now or datetime.datetime.now(datetime.timezone.utc)
     open_numbers = {i["number"] for i in issues}
-    issues = [i for i in issues if "pull_request" not in i]
+    # A hand-off PR (ready-to-merge, autopilot step 6.8) waits for the owner: its ticket is done (#546).
+    handoff = {int(n) for i in issues if "pull_request" in i and "ready-to-merge" in labels(i)
+               for n in re.findall(r"(?i)\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)", i.get("body") or "")}
+    issues = [i for i in issues if "pull_request" not in i and i["number"] not in handoff]
 
     def rank(i):
         p = next((k for k, name in enumerate(PRIORITY) if name in labels(i)), len(PRIORITY))

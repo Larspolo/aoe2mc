@@ -50,6 +50,7 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - Paper plugin (#435): `game/run.py` builds `game/plugin` with `./gradlew --no-daemon -q jar` and `JAVA_HOME` = the JDK 25 (`openjdk-25-jdk-headless`: the paper-api 26.3 classes are Java 25, javac 21 cannot read them); first build 30 s. A NoAI mob finds no path before its first AI tick; the path search ends at about `follow_range` (cow: 16). The world border stops paths: test inside the map. `fill ... hollow` also fills the bottom and top faces.
 - Run `claim.py N --guard` alone and read its exit code before the push: `guard; echo g=$? && git push` pushes also after a failed guard (#540: a push to the branch of a PR that another run had merged a minute before).
 - `-m mc` takes about 21 minutes, and 14 of its tests stop with "no javac" when `/etc/aoe2mc-setup-version` is below 6: `apt-get install -y openjdk-25-jdk-headless` first (1 min, #536).
+- Run `claude/gallant-fermat-zhmyki` (2026-10-26 05:51): `ToolSearch` found no `fire_trigger` (neither `select:` nor keywords), so the tool can be truly absent. Say so in the report; do not retry (#546).
 ## Libraries
 
 - AoE2ScenarioParser 0.9.8 makes new scenarios (`tools/scenarios.py`: `new_scenario`, `add_unit`, `save`). It prints much
