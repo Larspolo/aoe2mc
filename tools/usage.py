@@ -1,4 +1,7 @@
-"""The quota usage of the Claude subscription, and the number of runs that uses it evenly (owner request, 2026-10-26).
+"""The quota usage of the Claude subscription, and the number of runs that uses it (owner request, 2026-10-26).
+
+The aim (owner, 2026-10-26): 90 % of the 5-hour window used 2 hours before its reset, then slower to 98 % at the
+reset, so that each window reaches the limit (#587).
 
     python3 tools/usage.py              # five_hour 30% (resets 06:30 UTC, 2.0 h) · seven_day 30% ... · target 12 runs
     python3 tools/usage.py --target     # only the number of runs (rule 4 of the scheduled task)
@@ -20,7 +23,8 @@ import subprocess
 import sys
 
 BURN = 0.03         # share of the 5-hour quota that one run uses per hour (16 runs used about 50 % per hour, 2026-10-25)
-END = 0.95          # aim: this share is used when the 5-hour window resets
+MID, MID_LEFT = 0.90, 2.0   # aim: this share is used this many hours before the 5-hour window resets (#587)
+END = 0.98          # aim: this share is used when the 5-hour window resets
 LO, HI = 1, 16      # bounds of the number of runs
 MAX_FIRE = 4        # runs that the pacer starts per cycle: each run needs a few minutes to claim its ticket
 CALL = ["claude", "-p", "Reply with OK.", "--model", "claude-haiku-5-5", "--output-format", "stream-json", "--verbose"]
@@ -44,15 +48,21 @@ def read_usage(timeout=120):
     return parse(r.stdout.splitlines())
 
 
-def target_runs(usage, now, burn=BURN, end=END, lo=LO, hi=HI):
-    """The number of runs that ends the 5-hour window at `end` used, with a guard for the 7-day window."""
+def target_runs(usage, now, burn=BURN, end=END, lo=LO, hi=HI, mid=MID, mid_left=MID_LEFT):
+    """The number of runs that uses `mid` of the 5-hour window `mid_left` hours before its reset, and `end` at the
+    reset, with a guard for the 7-day window."""
     if not usage or "five_hour" not in usage:
         return None
     used, reset, status = usage["five_hour"]
     if status == "rejected":
         return 0
-    hours = max((reset - now) / 3600, 0.25)                     # the last quarter hour: use what is left
-    n = round(max(end - used, 0) / hours / burn)
+    left = (reset - now) / 3600
+    if left > mid_left and used < mid:                          # the first 3 hours: fast to `mid`
+        aim, hours = mid, left - mid_left
+    else:                                                       # the last 2 hours: slow to `end`
+        aim, hours = end, left
+    hours = max(hours, 0.25)                                    # the last quarter hour: use what is left
+    n = round(max(aim - used, 0) / hours / burn)
     if "seven_day" in usage:                                    # do not use the week faster than it passes
         used7, reset7, status7 = usage["seven_day"]
         if status7 == "rejected":
