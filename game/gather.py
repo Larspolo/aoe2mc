@@ -550,7 +550,8 @@ class Gather:
         self.trunks.pop(tile, None)
 
     def berries(self, tile):
-        """A fruit bush shows its food: full berries, fewer berries below half, a dead bush when it is empty."""
+        """A fruit bush shows its food: full berries, fewer berries below half, a dead bush when it is empty. Only a full
+        bush has the leaves in its middle: they become barriers, so the bush is small and still blocks (#590)."""
         food = self.map.bushes[tile]
         look = "minecraft:sweet_berry_bush[age=3]" if food > BUSH_FOOD // 2 else \
             "minecraft:sweet_berry_bush[age=2]" if food > 0 else "minecraft:dead_bush"
@@ -561,6 +562,7 @@ class Gather:
         (x0, z0), (x1, z1) = min(cells), max(cells)
         ys = [y for x, z in self.map.around(cells) if (y := self.map.y(x, z)) is not None] or [0]
         self.command(f"fill {x0} {min(ys) - 2} {z0} {x1} {max(ys) + 2} {z1} {look} replace minecraft:sweet_berry_bush")
+        self.command(f"fill {x0} {min(ys) - 2} {z0} {x1} {max(ys) + 2} {z1} minecraft:barrier replace minecraft:oak_leaves")
 
     def dig(self, tile, res):
         """An empty mine disappears: its heap and the barriers of its footprint. Its cells are free ground again."""
