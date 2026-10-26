@@ -2,6 +2,7 @@
 
 The agent (Claude Code) works on this project automatically. You steer it asynchronously through GitHub
 Issues. You can do all of this in the GitHub app on your phone.
+`docs/SYSTEM.md` describes the whole system: its parts, the locks, the pacing and your setup steps.
 
 ## How the agent works
 

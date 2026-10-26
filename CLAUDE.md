@@ -2,7 +2,7 @@
 
 aoe2mc converts an Age of Empires II: DE scenario (`.aoe2scenario`) into a Minecraft Java world.
 The owner is **Larspolo** (one person, one Claude Max account). The agent works on the project automatically.
-The owner steers asynchronously through GitHub Issues (see `docs/STEERING.md`).
+The owner steers asynchronously through GitHub Issues (see `docs/STEERING.md`). The whole agent system (parts, locks, pacing, setup): `docs/SYSTEM.md`.
 
 ## Language
 
