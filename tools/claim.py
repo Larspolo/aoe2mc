@@ -50,10 +50,12 @@ import sys
 import time
 import uuid
 
+from agent_config import CONFIG
+
 EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 REVIEW, REVIEW_MAX = 45, 360    # minutes: the first and the longest slot of the process review (#898)
 ROADMAP = 120               # minutes: the slot of the review of docs/ROADMAP.md
-STATUS = 1                  # the status issue: its state comment holds the review slot
+STATUS = CONFIG["status"]["issue"]   # the status issue: its state comment holds the review slot
 STALE = 30 * 60             # seconds without a claim or beat: the run stopped (usage limit, crash)
 RECENT = 30 * 60            # seconds: a "Started by" comment of another branch owns the ticket for this time (#288)
 
@@ -197,7 +199,7 @@ def release(number, remote="origin", word="Release"):
     return ref if push(sha, ref, remote) else None
 
 
-def revived(path="docs/LEARNINGS.md", base="origin/main"):
+def revived(path=CONFIG["docs"]["learnings"], base=f"origin/{CONFIG['branch']}"):
     """Lines of `path` that a `merge=union` merge of `base` brought back after `base` removed them (#563).
 
     M is the last merged state of `base` (the merge base). A line of HEAD that is not in M and that no own commit
