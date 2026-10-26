@@ -22,6 +22,7 @@ Ages (#672): the Feudal Age is a technology of the town center that needs 2 type
 sidebar title shows the age of the player; all players see a title and hear a sound when a player advances.
 Forging at the blacksmith (#675): infantry and cavalry get +1 attack. Fletching (#724): archers (also cavalry archers and
 skirmishers) get +1 attack and +1 range.
+Padded Archer Armor at the blacksmith in the Feudal Age (#937, TECH_AGE): archers get +1 melee and +1 pierce armor.
 Double-Bit Axe at the lumber camp (#723): villagers chop wood 20 % faster (gather.WORK_TECHS, gather.Gather.work_time).
 Gold Mining at the mining camp (#727): villagers mine gold 15 % faster.
 Horse Collar at the mill (#726): the live and the new farms of the player have 75 more food (gather.FARM_TECHS).
@@ -64,6 +65,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "LONGBOWMAN": {"wood": 35, "gold": 40},
          "MAMELUKE": {"food": 55, "gold": 85},
          "MANGUDAI": {"wood": 55, "gold": 65},
+         "PADDED_ARCHER_ARMOR": {"food": 100},
          "SAMURAI": {"food": 45, "gold": 30},
          "SCALE_MAIL_ARMOR": {"food": 100},
          "SCOUT_CAVALRY": {"food": 80},
@@ -89,6 +91,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "LONGBOWMAN": 18,
                "MAMELUKE": 23,
                "MANGUDAI": 26,
+               "PADDED_ARCHER_ARMOR": 40,
                "SAMURAI": 9,
                "SCALE_MAIL_ARMOR": 40,
                "SCOUT_CAVALRY": 30,
@@ -101,7 +104,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "WOAD_RAIDER": 10}
 TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW"), "BARRACKS": ("MILITIA", "SPEARMAN"),   # the units and technologies of each
           "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER"),                                         # building (#654, #670, #655)
-          "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING"),           # (#675, #725, #724)
+          "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING", "PADDED_ARCHER_ARMOR"),   # (#675, #725, #724, #937)
           "CASTLE": (),                                                         # the unique unit: trains() (#708)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES"),                           # (#671, #940)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
@@ -129,6 +132,8 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
          "LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
          if "VILLAGER" in name else s,
+         "PADDED_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
+         if "archer" in s.classes else s,
          "SCALE_MAIL_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "infantry" in s.classes else s,
          "FEUDAL_AGE": lambda name, s: s,   # the change of each technology to the AoE2 values
@@ -137,6 +142,7 @@ REQUIRES = {"FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP",
 TECH_AGE = {                                                       # the age of a technology (build.AGE): hidden before
     "BLOODLINES": 1,
     "DOUBLE_BIT_AXE": 1,
+    "PADDED_ARCHER_ARMOR": 1,
     "WHEELBARROW": 1,
 }
 AGES = ("Dark Age", "Feudal Age")                                  # the age after each researched age (index: ages)
@@ -165,6 +171,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "LOOM": (1, "book", "Loom"),                               # a book for a technology (#618)
          "MAMELUKE": (0, "camel_spawn_egg", "Mameluke"),
          "MANGUDAI": (0, "skeleton_horse_spawn_egg", "Mangudai"),
+         "PADDED_ARCHER_ARMOR": (3, "book", "Padded Archer Armor"),
          "SAMURAI": (0, "zombie_spawn_egg", "Samurai"),
          "SCALE_MAIL_ARMOR": (1, "book", "Scale Mail Armor"),
          "TEUTONIC_KNIGHT": (0, "zombie_spawn_egg", "Teutonic Knight"),
