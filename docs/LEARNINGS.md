@@ -2,9 +2,10 @@
 
 The agent writes here what it learned the hard way. Each line must save time in a later session.
 Ticket runs: add new lines at the end of a section and do not change other lines (`merge=union` in `.gitattributes`
-keeps the lines of both sides). The `improve` skill merges lines and keeps the file below 80 lines.
+keeps the lines of both sides). A pitfall of one topic (server, Paper, records, a design) goes into the "Pitfalls" section
+of its document (named below): this file loads into each run. The `improve` skill merges lines and keeps it below 80 lines.
 
-## Environment
+## Environment and libraries
 
 - GitHub raw files, PyPI and the Mojang hosts (`piston-meta`, `piston-data`, `libraries.minecraft.net`) work.
   Blocked: `minecraft.wiki`, `minecraft.net`, `papermc.io` (use `misode/mcmeta`, branch `<version>-summary`, and the
@@ -21,47 +22,26 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   uses it as a lock (#211). REST ref paths: `git/refs/heads/...`. `urllib` with a JSON body needs
   `Content-Type: application/json`, else 415 (#345).
 - Quote the heredoc tag (`<<'EOF'`) for GitHub text: `<<EOF` runs each `` `name` `` as a command.
-- Private repository: a workflow with a `permissions:` block also needs `contents: read`; the `pulls` API needs
-  `pull-requests: read`. A new `workflow_dispatch` workflow runs only after the merge to `main` (#207).
-- Minecraft server: a bad property value (`facing=up`) loads silently as the default state. An unknown block gives
-  "Recoverable errors when loading section", an unknown block entity id "Skipping block entity with invalid type"
-  (26.3 has no `bed` block entity, #249). A missing `level.dat` compound gives "key missing: <name>" (#60). A bad
-  datapack file stops the server. A datapack `worldgen/` file makes the client warn "Experimental Settings" (#218).
-  The 26.3 server writes a missing `white-list` as `true`: write `white-list=false` (`game/run.py`, #285).
-- Minecraft client (#178, #179): `tools/mc_shot.py` runs it in `Xvfb`. 26.3 needs `mesa-vulkan-drivers` (lavapipe) and
-  a placeholder for the title panorama. The view ends at about 100 blocks: put `--at` near the subject (#208).
-- Test data: `samples/de-64.3.aoe2record` (`mgz`, MIT, #134; each town center 4 times, #139). `parse_match(f).actions`:
-  `ERROR` actions are commands mgz could not read (all `DE_QUEUE` in DE 64.3: `aoe2mc.de_queue`; raw bytes: a wrapper
-  of `mgz.fast.parse_action`, #372). Old `.scx` (no license, do not commit): GitHub raw
-  `SiegeEngineers/genie-rs/master/crates/genie-scx/test/scenarios/` (format 1.21: `Age of Heroes b1-3-5.scx`).
+- Pitfalls of the Minecraft server, client and NBT (silent defaults, dropped tags): `docs/minecraft-versions.md`; of Paper
+  and the game program: `docs/research/gameplay.md`; of RCON `@e`: `docs/datapack.md` (sections "Pitfalls").
 - `tools/claim.py` names the run by the local branch (`who()`): beat only from the session branch, never in parallel (#361).
+  Run `claim.py N --guard` alone and read its exit code before the push: `guard; echo g=$? && git push` pushes also after
+  a failed guard (#540).
 - The cloud clone is shallow: `git fetch --unshallow origin` before a scan of the history (#367).
-- Starting runs: `mcp__claude-code-remote__fire_trigger` is in every run's tool list but can be deferred. Load it with
-  `ToolSearch` (`select:mcp__claude-code-remote__fire_trigger`); runs that skipped this did not start successors (2026-10-26).
+- `fire_trigger`: load it with `ToolSearch` (`select:mcp__claude-code-remote__fire_trigger`). Some runs do not have it at
+  all (nothing for `select:` or keywords, #539, #546): say so in the report, do not search again.
 - Quota usage: `claude -p ... --output-format stream-json --verbose` prints a `rate_limit_event` with
   `unifiedWindows.five_hour/seven_day.utilization` and `resetsAt` (`tools/usage.py`). A `statusLine` does not run in cloud sessions.
 - `pyproject.toml` `addopts` has `-q`: `python3 -m pytest -q` gives `-qq`, without the "N passed" line. Wait for the
   exit code, not for "passed" in the output; foreground `sleep` is blocked: use `run_in_background` (#413).
 - `mcp__github__get_job_logs` gives HTTP 404 for the jobs of `ci.yml` (2026-10-26, #443): do not retry. Run its steps
   (`ruff`, fast, `-m slow`, `-m mc`) locally on the run's `head_sha`; main is red only when one fails there.
-
-- Paper: `fill.papermc.io/v3/projects/paper/versions/V/builds/latest` lists the builds, but the jar URL is on `fill-data.papermc.io`, which the proxy blocked on 2026-10-26 (#439). Test a download host with `curl`, not only the API.
-- The Paper API answers 403 to the `Python-urllib` User-Agent (`curl` works): send a User-Agent (`game/run.py` `AGENT`). `-DbundlerRepoDir=DIR` keeps the patched Mojang jar of Paper in DIR; Paper writes `usercache.json` next to the `--universe` world (#434).
-- Paper plugin (#435): `game/run.py` builds `game/plugin` with `./gradlew --no-daemon -q jar` and `JAVA_HOME` = the JDK 25 (`openjdk-25-jdk-headless`: the paper-api 26.3 classes are Java 25, javac 21 cannot read them); first build 30 s. A NoAI mob finds no path before its first AI tick; the path search ends at about `follow_range` (cow: 16). The world border stops paths: test inside the map. `fill ... hollow` also fills the bottom and top faces.
-## Libraries
-
+- `-m mc` takes about 21 minutes, and 14 of its tests stop with "no javac" when `/etc/aoe2mc-setup-version` is below 6:
+  `apt-get install -y openjdk-25-jdk-headless` first (1 min, #536).
+- Records (`mgz`, test records, command pitfalls): `docs/research/replays.md`, "Pitfalls".
 - AoE2ScenarioParser 0.9.8 makes new scenarios (`tools/scenarios.py`: `new_scenario`, `add_unit`, `save`). It prints much
   text (`redirect_stdout`), default players are RANDOM (`western`), and `write_to_file` writes the output file name into
   the file: for the same bytes use `scenarios.save(..., name)` (#204).
-- The server drops entity tags that it does not know, without a log line: let the server save the world and compare
-  the entity NBT (`docs/minecraft-versions.md`). A wrong tag type gives "Serialization errors" (`mc_check.py`).
-  New entity NBT: convert a map with one unit per type (`add_unit` in a loop) and run `tools/mc_check.py` (1 min).
-- PrismarineJS `data/pc/common/protocolVersions.json` has the data versions of all releases (26.3 = 5023).
-- `mgz.model.parse_match` reads only DE 13.34 and later; `mgz.summary.full.FullSummary` reads HD, UserPatch and older DE
-  but skips the GAIA trees (`aoe2mc.read_old_record` turns the skip off). More test records: GitHub raw
-  `happyleavesaoc/aoc-mgz/master/tests/recs/` (table in `docs/research/replays.md`, #376). `construct` 2.8: `IfThenElse` is a `Switch`.
-- Record commands: the `player` of an mgz action is not always right (a MOVE shows for both players), and the
-  `objects` of SPECIAL are not IDs. New objects take the next free ID: `aoe2mc.name_timeline` (#407).
 
 ## Code
 
@@ -80,27 +60,18 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - Generated on main, not in PRs: the column "Used today in" of `docs/DESIGN.md` (`tools/feature_table.py`), `docs/coverage.md`
   and `MAX` in `tests/test_coverage.py` (`coverage.yml`, #233, #234). A conflict there: take main's side.
 - Block IDs in `B` depend on earlier tests: draw random numbers in state-name order, not ID order (a cause of full-suite-only failures, #44).
-- An invalid item in a block entity can vanish without a log line. `tools/mc_check.py W --keep DIR` keeps the saved world
-  (#27). 26.3 saves a default state as the bare name and in another property order: normalize before you compare (#189).
+- Design pitfalls (stacked cylinders, furniture in open designs, render limits, tests that name design blocks):
+  the `design` skill, "Pitfalls".
 - Inside of a design: `tools/render.py building NAME OUT.png --cut 2` (#265); exact layers: `c.get(x, y, z)` on a `Canvas`
   (#255). `vary()` materials: `render.building_blocks(NAME, arch, variant=v)` (#146). `render.py world` draws Y >= 50
   (`--y0 -64` for `--border`); `--scale 4` gives about 800 px like `docs/images/` (#262).
-- `aoe2mc.json`: object kind is `"unit"`; "ground" over a footprint is the top of the barriers: take the free cells next
-  to it (`Map.around`, #307). Stump names: `STUMP`, `*_STUMP`. The `buildings` scenario: building i of `BuildingInfo` is
-  near tile (4 + i % 40 × 7, 4 + i // 40 × 7) (#251).
+- `aoe2mc.json`: object kind is `"unit"`; `"id"` is the AoE2 type constant, the object ID of a record is `"ref"` (#408).
+  The "ground" of a blocked footprint is the barrier top: take the free cells of `Map.around()` (#307, #391). Stump names:
+  `STUMP`, `*_STUMP`. The `buildings` scenario: building i of `BuildingInfo` is near tile (4 + i % 40 × 7, 4 + i // 40 × 7).
 - Parallel sibling tickets: before you add a helper or a tool option, `git fetch origin main` and grep for it (two runs
   added `render.py --cut` and a `furnish()`; the second `furnish()` broke main, #263). Put the tests of a ticket in a new
   file `tests/test_<topic>.py`: tests appended at the end of a shared file conflict (3 times on #295).
-- A datapack `load` function or an RCON `@e` selector sees only entities of loaded chunks: 26.3 loads none without a
-  player. In an RCON check, `forceload add X0 Z0 X1 Z1` (at most 256 chunks per command) first (#358).
-- A fruit bush of `place_objects` is at block `int(x * T)` (the tile center), not at `int(tile) * T`. In `aoe2mc.json`
-  the "ground" of a blocked footprint is the barrier top: take the ground of `Map.around()` (#391).
-- `build.place` draws the design with `replay.Replay.building`: fake `aoe2mc.json` data in tests needs `level_height`
-  and a tile size of 4 (at tile size 1 most designs give no blocks). The site keeps the commands, bottom up (#418).
-- `aoe2mc.json` objects: `"id"` is the AoE2 type constant, not the object ID of a record: that is `"ref"` (#408).
-  Import cycle `gather` → `build` → `replay`: `replay` imports `gather` inside a function.
-- `gather.Map.path` on a whole record map (480 × 480): A* with a cell limit, about 45 ms per path, 0.3 s across the
-  map. Replay paths cost 18 s per 200 s of game in samples/ (one search per unit of a group, #409).
+- A fruit bush of `place_objects` is at block `int(x * T)` (the tile center), not at `int(tile) * T` (#391).
 - "units in a block": `AOE2MC_DEBUG=1` names the block; list the `aoe2mc.json` objects with a `tile` near the unit to
   find its source (#415: a `PLANT_SHRUB` on the same block, not the tree that the ticket named).
 - Stacked `cylinder`s of falling height make a flat top (the outer disc covers the inner ones): use `seats()`, which
@@ -114,3 +85,4 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - `docs/coverage.md` on main is stale while GitHub Actions cannot run (#460): it listed 21 fallbacks that the code already handles. For the real fallbacks, run `python3 tools/coverage.py OUT.md` into the scratchpad (#500).
 - Furniture inside a closed design: a text map of each layer (one character per state name of `render.building_blocks`, rows by z) shows the positions faster than an isometric render, which hides small blocks behind walls (#501).
 - `tests/test_objects.py::test_blocks_under_water_are_waterlogged` names the blocks of `fish_trap`: change it with the fish trap materials (#486). Grep `tests/` for the design name before the full run.
+- `docs/coverage.md` on main can be stale (#460): for the real fallbacks run `python3 tools/coverage.py OUT.md` (#500).

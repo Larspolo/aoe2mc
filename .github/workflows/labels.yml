@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read     # checkout needs it (the repository is private)
+  contents: read     # checkout needs it
   issues: write
 
 jobs:
