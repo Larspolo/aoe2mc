@@ -301,6 +301,7 @@ class Gather:
         self.menus = {}                                                # player -> handler of its open menu (#619)
         self.bar = None                                                # the unit on the boss bar (bossbar.py, #659)
         self.queues, self.trained = {}, {}                             # town center -> its queue, units it trained
+        self.techs = set()                                             # the researched technologies (train.TECHS)
         self.pop, self.census, self.shown = 0, 0.0, {}                 # live units, AoE2 seconds since the count, sidebar
         import combat                                                  # combat imports this module
         ground = [r.split() for r in data["ground"]]
