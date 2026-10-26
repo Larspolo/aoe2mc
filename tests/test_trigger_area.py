@@ -25,7 +25,7 @@ def test_scenario_area_trigger_gives_a_tick_line(tmp_path):
     assert files["data/minecraft/tags/function/tick.json"] == {"values": ["aoe2mc:tick"]}
     # tiles 3..6 are the blocks 12..27: dx 15; all heights
     assert files[TICK].splitlines() == [
-        "execute if entity @e[tag=aoe2mc.p1,tag=aoe2mc.t38,x=12,y=-64,z=12,dx=15,dy=383,dz=15] unless score #1 aoe_trig matches 1 "
+        "execute if entity @e[tag=aoe2mc.p1,tag=!aoe2mc.mount,tag=aoe2mc.t38,x=12,y=-64,z=12,dx=15,dy=383,dz=15] unless score #1 aoe_trig matches 1 "
         "run function aoe2mc:trigger/1"]
     assert files["data/aoe2mc/function/trigger/1.mcfunction"].splitlines() == [
         'tellraw @a {"text": "A monastery stands now next to the hill."}', "scoreboard players set #1 aoe_trig 1"]
@@ -33,22 +33,22 @@ def test_scenario_area_trigger_gives_a_tick_line(tmp_path):
 
 def test_trigger_that_does_not_loop_fires_once():
     _, files = aoe2mc.trigger_files([area(2, [(2, 1, [0, 1, 0, 1])])], T=2)
-    assert files[TICK] == ("execute if entity @e[tag=aoe2mc.p2,x=0,y=-64,z=2,dx=1,dy=383,dz=1] "
+    assert files[TICK] == ("execute if entity @e[tag=aoe2mc.p2,tag=!aoe2mc.mount,x=0,y=-64,z=2,dx=1,dy=383,dz=1] "
                            "unless score #2 aoe_trig matches 1 run function aoe2mc:trigger/2\n")
     assert "scoreboard players set #2 aoe_trig 1" in files["data/aoe2mc/function/trigger/2.mcfunction"]
 
 
 def test_looping_trigger_fires_again_after_the_units_leave():
     _, files = aoe2mc.trigger_files([area(3, [(1, 1, [5, 5, 4, 4])], looping=True)], T=4)
-    sel = "@e[tag=aoe2mc.p1,x=16,y=-64,z=16,dx=7,dy=383,dz=7]"        # corners in any order
+    sel = "@e[tag=aoe2mc.p1,tag=!aoe2mc.mount,x=16,y=-64,z=16,dx=7,dy=383,dz=7]"        # corners in any order
     assert files[TICK].splitlines()[1] == f"execute unless entity {sel} run scoreboard players reset #3 aoe_trig"
 
 
 def test_quantity_and_whole_map():
     _, files = aoe2mc.trigger_files([area(4, [(1, 3, [-1, -1, -1, -1]), (2, 1, [0, 0, 1, 1])])], T=4)
     lines = files[TICK].splitlines()
-    assert lines[0] == "execute store result score #4.0 aoe_trig if entity @e[tag=aoe2mc.p1]"
-    assert lines[1].startswith("execute if score #4.0 aoe_trig matches 3.. if entity @e[tag=aoe2mc.p2,x=0,")
+    assert lines[0] == "execute store result score #4.0 aoe_trig if entity @e[tag=aoe2mc.p1,tag=!aoe2mc.mount]"
+    assert lines[1].startswith("execute if score #4.0 aoe_trig matches 3.. if entity @e[tag=aoe2mc.p2,tag=!aoe2mc.mount,x=0,")
 
 
 def test_mixed_inverted_or_silent_triggers_give_no_tick():

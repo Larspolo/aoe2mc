@@ -47,7 +47,7 @@ def test_create_object_of_a_building_is_not_supported_yet():
 def test_remove_object_kills_the_units_of_the_player_in_the_area():
     stats = Counter()
     kill, = lines([effect(aoe2mc.REMOVE_OBJECT, "ARCHER", player=2, area=(1, 2, 3, 2))], stats)
-    assert kill == "kill @e[type=minecraft:skeleton,tag=aoe2mc.p2,x=4,y=-64,z=8,dx=11,dy=383,dz=3]"
+    assert kill == "kill @e[type=minecraft:skeleton,tag=aoe2mc.p2,tag=!aoe2mc.mount,x=4,y=-64,z=8,dx=11,dy=383,dz=3]"
     assert stats == Counter(remove=1)
 
 
@@ -83,5 +83,5 @@ def test_the_triggers_scenario_removes_the_archers(tmp_path):
     ids = [t["id"] for t in aoe2mc.read_scenario(src)[4]["triggers"] if t["name"] == "Archer leaves"]
     path = os.path.join(tmp_path, "W", "datapacks", "aoe2mc", "data", "aoe2mc", "function", "trigger", f"{ids[0]}.mcfunction")
     with open(path) as f:
-        assert f.read().startswith("kill @e[type=minecraft:skeleton,tag=aoe2mc.p2,x=0,y=-64,z=0,dx=95,")
+        assert f.read().startswith("kill @e[type=minecraft:skeleton,tag=aoe2mc.p2,tag=!aoe2mc.mount,x=0,y=-64,z=0,dx=95,")
     assert "timer and area triggers (chat, instructions, objects): 3, 1 create (not supported yet), 1 remove" in out.getvalue()
