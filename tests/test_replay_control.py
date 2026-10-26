@@ -16,8 +16,8 @@ class Clock(Fake):
         self.now, self.at = 0.0, {}
 
     def command(self, cmd):
-        if cmd.startswith("tellraw"):
-            self.at[re.search(r"t\d+", cmd)[0]] = round(self.now, 3)
+        if cmd.startswith("tellraw") and (m := re.search(r"\bt\d+", cmd)):     # a chat event, not a view text
+            self.at[m[0]] = round(self.now, 3)
         return super().command(cmd)
 
     def sleep(self, s):
