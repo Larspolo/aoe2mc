@@ -980,7 +980,7 @@ class Replay:
         """The units that arrived at their building until game time t (ms) go inside (garrison.enter). A full
         building: they stay next to it, as in AoE2."""
         import garrison
-        out = []
+        out, full = [], set()
         for i, (rect, o, at) in list(self.entering.items()):
             if at is None or at > t:
                 continue
@@ -990,10 +990,22 @@ class Replay:
                 continue
             x, y, z = garrison.cell(self.map, rect, o, len(units))
             units.append(i)
+            full.add(rect)
             v.pos, v.path = (x + 0.5, float(y), z + 0.5), []
             self.moving.pop(i, None)                                # inside: no walk (#1177)
             out += [f"aoe stop {v.uuid}"] * self.ai + garrison.enter(v.uuid, x, y, z)
-        return out
+        return out + [c for r in sorted(full) for c in self.arrows(r)]
+
+    def arrows(self, rect):
+        """`aoe arrows` of the plugin for the start building rect with the units inside it (#1203), as the game program
+        (#1113): only with the plugin, and only for a building with a target entity that shoots (combat.setup)."""
+        import combat, garrison
+        name = next((s[2] for s in self.starts if s[3] == rect), None)
+        s = combat.stats(name) if self.ai and name in combat.BUILDINGS else None
+        if not (s and s.attack and s.range):
+            return []
+        inside = [self.units[i].name for i in self.garrisons.get(rect, []) if i in self.units]
+        return [f"aoe arrows {combat.target_uuid([rect[0], rect[2], rect[1], rect[3]])} {garrison.arrows(name, inside)}"]
 
     def holders(self, e):
         """The footprints of the buildings of an UNGARRISON or BACK TO WORK event that the replay knows."""
@@ -1028,7 +1040,7 @@ class Replay:
             v, y = self.units[i], self.map.y(x, z) or 0
             v.pos = (x + 0.5, float(y), z + 0.5)
             out += garrison.leave(v.uuid, x, y, z) + [f"aoe label {v.uuid}"] * self.ai
-        return out
+        return out + self.arrows(rect)
 
     def resource(self, e):
         """The tile of the tree, fruit bush, mine or farm that an ORDER targets, else None. A target that the replay
