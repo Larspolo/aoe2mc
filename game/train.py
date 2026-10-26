@@ -15,6 +15,7 @@ range trains archers (#670): they shoot from their AoE2 range (combat.range_comm
 Technologies (#655): a technology (TECHS) is an item of the menu of its building and uses the queue of the units, as in
 AoE2, but needs no population room. A click queues it once; when it is complete it goes into g.techs, leaves the menu
 and changes the values of the live and the new units (stats()). Loom: villagers get 15 hit points and 1/2 armor.
+Double-Bit Axe at the lumber camp (#723): villagers chop wood 20 % faster (gather.WORK_TECHS, gather.Gather.work_time).
 Ages (#672): the Feudal Age is a technology of the town center that needs 2 types of Dark Age buildings (REQUIRES). The
 sidebar title shows the age of the player; all players see a title and hear a sound when a player advances.
 """
@@ -33,11 +34,15 @@ import build  # noqa: E402
 import menu  # noqa: E402
 
 COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   # as in AoE2
-         "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}, "FEUDAL_AGE": {"food": 500}}
-TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130}   # AoE2 seconds
+         "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}, "FEUDAL_AGE": {"food": 500},
+         "DOUBLE_BIT_AXE": {"food": 100, "wood": 50}}
+TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130,   # AoE2 seconds
+               "DOUBLE_BIT_AXE": 25}
 TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE"), "BARRACKS": ("MILITIA",),   # the units and technologies of each
-          "ARCHERY_RANGE": ("ARCHER",)}                                         # building (#654, #670, #655)
-TECHS = {"LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
+          "ARCHERY_RANGE": ("ARCHER",),                                         # building (#654, #670, #655)
+          "LUMBER_CAMP": ("DOUBLE_BIT_AXE",)}                                   # (#723)
+TECHS = {"DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
+         "LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
          if "VILLAGER" in name else s, "FEUDAL_AGE": lambda name, s: s}   # the change of each technology to the AoE2 values
 REQUIRES = {"FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP", "DOCK"))}   # n types of these buildings
 AGES = ("Dark Age", "Feudal Age")                                  # the age after each researched age (index: ages)
@@ -48,6 +53,7 @@ CENSUS = 2.0                                                       # AoE2 second
 ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, item and name of each unit (#620)
          "MILITIA": (0, "zombie_spawn_egg", "Militia"),             # the mob of units.classify
          "ARCHER": (0, "skeleton_spawn_egg", "Archer"),
+         "DOUBLE_BIT_AXE": (0, "book", "Double-Bit Axe"),
          "LOOM": (1, "book", "Loom"),                               # a book for a technology (#618)
          "FEUDAL_AGE": (2, "bell", "Feudal Age")}
 SHIFT = 5                                                          # units of a shift click, as in AoE2
@@ -168,7 +174,7 @@ def research(g, entry):
         g.command("tellraw @a " + json.dumps({"text": f"Player {g.player} advances to the {age(g)}.", "color": "gold"}))
         g.command("playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1")
         return
-    g.command(f"tellraw {entry['player']} " + json.dumps({"text": f"{build.pretty(entry['name'])} is researched.",
+    g.command(f"tellraw {entry['player']} " + json.dumps({"text": f"{ITEMS[entry['name']][2]} is researched.",
                                                           "color": "green"}))
 
 
