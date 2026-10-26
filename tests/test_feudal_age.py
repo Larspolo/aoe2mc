@@ -29,7 +29,7 @@ def test_a_built_mill_completes_the_need_and_a_click_queues_the_age_once():
     assert menus(server)[-1].endswith(" 2:bell:Feudal Age:500 food · 130 s · research")
     assert train.order(g, "Steve", rect, 2, shift=True) == 1 and g.stock["food"] == 500
     assert train.order(g, "Steve", rect, 2) == 0 and g.stock["food"] == 500
-    assert " 2:bell:Feudal Age:500 food · 130 s · researching" in menus(server)[-1]
+    assert menus(server)[-1].endswith(" 2:bell:Feudal Age:500 food · 130 s · researching")
 
 
 def test_after_130_seconds_the_player_is_in_the_feudal_age():

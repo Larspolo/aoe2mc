@@ -68,7 +68,7 @@ def test_a_shift_click_queues_as_many_as_the_stock_allows():
     server, g = setup(food=1000, gold=70)
     rect = train.open_menu(g, "Steve", (11, 3))
     assert train.order(g, "Steve", rect, 0, shift=True) == 3 and g.stock["gold"] == 10
-    assert "queue 3/15" in menus(server)[-1]
+    assert menus(server)[-1].endswith("queue 3/15")
 
 
 def test_the_militia_appears_after_21_seconds_and_joins_the_military_units():

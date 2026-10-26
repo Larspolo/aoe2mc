@@ -35,7 +35,7 @@ def test_a_click_queues_loom_once_and_takes_its_cost():
     rect = train.open_menu(g, "Steve", (3, 3))
     assert train.order(g, "Steve", rect, 1, shift=True) == 1 and g.stock["gold"] == 450
     assert train.order(g, "Steve", rect, 1) == 0 and g.stock["gold"] == 450
-    assert ("1:book:Loom:50 gold · 25 s · researching" + FEUDAL) in menus(server)[-1]
+    assert menus(server)[-1].endswith("1:book:Loom:50 gold · 25 s · researching" + FEUDAL)
 
 
 def test_loom_needs_no_population_room_and_changes_the_villagers():

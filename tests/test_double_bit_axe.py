@@ -33,7 +33,7 @@ def test_a_click_queues_double_bit_axe_once_and_takes_its_cost():
     rect = train.open_menu(g, "Steve", (3, 3))
     assert train.order(g, "Steve", rect, 0, shift=True) == 1 and (g.stock["food"], g.stock["wood"]) == (400, 450)
     assert train.order(g, "Steve", rect, 0) == 0 and (g.stock["food"], g.stock["wood"]) == (400, 450)
-    assert "0:book:Double-Bit Axe:100 food · 50 wood · 25 s · researching" in menus(server)[-1]
+    assert menus(server)[-1].endswith("0:book:Double-Bit Axe:100 food · 50 wood · 25 s · researching")
 
 
 def test_not_enough_resources():
