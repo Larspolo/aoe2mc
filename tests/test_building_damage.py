@@ -19,7 +19,7 @@ def test_building_commands():
     uuid = combat.target_uuid([8, 8, 16, 16])
     assert uuid == combat.target_uuid([8, 8, 16, 16]) != combat.target_uuid([8, 8, 16, 17])
     summon, team, aoe = combat.building(uuid, "HOUSE", 2, (8, 64, 8, 15, 104, 15))
-    assert summon.startswith("summon slime 12.0 64 12.0 {Size:15,NoAI:1b") and "Invisible:1b" in summon
+    assert summon.startswith("summon slime 12.0 64 12.0 {Size:15,NoAI:1b") and combat.INVISIBLE in summon
     assert 15 * combat.SLIME > 7 and team == f"team join p2 {uuid}"   # the slime covers the 8 blocks
     assert aoe == f"aoe building {uuid} 550 0 7 8 64 8 15 104 15"
     ints = [int(i) for i in re.search(r"UUID:\[I;([-\d,]+)\]", summon).group(1).split(",")]

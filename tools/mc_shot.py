@@ -85,8 +85,9 @@ def world_version(world):
     return str(data["Version"]["Name"]), spawn
 
 
-def add_data_pack(world, views, fmt, period):
-    """A data pack that shows the views one after the other, `period` ticks each."""
+def add_data_pack(world, views, fmt, period, player=False):
+    """A data pack that shows the views one after the other, `period` ticks each. player: adventure mode, not
+    spectator (a spectator sees invisible mobs, #636), and a teleport in each tick of a view (else the player falls)."""
     root = os.path.join(world, "datapacks", "aoe2mc_shot")
     fn = os.path.join(root, "data", "aoe2mc_shot", "function")
     tags = os.path.join(root, "data", "minecraft", "tags", "function")
@@ -97,10 +98,12 @@ def add_data_pack(world, views, fmt, period):
     json.dump({"values": ["aoe2mc_shot:load"]}, open(os.path.join(tags, "load.json"), "w"))
     json.dump({"values": ["aoe2mc_shot:tick"]}, open(os.path.join(tags, "tick.json"), "w"))
     open(os.path.join(fn, "load.mcfunction"), "w").write("scoreboard objectives add aoe2mc_t dummy\n")
-    lines = ["scoreboard players add @a aoe2mc_t 1", "gamemode spectator @a[scores={aoe2mc_t=1}]"]
+    mode = "adventure" if player else "spectator"
+    lines = ["scoreboard players add @a aoe2mc_t 1", f"gamemode {mode} @a[scores={{aoe2mc_t=1}}]"]
     for i, (x, y, z, yaw, pitch) in enumerate(views, 1):
         t = 40 + (i - 1) * period
-        lines.append(f"execute as @a[scores={{aoe2mc_t={t}}}] run tp @s {x} {y} {z} {yaw} {pitch}")
+        span = f"{t}..{'' if i == len(views) else t + period - 1}" if player else t
+        lines.append(f"execute as @a[scores={{aoe2mc_t={span}}}] run tp @s {x} {y} {z} {yaw} {pitch}")
         lines.append(f'tellraw @a[scores={{aoe2mc_t={t}}}] "aoe2mc view {i}"')
     open(os.path.join(fn, "tick.mcfunction"), "w").write("\n".join(lines) + "\n")
 
@@ -112,8 +115,9 @@ def free_display():
     return n
 
 
-def shoot(world, out, views=None, version=None, size=(1280, 720), settle=8.0, timeout=240):
-    """Screenshots of the views [(x, y, z, yaw, pitch)] of a world. Returns the list of written PNG files."""
+def shoot(world, out, views=None, version=None, size=(1280, 720), settle=8.0, timeout=240, player=False):
+    """Screenshots of the views [(x, y, z, yaw, pitch)] of a world. Returns the list of written PNG files.
+    player: the view of a player in adventure mode (with hand and hotbar), not of a spectator."""
     for tool in ("Xvfb", "import"):
         if not shutil.which(tool):
             sys.exit(f"{tool} is not installed (apt-get install xvfb imagemagick)")
@@ -132,7 +136,7 @@ def shoot(world, out, views=None, version=None, size=(1280, 720), settle=8.0, ti
     with tempfile.TemporaryDirectory(dir=os.path.join(mc_check.ROOT, ".cache")) as game:
         name = "shot"
         shutil.copytree(world, os.path.join(game, "saves", name))
-        add_data_pack(os.path.join(game, "saves", name), views, data_pack_format(cp[-1]), period)
+        add_data_pack(os.path.join(game, "saves", name), views, data_pack_format(cp[-1]), period, player)
         with open(os.path.join(game, "options.txt"), "w") as f:
             f.writelines(f"{k}:{v}\n" for k, v in OPTIONS.items())
         disp = free_display()
@@ -278,10 +282,13 @@ def main(argv=None):
     ap.add_argument("--version", help="client version (default: the version in level.dat)")
     ap.add_argument("--settle", type=float, default=8.0, help="seconds to wait for the chunks of a view (default 8)")
     ap.add_argument("--timeout", type=float, default=240, help="seconds until the last view (default 240)")
+    ap.add_argument("--player", action="store_true",
+                    help="adventure mode, not spectator: a spectator sees invisible mobs (with hand and hotbar)")
     a = ap.parse_args(argv)
     _, (spawn, yaw) = world_version(a.world)
     x, y, z = a.at or (spawn[0] + 0.5, spawn[1] + 2, spawn[2] + 0.5)
-    shoot(a.world, a.out, [(x, y, z, *(a.look or (yaw, 20)))] + a.more, a.version, settle=a.settle, timeout=a.timeout)
+    shoot(a.world, a.out, [(x, y, z, *(a.look or (yaw, 20)))] + a.more, a.version, settle=a.settle, timeout=a.timeout,
+          player=a.player)
 
 if __name__ == "__main__":
     main()
