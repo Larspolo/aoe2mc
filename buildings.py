@@ -2997,6 +2997,9 @@ def place_building(E, cols, B, o, players, walls, gates):
         transpose(c)
     if gates.get(id(o)) == "diag-":
         c.a = c.a[:, :, ::-1].copy()                                     # mirror: the other diagonal
+    if o.get("ref") is not None and fn not in (gate, bridge, wooden_bridge, fish_trap, scaffold_walk, aqueduct):
+        INSIDE[o["ref"]] = ([(x0 + x, z0 + z) for x, z in rooms(c, fx, fz) if cols.inside(x0 + x, z0 + z)],
+                            base + 1, (x0 + fx // 2, z0 + fz // 2))
     if BARRIERS and fn not in (gate, bridge, wooden_bridge, fish_trap, scaffold_walk):
         barriers(c, fx, fz)
     if fn is gate:                          # only the passage is free: units on the towers move out (#577)
@@ -3049,6 +3052,7 @@ WOOD_BRIDGE_TILES = set()
 SHELVES = {}             # (x, y, z) of a shelf block -> its 3 item names (#526)
 BRIDGE_CELLS = set()     # block columns with a bridge deck (units there stand on the deck)
 FLOORS = {}              # (x, z) of a gate passage -> the y where units stand on its floor (#773)
+INSIDE = {}              # reference ID of a building -> (free cells of its rooms, their y, center): garrisons (#807)
 
 
 def plan_walls(objects):
@@ -3056,6 +3060,7 @@ def plan_walls(objects):
     WOOD_BRIDGE_TILES.clear()
     BRIDGE_CELLS.clear()
     FLOORS.clear()
+    INSIDE.clear()
     WOOD_BRIDGE_TILES.update((int(o["x"]), int(o["y"])) for o in objects if "WOODEN_BRIDGE" in o["name"])
     walls = set()
     for o in objects:
@@ -4028,6 +4033,19 @@ def weather(c):
             acc += share
             if len(pick):
                 c.a[pick[:, 0], pick[:, 1], pick[:, 2]] = c.B("minecraft:" + repl + name[len(base):])
+
+
+def rooms(c, fx, fz):
+    """The local (x, z) of the free cells on the ground floor (2 free blocks on the floor or the ground), the rooms
+    (air) first, then nearest to the center: there the garrisoned units stand (#807). An open hall has no air, only
+    free space (-1)."""
+    m, b, air = c.m, c.below, c.B("air")
+    sub = c.a[m:m + fx, b:b + 3, m:m + fz]
+    free = (sub == -1) | (sub == air)
+    xs, zs = np.nonzero((sub[:, 0] != air) & free[:, 1] & free[:, 2])
+    room = (sub[xs, 1, zs] == air) & (sub[xs, 2, zs] == air)
+    order = np.lexsort((zs, xs, (2 * xs - fx + 1) ** 2 + (2 * zs - fz + 1) ** 2, ~room))
+    return [(int(xs[i]), int(zs[i])) for i in order]
 
 
 def barriers(c, fx, fz):

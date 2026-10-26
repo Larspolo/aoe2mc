@@ -37,7 +37,7 @@ def villagers(w):
 
 def test_garrisoned_units_stand_next_to_the_holder(tmp_path):
     src = garrison_map(str(tmp_path / "g.aoe2scenario"))
-    w, log = convert(src, str(tmp_path / "W"))
+    w, log = convert(src, str(tmp_path / "W"), garrison="outside")
     assert "  units in a block (moved up): 0" in log
     assert "  units (garrisoned, next to the holder): 3" in log
     vs = villagers(w)
