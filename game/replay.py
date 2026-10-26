@@ -150,6 +150,7 @@ class Replay:
         self.arriving = {}                      # object ID -> game time (ms) of its work start, until it is there (#766)
         self.entering = {}                      # object ID -> [footprint, building entry, arrival (ms) or None] (#809)
         self.garrisons = {}                     # building footprint -> object IDs of the units inside it
+        self.work = {}                          # object ID -> the resource tile that it left for a garrison (#1179)
         self.ids = {}                           # new object ID of a building -> footprint of its replay building (#876)
         self.effects = {}                       # entity tag of a research text -> game time (ms) of its end (#843)
         self.refs = {o["ref"]: o for o in data["objects"] if o.get("ref") is not None}
@@ -213,12 +214,9 @@ class Replay:
         if kind == "garrison" and e.get("objects"):
             return self.move(dict(e, kind="order", garrison=True))
         if kind == "ungarrison" and e.get("objects"):
-            import garrison
-            starts = {s[0]: s[3] for s in self.starts}
-            rects = [starts[i] if i in starts else name in garrison.SIZES and self.new_building(i, name, e["player"],
-                                                                                              full=True)
-                     for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"]))]
-            return [c for r in rects if r for c in self.release(r)]
+            return [c for r in self.holders(e) for c in self.release(r)]
+        if kind == "back_to_work" and e.get("objects"):
+            return self.back(e)[0]
         if kind == "delete" and e.get("objects"):
             return self.delete(e)
         if kind == "chat" and e.get("text"):
@@ -668,6 +666,8 @@ class Replay:
             self.working.pop(i, None)
             self.arriving.pop(i, None)
             self.entering.pop(i, None)
+            if e.get("garrison"):                                   # BACK TO WORK sends it there again
+                self.work[i] = v.tree
             v.tree = tile
             if home and not (not e.get("garrison") and v.load and v.name.startswith("VILLAGER")
                              and home[1]["name"] in self.gather.DROP_SITES.get(v.res, ())):   # it drops its load
@@ -977,6 +977,30 @@ class Replay:
             out += [f"aoe stop {v.uuid}"] * self.ai + garrison.enter(v.uuid, x, y, z)
         return out
 
+    def holders(self, e):
+        """The footprints of the buildings of an UNGARRISON or BACK TO WORK event that the replay knows."""
+        import garrison
+        starts = {s[0]: s[3] for s in self.starts}
+        rects = [starts[i] if i in starts else name in garrison.SIZES and self.new_building(i, name, e["player"],
+                                                                                          full=True)
+                 for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"]))]
+        return [r for r in rects if r]
+
+    def back(self, e):
+        """BACK TO WORK (#1179): the units inside the buildings come out, and each goes back to the resource that it
+        left for the garrison, as in AoE2. Returns the commands and the IDs of the units that work again."""
+        out, work = [], {}
+        for r in self.holders(e):
+            units = list(self.garrisons.get(r, []))
+            out += self.release(r)
+            for i in units:
+                if (tile := self.work.pop(i, None)) is not None:
+                    work.setdefault(tile, []).append(i)
+        for (x, z), ids in sorted(work.items()):                    # an order on the resource tile
+            out += self.move(dict(time=e["time"], player=e["player"], kind="order", target=-1, objects=ids,
+                                  names=[None] * len(ids), tile=[x + 0.5, z + 0.5], resource=(x, z)))
+        return out, [i for ids in work.values() for i in ids]
+
     def release(self, rect):
         """The units inside the building rect come out on the free cells next to it, the door side first."""
         import garrison
@@ -992,6 +1016,8 @@ class Replay:
         """The tile of the tree, fruit bush, mine or farm that an ORDER targets, else None. A target that the replay
         does not know (a farm of the replay: the record has no IDs of new objects) is the farm under the order tile."""
         t, m = e.get("target"), self.map
+        if "resource" in e:                                         # BACK TO WORK: the tile that the unit left
+            return e["resource"]
         o = self.refs.get(t) if e["kind"] == "order" else None
         if e["kind"] == "order" and t is not None and o is None and t not in self.units and "tile" in e:
             return m.farm_at.get((int(e["tile"][0] * self.T), int(e["tile"][1] * self.T)))
@@ -1265,6 +1291,12 @@ class Replay:
                     self.entering[i][2] = e["time"]
             elif e["kind"] in ("build", "wall", "spawn", "delete", "ungarrison"):
                 out += self.enter(e["time"]) + self.commands(e)
+            elif e["kind"] == "back_to_work" and e.get("objects"):  # the units work again from now (#1179)
+                out += self.enter(e["time"])
+                cmds, ids = self.back(e)
+                out += cmds
+                moved.update(ids)
+                since.update((i, self.walk_end(self.units[i], e["time"])) for i in ids)
             elif e["kind"] == "age" and e.get("age"):                 # the sidebar shows it, no title
                 self.age(e)
             elif e["kind"] == "research" and e.get("technology"):     # no text, but the summary counts it
