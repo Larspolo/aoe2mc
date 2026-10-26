@@ -85,6 +85,12 @@ is less than 1 block wide and walks up at its flat speed (16.4 to 17.3 blocks pe
 the game program (two sizes of one unit) and an own path follower (own logic in place of Minecraft path finding).
 Work: #1022.
 
+**Owner decision (2026-10-26): the stance of the selected units** (#1106). The stance (aggressive, defensive, stand
+ground, no attack) has a **chest menu of the Paper plugin**, with the same behaviour as the build menu of a villager
+(#621): a right click on a selected military unit opens a menu with four items (sword, shield, iron bars, white
+banner), a click sets the stance of the selection, and the menu closes. The menu has room for more unit commands
+later (formations, delete). Not chosen: a hotbar item that goes to the next stance, and a chat command. Epic #1103.
+
 ### Smallest playable milestone: "villagers gather wood"
 
 1. The converter writes `aoe2mc.json` into the world folder: each object with its AoE2 ID, name, owner,
