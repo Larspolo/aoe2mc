@@ -345,14 +345,29 @@ create_terrain DIRT3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
 create_terrain FOREST { base_terrain GRASS number_of_clumps 8 number_of_tiles 25 set_avoid_player_start_areas 16
   spacing_to_other_terrain_types 2 }
 """
+# Highland: grass land with forests, a river across the map between the players (RIVERS) with shallow fords.
+HIGHLAND = """
+<LAND_GENERATION>
+base_terrain GRASS
+create_player_lands { terrain_type GRASS2 land_percent 40 base_size 12 clumping_factor 15 }
+<TERRAIN_GENERATION>
+create_terrain FOREST { base_terrain GRASS number_of_clumps 8 land_percent 8 set_avoid_player_start_areas 16
+  spacing_to_other_terrain_types 1 clumping_factor 15 }
+create_terrain FOREST { base_terrain GRASS number_of_clumps 10 number_of_tiles 12 set_avoid_player_start_areas 12
+  spacing_to_other_terrain_types 2 }
+create_terrain DIRT3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
+create_terrain GRASS3 { base_terrain GRASS2 number_of_clumps 8 land_percent 3 }
+"""
 GENERATORS = {"arabia": ARABIA,
               "arena": ARENA,
               "black_forest": BLACK_FOREST,
-              "gold_rush": GOLD_RUSH}
+              "gold_rush": GOLD_RUSH,
+              "highland": HIGHLAND}
 WALLS = {"arena": 23}           # the radius in tiles of the stone wall circle around each player (outside START)
 BAND = 6                        # the forest inside the wall: tiles of width, on the half away from the map middle
 PATHS = {"black_forest": 1}     # the half width in tiles of the open path from each player to the middle
 GOLDS = {"gold_rush": (10, 6, 5)}  # the gold of the middle: radius in tiles, clumps of gold mines, mines in a clump
+RIVERS = {"highland": (3, 3, 5)}  # the river: half width in tiles, the least and the most fords
 RINGS = {"gold_rush": (14, 5)}  # the forest ring around the gold: inner radius and width in tiles, gaps between players
 WOODS = {"arabia": (10, 30, 3), # the wood line of each player (tiles from the town center, forest tiles) and its
          "gold_rush": (10, 30, 3)}  # single trees (stragglers, at 4 to 6 tiles), as in AoE2 (#1144)
@@ -411,6 +426,27 @@ def goldfield(d, gold, ring, rng):
     return out
 
 
+def river(d, spec, rng):
+    """A river of half width spec[0] across the whole map through the middle, on the line that is farthest from the
+    player origins (for 2 players: between them), with a meander. spec[1] to spec[2] fords of SHALLOW, 3 tiles wide,
+    at even places along it; no forest next to a ford, so units walk across."""
+    w, least, most = spec
+    n, terrain = d["size"], np.array(d["terrain"])
+    x, y = np.mgrid[0:n, 0:n] + 0.5 - n / 2
+    a = max(np.linspace(0, np.pi, 36, endpoint=False),                  # the normal of the river line
+            key=lambda a: min(abs((st["x"] - n / 2) * np.cos(a) + (st["y"] - n / 2) * np.sin(a)) for st in d["lands"]))
+    along = -x * np.sin(a) + y * np.cos(a)
+    side = x * np.cos(a) + y * np.sin(a) - 3 * np.sin(along * 4 * np.pi / n + rng.uniform(0, 2 * np.pi))
+    water = np.abs(side) <= w
+    k = rng.integers(least, most + 1)
+    fords = np.linspace(-0.6, 0.6, k) * n / 2 + rng.uniform(-3, 3, k)
+    ford = water & (np.abs(along[..., None] - fords).min(-1) <= 1.5)
+    terrain[water] = TERRAINS["WATER"]
+    terrain[ford] = TERRAINS["SHALLOW"]
+    terrain[dilate(ford, 3) & np.isin(terrain, list(FOREST_TREES))] = TERRAINS["GRASS"]
+    d["terrain"] = terrain.tolist()
+
+
 def paths(d, w):
     """Open grass paths of half width w from each player origin to the middle of the map."""
     n, terrain = d["size"], np.array(d["terrain"])
@@ -424,18 +460,20 @@ def paths(d, w):
 
 
 def random_map(kind, seed, players=2):
-    """The map description of an own generator (GENERATORS) and seed: the land of generate() (with the WALLS and PATHS
-    of the kind), a town center at each player origin and the START objects around it, on free tiles (no forest, no
-    water, not next to a wall)."""
+    """The map description of an own generator (GENERATORS) and seed: the land of generate() (with the WALLS, PATHS
+    and RIVERS of the kind), a town center at each player origin and the START objects around it, on free tiles (no
+    forest, no water, not next to a wall)."""
     d = generate(GENERATORS[kind], seed, players)
     rng = np.random.default_rng([seed, 993])
     if kind in PATHS:
         paths(d, PATHS[kind])
+    if kind in RIVERS:
+        river(d, RIVERS[kind], rng)
     objects = walls(d, WALLS[kind], rng) if kind in WALLS else []
     if kind in GOLDS:
         objects += goldfield(d, GOLDS[kind], RINGS[kind], rng)
     n, terrain = d["size"], np.array(d["terrain"])
-    used = np.isin(terrain, list(FOREST_TREES) + [TERRAINS["WATER"]])
+    used = np.isin(terrain, list(FOREST_TREES) + [TERRAINS["WATER"], TERRAINS["SHALLOW"]])
     for o in objects:                                      # no start object next to a wall or a gold mine
         used[max(0, int(o["x"]) - 1):int(o["x"]) + 2, max(0, int(o["y"]) - 1):int(o["y"]) + 2] = True
     for st in d["lands"]:
