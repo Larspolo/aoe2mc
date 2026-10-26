@@ -78,6 +78,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              the name of a building target (#661)
  *   aoe where <selector> [from]                "Where <count>: <uuid> <x> <y> <z> <order 0|1> <target 0|1>, ..." for
  *                                              WHERE_PAGE units from index `from` in UUID order (#813, tools/replay_drift.py)
+ *   aoe box <player> <x> <z> <dye>             draw the selection box from this corner to the look (#795, Border.java)
+ *   aoe box-clear <player>                     end the border of the selection box
  * Converted units have no AI (NoAI): an order turns it on. Such a unit finds no path before its first AI tick
  * (it is not "on the ground" yet), and vanilla goals (a random stroll) can take the navigation of a walking unit:
  * so the order sends the path again every 2 ticks (#437: 10 ticks made each walk 0.5 s longer), until the unit
@@ -138,6 +140,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     private final Map<UUID, Stats> stats = new HashMap<>();
     private final Ghost ghost = new Ghost(this);
+    private final Border border = new Border();
 
     private record Building(Stats stats, String box, int max, int[] b) {}   // b: x0 y0 z0 x1 y1 z1 of box
 
@@ -385,6 +388,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     public void onEnable() {
         Bukkit.getScheduler().runTaskTimer(this, this::follow, 2L, 2L);
         Bukkit.getScheduler().runTaskTimer(this, ghost::tick, 1L, 1L);
+        Bukkit.getScheduler().runTaskTimer(this, border::tick, 4L, 4L);
         Bukkit.getScheduler().runTaskTimer(this, this::siege, 10L, 10L);
         Bukkit.getScheduler().runTaskTimer(this, this::burn, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, this::watch, 20L, 20L);
@@ -650,7 +654,15 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             var path = pf.getCurrentPath();
             if (path == null || path.getFinalPoint() == null
                     || path.getFinalPoint().distanceSquared(o.goal) > 1.5 * 1.5) {
-                return !pf.moveTo(o.goal, o.speed) && ++o.fails >= 50;   // no path for 5 s: drop the order
+                if (pf.moveTo(o.goal, o.speed) || ++o.fails < 50) {
+                    return false;
+                }
+                if (mob instanceof Villager) {          // no path for 5 s: drop the order, and stop the brain (#811)
+                    mob.setAI(false);
+                }
+                getLogger().info("aoe2mc: no path " + mob.getUniqueId() + " " + o.goal.getX() + " " + o.goal.getY()
+                        + " " + o.goal.getZ());
+                return true;
             }
             return false;
         });
@@ -743,6 +755,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length >= 2 && args[0].startsWith("ghost")) {          // the ghost of a building (#794)
             return ghost.command(sender, args, players(sender, args[1]));
+        }
+        if (args.length >= 2 && args[0].startsWith("box")) {            // the border of the selection box (#795)
+            return border.command(sender, args, players(sender, args[1]));
         }
         if (args.length >= 5 && args[0].equals("moveto")) {
             double x, y, z, speed;
