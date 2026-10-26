@@ -4,7 +4,8 @@ AoE2 combat values of the units and buildings of the game program (#513, epic #3
 One table, keyed by the AoE2 unit name of `units.classify`. The values are the published AoE2 DE values of the
 base unit: no Blacksmith or University upgrades, no civilization bonuses. `range` is in tiles (0: melee),
 `reload` in game seconds. `bonus` is extra attack against the units of a class (`classes`): AoE2 adds it
-for each armor class of the target. The damage rule itself is in the next ticket (#514).
+for each armor class of the target. `damage` is the AoE2 damage rule (#514); the Paper plugin applies it
+(`aoe stats` gives a mob its values, `stats_command`).
 """
 from collections import namedtuple
 
@@ -67,3 +68,26 @@ DEFAULT, BUILDING = Stats(40, 4, 0, 0, 0, 2.0), Stats(1000, 0, 0, 7, 0, 0.0, {},
 def stats(name):
     """The combat values of an AoE2 unit or building; an unknown name gets a militia-like unit."""
     return STATS.get(name) or BUILDINGS.get(name) or (BUILDING if name.endswith(("_WALL", "_GATE", "_TOWER")) else DEFAULT)
+
+
+def damage(attacker, target):
+    """AoE2 damage of one hit: max(1, attack - armor + bonus). Melee hits the melee armor, a ranged unit the pierce armor."""
+    a, t = stats(attacker), stats(target)
+    armor = t.pierce if a.range else t.melee
+    return max(1, max(0, a.attack - armor) + sum(a.bonus.get(c, 0) for c in t.classes))
+
+
+def stats_command(uuid, name):
+    """The plugin command that gives entity `uuid` the values of AoE2 unit `name`: max_health = hit points (at most
+    1024, the limit of the attribute), full health, and the values of `damage` (the same rule in AoePlugin.java)."""
+    s = stats(name)
+    bonus = ",".join(f"{c}:{n}" for c, n in sorted(s.bonus.items())) or "-"
+    return (f"aoe stats {uuid} {min(s.hp, 1024)} {s.attack} {s.melee} {s.pierce} {int(s.range > 0)} "
+            f"{','.join(s.classes) or '-'} {bonus}")
+
+
+def setup(game, data):
+    """Give each unit of the players in `aoe2mc.json` data its AoE2 values; Gaia animals keep the vanilla values.
+    The entities must be loaded (forceload). Returns the number of units that got the values."""
+    return sum(game.command(stats_command(o["uuid"], o["name"])).strip() == "Stats: 1 units"
+               for o in data["objects"] if o["kind"] == "unit" and o["player"] and o.get("uuid"))

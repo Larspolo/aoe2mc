@@ -12,6 +12,9 @@ with the miner look. An empty mine disappears, and they go on to the nearest min
 on a farm sends one villager onto it (#392): one farmer per farm, as in AoE2. The wheat gets younger as the food
 goes down, and an empty farm is dirt.
 A right click on a construction site (build.py) sends them to build it, with the builder look (#418).
+A right click on a military unit of player 1 selects it; more clicks add more military units (#516). A right
+click on a unit of another player then sends them to attack it (`aoe attack` of the plugin, ai.py): one command
+for the selection, by the tag `SELECT`. A unit of player 1 is no target: a click on it selects it.
 A sidebar scoreboard shows wood, food, gold and stone of player 1.
 
 The program sees a click in two statistics: the use of the stick, and "talked to villager" (a right click on a
@@ -28,7 +31,7 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from aoe2mc import PASSABLE_OBJECTS, WOODS, object_footprint, tree_kind  # noqa: E402
-from units import VILLAGER_JOBS  # noqa: E402
+from units import VILLAGER_JOBS, animal  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
@@ -48,6 +51,8 @@ MINE_BLOCKS = {"gold": ("gold_ore", "raw_gold_block", "stone"),                #
                "stone": ("cobblestone", "andesite", "stone", "tuff")}
 STEPS = [(dx, dz) for dx in (-1, 0, 1) for dz in (-1, 0, 1) if dx or dz]
 NUMBER = r"(-?[\d.]+(?:E-?\d+)?)[df]"
+CIVILIANS = ("VILLAGER", "REPAIRER", "MONK", "KING", "TRADE", "FISHING_SHIP", "TRANSPORT")
+SELECT = "aoe2mc.selected"                                         # entity tag of the selected units
 EVENTS = {"idle": "idle", "to_tree": "walk", "chop": "chop", "to_drop": "carry",    # state -> event in the log
           "to_site": "walk", "build": "build"}
 
@@ -218,6 +223,11 @@ def pick_unit(eye, d, units, reach=64, radius=0.8):
     return best and best[1]
 
 
+def military(name):
+    """True for an AoE2 unit that fights: not a villager, monk, king, trade or transport unit, and no animal."""
+    return not name.startswith(CIVILIANS) and (animal(name) or ("military",))[0] == "military"
+
+
 def walk(g, v):
     """Move unit v one cell on its path with /tp, facing the step (g.map, g.command: Gather or replay.Replay)."""
     x, z = v.path.pop(0)
@@ -259,6 +269,10 @@ class Gather:
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
                       and "VILLAGER" in o["name"]]
         self.villagers, self.selected = {}, set()
+        self.soldiers = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit"
+                         and o["player"] == player and military(o["name"])}       # military units of the player
+        self.enemies = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit"
+                        and o["player"] not in (0, player)}                     # units of the other players
         self.players, self.sites = data.get("players", {}), []         # construction sites (#417)
         self.farmers, self.crops = {}, {}                              # farm tile -> UUID of its farmer, wheat age
         self.trunks = {}                                               # tree tile -> logs of its trunk on the ground
@@ -291,11 +305,26 @@ class Gather:
         return self
 
     def select(self, uuid):
-        """Select one villager (glowing), as a click in AoE2 does."""
-        for u in self.selected - {uuid}:
+        """Select one villager (glowing), as a click in AoE2 does. A click on a military unit adds it to selected
+        military units, as a shift click in AoE2 does."""
+        keep = {uuid} | (self.selected if uuid in self.soldiers and self.selected <= set(self.soldiers) else set())
+        for u in self.selected - keep:
             self.command(f"data merge entity {u} {{Glowing:0b}}")
-        self.selected = {uuid}
+            self.command(f"tag {u} remove {SELECT}")
         self.command(f"data merge entity {uuid} {{Glowing:1b}}")
+        self.command(f"tag {uuid} add {SELECT}")
+        self.selected = keep
+
+    def attack(self, target):
+        """Send the selected military units to attack the unit target, with their AoE2 walk speed (ai.py)."""
+        import ai                                                      # ai imports this module
+        for u in sorted(self.selected):
+            self.command(ai.speed_command(u, self.soldiers[u], self.map.T))
+        return self.command(f"aoe attack @e[tag={SELECT}] {target}")
+
+    def positions(self, uuids):
+        """{uuid: feet position} of the loaded units; a dead unit is not in it."""
+        return {u: p for u in uuids if (p := self.pos(u))}
 
     def task(self, v, name):
         """Give the villager the look of its AoE2 task (`LUMBERJACK` ...), with the table of the converter."""
@@ -398,7 +427,12 @@ class Gather:
         if not pos or len(rot) != 2:
             return
         eye, d = (pos[0], pos[1] + 1.62, pos[2]), direction(*map(float, rot))
-        u = pick_unit(eye, d, {k: v.pos for k, v in self.villagers.items()})
+        army = self.selected and self.selected <= set(self.soldiers)
+        u = pick_unit(eye, d, {k: v.pos for k, v in self.villagers.items()} |
+                      self.positions(list(self.soldiers) + (list(self.enemies) if army else [])))
+        if u in self.enemies:
+            self.attack(u)
+            return
         if u:
             self.select(u)
             return

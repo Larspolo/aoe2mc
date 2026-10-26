@@ -95,7 +95,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Painted trim (deck edge, band) | `*_concrete` (player color) | `torii`, `stupa`, `pyramid`, `dock` +3 more |
 | Painted plaster roof or ledge | `*_concrete_stairs` and `*_concrete_slab` | no design |
 | Red-painted stone (Indian, Mesoamerican, East Asian temples) | `cinnabar`, `cinnabar_bricks`, `polished_cinnabar`, `chiseled_cinnabar` | `rekha_deul`, `pagoda` |
-| Yellow ochre stone (African, Middle Eastern sets) | `sulfur_bricks`, `polished_sulfur`, `chiseled_sulfur` | no design |
+| Yellow ochre stone (African, Middle Eastern sets) | `sulfur_bricks`, `polished_sulfur`, `chiseled_sulfur` | `sankore` |
 | Fired orange brick | `resin_bricks`, `chiseled_resin_bricks` | `split_gate` |
 | Relief panel, carving | `chiseled_stone_bricks` | `harbor`, `temple`, `aqueduct`, `furnish_worship` +9 more |
 | Balustrade of a stair | `polished_granite` | `great_pyramid`, `pyramid` |

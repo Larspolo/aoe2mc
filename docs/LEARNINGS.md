@@ -38,6 +38,7 @@ of its document (named below): this file loads into each run. The `improve` skil
   (`ruff`, fast, `-m slow`, `-m mc`) locally on the run's `head_sha`; main is red only when one fails there.
 - `-m mc` takes about 21 minutes, and 14 of its tests stop with "no javac" when `/etc/aoe2mc-setup-version` is below 6:
   `apt-get install -y openjdk-25-jdk-headless` first (1 min, #536).
+- Wait for a `run_in_background` job in the foreground: `timeout 580 bash -c 'until [ -s OUT ]; do sleep 5; done'` works; a bare `sleep` is blocked (#514).
 - Records (`mgz`, test records, command pitfalls): `docs/research/replays.md`, "Pitfalls".
 - AoE2ScenarioParser 0.9.8 makes new scenarios (`tools/scenarios.py`: `new_scenario`, `add_unit`, `save`). It prints much
   text (`redirect_stdout`), default players are RANDOM (`western`), and `write_to_file` writes the output file name into
