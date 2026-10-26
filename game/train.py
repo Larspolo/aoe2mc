@@ -15,6 +15,8 @@ range trains archers (#670): they shoot from their AoE2 range (combat.range_comm
 Technologies (#655): a technology (TECHS) is an item of the menu of its building and uses the queue of the units, as in
 AoE2, but needs no population room. A click queues it once; when it is complete it goes into g.techs, leaves the menu
 and changes the values of the live and the new units (stats()). Loom: villagers get 15 hit points and 1/2 armor.
+Ages (#672): the Feudal Age is a technology of the town center that needs 2 types of Dark Age buildings (REQUIRES). The
+sidebar title shows the age of the player; all players see a title and hear a sound when a player advances.
 """
 import json
 import math
@@ -31,12 +33,14 @@ import build  # noqa: E402
 import menu  # noqa: E402
 
 COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   # as in AoE2
-         "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}}
-TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25}   # AoE2 seconds
-TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM"), "BARRACKS": ("MILITIA",),   # the units and technologies of each
+         "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}, "FEUDAL_AGE": {"food": 500}}
+TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130}   # AoE2 seconds
+TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE"), "BARRACKS": ("MILITIA",),   # the units and technologies of each
           "ARCHERY_RANGE": ("ARCHER",)}                                         # building (#654, #670, #655)
 TECHS = {"LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
-         if "VILLAGER" in name else s}                             # the change of each technology to the AoE2 values
+         if "VILLAGER" in name else s, "FEUDAL_AGE": lambda name, s: s}   # the change of each technology to the AoE2 values
+REQUIRES = {"FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP", "DOCK"))}   # n types of these buildings
+AGES = ("Dark Age", "Feudal Age")                                  # the age after each researched age (index: ages)
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
 HOUSING = {"TOWN_CENTER": 5, "HOUSE": 5, "CASTLE": 20}             # population of a complete building, as in AoE2
 LIMIT = 200                                                        # the AoE2 population limit
@@ -44,7 +48,8 @@ CENSUS = 2.0                                                       # AoE2 second
 ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, item and name of each unit (#620)
          "MILITIA": (0, "zombie_spawn_egg", "Militia"),             # the mob of units.classify
          "ARCHER": (0, "skeleton_spawn_egg", "Archer"),
-         "LOOM": (1, "book", "Loom")}                               # a book for a technology (#618)
+         "LOOM": (1, "book", "Loom"),                               # a book for a technology (#618)
+         "FEUDAL_AGE": (2, "bell", "Feudal Age")}
 SHIFT = 5                                                          # units of a shift click, as in AoE2
 
 
@@ -73,7 +78,8 @@ def show(g, player, rect):
     """Show (or refresh) the menu of the building rect: one item per unit, with its cost, time and queue."""
     n, building = len(g.queues.get(rect, [])), homes(g)[rect]
     items = [(*ITEMS[name], " · ".join(f"{v} {r}" for r, v in COSTS[name].items()) + f" · {TRAIN_TIMES[name]} s · "
-              + (("researching" if queued(g, name) else "research") if name in TECHS else f"queue {n}/{QUEUE}"))
+              + (missing(g, name) or ("researching" if queued(g, name) else "research") if name in TECHS
+                 else f"queue {n}/{QUEUE}"))
              for name in TRAINS[building] if name not in g.techs]
     menu.show(g, player, build.pretty(building), items, lambda p, slot, shift: order(g, p, rect, slot, shift))
 
@@ -98,6 +104,9 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
         return None
     if name in TECHS and (name in g.techs or queued(g, name)):        # a technology only once
         return None
+    if need := missing(g, name):
+        build.say(g, player, f"{build.pretty(name)} {need}.")
+        return None
     q = g.queues.setdefault(rect, [])
     if len(q) >= QUEUE:
         build.say(g, player, f"The queue is full ({QUEUE} units).")
@@ -119,6 +128,25 @@ def queued(g, name):
     return any(e["name"] == name for q in g.queues.values() for e in q)
 
 
+def owned(g):
+    """The names of the complete own buildings of the player: the start ones and the built ones."""
+    return [o["name"] for o in g.data["objects"] if o["kind"] == "building" and o["player"] == g.player] + \
+        [s["name"] for s in g.sites if s.get("done") and s["player"] == g.player]
+
+
+def missing(g, name):
+    """The text of the buildings that technology name still needs (REQUIRES), or None."""
+    n, names = REQUIRES.get(name, (0, ()))
+    has = sorted(set(names) & set(owned(g)))
+    if len(has) < n:
+        return f"needs {n} of {', '.join(build.pretty(b).lower() for b in names)} ({len(has)}/{n})"
+
+
+def age(g):
+    """The name of the age of the player."""
+    return AGES[sum(t in g.techs for t in ("FEUDAL_AGE",))]
+
+
 def stats(g, name):
     """The combat values of AoE2 unit name with the technologies of the player (combat.stats and TECHS)."""
     import combat                                                  # combat imports gather, gather imports this module
@@ -135,15 +163,18 @@ def research(g, entry):
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
         if stats(g, name) != combat.stats(name):
             g.command(combat.stats_command(uuid, name, stats(g, name)))
+    if entry["name"] in REQUIRES:                                  # an age: all players see it, as in AoE2
+        g.command("title @a title " + json.dumps({"text": age(g), "color": "gold"}))
+        g.command("tellraw @a " + json.dumps({"text": f"Player {g.player} advances to the {age(g)}.", "color": "gold"}))
+        g.command("playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1")
+        return
     g.command(f"tellraw {entry['player']} " + json.dumps({"text": f"{build.pretty(entry['name'])} is researched.",
                                                           "color": "green"}))
 
 
 def limit(g):
     """The population limit: 5 per complete own town center and house, 20 per castle, at most 200."""
-    names = [o["name"] for o in g.data["objects"] if o["kind"] == "building" and o["player"] == g.player]
-    names += [s["name"] for s in g.sites if s.get("done") and s["player"] == g.player]
-    return min(LIMIT, sum(HOUSING.get(n, 0) for n in names))
+    return min(LIMIT, sum(HOUSING.get(n, 0) for n in owned(g)))
 
 
 def census(g):
@@ -153,11 +184,15 @@ def census(g):
 
 
 def sidebar(g):
-    """Show the population and the limit as two lines of the sidebar (aoe_res), only when they changed."""
+    """Show the population and the limit as two lines of the sidebar (aoe_res) and the age in its title, only when
+    they changed."""
     for name, n in (("Population", g.pop), ("Limit", limit(g))):
         if g.shown.get(name) != n:
             g.shown[name] = n
             g.command(f"scoreboard players set {name} aoe_res {n}")
+    if g.shown.get("Age") != age(g):
+        g.shown["Age"] = age(g)
+        g.command(f'scoreboard objectives modify aoe_res displayname "Resources ({age(g)})"')
 
 
 def tick(g, work):
