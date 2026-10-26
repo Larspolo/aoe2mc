@@ -196,6 +196,7 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - The server cannot open an inventory without a joined player (#619): an `mc` test of a chest menu checks only the
   command answers ("Menu: 0 players", "Bad item"). Real clicks need a client on the server (#627).
   `scoreboard objectives list` shows the display names (`[Menu]`), not the objective names.
+- After `/kill <UUID>` the server still finds the entity by its UUID for 20 ticks (the death animation): `execute if entity <UUID>` gives "Test passed" at once. Poll for about 2 s in a test (#630).
 - A real client joins the Paper server of `run.Game` (`online-mode=false`) with `--quickPlayMultiplayer 127.0.0.1:PORT`
   (`mc_shot.Client`, #627). In an open inventory the pointer is free: `xdotool mousemove` + `click` hits the slots.
   A Paper display name of an item is italic by default (Adventure).
