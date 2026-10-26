@@ -20,6 +20,7 @@ Ages (#672): the Feudal Age is a technology of the town center that needs 2 type
 sidebar title shows the age of the player; all players see a title and hear a sound when a player advances.
 Forging at the blacksmith (#675): infantry and cavalry get +1 attack.
 Double-Bit Axe at the lumber camp (#723): villagers chop wood 20 % faster (gather.WORK_TECHS, gather.Gather.work_time).
+Horse Collar at the mill (#726): the live and the new farms of the player have 75 more food (gather.FARM_TECHS).
 """
 import json
 import math
@@ -38,16 +39,22 @@ import menu  # noqa: E402
 COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   # as in AoE2
          "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}, "FEUDAL_AGE": {"food": 500},
          "DOUBLE_BIT_AXE": {"food": 100, "wood": 50},
-         "FORGING": {"food": 150}, "SCOUT_CAVALRY": {"food": 80}}
+         "FORGING": {"food": 150},
+         "HORSE_COLLAR": {"food": 75, "wood": 75},
+         "SCOUT_CAVALRY": {"food": 80}}
 TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130,   # AoE2 seconds
                "DOUBLE_BIT_AXE": 25,
-               "FORGING": 50, "SCOUT_CAVALRY": 30}
+               "FORGING": 50,
+               "HORSE_COLLAR": 20,
+               "SCOUT_CAVALRY": 30}
 TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE"), "BARRACKS": ("MILITIA",),   # the units and technologies of each
           "ARCHERY_RANGE": ("ARCHER",),                                         # building (#654, #670, #655)
           "BLACKSMITH": ("FORGING",), "STABLE": ("SCOUT_CAVALRY",),             # (#675, #671)
-          "LUMBER_CAMP": ("DOUBLE_BIT_AXE",)}                                   # (#723)
+          "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
+          "MILL": ("HORSE_COLLAR",)}                                            # (#726)
 TECHS = {"DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
+         "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
          "LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
          if "VILLAGER" in name else s, "FEUDAL_AGE": lambda name, s: s}   # the change of each technology to the AoE2 values
 REQUIRES = {"FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP", "DOCK"))}   # n types of these buildings
@@ -62,6 +69,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "SCOUT_CAVALRY": (0, "horse_spawn_egg", "Scout Cavalry"),
          "DOUBLE_BIT_AXE": (0, "book", "Double-Bit Axe"),
          "FORGING": (0, "book", "Forging"),
+         "HORSE_COLLAR": (0, "book", "Horse Collar"),
          "LOOM": (1, "book", "Loom"),                               # a book for a technology (#618)
          "FEUDAL_AGE": (2, "bell", "Feudal Age")}
 SHIFT = 5                                                          # units of a shift click, as in AoE2
@@ -178,8 +186,13 @@ def stats(g, name):
 
 def research(g, entry):
     """A technology is complete: keep it in g.techs and give the live villagers and military units the new values."""
-    import combat
+    import combat, gather                                          # gather imports this module
     g.techs.add(entry["name"])
+    if (more := gather.FARM_TECHS.get(entry["name"])):             # the new and the live own farms get more food
+        g.map.farm_food += more
+        for t in g.map.own_farms:
+            if g.map.farms.get(t, 0) > 0:
+                g.map.farms[t] += more
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
         if stats(g, name) != combat.stats(name):
             g.command(combat.stats_command(uuid, name, stats(g, name)))
