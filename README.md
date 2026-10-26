@@ -146,6 +146,27 @@ format versions and `.scn` files give an error with the version: use the DE edit
 
 The file layouts are in [`docs/campaign-formats.md`](docs/campaign-formats.md).
 
+## Maps in JSON
+
+A map description in JSON converts without an AoE2 file. Use it for generated maps and tests:
+
+    aoe2mc Map.json MapWorld --preview
+
+    {"size": 16,
+     "terrain": [[0, 0, ...], ...],
+     "elevation": [[0, 0, ...], ...],
+     "objects": [{"name": "TOWN_CENTER", "player": 1, "x": 6.0, "y": 6.0, "rotation": 0}],
+     "players": {"1": {"civ": "BRITONS", "color": 0}}}
+
+- `terrain`: `size` lists of `size` terrain IDs, indexed `[x][y]` (AoE2ScenarioParser `TerrainId`, for example 0 is
+  grass and 22 is deep water).
+- `elevation`: the elevation levels, in the same layout. It is optional (default 0).
+- `objects`: the AoE2 object names (`aoe2mc.object_kinds()`, for example `TREE_OAK`, `GOLD_MINE`, `VILLAGER_MALE`),
+  with the tile position. Player 0 is GAIA. `rotation` is optional.
+- `players`: the civilization and the color index (0 blue to 7 orange, default: the player number - 1).
+
+An unknown terrain ID or object name gives an error.
+
 ## Buildings
 
 Each building fills its AoE2 footprint. The front (main door) is on the south side, as in the AoE2 camera view.
