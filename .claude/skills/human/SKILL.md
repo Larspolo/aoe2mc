@@ -31,7 +31,13 @@ the checks that the chosen ticket needs (a decision needs only GitHub).
 
 Run `python3 tools/owner_tasks.py`. It prints the open `needs-human` tickets that are not muted, decision tickets
 first, then the oldest first, each with its kind and its question. Show the list and ask the owner which ticket to
-do (`AskUserQuestion` with the first four tickets, plus "other"). With no ticket: say so and stop.
+do (`AskUserQuestion` with the first four tickets, plus "other"). With no ticket: say so and offer "Wait for the
+next ticket" (below); if the owner does not want to wait, stop.
+
+Wait for the next ticket (#1025): start `python3 tools/owner_tasks.py --wait` with `run_in_background` and end the
+turn. While it waits, the session uses no model turn (one GitHub request each 5 minutes, at most 12 hours). Exit 0:
+it printed the new ticket in the format of the list: show it and ask the owner with `AskUserQuestion` whether to do
+it now (step 3). Exit 1 ("No new ticket in 12 hours."): say so and offer to wait again.
 
 ## 3. Prepare the chosen ticket
 
@@ -78,4 +84,5 @@ the tree from the old tree, #718).
 3. Remove `needs-human` when the answer is complete. For a decision: write the decision into the document of the
    topic and close the decision ticket (`ticket` skill, "Decision tickets"). Keep `needs-human` and say what is open
    when the answer is not complete.
-4. Stop the server (Ctrl-C in `game/run.py`) and offer the next ticket of the list (step 2).
+4. Stop the server (Ctrl-C in `game/run.py`) and offer the next ticket of the list (step 2). After the last ticket:
+   offer "Wait for the next ticket" (step 2).
