@@ -117,7 +117,7 @@ class Map:
             if o["kind"] == "building":
                 x0, z0, x1, z1 = o["footprint"]
                 self.building(o["name"], (x0, x1, z0, z1), (int(o["tile"][0]), int(o["tile"][1])) if "tile" in o
-                              else None, o["player"] == player)
+                              else None, o["player"] == player, o.get("open", ()))
             elif o["kind"] == "other" and not any(k in o["name"] for k in PASSABLE_OBJECTS):
                 tile = int(o["tile"][0]), int(o["tile"][1])
                 if o["name"] in MINES:                                 # a mine at x.0 covers 2 tiles
@@ -138,9 +138,10 @@ class Map:
                         ("minecraft:oak_log", None) if kind == "dead" else \
                         (f"minecraft:{WOODS.get(kind, 'oak')}_log", f"minecraft:{WOODS.get(kind, 'oak')}_leaves[persistent=true]")
 
-    def building(self, name, rect, tile, own):
+    def building(self, name, rect, tile, own, open_cells=()):
         """Add a building with the block footprint rect = (x0, x1, z0, z1) and its center tile. A farm is ground
-        that a farmer stands on; own buildings are drop sites. Construction sites call it when they are complete."""
+        that a farmer stands on; own buildings are drop sites. Construction sites call it when they are complete.
+        open_cells: the cells that units walk through (under a town center, #865)."""
         x0, x1, z0, z1 = rect
         cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
         if "FARM" in name:                                             # no barriers: the farmer stands on it
@@ -149,7 +150,7 @@ class Map:
                 self.own_farms.add(tile)
             self.farm_at.update(dict.fromkeys(cells, tile))
             return
-        self.blocked |= cells
+        self.blocked |= cells - {tuple(c) for c in open_cells}
         for r, names in DROP_SITES.items():
             if own and any(k in name for k in names):
                 self.drops[r].append(cells)
