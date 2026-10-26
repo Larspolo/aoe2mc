@@ -43,6 +43,7 @@ import units  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
+import garrison  # noqa: E402
 import menu  # noqa: E402
 
 COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   # as in AoE2
@@ -227,6 +228,7 @@ def show(g, player, rect):
               " · ".join(f"{v} {r}" for r, v in COSTS[name].items()) + f" · {TRAIN_TIMES[name]} s · " + state(name))
              for name in trains(g, building) if name not in g.techs and unlocked(g, name) for slot, item, label in [ITEMS[name]]]
     items += [RALLY] if units_of(building) else []
+    items += [garrison.UNGARRISON] if getattr(g, "garrisons", {}).get(rect) else []   # only with units inside (#808)
     q = g.queues.get(rect, [])                                         # the queue row first: the plugin sets the
     items = [(ROW + i, ITEMS[name][1], ITEMS[name][2] + (f" {int(100 * q[0]['progress'])} %" if start == 0 else ""),
               "Click: cancel 1", k) for i, (name, start, k) in enumerate(groups(q)[:ROW])] + items   # items by slot
@@ -274,6 +276,10 @@ def order(g, player, rect, slot, shift=False):
         menu.close(g, player)
         g.command(f"tellraw {player} " + json.dumps({"text": "Right click the ground for the rally point.",
                                                       "color": "gray"}))
+        return 0
+    if slot == garrison.UNGARRISON[0] and getattr(g, "garrisons", {}).get(rect):   # all units come out (#808)
+        garrison.out(g, rect)
+        show(g, player, rect)
         return 0
     if slot >= ROW:
         cancel(g, player, rect, slot - ROW)
