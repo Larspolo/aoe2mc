@@ -97,10 +97,15 @@ def open_menu(g, player, cell):
 def show(g, player, rect):
     """Show (or refresh) the menu of the building rect: one item per unit, with its cost, time and queue."""
     n, building = len(g.queues.get(rect, [])), homes(g)[rect]
-    items = [(*ITEMS[name], " · ".join(f"{v} {r}" for r, v in COSTS[name].items()) + f" · {TRAIN_TIMES[name]} s · "
-              + (missing(g, name) or ("researching" if queued(g, name) else "research") if name in TECHS
-                 else f"queue {n}/{QUEUE}"))
-             for name in TRAINS[building] if name not in g.techs]
+    def state(name):
+        if need := build.locked(g, name):                              # a unit of a later age: a gray item (#674)
+            return need
+        if name in TECHS:
+            return missing(g, name) or ("researching" if queued(g, name) else "research")
+        return f"queue {n}/{QUEUE}"
+    items = [(slot, build.LOCKED if build.locked(g, name) else item, label,
+              " · ".join(f"{v} {r}" for r, v in COSTS[name].items()) + f" · {TRAIN_TIMES[name]} s · " + state(name))
+             for name in TRAINS[building] if name not in g.techs for slot, item, label in [ITEMS[name]]]
     menu.show(g, player, build.pretty(building), items, lambda p, slot, shift: order(g, p, rect, slot, shift))
 
 
@@ -126,6 +131,9 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
         return None
     if need := missing(g, name):
         build.say(g, player, f"{build.pretty(name)} {need}.")
+        return None
+    if need := build.locked(g, name):                                  # a unit of a later age (#674)
+        build.say(g, player, f"{build.pretty(name)}: {need}.")
         return None
     q = g.queues.setdefault(rect, [])
     if len(q) >= QUEUE:
@@ -164,7 +172,7 @@ def missing(g, name):
 
 def age(g):
     """The name of the age of the player."""
-    return AGES[sum(t in g.techs for t in ("FEUDAL_AGE",))]
+    return AGES[build.ages(g)]
 
 
 def stats(g, name):
