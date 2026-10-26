@@ -85,6 +85,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Painted trim (deck edge, band) | `*_concrete` (player color) | `torii`, `stupa`, `pyramid`, `dock` +3 more |
 | Relief panel, carving | `chiseled_stone_bricks` | `harbor`, `temple`, `aqueduct`, `furnish_worship` +6 more |
 | Balustrade of a stair | `polished_granite` | `pyramid` |
+| Stone bridge (#455) | `stone_bricks` piers with cutwaters every tile, `stone_brick_stairs[half=top]` vault, `stone_brick_wall` balustrade with `chiseled_stone_bricks` posts, `cracked_stone_bricks` on cracked and broken pieces | |
 | Crop field | `wheat` rows (ages 5–7) on `farmland`, furrows of bare `farmland`, `dirt_path` edge | `folwark` |
 | Hay, fodder | `hay_block` | `settlement`, `hut`, `mill_room`, `granary` +15 more |
 | Log pile, cut timber | `*_log[axis=x]` stacked as a pyramid (`log_pile`) | `log_pile`, `barricade`, `wooden_bridge`, `fish_trap` +36 more |
