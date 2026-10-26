@@ -50,3 +50,7 @@ def test_a_new_military_unit_walks_to_the_rally_point_with_the_plugin():
     train.rally(g, TC, (10, 12))
     train.go(g, TC, "m", "MILITIA")
     assert "aoe moveto m 10.5 64 12.5" in server.log
+
+
+def test_a_building_without_units_has_no_rally_point():
+    assert train.units_of("BLACKSMITH") == [] and train.units_of("TOWN_CENTER") == ["VILLAGER_MALE"]
