@@ -19,7 +19,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `convert:sounds` Sounds and ambient effects in the world (#188)
 - [x] `convert:triggers` Scenario triggers as datapack functions: messages, objectives, timers (epic #645)
 - [x] `convert:large` Large maps (480 × 480) in less time and memory, with a progress line (epic #689)
-- [ ] `convert:minimap` A filled Minecraft map item of the whole AoE2 map at the spawn, as the AoE2 minimap (epic #837)
+- [x] `convert:minimap` A filled Minecraft map item of the whole AoE2 map at the spawn, as the AoE2 minimap (epic #837)
 - [ ] `convert:random-maps` Make a world from an AoE2 random map script (`.rms`: Arabia, Arena, Black Forest) and a seed, with no scenario file
 
 ## 2. Play AoE2 in Minecraft (`game/`)
@@ -66,8 +66,8 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `replay:control` Control the replay in the game: pause, speed, jump to a time, a boss bar with the game time (epic #683)
 - [ ] `replay:follow` The units of the live replay follow the record: positions, gathering, no stuck units (epic #814)
 - [ ] `replay:view` A spectator view: follow a player or a unit, an overview from above (epic #736)
-- [ ] `replay:score` A score panel for each player: age, population, resources (estimated), military (epic #740)
-- [ ] `replay:effects` Show events on the map: research and age-up at the building, attacks, a marker where units die (epic #842)
+- [x] `replay:score` A score panel for each player: age, population, resources (estimated), military (epic #740)
+- [x] `replay:effects` Show events on the map: research and age-up at the building, attacks, a marker where units die (epic #842)
 - [ ] `replay:postgame` A summary at the end of the replay, as the AoE2 achievements screen: military, economy, technology, timeline
 
 ## 4. The agent system (`.claude/skills/`, `tools/`, `.github/workflows/`)

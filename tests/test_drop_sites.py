@@ -34,7 +34,7 @@ def test_a_villager_with_wood_walks_to_the_nearest_wood_site():
     d = data(building("TOWN_CENTER", 30, 30), building("MILL", 4, 0), building("MINING_CAMP", 4, 10),
              building("LUMBER_CAMP", 14, 4))
     server = Server()
-    g = gather.Gather(server, d)
+    g = gather.Gather(server, d, start={})
     v = g.villagers["v"] = gather.Villager("v", (2.5, 64.0, 7.5))
     v.state, v.load, v.tree = "to_drop", 0, None
     g.go(v, "to_drop", set().union(*map(g.map.around, g.map.drops[v.res])))

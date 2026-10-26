@@ -14,6 +14,8 @@ The end and destroy codes (#819): "i r winner" and "resign" show the title "Vict
 g.ended, which ends gather.Gather.run. "torpedo<n>" destroys player n, "black death" all other players (AoE2 has a bug
 here: it kills only one player) and "wimpywimpywimpy" the own player (a defeat). The buildings of the player fall as
 at 0 hit points (the plugin, `aoe destroy`), its units die (`kill` with the team and the tag of the player, #358).
+A transformation cheat (#967) turns each own unit of its "from" kind into its "to" unit: the new unit appears at the place
+of the old one with the same share of hit points, and the old one (with its riders) goes. The selection keeps the rest.
 "natural wonders" gives the control of the Gaia animals and takes the control of the own units (not reversible).
 More codes (#968): "woof woof" turns the birds into Stormy Dogs of Gaia, "my cpu can handle it" raises the highest
 population limit to 1000, "tech tech one two free" makes technologies free, "going above and beyond" lets the player
@@ -36,10 +38,14 @@ import bossbar  # noqa: E402
 from units import is_bird  # noqa: E402
 
 Unit = namedtuple("Unit", "name")             # the effect of a unit cheat
+Transform = namedtuple("Transform", "to units")   # a transformation cheat: own units with units(name) become unit `to`
 
 OBJECTIVE = "aoe_cheat"
 ALL = {"food": 100000, "wood": 100000, "gold": 100000, "stone": 100000}
 MAP = "The map is open already: Minecraft has no fog of war."
+CAMELS = {"BACTRIAN_CAMEL", "CAMEL", "CAMEL_ARCHER", "CAMEL_RIDER", "ELITE_CAMEL_ARCHER", "HEAVY_CAMEL_RIDER",
+          "IMPERIAL_CAMEL_RIDER"}               # "cameleon": not the Mameluke, Camel Scout and Raider, camel heroes
+NUMBER = r"-?\d+(?:\.\d+)?"
 
 
 def aegis(g, player):
@@ -99,9 +105,46 @@ def woof(g, player):
         if not (pos := g.pos(o["uuid"])):
             continue
         x, z = int(pos[0] // 1), int(pos[2] // 1)
-        if uuid := train.summon(g, "STORMY_DOG", (x + 0.5, float(g.map.y(x, z) or pos[1]), z + 0.5), 0):
+        if uuid := train.summon(g, "STORMY_DOG", (x + 0.5, float(g.map.y(x, z) or pos[1]), z + 0.5), player=0):
             g.command(f"tp {o['uuid']} {pos[0]} -200 {pos[2]}")      # gone without a death and its drops
             o["name"], o["uuid"] = "STORMY_DOG", uuid
+def infantry(name):
+    import combat                                                  # combat imports gather, gather imports this module
+    return combat.INF in combat.stats(name).classes
+
+
+def villager(name):
+    return name.startswith("VILLAGER")
+
+
+def share(g, uuid):
+    """The share of its hit points that unit uuid has: Health / max_health (1 when the server gives no number)."""
+    hp = re.findall(NUMBER, g.command(f"data get entity {uuid} Health").rsplit(":", 1)[-1])
+    top = re.findall(NUMBER, g.command(f"attribute {uuid} minecraft:max_health get").rsplit(" is ", 1)[-1])
+    return min(1.0, float(hp[0]) / float(top[0])) if hp and top and float(top[0]) > 0 else 1.0
+
+
+def transform(g, t):
+    """Turn each own unit of g whose name passes t.units into unit t.to at the same place (train.summon)."""
+    import train                                                   # train -> gather -> cheats: import it late
+    names = {o["uuid"]: o["name"] for o in g.units if o.get("uuid") in g.villagers} | g.soldiers
+    gone = set()
+    for uuid, name in sorted(names.items()):
+        if name == t.to or not t.units(name) or not (pos := g.pos(uuid)):
+            continue
+        part = share(g, uuid)
+        g.command(f"execute as {uuid} on passengers run kill @s")      # the rider of a horse or camel
+        g.command(f"kill {uuid}")
+        g.soldiers.pop(uuid, None)
+        g.villagers.pop(uuid, None)
+        gone.add(uuid)
+        new = train.summon(g, t.to, pos)
+        if new and part < 1:
+            hp = min(train.stats(g, t.to).hp, 1024)
+            g.command(f"data modify entity {new} Health set value {max(1.0, round(hp * part, 1))}f")
+    g.units = [o for o in g.units if o.get("uuid") not in gone]
+    g.farmers = {k: u for k, u in g.farmers.items() if u not in gone}
+    g.choose(g.selected - gone)
 
 
 def others(g):
@@ -116,14 +159,17 @@ def wonders(g, player):
     g.command(f'tellraw {player} {{"text":"You control nature: {len(g.soldiers)} animals"}}')
 
 
-CODES = {                                     # code -> the resources, the chat answer, a function or a Unit
+CODES = {                                     # code -> the resources, the chat answer, a function, a Unit or a Transform
     "aegis": aegis,
     "alpaca simulator": Unit("ALFRED_THE_ALPACA"),
     "black death": lambda g, player: [destroy(g, n) for n in others(g)],
+    "cameleon": Transform("FLAMING_CAMEL", CAMELS.__contains__),
     "catzor": Unit("SHARKATZOR"),
     "cheese steak jimmy's": {"food": 10000},
+    "flemish reformation": Transform("MONK", villager),
     "furious the monkey boy": Unit("FURIOUS_THE_MONKEY_BOY"),
     "going above and beyond": flag("beyond", "Technologies: up to 256 researches"),
+    "grab your pitchforks": Transform("FLEMISH_MILITIA", villager),
     "how do you turn this on": Unit("COBRA_CAR"),
     "i don't exist": Unit("WAR_PENGUIN"),
     "i love the monkey head": Unit("VMDL"),
@@ -137,6 +183,7 @@ CODES = {                                     # code -> the resources, the chat 
     "noui": noui,
     "photon man": Unit("PHOTONMAN"),
     "polo": MAP,
+    "put on your capes": Transform("ELITE_TEUTONIC_KNIGHT", infantry),
     "resign": end("Defeat", "red"),
     "robin hood": {"gold": 10000},
     "rock on": {"stone": 10000},
@@ -153,6 +200,7 @@ CODES = {                                     # code -> the resources, the chat 
     "torpedo8": lambda g, player: destroy(g, 8),
     "wimpywimpywimpy": lambda g, player: destroy(g, g.player) or end("Defeat", "red")(g, player),
     "woof woof": woof,
+    "yes we khan": Transform("GENGHIS_KHAN", {"ELITE_MANGUDAI", "MANGUDAI"}.__contains__),
 }
 NAMES = sorted(CODES)                         # the score of a code is its index + 1
 
@@ -168,6 +216,8 @@ def apply(g, player, code):
     effect = CODES[code]
     if callable(effect):
         return effect(g, player)
+    if isinstance(effect, Transform):
+        return transform(g, effect)
     if isinstance(effect, Unit):
         import train                                                # train -> gather -> cheats: import it late
         tc = sorted(r for r, n in train.homes(g).items() if n == "TOWN_CENTER")

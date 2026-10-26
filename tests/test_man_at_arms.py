@@ -87,7 +87,7 @@ def test_a_live_militia_gets_the_name_and_values_on_a_server(tmp_path):
         data = json.load(f)
     with run.Game(tmp_path / "W") as game:
         game.forceload()
-        g = gather.Gather(game, data, tick=0.25).setup()
+        g = gather.Gather(game, data, tick=0.25, start={}).setup()
         uuid, = [u for u, n in g.soldiers.items() if n == "MILITIA"]
         g.techs.add("FEUDAL_AGE")
         g.stock.update(food=100, gold=40)

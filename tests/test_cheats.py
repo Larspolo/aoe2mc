@@ -14,7 +14,7 @@ def game(tiny_world, on):
     with open(os.path.join(tiny_world[0], "aoe2mc.json")) as f:
         data = json.load(f)
     server = FakeServer({})
-    return server, gather.Gather(server, data, cheats=on).setup()
+    return server, gather.Gather(server, data, cheats=on, start={}).setup()
 
 
 def test_lumberjack_gives_wood_with_cheats_on(tiny_world):

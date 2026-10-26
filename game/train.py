@@ -550,29 +550,6 @@ def tick(g, work):
     return out
 
 
-def summon(g, name, pos, player=None):
-    """Summon AoE2 unit name of player (default: the own player) at pos, facing south, with its AoE2 values.
-    Returns its UUID, or None."""
-    o = dict(name=name, player=g.player if player is None else player, rotation=math.pi / 2)
-    players = {int(p): v for p, v in g.data.get("players", {}).items()}
-    nbt = units.make_entity(o, players, pos, np.random.default_rng())  # a new random UUID
-    if nbt is None:
-        return None
-    kind = str(nbt.pop("id"))
-    del nbt["Pos"]
-    uuid = units.uuid_str(nbt["UUID"])
-    g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}")
-    import combat                                                  # combat imports gather, gather imports this module
-    g.command(combat.stats_command(uuid, name, stats(g, name)))
-    if cmd := combat.range_command(uuid, name, g.map.T, s=stats(g, name)):   # an archer shoots from its range (#670)
-        g.command(cmd)
-    if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name)):   # it attacks enemies in sight (#775)
-        g.command(cmd)
-    import ai                                                      # ai imports gather, gather imports this module
-    g.command(ai.speed_command(uuid, name, g.map.T))               # its AoE2 walk speed also without an order (#849)
-    return uuid
-
-
 def spawn(g, rect, name):
     """Summon unit name on a free cell in front of the building rect (south side first, the middle first; the units
     take the cells one after the other) and add it to the villagers of g (a military unit: to g.soldiers, #654).
@@ -582,16 +559,40 @@ def spawn(g, rect, name):
         return None
     k = g.trained[rect] = g.trained.get(rect, -1) + 1
     x, z = cells[k % len(cells)]
-    pos = (x + 0.5, float(g.map.y(x, z)), z + 0.5)
-    uuid = summon(g, name, pos)
+    uuid = summon(g, name, (x + 0.5, float(g.map.y(x, z)), z + 0.5))  # it faces south
     if uuid is None:
         return None
-    import gather                                                  # gather imports this module
+    go(g, rect, uuid, name)
+    return g.villagers.get(uuid, uuid)
+
+
+def summon(g, name, pos, rotation=math.pi / 2, player=None):
+    """Summon unit name of g.player (or of another player) at pos with its AoE2 values, and add an own unit to
+    g.soldiers (a military unit) or to the villagers of g. Returns its UUID, or None. Also for the transformation cheats
+    (cheats.transform, #967) and the Stormy Dogs of Gaia (cheats.woof, #968)."""
+    o = dict(name=name, player=g.player if player is None else player, rotation=rotation)
+    players = {int(p): v for p, v in g.data.get("players", {}).items()}
+    nbt = units.make_entity(o, players, pos, np.random.default_rng())  # a new random UUID
+    if nbt is None:
+        return None
+    kind = str(nbt.pop("id"))
+    del nbt["Pos"]
+    uuid = units.uuid_str(nbt["UUID"])
+    g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}")
+    import combat, gather                                          # both import gather, gather imports this module
+    g.command(combat.stats_command(uuid, name, stats(g, name)))
+    if cmd := combat.range_command(uuid, name, g.map.T, s=stats(g, name)):   # an archer shoots from its range (#670)
+        g.command(cmd)
+    if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name)):   # it attacks enemies in sight (#775)
+        g.command(cmd)
+    import ai                                                      # ai imports gather, gather imports this module
+    g.command(ai.speed_command(uuid, name, g.map.T))               # its AoE2 walk speed also without an order (#849)
+    if player not in (None, g.player):
+        return uuid
     if gather.military(name):
         g.soldiers[uuid] = name
-        go(g, rect, uuid, name)
         return uuid
-    v = g.villagers[uuid] = gather.Villager(uuid, pos)
-    g.units.append({"kind": "unit", "name": name, "player": g.player, "uuid": uuid, "tile": [x / g.map.T, z / g.map.T]})
-    go(g, rect, uuid, name)
-    return v
+    g.villagers[uuid] = gather.Villager(uuid, pos)
+    g.units.append({"kind": "unit", "name": name, "player": g.player, "uuid": uuid,
+                    "tile": [math.floor(pos[0]) / g.map.T, math.floor(pos[2]) / g.map.T]})
+    return uuid

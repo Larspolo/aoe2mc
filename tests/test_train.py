@@ -21,7 +21,7 @@ def setup(food=60):
                {"kind": "other", "name": "TREE_OAK", "tile": [20.5, 4.5]},
                {"kind": "unit", "name": "VILLAGER_MALE", "player": 1, "uuid": "v", "tile": [7.5, 7.5]}]
     server = FakeServer({"v": {"Pos": (7.5, 64.0, 7.5)}, "Steve": {"Pos": (3.5, 64.0, 9.5), "Rotation": (180, 15)}})
-    g = gather.Gather(server, grid([[64] * 24 for _ in range(24)], objects)).setup()
+    g = gather.Gather(server, grid([[64] * 24 for _ in range(24)], objects), start={}).setup()
     g.stock["food"] = food
     server.scores["aoe_use"] = 1
     return server, g
@@ -103,7 +103,7 @@ def test_a_trained_villager_chops_on_a_server(tmp_path):
         data = json.load(f)
     with run.Game(tmp_path / "W") as game:
         game.forceload()
-        g = gather.Gather(game, data, tick=0.25, carry=3, chop=0.25).setup()
+        g = gather.Gather(game, data, tick=0.25, carry=3, chop=0.25, start={}).setup()
         g.stock["food"] = 50
         assert train.queue(g, "nobody", (4 * 4 + 1, 4 * 4 + 1))
         new, = train.tick(g, train.TRAIN_TIMES["VILLAGER_MALE"])

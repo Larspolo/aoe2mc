@@ -43,6 +43,7 @@ from units import VILLAGER_JOBS, animal  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
+import replay  # noqa: E402  (build imports it too)
 import bossbar  # noqa: E402
 import cheats  # noqa: E402
 import garrison  # noqa: E402
@@ -53,6 +54,7 @@ import train  # noqa: E402
 RESOURCES = ("Wood", "Food", "Gold", "Stone")
 DROP_SITES = {"wood": ("TOWN_CENTER", "LUMBER_CAMP"), "food": ("TOWN_CENTER", "MILL"),   # as in AoE2 (#389)
               "gold": ("TOWN_CENTER", "MINING_CAMP"), "stone": ("TOWN_CENTER", "MINING_CAMP")}
+START = replay.START                                               # the AoE2 standard start resources (#973)
 TREE_WOOD = 100                                                    # wood in one tree, as in AoE2
 BUSH_FOOD = 125                                                    # food in one fruit bush, as in AoE2 DE
 # AoE2 DE work rates per game second (#393): lumberjack 0.39 (empires2_x2_p1.dat, #267), the others the published
@@ -377,7 +379,8 @@ class Gather:
     """The gather game on a running server (game.command sends one command). Call setup(), then step() in a loop.
     log: a text file that gets one JSON line per event (state change or drop), to measure the timing (#289).
     chop: seconds per unit, one number for all resources or {resource: seconds} ("farm" for farms); default
-    WORK_SECONDS, the AoE2 rates at Normal speed (#413)."""
+    WORK_SECONDS, the AoE2 rates at Normal speed (#413). start: the start resources, default START as in AoE2 (#973);
+    a missing resource starts at 0 ({} for none)."""
     cheats = False                                                     # also for the adapters of Gather.__new__
     aegis = False                                                      # the cheat "aegis": all work is instant (#817)
     beyond = free_techs = noui = False                                 # cheats: repeat and free technologies, no UI (#968)
@@ -387,7 +390,7 @@ class Gather:
     bots = ()                                                          # run() steps them too (bot.Bot, #856)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
-                 cheats=False):
+                 cheats=False, start=None):
         self.game, self.data, self.map, self.player = game, data, Map(data, player), player
         self.paper = getattr(game, "kind", None) == "paper"           # walks with the plugin (#437)
         chop = WORK_SECONDS if chop is None else chop
@@ -395,7 +398,7 @@ class Gather:
         self.chop = dict(chop) if isinstance(chop, dict) else dict.fromkeys(WORK_SECONDS, chop)
         self.log, self.clock, self.t0 = log, clock, clock()
         self.cheats = cheats                                           # the AoE2 cheat codes in the chat (#816)
-        self.stock = dict.fromkeys(DROP_SITES, 0)                      # resources at the drop sites
+        self.stock = {**dict.fromkeys(DROP_SITES, 0), **(START if start is None else start)}   # at the drop sites (#973)
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
                       and "VILLAGER" in o["name"]]
         self.villagers, self.selected = {}, set()
@@ -448,7 +451,7 @@ class Gather:
                     f"scoreboard objectives setdisplay sidebar {self.board}"):
             self.command(cmd)
         for r in RESOURCES:
-            self.command(f"scoreboard players add {r} {self.board} 0")
+            self.command(f"scoreboard players set {r} {self.board} {self.stock[r.lower()]}")   # the start resources
         self.command(f'scoreboard players display name Idle {self.board} "Idle villagers"')   # a name has no space
         build.setup(self)
         menu.setup(self)
