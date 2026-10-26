@@ -8,7 +8,8 @@ The codes and amounts of AoE2 DE: the AoE2 wiki, "Cheat code (Age of Empires II)
 The Forgotten, before it 1,000). Minecraft has no fog of war: "polo" only answers in the chat, and "marco" answers
 "polo", an easter egg with the name of the owner (Larspolo, #1057).
 "aegis" (#817) is a toggle: g.aegis makes building (gather.Gather.step), training and research (train.tick) and
-gathering (gather.Gather.work_time) instant, for all players as in AoE2.
+gathering (gather.Gather.work_time) instant, and a hunted animal dies at the first hit (gather.Gather.strike, #1058), for
+all players as in AoE2.
 A unit cheat (#818; the DE list of the wiki, "Units") summons its unit at the town center of the player, as a trained
 unit (train.spawn): it costs nothing and counts in the population. Without a town center no unit appears, as in AoE2.
 The end and destroy codes (#819): "i r winner" and "resign" show the title "Victory" or "Defeat" to all players and set
@@ -25,7 +26,6 @@ bar and the hints, or shows them again.
 Excluded and partial codes (owner, #820, #985):
 - "!mute", "!nomute": excluded. The game program has no taunts, so the codes have nothing to silence.
 - "marco", "polo": done as they are. Minecraft has no fog of war, so the codes only answer in the chat ("marco": "polo").
-- "aegis": the part "animals die at once" has no effect. The game program has no hunting yet.
 - "sharing is caring": waits for allies (#969). The game program has no allies yet.
 """
 import os

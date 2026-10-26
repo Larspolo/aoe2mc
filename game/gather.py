@@ -12,6 +12,10 @@ with the miner look. An empty mine disappears, and they go on to the nearest min
 on a farm sends one villager onto it (#392): one farmer per farm, as in AoE2. The wheat gets younger as the food
 goes down, and an empty farm is dirt.
 A right click on a construction site (build.py) sends them to build it, with the builder look (#418).
+A right click on a deer, a boar or a herdable animal (HUNT_FOOD) sends them to hunt it (#1058), with the hunter look: they
+walk to it and hit it with the vanilla `damage` command (a boar hits back with its vanilla AI). The dead animal leaves a
+carcass with its AoE2 food on its tile (Map.carcasses): the hunters gather it as a bush and carry it to a town center or
+a mill. With the cheat "aegis" the first hit kills the animal.
 A right click on an own town center opens its menu: a click queues a villager for 50 food, a shift click 5 (train.py, #612, #620).
 A right click on a selected villager opens the build menu, a chest menu (build.py, #621).
 A right click on a military unit of player 1 selects it; more clicks add more military units (#516). A right
@@ -59,13 +63,26 @@ TREE_WOOD = 100                                                    # wood in one
 BUSH_FOOD = 125                                                    # food in one fruit bush, as in AoE2 DE
 # AoE2 DE work rates per game second (#393): lumberjack 0.39 (empires2_x2_p1.dat, #267), the others the published
 # DE gather rates. Normal game speed is 1.7 game seconds per real second (#413).
-AOE2_WORK, NORMAL = {"wood": 0.39, "food": 0.31, "farm": 0.33, "gold": 0.38, "stone": 0.36}, 1.7
+AOE2_WORK, NORMAL = {"wood": 0.39, "food": 0.31, "farm": 0.33, "gold": 0.38, "stone": 0.36, "hunt": 0.41}, 1.7
 WORK_SECONDS = {r: 1 / (w * NORMAL) for r, w in AOE2_WORK.items()}    # real seconds per unit, as at Normal speed
 CARRY = {"WHEELBARROW": 3}                                         # more resources per trip, as in AoE2 (#728)
 PACE = {"WHEELBARROW": 1.1}                                        # the villager walk speed factor, as in AoE2
 WORK_TECHS = {"DOUBLE_BIT_AXE": {"wood": 1.2},                     # work rate factors of the economy technologies (AoE2)
               "GOLD_MINING": {"gold": 1.15},
               "STONE_MINING": {"stone": 1.15}}
+# Food of a hunted animal, as in AoE2 DE (the AoE2 wiki; a "COW_..." name is a cow, #1058).
+HUNT_FOOD = {"COW": 150,
+             "DEER": 140,
+             "GOAT": 100,
+             "GOOSE": 100,
+             "JAVELINA": 340,
+             "LLAMA": 100,
+             "PIG": 100,
+             "SHEEP": 100,
+             "TURKEY": 100,
+             "WATER_BUFFALO": 150,
+             "WILD_BOAR": 340}
+VILLAGER_HIT = 3, 2.0                                              # AoE2 villager attack and reload (game seconds)
 FARM_FOOD = 175                                                    # food in one farm, as in AoE2 DE (no upgrades)
 FARM_TECHS = {"HORSE_COLLAR": 75}                                  # food that a farm technology adds to each farm (AoE2 DE)
 MINES = {"GOLD_MINE": ("gold", 800, "GOLD_MINER"), "STONE_MINE": ("stone", 350, "STONE_MINER")}   # as in AoE2
@@ -97,10 +114,16 @@ WHERE_PAGE = 40                                                    # units in on
 WORK_LOOK = {"wood": ("minecraft:oak_log", "minecraft:block.wood.hit"),
              "food": ("minecraft:sweet_berry_bush[age=3]", "minecraft:block.sweet_berry_bush.pick_berries"),
              "farm": ("minecraft:wheat[age=7]", "minecraft:item.hoe.till"),
+             "hunt": ("minecraft:red_wool", "minecraft:block.wool.hit"),
              "gold": ("minecraft:gold_ore", "minecraft:block.stone.hit"),
              "stone": ("minecraft:stone", "minecraft:block.stone.hit")}
 EVENTS = {"idle": "idle", "to_tree": "walk", "chop": "chop", "to_drop": "carry",    # state -> event in the log
-          "to_site": "walk", "build": "build", "to_rally": "walk"}
+          "to_site": "walk", "build": "build", "to_rally": "walk", "to_prey": "walk", "hunt": "hunt"}
+
+
+def hunt_food(name):
+    """The food of a hunted animal (HUNT_FOOD), else 0."""
+    return HUNT_FOOD.get("COW" if name.startswith("COW_") else name, 0)
 
 
 def group_item(n):
@@ -122,6 +145,7 @@ class Map:
         self.mine_at = {}                                              # block cell -> tile of its mine
         self.farms, self.farm_at = {}, {}                              # farm tile -> food; block cell -> farm tile
         self.farm_food, self.own_farms = FARM_FOOD, set()              # food of a new farm (FARM_TECHS), own farm tiles
+        self.carcasses = {}                                            # tile -> food of the carcasses of hunts (#1058)
         for o in data["objects"]:
             if o["kind"] == "building":
                 x0, z0, x1, z1 = o["footprint"]
@@ -178,7 +202,7 @@ class Map:
     def resource(self, tile):
         """The resource of the tile of a tree, bush or mine."""
         return next((r for r, m in self.mines.items() if tile in m),
-                    "food" if tile in self.bushes or tile in self.farms else "wood")
+                    "food" if tile in self.bushes or tile in self.farms or tile in self.carcasses else "wood")
 
     def y(self, x, z):
         return self.ground[z][x] if 0 <= x < self.n and 0 <= z < self.n else None
@@ -316,7 +340,7 @@ def profession(uuid, job):
 def job_of(m, tile):
     """The AoE2 task (`LUMBERJACK` ..., units.VILLAGER_JOBS) of a villager at the resource on tile of gather.Map m."""
     res = m.resource(tile)
-    return "FARMER" if tile in m.farms else {"wood": "LUMBERJACK", "food": "FORAGER"}.get(res) or \
+    return "FARMER" if tile in m.farms else "HUNTER" if tile in m.carcasses else {"wood": "LUMBERJACK", "food": "FORAGER"}.get(res) or \
         next(j for r, _, j in MINES.values() if r == res)
 
 
@@ -346,6 +370,7 @@ class Villager:
         self.site = None                                               # the construction site that it builds
         self.goal, self.moved, self.tries = None, 0.0, 0               # Paper: walk cell, time of the last step, orders
         self.lap = 0                                                   # step of a farmer over its farm (#591)
+        self.prey = None                                               # the UUID of the animal that it hunts (#1058)
 
     @property
     def cell(self):
@@ -410,6 +435,9 @@ class Gather:
                          and o["player"] == player and military(o["name"])}       # military units of the player
         self.enemies = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit"
                         and o["player"] not in (0, player)}                     # units of the other players
+        self.prey = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit" and o.get("uuid")
+                     and o["player"] in (0, player) and hunt_food(o["name"])}   # animals to hunt (#1058)
+        self.seen, self.dead = {}, {}                                  # hunted animal -> last feet position, carcass tile
         self.players, self.sites = data.get("players", {}), []         # construction sites (#417)
         self.farmers, self.crops = {}, {}                              # farm tile -> UUID of its farmer, wheat age
         self.trunks = {}                                               # tree tile -> logs of its trunk on the ground
@@ -632,6 +660,47 @@ class Gather:
             self.task(v, "BUILDER")
             self.go(v, "to_site", goals)
 
+    def hunt(self, prey, who=None):
+        """Send the selected villagers (or the villagers who) to hunt the animal prey, with the hunter look (#1058)."""
+        if not (pos := self.pos(prey)):
+            return
+        self.seen[prey] = pos
+        cell = math.floor(pos[0]), math.floor(pos[2])
+        for u in sorted((self.selected if who is None else who) & self.villagers.keys()):
+            v = self.villagers[u]
+            for t in [t for t, f in self.farmers.items() if f == u]:
+                del self.farmers[t]
+            self.task(v, "HUNTER")
+            if v.load and v.res != "food":
+                v.load = 0                                             # AoE2 drops a load of another resource
+            v.res, v.tree, v.site, v.prey = "food", None, None, prey
+            self.go(v, "to_prey", self.map.around({cell}) or {cell})
+
+    def strike(self, v):
+        """A hunter hits its animal once per AoE2 villager reload (VILLAGER_HIT), with aegis at once and to death
+        (#817). The `damage` source is the villager, so a boar hits back. A dead animal leaves its carcass on the tile
+        of its last place, and its hunters gather it: the work of a bush."""
+        if v.prey not in self.dead and (pos := self.pos(v.prey)):
+            self.seen[v.prey] = pos
+            if math.dist((pos[0], pos[2]), (v.pos[0], v.pos[2])) > 3:   # it ran away: follow it
+                self.hunt(v.prey, {v.uuid})
+                return
+            v.timer += self.tick
+            if self.aegis or v.timer >= VILLAGER_HIT[1] / NORMAL:
+                v.timer = 0.0
+                self.command(f"rotate {v.uuid} facing entity {v.prey}")
+                self.command(f"damage {v.prey} {1000 if self.aegis else VILLAGER_HIT[0]} minecraft:mob_attack by {v.uuid}")
+                if not re.search(r" 0\.0f$", self.command(f"data get entity {v.prey} Health")):
+                    return                                             # a dead mob stays 20 ticks: no more hits
+            else:
+                return
+        if v.prey in self.prey:                                        # dead: the first hunter that sees it makes the carcass
+            x, _, z = self.seen.get(v.prey, v.pos)
+            tile = self.dead[v.prey] = int(x // self.map.T), int(z // self.map.T)
+            self.map.carcasses[tile] = self.map.carcasses.get(tile, 0) + hunt_food(self.prey.pop(v.prey))
+        v.tree, v.prey, v.path = self.dead.get(v.prey), None, []
+        self.set(v, "to_tree" if v.tree else "idle")                   # it stands at the carcass: the next step gathers
+
     def goals(self, tile):
         """The cells where a villager works a resource: on a farm, else next to it."""
         spot = self.map.spot(tile)
@@ -641,6 +710,8 @@ class Gather:
         """The resources left in the tree, bush, mine or farm of a villager: {tile: amount} of its kind."""
         if v.tree in self.map.farms:
             return self.map.farms
+        if v.tree in self.map.carcasses:
+            return self.map.carcasses
         return self.map.bushes if v.res == "food" else self.map.trees if v.res == "wood" else self.map.mines[v.res]
 
     def nearest(self, v):
@@ -740,6 +811,10 @@ class Gather:
             self.attack(u)
             self.command(glow(u))                                     # the order marker of an attack (#796)
             return
+        if kind == "prey":
+            self.hunt(u)
+            self.command(glow(u))
+            return
         if kind == "unit" and u in self.selected and u in self.villagers:   # a click on a selected villager (#621)
             build.open_menu(self, name)
             return
@@ -780,7 +855,9 @@ class Gather:
         """The UUIDs of the soldiers and enemies that a right click can pick (villagers: their own positions). Units
         inside a building take no click (#808); an enemy only with an army selected."""
         army = self.selected and self.selected <= set(self.soldiers)
-        return (set(self.soldiers) | (set(self.enemies) if army else set())) - garrison.inside(self)
+        hunters = self.selected & self.villagers.keys()               # villagers take an animal to hunt (#1058)
+        return (set(self.soldiers) | (set(self.enemies) if army else set()) | (set(self.prey) if hunters else set())) \
+            - garrison.inside(self)
 
     def target(self, eye, d, places):
         """What a right click from eye in the view direction d picks, in the order of click(): (kind, key, block cells
@@ -791,7 +868,8 @@ class Gather:
         at = {k: v.pos for k, v in self.villagers.items() if k not in held} | \
             {k: p for k, p in places.items() if k in self.pickable()}
         if u := pick_unit(eye, d, at):
-            return "enemy" if u in self.enemies else "unit", u, {(math.floor(at[u][0]), math.floor(at[u][2]))}
+            kind = "enemy" if u in self.enemies else "prey" if u in self.prey else "unit"
+            return kind, u, {(math.floor(at[u][0]), math.floor(at[u][2]))}
         if self.selected and self.selected <= set(self.soldiers) and (fort := self.pick_fort(eye, d)):
             x0, _, z0, x1, _, z1 = self.forts[fort]
             return "fort", fort, {(x0, z0), (x1, z1)}
@@ -808,7 +886,9 @@ class Gather:
     def says(self, kind, key):
         """The action bar text of a pointed target (#989): its name and what a right click on it does now."""
         workers = self.selected & self.villagers.keys()
-        if kind in ("enemy", "unit"):
+        if kind == "prey":
+            name, act = pretty(self.prey[key]), "hunt" if workers else None
+        elif kind in ("enemy", "unit"):
             name = ("Enemy " if kind == "enemy" else "") + pretty(self.enemies.get(key) or self.soldiers.get(key)
                                                                   or "VILLAGER")
             act = "attack" if kind == "enemy" else "build menu" if key in workers else \
@@ -894,12 +974,17 @@ class Gather:
         self.fall()
         garrison.tick(self)
         for v in self.villagers.values():
-            if v.state in ("to_tree", "to_drop", "to_site", "to_rally") and v.path:
+            if v.state in ("to_tree", "to_drop", "to_site", "to_rally", "to_prey") and v.path:
                 self.follow(v) if self.paper else walk(self, v)
             elif v.state == "to_rally":
                 self.set(v, "idle")
             elif v.state == "to_site":
                 self.set(v, "build" if v.site["progress"] < 1 else "idle")
+            elif v.state == "to_prey":
+                v.timer = 0.0
+                self.set(v, "hunt")
+            elif v.state == "hunt":
+                self.strike(v)
             elif v.state == "to_tree":
                 v.timer = 0.0
                 self.set(v, "chop" if self.source(v).get(v.tree, 0) > 0 else "idle")
@@ -921,7 +1006,7 @@ class Gather:
             elif v.state == "chop":
                 v.timer += self.tick
                 src = self.source(v)
-                work = self.work_time("farm" if v.tree in self.map.farms else v.res)
+                work = self.work_time("farm" if v.tree in self.map.farms else "hunt" if v.tree in self.map.carcasses else v.res)
                 while v.timer >= work and v.load < self.limit() and src.get(v.tree, 0) > 0:
                     v.timer -= work
                     v.load += 1
@@ -930,6 +1015,8 @@ class Gather:
                     if v.tree in self.map.farms:
                         self.harvest(v.tree)
                         self.tend(v)
+                    elif v.tree in self.map.carcasses:
+                        pass                                           # a carcass has no blocks
                     elif v.res == "food":
                         self.berries(v.tree)
                     elif v.res != "wood":
@@ -956,7 +1043,7 @@ class Gather:
         """Real seconds per unit of resource res ("farm" for farms) with the technologies of the player (WORK_TECHS)."""
         if self.aegis:
             return 0.0                                                 # a full load in one work step
-        return self.chop[res] / math.prod(WORK_TECHS.get(t, {}).get(res, 1) ** train.count(self, t) for t in self.techs)
+        return self.chop.get(res, self.chop.get("food")) / math.prod(WORK_TECHS.get(t, {}).get(res, 1) ** train.count(self, t) for t in self.techs)
 
     def move(self, v):
         import ai                                                      # ai imports gather
@@ -995,7 +1082,7 @@ class Gather:
         tile, T = v.tree, self.map.T
         x0, x1, z0, z1 = self.map.feet.get(tile, (tile[0] * T, tile[0] * T + T, tile[1] * T, tile[1] * T + T))
         x, y, z = min(max(v.pos[0], x0 + 0.5), x1 - 0.5), v.pos[1] + 1, min(max(v.pos[2], z0 + 0.5), z1 - 0.5)
-        kind = "farm" if tile in self.map.farms else v.res
+        kind = "farm" if tile in self.map.farms else "hunt" if tile in self.map.carcasses else v.res
         block, sound = WORK_LOOK[kind]
         if kind == "wood":
             block = self.map.woods.get(tile, (block,))[0]
