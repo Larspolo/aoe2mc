@@ -569,9 +569,9 @@ def random_map(kind, seed, players=2):
             woodline(terrain, used, (cx, cy), WOODS[kind][:2], rng)
         start = START + (((FOREST_TREES[TERRAINS["FOREST"]], 1, 5, 0),) * WOODS[kind][2] if kind in WOODS else ())
         apart, far = [], NOMADS.get(kind, (0, 0))
-        if kind in NOMADS:                                       # one group for each villager, before the rest
+        if kind in NOMADS:            # one group for each villager, before the rest; no scout, as AoE2 Nomad (#1216)
             alone = tuple((s[0], 1, far[0], s[3]) for s in start if s[0].startswith("VILLAGER") for _ in range(s[1]))
-            start = alone + tuple(s for s in start if not s[0].startswith("VILLAGER"))
+            start = alone + tuple(s for s in start if not s[0].startswith("VILLAGER") and s[0] != "SCOUT_CAVALRY")
         for name, count, dist, own in start:
             turn = rng.uniform(0, 2 * np.pi)
             for k in range(36):                                          # 36 directions, from a random one

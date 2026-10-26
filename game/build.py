@@ -359,4 +359,20 @@ def rise(g, site, work):
         if "FARM" in site["name"]:                                     # free ground again: the farmer stands on it
             g.map.blocked -= {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
         g.map.building(site["name"], site["footprint"], (x0 // T + s // 2, z0 // T + s // 2), site["player"] == g.player)
+        target(g, site)
     return site["progress"] >= 1
+
+
+def target(g, site):
+    """A complete building of combat.BUILDINGS gets its target entity, as a building of the map (combat.setup): the
+    AoE2 hit points, and the arrows of a town center, tower or castle (#1202). wonder.tick makes the one of a wonder."""
+    import combat                                                      # combat -> gather -> build: import it late
+    if site["name"] not in combat.BUILDINGS or site["name"] == "WONDER":
+        return
+    x0, x1, z0, z1 = site["footprint"]
+    uuid = combat.target_uuid([x0, z0, x1, z1])
+    box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
+    for c in combat.building(uuid, site["name"], site["player"], box, g.map.T) + [combat.label_command(uuid, site["name"])]:
+        g.command(c)
+    if site["player"] != g.player:                                     # an enemy building: the player can attack it
+        g.forts[uuid], g.fort_names[uuid] = box, site["name"]

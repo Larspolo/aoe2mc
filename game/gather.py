@@ -63,6 +63,7 @@ RESOURCES = ("Wood", "Food", "Gold", "Stone")
 DROP_SITES = {"wood": ("TOWN_CENTER", "LUMBER_CAMP"), "food": ("TOWN_CENTER", "MILL"),   # as in AoE2 (#389)
               "gold": ("TOWN_CENTER", "MINING_CAMP"), "stone": ("TOWN_CENTER", "MINING_CAMP")}
 START = replay.START                                               # the AoE2 standard start resources (#973)
+NOMAD = {"wood": 275, "stone": 100}     # AoE2 Nomad (wiki "Nomad (map)"): no building at the start, the cost of a town center
 TREE_WOOD = 100                                                    # wood in one tree, as in AoE2
 # plants of the ground that are not in #minecraft:replaceable: the trunk on a slope removes them from its row (#1124)
 PLANTS = ("#minecraft:buttons", "#minecraft:flowers", "#minecraft:saplings", "#minecraft:wool_carpets",
@@ -417,8 +418,8 @@ class Gather:
     """The gather game on a running server (game.command sends one command). Call setup(), then step() in a loop.
     log: a text file that gets one JSON line per event (state change or drop), to measure the timing (#289).
     chop: seconds per unit, one number for all resources or {resource: seconds} ("farm" for farms); default
-    WORK_SECONDS, the AoE2 rates at Normal speed (#413). start: the start resources, default START as in AoE2 (#973);
-    a missing resource starts at 0 ({} for none)."""
+    WORK_SECONDS, the AoE2 rates at Normal speed (#413). start: the start resources, default START as in AoE2 (#973),
+    and NOMAD more for a player with units and no building (#1212); a missing resource starts at 0 ({} for none)."""
     cheats = False                                                     # also for the adapters of Gather.__new__
     aegis = False                                                      # the cheat "aegis": all work is instant (#817)
     beyond = free_techs = noui = False                                 # cheats: repeat and free technologies, no UI (#968)
@@ -436,7 +437,11 @@ class Gather:
         self.chop = dict(chop) if isinstance(chop, dict) else dict.fromkeys(WORK_SECONDS, chop)
         self.log, self.clock, self.t0 = log, clock, clock()
         self.cheats = cheats                                           # the AoE2 cheat codes in the chat (#816)
-        self.stock = {**dict.fromkeys(DROP_SITES, 0), **(START if start is None else start)}   # at the drop sites (#973)
+        if start is None:                                              # units, no building: a Nomad start (#1212)
+            kinds = {o["kind"] for o in data["objects"] if o.get("player") == player}
+            nomad = "unit" in kinds and "building" not in kinds
+            start = {r: v + NOMAD.get(r, 0) * nomad for r, v in START.items()}
+        self.stock = {**dict.fromkeys(DROP_SITES, 0), **start}             # at the drop sites (#973)
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
                       and "VILLAGER" in o["name"]]
         self.villagers, self.selected = {}, set()

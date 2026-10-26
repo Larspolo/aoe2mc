@@ -412,17 +412,28 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             if (best != null) {
                 lastHit.put(fort.getUniqueId(), Bukkit.getCurrentTick());
                 for (int k = 0, n = arrows.getOrDefault(fort.getUniqueId(), 1); k < n; k++) {
-                    volley(fort, c, best, k);
+                    volley(fort, b, best, k);
                 }
             }
         }
     }
 
-    // An arrow from above the roof at the center of the footprint, aimed as the arrow of an archer (shoot). Arrow k
-    // starts on a ring around the center, so that the arrows of one shot do not fly as one.
-    private static void volley(LivingEntity fort, Location c, LivingEntity t, int k) {
-        Location from = c.clone().add(k == 0 ? 0 : 0.6 * Math.cos(k * 2.4), 0, k == 0 ? 0 : 0.6 * Math.sin(k * 2.4));
-        from.setY(fort.getWorld().getHighestBlockYAt(c, HeightMap.MOTION_BLOCKING) + 1.5 + 0.2 * (k % 3));
+    // An arrow from above the edge of the footprint next to the target, aimed as the arrow of an archer (shoot): from
+    // the center the arrow hits the own roof (#1202). Arrow k starts on a ring around that point, so that the arrows of
+    // one shot do not fly as one; the start is above the highest block of the 3 x 3 columns around the point.
+    private static void volley(LivingEntity fort, int[] b, LivingEntity t, int k) {
+        var p = t.getLocation();
+        Location from = new Location(fort.getWorld(), Math.max(b[0] + 0.5, Math.min(b[3] + 0.5, p.getX())), 0,
+                Math.max(b[2] + 0.5, Math.min(b[5] + 0.5, p.getZ())));
+        int top = b[1];
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                top = Math.max(top, fort.getWorld().getHighestBlockYAt(from.getBlockX() + dx, from.getBlockZ() + dz,
+                        HeightMap.MOTION_BLOCKING));
+            }
+        }
+        from.add(k == 0 ? 0 : 0.6 * Math.cos(k * 2.4), 0, k == 0 ? 0 : 0.6 * Math.sin(k * 2.4));
+        from.setY(top + 1.5 + 0.2 * (k % 3));
         Vector to = t.getLocation().toVector().add(new Vector(0, t.getHeight() * 0.5, 0)).subtract(from.toVector());
         double ticks = to.length() / ARROW_SPEED;
         to.setY(to.getY() + 0.5 * ARROW_GRAVITY * ticks * ticks);

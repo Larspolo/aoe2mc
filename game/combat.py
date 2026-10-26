@@ -400,5 +400,5 @@ def building_box(o, ground):
     ring = [(x, z) for x in range(x0 - 1, x1 + 1) for z in (z0 - 1, z1)] + \
         [(x, z) for x in (x0 - 1, x1) for z in range(z0, z1)]
     ys = [int(ground[z][x]) for x, z in ring if 0 <= z < len(ground) and 0 <= x < len(ground[z])
-          and ground[z][x] != "-"] or [64]
+          and ground[z][x] not in ("-", None)] or [64]
     return x0, min(ys), z0, x1 - 1, min(ys) + HEIGHT, z1 - 1
