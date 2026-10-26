@@ -41,9 +41,10 @@ ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw
          "MILL": "white_wool", "FARM": "wheat", "BARRACKS": "stone_brick_wall", "ARCHERY_RANGE": "target",
          "BLACKSMITH": "anvil", "STABLE": "hay_block",
          "TOWN_CENTER": "cobblestone"}                                  # design
-AGE_TECHS = ("FEUDAL_AGE",)                                        # the technologies of the ages, in order
+AGE_TECHS = ("FEUDAL_AGE", "CASTLE_AGE")                           # the technologies of the ages, in order
 AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_TOWER",   # the AoE2 age of each
-                     "ARCHER", "SKIRMISHER", "SPEARMAN", "SCOUT_CAVALRY"), 1)            # building and unit (0: Dark)
+                     "ARCHER", "SKIRMISHER", "SPEARMAN", "SCOUT_CAVALRY",                # building, unit and age
+                     "CASTLE_AGE"), 1)                                                   # (0: Dark)
 GHOST = 400                                                        # block displays of one ghost: a coarser shape above
 LOCKED = "gray_dye"                                                # the item of a locked building or unit
 
