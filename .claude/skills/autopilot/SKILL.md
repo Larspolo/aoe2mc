@@ -5,7 +5,8 @@ description: Do one automatic work cycle on aoe2mc. Read the owner's feedback, t
 
 # Autopilot: one work cycle
 
-Repository: `Larspolo/aoe2mc`, default branch `main`. Owner: GitHub login `Larspolo`.
+The project values are in `agent.toml` at the root (#905): `repo` (`OWNER/NAME` below), `owner` (the GitHub login of
+the owner), `branch` (the default branch, `main` below), the status issue and its label, the commands.
 Follow each step in sequence. Do not skip the report (step 8).
 
 ## GitHub access
@@ -15,7 +16,7 @@ it works in cloud and local sessions. Cloud sessions block GraphQL and the searc
 `gh pr create` and `search/issues` fail there. Put long text in a file and pass it with `-F body=@file.md`.
 Put the method after the path (`... -X PATCH`): the permission rules match the start of the command.
 
-| Action | `gh api repos/Larspolo/aoe2mc` + |
+| Action | `gh api repos/OWNER/NAME` (`repo` in `agent.toml`) + |
 |---|---|
 | Open issues | `/issues?state=open&per_page=100` (entries with `pull_request` are PRs) |
 | New comments since T | `/issues/comments?since=T&per_page=100` and `/pulls/comments?since=T&per_page=100` |
@@ -98,7 +99,7 @@ find the open `P0` ticket "Fix main: ..." or make one (`P0`,
 ## 3. Read the owner's feedback
 
 Read all comments after `last_run` (`/issues/comments?since=` and `/pulls/comments?since=`, see
-"GitHub access") and the issues that `Larspolo` opened after `last_run`. Keep the ones by `Larspolo`.
+"GitHub access") and the issues that the owner opened after `last_run`. Keep the ones by the owner.
 For each new owner comment, lock it first: `python3 tools/claim.py ID --comment` (ID = the `id` of the comment).
 Exit 1: another run handles it, skip it (#320: three runs made three copies of one epic). Exit 0: act on it:
 - A question → answer it in the same thread.
@@ -128,8 +129,11 @@ then the lowest issue number.
 Epics first: an epic is never a candidate, so its rest of the work needs sub-issues. Before you claim a ticket, look
 at the open epics (label `epic`, not `needs-human`, any priority) with no open sub-issue, at most 3 per run. The
 priority does not matter here: a check of `P2` and `P3` epics was skipped, and six finished epics stayed open (#799).
-For each one, read its acceptance criteria. Close the epic with a comment when the closed sub-issues meet
-all criteria (name the evidence for each; a denied close: "Ask the owner" in step 6, #862). Else lock the epic first: `python3 tools/claim.py E --refill`
+For each one, read its acceptance criteria and all its comments. An epic without a criterion that checks that the
+whole goal is covered (owner rule, #820: never only "All sub-issues are closed") gets one first (`ticket` skill, "Split
+an L ticket"). Check that criterion against the full scope (for "all X": the full list, for example the AoE2 wiki) and
+name each missing item. Close the epic with a comment only when all criteria are met
+(name the evidence for each; a denied close: "Ask the owner" in step 6, #862). Else lock the epic first: `python3 tools/claim.py E --refill`
 (E = the epic; exit 1: another run makes its sub-issue, skip the epic, #505). Then make one sub-issue (same priority)
 for the criteria that an agent can do. A criterion that needs the owner stays on the epic. Then pick again (#176, #155 waited while P3 tickets ran).
 Refill the queue when fewer candidates are ready than the target number of runs, so that parallel runs always find
@@ -202,7 +206,7 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
 11. CI green → the Automerge workflow merges. Add label `hold` to the PR if it must not merge yet.
 
 Ask the owner (owner rule, #862): only with the label `needs-human` and a comment on the issue that needs the answer.
-The comment mentions `@Larspolo` and says exactly what the owner must do. Never ask with PushNotification, in the
+The comment mentions the owner (`@` and `owner` of `agent.toml`) and says exactly what the owner must do. Never ask with PushNotification, in the
 session, or only in the status report. When the auto mode denies an action (for example closing an issue), do not send
 it through another tool: add `needs-human` to that issue and comment the evidence and the action. When the owner did
 it, remove the label.
@@ -297,7 +301,7 @@ the merge) → `git push -u origin <branch>`. Exit 0 → `git fetch origin <bran
 (its commits are on main already, so the PR diff stays the same), then `git push origin HEAD:<branch>`. A conflict in that merge: take your side (`git checkout --ours FILE`):
 main has the squashed old commits, so check that `git diff --stat origin/main` shows only your ticket (#523).
 The session branch can carry only one open PR: do the next ticket in a local commit, and push it only when the PR
-of the last ticket is merged or closed (`/pulls?head=Larspolo:<branch>&state=open` is empty). Else a push replaces
+of the last ticket is merged or closed (`/pulls?head=OWNER:<branch>&state=open` is empty). Else a push replaces
 the open PR. After `checkout -B` the upstream is
 `origin/main`, so a bare `git push` fails: check that the output shows `-> <branch>`, else the PR has old commits.
 Stop when the context is more than half full.

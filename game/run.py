@@ -9,6 +9,7 @@ Usage:
     python3 game/run.py WORLD --play              # villagers gather wood, food, gold, stone (game/gather.py); Ctrl-C stops
     python3 game/run.py WORLD --play --cheats     # also the AoE2 cheat codes in the chat (game/cheats.py)
     python3 game/run.py WORLD --play --bot        # also a bot plays player 2: its villagers gather (game/bot.py)
+    python3 game/run.py WORLD --play --bot --bot-attack 5:00   # its soldiers attack player 1 from 5:00 (default 10:00)
     python3 game/run.py WORLD --play --log F.jsonl  # also write a timed event log (tools/measure_gather.py reads it)
     python3 game/run.py WORLD --replay [--speed 4]  # replay the recorded game of the world (game/replay.py), then stop
 
@@ -217,7 +218,7 @@ def bench(game, n=1000):
     return n / (time.perf_counter() - t)
 
 
-def play(game, world, log=None, cheats=False, bot=False, seconds=None):
+def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00"):
     import gather
     with open(os.path.join(world, "aoe2mc.json")) as f:
         data = json.load(f)
@@ -229,8 +230,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None):
         time.sleep(1)
     if bot:
         import bot as bots
-        g.bots = [bots.Bot(game, data, share=g, log=log).setup()]
-        print(f"A bot plays player 2: {len(g.bots[0].g.villagers)} villagers gather.", file=sys.stderr)
+        import replay
+        g.bots = [bots.Bot(game, data, share=g, log=log, attack=replay.aoe2mc.game_time(bot_attack) / 1000).setup()]
+        print(f"A bot plays player 2: {len(g.bots[0].g.villagers)} villagers gather, its soldiers attack at "
+              f"{bot_attack}.", file=sys.stderr)
     import combat
     combat.setup(game, data)                         # AoE2 hit points and damage (#514)
     print(f"Join the server localhost:{game.game_port} (Minecraft {game.version}, multiplayer, direct connection).\n"
@@ -276,6 +279,8 @@ def main(argv=None):
     ap.add_argument("--from", dest="start", default="0:00", metavar="MM:SS", help="--replay: start at this game time")
     ap.add_argument("--cheats", action="store_true", help="--play: the AoE2 cheat codes in the chat (off as in AoE2)")
     ap.add_argument("--bot", action="store_true", help="--play: a bot plays player 2 (game/bot.py)")
+    ap.add_argument("--bot-attack", default="10:00", metavar="MM:SS", help="--bot: its soldiers attack player 1 "
+                    "from this game time (default 10:00)")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     a = ap.parse_args(argv)
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
@@ -292,7 +297,7 @@ def main(argv=None):
             return
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
-                play(game, a.world, log, a.cheats, a.bot)
+                play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack)
             return
         while True:
             line = input("> ").strip().lstrip("/")

@@ -1,7 +1,8 @@
 """
 Replay a recorded game live (#374): play the "timeline" of aoe2mc.json (aoe2mc.read_timeline, #372) on a running
 server. Each building appears at its command time (the blocks of its design, as with --at, #373), chat lines are
-/tellraw in the player color, age-ups are a title, research is an action bar line, and RESIGN is a title.
+/tellraw in the player color, age-ups are a title, research is an action bar line and, for 10 game seconds, its name
+above the building with particles (#843), and RESIGN is a title.
 A trained unit appears in front of its building when its training ends (#408, aoe2mc.training). The units that a
 MOVE or ORDER command selects walk to its target: on Paper the plugin walks them on a Minecraft path at their walk speed
 (`aoe moveto`, game/ai.py, #438), else one /tp per block on the path of gather.Map (#409, gather.walk);
@@ -39,6 +40,11 @@ import units  # noqa: E402
 # Dye color of a player (aoe2mc.PLAYER_COLORS) -> text color of /tellraw and /title
 TEXT_COLORS = {"light_gray": "gray", "blue": "blue", "red": "red", "green": "green", "yellow": "yellow",
                "cyan": "aqua", "purple": "light_purple", "gray": "dark_gray", "orange": "gold"}
+# The firework color of each dye (DyeColor.getFireworkColor), for the age-up fireworks (#844).
+FIREWORK_COLORS = {"black": 0x1E1B1B, "blue": 0x253192, "brown": 0x51301A, "cyan": 0x287697, "gray": 0x434343,
+                   "green": 0x3B511A, "light_blue": 0x6689D3, "light_gray": 0xABABAB, "lime": 0x41CD34,
+                   "magenta": 0xC354CD, "orange": 0xEB8844, "pink": 0xD88198, "purple": 0x7B2FBE, "red": 0xB3312C,
+                   "white": 0xF0F0F0, "yellow": 0xDECF2A}
 FLAT = 16                   # tiles of the flat map that draws one design
 MAX_FILL = 32768            # blocks of one /fill command
 FORMATION = 2              # blocks between the units of a group in a formation (#410)
@@ -47,6 +53,10 @@ TALL = 48                   # blocks above the ground that a DELETE clears for a
 BAR = "aoe2mc:replay"       # the boss bar with the game time (#684)
 POP = "aoe_pop"             # the sidebar objective with the population of each player (#741)
 COUNTED = "aoe2mc.pop"      # entity tag of the units that the population counts (#787)
+EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
+EFFECT_MS = 10000           # ms of game time that the research text stays
+SCALE = 4                   # size of the research text: a spectator sees it from 40 blocks
+START = {"food": 200, "wood": 200, "gold": 100, "stone": 200}   # the AoE2 standard start resources (#932)
 VIEWER = "aoe_viewer"        # player tag: the player got the overview of the map (#737)
 VIEW_PITCH = 60             # degrees down of the overview
 VIEW_FALL = 60              # seconds of slow falling after the overview
@@ -111,6 +121,7 @@ class Replay:
         self.entering = {}                      # object ID -> [footprint, building entry, arrival (ms) or None] (#809)
         self.garrisons = {}                     # building footprint -> object IDs of the units inside it
         self.ids = {}                           # new object ID of a building -> footprint of its replay building (#876)
+        self.effects = {}                       # entity tag of a research text -> game time (ms) of its end (#843)
         self.refs = {o["ref"]: o for o in data["objects"] if o.get("ref") is not None}
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
@@ -118,6 +129,7 @@ class Replay:
         self.pop, self.shown = {}, None         # player -> live units (no animals), the value in the sidebar (#741)
         self.ages, self.named = {}, {}          # player -> age ("Feudal"); the age in its sidebar name (#805)
         self.counted = []                       # UUIDs of the start units that the population counts
+        self.stock = {}                         # player -> estimated resources: START + gather steps - costs (#932)
         for o in data["objects"]:
             if o["kind"] == "unit" and o.get("player") and not units.animal(o["name"]):
                 self.pop[o["player"]] = self.pop.get(o["player"], 0) + 1
@@ -130,6 +142,17 @@ class Replay:
 
     def age(self, e):
         self.ages[e.get("player")] = pretty(e["age"]).removesuffix(" Age")
+        self.pay(e.get("player"), e["age"])
+
+    def resources(self, p):
+        return self.stock.setdefault(p, dict(START))
+
+    def pay(self, p, name):
+        """The record has no resources: subtract the AoE2 cost of a unit, building or age (train and build COSTS)."""
+        import build                                                # gather -> build -> replay: import it late
+        import train
+        for r, v in (train.COSTS.get(name) or build.COSTS.get(name) or {}).items():
+            self.resources(p)[r] -= v
 
     def commands(self, e):
         """The commands of one timeline event (an empty list for the events that change nothing visible)."""
@@ -158,9 +181,10 @@ class Replay:
         if kind == "age" and e.get("age"):
             self.age(e)
             return ["title @a subtitle " + json.dumps(text(name, color)),
-                    "title @a title " + json.dumps(text(pretty(e["age"])))]
+                    "title @a title " + json.dumps(text(pretty(e["age"])))] + self.fireworks(e.get("player"))
         if kind == "research" and e.get("technology"):
-            return ["title @a actionbar " + json.dumps([text(name, color), text(f" researches {e['technology']}")])]
+            return ["title @a actionbar " + json.dumps([text(name, color), text(f" researches {e['technology']}")])] + \
+                self.research(e, color)
         if kind == "resign":
             return ["title @a subtitle " + json.dumps(text("The game ends")),
                     "title @a title " + json.dumps(text(f"{name} resigns", color))]
@@ -178,6 +202,7 @@ class Replay:
         for x, y in tiles:
             if (name, x, y) not in self.seen:
                 self.seen.add((name, x, y))
+                self.pay(e["player"], name)
                 k = len(self.placed)
                 out += self.building(name, e["player"], x, y)
                 if len(self.placed) > k:
@@ -189,6 +214,63 @@ class Replay:
                         out += self.move(dict(e, kind="order", target=-1,
                                               tile=[(x0 + x1) / 2 / self.T, (z0 + z1) / 2 / self.T]))
         return out
+
+    def research(self, e, color):
+        """The name of the technology 2 blocks above the roof of its building, and particles at the roof (#843).
+        The text goes after EFFECT_MS (`expire`). No known building: no commands."""
+        i, name = (e.get("objects") or [None])[0], (e.get("names") or [None])[0]
+        start = next((s for s in self.starts if s[0] == i), None)
+        rect = start[3] if start else name and self.new_building(i, name, e.get("player"))
+        if not rect:
+            return []
+        x0, x1, z0, z1 = rect
+        if start:                                                   # no height in aoe2mc.json: that of its design
+            m = self.grid()
+            ys = [y for x, z in m.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)})
+                  if (y := m.y(x, z)) is not None]
+            if not ys:
+                return []
+            top = max(ys) + self.height(start[2], start[1])
+        else:
+            top = self.tops.get(rect)
+        if top is None:
+            return []
+        tag = f"{EFFECT}.{len(self.effects)}.{e['time']}"
+        self.effects[tag] = e["time"] + EFFECT_MS
+        x, z = (x0 + x1) / 2, (z0 + z1) / 2
+        return [f"summon text_display {x} {top + 3} {z} {{text:{json.dumps(text(e['technology'], color))},"
+                f'billboard:"center",shadow:1b,transformation:{{left_rotation:[0f,0f,0f,1f],right_rotation:[0f,0f,0f,1f],'
+                f'translation:[0f,0f,0f],scale:[{SCALE}f,{SCALE}f,{SCALE}f]}},Tags:["{EFFECT}","{tag}"]}}',
+                f"particle minecraft:enchant {x} {top + 1} {z} {(x1 - x0) / 4} 0.5 {(z1 - z0) / 4} 1 60"]
+
+    def expire(self, t):
+        """The commands that remove the research texts whose time ended at game time t (ms)."""
+        done = [tag for tag, end in self.effects.items() if end <= t]
+        for tag in done:
+            del self.effects[tag]
+        return [f"kill @e[type=text_display,tag={tag}]" for tag in done]
+
+    @functools.lru_cache(maxsize=None)
+    def height(self, name, player):
+        """Blocks of the design of building `name` above the ground of its footprint (its top block)."""
+        x = y = FLAT // 2
+        cols, E, o = self.draw(name, player, x, y)
+        ys = [by for xs, bys, zs, ids, _ in E.parts for by, i in zip(bys.tolist(), ids.tolist()) if i]
+        return max(ys) - cols.surface(*o["footprint"][:2]) if ys and "footprint" in o else TALL
+
+    def draw(self, name, player, x, y):
+        """(Columns, Edits, object) of one building at tile (x, y) of a flat map whose corner is tile
+        (x - FLAT // 2, y - FLAT // 2), rounded down."""
+        T, info = self.T, self.data["players"].get(str(player), {})
+        ox, oy = int(x) - FLAT // 2, int(y) - FLAT // 2            # whole tiles: the same rounding as in place_building
+        cols = aoe2mc.Columns(FLAT, np.zeros((FLAT, FLAT), np.int16), np.zeros((FLAT, FLAT), np.float32),
+                              {0: "GRASS_1"}, T, self.data["level_height"], np.random.default_rng(1))
+        E = aoe2mc.Edits(cols)
+        players = {player: {"arch": info.get("arch", "western"), "color": info.get("color", "light_gray")}}
+        o = dict(kind="B", name=name, player=player, x=x - ox, y=y - oy, rotation=0.0, hero=False, garrisoned=False)
+        walls, gates = buildings.plan_walls([o])
+        buildings.place_building(E, cols, aoe2mc.B, o, players, walls, gates)
+        return cols, E, o
 
     def push_out(self, rect):
         """The units in the footprint of a new building step out to the nearest free cell, as in AoE2 (a unit in a
@@ -209,15 +291,9 @@ class Replay:
     def building(self, name, player, x, y):
         """The commands that draw one building at tile (x, y): its design on a flat map (like render.py), moved to
         the ground of the world. The footprint is cleared first; a foundation fills the air under the floor."""
-        T, info = self.T, self.data["players"].get(str(player), {})
-        ox, oy = int(x) - FLAT // 2, int(y) - FLAT // 2            # whole tiles: the same rounding as in place_building
-        cols = aoe2mc.Columns(FLAT, np.zeros((FLAT, FLAT), np.int16), np.zeros((FLAT, FLAT), np.float32),
-                              {0: "GRASS_1"}, T, self.data["level_height"], np.random.default_rng(1))
-        E = aoe2mc.Edits(cols)
-        players = {player: {"arch": info.get("arch", "western"), "color": info.get("color", "light_gray")}}
-        o = dict(kind="B", name=name, player=player, x=x - ox, y=y - oy, rotation=0.0, hero=False, garrisoned=False)
-        walls, gates = buildings.plan_walls([o])
-        buildings.place_building(E, cols, aoe2mc.B, o, players, walls, gates)
+        T, arch = self.T, self.data["players"].get(str(player), {}).get("arch", "western")
+        ox, oy = int(x) - FLAT // 2, int(y) - FLAT // 2
+        cols, E, o = self.draw(name, player, x, y)
         if not E.parts or "footprint" not in o:
             return []
         fx0, fz0, fx1, fz1 = o["footprint"]
@@ -257,8 +333,7 @@ class Replay:
                     for b in ("#minecraft:logs", "#minecraft:leaves", "minecraft:bamboo")]
         out += self.fill(x0, base, z0, x1, top, z1, "air")
         if low < base - 1:                                          # the floor replaces the top ground block
-            out += self.fill(x0, low, z0, x1, base - 2, z1, self.state(aoe2mc.B(buildings.ARCH[players[player][
-                "arch"]].stone2)) + " keep")
+            out += self.fill(x0, low, z0, x1, base - 2, z1, self.state(aoe2mc.B(buildings.ARCH[arch].stone2)) + " keep")
         rows = {}
         for (bx, by, bz), i in blocks.items():
             rows.setdefault((by, bz), []).append((bx, i))
@@ -331,6 +406,32 @@ class Replay:
                  "building": b, "where": (e.get("names") or [None] * len(e["objects"]))[e["objects"].index(b)]}
                 for end, e, b in aoe2mc.training(self.data.get("timeline", ())) if "type" in e and e.get("name")]
 
+    def fireworks(self, player):
+        """Three firework rockets in the player color above the first town center of the player, and one sound for
+        all (#844): a spectator sees which player advanced. No town center: no fireworks (the title stays)."""
+        rect = next((r for p, n, r in [s[1:] for s in self.starts] + self.placed
+                     if p == player and n == "TOWN_CENTER"), None)
+        if rect is None:
+            return []
+        x0, x1, z0, z1 = rect
+        ys = [g for z in range(max(0, z0), min(self.n, z1)) for x in range(max(0, x0), min(self.n, x1))
+              if (g := self.ground[z][x]) is not None]
+        if not ys:
+            return []
+        y = self.tops.get(rect) or max(ys)
+        info = self.data["players"].get(str(player), {})
+        rgb = FIREWORK_COLORS.get(info.get("color"), FIREWORK_COLORS["white"])
+        out = []
+        for k, (dx, dz) in enumerate(((0, 0), (-2, 1), (2, -1))):
+            fw = {"explosions": [{"shape": ("large_ball", "star", "burst")[k], "colors": [rgb],
+                                  "fade_colors": [FIREWORK_COLORS["white"]], "has_trail": True, "has_twinkle": True}],
+                  "flight_duration": 1}
+            item = {"id": "minecraft:firework_rocket", "count": 1, "components": {"minecraft:fireworks": fw}}
+            nbt = json.dumps({"LifeTime": 25 + 5 * k, "FireworksItem": item}).replace('"colors": [', '"colors": [I; ') \
+                .replace('"fade_colors": [', '"fade_colors": [I; ')
+            out.append(f"summon minecraft:firework_rocket {(x0 + x1) / 2 + dx} {y + 2} {(z0 + z1) / 2 + dz} {nbt}")
+        return out + ["playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1"]
+
     def home(self, e):
         """The block footprint (x0, x1, z0, z1) of the building that trains the unit of a spawn event: a start
         building by its ID, else the last building of the player with the name of its ID (name_timeline) or of the
@@ -349,6 +450,7 @@ class Replay:
         """The summon command of a trained unit, on a free cell in front of its building (south side first). The
         units of one building take the cells one after the other."""
         prefix, _ = self.kinds.get(e["type"], ("?", ""))
+        self.pay(e["player"], e["name"])
         rect = self.home(e) if prefix in ("U", "H") else None
         if rect is None:
             return []
@@ -445,6 +547,14 @@ class Replay:
             return combat.target_uuid(o["footprint"])
         return None
 
+    def target_mark(self, e):
+        """The red order marker at the target of an attack ORDER, as the game program shows it (#796, #845): a unit
+        glows for a moment, a building gets a ring of dust around its footprint."""
+        if (t := e["target"]) in self.units:
+            return [self.gather.glow(self.units[t].uuid)]
+        x0, z0, x1, z1 = self.refs[t]["footprint"]
+        return self.gather.marker(self.map, {(x0, z0), (x1 - 1, z1 - 1)}, "attack", "@a")
+
     def attack(self, group, target):
         """The military units of group attack entity target, with their AoE2 walk speed; they walk no more legs.
         Returns the commands and the rest of the group."""
@@ -500,6 +610,7 @@ class Replay:
         out = []
         if self.ai:
             out, group = self.attack(group, target) if (target := self.enemy(e)) else ([], group)
+            out += self.target_mark(e) if target else []            # the red order marker (#845)
             for i, v in group:
                 v.pos = self.at(v, e["time"])                       # it stops its leg where it is
                 end = slots.get(v) or min(goals, key=lambda c: (math.dist(c, v.cell), c))
@@ -604,7 +715,7 @@ class Replay:
 
     def steps(self, t):
         """The commands of the steps (/tp), legs (plugin orders) and gather steps that are due at game time t (ms)."""
-        out = []
+        out = self.expire(t)
         sink = types.SimpleNamespace(map=self.map, command=out.append)
         for i, due in list(self.moving.items()):
             v, at = self.units[i], due
@@ -645,6 +756,7 @@ class Replay:
             while due <= t and src.get(v.tree, 0) > 0:
                 src[v.tree] -= 1
                 v.load += 1
+                self.resources(v.player)[v.res] += 1
                 self.crew.work(v)
                 if v.tree in self.map.farms:                            # the wheat gets younger, the farmer walks
                     self.crew.harvest(v.tree)
@@ -867,17 +979,18 @@ class Replay:
 
     def score_commands(self):
         """The sidebar commands for the population of each player that changed since the last call (#741). The score
-        holder is "P<n>" (a holder name has no space); its display name is the player name in the player color and
-        the age of the player (#805)."""
+        holder is "P<n>" (a holder name has no space); its display name is the player name in the player color, the
+        age of the player (#805) and its estimated resources (#932)."""
         out = []
         if self.shown is None:
             self.shown, out = {}, [f'scoreboard objectives add {POP} dummy "Population"',
                                    f"scoreboard objectives setdisplay sidebar {POP}"]
         for p in sorted(self.pop):
-            if self.named.get(p) != (age := self.ages.get(p, "Dark")):
-                name, color = self.player(p)
-                out.append(f"scoreboard players display name P{p} {POP} {json.dumps(text(f'{name} · {age}', color))}")
-                self.named[p] = age
+            name, color = self.player(p)
+            res = " ".join(f"{r[0].upper()} {max(0, v)}" for r, v in self.resources(p).items())
+            if self.named.get(p) != (line := f"{name} · {self.ages.get(p, 'Dark')} · {res} (est.)"):
+                out.append(f"scoreboard players display name P{p} {POP} {json.dumps(text(line, color))}")
+                self.named[p] = line
             if self.shown.get(p) != self.pop[p]:
                 self.shown[p] = self.pop[p]
                 out.append(f"scoreboard players set P{p} {POP} {self.pop[p]}")
@@ -929,7 +1042,7 @@ class Replay:
                 out += self.enter(e["time"]) + self.commands(e)
             elif e["kind"] == "age" and e.get("age"):                 # the sidebar shows it, no title
                 self.age(e)
-        out += self.enter(to)
+        out += self.enter(to) + self.expire(to)
         inside = {u for us in self.garrisons.values() for u in us}
         for i in sorted(moved | self.moving.keys()):
             if (v := self.units.get(i)) is None or i in inside:
@@ -965,7 +1078,7 @@ class Replay:
              self.overview())
         census = self.census if bar and self.ai else lambda: None
         while k < len(events) or self.moving:
-            step = min([*self.moving.values(), *self.working.values(),                       # walk or gather step
+            step = min([*self.moving.values(), *self.working.values(), *self.effects.values(),   # walk, gather, text
                         *(at for _, _, at in self.entering.values() if at is not None)], default=math.inf)   # go in
             e = events[k] if k < len(events) and events[k]["time"] <= step else None
             k += e is not None
@@ -1012,6 +1125,7 @@ class Replay:
                     log(f"{m:02d}:{s:02d} {e['kind']} {e.get('name') or e.get('age') or ''} "
                         f"player {e.get('player')}: {len(cmds)} commands")
         census()
+        self.send(self.expire(math.inf))
         send(self.clock_commands(end, end, speed, done=True) + self.score_commands() + self.end_commands(end))
         span = (events[-1]["time"] - start) / 1000 / speed if events else 0                 # at the start speed
         return {"events": n, "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2),

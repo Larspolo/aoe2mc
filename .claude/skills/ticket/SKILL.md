@@ -5,7 +5,7 @@ description: Write, size and split GitHub issues (tickets) for aoe2mc in the pro
 
 # Write a ticket
 
-Tickets are GitHub Issues in `Larspolo/aoe2mc`. Write in ASD-STE100 Simplified Technical English.
+Tickets are GitHub Issues in the repository `repo` of `agent.toml`. Write in ASD-STE100 Simplified Technical English.
 
 ## Form
 
@@ -52,7 +52,11 @@ name each file and function that the ticket changes, and no others (tools that o
 1. Make S or M sub-issues (`sub_issue_write` in a cloud session, or "Depends on" lines in a local session).
    Make the first sub-issue small and useful alone.
 2. Give the sub-issues the priority of the parent and the order of the work (lower number = first).
-3. Add `epic` to the parent. The parent closes when all sub-issues are closed.
+3. Add `epic` to the parent. Its acceptance criteria check that the whole goal is covered, not only the sub-issues
+   (owner rule, 2026-10-26, #820): name the full scope (a list, a table, or a source such as the AoE2 wiki) and a check
+   that each item of it works, or that the owner excluded it in a comment on the epic. "All sub-issues are closed" is
+   never the only criterion; it can be an extra line. Example: "Each code of the DE list on the AoE2 wiki works in the
+   game program, or the owner excluded it." The epic closes when all its criteria are met.
 
 ## needs-human tickets
 

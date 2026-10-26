@@ -159,6 +159,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Ghost ghost = new Ghost(this);
     private final Cheats cheats = new Cheats(this);
     private final Deaths deaths = new Deaths(this);
+    private final Viewer viewer = new Viewer(this);                 // the game mode switch of a replay viewer (#910)
     private final Border border = new Border();
 
     private record Building(Stats stats, String box, int max, int[] b) {}   // b: x0 y0 z0 x1 y1 z1 of box
@@ -419,6 +420,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(this, this);
         Bukkit.getPluginManager().registerEvents(cheats, this);
         Bukkit.getPluginManager().registerEvents(deaths, this);
+        Bukkit.getPluginManager().registerEvents(viewer, this);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -969,9 +971,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 Entity t = e instanceof Minecart && !e.getPassengers().isEmpty() ? e.getPassengers().get(0) : e;
                 if (t instanceof LivingEntity le) {                // a siege unit: its crew takes the hits (#836)
                     AttributeInstance max = le.getAttribute(Attribute.MAX_HEALTH);
-                    if (max != null) {
+                    if (max != null) {                     // keep the lost hit points, as AoE2 does for Bloodlines (#940)
+                        double lost = Math.max(0, max.getValue() - le.getHealth());
                         max.setBaseValue(hp);
-                        le.setHealth(hp);
+                        le.setHealth(Math.min(max.getValue(), Math.max(Math.min(1, hp), hp - lost)));
                     }
                     stats.put(le.getUniqueId(), st);
                     nameLine(le);
@@ -1144,8 +1147,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (args.length >= 2 && args[0].equals("label")) {
             int n = 0;
             for (Entity e : select(sender, args[1])) {
-                if (args.length > 2) {
-                    names.put(e.getUniqueId(), Component.text(String.join(" ", List.of(args).subList(2, args.length))));
+                if (args.length > 2) {                       // a new name keeps the player color of the old one (#941)
+                    Component old = names.get(e.getUniqueId());
+                    names.put(e.getUniqueId(), Component.text(String.join(" ", List.of(args).subList(2, args.length)),
+                            old == null ? (e.customName() == null ? null : e.customName().color()) : old.color()));
                 }
                 if (names.containsKey(e.getUniqueId())) {
                     nameLine(e);

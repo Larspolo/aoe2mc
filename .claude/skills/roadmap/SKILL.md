@@ -13,14 +13,15 @@ Owner decisions (2026-10-26): the agents make the epics themselves, a new epic s
 Do this in the refill of autopilot step 5 (you hold its lock, `python3 tools/claim.py 0 --refill`), when the open
 epics have no goal left that an agent can do.
 
-1. List the epics: `gh api "repos/Larspolo/aoe2mc/issues?labels=epic&state=all&per_page=100"`. A feature has an
+1. List the epics: `gh api "repos/OWNER/NAME/issues?labels=epic&state=all&per_page=100"` (`repo` in `agent.toml`). A feature has an
    epic when an epic body names its key ("Roadmap: `<key>`") or the roadmap line names an epic number.
 2. Pick the goal: the goal whose newest epic is the oldest (the lowest issue number of the newest epics of the
    three goals; a goal without an epic first). Tie: the order of the file. Goal 4 (the agent system) takes no turn:
    its epics come from the `improve` skill and the owner.
 3. In that goal, take the first missing feature without an epic.
 4. Make the epic with the `ticket` skill: the title is an instruction, the body has the goal (what the player sees),
-   the acceptance criteria, the Minecraft feature that does the job (CLAUDE.md), the line "Roadmap: `<key>`", and
+   the acceptance criteria (with a check that the whole feature is covered: `ticket` skill, "Split an L ticket"),
+   the Minecraft feature that does the job (CLAUDE.md), the line "Roadmap: `<key>`", and
    the labels `epic`, `feature`, `size:L`, `P3`.
    When the feature has two or more good ways with no single best one (the interface, a game rule), make a decision
    ticket first (`ticket` skill, "Decision tickets") and let the sub-issues that need it depend on it.

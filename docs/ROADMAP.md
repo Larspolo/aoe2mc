@@ -20,6 +20,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `convert:triggers` Scenario triggers as datapack functions: messages, objectives, timers (epic #645)
 - [x] `convert:large` Large maps (480 × 480) in less time and memory, with a progress line (epic #689)
 - [ ] `convert:minimap` A filled Minecraft map item of the whole AoE2 map at the spawn, as the AoE2 minimap (epic #837)
+- [ ] `convert:random-maps` Make a world from an AoE2 random map script (`.rms`: Arabia, Arena, Black Forest) and a seed, with no scenario file
 
 ## 2. Play AoE2 in Minecraft (`game/`)
 
@@ -38,12 +39,15 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:civs` Civilizations: the bonuses, unique technologies and team bonus of each civilization change costs and attributes
 - [x] `play:feedback` Show what the player points at and the result of each action (epic #793)
 - [ ] `play:control` Select and order many units: a selection box, groups, formations, an idle villager item (epic #742)
+- [ ] `play:stances` Unit stances (aggressive, defensive, stand ground, no attack): an idle unit attacks the enemies in its line of sight and comes back
 - [ ] `play:garrison` Garrison units in buildings; the town center and castles shoot arrows (epic #810)
 - [ ] `play:win` Win and lose: destroy all buildings, a wonder, relics; a title for the end of the game
 - [ ] `play:monks` Monks heal and convert, relics in monasteries
 - [ ] `play:market` Market trade and trade carts
 - [ ] `play:two-players` Two human players against each other on one server
+- [ ] `play:diplomacy` Teams and diplomacy: allied, neutral and enemy players, shared line of sight, tribute of resources
 - [ ] `play:walls` Build walls and gates; a gate opens for own units and stays closed for enemies
+- [ ] `play:repair` Villagers repair damaged buildings and siege units for a part of the cost; a damaged building shows fire
 - [ ] `play:siege` Siege units: rams against buildings, mangonels with area damage, trebuchets that pack and unpack
 - [ ] `play:naval` Docks and ships: fishing ships and fish traps gather food, warships fight on water, transport ships carry units (Minecraft boats)
 - [ ] `play:cheats` The AoE2 cheat codes in the chat when cheats are on (epic #820)
