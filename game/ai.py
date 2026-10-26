@@ -26,17 +26,18 @@ from replay import SPEEDS  # noqa: E402
 WALK = 43.4
 
 
-def walk_speed(name, T):
-    """Blocks per real second of AoE2 unit `name` at Normal game speed (tiles per game second * T * NORMAL)."""
-    return next((s for k, s in SPEEDS.items() if name.startswith(k)), 1.0) * T * NORMAL
+def walk_speed(name, T, rate=NORMAL):
+    """Blocks per real second of AoE2 unit `name` at `rate` game seconds per real second (default: Normal game
+    speed): tiles per game second * T * rate."""
+    return next((s for k, s in SPEEDS.items() if name.startswith(k)), 1.0) * T * rate
 
 
-def movement_speed(name, T):
-    return round(math.sqrt(walk_speed(name, T) / WALK), 4)
+def movement_speed(name, T, rate=NORMAL):
+    return round(math.sqrt(walk_speed(name, T, rate) / WALK), 4)
 
 
-def speed_command(uuid, name, T):
-    return f"attribute {uuid} minecraft:movement_speed base set {movement_speed(name, T)}"
+def speed_command(uuid, name, T, rate=NORMAL):
+    return f"attribute {uuid} minecraft:movement_speed base set {movement_speed(name, T, rate)}"
 
 
 def move(game, uuid, name, T, x, y, z):
