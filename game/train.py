@@ -81,7 +81,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "HORSE_COLLAR": 20,
                "HUSKARL": 13,
                "JANISSARY": 21,
-               "LONGBOWMAN": 17,
+               "LONGBOWMAN": 18,
                "MAMELUKE": 23,
                "MANGUDAI": 26,
                "SAMURAI": 9,
