@@ -29,6 +29,8 @@ Horse Collar at the mill (#726): the live and the new farms of the player have 7
 Wheelbarrow at the town center in the Feudal Age (#728, TECH_AGE): villagers carry 3 more resources and walk 10 % faster (gather.CARRY, gather.PACE).
 Bloodlines at the stable in the Feudal Age (#940): cavalry gets 20 more hit points, also a live unit (it keeps its lost
 hit points: `aoe stats`).
+Man-at-Arms at the barracks in the Feudal Age (#941, UPGRADES): the live militia of the player become men-at-arms
+(name and values), and the barracks trains men-at-arms instead of militia.
 Rally points (#707): the menu item "Rally point" (RALLY) and the next right click on the ground set the rally point of
 the building; each new unit walks there (Minecraft path finding), a new villager gathers at a tree, bush, mine or farm.
 The castle (#708) trains the unique unit of the civilization of its player (UNIQUE, trains()). Only the units with AoE2
@@ -64,6 +66,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "JANISSARY": {"food": 60, "gold": 55},
          "LONGBOWMAN": {"wood": 35, "gold": 40},
          "MAMELUKE": {"food": 55, "gold": 85},
+         "MAN_AT_ARMS": {"food": 60, "gold": 20},
+         "MAN_AT_ARMS_UPGRADE": {"food": 100, "gold": 40},
          "MANGUDAI": {"wood": 55, "gold": 65},
          "PADDED_ARCHER_ARMOR": {"food": 100},
          "SAMURAI": {"food": 45, "gold": 30},
@@ -90,6 +94,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "JANISSARY": 21,
                "LONGBOWMAN": 18,
                "MAMELUKE": 23,
+               "MAN_AT_ARMS": 21,
+               "MAN_AT_ARMS_UPGRADE": 40,
                "MANGUDAI": 26,
                "PADDED_ARCHER_ARMOR": 40,
                "SAMURAI": 9,
@@ -102,7 +108,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "WAR_ELEPHANT": 25,
                "WHEELBARROW": 75,
                "WOAD_RAIDER": 10}
-TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW"), "BARRACKS": ("MILITIA", "SPEARMAN"),   # the units and technologies of each
+TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW"), "BARRACKS": ("MILITIA", "SPEARMAN", "MAN_AT_ARMS_UPGRADE"),   # the units and technologies of each
           "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER"),                                         # building (#654, #670, #655)
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING", "PADDED_ARCHER_ARMOR"),   # (#675, #725, #724, #937)
           "CASTLE": (),                                                         # the unique unit: trains() (#708)
@@ -132,16 +138,19 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
          "LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
          if "VILLAGER" in name else s,
+         "MAN_AT_ARMS_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "PADDED_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "archer" in s.classes else s,
          "SCALE_MAIL_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "infantry" in s.classes else s,
          "FEUDAL_AGE": lambda name, s: s,   # the change of each technology to the AoE2 values
          "WHEELBARROW": lambda name, s: s}                         # no combat change: gather.CARRY and gather.PACE
+UPGRADES = {"MAN_AT_ARMS_UPGRADE": ("MILITIA", "MAN_AT_ARMS")}  # technology: the unit and its new unit (#941)
 REQUIRES = {"FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP", "DOCK"))}   # n types of these buildings
 TECH_AGE = {                                                       # the age of a technology (build.AGE): hidden before
     "BLOODLINES": 1,
     "DOUBLE_BIT_AXE": 1,
+    "MAN_AT_ARMS_UPGRADE": 1,
     "PADDED_ARCHER_ARMOR": 1,
     "WHEELBARROW": 1,
 }
@@ -170,6 +179,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "LONGBOWMAN": (0, "skeleton_spawn_egg", "Longbowman"),
          "LOOM": (1, "book", "Loom"),                               # a book for a technology (#618)
          "MAMELUKE": (0, "camel_spawn_egg", "Mameluke"),
+         "MAN_AT_ARMS": (0, "zombie_spawn_egg", "Man-at-Arms"),
+         "MAN_AT_ARMS_UPGRADE": (2, "book", "Man-at-Arms"),
          "MANGUDAI": (0, "skeleton_horse_spawn_egg", "Mangudai"),
          "PADDED_ARCHER_ARMOR": (3, "book", "Padded Archer Armor"),
          "SAMURAI": (0, "zombie_spawn_egg", "Samurai"),
@@ -209,7 +220,8 @@ def homes(g):
 def trains(g, building):
     """The units and technologies of the own building: a castle trains the unique unit of the player's civilization."""
     if building != "CASTLE":
-        return TRAINS[building]
+        new = {old: unit for t, (old, unit) in UPGRADES.items() if t in g.techs}     # the barracks trains the new unit
+        return tuple(new.get(n, n) for n in TRAINS[building])
     civ = g.data.get("players", {}).get(str(g.player), {}).get("civ")
     return tuple(n for n in [UNIQUE.get(civ)] if n in COSTS)
 
@@ -408,6 +420,12 @@ def research(g, entry):
         for t in g.map.own_farms:
             if g.map.farms.get(t, 0) > 0:
                 g.map.farms[t] += more
+    if entry["name"] in UPGRADES:                                  # the live units of the line get the new name
+        old, new = UPGRADES[entry["name"]]
+        for uuid in [u for u, n in g.soldiers.items() if n == old]:
+            g.soldiers[uuid] = new
+            g.command(combat.stats_command(uuid, new, stats(g, new)))
+            g.command(combat.label_command(uuid, new))               # the name of a new unit (units.pretty)
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
         if stats(g, name) != combat.stats(name):
             g.command(combat.stats_command(uuid, name, stats(g, name)))
