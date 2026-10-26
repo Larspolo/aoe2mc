@@ -25,7 +25,7 @@ def test_scenario_area_trigger_gives_a_tick_line(tmp_path):
     assert files["data/minecraft/tags/function/tick.json"] == {"values": ["aoe2mc:tick"]}
     # tiles 3..6 are the blocks 12..27: dx 15; all heights
     assert files[TICK].splitlines() == [
-        "execute if entity @e[tag=aoe2mc.p1,x=12,y=-64,z=12,dx=15,dy=383,dz=15] unless score #1 aoe_trig matches 1 "
+        "execute if entity @e[tag=aoe2mc.p1,tag=aoe2mc.t38,x=12,y=-64,z=12,dx=15,dy=383,dz=15] unless score #1 aoe_trig matches 1 "
         "run function aoe2mc:trigger/1"]
     assert files["data/aoe2mc/function/trigger/1.mcfunction"].splitlines() == [
         'tellraw @a {"text": "A monastery stands now next to the hill."}', "scoreboard players set #1 aoe_trig 1"]
@@ -91,6 +91,10 @@ def test_area_trigger_fires_on_a_server(tmp_path):
     aoe2mc.convert(src, world)
     fn = os.path.join(world, "datapacks", "aoe2mc", "data", "aoe2mc", "function")
     unit = "@e[tag=aoe2mc.p1,type=villager,limit=1]"
+    texts = aoe2mc.read_scenario(src)[4]
+    texts["triggers"][1]["conditions"][0]["object"] = -1             # any unit, not only the knight (#681)
+    with open(os.path.join(fn, "tick.mcfunction"), "w") as f:
+        f.write(aoe2mc.trigger_files(texts["triggers"], T=4)[1]["data/aoe2mc/function/tick.mcfunction"])
     with run.Game(world) as game:
         game.forceload()
         assert wait_score(game, None, 2) is None                      # the villager is outside the area
@@ -98,7 +102,6 @@ def test_area_trigger_fires_on_a_server(tmp_path):
         assert wait_score(game, 1) == 1                               # in the area: the trigger fired
         game.command(f"tp {unit} 60 70 60")
         assert wait_score(game, None, 2) == 1                         # no loop: it stays fired
-        texts = aoe2mc.read_scenario(src)[4]
         texts["triggers"][1]["looping"] = True
         files = aoe2mc.trigger_files(texts["triggers"], T=4)[1]
         with open(os.path.join(fn, "tick.mcfunction"), "w") as f:
