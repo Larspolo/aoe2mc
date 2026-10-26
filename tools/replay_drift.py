@@ -15,6 +15,10 @@ that leg ("slack"), the order of the plugin and the target of the mob AI.
 The table has one row per unit kind: units, median and maximum distance (blocks, without height, less the slack), "stuck" (more than
 STUCK_BLOCKS from the replay position for more than STUCK_SECONDS of game time), "stray" (moved more than STRAY_BLOCKS
 between two samples with no plugin order, no mob target and the same replay position) and "died" (the entity is gone, the replay still has the unit).
+The second table (#829) has the walk speed of the units that walk behind their replay position: blocks per game second
+between two samples with a plugin order in both and more than FAR_BLOCKS of distance, as a median and as a part of
+the replay speed ("need": the AoE2 speed times the tile size). Use `--every 2` for it: with 10 s between two samples a
+detour counts as a slow walk.
 """
 import argparse
 import contextlib
@@ -32,6 +36,7 @@ ROOT = os.path.dirname(HERE)
 sys.path[:0] = [ROOT, HERE, os.path.join(ROOT, "game")]
 
 STUCK_BLOCKS, STUCK_SECONDS, STRAY_BLOCKS = 4, 30, 2
+FAR_BLOCKS = 20
 
 
 class Done(Exception):
@@ -66,6 +71,7 @@ def sample(r, now, found):
         rows.append({"t": int(now), "ref": key, "uuid": v.uuid, "name": v.name, "player": v.player,
                      "rx": round(v.pos[0], 2), "rz": round(v.pos[2], 2), "walking": id(v) in due,
                      "slack": round(max(0, due.get(id(v), now) - now) / 1000 * speed, 2),    # the rest of its leg
+                     "need": speed,
                      **({"x": e[0], "z": e[2], "order": e[3], "target": e[4]} if e else {"x": None, "z": None})})
     return rows
 
@@ -103,6 +109,34 @@ def analyze(samples):
         d = k.pop("d")
         k["median"], k["max"] = (round(statistics.median(d), 1), round(max(d), 1)) if d else (None, None)
     return out
+
+
+def walk(samples):
+    """kind -> {"moves", "walk", "need", "part"}: the second table (see the module text)."""
+    by, out = {}, {}
+    for s in sorted(samples, key=lambda s: s["t"]):
+        by.setdefault(s["uuid"], []).append(s)
+    for rows in by.values():
+        for a, b in zip(rows, rows[1:]):
+            if a["x"] is None or b["x"] is None or not (a.get("order") and b.get("order")) or b["t"] <= a["t"] or \
+                    ((a["x"] - a["rx"]) ** 2 + (a["z"] - a["rz"]) ** 2) ** 0.5 - a.get("slack", 0) <= FAR_BLOCKS:
+                continue
+            k = out.setdefault(kind(a["name"]), {"v": [], "need": a.get("need")})
+            k["v"].append(((b["x"] - a["x"]) ** 2 + (b["z"] - a["z"]) ** 2) ** 0.5 / ((b["t"] - a["t"]) / 1000))
+    for k in out.values():
+        v = k.pop("v")
+        k["moves"], k["walk"] = len(v), round(statistics.median(v), 2)
+        k["part"] = round(k["walk"] / k["need"], 2) if k["need"] else None
+    return out
+
+
+def walk_table(stats):
+    rows = [("Unit", "Moves", "Walk", "Need", "Part")] + [
+        (n, k["moves"], k["walk"], k["need"], "-" if k["part"] is None else f"{k['part']:.0%}")
+        for n, k in sorted(stats.items(), key=lambda kv: (-kv[1]["moves"], kv[0]))]
+    w = [max(len(str(r[i])) for r in rows) for i in range(len(rows[0]))]
+    return "\n".join("  ".join(str(c).ljust(w[0]) if i == 0 else str(c).rjust(w[i]) for i, c in enumerate(r))
+                     for r in rows)
 
 
 def table(stats):
@@ -182,6 +216,8 @@ def main(argv=None):
     else:
         ap.error("give a record, a world or --read FILE")
     print(table(analyze(samples)))
+    print()
+    print(walk_table(walk(samples)))
 
 
 if __name__ == "__main__":
