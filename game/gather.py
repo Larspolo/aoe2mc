@@ -19,7 +19,7 @@ click on a unit of another player then sends them to attack it (`aoe attack` of 
 for the selection, by the tag `SELECT`. A unit of player 1 is no target: a click on it selects it.
 A click with selected military units on a building of another player sends them to attack its target (#608,
 combat.building). When the plugin removes the target (0 hit points), its footprint is free ground for paths.
-A sidebar scoreboard shows wood, food, gold and stone of player 1.
+A sidebar scoreboard shows wood, food, gold and stone of player 1. A boss bar shows the selected unit (bossbar.py, #659).
 
 The program sees a click in two statistics: the use of the stick, and "talked to villager" (a right click on a
 villager is an interaction with the entity, not a use of the item). Then it reads the position and the view of
@@ -39,6 +39,7 @@ from units import VILLAGER_JOBS, animal  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
+import bossbar  # noqa: E402
 import menu  # noqa: E402
 import train  # noqa: E402
 
@@ -293,6 +294,7 @@ class Gather:
         self.trunks = {}                                               # tree tile -> logs of its trunk on the ground
         self.bushes = {}                                               # bush tile -> the block of its last look
         self.menus = {}                                                # player -> handler of its open menu (#619)
+        self.bar = None                                                # the unit on the boss bar (bossbar.py, #659)
         self.queues, self.trained = {}, {}                             # town center -> its queue, units it trained
         self.pop, self.census, self.shown = 0, 0.0, {}                 # live units, AoE2 seconds since the count, sidebar
         import combat                                                  # combat imports this module
@@ -323,6 +325,7 @@ class Gather:
             self.command(f"scoreboard players add {r} aoe_res 0")
         build.setup(self)
         menu.setup(self)
+        bossbar.setup(self)
         for o in self.units:                                           # the entities must be loaded (forceload)
             pos = self.pos(o["uuid"])
             if pos:
@@ -340,6 +343,7 @@ class Gather:
         self.command(f"data merge entity {uuid} {{Glowing:1b}}")
         self.command(f"tag {uuid} add {SELECT}")
         self.selected = keep
+        bossbar.show(self, uuid)                                        # the boss bar of the selection (#659)
 
     def attack(self, target):
         """Send the selected military units to attack the unit target, with their AoE2 walk speed (ai.py)."""
@@ -552,6 +556,7 @@ class Gather:
                 if v.load >= self.carry or src.get(v.tree, 0) <= 0:
                     self.go(v, "to_drop", set().union(*map(self.map.around, self.map.drops[v.res])))
         train.tick(self, self.tick * NORMAL)
+        bossbar.tick(self)
         for site in self.sites:
             builders = [v for v in self.villagers.values() if v.state == "build" and v.site is site]
             # AoE2: n builders need 3 / (n + 2) of the time of one
