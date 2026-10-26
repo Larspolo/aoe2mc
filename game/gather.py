@@ -67,16 +67,8 @@ class Map:
         for o in data["objects"]:
             if o["kind"] == "building":
                 x0, z0, x1, z1 = o["footprint"]
-                cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
-                if "FARM" in o["name"]:                                # no barriers: the farmer stands on it
-                    tile = int(o["tile"][0]), int(o["tile"][1])
-                    self.farms[tile], self.feet[tile] = FARM_FOOD, (x0, x1, z0, z1)
-                    self.farm_at.update(dict.fromkeys(cells, tile))
-                    continue
-                self.blocked |= cells
-                for r, names in DROP_SITES.items():
-                    if o["player"] == player and any(k in o["name"] for k in names):
-                        self.drops[r].append(cells)
+                self.building(o["name"], (x0, x1, z0, z1), (int(o["tile"][0]), int(o["tile"][1])) if "tile" in o
+                              else None, o["player"] == player)
             elif o["kind"] == "other" and not any(k in o["name"] for k in PASSABLE_OBJECTS):
                 tile = int(o["tile"][0]), int(o["tile"][1])
                 if o["name"] in MINES:                                 # a mine at x.0 covers 2 tiles
@@ -96,6 +88,20 @@ class Map:
                     self.woods[tile] = ("minecraft:bamboo_block", None) if kind == "bamboo" else \
                         ("minecraft:oak_log", None) if kind == "dead" else \
                         (f"minecraft:{WOODS.get(kind, 'oak')}_log", f"minecraft:{WOODS.get(kind, 'oak')}_leaves[persistent=true]")
+
+    def building(self, name, rect, tile, own):
+        """Add a building with the block footprint rect = (x0, x1, z0, z1) and its center tile. A farm is ground
+        that a farmer stands on; own buildings are drop sites. Construction sites call it when they are complete."""
+        x0, x1, z0, z1 = rect
+        cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
+        if "FARM" in name:                                             # no barriers: the farmer stands on it
+            self.farms[tile], self.feet[tile] = FARM_FOOD, rect
+            self.farm_at.update(dict.fromkeys(cells, tile))
+            return
+        self.blocked |= cells
+        for r, names in DROP_SITES.items():
+            if own and any(k in name for k in names):
+                self.drops[r].append(cells)
 
     def cells(self, tile):
         T = self.T

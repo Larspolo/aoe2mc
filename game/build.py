@@ -5,6 +5,7 @@ When the footprint is free and the stock pays the cost, a foundation appears: a 
 The footprint is blocked for paths. gather.Gather.click calls place().
 A right click on a foundation sends the selected villagers there to build it (#418): the blocks of the design
 (replay.Replay.building) appear from the bottom up, in the AoE2 build time. gather.Gather.step calls rise().
+A complete building works (#419): a camp, mill or town center is a drop site, a farm can be farmed.
 """
 import json
 import math
@@ -119,4 +120,11 @@ def rise(g, site, work):
     for c in cmds[site["sent"]:k]:
         g.command(c)
     site["sent"] = max(site["sent"], k)
+    if site["progress"] >= 1 and not site.get("done"):                 # complete: the building works (#419)
+        site["done"] = True
+        x0, x1, z0, z1 = site["footprint"]
+        s, T = footprint(site["name"]), g.map.T
+        if "FARM" in site["name"]:                                     # free ground again: the farmer stands on it
+            g.map.blocked -= {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
+        g.map.building(site["name"], site["footprint"], (x0 // T + s // 2, z0 // T + s // 2), site["player"] == g.player)
     return site["progress"] >= 1
