@@ -83,6 +83,7 @@ GROUPS = {n: (3 + n, dye) for n, dye in enumerate(("red_dye", "yellow_dye", "lim
 GROUP_GIVE = 20                                                    # clicks() calls between two checks of the items
 SNEAK = '{condition:"minecraft:entity_properties",entity:"this",predicate:{flags:{is_sneaking:true}}}'
 MARK = {"go": "[0.2,1.0,0.2]", "attack": "[1.0,0.15,0.15]"}       # dust colors of the order marker (#796): green, red
+SIEGE_GLOW = 3                                                     # seconds of the glow of an attacked building (#991)
 MARK_POINTS = 12                                                   # dust points on the ring of the order marker
 # The look and sound of one gather step at the resource (#592): block particles and a vanilla sound. A villager has
 # no arm swing, so it turns to the resource (`rotate ... facing`). 26.3 block particles take
@@ -358,9 +359,18 @@ def marker(m, cells, kind, who):
             for a in (2 * math.pi * k / MARK_POINTS for k in range(MARK_POINTS))]
 
 
-def glow(uuid):
+def glow(uuid, seconds=1):
     """The order marker of an attack on a unit (#796): the target glows for a moment (Minecraft effect)."""
-    return f"effect give {uuid} minecraft:glowing 1 0 true"
+    return f"effect give {uuid} minecraft:glowing {seconds} 0 true"
+
+
+def siege_mark(uuid, name, hp, who):
+    """The mark of an attack order on building `name` (#991), as the flash of AoE2: its target (an invisible slime that
+    fills the footprint) glows SIEGE_GLOW seconds (an invisible mob shows its outline in the team color), and the action
+    bar of player who shows the name and the hit points (the score aoe_hp of the plugin) of the full hp."""
+    text = [{"text": f"Attack: {build.pretty(name)} (", "color": "red"}, {"score": {"name": uuid, "objective": "aoe_hp"}},
+            {"text": f"/{hp})"}]
+    return [glow(uuid, SIEGE_GLOW), f"title {who} actionbar " + json.dumps(text)]
 
 
 class Gather:
@@ -410,6 +420,8 @@ class Gather:
         self.forts = {combat.target_uuid(o["footprint"]): combat.building_box(o, ground) for o in data["objects"]
                       if o["kind"] == "building" and o["player"] not in (0, player) and "footprint" in o
                       and o["name"] in combat.BUILDINGS}               # target UUID -> box of an enemy building
+        self.fort_names = {combat.target_uuid(o["footprint"]): o["name"] for o in data["objects"]
+                           if o["kind"] == "building" and "footprint" in o}   # target UUID -> AoE2 name (#991)
         self.sieged = set()                                            # the targets of attack orders
         self.wands, self.corners = set(), {}                           # players who clicked the wand, player -> corner 1
         self.holds = {}                                                # player -> time of the last wand use of a drag
@@ -737,6 +749,10 @@ class Gather:
             self.attack(fort)
             x0, _, z0, x1, _, z1 = self.forts[fort]
             self.mark(name, {(x0, z0), (x1, z1)}, "attack")
+            import combat                                              # combat imports this module
+            kind = self.fort_names.get(fort, "")
+            for c in siege_mark(fort, kind, combat.stats(kind).hp, name):
+                self.command(c)
             return
         building = build.chosen(self, name)
         if building:                                                   # a chosen building: place its foundation

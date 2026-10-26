@@ -81,7 +81,7 @@ def test_sample_record_ships_stay_on_the_water(tmp_path):
     def sleep(s):
         now[0] += s
     r = replay.Replay(Game(), d)
-    r.run(speed=1000, clock=lambda: now[0], sleep=sleep, log=None)
+    r.run(speed=1000, clock=lambda: now[0], sleep=sleep, log=None, finish=True)
     m = r.map
     boats = [(math.floor(x), math.floor(z)) for k, x, _, z in summons(sent) if k.endswith("_boat")]
     assert len(boats) >= 5 and all(m.ground[z][x] is None for x, z in boats)
