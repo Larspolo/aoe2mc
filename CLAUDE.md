@@ -88,6 +88,8 @@ Design work (buildings, objects, units, animals) follows `docs/DESIGN.md`. Do de
 
 Match the existing code: compact, numpy-vectorized, short comments that say why. Do not reformat code that you do
 not change. Do not add a dependency without a ticket that asks for it. Keep functions in their present file.
+When you add an entry to a table keyed by a name (`COSTS`, `TRAINS`, `STATS` ...), put each entry that you add on its
+own line, in alphabetical order, not at the end: parallel tickets that add to the same last line conflict (#655, #670).
 
 ## How to verify
 
