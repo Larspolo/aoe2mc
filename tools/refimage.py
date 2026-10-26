@@ -18,8 +18,10 @@ import urllib.request
 
 from PIL import Image
 
+from agent_config import CONFIG
+
 API = "https://ageofempires.fandom.com/api.php"
-HEADERS = {"User-Agent": "aoe2mc-refimage/1.0 (https://github.com/Larspolo/aoe2mc)"}   # the default urllib agent gets 403
+HEADERS = {"User-Agent": f"aoe2mc-refimage/1.0 (https://github.com/{CONFIG['repo']})"}   # the default urllib agent gets 403
 
 
 def fetch(url, timeout=30, tries=4):

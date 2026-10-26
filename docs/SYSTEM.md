@@ -109,32 +109,33 @@ Only the owner can do these steps. An agent that needs a change makes a `needs-h
 
 ## Generic and specific files
 
-"Generic" files work for another project with no change, or with a change of the repository name and the owner
-login only. "Specific" files hold rules of aoe2mc.
+"Generic" files work for another project with no change, or with a change of `agent.toml` only (#905: the repository,
+the owner login, the default branch, the status issue, the commands, the doc paths). "Specific" files hold rules of aoe2mc.
 
 | File | Kind | What is specific to aoe2mc |
 |---|---|---|
+| `agent.toml` | specific | All the project values that the generic files use. `tools/agent_config.py` reads it. |
 | `CLAUDE.md` | specific | The commands, the code map, the rules of the domain. The sections "How to work" and "Improve the process" are generic. |
 | `docs/STEERING.md` | generic | The owner login, the Mojang hosts, Minecraft in the setup script. |
 | `docs/LEARNINGS.md` | specific | The lessons of this project. The first section (environment and GitHub) is mostly generic. |
 | `docs/ROADMAP.md` | specific | The three goals and their features. |
 | `docs/SYSTEM.md` | generic | This document. |
-| `.claude/skills/autopilot/SKILL.md` | generic | The repository and owner names, the issue numbers of the lessons. |
+| `.claude/skills/autopilot/SKILL.md` | generic | The issue numbers of the lessons. |
 | `.claude/skills/verify/SKILL.md` | specific | The check levels (preview image, world reader, Minecraft server, screenshots). |
 | `.claude/skills/ticket/SKILL.md` | generic | The examples. |
 | `.claude/skills/design/SKILL.md` | specific | The design of buildings, units and animals. |
-| `.claude/skills/improve/SKILL.md` | generic | The project name and the owner login. |
+| `.claude/skills/improve/SKILL.md` | generic | The project name. |
 | `.claude/skills/roadmap/SKILL.md` | specific | The three goals of aoe2mc. |
-| `.claude/skills/pacer/SKILL.md` | generic | The trigger ID and the repository path. |
-| `.claude/settings.json` | generic | The permission rules name the repository. |
+| `.claude/skills/pacer/SKILL.md` | generic | The trigger ID, the repository path and name (it runs before the clone, so it cannot read `agent.toml`). |
+| `.claude/settings.json` | generic | The permission rules name the repository (they cannot read `agent.toml`). |
 | `.claude/hooks/session-start.sh` | generic | The Python packages and the setup version file name. |
 | `.claude/hooks/guard-main.sh` | generic | None. |
 | `scripts/cloud-setup.sh` | specific | Java, the Minecraft server jars, the Vulkan and X tools of the client. |
 | `scripts/autopilot.sh` | generic | None (runs on the owner's computer). |
-| `tools/claim.py` | generic | The repository name. |
+| `tools/claim.py` | generic | None (`agent.toml`). |
 | `tools/usage.py` | generic | None. |
-| `tools/dashboard.py` | generic | The repository name and the status issue number. |
-| `tools/health.py` | generic | The repository name. |
+| `tools/dashboard.py` | generic | None (`agent.toml`). |
+| `tools/health.py` | generic | None (`agent.toml`). |
 | `.github/workflows/ci.yml` | specific | The Python, Java and Minecraft steps, the test markers. The red-`main` ticket is generic. |
 | `.github/workflows/automerge.yml` | generic | The branch prefixes `claude/*` and `agent/*`. |
 | `.github/workflows/unconflict.yml` | generic | None. |
