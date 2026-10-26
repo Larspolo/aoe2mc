@@ -16,6 +16,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
+import org.bukkit.entity.Villager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
@@ -35,6 +36,7 @@ import org.bukkit.scoreboard.Team;
  * Wandering, looking around, panic, the choice of its own targets (a zombie attacks each villager), despawning and
  * the burning in the sun go. So a unit stands still without an order and attacks only the target of an order,
  * and an attack order skips the units of the team of the target (scoreboard teams of the datapack, #358).
+ * A villager walks with its brain, not with goals: it gets NoAI when it arrives, else it strolls away (#438).
  */
 public final class AoePlugin extends JavaPlugin {
     private static final class Order {
@@ -63,6 +65,9 @@ public final class AoePlugin extends JavaPlugin {
             }
             Order o = e.getValue();
             if (mob.getLocation().distanceSquared(o.goal) < 1.5 * 1.5) {
+                if (mob instanceof Villager) {      // its brain has no goals to drop: it strolls away (#438)
+                    mob.setAI(false);               // so it stands still until the next order
+                }
                 return true;                                          // arrived
             }
             var pf = mob.getPathfinder();

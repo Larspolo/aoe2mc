@@ -233,7 +233,7 @@ def replay(game, world, speed=1.0, start="0:00"):
     game.forceload()
     print(f"Join the server localhost:{game.game_port} (Minecraft {game.version}). The replay starts now "
           f"at speed {speed}.", file=sys.stderr)
-    stats = replay.Replay(game, data, game.version).run(speed, start)
+    stats = replay.Replay(game, data, game.version, ai=game.kind == "paper").run(speed, start)
     print(f"{stats['events']} events, {stats['commands']} commands in {stats['busy']} s "
           f"({stats['rate']} commands per second, the timeline needs {stats['need']}), largest lag {stats['lag']} s")
     return stats
