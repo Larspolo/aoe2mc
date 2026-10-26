@@ -13,6 +13,7 @@ import re
 import statistics
 import subprocess
 import sys
+from collections import Counter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from dashboard import api, closes  # noqa: E402
@@ -189,7 +190,18 @@ def fmt(x):
     return "-" if x is None else f"{x:.1f}"
 
 
-def report(since, runs, jobs, status_comments, comments, prs, files):
+def conflicted(comments):
+    """The numbers of the PRs that Automerge could not merge because of a merge conflict (events)."""
+    return sorted({int(c["issue_url"].rsplit("/", 1)[1]) for c in comments
+                   if (c.get("body") or "").lstrip().startswith("CI is green, but the merge failed")})
+
+
+def conflict_files(files_of, n=5):
+    """The n files that the most conflicted PRs change: where parallel tickets meet (files_of: PR -> file names)."""
+    return Counter(f for fs in files_of.values() for f in set(fs)).most_common(n)
+
+
+def report(since, runs, jobs, status_comments, comments, prs, files, files_of=None):
     out = [f"Health since {since:%Y-%m-%d %H:%M} UTC", "", "CI runs (count, median min, max min, failures):"]
     for name, (k, m, mx, fail) in ci_runs(runs, since).items():
         out.append(f"  {name}: {k}, {fmt(m)}, {fmt(mx)}, {fail}")
@@ -198,6 +210,9 @@ def report(since, runs, jobs, status_comments, comments, prs, files):
     out.append(f"Setup (median min of {len(setup)} Metrics lines): {fmt(med(setup))}")
     e = events(comments)
     out.append(f"Takeovers {e['takeovers']}, releases {e['releases']}, merge conflicts {e['conflicts']} (solved by Unconflict {e['solved']})")
+    if files_of:
+        out.append(f"Files of the {len(files_of)} conflicted PRs (PRs): "
+                   + "; ".join(f"{f} {k}" for f, k in conflict_files(files_of)))
     s = [x for x in samples(status_comments) if x[0] >= since]
     b, r = burn_pairs(s), burn_ratio(s)
     out.append(f"Burn per run-hour (ratio of sums of {len(s)} Usage lines, used by usage.py): "
@@ -253,7 +268,8 @@ def main(argv=None):
     a = ap.parse_args(argv)
     since = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=a.hours)
     runs, jobs, status_comments, comments, prs = fetch(since)
-    print(report(since, runs, jobs, status_comments, comments, prs, git_files()))
+    files_of = {n: [f["filename"] for f in api(f"pulls/{n}/files?per_page=100")] for n in conflicted(comments)}
+    print(report(since, runs, jobs, status_comments, comments, prs, git_files(), files_of))
     return 0
 
 
