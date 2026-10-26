@@ -135,6 +135,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     private final Map<UUID, Stats> stats = new HashMap<>();
+    private final Ghost ghost = new Ghost(this);
 
     private record Building(Stats stats, String box, int max, int[] b) {}   // b: x0 y0 z0 x1 y1 z1 of box
 
@@ -380,6 +381,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         Bukkit.getScheduler().runTaskTimer(this, this::follow, 2L, 2L);
+        Bukkit.getScheduler().runTaskTimer(this, ghost::tick, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::siege, 10L, 10L);
         Bukkit.getScheduler().runTaskTimer(this, this::burn, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, this::watch, 20L, 20L);
@@ -736,6 +738,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (args.length >= 2 && args[0].startsWith("ghost")) {          // the ghost of a building (#794)
+            return ghost.command(sender, args, players(sender, args[1]));
+        }
         if (args.length >= 5 && args[0].equals("moveto")) {
             double x, y, z, speed;
             try {
