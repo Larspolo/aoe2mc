@@ -22,7 +22,7 @@ def play(timeline, objects=(VIL, HOUSE), speed=4.0, n=64):
     def sleep(s):
         now[0] += s
     r = replay.Replay(game, d, ai=True)
-    stats = r.run(speed, clock=lambda: now[0], sleep=sleep, log=None)
+    stats = r.run(speed, clock=lambda: now[0], sleep=sleep, log=None, finish=True)
     return r, game.sent, stats
 
 
@@ -79,5 +79,5 @@ def test_without_the_plugin_the_units_walk_with_tp():
     d = data([dict(time=0, player=1, kind="move", objects=[7], tile=[10.5, 10.5])])
     d["objects"] += [VIL, HOUSE]
     game = Fake()
-    replay.Replay(game, d, aoe2mc.VERSION_NAME).run(4.0, clock=lambda: 1e9, sleep=lambda s: None, log=None)
+    replay.Replay(game, d, aoe2mc.VERSION_NAME).run(4.0, clock=lambda: 1e9, sleep=lambda s: None, log=None, finish=True)
     assert any(c.startswith("tp u1 ") for c in game.sent) and not orders(game.sent)

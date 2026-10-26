@@ -1057,16 +1057,20 @@ class Replay:
                 self.start(i, v, to)
         return out + [self.gather.profession(v.uuid, v.job) for i, v in self.units.items() if v.job != jobs.get(i)]
 
-    def run(self, speed=1.0, start=0, clock=time.monotonic, sleep=time.sleep, log=print, bar=False, poll=None):
+    def run(self, speed=1.0, start=0, clock=time.monotonic, sleep=time.sleep, log=print, bar=False, poll=None,
+            finish=False):
         """Play the timeline from game time `start` (ms) at `speed` times the game speed; `bar`: show the game time
         in a boss bar (`clock_commands`). Returns the stats:
         commands, events, the seconds of sending, the largest lag behind the timeline (s), commands per second
         (rate) and the commands per second that the timeline needs on average (need).
         poll(control) may change `self.control` ("speed", "paused") while the replay runs: run calls it before
         each event and each POLL seconds while it waits (#685). "jump" (game time, ms) skips forward to that time
-        (`jump`, #687); a time before the game time now changes nothing. "time" is the game time now (ms) for poll."""
-        events = sorted((e for e in self.data.get("timeline", []) + self.spawns() if e["time"] >= start),
-                        key=lambda e: e["time"])
+        (`jump`, #687); a time before the game time now changes nothing. "time" is the game time now (ms) for poll.
+        The replay ends at the time of its last event, as the record (#978); `finish`: play the walks and the
+        trainings to their end (tests of one walk or one queue)."""
+        last = math.inf if finish else max((e["time"] for e in self.data.get("timeline", [])), default=start)
+        events = sorted((e for e in self.data.get("timeline", []) + self.spawns() if start <= e["time"] <= last),
+                        key=lambda e: e["time"])                     # the record ends at `last`: no spawn after it
         g0, r0, lag, n, k = start, clock(), 0.0, 0, 0                 # game time g0 (ms) at real time r0
         self.speed, self.paused = speed, False
         self.control = {"speed": speed, "paused": False}
@@ -1080,6 +1084,8 @@ class Replay:
         while k < len(events) or self.moving:
             step = min([*self.moving.values(), *self.working.values(), *self.effects.values(),   # walk, gather, text
                         *(at for _, _, at in self.entering.values() if at is not None)], default=math.inf)   # go in
+            if k == len(events) and step > end and not finish:        # the record ends at its last event: do not wait for walks (#978)
+                break
             e = events[k] if k < len(events) and events[k]["time"] <= step else None
             k += e is not None
             now = e["time"] if e else step
