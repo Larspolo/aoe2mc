@@ -2198,14 +2198,30 @@ def fence(c, w, st, col, T, ctx):
     c.set(m, 1, m, post({d for d, v in (("north", n), ("south", s_), ("west", wst), ("east", e)) if v}))
 
 
+BARRICADE_DEBRIS = ["cobblestone", "andesite", "mossy_cobblestone", "spruce_log[axis=x]", "spruce_log[axis=z]",
+                    "stripped_spruce_log[axis=x]", "stripped_spruce_log[axis=z]", "spruce_planks", "spruce_slab[type=bottom]"]
+BARRICADE_TOP = ["mangrove_roots", "mangrove_roots", "spruce_fence", "oak_leaves[persistent=true]", "barrel[facing=up]",
+                 "decorated_pot[facing=south,cracked=false]", "stone_button[face=floor,facing=north]"]
+
+
 def barricade(c, w, st, col, T, ctx):
-    """A wooden barricade: crossed logs and sharpened stakes."""
-    for x in range(w):
-        c.set(x, 1, x % w, "spruce_log[axis=x]")
-        c.set(x, 1, w - 1 - x, "spruce_log[axis=z]")
-    for x in range(0, w, 2):
-        c.set(x, 2, w // 2, "spruce_fence")
-    c.set(w // 2, 2, w // 2, "spruce_log")
+    """A barricade like the game: a low heap of debris (stones, logs, planks, bare branches, crates, pots and ivy).
+    BARRICADE_A is a round heap; B, C and D are long heaps along x and along the two diagonals."""
+    k = "ABCD".find(ctx.get("name", "BARRICADE_A")[-1])
+    x, z = np.mgrid[0:w, 0:w] - (w - 1) / 2
+    u, v = [(x, z), (x, z), (x + z, z - x), (x - z, x + z)][max(k, 0)]
+    if k >= 2:
+        u, v = u / 1.6, v / 1.6
+    rx, rz = (w / 2, w / 2) if k <= 0 else (w / 2 + .5, w / 3)
+    d = (u / rx) ** 2 + (v / rz) ** 2 + c.rng.uniform(-.2, .2, (w, w))       # a ragged edge
+    h = (d < 1).astype(int) + (d < .45)                                       # 1 block at the edge, 2 in the middle
+    pick = c.rng.integers(0, len(BARRICADE_DEBRIS), (w, w, 2))
+    top = c.rng.integers(0, 3 * len(BARRICADE_TOP), (w, w))                   # one top cell in three gets a part
+    for i, j in zip(*np.nonzero(h)):
+        for y in range(h[i, j]):
+            c.set(i, y + 1, j, BARRICADE_DEBRIS[pick[i, j, y]])
+        if top[i, j] < len(BARRICADE_TOP):
+            c.set(i, h[i, j] + 1, j, BARRICADE_TOP[top[i, j]])
 
 
 def wall_banners(c, w, ctx, y, col, every=4):
@@ -3182,13 +3198,29 @@ def pavilion(c, w, st, col, T, ctx):
 
 
 def yurt(c, w, st, col, T, ctx):
+    """Like the game (#453): a low felt wall with a band, a flat dome roof and a wooden crown ring at the top.
+    The variants A to M have blue felt with white zig-zags, or plain white felt with a blue zig-zag band."""
     cx = (w - 1) / 2
     r = w / 2 - 0.3
-    c.cylinder(cx, cx, r, 1, 4, "white_wool", hollow=True)
-    c.cone(cx, cx, r + 0.3, 4, "brown_wool")
-    c.box(w // 2, w // 2 + 1, 1, 3, int(cx + r), int(cx + r) + 1, "air")
-    c.banner(w // 2 + 1, 3, int(cx + r) + 1, col)
-    hearth_room(c, w, int(cx + r), col, ["red_carpet", "orange_carpet"], "chest[facing=south,type=single,waterlogged=false]")
+    k = ord(ctx.get("name", "YURT_A")[-1]) - ord("A")
+    blue = "CHIEF" in ctx.get("name", "") or k % 3 != 2
+    felt, trim = ("blue_wool", "white_wool") if blue else ("white_wool", "blue_wool")
+    c.cylinder(cx, cx, r, 1, 4, felt, hollow=True)
+    ring, X, Z = c.disc_mask(cx, cx, r)
+    zig = ring & ((X + Z) % 2 == 0) & ~c.disc_mask(cx, cx, r - 1)[0]    # every second block: a zig-zag at this size
+    c._fill_mask(zig, 2 + (not blue), 3 + (not blue), trim)             # blue: the middle band, white: the top band
+    c.cylinder(cx, cx, r + 0.3, 4, 5, felt)                             # the dome: 3 discs, flat like the game
+    c._fill_mask(c.disc_mask(cx, cx, r + 0.3)[0] & ~c.disc_mask(cx, cx, r - 0.7)[0] & ((X + Z) % 2 == 1), 4, 5, trim)
+    c.cylinder(cx, cx, r - 0.7, 5, 6, felt)
+    if w >= 6:
+        c.cylinder(cx, cx, r - 1.9, 6, 7, felt)
+        crown = "spruce_trapdoor[facing=north,half=top,open=false]" if blue else "brown_wool"     # tied hides
+        c.box(w // 2 - 1, w // 2 + 1, 6, 7, w // 2 - 1, w // 2 + 1, crown)
+    zd = int(cx + r)
+    c.door(w // 2, 1, zd, "south", "spruce")
+    if "CHIEF" in ctx.get("name", ""):
+        c.flag(w // 2, 7 if w >= 6 else 6, w // 2, col)
+    hearth_room(c, w, zd, col, ["red_carpet", "orange_carpet"], "chest[facing=south,type=single,waterlogged=false]")
 
 
 def hearth_room(c, w, zd, col, rugs, store):
@@ -3208,10 +3240,28 @@ def hearth_room(c, w, zd, col, rugs, store):
 
 
 def hut(c, w, st, col, T, ctx):
-    cx = (w - 1) / 2
-    c.cylinder(cx, cx, w / 2 - 0.5, 1, 4, "packed_mud", hollow=True)
-    c.cone(cx, cx, w / 2 + 0.3, 4, "hay_block")
-    c.box(w // 2, w // 2 + 1, 1, 3, w - 1, w, "air")
+    """Like the game (#483): a low wall of posts and wicker (some huts: mud), a steep thatch cone and a tuft of sticks.
+    HUT_G is the large hut: a higher wall, a ledge in the roof and a blue clay finial."""
+    cx, r = (w - 1) / 2, w / 2 - 0.5
+    k = ord(ctx.get("name", "HUT_A")[-1]) - ord("A")
+    big, hw = k == 6, 2 + (k == 6)                                      # wall height: the roof hangs low
+    if k % 3 == 2:
+        c.cylinder(cx, cx, r, 1, hw + 1, "packed_mud", hollow=True)
+    else:
+        c.cylinder(cx, cx, r, 1, hw + 1, "mangrove_roots[waterlogged=false]", hollow=True)    # wicker
+        ring, X, Z = c.disc_mask(cx, cx, r)
+        c._fill_mask(ring & ~c.disc_mask(cx, cx, r - 1)[0] & ((X + Z) % 2 == 0), 1, hw + 1, "spruce_log[axis=y]")
+    radii = [r + 0.3, r - 0.9, r - 1.2, r - 1.9, r - 2.6] if big else [r + 0.3 - 0.7 * i for i in range(6)]
+    y = hw + 1
+    for rr in (rr for rr in radii if rr > 0.3):                         # steeper than one block per layer
+        c.cylinder(cx, cx, rr, y, y + 1, "hay_block")
+        y += 1
+    m = w // 2
+    if big:
+        c.set(m, y, m, "blue_terracotta")
+    else:
+        c.set(m, y, m, "spruce_fence"); c.set(m - 1, y, m - 1, "spruce_fence")
+    c.box(m, m + 1, 1, 3, w - 1, w, "air")
     hearth_room(c, w, w - 1, col, ["brown_carpet", "yellow_carpet"], "barrel[facing=up,open=false]")
 
 
@@ -4112,6 +4162,14 @@ def shrine(c, w, st, col, T, ctx):
     top = c.spire(a, b, a, b, 5, "sandstone", steep=2, tip="gold_block")
     c.set(m, top + 1, m, "lightning_rod")
     c.banner(m + 1, 3, b, col)
+    candles, lantern = "candle[candles=3,lit=true,waterlogged=false]", "lantern[hanging=false,waterlogged=false]"
+    z0, z1 = a + 1, b - 3                             # the cella; the row b - 2 behind the opening stays free
+    items = [(m, 1, z0, "chiseled_sandstone"), (m, 2, z0, "gold_block"),     # the idol on its altar
+             (m - 1, 1, z0, candles), (m + 1, 1, z0, candles)]
+    items += [(m, 1, z, f"{col}_carpet") for z in range(z0 + 1, b - 1)]
+    for x in (a + 1, b - 2):                                               # offerings and light at the side walls
+        items += [(x, 1, z0 + 1, "potted_poppy"), (x, 1, z1, lantern)]
+    c.furniture(items)
 
 
 def pagan_shrine(c, w, st, col, T, ctx):
@@ -4135,6 +4193,17 @@ def pagan_shrine(c, w, st, col, T, ctx):
     for x, z in ((3, w - 2), (w - 4, 2), (m + 3, 3)):
         c.set(x, 1, z, "cobblestone")
     c.banner(m, 3, w - 1, col)
+    skull = "skeleton_skull[powered=false,rotation=0]"
+    items = [(m, 1, m + 2, "mossy_cobblestone"), (m, 2, m + 2, skull),         # the offering stone at the tree
+             (m - 1, 1, m + 2, "candle[candles=4,lit=true,waterlogged=false]"),
+             (m + 1, 1, m + 2, "potted_red_mushroom"),
+             (m, 1, w - 2, "campfire[facing=south,lit=true,signal_fire=false,waterlogged=false]"),
+             (m - 3, 4, 0, skull), (m + 3, 4, w - 1, skull)]                 # skulls on the carved posts
+    items += [(x, 2, z, "lantern[hanging=true,waterlogged=false]") for x in (2, w - 3) for z in (4, w - 4)]
+    empty = (-1, c.id("air"))                                              # an open place: no room, no door
+    for x, y, z, b in items:
+        if c.get(x, y, z) in empty:
+            c.set(x, y, z, b)
 
 
 def wooden_bridge(c, w, st, col, T, ctx):

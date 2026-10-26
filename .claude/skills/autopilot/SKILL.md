@@ -69,7 +69,7 @@ If your usage limit stops you, the next run continues your work through this rul
 3. Read the state comment in its body: `<!-- agent-state: {"last_run": "<ISO time>", "runs": N} -->`.
 4. Note the start time (`date -u +%FT%TZ`) and keep a short list of time sinks during the run
    (for example "read buildings.py in full", "CI red: missing file", "permission denied for X").
-   Step 8 reports them.
+   Step 8 reports them. Run `python3 tools/usage.py --sample` (about 2 s) and keep its `Usage:` line for step 8.
 
 ## 2. Finish open work first
 
@@ -166,7 +166,7 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
    `ruff check .` and `python3 -m pytest` always; `python3 -m pytest -m slow` when the change touches `aoe2mc.py`,
    `buildings.py`, `units.py` or `tools/scenarios.py`; `python3 -m pytest -m mc` when it changes NBT, entities,
    block entities or the world format. Put the commands and the result lines in the PR body ("Local checks").
-   Then merge the PR yourself: `gh api -X PUT repos/Larspolo/aoe2mc/pulls/N/merge -f merge_method=squash -f sha=<head>`.
+   Then merge the PR yourself: `gh api repos/Larspolo/aoe2mc/pulls/N/merge -X put -f merge_method=squash -f sha=<head>`.
    A 405 (main moved, or a conflict) → step 10, the checks again, push, merge again. Remove `in-progress`.
 9. A check fails → find the cause, fix, check again. After 3 failed attempts stop: comment the cause on the ticket,
    add `blocked` or `needs-human` and `hold`, remove `in-progress`, and go to step 8 of the skill (report).
@@ -200,6 +200,8 @@ End it with one metrics line for each ticket of the run (the `improve` skill rea
 
     Metrics: ticket #<n> · <size> · <merged|blocked|needs-human|none> · <minutes> min · setup <m> min · checks <k> · checks <c> min · time sinks: <list or "none">
 
+Put the `Usage:` line of step 1.4 above the metrics lines, unchanged: `tools/health.py` measures the quota use of one
+run per hour from pairs of these lines, and `tools/usage.py --target` uses that value (#462).
 `setup`: minutes from the start time (step 4) to the claim of the first ticket (0 for later tickets).
 `checks <k>`: rounds of local checks before the merge; `checks <c> min`: their minutes in total.
 
