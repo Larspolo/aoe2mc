@@ -37,7 +37,7 @@ import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from aoe2mc import PASSABLE_OBJECTS, WOODS, object_footprint, tree_kind  # noqa: E402
+from aoe2mc import PASSABLE_OBJECTS, WOODS, object_footprint, player_color, tree_kind  # noqa: E402
 from units import VILLAGER_JOBS, animal  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -419,7 +419,8 @@ class Gather:
     def box(self, name, cell):
         """A click of player name with the selection wand on the ground cell (#778, owner choice #745). The first click
         sets a corner, the second selects the own units whose feet are in the rectangle of the two corners, as the
-        selection box of AoE2: military units win over villagers, and an empty box clears the selection."""
+        selection box of AoE2: military units win over villagers, and an empty box clears the selection. Between the
+        clicks the Paper plugin draws the border of the box to the ground under the look (Border.java, #795)."""
         if cell is None:
             return
         if (first := self.corners.pop(name, None)) is None:
@@ -427,7 +428,12 @@ class Gather:
             self.command(f"particle minecraft:happy_villager {x + 0.5} {(self.map.y(x, z) or 0) + 0.5} {z + 0.5} "
                          f"0.3 0.3 0.3 0 12 force {name}")
             self.command(f"title {name} actionbar " + json.dumps({"text": "Selection box: click the other corner"}))
+            if self.paper:                                             # the border follows the look (#795)
+                color = self.players.get(str(self.player), {}).get("color") or player_color(self.player)
+                self.command(f"aoe box {name} {x} {z} {color}")
             return
+        if self.paper:
+            self.command(f"aoe box-clear {name}")
         (x0, x1), (z0, z1) = sorted((first[0], cell[0])), sorted((first[1], cell[1]))
         pos = {k: v.pos for k, v in self.villagers.items()} | self.positions(list(self.soldiers))
         inside = {u for u, p in pos.items() if x0 <= p[0] < x1 + 1 and z0 <= p[2] < z1 + 1}
