@@ -1,13 +1,16 @@
 name: Automerge
 
 # Merges an agent PR (branch agent/* or claude/*) when its CI is green, so that the runs do not wait for CI (#232).
-# #344 removed it to save the Actions minutes of the private repository; the repository is public now (#370).
 # A merge with GITHUB_TOKEN starts no workflows, so this job starts CI on main, the dashboard and the claim clean-up.
-# A CI run with event workflow_dispatch on an agent branch comes from the Unconflict workflow (#280).
+# CI runs on a head that Unconflict pushed with GITHUB_TOKEN start no workflow_run event, also not after a re-run:
+# the sweep every 5 minutes merges those PRs (#581).
 on:
   workflow_run:
     workflows: [CI]
     types: [completed]
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
 
 permissions:
   contents: write        # merge, delete the branch
@@ -16,61 +19,89 @@ permissions:
   actions: write         # gh workflow run
 
 concurrency:
-  group: automerge-${{ github.event.workflow_run.head_branch }}   # per branch: a shared group drops pending runs
+  group: automerge-${{ github.event.workflow_run.head_branch || 'sweep' }}   # per branch: a shared group drops pending runs
   cancel-in-progress: false
 
 jobs:
   merge:
     if: >-
+      github.event_name != 'workflow_run' || (
       github.event.workflow_run.conclusion == 'success' &&
       (github.event.workflow_run.event == 'pull_request' || github.event.workflow_run.event == 'workflow_dispatch') &&
       github.event.workflow_run.head_repository.full_name == github.repository &&
       (startsWith(github.event.workflow_run.head_branch, 'agent/') ||
-       startsWith(github.event.workflow_run.head_branch, 'claude/'))
+       startsWith(github.event.workflow_run.head_branch, 'claude/')))
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
-      - name: Merge the PR
+      - name: Merge the green agent PRs
         env:
           GH_TOKEN: ${{ github.token }}
           R: ${{ github.repository }}
+          EVENT: ${{ github.event_name }}
           BRANCH: ${{ github.event.workflow_run.head_branch }}
           SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
-          pr=$(gh api "repos/$R/pulls?state=open&head=${R%%/*}:$BRANCH" --jq '.[0] // empty')
-          [ -n "$pr" ] || { echo "no open PR for $BRANCH"; exit 0; }
-          n=$(jq -r .number <<<"$pr")
-          if [ "$(jq -r .head.sha <<<"$pr")" != "$SHA" ]; then
-            echo "#$n: the head moved after the CI run started: the CI of the new head decides"; exit 0
-          fi
-          if jq -e '.labels[] | select(.name == "hold")' <<<"$pr" >/dev/null; then
-            echo "#$n has label hold"; exit 0
-          fi
-          ticket=$(jq -r .body <<<"$pr" | grep -oiE '(close[sd]?|fix(e[sd])?|resolve[sd]?) #[0-9]+' | head -1 | grep -oE '[0-9]+$' || true)
-          if [ -n "$ticket" ]; then
-            t=$(gh api "repos/$R/issues/$ticket")
-            if jq -e '.labels[] | select(.name == "needs-human" or .name == "blocked")' <<<"$t" >/dev/null; then
-              echo "ticket #$ticket waits (needs-human or blocked)"; exit 0
+          merged=0
+          merge() {   # merge PR_JSON SHA: SHA is the head that CI tested
+            local pr=$1 sha=$2 n branch ticket t
+            n=$(jq -r .number <<<"$pr"); branch=$(jq -r .head.ref <<<"$pr")
+            if [ "$(jq -r .head.sha <<<"$pr")" != "$sha" ]; then
+              echo "#$n: the head moved after the CI run started: the CI of the new head decides"; return
             fi
-          fi
-          gh api "repos/$R/issues/$n/labels/conflict" -X DELETE >/dev/null 2>&1 || true
-          if ! gh api "repos/$R/pulls/$n/merge" -X PUT -f merge_method=squash -f sha="$SHA" > merge.json 2> err.txt; then
-            cat merge.json err.txt
-            if gh api "repos/$R/pulls/$n" --jq .head.sha | grep -qx "$SHA"; then   # else a new push came: no conflict
-              gh api "repos/$R/issues/$n/labels" -f "labels[]=conflict" >/dev/null
-              printf 'CI is green, but the merge failed (%s). Merge `origin/main` into the branch and push (autopilot step 2).\n' \
-                "$(jq -r '.message // empty' merge.json 2>/dev/null || true)" > body.md
-              gh api "repos/$R/issues/$n/comments" -F body=@body.md >/dev/null
+            if jq -e '.labels[] | select(.name == "hold")' <<<"$pr" >/dev/null; then
+              echo "#$n has label hold"; return
             fi
-            exit 0
+            ticket=$(jq -r .body <<<"$pr" | grep -oiE '(close[sd]?|fix(e[sd])?|resolve[sd]?) #[0-9]+' | head -1 | grep -oE '[0-9]+$' || true)
+            if [ -n "$ticket" ]; then
+              t=$(gh api "repos/$R/issues/$ticket")
+              if jq -e '.labels[] | select(.name == "needs-human" or .name == "blocked")' <<<"$t" >/dev/null; then
+                echo "#$n: ticket #$ticket waits (needs-human or blocked)"; return
+              fi
+            fi
+            gh api "repos/$R/issues/$n/labels/conflict" -X DELETE >/dev/null 2>&1 || true
+            if ! gh api "repos/$R/pulls/$n/merge" -X PUT -f merge_method=squash -f sha="$sha" > merge.json 2> err.txt; then
+              cat merge.json err.txt
+              if [ "$(gh api "repos/$R/pulls/$n" --jq .merged)" = true ]; then
+                echo "#$n: another Automerge run merged it"; return
+              fi
+              if gh api "repos/$R/pulls/$n" --jq .head.sha | grep -qx "$sha"; then   # else a new push came: no conflict
+                gh api "repos/$R/issues/$n/labels" -f "labels[]=conflict" >/dev/null
+                printf 'CI is green, but the merge failed (%s). Merge `origin/main` into the branch and push (autopilot step 2).\n' \
+                  "$(jq -r '.message // empty' merge.json 2>/dev/null || true)" > body.md
+                gh api "repos/$R/issues/$n/comments" -F body=@body.md >/dev/null
+              fi
+              return
+            fi
+            echo "merged #$n"; merged=1
+            gh api "repos/$R/git/refs/heads/$branch" -X DELETE || true
+            if [ -n "$ticket" ]; then
+              gh api "repos/$R/issues/$ticket/labels/in-progress" -X DELETE >/dev/null 2>&1 || true
+            fi
+          }
+          if [ "$EVENT" = workflow_run ]; then
+            pr=$(gh api "repos/$R/pulls?state=open&head=${R%%/*}:$BRANCH" --jq '.[0] // empty')
+            if [ -n "$pr" ]; then merge "$pr" "$SHA"; else echo "no open PR for $BRANCH"; fi
+          else
+            # The sweep: each open agent PR without `conflict` (the runs and Unconflict solve those) whose head has a
+            # green `quick` check and no failed check.
+            gh api "repos/$R/pulls?state=open&per_page=100" --jq ".[] | select(.head.repo.full_name == \"$R\")
+              | select(.head.ref | test(\"^(agent|claude)/\")) | select([.labels[].name] | index(\"conflict\") | not)
+              | @json" > prs.txt
+            while read -r pr; do
+              sha=$(jq -r .head.sha <<<"$pr")
+              if gh api "repos/$R/commits/$sha/check-runs?per_page=100" --jq '.check_runs' | jq -e \
+                   'any(.[]; .name == "quick" and .conclusion == "success") and all(.[]; .conclusion != "failure")' >/dev/null; then
+                merge "$pr" "$sha"
+              else
+                echo "#$(jq -r .number <<<"$pr"): no green quick check on $sha"
+              fi
+            done < prs.txt
           fi
-          echo "merged #$n"
-          gh api "repos/$R/git/refs/heads/$BRANCH" -X DELETE || true
-          if [ -n "$ticket" ]; then
-            gh api "repos/$R/issues/$ticket/labels/in-progress" -X DELETE >/dev/null 2>&1 || true
+          if [ "$merged" = 1 ]; then
             gh workflow run claims.yml --repo "$R" || true                  # the claim refs of closed tickets
+            gh workflow run ci.yml --repo "$R" --ref main
+            gh workflow run dashboard.yml --repo "$R" || true
+            gh workflow run coverage.yml --repo "$R" --ref main || true     # report and MAX on main (#233)
+            gh workflow run unconflict.yml --repo "$R" || true             # main moved: merge it into conflicted PRs (#280)
           fi
-          gh workflow run ci.yml --repo "$R" --ref main
-          gh workflow run dashboard.yml --repo "$R" || true
-          gh workflow run coverage.yml --repo "$R" --ref main || true     # report and MAX on main (#233)
-          gh workflow run unconflict.yml --repo "$R" || true             # main moved: merge it into conflicted PRs (#280)
