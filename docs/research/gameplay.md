@@ -181,3 +181,6 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - `aoe moveto` of many units in a live replay (#438): an arrived villager strolls away (its brain), so the plugin sets
   NoAI on it at the goal; a goal more than about 100 blocks away gets no path (follow range 128): the replay sends
   legs of `replay.LEG` path cells. Check walks on a real server with `data get entity <uuid> Pos` after the replay.
+- Paper (Spigot) entity activation range: without a player near, a unit ticks only now and then. A villager then does
+  not walk or fall after `aoe moveto`, at random (#437: a farmer at the far end of its farm). `run.Game` writes a
+  `spigot.yml` with all ranges 0 (always active, as in vanilla).

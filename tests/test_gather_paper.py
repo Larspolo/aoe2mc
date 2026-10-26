@@ -87,3 +87,10 @@ def test_vanilla_keeps_the_own_path():
 def test_villager_speed_is_the_aoe2_speed(name):
     import ai
     assert ai.walk_speed(name, 4) == pytest.approx(0.8 * 4 * 1.7)
+
+
+def test_paper_ticks_units_far_from_players():
+    """Paper ticks a unit far from all players only now and then: a farmer at the far end of its farm did not walk
+    back (#437). The game program turns the activation range off."""
+    from game import run
+    assert all(f"      {k}: 0\n" in run.SPIGOT for k in ("villagers", "monsters", "animals", "misc"))
