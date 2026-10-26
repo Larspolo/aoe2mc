@@ -4,6 +4,8 @@ building is chosen or the first corner of the selection box is set, the line abo
 can do now: how to go on, how to cancel and how to deselect. The action bar fades after about 2 s, so tick() sends
 the hint again while the state lasts, and at once when the state changes. With no selection the hint shows once,
 after the change: a player who only walks around gets no line. gather.Gather.clicks calls tick().
+The pointed target (#989, gather.Gather.point) also goes into this line, after the count of the selection, so the
+action bar keeps one writer.
 """
 import json
 
@@ -27,17 +29,24 @@ def state(g, player=None):
         return "corner", TEXTS["corner"]
     if building := getattr(g, "ghosts", {}).get(player, [None])[0]:
         return "building", TEXTS["building"].format(building=pretty(building))
-    if army := g.selected & g.soldiers.keys():
-        return "military", TEXTS["military"].format(n=len(army), s="s" * (len(army) != 1))
-    if g.selected:
-        return "villagers", TEXTS["villagers"].format(n=len(g.selected), s="s" * (len(g.selected) != 1))
-    return "none", TEXTS["none"]
+    army, aim = g.selected & g.soldiers.keys(), getattr(g, "pointing", {}).get(player)
+    if army:
+        kind, text = "military", TEXTS["military"].format(n=len(army), s="s" * (len(army) != 1))
+    elif g.selected:
+        kind, text = "villagers", TEXTS["villagers"].format(n=len(g.selected), s="s" * (len(g.selected) != 1))
+    else:
+        kind, text = "none", TEXTS["none"]
+    if aim:                                                        # the count stays, the target replaces the help
+        return "pointing", (text.split(" · ")[0] + " · " if g.selected else "") + aim
+    return kind, text
 
 
 def tick(g):
     """Send the hint of each state: one command for the players with an own state (a corner, a chosen building), one
     for all others. Again after REPEAT seconds, at once after a change."""
-    own = sorted(set(g.corners) | set(getattr(g, "ghosts", {})))
+    if getattr(g, "noui", False):                                     # the cheat "noui" (#968)
+        return
+    own = sorted(set(g.corners) | set(getattr(g, "ghosts", {})) | set(getattr(g, "pointing", {})))
     targets = {p: state(g, p)[1] for p in own}
     targets["@a" + ("[" + ",".join(f"name=!{p}" for p in own) + "]") * bool(own)] = state(g)[1]
     now, shown = g.clock(), g.hints

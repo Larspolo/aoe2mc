@@ -24,6 +24,7 @@ the checks that the chosen ticket needs (a decision needs only GitHub).
 | Java 25 (Paper server, plugin) | `java -version` | Install a JDK 25 (for example Eclipse Temurin 25). |
 | Minecraft 26.3 | Ask the owner. | Minecraft launcher → Installations → New → version 26.3. |
 | GitHub access | `gh auth status`, or the GitHub MCP tools | `gh auth login` |
+| Commit email (a ticket with a PR, for example a close) | `git config user.email` ends with `@users.noreply.github.com`. GitHub refuses a push with a private email (#1020). | `git config user.email "$(gh api user --jq '"\(.id)+\(.login)@users.noreply.github.com"')"` (this clone only) |
 | A `.aoe2record` file (replay tickets) | `python3 -c "import mgz"` | `python3 -m pip install mgz` |
 
 ## 2. List the tickets
