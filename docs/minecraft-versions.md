@@ -158,3 +158,5 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
   A spectator sees invisible mobs: check them with `tools/mc_shot.py --player` (adventure mode).
 - A world that the Paper server of `game/run.py` opened fails `tools/mc_check.py` ("Missing data pack paper",
   "Overworld settings missing"): Paper changes `level.dat`. Convert again before a vanilla check (#656).
+- RCON `data get entity U CustomName` cuts deep compounds (`{extra: [{...}, " ", {...`): read one part with a path,
+  for example `CustomName.extra[2].text`. The answer starts with the display name of the entity (#661).
