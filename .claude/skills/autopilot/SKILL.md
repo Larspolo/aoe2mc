@@ -85,6 +85,9 @@ Then check main (it has no CI on each merge): run `ruff check .` and `python3 -m
 and read the last nightly CI run (`/actions/workflows/ci.yml/runs?per_page=1`, `conclusion`). If one is red, find the
 open `P0` ticket "Fix main: ..." or make one (`P0`, `bug`, `size:S`: the failing test and the commit that broke it),
 and do it first. The nightly CI makes the same ticket by itself.
+While GitHub Actions cannot run (the free minutes are used up until the 1st of the month, #460), the first run after
+03:00 UTC each day also runs `python3 -m pytest -m slow` and `python3 -m pytest -m mc` on `origin/main`, and writes the
+result in its report ("Daily main check"). Look for that line in today's reports on the status issue first.
 
 ## 3. Read the owner's feedback
 
