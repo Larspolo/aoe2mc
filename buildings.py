@@ -1474,6 +1474,14 @@ def throne_hall(c, x0, x1, z0, z1, y, st, col, aisle=None):
     c.set(x1 - 1, y, zl, "lectern[facing=west,has_book=true,powered=false]")
 
 
+def reach(c, x, y, z, dx, dz):
+    """The last air cell from (x, y, z) in the direction (dx, dz): the cell in front of the wall of a round room."""
+    air = c.id("air")
+    while c.get(x + dx, y, z + dz) == air:
+        x, z = x + dx, z + dz
+    return x, z
+
+
 def mill(c, w, st, col, T, ctx):
     if st.mill != "windmill":
         return granary(c, w, st, col, T, ctx)
@@ -3096,6 +3104,14 @@ def wooden_fort(c, w, st, col, T, ctx):
         for z in (a, b - 1):
             c.box(x, x + 1, 6, 8, z, z + 1, "spruce_fence")
     c.flag(w // 2, top + 1, w // 2, col, 2)
+    if b - a >= 4:                                         # inside (#441): a ladder to the gallery, stores, a camp
+        c.box(a + 1, a + 2, 1, 6, a + 1, a + 2, "ladder[facing=south,waterlogged=false]")
+        c.furniture([(b - 2, 1, a + 1, "chest[facing=west,type=single,waterlogged=false]")])
+        for x, z, s in ((1, 1, "campfire[facing=south,lit=true,signal_fire=false,waterlogged=false]"),
+                        (w - 2, 1, "barrel[facing=up,open=false]"), (w - 2, 2, "barrel[facing=up,open=false]"),
+                        (1, w - 3, "grindstone[face=floor,facing=east]"), (1, w - 2, "hay_block[axis=y]")):
+            c.set(x, 1, z, s)                              # the yard between the palisade and the tower
+        c.set(b - 2, 4, b - 2, "lantern[hanging=true,waterlogged=false]")
 
 
 def sapper_tunnel(c, w, st, col, T, ctx):
@@ -3325,12 +3341,31 @@ def svan_tower(c, w, st, col, T, ctx):
     """A Svan defense tower: tall, narrow, of rough stone, with a pitched tile roof."""
     h = max(12, 4 * T)
     c.room(0, w, 0, w, 0, h, "cobblestone")
-    c.box(0, w, 1, 2, 0, w, "mossy_cobblestone")
+    c.walls(0, w, 1, 2, 0, w, "mossy_cobblestone")
     c.door(w // 2, 1, w - 1)
     for y in range(4, h - 1, 4):
         c.set(w // 2, y, 0, "air"); c.set(w // 2, y, w - 1, "air")
     c.windows(0, w, 0, w, h - 1, b="air", step=2)
     c.gable(-1, w + 1, -1, w + 1, h + 1, "brick")
+    if w < 4:
+        return
+    # inside (#441): a wooden floor under each row of windows and a ladder through them. The family and the hay
+    # live at the bottom, stores, the hearth with its cauldron and a lookout above.
+    a, b = 1, w - 1
+    floors = list(range(5, h - 2, 4))
+    for y in floors:
+        c.box(a, b, y, y + 1, a, b, "spruce_planks")
+    c.box(a, a + 1, 1, floors[-1] + 2, a, a + 1, "ladder[facing=south,waterlogged=false]")
+    c.furniture([(b - 1, 1, a, "hay_block[axis=y]")])
+    c.set(b - 1, 4, b - 1, "lantern[hanging=true,waterlogged=false]")
+    rooms = [["chest[facing=west,type=single,waterlogged=false]", "barrel[facing=up,open=false]"],
+             ["cauldron", "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]"],
+             ["barrel[facing=up,open=false]", "lantern[hanging=false,waterlogged=false]"]]
+    for k, y in enumerate(floors):                         # upper floors: the cells at the ladder stay free
+        back, side = rooms[-1] if k == len(floors) - 1 else rooms[min(k, 1)]
+        c.set(b - 1, y + 1, a, back); c.set(b - 1, y + 1, b - 1, side)
+        if y + 4 < h and "lantern" not in side:
+            c.set(a, y + 3, b - 1, "lantern[hanging=true,waterlogged=false]")
 
 
 def courtyard_walls(c, w, st, col, T, ctx):
@@ -3804,6 +3839,15 @@ def gol_gumbaz(c, w, st, col, T, ctx):
     c.box(m - 1, m + 2, 1, h - 2, w - 2, w - 1, "air")
     c.door(m, 1, w - 3, "south", "dark_oak")
     c.banner(m - 3, h - 2, w - 1, col); c.banner(m + 3, h - 2, w - 1, col)
+    candles = "candle[candles=4,lit=true,waterlogged=false]"             # inside (#440): the tombs under the dome
+    items = [(x, 1, z, "red_carpet") for x in range(m - 2, m + 3) for z in range(m - 3, m + 3)
+             if abs(x - m) > 1 or abs(z - m) > 1]
+    for x in (m - 1, m + 1):                                              # the sultan, his wife and his daughter
+        items += [(x, 1, z, "smooth_quartz") for z in (m - 1, m)] + [(x, 2, z, "green_carpet") for z in (m - 1, m)]
+    items += [(m, 1, m - 1, "smooth_quartz_slab[type=bottom,waterlogged=false]"), (m, 2, m - 1, "white_carpet")]
+    items = [(x, 1, z, candles) for x in (m - 2, m + 2) for z in (m - 2, m + 1)] + items      # before the carpet
+    items += [(x, 1, z, "lantern[hanging=false,waterlogged=false]") for x in (3, w - 4) for z in (3, w - 4)]
+    c.furniture(items)
 
 
 def sanchi_stupa(c, w, st, col, T, ctx):
@@ -3863,6 +3907,14 @@ def temple_of_heaven(c, w, st, col, T, ctx):
     c.box(m, m + 1, 3, 6, int(cx + hr), int(cx + hr) + 1, "air")
     c.door(m, 3, int(cx + hr), "south", "dark_oak")
     c.banner(m - 2, 5, int(cx + hr) + 1, col)
+    x, zb = reach(c, m, 3, m, 0, -1)                                      # inside (#440): a golden altar for the tablets
+    items = [(m, 3, zb, "gold_block"), (m, 4, zb, "candle[candles=3,lit=true,waterlogged=false]"),
+             (m - 1, 3, zb, "red_terracotta"), (m + 1, 3, zb, "red_terracotta"),
+             (m - 1, 4, zb, "lantern[hanging=false,waterlogged=false]"),
+             (m + 1, 4, zb, "lantern[hanging=false,waterlogged=false]")]
+    items += [(x, 3, z, "yellow_carpet" if (x, z) == (m, m) else "red_carpet")
+              for x in range(m - 2, m + 3) for z in range(m - 2, m + 3)]
+    c.furniture(items)
 
 
 def minaret_of_jam(c, w, st, col, T, ctx):
@@ -3918,6 +3970,15 @@ def oracles_temple(c, w, st, col, T, ctx):
     c.door(m, 2, b - 4, "south", "dark_oak")
     c.set(m - 1, 2, b - 2, "campfire[lit=true,facing=south]")              # the oracle's fire
     c.banner(m + 1, 4, b - 3, col)
+    x0, x1, z0, z1 = a + 3, b - 3, a + 3, b - 4                            # inside the cella (#440)
+    pot = "decorated_pot[cracked=false,facing=south,waterlogged=false]"
+    candles = "candle[candles=3,lit=true,waterlogged=false]"
+    c.furniture([(m, 2, z0, "chiseled_quartz_block"), (m, 3, z0, "quartz_pillar"), (m, 4, z0, "gold_block"),
+                 (m - 1, 2, z0, candles), (m + 1, 2, z0, candles),             # the statue of the god
+                 (m, 2, z0 + 1, "cauldron"),                                    # the oracle's tripod
+                 (x0, 2, z0, pot), (x1 - 1, 2, z0, pot), (x0, 2, z1 - 1, pot), (x1 - 1, 2, z1 - 1, pot),
+                 (x0, 2, (z0 + z1) // 2, "lantern[hanging=false,waterlogged=false]"),
+                 (x1 - 1, 2, (z0 + z1) // 2, "lantern[hanging=false,waterlogged=false]")])
 
 
 def mosque_landmark(c, w, st, col, T, ctx):
@@ -3952,6 +4013,20 @@ def hall_of_heroes(c, w, st, col, T, ctx):
     for x in (m - 2, m + 2):                                              # guardian lions
         c.set(x, 2, w - 2, "chiseled_stone_bricks")
     c.banner(m - 1, 4, int(cx + R), col)
+    _, zb = reach(c, m, 2, m, 0, -1)                                      # inside (#440): a bronze hero at the back
+    lantern = "lantern[hanging=false,waterlogged=false]"
+    items = [(m, 2, zb, "chiseled_stone_bricks"), (m, 3, zb, "waxed_copper_block"), (m, 4, zb, "waxed_cut_copper"),
+             (m - 1, 2, zb, "candle[candles=4,lit=true,waterlogged=false]"),
+             (m + 1, 2, zb, "candle[candles=4,lit=true,waterlogged=false]")]
+    items += [(m, 2, z, f"{col}_carpet") for z in range(zb + 1, int(cx + R - 1))]
+    for d in (-1, 1):
+        items.append((reach(c, m, 2, m, d, 0)[0], 2, m, lantern))
+        items.append((reach(c, m, 2, m - 2, d, 0)[0], 2, m - 2,
+                      f"chest[facing={'east' if d < 0 else 'west'},type=single,waterlogged=false]"))
+        x, z = reach(c, m + 2 * d, 4, m, 0, -1)
+        items.append((x, 4, z, f"{col}_wall_banner[facing=south]"))
+    items += [(m, y, m, lantern) for y in (8, 14)]                         # light on the upper floors
+    c.furniture(items)
 
 
 def shrine(c, w, st, col, T, ctx):
