@@ -20,6 +20,7 @@ Ages (#672): the Feudal Age is a technology of the town center that needs 2 type
 sidebar title shows the age of the player; all players see a title and hear a sound when a player advances.
 Forging at the blacksmith (#675): infantry and cavalry get +1 attack.
 Double-Bit Axe at the lumber camp (#723): villagers chop wood 20 % faster (gather.WORK_TECHS, gather.Gather.work_time).
+Wheelbarrow at the town center in the Feudal Age (#728, TECH_AGE): villagers carry 3 more resources and walk 10 % faster (gather.CARRY, gather.PACE).
 """
 import json
 import math
@@ -40,13 +41,15 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "DOUBLE_BIT_AXE": {"food": 100, "wood": 50},
          "FORGING": {"food": 150},
          "SCALE_MAIL_ARMOR": {"food": 100},
-         "SCOUT_CAVALRY": {"food": 80}}
+         "SCOUT_CAVALRY": {"food": 80},
+         "WHEELBARROW": {"food": 175, "wood": 50}}
 TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130,   # AoE2 seconds
                "DOUBLE_BIT_AXE": 25,
                "FORGING": 50,
                "SCALE_MAIL_ARMOR": 40,
-               "SCOUT_CAVALRY": 30}
-TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE"), "BARRACKS": ("MILITIA",),   # the units and technologies of each
+               "SCOUT_CAVALRY": 30,
+               "WHEELBARROW": 75}
+TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW"), "BARRACKS": ("MILITIA",),   # the units and technologies of each
           "ARCHERY_RANGE": ("ARCHER",),                                         # building (#654, #670, #655)
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR"), "STABLE": ("SCOUT_CAVALRY",),   # (#675, #671, #725)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",)}                                   # (#723)
@@ -56,8 +59,10 @@ TECHS = {"DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy 
          if "VILLAGER" in name else s,
          "SCALE_MAIL_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "infantry" in s.classes else s,
-         "FEUDAL_AGE": lambda name, s: s}   # the change of each technology to the AoE2 values
+         "FEUDAL_AGE": lambda name, s: s,   # the change of each technology to the AoE2 values
+         "WHEELBARROW": lambda name, s: s}                         # no combat change: gather.CARRY and gather.PACE
 REQUIRES = {"FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP", "DOCK"))}   # n types of these buildings
+TECH_AGE = {"WHEELBARROW": 1}                                      # the age of a technology (build.AGE): hidden before
 AGES = ("Dark Age", "Feudal Age")                                  # the age after each researched age (index: ages)
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
 HOUSING = {"TOWN_CENTER": 5, "HOUSE": 5, "CASTLE": 20}             # population of a complete building, as in AoE2
@@ -71,7 +76,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "FORGING": (0, "book", "Forging"),
          "LOOM": (1, "book", "Loom"),                               # a book for a technology (#618)
          "SCALE_MAIL_ARMOR": (1, "book", "Scale Mail Armor"),
-         "FEUDAL_AGE": (2, "bell", "Feudal Age")}
+         "FEUDAL_AGE": (2, "bell", "Feudal Age"),
+         "WHEELBARROW": (3, "book", "Wheelbarrow")}
 SHIFT = 5                                                          # units of a shift click, as in AoE2
 
 
@@ -79,6 +85,12 @@ def melee(s):
     """True for the combat values s of an infantry or cavalry unit (also camels and elephants): the units of the melee
     attack upgrades of the AoE2 blacksmith. Cavalry archers get the archer upgrades."""
     return bool({"infantry", "cavalry", "camel", "elephant"} & set(s.classes)) and "archer" not in s.classes
+
+
+def unlocked(g, name):
+    """True when the player has the age of technology name (TECH_AGE). As in AoE2, the menu shows a technology only
+    from its age, but a building or unit of a later age as a gray item (build.locked)."""
+    return TECH_AGE.get(name, 0) <= build.ages(g)
 
 
 def homes(g):
@@ -113,7 +125,7 @@ def show(g, player, rect):
         return f"queue {n}/{QUEUE}"
     items = [(slot, build.LOCKED if build.locked(g, name) else item, label,
               " · ".join(f"{v} {r}" for r, v in COSTS[name].items()) + f" · {TRAIN_TIMES[name]} s · " + state(name))
-             for name in TRAINS[building] if name not in g.techs for slot, item, label in [ITEMS[name]]]
+             for name in TRAINS[building] if name not in g.techs and unlocked(g, name) for slot, item, label in [ITEMS[name]]]
     menu.show(g, player, build.pretty(building), items, lambda p, slot, shift: order(g, p, rect, slot, shift))
 
 
@@ -135,7 +147,7 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
     rect = home(g, cell)
     if rect is None or name not in TRAINS[homes(g)[rect]]:
         return None
-    if name in TECHS and (name in g.techs or queued(g, name)):        # a technology only once
+    if name in TECHS and (name in g.techs or queued(g, name)) or not unlocked(g, name):   # a technology only once
         return None
     if need := missing(g, name):
         build.say(g, player, f"{build.pretty(name)} {need}.")
