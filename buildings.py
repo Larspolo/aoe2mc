@@ -2311,6 +2311,9 @@ def generic(c, w, st, col, T, ctx):
     top = c.roof(m, w - m, m, w - m, hw + 1, st)
     c.door(w // 2, 1, w - m - 1)
     c.flag(w // 2, top + 1, w // 2, col, 2)
+    # A store room: barrels in the back corners, then a chest, a table with a lantern and a rug (no bed).
+    c.furniture([(x, 1, m + 1, "barrel[facing=up,open=false]") for x in (m + 1, w - m - 2)])
+    furnish(c, m + 1, w - m - 1, m + 1, w - m - 1, 1, st, col, door=w // 2, bed=False)
 
 
 # --------------------------------------------------------------------------------------------
