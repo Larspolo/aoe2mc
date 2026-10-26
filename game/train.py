@@ -169,6 +169,7 @@ AGES = ("Dark Age", "Feudal Age")                                  # the age aft
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
 HOUSING = {"TOWN_CENTER": 5, "HOUSE": 5, "CASTLE": 20}             # population of a complete building, as in AoE2
 LIMIT = 200                                                        # the AoE2 population limit
+REPEAT = 256                                                       # researches of one technology: "going above and beyond"
 CENSUS = 2.0                                                       # AoE2 seconds between two counts of the live units
 ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, item and name of each unit (#620)
          "MILITIA": (0, "zombie_spawn_egg", "Militia"),             # the mob of units.classify
@@ -271,8 +272,9 @@ def show(g, player, rect):
             return missing(g, name) or ("researching" if queued(g, name) else "research")
         return f"queue {n}/{QUEUE}"
     items = [(slot, build.LOCKED if build.locked(g, name) else item, label,
-              " · ".join(f"{v} {r}" for r, v in COSTS[name].items()) + f" · {TRAIN_TIMES[name]} s · " + state(name))
-             for name in trains(g, building) if name not in g.techs and unlocked(g, name) for slot, item, label in [ITEMS[name]]]
+              (" · ".join(f"{v} {r}" for r, v in price(g, name).items()) or "free") + f" · {TRAIN_TIMES[name]} s · "
+              + state(name))
+             for name in trains(g, building) if repeatable(g, name) and unlocked(g, name) for slot, item, label in [ITEMS[name]]]
     items += [RALLY] if units_of(building) else []
     items += [garrison.UNGARRISON] if getattr(g, "garrisons", {}).get(rect) else []   # only with units inside (#808)
     q = g.queues.get(rect, [])                                         # the queue row first: the plugin sets the
@@ -305,8 +307,7 @@ def cancel(g, player, rect, group):
     if not 0 <= group < len(gs):
         return None
     name, start, k = gs[group]
-    q.pop(start + k - 1)
-    for r, v in COSTS[name].items():
+    for r, v in q.pop(start + k - 1).get("paid", COSTS[name]).items():   # a free technology gives back nothing
         g.stock[r] += v
         g.command(f"scoreboard players add {r.capitalize()} {g.board} {v}")
     return name
@@ -374,7 +375,7 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
     rect = home(g, cell)
     if rect is None or name not in trains(g, homes(g)[rect]):
         return None
-    if name in TECHS and (name in g.techs or queued(g, name)) or not unlocked(g, name):   # a technology only once
+    if name in TECHS and (not repeatable(g, name) or queued(g, name)) or not unlocked(g, name):   # a technology once
         return None
     if need := missing(g, name):
         build.say(g, player, f"{build.pretty(name)} {need}.")
@@ -386,7 +387,7 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
     if len(q) >= QUEUE:
         build.say(g, player, f"The queue is full ({QUEUE} units).")
         return None
-    cost = COSTS[name]
+    cost = price(g, name)
     if any(g.stock[r] < v for r, v in cost.items()):
         build.say(g, player, f"Not enough resources: a {build.pretty(name).lower()} costs "
                              + ", ".join(f"{v} {r}" for r, v in cost.items()) + ".")
@@ -394,8 +395,26 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
     for r, v in cost.items():
         g.stock[r] -= v
         g.command(f"scoreboard players remove {r.capitalize()} {g.board} {v}")
-    q.append({"name": name, "progress": 0.0, "player": player})
+    q.append({"name": name, "progress": 0.0, "player": player} | ({"paid": cost} if cost != COSTS[name] else {}))
     return rect
+
+
+def count(g, t):
+    """How often the player researched technology t: 0 or 1, more only with the cheat "going above and beyond" (#968)."""
+    return (t in getattr(g, "techs", ())) + getattr(g, "repeats", {}).get(t, 0)
+
+
+def repeatable(g, name):
+    """True when the player can research technology name (again), and for each unit: a technology once, or REPEAT
+    times with the cheat "going above and beyond" (#968; ages and unit upgrades stay once). The effects stack: stats()
+    and the gather tables take count()."""
+    return name not in g.techs or getattr(g, "beyond", False) and name not in REQUIRES and name not in UPGRADES \
+        and count(g, name) < REPEAT
+
+
+def price(g, name):
+    """The cost of unit or technology name; a technology is free with the cheat "tech tech one two free" (#968)."""
+    return {} if name in TECHS and getattr(g, "free_techs", False) else COSTS[name]
 
 
 def queued(g, name):
@@ -427,13 +446,16 @@ def stats(g, name):
     import combat                                                  # combat imports gather, gather imports this module
     s = combat.stats(name)
     for t in sorted(g.techs):
-        s = TECHS[t](name, s)
+        for _ in range(count(g, t)):                                   # "going above and beyond" stacks (#968)
+            s = TECHS[t](name, s)
     return s
 
 
 def research(g, entry):
     """A technology is complete: keep it in g.techs and give the live villagers and military units the new values."""
     import combat, gather                                          # gather imports this module
+    if entry["name"] in g.techs:                                   # a repeat: "going above and beyond" (#968)
+        g.repeats[entry["name"]] = g.repeats.get(entry["name"], 0) + 1
     g.techs.add(entry["name"])
     if (more := gather.FARM_TECHS.get(entry["name"])):             # the new and the live own farms get more food
         g.map.farm_food += more
@@ -461,8 +483,13 @@ def research(g, entry):
 
 
 def limit(g):
-    """The population limit: 5 per complete own town center and house, 20 per castle, at most 200."""
-    return min(LIMIT, sum(HOUSING.get(n, 0) for n in owned(g)))
+    """The population limit: 5 per complete own town center and house, 20 per castle, at most max_pop()."""
+    return min(max_pop(g), sum(HOUSING.get(n, 0) for n in owned(g)))
+
+
+def max_pop(g):
+    """The highest population limit: LIMIT, 1000 with the cheat "my cpu can handle it" (#968)."""
+    return getattr(g, "pop_cap", None) or LIMIT
 
 
 def census(g):
@@ -509,7 +536,7 @@ def tick(g, work):
                 if not q[0].get("waits"):                              # as the "need more houses" message of AoE2
                     q[0]["waits"] = True
                     build.say(g, q[0]["player"], f"The population is at the limit ({g.pop}/{cap}): "
-                              + ("build more houses." if cap < LIMIT else "no more units."))
+                              + ("build more houses." if cap < max_pop(g) else "no more units."))
                 continue
             room -= 1
             q[0]["waits"] = False
@@ -523,6 +550,29 @@ def tick(g, work):
     return out
 
 
+def summon(g, name, pos, player=None):
+    """Summon AoE2 unit name of player (default: the own player) at pos, facing south, with its AoE2 values.
+    Returns its UUID, or None."""
+    o = dict(name=name, player=g.player if player is None else player, rotation=math.pi / 2)
+    players = {int(p): v for p, v in g.data.get("players", {}).items()}
+    nbt = units.make_entity(o, players, pos, np.random.default_rng())  # a new random UUID
+    if nbt is None:
+        return None
+    kind = str(nbt.pop("id"))
+    del nbt["Pos"]
+    uuid = units.uuid_str(nbt["UUID"])
+    g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}")
+    import combat                                                  # combat imports gather, gather imports this module
+    g.command(combat.stats_command(uuid, name, stats(g, name)))
+    if cmd := combat.range_command(uuid, name, g.map.T, s=stats(g, name)):   # an archer shoots from its range (#670)
+        g.command(cmd)
+    if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name)):   # it attacks enemies in sight (#775)
+        g.command(cmd)
+    import ai                                                      # ai imports gather, gather imports this module
+    g.command(ai.speed_command(uuid, name, g.map.T))               # its AoE2 walk speed also without an order (#849)
+    return uuid
+
+
 def spawn(g, rect, name):
     """Summon unit name on a free cell in front of the building rect (south side first, the middle first; the units
     take the cells one after the other) and add it to the villagers of g (a military unit: to g.soldiers, #654).
@@ -533,23 +583,10 @@ def spawn(g, rect, name):
     k = g.trained[rect] = g.trained.get(rect, -1) + 1
     x, z = cells[k % len(cells)]
     pos = (x + 0.5, float(g.map.y(x, z)), z + 0.5)
-    o = dict(name=name, player=g.player, rotation=math.pi / 2)        # it faces south
-    players = {int(p): v for p, v in g.data.get("players", {}).items()}
-    nbt = units.make_entity(o, players, pos, np.random.default_rng())  # a new random UUID
-    if nbt is None:
+    uuid = summon(g, name, pos)
+    if uuid is None:
         return None
-    kind = str(nbt.pop("id"))
-    del nbt["Pos"]
-    uuid = units.uuid_str(nbt["UUID"])
-    g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}")
-    import combat, gather                                          # both import gather, gather imports this module
-    g.command(combat.stats_command(uuid, name, stats(g, name)))
-    if cmd := combat.range_command(uuid, name, g.map.T, s=stats(g, name)):   # an archer shoots from its range (#670)
-        g.command(cmd)
-    if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name)):   # it attacks enemies in sight (#775)
-        g.command(cmd)
-    import ai                                                      # ai imports gather, gather imports this module
-    g.command(ai.speed_command(uuid, name, g.map.T))               # its AoE2 walk speed also without an order (#849)
+    import gather                                                  # gather imports this module
     if gather.military(name):
         g.soldiers[uuid] = name
         go(g, rect, uuid, name)
