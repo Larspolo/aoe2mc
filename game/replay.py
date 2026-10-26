@@ -1061,16 +1061,24 @@ class Replay:
                        for v in map(self.units.get, self.moving) if v and v.uuid])
         return g, r
 
-    def jump(self, events, to):
+    def jump(self, events, to, start=None):
         """Apply the events up to game time `to` (ms) at once (#687): buildings appear, deletes remove, trained units
         appear, and each unit that a MOVE or ORDER sent, or that walks now, stands at its target (tp, no walk). The
-        chat, age and research texts of the skipped time do not show (the sidebar shows the age, #805). Returns the commands."""
+        chat, age and research texts of the skipped time do not show (the sidebar shows the age, #805). The estimate
+        of the resources gets the gather of the skipped time (skipped()). Returns the commands."""
         out, moved = [], set()
         jobs = {i: v.job for i, v in self.units.items()}            # move() gives the looks: send the last ones
+        since = {} if start is None else {i: start if i in self.working else self.walk_end(v, start)
+                                          for i, v in self.units.items()
+                                          if (i in self.moving or i in self.working) and v.tree is not None}
         for e in events:
             if e["kind"] in ("move", "order", "garrison") and e.get("objects"):
+                for i in e["objects"]:                              # a new order ends the work at the old resource
+                    self.skipped(i, since.pop(i, None), e["time"])
                 self.commands(e) if e["kind"] == "garrison" else self.move(e)   # the paths and the targets; no walks
                 moved.update(e["objects"])
+                since.update((i, self.walk_end(v, e["time"])) for i in e["objects"]
+                             if (v := self.units.get(i)) is not None and v.tree is not None)
                 for i in set(e["objects"]) & self.entering.keys():  # it is at its building at once
                     self.entering[i][2] = e["time"]
             elif e["kind"] in ("build", "wall", "spawn", "delete", "ungarrison"):
@@ -1078,6 +1086,9 @@ class Replay:
             elif e["kind"] == "age" and e.get("age"):                 # the sidebar shows it, no title
                 self.age(e)
         out += self.enter(to) + self.expire(to)
+        for i, t in since.items():                                  # a unit that still works: steps() catch up
+            if i not in self.working or (i in moved and not self.ai):
+                self.skipped(i, t, to)
         inside = {u for us in self.garrisons.values() for u in us}
         for i in sorted(moved | self.moving.keys()):
             if (v := self.units.get(i)) is None or i in inside:
@@ -1092,6 +1103,27 @@ class Replay:
             else:                                                   # at its resource: it gathers (#887)
                 self.start(i, v, to)
         return out + [self.gather.profession(v.uuid, v.job) for i, v in self.units.items() if v.job != jobs.get(i)]
+
+    def walk_end(self, v, t):
+        """The game time (ms) at which unit v ends its walk to the last cell of its path when it leaves at t."""
+        speed = next((s for k, s in SPEEDS.items() if v.name.startswith(k)), 1.0) * self.T    # blocks per second
+        return t + (1000 * math.dist(v.cell, v.path[-1]) / speed if v.path else 0)
+
+    def skipped(self, i, t0, t1):
+        """Add to the estimate the resources that unit i gathers at its resource from game time t0 to t1 (ms) in a
+        jump: the jump runs no gather steps, so without it the costs of the skipped time take the estimate below 0
+        (#1056). At most what the resource has; the resource itself keeps its amount (the world shows no gather)."""
+        v = self.units.get(i)
+        if t0 is None or t1 <= t0 or v is None or not v.name.startswith("VILLAGER") or v.tree is None:
+            return
+        res = self.map.resource(v.tree)
+        if res not in self.gather.AOE2_WORK:
+            return
+        farm = v.tree in self.map.farms
+        left = (self.map.farms if farm else self.map.bushes if res == "food" else self.map.trees if res == "wood"
+                else self.map.mines.get(res, {})).get(v.tree, 0)
+        rate = self.gather.AOE2_WORK["farm" if farm else res]
+        self.resources(v.player)[res] += min(left, int(rate * (t1 - t0) / 1000))
 
     def run(self, speed=1.0, start=0, clock=time.monotonic, sleep=time.sleep, log=print, bar=False, poll=None,
             finish=False, to=None, paused=False, rewind=False):
@@ -1148,11 +1180,11 @@ class Replay:
                     send(self.clock_commands(to, end, self.speed, jump=True) + [f"tellraw @a {json.dumps(say)}"])
                     return {"rewind": to, "speed": self.speed, "paused": self.paused, "events": n,
                             "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2)}
-                if to > (g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed):
+                if to > (at := g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed):
                     skip = [x for x in events[k:] if x["time"] <= to]
                     k += len(skip)
                     send(self.clock_commands(to, end, self.speed, jump=True))    # the player sees why it waits
-                    self.send(self.jump(skip, to))
+                    self.send(self.jump(skip, to, at))
                     g0, r0 = to, clock()
                     shown = int(to) // 1000
                     send(self.clock_commands(to, end, self.speed) + self.score_commands())
