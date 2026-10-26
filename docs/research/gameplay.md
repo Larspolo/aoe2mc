@@ -182,3 +182,6 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
   legs of `replay.LEG` path cells. Check walks on a real server with `data get entity <uuid> Pos` after the replay.
 - A Paper `Goal` (MobGoals API) gets `tick()` only on each 2nd server tick: time a cooldown with
   `Bukkit.getCurrentTick()`, not with a counter in `tick()` (#515: the archer shot each 2.4 s, not 1.2 s).
+- A vanilla melee goal hits only a target in sight of its eye (#517): the stand-in slime of a building has its eye in
+  the walls, so the zombie walks to the wall and never hits. The plugin hits for it (`siege()`, `Mob#attack`).
+  Debug an attack on a server with `data get entity <uuid> Pos` and `aoe goals` once per second.
