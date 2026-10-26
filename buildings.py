@@ -631,6 +631,9 @@ def town_center(c, w, st, col, T, ctx):
     c.flag(mid, top + 1, (hz0 + hz1) // 2, col, 2)
 
 
+COPPER = {"lantern": "waxed_copper_lantern", "iron_chain": "waxed_copper_chain", "iron_bars": "waxed_copper_bars"}
+
+
 def castle(c, w, st, col, T, ctx, small=False):
     stone = st.stone
     th = 2 if w >= 14 else 1                         # wall thickness
@@ -686,7 +689,7 @@ def castle(c, w, st, col, T, ctx, small=False):
     c.box(k + 1, w - k - 1, kh, kh + 1, k + 1, w - k - 1, st.wood)
     c.crenels(k, w - k, k, w - k, kh + 1, (st.merlon or stone))
     for y in (hw + 2, kh - 2):
-        c.windows(k, w - k, k, w - k, y, b="iron_bars", step=2, height=2)
+        c.windows(k, w - k, k, w - k, y, b=COPPER["iron_bars"], step=2, height=2)
     c.box(mid - (gw // 2), mid - (gw // 2) + gw, 1, 4, w - k - 1, w - k, "air")
     if w - 2 * k >= 5:
         keep_inside(c, k + 1, w - k - 1, [0, *range(hw, kh, 4)], kh, st, col)
@@ -696,7 +699,7 @@ def castle(c, w, st, col, T, ctx, small=False):
         for x in (k, w - k - 1):
             for z in (k, w - k - 1):
                 c.box(x, x + 1, hw + 1, kh + 1, z, z + 1, st.timber)
-        c.windows(k, w - k, k, w - k, kh - 2, b="iron_bars", step=2, height=2)
+        c.windows(k, w - k, k, w - k, kh - 2, b=COPPER["iron_bars"], step=2, height=2)
         for y in range(hw + 1, kh - 1, 4):
             c.hip(k - 1, w - k + 1, k - 1, w - k + 1, y, st.roof, layers=1, flare=True)
         top = c.hip(k - 1, w - k + 1, k - 1, w - k + 1, kh + 1, st.roof, flare=True)
@@ -2567,7 +2570,7 @@ def pagoda(c, w, st, col, T, ctx):
         a = int(round(w / 2 - half))
         b = w - a
         h = 4 if i == 0 else 3
-        c.room(a, b, a, b, y, h, st.plaster, st.wood, corner=st.timber)
+        c.room(a, b, a, b, y, h, st.plaster, st.wood, corner="polished_cinnabar")      # red-painted posts (dancheong)
         c.windows(a, b, a, b, y + h, b="air", step=2)
         if i == 0:
             c.walls(a, b, y + 1, y + 2, a, b, f"{col}_wool")               # player band at the base
@@ -2673,6 +2676,22 @@ WONDERS = {"cathedral": cathedral, "mosque": mosque, "pagoda": pagoda, "pyramid"
 
 def wonder(c, w, st, col, T, ctx):
     WONDERS.get(st.wonder, cathedral)(c, w, st, col, T, ctx)
+
+
+def copper_fittings(c, bars=True):
+    """Copper lanterns, chains and bars (bars=False: keep iron bars, as on a portcullis) for the rich buildings
+    (#543): waxed, so they do not oxidize in the game. A hanging lantern under a high ceiling hangs on a copper chain."""
+    for i in np.unique(c.a[c.a >= 0]):
+        name, br, props = c.B.states[i].split(":")[-1].partition("[")
+        if name in COPPER and (bars or name != "iron_bars"):
+            c.a[c.a == i] = c.id(COPPER[name] + br + props)
+    hang, empty = c.id(COPPER["lantern"] + "[hanging=true]"), (-1, c.id("air"))
+    for x, y, z in zip(*np.nonzero(c.a == hang)):
+        top = y + 1
+        while top < min(y + 8, c.a.shape[1]) and c.a[x, top, z] in empty:
+            top += 1
+        if y + 1 < top < c.a.shape[1] and c.a[x, top, z] not in empty:             # a ceiling within reach
+            c.a[x, y + 1:top, z] = c.id(COPPER["iron_chain"] + "[axis=y]")
 
 
 # --------------------------------------------------------------------------------------------
@@ -2942,6 +2961,8 @@ def place_building(E, cols, B, o, players, walls, gates):
     weather(c)
     if fn not in NO_PROPS:
         decorate(c, fx, fz)
+    if fn in (castle, wonder):                                           # the rich buildings (#543)
+        copper_fittings(c, bars=fn is wonder)
     if TURN and fn not in (gate, aqueduct, bridge, wooden_bridge, wall_segment):    # these follow their neighbours
         turn(c, TURN)
     if along_z:
@@ -3633,7 +3654,7 @@ def rekha_deul(c, w, st, col, T, ctx):
     a, b, y = 2, w - 2, 1
     for k in range(7):                                  # the tower narrows faster near the top
         h = 3 if k < 4 else 2
-        c.box(a, b, y, y + h, a, b, "sandstone" if k % 2 == 0 else "cut_red_sandstone")
+        c.box(a, b, y, y + h, a, b, "sandstone" if k % 2 == 0 else "cinnabar_bricks")    # red-painted bands
         y += h
         if k >= 2:
             a, b = a + 1 if b - a > 3 else a, b - 1 if b - a > 3 else b
@@ -3646,7 +3667,7 @@ def rekha_deul(c, w, st, col, T, ctx):
         c.box(m - 2, m + 2, 1, 4, z0, w - 3, "air")
         c.box(m - 1, m + 1, 1, 3, w - 3, w - 2, "air")
         candles = "candle[candles=3,lit=true,waterlogged=false]"
-        items = [(m - 1, 1, z0, "chiseled_red_sandstone"), (m, 1, z0, "chiseled_red_sandstone"),   # the idol on its altar
+        items = [(m - 1, 1, z0, "chiseled_cinnabar"), (m, 1, z0, "chiseled_cinnabar"),   # the idol on its altar
                  (m - 1, 2, z0, "gold_block"), (m, 2, z0, "gold_block"),
                  (m - 2, 1, z0, candles), (m + 1, 1, z0, candles),
                  (m - 2, 1, z0 + 2, "potted_red_tulip"), (m + 1, 1, z0 + 2, "potted_orange_tulip")]

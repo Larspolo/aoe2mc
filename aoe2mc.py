@@ -941,7 +941,7 @@ def connect_kind(state):
     if name.endswith("_fence_gate"):
         facing = re.search(r"facing=(\w+)", state)
         return "gate_z" if facing and facing.group(1) in ("north", "south") else "gate_x"
-    if name.endswith("_pane") or name == "minecraft:iron_bars":
+    if name.endswith(("_pane", "copper_bars")) or name == "minecraft:iron_bars":
         return "pane"
     if name.endswith("_fence"):
         return "nether_fence" if name == "minecraft:nether_brick_fence" else "fence"
@@ -1099,6 +1099,7 @@ class Edits:
 # --------------------------------------------------------------------------------------------
 def tree_kind(n):
     if "BAMBOO" in n: return "bamboo"
+    if "AUTUMN" in n: return "poplar"                    # 26.3 poplar: yellow, orange and red leaves
     if "PINE" in n or "SPRUCE" in n or "CYPRESS" in n: return "spruce"
     if "BIRCH" in n: return "birch"
     if "PALM" in n: return "palm"
@@ -1114,7 +1115,7 @@ def leaves(wood):
 
 
 WOODS = {"palm": "jungle", "jungle": "jungle", "acacia": "acacia", "spruce": "spruce", "birch": "birch",
-         "mangrove": "mangrove"}                         # tree kind -> wood (log and leaves); else oak
+         "mangrove": "mangrove", "poplar": "poplar"}                         # tree kind -> wood (log and leaves); else oak
 
 
 def make_tree(E, kind, x, y, z, rng):
@@ -1132,6 +1133,8 @@ def make_tree(E, kind, x, y, z, rng):
         return
     wood = WOODS.get(kind, "oak")
     log, leaf = f"{wood}_log", leaves(wood)
+    if kind == "poplar":                                 # one autumn color per tree
+        leaf = leaves(f"{('yellow', 'orange', 'red')[int(rng.integers(3))]}_poplar")
     if kind == "spruce":
         h += 2
         for i, dy in enumerate(range(2, h + 1)):
@@ -1149,7 +1152,7 @@ def make_tree(E, kind, x, y, z, rng):
             E.add([x + dx, x + 2 * dx, x + 3 * dx], [y + h, y + h, y + h - 1],
                   [z + dz, z + 2 * dz, z + 3 * dz], leaf, hard=False)
         E.add([x], [y + h], [z], leaf, hard=False)
-    else:  # round trees: oak, birch, jungle, mangrove
+    else:  # round trees: oak, birch, jungle, mangrove, poplar
         if kind == "jungle":
             h += 3
         for dy, r in ((h - 2, 2), (h - 1, 2), (h, 1), (h + 1, 1)):
@@ -1660,6 +1663,8 @@ def place_objects(objects, players, cols, rng):
             stats["rocks"] += 1
         elif kind == "O" and name == "CACTUS":
             E.box(bx, bx + 1, y, y + 2, bz, bz + 1, "cactus")
+            if (bx * 7 + bz * 13) % 3 == 0:     # one in three blooms; from the position, so the rng stream stays the same
+                E.box(bx, bx + 1, y + 2, y + 3, bz, bz + 1, "cactus_flower")
             stats["plants"] += 1
         elif kind == "O" and name.startswith("PLANT"):
             plant = "fern" if ("FERN" in name or "JUNGLE" in name or "UNDERBRUSH" in name) else \
@@ -2534,12 +2539,13 @@ def border(cols, design, colors, E):
 # --------------------------------------------------------------------------------------------
 # Preview image (top view)
 # --------------------------------------------------------------------------------------------
-COLORS = [("leaves", (40, 110, 40)), ("snow[", (240, 240, 245)), ("tall_grass", (95, 150, 65)), ("large_fern", (75, 130, 55)), ("moss", (90, 115, 45)), ("petals", (235, 165, 200)), ("poppy", (200, 30, 30)), ("tulip", (220, 120, 60)),
+COLORS = [("yellow_poplar_leaves", (215, 180, 40)), ("orange_poplar_leaves", (215, 115, 30)), ("red_poplar_leaves", (170, 40, 30)),
+          ("leaves", (40, 110, 40)), ("snow[", (240, 240, 245)), ("tall_grass", (95, 150, 65)), ("large_fern", (75, 130, 55)), ("moss", (90, 115, 45)), ("petals", (235, 165, 200)), ("poppy", (200, 30, 30)), ("tulip", (220, 120, 60)),
           ("dandelion", (240, 220, 50)), ("cornflower", (70, 100, 220)), ("allium", (180, 110, 220)),
           ("bluet", (225, 230, 235)), ("daisy", (235, 235, 225)), ("lily_of", (235, 240, 235)),
           ("mushroom", (160, 110, 80)), ("stone_brick", (122, 122, 122)), ("cobblestone", (110, 110, 110)), ("white_terracotta", (215, 200, 190)),
           ("glass", (170, 200, 220)), ("banner", None), ("terracotta", (200, 180, 160)),
-          ("calcite", (225, 225, 220)), ("quartz", (235, 230, 225)), ("bricks", (150, 70, 55)),
+          ("calcite", (225, 225, 220)), ("quartz", (235, 230, 225)), ("cinnabar", (170, 55, 45)), ("bricks", (150, 70, 55)),
           ("brick", (150, 70, 55)), ("deepslate_tile", (55, 55, 60)), ("dark_oak", (65, 45, 25)),
           ("spruce", (105, 75, 45)), ("acacia", (170, 90, 50)), ("jungle", (160, 115, 80)),
           ("crimson", (140, 50, 60)), ("mud_brick", (140, 105, 80)), ("packed_mud", (140, 105, 80)),
