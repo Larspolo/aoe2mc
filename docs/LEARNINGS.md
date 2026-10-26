@@ -49,6 +49,7 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - The Paper API answers 403 to the `Python-urllib` User-Agent (`curl` works): send a User-Agent (`game/run.py` `AGENT`). `-DbundlerRepoDir=DIR` keeps the patched Mojang jar of Paper in DIR; Paper writes `usercache.json` next to the `--universe` world (#434).
 - Paper plugin (#435): `game/run.py` builds `game/plugin` with `./gradlew --no-daemon -q jar` and `JAVA_HOME` = the JDK 25 (`openjdk-25-jdk-headless`: the paper-api 26.3 classes are Java 25, javac 21 cannot read them); first build 30 s. A NoAI mob finds no path before its first AI tick; the path search ends at about `follow_range` (cow: 16). The world border stops paths: test inside the map. `fill ... hollow` also fills the bottom and top faces.
 - Run `claim.py N --guard` alone and read its exit code before the push: `guard; echo g=$? && git push` pushes also after a failed guard (#540: a push to the branch of a PR that another run had merged a minute before).
+- `-m mc` takes about 21 minutes, and 14 of its tests stop with "no javac" when `/etc/aoe2mc-setup-version` is below 6: `apt-get install -y openjdk-25-jdk-headless` first (1 min, #536).
 ## Libraries
 
 - AoE2ScenarioParser 0.9.8 makes new scenarios (`tools/scenarios.py`: `new_scenario`, `add_unit`, `save`). It prints much
@@ -114,3 +115,4 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - `docs/coverage.md` on main is stale while GitHub Actions cannot run (#460): it listed 21 fallbacks that the code already handles. For the real fallbacks, run `python3 tools/coverage.py OUT.md` into the scratchpad (#500).
 - Furniture inside a closed design: a text map of each layer (one character per state name of `render.building_blocks`, rows by z) shows the positions faster than an isometric render, which hides small blocks behind walls (#501).
 - `tests/test_objects.py::test_blocks_under_water_are_waterlogged` names the blocks of `fish_trap`: change it with the fish trap materials (#486). Grep `tests/` for the design name before the full run.
+- `render.py` draws each block as a cube: a roof of stairs looks like steps. Check stair facings with a text section of `blocks()` (`tests/test_furnish_landmarks.py`). Stairs and slabs new in 26.3 take the colour of their full block (#525).
