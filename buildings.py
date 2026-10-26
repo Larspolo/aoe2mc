@@ -3240,10 +3240,28 @@ def hearth_room(c, w, zd, col, rugs, store):
 
 
 def hut(c, w, st, col, T, ctx):
-    cx = (w - 1) / 2
-    c.cylinder(cx, cx, w / 2 - 0.5, 1, 4, "packed_mud", hollow=True)
-    c.cone(cx, cx, w / 2 + 0.3, 4, "hay_block")
-    c.box(w // 2, w // 2 + 1, 1, 3, w - 1, w, "air")
+    """Like the game (#483): a low wall of posts and wicker (some huts: mud), a steep thatch cone and a tuft of sticks.
+    HUT_G is the large hut: a higher wall, a ledge in the roof and a blue clay finial."""
+    cx, r = (w - 1) / 2, w / 2 - 0.5
+    k = ord(ctx.get("name", "HUT_A")[-1]) - ord("A")
+    big, hw = k == 6, 2 + (k == 6)                                      # wall height: the roof hangs low
+    if k % 3 == 2:
+        c.cylinder(cx, cx, r, 1, hw + 1, "packed_mud", hollow=True)
+    else:
+        c.cylinder(cx, cx, r, 1, hw + 1, "mangrove_roots[waterlogged=false]", hollow=True)    # wicker
+        ring, X, Z = c.disc_mask(cx, cx, r)
+        c._fill_mask(ring & ~c.disc_mask(cx, cx, r - 1)[0] & ((X + Z) % 2 == 0), 1, hw + 1, "spruce_log[axis=y]")
+    radii = [r + 0.3, r - 0.9, r - 1.2, r - 1.9, r - 2.6] if big else [r + 0.3 - 0.7 * i for i in range(6)]
+    y = hw + 1
+    for rr in (rr for rr in radii if rr > 0.3):                         # steeper than one block per layer
+        c.cylinder(cx, cx, rr, y, y + 1, "hay_block")
+        y += 1
+    m = w // 2
+    if big:
+        c.set(m, y, m, "blue_terracotta")
+    else:
+        c.set(m, y, m, "spruce_fence"); c.set(m - 1, y, m - 1, "spruce_fence")
+    c.box(m, m + 1, 1, 3, w - 1, w, "air")
     hearth_room(c, w, w - 1, col, ["brown_carpet", "yellow_carpet"], "barrel[facing=up,open=false]")
 
 
