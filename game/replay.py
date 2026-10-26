@@ -705,11 +705,13 @@ class Replay:
         return [f"fill {x0} {y} {z0} {x1} {min(y + step - 1, y1)} {z1} {what}" for y in range(y0, y1 + 1, step)]
 
     @staticmethod
-    def clock_commands(now, end, speed, done=False):
+    def clock_commands(now, end, speed, done=False, jump=False):
         """The boss bar commands for game time `now` (ms) of a replay that ends at `end` (ms): the time and speed as
-        its name, the game seconds as its value (#684). `players @a` also adds the players who joined later."""
+        its name, the game seconds as its value (#684). `players @a` also adds the players who joined later.
+        jump: the loading text while a jump to `now` sends its commands (#871)."""
         m, s = divmod(int(now) // 1000, 60)
-        name = f"End {m:02d}:{s:02d}" if done else f"{m:02d}:{s:02d} · speed {speed:g}×"
+        name = (f"End {m:02d}:{s:02d}" if done else f"Jump to {m:02d}:{s:02d} ..." if jump else
+                f"{m:02d}:{s:02d} · speed {speed:g}×")
         return [f"bossbar set {BAR} name {json.dumps(text(name), ensure_ascii=False)}",
                 f"bossbar set {BAR} value {min(int(now) // 1000, max(1, int(end) // 1000))}", f"bossbar set {BAR} players @a"]
 
@@ -829,8 +831,11 @@ class Replay:
                 if to > (g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed):
                     skip = [x for x in events[k:] if x["time"] <= to]
                     k += len(skip)
+                    send(self.clock_commands(to, end, self.speed, jump=True))    # the player sees why it waits
                     self.send(self.jump(skip, to))
                     g0, r0 = to, clock()
+                    shown = int(to) // 1000
+                    send(self.clock_commands(to, end, self.speed) + self.score_commands())
                 continue
             lag = max(lag, clock() - r0 - (now - g0) / 1000 / self.speed)
             if int(now) // 1000 != shown:                              # at most once per game second
