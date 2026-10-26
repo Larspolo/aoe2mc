@@ -14,6 +14,7 @@ a second push of another claim commit is never a fast-forward. Later claims of t
     python3 tools/claim.py N --guard      # before each push: beat, and exit 1 when a PR of another branch closes N
     python3 tools/claim.py N --guard --pr-branch B   # the same, but the open PR of branch B (taken over) is allowed
     python3 tools/claim.py ID --comment   # lock owner comment ID (autopilot step 3); exit 1: another run handles it
+    python3 tools/claim.py E --refill     # lock the sub-issues of epic E (0: the whole queue refill, autopilot step 5)
 
 Two runs did one ticket (#288): one commented "Started by" and worked without the claim ref. So a claim also fails
 when another branch commented "Started by" in the last 30 minutes or has an active PR for the ticket (#491), and
@@ -24,6 +25,9 @@ before the stop, so its ticket is stale at most 30 minutes after the limit reset
 
 Three runs read one owner comment at the same time and made three copies of one epic (#320). So a run locks a
 comment before it acts on it: `--comment` pushes `claim/comment-ID` once (no slots, no release).
+Three runs refilled the queue of one epic within 2 minutes and made copies of tickets (#505). So a run locks the
+refill before it makes tickets: `--refill` pushes `claim/refill-E-S` once. S is the state of the work: the number of
+closed sub-issues of epic E (a new lock when a sub-issue closes), or the UTC hour for E = 0 (the whole refill).
 
 Exit 2: git failed for another reason (network, permission). The workflow `claims.yml` deletes the refs
 of a closed ticket: the session proxy gives 403 for branch deletes.
@@ -115,6 +119,19 @@ def claim_comment(cid, remote="origin"):
     return push(sha, f"claim/comment-{cid}", remote)
 
 
+def refill_state(epic, remote="origin", now=None):
+    """The state part of the refill lock: closed sub-issues of the epic on GitHub, else the UTC hour."""
+    if epic and on_github(remote):
+        return str(api(f"issues/{epic}").get("sub_issues_summary", {}).get("completed", 0))
+    return datetime.datetime.fromtimestamp(now or time.time(), datetime.timezone.utc).strftime("%Y%m%d%H")
+
+
+def claim_refill(epic, state, remote="origin"):
+    """Lock the refill of epic `epic` in state `state`: True when this run pushed `claim/refill-E-S` first."""
+    msg = f"Claim refill {epic}-{state} by {who()} ({uuid.uuid4().hex})"
+    return push(git("commit-tree", EMPTY_TREE, "-m", msg).stdout.strip(), f"claim/refill-{epic}-{state}", remote)
+
+
 def release(number, remote="origin", word="Release"):
     """Add a release (or beat) commit on top of the own claim (a fast-forward of the top ref)."""
     found = refs(number, remote)
@@ -177,7 +194,7 @@ def active_pr(pulls, number, me, now, limit=RECENT):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("number", type=int, help="ticket number (with --comment: the comment ID)")
+    ap.add_argument("number", type=int, help="ticket number (--comment: the comment ID, --refill: the epic)")
     g = ap.add_mutually_exclusive_group()
     g.add_argument("--release", action="store_true", help="give the own claim back")
     g.add_argument("--takeover", action="store_true", help="claim the next slot also when the open claim is stale")
@@ -186,6 +203,8 @@ def main(argv=None):
     g.add_argument("--stale", action="store_true", help="exit 0 when the open claim had no beat for 30 minutes")
     g.add_argument("--guard", action="store_true", help="before a push: beat; exit 1 when another branch has a PR")
     g.add_argument("--comment", action="store_true", help="lock the owner comment with this ID")
+    g.add_argument("--refill", action="store_true", help="lock the new sub-issues of this epic (0: the whole refill)")
+    ap.add_argument("--state", help="--refill: the state part of the lock (default: closed sub-issues, or the hour)")
     ap.add_argument("--pr-branch", metavar="BRANCH", help="--guard: the branch of a PR that this run took over")
     ap.add_argument("--remote", default="origin")
     a = ap.parse_args(argv)
@@ -194,6 +213,14 @@ def main(argv=None):
             print(f"claimed comment {a.number}")
             return 0
         print(f"comment {a.number}: another run handles it")
+        return 1
+    if a.refill:
+        state = a.state or refill_state(a.number, a.remote)
+        key = f"{a.number}-{state}"
+        if claim_refill(a.number, state, a.remote):
+            print(f"claimed refill {key}")
+            return 0
+        print(f"refill {key}: another run makes the tickets")
         return 1
     if a.show or a.stale:
         found = refs(a.number, a.remote)

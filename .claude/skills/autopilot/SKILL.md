@@ -122,11 +122,15 @@ then the lowest issue number.
 Epics first: an epic is never a candidate, so its rest of the work needs sub-issues. Before you claim a ticket, look
 at the open epics (label `epic`, not `needs-human`) with a higher priority than the top candidate and no open
 sub-issue. For each one, read its acceptance criteria. Close the epic with a comment when the closed sub-issues meet
-all criteria (name the evidence for each). Else make one sub-issue (same priority) for the criteria that an agent
-can do. A criterion that needs the owner stays on the epic. Then pick again (#176, #155 waited while P3 tickets ran).
+all criteria (name the evidence for each). Else lock the epic first: `python3 tools/claim.py E --refill`
+(E = the epic; exit 1: another run makes its sub-issue, skip the epic, #505). Then make one sub-issue (same priority)
+for the criteria that an agent can do. A criterion that needs the owner stays on the epic. Then pick again (#176, #155 waited while P3 tickets ran).
 Refill the queue when fewer candidates are ready than runs are active (tickets with `in-progress` that changed in
-the last 30 minutes), so that parallel runs always find work. Do this at most once per run, in about 10 minutes:
-1. Split each `size:L` ticket without open sub-issues (`ticket` skill), also when it is not a candidate yet.
+the last 30 minutes), so that parallel runs always find work. Do this at most once per run, in about 10 minutes.
+Lock it first: `python3 tools/claim.py 0 --refill` (one run per UTC hour; exit 1: another run refills, skip the refill).
+Also lock each epic E with `python3 tools/claim.py E --refill` before you make its tickets (exit 1: skip that epic, #505):
+1. Split each `size:L` ticket N without open sub-issues (`ticket` skill), also when it is not a candidate yet. Lock it
+   first with `python3 tools/claim.py N --refill` (exit 1: skip it).
 2. For each open epic whose sub-issues are all closed: make a sub-issue for each acceptance criterion that is
    still open and that an agent can do. A criterion that needs the owner stays on the epic.
 3. Make up to 5 new tickets for the remaining goals of the open epics and `docs/ROADMAP.md`, and for the
