@@ -71,7 +71,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe goals <selector>                       the goals of the first unit (#436), for checks
  *   aoe stance <selector> <aggressive|defensive|stand_ground|no_attack>
  *                                              the AoE2 stance of a unit (#1104): no_attack never attacks without an
- *                                              order, stand_ground attacks only an enemy in its range and does not walk
+ *                                              order, stand_ground attacks only an enemy in its range and does not walk,
+ *                                              defensive chases an enemy only CHASE blocks past its range (#1105)
  *   aoe stats <selector> <hp> <attack> <melee armor> <pierce armor> <ranged 0|1|2> <classes|-> <class:bonus,...|->
  *             [reload ticks]                   the AoE2 values of a unit (#514, game/combat.py stats_command); a melee
  *                                              unit hits once per reload (#848, default 20: the vanilla cooldown)
@@ -123,7 +124,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * A stance (aoe stance, #1104) changes only what a unit does without an order: "no attack" does not attack back and
  * does not attack an enemy in its sight; "stand ground" does so only for an enemy in its range (a melee unit: next to
  * it), keeps its place (RangeGoal shoots without a walk) and drops the target when it goes out of the range.
- * "defensive" acts as "aggressive" (the default). An order (aoe moveto, aoe attack) works with each stance, as in AoE2.
+ * "defensive" (#1105) attacks as "aggressive" (the default), but keeps the place where its fight started: past its range
+ * + CHASE from it, or when the target is dead, it drops the target and walks back there with an order (as aoe moveto).
+ * An order (aoe moveto, aoe attack) works with each stance, as in AoE2, and drops the place.
  * A villager walks with its brain, not with goals: it gets NoAI when it arrives, else it strolls away (#438).
  * `aoe stop` stops a walk and sets NoAI (#437: a villager without a path).
  * A hit of a unit with AoE2 values on another one takes the AoE2 damage (#514, combat.damage): max(1, attack - armor
@@ -214,6 +217,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private static final Set<String> STANCES = Set.of("aggressive", "defensive", "stand_ground", "no_attack");
     private final Map<UUID, String> stances = new HashMap<>();      // no entry: aggressive (#1104)
     private final Set<UUID> held = new HashSet<>();                 // stand ground units with a target of their own
+    private final Map<UUID, Location> posts = new HashMap<>();      // defensive units in a fight: their place (#1105)
+    // defensive: the blocks past its range that a unit chases. The AoE2 wiki ("Unit stance": "will follow for a certain
+    // number of tiles before returning to their original position") gives no number: 3 tiles of 4 blocks (#1105).
+    private static final double CHASE = 12.0;
     private static final double MELEE = 2.0;          // stand ground: the blocks to an enemy that a melee unit attacks
     static final String CARRIER = "aoe2mc.carrier";                  // the tag of the mob that carries a siege unit
     private static final double STEP = 1.25;                         // a step of 1 block with snow[layers=2] (#851)
@@ -594,6 +601,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         unit(fighter).setTarget(enemy);
         if (stance(mob).equals("stand_ground")) {
             held.add(fighter.getUniqueId());
+        } else if (stance(mob).equals("defensive")) {
+            posts.putIfAbsent(mob.getUniqueId(), mob.getLocation());
         }
     }
 
@@ -611,6 +620,24 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             f.setTarget(null);
             f.getPathfinder().stopPathfinding();
+            return true;
+        });
+        posts.entrySet().removeIf(en -> {      // defensive (#1105): back to the place past the chase distance
+            if (!(Bukkit.getEntity(en.getKey()) instanceof Mob mob) || !mob.isValid() || orders.containsKey(en.getKey())) {
+                return true;
+            }
+            Mob f = rider(mob) != null ? rider(mob) : mob;
+            Range r = ranges.get(f.getUniqueId());
+            LivingEntity t = f.getTarget();
+            if (t != null && t.isValid() && !t.isDead() && mob.getLocation().distanceSquared(en.getValue())
+                    <= Math.pow((r != null ? r.blocks() : MELEE) + CHASE, 2)) {
+                return false;
+            }
+            f.setTarget(null);
+            f.getPathfinder().stopPathfinding();
+            reach(mob, en.getValue());
+            mob.getPathfinder().moveTo(en.getValue(), 1.0);
+            orders.put(mob.getUniqueId(), new Order(en.getValue(), 1.0));
             return true;
         });
     }
@@ -1217,6 +1244,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             for (Entity e : select(sender, args[1])) {
                 if (e instanceof Mob mob) {
                     held.remove(mob.getUniqueId());
+                    posts.remove(mob.getUniqueId());
                     if (args[2].equals("aggressive")) {
                         stances.remove(mob.getUniqueId());
                     } else {
@@ -1379,6 +1407,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             for (Entity e : select(sender, args[1])) {
                 if (walker(e) instanceof Mob mob) {
                     orders.remove(mob.getUniqueId());
+                    posts.remove(mob.getUniqueId());
                     mob.getPathfinder().stopPathfinding();
                     mob.setAI(false);
                     if (rider(mob) != null) {
@@ -1453,6 +1482,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 Mob mob = unit(e);
                 if (mob != null && mob != target && !sameTeam(mob, target)) {
                     orders.remove(mob.getUniqueId());
+                    posts.remove(mob.getUniqueId());            // an order: a defensive unit chases to the end
                     Mob r = rider(mob);
                     if (r != null) {                             // the horse has no attack goal: the rider leads
                         mob.setTarget(null);
