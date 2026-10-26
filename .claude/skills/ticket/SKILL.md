@@ -18,7 +18,8 @@ Body:
 <One or two sentences: what changes for the user or the developer.>
 
 ## Context
-<Where in the code (function names), why, and the evidence (output, image, test).>
+<Where in the code (function names), why, and the evidence (output, image, test).
+ The Minecraft feature that does the job (CLAUDE.md: "Minecraft features first"), or why there is none.>
 
 ## Acceptance criteria
 - [ ] <A result that a test or a check can show.>

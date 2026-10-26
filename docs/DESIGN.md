@@ -9,6 +9,29 @@ The owner set them on 2026-10-25 (#40):
 
 The `design` skill (`.claude/skills/design/SKILL.md`) gives the steps of one design ticket.
 
+## 0. Minecraft features first
+
+The owner added this rule on 2026-10-26:
+
+> I would rather use the MC pathfinding. In general I want to use MC features where possible. For example the
+> stacking on top of each other in the boat or even just the boat in general, or how I wanted to map the animals
+> based on their aggressiveness.
+
+It is rule 2 ("real blocks for real things") for behavior. Use the feature of Minecraft that does the job, before
+you write own logic:
+
+| Job | Minecraft feature | Not this |
+|---|---|---|
+| A unit walks to a place or to an enemy | Mob AI and path finding (vanilla goals; in the game program a Paper plugin for "walk to a point") | own path finding with `/tp` steps |
+| Units in a ship, riders, garrisons | `Passengers` (riders, stacks of riders), boats and chest boats | units next to the ship, or none |
+| Animal behavior | the behavior class of the mob (passive, neutral, hostile, `docs/animals.md`) | own anger rules |
+| Hit points, attack, speed, armor | entity attributes (`max_health`, `attack_damage`, `movement_speed`, `armor`) and vanilla damage | own hit point counters |
+| Teams and player colors | scoreboard teams | a tag per unit only |
+| Doors, gates, light, water | block states and block entities (`open`, `lit`, `waterlogged`) | look-alike blocks |
+
+Write own logic only when Minecraft has no feature for the job, or when the feature cannot give the AoE2 rule (for
+example the AoE2 attack bonuses), and say why in the PR. Converted worlds stay vanilla: they must load in single player.
+
 ## 1. Like the game
 
 - Copy the shape, the proportions, the colors and the main features of the in-game model.
