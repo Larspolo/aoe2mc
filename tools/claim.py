@@ -171,13 +171,18 @@ def closes(number):
     return re.compile(rf"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?) #{number}\b", re.I)
 
 
+def prose(body):
+    """The PR body without code blocks and code spans: GitHub closes no issue from a keyword in code (#536)."""
+    return re.sub(r"```.*?(```|$)|`[^`\n]*`", "", body or "", flags=re.S)
+
+
 def other_pr(pulls, number, me, taken=None):
     """Number of an open or merged PR of another branch whose body closes ticket `number`, else None.
     taken: the branch of a PR that this run took over (#361): its open PR is the run's own."""
     closes_n = closes(number)
     for p in pulls:
         own = p["head"]["ref"] == me or p["head"]["ref"] == taken and p["state"] == "open"
-        if not own and (p["state"] == "open" or p.get("merged_at")) and closes_n.search(p["body"] or ""):
+        if not own and (p["state"] == "open" or p.get("merged_at")) and closes_n.search(prose(p["body"])):
             return p["number"]
     return None
 
@@ -187,7 +192,7 @@ def active_pr(pulls, number, me, now, limit=RECENT):
     else None (#491): its run still works on it. A stalled PR does not count, so a takeover stays possible."""
     for p in pulls:
         t = datetime.datetime.fromisoformat(p["updated_at"].replace("Z", "+00:00")).timestamp()
-        if p["head"]["ref"] != me and p["state"] == "open" and now - t < limit and closes(number).search(p["body"] or ""):
+        if p["head"]["ref"] != me and p["state"] == "open" and now - t < limit and closes(number).search(prose(p["body"])):
             return p["number"]
     return None
 
