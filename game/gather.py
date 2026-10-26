@@ -292,6 +292,7 @@ class Gather:
         self.bushes = {}                                               # bush tile -> the block of its last look
         self.menus = {}                                                # player -> handler of its open menu (#619)
         self.queues, self.trained = {}, {}                             # town center -> its queue, units it trained
+        self.techs = set()                                             # the researched technologies (train.TECHS)
         self.pop, self.census, self.shown = 0, 0.0, {}                 # live units, AoE2 seconds since the count, sidebar
 
     @property
