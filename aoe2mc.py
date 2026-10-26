@@ -2375,7 +2375,14 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
         x, z = (x0 + x1) // 2, (z0 + z1) // 2
         if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
             continue
-        at = f"execute positioned {x} {int(ground[x, z]) + 1} {z} if entity @a[distance=..24] " \
+        # the feet height next to the building (the ground in the footprint is the roof or barrier top, #588)
+        xa, za = max(x0 - 1, 0), max(z0 - 1, 0)
+        edge = ground[xa:x1 + 1, za:z1 + 1]
+        outer = np.ones(edge.shape, bool)
+        outer[x0 - xa:x1 - xa, z0 - za:z1 - za] = False
+        y = int(np.median(edge[outer])) if outer.any() else int(ground[x, z]) + 1
+        # playsound at volume 1 is heard up to 16 blocks: a larger check plays it for nobody
+        at = f"execute positioned {x} {y} {z} if entity @a[distance=..16] " \
              f"if predicate aoe2mc:{rule[2]} run"
         lines.append(f"{at} playsound minecraft:{rule[1]} ambient @a ~ ~ ~ 1 {0.9 + 0.1 * (x % 3):.1f}")
         if rule[3]:

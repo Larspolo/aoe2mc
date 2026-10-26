@@ -24,8 +24,10 @@ biome's own ambient loop need a custom biome.
 ## What aoe2mc writes
 
 `write_datapack` in `aoe2mc.py` (#220) writes `datapacks/aoe2mc` when the map has a building with a work sound
-(`WORK_SOUNDS`). `pulse.mcfunction` has one line per building at the center of its footprint, one block over the
-ground: `execute positioned X Y Z if entity @a[distance=..24] if predicate aoe2mc:sometimes run playsound ...`.
+(`WORK_SOUNDS`). `pulse.mcfunction` has one line per building at the center of its footprint, at the feet height of
+the ground next to it (the median of the cells around the footprint, #588: the ground inside is the roof):
+`execute positioned X Y Z if entity @a[distance=..16] if predicate aoe2mc:sometimes run playsound ...`.
+`playsound` at volume 1 is heard up to 16 blocks, so the check is not larger.
 It uses fixed positions, not marker entities: no entity must load, and the check costs nothing that `/tick query`
 shows. The pack has no `worldgen/` file, so the client shows no warning.
 
