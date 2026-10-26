@@ -219,7 +219,28 @@ def place(g, player, name, eye, d):
         say(g, player, f"Not enough resources: a {pretty(name).lower()} costs "
                        + ", ".join(f"{v} {r}" for r, v in cost.items()) + ".")
         return None
-    for r, v in cost.items():
+    site = found(g, name, rect)
+    g.command(f"scoreboard players set {player} {OBJECTIVE} 0")
+    return site
+
+
+def near(g, name, cell, reach=12):
+    """A free footprint of name whose middle tile is next to the block cell (a source or the town center), with one
+    free block around it for the paths, or None. The nearest tile first, the same order each time."""
+    T, (cx, cz) = g.map.T, (cell[0] // g.map.T, cell[1] // g.map.T)
+    for r in range(1, reach + 1):
+        for tx, tz in sorted(((x, z) for x in range(cx - r, cx + r + 1) for z in range(cz - r, cz + r + 1)
+                              if max(abs(x - cx), abs(z - cz)) == r), key=lambda t: (math.dist(t, (cx, cz)), t)):
+            x0, x1, z0, z1 = rect = area(g, name, (tx * T, tz * T))
+            if x0 > 0 and z0 > 0 and free(g, (x0 - 1, x1 + 1, z0 - 1, z1 + 1)):
+                return rect
+    return None
+
+
+def found(g, name, rect):
+    """Pay for name and put its foundation (a wool ring in the player color) on the free footprint rect. Returns
+    the construction site."""
+    for r, v in COSTS[name].items():
         g.stock[r] -= v
         g.command(f"scoreboard players remove {r.capitalize()} {g.board} {v}")
     x0, x1, z0, z1 = rect
@@ -233,7 +254,6 @@ def place(g, player, name, eye, d):
     site = {"name": name, "player": g.player, "footprint": rect, "commands": cmds, "sent": 0, "progress": 0.0,
             "ring": dict.fromkeys(ring, f"minecraft:{color}_wool"), "under": {}}   # under: the design blocks on the ring
     g.sites.append(site)
-    g.command(f"scoreboard players set {player} {OBJECTIVE} 0")
     return site
 
 
