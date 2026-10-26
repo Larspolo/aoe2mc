@@ -40,6 +40,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
@@ -121,6 +122,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * the values of "aoe stats", the range of "aoe range" and the target of "aoe attack", and the horse gets AI without goals:
  * a riding mob walks with the navigation of its vehicle (vanilla Mob#getNavigation), so the horse follows the rider.
  * A hit on the rider takes the hit points of the horse, and the rider dies with the horse (#732).
+ * A horse regenerates by itself in vanilla, an AoE2 unit does not: the plugin cancels the REGEN healing of a unit
+ * with AoE2 values (#850). Other reasons (a later Monk heal) stay.
  * A building is blocks, and a mob attacks only a living entity: an invisible mob without AI (a slime of the size of
  * the footprint, game/combat.py building) stands in the building and takes the attacks, so that the vanilla attack
  * goals and paths work (#517). The plugin keeps the hit points of the building (a building has more than the
@@ -531,6 +534,14 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             ev.setCancelled(true);
         } else if (names.containsKey(e.getUniqueId())) {      // the new health is set after the event
             Bukkit.getScheduler().runTask(this, () -> nameLine(e));
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onRegain(EntityRegainHealthEvent ev) {        // a horse heals by itself, an AoE2 unit does not (#850)
+        if (ev.getRegainReason() == EntityRegainHealthEvent.RegainReason.REGEN
+                && stats.containsKey(ev.getEntity().getUniqueId())) {
+            ev.setCancelled(true);
         }
     }
 
