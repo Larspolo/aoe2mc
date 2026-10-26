@@ -78,6 +78,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              open a chest menu (#619, game/menu.py; the texts are URL-encoded)
  *   aoe menu-close <player>                    close the menu of the player
  *   aoe cheats <code>,<code>,...|-             the AoE2 cheat codes in the chat (#816, Cheats.java; URL-encoded)
+ *   aoe deathmarks on|off                      a short mark where a replay unit dies (#846, Deaths.java)
  *   aoe destroy <selector>                     the buildings fall as at 0 hit points: "Destroy: <n> buildings" (#819)
  *   aoe label <selector> [name]                show the name line again (after a selection change); a name sets
  *                                              the name of a building target (#661)
@@ -153,6 +154,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Stats> stats = new HashMap<>();
     private final Ghost ghost = new Ghost(this);
     private final Cheats cheats = new Cheats(this);
+    private final Deaths deaths = new Deaths(this);
     private final Border border = new Border();
 
     private record Building(Stats stats, String box, int max, int[] b) {}   // b: x0 y0 z0 x1 y1 z1 of box
@@ -410,6 +412,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, this::watch, 20L, 20L);
         Bukkit.getPluginManager().registerEvents(this, this);
         Bukkit.getPluginManager().registerEvents(cheats, this);
+        Bukkit.getPluginManager().registerEvents(deaths, this);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -831,6 +834,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         if (args.length == 2 && args[0].equals("cheats")) {
             return cheats.command(sender, args);
+        }
+        if (args.length == 2 && args[0].equals("deathmarks")) {        // the marks of the live replay (#846)
+            return deaths.command(sender, args);
         }
         if (args.length == 2 && args[0].equals("destroy")) {           // the cheats torpedo, black death (#819)
             int n = 0;
