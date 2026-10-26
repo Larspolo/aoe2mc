@@ -96,6 +96,45 @@ def bad_files(files):
             or (p.endswith(DENY) and not (p.endswith(".png") and p.startswith(DENY_OK)))]
 
 
+SAMPLE = re.compile(r"^Usage: (\S+) · usage (\d+(?:\.\d+)?)% · resets (\S+) · claims (\d+)", re.M)
+
+
+def samples(comments):
+    """[(time, 5-hour usage 0..1, reset time, claims)] of the `Usage:` lines of the run reports (#462), by time."""
+    return sorted((ts(t), float(u) / 100, ts(r), int(k)) for c in comments
+                  for t, u, r, k in SAMPLE.findall(c.get("body") or ""))
+
+
+def burn_pairs(samples, min_hours=0.25):
+    """Share of the 5-hour quota that one run uses per hour, from each pair of consecutive samples in the same
+    window (the same reset time): the rise of the usage divided by the hours and the mean number of claims."""
+    out = []
+    for a, b in zip(samples, samples[1:]):
+        h = (b[0] - a[0]).total_seconds() / 3600
+        if abs((b[2] - a[2]).total_seconds()) < 600 and h >= min_hours and b[1] >= a[1] and a[3] + b[3] > 0:
+            out.append((b[1] - a[1]) / h / ((a[3] + b[3]) / 2))
+    return out
+
+
+def measured_burn(comments, now, hours=24, need=5):
+    """The median burn of the pairs of the last `hours`, or None when there are fewer than `need` pairs."""
+    pairs = burn_pairs([s for s in samples(comments) if s[0] >= now - datetime.timedelta(hours=hours)])
+    return med(pairs) if len(pairs) >= need else None
+
+
+def status_comments(hours=24):
+    """The comments on the status issue of the last `hours`."""
+    status = api("issues?state=open&labels=agent-status")
+    since = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=hours)
+    return api_pages(f"issues/{status[0]['number']}/comments?since={since:%Y-%m-%dT%H:%M:%SZ}") if status else []
+
+
+def active_claims(now, minutes=30):
+    """The open tickets with `in-progress` that changed in the last `minutes` (rule 4 of the scheduled task)."""
+    return sum(ts(i["updated_at"]) >= now - datetime.timedelta(minutes=minutes)
+               for i in api("issues?state=open&labels=in-progress&per_page=100") if "pull_request" not in i)
+
+
 def fmt(x):
     return "-" if x is None else f"{x:.1f}"
 
@@ -109,6 +148,8 @@ def report(since, runs, jobs, status_comments, comments, prs, files):
     out.append(f"Setup (median min of {len(setup)} Metrics lines): {fmt(med(setup))}")
     e = events(comments)
     out.append(f"Takeovers {e['takeovers']}, releases {e['releases']}, merge conflicts {e['conflicts']}")
+    b = burn_pairs([x for x in samples(status_comments) if x[0] >= since])
+    out.append(f"Burn per run-hour (median of {len(b)} pairs of Usage lines): {'-' if not b else f'{med(b):.3f}'}")
     c2m = claim_to_merge(prs, comments, since)
     out.append(f"Claim to merge (median min of {len(c2m)} PRs): {fmt(med(c2m))}")
     bad = bad_files(files)

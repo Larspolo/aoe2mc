@@ -98,7 +98,8 @@ def test_claim_fails_after_a_started_by_comment(clones, monkeypatch):
     a, b, _ = clones
     now = claim.datetime.datetime.now(claim.datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     monkeypatch.setattr(claim, "on_github", lambda remote="origin": True)
-    monkeypatch.setattr(claim, "api", lambda path: [{"body": "Started by `run-0`.", "created_at": now}])
+    monkeypatch.setattr(claim, "api", lambda path: [] if path.startswith("pulls") else
+                        [{"body": "Started by `run-0`.", "created_at": now}])
     monkeypatch.chdir(b)
     assert claim.main(["8"]) == 1                                  # run-0 commented, but has no claim ref
     assert claim.refs(8) == {}
