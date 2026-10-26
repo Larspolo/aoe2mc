@@ -99,3 +99,4 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   map. Replay paths cost 18 s per 200 s of game in samples/ (one search per unit of a group, #409).
 - "units in a block": `AOE2MC_DEBUG=1` names the block; list the `aoe2mc.json` objects with a `tile` near the unit to
   find its source (#415: a `PLANT_SHRUB` on the same block, not the tree that the ticket named).
+- `render.building_blocks` gives states with the `minecraft:` prefix and world y (the ground is y 63, canvas y 1 is y 64): strip the prefix before you match a name (#449).

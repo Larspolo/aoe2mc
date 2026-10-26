@@ -3704,6 +3704,26 @@ def dome_rock(c, w, st, col, T, ctx):
     m = int(round(cx))
     for x, z in ((m, 0), (m, w - 1), (0, m), (w - 1, m)):     # four doors
         c.box(x, x + 1, 1, 3, z, z + 1, "air")
+        c.doors.append((x, z))
+    # inside (#449): the rock on the floor in the middle, a ring of columns around it, carpets, candles and lanterns
+    for x in range(w):
+        for z in range(w):
+            d = math.hypot(x - cx, z - cx)
+            if d < max(1.2, w / 9):
+                c.set(x, 1, z, c.rng.choice(["stone", "stone", "andesite", "tuff"]))
+                if d < max(0.8, w / 14):
+                    c.set(x, 2, z, c.rng.choice(["stone", "andesite"]))
+    items = []
+    for k in range(8):
+        a = 2 * math.pi * (k + 0.5) / 8                          # off the door axes
+        x, z = int(round(cx + w / 4 * math.cos(a))), int(round(cx + w / 4 * math.sin(a)))
+        c.box(x, x + 1, 1, 8, z, z + 1, "quartz_pillar")
+        x, z = int(round(cx + (R - 1.5) * math.cos(a))), int(round(cx + (R - 1.5) * math.sin(a)))
+        items.append((x, 7, z, "lantern[hanging=true,waterlogged=false]"))
+        x, z = int(round(cx + (w / 9 + 1) * math.cos(a))), int(round(cx + (w / 9 + 1) * math.sin(a)))
+        items.append((x, 1, z, "candle[candles=3,lit=true,waterlogged=false]"))
+    items += [(x, 1, z, "red_carpet") for x in range(w) for z in range(w) if w / 9 + 1.5 < math.hypot(x - cx, z - cx) < R - 0.5]
+    c.furniture(items)
     c.banner(m + 1, 3, w, col)
 
 
@@ -3717,6 +3737,17 @@ def sankore(c, w, st, col, T, ctx):
         c.set(x, 6, 0, "mud_brick_wall"); c.set(x, 6, w - 1, "mud_brick_wall")
     m = w // 2
     c.box(m, m + 1, 1, 3, w - 1, w, "air")
+    c.doors.append((m, w - 1))
+    # inside (#449): a school with bookshelves on the side walls, the teacher's lectern at the back, benches for
+    # the students, chests of manuscripts and hanging lanterns
+    lectern = "lectern[facing=south,has_book=true,powered=false]"
+    items = [(x, y, z, "bookshelf") for x in (1, w - 2) for z in range(2, w - 3) for y in (1, 2)]
+    items += [(1, 1, 1, "chest[facing=south,type=single,waterlogged=false]"), (w - 2, 1, 1, "chest[facing=south,type=single,waterlogged=false]"),
+              (m, 1, 1, lectern), (m - 1, 1, 1, "candle[candles=2,lit=true,waterlogged=false]")]
+    items += [(x, 1, z, stair("spruce_stairs", "south")) for z in range(3, w - 3, 2) for x in range(3, w - 3) if x != m]
+    items += [(m, 1, z, "brown_carpet") for z in range(2, w - 1)]
+    items += [(x, 4, z, "lantern[hanging=true,waterlogged=false]") for x in (2, w - 3) for z in (2, w - 3)]
+    c.furniture(items)
     # tapering tower with beams that stick out
     a, b, y = m - 2, m + 2, 6
     while b - a >= 1 and y < 6 + 3 * w:
