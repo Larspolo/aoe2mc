@@ -3104,6 +3104,14 @@ def wooden_fort(c, w, st, col, T, ctx):
         for z in (a, b - 1):
             c.box(x, x + 1, 6, 8, z, z + 1, "spruce_fence")
     c.flag(w // 2, top + 1, w // 2, col, 2)
+    if b - a >= 4:                                         # inside (#441): a ladder to the gallery, stores, a camp
+        c.box(a + 1, a + 2, 1, 6, a + 1, a + 2, "ladder[facing=south,waterlogged=false]")
+        c.furniture([(b - 2, 1, a + 1, "chest[facing=west,type=single,waterlogged=false]")])
+        for x, z, s in ((1, 1, "campfire[facing=south,lit=true,signal_fire=false,waterlogged=false]"),
+                        (w - 2, 1, "barrel[facing=up,open=false]"), (w - 2, 2, "barrel[facing=up,open=false]"),
+                        (1, w - 3, "grindstone[face=floor,facing=east]"), (1, w - 2, "hay_block[axis=y]")):
+            c.set(x, 1, z, s)                              # the yard between the palisade and the tower
+        c.set(b - 2, 4, b - 2, "lantern[hanging=true,waterlogged=false]")
 
 
 def sapper_tunnel(c, w, st, col, T, ctx):
@@ -3333,12 +3341,31 @@ def svan_tower(c, w, st, col, T, ctx):
     """A Svan defense tower: tall, narrow, of rough stone, with a pitched tile roof."""
     h = max(12, 4 * T)
     c.room(0, w, 0, w, 0, h, "cobblestone")
-    c.box(0, w, 1, 2, 0, w, "mossy_cobblestone")
+    c.walls(0, w, 1, 2, 0, w, "mossy_cobblestone")
     c.door(w // 2, 1, w - 1)
     for y in range(4, h - 1, 4):
         c.set(w // 2, y, 0, "air"); c.set(w // 2, y, w - 1, "air")
     c.windows(0, w, 0, w, h - 1, b="air", step=2)
     c.gable(-1, w + 1, -1, w + 1, h + 1, "brick")
+    if w < 4:
+        return
+    # inside (#441): a wooden floor under each row of windows and a ladder through them. The family and the hay
+    # live at the bottom, stores, the hearth with its cauldron and a lookout above.
+    a, b = 1, w - 1
+    floors = list(range(5, h - 2, 4))
+    for y in floors:
+        c.box(a, b, y, y + 1, a, b, "spruce_planks")
+    c.box(a, a + 1, 1, floors[-1] + 2, a, a + 1, "ladder[facing=south,waterlogged=false]")
+    c.furniture([(b - 1, 1, a, "hay_block[axis=y]")])
+    c.set(b - 1, 4, b - 1, "lantern[hanging=true,waterlogged=false]")
+    rooms = [["chest[facing=west,type=single,waterlogged=false]", "barrel[facing=up,open=false]"],
+             ["cauldron", "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]"],
+             ["barrel[facing=up,open=false]", "lantern[hanging=false,waterlogged=false]"]]
+    for k, y in enumerate(floors):                         # upper floors: the cells at the ladder stay free
+        back, side = rooms[-1] if k == len(floors) - 1 else rooms[min(k, 1)]
+        c.set(b - 1, y + 1, a, back); c.set(b - 1, y + 1, b - 1, side)
+        if y + 4 < h and "lantern" not in side:
+            c.set(a, y + 3, b - 1, "lantern[hanging=true,waterlogged=false]")
 
 
 def courtyard_walls(c, w, st, col, T, ctx):
