@@ -978,6 +978,18 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Label: " + n + " units");
             return true;
         }
+        if (args.length == 2 && args[0].equals("destroy")) {           // the cheats torpedo, black death (#819)
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                Building b = buildings.get(e.getUniqueId());
+                if (b != null) {                                  // it falls as at 0 hit points
+                    hit(e, b, b.max());
+                    n++;
+                }
+            }
+            sender.sendMessage("Destroy: " + n + " buildings");
+            return true;
+        }
         if (args.length == 3 && args[0].equals("attack")) {
             List<Entity> targets = select(sender, args[2]);
             if (targets.isEmpty() || !(targets.get(0) instanceof LivingEntity target)) {
