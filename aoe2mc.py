@@ -1857,9 +1857,10 @@ def sun_helmet(nbt):
             eq["head"] = units.item("leather_helmet", unbreakable=True)
 
 
-def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside", silent=False):
+def plan_units(objects, players, cols, rng, stats, birds=True, garrison="inside", silent=False):
     """Entities per chunk: {(cx, cz): [(nbt, x, z, is_boat)]}. silent: also the passive animals (--ambience off).
-    garrison="outside": a garrisoned unit rides its ship if a seat is free, else stands next to its holder."""
+    A garrisoned unit rides its ship if a seat is free. Else garrison="inside": it stands in the rooms of its building
+    (is_boat = ("inside", y)), invulnerable and without a visible name (#807); "outside": it stands next to its holder."""
     T = cols.T
     out = {}
     refs = {o["ref"]: o for o in objects if o.get("ref") is not None}
@@ -1868,6 +1869,7 @@ def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside
     full = Counter()            # reference ID of a ship -> garrisoned units without room (on its name tag)
     labels = {}                 # reference ID of a ship -> the entity with its name tag
     taken = set()               # columns that garrisoned units use, so that they do not stand in one column
+    garrisons = Counter()       # reference ID of a building -> units inside it
     # The holders come first: a ship must exist before its passengers board it.
     for o in sorted(objects, key=lambda o: bool(o.get("garrisoned"))):
         src = o                 # gets the UUID of the entity for aoe2mc.json
@@ -1905,6 +1907,22 @@ def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside
                         continue
                     src["uuid"] = units.uuid_str(nbt["UUID"])
                     stats["units (garrisoned, in a ship)"] += 1
+                    continue
+                if garrison == "inside" and o.get("holder") in buildings.INSIDE:
+                    cells, y, center = buildings.INSIDE[o["holder"]]
+                    bx, bz = cells[garrisons[o["holder"]] % len(cells)] if cells else center   # more units share cells
+                    garrisons[o["holder"]] += 1
+                    label = units.top_entity(nbt)
+                    label["CustomNameVisible"] = Byte(0)            # a name tag shows through the walls
+                    label["Tags"] = List[String](list(label.get("Tags", [])) + [String("aoe2mc.garrisoned")])
+                    e = nbt
+                    while e is not None:                            # no damage in the barrier blocks of the rooms
+                        e["Invulnerable"], e["NoAI"] = Byte(1), Byte(1)
+                        e = e["Passengers"][0] if e.get("Passengers") else None
+                    src["uuid"] = units.uuid_str(nbt["UUID"])
+                    out.setdefault((bx >> 4, bz >> 4), []).append((nbt, bx + 0.5, bz + 0.5, ("inside", y)))
+                    stats["units (garrisoned, inside the holder)"] += 1
+                    stats["units"] += 1
                     continue
                 o = dict(o, x=holder["x"], y=holder["y"]) if holder else o
                 stats["units (garrisoned, next to the holder)"] += 1
@@ -2071,7 +2089,9 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
     for nbt, x, z, boat in ents:
         bx, bz = int(x), int(z)
         top, wtop = int(cols.top[bx, bz]), int(cols.wtop[bx, bz])
-        if boat == "fish":
+        if isinstance(boat, tuple):                 # a garrisoned unit in the rooms of its building (#807)
+            y = boat[1]
+        elif boat == "fish":
             if wtop - top < 2:
                 continue
             y = (top + wtop) / 2 + 0.3
@@ -2326,6 +2346,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
                 e[k] = o[k]
         if o.get("ref") is not None:                    # the object ID of a recorded game (#407, #408)
             e["ref"] = o["ref"]
+        if o["kind"] == "U" and o.get("garrisoned") and o.get("holder") is not None:
+            e["holder"] = o["holder"]                   # the reference ID of its building or ship (#807)
         objs.append(e)
     data = {"map_size": size, "tile_size": T, "level_height": H,
             "players": {str(pid): {"civ": p["civ"], "color": p["color"], "arch": p["arch"]}
@@ -2843,7 +2865,7 @@ class Progress:
 
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
             barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False,
-            garrison="outside", border_design="diorama", ambience="basic", at=None):
+            garrison="inside", border_design="diorama", ambience="basic", at=None):
     """at: recorded games only, the time in ms (--at): convert the state at that time (apply_timeline)."""
     global MC
     MC = VERSIONS[mc_version]
@@ -3195,8 +3217,9 @@ def main(argv=None):
                     help="architecture set for one player, for example 6=western (can be repeated)")
     ap.add_argument("--spawn", type=spawn_spec, metavar="X,Z",
                     help="player spawn in tiles (default: start view or town center of player 1)")
-    ap.add_argument("--garrison", choices=("outside", "skip"), default="outside",
-                    help="garrisoned units: ride their ship or stand next to their holder (default), or skip them")
+    ap.add_argument("--garrison", choices=("inside", "outside", "skip"), default="inside",
+                    help="garrisoned units: ride their ship, or stand inside their building (default) or next to it, "
+                         "or skip them")
     ap.add_argument("--mc-version", choices=sorted(VERSIONS), default=VERSION_NAME,
                     help=f"Minecraft Java version of the output (default {VERSION_NAME})")
     ap.add_argument("--orientation", choices=sorted(ORIENTATIONS), default="ne",
