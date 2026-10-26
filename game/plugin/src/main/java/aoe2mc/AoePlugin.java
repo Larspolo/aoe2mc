@@ -55,6 +55,7 @@ import com.destroystokyo.paper.entity.ai.GoalKey;
 import com.destroystokyo.paper.entity.ai.GoalType;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 
 /**
  * Orders for the units of the game program, with Minecraft path finding (#435). Vanilla has no command for
@@ -64,15 +65,19 @@ import net.kyori.adventure.text.Component;
  *   aoe goals <selector>                       the goals of the first unit (#436), for checks
  *   aoe stats <selector> <hp> <attack> <melee armor> <pierce armor> <ranged 0|1> <classes|-> <class:bonus,...|->
  *                                              the AoE2 values of a unit (#514, game/combat.py stats_command)
+ *   aoe stop <selector>                        stop the walk and turn the AI off: the unit stands still (#437)
  *   aoe range <selector> <blocks> <ticks>      a ranged unit shoots from this range, one shot per ticks (#515)
  *   aoe building <selector> <hp> <melee armor> <pierce armor> <x0> <y0> <z0> <x1> <y1> <z1>
  *                                              make the entity the target of a building (#517, combat.building)
  *   aoe menu <player> <title> <slot>:<material>:<name>:<lore> ...
  *                                              open a chest menu (#619, game/menu.py; the texts are URL-encoded)
  *   aoe menu-close <player>                    close the menu of the player
+ *   aoe label <selector> [name]                show the name line again (after a selection change); a name sets
+ *                                              the name of a building target (#661)
  * Converted units have no AI (NoAI): an order turns it on. Such a unit finds no path before its first AI tick
  * (it is not "on the ground" yet), and vanilla goals (a random stroll) can take the navigation of a walking unit:
- * so the order sends the path again every 10 ticks, until the unit arrives or 10 tries found no path.
+ * so the order sends the path again every 2 ticks (#437: 10 ticks made each walk 0.5 s longer), until the unit
+ * arrives or 50 tries (5 s) found no path.
  * The path search reaches only about the follow range of the mob (16 blocks for a cow): an order raises the
  * attribute follow_range to twice the distance + 32, at most 128. Longer ways need waypoints.
  * With the AI on, a unit keeps only the goals that fit AoE2 (#436): its attack goals and "float" (it swims).
@@ -80,6 +85,7 @@ import net.kyori.adventure.text.Component;
  * the burning in the sun go. So a unit stands still without an order and attacks only the target of an order,
  * and an attack order skips the units of the team of the target (scoreboard teams of the datapack, #358).
  * A villager walks with its brain, not with goals: it gets NoAI when it arrives, else it strolls away (#438).
+ * `aoe stop` stops a walk and sets NoAI (#437: a villager without a path).
  * A hit of a unit with AoE2 values on another one takes the AoE2 damage (#514, combat.damage): max(1, attack - armor
  * + bonus). The plugin cancels the vanilla damage and sets the health: so vanilla armor items, enchantments, effects,
  * difficulty and knockback (AoE2 has none) do not change it. Max health is the attribute max_health.
@@ -99,6 +105,9 @@ import net.kyori.adventure.text.Component;
  * Vanilla has no clickable item menu: "aoe menu" opens an inventory with the items (#619). A click on an item is
  * cancelled (the player takes nothing) and sets the score aoe_menu of the player to slot + 1 (a shift click: -(slot + 1),
  * #620); the menu stays open, so the player can click again. "aoe menu" on an open menu of the same title and size only changes the items.
+ * The name line of a unit or building (#661, owner decision #658): the custom name of the mob holds the name and 5 hearts
+ * ("Militia ❤❤❤❤❤", red: full, gray: empty, each heart 20 % of the hit points). It is visible only for a hurt unit or a
+ * selected one (tag aoe2mc.selected, game/gather.py), as the bars in AoE2. Each hit and "aoe stats" update it.
  */
 public final class AoePlugin extends JavaPlugin implements Listener {
     private record Stats(int attack, int melee, int pierce, boolean ranged, Set<String> classes,
@@ -117,6 +126,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private record Building(Stats stats, String box, int max, int[] b) {}   // b: x0 y0 z0 x1 y1 z1 of box
 
     private final Map<UUID, Building> buildings = new HashMap<>();
+    private final Map<UUID, Component> names = new HashMap<>();      // the name in the name line (#661)
+    private static final int HEARTS = 5;
     private final Map<UUID, Integer> lastHit = new HashMap<>();      // tick of the last hit of a unit on a building
     private static final double REACH = Math.sqrt(2.04) - 0.6;       // vanilla melee reach past the hit box
 
@@ -352,7 +363,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        Bukkit.getScheduler().runTaskTimer(this, this::follow, 10L, 10L);
+        Bukkit.getScheduler().runTaskTimer(this, this::follow, 2L, 2L);
         Bukkit.getScheduler().runTaskTimer(this, this::siege, 10L, 10L);
         Bukkit.getScheduler().runTaskTimer(this, this::burn, 20L, 20L);
         Bukkit.getPluginManager().registerEvents(this, this);
@@ -381,12 +392,16 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         ev.setCancelled(true);
         victim.playHurtAnimation(0);
         victim.setHealth(Math.max(0, victim.getHealth() - a.damage(t)));     // 0 kills it
+        nameLine(victim);
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onHurt(EntityDamageEvent ev) {               // suffocation in its walls, fire, fall ...
-        if (!(ev instanceof EntityDamageByEntityEvent) && buildings.containsKey(ev.getEntity().getUniqueId())) {
+        Entity e = ev.getEntity();
+        if (!(ev instanceof EntityDamageByEntityEvent) && buildings.containsKey(e.getUniqueId())) {
             ev.setCancelled(true);
+        } else if (names.containsKey(e.getUniqueId())) {      // the new health is set after the event
+            Bukkit.getScheduler().runTask(this, () -> nameLine(e));
         }
     }
 
@@ -402,8 +417,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (target instanceof LivingEntity le) {
             le.playHurtAnimation(0);
         }
+        nameLine(target);
         if (score.getScore() == 0) {                          // the building falls
             buildings.remove(target.getUniqueId());
+            names.remove(target.getUniqueId());
             score.resetScore();
             target.remove();
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "fill " + b.box + " minecraft:air");
@@ -468,6 +485,33 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
     }
 
+    /** The name and the hearts of the hit points; visible only when hurt or selected (#661). The first call keeps the
+     *  custom name of the converter (the unit name in the player color) as the name. */
+    private void nameLine(Entity e) {
+        if (!(e instanceof LivingEntity le)) {
+            return;
+        }
+        Component name = names.computeIfAbsent(e.getUniqueId(), k -> {
+            Component c = le.customName();                    // a world saved by the game program has the hearts
+            var parts = c == null ? List.<Component>of() : c.children();
+            return parts.size() == 4 && parts.get(3).color() != null
+                    && parts.get(3).color().value() == NamedTextColor.DARK_GRAY.value() ? parts.get(0) : c;
+        });
+        if (name == null) {
+            names.remove(e.getUniqueId());
+            return;
+        }
+        Building b = buildings.get(e.getUniqueId());
+        AttributeInstance attr = le.getAttribute(Attribute.MAX_HEALTH);
+        double hp = b != null ? hp().getScoreFor(e).getScore() : le.getHealth();
+        double max = b != null ? b.max : attr != null ? attr.getValue() : hp;
+        int full = hp <= 0 ? 0 : Math.max(1, (int) Math.ceil(HEARTS * hp / max - 1e-9));
+        le.customName(Component.text().append(name).append(Component.text(" "))
+                .append(Component.text("❤".repeat(full), NamedTextColor.RED))
+                .append(Component.text("❤".repeat(HEARTS - full), NamedTextColor.DARK_GRAY)).build());
+        le.setCustomNameVisible(hp < max || le.getScoreboardTags().contains("aoe2mc.selected"));
+    }
+
     private void siege() {
         int now = Bukkit.getCurrentTick();
         lastHit.values().removeIf(t -> now - t > 100);
@@ -509,7 +553,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             var path = pf.getCurrentPath();
             if (path == null || path.getFinalPoint() == null
                     || path.getFinalPoint().distanceSquared(o.goal) > 1.5 * 1.5) {
-                return !pf.moveTo(o.goal, o.speed) && ++o.fails >= 10;   // no path 10 times: drop the order
+                return !pf.moveTo(o.goal, o.speed) && ++o.fails >= 50;   // no path for 5 s: drop the order
             }
             return false;
         });
@@ -639,6 +683,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                         le.setHealth(hp);
                     }
                     stats.put(le.getUniqueId(), st);
+                    nameLine(le);
                     n++;
                 }
             }
@@ -708,6 +753,19 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Goals: " + String.join(" ", keys));
             return true;
         }
+        if (args.length == 2 && args[0].equals("stop")) {
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                if (e instanceof Mob mob) {
+                    orders.remove(mob.getUniqueId());
+                    mob.getPathfinder().stopPathfinding();
+                    mob.setAI(false);
+                    n++;
+                }
+            }
+            sender.sendMessage("Stopped " + n + " units");
+            return true;
+        }
         if (args.length >= 3 && args[0].equals("menu")) {
             return menu(sender, args);
         }
@@ -720,6 +778,20 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
             }
             sender.sendMessage("Closed: " + n + " menus");
+            return true;
+        }
+        if (args.length >= 2 && args[0].equals("label")) {
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                if (args.length > 2) {
+                    names.put(e.getUniqueId(), Component.text(String.join(" ", List.of(args).subList(2, args.length))));
+                }
+                if (names.containsKey(e.getUniqueId())) {
+                    nameLine(e);
+                    n++;
+                }
+            }
+            sender.sendMessage("Label: " + n + " units");
             return true;
         }
         if (args.length == 3 && args[0].equals("attack")) {

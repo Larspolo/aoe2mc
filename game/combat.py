@@ -17,6 +17,9 @@ from collections import namedtuple
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from gather import NORMAL  # noqa: E402
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from units import pretty  # noqa: E402
+
 Stats = namedtuple("Stats", "hp attack melee pierce range reload bonus classes", defaults=({}, ()))
 
 INF, ARC, CAV, CAM, ELE, SIE, SPE = "infantry", "archer", "cavalry", "camel", "elephant", "siege", "spearman"
@@ -77,8 +80,9 @@ HEIGHT = 40                     # blocks above the ground that a fallen building
 
 
 def stats(name):
-    """The combat values of an AoE2 unit or building; an unknown name gets a militia-like unit."""
-    return STATS.get(name) or BUILDINGS.get(name) or (BUILDING if name.endswith(("_WALL", "_GATE", "_TOWER")) else DEFAULT)
+    """The combat values of an AoE2 unit or building; an unknown name gets a militia-like unit. All villager names
+    (VILLAGER_MALE, VILLAGER_FEMALE_FARMER ...) get the villager values (#655)."""
+    return STATS.get("VILLAGER" if name.startswith("VILLAGER") else name) or BUILDINGS.get(name) or (BUILDING if name.endswith(("_WALL", "_GATE", "_TOWER")) else DEFAULT)
 
 
 def damage(attacker, target):
@@ -88,13 +92,21 @@ def damage(attacker, target):
     return max(1, max(0, a.attack - armor) + sum(a.bonus.get(c, 0) for c in t.classes))
 
 
-def stats_command(uuid, name):
-    """The plugin command that gives entity `uuid` the values of AoE2 unit `name`: max_health = hit points (at most
-    1024, the limit of the attribute), full health, and the values of `damage` (the same rule in AoePlugin.java)."""
-    s = stats(name)
+def stats_command(uuid, name, s=None):
+    """The plugin command that gives entity `uuid` the values of AoE2 unit `name` (or the values s, for example with
+    technologies, #655): max_health = hit points (at most 1024, the limit of the attribute), full health, and the
+    values of `damage` (the same rule in AoePlugin.java)."""
+    s = s or stats(name)
     bonus = ",".join(f"{c}:{n}" for c, n in sorted(s.bonus.items())) or "-"
     return (f"aoe stats {uuid} {min(s.hp, 1024)} {s.attack} {s.melee} {s.pierce} {int(s.range > 0)} "
             f"{','.join(s.classes) or '-'} {bonus}")
+
+
+def label_command(uuid, name=None):
+    """The plugin command that shows the name line of a unit again (after a selection change), or with a name sets the name
+    of a building target (#661): the name and 5 hearts, visible only when the unit is hurt or selected (AoePlugin.java).
+    The units keep the name of the converter: `aoe stats` takes it."""
+    return f"aoe label {uuid}" + (f" {pretty(name)}" if name else "")
 
 
 def range_command(uuid, name, T, rate=NORMAL):
@@ -112,7 +124,8 @@ def setup(game, data):
     ground = [r.split() for r in data.get("ground", ())]
     for o in data["objects"]:
         if o["kind"] == "building" and o["player"] and "footprint" in o and o["name"] in BUILDINGS:
-            for c in building(target_uuid(o["footprint"]), o["name"], o["player"], building_box(o, ground)):
+            uuid = target_uuid(o["footprint"])
+            for c in building(uuid, o["name"], o["player"], building_box(o, ground)) + [label_command(uuid, o["name"])]:
                 game.command(c)
     units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] and o.get("uuid")]
     for o in units:                                  # the plugin answers "Range: 0 units" for a mob that cannot shoot
