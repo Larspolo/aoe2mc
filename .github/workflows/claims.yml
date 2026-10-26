@@ -13,6 +13,10 @@ on:
 permissions:
   contents: write    # delete refs
 
+concurrency:
+  group: claims              # one run at a time: parallel runs delete the same refs (#560)
+  cancel-in-progress: false
+
 jobs:
   delete:
     runs-on: ubuntu-latest
@@ -27,7 +31,8 @@ jobs:
             [[ "$n" =~ ^[0-9]+$ ]] || continue
             [ "$(gh api "repos/$GITHUB_REPOSITORY/issues/$n" --jq .state)" = closed ] || continue
             echo "delete $ref"
-            gh api "repos/$GITHUB_REPOSITORY/git/$ref" -X DELETE   # git/refs/heads/claim/N
+            gh api "repos/$GITHUB_REPOSITORY/git/$ref" -X DELETE 2> err.txt ||   # git/refs/heads/claim/N
+              { grep -q "Reference does not exist" err.txt && echo "  already deleted"; } || { cat err.txt; exit 1; }
           done
       - name: Delete the comment locks older than one day
         env:
@@ -39,6 +44,7 @@ jobs:
             when=$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$sha" --jq .committer.date)
             if [[ "$when" < "$old" ]]; then
               echo "delete $ref ($when)"
-              gh api "repos/$GITHUB_REPOSITORY/git/$ref" -X DELETE
+              gh api "repos/$GITHUB_REPOSITORY/git/$ref" -X DELETE 2> err.txt ||
+                { grep -q "Reference does not exist" err.txt && echo "  already deleted"; } || { cat err.txt; exit 1; }
             fi
           done
