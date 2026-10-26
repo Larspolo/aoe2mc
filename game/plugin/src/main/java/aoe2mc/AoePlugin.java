@@ -651,7 +651,15 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             var path = pf.getCurrentPath();
             if (path == null || path.getFinalPoint() == null
                     || path.getFinalPoint().distanceSquared(o.goal) > 1.5 * 1.5) {
-                return !pf.moveTo(o.goal, o.speed) && ++o.fails >= 50;   // no path for 5 s: drop the order
+                if (pf.moveTo(o.goal, o.speed) || ++o.fails < 50) {
+                    return false;
+                }
+                if (mob instanceof Villager) {          // no path for 5 s: drop the order, and stop the brain (#811)
+                    mob.setAI(false);
+                }
+                getLogger().info("aoe2mc: no path " + mob.getUniqueId() + " " + o.goal.getX() + " " + o.goal.getY()
+                        + " " + o.goal.getZ());
+                return true;
             }
             return false;
         });
