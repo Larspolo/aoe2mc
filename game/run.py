@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-The game program: start a vanilla server on a converted world, with RCON on localhost, and send commands to it.
+The game program: start a Paper server on a converted world, with RCON on localhost, and send commands to it.
 
 Usage:
     python3 game/run.py WORLD [--version 26.3]    # type commands (without "/"); Ctrl-C stops the server
+    python3 game/run.py WORLD --server vanilla    # the vanilla server of Mojang instead of Paper
     python3 game/run.py WORLD --bench 1000        # measure the commands per second through RCON, then stop
     python3 game/run.py WORLD --play              # villagers gather wood, food, gold, stone (game/gather.py); Ctrl-C stops
     python3 game/run.py WORLD --play --log F.jsonl  # also write a timed event log (tools/measure_gather.py reads it)
@@ -11,10 +12,13 @@ Usage:
 
 Join with Minecraft (multiplayer, localhost): players play in creative mode and get operator rights.
 The server plays the world in place (the game changes it). Server files (eula, properties, logs) go to .cache/.
-Platform choice: docs/research/gameplay.md (#135).
+Platform choice: docs/research/gameplay.md (#135). Paper (#433, #434) adds path finding through a plugin;
+converted worlds stay vanilla, and tools/mc_check.py checks them with the vanilla server.
 """
 import argparse
 import contextlib
+import glob
+import hashlib
 import json
 import os
 import re
@@ -25,13 +29,45 @@ import sys
 import tempfile
 import threading
 import time
+import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path[:0] = [HERE, os.path.join(os.path.dirname(HERE), "tools")]
 import mc_check  # noqa: E402
 from rcon import Rcon  # noqa: E402
 
-JOINED = re.compile(r"/INFO\]: (\w{1,16}) joined the game$")      # a chat line starts with "<name>", not with a name
+JOINED = re.compile(r"[/ ]INFO\]: (\w{1,16}) joined the game$")   # a chat line starts with "<name>", not with a name
+PAPER = os.path.join(os.path.dirname(mc_check.CACHE), "paper")       # ~/.cache/aoe2mc/paper/VERSION/
+FILL = "https://fill.papermc.io/v3/projects/paper/versions"
+AGENT = {"User-Agent": "aoe2mc (https://github.com/Larspolo/aoe2mc)"}   # the Paper API refuses Python-urllib (403)
+
+
+def get(url):
+    with urllib.request.urlopen(urllib.request.Request(url, headers=AGENT), timeout=300) as r:
+        return r.read()
+
+
+def paper_jar(version):
+    """The Paper server jar for the Minecraft version: the cached one, else the latest build of the downloads API.
+    The jar comes from fill-data.papermc.io (#439). Delete the folder to get a newer build."""
+    folder = os.path.join(PAPER, version)
+    jars = sorted(glob.glob(os.path.join(folder, "paper-*.jar")), key=os.path.getmtime)
+    if jars:
+        return jars[-1]
+    try:
+        build = json.loads(get(f"{FILL}/{version}/builds/latest"))
+    except OSError as e:
+        sys.exit(f"no Paper build for Minecraft {version} ({e}); use --server vanilla")
+    jar = build["downloads"]["server:default"]
+    data = get(jar["url"])
+    if hashlib.sha256(data).hexdigest() != jar["checksums"]["sha256"]:
+        sys.exit(f"bad checksum: {jar['url']}")
+    os.makedirs(folder, exist_ok=True)
+    path = os.path.join(folder, jar["name"])
+    with open(path + ".part", "wb") as f:
+        f.write(data)
+    os.replace(path + ".part", path)
+    return path
 
 
 def properties(game_port, rcon_port, password):
@@ -46,13 +82,21 @@ def properties(game_port, rcon_port, password):
 class Game:
     """A running server with an RCON connection. Use it in a `with` block, so that the server always stops."""
 
-    def __init__(self, world, version=mc_check.DEFAULT_VERSION, timeout=300):
-        self.world, self.version, self.timeout = os.path.abspath(world), version, timeout
+    def __init__(self, world, version=mc_check.DEFAULT_VERSION, timeout=300, server="paper"):
+        self.world, self.version, self.timeout, self.kind = os.path.abspath(world), version, timeout, server
         self.server = self.rcon = None
         self.lock, self.seen = threading.Lock(), 0     # the op thread and the game send commands
 
     def start(self):
-        jar, java = mc_check.server_jar(self.version), mc_check.java_for(self.version)
+        java, jvm = mc_check.java_for(self.version), []
+        if self.kind == "paper":                     # Paper patches the Mojang jar once, into the cache
+            jar = paper_jar(self.version)
+            jvm = [f"-DbundlerRepoDir={os.path.dirname(jar)}"]
+        else:
+            jar = mc_check.server_jar(self.version)
+        # Paper writes usercache.json into the folder of the world folder: remove it after the game
+        cache = os.path.join(os.path.dirname(self.world), "usercache.json")
+        self.usercache = None if os.path.exists(cache) else cache
         self.folder = tempfile.mkdtemp(dir=mc_check.workdir())
         self.port, self.game_port, password = mc_check.free_port(), mc_check.free_port(), secrets.token_hex(16)
         with open(os.path.join(self.folder, "eula.txt"), "w") as f:
@@ -61,7 +105,7 @@ class Game:
             f.write(properties(self.game_port, self.port, password))
         # --universe and --world: the server uses the world folder where it is, not a copy
         self.server = mc_check.Server(java, jar, self.folder, ["--universe", os.path.dirname(self.world),
-                                                               "--world", os.path.basename(self.world)])
+                                                               "--world", os.path.basename(self.world)], jvm)
         try:
             self.server.wait(r"\]: Done \(", self.timeout)
             self.rcon = Rcon("127.0.0.1", self.port, password)
@@ -112,6 +156,8 @@ class Game:
                 self.server.p.wait()
         if getattr(self, "folder", None):
             shutil.rmtree(self.folder, ignore_errors=True)
+        if getattr(self, "usercache", None) and os.path.exists(self.usercache):
+            os.remove(self.usercache)
 
     def __enter__(self):
         return self.start()
@@ -166,6 +212,7 @@ def main(argv=None):
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("world")
     ap.add_argument("--version", default=mc_check.DEFAULT_VERSION, help="Minecraft version of the world")
+    ap.add_argument("--server", choices=["paper", "vanilla"], default="paper", help="server program (default: Paper)")
     ap.add_argument("--bench", type=int, metavar="N", help="send N commands, print the commands per second, stop")
     ap.add_argument("--play", action="store_true", help="play: villagers of player 1 gather resources (aoe2mc.json)")
     ap.add_argument("--replay", action="store_true", help="replay the timeline of a recorded game (aoe2mc.json)")
@@ -175,7 +222,7 @@ def main(argv=None):
     a = ap.parse_args(argv)
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
         sys.exit(f"no level.dat in {a.world}")
-    game = Game(a.world, a.version)
+    game = Game(a.world, a.version, server=a.server)
     try:
         game.start()
         print(f"Server is ready. RCON on 127.0.0.1:{game.port}. Ctrl-C stops the server.", file=sys.stderr)
