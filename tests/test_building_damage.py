@@ -40,7 +40,8 @@ def test_setup_makes_targets_for_the_buildings_of_the_players():
         {"kind": "building", "player": 0, "name": "HOUSE", "footprint": [5, 5, 7, 7]},         # Gaia: none
         {"kind": "building", "player": 1, "name": "FARM", "footprint": [8, 8, 11, 11]}]}      # no hit points
     assert combat.setup(Game(), data) == 0
-    assert len(Game.sent) == 3 and Game.sent[2].endswith(" 550 0 7 1 63 1 2 103 2")
+    assert len(Game.sent) == 4 and Game.sent[2].endswith(" 550 0 7 1 63 1 2 103 2")
+    assert Game.sent[3] == f"aoe label {combat.target_uuid([1, 1, 3, 3])} House"
 
 
 def hp(game, uuid):

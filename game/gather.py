@@ -342,6 +342,8 @@ class Gather:
             self.command(f"tag {u} remove {SELECT}")
         self.command(f"data merge entity {uuid} {{Glowing:1b}}")
         self.command(f"tag {uuid} add {SELECT}")
+        for u in sorted(self.selected ^ keep | {uuid}):                 # the name line shows the selection (#661)
+            self.command(f"aoe label {u}")
         self.selected = keep
         bossbar.show(self, uuid)                                        # the boss bar of the selection (#659)
 
