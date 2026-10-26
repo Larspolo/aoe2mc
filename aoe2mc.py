@@ -1132,6 +1132,7 @@ def make_tree(E, kind, x, y, z, rng):
     if kind == "dead":
         E.box(x, x + 1, y, y + h - 1, z, z + 1, "oak_log")
         E.add([x + 1, x - 1], [y + h - 2, y + h - 3], [z, z], "oak_log[axis=x]")
+        fungus(E, x, y, z, h - 1, ("north", "south"))   # the branches are on the east and west sides
         return
     wood = WOODS.get(kind, "oak")
     log, leaf = f"{wood}_log", leaves(wood)
@@ -1160,6 +1161,24 @@ def make_tree(E, kind, x, y, z, rng):
         for dy, r in ((h - 2, 2), (h - 1, 2), (h, 1), (h + 1, 1)):
             disc(E, x, y + dy, z, r, leaf)
         E.box(x, x + 1, y, y + h, z, z + 1, log)
+        if kind == "oak":
+            fungus(E, x, y, z, h - 2, ("north", "south", "west", "east"))
+
+
+FACE = {"north": (0, -1), "south": (0, 1), "west": (-1, 0), "east": (1, 0)}
+
+
+def fungus(E, x, y, z, top, faces):
+    """Bracket fungus (shelf_mushroom) on 1 old tree in 10: 1 or 2 on the trunk, 1 to 3 blocks up, below `top`.
+
+    Its own generator, seeded by the position: the trees after it keep their random numbers."""
+    r = np.random.default_rng([x % 65536, y % 65536, z % 65536, 558])
+    if r.random() >= 0.1:
+        return
+    for f in r.permutation(faces)[:int(r.integers(1, 3))]:
+        dx, dz = FACE[f]
+        E.add([x + dx], [y + int(r.integers(1, max(2, min(4, top))))], [z + dz],
+              f"shelf_mushroom[age={int(r.integers(2))},facing={f}]")
 
 
 def disc(E, x, y, z, r, block):
