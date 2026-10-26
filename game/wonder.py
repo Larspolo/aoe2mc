@@ -38,7 +38,7 @@ def found(g):
     """The complete wonders of the players: {target uuid: (player, site or None)}."""
     out = {combat.target_uuid(o["footprint"]): (o["player"], None) for o in g.data["objects"]
            if o["kind"] == "building" and o["name"] == "WONDER" and o["player"] and "footprint" in o}
-    for s in [s for b in [g, *getattr(g, "bots", ())] for s in b.sites]:
+    for s in [s for b in [g, *(b.g for b in getattr(g, "bots", ()))] for s in b.sites]:   # a bot.Bot: its Gather
         if s["name"] == "WONDER" and s.get("done"):
             x0, x1, z0, z1 = s["footprint"]
             out[combat.target_uuid([x0, z0, x1, z1])] = (s["player"], s)
