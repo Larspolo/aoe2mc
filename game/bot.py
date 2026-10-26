@@ -58,9 +58,11 @@ class Bot:
         return self
 
     def sources(self, res):
-        """{tile: amount} of the trees, fruit bushes or mines of res."""
+        """{tile: amount} of the trees, the fruit bushes and the own farms without a farmer, or the mines of res."""
         m = self.g.map
-        return m.trees if res == "wood" else m.bushes if res == "food" else m.mines[res]
+        if res == "food":                                              # a farm takes one farmer (Gather.send)
+            return {**m.bushes, **{t: k for t, k in m.farms.items() if t in m.own_farms and t not in self.g.farmers}}
+        return m.trees if res == "wood" else m.mines[res]
 
     def step(self):
         """One tick of the gather game of the player, then orders for the idle villagers."""
@@ -143,12 +145,15 @@ class Bot:
                     more += n == "VILLAGER_MALE"
 
     def build(self):
-        """Start the next house or building of ORDER when the bot can pay for it and no site of it is unfinished."""
+        """Start the next house, farm or building of ORDER when the bot can pay for it and no site of it is unfinished.
+        A farm when no food source is left (#1026), at most one for each food villager of SHARE."""
         g = self.g
         if any(not s.get("done") for s in g.sites):                    # one site at a time
             return
         cap, have = train.limit(g), train.owned(g)
-        name = "HOUSE" if g.pop >= cap - HOUSE_GAP and cap < train.LIMIT else \
+        farms = sum(k > 0 for t, k in g.map.farms.items() if t in g.map.own_farms)
+        hungry = not any(k > 0 for k in self.sources("food").values()) and farms < math.ceil(SHARE["food"] * len(g.villagers))
+        name = "HOUSE" if g.pop >= cap - HOUSE_GAP and cap < train.LIMIT else "FARM" if hungry else \
             next((n for n in ORDER if n not in have), None)
         if name is None or any(g.stock[r] < v for r, v in build.COSTS[name].items()):
             return
