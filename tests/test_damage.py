@@ -5,7 +5,7 @@ import time
 
 import pytest
 
-from game import combat, run
+from game import ai, combat, run
 
 
 def test_damage_with_armor_and_bonus():
@@ -33,7 +33,8 @@ def test_stats_command():
     data = {"objects": [{"kind": "unit", "player": 1, "name": "MILITIA", "uuid": "a"},
                         {"kind": "unit", "player": 0, "name": "DEER", "uuid": "b"},       # Gaia keeps vanilla
                         {"kind": "building", "player": 1, "name": "HOUSE"}]}
-    assert combat.setup(Game(), data) == 1 and Game.sent == [combat.stats_command("a", "MILITIA"), "aoe sight a 16"]
+    assert combat.setup(Game(), data) == 1 and Game.sent == [combat.stats_command("a", "MILITIA"), "aoe sight a 16",
+                                                    ai.speed_command("a", "MILITIA", 4)]
 
 
 def health(game, tag):
