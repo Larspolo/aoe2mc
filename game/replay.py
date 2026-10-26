@@ -502,13 +502,36 @@ class Replay:
                        for v in map(self.units.get, self.moving) if v and v.uuid])
         return g, r
 
+    def jump(self, events, to):
+        """Apply the events up to game time `to` (ms) at once (#687): buildings appear, deletes remove, trained units
+        appear, and each unit that a MOVE or ORDER sent, or that walks now, stands at its target (tp, no walk). The
+        chat, age and research texts of the skipped time do not show. Returns the commands."""
+        out, moved = [], set()
+        for e in events:
+            if e["kind"] in ("move", "order") and e.get("objects"):
+                self.move(e)                                        # the paths and the targets; no walk orders
+                moved.update(e["objects"])
+            elif e["kind"] in ("build", "wall", "spawn", "delete"):
+                out += self.commands(e)
+        for i in sorted(moved | self.moving.keys()):
+            if (v := self.units.get(i)) is None:
+                continue
+            x, z = v.path[-1] if v.path else v.cell
+            v.pos, v.path = (x + 0.5, float(self.map.y(x, z)), z + 0.5), []
+            self.moving.pop(i, None)
+            out.append("tp {} {} {} {}".format(v.uuid, *v.pos))
+            if self.ai:                                             # ends the walk order of the plugin at once
+                out.append("aoe moveto {} {} {} {}".format(v.uuid, *v.pos))
+        return out
+
     def run(self, speed=1.0, start=0, clock=time.monotonic, sleep=time.sleep, log=print, bar=False, poll=None):
         """Play the timeline from game time `start` (ms) at `speed` times the game speed; `bar`: show the game time
         in a boss bar (`clock_commands`). Returns the stats:
         commands, events, the seconds of sending, the largest lag behind the timeline (s), commands per second
         (rate) and the commands per second that the timeline needs on average (need).
         poll(control) may change `self.control` ("speed", "paused") while the replay runs: run calls it before
-        each event and each POLL seconds while it waits (#685)."""
+        each event and each POLL seconds while it waits (#685). "jump" (game time, ms) skips forward to that time
+        (`jump`, #687); a time before the game time now changes nothing."""
         events = sorted((e for e in self.data.get("timeline", []) + self.spawns() if e["time"] >= start),
                         key=lambda e: e["time"])
         g0, r0, lag, n, k = start, clock(), 0.0, 0, 0                 # game time g0 (ms) at real time r0
@@ -523,16 +546,27 @@ class Replay:
             e = events[k] if k < len(events) and events[k]["time"] <= step else None
             k += e is not None
             now = e["time"] if e else step
+            to = None
             while True:
                 if poll:
                     poll(self.control)
                     g0, r0 = self.retime(g0, r0, clock())
+                    if (to := self.control.pop("jump", None)) is not None:
+                        break
                 wait = POLL if self.paused else (now - g0) / 1000 / self.speed - (clock() - r0)
                 if wait <= 1e-6:                                    # rounding: no endless wait
                     break
                 sleep(min(wait, POLL) if poll else wait)
                 if not poll:
                     break
+            if to is not None:
+                k -= e is not None                                  # the event waits for the jump
+                if to > (g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed):
+                    skip = [x for x in events[k:] if x["time"] <= to]
+                    k += len(skip)
+                    self.send(self.jump(skip, to))
+                    g0, r0 = to, clock()
+                continue
             lag = max(lag, clock() - r0 - (now - g0) / 1000 / self.speed)
             if int(now) // 1000 != shown:                              # at most once per game second
                 shown = int(now) // 1000
