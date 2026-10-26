@@ -47,21 +47,32 @@ def test_create_object_of_a_building_is_not_supported_yet():
 def test_remove_object_kills_the_units_of_the_player_in_the_area():
     stats = Counter()
     kill, = lines([effect(aoe2mc.REMOVE_OBJECT, "ARCHER", player=2, area=(1, 2, 3, 2))], stats)
-    assert kill == "kill @e[tag=aoe2mc.p2,type=minecraft:skeleton,x=4,y=-64,z=8,dx=11,dy=384,dz=3]"
+    assert kill == "kill @e[type=minecraft:skeleton,tag=aoe2mc.p2,x=4,y=-64,z=8,dx=11,dy=383,dz=3]"
     assert stats == Counter(remove=1)
 
 
 def test_remove_object_of_a_rider_kills_its_mount_too():
     ride, kill = lines([effect(aoe2mc.REMOVE_OBJECT, "KNIGHT", area=(0, 0, 1, 1))])
-    assert ride.startswith("execute as @e[tag=aoe2mc.p1,") and ride.endswith(" on vehicle run kill @s")
+    assert ride.startswith("execute as @e[type=minecraft:zombie,tag=aoe2mc.p1,") and ride.endswith(" on vehicle run kill @s")
     assert kill == "kill " + ride.split(" ")[2]
 
 
-def test_the_effect_tiles_turn_with_the_map():
-    t = trig([effect(aoe2mc.CREATE_OBJECT, "MILITIA", tile=(3, 5)), effect(aoe2mc.REMOVE_OBJECT, area=(1, 2, 3, 2))])
-    aoe2mc.turn_effects([t], 16, 1)                                     # one quarter turn: (x, y) -> (15 - y, x)
-    assert t["effects"][0]["tile"] == [10, 3] and t["effects"][1]["area"] == [13, 1, 13, 3]
-    assert t["effects"][1]["object"] is None                           # no type: all units of the player
+def test_the_effect_tiles_turn_with_the_map(tmp_path):
+    from AoE2ScenarioParser.datasets.units import UnitInfo
+    scn = scenarios.new_scenario(16)
+    t = scn.trigger_manager.add_trigger("Militia")
+    t.new_condition.timer(timer=1)
+    t.new_effect.create_object(source_player=1, object_list_unit_id=UnitInfo.MILITIA.ID, location_x=3, location_y=5)
+    src = scenarios.save(scn, str(tmp_path / "m.aoe2scenario"))
+    with contextlib.redirect_stdout(io.StringIO()):
+        aoe2mc.convert(src, str(tmp_path / "W"), orientation="se")      # one quarter turn: (x, y) -> (15 - y, x)
+    assert read_fn(tmp_path / "W", t.trigger_id).startswith("summon minecraft:zombie 42.5 ")   # tile (10, 3)
+    assert " 14.5 {" in read_fn(tmp_path / "W", t.trigger_id)
+
+
+def read_fn(world, id):
+    with open(os.path.join(world, "datapacks", "aoe2mc", "data", "aoe2mc", "function", "trigger", f"{id}.mcfunction")) as f:
+        return f.read()
 
 
 def test_the_triggers_scenario_removes_the_archers(tmp_path):
@@ -72,5 +83,5 @@ def test_the_triggers_scenario_removes_the_archers(tmp_path):
     ids = [t["id"] for t in aoe2mc.read_scenario(src)[4]["triggers"] if t["name"] == "Archer leaves"]
     path = os.path.join(tmp_path, "W", "datapacks", "aoe2mc", "data", "aoe2mc", "function", "trigger", f"{ids[0]}.mcfunction")
     with open(path) as f:
-        assert f.read().startswith("kill @e[tag=aoe2mc.p2,type=minecraft:skeleton,x=0,y=-64,z=0,dx=95,")
-    assert "timer triggers (chat, instructions, objects): 2, 1 remove" in out.getvalue()
+        assert f.read().startswith("kill @e[type=minecraft:skeleton,tag=aoe2mc.p2,x=0,y=-64,z=0,dx=95,")
+    assert "timer and area triggers (chat, instructions, objects): 3, 1 create (not supported yet), 1 remove" in out.getvalue()
