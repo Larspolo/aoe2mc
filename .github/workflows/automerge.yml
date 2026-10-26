@@ -42,7 +42,7 @@ jobs:
           BRANCH: ${{ github.event.workflow_run.head_branch }}
           SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
-          merged=0 conflict=0
+          merged=0 conflict=0 labels=0
           merge() {   # merge PR_JSON SHA: SHA is the head that CI tested
             local pr=$1 sha=$2 n branch ticket t
             n=$(jq -r .number <<<"$pr"); branch=$(jq -r .head.ref <<<"$pr")
@@ -75,6 +75,9 @@ jobs:
               return
             fi
             echo "merged #$n"; merged=1
+            if gh api "repos/$R/pulls/$n/files?per_page=100" --jq '.[].filename' | grep -Fqx .github/labels.txt; then
+              labels=1
+            fi
             gh api "repos/$R/git/refs/heads/$branch" -X DELETE || true
             if [ -n "$ticket" ]; then
               gh api "repos/$R/issues/$ticket/labels/in-progress" -X DELETE >/dev/null 2>&1 || true
@@ -104,6 +107,12 @@ jobs:
             gh workflow run ci.yml --repo "$R" --ref main
             gh workflow run dashboard.yml --repo "$R" || true
             gh workflow run coverage.yml --repo "$R" --ref main || true     # report and MAX on main (#233)
+          fi
+          # A push of GITHUB_TOKEN starts no `push` workflow, so labels.yml does not see the merge (#980). Start it only
+          # when the merged PR changed labels.txt: it calls the API once per label, and a start after each of about
+          # 50 merges per hour uses much of the token limit (1,000 calls per hour per repository).
+          if [ "$labels" = 1 ]; then
+            gh workflow run labels.yml --repo "$R" --ref main || true
           fi
           if [ "$merged" = 1 ] || [ "$conflict" = 1 ]; then              # GitHub ignores merge=union: do not wait 20 min
             gh workflow run unconflict.yml --repo "$R" || true             # main moved: merge it into conflicted PRs (#280)
