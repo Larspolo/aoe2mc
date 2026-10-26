@@ -8,7 +8,7 @@ villagers to the nearest source of the resource with the largest gap to SHARE. T
 
 Build (#857): a house when the population is 2 below the limit, then the buildings of ORDER when the bot has their
 cost. One villager builds each site (an idle one, else the nearest), next to the source of the building (NEAR) or
-the town center. Each building of ORDER once, as the first buildings of an AoE2 build order.
+the town center. An unfinished site without a working builder gets a new one (#1121). Each building of ORDER once, as the first buildings of an AoE2 build order.
 
 Army shares (#1049): when the bot has its villager number and a building that trains a soldier, the shares follow the
 cost of that soldier (train.COSTS), with WOOD for farms and houses; stone gets no new villagers. Each step moves at
@@ -203,7 +203,10 @@ class Bot:
         """Start the next house, farm or building of ORDER when the bot can pay for it and no site of it is unfinished.
         A farm when no food source is left (#1026), at most one for each food villager of the shares."""
         g = self.g
-        if any(not s.get("done") for s in g.sites):                    # one site at a time
+        if open_ := [s for s in g.sites if not s.get("done")]:           # one site at a time
+            for site in open_:                                         # its builder left or died (#1121)
+                if g.villagers and not any(v.site is site and v.state != "idle" for v in g.villagers.values()):
+                    self.builder(site)
             return
         cap, have = train.limit(g), train.owned(g)
         farms = sum(k > 0 for t, k in g.map.farms.items() if t in g.map.own_farms)
@@ -218,8 +221,13 @@ class Bot:
             center = min(((t[0] * T + T // 2, t[1] * T + T // 2) for t in full), key=lambda c: (math.dist(c, center), c))
         if center is None or (rect := build.near(g, name, center)) is None or not g.villagers:
             return
-        site = build.found(g, name, rect)
-        x, z = (rect[0] + rect[1]) / 2, (rect[2] + rect[3]) / 2
+        self.builder(build.found(g, name, rect))
+
+    def builder(self, site):
+        """Send one villager to build site: an idle one, else the nearest."""
+        g = self.g
+        x0, x1, z0, z1 = site["footprint"]
+        x, z = (x0 + x1) / 2, (z0 + z1) / 2
         v = min(g.villagers.values(), key=lambda v: (v.state != "idle", math.dist(v.cell, (x, z)), v.uuid))
         g.build(site, {v.uuid})
 

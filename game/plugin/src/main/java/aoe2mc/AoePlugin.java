@@ -189,13 +189,13 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Integer> lastHit = new HashMap<>();      // tick of the last melee hit of a unit
     private static final double REACH = Math.sqrt(2.04) - 0.6;       // vanilla melee reach past the hit box
     private static final double WALK = 43.4;      // blocks per second of movement_speed 1 on flat ground (game/ai.py)
-    private static final double AIR = 1 - 0.91;   // air drag per tick: a speed v in the air goes v / AIR blocks
     private static final double GROUND = 0.6 * 0.91;  // ground drag per tick (the friction of most blocks)
     private static final double LOOK = 3, OFF = 0.75;   // steer(): blocks ahead, blocks off the line (#1022)
 
     private static final class Order {
         final Location goal;
         final double speed;
+        final int start = Bukkit.getCurrentTick();
         int fails;
 
         Order(Location goal, double speed) {
@@ -822,6 +822,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 if (mob instanceof Villager         // its brain has no goals to drop: it strolls away (#438)
                         || mob.getScoreboardTags().contains(CARRIER)) {   // its minecart pushes it on (#836)
                     mob.setAI(false);               // so it stands still until the next order
+                } else if (center(mob) >= 1) {      // steer() skips path points: Minecraft walks back to them (#1078)
+                    mob.getPathfinder().stopPathfinding();
                 }
                 return true;                                          // arrived
             }
@@ -848,8 +850,6 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             if (passed(mob, path)) {
                 pf.stopPathfinding();                   // else moveTo keeps the path: same target (createPath)
                 pf.moveTo(o.goal, o.speed);
-            } else {
-                glide(mob, path, o.speed);
             }
             return false;
         });
@@ -878,10 +878,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // Down a slope a mob is in the air most of the time, and a mob has almost no control in the air (0.02 blocks per
     // tick, drag 0.91): a fast unit flew at about 5 blocks per second for each movement_speed (#888). On the way down
     // to the first point of its path that is still ahead, it keeps its walk speed (game/ai.py: WALK x attribute^2
-    // blocks per second), at most the speed that stops in the air at the end of the path. The path finder plans no drop larger than the
-    // safe fall distance, so the glide along it does not hurt either: the fall distance and the height above the point
-    // are together at most that. It aims at a point at least one tick of the glide ahead: a horse aimed at a point
-    // closer than that, passed it in one tick and turned back the next tick, at half its speed (#889).
+    // blocks per second), and it falls along the path, not above it (gravity is slower than a slope of 1:1, #1078).
+    // The path finder plans no drop larger than the safe fall distance, so the glide along it does not hurt either:
+    // the fall distance and the height above the point are together at most that. It aims at a point at least one
+    // tick of the glide ahead: a horse aimed at a point closer than that, passed it in one tick and turned back the
+    // next tick, at half its speed (#889).
     private static void glide(Mob mob, Pathfinder.PathResult path, double speed) {
         Vector v = mob.getVelocity();
         AttributeInstance attr = mob.getAttribute(Attribute.MOVEMENT_SPEED);
@@ -912,18 +913,30 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (v.getY() >= 0 || n.getY() >= m.getY() || d < 0.05) {
             return;
         }
-        double w = Math.min(AIR * Math.hypot(f.getX() + c - m.getX(), f.getZ() + c - m.getZ()), Math.min(step, d));
-        if (w > Math.hypot(v.getX(), v.getZ())) {
-            mob.setVelocity(new Vector(dx / d * w, v.getY(), dz / d * w));
+        // glide() runs each tick, so only a landing in this tick limits the speed: then the mob slides on the ground
+        // (1 / (1 - GROUND) blocks for each block per tick). A limit for a stop in the air (11 blocks for each block per
+        // tick) slowed a horse in the last 6 blocks of a slope to half its speed (#1078).
+        boolean lands = (v.getY() - 0.08) * 0.98 <= f.getY() - m.getY();
+        double r = Math.hypot(f.getX() + c - m.getX(), f.getZ() + c - m.getZ()), stop = lands ? r * (1 - GROUND) : r;
+        double w = Math.min(stop, Math.min(step, d)), h = Math.hypot(v.getX(), v.getZ());
+        double vy = Math.min(v.getY(), (n.getY() - m.getY()) * w / d);   // down along the path, not above it
+        if (w > h || h > stop || vy < v.getY()) {      // faster, or slower so that it stops at the end of the path
+            mob.setVelocity(new Vector(dx / d * w, vy, dz / d * w));
         }
     }
 
     private void steer() {
         for (var e : orders.entrySet()) {
             if (Bukkit.getEntity(e.getKey()) instanceof Mob mob && mob.isValid()) {
-                var path = mob.getPathfinder().getCurrentPath();
+                Order o = e.getValue();
+                var pf = mob.getPathfinder();
+                if (pf.getCurrentPath() == null && Bukkit.getCurrentTick() - o.start < 4) {
+                    pf.moveTo(o.goal, o.speed);         // a unit without AI finds its path a tick later: try each tick
+                }
+                var path = pf.getCurrentPath();
                 if (path != null) {
-                    steer(mob, path, e.getValue().speed);
+                    steer(mob, path, o.speed);
+                    glide(mob, path, o.speed);
                 }
             }
         }
