@@ -1,4 +1,5 @@
-"""A unit of the plugin walks down a slope without walking back (#888) and up steps with a carpet (#851). Paper."""
+"""A unit of the plugin walks down a slope without walking back and at its walk speed, with no fall damage (#888), and
+up steps with a carpet (#851). Paper."""
 import shutil
 import time
 
@@ -36,7 +37,10 @@ def test_a_scout_walks_down_and_up_a_slope(tiny_world, tmp_path):
         game.command(f'summon husk {x0 + 1.5} {y} {z0 + 0.5} {{NoAI:1b,Tags:["s"]}}')
         time.sleep(1)
         down = walk("s", z0 + STEPS)
+        health = data(game, "s", "Health")
         up = walk("s", z0)
         want = ai.walk_speed("EAGLE_SCOUT", 4, 4.0)                   # 17.6 blocks per second
-        assert down > 0.25 * want, (down, want)                      # 6.0; 2.8 when it walked back to each point
+        print("down", down, "up", up, "health", health)
+        assert down > 0.6 * want, (down, want)                       # 6.0 before the glide, 2.8 when it walked back
+        assert health == [20.0]                                       # the glide does not end in fall damage
         assert up > 0.6 * want, (up, want)                           # 12 to 14; it stood still at a carpet step
