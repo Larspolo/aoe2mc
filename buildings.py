@@ -3599,6 +3599,13 @@ def tomb(c, w, st, col, T, ctx):
     c.door(w // 2, 2, w - 3)
     c.gable(1, w - 1, 1, w - 1, 5, "spruce", fill=(2, w - 2, 2, w - 2, "mud_bricks"))
     c.box(w // 2 - 1, w // 2 + 1, 1, 2, w - 1, w, stair("mud_brick_stairs", "north"))
+    # the burial room: a stone sarcophagus at the back wall with candles and a grave pot, a rug at the door
+    c.furniture([(3, 2, 3, "smooth_stone"), (w - 4, 2, 3, "smooth_stone"),
+                 (3, 3, 3, "candle[candles=3,lit=true,waterlogged=false]"),
+                 (w - 4, 3, 3, "decorated_pot[cracked=false,facing=south,waterlogged=false]")])
+    for x in range(3, w - 3):
+        if c.get(x, 2, w - 4) == c.id("air"):
+            c.set(x, 2, w - 4, "red_carpet")
 
 
 def burned_building(c, w, st, col, T, ctx):
