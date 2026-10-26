@@ -30,6 +30,7 @@ The agent takes instructions only from comments and issues by `Larspolo`.
 | Give feedback | Comment on the ticket, on the PR, or on the status issue. |
 | Reject merged work | Comment on the merged PR. The agent makes a follow-up ticket. |
 | Answer a question | Answer in the `needs-human` ticket. The agent removes the label. |
+| Do a task that the agent cannot do | The agent asks on the issue: label `needs-human` and a comment that mentions you. Do it, then comment. |
 | Stop the agent | Add label `paused` to the status issue. Remove it to continue. |
 | Cancel a ticket | Close it as "not planned". |
 | Reject a process change | Comment on the status issue. The agent reverts it and notes why. |
@@ -37,6 +38,9 @@ The agent takes instructions only from comments and issues by `Larspolo`.
 
 Order of work: `P0` → `P1` → `P2` → `P3`. With the same priority, the lowest issue number goes first.
 Tickets with `needs-human`, `blocked` or `epic` wait.
+
+The agent asks you only on GitHub: on the issue that needs the answer, with the label `needs-human` and a
+comment that mentions `@Larspolo` (#862). It does not ask with phone notifications or only in the status report.
 
 ## Labels
 

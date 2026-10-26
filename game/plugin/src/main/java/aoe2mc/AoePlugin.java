@@ -28,7 +28,9 @@ import org.bukkit.entity.AbstractSkeleton;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Mob;
+import org.bukkit.entity.Pig;
 import org.bukkit.entity.Pillager;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -76,10 +78,13 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              open a chest menu (#619, game/menu.py; the texts are URL-encoded)
  *   aoe menu-close <player>                    close the menu of the player
  *   aoe cheats <code>,<code>,...|-             the AoE2 cheat codes in the chat (#816, Cheats.java; URL-encoded)
+ *   aoe destroy <selector>                     the buildings fall as at 0 hit points: "Destroy: <n> buildings" (#819)
  *   aoe label <selector> [name]                show the name line again (after a selection change); a name sets
  *                                              the name of a building target (#661)
  *   aoe where <selector> [from]                "Where <count>: <uuid> <x> <y> <z> <order 0|1> <target 0|1>, ..." for
  *                                              WHERE_PAGE units from index `from` in UUID order (#813, tools/replay_drift.py)
+ *   aoe speed <selector> <speed>               the movement_speed of each unit; a siege unit (a minecart) gets its
+ *                                              carrier first (#836): an invisible small pig that walks for it
  *   aoe box <player> <x> <z> <dye>             draw the selection box from this corner to the look (#795, Border.java)
  *   aoe box-clear <player>                     end the border of the selection box
  * Converted units have no AI (NoAI): an order turns it on. Such a unit finds no path before its first AI tick
@@ -88,6 +93,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * arrives or 50 tries (5 s) found no path.
  * The path search reaches only about the follow range of the mob (16 blocks for a cow): an order raises the
  * attribute follow_range to twice the distance + 32, at most 128. Longer ways need waypoints.
+ * An order also sets the attribute step_height to 1 (as a horse): the ground of a map has many steps of one block,
+ * and a jump on each made the replay units walk at 64 % of their speed (#829).
  * With the AI on, a unit keeps only the goals that fit AoE2 (#436): its attack goals and "float" (it swims).
  * Wandering, looking around, panic, the choice of its own targets (a zombie attacks each villager), despawning and
  * the burning in the sun go. So a unit stands still without an order and attacks only the target of an order,
@@ -174,6 +181,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     private final Map<UUID, Range> ranges = new HashMap<>();
     private final Map<UUID, Double> sights = new HashMap<>();       // the line of sight of a unit in blocks (#775)
+    static final String CARRIER = "aoe2mc.carrier";                  // the tag of the mob that carries a siege unit
+    private static final double CARRIER_SCALE = 0.3;                 // a pig of 0.27 blocks: the minecart stays low
     private final GoalKey<Mob> rangeKey = GoalKey.of(Mob.class, new NamespacedKey("aoe2mc", "aoe_range"));
     // the vanilla ranged goals that "aoe_range" replaces
     private static final Set<String> SHOTS = Set.of("ranged_attack", "ranged_bow_attack", "ranged_crossbow_attack",
@@ -665,7 +674,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             Order o = e.getValue();
             if (mob.getLocation().distanceSquared(o.goal) < 1.5 * 1.5) {
-                if (mob instanceof Villager) {      // its brain has no goals to drop: it strolls away (#438)
+                if (mob instanceof Villager         // its brain has no goals to drop: it strolls away (#438)
+                        || mob.getScoreboardTags().contains(CARRIER)) {   // its minecart pushes it on (#836)
                     mob.setAI(false);               // so it stands still until the next order
                 }
                 return true;                                          // arrived
@@ -706,7 +716,44 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         return e instanceof Mob && e.getPassengers().size() > 0 && e.getPassengers().get(0) instanceof Mob r ? r : null;
     }
 
+    /** The mob that carries a siege unit (#836). A minecart is no mob, and Minecraft has no path finding for it: so
+     *  an invisible small pig carries it, and the orders go to the pig. The first order makes it. */
+    static Mob carrier(Minecart cart, boolean make) {
+        if (cart.getVehicle() instanceof Mob m && m.getScoreboardTags().contains(CARRIER)) {
+            return m;
+        }
+        if (!make || cart.getVehicle() != null) {
+            return null;
+        }
+        Pig pig = cart.getWorld().spawn(cart.getLocation(), Pig.class, p -> {
+            p.setInvisible(true);
+            p.setSilent(true);
+            p.setInvulnerable(true);           // the hits go to the crew (aoe stats), not to the carrier
+            p.setPersistent(true);
+            p.addScoreboardTag(CARRIER);
+            AttributeInstance scale = p.getAttribute(Attribute.SCALE);
+            if (scale != null) {
+                scale.setBaseValue(CARRIER_SCALE);  // the minecart rides near the ground
+            }
+            AttributeInstance step = p.getAttribute(Attribute.STEP_HEIGHT);
+            if (step != null) {
+                step.setBaseValue(1.0);             // up one block, as the other units
+            }
+        });
+        pig.addPassenger(cart);
+        return pig;
+    }
+
+    /** The entity that walks for e: the carrier of a siege unit, else e. */
+    private static Entity walker(Entity e) {
+        return e instanceof Minecart cart && carrier(cart, false) != null ? carrier(cart, false) : e;
+    }
+
     private Mob unit(Entity e) {
+        if (e instanceof Minecart cart) {
+            Mob c = carrier(cart, true);
+            return c == null ? null : unit(c);
+        }
         if (!(e instanceof Mob mob)) {
             return null;
         }
@@ -714,6 +761,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             mob.setAI(true);
         }
         tame(mob);                  // each order: tame() only after setAI() missed the goals of some units (#436)
+        AttributeInstance step = mob.getAttribute(Attribute.STEP_HEIGHT);
+        if (step != null && step.getBaseValue() < 1) {
+            step.setBaseValue(1);                                      // no jump on a step of one block (#829)
+        }
         Range r = ranges.get(mob.getUniqueId());
         var goals = Bukkit.getMobGoals();
         if (r != null && mob instanceof RangedEntity) {
@@ -779,6 +830,18 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (args.length == 2 && args[0].equals("cheats")) {
             return cheats.command(sender, args);
         }
+        if (args.length == 2 && args[0].equals("destroy")) {           // the cheats torpedo, black death (#819)
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                Building b = buildings.get(e.getUniqueId());
+                if (b != null) {                                  // it falls as at 0 hit points
+                    hit(e, b, b.max());
+                    n++;
+                }
+            }
+            sender.sendMessage("Destroy: " + n + " buildings");
+            return true;
+        }
         if (args.length >= 2 && args[0].startsWith("box")) {            // the border of the selection box (#795)
             return border.command(sender, args, players(sender, args[1]));
         }
@@ -826,7 +889,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             int n = 0;
             for (Entity e : select(sender, args[1])) {
-                if (e instanceof LivingEntity le) {
+                Entity t = e instanceof Minecart && !e.getPassengers().isEmpty() ? e.getPassengers().get(0) : e;
+                if (t instanceof LivingEntity le) {                // a siege unit: its crew takes the hits (#836)
                     AttributeInstance max = le.getAttribute(Attribute.MAX_HEALTH);
                     if (max != null) {
                         max.setBaseValue(hp);
@@ -928,10 +992,30 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Goals: " + String.join(" ", keys));
             return true;
         }
+        if (args.length == 3 && args[0].equals("speed")) {          // the attribute command fails on a minecart (#836)
+            double v;
+            try {
+                v = Double.parseDouble(args[2]);
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad speed: " + args[2]);
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                Mob mob = unit(e);
+                AttributeInstance a = mob == null ? null : mob.getAttribute(Attribute.MOVEMENT_SPEED);
+                if (a != null) {
+                    a.setBaseValue(v);
+                    n++;
+                }
+            }
+            sender.sendMessage("Speed: " + n + " units");
+            return true;
+        }
         if (args.length == 2 && args[0].equals("stop")) {
             int n = 0;
             for (Entity e : select(sender, args[1])) {
-                if (e instanceof Mob mob) {
+                if (walker(e) instanceof Mob mob) {
                     orders.remove(mob.getUniqueId());
                     mob.getPathfinder().stopPathfinding();
                     mob.setAI(false);

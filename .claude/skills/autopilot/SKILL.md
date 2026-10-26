@@ -130,7 +130,7 @@ Epics first: an epic is never a candidate, so its rest of the work needs sub-iss
 at the open epics (label `epic`, not `needs-human`, any priority) with no open sub-issue, at most 3 per run. The
 priority does not matter here: a check of `P2` and `P3` epics was skipped, and six finished epics stayed open (#799).
 For each one, read its acceptance criteria. Close the epic with a comment when the closed sub-issues meet
-all criteria (name the evidence for each). Else lock the epic first: `python3 tools/claim.py E --refill`
+all criteria (name the evidence for each; a denied close: "Ask the owner" in step 6, #862). Else lock the epic first: `python3 tools/claim.py E --refill`
 (E = the epic; exit 1: another run makes its sub-issue, skip the epic, #505). Then make one sub-issue (same priority)
 for the criteria that an agent can do. A criterion that needs the owner stays on the epic. Then pick again (#176, #155 waited while P3 tickets ran).
 Refill the queue when fewer candidates are ready than the target number of runs, so that parallel runs always find
@@ -202,6 +202,12 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
     and names them (#563): remove them from the branch, commit, and run the guard again.
 11. CI green → the Automerge workflow merges. Add label `hold` to the PR if it must not merge yet.
 
+Ask the owner (owner rule, #862): only with the label `needs-human` and a comment on the issue that needs the answer.
+The comment mentions `@Larspolo` and says exactly what the owner must do. Never ask with PushNotification, in the
+session, or only in the status report. When the auto mode denies an action (for example closing an issue), do not send
+it through another tool: add `needs-human` to that issue and comment the evidence and the action. When the owner did
+it, remove the label.
+
 If the ticket is wrong or not possible: comment why, add `needs-human`, remove `in-progress`. Do not merge
 partial work: add `hold` to its PR (the workflow also skips a PR whose ticket has `needs-human` or `blocked`).
 
@@ -225,7 +231,8 @@ other runs change it too):
 - The section `### Process changes`: add a line `- <date>: <what changed in the skills, CLAUDE.md or
   LEARNINGS> (PR #n)` at the top, keep the last 5.
 
-Then add one short comment on the status issue: what you did, what is next, and questions for the owner.
+Then add one short comment on the status issue: what you did and what is next. A question for the owner goes on its
+issue, not here (see "Ask the owner" in step 6).
 End it with one metrics line for each ticket of the run (the `improve` skill reads these lines):
 
     Metrics: ticket #<n> · <size> · <merged|blocked|needs-human|none> · <minutes> min · setup <m> min · checks <k> · checks <c> min · time sinks: <list or "none">

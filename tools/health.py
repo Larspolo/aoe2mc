@@ -68,11 +68,14 @@ def setup_minutes(comments):
 
 
 def events(comments):
-    """Counts of takeovers, releases and merge conflicts in the issue and PR comments."""
+    """Counts of takeovers, releases and merge conflicts in the issue and PR comments. A conflict counts only from
+    the comments of the workflows: Automerge could not merge, or Unconflict solved it alone ("solved"). Run reports
+    that only name a conflict counted 5 times too many (improve, run 145)."""
     bodies = [(c.get("body") or "").lstrip() for c in comments]
     return {"takeovers": sum(b.startswith("Taken over by") for b in bodies),
             "releases": sum(b.startswith("Released") for b in bodies),
-            "conflicts": sum("the merge failed" in b or "merge conflict" in b.lower() for b in bodies)}
+            "conflicts": sum(b.startswith("CI is green, but the merge failed") for b in bodies),
+            "solved": sum(b.startswith("Merged `main` into the branch") for b in bodies)}
 
 
 def claim_to_merge(prs, comments, since):
@@ -194,7 +197,7 @@ def report(since, runs, jobs, status_comments, comments, prs, files):
     setup = setup_minutes(status_comments)
     out.append(f"Setup (median min of {len(setup)} Metrics lines): {fmt(med(setup))}")
     e = events(comments)
-    out.append(f"Takeovers {e['takeovers']}, releases {e['releases']}, merge conflicts {e['conflicts']}")
+    out.append(f"Takeovers {e['takeovers']}, releases {e['releases']}, merge conflicts {e['conflicts']} (solved by Unconflict {e['solved']})")
     s = [x for x in samples(status_comments) if x[0] >= since]
     b, r = burn_pairs(s), burn_ratio(s)
     out.append(f"Burn per run-hour (ratio of sums of {len(s)} Usage lines, used by usage.py): "

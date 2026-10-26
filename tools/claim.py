@@ -28,7 +28,8 @@ Three runs read one owner comment at the same time and made three copies of one 
 comment before it acts on it: `--comment` pushes `claim/comment-ID` once (no slots, no release).
 Three runs refilled the queue of one epic within 2 minutes and made copies of tickets (#505). So a run locks the
 refill before it makes tickets: `--refill` pushes `claim/refill-E-S` once. S is the state of the work: the number of
-closed sub-issues of epic E (a new lock when a sub-issue closes), or the UTC hour for E = 0 (the whole refill).
+closed sub-issues of epic E (a new lock when a sub-issue closes), or the UTC hour for E = 0 (the whole refill) and for
+a ticket E with no sub-issue (#855).
 
 Exit 2: git failed for another reason (network, permission). The workflow `claims.yml` deletes the refs
 of a closed ticket: the session proxy gives 403 for branch deletes.
@@ -123,11 +124,14 @@ def claim_comment(cid, remote="origin"):
 def refill_state(epic, remote="origin", now=None):
     """The state part of the refill lock: closed sub-issues of the epic on GitHub, else the UTC hour and its 10-minute
     slot: the runs close about 25 tickets per hour, so one refill per hour, then per 15 minutes, left the queue empty
-    (#609, #650)."""
-    if epic and on_github(remote):
-        return str(api(f"issues/{epic}").get("sub_issues_summary", {}).get("completed", 0))
+    (#609, #650). A ticket with no sub-issue gets the slot too: else the lock of a run that did not split it stays
+    for ever (#855: #397 waited 5 hours)."""
     t = datetime.datetime.fromtimestamp(now or time.time(), datetime.timezone.utc)
-    return t.strftime("%Y%m%d%H") + str(t.minute // 10)
+    slot = t.strftime("%Y%m%d%H") + str(t.minute // 10)
+    if epic and on_github(remote):
+        s = api(f"issues/{epic}").get("sub_issues_summary") or {}
+        return str(s.get("completed", 0)) if s.get("total") else "0-" + slot
+    return slot
 
 
 def claim_refill(epic, state, remote="origin"):

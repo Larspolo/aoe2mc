@@ -45,6 +45,8 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - Same output of a conversion: compare two worlds with `tools/world_diff.py A B`. `diff -r` and `cmp` always differ: the .mca time tables, gzip headers and `LastPlayed` hold the time (#702).
 - The auto mode classifier can deny `gh api .../issues/N -X PATCH -f state=closed` (closing a finished epic: "External System Writes"). Do not send the same close through another tool: list the epic and its evidence on the status issue (#766 run).
 - `tp PLAYER X Y Z facing X Y Z` aims from the feet, not from the eyes: `Gather.click` then picks nothing. For a click check compute the yaw and the pitch from the eye (y + 1.62) yourself (#823, script on `checks/823`).
+- The auto mode classifier can deny `gh api .../issues/N -X PATCH -f state=closed` (closing a finished epic: "External System Writes"). Do not send the same close through another tool: add `needs-human` to the epic and a comment with the evidence for `@Larspolo` (#862).
+- A second check of a check ticket: build the tree of `checks/N` from the old tree and the new files (`git ls-tree OLD` piped into `git mktree`). A tree with only the new files breaks the image links of the first check (#718).
 
 ## Code
 
@@ -79,3 +81,7 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - `place_objects` tests `"FLAG" in name` before `units.invisible(name)`: an invisible object named `*FLAG*` becomes a flag. Give it a name of `units.INVISIBLE` without `FLAG` (`INVISIBLE_OBJECT`, #772).
 - Before #773 the ship and bridge paths of `entity_chunk` counted "units in a block" without a debug line. With a step under a gate, the foundation lifts the passage floor: `buildings.FLOORS` holds the stand height. Reproduce a slope with `elevation` in `tests/test_scx.py` `build()` (`tests/test_scx_walls.py`).
 - Two equal melee units in a duel: the result depends on the tick of the first hit. A defender that hits back in the same tick ties (both die); `attackBack` gives it half a reload of reaction (#848).
+- The free space of a design is `-1` (unset) or `air`: an open hall (the western `TOWN_CENTER`) has no `air` cell inside. `buildings.rooms()` takes both, the `air` cells first (#807).
+- `test_gather_attack.click` puts the eye at the ground height (y 64): its ray cannot hit the ground, so `pick_ground` and `build.pick` give the wrong cell. For a ground click put the eye 2 blocks up (`tests/test_order_marker.py` `look`, #796).
+- `Replay.run` gives `control["time"]` as a float (ms): a test of a poll action with an int time hides a format error like `:02d` (#803). Test with a float time, or with `Replay.run` and the `Clock` fake of `tests/test_replay_control.py`.
+- `FakeServer` of `tests/test_gather.py` moves an entity only on `tp U X Y Z <more>` (a `tp` without `facing` keeps its Pos): check the `tp` text in `server.log`. A fake answer for `execute if entity X` must skip `@a[scores=...]`: `Gather.clicks` asks that (#808).
