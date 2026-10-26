@@ -17,6 +17,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from dashboard import api, closes  # noqa: E402
 
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 CI_JOB_RUNS = 20                          # read the step times of this many CI runs (one API call each)
 DENY = (".log", ".mca", ".png")           # suffixes that do not belong in git ...
 DENY_OK = ("docs/", "samples/")           # ... except .png in these folders
@@ -96,7 +98,8 @@ def bad_files(files):
             or (p.endswith(DENY) and not (p.endswith(".png") and p.startswith(DENY_OK)))]
 
 
-SAMPLE = re.compile(r"^Usage: (\S+) · usage (\d+(?:\.\d+)?)% · resets (\S+) · claims (\d+)", re.M)
+# `runs N` since #635 (claim beats); the older `claims N` lines counted too few runs, so they do not count.
+SAMPLE = re.compile(r"^Usage: (\S+) · usage (\d+(?:\.\d+)?)% · resets (\S+) · runs (\d+)", re.M)
 
 
 def samples(comments):
@@ -144,8 +147,37 @@ def status_comments(hours=24):
     return api_pages(f"issues/{status[0]['number']}/comments?since={since:%Y-%m-%dT%H:%M:%SZ}") if status else []
 
 
+def count_beating(lines, now, minutes=25):
+    """The tickets whose claim ref (top slot `N` or `N-k`) had a claim or beat in the last `minutes` and is not
+    released. `lines`: "<slot> <commit time> <subject>" of the refs claim/<slot>."""
+    top = {}
+    for line in lines:
+        slot, t, subject = (line.split(" ", 2) + [""])[:3]
+        m = re.fullmatch(r"(\d+)(?:-(\d+))?", slot)
+        if m and t.isdigit():
+            n, k = int(m.group(1)), int(m.group(2) or 1)
+            if n not in top or k > top[n][0]:
+                top[n] = (k, int(t), subject)
+    cut = now.timestamp() - minutes * 60
+    return sum(t >= cut and not s.startswith("Release") for _, t, s in top.values())
+
+
+def beating_claims(now, minutes=25, remote="origin"):
+    """The runs that work now: runs beat at least every 20 minutes, also while they work long on one ticket and the
+    issue does not change (#635). None when git cannot read the claim refs."""
+    git = lambda *a: subprocess.run(["git", *a], capture_output=True, text=True, cwd=ROOT)
+    if git("fetch", "-q", "--prune", remote, "+refs/heads/claim/*:refs/aoe2mc-claims/*").returncode:
+        return None
+    out = git("for-each-ref", "refs/aoe2mc-claims", "--format=%(refname:lstrip=2) %(committerdate:unix) %(subject)")
+    return count_beating(out.stdout.splitlines(), now, minutes) if out.returncode == 0 else None
+
+
 def active_claims(now, minutes=30):
-    """The open tickets with `in-progress` that changed in the last `minutes` (rule 4 of the scheduled task)."""
+    """The runs that work now (rule 4 of the scheduled task): the claim beats, else the open tickets with
+    `in-progress` that changed in the last `minutes`."""
+    n = beating_claims(now)
+    if n is not None:
+        return n
     return sum(ts(i["updated_at"]) >= now - datetime.timedelta(minutes=minutes)
                for i in api("issues?state=open&labels=in-progress&per_page=100") if "pull_request" not in i)
 
