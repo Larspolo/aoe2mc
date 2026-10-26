@@ -22,7 +22,7 @@ from replay import SPEEDS  # noqa: E402
 
 # Walk speed on a Minecraft path, blocks per second = WALK * movement_speed ** 2 (the mob input is the speed, and
 # the step is the input times the speed). Measured on Paper 26.3 on flat stone, attribute 0.15 to 0.6: zombie 43.1
-# to 44.1, cow 43.0, horse 39.8 (#436). Villagers walk with their brain, not with goals: about 4 times slower.
+# to 44.1, cow 43.0, horse 39.8 (#436), villager 42.3 to 44.3 (#437: NoAI villagers on stone bricks, as the zombies).
 WALK = 43.4
 
 

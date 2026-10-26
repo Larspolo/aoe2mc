@@ -54,7 +54,7 @@ Find code by function name with Grep. Do not read the large files from start to 
 - `tools/` – test and debug tools (scenarios, world reader, 3D render, Minecraft data, validation).
 - `game/` – the game program (#137): `run.Game` starts a Paper server with RCON on the world, `rcon.Rcon` sends commands,
   `plugin/` is the Paper plugin (Java, Gradle wrapper; `run.py` builds it): `aoe moveto`, `aoe attack` with Minecraft path finding (#435),
-  `gather.Gather` lets villagers gather wood, food, gold and stone (#138, #391, #390, #392: clicks, paths on `aoe2mc.json` "ground", sidebar),
+  `gather.Gather` lets villagers gather wood, food, gold and stone (#138, #391, #390, #392: clicks, sidebar; walks with `aoe moveto` on Paper, #437, own paths on `aoe2mc.json` "ground" only for vanilla),
   `build` places construction sites (#417), `replay.Replay` plays the "timeline" of a recorded game (#374: buildings, chat, ages).
   `ai` gives orders to units with their Minecraft AI through the Paper plugin `game/plugin` (#435, #436: `aoe moveto`, `aoe attack`, `aoe goals`).
 - `tests/` – pytest. `conftest.py` has the `tiny_world` fixture (one conversion per session).

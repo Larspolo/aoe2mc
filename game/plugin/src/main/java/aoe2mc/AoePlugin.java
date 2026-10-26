@@ -26,15 +26,19 @@ import org.bukkit.scoreboard.Team;
  *   aoe moveto <selector> <x> <y> <z> [speed]   walk on the path of Mob#getPathfinder
  *   aoe attack <selector> <target selector>    Mob#setTarget: the mob attacks with its own AI
  *   aoe goals <selector>                       the goals of the first unit (#436), for checks
+ *   aoe stop <selector>                        stop the walk and turn the AI off: the unit stands still (#437)
  * Converted units have no AI (NoAI): an order turns it on. Such a unit finds no path before its first AI tick
  * (it is not "on the ground" yet), and vanilla goals (a random stroll) can take the navigation of a walking unit:
- * so the order sends the path again every 10 ticks, until the unit arrives or 10 tries found no path.
+ * so the order sends the path again every 2 ticks (#437: 10 ticks made each walk 0.5 s longer), until the unit
+ * arrives or 50 tries (5 s) found no path.
  * The path search reaches only about the follow range of the mob (16 blocks for a cow): an order raises the
  * attribute follow_range to twice the distance + 32, at most 128. Longer ways need waypoints.
  * With the AI on, a unit keeps only the goals that fit AoE2 (#436): its attack goals and "float" (it swims).
  * Wandering, looking around, panic, the choice of its own targets (a zombie attacks each villager), despawning and
  * the burning in the sun go. So a unit stands still without an order and attacks only the target of an order,
  * and an attack order skips the units of the team of the target (scoreboard teams of the datapack, #358).
+ * A villager has a brain, not goals: it walks to other villagers, a bed or a job site after an order. So the game
+ * program stops it when it arrives (#437).
  */
 public final class AoePlugin extends JavaPlugin {
     private static final class Order {
@@ -52,7 +56,7 @@ public final class AoePlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        Bukkit.getScheduler().runTaskTimer(this, this::follow, 10L, 10L);
+        Bukkit.getScheduler().runTaskTimer(this, this::follow, 2L, 2L);
     }
 
     private void follow() {
@@ -69,7 +73,7 @@ public final class AoePlugin extends JavaPlugin {
             var path = pf.getCurrentPath();
             if (path == null || path.getFinalPoint() == null
                     || path.getFinalPoint().distanceSquared(o.goal) > 1.5 * 1.5) {
-                return !pf.moveTo(o.goal, o.speed) && ++o.fails >= 10;   // no path 10 times: drop the order
+                return !pf.moveTo(o.goal, o.speed) && ++o.fails >= 50;   // no path for 5 s: drop the order
             }
             return false;
         });
@@ -172,6 +176,19 @@ public final class AoePlugin extends JavaPlugin {
                 keys.add(g.getKey().getNamespacedKey().getKey());
             }
             sender.sendMessage("Goals: " + String.join(" ", keys));
+            return true;
+        }
+        if (args.length == 2 && args[0].equals("stop")) {
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                if (e instanceof Mob mob) {
+                    orders.remove(mob.getUniqueId());
+                    mob.getPathfinder().stopPathfinding();
+                    mob.setAI(false);
+                    n++;
+                }
+            }
+            sender.sendMessage("Stopped " + n + " units");
             return true;
         }
         if (args.length == 3 && args[0].equals("attack")) {

@@ -199,7 +199,8 @@ def test_measured_gather_timing_is_near_the_configured_timing():
     import measure_gather
     events, T = measure_gather.measure(distance=10, loads=2)
     m = measure_gather.analyze(events)
-    conf = measure_gather.configured(0.25, measure_gather.WORK_SECONDS["wood"], 10, m["trip_blocks"])
+    conf = measure_gather.configured(0.25, measure_gather.WORK_SECONDS["wood"], 10, m["trip_blocks"],
+                                     measure_gather.ai.walk_speed("VILLAGER", T))       # Paper (#437)
     print(measure_gather.table(m, conf, T))
     for k in ("walk", "chop", "trip"):
         assert m[k] == pytest.approx(conf[k], rel=0.1), (k, m[k], conf[k])

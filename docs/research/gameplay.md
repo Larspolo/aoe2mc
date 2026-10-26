@@ -175,5 +175,6 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - Paper 26.3 (#436): remove mob goals by `GoalKey` (`MobGoals.removeGoal(mob, key)`), on each order: removal by the
   goal object, and a removal only after `setAI(true)`, missed goals. `Zombie#setShouldBurnInDay(false)` does nothing:
   set the attribute `burning_time` to 0. `aoe goals <selector>` lists the goal keys of a unit.
-- Mob walk speed on a path: blocks per second = 43.4 * `movement_speed` ** 2 (zombie, cow, horse). Villagers walk
-  with their brain (no goals): 4 times slower, and the MobGoals API does not stop their wandering (#436).
+- Mob walk speed on a path: blocks per second = 43.4 * `movement_speed` ** 2 (zombie, cow, horse, and villager: 42 to 44
+  at 0.15 to 0.6 on stone bricks, #437; the "4 times slower" of #436 did not repeat). Villagers have a brain, not
+  goals: the MobGoals API does not stop them. After an order they walk to each other: `aoe stop` turns the AI off.
