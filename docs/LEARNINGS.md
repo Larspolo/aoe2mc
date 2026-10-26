@@ -108,3 +108,8 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - `render.py --cut` does not show the inside of a narrow tower (#452): filter `render.building_blocks()` by x, y, z
   (drop barriers and one side of the walls) and call `render.render()` for a section view.
 - `render.building_blocks` gives states with the `minecraft:` prefix and world y (the ground is y 63, canvas y 1 is y 64): strip the prefix before you match a name (#449).
+- Paper 26.3 (#436): remove mob goals by `GoalKey` (`MobGoals.removeGoal(mob, key)`), on each order: removal by the
+  goal object and a removal only after `setAI(true)` missed goals. `Zombie#setShouldBurnInDay(false)` does nothing:
+  set the attribute `burning_time` to 0. `aoe goals <selector>` lists the goal keys of a unit.
+- Mob walk speed on a path: blocks per second = 43.4 * `movement_speed` ** 2 (zombie, cow, horse). Villagers walk
+  with their brain (no goals): 4 times slower, and the MobGoals API does not stop their wandering (#436).
