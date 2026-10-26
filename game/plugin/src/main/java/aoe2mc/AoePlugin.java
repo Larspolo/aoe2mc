@@ -9,14 +9,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.bukkit.Bukkit;
+import org.bukkit.HeightMap;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.AbstractArrow;
@@ -108,7 +112,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     private final Map<UUID, Stats> stats = new HashMap<>();
 
-    private record Building(Stats stats, String box) {}
+    private record Building(Stats stats, String box, int max, int[] b) {}   // b: x0 y0 z0 x1 y1 z1 of box
 
     private final Map<UUID, Building> buildings = new HashMap<>();
     private final Map<UUID, Integer> lastHit = new HashMap<>();      // tick of the last hit of a unit on a building
@@ -330,6 +334,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     public void onEnable() {
         Bukkit.getScheduler().runTaskTimer(this, this::follow, 10L, 10L);
         Bukkit.getScheduler().runTaskTimer(this, this::siege, 10L, 10L);
+        Bukkit.getScheduler().runTaskTimer(this, this::burn, 20L, 20L);
         Bukkit.getPluginManager().registerEvents(this, this);
     }
 
@@ -346,6 +351,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             if (a != null && b != null) {
                 lastHit.put(from.getUniqueId(), Bukkit.getCurrentTick());
                 hit(ev.getEntity(), b, a.damage(b.stats));
+                hitEffect(ev.getEntity(), b, from);
             }
             return;
         }
@@ -381,6 +387,64 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             score.resetScore();
             target.remove();
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "fill " + b.box + " minecraft:air");
+        }
+    }
+
+    /** The roof block over column (x, z) of a building, or null when the column is empty (#660). */
+    private static org.bukkit.block.Block roof(Entity target, int x, int z) {
+        var block = target.getWorld().getHighestBlockAt(x, z, HeightMap.MOTION_BLOCKING);
+        return block.getType().isAir() ? null : block;
+    }
+
+    /** Block particles and the hit sound of the block at the point of the building next to the attacker (#660). */
+    private static void hitEffect(Entity target, Building b, Entity from) {
+        if (!target.isValid()) {                              // the building fell
+            return;
+        }
+        var at = from.getLocation().add(0, 1, 0);
+        int x = Math.clamp(at.getBlockX(), b.b[0], b.b[3]), z = Math.clamp(at.getBlockZ(), b.b[2], b.b[5]);
+        int y = Math.clamp(at.getBlockY(), b.b[1], b.b[4]);
+        var block = target.getWorld().getBlockAt(x, y, z);
+        if (block.getType().isAir() || block.getType() == Material.BARRIER) {
+            block = roof(target, (b.b[0] + b.b[3]) / 2, (b.b[2] + b.b[5]) / 2);
+        }
+        if (block == null) {
+            return;
+        }
+        BlockData data = block.getBlockData();
+        var loc = new Location(target.getWorld(), x + 0.5, Math.min(y, block.getY()) + 0.5, z + 0.5);
+        target.getWorld().spawnParticle(Particle.BLOCK, loc, 12, 0.3, 0.3, 0.3, 0, data);
+        target.getWorld().playSound(loc, data.getSoundGroup().getHitSound(), 1.0f, 0.8f);
+    }
+
+    /** Each second: smoke and flames at the roof of each building below half of its hit points, more at fewer hit
+     * points, as in AoE2 (#660). Not fire blocks: they spread and burn the design. Tag aoe2mc.burning while it burns. */
+    private void burn() {
+        for (var e : buildings.entrySet()) {
+            Entity t = Bukkit.getEntity(e.getKey());
+            Building b = e.getValue();
+            if (t == null) {
+                continue;
+            }
+            var score = hp().getScoreFor(t);
+            boolean burning = score.isScoreSet() && score.getScore() * 2 < b.max;
+            if (!burning) {
+                t.removeScoreboardTag("aoe2mc.burning");
+                continue;
+            }
+            t.addScoreboardTag("aoe2mc.burning");
+            var rnd = ThreadLocalRandom.current();
+            int fires = 1 + (int) (3 * (1 - 2.0 * score.getScore() / b.max));   // 1 fire at half, 4 near 0
+            for (int i = 0; i < fires; i++) {
+                int x = rnd.nextInt(b.b[0], b.b[3] + 1), z = rnd.nextInt(b.b[2], b.b[5] + 1);
+                var top = roof(t, x, z);
+                if (top == null) {
+                    continue;
+                }
+                var loc = top.getLocation().add(0.5, 1.1, 0.5);
+                t.getWorld().spawnParticle(Particle.FLAME, loc, 6, 0.3, 0.2, 0.3, 0.01);
+                t.getWorld().spawnParticle(Particle.LARGE_SMOKE, loc.add(0, 0.5, 0), 4, 0.3, 0.4, 0.3, 0.02);
+            }
         }
     }
 
@@ -584,13 +648,15 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             int hp;
             Stats st;
             String box;
+            int[] b = new int[6];
             try {
                 hp = Integer.parseInt(args[2]);
                 st = new Stats(0, Integer.parseInt(args[3]), Integer.parseInt(args[4]), false, Set.of("building"),
                         Map.of());
                 var c = new ArrayList<String>();
                 for (int i = 5; i < 11; i++) {
-                    c.add(Integer.toString(Integer.parseInt(args[i])));
+                    b[i - 5] = Integer.parseInt(args[i]);
+                    c.add(Integer.toString(b[i - 5]));
                 }
                 box = String.join(" ", c);
             } catch (NumberFormatException e) {
@@ -601,7 +667,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             for (Entity e : select(sender, args[1])) {
                 if (e instanceof LivingEntity le) {
                     le.setCollidable(false);                  // units walk up to the walls, not off the slime
-                    buildings.put(le.getUniqueId(), new Building(st, box));
+                    buildings.put(le.getUniqueId(), new Building(st, box, hp, b));
                     hp().getScoreFor(le).setScore(hp);
                     n++;
                 }
