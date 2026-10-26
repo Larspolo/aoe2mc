@@ -6,6 +6,10 @@ A trained unit appears in front of its building when its training ends (#408, ao
 MOVE or ORDER command selects walk to its target: on Paper the plugin walks them on a Minecraft path at their walk speed
 (`aoe moveto`, game/ai.py, #438), else one /tp per block on the path of gather.Map (#409, gather.walk);
 a group that goes to a tile stops there in rows (#410).
+Fights (#632): on Paper an ORDER on a unit or a start building of another player sends the military units of the
+selection to attack it (`aoe attack`, the mob AI and the AoE2 values of game/combat.py); a unit at 0 hit points dies by
+itself. A trained unit gets its AoE2 values at its spawn (`aoe stats`, `aoe range`); game/run.py gives them to the
+units and buildings of the start state (combat.setup).
 
 Replay(game, data).run(speed) plays it; commands(e) gives the commands of one event (the unit tests use it).
 With bar=True (game/run.py --replay) a boss bar shows the game time, the speed and the progress (#684).
@@ -270,9 +274,13 @@ class Replay:
         kind = str(nbt.pop("id"))
         del nbt["Pos"]
         v = self.gather.Villager(units.uuid_str(nbt["UUID"]), pos)
-        v.name = e["name"]
+        v.name, v.player = e["name"], e["player"]
         self.new.append((e["player"], v))
-        return [f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}"]
+        out = [f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}"]
+        if self.ai:                                                 # the AoE2 values: plugin commands (#632)
+            import combat                                           # combat -> gather -> build -> replay
+            out += [combat.stats_command(v.uuid, v.name)] + [c for c in [combat.range_command(v.uuid, v.name, self.T)] if c]
+        return out
 
     def grid(self):
         """The gather.Map of the world with the buildings of the replay. The first call also finds the units of the
@@ -284,7 +292,7 @@ class Replay:
                 if o["kind"] == "unit" and "uuid" in o and o.get("ref") is not None:
                     x, z = o["tile"][0] * T, o["tile"][1] * T
                     self.units[o["ref"]] = v = gather.Villager(o["uuid"], (x, float(self.map.y(int(x), int(z)) or 0), z))
-                    v.name = o["name"]
+                    v.name, v.player = o["name"], o["player"]
         for _, name, r in self.placed[self.added:]:
             if "FARM" not in name:
                 self.map.building(name, r, None, False)
@@ -319,6 +327,33 @@ class Replay:
         c = int(e["tile"][0] * T), int(e["tile"][1] * T)
         return {c} if m.free(*c) else m.around(m.cells((c[0] // T, c[1] // T)))
 
+    def enemy(self, e):
+        """The entity UUID of the target of an ORDER when it is a unit or a start building (with a target of
+        combat.building) of another player than e["player"], else None."""
+        import combat
+        t, p = e.get("target"), e["player"]
+        if e["kind"] != "order" or t is None:
+            return None
+        if t in self.units:
+            return self.units[t].uuid if self.units[t].player not in (0, p) else None
+        o = self.refs.get(t, {})
+        if o.get("kind") == "building" and "footprint" in o and o["name"] in combat.BUILDINGS and o["player"] not in (0, p):
+            return combat.target_uuid(o["footprint"])
+        return None
+
+    def attack(self, group, target):
+        """The military units of group attack entity target, with their AoE2 walk speed; they walk no more legs.
+        Returns the commands and the rest of the group."""
+        import ai
+        out, rest = [], []
+        for i, v in group:
+            if self.gather.military(v.name):
+                out += [ai.speed_command(v.uuid, v.name, self.T, self.speed), f"aoe attack {v.uuid} {target}"]
+                self.moving.pop(i, None)
+            else:
+                rest.append((i, v))
+        return out, rest
+
     def move(self, e):
         """MOVE and ORDER: each selected unit gets a path to the target. Its steps come later (steps()). A group
         that goes to a tile stops in a formation there (formation()), a unit with no path to its cell goes to the
@@ -332,7 +367,7 @@ class Replay:
         to_tile = not (e["kind"] == "order" and e.get("target") is not None)
         slots = self.formation([v for _, v in group], e["tile"]) if to_tile else {}
         if self.ai:
-            out = []
+            out, group = self.attack(group, target) if (target := self.enemy(e)) else ([], group)
             for i, v in group:
                 end = slots.get(v) or min(goals, key=lambda c: (math.dist(c, v.cell), c))
                 path = self.map.path(v.cell, {end}, PATH_CELLS) or []
