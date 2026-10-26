@@ -37,7 +37,7 @@ def test_a_queue_of_two_gives_two_units_one_after_the_other():
 
     def sleep(s):
         now[0] += s
-    replay.Replay(game, d).run(clock=lambda: now[0], sleep=sleep, log=None)
+    replay.Replay(game, d).run(clock=lambda: now[0], sleep=sleep, log=None, finish=True)
     assert now[0] == pytest.approx(51)                                # 1 s + 2 × 25 s of training
     (k1, x1, y1, z1), (k2, x2, y2, z2) = summons(game.sent)
     assert k1 == k2 == "minecraft:villager" and y1 == y2 == 70
