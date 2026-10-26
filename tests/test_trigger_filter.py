@@ -18,7 +18,7 @@ def test_type_filter_in_the_selector():
     t = area(1, [(1, 1, [0, 0, 0, 0])])
     t["conditions"][0]["object"] = 38
     tick = aoe2mc.trigger_files([t], T=4)[1]["data/aoe2mc/function/tick.mcfunction"]
-    assert tick.startswith("execute if entity @e[tag=aoe2mc.p1,tag=aoe2mc.t38,x=0,y=-64,z=0,dx=3,")
+    assert tick.startswith("execute if entity @e[tag=aoe2mc.p1,tag=!aoe2mc.mount,tag=aoe2mc.t38,x=0,y=-64,z=0,dx=3,")
 
 
 def test_class_or_group_filter_skips_the_trigger():

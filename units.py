@@ -59,6 +59,7 @@ FLYING = {   # flying birds -> mob; it floats FLY_HEIGHT blocks above the ground
     "BUTTERFLY1": ("bee", None), "BUTTERFLY2": ("bee", None), "BUTTERFLY3": ("bee", None),   # no butterfly mob:
 }                                                                       # the bee is the nearest small insect
 FLY_HEIGHT = 6
+MOUNT = "aoe2mc.mount"     # the tag of the vehicle and the crew of a unit: in the team, but not counted as a unit (#1045)
 FLY_LOW = {"minecraft:bee": 2}  # insects fly near the flowers
 JOKES = {   # joke and special units -> entity
     "TREASURE_CHEST": lambda: vehicle("chest_minecart", []),
@@ -586,6 +587,12 @@ def make_entity(o, players, pos, rng, desc=None):
     if o["player"]:                # the datapack puts the tagged units in the player team (#358); area triggers (#681)
         label["Tags"] = List[String]([String(f"aoe2mc.p{o['player']}")] +
                                      [String(f"aoe2mc.t{o.get('id')}")] * ("id" in o))
+        stack = [nbt]              # the horse, boat or crew of the unit: the same team, but no unit of its own (#1045)
+        while stack:
+            e = stack.pop()
+            stack += list(e.get("Passengers", []))
+            if e is not label:
+                e["Tags"] = List[String]([String(f"aoe2mc.p{o['player']}"), String(MOUNT)])
     return nbt
 
 
