@@ -47,6 +47,41 @@ records (`aoe.ms`, `data.aoe2companion.com`, `www.aoe2insights.com`) are blocked
 the `mgz` package has no sample records. Update (#134): `samples/de-64.3.aoe2record` is a DE test record of the
 `mgz` repository (MIT, GitHub raw). `mgz.model.parse_match` reads it.
 
+### Object IDs (#407)
+
+The commands name objects by ID (`"objects"`, `"target"` in `read_timeline`). The rules, from
+`samples/de-64.3.aoe2record`:
+
+- Start objects keep the ID of the record (`instance_id`, `ref` in `read_record`). GAIA animals that a player
+  takes keep their ID too: player 2 moves the GAIA goats 8380–8383 at 25 s.
+- The game gives each new object the next free ID, in the order that it makes the objects. The first new ID is
+  the highest start ID + 1 (the start flares are 9912 and 9913). A foundation gets its ID at the BUILD command (one
+  per wall tile), a unit when its training ends. Example: the houses at 3.1, 3.5, 4.6 and 5.4 s fit 9914–9917 (no
+  command selects them). The
+  first villagers end their training at 25.9 s (player 2, 9918) and 27.0 s (player 1, 9919). The lumber camp of
+  player 1 (BUILD at 123.2 s) is 9933, and the villager of player 1 that ends at 127.0 s is 9934.
+- Objects that the record does not show take IDs too (9920, 9921, 9924 and 9927–9930 in the first 100 s; later
+  also arrows and dead units). So a counter alone loses the count.
+- The `player` of a command is not always correct: some MOVE commands show for both players (6.8 s, the goat
+  1557 of player 1). Use the objects, not the player.
+
+`aoe2mc.name_timeline` uses these rules. It predicts the new objects (BUILD and WALL foundations, QUEUE units at
+the end of the queue of their building: `TRAIN`, `RESEARCH_S`) and matches each one to the first ID in the next 16
+IDs that the commands use in the same way: a building ID in QUEUE and RESEARCH (and of the building that trains
+its units), a unit ID in MOVE, ORDER and BUILD, not used before the object exists. An ID that a command uses before
+the command of the new object is older. A building that is not matched gets the name of its units' building. It
+adds `"names"` to the events. Result on the samples (the IDs that player 1 selects in MOVE, ORDER and BUILD):
+
+| Record | First 5 minutes | Whole game |
+|---|---|---|
+| DE 64.3 (`samples/`) | 33 of 33 | 113 of 247 |
+| DE 63.0 | 19 of 20 | 63 of 72 |
+| DE 61.5 | 27 of 35 | 114 of 202 |
+| DE 25.01 | 31 of 34 | 187 of 409 |
+
+Later in a game, fights make many objects that the record does not show (arrows, dead units), and the queues of
+the record do not show cancelled units, so the match finds fewer IDs.
+
 ### Game versions (#376)
 
 The test records of the `mgz` repository (`tests/recs/`, MIT), read with `mgz` 1.8.51. "Model":
