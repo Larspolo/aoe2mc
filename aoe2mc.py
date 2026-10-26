@@ -232,10 +232,13 @@ def object_kinds():
     return kinds
 
 
+RECORDS = (".aoe2record", ".mgz", ".mgx", ".mgl")      # recorded games: DE, HD; UserPatch, AoC; AoK
+
+
 def read_map(path):
-    """read_record for .aoe2record files, read_scx for old .scx scenarios, else read_scenario."""
+    """read_record for recorded games (RECORDS), read_scx for old .scx scenarios, else read_scenario."""
     p = path.lower()
-    return (read_record if p.endswith(".aoe2record") else read_scx if p.endswith(".scx") else read_scenario)(path)
+    return (read_record if p.endswith(RECORDS) else read_scx if p.endswith(".scx") else read_scenario)(path)
 
 
 def read_scx(path):
@@ -329,8 +332,11 @@ def read_record(path):
     except ImportError:
         raise SystemExit("A .aoe2record file needs the mgz package: python3 -m pip install mgz") from None
     from AoE2ScenarioParser.datasets.terrains import TerrainId
-    with open(path, "rb") as f:
-        match = parse_match(f)
+    try:
+        with open(path, "rb") as f:
+            match = parse_match(f)
+    except RuntimeError as e:      # the mgz model reads DE 13.34 and later only: read the header of older games
+        return read_old_record(path, e)
     size = match.map.dimension
     terrain = np.zeros((size, size), np.int16)
     elevation = np.zeros((size, size), np.float32)
@@ -356,6 +362,60 @@ def read_record(path):
                                 x=o.position.x, y=o.position.y, rotation=0.0, garrisoned=False,
                                 ref=o.instance_id, holder=None))
     return size, terrain, elevation, terrain_names, {k: "" for k in CHAPTERS}, objects, players
+
+
+def read_old_record(path, error):
+    """read_record for the recorded games that the mgz model cannot read (HD, UserPatch, DE before 13.34, #376),
+    with the header parser of mgz. That parser skips the sleeping objects of GAIA (the trees) of these versions
+    "for performance reasons": read them too. error: the error of the mgz model, for the message."""
+    import sys
+    from importlib.metadata import version
+    from AoE2ScenarioParser.datasets.terrains import TerrainId
+    from mgz.summary.full import FullSummary
+    skip = trees_switch(sys.modules["mgz.header.initial"].player)
+    keyfunc, skip.keyfunc = skip.keyfunc, lambda ctx: True
+    try:
+        with open(path, "rb") as f:
+            s = FullSummary(f)
+        s.get_dataset()
+    except (RuntimeError, ValueError) as e:
+        raise SystemExit(f"{path}: mgz {version('mgz')} cannot read this recorded game ({error}; {e})") from None
+    finally:
+        skip.keyfunc = keyfunc
+    h = s.get_header()
+    size = h.map_info.size_x
+    tiles = h.map_info.tile                                       # row by row: index y * size + x
+    terrain = np.array([t.terrain_type for t in tiles], np.int16).reshape(size, size).T.copy()
+    elevation = np.array([t.elevation for t in tiles], np.float32).reshape(size, size).T.copy()
+    civs = s.reference.get("civilizations", {})
+    players = {0: {"color": "light_gray", "arch": "western", "civ": "GAIA", "view": None}}
+    for p in s.get_players():
+        civ = civs.get(str(p["civilization"]), {}).get("name", "?").upper()
+        players[p["number"]] = {"color": buildings.COLOR_NAMES[p["color_id"]] if 0 <= p["color_id"] < 8 else
+                                "light_gray", "arch": buildings.CIV_TO_ARCH.get(civ, "western"), "civ": civ,
+                                "view": p["position"]}
+    kinds, objects = object_kinds(), []
+    for p in h.initial.players:
+        for o in list(p.objects) + (list(p.sleeping_objects) if p.type == 2 else []):     # 2: GAIA
+            if o.type not in (10, 20, 30, 70, 80) or o.object_type in ANNEXES or o.player_id not in players:
+                continue
+            prefix, name = kinds.get(o.object_type, ("?", f"UNKNOWN_{o.object_type}"))
+            objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name,
+                                player=o.player_id, x=o.x, y=o.y, rotation=0.0, garrisoned=False,
+                                ref=o.object_id, holder=None))
+    return size, terrain, elevation, {t.value: t.name for t in TerrainId}, {k: "" for k in CHAPTERS}, objects, players
+
+
+def trees_switch(con):
+    """The Switch in the mgz player struct that skips the sleeping objects of GAIA (its True case reads s_size)."""
+    from construct import Switch
+    if isinstance(con, Switch) and any(getattr(c, "name", None) == "s_size"
+                                       for c in getattr(con.cases.get(True), "subcons", [])):
+        return con
+    for sub in [getattr(con, "subcon", None)] + list(getattr(con, "subcons", [])) + \
+            list(getattr(con, "cases", {}).values()):
+        if sub is not None and (found := trees_switch(sub)):
+            return found
 
 
 def de_queue(parse_action):
@@ -386,7 +446,8 @@ def read_timeline(path):
     None, "kind": "build", "wall", "queue", "research", "move", "order", "chat", "age" ..., and the data of the
     kind: "type" and "name" (building or unit, as in read_record), "tile" [x, y], "end" [x, y] (wall),
     "technology", "objects" (the object IDs that the command selects), "target" (object ID), "text" (chat)}.
-    Tiles are AoE2 tiles. Actions that mgz cannot read are left out."""
+    Tiles are AoE2 tiles. Actions that mgz cannot read are left out. None for the games that the mgz model
+    cannot read (read_old_record reads only their start state, #376)."""
     import mgz.fast as fast
     from mgz.model import parse_match
     names, parse = object_kinds(), fast.parse_action
@@ -394,6 +455,8 @@ def read_timeline(path):
     try:
         with open(path, "rb") as f:
             match = parse_match(f)
+    except RuntimeError:
+        return None
     finally:
         fast.parse_action = parse
     ms = lambda t: int(round(t.total_seconds() * 1000))           # noqa: E731
@@ -2441,11 +2504,13 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         clock[0] = now
 
     size, terrain, elevation, tnames, texts, objects, players = read_map(src)
-    timeline = read_timeline(src) if src.lower().endswith(".aoe2record") else None
+    record = src.lower().endswith(RECORDS)
+    timeline = read_timeline(src) if record else None
     at_stats = Counter()
     if at is not None:
         if timeline is None:
-            raise OptionError("--at needs a recorded game (.aoe2record)")
+            raise OptionError("--at needs a recorded game (.aoe2record)" if not record else
+                              "--at: mgz cannot read the commands of this recorded game (only its start state)")
         objects, at_stats = apply_timeline(objects, timeline, at)
     for e in timeline or ():
         for k in ("tile", "end"):
@@ -2720,7 +2785,7 @@ def game_time(text):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
-    ap.add_argument("scenario", help=".aoe2scenario file, .aoe2record (the start state of a recorded game), .scx "
+    ap.add_argument("scenario", help=".aoe2scenario file, .aoe2record, .mgz, .mgx or .mgl (the start state of a recorded game), .scx "
                     "(an old scenario, format 1.21), or "
                     ".aoe2campaign, .cpx or .cpn (one world per scenario; old scenarios that are not .scx 1.21: the "
                     "steps for the DE editor)")
@@ -2767,7 +2832,7 @@ def main(argv=None):
               mc_version=a.mc_version, spawn=a.spawn, birds=not a.no_birds, orientation=a.orientation,
               verbose=a.verbose, garrison=a.garrison, border_design=a.border, ambience=a.ambience)
     try:
-        if a.at is not None and not a.scenario.lower().endswith(".aoe2record"):
+        if a.at is not None and not a.scenario.lower().endswith(RECORDS):
             ap.error("--at needs a recorded game (.aoe2record)")
         if a.scenario.lower().endswith((".aoe2campaign", ".cpx", ".cpn")):
             convert_campaign(a.scenario, a.output, a.only, a.name, **kw)
