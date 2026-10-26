@@ -1,5 +1,5 @@
 """game/train.py and game/gather.py: the lumber camp menu has "Double-Bit Axe" (a book, 100 food and 50 wood, 25 AoE2
-seconds). A click queues it once; after the research a villager chops one wood in 1/1.2 of the old time (#723)."""
+seconds) from the Feudal Age (#760). A click queues it once; after the research a villager chops one wood in 1/1.2 of the old time (#723)."""
 from urllib.parse import unquote
 
 import pytest
@@ -15,6 +15,7 @@ def setup(food=100, wood=50):
     server = FakeServer({"v": {"Pos": (7.5, 64.0, 7.5)}})
     g = gather.Gather(server, grid([[64] * 16 for _ in range(16)], objects)).setup()
     g.stock.update(food=food, wood=wood)
+    g.techs.add("FEUDAL_AGE")                                          # a Feudal Age technology (#760)
     return server, g
 
 
@@ -26,6 +27,14 @@ def test_the_lumber_camp_menu_has_double_bit_axe():
     server, g = setup()
     assert train.open_menu(g, "Steve", (2, 3)) == (2, 4, 2, 4)
     assert menus(server) == ["aoe menu Steve Lumber Camp 0:book:Double-Bit Axe:100 food · 50 wood · 25 s · research"]
+
+
+def test_no_double_bit_axe_in_the_dark_age():
+    server, g = setup()
+    g.techs.clear()
+    train.open_menu(g, "Steve", (3, 3))
+    assert "Double-Bit Axe" not in menus(server)[-1] and train.queue(g, "Steve", (3, 3), "DOUBLE_BIT_AXE") is None
+    assert (g.stock["food"], g.stock["wood"]) == (100, 50)
 
 
 def test_a_click_queues_double_bit_axe_once_and_takes_its_cost():
@@ -46,9 +55,9 @@ def test_after_the_research_wood_is_20_percent_faster():
     before = {r: g.work_time(r) for r in ("wood", "food", "farm", "gold", "stone")}
     train.queue(g, "Steve", (3, 3), "DOUBLE_BIT_AXE")
     train.tick(g, 24)
-    assert not g.techs and g.work_time("wood") == before["wood"]
+    assert g.techs == {"FEUDAL_AGE"} and g.work_time("wood") == before["wood"]
     train.tick(g, 1)
-    assert g.techs == {"DOUBLE_BIT_AXE"} and not any(g.queues.values())
+    assert g.techs == {"FEUDAL_AGE", "DOUBLE_BIT_AXE"} and not any(g.queues.values())
     assert g.work_time("wood") == pytest.approx(before["wood"] / 1.2)
     assert {r: g.work_time(r) for r in ("food", "farm", "gold", "stone")} == {r: before[r] for r in ("food", "farm", "gold", "stone")}
     assert not [c for c in server.log if c.startswith("aoe stats")]   # no combat change
