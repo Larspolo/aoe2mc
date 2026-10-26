@@ -102,9 +102,9 @@ def test_villager_forages_on_a_server(tmp_path):
         g.select(uuid)
         g.send(bush)
         assert 'profession: "minecraft:farmer"' in game.command(f"data get entity {uuid} VillagerData")
-        end = time.time() + 90
+        end = time.time() + 180                                        # 13 trips at the AoE2 walk speed (#437)
         while g.map.bushes[bush] > 0 or g.villagers[uuid].state != "idle":
-            assert time.time() < end, "the bush is not empty after 90 s"
+            assert time.time() < end, "the bush is not empty after 180 s"
             g.step()
         assert "has 125 " in game.command("scoreboard players get Food aoe_res")
         T = g.map.T
