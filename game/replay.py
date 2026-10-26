@@ -3,7 +3,8 @@ Replay a recorded game live (#374): play the "timeline" of aoe2mc.json (aoe2mc.r
 server. Each building appears at its command time (the blocks of its design, as with --at, #373), chat lines are
 /tellraw in the player color, age-ups are a title, research is an action bar line, and RESIGN is a title.
 A trained unit appears in front of its building when its training ends (#408, aoe2mc.training). The units that a
-MOVE or ORDER command selects walk on a path to its target, one /tp per block at their walk speed (#409, gather.walk).
+MOVE or ORDER command selects walk on a path to its target, one /tp per block at their walk speed (#409, gather.walk);
+a group that goes to a tile stops there in rows (#410).
 
 Replay(game, data).run(speed) plays it; commands(e) gives the commands of one event (the unit tests use it).
 """
@@ -27,6 +28,7 @@ TEXT_COLORS = {"light_gray": "gray", "blue": "blue", "red": "red", "green": "gre
                "cyan": "aqua", "purple": "light_purple", "gray": "dark_gray", "orange": "gold"}
 FLAT = 16                   # tiles of the flat map that draws one design
 MAX_FILL = 32768            # blocks of one /fill command
+FORMATION = 2              # blocks between the units of a group in a formation (#410)
 PATH_CELLS = 20000          # cells that one path search may look at: a unit with no path stays (no time lag)
 SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, "PIKEMAN": 1.0, "EAGLE": 1.1,
           "ARCHER": 0.96, "SKIRMISHER": 0.96, "CROSSBOWMAN": 0.96, "CAVALRY_ARCHER": 1.4, "SCOUT": 1.2,
@@ -269,20 +271,53 @@ class Replay:
         return {c} if m.free(*c) else m.around(m.cells((c[0] // T, c[1] // T)))
 
     def move(self, e):
-        """MOVE and ORDER: each selected unit gets a path to the target. Its steps come later (steps())."""
+        """MOVE and ORDER: each selected unit gets a path to the target. Its steps come later (steps()). A group
+        that goes to a tile stops in a formation there (formation()), a unit with no path to its cell goes to the
+        target tile."""
         self.grid()
         goals = self.goals(e)
-        for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"])):
-            v = self.unit(i, name, e["player"])
-            if v is None or not goals:
-                continue
-            v.path = self.map.path(v.cell, goals, PATH_CELLS) or []
+        group = [(i, v) for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"]))
+                 if (v := self.unit(i, name, e["player"])) is not None]
+        if not goals or not group:
+            return []
+        to_tile = not (e["kind"] == "order" and e.get("target") is not None)
+        slots = self.formation([v for _, v in group], e["tile"]) if to_tile else {}
+        for i, v in group:
+            v.path = (self.map.path(v.cell, {slots[v]}, PATH_CELLS) if v in slots else None) or \
+                self.map.path(v.cell, goals, PATH_CELLS) or []
             due = self.moving[i] if i in self.moving and v.path else self.next_step(v, e["time"])
             if due is None:
                 self.moving.pop(i, None)
             else:
                 self.moving[i] = due
         return []
+
+    def formation(self, group, tile):
+        """The end cell of each unit of a group that walks to a tile (#410): rows across the walk direction, the
+        first row on the target and the others behind it, FORMATION blocks apart (AoE2 line formation). A slot
+        snaps to the next free cell, one unit per cell. The units nearest to the target take the first row, and
+        in a row they keep their order from left to right, so that the paths do not cross."""
+        m, n, S = self.map, len(group), FORMATION
+        tx, tz = tile[0] * self.T, tile[1] * self.T
+        cx, cz = (sum(v.pos[k] for v in group) / n for k in (0, 2))
+        d = math.hypot(tx - cx, tz - cz)
+        dx, dz = ((tx - cx) / d, (tz - cz) / d) if d > 0.5 else (0.0, -1.0)    # walk direction (else north)
+        cols = min(n, max(1, round(math.sqrt(2 * n))))
+        rows = -(-n // cols)
+        r = max(2 * self.T, math.ceil(max(cols, rows) * S))
+        x0, z0 = int(tx), int(tz)
+        todo = {(x, z) for x in range(x0 - r, x0 + r + 1) for z in range(z0 - r, z0 + r + 1) if m.free(x, z)}
+        group = sorted(group, key=lambda v: (tx - v.pos[0]) * dx + (tz - v.pos[2]) * dz)
+        out = {}
+        for q in range(rows):
+            row = sorted(group[q * cols:q * cols + cols], key=lambda v: v.pos[0] * -dz + v.pos[2] * dx)
+            for j, v in enumerate(row):
+                off = (j - (len(row) - 1) / 2) * S
+                px, pz = tx - dx * q * S - dz * off, tz - dz * q * S + dx * off
+                if todo:
+                    out[v] = c = min(todo, key=lambda c: ((c[0] - px) ** 2 + (c[1] - pz) ** 2, c))
+                    todo.discard(c)
+        return out
 
     def next_step(self, v, t):
         """The game time (ms) at which unit v reaches the next cell of its path when it leaves at t, or None."""
