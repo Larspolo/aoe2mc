@@ -151,8 +151,11 @@ Control of a live replay (decision of the owner in #686: hotbar items, a chest f
 for each action; #688, `game/replay_input.py`): a right click with the clock pauses and continues, the feather sets
 the next speed (0.5, 1, 2, 4, 8×), the ender pearl jumps 1 minute forward, and the chest in the last slot opens a chest
 menu with all actions (Paper only). `/trigger aoe_replay set N` does action N (1 pause, 2 next speed, 3, 5, 6 jump 1, 5,
-10 minutes, 10-14 speed 0.5-8×); a clickable chat line lists them. The items are carrots on a stick with an
-`item_model`: Minecraft counts their right clicks (`minecraft.used`), not those of a clock.
+10 minutes, 8, 9 back 1, 5 minutes, 10-14 speed 0.5-8×); a clickable chat line lists them. The items are carrots on
+a stick with an `item_model`: Minecraft counts their right clicks (`minecraft.used`), not those of a clock.
+A jump back (#979): the replay keeps no earlier states, so `game/run.py` saves the world at the start, and for a jump
+back to T it stops the server, puts the saved world back (the player files stay), starts the server on the same port
+and plays a fresh replay that jumps forward to T (`replay.live`). The players join again (about 10 to 20 s).
 
 Not possible from the record alone: fights and deaths, gathering, destroyed or unfinished buildings, cut trees,
 used mines and farms, and the exact unit paths. Next: #438 lets Minecraft path finding walk the units (epic #433).

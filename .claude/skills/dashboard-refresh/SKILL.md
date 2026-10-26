@@ -21,8 +21,11 @@ connector, so this skill writes a saved copy (#982). It is not the #1 dashboard 
 
 URL = `artifact` of the section `[dashboard]` in `agent.toml`. Do these steps in sequence:
 
-1. Pull `main`. Run `python3 tools/dashboard_data.py out/dashboard`. It writes the seven files and prints the rows of
-   each. A failure (GitHub access): stop, change nothing on the artifact.
+1. Pull `main`. Run `python3 tools/dashboard_data.py out/dashboard`. It writes the seven files, prints the rows of
+   each, and checks the columns (#1031): it compares the columns of each new file with the columns that
+   `tools/dashboard_artifact/index.html` reads, and prints `columns: OK` or each file with its missing columns
+   (exit 1). The check needs no old asset. A failure (GitHub access or missing columns): stop, change nothing on the
+   artifact. Missing columns: make a `bug` ticket with the printed lines.
 2. Read the dataset documents: `ArtifactData list`, collection `datasets`. Note `version` and `source.url` of each
    (the old asset `/_blob/<id>`).
 3. Upload each file: `Artifact` publish with `url` = URL, `asset: true`, `file_path` = `out/dashboard/<file>`.
@@ -35,12 +38,16 @@ URL = `artifact` of the section `[dashboard]` in `agent.toml`. Do these steps in
    `tools/dashboard_artifact/index.html` on `main` differs, write it: `ArtifactData set` of `files/index.html` with
    `{"text": <the file>}` and `if_version`. When the artifact page is newer than the copy (the owner changed it),
    do not write it: make a ticket to copy the page into the repository.
-6. Delete the old files: `Artifact` delete with `url` = URL and `path` = each old asset id of step 2 (only ids that no
+6. Read the run documents of the page: `ArtifactData get`, collection `data/users/me`, doc `check`, then doc `runs`.
+   The page writes them only when Claude writes the page (step 5), not when a person opens it (#1031). "No document"
+   is therefore the usual result of a refresh that wrote only data files: it is no failure, do not wait for it. The
+   column check of step 1 is the check of the data. A document that holds a failure (a failed check, a run with an
+   error): make a `bug` ticket with its text (look for an open one first). Report the result in one line, for example
+   "check: none (no page write), runs: none, columns: OK".
+7. Delete the old files: `Artifact` delete with `url` = URL and `path` = each old asset id of step 2 (only ids that no
    dataset uses now). The auto mode of an unattended run can deny this delete (2026-10-26, #982): do not try another
-   way; list the old ids in the report. The page uses only the ids of the dataset documents. Then read the dashboard check: `ArtifactData get`, collection `data/users/me`, doc `check`.
-   Report its result in one line. A failed check: make a `bug` ticket with the check text. The page writes the
-   check when it renders: no `check` document means that nobody opened the page since; then compare the columns of
-   each new file with its old asset (`Artifact` read with `path` = the old id) instead.
+   way; list the old ids in the report. The page uses only the ids of the dataset documents. Do not read the old
+   assets: a cloud session cannot read an uploaded asset ("not found through this cloud session's artifact mount").
 
 ## The hourly scheduled task
 

@@ -122,7 +122,7 @@ def test_polls_closer_than_every_send_nothing():
 
 
 def test_help_text_has_a_click_for_each_action():
-    cmds = [p["click_event"]["command"] for p in json.loads(ri.help_text())["extra"]]
+    cmds = [p["click_event"]["command"] for p in json.loads(ri.help_text())["extra"] if "click_event" in p]
     assert cmds == [f"/trigger aoe_replay set {n}" for n in ri.actions()]
     game = Scores()
     ri.Input(game).give()

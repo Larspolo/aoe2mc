@@ -285,3 +285,59 @@ def generate(text, seed, players=2, size=None, warn=None):
              for x, y in np.argwhere(np.isin(terrain, list(FOREST_TREES)))]
     return {"size": n, "terrain": terrain.tolist(), "elevation": [[0] * n for _ in range(n)], "objects": trees,
             "players": {str(p): {"color": p - 1} for p in range(1, players + 1)}, "lands": starts}
+
+
+# Own generators (#993, decision B of #961): the land of a map type in the script language of generate(). The text is
+# not a game script: it holds only facts about the map. Arabia: open grass and dirt land, small forests, a few single
+# trees, small ponds away from the players.
+ARABIA = """
+<LAND_GENERATION>
+base_terrain DIRT
+create_player_lands { terrain_type GRASS land_percent 50 base_size 12 clumping_factor 15 }
+<TERRAIN_GENERATION>
+create_terrain FOREST { base_terrain GRASS number_of_clumps 4 land_percent 3 set_avoid_player_start_areas 16
+  spacing_to_other_terrain_types 1 clumping_factor 15 }
+create_terrain FOREST { base_terrain DIRT number_of_clumps 6 land_percent 4 set_avoid_player_start_areas 16
+  spacing_to_other_terrain_types 1 clumping_factor 15 }
+create_terrain FOREST { base_terrain GRASS number_of_clumps 12 number_of_tiles 12 set_avoid_player_start_areas 12
+  spacing_to_other_terrain_types 2 }
+create_terrain WATER { base_terrain DIRT number_of_clumps 2 number_of_tiles 50 set_avoid_player_start_areas 22
+  spacing_to_other_terrain_types 3 clumping_factor 20 }
+create_terrain DIRT3 { base_terrain DIRT number_of_clumps 12 land_percent 4 }
+create_terrain GRASS3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
+"""
+# The start objects of each player: (name, count, distance in tiles from the town center, owner: 0 = Gaia, 1 = the
+# player). A group of more than one object stands on next tiles.
+START = (("VILLAGER_MALE", 2, 4, 1), ("VILLAGER_FEMALE", 1, 4, 1), ("SCOUT_CAVALRY", 1, 6, 1), ("SHEEP", 4, 7, 1),
+         ("FORAGE_BUSH", 6, 9, 0), ("GOLD_MINE", 7, 11, 0), ("STONE_MINE", 5, 13, 0), ("WILD_BOAR", 1, 15, 0),
+         ("WILD_BOAR", 1, 16, 0), ("DEER", 3, 18, 0), ("GOLD_MINE", 4, 19, 0), ("STONE_MINE", 4, 20, 0))
+GENERATORS = {"arabia": ARABIA}
+
+
+def random_map(kind, seed, players=2):
+    """The map description of an own generator (GENERATORS) and seed: the land of generate(), a town center at each
+    player origin and the START objects around it, on free tiles (no forest, no water)."""
+    d = generate(GENERATORS[kind], seed, players)
+    rng = np.random.default_rng([seed, 993])
+    n, terrain = d["size"], np.array(d["terrain"])
+    used = np.isin(terrain, list(FOREST_TREES) + [TERRAINS["WATER"]])
+    objects = []
+    for st in d["lands"]:
+        cx, cy = st["x"], st["y"]
+        used[max(0, cx - 3):cx + 3, max(0, cy - 3):cy + 3] = True       # the 4 × 4 town center and a path around it
+        objects.append({"name": "TOWN_CENTER", "player": st["player"], "x": cx, "y": cy})
+        for name, count, dist, own in START:
+            turn = rng.uniform(0, 2 * np.pi)
+            for k in range(36):                                          # 36 directions, from a random one
+                a = turn + k * np.pi / 18
+                c = (int(round(cx - 0.5 + dist * np.cos(a))), int(round(cy - 0.5 + dist * np.sin(a))))
+                cells = sorted(square(c, 2, n), key=lambda t: (t[0] - c[0]) ** 2 + (t[1] - c[1]) ** 2)[:count]
+                if len(cells) == count and not any(used[t] for t in cells):
+                    break
+            else:
+                continue                                                 # no space: the group is missing
+            for t in cells:
+                used[max(0, t[0] - 1):t[0] + 2, max(0, t[1] - 1):t[1] + 2] = True
+                objects.append({"name": name, "player": st["player"] * own, "x": t[0] + 0.5, "y": t[1] + 0.5})
+    d["objects"] = objects + d["objects"]
+    return d
