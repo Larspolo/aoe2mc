@@ -62,7 +62,7 @@ def test_forging_gives_infantry_and_cavalry_one_attack():
         assert train.stats(g, name) == combat.stats(name), name
     stats = sorted(c for c in server.log if c.startswith("aoe stats"))
     assert stats == sorted(combat.stats_command(u, n, train.stats(g, n)) for u, n in (("m", "MILITIA"), ("s", "SCOUT_CAVALRY")))
-    assert "aoe stats m 40 5 0 1 0 infantry -" in stats                # 4 + 1 attack
+    assert "aoe stats m 40 5 0 1 0 infantry - 24" in stats             # 4 + 1 attack
     assert any("Forging is researched." in c for c in server.log if c.startswith("tellraw"))
     train.open_menu(g, "Steve", (11, 3))
     assert "Forging" not in menus(server)[-1]
