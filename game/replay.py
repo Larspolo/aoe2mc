@@ -823,6 +823,9 @@ class Replay:
                 due = at if v.path and legs else None
                 out += cmds
             while (not self.ai or w) and due is not None and due <= t:
+                if not v.path:                                          # no cell left: it stops (#1177)
+                    due = None
+                    break
                 if not ok(*v.path[0]):                                  # a new building on the way: a new path
                     goal = v.path[-1]
                     v.path = (self.map.path(v.cell, {goal}, PATH_CELLS, w) or []) if ok(*goal) else []
@@ -905,11 +908,13 @@ class Replay:
             if v.path:
                 self.moving[i] = due
             else:
+                self.moving.pop(i, None)                            # it was on a walk: it stops (#1177)
                 self.start(i, v, due)
             return cmds
         v.path = path
         due = self.next_step(v, t)
         if due is None:
+            self.moving.pop(i, None)
             self.start(i, v, t)
         else:
             self.moving[i] = due
@@ -968,6 +973,7 @@ class Replay:
             x, y, z = garrison.cell(self.map, rect, o, len(units))
             units.append(i)
             v.pos, v.path = (x + 0.5, float(y), z + 0.5), []
+            self.moving.pop(i, None)                                # inside: no walk (#1177)
             out += [f"aoe stop {v.uuid}"] * self.ai + garrison.enter(v.uuid, x, y, z)
         return out
 
