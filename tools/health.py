@@ -106,13 +106,15 @@ def samples(comments):
 
 
 def burn_pairs(samples, min_hours=0.25):
-    """Share of the 5-hour quota that one run uses per hour, from each pair of consecutive samples in the same
-    window (the same reset time): the rise of the usage divided by the hours and the mean number of claims."""
+    """Share of the 5-hour quota that one run uses per hour, from each sample and the first later sample in the same
+    window (the same reset time) at least `min_hours` later: the rise of the usage divided by the hours and the mean
+    number of claims. Runs report a few minutes apart, so neighbours alone give almost no pairs (#571)."""
     out = []
-    for a, b in zip(samples, samples[1:]):
-        h = (b[0] - a[0]).total_seconds() / 3600
-        if abs((b[2] - a[2]).total_seconds()) < 600 and h >= min_hours and b[1] >= a[1] and a[3] + b[3] > 0:
-            out.append((b[1] - a[1]) / h / ((a[3] + b[3]) / 2))
+    for i, a in enumerate(samples):
+        b = next((b for b in samples[i + 1:] if abs((b[2] - a[2]).total_seconds()) < 600
+                  and (b[0] - a[0]).total_seconds() >= min_hours * 3600), None)
+        if b and b[1] >= a[1] and a[3] + b[3] > 0:
+            out.append((b[1] - a[1]) / ((b[0] - a[0]).total_seconds() / 3600) / ((a[3] + b[3]) / 2))
     return out
 
 
