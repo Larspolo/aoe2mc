@@ -10,6 +10,9 @@ Fights (#632): on Paper an ORDER on a unit or a start building of another player
 selection to attack it (`aoe attack`, the mob AI and the AoE2 values of game/combat.py); a unit at 0 hit points dies by
 itself. A trained unit gets its AoE2 values at its spawn (`aoe stats`, `aoe range`); game/run.py gives them to the
 units and buildings of the start state (combat.setup).
+Garrisons (#809): a GARRISON command, or an ORDER on an own start building with garrison room (game/garrison.py SIZES),
+puts the units inside it when they arrive (the state of the converter, #807), and UNGARRISON lets them out next to it.
+A villager with resources and an ORDER on a drop site drops them and does not go in.
 
 Replay(game, data).run(speed) plays it; commands(e) gives the commands of one event (the unit tests use it).
 With bar=True (game/run.py --replay) a boss bar shows the game time, the speed and the progress (#684).
@@ -77,6 +80,8 @@ class Replay:
         self.moving = {}                        # object ID -> game time (ms) of its next step
         self.working = {}                       # object ID -> game time (ms) of its next gather step (#631)
         self.arriving = {}                      # object ID -> game time (ms) of its work start, until it is there (#766)
+        self.entering = {}                      # object ID -> [footprint, building entry, arrival (ms) or None] (#809)
+        self.garrisons = {}                     # building footprint -> object IDs of the units inside it
         self.refs = {o["ref"]: o for o in data["objects"] if o.get("ref") is not None}
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
@@ -102,6 +107,10 @@ class Replay:
             return self.spawn(e)
         if kind in ("move", "order") and e.get("objects"):
             return self.move(e)
+        if kind == "garrison" and e.get("objects"):
+            return self.move(dict(e, kind="order", garrison=True))
+        if kind == "ungarrison" and e.get("objects"):
+            return [c for i in e["objects"] for s in self.starts if s[0] == i for c in self.release(s[3])]
         if kind == "delete" and e.get("objects"):
             return self.delete(e)
         if kind == "chat" and e.get("text"):
@@ -222,6 +231,7 @@ class Replay:
             if start or new is not None:
                 self.refs.pop(i, None)                              # no ORDER goes to it
                 rect = start[3] if start else self.placed[new][2]
+                out += self.release(rect)                           # AoE2: the units come out alive
                 if start:
                     self.starts.remove(start)
                 else:
@@ -234,6 +244,9 @@ class Replay:
                 self.moving.pop(i, None)
                 self.working.pop(i, None)
                 self.arriving.pop(i, None)
+                self.entering.pop(i, None)
+                for us in self.garrisons.values():
+                    us[:] = [u for u in us if u != i]
                 self.pop[e["player"]] = max(0, self.pop.get(e["player"], 0) - 1)
                 out.append(f"kill {v.uuid}")
         return out
@@ -388,15 +401,21 @@ class Replay:
         target tile."""
         self.grid()
         goals = self.goals(e)
+        inside = {u for us in self.garrisons.values() for u in us}   # AoE2: a unit inside takes no orders
         group = [(i, v) for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"]))
-                 if (v := self.unit(i, name, e["player"])) is not None]
+                 if (v := self.unit(i, name, e["player"])) is not None and i not in inside]
         tile = self.resource(e)
         if tile in self.map.farms:                                  # a farmer stands on the farm
             goals = self.crew.goals(tile)
+        home = self.holder(e)
         for i, v in group:                                          # a new MOVE or ORDER stops the work
             self.working.pop(i, None)
             self.arriving.pop(i, None)
+            self.entering.pop(i, None)
             v.tree = tile
+            if home and not (not e.get("garrison") and v.load and v.name.startswith("VILLAGER")
+                             and home[1]["name"] in self.gather.DROP_SITES.get(v.res, ())):   # it drops its load
+                self.entering[i] = [*home, None]
         if not goals or not group:
             return []
         to_tile = not (e["kind"] == "order" and e.get("target") is not None)
@@ -499,6 +518,7 @@ class Replay:
                 self.start(i, v, at)
             else:
                 self.moving[i] = due
+        out += self.enter(t)
         self.crew.command = out.append
         for i, due in list(self.working.items()):
             v = self.units[i]
@@ -562,6 +582,44 @@ class Replay:
             self.moving[i] = due
         return []
 
+    def holder(self, e):
+        """(footprint, entry of aoe2mc.json) of the own start building with garrison room that an ORDER targets, or
+        None. The record has no IDs of the buildings of the replay."""
+        import garrison
+        o = self.refs.get(e.get("target")) if e["kind"] == "order" else None
+        if not o or o["kind"] != "building" or o["name"] not in garrison.SIZES or o["player"] != e["player"]:
+            return None
+        return next(((s[3], o) for s in self.starts if s[0] == o["ref"]), None)
+
+    def enter(self, t):
+        """The units that arrived at their building until game time t (ms) go inside (garrison.enter). A full
+        building: they stay next to it, as in AoE2."""
+        import garrison
+        out = []
+        for i, (rect, o, at) in list(self.entering.items()):
+            if at is None or at > t:
+                continue
+            del self.entering[i]
+            units, v = self.garrisons.setdefault(rect, []), self.units[i]
+            if len(units) >= garrison.SIZES[o["name"]]:
+                continue
+            x, y, z = garrison.cell(self.map, rect, o, len(units))
+            units.append(i)
+            v.pos, v.path = (x + 0.5, float(y), z + 0.5), []
+            out += [f"aoe stop {v.uuid}"] * self.ai + garrison.enter(v.uuid, x, y, z)
+        return out
+
+    def release(self, rect):
+        """The units inside the building rect come out on the free cells next to it, the door side first."""
+        import garrison
+        ring, out = self.map.front(rect) or [((rect[0] + rect[1]) // 2, rect[3])], []
+        for k, i in enumerate(self.garrisons.pop(rect, [])):
+            x, z = ring[k % len(ring)]
+            v, y = self.units[i], self.map.y(x, z) or 0
+            v.pos = (x + 0.5, float(y), z + 0.5)
+            out += garrison.leave(v.uuid, x, y, z) + [f"aoe label {v.uuid}"] * self.ai
+        return out
+
     def resource(self, e):
         """The tile of the tree, fruit bush, mine or farm that an ORDER targets, else None. A target that the replay
         does not know (a farm of the replay: the record has no IDs of new objects) is the farm under the order tile."""
@@ -581,7 +639,12 @@ class Replay:
     def start(self, i, v, t):
         """A unit with a resource that ends its walk next to it gathers from game time t on, at the AoE2 work rate
         of the resource (gather.AOE2_WORK, per game second). The record has no drop-off: it does not carry.
-        A farmer works on its farm (gather.Gather.goals)."""
+        A farmer works on its farm (gather.Gather.goals). A unit that goes into a building arrives (enter())."""
+        if i in self.entering:
+            x0, x1, z0, z1 = self.entering[i][0]
+            if v.cell in self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)}):
+                self.entering[i][2] = t
+            return
         if v.tree is None or v.cell not in self.crew.goals(v.tree):
             return
         v.res, v.load = self.map.resource(v.tree), 0
@@ -671,13 +734,17 @@ class Replay:
         chat, age and research texts of the skipped time do not show. Returns the commands."""
         out, moved = [], set()
         for e in events:
-            if e["kind"] in ("move", "order") and e.get("objects"):
-                self.move(e)                                        # the paths and the targets; no walk orders
+            if e["kind"] in ("move", "order", "garrison") and e.get("objects"):
+                self.commands(e) if e["kind"] == "garrison" else self.move(e)   # the paths and the targets; no walks
                 moved.update(e["objects"])
-            elif e["kind"] in ("build", "wall", "spawn", "delete"):
-                out += self.commands(e)
+                for i in set(e["objects"]) & self.entering.keys():  # it is at its building at once
+                    self.entering[i][2] = e["time"]
+            elif e["kind"] in ("build", "wall", "spawn", "delete", "ungarrison"):
+                out += self.enter(e["time"]) + self.commands(e)
+        out += self.enter(to)
+        inside = {u for us in self.garrisons.values() for u in us}
         for i in sorted(moved | self.moving.keys()):
-            if (v := self.units.get(i)) is None:
+            if (v := self.units.get(i)) is None or i in inside:
                 continue
             x, z = v.path[-1] if v.path else v.cell
             v.pos, v.path = (x + 0.5, float(self.map.y(x, z)), z + 0.5), []
@@ -707,7 +774,8 @@ class Replay:
              [f"tag {u} add {COUNTED}" for u in self.counted] * self.ai)
         census = self.census if bar and self.ai else lambda: None
         while k < len(events) or self.moving:
-            step = min([*self.moving.values(), *self.working.values()], default=math.inf)   # walk or gather step
+            step = min([*self.moving.values(), *self.working.values(),                       # walk or gather step
+                        *(at for _, _, at in self.entering.values() if at is not None)], default=math.inf)   # go in
             e = events[k] if k < len(events) and events[k]["time"] <= step else None
             k += e is not None
             now = e["time"] if e else step
