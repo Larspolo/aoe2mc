@@ -1016,7 +1016,7 @@ def siege_workshop(c, w, st, col, T, ctx):
     for z in (2, w - 3):
         c.box(cx, cx + 1, 1, ch, z, z + 1, st.timber)
     c.box(cx, cx + 1, ch, ch + 1, 2, w - 2, st.beam + "[axis=z]")
-    c.box(cx, cx + 1, ch - 3, ch, w // 2, w // 2 + 1, "chain")
+    c.box(cx, cx + 1, ch - 3, ch, w // 2, w // 2 + 1, "iron_chain")
     c.set(cx, ch - 4, w // 2, "oak_log[axis=x]")
     c.box(hx + 1, hx + 3, 1, 2, w - 3, w - 1, "oak_log[axis=x]")           # timber pile
     # A siege engine under construction in the yard: a wooden frame with a ram beam, and barrels at the hall
@@ -1064,7 +1064,7 @@ def blacksmith(c, w, st, col, T, ctx):
                (m + 1, 1, n, "grindstone[face=floor,facing=north]"), (m + 2, 1, n, "smithing_table"),
                (m + 3, 1, n, "barrel[facing=up]"), (m + 3, 2, n, "barrel[facing=up]"), (m + 4, 1, n, "chest[facing=south]"),
                (m + 1, 1, n + 2, "chipped_anvil[facing=north]"), (m + 1, 1, n + 4, "chest[facing=east]"),
-               (m + 1, 1, n + 5, "barrel[facing=up]"), (m + 1, 4, n + 2, "chain"), (e, 4, n + 4, "chain"),
+               (m + 1, 1, n + 5, "barrel[facing=up]"), (m + 1, 4, n + 2, "iron_chain"), (e, 4, n + 4, "iron_chain"),
                (m + 1, 3, n + 2, "lantern[hanging=true]"), (e, 3, n + 4, "lantern[hanging=true]")])
 
 
@@ -1376,7 +1376,7 @@ def hang(c, x, y, z):
     air = (-1, c.B("air"))
     top = next((t for t in range(y + 1, c.height) if c.get(x, t, z) not in air), None)
     if top is not None:
-        c.box(x, x + 1, y + 1, top, z, z + 1, "chain")
+        c.box(x, x + 1, y + 1, top, z, z + 1, "iron_chain")
         c.set(x, y, z, "lantern[hanging=true]")
 
 
@@ -1638,7 +1638,7 @@ def lumber_camp(c, w, st, col, T, ctx):
     post = st.timber.replace("stripped_", "")
     c.box(1, 2, 1, 6, 1, 2, post)                                          # hoist: post, arm, chain, log
     c.box(1, 4, 6, 7, 1, 2, post + "[axis=x]")
-    c.set(3, 5, 1, "chain"); c.set(3, 4, 1, "oak_log[axis=x]")
+    c.set(3, 5, 1, "iron_chain"); c.set(3, 4, 1, "oak_log[axis=x]")
     c.set(2, 5, 1, "lantern[hanging=true]")                               # light under the hoist arm
     c.set(4, 1, 2, "spruce_fence"); c.set(6, 1, 2, "spruce_fence")      # sawhorse with a log on it
     c.box(4, 7, 2, 3, 2, 3, "stripped_spruce_log[axis=x]")
@@ -1682,7 +1682,7 @@ def dock(c, w, st, col, T, ctx):
     c.door(m, 2, z1 - 1)
     c.banner(m - 1, 4, z1, col); c.banner(m + 1, 4, z1, col)
     c.set(m, 6, z1, "spruce_planks"); c.box(m, m + 1, 6, 7, z1 + 1, z1 + 2, "stripped_spruce_log[axis=z]")   # hoist
-    c.set(m, 5, z1 + 1, "chain")
+    c.set(m, 5, z1 + 1, "iron_chain")
     c.flag(m, top + 1, (z0 + z1) // 2, col, 2)
     # Inside (#255): goods and a lantern at the back wall, a net loom and a boat workbench at the side walls.
     # The way from the door to the back wall stays free.
@@ -1806,7 +1806,7 @@ def shipyard(c, w, st, col, T, ctx):
     mx, mh = w - 2, max(8, w // 2 + 4)                                     # crane over the hull
     c.box(mx, mx + 1, 2, mh, 1, 2, "stripped_spruce_log")
     c.box(mx, mx + 1, mh, mh + 1, 1, (q + w) // 2 + 1, "stripped_spruce_log[axis=z]")
-    c.box(mx, mx + 1, mh - 3, mh, (q + w) // 2, (q + w) // 2 + 1, "chain")
+    c.box(mx, mx + 1, mh - 3, mh, (q + w) // 2, (q + w) // 2 + 1, "iron_chain")
     c.set(w // 2, 2, 1, "barrel[facing=up]"); c.set(w // 2 + 1, 2, 1, "chest[facing=south]")
     c.flag(mx, mh + 1, 1, col, 2)
 
@@ -1867,15 +1867,15 @@ def harbor_chain(c, w, st, col, T, ctx):
     AoE2 screen directions: map x runs to the south-east and map y to the south-west on the screen."""
     dx, dz = next(d for k, d in CHAIN_DIRECTION.items() if ctx["name"].endswith(k))
     if dz == 0:
-        c.box(0, w, 0, 1, w // 2, w // 2 + 1, "chain[axis=x]")
+        c.box(0, w, 0, 1, w // 2, w // 2 + 1, "iron_chain[axis=x]")
     elif dx == 0:
-        c.box(w // 2, w // 2 + 1, 0, 1, 0, w, "chain[axis=z]")
+        c.box(w // 2, w // 2 + 1, 0, 1, 0, w, "iron_chain[axis=z]")
     else:
         for i in range(w):                                                 # diagonal: a staircase of links
             z = i if dz > 0 else w - 1 - i
-            c.set(i, 0, z, "chain[axis=x]")
+            c.set(i, 0, z, "iron_chain[axis=x]")
             if i < w - 1:
-                c.set(i + 1, 0, z, "chain[axis=z]")
+                c.set(i + 1, 0, z, "iron_chain[axis=z]")
     c.set(w // 2, 0, w // 2, "barrel[facing=up]")                          # float in the middle
 
 
@@ -2121,16 +2121,37 @@ def feitoria(c, w, st, col, T, ctx):
 
 
 def outpost(c, w, st, col, T, ctx):
-    hp = 2 * T + 2
+    """Like the game (#485): a lookout hut on four stilts with rails as braces, a ladder at the front, a low wall in
+    the player color and a canvas roof with a valance in the player color. The fortified outpost stands on stone."""
+    hp, y0 = 2 * T + 2, 1
+    if "FORTIFIED" in ctx.get("name", ""):
+        c.box(0, w, 1, 3, 0, w, st.stone2)
+        y0 = 3
     for x in (0, w - 1):
         for z in (0, w - 1):
-            c.box(x, x + 1, 1, hp, z, z + 1, st.timber)
+            c.box(x, x + 1, y0, hp + 4, z, z + 1, st.timber)          # stilts, up to the roof
+    for y in (y0 + 1, (y0 + hp) // 2 + 1):
+        c.walls(0, w, y, y + 1, 0, w, "spruce_fence")                 # braces between the stilts
+        for x in (0, w - 1):
+            for z in (0, w - 1):
+                c.set(x, y, z, st.timber)
     c.box(0, w, hp, hp + 1, 0, w, st.wood)
-    c.walls(0, w, hp + 1, hp + 2, 0, w, "spruce_fence")
-    c.box(w // 2, w // 2 + 1, 1, hp, w - 1, w, "ladder[facing=south]")
-    c.box(w // 2, w // 2 + 1, hp, hp + 2, w - 1, w, "air")
-    c.set(w // 2, hp + 1, w // 2, "campfire[lit=true,signal_fire=false]")
-    c.flag(0, hp + 2, 0, col, 1)
+    c.walls(0, w, hp + 1, hp + 2, 0, w, f"{col}_wool")                # the hut: a band, cloth, then open
+    c.walls(0, w, hp + 2, hp + 3, 0, w, "white_wool")
+    for x in (0, w - 1):
+        for z in (0, w - 1):
+            c.box(x, x + 1, hp + 1, hp + 3, z, z + 1, st.timber)
+    c.box(-1, w + 1, hp + 4, hp + 5, -1, w + 1, f"{col}_wool")        # the valance of the roof
+    c.box(0, w, hp + 4, hp + 5, 0, w, "white_wool")                   # canvas
+    c.box(1, w - 1, hp + 5, hp + 6, 1, w - 1, "white_wool")
+    if w >= 3:
+        x = w // 2
+        c.box(x, x + 1, y0, hp, w - 2, w - 1, st.timber)              # the ladder leans on a pole
+        c.box(x, x + 1, y0, hp + 1, w - 1, w, "ladder[facing=south]")
+        c.box(x, x + 1, hp + 1, hp + 4, w - 1, w, "air")              # the way in
+        c.set(x, hp + 1, w - 2, "air")
+        c.set(1, hp + 1, 1, "campfire[lit=true,signal_fire=false]")   # the signal fire
+    c.flag(w // 2, hp + 6 - (w < 3), w // 2, col, 1)
 
 
 def wall_shape(w, ctx, every=3):
@@ -3660,7 +3681,7 @@ def crane(c, w, st, col, T, ctx):
         c.set(m + dx, 1, m, "spruce_log[axis=y]")
         c.set(m + dx, 2, m, "spruce_fence")
     c.box(m, m + 1, h, h + 1, 1, w - 1, "stripped_spruce_log[axis=z]")     # jib
-    c.box(m, m + 1, 4, h, 1, 2, "chain[axis=y]")
+    c.box(m, m + 1, 4, h, 1, 2, "iron_chain[axis=y]")
     c.set(m, 3, 1, "chiseled_stone_bricks")                                # the load
     r = min(2.5, (w - 3) / 2)                                              # treadwheel at the back
     for k in range(24):
@@ -4336,13 +4357,20 @@ def wooden_bridge(c, w, st, col, T, ctx):
 
 
 def fish_trap(c, w, st, col, T, ctx):
-    """A fish trap in the water: a ring of posts with a net."""
-    cx = (w - 1) / 2
-    for k in range(24):
-        a = 2 * math.pi * k / 24
-        x, z = int(round(cx + (w / 2 - 0.6) * math.cos(a))), int(round(cx + (w / 2 - 0.6) * math.sin(a)))
-        c.box(x, x + 1, -6, 2, z, z + 1, "spruce_fence" if k % 2 else "spruce_log")
-    c.set(int(cx), 1, int(cx), "barrel[facing=up]")
+    """A fish trap like the game model: a basket tunnel on the water. Long bamboo rods along x on three
+    half-round hoops (dark ends, a light middle hoop), held by stakes at the feet of the hoops (#486)."""
+    cz, r = (w - 1) / 2, max(1.5, (w - 1) / 2 - 2)
+    def ring(angles):                                                            # (z, y) cells, symmetric to z = cz
+        half = {(int(cz + r * math.cos(a) + 0.5), int(r * math.sin(a) + 0.5)) for a in angles}
+        return sorted(half | {(w - 1 - z, y) for z, y in half})
+    arc = ring(np.linspace(0, math.pi / 2, 2 * w))
+    for z, y in ring(np.linspace(0, math.pi / 2, 4)):                            # the rods, from end to end
+        c.box(0, w, y, y + 1, z, z + 1, "bamboo_fence")
+    for x, b in ((1, "dark_oak_wood[axis=x]"), (w // 2, "stripped_oak_wood[axis=x]"), (w - 2, "dark_oak_wood[axis=x]")):
+        for z, y in arc:
+            c.set(x, y, z, b)
+        for z in (arc[0][0], arc[-1][0]):                                        # stakes in the bed
+            c.box(x, x + 1, -6, 0, z, z + 1, "dark_oak_fence")
 
 
 # Sets of designs (defined after all designs)

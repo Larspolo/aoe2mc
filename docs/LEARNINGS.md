@@ -76,7 +76,7 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   `(nbt, vol)`: test exact blocks with `vol` (#19). Footprint rule: `Edits.add` keeps a block outside the footprint
   when `y >= cols.wtop + E.HEAD`. Match a block by its name before `[` (`water_cauldron` starts with `water`, #295).
   A `MONUMENTS` object goes to `place_building` as a copy without `o["footprint"]`: use `buildings.footprint(name)` (#296).
-- A new runtime data file (like `tools/mcdata/1.21.1.json`) must go into the package data (`pyproject.toml`).
+- A new runtime data file (like `tools/mcdata/26.3.json`) must go into the package data (`pyproject.toml`).
 - Generated on main, not in PRs: the column "Used today in" of `docs/DESIGN.md` (`tools/feature_table.py`), `docs/coverage.md`
   and `MAX` in `tests/test_coverage.py` (`coverage.yml`, #233, #234). A conflict there: take main's side.
 - Block IDs in `B` depend on earlier tests: draw random numbers in state-name order, not ID order (a cause of full-suite-only failures, #44).
@@ -111,3 +111,4 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   (drop barriers and one side of the walls) and call `render.render()` for a section view.
 - `render.building_blocks` gives states with the `minecraft:` prefix and world y (the ground is y 63, canvas y 1 is y 64): strip the prefix before you match a name (#449).
 - Furniture inside a closed design: a text map of each layer (one character per state name of `render.building_blocks`, rows by z) shows the positions faster than an isometric render, which hides small blocks behind walls (#501).
+- `tests/test_objects.py::test_blocks_under_water_are_waterlogged` names the blocks of `fish_trap`: change it with the fish trap materials (#486). Grep `tests/` for the design name before the full run.

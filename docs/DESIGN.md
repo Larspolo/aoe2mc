@@ -113,10 +113,12 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Player color band (walls, gate towers) | `*_wool` (player color), one row | `pavilion`, `yurt`, `command_tent`, `army_tent` +19 more |
 | Fence, pen | `*_fence` | `pasture`, `nine_bands`, `fish_trap`, `outpost` +37 more |
 | Gate of a pen | `*_fence_gate` | `pasture`, `folwark` |
+| Fish trap basket | `bamboo_fence` rods on half-round hoops of `dark_oak_wood` and `stripped_oak_wood` |  |
 | Wheel | open `*_trapdoor` on the side | `cart`, `university`, `market`, `dock` +9 more |
 | Siege engine in the making | `stripped_spruce_log` frame, `oak_fence` posts, a `stripped_oak_log` ram beam with an `iron_block` head | `siege_workshop` |
 | Tent canvas | `white_wool`, a valance of wool in the player color | `command_tent`, `army_tent`, `pavilion`, `yurt` +4 more |
 | Tent poles of a pavilion | `stripped_spruce_log[axis=y]` at the corners, up to the roof edge | |
+| Lookout hut on stilts (outpost) | `*_log` stilts with `spruce_fence` braces, a `*_wool` band (player color) and `white_wool` cloth, a `white_wool` roof with a valance (player color) | |
 | Yurt felt | `blue_wool` with a zig-zag of `white_wool` (or the inverse), a flat dome with a `spruce_trapdoor` crown ring | |
 | Pavilion cloth | stripes of `*_wool` (player color) on `white_wool`, a `yellow_wool` valance, a white cone | |
 | Thatch | `hay_block` | `settlement`, `hut`, `mill_room`, `granary` +15 more |

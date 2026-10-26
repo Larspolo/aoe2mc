@@ -30,6 +30,7 @@ Body:
 <The verify level (1-4) and the commands or checks.>
 
 Depends on: #<n>, #<m>        (only when another ticket must close first)
+Start after: <YYYY-MM-DD HH:MM> UTC   (only when the ticket must wait for a time, for example to measure 24 hours)
 ```
 
 Labels: one priority (`P0`-`P3`), one kind (`bug`, `feature`, `tooling`, `design`, `docs`, `cleanup`),
