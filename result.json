@@ -1,0 +1,26 @@
+{
+ "civ": "FRANKS",
+ "dark_mill": [
+  "Mill"
+ ],
+ "dark_scout_hp": 45.0,
+ "food_s": 1.6500288755053214,
+ "food_s_base": 1.8975332068311195,
+ "wood_s": 1.5082956259426847,
+ "feudal_s": 76.9,
+ "feudal_scout_hp": 54.0,
+ "feudal_mill": [
+  "Mill",
+  "0:book:Horse Collar:free \u00b7 20 s \u00b7 research"
+ ],
+ "collar_queued": 1,
+ "collar_paid": {},
+ "collar_price": {},
+ "forage": {
+  "walk": 3.2135066351572434,
+  "chop": 0.5955334987593052,
+  "trip": 24.6775,
+  "trip_blocks": 22.034999999999997
+ },
+ "bar": "Custom bossbar [Scout Cavalry] has a maximum of 54 | Custom bossbar [Scout Cavalry] has a value of 54"
+}
