@@ -1324,7 +1324,12 @@ class Replay:
                 for i in set(e["objects"]) & self.entering.keys():  # it is at its building at once
                     self.entering[i][2] = e["time"]
             elif e["kind"] in ("build", "wall", "spawn", "delete", "ungarrison"):
+                builders = e.get("objects", ()) if e["kind"] in ("build", "wall") else ()
+                for i in builders:                                  # a builder ends the work at its resource
+                    self.skipped(i, since.pop(i, None), e["time"])
                 out += self.enter(e["time"]) + self.commands(e)
+                since.update((i, self.walk_end(v, e["time"])) for i in builders     # the builders of a farm farm it
+                             if (v := self.units.get(i)) is not None and v.tree in self.map.farms)
             elif e["kind"] == "back_to_work" and e.get("objects"):  # the units work again from now (#1179)
                 out += self.enter(e["time"])
                 cmds, ids = self.back(e)
