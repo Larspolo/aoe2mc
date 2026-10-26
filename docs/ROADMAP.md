@@ -43,6 +43,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:two-players` Two human players against each other on one server
 - [ ] `play:walls` Build walls and gates; a gate opens for own units and stays closed for enemies
 - [ ] `play:siege` Siege units: rams against buildings, mangonels with area damage, trebuchets that pack and unpack
+- [ ] `play:cheats` The AoE2 cheat codes in the chat when cheats are on (epic #820)
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
