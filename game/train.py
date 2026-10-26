@@ -79,6 +79,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "FEUDAL_AGE": (2, "bell", "Feudal Age"),
          "WHEELBARROW": (3, "book", "Wheelbarrow")}
 SHIFT = 5                                                          # units of a shift click, as in AoE2
+ROW = 9                                                            # the first slot of the queue row of the menu (#706)
 
 
 def melee(s):
@@ -115,7 +116,9 @@ def open_menu(g, player, cell):
 
 
 def show(g, player, rect):
-    """Show (or refresh) the menu of the building rect: one item per unit, with its cost, time and queue."""
+    """Show (or refresh) the menu of the building rect: one item per unit, with its cost, time and queue. The second
+    row shows the queue (#706): one item per group of the same unit (groups(), item count: the units), the first one
+    with its progress; a click on it cancels a unit (cancel())."""
     n, building = len(g.queues.get(rect, [])), homes(g)[rect]
     def state(name):
         if need := build.locked(g, name):                              # a unit of a later age: a gray item (#674)
@@ -126,12 +129,46 @@ def show(g, player, rect):
     items = [(slot, build.LOCKED if build.locked(g, name) else item, label,
               " · ".join(f"{v} {r}" for r, v in COSTS[name].items()) + f" · {TRAIN_TIMES[name]} s · " + state(name))
              for name in TRAINS[building] if name not in g.techs and unlocked(g, name) for slot, item, label in [ITEMS[name]]]
+    q = g.queues.get(rect, [])                                         # the queue row first: the plugin sets the
+    items = [(ROW + i, ITEMS[name][1], ITEMS[name][2] + (f" {int(100 * q[0]['progress'])} %" if start == 0 else ""),
+              "Click: cancel 1", k) for i, (name, start, k) in enumerate(groups(q)[:ROW])] + items   # items by slot
     menu.show(g, player, build.pretty(building), items, lambda p, slot, shift: order(g, p, rect, slot, shift))
+
+
+def groups(q):
+    """The queue q as (name, index of the first, count) of the same unit next to each other."""
+    out = []
+    for i, e in enumerate(q):
+        if out and out[-1][0] == e["name"]:
+            out[-1] = (e["name"], out[-1][1], out[-1][2] + 1)
+        else:
+            out.append((e["name"], i, 1))
+    return out
+
+
+def cancel(g, player, rect, group):
+    """Remove the last unit of queue group `group` (groups()) of the building rect and give back its full cost, as in
+    AoE2 (also for the unit in training). Returns its name, or None."""
+    q = g.queues.get(rect, [])
+    gs = groups(q)
+    if not 0 <= group < len(gs):
+        return None
+    name, start, k = gs[group]
+    q.pop(start + k - 1)
+    for r, v in COSTS[name].items():
+        g.stock[r] += v
+        g.command(f"scoreboard players add {r.capitalize()} aoe_res {v}")
+    return name
 
 
 def order(g, player, rect, slot, shift=False):
     """A click on the menu item in slot: queue 1 unit (a shift click: SHIFT, as many as the resources and the queue
-    allow) at the building rect, and refresh the menu. Returns the number of queued units."""
+    allow) at the building rect, or cancel a unit of the queue row (cancel()), and refresh the menu. Returns the
+    number of queued units."""
+    if slot >= ROW:
+        cancel(g, player, rect, slot - ROW)
+        show(g, player, rect)
+        return 0
     name = next((n for n in TRAINS[homes(g)[rect]] if ITEMS[n][0] == slot), None)
     n = 0
     while name and n < (SHIFT if shift else 1) and queue(g, player, rect[::2], name):
