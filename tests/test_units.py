@@ -43,7 +43,7 @@ def test_pretty(name, expected):
 
 
 # Behavior class of each Minecraft mob that an animal can use (Minecraft 1.21.1). An angry neutral mob
-# (AngerTime) counts as aggressive: see docs/animals.md.
+# (anger_end_time) counts as aggressive: see docs/animals.md.
 MC_CLASS = {"sheep": "passive", "cow": "passive", "pig": "passive", "chicken": "passive", "horse": "passive",
             "donkey": "passive", "camel": "passive", "rabbit": "passive", "fox": "passive", "ocelot": "passive",
             "turtle": "passive", "panda": "defensive", "polar_bear": "defensive", "llama": "defensive",
@@ -65,7 +65,7 @@ def test_animals_follow_the_owner_rule():
         assert str(units.classify(name)["id"]) == "minecraft:" + mob, name
         if behavior == "military":
             continue
-        cls = "aggressive" if mob in ("wolf", "polar_bear") and "AngerTime" in tags else MC_CLASS[mob]
+        cls = "aggressive" if mob in ("wolf", "polar_bear") and "anger_end_time" in tags else MC_CLASS[mob]
         assert cls == behavior, (name, mob)
 
 
@@ -119,9 +119,11 @@ def test_elite_has_a_gold_trim_on_the_base_design(name):
     elite, base = units.classify(name), units.classify(name.removeprefix("ELITE_"))
     if "Passengers" in elite:
         elite, base = elite["Passengers"][0], base["Passengers"][0]
-    trims = [i for i in elite["ArmorItems"] if "minecraft:trim" in i.get("components", {})]
+    trims = [k for k, i in elite["equipment"].items() if "minecraft:trim" in i.get("components", {})]
     assert len(trims) == 1
-    assert elite["HandItems"] == base["HandItems"] and elite["id"] == base["id"]
+    hands = ("mainhand", "offhand")
+    assert [elite["equipment"].get(k) for k in hands] == [base["equipment"].get(k) for k in hands]
+    assert elite["id"] == base["id"]
 
 
 @pytest.mark.parametrize("name", sorted(n for n, _ in NAMES if units.line_unit(n)))
@@ -129,23 +131,25 @@ def test_no_empty_item_has_components(name):
     """An item without an id is invalid in Minecraft ("Tried to load invalid item")."""
     desc = units.classify(name)
     for d in [desc, *desc.get("Passengers", [])]:
-        for it in [*d.get("ArmorItems", []), *d.get("HandItems", [])]:
-            assert "id" in it or not len(it), (name, it)
+        for it in d.get("equipment", {}).values():
+            assert "id" in it, (name, it)
 
 
-def test_to_version_26_3():
+def test_entity_nbt_of_26_3():
+    """units builds the 26.3 entity format directly (#428): boat types per wood, equipment, NBT text."""
     rider = units.soldier("zombie", 2, "iron_sword")
-    rider["ArmorItems"][2]["components"] = {"minecraft:dyed_color": {"rgb": 255}}
     boat = units.to_nbt(units.boat("bamboo", [rider], chest=True), (0, 0, 0), 0.0, np.random.default_rng(1))
-    boat["Passengers"][0]["CustomName"] = '{"text": "Knight", "color": "#FF0000"}'
-    new = units.to_version(boat, 5023)
-    assert str(new["id"]) == "minecraft:bamboo_chest_raft" and "Type" not in new
-    r = new["Passengers"][0]
+    assert str(boat["id"]) == "minecraft:bamboo_chest_raft" and "Type" not in boat
+    r = boat["Passengers"][0]
     assert {"ArmorItems", "HandItems", "FallDistance"}.isdisjoint(r) and float(r["fall_distance"]) == 0.0
-    assert str(r["equipment"]["mainhand"]["id"]) == "minecraft:iron_sword"
-    assert int(r["equipment"]["chest"]["components"]["minecraft:dyed_color"]) == 255
-    assert dict(r["CustomName"]) == {"text": "Knight", "color": "#FF0000"}
-    assert units.to_version(boat, 3955) is boat                   # 1.21.1 stays as it is
+    assert str(r["equipment"]["mainhand"]["id"]) == "minecraft:iron_sword" and "offhand" not in r["equipment"]
+    dyed = units.armor_items(((("leather", 255)), None, None, None))
+    assert int(dyed["head"]["components"]["minecraft:dyed_color"]) == 255
+    o = dict(name="KNIGHT", player=1, rotation=0.0)
+    knight = units.top_entity(units.make_entity(o, {1: {"color": "red"}}, (0, 0, 0), np.random.default_rng(1)))
+    assert dict(knight["CustomName"]) == {"text": "Knight", "color": units.HEX["red"]}
+    assert units.to_nbt(units.mounted("horse", None, 2), (0, 0, 0), 0.0, np.random.default_rng(1))["equipment"]
+    assert str(units.classify("FISHING_SHIP")["id"]) == "minecraft:oak_boat"
 
 
 def test_facing_map_knights_face_away_from_the_center(tmp_path):

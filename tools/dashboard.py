@@ -39,6 +39,14 @@ def depends(issue):
     return [int(n) for line in lines for n in re.findall(r"#(\d+)", line)]
 
 
+def start_after(issue):
+    """The time of the "Start after: YYYY-MM-DD HH:MM UTC" line of the issue body (at the start of a line), or None."""
+    m = re.search(r"^Start after:\s*(\d{4}-\d{2}-\d{2})(?:[ T](\d{2}:\d{2}))?", issue.get("body") or "", re.M)
+    if not m:
+        return None
+    return datetime.datetime.fromisoformat(f"{m.group(1)}T{m.group(2) or '00:00'}+00:00")
+
+
 def names(text):
     """File and function names in backticks: `buildings.py`, `tools/dashboard.py`, `furnish()`, `aoe2mc.convert()`.
     Files become their base name, functions "name()", so the names of tickets and of PR file lists match."""
@@ -66,17 +74,20 @@ def overlap(issue, busy):
     return sorted(names(issue.get("body")) & busy)
 
 
-def candidates(issues, busy=frozenset()):
+def candidates(issues, busy=frozenset(), now=None):
     """The ticket candidates in the pick order of the autopilot skill (step 5): priority, then the overlap with the
     work in progress (busy, from work(); fewer merge conflicts, #487), then the ticket number.
-    issues: the open issues and PRs. A dependency is closed when it is not open: an open PR is open too (#243)."""
+    issues: the open issues and PRs. A dependency is closed when it is not open: an open PR is open too (#243).
+    A ticket waits until the time of its "Start after:" line (#496)."""
+    now = now or datetime.datetime.now(datetime.timezone.utc)
     open_numbers = {i["number"] for i in issues}
     issues = [i for i in issues if "pull_request" not in i]
 
     def rank(i):
         p = next((k for k, name in enumerate(PRIORITY) if name in labels(i)), len(PRIORITY))
         return p, len(overlap(i, busy)), i["number"]
-    ready = [i for i in issues if not labels(i) & SKIP and not any(d in open_numbers for d in depends(i))]
+    ready = [i for i in issues if not labels(i) & SKIP and not any(d in open_numbers for d in depends(i))
+             and not (start_after(i) or now) > now]
     return sorted(ready, key=rank)
 
 
@@ -128,7 +139,7 @@ def pr_for(number, branch, prs):
 def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now):
     """The new body of the status issue. comments: {issue number: comments} for the needs-human and
     in-progress issues."""
-    nxt = candidates(issues)[:5]
+    nxt = candidates(issues, now=now)[:5]
     issues = [i for i in issues if "pull_request" not in i]
     state = re.search(r"<!-- agent-state:.*?-->", old_body or "")
     process = re.search(r"### Process changes\n(.*?)(?=\n### |\n---\n|\n_Updated |\Z)", old_body or "", re.S)

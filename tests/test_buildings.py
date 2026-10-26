@@ -27,8 +27,6 @@ def test_every_building_in_every_architecture_set(arch):
         walls, gates = buildings.plan_walls([o])
         buildings.place_building(E, cols, aoe2mc.B, o, players, walls, gates)
     assert mcvalid.invalid_states(aoe2mc.B.states) == {}
-    # 26.3 knows all states too, except the renames in docs/minecraft-versions.md
-    assert {st.split(":")[1].split("[")[0] for st in mcvalid.invalid_states(aoe2mc.B.states, "26.3")} <= {"chain"}
 
 
 def test_every_civilization_has_a_known_architecture_set():

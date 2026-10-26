@@ -8,7 +8,7 @@ import functools
 import json
 import os
 
-DEFAULT_VERSION = "1.21.1"      # the block and entity names in the code; aoe2mc renames them for its output version
+DEFAULT_VERSION = "26.3"        # the block and entity names in the code and in the output (#428)
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mcdata")
 
 
