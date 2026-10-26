@@ -5,7 +5,7 @@
 # so later sessions start with these tools in place. It must not fail: each step ends with `|| true`.
 # It does not read the repository. The SessionStart hook installs what changed since the snapshot.
 set -u
-SETUP_VERSION=4   # raise it with each change: the SessionStart hook compares it with /etc/aoe2mc-setup-version
+SETUP_VERSION=5   # raise it with each change: the SessionStart hook compares it with /etc/aoe2mc-setup-version
 
 # Java 25 for the Minecraft 26.3 server (tools/mc_check.py). The image has Java 21.
 # Software Vulkan for the 26.3 client in Xvfb (tools/mc_shot.py). The image has Xvfb and ImageMagick.
@@ -38,6 +38,21 @@ for v in (v for v in manifest if v["id"] in sys.argv[1:]):
     save(v["url"], path, v["sha1"])
     server = json.load(open(path))["downloads"]["server"]
     save(server["url"], os.path.join(cache, v["id"], "server.jar"), server["sha1"])
+EOF
+# The Paper server jar of the game program in the cache of game/run.py (paper_jar, #434).
+python3 - 26.3 <<'EOF' || true
+import glob, hashlib, json, os, sys, urllib.request
+get = lambda url: urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "aoe2mc"}), timeout=300).read()
+for version in sys.argv[1:]:
+    folder = os.path.join(os.environ.get("XDG_CACHE_HOME") or os.path.expanduser("~/.cache"), "aoe2mc", "paper", version)
+    if glob.glob(os.path.join(folder, "paper-*.jar")):
+        continue
+    url = f"https://fill.papermc.io/v3/projects/paper/versions/{version}/builds/latest"
+    jar = json.loads(get(url))["downloads"]["server:default"]
+    data = get(jar["url"])
+    if hashlib.sha256(data).hexdigest() == jar["checksums"]["sha256"]:
+        os.makedirs(folder, exist_ok=True)
+        open(os.path.join(folder, jar["name"]), "wb").write(data)
 EOF
 echo "$SETUP_VERSION" > /etc/aoe2mc-setup-version || true
 exit 0
