@@ -10,6 +10,8 @@ after the agent check, #580, #668), a decision ("Decide: ..."), a setting of the
 the cloud (#907), or a close that the auto mode did not let the agent do (#862). The owner's computer has a window
 and real input. This skill does the setup, so that the owner only plays, looks and answers.
 Write in ASD-STE100 (CLAUDE.md, "Language"). Talk to the owner in short steps: one step, then wait.
+Do not ask the owner about times, speeds, values or texts: an agent measures them (#1159). When a point of the ticket
+asks for one, measure it in this session and write the result. A look comparison: show the image before first.
 The project values (repository, owner, labels) are in `agent.toml`.
 
 ## 1. Check the computer
