@@ -358,16 +358,32 @@ create_terrain FOREST { base_terrain GRASS number_of_clumps 10 number_of_tiles 1
 create_terrain DIRT3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
 create_terrain GRASS3 { base_terrain GRASS2 number_of_clumps 8 land_percent 3 }
 """
+# Mediterranean: a sea in the middle of the map, the player lands on the land ring around it, a beach at the coast
+# (COASTS).
+MEDITERRANEAN = """
+<LAND_GENERATION>
+base_terrain GRASS
+create_player_lands { terrain_type GRASS2 land_percent 30 base_size 12 clumping_factor 15 }
+create_land { terrain_type WATER land_position 50 50 base_size 8 land_percent 22 clumping_factor 20 }
+<TERRAIN_GENERATION>
+create_terrain FOREST { base_terrain GRASS number_of_clumps 8 land_percent 6 set_avoid_player_start_areas 16
+  spacing_to_other_terrain_types 2 clumping_factor 15 }
+create_terrain FOREST { base_terrain GRASS2 number_of_clumps 6 number_of_tiles 12 set_avoid_player_start_areas 12
+  spacing_to_other_terrain_types 2 }
+create_terrain DIRT3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
+"""
 GENERATORS = {"arabia": ARABIA,
               "arena": ARENA,
               "black_forest": BLACK_FOREST,
               "gold_rush": GOLD_RUSH,
-              "highland": HIGHLAND}
+              "highland": HIGHLAND,
+              "mediterranean": MEDITERRANEAN}
 WALLS = {"arena": 23}           # the radius in tiles of the stone wall circle around each player (outside START)
 BAND = 6                        # the forest inside the wall: tiles of width, on the half away from the map middle
 PATHS = {"black_forest": 1}     # the half width in tiles of the open path from each player to the middle
 GOLDS = {"gold_rush": (10, 6, 5)}  # the gold of the middle: radius in tiles, clumps of gold mines, mines in a clump
 RIVERS = {"highland": (3, 3, 5)}  # the river: half width in tiles, the least and the most fords
+COASTS = {"mediterranean": 1}   # the beach: tiles of width on the land next to the water
 RINGS = {"gold_rush": (14, 5)}  # the forest ring around the gold: inner radius and width in tiles, gaps between players
 WOODS = {"arabia": (10, 30, 3), # the wood line of each player (tiles from the town center, forest tiles) and its
          "gold_rush": (10, 30, 3)}  # single trees (stragglers, at 4 to 6 tiles), as in AoE2 (#1144)
@@ -447,6 +463,14 @@ def river(d, spec, rng):
     d["terrain"] = terrain.tolist()
 
 
+def coast(d, w):
+    """A BEACH of w tiles on the land (not forest) next to the water."""
+    terrain = np.array(d["terrain"])
+    water = terrain == TERRAINS["WATER"]
+    terrain[dilate(water, w) & ~water & ~np.isin(terrain, list(FOREST_TREES))] = TERRAINS["BEACH"]
+    d["terrain"] = terrain.tolist()
+
+
 def paths(d, w):
     """Open grass paths of half width w from each player origin to the middle of the map."""
     n, terrain = d["size"], np.array(d["terrain"])
@@ -460,15 +484,17 @@ def paths(d, w):
 
 
 def random_map(kind, seed, players=2):
-    """The map description of an own generator (GENERATORS) and seed: the land of generate() (with the WALLS, PATHS
-    and RIVERS of the kind), a town center at each player origin and the START objects around it, on free tiles (no
-    forest, no water, not next to a wall)."""
+    """The map description of an own generator (GENERATORS) and seed: the land of generate() (with the WALLS, PATHS,
+    RIVERS and COASTS of the kind), a town center at each player origin and the START objects around it, on free
+    tiles (no forest, no water, not next to a wall)."""
     d = generate(GENERATORS[kind], seed, players)
     rng = np.random.default_rng([seed, 993])
     if kind in PATHS:
         paths(d, PATHS[kind])
     if kind in RIVERS:
         river(d, RIVERS[kind], rng)
+    if kind in COASTS:
+        coast(d, COASTS[kind])
     objects = walls(d, WALLS[kind], rng) if kind in WALLS else []
     if kind in GOLDS:
         objects += goldfield(d, GOLDS[kind], RINGS[kind], rng)
