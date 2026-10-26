@@ -11,13 +11,18 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.AbstractArrow;
+import org.bukkit.entity.AbstractSkeleton;
+import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
+import org.bukkit.entity.Pillager;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
@@ -29,6 +34,7 @@ import org.bukkit.scoreboard.Criteria;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
+import org.bukkit.util.Vector;
 
 import com.destroystokyo.paper.entity.RangedEntity;
 import com.destroystokyo.paper.entity.ai.Goal;
@@ -148,7 +154,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             mob.lookAt(t);
             int now = Bukkit.getCurrentTick();
-            if (now >= next && near && mob instanceof RangedEntity r) {
+            if (now >= next && near && (mob instanceof AbstractSkeleton || mob instanceof Pillager)) {
+                shoot(mob, t);
+                next = now + range.ticks;
+            } else if (now >= next && near && mob instanceof RangedEntity r) {
                 r.rangedAttack(t, 1.0f);
                 next = now + range.ticks;
             }
@@ -163,6 +172,22 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         public EnumSet<GoalType> getTypes() {
             return EnumSet.of(GoalType.MOVE, GoalType.LOOK);
         }
+    }
+
+    // The vanilla bow shot has a spread of 14 - 4 × difficulty and a slow arrow: at 20 blocks most
+    // arrows miss (#634). An AoE2 archer hits a standing target almost always: aim at the middle of the target, with
+    // a fast arrow that rises by the fall of its flight time.
+    private static final double ARROW_SPEED = 3.0, ARROW_GRAVITY = 0.05;     // blocks per tick, blocks per tick²
+
+    static void shoot(Mob mob, LivingEntity t) {
+        Location from = mob.getEyeLocation();
+        Vector to = t.getLocation().toVector().add(new Vector(0, t.getHeight() * 0.5, 0)).subtract(from.toVector());
+        double ticks = to.length() / ARROW_SPEED;
+        to.setY(to.getY() + 0.5 * ARROW_GRAVITY * ticks * ticks);
+        Arrow a = mob.launchProjectile(Arrow.class, to.normalize().multiply(ARROW_SPEED));
+        a.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
+        mob.getWorld().playSound(mob, mob instanceof Pillager ? Sound.ITEM_CROSSBOW_SHOOT : Sound.ENTITY_SKELETON_SHOOT,
+                1.0f, 1.0f);
     }
 
     @Override

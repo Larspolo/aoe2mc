@@ -45,6 +45,8 @@ of its document (named below): this file loads into each run. The `improve` skil
 - A world that the Paper server saved does not open in the vanilla client ("Overworld settings missing"): Paper moves
   `data/minecraft/world_gen_settings.dat` into each dimension folder. Copy the `.dat` files of `data/minecraft/` of a fresh
   conversion into the saved copy before `tools/mc_shot.py` (#420, #580).
+- Images of a check ticket (no PR): push an orphan commit (`git mktree`, `git commit-tree`) to `refs/heads/checks/N` and
+  link `https://raw.githubusercontent.com/Larspolo/aoe2mc/checks/N/NAME.png` in the comment (#614).
 
 ## Libraries
 
