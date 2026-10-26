@@ -14,7 +14,7 @@ TEXTS = {                                                          # short: the 
     "building": "Place the {building}: right click the ground · Cancel: /trigger aoe_build set 0",
     "corner": "Selection box: right click the other corner",
     "drag": "Selection box: hold right click, look at the other corner, release · Release here: cancel",
-    "military": "{n} military unit{s} · Right click: attack an enemy, select all of a type · Empty box: deselect",
+    "military": "{n} military unit{s} · Right click: attack an enemy, stance menu · Empty box: deselect",
     "none": "Right click: select a unit · Wand: selection box",
     "villagers": "{n} villager{s} · Right click: gather, build, build menu · Empty box: deselect",
 }

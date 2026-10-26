@@ -54,6 +54,7 @@ import civs  # noqa: E402
 import garrison  # noqa: E402
 import hints  # noqa: E402
 import menu  # noqa: E402
+import stance  # noqa: E402
 import train  # noqa: E402
 
 RESOURCES = ("Wood", "Food", "Gold", "Stone")
@@ -449,6 +450,7 @@ class Gather:
         self.trunks = {}                                               # tree tile -> logs of its trunk on the ground
         self.bushes = {}                                               # bush tile -> the block of its last look
         self.menus = {}                                                # player -> handler of its open menu (#619)
+        self.stances = {}                                              # uuid -> stance other than aggressive (#1107)
         self.bar = None                                                # the unit on the boss bar (bossbar.py, #659)
         self.queues, self.trained = {}, {}                             # town center -> its queue, units it trained
         self.techs = set()                                             # the researched technologies (train.TECHS)
@@ -827,8 +829,8 @@ class Gather:
         if kind == "unit" and u in self.selected and u in self.villagers:   # a click on a selected villager (#621)
             build.open_menu(self, name)
             return
-        if kind == "unit" and u in self.selected and u in self.soldiers:    # a second click on a soldier (#743)
-            self.select_type(u)
+        if kind == "unit" and u in self.selected and u in self.soldiers:    # a click on a selected soldier (#1107)
+            stance.open_menu(self, name, u)
             return
         if kind == "unit":
             self.select(u)
