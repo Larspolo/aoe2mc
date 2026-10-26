@@ -9,6 +9,8 @@ A right click on a foundation sends the selected villagers there to build it (#4
 A complete building works (#419): a camp, mill or town center is a drop site, a farm can be farmed.
 A right click on a selected villager opens the build menu (#621): a chest menu (menu.py) with one item per building.
 A click chooses the building as /trigger does and closes the menu, so the next right click places it.
+Ages (#674): a Feudal Age building or unit (AGE) is locked until the player researches the Feudal Age (train.py):
+its item is gray, says "Needs the Feudal Age", and a click does nothing.
 """
 import json
 import math
@@ -33,6 +35,10 @@ OBJECTIVE = "aoe_build"
 ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw_gold_block",   # a block of the
          "MILL": "white_wool", "FARM": "wheat", "BARRACKS": "stone_brick_wall", "ARCHERY_RANGE": "target",
          "TOWN_CENTER": "cobblestone"}                                  # design
+AGE_TECHS = ("FEUDAL_AGE",)                                        # the technologies of the ages, in order
+AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_TOWER",   # the AoE2 age of each
+                     "ARCHER", "SKIRMISHER", "SPEARMAN", "SCOUT_CAVALRY"), 1)            # building and unit (0: Dark)
+LOCKED = "gray_dye"                                                # the item of a locked building or unit
 
 
 def pretty(name):
@@ -50,25 +56,38 @@ def tick(g):
     g.command(f"scoreboard players enable @a {OBJECTIVE}")
 
 
+def ages(g):
+    """The number of ages that the player researched: 0 in the Dark Age."""
+    return sum(t in getattr(g, "techs", ()) for t in AGE_TECHS)
+
+
+def locked(g, name):
+    """The text "Needs the ... Age" when the player is not yet in the AoE2 age of building or unit name, else None."""
+    if g is not None and AGE.get(name, 0) > ages(g):
+        return "Needs the Feudal Age"
+
+
 def menu():
     lines = [f"/trigger {OBJECTIVE} set {i}: {pretty(n)} ({', '.join(f'{v} {r}' for r, v in COSTS[n].items())})"
              for i, n in enumerate(MENU, 1)]
     return json.dumps({"text": "Build: " + "\n".join(lines), "color": "gray"})
 
 
-def items():
-    """The items of the build menu: (slot, icon, name, lore) with the cost and the build time."""
-    return [(i, ICONS[n], pretty(n), "\n".join([", ".join(f"{v} {r}" for r, v in COSTS[n].items()),
-                                                 f"{BUILD_TIMES[n]} s"])) for i, n in enumerate(MENU)]
+def items(g=None):
+    """The items of the build menu: (slot, icon, name, lore) with the cost and the build time. With g: a building of
+    a later age is gray and says which age it needs."""
+    return [(i, LOCKED if locked(g, n) else ICONS[n], pretty(n),
+             "\n".join([", ".join(f"{v} {r}" for r, v in COSTS[n].items()), f"{BUILD_TIMES[n]} s"]
+                       + [locked(g, n)] * bool(locked(g, n)))) for i, n in enumerate(MENU)]
 
 
 def open_menu(g, player):
     """Show the build menu. A click sets the trigger score, as /trigger aoe_build set N does, and closes the menu."""
     def choose(p, slot, shift):                                        # shift: one building all the same
-        if slot < len(MENU):
+        if slot < len(MENU) and not locked(g, MENU[slot]):
             g.command(f"scoreboard players set {p} {OBJECTIVE} {slot + 1}")
             chest.close(g, p)
-    return chest.show(g, player, "Build", items(), choose)
+    return chest.show(g, player, "Build", items(g), choose)
 
 
 def chosen(g, player):
@@ -96,6 +115,9 @@ def free(g, rect):
 
 def place(g, player, name, eye, d):
     """Place a foundation of name at the ground that the player looks at. Returns the site or None."""
+    if need := locked(g, name):                                        # a /trigger choice of a later age
+        say(g, player, f"{pretty(name)}: {need}.")
+        return None
     cell = g.map.pick_ground(eye, d)
     if cell is None:
         return None
