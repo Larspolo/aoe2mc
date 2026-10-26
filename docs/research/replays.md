@@ -47,6 +47,35 @@ records (`aoe.ms`, `data.aoe2companion.com`, `www.aoe2insights.com`) are blocked
 the `mgz` package has no sample records. Update (#134): `samples/de-64.3.aoe2record` is a DE test record of the
 `mgz` repository (MIT, GitHub raw). `mgz.model.parse_match` reads it.
 
+### Game versions (#376)
+
+The test records of the `mgz` repository (`tests/recs/`, MIT), read with `mgz` 1.8.51. "Model":
+`mgz.model.parse_match` (map, objects and commands). "Header": `mgz.summary.full.FullSummary` (map, players,
+start objects; no commands). The converter uses the model, and the header for the games that the model cannot
+read (`aoe2mc.read_old_record`). The header parser skips the GAIA trees of these versions: `read_old_record`
+turns the skip off (about 1 s more).
+
+| Record | Version | Model | Header | Converter |
+|---|---|---|---|---|
+| `up-1.4.mgz` | UserPatch 1.4 | no ("not supported") | yes | start state, 1812 objects |
+| `small.mgz` | UserPatch 1.5 | no | yes | start state, 2046 objects (object 917 unknown ×8) |
+| `hd-4.6.aoe2record` | HD 4.6 | no | yes | start state, 2765 objects (`samples/`, test) |
+| `hd-5.5.aoe2record` | HD 5.5 | no | yes | start state, 20323 objects |
+| `hd-5.8.aoe2record` | HD 5.8 | no | yes | start state, 9521 objects |
+| `de-12.97-6byte-tile.aoe2record` | DE 12.97 | no | yes | start state, 1881 objects |
+| `de-13.07.aoe2record` | DE 13.07 | no | yes | start state, 2695 objects |
+| `de-13.34.aoe2record` | DE 13.34 | yes | yes | start state and timeline |
+| `de-25.01.aoe2record` | DE 25.01 | yes | yes | start state and timeline |
+| `de-50.6-scenario.aoe2record`, `-with-triggers` | DE 50.6 (scenario game) | no | no | error message |
+| `de-61.5.aoe2record` | DE 61.5 | yes | yes | start state and timeline (object 649 unknown ×444) |
+| `de-62.0.aoe2record` | DE 62.0 | yes | yes | start state and timeline (object 649 unknown ×430) |
+| `de-63.0.aoe2record` | DE 63.0 | yes | yes | start state and timeline |
+| `de-64.3.aoe2record` | DE 64.3 | yes | yes | start state and timeline (`samples/`, tests) |
+
+The converter reads `.aoe2record`, `.mgz` (UserPatch), `.mgx` (AoC) and `.mgl` (AoK). `--at` needs the
+timeline: for a game without one it stops with "mgz cannot read the commands of this recorded game". Only
+`hd-4.6` is in `samples/`: the other records are larger than 1 MB (`tools/health.py`).
+
 ## Options for the replay in Minecraft
 
 | Option | What the player sees | Accuracy | Cost |

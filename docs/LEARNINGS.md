@@ -46,6 +46,9 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   the entity NBT (`docs/minecraft-versions.md`). A wrong tag type gives "Serialization errors" (`mc_check.py`).
   New entity NBT: convert a map with one unit per type (`add_unit` in a loop) and run `tools/mc_check.py` (1 min).
 - PrismarineJS `data/pc/common/protocolVersions.json` has the data versions of all releases (26.3 = 5023).
+- `mgz.model.parse_match` reads only DE 13.34 and later; `mgz.summary.full.FullSummary` reads HD, UserPatch and older DE
+  but skips the GAIA trees (`aoe2mc.read_old_record` turns the skip off). More test records: GitHub raw
+  `happyleavesaoc/aoc-mgz/master/tests/recs/` (table in `docs/research/replays.md`, #376). `construct` 2.8: `IfThenElse` is a `Switch`.
 
 ## Code
 
