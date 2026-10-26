@@ -3673,13 +3673,13 @@ def stupa(c, w, st, col, T, ctx):
 
 
 def split_gate(c, w, st, col, T, ctx):
-    """Trowulan split gate (candi bentar): two stepped red brick towers with a passage between them."""
+    """Trowulan split gate (candi bentar): two stepped towers of orange fired brick with a passage between them."""
     m = w // 2
     for x0, x1 in ((0, m - 1), (m + 1, w)):
         for k in range(4):
-            c.box(x0 + (k if x0 else 0), x1 - (0 if x0 else k), 3 * k, 3 * k + 3, 2 + k // 2, w - 2 - k // 2, "bricks")
-        c.box(x0, x1, 3, 4, 2, w - 2, "mud_bricks")
-    c.box(m - 1, m + 1, 0, 1, 0, w, "brick_slab[type=top]")
+            c.box(x0 + (k if x0 else 0), x1 - (0 if x0 else k), 3 * k, 3 * k + 3, 2 + k // 2, w - 2 - k // 2, "resin_bricks")
+        c.box(x0, x1, 3, 4, 2, w - 2, "chiseled_resin_bricks")           # carved band of the base
+    c.box(m - 1, m + 1, 0, 1, 0, w, "resin_brick_slab[type=top]")
 
 
 def rekha_deul(c, w, st, col, T, ctx):

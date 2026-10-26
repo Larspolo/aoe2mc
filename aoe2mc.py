@@ -2553,7 +2553,7 @@ COLORS = [("yellow_poplar_leaves", (215, 180, 40)), ("orange_poplar_leaves", (21
           ("bluet", (225, 230, 235)), ("daisy", (235, 235, 225)), ("lily_of", (235, 240, 235)),
           ("mushroom", (160, 110, 80)), ("stone_brick", (122, 122, 122)), ("cobblestone", (110, 110, 110)), ("white_terracotta", (215, 200, 190)),
           ("glass", (170, 200, 220)), ("banner", None), ("terracotta", (200, 180, 160)),
-          ("calcite", (225, 225, 220)), ("quartz", (235, 230, 225)), ("cinnabar", (170, 55, 45)), ("bricks", (150, 70, 55)),
+          ("calcite", (225, 225, 220)), ("quartz", (235, 230, 225)), ("cinnabar", (170, 55, 45)), ("chiseled_resin", (175, 75, 30)), ("resin_brick", (205, 95, 35)), ("bricks", (150, 70, 55)),
           ("brick", (150, 70, 55)), ("deepslate_tile", (55, 55, 60)), ("dark_oak", (65, 45, 25)),
           ("spruce", (105, 75, 45)), ("acacia", (170, 90, 50)), ("jungle", (160, 115, 80)),
           ("crimson", (140, 50, 60)), ("mud_brick", (140, 105, 80)), ("packed_mud", (140, 105, 80)),
