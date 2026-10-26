@@ -38,6 +38,8 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - The cloud clone is shallow: `git fetch --unshallow origin` before a scan of the history (#367).
 - `pyproject.toml` `addopts` has `-q`: `python3 -m pytest -q` gives `-qq`, without the "N passed" line. Wait for the
   exit code, not for "passed" in the output; foreground `sleep` is blocked: use `run_in_background` (#413).
+- `mcp__github__get_job_logs` gives HTTP 404 for the jobs of `ci.yml` (2026-10-26, #443): do not retry. Run its steps
+  (`ruff`, fast, `-m slow`, `-m mc`) locally on the run's `head_sha`; main is red only when one fails there.
 
 ## Libraries
 

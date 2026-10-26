@@ -80,6 +80,19 @@ villager walks there, chops and carries the wood to the town center. Right click
 forages and carries the food to the town center or a mill, and goes on to the next bush when one is empty.
 The sidebar shows the wood and the food.
 
+Live replay of a recorded game: convert the record, then play its commands on a server.
+
+    aoe2mc samples/de-64.3.aoe2record RecordWorld
+    python3 game/run.py RecordWorld --replay [--speed 4] [--from 10:00]
+
+`--speed N` plays N times faster than the game, `--from MM:SS` starts at that game time. Join the server at the
+address that it prints. The replay shows, at their game time: each building and wall (with the blocks of its
+design), chat lines in the player color, age-ups and resigns as a title, and research in the action bar. A trained
+unit appears in front of its building. The units of a move order or a right-click order walk to its target at their
+AoE2 speed, and a group stops there in a line formation. The record has no positions and no results of the game, so
+the replay cannot show: fights, dead units, gathering, destroyed buildings or the exact paths of the units. A unit
+that has no path stays where it is.
+
 | Option | Default | Description |
 |---|---|---|
 | `--tile-size` | 4 | Blocks per AoE2 tile, in each direction. 5 or 6 gives more detail. Range 1–16. |

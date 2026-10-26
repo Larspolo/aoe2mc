@@ -136,6 +136,20 @@ can write it into the world folder. Prefer the datapack.
 
 Not planned: option E.
 
+## State of the replay
+
+Usage: README, section "Use". Two outputs use the timeline of a record (`aoe2mc.read_timeline`, #372):
+- `aoe2mc REC W --at MM:SS` (#373): a world at that time. Buildings and walls of the build commands stand, trained
+  units stand at their building.
+- `game/run.py W --replay [--speed N] [--from MM:SS]` (#374): plays the timeline on a server. Buildings appear at
+  their command time, chat is `/tellraw` in the player color, age-ups and resigns are a title, research is an action
+  bar line (#374). Trained units appear in front of their building when the training ends (#408, IDs: #407). Units
+  of `MOVE` and `ORDER` walk on a path to the target at their AoE2 speed (#409), a group stops in a line formation
+  (#410). Old game versions: #376.
+
+Not possible from the record alone: fights and deaths, gathering, destroyed or unfinished buildings, cut trees,
+used mines and farms, and the exact unit paths. Next: #438 lets Minecraft path finding walk the units (epic #433).
+
 ## Follow-up tickets (milestone 1)
 
 - #134 Add a short AoE2 DE recorded game to `samples/` (owner, `needs-human`).
