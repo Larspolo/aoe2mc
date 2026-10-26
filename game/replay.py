@@ -2,7 +2,8 @@
 Replay a recorded game live (#374): play the "timeline" of aoe2mc.json (aoe2mc.read_timeline, #372) on a running
 server. Each building appears at its command time (the blocks of its design, as with --at, #373), chat lines are
 /tellraw in the player color, age-ups are a title, research is an action bar line, and RESIGN is a title.
-A trained unit appears in front of its building when its training ends (#408, aoe2mc.training).
+A trained unit appears in front of its building when its training ends (#408, aoe2mc.training). The units that a
+MOVE or ORDER command selects walk on a path to its target, one /tp per block at their walk speed (#409, gather.walk).
 
 Replay(game, data).run(speed) plays it; commands(e) gives the commands of one event (the unit tests use it).
 """
@@ -11,6 +12,7 @@ import math
 import os
 import sys
 import time
+import types
 
 import numpy as np
 
@@ -25,6 +27,11 @@ TEXT_COLORS = {"light_gray": "gray", "blue": "blue", "red": "red", "green": "gre
                "cyan": "aqua", "purple": "light_purple", "gray": "dark_gray", "orange": "gold"}
 FLAT = 16                   # tiles of the flat map that draws one design
 MAX_FILL = 32768            # blocks of one /fill command
+PATH_CELLS = 20000          # cells that one path search may look at: a unit with no path stays (no time lag)
+SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, "PIKEMAN": 1.0, "EAGLE": 1.1,
+          "ARCHER": 0.96, "SKIRMISHER": 0.96, "CROSSBOWMAN": 0.96, "CAVALRY_ARCHER": 1.4, "SCOUT": 1.2,
+          "LIGHT_CAVALRY": 1.5, "KNIGHT": 1.35, "CAMEL": 1.45, "MONK": 0.7, "BATTERING_RAM": 0.5, "MANGONEL": 0.6,
+          "SCORPION": 0.65, "TRADE_CART": 1.0}   # walk speed of common units, tiles per game second (AoE2 DE)
 
 
 def pretty(name):
@@ -48,6 +55,9 @@ class Replay:
                         o["footprint"][3])) for o in data["objects"] if o["kind"] == "building" and "footprint" in o]
         self.placed, self.map, self.added = [], None, 0        # buildings of the replay, gather.Map, placed in the map
         self.trained = {}                                       # units per building footprint
+        self.units, self.new = {}, []           # object ID -> gather.Villager; spawned units without a known ID
+        self.moving = {}                        # object ID -> game time (ms) of its next step
+        self.refs = {o["ref"]: o for o in data["objects"] if o.get("ref") is not None}
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
         self.sent, self.busy = 0, 0.0           # commands sent, seconds spent sending them
@@ -64,6 +74,8 @@ class Replay:
             return self.build(e)
         if kind == "spawn":
             return self.spawn(e)
+        if kind in ("move", "order") and e.get("objects"):
+            return self.move(e)
         if kind == "chat" and e.get("text"):
             name, color = self.player(e["player"]) if e.get("player") else ("Game", "white")
             return ["tellraw @a " + json.dumps([text(f"<{name}> ", color), text(e["text"])])]
@@ -90,7 +102,25 @@ class Replay:
         for x, y in tiles:
             if (name, x, y) not in self.seen:
                 self.seen.add((name, x, y))
+                k = len(self.placed)
                 out += self.building(name, e["player"], x, y)
+                if len(self.placed) > k:
+                    out += self.push_out(self.placed[-1][2])
+        return out
+
+    def push_out(self, rect):
+        """The units in the footprint of a new building step out to the nearest free cell, as in AoE2 (a unit in a
+        block suffocates; the replay does not know all walks)."""
+        x0, x1, z0, z1 = rect
+        cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
+        self.grid()
+        free = self.map.around(cells)
+        out = []
+        for i, v in list(self.units.items()) + [(None, v) for _, v in self.new]:
+            if v.cell in cells and free and "FARM" not in self.placed[-1][1]:
+                v.path = [min(free, key=lambda c: (math.dist(c, v.cell), c))]
+                self.gather.walk(types.SimpleNamespace(map=self.map, command=out.append), v)
+                self.moving.pop(i, None)                                # it stops there
         return out
 
     def building(self, name, player, x, y):
@@ -172,13 +202,7 @@ class Replay:
         rect = self.home(e) if prefix in ("U", "H") else None
         if rect is None:
             return []
-        if self.map is None:
-            import gather                                           # gather -> build -> replay: import it late
-            self.map = gather.Map(self.data)
-        for _, name, r in self.placed[self.added:]:
-            if "FARM" not in name:
-                self.map.building(name, r, None, False)
-        self.added = len(self.placed)
+        self.grid()
         x0, x1, z0, z1 = rect
         cells = sorted(self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)}),
                        key=lambda c: (abs(c[1] - z1), abs(2 * c[0] + 1 - x0 - x1), c))
@@ -194,7 +218,100 @@ class Replay:
         nbt = units.to_version(nbt, self.data_version)
         kind = str(nbt.pop("id"))
         del nbt["Pos"]
+        v = self.gather.Villager(units.uuid_str(nbt["UUID"]), pos)
+        v.name = e["name"]
+        self.new.append((e["player"], v))
         return [f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}"]
+
+    def grid(self):
+        """The gather.Map of the world with the buildings of the replay. The first call also finds the units of the
+        start state (the entities of aoe2mc.json with an object ID)."""
+        if self.map is None:
+            import gather                                           # gather -> build -> replay: import it late
+            self.gather, self.map, T = gather, gather.Map(self.data), self.T
+            for o in self.data["objects"]:
+                if o["kind"] == "unit" and "uuid" in o and o.get("ref") is not None:
+                    x, z = o["tile"][0] * T, o["tile"][1] * T
+                    self.units[o["ref"]] = v = gather.Villager(o["uuid"], (x, float(self.map.y(int(x), int(z)) or 0), z))
+                    v.name = o["name"]
+        for _, name, r in self.placed[self.added:]:
+            if "FARM" not in name:
+                self.map.building(name, r, None, False)
+        self.added = len(self.placed)
+        return self.map
+
+    def unit(self, i, name, player):
+        """The unit with object ID i. A new ID takes the oldest spawned unit of the player with its name (the game
+        gives the IDs in the order of the trainings, aoe2mc.name_timeline)."""
+        if i not in self.units and name:
+            k = next((k for k, (p, v) in enumerate(self.new) if p == player and v.name == name), None)
+            if k is not None:
+                self.units[i] = self.new.pop(k)[1]
+        return self.units.get(i)
+
+    def goals(self, e):
+        """The cells that the units of a MOVE or ORDER go to: next to the target object of an ORDER, else the
+        target tile (or next to it, when it is blocked)."""
+        m, T, t = self.map, self.T, e.get("target")
+        if e["kind"] == "order" and t is not None and (t in self.units or t in self.refs):
+            o = self.refs.get(t, {})
+            if t in self.units:
+                cells = {self.units[t].cell}
+            elif "footprint" in o:
+                x0, z0, x1, z1 = o["footprint"]
+                cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
+            else:
+                cells = m.cells((int(o["tile"][0]), int(o["tile"][1])))
+            return m.around(cells)
+        if "tile" not in e:
+            return set()
+        c = int(e["tile"][0] * T), int(e["tile"][1] * T)
+        return {c} if m.free(*c) else m.around(m.cells((c[0] // T, c[1] // T)))
+
+    def move(self, e):
+        """MOVE and ORDER: each selected unit gets a path to the target. Its steps come later (steps())."""
+        self.grid()
+        goals = self.goals(e)
+        for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"])):
+            v = self.unit(i, name, e["player"])
+            if v is None or not goals:
+                continue
+            v.path = self.map.path(v.cell, goals, PATH_CELLS) or []
+            due = self.moving[i] if i in self.moving and v.path else self.next_step(v, e["time"])
+            if due is None:
+                self.moving.pop(i, None)
+            else:
+                self.moving[i] = due
+        return []
+
+    def next_step(self, v, t):
+        """The game time (ms) at which unit v reaches the next cell of its path when it leaves at t, or None."""
+        if not v.path:
+            return None
+        speed = next((s for k, s in SPEEDS.items() if v.name.startswith(k)), 1.0) * self.T    # blocks per second
+        x, z = v.path[0]
+        return t + 1000 * math.hypot(x + 0.5 - v.pos[0], z + 0.5 - v.pos[2]) / speed
+
+    def steps(self, t):
+        """The /tp commands of the steps that are due at game time t (ms)."""
+        out = []
+        sink = types.SimpleNamespace(map=self.map, command=out.append)
+        for i, due in list(self.moving.items()):
+            v = self.units[i]
+            while due is not None and due <= t:
+                if not self.map.free(*v.path[0]):                       # a new building on the way: a new path
+                    goal = v.path[-1]
+                    v.path = (self.map.path(v.cell, {goal}, PATH_CELLS) or []) if self.map.free(*goal) else []
+                    if not v.path:
+                        due = None
+                        break
+                self.gather.walk(sink, v)
+                due = self.next_step(v, due)
+            if due is None:
+                del self.moving[i]
+            else:
+                self.moving[i] = due
+        return out
 
     def state(self, i):
         name, _, props = aoe2mc.B.states[i].partition("[")
@@ -219,13 +336,20 @@ class Replay:
         (rate) and the commands per second that the timeline needs on average (need)."""
         events = sorted((e for e in self.data.get("timeline", []) + self.spawns() if e["time"] >= start),
                         key=lambda e: e["time"])
-        t0, lag, n = clock(), 0.0, 0
-        for e in events:
-            due = (e["time"] - start) / 1000 / speed
+        t0, lag, n, k = clock(), 0.0, 0, 0
+        while k < len(events) or self.moving:
+            step = min(self.moving.values(), default=math.inf)        # the next step of a walking unit
+            e = events[k] if k < len(events) and events[k]["time"] <= step else None
+            k += e is not None
+            now = e["time"] if e else step
+            due = (now - start) / 1000 / speed
             wait = due - (clock() - t0)
             if wait > 0:
                 sleep(wait)
             lag = max(lag, clock() - t0 - due)
+            if e is None:
+                self.send(self.steps(now))
+                continue
             cmds = self.commands(e)
             if cmds:
                 n += 1
