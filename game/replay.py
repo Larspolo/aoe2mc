@@ -38,6 +38,7 @@ FORMATION = 2              # blocks between the units of a group in a formation 
 LEG = 48                    # path cells of one plugin order: within the reach of a Minecraft path search (#438)
 TALL = 48                   # blocks above the ground that a DELETE clears for a start building (no height in aoe2mc.json)
 BAR = "aoe2mc:replay"       # the boss bar with the game time (#684)
+POP = "aoe_pop"             # the sidebar objective with the population of each player (#741)
 POLL = 0.2                  # seconds between two calls of the poll of Replay.run while it waits (#685)
 NEXT = 5                    # tiles: an empty resource sends its villager to the next one this near (#720)
 PATH_CELLS = 20000          # cells that one path search may look at: a unit with no path stays (no time lag)
@@ -74,6 +75,10 @@ class Replay:
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
         self.sent, self.busy = 0, 0.0           # commands sent, seconds spent sending them
+        self.pop, self.shown = {}, None         # player -> live units (no animals), the value in the sidebar (#741)
+        for o in data["objects"]:
+            if o["kind"] == "unit" and o.get("player") and not units.animal(o["name"]):
+                self.pop[o["player"]] = self.pop.get(o["player"], 0) + 1
 
     def player(self, p):
         info = self.data["players"].get(str(p), {})
@@ -220,6 +225,7 @@ class Replay:
                 self.refs.pop(i, None)
                 self.moving.pop(i, None)
                 self.working.pop(i, None)
+                self.pop[e["player"]] = max(0, self.pop.get(e["player"], 0) - 1)
                 out.append(f"kill {v.uuid}")
         return out
 
@@ -286,6 +292,7 @@ class Replay:
         v = self.gather.Villager(units.uuid_str(nbt["UUID"]), pos)
         v.name, v.player = e["name"], e["player"]
         self.new.append((e["player"], v))
+        self.pop[e["player"]] = self.pop.get(e["player"], 0) + 1
         out = [f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}"]
         if self.ai:                                                 # the AoE2 values: plugin commands (#632)
             import combat                                           # combat -> gather -> build -> replay
@@ -586,6 +593,22 @@ class Replay:
         return [f"bossbar set {BAR} name {json.dumps(text(name), ensure_ascii=False)}",
                 f"bossbar set {BAR} value {min(int(now) // 1000, max(1, int(end) // 1000))}", f"bossbar set {BAR} players @a"]
 
+    def score_commands(self):
+        """The sidebar commands for the population of each player that changed since the last call (#741). The score
+        holder is "P<n>" (a holder name has no space); its display name is the player name in the player color."""
+        out = []
+        if self.shown is None:
+            self.shown, out = {}, [f'scoreboard objectives add {POP} dummy "Population"',
+                                   f"scoreboard objectives setdisplay sidebar {POP}"]
+        for p in sorted(self.pop):
+            if self.shown.get(p) != self.pop[p]:
+                if p not in self.shown:
+                    name, color = self.player(p)
+                    out.append(f"scoreboard players display name P{p} {POP} {json.dumps(text(name, color))}")
+                self.shown[p] = self.pop[p]
+                out.append(f"scoreboard players set P{p} {POP} {self.pop[p]}")
+        return out
+
     def send(self, cmds):
         t = time.perf_counter()
         for c in cmds:
@@ -677,7 +700,7 @@ class Replay:
             lag = max(lag, clock() - r0 - (now - g0) / 1000 / self.speed)
             if int(now) // 1000 != shown:                              # at most once per game second
                 shown = int(now) // 1000
-                send(self.clock_commands(now, end, self.speed))
+                send(self.clock_commands(now, end, self.speed) + self.score_commands())
             if e is None:
                 self.send(self.steps(now))
                 continue
@@ -689,7 +712,7 @@ class Replay:
                     m, s = divmod(e["time"] // 1000, 60)
                     log(f"{m:02d}:{s:02d} {e['kind']} {e.get('name') or e.get('age') or ''} "
                         f"player {e.get('player')}: {len(cmds)} commands")
-        send(self.clock_commands(end, end, speed, done=True))
+        send(self.clock_commands(end, end, speed, done=True) + self.score_commands())
         span = (events[-1]["time"] - start) / 1000 / speed if events else 0                 # at the start speed
         return {"events": n, "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2),
                 "rate": round(self.sent / self.busy) if self.busy else 0, "need": round(self.sent / span) if span else 0}
