@@ -205,3 +205,7 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - A building target (#660): `damage <uuid> 1 ... by <mob>` answers "Target is invulnerable" and the plugin counts no hit
   (most runs): hit it with `aoe attack`. `execute if entity <uuid>[tag=T]` is not valid syntax and never passes:
   use `@e[type=slime,tag=T]`. A NoAI zombie burns in the sun at y 200: use a `husk`.
+- `summon skeleton` with NBT gets no bow: `RangedEntity#rangedAttack` then throws "Invalid weapon firing an arrow"
+  and the server removes the mob ("No entity was found" right after the order). Give
+  `equipment:{mainhand:{id:"minecraft:bow",count:1}}`. A Java exception of the plugin is only in `game.server.log` (#608).
+- An arrow at the stand-in slime of a building sticks in the walls first (#608): the range goal counts each shot itself.
