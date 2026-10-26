@@ -36,6 +36,7 @@ import json
 import math
 import os
 import re
+import sys
 import textwrap
 import time
 import zlib
@@ -2027,6 +2028,7 @@ def set_pos(nbt, x, y, z):
 
 
 MOVED = Counter()
+TICKS = []                  # (time, phase) of each phase end of the last convert(): tools/measure_convert.py (#690)
 
 
 def entity_chunk(cx, cz, ents, cols, vol, passable):
@@ -2771,6 +2773,32 @@ def block_color(state):
 # --------------------------------------------------------------------------------------------
 # Main
 # --------------------------------------------------------------------------------------------
+class Progress:
+    """One line that changes in place (\\r) during a long phase, at most each `every` s, so that a large map does not
+    look stuck (#691). Nothing when the output is not a terminal (CI, tests, a pipe): the output stays the same."""
+
+    def __init__(self, label, total, out=None, every=2.0, clock=time.time):
+        self.out = out or sys.stdout
+        self.label, self.total, self.every, self.clock = label, total, every, clock
+        self.on = total > 0 and self.out.isatty()
+        self.t0 = self.last = clock()
+        self.width = 0
+
+    def step(self, done):
+        if not self.on or self.clock() - self.last < self.every:
+            return
+        self.last = now = self.clock()
+        text = f"\r  {self.label} {done}/{self.total} ({100 * done // self.total} %), {now - self.t0:.0f} s"
+        self.width = max(self.width, len(text))
+        self.out.write(text)
+        self.out.flush()
+
+    def close(self):        # clear the line, so that the next print starts at column 0
+        if self.width:
+            self.out.write("\r" + " " * self.width + "\r")
+            self.out.flush()
+
+
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
             barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False,
             garrison="outside", border_design="diorama", ambience="basic", at=None):
@@ -2797,9 +2825,11 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     rng = np.random.default_rng(seed)
     t0 = time.time()
     times, clock = {}, [t0]
+    TICKS[:] = [(t0, "start")]
 
     def tick(phase):        # add the time since the last tick to the phase (--verbose)
         now = time.time()
+        TICKS.append((now, phase))
         times[phase] = times.get(phase, 0.0) + now - clock[0]
         clock[0] = now
 
@@ -2883,8 +2913,10 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     top_view = np.zeros((cols.width, cols.width), np.uint16)     # for icon.png and preview.png
     ground = np.zeros((cols.width, cols.width), np.int16)        # y where a unit stands, for aoe2mc.json
     ys = np.arange(MIN_Y, MAX_Y - 1)[:, None, None]
+    progress = Progress("chunks", nchunks * nchunks + len(rim))
     for cx in range(nchunks):
         for cz in range(nchunks):
+            progress.step(cx * nchunks + cz)
             data, vol = build_chunk(cx, cz, cols, per_chunk.get((cx, cz)))
             regions.setdefault((cx >> 5, cz >> 5), {})[(cx & 31, cz & 31)] = data
             solid = (vol != AIR) & (vol != BARRIER)
@@ -2901,9 +2933,11 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
                 if ed:
                     entity_regions.setdefault((cx >> 5, cz >> 5), {})[(cx & 31, cz & 31)] = ed
                 tick("units")
-    for cx, cz in sorted(rim):
+    for i, (cx, cz) in enumerate(sorted(rim)):
+        progress.step(nchunks * nchunks + i)
         data, _ = build_chunk(cx, cz, outside, per_chunk[(cx, cz)], (cx * 16, cz * 16))
         regions.setdefault((cx >> 5, cz >> 5), {})[(cx & 31, cz & 31)] = data
+    progress.close()
     tick("chunks")
     for (rx, rz), chunks in regions.items():
         write_region(os.path.join(dim, "region", f"r.{rx}.{rz}.mca"), chunks)
