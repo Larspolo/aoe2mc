@@ -14,10 +14,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.AbstractSkeleton;
+import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
@@ -38,6 +41,7 @@ import org.bukkit.scoreboard.Criteria;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
+import org.bukkit.util.Vector;
 
 import com.destroystokyo.paper.entity.RangedEntity;
 import com.destroystokyo.paper.entity.ai.Goal;
@@ -166,7 +170,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             mob.lookAt(t);
             int now = Bukkit.getCurrentTick();
             if (now >= next && near && mob instanceof RangedEntity r) {
-                r.rangedAttack(t, 1.0f);
+                if (mob instanceof AbstractSkeleton && mob.getEquipment().getItemInMainHand().getType() != Material.BOW) {
+                    shoot(mob, t);            // the skeleton shot throws "Invalid weapon" for a crossbow (#633)
+                } else {
+                    r.rangedAttack(t, 1.0f);
+                }
                 next = now + range.ticks;
             }
         }
@@ -180,6 +188,16 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         public EnumSet<GoalType> getTypes() {
             return EnumSet.of(GoalType.MOVE, GoalType.LOOK);
         }
+    }
+
+    // A vanilla arrow with the aim of AbstractSkeleton.performRangedAttack: at a third of the target height,
+    // raised by 0.2 per block of distance, speed 1.6. The damage handler (onHit) gives the AoE2 damage.
+    private static void shoot(Mob mob, LivingEntity t) {
+        Location from = mob.getEyeLocation().subtract(0, 0.1, 0);
+        Vector v = t.getLocation().add(0, t.getHeight() / 3, 0).toVector().subtract(from.toVector());
+        v.setY(v.getY() + 0.2 * Math.hypot(v.getX(), v.getZ()));
+        mob.launchProjectile(Arrow.class, v.normalize().multiply(1.6));
+        mob.getWorld().playSound(mob, Sound.ITEM_CROSSBOW_SHOOT, 1.0f, 1.0f);
     }
 
     /** The holder of a chest menu: it tells a menu from the other inventories. */
