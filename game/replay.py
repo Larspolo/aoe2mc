@@ -154,10 +154,13 @@ class Replay:
         self.stock = {}                         # player -> estimated resources: START + gather steps - costs (#932)
         self.gathered, self.villagers = {}, {}  # player -> resources of the gather steps, trained villagers (#1065)
         self.reached, self.researched = {}, {}  # player -> {age: game time (ms)}, researched technologies (#1067)
+        self.vills, self.vhigh = {}, {}         # player -> live villagers (est.), the highest count (#1086)
         for o in data["objects"]:
             if o["kind"] == "unit" and o.get("player") and not units.animal(o["name"]):
                 self.pop[o["player"]] = self.pop.get(o["player"], 0) + 1
                 self.counted += [o["uuid"]] * ("uuid" in o)
+            if o["kind"] == "unit" and o.get("player") and o["name"].startswith("VILLAGER"):
+                self.villager(o["player"], 1)
 
     def player(self, p):
         info = self.data["players"].get(str(p), {})
@@ -172,6 +175,11 @@ class Replay:
     def learn(self, e):
         """Count a research of the timeline for the summary (#1067)."""
         self.researched[e.get("player")] = self.researched.get(e.get("player"), 0) + 1
+
+    def villager(self, p, n, live=None):
+        """n more live villagers of player p, or the `live` count of the census: keep the highest count (#1086)."""
+        self.vills[p] = live if live is not None else self.vills.get(p, 0) + n
+        self.vhigh[p] = max(self.vhigh.get(p, 0), self.vills[p])
 
     def resources(self, p):
         return self.stock.setdefault(p, dict(START))
@@ -502,6 +510,7 @@ class Replay:
         self.pay(e["player"], e["name"])
         if e["name"].startswith("VILLAGER"):
             self.villagers[e["player"]] = self.villagers.get(e["player"], 0) + 1
+            self.villager(e["player"], 1)
         rect = self.home(e) if prefix in ("U", "H") else None
         if rect is None:
             return []
@@ -1040,7 +1049,7 @@ class Replay:
             res = ", ".join(f"{r} {v}" for r, v in g.items())
             out.append("tellraw @a " + json.dumps([text(name, color), text(
                 f": villagers trained {self.villagers.get(p, 0)}, gathered {res}")]))
-        return out + self.tech_commands()
+        return out + self.tech_commands() + self.society_commands()
 
     def tech_commands(self):
         """One chat line per player with the game time of each age-up (MM:SS, "-": not reached) and the number of
@@ -1053,6 +1062,30 @@ class Replay:
                              for a in ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE"))
             out.append("tellraw @a " + json.dumps([text(name, color), text(
                 f": {ages}, technologies {self.researched.get(p, 0)}")]))
+        return out
+
+    def society_commands(self):
+        """One chat line per player with the values of the AoE2 Society tab (#1086): castles and wonders built (each
+        foundation once, as build()), tribute sent and received (all resources), and the highest villager count
+        (est.: the start and the trained villagers, the census of the plugin counts the losses)."""
+        built, sent, got, seen = {}, {}, {}, set()
+        for e in self.data.get("timeline", []):
+            p = e.get("player")
+            name = e.get("name") or self.kinds.get(e.get("type"), ("?", ""))[1]
+            if e["kind"] == "build" and name in ("CASTLE", "WONDER") and (p, tuple(e.get("tile", ()))) not in seen:
+                seen.add((p, tuple(e.get("tile", ()))))
+                built[p, name] = built.get((p, name), 0) + 1
+            elif e["kind"] == "tribute" and e.get("to"):
+                n = sum(e.get(r, 0) for r in START) or int(e.get("amount", 0))   # old records: one resource
+                sent[p], got[e["to"]] = sent.get(p, 0) + n, got.get(e["to"], 0) + n
+        out = []
+        for p in sorted(self.pop.keys() | self.vhigh.keys() | sent.keys() | got.keys() | {q for q, _ in built}):
+            if p is None:
+                continue
+            name, color = self.player(p)
+            out.append("tellraw @a " + json.dumps([text(name, color), text(
+                f": castles {built.get((p, 'CASTLE'), 0)}, wonders {built.get((p, 'WONDER'), 0)}, tribute sent "
+                f"{sent.get(p, 0)}, received {got.get(p, 0)}, villager high {self.vhigh.get(p, 0)} (est.)")]))
         return out
 
     def score_commands(self):
@@ -1081,6 +1114,9 @@ class Replay:
         for p in self.pop:
             m = re.search(r"Count: (\d+)", self.game.command(f"execute if entity @e[tag={COUNTED},tag=aoe2mc.p{p}]"))
             self.pop[p] = int(m[1]) if m else 0
+            m = re.search(r"Count: (\d+)", self.game.command(
+                f"execute if entity @e[tag={COUNTED},tag=aoe2mc.p{p},type=minecraft:villager]"))
+            self.villager(p, 0, int(m[1]) if m else 0)               # the record has no deaths (#1086)
 
     def send(self, cmds):
         t = time.perf_counter()
