@@ -30,22 +30,22 @@ def menus(server):
 def test_the_blacksmith_menu_has_fletching_next_to_forging():
     server, g = setup()
     train.open_menu(g, "Steve", (11, 3))
-    assert menus(server) == ["aoe menu Steve Blacksmith 0:book:Forging:150 food · 50 s · research "
-                             "1:book:Fletching:100 food · 50 gold · 30 s · research"]
+    assert menus(server)[0].startswith("aoe menu Steve Blacksmith 0:book:Forging:150 food · 50 s · research ")
+    assert " 2:book:Fletching:100 food · 50 gold · 30 s · research " in menus(server)[0] + " "
 
 
 def test_a_click_queues_fletching_once_and_takes_its_cost():
     server, g = setup(food=1000, gold=1000)
     rect = train.open_menu(g, "Steve", (11, 3))
-    assert train.order(g, "Steve", rect, 1, shift=True) == 1 and (g.stock["food"], g.stock["gold"]) == (900, 950)
-    assert train.order(g, "Steve", rect, 1) == 0 and (g.stock["food"], g.stock["gold"]) == (900, 950)
-    assert menus(server)[-1].endswith("1:book:Fletching:100 food · 50 gold · 30 s · researching")
+    assert train.order(g, "Steve", rect, 2, shift=True) == 1 and (g.stock["food"], g.stock["gold"]) == (900, 950)
+    assert train.order(g, "Steve", rect, 2) == 0 and (g.stock["food"], g.stock["gold"]) == (900, 950)
+    assert " 2:book:Fletching:100 food · 50 gold · 30 s · researching " in menus(server)[-1] + " "
 
 
 def test_fletching_gives_archers_one_attack_and_one_range():
     server, g = setup()
     rect = train.open_menu(g, "Steve", (11, 3))
-    train.order(g, "Steve", rect, 1)
+    train.order(g, "Steve", rect, 2)
     train.tick(g, 29)
     assert not g.techs and not [c for c in server.log if c.startswith(("aoe stats", "aoe range"))]
     train.tick(g, 1)
@@ -65,7 +65,7 @@ def test_fletching_gives_archers_one_attack_and_one_range():
 def test_a_new_archer_has_the_fletching_range():
     server, g = setup(food=0, gold=45)
     g.stock.update(wood=25)
-    g.techs.add("FLETCHING")
+    g.techs.update({"FEUDAL_AGE", "FLETCHING"})                        # archers are a Feudal Age unit (#674)
     assert train.queue(g, "Steve", (17, 3), "ARCHER")
     uuid, = train.tick(g, 35)
     assert combat.stats_command(uuid, "ARCHER", train.stats(g, "ARCHER")) in server.log

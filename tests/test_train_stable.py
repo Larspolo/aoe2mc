@@ -25,6 +25,7 @@ def setup(food=80, done=True):
     if done is not None:
         g.sites.append({"name": "STABLE", "player": 1, "footprint": [10, 13, 2, 5], "done": done})
     g.stock.update(food=food)
+    g.techs.add("FEUDAL_AGE")                                          # scouts are a Feudal Age unit (#674)
     server.scores["aoe_use"] = 1
     return server, g
 
@@ -100,6 +101,7 @@ def test_a_trained_scout_is_a_rider_on_a_server(tmp_path):
         game.forceload()
         g = gather.Gather(game, data, tick=0.25).setup()
         g.stock.update(food=80)
+        g.techs.add("FEUDAL_AGE")
         rect, = train.homes(g)
         assert train.queue(g, "nobody", rect[::2], "SCOUT_CAVALRY")
         uuid, = train.tick(g, train.TRAIN_TIMES["SCOUT_CAVALRY"])
