@@ -386,11 +386,23 @@ create_terrain FOREST { base_terrain GRASS2 number_of_clumps 6 number_of_tiles 1
   spacing_to_other_terrain_types 2 }
 create_terrain DIRT3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
 """
+# Islands: water on the whole map, one island of grass for each player (ISLES keeps water between the islands), a beach
+# at the coast (COASTS) and forests on each island away from the town center.
+ISLANDS = """
+<LAND_GENERATION>
+base_terrain WATER
+create_player_lands { terrain_type GRASS land_percent 40 base_size 10 clumping_factor 15 }
+<TERRAIN_GENERATION>
+create_terrain FOREST { base_terrain GRASS number_of_clumps 12 land_percent 7 set_avoid_player_start_areas 14
+  spacing_to_other_terrain_types 2 clumping_factor 15 }
+create_terrain DIRT3 { base_terrain GRASS number_of_clumps 10 land_percent 2 }
+"""
 GENERATORS = {"arabia": ARABIA,
               "arena": ARENA,
               "black_forest": BLACK_FOREST,
               "gold_rush": GOLD_RUSH,
               "highland": HIGHLAND,
+              "islands": ISLANDS,
               "mediterranean": MEDITERRANEAN,
               "nomad": NOMAD}
 WALLS = {"arena": 23}           # the radius in tiles of the stone wall circle around each player (outside START)
@@ -398,8 +410,10 @@ BAND = 6                        # the forest inside the wall: tiles of width, on
 PATHS = {"black_forest": 1}     # the half width in tiles of the open path from each player to the middle
 GOLDS = {"gold_rush": (10, 6, 5)}  # the gold of the middle: radius in tiles, clumps of gold mines, mines in a clump
 RIVERS = {"highland": (3, 3, 5)}  # the river: half width in tiles, the least and the most fords
-COASTS = {"mediterranean": 1,   # the beach: tiles of width on the land next to the water
+COASTS = {"islands": 1,         # the beach: tiles of width on the land next to the water
+          "mediterranean": 1,
           "nomad": 1}
+ISLES = {"islands": 2}          # the water between two islands: tiles that each island gives up next to another one
 NOMADS = {"nomad": (6, 7)}      # no town center: each villager alone, at (tiles from the origin, tiles from each other)
 RINGS = {"gold_rush": (14, 5)}  # the forest ring around the gold: inner radius and width in tiles, gaps between players
 WOODS = {"arabia": (10, 30, 3), # the wood line of each player (tiles from the town center, forest tiles) and its
@@ -480,6 +494,31 @@ def river(d, spec, rng):
     d["terrain"] = terrain.tolist()
 
 
+def isles(d, gap):
+    """Keep the islands apart: each land tile goes to the player origin that a walk over the land reaches first, and a
+    tile within gap (a square) of the land of another player becomes water, so no walk goes from one island to another."""
+    n, terrain = d["size"], np.array(d["terrain"])
+    land, owner = terrain != TERRAINS["WATER"], np.full((n, n), -1, np.int32)
+    for k, st in enumerate(d["lands"]):
+        owner[st["x"], st["y"]] = k
+    while True:                                          # grow all labels one step at a time (a walk of 4 steps)
+        new = owner.copy()
+        for dx, dy in STEPS:
+            src = np.roll(owner, (dx, dy), (0, 1))
+            if dx:
+                src[0 if dx > 0 else -1, :] = -1
+            else:
+                src[:, 0 if dy > 0 else -1] = -1
+            take = land & (new < 0) & (src >= 0)
+            new[take] = src[take]
+        if (new == owner).all():
+            break
+        owner = new
+    for k in range(len(d["lands"])):
+        terrain[(owner == k) & dilate((owner >= 0) & (owner != k), gap)] = TERRAINS["WATER"]
+    d["terrain"] = terrain.tolist()
+
+
 def coast(d, w):
     """A BEACH of w tiles on the land (not forest) next to the water."""
     terrain = np.array(d["terrain"])
@@ -502,7 +541,7 @@ def paths(d, w):
 
 def random_map(kind, seed, players=2):
     """The map description of an own generator (GENERATORS) and seed: the land of generate() (with the WALLS, PATHS,
-    RIVERS and COASTS of the kind), a town center at each player origin (not for NOMADS) and the START objects around
+    RIVERS, ISLES and COASTS of the kind), a town center at each player origin (not for NOMADS) and the START objects around
     it, on free tiles (no forest, no water, not next to a wall)."""
     d = generate(GENERATORS[kind], seed, players)
     rng = np.random.default_rng([seed, 993])
@@ -510,6 +549,8 @@ def random_map(kind, seed, players=2):
         paths(d, PATHS[kind])
     if kind in RIVERS:
         river(d, RIVERS[kind], rng)
+    if kind in ISLES:
+        isles(d, ISLES[kind])
     if kind in COASTS:
         coast(d, COASTS[kind])
     objects = walls(d, WALLS[kind], rng) if kind in WALLS else []
