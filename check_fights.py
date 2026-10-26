@@ -78,7 +78,7 @@ with run.Game(world) as game, mc_shot.Client(game.game_port, game.version) as cl
         sel = a in g.selected and "Test passed" in game.command(f"execute if entity @e[tag={gather.SELECT}]")
         aim_click((X + 6.5, ground(X, Z) + 3, Z + gap / 2), t)
         t0, hits_t, hits_a, first, times_t = time.time(), [ht0], [ha0], None, []
-        shot = False
+        shot, track = False, []
         while time.time() - t0 < 60:
             ht, ha = health(t), health(a)
             if ht is not None and ht != hits_t[-1]:
@@ -91,6 +91,9 @@ with run.Game(world) as game, mc_shot.Client(game.game_port, game.version) as cl
                 pa, pt = g.pos(a), g.pos(t)
                 print("t", round(time.time() - t0, 1), "a", pa and [round(c, 1) for c in pa], "t", pt and [round(c, 1) for c in pt], ht, ha,
                       game.command(f"data get entity {t} Motion")[-40:], flush=True)
+            pt = g.pos(t)
+            if pt:
+                track.append((time.time() - t0, pt[0], pt[2]))
             if ha is not None and ha != hits_a[-1]:
                 hits_a.append(ha)
             if not shot and len(hits_t) >= 2 and k in (0, 1):
@@ -102,10 +105,14 @@ with run.Game(world) as game, mc_shot.Client(game.game_port, game.version) as cl
             if ht is None or ha is None:
                 break
             time.sleep(0.05)
+        speed = max([math.hypot(b[1] - a_[1], b[2] - a_[2]) / (b[0] - a_[0]) for a_, b in zip(track, track[1:])
+                     if False] + [math.hypot(track[j][1] - track[i][1], track[j][2] - track[i][2]) / (track[j][0] - track[i][0])
+                     for i in range(len(track)) for j in range(i + 1, len(track)) if 0.9 < track[j][0] - track[i][0] < 1.1] or [0])
         drops = lambda h: [round(x - y, 1) for x, y in zip(h, h[1:]) if x is not None and y is not None]
         res["pairs"].append({"attacker": a_name, "target": t_name, "selected": sel, "target_hp": hits_t,
                              "attacker_hp": hits_a, "times_t": times_t, "per_hit_target": drops(hits_t), "per_hit_attacker": drops(hits_a),
-                             "dist_first_hit": first, "target_dead": health(t) is None,
+                             "dist_first_hit": first, "target_speed": round(speed, 2),
+                             "attacker_healed": any(y > x for x, y in zip(hits_a, hits_a[1:]) if x is not None and y is not None), "target_dead": health(t) is None,
                              "expected_per_hit": combat.damage(a_name, t_name),
                              "expected_back": combat.damage(t_name, a_name)})
         print(res["pairs"][-1], flush=True)
