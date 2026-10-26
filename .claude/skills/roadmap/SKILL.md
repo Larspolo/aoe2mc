@@ -20,7 +20,8 @@ epics have no goal left that an agent can do.
    its epics come from the `improve` skill and the owner.
 3. In that goal, take the first missing feature without an epic.
 4. Make the epic with the `ticket` skill: the title is an instruction, the body has the goal (what the player sees),
-   the acceptance criteria, the Minecraft feature that does the job (CLAUDE.md), the line "Roadmap: `<key>`", and
+   the acceptance criteria (with a check that the whole feature is covered: `ticket` skill, "Split an L ticket"),
+   the Minecraft feature that does the job (CLAUDE.md), the line "Roadmap: `<key>`", and
    the labels `epic`, `feature`, `size:L`, `P3`.
    When the feature has two or more good ways with no single best one (the interface, a game rule), make a decision
    ticket first (`ticket` skill, "Decision tickets") and let the sub-issues that need it depend on it.
