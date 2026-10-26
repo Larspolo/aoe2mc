@@ -185,6 +185,9 @@ Without AoE2, use an own generator of the program. It needs no game file:
 
 Arabia gives open grass and dirt land, small forests and ponds, and 2 players on a circle. Each player gets a town
 center, 3 villagers, a scout, sheep, berry bushes, gold and stone mines, boars and deer.
+`--random-map arena` closes each player in a circle of stone walls with a forest inside it, and has open land
+between the circles. `--random-map black_forest` covers most of the map with forest, with open player lands, an open
+middle and open paths between them.
 
 ## Buildings
 
