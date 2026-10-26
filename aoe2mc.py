@@ -1727,9 +1727,15 @@ def place_objects(objects, players, cols, rng):
             mound(E, cols, bx, bz, T * 0.4, 2, ["mossy_cobblestone", "cobblestone", "stone"], rng)
             stats["rocks"] += 1
         elif kind == "O" and ("FORAGE" in name or "FRUIT_BUSH" in name):
-            for dx, dz in ((0, 0), (1, 0), (0, 1)):
-                if cols.inside(bx + dx, bz + dz):
-                    E.add([bx + dx], [cols.surface(bx + dx, bz + dz)], [bz + dz], "sweet_berry_bush[age=3]")
+            x0, z0 = bx // T * T, bz // T * T          # a full bush fills its tile, 2 blocks high (#590): berries
+            for x in range(x0, x0 + T):                 # around, leaves in the middle (a berry bush needs dirt below)
+                for z in range(z0, z0 + T):
+                    if cols.inside(x, z):
+                        ring = x in (x0, x0 + T - 1) or z in (z0, z0 + T - 1)
+                        mid = not ring or T <= 2 and (x, z) == (x0, z0)
+                        y = cols.surface(x, z)
+                        E.add([x] * (1 + mid), [y, y + 1][:1 + mid], [z] * (1 + mid),
+                              "oak_leaves[persistent=true]" if mid else "sweet_berry_bush[age=3]")
             stats["berry bushes"] += 1
         elif kind == "O" and "RELIC" in name:
             E.add([bx], [y], [bz], "decorated_pot[facing=south,cracked=false]")
