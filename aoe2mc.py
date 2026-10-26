@@ -815,8 +815,10 @@ class Columns:
         field = grass & free & (n3 > 0.8) & (r < 0.35)
         ids = np.array([B(f) for f in flowers], np.uint16)
         deco[field] = ids[kind[field]]
+        deco[field & (r2 < 0.06)] = B("golden_dandelion")               # a few of the new 26.3 flower in each field
         petals = grass & free & (n3 < 0.1) & (r < 0.5)
         deco[petals] = B("pink_petals[facing=north,flower_amount=3]")
+        deco2[field | petals] = AIR                                     # no tall grass top above a flower
         faces = ("east", "north", "south", "west")
         def clumps(name, prop, mask):                   # a random facing and amount (1-4) for each clump
             ids = np.array([B(f"{name}[facing={f},{prop}={k}]") for f in faces for k in range(1, 5)], np.uint16)
