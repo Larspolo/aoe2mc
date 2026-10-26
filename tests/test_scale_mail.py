@@ -34,7 +34,7 @@ def test_scale_mail_armor_gives_infantry_one_melee_and_pierce_armor():
         assert train.stats(g, name) == combat.stats(name), name
     stats = [c for c in server.log if c.startswith("aoe stats")]
     assert stats == [combat.stats_command("m", "MILITIA", train.stats(g, "MILITIA"))]
-    assert "aoe stats m 40 4 1 2 0 infantry -" in stats                # militia: 0/1 armor + 1/1
+    assert "aoe stats m 40 4 1 2 0 infantry - 24" in stats                # militia: 0/1 armor + 1/1
     assert any("Scale Mail Armor is researched." in c for c in server.log if c.startswith("tellraw"))
     train.open_menu(g, "Steve", (11, 3))
     assert "Scale Mail" not in menus(server)[-1]

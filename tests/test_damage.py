@@ -20,9 +20,9 @@ def test_damage_with_armor_and_bonus():
 
 
 def test_stats_command():
-    assert combat.stats_command("u-1", "MILITIA") == "aoe stats u-1 40 4 0 1 0 infantry -"
-    assert combat.stats_command("u-2", "SPEARMAN") == "aoe stats u-2 45 3 0 0 0 infantry,spearman camel:12,cavalry:15,elephant:15"
-    assert combat.stats_command("u-3", "ARCHER").split()[3:] == ["30", "4", "0", "0", "1", "archer", "spearman:3"]
+    assert combat.stats_command("u-1", "MILITIA") == "aoe stats u-1 40 4 0 1 0 infantry - 24"
+    assert combat.stats_command("u-2", "SPEARMAN") == "aoe stats u-2 45 3 0 0 0 infantry,spearman camel:12,cavalry:15,elephant:15 35"
+    assert combat.stats_command("u-3", "ARCHER").split()[3:] == ["30", "4", "0", "0", "1", "archer", "spearman:3", "24"]
 
     class Game:
         sent = []
