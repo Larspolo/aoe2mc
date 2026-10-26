@@ -178,7 +178,9 @@ STATS = {
     "ARMORED_ELEPHANT": Stats(180, 4, -2, 140, 0, 3.0, {"building": 90, SIE: 25}, (CAV, ELE, SIE)),
     "FIRE_LANCER": Stats(65, 9, 1, 0, 0, 2.0, {"building": 1, CAV: 5, CAM: 4, ELE: 5}, (INF, GUN)),
     "GRENADIER": Stats(40, 12, 1, 1, 6, 3.45, {"building": 4, INF: 9, SIE: 3, SPE: 1}, (ARC, GUN, UNI)),
+    "HEAVY_ROCKET_CART": Stats(65, 5, 0, 8, 8, 5.35, {"building": 12, SIE: 2}, (GUN, SIE)),
     "HEI_GUANG_CAVALRY": Stats(60, 11, 4, 3, 0, 1.8, {}, (CAV,)),
+    "HOUFNICE": Stats(90, 50, 2, 6, 12, 6.5, {"building": 250, SIE: 20}, (GUN, SIE)),
     "IRON_PAGODA": Stats(115, 12, 1, 3, 0, 2.16, {}, (CAV, UNI)),
     "LEGIONARY": Stats(75, 12, 2, 2, 0, 2.0, {"building": 4, INF: 4}, (INF,)),
     "ROCKET_CART": Stats(45, 5, 0, 6, 7, 5.5, {"building": 7, SIE: 2}, (GUN, SIE)),
@@ -234,6 +236,7 @@ MELEE_RANGED = {"ELITE_GBETO",
                 "ELITE_MAMELUKE",
                 "ELITE_THROWING_AXEMAN",
                 "GBETO",
+                "HEAVY_ROCKET_CART",
                 "MAMELUKE",
                 "MANGONEL",
                 "ONAGER",
@@ -244,8 +247,11 @@ MELEE_RANGED = {"ELITE_GBETO",
 # Blast radius in tiles of the units whose shot hits all units near the target, also own units (AoE2 DE, wiki "AOE";
 # AoE2 tapers the damage at the edge, here each unit in the radius takes the full damage() hit, #1050).
 BLAST = {"BOMBARD_CANNON": 0.5,
+         "HEAVY_ROCKET_CART": 1.25,
+         "HOUFNICE": 0.7,
          "MANGONEL": 1.0,
          "ONAGER": 1.25,
+         "ROCKET_CART": 1.0,
          "SIEGE_ONAGER": 1.5}
 DEFAULT, BUILDING = Stats(40, 4, 0, 0, 0, 2.0), Stats(1000, 0, 0, 7, 0, 0.0, {}, ("building",))
 SLIME = 0.52                    # blocks of width and height per slime size: the target of a building (#517)
