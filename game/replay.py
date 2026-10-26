@@ -54,6 +54,7 @@ BAR = "aoe2mc:replay"       # the boss bar with the game time (#684)
 POP = "aoe_pop"             # the sidebar objective with the population of each player (#741)
 COUNTED = "aoe2mc.pop"      # entity tag of the units that the population counts (#787)
 EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
+FOLLOW_MS = 15000           # ms of game time: the camera of --follow changes its unit at most this often (#738)
 EFFECT_MS = 10000           # ms of game time that the research text stays
 SCALE = 4                   # size of the research text: a spectator sees it from 40 blocks
 START = {"food": 200, "wood": 200, "gold": 100, "stone": 200}   # the AoE2 standard start resources (#932)
@@ -117,8 +118,9 @@ def live(make, speed=1.0, start=0, restart=None, **kw):
 class Replay:
     """The timeline of aoe2mc.json `data` on a server (game.command sends one command)."""
 
-    def __init__(self, game, data, version=aoe2mc.VERSION_NAME, ai=False):
+    def __init__(self, game, data, version=aoe2mc.VERSION_NAME, ai=False, follow=None):
         self.game, self.data, self.ai, self.speed, self.paused = game, data, ai, 1.0, False  # ai: plugin walks
+        self.follow, self.followed = follow, (None, -math.inf)  # the spectators follow player N: (UUID, game time)
         self.T, self.n = data["tile_size"], len(data["ground"])
         self.ground = [[None if v == "-" else int(v) for v in row.split()] for row in data["ground"]]
         self.starts = [(o.get("ref"), o["player"], o["name"], (o["footprint"][0], o["footprint"][2], o["footprint"][1],
@@ -413,6 +415,25 @@ class Replay:
             return []
         top = self.tops.pop(rect, None) or max(ys) + TALL
         return self.fill(max(0, x0), min(ys), max(0, z0), min(self.n, x1) - 1, top, min(self.n, z1) - 1, "air destroy")
+
+    def spectate(self, e):
+        """--follow N (#738): the spectators look through the first unit of a MOVE, ORDER or spawn of player N
+        (vanilla /spectate; it takes one player, so `execute as` each spectator). The camera changes at most once per
+        FOLLOW_MS of game time, at once when its unit is gone (DELETE)."""
+        if self.follow is None or e.get("player") != self.follow or e["kind"] not in ("move", "order", "spawn"):
+            return []
+        uuid, at = self.followed
+        alive = {v.uuid for v in self.units.values()} | {v.uuid for _, v in self.new}
+        if uuid in alive and e["time"] - at < FOLLOW_MS:
+            return []
+        if e["kind"] == "spawn":
+            v = self.new[-1][1] if self.new and self.new[-1][0] == self.follow else None
+        else:
+            v = next((self.units[i] for i in e["objects"] if i in self.units), None)
+        if v is None or v.uuid == uuid:
+            return []
+        self.followed = (v.uuid, e["time"])
+        return [f"execute as @a[gamemode=spectator] run spectate {v.uuid} @s"]
 
     def spawns(self):
         """A "spawn" event for each unit that a QUEUE command trains, at the end of its training."""
@@ -1144,7 +1165,7 @@ class Replay:
             if e is None:
                 self.send(self.steps(now))
                 continue
-            cmds = self.commands(e)
+            cmds = self.commands(e) + self.spectate(e)
             if cmds:
                 n += 1
                 self.send(cmds)

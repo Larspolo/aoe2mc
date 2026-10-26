@@ -16,7 +16,7 @@ class Server:
 
     def command(self, cmd):
         self.log.append(cmd)
-        return ""
+        return "v has the following entity data: [2.5d, 64.0d, 7.5d]" * (cmd == "data get entity v Pos")   # alive (#1039)
 
 
 def test_drop_sites_per_resource():

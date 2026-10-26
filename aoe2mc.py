@@ -2627,9 +2627,10 @@ def turn_area(area, size, k):
 def area_selector(c, T):
     """The entity selector of the units of the player of an "Objects in Area" condition: the blocks of the tiles
     x1..x2, y1..y2 (z), all heights. An area of -1 is the whole map. A unit type filter is the tag aoe2mc.t<id>
-    of the units (#681); the "object" of an effect (a name, #656) is not a filter here."""
+    of the units (#681); the "object" of an effect (a name, #656) is not a filter here. The horse of a unit has the player
+    tag too (units.MOUNT, #1045): it does not count."""
     obj = c.get("object")
-    sel = [f"tag=aoe2mc.p{c['player']}"] + [f"tag=aoe2mc.t{obj}"] * (isinstance(obj, int) and obj >= 0)
+    sel = [f"tag=aoe2mc.p{c['player']}", f"tag=!{units.MOUNT}"] + [f"tag=aoe2mc.t{obj}"] * (isinstance(obj, int) and obj >= 0)
     if min(c["area"]) >= 0:
         x1, y1, x2, y2 = c["area"]
         x1, x2, y1, y2 = min(x1, x2), max(x1, x2), min(y1, y2), max(y1, y2)
