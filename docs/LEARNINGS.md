@@ -89,3 +89,4 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - `[f"...{o['id']}"] * ("id" in o)` evaluates the f-string also when the factor is 0 (KeyError): use `o.get('id')` in it (#681).
 - `game/combat.py` `stats()`: a name that is not a `STATS` key gets `DEFAULT` (40 hit points) without a warning. The units of `aoe2mc.json` have names like `VILLAGER_MALE`: compare with `units.classify` names, not the table keys (#655).
 - `game/replay.py` uses the resource looks of `gather.Gather` through `Replay.crew` (`Gather.__new__` with `map`, `trunks`, `bushes` and a `command` attribute): no copy of the look code (#631).
+- A menu test of `game/train.py` matches an item with `in menus(server)[-1]`, not `endswith`: the queue row (slots 9-17) follows the items once a unit or technology is queued (#706).
