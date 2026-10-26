@@ -115,7 +115,9 @@ For each open issue without a priority label:
 ## 5. Pick and claim one ticket
 
 Candidates: open issues without `needs-human`, `blocked`, `epic`, `agent-status`, `in-progress`, and whose
-"Depends on: #n" issues are all closed. Order: `P0`, `P1`, `P2`, `P3`, then the lowest issue number.
+"Depends on: #n" issues are all closed. Order: `P0`, `P1`, `P2`, `P3`, then the
+least overlap with the work in progress (files and functions that open PRs change or claimed tickets name, #487),
+then the lowest issue number.
 `python3 tools/dashboard.py --next` prints the candidates in this order (the rule is `dashboard.candidates()`).
 Epics first: an epic is never a candidate, so its rest of the work needs sub-issues. Before you claim a ticket, look
 at the open epics (label `epic`, not `needs-human`) with a higher priority than the top candidate and no open
