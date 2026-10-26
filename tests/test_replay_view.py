@@ -57,7 +57,7 @@ def test_without_the_bar_no_view_commands():
 
 
 def test_the_view_stays_below_the_build_limit_on_a_large_map():
-    r = replay.Replay(Fake(), data([], n=960, y=200))
+    r = replay.Replay(Fake(), data([], n=960, y=315))
     tp = next(c for c in r.overview() if c.startswith("tp @a "))
     assert float(tp.split()[3]) == 319
 

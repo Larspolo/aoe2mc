@@ -63,6 +63,8 @@ START = {"food": 200, "wood": 200, "gold": 100, "stone": 200}   # the AoE2 stand
 VIEWER = "aoe_viewer"        # player tag: the player got the overview of the map (#737)
 VIEW_PITCH = 60             # degrees down of the overview
 VIEW_FALL = 60              # seconds of slow falling after the overview
+VIEW_DIST = 150             # blocks from the overview to the map center: in the vanilla render distance 12 (192, #1094)
+CLOUDS = 192                # the vanilla cloud height: the overview stays below it, else it shows only clouds (#1094)
 RCON_MAX = 1446             # bytes of one RCON command: the server closes the connection after a longer one
 BOOK_COLS, BOOK_ROWS = 19, 14   # characters per line and lines of a book page (aoe2mc.book_pages)
 POLL = 0.2                  # seconds between two calls of the poll of Replay.run while it waits (#685)
@@ -1029,16 +1031,21 @@ class Replay:
     def overview(self, join=False):
         """The view of a player at the start of the replay (#737, owner decision #782): adventure mode, a text about
         the spectator view, and a place high above the map that looks down at its center (VIEW_PITCH) in the
-        direction of the spawn of the converter. join: only for the players without the tag VIEWER (a player who
+        direction of the spawn of the converter, at most VIEW_DIST blocks from it and below the clouds (#1094). join: only for the players without the tag VIEWER (a player who
         joins later gets it once, and keeps the game mode that it selects after it, #910). Adventure mode has no
         flight before #910: slow falling (VIEW_FALL s) brings the player down with no fall damage."""
         if getattr(self, "view", None) is None:                    # once: each game second calls it
             c = self.n / 2
             top = max([y for row in self.ground for y in row if y is not None] or [64])
-            y = min(319, top + self.n // 3)
-            d = (y - top) / math.tan(math.radians(VIEW_PITCH))     # the center is this far in front
+            i, r = int(c), 16
+            near = sorted(y for row in self.ground[max(0, i - r):i + r] for y in row[max(0, i - r):i + r] if y is not None)
+            mid = near[len(near) // 2] if near else top                # the ground at the center
+            pitch = math.radians(VIEW_PITCH)
+            y = min(self.n // 3, VIEW_DIST * math.sin(pitch), CLOUDS - 4 - mid)     # the height above the center
+            y = min(319, max(top + 8, round(mid + y)))                 # above the highest ground, below the build limit
+            d = (y - mid) / math.tan(pitch)                            # the center is this far in front
             yaw = math.radians(aoe2mc.SPAWN_YAW)
-            self.view = f"{c + d * math.sin(yaw):.1f} {y} {c - d * math.cos(yaw):.1f} facing {c:.1f} {top} {c:.1f}"
+            self.view = f"{c + d * math.sin(yaw):.1f} {y} {c - d * math.cos(yaw):.1f} facing {c:.1f} {mid} {c:.1f}"
         say = text("Double-tap Shift: spectator view (fly through blocks). Right click the hotbar items: replay control.")
         sel, run = (f"@a[tag=!{VIEWER}]", f"execute as @a[tag=!{VIEWER}] run ") if join else ("@a", "")
         me = "@s" if join else "@a"
