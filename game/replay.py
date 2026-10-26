@@ -86,6 +86,12 @@ def text(s, color=None):
     return {"text": s, "color": color} if color else {"text": s}
 
 
+def mmss(ms):
+    """Game time in ms -> "MM:SS"."""
+    m, s = divmod(int(ms) // 1000, 60)
+    return f"{m:02d}:{s:02d}"
+
+
 @functools.lru_cache(maxsize=None)
 def ship(name):
     """True for a unit that the converter makes a boat (a fishing ship, a galley ...): it stays on the water (#866)."""
@@ -147,6 +153,7 @@ class Replay:
         self.counted = []                       # UUIDs of the start units that the population counts
         self.stock = {}                         # player -> estimated resources: START + gather steps - costs (#932)
         self.gathered, self.villagers = {}, {}  # player -> resources of the gather steps, trained villagers (#1065)
+        self.reached, self.researched = {}, {}  # player -> {age: game time (ms)}, researched technologies (#1067)
         for o in data["objects"]:
             if o["kind"] == "unit" and o.get("player") and not units.animal(o["name"]):
                 self.pop[o["player"]] = self.pop.get(o["player"], 0) + 1
@@ -159,7 +166,12 @@ class Replay:
 
     def age(self, e):
         self.ages[e.get("player")] = pretty(e["age"]).removesuffix(" Age")
+        self.reached.setdefault(e.get("player"), {})[e["age"]] = e.get("time", 0)
         self.pay(e.get("player"), e["age"])
+
+    def learn(self, e):
+        """Count a research of the timeline for the summary (#1067)."""
+        self.researched[e.get("player")] = self.researched.get(e.get("player"), 0) + 1
 
     def resources(self, p):
         return self.stock.setdefault(p, dict(START))
@@ -200,6 +212,7 @@ class Replay:
             return ["title @a subtitle " + json.dumps(text(name, color)),
                     "title @a title " + json.dumps(text(pretty(e["age"])))] + self.fireworks(e.get("player"))
         if kind == "research" and e.get("technology"):
+            self.learn(e)
             return ["title @a actionbar " + json.dumps([text(name, color), text(f" researches {e['technology']}")])] + \
                 self.research(e, color)
         if kind == "resign":
@@ -1027,6 +1040,19 @@ class Replay:
             res = ", ".join(f"{r} {v}" for r, v in g.items())
             out.append("tellraw @a " + json.dumps([text(name, color), text(
                 f": villagers trained {self.villagers.get(p, 0)}, gathered {res}")]))
+        return out + self.tech_commands()
+
+    def tech_commands(self):
+        """One chat line per player with the game time of each age-up (MM:SS, "-": not reached) and the number of
+        researched technologies (#1067)."""
+        out = []
+        for p in sorted(self.pop.keys() | self.reached.keys() | self.researched.keys()):
+            name, color = self.player(p)
+            times = self.reached.get(p, {})
+            ages = ", ".join(f"{pretty(a).removesuffix(' Age')} {mmss(times[a]) if a in times else '-'}"
+                             for a in ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE"))
+            out.append("tellraw @a " + json.dumps([text(name, color), text(
+                f": {ages}, technologies {self.researched.get(p, 0)}")]))
         return out
 
     def score_commands(self):
@@ -1102,6 +1128,8 @@ class Replay:
                 out += self.enter(e["time"]) + self.commands(e)
             elif e["kind"] == "age" and e.get("age"):                 # the sidebar shows it, no title
                 self.age(e)
+            elif e["kind"] == "research" and e.get("technology"):     # no text, but the summary counts it
+                self.learn(e)
         out += self.enter(to) + self.expire(to)
         for i, t in since.items():                                  # a unit that still works: steps() catch up
             if i not in self.working or (i in moved and not self.ai):
