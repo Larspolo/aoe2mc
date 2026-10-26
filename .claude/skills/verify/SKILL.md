@@ -59,6 +59,9 @@ in the game (light, textures, connected fences and panes), what the player sees 
   25 s per world.
 - Yaw: 0 = south, 90 = west, 180 = north, -90 = east. Pitch: positive looks down (90 = top view).
 - Repeat `--more` for each extra view (OUT_2.png, OUT_3.png ...). The world loads once for all views.
+- A player on the Paper server of the game program (#627): `mc_shot.Client(game.game_port, game.version)` joins the
+  client as "aoe2mc" (`wait_join()`), `shot(PATH)`, `click(*client.slot(i, rows))` clicks a chest menu, `key(NAME)`
+  (xdotool). Example: `tests/test_menu_client.py`. Join takes about 40 s after the server start.
 - Direction of a mob: look at it from the side, 8–10 blocks away, pitch 10. A top view does not show the head.
 - Look at each image with the Read tool and describe it in the PR body. Comment the result on the ticket.
 
