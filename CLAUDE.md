@@ -73,8 +73,8 @@ Design work (buildings, objects, units, animals) follows `docs/DESIGN.md`. Do de
   the converter prints "units in a block (moved up): N" and N must be 0.
 - Block states are strings like `"oak_stairs[facing=north,half=bottom]"`. Each new state must pass `mcvalid`.
 - Output is deterministic: all randomness comes from seeded `numpy` generators. Keep it so.
-- Target: Minecraft Java 26.3 (`DATA_VERSION = 5023`), the only output (#427). The code still uses the 1.21.1 block
-  and entity names (#428): `mcvalid` checks code names with 1.21.1, and output worlds with 26.3.
+- Target: Minecraft Java 26.3 (`DATA_VERSION = 5023`), the only output (#427). The code uses the 26.3 block and
+  entity names and writes the 26.3 entity NBT directly (#428): `mcvalid` checks with 26.3.
   `VERSIONS` in `aoe2mc.py` holds the output profile (`--mc-version`); format changes: `docs/minecraft-versions.md`.
 - Global state: `aoe2mc.B` (block registry), `aoe2mc.MOVED`, `aoe2mc.BLOCK_DATA` (extra block entity NBT), `buildings.BARRIERS`, `buildings.TURN` (`--orientation`), `buildings.BRIDGE_CELLS`.
   Tests share `B`, so `B.states` holds the states of all earlier tests.

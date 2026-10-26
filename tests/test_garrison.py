@@ -71,11 +71,11 @@ def test_garrisoned_units_stack_on_the_seats_of_a_ship():
 
     def chain(e):
         return [e] + (chain(e["Passengers"][0]) if e.get("Passengers") else [])
-    fishing, transport = ships["minecraft:boat"], ships["minecraft:chest_boat"]
+    fishing, transport = ships["minecraft:oak_boat"], ships["minecraft:spruce_chest_boat"]
     assert [len(chain(s)) for s in fishing["Passengers"]] == [2, 1]      # crew + 1 unit, and 1 unit on the free seat
     stack = chain(transport["Passengers"][0])                             # the crew and 3 archers
     assert [str(e["id"]) for e in stack] == ["minecraft:villager"] + ["minecraft:skeleton"] * 3
-    assert all(e["ArmorItems"][3].get("id") for e in stack[1:])          # skeletons burn in the sun: a helmet
+    assert all(e["equipment"]["head"].get("id") for e in stack[1:])          # skeletons burn in the sun: a helmet
     assert all("CustomName" in e for e in stack)
     assert "(+7)" in str(stack[0]["CustomName"])                          # the crew carries the ship's name tag
     assert stats["units (garrisoned, in a ship)"] == 5

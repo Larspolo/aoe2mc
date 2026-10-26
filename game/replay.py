@@ -51,8 +51,6 @@ class Replay:
         self.game, self.data = game, data
         self.T, self.n = data["tile_size"], len(data["ground"])
         self.ground = [[None if v == "-" else int(v) for v in row.split()] for row in data["ground"]]
-        self.renames = aoe2mc.VERSIONS[version]["renames"]
-        self.data_version = aoe2mc.VERSIONS[version]["data_version"]
         self.starts = [(o.get("ref"), o["player"], o["name"], (o["footprint"][0], o["footprint"][2], o["footprint"][1],
                         o["footprint"][3])) for o in data["objects"] if o["kind"] == "building" and "footprint" in o]
         self.placed, self.map, self.added = [], None, 0        # buildings of the replay, gather.Map, placed in the map
@@ -217,7 +215,6 @@ class Replay:
         nbt = units.make_entity(o, {int(p): v for p, v in self.data["players"].items()}, pos, self.rng)
         if nbt is None:
             return []
-        nbt = units.to_version(nbt, self.data_version)
         kind = str(nbt.pop("id"))
         del nbt["Pos"]
         v = self.gather.Villager(units.uuid_str(nbt["UUID"]), pos)
@@ -349,8 +346,7 @@ class Replay:
         return out
 
     def state(self, i):
-        name, _, props = aoe2mc.B.states[i].partition("[")
-        return self.renames.get(name, name) + (f"[{props}" if props else "")
+        return aoe2mc.B.states[i]
 
     @staticmethod
     def fill(x0, y0, z0, x1, y1, z1, what):

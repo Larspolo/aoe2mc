@@ -49,16 +49,16 @@ import buildings
 import units
 
 # Blocks with the 'waterlogged' property. A block of this list under the water surface gets waterlogged=true (#19).
-with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools", "mcdata", "1.21.1.json")) as _f:
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools", "mcdata", "26.3.json")) as _f:
     BLOCK_PROPS = {"minecraft:" + k: v for k, v in json.load(_f)["blocks"].items()}
 WATERLOGGABLE = {k for k, v in BLOCK_PROPS.items() if "waterlogged" in v}
 
 # Output format per Minecraft Java version (docs/minecraft-versions.md): only 26.3 (#427); a later 26.x version can
-# get its own entry. Entities: units.to_version().
+# get its own entry. The code uses the 26.3 block and entity names (#428).
 VERSIONS = {
-    "26.3": dict(name="26.3", data_version=5023, pack_format=121, renames={"minecraft:chain": "minecraft:iron_chain"}),
+    "26.3": dict(name="26.3", data_version=5023, pack_format=121),
 }
-VERSION_NAME = "26.3"        # the default output version. The code uses the 1.21.1 names (no renames).
+VERSION_NAME = "26.3"        # the default output version
 DATA_VERSION = VERSIONS[VERSION_NAME]["data_version"]
 MC = VERSIONS[VERSION_NAME]  # the version of the running conversion; convert() sets it
 MIN_Y, MAX_Y = -64, 320      # world height range (MAX_Y exclusive)
@@ -102,9 +102,8 @@ class Blocks:
         return self.wets[i]
 
     def nbt(self, i):
-        """Palette entry for block id i: {Name, Properties}, with the block names of the output version."""
+        """Palette entry for block id i: {Name, Properties}."""
         name, _, props = self.states[i].partition("[")
-        name = MC["renames"].get(name, name)
         if not props:
             return Compound({"id": String(name)})
         p = dict(kv.split("=") for kv in props[:-1].split(","))
@@ -1230,7 +1229,7 @@ def decor(E, cols, name, rect, rng):
     elif "LUMBER" in n or "SIEGE" in n:
         E.box(cx - 1, cx + 2, y, y + 1, cz, cz + 1, "oak_log[axis=x]"); put(0, 1, 0, "oak_log[axis=x]")
         if "SIEGE" in n:
-            put(-1, 0, 1, "barrel[facing=up]"); put(1, 0, -1, "chain")
+            put(-1, 0, 1, "barrel[facing=up]"); put(1, 0, -1, "iron_chain")
     elif "BARREL" in n:
         for dx, dz in ((0, 0), (1, 0), (0, 1)):
             put(dx, 0, dz, "barrel[facing=up]")
@@ -1354,7 +1353,7 @@ def decor(E, cols, name, rect, rng):
             put(dx, 0, 0, f"{'spruce' if wood else 'stone_brick'}_stairs[facing=north,half=bottom,shape=straight]")
     elif "GALLOW" in n:
         put(-1, 0, 0, "dark_oak_fence"); put(-1, 1, 0, "dark_oak_fence"); put(-1, 2, 0, "dark_oak_fence")
-        E.box(cx - 1, cx + 2, y + 3, y + 4, cz, cz + 1, "dark_oak_log[axis=x]"); put(1, 2, 0, "chain")
+        E.box(cx - 1, cx + 2, y + 3, y + 4, cz, cz + 1, "dark_oak_log[axis=x]"); put(1, 2, 0, "iron_chain")
     elif "OYSTER" in n:
         x, z = min(max(cx, 0), cols.n - 1), min(max(cz, 0), cols.n - 1)
         if cols.wtop[x, z] > cols.top[x, z]:
@@ -1724,7 +1723,8 @@ PASSABLE = ("short_grass", "tall_grass", "large_fern", "petals", "moss_carpet", 
             "lily_pad")
 
 
-SEATS = {"minecraft:boat": 2, "minecraft:chest_boat": 1}
+def seat_count(ship):
+    return 1 if "_chest_" in str(ship["id"]) else 2      # a chest boat has one seat
 CHAIN = 4                   # units per boat seat: each garrisoned unit rides the unit below it (#382)
 SUN = ("minecraft:zombie", "minecraft:zombie_villager", "minecraft:skeleton", "minecraft:stray", "minecraft:drowned")
 
@@ -1739,9 +1739,9 @@ def sun_helmet(nbt):
     for p in nbt.get("Passengers", []):
         sun_helmet(p)
     if str(nbt["id"]) in SUN:
-        arm = nbt.setdefault("ArmorItems", List[Compound]([Compound({}) for _ in range(4)]))
-        if not arm[3].get("id"):
-            arm[3] = units.item("leather_helmet", unbreakable=True)
+        eq = nbt.setdefault("equipment", Compound({}))
+        if "head" not in eq:
+            eq["head"] = units.item("leather_helmet", unbreakable=True)
 
 
 def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside", silent=False):
@@ -1779,7 +1779,7 @@ def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside
                     ship, ref = boats[o["holder"]], o["holder"]
                     seats, n = ship.setdefault("Passengers", List[Compound]([])), stacks[ref]
                     sun_helmet(nbt)
-                    if len(seats) < SEATS[str(ship["id"])]:
+                    if len(seats) < seat_count(ship):
                         seats.append(nbt)
                         n.append(1)
                     elif n and min(n) < CHAIN:          # a full seat: ride the top of its stack
@@ -1826,14 +1826,13 @@ def plan_units(objects, players, cols, rng, stats, birds=True, garrison="outside
             src["uuid"] = units.uuid_str(nbt["UUID"])
         out.setdefault((bx >> 4, bz >> 4), []).append((nbt, x, z, boat))
     for ref, k in full.items():                 # the units without room: "Transport Ship (+6)"
-        name = json.loads(str(labels[ref]["CustomName"]))
-        labels[ref]["CustomName"] = String(json.dumps(dict(name, text=f"{name['text']} (+{k})")))
+        labels[ref]["CustomName"]["text"] = String(f"{labels[ref]['CustomName']['text']} (+{k})")
     return out
 
 
 def top_name(nbt):
     t = units.top_entity(nbt)
-    return t.get("CustomName", t["id"])
+    return t["CustomName"]["text"] if "CustomName" in t else t["id"]
 
 
 def free_spot(cols, bx, bz, r, water=False, taken=()):
@@ -1991,7 +1990,7 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
     if not out:
         return None
     root = Compound({"DataVersion": Int(MC["data_version"]), "Position": IntArray([cx, cz]),
-                     "Entities": List[Compound]([units.to_version(e, MC["data_version"]) for e in out])})
+                     "Entities": List[Compound]([e for e in out])})
     buf = io.BytesIO()
     buf.write(b"\x0a\x00\x00")
     root.write(buf)
