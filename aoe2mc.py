@@ -161,7 +161,7 @@ def terrain_style(name):
                  deco=[("short_grass", .15)] if "VEGETATION" in n else [])
     if "DESERT" in n and "GRAVEL" not in n:
         return S("sandstone" if "CRACKED" in n else "sand", "sandstone", biome="desert",
-                 deco=[("dead_bush", .01)])
+                 deco=[("dead_bush", .01), ("short_dry_grass", .01)])
     if "GRAVEL" in n and "ROAD" not in n:
         return S("gravel", "gravel", biome="desert" if "DESERT" in n else "plains")
     if "FARM" in n:
@@ -188,7 +188,7 @@ def terrain_style(name):
     if "DIRT" in n:
         return S("coarse_dirt", biome="savanna")
     if "DRY" in n and "GRASS" in n:
-        return S("grass_block", biome="savanna", deco=[("short_grass", .1)])
+        return S("grass_block", biome="savanna", deco=[("short_dry_grass", .08), ("tall_dry_grass", .02)])
     if any(k in n for k in ("ACACIA", "BAOBAB", "DRAGON")):
         return S("grass_block", biome="savanna")
     if "PALM_DESERT" in n:
@@ -875,16 +875,19 @@ class Columns:
         deco[worn & (r2 < 0.45)] = AIR
         deco2[worn & (r2 < 0.45)] = AIR
 
-        # dry ground (steppe): patches of dry grass, tufts, dead bushes
+        # dry ground (steppe): patches of grass with dry grass (the dry grass blocks of 26.3, #523), dead bushes
         steppe_grass = dirt & (top == B("coarse_dirt")) & (n1 < 0.3)
         top[steppe_grass] = B("grass_block")
         top[dirt & ~steppe_grass & (n3 > 0.75)] = B("dirt")
-        deco[steppe_grass & free & (r < 0.30)] = B("short_grass")
-        tall = steppe_grass & free & (r >= 0.30) & (r < 0.34)
-        deco[tall], deco2[tall] = B("tall_grass[half=lower]"), B("tall_grass[half=upper]")
-        deco[dirt & ~steppe_grass & free & (r < 0.02)] = B("dead_bush")
-        deco[dirt & ~steppe_grass & free & (r >= 0.02) & (r < 0.10)] = B("short_grass")
+        deco[steppe_grass & free & (r < 0.12)] = B("short_grass")
+        deco[steppe_grass & free & (r >= 0.12) & (r < 0.30)] = B("short_dry_grass")
+        deco[steppe_grass & free & (r >= 0.30) & (r < 0.34)] = B("tall_dry_grass")
+        bare = dirt & ~steppe_grass & free
+        deco[bare & (r < 0.02)] = B("dead_bush")
+        deco[bare & (r >= 0.02) & (r < 0.10)] = B("short_dry_grass")
+        deco[bare & (r >= 0.10) & (r < 0.12)] = B("tall_dry_grass")
         deco[sand & free & (r < 0.012)] = B("dead_bush")
+        deco[sand & free & (r >= 0.012) & (r < 0.02)] = B("short_dry_grass")
 
     def outside(self):
         """Columns of one chunk outside the map (--border): no ground, the most common biome of the map."""
@@ -915,7 +918,7 @@ class Columns:
 SIDES = (("north", 0, -1), ("east", 1, 0), ("south", 0, 1), ("west", -1, 0))
 NOT_STURDY = ("slab", "stairs", "fence", "_wall", "pane", "bars", "door", "banner", "torch", "lantern", "sign", "button",
               "lever", "plate", "carpet", "rail", "ladder", "vine", "chain", "rod", "campfire", "bell", "anvil",
-              "cauldron", "flower", "short_grass", "tall_grass", "fern", "bush", "sapling", "leaves", "air", "water",
+              "cauldron", "flower", "short_grass", "tall_grass", "dry_grass", "fern", "bush", "sapling", "leaves", "air", "water",
               "lava", "fire", "mushroom", "poppy", "dandelion", "orchid", "allium", "tulip", "daisy", "cornflower",
               "lily", "rose", "peony", "lilac", "sunflower", "kelp", "seagrass", "coral", "pickle", "candle", "head",
               "skull", "pot", "cake", "_bed", "chest", "lectern", "grindstone", "stonecutter", "enchanting", "dripstone",
@@ -938,7 +941,7 @@ def connect_kind(state):
     if name.endswith("_fence_gate"):
         facing = re.search(r"facing=(\w+)", state)
         return "gate_z" if facing and facing.group(1) in ("north", "south") else "gate_x"
-    if name.endswith("_pane") or name == "minecraft:iron_bars":
+    if name.endswith(("_pane", "copper_bars")) or name == "minecraft:iron_bars":
         return "pane"
     if name.endswith("_fence"):
         return "nether_fence" if name == "minecraft:nether_brick_fence" else "fence"
@@ -1096,6 +1099,7 @@ class Edits:
 # --------------------------------------------------------------------------------------------
 def tree_kind(n):
     if "BAMBOO" in n: return "bamboo"
+    if "AUTUMN" in n: return "poplar"                    # 26.3 poplar: yellow, orange and red leaves
     if "PINE" in n or "SPRUCE" in n or "CYPRESS" in n: return "spruce"
     if "BIRCH" in n: return "birch"
     if "PALM" in n: return "palm"
@@ -1111,7 +1115,7 @@ def leaves(wood):
 
 
 WOODS = {"palm": "jungle", "jungle": "jungle", "acacia": "acacia", "spruce": "spruce", "birch": "birch",
-         "mangrove": "mangrove"}                         # tree kind -> wood (log and leaves); else oak
+         "mangrove": "mangrove", "poplar": "poplar"}                         # tree kind -> wood (log and leaves); else oak
 
 
 def make_tree(E, kind, x, y, z, rng):
@@ -1129,6 +1133,8 @@ def make_tree(E, kind, x, y, z, rng):
         return
     wood = WOODS.get(kind, "oak")
     log, leaf = f"{wood}_log", leaves(wood)
+    if kind == "poplar":                                 # one autumn color per tree
+        leaf = leaves(f"{('yellow', 'orange', 'red')[int(rng.integers(3))]}_poplar")
     if kind == "spruce":
         h += 2
         for i, dy in enumerate(range(2, h + 1)):
@@ -1146,7 +1152,7 @@ def make_tree(E, kind, x, y, z, rng):
             E.add([x + dx, x + 2 * dx, x + 3 * dx], [y + h, y + h, y + h - 1],
                   [z + dz, z + 2 * dz, z + 3 * dz], leaf, hard=False)
         E.add([x], [y + h], [z], leaf, hard=False)
-    else:  # round trees: oak, birch, jungle, mangrove
+    else:  # round trees: oak, birch, jungle, mangrove, poplar
         if kind == "jungle":
             h += 3
         for dy, r in ((h - 2, 2), (h - 1, 2), (h, 1), (h + 1, 1)):
@@ -1657,6 +1663,8 @@ def place_objects(objects, players, cols, rng):
             stats["rocks"] += 1
         elif kind == "O" and name == "CACTUS":
             E.box(bx, bx + 1, y, y + 2, bz, bz + 1, "cactus")
+            if (bx * 7 + bz * 13) % 3 == 0:     # one in three blooms; from the position, so the rng stream stays the same
+                E.box(bx, bx + 1, y + 2, y + 3, bz, bz + 1, "cactus_flower")
             stats["plants"] += 1
         elif kind == "O" and name.startswith("PLANT"):
             plant = "fern" if ("FERN" in name or "JUNGLE" in name or "UNDERBRUSH" in name) else \
@@ -1741,7 +1749,7 @@ def object_mob(name):
 PASSABLE = ("short_grass", "tall_grass", "large_fern", "petals", "moss_carpet", "mushroom", "allium", "bluet",
             "tulip", "lily_of", "fern", "wheat", "poppy", "dandelion", "cornflower", "daisy", "water",
             "seagrass", "dead_bush", "sweet_berry", "rail", "carpet", "banner", "button", "lantern", "snow[", "kelp",
-            "lily_pad", "bush[", "shrub")
+            "lily_pad", "bush[", "shrub", "dry_grass")
 
 
 def passable_states(states):
@@ -2531,7 +2539,8 @@ def border(cols, design, colors, E):
 # --------------------------------------------------------------------------------------------
 # Preview image (top view)
 # --------------------------------------------------------------------------------------------
-COLORS = [("leaves", (40, 110, 40)), ("snow[", (240, 240, 245)), ("tall_grass", (95, 150, 65)), ("large_fern", (75, 130, 55)), ("moss", (90, 115, 45)), ("petals", (235, 165, 200)), ("poppy", (200, 30, 30)), ("tulip", (220, 120, 60)),
+COLORS = [("yellow_poplar_leaves", (215, 180, 40)), ("orange_poplar_leaves", (215, 115, 30)), ("red_poplar_leaves", (170, 40, 30)),
+          ("leaves", (40, 110, 40)), ("snow[", (240, 240, 245)), ("tall_grass", (95, 150, 65)), ("large_fern", (75, 130, 55)), ("moss", (90, 115, 45)), ("petals", (235, 165, 200)), ("poppy", (200, 30, 30)), ("tulip", (220, 120, 60)),
           ("dandelion", (240, 220, 50)), ("cornflower", (70, 100, 220)), ("allium", (180, 110, 220)),
           ("bluet", (225, 230, 235)), ("daisy", (235, 235, 225)), ("lily_of", (235, 240, 235)),
           ("mushroom", (160, 110, 80)), ("stone_brick", (122, 122, 122)), ("cobblestone", (110, 110, 110)), ("white_terracotta", (215, 200, 190)),
@@ -2544,7 +2553,7 @@ COLORS = [("leaves", (40, 110, 40)), ("snow[", (240, 240, 245)), ("tall_grass", 
           ("hay", (200, 170, 50)), ("chain", (60, 60, 70)), ("iron_bars", (90, 90, 90)), ("fence", (120, 90, 60)),
           ("door", (110, 80, 50)), ("bell", (240, 200, 40)), ("campfire", (230, 120, 30)),
           ("water", (52, 92, 200)), ("ice", (160, 190, 240)), ("seagrass", (52, 92, 200)),
-          ("leaves", (40, 110, 40)), ("bamboo", (90, 160, 40)), ("grass_block", (100, 160, 70)),
+          ("dry_grass", (190, 170, 100)), ("leaves", (40, 110, 40)), ("bamboo", (90, 160, 40)), ("grass_block", (100, 160, 70)),
           ("short_grass", (100, 160, 70)), ("fern", (80, 140, 60)), ("podzol", (110, 80, 40)),
           ("snow", (240, 240, 245)), ("sandstone", (215, 200, 150)), ("sand", (220, 210, 160)),
           ("gravel", (140, 135, 130)), ("mud", (70, 60, 60)), ("dirt", (130, 95, 65)),
@@ -2557,7 +2566,7 @@ DYE = {"white": (240, 240, 240), "light_gray": (160, 160, 160), "gray": (80, 80,
 
 
 def block_color(state):
-    n = state.split(":")[1].split("[")[0]
+    n = state.split(":")[1].split("[")[0].removesuffix("_stairs").removesuffix("_slab")   # white_wool_stairs: as white_wool
     for key, col in COLORS:
         if key in n:
             if col is None:

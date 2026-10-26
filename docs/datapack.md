@@ -154,3 +154,10 @@ fails when the pack costs 2 ms per tick or more. Village, 26.3, no players: 14 p
 4. Open the world in the real client with `tools/mc_shot.py`. If the client does not reach the view, the tool
    saves the screen that stops it (here the experimental warning). A pack with functions only (the pack of
    `mc_shot.py` itself) opens without the warning.
+
+## Pitfalls
+
+Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
+
+- A datapack `load` function or an RCON `@e` selector sees only entities of loaded chunks: 26.3 loads none without a
+  player. In an RCON check, `forceload add X0 Z0 X1 Z1` (at most 256 chunks per command) first (#358).

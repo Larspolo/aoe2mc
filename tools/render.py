@@ -67,9 +67,10 @@ def texture_colors(version="1.21.1"):
 
 
 def colors(states):
-    """RGB per state and face (top, side), and a transparent flag. A block without texture colors uses block_color()."""
+    """RGB per state and face (top, side), and a transparent flag. Stairs and slabs without texture colors (new in 26.3,
+    such as white_wool_stairs) take the colors of their full block, else block_color()."""
     tex = texture_colors()
-    rgb = np.array([tex.get(base_name(s)) or [aoe2mc.block_color(s if ":" in s else "minecraft:" + s)] * 2
+    rgb = np.array([tex.get(base_name(s)) or tex.get(base_name(s).removesuffix("_stairs").removesuffix("_slab")) or [aoe2mc.block_color(s if ":" in s else "minecraft:" + s)] * 2
                     for s in states], float)
     clear = np.array([any(k in base_name(s) for k in TRANSPARENT) for s in states])
     rgb[clear] = rgb[clear] * 0.6 + 255 * 0.4
