@@ -62,7 +62,7 @@ STATS = {
     "CAMEL_RIDER": Stats(100, 6, 0, 0, 0, 2.0, {CAV: 9}, (CAM,)),
     "HEAVY_CAMEL_RIDER": Stats(120, 7, 0, 0, 0, 2.0, {CAM: 9, CAV: 18}, (CAM,)),
     "IMPERIAL_CAMEL_RIDER": Stats(140, 8, 0, 0, 0, 1.667, {"building": 2, CAM: 9, CAV: 18}, (CAM,)),
-    "WAR_ELEPHANT": Stats(450, 15, 1, 2, 0, 2.0, {"building": 7}, (ELE, UNI)),
+    "WAR_ELEPHANT": Stats(450, 15, 1, 2, 0, 2.0, {"building": 30}, (ELE, UNI)),
     "ELITE_WAR_ELEPHANT": Stats(600, 20, 1, 3, 0, 2.0, {"building": 30}, (ELE, UNI)),
     # unique units of the castle (#712; Throwing Axeman and Mameluke hit with melee damage in AoE2: here pierce). #1006:
     # the first projectile of Kipchak and Organ Gun, the ranged mode of the Ratha, the Castle Age Serjeant
