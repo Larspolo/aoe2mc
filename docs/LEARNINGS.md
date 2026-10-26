@@ -36,6 +36,8 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   `SiegeEngineers/genie-rs/master/crates/genie-scx/test/scenarios/` (format 1.21: `Age of Heroes b1-3-5.scx`).
 - `tools/claim.py` names the run by the local branch (`who()`): beat only from the session branch, never in parallel (#361).
 - The cloud clone is shallow: `git fetch --unshallow origin` before a scan of the history (#367).
+- Starting runs: `mcp__claude-code-remote__fire_trigger` is in every run's tool list but can be deferred. Load it with
+  `ToolSearch` (`select:mcp__claude-code-remote__fire_trigger`); runs that skipped this did not start successors (2026-10-26).
 - Quota usage: `claude -p ... --output-format stream-json --verbose` prints a `rate_limit_event` with
   `unifiedWindows.five_hour/seven_day.utilization` and `resetsAt` (`tools/usage.py`). A `statusLine` does not run in cloud sessions.
 - `pyproject.toml` `addopts` has `-q`: `python3 -m pytest -q` gives `-qq`, without the "N passed" line. Wait for the
@@ -45,6 +47,7 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 
 - Paper: `fill.papermc.io/v3/projects/paper/versions/V/builds/latest` lists the builds, but the jar URL is on `fill-data.papermc.io`, which the proxy blocked on 2026-10-26 (#439). Test a download host with `curl`, not only the API.
 - The Paper API answers 403 to the `Python-urllib` User-Agent (`curl` works): send a User-Agent (`game/run.py` `AGENT`). `-DbundlerRepoDir=DIR` keeps the patched Mojang jar of Paper in DIR; Paper writes `usercache.json` next to the `--universe` world (#434).
+- Paper plugin (#435): `game/run.py` builds `game/plugin` with `./gradlew --no-daemon -q jar` and `JAVA_HOME` = the JDK 25 (`openjdk-25-jdk-headless`: the paper-api 26.3 classes are Java 25, javac 21 cannot read them); first build 30 s. A NoAI mob finds no path before its first AI tick; the path search ends at about `follow_range` (cow: 16). The world border stops paths: test inside the map. `fill ... hollow` also fills the bottom and top faces.
 ## Libraries
 
 - AoE2ScenarioParser 0.9.8 makes new scenarios (`tools/scenarios.py`: `new_scenario`, `add_unit`, `save`). It prints much
