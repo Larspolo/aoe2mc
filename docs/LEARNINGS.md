@@ -44,6 +44,8 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - The auto mode classifier can deny `gh api .../issues/N -X PATCH -f state=closed` (closing a finished epic: "External System Writes"). Do not send the same close through another tool: add `needs-human` to the epic and a comment with the evidence for `@Larspolo` (#862).
 - `S=dir && cmd1 & cmd2 $S/x`: the `&` puts the whole `S=... && cmd1` list in a background subshell, so `cmd2` sees an empty `S` and writes to `/x` (#865). Set the variable on its own line first.
 - `tools/claim.py` fetches, so it overwrites `FETCH_HEAD`: fetch a `checks/N` ref into a named ref (`git fetch origin +refs/heads/checks/N:refs/remotes/origin/checks/N`) before you build its next commit, else the push is non-fast-forward.
+- The auto mode denies an edit of a skill that closes epics through a PR because a close was denied ("Instruction Poisoning", #971): it is a way around the denial. Do not try another way: ask the owner on the ticket.
+- Automerge takes the first "close #N" (also "fix", "resolve") anywhere in the PR body as the ticket, also in "does not close #N": a ticket with `needs-human` then stops the merge (#984). Do not write those words before another issue number.
 
 ## Code
 

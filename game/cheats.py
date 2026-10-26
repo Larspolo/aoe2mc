@@ -15,6 +15,11 @@ g.ended, which ends gather.Gather.run. "torpedo<n>" destroys player n, "black de
 here: it kills only one player) and "wimpywimpywimpy" the own player (a defeat). The buildings of the player fall as
 at 0 hit points (the plugin, `aoe destroy`), its units die (`kill` with the team and the tag of the player, #358).
 "natural wonders" gives the control of the Gaia animals and takes the control of the own units (not reversible).
+Excluded and partial codes (owner, #820, #985):
+- "!mute", "!nomute": excluded. The game program has no taunts, so the codes have nothing to silence.
+- "marco", "polo": done as they are. Minecraft has no fog of war, so the codes only answer in the chat.
+- "aegis": the part "animals die at once" has no effect. The game program has no hunting yet.
+- "sharing is caring": waits for allies (#969). The game program has no allies yet.
 """
 import re
 from collections import namedtuple
