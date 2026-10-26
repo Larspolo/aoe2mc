@@ -9,13 +9,19 @@ villagers to the nearest source of the resource with the largest gap to SHARE. T
 Build (#857): a house when the population is 2 below the limit, then the buildings of ORDER when the bot has their
 cost. One villager builds each site (an idle one, else the nearest), next to the source of the building (NEAR) or
 the town center. Each building of ORDER once, as the first buildings of an AoE2 build order.
+
+Attack (#859): until the game time `attack` (AoE2 seconds) the soldiers stay at their buildings. Then each soldier
+without a live target attacks the nearest unit of player `foe`, else its nearest building, with the mob AI of the
+plugin (`ai.attack`, `aoe attack`). A soldier gets a new target when its target dies.
 """
 import math
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import ai  # noqa: E402
 import build  # noqa: E402
+import combat  # noqa: E402
 import gather  # noqa: E402
 import train  # noqa: E402
 
@@ -24,14 +30,18 @@ QUEUED = 2                                                         # units in th
 ORDER = ("LUMBER_CAMP", "MILL", "MINING_CAMP", "BARRACKS")         # the build order after the houses
 NEAR = {"LUMBER_CAMP": "wood", "MILL": "food", "MINING_CAMP": "gold"}   # a drop site goes next to its resource
 HOUSE_GAP = 2                                                      # a new house at this many units below the limit
+ATTACK = 600.0                                                     # AoE2 seconds: the first attack at 10:00
+LOOK = 2.0                                                         # AoE2 seconds between two looks for targets
 
 
 class Bot:
-    def __init__(self, game, data, player=2, share=None, villagers=20, **kw):
+    def __init__(self, game, data, player=2, share=None, villagers=20, attack=ATTACK, foe=1, **kw):
         """share: the Gather of the human player. Both then use the same trees, bushes and mines.
-        villagers: the bot trains villagers up to this number, then soldiers."""
+        villagers: the bot trains villagers up to this number, then soldiers.
+        attack: the game time (AoE2 seconds) of the first attack on player foe."""
         self.g = gather.Gather(game, data, player=player, **kw)
-        self.villagers = villagers
+        self.villagers, self.attack, self.foe, self.share = villagers, attack, foe, share
+        self.time, self.looked, self.targets = 0.0, -LOOK, {}          # AoE2 seconds of the game, soldier -> target
         self.nobody = f"@a[tag=aoe2mc.bot{player}]"                     # the texts of the queues go to no player
         if share:
             self.g.map.trees, self.g.map.bushes, self.g.map.mines = share.map.trees, share.map.bushes, share.map.mines
@@ -79,6 +89,43 @@ class Bot:
                     work[res] += 1
                     break
         self.recruit()
+        self.time += g.tick * gather.NORMAL
+        if self.time >= self.attack and self.time >= self.looked + LOOK:   # each look costs RCON commands
+            self.looked = self.time
+            self.fight()
+
+    def fight(self):
+        """Send each soldier without a live target to the nearest unit of the foe, else to its nearest building."""
+        g = self.g
+        mine = g.positions(sorted(g.soldiers))                         # a dead soldier is not in it
+        live = {t for t in set(self.targets.values()) if "passed" in g.command(f"execute if entity {t}")}
+        self.targets = {u: t for u, t in self.targets.items() if u in mine and t in live}
+        free = sorted(mine.keys() - self.targets.keys())
+        if not free:
+            return
+        units = {o["uuid"] for o in g.data["objects"] if o["kind"] == "unit" and o["player"] == self.foe and o.get("uuid")}
+        if self.share:                                                 # also the units that player 1 trained
+            units |= self.share.villagers.keys() | self.share.soldiers.keys()
+        near = g.positions(sorted(units)) or \
+            {u: ((b[0] + b[3] + 1) / 2, b[1], (b[2] + b[5] + 1) / 2) for u, b in self.forts().items()}
+        orders = {}
+        for u in free if near else ():
+            t = min(near, key=lambda k: (math.dist(near[k], mine[u]), k))
+            self.targets[u] = t
+            orders.setdefault(t, []).append(u)
+        for t, us in sorted(orders.items()):
+            if t in g.forts:
+                g.sieged.add(t)                                        # Gather.fall frees its footprint
+            ai.attack(g.game, us, [g.soldiers[u] for u in us], g.map.T, t)
+
+    def forts(self):
+        """{target UUID: box} of the buildings of the foe whose target entity lives."""
+        g = self.g
+        boxes = {combat.target_uuid(o["footprint"]): o for o in g.data["objects"] if o["kind"] == "building"
+                 and o["player"] == self.foe and "footprint" in o and o["name"] in combat.BUILDINGS}
+        ground = [r.split() for r in g.data["ground"]]
+        return {u: combat.building_box(o, ground) for u, o in sorted(boxes.items())
+                if "passed" in g.command(f"execute if entity {u}")}
 
     def recruit(self):
         """Keep QUEUED units in the queue of each training building: villagers at the town centers up to
