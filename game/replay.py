@@ -1054,10 +1054,12 @@ class Replay:
         flight before #910: slow falling (VIEW_FALL s) brings the player down with no fall damage."""
         if getattr(self, "view", None) is None:                    # once: each game second calls it
             c = self.n / 2
-            top = max([y for row in self.ground for y in row if y is not None] or [64])
+            land = [y for row in self.ground for y in row if y is not None] or [64]
+            top, low = max(land), min(land)
             i, r = int(c), 16
-            near = sorted(y for row in self.ground[max(0, i - r):i + r] for y in row[max(0, i - r):i + r] if y is not None)
-            mid = near[len(near) // 2] if near else top                # the ground at the center
+            near = sorted(low if y is None else y                      # water: the lowest ground (all water is at
+                          for row in self.ground[max(0, i - r):i + r] for y in row[max(0, i - r):i + r])  # elevation 0)
+            mid = near[len(near) // 2] if near else top                # the ground at the center (a lake: #1150)
             pitch = math.radians(VIEW_PITCH)
             y = min(self.n // 3, VIEW_DIST * math.sin(pitch), CLOUDS - 4 - mid)     # the height above the center
             y = min(319, max(top + 8, round(mid + y)))                 # above the highest ground, below the build limit
