@@ -140,7 +140,8 @@ def measure(distance=10, loads=2, tick=0.25, chop=None, carry=10, log=None, vers
                 g.map.trees if resource == "wood" else g.map.mines[resource]
             g.select(uuid)
             g.send(tile)
-            g.run(timeout, until=lambda: g.stock[stock] >= loads * carry)
+            base = g.stock[stock]                                  # the start resources of AoE2 (#973)
+            g.run(timeout, until=lambda: g.stock[stock] >= base + loads * carry)
         if log:
             with open(log, "w") as f:
                 f.write(buf.getvalue())
