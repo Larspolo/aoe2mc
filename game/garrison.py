@@ -9,6 +9,9 @@ the fall of the building (its target entity of the plugin is gone), alive, as in
     garrison.tick(g)                    # gather.Gather.step: units at the door go in, a fallen building lets them out
     garrison.out(g, rect)               # the menu item
 
+Each garrisoned villager or foot archer adds one arrow to the shot of its town center, tower or castle, as in AoE2
+(#1113): `aoe arrows` of the plugin. An empty town center shoots no arrow, a castle 5 (BASE, #1201).
+
 The live replay (game/replay.py, #809) uses SIZES, cell(), enter() and leave().
 """
 import json
@@ -24,6 +27,7 @@ SIZES = {                                                          # units insid
     "TOWN_CENTER": 15,
     "WATCH_TOWER": 5,
 }
+BASE = {"CASTLE": 5, "TOWN_CENTER": 0}                            # arrows of an empty building (AoE2 wiki), else 1
 DOOR = 2.5                  # blocks from the door cell: there a unit goes in
 UNGARRISON = (7, "oak_door", "Ungarrison", "Click: all units come out")   # a slot of the first row, before RALLY
 INSIDE = "{Invulnerable:1b,NoAI:1b,CustomNameVisible:0b}"         # the NBT of a garrisoned unit (#807)
@@ -46,6 +50,23 @@ def start(g):
         if o["kind"] == "unit" and o.get("uuid") and o.get("holder") in refs:
             out.setdefault(refs[o["holder"]], []).append(o["uuid"])
     return out
+
+
+def arrows(building, names):
+    """The arrows of one shot of the building with the units `names` inside: its BASE, and 1 more for each villager or
+    foot archer (an archer that is not cavalry, a camel or an elephant), as in AoE2."""
+    import combat                                                  # combat imports gather
+    riders = {combat.CAV, combat.CAM, combat.ELE}
+    return BASE.get(building, 1) + sum(n.startswith("VILLAGER") or combat.ARC in (c := set(combat.stats(n).classes)) and not c & riders
+                   for n in names)
+
+
+def arrows_command(g, rect):
+    """The plugin command that gives the building rect the arrows of its garrison (#1113)."""
+    import combat
+    names = ["VILLAGER" if u in g.villagers else g.soldiers.get(u, "") for u in g.garrisons.get(rect, [])]
+    building = holders(g).get(rect, {}).get("name")
+    return f"aoe arrows {combat.target_uuid([rect[0], rect[2], rect[1], rect[3]])} {arrows(building, names)}"
 
 
 def door(g, rect):
@@ -107,7 +128,7 @@ def go_in(g, u, rect, o):
     x, y, z = cell(g.map, rect, o, len(units))
     units.append(u)
     g.command(f"aoe stop {u}")
-    for c in enter(u, x, y, z):
+    for c in enter(u, x, y, z) + [arrows_command(g, rect)]:
         g.command(c)
     if (v := g.villagers.get(u)) is not None:
         v.pos, v.state = (x + 0.5, float(y), z + 0.5), "garrison"
@@ -118,6 +139,8 @@ def go_in(g, u, rect, o):
 def out(g, rect):
     """All units of the building rect come out on the free cells next to it, the door side first. Returns them."""
     units = g.garrisons.pop(rect, [])
+    if units and g.paper:
+        g.command(arrows_command(g, rect))                         # one arrow again
     ring = g.map.front(rect) or [((rect[0] + rect[1]) // 2, rect[3])]
     for k, u in enumerate(units):
         x, z = ring[k % len(ring)]

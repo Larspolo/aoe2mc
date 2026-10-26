@@ -28,7 +28,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `play:program` A game program on a Paper server with Minecraft path finding (#433)
 - [x] `play:gather` Gather wood, food, gold and stone, with drop sites and AoE2 work rates (#388)
 - [x] `play:build` Place and build a construction site; a finished building works (#394)
-- [ ] `play:fight` Military units fight: AoE2 attack, armor, range and hit points (epic #395)
+- [x] `play:fight` Military units fight: AoE2 attack, armor, range and hit points (epic #395)
 - [x] `play:train` Train villagers at the town center: cost, queue, population limit (epic #396)
 - [ ] `play:bot` A scripted bot plays player 2 (epic #397)
 - [x] `play:scale` Measure and raise the number of units that the program can move (epic #398)
@@ -59,6 +59,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:hunt` Hunt and herd: villagers kill deer, lure and kill boars, and herd sheep that the first player who sees them owns
 - [ ] `play:setup` Set up a game before it starts: the starting age, starting resources, population limit, the civilizations and the number of bots
 - [ ] `play:scenario` Play a converted scenario in the game program: its objectives, triggers and victory conditions work, the scenario AI players are bots
+- [ ] `play:minimap` A minimap as in AoE2: a held Minecraft map item that shows the own and the seen enemy units and buildings as markers in the player colors, and a click on it sends the selection there
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
@@ -75,6 +76,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `replay:effects` Show events on the map: research and age-up at the building, attacks, a marker where units die (epic #842)
 - [ ] `replay:postgame` A summary at the end of the replay, as the AoE2 achievements screen: military, economy, technology, timeline
 - [ ] `replay:team-games` Team games of up to 8 players: the score panel, the colors, the views and the summary work with all players
+- [ ] `replay:minimap` A live minimap of the replay: a Minecraft map item that shows the units and buildings of all players in their colors and changes with the game
 
 ## 4. The agent system (`.claude/skills/`, `tools/`, `.github/workflows/`)
 

@@ -111,6 +111,23 @@ The converter reads `.aoe2record`, `.mgz` (UserPatch), `.mgx` (AoC) and `.mgl` (
 timeline: for a game without one it stops with "mgz cannot read the commands of this recorded game". Only
 `hd-4.6` is in `samples/`: the other records are larger than 1 MB (`tools/health.py`).
 
+### Team games (#1190)
+
+The records of the table that `mgz.model.parse_match` reads, by players (`mgz` 1.8.51, `aoe2mc.read_timeline`):
+
+| Record | Players | Teams | Map | Length | Size |
+|---|---|---|---|---|---|
+| `de-13.34.aoe2record` | 2 | 1 vs 1 | Arabia | 44:42 | 4.5 MB |
+| `de-25.01.aoe2record` | 2 | 1 vs 1 | Arabia | 44:01 | 3.0 MB |
+| `de-61.5.aoe2record` | 2 | 1 vs 1 | Arabia | 27:54 | 3.8 MB |
+| `de-62.0.aoe2record` | 2 | 1 vs 1 | Arabia | 18:07 | 2.2 MB |
+| `de-63.0.aoe2record` | 4 | 2 vs 2 (players 1 + 3, 2 + 4) | Arena (Medium, 168 tiles) | 23:28 | 3.0 MB |
+| `de-64.3.aoe2record` | 2 | 1 vs 1 | Acropolis | 44:22 | 5.7 MB |
+
+Result: `de-63.0` is the team game for the tests (`samples/`, MIT, `tests/test_record_team.py`). Its timeline has
+2347 commands of all 4 players (build commands of each player) and ends with a resign of player 4. The converter
+makes 672 × 672 blocks in 15 s, with 84 units and 0 units in a block. No test record has 8 players.
+
 ## Options for the replay in Minecraft
 
 | Option | What the player sees | Accuracy | Cost |
@@ -197,3 +214,5 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
   `objects` of SPECIAL are not IDs. New objects take the next free ID: `aoe2mc.name_timeline` (#407).
 - mgz `Inputs.add_action` fills a command without object IDs with the last IDs of its action type of any player: player 2 "moved" the villagers of player 1 (#828). `read_timeline` parses in `aoe2mc.own_selection()` (the last IDs of the same player). The selection of a player is its own: check the owners of the IDs (`tests/test_record_selection.py`).
 - Garrisons (#809): DE has no own garrison action in `mgz`. The garrison button and a right click with the garrison cursor are SPECIAL with `order` "Garrison" (order 5) and the building in `target`; `mgz.fast` reads their `objects` one byte early (ID × 256). `read_timeline` gives them as kind `garrison` with the real IDs. UNGARRISON has the building IDs in `objects`. `samples/de-64.3.aoe2record`: 20 garrison commands (11 on a start town center), 8 ungarrisons (5 of a start town center), 3 ORDERs on an own start town center.
+- A broken state of `replay.Replay` (for example a unit in `moving` with an empty path, #1177): wrap each function of `vars(replay.Replay)` (only plain functions: a wrapped staticmethod breaks) with a check of the state before and after, and play the jump with the fake clock of `tests/test_replay_control.py`. The wrapper names the method that breaks it (`enter`) in one run (about 2 minutes for 43:30 of `samples/de-64.3.aoe2record`).
+- A summary or an estimate that is too low after a jump: look first for record commands that the replay ignores (`back_to_work` left 18 villagers in a town center, #1179). Count the `kind` values of the timeline against the cases of `Replay.commands`.

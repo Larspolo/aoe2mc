@@ -713,12 +713,12 @@
    "minecraft:grass_block": 77,
    "minecraft:moss_block": 51,
    "minecraft:sand": 512,
-   "minecraft:seagrass": 10,
+   "minecraft:seagrass": 8,
    "minecraft:short_grass": 7,
-   "minecraft:stone": 2512,
+   "minecraft:stone": 2400,
    "minecraft:tall_grass[half=lower]": 2,
    "minecraft:tall_grass[half=upper]": 2,
-   "minecraft:water[level=0]": 166
+   "minecraft:water[level=0]": 280
   },
   "4,1": {
    "minecraft:air": 94562,
@@ -726,12 +726,12 @@
    "minecraft:grass_block": 80,
    "minecraft:moss_block": 48,
    "minecraft:sand": 512,
-   "minecraft:seagrass": 17,
+   "minecraft:seagrass": 7,
    "minecraft:short_grass": 24,
-   "minecraft:stone": 2512,
+   "minecraft:stone": 2400,
    "minecraft:tall_grass[half=lower]": 3,
    "minecraft:tall_grass[half=upper]": 3,
-   "minecraft:water[level=0]": 159
+   "minecraft:water[level=0]": 281
   },
   "4,2": {
    "minecraft:air": 94571,
@@ -739,12 +739,12 @@
    "minecraft:grass_block": 74,
    "minecraft:moss_block": 54,
    "minecraft:sand": 512,
-   "minecraft:seagrass": 11,
+   "minecraft:seagrass": 6,
    "minecraft:short_grass": 10,
-   "minecraft:stone": 2512,
+   "minecraft:stone": 2400,
    "minecraft:tall_grass[half=lower]": 5,
    "minecraft:tall_grass[half=upper]": 5,
-   "minecraft:water[level=0]": 165,
+   "minecraft:water[level=0]": 282,
    "minecraft:wildflowers[facing=west,flower_amount=1]": 1
   },
   "4,3": {
@@ -752,22 +752,22 @@
    "minecraft:dirt": 384,
    "minecraft:grass_block": 128,
    "minecraft:sand": 512,
-   "minecraft:seagrass": 18,
+   "minecraft:seagrass": 10,
    "minecraft:short_grass": 32,
-   "minecraft:stone": 2512,
+   "minecraft:stone": 2400,
    "minecraft:tall_grass[half=lower]": 2,
    "minecraft:tall_grass[half=upper]": 2,
-   "minecraft:water[level=0]": 158
+   "minecraft:water[level=0]": 278
   },
   "4,4": {
    "minecraft:air": 94577,
    "minecraft:dirt": 384,
    "minecraft:grass_block": 128,
    "minecraft:sand": 512,
-   "minecraft:seagrass": 15,
+   "minecraft:seagrass": 4,
    "minecraft:short_grass": 15,
-   "minecraft:stone": 2512,
-   "minecraft:water[level=0]": 161
+   "minecraft:stone": 2400,
+   "minecraft:water[level=0]": 284
   },
   "4,5": {
    "minecraft:air": 94524,
@@ -777,10 +777,10 @@
    "minecraft:grass_block": 128,
    "minecraft:raw_gold_block": 11,
    "minecraft:sand": 512,
-   "minecraft:seagrass": 14,
+   "minecraft:seagrass": 7,
    "minecraft:short_grass": 19,
-   "minecraft:stone": 2521,
-   "minecraft:water[level=0]": 162
+   "minecraft:stone": 2409,
+   "minecraft:water[level=0]": 281
   },
   "4,6": {
    "minecraft:air": 98008,

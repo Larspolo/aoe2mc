@@ -13,7 +13,8 @@ Options:
     --name TEXT        World name in the Minecraft menu (default: file name)
     --seed N           Seed for the random details (tree heights, flowers), of a random map script (.rms) and
                        of --random-map (default 1)
-    --random-map KIND  Make the map with an own generator (arabia, arena, black_forest), no input file:
+    --random-map KIND  Make the map with an own generator (arabia, arena, black_forest, gold_rush, highland,
+                       mediterranean, nomad), no input file:
                        aoe2mc.py --random-map arabia OUT
     --preview          Also write preview.png (top view) into the world folder
     --mc-version V     Minecraft Java version of the output: 26.3 (default, the only one)
@@ -146,6 +147,8 @@ def terrain_style(name):
         return S("mud", "mud", 1, "mud", "mangrove_swamp")
     if "DEEP" in n and "WATER" in n:
         return S("gravel", "gravel", 7, "gravel", "deep_ocean")
+    if "SHALLOW" in n and n.startswith("WATER"):    # "Water, Shallow": only ships go on it, not the shallows (#1198)
+        return S("sand", "sand", 2, "sand", "river", [("seagrass", .05)])
     if "SHALLOW" in n:
         return S("sand", "sand", 1, "sand", "river", [("seagrass", .1)])
     if "WATER" in n:
@@ -446,10 +449,11 @@ def read_record(path):
         elevation[t.position.x, t.position.y] = t.elevation
     terrain_names = {t.value: t.name for t in TerrainId}
 
-    players = {0: {"color": "light_gray", "arch": "western", "civ": "GAIA", "view": None}}
+    players = {0: {"color": "light_gray", "arch": "western", "civ": "GAIA", "view": None, "team": None}}
+    teams = team_numbers([[q.number for q in t] for t in match.teams])        # for the live replay (#1188)
     for p in match.players:
         civ = (p.civilization or "?").upper()
-        players[p.number] = {"color": buildings.COLOR_NAMES[p.color_id] if 0 <= p.color_id < 8 else "light_gray",
+        players[p.number] = {"team": teams.get(p.number), "color": buildings.COLOR_NAMES[p.color_id] if 0 <= p.color_id < 8 else "light_gray",
                              "arch": buildings.CIV_TO_ARCH.get(civ, "western"), "civ": civ,
                              "view": (p.position.x, p.position.y) if p.position else None}
 
@@ -463,6 +467,12 @@ def read_record(path):
                                 x=o.position.x, y=o.position.y, rotation=0.0, garrisoned=False,
                                 ref=o.instance_id, holder=None))
     return size, terrain, elevation, terrain_names, {k: "" for k in CHAPTERS}, objects, players
+
+
+def team_numbers(teams):
+    """{player: team number} of the teams of a record (lists of player numbers). The team of the lowest player
+    number is team 1: mgz gives the teams in no fixed order (a set in the header parser)."""
+    return {p: n for n, t in enumerate(sorted(teams, key=min), 1) for p in t}
 
 
 def read_old_record(path, error):
@@ -489,10 +499,11 @@ def read_old_record(path, error):
     terrain = np.array([t.terrain_type for t in tiles], np.int16).reshape(size, size).T.copy()
     elevation = np.array([t.elevation for t in tiles], np.float32).reshape(size, size).T.copy()
     civs = s.reference.get("civilizations", {})
-    players = {0: {"color": "light_gray", "arch": "western", "civ": "GAIA", "view": None}}
+    players = {0: {"color": "light_gray", "arch": "western", "civ": "GAIA", "view": None, "team": None}}
+    teams = team_numbers(s.get_teams())
     for p in s.get_players():
         civ = civs.get(str(p["civilization"]), {}).get("name", "?").upper()
-        players[p["number"]] = {"color": buildings.COLOR_NAMES[p["color_id"]] if 0 <= p["color_id"] < 8 else
+        players[p["number"]] = {"team": teams.get(p["number"]), "color": buildings.COLOR_NAMES[p["color_id"]] if 0 <= p["color_id"] < 8 else
                                 "light_gray", "arch": buildings.CIV_TO_ARCH.get(civ, "western"), "civ": civ,
                                 "view": p["position"]}
     kinds, objects = object_kinds(), []
@@ -2532,7 +2543,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         objs.append(e)
     data = {"map_size": size, "tile_size": T, "level_height": H,
             "players": {str(pid): {"civ": p["civ"], "color": p["color"], "arch": p["arch"]}
-                        for pid, p in sorted(players.items())},
+                        | {k: p[k] for k in ("team",) if k in p} for pid, p in sorted(players.items())},
             "objects": objs}
     n, wet = cols.n, cols.wtop > cols.top
     data["ground"] = [" ".join("-" if wet[x, z] else str(ground[x, z]) for x in range(n)) for z in range(n)]
@@ -3311,6 +3322,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     lut = np.array([block_color(s) for s in B.states], np.uint8)
     img = lut[top_view[:cols.n, :cols.n].T]                     # rows = z, columns = x
     shade = np.clip(1 + (cols.wtop[:cols.n, :cols.n].T - WATER_Y) * 0.02, 0.6, 1.4)
+    depth = (cols.wtop - cols.top)[:cols.n, :cols.n].T
+    shade *= np.where(depth > 0, np.clip(1.6 - 0.2 * depth, 1, 1.4), 1)     # shallow water is lighter, as on a map item
     img = Image.fromarray(np.clip(img * shade[..., None], 0, 255).astype(np.uint8))
     if preview:
         img.save(os.path.join(out, "preview.png"))
@@ -3486,9 +3499,12 @@ def main(argv=None):
                     "steps for the DE editor)")
     ap.add_argument("output", nargs="?", help="output world folder (put it in .minecraft/saves/); for a campaign the "
                     "folder of the worlds")
-    ap.add_argument("--random-map", choices=("arabia", "arena", "black_forest"), metavar="KIND",
-                    help="make the map with an own generator of the seed, no input file (arabia, arena, black_forest); "
-                    "give only the output")
+    ap.add_argument("--random-map", choices=("arabia", "arena", "black_forest", "gold_rush", "highland",
+                                         "mediterranean", "nomad"),
+                    metavar="KIND",
+                    help="make the map with an own generator of the seed, no input file (arabia, arena, black_forest, "
+                    "gold_rush, highland: a river with fords, mediterranean: a sea in the middle, nomad: no town "
+                    "center); give only the output")
     ap.add_argument("--scenario", dest="only", type=int_range(1, 999), metavar="N",
                     help="campaign: convert only scenario N (1 = the first)")
     ap.add_argument("--tile-size", type=int_range(1, 16), default=4, help="blocks per tile (default 4)")

@@ -334,14 +334,76 @@ create_terrain DIRT3 { base_terrain GRASS number_of_clumps 8 land_percent 2 }
 create_terrain FOREST { base_terrain GRASS number_of_clumps 6 number_of_tiles 10 set_avoid_player_start_areas 15
   spacing_to_other_terrain_types 2 }
 """
+# Gold Rush: open land, a dirt land with many gold mines in the middle (GOLDS) and a forest ring around it.
+GOLD_RUSH = """
+<LAND_GENERATION>
+base_terrain GRASS
+create_player_lands { terrain_type GRASS2 land_percent 30 base_size 12 clumping_factor 15 }
+create_land { terrain_type DIRT land_position 50 50 base_size 8 number_of_tiles 450 clumping_factor 20 }
+<TERRAIN_GENERATION>
+create_terrain DIRT3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
+create_terrain FOREST { base_terrain GRASS number_of_clumps 8 number_of_tiles 25 set_avoid_player_start_areas 16
+  spacing_to_other_terrain_types 2 }
+"""
+# Highland: grass land with forests, a river across the map between the players (RIVERS) with shallow fords.
+HIGHLAND = """
+<LAND_GENERATION>
+base_terrain GRASS
+create_player_lands { terrain_type GRASS2 land_percent 40 base_size 12 clumping_factor 15 }
+<TERRAIN_GENERATION>
+create_terrain FOREST { base_terrain GRASS number_of_clumps 8 land_percent 8 set_avoid_player_start_areas 16
+  spacing_to_other_terrain_types 1 clumping_factor 15 }
+create_terrain FOREST { base_terrain GRASS number_of_clumps 10 number_of_tiles 12 set_avoid_player_start_areas 12
+  spacing_to_other_terrain_types 2 }
+create_terrain DIRT3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
+create_terrain GRASS3 { base_terrain GRASS2 number_of_clumps 8 land_percent 3 }
+"""
+# Mediterranean: a sea in the middle of the map, the player lands on the land ring around it, a beach at the coast
+# (COASTS).
+MEDITERRANEAN = """
+<LAND_GENERATION>
+base_terrain GRASS
+create_player_lands { terrain_type GRASS2 land_percent 30 base_size 12 clumping_factor 15 }
+create_land { terrain_type WATER land_position 50 50 base_size 8 land_percent 22 clumping_factor 20 }
+<TERRAIN_GENERATION>
+create_terrain FOREST { base_terrain GRASS number_of_clumps 8 land_percent 6 set_avoid_player_start_areas 16
+  spacing_to_other_terrain_types 2 clumping_factor 15 }
+create_terrain FOREST { base_terrain GRASS2 number_of_clumps 6 number_of_tiles 12 set_avoid_player_start_areas 12
+  spacing_to_other_terrain_types 2 }
+create_terrain DIRT3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
+"""
+# Nomad: a sea in the middle as Mediterranean, but no town center at the start: the villagers stand apart (NOMADS) and
+# the player builds the town center.
+NOMAD = """
+<LAND_GENERATION>
+base_terrain GRASS
+create_player_lands { terrain_type GRASS2 land_percent 30 base_size 12 clumping_factor 15 }
+create_land { terrain_type WATER land_position 50 50 base_size 8 land_percent 20 clumping_factor 20 }
+<TERRAIN_GENERATION>
+create_terrain FOREST { base_terrain GRASS number_of_clumps 8 land_percent 6 set_avoid_player_start_areas 16
+  spacing_to_other_terrain_types 2 clumping_factor 15 }
+create_terrain FOREST { base_terrain GRASS2 number_of_clumps 6 number_of_tiles 12 set_avoid_player_start_areas 12
+  spacing_to_other_terrain_types 2 }
+create_terrain DIRT3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
+"""
 GENERATORS = {"arabia": ARABIA,
               "arena": ARENA,
-              "black_forest": BLACK_FOREST}
+              "black_forest": BLACK_FOREST,
+              "gold_rush": GOLD_RUSH,
+              "highland": HIGHLAND,
+              "mediterranean": MEDITERRANEAN,
+              "nomad": NOMAD}
 WALLS = {"arena": 23}           # the radius in tiles of the stone wall circle around each player (outside START)
 BAND = 6                        # the forest inside the wall: tiles of width, on the half away from the map middle
 PATHS = {"black_forest": 1}     # the half width in tiles of the open path from each player to the middle
-WOODS = {"arabia": (10, 30, 3)} # the wood line of each player (tiles from the town center, forest tiles) and its
-                                # single trees (stragglers, at 4 to 6 tiles), as in AoE2 (#1144)
+GOLDS = {"gold_rush": (10, 6, 5)}  # the gold of the middle: radius in tiles, clumps of gold mines, mines in a clump
+RIVERS = {"highland": (3, 3, 5)}  # the river: half width in tiles, the least and the most fords
+COASTS = {"mediterranean": 1,   # the beach: tiles of width on the land next to the water
+          "nomad": 1}
+NOMADS = {"nomad": (6, 7)}      # no town center: each villager alone, at (tiles from the origin, tiles from each other)
+RINGS = {"gold_rush": (14, 5)}  # the forest ring around the gold: inner radius and width in tiles, gaps between players
+WOODS = {"arabia": (10, 30, 3), # the wood line of each player (tiles from the town center, forest tiles) and its
+         "gold_rush": (10, 30, 3)}  # single trees (stragglers, at 4 to 6 tiles), as in AoE2 (#1144)
 
 
 def walls(d, r, rng):
@@ -365,6 +427,67 @@ def walls(d, r, rng):
     return out
 
 
+def goldfield(d, gold, ring, rng):
+    """The gold of the middle: gold[1] clumps of gold[2] gold mines within gold[0] tiles of the map middle, and a forest
+    ring (inner radius ring[0] with an uneven edge, ring[1] tiles wide) around it, with a gap of 5 tiles half way
+    between each two players: the player lands do not see the gold, and the gaps let the units in."""
+    n, terrain = d["size"], np.array(d["terrain"])
+    x, y = np.mgrid[0:n, 0:n] + 0.5
+    dx, dy = x - n / 2, y - n / 2
+    dist, a = np.hypot(dx, dy), np.arctan2(dy, dx)
+    inner = ring[0] + 1.5 * np.sin(5 * a + rng.uniform(0, 2 * np.pi))
+    band = (dist >= inner) & (dist < inner + ring[1])
+    turns = sorted(np.arctan2(st["y"] - n / 2, st["x"] - n / 2) for st in d["lands"])
+    for t0, t1 in zip(turns, turns[1:] + [turns[0] + 2 * np.pi]):
+        gap = (t0 + t1) / 2
+        band &= (abs(dx * np.sin(gap) - dy * np.cos(gap)) > 2.5) | (dx * np.cos(gap) + dy * np.sin(gap) < 0)
+    terrain[band] = TERRAINS["FOREST"]
+    d["terrain"] = terrain.tolist()
+    out, used = [], dist > gold[0]
+    for _ in range(gold[1]):
+        for _ in range(36):                                              # a free spot for the clump
+            r, b = gold[0] * np.sqrt(rng.uniform(0, 0.8)), rng.uniform(0, 2 * np.pi)
+            c = (int(n / 2 + r * np.cos(b)), int(n / 2 + r * np.sin(b)))
+            cells = sorted(square(c, 2, n), key=lambda t: (t[0] - c[0]) ** 2 + (t[1] - c[1]) ** 2)[:gold[2]]
+            if not any(used[t] for t in cells):
+                break
+        else:
+            continue
+        for t in cells:
+            used[max(0, t[0] - 1):t[0] + 2, max(0, t[1] - 1):t[1] + 2] = True
+        out += [{"name": "GOLD_MINE", "player": 0, "x": t[0] + 0.5, "y": t[1] + 0.5} for t in cells]
+    return out
+
+
+def river(d, spec, rng):
+    """A river of half width spec[0] across the whole map through the middle, on the line that is farthest from the
+    player origins (for 2 players: between them), with a meander. spec[1] to spec[2] fords of SHALLOW, 3 tiles wide,
+    at even places along it; no forest next to a ford, so units walk across."""
+    w, least, most = spec
+    n, terrain = d["size"], np.array(d["terrain"])
+    x, y = np.mgrid[0:n, 0:n] + 0.5 - n / 2
+    a = max(np.linspace(0, np.pi, 36, endpoint=False),                  # the normal of the river line
+            key=lambda a: min(abs((st["x"] - n / 2) * np.cos(a) + (st["y"] - n / 2) * np.sin(a)) for st in d["lands"]))
+    along = -x * np.sin(a) + y * np.cos(a)
+    side = x * np.cos(a) + y * np.sin(a) - 3 * np.sin(along * 4 * np.pi / n + rng.uniform(0, 2 * np.pi))
+    water = np.abs(side) <= w
+    k = rng.integers(least, most + 1)
+    fords = np.linspace(-0.6, 0.6, k) * n / 2 + rng.uniform(-3, 3, k)
+    ford = water & (np.abs(along[..., None] - fords).min(-1) <= 1.5)
+    terrain[water] = TERRAINS["WATER"]
+    terrain[ford] = TERRAINS["SHALLOW"]
+    terrain[dilate(ford, 3) & np.isin(terrain, list(FOREST_TREES))] = TERRAINS["GRASS"]
+    d["terrain"] = terrain.tolist()
+
+
+def coast(d, w):
+    """A BEACH of w tiles on the land (not forest) next to the water."""
+    terrain = np.array(d["terrain"])
+    water = terrain == TERRAINS["WATER"]
+    terrain[dilate(water, w) & ~water & ~np.isin(terrain, list(FOREST_TREES))] = TERRAINS["BEACH"]
+    d["terrain"] = terrain.tolist()
+
+
 def paths(d, w):
     """Open grass paths of half width w from each player origin to the middle of the map."""
     n, terrain = d["size"], np.array(d["terrain"])
@@ -378,38 +501,51 @@ def paths(d, w):
 
 
 def random_map(kind, seed, players=2):
-    """The map description of an own generator (GENERATORS) and seed: the land of generate() (with the WALLS and PATHS
-    of the kind), a town center at each player origin and the START objects around it, on free tiles (no forest, no
-    water, not next to a wall)."""
+    """The map description of an own generator (GENERATORS) and seed: the land of generate() (with the WALLS, PATHS,
+    RIVERS and COASTS of the kind), a town center at each player origin (not for NOMADS) and the START objects around
+    it, on free tiles (no forest, no water, not next to a wall)."""
     d = generate(GENERATORS[kind], seed, players)
     rng = np.random.default_rng([seed, 993])
     if kind in PATHS:
         paths(d, PATHS[kind])
+    if kind in RIVERS:
+        river(d, RIVERS[kind], rng)
+    if kind in COASTS:
+        coast(d, COASTS[kind])
     objects = walls(d, WALLS[kind], rng) if kind in WALLS else []
+    if kind in GOLDS:
+        objects += goldfield(d, GOLDS[kind], RINGS[kind], rng)
     n, terrain = d["size"], np.array(d["terrain"])
-    used = np.isin(terrain, list(FOREST_TREES) + [TERRAINS["WATER"]])
-    for o in objects:                                                    # no start object next to a wall
+    used = np.isin(terrain, list(FOREST_TREES) + [TERRAINS["WATER"], TERRAINS["SHALLOW"]])
+    for o in objects:                                      # no start object next to a wall or a gold mine
         used[max(0, int(o["x"]) - 1):int(o["x"]) + 2, max(0, int(o["y"]) - 1):int(o["y"]) + 2] = True
     for st in d["lands"]:
         cx, cy = st["x"], st["y"]
         used[max(0, cx - 3):cx + 3, max(0, cy - 3):cy + 3] = True       # the 4 × 4 town center and a path around it
-        objects.append({"name": "TOWN_CENTER", "player": st["player"], "x": cx, "y": cy})
+        if kind not in NOMADS:                                   # Nomad: the place stays free for the town center
+            objects.append({"name": "TOWN_CENTER", "player": st["player"], "x": cx, "y": cy})
         if kind in WOODS:
             woodline(terrain, used, (cx, cy), WOODS[kind][:2], rng)
         start = START + (((FOREST_TREES[TERRAINS["FOREST"]], 1, 5, 0),) * WOODS[kind][2] if kind in WOODS else ())
+        apart, far = [], NOMADS.get(kind, (0, 0))
+        if kind in NOMADS:                                       # one group for each villager, before the rest
+            alone = tuple((s[0], 1, far[0], s[3]) for s in start if s[0].startswith("VILLAGER") for _ in range(s[1]))
+            start = alone + tuple(s for s in start if not s[0].startswith("VILLAGER"))
         for name, count, dist, own in start:
             turn = rng.uniform(0, 2 * np.pi)
             for k in range(36):                                          # 36 directions, from a random one
                 a = turn + k * np.pi / 18
                 c = (int(round(cx - 0.5 + dist * np.cos(a))), int(round(cy - 0.5 + dist * np.sin(a))))
                 cells = sorted(square(c, 2, n), key=lambda t: (t[0] - c[0]) ** 2 + (t[1] - c[1]) ** 2)[:count]
-                if len(cells) == count and not any(used[t] for t in cells):
+                if len(cells) == count and not any(used[t] for t in cells) and \
+                        all(np.hypot(c[0] - p[0], c[1] - p[1]) >= far[1] for p in apart * name.startswith("VILLAGER")):
                     break
             else:
                 continue                                                 # no space: the group is missing
             for t in cells:
                 used[max(0, t[0] - 1):t[0] + 2, max(0, t[1] - 1):t[1] + 2] = True
                 objects.append({"name": name, "player": st["player"] * own, "x": t[0] + 0.5, "y": t[1] + 0.5})
+            apart += cells * name.startswith("VILLAGER")
     d["terrain"] = terrain.tolist()
     d["objects"] = objects + trees(terrain)
     return d
