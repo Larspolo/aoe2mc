@@ -202,3 +202,6 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - A real client joins the Paper server of `run.Game` (`online-mode=false`) with `--quickPlayMultiplayer 127.0.0.1:PORT`
   (`mc_shot.Client`, #627). In an open inventory the pointer is free: `xdotool mousemove` + `click` hits the slots.
   A Paper display name of an item is italic by default (Adventure).
+- A building target (#660): `damage <uuid> 1 ... by <mob>` answers "Target is invulnerable" and the plugin counts no hit
+  (most runs): hit it with `aoe attack`. `execute if entity <uuid>[tag=T]` is not valid syntax and never passes:
+  use `@e[type=slime,tag=T]`. A NoAI zombie burns in the sun at y 200: use a `husk`.
