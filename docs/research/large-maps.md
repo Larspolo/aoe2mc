@@ -56,3 +56,26 @@ went over all 384 rows.
 - "chunks" is 41 % faster (37.0 s → 21.7 s). Now "objects" is the slowest phase (#702).
 - Same output: the decompressed chunks and entities of the `tiny`, `stress` and `village` worlds are the same as
   before, and 1240 sampled chunks of the `large` map give the same bytes (only `level.dat` has a new LastPlayed time).
+
+## Result 2026-10-26: one add for each tree and obstacle (#702)
+
+The profile (`python3 -m cProfile`) of the object phase showed 609 460 calls of `Edits.add` (43 of 66 s): 4 to 6 for
+each tree (`disc`, `box`) and one for each block column of a barrier (`obstacle`). Now `make_tree` draws each
+(kind, height, leaves) shape once (`TREE_SHAPES`, `tree_shape`) and adds it with one call, and `obstacle` adds all
+its columns with one call. `Edits.add` takes one `hard` flag for each block. The random numbers and the order of the
+blocks stay the same: `tools/world_diff.py` shows the same bytes for `tiny`, `stress`, `village`, `gallery` and `large`.
+
+Same session for both rows. This session was about 2.5 times slower than the session of #690, so compare the rows
+with each other, not with the first table. Both rows are without the chunk change of #701 (measured before it merged).
+
+| Phase | Before (s) | After (s) | Change |
+|---|---|---|---|
+| read | 29.2 | 30.3 | |
+| columns | 6.3 | 6.0 | |
+| objects | 73.4 | 17.9 | −76 % |
+| units | 0.1 | 0.2 | |
+| chunks | 88.7 | 100.2 | |
+| write | 7.8 | 7.5 | |
+| total | 205.6 | 162.1 | −21 % |
+
+Peak memory: 1148 MB before, 972 MB after (fewer small arrays in `Edits.parts`).
