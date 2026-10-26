@@ -224,6 +224,7 @@ BUILDINGS = {
     "SIEGE_WORKSHOP": Stats(2100, 0, 0, 7, 0, 0.0, {}, ("building",)),
     "TOWN_CENTER": Stats(2400, 5, 3, 5, 6, 2.0, {}, ("building",)),
     "CASTLE": Stats(4800, 11, 8, 11, 8, 2.0, {}, ("building",)),
+    "WONDER": Stats(4800, 0, 3, 10, 0, 0.0, {}, ("building",)),
 }
 # Line of sight in tiles (AoE2 DE, base unit) where it is not max(4, range + 2) (sight()).
 SIGHT = {

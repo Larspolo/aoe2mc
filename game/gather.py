@@ -57,6 +57,7 @@ import hints  # noqa: E402
 import menu  # noqa: E402
 import stance  # noqa: E402
 import train  # noqa: E402
+import wonder  # noqa: E402
 
 RESOURCES = ("Wood", "Food", "Gold", "Stone")
 DROP_SITES = {"wood": ("TOWN_CENTER", "LUMBER_CAMP"), "food": ("TOWN_CENTER", "MILL"),   # as in AoE2 (#389)
@@ -1278,4 +1279,5 @@ class Gather:
             for b in self.bots:
                 b.step()
             conquest.tick(self)                                        # not in step(): the bot steps its own Gather
+            wonder.tick(self, self.tick * NORMAL)                      # game seconds, as train.tick
             time.sleep(max(0.0, self.tick - (time.time() - t)))
