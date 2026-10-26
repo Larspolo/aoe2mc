@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -68,6 +69,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe moveto <selector> <x> <y> <z> [speed]   walk on the path of Mob#getPathfinder
  *   aoe attack <selector> <target selector>    Mob#setTarget: the mob attacks with its own AI
  *   aoe goals <selector>                       the goals of the first unit (#436), for checks
+ *   aoe stance <selector> <aggressive|defensive|stand_ground|no_attack>
+ *                                              the AoE2 stance of a unit (#1104): no_attack never attacks without an
+ *                                              order, stand_ground attacks only an enemy in its range and does not walk
  *   aoe stats <selector> <hp> <attack> <melee armor> <pierce armor> <ranged 0|1|2> <classes|-> <class:bonus,...|->
  *             [reload ticks]                   the AoE2 values of a unit (#514, game/combat.py stats_command); a melee
  *                                              unit hits once per reload (#848, default 20: the vanilla cooldown)
@@ -75,7 +79,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe range <selector> <blocks> <ticks> [blast]
  *                                              a ranged unit shoots from this range, one shot per ticks (#515); a
  *                                              shot with a blast radius in blocks hits all units near the target, and
- *                                              a siege unit (a minecart) shoots too (#1050)
+ *                                              a siege unit (a minecart) shoots too (#1050); blast 0: a siege shot
+ *                                              that hits only the target (the Scorpion, #1062)
  *   aoe sight <selector> <blocks>              an idle unit attacks an enemy in this line of sight (#775)
  *   aoe building <selector> <hp> <melee armor> <pierce armor> <x0> <y0> <z0> <x1> <y1> <z1>
  *                                              make the entity the target of a building (#517, combat.building)
@@ -115,6 +120,10 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * A unit with a line of sight (aoe sight) and the same rules also attacks the nearest enemy unit in its sight, each
  * second (#775). The vanilla goal nearest_attackable_target also chooses units of the own team, players and animals,
  * and has no AoE2 sight: tame() drops it.
+ * A stance (aoe stance, #1104) changes only what a unit does without an order: "no attack" does not attack back and
+ * does not attack an enemy in its sight; "stand ground" does so only for an enemy in its range (a melee unit: next to
+ * it), keeps its place (RangeGoal shoots without a walk) and drops the target when it goes out of the range.
+ * "defensive" acts as "aggressive" (the default). An order (aoe moveto, aoe attack) works with each stance, as in AoE2.
  * A villager walks with its brain, not with goals: it gets NoAI when it arrives, else it strolls away (#438).
  * `aoe stop` stops a walk and sets NoAI (#437: a villager without a path).
  * A hit of a unit with AoE2 values on another one takes the AoE2 damage (#514, combat.damage): max(1, attack - armor
@@ -127,6 +136,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * A siege unit with a blast (the Mangonel line, #1050) has no mob that shoots: its carrier gets the goal "aoe_range".
  * The shot hits at once (as at a building) each unit with AoE2 values within the blast radius of the target, also own
  * units (AoE2 friendly fire), each with the damage rule; an explosion particle shows it, and no block breaks.
+ * A siege unit with blast 0 (the Scorpion, Trebuchet, Organ Gun, #1062) hits only its target at once.
  * A mounted unit (#710) is a horse (its UUID in aoe2mc.json) with a rider: a horse has no attack goal. The rider gets
  * the values of "aoe stats", the range of "aoe range" and the target of "aoe attack", and the horse gets AI without goals:
  * a riding mob walks with the navigation of its vehicle (vanilla Mob#getNavigation), so the horse follows the rider.
@@ -196,11 +206,15 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     private final Map<UUID, Order> orders = new HashMap<>();
 
-    private record Range(double blocks, int ticks, double blast) {
+    private record Range(double blocks, int ticks, double blast, boolean siege) {
     }
 
     private final Map<UUID, Range> ranges = new HashMap<>();
     private final Map<UUID, Double> sights = new HashMap<>();       // the line of sight of a unit in blocks (#775)
+    private static final Set<String> STANCES = Set.of("aggressive", "defensive", "stand_ground", "no_attack");
+    private final Map<UUID, String> stances = new HashMap<>();      // no entry: aggressive (#1104)
+    private final Set<UUID> held = new HashSet<>();                 // stand ground units with a target of their own
+    private static final double MELEE = 2.0;          // stand ground: the blocks to an enemy that a melee unit attacks
     static final String CARRIER = "aoe2mc.carrier";                  // the tag of the mob that carries a siege unit
     private static final double STEP = 1.25;                         // a step of 1 block with snow[layers=2] (#851)
     private static final double CARRIER_SCALE = 0.3;                 // a pig of 0.27 blocks: the minecart stays low
@@ -240,13 +254,15 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     <= range.blocks * range.blocks && (wall || mob.hasLineOfSight(t));
             if (near) {
                 mob.getPathfinder().stopPathfinding();
+            } else if (held.contains(mob.getUniqueId())) {
+                mob.getPathfinder().stopPathfinding();               // stand ground: no walk (#1104)
             } else if (!mob.getPathfinder().hasPath() || ++ticks % 10 == 0) {     // the target can move
                 reach(mob, t.getLocation());
                 mob.getPathfinder().moveTo(t);
             }
             mob.lookAt(t);
             int now = Bukkit.getCurrentTick();
-            if (now >= next && near && range.blast > 0) {
+            if (now >= next && near && range.siege) {
                 next = now + range.ticks;
                 blast(mob, t, range.blast);
             } else if (now >= next && near && mob instanceof RangedEntity r) {
@@ -284,6 +300,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     // A blast shot (#1050): each unit with AoE2 values within r blocks of the target takes the AoE2 damage of the
     // shooter, also its own units. A mounted unit has the hit points of its horse (#732): only the horse counts.
+    // r 0: a siege shot that hits only the target (#1062).
     private void blast(Mob mob, LivingEntity t, double r) {
         Entity from = crew(mob);
         Stats a = stats.get(from.getUniqueId());
@@ -295,6 +312,14 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (b != null) {                                  // a building takes the shot alone
             hit(t, b, a.damage(b.stats));
             hitEffect(t, b, mob);
+        } else if (r <= 0) {
+            LivingEntity v = t.getVehicle() instanceof LivingEntity h && stats.containsKey(h.getUniqueId()) ? h : t;
+            if (v.isValid() && stats.containsKey(v.getUniqueId())) {
+                harm(v, stats.get(v.getUniqueId()), a, from);
+            }
+            t.getWorld().spawnParticle(Particle.CRIT, at.clone().add(0, 1, 0), 8);
+            t.getWorld().playSound(at, Sound.ENTITY_ARROW_HIT, 1.0f, 1.0f);
+            return;
         } else {
             for (Entity e : t.getWorld().getNearbyEntities(at, r, r, r)) {
                 if (e instanceof LivingEntity le && le.isValid() && stats.containsKey(le.getUniqueId())
@@ -464,6 +489,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, this::siege, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::burn, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, this::watch, 20L, 20L);
+        Bukkit.getScheduler().runTaskTimer(this, this::hold, 4L, 4L);
         Bukkit.getPluginManager().registerEvents(this, this);
         Bukkit.getPluginManager().registerEvents(cheats, this);
         Bukkit.getPluginManager().registerEvents(deaths, this);
@@ -521,18 +547,42 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // The AoE2 default stance (#733): a military unit without an order and without a target attacks its attacker.
     // A mounted unit: the horse has the order, the rider the target (#710).
     private void attackBack(LivingEntity victim, LivingEntity attacker, Stats t) {
-        if (victim instanceof Mob mob && idle(mob, t) && !sameTeam(mob, attacker)) {
+        if (victim instanceof Mob mob && idle(mob, t) && !sameTeam(mob, attacker)
+                && mob.getLocation().distanceSquared(attacker.getLocation()) <= Math.pow(stanceRange(mob), 2)) {
             engage(mob, attacker);
             Mob fighter = rider(mob) != null ? rider(mob) : mob;      // it turns and swings first: its first hit
             lastHit.putIfAbsent(fighter.getUniqueId(), Bukkit.getCurrentTick() - t.reload() / 2);   // after half a reload
         }
     }
 
-    // A military unit without an order and without a target: the units of the AoE2 default stance (#733, #775).
+    // A military unit without an order and without a target: the units of the AoE2 default stance (#733, #775),
+    // not with the stance "no attack" (#1104).
     private boolean idle(Mob mob, Stats t) {
         Mob fighter = rider(mob) != null ? rider(mob) : mob;
         return t != null && !t.classes().isEmpty() && t.attack() > 0 && !orders.containsKey(mob.getUniqueId())
-                && (fighter.getTarget() == null || !fighter.getTarget().isValid());
+                && (fighter.getTarget() == null || !fighter.getTarget().isValid()) && !stance(mob).equals("no_attack");
+    }
+
+    // The stance of a unit, of its rider or of its horse: the selector can name each one (#1104).
+    private String stance(Entity e) {
+        String s = stances.get(e.getUniqueId());
+        if (s == null && rider(e) != null) {
+            s = stances.get(rider(e).getUniqueId());
+        }
+        if (s == null && e.getVehicle() != null) {
+            s = stances.get(e.getVehicle().getUniqueId());
+        }
+        return s == null ? "aggressive" : s;
+    }
+
+    // The blocks to an enemy that a unit attacks without an order: no limit, with stand ground its range (#1104).
+    private double stanceRange(Mob mob) {
+        if (!stance(mob).equals("stand_ground")) {
+            return Double.MAX_VALUE;
+        }
+        Mob fighter = rider(mob) != null ? rider(mob) : mob;
+        Range r = ranges.get(fighter.getUniqueId());
+        return r != null ? r.blocks() : MELEE;
     }
 
     private void engage(Mob mob, LivingEntity enemy) {
@@ -542,6 +592,27 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         reach(fighter, enemy.getLocation());
         unit(fighter).setTarget(enemy);
+        if (stance(mob).equals("stand_ground")) {
+            held.add(fighter.getUniqueId());
+        }
+    }
+
+    // Stand ground (#1104): a unit drops a target of its own that went out of its range, and stays.
+    private void hold() {
+        held.removeIf(id -> {
+            if (!(Bukkit.getEntity(id) instanceof Mob f) || !f.isValid()) {
+                return true;
+            }
+            Mob mob = f.getVehicle() instanceof Mob h ? h : f;
+            LivingEntity t = f.getTarget();
+            if (t != null && t.isValid() && !t.isDead()
+                    && f.getLocation().distanceSquared(t.getLocation()) <= Math.pow(stanceRange(mob), 2)) {
+                return false;
+            }
+            f.setTarget(null);
+            f.getPathfinder().stopPathfinding();
+            return true;
+        });
     }
 
     // Each second: an idle unit with a line of sight attacks the nearest unit of another team in it (#775). Only
@@ -555,7 +626,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             if (!(e instanceof Mob mob) || !idle(mob, stats.get(mob.getUniqueId()))) {
                 return false;
             }
-            double r = en.getValue();
+            double r = Math.min(en.getValue(), stanceRange(mob));
             LivingEntity best = null;
             double bestD = r * r;
             for (Entity o : mob.getNearbyEntities(r, r, r)) {
@@ -575,6 +646,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onDeath(EntityDeathEvent ev) {               // the rider dies with its horse, else it stays (#732)
+        stances.remove(ev.getEntity().getUniqueId());
         if (stats.containsKey(ev.getEntity().getUniqueId())) {
             for (Entity p : ev.getEntity().getPassengers()) {
                 if (p instanceof LivingEntity r && stats.containsKey(r.getUniqueId())) {
@@ -982,7 +1054,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             r = ranges.get(mob.getPassengers().get(0).getUniqueId());      // the range of its siege unit (#1050)
         }
         var goals = Bukkit.getMobGoals();
-        if (r != null && (mob instanceof RangedEntity || r.blast > 0)) {
+        if (r != null && (mob instanceof RangedEntity || r.siege)) {
             for (var g : goals.getAllGoals(mob)) {
                 if (SHOTS.contains(g.getKey().getNamespacedKey().getKey())) {
                     goals.removeGoal(mob, g.getKey());
@@ -1107,6 +1179,26 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Moved " + n + " units");
             return true;
         }
+        if (args.length == 3 && args[0].equals("stance")) {
+            if (!STANCES.contains(args[2])) {
+                sender.sendMessage("Bad stance: " + args[2]);
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                if (e instanceof Mob mob) {
+                    held.remove(mob.getUniqueId());
+                    if (args[2].equals("aggressive")) {
+                        stances.remove(mob.getUniqueId());
+                    } else {
+                        stances.put(mob.getUniqueId(), args[2]);
+                    }
+                    n++;
+                }
+            }
+            sender.sendMessage("Stance: " + n + " units");
+            return true;
+        }
         if ((args.length == 9 || args.length == 10) && args[0].equals("stats")) {
             double hp;
             Stats st;
@@ -1145,7 +1237,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             Range r;
             try {
                 r = new Range(Double.parseDouble(args[2]), Integer.parseInt(args[3]),
-                        args.length == 5 ? Double.parseDouble(args[4]) : 0);
+                        args.length == 5 ? Double.parseDouble(args[4]) : 0, args.length == 5);
             } catch (NumberFormatException e) {
                 sender.sendMessage("Bad number: " + e.getMessage());
                 return true;
@@ -1155,14 +1247,14 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 if (rider(e) instanceof RangedEntity) {
                     e = rider(e);                                // a mounted archer: the rider shoots (#710)
                 }
-                if (e instanceof Minecart cart && r.blast > 0) {
+                if (e instanceof Minecart cart && r.siege) {
                     ranges.put(cart.getUniqueId(), r);           // its carrier shoots (unit())
                     Mob c = carrier(cart, false);
                     if (c != null) {
                         Bukkit.getMobGoals().removeGoal(c, rangeKey);
                     }
                     n++;
-                } else if (e instanceof Mob mob && (mob instanceof RangedEntity || r.blast > 0)) {
+                } else if (e instanceof Mob mob && (mob instanceof RangedEntity || r.siege)) {
                     ranges.put(mob.getUniqueId(), r);
                     Bukkit.getMobGoals().removeGoal(mob, rangeKey);    // the next order adds it with the new range
                     n++;
@@ -1340,6 +1432,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     }
                     reach(mob, target.getLocation());
                     mob.setTarget(target);
+                    held.remove(mob.getUniqueId());             // an order: the unit walks, also with stand ground
                     n++;
                 }
             }

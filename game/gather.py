@@ -50,6 +50,7 @@ import build  # noqa: E402
 import replay  # noqa: E402  (build imports it too)
 import bossbar  # noqa: E402
 import cheats  # noqa: E402
+import civs  # noqa: E402
 import garrison  # noqa: E402
 import hints  # noqa: E402
 import menu  # noqa: E402
@@ -82,6 +83,7 @@ HUNT_FOOD = {"COW": 150,
              "TURKEY": 100,
              "WATER_BUFFALO": 150,
              "WILD_BOAR": 340}
+HERDS = {"COW", "GOAT", "GOOSE", "LLAMA", "PIG", "SHEEP", "TURKEY", "WATER_BUFFALO"}   # herdable animals: shepherds (civs.WORK)
 VILLAGER_HIT = 3, 2.0                                              # AoE2 villager attack and reload (game seconds)
 FARM_FOOD = 175                                                    # food in one farm, as in AoE2 DE (no upgrades)
 FARM_TECHS = {"HORSE_COLLAR": 75}                                  # food that a farm technology adds to each farm (AoE2 DE)
@@ -146,6 +148,7 @@ class Map:
         self.farms, self.farm_at = {}, {}                              # farm tile -> food; block cell -> farm tile
         self.farm_food, self.own_farms = FARM_FOOD, set()              # food of a new farm (FARM_TECHS), own farm tiles
         self.carcasses = {}                                            # tile -> food of the carcasses of hunts (#1058)
+        self.herds = set()                                             # carcass tiles of herdable animals (HERDS)
         for o in data["objects"]:
             if o["kind"] == "building":
                 x0, z0, x1, z1 = o["footprint"]
@@ -697,7 +700,10 @@ class Gather:
         if v.prey in self.prey:                                        # dead: the first hunter that sees it makes the carcass
             x, _, z = self.seen.get(v.prey, v.pos)
             tile = self.dead[v.prey] = int(x // self.map.T), int(z // self.map.T)
-            self.map.carcasses[tile] = self.map.carcasses.get(tile, 0) + hunt_food(self.prey.pop(v.prey))
+            name = self.prey.pop(v.prey)
+            self.map.carcasses[tile] = self.map.carcasses.get(tile, 0) + hunt_food(name)
+            if ("COW" if name.startswith("COW_") else name) in HERDS:
+                self.map.herds.add(tile)
         v.tree, v.prey, v.path = self.dead.get(v.prey), None, []
         self.set(v, "to_tree" if v.tree else "idle")                   # it stands at the carcass: the next step gathers
 
@@ -1006,7 +1012,8 @@ class Gather:
             elif v.state == "chop":
                 v.timer += self.tick
                 src = self.source(v)
-                work = self.work_time("farm" if v.tree in self.map.farms else "hunt" if v.tree in self.map.carcasses else v.res)
+                work = self.work_time("farm" if v.tree in self.map.farms else "hunt" if v.tree in self.map.carcasses else v.res,
+                                      v.tree in self.map.herds)
                 while v.timer >= work and v.load < self.limit() and src.get(v.tree, 0) > 0:
                     v.timer -= work
                     v.load += 1
@@ -1039,11 +1046,13 @@ class Gather:
                     self.set(v, "idle")
         self.idle()
 
-    def work_time(self, res):
-        """Real seconds per unit of resource res ("farm" for farms) with the technologies of the player (WORK_TECHS)."""
+    def work_time(self, res, herd=False):
+        """Real seconds per unit of resource res ("farm" for farms) with the technologies of the player (WORK_TECHS) and
+        the work-rate bonus of its civilization (civs.WORK; herd: the carcass of a herdable animal, for shepherds)."""
         if self.aegis:
             return 0.0                                                 # a full load in one work step
-        return self.chop.get(res, self.chop.get("food")) / math.prod(WORK_TECHS.get(t, {}).get(res, 1) ** train.count(self, t) for t in self.techs)
+        rate = civs.work(self, "sheep" if herd else res)
+        return self.chop.get(res, self.chop.get("food")) / rate / math.prod(WORK_TECHS.get(t, {}).get(res, 1) ** train.count(self, t) for t in self.techs)
 
     def move(self, v):
         import ai                                                      # ai imports gather
