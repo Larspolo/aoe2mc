@@ -3150,10 +3150,10 @@ def ridge_tent(c, w, col):
     shield and pots of the player in front."""
     m = w // 2
     z1 = max(w - 1, 2)                                     # the front row stays free for the shield and the pots
-    for i in range((w + 1) // 2):
+    for i in range((w + 1) // 2):                         # cloth slopes of wool stairs, a wool slab on the ridge (#525)
         y = 1 + i
-        for x in (i, w - 1 - i):
-            c.box(x, x + 1, y, y + 1, 0, z1, "white_wool")
+        for x, f in ((i, "east"), (w - 1 - i, "west")):
+            c.box(x, x + 1, y, y + 1, 0, z1, "white_wool_slab[type=bottom]" if 2 * i == w - 1 else stair("white_wool_stairs", f))
         c.box(i + 1, w - 1 - i, 1, y + 1, 1, z1 - 1, "air")
     c.box(1, w - 1, 1, (w + 1) // 2, 0, 1, "white_wool")    # the back gable
     for i in range((w + 1) // 2 - 1):
@@ -3167,6 +3167,23 @@ def ridge_tent(c, w, col):
             c.furniture([(x, 1, 2, f"{col}_bed[facing=north,occupied=false,part=head]"),
                          (x, 1, 3, f"{col}_bed[facing=north,occupied=false,part=foot]")])
         c.furniture([(m, 1, 1, "lantern[hanging=false,waterlogged=false]")])
+
+
+def cloth_slopes(c, wool, y0, cx, cz):
+    """Turn the open steps (nothing above, nothing outside) of a round wool roof from y0 up into wool stairs that rise
+    to the centre, so the cloth slopes smoothly (#525)."""
+    full, empty = c.id(wool), (-1, c.id("air"))
+    n = c.a.shape[0] - c.m - 1                             # keep x + ox inside the canvas (no negative index)
+    for x in range(1 - c.m, n):
+        for z in range(1 - c.m, n):
+            dx, dz = cx - x, cz - z
+            if max(abs(dx), abs(dz)) < 0.5:
+                continue
+            f, ox, oz = (("east", -1, 0) if dx > 0 else ("west", 1, 0)) if abs(dx) >= abs(dz) else \
+                (("south", 0, -1) if dz > 0 else ("north", 0, 1))
+            for y in range(y0, c.a.shape[1] - c.below - 1):
+                if c.get(x, y, z) == full and c.get(x, y + 1, z) in empty and c.get(x + ox, y, z + oz) in empty:
+                    c.set(x, y, z, stair(f"{wool}_stairs", f))
 
 
 def hide_tent(c, w, col, name):
@@ -3184,6 +3201,7 @@ def hide_tent(c, w, col, name):
     peak = 1 + (ord(name[-1]) - ord("A")) % 2
     c.box(m, m + 1, top + 1, top + 1 + peak, m, m + 1, "brown_wool")
     c.set(m, top + 1 + peak, m, "spruce_fence")
+    cloth_slopes(c, "brown_wool", 3, cx, cx)
     c.box(m - 1, m + 2, 1, 3, int(cx + r) - 1, w, "air")             # the wide door
     if w >= 6:
         c.box(2, w - 2, 1, 2, 2, w - 3, "red_carpet")
