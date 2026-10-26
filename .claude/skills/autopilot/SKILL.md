@@ -137,7 +137,7 @@ the same thing, and no run answered the owner's question between them). An epic 
 whole goal is covered (owner rule, #820: never only "All sub-issues are closed") gets one first (`ticket` skill, "Split
 an L ticket"). Check that criterion against the full scope (for "all X": the full list, for example the AoE2 wiki) and
 name each missing item. Close the epic with a comment only when all criteria are met
-(name the evidence for each; a denied close: "Ask the owner" in step 6, #862). Else lock the epic first: `python3 tools/claim.py E --refill`
+(name the evidence for each; a denied close: "Ask the owner" in step 6, #862). When the close of an epic is denied, open a PR that changes no code and has "Closes #<epic>" and the evidence of each criterion in its body: the Automerge workflow merges it and GitHub closes the epic (owner rule, #971). Else lock the epic first: `python3 tools/claim.py E --refill`
 (E = the epic; exit 1: another run makes its sub-issue, skip the epic, #505). Then make one sub-issue (same priority)
 for the criteria that an agent can do. A criterion that needs the owner stays on the epic. Then pick again (#176, #155 waited while P3 tickets ran).
 Refill the queue when fewer candidates are ready than the target number of runs, so that parallel runs always find
