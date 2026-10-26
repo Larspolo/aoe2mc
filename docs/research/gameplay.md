@@ -102,6 +102,10 @@ The owner chose the order in #357: A (item 1) #388, C (item 3) #394, D (item 4) 
 E (item 5) #397, F (item 7) #398. Each epic gets its sub-issues when the epic before it is done.
 Item 6 (fog of war) has no ticket.
 
+Selection of many units (#742): the owner chose in #745 a selection wand with two corners for the AoE2 selection box
+(option A, #778: `Gather.box`, item `warped_fungus_on_a_stick` with its own "used" statistic `aoe_box`), and hotbar
+items for the control groups later (option C, #779). A radius selection (option B) was not chosen.
+
 ## Measured gather timing (#289)
 
 `python3 tools/measure_gather.py` plays a fixed map on a real server without a client: one villager of player 1,
