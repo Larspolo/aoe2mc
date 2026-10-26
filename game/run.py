@@ -63,8 +63,15 @@ def plugin_jar(version):
     return path
 
 
+def java_home(java):
+    """The home of the JDK of a java binary, from Java itself: on macOS /usr/bin/java is a stub, not a link (#1126)."""
+    out = subprocess.run([java, "-XshowSettings:properties", "-version"], capture_output=True, text=True).stderr
+    m = re.search(r"^\s*java\.home = (.+)$", out, re.M)
+    return m.group(1).strip() if m else os.path.dirname(os.path.dirname(os.path.realpath(java)))
+
+
 def build_plugin(version, path):
-    jdk = os.path.dirname(os.path.dirname(os.path.realpath(mc_check.java_for(version))))
+    jdk = java_home(mc_check.java_for(version))
     if not os.path.exists(os.path.join(jdk, "bin", "javac")):
         sys.exit(f"no javac in {jdk}: install the JDK (apt-get install openjdk-25-jdk-headless)")
     subprocess.run([os.path.join(PLUGIN, "gradlew"), "--no-daemon", "-q", "jar"], cwd=PLUGIN, check=True,
