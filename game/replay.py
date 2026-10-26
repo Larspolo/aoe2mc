@@ -43,6 +43,9 @@ POP = "aoe_pop"             # the sidebar objective with the population of each 
 COUNTED = "aoe2mc.pop"      # entity tag of the units that the population counts (#787)
 POLL = 0.2                  # seconds between two calls of the poll of Replay.run while it waits (#685)
 NEXT = 5                    # tiles: an empty resource sends its villager to the next one this near (#720)
+NEAR = 2                    # blocks: a unit of the plugin this near to its replay position is at its resource (#766)
+WAIT = 1000                 # ms of game time between two position checks of a unit that is late on its path (#766)
+LATE = 60000                # ms of game time: a unit that is still not at its resource then goes there with /tp
 PATH_CELLS = 20000          # cells that one path search may look at: a unit with no path stays (no time lag)
 SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, "PIKEMAN": 1.0, "EAGLE": 1.1,
           "ARCHER": 0.96, "SKIRMISHER": 0.96, "CROSSBOWMAN": 0.96, "CAVALRY_ARCHER": 1.4, "SCOUT": 1.2,
@@ -73,6 +76,7 @@ class Replay:
         self.units, self.new = {}, []           # object ID -> gather.Villager; spawned units without a known ID
         self.moving = {}                        # object ID -> game time (ms) of its next step
         self.working = {}                       # object ID -> game time (ms) of its next gather step (#631)
+        self.arriving = {}                      # object ID -> game time (ms) of its work start, until it is there (#766)
         self.refs = {o["ref"]: o for o in data["objects"] if o.get("ref") is not None}
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
@@ -229,6 +233,7 @@ class Replay:
                 self.refs.pop(i, None)
                 self.moving.pop(i, None)
                 self.working.pop(i, None)
+                self.arriving.pop(i, None)
                 self.pop[e["player"]] = max(0, self.pop.get(e["player"], 0) - 1)
                 out.append(f"kill {v.uuid}")
         return out
@@ -390,6 +395,7 @@ class Replay:
             goals = self.crew.goals(tile)
         for i, v in group:                                          # a new MOVE or ORDER stops the work
             self.working.pop(i, None)
+            self.arriving.pop(i, None)
             v.tree = tile
         if not goals or not group:
             return []
@@ -423,7 +429,7 @@ class Replay:
         """The plugin walks unit v on a Minecraft path to the first cell of `legs`, at its walk speed times the replay
         speed (#438). The path search of Minecraft reaches only about 128 blocks, so a long way goes in legs of
         LEG cells of the path of gather.Map: the next leg starts when the unit is due at the end of this one.
-        The replay does not read the positions back: it takes the unit at the end of its leg. Returns the commands
+        The replay takes the unit at the end of its leg (only the first gather step reads the entity, #766). Returns the commands
         and the game time (ms) at the end of the leg (the next leg starts then, if v.path has one)."""
         import ai                                                   # ai -> replay: import it late
         x, z = legs[0]
@@ -496,6 +502,13 @@ class Replay:
         self.crew.command = out.append
         for i, due in list(self.working.items()):
             v = self.units[i]
+            if i in self.arriving and due <= t:                     # Paper: the real unit can be late (#766)
+                if due - self.arriving[i] < LATE and not self.arrived(v):
+                    self.working[i] = due + WAIT
+                    continue
+                if due - self.arriving[i] >= LATE:
+                    out.append("tp {} {} {} {}".format(v.uuid, *v.pos))
+                del self.arriving[i]
             src = self.crew.source(v)
             while due <= t and src.get(v.tree, 0) > 0:
                 src[v.tree] -= 1
@@ -574,6 +587,15 @@ class Replay:
         v.res, v.load = self.map.resource(v.tree), 0
         if self.crew.source(v).get(v.tree, 0) > 0:
             self.working[i] = t + 1000 / self.rate(v)
+            if self.ai:
+                self.arriving[i] = t
+
+    def arrived(self, v):
+        """True when the entity of unit v is at most NEAR blocks from its replay position, or its position is unknown.
+        The plugin walks a unit on its Minecraft path, which is slower than the AoE2 speed on slopes and around trees:
+        the replay takes it at the end of its walk at the AoE2 time, so the first gather step waits for it (#766)."""
+        m = re.findall(self.gather.NUMBER, self.game.command(f"data get entity {v.uuid} Pos").rsplit(":", 1)[-1])
+        return len(m) != 3 or math.dist((float(m[0]), float(m[2])), (v.pos[0], v.pos[2])) <= NEAR
 
     def rate(self, v):
         """The AoE2 work rate of unit v at its resource (per game second): a farm has its own rate."""
