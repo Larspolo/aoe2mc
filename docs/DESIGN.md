@@ -94,7 +94,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Upper floor (inside) | `*_planks` floor and a `ladder` | `helepolis`, `wooden_fort`, `outpost`, `tower` +39 more |
 | Painted trim (deck edge, band) | `*_concrete` (player color) | `torii`, `stupa`, `pyramid`, `dock` +3 more |
 | Painted plaster roof or ledge | `*_concrete_stairs` and `*_concrete_slab` | no design |
-| Red-painted stone (Indian, Mesoamerican, East Asian temples) | `cinnabar`, `cinnabar_bricks`, `polished_cinnabar`, `chiseled_cinnabar` | no design |
+| Red-painted stone (Indian, Mesoamerican, East Asian temples) | `cinnabar`, `cinnabar_bricks`, `polished_cinnabar`, `chiseled_cinnabar` | `rekha_deul`, `pagoda` |
 | Yellow ochre stone (African, Middle Eastern sets) | `sulfur_bricks`, `polished_sulfur`, `chiseled_sulfur` | no design |
 | Fired orange brick | `resin_bricks`, `chiseled_resin_bricks` | no design |
 | Relief panel, carving | `chiseled_stone_bricks` | `harbor`, `temple`, `aqueduct`, `furnish_worship` +9 more |
