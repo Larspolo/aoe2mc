@@ -9,7 +9,7 @@ from urllib.parse import unquote
 
 import pytest
 from test_gather import FakeServer, grid
-from test_train_menu import RALLY
+from test_train_menu import RALLY, SKIRM
 
 from game import build, combat, gather, run, train
 
@@ -45,7 +45,7 @@ def test_a_right_click_on_the_archery_range_opens_its_menu():
     server, g = setup(done=None)
     for name in g.clicks():
         g.click(name)
-    assert menus(server) == ["aoe menu Steve Archery Range 0:skeleton_spawn_egg:Archer:25 wood · 45 gold · 35 s · queue 0/15" + RALLY]
+    assert menus(server) == ["aoe menu Steve Archery Range 0:skeleton_spawn_egg:Archer:25 wood · 45 gold · 35 s · queue 0/15" + SKIRM + RALLY]
 
 
 def test_no_menu_at_an_archery_range_that_is_not_complete():

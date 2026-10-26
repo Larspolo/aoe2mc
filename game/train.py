@@ -13,7 +13,8 @@ Military units (#654): a right click on an own barracks opens its menu with "Mil
 joins the military units of the player (g.soldiers), so a click can select it and send it to attack. An own archery
 range trains archers (#670): they shoot from their AoE2 range (combat.range_command). An own stable trains scout
 cavalry (#671): a rider on a horse (the Passengers of units.make_entity); the horse is the unit.
-The barracks trains spearmen in the Feudal Age (#729): before it, the menu shows a gray item (build.locked).
+The barracks trains spearmen (#729) and the archery range skirmishers (#730, a drowned that throws tridents) in the
+Feudal Age: before it, the menu shows a gray item (build.locked).
 Technologies (#655): a technology (TECHS) is an item of the menu of its building and uses the queue of the units, as in
 AoE2, but needs no population room. A click queues it once; when it is complete it goes into g.techs, leaves the menu
 and changes the values of the live and the new units (stats()). Loom: villagers get 15 hit points and 1/2 armor.
@@ -54,6 +55,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "LONGBOWMAN": {"wood": 35, "gold": 40},
          "SCALE_MAIL_ARMOR": {"food": 100},
          "SCOUT_CAVALRY": {"food": 80},
+         "SKIRMISHER": {"food": 25, "wood": 35},
          "SPEARMAN": {"food": 35, "wood": 25},
          "WAR_ELEPHANT": {"food": 170, "gold": 85},
          "WHEELBARROW": {"food": 175, "wood": 50}}
@@ -66,11 +68,12 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "LONGBOWMAN": 17,
                "SCALE_MAIL_ARMOR": 40,
                "SCOUT_CAVALRY": 30,
+               "SKIRMISHER": 22,
                "SPEARMAN": 22,
                "WAR_ELEPHANT": 25,
                "WHEELBARROW": 75}
 TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW"), "BARRACKS": ("MILITIA", "SPEARMAN"),   # the units and technologies of each
-          "ARCHERY_RANGE": ("ARCHER",),                                         # building (#654, #670, #655)
+          "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER"),                                         # building (#654, #670, #655)
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING"),           # (#675, #725, #724)
           "CASTLE": (),                                                         # the unique unit: trains() (#708)
           "STABLE": ("SCOUT_CAVALRY",),                                         # (#671)
@@ -116,6 +119,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "MILITIA": (0, "zombie_spawn_egg", "Militia"),             # the mob of units.classify
          "ARCHER": (0, "skeleton_spawn_egg", "Archer"),
          "SCOUT_CAVALRY": (0, "horse_spawn_egg", "Scout Cavalry"),
+         "SKIRMISHER": (1, "drowned_spawn_egg", "Skirmisher"),
          "SPEARMAN": (1, "zombie_spawn_egg", "Spearman"),
          "DOUBLE_BIT_AXE": (0, "book", "Double-Bit Axe"),
          "FLETCHING": (2, "book", "Fletching"),
