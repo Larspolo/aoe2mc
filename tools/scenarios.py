@@ -89,6 +89,30 @@ def tiny(path, texts=None):
     return save(scn, path)
 
 
+def triggers(path):
+    """The tiny map with the common triggers of epic #645: timer messages, a unit in an area that creates an object,
+    and a timer that removes an object (input of tools/triggers.py)."""
+    with contextlib.redirect_stdout(io.StringIO()), tempfile.TemporaryDirectory() as tmp:   # the parser does not
+        scn = AoE2DEScenario.from_file(tiny(os.path.join(tmp, "tiny.aoe2scenario")))     # overwrite its source
+    tm = scn.trigger_manager
+    t = tm.add_trigger("Welcome")
+    t.new_condition.timer(timer=5)
+    t.new_effect.send_chat(source_player=PlayerId.ONE, message="Welcome to the tiny map.")
+    t.new_effect.display_instructions(source_player=PlayerId.ONE, message="Bring the knight to the hill.",
+                                      display_time=10, instruction_panel_position=0)
+    t = tm.add_trigger("Knight on the hill")
+    t.new_condition.objects_in_area(quantity=1, source_player=PlayerId.ONE, object_list=UnitInfo.KNIGHT.ID,
+                                    area_x1=3, area_y1=3, area_x2=6, area_y2=6)
+    t.new_effect.create_object(source_player=PlayerId.ONE, object_list_unit_id=BuildingInfo.MONASTERY.ID,
+                               location_x=8, location_y=4)
+    t.new_effect.send_chat(source_player=PlayerId.ONE, message="A monastery stands now next to the hill.")
+    t = tm.add_trigger("Archer leaves")
+    t.new_condition.timer(timer=60)
+    t.new_effect.remove_object(source_player=PlayerId.TWO, object_list_unit_id=UnitInfo.ARCHER.ID,
+                               area_x1=0, area_y1=0, area_x2=23, area_y2=23)
+    return save(scn, path)
+
+
 def gallery(path, kinds="BOU", step=7):
     groups = [("B", BuildingInfo, PlayerId.ONE), ("O", OtherInfo, PlayerId.GAIA), ("U", UnitInfo, PlayerId.TWO)]
     items = [(e, player) for k, enum, player in groups if k in kinds for e in enum]
@@ -447,7 +471,8 @@ def battle(path):
 
 
 MAKERS = {"tiny": tiny, "stress": stress, "buildings": buildings_map, "units": units_map, "village": village, "facing": facing,
-          "walls": walls, "river": river, "river_town": river_town, "four_civs": four_civs, "battle": battle}
+          "walls": walls, "river": river, "river_town": river_town, "four_civs": four_civs, "battle": battle,
+          "triggers": triggers}
 
 
 def main():

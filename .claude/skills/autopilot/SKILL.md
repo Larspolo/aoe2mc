@@ -130,16 +130,19 @@ sub-issue. For each one, read its acceptance criteria. Close the epic with a com
 all criteria (name the evidence for each). Else lock the epic first: `python3 tools/claim.py E --refill`
 (E = the epic; exit 1: another run makes its sub-issue, skip the epic, #505). Then make one sub-issue (same priority)
 for the criteria that an agent can do. A criterion that needs the owner stays on the epic. Then pick again (#176, #155 waited while P3 tickets ran).
-Refill the queue when fewer candidates are ready than runs are active (tickets with `in-progress` that changed in
-the last 30 minutes), so that parallel runs always find work. Do this at most once per run, in about 10 minutes.
-Lock it first: `python3 tools/claim.py 0 --refill` (one run per UTC hour; exit 1: another run refills, skip the refill).
+Refill the queue when fewer candidates are ready than runs are active (the claims of `python3 tools/usage.py --fire`:
+runs with a claim beat, #635), so that parallel runs always find work. Do this at most once per run, in about 10 minutes.
+Lock it first: `python3 tools/claim.py 0 --refill` (one run per 10 minutes). Exit 1: another run makes the whole
+refill; then refill one open epic instead (the first one with open goals that an agent can do, under its lock below):
+up to 5 sub-issues for its open goals, then pick again (#650: 10 runs closed tickets faster than one refill made them).
 Also lock each epic E with `python3 tools/claim.py E --refill` before you make its tickets (exit 1: skip that epic, #505):
 1. Split each `size:L` ticket N without open sub-issues (`ticket` skill), also when it is not a candidate yet. Lock it
    first with `python3 tools/claim.py N --refill` (exit 1: skip it).
 2. For each open epic whose sub-issues are all closed: make a sub-issue for each acceptance criterion that is
    still open and that an agent can do. A criterion that needs the owner stays on the epic.
-3. Make up to 5 new tickets for the remaining goals of the open epics and `docs/ROADMAP.md`, and for the
-   fallbacks in `docs/coverage.md`. Priority: that of the epic, else `P3`. Never `P0` or `P1`, except for
+3. Make up to 12 new tickets for the remaining goals of the open epics, and for the fallbacks in
+   `docs/coverage.md`. When the open epics have no goal left that an agent can do, make the next epic from the
+   feature list of `docs/ROADMAP.md` with the `roadmap` skill (the goals take turns). Priority: that of the epic, else `P3`. Never `P0` or `P1`, except for
    a `tooling` ticket that blocks other tickets. Look for duplicates first, and list the open issues again just
    before you make the tickets: parallel runs make the same follow-ups at the same time (#300, #301).
 4. Prefer tickets that depend on no open ticket and change other files than the claimed tickets (fewer conflicts).
@@ -243,6 +246,7 @@ Answer these questions. Do the action for each "yes". Spend little time.
 
 After step 8, run the `improve` skill when `runs` is a multiple of 5, when this run failed, or when a
 ticket took more than 90 minutes. It finds the largest loss in the metrics and makes one improvement.
+When `runs` is a multiple of 10, also review the feature list of `docs/ROADMAP.md` (the `roadmap` skill).
 Do not change a priority that the owner set. Propose it.
 
 ## More tickets
@@ -263,4 +267,4 @@ Stop when the context is more than half full.
 
 Argument `max`: continue until no ticket is ready, a usage limit stops you, or the context is more than half full.
 Do not start other runs: a run of the scheduled task has no `fire_trigger` (#566). The pacer session (skill `pacer`)
-starts the runs that the quota target misses, every 20 minutes. A fresh run has a small context, so it works faster.
+starts the runs that the quota target misses, every 10 minutes. A fresh run has a small context, so it works faster.

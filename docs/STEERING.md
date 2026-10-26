@@ -94,7 +94,7 @@ as the Claude Code CLI reports them) and computes the number of runs: fast to 90
 its reset, then slower to 98 % at the reset (your decision, 2026-10-26), and not the week faster than it passes.
 You do not need to send percentages.
 A run of the scheduled task cannot start other runs (#566). So one pacer session ("aoe2mc pacer", skill `pacer`)
-runs `python3 tools/usage.py --fire` every 20 minutes and starts the runs that the target misses (at most 4 at a
+runs `python3 tools/usage.py --fire` every 10 minutes and starts the runs that the target misses (at most 4 at a
 time). The scheduled task also starts one run each hour. To stop all runs: add `paused` to the status issue.
 
 ## CI and the merge
@@ -114,10 +114,11 @@ The ruleset `Protect main` (Settings → Rules) refuses force pushes and deletes
 |---|---|
 | `CLAUDE.md` | Project guide and rules. Every session reads it. |
 | `docs/LEARNINGS.md` | What the agent learned. It updates this file itself. |
-| `docs/ROADMAP.md` | Phases and goals of the project. |
+| `docs/ROADMAP.md` | The features of the three goals (done or missing). Add a line to get a feature built: the agents make an epic from it (`roadmap` skill). |
 | `.claude/skills/autopilot/` | The work cycle. |
 | `.claude/skills/verify/` | How to test a change. |
 | `.claude/skills/ticket/` | How to write and split tickets. |
 | `.claude/skills/improve/` | How the agent measures and improves its own process. |
+| `.claude/skills/roadmap/` | How the agent makes epics from the roadmap and reviews it. |
 
 You can edit these files. The agent follows the version on `main`.

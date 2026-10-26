@@ -31,6 +31,7 @@ FLAT = 16                   # tiles of the flat map that draws one design
 MAX_FILL = 32768            # blocks of one /fill command
 FORMATION = 2              # blocks between the units of a group in a formation (#410)
 LEG = 48                    # path cells of one plugin order: within the reach of a Minecraft path search (#438)
+TALL = 48                   # blocks above the ground that a DELETE clears for a start building (no height in aoe2mc.json)
 PATH_CELLS = 20000          # cells that one path search may look at: a unit with no path stays (no time lag)
 SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, "PIKEMAN": 1.0, "EAGLE": 1.1,
           "ARCHER": 0.96, "SKIRMISHER": 0.96, "CROSSBOWMAN": 0.96, "CAVALRY_ARCHER": 1.4, "SCOUT": 1.2,
@@ -56,6 +57,7 @@ class Replay:
         self.starts = [(o.get("ref"), o["player"], o["name"], (o["footprint"][0], o["footprint"][2], o["footprint"][1],
                         o["footprint"][3])) for o in data["objects"] if o["kind"] == "building" and "footprint" in o]
         self.placed, self.map, self.added = [], None, 0        # buildings of the replay, gather.Map, placed in the map
+        self.tops = {}                                          # top block y per footprint of a replay building
         self.trained = {}                                       # units per building footprint
         self.units, self.new = {}, []           # object ID -> gather.Villager; spawned units without a known ID
         self.moving = {}                        # object ID -> game time (ms) of its next step
@@ -78,6 +80,8 @@ class Replay:
             return self.spawn(e)
         if kind in ("move", "order") and e.get("objects"):
             return self.move(e)
+        if kind == "delete" and e.get("objects"):
+            return self.delete(e)
         if kind == "chat" and e.get("text"):
             name, color = self.player(e["player"]) if e.get("player") else ("Game", "white")
             return ["tellraw @a " + json.dumps([text(f"<{name}> ", color), text(e["text"])])]
@@ -159,6 +163,7 @@ class Replay:
         top = max(k[1] for k in blocks)
         x0, x1, z0, z1 = fx0 + dx, fx1 + dx - 1, fz0 + dz, fz1 + dz - 1
         self.placed.append((player, name, (x0, x1 + 1, z0, z1 + 1)))
+        self.tops[self.placed[-1][2]] = top
         out = self.fill(x0, base, z0, x1, top, z1, "air")
         if low < base - 1:                                          # the floor replaces the top ground block
             out += self.fill(x0, low, z0, x1, base - 2, z1, self.state(aoe2mc.B(buildings.ARCH[players[player][
@@ -176,6 +181,48 @@ class Replay:
                     out.append(f"setblock {ax} {by} {bz} {s}" if ax == bx else f"fill {ax} {by} {bz} {bx} {by} {bz} {s}")
                     start = k
         return out
+
+    def delete(self, e):
+        """DELETE: a unit dies (/kill: the death animation of Minecraft) and stops; a building falls (/fill ... air
+        destroy: the block particles and drops) and its cells are free for the paths again. A new ID with a building
+        name takes the newest replay building of the player with that name (a cancelled foundation, as in AoE2). An
+        ID that the replay does not know changes nothing."""
+        self.grid()
+        out = []
+        for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"])):
+            start = next((s for s in self.starts if s[0] == i), None)
+            new = None if start or not name else next(
+                (k for k in range(len(self.placed) - 1, -1, -1) if self.placed[k][:2] == (e["player"], name)), None)
+            if start or new is not None:
+                self.refs.pop(i, None)                              # no ORDER goes to it
+                rect = start[3] if start else self.placed[new][2]
+                if start:
+                    self.starts.remove(start)
+                else:
+                    del self.placed[new]
+                    self.added -= 1
+                out += self.fall(rect)
+            elif (v := self.unit(i, name, e["player"])) is not None:
+                del self.units[i]
+                self.refs.pop(i, None)
+                self.moving.pop(i, None)
+                out.append(f"kill {v.uuid}")
+        return out
+
+    def fall(self, rect):
+        """The commands that clear the building with the block footprint rect = (x0, x1, z0, z1), from the lowest
+        ground at its edge (the ground in a start footprint is the barrier top) to its top."""
+        x0, x1, z0, z1 = rect
+        cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
+        m = self.map
+        m.blocked -= cells
+        for r in m.drops:
+            m.drops[r] = [d for d in m.drops[r] if d != cells]
+        ys = [y for x, z in cells | m.around(cells) if (y := m.y(x, z)) is not None]
+        if not ys:
+            return []
+        top = self.tops.pop(rect, None) or max(ys) + TALL
+        return self.fill(max(0, x0), min(ys), max(0, z0), min(self.n, x1) - 1, top, min(self.n, z1) - 1, "air destroy")
 
     def spawns(self):
         """A "spawn" event for each unit that a QUEUE command trains, at the end of its training."""

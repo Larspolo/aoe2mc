@@ -60,6 +60,19 @@ owner must reply. One ticket per decision.
 A check ticket ("check X in the game") starts without `needs-human`: an agent runs the check first (`verify`, level 4),
 comments the results and screenshots, and then adds `needs-human` with the list of what only a person can check (#580).
 
+## Decision tickets
+
+Owner rule (2026-10-26): when a design has two or more clear options and no single best one (an interface, a game rule,
+the order of features), the owner decides on GitHub. Do not choose, and do not ask only in a session.
+- Title: "Decide: <the question>". Labels: `needs-human`, the kind of the work (`feature`, `design`, ...), `size:S`,
+  the priority of the work that waits for it.
+- Body: the question, the options as a table (what the player sees, plus, minus, cost), your recommendation and why,
+  and "Reply with the option name (A, B, ...) or your own idea."
+- The tickets that need the answer get "Depends on: #<decision>", so no run starts them before the owner answers.
+- When the owner answers: write the decision into the document of the topic (for example `docs/research/gameplay.md`),
+  remove `needs-human` and close the decision ticket.
+- One clearly best option: no decision ticket. Choose it and say why in the PR.
+
 A research result that waits for the owner (options, milestones, "the owner decides") gets a `needs-human` ticket
 for each decision, with the options and your recommendation, before the research ticket closes. A decision that
 is only in a document is lost: milestones 2 and 3 of the replay research (#31) waited without a ticket until the owner asked (#371).

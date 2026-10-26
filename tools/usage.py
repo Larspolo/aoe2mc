@@ -6,7 +6,7 @@ reset, so that each window reaches the limit (#587).
     python3 tools/usage.py              # five_hour 30% (resets 06:30 UTC, 2.0 h) · seven_day 30% ... · target 12 runs
     python3 tools/usage.py --target     # only the number of runs (rule 4 of the scheduled task)
     python3 tools/usage.py --json
-    python3 tools/usage.py --sample     # Usage: <now> · usage 30.0% · resets <time> · claims 9 (for the run report)
+    python3 tools/usage.py --sample     # Usage: <now> · usage 30.0% · resets <time> · runs 9 (for the run report)
     python3 tools/usage.py --fire       # the number of runs that the pacer session starts now (skill `pacer`, #566)
 
 BURN is the default. When the run reports on the status issue have enough `Usage:` lines (at least 5 pairs in the
@@ -74,11 +74,12 @@ def target_runs(usage, now, burn=BURN, end=END, lo=LO, hi=HI, mid=MID, mid_left=
 
 
 def runs_to_start(target, claims, ready, paused, hi=MAX_FIRE):
-    """The number of runs that the pacer starts now: the runs that the target misses, not more than the ready tickets.
+    """The number of runs that the pacer starts now: the runs that the target misses, not more than the ready tickets,
+    but 1 when no ticket is ready: that run refills the queue (#609).
     Runs that the scheduled task starts cannot start other runs (no `fire_trigger`, #566)."""
     if paused or not target:
         return 0
-    return max(0, min(target - claims, ready, hi))
+    return max(0, min(target - claims, max(ready, 1), hi))
 
 
 def measured_burn():
@@ -94,7 +95,7 @@ def sample_line(usage, now, claims):
     """The `Usage:` line of a run report, which `tools/health.py` reads."""
     iso = lambda t: f"{datetime.datetime.fromtimestamp(t, datetime.timezone.utc):%Y-%m-%dT%H:%M:%SZ}"
     used, reset, _ = usage["five_hour"]
-    return f"Usage: {iso(now)} · usage {used * 100:.1f}% · resets {iso(reset)} · claims {claims}"
+    return f"Usage: {iso(now)} · usage {used * 100:.1f}% · resets {iso(reset)} · runs {claims}"
 
 
 def describe(usage, now, burn=BURN):
