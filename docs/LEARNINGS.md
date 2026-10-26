@@ -28,8 +28,8 @@ of its document (named below): this file loads into each run. The `improve` skil
   Run `claim.py N --guard` alone and read its exit code before the push: `guard; echo g=$? && git push` pushes also after
   a failed guard (#540).
 - The cloud clone is shallow: `git fetch --unshallow origin` before a scan of the history (#367).
-- `fire_trigger`: load it with `ToolSearch` (`select:mcp__claude-code-remote__fire_trigger`). Some runs do not have it at
-  all (nothing for `select:` or keywords, #539, #546): say so in the report, do not search again.
+- A run of the scheduled task has only `subscribe_pr_activity` and `unsubscribe_pr_activity` of `claude-code-remote`:
+  no `fire_trigger`, `send_later` or `list_triggers` (checked 2026-10-26, #566). The pacer session starts the runs.
 - Quota usage: `claude -p ... --output-format stream-json --verbose` prints a `rate_limit_event` with
   `unifiedWindows.five_hour/seven_day.utilization` and `resetsAt` (`tools/usage.py`). A `statusLine` does not run in cloud sessions.
 - `pyproject.toml` `addopts` has `-q`: `python3 -m pytest -q` gives `-qq`, without the "N passed" line. Wait for the
