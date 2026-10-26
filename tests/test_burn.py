@@ -42,5 +42,5 @@ def test_measured_burn_needs_five_pairs_of_the_last_day():
 
 def test_target_uses_the_burn():
     u = {"five_hour": (0.3, NOW.timestamp() + 2 * 3600, "allowed")}
-    assert usage.target_runs(u, NOW.timestamp(), burn=0.05) == round(0.325 / 0.05)
+    assert usage.target_runs(u, NOW.timestamp(), burn=0.05) == round((usage.END - 0.3) / 2 / 0.05)   # the last 2 hours
     assert "burn 0.050" in usage.describe(u, NOW.timestamp(), 0.05)
