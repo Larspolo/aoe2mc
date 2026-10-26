@@ -39,8 +39,8 @@ def bot_map():
     server.command = track
     data = grid([[64] * 32 for _ in range(32)], objects)
     data.update(level_height=1, players={"2": {"color": "blue", "arch": "western"}})   # the bot builds too (#857)
-    me = gather.Gather(server, data, carry=10, chop=0.05).setup()
-    return server, me, bot.Bot(server, data, share=me, carry=10, chop=0.05).setup()
+    me = gather.Gather(server, data, carry=10, chop=0.05, start={}).setup()
+    return server, me, bot.Bot(server, data, share=me, carry=10, chop=0.05, start={}).setup()
 
 
 def test_the_bot_gathers_all_four_resources():
@@ -116,8 +116,8 @@ def test_the_bot_gathers_on_a_server(tmp_path):
         game.forceload()
         end = time.time() + 60                                         # entities load in other threads
         while True:
-            me = gather.Gather(game, data, tick=0.1, carry=3, chop=0.01).setup()
-            b = bot.Bot(game, data, share=me, tick=0.1, carry=3, chop=0.01).setup()
+            me = gather.Gather(game, data, tick=0.1, carry=3, chop=0.01, start={}).setup()
+            b = bot.Bot(game, data, share=me, tick=0.1, carry=3, chop=0.01, start={}).setup()
             if me.villagers and len(b.g.villagers) == 4:
                 break
             assert time.time() < end, "the villagers did not load"

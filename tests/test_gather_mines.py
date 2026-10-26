@@ -22,7 +22,7 @@ def mine_map(camp=True):
     if camp:
         objects.append({"kind": "building", "name": "MINING_CAMP", "player": 1, "footprint": [12, 14, 14, 16]})
     server = FakeServer({"v": {"Pos": (7.5, 64.0, 7.5)}})
-    return server, gather.Gather(server, grid([[64] * 24 for _ in range(24)], objects), carry=10, chop=0.25).setup()
+    return server, gather.Gather(server, grid([[64] * 24 for _ in range(24)], objects), carry=10, chop=0.25, start={}).setup()
 
 
 def score(server, name):
@@ -114,7 +114,7 @@ def test_villager_mines_gold_on_a_server(tmp_path):
         game.forceload()
         end = time.time() + 60                                         # entities load in other threads
         while True:
-            g = gather.Gather(game, data, tick=0.05, carry=10, chop=0.01).setup()
+            g = gather.Gather(game, data, tick=0.05, carry=10, chop=0.01, start={}).setup()
             if g.villagers:
                 break
             assert time.time() < end, "the villager did not load"

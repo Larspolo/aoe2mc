@@ -22,7 +22,7 @@ def setup(food=60, gold=20, done=True):
         objects.append({"kind": "building", "name": "BARRACKS", "player": 1, "tile": [11.5, 3.5],
                         "footprint": [10, 2, 13, 5]})
     server = FakeServer({"v": {"Pos": (7.5, 64.0, 7.5)}, "Steve": {"Pos": (11.5, 64.0, 9.5), "Rotation": (180, 15)}})
-    g = gather.Gather(server, grid([[64] * 24 for _ in range(24)], objects)).setup()
+    g = gather.Gather(server, grid([[64] * 24 for _ in range(24)], objects), start={}).setup()
     if done is not None:
         g.sites.append({"name": "BARRACKS", "player": 1, "footprint": [10, 13, 2, 5], "done": done})
     g.stock.update(food=food, gold=gold)
@@ -106,7 +106,7 @@ def test_a_trained_militia_exists_on_a_server(tmp_path):
         data = json.load(f)
     with run.Game(tmp_path / "W") as game:
         game.forceload()
-        g = gather.Gather(game, data, tick=0.25).setup()
+        g = gather.Gather(game, data, tick=0.25, start={}).setup()
         g.stock.update(food=60, gold=20)
         rect, = train.homes(g)
         assert train.queue(g, "nobody", rect[::2], "MILITIA")
