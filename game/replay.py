@@ -107,6 +107,7 @@ class Replay:
         self.arriving = {}                      # object ID -> game time (ms) of its work start, until it is there (#766)
         self.entering = {}                      # object ID -> [footprint, building entry, arrival (ms) or None] (#809)
         self.garrisons = {}                     # building footprint -> object IDs of the units inside it
+        self.ids = {}                           # new object ID of a building -> footprint of its replay building (#876)
         self.refs = {o["ref"]: o for o in data["objects"] if o.get("ref") is not None}
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
@@ -135,7 +136,12 @@ class Replay:
         if kind == "garrison" and e.get("objects"):
             return self.move(dict(e, kind="order", garrison=True))
         if kind == "ungarrison" and e.get("objects"):
-            return [c for i in e["objects"] for s in self.starts if s[0] == i for c in self.release(s[3])]
+            import garrison
+            starts = {s[0]: s[3] for s in self.starts}
+            rects = [starts[i] if i in starts else name in garrison.SIZES and self.new_building(i, name, e["player"],
+                                                                                              full=True)
+                     for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"]))]
+            return [c for r in rects if r for c in self.release(r)]
         if kind == "delete" and e.get("objects"):
             return self.delete(e)
         if kind == "chat" and e.get("text"):
@@ -457,6 +463,9 @@ class Replay:
         if tile in self.map.farms:                                  # a farmer stands on the farm
             goals = self.crew.goals(tile)
         home = self.holder(e)
+        if home and e.get("target") not in self.refs:              # a building of the replay: next to it (#876)
+            x0, x1, z0, z1 = home[0]
+            goals = self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)})
         for i, v in group:                                          # a new MOVE or ORDER stops the work
             self.working.pop(i, None)
             self.arriving.pop(i, None)
@@ -701,10 +710,30 @@ class Replay:
         """(footprint, entry of aoe2mc.json) of the own start building with garrison room that an ORDER targets, or
         None. The record has no IDs of the buildings of the replay."""
         import garrison
-        o = self.refs.get(e.get("target")) if e["kind"] == "order" else None
+        t = e.get("target") if e["kind"] == "order" else None
+        o = self.refs.get(t)
+        if o is None and t is not None and t not in self.units and e.get("target_name") in garrison.SIZES:
+            r = self.new_building(t, e["target_name"], e["player"], e.get("tile"))   # a building of the replay (#876)
+            return (r, {"name": e["target_name"], "player": e["player"]}) if r else None
         if not o or o["kind"] != "building" or o["name"] not in garrison.SIZES or o["player"] != e["player"]:
             return None
         return next(((s[3], o) for s in self.starts if s[0] == o["ref"]), None)
+
+    def new_building(self, i, name, player, tile=None, full=False):
+        """The footprint of the replay building with the new object ID i (aoe2mc.name_timeline gives its name), or
+        None. The record has no IDs of new buildings (#876): the first command on i takes the building of the player
+        with that name under the tile of the click, else the newest one that no other ID has (full: one with units
+        inside first, for UNGARRISON). Later commands on i take the same building."""
+        rects = [r for p, n, r in self.placed if (p, n) == (player, name)]
+        if self.ids.get(i) in rects:
+            return self.ids[i]
+        c = (int(tile[0] * self.T), int(tile[1] * self.T)) if tile else None
+        under = [r for r in rects if c and r[0] <= c[0] < r[1] and r[2] <= c[1] < r[3]]
+        free = [r for r in rects if r not in self.ids.values()]
+        r = (under or [r for r in free if r in self.garrisons] * full or free or [None])[-1]
+        if r:
+            self.ids[i] = r
+        return r
 
     def enter(self, t):
         """The units that arrived at their building until game time t (ms) go inside (garrison.enter). A full

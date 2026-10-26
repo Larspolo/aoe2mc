@@ -217,8 +217,10 @@ def terrain_style(name):
 # --------------------------------------------------------------------------------------------
 # Read the AoE2 scenario.
 # --------------------------------------------------------------------------------------------
-def object_kinds():
-    """Object ID -> (kind prefix, name). Scenarios and recorded games use the same IDs."""
+def object_kinds(old=True):
+    """Object ID -> (kind prefix, name). Scenarios and recorded games use the same IDs. old: also the IDs that DE
+    keeps only in its data file (OLD_IDS), with the name of the DE object: a recorded game builds a town center
+    as 621 (#876)."""
     from AoE2ScenarioParser.datasets.buildings import BuildingInfo
     from AoE2ScenarioParser.datasets.heroes import HeroInfo
     from AoE2ScenarioParser.datasets.other import OtherInfo
@@ -227,6 +229,9 @@ def object_kinds():
     for prefix, enum in (("H", HeroInfo), ("U", UnitInfo), ("O", OtherInfo), ("B", BuildingInfo)):
         for e in enum:          # later enums win: Building > Other > Unit > Hero
             kinds[e.ID] = (prefix, e.name)
+    prefixes = {name: prefix for prefix, name in kinds.values()}
+    for i, name in OLD_IDS.items() if old else ():
+        kinds.setdefault(i, (prefixes.get(name, "O"), name))
     return kinds
 
 
@@ -264,7 +269,7 @@ def read_scx(path):
     w, h = s["width"], s["height"]
     size = max(w, h)
     terrain, elevation = (np.pad(a, ((0, size - w), (0, size - h)), mode="edge") for a in (s["terrain"], s["elevation"]))
-    kinds = object_kinds()
+    kinds = object_kinds(old=False)                                  # OLD_IDS go to the DE IDs below
     ids = {name: i for i, (_, name) in kinds.items()}
     players = {}
     for pid, p in s["players"].items():
@@ -641,7 +646,8 @@ def name_timeline(objects, timeline, window=16):
     too, so match each predicted object to the first ID in the next `window` IDs that the commands use in the same
     way (a building ID in QUEUE and RESEARCH, of the building that trains its units; a unit ID in MOVE, ORDER and
     BUILD) and not before the object exists. A building that is not matched gets the name of its units' building.
-    Adds "names" (a name or None per ID of "objects") to the events and returns {id: name}."""
+    Adds "names" (a name or None per ID of "objects") and the "target_name" of a new target ID to the events and
+    returns {id: name}."""
     names = {o["ref"]: o["name"] for o in objects if o.get("ref") is not None}
     top = max(names, default=0)
     used = {}             # new ID -> [time of its first use, "B", "U" or None, {building of its units}, a worker]
@@ -684,6 +690,8 @@ def name_timeline(objects, timeline, window=16):
     for e in timeline:
         if e.get("objects"):
             e["names"] = [names.get(i) for i in e["objects"]]
+        if names.get(e.get("target")) and e["target"] > top:          # a new building: GARRISON in it (#876)
+            e["target_name"] = names[e["target"]]
     return names
 
 
