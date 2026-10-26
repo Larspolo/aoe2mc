@@ -129,3 +129,21 @@ Notes for the check of a world with the dedicated server:
 - Whether 26.3 opens a world with data version 5023 and the old palette form (`Name`, `Properties`). aoe2mc
   writes `id` and `properties` for 26.3. Its tiny, units gallery and full gallery worlds load in the 26.3 server
   without problems (`tools/mc_check.py --version 26.3`, #57).
+
+## Pitfalls
+
+Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
+
+- Minecraft server: a bad property value (`facing=up`) loads silently as the default state. An unknown block gives
+  "Recoverable errors when loading section", an unknown block entity id "Skipping block entity with invalid type"
+  (26.3 has no `bed` block entity, #249). A missing `level.dat` compound gives "key missing: <name>" (#60). A bad
+  datapack file stops the server. A datapack `worldgen/` file makes the client warn "Experimental Settings" (#218).
+  The 26.3 server writes a missing `white-list` as `true`: write `white-list=false` (`game/run.py`, #285).
+- Minecraft client (#178, #179): `tools/mc_shot.py` runs it in `Xvfb`. 26.3 needs `mesa-vulkan-drivers` (lavapipe) and
+  a placeholder for the title panorama. The view ends at about 100 blocks: put `--at` near the subject (#208).
+- The server drops entity tags that it does not know, without a log line: let the server save the world and compare
+  the entity NBT (`docs/minecraft-versions.md`). A wrong tag type gives "Serialization errors" (`mc_check.py`).
+  New entity NBT: convert a map with one unit per type (`add_unit` in a loop) and run `tools/mc_check.py` (1 min).
+- PrismarineJS `data/pc/common/protocolVersions.json` has the data versions of all releases (26.3 = 5023).
+- An invalid item in a block entity can vanish without a log line. `tools/mc_check.py W --keep DIR` keeps the saved world
+  (#27). 26.3 saves a default state as the bare name and in another property order: normalize before you compare (#189).
