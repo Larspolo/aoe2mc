@@ -1274,7 +1274,9 @@ class Replay:
         left = (self.map.farms if farm else self.map.bushes if res == "food" else self.map.trees if res == "wood"
                 else self.map.mines.get(res, {})).get(v.tree, 0)
         rate = self.gather.AOE2_WORK["farm" if farm else res]
-        self.resources(v.player)[res] += min(left, int(rate * (t1 - t0) / 1000))
+        n = min(left, int(rate * (t1 - t0) / 1000))
+        self.resources(v.player)[res] += n
+        self.gathered.setdefault(v.player, dict.fromkeys(START, 0))[res] += n     # the summary (#1097)
 
     def run(self, speed=1.0, start=0, clock=time.monotonic, sleep=time.sleep, log=print, bar=False, poll=None,
             finish=False, to=None, paused=False, rewind=False):
