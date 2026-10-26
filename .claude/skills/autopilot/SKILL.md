@@ -129,8 +129,11 @@ then the lowest issue number.
 Epics first: an epic is never a candidate, so its rest of the work needs sub-issues. Before you claim a ticket, look
 at the open epics (label `epic`, not `needs-human`, any priority) with no open sub-issue, at most 3 per run. The
 priority does not matter here: a check of `P2` and `P3` epics was skipped, and six finished epics stayed open (#799).
-For each one, read its acceptance criteria. Close the epic with a comment when the closed sub-issues meet
-all criteria (name the evidence for each; a denied close: "Ask the owner" in step 6, #862). Else lock the epic first: `python3 tools/claim.py E --refill`
+For each one, read its acceptance criteria and all its comments. An epic without a criterion that checks that the
+whole goal is covered (owner rule, #820: never only "All sub-issues are closed") gets one first (`ticket` skill, "Split
+an L ticket"). Check that criterion against the full scope (for "all X": the full list, for example the AoE2 wiki) and
+name each missing item. Close the epic with a comment only when all criteria are met
+(name the evidence for each; a denied close: "Ask the owner" in step 6, #862). Else lock the epic first: `python3 tools/claim.py E --refill`
 (E = the epic; exit 1: another run makes its sub-issue, skip the epic, #505). Then make one sub-issue (same priority)
 for the criteria that an agent can do. A criterion that needs the owner stays on the epic. Then pick again (#176, #155 waited while P3 tickets ran).
 Refill the queue when fewer candidates are ready than the target number of runs, so that parallel runs always find
