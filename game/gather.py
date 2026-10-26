@@ -320,6 +320,8 @@ class Gather:
     cheats = False                                                     # also for the adapters of Gather.__new__
     aegis = False                                                      # the cheat "aegis": all work is instant (#817)
     ended = None                                                       # "Victory" or "Defeat": run() stops (#819)
+    board = "aoe_res"                                                  # the objective of the resources (the sidebar)
+    bots = ()                                                          # run() steps them too (bot.Bot, #856)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
                  cheats=False):
@@ -375,12 +377,12 @@ class Gather:
         for cmd in ("scoreboard objectives add aoe_use minecraft.used:minecraft.carrot_on_a_stick",
                     f"scoreboard objectives add aoe_box minecraft.used:minecraft.{WAND}",
                     "scoreboard objectives add aoe_talk minecraft.custom:minecraft.talked_to_villager",
-                    'scoreboard objectives add aoe_res dummy "Resources"',
-                    "scoreboard objectives setdisplay sidebar aoe_res"):
+                    f'scoreboard objectives add {self.board} dummy "Resources"',
+                    f"scoreboard objectives setdisplay sidebar {self.board}"):
             self.command(cmd)
         for r in RESOURCES:
-            self.command(f"scoreboard players add {r} aoe_res 0")
-        self.command('scoreboard players display name Idle aoe_res "Idle villagers"')   # a name has no space
+            self.command(f"scoreboard players add {r} {self.board} 0")
+        self.command(f'scoreboard players display name Idle {self.board} "Idle villagers"')   # a name has no space
         build.setup(self)
         menu.setup(self)
         cheats.setup(self)
@@ -399,7 +401,7 @@ class Gather:
         n = sum(v.state == "idle" for v in self.villagers.values())
         if self.shown.get("Idle") != n:
             self.shown["Idle"] = n
-            self.command(f"scoreboard players set Idle aoe_res {n}")
+            self.command(f"scoreboard players set Idle {self.board} {n}")
 
     def select(self, uuid):
         """Select one villager (glowing), as a click in AoE2 does. A click on a military unit adds it to selected
@@ -715,7 +717,7 @@ class Gather:
                 v.timer = 0.0
                 self.set(v, "chop" if self.source(v).get(v.tree, 0) > 0 else "idle")
             elif v.state == "to_drop":
-                self.command(f"scoreboard players add {v.res.capitalize()} aoe_res {v.load}")
+                self.command(f"scoreboard players add {v.res.capitalize()} {self.board} {v.load}")
                 self.stock[v.res] += v.load
                 v.load = 0
                 self.event(v, "drop")
@@ -938,4 +940,6 @@ class Gather:
             for name in self.clicks():
                 self.click(name)
             self.step()
+            for b in self.bots:
+                b.step()
             time.sleep(max(0.0, self.tick - (time.time() - t)))
