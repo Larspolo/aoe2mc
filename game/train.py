@@ -15,6 +15,8 @@ range trains archers (#670): they shoot from their AoE2 range (combat.range_comm
 Technologies (#655): a technology (TECHS) is an item of the menu of its building and uses the queue of the units, as in
 AoE2, but needs no population room. A click queues it once; when it is complete it goes into g.techs, leaves the menu
 and changes the values of the live and the new units (stats()). Loom: villagers get 15 hit points and 1/2 armor.
+The castle (#708) trains the unique unit of the civilization of its player (UNIQUE, trains()). Only the units with AoE2
+combat values (combat.STATS) are in its menu.
 """
 import json
 import math
@@ -31,10 +33,26 @@ import build  # noqa: E402
 import menu  # noqa: E402
 
 COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   # as in AoE2
-         "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}}
-TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25}   # AoE2 seconds
+         "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50},
+         "LONGBOWMAN": {"wood": 35, "gold": 40}, "WAR_ELEPHANT": {"food": 170, "gold": 85}}
+TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25,   # AoE2 seconds
+               "LONGBOWMAN": 17, "WAR_ELEPHANT": 25}
 TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM"), "BARRACKS": ("MILITIA",),   # the units and technologies of each
-          "ARCHERY_RANGE": ("ARCHER",)}                                         # building (#654, #670, #655)
+          "ARCHERY_RANGE": ("ARCHER",), "CASTLE": ()}                           # building (#654, #670, #655, #708)
+# The unique unit of each civilization (AoE2 DE), trained at its castle. A unit without COSTS is not in the menu yet:
+# it has no AoE2 combat values in combat.STATS.
+UNIQUE = {"BRITONS": "LONGBOWMAN", "PERSIANS": "WAR_ELEPHANT", "BYZANTINES": "CATAPHRACT", "CELTS": "WOAD_RAIDER",
+          "CHINESE": "CHU_KO_NU", "FRANKS": "THROWING_AXEMAN", "GOTHS": "HUSKARL", "JAPANESE": "SAMURAI",
+          "MONGOLS": "MANGUDAI", "SARACENS": "MAMELUKE", "TEUTONS": "TEUTONIC_KNIGHT", "TURKS": "JANISSARY",
+          "VIKINGS": "BERSERK", "AZTECS": "JAGUAR_WARRIOR", "HUNS": "TARKAN", "KOREANS": "WAR_WAGON",
+          "MAYANS": "PLUMED_ARCHER", "SPANISH": "CONQUISTADOR", "INCAS": "KAMAYUK", "ITALIANS": "GENOESE_CROSSBOWMAN",
+          "MAGYARS": "MAGYAR_HUSZAR", "SLAVS": "BOYAR", "BERBERS": "CAMEL_ARCHER", "ETHIOPIANS": "SHOTEL_WARRIOR",
+          "MALIANS": "GBETO", "PORTUGUESE": "ORGAN_GUN", "BURMESE": "ARAMBAI", "KHMER": "BALLISTA_ELEPHANT",
+          "MALAY": "KARAMBIT_WARRIOR", "VIETNAMESE": "RATTAN_ARCHER", "BULGARIANS": "KONNIK", "CUMANS": "KIPCHAK",
+          "LITHUANIANS": "LEITIS", "TATARS": "KESHIK", "BURGUNDIANS": "COUSTILLIER", "SICILIANS": "SERJEANT",
+          "POLES": "OBUCH", "BOHEMIANS": "HUSSITE_WAGON", "HINDUSTANIS": "GHULAM", "DRAVIDIANS": "URUMI_SWORDSMAN",
+          "BENGALIS": "RATHA", "GURJARAS": "SHRIVAMSHA_RIDER", "ROMANS": "CENTURION", "ARMENIANS": "COMPOSITE_BOWMAN",
+          "GEORGIANS": "MONASPA"}
 TECHS = {"LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
          if "VILLAGER" in name else s}                             # the change of each technology to the AoE2 values
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
@@ -44,6 +62,7 @@ CENSUS = 2.0                                                       # AoE2 second
 ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, item and name of each unit (#620)
          "MILITIA": (0, "zombie_spawn_egg", "Militia"),             # the mob of units.classify
          "ARCHER": (0, "skeleton_spawn_egg", "Archer"),
+         "LONGBOWMAN": (0, "skeleton_spawn_egg", "Longbowman"), "WAR_ELEPHANT": (0, "ravager_spawn_egg", "War Elephant"),
          "LOOM": (1, "book", "Loom")}                               # a book for a technology (#618)
 SHIFT = 5                                                          # units of a shift click, as in AoE2
 
@@ -54,6 +73,14 @@ def homes(g):
     out = {(x0, x1, z0, z1): o["name"] for o in g.data["objects"] if o["kind"] == "building" and o["name"] in TRAINS
            and o["player"] == g.player for x0, z0, x1, z1 in [o["footprint"]]}
     return out | {tuple(s["footprint"]): s["name"] for s in g.sites if s["name"] in TRAINS and s.get("done")}
+
+
+def trains(g, building):
+    """The units and technologies of the own building: a castle trains the unique unit of the player's civilization."""
+    if building != "CASTLE":
+        return TRAINS[building]
+    civ = g.data.get("players", {}).get(str(g.player), {}).get("civ")
+    return tuple(n for n in [UNIQUE.get(civ)] if n in COSTS)
 
 
 def home(g, cell):
@@ -74,14 +101,14 @@ def show(g, player, rect):
     n, building = len(g.queues.get(rect, [])), homes(g)[rect]
     items = [(*ITEMS[name], " · ".join(f"{v} {r}" for r, v in COSTS[name].items()) + f" · {TRAIN_TIMES[name]} s · "
               + (("researching" if queued(g, name) else "research") if name in TECHS else f"queue {n}/{QUEUE}"))
-             for name in TRAINS[building] if name not in g.techs]
+             for name in trains(g, building) if name not in g.techs]
     menu.show(g, player, build.pretty(building), items, lambda p, slot, shift: order(g, p, rect, slot, shift))
 
 
 def order(g, player, rect, slot, shift=False):
     """A click on the menu item in slot: queue 1 unit (a shift click: SHIFT, as many as the resources and the queue
     allow) at the building rect, and refresh the menu. Returns the number of queued units."""
-    name = next((n for n in TRAINS[homes(g)[rect]] if ITEMS[n][0] == slot), None)
+    name = next((n for n in trains(g, homes(g)[rect]) if ITEMS[n][0] == slot), None)
     n = 0
     while name and n < (SHIFT if shift else 1) and queue(g, player, rect[::2], name):
         n += 1
@@ -94,7 +121,7 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
     Returns the footprint of the building, or None (no building there that trains name, a full queue, not enough
     resources)."""
     rect = home(g, cell)
-    if rect is None or name not in TRAINS[homes(g)[rect]]:
+    if rect is None or name not in trains(g, homes(g)[rect]):
         return None
     if name in TECHS and (name in g.techs or queued(g, name)):        # a technology only once
         return None
