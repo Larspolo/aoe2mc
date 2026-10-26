@@ -31,6 +31,7 @@ def site_map(wood=200, chosen=1):
                {"kind": "other", "name": "TREE_OAK", "tile": [12.5, 12.5]}]
     data = grid(rows, objects)
     data["players"] = {"1": {"civ": "BRITONS", "color": "blue", "arch": "western"}}
+    data["level_height"] = 1
     server = Server({"Steve": {"Pos": (8.5, 64.0, 12.5), "Rotation": (-90.0, 30.0)}}, chosen)
     g = gather.Gather(server, data).setup()
     g.stock["wood"] = wood

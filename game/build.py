@@ -3,17 +3,26 @@ Construction sites in the game program (#417, part of #394). A player chooses a 
 set N` (players without operator rights can run /trigger), then right clicks the ground with the command stick.
 When the footprint is free and the stock pays the cost, a foundation appears: a ring of wool in the player color.
 The footprint is blocked for paths. gather.Gather.click calls place().
+A right click on a foundation sends the selected villagers there to build it (#418): the blocks of the design
+(replay.Replay.building) appear from the bottom up, in the AoE2 build time. gather.Gather.step calls rise().
 """
 import json
+import math
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from aoe2mc import VERSION_NAME  # noqa: E402
 from buildings import footprint  # noqa: E402
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from replay import Replay  # noqa: E402
 
 COSTS = {"HOUSE": {"wood": 25}, "LUMBER_CAMP": {"wood": 100}, "MINING_CAMP": {"wood": 100},   # as in AoE2
          "MILL": {"wood": 100}, "FARM": {"wood": 60}, "BARRACKS": {"wood": 175},
          "TOWN_CENTER": {"wood": 275, "stone": 100}}
+BUILD_TIMES = {"HOUSE": 25, "LUMBER_CAMP": 35, "MINING_CAMP": 35, "MILL": 35, "FARM": 15,   # AoE2 seconds,
+               "BARRACKS": 50, "TOWN_CENTER": 150}                                # one builder
 MENU = list(COSTS)                                                 # trigger value N -> MENU[N - 1]
 OBJECTIVE = "aoe_build"
 
@@ -86,7 +95,28 @@ def place(g, player, name, eye, d):
             if x in (x0, x1 - 1) or z in (z0, z1 - 1):
                 g.command(f"setblock {x} {g.map.y(x, z)} {z} minecraft:{color}_wool")
     g.map.blocked |= {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
-    site = {"name": name, "player": g.player, "footprint": rect}
+    s = footprint(name)                                                # the design, bottom up (one command each)
+    cmds = Replay(g, g.data, getattr(g.game, "version", VERSION_NAME)).building(name, g.player, x0 / g.map.T + s / 2, z0 / g.map.T + s / 2)
+    site = {"name": name, "player": g.player, "footprint": rect, "commands": cmds, "sent": 0, "progress": 0.0}
     g.sites.append(site)
     g.command(f"scoreboard players set {player} {OBJECTIVE} 0")
     return site
+
+
+def pick(g, eye, d):
+    """The unfinished construction site on the ground that the player looks at, or None."""
+    cell = g.map.pick_ground(eye, d)
+    return next((s for s in g.sites if s["progress"] < 1 and cell and s["footprint"][0] <= cell[0] < s["footprint"][1]
+                 and s["footprint"][2] <= cell[1] < s["footprint"][3]), None)
+
+
+def rise(g, site, work):
+    """Add work (game seconds of one builder) to the site and send the commands of the blocks that are due.
+    Returns True when the building is complete."""
+    site["progress"] = min(1.0, site["progress"] + work / BUILD_TIMES[site["name"]])
+    cmds = site["commands"]
+    k = len(cmds) if site["progress"] >= 1 else math.floor(site["progress"] * len(cmds))
+    for c in cmds[site["sent"]:k]:
+        g.command(c)
+    site["sent"] = max(site["sent"], k)
+    return site["progress"] >= 1

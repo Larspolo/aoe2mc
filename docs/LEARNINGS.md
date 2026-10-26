@@ -86,3 +86,5 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
   player. In an RCON check, `forceload add X0 Z0 X1 Z1` (at most 256 chunks per command) first (#358).
 - A fruit bush of `place_objects` is at block `int(x * T)` (the tile center), not at `int(tile) * T`. In `aoe2mc.json`
   the "ground" of a blocked footprint is the barrier top: take the ground of `Map.around()` (#391).
+- `build.place` draws the design with `replay.Replay.building`: fake `aoe2mc.json` data in tests needs `level_height`
+  and a tile size of 4 (at tile size 1 most designs give no blocks). The site keeps the commands, bottom up (#418).
