@@ -1,0 +1,46 @@
+{
+ "seen": [
+  1,
+  2
+ ],
+ "conquest": {
+  "ended": "Victory",
+  "s": 3.2,
+  "defeated": [
+   2
+  ],
+  "p2_left": "Test failed",
+  "chat": [
+   "[22:20:10] [Render thread/INFO]: [System] [CHAT] aoe2mc joined the game",
+   "[22:20:10] [Render thread/INFO]: [System] [CHAT] Your game mode has been updated to Adventure Mode",
+   "[22:20:16] [Render thread/INFO]: [System] [CHAT] Build: /trigger aoe_build set 1: House (25 wood)\\n/trigger aoe_build set 2: Lumber Camp (100 wood)\\n/trigger aoe_build set 3: Mining Camp (100 wood)\\n/trigger aoe_build set 4: Mill (100 wood)\\n/trigger aoe_build set 5: Farm (60 wood)\\n/trigger aoe_build set 6: Barracks (175 wood)\\n/trigger aoe_build set 7: Blacksmith (150 wood)\\n/trigger aoe_build set 8: Archery Range (175 wood)\\n/trigger aoe_build set 9: Stable (175 wood)\\n/trigger aoe_build set 10: Town Center (275 wood, 100 stone)\\n/trigger aoe_build set 11: Castle (650 stone)\\n/trigger aoe_build set 12: Monastery (175 wood)\\n/trigger aoe_build set 13: Siege Workshop (200 wood)\\n/trigger aoe_build set 14: University (200 wood)\\n/trigger aoe_build set 15: Wonder (1000 wood, 1000 gold, 1000 stone)",
+   "[22:20:27] [Render thread/INFO]: [System] [CHAT] Player 2 is defeated."
+  ]
+ },
+ "wonder": {
+  "rect": [
+   32,
+   52,
+   20,
+   40
+  ],
+  "timers": {
+   "dc20f24c-b546-5821-b66d-ee3323ece885": {
+    "player": 1,
+    "left": 989.8000000000011
+   }
+  },
+  "bar": "Custom bossbar [Player 1: wonder, 198 years left] has a value of 198",
+  "bars": "There are 2 custom bossbar(s) active: [Player 1: wonder, 198 years left], []",
+  "bar_low": "Custom bossbar [Player 1: wonder, 3 years left] has a value of 3",
+  "bars_after": "There are 2 custom bossbar(s) active: [Player 1: wonder, 1 year left], []",
+  "ended": "Victory",
+  "s": 23.4,
+  "chat": [
+   "[22:21:31] [Render thread/INFO]: [System] [CHAT] aoe2mc joined the game",
+   "[22:21:31] [Render thread/INFO]: [System] [CHAT] Your game mode has been updated to Adventure Mode",
+   "[22:21:39] [Render thread/INFO]: [System] [CHAT] Build: /trigger aoe_build set 1: House (25 wood)\\n/trigger aoe_build set 2: Lumber Camp (100 wood)\\n/trigger aoe_build set 3: Mining Camp (100 wood)\\n/trigger aoe_build set 4: Mill (100 wood)\\n/trigger aoe_build set 5: Farm (60 wood)\\n/trigger aoe_build set 6: Barracks (175 wood)\\n/trigger aoe_build set 7: Blacksmith (150 wood)\\n/trigger aoe_build set 8: Archery Range (175 wood)\\n/trigger aoe_build set 9: Stable (175 wood)\\n/trigger aoe_build set 10: Town Center (275 wood, 100 stone)\\n/trigger aoe_build set 11: Castle (650 stone)\\n/trigger aoe_build set 12: Monastery (175 wood)\\n/trigger aoe_build set 13: Siege Workshop (200 wood)\\n/trigger aoe_build set 14: University (200 wood)\\n/trigger aoe_build set 15: Wonder (1000 wood, 1000 gold, 1000 stone)",
+   "[22:21:39] [Render thread/INFO]: [System] [CHAT] Player 1 built a wonder."
+  ]
+ }
+}
