@@ -29,6 +29,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:train` Train villagers at the town center: cost, queue, population limit (epic #396)
 - [ ] `play:bot` A scripted bot plays player 2 (epic #397)
 - [ ] `play:scale` Measure and raise the number of units that the program can move (epic #398)
+- [ ] `play:menu` Choose the options of a building and the build menu in a chest menu (epic #618, owner decision)
 - [ ] `play:health` Health indication: hit points over each unit and building, a boss bar for the selected unit, damage effects
 - [ ] `play:military-train` Train all units at their buildings (barracks, archery range, stable, castle) with a queue and a rally point
 - [ ] `play:tech` Technologies and upgrades (blacksmith, university, unit lines) with cost, time and effect on the Minecraft attributes

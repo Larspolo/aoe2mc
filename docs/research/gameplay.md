@@ -64,6 +64,11 @@ plugin, so that units keep their AI and walk with `Mob#getPathfinder().moveTo(..
 (fights). The players already join the server of the game program, so no single-player world is lost. The
 converted worlds stay vanilla. See CLAUDE.md, "Minecraft features first".
 
+**Owner decision (2026-10-26): the interface for choices.** A building with several options (train a unit, research,
+age up) and the build menu of a villager open a **chest menu of the Paper plugin** (an inventory with item icons and
+the cost in the item text), not the vanilla `/dialog` window and not clickable chat. A right click with the command
+stick on an own building opens its menu; a click on an option queues 1, a shift click 5. Epic #618.
+
 ### Smallest playable milestone: "villagers gather wood"
 
 1. The converter writes `aoe2mc.json` into the world folder: each object with its AoE2 ID, name, owner,
