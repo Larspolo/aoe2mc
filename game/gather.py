@@ -335,6 +335,7 @@ class Gather:
             self.command(cmd)
         for r in RESOURCES:
             self.command(f"scoreboard players add {r} aoe_res 0")
+        self.command('scoreboard players display name Idle aoe_res "Idle villagers"')   # a name has no space
         build.setup(self)
         menu.setup(self)
         bossbar.setup(self)
@@ -343,7 +344,16 @@ class Gather:
             if pos:
                 self.villagers[o["uuid"]] = Villager(o["uuid"], pos)
         train.census(self)                                             # the population and the limit (#613)
+        self.idle()
         return self
+
+    def idle(self):
+        """Show the number of idle villagers in the sidebar, as the idle villager button of AoE2 (#744), only when it
+        changed."""
+        n = sum(v.state == "idle" for v in self.villagers.values())
+        if self.shown.get("Idle") != n:
+            self.shown["Idle"] = n
+            self.command(f"scoreboard players set Idle aoe_res {n}")
 
     def select(self, uuid):
         """Select one villager (glowing), as a click in AoE2 does. A click on a military unit adds it to selected
@@ -607,6 +617,7 @@ class Gather:
                 for v in builders:                                     # complete: the builders stop
                     v.site = None
                     self.set(v, "idle")
+        self.idle()
 
     def work_time(self, res):
         """Real seconds per unit of resource res ("farm" for farms) with the technologies of the player (WORK_TECHS)."""
