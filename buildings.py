@@ -2846,7 +2846,7 @@ def place_building(E, cols, B, o, players, walls, gates):
                 # on water: a footing from the bed, not a block that floats on the surface
                 E.box(x, x + 1, (top if wtop > top else wtop) + 1, base + 1, z, z + 1, found)
 
-    ctx = {"name": name, "deck": max(1, water_y + 2 - base), "diag": gates.get(id(o)) in ("diag+", "diag-"),
+    ctx = {"name": name, "deck": max(1, water_y + 2 - base), "water": water_y - base, "diag": gates.get(id(o)) in ("diag+", "diag-"),
            "origin": (int(ux) * T if not along_z else int(uy) * T, 0)}
     if fn in (bridge, wooden_bridge):
         BRIDGE_CELLS.update((x, z) for x in xs for z in zs)
@@ -2961,23 +2961,35 @@ def plan_walls(objects):
 # Special and decorative buildings (bridges, aqueducts, tents, landmarks)
 # --------------------------------------------------------------------------------------------
 def bridge(c, w, st, col, T, ctx):
-    """One bridge piece along the x axis: 2 tiles long, 3 tiles wide (w = 3 tiles)."""
+    """One stone bridge piece along the x axis: 2 tiles long, 3 tiles wide (w = 3 tiles). Like the game (#455):
+    piers with cutwaters every tile, vaulted arches between them, a balustrade with posts over the piers."""
     L, deck = 2 * T, ctx["deck"]
-    stone = not ctx["name"].startswith("WOODEN")
-    mat, rail = ("stone_bricks", "stone_brick_wall") if stone else ("spruce_planks", "spruce_fence")
+    wl = ctx.get("water", deck - 2)                                     # the top water block (local y)
     z0, z1 = 2, w - 2
-    c.box(0, L, deck, deck + 1, z0, z1, mat)
-    if "BROKEN" in ctx["name"]:                                     # broken: the deck stops halfway
-        c.box(L // 2, L, deck, deck + 1, z0, z1, "air")
-    c.box(0, L, deck + 1, deck + 2, z0, z0 + 1, rail)
-    c.box(0, L, deck + 1, deck + 2, z1 - 1, z1, rail)
-    if deck > 1:
-        c.box(0, L, 1, deck, z0 + 1, z1 - 1, "air")
-    for x in (0, L - 1):                                                # piers down to the bottom
-        c.box(x, x + 1, -12, deck, z0, z0 + 1, "stone_bricks" if stone else "spruce_log")
-        c.box(x, x + 1, -12, deck, z1 - 1, z1, "stone_bricks" if stone else "spruce_log")
-    if stone:
-        c.box(L // 2 - 1, L // 2 + 1, deck - 1, deck, z0, z1, "stone_bricks")
+    sp = T if T >= 3 else L                                             # pier spacing: same at the joins of pieces
+    piers = range(0, L, sp)
+    c.box(0, L, deck, deck + 1, z0, z1, "stone_bricks")
+    c.box(0, L, max(1, wl + 1), deck, z0, z1, "air")
+    for p in piers:
+        c.box(p, p + 1, -12, deck, z0, z1, "stone_bricks")              # pier down to the bed
+        for z in (z0 - 1, z1):                                          # cutwater on each side, up to the deck
+            c.box(p, p + 1, -12, deck + 1, z, z + 1, "stone_bricks")
+            c.set(p, deck + 1, z, "stone_brick_slab[type=bottom]")
+        if deck - 1 > wl and sp > 2:                                    # vault: the arch springs from the pier
+            c.box(p + 1, p + 2, deck - 1, deck, z0, z1, "stone_brick_stairs[facing=west,half=top]")
+            c.box(p + sp - 1, p + sp, deck - 1, deck, z0, z1, "stone_brick_stairs[facing=east,half=top]")
+    for z in (z0, z1 - 1):                                              # balustrade, a post over each pier
+        c.box(0, L, deck + 1, deck + 2, z, z + 1, "stone_brick_wall")
+        for p in piers:
+            c.set(p, deck + 1, z, "chiseled_stone_bricks")
+    name = ctx["name"]
+    if "CRACKED" in name:                                               # cracked: split stones, a gap in the rail
+        c.box(L // 2 - 1, L // 2 + 1, deck, deck + 1, z0, z1, "cracked_stone_bricks")
+        c.box(L // 2, L // 2 + 2, deck + 1, deck + 2, z1 - 1, z1, "air")
+    if "BROKEN" in name:                                                # broken: the deck stops halfway
+        c.box(L // 2, L, deck, deck + 2, z0 - 1, z1 + 1, "air")
+        c.box(L // 2, L // 2 + 1, deck, deck + 1, z0, z1, "cracked_stone_bricks")
+        c.set(L // 2, deck, z0 + 1, "air"); c.set(L // 2, deck, z1 - 3, "air")
 
 
 def aqueduct(c, w, st, col, T, ctx):
