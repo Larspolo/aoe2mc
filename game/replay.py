@@ -39,6 +39,7 @@ LEG = 48                    # path cells of one plugin order: within the reach o
 TALL = 48                   # blocks above the ground that a DELETE clears for a start building (no height in aoe2mc.json)
 BAR = "aoe2mc:replay"       # the boss bar with the game time (#684)
 POLL = 0.2                  # seconds between two calls of the poll of Replay.run while it waits (#685)
+NEXT = 5                    # tiles: an empty resource sends its villager to the next one this near (#720)
 PATH_CELLS = 20000          # cells that one path search may look at: a unit with no path stays (no time lag)
 SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, "PIKEMAN": 1.0, "EAGLE": 1.1,
           "ARCHER": 0.96, "SKIRMISHER": 0.96, "CROSSBOWMAN": 0.96, "CAVALRY_ARCHER": 1.4, "SCOUT": 1.2,
@@ -492,9 +493,38 @@ class Replay:
                 due += 1000 / self.gather.AOE2_WORK[v.res]
             if src.get(v.tree, 0) > 0:
                 self.working[i] = due
-            else:                                                       # empty: it stays there (no drop-off)
+            else:
                 del self.working[i]
+                out += self.next_resource(i, v, due - 1000 / self.gather.AOE2_WORK[v.res])
         return out
+
+    def next_resource(self, i, v, t):
+        """Unit i gathered the last of its resource at game time t: as in AoE2 it walks to the nearest resource of
+        the same kind within NEXT tiles that has something left, and gathers there. Else it stays (the record has no
+        drop-off). Returns the commands (Paper: the first leg)."""
+        T, (x, z) = self.T, v.cell
+        far = {k: math.dist((x / T, z / T), (k[0] + 0.5, k[1] + 0.5)) for k, n in self.crew.source(v).items() if n > 0}
+        near = sorted((d, k) for k, d in far.items() if d <= NEXT)
+        if not near:
+            return []
+        v.tree = near[0][1]
+        path = self.map.path(v.cell, self.map.around(self.map.spot(v.tree)), PATH_CELLS)
+        if path is None:
+            return []
+        if self.ai and path:
+            cmds, due = self.order(v, path[LEG - 1:-1:LEG] + [path[-1]], t)
+            if v.path:
+                self.moving[i] = due
+            else:
+                self.start(i, v, due)
+            return cmds
+        v.path = path
+        due = self.next_step(v, t)
+        if due is None:
+            self.start(i, v, t)
+        else:
+            self.moving[i] = due
+        return []
 
     def resource(self, e):
         """The tile of the tree, fruit bush or mine that an ORDER targets, else None."""
