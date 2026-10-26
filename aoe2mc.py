@@ -13,7 +13,7 @@ Options:
     --name TEXT        World name in the Minecraft menu (default: file name)
     --seed N           Seed for the random details (tree heights, flowers) (default 1)
     --preview          Also write preview.png (top view) into the world folder
-    --mc-version V     Minecraft Java version of the output: 26.3 (default) or 1.21.1
+    --mc-version V     Minecraft Java version of the output: 26.3 (default, the only one)
     --orientation C    Minecraft corner (ne, se, sw, nw) of the top corner of the AoE2 screen (default ne)
     --no-units         Do not convert units (mobs, boats, minecarts)
     --no-birds         Do not convert birds
@@ -27,7 +27,7 @@ Requirements:
     pip install AoE2ScenarioParser nbtlib numpy pillow
 
 Coordinates: AoE2 tile (x, y) becomes Minecraft block x = x * tile-size, z = y * tile-size.
-The world is saved with Minecraft data version 1.21.1. Newer Minecraft versions upgrade it on load.
+The world is saved with Minecraft data version 26.3. Newer Minecraft versions upgrade it on load.
 """
 import argparse
 import contextlib
@@ -53,15 +53,14 @@ with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools", "mcd
     BLOCK_PROPS = {"minecraft:" + k: v for k, v in json.load(_f)["blocks"].items()}
 WATERLOGGABLE = {k for k, v in BLOCK_PROPS.items() if "waterlogged" in v}
 
-# Output format per Minecraft Java version (docs/minecraft-versions.md). Entities: units.to_version().
+# Output format per Minecraft Java version (docs/minecraft-versions.md): only 26.3 (#427); a later 26.x version can
+# get its own entry. Entities: units.to_version().
 VERSIONS = {
-    "1.21.1": dict(name="1.21.1", data_version=3955, pack_format=48, renames={}),
     "26.3": dict(name="26.3", data_version=5023, pack_format=121, renames={"minecraft:chain": "minecraft:iron_chain"}),
 }
 VERSION_NAME = "26.3"        # the default output version. The code uses the 1.21.1 names (no renames).
 DATA_VERSION = VERSIONS[VERSION_NAME]["data_version"]
 MC = VERSIONS[VERSION_NAME]  # the version of the running conversion; convert() sets it
-V26_1, V26_3 = 4786, 5023    # data versions of format changes (more in units.to_version)
 MIN_Y, MAX_Y = -64, 320      # world height range (MAX_Y exclusive)
 HEIGHT = MAX_Y - MIN_Y
 WATER_Y = 62                 # Y of the highest water block (sea level)
@@ -106,11 +105,10 @@ class Blocks:
         """Palette entry for block id i: {Name, Properties}, with the block names of the output version."""
         name, _, props = self.states[i].partition("[")
         name = MC["renames"].get(name, name)
-        key, pkey = ("id", "properties") if MC["data_version"] >= V26_3 else ("Name", "Properties")
         if not props:
-            return Compound({key: String(name)})
+            return Compound({"id": String(name)})
         p = dict(kv.split("=") for kv in props[:-1].split(","))
-        return Compound({key: String(name), pkey: Compound({k: String(v) for k, v in p.items()})})
+        return Compound({"id": String(name), "properties": Compound({k: String(v) for k, v in p.items()})})
 
 
 B = Blocks()
@@ -1898,10 +1896,8 @@ def book_pages(texts, cols=19, rows=14):
 
 
 def text_nbt(parts):
-    """A text component of (text, bold) parts in the format of the target version."""
+    """A text component of (text, bold) parts (NBT since 1.21.5)."""
     extra = [dict(text=t, bold=True) if b else dict(text=t) for t, b in parts]
-    if MC["data_version"] < 4325:                      # before 1.21.5 text components are JSON strings
-        return String(json.dumps({"text": "", "extra": extra}))
     return Compound({"text": String(""), "extra": List[Compound](
         [Compound({k: Byte(1) if k == "bold" else String(v) for k, v in e.items()}) for e in extra])})
 
@@ -2018,7 +2014,7 @@ def block_entity_type(state):
     name = state.split(":")[1].split("[")[0]
     for key, be in BE_TYPES:
         if key in name:
-            return None if be == "bed" and MC["data_version"] >= V26_3 else be    # 26.3 has no bed block entity
+            return None if be == "bed" else be                       # 26.3 has no bed block entity
     return None
 
 
@@ -2202,7 +2198,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
 
 
 # Work sounds at buildings (#220): name part -> (sound, predicate, particle). Only Minecraft sounds; the villager
-# work sounds exist in 1.21.1 and 26.3. The first matching rule wins.
+# work sounds exist in 26.3. The first matching rule wins.
 WORK_SOUNDS = [
     ("BLACKSMITH", "block.anvil.use", "sometimes", "lava"), ("MARKET", "entity.villager.trade", "sometimes", None),
     ("TOWN_CENTER", "block.bell.use", "rare", None), ("LUMBER_CAMP", "item.axe.strip", "sometimes", None),
@@ -2216,8 +2212,8 @@ CHANCE = {"sometimes": 0.25, "rare": 0.03}      # per pulse of 2 s
 
 # Ambience per terrain group (#219): vanilla biomes of `terrain_style` -> particle and sound near each player in such
 # a biome (datapack function, no warning), and the colors of the custom biome of `--ambience full` (the client shows
-# the "Experimental Settings" warning for it, docs/datapack.md). Particles: only types without options that exist in
-# 1.21.1 and 26.3. Colors: sky, fog, water, water fog (0xRRGGBB), then extra `effects` (the same in both versions).
+# the "Experimental Settings" warning for it, docs/datapack.md). Particles: only types without options.
+# Colors: sky, fog, water, water fog (0xRRGGBB), then extra `effects`.
 AMBIENCE = {
     "forest": (("forest", "birch_forest", "taiga", "jungle", "bamboo_jungle"), "spore_blossom_air",
                "entity.parrot.ambient", (0.7, 0.8, True), (0x79a6ff, 0xc0d8ff, 0x3f76e4, 0x050533), {}),
@@ -2239,17 +2235,15 @@ def custom_biomes(names):
 
 
 def biome_file(group):
-    """The custom biome of a group in the format of the output version (docs/datapack.md, "Biome files")."""
+    """The custom biome of a group (docs/datapack.md, "Biome files"): colors are "#rrggbb", sky and fog are
+    attributes (26.x)."""
     (t, rain, precip), (sky, fog, water, water_fog), extra = AMBIENCE[group][3:]
-    data = {"has_precipitation": precip, "temperature": t, "downfall": rain}
-    if MC["data_version"] >= V26_1:             # 26.x: colors are "#rrggbb", sky and fog are attributes
-        hx = "#{:06x}".format
-        return data | {"effects": {"water_color": hx(water)} | extra,
-                       "attributes": {"minecraft:visual/sky_color": hx(sky), "minecraft:visual/fog_color": hx(fog),
-                                      "minecraft:visual/water_fog_color": hx(water_fog)},
-                       "features": [], "carvers": []}
-    return data | {"effects": {"sky_color": sky, "fog_color": fog, "water_color": water, "water_fog_color": water_fog}
-                   | extra, "spawners": {}, "spawn_costs": {}, "features": [], "carvers": {}}
+    hx = "#{:06x}".format
+    return {"has_precipitation": precip, "temperature": t, "downfall": rain,
+            "effects": {"water_color": hx(water)} | extra,
+            "attributes": {"minecraft:visual/sky_color": hx(sky), "minecraft:visual/fog_color": hx(fog),
+                           "minecraft:visual/water_fog_color": hx(water_fog)},
+            "features": [], "carvers": []}
 
 
 def ambience_lines(biome_names):
@@ -2309,16 +2303,14 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
     if not lines and not groups and not team_load:    # the server finds a new pack by itself; level.dat needs no entry
         return 0, 0
     files = {
-        "pack.mcmeta": {"pack": {"description": "aoe2mc: work sounds and ambience", "pack_format": MC["pack_format"]}
-                        | ({"min_format": MC["pack_format"], "max_format": MC["pack_format"]}
-                           if MC["data_version"] >= V26_1 else {})},
+        "pack.mcmeta": {"pack": {"description": "aoe2mc: work sounds and ambience", "pack_format": MC["pack_format"],
+                                 "min_format": MC["pack_format"], "max_format": MC["pack_format"]}},
         "data/minecraft/tags/function/load.json": {"values": ["aoe2mc:load"]},
         "data/aoe2mc/function/load.mcfunction": "\n".join(team_load + ["schedule function aoe2mc:pulse 40t replace"]) + "\n",
         "data/aoe2mc/function/pulse.mcfunction": "\n".join(lines + team_pulse + ["schedule function aoe2mc:pulse 40t replace"]) + "\n",
     }
-    key = "type" if MC["data_version"] >= V26_1 else "condition"     # 26.x renamed the key of a predicate
     for name, chance in CHANCE.items():
-        files[f"data/aoe2mc/predicate/{name}.json"] = {key: "minecraft:random_chance", "chance": chance}
+        files[f"data/aoe2mc/predicate/{name}.json"] = {"type": "minecraft:random_chance", "chance": chance}
     for g in groups:
         files[f"data/aoe2mc/worldgen/biome/{g}.json"] = biome_file(g)
     for name, data in files.items():
@@ -2342,53 +2334,27 @@ def write_level_dat(path, name, spawn, yaw=SPAWN_YAW, size=None):
                                                  "preset": String("minecraft:nether")})})
     end = Compound({"type": String("minecraft:noise"), "settings": String("minecraft:end"),
                     "biome_source": Compound({"type": String("minecraft:the_end")})})
-    data = Compound({
+    level = Compound({
         "DataVersion": Int(MC["data_version"]), "version": Int(19133),
         "Version": Compound({"Id": Int(MC["data_version"]), "Name": String(MC["name"]),
                              "Series": String("main"), "Snapshot": Byte(0)}),
-        "LevelName": String(name), "GameType": Int(1), "Difficulty": Byte(1),   # not peaceful: peaceful removes the soldiers
-        "allowCommands": Byte(1), "hardcore": Byte(0), "initialized": Byte(1),
-        "SpawnX": Int(spawn[0]), "SpawnY": Int(spawn[1]), "SpawnZ": Int(spawn[2]), "SpawnAngle": Float(yaw),
-        "LastPlayed": Long(int(time.time() * 1000)), "Time": Long(0), "DayTime": Long(6000),
-        "raining": Byte(0), "thundering": Byte(0), "rainTime": Int(0), "thunderTime": Int(0),
-        "clearWeatherTime": Int(0), "WasModded": Byte(0),
-        "DragonFight": Compound({"NeedsStateScanning": Byte(1), "DragonKilled": Byte(0),   # else "key missing" on load
-                                 "PreviouslyKilled": Byte(0)}),
-        "GameRules": Compound({"doDaylightCycle": String("false"), "doWeatherCycle": String("false"),
-                               "doMobSpawning": String("false"), "doFireTick": String("false")}),
+        "LevelName": String(name), "GameType": Int(1), "allowCommands": Byte(1), "initialized": Byte(1),
+        "LastPlayed": Long(int(time.time() * 1000)), "Time": Long(0), "WasModded": Byte(0),
         "DataPacks": Compound({"Enabled": List[String]([String("vanilla")]), "Disabled": List[String]([])}),
-        "WorldGenSettings": Compound({
-            "seed": Long(0), "generate_features": Byte(0), "bonus_chest": Byte(0),
-            "dimensions": Compound({"minecraft:overworld": dim("overworld", void),
-                                    "minecraft:the_nether": dim("the_nether", nether),
-                                    "minecraft:the_end": dim("the_end", end)})}),
     })
-    c = size / 2 if size else 0.0
-    edge = {"center_x": Double(c), "center_z": Double(c), "size": Double(size or 5.9999968e7),
-            "lerp_time": Long(0), "lerp_target": Double(size or 5.9999968e7), "safe_zone": Double(5),
-            "damage_per_block": Double(0.2), "warning_blocks": Int(5), "warning_time": Int(15)}
-    if MC["data_version"] < V26_1:
-        for k, old in (("center_x", "BorderCenterX"), ("center_z", "BorderCenterZ"), ("size", "BorderSize"),
-                       ("lerp_time", "BorderSizeLerpTime"), ("lerp_target", "BorderSizeLerpTarget"),
-                       ("safe_zone", "BorderSafeZone"), ("damage_per_block", "BorderDamagePerBlock"),
-                       ("warning_blocks", "BorderWarningBlocks"), ("warning_time", "BorderWarningTime")):
-            v = edge[k]
-            data[old] = Double(v) if isinstance(v, Int) else v        # 1.21.1 reads the warnings as doubles
-        File({"Data": data}, gzipped=True).save(path)
-        return
-    # 26.1: most fields leave level.dat for files in data/minecraft/ (docs/minecraft-versions.md)
-    level = Compound({k: data[k] for k in ("DataVersion", "version", "Version", "LevelName", "GameType",
-                                           "allowCommands", "initialized", "LastPlayed", "Time", "WasModded",
-                                           "DataPacks")})
     level["spawn"] = Compound({"pos": IntArray(list(spawn)), "dimension": String("minecraft:overworld"),
                                "yaw": Float(yaw), "pitch": Float(0)})
+    # not peaceful: peaceful removes the soldiers
     level["difficulty_settings"] = Compound({"difficulty": String("easy"), "hardcore": Byte(0), "locked": Byte(0)})
     File({"Data": level}, gzipped=True).save(path)
+    # 26.1: most fields left level.dat for files in data/minecraft/ (docs/minecraft-versions.md)
     files = {
         "game_rules": {"minecraft:advance_time": Byte(0), "minecraft:advance_weather": Byte(0),
                        "minecraft:spawn_mobs": Byte(0), "minecraft:fire_spread_radius_around_player": Int(0)},
         "world_gen_settings": {"seed": Long(0), "generate_structures": Byte(0), "bonus_chest": Byte(0),
-                               "dimensions": data["WorldGenSettings"]["dimensions"]},
+                               "dimensions": Compound({"minecraft:overworld": dim("overworld", void),
+                                                       "minecraft:the_nether": dim("the_nether", nether),
+                                                       "minecraft:the_end": dim("the_end", end)})},
         "weather": {"raining": Byte(0), "thundering": Byte(0), "rain_time": Int(0), "thunder_time": Int(0),
                     "clear_weather_time": Int(0)},
         "world_clocks": {"minecraft:overworld": Compound({"total_ticks": Long(6000), "paused": Byte(0)})},
@@ -2398,6 +2364,10 @@ def write_level_dat(path, name, spawn, yaw=SPAWN_YAW, size=None):
     for f, v in files.items():
         File({"data": Compound(v), "DataVersion": Int(MC["data_version"])}, gzipped=True).save(os.path.join(d, f + ".dat"))
     # The world border is data of the overworld (DimensionStorageFileFix in the 26.3 server)
+    c = size / 2 if size else 0.0
+    edge = {"center_x": Double(c), "center_z": Double(c), "size": Double(size or 5.9999968e7),
+            "lerp_time": Long(0), "lerp_target": Double(size or 5.9999968e7), "safe_zone": Double(5),
+            "damage_per_block": Double(0.2), "warning_blocks": Int(5), "warning_time": Int(15)}
     d = os.path.join(os.path.dirname(path), "dimensions", "minecraft", "overworld", "data", "minecraft")
     os.makedirs(d, exist_ok=True)
     File({"data": Compound(edge), "DataVersion": Int(MC["data_version"])}, gzipped=True).save(
@@ -2662,7 +2632,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
                          any(k in st.split(":")[1] for k in PASSABLE) and "grass_block" not in st
                          for st in B.states] + [True] * 1024)
 
-    dim = os.path.join(out, "dimensions", "minecraft", "overworld") if MC["data_version"] >= V26_1 else out
+    dim = os.path.join(out, "dimensions", "minecraft", "overworld")
     for d in ("region", "entities"):
         os.makedirs(os.path.join(dim, d), exist_ok=True)
     entity_regions = {}

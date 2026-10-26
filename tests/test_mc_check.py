@@ -6,7 +6,7 @@ import pytest
 
 import mc_check
 
-LOG = """[17:14:40] [Server thread/INFO]: Starting minecraft server version 1.21.1
+LOG = """[17:14:40] [Server thread/INFO]: Starting minecraft server version 26.3
 [17:14:40] [Yggdrasil Key Fetcher/ERROR]: Failed to request yggdrasil public key
 com.mojang.authlib.exceptions.MinecraftClientException: Failed to read from https://api.minecraftservices.com/publickeys
 Caused by: java.net.UnknownHostException: api.minecraftservices.com
@@ -56,8 +56,7 @@ def test_server_loads_tiny_world(tiny_world):
 
 
 @pytest.mark.mc
-@pytest.mark.parametrize("version", ["1.21.1", "26.3"])
-def test_server_loads_border_of_tiny_world(tmp_path, version):
+def test_server_loads_border_of_tiny_world(tmp_path):
     import contextlib
     import io
 
@@ -67,16 +66,15 @@ def test_server_loads_border_of_tiny_world(tmp_path, version):
         pytest.skip("Mojang is not reachable")
     src = scenarios.tiny(str(tmp_path / "tiny.aoe2scenario"))
     with contextlib.redirect_stdout(io.StringIO()):
-        aoe2mc.convert(src, str(tmp_path / "W"), mc_version=version)
-    bad, log = mc_check.check(str(tmp_path / "W"), version)
+        aoe2mc.convert(src, str(tmp_path / "W"))
+    bad, log = mc_check.check(str(tmp_path / "W"), "26.3")
     assert any("Saved the game" in line for line in log)
     assert any("world border is currently 96" in line for line in log)      # the map edge, #172
     assert bad == []
 
 
 @pytest.mark.mc
-@pytest.mark.parametrize("version", ["1.21.1", "26.3"])
-def test_server_loads_custom_biomes(tmp_path, version):
+def test_server_loads_custom_biomes(tmp_path):
     """--ambience full (#219): the biome files and the custom biome names in the chunks load without errors."""
     import contextlib
     import io
@@ -87,7 +85,7 @@ def test_server_loads_custom_biomes(tmp_path, version):
         pytest.skip("Mojang is not reachable")
     src = scenarios.tiny(str(tmp_path / "tiny.aoe2scenario"))
     with contextlib.redirect_stdout(io.StringIO()):
-        aoe2mc.convert(src, str(tmp_path / "W"), mc_version=version, ambience="full")
-    bad, log = mc_check.check(str(tmp_path / "W"), version)
+        aoe2mc.convert(src, str(tmp_path / "W"), ambience="full")
+    bad, log = mc_check.check(str(tmp_path / "W"), "26.3")
     assert any("Saved the game" in line for line in log)
     assert bad == []

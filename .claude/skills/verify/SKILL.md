@@ -52,11 +52,11 @@ does not log it: `mcvalid` finds those. `python3 tools/mc_check.py --reports VER
 Use it when only the Minecraft client shows the answer: unit facing, map orientation, how a building looks
 in the game (light, textures, connected fences and panes), what the player sees at the spawn.
 
-    python3 tools/mc_shot.py WORLD OUT.png                                  # the spawn view (SpawnAngle)
+    python3 tools/mc_shot.py WORLD OUT.png                                  # the spawn view
     python3 tools/mc_shot.py WORLD OUT.png --at X Y Z --look YAW PITCH --more X,Y,Z,YAW,PITCH
 
-- Convert with `--mc-version 1.21.1`: that client runs with Mesa OpenGL in Xvfb, about 25 s per world.
-  26.3 also works, but needs `mesa-vulkan-drivers` and Java 25 (see `docs/LEARNINGS.md`).
+- The 26.3 client runs with Mesa Vulkan in Xvfb (`mesa-vulkan-drivers`, Java 25: `scripts/cloud-setup.sh`), about
+  25 s per world.
 - Yaw: 0 = south, 90 = west, 180 = north, -90 = east. Pitch: positive looks down (90 = top view).
 - Repeat `--more` for each extra view (OUT_2.png, OUT_3.png ...). The world loads once for all views.
 - Direction of a mob: look at it from the side, 8–10 blocks away, pitch 10. A top view does not show the head.

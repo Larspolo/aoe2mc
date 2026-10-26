@@ -3,8 +3,8 @@
 Load a world in a headless Minecraft server and find load errors. Also make tools/mcdata files from Mojang's reports.
 
 Usage:
-    python3 tools/mc_check.py WORLD [--version 1.21.1]     # exit 0: no problems, 1: problem lines (printed)
-    python3 tools/mc_check.py --reports 1.21.1              # write tools/mcdata/1.21.1.json from Mojang's data
+    python3 tools/mc_check.py WORLD [--version 26.3]       # exit 0: no problems, 1: problem lines (printed)
+    python3 tools/mc_check.py --reports 26.3                # write tools/mcdata/26.3.json from Mojang's data
 
 Downloads (server jars, a JDK when the installed Java is too old) go to ~/.cache/aoe2mc/mc, so that they stay
 after a new clone (scripts/cloud-setup.sh fills it in the cloud snapshot). Server folders go to .cache/.

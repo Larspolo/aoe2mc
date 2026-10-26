@@ -13,7 +13,7 @@ GOLDEN = os.path.join(os.path.dirname(os.path.abspath(__file__)), "golden", "tin
 
 
 def name_text(n):
-    return str(n["text"]) if hasattr(n, "keys") else json.loads(str(n))["text"]      # 26.3: NBT, 1.21.1: JSON
+    return str(n["text"])                                                       # an NBT compound (26.3)
 
 
 def digest(path):
