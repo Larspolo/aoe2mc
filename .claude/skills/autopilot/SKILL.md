@@ -251,4 +251,6 @@ Argument `max`: continue until no ticket is ready or a usage limit stops you. Wh
 full and tickets are still ready, start a fresh run, then stop: fire the scheduled task that started this run
 (its ID is in the run prompt) once with `fire_trigger`. Never fire it when no ticket is ready, when the status
 issue has `paused`, or after a usage-limit error. A fresh run has a small context, so it works faster.
-Some sessions have no `fire_trigger` tool (`ToolSearch` finds none): then do not fire, continue alone and say so in the report.
+The tool is `mcp__claude-code-remote__fire_trigger`. Every run has it, but it can be deferred: load it with `ToolSearch`,
+query `select:mcp__claude-code-remote__fire_trigger`, then call it. On 2026-10-26 runs reported "no fire_trigger tool"
+although their tool list had it, so the number of runs fell below the target of `tools/usage.py`.
