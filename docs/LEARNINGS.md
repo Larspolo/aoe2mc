@@ -110,6 +110,7 @@ keeps the lines of both sides). The `improve` skill merges lines and keeps the f
 - `render.py --cut` does not show the inside of a narrow tower (#452): filter `render.building_blocks()` by x, y, z
   (drop barriers and one side of the walls) and call `render.render()` for a section view.
 - `render.building_blocks` gives states with the `minecraft:` prefix and world y (the ground is y 63, canvas y 1 is y 64): strip the prefix before you match a name (#449).
+- Items in a block of a design: the canvas turns after the design, so set the item data after `E.add` in `place_building` by world position (`buildings.SHELVES` -> `aoe2mc.BLOCK_DATA`). 26.3 shelf: block entity `shelf`, `Items` with `Slot` 0-2; the server keeps them (#526).
 - `docs/coverage.md` on main is stale while GitHub Actions cannot run (#460): it listed 21 fallbacks that the code already handles. For the real fallbacks, run `python3 tools/coverage.py OUT.md` into the scratchpad (#500).
 - Furniture inside a closed design: a text map of each layer (one character per state name of `render.building_blocks`, rows by z) shows the positions faster than an isometric render, which hides small blocks behind walls (#501).
 - `tests/test_objects.py::test_blocks_under_water_are_waterlogged` names the blocks of `fish_trap`: change it with the fish trap materials (#486). Grep `tests/` for the design name before the full run.

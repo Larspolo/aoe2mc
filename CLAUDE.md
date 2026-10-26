@@ -79,7 +79,7 @@ Design work (buildings, objects, units, animals) follows `docs/DESIGN.md`. Do de
 - Target: Minecraft Java 26.3 (`DATA_VERSION = 5023`), the only output (#427). The code uses the 26.3 block and
   entity names and writes the 26.3 entity NBT directly (#428): `mcvalid` checks with 26.3.
   `VERSIONS` in `aoe2mc.py` holds the output profile (`--mc-version`); format changes: `docs/minecraft-versions.md`.
-- Global state: `aoe2mc.B` (block registry), `aoe2mc.MOVED`, `aoe2mc.BLOCK_DATA` (extra block entity NBT), `buildings.BARRIERS`, `buildings.TURN` (`--orientation`), `buildings.BRIDGE_CELLS`.
+- Global state: `aoe2mc.B` (block registry), `aoe2mc.MOVED`, `aoe2mc.BLOCK_DATA` (extra block entity NBT), `buildings.BARRIERS`, `buildings.TURN` (`--orientation`), `buildings.BRIDGE_CELLS`, `buildings.SHELVES` (items of the shelves).
   Tests share `B`, so `B.states` holds the states of all earlier tests.
 
 ## Code style
