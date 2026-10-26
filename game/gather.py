@@ -37,7 +37,7 @@ import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from aoe2mc import PASSABLE_OBJECTS, WOODS, object_footprint, tree_kind  # noqa: E402
+from aoe2mc import PASSABLE_OBJECTS, WOODS, object_footprint, player_color, tree_kind  # noqa: E402
 from units import VILLAGER_JOBS, animal  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -70,6 +70,8 @@ CIVILIANS = ("VILLAGER", "REPAIRER", "MONK", "KING", "TRADE", "FISHING_SHIP", "T
 SELECT = "aoe2mc.selected"                                         # entity tag of the selected units
 TYPE_REACH = 16                                                    # blocks: a second click selects its type this near (#743)
 WAND = "warped_fungus_on_a_stick"     # the selection wand: a second item with its own "used" statistic (#778)
+MARK = {"go": "[0.2,1.0,0.2]", "attack": "[1.0,0.15,0.15]"}       # dust colors of the order marker (#796): green, red
+MARK_POINTS = 12                                                   # dust points on the ring of the order marker
 # The look and sound of one gather step at the resource (#592): block particles and a vanilla sound. A villager has
 # no arm swing, so it turns to the resource (`rotate ... facing`). 26.3 block particles take
 # `{id:...,Properties:{...}}`, not `Name`.
@@ -419,7 +421,8 @@ class Gather:
     def box(self, name, cell):
         """A click of player name with the selection wand on the ground cell (#778, owner choice #745). The first click
         sets a corner, the second selects the own units whose feet are in the rectangle of the two corners, as the
-        selection box of AoE2: military units win over villagers, and an empty box clears the selection."""
+        selection box of AoE2: military units win over villagers, and an empty box clears the selection. Between the
+        clicks the Paper plugin draws the border of the box to the ground under the look (Border.java, #795)."""
         if cell is None:
             return
         if (first := self.corners.pop(name, None)) is None:
@@ -427,7 +430,12 @@ class Gather:
             self.command(f"particle minecraft:happy_villager {x + 0.5} {(self.map.y(x, z) or 0) + 0.5} {z + 0.5} "
                          f"0.3 0.3 0.3 0 12 force {name}")
             self.command(f"title {name} actionbar " + json.dumps({"text": "Selection box: click the other corner"}))
+            if self.paper:                                             # the border follows the look (#795)
+                color = self.players.get(str(self.player), {}).get("color") or player_color(self.player)
+                self.command(f"aoe box {name} {x} {z} {color}")
             return
+        if self.paper:
+            self.command(f"aoe box-clear {name}")
         (x0, x1), (z0, z1) = sorted((first[0], cell[0])), sorted((first[1], cell[1]))
         pos = {k: v.pos for k, v in self.villagers.items()} | self.positions(list(self.soldiers))
         inside = {u for u, p in pos.items() if x0 <= p[0] < x1 + 1 and z0 <= p[2] < z1 + 1}
@@ -570,6 +578,7 @@ class Gather:
                       self.positions(list(self.soldiers) + (list(self.enemies) if army else [])))
         if u in self.enemies:
             self.attack(u)
+            self.command(f"effect give {u} minecraft:glowing 1 0 true")   # the order marker of an attack (#796)
             return
         if u and u in self.selected and u in self.villagers:         # a click on a selected villager (#621)
             build.open_menu(self, name)
@@ -583,6 +592,8 @@ class Gather:
         if army and (fort := self.pick_fort(eye, d)):
             self.sieged.add(fort)
             self.attack(fort)
+            x0, _, z0, x1, _, z1 = self.forts[fort]
+            self.mark(name, {(x0, z0), (x1, z1)}, "attack")
             return
         building = build.chosen(self, name)
         if building:                                                   # a chosen building: place its foundation
@@ -593,8 +604,23 @@ class Gather:
         tile = self.map.pick_tree(eye, d)
         if tile and self.selected:
             self.send(tile)
+            self.mark(name, self.map.spot(tile))
         elif self.selected and (site := build.pick(self, eye, d)):
             self.build(site)
+            x0, x1, z0, z1 = site["footprint"]
+            self.mark(name, {(x0, z0), (x1 - 1, z1 - 1)})
+
+    def mark(self, name, cells, kind="go"):
+        """Show the target of an order to player name, as the flag of AoE2 (#796): a ring of dust particles on the
+        ground around the block cells. Dust fades in about 1 second by itself (Minecraft feature): no remove command."""
+        xs, zs = [c[0] for c in cells], [c[1] for c in cells]
+        cx, cz = (min(xs) + max(xs) + 1) / 2, (min(zs) + max(zs) + 1) / 2
+        r = max(max(xs) - min(xs) + 1, max(zs) - min(zs) + 1) / 2 + 0.5
+        y = self.map.y(int(cx), int(cz)) or 0
+        for k in range(MARK_POINTS):
+            a = 2 * math.pi * k / MARK_POINTS
+            self.command(f"particle minecraft:dust{{color:{MARK[kind]},scale:1.5}} {cx + r * math.cos(a):.2f} "
+                         f"{y + 0.2:.2f} {cz + r * math.sin(a):.2f} 0 0 0 0 1 force {name}")
 
     def pick_fort(self, eye, d, reach=64):
         """The target UUID of the enemy building that the ray from eye in direction d hits first (up to 3 tiles
