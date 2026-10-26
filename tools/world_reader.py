@@ -5,6 +5,8 @@ Read a world that aoe2mc wrote (Anvil region files). For tests and for debugging
 Usage:
     python tools/world_reader.py WORLD                 # summary: chunks, block counts, entities
     python tools/world_reader.py WORLD X Y Z           # the block state at one position
+    python tools/world_reader.py WORLD --section x|z C A0 A1 Y0 Y1
+        # vertical section at x = C (along z from A0 to A1) or z = C (along x), rows from Y1 down to Y0
 
     import world_reader as wr
     w = wr.World("MyWorld")
@@ -13,6 +15,7 @@ Usage:
 """
 import io
 import os
+import string
 import sys
 import zlib
 from collections import Counter
@@ -20,6 +23,7 @@ from collections import Counter
 import nbtlib
 
 MIN_Y = -64
+AIR = ("air", "cave_air", "void_air")
 
 
 def read_region(path):
@@ -76,6 +80,7 @@ class World:
         self.root = path                                          # level.dat is here
         self.path = os.path.join(path, "dimensions", "minecraft", "overworld")   # 26.1 moved region/ and entities/
         self._regions = {}
+        self._sections = {}                                       # (cx, cz, section Y) -> (names, indexes)
 
     def _region(self, folder, rx, rz):
         key = (folder, rx, rz)
@@ -107,14 +112,35 @@ class World:
         return names, unpack(bs["data"], bits, 4096)
 
     def block(self, x, y, z):
-        c = self.chunk(x >> 4, z >> 4)
-        if c is None:
+        key = (x >> 4, z >> 4, y >> 4)
+        if key not in self._sections:                             # unpack each section one time only
+            c = self.chunk(x >> 4, z >> 4)
+            s = next((s for s in c["sections"] if int(s["Y"]) == y >> 4), None) if c is not None else None
+            self._sections[key] = self.section_states(s) if s is not None else None
+        if self._sections[key] is None:
             return None
-        for s in c["sections"]:
-            if int(s["Y"]) == y >> 4:
-                names, idx = self.section_states(s)
-                return names[idx[(y & 15) * 256 + (z & 15) * 16 + (x & 15)]]
-        return None
+        names, idx = self._sections[key]
+        return names[idx[(y & 15) * 256 + (z & 15) * 16 + (x & 15)]]
+
+    def section(self, axis, c, a0, a1, y0, y1):
+        """Vertical section as text (#474): x = c along z (axis "x") or z = c along x (axis "z"), from a0 to a1.
+        Returns (rows from y1 down to y0, one character per block, air a space, "." no chunk; legend {char: name})."""
+        chars, legend, rows = {}, {}, []
+        pool = string.ascii_letters + string.digits + "#%&*+=?@"
+        for y in range(y1, y0 - 1, -1):
+            row = ""
+            for a in range(a0, a1 + 1):
+                b = self.block(c, y, a) if axis == "x" else self.block(a, y, c)
+                name = None if b is None else b.removeprefix("minecraft:").split("[")[0]
+                if name is None or name in AIR:
+                    row += "." if name is None else " "
+                    continue
+                if name not in chars:                             # the first free letter of the name, else of the pool
+                    chars[name] = next((k for k in name.replace("_", "") + pool if k not in legend), "!")
+                    legend[chars[name]] = name
+                row += chars[name]
+            rows.append(row)
+        return rows, legend
 
     def palette(self):
         """Counter of every block state name in the palettes of all sections (each name once per section)."""
@@ -149,6 +175,15 @@ class World:
 
 def main():
     w = World(sys.argv[1])
+    if len(sys.argv) == 9 and sys.argv[2] == "--section":
+        axis, (c, a0, a1, y0, y1) = sys.argv[3], map(int, sys.argv[4:9])
+        rows, legend = w.section(axis, c, a0, a1, y0, y1)
+        print(f"section {axis} = {c}, {'z' if axis == 'x' else 'x'} {a0}..{a1} (left to right), y {y1}..{y0}")
+        for y, row in zip(range(y1, y0 - 1, -1), rows):
+            print(f"{y:5d} |{row}|")
+        for k, name in legend.items():
+            print(f"  {k} {name}")
+        return
     if len(sys.argv) == 5:
         print(w.block(*map(int, sys.argv[2:5])))
         return

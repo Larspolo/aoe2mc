@@ -2636,9 +2636,9 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     print(f"  units: {stats['units']}, fish: {stats['fish']}")
     for k in sorted(set(stats) - before - {"units", "fish"}):
         print(f"  {k}: {stats[k]}")
-    passable = np.array([st.split(":")[1].split("[")[0] in ("air", "cave_air") or
-                         any(k in st.split(":")[1] for k in PASSABLE) and "grass_block" not in st
-                         for st in B.states] + [True] * 1024)
+    passable = np.array([st.split(":")[1].split("[")[0] in ("air", "cave_air") or       # the name only: a fence has
+                         any(k in st.split(":")[1].split("[")[0] + "[" for k in PASSABLE)  # "waterlogged=false" (#465)
+                         and "grass_block" not in st for st in B.states] + [True] * 1024)
 
     dim = os.path.join(out, "dimensions", "minecraft", "overworld")
     for d in ("region", "entities"):
