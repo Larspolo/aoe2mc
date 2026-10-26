@@ -176,25 +176,42 @@ class Map:
     def free(self, x, z):
         return self.y(x, z) is not None and (x, z) not in self.blocked
 
-    def around(self, cells):
-        """The free cells next to a group of cells (a tree tile, a footprint)."""
-        return {(x + dx, z + dz) for x, z in cells for dx, dz in STEPS if self.free(x + dx, z + dz)} - cells
+    def wet(self, x, z):
+        """True for a water cell where a ship can be: in the map, no ground and no building (a dock, #866)."""
+        return 0 <= x < self.n and 0 <= z < self.n and self.ground[z][x] is None and (x, z) not in self.blocked
 
-    def front(self, rect, mounted=False):
+    def sea(self, x, z, reach=16):
+        """The y of a boat on the water cell (x, z): one block under the lowest land next to the water within reach
+        blocks (the shore is 1 to 2 blocks above the water surface, #166). A boat floats up or falls on the water."""
+        for r in range(1, reach + 1):
+            ys = [y for d in range(-r, r + 1) for c in ((x + d, z - r), (x + d, z + r), (x - r, z + d), (x + r, z + d))
+                  if (y := self.y(*c)) is not None]
+            if ys:
+                return float(min(ys) - 1)
+        return float(min((y for row in self.ground for y in row if y is not None), default=64) - 1)
+
+    def around(self, cells, water=False):
+        """The free cells next to a group of cells (a tree tile, a footprint); water: the water cells (wet)."""
+        ok = self.wet if water else self.free
+        return {(x + dx, z + dz) for x, z in cells for dx, dz in STEPS if ok(x + dx, z + dz)} - cells
+
+    def front(self, rect, mounted=False, water=False):
         """The spawn cells of a unit trained at the building with block footprint rect: the free cells next to it,
         south side first, the middle first. A mounted unit (a horse with a rider) one cell farther out: the rider
-        sits about 0.7 blocks behind the middle of the horse, so next to the walls its head is in them (#767)."""
+        sits about 0.7 blocks behind the middle of the horse, so next to the walls its head is in them (#767).
+        water: the water cells, for a ship of a dock (#866)."""
         x0, x1, z0, z1 = rect
         cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
-        ring = self.around(cells)
-        if mounted:
+        ring = self.around(cells, water)
+        if mounted and not water:
             ring = {c for c in self.around(cells | ring) if all(self.free(c[0] + dx, c[1] + dz) for dx, dz in STEPS)}
         return sorted(ring, key=lambda c: (abs(c[1] - z1 - mounted), abs(2 * c[0] + 1 - x0 - x1), c))
 
-    def path(self, start, goals, limit=None):
+    def path(self, start, goals, limit=None, water=False):
         """Shortest path (list of cells after start) to one of goals. 8 neighbours, no cut corners, steps of at
         most 1 block up or down. A* with the distance to the box of the goals. None: no path, or no path after
-        `limit` cells (a far or unreachable goal on a large map)."""
+        `limit` cells (a far or unreachable goal on a large map). water: on water cells (wet), for a ship (#866)."""
+        ok = self.wet if water else self.free
         if not goals:
             return None
         gx0, gx1 = min(x for x, _ in goals), max(x for x, _ in goals)
@@ -221,9 +238,9 @@ class Map:
             x, z = c
             for dx, dz in STEPS:
                 n = (x + dx, z + dz)
-                if not self.free(*n) or c != start and abs(self.y(*n) - self.y(x, z)) > 1:
+                if not ok(*n) or c != start and not water and abs(self.y(*n) - self.y(x, z)) > 1:
                     continue
-                if dx and dz and not (self.free(x + dx, z) and self.free(x, z + dz)):
+                if dx and dz and not (ok(x + dx, z) and ok(x, z + dz)):
                     continue
                 nd = d + (1.414 if dx and dz else 1)
                 if nd < dist.get(n, 1e9):
