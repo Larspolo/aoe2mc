@@ -493,8 +493,15 @@ def max_pop(g):
 
 
 def census(g):
-    """Count the live villagers and military units of the player (a dead unit has no position) and show the counts."""
-    g.pop, g.census = len(g.positions(list(g.villagers) + list(g.soldiers))), 0.0
+    """Count the live villagers and military units of the player (a dead unit has no position) and show the counts.
+    A dead villager leaves g.villagers, the selection and its farm: the idle count and the bot see only live ones (#1039)."""
+    live = g.positions(list(g.villagers) + list(g.soldiers))
+    for u in [u for u in g.villagers if u not in live]:
+        del g.villagers[u]
+        g.selected.discard(u)
+        for t in [t for t, f in g.farmers.items() if f == u]:
+            del g.farmers[t]
+    g.pop, g.census = len(live), 0.0
     sidebar(g)
 
 
