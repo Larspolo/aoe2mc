@@ -74,4 +74,15 @@ of its document (named below): this file loads into each run. The `improve` skil
 - A fruit bush of `place_objects` is at block `int(x * T)` (the tile center), not at `int(tile) * T` (#391).
 - "units in a block": `AOE2MC_DEBUG=1` names the block; list the `aoe2mc.json` objects with a `tile` near the unit to
   find its source (#415: a `PLANT_SHRUB` on the same block, not the tree that the ticket named).
+- Stacked `cylinder`s of falling height make a flat top (the outer disc covers the inner ones): use `seats()`, which
+  carves air above each row (#451). Find the edge of a round room by a scan with `c.get` from the centre (`arena_inside`).
+- `Canvas.furniture` sets only into `air` cells: an open design without `room()` has empty cells (`-1`), so its
+  furniture vanishes without an error. Set those cells with `c.get(...) in (-1, air)` (`pagan_shrine`, #450).
+- `render.py --cut` does not show the inside of a narrow tower (#452): filter `render.building_blocks()` by x, y, z
+  (drop barriers and one side of the walls) and call `render.render()` for a section view.
+- `render.building_blocks` gives states with the `minecraft:` prefix and world y (the ground is y 63, canvas y 1 is y 64): strip the prefix before you match a name (#449).
+- Items in a block of a design: the canvas turns after the design, so set the item data after `E.add` in `place_building` by world position (`buildings.SHELVES` -> `aoe2mc.BLOCK_DATA`). 26.3 shelf: block entity `shelf`, `Items` with `Slot` 0-2; the server keeps them (#526).
+- `docs/coverage.md` on main is stale while GitHub Actions cannot run (#460): it listed 21 fallbacks that the code already handles. For the real fallbacks, run `python3 tools/coverage.py OUT.md` into the scratchpad (#500).
+- Furniture inside a closed design: a text map of each layer (one character per state name of `render.building_blocks`, rows by z) shows the positions faster than an isometric render, which hides small blocks behind walls (#501).
+- `tests/test_objects.py::test_blocks_under_water_are_waterlogged` names the blocks of `fish_trap`: change it with the fish trap materials (#486). Grep `tests/` for the design name before the full run.
 - `docs/coverage.md` on main can be stale (#460): for the real fallbacks run `python3 tools/coverage.py OUT.md` (#500).

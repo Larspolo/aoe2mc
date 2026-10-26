@@ -172,3 +172,8 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - Import cycle `gather` → `build` → `replay`: `replay` imports `gather` inside a function (#408).
 - `gather.Map.path` on a whole record map (480 × 480): A* with a cell limit, about 45 ms per path, 0.3 s across the
   map. Replay paths cost 18 s per 200 s of game in samples/ (one search per unit of a group, #409).
+- Paper 26.3 (#436): remove mob goals by `GoalKey` (`MobGoals.removeGoal(mob, key)`), on each order: removal by the
+  goal object, and a removal only after `setAI(true)`, missed goals. `Zombie#setShouldBurnInDay(false)` does nothing:
+  set the attribute `burning_time` to 0. `aoe goals <selector>` lists the goal keys of a unit.
+- Mob walk speed on a path: blocks per second = 43.4 * `movement_speed` ** 2 (zombie, cow, horse). Villagers walk
+  with their brain (no goals): 4 times slower, and the MobGoals API does not stop their wandering (#436).

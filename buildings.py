@@ -118,6 +118,7 @@ class Canvas:
         self.rng = np.random.default_rng(0)
         self.doors = []                 # (x, z) of door blocks, the space in front stays free
         self.trapdoor = "spruce_trapdoor"
+        self.goods = ()                 # item names for the shelves of the design (place_building fills them, #526)
         self.a = np.full((w + 2 * margin, height + below, w + 2 * margin), -1, np.int32)
 
     def id(self, b):
@@ -1083,6 +1084,11 @@ def blacksmith(c, w, st, col, T, ctx):
                (m + 1, 1, n + 2, "chipped_anvil[facing=north]"), (m + 1, 1, n + 4, "chest[facing=east]"),
                (m + 1, 1, n + 5, "barrel[facing=up]"), (m + 1, 4, n + 2, "iron_chain"), (e, 4, n + 4, "iron_chain"),
                (m + 1, 3, n + 2, "lantern[hanging=true]"), (e, 3, n + 4, "lantern[hanging=true]")])
+    wood = st.wood.replace("_planks", "")
+    shelf = f"{wood if wood in WOODS else 'spruce'}_shelf[facing=south,powered=false,side_chain=unconnected]"
+    c.furniture([(x, 2, n, shelf) for x in (m + 1, m + 2, m + 4)])        # tools on shelves over the bench (#526)
+    c.goods = ("iron_sword", "iron_axe", "iron_pickaxe", "iron_shovel", "iron_hoe", "shears", "iron_ingot",
+               "iron_helmet", "iron_horse_armor", "shield", "iron_nugget", "bucket")
 
 
 def market(c, w, st, col, T, ctx):
@@ -1101,7 +1107,10 @@ def market(c, w, st, col, T, ctx):
     wood = wood if wood in WOODS else "spruce"
     stock = ["barrel[facing=up]", "chest[facing=south]", "hay_block", "white_wool", "brown_wool", "barrel[facing=up]"]
     back = [(x, 1, 1, stock[int(c.rng.integers(len(stock)))]) for x in range(2, w - 3)]
-    back += [(x, 2, 1, "barrel[facing=up]") for x in range(3, w - 3, 3)]
+    back += [(x, 2, 1, "barrel[facing=up]" if x % 3 == 0 else f"{wood}_shelf[facing=south,powered=false,side_chain=unconnected]")
+             for x in range(2, w - 3)]                                     # shelves of goods over the stock (#526)
+    c.goods = ("wheat", "bread", "apple", "carrot", "potato", "melon_slice", "leather", "white_wool", "paper",
+               "emerald", "honey_bottle", "egg")
     counter = [(x, 1, d - 3, f"{wood}_slab[type=top]") for x in range(3, w - 3) if abs(x - w // 2) > 1]
     c.furniture(back + counter + [(4, 2, d - 3, "cartography_table"),
                                 (w - 5, 2, d - 3, "lectern[facing=south,has_book=true,powered=false]")])
@@ -2997,6 +3006,11 @@ def place_building(E, cols, B, o, players, walls, gates):
     if len(ix):
         ids = c.a[ix, iy, iz].astype(np.uint16)
         E.add(x0 - c.m + ix, base - c.below + iy, z0 - c.m + iz, ids)
+        if c.goods:                                                      # 3 items per shelf, in turn from the goods
+            k = np.flatnonzero(np.isin(ids, [i for i in np.unique(ids).tolist() if "_shelf[" in B.states[i]]))
+            for n, j in enumerate(k.tolist()):
+                SHELVES[(int(x0 - c.m + ix[j]), int(base - c.below + iy[j]), int(z0 - c.m + iz[j]))] = \
+                    tuple(c.goods[(3 * n + i) % len(c.goods)] for i in range(3))
     sx, sy, sz = np.nonzero(c.a == SOFT_BARRIER)
     if len(sx):
         E.add(x0 - c.m + sx, base - c.below + sy, z0 - c.m + sz, B("barrier"), hard=False)
@@ -3024,6 +3038,7 @@ def bridge_deck(cols, x, z, along_z, water_y):
 
 
 WOOD_BRIDGE_TILES = set()
+SHELVES = {}             # (x, y, z) of a shelf block -> its 3 item names (#526)
 BRIDGE_CELLS = set()     # block columns with a bridge deck (units there stand on the deck)
 
 

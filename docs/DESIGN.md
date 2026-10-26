@@ -67,7 +67,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Cushion | `red_wool` next to a low `*_slab[type=top]` table | `pavilion`, `scaffold_walk`, `scaffolding`, `cart` +46 more |
 | Table with a light (inside) | `*_slab[type=top]` with a `lantern` on it, a `*_stairs` stool | `town_hall`, `furnish`, `pagoda`, `hall_of_heroes` +41 more |
 | Storage (inside) | `chest` at the back wall | `furnish`, `throne_hall`, `town_hall`, `decorate` +25 more |
-| Shelf with goods or tools (inside) | `*_shelf` on the wall (holds items, like a stall) | no design |
+| Shelf with goods or tools (inside) | `*_shelf` on the wall (holds items, like a stall) | `market`, `blacksmith` |
 | Strongbox of a market or a treasury (inside) | `copper_chest` | no design |
 | Rug | `*_carpet` | `hearth_room`, `furnish_worship`, `furnish`, `throne_hall` +14 more |
 | Throne (inside) | `*_stairs` (backrest north) between `gold_block`s, `*_wall_banner`s (player color) over it | `throne_hall`, `pagoda`, `oracles_temple`, `feitoria` +37 more |
