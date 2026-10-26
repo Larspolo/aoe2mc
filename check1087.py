@@ -49,15 +49,9 @@ with run.Game(world) as game, mc_shot.Client(game.game_port, game.version, chat=
     time.sleep(1)
     inv = command("data get entity aoe2mc Inventory")
     print("inventory:", inv[:600], flush=True)
-    import re
-    m = re.search(r'\{[^{}]*Slot: (\d+)b[^{}]*id: "minecraft:written_book"', inv) or \
-        re.search(r'id: "minecraft:written_book"[^{}]*Slot: (\d+)b', inv)
-    if not m:                                                          # find the slot in any order of the keys
-        for part in inv.split("}, {"):
-            if "written_book" in part and (s := re.search(r"Slot: (\d+)b", part)):
-                m = s
-                break
-    slot = int(m.group(1)) if m else 0
+    slot = next((k for k in range(36) if "passed" in command(
+        f"execute if items entity aoe2mc {'hotbar.%d' % k if k < 9 else 'inventory.%d' % (k - 9)} minecraft:written_book")),
+        0)                                                             # the slot of the timeline book
     print("book slot", slot, flush=True)
     if slot > 8:
         command(f"item replace entity aoe2mc hotbar.8 from entity aoe2mc inventory.{slot - 9}")

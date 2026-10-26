@@ -1,0 +1,14 @@
+tellraw @a {"text": "Double-tap Shift: spectator view (fly through blocks). Right click the hotbar items: replay control."}
+tellraw @a [{"text": "<Player 1 (Byzantines)> ", "color": "red"}, {"text": "gg"}]
+tellraw @a [{"text": "<Player 2 (Aztecs)> ", "color": "gold"}, {"text": "gg"}]
+tellraw @a [{"text": "<Player 1 (Byzantines)> ", "color": "red"}, {"text": "Much better at the game than me, elo does not mean a thing in this game"}]
+tellraw @a {"text": "Summary (est.)", "bold": true}
+tellraw @a [{"text": "Player 1 (Byzantines)", "color": "red"}, {"text": ": villagers trained 87, gathered food 2172, wood 4070, gold 763, stone 282"}]
+tellraw @a [{"text": "Player 1 (Byzantines)", "color": "red"}, {"text": ": military units trained 128, units lost 2, buildings lost 0"}]
+tellraw @a [{"text": "Player 2 (Aztecs)", "color": "gold"}, {"text": ": villagers trained 92, gathered food 2065, wood 2791, gold 4659, stone 0"}]
+tellraw @a [{"text": "Player 2 (Aztecs)", "color": "gold"}, {"text": ": military units trained 62, units lost 12, buildings lost 4"}]
+tellraw @a [{"text": "Player 1 (Byzantines)", "color": "red"}, {"text": ": Feudal 10:42, Castle 22:00, Imperial -, technologies 21"}]
+tellraw @a [{"text": "Player 2 (Aztecs)", "color": "gold"}, {"text": ": Feudal 10:20, Castle 22:39, Imperial 43:25, technologies 23"}]
+tellraw @a [{"text": "Player 1 (Byzantines)", "color": "red"}, {"text": ": castles 1, wonders 0, tribute sent 0, received 0, villager high 90 (est.)"}]
+tellraw @a [{"text": "Player 2 (Aztecs)", "color": "gold"}, {"text": ": castles 2, wonders 0, tribute sent 0, received 0, villager high 93 (est.)"}]
+give @a minecraft:written_book[minecraft:written_book_content={"title":"Timeline","author":"aoe2mc","pages":["Player 1 (Byzantines)\n\n10:42 Feudal Age\n12:16 1st military: Fire Galley\n22:00 Castle Age\n43:21 Castle\n44:22 Resigns","Player 2 (Aztecs)\n\n10:20 Feudal Age\n11:07 1st military: Fire Galley\n22:39 Castle Age\n34:38 Castle\n43:25 Imperial Age"]}]
