@@ -21,6 +21,7 @@ and changes the values of the live and the new units (stats()). Loom: villagers 
 Ages (#672): the Feudal Age is a technology of the town center that needs 2 types of Dark Age buildings (REQUIRES). The
 sidebar title shows the age of the player; all players see a title and hear a sound when a player advances.
 The Castle Age (#1080) needs the Feudal Age (build.AGE: a gray item before it) and 2 types of Feudal Age buildings.
+The Imperial Age (#1081) needs the Castle Age and a castle, or 2 types of Castle Age buildings (REQUIRES).
 Forging at the blacksmith (#675): infantry and cavalry get +1 attack. Fletching (#724): archers (also cavalry archers and
 skirmishers) get +1 attack and +1 range.
 Padded Archer Armor at the blacksmith in the Feudal Age (#937, TECH_AGE): archers get +1 melee and +1 pierce armor.
@@ -67,6 +68,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "GOLD_MINING": {"food": 100, "wood": 75},
          "HORSE_COLLAR": {"food": 75, "wood": 75},
          "HUSKARL": {"food": 75, "gold": 35},
+         "IMPERIAL_AGE": {"food": 1000, "gold": 800},
          "JANISSARY": {"food": 60, "gold": 55},
          "LONGBOWMAN": {"wood": 35, "gold": 40},
          "MAMELUKE": {"food": 55, "gold": 85},
@@ -98,6 +100,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "GOLD_MINING": 30,
                "HORSE_COLLAR": 20,
                "HUSKARL": 13,
+               "IMPERIAL_AGE": 190,
                "JANISSARY": 21,
                "LONGBOWMAN": 18,
                "MAMELUKE": 23,
@@ -117,7 +120,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "WAR_ELEPHANT": 25,
                "WHEELBARROW": 75,
                "WOAD_RAIDER": 10}
-TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", "CASTLE_AGE"), "BARRACKS": ("MILITIA", "SPEARMAN", "MAN_AT_ARMS_UPGRADE"),   # the units and technologies of each
+TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", "CASTLE_AGE", "IMPERIAL_AGE"), "BARRACKS": ("MILITIA", "SPEARMAN", "MAN_AT_ARMS_UPGRADE"),   # the units and technologies of each
           "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER"),                                         # building (#654, #670, #655)
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING",            # (#675, #725, #724, #937, #938)
                          "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR"),
@@ -147,6 +150,7 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
          "GOLD_MINING": lambda name, s: s,                         # an economy technology: gather.WORK_TECHS
          "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
+         "IMPERIAL_AGE": lambda name, s: s,                        # an age: REQUIRES
          "LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
          if "VILLAGER" in name else s,
          "MAN_AT_ARMS_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
@@ -161,7 +165,8 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "WHEELBARROW": lambda name, s: s}                         # no combat change: gather.CARRY and gather.PACE
 UPGRADES = {"MAN_AT_ARMS_UPGRADE": ("MILITIA", "MAN_AT_ARMS")}  # technology: the unit and its new unit (#941)
 REQUIRES = {"CASTLE_AGE": (2, ("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET")),   # n types of these buildings
-            "FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP", "DOCK"))}
+            "FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP", "DOCK")),
+            "IMPERIAL_AGE": (2, ("MONASTERY", "UNIVERSITY", "SIEGE_WORKSHOP"), ("CASTLE",))}   # or one of these alone
 TECH_AGE = {                                                       # the age of a technology (build.AGE): hidden before
     "BLOODLINES": 1,
     "DOUBLE_BIT_AXE": 1,
@@ -176,7 +181,7 @@ TECH_AGE = {                                                       # the age of 
     "STONE_MINING": 1,
     "WHEELBARROW": 1,
 }
-AGES = ("Dark Age", "Feudal Age", "Castle Age")                    # the age after each researched age (index: ages)
+AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age after each researched age (index: ages)
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
 HOUSING = {"TOWN_CENTER": 5, "HOUSE": 5, "CASTLE": 20}             # population of a complete building, as in AoE2
 LIMIT = 200                                                        # the AoE2 population limit
@@ -199,6 +204,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "GOLD_MINING": (0, "book", "Gold Mining"),
          "HORSE_COLLAR": (0, "book", "Horse Collar"),
          "HUSKARL": (0, "zombie_spawn_egg", "Huskarl"),
+         "IMPERIAL_AGE": (5, "bell", "Imperial Age"),
          "JANISSARY": (0, "pillager_spawn_egg", "Janissary"),
          "LONGBOWMAN": (0, "skeleton_spawn_egg", "Longbowman"),
          "LOOM": (1, "book", "Loom"),                               # a book for a technology (#618)
@@ -442,10 +448,10 @@ def owned(g):
 
 def missing(g, name):
     """The text of the buildings that technology name still needs (REQUIRES), or None."""
-    n, names = REQUIRES.get(name, (0, ()))
-    has = sorted(set(names) & set(owned(g)))
-    if len(has) < n:
-        return f"needs {n} of {', '.join(build.pretty(b).lower() for b in names)} ({len(has)}/{n})"
+    n, names, *alone = REQUIRES.get(name, (0, ()))
+    has, alone = sorted(set(names) & set(owned(g))), alone[0] if alone else ()
+    if len(has) < n and not set(alone) & set(owned(g)):
+        return f"needs {''.join(f'a {build.pretty(b).lower()} or ' for b in alone)}{n} of {', '.join(build.pretty(b).lower() for b in names)} ({len(has)}/{n})"
 
 
 def age(g):

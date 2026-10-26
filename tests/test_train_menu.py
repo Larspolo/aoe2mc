@@ -6,7 +6,9 @@ from test_train import setup
 
 from game import train
 
-CASTLE = " 4:gray_dye:Castle Age:800 food · 200 gold · 160 s · Needs the Feudal Age"   # the next age: gray (#1080)
+IMPERIAL = " 5:gray_dye:Imperial Age:1000 food · 800 gold · 190 s · Needs the Castle Age"   # gray before it (#1081)
+CASTLE = " 4:gray_dye:Castle Age:800 food · 200 gold · 160 s · Needs the Feudal Age" \
+    + IMPERIAL                                                     # the next ages: gray (#1080)
 FEUDAL = " 2:bell:Feudal Age:500 food · 130 s · needs 2 of barracks, mill, lumber camp, mining camp, dock (0/2)" \
     + CASTLE                                                       # the age item without its buildings (#672)
 RALLY = " 8:white_banner:Rally point:Click, then right click the ground"   # the last item (#707)
