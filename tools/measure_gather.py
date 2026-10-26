@@ -25,10 +25,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path[:0] = [ROOT, HERE, os.path.join(ROOT, "game")]
 
-# AoE2 DE villagers, per game second: speed 0.8 tiles/s, carry 10 (unit 123 VMLUM, owner's data in #267). Work rates
-# (resource/s): lumberjack 0.39 from #267; forager, farmer, gold and stone miner: the published DE gather rates.
-AOE2_SPEED, AOE2_CARRY, NORMAL = 0.8, 10, 1.7                      # tiles/s, resource, game s per real s
-AOE2_WORK = {"wood": 0.39, "food": 0.31, "farm": 0.33, "gold": 0.38, "stone": 0.36}
+# AoE2 DE villagers, per game second: speed 0.8 tiles/s, carry 10 (unit 123 VMLUM, owner's data in #267). The work
+# rates per resource are in game/gather.py (AOE2_WORK, #393).
+from gather import AOE2_WORK, NORMAL, WORK_SECONDS  # noqa: E402
+
+AOE2_SPEED, AOE2_CARRY = 0.8, 10                                   # tiles/s, resource
 RESOURCES = {"wood": ("TREE_OAK", "wood"), "food": ("FRUIT_BUSH", "food"), "farm": ("FARM", "food"),
              "gold": ("GOLD_MINE", "gold"), "stone": ("STONE_MINE", "stone")}    # --resource -> object, stock
 
@@ -101,7 +102,7 @@ def table(m, conf, T, resource="wood"):
     return "\n".join(out)
 
 
-def measure(distance=10, loads=2, tick=0.25, chop=1.0, carry=10, log=None, version=None, timeout=300,
+def measure(distance=10, loads=2, tick=0.25, chop=None, carry=10, log=None, version=None, timeout=300,
             resource="wood"):
     """Convert the measure map, play on a server until loads loads are dropped. Returns (events, tile size)."""
     import time
@@ -122,7 +123,7 @@ def measure(distance=10, loads=2, tick=0.25, chop=1.0, carry=10, log=None, versi
             game.forceload()
             end = time.time() + 60                                 # entities load in other threads
             while True:
-                g = gather.Gather(game, data, tick=tick, carry=carry, chop=chop, log=buf).setup()
+                g = gather.Gather(game, data, tick=tick, carry=carry, chop=chop or WORK_SECONDS[resource], log=buf).setup()
                 if g.villagers:
                     break
                 if time.time() > end:
@@ -152,7 +153,7 @@ def main(argv=None):
     ap.add_argument("--version", help="Minecraft version of the server")
     ap.add_argument("--tile-size", type=int, default=4, help="--read: tile size of the world (default 4)")
     a = ap.parse_args(argv)
-    tick, chop, carry = 0.25, 1.0, 10                              # the defaults of gather.Gather
+    tick, chop, carry = 0.25, WORK_SECONDS[a.resource], 10         # the defaults of gather.Gather
     if a.read:
         with open(a.read) as f:
             events, T = [json.loads(line) for line in f if line.strip()], a.tile_size
