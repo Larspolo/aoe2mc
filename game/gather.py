@@ -319,6 +319,7 @@ class Gather:
     WORK_SECONDS, the AoE2 rates at Normal speed (#413)."""
     cheats = False                                                     # also for the adapters of Gather.__new__
     aegis = False                                                      # the cheat "aegis": all work is instant (#817)
+    ended = None                                                       # "Victory" or "Defeat": run() stops (#819)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
                  cheats=False):
@@ -930,9 +931,9 @@ class Gather:
             self.command(f"fill {box} minecraft:dirt replace minecraft:farmland")
 
     def run(self, seconds=None, until=None):
-        """Play in real time until seconds passed or until() is true."""
+        """Play in real time until seconds passed, until() is true or the game ended (a cheat, #819)."""
         end = seconds and time.time() + seconds
-        while (not end or time.time() < end) and not (until and until()):
+        while (not end or time.time() < end) and not (until and until()) and not self.ended:
             t = time.time()
             for name in self.clicks():
                 self.click(name)

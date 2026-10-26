@@ -10,6 +10,11 @@ The Forgotten, before it 1,000). Minecraft has no fog of war: "marco" and "polo"
 gathering (gather.Gather.work_time) instant, for all players as in AoE2.
 A unit cheat (#818; the DE list of the wiki, "Units") summons its unit at the town center of the player, as a trained
 unit (train.spawn): it costs nothing and counts in the population. Without a town center no unit appears, as in AoE2.
+The end and destroy codes (#819): "i r winner" and "resign" show the title "Victory" or "Defeat" to all players and set
+g.ended, which ends gather.Gather.run. "torpedo<n>" destroys player n, "black death" all other players (AoE2 has a bug
+here: it kills only one player) and "wimpywimpywimpy" the own player (a defeat). The buildings of the player fall as
+at 0 hit points (the plugin, `aoe destroy`), its units die (`kill` with the team and the tag of the player, #358).
+"natural wonders" gives the control of the Gaia animals and takes the control of the own units (not reversible).
 """
 import re
 from collections import namedtuple
@@ -27,25 +32,75 @@ def aegis(g, player):
     g.command(f'tellraw {player} {{"text":"Aegis {"on" if g.aegis else "off"}"}}')
 
 
+def end(text, color):
+    def effect(g, player):
+        g.command(f'title @a title {{"text":"{text}","color":"{color}"}}')
+        g.ended = text
+    return effect
+
+
+def destroy(g, n):
+    """Destroy all units and buildings of player n."""
+    g.command(f"aoe destroy @e[tag=aoe2mc.building,team=p{n}]")
+    g.command(f"execute as @e[tag=aoe2mc.p{n}] on vehicle run kill @s")   # the horse, elephant or boat of a unit
+    g.command(f"kill @e[team=p{n},type=!player]")
+    g.command(f"kill @e[tag=aoe2mc.p{n}]")                        # units that the team pulse did not reach yet
+    import combat
+    gone = {combat.target_uuid(o["footprint"]) for o in g.data["objects"]
+            if o["kind"] == "building" and o["player"] == n and "footprint" in o}
+    g.sieged |= gone & g.forts.keys()                              # Gather.fall frees their footprints
+    if n == g.player:
+        g.choose(set())
+        g.villagers, g.soldiers = {}, {}
+    else:
+        dead = {o.get("uuid") for o in g.data["objects"] if o["player"] == n}
+        g.enemies = {u: k for u, k in g.enemies.items() if u not in dead}
+
+
+def others(g):
+    return sorted({o["player"] for o in g.data["objects"] if o["player"] not in (0, g.player)})
+
+
+def wonders(g, player):
+    g.choose(set())
+    g.villagers = {}
+    g.soldiers = {o["uuid"]: o["name"] for o in g.data["objects"] if o["kind"] == "unit" and o["player"] == 0
+                  and o.get("uuid")}
+    g.command(f'tellraw {player} {{"text":"You control nature: {len(g.soldiers)} animals"}}')
+
+
 CODES = {                                     # code -> the resources, the chat answer, a function or a Unit
     "aegis": aegis,
     "alpaca simulator": Unit("ALFRED_THE_ALPACA"),
+    "black death": lambda g, player: [destroy(g, n) for n in others(g)],
     "catzor": Unit("SHARKATZOR"),
     "cheese steak jimmy's": {"food": 10000},
     "furious the monkey boy": Unit("FURIOUS_THE_MONKEY_BOY"),
     "how do you turn this on": Unit("COBRA_CAR"),
     "i don't exist": Unit("WAR_PENGUIN"),
     "i love the monkey head": Unit("VMDL"),
+    "i r winner": end("Victory", "gold"),
     "lumberjack": {"wood": 10000},
     "marco": MAP,
+    "natural wonders": wonders,
     "ninjaconnor": ALL,
     "ninjalui": ALL,
     "photon man": Unit("PHOTONMAN"),
     "polo": MAP,
+    "resign": end("Defeat", "red"),
     "robin hood": {"gold": 10000},
     "rock on": {"stone": 10000},
     "rowshep": ALL,
     "to smithereens": Unit("SABOTEUR"),
+    "torpedo1": lambda g, player: destroy(g, 1),
+    "torpedo2": lambda g, player: destroy(g, 2),
+    "torpedo3": lambda g, player: destroy(g, 3),
+    "torpedo4": lambda g, player: destroy(g, 4),
+    "torpedo5": lambda g, player: destroy(g, 5),
+    "torpedo6": lambda g, player: destroy(g, 6),
+    "torpedo7": lambda g, player: destroy(g, 7),
+    "torpedo8": lambda g, player: destroy(g, 8),
+    "wimpywimpywimpy": lambda g, player: destroy(g, g.player) or end("Defeat", "red")(g, player),
 }
 NAMES = sorted(CODES)                         # the score of a code is its index + 1
 
