@@ -59,12 +59,13 @@ def order(g, player, cell):
     rect = next((r for r in holders(g) if cell and r[0] <= cell[0] < r[1] and r[2] <= cell[1] < r[3]), None)
     if rect is None or not g.selected or not g.paper or (to := door(g, rect)) is None:
         return None
-    import ai                                                      # ai imports gather, gather imports this module
+    import ai, civs                                                # ai imports gather, gather imports this module
     x, z = to
     for u in sorted(g.selected):
         if (v := g.villagers.get(u)) is not None:                  # the villager stops its work
             v.state, v.path, v.goal, v.site = "garrison", [], None, None
-        ai.move(g, u, "VILLAGER" if u in g.villagers else g.soldiers.get(u, ""), g.map.T, x + 0.5, g.map.y(x, z), z + 0.5)
+        name = "VILLAGER" if u in g.villagers else g.soldiers.get(u, "")
+        ai.move(g, u, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * civs.speed(g, name))
         g.entering[u] = rect
     g.mark(player, {to})
     return rect

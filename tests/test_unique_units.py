@@ -41,8 +41,8 @@ def test_a_trained_unique_unit_has_the_converter_look_and_the_aoe2_values(civ):
     summon, = [c for c in server.log if c.startswith("summon")]
     assert re.match(rf"summon {units.classify(unit)['id']} ", summon)
     assert train.ITEMS[unit][1] == units.classify(unit)["id"].split(":")[1] + "_spawn_egg"
-    assert combat.stats_command(uuid, unit, combat.stats(unit)) in server.log
-    ranged = combat.range_command(uuid, unit, 1)
+    assert combat.stats_command(uuid, unit, train.stats(g, unit)) in server.log   # with the civilization bonus (#1090)
+    ranged = combat.range_command(uuid, unit, 1, s=train.stats(g, unit))
     assert (ranged in server.log) if combat.STATS[unit].range else ranged is None
 
 

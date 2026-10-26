@@ -613,7 +613,7 @@ class Gather:
         """Send the selected military units to attack the unit target, with their AoE2 walk speed (ai.py)."""
         import ai                                                      # ai imports this module
         for u in sorted(self.selected):
-            self.command(ai.speed_command(u, self.soldiers[u], self.map.T))
+            self.command(ai.speed_command(u, self.soldiers[u], self.map.T, NORMAL * civs.speed(self, self.soldiers[u])))
         return self.command(f"aoe attack @e[tag={SELECT}] {target}")
 
     def positions(self, uuids):
@@ -1059,7 +1059,7 @@ class Gather:
         if v.goal:
             x, z = v.goal
             ai.move(self, v.uuid, "VILLAGER", self.map.T, x + 0.5, self.map.y(x, z), z + 0.5,
-                    NORMAL * math.prod(PACE.get(t, 1) ** train.count(self, t) for t in self.techs))
+                    NORMAL * civs.speed(self, "VILLAGER") * math.prod(PACE.get(t, 1) ** train.count(self, t) for t in self.techs))
         v.moved, v.tries = self.clock(), v.tries + 1
 
     def limit(self):
