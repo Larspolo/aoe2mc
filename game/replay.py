@@ -547,6 +547,14 @@ class Replay:
             return combat.target_uuid(o["footprint"])
         return None
 
+    def target_mark(self, e):
+        """The red order marker at the target of an attack ORDER, as the game program shows it (#796, #845): a unit
+        glows for a moment, a building gets a ring of dust around its footprint."""
+        if (t := e["target"]) in self.units:
+            return [self.gather.glow(self.units[t].uuid)]
+        x0, z0, x1, z1 = self.refs[t]["footprint"]
+        return self.gather.marker(self.map, {(x0, z0), (x1 - 1, z1 - 1)}, "attack", "@a")
+
     def attack(self, group, target):
         """The military units of group attack entity target, with their AoE2 walk speed; they walk no more legs.
         Returns the commands and the rest of the group."""
@@ -602,6 +610,7 @@ class Replay:
         out = []
         if self.ai:
             out, group = self.attack(group, target) if (target := self.enemy(e)) else ([], group)
+            out += self.target_mark(e) if target else []            # the red order marker (#845)
             for i, v in group:
                 v.pos = self.at(v, e["time"])                       # it stops its leg where it is
                 end = slots.get(v) or min(goals, key=lambda c: (math.dist(c, v.cell), c))
