@@ -7,6 +7,7 @@ Usage:
     python3 game/run.py WORLD --server vanilla    # the vanilla server of Mojang instead of Paper
     python3 game/run.py WORLD --bench 1000        # measure the commands per second through RCON, then stop
     python3 game/run.py WORLD --play              # villagers gather wood, food, gold, stone (game/gather.py); Ctrl-C stops
+    python3 game/run.py WORLD --play --cheats     # also the AoE2 cheat codes in the chat (game/cheats.py)
     python3 game/run.py WORLD --play --log F.jsonl  # also write a timed event log (tools/measure_gather.py reads it)
     python3 game/run.py WORLD --replay [--speed 4]  # replay the recorded game of the world (game/replay.py), then stop
 
@@ -215,13 +216,13 @@ def bench(game, n=1000):
     return n / (time.perf_counter() - t)
 
 
-def play(game, world, log=None):
+def play(game, world, log=None, cheats=False):
     import gather
     with open(os.path.join(world, "aoe2mc.json")) as f:
         data = json.load(f)
     game.forceload()
     for _ in range(60):                              # entities load in other threads
-        g = gather.Gather(game, data, log=log).setup()
+        g = gather.Gather(game, data, log=log, cheats=cheats).setup()
         if len(g.villagers) == len(g.units):
             break
         time.sleep(1)
@@ -267,6 +268,7 @@ def main(argv=None):
     ap.add_argument("--replay", action="store_true", help="replay the timeline of a recorded game (aoe2mc.json)")
     ap.add_argument("--speed", type=float, default=1.0, help="--replay: times the game speed (default 1)")
     ap.add_argument("--from", dest="start", default="0:00", metavar="MM:SS", help="--replay: start at this game time")
+    ap.add_argument("--cheats", action="store_true", help="--play: the AoE2 cheat codes in the chat (off as in AoE2)")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     a = ap.parse_args(argv)
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
@@ -283,7 +285,7 @@ def main(argv=None):
             return
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
-                play(game, a.world, log)
+                play(game, a.world, log, a.cheats)
             return
         while True:
             line = input("> ").strip().lstrip("/")

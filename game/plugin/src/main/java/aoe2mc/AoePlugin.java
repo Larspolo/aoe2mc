@@ -74,8 +74,11 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe menu <player> <title> <slot>:<material>:<name>:<lore>[:<count>] ...
  *                                              open a chest menu (#619, game/menu.py; the texts are URL-encoded)
  *   aoe menu-close <player>                    close the menu of the player
+ *   aoe cheats <code>,<code>,...|-             the AoE2 cheat codes in the chat (#816, Cheats.java; URL-encoded)
  *   aoe label <selector> [name]                show the name line again (after a selection change); a name sets
  *                                              the name of a building target (#661)
+ *   aoe where <selector> [from]                "Where <count>: <uuid> <x> <y> <z> <order 0|1> <target 0|1>, ..." for
+ *                                              WHERE_PAGE units from index `from` in UUID order (#813, tools/replay_drift.py)
  *   aoe box <player> <x> <z> <dye>             draw the selection box from this corner to the look (#795, Border.java)
  *   aoe box-clear <player>                     end the border of the selection box
  * Converted units have no AI (NoAI): an order turns it on. Such a unit finds no path before its first AI tick
@@ -138,6 +141,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     private final Map<UUID, Stats> stats = new HashMap<>();
     private final Ghost ghost = new Ghost(this);
+    private final Cheats cheats = new Cheats(this);
     private final Border border = new Border();
 
     private record Building(Stats stats, String box, int max, int[] b) {}   // b: x0 y0 z0 x1 y1 z1 of box
@@ -145,6 +149,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Building> buildings = new HashMap<>();
     private final Map<UUID, Component> names = new HashMap<>();      // the name in the name line (#661)
     private static final int HEARTS = 5;
+    private static final int WHERE_PAGE = 40;                          // aoe where: about 3000 bytes per answer
     private final Map<UUID, Integer> lastHit = new HashMap<>();      // tick of the last hit of a unit on a building
     private static final double REACH = Math.sqrt(2.04) - 0.6;       // vanilla melee reach past the hit box
 
@@ -390,6 +395,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, this::burn, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, this::watch, 20L, 20L);
         Bukkit.getPluginManager().registerEvents(this, this);
+        Bukkit.getPluginManager().registerEvents(cheats, this);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -753,6 +759,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (args.length >= 2 && args[0].startsWith("ghost")) {          // the ghost of a building (#794)
             return ghost.command(sender, args, players(sender, args[1]));
         }
+        if (args.length == 2 && args[0].equals("cheats")) {
+            return cheats.command(sender, args);
+        }
         if (args.length >= 2 && args[0].startsWith("box")) {            // the border of the selection box (#795)
             return border.command(sender, args, players(sender, args[1]));
         }
@@ -930,6 +939,28 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
             }
             sender.sendMessage("Closed: " + n + " menus");
+            return true;
+        }
+        if ((args.length == 2 || args.length == 3) && args[0].equals("where")) {
+            // One answer for many units: one `data get entity` for each unit costs too many commands (#813). A page
+            // keeps the answer below the 4096 bytes of one RCON packet.
+            int from;
+            try {
+                from = args.length > 2 ? Integer.parseInt(args[2]) : 0;
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            var found = new ArrayList<>(select(sender, args[1]));
+            found.sort(java.util.Comparator.comparing(e -> e.getUniqueId().toString()));
+            var parts = new ArrayList<String>();
+            for (Entity e : found.subList(Math.min(from, found.size()), Math.min(from + WHERE_PAGE, found.size()))) {
+                Location l = e.getLocation();
+                parts.add(String.format(java.util.Locale.ROOT, "%s %.2f %.2f %.2f %d %d", e.getUniqueId(), l.getX(),
+                        l.getY(), l.getZ(), orders.containsKey(e.getUniqueId()) ? 1 : 0,
+                        e instanceof Mob mob && mob.getTarget() != null ? 1 : 0));
+            }
+            sender.sendMessage("Where " + found.size() + ": " + String.join(", ", parts));
             return true;
         }
         if (args.length >= 2 && args[0].equals("label")) {

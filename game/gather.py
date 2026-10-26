@@ -44,6 +44,7 @@ from units import VILLAGER_JOBS, animal  # noqa: E402
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import bossbar  # noqa: E402
+import cheats  # noqa: E402
 import hints  # noqa: E402
 import menu  # noqa: E402
 import train  # noqa: E402
@@ -315,14 +316,17 @@ class Gather:
     log: a text file that gets one JSON line per event (state change or drop), to measure the timing (#289).
     chop: seconds per unit, one number for all resources or {resource: seconds} ("farm" for farms); default
     WORK_SECONDS, the AoE2 rates at Normal speed (#413)."""
+    cheats = False                                                     # also for the adapters of Gather.__new__
 
-    def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic):
+    def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
+                 cheats=False):
         self.game, self.data, self.map, self.player = game, data, Map(data, player), player
         self.paper = getattr(game, "kind", None) == "paper"           # walks with the plugin (#437)
         chop = WORK_SECONDS if chop is None else chop
         self.tick, self.carry = tick, carry
         self.chop = dict(chop) if isinstance(chop, dict) else dict.fromkeys(WORK_SECONDS, chop)
         self.log, self.clock, self.t0 = log, clock, clock()
+        self.cheats = cheats                                           # the AoE2 cheat codes in the chat (#816)
         self.stock = dict.fromkeys(DROP_SITES, 0)                      # resources at the drop sites
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
                       and "VILLAGER" in o["name"]]
@@ -375,6 +379,7 @@ class Gather:
         self.command('scoreboard players display name Idle aoe_res "Idle villagers"')   # a name has no space
         build.setup(self)
         menu.setup(self)
+        cheats.setup(self)
         bossbar.setup(self)
         for o in self.units:                                           # the entities must be loaded (forceload)
             pos = self.pos(o["uuid"])
@@ -559,6 +564,7 @@ class Gather:
         build.tick(self)
         hints.tick(self)
         menu.clicks(self)
+        cheats.clicks(self)
         self.command("execute as @a unless items entity @s container.* minecraft:carrot_on_a_stick[!custom_data] "
                      "run give @s minecraft:carrot_on_a_stick")       # not a group item
         if self.calls % GROUP_GIVE == 0:
