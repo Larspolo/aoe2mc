@@ -1963,6 +1963,12 @@ def place_book(cols, edits, spawn, texts, title):
     return x, y, z
 
 
+def shelf_data(items):
+    """Block entity fields of a shelf (26.3) with one item in each of its 3 slots (#526)."""
+    return {"Items": List[Compound]([Compound({"Slot": Byte(i), "id": String("minecraft:" + n), "count": Int(1)})
+                                     for i, n in enumerate(items)])}
+
+
 def set_pos(nbt, x, y, z):
     nbt["Pos"] = List[Double]([Double(x), Double(y), Double(z)])
     for p in nbt.get("Passengers", []):
@@ -2051,7 +2057,7 @@ PALETTE_CACHE = {}
 # Blocks that need a block entity, or Minecraft shows them wrong (banners are invisible without one).
 BE_TYPES = [("decorated_pot", "decorated_pot"), ("oak_sign", "sign"), ("wall_banner", "banner"), ("_banner", "banner"), ("bell", "bell"), ("campfire", "campfire"),
             ("barrel", "barrel"), ("chest", "chest"), ("blast_furnace", "blast_furnace"),
-            ("smoker", "smoker"), ("furnace", "furnace"), ("lectern", "lectern"), ("_bed", "bed")]
+            ("smoker", "smoker"), ("furnace", "furnace"), ("lectern", "lectern"), ("_shelf", "shelf"), ("_bed", "bed")]
 
 
 def block_entity_type(state):
@@ -2602,6 +2608,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     buildings.TURN, yaw = ORIENTATIONS[orientation]
     MOVED.clear()           # the counts of an earlier conversion in this process
     BLOCK_DATA.clear()
+    buildings.SHELVES.clear()
     rng = np.random.default_rng(seed)
     t0 = time.time()
     times, clock = {}, [t0]
@@ -2656,6 +2663,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         if pid and any(o["player"] == pid for o in objects):
             print(f"  player {pid}: {p['civ'].lower()}, {p['color']}, {p['arch']} buildings")
     edits, stats = place_objects(objects, players, cols, rng)
+    BLOCK_DATA.update({p: shelf_data(items) for p, items in buildings.SHELVES.items()})
     for k, v in sorted(stats.items()):
         print(f"  {k}: {v}")
     spawn = find_spawn(cols, objects, players, spawn)
