@@ -183,3 +183,7 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 
 - A datapack `load` function or an RCON `@e` selector sees only entities of loaded chunks: 26.3 loads none without a
   player. In an RCON check, `forceload add X0 Z0 X1 Z1` (at most 256 chunks per command) first (#358).
+- RCON `execute if entity SEL` answers "Test passed. Count: N" (capital C) or "Test failed": match with `re.I` (#676).
+- A timer trigger fires from the server start, before a client joins (about 30 s). To see its chat in a client
+  (`mc_shot.Client`), send `tick freeze` first and `tick unfreeze` after the join: the `schedule` timers wait, and
+  the chunks and entities load in a frozen game (#676).
