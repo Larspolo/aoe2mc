@@ -1345,6 +1345,10 @@ class Replay:
                     k += len(skip)
                     send(self.clock_commands(to, end, self.speed, jump=True))    # the player sees why it waits
                     self.send(self.jump(skip, to, at))
+                    if self.moving or self.working:                 # the gather steps of the skipped time at once,
+                        self.send(self.steps(to))                   # and no step before `to`: an older time on the
+                        self.moving = {i: max(t, to) for i, t in self.moving.items()}     # bar and fast catch-up
+                        self.working = {i: max(t, to) for i, t in self.working.items()}   # walks after it (#1125)
                     g0, r0 = to, clock()
                     shown = int(to) // 1000
                     send(self.clock_commands(to, end, self.speed) + self.score_commands())
