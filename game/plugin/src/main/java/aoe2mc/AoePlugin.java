@@ -885,9 +885,23 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     private static boolean sameTeam(Entity a, Entity b) {
-        Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
-        Team t = sb.getEntityTeam(a);
-        return t != null && t.equals(sb.getEntityTeam(b));
+        String s = side(a);
+        return s != null && s.equals(side(b));
+    }
+
+    // The team name, else the player tag aoe2mc.pN: the pulse of the datapack puts a unit in its team only when its
+    // chunk is loaded, and two units without a team are not enemies (#986: idle soldiers killed their neighbours).
+    private static String side(Entity e) {
+        Team t = Bukkit.getScoreboardManager().getMainScoreboard().getEntityTeam(e);
+        if (t != null) {
+            return t.getName();
+        }
+        for (String tag : e.getScoreboardTags()) {
+            if (tag.matches("aoe2mc\\.p\\d+")) {
+                return tag.substring(7);
+            }
+        }
+        return null;
     }
 
     private static List<Entity> select(CommandSender sender, String selector) {
