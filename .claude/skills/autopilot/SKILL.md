@@ -121,8 +121,7 @@ For each open issue without a priority label:
 ## 5. Pick and claim one ticket
 
 Candidates: open issues without `needs-human`, `blocked`, `epic`, `agent-status`, `in-progress`, and whose
-"Depends on: #n" issues are all closed, whose "Start after:" time is past (#496), and that no open hand-off PR
-(`ready-to-merge`) closes (#546: it waits for the owner). Order: `P0`, `P1`, `P2`, `P3`, then the
+"Depends on: #n" issues are all closed, whose "Start after:" time is past (#496). Order: `P0`, `P1`, `P2`, `P3`, then the
 least overlap with the work in progress (files and functions that open PRs change or claimed tickets name, #487),
 then the lowest issue number.
 `python3 tools/dashboard.py --next` prints the candidates in this order (the rule is `dashboard.candidates()`).
