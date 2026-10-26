@@ -5,11 +5,10 @@ In-game screenshots of a converted world with the real Minecraft client (no wind
 Usage:
     python3 tools/mc_shot.py WORLD OUT.png [--at X Y Z] [--look YAW PITCH] [--more X,Y,Z,YAW,PITCH ...]
 
-The client runs in Xvfb with software rendering: Mesa OpenGL (1.21.1) or Mesa Vulkan (26.x: package
-mesa-vulkan-drivers; Java 25: openjdk-25-jre-headless). A copy of the world gets a small data pack: it puts the
-player in spectator mode (no hand, no hotbar), teleports it to each view and writes "aoe2mc view N" in the chat.
+The client runs in Xvfb with software rendering: Mesa Vulkan (package mesa-vulkan-drivers; Java 25:
+openjdk-25-jre-headless). A copy of the world gets a small data pack: it puts the player in spectator mode (no hand, no hotbar), teleports it to each view and writes "aoe2mc view N" in the chat.
 The script waits for that line in the client log, waits until the chunks are drawn and saves the X screen.
-Without --at the camera stands 2 blocks above the spawn and looks in the spawn direction (SpawnAngle).
+Without --at the camera stands 2 blocks above the spawn and looks in the spawn direction (the yaw of the spawn).
 Yaw: 0 = south, 90 = west, 180 = north, -90 = east. Pitch: positive looks down.
 Downloads (client jar, libraries) go to .cache/mc/VERSION/client/. The version comes from level.dat.
 OUT.png gets the first view; the views of --more go to OUT_2.png, OUT_3.png ...
@@ -80,10 +79,7 @@ def data_pack_format(client_jar):
 def world_version(world):
     from nbtlib import load
     data = load(os.path.join(world, "level.dat"))["Data"]
-    if "spawn" in data:                 # 26.x: a "spawn" compound with "pos" and "yaw"
-        spawn = [int(v) for v in data["spawn"]["pos"]], float(data["spawn"].get("yaw", 0.0))
-    else:
-        spawn = [int(data["SpawnX"]), int(data["SpawnY"]), int(data["SpawnZ"])], float(data.get("SpawnAngle", 0.0))
+    spawn = [int(v) for v in data["spawn"]["pos"]], float(data["spawn"].get("yaw", 0.0))    # 26.x: "pos", "yaw"
     return str(data["Version"]["Name"]), spawn
 
 
@@ -124,7 +120,7 @@ def shoot(world, out, views=None, version=None, size=(1280, 720), settle=8.0, ti
     if not views:
         views = [(spawn[0] + 0.5, spawn[1] + 2, spawn[2] + 0.5, yaw, 20)]
     cp, vj = client_files(version)
-    if not version.startswith("1.") and not glob.glob("/usr/share/vulkan/icd.d/lvp_icd*.json"):
+    if not glob.glob("/usr/share/vulkan/icd.d/lvp_icd*.json"):
         sys.exit("Minecraft 26.x finds no GLX visual in Xvfb and needs software Vulkan: "
                  "apt-get install -y mesa-vulkan-drivers")
     java = mc_check.java_for(version)

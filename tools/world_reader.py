@@ -74,8 +74,7 @@ def state_name(entry):
 class World:
     def __init__(self, path):
         self.root = path                                          # level.dat is here
-        dim = os.path.join(path, "dimensions", "minecraft", "overworld")
-        self.path = dim if os.path.isdir(dim) else path           # 26.1 moved region/ and entities/
+        self.path = os.path.join(path, "dimensions", "minecraft", "overworld")   # 26.1 moved region/ and entities/
         self._regions = {}
 
     def _region(self, folder, rx, rz):
@@ -143,11 +142,9 @@ class World:
         return nbtlib.load(os.path.join(self.root, "level.dat"))["Data"]
 
     def spawn(self):
-        """(x, y, z, yaw) of the world spawn. 26.x has a "spawn" compound, 1.21.1 has SpawnX ... SpawnAngle."""
+        """(x, y, z, yaw) of the world spawn (the "spawn" compound of 26.x)."""
         d = self.level()
-        if "spawn" in d:
-            return (*[int(v) for v in d["spawn"]["pos"]], float(d["spawn"]["yaw"]))
-        return int(d["SpawnX"]), int(d["SpawnY"]), int(d["SpawnZ"]), float(d["SpawnAngle"])
+        return (*[int(v) for v in d["spawn"]["pos"]], float(d["spawn"]["yaw"]))
 
 
 def main():

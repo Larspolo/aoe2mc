@@ -65,7 +65,7 @@ their building. The record has no positions and no results of the game, so `--at
 units, destroyed or unfinished buildings, cut trees, used mines and farms. A delete command removes only objects of
 the start state. A unit from a building that was built later stands at the first building of its player.
 
-Copy the folder `MyMapWorld` into your Minecraft `saves` folder. Open it in Minecraft Java 26.3 or newer. For an older game (1.21.1 to 26.2), convert with `--mc-version 1.21.1`.
+Copy the folder `MyMapWorld` into your Minecraft `saves` folder. Open it in Minecraft Java 26.3 or newer. Older games cannot open it.
 The world is in creative mode. Outside the map there is only void. The world list shows a small top view of the map
 (`icon.png`).
 The file `aoe2mc.json` in the world folder lists the map size, the players and each object: AoE2 ID, name, owner,
@@ -89,7 +89,7 @@ The sidebar shows the wood and the food.
 | `--name` | file name | World name in the Minecraft menu |
 | `--seed` | 1 | Seed for random details (tree heights, flowers) |
 | `--preview` | off | Writes `preview.png` (top view) into the world folder |
-| `--mc-version` | 26.3 | Minecraft Java version of the output: `26.3` or `1.21.1` |
+| `--mc-version` | 26.3 | Minecraft Java version of the output: only `26.3` |
 | `--no-units` | off | Do not convert units |
 | `--no-birds` | off | Do not convert birds. Flying birds float 6 blocks above the ground (parrot or bat); peacocks, flamingos, storks and cranes are chickens |
 | `--no-barriers` | off | Do not fill building footprints with invisible barrier blocks |

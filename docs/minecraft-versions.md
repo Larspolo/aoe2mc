@@ -1,7 +1,7 @@
 # Minecraft format changes from 1.21.1 to 26.3
 
-aoe2mc wrote Minecraft Java 1.21.1 (data version 3955) until #58; now 26.3 is the default and `--mc-version 1.21.1`
-writes the old format. This document lists the format changes up to 26.3
+aoe2mc wrote Minecraft Java 1.21.1 (data version 3955) until #58; then 26.3 was the default and `--mc-version 1.21.1`
+wrote the old format. Since #427 aoe2mc writes only 26.3: this document is the history. It lists the format changes up to 26.3
 (data version 5023) that affect the output of aoe2mc. The sub-issues of #14 use it.
 
 ## Method

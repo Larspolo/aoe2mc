@@ -4,7 +4,10 @@ import mcvalid
 
 
 def test_default_version_is_the_version_of_the_code_names():
-    assert aoe2mc.VERSIONS[mcvalid.DEFAULT_VERSION]["renames"] == {}   # the output versions rename from these names
+    for v in aoe2mc.VERSIONS.values():                                  # the output versions rename from these names
+        for old, new in v["renames"].items():
+            assert mcvalid.block_error(old) is None and mcvalid.block_error(new, v["name"]) is None
+            assert mcvalid.block_error(old, v["name"]) is not None
 
 
 def test_version_data_differs():

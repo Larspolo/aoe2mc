@@ -113,7 +113,7 @@ def test_mc_version_26_3(tmp_path, monkeypatch):
     assert os.path.isdir(tmp_path / "W" / "dimensions" / "minecraft" / "overworld" / "region")
     assert not os.path.exists(tmp_path / "W" / "region")
     assert "spawn" in level and "SpawnX" not in level and "GameRules" not in level
-    assert float(level["spawn"]["yaw"]) == aoe2mc.SPAWN_YAW         # the AoE2 camera view, as in 1.21.1 (#23)
+    assert float(level["spawn"]["yaw"]) == aoe2mc.SPAWN_YAW         # the AoE2 camera view (#23)
     for f in ("game_rules", "world_gen_settings", "weather", "world_clocks"):
         assert os.path.exists(tmp_path / "W" / "data" / "minecraft" / f"{f}.dat"), f
     ents = w.entities()
@@ -151,9 +151,7 @@ def test_book_of_scenario_texts(tmp_path):
     assert w.block(x, y - 1, z) != "minecraft:air" and max(abs(x - sx), abs(z - sz)) <= 6
     book = be["Book"]["components"]["minecraft:written_book_content"]
     assert str(book["title"]["raw"]) == "book"
-    def text(raw):                                                # 26.3: NBT compound, 1.21.1: JSON string
-        if not hasattr(raw, "keys"):
-            return json.loads(str(raw))
+    def text(raw):                                                # an NBT compound (26.3)
         return {"extra": [{k: bool(v) if k == "bold" else str(v) for k, v in e.items()} for e in raw["extra"]]}
     pages = [text(p["raw"]) for p in book["pages"]]
     assert pages[0]["extra"] == [{"text": "Instructions\n\n", "bold": True}, {"text": "Defend the town center."}]
@@ -182,26 +180,7 @@ def test_book_has_the_objectives(tmp_path):
     assert aoe2mc.book_pages(texts) == [("Objectives", "- Find the relic\n- Keep the castle.")]
 
 
-def test_mc_version_1_21_1(tmp_path):
-    import contextlib
-    import io
-
-    import scenarios
-    src = scenarios.tiny(str(tmp_path / "tiny.aoe2scenario"))
-    with contextlib.redirect_stdout(io.StringIO()):
-        aoe2mc.main([src, str(tmp_path / "W"), "--mc-version", "1.21.1"])
-    assert os.path.isdir(tmp_path / "W" / "region") and not os.path.exists(tmp_path / "W" / "dimensions")
-    w = world_reader.World(str(tmp_path / "W"))
-    level = w.level()
-    assert (int(level["DataVersion"]), str(level["Version"]["Name"])) == (3955, "1.21.1")
-    assert float(level["SpawnAngle"]) == aoe2mc.SPAWN_YAW and "GameRules" in level
-    assert {int(c["DataVersion"]) for c in w.chunks().values()} == {3955}
-    assert mcvalid.invalid_states(w.palette(), "1.21.1") == {}
-    ids = [i for e in w.entities(flat=False) for i in entity_ids(e)]
-    assert ids and all(mcvalid.entity_error(i, "1.21.1") is None for i in ids)
-
-
-def test_work_sounds(tiny_world, tmp_path, monkeypatch):
+def test_work_sounds(tiny_world, tmp_path):
     """The datapack plays a work sound at a building with a player near it: the bell at the town center (#220)."""
     path, out = tiny_world
     pack = os.path.join(path, "datapacks", "aoe2mc")
@@ -218,22 +197,17 @@ def test_work_sounds(tiny_world, tmp_path, monkeypatch):
     assert len(bell) == 1 and (int(bell[0][2]), int(bell[0][4])) == ((x0 + x1) // 2, (z0 + z1) // 2)
     assert "if entity @a[distance=..24]" in lines[0] and lines[-1].startswith("schedule function aoe2mc:pulse")
     assert "work sounds at buildings: " in out
-    # 1.21.1: another pack format and predicate key; no building with a sound: no pack
+    # no building with a sound: no pack
     import numpy as np
-    monkeypatch.setattr(aoe2mc, "MC", aoe2mc.VERSIONS["1.21.1"])
     ground = np.full((32, 32), 70)
     smith = {"kind": "B", "name": "BLACKSMITH", "footprint": [4, 4, 12, 12]}
     assert aoe2mc.write_datapack(str(tmp_path / "A"), [smith], ground) == (1, 0)
-    with open(tmp_path / "A" / "datapacks" / "aoe2mc" / "pack.mcmeta") as f:
-        assert json.load(f) == {"pack": {"description": "aoe2mc: work sounds and ambience", "pack_format": 48}}
-    with open(tmp_path / "A" / "datapacks" / "aoe2mc" / "data" / "aoe2mc" / "predicate" / "sometimes.json") as f:
-        assert "condition" in json.load(f)
     house = dict(smith, name="HOUSE")
     assert aoe2mc.write_datapack(str(tmp_path / "B"), [house], ground) == (0, 0)
     assert not os.path.exists(tmp_path / "B" / "datapacks")
 
 
-def test_ambience(tiny_world, tmp_path, monkeypatch):
+def test_ambience(tiny_world, tmp_path):
     """Particles and sounds by the vanilla biome near each player; --ambience full adds custom biomes (#219)."""
     path, out = tiny_world
     with open(os.path.join(path, "datapacks", "aoe2mc", "data", "aoe2mc", "function", "pulse.mcfunction")) as f:
@@ -263,11 +237,9 @@ def test_ambience(tiny_world, tmp_path, monkeypatch):
     pulse = (tmp_path / "F" / "datapacks" / "aoe2mc" / "data" / "aoe2mc" / "function" / "pulse.mcfunction").read_text()
     assert {line.split()[10] for line in pulse.splitlines() if " if biome " in line} == {f"aoe2mc:{g}" for g in groups
                                                                                        if any(aoe2mc.AMBIENCE[g][1:3])}
-    monkeypatch.setattr(aoe2mc, "MC", aoe2mc.VERSIONS["1.21.1"])
-    old = aoe2mc.biome_file("swamp")
-    assert old["effects"]["water_color"] == 0x617b64 and old["effects"]["grass_color_modifier"] == "swamp"
+    swamp = aoe2mc.biome_file("swamp")
+    assert swamp["effects"]["water_color"] == "#617b64" and swamp["effects"]["grass_color_modifier"] == "swamp"
     # off: the world as before #188: no datapack, the animals are silent too (#222)
-    monkeypatch.setattr(aoe2mc, "MC", aoe2mc.VERSIONS[aoe2mc.VERSION_NAME])
     with contextlib.redirect_stdout(io.StringIO()) as log:
         aoe2mc.convert(src, str(tmp_path / "O"), ambience="off")
     assert not os.path.exists(tmp_path / "O" / "datapacks") and "work sounds" not in log.getvalue()
