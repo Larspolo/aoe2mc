@@ -8,7 +8,9 @@ buildings, trees and water (one /tp per block), chops, carries the wood to the n
 (`units.VILLAGER_JOBS`, as in AoE2). A right click on a fruit bush sends them to forage (#391): they carry the food
 to a town center or a mill, with the forager look, and go on to the nearest bush when one is empty. A right click
 on a gold or stone mine sends them to mine (#390): they carry the gold or stone to a town center or a mining camp,
-with the miner look. An empty mine disappears, and they go on to the nearest mine of the same kind.
+with the miner look. An empty mine disappears, and they go on to the nearest mine of the same kind. A right click
+on a farm sends one villager onto it (#392): one farmer per farm, as in AoE2. The wheat gets younger as the food
+goes down, and an empty farm is dirt.
 A sidebar scoreboard shows wood, food, gold and stone of player 1.
 
 The program sees a click in two statistics: the use of the stick, and "talked to villager" (a right click on a
@@ -32,6 +34,7 @@ DROP_SITES = {"wood": ("TOWN_CENTER", "LUMBER_CAMP"), "food": ("TOWN_CENTER", "M
               "gold": ("TOWN_CENTER", "MINING_CAMP"), "stone": ("TOWN_CENTER", "MINING_CAMP")}
 TREE_WOOD = 100                                                    # wood in one tree, as in AoE2
 BUSH_FOOD = 125                                                    # food in one fruit bush, as in AoE2 DE
+FARM_FOOD = 175                                                    # food in one farm, as in AoE2 DE (no upgrades)
 MINES = {"GOLD_MINE": ("gold", 800, "GOLD_MINER"), "STONE_MINE": ("stone", 350, "STONE_MINER")}   # as in AoE2
 MINE_BLOCKS = {"gold": ("gold_ore", "raw_gold_block", "stone"),                # the blocks of the converter's heap
                "stone": ("cobblestone", "andesite", "stone", "tuff")}
@@ -51,10 +54,16 @@ class Map:
         self.drops = {r: [] for r in DROP_SITES}                       # resource -> footprints of the drop sites
         self.mines = {r: {} for r, _, _ in MINES.values()}             # resource -> {tile: amount}
         self.mine_at = {}                                              # block cell -> tile of its mine
+        self.farms, self.farm_at = {}, {}                              # farm tile -> food; block cell -> farm tile
         for o in data["objects"]:
             if o["kind"] == "building":
                 x0, z0, x1, z1 = o["footprint"]
                 cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
+                if "FARM" in o["name"]:                                # no barriers: the farmer stands on it
+                    tile = int(o["tile"][0]), int(o["tile"][1])
+                    self.farms[tile], self.feet[tile] = FARM_FOOD, (x0, x1, z0, z1)
+                    self.farm_at.update(dict.fromkeys(cells, tile))
+                    continue
                 self.blocked |= cells
                 for r, names in DROP_SITES.items():
                     if o["player"] == player and any(k in o["name"] for k in names):
@@ -84,15 +93,16 @@ class Map:
         return {(x, z) for x in range(tile[0] * T, tile[0] * T + T) for z in range(tile[1] * T, tile[1] * T + T)}
 
     def spot(self, tile):
-        """The cells of a resource: the footprint of a mine, else the tile."""
-        if any(tile in m for m in self.mines.values()):
+        """The cells of a resource: the footprint of a mine or a farm, else the tile."""
+        if tile in self.farms or any(tile in m for m in self.mines.values()):
             x0, x1, z0, z1 = self.feet[tile]
             return {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
         return self.cells(tile)
 
     def resource(self, tile):
         """The resource of the tile of a tree, bush or mine."""
-        return next((r for r, m in self.mines.items() if tile in m), "food" if tile in self.bushes else "wood")
+        return next((r for r, m in self.mines.items() if tile in m),
+                    "food" if tile in self.bushes or tile in self.farms else "wood")
 
     def y(self, x, z):
         return self.ground[z][x] if 0 <= x < self.n and 0 <= z < self.n else None
@@ -134,7 +144,7 @@ class Map:
         return None
 
     def pick_tree(self, eye, d, reach=64):
-        """The tree, fruit bush or mine tile that the ray from eye in direction d hits first, or None."""
+        """The tree, fruit bush, mine or farm tile that the ray from eye in direction d hits first, or None."""
         for k in range(1, reach * 4):
             x, y, z = (eye[i] + d[i] * k / 4 for i in range(3))
             bx, bz = math.floor(x), math.floor(z)
@@ -146,6 +156,8 @@ class Map:
                 return tile
             if (bx, bz) in self.mine_at and (g is None or y < g + 1):    # "ground" over a mine is its top
                 return self.mine_at[bx, bz]
+            if (bx, bz) in self.farm_at and g is not None and y < g + 0.5:     # the crop on the farm
+                return self.farm_at[bx, bz]
             if g is not None and y < g:                                # the ray hits the ground or a building
                 return None
         return None
@@ -193,6 +205,7 @@ class Gather:
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
                       and "VILLAGER" in o["name"]]
         self.villagers, self.selected = {}, set()
+        self.farmers, self.crops = {}, {}                              # farm tile -> UUID of its farmer, wheat age
         self.trunks = {}                                               # tree tile -> logs of its trunk on the ground
         self.bushes = {}                                               # bush tile -> the block of its last look
 
@@ -236,19 +249,39 @@ class Gather:
             self.command(f'data merge entity {v.uuid} {{VillagerData:{{profession:"minecraft:{job}"}}}}')
 
     def send(self, tile):
-        """Send the selected villagers to the tree, the fruit bush or the mine on tile."""
+        """Send the selected villagers to the tree, the fruit bush, the mine or the farm on tile. A farm takes one
+        farmer: the next villagers go to the nearest free farms, or stop."""
         res = self.map.resource(tile)
-        job = {"wood": "LUMBERJACK", "food": "FORAGER"}.get(res) or next(j for r, _, j in MINES.values() if r == res)
-        for u in self.selected:
+        job = "FARMER" if tile in self.map.farms else {"wood": "LUMBERJACK", "food": "FORAGER"}.get(res) or \
+            next(j for r, _, j in MINES.values() if r == res)
+        for u in sorted(self.selected):
             v = self.villagers[u]
+            for t in [t for t, f in self.farmers.items() if f == u]:
+                del self.farmers[t]
+            to = tile
+            if tile in self.map.farms:
+                v.tree = None
+                free = [t for t, k in self.map.farms.items() if k > 0 and t not in self.farmers]
+                to = tile if tile in free else min(free, key=lambda t: math.dist(t, tile), default=None)
+                if to is None:
+                    self.set(v, "idle")
+                    continue
+                self.farmers[to] = u
             self.task(v, job)
             if v.load and v.res != res:
                 v.load = 0                                             # AoE2 drops a load of another resource
-            v.res, v.tree = res, tile
-            self.go(v, "to_tree", self.map.around(self.map.spot(tile)))
+            v.res, v.tree = res, to
+            self.go(v, "to_tree", self.goals(to))
+
+    def goals(self, tile):
+        """The cells where a villager works a resource: on a farm, else next to it."""
+        spot = self.map.spot(tile)
+        return {c for c in spot if self.map.free(*c)} if tile in self.map.farms else self.map.around(spot)
 
     def source(self, v):
-        """The resources left in the tree, bush or mine of a villager: {tile: amount} of its kind."""
+        """The resources left in the tree, bush, mine or farm of a villager: {tile: amount} of its kind."""
+        if v.tree in self.map.farms:
+            return self.map.farms
         return self.map.bushes if v.res == "food" else self.map.trees if v.res == "wood" else self.map.mines[v.res]
 
     def nearest(self, v):
@@ -321,10 +354,14 @@ class Gather:
                 self.stock[v.res] += v.load
                 v.load = 0
                 self.event(v, "drop")
-                if v.res != "wood" and self.source(v).get(v.tree, 0) <= 0:
+                if v.tree in self.map.farms:
+                    if self.map.farms[v.tree] <= 0:                    # an empty farm: the farmer stops
+                        self.farmers.pop(v.tree, None)
+                        v.tree = None
+                elif v.res != "wood" and self.source(v).get(v.tree, 0) <= 0:
                     v.tree = self.nearest(v)                           # as in AoE2: the next bush or mine, or stop
                 if self.source(v).get(v.tree, 0) > 0:
-                    self.go(v, "to_tree", self.map.around(self.map.spot(v.tree)))
+                    self.go(v, "to_tree", self.goals(v.tree))
                 else:
                     self.set(v, "idle")
             elif v.state == "chop":
@@ -334,7 +371,9 @@ class Gather:
                     v.timer -= self.chop
                     v.load += 1
                     src[v.tree] -= 1
-                    if v.res == "food":
+                    if v.tree in self.map.farms:
+                        self.harvest(v.tree)
+                    elif v.res == "food":
                         self.berries(v.tree)
                     elif v.res != "wood":
                         if src[v.tree] == 0:
@@ -419,6 +458,22 @@ class Gather:
             self.map.ground[z][x] = min(ys)
             self.map.mine_at.pop((x, z), None)
         self.map.blocked -= spot
+
+    def harvest(self, tile):
+        """A farm shows its food: the wheat gets younger (age 7 when full), and an empty farm is dirt."""
+        food = self.map.farms[tile]
+        age = math.ceil(7 * food / FARM_FOOD)
+        if self.crops.get(tile, 7) == age:                             # the converter's farm: mostly age 7
+            return
+        self.crops[tile] = age
+        x0, x1, z0, z1 = self.map.feet[tile]
+        ys = [y for x in range(x0, x1) for z in range(z0, z1) if (y := self.map.y(x, z)) is not None] or [0]
+        box = f"{x0} {min(ys) - 1} {z0} {x1 - 1} {max(ys)} {z1 - 1}"
+        if food > 0:
+            self.command(f"fill {box} minecraft:wheat[age={age}] replace minecraft:wheat")
+        else:
+            self.command(f"fill {box} air replace minecraft:wheat")
+            self.command(f"fill {box} minecraft:dirt replace minecraft:farmland")
 
     def run(self, seconds=None, until=None):
         """Play in real time until seconds passed or until() is true."""
