@@ -66,7 +66,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Map table of a commander | `cartography_table` | `study`, `command_tent`, `harbor`, `market` +2 more |
 | Cushion | `red_wool` next to a low `*_slab[type=top]` table | `pavilion`, `scaffold_walk`, `scaffolding`, `cart` +46 more |
 | Table with a light (inside) | `*_slab[type=top]` with a `lantern` on it, a `*_stairs` stool | `town_hall`, `furnish`, `pagoda`, `hall_of_heroes` +41 more |
-| Storage (inside) | `chest` at the back wall | `furnish`, `throne_hall`, `town_hall`, `decorate` +25 more |
+| Storage (inside) | `chest` at the back wall | `furnish`, `throne_hall`, `decorate`, `town_hall` +25 more |
 | Shelf with goods or tools (inside) | `*_shelf` on the wall (holds items, like a stall) | `market`, `blacksmith` |
 | Strongbox of a market or a treasury (inside) | `copper_chest` | no design |
 | Rug | `*_carpet` | `hearth_room`, `furnish_worship`, `furnish`, `throne_hall` +14 more |
@@ -96,7 +96,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Painted plaster roof or ledge | `*_concrete_stairs` and `*_concrete_slab` | no design |
 | Red-painted stone (Indian, Mesoamerican, East Asian temples) | `cinnabar`, `cinnabar_bricks`, `polished_cinnabar`, `chiseled_cinnabar` | `rekha_deul`, `pagoda` |
 | Yellow ochre stone (African, Middle Eastern sets) | `sulfur_bricks`, `polished_sulfur`, `chiseled_sulfur` | no design |
-| Fired orange brick | `resin_bricks`, `chiseled_resin_bricks` | no design |
+| Fired orange brick | `resin_bricks`, `chiseled_resin_bricks` | `split_gate` |
 | Relief panel, carving | `chiseled_stone_bricks` | `harbor`, `temple`, `aqueduct`, `furnish_worship` +9 more |
 | Balustrade of a stair | `polished_granite` | `great_pyramid`, `pyramid` |
 | Stone bridge (#455) | `stone_bricks` piers with cutwaters every tile, `stone_brick_stairs[half=top]` vault, `stone_brick_wall` balustrade with `chiseled_stone_bricks` posts, `cracked_stone_bricks` on cracked and broken pieces | `bridge`, `temple`, `cathedral`, `fortified_church` +18 more |
