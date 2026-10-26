@@ -12,6 +12,7 @@ with the miner look. An empty mine disappears, and they go on to the nearest min
 on a farm sends one villager onto it (#392): one farmer per farm, as in AoE2. The wheat gets younger as the food
 goes down, and an empty farm is dirt.
 A right click on a construction site (build.py) sends them to build it, with the builder look (#418).
+A right click on an own town center queues a villager for 50 food (train.py, #612).
 A right click on a military unit of player 1 selects it; more clicks add more military units (#516). A right
 click on a unit of another player then sends them to attack it (`aoe attack` of the plugin, ai.py): one command
 for the selection, by the tag `SELECT`. A unit of player 1 is no target: a click on it selects it.
@@ -35,6 +36,7 @@ from units import VILLAGER_JOBS, animal  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
+import train  # noqa: E402
 
 RESOURCES = ("Wood", "Food", "Gold", "Stone")
 DROP_SITES = {"wood": ("TOWN_CENTER", "LUMBER_CAMP"), "food": ("TOWN_CENTER", "MILL"),   # as in AoE2 (#389)
@@ -286,6 +288,7 @@ class Gather:
         self.farmers, self.crops = {}, {}                              # farm tile -> UUID of its farmer, wheat age
         self.trunks = {}                                               # tree tile -> logs of its trunk on the ground
         self.bushes = {}                                               # bush tile -> the block of its last look
+        self.queues, self.trained = {}, {}                             # town center -> its queue, units it trained
 
     @property
     def wood(self):
@@ -449,6 +452,8 @@ class Gather:
         if building:                                                   # a chosen building: place its foundation
             build.place(self, name, building, eye, d)
             return
+        if train.queue(self, name, self.map.pick_ground(eye, d)):     # a click on an own town center (#612)
+            return
         tile = self.map.pick_tree(eye, d)
         if tile and self.selected:
             self.send(tile)
@@ -503,6 +508,7 @@ class Gather:
                         self.trunk(v.tree)
                 if v.load >= self.carry or src.get(v.tree, 0) <= 0:
                     self.go(v, "to_drop", set().union(*map(self.map.around, self.map.drops[v.res])))
+        train.tick(self, self.tick * NORMAL)
         for site in self.sites:
             builders = [v for v in self.villagers.values() if v.state == "build" and v.site is site]
             # AoE2: n builders need 3 / (n + 2) of the time of one

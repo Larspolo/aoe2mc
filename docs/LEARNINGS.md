@@ -101,3 +101,4 @@ of its document (named below): this file loads into each run. The `improve` skil
 - `docs/coverage.md` on main can be stale (#460): for the real fallbacks run `python3 tools/coverage.py OUT.md` (#500).
 - A gate footprint is not in `cols.blocked` (units walk through the passage): `place_building` blocks only the columns with a solid block at head height (#577). Reproduce "units in a block" of a campaign with `tests/test_scx.py` `build()` and random units on the wall line.
 - A change to the blocks of an object: also run the `-m mc` tests of the files that name it (`grep -l NAME tests/`): the fast suite skips them, and #590 broke `test_villager_forages_on_a_server` (fixed in #602).
+- `game/gather.py` imports `build` and `train` at the top, and `combat`, `ai`, `replay` import `gather`: a module that `gather` imports must import `combat` or `gather` inside its function (#612).
