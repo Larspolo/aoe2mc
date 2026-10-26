@@ -9,6 +9,7 @@ from urllib.parse import unquote
 
 import pytest
 from test_gather import FakeServer, grid
+from test_train_menu import RALLY
 
 from game import build, combat, gather, run, train
 
@@ -26,6 +27,7 @@ def setup(wood=25, gold=45, done=True):
     if done is not None:
         g.sites.append({"name": "ARCHERY_RANGE", "player": 1, "footprint": [10, 13, 2, 5], "done": done})
     g.stock.update(wood=wood, gold=gold)
+    g.techs.add("FEUDAL_AGE")                                          # archers are a Feudal Age unit (#674)
     server.scores["aoe_use"] = 1
     return server, g
 
@@ -43,7 +45,7 @@ def test_a_right_click_on_the_archery_range_opens_its_menu():
     server, g = setup(done=None)
     for name in g.clicks():
         g.click(name)
-    assert menus(server) == ["aoe menu Steve Archery Range 0:skeleton_spawn_egg:Archer:25 wood · 45 gold · 35 s · queue 0/15"]
+    assert menus(server) == ["aoe menu Steve Archery Range 0:skeleton_spawn_egg:Archer:25 wood · 45 gold · 35 s · queue 0/15" + RALLY]
 
 
 def test_no_menu_at_an_archery_range_that_is_not_complete():
@@ -64,7 +66,7 @@ def test_a_shift_click_queues_5():
     server, g = setup(wood=1000, gold=1000)
     rect = train.open_menu(g, "Steve", (11, 3))
     assert train.order(g, "Steve", rect, 0, shift=True) == 5 and g.stock["gold"] == 1000 - 5 * 45
-    assert menus(server)[-1].endswith("queue 5/15")
+    assert menus(server)[-1].endswith("queue 5/15" + RALLY)
 
 
 def test_the_archer_appears_after_35_seconds_and_shoots_from_its_range():
@@ -100,6 +102,7 @@ def test_a_trained_archer_can_shoot_on_a_server(tmp_path):
         game.forceload()
         g = gather.Gather(game, data, tick=0.25).setup()
         g.stock.update(wood=25, gold=45)
+        g.techs.add("FEUDAL_AGE")
         rect, = train.homes(g)
         assert train.queue(g, "nobody", rect[::2], "ARCHER")
         uuid, = train.tick(g, train.TRAIN_TIMES["ARCHER"])

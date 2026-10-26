@@ -323,7 +323,9 @@ def read_scenario(path):
     texts["triggers"] = [dict(id=t.trigger_id, name=t.name, enabled=bool(t.enabled), looping=bool(t.looping),
                               conditions=[dict(type=c.condition_type, timer=c.timer, inverted=bool(c.inverted),
                                                **({"quantity": c.quantity, "player": c.source_player,
-                                                   "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2]}
+                                                   "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2],
+                                                   "object": c.object_list, "group": c.object_group,
+                                                   "class": c.object_type}
                                                   if c.condition_type == IN_AREA else {}))
                                           for c in t.conditions],
                               effects=[dict(type=e.effect_type, message=e.message or "", player=e.source_player,
@@ -572,6 +574,7 @@ RESEARCH_S = {"Loom": 25, "Town Watch": 25, "Town Patrol": 40, "Wheelbarrow": 75
               "Feudal Age": 130, "Castle Age": 160, "Imperial Age": 190}   # the town center researches: they delay units
 UNIT_USE = {"move", "order", "build", "wall", "patrol", "follow", "formation", "attack_move", "back_to_work", "stance"}
 BUILDING_USE = {"queue", "research", "gather_point", "ungarrison", "sell", "buy"}
+WORK = re.compile(r"TREE|.*BUSH|.*_MINE|.*FARM")                     # an ORDER on these: a villager gathers
 
 
 def train(unit):
@@ -608,17 +611,18 @@ def name_timeline(objects, timeline, window=16):
     Adds "names" (a name or None per ID of "objects") to the events and returns {id: name}."""
     names = {o["ref"]: o["name"] for o in objects if o.get("ref") is not None}
     top = max(names, default=0)
-    used = {}                     # new ID -> [time of its first use, "B", "U" or None, {building of its units}]
+    used = {}             # new ID -> [time of its first use, "B", "U" or None, {building of its units}, a worker]
     for e in timeline:                                   # not SPECIAL and others: their numbers are not all IDs
         role = "U" if e["kind"] in UNIT_USE else "B" if e["kind"] in BUILDING_USE else None
+        work = e["kind"] in ("build", "wall") or e["kind"] == "order" and WORK.match(names.get(e.get("target"), ""))
         for i in e.get("objects", ()) if role else ():
             if i > top:
-                u = used.setdefault(i, [e["time"], None, set()])
-                u[1] = u[1] or role
+                u = used.setdefault(i, [e["time"], None, set(), False])
+                u[1], u[3] = u[1] or role, u[3] or bool(work)
                 if e["kind"] == "queue" and train(e.get("name", "")):
                     u[2].add(train(e["name"])[1])
         if role == "U" and e.get("target", 0) > top:
-            used.setdefault(e["target"], [e["time"], None, set()])
+            used.setdefault(e["target"], [e["time"], None, set(), False])
     made, seen = [], set()               # (time ms, command time, "B" or "U", name)
     for e in timeline:
         kind, t = e["kind"], e["time"]
@@ -636,7 +640,8 @@ def name_timeline(objects, timeline, window=16):
             below, k = max(below, firsts[k][1]), k + 1
         nxt = max(nxt, below + 1)
         ids = [i for i in range(nxt, nxt + window) if i in used and used[i][1] in (role, None) and
-               used[i][0] >= t - 5000 and used[i][2] <= {name}]   # 5 s: the training times are estimates
+               used[i][0] >= t - 5000 and used[i][2] <= {name} and   # 5 s: the training times are estimates
+               not (used[i][3] and "VILLAGER" not in name)]         # only villagers build and gather on land (#765)
         i = ids[0] if ids else nxt if nxt not in used else None
         if i is not None:
             names[i], nxt = name, i + 1
@@ -1029,12 +1034,13 @@ class Edits:
         xs, ys, zs = (np.asarray(a, np.int32).ravel() for a in (xs, ys, zs))
         ids = np.broadcast_to(np.asarray(block, np.uint16), xs.shape).copy() \
             if not isinstance(block, str) else np.full(xs.shape, B(block), np.uint16)
+        hard = np.broadcast_to(np.asarray(hard, bool), xs.shape)        # one flag, or one for each block
         if self.natural and self.blocked is not None and len(xs):
             n = self.blocked.shape[0]
             inside = (xs >= 0) & (zs >= 0) & (xs < n) & (zs < n)
             keep = ~inside.copy()
             keep[inside] = ~self.blocked[xs[inside], zs[inside]]
-            xs, ys, zs, ids = xs[keep], ys[keep], zs[keep], ids[keep]
+            xs, ys, zs, ids, hard = xs[keep], ys[keep], zs[keep], ids[keep], hard[keep]
         if self.footprint is not None and self.cols is not None and len(xs):
             x0, x1, z0, z1 = self.footprint
             outside = (xs < x0) | (xs >= x1) | (zs < z0) | (zs >= z1)
@@ -1043,8 +1049,8 @@ class Edits:
                 cx, cz = np.clip(xs, 0, n - 1), np.clip(zs, 0, n - 1)
                 ground = self.cols.wtop[cx, cz].astype(np.int32)
                 keep = ~outside | (ys >= ground + self.HEAD)
-                xs, ys, zs, ids = xs[keep], ys[keep], zs[keep], ids[keep]
-        self.parts.append((xs, ys, zs, ids, np.full(xs.shape, hard, bool)))
+                xs, ys, zs, ids, hard = xs[keep], ys[keep], zs[keep], ids[keep], hard[keep]
+        self.parts.append((xs, ys, zs, ids, hard.copy()))
 
     def box(self, x0, x1, y0, y1, z0, z1, block, hard=True):
         """Fill the box x0..x1-1, y0..y1-1, z0..z1-1."""
@@ -1145,6 +1151,9 @@ WOODS = {"palm": "jungle", "jungle": "jungle", "acacia": "acacia", "spruce": "sp
          "mangrove": "mangrove", "poplar": "poplar"}                         # tree kind -> wood (log and leaves); else oak
 
 
+TREE_SHAPES = {}        # (kind, h, leaf) -> (dx, dy, dz, ids, hard): the blocks of a tree at (0, 0, 0)
+
+
 def make_tree(E, kind, x, y, z, rng):
     """Put one tree with its trunk base at (x, y, z)."""
     h = int(rng.integers(4, 7))
@@ -1163,6 +1172,20 @@ def make_tree(E, kind, x, y, z, rng):
     log, leaf = f"{wood}_log", leaves(wood)
     if kind == "poplar":                                 # one autumn color per tree
         leaf = leaves(f"{('yellow', 'orange', 'red')[int(rng.integers(3))]}_poplar")
+    shape = TREE_SHAPES.get((kind, h, leaf))
+    if shape is None:                                    # one add for each tree: a large map has 30 000 (#702)
+        S = Edits()
+        tree_shape(S, kind, h, log, leaf)
+        shape = TREE_SHAPES[kind, h, leaf] = tuple(np.concatenate(p) for p in zip(*S.parts))
+    dx, dy, dz, ids, hard = shape
+    E.add(x + dx, y + dy, z + dz, ids, hard)
+    if kind == "oak":
+        fungus(E, x, y, z, h - 2, ("north", "south", "west", "east"))
+
+
+def tree_shape(E, kind, h, log, leaf):
+    """Draw the blocks of a tree without random numbers at (0, 0, 0)."""
+    x = y = z = 0
     if kind == "spruce":
         h += 2
         for i, dy in enumerate(range(2, h + 1)):
@@ -1186,8 +1209,6 @@ def make_tree(E, kind, x, y, z, rng):
         for dy, r in ((h - 2, 2), (h - 1, 2), (h, 1), (h + 1, 1)):
             disc(E, x, y + dy, z, r, leaf)
         E.box(x, x + 1, y, y + h, z, z + 1, log)
-        if kind == "oak":
-            fungus(E, x, y, z, h - 2, ("north", "south", "west", "east"))
 
 
 FACE = {"north": (0, -1), "south": (0, 1), "west": (-1, 0), "east": (1, 0)}
@@ -1569,10 +1590,9 @@ def obstacle(E, cols, rect, height=3):
     cols.blocked[max(0, x0):max(0, x1), max(0, z0):max(0, z1)] = True
     if not buildings.BARRIERS:
         return
-    for x in range(max(0, x0), min(cols.n, x1)):
-        for z in range(max(0, z0), min(cols.n, z1)):
-            y = cols.surface(x, z)
-            E.add([x] * height, list(range(y, y + height)), [z] * height, "barrier", hard=False)
+    X, Z = np.meshgrid(np.arange(max(0, x0), min(cols.n, x1)), np.arange(max(0, z0), min(cols.n, z1)), indexing="ij")
+    Y = cols.wtop[X, Z].astype(np.int32)[..., None] + 1 + np.arange(height)      # one add: columns in x, z order
+    E.add(np.repeat(X, height), Y, np.repeat(Z, height), "barrier", hard=False)
 
 
 def player_color(p, players=None):
@@ -2141,13 +2161,16 @@ def build_chunk(cx, cz, cols, edits, origin=(0, 0)):
     g = lambda a: a[sl].T[None]          # (1, z, x) for broadcasting against Y
     top, wtop, top_id, sub_id = g(cols.top), g(cols.wtop), g(cols.top_id), g(cols.sub_id)
     ice, deco, sub = g(cols.ice), cols.deco[sl].T, top - g(cols.sub_depth)
-    Y = np.arange(MIN_Y, MAX_Y, dtype=np.int32)[:, None, None]
+    # the terrain passes run only up to the highest ground or water: above it all is air (#701, 2× faster)
+    n = int(np.clip(max(top.max(), wtop.max()) + 1 - MIN_Y, 1, HEIGHT))
+    Y = np.arange(MIN_Y, MIN_Y + n, dtype=np.int32)[:, None, None]
 
-    vol = np.where(Y < sub, np.where(Y < 0, DEEPSLATE, STONE), AIR).astype(np.uint16)
-    vol = np.where((Y >= sub) & (Y < top), sub_id, vol)
-    vol = np.where(Y == top, top_id, vol)
+    vol = np.zeros((HEIGHT, 16, 16), np.uint16)         # AIR
+    low = np.where(Y < sub, np.where(Y < 0, DEEPSLATE, STONE), AIR).astype(np.uint16)
+    low = np.where((Y >= sub) & (Y < top), sub_id, low)
+    low = np.where(Y == top, top_id, low)
     water = (Y > top) & (Y <= wtop)
-    vol = np.where(water, np.where(ice & (Y == wtop), ICE, WATER), vol)
+    vol[:n] = np.where(water, np.where(ice & (Y == wtop), ICE, WATER), low)
     vol[0] = np.where(top[0] > NONE, BEDROCK, AIR)
     if cols.floor > MIN_Y:              # --border diorama, island, table: the map stands on a floor with air under it
         vol[:cols.floor - MIN_Y] = AIR
@@ -2172,23 +2195,29 @@ def build_chunk(cx, cz, cols, edits, origin=(0, 0)):
         vol[ey[soft][free], ez[soft][free], ex[soft][free]] = eid[soft][free]
         vol[ey[hard], ez[hard], ex[hard]] = eid[hard]
 
+    # the scans below look only at the sections with blocks and one row of air over them (AIR = 0: the maximum of
+    # an empty section is 0), so that a lower half of a plant at the top still sees the air above it
+    full = np.flatnonzero(vol.reshape(HEIGHT // 16, 4096).max(1))
+    used = vol[:min(HEIGHT, 16 * (int(full[-1]) + 1) + 1) if len(full) else 16]
+
     # Tall plants: remove an upper half without its lower half (when an object took the place of the lower half)
-    counts = np.bincount(vol.ravel(), minlength=len(B.states))
+    counts = np.bincount(used.ravel(), minlength=len(B.states))
     for lower, upper in TALL_PLANTS:
         if not (counts[lower] or counts[upper]):        # the full scans below are slow: skip them when possible
             continue
-        ys, zs, xs = np.nonzero(vol[1:] == upper)
-        bad = vol[ys, zs, xs] != lower
-        vol[ys[bad] + 1, zs[bad], xs[bad]] = AIR
-        ys, zs, xs = np.nonzero(vol[:-1] == lower)
-        bad = vol[ys + 1, zs, xs] != upper
-        vol[ys[bad], zs[bad], xs[bad]] = SHORT_GRASS
+        ys, zs, xs = np.nonzero(used[1:] == upper)
+        bad = used[ys, zs, xs] != lower
+        used[ys[bad] + 1, zs[bad], xs[bad]] = AIR
+        ys, zs, xs = np.nonzero(used[:-1] == lower)
+        bad = used[ys + 1, zs, xs] != upper
+        used[ys[bad], zs[bad], xs[bad]] = SHORT_GRASS
 
     # Blocks under the water surface are waterlogged, else they leave a dry gap in the water
-    wet = water & (vol != WATER) & (vol != ICE)
+    low = vol[:n]                                       # a view: the water is below n
+    wet = water & (low != WATER) & (low != ICE)
     if wet.any():
-        vals, inv = np.unique(vol[wet], return_inverse=True)
-        vol[wet] = np.array([B.wet(int(v)) for v in vals], np.uint16)[inv]
+        vals, inv = np.unique(low[wet], return_inverse=True)
+        low[wet] = np.array([B.wet(int(v)) for v in vals], np.uint16)[inv]
 
     # Biomes: one per 4x4 block cell, the same for all heights.
     cells = cols.biome[ox + 2:ox + 16:4, oz + 2:oz + 16:4].T            # (z, x) 4x4
@@ -2216,7 +2245,7 @@ def build_chunk(cx, cz, cols, edits, origin=(0, 0)):
     block_entities = []
     be_ids = [i for i in sorted(present) if block_entity_type(B.states[i])]
     for i in be_ids:
-        for y, z, x in zip(*np.nonzero(vol == i)):
+        for y, z, x in zip(*np.nonzero(used == i)):
             pos = (x0 + int(x), int(y) + MIN_Y, z0 + int(z))
             block_entities.append(Compound({
                 "id": String("minecraft:" + block_entity_type(B.states[i])), "keepPacked": Byte(0),
@@ -2390,8 +2419,10 @@ def turn_area(area, size, k):
 
 def area_selector(c, T):
     """The entity selector of the units of the player of an "Objects in Area" condition: the blocks of the tiles
-    x1..x2, y1..y2 (z), all heights. An area of -1 is the whole map. The object type filter is not used yet."""
-    sel = [f"tag=aoe2mc.p{c['player']}"]
+    x1..x2, y1..y2 (z), all heights. An area of -1 is the whole map. A unit type filter is the tag aoe2mc.t<id>
+    of the units (#681); the "object" of an effect (a name, #656) is not a filter here."""
+    obj = c.get("object")
+    sel = [f"tag=aoe2mc.p{c['player']}"] + [f"tag=aoe2mc.t{obj}"] * (isinstance(obj, int) and obj >= 0)
     if min(c["area"]) >= 0:
         x1, y1, x2, y2 = c["area"]
         x1, x2, y1, y2 = min(x1, x2), max(x1, x2), min(y1, y2), max(y1, y2)
@@ -2453,7 +2484,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None):
     for t in triggers:
         conds = t["conditions"]
         kinds = {(c["type"], c["inverted"]) for c in conds}
-        if not t["enabled"] or not conds or kinds not in ({(TIMER, False)}, {(IN_AREA, False)}):
+        if not t["enabled"] or not conds or kinds not in ({(TIMER, False)}, {(IN_AREA, False)}) or \
+                any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds):   # unit classes: not yet
             continue
         lines = []
         for e in t["effects"]:
