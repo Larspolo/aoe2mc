@@ -79,8 +79,10 @@ owns (see "Runs can overlap"):
 - Its ticket has `needs-human` or `blocked`, or is closed → skip the PR: it waits for the owner or another
   ticket. When the ticket is closed as "not planned", close the PR with a one-line comment.
 - CI green or running, no label → skip it: the Automerge workflow merges it. Do not merge it by hand.
-  Exception: CI was green more than 15 minutes ago and the PR is still open (the workflow failed) → read the last
-  Automerge run (`/actions/workflows/automerge.yml/runs?per_page=5`) and say why on the status issue.
+  Exception: the `quick` check is green and the PR is open for more than 10 minutes → start the Automerge sweep
+  (`/actions/workflows/automerge.yml/dispatches -f ref=main`) and say so on the status issue: GitHub drops its cron
+  runs, and a CI run of `GITHUB_TOKEN` gives no `workflow_run` event (#734). Still open 15 minutes after the sweep →
+  read the last Automerge run (`/actions/workflows/automerge.yml/runs?per_page=5`) and say why on the status issue.
 - CI red, stalled (see "Runs can overlap") or owner review comments → take it over and fix it now: continue at
   step 6.8. That is the work of this cycle.
 - Merge conflict (label `conflict`, or `mergeable_state` is `dirty`, often with no CI run) → step 6.10, then
