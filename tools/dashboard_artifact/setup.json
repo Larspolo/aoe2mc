@@ -1,0 +1,142 @@
+[
+ {
+  "part": "Autopilot runs",
+  "group": "Runs",
+  "when": "Hourly at :06, and each time the pacer starts one",
+  "does": "One unattended cloud session: reads your feedback, triages new issues, does tickets (one PR each) and reports on the status issue",
+  "where": "Scheduled task “aoe2mc autopilot”, .claude/skills/autopilot"
+ },
+ {
+  "part": "Pacer session",
+  "group": "Runs",
+  "when": "A cycle every 10 minutes",
+  "does": "Reads the 5-hour and 7-day usage and starts 0 to 4 new runs, so that usage follows the target",
+  "where": ".claude/skills/pacer, tools/usage.py --fire"
+ },
+ {
+  "part": "Pacer heartbeat",
+  "group": "Runs",
+  "when": "Hourly at :36",
+  "does": "Wakes the pacer session when its 10-minute chain has stopped",
+  "where": "Scheduled task “aoe2mc pacer heartbeat”"
+ },
+ {
+  "part": "Quota target",
+  "group": "Rules",
+  "when": "Each pacer cycle",
+  "does": "90 % of the 5-hour window 2 hours before the reset, then 98 % at the reset; the 7-day window limits it too",
+  "where": "tools/usage.py"
+ },
+ {
+  "part": "Claims",
+  "group": "Rules",
+  "when": "Each run, a beat every few minutes",
+  "does": "A run locks its ticket with the ref claim/N and beats it; a claim without a beat for 25 minutes is free again",
+  "where": "tools/claim.py"
+ },
+ {
+  "part": "Queue refill",
+  "group": "Rules",
+  "when": "When fewer tickets are ready than runs",
+  "does": "Makes new tickets from the open epics, at most 2 × runs − ready (12 at most); closes finished epics",
+  "where": ".claude/skills/autopilot (step 5)"
+ },
+ {
+  "part": "Roadmap",
+  "group": "Rules",
+  "when": "When the epics have no work left; a review once per 2 hours (a lock)",
+  "does": "Turns the missing features of the three goals into new epics",
+  "where": "docs/ROADMAP.md, .claude/skills/roadmap, tools/claim.py 0 --roadmap"
+ },
+ {
+  "part": "Process review",
+  "group": "Rules",
+  "when": "A time-slot lock: one review per 45 minutes; a slot without a large loss doubles (up to 6 hours)",
+  "does": "Looks at the whole system (how runs start, the loop, time and quota, quality, weak spots, reuse); changes one thing only when a loss is above its threshold, and checks the last change",
+  "where": ".claude/skills/improve, tools/claim.py 0 --review, tools/health.py"
+ },
+ {
+  "part": "Release bar",
+  "group": "Rules",
+  "when": "Each run report, and the roadmap review",
+  "does": "What 100 % means for each goal: the features with milestones B, A and C, the release checks and a 30 % bug reserve",
+  "where": "docs/RELEASE.md, tools/release.py"
+ },
+ {
+  "part": "Project config",
+  "group": "Rules",
+  "when": "Read by each tool",
+  "does": "The project values (owner, repository, commands, labels) in one file, so that the system can run another project",
+  "where": "agent.toml, tools/agent_config.py"
+ },
+ {
+  "part": "Bootstrap",
+  "group": "Rules",
+  "when": "Once, for a new project",
+  "does": "Copies the generic parts to a new repository and prints the setup steps that only the owner can do",
+  "where": "tools/bootstrap.py, docs/SYSTEM.md"
+ },
+ {
+  "part": "Decision tickets",
+  "group": "Owner",
+  "when": "When a design has several good options",
+  "does": "For the runs: a “Decide: …” ticket with the label needs-human; the work that needs it waits. In the owner's session, the agent asks directly",
+  "where": ".claude/skills/ticket"
+ },
+ {
+  "part": "Your steering",
+  "group": "Owner",
+  "when": "Any time",
+  "does": "Issues and comments by Larspolo; priorities P0 to P3; the label muted parks a ticket; the label paused on the status issue stops all runs",
+  "where": "docs/STEERING.md"
+ },
+ {
+  "part": "CI quick",
+  "group": "GitHub Actions",
+  "when": "Each PR and each push to main",
+  "does": "Lint (ruff) and the fast tests",
+  "where": ".github/workflows/ci.yml"
+ },
+ {
+  "part": "CI slow and mc",
+  "group": "GitHub Actions",
+  "when": "Each night at 03:17 UTC",
+  "does": "The slow tests and the tests on a real Minecraft server; a red run opens a P0 ticket",
+  "where": ".github/workflows/ci.yml"
+ },
+ {
+  "part": "Automerge",
+  "group": "GitHub Actions",
+  "when": "After each CI run, and a sweep every 5 minutes",
+  "does": "Merges a PR when its quick CI is green; skips hold, needs-human and blocked",
+  "where": ".github/workflows/automerge.yml"
+ },
+ {
+  "part": "Unconflict",
+  "group": "GitHub Actions",
+  "when": "Every 20 minutes",
+  "does": "Merges main into PRs with a conflict, or labels them conflict",
+  "where": ".github/workflows/unconflict.yml"
+ },
+ {
+  "part": "Claims cleanup",
+  "group": "GitHub Actions",
+  "when": "When an issue closes, and daily at 05:53 UTC",
+  "does": "Deletes the claim refs of closed tickets",
+  "where": ".github/workflows/claims.yml"
+ },
+ {
+  "part": "Dashboard issue",
+  "group": "GitHub Actions",
+  "when": "On issue and PR events, and hourly at :23",
+  "does": "Updates the dashboard on issue #1 (also the count of muted tickets and process changes)",
+  "where": ".github/workflows/dashboard.yml"
+ },
+ {
+  "part": "Coverage",
+  "group": "GitHub Actions",
+  "when": "Each push to main",
+  "does": "Updates docs/coverage.md and the feature table",
+  "where": ".github/workflows/coverage.yml"
+ }
+]

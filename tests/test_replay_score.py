@@ -25,7 +25,7 @@ def play(timeline, bar=True):
     def sleep(s):
         now[0] += s
     r = replay.Replay(game, d)
-    r.run(clock=lambda: now[0], sleep=sleep, log=None, bar=bar)
+    r.run(clock=lambda: now[0], sleep=sleep, log=None, bar=bar, finish=True)
     return r, [c for c in game.sent if replay.POP in c]
 
 

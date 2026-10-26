@@ -11,7 +11,7 @@ Usage:
     python3 game/run.py WORLD --play --bot        # also a bot plays player 2: its villagers gather (game/bot.py)
     python3 game/run.py WORLD --play --bot --bot-attack 5:00   # its soldiers attack player 1 from 5:00 (default 10:00)
     python3 game/run.py WORLD --play --log F.jsonl  # also write a timed event log (tools/measure_gather.py reads it)
-    python3 game/run.py WORLD --replay [--speed 4]  # replay the recorded game of the world (game/replay.py), then stop
+    python3 game/run.py WORLD --replay [--speed 4]  # replay the recorded game of the world (game/replay.py), then wait for Ctrl-C
 
 Join with Minecraft (multiplayer, localhost): players play in creative mode and get operator rights.
 The server plays the world in place (the game changes it). Server files (eula, properties, logs) go to .cache/.
@@ -292,9 +292,9 @@ def main(argv=None):
         if a.bench:
             print(f"{bench(game, a.bench):.0f} commands per second through RCON")
             return
-        if a.replay:
+        if a.replay:                                 # after the end the player can look around (#978)
             replay(game, a.world, a.speed, a.start)
-            return
+            print("The replay ended. The server stays up: type commands, Ctrl-C stops it.", file=sys.stderr)
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
                 play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack)
