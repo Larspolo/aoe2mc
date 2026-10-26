@@ -3,11 +3,12 @@ seconds). After the research the villagers carry 3 more resources and walk 10 % 
 from urllib.parse import unquote
 
 from test_gather import FakeServer, grid, tiny
-from test_train_menu import RALLY
+from test_train_menu import IMPERIAL, RALLY
 
 from game import ai, gather, train
 
-CASTLE = " 4:bell:Castle Age:800 food · 200 gold · 160 s · needs 2 of archery range, stable, blacksmith, market (0/2)"   # the next age (#1080)
+CASTLE = " 4:bell:Castle Age:800 food · 200 gold · 160 s · needs 2 of archery range, stable, blacksmith, market (0/2)" \
+    + IMPERIAL                                                     # the next ages (#1080)
 
 
 def setup(food=175, wood=50):
