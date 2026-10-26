@@ -464,10 +464,16 @@ class Replay:
                 self.entering[i] = [*home, None]
         boats = [(i, v) for i, v in group if ship(v.name)]          # ships sail on the water (#866)
         wet = self.goals(e, True) if boats else set()
-        group = [(i, v) for i, v in group if not ship(v.name)] if goals else []
+        group = [(i, v) for i, v in group if not ship(v.name)]
+        if not goals:                                               # no free cell next to the target (#869)
+            near = [(i, v, self.detour(i, v, tile, e["time"])) for i, v in group]
+            group, first = [], [c for i, v, cmds in near if cmds is not None
+                                for c in self.look(v, self.gather.job_of(self.map, tile)) + cmds]
+        else:
+            first = []
         boats = boats if wet else []
         if not group and not boats:
-            return []
+            return first
         looks = [c for _, v in group for c in self.look(v, self.gather.job_of(self.map, tile) if tile else "none")]
         to_tile = not (e["kind"] == "order" and e.get("target") is not None)
         slots = self.formation([v for _, v in group], e["tile"]) if to_tile and group else {}
@@ -476,7 +482,11 @@ class Replay:
             out, group = self.attack(group, target) if (target := self.enemy(e)) else ([], group)
             for i, v in group:
                 end = slots.get(v) or min(goals, key=lambda c: (math.dist(c, v.cell), c))
-                path = self.map.path(v.cell, {end}, PATH_CELLS) or []
+                path = self.map.path(v.cell, {end}, PATH_CELLS)
+                if path is None and (cmds := self.detour(i, v, tile, e["time"])) is not None:
+                    out += cmds
+                    continue
+                path = path or []
                 cmds, due = self.order(v, path[LEG - 1:-1:LEG] + [end], e["time"])
                 out += cmds
                 if v.path:
@@ -488,14 +498,17 @@ class Replay:
         for i, v in group + boats:                                  # a boat has no path finding: /tp steps
             w = ship(v.name)
             v.path = (self.map.path(v.cell, {slots[v]}, PATH_CELLS) if v in slots else None) or \
-                self.map.path(v.cell, wet if w else goals, PATH_CELLS, w) or []
+                self.map.path(v.cell, wet if w else goals, PATH_CELLS, w)
+            if v.path is None and not w and self.detour(i, v, tile, e["time"]) is not None:
+                continue
+            v.path = v.path or []
             due = self.moving[i] if i in self.moving and v.path else self.next_step(v, e["time"])
             if due is None:
                 self.moving.pop(i, None)
                 self.start(i, v, e["time"])
             else:
                 self.moving[i] = due
-        return looks + out
+        return first + looks + out
 
     def look(self, v, task):
         """The command that gives villager v the look of the AoE2 task (`LUMBERJACK` ..., "none": no work), when it
@@ -622,17 +635,28 @@ class Replay:
 
     def next_resource(self, i, v, t):
         """Unit i gathered the last of its resource at game time t: as in AoE2 it walks to the nearest resource of
-        the same kind within NEXT tiles that has something left, and gathers there. Else it stays (the record has no
-        drop-off). Returns the commands (Paper: the first leg)."""
-        T, (x, z) = self.T, v.cell
-        far = {k: math.dist((x / T, z / T), (k[0] + 0.5, k[1] + 0.5)) for k, n in self.crew.source(v).items() if n > 0}
-        near = sorted((d, k) for k, d in far.items() if d <= NEXT)
-        if not near:
-            return self.look(v, "none")
-        v.tree = near[0][1]
-        path = self.map.path(v.cell, self.map.around(self.map.spot(v.tree)), PATH_CELLS)
-        if path is None:
-            return self.look(v, "none")
+        the same kind within NEXT tiles that has something left, and gathers there (#720). Else it stays (the record
+        has no drop-off). Returns the commands (Paper: the first leg)."""
+        way = self.reachable(v, v.cell)
+        return self.look(v, "none") if way is None else self.go(i, v, *way, t)
+
+    def reachable(self, v, at):
+        """(tile, path) of the resource of the kind of v within NEXT tiles of cell `at` that has something left and
+        is nearest on a path from v (one path search for all of them, #869), or None."""
+        T = self.T
+        far = {k: math.dist((at[0] / T, at[1] / T), (k[0] + 0.5, k[1] + 0.5)) for k, n in self.crew.source(v).items()
+               if n > 0}
+        goals = {}
+        for d, k in sorted((d, k) for k, d in far.items() if d <= NEXT):
+            for c in self.map.around(self.map.spot(k)):
+                goals.setdefault(c, k)                              # a cell next to two of them: the nearer one
+        path = self.map.path(v.cell, goals, PATH_CELLS)
+        return None if path is None else (goals[path[-1] if path else v.cell], path)
+
+    def go(self, i, v, tile, path, t):
+        """Unit i walks on path to its resource `tile` from game time t on, and gathers there. Returns the commands
+        (Paper: the first leg)."""
+        v.tree = tile
         if self.ai and path:
             cmds, due = self.order(v, path[LEG - 1:-1:LEG] + [path[-1]], t)
             if v.path:
@@ -647,6 +671,15 @@ class Replay:
         else:
             self.moving[i] = due
         return []
+
+    def detour(self, i, v, tile, t):
+        """A villager whose ORDER on a tree, bush or mine `tile` found no path takes the nearest one of the same kind
+        that it can reach, as in AoE2 (#869). Returns the commands, or None (no such resource: the order stays)."""
+        if tile is None or tile in self.map.farms or not v.name.startswith("VILLAGER"):
+            return None
+        v.res = self.map.resource(tile)
+        way = self.reachable(v, (tile[0] * self.T, tile[1] * self.T))
+        return None if way is None else self.go(i, v, *way, t)
 
     def holder(self, e):
         """(footprint, entry of aoe2mc.json) of the own start building with garrison room that an ORDER targets, or
