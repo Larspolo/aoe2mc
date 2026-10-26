@@ -11,7 +11,8 @@ on it queues 1 villager, a shift click 5 (as many as the food and the queue allo
 new queue count. gather.Gather.click calls open_menu().
 Military units (#654): a right click on an own barracks opens its menu with "Militia" (TRAINS); a trained militia
 joins the military units of the player (g.soldiers), so a click can select it and send it to attack. An own archery
-range trains archers (#670): they shoot from their AoE2 range (combat.range_command).
+range trains archers (#670): they shoot from their AoE2 range (combat.range_command). An own stable trains scout
+cavalry (#671): a rider on a horse (the Passengers of units.make_entity); the horse is the unit.
 Technologies (#655): a technology (TECHS) is an item of the menu of its building and uses the queue of the units, as in
 AoE2, but needs no population room. A click queues it once; when it is complete it goes into g.techs, leaves the menu
 and changes the values of the live and the new units (stats()). Loom: villagers get 15 hit points and 1/2 armor.
@@ -37,13 +38,13 @@ import menu  # noqa: E402
 COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   # as in AoE2
          "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}, "FEUDAL_AGE": {"food": 500},
          "DOUBLE_BIT_AXE": {"food": 100, "wood": 50},
-         "FORGING": {"food": 150}}
+         "FORGING": {"food": 150}, "SCOUT_CAVALRY": {"food": 80}}
 TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130,   # AoE2 seconds
                "DOUBLE_BIT_AXE": 25,
-               "FORGING": 50}
+               "FORGING": 50, "SCOUT_CAVALRY": 30}
 TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE"), "BARRACKS": ("MILITIA",),   # the units and technologies of each
           "ARCHERY_RANGE": ("ARCHER",),                                         # building (#654, #670, #655)
-          "BLACKSMITH": ("FORGING",),                                           # (#675)
+          "BLACKSMITH": ("FORGING",), "STABLE": ("SCOUT_CAVALRY",),             # (#675, #671)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",)}                                   # (#723)
 TECHS = {"DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
@@ -58,6 +59,7 @@ CENSUS = 2.0                                                       # AoE2 second
 ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, item and name of each unit (#620)
          "MILITIA": (0, "zombie_spawn_egg", "Militia"),             # the mob of units.classify
          "ARCHER": (0, "skeleton_spawn_egg", "Archer"),
+         "SCOUT_CAVALRY": (0, "horse_spawn_egg", "Scout Cavalry"),
          "DOUBLE_BIT_AXE": (0, "book", "Double-Bit Axe"),
          "FORGING": (0, "book", "Forging"),
          "LOOM": (1, "book", "Loom"),                               # a book for a technology (#618)

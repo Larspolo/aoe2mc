@@ -90,9 +90,10 @@ address that it prints. The replay shows, at their game time: each building and 
 design), chat lines in the player color, age-ups and resigns as a title, and research in the action bar. A trained
 unit appears in front of its building. The units of a move order or a right-click order walk to its target at their
 AoE2 speed, and a group stops there in a line formation. A villager that an order sends to a tree, a fruit bush
-or a mine gathers there at the AoE2 rate: the tree falls and the mine goes when they are empty. The record has no
-positions and no results of the game, so the replay cannot show: fights, dead units, the walks to the drop sites,
-destroyed buildings or the exact paths of the units. A unit that has no path stays where it is.
+or a mine gathers there at the AoE2 rate: the tree falls and the mine goes when they are empty, and the
+villager takes the next one near it. The record has no positions and no results of the game, so the replay cannot
+show: fights, dead units, the walks to the drop sites, destroyed buildings or the exact paths of the units. A unit
+that has no path stays where it is.
 
 | Option | Default | Description |
 |---|---|---|
