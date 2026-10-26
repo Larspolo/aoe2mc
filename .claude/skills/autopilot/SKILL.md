@@ -278,7 +278,8 @@ Do not change a priority that the owner set. Propose it.
 
 If the argument asks for more than 1 ticket, go back to step 2 after step 8 (finish stalled PRs of other runs, then read new owner
 feedback). In a
-cloud session, reset the branch first: `git fetch origin main && git checkout -B <branch> origin/main`. Never force-push: the auto mode denies it
+cloud session, reset the branch first: `git fetch origin main && git checkout -B <branch> origin/main` (fetch `main` alone:
+a fetch that also names a deleted branch fails as a whole, and `origin/main` stays old). Never force-push: the auto mode denies it
 ("Git Destructive"; 33 runs lost a step on it on 2026-10-26). Push with
 `git ls-remote --exit-code --heads origin <branch>` first: exit 2 (the usual case: Automerge deletes the branch after
 the merge) → `git push -u origin <branch>`. Exit 0 → `git fetch origin <branch> && git merge --no-edit origin/<branch>`
