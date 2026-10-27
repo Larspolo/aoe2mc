@@ -1,9 +1,9 @@
 """
 AoE2 combat values of the units and buildings of the game program (#513, epic #395: milestone D).
 
-One table, keyed by the AoE2 unit name of `units.classify`. The values are the published AoE2 DE values of the
-base unit: no Blacksmith or University upgrades, no civilization bonuses. `range` is in tiles (0: melee),
-`reload` in game seconds. `bonus` is extra attack against the units of a class (`classes`): AoE2 adds it
+One table (`STATS`, one line per unit in `data/units.jsonl`, #1912), keyed by the AoE2 unit name of `units.classify`.
+The values are the published AoE2 DE values of the base unit: no Blacksmith or University upgrades, no civilization
+bonuses. `range` is in tiles (0: melee), `reload` in game seconds. `bonus` is extra attack against the units of a class (`classes`): AoE2 adds it
 for each armor class of the target. `damage` is the AoE2 damage rule (#514); the Paper plugin applies it
 (`aoe stats` gives a mob its values, `stats_command`).
 A ranged unit shoots from its AoE2 range, one shot per reload time (#515, `aoe range`, `range_command`).
@@ -20,6 +20,7 @@ from collections import namedtuple
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from gather import NORMAL  # noqa: E402
 import garrison  # noqa: E402
+import table  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import units  # noqa: E402
@@ -34,212 +35,9 @@ UNI = "unique"                                        # the unique units of the 
 GUN = "gunpowder"                                     # the targets of the Condottiero and Winged Hussar bonus (#1007)
 SHIP, WAR = "ship", "warship"                         # the ships; "warship": the AoE2 class "Long-range warship"
 FIRE = "fireship"                                     # the AoE2 class "Fire Ships" (the hulk bonus, #1489)
-SPEAR = {CAV: 15, CAM: 12, ELE: 15}                   # spearman bonus, more in the later ages of the line
-STATS = {
-    # infantry: militia line and spearman line
-    "MILITIA": Stats(40, 4, 0, 1, 0, 2.0, {}, (INF,)),
-    "MAN_AT_ARMS": Stats(45, 6, 0, 1, 0, 2.0, {}, (INF,)),
-    "LONG_SWORDSMAN": Stats(60, 9, 0, 1, 0, 2.0, {}, (INF,)),
-    "TWO_HANDED_SWORDSMAN": Stats(65, 12, 0, 1, 0, 2.0, {}, (INF,)),
-    "CHAMPION": Stats(70, 13, 1, 1, 0, 2.0, {}, (INF,)),
-    "SPEARMAN": Stats(45, 3, 0, 0, 0, 3.0, SPEAR, (INF, SPE)),
-    "PIKEMAN": Stats(55, 4, 0, 0, 0, 3.0, {CAV: 22, CAM: 18, ELE: 25}, (INF, SPE)),
-    "HALBERDIER": Stats(60, 6, 0, 0, 0, 3.0, {CAV: 32, CAM: 26, ELE: 28}, (INF, SPE)),
-    "EAGLE_SCOUT": Stats(50, 4, 0, 2, 0, 2.0, {SIE: 3}, (INF,)),               # the Dark and Feudal Age values
-    "EAGLE_WARRIOR": Stats(55, 7, 0, 3, 0, 2.0, {CAM: 2, CAV: 3, SIE: 3, SHIP: 1}, (INF,)),   # AoE2 DE wiki (#1555)
-    "ELITE_EAGLE_WARRIOR": Stats(60, 9, 0, 4, 0, 2.0, {CAM: 3, CAV: 4, SIE: 5, SHIP: 2}, (INF,)),
-    # archers: the attack is pierce damage
-    "ARCHER": Stats(30, 4, 0, 0, 4, 2.0, {SPE: 3}, (ARC,)),
-    "CROSSBOWMAN": Stats(35, 5, 0, 0, 5, 2.0, {SPE: 3}, (ARC,)),
-    "ARBALESTER": Stats(40, 6, 0, 0, 5, 2.0, {SPE: 3}, (ARC,)),
-    "SKIRMISHER": Stats(30, 2, 0, 3, 4, 3.0, {ARC: 3, SPE: 3}, (ARC,)),
-    "ELITE_SKIRMISHER": Stats(35, 3, 0, 4, 5, 3.0, {ARC: 4, SPE: 3}, (ARC,)),
-    "IMPERIAL_SKIRMISHER": Stats(35, 4, 0, 5, 5, 3.0, {ARC: 5, SPE: 4}, (ARC,)),
-    "LONGBOWMAN": Stats(35, 6, 0, 0, 5, 2.0, {SPE: 2}, (ARC, UNI)),
-    "CAVALRY_ARCHER": Stats(50, 6, 0, 0, 4, 2.0, {SPE: 2}, (ARC, CAV)),
-    "HEAVY_CAVALRY_ARCHER": Stats(60, 7, 1, 0, 4, 2.0, {SPE: 4}, (ARC, CAV)),
-    "HAND_CANNONEER": Stats(40, 17, 1, 0, 7, 3.45, {INF: 10, SPE: 1}, (ARC, GUN)),
-    # cavalry
-    "SCOUT_CAVALRY": Stats(45, 3, 0, 2, 0, 2.0, {}, (CAV,)),
-    "LIGHT_CAVALRY": Stats(60, 7, 0, 2, 0, 2.0, {}, (CAV,)),
-    "HUSSAR": Stats(75, 7, 0, 2, 0, 1.9, {}, (CAV,)),
-    "KNIGHT": Stats(100, 10, 2, 2, 0, 1.8, {}, (CAV,)),
-    "CAVALIER": Stats(120, 12, 2, 2, 0, 1.8, {}, (CAV,)),
-    "PALADIN": Stats(160, 14, 2, 3, 0, 1.9, {}, (CAV,)),                     # ROF 1.9: the wiki infobox (#1501)
-    "CAMEL_RIDER": Stats(100, 6, 0, 0, 0, 2.0, {CAV: 9, CAM: 5, SHIP: 5}, (CAM,)),   # the wiki infobox (#1550)
-    "HEAVY_CAMEL_RIDER": Stats(120, 7, 0, 0, 0, 2.0, {CAM: 9, CAV: 18, SHIP: 9}, (CAM,)),
-    "IMPERIAL_CAMEL_RIDER": Stats(140, 8, 0, 0, 0, 1.667, {"building": 2, CAM: 9, CAV: 18}, (CAM,)),
-    "WAR_ELEPHANT": Stats(450, 15, 1, 2, 0, 2.0, {"building": 30}, (ELE, UNI)),
-    "ELITE_WAR_ELEPHANT": Stats(600, 20, 1, 3, 0, 2.0, {"building": 30}, (ELE, UNI)),
-    # unique units of the castle (#712; Throwing Axeman and Mameluke hit with melee damage in AoE2: here pierce). #1006:
-    # the first projectile of Kipchak and Organ Gun, the ranged mode of the Ratha, the Castle Age Serjeant.
-    # #1005: a Kamayuk hits from AoE2 range 1: a melee hit. #1041: the base values of the wiki without the civilization
-    # bonus (Berserk 54 HP, Janissary 35 HP, Mangudai and Samurai reload, Genoese armor, Rattan Archer HP, Teutonic armor)
-    "ARAMBAI": Stats(60, 12, 0, 1, 5, 2.0, {SIE: 2}, (ARC, CAV, UNI)),
-    "BALLISTA_ELEPHANT": Stats(250, 9, 0, 3, 5, 2.5, {"building": 5}, (CAV, ELE, SIE, UNI, HSI)),
-    "BERSERK": Stats(54, 12, 1, 1, 0, 2.0, {"building": 2}, (INF, UNI)),
-    "BOYAR": Stats(100, 12, 4, 2, 0, 1.9, {}, (CAV, UNI)),
-    "CAMEL_ARCHER": Stats(55, 7, 0, 1, 4, 2.0, {}, (ARC, CAM, UNI)),
-    "CATAPHRACT": Stats(110, 9, 2, 1, 0, 1.8, {INF: 13}, (CAV, UNI)),
-    "CENTURION": Stats(110, 13, 2, 3, 0, 1.9, {}, (CAV, UNI)),
-    "CHAKRAM_THROWER": Stats(40, 3, 1, 0, 5, 2.0, {"building": 1}, (INF, UNI)),   # the Gurjaras castle (#1612)
-    "CHU_KO_NU": Stats(45, 8, 0, 0, 4, 3.0, {SPE: 2}, (ARC, UNI)),
-    "COMPOSITE_BOWMAN": Stats(40, 4, 1, 0, 4, 2.0, {SPE: 2}, (ARC, UNI)),
-    "CONQUISTADOR": Stats(55, 16, 2, 1, 6, 2.9, {SIE: 4}, (ARC, CAV, UNI)),
-    "COUSTILLIER": Stats(115, 8, 2, 2, 0, 1.9, {}, (CAV, UNI)),
-    "ELITE_TEUTONIC_KNIGHT": Stats(110, 17, 8, 2, 0, 2.0, {"building": 4}, (INF, UNI)),
-    "FLAMING_CAMEL": Stats(55, 20, 0, 0, 0, 2.0, {"building": 200, CAV: 50, CAM: 50, ELE: 130, SIE: 25}, (CAM, UNI)),
-    "FLEMISH_MILITIA": Stats(40, 5, 1, 1, 0, 2.0, {CAV: 6, CAM: 4, ELE: 6}, (INF, UNI)),
-    "GBETO": Stats(40, 10, 0, 0, 5, 2.0, {}, (INF, UNI)),
-    "GENGHIS_KHAN": Stats(300, 25, 2, 2, 5, 2.0, {SIE: 3}, (ARC, CAV, UNI)),
-    "GENOESE_CROSSBOWMAN": Stats(45, 6, 1, 0, 4, 2.0, {CAV: 5, CAM: 4, ELE: 5}, (ARC, UNI)),
-    "GHULAM": Stats(60, 9, 0, 3, 0, 2.0, {ARC: 5, "building": 2}, (INF, UNI)),
-    "HUSKARL": Stats(60, 10, 0, 6, 0, 2.0, {ARC: 6, "building": 2}, (INF, UNI)),
-    "HUSSITE_WAGON": Stats(160, 10, 0, 7, 6, 3.45, {SIE: 3, "building": 1}, (SIE, UNI, HSI)),
-    "JAGUAR_WARRIOR": Stats(65, 15, 1, 2, 0, 2.0, {INF: 5, "building": 2}, (INF, UNI)),
-    "JANISSARY": Stats(35, 17, 1, 0, 7, 3.45, {SIE: 2}, (ARC, GUN, UNI)),
-    "KAMAYUK": Stats(70, 7, 1, 0, 0, 2.0, {CAV: 8, CAM: 6, ELE: 20}, (INF, UNI)),
-    "KARAMBIT_WARRIOR": Stats(30, 7, 0, 1, 0, 2.0, {}, (INF, UNI)),
-    "KESHIK": Stats(120, 9, 1, 2, 0, 1.9, {}, (CAV, UNI)),
-    "KIPCHAK": Stats(40, 4, 0, 0, 4, 2.2, {SPE: 1}, (ARC, CAV, UNI)),
-    "KONNIK": Stats(100, 12, 2, 2, 0, 2.4, {}, (CAV, UNI)),
-    "LEITIS": Stats(100, 13, 1, 1, 0, 1.9, {}, (CAV, UNI)),
-    "MAGYAR_HUSZAR": Stats(80, 10, 0, 2, 0, 1.8, {SIE: 5}, (CAV, UNI)),
-    "MAMELUKE": Stats(80, 8, 0, 0, 3, 2.0, {CAV: 9}, (CAM, UNI)),
-    "MANGUDAI": Stats(60, 6, 0, 0, 4, 2.1, {SIE: 3, SPE: 1}, (ARC, CAV, UNI)),
-    "MONASPA": Stats(70, 12, 3, 2, 0, 1.8, {}, (CAV, UNI)),
-    "OBUCH": Stats(80, 8, 2, 2, 0, 2.0, {"building": 4}, (INF, UNI)),
-    "ORGAN_GUN": Stats(50, 6, 2, 4, 7, 3.45, {INF: 2}, (GUN, SIE, UNI)),
-    "PLUMED_ARCHER": Stats(50, 5, 0, 1, 4, 1.9, {INF: 1, SPE: 2}, (ARC, UNI)),
-    "RATHA": Stats(100, 5, 3, 1, 4, 2.0, {SPE: 1}, (ARC, CAV, UNI)),
-    "RATTAN_ARCHER": Stats(35, 6, 0, 4, 4, 2.0, {SPE: 2}, (ARC, UNI)),
-    "SAMURAI": Stats(70, 10, 1, 1, 0, 1.9, {"building": 2, UNI: 10}, (INF, UNI)),
-    "SERJEANT": Stats(75, 8, 4, 2, 0, 2.0, {"building": 2}, (INF, UNI)),
-    "SHOTEL_WARRIOR": Stats(45, 16, 0, 0, 0, 2.0, {}, (INF, UNI)),
-    "SHRIVAMSHA_RIDER": Stats(55, 8, 0, 1, 0, 2.0, {}, (CAV, UNI)),
-    "TARKAN": Stats(100, 8, 1, 3, 0, 1.9, {"building": 8}, (CAV, UNI)),
-    "TEUTONIC_KNIGHT": Stats(90, 14, 7, 2, 0, 2.0, {"building": 4}, (INF, UNI)),
-    "THROWING_AXEMAN": Stats(60, 7, 0, 0, 5, 2.0, {"building": 1}, (INF, UNI)),
-    "URUMI_SWORDSMAN": Stats(55, 9, 1, 0, 0, 2.0, {"building": 1}, (INF, UNI)),
-    "WAR_WAGON": Stats(150, 9, 0, 2, 4, 2.5, {"building": 2}, (ARC, CAV, UNI)),
-    "WOAD_RAIDER": Stats(70, 11, 0, 1, 0, 2.0, {"building": 2}, (INF, UNI)),
-    # elite unique units (#1008, AoE2 wiki, DE, no upgrades): the wiki lists one bonus per class; "building" sums the bonus
-    # vs standard buildings and vs all buildings. No class here: shock infantry, ships, cavalry archers. #1075: without the
-    # civilization bonus, as the base units (#1041)
-    "ELITE_ARAMBAI": Stats(65, 14, 0, 2, 5, 2.0, {SIE: 2}, (ARC, CAV, UNI)),
-    "ELITE_BALLISTA_ELEPHANT": Stats(280, 10, 0, 3, 5, 2.5, {"building": 8}, (CAV, ELE, SIE, UNI, HSI)),
-    "ELITE_BERSERK": Stats(62, 14, 2, 1, 0, 2.0, {"building": 3}, (INF, UNI)),
-    "ELITE_BOYAR": Stats(130, 14, 8, 3, 0, 1.9, {}, (CAV, UNI)),
-    "ELITE_CAMEL_ARCHER": Stats(60, 8, 1, 1, 4, 2.0, {}, (ARC, CAM, UNI)),
-    "ELITE_CATAPHRACT": Stats(150, 12, 2, 1, 0, 1.7, {INF: 18}, (CAV, UNI)),
-    "ELITE_CENTURION": Stats(155, 15, 3, 3, 0, 1.9, {}, (CAV, UNI)),
-    "ELITE_CHAKRAM_THROWER": Stats(50, 4, 1, 0, 6, 2.0, {"building": 2, INF: 1}, (INF, UNI)),
-    "ELITE_CHU_KO_NU": Stats(50, 10, 0, 0, 4, 3.0, {SPE: 2}, (ARC, UNI)),
-    "ELITE_COMPOSITE_BOWMAN": Stats(50, 4, 2, 0, 4, 2.0, {SPE: 2}, (ARC, UNI)),
-    "ELITE_CONQUISTADOR": Stats(70, 19, 2, 2, 6, 2.9, {SIE: 6, "building": 2}, (ARC, CAV, UNI)),
-    "ELITE_COUSTILLIER": Stats(145, 11, 2, 2, 0, 1.9, {}, (CAV, UNI)),
-    "ELITE_GBETO": Stats(50, 13, 0, 0, 6, 2.0, {}, (INF, UNI)),
-    "ELITE_GENOESE_CROSSBOWMAN": Stats(50, 6, 1, 0, 4, 2.0, {CAV: 7, CAM: 6, ELE: 7}, (ARC, UNI)),
-    "ELITE_GHULAM": Stats(70, 11, 0, 6, 0, 2.0, {ARC: 6, "building": 2}, (INF, UNI)),
-    "ELITE_HUSKARL": Stats(70, 12, 0, 8, 0, 2.0, {ARC: 10, "building": 3}, (INF, UNI)),
-    "ELITE_HUSSITE_WAGON": Stats(230, 13, 1, 10, 6, 3.45, {SIE: 3, "building": 2}, (SIE, UNI, HSI)),
-    "ELITE_JAGUAR_WARRIOR": Stats(75, 19, 2, 2, 0, 2.0, {INF: 6, "building": 2}, (INF, UNI)),
-    "ELITE_JANISSARY": Stats(40, 22, 2, 0, 8, 3.45, {SIE: 3}, (ARC, GUN, UNI)),
-    "ELITE_KAMAYUK": Stats(80, 8, 1, 1, 0, 2.0, {CAV: 12, CAM: 10, ELE: 20}, (INF, UNI)),
-    "ELITE_KARAMBIT_WARRIOR": Stats(40, 8, 1, 1, 0, 2.0, {"building": 1}, (INF, UNI)),
-    "ELITE_KESHIK": Stats(145, 11, 1, 3, 0, 1.9, {}, (CAV, UNI)),
-    "ELITE_KIPCHAK": Stats(45, 5, 0, 0, 4, 2.2, {SPE: 1}, (ARC, CAV, UNI)),
-    "ELITE_KONNIK": Stats(120, 14, 2, 2, 0, 2.4, {}, (CAV, UNI)),
-    "ELITE_LEITIS": Stats(130, 16, 2, 1, 0, 1.9, {}, (CAV, UNI)),
-    "ELITE_LONGBOWMAN": Stats(40, 7, 0, 1, 6, 2.0, {SPE: 2}, (ARC, UNI)),
-    "ELITE_MAGYAR_HUSZAR": Stats(90, 11, 0, 2, 0, 1.8, {SIE: 8}, (CAV, UNI)),
-    "ELITE_MAMELUKE": Stats(90, 10, 1, 0, 3, 2.0, {CAV: 12}, (CAM, UNI)),
-    "ELITE_MANGUDAI": Stats(60, 8, 1, 0, 4, 2.1, {SIE: 5, SPE: 1}, (ARC, CAV, UNI)),
-    "ELITE_MONASPA": Stats(80, 14, 5, 2, 0, 1.8, {}, (CAV, UNI)),
-    "ELITE_OBUCH": Stats(95, 10, 2, 2, 0, 2.0, {"building": 6}, (INF, UNI)),
-    "ELITE_ORGAN_GUN": Stats(70, 8, 2, 6, 7, 3.45, {INF: 2, SIE: 1, "building": 1}, (GUN, SIE, UNI)),
-    "ELITE_PLUMED_ARCHER": Stats(65, 5, 0, 2, 5, 1.9, {INF: 2, SPE: 2}, (ARC, UNI)),
-    "ELITE_RATTAN_ARCHER": Stats(40, 7, 0, 6, 5, 2.0, {SPE: 2}, (ARC, UNI)),
-    "ELITE_SAMURAI": Stats(80, 12, 1, 1, 0, 1.9, {"building": 3, UNI: 12}, (INF, UNI)),
-    "ELITE_SERJEANT": Stats(85, 11, 6, 3, 0, 2.0, {"building": 3}, (INF, UNI)),
-    "ELITE_SHOTEL_WARRIOR": Stats(50, 18, 0, 1, 0, 2.0, {"building": 1}, (INF, UNI)),
-    "ELITE_SHRIVAMSHA_RIDER": Stats(70, 11, 0, 1, 0, 1.9, {}, (CAV, UNI)),
-    "ELITE_TARKAN": Stats(150, 11, 1, 4, 0, 1.9, {"building": 10}, (CAV, UNI)),
-    "ELITE_THROWING_AXEMAN": Stats(70, 8, 1, 0, 6, 2.0, {"building": 2}, (INF, UNI)),
-    "ELITE_URUMI_SWORDSMAN": Stats(65, 11, 1, 0, 0, 2.0, {"building": 2}, (INF, UNI)),
-    "ELITE_WAR_WAGON": Stats(200, 9, 0, 4, 5, 2.5, {"building": 2}, (ARC, CAV, UNI)),
-    "ELITE_WOAD_RAIDER": Stats(85, 15, 0, 1, 0, 2.0, {"building": 3}, (INF, UNI)),
-    # regional units (#1007). The steppe lancers hit from AoE2 range 1: a melee hit in Minecraft (the vanilla reach)
-    "BATTLE_ELEPHANT": Stats(250, 12, 1, 2, 0, 2.0, {"building": 4}, (ELE,)),
-    "CONDOTTIERO": Stats(80, 10, 1, 0, 0, 1.9, {GUN: 10, "building": 2}, (INF, UNI)),
-    "ELITE_BATTLE_ELEPHANT": Stats(300, 14, 1, 3, 0, 2.0, {"building": 7}, (ELE,)),
-    "ELITE_GENITOUR": Stats(55, 4, 0, 4, 4, 3.0, {ARC: 5, SPE: 3}, (ARC, CAV, UNI)),   # the wiki infobox (#1610)
-    "ELITE_STEPPE_LANCER": Stats(80, 11, 0, 2, 0, 2.0, {}, (CAV,)),
-    "GENITOUR": Stats(50, 3, 0, 4, 4, 3.0, {ARC: 4, SPE: 3}, (ARC, CAV, UNI)),
-    "SLINGER": Stats(35, 4, 0, 0, 5, 2.0, {INF: 4, SIE: 3, SPE: 1}, (ARC,)),
-    "STEPPE_LANCER": Stats(60, 9, 0, 1, 0, 2.0, {}, (CAV,)),
-    "WINGED_HUSSAR": Stats(80, 9, 1, 2, 0, 1.9, {GUN: 4}, (CAV,)),
-    # units of the DLCs Dynasties of India, Return of Rome and The Three Kingdoms (#1009, AoE2 wiki, DE, base unit, no civilization bonus;
-    # Iron Pagoda: reload 2.16 without the Jurchen bonus). No class here: shock infantry, rams, ships; the charged
-    # attacks (Fire Lancer) and "ignores armor" (Rocket Cart) are not modeled
-    "ARMORED_ELEPHANT": Stats(180, 4, -2, 140, 0, 3.0, {"building": 90, SIE: 25}, (CAV, ELE, SIE, RAM)),
-    "FIRE_LANCER": Stats(65, 9, 1, 0, 0, 2.0, {"building": 1, CAV: 5, CAM: 4, ELE: 5}, (INF, GUN)),
-    "GRENADIER": Stats(40, 12, 1, 1, 6, 3.45, {"building": 4, INF: 9, SIE: 3, SPE: 1}, (ARC, GUN, UNI)),
-    "HEAVY_ROCKET_CART": Stats(65, 5, 0, 8, 8, 5.35, {"building": 12, SIE: 2}, (GUN, SIE)),
-    "HEI_GUANG_CAVALRY": Stats(60, 11, 4, 3, 0, 1.8, {}, (CAV,)),
-    "HOUFNICE": Stats(90, 50, 2, 6, 12, 6.5, {"building": 250, SIE: 20}, (GUN, SIE)),
-    "IRON_PAGODA": Stats(115, 12, 1, 3, 0, 2.16, {}, (CAV, UNI)),
-    "LEGIONARY": Stats(75, 12, 2, 2, 0, 2.0, {"building": 4, INF: 4}, (INF,)),
-    "ROCKET_CART": Stats(45, 5, 0, 6, 7, 5.5, {"building": 7, SIE: 2}, (GUN, SIE)),
-    "SIEGE_ELEPHANT": Stats(220, 4, -2, 150, 0, 3.0, {"building": 105, SIE: 35}, (CAV, ELE, SIE, RAM)),
-    "TRACTION_TREBUCHET": Stats(115, 50, 1, 8, 14, 11.0, {"building": 230}, (SIE,)),
-    "WHITE_FEATHER_GUARD": Stats(95, 7, 0, 2, 0, 2.0, {"building": 2, CAV: 8, CAM: 6, ELE: 8}, (INF, UNI)),
-    # siege
-    "MANGONEL": Stats(50, 40, 0, 6, 7, 6.0, {"building": 35, HSI: 40, SIE: 12}, (SIE,)),   # AoE2 DE wiki (#1402)
-    "ONAGER": Stats(60, 55, 0, 8, 8, 6.0, {"building": 45, HSI: 50, SIE: 12}, (SIE,)),
-    "SIEGE_ONAGER": Stats(70, 75, 0, 8, 8, 6.0, {"building": 60, HSI: 50, SIE: 12}, (SIE,)),
-    "SCORPION": Stats(40, 11, 0, 7, 7, 3.6, {"building": 3, ELE: 7, INF: 1, RAM: 1}, (SIE,)),
-    "HEAVY_SCORPION": Stats(60, 14, 1, 8, 7, 3.6, {"building": 6, ELE: 10, INF: 2, RAM: 2}, (SIE,)),
-    "BATTERING_RAM": Stats(175, 2, -3, 180, 0, 5.0, {"building": 150, SIE: 40}, (SIE, RAM)),
-    "CAPPED_RAM": Stats(200, 3, -2, 190, 0, 5.0, {"building": 160, SIE: 50}, (SIE, RAM)),
-    "SIEGE_RAM": Stats(270, 4, -1, 195, 0, 5.0, {"building": 200, SIE: 65}, (SIE, RAM)),
-    "SIEGE_TOWER": Stats(175, 0, -2, 100, 0, 0.0, {}, (SIE, RAM)),         # AoE2 DE wiki (#1362)
-    "TRADE_COG": Stats(80, 0, 0, 6, 0, 0.0, {}, ()),                   # AoE2 DE wiki (#1485)
-    "TRANSPORT_SHIP": Stats(70, 0, 0, 2, 0, 0.0, {}, ()),              # AoE2 DE wiki (#1385)
-    "TREBUCHET": Stats(150, 200, 2, 8, 16, 10.0, {"building": 250}, (SIE,)),   # AoE2 DE wiki: 150 HP (#1351); packed
-    # armor (unpacked: trebuchet.UNPACKED, #1409)
-    "BOMBARD_CANNON": Stats(80, 40, 2, 5, 12, 6.5, {"building": 200, HSI: 40, SIE: 20}, (GUN, SIE)),
-    "PETARD": Stats(50, 25, 0, 2, 0, 2.0, {"building": 500, SIE: 60}),
-    # cheat units (#818, AoE2 DE values of the wiki; the Cobra car shoots: a ranged unit)
-    "ALFRED_THE_ALPACA": Stats(140, 120, 20, 20, 0, 2.0, {"building": 100}, (CAV,)),
-    "COBRA_CAR": Stats(500, 10, 10, 10, 10, 0.25, {"building": 10}, (SIE,)),
-    "FURIOUS_THE_MONKEY_BOY": Stats(9, 99, 99, 99, 0, 0.9, {"building": 999}),
-    "PHOTONMAN": Stats(80, 30, 2, 2, 10, 2.0, {"building": 5}, (ARC, UNI)),
-    "SABOTEUR": Stats(45, 100, 1, 3, 0, 2.0, {"building": 500}, (SIE,)),
-    "SHARKATZOR": Stats(600, 33, 1, 0, 10, 2.1, {SIE: 5}, (SIE,)),
-    "VMDL": Stats(25, 0, 0, 0, 0, 0.0),
-    "WAR_PENGUIN": Stats(64, 16, 4, 4, 0, 2.0, {"building": 8}, (INF,)),
-    # ships (#1386, AoE2 DE wiki): the hits go to the crew of the boat (AoePlugin.java)
-    "CANNON_GALLEON": Stats(120, 50, 0, 5, 13, 10.0, {"building": 200, SIE: 25}, (SHIP, GUN, WAR)),   # (#1484) melee damage
-    "DEMOLITION_RAFT": Stats(40, 75, 0, 0, 0, 0.0, {"building": 180}, (SHIP,)),   # (#1481) the Feudal Age form
-    "DEMOLITION_SHIP": Stats(50, 95, 1, 0, 0, 0.0, {"building": 220}, (SHIP,)),   # one blast (BLAST), then it dies
-    "ELITE_CANNON_GALLEON": Stats(150, 60, 0, 6, 15, 10.0, {"building": 275, SIE: 25}, (SHIP, GUN, WAR)),   # (#1491)
-    "FAST_FIRE_SHIP": Stats(140, 4, 3, 7, 2.5, 0.25, {"building": 3, WAR: 1}, (SHIP, FIRE)),   # Heavy Warships (#1483)
-    "FIRE_GALLEY": Stats(110, 2, 1, 4, 2.5, 0.25, {WAR: 1}, (SHIP, FIRE)),   # (#1481) the Feudal Age form of the fire ship
-    "FIRE_SHIP": Stats(120, 3, 2, 4, 2.5, 0.25, {"building": 2, WAR: 1}, (SHIP, FIRE)),   # (#1440) melee damage, 4 hits/s
-    "FISHING_SHIP": Stats(50, 0, 1, 1, 0, 0.0, {}, (SHIP,)),
-    "GALLEY": Stats(110, 6, 0, 3, 5, 3.0, {"building": 6, WAR: 5}, (SHIP, WAR)),
-    "GALLEON": Stats(155, 9, 0, 6, 7, 3.0, {"building": 6, WAR: 9, RAM: 3}, (SHIP, WAR)),   # Heavy Warships (#1483)
-    "HEAVY_DEMOLITION_SHIP": Stats(70, 120, 2, 0, 0, 0.0, {"building": 280}, (SHIP,)),   # (#1483)
-    "HULK": Stats(85, 4, 3, 1, 1, 1.75, {FIRE: 1, "standard": -3}, (SHIP,)),   # AoE2 DE wiki (#1489): melee hits at range 1
-    "WAR_GALLEY": Stats(125, 7, 0, 4, 6, 3.0, {"building": 6, WAR: 5}, (SHIP, WAR)),   # Medium Warships (#1482)
-    "WAR_HULK": Stats(110, 4, 4, 1, 1, 1.5, {FIRE: 1, "standard": -3}, (SHIP,)),   # Medium Warships (#1508)
-    # others: no fight, but they can die
-    "VILLAGER": Stats(25, 3, 0, 0, 0, 2.0, {"building": 3, HSI: 6, "stone": 6}),   # AoE2 DE wiki (#1590)
-    "KING": Stats(75, 0, 0, 0, 0, 0.0),
-    "MONK": Stats(30, 0, 0, 0, 9, 0.0),
-    "TRADE_CART": Stats(70, 0, 0, 0, 0, 0.0),
-}
+# The values of each unit: one line per unit in data/units.jsonl (#1912). "note" is the source of a value.
+STATS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields if f != "classes"}, classes=tuple(r["classes"]))
+         for r in table.load("units.jsonl")}
 # Buildings: hit points, melee and pierce armor (Dark Age base). The high pierce armor makes arrows weak, as in AoE2.
 BUILDINGS = {
     "HOUSE": Stats(550, 0, 0, 7, 0, 0.0, {}, ("building",)),
