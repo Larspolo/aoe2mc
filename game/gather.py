@@ -742,6 +742,7 @@ class Gather:
         not attack: it converts (monk.convert_order, #1245) or stays."""
         import ai                                                      # ai imports this module
         monks = self.monks()
+        repair.drop(self, self.selected)                               # Serjeants stop a repair (#2128)
         trebs = {u for u in self.selected if self.soldiers.get(u) == trebuchet.NAME}
         for u in sorted(trebs):                                        # it unpacks first (#1351)
             trebuchet.unpack(self, u, target)
@@ -1151,6 +1152,7 @@ class Gather:
         {uuid: cell}."""
         import ai                                                      # ai imports this module
         units = self.selected if units is None else set(units)
+        repair.drop(self, units)                                       # Serjeants stop a repair (#2128)
         boats = {u for u in units if replay.ship(self.soldiers.get(u, ""))}
         out = fleet.order(self, boats, cell)                           # a ship sails on the water (#1383)
         transport.aim(self, out, cell)                                 # a loaded ship unloads at a land cell (#1385)
