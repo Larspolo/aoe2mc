@@ -106,6 +106,7 @@ MISSING = {t: tuple(sorted(r["name"] for r in ROWS if t in r["missing"]))
 ELEPHANTS = tuple(r["name"] for r in ROWS if "BATTLE_ELEPHANT" not in r["missing"])   # the battle elephant (#1556)
 EAGLES = tuple(r["name"] for r in ROWS if "EAGLE_SCOUT" not in r["missing"])   # the eagle line (#1555)
 LANCERS = tuple(r["name"] for r in ROWS if "STEPPE_LANCER" not in r["missing"])   # the steppe lancers (#1557)
+FIRE_LANCERS = tuple(r["name"] for r in ROWS if "FIRE_LANCER" not in r["missing"])   # the fire lancer (#1953)
 SMITH = ("BLAST_FURNACE", "BODKIN_ARROW", "BRACER", "CHAIN_BARDING_ARMOR", "CHAIN_MAIL_ARMOR", "FLETCHING", "FORGING",
          "IRON_CASTING", "LEATHER_ARCHER_ARMOR", "PADDED_ARCHER_ARMOR", "PLATE_BARDING_ARMOR", "PLATE_MAIL_ARMOR",
          "RING_ARCHER_ARMOR", "SCALE_BARDING_ARMOR", "SCALE_MAIL_ARMOR")   # the blacksmith (#1452)
