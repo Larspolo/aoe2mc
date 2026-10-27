@@ -21,6 +21,7 @@ KINDS = {"zombie": "MILITIA", "skeleton": "ARCHER", "horse": "SCOUT_CAVALRY", "s
          "husk": "EAGLE_WARRIOR", "pillager": "HAND_CANNONEER", "zombie_villager": "FLEMISH_MILITIA",
          "creeper": "PETARD", "llama": "ALFRED_THE_ALPACA", "ocelot": "FURIOUS_THE_MONKEY_BOY", "chicken": "WAR_PENGUIN"}
 NO_RETURN = {"PETARD": "it dies in its blast, as in AoE2"}   # defensive: no unit to come back
+NO_SIGHT = {"FURIOUS_THE_MONKEY_BOY": "#1995: no armor class, so no aoe sight"}   # defensive: no attack without an order
 
 
 def test_each_kind_is_the_converter_kind_of_its_unit():
@@ -80,6 +81,8 @@ def arena(game, stances):
     apart, more than a sight at T = 1) with an enemy: next to it (no_attack), in its sight but out of its range
     (stand_ground), in its range (defensive). Returns {kind: {stance letter: (start position)}}."""
     y = 200
+    game.command("worldborder center 128 128")                 # the tiny world has a border of 96 blocks: a path
+    game.command("worldborder set 400")                        # ... finder takes no step outside it (#1968)
     game.command("gamerule mobGriefing false")                 # the petard: no hole in the floor
     game.command("time set midnight")                          # the zombies do not burn
     for t in ("p1", "p2"):
@@ -122,23 +125,23 @@ def test_no_attack_and_stand_ground_for_each_mob_kind(tiny_world, tmp_path):
 
 
 @pytest.mark.mc
-@pytest.mark.xfail(reason="#1968: a defensive unit of most kinds hits its enemy once or not at all", strict=False)
 def test_defensive_for_each_mob_kind(tiny_world, tmp_path):
     from test_paper import paper_reachable
     if not paper_reachable():
         pytest.skip("Paper is not reachable")
     with run.Game(shutil.copytree(tiny_world[0], tmp_path / "W")) as game:
         start = arena(game, "d")
-        end = time.time() + 20
-        while time.time() < end and not all(hurt(game, f"{k}ed") for k in KINDS):
+        end, attacked = time.time() + 20, set()
+        fighters = {k for k, name in KINDS.items() if name not in NO_RETURN and name not in NO_SIGHT}
+        while time.time() < end and attacked < fighters:      # each hit when it comes: Alfred kills its enemy in 18 s
+            attacked |= {k for k in fighters - attacked if hurt(game, f"{k}ed") or health(game, f"{k}ed") is None}
             time.sleep(0.5)
-        attacked = {k for k in KINDS if hurt(game, f"{k}ed")}
         for i, k in enumerate(KINDS):                          # the enemies walk away, 40 blocks
             x0, z0 = 1 + 64 * (i % 4), 1 + 64 * (i // 4)
             game.command(f"aoe moveto @e[tag={k}ed] {x0 + 50.5} 200 {z0 + 2.5}")
         time.sleep(30)
         fails = [f"{k} ({name}) defensive: " + ("did not attack the enemy in its range" if k not in attacked else
                                                f"{moved(game, f'{k}d', start[k]['d']):.1f} blocks from its place")
-                 for k, name in KINDS.items() if name not in NO_RETURN
-                 and (k not in attacked or moved(game, f"{k}d", start[k]["d"]) > 2)]
+                 for k, name in KINDS.items() if name not in NO_RETURN and name not in NO_SIGHT
+                 and (k not in attacked or moved(game, f"{k}d", start[k]["d"]) > 3)]   # as no_attack: an order ends 1.5 off
     assert not fails, "\n".join(fails)
