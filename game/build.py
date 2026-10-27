@@ -810,5 +810,15 @@ def target(g, site):
     for c in combat.building(uuid, name, site["player"], box, g.map.T, s=s, low=minimum(g, name)) \
             + [f"tag {uuid} add {combat.WALL_TAG}"] * wall + [combat.label_command(uuid, name)]:
         g.command(c)
-    if site["player"] != g.player:                                     # an enemy building: the player can attack it
-        g.forts[uuid], g.fort_names[uuid] = box, site["name"]
+    for o in sides(g):                     # each other side can attack it: the bot and player 1 alike (#1819)
+        o.fort_names[uuid] = site["name"]
+        if site["player"] != o.player:
+            o.forts[uuid] = box
+            vars(o).setdefault("fort_players", {})[uuid] = site["player"]
+
+
+def sides(g):
+    """The Gathers of all sides of the game of g: player 1 holds the bots and the other people (run.py, Gather.bots),
+    a bot knows player 1 (share), a person the others (peers)."""
+    first = g.peers[0] if g.peers else getattr(g, "share", None) or g
+    return [first, *(b.g for b in first.bots)]

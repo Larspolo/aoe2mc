@@ -190,13 +190,11 @@ class Bot:
         return math.dist(at[::2], to[::2]) <= combat.stats(self.g.soldiers[u]).range * self.g.map.T
 
     def forts(self):
-        """{target UUID: box} of the buildings of the foe whose target entity lives."""
+        """{target UUID: box} of the buildings of the foe whose target entity lives: those of the map and those that
+        the foe built in the game (build.target, #1819)."""
         g = self.g
-        boxes = {combat.target_uuid(o["footprint"]): o for o in g.data["objects"] if o["kind"] == "building"
-                 and o["player"] == self.foe and "footprint" in o and o["name"] in combat.BUILDINGS}
-        ground = [r.split() for r in g.data["ground"]]
-        return {u: combat.building_box(o, ground) for u, o in sorted(boxes.items())
-                if "passed" in g.command(f"execute if entity {u}")}
+        return {u: box for u, box in sorted(g.forts.items()) if g.fort_players.get(u) == self.foe
+                and "passed" in g.command(f"execute if entity {u}")}
 
     def recruit(self):
         """Keep QUEUED units in the queue of each training building: villagers at the town centers up to
