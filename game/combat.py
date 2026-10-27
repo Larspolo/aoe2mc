@@ -3,8 +3,8 @@ AoE2 combat values of the units and buildings of the game program (#513, epic #3
 
 One table (`STATS`, one line per unit in `data/units.jsonl`, #1912), keyed by the AoE2 unit name of `units.classify`.
 The values are the published AoE2 DE values of the base unit: no Blacksmith or University upgrades, no civilization
-bonuses. `range` is in tiles (0: melee), `reload` in game seconds. `bonus` is extra attack against the units of a class (`classes`): AoE2 adds it
-for each armor class of the target. `damage` is the AoE2 damage rule (#514); the Paper plugin applies it
+bonuses. `range` is in tiles (0: melee), `reload` in game seconds. `bonus` is extra attack against the units of a
+class (`classes`): AoE2 adds it for each armor class of the target. `damage` is the AoE2 damage rule (#514); the Paper plugin applies it
 (`aoe stats` gives a mob its values, `stats_command`).
 A ranged unit shoots from its AoE2 range, one shot per reload time (#515, `aoe range`, `range_command`).
 The Mangonel line hits all units in its blast radius around the target (#1050, `BLAST`). It does not shoot at a target inside its minimum range (`MIN_RANGE`, #1350).
