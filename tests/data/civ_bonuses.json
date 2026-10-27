@@ -25,7 +25,7 @@
  ],
  "BENGALIS": [
   {"bonus": "Elephant units receive 25% less bonus damage and are more resistant to conversion.", "later": "play:fight"},
-  {"bonus": "All Town Centers spawn 2 Villagers when the next Age is reached.", "gap": "play:ages"},
+  {"bonus": "All Town Centers spawn 2 Villagers when the next Age is reached.", "in": "AGE_VILLAGERS"},
   {"bonus": "Cavalry units +2 attack vs Skirmishers.", "later": "play:fight"},
   {"bonus": "Ships regenerate 15 HP per minute.", "later": "play:naval"},
   {"bonus": "Monks +3/+3 armor.", "later": "play:monks"}
@@ -95,7 +95,7 @@
   {"bonus": "Varangian Guards and Longships move 10% faster.", "later": "play:military-train"}
  ],
  "DRAVIDIANS": [
-  {"bonus": "Receive wood 200 when advancing to the next Age.", "gap": "play:ages"},
+  {"bonus": "Receive wood 200 when advancing to the next Age.", "in": "AGE_GIFTS"},
   {"bonus": "Fishermen, Oyster gatherers, and Fishing Ships carry +15.", "later": "play:naval"},
   {"bonus": "Barracks technologies cost -50%.", "in": "COSTS"},
   {"bonus": "Siege units cost wood -33%.", "in": "COSTS"},
@@ -103,7 +103,7 @@
  ],
  "ETHIOPIANS": [
   {"bonus": "The Archer line fires 18% faster.", "in": "UNITS"},
-  {"bonus": "Receive food +100, gold +100 whenever a new Age is reached.", "gap": "play:ages"},
+  {"bonus": "Receive food +100, gold +100 whenever a new Age is reached.", "in": "AGE_GIFTS"},
   {"bonus": "The Pikeman upgrade is free.", "gap": "play:tech"}
  ],
  "FRANKS": [
@@ -175,7 +175,7 @@
   {"bonus": "Heavy Cavalry Archer upgrade available in the Castle Age and costs -50%", "later": "play:ages"}
  ],
  "KHMER": [
-  {"bonus": "No buildings are required to advance to the next age or to unlock other buildings.", "gap": "play:ages"},
+  {"bonus": "No buildings are required to advance to the next age or to unlock other buildings.", "in": "AGE_NO_BUILDINGS"},
   {"bonus": "Battle Elephants move 10% faster.", "in": "UNITS"},
   {"bonus": "Farmers don't carry food but rather add it directly to the stockpile without any drop-off, but work 5% slower.", "in": "WORK"},
   {"bonus": "Villagers (and Kings) can garrison in Houses.", "gap": "play:garrison"}
@@ -203,7 +203,7 @@
   {"bonus": "Villagers kill predators in one strike.", "later": "play:hunt"}
  ],
  "MALAY": [
-  {"bonus": "Advancing in Age is +66% faster.", "gap": "play:ages"},
+  {"bonus": "Advancing in Age is +66% faster.", "in": "AGE_RATE"},
   {"bonus": "Fish Traps are 33% cheaper and provide food 3×.", "later": "play:naval"},
   {"bonus": "Battle Elephants are 25% cheaper in the Castle Age, 35% cheaper in the Imperial Age.", "in": "COSTS"},
   {"bonus": "Infantry armor upgrades are free.", "in": "COSTS"}
@@ -232,7 +232,7 @@
   {"bonus": "Hunters work 40% faster.", "in": "WORK"}
  ],
  "MUISCA": [
-  {"bonus": "Advancing to the next Age costs gold -50%.", "gap": "play:ages"},
+  {"bonus": "Advancing to the next Age costs gold -50%.", "in": "COSTS"},
   {"bonus": "Settlements cost -33% and heal allied human units within 3 tiles by 5/10/15/15 HP/min in the Dark/Feudal/Castle/Imperial Age.", "later": "play:build"},
   {"bonus": "The Champi Scout line and Archery Range units have +1/2/3 melee armor in the Feudal/Castle/Imperial Age.", "gap": "play:fight"},
   {"bonus": "Monks regain faith 100% faster.", "later": "play:monks"},

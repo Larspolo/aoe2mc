@@ -61,7 +61,7 @@ def test_more_cost_bonuses():
 
 
 def test_the_table_is_in_order_and_names_known_groups():
-    assert list(civs.COSTS) == sorted(civs.COSTS) and set(civs.COSTS) <= set(train.UNIQUE)
+    assert list(civs.COSTS) == sorted(civs.COSTS) and set(civs.COSTS) <= {r["name"] for r in civs.ROWS}
     names = set(train.COSTS) | set(build.COSTS)
     for civ, rules in civs.COSTS.items():
         for what, r, change in rules:

@@ -648,6 +648,8 @@ def owned(g):
 def missing(g, name):
     """The text of the buildings that technology name still needs (REQUIRES), or None."""
     n, names, *alone = REQUIRES.get(name, (0, ()))
+    if civs.civ(g) in civs.AGE_NO_BUILDINGS:                       # the Khmer (#1926)
+        return None
     has, alone = sorted(set(names) & set(owned(g))), alone[0] if alone else ()
     if len(has) < n and not set(alone) & set(owned(g)):
         return f"needs {''.join(f'a {build.pretty(b).lower()} or ' for b in alone)}{n} of {', '.join(build.pretty(b).lower() for b in names)} ({len(has)}/{n})"
@@ -672,9 +674,11 @@ def stats(g, name):
 def seconds(g, name, building=None):
     """The train time of unit or technology name: TRAIN_TIMES, or the time of FASTER from its age (the eagle scout trains
     in 46 s in the Feudal Age and in 35 s from the Castle Age, AoE2 DE wiki), divided by the work rate of the
-    civilization at building (civs.work_rate: Persian town centers and docks, #1894)."""
+    civilization at building (civs.work_rate: Persian town centers and docks, #1894) and by its age-up rate (civs.age_rate:
+    the Malay, #1926)."""
     age, time = FASTER.get(name, (9, 0))
-    return (time if build.ages(g) >= age else TRAIN_TIMES[name]) / (civs.work_rate(g, building) if building else 1)
+    return (time if build.ages(g) >= age else TRAIN_TIMES[name]) / (civs.work_rate(g, building) if building else 1) \
+        / civs.age_rate(g, name)
 
 
 def speed(g, name):
@@ -739,6 +743,13 @@ def research(g, entry):
         for uuid, name in g.soldiers.items():                      # the walk speed of the age (civs.UNITS, Celts)
             if civs.speed(g, name) != 1:
                 g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))
+        for r, v in civs.AGE_GIFTS.get(civs.civ(g), {}).items():    # Dravidians, Ethiopians (#1926)
+            g.stock[r] += v
+            g.command(f"scoreboard players add {r.capitalize()} {g.board} {v}")
+        for rect in [r for r, n in homes(g).items() if n == "TOWN_CENTER"]:   # Bengalis: free villagers (#1926)
+            for _ in range(civs.AGE_VILLAGERS.get(civs.civ(g), 0)):
+                if spawn(g, rect, "VILLAGER_MALE"):
+                    g.pop += 1
         g.command(f"title @a[team=p{g.player}] title " + json.dumps({"text": age(g), "color": "gold"}))  # the own team only
         g.command("tellraw @a " + json.dumps({"text": f"Player {g.player} advances to the {age(g)}.", "color": "gold"}))
         g.command("playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1")
