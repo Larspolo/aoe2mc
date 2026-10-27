@@ -49,12 +49,12 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:monks` Monks heal and convert, relics in monasteries
 - [ ] `play:market` Market trade and trade carts
 - [ ] `play:two-players` Two human players against each other on one server
-- [ ] `play:diplomacy` Teams and diplomacy: allied, neutral and enemy players, shared line of sight, tribute of resources
+- [x] `play:diplomacy` Teams and diplomacy: allied, neutral and enemy players, shared line of sight, tribute of resources (epic #1311)
 - [ ] `play:walls` Build walls and gates; a gate opens for own units and stays closed for enemies
 - [ ] `play:repair` Villagers repair damaged buildings and siege units for a part of the cost; a damaged building shows fire
 - [x] `play:siege` Siege units: rams against buildings, mangonels with area damage, trebuchets that pack and unpack (epic #1348)
 - [ ] `play:naval` Docks and ships: fishing ships and fish traps gather food, warships fight on water, transport ships carry units (Minecraft boats)
-- [ ] `play:cheats` The AoE2 cheat codes in the chat when cheats are on (epic #820)
+- [x] `play:cheats` The AoE2 cheat codes in the chat when cheats are on (epic #820)
 - [x] `play:fog` The explored area and the fog of war: a player sees only what the own units and buildings see (epic #1387)
 - [ ] `play:save` Save a game of the game program and load it again (units, resources, queues, ages)
 - [ ] `play:hunt` Hunt and herd: villagers kill deer, lure and kill boars, and herd sheep that the first player who sees them owns
@@ -70,6 +70,8 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:farm-reseed` Farm reseeds as in AoE2: the mill queues farms, and an exhausted farm is built again by its farmer when the player has the wood
 - [ ] `play:game-modes` The AoE2 game modes in the game setup: Regicide (a king per player), Death Match (large start resources), King of the Hill (hold the monument) and Empire Wars (a running start economy)
 - [ ] `play:formations` AoE2 formations for a selected group (line, box, staggered, flank): the units keep their places on the walk, and the slowest unit sets the speed
+- [ ] `play:town-bell` The town bell as in AoE2: a click at the town center sends the villagers into the nearest own buildings, a second click lets them out
+- [ ] `play:delete` Delete an own unit or building as the AoE2 Delete key: the unit dies, the building falls down
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
@@ -78,16 +80,16 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `replay:units` Trained units appear and walk to their targets with Minecraft path finding (#375, #408, #409, #410, #438)
 - [x] `replay:versions` Records of other game versions (#376)
 - [x] `replay:record` Replay a recorded game as fully as the file allows (epic #371)
-- [ ] `replay:simulate` Simulate what the record does not contain with the rules of the game program: gathering, fights, deaths, destroyed buildings (epic #629)
+- [x] `replay:simulate` Simulate what the record does not contain with the rules of the game program: gathering, fights, deaths, destroyed buildings (epic #629)
 - [x] `replay:control` Control the replay in the game: pause, speed, jump to a time, a boss bar with the game time (epic #683)
 - [x] `replay:follow` The units of the live replay follow the record: positions, gathering, no stuck units (epic #814)
-- [ ] `replay:view` A spectator view: follow a player or a unit, an overview from above (epic #736)
+- [x] `replay:view` A spectator view: follow a player or a unit, an overview from above (epic #736)
 - [x] `replay:score` A score panel for each player: age, population, resources (estimated), military (epic #740)
 - [x] `replay:effects` Show events on the map: research and age-up at the building, attacks, a marker where units die (epic #842)
 - [ ] `replay:postgame` A summary at the end of the replay, as the AoE2 achievements screen: military, economy, technology, timeline
-- [ ] `replay:team-games` Team games of up to 8 players: the score panel, the colors, the views and the summary work with all players
+- [x] `replay:team-games` Team games of up to 8 players: the score panel, the colors, the views and the summary work with all players (epic #1187)
 - [ ] `replay:minimap` A live minimap of the replay: a Minecraft map item that shows the units and buildings of all players in their colors and changes with the game
-- [ ] `replay:fog` The view of one player in the replay: only what the units and buildings of that player see, as the AoE2 "line of sight" option of the replay
+- [x] `replay:fog` The view of one player in the replay: only what the units and buildings of that player see, as the AoE2 "line of sight" option of the replay (epic #1299)
 - [ ] `replay:taunts` The taunts of the record (a chat line with a number) play their sound and show their text in the live replay
 
 ## 4. The agent system (`.claude/skills/`, `tools/`, `.github/workflows/`)
@@ -97,6 +99,7 @@ other projects with". The `roadmap` skill makes no epics for this goal: the `imp
 
 - [ ] `system:improve` The system improves itself in its own loop, over the whole system, and only where it pays (epic #908)
 - [ ] `system:reuse` The system can be set up for another project (epic #909)
+- [ ] `system:structure` The code stays easy to change: game data in data files, checks in place of rules (epic #1909)
 
 ## Principles
 

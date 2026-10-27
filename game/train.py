@@ -91,20 +91,23 @@ COSTS = {r["name"]: r["cost"] for r in ROWS}                       # as in AoE2
 TRAIN_TIMES = {r["name"]: r["time"] for r in ROWS}                 # AoE2 seconds
 TRAINS = {b: tuple(r["name"] for r in ROWS if r["building"] == b)    # the units and technologies of each
           for b in dict.fromkeys(r["building"] for r in ROWS if r["building"])}   # building, in file order
+TRAINS["FOLWARK"] = TRAINS["MILL"]                                 # the mill of the Poles (#1874)
 TRAINS["KREPOST"] = ()                                             # trains() adds the Konnik (#1872)
 # The unique unit of each civilization (AoE2 DE, "unique" in data/civs.jsonl, #1914), trained at its castle. A unit
 # without COSTS is not in the menu yet: it has no AoE2 combat values in combat.STATS.
 UNIQUE = civs.UNIQUE
+CIV_TECHS = {r["name"]: r["civ"] for r in ROWS if "civ" in r}      # a unique technology: its civ (castle, #2021)
 build.AGE |= dict.fromkeys(UNIQUE.values(), 2) | dict.fromkeys(("ELITE_" + n for n in UNIQUE.values()), 3)   # (#1082)
 
 
 def own_civ_only():
     """{name: the other civs} of each unique unit with an elite upgrade in COSTS, its elite unit and its upgrade: only
     the own civ has them (civs.MISSING). A new unique unit needs no line in civs.py, and its elite upgrade has
-    `"building": null` in data/train.jsonl: trains() adds it to the castle of the own civ (#1760)."""
+    `"building": null` in data/train.jsonl: trains() adds it to the castle of the own civ (#1760). The same for a unique
+    technology: its key `"civ"` (CIV_TECHS, #2021)."""
     others = set().union(*civs.MISSING.values()) | set(UNIQUE)
     return {n: tuple(sorted(others - {c})) for c, u in UNIQUE.items() if f"ELITE_{u}_UPGRADE" in COSTS
-            for n in (u, "ELITE_" + u, f"ELITE_{u}_UPGRADE")}
+            for n in (u, "ELITE_" + u, f"ELITE_{u}_UPGRADE")} | {n: tuple(sorted(others - {c})) for n, c in CIV_TECHS.items()}
 
 
 civs.MISSING |= own_civ_only()
@@ -162,6 +165,8 @@ def arrowslits(name, s):
     values (build.line)."""
     return s._replace(attack=s.attack + ARROWSLITS[name]) if name in ARROWSLITS else s
 
+ARCHER_LINE = ("ARCHER", "CROSSBOWMAN", "ARBALESTER")
+LONGSHIPS = ("LONGSHIP", "ELITE_LONGSHIP")
 TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit name: UPGRADES
          "ARCHITECTURE": masonry,                                  # the same effect as Masonry (#1504)
          "ARROWSLITS": arrowslits,                                 # the towers of the player: build.values
@@ -173,6 +178,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "BANKING": lambda name, s: s,                             # the tribute fee: diplomacy.FEES
          "BLAST_FURNACE": lambda name, s: s._replace(attack=s.attack + 2) if melee(s) or name in HULKS else s,
          "BLOCK_PRINTING": lambda name, s: s,                      # the conversion range: monk.near
+         "BOGSVEIGAR": lambda name, s: s._replace(attack=s.attack + 1) if name in ARCHER_LINE + LONGSHIPS else s,  # (#2021)
          "BOMBARD_TOWER_TECH": lambda name, s: s,                  # the bombard tower in the build menu: build.NEEDS
          "BOW_SAW": lambda name, s: s,                             # an economy technology: gather.WORK_TECHS
          "BRACER": fletching,
@@ -185,6 +191,9 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          if name == "EAGLE_SCOUT" else s,                          # an age: REQUIRES; the eagle scout (#1555)
          "CAREENING": lambda name, s: s._replace(pierce=s.pierce + 1) if ship(name, s) else s,
          "CHAMPION_UPGRADE": lambda name, s: s,                    # a new unit name: UPGRADES
+         "CHIEFTAINS": lambda name, s: s._replace(bonus={**s.bonus, "cavalry": s.bonus.get("cavalry", 0) + 5,
+                                                         "camel": s.bonus.get("camel", 0) + 4})
+         if "infantry" in s.classes else s,                        # the Vikings (#2021)
          "CHEMISTRY": chemistry,
          "COINAGE": lambda name, s: s,                             # the tribute fee: diplomacy.FEES
          "CONSCRIPTION": lambda name, s: s,                        # the train speed: CONSCRIPT, tick()
@@ -238,6 +247,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_SKIRMISHER_UPGRADE": lambda name, s: s,
          "ELITE_TARKAN_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "ELITE_URUMI_SWORDSMAN_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
+         "ELITE_VARANGIAN_GUARD_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_WAR_WAGON_UPGRADE": lambda name, s: s,            # a new unit name: UPGRADES
          "FAITH": lambda name, s: s,                               # the conversion resistance: monk.resist
          "FERVOR": lambda name, s: s,                              # the walk speed: SPEEDS
@@ -347,6 +357,7 @@ TECH_AGE = {r["name"]: r["age"] for r in ROWS if "age" in r}       # the age of 
 AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age after each researched age (index: ages)
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
 HOUSING = {"TOWN_CENTER": 5, "HOUSE": 5, "CASTLE": 20,            # population of a complete building, as in AoE2
+           "FOLWARK": 5,                                          # (#1874)
            "KREPOST": 20}                                         # (#1872)
 LIMIT = 200                                                        # the AoE2 population limit
 REPEAT = 256                                                       # researches of one technology: "going above and beyond"
@@ -416,6 +427,7 @@ def trains(g, building):
     unique = [n for n in [UNIQUE.get(civs.civ(g))] if n in COSTS] * (building == "CASTLE") \
         + ["KONNIK"] * (building == "KREPOST")                     # the Krepost trains only the Konnik (#1872)
     out = unique + list(TRAINS[building]) + [f"ELITE_{n}_UPGRADE" for n in unique if f"ELITE_{n}_UPGRADE" in COSTS]   # (#1760)
+    out += [n for n, c in CIV_TECHS.items() if c == civs.civ(g)] * (building == "CASTLE")   # the unique technologies (#2021)
     for _ in UPGRADES:                                             # a line of upgrades: mangonel, onager, siege onager
         out = [new.get(n, n) for n in out]                         # the castle: the elite unique unit (#1624)
     return tuple(out)
@@ -649,8 +661,9 @@ def owned(g):
 def missing(g, name):
     """The text of the buildings that technology name still needs (REQUIRES), or None."""
     n, names, *alone = REQUIRES.get(name, (0, ()))
-    has, alone = sorted(set(names) & set(owned(g))), alone[0] if alone else ()
-    if len(has) < n and not set(alone) & set(owned(g)):
+    own = {"MILL" if b == "FOLWARK" else b for b in owned(g)}      # the Folwark is the mill of the Poles (#1874)
+    has, alone = sorted(set(names) & own), alone[0] if alone else ()
+    if len(has) < n and not set(alone) & own:
         return f"needs {''.join(f'a {build.pretty(b).lower()} or ' for b in alone)}{n} of {', '.join(build.pretty(b).lower() for b in names)} ({len(has)}/{n})"
 
 
