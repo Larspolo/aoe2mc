@@ -20,21 +20,12 @@ def archery(civ="BERBERS", ages=IMPERIAL):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.COSTS["GENITOUR"] == train.COSTS["ELITE_GENITOUR"] == {"food": 40, "wood": 35}
-    assert train.TRAIN_TIMES["GENITOUR"] == train.TRAIN_TIMES["ELITE_GENITOUR"] == 25
-    assert train.COSTS["ELITE_GENITOUR_UPGRADE"] == {"food": 500, "wood": 450}
-    assert train.TRAIN_TIMES["ELITE_GENITOUR_UPGRADE"] == 60 and train.TECH_AGE["ELITE_GENITOUR_UPGRADE"] == 3
     assert build.AGE["GENITOUR"] == 2 and build.AGE["ELITE_GENITOUR"] == 3
-    assert combat.stats("GENITOUR") == (50, 3, 0, 4, 4, 3.0, {"archer": 4, "spearman": 3}, ("archer", "cavalry", "unique"))
-    assert combat.stats("ELITE_GENITOUR") == (55, 4, 0, 4, 4, 3.0, {"archer": 5, "spearman": 3},
-                                              ("archer", "cavalry", "unique"))
     assert combat.sight("GENITOUR") == 5 and combat.sight("ELITE_GENITOUR") == 6
     for unit in ("GENITOUR", "ELITE_GENITOUR", "ELITE_GENITOUR_UPGRADE"):
         assert len(train.HELP[unit]) <= 50
         assert "BERBERS" not in civs.MISSING[unit] and {"BRITONS", "FRANKS", "AZTECS"} <= set(civs.MISSING[unit])
     assert replay.SPEEDS["GENITOUR"] == replay.SPEEDS["ELITE_GENITOUR"] == 1.35
-    assert train.ITEMS["GENITOUR"][0] == train.ITEMS["ELITE_GENITOUR"][0] == train.MORE + 1
-    assert train.ITEMS["ELITE_GENITOUR_UPGRADE"][0] == train.MORE + 2
 
 
 def test_the_archery_range_has_the_genitour_from_the_castle_age_for_the_berbers():

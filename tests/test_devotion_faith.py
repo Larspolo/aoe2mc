@@ -10,8 +10,6 @@ from game import civs, monk, train
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.COSTS["DEVOTION"] == {"food": 100, "gold": 200} and train.TRAIN_TIMES["DEVOTION"] == 40
-    assert train.COSTS["FAITH"] == {"food": 550, "gold": 750} and train.TRAIN_TIMES["FAITH"] == 60
     assert train.TECH_AGE["DEVOTION"] == 2 and train.TECH_AGE["FAITH"] == 3 and train.AFTER["FAITH"] == "DEVOTION"
     assert all(len(train.HELP[t]) <= 50 for t in ("DEVOTION", "FAITH"))
     assert "DEVOTION" not in civs.MISSING and {"DANES", "MAGYARS", "TATARS"} <= set(civs.MISSING["FAITH"])

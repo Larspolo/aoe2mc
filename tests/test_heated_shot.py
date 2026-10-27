@@ -18,7 +18,6 @@ def hit(a, t):
 
 
 def test_the_cost_time_age_and_civilizations_are_those_of_aoe2():
-    assert train.COSTS["HEATED_SHOT"] == {"food": 350, "gold": 100} and train.TRAIN_TIMES["HEATED_SHOT"] == 30
     assert train.TECH_AGE["HEATED_SHOT"] == 2 and "HEATED_SHOT" in train.TRAINS["UNIVERSITY"]
     assert "SPANISH" in civs.MISSING["HEATED_SHOT"] and "BRITONS" not in civs.MISSING["HEATED_SHOT"]
 

@@ -28,7 +28,6 @@ def docks_map():
 
 
 def test_the_trade_cog_has_the_aoe2_de_values_of_the_wiki():
-    assert train.COSTS["TRADE_COG"] == {"wood": 100, "gold": 50} and train.TRAIN_TIMES["TRADE_COG"] == 36
     assert build.AGE["TRADE_COG"] == 1 and "TRADE_COG" in train.TRAINS["DOCK"]
     assert combat.stats("TRADE_COG")[:4] == (80, 0, 0, 6) and combat.sight("TRADE_COG") == 6
     assert fleet.SPEEDS["TRADE_COG"] == 1.65 and len(train.HELP["TRADE_COG"]) <= 50

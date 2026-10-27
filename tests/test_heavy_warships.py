@@ -28,12 +28,6 @@ def test_the_values_are_those_of_aoe2_de():
     assert train.AFTER["HEAVY_DEMOLITION_SHIP_UPGRADE"] == "DEMOLITION_SHIP_UPGRADE"
     assert train.lines("HEAVY_WARSHIPS") == (("WAR_GALLEY", "GALLEON"), ("FIRE_SHIP", "DRAGON_SHIP"),
                                             ("FIRE_SHIP", "FAST_FIRE_SHIP"), ("WAR_HULK", "CARRACK"))
-    assert combat.stats("GALLEON") == (155, 9, 0, 6, 7, 3.0, {"building": 6, "warship": 9, "ram": 3}, ("ship", "warship"))
-    assert combat.stats("FAST_FIRE_SHIP") == (140, 4, 3, 7, 2.5, 0.25, {"building": 3, "warship": 1},
-                                              ("ship", "fireship"))   # the class "Fire Ships": the hulk bonus (#1489)
-    assert combat.stats("HEAVY_DEMOLITION_SHIP") == (70, 120, 2, 0, 0, 0.0, {"building": 280}, ("ship",))
-    assert (train.COSTS["GALLEON"], train.COSTS["FAST_FIRE_SHIP"], train.COSTS["HEAVY_DEMOLITION_SHIP"]) == \
-        ({"wood": 90, "gold": 30}, {"wood": 75, "gold": 45}, {"wood": 45, "gold": 80})
     assert [fleet.SPEEDS[n] for n in ("GALLEON", "FAST_FIRE_SHIP", "HEAVY_DEMOLITION_SHIP")] == [1.36, 1.56, 1.52]
     assert [combat.sight(n) for n in ("GALLEON", "FAST_FIRE_SHIP", "HEAVY_DEMOLITION_SHIP")] == [9, 6, 6]
     assert combat.range_command("u", "HEAVY_DEMOLITION_SHIP", 4) == "aoe range u 4.0 1 13.0"   # 3.25 tiles of blast

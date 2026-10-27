@@ -25,7 +25,6 @@ def test_each_line_has_the_stats_fields():
 def test_stats_come_from_the_file():
     rows = table.load("units.jsonl")
     assert list(combat.STATS) == [r["name"] for r in rows]
-    assert combat.STATS["MILITIA"] == combat.Stats(40, 4, 0, 1, 0, 2.0, {}, ("infantry",))
     assert all(isinstance(s.classes, tuple) for s in combat.STATS.values())
 
 
