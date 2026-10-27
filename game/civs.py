@@ -308,6 +308,8 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
 ELEPHANTS = ("BENGALIS", "BURMESE", "DRAVIDIANS", "KHMER", "MALAY", "VIETNAMESE")   # the battle elephant (AoE2 DE wiki, #1556)
 MISSING |= {"BATTLE_ELEPHANT": tuple(sorted(set().union(*MISSING.values()) - set(ELEPHANTS))),
             "ELITE_BATTLE_ELEPHANT": tuple(sorted(set().union(*MISSING.values()) - set(ELEPHANTS) | {"DRAVIDIANS"}))}   # no elite
+MISSING |= dict.fromkeys(("ELEPHANT_ARCHER", "ELITE_ELEPHANT_ARCHER", "ELITE_ELEPHANT_ARCHER_UPGRADE"),   # (#1952)
+                         tuple(sorted(set().union(*MISSING.values()) - {"BENGALIS", "DRAVIDIANS", "GURJARAS"})))
 EAGLES = ("AZTECS", "MAYANS")                                     # the eagle line (AoE2 DE wiki; not the Incas since
 MISSING |= dict.fromkeys(("EAGLE_SCOUT", "EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"),   # The Last Chieftains, #1555)
                          tuple(sorted(set().union(*MISSING.values()) - set(EAGLES))))
