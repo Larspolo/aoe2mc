@@ -6,6 +6,9 @@
 # It does not read the repository. The SessionStart hook installs what changed since the snapshot.
 set -u
 SETUP_VERSION=7   # raise it with each change: the SessionStart hook compares it with /etc/aoe2mc-setup-version
+# What this script installs, for the SessionStart hook in an environment with the setup script of another project
+# (#1964): commands, paths or path patterns. A change here needs no new SETUP_VERSION: the hook reads the repository.
+SETUP_NEEDS="/usr/lib/jvm/java-25-openjdk-amd64/bin/javac /usr/share/vulkan/icd.d/lvp_icd*.json xdotool"
 
 # Java 25 for the Minecraft 26.3 server (tools/mc_check.py), a JDK (javac) for the Paper plugin (game/plugin, #435).
 # The image has Java 21.
