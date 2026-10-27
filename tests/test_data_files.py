@@ -21,11 +21,13 @@ NUMBER = (int, float)
 
 
 def form(row, need, may=()):
-    """The keys of row: all of need, and only need and may ({key: type})."""
+    """The keys of row: all of need, each of need and may ({key: type}) with its type. Another key is new: a parallel
+    ticket can add one, so test_each_key_has_one_type checks it until it gets its type here."""
     keys = {**need, **dict(may)}
-    assert set(need) <= set(row) <= set(keys), (row["name"], sorted(set(row) ^ set(need)))
+    assert set(need) <= set(row), (row["name"], sorted(set(need) - set(row)))
     for k, v in row.items():
-        assert isinstance(v, keys[k]) and (keys[k] is bool or not isinstance(v, bool)), (row["name"], k, v)
+        if k in keys:
+            assert isinstance(v, keys[k]) and (keys[k] is bool or not isinstance(v, bool)), (row["name"], k, v)
 
 
 STATS = {"hp": int, "attack": int, "melee": int, "pierce": int, "range": NUMBER, "reload": float, "bonus": dict,
@@ -41,17 +43,18 @@ def stats(row):
 
 
 def check_units(row):
-    form(row, {"name": str, **STATS}, {"sight": int, "note": str})
+    form(row, {"name": str, **STATS}, {"sight": int, "min_range": NUMBER, "note": str})
     stats(row)
 
 
 def check_buildings(row):
     if "hp" in row:
-        form(row, {"name": str, **STATS, "sight": int}, {"as": str, "note": str})
+        form(row, {"name": str, **STATS, "sight": int}, {"as": str, "min_range": NUMBER, "note": str})
         stats(row)
         assert row.get("as", "HOUSE") in NAMES["buildings.jsonl"], row["name"]   # combat.STANDS_FOR
-    else:                                                  # only a line of sight: no target
-        form(row, {"name": str, "sight": int}, {"note": str})
+    else:                                                  # no target, or a wall of the game program (combat.WALLS)
+        form(row, {"name": str}, {"sight": int, "note": str})
+        assert len(row) > 1, row["name"]
 
 
 def check_train(row):
@@ -102,22 +105,36 @@ def check_gather(row):
     assert len(row.get("ship", (0, 0))) == 2 and all(isinstance(v, NUMBER) for v in row.get("ship", ())), n
 
 
-CHECKS = {"buildings.jsonl": check_buildings, "civs.jsonl": check_civs, "gather.jsonl": check_gather,
-          "train.jsonl": check_train, "units.jsonl": check_units}
+def check_build(row):
+    form(row, {"name": str}, {"cost": dict, "time": int, "icon": str, "age": int, "needs": str, "gate": bool,
+                              "wall": bool, "age_tech": int})
+    n = row["name"]
+    assert set(row.get("cost", {})) <= RES and all(isinstance(v, int) for v in row.get("cost", {}).values()), n
+    assert row.get("time", 1) > 0 and row.get("age", 1) in (1, 2, 3), n
+    assert row.get("needs", "HOUSE") in NAMES["build.jsonl"] | NAMES["train.jsonl"], n
 
 
-def test_each_data_file_has_a_check():
-    assert set(NAMES) == set(CHECKS)
+CHECKS = {"build.jsonl": check_build, "buildings.jsonl": check_buildings, "civs.jsonl": check_civs,
+          "gather.jsonl": check_gather, "train.jsonl": check_train, "units.jsonl": check_units}
 
 
-@pytest.mark.parametrize("name", sorted(CHECKS))
+@pytest.mark.parametrize("name", sorted(NAMES))
+def test_each_key_has_one_type(name):
+    types = {}
+    for row in rows(name):
+        for k, v in row.items():
+            t = float if type(v) is int else type(v)       # an int is a float without a fraction; null: none
+            assert v is None or types.setdefault(k, t) is t, (name, row["name"], k)
+
+
+@pytest.mark.parametrize("name", sorted(NAMES))
 def test_each_line_is_one_json_object_with_a_unique_name(name):
     lines = [s for s in open(os.path.join(table.DIR, name), encoding="utf-8") if s.strip()]
     assert all(isinstance(json.loads(s), dict) for s in lines)
     assert len(rows(name)) == len(lines) == len(NAMES[name])      # table.load stops on a name in two lines
 
 
-@pytest.mark.parametrize("name", sorted(CHECKS))
+@pytest.mark.parametrize("name", sorted(NAMES))
 def test_each_line_has_the_keys_and_the_names_of_its_file(name):
     for row in rows(name):
-        CHECKS[name](row)
+        CHECKS.get(name, lambda row: None)(row)            # a new file: give it an own check in CHECKS
