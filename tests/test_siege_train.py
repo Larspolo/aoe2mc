@@ -42,7 +42,9 @@ def test_the_siege_units_are_locked_before_the_castle_age(ages):
     server, g = setup(ages)
     train.open_menu(g, "Steve", (3, 3))
     assert all(build.locked(g, n) == "Needs the Castle Age" for n in WIKI)
-    assert all(f":gray_dye:{build.pretty(n)}:" in menus(server)[-1] for n in WIKI)   # no count: regional units (#2142)
+    text = menus(server)[-1]                                           # the Imperial Age units are gray too (#1380)
+    assert all(f":gray_dye:{build.pretty(n)}:" in text for n in WIKI)   # no count: regional units (#2142)
+    assert "Bombard Cannon:225 wood · 225 gold · 56 s · Needs" in text
     assert not train.queue(g, "Steve", (3, 3), "MANGONEL") and g.stock["wood"] == 1000
 
 
