@@ -368,10 +368,18 @@ def show(g, player, rect):
              for name in trains(g, building) if repeatable(g, name) and unlocked(g, name) for slot, item, label in [ITEMS[name]]]
     items += [RALLY] if units_of(building) else []
     items += [garrison.UNGARRISON] if getattr(g, "garrisons", {}).get(rect) else []   # only with units inside (#808)
+    if building == "MARKET":                                           # the buy and sell rows under the queue (#1286)
+        import market                                                  # only for a market
+        items += [(market.ROW + slot, *item) for slot, *item in market.items(g)]
     q = g.queues.get(rect, [])                                         # the queue row first: the plugin sets the
     items = [(ROW + i, ITEMS[name][1], ITEMS[name][2] + (f" {int(100 * q[0]['progress'])} %" if start == 0 else ""),
               "Click: cancel 1", k) for i, (name, start, k) in enumerate(groups(q)[:ROW])] + items   # items by slot
-    menu.show(g, player, build.pretty(building), items, lambda p, slot, shift: order(g, p, rect, slot, shift))
+    def click(p, slot, shift):
+        if building == "MARKET" and slot >= market.ROW:
+            market.order(g, p, slot - market.ROW, shift, lambda: show(g, p, rect))
+        else:
+            order(g, p, rect, slot, shift)
+    menu.show(g, player, build.pretty(building), items, click)
 
 
 def units_of(building):
