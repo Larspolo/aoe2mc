@@ -114,6 +114,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "LONG_SWORDSMAN_UPGRADE": {"food": 150, "gold": 65},
          "MAMELUKE": {"food": 55, "gold": 85},
          "MAN_AT_ARMS": {"food": 50, "gold": 20},                       # AoE2 DE wiki (#1417)
+         "MASONRY": {"food": 150, "wood": 175},                       # the university, Castle Age (#1398)
          "MAN_AT_ARMS_UPGRADE": {"food": 100, "gold": 40},
          "MANGONEL": {"wood": 160, "gold": 135},
          "MANGUDAI": {"wood": 55, "gold": 65},
@@ -191,6 +192,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "LONG_SWORDSMAN_UPGRADE": 40,
                "MAMELUKE": 23,
                "MAN_AT_ARMS": 21,
+               "MASONRY": 50,
                "MAN_AT_ARMS_UPGRADE": 40,
                "MANGONEL": 46,
                "MANGUDAI": 26,
@@ -236,7 +238,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "CASTLE": ("TREBUCHET",),                                             # and the unique unit: trains() (#708, #1351)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES", "LIGHT_CAVALRY_UPGRADE"),  # (#671, #940, #1396)
           "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS",   # (#1326, #1374, #1352)
-                         "CHEMISTRY", "BOMBARD_TOWER_TECH"),                    # (#1375)
+                         "MASONRY", "CHEMISTRY", "BOMBARD_TOWER_TECH"),         # (#1398, #1375)
           "DOCK": ("FISHING_SHIP",),                                            # (#1383)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
           "MARKET": ("TRADE_CART", "CARAVAN", "GUILDS"),                       # (#1253, #1254)
@@ -263,7 +265,7 @@ UNIQUE = {"BRITONS": "LONGBOWMAN", "PERSIANS": "WAR_ELEPHANT", "BYZANTINES": "CA
 build.AGE |= dict.fromkeys(UNIQUE.values(), 2) | dict.fromkeys(("ELITE_" + n for n in UNIQUE.values()), 3)   # (#1082)
 def chemistry(name, s):
     """Chemistry (AoE2 DE, wiki): +1 attack for archers, ranged siege units and buildings that shoot. A building gets it
-    when it is complete (build.target, train.building_stats)."""
+    when it is complete (build.target, build.values)."""
     shoots = "archer" in s.classes or "siege" in s.classes and s.range > 0 or "building" in s.classes and s.attack > 0
     return s._replace(attack=s.attack + 1) if shoots else s
 
@@ -275,6 +277,15 @@ def engineers(name, s):
         return s
     bonus = {**s.bonus, "building": round(s.bonus["building"] * 1.2)} if "building" in s.bonus else s.bonus
     return s._replace(range=s.range + (s.range > 0), bonus=bonus)
+
+
+def masonry(name, s):
+    """Masonry (AoE2 DE, wiki): a building +10 % hit points, +1 melee and +1 pierce armor; not the walls and gates
+    (combat.WALLS) and not the farms and fish traps (no building Stats). The +3 building armor against the bonus damage
+    of siege units and ships is not in the damage rule (combat.damage)."""
+    import combat                                                  # combat imports gather, gather imports this module
+    wall = name in combat.WALLS or name.endswith(("_WALL", "_GATE"))
+    return s._replace(hp=round(s.hp * 1.1), melee=s.melee + 1, pierce=s.pierce + 1) if "building" in s.classes and not wall else s
 
 
 TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
@@ -309,6 +320,7 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "LONG_SWORDSMAN_UPGRADE": lambda name, s: s,
          "LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
          if "VILLAGER" in name else s,
+         "MASONRY": masonry,                                       # the buildings of the player: build.values
          "MAN_AT_ARMS_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "ONAGER_UPGRADE": lambda name, s: s,
          "PADDED_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
@@ -382,6 +394,7 @@ TECH_AGE = {                                                       # the age of 
     "LEATHER_ARCHER_ARMOR": 2,
     "LIGHT_CAVALRY_UPGRADE": 2,
     "LONG_SWORDSMAN_UPGRADE": 2,
+    "MASONRY": 2,
     "MAN_AT_ARMS_UPGRADE": 1,
     "ONAGER_UPGRADE": 3,
     "PADDED_ARCHER_ARMOR": 1,
@@ -464,6 +477,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "LOOM": (1, "book", "Loom"),                               # a book for a technology (#618)
          "MAMELUKE": (0, "camel_spawn_egg", "Mameluke"),
          "MAN_AT_ARMS": (0, "zombie_spawn_egg", "Man-at-Arms"),
+         "MASONRY": (6, "book", "Masonry"),
          "MAN_AT_ARMS_UPGRADE": (2, "book", "Man-at-Arms"),
          "MANGONEL": (1, "dispenser", "Mangonel"),
          "MANGUDAI": (0, "skeleton_horse_spawn_egg", "Mangudai"),
@@ -532,6 +546,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "LOOM": "Villagers +15 HP, +1/+2 armor.",
         "MAMELUKE": "Saracen camel. Strong vs. cavalry.",
         "MAN_AT_ARMS": "Infantry. Strong vs. eagles, buildings.",
+        "MASONRY": "Buildings +10 % HP, +1/+1 armor.",
         "MAN_AT_ARMS_UPGRADE": "Upgrades militia to man-at-arms.",
         "MANGONEL": "Siege. Hits all units near the target.",
         "MANGUDAI": "Mongol horse archer. Strong vs. siege.",
@@ -852,16 +867,6 @@ def stats(g, name):
     return s
 
 
-def building_stats(g, name):
-    """The combat values of building name with the technologies of the player (TECHS: Chemistry), without the unit
-    bonuses of the civilization (civs.UNITS covers all units)."""
-    import combat                                                  # combat imports gather, gather imports this module
-    s = combat.stats(name)
-    for t in sorted(g.techs):
-        s = TECHS[t](name, s)
-    return s
-
-
 def speed(g, name):
     """The factor of the walk speed of unit name: the bonus of the civilization (civs.speed) and the technologies of the
     player (SPEEDS: Fervor, #1261; Squires for the class infantry, #1415)."""
@@ -889,8 +894,8 @@ def research(g, entry):
         for site in [s for s in g.sites if s["name"] in WALL_UPGRADES[entry["name"]] and s.get("done")
                      and s["player"] == g.player]:
             build.upgrade(g, site, combat.wall(site["name"], build.ages(g)))
-    if entry["name"] in TOWER_UPGRADES:                            # the complete own towers get the new values (#1374)
-        build.retower(g, g.techs - {entry["name"]})
+    if entry["name"] in TOWER_UPGRADES or entry["name"] == "MASONRY":   # the complete own towers (#1374) and buildings
+        build.retower(g, g.techs - {entry["name"]})                # (#1398) get the new values
     if entry["name"] in UPGRADES:                                  # the live units of the line get the new name
         old, new = UPGRADES[entry["name"]]
         for uuid in [u for u, n in g.soldiers.items() if n == old]:
