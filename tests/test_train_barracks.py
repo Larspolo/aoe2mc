@@ -16,6 +16,7 @@ from game import combat, gather, run, train
 EAGLE = "7:gray_dye:Eagle Scout:20 food · 50 gold · 46 s · Needs the Feudal Age"   # a player without a civ (#1555)
 FIRE = "19:gray_dye:Fire Lancer:45 wood · 45 gold · 35 s · Needs the Castle Age"   # a player without a civ (#1953)
 VG = "21:gray_dye:Varangian Guard:65 food · 45 gold · 30 s · Needs the Castle Age"   # a player without a civ (#2011)
+TG = "23:gray_dye:Temple Guard:70 food · 45 gold · 28 s · Needs the Castle Age"   # a player without a civ (#2157)
 
 
 def setup(food=50, gold=20, done=True):
@@ -46,8 +47,8 @@ def test_a_right_click_on_the_barracks_opens_its_menu():
     cmd, = menus(server)
     assert cmd.startswith("aoe menu Steve Barracks ") and labels(cmd) == order(g, "BARRACKS")   # the full menu
     assert [item(cmd, label) for label in ("Militia", "Spearman", "Eagle Scout", "Fire Lancer", "Varangian Guard",
-                                           "Rally point")] \
-        == ["0:zombie_spawn_egg:Militia:50 food · 20 gold · 21 s · queue 0/15", SPEAR, EAGLE, FIRE, VG, RALLY]
+                                           "Temple Guard", "Rally point")] \
+        == ["0:zombie_spawn_egg:Militia:50 food · 20 gold · 21 s · queue 0/15", SPEAR, EAGLE, FIRE, VG, TG, RALLY]
     assert not any(g.queues.values())
 
 

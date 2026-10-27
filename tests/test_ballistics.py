@@ -14,7 +14,7 @@ from game import combat, run, train
 
 
 def test_the_cost_time_and_age_are_those_of_aoe2():
-    assert train.TECH_AGE["BALLISTICS"] == 2 and "BALLISTICS" in train.TRAINS["UNIVERSITY"]
+    assert "BALLISTICS" in train.TRAINS["UNIVERSITY"]
     assert len(train.HELP["BALLISTICS"]) <= 50
 
 

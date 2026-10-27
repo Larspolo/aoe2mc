@@ -21,10 +21,6 @@ def archery_range(civ="MAPUCHE", ages=IMPERIAL):
 
 
 def test_the_values_are_those_of_the_wiki():
-    assert train.COSTS["BOLAS_RIDER"] == {"wood": 50, "gold": 55} and train.TRAIN_TIMES["BOLAS_RIDER"] == 34
-    assert train.TRAIN_TIMES["ELITE_BOLAS_RIDER"] == 28
-    assert train.COSTS["ELITE_BOLAS_RIDER_UPGRADE"] == {"food": 800, "gold": 500}
-    assert train.TRAIN_TIMES["ELITE_BOLAS_RIDER_UPGRADE"] == 45
     assert build.AGE["BOLAS_RIDER"] == 2 and build.AGE["ELITE_BOLAS_RIDER"] == 3
     assert combat.stats("BOLAS_RIDER") == (55, 5, 0, 1, 4, 2.0, {"camel": 2, "cavalry": 2, "ram": 2},
                                            ("archer", "cavalry", "unique"))

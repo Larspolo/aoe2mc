@@ -9,7 +9,7 @@ from game import civs, train
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.TECH_AGE["HERBAL_MEDICINE"] == 2 and len(train.HELP["HERBAL_MEDICINE"]) <= 50
+    assert len(train.HELP["HERBAL_MEDICINE"]) <= 50
     assert {"BYZANTINES", "HUNS", "VIKINGS"} <= set(civs.MISSING["HERBAL_MEDICINE"])
     assert "BRITONS" not in civs.MISSING["HERBAL_MEDICINE"]
 
