@@ -14,12 +14,12 @@ from game import ai, build, combat, replay, train
 
 
 def test_the_castle_trains_the_petard_from_the_castle_age():
-    assert build.AGE["PETARD"] == 2 and train.ITEMS["PETARD"][0] == train.MORE   # the first row of the castle is full
+    assert build.AGE["PETARD"] == 2 and train.ITEMS["PETARD"][0] == train.MORE + 1   # first row full, Spies
     assert replay.SPEEDS["PETARD"] == 0.8                                # the wiki infobox: speed 0.8
     server, g = setup(food=500, gold=500, ages=1)                      # the Feudal Age
     assert "PETARD" in train.trains(g, "CASTLE") and "PETARD" in train.trains(g, "KREPOST")
     train.open_menu(g, "Steve", (12, 4))
-    assert re.search(r"\b18:gray_dye:Petard:[^:]* · Needs the Castle Age", menus(server)[-1])
+    assert re.search(r"\b19:gray_dye:Petard:[^:]* · Needs the Castle Age", menus(server)[-1])
     assert train.queue(g, "Steve", (12, 4), "PETARD") is None
     server, g = setup(food=500, gold=500)                              # the Castle Age
     assert train.queue(g, "Steve", (12, 4), "PETARD")
