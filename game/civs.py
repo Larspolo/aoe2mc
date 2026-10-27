@@ -138,7 +138,7 @@ START = {"AZTECS": {"gold": 50},
          "MAYANS": {"food": -50},
          "PERSIANS": {"food": 50, "wood": 50},
          "SICILIANS": {"stone": 100}}
-# The technologies that a civilization does not have (AoE2 wiki, the availability chart of each technology, #1373):
+# The technologies and units that a civilization does not have (AoE2 wiki, the availability chart of each, #1373):
 # the menu does not show them (train.unlocked).
 MISSING = {"ARSON": ("GOTHS", "MUISCA", "ROMANS"),                                          # (#1419)
            "BOMBARD_TOWER_TECH": ("ACHAEMENIDS", "ATHENIANS", "AZTECS", "BENGALIS", "BERBERS", "BRITONS", "BULGARIANS",
@@ -147,6 +147,10 @@ MISSING = {"ARSON": ("GOTHS", "MUISCA", "ROMANS"),                              
                                   "MACEDONIANS", "MAGYARS", "MALIANS", "MAYANS", "MONGOLS", "MUISCA", "PERSIANS", "PURU",
                                   "ROMANS", "SARACENS", "SAXONS", "SHU", "SICILIANS", "SLAVS", "SPARTANS", "THRACIANS",
                                   "TUPI", "VARANGIANS", "VIKINGS", "WEI", "WU"),
+           "CAVALRY_ARCHER": ("AZTECS", "BENGALIS", "BOHEMIANS", "BRITONS", "BURGUNDIANS", "CELTS", "DANES", "DRAVIDIANS",
+                              "FRANKS", "GURJARAS", "INCAS", "ITALIANS", "MAPUCHE", "MAYANS", "MUISCA", "POLES",
+                              "PORTUGUESE", "SAXONS", "SICILIANS", "SPANISH", "TEUTONS", "TUPI", "VARANGIANS", "VIKINGS",
+                              "WEI"),                                 # the wiki chart (#1430)
            "FORTIFIED_WALL": ("BULGARIANS", "CUMANS", "DANES", "GOTHS", "HUNS", "MAGYARS", "MALAY", "MAPUCHE", "MUISCA",
                               "PERSIANS", "SICILIANS", "TUPI", "WU"),
            "GAMBESONS": ("ACHAEMENIDS", "ATHENIANS", "BERBERS", "BOHEMIANS", "BURGUNDIANS", "CHINESE", "CUMANS",
@@ -156,6 +160,8 @@ MISSING = {"ARSON": ("GOTHS", "MUISCA", "ROMANS"),                              
                           "TURKS", "VIETNAMESE", "VIKINGS", "WEI", "WU"),
            "HEAVY_PLOW": ("KHITANS",),                                     # (#1424)
            "HUSBANDRY": ("AZTECS", "CUMANS", "INCAS", "MAPUCHE", "MAYANS", "MUISCA", "TEUTONS", "TUPI", "VIKINGS"),
+           "KNIGHT": ("AZTECS", "BENGALIS", "DRAVIDIANS", "GURJARAS", "HINDUSTANIS", "INCAS", "JURCHENS", "KHITANS",
+                      "MAPUCHE", "MAYANS", "MUISCA", "SHU", "TUPI", "WEI", "WU"),   # the wiki chart (#1430)
            "SQUIRES": ("CELTS", "GURJARAS", "KHMER", "MAGYARS", "MAPUCHE", "PORTUGUESE"),   # (#1415)
            "THUMB_RING": ("ARMENIANS", "AZTECS", "BENGALIS", "BOHEMIANS", "BRITONS", "BURGUNDIANS", "BURMESE", "CELTS",
                           "FRANKS", "GEORGIANS", "GOTHS", "JURCHENS", "KHMER", "MAPUCHE", "ROMANS", "SICILIANS", "SLAVS",
