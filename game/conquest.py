@@ -29,7 +29,7 @@ def alive(g, n):
     """Player n has a unit, a building or a construction site that counts in the AoE2 conquest."""
     return any(s["player"] == n for s in g.sites) or any(
         "passed" in g.command(f"execute if entity {sel}")
-        for sel in (f"@e[tag=aoe2mc.p{n},tag=!{MOUNT}]", f"@e[tag=aoe2mc.building,team=p{n}]"))
+        for sel in (f"@e[tag=aoe2mc.p{n},tag=!{MOUNT}]", f"@e[tag=aoe2mc.building,team=p{n},tag=!aoe2mc.wall]"))
 
 
 def tick(g):
