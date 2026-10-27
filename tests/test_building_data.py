@@ -38,10 +38,10 @@ def test_each_sight_belongs_to_a_line_of_a_unit_or_a_building():
     assert set(combat.SIGHT) <= names
 
 
-def test_the_file_merges_by_union():
+def test_the_file_merges_by_name():
     out = subprocess.run(["git", "check-attr", "merge", "game/data/buildings.jsonl"], cwd=ROOT, capture_output=True,
                          text=True).stdout
-    assert out.strip().endswith("merge: union")
+    assert out.strip().endswith("merge: jsonl")     # tools/merge_jsonl.py (#2004)
 
 
 def test_combat_py_has_no_literal_of_the_tables():
