@@ -65,8 +65,8 @@ def test_the_first_command_of_the_unit_takes_it_over_with_its_work():
 
 @pytest.mark.slow
 def test_the_jump_to_43_30_of_the_sample_record_counts_the_food_of_the_gather_points(tmp_path):
-    """Before #1227 the jump gave food 3092 (player 1) and 4115 (player 2), with the hunts of #1229 about 5500. The
-    lower bounds of the record (villagers, ages and the market) are 4650 and 6300: the rest of player 2 is #1283."""
+    """Before #1227 the jump gave food 3092 (player 1) and 4115 (player 2), with the hunts of #1229 about 5500, with
+    the fish of #1283 7353 and 7484. The lower bounds of the record (villagers, ages and the market) are 4650 and 6300."""
     import contextlib
     import io
     import json
@@ -82,5 +82,5 @@ def test_the_jump_to_43_30_of_the_sample_record_counts_the_food_of_the_gather_po
     r = replay.Replay(game, d)
     r.run(clock=lambda: game.now, sleep=game.sleep, log=None, to=(43 * 60 + 30) * 1000)
     food = {p: g.get("food", 0) for p, g in r.gathered.items()}
-    assert food[1] >= 4650 and food[2] >= 5400, food
+    assert food[1] >= 4650 and food[2] >= 6300, food
     assert len(r.adopted) > 50                                         # the record names many of them later

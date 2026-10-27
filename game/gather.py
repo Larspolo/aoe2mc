@@ -76,7 +76,8 @@ PLANTS = ("#minecraft:buttons", "#minecraft:flowers", "#minecraft:saplings", "#m
 BUSH_FOOD = 125                                                    # food in one fruit bush, as in AoE2 DE
 # AoE2 DE work rates per game second (#393): lumberjack 0.39 (empires2_x2_p1.dat, #267), the others the published
 # DE gather rates. Normal game speed is 1.7 game seconds per real second (#413).
-AOE2_WORK, NORMAL = {"wood": 0.39, "food": 0.31, "farm": 0.33, "gold": 0.38, "stone": 0.36, "hunt": 0.41}, 1.7
+AOE2_WORK, NORMAL = {"wood": 0.39, "food": 0.31, "farm": 0.33, "gold": 0.38, "stone": 0.36, "hunt": 0.41,
+                     "fish": 0.43}, 1.7                            # fish: a fisherman at a shore fish (#1283)
 WORK_SECONDS = {r: 1 / (w * NORMAL) for r, w in AOE2_WORK.items()}    # real seconds per unit, as at Normal speed
 CARRY = {"WHEELBARROW": 3}                                         # more resources per trip, as in AoE2 (#728)
 PACE = {"WHEELBARROW": 1.1}                                        # the villager walk speed factor, as in AoE2
@@ -96,6 +97,18 @@ HUNT_FOOD = {"COW": 150,
              "TURKEY": 100,
              "WATER_BUFFALO": 150,
              "WILD_BOAR": 340}
+# Food of a fish, as in AoE2 DE (the AoE2 wiki, "Fishing", #1283). Villagers reach the shore fish from the land.
+FISH_FOOD = {"BOX_TURTLES": 200,
+             "DOLPHIN": 350,
+             "FISH_DORADO": 225,
+             "FISH_PERCH": 200,
+             "FISH_SALMON": 225,
+             "FISH_SNAPPER": 225,
+             "FISH_TUNA": 225,
+             "GREAT_FISH_MARLIN": 350,
+             "SHORE_FISH": 200}
+SHORE_FISH = {"BOX_TURTLES", "SHORE_FISH"}
+SHIP_WORK = {"deep": 0.42, "shore": 0.24}                          # the work rate of a fishing ship (AoE2 DE wiki)
 HERDS = {"COW", "GOAT", "GOOSE", "LLAMA", "PIG", "SHEEP", "TURKEY", "WATER_BUFFALO"}   # herdable animals: shepherds (civs.WORK)
 VILLAGER_HIT = 3, 2.0                                              # AoE2 villager attack and reload (game seconds)
 FARM_FOOD = 175                                                    # food in one farm, as in AoE2 DE (no upgrades)
@@ -130,6 +143,7 @@ WORK_LOOK = {"wood": ("minecraft:oak_log", "minecraft:block.wood.hit"),
              "food": ("minecraft:sweet_berry_bush[age=3]", "minecraft:block.sweet_berry_bush.pick_berries"),
              "farm": ("minecraft:wheat[age=7]", "minecraft:item.hoe.till"),
              "hunt": ("minecraft:red_wool", "minecraft:block.wool.hit"),
+             "fish": ("minecraft:water", "minecraft:entity.fishing_bobber.splash"),
              "gold": ("minecraft:gold_ore", "minecraft:block.stone.hit"),
              "stone": ("minecraft:stone", "minecraft:block.stone.hit")}
 EVENTS = {"idle": "idle", "to_tree": "walk", "chop": "chop", "to_drop": "carry",    # state -> event in the log
@@ -162,11 +176,17 @@ class Map:
         self.farm_food, self.own_farms = FARM_FOOD, set()              # food of a new farm (FARM_TECHS), own farm tiles
         self.carcasses = {}                                            # tile -> food of the carcasses of hunts (#1058)
         self.herds = set()                                             # carcass tiles of herdable animals (HERDS)
+        self.fish, self.shore = {}, set()                              # tile -> food of a fish (#1283), shore fish
         for o in data["objects"]:
             if o["kind"] == "building":
                 x0, z0, x1, z1 = o["footprint"]
                 self.building(o["name"], (x0, x1, z0, z1), (int(o["tile"][0]), int(o["tile"][1])) if "tile" in o
                               else None, o["player"] == player, o.get("open", ()))
+            elif o["kind"] == "other" and o["name"] in FISH_FOOD:      # a fish is passable: no barrier
+                tile = int(o["tile"][0]), int(o["tile"][1])
+                self.fish[tile] = FISH_FOOD[o["name"]]
+                if o["name"] in SHORE_FISH:                            # the tiles of the shore fish
+                    self.shore.add(tile)
             elif o["kind"] == "other" and not any(k in o["name"] for k in PASSABLE_OBJECTS):
                 tile = int(o["tile"][0]), int(o["tile"][1])
                 if o["name"] in MINES:                                 # a mine at x.0 covers 2 tiles
@@ -216,9 +236,10 @@ class Map:
         return self.cells(tile)
 
     def resource(self, tile):
-        """The resource of the tile of a tree, bush or mine."""
+        """The resource of the tile of a tree, bush, mine or fish."""
         return next((r for r, m in self.mines.items() if tile in m),
-                    "food" if tile in self.bushes or tile in self.farms or tile in self.carcasses else "wood")
+                    "food" if tile in self.bushes or tile in self.farms or tile in self.carcasses or tile in self.fish
+                    else "wood")
 
     def y(self, x, z):
         return self.ground[z][x] if 0 <= x < self.n and 0 <= z < self.n else None
@@ -356,8 +377,8 @@ def profession(uuid, job):
 def job_of(m, tile):
     """The AoE2 task (`LUMBERJACK` ..., units.VILLAGER_JOBS) of a villager at the resource on tile of gather.Map m."""
     res = m.resource(tile)
-    return "FARMER" if tile in m.farms else "HUNTER" if tile in m.carcasses else {"wood": "LUMBERJACK", "food": "FORAGER"}.get(res) or \
-        next(j for r, _, j in MINES.values() if r == res)
+    return "FARMER" if tile in m.farms else "HUNTER" if tile in m.carcasses else "FISHERMAN" if tile in m.fish else \
+        {"wood": "LUMBERJACK", "food": "FORAGER"}.get(res) or next(j for r, _, j in MINES.values() if r == res)
 
 
 def military(name):
@@ -756,6 +777,8 @@ class Gather:
             return self.map.farms
         if v.tree in self.map.carcasses:
             return self.map.carcasses
+        if v.tree in self.map.fish:
+            return self.map.fish
         return self.map.bushes if v.res == "food" else self.map.trees if v.res == "wood" else self.map.mines[v.res]
 
     def nearest(self, v):
@@ -1146,7 +1169,8 @@ class Gather:
         tile, T = v.tree, self.map.T
         x0, x1, z0, z1 = self.map.feet.get(tile, (tile[0] * T, tile[0] * T + T, tile[1] * T, tile[1] * T + T))
         x, y, z = min(max(v.pos[0], x0 + 0.5), x1 - 0.5), v.pos[1] + 1, min(max(v.pos[2], z0 + 0.5), z1 - 0.5)
-        kind = "farm" if tile in self.map.farms else "hunt" if tile in self.map.carcasses else v.res
+        kind = "farm" if tile in self.map.farms else "hunt" if tile in self.map.carcasses else \
+            "fish" if tile in self.map.fish else v.res
         block, sound = WORK_LOOK[kind]
         if kind == "wood":
             block = self.map.woods.get(tile, (block,))[0]
