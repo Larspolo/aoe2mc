@@ -102,6 +102,8 @@ A new menu item of a building (cost, time, slot, help, age) is one new line in `
 its building block: `merge=union` keeps the lines of both sides, and `train.load()` stops on a name in two lines (#1702).
 The combat values of a new unit are one new line in `game/data/units.jsonl` (`combat.STATS`, #1912), of a new building
 one in `game/data/buildings.jsonl` (`combat.BUILDINGS`); its line of sight is the key `"sight"` there (#1913; epic #1909 moves more tables).
+An item that some civilizations do not have goes into the list `"missing"` of each such line of
+`game/data/civs.jsonl` (`civs.MISSING`, #1914; also `unique`, `costs`, `units`, `twice`), not into `civs.py`.
 The same for a new command of the Paper plugin: its line in the command list at the top of `AoePlugin.java` and its
 `if` block in `onCommand` go in alphabetical order of the command name, not after the last one (#795 and #813 conflicted).
 
