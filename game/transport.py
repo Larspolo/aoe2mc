@@ -1,7 +1,9 @@
 """The transport ship in the game program (#1385, epic #1381). The dock trains it in the Dark Age (train.py). A right
 click with selected land units on an own transport ship loads up to SIZE of them, as in AoE2 DE (AoE2 wiki "Transport
 Ship": garrison 20, all land units): they walk to the land cell nearest to the ship with the plugin (`aoe moveto`), and
-there they go in. The ship does not move: a ship far from the land takes them from the nearest shore too (#1653). A click on the land with the selected loaded ship sails it to the water near that cell (fleet.order),
+there they go in when the ship is at that shore: the ship sails to the water next to it first, as in AoE2 (the owner,
+#2055; before, the ship stayed and took the units from the nearest shore, #1653). A click on the land with the
+selected loaded ship sails it to the water near that cell (fleet.order),
 and at the end of its path the units come out on the land next to the ship and walk to the clicked cell, as in AoE2 DE
 (#1652: before, they came out at a clicked cell near the ship). A right click on the selected ship unloads it at once
 on the nearest land. When the ship sinks, the units inside are lost, as in AoE2.
@@ -14,7 +16,7 @@ A unit inside has the state of a garrisoned unit (garrison.INSIDE) and the plugi
     transport.order(g, player, u)     # gather.Gather.click: the selection goes into the own transport ship u
     transport.out(g, u)               # gather.Gather.click on the selected ship: all units come out on the shore
     transport.aim(g, ships, cell)     # gather.Gather.walk_to: a loaded ship sent to a land cell unloads there
-    transport.tick(g)                 # gather.Gather.step: units at the ship go in, a ship at its goal unloads
+    transport.tick(g)                 # gather.Gather.step: units at the ship at the shore go in, a ship at its goal unloads
 """
 import collections
 import json
@@ -27,7 +29,7 @@ from garrison import INSIDE, OUTSIDE
 
 NAME = "TRANSPORT_SHIP"
 SIZE = 20                   # units inside, as in AoE2 DE (5 before update 141935)
-DOOR = 2.5                  # blocks from the boarding cell or the ship: there a unit goes in
+DOOR = 2.5                  # blocks from the boarding cell or the ship: there a unit goes in, and the ship is at its berth
 SHORE = 3                   # tiles from the ship to the land that units board from or go out to
 BODY = 250000               # cells: the limit of the search of the land that the units can walk on (#1694)
 
@@ -63,12 +65,12 @@ def body(g, start, limit=BODY):
 
 
 def order(g, player, ship):
-    """The land units of the selection walk to the shore next to the own transport ship and go in. Returns True, or
-    False (no own transport ship, no unit of the selection fits, or no land on the map). The ship stays where it is: a
-    ship farther than SHORE tiles from the land takes the units from the land cell nearest to it (the owner, #1653:
-    "the units could teleport inside the ship iso the ship having to go to shore first"). The land cell is on the land
-    of the first unit of the selection (body): a nearer shore across the sea is not a goal, the units cannot walk
-    there (#1694: they walked into the sea)."""
+    """The land units of the selection walk to the shore cell nearest to the own transport ship, and the ship sails
+    to the water next to that cell (its berth, fleet.order): the units go in only when the ship is there (tick), as in
+    AoE2 (the owner, #2055: "they can still load while the boat is not near the coast"). Returns True, or False (no
+    own transport ship, no unit of the selection fits, no land on the map, or no water path to the shore). The land
+    cell is on the land of the first unit of the selection (body): a nearer shore across the sea is not a goal, the
+    units cannot walk there (#1694: they walked into the sea)."""
     if g.soldiers.get(ship) != NAME or not g.paper or not (pos := g.pos(ship)):
         return False
     who = sorted(u for u in g.selected - {ship} if fits(g, u))
@@ -80,8 +82,12 @@ def order(g, player, ship):
         tiles *= 2                                                 # far from the land: look farther (#1653)
     if not who or not at:
         return False
-    import ai, train                                               # ai and train import gather
+    import ai, fleet, train                                        # ai, fleet and train import gather
     x, z = at[0]
+    if not (berth := fleet.order(g, {ship}, (x, z))):              # no water path to that shore
+        return False
+    vars(g).setdefault("berths", {})[ship] = berth[ship]
+    vars(g).get("unloads", {}).pop(ship, None)                     # a boarding order ends an unload order
     for u in who:
         if (v := g.villagers.get(u)) is not None:                  # the villager stops its work
             v.state, v.path, v.goal, v.site = "garrison", [], None, None
@@ -164,15 +170,21 @@ def tick(g):
     """The units at the shore next to their ship go in; a loaded ship at the end of its path unloads; the units of a
     sunk ship are lost."""
     loading, cargo, unloads = vars(g).get("loading", {}), vars(g).get("cargo", {}), vars(g).get("unloads", {})
+    berths = vars(g).get("berths", {})
     if loading:
         pos = g.positions(sorted(set(loading) | {s for s, _ in loading.values()}))
         for u, (ship, at) in sorted(loading.items()):
             if u not in pos or ship not in pos or g.soldiers.get(ship) != NAME:
                 del loading[u]                                     # dead, or the ship sank
+            elif (berth := berths.get(ship)) and math.dist((pos[ship][0], pos[ship][2]),
+                                                          (berth[0] + 0.5, berth[1] + 0.5)) > DOOR:
+                continue                                           # the ship is not at the shore yet (#2055)
             elif min(math.dist((pos[u][0], pos[u][2]), (at[0] + 0.5, at[1] + 0.5)),
                      math.dist((pos[u][0], pos[u][2]), (pos[ship][0], pos[ship][2]))) <= DOOR:
                 del loading[u]
                 go_in(g, u, ship)
+    for ship in [s for s in berths if all(v[0] != s for v in loading.values())]:
+        del berths[ship]                                           # all its units are in, or gone
     for ship, cell in sorted(unloads.items()):
         v = g.ships.get(ship)
         if ship not in cargo or v is None:

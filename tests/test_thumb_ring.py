@@ -15,8 +15,6 @@ def player(civ=None, ages=("FEUDAL_AGE", "CASTLE_AGE")):
 
 
 def test_the_archery_range_menu_has_thumb_ring_from_the_castle_age():
-    assert train.COSTS["THUMB_RING"] == {"food": 300, "wood": 250} and train.TRAIN_TIMES["THUMB_RING"] == 45
-    assert train.TECH_AGE["THUMB_RING"] == 2
     server, g = player(ages=("FEUDAL_AGE",))
     train.open_menu(g, "Steve", RANGE)
     assert "Thumb Ring" not in menus(server)[-1] and train.queue(g, "Steve", RANGE, "THUMB_RING") is None

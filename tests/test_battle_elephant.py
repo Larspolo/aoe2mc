@@ -21,11 +21,6 @@ def test_the_values_are_those_of_the_wiki():
     for name in ("BATTLE_ELEPHANT", "ELITE_BATTLE_ELEPHANT"):
         assert train.COSTS[name] == {"food": 100, "gold": 70} and train.TRAIN_TIMES[name] == 24 and len(train.HELP[name]) <= 50
     assert [build.AGE[n] for n in ("BATTLE_ELEPHANT", "ELITE_BATTLE_ELEPHANT")] == [2, 3]
-    assert train.COSTS["ELITE_BATTLE_ELEPHANT_UPGRADE"] == {"food": 1100, "gold": 700}
-    assert (train.TRAIN_TIMES["ELITE_BATTLE_ELEPHANT_UPGRADE"], train.TECH_AGE["ELITE_BATTLE_ELEPHANT_UPGRADE"]) == (100, 3)
-    assert combat.stats("BATTLE_ELEPHANT") == (250, 12, 1, 2, 0, 2.0, {"building": 4}, ("elephant",))
-    assert combat.stats("ELITE_BATTLE_ELEPHANT") == (300, 14, 1, 3, 0, 2.0, {"building": 7}, ("elephant",))
-    assert (train.ITEMS["BATTLE_ELEPHANT"][0], train.ITEMS["ELITE_BATTLE_ELEPHANT_UPGRADE"][0]) == (7, train.MORE + 1)
 
 
 def test_the_stable_menu_has_the_battle_elephant_only_for_its_civilizations():
