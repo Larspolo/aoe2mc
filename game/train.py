@@ -264,6 +264,14 @@ def chemistry(name, s):
     return s._replace(attack=s.attack + 1) if shoots else s
 
 
+def fletching(name, s):
+    """Fletching and Bodkin Arrow (AoE2 DE, wiki): archers and the buildings that shoot +1 attack and +1 range, the town
+    center +1 attack only (#1408). A complete building gets it at once (build.retower), a new one when it is complete."""
+    if "archer" in s.classes or "building" in s.classes and s.attack > 0:
+        return s._replace(attack=s.attack + 1, range=s.range + (name != "TOWN_CENTER"))
+    return s
+
+
 def engineers(name, s):
     """Siege Engineers (AoE2 DE, wiki): a siege unit +20 % bonus attack against buildings (rounded), a ranged one
     +1 range."""
@@ -275,7 +283,7 @@ def engineers(name, s):
 
 TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
          "BOMBARD_TOWER_TECH": lambda name, s: s,                  # the bombard tower in the build menu: build.NEEDS
-         "BODKIN_ARROW": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if "archer" in s.classes else s,
+         "BODKIN_ARROW": fletching,
          "CAPPED_RAM_UPGRADE": lambda name, s: s,                  # a new unit name: UPGRADES
          "CARAVAN": lambda name, s: s,                             # the walk speed: SPEEDS
          "CASTLE_AGE": lambda name, s: s,                          # an age: REQUIRES
@@ -288,7 +296,7 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
          "ELITE_SKIRMISHER_UPGRADE": lambda name, s: s,
          "FERVOR": lambda name, s: s,                              # the walk speed: SPEEDS
-         "FLETCHING": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if "archer" in s.classes else s,
+         "FLETCHING": fletching,
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
          "FORTIFIED_WALL": lambda name, s: s,                      # the walls of the player: WALL_UPGRADES
          "GOLD_MINING": lambda name, s: s,                         # an economy technology: gather.WORK_TECHS
@@ -482,7 +490,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "BATTERING_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
         "BERSERK": "Viking infantry. Heals itself.",
         "BLOODLINES": "Cavalry +20 HP.",
-        "BODKIN_ARROW": "Archers +1 attack, +1 range.",
+        "BODKIN_ARROW": "Archers, towers +1 attack, range; TC +1 attack.",
         "BOMBARD_TOWER_TECH": "Lets you build bombard towers.",
         "CHEMISTRY": "Archers, ranged siege, towers +1 attack.",
         "CAPPED_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
@@ -501,7 +509,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "FEUDAL_AGE": "Advance to the Feudal Age.",
         "FERVOR": "Monks +15 % speed.",
         "FISHING_SHIP": "Gathers food from fish.",
-        "FLETCHING": "Archers, towers, town center +1 attack, +1 range.",
+        "FLETCHING": "Archers, towers +1 attack, range; TC +1 attack.",
         "FORGING": "Infantry and cavalry +1 attack.",
         "FORTIFIED_WALL": "Stone walls +1,200 HP, +4/+2 armor; also gates.",
         "GOLD_MINING": "Villagers mine gold 15 % faster.",
@@ -843,12 +851,12 @@ def stats(g, name):
     return s
 
 
-def building_stats(g, name):
-    """The combat values of building name with the technologies of the player (TECHS: Chemistry), without the unit
-    bonuses of the civilization (civs.UNITS covers all units)."""
+def building_stats(g, name, techs=None):
+    """The combat values of building name with the technologies of the player (TECHS: Chemistry, Fletching), without
+    the unit bonuses of the civilization (civs.UNITS covers all units). techs: default those of the player."""
     import combat                                                  # combat imports gather, gather imports this module
     s = combat.stats(name)
-    for t in sorted(g.techs):
+    for t in sorted(g.techs if techs is None else techs):
         s = TECHS[t](name, s)
     return s
 
@@ -864,6 +872,7 @@ def research(g, entry):
     import combat, gather                                          # gather imports this module
     if entry["name"] in g.techs:                                   # a repeat: "going above and beyond" (#968)
         g.repeats[entry["name"]] = g.repeats.get(entry["name"], 0) + 1
+    before = set(g.techs)
     g.techs.add(entry["name"])
     if (more := gather.FARM_TECHS.get(entry["name"])):             # the new and the live own farms get more food
         g.map.farm_food += more
@@ -874,8 +883,8 @@ def research(g, entry):
         for site in [s for s in g.sites if s["name"] in WALL_UPGRADES[entry["name"]] and s.get("done")
                      and s["player"] == g.player]:
             build.upgrade(g, site, combat.wall(site["name"], build.ages(g)))
-    if entry["name"] in TOWER_UPGRADES:                            # the complete own towers get the new values (#1374)
-        build.retower(g, g.techs - {entry["name"]})
+    build.retower(g, before)                                       # the complete own towers get the new values (#1374),
+                                                                   # and the own buildings those of Fletching (#1408)
     if entry["name"] in UPGRADES:                                  # the live units of the line get the new name
         old, new = UPGRADES[entry["name"]]
         for uuid in [u for u, n in g.soldiers.items() if n == old]:

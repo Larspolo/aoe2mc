@@ -562,19 +562,23 @@ def line(g, name, techs=None):
 
 
 def retower(g, before):
-    """The complete own towers get the values of their new tower after a tower technology (#1374): the target keeps its
-    lost hit points, as a wall (upgrade). before: the technologies before the research. A destroyed tower stays air."""
-    import combat, repair                                              # combat -> gather -> build: import it late
+    """The complete own towers get the values of their new tower after a tower technology (#1374), and the own buildings
+    of combat.BUILDINGS the values of a technology (train.building_stats: Fletching, #1408): the target keeps its lost
+    hit points, as a wall (upgrade). before: the technologies before the research. A destroyed building stays air."""
+    import combat, repair, train                                       # combat -> gather -> build: import it late
     rects = [(x0, x1, z0, z1, o["name"]) for o in g.data["objects"] if o["kind"] == "building" and o["player"] == g.player
              and "footprint" in o for x0, z0, x1, z1 in [o["footprint"]]] \
         + [(*s["footprint"], s["name"]) for s in g.sites if s.get("done") and s["player"] == g.player]
     for x0, x1, z0, z1, name in rects:
         old, new = line(g, name, before), line(g, name)
-        if old == new or (hp := repair.hp(g, (x0, x1, z0, z1))) is None or hp <= 0:
+        if name not in combat.BUILDINGS or name == "WONDER":           # no target (target)
             continue
-        uuid, a, b = combat.target_uuid([x0, z0, x1, z1]), combat.stats(old), combat.stats(new)
+        a, b = train.building_stats(g, old, before), train.building_stats(g, new)
+        if a == b or (hp := repair.hp(g, (x0, x1, z0, z1))) is None or hp <= 0:
+            continue
+        uuid = combat.target_uuid([x0, z0, x1, z1])
         box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
-        for c in [c for c in combat.building(uuid, new, g.player, box, g.map.T) if c.startswith("aoe building ")] \
+        for c in [c for c in combat.building(uuid, new, g.player, box, g.map.T, s=b) if c.startswith("aoe building ")] \
                 + [f"scoreboard players set {uuid} aoe_hp {min(b.hp, hp + b.hp - a.hp)}", combat.label_command(uuid, new)]:
             g.command(c)
 
