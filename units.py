@@ -15,6 +15,15 @@ TEAM_COLOR = {"blue": "blue", "red": "red", "green": "dark_green", "yellow": "ye
               "purple": "dark_purple", "gray": "gray", "orange": "gold", "light_gray": "white"}
 HEX = {"blue": "#2D2DF5", "red": "#E0281E", "green": "#00B400", "yellow": "#F0F000", "cyan": "#00E0E0",
        "purple": "#A000F0", "gray": "#909090", "orange": "#FF8C00", "light_gray": "#FFFFFF"}
+# Minecraft dye index of each dye name: the wool `Color` of a sheep (#1790).
+DYES = ["white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
+        "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"]
+
+
+def dye(p, players):
+    """Dye index of the color of player p (0 white for Gaia and unknown colors)."""
+    name = players.get(p, {}).get("color") if p else None
+    return DYES.index(name) if name in DYES else 0
 
 # Upgrade steps of the standard unit lines. Other units are "unique", "elite" or "hero".
 TIER = {
@@ -585,6 +594,8 @@ def make_entity(o, players, pos, rng, desc=None):
     label = top_entity(nbt)
     label["CustomName"] = Compound({"text": String(pretty(o["name"], o.get("hero"))), "color": String(color)})
     label["CustomNameVisible"] = Byte(1)
+    if o["player"] and "Color" in label:   # an own herdable has the wool of its player, as in AoE2 (#1790)
+        label["Color"] = Byte(dye(o["player"], players))
     if o["player"]:                # the datapack puts the tagged units in the player team (#358); area triggers (#681)
         label["Tags"] = List[String]([String(f"aoe2mc.p{o['player']}")] +
                                      [String(f"aoe2mc.t{o.get('id')}")] * ("id" in o))
