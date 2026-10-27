@@ -416,6 +416,10 @@ COASTS = {"islands": 1,         # the beach: tiles of width on the land next to 
 ISLES = {"islands": 2}          # the water between two islands: tiles that each island gives up next to another one
 NOMADS = {"nomad": (6, 7)}      # no town center: each villager alone, at (tiles from the origin, tiles from each other)
 RINGS = {"gold_rush": (14, 5)}  # the forest ring around the gold: inner radius and width in tiles, gaps between players
+FISH = {"highland": (0, "FISH_SALMON", 4),    # the fish of a player: shore fish, the deep fish and its count (#1943)
+        "islands": (3, "FISH_DORADO", 6),
+        "mediterranean": (2, "FISH_TUNA", 4),
+        "nomad": (2, "FISH_TUNA", 4)}
 WOODS = {"arabia": (10, 30, 3), # the wood line of each player (tiles from the town center, forest tiles) and its
          "gold_rush": (10, 30, 3)}  # single trees (stragglers, at 4 to 6 tiles), as in AoE2 (#1144)
 
@@ -542,7 +546,7 @@ def paths(d, w):
 def random_map(kind, seed, players=2):
     """The map description of an own generator (GENERATORS) and seed: the land of generate() (with the WALLS, PATHS,
     RIVERS, ISLES and COASTS of the kind), a town center at each player origin (not for NOMADS) and the START objects around
-    it, on free tiles (no forest, no water, not next to a wall)."""
+    it, on free tiles (no forest, no water, not next to a wall), and the FISH of the kind."""
     d = generate(GENERATORS[kind], seed, players)
     rng = np.random.default_rng([seed, 993])
     if kind in PATHS:
@@ -587,9 +591,31 @@ def random_map(kind, seed, players=2):
                 used[max(0, t[0] - 1):t[0] + 2, max(0, t[1] - 1):t[1] + 2] = True
                 objects.append({"name": name, "player": st["player"] * own, "x": t[0] + 0.5, "y": t[1] + 0.5})
             apart += cells * name.startswith("VILLAGER")
+    if kind in FISH:
+        objects += fish(terrain, FISH[kind], len(d["lands"]), rng)
     d["terrain"] = terrain.tolist()
     d["objects"] = objects + trees(terrain)
     return d
+
+
+def fish(terrain, spec, players, rng):
+    """The fish of spec for each player: SHORE_FISH on water next to a beach, the deep fish on water 3 or more tiles from
+    land (a ford is land). Each fish is 3 or more tiles from another one; a fish with no free place is missing."""
+    shore, deep, count = spec
+    water = terrain == TERRAINS["WATER"]
+    taken, out = np.zeros(terrain.shape, bool), []
+    for name, k, where in (("SHORE_FISH", shore, water & dilate(terrain == TERRAINS["BEACH"], 1)),
+                           (deep, count, water & ~dilate(~water, 2))):
+        x, y = np.nonzero(where)
+        placed = 0
+        for i in rng.permutation(len(x)):
+            if placed == k * players:
+                break
+            if not taken[x[i], y[i]]:
+                taken[max(0, x[i] - 2):x[i] + 3, max(0, y[i] - 2):y[i] + 3] = True
+                out.append({"name": name, "player": 0, "x": x[i] + 0.5, "y": y[i] + 0.5})
+                placed += 1
+    return out
 
 
 def woodline(terrain, used, tc, wood, rng):

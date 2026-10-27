@@ -145,6 +145,7 @@ the owner login, the default branch, the status issue, the commands, the doc pat
 The tests of the generic tools are generic too, so that a new project has them (#1900). Not in the table: the tests
 of `tools/bootstrap.py` (they copy this repository) and the tests that need a specific tool (`tools/dashboard_data.py`,
 `tools/release.py`). `tests/test_generic_words.py` fails when a generic file names the domain of the project.
+`tests/test_generic_tools.py` fails when a generic file names a `tools/X.py` that is not a generic row (#1963).
 
 | File | Kind | What is specific to aoe2mc |
 |---|---|---|
@@ -188,6 +189,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tools/dashboard.py` | generic | None (`agent.toml`). |
 | `tools/feedback.py` | generic | None (`agent.toml`). |
 | `tools/health.py` | generic | None (`agent.toml`). |
+| `tools/report.py` | generic | None (the run report of step 8; the release bar only with a project `tools/release.py`, #1963). |
 | `tools/tokens.py` | generic | None. |
 | `tools/operator_check.py` | generic | None (`agent.toml`). |
 | `tools/owner_tasks.py` | generic | None (`agent.toml`). |
@@ -219,12 +221,14 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_owner_tasks_close.py` | generic | None (a test of `tools/owner_tasks.py`). |
 | `tests/test_owner_tasks_project.py` | generic | None (a test of `tools/owner_tasks.py`). |
 | `tests/test_owner_tasks_wait.py` | generic | None (a test of `tools/owner_tasks.py`). |
+| `tests/test_report.py` | generic | None (a test of `tools/report.py`). |
 | `tests/test_tokens.py` | generic | None (a test of `tools/tokens.py`). |
 | `tests/test_tokens_verify.py` | generic | None (a test of `tools/tokens.py`). |
 | `tests/test_unconflict.py` | generic | None (a test of `tools/unconflict.py`). |
 | `tests/test_pacer.py` | generic | None (a test of `tools/usage.py`). |
 | `tests/test_usage.py` | generic | None (a test of `tools/usage.py`). |
 | `tests/test_usage_week.py` | generic | None (a test of `tools/usage.py`). |
+| `tests/test_generic_tools.py` | specific | The tools of aoe2mc that generic files may name (`OPTIONAL`, #1963). |
 | `tests/test_generic_words.py` | specific | The words of aoe2mc that the generic files must not contain (#1900). |
 | `.github/workflows/ci.yml` | specific | The Python, Java and Minecraft steps, the test markers. The red-`main` ticket is generic. |
 | `.github/workflows/automerge.yml` | generic | The branch prefixes `claude/*` and `agent/*`. |
