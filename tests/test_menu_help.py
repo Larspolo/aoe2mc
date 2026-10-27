@@ -19,7 +19,7 @@ class Log:
 
 def test_each_unit_and_technology_has_a_short_help_line():
     names = {n for b in train.TRAINS.values() for n in b} | (set(train.UNIQUE.values()) & set(train.COSTS))
-    names |= {unit for _, unit in train.UPGRADES.values()}
+    names |= {unit for t in train.UPGRADES for _, unit in train.lines(t)}
     assert names <= set(train.HELP) <= set(train.ITEMS)
     assert all(0 < len(h) <= 50 for h in train.HELP.values())
 

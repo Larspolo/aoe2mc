@@ -143,6 +143,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "MANGONEL": {"wood": 160, "gold": 135},
          "MANGUDAI": {"wood": 55, "gold": 65},
          "MASONRY": {"food": 150, "wood": 175},                       # the university, Castle Age (#1398)
+         "MEDIUM_WARSHIPS": {"wood": 150, "gold": 100},                 # the dock, Castle Age (#1482)
          "MONK": {"gold": 100},
          "ONAGER": {"wood": 160, "gold": 135},
          "ONAGER_UPGRADE": {"food": 800, "gold": 500},
@@ -179,6 +180,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "TREADMILL_CRANE": {"wood": 200, "stone": 50},               # AoE2 DE wiki (#1422)
          "TREBUCHET": {"wood": 200, "gold": 200},                   # the castle, Imperial Age (#1351)
          "WAR_ELEPHANT": {"food": 170, "gold": 85},
+         "WAR_GALLEY": {"wood": 90, "gold": 30},                       # AoE2 DE wiki (#1482)
          "WHEELBARROW": {"food": 175, "wood": 50},
          "WOAD_RAIDER": {"food": 70, "gold": 25}}
 TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130,   # AoE2 seconds
@@ -250,6 +252,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "MANGONEL": 46,
                "MANGUDAI": 26,
                "MASONRY": 50,
+               "MEDIUM_WARSHIPS": 50,
                "MONK": 51,
                "ONAGER": 46,
                "ONAGER_UPGRADE": 75,
@@ -286,6 +289,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "TREADMILL_CRANE": 20,
                "TREBUCHET": 50,
                "WAR_ELEPHANT": 25,
+               "WAR_GALLEY": 27,
                "WHEELBARROW": 75,
                "WOAD_RAIDER": 10}
 TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", "HAND_CART", "CASTLE_AGE", "IMPERIAL_AGE",
@@ -315,10 +319,10 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "DOCK": ("FISHING_SHIP",                                             # (#1383)
                    "GALLEY",                                                   # (#1386)
                    "TRANSPORT_SHIP",                                           # (#1385)
-                   "FIRE_SHIP",                                                # (#1440)
                    "DEMOLITION_SHIP",                                          # (#1440)
                    "FIRE_GALLEY",                                              # (#1481)
                    "DEMOLITION_RAFT",                                          # (#1481)
+                   "MEDIUM_WARSHIPS",                                          # the war galley, fire ship (#1482)
                    "FISHING_LINES", "GILLNETS"),                                # (#1439)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",
                           "BOW_SAW"),                                           # (#723, #1423)
@@ -439,6 +443,7 @@ TECHS = {"ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bon
          if "VILLAGER" in name else s,
          "MAN_AT_ARMS_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "MASONRY": masonry,                                       # the buildings of the player: build.values
+         "MEDIUM_WARSHIPS": lambda name, s: s,                     # new unit names: UPGRADES
          "ONAGER_UPGRADE": lambda name, s: s,
          "PADDED_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "archer" in s.classes else s,
@@ -479,6 +484,7 @@ UPGRADES = {                                                       # technology:
     "LIGHT_CAVALRY_UPGRADE": ("SCOUT_CAVALRY", "LIGHT_CAVALRY"),
     "LONG_SWORDSMAN_UPGRADE": ("MAN_AT_ARMS", "LONG_SWORDSMAN"),
     "MAN_AT_ARMS_UPGRADE": ("MILITIA", "MAN_AT_ARMS"),
+    "MEDIUM_WARSHIPS": (("GALLEY", "WAR_GALLEY"), ("FIRE_GALLEY", "FIRE_SHIP")),   # two lines (#1482): lines()
     "ONAGER_UPGRADE": ("MANGONEL", "ONAGER"),
     "PIKEMAN_UPGRADE": ("SPEARMAN", "PIKEMAN"),
     "SIEGE_ONAGER_UPGRADE": ("ONAGER", "SIEGE_ONAGER"),
@@ -547,6 +553,7 @@ TECH_AGE = {                                                       # the age of 
     "LONG_SWORDSMAN_UPGRADE": 2,
     "MAN_AT_ARMS_UPGRADE": 1,
     "MASONRY": 2,
+    "MEDIUM_WARSHIPS": 2,
     "ONAGER_UPGRADE": 3,
     "PADDED_ARCHER_ARMOR": 1,
     "PIKEMAN_UPGRADE": 2,
@@ -631,7 +638,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "DEMOLITION_RAFT": (7, "bamboo_raft", "Demolition Raft"),   # the Feudal Age forms (#1481)
          "DEMOLITION_SHIP": (4, "bamboo_raft", "Demolition Ship"),   # units.classify: a raft with a creeper
          "FIRE_GALLEY": (6, "mangrove_boat", "Fire Galley"),
-         "FIRE_SHIP": (3, "mangrove_boat", "Fire Ship"),           # units.classify: a boat with a blaze
+         "FIRE_SHIP": (6, "mangrove_boat", "Fire Ship"),           # the slot of the fire galley (#1482)
          "FISHING_LINES": (5, "book", "Fishing Lines"),            # slots 1-4: the ships of the dock
          "FISHING_SHIP": (0, "oak_boat", "Fishing Ship"),         # a ship is a boat (units.boat)
          "FLETCHING": (2, "book", "Fletching"),
@@ -658,6 +665,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "MAMELUKE": (0, "camel_spawn_egg", "Mameluke"),
          "MAN_AT_ARMS": (0, "zombie_spawn_egg", "Man-at-Arms"),
          "MASONRY": (6, "book", "Masonry"),
+         "MEDIUM_WARSHIPS": (3, "book", "Medium Warships"),         # the dock
          "MAN_AT_ARMS_UPGRADE": (2, "book", "Man-at-Arms"),
          "MANGONEL": (1, "dispenser", "Mangonel"),
          "MANGUDAI": (0, "skeleton_horse_spawn_egg", "Mangudai"),
@@ -684,6 +692,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "TREADMILL_CRANE": (7, "book", "Treadmill Crane"),         # the last free slot of the university
          "TREBUCHET": (1, "minecart", "Trebuchet"),                 # after the unique unit
          "WAR_ELEPHANT": (0, "ravager_spawn_egg", "War Elephant"),
+         "WAR_GALLEY": (1, "dark_oak_boat", "War Galley"),        # the slot of the galley
          "FEUDAL_AGE": (2, "bell", "Feudal Age"),
          "WHEELBARROW": (3, "book", "Wheelbarrow"),
          "WOAD_RAIDER": (0, "zombie_spawn_egg", "Woad Raider")}
@@ -759,6 +768,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "MANGONEL": "Siege. Hits all units near the target.",
         "MANGUDAI": "Mongol horse archer. Strong vs. siege.",
         "MASONRY": "Buildings +10 % HP, +1/+1 armor.",
+        "MEDIUM_WARSHIPS": "Galleys, fire galleys to war galleys, fire ships.",
         "MILITIA": "Infantry. Strong vs. eagles; weak vs. archers.",
         "MONK": "Heals own units, converts enemy units.",
         "ONAGER": "Siege. Hits all units near the target.",
@@ -797,6 +807,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "TREBUCHET": "Siege. Long range vs. buildings; unpacks to shoot.",
         "VILLAGER_MALE": "Gathers, builds and repairs.",
         "WAR_ELEPHANT": "Persian elephant. Slow, very strong.",
+        "WAR_GALLEY": "All-purpose warship with ranged attack.",
         "WHEELBARROW": "Villagers +10 % speed, +25 % carry.",
         "WOAD_RAIDER": "Celtic infantry. Fast."}
 SHIFT = 5                                                          # units of a shift click, as in AoE2
@@ -834,10 +845,15 @@ def homes(g):
     return out | {tuple(s["footprint"]): s["name"] for s in g.sites if s["name"] in TRAINS and s.get("done")}
 
 
+def lines(t):
+    """The (unit, new unit) pairs of upgrade technology t (UPGRADES): Medium Warships upgrades two lines (#1482)."""
+    return UPGRADES[t] if isinstance(UPGRADES[t][0], tuple) else (UPGRADES[t],)
+
+
 def trains(g, building):
     """The units and technologies of the own building: a castle trains the unique unit of the player's civilization."""
     if building != "CASTLE":
-        new = {old: unit for t, (old, unit) in UPGRADES.items() if t in g.techs}     # the barracks trains the new unit
+        new = {old: unit for t in UPGRADES if t in g.techs for old, unit in lines(t)}   # the barracks trains the new unit
         out = list(TRAINS[building])
         for _ in UPGRADES:                                         # a line of upgrades: mangonel, onager, siege onager
             out = [new.get(n, n) for n in out]
@@ -1117,8 +1133,7 @@ def research(g, entry):
     build.retower(g, before)                                       # the complete own towers get the new values (#1374),
                                                                    # the buildings those of Masonry and Fletching (#1398, #1408)
     if entry["name"] in UPGRADES:                                  # the live units of the line get the new name
-        old, new = UPGRADES[entry["name"]]
-        for uuid in [u for u, n in g.soldiers.items() if n == old]:
+        for uuid, new in [(u, new) for old, new in lines(entry["name"]) for u, n in g.soldiers.items() if n == old]:
             g.soldiers[uuid] = new
             g.command(combat.stats_command(uuid, new, stats(g, new)))
             if cmd := combat.range_command(uuid, new, g.map.T, s=stats(g, new)):   # the range and blast of an onager

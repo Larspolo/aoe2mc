@@ -17,7 +17,7 @@ def test_the_two_ships_have_the_aoe2_de_values_of_the_wiki():
     assert train.COSTS["FIRE_SHIP"] == {"wood": 75, "gold": 45} and train.TRAIN_TIMES["FIRE_SHIP"] == 27
     assert train.COSTS["DEMOLITION_SHIP"] == {"wood": 45, "gold": 80} and train.TRAIN_TIMES["DEMOLITION_SHIP"] == 31
     assert build.AGE["FIRE_SHIP"] == build.AGE["DEMOLITION_SHIP"] == 2                      # the Castle Age
-    assert {"FIRE_SHIP", "DEMOLITION_SHIP"} <= set(train.TRAINS["DOCK"])
+    assert "DEMOLITION_SHIP" in train.TRAINS["DOCK"] and ("FIRE_GALLEY", "FIRE_SHIP") in train.lines("MEDIUM_WARSHIPS")
     assert combat.stats("FIRE_SHIP") == (120, 3, 2, 4, 2.5, 0.25, {"building": 2, "warship": 1}, ("ship",))
     assert combat.stats("DEMOLITION_SHIP") == (50, 95, 1, 0, 0, 0.0, {"building": 220}, ("ship",))
     assert fleet.SPEEDS["FIRE_SHIP"] == 1.47 and fleet.SPEEDS["DEMOLITION_SHIP"] == 1.52
@@ -44,13 +44,13 @@ def test_the_dock_menu_has_the_two_ships_in_the_castle_age():
     g.stock["gold"] = 200
     train.open_menu(g, "Steve", (15, 12))
     menu = menus(server)[-1]
-    assert "3:gray_dye:Fire Ship:75 wood · 45 gold · 27 s · Needs the Castle Age" in menu
+    assert "Fire Ship" not in menu                                     # after Medium Warships (#1482)
     assert "4:gray_dye:Demolition Ship:45 wood · 80 gold · 31 s · Needs the Castle Age" in menu
-    assert train.order(g, "Steve", DOCK, 3) == 0
-    g.techs |= {"CASTLE_AGE"}
+    assert train.order(g, "Steve", DOCK, 4) == 0
+    g.techs |= {"CASTLE_AGE", "MEDIUM_WARSHIPS"}
     train.open_menu(g, "Steve", (15, 12))
-    assert "3:mangrove_boat:Fire Ship:75 wood · 45 gold · 27 s · queue 0/15" in menus(server)[-1]
-    assert train.order(g, "Steve", DOCK, 3) == 1 and train.order(g, "Steve", DOCK, 4) == 1
+    assert "6:mangrove_boat:Fire Ship:75 wood · 45 gold · 27 s · queue 0/15" in menus(server)[-1]
+    assert train.order(g, "Steve", DOCK, 6) == 1 and train.order(g, "Steve", DOCK, 4) == 1
     fire, = train.tick(g, 27)
     demo, = train.tick(g, 31)
     assert (g.soldiers[fire], g.soldiers[demo]) == ("FIRE_SHIP", "DEMOLITION_SHIP")
