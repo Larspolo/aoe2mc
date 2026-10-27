@@ -8,6 +8,9 @@ commands:
     description: Orders for units.
     usage: /aoe moveto <selector> <x> <y> <z> [speed] | /aoe attack <selector> <target selector> | /aoe goals <selector> | /aoe menu <player> <title> <slot>:<material>:<name>:<lore> ... | /aoe menu-close <player> | /aoe stop <selector> | /aoe sight <selector> <blocks>
     permission: aoe2mc.order
+  aoego:
+    description: Go to the place of an attack alert of your team (a click on the alert line, #1816).
+    usage: /aoego <x> <z>
 permissions:
   aoe2mc.order:
     default: op
