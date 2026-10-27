@@ -89,6 +89,7 @@ SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, 
           "CAVALIER": 1.35,                                                         # (#1501)
           "ELITE_SKIRMISHER": 0.96,                                                 # (#1396)
           "HALBERDIER": 1.0,                                                        # (#1499)
+          "HEAVY_CAMEL_RIDER": 1.45,                                                # (#1550)
           "HEAVY_CAVALRY_ARCHER": 1.4,                                              # (#1500)
           "HUSSAR": 1.5,                                                            # (#1502)
           "LONG_SWORDSMAN": 0.9,

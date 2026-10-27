@@ -46,7 +46,8 @@ def test_a_right_click_on_the_stable_opens_its_menu():
         g.click(name)
     assert menus(server) == ["aoe menu Steve Stable 0:horse_spawn_egg:Scout Cavalry:80 food · 30 s · queue 0/15 "
                              "1:book:Bloodlines:150 food · 100 gold · 50 s · research"
-                             " 3:gray_dye:Knight:60 food · 75 gold · 30 s · Needs the Castle Age" + RALLY]
+                             " 3:gray_dye:Knight:60 food · 75 gold · 30 s · Needs the Castle Age"
+                             " 6:gray_dye:Camel Rider:55 food · 60 gold · 22 s · Needs the Castle Age" + RALLY]
 
 
 def test_no_menu_at_a_stable_that_is_not_complete():

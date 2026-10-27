@@ -173,6 +173,13 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
                                   "ROMANS", "SARACENS", "SAXONS", "SHU", "SICILIANS", "SLAVS", "SPARTANS", "THRACIANS",
                                   "TUPI", "VARANGIANS", "VIKINGS", "WEI", "WU"),
            "BRACER": ("CELTS", "CUMANS", "FRANKS", "MALIANS", "MAPUCHE", "PERSIANS", "ROMANS", "SLAVS", "TEUTONS"),   # (#1503)
+           "CAMEL_RIDER": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "BENGALIS", "BOHEMIANS", "BRITONS",
+                           "BULGARIANS", "BURGUNDIANS", "BURMESE", "CELTS", "CHINESE", "DANES", "DRAVIDIANS",
+                           "FRANKS", "GEORGIANS", "GOTHS", "HUNS", "INCAS", "ITALIANS", "JAPANESE", "JURCHENS",
+                           "KHMER", "KOREANS", "LITHUANIANS", "MACEDONIANS", "MAGYARS", "MALAY", "MAPUCHE", "MAYANS",
+                           "MUISCA", "POLES", "PORTUGUESE", "PURU", "ROMANS", "SAXONS", "SHU", "SICILIANS", "SLAVS",
+                           "SPANISH", "SPARTANS", "TEUTONS", "THRACIANS", "TUPI", "VARANGIANS", "VIETNAMESE",
+                           "VIKINGS", "WEI", "WU"),   # the wiki chart (#1550)
            "CANNON_GALLEON": ("ARMENIANS", "AZTECS", "BYZANTINES", "CHINESE", "CUMANS", "DANES", "GOTHS", "HUNS", "INCAS",
                               "JURCHENS", "MAPUCHE", "MAYANS", "MUISCA", "ROMANS", "SAXONS", "SHU", "TUPI", "VARANGIANS",
                               "VIKINGS", "WEI", "WU"),                                     # (#1484)
@@ -213,6 +220,14 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
            "HEATED_SHOT": ("BOHEMIANS", "BURGUNDIANS", "BYZANTINES", "FRANKS", "GEORGIANS", "HINDUSTANIS", "HUNS",
                            "JAPANESE", "JURCHENS", "MAPUCHE", "MONGOLS", "MUISCA", "POLES", "ROMANS", "SARACENS",
                            "SLAVS", "SPANISH"),                                       # the wiki chart (#1548)
+           "HEAVY_CAMEL_RIDER_UPGRADE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "BENGALIS", "BOHEMIANS",
+                                         "BRITONS", "BULGARIANS", "BURGUNDIANS", "BURMESE", "CELTS", "CHINESE",
+                                         "CUMANS", "DANES", "DRAVIDIANS", "FRANKS", "GEORGIANS", "GOTHS", "HUNS",
+                                         "INCAS", "ITALIANS", "JAPANESE", "JURCHENS", "KHMER", "KOREANS",
+                                         "LITHUANIANS", "MACEDONIANS", "MAGYARS", "MALAY", "MAPUCHE", "MAYANS",
+                                         "MUISCA", "POLES", "PORTUGUESE", "PURU", "ROMANS", "SAXONS", "SHU",
+                                         "SICILIANS", "SLAVS", "SPANISH", "SPARTANS", "TEUTONS", "THRACIANS", "TUPI",
+                                         "VARANGIANS", "VIETNAMESE", "VIKINGS", "WEI", "WU"),   # the wiki chart (#1550)
            "HEAVY_DEMOLITION_SHIP": ("ACHAEMENIDS", "ATHENIANS", "AZTECS", "BENGALIS", "BOHEMIANS", "BULGARIANS",
                                      "BURGUNDIANS", "BURMESE", "CUMANS", "DANES", "ETHIOPIANS", "GEORGIANS",
                                      "HINDUSTANIS", "INCAS", "ITALIANS", "JAPANESE", "KHITANS", "KHMER", "KOREANS",
