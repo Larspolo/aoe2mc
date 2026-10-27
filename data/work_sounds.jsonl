@@ -1,0 +1,11 @@
+{"name": "BLACKSMITH", "sound": "block.anvil.use", "when": "sometimes", "particle": "lava"}
+{"name": "MARKET", "sound": "entity.villager.trade", "when": "sometimes", "particle": null}
+{"name": "TOWN_CENTER", "sound": "block.bell.use", "when": "rare", "particle": null}
+{"name": "LUMBER_CAMP", "sound": "item.axe.strip", "when": "sometimes", "particle": null}
+{"name": "MINING_CAMP", "sound": "block.stone.break", "when": "sometimes", "particle": null}
+{"name": "DOCK", "sound": "entity.villager.work_fisherman", "when": "sometimes", "particle": null}
+{"name": "MONASTERY", "sound": "entity.villager.work_cleric", "when": "sometimes", "particle": null}
+{"name": "MILL", "sound": "entity.villager.work_farmer", "when": "sometimes", "particle": null}
+{"name": "ARCHERY_RANGE", "sound": "entity.villager.work_fletcher", "when": "sometimes", "particle": null}
+{"name": "UNIVERSITY", "sound": "entity.villager.work_librarian", "when": "sometimes", "particle": null}
+{"name": "SIEGE_WORKSHOP", "sound": "entity.villager.work_mason", "when": "sometimes", "particle": null}
