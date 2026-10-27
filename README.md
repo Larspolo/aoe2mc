@@ -146,7 +146,8 @@ that has no path stays where it is.
 | `--spawn X,Z` | start view or town center of player 1 | Player spawn in AoE2 tiles. Without it the spawn is the start view of player 1, else the front of its first town center, else the map center. |
 | `--garrison {inside,outside,skip}` | `inside` | Garrisoned units: a ship carries its units in stacks of up to 4 on each boat seat. `inside` puts each other unit inside its building. It does not move, it cannot die and its name does not show. `outside` puts each unit next to the building or unit that holds it. `skip` does not convert them. |
 | `--border {diorama,island,natural,table,wall,none}` | `diorama` | Edge outside the map. `diorama`: the map stands on a plinth of stone bricks. `island`: the map floats on a cone of rock and earth. `natural`: the ground slopes down into a ring of sea. `table`: the map lies on a dark oak table with legs, lanterns and a banner in a player color on each corner. `wall`: a low wall with a tower in a player color at each corner. `none`: no blocks. All keep the vanilla world border at the map edge. Images: `docs/images/border-*.png`. |
-| `--mood {on,off}` | `on` | The time of day of the map color mood of a DE scenario: Night and Darkness at midnight, Evening and Twilight at sunset, all others at noon. `off`: noon for all maps. |
+| `--mood {on,off}` | `on` | The map color mood of a DE scenario. `on`: the time of day (Night and Darkness at midnight, Evening and Twilight at sunset, all others at noon) and rain in the wet moods (Murky, Rainforest, Swamp; snow in the cold biomes). `off`: noon for all maps, no rain and no fog. |
+| `--fog` | off | Fog in the fog moods (Brumous, Misty, Murky): the fog starts 4 blocks away and ends 48 blocks away. `--ambience full` turns it on too. Minecraft then shows an "Experimental Settings" warning when the world opens. `--mood off` turns it off. |
 
 ## Campaigns
 

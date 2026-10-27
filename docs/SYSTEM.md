@@ -26,7 +26,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 |---|---|---|
 | `ci.yml` (CI) | Each PR, each push to `main`, each night | Quick checks (lint, fast tests) on each PR. The full suite each night on `main`. A red `main` opens a `P0` ticket. |
 | `automerge.yml` (Automerge) | After CI, every 5 minutes, by hand | Merges an agent PR with green CI. Skips `hold` and tickets with `needs-human` or `blocked`. Then starts CI on `main`, Coverage, Claims and Dashboard. |
-| `unconflict.yml` (Unconflict) | Every 20 minutes, after each merge | Merges `main` into a conflicted agent PR when git solves the conflict alone (`merge=union` files), and starts CI. |
+| `unconflict.yml` (Unconflict) | Every 20 minutes, after each merge | Merges `main` into a conflicted agent PR when git solves the conflict alone (`merge=union` files) or both sides only add lines (`tools/unconflict.py`, #1864), and starts CI. |
 | `claims.yml` (Claims) | A ticket closes, each day | Deletes the claim refs of closed tickets and old comment locks. The runs cannot delete refs (403). |
 | `dashboard.yml` (Dashboard) | Label changes, closed issues and PRs, each hour | Writes the dashboard in the body of the status issue (`tools/dashboard.py`). |
 | `coverage.yml` (Coverage) | Each push to `main` | Writes `docs/coverage.md`, `MAX` of `tests/test_coverage.py` and a column of `docs/DESIGN.md`. PRs do not change these files, so they do not conflict there. |
@@ -74,7 +74,8 @@ tiny CLI call. It computes the target number of runs: 90 % of the 5-hour window 
 98 % at the reset, and the week not faster than it passes: when the 7-day usage is ahead of the share of the week
 that has passed, the count is at most the runs that the rest of the 7-day budget (1 − used) carries to the 7-day reset
 at the measured 7-day burn per run-hour (`health.weekly_burn`, default `BURN7`). This count can be 0: the runs then
-wait until the budget per hour is large enough again (#1695). The CLI line shows the projection
+wait until the budget per hour is large enough again (#1695). Below `week_free` of `agent.toml` (60 %) of the 7-day
+usage there is no weekly guard: the runs fill each 5-hour window (owner, 2026-10-27). The CLI line shows the projection
 (`week ahead +38 pt · runs out Wed 11:22`, at the mean rate of the week so far). `--fire` gives the number of runs to start now: the
 target less the runs with a claim beat in the last 25 minutes. A run cannot start other runs (no `fire_trigger`, #566),
 so the pacer session starts them (at most 4 per cycle). Each cycle reads `.claude/skills/pacer/SKILL.md` again, so a change of the pacing rules reaches
@@ -181,6 +182,7 @@ the owner login, the default branch, the status issue, the commands, the doc pat
 | `tools/tokens.py` | generic | None. |
 | `tools/operator_check.py` | generic | None (`agent.toml`). |
 | `tools/owner_tasks.py` | generic | None (`agent.toml`). |
+| `tools/unconflict.py` | generic | None (solves add-add conflicts for `unconflict.yml`, #1864). |
 | `.github/workflows/ci.yml` | specific | The Python, Java and Minecraft steps, the test markers. The red-`main` ticket is generic. |
 | `.github/workflows/automerge.yml` | generic | The branch prefixes `claude/*` and `agent/*`. |
 | `.github/workflows/unconflict.yml` | generic | None. |

@@ -6,6 +6,7 @@ must handle and stops, so that the session uses no model turn while nothing happ
 Usage:
     python3 game/demo_watch.py GAME_PORT [--out out/demo] [--game out/demo/game.log] [--quiet 20] [--hours 6]
     python3 game/demo_watch.py GAME_PORT --say TEXT      # say TEXT in the chat of all players, then stop
+                                                         # (each #N is a link to issue N of the repository)
 
 GAME_PORT: the port of "Join the server localhost:PORT" (play_guide.server finds the server folder of that port).
 --game: the output of game/run.py (stdout and stderr: `python3 -u game/run.py ... 2>&1 | tee -i out/demo/game.log`).
@@ -28,6 +29,8 @@ import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(1, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"))
+import agent_config  # noqa: E402
 import play_guide  # noqa: E402
 from rcon import Rcon  # noqa: E402
 
@@ -35,6 +38,20 @@ SHOTS = os.path.expanduser("~/Library/Application Support/minecraft/screenshots"
                            else "~/.minecraft/screenshots")
 ERROR = re.compile(r"/ERROR\]|Exception|/WARN\]: \[aoe2mc\]")
 QUIET = 20                  # seconds after the last event: more feedback lines come in the same call
+ISSUE = re.compile(r"(#\d+)")
+
+
+def chat(text, repo):
+    """The tellraw text of a demo line: each #N is a link to issue N of repo (owner request in the demo of
+    2026-10-27), so that the owner opens the ticket from the chat."""
+    parts = [{"text": "[demo] ", "color": "aqua"}]
+    for part in filter(None, ISSUE.split(text)):
+        url = f"https://github.com/{repo}/issues/{part[1:]}"
+        parts.append({"text": part, "color": "aqua", "underlined": True,
+                      "click_event": {"action": "open_url", "url": url},
+                      "hover_event": {"action": "show_text", "value": url}} if ISSUE.fullmatch(part)
+                     else {"text": part, "color": "gold"})
+    return parts
 
 
 class Watch:
@@ -133,7 +150,7 @@ def main(argv=None):
     folder, rcon_port, password = play_guide.server(a.port)
     if a.say:
         with Rcon("127.0.0.1", rcon_port, password, retry=0) as r:
-            r.command("tellraw @a " + json.dumps([{"text": "[demo] ", "color": "aqua"}, {"text": a.say, "color": "gold"}]))
+            r.command("tellraw @a " + json.dumps(chat(a.say, agent_config.load()["repo"])))
         return 0
     os.makedirs(a.out, exist_ok=True)
     return Watch(folder, a.out, a.game, a.shots).run(a.quiet, a.hours)

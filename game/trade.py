@@ -109,8 +109,7 @@ def tick(g):
             t["rest"] += gold(center(t["home"], g.map.T), center(t["market"], g.map.T), g.map.n / g.map.T)
             n, t["rest"] = int(t["rest"]), t["rest"] - int(t["rest"])
             if n:
-                g.command(f"scoreboard players add Gold {g.board} {n}")
-                g.stock["gold"] += n
+                g.earn("gold", n)
         t["to"] = t["market"] if t["to"] == t["home"] else t["home"]
         if (legs := walk(g, u, t["to"], pos[u])) is not None:
             t["cell"], t["legs"] = legs[-1], legs

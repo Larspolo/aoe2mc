@@ -179,8 +179,7 @@ def relic_tick(g, dt):
     g.relic_gold += GOLD * dt * sum(r["home"] in homes for r in relics(g))
     if (n := int(g.relic_gold)) > 0:
         g.relic_gold -= n
-        g.stock["gold"] += n
-        g.command(f"scoreboard players add Gold {g.board} {n}")
+        g.earn("gold", n)
 
 
 def healable(name):
