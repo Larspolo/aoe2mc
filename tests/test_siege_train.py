@@ -26,7 +26,7 @@ def setup(ages=2):
 
 
 def test_the_siege_workshop_trains_the_castle_age_siege_units_with_the_aoe2_cost_and_time():
-    assert train.TRAINS["SIEGE_WORKSHOP"] == tuple(WIKI)
+    assert train.TRAINS["SIEGE_WORKSHOP"][:len(WIKI)] == tuple(WIKI)          # then the upgrades (#1352)
     for name, (cost, seconds) in WIKI.items():
         assert (train.COSTS[name], train.TRAIN_TIMES[name], build.AGE[name]) == (cost, seconds, 2), name
         assert train.HELP[name] and name in train.ITEMS
