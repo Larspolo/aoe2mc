@@ -625,8 +625,10 @@ class Replay:
         return self.fill(max(0, x0), min(ys), max(0, z0), min(self.n, x1) - 1, top, min(self.n, z1) - 1, "air destroy")
 
     def spectate(self, e):
-        """--follow N (#738): the spectators look through the first unit of a MOVE, ORDER or spawn of player N
-        (vanilla /spectate; it takes one player, so `execute as` each spectator). The camera changes at most once per
+        """--follow N (#738): the spectators follow the first unit of a MOVE, ORDER or spawn of player N, the unit with
+        the tag FOLLOWED. On Paper the plugin moves each spectator over the shoulder of that unit each tick (Follow.java,
+        #1660); a vanilla server has no plugin, so there the spectators look through its eyes (/spectate; it takes one
+        player, so `execute as` each spectator). The camera changes at most once per
         FOLLOW_MS of game time, at once when its unit is gone (DELETE). A unit with a rider (a horse, a siege crew):
         the spectators look through the rider, else its legs fill the screen (#1095). `execute on passengers` finds
         it: the replay does not know the UUID of the rider."""
@@ -645,8 +647,9 @@ class Replay:
         self.followed = (v.uuid, e["time"])
         return [f"tag @e[tag={FOLLOWED}] remove {FOLLOWED}", f"tag {v.uuid} add {FOLLOWED}",
                 f"execute as {v.uuid} on passengers run tag {v.uuid} remove {FOLLOWED}",
-                f"execute as {v.uuid} on passengers run tag @s add {FOLLOWED}",
-                f"execute as @a[gamemode=spectator] run spectate @e[tag={FOLLOWED},limit=1] @s"]
+                f"execute as {v.uuid} on passengers run tag @s add {FOLLOWED}"] + \
+            [f"execute as @a[gamemode=spectator] run spectate @e[tag={FOLLOWED},limit=1] @s"] * \
+            (getattr(self.game, "kind", "paper") == "vanilla")
 
     def spawns(self):
         """A "spawn" event for each unit that a QUEUE command trains, at the end of its training."""
