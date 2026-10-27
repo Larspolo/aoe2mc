@@ -94,7 +94,7 @@ def test_the_selectors_skip_mounts_walls_and_gaia():
     server.log.clear()
     live(server, set())
     conquest.alive(g, 2)
-    assert server.log[-1] == "execute if entity @e[tag=aoe2mc.building,team=p2]"   # combat.building: no walls
+    assert server.log[-1] == "execute if entity @e[tag=aoe2mc.building,team=p2,tag=!aoe2mc.wall]"   # no walls (#1322)
 
 
 @pytest.mark.parametrize("name", ["PALISADE_WALL", "STONE_WALL", "FORTIFIED_WALL", "GATE", "PALISADE_GATE",
