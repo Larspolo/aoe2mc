@@ -44,7 +44,7 @@ def test_a_right_click_on_the_barracks_opens_its_menu():
     server, g = setup(done=None)
     for name in g.clicks():
         g.click(name)
-    assert menus(server) == ["aoe menu Steve Barracks 0:zombie_spawn_egg:Militia:50 food · 20 gold · 21 s · queue 0/15" + SPEAR + EAGLE + FIRE + VG + TG + FM + RALLY]
+    assert menus(server) == ["aoe menu Steve Barracks 0:zombie_spawn_egg:Militia:50 food · 20 gold · 21 s · queue 0/15" + SPEAR + EAGLE + FIRE + VG + FM + TG + RALLY]
     assert not any(g.queues.values())
 
 
@@ -74,7 +74,7 @@ def test_a_shift_click_queues_as_many_as_the_stock_allows():
     server, g = setup(food=1000, gold=70)
     rect = train.open_menu(g, "Steve", (11, 3))
     assert train.order(g, "Steve", rect, 0, shift=True) == 3 and g.stock["gold"] == 10
-    assert menus(server)[-1].endswith("queue 3/15" + SPEAR + EAGLE + FIRE + VG + TG + FM + RALLY)
+    assert menus(server)[-1].endswith("queue 3/15" + SPEAR + EAGLE + FIRE + VG + FM + TG + RALLY)
 
 
 def test_the_militia_appears_after_21_seconds_and_joins_the_military_units():

@@ -20,7 +20,7 @@ def barracks(civ="BURGUNDIANS", ages=IMPERIAL):
 
 
 def test_the_values_are_those_of_the_wiki():
-    assert train.COSTS[NAME] == {"food": 35, "gold": 25} and build.AGE[NAME] == 1
+    assert build.AGE[NAME] == 1                    # the cost and time: the menu line (#2182)
     assert combat.stats(NAME) == (40, 5, 1, 1, 0, 2.0, {"camel": 4, "cavalry": 6, "elephant": 6, "ship": 4},
                                   ("infantry", "unique"))
     assert replay.SPEEDS[NAME] == 0.94 and combat.sight(NAME) == 7 and len(train.HELP[NAME]) <= 50
