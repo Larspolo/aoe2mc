@@ -28,6 +28,7 @@
 {"name": "CAVALIER", "hp": 120, "attack": 12, "melee": 2, "pierce": 2, "range": 0, "reload": 1.8, "bonus": {}, "classes": ["cavalry"]}
 {"name": "PALADIN", "hp": 160, "attack": 14, "melee": 2, "pierce": 3, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry"], "sight": 5, "note": "ROF 1.9: the wiki infobox (#1501)"}
 {"name": "CAMEL_RIDER", "hp": 100, "attack": 6, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"cavalry": 9, "camel": 5, "ship": 5}, "classes": ["camel"], "sight": 5, "note": "the wiki infobox (#1550); sight: the wiki infobox (#1550)"}
+{"name": "CAMEL_SCOUT", "hp": 70, "attack": 5, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"cavalry": 4, "camel": 2, "ship": 2}, "classes": ["camel", "unique"], "sight": 5, "note": "the wiki infobox \"Camel Scout\", Feudal Age values (#2130)"}
 {"name": "HEAVY_CAMEL_RIDER", "hp": 120, "attack": 7, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"camel": 9, "cavalry": 18, "ship": 9}, "classes": ["camel"], "sight": 5}
 {"name": "IMPERIAL_CAMEL_RIDER", "hp": 140, "attack": 8, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"building": 2, "camel": 9, "cavalry": 18}, "classes": ["camel"], "sight": 5, "note": "reload: the base 2 of the wiki; the Hindustani bonus makes it 1.667 (civs.UNITS, #2013)"}
 {"name": "WAR_ELEPHANT", "hp": 450, "attack": 15, "melee": 1, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 30}, "classes": ["elephant", "unique"], "sight": 7}

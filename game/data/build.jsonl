@@ -32,6 +32,7 @@
 {"name": "BATTLE_ELEPHANT", "age": 2}
 {"name": "BOMBARD_CANNON", "age": 3, "needs": "CHEMISTRY"}
 {"name": "CAMEL_RIDER", "age": 2}
+{"name": "CAMEL_SCOUT", "age": 1}
 {"name": "CANNON_GALLEON", "age": 3, "needs": "CHEMISTRY"}
 {"name": "CAPPED_RAM", "age": 3}
 {"name": "CARAVEL", "age": 2}
