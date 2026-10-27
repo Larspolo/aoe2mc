@@ -309,6 +309,20 @@ def locked(g, name):
         return f"Needs the {('Dark', 'Feudal', 'Castle', 'Imperial')[AGE[name]]} Age"
     if g is not None and name in NEEDS and NEEDS[name] not in getattr(g, "techs", ()):
         return "Needs " + pretty(NEEDS[name].removesuffix("_TECH"))
+    if g is not None and name == "TOWN_CENTER" and ages(g) < (1 if civs.civ(g) == "CUMANS" else 2) and town_center(g):
+        return "Needs the Castle Age"                                  # a second one (AoE2; the Cumans: Feudal, #1951)
+
+
+def town_center(g):
+    """True when the player has a town center: a construction site, or a complete one whose target still stands."""
+    import combat                                                      # combat imports gather, which imports this module
+    sites = [s for s in getattr(g, "sites", ()) if s["name"] == "TOWN_CENTER" and s["player"] == g.player]
+    if any(not s.get("done") for s in sites):
+        return True
+    rects = [o["footprint"] for o in g.data.get("objects", ()) if o["kind"] == "building" and o["name"] == "TOWN_CENTER"
+             and o["player"] == g.player and "footprint" in o]
+    rects += [[x0, z0, x1, z1] for s in sites for x0, x1, z0, z1 in [s["footprint"]]]
+    return any("passed" in g.command(f"execute if entity {combat.target_uuid(r)}") for r in rects)
 
 
 def hidden(g, name):

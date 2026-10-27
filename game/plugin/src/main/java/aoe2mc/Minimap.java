@@ -1,5 +1,9 @@
 package aoe2mc;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -24,6 +28,9 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
+
 import net.kyori.adventure.text.format.NamedTextColor;
 
 /**
@@ -46,6 +53,10 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * (the area of one AoE2 screen, game/replay.py FRAME), "aoe minimap frame off" removes it. Each player sees only the
  * own square: Frame is a contextual renderer above this one. "aoe minimap square NAME" gives the pixels of the last
  * square of player NAME (clipped at the map edge) and the map color of its first outline pixel, or "none" (the tests).
+ * The bare ground (#1940): "aoe minimap on" reads "map_ground" of aoe2mc.json in the world folder (the map bytes
+ * without the start objects, aoe2mc.write_objects). The renderer paints it under the buildings and the dots, so a
+ * start unit that walked away or died, and a razed start building, leave no pixel. The replay sends the start
+ * buildings as "aoe minimap building". Without "map_ground" (an older world) the base image shows, as before.
  */
 final class Minimap extends MapRenderer {
     static final int PERIOD = 20;                         // ticks between two updates of the dots (sendMap)
@@ -60,6 +71,7 @@ final class Minimap extends MapRenderer {
     private long last = Long.MIN_VALUE;                   // the server tick of the last update
     private List<int[]> dots = new ArrayList<>();         // {px, pz} of the drawn dots and squares
     private final Map<List<Integer>, int[]> buildings = new LinkedHashMap<>();   // (x0, z0) -> {x0, z0, x1, z1, color}
+    private byte[] ground;                                // the bare ground: 128 × 128 map bytes, row z; null: none
     private byte[][] fog;                                 // [tile x][tile y] -> UNEXPLORED, EXPLORED, SEEN; null: no fog
     private int tile;                                     // blocks of a fog tile side
     private boolean fogged;                               // the last render drew the fog: clear all pixels first
@@ -142,6 +154,40 @@ final class Minimap extends MapRenderer {
                 }
             }
         }
+    }
+
+    /** The "map_ground" rows of aoe2mc.json in folder w or a parent of it (Paper can give the folder of the dimension),
+     * or null. Streamed: the file holds the whole "ground" too. */
+    static byte[] ground(Path w) {
+        Path f = w.toAbsolutePath().resolve("aoe2mc.json");
+        Path d = w.toAbsolutePath();
+        for (int up = 0; up < 4 && d != null && !Files.isRegularFile(f); up++, d = d.getParent()) {
+            f = d.resolve("aoe2mc.json");
+        }
+        if (!Files.isRegularFile(f)) {
+            return null;
+        }
+        try (Reader in = Files.newBufferedReader(f); JsonReader r = new JsonReader(in)) {
+            r.beginObject();
+            while (r.hasNext()) {
+                if (!r.nextName().equals("map_ground") || r.peek() != JsonToken.BEGIN_ARRAY) {
+                    r.skipValue();
+                    continue;
+                }
+                byte[] out = new byte[128 * 128];
+                r.beginArray();
+                for (int z = 0; r.hasNext(); z++) {
+                    String row = r.nextString();
+                    for (int x = 0; x < 128 && z < 128 && 2 * x + 2 <= row.length(); x++) {
+                        out[z * 128 + x] = (byte) Integer.parseInt(row, 2 * x, 2 * x + 2, 16);
+                    }
+                }
+                return out;
+            }
+        } catch (IOException | RuntimeException e) {
+            return null;                                  // no bare ground: the base image shows
+        }
+        return null;
     }
 
     /** Map color c in the darkest shade (shade 3: 135/255 of the color, the map rule); no color (0 to 3): black. */
@@ -263,6 +309,10 @@ final class Minimap extends MapRenderer {
             return true;
         }
         on = args[1].equals("on");
+        if (on) {
+            World w = v.getWorld() != null ? v.getWorld() : Bukkit.getWorlds().get(0);
+            ground = ground(w.getWorldFolder().toPath());
+        }
         if (on && !v.getRenderers().contains(this)) {
             v.addRenderer(this);
             if (frame.side > 0) {                         // the square stays above the dots
@@ -277,7 +327,7 @@ final class Minimap extends MapRenderer {
             send(v);                                      // the map without the dots
         }
         sync(v);
-        sender.sendMessage("Minimap: " + (on ? "on" : "off"));
+        sender.sendMessage("Minimap: " + (on ? "on" + (ground != null ? ", bare ground" : "") : "off"));
         return true;
     }
 
@@ -304,7 +354,13 @@ final class Minimap extends MapRenderer {
         last = now;
         drawn = canvas;
         int s = map.getScale().getValue();
-        if (fogged) {                                     // the fog was on each pixel: clear all
+        if (ground != null) {                             // the bare ground over the whole base image (#1940)
+            for (int px = 0; px < 128; px++) {
+                for (int pz = 0; pz < 128; pz++) {
+                    canvas.setPixel(px, pz, ground[pz * 128 + px]);
+                }
+            }
+        } else if (fogged) {                              // the fog was on each pixel: clear all
             for (int px = 0; px < 128; px++) {
                 for (int pz = 0; pz < 128; pz++) {
                     canvas.setPixel(px, pz, (byte) -1);

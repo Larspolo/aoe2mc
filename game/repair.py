@@ -16,7 +16,11 @@ the civilization of the ally. A building of an enemy or of no player is not repa
 Siege units (#1331): a right click with selected villagers on an own damaged siege unit (units.siege: a minecart)
 sends them next to it. AoE2 repairs siege weapons at 25 % of the building rate (SIEGE: 187.5 hit points per minute for
 the first villager, 93.75 for each other one), for half the training cost (train.price). A siege unit that moves stops
-the repair, as in AoE2: the villagers stand idle.
+the repair, as in AoE2: the villagers stand idle. The Georgian team bonus (civs.REPAIR_COST) does not lower the cost
+of a unit (AoE2 wiki "Villager (Age of Empires II)": "The bonus does not apply to repairing units", #1929).
+
+Civilization bonuses of the rate (civs.repair_rate): Roman repairers work 5 % faster, and the Saxon team bonus makes
+the repairers of the Saxons and their allies 25 % faster (AoE2 wiki "Saxons", #1929). The two factors multiply.
 
 Ships (#1661): AoE2 repairs ships at the siege rate, for half the training cost, from the shore: a villager repairs
 from up to REACH tiles away. So a right click with selected villagers on an own damaged ship (fleet.SPEEDS) sends them
@@ -224,7 +228,7 @@ def charge(g, key, vs, full, share, name):
 def unit_tick(g, u, vs, dt):
     """dt AoE2 seconds of repair of siege unit or ship u by the villagers vs: its crew gets Health back, the stock pays
     half the training cost for the full hit points. It stops when the unit is full, dead or moves."""
-    import civs, train                                             # train imports gather
+    import train                                                   # train imports gather
     name, h, pos = g.soldiers.get(u), unit_hp(g, u), g.pos(u)
     start = vars(g).get("repair_at", {}).get(u)
     if not name or not h or not 0 < h[0] < h[1] or not pos or not start or math.dist(pos, start) > STILL:
@@ -232,8 +236,7 @@ def unit_tick(g, u, vs, dt):
         return
     gain = h[1] - h[0] if g.aegis else min(h[1] - h[0], rate(g, vs) * SIEGE * dt)
     new = min(h[1], round(h[0] + gain, 2))                         # Health in steps of 0.01: pay for those
-    k = civs.repair_cost(g)                                        # the Georgian team bonus (#1730)
-    full = {r: v * SHARE * k for r, v in train.price(g, name).items()} if name in train.COSTS else {}
+    full = {r: v * SHARE for r, v in train.price(g, name).items()} if name in train.COSTS else {}   # no Georgian bonus (#1929)
     if not charge(g, u, vs, full, (new - h[0]) / h[1], name):
         return
     g.command(crew(u) + f"data modify entity @s Health set value {new}f")
