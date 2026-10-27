@@ -121,6 +121,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "ELITE_CANNON_GALLEON_UPGRADE": {"wood": 525, "gold": 500},   # the Imperial Age (#1491)
          "ELITE_EAGLE_WARRIOR": {"food": 20, "gold": 50},
          "ELITE_EAGLE_WARRIOR_UPGRADE": {"food": 800, "gold": 500},
+         "ELITE_STEPPE_LANCER": {"food": 70, "gold": 40},
+         "ELITE_STEPPE_LANCER_UPGRADE": {"food": 600, "gold": 550},   # the Imperial Age (#1557)
          "ELITE_SKIRMISHER": {"food": 25, "wood": 35},
          "ELITE_SKIRMISHER_UPGRADE": {"wood": 230, "gold": 130},
          "FERVOR": {"gold": 140},
@@ -212,6 +214,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "STONE_SHAFT_MINING": {"food": 175, "wood": 75},
          "SPEARMAN": {"food": 35, "wood": 25},
          "SQUIRES": {"food": 100},                                    # AoE2 DE wiki (#1415)
+         "STEPPE_LANCER": {"food": 70, "gold": 40},                    # AoE2 DE wiki (#1557)
          "TEUTONIC_KNIGHT": {"food": 85, "gold": 30},
          "THROWING_AXEMAN": {"food": 55, "gold": 25},
          "THUMB_RING": {"food": 300, "wood": 250},                      # AoE2 DE wiki (#1421)
@@ -273,6 +276,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "ELITE_CANNON_GALLEON_UPGRADE": 30,
                "ELITE_EAGLE_WARRIOR": 20,
                "ELITE_EAGLE_WARRIOR_UPGRADE": 50,
+               "ELITE_STEPPE_LANCER": 20,
+               "ELITE_STEPPE_LANCER_UPGRADE": 55,
                "ELITE_SKIRMISHER": 22,
                "ELITE_SKIRMISHER_UPGRADE": 50,
                "FERVOR": 50,
@@ -364,6 +369,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "SQUIRES": 40,
                "STONE_MINING": 30,
                "STONE_SHAFT_MINING": 75,
+               "STEPPE_LANCER": 24,
                "TEUTONIC_KNIGHT": 12,
                "THROWING_AXEMAN": 13,
                "THUMB_RING": 45,
@@ -414,7 +420,9 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                      "HUSBANDRY",                                               # (#1416)
                      "HUSSAR_UPGRADE",                                          # the Imperial Age (#1502)
                      "CAVALIER_UPGRADE",                                        # (#1501)
-                     "PALADIN_UPGRADE"),                                        # after Cavalier (#1501)
+                     "PALADIN_UPGRADE",                                         # after Cavalier (#1501)
+                     "STEPPE_LANCER",                                           # Cumans, Jurchens, Khitans, Mongols,
+                     "ELITE_STEPPE_LANCER_UPGRADE"),                            # Tatars (#1557)
           "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS",   # (#1326, #1374, #1352)
                          "MASONRY", "TREADMILL_CRANE",                          # (#1398, #1422) the Castle Age
                          "CHEMISTRY", "BOMBARD_TOWER_TECH",                     # (#1375)
@@ -553,6 +561,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "EAGLE_WARRIOR_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "ELITE_CANNON_GALLEON_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
          "ELITE_EAGLE_WARRIOR_UPGRADE": lambda name, s: s,
+         "ELITE_STEPPE_LANCER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
          "ELITE_SKIRMISHER_UPGRADE": lambda name, s: s,
          "FERVOR": lambda name, s: s,                              # the walk speed: SPEEDS
          "FISHING_LINES": lambda name, s: s,                       # the fishing ships: gather.SHIP_TECHS
@@ -645,6 +654,7 @@ UPGRADES = {                                                       # technology:
     "ELITE_CANNON_GALLEON_UPGRADE": ("CANNON_GALLEON", "ELITE_CANNON_GALLEON"),
     "ELITE_EAGLE_WARRIOR_UPGRADE": ("EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"),
     "ELITE_SKIRMISHER_UPGRADE": ("SKIRMISHER", "ELITE_SKIRMISHER"),
+    "ELITE_STEPPE_LANCER_UPGRADE": ("STEPPE_LANCER", "ELITE_STEPPE_LANCER"),   # (#1557)
     "HALBERDIER_UPGRADE": ("PIKEMAN", "HALBERDIER"),
     "HEAVY_CAVALRY_ARCHER_UPGRADE": ("CAVALRY_ARCHER", "HEAVY_CAVALRY_ARCHER"),
     "HEAVY_SCORPION_UPGRADE": ("SCORPION", "HEAVY_SCORPION"),
@@ -727,6 +737,7 @@ TECH_AGE = {                                                       # the age of 
     "ELITE_CANNON_GALLEON_UPGRADE": 3,
     "ELITE_EAGLE_WARRIOR_UPGRADE": 3,
     "ELITE_SKIRMISHER_UPGRADE": 2,
+    "ELITE_STEPPE_LANCER_UPGRADE": 3,                             # (#1557)
     "FERVOR": 2,
     "FISHING_LINES": 1,
     "FLETCHING": 1,
@@ -812,6 +823,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "ELITE_EAGLE_WARRIOR_UPGRADE": (MORE, "book", "Elite Eagle Warrior"),   # the slot of Eagle Warrior (AFTER)
          "ELITE_SKIRMISHER": (1, "drowned_spawn_egg", "Elite Skirmisher"),
          "ELITE_SKIRMISHER_UPGRADE": (3, "book", "Elite Skirmisher"),
+         "ELITE_STEPPE_LANCER": (MORE + 2, "horse_spawn_egg", "Elite Steppe Lancer"),   # the slot of the steppe lancer
+         "ELITE_STEPPE_LANCER_UPGRADE": (MORE + 3, "book", "Elite Steppe Lancer"),   # the stable (#1557)
          "HALBERDIER": (1, "zombie_spawn_egg", "Halberdier"),
          "HALBERDIER_UPGRADE": (3, "book", "Halberdier"),             # the slot of Pikeman (AFTER)
          "HAND_CANNONEER": (7, "pillager_spawn_egg", "Hand Cannoneer"),      # units.classify: a pillager
@@ -932,6 +945,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "SIEGE_TOWER": (6, "ladder", "Siege Tower"),               # after the slots of the upgrades
          "STONE_MINING": (1, "book", "Stone Mining"),
          "STONE_SHAFT_MINING": (1, "book", "Stone Shaft Mining"),
+         "STEPPE_LANCER": (MORE + 2, "horse_spawn_egg", "Steppe Lancer"),   # slots 20, 21 of the stable (#1557)
          "TEUTONIC_KNIGHT": (0, "zombie_spawn_egg", "Teutonic Knight"),
          "THROWING_AXEMAN": (0, "drowned_spawn_egg", "Throwing Axeman"),
          "THUMB_RING": (5, "book", "Thumb Ring"),                   # slot 4: the cavalry archer (#1397)
@@ -997,6 +1011,8 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "ELITE_EAGLE_WARRIOR_UPGRADE": "Upgrades eagle warriors to elite ones.",
         "ELITE_SKIRMISHER": "Ranged. Strong vs. archers, spearmen.",
         "ELITE_SKIRMISHER_UPGRADE": "Upgrades skirmishers to elite skirmishers.",
+        "ELITE_STEPPE_LANCER": "Cavalry with a lance. Hits from 1 tile away.",
+        "ELITE_STEPPE_LANCER_UPGRADE": "Upgrades steppe lancers to elite ones.",
         "FEUDAL_AGE": "Advance to the Feudal Age.",
         "FERVOR": "Monks +15 % speed.",
         "DEMOLITION_RAFT": "Explodes next to ships and buildings.",
@@ -1084,6 +1100,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "SIEGE_ONAGER_UPGRADE": "Upgrades onagers to siege onagers.",
         "SIEGE_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
         "SIEGE_RAM_UPGRADE": "Upgrades capped rams to siege rams.",
+        "STEPPE_LANCER": "Cavalry with a lance. Hits from 1 tile away.",
         "SKIRMISHER": "Strong vs. archers, spears; weak vs. cavalry.",
         "SPEARMAN": "Strong vs. cavalry; weak vs. archers.",
         "SQUIRES": "Infantry +10 % speed.",
