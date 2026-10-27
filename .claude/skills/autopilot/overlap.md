@@ -15,7 +15,9 @@ and say so in a comment. Exit 1 means that another run took it over first: leave
 A ticket with `in-progress` and no claim ref (older runs): the same rule with the ticket, branch and PR times only.
 The workflow `automerge.yml` merges an agent PR when its CI is green (#232, #370). A PR whose CI runs or is green waits
 for that workflow: it is not stalled. Exception: a PR with red CI, label `conflict` or a merge conflict, and with no new
-commit and no new comment for 30 minutes, is stalled. Take it over at once
+commit and no new comment for 30 minutes, is stalled. A PR with label `conflict`, no new commit for 10 minutes and a
+ticket claim with no beat for 10 minutes is stalled too, also when Automerge commented later: its run reported and went
+on (`claim.py N --stale` and `--takeover` use 10 minutes then, #1773). Take it over at once
 (`python3 tools/claim.py N --takeover` with the ticket number N, then comment "Taken over by `<your branch>`: stalled."), for example when its run stopped. Then read the PR comments again: if an older "Taken over by" comment of another branch is less than
 30 minutes old, leave the PR to that run. Work on the PR from your session branch (`claim.py` takes the run name
 from the current local branch), push with `git push origin HEAD:<branch of the PR>`, and run the guard with
