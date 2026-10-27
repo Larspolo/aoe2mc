@@ -234,7 +234,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "CASTLE": ("TREBUCHET",),                                             # and the unique unit: trains() (#708, #1351)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES", "LIGHT_CAVALRY_UPGRADE"),  # (#671, #940, #1396)
           "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS",   # (#1326, #1374, #1352)
-                         "CHEMISTRY", "BOMBARD_TOWER_TECH", "MASONRY"),         # (#1375, #1398)
+                         "MASONRY", "CHEMISTRY", "BOMBARD_TOWER_TECH"),         # (#1398, #1375)
           "DOCK": ("FISHING_SHIP",),                                            # (#1383)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
           "MARKET": ("TRADE_CART", "CARAVAN", "GUILDS"),                       # (#1253, #1254)
