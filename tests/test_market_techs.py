@@ -1,0 +1,61 @@
+"""game/train.py: the market researches Caravan (200 food, 200 gold, 40 s, Castle Age: trade carts walk 20 % faster)
+and Guilds (300 food, 200 gold, 50 s, Imperial Age: trading fee 15 %), as on the AoE2 wiki infoboxes (#1254).
+Coinage and Banking change the tribute fee: the game program has no tribute, so they are not in the menu."""
+from test_loom import menus
+from test_trade_cart import FAR, HOME, setup
+
+from game import ai, build, gather, market, trade, train
+
+
+def market_map(age, **stock):
+    server, g = setup()
+    g.techs |= set(build.AGE_TECHS[:age])
+    g.stock.update(stock)
+    return server, g
+
+
+def research(g, slot, work):
+    assert train.order(g, "Steve", train.open_menu(g, "Steve", (3, 3)), slot) == 1
+    assert g.stock["food"] == g.stock["gold"] == 0
+    train.tick(g, work - 1)
+    assert not g.techs & {"CARAVAN", "GUILDS"}
+    train.tick(g, 1)
+
+
+def test_the_costs_times_and_ages_are_those_of_aoe2():
+    assert train.COSTS["CARAVAN"] == {"food": 200, "gold": 200} and train.TRAIN_TIMES["CARAVAN"] == 40
+    assert train.COSTS["GUILDS"] == {"food": 300, "gold": 200} and train.TRAIN_TIMES["GUILDS"] == 50
+    assert train.TECH_AGE["CARAVAN"] == 2 and train.TECH_AGE["GUILDS"] == 3
+    assert train.HELP["CARAVAN"] and train.HELP["GUILDS"]
+    assert not {"COINAGE", "BANKING"} & set(train.TRAINS["MARKET"])
+
+
+def test_the_market_menu_shows_each_technology_from_its_age():
+    for age, shown in ((1, ()), (2, ("Caravan",)), (3, ("Caravan", "Guilds"))):
+        server, g = market_map(age)
+        train.open_menu(g, "Steve", (3, 3))
+        assert [n for n in ("Caravan", "Guilds") if f":book:{n}:" in menus(server)[-1]] == list(shown)
+    assert "1:book:Caravan:200 food · 200 gold · 40 s · research" in menus(server)[-1]
+    assert "2:book:Guilds:300 food · 200 gold · 50 s · research" in menus(server)[-1]
+
+
+def test_caravan_makes_the_trade_carts_walk_20_percent_faster():
+    server, g = market_map(2, food=200, gold=200)
+    assert train.speed(g, "TRADE_CART") == 1
+    research(g, 1, 40)
+    assert "CARAVAN" in g.techs and train.speed(g, "TRADE_CART") == 1.2 and train.speed(g, "MONK") == 1
+    g.selected = {"c"}
+    server.log.clear()
+    assert market.fee(g) == 30 and trade.order(g, "Steve", (19, 17)) == FAR
+    fast = ai.speed_command("c", "TRADE_CART", g.map.T, gather.NORMAL * 1.2)
+    assert fast in server.log and fast != ai.speed_command("c", "TRADE_CART", g.map.T, gather.NORMAL)
+
+
+def test_guilds_lowers_the_trading_fee_to_15_percent():
+    server, g = market_map(3, food=300, gold=200)
+    assert market.fee(g) == 30 and market.price(g, "wood", True) == 130
+    research(g, 2, 50)
+    assert "GUILDS" in g.techs and market.fee(g) == 15
+    assert market.price(g, "wood", True) == 115 and market.price(g, "wood", False) == 85
+    assert train.open_menu(g, "Steve", (3, 3)) == HOME and ":Guilds:" not in menus(server)[-1]   # once only
+

@@ -13,6 +13,7 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.bukkit.Bukkit;
+import org.bukkit.FluidCollisionMode;
 import org.bukkit.HeightMap;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -434,6 +435,13 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // their highest block, else the arrow hits the own roof (#1219).
     private static void volley(LivingEntity fort, int[] b, LivingEntity t, int k) {
         var p = t.getLocation();
+        if (p.getX() >= b[0] && p.getX() < b[3] + 1 && p.getZ() >= b[2] && p.getZ() < b[5] + 1) {
+            Location side = side(t, k);                                // under the building: the roof is above it
+            if (side != null) {
+                aim(fort, side, t);
+            }
+            return;
+        }
         Location from = new Location(fort.getWorld(), Math.max(b[0] + 0.5, Math.min(b[3] + 0.5, p.getX())), 0,
                 Math.max(b[2] + 0.5, Math.min(b[5] + 0.5, p.getZ())));
         int top = b[1];
@@ -450,6 +458,26 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             y = Math.max(y, (top + 1 - ty * 1.5 / h) / (1 - 1.5 / h));
         }
         from.setY(y + 0.2 * (k % 3));
+        aim(fort, from, t);
+    }
+
+    // A target under its building (the passage of a town center, #865): the arrow starts next to it at head height,
+    // on a free side with no block on the way, else there is no shot (#1285). Arrow k tries the sides from side k.
+    private static Location side(LivingEntity t, int k) {
+        Location eye = t.getLocation().add(0, t.getHeight() * 0.8, 0);
+        for (int i = 0; i < 4; i++) {
+            int d = (i + k) % 4;
+            Vector v = new Vector(d == 0 ? 1.5 : d == 1 ? -1.5 : 0, 0, d == 2 ? 1.5 : d == 3 ? -1.5 : 0);
+            Location from = eye.clone().add(v);
+            if (from.getBlock().isPassable() && t.getWorld().rayTraceBlocks(from, v.clone().multiply(-1), 1.5,
+                    FluidCollisionMode.NEVER, true) == null) {
+                return from;
+            }
+        }
+        return null;
+    }
+
+    private static void aim(LivingEntity fort, Location from, LivingEntity t) {
         Vector to = t.getLocation().toVector().add(new Vector(0, t.getHeight() * 0.5, 0)).subtract(from.toVector());
         double ticks = to.length() / ARROW_SPEED;
         to.setY(to.getY() + 0.5 * ARROW_GRAVITY * ticks * ticks);
@@ -768,12 +796,18 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     // Each second: an idle unit with a line of sight attacks the nearest unit of another team in it (#775). Only
-    // units with AoE2 values are enemies: Gaia animals, players and building targets are not.
+    // units with AoE2 values are enemies: Gaia animals, players, building targets and garrisoned units are not (#1285).
     private void watch() {
         sights.entrySet().removeIf(en -> {
             Entity e = Bukkit.getEntity(en.getKey());
             if (e == null || !e.isValid()) {
                 return e == null || e.isDead();                       // an unloaded unit keeps its sight
+            }
+            if (e instanceof Mob m && (rider(m) != null ? rider(m) : m).getTarget() instanceof LivingEntity t
+                    && t.isInvulnerable() && stats.containsKey(t.getUniqueId())) {   // it went into a building (#1285)
+                Mob f = rider(m) != null ? rider(m) : m;
+                f.setTarget(null);
+                f.getPathfinder().stopPathfinding();
             }
             if (!(e instanceof Mob mob) || !idle(mob, stats.get(mob.getUniqueId()))) {
                 return false;
@@ -783,7 +817,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             double bestD = r * r;
             for (Entity o : mob.getNearbyEntities(r, r, r)) {
                 if (o instanceof LivingEntity le && le.isValid() && stats.containsKey(le.getUniqueId())
-                        && !buildings.containsKey(le.getUniqueId()) && !sameTeam(mob, le)
+                        && !buildings.containsKey(le.getUniqueId()) && !sameTeam(mob, le) && !le.isInvulnerable()
                         && le.getVehicle() == null && mob.getLocation().distanceSquared(le.getLocation()) <= bestD) {
                     best = le;
                     bestD = mob.getLocation().distanceSquared(le.getLocation());
