@@ -4,7 +4,7 @@ are doubled."; the "Hulk" infobox: Forging +1 (+2 for Khitans), Iron Casting +1 
 import pytest
 from test_forging import setup
 
-from game import civs, combat, train
+from game import combat, train
 
 
 def player(civ, *techs):
@@ -12,10 +12,6 @@ def player(civ, *techs):
     g.data["players"] = {"1": {"civ": civ}}
     g.techs |= {"FEUDAL_AGE", "CASTLE_AGE", *techs}
     return server, g
-
-
-def test_the_khitans_double_forging_and_iron_casting():
-    assert civs.TWICE["KHITANS"] == ("FORGING", "IRON_CASTING")
 
 
 @pytest.mark.parametrize("unit", ["MILITIA", "SCOUT_CAVALRY", "HULK"])

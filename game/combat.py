@@ -162,15 +162,16 @@ def sight(name, s=None):
 # Ram line automatically attack only buildings", "Trebuchets automatically attack only buildings", "The Armored
 # Elephant and Cannon Galleon lines prioritize attacking enemy buildings over units"): "only" or "first".
 BUILDING_SIGHT = {r["name"]: r["building_sight"] for r in UNIT_ROWS if "building_sight" in r}   # data/units.jsonl
+FIGHTERS = {r["name"] for r in UNIT_ROWS if r.get("fighter")}   # no armor class, but fights as a soldier (#1995)
 
 
 def sight_command(uuid, name, T, s=None):
     """The plugin command that lets an idle soldier attack the nearest enemy unit in its line of sight (tiles * T
     blocks, #775), and the enemy buildings for the units of BUILDING_SIGHT (#1820). None for a unit that does not
-    fight (villager, monk, king)."""
+    fight (villager, monk, king): no armor class, except the FIGHTERS (Furious the Monkey Boy, #1995)."""
     s = s or stats(name)
     mode = f" {BUILDING_SIGHT[name]}" if name in BUILDING_SIGHT else ""
-    return f"aoe sight {uuid} {sight(name, s) * T}{mode}" if s.classes and s.attack else None
+    return f"aoe sight {uuid} {sight(name, s) * T}{mode}" if (s.classes or name in FIGHTERS) and s.attack else None
 
 
 STANCES = ("aggressive", "defensive", "stand_ground", "no_attack")

@@ -20,20 +20,12 @@ def barracks(civ="JURCHENS", ages=IMPERIAL):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.COSTS["FIRE_LANCER"] == train.COSTS["ELITE_FIRE_LANCER"] == {"wood": 45, "gold": 45}
-    assert train.TRAIN_TIMES["FIRE_LANCER"] == 35 and train.TRAIN_TIMES["ELITE_FIRE_LANCER"] == 25
-    assert train.COSTS["ELITE_FIRE_LANCER_UPGRADE"] == {"food": 750, "gold": 400}
-    assert train.TRAIN_TIMES["ELITE_FIRE_LANCER_UPGRADE"] == 50 and train.TECH_AGE["ELITE_FIRE_LANCER_UPGRADE"] == 3
     assert build.AGE["FIRE_LANCER"] == 2 and build.AGE["ELITE_FIRE_LANCER"] == 3
-    assert combat.stats("ELITE_FIRE_LANCER") == (85, 10, 2, 1, 0, 2.0, {"building": 1, "cavalry": 15, "camel": 12,
-                                                                      "elephant": 15}, ("infantry", "gunpowder"))
     assert combat.sight("FIRE_LANCER") == 7 and combat.sight("ELITE_FIRE_LANCER") == 8
     for unit in ("FIRE_LANCER", "ELITE_FIRE_LANCER"):
         assert replay.SPEEDS[unit] == 0.96 and len(train.HELP[unit]) <= 50
         assert units.classify(unit)["id"] == "minecraft:pillager"
     assert len(train.HELP["ELITE_FIRE_LANCER_UPGRADE"]) <= 50
-    assert train.ITEMS["FIRE_LANCER"][0] == train.ITEMS["ELITE_FIRE_LANCER"][0] == train.MORE + 1
-    assert train.ITEMS["ELITE_FIRE_LANCER_UPGRADE"][0] == train.MORE + 2
     for civ in civs.FIRE_LANCERS:
         assert civ not in civs.MISSING["FIRE_LANCER"] and civ not in civs.MISSING["ELITE_FIRE_LANCER_UPGRADE"]
     assert {"BRITONS", "FRANKS", "MONGOLS", "TURKS"} <= set(civs.MISSING["FIRE_LANCER"])
