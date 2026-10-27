@@ -740,7 +740,10 @@ class Gather:
             hp = combat.BUILDINGS.keys() | combat.WALLS.keys()
             placed = [(n, fp, k) for n, fp, k in placed
                       if n not in hp or k < 1 or combat.target_uuid([fp[i] for i in (0, 2, 1, 3)]) in alive]
-        return replay.seen(mobs, [(self.player, n, fp) for n, fp, _ in placed], self.player, self.map.T)
+        import combat                                                  # combat imports this module
+        printing = monk.PRINTING * ("BLOCK_PRINTING" in getattr(self, "techs", ()))   # the monks see more (#1475)
+        return replay.seen(mobs, [(self.player, n, fp) for n, fp, _ in placed], self.player, self.map.T,
+                           lambda n: combat.sight(n) + printing * (n == "MONK"))
 
     def task(self, v, name):
         """Give the villager the look of its AoE2 task (`LUMBERJACK` ...), with the table of the converter."""
