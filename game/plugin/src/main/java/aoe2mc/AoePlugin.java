@@ -416,7 +416,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     var p = le.getLocation();
                     double dx = Math.max(0, Math.max(b[0] - p.getX(), p.getX() - b[3] - 1));
                     double dz = Math.max(0, Math.max(b[2] - p.getZ(), p.getZ() - b[5] - 1));
-                    if (dx * dx + dz * dz <= bestD) {
+                    if (dx * dx + dz * dz <= bestD && (!under(b, p) || side(le, 0) != null)) {   // no shot: the next (#1328)
                         best = le;
                         bestD = dx * dx + dz * dz;
                     }
@@ -438,7 +438,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // their highest block, else the arrow hits the own roof (#1219).
     private static void volley(LivingEntity fort, int[] b, LivingEntity t, int k) {
         var p = t.getLocation();
-        if (p.getX() >= b[0] && p.getX() < b[3] + 1 && p.getZ() >= b[2] && p.getZ() < b[5] + 1) {
+        if (under(b, p)) {
             Location side = side(t, k);                                // under the building: the roof is above it
             if (side != null) {
                 aim(fort, side, t);
@@ -464,8 +464,13 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         aim(fort, from, t);
     }
 
+    private static boolean under(int[] b, Location p) {
+        return p.getX() >= b[0] && p.getX() < b[3] + 1 && p.getZ() >= b[2] && p.getZ() < b[5] + 1;
+    }
+
     // A target under its building (the passage of a town center, #865): the arrow starts next to it at head height,
-    // on a free side with no block on the way, else there is no shot (#1285). Arrow k tries the sides from side k.
+    // on a free side with no block on the way, else towers() takes the next enemy (#1285, #1328). Arrow k tries the
+    // sides from side k.
     private static Location side(LivingEntity t, int k) {
         Location eye = t.getLocation().add(0, t.getHeight() * 0.8, 0);
         for (int i = 0; i < 4; i++) {
