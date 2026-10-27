@@ -175,6 +175,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "TEUTONIC_KNIGHT": {"food": 85, "gold": 30},
          "THROWING_AXEMAN": {"food": 55, "gold": 25},
          "THUMB_RING": {"food": 300, "wood": 250},                      # AoE2 DE wiki (#1421)
+         "TOWN_WATCH": {"food": 75},                                    # the Feudal Age (AoE2 DE wiki, #1454)
          "TRADE_CART": {"wood": 100, "gold": 50},
          "TRANSPORT_SHIP": {"wood": 125},                               # the Dark Age (AoE2 DE wiki, #1385)
          "TREADMILL_CRANE": {"wood": 200, "stone": 50},               # AoE2 DE wiki (#1422)
@@ -283,6 +284,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "TEUTONIC_KNIGHT": 12,
                "THROWING_AXEMAN": 13,
                "THUMB_RING": 45,
+               "TOWN_WATCH": 25,
                "TRADE_CART": 51,
                "TRANSPORT_SHIP": 46,
                "TREADMILL_CRANE": 20,
@@ -290,7 +292,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "WAR_ELEPHANT": 25,
                "WHEELBARROW": 75,
                "WOAD_RAIDER": 10}
-TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", "HAND_CART", "CASTLE_AGE", "IMPERIAL_AGE"), "BARRACKS": ("MILITIA", "SPEARMAN", "MAN_AT_ARMS_UPGRADE",   # the units and technologies of each
+TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", "HAND_CART", "CASTLE_AGE", "IMPERIAL_AGE",
+                         "TOWN_WATCH"), "BARRACKS": ("MILITIA", "SPEARMAN", "MAN_AT_ARMS_UPGRADE",   # the units and technologies of each
                        "LONG_SWORDSMAN_UPGRADE", "PIKEMAN_UPGRADE",           # the Castle Age (#1396)
                        "SQUIRES", "GAMBESONS",                                           # (#1415)
                        "ARSON"),                                              # (#1419)
@@ -466,6 +469,7 @@ TECHS = {"ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bon
          "STONE_MINING": lambda name, s: s,                        # an economy technology: gather.WORK_TECHS
          "STONE_SHAFT_MINING": lambda name, s: s,
          "THUMB_RING": lambda name, s: s._replace(reload=round(s.reload / 1.1765, 3)) if thumb(name, s) else s,
+         "TOWN_WATCH": lambda name, s: s,                          # the building sight: gather.seen_tiles
          "TREADMILL_CRANE": lambda name, s: s,                     # the build speed: build.rise
          "FEUDAL_AGE": lambda name, s: s,   # the change of each technology to the AoE2 values
          "WHEELBARROW": lambda name, s: s}                         # no combat change: gather.CARRY and gather.PACE
@@ -572,6 +576,7 @@ TECH_AGE = {                                                       # the age of 
     "STONE_MINING": 1,
     "STONE_SHAFT_MINING": 2,
     "THUMB_RING": 2,
+    "TOWN_WATCH": 1,
     "TREADMILL_CRANE": 2,
     "WHEELBARROW": 1,
 }
@@ -685,6 +690,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "TEUTONIC_KNIGHT": (0, "zombie_spawn_egg", "Teutonic Knight"),
          "THROWING_AXEMAN": (0, "drowned_spawn_egg", "Throwing Axeman"),
          "THUMB_RING": (5, "book", "Thumb Ring"),                   # slot 4: the cavalry archer (#1397)
+         "TOWN_WATCH": (6, "book", "Town Watch"),                   # the free slot of the town center
          "TRADE_CART": (0, "donkey_spawn_egg", "Trade Cart"),
          "TRANSPORT_SHIP": (2, "spruce_chest_boat", "Transport Ship"),   # units.classify: a spruce chest boat
          "TREADMILL_CRANE": (7, "book", "Treadmill Crane"),         # the last free slot of the university
@@ -798,6 +804,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "TEUTONIC_KNIGHT": "Teutonic infantry. Slow, strong armor.",
         "THROWING_AXEMAN": "Frankish infantry. Melee attack at range.",
         "THUMB_RING": "Archers fire 17.65 % faster.",
+        "TOWN_WATCH": "Buildings +4 line of sight.",
         "TRADE_CART": "Brings gold from a second own market.",
         "TRANSPORT_SHIP": "Carries 20 land units across the water.",
         "TREADMILL_CRANE": "Villagers build 20 % faster.",
