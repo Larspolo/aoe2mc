@@ -2539,7 +2539,7 @@ def write_region(path, chunks):
         f.write(header + body)
 
 
-def write_objects(path, size, T, H, players, objects, cols, ground, timeline=None, mood="DEFAULT"):
+def write_objects(path, size, T, H, players, objects, cols, ground, timeline=None, mood="DEFAULT", map_ground=None):
     """aoe2mc.json: the data that a game program needs (docs/research/gameplay.md). Tiles are in the turned grid
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
     their footprint [x0, z0, x1, z1) in blocks. Objects of a recorded game have their object ID ("ref").
@@ -2549,7 +2549,9 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     "ground" has one string per block row z: for each x the y where a unit stands, or "-" for water.
     "timeline" (recorded games only): the events of read_timeline, with tiles in the turned grid
     and the "names" of the selected objects (name_timeline).
-    "mood": the map color mood of a DE scenario (ColorMood name, #1594), else "DEFAULT"."""
+    "mood": the map color mood of a DE scenario (ColorMood name, #1594), else "DEFAULT".
+    "map_ground": the map bytes of map 0 without the objects (map_colors), one hex string per pixel row z: the live
+    minimap of the plugin paints them where no live object is (#1940)."""
     kinds = {"U": "unit", "B": "building", "O": "other"}
     objs = []
     for o in objects:
@@ -2580,6 +2582,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     data["ground"] = [" ".join("-" if wet[x, z] else str(ground[x, z]) for x in range(n)) for z in range(n)]
     if timeline is not None:
         data["timeline"] = timeline
+    if map_ground is not None:
+        data["map_ground"] = [bytes(row).hex() for row in np.asarray(map_ground, np.uint8)]
     with open(path, "w") as f:
         json.dump(data, f, indent=1)
 
@@ -3402,8 +3406,15 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
 
     write_level_dat(os.path.join(out, "level.dat"), name, spawn, yaw, cols.n,
                     MOODS.get(texts.get("mood"), NOON) if mood == "on" else NOON, mood == "on" and texts.get("mood") in RAIN)
+    from PIL import Image
+    lut = np.array([block_color(s) for s in B.states], np.uint8)
+    img = lut[top_view[:cols.n, :cols.n].T]                     # rows = z, columns = x
+    shade = np.clip(1 + (cols.wtop[:cols.n, :cols.n].T - WATER_Y) * 0.02, 0.6, 1.4)
+    depth = (cols.wtop - cols.top)[:cols.n, :cols.n].T
+    shade *= np.where(depth > 0, np.clip(1.6 - 0.2 * depth, 1, 1.4), 1)     # shallow water is lighter, as on a map item
+    img = Image.fromarray(np.clip(img * shade[..., None], 0, 255).astype(np.uint8))
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline,
-                  texts.get("mood", "DEFAULT"))
+                  texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0])
     triggers, tstats = texts.get("triggers", []), Counter()
     haze = FOG.get(texts.get("mood")) if mood == "on" and (fog or ambience == "full") else None
     n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze,
@@ -3421,13 +3432,6 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     if haze:
         print(f"  fog of the map mood: {haze[0]} to {haze[1]} blocks (Minecraft shows the experimental warning)")
 
-    from PIL import Image
-    lut = np.array([block_color(s) for s in B.states], np.uint8)
-    img = lut[top_view[:cols.n, :cols.n].T]                     # rows = z, columns = x
-    shade = np.clip(1 + (cols.wtop[:cols.n, :cols.n].T - WATER_Y) * 0.02, 0.6, 1.4)
-    depth = (cols.wtop - cols.top)[:cols.n, :cols.n].T
-    shade *= np.where(depth > 0, np.clip(1.6 - 0.2 * depth, 1, 1.4), 1)     # shallow water is lighter, as on a map item
-    img = Image.fromarray(np.clip(img * shade[..., None], 0, 255).astype(np.uint8))
     if preview:
         img.save(os.path.join(out, "preview.png"))
     write_map(out, img, objects, players, T)
