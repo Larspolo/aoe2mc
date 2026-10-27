@@ -60,6 +60,7 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - In the same chart `-1` also means missing (removed: the Lithuanians and Poles in the Hussar chart, the Chinese in the Camel Rider chart, #1550); `x`, `+-` and `-+` mean it has it.
 - The auto mode also denies the close of an answered decision ticket (#1323, 2026-10-27): comment the decision, write it into the body of the waiting ticket and remove the decision from its "Depends on:" line (so it is a candidate at once), then add `needs-human` to the decision ticket for the close.
 - The default `python3` (3.11, `/usr/local/bin`) has no `tkinter`, also after `apt-get install -y python3-tk`: that gives it to `/usr/bin/python3.12` only. Test a Tk window with a 3.12 venv (`/usr/bin/python3.12 -m venv V && V/bin/python -m pip install -r requirements.txt pytest`) and `xvfb-run -a` (#1540).
+- Actions artifacts (`/actions/artifacts/ID/zip`) do not download in the cloud: the proxy blocks `*.blob.core.windows.net`; release assets (`github.com/.../releases/download/...`) work. Check a bundle with a local build (`packaging/aoe2mc.spec` in a 3.12 venv, `apt-get install -y python3-tk` first). The auto mode denies running a downloaded `appimagetool`. Under Xvfb (no window manager) no field has the key focus: click into each field with `xdotool mousemove X Y click 1` before `xdotool type` (#1545).
 
 ## Code
 
