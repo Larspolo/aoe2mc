@@ -247,6 +247,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "TRANSPORT_SHIP": {"wood": 125},                               # the Dark Age (AoE2 DE wiki, #1385)
          "TREADMILL_CRANE": {"wood": 200, "stone": 50},               # AoE2 DE wiki (#1422)
          "TREBUCHET": {"wood": 200, "gold": 200},                   # the castle, Imperial Age (#1351)
+         "TWO_MAN_SAW": {"food": 300, "wood": 200},                     # the Imperial Age (AoE2 DE wiki, #1577)
          "TWO_HANDED_SWORDSMAN": {"food": 50, "gold": 20},             # AoE2 DE wiki (#1498)
          "TWO_HANDED_SWORDSMAN_UPGRADE": {"food": 200, "gold": 100},   # the Imperial Age (#1498)
          "WAR_ELEPHANT": {"food": 170, "gold": 85},
@@ -428,6 +429,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "TREBUCHET": 50,
                "TWO_HANDED_SWORDSMAN": 21,
                "TWO_HANDED_SWORDSMAN_UPGRADE": 45,
+               "TWO_MAN_SAW": 100,
                "WAR_ELEPHANT": 25,
                "WAR_GALLEY": 27,
                "WAR_HULK": 27,
@@ -507,7 +509,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                    "ELITE_CANNON_GALLEON_UPGRADE",                             # after Chemistry (#1491)
                    "FISHING_LINES", "GILLNETS"),                                # (#1439)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",
-                          "BOW_SAW"),                                           # (#723, #1423)
+                          "BOW_SAW",                                            # (#723, #1423)
+                          "TWO_MAN_SAW"),                                       # (#1577)
           "MARKET": ("TRADE_CART", "CARAVAN", "GUILDS",                        # (#1253, #1254)
                      "COINAGE",                                               # the Castle Age (#1606)
                      "BANKING"),                                              # the Imperial Age (#1606)
@@ -716,6 +719,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "TOWN_WATCH": lambda name, s: s,                          # the building sight: gather.seen_tiles
          "TREADMILL_CRANE": lambda name, s: s,                     # the build speed: build.rise
          "TWO_HANDED_SWORDSMAN_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
+         "TWO_MAN_SAW": lambda name, s: s,                         # an economy technology: gather.WORK_TECHS
          "WINGED_HUSSAR_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "FEUDAL_AGE": lambda name, s: s,   # the change of each technology to the AoE2 values
          "WHEELBARROW": lambda name, s: s}                         # no combat change: gather.CARRY and gather.PACE
@@ -771,6 +775,7 @@ AFTER = {"ARBALESTER_UPGRADE": "CROSSBOWMAN_UPGRADE",
          "BODKIN_ARROW": "FLETCHING",
          "BOMBARD_TOWER_TECH": "CHEMISTRY",
          "BOW_SAW": "DOUBLE_BIT_AXE",
+         "TWO_MAN_SAW": "BOW_SAW",                                 # (#1577)
          "BRACER": "BODKIN_ARROW",
          "HEAVY_DEMOLITION_SHIP_UPGRADE": "DEMOLITION_SHIP_UPGRADE",   # (#1483)
          "HEAVY_WARSHIPS": "MEDIUM_WARSHIPS",
@@ -907,6 +912,7 @@ TECH_AGE = {                                                       # the age of 
     "TOWN_WATCH": 1,
     "TREADMILL_CRANE": 2,
     "TWO_HANDED_SWORDSMAN_UPGRADE": 3,
+    "TWO_MAN_SAW": 3,
     "WINGED_HUSSAR_UPGRADE": 3,
     "WHEELBARROW": 1,
 }
@@ -1090,6 +1096,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "TRANSPORT_SHIP": (2, "spruce_chest_boat", "Transport Ship"),   # units.classify: a spruce chest boat
          "TREADMILL_CRANE": (7, "book", "Treadmill Crane"),
          "TREBUCHET": (1, "minecart", "Trebuchet"),                 # after the unique unit
+         "TWO_MAN_SAW": (0, "book", "Two-Man Saw"),                   # the slot of Bow Saw (AFTER, #1577)
          "TWO_HANDED_SWORDSMAN": (0, "zombie_spawn_egg", "Two-Handed Swordsman"),
          "TWO_HANDED_SWORDSMAN_UPGRADE": (2, "book", "Two-Handed Swordsman"),   # the slot of Long Swordsman (AFTER)
          "WAR_ELEPHANT": (0, "ravager_spawn_egg", "War Elephant"),
@@ -1276,6 +1283,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "TREBUCHET": "Siege. Long range vs. buildings; unpacks to shoot.",
         "TWO_HANDED_SWORDSMAN": "Infantry. Strong vs. eagles, buildings.",
         "TWO_HANDED_SWORDSMAN_UPGRADE": "Upgrades long swordsmen to two-handed.",
+        "TWO_MAN_SAW": "Villagers chop wood 10 % faster.",
         "VILLAGER_MALE": "Gathers, builds and repairs.",
         "WAR_ELEPHANT": "Persian elephant. Slow, very strong.",
         "WAR_GALLEY": "All-purpose warship with ranged attack.",
