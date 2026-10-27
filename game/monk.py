@@ -56,6 +56,7 @@ WARM = 4        # the first intervals only warm up
 CHANCE = 0.38   # the chance of each later interval
 SURE = 9        # the 9th interval always converts
 REST = 62       # AoE2 seconds after a conversion before the monk can convert again
+ILLUMINATED = 33   # the rest after Illumination: 87.5 % faster (AoE2 wiki "Illumination", #1583)
 IMMUNE = ("KING", "QUEEN", "KHAN", "CRUSADER_KNIGHT", "HUNNIC_HORSE", "MOUNTED_SAMURAI")
 TOUCH = 1.5     # blocks between a monk and a building, ram or trebuchet that it converts: next to it (AoE2)
 NEXT = ("RAM", "TREBUCHET", "SIEGE_TOWER")   # the siege units that a monk converts only next to them
@@ -338,6 +339,6 @@ def convert(g, dt):
             warm, chance, sure = FORT if fort else (WARM, CHANCE, SURE)
             if job[2] > warm and (job[2] >= sure or g.chance.random() < chance):
                 (win if fort else take)(g, target)
-                g.faith[m] = REST
+                g.faith[m] = ILLUMINATED if "ILLUMINATION" in g.techs else REST
                 for k in [k for k, j in g.converting.items() if j[0] == target]:
                     del g.converting[k]

@@ -169,6 +169,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "HUSSAR": {"food": 80},                                       # AoE2 DE wiki (#1502)
          "HUSSAR_UPGRADE": {"food": 500, "gold": 600},                 # the Imperial Age (#1502)
          "HUSKARL": {"food": 75, "gold": 35},
+         "ILLUMINATION": {"gold": 120},                                # the monastery, Imperial Age (#1583)
          "IMPERIAL_AGE": {"food": 1000, "gold": 800},
          "IRON_CASTING": {"food": 220, "gold": 120},
          "JANISSARY": {"food": 60, "gold": 55},
@@ -331,6 +332,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "HUSSAR": 30,
                "HUSSAR_UPGRADE": 50,
                "HUSKARL": 13,
+               "ILLUMINATION": 65,
                "IMPERIAL_AGE": 190,
                "IRON_CASTING": 75,
                "JANISSARY": 21,
@@ -473,7 +475,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                           "GOLD_SHAFT_MINING",
                           "STONE_SHAFT_MINING"),                                # (#1423)
           "MONASTERY": ("MONK", "FERVOR", "SANCTITY", "REDEMPTION",             # (#1243, #1261, #1264)
-                        "BLOCK_PRINTING"),                                      # (#1457)
+                        "BLOCK_PRINTING",                                       # (#1457)
+                        "ILLUMINATION"),                                        # (#1583)
           "SIEGE_WORKSHOP": ("BATTERING_RAM", "MANGONEL", "SCORPION", "SIEGE_TOWER",   # (#1349, #1362)
                              "CAPPED_RAM_UPGRADE", "SIEGE_RAM_UPGRADE", "ONAGER_UPGRADE", "SIEGE_ONAGER_UPGRADE",
                              "HEAVY_SCORPION_UPGRADE",                  # (#1352)
@@ -608,6 +611,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
          "HUSBANDRY": lambda name, s: s,                           # the walk speed: SPEEDS
          "HUSSAR_UPGRADE": lambda name, s: s,                      # a new unit name: UPGRADES
+         "ILLUMINATION": lambda name, s: s,                        # the rest after a conversion: monk.ILLUMINATED
          "IMPERIAL_AGE": lambda name, s: s,                        # an age: REQUIRES
          "IRON_CASTING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) or name in HULKS else s,
          "KEEP": lambda name, s: s,                                # the towers of the player: TOWER_UPGRADES
@@ -791,6 +795,7 @@ TECH_AGE = {                                                       # the age of 
     "HORSE_COLLAR": 1,
     "HUSBANDRY": 2,
     "HUSSAR_UPGRADE": 3,
+    "ILLUMINATION": 3,
     "IRON_CASTING": 2,
     "KEEP": 3,
     "LEATHER_ARCHER_ARMOR": 2,
@@ -948,6 +953,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "HUSSAR": (0, "horse_spawn_egg", "Hussar"),
          "HUSSAR_UPGRADE": (2, "book", "Hussar"),                     # the slot of Light Cavalry (AFTER)
          "HUSKARL": (0, "zombie_spawn_egg", "Huskarl"),
+         "ILLUMINATION": (7, "book", "Illumination"),
          "IMPERIAL_AGE": (5, "bell", "Imperial Age"),
          "IRON_CASTING": (0, "book", "Iron Casting"),                 # the slot of Forging
          "JANISSARY": (0, "pillager_spawn_egg", "Janissary"),
@@ -1097,6 +1103,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "HUSSAR": "Cavalry. Fast; strong vs. monks, siege.",
         "HUSSAR_UPGRADE": "Upgrades light cavalry to hussars.",
         "HUSKARL": "Gothic infantry. Strong vs. archers.",
+        "ILLUMINATION": "Monks convert again after 33 s, not 62 s.",
         "IMPERIAL_AGE": "Advance to the Imperial Age.",
         "IRON_CASTING": "Infantry, cavalry and hulks +1 attack.",
         "JANISSARY": "Turkish gunner. Strong vs. infantry.",
