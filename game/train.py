@@ -791,7 +791,9 @@ def research(g, entry):
             g.command(combat.label_command(uuid, new))               # the name of a new unit (units.pretty)
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
         if stats(g, name) != combat.stats(name):
-            g.command(combat.stats_command(uuid, name, stats(g, name)))
+            import trebuchet                                       # trebuchet imports this module: import it late
+            g.command(trebuchet.stats_command(g, uuid) if name == trebuchet.NAME   # the armor of its state (#1409)
+                      else combat.stats_command(uuid, name, stats(g, name)))
         if stats(g, name).range != combat.stats(name).range:          # Fletching (#724)
             g.command(combat.range_command(uuid, name, g.map.T, s=stats(g, name)))
     if entry["name"] in SPEEDS:                                    # the live units walk faster (Fervor)
