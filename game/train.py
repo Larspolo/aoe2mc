@@ -98,6 +98,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "FLETCHING": {"food": 100, "gold": 50},
          "FORGING": {"food": 150},
          "FORTIFIED_WALL": {"food": 200, "wood": 100},
+         "GALLEY": {"wood": 90, "gold": 30},                           # AoE2 DE wiki (#1386)
          "GAMBESONS": {"food": 50, "gold": 100},                       # AoE2 DE wiki (#1420)
          "GOLD_MINING": {"food": 100, "wood": 75},
          "GOLD_SHAFT_MINING": {"food": 175, "wood": 75},
@@ -183,6 +184,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "FLETCHING": 30,
                "FORGING": 50,
                "FORTIFIED_WALL": 50,
+               "GALLEY": 36,
                "GAMBESONS": 25,
                "GOLD_MINING": 30,
                "GOLD_SHAFT_MINING": 75,
@@ -255,7 +257,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES", "LIGHT_CAVALRY_UPGRADE", "KNIGHT"),   # (#671, #940, #1396, #1397)
           "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS",   # (#1326, #1374, #1352)
                          "MASONRY", "CHEMISTRY", "BOMBARD_TOWER_TECH"),         # (#1398, #1375)
-          "DOCK": ("FISHING_SHIP",),                                            # (#1383)
+          "DOCK": ("FISHING_SHIP",                                             # (#1383)
+                   "GALLEY"),                                                  # (#1386)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",
                           "BOW_SAW"),                                           # (#723, #1423)
           "MARKET": ("TRADE_CART", "CARAVAN", "GUILDS"),                       # (#1253, #1254)
@@ -507,6 +510,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "FLETCHING": (2, "book", "Fletching"),
          "FORGING": (0, "book", "Forging"),
          "FORTIFIED_WALL": (0, "book", "Fortified Wall"),
+         "GALLEY": (1, "oak_boat", "Galley"),
          "GAMBESONS": (5, "book", "Gambesons"),                    # slot 4: Squires (#1415)
          "GOLD_MINING": (0, "book", "Gold Mining"),
          "GOLD_SHAFT_MINING": (0, "book", "Gold Shaft Mining"),
@@ -577,6 +581,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "FLETCHING": "Archers, towers, town center +1 attack, +1 range.",
         "FORGING": "Infantry and cavalry +1 attack.",
         "FORTIFIED_WALL": "Stone walls +1,200 HP, +4/+2 armor; also gates.",
+        "GALLEY": "All-purpose warship with ranged attack.",
         "GAMBESONS": "Militia line +1 pierce armor.",
         "GOLD_MINING": "Villagers mine gold 15 % faster.",
         "GOLD_SHAFT_MINING": "Villagers mine gold 15 % faster.",
