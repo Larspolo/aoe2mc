@@ -29,12 +29,13 @@ def state(g, u):
 
 def stats(g, u):
     """The combat values of trebuchet u with the technologies of the player (train.stats) and the armor of its state:
-    packed (also while it unpacks) the armor of combat.STATS, unpacked (also while it packs) UNPACKED."""
+    packed (also while it unpacks) the armor of combat.STATS, unpacked (also while it packs) UNPACKED and the class ram."""
     import combat                                                  # combat imports gather, gather imports this module
     import train
     s, base = train.stats(g, NAME), combat.stats(NAME)
     if state(g, u) in ("unpacked", "packing"):
-        s = s._replace(melee=s.melee - base.melee + UNPACKED[0], pierce=s.pierce - base.pierce + UNPACKED[1])
+        s = s._replace(melee=s.melee - base.melee + UNPACKED[0], pierce=s.pierce - base.pierce + UNPACKED[1],
+                       classes=(*s.classes, combat.RAM))           # only unpacked in the class "Rams" (#1402)
     return s
 
 
@@ -82,14 +83,14 @@ def walk(g, u, target, to):
 def unpack(g, u, target):
     """The trebuchet u stops, unpacks and then attacks the entity target. Unpacked: it attacks at once. A target out
     of range: it walks packed until the target is in range (unpacked, it packs first)."""
-    then = [range_command(g, u), f"aoe attack {u} {target}"]
+    then = [f"aoe attack {u} {target}"]                            # the range goes first, at the end of the unpack
     far = state(g, u) in ("packed", "walking", "unpacked") and gap(g, u, target)
     if far and far[0] > 0:
         if state(g, u) == "unpacked":
             return move(g, u, [("walk", target)])
         return walk(g, u, target, far[1])
     if state(g, u) == "unpacked":
-        for c in then:
+        for c in [range_command(g, u), *then]:
             g.command(c)
         return
     if state(g, u) != "unpacking":                                 # packed or packing: AoE2 cancels the pack at once
@@ -142,5 +143,7 @@ def tick(g, dt):
             continue
         trebs[u] = ["packed" if st == "packing" else "unpacked", 0.0, []]
         g.command(stats_command(g, u))                             # the armor of the new state
+        if st == "unpacking":                                      # the range of now: a research during the unpack (#1414)
+            g.command(range_command(g, u))
         for c in then:
             _ = unpack(g, u, c[1]) if isinstance(c, tuple) else g.command(c)   # ("walk", target): to its range

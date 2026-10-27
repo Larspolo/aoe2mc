@@ -1,0 +1,136 @@
+"""game/train.py, game/fleet.py and the plugin: an own dock trains a galley in the Feudal Age, and a galley sails into
+its range of an enemy ship or a unit on the shore and attacks it (#1386). Fake server, and a fight on a server."""
+import math
+import re
+import shutil
+import time
+
+import pytest
+from test_dock_train import DOCK, dock_map
+from test_train_archery import menus
+
+from game import build, combat, fleet, gather, run, train
+
+
+def galley(server, g):
+    """A galley of player 1 from the dock, in the Feudal Age."""
+    g.techs = {"FEUDAL_AGE"}
+    g.stock["gold"] = 100
+    rect = train.open_menu(g, "Steve", (15, 12))
+    assert train.order(g, "Steve", rect, 1) == 1
+    uuid, = train.tick(g, 36)
+    return uuid
+
+
+def test_the_galley_has_the_aoe2_de_values_of_the_wiki():
+    assert train.COSTS["GALLEY"] == {"wood": 90, "gold": 30} and train.TRAIN_TIMES["GALLEY"] == 36
+    assert build.AGE["GALLEY"] == 1 and "GALLEY" in train.TRAINS["DOCK"]
+    assert combat.stats("GALLEY") == (110, 6, 0, 3, 5, 3.0, {"building": 6, "warship": 5}, ("ship", "warship"))
+    assert fleet.SPEEDS["GALLEY"] == 1.36 and combat.sight("GALLEY") == 7
+    assert combat.damage("GALLEY", "GALLEY") == 3 + 5 and combat.damage("GALLEY", "FISHING_SHIP") == 5
+    assert combat.range_command("u", "GALLEY", 4) == "aoe range u 20 35"
+    assert combat.sight_command("u", "FISHING_SHIP", 4) is None        # a fishing ship does not fight
+
+
+def test_the_dock_menu_has_the_galley_in_the_feudal_age():
+    server, g = dock_map()
+    train.open_menu(g, "Steve", (15, 12))
+    assert "1:gray_dye:Galley:90 wood · 30 gold · 36 s · Needs the Feudal Age" in menus(server)[-1]
+    assert train.order(g, "Steve", DOCK, 1) == 0
+    g.techs = {"FEUDAL_AGE"}
+    g.stock["gold"] = 100
+    train.open_menu(g, "Steve", (15, 12))
+    assert "1:oak_boat:Galley:90 wood · 30 gold · 36 s · queue 0/15" in menus(server)[-1]
+    assert train.order(g, "Steve", DOCK, 1) == 1 and (g.stock["wood"], g.stock["gold"]) == (110, 70)
+    assert train.tick(g, 35) == []
+    uuid, = train.tick(g, 1)
+    assert g.soldiers[uuid] == "GALLEY" and uuid in g.ships and g.map.wet(*g.ships[uuid].cell)
+    assert f"aoe range {uuid} 5 35" in server.log                      # tile size 1: 5 blocks, 3 s at Normal speed
+
+
+def test_a_galley_sails_into_its_range_of_an_enemy_ship_and_attacks_it():
+    server, g = dock_map()
+    uuid = galley(server, g)
+    server.entities["enemy"] = {"Pos": (21.5, 63.0, 2.5)}             # an enemy ship far in the north-east
+    g.select(uuid)
+    g.attack("enemy")
+    assert f"aoe attack @e[tag={gather.SELECT}] enemy" in server.log   # the plugin gives the target to the crew
+    v = g.ships[uuid]
+    assert v.prey == "enemy" and v.path and math.dist(v.path[-1], (21, 2)) <= 4 and all(g.map.wet(*c) for c in v.path)
+    for _ in range(30):
+        fleet.tick(g, 1.0)
+    assert not v.path and math.dist(v.cell, (21, 2)) <= 4             # in range (5 tiles less one): it stops there
+
+
+def test_a_galley_in_range_does_not_sail_and_follows_a_target_that_moves_away():
+    server, g = dock_map()
+    uuid = galley(server, g)
+    v = g.ships[uuid]
+    server.entities["enemy"] = {"Pos": (17.5, 63.0, 15.5)}
+    assert fleet.attack(g, {uuid}, "enemy") == {} and not v.path       # 2 tiles away: it shoots from its place
+    server.entities["enemy"]["Pos"] = (22.5, 63.0, 22.5)
+    v.chased = 0.0
+    fleet.tick(g, 0.0)
+    assert v.path and math.dist(v.path[-1], (22, 22)) <= 4
+    del server.entities["enemy"]                                       # it sank
+    v.path, v.chased = [], 0.0
+    fleet.tick(g, 0.0)
+    assert v.prey is None and not v.path
+
+
+def test_a_galley_attacks_a_unit_on_the_shore_from_the_water():
+    server, g = dock_map()
+    uuid = galley(server, g)
+    server.entities["archer"] = {"Pos": (11.5, 64.0, 20.5)}            # on the land, 3 blocks from the water
+    goal = fleet.attack(g, {uuid}, "archer")[uuid]
+    assert g.map.wet(*goal) and math.dist(goal, (11, 20)) <= 4
+
+
+def test_a_move_order_ends_the_attack_and_a_fishing_ship_does_not_attack():
+    server, g = dock_map(wood=400)
+    uuid = galley(server, g)
+    server.entities["enemy"] = {"Pos": (21.5, 63.0, 2.5)}
+    fleet.attack(g, {uuid}, "enemy")
+    assert g.ships[uuid].prey == "enemy"
+    fleet.order(g, {uuid}, (20, 20))
+    assert g.ships[uuid].prey is None
+    assert train.order(g, "Steve", DOCK, 0) == 1
+    fisher, = train.tick(g, 40)
+    assert fleet.attack(g, {fisher}, "enemy") == {} and g.ships[fisher].prey is None
+
+
+@pytest.mark.mc
+def test_two_galleys_fight_and_the_loser_sinks_on_a_server(tiny_world, tmp_path):
+    from test_paper import paper_reachable
+    if not paper_reachable():
+        pytest.skip("Paper is not reachable")
+    from test_siege_walk import summon
+    world = shutil.copytree(tiny_world[0], tmp_path / "W")
+    y = 200                                                            # a pool in the air
+    with run.Game(world) as game:
+        game.command("forceload add -2 -2 26 26")
+        game.command(f"fill 0 {y - 1} 0 23 {y} 23 stone_bricks")
+        game.command(f"fill 2 {y} 2 21 {y} 21 water")
+        ids = {}
+        for tag, x in (("a", 4.5), ("bb", 16.5)):   # own UUIDs: tags of other lengths
+            assert "Summoned" in summon(game, "GALLEY", x, y + 0.5, 10.5, tag)
+            ints = [int(i) for i in re.findall(r"-?\d+", game.command(
+                f"data get entity @e[type=oak_boat,tag={tag},limit=1] UUID").rsplit(":", 1)[-1])]
+            h = "".join(f"{i & 0xFFFFFFFF:08x}" for i in ints)
+            ids[tag] = f"{h[:8]}-{h[8:12]}-{h[12:16]}-{h[16:20]}-{h[20:]}"
+            assert "Stats: 1 units" in game.command(combat.stats_command(ids[tag], "GALLEY"))     # the crew
+            assert "Range: 1 units" in game.command(combat.range_command(ids[tag], "GALLEY", 4, rate=20))
+        game.command("team add red")
+        game.command("team join red @e[tag=a]")
+        game.command(f"execute as {ids['a']} on passengers run team join red @s")
+        assert "Attack: 1 units" in game.command(f"aoe attack {ids['a']} {ids['bb']}")   # 12 blocks: in its 20
+        hp = []
+        for _ in range(40):
+            time.sleep(0.5)
+            out = game.command(f"execute as {ids['bb']} on passengers run data get entity @s Health")
+            hp.append(float(m[0]) if (m := re.findall(r"(\d+\.?\d*)f", out)) else 0.0)
+            if "Test failed" in game.command(f"execute if entity {ids['bb']}") or "No entity" in out or not out:
+                break
+        assert hp[0] < 110 and "Test failed" in game.command(f"execute if entity {ids['bb']}"), hp   # it sank
+        assert "Test passed" in game.command(f"execute if entity {ids['a']}")
+        assert "Test failed" in game.command(f"execute if entity @e[type=item,x=0,y={y - 5},z=0,dx=24,dy=12,dz=24]")

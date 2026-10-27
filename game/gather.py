@@ -46,7 +46,7 @@ import time
 import types
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from aoe2mc import PASSABLE_OBJECTS, WOODS, object_footprint, player_color, tree_kind  # noqa: E402
+from aoe2mc import PASSABLE_OBJECTS, WOODS, object_footprint, object_mob, player_color, tree_kind  # noqa: E402
 from units import VILLAGER_JOBS, animal, pretty  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -56,6 +56,8 @@ import bossbar  # noqa: E402
 import cheats  # noqa: E402
 import civs  # noqa: E402
 import conquest  # noqa: E402
+import fleet  # noqa: E402
+import fog  # noqa: E402
 import garrison  # noqa: E402
 import hints  # noqa: E402
 import market  # noqa: E402
@@ -87,9 +89,12 @@ AOE2_WORK, NORMAL = {"wood": 0.39, "food": 0.31, "farm": 0.33, "gold": 0.38, "st
 WORK_SECONDS = {r: 1 / (w * NORMAL) for r, w in AOE2_WORK.items()}    # real seconds per unit, as at Normal speed
 CARRY = {"WHEELBARROW": 3}                                         # more resources per trip, as in AoE2 (#728)
 PACE = {"WHEELBARROW": 1.1}                                        # the villager walk speed factor, as in AoE2
-WORK_TECHS = {"DOUBLE_BIT_AXE": {"wood": 1.2},                     # work rate factors of the economy technologies (AoE2)
+WORK_TECHS = {"BOW_SAW": {"wood": 1.2},                            # work rate factors of the economy technologies (AoE2)
+              "DOUBLE_BIT_AXE": {"wood": 1.2},
               "GOLD_MINING": {"gold": 1.15},
-              "STONE_MINING": {"stone": 1.15}}
+              "GOLD_SHAFT_MINING": {"gold": 1.15},
+              "STONE_MINING": {"stone": 1.15},
+              "STONE_SHAFT_MINING": {"stone": 1.15}}
 # Food of a hunted animal, as in AoE2 DE (the AoE2 wiki; a "COW_..." name is a cow, #1058).
 HUNT_FOOD = {"COW": 150,
              "DEER": 140,
@@ -201,6 +206,7 @@ class Map:
         self.carcasses = {}                                            # tile -> food of the carcasses of hunts (#1058)
         self.herds = set()                                             # carcass tiles of herdable animals (HERDS)
         self.fish, self.shore = {}, set()                              # tile -> food of a fish (#1283), shore fish
+        self.fish_mobs, self.docks = {}, []                            # tile -> mob of a fish; own dock cells (#1384)
         for o in data["objects"]:
             if o["kind"] == "building":
                 x0, z0, x1, z1 = o["footprint"]
@@ -209,6 +215,7 @@ class Map:
             elif o["kind"] == "other" and o["name"] in FISH_FOOD:      # a fish is passable: no barrier
                 tile = int(o["tile"][0]), int(o["tile"][1])
                 self.fish[tile] = FISH_FOOD[o["name"]]
+                self.fish_mobs[tile] = object_mob(o["name"])
                 if o["name"] in SHORE_FISH:                            # the tiles of the shore fish
                     self.shore.add(tile)
             elif o["kind"] == "other" and not any(k in o["name"] for k in PASSABLE_OBJECTS):
@@ -247,6 +254,8 @@ class Map:
         for r, names in DROP_SITES.items():
             if own and any(k in name for k in names):
                 self.drops[r].append(cells)
+        if own and "DOCK" in name:                                     # the drop site of the fishing ships (#1384)
+            self.docks.append(cells)
 
     def cells(self, tile):
         T = self.T
@@ -445,7 +454,8 @@ def marker(m, cells, kind, who, colors=MARK, points=MARK_POINTS, scale=1.5):
     xs, zs = [c[0] for c in cells], [c[1] for c in cells]
     cx, cz = (min(xs) + max(xs) + 1) / 2, (min(zs) + max(zs) + 1) / 2
     r = max(max(xs) - min(xs) + 1, max(zs) - min(zs) + 1) / 2 + 0.5
-    y = m.y(int(cx), int(cz)) or 0
+    y = m.y(int(cx), int(cz))
+    y = m.sea(int(cx), int(cz)) if y is None and hasattr(m, "sea") else y or 0    # a ship order on the water (#1383)
     return [f"particle minecraft:dust{{color:{colors[kind]},scale:{scale}}} {cx + r * math.cos(a):.2f} {y + 0.2:.2f} "
             f"{cz + r * math.sin(a):.2f} 0 0 0 0 1 force {who}"
             for a in (2 * math.pi * k / points for k in range(points))]
@@ -478,6 +488,7 @@ class Gather:
     ended = None                                                       # "Victory" or "Defeat": run() stops (#819)
     board = "aoe_res"                                                  # the objective of the resources (the sidebar)
     bots = ()                                                          # run() steps them too (bot.Bot, #856)
+    reveal = "normal"                                                  # AoE2 "Reveal map"; "all": no fog (fog.py, #1389)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
                  cheats=False, start=None):
@@ -497,8 +508,10 @@ class Gather:
                       and "VILLAGER" in o["name"]]
         self.villagers, self.selected = {}, set()
         self.soldiers = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit"
-                         and o["player"] == player and (military(o["name"]) or o["name"] == "MONK" or o["name"].startswith(trade.CART))}
-        # military units, monks and trade carts of the player: they take move orders (#1243, #1253)
+                         and o["player"] == player and (military(o["name"]) or o["name"] == "MONK" or o["name"].startswith(trade.CART)
+                              or replay.ship(o["name"]))}
+        # military units, monks, trade carts and ships of the player: they take move orders (#1243, #1253, #1383)
+        self.ships = {}                         # UUID of an own ship -> Villager with its water path (fleet.py, #1383)
         self.enemies = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit" and o["player"]
                         and not allied(data.get("players", {}), player, o["player"])}   # no allies (#1312)
         self.prey = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit" and o.get("uuid")
@@ -693,6 +706,7 @@ class Gather:
         trebs = {u for u in self.selected if self.soldiers.get(u) == trebuchet.NAME}
         for u in sorted(trebs):                                        # it unpacks first (#1351)
             trebuchet.unpack(self, u, target)
+        fleet.attack(self, {u for u in self.selected if replay.ship(self.soldiers.get(u, ""))}, target)   # (#1386)
         for u in sorted(self.selected - monks - trebs):
             self.command(ai.speed_command(u, self.soldiers[u], self.map.T, NORMAL * train.speed(self, self.soldiers[u])))
         if not monks and not trebs:
@@ -962,7 +976,11 @@ class Gather:
             return
         if train.open_menu(self, name, self.map.pick_ground(eye, d)):  # an own town center or barracks (#620, #654)
             return
+        if train.open_menu(self, name, fleet.pick(self, eye, d)):     # a dock is on the water (#1383)
+            return
         if market.open_menu(self, name, self.map.pick_ground(eye, d)):  # an own market: buy and sell (#1252)
+            return
+        if fleet.fish_order(self, name, eye, d):                     # the fishing ships fish (#1384)
             return
         tile = self.map.pick_tree(eye, d)
         if tile and self.selected:
@@ -974,18 +992,24 @@ class Gather:
             self.mark(name, {(x0, z0), (x1 - 1, z1 - 1)})
         elif self.selected and (cell := self.map.pick_ground(eye, d)) and self.map.free(*cell):
             self.walk_to(name, cell)                                   # the move order of AoE2 (#1368)
+        elif any(replay.ship(self.soldiers.get(u, "")) for u in self.selected) \
+                and (cell := fleet.pick(self, eye, d)) and self.map.wet(*cell):
+            self.walk_to(name, cell)                                   # the ships sail on the water (#1383)
 
     def walk_to(self, name, cell):
         """The selected units walk to the free block cell (x, z), as the move order of AoE2 (#1368): each one to its own
         free cell near it, the nearest cells first (no formation yet). Military units walk with the plugin path finding
-        at their AoE2 speed; villagers stop their work and walk there. Returns the cells {uuid: cell}."""
+        at their AoE2 speed; villagers stop their work and walk there. Ships sail to the water near it (fleet.order, also
+        at a water cell). Returns the cells {uuid: cell}."""
         import ai                                                      # ai imports this module
-        who = sorted(u for u in self.selected if u in self.villagers or u in self.soldiers)
+        boats = {u for u in self.selected if replay.ship(self.soldiers.get(u, ""))}
+        out = fleet.order(self, boats, cell)                           # a ship sails on the water (#1383)
+        who = sorted(u for u in self.selected - boats if u in self.villagers or u in self.soldiers)
         r = math.isqrt(len(who)) + 2
         cells = sorted(((x, z) for x in range(cell[0] - r, cell[0] + r + 1) for z in range(cell[1] - r, cell[1] + r + 1)
                         if self.map.free(x, z)), key=lambda c: (math.dist(c, cell), c))
-        out = dict(zip(who, cells))
-        for u, (x, z) in out.items():
+        out |= dict(zip(who, cells))
+        for u, (x, z) in [(u, c) for u, c in out.items() if u not in boats]:
             if u in self.villagers:
                 v = self.villagers[u]
                 for t in [t for t, f in self.farmers.items() if f == u]:
@@ -1061,7 +1085,10 @@ class Gather:
         """{UUID: feet} of pickable() for the pointing mark. On Paper one `aoe where` answer has WHERE_PAGE units
         (#813): the units of the players are on their teams (the pulse of the datapack, #358). Else one `data get`
         for each unit."""
-        want = self.pickable()
+        return self.where(self.pickable())
+
+    def where(self, want):
+        """{UUID: feet} of the units want: on Paper `aoe where` answers (WHERE_PAGE units each), else `data get`."""
         if not self.paper:
             return self.positions(sorted(want))
         out, start = {}, 0
@@ -1191,6 +1218,7 @@ class Gather:
         garrison.heal(self, self.tick * NORMAL)
         repair.tick(self, self.tick * NORMAL)
         trebuchet.tick(self, self.tick * NORMAL)
+        fleet.tick(self, self.tick * NORMAL)
         monk.relic_tick(self, self.tick * NORMAL)
         trade.tick(self)
         bossbar.tick(self)
@@ -1433,6 +1461,7 @@ class Gather:
             for b in self.bots:
                 b.step()
             conquest.tick(self)                                        # not in step(): the bot steps its own Gather
+            fog.tick(self)                                             # after the bots: their units too (#1389)
             wonder.tick(self, self.tick * NORMAL)                      # game seconds, as train.tick
             relic_victory.tick(self, self.tick * NORMAL)
             time.sleep(max(0.0, self.tick - (time.time() - t)))
