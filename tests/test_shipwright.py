@@ -28,8 +28,8 @@ def test_the_university_has_it_only_in_the_imperial_age_and_not_for_the_franks()
     server, g = imperial()
     g.stock.update(food=1000, gold=300)
     rect = train.open_menu(g, "Steve", (8, 18))
-    assert " 8:book:Shipwright:1000 food · 300 gold · 60 s" in menus(server)[-1]
-    assert train.order(g, "Steve", rect, 8) == 1 and g.stock["food"] == g.stock["gold"] == 0
+    assert "18:book:Shipwright:1000 food · 300 gold · 60 s" in menus(server)[-1]
+    assert train.order(g, "Steve", rect, train.MORE) == 1 and g.stock["food"] == g.stock["gold"] == 0
     train.tick(g, 59.9)
     assert "SHIPWRIGHT" not in g.techs                                 # a technology: not faster
     train.tick(g, 0.2)

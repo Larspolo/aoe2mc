@@ -80,7 +80,7 @@ def ride(g, u, units):
 
 def go_in(g, u, ship):
     """Unit u rides the transport ship: on its crew, or on the top unit inside. A full ship: it stays on the shore."""
-    units = vars(g).setdefault("holds", {}).setdefault(ship, [])
+    units = vars(g).setdefault("cargo", {}).setdefault(ship, [])
     g.command(f"aoe stop {u}")
     if len(units) >= SIZE:
         if (v := g.villagers.get(u)) is not None:
@@ -100,7 +100,7 @@ def go_in(g, u, ship):
 def out(g, ship, cell=None):
     """All units of the transport ship come out on the land cells nearest to the block cell (x, z), else to the ship.
     Returns them; [] (they stay inside) when the ship is empty or no land is within SHORE tiles."""
-    units = vars(g).get("holds", {}).get(ship, [])
+    units = vars(g).get("cargo", {}).get(ship, [])
     pos = g.pos(ship) if units else None
     if not pos:
         return []
@@ -108,7 +108,7 @@ def out(g, ship, cell=None):
     ring = land(g, at, len(units))
     if not ring:
         return []
-    del g.holds[ship]
+    del g.cargo[ship]
     for k, u in enumerate(reversed(units)):                        # the top of the stack first
         x, z = ring[k % len(ring)]
         y = g.map.y(x, z)
@@ -126,7 +126,7 @@ def aim(g, ships, cell):
     when it is land; a ship sent onto the water keeps its units."""
     unloads = vars(g).setdefault("unloads", {})
     for u in ships:
-        if u in vars(g).get("holds", {}) and not g.map.wet(*cell):
+        if u in vars(g).get("cargo", {}) and not g.map.wet(*cell):
             unloads[u] = cell
         else:
             unloads.pop(u, None)
@@ -135,7 +135,7 @@ def aim(g, ships, cell):
 def tick(g):
     """The units at the shore next to their ship go in; a loaded ship at the end of its path unloads; the units of a
     sunk ship are lost."""
-    loading, holds, unloads = vars(g).get("loading", {}), vars(g).get("holds", {}), vars(g).get("unloads", {})
+    loading, cargo, unloads = vars(g).get("loading", {}), vars(g).get("cargo", {}), vars(g).get("unloads", {})
     if loading:
         pos = g.positions(sorted(set(loading) | {s for s, _ in loading.values()}))
         for u, (ship, at) in sorted(loading.items()):
@@ -147,11 +147,11 @@ def tick(g):
                 go_in(g, u, ship)
     for ship, cell in sorted(unloads.items()):
         v = g.ships.get(ship)
-        if ship not in holds or v is None:
+        if ship not in cargo or v is None:
             del unloads[ship]
         elif not v.path:
             del unloads[ship]
             out(g, ship, cell)
-    for ship in [s for s in sorted(holds) if s not in g.soldiers]:   # sunk: the units inside are lost, as in AoE2
-        for u in holds.pop(ship):
+    for ship in [s for s in sorted(cargo) if s not in g.soldiers]:   # sunk: the units inside are lost, as in AoE2
+        for u in cargo.pop(ship):
             g.command(f"kill {u}")
