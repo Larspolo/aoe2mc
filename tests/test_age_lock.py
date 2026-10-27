@@ -47,7 +47,7 @@ def test_in_the_dark_age_a_start_archery_range_shows_a_gray_archer_and_trains_no
     assert menus(server)[-1] == "aoe menu Steve Archery Range 0:gray_dye:Archer:25 wood · 45 gold · 35 s · " \
                                 "Needs the Feudal Age" + SKIRM.replace("drowned_spawn_egg", "gray_dye").replace(
                                     "queue 0/15", "Needs the Feudal Age") + " 4:gray_dye:Cavalry Archer:40 wood · 60 gold · 37 s · Needs the Castle Age" \
-        + " 18:gray_dye:Hand Cannoneer:45 food · 50 gold · 34 s · Needs the Imperial Age" + RALLY
+        + " 7:gray_dye:Hand Cannoneer:45 food · 50 gold · 34 s · Needs the Imperial Age" + RALLY
     assert train.order(g, "Steve", rect, 0) == 0 and g.stock["wood"] == 25 and not g.queues.get(rect)
     g.techs.add("FEUDAL_AGE")
     assert train.order(g, "Steve", rect, 0) == 1
