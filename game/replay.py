@@ -118,6 +118,22 @@ def fisher(name):
     return name.startswith("FISHING_SHIP")
 
 
+def seen(mobs, placed, player, T):
+    """The tiles (x, y) in the line of sight of the units and buildings of player (#1300): a circle of combat.sight()
+    tiles around each one, from the tile center. mobs: units with name, player and pos (blocks, Replay.units), placed:
+    (player, name, (x0, x1, z0, z1) in blocks) as Replay.placed."""
+    import combat                                                   # combat -> gather -> build -> replay
+    objs = [(v.pos[0] / T, v.pos[2] / T, v.name) for v in mobs if v.player == player and v.pos is not None]
+    objs += [((x0 + x1) / 2 / T, (z0 + z1) / 2 / T, name) for p, name, (x0, x1, z0, z1) in placed if p == player]
+    out = set()
+    for x, y, name in objs:
+        r = combat.sight(name)
+        xs, ys = np.meshgrid(np.arange(math.floor(x - r), math.ceil(x + r)), np.arange(math.floor(y - r), math.ceil(y + r)))
+        keep = (xs + 0.5 - x) ** 2 + (ys + 0.5 - y) ** 2 <= r * r
+        out.update(zip(xs[keep].tolist(), ys[keep].tolist()))
+    return out
+
+
 def sail(g, v):
     """Move ship v one cell on its water path with /tp, facing the step. The y of the boat stays (`at @s`, `~`):
     the water carries it, and aoe2mc.json has no height for the water."""

@@ -235,11 +235,37 @@ BUILDINGS = {
     "CASTLE": Stats(4800, 11, 8, 11, 8, 2.0, {}, ("building",)),
     "WONDER": Stats(4800, 0, 3, 10, 0, 0.0, {}, ("building",)),
 }
-# Line of sight in tiles (AoE2 DE, base unit) where it is not max(4, range + 2) (sight()).
+# Line of sight in tiles (AoE2 DE, base unit or building, wiki infobox "LOS"; the house: 1 from the edge of its
+# 2 x 2 tiles, #1300) where it is not max(4, range + 2) (sight()).
 SIGHT = {
+    "ARCHERY_RANGE": 6,
+    "BARRACKS": 6,
+    "BLACKSMITH": 6,
+    "BOMBARD_TOWER": 10,
+    "CASTLE": 11,
     "CHAMPION": 5,
+    "DOCK": 8,
+    "DONJON": 10,
+    "FEITORIA": 6,
+    "FORTIFIED_TOWER": 14,
+    "GUARD_TOWER": 10,
+    "HOUSE": 2,
+    "KEEP": 10,
+    "KREPOST": 10,
     "LIGHT_CAVALRY": 8,
+    "LUMBER_CAMP": 6,
+    "MARKET": 6,
+    "MILL": 6,
+    "MINING_CAMP": 6,
+    "MONASTERY": 6,
+    "OUTPOST": 4,
+    "SIEGE_WORKSHOP": 6,
+    "STABLE": 6,
+    "TOWN_CENTER": 8,
     "TWO_HANDED_SWORDSMAN": 5,
+    "UNIVERSITY": 6,
+    "WATCH_TOWER": 10,
+    "WONDER": 8,
 }
 # Units that attack from a range with melee damage (AoE2): their hit takes the melee armor of the target (#800).
 MELEE_RANGED = {"ELITE_GBETO",
