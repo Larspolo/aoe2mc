@@ -10,14 +10,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
-import org.bukkit.event.player.PlayerToggleSneakEvent;
+import org.bukkit.event.player.PlayerInputEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * The game mode switch of a viewer of the live replay (#910, owner decision #782). The replay gives each player the
  * tag aoe_viewer (replay.VIEWER, #737). A viewer in adventure mode can fly, and has the hotbar items of the replay
  * control. A double tap of the sneak key (two presses within TAP ms) changes between spectator mode and adventure
- * mode: a spectator's clicks do not reach the server, its keys do (PlayerToggleSneakEvent). One tap stays "fly down".
+ * mode: a spectator's clicks do not reach the server, its keys do (PlayerInputEvent). One tap stays "fly down".
+ * The press is the change of the sneak key in the input of the client: after a game mode change the server can keep
+ * the old sneak state, and PlayerToggleSneakEvent then missed the first press of the next double tap (#1213).
  * Vanilla has no command for "may fly", so the plugin sets it. The game program does not add the tag.
  */
 final class Viewer implements Listener {
@@ -26,15 +28,18 @@ final class Viewer implements Listener {
     static final long LATER = 20;                         // ticks: the replay adds the tag after its gamemode command
     private final JavaPlugin plugin;
     private final Map<UUID, Long> pressed = new HashMap<>();
+    private final Map<UUID, Boolean> down = new HashMap<>();  // the sneak key in the last input of each player
 
     Viewer(JavaPlugin plugin) {
         this.plugin = plugin;
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onSneak(PlayerToggleSneakEvent ev) {
+    public void onInput(PlayerInputEvent ev) {
         Player p = ev.getPlayer();
-        if (!ev.isSneaking() || !p.getScoreboardTags().contains(TAG)) {
+        boolean sneak = ev.getInput().isSneak();
+        Boolean was = down.put(p.getUniqueId(), sneak);
+        if (!sneak || Boolean.TRUE.equals(was) || !p.getScoreboardTags().contains(TAG)) {
             return;
         }
         long now = System.currentTimeMillis();

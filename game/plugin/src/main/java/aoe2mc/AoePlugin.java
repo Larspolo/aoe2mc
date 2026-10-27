@@ -102,6 +102,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe lore <material> <name> <text>          the last lore line of each menu item with this material and name: the
  *                                              AoE2 help text (#1160, train.HELP; URL-encoded). Sent once at the
  *                                              setup, so the menu commands stay below the RCON limit
+ *   aoe minimap on|off|pixel <x> <z>           the live units as dots in their team color on map 0, once per
+ *                                              second (#1237, Minimap.java); pixel: the map pixel of a block
  *   aoe where <selector> [from]                "Where <count>: <uuid> <x> <y> <z> <order 0|1> <target 0|1>, ..." for
  *                                              WHERE_PAGE units from index `from` in UUID order (#813, tools/replay_drift.py);
  *                                              target 1 also after a target or a hit since the last answer (#1169)
@@ -191,6 +193,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Cheats cheats = new Cheats(this);
     private final Deaths deaths = new Deaths(this);
     private final Alerts alerts = new Alerts(this, AoePlugin::side);   // "under attack" for the team of the target (#1231)
+    private final Minimap minimap = new Minimap(this);
     private final Viewer viewer = new Viewer(this);                 // the game mode switch of a replay viewer (#910)
     private final Border border = new Border();
 
@@ -421,14 +424,15 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
     }
 
-    // An arrow from next to the edge of the footprint on the side of the target, aimed as the arrow of an archer
-    // (shoot): from the center the arrow hits the own roof (#1202). The start is 1 block outside the footprint: from
-    // above the edge column a steep arrow to a near target falls into the barrier top of that column (#1249). Arrow k
-    // starts on a ring around that point, so that the arrows of one shot do not fly as one; the start is above the
-    // highest block of the 3 x 3 columns around the point.
+    // An arrow from above the edge of the footprint next to the target, aimed as the arrow of an archer (shoot): from
+    // the center the arrow hits the own roof (#1202). Arrow k starts on a ring around that point, so that the arrows of
+    // one shot do not fly as one; the start is above the highest block of the 3 x 3 columns around the point. A steep
+    // shot (a tall tower, a near target) starts higher: the straight line to the target leaves the 3 x 3 columns above
+    // their highest block, else the arrow hits the own roof (#1219).
     private static void volley(LivingEntity fort, int[] b, LivingEntity t, int k) {
         var p = t.getLocation();
-        Location from = new Location(fort.getWorld(), outside(p.getX(), b[0], b[3]), 0, outside(p.getZ(), b[2], b[5]));
+        Location from = new Location(fort.getWorld(), Math.max(b[0] + 0.5, Math.min(b[3] + 0.5, p.getX())), 0,
+                Math.max(b[2] + 0.5, Math.min(b[5] + 0.5, p.getZ())));
         int top = b[1];
         for (int dx = -1; dx <= 1; dx++) {
             for (int dz = -1; dz <= 1; dz++) {
@@ -437,7 +441,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
         }
         from.add(k == 0 ? 0 : 0.6 * Math.cos(k * 2.4), 0, k == 0 ? 0 : 0.6 * Math.sin(k * 2.4));
-        from.setY(top + 1.5 + 0.2 * (k % 3));
+        double ty = p.getY() + t.getHeight() * 0.5, h = Math.hypot(p.getX() - from.getX(), p.getZ() - from.getZ());
+        double y = top + 1.5;
+        if (h > 3) {                                                   // the line at 1.5 blocks: at least top + 1
+            y = Math.max(y, (top + 1 - ty * 1.5 / h) / (1 - 1.5 / h));
+        }
+        from.setY(y + 0.2 * (k % 3));
         Vector to = t.getLocation().toVector().add(new Vector(0, t.getHeight() * 0.5, 0)).subtract(from.toVector());
         double ticks = to.length() / ARROW_SPEED;
         to.setY(to.getY() + 0.5 * ARROW_GRAVITY * ticks * ticks);
@@ -445,12 +454,6 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         a.setShooter(fort);
         a.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
         fort.getWorld().playSound(from, Sound.ENTITY_ARROW_SHOOT, 1.0f, 1.0f);
-    }
-
-    // The start coordinate of a volley arrow on one axis: 1 block outside the blocks lo..hi on the side of the target
-    // coordinate v, else v inside them.
-    private static double outside(double v, int lo, int hi) {
-        return v < lo ? lo - 1.0 : v > hi + 1 ? hi + 2.0 : Math.max(lo + 0.5, Math.min(hi + 0.5, v));
     }
 
     /** The holder of a chest menu: it tells a menu from the other inventories. */
@@ -1333,6 +1336,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             sender.sendMessage("Destroy: " + n + " buildings");
             return true;
+        }
+        if ((args.length == 2 || args.length == 4) && args[0].equals("minimap")) {   // live units on map 0 (#1237)
+            return minimap.command(sender, args);
         }
         if (args.length >= 2 && args[0].startsWith("box")) {            // the border of the selection box (#795)
             return border.command(sender, args, players(sender, args[1]));
