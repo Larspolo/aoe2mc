@@ -1024,16 +1024,18 @@ class Gather:
                 and (cell := fleet.pick(self, eye, d)) and self.map.wet(*cell):
             self.walk_to(name, cell)                                   # the ships sail on the water (#1383)
 
-    def walk_to(self, name, cell):
+    def walk_to(self, name, cell, units=None):
         """The selected units walk to the free block cell (x, z), as the move order of AoE2 (#1368): each one to its own
         free cell near it, the nearest cells first (no formation yet). Military units walk with the plugin path finding
         at their AoE2 speed; villagers stop their work and walk there. Ships sail to the water near it (fleet.order, also
-        at a water cell). Returns the cells {uuid: cell}."""
+        at a water cell). units: these units, not the selection, and no mark (transport.tick, #1515). Returns the cells
+        {uuid: cell}."""
         import ai                                                      # ai imports this module
-        boats = {u for u in self.selected if replay.ship(self.soldiers.get(u, ""))}
+        units = self.selected if units is None else set(units)
+        boats = {u for u in units if replay.ship(self.soldiers.get(u, ""))}
         out = fleet.order(self, boats, cell)                           # a ship sails on the water (#1383)
         transport.aim(self, out, cell)                                 # a loaded ship unloads at a land cell (#1385)
-        who = sorted(u for u in self.selected - boats if u in self.villagers or u in self.soldiers)
+        who = sorted(u for u in units - boats if u in self.villagers or u in self.soldiers)
         r = math.isqrt(len(who)) + 2
         cells = sorted(((x, z) for x in range(cell[0] - r, cell[0] + r + 1) for z in range(cell[1] - r, cell[1] + r + 1)
                         if self.map.free(x, z)), key=lambda c: (math.dist(c, cell), c))
@@ -1048,7 +1050,7 @@ class Gather:
             else:
                 unit = self.soldiers[u]
                 ai.move(self, u, unit, self.map.T, x + 0.5, self.map.y(x, z), z + 0.5, NORMAL * train.speed(self, unit))
-        if out:
+        if out and name:
             self.mark(name, {cell})
         return out
 

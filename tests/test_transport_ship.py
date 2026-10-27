@@ -141,7 +141,7 @@ def test_a_militia_rides_a_transport_ship_to_another_shore_on_paper(tmp_path):
         g.choose({militia}, militia)
         assert transport.order(g, "nobody", ship)
         end = time.time() + 60
-        while not vars(g).get("holds"):
+        while not vars(g).get("cargo"):
             assert time.time() < end, (g.pos(militia), g.pos(ship))
             g.step()
             time.sleep(g.tick)
@@ -152,7 +152,7 @@ def test_a_militia_rides_a_transport_ship_to_another_shore_on_paper(tmp_path):
         g.choose({ship}, ship)
         assert ship in g.walk_to("nobody", goal) and g.unloads
         end = time.time() + 90
-        while vars(g).get("holds"):
+        while vars(g).get("cargo"):
             assert time.time() < end, (g.pos(ship), g.ships[ship].path[-1:])
             g.step()
             time.sleep(g.tick)

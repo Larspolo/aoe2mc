@@ -151,7 +151,10 @@ def tick(g):
             del unloads[ship]
         elif not v.path:
             del unloads[ship]
-            out(g, ship, cell)
+            if math.dist(v.cell, cell) > SHORE * g.map.T:              # a far click: out at the shore (#1515)
+                g.walk_to(None, cell, out(g, ship))                    # then they walk on to the clicked cell
+            else:
+                out(g, ship, cell)
     for ship in [s for s in sorted(cargo) if s not in g.soldiers]:   # sunk: the units inside are lost, as in AoE2
         for u in cargo.pop(ship):
             g.command(f"kill {u}")
