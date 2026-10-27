@@ -140,12 +140,19 @@ START = {"AZTECS": {"gold": 50},
          "SICILIANS": {"stone": 100}}
 # The technologies that a civilization does not have (AoE2 wiki, the availability chart of each technology, #1373):
 # the menu does not show them (train.unlocked).
-MISSING = {"FORTIFIED_WALL": ("BULGARIANS", "CUMANS", "DANES", "GOTHS", "HUNS", "MAGYARS", "MALAY", "MAPUCHE", "MUISCA",
+MISSING = {"BOMBARD_TOWER_TECH": ("ACHAEMENIDS", "ATHENIANS", "AZTECS", "BENGALIS", "BERBERS", "BRITONS", "BULGARIANS",
+                                  "BURMESE", "CELTS", "CUMANS", "DANES", "ETHIOPIANS", "FRANKS", "GEORGIANS", "GOTHS",
+                                  "GURJARAS", "HINDUSTANIS", "HUNS", "INCAS", "JAPANESE", "JURCHENS", "KHITANS", "KHMER",
+                                  "MACEDONIANS", "MAGYARS", "MALIANS", "MAYANS", "MONGOLS", "MUISCA", "PERSIANS", "PURU",
+                                  "ROMANS", "SARACENS", "SAXONS", "SHU", "SICILIANS", "SLAVS", "SPARTANS", "THRACIANS",
+                                  "TUPI", "VARANGIANS", "VIKINGS", "WEI", "WU"),
+           "FORTIFIED_WALL": ("BULGARIANS", "CUMANS", "DANES", "GOTHS", "HUNS", "MAGYARS", "MALAY", "MAPUCHE", "MUISCA",
                               "PERSIANS", "SICILIANS", "TUPI", "WU"),
-           "GAMBESONS": ("BERBERS", "BOHEMIANS", "BURGUNDIANS", "CHINESE", "CUMANS", "ETHIOPIANS", "GOTHS", "GURJARAS",
-                         "HINDUSTANIS", "HUNS", "INCAS", "ITALIANS", "KHMER", "KOREANS", "LITHUANIANS", "MAGYARS", "MALAY",
-                         "MALIANS", "MAPUCHE", "MAYANS", "MONGOLS", "MUISCA", "POLES", "ROMANS", "TATARS", "TUPI", "TURKS",
-                         "VIETNAMESE", "VIKINGS", "WU")}
+           "GAMBESONS": ("ACHAEMENIDS", "ATHENIANS", "BERBERS", "BOHEMIANS", "BURGUNDIANS", "CHINESE", "CUMANS",
+                          "ETHIOPIANS", "GOTHS", "GURJARAS", "HINDUSTANIS", "HUNS", "INCAS", "ITALIANS", "KHMER",
+                          "KOREANS", "LITHUANIANS", "MACEDONIANS", "MAGYARS", "MALAY", "MALIANS", "MAPUCHE", "MAYANS",
+                          "MONGOLS", "MUISCA", "POLES", "PURU", "ROMANS", "SPARTANS", "TATARS", "THRACIANS", "TUPI",
+                          "TURKS", "VIETNAMESE", "VIKINGS", "WEI", "WU")}
 
 
 def mounted(s):

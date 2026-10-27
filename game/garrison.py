@@ -62,8 +62,11 @@ def start(g):
 
 def arrows(building, names):
     """The arrows of one shot of the building with the units `names` inside: its BASE, and 1 more for each villager or
-    foot archer (an archer that is not cavalry, a camel or an elephant), as in AoE2."""
+    foot archer (an archer that is not cavalry, a camel or an elephant), as in AoE2. A bombard tower shoots one cannon
+    ball (#1375)."""
     import combat                                                  # combat imports gather
+    if building == "BOMBARD_TOWER":
+        return 1
     riders = {combat.CAV, combat.CAM, combat.ELE}
     return BASE.get(building, 1) + sum(n.startswith("VILLAGER") or combat.ARC in (c := set(combat.stats(n).classes)) and not c & riders
                    for n in names)
