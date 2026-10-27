@@ -1,6 +1,7 @@
 package aoe2mc;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,10 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * of sight (the darkest shade of the color), RUN = "Y,X0,X1" (tiles X0 to X1 of row Y); "aoe minimap fog off" removes
  * it. The fog goes over the base image and the buildings, under the dots. "aoe minimap tile X Z" gives the fog of
  * block (X, Z). The units that "aoe hide" hides (the enemies out of sight) have no dot.
+ * The view square (#1762): "aoe minimap frame SIDE" draws a white square outline of SIDE blocks around each player
+ * (the area of one AoE2 screen, game/replay.py FRAME), "aoe minimap frame off" removes it. Each player sees only the
+ * own square: Frame is a contextual renderer above this one. "aoe minimap square NAME" gives the pixels of the last
+ * square of player NAME (clipped at the map edge) and the map color of its first outline pixel, or "none" (the tests).
  */
 final class Minimap extends MapRenderer {
     static final int PERIOD = 20;                         // ticks between two updates of the dots (sendMap)
@@ -64,10 +69,79 @@ final class Minimap extends MapRenderer {
     private final JavaPlugin plugin;
     private final Predicate<UUID> hidden;                 // aoe hide: no dot for these units
 
+    private final Frame frame = new Frame();
+
     Minimap(JavaPlugin plugin, Predicate<UUID> hidden) {
         super(false);                                     // the same image for each player
         this.plugin = plugin;
         this.hidden = hidden;
+    }
+
+    /** Start the send task while the dots or the square are on, stop it when both are off. */
+    private void sync(MapView v) {
+        boolean run = on || frame.side > 0;
+        if (run && task == null) {
+            task = Bukkit.getScheduler().runTaskTimer(plugin, () -> send(v), 1L, PERIOD);
+        }
+        if (!run && task != null) {
+            task.cancel();
+            task = null;
+        }
+    }
+
+    /** The square of the view of each player (#1762): a white outline of side × side blocks around the player. Each
+     * player has an own canvas (a contextual renderer); all other pixels stay transparent. */
+    static final class Frame extends MapRenderer {
+        static final byte WHITE = 8 * 4 + 2;              // map color SNOW, the normal shade: white
+        int side;                                         // blocks; 0: off
+        final Map<UUID, int[]> squares = new HashMap<>();         // player -> {px0, pz0, px1, pz1} of the last render
+        final Map<UUID, MapCanvas> canvases = new HashMap<>();
+        final Map<UUID, List<int[]>> drawn = new HashMap<>();          // player -> the pixels of the square
+
+        Frame() {
+            super(true);                                  // an own image for each player
+        }
+
+        /** The map pixel of block coordinate b, also outside 0 to 127 (pixel() without the limit). */
+        static int raw(double b, int center, int scale) {
+            int f = 1 << scale;
+            return (int) Math.floor((b - (center - 64 * f)) / f);
+        }
+
+        @Override
+        @SuppressWarnings({"deprecation", "removal"})     // setPixel: the map color byte
+        public void render(MapView map, MapCanvas canvas, Player player) {
+            List<int[]> old = drawn.getOrDefault(player.getUniqueId(), List.of());
+            for (int[] d : old) {                         // clear the old square: the layers below show again
+                canvas.setPixel(d[0], d[1], (byte) -1);
+            }
+            List<int[]> now = new ArrayList<>();
+            drawn.put(player.getUniqueId(), now);
+            canvases.put(player.getUniqueId(), canvas);
+            if (side <= 0 || map.getWorld() != null && !map.getWorld().equals(player.getWorld())) {
+                squares.remove(player.getUniqueId());
+                return;
+            }
+            int s = map.getScale().getValue();
+            Location at = player.getLocation();
+            double h = side / 2.0;
+            int x0 = raw(at.getX() - h, map.getCenterX(), s), x1 = raw(at.getX() + h, map.getCenterX(), s);
+            int z0 = raw(at.getZ() - h, map.getCenterZ(), s), z1 = raw(at.getZ() + h, map.getCenterZ(), s);
+            int cx0 = Math.max(0, x0), cx1 = Math.min(127, x1), cz0 = Math.max(0, z0), cz1 = Math.min(127, z1);
+            if (cx0 > cx1 || cz0 > cz1) {                 // all outside the map: no square
+                squares.remove(player.getUniqueId());
+                return;
+            }
+            squares.put(player.getUniqueId(), new int[] {cx0, cz0, cx1, cz1});
+            for (int px = cx0; px <= cx1; px++) {
+                for (int pz = cz0; pz <= cz1; pz++) {
+                    if (px == x0 || px == x1 || pz == z0 || pz == z1) {    // only the outline, not the clip edge
+                        canvas.setPixel(px, pz, WHITE);
+                        now.add(new int[] {px, pz});
+                    }
+                }
+            }
+        }
     }
 
     /** Map color c in the darkest shade (shade 3: 135/255 of the color, the map rule); no color (0 to 3): black. */
@@ -164,6 +238,26 @@ final class Minimap extends MapRenderer {
             sender.sendMessage("Minimap buildings: " + buildings.size());
             return true;
         }
+        if (args.length == 3 && args[1].equals("frame")) {
+            frame.side = args[2].equals("off") ? 0 : Math.max(0, Integer.parseInt(args[2]));
+            v.removeRenderer(frame);
+            if (frame.side > 0) {
+                v.addRenderer(frame);                     // the last renderer: the square is above the fog and the dots
+            }
+            sync(v);
+            send(v);
+            sender.sendMessage("Minimap frame: " + (frame.side > 0 ? frame.side + " blocks" : "off"));
+            return true;
+        }
+        if (args.length == 3 && args[1].equals("square")) {
+            Player p = Bukkit.getPlayerExact(args[2]);
+            int[] q = p == null ? null : frame.squares.get(p.getUniqueId());
+            List<int[]> d = q == null ? List.of() : frame.drawn.get(p.getUniqueId());
+            MapCanvas c = frame.canvases.get(p == null ? null : p.getUniqueId());
+            sender.sendMessage("Minimap square: " + (d.isEmpty() ? "none" : q[0] + " " + q[1] + " " + q[2] + " " + q[3]
+                    + " " + (c.getPixel(d.get(0)[0], d.get(0)[1]) & 0xFF)));
+            return true;
+        }
         if (args.length != 2) {
             sender.sendMessage("Minimap: unknown command " + String.join(" ", args));
             return true;
@@ -171,16 +265,18 @@ final class Minimap extends MapRenderer {
         on = args[1].equals("on");
         if (on && !v.getRenderers().contains(this)) {
             v.addRenderer(this);
-            task = Bukkit.getScheduler().runTaskTimer(plugin, () -> send(v), 1L, PERIOD);
+            if (frame.side > 0) {                         // the square stays above the dots
+                v.removeRenderer(frame);
+                v.addRenderer(frame);
+            }
         }
-        if (!on && task != null) {
-            task.cancel();
-            task = null;
+        if (!on && v.getRenderers().contains(this)) {
             v.removeRenderer(this);
             dots.clear();
             last = Long.MIN_VALUE;
             send(v);                                      // the map without the dots
         }
+        sync(v);
         sender.sendMessage("Minimap: " + (on ? "on" : "off"));
         return true;
     }

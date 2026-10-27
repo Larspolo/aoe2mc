@@ -146,6 +146,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe minimap fog <tile> <n>|off, see|dim <y,x0,x1> ..., tile <x> <z>
  *                                              the fog of the view player on map 0 (#1567): black unexplored tiles,
  *                                              dark explored tiles out of sight; tile: the fog of a block
+ *   aoe minimap frame <side>|off, square <name>   a white square of <side> blocks around each player on map 0, only
+ *                                              for that player (#1762); square: its pixels and color
  *   aoe where <selector> [from]                "Where <count>: <uuid> <x> <y> <z> <order 0|1> <target 0|1>, ..." for
  *                                              WHERE_PAGE units from index `from` in UUID order (#813, tools/replay_drift.py);
  *                                              target 1 also after a target or a hit since the last answer (#1169)
