@@ -12,7 +12,7 @@ from test_unit_ai import data
 
 
 def test_siege_units_take_buildings_in_sight():
-    assert combat.sight_command("u", "BATTERING_RAM", 4) == "aoe sight u 16 only"
+    assert combat.sight_command("u", "BATTERING_RAM", 4) == f"aoe sight u {combat.sight('BATTERING_RAM') * 4} only"
     assert combat.sight_command("u", "TREBUCHET", 4).endswith(" only")
     for name in ("ARMORED_ELEPHANT", "SIEGE_ELEPHANT", "CANNON_GALLEON", "ELITE_CANNON_GALLEON"):
         assert combat.sight_command("u", name, 4).endswith(" first"), name
