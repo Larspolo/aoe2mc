@@ -85,6 +85,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "BLOCK_PRINTING": {"gold": 200},                              # AoE2 DE wiki (#1457)
          "BODKIN_ARROW": {"food": 200, "gold": 100},                   # AoE2 DE wiki (#1395)
          "BLOODLINES": {"food": 150, "gold": 100},
+         "CANNON_GALLEON": {"wood": 200, "gold": 150},                 # the Imperial Age, after Chemistry (#1484)
          "CAPPED_RAM": {"wood": 160, "gold": 75},
          "CAPPED_RAM_UPGRADE": {"food": 300},
          "CASTLE_AGE": {"food": 800, "gold": 200},
@@ -189,6 +190,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "BODKIN_ARROW": 35,
                "BOMBARD_CANNON": 56,
                "BOMBARD_TOWER_TECH": 60,
+               "CANNON_GALLEON": 46,
                "CAPPED_RAM": 36,
                "CAPPED_RAM_UPGRADE": 50,
                "CARAVAN": 40,
@@ -310,6 +312,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                    "TRANSPORT_SHIP",                                           # (#1385)
                    "FIRE_SHIP",                                                # (#1440)
                    "DEMOLITION_SHIP",                                          # (#1440)
+                   "CANNON_GALLEON",                                           # after Chemistry: build.NEEDS (#1484)
                    "FISHING_LINES", "GILLNETS"),                                # (#1439)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",
                           "BOW_SAW"),                                           # (#723, #1423)
@@ -608,6 +611,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "BOMBARD_CANNON": (7, "tnt_minecart", "Bombard Cannon"),   # after the siege tower
          "BOW_SAW": (0, "book", "Bow Saw"),                           # the slot of Double-Bit Axe (AFTER)
          "BOMBARD_TOWER_TECH": (5, "book", "Bombard Tower"),
+         "CANNON_GALLEON": (7, "dark_oak_boat", "Cannon Galleon"),   # units.classify: a dark oak boat with a pillager
          "CARAVAN": (1, "book", "Caravan"),
          "CASTLE_AGE": (4, "bell", "Castle Age"),
          "CATAPHRACT": (0, "horse_spawn_egg", "Cataphract"),
@@ -687,6 +691,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "BOMBARD_TOWER_TECH": "Lets you build bombard towers.",
         "CHEMISTRY": "Archers, ranged siege, towers +1 attack.",
         "CONSCRIPTION": "Military buildings train 33 % faster.",
+        "CANNON_GALLEON": "Siege warship. Long range; strong vs. buildings.",
         "CAPPED_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
         "CAPPED_RAM_UPGRADE": "Upgrades battering rams to capped rams.",
         "CARAVAN": "Trade carts +20 % speed.",
