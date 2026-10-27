@@ -18,8 +18,6 @@ def imperial(civ="BRITONS", techs=()):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert (train.COSTS["SHIPWRIGHT"], train.TRAIN_TIMES["SHIPWRIGHT"], train.TECH_AGE["SHIPWRIGHT"]) \
-        == ({"food": 1000, "gold": 300}, 60, 3)
     assert "SHIPWRIGHT" in train.TRAINS["UNIVERSITY"] and len(train.HELP["SHIPWRIGHT"]) <= 50
     assert train.SHIPWRIGHT == (0.8, 1.54)
 

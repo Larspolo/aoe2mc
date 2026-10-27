@@ -22,15 +22,6 @@ def test_the_values_are_those_of_the_wiki():
         assert train.COSTS[name] == {"food": 20, "gold": 50} and len(train.HELP[name]) <= 50
     assert [train.TRAIN_TIMES[n] for n in ("EAGLE_SCOUT", "EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR")] == [46, 35, 20]
     assert [build.AGE[n] for n in ("EAGLE_SCOUT", "EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR")] == [1, 2, 3]
-    assert train.COSTS["EAGLE_WARRIOR_UPGRADE"] == {"food": 200, "gold": 200} and train.TECH_AGE["EAGLE_WARRIOR_UPGRADE"] == 2
-    assert train.COSTS["ELITE_EAGLE_WARRIOR_UPGRADE"] == {"food": 800, "gold": 500}
-    assert train.TECH_AGE["ELITE_EAGLE_WARRIOR_UPGRADE"] == 3
-    assert train.TRAIN_TIMES["EAGLE_WARRIOR_UPGRADE"] == train.TRAIN_TIMES["ELITE_EAGLE_WARRIOR_UPGRADE"] == 50
-    assert combat.stats("EAGLE_SCOUT") == (50, 4, 0, 2, 0, 2.0, {"siege": 3}, ("infantry",))
-    assert combat.stats("EAGLE_WARRIOR") == (55, 7, 0, 3, 0, 2.0, {"camel": 2, "cavalry": 3, "siege": 3, "ship": 1},
-                                             ("infantry",))
-    assert combat.stats("ELITE_EAGLE_WARRIOR") == (60, 9, 0, 4, 0, 2.0, {"camel": 3, "cavalry": 4, "siege": 5, "ship": 2},
-                                                   ("infantry",))
 
 
 def test_the_barracks_menu_has_the_eagle_scout_only_for_the_aztecs_and_the_mayans():

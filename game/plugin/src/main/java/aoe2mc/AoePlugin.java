@@ -190,7 +190,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * A military unit without an order and without a target attacks back when a unit of another team hits it, as with
  * the AoE2 default stance (#733). The vanilla goal hurt_by also hits back at its own team and calls the mobs of its kind,
  * so the hit handler sets the target. A unit that walks (aoe moveto) continues; villagers, monks and kings
- * (no unit classes or no attack) and Gaia animals (no AoE2 values) do not attack back.
+ * (no unit classes or no attack) and Gaia animals (no AoE2 values) do not attack back. A unit with a line of sight
+ * fights also without a unit class (Furious the Monkey Boy, #1995).
  * A unit with a line of sight (aoe sight) and the same rules also attacks the nearest enemy unit in its sight, each
  * second (#775). The vanilla goal nearest_attackable_target also chooses units of the own team, players and animals,
  * and has no AoE2 sight: tame() drops it.
@@ -994,7 +995,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // not with the stance "no attack" (#1104).
     private boolean idle(Mob mob, Stats t) {
         Mob fighter = rider(mob) != null ? rider(mob) : mob;
-        return t != null && !t.classes().isEmpty() && t.attack() > 0 && !orders.containsKey(mob.getUniqueId())
+        return t != null && (!t.classes().isEmpty() || sights.containsKey(mob.getUniqueId())) && t.attack() > 0
+                && !orders.containsKey(mob.getUniqueId())
                 && (fighter.getTarget() == null || !fighter.getTarget().isValid()) && !stance(mob).equals("no_attack");
     }
 
