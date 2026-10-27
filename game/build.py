@@ -96,6 +96,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "BATTERING_RAM",
         "CAMEL_RIDER",
         "CASTLE",
+        "CAVALRY_ARCHER",
         "CROSSBOWMAN",
         "ELITE_SKIRMISHER",
         "HEAVY_CAVALRY_ARCHER",
