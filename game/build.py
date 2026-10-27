@@ -100,6 +100,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
                      "FISH_TRAP",
                      "TRADE_COG",
                      "GALLEY",
+                     "HULK",
                      "GATE",
                      "STONE_WALL",
                      "CASTLE_AGE"), 1) | {"IMPERIAL_AGE": 2} \
@@ -128,6 +129,9 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "BOMBARD_CANNON",
         "BOMBARD_TOWER",
         "CANNON_GALLEON",
+        "FAST_FIRE_SHIP",
+        "GALLEON",
+        "HEAVY_DEMOLITION_SHIP",
         "CAPPED_RAM",
         "CAVALIER",
         "CHAMPION",

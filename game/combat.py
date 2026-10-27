@@ -33,13 +33,14 @@ RAM = "ram"                                           # the rams, the siege towe
 UNI = "unique"                                        # the unique units of the castles (the Samurai bonus)
 GUN = "gunpowder"                                     # the targets of the Condottiero and Winged Hussar bonus (#1007)
 SHIP, WAR = "ship", "warship"                         # the ships; "warship": the AoE2 class "Long-range warship"
+FIRE = "fireship"                                     # the AoE2 class "Fire Ships" (the hulk bonus, #1489)
 SPEAR = {CAV: 15, CAM: 12, ELE: 15}                   # spearman bonus, more in the later ages of the line
 STATS = {
     # infantry: militia line and spearman line
     "MILITIA": Stats(40, 4, 0, 1, 0, 2.0, {}, (INF,)),
     "MAN_AT_ARMS": Stats(45, 6, 0, 1, 0, 2.0, {}, (INF,)),
     "LONG_SWORDSMAN": Stats(60, 9, 0, 1, 0, 2.0, {}, (INF,)),
-    "TWO_HANDED_SWORDSMAN": Stats(60, 12, 0, 1, 0, 2.0, {}, (INF,)),
+    "TWO_HANDED_SWORDSMAN": Stats(65, 12, 0, 1, 0, 2.0, {}, (INF,)),
     "CHAMPION": Stats(70, 13, 1, 1, 0, 2.0, {}, (INF,)),
     "SPEARMAN": Stats(45, 3, 0, 0, 0, 3.0, SPEAR, (INF, SPE)),
     "PIKEMAN": Stats(55, 4, 0, 0, 0, 3.0, {CAV: 22, CAM: 18, ELE: 25}, (INF, SPE)),
@@ -221,10 +222,14 @@ STATS = {
     "DEMOLITION_RAFT": Stats(40, 75, 0, 0, 0, 0.0, {"building": 180}, (SHIP,)),   # (#1481) the Feudal Age form
     "DEMOLITION_SHIP": Stats(50, 95, 1, 0, 0, 0.0, {"building": 220}, (SHIP,)),   # one blast (BLAST), then it dies
     "ELITE_CANNON_GALLEON": Stats(150, 60, 0, 6, 15, 10.0, {"building": 275, SIE: 25}, (SHIP, GUN, WAR)),   # (#1491)
-    "FIRE_GALLEY": Stats(110, 2, 1, 4, 2.5, 0.25, {WAR: 1}, (SHIP,)),   # (#1481) the Feudal Age form of the fire ship
-    "FIRE_SHIP": Stats(120, 3, 2, 4, 2.5, 0.25, {"building": 2, WAR: 1}, (SHIP,)),   # (#1440) melee damage, 4 hits/s
+    "FAST_FIRE_SHIP": Stats(140, 4, 3, 7, 2.5, 0.25, {"building": 3, WAR: 1}, (SHIP, FIRE)),   # Heavy Warships (#1483)
+    "FIRE_GALLEY": Stats(110, 2, 1, 4, 2.5, 0.25, {WAR: 1}, (SHIP, FIRE)),   # (#1481) the Feudal Age form of the fire ship
+    "FIRE_SHIP": Stats(120, 3, 2, 4, 2.5, 0.25, {"building": 2, WAR: 1}, (SHIP, FIRE)),   # (#1440) melee damage, 4 hits/s
     "FISHING_SHIP": Stats(50, 0, 1, 1, 0, 0.0, {}, (SHIP,)),
     "GALLEY": Stats(110, 6, 0, 3, 5, 3.0, {"building": 6, WAR: 5}, (SHIP, WAR)),
+    "GALLEON": Stats(155, 9, 0, 6, 7, 3.0, {"building": 6, WAR: 9, RAM: 3}, (SHIP, WAR)),   # Heavy Warships (#1483)
+    "HEAVY_DEMOLITION_SHIP": Stats(70, 120, 2, 0, 0, 0.0, {"building": 280}, (SHIP,)),   # (#1483)
+    "HULK": Stats(85, 4, 3, 1, 1, 1.75, {FIRE: 1, "standard": -3}, (SHIP,)),   # AoE2 DE wiki (#1489): melee hits at range 1
     "WAR_GALLEY": Stats(125, 7, 0, 4, 6, 3.0, {"building": 6, WAR: 5}, (SHIP, WAR)),   # Medium Warships (#1482)
     # others: no fight, but they can die
     "VILLAGER": Stats(25, 3, 0, 0, 0, 2.0),
@@ -286,11 +291,15 @@ SIGHT = {
     "CHAMPION": 5,
     "DEMOLITION_RAFT": 6,
     "DEMOLITION_SHIP": 6,
+    "FAST_FIRE_SHIP": 6,
     "DOCK": 8,
     "DONJON": 10,
     "ELITE_CANNON_GALLEON": 17,
     "FIRE_GALLEY": 5,
     "FIRE_SHIP": 5,
+    "GALLEON": 9,
+    "HEAVY_DEMOLITION_SHIP": 6,
+    "HULK": 5,
     "FEITORIA": 6,
     "FORTIFIED_TOWER": 14,
     "GUARD_TOWER": 10,
@@ -321,10 +330,12 @@ MELEE_RANGED = {"BOMBARD_CANNON",
                 "ELITE_GBETO",
                 "ELITE_MAMELUKE",
                 "ELITE_THROWING_AXEMAN",
+                "FAST_FIRE_SHIP",
                 "FIRE_GALLEY",
                 "FIRE_SHIP",
                 "GBETO",
                 "HEAVY_ROCKET_CART",
+                "HULK",
                 "MAMELUKE",
                 "MANGONEL",
                 "ONAGER",
@@ -341,8 +352,10 @@ BLAST = {"BOMBARD_CANNON": 0.5,
          "DEMOLITION_RAFT": 2.5,
          "DEMOLITION_SHIP": 3,
          "ELITE_CANNON_GALLEON": 0.3,
+         "FAST_FIRE_SHIP": 0,
          "FIRE_GALLEY": 0,
          "FIRE_SHIP": 0,
+         "HEAVY_DEMOLITION_SHIP": 3.25,
          "HEAVY_ROCKET_CART": 1.25,
          "HOUFNICE": 0.7,
          "MANGONEL": 1.0,

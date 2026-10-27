@@ -16,6 +16,7 @@ def test_the_mangonel_line_has_the_blast_radius_of_the_wiki():
                             "CANNON_GALLEON": 0.25,                                                    # (#1484)
                             "DEMOLITION_RAFT": 2.5,                                                    # (#1481)
                             "ELITE_CANNON_GALLEON": 0.3,                                               # (#1491)
+                            "FAST_FIRE_SHIP": 0, "HEAVY_DEMOLITION_SHIP": 3.25,                         # (#1483)
                             "FIRE_GALLEY": 0}
 
 
