@@ -263,4 +263,4 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `.github/workflows/worlds.yml` | specific | The worlds of `examples/` and `samples/` as zips in a release (#207). |
 | `.github/labels.txt` | generic | None. |
 | `.github/ISSUE_TEMPLATE/ticket.yml` | generic | None. |
-| `.gitattributes` | specific | The list of `merge=union` files, and `merge=jsonl` for `game/data/*.jsonl` (`tools/merge_jsonl.py`, #2004). |
+| `.gitattributes` | specific | The list of `merge=union` files, and `merge=jsonl` for `game/data/*.jsonl` and `tests/data/civ_bonuses.jsonl` (`tools/merge_jsonl.py`, #2004, #2100). |
