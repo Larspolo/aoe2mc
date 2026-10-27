@@ -57,6 +57,7 @@ import hints  # noqa: E402
 import market  # noqa: E402
 import menu  # noqa: E402
 import monk  # noqa: E402
+import relic_victory  # noqa: E402
 import stance  # noqa: E402
 import trade  # noqa: E402
 import train  # noqa: E402
@@ -1314,4 +1315,5 @@ class Gather:
                 b.step()
             conquest.tick(self)                                        # not in step(): the bot steps its own Gather
             wonder.tick(self, self.tick * NORMAL)                      # game seconds, as train.tick
+            relic_victory.tick(self, self.tick * NORMAL)
             time.sleep(max(0.0, self.tick - (time.time() - t)))
