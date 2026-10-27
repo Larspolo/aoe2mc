@@ -24,6 +24,7 @@ import flare  # noqa: E402
 import lobby  # noqa: E402
 import market  # noqa: E402
 import menu  # noqa: E402
+import table  # noqa: E402
 
 SLOT = 3                                                           # hotbar slot of the item (key 4): groups use 4-8
 ITEM = ('minecraft:carrot_on_a_stick[item_model="minecraft:writable_book",item_name="Game menu",'
@@ -34,8 +35,8 @@ RESOURCES = {"food": "wheat", "wood": "oak_log", "gold": "gold_ingot", "stone": 
 LOT = 100                                                          # the resource of one click
 SHIFT = 5                                                          # tributes of a shift click (500)
 FEE = 30                                                           # the tribute fee in percent, paid by the sender
-FEES = {"BANKING": 0,                                              # a technology of the sender: its fee (#1606)
-        "COINAGE": 20}
+# A technology of the sender: its fee (#1606, the key "tribute_fee" of data/train.jsonl)
+FEES = {r["name"]: r["tribute_fee"] for r in table.load("train.jsonl") if "tribute_fee" in r}
 
 
 def give(g):

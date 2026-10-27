@@ -11,7 +11,8 @@ import table  # noqa: E402
 
 PATH = os.path.join(table.DIR, "units.jsonl")
 # The keys that only some lines have (#2032: the combat properties of combat.py).
-OPTIONAL = {"blast", "building_sight", "fighter", "groups", "melee_ranged", "min_range", "note", "pass", "pass_part", "sight"}
+OPTIONAL = {"blast", "building_sight", "convert", "fighter", "groups", "melee_ranged", "min_range", "note", "pass",
+            "pass_part", "sail", "sight"}   # convert: monk.py, sail: fleet.py (#2034)
 
 
 def test_each_line_has_the_stats_fields():

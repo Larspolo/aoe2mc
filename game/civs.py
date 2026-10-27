@@ -72,7 +72,7 @@ GROUPS = {g: (lambda f, g: lambda n, s: g in TAGS.get(n, ()) or f(n, s))(RULES.g
 # age]; what is a group of GROUPS (units), "buildings", "buildings but farms", "technologies", "ages", "BUILDING
 # technologies" (the technologies of the menu of that building, #1925) or a list of names; a float multiplies the cost
 # (0.0: free), an int adds to it; AoE2 rounds half up (35 × 0.75 = 26). "twice": the technologies whose effect it gets
-# twice (train.stats, #1561).
+# twice (train.stats, #1561). "age_gifts": the resources that it gets at each new age (#1926).
 ROWS = table.load("civs.jsonl")
 
 
@@ -122,6 +122,13 @@ REPAIR_TEAM = {r["name"]: r["repair_team"] for r in ROWS if "repair_team" in r}
 WORK_RATE = {r["name"]: {b: tuple(v) for b, v in r["work_rate"].items()} for r in ROWS if "work_rate" in r}
 TRAIN_RATE = {r["name"]: [tuples(b) for b in r["train_rate"]] for r in ROWS if "train_rate" in r}
 HP = {r["name"]: r["hp"] for r in ROWS if "hp" in r}
+# The age-up bonuses (#1926, AoE2 DE wiki): train.research applies AGE_GIFTS and AGE_VILLAGERS at the end of each age,
+# train.seconds divides the time of an age by AGE_RATE, and train.missing needs no buildings for AGE_NO_BUILDINGS (the
+# game program has no other building needs). The Muisca gold discount of the ages is in COSTS (civs.jsonl).
+AGE_GIFTS = {r["name"]: r["age_gifts"] for r in ROWS if "age_gifts" in r}   # resources at each new age
+AGE_NO_BUILDINGS = ("KHMER",)                                      # no buildings are required to advance
+AGE_RATE = {"MALAY": 1.66}                                         # advancing in age is 66 % faster
+AGE_VILLAGERS = {"BENGALIS": 2}                                    # each own town center spawns 2 villagers
 
 
 def tagged(n, group):
@@ -210,6 +217,13 @@ def missing(g, name):
 def civ(g, player=None):
     """The civilization of the player of g, or of another player (aoe2mc.json "players"), for example "CELTS", else None."""
     return g.data.get("players", {}).get(str(g.player if player is None else player), {}).get("civ")
+
+
+def age_rate(g, name):
+    """The factor of the research rate of technology name for the civilization of the player of g: AGE_RATE for an
+    age, else 1."""
+    import build                                                   # build imports gather, gather imports this module
+    return AGE_RATE.get(civ(g), 1) if name in build.AGE_TECHS else 1
 
 
 def build_rate(g, name):
