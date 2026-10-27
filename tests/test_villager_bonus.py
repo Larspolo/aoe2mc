@@ -22,8 +22,8 @@ def test_a_villager_hits_with_the_aoe2_damage():
 def test_the_stone_defense_class_and_the_building_command():
     stone = {k for k, s in combat.BUILDINGS.items() if combat.STONE in s.classes}
     assert stone >= {"BOMBARD_TOWER", "DONJON", "FORTIFIED_CHURCH", "FORTIFIED_TOWER", "GUARD_TOWER", "HARBOR", "KEEP",
-                     "WATCH_TOWER"}
-    assert not stone & {"CASTLE", "KREPOST", "TOWN_CENTER", "WONDER"}
+                     "WATCH_TOWER"}                                      # not the count (#2008)
+    assert not stone & {"CASTLE", "FORTRESS", "KREPOST", "TOWN_CENTER", "WONDER"}
     assert {k for k in combat.WALLS if combat.STONE in combat.wall(k, 0).classes} == \
         {"FORTIFIED_GATE", "FORTIFIED_WALL", "GATE", "STONE_WALL"}
     cmd = combat.building(combat.target_uuid([0, 0, 2, 2]), "WATCH_TOWER", 1, (0, 64, 0, 1, 70, 1), 4)[-1]

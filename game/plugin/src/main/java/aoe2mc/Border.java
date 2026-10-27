@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.DyeColor;
+import org.bukkit.FluidCollisionMode;
 import org.bukkit.HeightMap;
 import org.bukkit.Particle;
 import org.bukkit.World;
@@ -65,7 +66,7 @@ final class Border {
                 it.remove();
                 continue;
             }
-            RayTraceResult r = p.rayTraceBlocks(REACH);
+            RayTraceResult r = p.rayTraceBlocks(REACH, FluidCollisionMode.SOURCE_ONLY);   // the water surface (#2060)
             Block b = r == null ? null : r.getHitBlock();
             if (b == null) {
                 continue;

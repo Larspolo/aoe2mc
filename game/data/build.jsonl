@@ -30,6 +30,7 @@
 {"name": "ARCHER", "age": 1}
 {"name": "BATTERING_RAM", "age": 2}
 {"name": "BATTLE_ELEPHANT", "age": 2}
+{"name": "BOLAS_RIDER", "age": 2}
 {"name": "BOMBARD_CANNON", "age": 3, "needs": "CHEMISTRY"}
 {"name": "CAMEL_RIDER", "age": 2}
 {"name": "CANNON_GALLEON", "age": 3, "needs": "CHEMISTRY"}
@@ -49,6 +50,7 @@
 {"name": "EAGLE_WARRIOR", "age": 2}
 {"name": "ELEPHANT_ARCHER", "age": 2}
 {"name": "ELITE_BATTLE_ELEPHANT", "age": 3}
+{"name": "ELITE_BOLAS_RIDER", "age": 3}
 {"name": "ELITE_CANNON_GALLEON", "age": 3}
 {"name": "ELITE_CARAVEL", "age": 3}
 {"name": "ELITE_EAGLE_WARRIOR", "age": 3}
@@ -104,6 +106,7 @@
 {"name": "SPEARMAN", "age": 1}
 {"name": "STEPPE_LANCER", "age": 2}
 {"name": "THIRISADAI", "age": 3}
+{"name": "TRACTION_TREBUCHET", "age": 3}
 {"name": "TRADE_CART", "age": 1}
 {"name": "TRADE_COG", "age": 1}
 {"name": "TREBUCHET", "age": 3}
