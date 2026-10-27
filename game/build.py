@@ -251,9 +251,10 @@ def menu():
     return json.dumps({"text": "Build: " + "\n".join(lines), "color": "gray"})
 
 
-def price(g, name):
-    """The cost of building name for the player of g, with the bonuses of the civilization (civs.COSTS, #1091)."""
-    return civs.cost(g, name, COSTS[name]) if g is not None else COSTS[name]
+def price(g, name, player=None):
+    """The cost of building name for the player of g (or another player), with the bonuses of the civilization
+    (civs.COSTS, #1091)."""
+    return civs.cost(g, name, COSTS[name], player) if g is not None else COSTS[name]
 
 
 def items(g=None):

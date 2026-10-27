@@ -116,6 +116,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "TEUTONIC_KNIGHT": {"food": 85, "gold": 30},
          "THROWING_AXEMAN": {"food": 55, "gold": 25},
          "TRADE_CART": {"wood": 100, "gold": 50},
+         "TREBUCHET": {"wood": 200, "gold": 200},                   # the castle, Imperial Age (#1351)
          "WAR_ELEPHANT": {"food": 170, "gold": 85},
          "WHEELBARROW": {"food": 175, "wood": 50},
          "WOAD_RAIDER": {"food": 70, "gold": 25}}
@@ -170,6 +171,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "TEUTONIC_KNIGHT": 12,
                "THROWING_AXEMAN": 13,
                "TRADE_CART": 51,
+               "TREBUCHET": 50,
                "WAR_ELEPHANT": 25,
                "WHEELBARROW": 75,
                "WOAD_RAIDER": 10}
@@ -177,7 +179,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER"),                                         # building (#654, #670, #655)
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING",            # (#675, #725, #724, #937, #938)
                          "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR"),
-          "CASTLE": (),                                                         # the unique unit: trains() (#708)
+          "CASTLE": ("TREBUCHET",),                                             # and the unique unit: trains() (#708, #1351)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES"),                           # (#671, #940)
           "UNIVERSITY": ("FORTIFIED_WALL", "SIEGE_ENGINEERS"),                 # (#1326, #1352)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
@@ -345,6 +347,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "TEUTONIC_KNIGHT": (0, "zombie_spawn_egg", "Teutonic Knight"),
          "THROWING_AXEMAN": (0, "drowned_spawn_egg", "Throwing Axeman"),
          "TRADE_CART": (0, "donkey_spawn_egg", "Trade Cart"),
+         "TREBUCHET": (1, "minecart", "Trebuchet"),                 # after the unique unit
          "WAR_ELEPHANT": (0, "ravager_spawn_egg", "War Elephant"),
          "FEUDAL_AGE": (2, "bell", "Feudal Age"),
          "WHEELBARROW": (3, "book", "Wheelbarrow"),
@@ -404,6 +407,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "TEUTONIC_KNIGHT": "Teutonic infantry. Slow, strong armor.",
         "THROWING_AXEMAN": "Frankish infantry. Melee attack at range.",
         "TRADE_CART": "Brings gold from a second own market.",
+        "TREBUCHET": "Siege. Long range vs. buildings; unpacks to shoot.",
         "VILLAGER_MALE": "Gathers, builds and repairs.",
         "WAR_ELEPHANT": "Persian elephant. Slow, very strong.",
         "WHEELBARROW": "Villagers +10 % speed, +25 % carry.",
@@ -449,7 +453,7 @@ def trains(g, building):
         for _ in UPGRADES:                                         # a line of upgrades: mangonel, onager, siege onager
             out = [new.get(n, n) for n in out]
         return tuple(out)
-    return tuple(n for n in [UNIQUE.get(civs.civ(g))] if n in COSTS)
+    return tuple(n for n in [UNIQUE.get(civs.civ(g))] if n in COSTS) + TRAINS[building]
 
 
 def home(g, cell):

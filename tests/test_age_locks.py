@@ -50,7 +50,8 @@ def test_the_unique_unit_is_a_gray_item_before_the_castle_age(ages, need):
     assert build.locked(g, "LONGBOWMAN") == need
     assert build.locked(g, "ELITE_LONGBOWMAN") == "Needs the Imperial Age"
     train.open_menu(g, "Steve", (12, 4))
-    assert (menus(server)[0].endswith("Needs the Castle Age") and ":gray_dye:" in menus(server)[0]) == bool(need)
+    unique = menus(server)[0].split(" 1:")[0]                          # item 1: the trebuchet (#1351)
+    assert (unique.endswith("Needs the Castle Age") and ":gray_dye:" in unique) == bool(need)
 
 
 def test_a_click_on_a_locked_unique_unit_does_nothing():

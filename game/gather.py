@@ -63,6 +63,7 @@ import repair  # noqa: E402
 import stance  # noqa: E402
 import trade  # noqa: E402
 import train  # noqa: E402
+import trebuchet  # noqa: E402
 import wonder  # noqa: E402
 
 RESOURCES = ("Wood", "Food", "Gold", "Stone")
@@ -685,11 +686,14 @@ class Gather:
         not attack: it converts (monk.convert_order, #1245) or stays."""
         import ai                                                      # ai imports this module
         monks = self.monks()
-        for u in sorted(self.selected - monks):
+        trebs = {u for u in self.selected if self.soldiers.get(u) == trebuchet.NAME}
+        for u in sorted(trebs):                                        # it unpacks first (#1351)
+            trebuchet.unpack(self, u, target)
+        for u in sorted(self.selected - monks - trebs):
             self.command(ai.speed_command(u, self.soldiers[u], self.map.T, NORMAL * train.speed(self, self.soldiers[u])))
-        if not monks:
+        if not monks and not trebs:
             return self.command(f"aoe attack @e[tag={SELECT}] {target}")
-        return [self.command(f"aoe attack {u} {target}") for u in sorted(self.selected - monks)]
+        return [self.command(f"aoe attack {u} {target}") for u in sorted(self.selected - monks - trebs)]
 
     def monks(self):
         """The selected monks."""
@@ -1140,6 +1144,7 @@ class Gather:
         monk.convert(self, self.tick * NORMAL)
         garrison.heal(self, self.tick * NORMAL)
         repair.tick(self, self.tick * NORMAL)
+        trebuchet.tick(self, self.tick * NORMAL)
         monk.relic_tick(self, self.tick * NORMAL)
         trade.tick(self)
         bossbar.tick(self)
