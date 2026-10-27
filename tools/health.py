@@ -173,6 +173,24 @@ def quota_per_merge(samples, merged):
     return rise / merged if merged and rise else None
 
 
+TOKENS = re.compile(r"^Tokens: (\d+(?:\.\d+)?)M eq · .*?· sinks (.*)$", re.M)
+
+
+def token_lines(comments):
+    """[(M eq, {sink: share 0..1})] of the `Tokens:` lines of the run reports (tools/tokens.py, owner 2026-10-27)."""
+    return [(float(m), {k: float(v) / 100 for k, v in re.findall(r"(\S.*?) (\d+)%(?:, |$)", sinks)})
+            for c in comments for m, sinks in TOKENS.findall(c.get("body") or "")]
+
+
+def token_sinks(lines, k=6):
+    """[(sink, share of all eq)] of the k largest sinks over the `Tokens:` lines: the token bottleneck."""
+    total, by = sum(m for m, _ in lines), {}
+    for m, sinks in lines:
+        for s, x in sinks.items():
+            by[s] = by.get(s, 0) + m * x
+    return sorted(((s, x / total) for s, x in by.items()), key=lambda kv: -kv[1])[:k] if total else []
+
+
 def weekly(comments):
     """[(time, 7-day usage %, release % or None)] of the `Usage:` lines that have the week (usage.py --sample), by time."""
     return sorted((ts(t), float(w), float(r) if r else None) for c in comments for t, w, r in WEEK.findall(c.get("body") or ""))
@@ -294,6 +312,10 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
     merged = sum(1 for p in prs if p.get("merged_at") and ts(p["merged_at"]) >= since)
     q = quota_per_merge(s, merged)
     out.append(f"Quota per merged PR: {'-' if q is None else f'{q:.1%}'} of the 5-hour window ({merged} merged)")
+    tl = token_lines(status_comments)
+    out.append(f"Tokens per run (median of {len(tl)} Tokens lines): {fmt(med([m for m, _ in tl]))}M eq"
+               + (f" · per merged PR {sum(m for m, _ in tl) / len(ok):.2f}M eq" if tl and ok else "")
+               + " · largest sinks: " + ("; ".join(f"{s} {x:.0%}" for s, x in token_sinks(tl)) or "-"))
     rw = release_per_week([p for p in weekly(status_comments) if p[0] >= since])
     out.append("Release per 1 % of 7-day quota: " + ("-" if rw is None else
                f"{rw[0]:.2f} points ({rw[1]:g} % to {rw[2]:g} %)"))
