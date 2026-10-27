@@ -139,6 +139,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "TEUTONIC_KNIGHT": {"food": 85, "gold": 30},
          "THROWING_AXEMAN": {"food": 55, "gold": 25},
          "TRADE_CART": {"wood": 100, "gold": 50},
+         "TRANSPORT_SHIP": {"wood": 125},                               # the Dark Age (AoE2 DE wiki, #1385)
          "TREBUCHET": {"wood": 200, "gold": 200},                   # the castle, Imperial Age (#1351)
          "WAR_ELEPHANT": {"food": 170, "gold": 85},
          "WHEELBARROW": {"food": 175, "wood": 50},
@@ -213,6 +214,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "TEUTONIC_KNIGHT": 12,
                "THROWING_AXEMAN": 13,
                "TRADE_CART": 51,
+               "TRANSPORT_SHIP": 46,
                "TREBUCHET": 50,
                "WAR_ELEPHANT": 25,
                "WHEELBARROW": 75,
@@ -228,7 +230,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "CASTLE": ("TREBUCHET",),                                             # and the unique unit: trains() (#708, #1351)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES", "LIGHT_CAVALRY_UPGRADE"),  # (#671, #940, #1396)
           "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS"),   # (#1326, #1374, #1352)
-          "DOCK": ("FISHING_SHIP",),                                            # (#1383)
+          "DOCK": ("FISHING_SHIP", "TRANSPORT_SHIP"),                          # (#1383, #1385)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
           "MARKET": ("TRADE_CART", "CARAVAN", "GUILDS"),                       # (#1253, #1254)
           "MILL": ("HORSE_COLLAR",),                                            # (#726)
@@ -453,6 +455,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "TEUTONIC_KNIGHT": (0, "zombie_spawn_egg", "Teutonic Knight"),
          "THROWING_AXEMAN": (0, "drowned_spawn_egg", "Throwing Axeman"),
          "TRADE_CART": (0, "donkey_spawn_egg", "Trade Cart"),
+         "TRANSPORT_SHIP": (1, "spruce_chest_boat", "Transport Ship"),   # units.classify: a spruce chest boat
          "TREBUCHET": (1, "minecart", "Trebuchet"),                 # after the unique unit
          "WAR_ELEPHANT": (0, "ravager_spawn_egg", "War Elephant"),
          "FEUDAL_AGE": (2, "bell", "Feudal Age"),
@@ -532,6 +535,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "TEUTONIC_KNIGHT": "Teutonic infantry. Slow, strong armor.",
         "THROWING_AXEMAN": "Frankish infantry. Melee attack at range.",
         "TRADE_CART": "Brings gold from a second own market.",
+        "TRANSPORT_SHIP": "Carries 20 land units across the water.",
         "TREBUCHET": "Siege. Long range vs. buildings; unpacks to shoot.",
         "VILLAGER_MALE": "Gathers, builds and repairs.",
         "WAR_ELEPHANT": "Persian elephant. Slow, very strong.",
