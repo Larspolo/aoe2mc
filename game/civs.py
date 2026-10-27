@@ -92,13 +92,17 @@ UNITS = {"BERBERS": [("villagers", "speed", (1.05, 1.1, 1.1, 1.1))],
 # tuple of names. A float multiplies the cost (0.0: free), an int adds to it. AoE2 rounds half up (35 × 0.75 = 26).
 SMITH = ("BLAST_FURNACE", "BODKIN_ARROW", "CHAIN_BARDING_ARMOR", "CHAIN_MAIL_ARMOR", "FLETCHING", "FORGING",
          "IRON_CASTING", "LEATHER_ARCHER_ARMOR", "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR", "SCALE_MAIL_ARMOR")   # the blacksmith
+ECONOMY = ("BOW_SAW", "CARAVAN", "CROP_ROTATION", "DOUBLE_BIT_AXE", "FISHING_LINES", "GILLNETS", "GOLD_MINING",
+           "GOLD_SHAFT_MINING", "GUILDS", "HAND_CART", "HEAVY_PLOW", "HORSE_COLLAR", "STONE_MINING", "STONE_SHAFT_MINING",
+           "TWO_MAN_SAW", "WHEELBARROW")   # the economic technologies but Coinage and Banking (AoE2 wiki "Burgundians")
 COSTS = {"BERBERS": [("cavalry", None, (1.0, 1.0, 0.85, 0.8))],
-         "BOHEMIANS": [(("BLACKSMITH", "UNIVERSITY"), "wood", (-100,) * 4), (("GOLD_MINING", "STONE_MINING"), None, (0.0,) * 4)],
+         "BOHEMIANS": [(("BLACKSMITH", "UNIVERSITY"), "wood", (-100,) * 4),
+                       (("GOLD_MINING", "GOLD_SHAFT_MINING", "STONE_MINING", "STONE_SHAFT_MINING"), None, (0.0,) * 4)],   # (#1447)
          "BRITONS": [(("TOWN_CENTER",), "wood", (1.0, 1.0, 0.5, 0.5))],
          "BULGARIANS": [(("MAN_AT_ARMS_UPGRADE",), None, (0.0,) * 4), (("TOWN_CENTER",), "stone", (0.5,) * 4),
                         (SMITH, "food", (0.5,) * 4)],
-         "BURGUNDIANS": [(("BLOODLINES",), None, (0.5,) * 4)],
-         "BURMESE": [(("DOUBLE_BIT_AXE",), None, (0.0,) * 4)],
+         "BURGUNDIANS": [(("BLOODLINES",), None, (0.5,) * 4), (ECONOMY, "food", (0.6,) * 4)],   # (#1447)
+         "BURMESE": [(("BOW_SAW", "DOUBLE_BIT_AXE", "TWO_MAN_SAW"), None, (0.0,) * 4)],   # the lumber camp (#1447)
          "BYZANTINES": [("camel riders", None, (0.75,) * 4), ("spearmen, skirmishers", None, (0.75,) * 4),
                         (("IMPERIAL_AGE",), None, (2 / 3,) * 4)],
          "CHINESE": [("technologies", None, (1.0, 0.95, 0.9, 0.85))],
@@ -123,8 +127,7 @@ COSTS = {"BERBERS": [("cavalry", None, (1.0, 1.0, 0.85, 0.8))],
          "SLAVS": [("siege", None, (0.85,) * 4)],
          "SPANISH": [(SMITH, "gold", (0.0,) * 4)],
          "TEUTONS": [(("FARM",), None, (0.6,) * 4)],
-         "VIETNAMESE": [(("DOUBLE_BIT_AXE", "GOLD_MINING", "HORSE_COLLAR", "STONE_MINING", "WHEELBARROW"), "wood",
-                         (0.0,) * 4)],
+         "VIETNAMESE": [(ECONOMY, "wood", (0.0,) * 4)],                    # (#1447)
          "VIKINGS": [(("WHEELBARROW",), None, (0.0,) * 4)]}
 
 # The start-resource bonuses (#1269): civilization -> {resource: change of START} (AoE2 DE, the AoE2 wiki). In AoE2 the
