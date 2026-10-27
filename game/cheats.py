@@ -24,10 +24,11 @@ More codes (#968): "woof woof" turns the birds into Stormy Dogs of Gaia, "my cpu
 population limit to 1000, "tech tech one two free" makes technologies free, "going above and beyond" lets the player
 research a technology up to train.REPEAT times with stacked effects (train.count), and "noui" hides the sidebar, the boss
 bar and the hints, or shows them again.
+"sharing is caring" (#969) sends the income of the player (Gather.earn: gathering, fishing, trade, relics) to its allies
+(gather.allied) in equal parts, for ever, as in AoE2. With no ally the player keeps it.
 Excluded and partial codes (owner, #820, #985):
 - "!mute", "!nomute": excluded. The game program has no taunts, so the codes have nothing to silence.
 - "marco": done as it is. The fog of war hides only units, not the map: "marco" only answers in the chat ("polo").
-- "sharing is caring": waits for allies (#969). The game program has no allies yet.
 """
 import os
 import re
@@ -224,6 +225,7 @@ CODES = {                                     # code -> the resources, the chat 
     "robin hood": {"gold": 10000},
     "rock on": {"stone": 10000},
     "rowshep": ALL,
+    "sharing is caring": flag("sharing", "Sharing is caring: your income goes to your allies"),
     "tech tech one two free": flag("free_techs", "Technologies are free"),
     "to smithereens": Unit("SABOTEUR"),
     "torpedo1": lambda g, player: destroy(g, 1),

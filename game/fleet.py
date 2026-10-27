@@ -278,8 +278,7 @@ def route(g, v):
         r["rest"] += trade.gold(trade.center(r["home"], g.map.T), trade.center(r["dock"], g.map.T), g.map.n / g.map.T)
         n, r["rest"] = int(r["rest"]), r["rest"] - int(r["rest"])
         if n:
-            g.command(f"scoreboard players add Gold {g.board} {n}")
-            g.stock["gold"] += n
+            g.earn("gold", n)
     r["to"] = r["dock"] if r["to"] == r["home"] else r["home"]
     sail_to(g, v, "to_trade", pier(g, r["to"]))
 
@@ -387,8 +386,7 @@ def work(g, v, dt):
             if not docks or not sail_to(g, v, "to_drop", docks):
                 v.state = "idle"
     elif v.state == "to_drop":
-        g.command(f"scoreboard players add Food {g.board} {v.load}")
-        g.stock["food"] += v.load
+        g.earn("food", v.load)
         v.load = 0
         g.event(v, "drop")
         v.tree = v.tree if m.fish.get(v.tree, 0) > 0 else nearest(g, v.tree)
