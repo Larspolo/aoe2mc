@@ -11,9 +11,12 @@ Make at most one improvement per review, only where it pays, and stop changing t
 (owner, #900: "only where it makes sense ... in the broadest sense"). The main number is the release progress per
 quota (`tools/health.py`, #899): the game goals 1 to 3 of `docs/ROADMAP.md`. Goal 4 of that file is this system.
 
-**Tokens are the bottleneck** (owner, 2026-10-27). The quota limits the number of runs, not the run minutes. So
-measure each loss in tokens first (`eq`: input-token equivalents, `tools/tokens.py`), and minutes second. Each token
-bottleneck gets its own ticket on the board (step 3), so that the owner sees the work on it.
+**The limit is the usage limit** (owner, 2026-10-27). The 7-day and the 5-hour window of the subscription limit the
+number of runs, not the run minutes. So the main cost of a loss is quota, and minutes come second. Which part of
+the system uses the quota best or worst is not known: find the bottleneck from data, do not assume it. The owner
+thinks that tokens per run can be one (`tools/tokens.py`, the `Tokens:` lines), but that is a hunch to test, not a
+fact. When the data cannot name the bottleneck, the first ticket expands the data (step 2). Each bottleneck and each
+data gap gets its own ticket on the board (step 3), so that the owner sees the work on it.
 
 ## 0. Check the last change
 
@@ -30,8 +33,8 @@ phase, the quota per merged PR, the release points per 1 % of 7-day quota (the m
 quota), the tokens per run and per merged PR and the largest token sinks (from the `Tokens:` lines), weak spots (rework, bugs of check tickets, red night runs), claim-to-merge minutes and files that do not belong in git. Collect by hand only what it does not print.
 
 - Tokens: `python3 tools/tokens.py --top 15` on this run (the sinks one by one: which file, which command). The
-  `Tokens:` lines of `tools/health.py` give only the groups. When a group is large and you do not know its cause,
-  make the data better first: a finer label in `tools/tokens.py` (`label()`), or a new field. That is a valid change.
+  `Tokens:` lines of `tools/health.py` give only the groups. The token counts are estimates (API price ratios, about
+  4 characters per token): compare them with the rise of the `Usage:` lines before you trust them.
 - Agent: the last 20 run comments by the agent on the status issue (label `agent-status`). Each has a line
   `Metrics: ticket #n · size · result · minutes · setup m min · checks k · checks c min · time sinks: ...`.
   Also the tickets and PRs closed in that period, and rework (tickets that the owner reopened, or that came
@@ -48,22 +51,31 @@ quota), the tokens per run and per merged PR and the largest token sinks (from t
 
 ## 2. Find the largest loss
 
-Go through the six areas. For each one, note its largest loss in minutes of run time (or tickets) per day:
+Go through the six areas. For each one, note its largest loss in quota (share of the 5-hour and 7-day usage), else in
+minutes of run time (or tickets) per day:
 
 1. **How runs start:** the scheduled task prompt, the pacer (`tools/usage.py`, `.claude/skills/pacer`), the quota
    target, idle runs (no ticket ready, stopped at once), runs that hit the usage limit.
 2. **The loop:** the steps of `.claude/skills/autopilot` and the phase minutes of the `Metrics:` lines
    (`read`, `claim`, `code`, `verify`, `ci`, `conflict`, `report`); steps that cost time and change nothing.
-3. **Tokens and quota:** the largest token sinks (share of all `eq`), the tokens per merged PR, the peak context,
-   the quota per merged ticket, the release progress per quota. The phase shares in minutes come second.
+3. **Quota:** the quota per merged ticket, the release progress per quota, the quota of work that gives no merge
+   (idle runs, closed PRs, rework), the quota of the sessions that are not runs (pacer, dashboard refresh), the
+   token sinks (`Tokens:` lines). The phase shares in minutes come second.
 4. **Quality:** rework (owner corrections, reopened tickets, follow-ups of merged work), bugs found by check tickets,
    red night CI runs.
 5. **Weak spots:** merge conflicts, takeovers, refused commands, slow tests, tools missing in the environment.
 6. **Reuse:** what is aoe2mc-specific in the skills, tools and workflows, and how hard it is to set it up for
    another project (epic #909).
 
-The threshold: change something only when the largest loss is above about 5 % of the run minutes of the period,
-or a token sink above 10 % of all `eq`, or one ticket per day, or a quality problem that a person would see. Else make no change ("no change" in step 5).
+**Is the data enough?** The bottleneck is clear only when one loss is larger than the others by numbers of the same
+kind (quota, or minutes), measured over at least 10 runs. When it is not clear (no number for an area, two losses of
+the same size, a number that does not match the `Usage:` rise, or a cause that you only guess), the bottleneck of
+this review is the data gap: the change adds the measurement that answers it (a field of the `Metrics:` or `Tokens:`
+line, a number in `tools/health.py`, a finer label in `tools/tokens.py`). Write the question that the new data must
+answer, for example "Which part of the 7-day quota goes to runs that merge nothing?".
+
+The threshold: change something only when the largest loss is above about 5 % of the quota or of the run minutes of
+the period, or one ticket per day, or a quality problem that a person would see. Else make no change ("no change" in step 5).
 
 Compute the numbers of all areas: tickets per run, median minutes for `size:S` and `size:M` tickets
 (last 5 runs against the 5 runs before), setup minutes, verify rounds per PR, CI rounds per PR, the minutes from the PR
@@ -92,6 +104,7 @@ patterns and their fixes:
 | Scheduling | Dead claims, stalled PRs | Better claim or takeover rules (`tools/claim.py`, autopilot) |
 | Scheduling | Merge conflicts in generated files | A merge driver in `.gitattributes`, or generate the file in CI |
 | Scheduling | Runs stop because no ticket is ready | Split epics earlier |
+| Data | The data cannot name the largest loss | Add the measurement first (above, "Is the data enough?") |
 | Tokens | Sink `base` large (each call reads it again) | The `repo` part: shorter `CLAUDE.md` and `LEARNINGS.md`, topic lines to the docs that load only when needed. The rest (system prompt, tool definitions of the connectors): a `needs-human` ticket to turn off connectors that runs do not use |
 | Tokens | Sink `Read` or `Bash cat`/`sed` of large files | Better code map, `Grep` and line ranges, a smaller file |
 | Tokens | Sink `Bash pytest` or another long command output | `-q`, `\| tail -N`, a tool option for a short summary |
@@ -105,13 +118,13 @@ patterns and their fixes:
 One change per review, for the largest loss above the threshold. Write down the numbers that the change must make
 better ("before" numbers) before you change something.
 
-**A token bottleneck is a ticket** (owner, 2026-10-27). For the largest token sink above the threshold, look for an
-open ticket with the title `Process: tokens - <sink>`. None → make one (`ticket` skill, labels `process`, `tooling`,
-`P1`): the sink, its share of all `eq`, the tokens per run and per merged PR (the before-numbers), the cause from
-`tools/tokens.py --top`, and one small step that makes the share smaller. Then do that step in this review when it is
-small. Work iteratively: one step per review, measure it in step 0 of the next review (at least 10 `Tokens:` lines),
-and close the ticket when the sink is below the threshold, or add the next step to it. Then the next sink gets its
-ticket.
+**Each bottleneck is a ticket on the board** (owner, 2026-10-27). For the bottleneck of step 2, look for an open
+ticket with the title `Process: <bottleneck>` (a data gap: `Process: measure <what>`). None → make one (`ticket`
+skill, labels `process`, `tooling`, `P1`): the evidence (the numbers and their period), the before-numbers, the
+hypothesis (what causes the loss, or the question that the new data must answer), and one small step. Then do that
+step in this review when it is small. Work iteratively: one step per review, measure it in step 0 of the next review
+(at least 10 runs), and then close the ticket (the loss is below the threshold, or the data answered the question),
+or add the next step to it. A data ticket that names a bottleneck ends with a new ticket for that bottleneck.
 First list the open `tooling` and process tickets (`/issues?state=open&labels=tooling`, and titles that start with
 "Process:"). When one already names the pattern, do not make a second change: claim that ticket (`tools/claim.py N`)
 and do it as this improvement, or, when another run owns it, choose the next pattern. PR #917 of a review and the

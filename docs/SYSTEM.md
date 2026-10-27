@@ -76,7 +76,8 @@ target less the runs with a claim beat in the last 25 minutes. A run cannot star
 so the pacer session starts them (at most 4 per cycle). `tools/health.py` measures the quota use of one run from the
 `Usage:` lines of the run reports, and `usage.py` uses that value. `tools/tokens.py` reads the transcript of the
 session and writes the `Tokens:` line of each run report: the tokens of the run and its largest sinks. `health.py`
-adds them, and the `improve` skill makes one `Process: tokens - <sink>` ticket per token bottleneck.
+adds them. The `improve` skill finds the largest loss of quota from this data, or the data that is missing, and
+makes one `Process: <bottleneck>` ticket for it on the board.
 
 ## The steering
 

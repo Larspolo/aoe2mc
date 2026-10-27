@@ -1,4 +1,4 @@
-"""The tokens of this run and their sinks: the data for the token bottleneck (owner, 2026-10-27).
+"""The tokens of this run and their sinks: one data source to find the bottleneck of the system (owner, 2026-10-27).
 
 Claude Code writes each session to `~/.claude/projects/<cwd with - for />/<session>.jsonl` (subagents in
 `<session>/subagents/*.jsonl`). Each API call has a `usage` record. This tool adds them and finds the tool results
