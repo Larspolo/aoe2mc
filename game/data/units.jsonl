@@ -136,6 +136,7 @@
 {"name": "GRENADIER", "hp": 40, "attack": 12, "melee": 1, "pierce": 1, "range": 6, "reload": 3.45, "bonus": {"building": 4, "infantry": 9, "siege": 3, "spearman": 1}, "classes": ["archer", "gunpowder", "unique"]}
 {"name": "HEAVY_ROCKET_CART", "hp": 65, "attack": 5, "melee": 0, "pierce": 8, "range": 8, "reload": 5.35, "bonus": {"building": 12, "siege": 2}, "classes": ["gunpowder", "siege"]}
 {"name": "HEI_GUANG_CAVALRY", "hp": 60, "attack": 11, "melee": 4, "pierce": 3, "range": 0, "reload": 1.8, "bonus": {}, "classes": ["cavalry"]}
+{"name": "HEAVY_HEI_GUANG_CAVALRY", "hp": 90, "attack": 12, "melee": 4, "pierce": 3, "range": 0, "reload": 1.8, "bonus": {"infantry": 1, "condottiero": 1}, "classes": ["cavalry"]}
 {"name": "HOUFNICE", "hp": 90, "attack": 50, "melee": 2, "pierce": 6, "range": 12, "reload": 6.5, "bonus": {"building": 250, "siege": 20}, "classes": ["gunpowder", "siege"]}
 {"name": "IRON_PAGODA", "hp": 115, "attack": 12, "melee": 1, "pierce": 3, "range": 0, "reload": 2.16, "bonus": {}, "classes": ["cavalry", "unique"]}
 {"name": "LEGIONARY", "hp": 75, "attack": 12, "melee": 2, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 4, "infantry": 4}, "classes": ["infantry"]}
