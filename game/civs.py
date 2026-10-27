@@ -178,11 +178,12 @@ def has(what, name):
     return s is not None and name not in train.TECHS and GROUPS[what](name, s)
 
 
-def cost(g, name, base):
-    """The cost `base` ({resource: amount}) of name with the cost bonuses of the civilization of the player of g."""
+def cost(g, name, base, player=None):
+    """The cost `base` ({resource: amount}) of name with the cost bonuses of the civilization of the player of g, or of
+    another player (an ally: repair.cost, #1361)."""
     import build                                                   # build imports gather, gather imports this module
     out, age = dict(base), build.ages(g)
-    for what, r, c in COSTS.get(civ(g), []):
+    for what, r, c in COSTS.get(civ(g, player), []):
         if has(what, name):
             for k in [r] if r else list(out):
                 if k in out:
@@ -196,9 +197,9 @@ def speed(g, name):
     return math.prod(c for v, c in changes(g, name, combat.stats(name)) if v == "speed")
 
 
-def civ(g):
-    """The civilization of the player of g (aoe2mc.json "players"), for example "CELTS", else None."""
-    return g.data.get("players", {}).get(str(g.player), {}).get("civ")
+def civ(g, player=None):
+    """The civilization of the player of g, or of another player (aoe2mc.json "players"), for example "CELTS", else None."""
+    return g.data.get("players", {}).get(str(g.player if player is None else player), {}).get("civ")
 
 
 def start(g, base):
