@@ -31,6 +31,7 @@ BURN7 = 0.005       # share of the 7-day quota that one run uses per hour (0.005
 MID, MID_LEFT = 0.90, 2.0   # aim: this share is used this many hours before the 5-hour window resets (#587)
 END = 0.98          # aim: this share is used when the 5-hour window resets
 LO, HI = 1, CONFIG.get("pacing", {}).get("max_runs", 16)   # bounds of the number of runs (`agent.toml`, #1706)
+FREE7 = CONFIG.get("pacing", {}).get("week_free", 0.60)   # below this 7-day usage only the 5-hour window counts (owner, 2026-10-27)
 MAX_FIRE = 4        # runs that the pacer starts per cycle: each run needs a few minutes to claim its ticket
 CALL = ["claude", "-p", "Reply with OK.", "--model", "claude-haiku-5-5", "--output-format", "stream-json", "--verbose"]
 
@@ -53,12 +54,13 @@ def read_usage(timeout=120):
     return parse(r.stdout.splitlines())
 
 
-def target_runs(usage, now, burn=BURN, end=END, lo=LO, hi=HI, mid=MID, mid_left=MID_LEFT, burn7=None):
+def target_runs(usage, now, burn=BURN, end=END, lo=LO, hi=HI, mid=MID, mid_left=MID_LEFT, burn7=None, free7=FREE7):
     """The number of runs that uses `mid` of the 5-hour window `mid_left` hours before its reset, and `end` at the
     reset, with a guard for the 7-day window. burn7 (the share of the 7-day quota of one run-hour, measured): a week
     used ahead of the time gets at most the runs that its budget (1 - used) carries to the 7-day reset (#1695). This
     count can be 0, below `lo`: the week has no budget for a run now, and the budget per hour grows while the reset
-    comes nearer. Without burn7 the count of a week ahead by more than 10 points is half."""
+    comes nearer. Without burn7 the count of a week ahead by more than 10 points is half. Below `free7` of the 7-day
+    usage there is no guard: the runs hit the 5-hour limit, not the weekly pace (owner, 2026-10-27)."""
     if not usage or "five_hour" not in usage:
         return None
     used, reset, status = usage["five_hour"]
@@ -75,6 +77,8 @@ def target_runs(usage, now, burn=BURN, end=END, lo=LO, hi=HI, mid=MID, mid_left=
         used7, reset7, status7 = usage["seven_day"]
         if status7 == "rejected":
             return 0
+        if used7 < free7:
+            return max(lo, min(hi, n))
         elapsed = 1 - max(reset7 - now, 0) / (7 * 86400)
         if burn7 and used7 > elapsed:
             fit = max(1 - used7, 0) / max((reset7 - now) / 3600, 0.25) / burn7
