@@ -264,6 +264,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          if name in HEATED else s,                                 # the arrows of the own towers on ships (#1548)
          "HEAVY_CAMEL_RIDER_UPGRADE": lambda name, s: s,           # a new unit name: UPGRADES
          "HEAVY_CAVALRY_ARCHER_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
+         "HEAVY_HEI_GUANG_CAVALRY_UPGRADE": lambda name, s: s,     # a new unit name: UPGRADES
          "HOARDINGS": lambda name, s: s._replace(hp=round(s.hp * 1.21)) if name == "CASTLE" else s,   # build.values
          "HEAVY_PLOW": lambda name, s: s,                          # an economy technology: gather.FARM_TECHS, FOOD_CARRY
          "HEAVY_SCORPION_UPGRADE": lambda name, s: s,
