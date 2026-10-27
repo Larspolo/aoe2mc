@@ -183,6 +183,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ARROWSLITS": arrowslits,                                 # the towers of the player: build.values
          "ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bonus.get("standard", 0) + 2})
          if "infantry" in s.classes else s,                        # combat.STANDARD: not the walls (#1419)
+         "ATLATL": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if name in forms("SKIRMISHER") else s,  # the Aztecs (#2041)
          "ATONEMENT": lambda name, s: s,                           # monks convert enemy monks: monk.convertible
          "BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
          "BALLISTICS": lambda name, s: s,                          # the aim of the arrows: aoe ballistics (#1549)
@@ -265,6 +266,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_URUMI_SWORDSMAN_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
          "ELITE_VARANGIAN_GUARD_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_WAR_WAGON_UPGRADE": lambda name, s: s,            # a new unit name: UPGRADES
+         "EUPSEONG": lambda name, s: s._replace(range=s.range + 2) if name in ("GUARD_TOWER", "KEEP") else s,   # the Koreans (#2048)
          "FABRIC_SHIELDS": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if name in ("KAMAYUK", "ELITE_KAMAYUK", "SLINGER") else s,   # the Incas (#2047)
          "FAITH": lambda name, s: s,                               # the conversion resistance: monk.resist
