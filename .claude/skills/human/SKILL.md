@@ -33,12 +33,40 @@ When `.venv/bin/python` exists, use it in place of `python3` for each command of
 `aoe2mc.py`, `game/run.py`, `tools/owner_tasks.py`): the Bash tool does not keep `source .venv/bin/activate` between
 two calls. Tell the owner to type `source .venv/bin/activate` in each new terminal.
 
-## 2. List the tickets
+## 2. Sort the tickets and make one plan
 
 Run `python3 tools/owner_tasks.py`. It prints the open `needs-human` tickets that are not muted, decision tickets
-first, then the oldest first, each with its kind and its question. Show the list and ask the owner which ticket to
-do (`AskUserQuestion` with the first four tickets, plus "other"). With no ticket: say so and offer "Wait for the
+first, then the oldest first, each with its kind and its question. With no ticket: say so and offer "Wait for the
 next ticket" (below); if the owner does not want to wait, stop.
+
+Check each ticket: is the owner really needed (#1674)? Read its body and its last comments, and sort it into one group:
+1. **Close now**: the work is done and only the close is open (a denied close, #862, or an owner answer that only
+   needs a close). Close it as completed with an evidence comment (what proves each criterion), then tell the owner.
+2. **Agent work**: the point asks for times, speeds, values or texts (#1159), or tests and agent checks cover it
+   already. Measure it in this session, or remove `needs-human` with a comment that names the evidence.
+3. **Owner needed**: a look, a feel, real input by hand, a decision or a setting.
+
+Then run `python3 tools/owner_tasks.py --plan`: it puts each ticket into "close now", "replay", "play game" or
+"no game". Move the tickets of group 2 out, and show the plan to the owner: one replay with `game/watch.py` for all
+replay tickets (one stage list), one play game with `game/play_guide.py` for all play tickets (one step file), then
+the decisions and settings. Ask with `AskUserQuestion` whether to start the plan, or which single ticket to do.
+
+The play game (step 3, "play"): `python3 tools/scenarios.py owner_loop out/loop.aoe2scenario` makes the play-test
+map (a town, a barracks, a lake with a dock, a transport ship and 3 militia, the bot with 5 militia toward the town
+center). Write one step file (JSON, see the docstring of `game/play_guide.py`: setup commands with `{BARRACKS}`,
+`{MILITIA1}` ..., the task, the question for each ticket), start `python3 game/run.py out/LoopWorld --play --bot --bot-attack 3:00` (an early attack for the arrows)
+(add `--cheats` when a step needs them), and when the server says "Join the server localhost:PORT", start
+`python3 game/play_guide.py PORT out/LoopWorld STEPS.json --out out/play.json` in the background. Wait for its JOINED,
+ASK, ANSWER and DONE lines; the answers are in `out/play.json`. Write each answer on its ticket (step 5).
+
+Pitfalls of the session of #1674 (avoid them):
+- Give each step the state that it needs with its setup commands (age, resources), or say the cheat codes in the
+  task: a Stone Wall and a Gate need the Feudal Age (`build.AGE`).
+- A step that needs an attack on a building has no own units between the enemy and the building: the bot attacks the
+  nearest unit (`bot.fight`). In `owner_loop` the villagers at the town center are the nearest.
+- `game/run.py --replay` without `game/watch.py` starts at once and ends before the owner joins: use `game/watch.py`.
+- The owner can answer in two chat lines: `game/play_guide.py` takes the lines of 20 s as one answer.
+- macOS: the first start of a downloaded app or JDK can need System Settings → Privacy & Security → "Open Anyway" (#1668).
 
 Wait for the next ticket (#1025): start `python3 tools/owner_tasks.py --wait` with `run_in_background` and end the
 turn. While it waits, the session uses no model turn (one GitHub request each 5 minutes, at most 12 hours). Exit 0:
