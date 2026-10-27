@@ -420,6 +420,11 @@ AWAY = 12                       # tiles from each villager of Nomad to the SCATT
 RINGS = {"gold_rush": (14, 5)}  # the forest ring around the gold: inner radius and width in tiles, gaps between players
 # The fish of a map kind: shore fish, the deep fish and its count (#1943).
 FISH = {r["fish"][0]: (r["fish"][1], r["name"], r["fish"][2]) for r in RMAP if "fish" in r}
+# The relics of each kind: 3 + 1 per player (AoE2 wiki: Arabia "five Relics" on 2-player maps, one more per player;
+# Black Forest "Default: 3, Per player: 1"; the others "standard"), #2018. The distances in tiles to each town center
+# (Nomad: each villager) and to each other relic are own values: the repository holds no text of the Microsoft
+# scripts (decision #961).
+RELICS = (3, 1, 20, 15)        # relics, more per player, tiles from a start, tiles from another relic
 WOODS = {"arabia": (10, 30, 3), # the wood line of each player (tiles from the town center, forest tiles) and its
          "gold_rush": (10, 30, 3)}  # single trees (stragglers, at 4 to 6 tiles), as in AoE2 (#1144)
 
@@ -546,7 +551,7 @@ def paths(d, w):
 def random_map(kind, seed, players=2):
     """The map description of an own generator (GENERATORS) and seed: the land of generate() (with the WALLS, PATHS,
     RIVERS, ISLES and COASTS of the kind), a town center at each player origin (not for NOMADS) and the START objects around
-    it, on free tiles (no forest, no water, not next to a wall), and the FISH of the kind."""
+    it, on free tiles (no forest, no water, not next to a wall), the FISH of the kind and the RELICS."""
     d = generate(GENERATORS[kind], seed, players)
     rng = np.random.default_rng([seed, 993])
     if kind in PATHS:
@@ -594,6 +599,11 @@ def random_map(kind, seed, players=2):
         objects += fish(terrain, FISH[kind], len(d["lands"]), rng)
     if kind in NOMADS:
         objects += scatter(used, len(d["lands"]), rng, [(o["x"], o["y"]) for o in objects if o["name"].startswith("VILLAGER")])
+    for o in objects:                                      # no relic next to a Nomad resource
+        used[max(0, int(o["x"]) - 1):int(o["x"]) + 2, max(0, int(o["y"]) - 1):int(o["y"]) + 2] = True
+    starts = [(o["x"], o["y"]) for o in objects if o["name"] == "TOWN_CENTER" or kind in NOMADS and
+              o["name"].startswith("VILLAGER")]
+    objects += relics(used, len(d["lands"]), np.random.default_rng([seed, 994]), starts)   # own rng: the rest stays
     d["terrain"] = terrain.tolist()
     d["objects"] = objects + trees(terrain)
     return d
@@ -639,6 +649,22 @@ def scatter(used, players, rng, villagers):
             for t in cells:
                 used[max(0, t[0] - 1):t[0] + 2, max(0, t[1] - 1):t[1] + 2] = True
                 out.append({"name": name, "player": 0, "x": t[0] + 0.5, "y": t[1] + 0.5})
+    return out
+
+
+def relics(used, players, rng, tcs):
+    """The RELICS of a map (#2018) on random free tiles (`used` is False: no forest, water or shallows, not next to
+    another object), far from each town center or Nomad villager of tcs and from each other relic. A relic with no
+    place after 200 tries is missing."""
+    count, more, start, apart = RELICS
+    n, out = used.shape[0], []
+    for _ in range(count + more * players):
+        for _ in range(200):
+            c = (int(rng.integers(n)) + 0.5, int(rng.integers(n)) + 0.5)
+            if not used[int(c[0]), int(c[1])] and all(np.hypot(c[0] - x, c[1] - y) >= start for x, y in tcs) and \
+                    all(np.hypot(c[0] - o["x"], c[1] - o["y"]) >= apart for o in out):
+                out.append({"name": "RELIC", "player": 0, "x": c[0], "y": c[1]})
+                break
     return out
 
 
