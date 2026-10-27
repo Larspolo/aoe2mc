@@ -309,6 +309,8 @@ MISSING |= dict.fromkeys(("STEPPE_LANCER", "ELITE_STEPPE_LANCER", "ELITE_STEPPE_
                          tuple(sorted(set().union(*MISSING.values()) - set(LANCERS))))
 MISSING |= dict.fromkeys(("GENITOUR", "ELITE_GENITOUR", "ELITE_GENITOUR_UPGRADE"),   # the Berbers (AoE2 DE wiki, #1610)
                          tuple(sorted(set().union(*MISSING.values()) - {"BERBERS"})))
+MISSING |= dict.fromkeys(("CHAKRAM_THROWER", "ELITE_CHAKRAM_THROWER", "ELITE_CHAKRAM_THROWER_UPGRADE"),   # (#1624)
+                         tuple(sorted(set().union(*MISSING.values()) - {"GURJARAS"})))
 MISSING |= dict.fromkeys(("SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER_UPGRADE"),
                          tuple(sorted(set().union(*MISSING.values()) - {"GURJARAS"})))   # (AoE2 DE wiki, #1612)
 
