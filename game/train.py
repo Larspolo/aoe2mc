@@ -1404,11 +1404,11 @@ def age(g):
 
 def stats(g, name):
     """The combat values of AoE2 unit name with the bonuses of the civilization (civs.UNITS) and the technologies of
-    the player (combat.stats and TECHS)."""
+    the player (combat.stats and TECHS), twice for civs.TWICE (#1561)."""
     import combat                                                  # combat imports gather, gather imports this module
-    s = civs.units(g, name, combat.stats(name))
+    s, twice = civs.units(g, name, combat.stats(name)), civs.TWICE.get(civs.civ(g), ())
     for t in sorted(g.techs):
-        for _ in range(count(g, t)):                                   # "going above and beyond" stacks (#968)
+        for _ in range(count(g, t) * (1 + (t in twice))):              # "going above and beyond" stacks (#968)
             s = TECHS[t](name, s)
     return s
 
