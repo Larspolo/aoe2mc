@@ -30,6 +30,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 | `claims.yml` (Claims) | A ticket closes, each day | Deletes the claim refs of closed tickets and old comment locks. The runs cannot delete refs (403). |
 | `dashboard.yml` (Dashboard) | Label changes, closed issues and PRs, each hour | Writes the dashboard in the body of the status issue (`tools/dashboard.py`). |
 | `coverage.yml` (Coverage) | Each push to `main` | Writes `docs/coverage.md`, `MAX` of `tests/test_coverage.py` and a column of `docs/DESIGN.md`. PRs do not change these files, so they do not conflict there. |
+| `metrics.yml` (Metrics) | Each 15 minutes, by hand with `days` | Writes the status issue comments to the orphan branch `metrics` (`tools/metrics_log.py`, one file per day). `tools/health.py` reads them and only the newest comments from the API (#1983). |
 | `labels.yml` (Labels) | A change of `.github/labels.txt` | Creates the labels. |
 
 ## The loop of a run
@@ -230,6 +231,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `.github/workflows/close.yml` | generic | None. It closes the issues with the label `close` (#1740). |
 | `.github/workflows/dashboard.yml` | generic | None. |
 | `.github/workflows/coverage.yml` | specific | The coverage of the AoE2 types. |
+| `.github/workflows/metrics.yml` | generic | None. |
 | `.github/workflows/labels.yml` | generic | None. |
 | `.github/workflows/bundles.yml` | specific | The app bundles of the converter (PyInstaller, `packaging/`, #1541) and their installers (#1542). |
 | `.github/workflows/installers.yml` | specific | On a tag `v*`: the installers of `bundles.yml` in the release of the tag (#1542). |
