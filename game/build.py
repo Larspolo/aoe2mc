@@ -41,176 +41,23 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import civs  # noqa: E402
 import menu as chest  # noqa: E402  (menu() below is the chat text)
 from replay import Replay  # noqa: E402
+import table  # noqa: E402
 
-COSTS = {"HOUSE": {"wood": 25}, "LUMBER_CAMP": {"wood": 100}, "MINING_CAMP": {"wood": 100},   # as in AoE2
-         "MILL": {"wood": 100}, "FARM": {"wood": 60}, "BARRACKS": {"wood": 175},
-         "BLACKSMITH": {"wood": 150},
-         "BOMBARD_TOWER": {"gold": 100, "stone": 125},             # after the technology Bombard Tower (#1375)
-         "ARCHERY_RANGE": {"wood": 175}, "STABLE": {"wood": 175}, "TOWN_CENTER": {"wood": 275, "stone": 100},
-         "CASTLE": {"stone": 650},                                 # the Castle Age: the Imperial Age needs them (#1162)
-         "DOCK": {"wood": 150},                                    # 3 x 3 tiles on water at the shore (#1382)
-         "FISH_TRAP": {"wood": 100},                               # on water, fishing ships build it (#1438)
-         "FOLWARK": {"wood": 100},                                 # the mill of the Poles (civs.MISSING, #1874)
-         "FORTIFIED_CHURCH": {"wood": 200},                        # the Armenians, Georgians (civs.MISSING, #1930)
-         "GATE": {"stone": 30},                                    # 4 x 1 tiles (AoE2 DE wiki, #1324)
-         "KREPOST": {"stone": 350},                                # the Bulgarians only (civs.MISSING, #1872)
-         "MARKET": {"wood": 175},                                  # the Feudal Age (#1251)
-         "MONASTERY": {"wood": 175},
-         "PALISADE_GATE": {"wood": 30},
-         "PALISADE_WALL": {"wood": 3},                             # per tile (AoE2 DE wiki, #1322)
-         "SIEGE_WORKSHOP": {"wood": 200},
-         "STONE_WALL": {"stone": 5},                               # per tile
-         "UNIVERSITY": {"wood": 200},
-         "WATCH_TOWER": {"wood": 35, "stone": 125},                # AoE2 DE (wiki: 25 wood before patch 5.8)
-         "WONDER": {"wood": 1000, "gold": 1000, "stone": 1000}}
-BUILD_TIMES = {"HOUSE": 25, "LUMBER_CAMP": 35, "MINING_CAMP": 35, "MILL": 35, "FARM": 15,   # AoE2 seconds,
-               "BARRACKS": 50, "ARCHERY_RANGE": 50, "STABLE": 50, "TOWN_CENTER": 150,                              # one builder
-               "BLACKSMITH": 40,
-               "BOMBARD_TOWER": 80,
-               "CASTLE": 200,
-               "DOCK": 35,
-               "FISH_TRAP": 40,
-               "FOLWARK": 40,
-               "FORTIFIED_CHURCH": 50,
-               "GATE": 70,
-               "KREPOST": 150,
-               "MARKET": 60,
-               "MONASTERY": 40,
-               "PALISADE_GATE": 30,
-               "PALISADE_WALL": 7,
-               "SIEGE_WORKSHOP": 40,
-               "STONE_WALL": 10,
-               "UNIVERSITY": 60,
-               "WATCH_TOWER": 80,
-               "WONDER": 3500}
+# The buildings of the menu (in menu order), the age of each building, unit and age, and the technology that each
+# needs: one line per name in data/build.jsonl (#2028). Cost and time as in AoE2 (seconds of one builder).
+ROWS = table.load("build.jsonl")
+COSTS = {r["name"]: r["cost"] for r in ROWS if "cost" in r}
+BUILD_TIMES = {r["name"]: r["time"] for r in ROWS if "time" in r}
 FOLWARK_SHARE, FOLWARK_REACH = 0.1, 4                               # of the food of a farm; tiles from the Folwark
 MENU = list(COSTS)                                                 # trigger value N -> MENU[N - 1]
 OBJECTIVE = "aoe_build"
 SNEAK = '{type:"minecraft:entity_properties",entity:"this",predicate:{flags:{is_sneaking:true}}}'   # as gather.SNEAK
-ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw_gold_block",   # a block of the
-         "MILL": "white_wool", "FARM": "wheat", "BARRACKS": "stone_brick_wall", "ARCHERY_RANGE": "target",
-         "BLACKSMITH": "anvil", "STABLE": "hay_block",
-         "BOMBARD_TOWER": "polished_basalt",                            # the cannon barrels
-         "CASTLE": "stone_bricks",
-         "DOCK": "dark_oak_planks",                                     # the wood of the pier
-         "FISH_TRAP": "bamboo_fence",                                   # the rods of the basket
-         "FOLWARK": "white_terracotta",                                 # the plaster of the hall
-         "FORTIFIED_CHURCH": "candle",                                  # the light of the altar
-         "GATE": "iron_bars",                                           # the portcullis
-         "KREPOST": "red_sandstone",                                    # the stone of the walls
-         "MARKET": "barrel",                                            # the goods of the stalls
-         "MONASTERY": "bell",
-         "PALISADE_GATE": "stripped_spruce_log",                        # the beam over the passage
-         "PALISADE_WALL": "spruce_fence",
-         "SIEGE_WORKSHOP": "grindstone",
-         "STONE_WALL": "mossy_stone_bricks",
-         "UNIVERSITY": "bookshelf",
-         "WATCH_TOWER": "cracked_stone_bricks",
-         "WONDER": "weathered_cut_copper_stairs",                       # the copper roof
-         "TOWN_CENTER": "cobblestone"}                                  # design
-AGE_TECHS = ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE")           # the technologies of the ages, in order
-AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_TOWER",   # the AoE2 age of each
-                     "ARCHER", "SKIRMISHER", "SPEARMAN", "SCOUT_CAVALRY", "TRADE_CART",  # building, unit and age
-                     "DEMOLITION_RAFT",
-                     "EAGLE_SCOUT",
-                     "FIRE_GALLEY",
-                     "FISH_TRAP",
-                     "TRADE_COG",
-                     "GALLEY",
-                     "HULK",
-                     "GATE",
-                     "STONE_WALL",
-                     "CASTLE_AGE"), 1) | {"IMPERIAL_AGE": 2} \
-    | dict.fromkeys((                                                  # the Castle Age (#1082): buildings and units
-        "BATTERING_RAM",
-        "BATTLE_ELEPHANT",
-        "CAMEL_RIDER",
-        "CARAVEL",
-        "CASTLE",
-        "CAVALRY_ARCHER",
-        "CROSSBOWMAN",
-        "DEMOLITION_SHIP",
-        "EAGLE_WARRIOR",
-        "ELEPHANT_ARCHER",
-        "ELITE_SKIRMISHER",
-        "FIRE_LANCER",
-        "FIRE_SHIP",
-        "FORTIFIED_CHURCH",
-        "GENITOUR",
-        "HEI_GUANG_CAVALRY",
-        "KNIGHT",
-        "KREPOST",
-        "LIGHT_CAVALRY",
-        "LONG_SWORDSMAN",
-        "LONGSHIP",
-        "MANGONEL",
-        "MISSIONARY",
-        "MOUNTED_CROSSBOWMAN",
-        "MONASTERY",
-        "MONK",
-        "PIKEMAN",
-        "SCORPION",
-        "SIEGE_TOWER",
-        "SHRIVAMSHA_RIDER",
-        "SIEGE_WORKSHOP",
-        "STEPPE_LANCER",
-        "TURTLE_SHIP",
-        "UNIVERSITY",
-        "VARANGIAN_GUARD",
-        "WAR_HULK",
-    ), 2) | dict.fromkeys((                                           # the Imperial Age (unique units: train.UNIQUE)
-        "ARBALESTER",
-        "BOMBARD_CANNON",
-        "BOMBARD_TOWER",
-        "CANNON_GALLEON",
-        "CARRACK",
-        "FAST_FIRE_SHIP",
-        "GALLEON",
-        "HEAVY_DEMOLITION_SHIP",
-        "CAPPED_RAM",
-        "CATAPULT_GALLEON",
-        "CAVALIER",
-        "CHAMPION",
-        "DRAGON_SHIP",
-        "DROMON",
-        "ELITE_BATTLE_ELEPHANT",
-        "ELITE_CANNON_GALLEON",
-        "ELITE_CARAVEL",
-        "ELITE_EAGLE_WARRIOR",
-        "ELITE_ELEPHANT_ARCHER",
-        "ELITE_FIRE_LANCER",
-        "ELITE_GENITOUR",
-        "ELITE_LONGSHIP",
-        "ELITE_SHRIVAMSHA_RIDER",
-        "ELITE_STEPPE_LANCER",
-        "ELITE_TURTLE_SHIP",
-        "ELITE_VARANGIAN_GUARD",
-        "HALBERDIER",
-        "HAND_CANNONEER",
-        "HEAVY_CAMEL_RIDER",
-        "HEAVY_CAVALRY_ARCHER",
-        "HEAVY_HEI_GUANG_CAVALRY",
-        "HEAVY_MOUNTED_CROSSBOWMAN",
-        "HUSSAR",
-        "IMPERIAL_CAMEL_RIDER",
-        "IMPERIAL_SKIRMISHER",
-        "KEEP",
-        "LOU_CHUAN",
-        "ONAGER",
-        "PALADIN",
-        "THIRISADAI",
-        "SIEGE_RAM",
-        "TREBUCHET",
-        "TWO_HANDED_SWORDSMAN",
-        "WINGED_HUSSAR",
-        "WONDER",
-    ), 3)                                                              # (0: Dark)
-WALLS = ("PALISADE_WALL", "STONE_WALL")                            # a line of 1-tile sites with two clicks (#1322)
-GATES = ("GATE", "PALISADE_GATE")                                  # on 4 own wall tiles in a line (#1324)
-NEEDS = {"BOMBARD_CANNON": "CHEMISTRY",                            # a unit or building after a technology (#1380)
-         "BOMBARD_TOWER": "BOMBARD_TOWER_TECH",                    # (#1375)
-         "CANNON_GALLEON": "CHEMISTRY",                            # (#1484)
-         "HAND_CANNONEER": "CHEMISTRY"}                            # (#1506)
+ICONS = {r["name"]: r["icon"] for r in ROWS if "icon" in r}           # a block of the design
+AGE_TECHS = tuple(r["name"] for r in sorted((r for r in ROWS if "age_tech" in r), key=lambda r: r["age_tech"]))
+AGE = {r["name"]: r["age"] for r in ROWS if "age" in r}           # (0: Dark)
+WALLS = tuple(r["name"] for r in ROWS if r.get("wall"))          # a line of 1-tile sites with two clicks (#1322)
+GATES = tuple(r["name"] for r in ROWS if r.get("gate"))          # on 4 own wall tiles in a line (#1324)
+NEEDS = {r["name"]: r["needs"] for r in ROWS if "needs" in r}     # a unit or building after a technology (#1380)
 SHORE = ("DOCK",)                                                  # on water next to the land, as in AoE2 (#1382)
 WATER = ("FISH_TRAP",)                                             # on free water only, ships build it (#1438)
 GHOST = 400                                                        # block displays of one ghost: a coarser shape above
