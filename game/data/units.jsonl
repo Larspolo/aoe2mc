@@ -18,6 +18,8 @@
 {"name": "LONGBOWMAN", "hp": 35, "attack": 6, "melee": 0, "pierce": 0, "range": 5, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"]}
 {"name": "CAVALRY_ARCHER", "hp": 50, "attack": 6, "melee": 0, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "cavalry"], "sight": 5}
 {"name": "HEAVY_CAVALRY_ARCHER", "hp": 60, "attack": 7, "melee": 1, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 4}, "classes": ["archer", "cavalry"]}
+{"name": "HEAVY_MOUNTED_CROSSBOWMAN", "hp": 55, "attack": 8, "melee": 2, "pierce": 0, "range": 4, "reload": 2.5, "bonus": {"spearman": 1}, "classes": ["archer", "cavalry"], "sight": 6, "note": "the wiki infobox (#2012)"}
+{"name": "MOUNTED_CROSSBOWMAN", "hp": 45, "attack": 7, "melee": 2, "pierce": 0, "range": 4, "reload": 2.5, "bonus": {"spearman": 1}, "classes": ["archer", "cavalry"], "sight": 6, "note": "the wiki infobox (#2012)"}
 {"name": "HAND_CANNONEER", "hp": 40, "attack": 17, "melee": 1, "pierce": 0, "range": 7, "reload": 3.45, "bonus": {"infantry": 10, "spearman": 1}, "classes": ["archer", "gunpowder"]}
 {"name": "SCOUT_CAVALRY", "hp": 45, "attack": 3, "melee": 0, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["cavalry"]}
 {"name": "LIGHT_CAVALRY", "hp": 60, "attack": 7, "melee": 0, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["cavalry"], "sight": 8}
@@ -196,6 +198,7 @@
 {"name": "THIRISADAI", "hp": 250, "attack": 10, "melee": 2, "pierce": 11, "range": 7, "reload": 3.45, "bonus": {"building": 7, "ram": 4, "warship": 7}, "classes": ["ship", "warship", "unique"], "sight": 9, "note": "AoE2 DE wiki (#1935) the main arrow"}
 {"name": "WAR_GALLEY", "hp": 125, "attack": 7, "melee": 0, "pierce": 4, "range": 6, "reload": 3.0, "bonus": {"building": 6, "warship": 5}, "classes": ["ship", "warship"], "note": "Medium Warships (#1482)"}
 {"name": "WAR_HULK", "hp": 110, "attack": 4, "melee": 4, "pierce": 1, "range": 1, "reload": 1.5, "bonus": {"fireship": 1, "standard": -3}, "classes": ["ship"], "sight": 5, "note": "Medium Warships (#1508)"}
+{"name": "CARRACK", "hp": 135, "attack": 4, "melee": 5, "pierce": 1, "range": 1, "reload": 1.5, "bonus": {"fireship": 1, "standard": -3}, "classes": ["ship"], "sight": 6, "note": "Heavy Warships, AoE2 DE wiki \"Carrack (unit)\" (#1933)"}
 {"name": "VILLAGER", "hp": 25, "attack": 3, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"building": 3, "heavysiege": 6, "stone": 6}, "classes": [], "note": "AoE2 DE wiki (#1590)"}
 {"name": "MISSIONARY", "hp": 30, "attack": 0, "melee": 0, "pierce": 0, "range": 7, "reload": 0.0, "bonus": {}, "classes": [], "note": "AoE2 DE wiki (#1939)"}
 {"name": "KING", "hp": 75, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": [], "sight": 6}
