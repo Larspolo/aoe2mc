@@ -221,6 +221,7 @@ BUILDINGS = {
     "BARRACKS": Stats(1200, 0, 0, 7, 0, 0.0, {}, ("building",)),
     "ARCHERY_RANGE": Stats(1500, 0, 0, 7, 0, 0.0, {}, ("building",)),
     "STABLE": Stats(1500, 0, 0, 7, 0, 0.0, {}, ("building",)),
+    "MARKET": Stats(1800, 0, 1, 8, 0, 0.0, {}, ("building",)),       # the Feudal Age values of the wiki (#1251)
     "MONASTERY": Stats(2100, 0, 0, 7, 0, 0.0, {}, ("building",)),
     "SIEGE_WORKSHOP": Stats(2100, 0, 0, 7, 0, 0.0, {}, ("building",)),
     # the towers (AoE2 DE, wiki): a watch tower of the Castle Age (850 hit points in the Feudal Age), #1112

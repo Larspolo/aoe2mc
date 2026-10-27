@@ -980,7 +980,7 @@ class Replay:
         """The units that arrived at their building until game time t (ms) go inside (garrison.enter). A full
         building: they stay next to it, as in AoE2."""
         import garrison
-        out = []
+        out, full = [], set()
         for i, (rect, o, at) in list(self.entering.items()):
             if at is None or at > t:
                 continue
@@ -990,10 +990,22 @@ class Replay:
                 continue
             x, y, z = garrison.cell(self.map, rect, o, len(units))
             units.append(i)
+            full.add(rect)
             v.pos, v.path = (x + 0.5, float(y), z + 0.5), []
             self.moving.pop(i, None)                                # inside: no walk (#1177)
             out += [f"aoe stop {v.uuid}"] * self.ai + garrison.enter(v.uuid, x, y, z)
-        return out
+        return out + [c for r in sorted(full) for c in self.arrows(r)]
+
+    def arrows(self, rect):
+        """`aoe arrows` of the plugin for the start building rect with the units inside it (#1203), as the game program
+        (#1113): only with the plugin, and only for a building with a target entity that shoots (combat.setup)."""
+        import combat, garrison
+        name = next((s[2] for s in self.starts if s[3] == rect), None)
+        s = combat.stats(name) if self.ai and name in combat.BUILDINGS else None
+        if not (s and s.attack and s.range):
+            return []
+        inside = [self.units[i].name for i in self.garrisons.get(rect, []) if i in self.units]
+        return [f"aoe arrows {combat.target_uuid([rect[0], rect[2], rect[1], rect[3]])} {garrison.arrows(name, inside)}"]
 
     def holders(self, e):
         """The footprints of the buildings of an UNGARRISON or BACK TO WORK event that the replay knows."""
@@ -1028,7 +1040,7 @@ class Replay:
             v, y = self.units[i], self.map.y(x, z) or 0
             v.pos = (x + 0.5, float(y), z + 0.5)
             out += garrison.leave(v.uuid, x, y, z) + [f"aoe label {v.uuid}"] * self.ai
-        return out
+        return out + self.arrows(rect)
 
     def resource(self, e):
         """The tile of the tree, fruit bush, mine or farm that an ORDER targets, else None. A target that the replay
@@ -1312,7 +1324,12 @@ class Replay:
                 for i in set(e["objects"]) & self.entering.keys():  # it is at its building at once
                     self.entering[i][2] = e["time"]
             elif e["kind"] in ("build", "wall", "spawn", "delete", "ungarrison"):
+                builders = e.get("objects", ()) if e["kind"] in ("build", "wall") else ()
+                for i in builders:                                  # a builder ends the work at its resource
+                    self.skipped(i, since.pop(i, None), e["time"])
                 out += self.enter(e["time"]) + self.commands(e)
+                since.update((i, self.walk_end(v, e["time"])) for i in builders     # the builders of a farm farm it
+                             if (v := self.units.get(i)) is not None and v.tree in self.map.farms)
             elif e["kind"] == "back_to_work" and e.get("objects"):  # the units work again from now (#1179)
                 out += self.enter(e["time"])
                 cmds, ids = self.back(e)
@@ -1390,7 +1407,8 @@ class Replay:
         send = self.send if bar else lambda cmds: None
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
                    f"bossbar set {BAR} max {max(1, int(end) // 1000)}"] +
-             ([f"tag {u} add {COUNTED}" for u in self.counted] + ["aoe deathmarks on"]) * self.ai +   # marks: #846
+             ([f"tag {u} add {COUNTED}" for u in self.counted] + ["aoe deathmarks on", "aoe minimap on"]) * self.ai +
+             # the death marks (#846) and the live units on the map item (#1237)
              self.overview())
         census = self.census if bar and self.ai else lambda: None
         while k < len(events) or self.moving:

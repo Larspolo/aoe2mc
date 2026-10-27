@@ -103,6 +103,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe lore <material> <name> <text>          the last lore line of each menu item with this material and name: the
  *                                              AoE2 help text (#1160, train.HELP; URL-encoded). Sent once at the
  *                                              setup, so the menu commands stay below the RCON limit
+ *   aoe minimap on|off|pixel <x> <z>           the live units as dots in their team color on map 0, once per
+ *                                              second (#1237, Minimap.java); pixel: the map pixel of a block
  *   aoe where <selector> [from]                "Where <count>: <uuid> <x> <y> <z> <order 0|1> <target 0|1>, ..." for
  *                                              WHERE_PAGE units from index `from` in UUID order (#813, tools/replay_drift.py);
  *                                              target 1 also after a target or a hit since the last answer (#1169)
@@ -191,6 +193,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Ghost ghost = new Ghost(this);
     private final Cheats cheats = new Cheats(this);
     private final Deaths deaths = new Deaths(this);
+    private final Alerts alerts = new Alerts(this, AoePlugin::side);   // "under attack" for the team of the target (#1231)
+    private final Minimap minimap = new Minimap(this);
     private final Viewer viewer = new Viewer(this);                 // the game mode switch of a replay viewer (#910)
     private final Border border = new Border();
 
@@ -299,6 +303,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 if (a != null && b != null) {           // the arrow sticks in the walls: the shot hits (#608)
                     hit(t, b, a.damage(b.stats));
                     hitEffect(t, b, mob);
+                    alerts.hit(t, true, mob);
                 }
             }
         }
@@ -334,6 +339,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (b != null) {                                  // a building takes the shot alone
             hit(t, b, a.damage(b.stats));
             hitEffect(t, b, mob);
+            alerts.hit(t, true, mob);
         } else if (r <= 0) {
             LivingEntity v = t.getVehicle() instanceof LivingEntity h && stats.containsKey(h.getUniqueId()) ? h : t;
             if (v.isValid() && stats.containsKey(v.getUniqueId())) {
@@ -422,7 +428,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     // An arrow from above the edge of the footprint next to the target, aimed as the arrow of an archer (shoot): from
     // the center the arrow hits the own roof (#1202). Arrow k starts on a ring around that point, so that the arrows of
-    // one shot do not fly as one; the start is above the highest block of the 3 x 3 columns around the point.
+    // one shot do not fly as one; the start is above the highest block of the 3 x 3 columns around the point. A steep
+    // shot (a tall tower, a near target) starts higher: the straight line to the target leaves the 3 x 3 columns above
+    // their highest block, else the arrow hits the own roof (#1219).
     private static void volley(LivingEntity fort, int[] b, LivingEntity t, int k) {
         var p = t.getLocation();
         Location from = new Location(fort.getWorld(), Math.max(b[0] + 0.5, Math.min(b[3] + 0.5, p.getX())), 0,
@@ -435,7 +443,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
         }
         from.add(k == 0 ? 0 : 0.6 * Math.cos(k * 2.4), 0, k == 0 ? 0 : 0.6 * Math.sin(k * 2.4));
-        from.setY(top + 1.5 + 0.2 * (k % 3));
+        double ty = p.getY() + t.getHeight() * 0.5, h = Math.hypot(p.getX() - from.getX(), p.getZ() - from.getZ());
+        double y = top + 1.5;
+        if (h > 3) {                                                   // the line at 1.5 blocks: at least top + 1
+            y = Math.max(y, (top + 1 - ty * 1.5 / h) / (1 - 1.5 / h));
+        }
+        from.setY(y + 0.2 * (k % 3));
         Vector to = t.getLocation().toVector().add(new Vector(0, t.getHeight() * 0.5, 0)).subtract(from.toVector());
         double ticks = to.length() / ARROW_SPEED;
         to.setY(to.getY() + 0.5 * ARROW_GRAVITY * ticks * ticks);
@@ -609,6 +622,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 lastHit.put(from.getUniqueId(), Bukkit.getCurrentTick());
                 hit(ev.getEntity(), b, a.damage(b.stats));
                 hitEffect(ev.getEntity(), b, from);
+                alerts.hit(ev.getEntity(), true, from);
             }
             return;
         }
@@ -650,6 +664,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     // The AoE2 damage of attacker values a on the victim with values t (#514), and the attack back.
     private void harm(LivingEntity victim, Stats t, Stats a, Entity from) {
+        alerts.hit(victim, false, from);                  // before the hit: a unit that dies of it is attacked too
         fight(victim);
         fight(from);
         victim.playHurtAnimation(0);
@@ -1308,7 +1323,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     // The team name, else the player tag aoe2mc.pN: the pulse of the datapack puts a unit in its team only when its
     // chunk is loaded, and two units without a team are not enemies (#986: idle soldiers killed their neighbours).
-    private static String side(Entity e) {
+    static String side(Entity e) {
         Team t = Bukkit.getScoreboardManager().getMainScoreboard().getEntityTeam(e);
         if (t != null) {
             return t.getName();
@@ -1361,6 +1376,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             sender.sendMessage("Destroy: " + n + " buildings");
             return true;
+        }
+        if ((args.length == 2 || args.length == 4) && args[0].equals("minimap")) {   // live units on map 0 (#1237)
+            return minimap.command(sender, args);
         }
         if (args.length >= 2 && args[0].startsWith("box")) {            // the border of the selection box (#795)
             return border.command(sender, args, players(sender, args[1]));

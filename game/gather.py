@@ -55,6 +55,7 @@ import conquest  # noqa: E402
 import garrison  # noqa: E402
 import hints  # noqa: E402
 import menu  # noqa: E402
+import monk  # noqa: E402
 import stance  # noqa: E402
 import train  # noqa: E402
 import wonder  # noqa: E402
@@ -446,7 +447,8 @@ class Gather:
                       and "VILLAGER" in o["name"]]
         self.villagers, self.selected = {}, set()
         self.soldiers = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit"
-                         and o["player"] == player and military(o["name"])}       # military units of the player
+                         and o["player"] == player and (military(o["name"]) or o["name"] == "MONK")}   # military units
+        #                                                                and monks of the player: they take move orders (#1243)
         self.enemies = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit"
                         and o["player"] not in (0, player)}                     # units of the other players
         self.prey = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit" and o.get("uuid")
@@ -478,7 +480,9 @@ class Gather:
         self.groups, self.grouping, self.calls = {}, {}, 0             # group -> units, player -> (group, shift)
         self.hints = {}                                                # target -> (hint text, time) (hints.py, #798)
         self.pointing = {}                                             # player -> text of its pointed target (#989)
+        self.sided = set()                                             # players in the team of the units (#1241)
         self.garrisons, self.entering = garrison.start(self), {}       # building -> units inside, unit -> building (#808)
+        self.monk_at, self.heal_time = {}, 0.0                         # monk -> feet at the last heal pass (#1244)
 
     @property
     def wood(self):
@@ -501,6 +505,9 @@ class Gather:
         for r in RESOURCES:
             self.command(f"scoreboard players set {r} {self.board} {self.stock[r.lower()]}")   # the start resources
         self.command(f'scoreboard players display name Idle {self.board} "Idle villagers"')   # a name has no space
+        # The players get the side of the units for the attack alerts of the plugin (AoePlugin.side, #1241): the team,
+        # not the tag aoe2mc.pN, because cheats.destroy kills and conquest.alive counts the entities with that tag.
+        self.command(f"team join p{self.player} @a")
         build.setup(self)
         menu.setup(self)
         if self.paper:
@@ -951,6 +958,9 @@ class Gather:
         hints.py writes its name and action into the action bar. Minecraft outlines a block only up to about 5
         blocks, and the order marker (#796) shows only after the click."""
         names = [n for n in (n.strip() for n in self.command("list").split(":", 1)[-1].split(",")) if n]
+        for name in sorted(set(names) - self.sided):                   # a player who joins later (#1241)
+            self.command(f"team join p{self.player} {name}")
+            self.sided.add(name)
         self.pointing = {}
         places = self.places() if names else {}
         for name in names:
@@ -1050,6 +1060,7 @@ class Gather:
                 if v.load >= self.limit() or src.get(v.tree, 0) <= 0:
                     self.go(v, "to_drop", set().union(*map(self.map.around, self.map.drops[v.res])))
         train.tick(self, self.tick * NORMAL)
+        monk.heal(self, self.tick * NORMAL)
         bossbar.tick(self)
         for site in self.sites:
             builders = [v for v in self.villagers.values() if v.state == "build" and v.site is site]
