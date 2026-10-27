@@ -177,6 +177,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "HEAVY_SCORPION_UPGRADE": {"food": 800, "wood": 750},
          "HERESY": {"gold": 1000},                                     # the monastery, Castle Age (#1582)
          "HEAVY_WARSHIPS": {"wood": 400, "gold": 315},                 # the dock, Imperial Age (#1483)
+         "HERBAL_MEDICINE": {"gold": 200},                             # the monastery, Castle Age (#1585)
          "HORSE_COLLAR": {"food": 75, "wood": 75},
          "HUSBANDRY": {"food": 150},                                   # AoE2 DE wiki (#1416)
          "HUSSAR": {"food": 80},                                       # AoE2 DE wiki (#1502)
@@ -355,6 +356,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "HEAVY_SCORPION_UPGRADE": 50,
                "HERESY": 60,
                "HEAVY_WARSHIPS": 65,
+               "HERBAL_MEDICINE": 35,
                "HORSE_COLLAR": 20,
                "HUSBANDRY": 40,
                "HUSSAR": 30,
@@ -519,7 +521,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                         "ATONEMENT",                                            # (#1581)
                         "HERESY",                                               # (#1582)
                         "DEVOTION",                                             # (#1584)
-                        "FAITH"),
+                        "FAITH",
+                        "HERBAL_MEDICINE"),                                     # (#1585)
           "SIEGE_WORKSHOP": ("BATTERING_RAM", "MANGONEL", "SCORPION", "SIEGE_TOWER",   # (#1349, #1362)
                              "CAPPED_RAM_UPGRADE", "SIEGE_RAM_UPGRADE", "ONAGER_UPGRADE", "SIEGE_ONAGER_UPGRADE",
                              "HEAVY_SCORPION_UPGRADE",                  # (#1352)
@@ -658,6 +661,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "HEAVY_SCORPION_UPGRADE": lambda name, s: s,
          "HERESY": lambda name, s: s,                              # a converted unit dies: monk.heresy
          "HEAVY_WARSHIPS": lambda name, s: s,                      # new unit names: UPGRADES
+         "HERBAL_MEDICINE": lambda name, s: s,                     # the heal in a garrison: garrison.heal
          "HEAVY_DEMOLITION_SHIP_UPGRADE": lambda name, s: s,
          "DEMOLITION_SHIP_UPGRADE": lambda name, s: s,
          "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
@@ -861,6 +865,7 @@ TECH_AGE = {                                                       # the age of 
     "HERESY": 2,
     "HEAVY_DEMOLITION_SHIP_UPGRADE": 3,
     "HEAVY_WARSHIPS": 3,
+    "HERBAL_MEDICINE": 2,
     "HORSE_COLLAR": 1,
     "HUSBANDRY": 2,
     "HUSSAR_UPGRADE": 3,
@@ -956,6 +961,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "HEAVY_DEMOLITION_SHIP": (7, "bamboo_raft", "Heavy Demolition Ship"),
          "HEAVY_DEMOLITION_SHIP_UPGRADE": (4, "book", "Heavy Demolition Ship"),   # the slot of the ship upgrade (AFTER)
          "HEAVY_WARSHIPS": (3, "book", "Heavy Warships"),           # the slot of Medium Warships (AFTER)
+         "HERBAL_MEDICINE": (MORE + 1, "book", "Herbal Medicine"),   # the monastery (#1585)
          "LIGHT_CAVALRY": (0, "horse_spawn_egg", "Light Cavalry"),
          "LIGHT_CAVALRY_UPGRADE": (2, "book", "Light Cavalry"),
          "LONG_SWORDSMAN": (0, "zombie_spawn_egg", "Long Swordsman"),
@@ -1196,6 +1202,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "HEAVY_DEMOLITION_SHIP": "Explodes next to ships and buildings.",
         "HEAVY_DEMOLITION_SHIP_UPGRADE": "Upgrades demolition ships to heavy ones.",
         "HEAVY_WARSHIPS": "Upgrades war galleys and fire ships.",
+        "HERBAL_MEDICINE": "Units in buildings heal 6 times as fast.",
         "HORSE_COLLAR": "Farms +75 food.",
         "HUSBANDRY": "Mounted units walk 10 % faster.",
         "HUSSAR": "Cavalry. Fast; strong vs. monks, siege.",
