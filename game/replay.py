@@ -85,8 +85,10 @@ PATH_CELLS = 20000          # cells that one path search may look at: a unit wit
 SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, "PIKEMAN": 1.0, "EAGLE": 1.1,
           "ARCHER": 0.96, "SKIRMISHER": 0.96, "CROSSBOWMAN": 0.96, "CAVALRY_ARCHER": 1.4, "SCOUT": 1.2,
           "LIGHT_CAVALRY": 1.5, "KNIGHT": 1.35, "CAMEL": 1.45, "MONK": 0.7, "BATTERING_RAM": 0.5, "MANGONEL": 0.6,
+          "ARBALESTER": 0.96,                                                       # (#1500)
           "ELITE_SKIRMISHER": 0.96,                                                 # (#1396)
           "HALBERDIER": 1.0,                                                        # (#1499)
+          "HEAVY_CAVALRY_ARCHER": 1.4,                                              # (#1500)
           "HUSSAR": 1.5,                                                            # (#1502)
           "LONG_SWORDSMAN": 0.9,
           "CHAMPION": 0.96,                                                         # (#1498)
