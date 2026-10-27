@@ -111,6 +111,7 @@
 {"name": "ELITE_OBUCH", "hp": 95, "attack": 10, "melee": 2, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 6}, "classes": ["infantry", "unique"]}
 {"name": "ELITE_ORGAN_GUN", "hp": 70, "attack": 8, "melee": 2, "pierce": 6, "range": 7, "reload": 3.45, "bonus": {"infantry": 2, "siege": 1, "building": 1}, "classes": ["gunpowder", "siege", "unique"]}
 {"name": "ELITE_PLUMED_ARCHER", "hp": 65, "attack": 5, "melee": 0, "pierce": 2, "range": 5, "reload": 1.9, "bonus": {"infantry": 2, "spearman": 2}, "classes": ["archer", "unique"]}
+{"name": "ELITE_RATHA", "hp": 115, "attack": 6, "melee": 3, "pierce": 3, "range": 4, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "cavalry", "unique"], "note": "ranged mode (#1891)"}
 {"name": "ELITE_RATTAN_ARCHER", "hp": 40, "attack": 7, "melee": 0, "pierce": 6, "range": 5, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"]}
 {"name": "ELITE_SAMURAI", "hp": 80, "attack": 12, "melee": 1, "pierce": 1, "range": 0, "reload": 1.9, "bonus": {"building": 3, "unique": 12}, "classes": ["infantry", "unique"]}
 {"name": "ELITE_SERJEANT", "hp": 85, "attack": 11, "melee": 6, "pierce": 3, "range": 0, "reload": 2.0, "bonus": {"building": 3}, "classes": ["infantry", "unique"]}
