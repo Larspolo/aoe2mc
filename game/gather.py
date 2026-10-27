@@ -88,9 +88,9 @@ BUSH_FOOD = 125                                                    # food in one
 AOE2_WORK, NORMAL = {"wood": 0.39, "food": 0.31, "farm": 0.33, "gold": 0.38, "stone": 0.36, "hunt": 0.41,
                      "fish": 0.43}, 1.7                            # fish: a fisherman at a shore fish (#1283)
 WORK_SECONDS = {r: 1 / (w * NORMAL) for r, w in AOE2_WORK.items()}    # real seconds per unit, as at Normal speed
-CARRY = {"WHEELBARROW": 3}                                         # more resources per trip, as in AoE2 (#728)
+CARRY = {"HAND_CART": 7, "WHEELBARROW": 3}                         # more resources per trip: 10, 13, 20 (AoE2 wiki, #728, #1453)
 FOOD_CARRY = {"HEAVY_PLOW": 1}                                     # more food only per trip, as in AoE2 (#1424)
-PACE = {"WHEELBARROW": 1.1}                                        # the villager walk speed factor, as in AoE2
+PACE = {"HAND_CART": 1.1, "WHEELBARROW": 1.1}                      # the villager walk speed factor, as in AoE2
 WORK_TECHS = {"BOW_SAW": {"wood": 1.2},                            # work rate factors of the economy technologies (AoE2)
               "DOUBLE_BIT_AXE": {"wood": 1.2},
               "GOLD_MINING": {"gold": 1.15},
