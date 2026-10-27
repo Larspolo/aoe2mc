@@ -171,7 +171,7 @@ STATS = {
     "BATTLE_ELEPHANT": Stats(250, 12, 1, 2, 0, 2.0, {"building": 4}, (ELE,)),
     "CONDOTTIERO": Stats(80, 10, 1, 0, 0, 1.9, {GUN: 10, "building": 2}, (INF, UNI)),
     "ELITE_BATTLE_ELEPHANT": Stats(300, 14, 1, 3, 0, 2.0, {"building": 7}, (ELE,)),
-    "ELITE_GENITOUR": Stats(55, 4, 0, 4, 4, 3.0, {ARC: 5, SPE: 3}, (ARC, CAV, UNI)),
+    "ELITE_GENITOUR": Stats(55, 4, 0, 4, 4, 3.0, {ARC: 5, SPE: 3}, (ARC, CAV, UNI)),   # the wiki infobox (#1610)
     "ELITE_STEPPE_LANCER": Stats(80, 11, 0, 2, 0, 2.0, {}, (CAV,)),
     "GENITOUR": Stats(50, 3, 0, 4, 4, 3.0, {ARC: 4, SPE: 3}, (ARC, CAV, UNI)),
     "SLINGER": Stats(35, 4, 0, 0, 5, 2.0, {INF: 4, SIE: 3, SPE: 1}, (ARC,)),
@@ -298,10 +298,12 @@ SIGHT = {
     "DOCK": 8,
     "DONJON": 10,
     "ELITE_CANNON_GALLEON": 17,
+    "ELITE_GENITOUR": 6,                                               # the wiki infobox (#1610)
     "ELITE_STEPPE_LANCER": 5,
     "FIRE_GALLEY": 5,
     "FIRE_SHIP": 5,
     "GALLEON": 9,
+    "GENITOUR": 5,
     "HEAVY_DEMOLITION_SHIP": 6,
     "HULK": 5,
     "FEITORIA": 6,
