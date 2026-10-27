@@ -218,6 +218,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "TWO_HANDED_SWORDSMAN_UPGRADE": {"food": 200, "gold": 100},   # the Imperial Age (#1498)
          "WAR_ELEPHANT": {"food": 170, "gold": 85},
          "WAR_GALLEY": {"wood": 90, "gold": 30},                       # AoE2 DE wiki (#1482)
+         "WAR_HULK": {"wood": 75, "gold": 35},                         # AoE2 DE wiki (#1508)
          "WHEELBARROW": {"food": 175, "wood": 50},
          "WOAD_RAIDER": {"food": 70, "gold": 25}}
 TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130,   # AoE2 seconds
@@ -362,6 +363,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "TWO_HANDED_SWORDSMAN_UPGRADE": 45,
                "WAR_ELEPHANT": 25,
                "WAR_GALLEY": 27,
+               "WAR_HULK": 27,
                "WHEELBARROW": 75,
                "WOAD_RAIDER": 10}
 TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", "HAND_CART", "CASTLE_AGE", "IMPERIAL_AGE",
@@ -505,7 +507,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bonus.get("standard", 0) + 2})
          if "infantry" in s.classes else s,                        # combat.STANDARD: not the walls (#1419)
          "BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
-         "BLAST_FURNACE": lambda name, s: s._replace(attack=s.attack + 2) if melee(s) else s,
+         "BLAST_FURNACE": lambda name, s: s._replace(attack=s.attack + 2) if melee(s) or name in HULKS else s,
          "BLOCK_PRINTING": lambda name, s: s,                      # the conversion range: monk.near
          "BOMBARD_TOWER_TECH": lambda name, s: s,                  # the bombard tower in the build menu: build.NEEDS
          "BOW_SAW": lambda name, s: s,                             # an economy technology: gather.WORK_TECHS
@@ -531,7 +533,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "FERVOR": lambda name, s: s,                              # the walk speed: SPEEDS
          "FISHING_LINES": lambda name, s: s,                       # the fishing ships: gather.SHIP_TECHS
          "FLETCHING": fletching,
-         "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
+         "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) or name in HULKS else s,
          "FORTIFIED_WALL": lambda name, s: s,                      # the walls of the player: WALL_UPGRADES
          "GAMBESONS": lambda name, s: s._replace(pierce=s.pierce + 1) if name in MILITIA_LINE else s,
          "GILLNETS": lambda name, s: s,                            # the fishing ships: gather.SHIP_TECHS
@@ -552,7 +554,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "HUSBANDRY": lambda name, s: s,                           # the walk speed: SPEEDS
          "HUSSAR_UPGRADE": lambda name, s: s,                      # a new unit name: UPGRADES
          "IMPERIAL_AGE": lambda name, s: s,                        # an age: REQUIRES
-         "IRON_CASTING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
+         "IRON_CASTING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) or name in HULKS else s,
          "KEEP": lambda name, s: s,                                # the towers of the player: TOWER_UPGRADES
          "LEATHER_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "archer" in s.classes else s,
@@ -621,7 +623,8 @@ UPGRADES = {                                                       # technology:
     "LIGHT_CAVALRY_UPGRADE": ("SCOUT_CAVALRY", "LIGHT_CAVALRY"),
     "LONG_SWORDSMAN_UPGRADE": ("MAN_AT_ARMS", "LONG_SWORDSMAN"),
     "MAN_AT_ARMS_UPGRADE": ("MILITIA", "MAN_AT_ARMS"),
-    "MEDIUM_WARSHIPS": (("GALLEY", "WAR_GALLEY"), ("FIRE_GALLEY", "FIRE_SHIP")),   # two lines (#1482): lines()
+    "MEDIUM_WARSHIPS": (("GALLEY", "WAR_GALLEY"), ("FIRE_GALLEY", "FIRE_SHIP"),   # two lines (#1482): lines()
+                        ("HULK", "WAR_HULK")),                                 # (#1508)
     "ONAGER_UPGRADE": ("MANGONEL", "ONAGER"),
     "PALADIN_UPGRADE": ("CAVALIER", "PALADIN"),
     "PIKEMAN_UPGRADE": ("SPEARMAN", "PIKEMAN"),
@@ -899,6 +902,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "TWO_HANDED_SWORDSMAN_UPGRADE": (2, "book", "Two-Handed Swordsman"),   # the slot of Long Swordsman (AFTER)
          "WAR_ELEPHANT": (0, "ravager_spawn_egg", "War Elephant"),
          "WAR_GALLEY": (1, "dark_oak_boat", "War Galley"),        # the slot of the galley
+         "WAR_HULK": (MORE + 2, "dark_oak_boat", "War Hulk"),     # the slot of the hulk
          "FEUDAL_AGE": (2, "bell", "Feudal Age"),
          "WHEELBARROW": (3, "book", "Wheelbarrow"),
          "WOAD_RAIDER": (0, "zombie_spawn_egg", "Woad Raider")}
@@ -911,7 +915,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "ARSON": "Infantry +2 attack vs. buildings.",
         "BATTERING_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
         "BERSERK": "Viking infantry. Heals itself.",
-        "BLAST_FURNACE": "Infantry and cavalry +2 attack.",
+        "BLAST_FURNACE": "Infantry, cavalry and hulks +2 attack.",
         "BLOCK_PRINTING": "Monks +3 conversion range and line of sight.",
         "BLOODLINES": "Cavalry +20 HP.",
         "BOW_SAW": "Villagers chop wood 20 % faster.",
@@ -955,7 +959,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "FISHING_LINES": "Fishing ships work 10 % faster, carry +5.",
         "FISHING_SHIP": "Gathers food from fish.",
         "FLETCHING": "Archers, towers +1 attack, range; TC +1 attack.",
-        "FORGING": "Infantry and cavalry +1 attack.",
+        "FORGING": "Infantry, cavalry and hulks +1 attack.",
         "FORTIFIED_WALL": "Stone walls +1,200 HP, +4/+2 armor; also gates.",
         "GALLEON": "All-purpose warship with ranged attack.",
         "GALLEY": "All-purpose warship with ranged attack.",
@@ -985,7 +989,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "HUSSAR_UPGRADE": "Upgrades light cavalry to hussars.",
         "HUSKARL": "Gothic infantry. Strong vs. archers.",
         "IMPERIAL_AGE": "Advance to the Imperial Age.",
-        "IRON_CASTING": "Infantry and cavalry +1 attack.",
+        "IRON_CASTING": "Infantry, cavalry and hulks +1 attack.",
         "JANISSARY": "Turkish gunner. Strong vs. infantry.",
         "KEEP": "Guard towers +750 HP, +1 attack, +1/+1 armor.",
         "KNIGHT": "Strong vs. archers, siege; weak vs. spears, monks.",
@@ -1049,12 +1053,16 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "VILLAGER_MALE": "Gathers, builds and repairs.",
         "WAR_ELEPHANT": "Persian elephant. Slow, very strong.",
         "WAR_GALLEY": "All-purpose warship with ranged attack.",
+        "WAR_HULK": "Warship with a close range melee attack.",
         "WHEELBARROW": "Villagers +10 % speed, +25 % carry.",
         "WOAD_RAIDER": "Celtic infantry. Fast."}
 SHIFT = 5                                                          # units of a shift click, as in AoE2
 RALLY = (8, "white_banner", "Rally point", "Click, then right click the ground")   # last slot of the first row
 MARK = 17.0                                                        # AoE2 seconds of the rally marker: 10 s at Normal
 ROW = 9                                                            # the first slot of the queue row of the menu (#706)
+
+
+HULKS = ("HULK", "WAR_HULK")                                       # melee warships: the blacksmith attack too (#1509)
 
 
 def melee(s):

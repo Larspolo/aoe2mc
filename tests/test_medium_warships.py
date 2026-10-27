@@ -1,6 +1,6 @@
 """Medium Warships (#1482): the dock researches it in the Castle Age (150 wood, 100 gold, 50 s; AoE2 wiki "Medium
 Warships"). Then the live galleys become war galleys and the fire galleys fire ships, and the dock trains the new
-forms in their slots. The fire ship needs it ("TrainReq"). The hulk is not in the game program."""
+forms in their slots. The fire ship needs it ("TrainReq"). The hulk becomes the war hulk: tests/test_war_hulk.py."""
 from test_dock_train import DOCK, dock_map
 from test_train_archery import menus
 
@@ -17,7 +17,7 @@ def castle(wood=400, gold=300):
 def test_the_values_are_those_of_aoe2():
     assert train.COSTS["MEDIUM_WARSHIPS"] == {"wood": 150, "gold": 100} and train.TRAIN_TIMES["MEDIUM_WARSHIPS"] == 50
     assert train.TECH_AGE["MEDIUM_WARSHIPS"] == 2 and len(train.HELP["MEDIUM_WARSHIPS"]) <= 50
-    assert train.lines("MEDIUM_WARSHIPS") == (("GALLEY", "WAR_GALLEY"), ("FIRE_GALLEY", "FIRE_SHIP"))
+    assert train.lines("MEDIUM_WARSHIPS") == (("GALLEY", "WAR_GALLEY"), ("FIRE_GALLEY", "FIRE_SHIP"), ("HULK", "WAR_HULK"))
     assert train.lines("MAN_AT_ARMS_UPGRADE") == (("MILITIA", "MAN_AT_ARMS"),)
     assert train.COSTS["WAR_GALLEY"] == {"wood": 90, "gold": 30} and train.TRAIN_TIMES["WAR_GALLEY"] == 27
     assert combat.stats("WAR_GALLEY") == (125, 7, 0, 4, 6, 3.0, {"building": 6, "warship": 5}, ("ship", "warship"))

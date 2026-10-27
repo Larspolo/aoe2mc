@@ -2624,7 +2624,8 @@ def team_lines(objects, players):
         p = players.get(n, {})
         civ = "" if p.get("civ") in (None, "RANDOM") else str(p["civ"]).replace("_", " ").title()
         load += [f'team add p{n} "Player {n}{f" ({civ})" if civ else ""}"',
-                 f"team modify p{n} color {units.TEAM_COLOR.get(p.get('color'), 'white')}"]
+                 f"team modify p{n} color {units.TEAM_COLOR.get(p.get('color'), 'white')}",
+                 f"team modify p{n} seeFriendlyInvisibles false"]       # the invisible target slime of a building (#1538)
         pulse.append(f"team join p{n} @e[tag=aoe2mc.p{n},team=]")
     return load, pulse
 

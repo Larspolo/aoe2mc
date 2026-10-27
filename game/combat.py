@@ -231,6 +231,7 @@ STATS = {
     "HEAVY_DEMOLITION_SHIP": Stats(70, 120, 2, 0, 0, 0.0, {"building": 280}, (SHIP,)),   # (#1483)
     "HULK": Stats(85, 4, 3, 1, 1, 1.75, {FIRE: 1, "standard": -3}, (SHIP,)),   # AoE2 DE wiki (#1489): melee hits at range 1
     "WAR_GALLEY": Stats(125, 7, 0, 4, 6, 3.0, {"building": 6, WAR: 5}, (SHIP, WAR)),   # Medium Warships (#1482)
+    "WAR_HULK": Stats(110, 4, 4, 1, 1, 1.5, {FIRE: 1, "standard": -3}, (SHIP,)),   # Medium Warships (#1508)
     # others: no fight, but they can die
     "VILLAGER": Stats(25, 3, 0, 0, 0, 2.0),
     "KING": Stats(75, 0, 0, 0, 0, 0.0),
@@ -321,6 +322,7 @@ SIGHT = {
     "TRADE_COG": 6,
     "TWO_HANDED_SWORDSMAN": 5,
     "UNIVERSITY": 6,
+    "WAR_HULK": 5,
     "WATCH_TOWER": 10,
     "WONDER": 8,
 }
@@ -343,7 +345,8 @@ MELEE_RANGED = {"BOMBARD_CANNON",
                 "ROCKET_CART",
                 "SIEGE_ONAGER",
                 "THROWING_AXEMAN",
-                "TRACTION_TREBUCHET"}
+                "TRACTION_TREBUCHET",
+                "WAR_HULK"}
 # Blast radius in tiles of the units whose shot hits all units near the target, also own units (AoE2 DE, wiki "AOE";
 # AoE2 tapers the damage at the edge, here each unit in the radius takes the full damage() hit, #1050). A ship has no
 # vanilla shot: the fire ship (0: it hits only the target) and the demolition ship (#1440) shoot as a siege unit, and

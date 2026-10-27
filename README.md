@@ -50,6 +50,10 @@ Two ways:
     aoe2mc MyMap.aoe2scenario MyMapWorld --preview
     python aoe2mc.py MyMap.aoe2scenario MyMapWorld --preview      (the same, from the repository folder)
 
+A window does the same: start `aoe2mc-gui` (or `python gui.py`), select the scenario or recorded game, set the options
+and click "Convert". The world goes into the Minecraft `saves` folder. The window needs Tkinter (on Debian and Ubuntu:
+`sudo apt install python3-tk`).
+
 The input can also be a recorded game (`.aoe2record`). The converter then converts its start state: the map, the
 start units and the start buildings, like a scenario. All units face the same way (a record has no rotation), and the spawn
 is at the town center of player 1. This needs the `mgz` package (in `requirements.txt`):
