@@ -146,7 +146,10 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "PADDED_ARCHER_ARMOR": {"food": 100},
          "PIKEMAN": {"food": 35, "wood": 25},
          "PIKEMAN_UPGRADE": {"food": 160, "gold": 90},
+         "PLATE_BARDING_ARMOR": {"food": 350, "gold": 200},            # AoE2 DE wiki (#1452)
+         "PLATE_MAIL_ARMOR": {"food": 300, "gold": 150},
          "REDEMPTION": {"gold": 475},
+         "RING_ARCHER_ARMOR": {"food": 250, "gold": 250},
          "SAMURAI": {"food": 45, "gold": 30},
          "SANCTITY": {"gold": 175},
          "SCALE_BARDING_ARMOR": {"food": 150},
@@ -246,7 +249,10 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "PADDED_ARCHER_ARMOR": 40,
                "PIKEMAN": 22,
                "PIKEMAN_UPGRADE": 35,
+               "PLATE_BARDING_ARMOR": 75,
+               "PLATE_MAIL_ARMOR": 70,
                "REDEMPTION": 50,
+               "RING_ARCHER_ARMOR": 70,
                "SAMURAI": 9,
                "SANCTITY": 60,
                "SCALE_BARDING_ARMOR": 45,
@@ -285,7 +291,10 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                          "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR",
                          "CHAIN_MAIL_ARMOR", "LEATHER_ARCHER_ARMOR", "CHAIN_BARDING_ARMOR",   # the Castle Age (#1394)
                          "IRON_CASTING", "BODKIN_ARROW",                        # (#1395)
-                         "BLAST_FURNACE"),                                      # the Imperial Age (#1451)
+                         "BLAST_FURNACE",                                       # the Imperial Age (#1451)
+                         "PLATE_MAIL_ARMOR",                                    # (#1452)
+                         "RING_ARCHER_ARMOR",
+                         "PLATE_BARDING_ARMOR"),
           "CASTLE": ("TREBUCHET",                                               # and the unique unit: trains() (#708, #1351)
                      "CONSCRIPTION"),                                           # (#1455)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES", "LIGHT_CAVALRY_UPGRADE", "KNIGHT",   # (#671, #940, #1396, #1397)
@@ -421,7 +430,13 @@ TECHS = {"ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bon
          "PADDED_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "archer" in s.classes else s,
          "PIKEMAN_UPGRADE": lambda name, s: s,
+         "PLATE_BARDING_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 2)
+         if barding(s) else s,
+         "PLATE_MAIL_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 2)
+         if "infantry" in s.classes else s,
          "REDEMPTION": lambda name, s: s,                          # monks convert buildings and siege: monk.py
+         "RING_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 2)
+         if "archer" in s.classes else s,
          "SCALE_BARDING_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if barding(s) else s,
          "SANCTITY": lambda name, s: s._replace(hp=s.hp + 15) if name == "MONK" else s,
@@ -468,6 +483,9 @@ AFTER = {"BLAST_FURNACE": "IRON_CASTING",
          "KEEP": "GUARD_TOWER",
          "LEATHER_ARCHER_ARMOR": "PADDED_ARCHER_ARMOR",
          "LONG_SWORDSMAN_UPGRADE": "MAN_AT_ARMS_UPGRADE",
+         "PLATE_BARDING_ARMOR": "CHAIN_BARDING_ARMOR",
+         "PLATE_MAIL_ARMOR": "CHAIN_MAIL_ARMOR",
+         "RING_ARCHER_ARMOR": "LEATHER_ARCHER_ARMOR",
          "SIEGE_ONAGER_UPGRADE": "ONAGER_UPGRADE", "SIEGE_RAM_UPGRADE": "CAPPED_RAM_UPGRADE",
          "STONE_SHAFT_MINING": "STONE_MINING"}   # the upgrade before it
 WALL_UPGRADES = {"FORTIFIED_WALL": {"STONE_WALL": "FORTIFIED_WALL", "GATE": "FORTIFIED_GATE"}}   # technology: {wall: new} (#1326)
@@ -517,7 +535,10 @@ TECH_AGE = {                                                       # the age of 
     "ONAGER_UPGRADE": 3,
     "PADDED_ARCHER_ARMOR": 1,
     "PIKEMAN_UPGRADE": 2,
+    "PLATE_BARDING_ARMOR": 3,
+    "PLATE_MAIL_ARMOR": 3,
     "REDEMPTION": 2,
+    "RING_ARCHER_ARMOR": 3,
     "SANCTITY": 2,
     "SCALE_BARDING_ARMOR": 1,
     "SCALE_MAIL_ARMOR": 1,
@@ -623,7 +644,10 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "MANGUDAI": (0, "skeleton_horse_spawn_egg", "Mangudai"),
          "MONK": (0, "evoker_spawn_egg", "Monk"),
          "PADDED_ARCHER_ARMOR": (3, "book", "Padded Archer Armor"),
+         "PLATE_BARDING_ARMOR": (4, "book", "Plate Barding Armor"),   # the slot of the Feudal armor (AFTER)
+         "PLATE_MAIL_ARMOR": (1, "book", "Plate Mail Armor"),
          "REDEMPTION": (3, "book", "Redemption"),
+         "RING_ARCHER_ARMOR": (3, "book", "Ring Archer Armor"),
          "SAMURAI": (0, "zombie_spawn_egg", "Samurai"),
          "SANCTITY": (2, "book", "Sanctity"),
          "SCALE_BARDING_ARMOR": (4, "book", "Scale Barding Armor"),
@@ -719,7 +743,10 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "PADDED_ARCHER_ARMOR": "Archers +1 melee armor, +1 pierce armor.",
         "PIKEMAN": "Infantry. Strong vs. cavalry; weak vs. archers.",
         "PIKEMAN_UPGRADE": "Upgrades spearmen to pikemen.",
+        "PLATE_BARDING_ARMOR": "Cavalry +1 melee armor, +2 pierce armor.",
+        "PLATE_MAIL_ARMOR": "Infantry +1 melee armor, +2 pierce armor.",
         "REDEMPTION": "Monks convert siege and most buildings.",
+        "RING_ARCHER_ARMOR": "Archers +1 melee armor, +2 pierce armor.",
         "SAMURAI": "Japanese infantry. Strong vs. unique units.",
         "SANCTITY": "Monks +15 HP.",
         "SCALE_BARDING_ARMOR": "Cavalry +1 melee armor, +1 pierce armor.",
