@@ -24,6 +24,10 @@ game/data/buildings.jsonl merge=jsonl
 game/data/build.jsonl merge=jsonl
 # One JSON object per resource, drop site, gather technology or animal (#2033); table.load() stops on a name in two lines.
 game/data/gather.jsonl merge=jsonl
+# One JSON object per cheat code with a unit, per monk rule name and per replay name (#2034); table.load() stops on a name in two lines.
+game/data/cheats.jsonl merge=jsonl
+game/data/monk.jsonl merge=jsonl
+game/data/replay.jsonl merge=jsonl
 # One JSON object per bonus of the wiki list, named "CIV: bonus" (#2100): two tickets that close two bonuses do not conflict.
 tests/data/civ_bonuses.jsonl merge=jsonl
 # The converter tables (#1917): one JSON object per line; the order of animals.jsonl and footprint.jsonl matters (the first match wins).
