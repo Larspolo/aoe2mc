@@ -57,6 +57,7 @@ import cheats  # noqa: E402
 import civs  # noqa: E402
 import conquest  # noqa: E402
 import fleet  # noqa: E402
+import fog  # noqa: E402
 import garrison  # noqa: E402
 import hints  # noqa: E402
 import market  # noqa: E402
@@ -89,9 +90,12 @@ AOE2_WORK, NORMAL = {"wood": 0.39, "food": 0.31, "farm": 0.33, "gold": 0.38, "st
 WORK_SECONDS = {r: 1 / (w * NORMAL) for r, w in AOE2_WORK.items()}    # real seconds per unit, as at Normal speed
 CARRY = {"WHEELBARROW": 3}                                         # more resources per trip, as in AoE2 (#728)
 PACE = {"WHEELBARROW": 1.1}                                        # the villager walk speed factor, as in AoE2
-WORK_TECHS = {"DOUBLE_BIT_AXE": {"wood": 1.2},                     # work rate factors of the economy technologies (AoE2)
+WORK_TECHS = {"BOW_SAW": {"wood": 1.2},                            # work rate factors of the economy technologies (AoE2)
+              "DOUBLE_BIT_AXE": {"wood": 1.2},
               "GOLD_MINING": {"gold": 1.15},
-              "STONE_MINING": {"stone": 1.15}}
+              "GOLD_SHAFT_MINING": {"gold": 1.15},
+              "STONE_MINING": {"stone": 1.15},
+              "STONE_SHAFT_MINING": {"stone": 1.15}}
 # Food of a hunted animal, as in AoE2 DE (the AoE2 wiki; a "COW_..." name is a cow, #1058).
 HUNT_FOOD = {"COW": 150,
              "DEER": 140,
@@ -485,6 +489,7 @@ class Gather:
     ended = None                                                       # "Victory" or "Defeat": run() stops (#819)
     board = "aoe_res"                                                  # the objective of the resources (the sidebar)
     bots = ()                                                          # run() steps them too (bot.Bot, #856)
+    reveal = "normal"                                                  # AoE2 "Reveal map"; "all": no fog (fog.py, #1389)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
                  cheats=False, start=None):
@@ -702,6 +707,7 @@ class Gather:
         trebs = {u for u in self.selected if self.soldiers.get(u) == trebuchet.NAME}
         for u in sorted(trebs):                                        # it unpacks first (#1351)
             trebuchet.unpack(self, u, target)
+        fleet.attack(self, {u for u in self.selected if replay.ship(self.soldiers.get(u, ""))}, target)   # (#1386)
         for u in sorted(self.selected - monks - trebs):
             self.command(ai.speed_command(u, self.soldiers[u], self.map.T, NORMAL * train.speed(self, self.soldiers[u])))
         if not monks and not trebs:
@@ -1085,7 +1091,10 @@ class Gather:
         """{UUID: feet} of pickable() for the pointing mark. On Paper one `aoe where` answer has WHERE_PAGE units
         (#813): the units of the players are on their teams (the pulse of the datapack, #358). Else one `data get`
         for each unit."""
-        want = self.pickable()
+        return self.where(self.pickable())
+
+    def where(self, want):
+        """{UUID: feet} of the units want: on Paper `aoe where` answers (WHERE_PAGE units each), else `data get`."""
         if not self.paper:
             return self.positions(sorted(want))
         out, start = {}, 0
@@ -1459,6 +1468,7 @@ class Gather:
             for b in self.bots:
                 b.step()
             conquest.tick(self)                                        # not in step(): the bot steps its own Gather
+            fog.tick(self)                                             # after the bots: their units too (#1389)
             wonder.tick(self, self.tick * NORMAL)                      # game seconds, as train.tick
             relic_victory.tick(self, self.tick * NORMAL)
             time.sleep(max(0.0, self.tick - (time.time() - t)))
