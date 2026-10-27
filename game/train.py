@@ -142,6 +142,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "SQUIRES": {"food": 100},                                    # AoE2 DE wiki (#1415)
          "TEUTONIC_KNIGHT": {"food": 85, "gold": 30},
          "THROWING_AXEMAN": {"food": 55, "gold": 25},
+         "THUMB_RING": {"food": 300, "wood": 250},                      # AoE2 DE wiki (#1421)
          "TRADE_CART": {"wood": 100, "gold": 50},
          "TREBUCHET": {"wood": 200, "gold": 200},                   # the castle, Imperial Age (#1351)
          "WAR_ELEPHANT": {"food": 170, "gold": 85},
@@ -219,6 +220,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "STONE_MINING": 30,
                "TEUTONIC_KNIGHT": 12,
                "THROWING_AXEMAN": 13,
+               "THUMB_RING": 45,
                "TRADE_CART": 51,
                "TREBUCHET": 50,
                "WAR_ELEPHANT": 25,
@@ -228,7 +230,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                        "LONG_SWORDSMAN_UPGRADE", "PIKEMAN_UPGRADE",           # the Castle Age (#1396)
                        "SQUIRES"),                                            # (#1415)
           "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER",                                          # building (#654, #670, #655)
-                            "CROSSBOWMAN_UPGRADE", "ELITE_SKIRMISHER_UPGRADE"),
+                            "CROSSBOWMAN_UPGRADE", "ELITE_SKIRMISHER_UPGRADE", "THUMB_RING"),
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING",            # (#675, #725, #724, #937, #938)
                          "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR",
                          "CHAIN_MAIL_ARMOR", "LEATHER_ARCHER_ARMOR", "CHAIN_BARDING_ARMOR",   # the Castle Age (#1394)
@@ -266,6 +268,12 @@ def chemistry(name, s):
     when it is complete (build.target, train.building_stats)."""
     shoots = "archer" in s.classes or "siege" in s.classes and s.range > 0 or "building" in s.classes and s.attack > 0
     return s._replace(attack=s.attack + 1) if shoots else s
+
+
+def thumb(name, s):
+    """Thumb Ring (AoE2 DE, wiki): the archers fire faster; not the skirmishers (only their accuracy) and not the
+    gunpowder units."""
+    return "archer" in s.classes and "gunpowder" not in s.classes and "SKIRMISHER" not in name
 
 
 def engineers(name, s):
@@ -325,6 +333,7 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "SIEGE_RAM_UPGRADE": lambda name, s: s,
          "SQUIRES": lambda name, s: s,                             # the walk speed: SPEEDS
          "STONE_MINING": lambda name, s: s,                        # an economy technology: gather.WORK_TECHS
+         "THUMB_RING": lambda name, s: s._replace(reload=round(s.reload / 1.1765, 3)) if thumb(name, s) else s,
          "FEUDAL_AGE": lambda name, s: s,   # the change of each technology to the AoE2 values
          "WHEELBARROW": lambda name, s: s}                         # no combat change: gather.CARRY and gather.PACE
 SPEEDS = {"CARAVAN": ("TRADE_CART", 1.2),                         # technology: the unit (or a class of combat.STATS:
@@ -396,6 +405,7 @@ TECH_AGE = {                                                       # the age of 
     "SIEGE_RAM_UPGRADE": 3,
     "SQUIRES": 2,
     "STONE_MINING": 1,
+    "THUMB_RING": 2,
     "WHEELBARROW": 1,
 }
 AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age after each researched age (index: ages)
@@ -479,6 +489,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "STONE_MINING": (1, "book", "Stone Mining"),
          "TEUTONIC_KNIGHT": (0, "zombie_spawn_egg", "Teutonic Knight"),
          "THROWING_AXEMAN": (0, "drowned_spawn_egg", "Throwing Axeman"),
+         "THUMB_RING": (5, "book", "Thumb Ring"),                   # slot 4: the cavalry archer (#1397)
          "TRADE_CART": (0, "donkey_spawn_egg", "Trade Cart"),
          "TREBUCHET": (1, "minecart", "Trebuchet"),                 # after the unique unit
          "WAR_ELEPHANT": (0, "ravager_spawn_egg", "War Elephant"),
@@ -561,6 +572,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "STONE_MINING": "Villagers mine stone 15 % faster.",
         "TEUTONIC_KNIGHT": "Teutonic infantry. Slow, strong armor.",
         "THROWING_AXEMAN": "Frankish infantry. Melee attack at range.",
+        "THUMB_RING": "Archers fire 17.65 % faster.",
         "TRADE_CART": "Brings gold from a second own market.",
         "TREBUCHET": "Siege. Long range vs. buildings; unpacks to shoot.",
         "VILLAGER_MALE": "Gathers, builds and repairs.",
