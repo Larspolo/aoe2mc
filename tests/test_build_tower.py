@@ -22,7 +22,7 @@ def test_the_menu_shows_the_watch_tower_gray_before_the_feudal_age():
     g.techs.add("FEUDAL_AGE")
     item, = [i for i in build.items(g) if i[2] == "Watch Tower"]
     assert item[1] == "cracked_stone_bricks" and "Needs" not in item[3]
-    assert len(build.MENU) <= 27                                       # one chest
+    assert len(build.MENU) <= 54                                       # 6 rows: the most of the plugin menu (#1873)
 
 
 def test_a_complete_watch_tower_gets_its_target_and_arrows():
