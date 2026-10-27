@@ -15,7 +15,7 @@ def test_movement_speed_follows_the_aoe2_speed():
     order = ["BATTERING_RAM", "MANGONEL", "VILLAGER", "MILITIA", "SCOUT", "KNIGHT", "LIGHT_CAVALRY"]
     assert [ai.movement_speed(n, 4) for n in order] == sorted(ai.movement_speed(n, 4) for n in order)
     assert ai.movement_speed("VILLAGER", 2) < ai.movement_speed("VILLAGER", 4)       # smaller tiles: slower
-    assert ai.movement_speed("SOMETHING_ELSE", 4) == ai.movement_speed("TRADE_CART", 4)  # 1 tile per second
+    assert ai.movement_speed("SOMETHING_ELSE", 4) == ai.movement_speed("SPEARMAN", 4)  # 1 tile per second
 
 
 def test_orders_set_the_speed_first():
