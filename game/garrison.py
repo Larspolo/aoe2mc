@@ -31,13 +31,15 @@ SIZES = {                                                          # units insid
     "CASTLE": 20,
     "GUARD_TOWER": 5,
     "KEEP": 5,
+    "KREPOST": 20,                                                 # (AoE2 DE wiki, #1872)
     "TOWN_CENTER": 15,
     "WATCH_TOWER": 5,
 }
 HEAL = {"CASTLE": 0.2}                                           # hit points per AoE2 second inside, else 0.1
 HERBAL = 6                  # Herbal Medicine: units inside heal 6 times as fast (AoE2 DE wiki, #1585)
 HEAL_EVERY = 5.0            # AoE2 seconds between two heal passes (fewer commands)
-BASE = {"CASTLE": 5, "TOWN_CENTER": 0}                            # arrows of an empty building (AoE2 wiki), else 1
+BASE = {"CASTLE": 5, "TOWN_CENTER": 0,                           # arrows of an empty building (AoE2 wiki), else 1
+        "KREPOST": 5}                                             # (#1872)
 DOOR = 2.5                  # blocks from the door cell: there a unit goes in
 UNGARRISON = (7, "oak_door", "Ungarrison", "Click: all units come out")   # a slot of the first row, before RALLY
 INSIDE = "{Invulnerable:1b,NoAI:1b,CustomNameVisible:0b}"         # the NBT of a garrisoned unit (#807)

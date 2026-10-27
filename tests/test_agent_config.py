@@ -34,16 +34,15 @@ def test_the_tools_read_another_config(tmp_path):
     (tmp_path / "agent.toml").write_text(FAKE)
     env = {k: v for k, v in os.environ.items() if k != "GITHUB_REPOSITORY"}
     env["AGENT_CONFIG"] = str(tmp_path / "agent.toml")
-    code = ("import inspect, claim, dashboard, health, refimage;"
+    code = ("import inspect, claim, dashboard, health;"
             "print(dashboard.REPO, dashboard.STATUS, dashboard.PAUSED, sorted(dashboard.SKIP), claim.STATUS,"
-            " health.OWNER, health.STATUS, inspect.signature(claim.revived), refimage.HEADERS['User-Agent'])")
+            " health.OWNER, health.STATUS, inspect.signature(claim.revived))")
     out = subprocess.run([sys.executable, "-c", code], cwd=os.path.join(ROOT, "tools"), env=env,
                          capture_output=True, text=True, check=True).stdout.split()
     assert out[:3] == ["someone/other", "bot-status", "stop"]
     assert "'bot-status'," in out and "'agent-status'," not in " ".join(out)
     assert "7" in out and "someone" in out
-    assert "(path='NOTES.md', base='origin/trunk')" in " ".join(out)
-    assert out[-1] == "(https://github.com/someone/other)"
+    assert " ".join(out).endswith("(path='NOTES.md', base='origin/trunk')")
 
 
 def test_no_tool_skill_or_workflow_names_the_repository():

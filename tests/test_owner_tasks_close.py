@@ -11,14 +11,14 @@ def issue(n, title, body=""):
 
 
 def test_a_close_request_wins_over_the_check_title():
-    i = issue(1691, "Check that the bot militia stay out of a lake in a real game", "Use a real Minecraft client.")
+    i = issue(1691, "Check that the bot militia stay out of a lake in a real game", "Use a real game client.")
     assert owner_tasks.kind(i, [{"body": "Second check: no bug." + FOOTER}, {"body": ASK}]) == "close"
     found = owner_tasks.tasks([i], {1691: [{"body": ASK}]})
     assert [t["number"] for t in owner_tasks.plan(found)["close now"]] == [1691]
 
 
 def test_a_close_request_wins_over_the_section_for_the_owner():
-    i = issue(1204, "Check the arrows in Minecraft", "## For the owner\nKind: play\nLook at the arrows.\n")
+    i = issue(1204, "Check the arrows in the game", "## For the owner\nKind: play\nLook at the arrows.\n")
     assert owner_tasks.kind(i, [{"body": ASK}]) == "close"
     assert owner_tasks.kind(i) == "play"
 
@@ -30,5 +30,5 @@ def test_a_decision_with_a_close_request_is_a_close():
 
 
 def test_an_owner_answer_after_the_close_request_keeps_the_kind():
-    i = issue(1492, "Check the ships of the game program in Minecraft")
+    i = issue(1492, "Check the ships of the game program")
     assert owner_tasks.kind(i, [{"body": ASK}, {"body": "No, the boarding still fails for me."}]) == "play"

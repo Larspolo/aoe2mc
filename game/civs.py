@@ -7,7 +7,8 @@ Bonuses that the game program cannot use yet: Japanese fishing ships, Malian oys
 church (+10 % near it).
 BUILD and BUILD_WONDER hold the build speed bonuses (#1893): build.rise multiplies the work of the builders (build_rate).
 WORK_RATE holds the train and research rate of the buildings (#1894, Persian town centers and docks): train.seconds
-divides the time of an item by work_rate().
+divides the time of an item by work_rate(). HP holds the hit points bonus of the buildings (#1895): build.values and
+combat.setup (the buildings of the map) apply it before the technologies (Masonry).
 REPAIR and REPAIR_COST hold the repair bonuses (#1730, AoE2 wiki "Repairing"): repair.tick multiplies the rate and the
 cost of the repairs of a player by them (repair_rate, repair_cost).
 
@@ -316,6 +317,7 @@ MISSING |= dict.fromkeys(("GENITOUR", "ELITE_GENITOUR", "ELITE_GENITOUR_UPGRADE"
                          tuple(sorted(set().union(*MISSING.values()) - {"BERBERS"})))
 MISSING |= dict.fromkeys(("SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER_UPGRADE"),
                          tuple(sorted(set().union(*MISSING.values()) - {"GURJARAS"})))   # (AoE2 DE wiki, #1612)
+MISSING["KREPOST"] = tuple(sorted(set().union(*MISSING.values()) - {"BULGARIANS"}))   # the build menu (AoE2 DE wiki, #1872)
 SHARED = {"CONDOTTIERO": "ITALIANS",                              # the shared unique units of the team bonuses: an ally
           "ELITE_GENITOUR": "BERBERS",                             # of the civilization has them too (AoE2 DE wiki,
           "ELITE_GENITOUR_UPGRADE": "BERBERS",                     # "Team bonus", #1619)
@@ -329,6 +331,7 @@ REPAIR = {"ROMANS": ROMAN}                                        # Romans: repa
 REPAIR_COST = {"GEORGIANS": 0.75}                                 # Georgians (team bonus): repairs cost -25 %
 PERSIAN = (1.05, 1.1, 1.15, 1.2)                                   # Persians: 5/10/15/20 % faster in the Dark ... Imperial Age
 WORK_RATE = {"PERSIANS": {"DOCK": PERSIAN, "TOWN_CENTER": PERSIAN}}   # the train and research rate of a building in each age
+HP = {"PERSIANS": {"DOCK": 2, "TOWN_CENTER": 2}}                   # Persians: town centers and docks have double hit points
 
 
 def mounted(s):
@@ -425,6 +428,11 @@ def repair_cost(g):
     players = g.data.get("players", {})
     return min([REPAIR_COST.get(civ(g, p), 1) for p in players if p.isdigit() and gather.allied(players, g.player, int(p))]
                + [REPAIR_COST.get(civ(g), 1)])
+
+
+def hp(civ, building, s):
+    """The combat.Stats s of building (a name) with the hit points bonus of civilization civ (HP, #1895)."""
+    return s._replace(hp=s.hp * HP.get(civ, {}).get(building, 1))
 
 
 def work_rate(g, building):

@@ -39,9 +39,10 @@ def test_the_castle_menu_has_the_unique_unit_of_the_civilization():
     assert menus(server)[-1].startswith("aoe menu Steve Castle 0:ravager_spawn_egg:War Elephant:170 food · 85 gold")
 
 
-def test_a_unique_unit_without_combat_values_is_not_in_the_menu():
+def test_a_unique_unit_without_combat_values_is_not_in_the_menu(monkeypatch):
     assert all(u in combat.STATS for u in train.UNIQUE.values() if u in train.COSTS)
-    server, g = setup("AZTECS")                                        # JAGUAR_WARRIOR: not in combat.STATS yet
+    monkeypatch.delitem(train.COSTS, "JAGUAR_WARRIOR")                 # the rule needs one unit that the data does not list
+    server, g = setup("AZTECS")
     assert train.trains(g, "CASTLE") == train.TRAINS["CASTLE"] and train.queue(g, "Steve", (12, 4), "LONGBOWMAN") is None
 
 
