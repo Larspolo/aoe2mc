@@ -41,7 +41,7 @@ def test_a_complete_watch_tower_gets_its_target_and_arrows():
     x0, x1, z0, z1 = site["footprint"]
     uuid = combat.target_uuid([x0, z0, x1, z1])
     cmd, = [c for c in server.log if c.startswith(f"aoe building {uuid} ")]
-    assert cmd.startswith(f"aoe building {uuid} 1020 1 7 ") and cmd.endswith(" 5 32 24 4 building,standard,stone")   # 8 tiles, 2 s, min 1
+    assert cmd.startswith(f"aoe building {uuid} 1020 1 7 ") and cmd.endswith(" 5 32 24 4 building,standard,stone ship:5")   # 8 tiles, 2 s, min 1
     assert f"aoe arrows {uuid} 1" in server.log
 
 

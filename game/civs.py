@@ -160,6 +160,9 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
                           "PORTUGUESE", "PURU", "ROMANS", "SLAVS", "SPARTANS", "TATARS", "THRACIANS", "VARANGIANS",
                           "WEI", "WU"),   # the wiki chart (#1504)
            "ARSON": ("GOTHS", "MUISCA", "ROMANS"),                                          # (#1419)
+           "ATONEMENT": ("BRITONS", "BULGARIANS", "CELTS", "DANES", "FRANKS", "GEORGIANS", "GOTHS",
+                         "HINDUSTANIS", "INCAS", "KHMER", "KOREANS", "MAGYARS", "PERSIANS", "POLES", "SICILIANS",
+                         "TUPI", "WEI"),                                                # the wiki chart (#1581)
            "BLOCK_PRINTING": ("BERBERS", "BULGARIANS", "CELTS", "CUMANS", "ETHIOPIANS", "GOTHS", "GURJARAS", "HUNS",
                               "KHITANS", "KHMER", "MAPUCHE", "MONGOLS", "SHU", "SICILIANS", "TUPI", "TURKS",
                               "VARANGIANS", "WU"),                                          # (#1457)
@@ -175,6 +178,13 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
                                   "ROMANS", "SARACENS", "SAXONS", "SHU", "SICILIANS", "SLAVS", "SPARTANS", "THRACIANS",
                                   "TUPI", "VARANGIANS", "VIKINGS", "WEI", "WU"),
            "BRACER": ("CELTS", "CUMANS", "FRANKS", "MALIANS", "MAPUCHE", "PERSIANS", "ROMANS", "SLAVS", "TEUTONS"),   # (#1503)
+           "CAMEL_RIDER": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "BENGALIS", "BOHEMIANS", "BRITONS",
+                           "BULGARIANS", "BURGUNDIANS", "BURMESE", "CELTS", "CHINESE", "DANES", "DRAVIDIANS",
+                           "FRANKS", "GEORGIANS", "GOTHS", "HUNS", "INCAS", "ITALIANS", "JAPANESE", "JURCHENS",
+                           "KHMER", "KOREANS", "LITHUANIANS", "MACEDONIANS", "MAGYARS", "MALAY", "MAPUCHE", "MAYANS",
+                           "MUISCA", "POLES", "PORTUGUESE", "PURU", "ROMANS", "SAXONS", "SHU", "SICILIANS", "SLAVS",
+                           "SPANISH", "SPARTANS", "TEUTONS", "THRACIANS", "TUPI", "VARANGIANS", "VIETNAMESE",
+                           "VIKINGS", "WEI", "WU"),   # the wiki chart (#1550)
            "CANNON_GALLEON": ("ARMENIANS", "AZTECS", "BYZANTINES", "CHINESE", "CUMANS", "DANES", "GOTHS", "HUNS", "INCAS",
                               "JURCHENS", "MAPUCHE", "MAYANS", "MUISCA", "ROMANS", "SAXONS", "SHU", "TUPI", "VARANGIANS",
                               "VIKINGS", "WEI", "WU"),                                     # (#1484)
@@ -185,6 +195,9 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
                               "FRANKS", "GURJARAS", "INCAS", "ITALIANS", "MAPUCHE", "MAYANS", "MUISCA", "POLES",
                               "PORTUGUESE", "SAXONS", "SICILIANS", "SPANISH", "TEUTONS", "TUPI", "VARANGIANS", "VIKINGS",
                               "WEI"),                                 # the wiki chart (#1430)
+           "CROP_ROTATION": ("ARMENIANS", "BOHEMIANS", "BRITONS", "CELTS", "CHINESE", "DANES", "DRAVIDIANS", "ETHIOPIANS",
+                             "HINDUSTANIS", "HUNS", "JAPANESE", "KHITANS", "KOREANS", "MONGOLS", "SARACENS", "SHU",
+                             "SPANISH", "TUPI", "TURKS", "WU"),                     # the wiki chart (#1578)
            "DEMOLITION_RAFT": ("DANES", "KOREANS", "PORTUGUESE", "SAXONS", "VARANGIANS", "VIKINGS"),   # (#1481)
            "DEMOLITION_SHIP": ("DANES", "KOREANS", "PORTUGUESE", "SAXONS", "VARANGIANS", "VIKINGS"),   # (#1481)
            "DRY_DOCK": ("BOHEMIANS", "BULGARIANS", "BURGUNDIANS", "CUMANS", "GEORGIANS", "GOTHS", "GURJARAS",
@@ -215,6 +228,17 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
            "HEATED_SHOT": ("BOHEMIANS", "BURGUNDIANS", "BYZANTINES", "FRANKS", "GEORGIANS", "HINDUSTANIS", "HUNS",
                            "JAPANESE", "JURCHENS", "MAPUCHE", "MONGOLS", "MUISCA", "POLES", "ROMANS", "SARACENS",
                            "SLAVS", "SPANISH"),                                       # the wiki chart (#1548)
+           "HEAVY_CAMEL_RIDER_UPGRADE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "BENGALIS", "BOHEMIANS",
+                                         "BRITONS", "BULGARIANS", "BURGUNDIANS", "BURMESE", "CELTS", "CHINESE",
+                                         "CUMANS", "DANES", "DRAVIDIANS", "FRANKS", "GEORGIANS", "GOTHS", "HUNS",
+                                         "INCAS", "ITALIANS", "JAPANESE", "JURCHENS", "KHMER", "KOREANS",
+                                         "LITHUANIANS", "MACEDONIANS", "MAGYARS", "MALAY", "MAPUCHE", "MAYANS",
+                                         "MUISCA", "POLES", "PORTUGUESE", "PURU", "ROMANS", "SAXONS", "SHU",
+                                         "SICILIANS", "SLAVS", "SPANISH", "SPARTANS", "TEUTONS", "THRACIANS", "TUPI",
+                                         "VARANGIANS", "VIETNAMESE", "VIKINGS", "WEI", "WU"),   # the wiki chart (#1550)
+           "HERESY": ("BENGALIS", "BRITONS", "BURGUNDIANS", "BURMESE", "CHINESE", "DANES", "DRAVIDIANS", "GOTHS",
+                      "HINDUSTANIS", "ITALIANS", "JAPANESE", "JURCHENS", "KHMER", "KOREANS", "PERSIANS", "POLES",
+                      "ROMANS", "SICILIANS", "SLAVS", "TATARS", "VARANGIANS", "VIETNAMESE", "WEI", "WU"),   # (#1582)
            "HEAVY_DEMOLITION_SHIP": ("ACHAEMENIDS", "ATHENIANS", "AZTECS", "BENGALIS", "BOHEMIANS", "BULGARIANS",
                                      "BURGUNDIANS", "BURMESE", "CUMANS", "DANES", "ETHIOPIANS", "GEORGIANS",
                                      "HINDUSTANIS", "INCAS", "ITALIANS", "JAPANESE", "KHITANS", "KHMER", "KOREANS",
@@ -249,6 +273,9 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
                                 "PURU", "ROMANS", "SAXONS", "SHU", "SICILIANS", "SLAVS",
                                 "SPANISH", "SPARTANS", "TEUTONS", "THRACIANS", "TUPI",
                                 "VARANGIANS", "VIETNAMESE", "VIKINGS", "WU"),   # the wiki chart (#1505)
+           "SAPPERS": ("BENGALIS", "BERBERS", "BULGARIANS", "BURMESE", "BYZANTINES", "DANES", "DRAVIDIANS", "FRANKS",
+                       "HINDUSTANIS", "ITALIANS", "JAPANESE", "KHITANS", "KOREANS", "LITHUANIANS", "MUISCA",
+                       "SARACENS", "VARANGIANS", "WEI", "WU"),                     # the wiki chart (#1580)
            "SHIPWRIGHT": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "BOHEMIANS", "BULGARIANS", "BURGUNDIANS", "BURMESE",
                           "CUMANS", "FRANKS", "GEORGIANS", "HINDUSTANIS", "HUNS", "JURCHENS", "KHITANS", "KHMER",
                           "LITHUANIANS", "MACEDONIANS", "MALIANS", "MAPUCHE", "MUISCA", "PERSIANS", "POLES", "PORTUGUESE",
@@ -267,6 +294,9 @@ EAGLES = ("AZTECS", "MAYANS")                                     # the eagle li
 MISSING |= dict.fromkeys(("EAGLE_SCOUT", "EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"),   # The Last Chieftains, #1555)
                          tuple(sorted(set().union(*MISSING.values()) - set(EAGLES))))
 MISSING["WINGED_HUSSAR_UPGRADE"] = tuple(sorted(set().union(*MISSING.values()) - {"LITHUANIANS", "POLES"}))   # (#1558)
+LANCERS = ("CUMANS", "JURCHENS", "KHITANS", "MONGOLS", "TATARS")   # the steppe lancers (AoE2 DE wiki, #1557)
+MISSING |= dict.fromkeys(("STEPPE_LANCER", "ELITE_STEPPE_LANCER", "ELITE_STEPPE_LANCER_UPGRADE"),
+                         tuple(sorted(set().union(*MISSING.values()) - set(LANCERS))))
 
 
 def mounted(s):

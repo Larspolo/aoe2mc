@@ -41,7 +41,7 @@ def test_a_complete_watch_tower_site_takes_hits_and_shoots():
     build.target(g, tower)
     x0, x1, z0, z1 = tower["footprint"]
     shot, = [c for c in log[n:] if c.startswith("aoe building")]
-    assert shot.split()[2] == combat.target_uuid([x0, z0, x1, z1]) and shot.endswith(" 5 32 24 4 building,standard,stone")
+    assert shot.split()[2] == combat.target_uuid([x0, z0, x1, z1]) and shot.endswith(" 5 32 24 4 building,standard,stone ship:5")
     assert shot.split()[3:6] == ["1020", "1", "7"]                    # hit points, melee and pierce armor
     assert f"aoe arrows {shot.split()[2]} 1" in log[n:]
 
@@ -49,7 +49,7 @@ def test_a_complete_watch_tower_site_takes_hits_and_shoots():
 def test_a_complete_town_center_site_takes_hits_and_shoots_once():
     g, site, log = built("TOWN_CENTER")
     shot, = [c for c in log if c.startswith("aoe building")]
-    assert shot.split()[3] == "2400" and shot.endswith(" 5 24 24 0")  # range 6 tiles × 4
+    assert shot.split()[3] == "2400" and shot.endswith(" 5 24 24 0 building,standard ship:5")   # range 6 tiles × 4
     assert any(c.startswith("summon slime") for c in log) and any(c.startswith("aoe label") for c in log)
     assert not g.forts.keys() & {shot.split()[2]}                     # an own building: no target of a click
 

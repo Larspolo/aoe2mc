@@ -39,6 +39,26 @@ the zips: start it in the "Actions" tab, or push a tag `v*` for a release of tha
 
 ## Install
 
+### Installer (no Python needed)
+
+Download the installer of your system from the
+[latest release](https://github.com/Larspolo/aoe2mc/releases/latest). The installers are not signed, so the
+system shows a warning the first time. The steps below go past it.
+
+- Windows: start `aoe2mc-<version>-windows-x64-setup.exe`. If Windows SmartScreen shows "Windows protected your PC",
+  click "More info", then "Run anyway". The installer needs no admin rights. Start "aoe2mc" from the Start menu.
+  The command line is `aoe2mc.exe` in the install folder (default `%LOCALAPPDATA%\Programs\aoe2mc`).
+- macOS: open `aoe2mc-<version>-macos-arm64.dmg` (Apple silicon) or `aoe2mc-<version>-macos-x86_64.dmg` (Intel) and
+  drag `aoe2mc` into "Applications". The first time, right click the app and select "Open", then "Open" again. If
+  macOS does not show "Open", go to "System Settings" → "Privacy & Security" and click "Open Anyway". The command
+  line is `/Applications/aoe2mc.app/Contents/MacOS/aoe2mc`.
+- Linux: make the file executable (`chmod +x aoe2mc-<version>-linux-x86_64.AppImage`) and start it: without
+  arguments it opens the window, with arguments it is the command line
+  (`./aoe2mc-<version>-linux-x86_64.AppImage MyMap.aoe2scenario MyMapWorld`). If it says that FUSE is missing,
+  install `libfuse2` or start it with `--appimage-extract-and-run`.
+
+### With Python
+
 Two ways:
 
 - Install the command `aoe2mc`: `pip install .` in the repository folder, or

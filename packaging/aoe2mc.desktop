@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=aoe2mc
+Comment=Convert an Age of Empires II scenario into a Minecraft world
+Exec=aoe2mc-gui
+Icon=aoe2mc
+Categories=Utility;
+Terminal=false

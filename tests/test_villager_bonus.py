@@ -25,7 +25,7 @@ def test_the_stone_defense_class_and_the_building_command():
     assert {k for k in combat.WALLS if combat.STONE in combat.wall(k, 0).classes} == \
         {"FORTIFIED_GATE", "FORTIFIED_WALL", "GATE", "STONE_WALL"}
     cmd = combat.building(combat.target_uuid([0, 0, 2, 2]), "WATCH_TOWER", 1, (0, 64, 0, 1, 70, 1), 4)[-1]
-    assert cmd.endswith(" building,standard,stone")                     # the plugin reads the classes
+    assert cmd.split()[16] == "building,standard,stone"                 # the plugin reads the classes
     house = combat.building(combat.target_uuid([4, 4, 6, 6]), "HOUSE", 1, (0, 64, 0, 1, 70, 1), 4)[-1]
     assert house.split()[-1] == "1"                                     # the default classes: no class text
 
