@@ -1,8 +1,9 @@
 """game/build.py and game/train.py: the Feudal Age buildings and units are locked until the Feudal Age (#674)."""
 from test_build_menu import villager_map
-from test_train_archery import menus
+from menu_line import item
+from test_train_archery import BOLA, CAVA, ELEA, GENI, HAND, MOCB, SLIN, menus
 from test_train_archery import setup as archery
-from test_train_menu import RALLY, SKIRM
+from test_train_menu import SKIRM
 
 from game import build, train
 
@@ -44,15 +45,13 @@ def test_in_the_dark_age_a_start_archery_range_shows_a_gray_archer_and_trains_no
     server, g = archery()
     g.techs.discard("FEUDAL_AGE")
     rect = train.open_menu(g, "Steve", (11, 3))
-    assert menus(server)[-1] == "aoe menu Steve Archery Range 0:gray_dye:Archer:25 wood · 45 gold · 35 s · " \
-                                "Needs the Feudal Age" + SKIRM.replace("drowned_spawn_egg", "gray_dye").replace(
-                                    "queue 0/15", "Needs the Feudal Age") + " 4:gray_dye:Cavalry Archer:40 wood · 60 gold · 37 s · Needs the Castle Age" \
-        + " 7:gray_dye:Hand Cannoneer:45 food · 50 gold · 34 s · Needs the Imperial Age" \
-        + " 19:gray_dye:Genitour:40 food · 35 wood · 25 s · Needs the Castle Age" \
-        + " 21:gray_dye:Elephant Archer:70 food · 80 gold · 32 s · Needs the Castle Age" \
-        + " 23:gray_dye:Mounted Crossbowman:40 wood · 65 gold · 40 s · Needs the Castle Age" \
-        + " 25:gray_dye:Slinger:50 food · 25 wood · 25 s · Needs the Castle Age" \
-        + " 26:gray_dye:Bolas Rider:50 wood · 55 gold · 34 s · Needs the Castle Age" + RALLY   # (#1610, #1952, #2012, #2010, #2135)
+    cmd = menus(server)[-1]
+    assert item(cmd, "Archer") == "0:gray_dye:Archer:25 wood · 45 gold · 35 s · Needs the Feudal Age"
+    assert item(cmd, "Skirmisher") == SKIRM.replace("drowned_spawn_egg", "gray_dye").replace("queue 0/15",
+                                                                                              "Needs the Feudal Age")
+    assert [item(cmd, label) for label in ("Cavalry Archer", "Hand Cannoneer", "Genitour", "Elephant Archer",
+                                           "Mounted Crossbowman", "Slinger", "Bolas Rider")] \
+        == [CAVA, HAND, GENI, ELEA, MOCB, SLIN, BOLA]   # gray as before
     assert train.order(g, "Steve", rect, 0) == 0 and g.stock["wood"] == 25 and not g.queues.get(rect)
     g.techs.add("FEUDAL_AGE")
     assert train.order(g, "Steve", rect, 0) == 1
