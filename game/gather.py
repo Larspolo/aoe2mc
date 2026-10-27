@@ -57,6 +57,7 @@ import cheats  # noqa: E402
 import civs  # noqa: E402
 import conquest  # noqa: E402
 import fleet  # noqa: E402
+import fog  # noqa: E402
 import garrison  # noqa: E402
 import hints  # noqa: E402
 import market  # noqa: E402
@@ -67,6 +68,7 @@ import repair  # noqa: E402
 import siege_tower  # noqa: E402
 import stance  # noqa: E402
 import trade  # noqa: E402
+import transport  # noqa: E402
 import train  # noqa: E402
 import trebuchet  # noqa: E402
 import wonder  # noqa: E402
@@ -87,6 +89,7 @@ AOE2_WORK, NORMAL = {"wood": 0.39, "food": 0.31, "farm": 0.33, "gold": 0.38, "st
                      "fish": 0.43}, 1.7                            # fish: a fisherman at a shore fish (#1283)
 WORK_SECONDS = {r: 1 / (w * NORMAL) for r, w in AOE2_WORK.items()}    # real seconds per unit, as at Normal speed
 CARRY = {"WHEELBARROW": 3}                                         # more resources per trip, as in AoE2 (#728)
+FOOD_CARRY = {"HEAVY_PLOW": 1}                                     # more food only per trip, as in AoE2 (#1424)
 PACE = {"WHEELBARROW": 1.1}                                        # the villager walk speed factor, as in AoE2
 WORK_TECHS = {"BOW_SAW": {"wood": 1.2},                            # work rate factors of the economy technologies (AoE2)
               "DOUBLE_BIT_AXE": {"wood": 1.2},
@@ -119,10 +122,11 @@ FISH_FOOD = {"BOX_TURTLES": 200,
              "SHORE_FISH": 200}
 SHORE_FISH = {"BOX_TURTLES", "SHORE_FISH"}
 SHIP_WORK = {"deep": 0.42, "shore": 0.24}                          # the work rate of a fishing ship (AoE2 DE wiki)
+SHIP_TECHS = {"FISHING_LINES": (1.1, 5), "GILLNETS": (1.1, 5)}     # the work rate factor and the more food of a trip (#1439)
 HERDS = {"COW", "GOAT", "GOOSE", "LLAMA", "PIG", "SHEEP", "TURKEY", "WATER_BUFFALO"}   # herdable animals: shepherds (civs.WORK)
 VILLAGER_HIT = 3, 2.0                                              # AoE2 villager attack and reload (game seconds)
 FARM_FOOD = 175                                                    # food in one farm, as in AoE2 DE (no upgrades)
-FARM_TECHS = {"HORSE_COLLAR": 75}                                  # food that a farm technology adds to each farm (AoE2 DE)
+FARM_TECHS = {"HEAVY_PLOW": 125, "HORSE_COLLAR": 75}               # food that a farm technology adds to each farm (AoE2 DE)
 MINES = {"GOLD_MINE": ("gold", 800, "GOLD_MINER"), "STONE_MINE": ("stone", 350, "STONE_MINER")}   # as in AoE2
 MINE_BLOCKS = {"gold": ("gold_ore", "raw_gold_block", "stone"),                # the blocks of the converter's heap
                "stone": ("cobblestone", "andesite", "stone", "tuff")}
@@ -487,6 +491,7 @@ class Gather:
     ended = None                                                       # "Victory" or "Defeat": run() stops (#819)
     board = "aoe_res"                                                  # the objective of the resources (the sidebar)
     bots = ()                                                          # run() steps them too (bot.Bot, #856)
+    reveal = "normal"                                                  # AoE2 "Reveal map"; "all": no fog (fog.py, #1389)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
                  cheats=False, start=None):
@@ -704,6 +709,7 @@ class Gather:
         trebs = {u for u in self.selected if self.soldiers.get(u) == trebuchet.NAME}
         for u in sorted(trebs):                                        # it unpacks first (#1351)
             trebuchet.unpack(self, u, target)
+        fleet.attack(self, {u for u in self.selected if replay.ship(self.soldiers.get(u, ""))}, target)   # (#1386)
         for u in sorted(self.selected - monks - trebs):
             self.command(ai.speed_command(u, self.soldiers[u], self.map.T, NORMAL * train.speed(self, self.soldiers[u])))
         if not monks and not trebs:
@@ -938,12 +944,16 @@ class Gather:
             return
         if kind == "unit" and u in self.selected and siege_tower.out(self, u):   # its units come out (#1362)
             return
+        if kind == "unit" and u in self.selected and transport.out(self, u):   # on the nearest land (#1385)
+            return
         if kind == "unit" and u in self.selected and u in self.soldiers:    # a click on a selected soldier (#1107)
             stance.open_menu(self, name, u)
             return
         if kind == "unit" and repair.unit_order(self, name, u):        # villagers repair an own damaged siege unit (#1331)
             return
         if kind == "unit" and siege_tower.order(self, name, u):        # the selection goes into a siege tower (#1362)
+            return
+        if kind == "unit" and transport.order(self, name, u):          # the selection goes into a transport ship (#1385)
             return
         if kind == "unit":
             self.select(u)
@@ -1001,6 +1011,7 @@ class Gather:
         import ai                                                      # ai imports this module
         boats = {u for u in self.selected if replay.ship(self.soldiers.get(u, ""))}
         out = fleet.order(self, boats, cell)                           # a ship sails on the water (#1383)
+        transport.aim(self, out, cell)                                 # a loaded ship unloads at a land cell (#1385)
         who = sorted(u for u in self.selected - boats if u in self.villagers or u in self.soldiers)
         r = math.isqrt(len(who)) + 2
         cells = sorted(((x, z) for x in range(cell[0] - r, cell[0] + r + 1) for z in range(cell[1] - r, cell[1] + r + 1)
@@ -1082,7 +1093,10 @@ class Gather:
         """{UUID: feet} of pickable() for the pointing mark. On Paper one `aoe where` answer has WHERE_PAGE units
         (#813): the units of the players are on their teams (the pulse of the datapack, #358). Else one `data get`
         for each unit."""
-        want = self.pickable()
+        return self.where(self.pickable())
+
+    def where(self, want):
+        """{UUID: feet} of the units want: on Paper `aoe where` answers (WHERE_PAGE units each), else `data get`."""
         if not self.paper:
             return self.positions(sorted(want))
         out, start = {}, 0
@@ -1148,6 +1162,7 @@ class Gather:
         self.fall()
         garrison.tick(self)
         siege_tower.tick(self)
+        transport.tick(self)
         for v in self.villagers.values():
             if v.state in ("to_tree", "to_drop", "to_site", "to_rally", "to_prey", "to_repair") and v.path:
                 self.follow(v) if self.paper else walk(self, v)
@@ -1185,7 +1200,7 @@ class Gather:
                 src = self.source(v)
                 work = self.work_time("farm" if v.tree in self.map.farms else "hunt" if v.tree in self.map.carcasses else v.res,
                                       v.tree in self.map.herds)
-                while v.timer >= work and v.load < self.limit() and src.get(v.tree, 0) > 0:
+                while v.timer >= work and v.load < self.limit(v.res) and src.get(v.tree, 0) > 0:
                     v.timer -= work
                     v.load += 1
                     src[v.tree] -= 1
@@ -1204,7 +1219,7 @@ class Gather:
                         self.fell(v.tree)
                     else:
                         self.trunk(v.tree)
-                if v.load >= self.limit() or src.get(v.tree, 0) <= 0:
+                if v.load >= self.limit(v.res) or src.get(v.tree, 0) <= 0:
                     self.go(v, "to_drop", set().union(*map(self.map.around, self.map.drops[v.res])))
         train.tick(self, self.tick * NORMAL)
         monk.heal(self, self.tick * NORMAL)
@@ -1244,9 +1259,11 @@ class Gather:
                     NORMAL * civs.speed(self, "VILLAGER") * math.prod(PACE.get(t, 1) ** train.count(self, t) for t in self.techs))
         v.moved, v.tries = self.clock(), v.tries + 1
 
-    def limit(self):
-        """The resources that a villager carries, with the technologies of the player (CARRY)."""
-        return self.carry + sum(CARRY.get(t, 0) * train.count(self, t) for t in self.techs)
+    def limit(self, res=None):
+        """The resources res that a villager carries, with the technologies of the player (CARRY, and FOOD_CARRY for
+        food)."""
+        more = CARRY | FOOD_CARRY if res == "food" else CARRY
+        return self.carry + sum(more.get(t, 0) * train.count(self, t) for t in self.techs)
 
     def follow(self, v):
         """Paper: read the position of a walking villager. It arrives 1.5 blocks from the center of its goal cell (there
@@ -1455,6 +1472,7 @@ class Gather:
             for b in self.bots:
                 b.step()
             conquest.tick(self)                                        # not in step(): the bot steps its own Gather
+            fog.tick(self)                                             # after the bots: their units too (#1389)
             wonder.tick(self, self.tick * NORMAL)                      # game seconds, as train.tick
             relic_victory.tick(self, self.tick * NORMAL)
             time.sleep(max(0.0, self.tick - (time.time() - t)))

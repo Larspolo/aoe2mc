@@ -32,6 +32,7 @@ HSI = "heavysiege"                                    # the Hussite Wagon and Ba
 RAM = "ram"                                           # the rams, the siege tower, the unpacked trebuchet, the Armored Elephant line
 UNI = "unique"                                        # the unique units of the castles (the Samurai bonus)
 GUN = "gunpowder"                                     # the targets of the Condottiero and Winged Hussar bonus (#1007)
+SHIP, WAR = "ship", "warship"                         # the ships; "warship": the AoE2 class "Long-range warship"
 SPEAR = {CAV: 15, CAM: 12, ELE: 15}                   # spearman bonus, more in the later ages of the line
 STATS = {
     # infantry: militia line and spearman line
@@ -200,6 +201,7 @@ STATS = {
     "CAPPED_RAM": Stats(200, 3, -2, 190, 0, 5.0, {"building": 160, SIE: 50}, (SIE, RAM)),
     "SIEGE_RAM": Stats(270, 4, -1, 195, 0, 5.0, {"building": 200, SIE: 65}, (SIE, RAM)),
     "SIEGE_TOWER": Stats(175, 0, -2, 100, 0, 0.0, {}, (SIE, RAM)),         # AoE2 DE wiki (#1362)
+    "TRANSPORT_SHIP": Stats(70, 0, 0, 2, 0, 0.0, {}, ()),              # AoE2 DE wiki (#1385)
     "TREBUCHET": Stats(150, 200, 2, 8, 16, 10.0, {"building": 250}, (SIE,)),   # AoE2 DE wiki: 150 HP (#1351); packed
     # armor (unpacked: trebuchet.UNPACKED, #1409)
     "BOMBARD_CANNON": Stats(80, 40, 2, 5, 12, 6.5, {"building": 200, HSI: 40, SIE: 20}, (GUN, SIE)),
@@ -213,6 +215,9 @@ STATS = {
     "SHARKATZOR": Stats(600, 33, 1, 0, 10, 2.1, {SIE: 5}, (SIE,)),
     "VMDL": Stats(25, 0, 0, 0, 0, 0.0),
     "WAR_PENGUIN": Stats(64, 16, 4, 4, 0, 2.0, {"building": 8}, (INF,)),
+    # ships (#1386, AoE2 DE wiki): the hits go to the crew of the boat (AoePlugin.java)
+    "FISHING_SHIP": Stats(50, 0, 1, 1, 0, 0.0, {}, (SHIP,)),
+    "GALLEY": Stats(110, 6, 0, 3, 5, 3.0, {"building": 6, WAR: 5}, (SHIP, WAR)),
     # others: no fight, but they can die
     "VILLAGER": Stats(25, 3, 0, 0, 0, 2.0),
     "KING": Stats(75, 0, 0, 0, 0, 0.0),
@@ -256,6 +261,10 @@ WALLS = {
     "STONE_WALL": ((1080, 1080, 1800, 1800), 8, 10),
 }
 WALL_TAG = "aoe2mc.wall"
+# The AoE2 class "Standard Buildings" (wiki "Armor class"): all buildings but the walls, the gates and the wonder. Arson
+# gives infantry a bonus against it (#1419).
+STANDARD = "standard"
+BUILDINGS = {k: s if k == "WONDER" else s._replace(classes=s.classes + (STANDARD,)) for k, s in BUILDINGS.items()}
 # Line of sight in tiles (AoE2 DE, base unit or building, wiki infobox "LOS"; the house: 1 from the edge of its
 # 2 x 2 tiles, #1300) where it is not max(4, range + 2) (sight()).
 SIGHT = {
@@ -471,7 +480,8 @@ def building(uuid, name, player, box, T=4, inside=(), s=None):
             f"team join p{player} {uuid}"] + \
         [f"aoe arrows {uuid} {garrison.arrows(name, inside)}"] * bool(s.attack and s.range) + \
         [f"aoe building {uuid} {s.hp} {s.melee} {s.pierce} {' '.join(map(str, box))}"   # after the arrows: no shot of 1
-         + (f" {s.attack} {s.range * T} {round(s.reload / NORMAL * 20)}" if s.attack and s.range else "")]
+         + (f" {s.attack} {s.range * T} {round(s.reload / NORMAL * 20)}" if s.attack and s.range else "")
+         + (f" {','.join(s.classes)}" if STANDARD not in s.classes else "")]   # a wall, a gate, the wonder (#1419)
 
 
 def building_box(o, ground):
