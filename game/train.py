@@ -75,6 +75,7 @@ import build  # noqa: E402
 import civs  # noqa: E402
 import garrison  # noqa: E402
 import menu  # noqa: E402
+import monk  # noqa: E402
 import table  # noqa: E402
 
 DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "train.jsonl")
@@ -90,31 +91,24 @@ COSTS = {r["name"]: r["cost"] for r in ROWS}                       # as in AoE2
 TRAIN_TIMES = {r["name"]: r["time"] for r in ROWS}                 # AoE2 seconds
 TRAINS = {b: tuple(r["name"] for r in ROWS if r["building"] == b)    # the units and technologies of each
           for b in dict.fromkeys(r["building"] for r in ROWS if r["building"])}   # building, in file order
+TRAINS["FOLWARK"] = TRAINS["MILL"]                                 # the mill of the Poles (#1874)
 TRAINS["KREPOST"] = ()                                             # trains() adds the Konnik (#1872)
-# The unique unit of each civilization (AoE2 DE), trained at its castle. A unit without COSTS is not in the menu yet:
-# it has no AoE2 combat values in combat.STATS.
-UNIQUE = {"BRITONS": "LONGBOWMAN", "PERSIANS": "WAR_ELEPHANT", "BYZANTINES": "CATAPHRACT", "CELTS": "WOAD_RAIDER",
-          "CHINESE": "CHU_KO_NU", "FRANKS": "THROWING_AXEMAN", "GOTHS": "HUSKARL", "JAPANESE": "SAMURAI",
-          "MONGOLS": "MANGUDAI", "SARACENS": "MAMELUKE", "TEUTONS": "TEUTONIC_KNIGHT", "TURKS": "JANISSARY",
-          "VIKINGS": "BERSERK", "AZTECS": "JAGUAR_WARRIOR", "HUNS": "TARKAN", "KOREANS": "WAR_WAGON",
-          "MAYANS": "PLUMED_ARCHER", "SPANISH": "CONQUISTADOR", "INCAS": "KAMAYUK", "ITALIANS": "GENOESE_CROSSBOWMAN",
-          "MAGYARS": "MAGYAR_HUSZAR", "SLAVS": "BOYAR", "BERBERS": "CAMEL_ARCHER", "ETHIOPIANS": "SHOTEL_WARRIOR",
-          "MALIANS": "GBETO", "PORTUGUESE": "ORGAN_GUN", "BURMESE": "ARAMBAI", "KHMER": "BALLISTA_ELEPHANT",
-          "MALAY": "KARAMBIT_WARRIOR", "VIETNAMESE": "RATTAN_ARCHER", "BULGARIANS": "KONNIK", "CUMANS": "KIPCHAK",
-          "LITHUANIANS": "LEITIS", "TATARS": "KESHIK", "BURGUNDIANS": "COUSTILLIER", "SICILIANS": "SERJEANT",
-          "POLES": "OBUCH", "BOHEMIANS": "HUSSITE_WAGON", "HINDUSTANIS": "GHULAM", "DRAVIDIANS": "URUMI_SWORDSMAN",
-          "BENGALIS": "RATHA", "GURJARAS": "CHAKRAM_THROWER", "ROMANS": "CENTURION", "ARMENIANS": "COMPOSITE_BOWMAN",
-          "GEORGIANS": "MONASPA"}
+TRAINS["FORTIFIED_CHURCH"] = TRAINS["MONASTERY"]                  # the monastery of the Armenians, Georgians (#1930)
+# The unique unit of each civilization (AoE2 DE, "unique" in data/civs.jsonl, #1914), trained at its castle. A unit
+# without COSTS is not in the menu yet: it has no AoE2 combat values in combat.STATS.
+UNIQUE = civs.UNIQUE
+CIV_TECHS = {r["name"]: r["civ"] for r in ROWS if "civ" in r}      # a unique technology: its civ (castle, #2021)
 build.AGE |= dict.fromkeys(UNIQUE.values(), 2) | dict.fromkeys(("ELITE_" + n for n in UNIQUE.values()), 3)   # (#1082)
 
 
 def own_civ_only():
     """{name: the other civs} of each unique unit with an elite upgrade in COSTS, its elite unit and its upgrade: only
     the own civ has them (civs.MISSING). A new unique unit needs no line in civs.py, and its elite upgrade has
-    `"building": null` in data/train.jsonl: trains() adds it to the castle of the own civ (#1760)."""
+    `"building": null` in data/train.jsonl: trains() adds it to the castle of the own civ (#1760). The same for a unique
+    technology: its key `"civ"` (CIV_TECHS, #2021)."""
     others = set().union(*civs.MISSING.values()) | set(UNIQUE)
     return {n: tuple(sorted(others - {c})) for c, u in UNIQUE.items() if f"ELITE_{u}_UPGRADE" in COSTS
-            for n in (u, "ELITE_" + u, f"ELITE_{u}_UPGRADE")}
+            for n in (u, "ELITE_" + u, f"ELITE_{u}_UPGRADE")} | {n: tuple(sorted(others - {c})) for n, c in CIV_TECHS.items()}
 
 
 civs.MISSING |= own_civ_only()
@@ -172,6 +166,18 @@ def arrowslits(name, s):
     values (build.line)."""
     return s._replace(attack=s.attack + ARROWSLITS[name]) if name in ARROWSLITS else s
 
+
+
+def forms(first):
+    """The unit first and the units that its upgrades make, in order (UPGRADES of data/train.jsonl): the archer line
+    is forms("ARCHER"). No list of names in the code (tools/data_lint.py, #2061)."""
+    pairs = [p for u in UPGRADES.values() for p in ([u] if isinstance(u[0], str) else u)]
+    out = [first]
+    while (new := next((b for a, b in pairs if a == out[-1]), None)) and new not in out:
+        out.append(new)
+    return tuple(out)
+
+
 TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit name: UPGRADES
          "ARCHITECTURE": masonry,                                  # the same effect as Masonry (#1504)
          "ARROWSLITS": arrowslits,                                 # the towers of the player: build.values
@@ -181,8 +187,11 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
          "BALLISTICS": lambda name, s: s,                          # the aim of the arrows: aoe ballistics (#1549)
          "BANKING": lambda name, s: s,                             # the tribute fee: diplomacy.FEES
+         "BEARDED_AXE": lambda name, s: s._replace(range=s.range + 2)
+         if name in ("THROWING_AXEMAN", "ELITE_THROWING_AXEMAN") else s,  # the Franks (#2044)
          "BLAST_FURNACE": lambda name, s: s._replace(attack=s.attack + 2) if melee(s) or name in HULKS else s,
          "BLOCK_PRINTING": lambda name, s: s,                      # the conversion range: monk.near
+         "BOGSVEIGAR": lambda name, s: s._replace(attack=s.attack + 1) if name in forms("ARCHER") + forms("LONGSHIP") else s,  # (#2021)
          "BOMBARD_TOWER_TECH": lambda name, s: s,                  # the bombard tower in the build menu: build.NEEDS
          "BOW_SAW": lambda name, s: s,                             # an economy technology: gather.WORK_TECHS
          "BRACER": fletching,
@@ -195,6 +204,9 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          if name == "EAGLE_SCOUT" else s,                          # an age: REQUIRES; the eagle scout (#1555)
          "CAREENING": lambda name, s: s._replace(pierce=s.pierce + 1) if ship(name, s) else s,
          "CHAMPION_UPGRADE": lambda name, s: s,                    # a new unit name: UPGRADES
+         "CHIEFTAINS": lambda name, s: s._replace(bonus={**s.bonus, "cavalry": s.bonus.get("cavalry", 0) + 5,
+                                                         "camel": s.bonus.get("camel", 0) + 4})
+         if "infantry" in s.classes else s,                        # the Vikings (#2021)
          "CHEMISTRY": chemistry,
          "COINAGE": lambda name, s: s,                             # the tribute fee: diplomacy.FEES
          "CONSCRIPTION": lambda name, s: s,                        # the train speed: CONSCRIPT, tick()
@@ -214,13 +226,16 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_BOYAR_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "ELITE_CAMEL_ARCHER_UPGRADE": lambda name, s: s,          # a new unit name: UPGRADES
          "ELITE_CANNON_GALLEON_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
+         "ELITE_CARAVEL_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES (#1934)
          "ELITE_CENTURION_UPGRADE": lambda name, s: s,             # a new unit name: UPGRADES
          "ELITE_CHAKRAM_THROWER_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_COMPOSITE_BOWMAN_UPGRADE": lambda name, s: s,     # a new unit name: UPGRADES
          "ELITE_COUSTILLIER_UPGRADE": lambda name, s: s,           # a new unit name: UPGRADES
          "ELITE_CONQUISTADOR_UPGRADE": lambda name, s: s,          # a new unit name: UPGRADES
          "ELITE_EAGLE_WARRIOR_UPGRADE": lambda name, s: s,
+         "ELITE_ELEPHANT_ARCHER_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_GBETO_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
+         "ELITE_FIRE_LANCER_UPGRADE": lambda name, s: s,           # a new unit name: UPGRADES
          "ELITE_GENITOUR_UPGRADE": lambda name, s: s,              # a new unit name: UPGRADES
          "ELITE_JAGUAR_WARRIOR_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
          "ELITE_MAGYAR_HUSZAR_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
@@ -233,8 +248,10 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_KIPCHAK_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "ELITE_KONNIK_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
          "ELITE_LEITIS_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
+         "ELITE_LONGSHIP_UPGRADE": lambda name, s: s,              # a new unit name: UPGRADES (#1934)
          "ELITE_MONASPA_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "ELITE_OBUCH_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
+         "ELITE_ORGAN_GUN_UPGRADE": lambda name, s: s,             # a new unit name: UPGRADES
          "ELITE_PLUMED_ARCHER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
          "ELITE_RATHA_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "ELITE_RATTAN_ARCHER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
@@ -244,7 +261,9 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_STEPPE_LANCER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
          "ELITE_SKIRMISHER_UPGRADE": lambda name, s: s,
          "ELITE_TARKAN_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
+         "ELITE_TURTLE_SHIP_UPGRADE": lambda name, s: s,           # a new unit name: UPGRADES (#1934)
          "ELITE_URUMI_SWORDSMAN_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
+         "ELITE_VARANGIAN_GUARD_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_WAR_WAGON_UPGRADE": lambda name, s: s,            # a new unit name: UPGRADES
          "FAITH": lambda name, s: s,                               # the conversion resistance: monk.resist
          "FERVOR": lambda name, s: s,                              # the walk speed: SPEEDS
@@ -252,7 +271,9 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "FLETCHING": fletching,
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) or name in HULKS else s,
          "FORTIFIED_WALL": lambda name, s: s,                      # the walls of the player: WALL_UPGRADES
+         "FUROR_CELTICA": lambda name, s: s._replace(hp=round(s.hp * 1.4)) if "siege" in s.classes else s,   # the Celts (#2043)
          "GAMBESONS": lambda name, s: s._replace(pierce=s.pierce + 1) if name in MILITIA_LINE else s,
+         "GARLAND_WARS": lambda name, s: s._replace(attack=s.attack + 4) if "infantry" in s.classes else s,  # the Aztecs (#2042)
          "GILLNETS": lambda name, s: s,                            # the fishing ships: gather.SHIP_TECHS
          "GOLD_MINING": lambda name, s: s,                         # an economy technology: gather.WORK_TECHS
          "GOLD_SHAFT_MINING": lambda name, s: s,
@@ -264,6 +285,8 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          if name in HEATED else s,                                 # the arrows of the own towers on ships (#1548)
          "HEAVY_CAMEL_RIDER_UPGRADE": lambda name, s: s,           # a new unit name: UPGRADES
          "HEAVY_CAVALRY_ARCHER_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
+         "HEAVY_HEI_GUANG_CAVALRY_UPGRADE": lambda name, s: s,     # a new unit name: UPGRADES
+         "HEAVY_MOUNTED_CROSSBOWMAN_UPGRADE": lambda name, s: s,   # a new unit name: UPGRADES
          "HOARDINGS": lambda name, s: s._replace(hp=round(s.hp * 1.21)) if name == "CASTLE" else s,   # build.values
          "HEAVY_PLOW": lambda name, s: s,                          # an economy technology: gather.FARM_TECHS, FOOD_CARRY
          "HEAVY_SCORPION_UPGRADE": lambda name, s: s,
@@ -307,7 +330,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          if "archer" in s.classes else s,
          "SCALE_BARDING_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if barding(s) else s,
-         "SANCTITY": lambda name, s: s._replace(hp=s.hp + 15) if name == "MONK" else s,
+         "SANCTITY": lambda name, s: s._replace(hp=s.hp + 15) if name in monk.MONKS else s,
          "SAPPERS": lambda name, s: s._replace(bonus={**s.bonus, "building": s.bonus.get("building", 0) + 15,
                                                       "ram": s.bonus.get("ram", 0) + 3})
          if name.startswith("VILLAGER") else s,                    # the walls too: "building" is also stone defense
@@ -331,7 +354,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "FEUDAL_AGE": lambda name, s: s,   # the change of each technology to the AoE2 values
          "WHEELBARROW": lambda name, s: s}                         # no combat change: gather.CARRY and gather.PACE
 SPEEDS = {"CARAVAN": ("trade units", 1.2),                        # technology: the unit (or a class of combat.STATS:
-          "FERVOR": ("MONK", 1.15),                                # lower case, or a group of civs.GROUPS) and its
+          "FERVOR": ("monks", 1.15),                               # lower case, or a group of civs.GROUPS) and its
           "HUSBANDRY": ("mounted", 1.1),                           # walk speed factor; cavalry, camels, elephants (#1416)
           "SQUIRES": ("infantry", 1.1)}                            # (#1415)
 SHIPWRIGHT = (0.8, 1.54)                                           # Shipwright: ships cost 80 % wood, train 54 % faster
@@ -340,73 +363,8 @@ CONSCRIPT = (("ARCHERY_RANGE", "BARRACKS", "CASTLE", "STABLE"), 1.33)   # Conscr
 ARROWSLITS = {"GUARD_TOWER": 2, "KEEP": 3, "WATCH_TOWER": 1}         # Arrowslits: the attack of each tower (#1504)
 HEATED = {"BOMBARD_TOWER": 50, "CASTLE": 4, "DOCK": 4, "GUARD_TOWER": 9, "KEEP": 10,   # Heated Shot: attack against
           "WATCH_TOWER": 6}                 # ships (AoE2 DE wiki "Attack increase against ships", #1548)
-UPGRADES = {                                                       # technology: the unit and its new unit (#941)
-    "ARBALESTER_UPGRADE": ("CROSSBOWMAN", "ARBALESTER"),
-    "DEMOLITION_SHIP_UPGRADE": ("DEMOLITION_RAFT", "DEMOLITION_SHIP"),   # (#1483)
-    "CAPPED_RAM_UPGRADE": ("BATTERING_RAM", "CAPPED_RAM"),           # the siege upgrades of AoE2 DE (#1352)
-    "CAVALIER_UPGRADE": ("KNIGHT", "CAVALIER"),
-    "CHAMPION_UPGRADE": ("TWO_HANDED_SWORDSMAN", "CHAMPION"),
-    "CROSSBOWMAN_UPGRADE": ("ARCHER", "CROSSBOWMAN"),
-    "EAGLE_WARRIOR_UPGRADE": ("EAGLE_SCOUT", "EAGLE_WARRIOR"),        # (#1555)
-    "ELITE_ARAMBAI_UPGRADE": ("ARAMBAI", "ELITE_ARAMBAI"),   # the castle of the Burmese (#1751)
-    "ELITE_BALLISTA_ELEPHANT_UPGRADE": ("BALLISTA_ELEPHANT", "ELITE_BALLISTA_ELEPHANT"),   # the castle of the Khmer (#1752)
-    "ELITE_BATTLE_ELEPHANT_UPGRADE": ("BATTLE_ELEPHANT", "ELITE_BATTLE_ELEPHANT"),   # (#1556)
-    "ELITE_BOYAR_UPGRADE": ("BOYAR", "ELITE_BOYAR"),   # the castle of the Slavs (#1721)
-    "ELITE_CAMEL_ARCHER_UPGRADE": ("CAMEL_ARCHER", "ELITE_CAMEL_ARCHER"),   # the castle of the Berbers (#1723)
-    "ELITE_CANNON_GALLEON_UPGRADE": ("CANNON_GALLEON", "ELITE_CANNON_GALLEON"),
-    "ELITE_CENTURION_UPGRADE": ("CENTURION", "ELITE_CENTURION"),   # the castle of the Romans (#1749)
-    "ELITE_CHAKRAM_THROWER_UPGRADE": ("CHAKRAM_THROWER", "ELITE_CHAKRAM_THROWER"),   # the castle (#1624)
-    "ELITE_COMPOSITE_BOWMAN_UPGRADE": ("COMPOSITE_BOWMAN", "ELITE_COMPOSITE_BOWMAN"),   # the castle of the Armenians (#1759)
-    "ELITE_COUSTILLIER_UPGRADE": ("COUSTILLIER", "ELITE_COUSTILLIER"),   # the castle of the Burgundians (#1753)
-    "ELITE_CONQUISTADOR_UPGRADE": ("CONQUISTADOR", "ELITE_CONQUISTADOR"),   # the castle of the Spanish (#1744)
-    "ELITE_EAGLE_WARRIOR_UPGRADE": ("EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"),
-    "ELITE_GBETO_UPGRADE": ("GBETO", "ELITE_GBETO"),   # the castle of the Malians (#1722)
-    "ELITE_GENITOUR_UPGRADE": ("GENITOUR", "ELITE_GENITOUR"),   # (#1610)
-    "ELITE_JAGUAR_WARRIOR_UPGRADE": ("JAGUAR_WARRIOR", "ELITE_JAGUAR_WARRIOR"),   # the castle of the Aztecs (#1884)
-    "ELITE_MAGYAR_HUSZAR_UPGRADE": ("MAGYAR_HUSZAR", "ELITE_MAGYAR_HUSZAR"),   # the castle of the Magyars (#1743)
-    "ELITE_GENOESE_CROSSBOWMAN_UPGRADE": ("GENOESE_CROSSBOWMAN", "ELITE_GENOESE_CROSSBOWMAN"),   # the castle (#1724)
-    "ELITE_GHULAM_UPGRADE": ("GHULAM", "ELITE_GHULAM"),   # the castle of the Hindustanis (#1756)
-    "ELITE_HUSSITE_WAGON_UPGRADE": ("HUSSITE_WAGON", "ELITE_HUSSITE_WAGON"),   # the castle of the Bohemians (#1758)
-    "ELITE_KAMAYUK_UPGRADE": ("KAMAYUK", "ELITE_KAMAYUK"),   # the castle of the Incas (#1886)
-    "ELITE_KARAMBIT_WARRIOR_UPGRADE": ("KARAMBIT_WARRIOR", "ELITE_KARAMBIT_WARRIOR"),   # the castle of the Malay (#1750)
-    "ELITE_KESHIK_UPGRADE": ("KESHIK", "ELITE_KESHIK"),   # the castle of the Tatars (#1745)
-    "ELITE_KIPCHAK_UPGRADE": ("KIPCHAK", "ELITE_KIPCHAK"),   # the castle of the Cumans (#1885)
-    "ELITE_KONNIK_UPGRADE": ("KONNIK", "ELITE_KONNIK"),   # the castle of the Bulgarians (#1757)
-    "ELITE_LEITIS_UPGRADE": ("LEITIS", "ELITE_LEITIS"),   # the castle of the Lithuanians (#1746)
-    "ELITE_MONASPA_UPGRADE": ("MONASPA", "ELITE_MONASPA"),   # the castle of the Georgians (#1755)
-    "ELITE_OBUCH_UPGRADE": ("OBUCH", "ELITE_OBUCH"),   # the castle of the Poles (#1747)
-    "ELITE_PLUMED_ARCHER_UPGRADE": ("PLUMED_ARCHER", "ELITE_PLUMED_ARCHER"),   # the castle of the Mayans (#1887)
-    "ELITE_RATHA_UPGRADE": ("RATHA", "ELITE_RATHA"),   # the castle of the Bengalis (#1891)
-    "ELITE_RATTAN_ARCHER_UPGRADE": ("RATTAN_ARCHER", "ELITE_RATTAN_ARCHER"),   # the castle of the Vietnamese (#1888)
-    "ELITE_SERJEANT_UPGRADE": ("SERJEANT", "ELITE_SERJEANT"),   # the castle of the Sicilians (#1748)
-    "ELITE_SHOTEL_WARRIOR_UPGRADE": ("SHOTEL_WARRIOR", "ELITE_SHOTEL_WARRIOR"),   # the castle (#1725)
-    "ELITE_SHRIVAMSHA_RIDER_UPGRADE": ("SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER"),   # (#1612)
-    "ELITE_SKIRMISHER_UPGRADE": ("SKIRMISHER", "ELITE_SKIRMISHER"),
-    "ELITE_TARKAN_UPGRADE": ("TARKAN", "ELITE_TARKAN"),   # the castle of the Huns (#1726)
-    "ELITE_STEPPE_LANCER_UPGRADE": ("STEPPE_LANCER", "ELITE_STEPPE_LANCER"),   # (#1557)
-    "ELITE_URUMI_SWORDSMAN_UPGRADE": ("URUMI_SWORDSMAN", "ELITE_URUMI_SWORDSMAN"),   # the castle of the Dravidians (#1754)
-    "ELITE_WAR_WAGON_UPGRADE": ("WAR_WAGON", "ELITE_WAR_WAGON"),   # the castle of the Koreans (#1889)
-    "HALBERDIER_UPGRADE": ("PIKEMAN", "HALBERDIER"),
-    "HEAVY_CAMEL_RIDER_UPGRADE": ("CAMEL_RIDER", "HEAVY_CAMEL_RIDER"),   # (#1550)
-    "HEAVY_CAVALRY_ARCHER_UPGRADE": ("CAVALRY_ARCHER", "HEAVY_CAVALRY_ARCHER"),
-    "HEAVY_SCORPION_UPGRADE": ("SCORPION", "HEAVY_SCORPION"),
-    "HEAVY_DEMOLITION_SHIP_UPGRADE": ("DEMOLITION_SHIP", "HEAVY_DEMOLITION_SHIP"),   # (#1483)
-    "HEAVY_WARSHIPS": (("WAR_GALLEY", "GALLEON"), ("FIRE_SHIP", "FAST_FIRE_SHIP")),   # (#1483)
-    "HUSSAR_UPGRADE": ("LIGHT_CAVALRY", "HUSSAR"),
-    "IMPERIAL_SKIRMISHER_UPGRADE": ("ELITE_SKIRMISHER", "IMPERIAL_SKIRMISHER"),   # (#1611)
-    "LIGHT_CAVALRY_UPGRADE": ("SCOUT_CAVALRY", "LIGHT_CAVALRY"),
-    "LONG_SWORDSMAN_UPGRADE": ("MAN_AT_ARMS", "LONG_SWORDSMAN"),
-    "MAN_AT_ARMS_UPGRADE": ("MILITIA", "MAN_AT_ARMS"),
-    "MEDIUM_WARSHIPS": (("GALLEY", "WAR_GALLEY"), ("FIRE_GALLEY", "FIRE_SHIP"),   # two lines (#1482): lines()
-                        ("HULK", "WAR_HULK")),                                 # (#1508)
-    "ONAGER_UPGRADE": ("MANGONEL", "ONAGER"),
-    "PALADIN_UPGRADE": ("CAVALIER", "PALADIN"),
-    "PIKEMAN_UPGRADE": ("SPEARMAN", "PIKEMAN"),
-    "SIEGE_ONAGER_UPGRADE": ("ONAGER", "SIEGE_ONAGER"),
-    "SIEGE_RAM_UPGRADE": ("CAPPED_RAM", "SIEGE_RAM"),
-    "TWO_HANDED_SWORDSMAN_UPGRADE": ("LONG_SWORDSMAN", "TWO_HANDED_SWORDSMAN"),
-    "WINGED_HUSSAR_UPGRADE": ("LIGHT_CAVALRY", "WINGED_HUSSAR"),
-}
+UPGRADES = {r["name"]: tuple(map(tuple, u)) if isinstance(u[0], list) else tuple(u)   # technology: the unit and its
+            for r in ROWS if (u := r.get("upgrade"))}             # new unit (#941), "upgrade" of data/train.jsonl (#1915)
 AFTER = {r["name"]: r["after"] for r in ROWS if "after" in r}     # the technology before it in its slot
 WALL_UPGRADES = {"FORTIFIED_WALL": {"STONE_WALL": "FORTIFIED_WALL", "GATE": "FORTIFIED_GATE"}}   # technology: {wall: new} (#1326)
 TOWER_UPGRADES = {"GUARD_TOWER": {"WATCH_TOWER": "GUARD_TOWER"},   # technology: {tower: the tower of its values},
@@ -418,6 +376,7 @@ TECH_AGE = {r["name"]: r["age"] for r in ROWS if "age" in r}       # the age of 
 AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age after each researched age (index: ages)
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
 HOUSING = {"TOWN_CENTER": 5, "HOUSE": 5, "CASTLE": 20,            # population of a complete building, as in AoE2
+           "FOLWARK": 5,                                          # (#1874)
            "KREPOST": 20}                                         # (#1872)
 LIMIT = 200                                                        # the AoE2 population limit
 REPEAT = 256                                                       # researches of one technology: "going above and beyond"
@@ -432,7 +391,7 @@ MARK = 17.0                                                        # AoE2 second
 ROW = 9                                                            # the first slot of the queue row of the menu (#706)
 
 
-HULKS = ("HULK", "WAR_HULK")                                       # melee warships: the blacksmith attack too (#1509)
+HULKS = ("CARRACK", "HULK", "WAR_HULK")                                     # melee warships: the blacksmith attack too (#1509)
 
 
 def melee(s):
@@ -487,6 +446,7 @@ def trains(g, building):
     unique = [n for n in [UNIQUE.get(civs.civ(g))] if n in COSTS] * (building == "CASTLE") \
         + ["KONNIK"] * (building == "KREPOST")                     # the Krepost trains only the Konnik (#1872)
     out = unique + list(TRAINS[building]) + [f"ELITE_{n}_UPGRADE" for n in unique if f"ELITE_{n}_UPGRADE" in COSTS]   # (#1760)
+    out += [n for n, c in CIV_TECHS.items() if c == civs.civ(g)] * (building == "CASTLE")   # the unique technologies (#2021)
     for _ in UPGRADES:                                             # a line of upgrades: mangonel, onager, siege onager
         out = [new.get(n, n) for n in out]                         # the castle: the elite unique unit (#1624)
     return tuple(out)
@@ -529,7 +489,7 @@ def show(g, player, rect):
               + state(name))
              for name in trains(g, building) if repeatable(g, name) and unlocked(g, name) for slot, item, label in [ITEMS[name]]]
     items += [RALLY] if units_of(building) else []
-    items += [garrison.UNGARRISON] if getattr(g, "garrisons", {}).get(rect) else []   # only with units inside (#808)
+    items += [garrison.ungarrison(building)] if getattr(g, "garrisons", {}).get(rect) else []   # only with units inside (#808)
     if building == "MARKET":                                           # the buy and sell rows under the queue (#1286)
         import market                                                  # only for a market
         items += [(market.ROW + slot, *item) for slot, *item in market.items(g)]
@@ -601,7 +561,7 @@ def order(g, player, rect, slot, shift=False):
         g.command(f"tellraw {player} " + json.dumps({"text": "Right click the ground for the rally point.",
                                                       "color": "gray"}))
         return 0
-    if slot == garrison.UNGARRISON[0] and getattr(g, "garrisons", {}).get(rect):   # all units come out (#808)
+    if slot == garrison.ungarrison(homes(g)[rect])[0] and getattr(g, "garrisons", {}).get(rect):   # all units come out (#808)
         garrison.out(g, rect)
         show(g, player, rect)
         return 0
@@ -720,8 +680,10 @@ def owned(g):
 def missing(g, name):
     """The text of the buildings that technology name still needs (REQUIRES), or None."""
     n, names, *alone = REQUIRES.get(name, (0, ()))
-    has, alone = sorted(set(names) & set(owned(g))), alone[0] if alone else ()
-    if len(has) < n and not set(alone) & set(owned(g)):
+    import combat                                                  # combat imports gather, gather imports this module
+    own = {combat.STANDS_FOR.get(b, b) for b in owned(g)}          # the Folwark is a mill, the church a monastery
+    has, alone = sorted(set(names) & own), alone[0] if alone else ()
+    if len(has) < n and not set(alone) & own:
         return f"needs {''.join(f'a {build.pretty(b).lower()} or ' for b in alone)}{n} of {', '.join(build.pretty(b).lower() for b in names)} ({len(has)}/{n})"
 
 
@@ -744,9 +706,11 @@ def stats(g, name):
 def seconds(g, name, building=None):
     """The train time of unit or technology name: TRAIN_TIMES, or the time of FASTER from its age (the eagle scout trains
     in 46 s in the Feudal Age and in 35 s from the Castle Age, AoE2 DE wiki), divided by the work rate of the
-    civilization at building (civs.work_rate: Persian town centers and docks, #1894)."""
+    civilization at building (civs.work_rate: Persian town centers and docks, #1894) and its rate of the unit group
+    (civs.train_rate: Aztec military units, Khitan skirmishers, #1927)."""
     age, time = FASTER.get(name, (9, 0))
-    return (time if build.ages(g) >= age else TRAIN_TIMES[name]) / (civs.work_rate(g, building) if building else 1)
+    return (time if build.ages(g) >= age else TRAIN_TIMES[name]) / (civs.work_rate(g, building) if building else 1) \
+        / civs.train_rate(g, name)
 
 
 def speed(g, name):
@@ -941,7 +905,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     if player not in (None, g.player):
         return uuid
     # they take move orders as a soldier (#1243, #1253); a ship sails with fleet.py (#1383)
-    if gather.military(name) or name in ("MONK", "TRADE_CART") or units.is_boat(units.classify(name)):
+    if gather.military(name) or name in ("MONK", "MISSIONARY", "TRADE_CART") or units.is_boat(units.classify(name)):
         g.soldiers[uuid] = name
         return uuid
     g.villagers[uuid] = gather.Villager(uuid, pos)

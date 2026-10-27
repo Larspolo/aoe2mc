@@ -96,11 +96,18 @@ Design work (buildings, objects, units, animals) follows `docs/DESIGN.md`. Do de
 
 Match the existing code: compact, numpy-vectorized, short comments that say why. Do not reformat code that you do
 not change. Do not add a dependency without a ticket that asks for it. Keep functions in their present file.
-When you add an entry to a table keyed by a name (`STATS` ...), put each entry that you add on its
-own line, in alphabetical order, not at the end: parallel tickets that add to the same last line conflict (#655, #670).
+Game data (AoE2 units, buildings, technologies, objects, terrains, civilizations, their values) goes in a `.jsonl` data
+file, not in a literal of the code: the fast test of `tools/data_lint.py` fails on a new one (#1909). Where a table is
+still in the code, add each entry on its own line, in alphabetical order, not at the end (#655, #670).
+Never test the number of entries of a data table (`len(combat.SIGHT) == 154`): each new line changes it, and parallel
+tickets conflict there. Test the values (owner, #2008; `tests/test_conflict_prone.py`).
 A new menu item of a building (cost, time, slot, help, age) is one new line in `game/data/train.jsonl`, at the end of
-its building block: `merge=union` keeps the lines of both sides, and `train.load()` stops on a name in two lines (#1702).
-The combat values of a new unit are one new line in `game/data/units.jsonl` (`combat.STATS`, #1912; epic #1909 moves more tables).
+its building block: the merge driver `tools/merge_jsonl.py` (`merge=jsonl`, #2004) merges the lines by name, and `train.load()` stops on a name in two lines (#1702).
+The combat values of a new unit are one new line in `game/data/units.jsonl` (`combat.STATS`, #1912), of a new building
+one in `game/data/buildings.jsonl` (`combat.BUILDINGS`); its line of sight is the key `"sight"` there (#1913; epic #1909 moves more tables).
+The converter tables are lines in `data/*.jsonl` too (#1917): an animal in `animals.jsonl`, an infantry design in `lines.jsonl`, a footprint in `footprint.jsonl` (the first match wins: put a longer name before its part).
+An item that some civilizations do not have goes into the list `"missing"` of each such line of
+`game/data/civs.jsonl` (`civs.MISSING`, #1914; also `unique`, `costs`, `units`, `twice`), not into `civs.py`.
 The same for a new command of the Paper plugin: its line in the command list at the top of `AoePlugin.java` and its
 `if` block in `onCommand` go in alphabetical order of the command name, not after the last one (#795 and #813 conflicted).
 
@@ -142,7 +149,7 @@ hook, `.gitignore` and the claim and dashboard rules. The aim is more closed tic
   that was wrong, and make a `tooling` ticket when a tool or test would have found a problem earlier.
 - Only the owner can change the environment settings (setup script, network, variables), the scheduled task and the
   GitHub settings. When one of them costs time, make a `needs-human` ticket with numbered steps and the exact text.
-- One run per review slot (`tools/claim.py 0 --review`, 45 minutes, longer after reviews with no change): the `improve` skill measures the runs, CI and the environment and makes one larger improvement.
+- One run per review (`tools/claim.py 0 --review`, after 50 merged PRs, more after reviews with no change): the `improve` skill measures the runs, CI and the environment and makes one larger improvement.
 - Never weaken tests, CI or safety rules to save time. List each process change on the status issue.
 Keep this file short: put details in skills or docs.
 

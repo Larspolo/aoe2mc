@@ -1,5 +1,5 @@
 """The run report of autopilot step 8 with one command (#1701): the text, the release bar (`release.py`), the `Usage:`
-line of the run start, one `Metrics:` line per ticket and the `Tokens:` line (`tokens.py`). `tools/health.py` parses it.
+line of the run start (the release bar only when the project has `release.py`), one `Metrics:` line per ticket and the `Tokens:` line (`tokens.py`). `tools/health.py` parses it.
 
     python3 tools/report.py --usage "$(cat USAGE)" --text "What I did. Next: ..." \\
         --ticket 1701 --size S --result "pr #1770" --setup 2 --checks 1 --checks-min 4 --sinks none \\
@@ -52,16 +52,20 @@ def git_lane():
 
 
 def tool(*args):
-    """The output of another tool of this directory, without its trailing newline."""
-    r = subprocess.run([sys.executable, os.path.join(HERE, args[0]), *args[1:]], capture_output=True, text=True)
-    return r.stdout.rstrip("\n")
+    """The output of another tool of this directory, without its trailing newline; "" when the project has no such
+    tool or it fails (a new project has no `release.py`, #1963)."""
+    path = os.path.join(HERE, args[0])
+    if not os.path.exists(path):
+        return ""
+    r = subprocess.run([sys.executable, path, *args[1:]], capture_output=True, text=True)
+    return r.stdout.rstrip("\n") if r.returncode == 0 else ""
 
 
 def report(text, usage, lines, release=None, tokens=None):
-    """The comment: text, release bar, `Usage:`, `Metrics:` and `Tokens:` lines, footer."""
+    """The comment: text, release bar (none when it is empty), `Usage:`, `Metrics:` and `Tokens:` lines, footer."""
     release = tool("release.py") if release is None else release
     tokens = (tool("tokens.py").splitlines() or [""])[-1] if tokens is None else tokens
-    return "\n".join([text.strip(), "", release, "", usage.strip(), *lines, tokens]) + FOOTER
+    return "\n".join([text.strip(), "", *([release, ""] if release else []), usage.strip(), *lines, tokens]) + FOOTER
 
 
 def main(argv=None):

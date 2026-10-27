@@ -30,7 +30,8 @@ Body:
 <The verify level (1-4) and the commands or checks.>
 
 Depends on: #<n>, #<m>        (only when another ticket must close first)
-Start after: <YYYY-MM-DD HH:MM> UTC   (only when the ticket must wait for a time, for example to measure 24 hours)
+Start after: <N> PRs after #<M>       (only when the ticket must wait for work, for example to measure a change: N merged PRs after PR #M)
+Start after: <YYYY-MM-DD HH:MM> UTC   (only when the ticket must wait for a real time; the speed of the project changes, #2039)
 ```
 
 Labels: one priority (`P0`-`P3`), one kind (`bug`, `feature`, `tooling`, `design`, `docs`, `cleanup`),
@@ -123,6 +124,8 @@ A cheap Haiku run takes the tickets with the label `lane:haiku` (#1715). Add it 
 - Verify level 1 is enough: no server, no screenshot, no look to judge.
 - Not a decision, design, check, process or epic ticket, and no "Depends on:" that is open.
 When you are not sure, do not add it: an Opus run takes the ticket.
+While `reserved` in `[pacing]` of `agent.toml` names the lane, Opus runs never take its tickets (#1994): make
+enough `lane:haiku` tickets in the refill, else the Haiku runs find none.
 
 ## Rules
 

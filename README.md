@@ -221,7 +221,10 @@ center, 3 villagers, a scout, sheep, berry bushes, gold and stone mines, boars a
 between the circles. `--random-map black_forest` covers most of the map with forest, with open player lands, an open
 middle and open paths between them. `--random-map nomad` has a sea in the middle and no town center: the 3 villagers
 of each player stand apart, and the player builds the town center. `--random-map islands` gives each player an own
-island with a beach, and water between the islands.
+island with a beach, and water between the islands. `--random-map gold_rush` puts many gold mines in the middle of
+the map, in a ring of forest with gaps. `--random-map highland` puts a river with shallow fords between the players:
+units walk across only at the fords. `--random-map mediterranean` has a sea with a beach in the middle of the map, and
+the player lands around it.
 
 ## Buildings
 

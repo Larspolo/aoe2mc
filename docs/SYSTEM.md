@@ -18,7 +18,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 | GitHub | The issues are the tickets. Issue #1 (label `agent-status`) is the status issue: the dashboard in its body, the run reports as comments. The labels are in `.github/labels.txt`. |
 | Workflows (`.github/workflows/`) | CI, Automerge, Unconflict, Claims, Close, Dashboard, Coverage, Labels, Bundles (see below). |
 | Cloud environment | The setup script `scripts/cloud-setup.sh` (Java, packages, server jars), the network access, the SessionStart hook. |
-| Hooks (`.claude/hooks/`) | `session-start.sh` installs the Python packages and compares `SETUP_VERSION`. `guard-main.sh` blocks a force push, a history rewrite or a delete of `main`. |
+| Hooks (`.claude/hooks/`) | `session-start.sh` installs the Python packages, registers the merge driver `merge=jsonl` (#2004) and compares `SETUP_VERSION`. `guard-main.sh` blocks a force push, a history rewrite or a delete of `main`. |
 
 ### Workflows
 
@@ -62,11 +62,20 @@ The details are in the text at the top of `tools/claim.py`.
 | Ticket | `claim/N` (`claim/N-2` ... after a release) | `claim.py N`. The owner beats each 20 minutes (`--beat`). After 30 minutes without a beat the claim is stale: another run can take it over (`--takeover`). `--guard` before each push. |
 | Owner comment | `claim/comment-ID` | `claim.py ID --comment`: one run acts on one owner comment. |
 | Refill | `claim/refill-E-S` | `claim.py E --refill`: one run makes the sub-issues of epic E (E = 0: the whole queue, one per hour). |
-| Process review | `claim/review-<minutes>m-<slot>` | `claim.py 0 --review`: one run per time slot runs the `improve` skill. A review with no change doubles the slot. |
-| Roadmap review | `claim/roadmap-<slot>` (2-hour slot) | `claim.py 0 --roadmap`: one run per slot reviews `docs/ROADMAP.md`. |
+| Process review | `claim/review-<gap>pr-<last>-<k>` | `claim.py 0 --review`: one run runs the `improve` skill after `gap` merged PRs (50). A review with no change doubles the gap (#2039). |
+| Roadmap review | `claim/roadmap-100pr-<last>-<k>` | `claim.py 0 --roadmap`: one run reviews `docs/ROADMAP.md` after 100 merged PRs. |
 
 Other rules against conflicts: one ticket per PR, new tests in a new file, new table entries on their own line in
 alphabetical order, `merge=union` in `.gitattributes` for files where runs only add lines.
+
+Clock or count (#2039). A rule that waits for work counts merged PRs, because the speed of the project changes and a
+fixed time measures a different amount of work: the process review (50 PRs, 100 or 200 after a review with no change),
+the roadmap review (100), `Start after: N PRs after #M` and the window of `tools/health.py` (50). A rule that finds a
+stopped run or follows a real clock stays in minutes, because a stopped run merges nothing: the claim beat (20), a
+stale claim (30, or 10 with the label `conflict`), a "Started by" comment (30), the Automerge sweep (10), an old PR in
+`tools/operator_check.py` (30), the pacer (10), `unconflict.yml` (20) and the refill lock (one per hour). The quota
+windows (5 hours, 7 days) follow the subscription, the owner comments of `tools/feedback.py` (6 hours) get an answer
+in time, and a run longer than 90 minutes is about the context and the container of one run.
 
 ## The quota pacing
 
@@ -79,15 +88,15 @@ wait until the budget per hour is large enough again (#1695). Below `week_free` 
 usage there is no weekly guard: the runs fill each 5-hour window (owner, 2026-10-27). The CLI line shows the projection
 (`week ahead +38 pt · runs out Wed 11:22`, at the mean rate of the week so far). `--fire` gives the number of runs to start now: the
 target less the runs with a claim beat in the last 25 minutes. A run cannot start other runs (no `fire_trigger`, #566),
-so the pacer session starts them (at most 4 per cycle). Each cycle reads `.claude/skills/pacer/SKILL.md` again, so a change of the pacing rules reaches
+so the pacer session starts them (at most `max_fire` of `agent.toml` per cycle). Each cycle reads `.claude/skills/pacer/SKILL.md` again, so a change of the pacing rules reaches
 the long-lived pacer session at its next cycle (#1824). `tools/health.py` measures the quota use of one run from the
 `Usage:` lines of the run reports, and `usage.py` uses that value. After a plan upgrade the same work is a smaller share of the larger quota: when the burn of
 the last 2 hours is less than half of the 24-hour burn, only the last 2 hours count (`health.ratio`, 5-hour and 7-day
-burn, #1706). The most runs at one time is `max_runs` in `[pacing]` of `agent.toml` (default 16): raise it with a larger plan.
+burn, #1706). The most runs at one time is `max_runs` in `[pacing]` of `agent.toml` (default 16): raise it when the 5-hour window does not reach its limit (40 since 2026-10-27: at a burn of 0.009 per run-hour, 16 runs used only about 70 %).
 The target counts Opus runs. A run of a cheap lane counts its weight (#1727): a Haiku run sets `git config aoe2mc.lane haiku`,
 its claims end with ` lane haiku`, the `Usage:` lines count its runs (`· haiku N`), and `health.lane_weights` measures
 the weight from them (least squares, at least 10 intervals with Haiku runs; before that `weights` of `agent.toml`,
-0.25). `usage.py --fire` gives the ready `lane:haiku` tickets Haiku runs first, then Opus runs take the rest. `tools/tokens.py` reads the transcript of the
+0.25). `usage.py --fire` gives the ready `lane:haiku` tickets Haiku runs first, then Opus runs take the rest. A lane in `reserved` of `[pacing]` keeps its tickets for its own runs (Opus runs never take them, #1994). `tools/tokens.py` reads the transcript of the
 session and writes the `Tokens:` line of each run report: the tokens of the run and its largest sinks. `health.py`
 adds them. The `improve` skill finds the largest loss of quota from this data, or the data that is missing, and
 makes one `Process: <bottleneck>` ticket for it on the board.
@@ -114,6 +123,9 @@ on `main` yet, and the branch of an owner session is not `agent/*` or `claude/*`
 2. **Cloud environment.** At claude.ai/code, make one environment for all runs. Network access: keep "Allow package
    managers" on and add the hosts of `docs/ENVIRONMENT.md` ("Network"). Setup script: paste
    `scripts/cloud-setup.sh`. Paste it again when an agent asks (the SessionStart hook compares `SETUP_VERSION`).
+   One environment can serve two projects (#1964): paste one setup script that installs the needs of both (each
+   script lists them in `SETUP_NEEDS`). The hook of the project with no version file in `/etc` checks only its
+   `SETUP_NEEDS`, and asks for a new script only when one is missing.
 3. **Status issue.** Open issue #1 with the label `agent-status` (the first run makes it when it is missing).
 4. **Scheduled task "aoe2mc autopilot".** Hourly at :06. Repository `Larspolo/aoe2mc`, the environment of step 2.
    Its prompt: open the repository and pull `main`, read `CLAUDE.md`, follow `.claude/skills/autopilot/SKILL.md`
@@ -143,6 +155,7 @@ the owner login, the default branch, the status issue, the commands, the doc pat
 The tests of the generic tools are generic too, so that a new project has them (#1900). Not in the table: the tests
 of `tools/bootstrap.py` (they copy this repository) and the tests that need a specific tool (`tools/dashboard_data.py`,
 `tools/release.py`). `tests/test_generic_words.py` fails when a generic file names the domain of the project.
+`tests/test_generic_tools.py` fails when a generic file names a `tools/X.py` that is not a generic row (#1963).
 
 | File | Kind | What is specific to aoe2mc |
 |---|---|---|
@@ -186,10 +199,12 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tools/dashboard.py` | generic | None (`agent.toml`). |
 | `tools/feedback.py` | generic | None (`agent.toml`). |
 | `tools/health.py` | generic | None (`agent.toml`). |
+| `tools/report.py` | generic | None (the run report of step 8; the release bar only with a project `tools/release.py`, #1963). |
 | `tools/tokens.py` | generic | None. |
 | `tools/operator_check.py` | generic | None (`agent.toml`). |
 | `tools/owner_tasks.py` | generic | None (`agent.toml`). |
 | `tools/unconflict.py` | generic | None (solves add-add conflicts for `unconflict.yml`, #1864). |
+| `tools/merge_jsonl.py` | generic | None (the merge driver `merge=jsonl`: JSON lines by "name", #2004). |
 | `tests/test_agent_config.py` | generic | None (a test of `tools/agent_config.py`). |
 | `tests/test_claim.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_claim_active_pr.py` | generic | None (a test of `tools/claim.py`). |
@@ -204,6 +219,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_dashboard_overlap.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_process.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_start.py` | generic | None (a test of `tools/dashboard.py`). |
+| `tests/test_dashboard_start_prs.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_feedback.py` | generic | None (a test of `tools/feedback.py`). |
 | `tests/test_health.py` | generic | None (a test of `tools/health.py`). |
 | `tests/test_health_compare.py` | generic | None (a test of `tools/health.py`). |
@@ -211,18 +227,21 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_health_pr.py` | generic | None (a test of `tools/health.py`). |
 | `tests/test_health_reviews.py` | generic | None (a test of `tools/health.py`). |
 | `tests/test_health_takeovers.py` | generic | None (a test of `tools/health.py`). |
-| `tests/test_health_until.py` | generic | None (a test of `tools/health.py`). |
+| `tests/test_health_misses.py` | generic | None (a test of `tools/health.py`). |
 | `tests/test_operator.py` | generic | None (a test of `tools/operator_check.py`). |
 | `tests/test_owner_tasks.py` | generic | None (a test of `tools/owner_tasks.py`). |
 | `tests/test_owner_tasks_close.py` | generic | None (a test of `tools/owner_tasks.py`). |
 | `tests/test_owner_tasks_project.py` | generic | None (a test of `tools/owner_tasks.py`). |
 | `tests/test_owner_tasks_wait.py` | generic | None (a test of `tools/owner_tasks.py`). |
+| `tests/test_report.py` | generic | None (a test of `tools/report.py`). |
 | `tests/test_tokens.py` | generic | None (a test of `tools/tokens.py`). |
 | `tests/test_tokens_verify.py` | generic | None (a test of `tools/tokens.py`). |
 | `tests/test_unconflict.py` | generic | None (a test of `tools/unconflict.py`). |
+| `tests/test_merge_jsonl.py` | generic | None (a test of `tools/merge_jsonl.py`). |
 | `tests/test_pacer.py` | generic | None (a test of `tools/usage.py`). |
 | `tests/test_usage.py` | generic | None (a test of `tools/usage.py`). |
 | `tests/test_usage_week.py` | generic | None (a test of `tools/usage.py`). |
+| `tests/test_generic_tools.py` | specific | The tools of aoe2mc that generic files may name (`OPTIONAL`, #1963). |
 | `tests/test_generic_words.py` | specific | The words of aoe2mc that the generic files must not contain (#1900). |
 | `.github/workflows/ci.yml` | specific | The Python, Java and Minecraft steps, the test markers. The red-`main` ticket is generic. |
 | `.github/workflows/automerge.yml` | generic | The branch prefixes `claude/*` and `agent/*`. |
@@ -239,4 +258,4 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `.github/workflows/worlds.yml` | specific | The worlds of `examples/` and `samples/` as zips in a release (#207). |
 | `.github/labels.txt` | generic | None. |
 | `.github/ISSUE_TEMPLATE/ticket.yml` | generic | None. |
-| `.gitattributes` | specific | The list of `merge=union` files. |
+| `.gitattributes` | specific | The list of `merge=union` files, and `merge=jsonl` for `game/data/*.jsonl` (`tools/merge_jsonl.py`, #2004). |
