@@ -189,8 +189,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * the footprint, game/combat.py building) stands in the building and takes the attacks, so that the vanilla attack
  * goals and paths work (#517). The plugin keeps the hit points of the building (a building has more than the
  * 1024 of max_health) in the scoreboard aoe_hp, cancels all other damage to it and from it (no suffocation in the
- * walls, no slime touch), and at 0 removes it and fills the box of the building with air. The vanilla melee goal
- * hits only a target in sight, and the eye of the slime is in the walls: so a unit next to the slime that has it as
+ * walls, no slime touch), and at 0 removes it and fills the box of the building with air. At 75 %, 50 % and 25 % of
+ * its hit points the building wears in stages: more worn blocks and holes at each stage, back at a repair (wear,
+ * #1522). The vanilla melee goal hits only a target in sight, and the eye of the slime is in the walls: so a unit next to the slime that has it as
  * target hits it once per AoE2 reload (Mob#attack, the vanilla hit with the swing; #848). A ranged unit shoots
  * a building from its range to the nearest side of the target, without sight of the eye (#608). Its arrow sticks
  * in the walls, so the goal takes the hit points for each shot, and an arrow that hits the slime does nothing.
@@ -229,6 +230,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     private final Map<UUID, Building> buildings = new HashMap<>();
     private final Map<UUID, Integer> arrows = new HashMap<>();       // the arrows of a shot of a building (#1113)
+    private final Map<UUID, Wear> wear = new HashMap<>();             // the damage stage of a building and its blocks (#1522)
     private final Set<UUID> hidden = new HashSet<>();                 // aoe hide: also for a player that joins later
     private final Map<UUID, Component> names = new HashMap<>();      // the name in the name line (#661)
     private static final int HEARTS = 5;
@@ -1000,6 +1002,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         nameLine(target);
         if (score.getScore() == 0) {                          // the building falls
             buildings.remove(target.getUniqueId());
+            wear.remove(target.getUniqueId());
             names.remove(target.getUniqueId());
             score.resetScore();
             target.remove();
@@ -1044,14 +1047,17 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 continue;
             }
             var score = hp().getScoreFor(t);
+            wear(t, b, score.isScoreSet() ? stage(score.getScore(), b.max) : 0);
             boolean burning = score.isScoreSet() && score.getScore() * 2 < b.max;
             if (!burning) {
                 t.removeScoreboardTag("aoe2mc.burning");
-                continue;
+            } else {
+                t.addScoreboardTag("aoe2mc.burning");
             }
-            t.addScoreboardTag("aoe2mc.burning");
             var rnd = ThreadLocalRandom.current();
-            int fires = 1 + (int) (3 * (1 - 2.0 * score.getScore() / b.max));   // 1 fire at half, 4 near 0
+            int fires = !score.isScoreSet() || score.getScore() * 4 >= b.max * 3 ? 0   // smoke from 75 %, as AoE2
+                    : burning ? 1 + (int) (3 * (1 - 2.0 * score.getScore() / b.max)) + (stage(score.getScore(), b.max) / 3) * 2
+                    : 1;                                     // 1 fire at half, 4 at 25 %, 6 near 0
             for (int i = 0; i < fires; i++) {
                 int x = rnd.nextInt(b.b[0], b.b[3] + 1), z = rnd.nextInt(b.b[2], b.b[5] + 1);
                 var top = roof(t, x, z);
@@ -1059,9 +1065,111 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     continue;
                 }
                 var loc = top.getLocation().add(0.5, 1.1, 0.5);
-                t.getWorld().spawnParticle(Particle.FLAME, loc, 6, 0.3, 0.2, 0.3, 0.01);
+                if (burning) {
+                    t.getWorld().spawnParticle(Particle.FLAME, loc, 6, 0.3, 0.2, 0.3, 0.01);
+                }
                 t.getWorld().spawnParticle(Particle.LARGE_SMOKE, loc.add(0, 0.5, 0), 4, 0.3, 0.4, 0.3, 0.02);
             }
+        }
+    }
+
+    /** The original blocks of a worn building (by block key) and its damage stage (#1522). */
+    private record Wear(int[] stage, Map<Long, BlockData> blocks) {}
+
+    private static final double[] HOLES = {0, 0.05, 0.15, 0.35};      // share of the blocks that are gone, per stage
+    private static final double[] WORN = {0, 0.30, 0.50, 0.70};       // share of the blocks that are worn or gone
+    private static final double COBWEB = 0.06;                        // of the holes at stage 3: cobwebs, not air
+
+    /** The damage stage of a building with hp of max hit points: 0 above 75 %, 1, 2, 3 at 25 % and less, as the fire
+     *  steps of AoE2 (#1522). */
+    static int stage(int hp, int max) {
+        return hp * 4 > max * 3 ? 0 : hp * 2 > max ? 1 : hp * 4 > max ? 2 : 3;
+    }
+
+    /** A fixed random number in [0, 1) of the block (x, y, z): the same blocks go first at each damage and come back
+     *  last at each repair, and the result does not depend on the order of the hits. */
+    static double chance(int x, int y, int z) {
+        long h = x * 0x9E3779B97F4A7C15L ^ y * 0xC2B2AE3D27D4EB4FL ^ z * 0x165667B19E3779F9L;
+        h = (h ^ (h >>> 31)) * 0xBF58476D1CE4E5B9L;
+        h = (h ^ (h >>> 29)) * 0x94D049BB133111EBL;
+        return ((h ^ (h >>> 32)) >>> 11) * 0x1.0p-53;
+    }
+
+    /** The worn form of a block (cracked or mossy bricks, a stripped log, a broken window as air, planks or stairs
+     *  broken to a bottom slab of the same material), or null when it has none. */
+    static BlockData worn(BlockData data) {
+        String s = data.getAsString(), id = s.split("\\[")[0].substring("minecraft:".length());
+        String to = switch (id) {
+            case "stone_bricks", "deepslate_bricks", "deepslate_tiles", "nether_bricks", "polished_blackstone_bricks"
+                    -> "cracked_" + id;
+            case "glass", "glass_pane" -> "air";
+            default -> id.startsWith("stone_brick_") || id.startsWith("cobblestone") ? "mossy_" + id
+                    : (id.endsWith("_log") || id.endsWith("_wood")) && !id.startsWith("stripped_") ? "stripped_" + id
+                    : id.endsWith("_stained_glass") || id.endsWith("_stained_glass_pane") ? "air"
+                    : id.endsWith("_planks") ? id.replace("_planks", "_slab")
+                    : id.endsWith("_stairs") ? id.replace("_stairs", "_slab") : null;
+        };
+        if (to == null) {
+            return null;
+        } else if (to.endsWith("_slab")) {                    // a slab has other states than a block or stairs
+            try {
+                return Bukkit.createBlockData("minecraft:" + to + "[type=bottom]");
+            } catch (IllegalArgumentException e) {
+                return null;
+            }
+        }
+        try {
+            return Bukkit.createBlockData(to.equals("air") ? "minecraft:air" : "minecraft:" + to + s.substring(s.split("\\[")[0].length()));
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    /** Show the damage stage of building t (#1522): at each stage a fixed random share of its blocks above the floor
+     *  is worn (worn()) or gone (holes, cobwebs at stage 3), more at each stage, so that almost destroyed looks clearly
+     *  other than a little damaged. The blocks go anywhere in the building, not from the top as a construction site
+     *  (build.rise). A repair puts the blocks of each stage back. No change to barriers, block entities and fluids: the
+     *  units never stand in a block (a hole only removes one), and no item drops (no block updates). */
+    private void wear(Entity t, Building b, int stage) {
+        Wear w = wear.get(t.getUniqueId());
+        if (stage == (w == null ? 0 : w.stage[0])) {
+            return;
+        }
+        var world = t.getWorld();
+        if (w == null) {                                      // the first damage: keep the original blocks
+            w = new Wear(new int[] {0}, new HashMap<>());
+            for (int x = b.b[0]; x <= b.b[3]; x++) {
+                for (int y = b.b[1] + 1; y <= b.b[4]; y++) {
+                    for (int z = b.b[2]; z <= b.b[5]; z++) {
+                        Block block = world.getBlockAt(x, y, z);
+                        Material m = block.getType();
+                        if (!m.isAir() && m != Material.BARRIER && !block.isLiquid()
+                                && !(block.getState() instanceof org.bukkit.block.TileState)) {
+                            w.blocks.put(Block.getBlockKey(x, y, z), block.getBlockData());
+                        }
+                    }
+                }
+            }
+            wear.put(t.getUniqueId(), w);
+        }
+        for (var e : w.blocks.entrySet()) {
+            int x = Block.getBlockKeyX(e.getKey()), y = Block.getBlockKeyY(e.getKey()), z = Block.getBlockKeyZ(e.getKey());
+            double r = chance(x, y, z);
+            BlockData to = e.getValue();
+            if (r < HOLES[stage]) {
+                to = Bukkit.createBlockData(stage == 3 && r < COBWEB ? Material.COBWEB : Material.AIR);
+            } else if (r < WORN[stage]) {
+                BlockData v = worn(e.getValue());
+                to = v != null ? v : to;
+            }
+            Block block = world.getBlockAt(x, y, z);
+            if (!block.getBlockData().equals(to)) {
+                block.setBlockData(to, false);
+            }
+        }
+        w.stage[0] = stage;
+        if (stage == 0) {                                     // repaired: all blocks are back
+            wear.remove(t.getUniqueId());
         }
     }
 
