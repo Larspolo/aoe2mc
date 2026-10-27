@@ -147,7 +147,13 @@ MISSING = {"BOMBARD_TOWER_TECH": ("ACHAEMENIDS", "ATHENIANS", "AZTECS", "BENGALI
                                   "ROMANS", "SARACENS", "SAXONS", "SHU", "SICILIANS", "SLAVS", "SPARTANS", "THRACIANS",
                                   "TUPI", "VARANGIANS", "VIKINGS", "WEI", "WU"),
            "FORTIFIED_WALL": ("BULGARIANS", "CUMANS", "DANES", "GOTHS", "HUNS", "MAGYARS", "MALAY", "MAPUCHE", "MUISCA",
-                              "PERSIANS", "SICILIANS", "TUPI", "WU")}
+                              "PERSIANS", "SICILIANS", "TUPI", "WU"),
+           "GAMBESONS": ("ACHAEMENIDS", "ATHENIANS", "BERBERS", "BOHEMIANS", "BURGUNDIANS", "CHINESE", "CUMANS",
+                          "ETHIOPIANS", "GOTHS", "GURJARAS", "HINDUSTANIS", "HUNS", "INCAS", "ITALIANS", "KHMER",
+                          "KOREANS", "LITHUANIANS", "MACEDONIANS", "MAGYARS", "MALAY", "MALIANS", "MAPUCHE", "MAYANS",
+                          "MONGOLS", "MUISCA", "POLES", "PURU", "ROMANS", "SPARTANS", "TATARS", "THRACIANS", "TUPI",
+                          "TURKS", "VIETNAMESE", "VIKINGS", "WEI", "WU"),
+           "SQUIRES": ("CELTS", "GURJARAS", "KHMER", "MAGYARS", "MAPUCHE", "PORTUGUESE")}   # (#1415)
 
 
 def mounted(s):
