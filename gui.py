@@ -4,11 +4,14 @@ child process and stops it (#1775). The logic is in pure functions (argv, saves_
 play_argv, start_game, stop_game) that the tests call without a display: tkinter loads only in window(), and many Python installs (also the
 cloud environment) have no tkinter."""
 import contextlib
+import glob
 import io
 import os
 import platform
 import queue
+import re
 import shlex
+import shutil
 import signal
 import subprocess
 import sys
@@ -24,6 +27,9 @@ FLAGS = (("preview", "--preview"), ("no_units", "--no-units"))
 GAME = Path(__file__).resolve().parent / "game" / "run.py"
 PLAY_VALUES = (("server", "--server"), ("people", "--people"), ("reveal", "--reveal"))
 PLAY_FLAGS = (("play", "--play"), ("bot", "--bot"), ("cheats", "--cheats"))
+JAVA = {"26.3": 25}                                    # Java of each Minecraft version (mc_check reads the version JSON)
+JDK_INSTALL = {"Linux": "sudo apt-get install openjdk-{n}-jdk-headless", "Darwin": "brew install openjdk@{n}",
+               "Windows": "Install the JDK {n} from https://adoptium.net/temurin/releases/?version={n}"}
 
 
 def argv(o):
@@ -87,6 +93,38 @@ def convert(args, write):
         except Exception as e:
             traceback.print_exc()
             return f"{type(e).__name__}: {e}"
+
+
+def javas():
+    """The java binaries that mc_check.find_java looks at, in its order (apt installs into /usr/lib/jvm)."""
+    cache = os.path.join(os.environ.get("XDG_CACHE_HOME") or os.path.expanduser("~/.cache"), "aoe2mc", "mc")
+    return [j for j in [shutil.which("java")] + sorted(glob.glob("/usr/lib/jvm/*/bin/java"))
+            + sorted(glob.glob(os.path.join(cache, "jdk-*", "*", "bin", "java"))) if j]
+
+
+def java_problem(version="26.3", jdk=True, system=None, found=None, run=subprocess.run, exists=os.path.exists):
+    """None when game/run.py finds the Java of the Minecraft version (and javac for the Paper plugin, jdk), else the
+    text for the user with the install step of the system (#1776)."""
+    need = JAVA.get(version, 25)
+    step = JDK_INSTALL.get(system or platform.system(), JDK_INSTALL["Windows"]).format(n=need)
+    best = 0
+    for java in javas() if found is None else found:
+        try:
+            out = run([java, "-XshowSettings:properties", "-version"], capture_output=True, text=True).stderr
+        except OSError:
+            continue
+        major = int(m.group(1)) if (m := re.search(r'version "(\d+)', out)) else 0
+        best = max(best, major)
+        if major < need:
+            continue
+        home = m.group(1).strip() if (m := re.search(r"^\s*java\.home = (.+)$", out, re.M)) else \
+            os.path.dirname(os.path.dirname(os.path.realpath(java)))
+        if not jdk or any(exists(os.path.join(home, "bin", n)) for n in ("javac", "javac.exe")):
+            return None
+        return (f"Java {major} has no javac (it is a JRE): the Paper plugin needs the JDK {need}.\n{step}\n"
+                "Or select the server \"vanilla\".")
+    have = f"Java {best} is too old" if best else "No Java was found"
+    return f"{have}: Minecraft {version} needs Java {need}.\n{step}"
 
 
 def play_argv(o):
@@ -246,6 +284,9 @@ def window():
             return
         if o["bot"] and str(o["people"]).strip() not in ("", "1"):
             messagebox.showerror("aoe2mc", "The bot plays player 2: use it with one person only.")
+            return
+        if problem := java_problem(jdk=o["server"] != "vanilla"):
+            messagebox.showerror("aoe2mc", problem)
             return
         play.state(["disabled"])
         halt.state(["!disabled"])
