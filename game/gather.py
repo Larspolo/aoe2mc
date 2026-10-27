@@ -54,6 +54,7 @@ import civs  # noqa: E402
 import conquest  # noqa: E402
 import garrison  # noqa: E402
 import hints  # noqa: E402
+import market  # noqa: E402
 import menu  # noqa: E402
 import monk  # noqa: E402
 import stance  # noqa: E402
@@ -871,6 +872,8 @@ class Gather:
         if garrison.order(self, name, self.map.pick_ground(eye, d)):   # the selection goes into an own building (#808)
             return
         if train.open_menu(self, name, self.map.pick_ground(eye, d)):  # an own town center or barracks (#620, #654)
+            return
+        if market.open_menu(self, name, self.map.pick_ground(eye, d)):  # an own market: buy and sell (#1252)
             return
         tile = self.map.pick_tree(eye, d)
         if tile and self.selected:
