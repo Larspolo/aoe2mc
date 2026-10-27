@@ -2,6 +2,7 @@
 
     python3 tools/health.py              # the last 24 hours
     python3 tools/health.py --hours 72
+    python3 tools/health.py --hours 24 --until 2026-10-26T05:15:00Z   # the 24 hours before a time (#489)
 
 REST only (cloud sessions give 403 for GraphQL and `search/...`). Token and `gh` fallback as in
 `tools/dashboard.py`. The parsing functions take plain JSON, so the tests need no network.
@@ -315,11 +316,12 @@ def git_files():
     return [(p, os.path.getsize(os.path.join(root, p))) for p in paths if p and os.path.isfile(os.path.join(root, p))]
 
 
-def fetch(since):
+def fetch(since, until=None):
     iso = f"{since:%Y-%m-%dT%H:%M:%SZ}"
+    created = f"{iso}..{until:%Y-%m-%dT%H:%M:%SZ}" if until else f">={iso}"   # the Dashboard runs fill 10 pages a day
     runs = []
     for page in range(1, 11):
-        rs = api(f"actions/runs?per_page=100&page={page}&created=>={iso}")["workflow_runs"]
+        rs = api(f"actions/runs?per_page=100&page={page}&created={created}")["workflow_runs"]
         runs += rs
         if len(rs) < 100:
             break
@@ -337,6 +339,14 @@ def fetch(since):
     return runs, jobs, status_comments, recent, prs, issues, events
 
 
+def clip(until, runs, status_comments, comments, prs, issues, events):
+    """The items up to `until`: a period in the past ends there (--until, #489). A PR that closed later was open."""
+    early = lambda t: t is not None and ts(t) < until
+    return ([r for r in runs if early(r["created_at"])], [c for c in status_comments if early(c["created_at"])],
+            [c for c in comments if early(c["created_at"])], [p for p in prs if early(p.get("closed_at"))],
+            [i for i in issues if early(i["created_at"])], [e for e in events if early(e["created_at"])])
+
+
 def api_pages(path, limit=20, stop=None):
     out = []
     for page in range(1, limit + 1):
@@ -350,13 +360,19 @@ def api_pages(path, limit=20, stop=None):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--hours", type=float, default=24)
+    ap.add_argument("--until", type=ts, help="the end of the period (ISO time, default now): compare two periods")
     a = ap.parse_args(argv)
-    since = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=a.hours)
-    runs, jobs, status_comments, comments, prs, issues, events = fetch(since)
+    until = a.until or datetime.datetime.now(datetime.timezone.utc)
+    since = until - datetime.timedelta(hours=a.hours)
+    runs, jobs, status_comments, comments, prs, issues, events = fetch(since, a.until)
+    if a.until:
+        runs, status_comments, comments, prs, issues, events = clip(until, runs, status_comments, comments, prs,
+                                                                    issues, events)
     files_of = {n: [f["filename"] for f in api(f"pulls/{n}/files?per_page=100")] for n in conflicted(comments)}
     from feedback import fetch as unanswered
-    print(report(since, runs, jobs, status_comments, comments, prs, git_files(), files_of, issues, events,
-                 unanswered()))
+    text = report(since, runs, jobs, status_comments, comments, prs, git_files(), files_of, issues, events,
+                  unanswered())
+    print(text.replace(" UTC", f" UTC until {until:%Y-%m-%d %H:%M} UTC", 1) if a.until else text)
     return 0
 
 
