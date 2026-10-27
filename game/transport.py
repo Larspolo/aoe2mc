@@ -2,8 +2,9 @@
 click with selected land units on an own transport ship loads up to SIZE of them, as in AoE2 DE (AoE2 wiki "Transport
 Ship": garrison 20, all land units): they walk to the land cell nearest to the ship with the plugin (`aoe moveto`), and
 there they go in. A click on the land with the selected loaded ship sails it to the water near that cell (fleet.order),
-and at the end of its path the units come out on the land cells nearest to the clicked cell. A right click on the
-selected ship unloads it at once on the nearest land. When the ship sinks, the units inside are lost, as in AoE2.
+and at the end of its path the units come out on the land next to the ship and walk to the clicked cell, as in AoE2 DE
+(#1652: before, they came out at a clicked cell near the ship). A right click on the selected ship unloads it at once
+on the nearest land. When the ship sinks, the units inside are lost, as in AoE2.
 
 Minecraft feature: the units inside ride the ship (`ride ... mount`, Minecraft riders), as in the siege tower: the
 first one rides its crew (the passenger of the chest boat, which has one seat), each next one the one before (on its
@@ -26,7 +27,7 @@ from garrison import INSIDE, OUTSIDE
 NAME = "TRANSPORT_SHIP"
 SIZE = 20                   # units inside, as in AoE2 DE (5 before update 141935)
 DOOR = 2.5                  # blocks from the boarding cell or the ship: there a unit goes in
-SHORE = 3                   # tiles from the ship (or the clicked cell) to the land that units board from or go out to
+SHORE = 3                   # tiles from the ship to the land that units board from or go out to
 
 
 def fits(g, u):
@@ -97,15 +98,14 @@ def go_in(g, u, ship):
         g.choose(g.selected - {u}, min(g.selected - {u}, default=None))
 
 
-def out(g, ship, cell=None):
-    """All units of the transport ship come out on the land cells nearest to the block cell (x, z), else to the ship.
-    Returns them; [] (they stay inside) when the ship is empty or no land is within SHORE tiles."""
+def out(g, ship):
+    """All units of the transport ship come out on the land cells nearest to the ship. Returns them; [] (they stay
+    inside) when the ship is empty or no land is within SHORE tiles."""
     units = vars(g).get("cargo", {}).get(ship, [])
     pos = g.pos(ship) if units else None
     if not pos:
         return []
-    at = cell or (math.floor(pos[0]), math.floor(pos[2]))
-    ring = land(g, at, len(units))
+    ring = land(g, (math.floor(pos[0]), math.floor(pos[2])), len(units))
     if not ring:
         return []
     del g.cargo[ship]
@@ -151,10 +151,7 @@ def tick(g):
             del unloads[ship]
         elif not v.path:
             del unloads[ship]
-            if math.dist(v.cell, cell) > SHORE * g.map.T:              # a far click: out at the shore (#1515)
-                g.walk_to(None, cell, out(g, ship))                    # then they walk on to the clicked cell
-            else:
-                out(g, ship, cell)
+            g.walk_to(None, cell, out(g, ship))                        # out at the shore, then a walk (#1515, #1652)
     for ship in [s for s in sorted(cargo) if s not in g.soldiers]:   # sunk: the units inside are lost, as in AoE2
         for u in cargo.pop(ship):
             g.command(f"kill {u}")

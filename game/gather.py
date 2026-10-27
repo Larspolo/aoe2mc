@@ -1029,6 +1029,8 @@ class Gather:
         if building:                                                   # a chosen building: place its foundation
             if (site := build.place(self, name, building, eye, d)) and building in build.WATER:
                 fleet.build_site(self, self.selected, site)            # the selected fishing ships build it (#1438)
+            elif site and self.selected & self.villagers.keys():
+                self.build(site)                                       # the selected villagers build it at once, as in AoE2 (#1654)
             return
         if monk.order(self, name, self.map.pick_ground(eye, d)):      # a monk to a relic or to a monastery (#1246)
             return

@@ -57,6 +57,7 @@ def test_the_plugin_keeps_the_help_lines(tiny_world, tmp_path):
     with run.Game(world) as game:
         assert menu.lore(game, "book", "Loom", "Villagers +15 HP, +1/+2 armor.").strip() == "Lore: 1 items"
         train.lore(game)
-        assert game.command("aoe lore book Loom x").strip() == f"Lore: {len(train.HELP) + len(train.HELP) - 1} items"
+        keys = {(m, train.ITEMS[n][2]) for n in train.HELP for m in (train.ITEMS[n][1], build.LOCKED)}
+        assert game.command("aoe lore book Loom x").strip() == f"Lore: {len(keys)} items"    # one per material:label
         assert game.command(menu.command("@a", "Town Center", [(1, "book", "Loom", "50 gold")])).strip() == \
             "Menu: 0 players"

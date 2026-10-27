@@ -30,3 +30,23 @@ def tiny_world(tmp_path_factory):
     with contextlib.redirect_stdout(out):
         aoe2mc.convert(src, str(d / "TinyWorld"), preview=True)
     return str(d / "TinyWorld"), out.getvalue()
+
+
+def limited(command):
+    """command of a fake server that fails on a command that the RCON server refuses (rcon.MAX, #1647)."""
+    from game import rcon
+
+    def check(self, cmd, *args, **kw):
+        assert len(cmd.encode()) <= rcon.MAX, f"RCON command of {len(cmd.encode())} bytes: {cmd[:80]}..."
+        return command(self, cmd, *args, **kw)
+    check.limited = True
+    return check
+
+
+@pytest.fixture(autouse=True)
+def rcon_limit(request):
+    """The fake servers of the tests (each class of the test module with a command method) fail on a command longer
+    than rcon.MAX bytes, as the real server, which closes the connection (#1647)."""
+    for obj in list(vars(request.module).values()):
+        if isinstance(obj, type) and callable(vars(obj).get("command")) and not getattr(obj.command, "limited", False):
+            obj.command = limited(vars(obj)["command"])

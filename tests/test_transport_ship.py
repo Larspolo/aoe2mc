@@ -1,5 +1,5 @@
 """game/transport.py: the dock trains the transport ship, up to 20 land units ride it and come out on the land
-nearest to the ship or to a clicked land cell (#1385). Fake server; an mc test on Paper."""
+nearest to the ship and walk to a clicked land cell (#1385, #1652). Fake server; an mc test on Paper."""
 import math
 import time
 
@@ -90,10 +90,12 @@ def test_a_loaded_ship_sent_to_the_land_unloads_there_after_the_trip():
     assert g.cargo                                                      # it sails first
     for _ in range(30):
         fleet.tick(g, 1.0)
+    server.entities["ship"]["Pos"] = g.ships["ship"].pos
     transport.tick(g)
     assert not g.cargo and not g.unloads
     tps = [c.split() for c in server.log if c.startswith("tp ")]
-    assert {(math.floor(float(t[2])), math.floor(float(t[4]))) for t in tps} == {(12, 15), (11, 15)}
+    assert {(math.floor(float(t[2])), math.floor(float(t[4]))) for t in tps} == {(13, 15), (13, 14)}   # next to the ship
+    assert any(c.startswith("aoe moveto m 12.5 ") or c.startswith("aoe moveto m 11.5 ") for c in server.log)   # #1652
     g.cargo = {"ship": ["m"]}
     g.walk_to("Steve", (20, 20))                                       # onto the water: no unload
     assert not g.unloads
@@ -147,7 +149,7 @@ def test_a_militia_rides_a_transport_ship_to_another_shore_on_paper(tmp_path):
             time.sleep(g.tick)
         assert "Test passed" in game.command(f"execute as {ship} on passengers if entity @s[nbt={{Passengers:[{{}}]}}]")
         T = g.map.T
-        goal = (17 * T + 1, 12 * T + 1)                                  # a land cell on the east shore
+        goal = (20 * T + 1, 12 * T + 1)                                  # 4 tiles inland on the east shore (#1652)
         assert g.map.free(*goal)
         g.choose({ship}, ship)
         assert ship in g.walk_to("nobody", goal) and g.unloads
@@ -156,7 +158,12 @@ def test_a_militia_rides_a_transport_ship_to_another_shore_on_paper(tmp_path):
             assert time.time() < end, (g.pos(ship), g.ships[ship].path[-1:])
             g.step()
             time.sleep(g.tick)
-        time.sleep(1)
-        pos = g.pos(militia)
-        assert math.dist((pos[0], pos[2]), goal) < 2 * T and g.map.free(math.floor(pos[0]), math.floor(pos[2])), pos
+        at, boat = g.pos(militia), g.pos(ship)
+        assert math.dist((at[0], at[2]), (boat[0], boat[2])) <= 2 * T, (at, boat)   # out next to the ship, no /tp to goal
+        end = time.time() + 30
+        while math.dist(((pos := g.pos(militia))[0], pos[2]), goal) >= 2 * T:      # then it walks there
+            assert time.time() < end, pos
+            g.step()
+            time.sleep(g.tick)
+        assert g.map.free(math.floor(pos[0]), math.floor(pos[2])), pos
         assert game.command(f"data get entity {militia} Invulnerable").strip().endswith("0b")

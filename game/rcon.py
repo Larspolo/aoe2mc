@@ -10,6 +10,7 @@ import struct
 import time
 
 LOGIN, COMMAND, RESPONSE = 3, 2, 0
+MAX = 1446             # bytes of one command (packet size 1460 minus the header): the server closes the connection after a longer one
 
 
 class RconError(Exception):
@@ -59,7 +60,10 @@ class Rcon:
         return rid, data.decode("utf-8")
 
     def command(self, cmd):
-        """Send one command (without "/") and return the answer of the server."""
+        """Send one command (without "/") and return the answer of the server. A command longer than MAX bytes is an
+        error before it goes out: the server would close the connection (#1647)."""
+        if (n := len(cmd.encode("utf-8"))) > MAX:
+            raise RconError(f"RCON command of {n} bytes, the limit is {MAX}: {cmd[:80]}...")
         return self._request(COMMAND, cmd)[1]
 
     def close(self):
