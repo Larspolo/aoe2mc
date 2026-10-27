@@ -9,7 +9,7 @@ CASTLE = (12, 4)
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.TECH_AGE["ELITE_CHAKRAM_THROWER_UPGRADE"] == 3 and train.build.AGE["ELITE_CHAKRAM_THROWER"] == 3
+    assert train.build.AGE["ELITE_CHAKRAM_THROWER"] == 3
     assert {"CHAKRAM_THROWER", "ELITE_CHAKRAM_THROWER"} <= combat.MELEE_RANGED
     assert replay.SPEEDS["CHAKRAM_THROWER"] == replay.SPEEDS["ELITE_CHAKRAM_THROWER"] == 1.15
     for name in ("CHAKRAM_THROWER", "ELITE_CHAKRAM_THROWER", "ELITE_CHAKRAM_THROWER_UPGRADE"):

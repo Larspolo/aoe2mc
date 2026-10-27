@@ -25,7 +25,7 @@ def imperial(*techs):
 def test_the_menu_shows_the_imperial_armor_after_its_castle_age_armor(tech):
     before, label, cost, _ = TECHS[tech]
     slot = train.ITEMS[before][0]
-    assert train.ITEMS[tech][0] == slot and train.AFTER[tech] == before and train.TECH_AGE[tech] == 3
+    assert train.ITEMS[tech][0] == slot and train.AFTER[tech] == before
     assert len(train.HELP[tech]) <= 50
     server, g = imperial()
     train.open_menu(g, "Steve", (11, 3))

@@ -15,13 +15,14 @@ from game import combat, gather, run, train
 EAGLE = " 7:gray_dye:Eagle Scout:20 food · 50 gold · 46 s · Needs the Feudal Age"   # a player without a civ (#1555)
 FIRE = " 19:gray_dye:Fire Lancer:45 wood · 45 gold · 35 s · Needs the Castle Age"   # a player without a civ (#1953)
 VG = " 21:gray_dye:Varangian Guard:65 food · 45 gold · 30 s · Needs the Castle Age"   # a player without a civ (#2011)
-COND = " 23:gray_dye:Condottiero:50 food · 35 gold · 18 s · Needs the Imperial Age"   # a player without a civ (#2156)
+TG = " 23:gray_dye:Temple Guard:70 food · 45 gold · 28 s · Needs the Castle Age"   # a player without a civ (#2157)
+COND = " 25:gray_dye:Condottiero:50 food · 35 gold · 18 s · Needs the Imperial Age"   # a player without a civ (#2156)
 
 
 def shows(text, start):
     """The menu text starts with start, has the gray items of a player without a civ and ends with the rally point.
     Not one exact text: each new unit of the barracks adds an item (#2156)."""
-    return text.startswith(start) and text.endswith(RALLY) and all(i in text for i in (SPEAR, EAGLE, FIRE, VG, COND))
+    return text.startswith(start) and text.endswith(RALLY) and all(i in text for i in (SPEAR, EAGLE, FIRE, VG, TG, COND))
 
 
 def setup(food=50, gold=20, done=True):

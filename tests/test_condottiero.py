@@ -1,5 +1,5 @@
 """Condottiero (#2156): the barracks of the Italians and of their allies (civs.SHARED, the team bonus) trains the
-condottiero in the Imperial Age (slot 23: 50 food, 35 gold, 18 s), with the values of the AoE2 DE wiki infobox
+condottiero in the Imperial Age (slot 25: 50 food, 35 gold, 18 s), with the values of the AoE2 DE wiki infobox
 "Condottiero (Age of Empires II)" (MediaWiki API, 2026-10-27: 80 HP, 10 attack, 1/0 armor, sight 8, speed 1.2)."""
 from test_castle_upgrades import BARRACKS, setup
 from test_forging import menus
@@ -8,7 +8,7 @@ import units
 from game import build, civs, combat, replay, train
 
 IMPERIAL = ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE")
-UNIT = 23
+UNIT = 25                                                              # after the Temple Guard (23, 24)
 
 
 def menu(civ, other="FRANKS", other_team=1, ages=IMPERIAL):
@@ -19,8 +19,7 @@ def menu(civ, other="FRANKS", other_team=1, ages=IMPERIAL):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.COSTS["CONDOTTIERO"] == {"food": 50, "gold": 35} and train.TRAIN_TIMES["CONDOTTIERO"] == 18
-    assert build.AGE["CONDOTTIERO"] == 3 and len(train.HELP["CONDOTTIERO"]) <= 50
+    assert build.AGE["CONDOTTIERO"] == 3 and len(train.HELP["CONDOTTIERO"]) <= 50   # cost and time: the menu tests
     assert combat.stats("CONDOTTIERO")[:4] == (80, 10, 1, 0) and combat.sight("CONDOTTIERO") == 8
     assert replay.SPEEDS["CONDOTTIERO"] == 1.2 and units.classify("CONDOTTIERO")["id"] == "minecraft:zombie"
     assert set(civs.MISSING["CONDOTTIERO"]) == {r["name"] for r in civs.ROWS} - {"ITALIANS"}
