@@ -82,7 +82,8 @@ def candidates(issues, busy=frozenset(), now=None):
     """The ticket candidates in the pick order of the autopilot skill (step 5): priority, then the overlap with the
     work in progress (busy, from work(); fewer merge conflicts, #487), then the ticket number.
     issues: the open issues and PRs. A dependency is closed when it is not open: an open PR is open too (#243).
-    A ticket waits until the time of its "Start after:" line (#496)."""
+    A ticket waits until the time of its "Start after:" line (#496). A decision ticket ("Decide: ...") is never a
+    candidate: only the owner answers it, also when the owner removed `needs-human` with the answer (#1569)."""
     now = now or datetime.datetime.now(datetime.timezone.utc)
     open_numbers = {i["number"] for i in issues}
     issues = [i for i in issues if "pull_request" not in i]
@@ -91,7 +92,7 @@ def candidates(issues, busy=frozenset(), now=None):
         p = next((k for k, name in enumerate(PRIORITY) if name in labels(i)), len(PRIORITY))
         return p, len(overlap(i, busy)), i["number"]
     ready = [i for i in issues if not labels(i) & SKIP and not any(d in open_numbers for d in depends(i))
-             and not (start_after(i) or now) > now]
+             and not (start_after(i) or now) > now and not i.get("title", "").startswith("Decide:")]
     return sorted(ready, key=rank)
 
 

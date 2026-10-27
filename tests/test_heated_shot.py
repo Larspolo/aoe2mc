@@ -52,13 +52,13 @@ def test_the_research_gives_the_own_towers_the_bonus():
     server.hp[uuid(MAP)] = 1000                                        # the tower lost 20 hit points
     research(g, "HEATED_SHOT", 30)
     cmd, = [c for c in server.log if c.startswith(f"aoe building {uuid(MAP)} ")]
-    assert cmd.endswith(" 5 8 24 building,standard ship:6")      # attack, range (T = 1), reload, the classes, the bonus
+    assert cmd.endswith(" 5 8 24 1 building,standard ship:6")    # attack, range (T = 1), reload, min, classes, bonus
     assert server.hp[uuid(MAP)] == 1000
 
 
 def test_a_building_without_a_bonus_keeps_its_short_command():
     tc = combat.building(combat.target_uuid([2, 2, 6, 6]), "TOWN_CENTER", 1, (8, 64, 8, 23, 104, 23))[-1]
-    assert tc.endswith(" 5 24 24")
+    assert tc.endswith(" 5 24 24 0")
 
 
 @pytest.mark.mc
