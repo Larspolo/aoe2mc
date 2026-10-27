@@ -268,6 +268,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "FLETCHING": fletching,
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) or name in HULKS else s,
          "FORTIFIED_WALL": lambda name, s: s,                      # the walls of the player: WALL_UPGRADES
+         "FUROR_CELTICA": lambda name, s: s._replace(hp=round(s.hp * 1.4)) if "siege" in s.classes else s,   # the Celts (#2043)
          "GAMBESONS": lambda name, s: s._replace(pierce=s.pierce + 1) if name in MILITIA_LINE else s,
          "GILLNETS": lambda name, s: s,                            # the fishing ships: gather.SHIP_TECHS
          "GOLD_MINING": lambda name, s: s,                         # an economy technology: gather.WORK_TECHS
