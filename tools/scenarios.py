@@ -5,6 +5,7 @@ Make synthetic AoE2 DE scenarios for tests (no real map files necessary).
 Usage:
     python tools/scenarios.py tiny OUT.aoe2scenario
     python tools/scenarios.py gallery OUT.aoe2scenario [--kinds BOU]
+    python tools/scenarios.py moods OUT.aoe2scenario [--mood NIGHT]
     python tools/scenarios.py stress|buildings|units|village|facing|walls|river|river_town|four_civs|battle|large OUT.aoe2scenario
 
 tiny:      24x24 tiles with land, shallow and deep water, a hill, buildings, units, a tree, a mine and fish.
@@ -13,6 +14,8 @@ stress:    units against every side of buildings, trees, mines, cliffs and a mou
 buildings: every building type for 8 civilizations with different architecture sets (players 1-8).
 units:     every land unit on land and every ship on water.
 village:   a small map with terrain types, water, a hill, a town and animals.
+moods:     the village with a map color mood (--mood: DEFAULT, NIGHT, EVENING, SWAMP, MISTY ...), for a check of the
+           moods in the game (#1598).
 river:     a river at elevation 2 between land at elevation 2, with a dock, a bridge, a ship and fish (#165).
 facing:    units at the rotations 0, pi/4 ... 7pi/4, to compare the facing in AoE2 and in Minecraft (docs/facing.md).
 river_town: a 64x64 example map (examples/river_town.aoe2scenario): a walled town, a river with a bridge and a dock,
@@ -40,6 +43,7 @@ from AoE2ScenarioParser.datasets.object_support import Civilization
 from AoE2ScenarioParser.datasets.other import OtherInfo
 from AoE2ScenarioParser.datasets.players import PlayerId
 from AoE2ScenarioParser.datasets.terrains import TerrainId
+from AoE2ScenarioParser.datasets.trigger_lists import ColorMood
 from AoE2ScenarioParser.datasets.units import UnitInfo
 from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
 
@@ -199,8 +203,11 @@ def units_map(path, step=3, per_row=30):
     return save(scn, path)
 
 
-def village(path):
+def village(path, mood=None):
+    """mood: the name of a map color mood (ColorMood), or None for the default."""
     scn = new_scenario(32)
+    if mood:
+        scn.map_manager.map_color_mood = ColorMood[mood.upper()]
     for t in scn.map_manager.terrain:
         if t.x >= 26:
             t.terrain_id = TerrainId.WATER_DEEP if t.x >= 28 else TerrainId.WATER_SHALLOW
@@ -231,6 +238,11 @@ def village(path):
     um.add_unit(PlayerId.ONE, UnitInfo.FISHING_SHIP.ID, x=29.5, y=12.5)
     um.add_unit(PlayerId.GAIA, OtherInfo.FISH_TUNA.ID, x=29.5, y=20.5)
     return save(scn, path)
+
+
+def moods(path, mood="NIGHT"):
+    """The village with the map color mood mood, for a check of the moods in the game (#1598, epic #1593)."""
+    return village(path, mood)
 
 
 def facing(path):
@@ -518,7 +530,8 @@ def large(path, size=480, players=8):
 
 MAKERS = {"tiny": tiny, "stress": stress, "buildings": buildings_map, "units": units_map, "village": village, "facing": facing,
           "walls": walls, "river": river, "river_town": river_town, "four_civs": four_civs, "battle": battle,
-          "triggers": triggers, "large": large}
+          "triggers": triggers, "large": large,
+          "moods": moods}
 
 
 def main():
@@ -526,9 +539,13 @@ def main():
     ap.add_argument("kind", choices=["gallery", *MAKERS])
     ap.add_argument("output")
     ap.add_argument("--kinds", default="BOU", help="gallery: B, O and/or U (default BOU)")
+    ap.add_argument("--mood", default="NIGHT", choices=[m.name for m in ColorMood], type=str.upper,
+                    help="moods: the map color mood (default NIGHT)")
     a = ap.parse_args()
     if a.kind == "gallery":
         gallery(a.output, a.kinds)
+    elif a.kind == "moods":
+        moods(a.output, a.mood)
     else:
         MAKERS[a.kind](a.output)
     print("Wrote", a.output)
