@@ -322,7 +322,7 @@ def status_comments(hours=24):
     """The comments on the status issue of the last `hours`."""
     status = api(f"issues?state=open&labels={STATUS}")
     since = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=hours)
-    return api_pages(f"issues/{status[0]['number']}/comments?since={since:%Y-%m-%dT%H:%M:%SZ}") if status else []
+    return api_pages(f"issues/{status[0]['number']}/comments?since={since:%Y-%m-%dT%H:%M:%SZ}", COMMENT_PAGES) if status else []
 
 
 def count_beating(lines, now, minutes=25):
@@ -561,7 +561,7 @@ def fetch(since, until=None):
     jobs = [j for r in ci for j in api(f"actions/runs/{r['id']}/jobs")["jobs"]]
     status = api(f"issues?state=open&labels={STATUS}")
     # one day more: the "Started by" comment of a ticket that merged in the period can be older
-    comments = api_pages(f"issues/comments?since={since - datetime.timedelta(days=1):%Y-%m-%dT%H:%M:%SZ}")
+    comments = api_pages(f"issues/comments?since={since - datetime.timedelta(days=1):%Y-%m-%dT%H:%M:%SZ}", COMMENT_PAGES)
     status_comments = [c for c in comments if status and c["issue_url"].endswith(f"/{status[0]['number']}")
                        and c["created_at"] >= iso]
     recent = [c for c in comments if c["created_at"] >= iso or c["body"].startswith("Started by")]
@@ -579,6 +579,9 @@ def clip(until, runs, status_comments, comments, prs, issues, events):
             [i for i in issues if early(i["created_at"])], [e for e in events if early(e["created_at"])])
 
 
+COMMENT_PAGES = 100   # the repository has about 1100 comments a day: 20 pages cut the last hours of 2 days (#1717)
+
+
 def api_pages(path, limit=20, stop=None):
     out = []
     for page in range(1, limit + 1):
@@ -586,6 +589,8 @@ def api_pages(path, limit=20, stop=None):
         out += items
         if len(items) < 100 or (stop and stop(items[-1])):
             break
+    else:
+        print(f"health: {path} stopped at {limit} pages: items of the period are missing", file=sys.stderr)
     return out
 
 
