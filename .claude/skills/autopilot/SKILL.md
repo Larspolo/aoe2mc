@@ -253,7 +253,12 @@ other runs change it too):
 - The section `### Process changes`: add a line `- <date>: <what changed in the skills, CLAUDE.md or
   LEARNINGS> (PR #n)` at the top, keep the last 5.
 
-Then add one short comment on the status issue: what you did and what is next. A question for the owner goes on its
+Then add one short comment on the status issue: what you did and what is next.
+Write it with one command (#1701): `python3 tools/report.py --usage "<the Usage: line of step 1.4>" --text "<what you
+did, what is next>" --ticket N --size S --result "pr #M" --setup 0 --checks K --checks-min C --sinks "<list or none>"
+--phases read=8,claim=1,code=18,verify=9,ci=0,conflict=5,report=4 --post` (repeat the ticket options for each ticket,
+in the same order). It adds the release bar, the `Tokens:` line and the footer in the format below. Without `--post`
+it only prints the comment. A question for the owner goes on its
 issue, not here (see "Ask the owner" in step 6).
 End it with one metrics line for each ticket of the run (the `improve` skill reads these lines):
 
