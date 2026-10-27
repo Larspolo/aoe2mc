@@ -65,6 +65,7 @@ jobs:
                 how='both sides only added lines, `tools/unconflict.py` kept both (#1864)'
               else
                 git merge --abort
+                [ "$label" = true ] || gh api "repos/$R/issues/$n/labels" -f "labels[]=conflict" >/dev/null || true   # takeover after 10 min, not 30 (claim.py)
                 echo "#$n: a real conflict: the runs solve it (autopilot step 6.10)"; continue
               fi
             fi

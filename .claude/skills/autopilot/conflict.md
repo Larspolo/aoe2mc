@@ -6,7 +6,7 @@ Read this file when a PR has a merge conflict (label `conflict`, or `mergeable_s
 A PR with a merge conflict: do the steps below, then continue at step 6.8. Remove the label `conflict` when you push the fix.
 The workflow `unconflict.yml` (after each merge and every 20 minutes) merges `origin/main` into a conflicted PR
 when git solves the conflict alone (`merge=union` files) or when both sides only add lines, for example two new
-entries at one place of a table (`tools/unconflict.py`, #1864), and starts CI (#280). So a conflict that stays is a real one.
+entries at one place of a table (`tools/unconflict.py`, #1864), and starts CI (#280). So a conflict that stays is a real one: Unconflict gives it the label `conflict`.
 Locally: `git -c merge.conflictStyle=diff3 merge origin/main`, then `python3 tools/unconflict.py` solves the add-add
 hunks (exit 1: it names the real conflict).
 
