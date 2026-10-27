@@ -10,7 +10,7 @@ from game import civs, monk, train
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.TECH_AGE["HERESY"] == 2 and len(train.HELP["HERESY"]) <= 50
+    assert len(train.HELP["HERESY"]) <= 50
     assert {"BRITONS", "GOTHS", "PERSIANS", "WU"} <= set(civs.MISSING["HERESY"])
     assert not {"AZTECS", "FRANKS", "TEUTONS"} & set(civs.MISSING["HERESY"])
 

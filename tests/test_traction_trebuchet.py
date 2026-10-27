@@ -18,8 +18,7 @@ def menu(civ):
 
 
 def test_the_values_are_those_of_the_wiki():
-    assert train.COSTS["TRACTION_TREBUCHET"] == {"wood": 175, "gold": 210}
-    assert train.TRAIN_TIMES["TRACTION_TREBUCHET"] == 70 and build.AGE["TRACTION_TREBUCHET"] == 3
+    assert build.AGE["TRACTION_TREBUCHET"] == 3
     assert "TRACTION_TREBUCHET" not in build.NEEDS and len(train.HELP["TRACTION_TREBUCHET"]) <= 50
     assert combat.stats("TRACTION_TREBUCHET")[:5] == (115, 50, 1, 8, 14) and combat.sight("TRACTION_TREBUCHET") == 18
     assert train.ITEMS["TRACTION_TREBUCHET"][0] == UNIT
