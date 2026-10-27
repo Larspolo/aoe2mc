@@ -21,13 +21,15 @@ import gather
 import replay
 
 SPEEDS = {"FISHING_SHIP": 1.26,          # tiles per game second (AoE2 DE wiki infobox); other ships: 1.0 until a ticket
+          "CANNON_GALLEON": 1.05,
           "DEMOLITION_RAFT": 1.42,
           "DEMOLITION_SHIP": 1.52,
           "FIRE_GALLEY": 1.36,
           "FIRE_SHIP": 1.47,
           "GALLEY": 1.36,
           "TRADE_COG": 1.65,
-          "TRANSPORT_SHIP": 1.45}
+          "TRANSPORT_SHIP": 1.45,
+          "WAR_GALLEY": 1.36}                                   # (#1482)
 NEAR = 3                                 # tiles from a clicked land cell to the water that a ship sails to
 PATH_CELLS = 20000                       # the path search limit (cells), as a long walk of the replay
 CHASE = 2.0                              # seconds between two range checks of a warship with a target (#1386)

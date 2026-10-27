@@ -217,12 +217,14 @@ STATS = {
     "VMDL": Stats(25, 0, 0, 0, 0, 0.0),
     "WAR_PENGUIN": Stats(64, 16, 4, 4, 0, 2.0, {"building": 8}, (INF,)),
     # ships (#1386, AoE2 DE wiki): the hits go to the crew of the boat (AoePlugin.java)
+    "CANNON_GALLEON": Stats(120, 50, 0, 5, 13, 10.0, {"building": 200, SIE: 25}, (SHIP, GUN, WAR)),   # (#1484) melee damage
     "DEMOLITION_RAFT": Stats(40, 75, 0, 0, 0, 0.0, {"building": 180}, (SHIP,)),   # (#1481) the Feudal Age form
     "DEMOLITION_SHIP": Stats(50, 95, 1, 0, 0, 0.0, {"building": 220}, (SHIP,)),   # one blast (BLAST), then it dies
     "FIRE_GALLEY": Stats(110, 2, 1, 4, 2.5, 0.25, {WAR: 1}, (SHIP,)),   # (#1481) the Feudal Age form of the fire ship
     "FIRE_SHIP": Stats(120, 3, 2, 4, 2.5, 0.25, {"building": 2, WAR: 1}, (SHIP,)),   # (#1440) melee damage, 4 hits/s
     "FISHING_SHIP": Stats(50, 0, 1, 1, 0, 0.0, {}, (SHIP,)),
     "GALLEY": Stats(110, 6, 0, 3, 5, 3.0, {"building": 6, WAR: 5}, (SHIP, WAR)),
+    "WAR_GALLEY": Stats(125, 7, 0, 4, 6, 3.0, {"building": 6, WAR: 5}, (SHIP, WAR)),   # Medium Warships (#1482)
     # others: no fight, but they can die
     "VILLAGER": Stats(25, 3, 0, 0, 0, 2.0),
     "KING": Stats(75, 0, 0, 0, 0, 0.0),
@@ -278,6 +280,7 @@ SIGHT = {
     "BARRACKS": 6,
     "BLACKSMITH": 6,
     "BOMBARD_TOWER": 10,
+    "CANNON_GALLEON": 15,
     "CASTLE": 11,
     "CHAMPION": 5,
     "DEMOLITION_RAFT": 6,
@@ -290,6 +293,7 @@ SIGHT = {
     "FORTIFIED_TOWER": 14,
     "GUARD_TOWER": 10,
     "HOUSE": 2,
+    "HUSSAR": 10,
     "KEEP": 10,
     "KREPOST": 10,
     "LIGHT_CAVALRY": 8,
@@ -310,6 +314,7 @@ SIGHT = {
 }
 # Units that attack from a range with melee damage (AoE2): their hit takes the melee armor of the target (#800).
 MELEE_RANGED = {"BOMBARD_CANNON",
+                "CANNON_GALLEON",
                 "ELITE_GBETO",
                 "ELITE_MAMELUKE",
                 "ELITE_THROWING_AXEMAN",
@@ -329,6 +334,7 @@ MELEE_RANGED = {"BOMBARD_CANNON",
 # vanilla shot: the fire ship (0: it hits only the target) and the demolition ship (#1440) shoot as a siege unit, and
 # the creeper crew of the demolition ship dies after its blast (AoePlugin.java), as a vanilla creeper.
 BLAST = {"BOMBARD_CANNON": 0.5,
+         "CANNON_GALLEON": 0.25,
          "DEMOLITION_RAFT": 2.5,
          "DEMOLITION_SHIP": 3,
          "FIRE_GALLEY": 0,
@@ -342,6 +348,7 @@ BLAST = {"BOMBARD_CANNON": 0.5,
 RAM_REACH = 2.0       # blocks: a ram (a minecart with range 0) hits from next to its target, on its carrier (#1399)
 CONTACT = 1.0         # tiles: the reach of a demolition ship (range 0, #1440): its raft is higher than a boat
 MIN_RANGE = {"BOMBARD_CANNON": 5,     # tiles: no shot at a unit nearer (AoE2 DE, wiki infobox "MinRange", #1350)
+             "CANNON_GALLEON": 3,
              "ELITE_ORGAN_GUN": 1,
              "HEAVY_ROCKET_CART": 2.5,
              "HEAVY_SCORPION": 2,
