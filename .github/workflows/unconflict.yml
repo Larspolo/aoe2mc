@@ -4,6 +4,8 @@ name: Unconflict
 # `merge=union` in .gitattributes, so a new line in docs/LEARNINGS.md or docs/DESIGN.md on both sides makes the PR
 # "dirty" and GitHub starts no CI. A push with GITHUB_TOKEN starts no workflow: this job starts CI on the branch,
 # and Automerge accepts that CI run.
+# Two new lines at one place of a table (`TECHS` in game/train.py) are a conflict for git too: `tools/unconflict.py`
+# keeps both sides when no side changes a base line (#1864), and CI checks the result.
 on:
   schedule:
     - cron: "*/20 * * * *"     # dirty PRs get no CI event, so they wait for this job
@@ -34,6 +36,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config merge.conflictStyle diff3     # tools/unconflict.py needs the base of each hunk
+          cp tools/unconflict.py "$RUNNER_TEMP/"   # main's copy: an older PR branch does not have it
           git fetch -q origin main
           now=$(date +%s)
           for n in $(gh api "repos/$R/pulls?state=open&per_page=100" --jq ".[] | select(.head.repo.full_name == \"$R\")
@@ -54,9 +58,14 @@ jobs:
             fi
             git fetch -q origin "$branch"
             git checkout -q -B "$branch" "origin/$branch"
+            how='git solved the conflict alone (`merge=union`)'
             if ! git merge -q --no-edit origin/main; then
-              git merge --abort
-              echo "#$n: a real conflict: the runs solve it (autopilot step 6.10)"; continue
+              if python3 "$RUNNER_TEMP/unconflict.py" && git commit -q --no-edit; then
+                how='both sides only added lines, `tools/unconflict.py` kept both (#1864)'
+              else
+                git merge --abort
+                echo "#$n: a real conflict: the runs solve it (autopilot step 6.10)"; continue
+              fi
             fi
             if [ "$(git rev-parse HEAD)" = "$sha" ]; then
               echo "#$n: main is in the branch already"; continue
@@ -66,7 +75,7 @@ jobs:
             fi
             echo "#$n: merged main into $branch"
             gh api "repos/$R/issues/$n/labels/conflict" -X DELETE >/dev/null 2>&1 || true
-            printf 'Merged `main` into the branch: git solved the conflict alone (`merge=union`). CI runs again (#280).\n' > body.md
+            printf 'Merged `main` into the branch: %s. CI runs again (#280).\n' "$how" > body.md
             gh api "repos/$R/issues/$n/comments" -F body=@body.md >/dev/null
             gh workflow run ci.yml --repo "$R" --ref "$branch"
           done
