@@ -67,6 +67,7 @@
 {"name": "KNIGHT", "tier": 2}
 {"name": "CAVALIER", "tier": 3}
 {"name": "PALADIN", "tier": 4}
+{"name": "SAVAR", "tier": 4}
 {"name": "CAMEL_SCOUT", "tier": 1}
 {"name": "CAMEL_RIDER", "tier": 2}
 {"name": "HEAVY_CAMEL_RIDER", "tier": 3}
