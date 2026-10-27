@@ -32,10 +32,8 @@ game/train.py:CONSCRIPT 1
 game/train.py:HEATED 1
 game/train.py:HOUSING 1
 game/train.py:HULKS 1
-game/train.py:MILITIA_LINE 1
 game/train.py:REQUIRES 1
 game/train.py:SPEEDS 1
-game/train.py:TECHS 1
 game/train.py:TOWER_UPGRADES 1
 game/train.py:WALL_UPGRADES 1
 game/train.py:summon 1
