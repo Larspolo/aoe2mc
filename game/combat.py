@@ -82,6 +82,7 @@ MELEE_RANGED = {"BOMBARD_CANNON",
                 "ELITE_GBETO",
                 "ELITE_MAMELUKE",
                 "ELITE_THROWING_AXEMAN",
+                "ELITE_TURTLE_SHIP",              # the cannon (AoE2 DE wiki, #1934)
                 "FAST_FIRE_SHIP",
                 "FIRE_GALLEY",
                 "FIRE_SHIP",
@@ -95,6 +96,7 @@ MELEE_RANGED = {"BOMBARD_CANNON",
                 "SIEGE_ONAGER",
                 "THROWING_AXEMAN",
                 "TRACTION_TREBUCHET",
+                "TURTLE_SHIP",
                 "WAR_HULK"}
 # Blast radius in tiles of the units whose shot hits all units near the target, also own units (AoE2 DE, wiki "AOE";
 # AoE2 tapers the damage at the edge, here each unit in the radius takes the full damage() hit, #1050). A ship has no
@@ -105,6 +107,7 @@ BLAST = {"BOMBARD_CANNON": 0.5,
          "DEMOLITION_RAFT": 2.5,
          "DEMOLITION_SHIP": 3,
          "ELITE_CANNON_GALLEON": 0.3,
+         "ELITE_TURTLE_SHIP": 0.5,                             # the cannon (AoE2 DE wiki "AOE", #1934)
          "FAST_FIRE_SHIP": 0,
          "FIRE_GALLEY": 0,
          "FIRE_SHIP": 0,
@@ -114,7 +117,8 @@ BLAST = {"BOMBARD_CANNON": 0.5,
          "MANGONEL": 1.0,
          "ONAGER": 1.25,
          "ROCKET_CART": 1.0,
-         "SIEGE_ONAGER": 1.5}
+         "SIEGE_ONAGER": 1.5,
+         "TURTLE_SHIP": 0.5}
 RAM_REACH = 2.0       # blocks: a ram (a minecart with range 0) hits from next to its target, on its carrier (#1399)
 CONTACT = 1.0         # tiles: the reach of a demolition ship (range 0, #1440): its raft is higher than a boat
 MIN_RANGE = {"BOMBARD_CANNON": 5,     # tiles: no shot at a unit nearer (AoE2 DE, wiki infobox "MinRange", #1350)
