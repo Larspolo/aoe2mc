@@ -99,9 +99,9 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "BATTERING_RAM",
         "CAMEL_RIDER",
         "CASTLE",
+        "CAVALRY_ARCHER",
         "CROSSBOWMAN",
         "ELITE_SKIRMISHER",
-        "HEAVY_CAVALRY_ARCHER",
         "KNIGHT",
         "LIGHT_CAVALRY",
         "LONG_SWORDSMAN",
@@ -122,6 +122,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "CHAMPION",
         "HALBERDIER",
         "HEAVY_CAMEL_RIDER",
+        "HEAVY_CAVALRY_ARCHER",
         "HUSSAR",
         "KEEP",
         "ONAGER",
@@ -561,20 +562,32 @@ def line(g, name, techs=None):
     return name
 
 
+def values(g, name, techs=None):
+    """The AoE2 values of building name of the player of g: those of its tower (line, #1374) with the building
+    technologies (train.TECHS: Chemistry, Masonry, #1398). techs: the technologies (default: those of the player)."""
+    import combat, train                                               # combat -> gather -> build: import it late
+    techs = getattr(g, "techs", ()) if techs is None else techs
+    s = combat.stats(line(g, name, techs))
+    for t in sorted(techs):
+        s = train.TECHS[t](name, s)
+    return s
+
+
 def retower(g, before):
-    """The complete own towers get the values of their new tower after a tower technology (#1374): the target keeps its
-    lost hit points, as a wall (upgrade). before: the technologies before the research. A destroyed tower stays air."""
+    """The complete own buildings get their new values after a tower technology (#1374) or Masonry (#1398, values): the
+    target keeps its lost hit points, as a wall (upgrade). before: the technologies before the research. A destroyed
+    building stays air."""
     import combat, repair                                              # combat -> gather -> build: import it late
     rects = [(x0, x1, z0, z1, o["name"]) for o in g.data["objects"] if o["kind"] == "building" and o["player"] == g.player
              and "footprint" in o for x0, z0, x1, z1 in [o["footprint"]]] \
         + [(*s["footprint"], s["name"]) for s in g.sites if s.get("done") and s["player"] == g.player]
     for x0, x1, z0, z1, name in rects:
-        old, new = line(g, name, before), line(g, name)
-        if old == new or (hp := repair.hp(g, (x0, x1, z0, z1))) is None or hp <= 0:
+        a, b, new = values(g, name, before), values(g, name), line(g, name)
+        if a == b or (hp := repair.hp(g, (x0, x1, z0, z1))) is None or hp <= 0:
             continue
-        uuid, a, b = combat.target_uuid([x0, z0, x1, z1]), combat.stats(old), combat.stats(new)
+        uuid = combat.target_uuid([x0, z0, x1, z1])
         box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
-        for c in [c for c in combat.building(uuid, new, g.player, box, g.map.T) if c.startswith("aoe building ")] \
+        for c in [c for c in combat.building(uuid, new, g.player, box, g.map.T, s=b) if c.startswith("aoe building ")] \
                 + [f"scoreboard players set {uuid} aoe_hp {min(b.hp, hp + b.hp - a.hp)}", combat.label_command(uuid, new)]:
             g.command(c)
 
@@ -603,7 +616,7 @@ def upgrade(g, site, old, redraw=True):
 def target(g, site):
     """A complete building of combat.BUILDINGS gets its target entity, as a building of the map (combat.setup): the
     AoE2 hit points, and the arrows of a town center, tower or castle (#1202). wonder.tick makes the one of a wonder."""
-    import combat, train                                               # combat -> gather -> build: import them late
+    import combat                                                      # combat -> gather -> build: import it late
     if site["name"] not in combat.BUILDINGS and site["name"] not in combat.WALLS or site["name"] == "WONDER":
         return
     x0, x1, z0, z1 = site["footprint"]
@@ -611,7 +624,7 @@ def target(g, site):
     box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
     wall, name = site["name"] in combat.WALLS, line(g, design(g, site["name"], site["player"]))   # the hit points of the age
                                                                        # (#1322), a guard tower or keep (#1374)
-    s = combat.wall(name, ages(g)) if wall else train.building_stats(g, name)   # Chemistry (#1375)
+    s = combat.wall(name, ages(g)) if wall else values(g, name)                  # Chemistry (#1375), Masonry (#1398)
     for c in combat.building(uuid, name, site["player"], box, g.map.T, s=s) \
             + [f"tag {uuid} add {combat.WALL_TAG}"] * wall + [combat.label_command(uuid, name)]:
         g.command(c)
