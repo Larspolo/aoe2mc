@@ -2851,11 +2851,18 @@ MOODS = {
     "TWILIGHT": 13000,
     "WINTER": NOON,
 }
+# The wet moods have rain (#1596); it falls as snow in the cold biomes. advance_weather is 0, so the rain stays. A set,
+# not a column of MOODS: MOODS gives the ticks.
+RAIN = {
+    "MURKY",
+    "RAINFOREST",
+    "SWAMP",
+}
 
 
-def write_level_dat(path, name, spawn, yaw=SPAWN_YAW, size=None, ticks=NOON):
+def write_level_dat(path, name, spawn, yaw=SPAWN_YAW, size=None, ticks=NOON, rain=False):
     """size: the map size in blocks; the vanilla world border goes around the map (#172). ticks: the time of day
-    (MOODS, #1595)."""
+    (MOODS, #1595). rain: it rains (RAIN, #1596)."""
     def dim(kind, gen):
         return Compound({"type": String(f"minecraft:{kind}"), "generator": gen})
     void = Compound({"type": String("minecraft:flat"), "settings": Compound({
@@ -2888,7 +2895,7 @@ def write_level_dat(path, name, spawn, yaw=SPAWN_YAW, size=None, ticks=NOON):
                                "dimensions": Compound({"minecraft:overworld": dim("overworld", void),
                                                        "minecraft:the_nether": dim("the_nether", nether),
                                                        "minecraft:the_end": dim("the_end", end)})},
-        "weather": {"raining": Byte(0), "thundering": Byte(0), "rain_time": Int(0), "thunder_time": Int(0),
+        "weather": {"raining": Byte(int(rain)), "thundering": Byte(0), "rain_time": Int(0), "thunder_time": Int(0),
                     "clear_weather_time": Int(0)},
         "world_clocks": {"minecraft:overworld": Compound({"total_ticks": Long(ticks), "paused": Byte(0)})},
     }
@@ -3337,7 +3344,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         write_region(os.path.join(dim, "entities", f"r.{rx}.{rz}.mca"), chunks)
 
     write_level_dat(os.path.join(out, "level.dat"), name, spawn, yaw, cols.n,
-                    MOODS.get(texts.get("mood"), NOON) if mood == "on" else NOON)
+                    MOODS.get(texts.get("mood"), NOON) if mood == "on" else NOON, mood == "on" and texts.get("mood") in RAIN)
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline,
                   texts.get("mood", "DEFAULT"))
     triggers, tstats = texts.get("triggers", []), Counter()
