@@ -20,8 +20,9 @@ data gap gets its own ticket on the board (step 3), so that the owner sees the w
 
 ## 0. Check the last change
 
-Read the newest line of "Process changes" on the status issue that has `before:` numbers. Compute the same numbers
-now (step 1). Did they get better?
+Read the newest line of "Process changes" on the status issue that has `before:` numbers: a line of a review or of a
+ticket run (autopilot step 8, #1738); skip `before: -` (a pitfall line). Compute the same numbers now (step 1).
+Did they get better?
 - Yes, or too early to say (less than 10 Metrics lines since the change) → keep it. Say so in the report.
 - No → undo it or try another way to fix the same loss. This is the change of this review. Say so in the report.
 
