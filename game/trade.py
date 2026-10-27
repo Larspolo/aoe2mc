@@ -43,11 +43,11 @@ def markets(g):
 
 def walk(g, uuid, rect):
     """Send cart uuid to the door cell of the market rect. Returns the cell, or None."""
-    import ai, civs                                                # ai imports gather, gather imports this module
+    import ai, train                                               # both import gather, gather imports this module
     if not (to := next(iter(g.map.front(rect)), None)):
         return None
     x, z = to
-    ai.move(g, uuid, CART, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * civs.speed(g, CART))
+    ai.move(g, uuid, CART, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * train.speed(g, CART))
     return to
 
 

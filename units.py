@@ -433,7 +433,7 @@ def classify(n, hero=False):
         return mob("donkey", Tame=Byte(1), ChestedHorse=Byte(1))
 
     # Ships: boats with a crew that shows the ship type
-    if has(n, "SHIP", "GALLEY", "GALLEON", "CARAVEL", "LONGSHIP", "JUNK", "CANOE", "DROMON", "THIRISADAI",
+    if has(n, "SHIP", "GALLEY", "GALLEON", "CARAVEL", "LONGSHIP", "LONGBOAT", "JUNK", "CANOE", "DROMON", "THIRISADAI",
            "LOU_CHUAN", "LEMBOS", "MONOREME", "BIREME", "TRIREME", "LEVIATHAN", "HULK", "CARRACK", "RAFT", "COG"):
         crew = soldier("skeleton", "crew", "bow")
         if has(n, "FISHING", "WHALING"):
@@ -446,7 +446,7 @@ def classify(n, hero=False):
             return boat("bamboo", [mob("creeper")])
         if has(n, "CANNON", "TURTLE", "CATAPULT", "ONAGER", "LEVIATHAN"):
             return boat("dark_oak", [mob("pillager", hands("crossbow")), crew])
-        if has(n, "LONGSHIP", "DRAGON_SHIP"):
+        if has(n, "LONGSHIP", "LONGBOAT", "DRAGON_SHIP"):   # LONGBOAT: the DE name (#1257)
             return boat("spruce", [soldier("zombie", "crew", "iron_axe"), crew])
         if has(n, "CANOE"):
             return boat("jungle", [crew])

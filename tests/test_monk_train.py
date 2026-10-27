@@ -9,6 +9,7 @@ import units
 from game import build, train
 
 MONK = " 0:evoker_spawn_egg:Monk:100 gold · 51 s · "
+TECHS = " 1:book:Fervor:140 gold · 50 s · research 2:book:Sanctity:175 gold · 60 s · research"   # (#1261)
 RALLY = " 8:white_banner:Rally point:Click, then right click the ground"
 MONASTERY = (12, 2)                                                    # a block of the monastery of add()
 
@@ -23,7 +24,7 @@ def monastery(gold=100, age=2):
 def test_the_monastery_menu_shows_the_monk_with_its_cost_and_time():
     server, g = monastery()
     assert train.open_menu(g, "Steve", MONASTERY) is not None
-    assert menus(server)[-1] == "aoe menu Steve Monastery" + MONK + "queue 0/15" + RALLY
+    assert menus(server)[-1] == "aoe menu Steve Monastery" + MONK + "queue 0/15" + TECHS + RALLY
 
 
 def test_before_the_castle_age_the_monk_is_gray_and_a_click_does_nothing():
