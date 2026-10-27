@@ -41,7 +41,7 @@ def test_each_player_gets_the_group_items_in_the_hotbar():
     server, g = setup()
     server.log.clear()
     g.clicks()
-    give = [c for c in server.log if "item replace" in c]
+    give = [c for c in server.log if "item replace" in c and "aoe_group" in c]   # not the Game menu item (#1588)
     assert [c.split()[7] for c in give] == ["hotbar.4", "hotbar.5", "hotbar.6", "hotbar.7", "hotbar.8"]
     assert 'item_name="Group 3"' in give[2] and "custom_data={aoe_group:3}" in give[2]
     assert any("carrot_on_a_stick[!custom_data]" in c for c in server.log)   # a group item is not the click item

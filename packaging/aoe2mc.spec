@@ -1,6 +1,7 @@
 # PyInstaller spec of the app bundle (#1541): one folder "aoe2mc" with the window (aoe2mc-gui, gui.run of #1540) and
 # the command line (aoe2mc, aoe2mc.main). Build: python3 -m PyInstaller packaging/aoe2mc.spec (docs/packaging.md).
 import os
+import sys
 
 from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
@@ -20,9 +21,18 @@ def analysis(script):
 gui, cli = analysis("gui.py"), analysis("aoe2mc.py")
 
 
+# the icon of packaging/icon.py (the workflow draws it first, #1542); a local build without it has the default icon
+ICON = os.path.join(ROOT, "packaging", "icon.ico" if sys.platform == "win32" else "icon.icns")
+ICON = ICON if os.path.exists(ICON) else None
+
+
 def exe(a, name, console):
-    return EXE(PYZ(a.pure), a.scripts, [], exclude_binaries=True, name=name, console=console, upx=False)
+    return EXE(PYZ(a.pure), a.scripts, [], exclude_binaries=True, name=name, console=console, upx=False, icon=ICON)
 
 
 coll = COLLECT(exe(gui, "aoe2mc-gui", False), gui.binaries, gui.datas,
                exe(cli, "aoe2mc", True), cli.binaries, cli.datas, name="aoe2mc", upx=False)
+if sys.platform == "darwin":                                            # the app in the .dmg of the installer (#1542)
+    app = BUNDLE(coll, name="aoe2mc.app", icon=ICON, bundle_identifier="io.github.larspolo.aoe2mc",
+                 info_plist={"CFBundleExecutable": "aoe2mc-gui", "CFBundleDisplayName": "aoe2mc",
+                             "NSHighResolutionCapable": True})
