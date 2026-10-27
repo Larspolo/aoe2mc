@@ -1493,7 +1493,8 @@ class Replay:
     def timeline_commands(self, end):
         """A written book "Timeline" for each viewer at the end of the replay (#1068): per player its age-ups, its
         first military unit, its first castle and its resign, in time order, from the whole timeline (also the time
-        of a jump) up to `end` (ms). Each player starts a page; a long list goes on to the next page. One RCON
+        of a jump) up to `end` (ms). Each player starts a page with a heading in its player color and its team (#1643); a
+        long list goes on to the next page. One RCON
         command holds at most RCON_MAX bytes: the last lines go first."""
         import gather                                               # gather -> build -> replay: import it late
         lines, army, castle = {}, set(), set()
@@ -1518,15 +1519,20 @@ class Replay:
         while True:
             pages = []
             for p in sorted(lines):
-                name = self.player(p)[0]                                # the name and an empty line
-                rows, page = BOOK_ROWS - 1 - len(textwrap.wrap(name, BOOK_COLS)), name + "\n"
+                name, color = self.player(p)                            # the heading and an empty line
+                team = self.team(p)
+                name = f"■ {f'Team {team} · ' if team is not None else ''}{name}"
+                rows, page = BOOK_ROWS - 1 - len(textwrap.wrap(name, BOOK_COLS)), ""
+                head = {"text": name, "color": color if color != "white" else "black"}   # the sidebar color (#1643)
                 for line in lines[p]:
                     n = len(textwrap.wrap(line, BOOK_COLS))
                     if n > rows:
-                        pages.append(page.rstrip("\n"))
-                        rows, page = BOOK_ROWS, ""
+                        pages.append({"text": "", "extra": [head, {"text": "\n" + page.rstrip("\n")}]} if head
+                                     else {"text": page.strip("\n")})
+                        rows, page, head = BOOK_ROWS, "", None
                     rows, page = rows - n, page + "\n" + line
-                pages.append(page.strip("\n"))
+                pages.append({"text": "", "extra": [head, {"text": "\n" + page.rstrip("\n")}]} if head
+                             else {"text": page.strip("\n")})       # only the heading has a color, the lines are black
             book = {"title": "Timeline", "author": "aoe2mc", "pages": pages}
             cmd = "give @a minecraft:written_book[minecraft:written_book_content=" + \
                 json.dumps(book, ensure_ascii=False, separators=(",", ":")) + "]"
