@@ -82,6 +82,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "ARCHITECTURE": {"food": 300, "wood": 200},                   # the university, Imperial Age (#1504)
          "ARROWSLITS": {"food": 250, "wood": 250},                     # AoE2 DE wiki (#1504)
          "ARSON": {"food": 75, "gold": 25},                           # AoE2 DE wiki (#1419)
+         "BALLISTICS": {"wood": 300, "gold": 175},                    # the university, Castle Age (#1549)
          "BATTERING_RAM": {"wood": 160, "gold": 75},
          "BOMBARD_CANNON": {"wood": 225, "gold": 225},               # the Imperial Age, after Chemistry (#1380)
          "BOMBARD_TOWER_TECH": {"food": 800, "wood": 400},           # the university, after Chemistry (#1375)
@@ -233,6 +234,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "ARBALESTER_UPGRADE": 50,
                "ARCHITECTURE": 70,
                "ARROWSLITS": 25,
+               "BALLISTICS": 60,
                "BATTERING_RAM": 36,
                "BERSERK": 14,
                "BLAST_FURNACE": 100,
@@ -418,6 +420,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                          "CHEMISTRY", "BOMBARD_TOWER_TECH",                     # (#1375)
                          "ARCHITECTURE",                                        # the Imperial Age (#1504)
                          "ARROWSLITS",
+                         "BALLISTICS",                                          # the Castle Age (#1549)
                          "HEATED_SHOT",                                         # the Castle Age (#1548)
                          "CAREENING", "DRY_DOCK",                               # the ships (#1441)
                          "SHIPWRIGHT"),                                         # (#1490)
@@ -523,6 +526,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bonus.get("standard", 0) + 2})
          if "infantry" in s.classes else s,                        # combat.STANDARD: not the walls (#1419)
          "BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
+         "BALLISTICS": lambda name, s: s,                          # the aim of the arrows: aoe ballistics (#1549)
          "BLAST_FURNACE": lambda name, s: s._replace(attack=s.attack + 2) if melee(s) or name in HULKS else s,
          "BLOCK_PRINTING": lambda name, s: s,                      # the conversion range: monk.near
          "BOMBARD_TOWER_TECH": lambda name, s: s,                  # the bombard tower in the build menu: build.NEEDS
@@ -701,6 +705,7 @@ TECH_AGE = {                                                       # the age of 
     "ARCHITECTURE": 3,
     "ARROWSLITS": 3,
     "ARSON": 1,
+    "BALLISTICS": 2,
     "BLAST_FURNACE": 3,
     "BLOCK_PRINTING": 3,
     "BLOODLINES": 1,
@@ -842,6 +847,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "SKIRMISHER": (1, "drowned_spawn_egg", "Skirmisher"),
          "SPEARMAN": (1, "zombie_spawn_egg", "Spearman"),
          "SQUIRES": (4, "book", "Squires"),                        # after the slot of Pikeman
+         "BALLISTICS": (MORE + 3, "book", "Ballistics"),          # 18: Shipwright, 19: Arrowslits, 20: Heated Shot
          "BATTERING_RAM": (0, "minecart", "Battering Ram"),         # a siege unit is a minecart (units.siege)
          "BERSERK": (0, "zombie_spawn_egg", "Berserk"),
          "BLAST_FURNACE": (0, "book", "Blast Furnace"),               # the slot of Forging
@@ -950,6 +956,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "ARCHITECTURE": "Buildings +10 % HP, +1/+1 armor.",
         "ARROWSLITS": "Towers +1, +2, keeps +3 attack.",
         "ARSON": "Infantry +2 attack vs. buildings.",
+        "BALLISTICS": "Arrows hit moving targets.",
         "BATTERING_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
         "BERSERK": "Viking infantry. Heals itself.",
         "BLAST_FURNACE": "Infantry, cavalry and hulks +2 attack.",
@@ -1452,6 +1459,8 @@ def research(g, entry):
             build.upgrade(g, site, combat.wall(site["name"], build.ages(g)))
     build.retower(g, before)                                       # the complete own towers get the new values (#1374),
                                                                    # the buildings those of Masonry and Fletching (#1398, #1408)
+    if entry["name"] == "BALLISTICS" and getattr(g, "paper", False):   # the plugin aims the arrows of the player (#1549)
+        g.command(f"aoe ballistics p{g.player} on")
     if entry["name"] in UPGRADES:                                  # the live units of the line get the new name
         for uuid, new in [(u, new) for old, new in lines(entry["name"], g) for u, n in g.soldiers.items() if n == old]:
             g.soldiers[uuid] = new
