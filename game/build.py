@@ -40,6 +40,7 @@ from replay import Replay  # noqa: E402
 COSTS = {"HOUSE": {"wood": 25}, "LUMBER_CAMP": {"wood": 100}, "MINING_CAMP": {"wood": 100},   # as in AoE2
          "MILL": {"wood": 100}, "FARM": {"wood": 60}, "BARRACKS": {"wood": 175},
          "BLACKSMITH": {"wood": 150},
+         "BOMBARD_TOWER": {"gold": 100, "stone": 125},             # after the technology Bombard Tower (#1375)
          "ARCHERY_RANGE": {"wood": 175}, "STABLE": {"wood": 175}, "TOWN_CENTER": {"wood": 275, "stone": 100},
          "CASTLE": {"stone": 650},                                 # the Castle Age: the Imperial Age needs them (#1162)
          "DOCK": {"wood": 150},                                    # 3 x 3 tiles on water at the shore (#1382)
@@ -56,6 +57,7 @@ COSTS = {"HOUSE": {"wood": 25}, "LUMBER_CAMP": {"wood": 100}, "MINING_CAMP": {"w
 BUILD_TIMES = {"HOUSE": 25, "LUMBER_CAMP": 35, "MINING_CAMP": 35, "MILL": 35, "FARM": 15,   # AoE2 seconds,
                "BARRACKS": 50, "ARCHERY_RANGE": 50, "STABLE": 50, "TOWN_CENTER": 150,                              # one builder
                "BLACKSMITH": 40,
+               "BOMBARD_TOWER": 80,
                "CASTLE": 200,
                "DOCK": 35,
                "GATE": 70,
@@ -73,6 +75,7 @@ OBJECTIVE = "aoe_build"
 ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw_gold_block",   # a block of the
          "MILL": "white_wool", "FARM": "wheat", "BARRACKS": "stone_brick_wall", "ARCHERY_RANGE": "target",
          "BLACKSMITH": "anvil", "STABLE": "hay_block",
+         "BOMBARD_TOWER": "polished_basalt",                            # the cannon barrels
          "CASTLE": "stone_bricks",
          "DOCK": "dark_oak_planks",                                     # the wood of the pier
          "GATE": "iron_bars",                                           # the portcullis
@@ -130,6 +133,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
     ), 3)                                                              # (0: Dark)
 WALLS = ("PALISADE_WALL", "STONE_WALL")                            # a line of 1-tile sites with two clicks (#1322)
 GATES = ("GATE", "PALISADE_GATE")                                  # on 4 own wall tiles in a line (#1324)
+NEEDS = {"BOMBARD_TOWER": "BOMBARD_TOWER_TECH"}                    # a building after a technology (#1375)
 SHORE = ("DOCK",)                                                  # on water next to the land, as in AoE2 (#1382)
 GHOST = 400                                                        # block displays of one ghost: a coarser shape above
 LOCKED = "gray_dye"                                                # the item of a locked building or unit
@@ -250,6 +254,8 @@ def locked(g, name):
     """The text "Needs the ... Age" when the player is not yet in the AoE2 age of building or unit name, else None."""
     if g is not None and AGE.get(name, 0) > ages(g):
         return f"Needs the {('Dark', 'Feudal', 'Castle', 'Imperial')[AGE[name]]} Age"
+    if g is not None and name in NEEDS and NEEDS[name] not in getattr(g, "techs", ()):
+        return "Needs " + pretty(NEEDS[name].removesuffix("_TECH"))
 
 
 def menu():
@@ -557,7 +563,7 @@ def line(g, name, techs=None):
 
 def values(g, name, techs=None):
     """The AoE2 values of building name of the player of g: those of its tower (line, #1374) with the building
-    technologies (train.TECHS: Masonry, #1398). techs: the technologies (default: those of the player)."""
+    technologies (train.TECHS: Chemistry, Masonry, #1398). techs: the technologies (default: those of the player)."""
     import combat, train                                               # combat -> gather -> build: import it late
     techs = getattr(g, "techs", ()) if techs is None else techs
     s = combat.stats(line(g, name, techs))
@@ -617,7 +623,7 @@ def target(g, site):
     box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
     wall, name = site["name"] in combat.WALLS, line(g, design(g, site["name"], site["player"]))   # the hit points of the age
                                                                        # (#1322), a guard tower or keep (#1374)
-    s = combat.wall(name, ages(g)) if wall else values(g, name)                  # Masonry (#1398)
+    s = combat.wall(name, ages(g)) if wall else values(g, name)                  # Chemistry (#1375), Masonry (#1398)
     for c in combat.building(uuid, name, site["player"], box, g.map.T, s=s) \
             + [f"tag {uuid} add {combat.WALL_TAG}"] * wall + [combat.label_command(uuid, name)]:
         g.command(c)
