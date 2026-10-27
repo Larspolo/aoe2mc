@@ -380,6 +380,14 @@ MIN_RANGE = {"BOMBARD_CANNON": 5,     # tiles: no shot at a unit nearer (AoE2 DE
              "SIEGE_ONAGER": 3,
              "TRACTION_TREBUCHET": 4,
              "TREBUCHET": 4}
+# The minimum range of the buildings that shoot, in tiles from the edge of the footprint (AoE2 DE, wiki infobox
+# "MinRange", #1546). The town center has none. Murder Holes removes it.
+FORT_MIN_RANGE = {"BOMBARD_TOWER": 1,
+                  "CASTLE": 1,
+                  "DOCK": 1,                  # it shoots only with fishing ships inside (AoE2 DE): not yet
+                  "GUARD_TOWER": 1,
+                  "KEEP": 1,
+                  "WATCH_TOWER": 1}
 # Tiles that a bolt flies past the range and hurts the enemy units on its line with half the damage (AoE2 DE, wiki
 # "Pass-through damage": "Projectiles travel Range+2 tiles in total", no friendly fire, #1401).
 PASS = {"HEAVY_SCORPION": 2,
@@ -514,7 +522,8 @@ def building(uuid, name, player, box, T=4, inside=(), s=None):
     keeps the AoE2 hit points. box: the blocks (x0, y0, z0, x1, y1, z1), both ends included, y0 the ground.
     A building with an attack (town center, castle) also gets its attack, its range (tiles * T blocks) and its reload
     in ticks at Normal speed: the plugin lets it shoot arrows at the enemies in its range (#1111), with the AoE2
-    number of arrows of the units `inside` (garrison.arrows: an empty town center shoots none, #1201).
+    number of arrows of the units `inside` (garrison.arrows: an empty town center shoots none, #1201), and its
+    minimum range in blocks (FORT_MIN_RANGE, 0 for the town center): no shot at a unit nearer (#1546).
     s: the Stats (default: stats(name); a wall of the game program: wall(), #1322).
     At 0 hit points the plugin fills the box with air. The invisibility effect hides the slime: the tag Invisible is
     only for armor stands, the server drops it on a slime (#636)."""
@@ -527,7 +536,8 @@ def building(uuid, name, player, box, T=4, inside=(), s=None):
             f"team join p{player} {uuid}"] + \
         [f"aoe arrows {uuid} {garrison.arrows(name, inside)}"] * bool(s.attack and s.range) + \
         [f"aoe building {uuid} {s.hp} {s.melee} {s.pierce} {' '.join(map(str, box))}"   # after the arrows: no shot of 1
-         + (f" {s.attack} {s.range * T} {round(s.reload / NORMAL * 20)}" if s.attack and s.range else "")
+         + (f" {s.attack} {s.range * T} {round(s.reload / NORMAL * 20)} {FORT_MIN_RANGE.get(name, 0) * T}"   # (#1546)
+            if s.attack and s.range else "")
          + (f" {','.join(s.classes)}" if STANDARD not in s.classes else "")]   # a wall, a gate, the wonder (#1419)
 
 

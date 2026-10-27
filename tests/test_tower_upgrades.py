@@ -66,7 +66,7 @@ def test_the_research_gives_the_towers_the_values_of_the_guard_tower_and_then_of
     server.hp[uuid(MAP)] = 520                                     # 500 hit points lost
     research(g, "GUARD_TOWER", 30)
     assert server.hp[uuid(MAP)] == 1000                            # +480 hit points
-    assert any(c.startswith(f"aoe building {uuid(MAP)} 1500 2 8 ") and c.split()[-3:-1] == ["7", "8"]   # attack, range
+    assert any(c.startswith(f"aoe building {uuid(MAP)} 1500 2 8 ") and c.split()[-4:-2] == ["7", "8"]   # attack, range
                for c in server.log)
     assert f"aoe label {uuid(MAP)} Guard Tower" in server.log
     assert not any(c.startswith("summon ") for c in server.log)    # the same target
