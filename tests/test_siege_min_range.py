@@ -25,7 +25,7 @@ def test_the_range_command_gives_the_minimum_range_in_blocks(name):
 
 def test_no_minimum_range_for_an_archer_and_a_ram():
     assert len(combat.range_command("u", "ARCHER", 4).split()) == 5
-    assert combat.range_command("u", "BATTERING_RAM", 4) is None
+    assert len(combat.range_command("u", "BATTERING_RAM", 4).split()) == 6   # the melee reach, no minimum (#1399)
 
 
 @pytest.mark.mc
