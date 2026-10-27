@@ -97,6 +97,7 @@ AGE_TECHS = ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE")           # the technol
 AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_TOWER",   # the AoE2 age of each
                      "ARCHER", "SKIRMISHER", "SPEARMAN", "SCOUT_CAVALRY", "TRADE_CART",  # building, unit and age
                      "DEMOLITION_RAFT",
+                     "EAGLE_SCOUT",
                      "FIRE_GALLEY",
                      "FISH_TRAP",
                      "TRADE_COG",
@@ -112,6 +113,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "CAVALRY_ARCHER",
         "CROSSBOWMAN",
         "DEMOLITION_SHIP",
+        "EAGLE_WARRIOR",
         "ELITE_SKIRMISHER",
         "FIRE_SHIP",
         "KNIGHT",
@@ -138,6 +140,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "CAVALIER",
         "CHAMPION",
         "ELITE_CANNON_GALLEON",
+        "ELITE_EAGLE_WARRIOR",
         "HALBERDIER",
         "HAND_CANNONEER",
         "HEAVY_CAMEL_RIDER",

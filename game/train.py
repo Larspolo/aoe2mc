@@ -113,8 +113,13 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "CROSSBOWMAN_UPGRADE": {"food": 175, "gold": 100},
          "DOUBLE_BIT_AXE": {"food": 100, "wood": 50},
          "DRY_DOCK": {"food": 200, "gold": 400},                      # the university, after Careening (#1441)
+         "EAGLE_SCOUT": {"food": 20, "gold": 50},                       # AoE2 DE wiki (#1555)
+         "EAGLE_WARRIOR": {"food": 20, "gold": 50},
+         "EAGLE_WARRIOR_UPGRADE": {"food": 200, "gold": 200},
          "ELITE_CANNON_GALLEON": {"wood": 200, "gold": 150},           # AoE2 DE wiki (#1491)
          "ELITE_CANNON_GALLEON_UPGRADE": {"wood": 525, "gold": 500},   # the Imperial Age (#1491)
+         "ELITE_EAGLE_WARRIOR": {"food": 20, "gold": 50},
+         "ELITE_EAGLE_WARRIOR_UPGRADE": {"food": 800, "gold": 500},
          "ELITE_SKIRMISHER": {"food": 25, "wood": 35},
          "ELITE_SKIRMISHER_UPGRADE": {"wood": 230, "gold": 130},
          "FERVOR": {"gold": 140},
@@ -258,8 +263,13 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "CROSSBOWMAN_UPGRADE": 35,
                "DOUBLE_BIT_AXE": 25,
                "DRY_DOCK": 60,
+               "EAGLE_SCOUT": 46,                                  # 35 s from the Castle Age: FASTER
+               "EAGLE_WARRIOR": 35,
+               "EAGLE_WARRIOR_UPGRADE": 50,
                "ELITE_CANNON_GALLEON": 46,
                "ELITE_CANNON_GALLEON_UPGRADE": 30,
+               "ELITE_EAGLE_WARRIOR": 20,
+               "ELITE_EAGLE_WARRIOR_UPGRADE": 50,
                "ELITE_SKIRMISHER": 22,
                "ELITE_SKIRMISHER_UPGRADE": 50,
                "FERVOR": 50,
@@ -372,6 +382,9 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                        "HALBERDIER_UPGRADE",                                  # the Imperial Age (#1499)
                        "TWO_HANDED_SWORDSMAN_UPGRADE",                        # the Imperial Age (#1498)
                        "CHAMPION_UPGRADE",                                    # (#1498)
+                       "EAGLE_SCOUT",                                         # Aztecs, Mayans (#1555)
+                       "EAGLE_WARRIOR_UPGRADE",
+                       "ELITE_EAGLE_WARRIOR_UPGRADE",
                        "SQUIRES", "GAMBESONS",                                           # (#1415)
                        "ARSON"),                                              # (#1419)
           "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER",                                          # building (#654, #670, #655)
@@ -516,7 +529,9 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "CAPPED_RAM_UPGRADE": lambda name, s: s,                  # a new unit name: UPGRADES
          "CARAVAN": lambda name, s: s,                             # the walk speed: SPEEDS
          "CAVALIER_UPGRADE": lambda name, s: s,                    # a new unit name: UPGRADES
-         "CASTLE_AGE": lambda name, s: s,                          # an age: REQUIRES
+         "CASTLE_AGE": lambda name, s: s._replace(attack=s.attack + 3, bonus={**s.bonus, "cavalry": 2, "camel": 1,
+                                                                            "ship": 1})
+         if name == "EAGLE_SCOUT" else s,                          # an age: REQUIRES; the eagle scout (#1555)
          "CAREENING": lambda name, s: s._replace(pierce=s.pierce + 1) if ship(name, s) else s,
          "CHAMPION_UPGRADE": lambda name, s: s,                    # a new unit name: UPGRADES
          "CHEMISTRY": chemistry,
@@ -528,7 +543,9 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "CROSSBOWMAN_UPGRADE": lambda name, s: s,
          "DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
          "DRY_DOCK": lambda name, s: s._replace(pierce=s.pierce + 1) if ship(name, s) else s,
+         "EAGLE_WARRIOR_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "ELITE_CANNON_GALLEON_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
+         "ELITE_EAGLE_WARRIOR_UPGRADE": lambda name, s: s,
          "ELITE_SKIRMISHER_UPGRADE": lambda name, s: s,
          "FERVOR": lambda name, s: s,                              # the walk speed: SPEEDS
          "FISHING_LINES": lambda name, s: s,                       # the fishing ships: gather.SHIP_TECHS
@@ -603,6 +620,7 @@ SPEEDS = {"CARAVAN": ("trade units", 1.2),                        # technology: 
           "HUSBANDRY": ("mounted", 1.1),                           # walk speed factor; cavalry, camels, elephants (#1416)
           "SQUIRES": ("infantry", 1.1)}                            # (#1415)
 SHIPWRIGHT = (0.8, 1.54)                                           # Shipwright: ships cost 80 % wood, train 54 % faster
+FASTER = {"EAGLE_SCOUT": (2, 35)}                                  # unit: the age and its train time from it (#1555)
 CONSCRIPT = (("ARCHERY_RANGE", "BARRACKS", "CASTLE", "STABLE"), 1.33)   # Conscription: these buildings train faster
 ARROWSLITS = {"GUARD_TOWER": 2, "KEEP": 3, "WATCH_TOWER": 1}         # Arrowslits: the attack of each tower (#1504)
 UPGRADES = {                                                       # technology: the unit and its new unit (#941)
@@ -612,7 +630,9 @@ UPGRADES = {                                                       # technology:
     "CAVALIER_UPGRADE": ("KNIGHT", "CAVALIER"),
     "CHAMPION_UPGRADE": ("TWO_HANDED_SWORDSMAN", "CHAMPION"),
     "CROSSBOWMAN_UPGRADE": ("ARCHER", "CROSSBOWMAN"),
+    "EAGLE_WARRIOR_UPGRADE": ("EAGLE_SCOUT", "EAGLE_WARRIOR"),        # (#1555)
     "ELITE_CANNON_GALLEON_UPGRADE": ("CANNON_GALLEON", "ELITE_CANNON_GALLEON"),
+    "ELITE_EAGLE_WARRIOR_UPGRADE": ("EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"),
     "ELITE_SKIRMISHER_UPGRADE": ("SKIRMISHER", "ELITE_SKIRMISHER"),
     "HALBERDIER_UPGRADE": ("PIKEMAN", "HALBERDIER"),
     "HEAVY_CAVALRY_ARCHER_UPGRADE": ("CAVALRY_ARCHER", "HEAVY_CAVALRY_ARCHER"),
@@ -643,6 +663,7 @@ AFTER = {"ARBALESTER_UPGRADE": "CROSSBOWMAN_UPGRADE",
          "HEAVY_WARSHIPS": "MEDIUM_WARSHIPS",
          "DRY_DOCK": "CAREENING",
          "CHAMPION_UPGRADE": "TWO_HANDED_SWORDSMAN_UPGRADE",
+         "ELITE_EAGLE_WARRIOR_UPGRADE": "EAGLE_WARRIOR_UPGRADE",   # (#1555)
          "ELITE_CANNON_GALLEON_UPGRADE": "CHEMISTRY",             # the cannon galleon needs it (build.NEEDS)
          "CHAIN_BARDING_ARMOR": "SCALE_BARDING_ARMOR", "CHAIN_MAIL_ARMOR": "SCALE_MAIL_ARMOR",
          "GILLNETS": "FISHING_LINES",
@@ -690,7 +711,9 @@ TECH_AGE = {                                                       # the age of 
     "CROSSBOWMAN_UPGRADE": 2,
     "DOUBLE_BIT_AXE": 1,
     "DRY_DOCK": 3,
+    "EAGLE_WARRIOR_UPGRADE": 2,
     "ELITE_CANNON_GALLEON_UPGRADE": 3,
+    "ELITE_EAGLE_WARRIOR_UPGRADE": 3,
     "ELITE_SKIRMISHER_UPGRADE": 2,
     "FERVOR": 2,
     "FISHING_LINES": 1,
@@ -767,8 +790,13 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "CAPPED_RAM_UPGRADE": (3, "book", "Capped Ram"),        # one slot for each line of upgrades
          "CROSSBOWMAN": (0, "skeleton_spawn_egg", "Crossbowman"),
          "CROSSBOWMAN_UPGRADE": (2, "book", "Crossbowman"),
+         "EAGLE_SCOUT": (7, "husk_spawn_egg", "Eagle Scout"),        # the free slot of the barracks (#1555)
+         "EAGLE_WARRIOR": (7, "husk_spawn_egg", "Eagle Warrior"),    # the slot of the eagle scout
+         "EAGLE_WARRIOR_UPGRADE": (MORE, "book", "Eagle Warrior"),
          "ELITE_CANNON_GALLEON": (MORE + 1, "dark_oak_boat", "Elite Cannon Galleon"),   # the slot of the cannon galleon
          "ELITE_CANNON_GALLEON_UPGRADE": (MORE + 3, "book", "Elite Cannon Galleon"),   # the dock (#1491)
+         "ELITE_EAGLE_WARRIOR": (7, "husk_spawn_egg", "Elite Eagle Warrior"),
+         "ELITE_EAGLE_WARRIOR_UPGRADE": (MORE, "book", "Elite Eagle Warrior"),   # the slot of Eagle Warrior (AFTER)
          "ELITE_SKIRMISHER": (1, "drowned_spawn_egg", "Elite Skirmisher"),
          "ELITE_SKIRMISHER_UPGRADE": (3, "book", "Elite Skirmisher"),
          "HALBERDIER": (1, "zombie_spawn_egg", "Halberdier"),
@@ -944,8 +972,13 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "CROSSBOWMAN_UPGRADE": "Upgrades archers to crossbowmen.",
         "DOUBLE_BIT_AXE": "Villagers chop wood 20 % faster.",
         "DRY_DOCK": "Ships +1 pierce armor.",
+        "EAGLE_SCOUT": "Fast infantry scout. Strong vs. monks, siege.",
+        "EAGLE_WARRIOR": "Fast infantry. Strong vs. monks, siege, cavalry.",
+        "EAGLE_WARRIOR_UPGRADE": "Upgrades eagle scouts to eagle warriors.",
         "ELITE_CANNON_GALLEON": "Siege warship. Long range; strong vs. buildings.",
         "ELITE_CANNON_GALLEON_UPGRADE": "Upgrades cannon galleons to elite ones.",
+        "ELITE_EAGLE_WARRIOR": "Fast infantry. Strong vs. monks, siege, cavalry.",
+        "ELITE_EAGLE_WARRIOR_UPGRADE": "Upgrades eagle warriors to elite ones.",
         "ELITE_SKIRMISHER": "Ranged. Strong vs. archers, spearmen.",
         "ELITE_SKIRMISHER_UPGRADE": "Upgrades skirmishers to elite skirmishers.",
         "FEUDAL_AGE": "Advance to the Feudal Age.",
@@ -1151,7 +1184,7 @@ def show(g, player, rect):
             return missing(g, name) or ("researching" if queued(g, name) else "research")
         return f"queue {n}/{QUEUE}"
     items = [(slot, build.LOCKED if build.locked(g, name) else item, label,
-              (" · ".join(f"{v} {r}" for r, v in price(g, name).items()) or "free") + f" · {TRAIN_TIMES[name]} s · "
+              (" · ".join(f"{v} {r}" for r, v in price(g, name).items()) or "free") + f" · {seconds(g, name)} s · "
               + state(name))
              for name in trains(g, building) if repeatable(g, name) and unlocked(g, name) for slot, item, label in [ITEMS[name]]]
     items += [RALLY] if units_of(building) else []
@@ -1367,6 +1400,13 @@ def stats(g, name):
     return s
 
 
+def seconds(g, name):
+    """The train time of unit or technology name: TRAIN_TIMES, or the time of FASTER from its age (the eagle scout trains
+    in 46 s in the Feudal Age and in 35 s from the Castle Age, AoE2 DE wiki)."""
+    age, time = FASTER.get(name, (9, 0))
+    return time if build.ages(g) >= age else TRAIN_TIMES[name]
+
+
 def speed(g, name):
     """The factor of the walk speed of unit name: the bonus of the civilization (civs.speed) and the technologies of the
     player (SPEEDS: Fervor, #1261; Squires for the class infantry, #1415; Husbandry for the mounted units, #1416)."""
@@ -1503,7 +1543,7 @@ def tick(g, work):
             q[0]["waits"] = False
         rate = CONSCRIPT[1] if rect in fast and q[0]["name"] not in TECHS else 1   # units only, not technologies
         rate *= SHIPWRIGHT[1] if shipwright(g, q[0]["name"]) else 1          # the ships of a dock, not its technologies
-        q[0]["progress"] += 1 if getattr(g, "aegis", False) else work * rate / TRAIN_TIMES[q[0]["name"]]   # cheats.aegis
+        q[0]["progress"] += 1 if getattr(g, "aegis", False) else work * rate / seconds(g, q[0]["name"])   # cheats.aegis
         if q[0]["progress"] >= 1 and q[0]["name"] in TECHS:
             research(g, q.pop(0))
         elif q[0]["progress"] >= 1 and (v := spawn(g, rect, q.pop(0)["name"])):
