@@ -45,6 +45,7 @@
 {"name": "SHRIVAMSHA_RIDER", "walk": 1.6}
 {"name": "STEPPE_LANCER", "walk": 1.45}
 {"name": "VARANGIAN_GUARD", "walk": 1.05}
+{"name": "CONDOTTIERO", "walk": 1.2}
 {"name": "CHAMPION", "walk": 0.96}
 {"name": "TWO_HANDED_SWORDSMAN", "walk": 0.96}
 {"name": "WINGED_HUSSAR", "walk": 1.5}

@@ -15,6 +15,13 @@ from game import combat, gather, run, train
 EAGLE = " 7:gray_dye:Eagle Scout:20 food · 50 gold · 46 s · Needs the Feudal Age"   # a player without a civ (#1555)
 FIRE = " 19:gray_dye:Fire Lancer:45 wood · 45 gold · 35 s · Needs the Castle Age"   # a player without a civ (#1953)
 VG = " 21:gray_dye:Varangian Guard:65 food · 45 gold · 30 s · Needs the Castle Age"   # a player without a civ (#2011)
+COND = " 23:gray_dye:Condottiero:50 food · 35 gold · 18 s · Needs the Imperial Age"   # a player without a civ (#2156)
+
+
+def shows(text, start):
+    """The menu text starts with start, has the gray items of a player without a civ and ends with the rally point.
+    Not one exact text: each new unit of the barracks adds an item (#2156)."""
+    return text.startswith(start) and text.endswith(RALLY) and all(i in text for i in (SPEAR, EAGLE, FIRE, VG, COND))
 
 
 def setup(food=50, gold=20, done=True):
@@ -42,7 +49,8 @@ def test_a_right_click_on_the_barracks_opens_its_menu():
     server, g = setup(done=None)
     for name in g.clicks():
         g.click(name)
-    assert menus(server) == ["aoe menu Steve Barracks 0:zombie_spawn_egg:Militia:50 food · 20 gold · 21 s · queue 0/15" + SPEAR + EAGLE + FIRE + VG + RALLY]
+    text, = menus(server)
+    assert shows(text, "aoe menu Steve Barracks 0:zombie_spawn_egg:Militia:50 food · 20 gold · 21 s · queue 0/15" + SPEAR)
     assert not any(g.queues.values())
 
 
@@ -72,7 +80,7 @@ def test_a_shift_click_queues_as_many_as_the_stock_allows():
     server, g = setup(food=1000, gold=70)
     rect = train.open_menu(g, "Steve", (11, 3))
     assert train.order(g, "Steve", rect, 0, shift=True) == 3 and g.stock["gold"] == 10
-    assert menus(server)[-1].endswith("queue 3/15" + SPEAR + EAGLE + FIRE + VG + RALLY)
+    assert "queue 3/15" + SPEAR in menus(server)[-1] and shows(menus(server)[-1], "aoe menu Steve Barracks ")
 
 
 def test_the_militia_appears_after_21_seconds_and_joins_the_military_units():
