@@ -56,7 +56,7 @@ def test_a_walk_right_after_a_walk_catches_up():
     speeds = [c for c in game.sent if c.startswith("attribute u1 ")]
     assert game.sent.count("data get entity u1 Pos") == 1          # the third walk starts long after the second
     assert speeds[0] == speeds[2] == ai.speed_command("u1", "VILLAGER_MALE", 4, 4.0 * replay.PATH)
-    assert speeds[1] == ai.speed_command("u1", "VILLAGER_MALE", 4, 4.0 * replay.PATH * 48 / 40)   # 48 blocks in the time of 40
+    assert speeds[1] == ai.speed_command("u1", "VILLAGER_MALE", 4, 4.0 * replay.CATCH_UP)   # 8 blocks of lag in 16 (#1291)
 
 
 def test_a_unit_behind_walks_the_next_leg_faster_up_to_the_cap():
