@@ -44,7 +44,7 @@ def test_no_start_object_is_on_water_or_forest(players):
     d = rmap.random_map("islands", 7, players)
     t = np.array(d["terrain"])
     bad = [T["WATER"], T["SHALLOW"]] + list(rmap.FOREST_TREES)
-    start = [o for o in d["objects"] if not o["name"].startswith("TREE")]
+    start = [o for o in d["objects"] if not o["name"].startswith("TREE") and "FISH" not in o["name"]]
     assert {o["name"] for o in start} >= {"TOWN_CENTER", "VILLAGER_MALE", "GOLD_MINE"}
     assert not any(t[int(o["x"]), int(o["y"])] in bad for o in start)
     assert sum(o["name"] == "TOWN_CENTER" for o in start) == players
