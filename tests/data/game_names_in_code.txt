@@ -86,16 +86,3 @@ rmap.py:START 1
 rmap.py:TERRAINS 1
 rmap.py:fish 1
 scx.py:CIVS 1
-units.py:FLYING 1
-units.py:HERO_BASE 1
-units.py:INVISIBLE 1
-units.py:JOKES 1
-units.py:MOUNTED_HEROES 1
-units.py:RANGED_HEROES 1
-units.py:RELIGIOUS_HEROES 1
-units.py:SIEGE_CREW 1
-units.py:SIEGE_HEROES 1
-units.py:TIER 1
-units.py:classify 3
-units.py:is_bird 1
-units.py:pretty 1
