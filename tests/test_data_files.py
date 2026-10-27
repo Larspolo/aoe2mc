@@ -140,13 +140,6 @@ CHECKS = {"build.jsonl": check_build, "buildings.jsonl": check_buildings, "cheat
 TWO_TYPES = {("train.jsonl", "effect"): (dict, str)}
 
 
-MIXED = {("train.jsonl", "effect")}       # a function name or a change of the values (train.effect(), #2098)
-
-
-# The keys with two types by design: an "effect" is data or the name of a function of game/train.py (#2098, #2122)
-TWO_TYPES = {("train.jsonl", "effect"): (dict, str)}
-
-
 @pytest.mark.parametrize("name", sorted(NAMES))
 def test_each_key_has_one_type(name):
     types = {}
@@ -156,7 +149,7 @@ def test_each_key_has_one_type(name):
                 assert isinstance(v, TWO_TYPES[name, k]), (name, row["name"], k)
                 continue
             t = float if type(v) is int else type(v)       # an int is a float without a fraction; null: none
-            assert v is None or (name, k) in MIXED or types.setdefault(k, t) is t, (name, row["name"], k)
+            assert v is None or types.setdefault(k, t) is t, (name, row["name"], k)
 
 
 def test_the_effect_name_of_a_technology_is_a_function_of_train():
