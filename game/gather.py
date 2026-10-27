@@ -578,6 +578,8 @@ class Gather:
                       and o["name"] in combat.BUILDINGS}               # target UUID -> box of an enemy building
         self.fort_names = {combat.target_uuid(o["footprint"]): o["name"] for o in data["objects"]
                            if o["kind"] == "building" and "footprint" in o}   # target UUID -> AoE2 name (#991)
+        self.fort_players = {combat.target_uuid(o["footprint"]): o["player"] for o in data["objects"]
+                             if o["kind"] == "building" and "footprint" in o}  # target UUID -> owner (bot.forts, #1819)
         self.sieged = set()                                            # the targets of attack orders
         self.wands, self.corners = set(), {}                           # players who clicked the wand, player -> corner 1
         self.holds = {}                                                # player -> time of the last wand use of a drag
@@ -1295,6 +1297,8 @@ class Gather:
         for uuid in [u for u in self.sieged if "passed" not in self.command(f"execute if entity {u}")]:
             self.sieged.discard(uuid)
             x0, y0, z0, x1, _, z1 = self.forts.pop(uuid)
+            for o in build.sides(self):                                # the other sides attack it no more (#1819)
+                o.forts.pop(uuid, None)
             for x in range(x0, x1 + 1):
                 for z in range(z0, z1 + 1):
                     self.map.blocked.discard((x, z))

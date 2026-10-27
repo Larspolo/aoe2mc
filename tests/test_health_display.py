@@ -100,6 +100,8 @@ def test_a_hit_building_shows_its_name_line(tiny_world, tmp_path):
         game.command(combat.stats_command("@e[tag=a,limit=1]", "CHAMPION"))
         game.command(f"aoe attack @e[tag=a] {uuid}")
         end = time.time() + 30
-        while time.time() < end and not hearts(game, uuid)[2]:
+        label = "execute if entity @e[type=text_display,tag=aoe2mc.label]"
+        while time.time() < end and "passed" not in game.command(label):
             time.sleep(0.2)
-        assert hearts(game, uuid) == (5, 0, True)                       # 537 of 550: still 5 hearts, but hurt
+        assert "passed" in game.command(label)                         # the name line over the roof (#1811)
+        assert hearts(game, uuid) == (5, 0, False)                      # 537 of 550: still 5 hearts; the slime hides its name
