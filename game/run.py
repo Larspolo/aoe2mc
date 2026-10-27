@@ -49,11 +49,15 @@ AGENT = {"User-Agent": "aoe2mc (https://github.com/Larspolo/aoe2mc)"}   # the Pa
 
 
 PLUGIN = os.path.join(HERE, "plugin")                               # the Paper plugin: aoe moveto, aoe attack (#435)
+BUNDLED = os.path.join(PLUGIN, "aoe2mc-plugin.jar")                # the jar in an app bundle (#1778): no JDK needed
 
 
 def plugin_jar(version):
     """The jar of game/plugin: built with the Gradle wrapper when its source changed (the name has its hash).
-    Gradle needs a JDK of the server's Java version (javac): openjdk-25-jdk-headless for 26.3."""
+    Gradle needs a JDK of the server's Java version (javac): openjdk-25-jdk-headless for 26.3. An app bundle
+    (sys.frozen) has no source: it brings the jar that the packaging workflow built."""
+    if getattr(sys, "frozen", False):
+        return BUNDLED
     files = [os.path.join(PLUGIN, f) for f in ("build.gradle.kts", "settings.gradle.kts",
                                                "gradle/wrapper/gradle-wrapper.properties")]
     files += sorted(glob.glob(os.path.join(PLUGIN, "src", "**", "*.*"), recursive=True))

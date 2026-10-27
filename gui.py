@@ -138,10 +138,18 @@ def play_argv(o):
     return a + [flag for key, flag in PLAY_FLAGS if o.get(key)]
 
 
-def start_game(args, write, done, cmd=(sys.executable, "-u", str(GAME))):
+def game_command():
+    """The command of the game program: game/run.py with this Python, or in an app bundle (sys.frozen) the program
+    aoe2mc-game next to the window (#1778)."""
+    if getattr(sys, "frozen", False):
+        return (str(Path(sys.executable).with_name("aoe2mc-game" + (".exe" if os.name == "nt" else ""))),)
+    return sys.executable, "-u", str(GAME)
+
+
+def start_game(args, write, done, cmd=None):
     """Start the game program with args as a child process. A thread sends each line of its output to write, and its
     exit code to done at the end. stdin is a pipe: with no stdin, input() in run.main() ends the game at once."""
-    p = subprocess.Popen([*cmd, *args], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+    p = subprocess.Popen([*(cmd or game_command()), *args], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                          text=True, bufsize=1, start_new_session=os.name != "nt",
                          creationflags=getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
 

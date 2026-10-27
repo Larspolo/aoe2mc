@@ -75,6 +75,8 @@ def server_jar(version):
 
 def workdir():
     path = os.path.join(ROOT, ".cache")         # server folders: in the repository (ignored by git), not in /tmp
+    if getattr(sys, "frozen", False):           # an app bundle (#1778) can be read-only (AppImage): the user cache
+        path = os.path.join(os.path.dirname(CACHE), "servers")
     os.makedirs(path, exist_ok=True)
     return path
 
