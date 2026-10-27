@@ -112,6 +112,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "FORGING": {"food": 150},
          "FORTIFIED_WALL": {"food": 200, "wood": 100},
          "GALLEY": {"wood": 90, "gold": 30},                           # AoE2 DE wiki (#1386)
+         "HULK": {"wood": 75, "gold": 35},                             # AoE2 DE wiki (#1489)
          "GAMBESONS": {"food": 50, "gold": 100},                       # AoE2 DE wiki (#1420)
          "GILLNETS": {"food": 150, "wood": 200},                       # AoE2 DE wiki (#1439)
          "GOLD_MINING": {"food": 100, "wood": 75},
@@ -218,6 +219,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "FORGING": 50,
                "FORTIFIED_WALL": 50,
                "GALLEY": 36,
+               "HULK": 42,
                "GAMBESONS": 25,
                "GILLNETS": 45,
                "GOLD_MINING": 30,
@@ -316,6 +318,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                    "DEMOLITION_SHIP",                                          # (#1440)
                    "FIRE_GALLEY",                                              # (#1481)
                    "DEMOLITION_RAFT",                                          # (#1481)
+                   "HULK",                                                     # (#1489)
                    "FISHING_LINES", "GILLNETS"),                                # (#1439)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",
                           "BOW_SAW"),                                           # (#723, #1423)
@@ -571,6 +574,8 @@ HOUSING = {"TOWN_CENTER": 5, "HOUSE": 5, "CASTLE": 20}             # population 
 LIMIT = 200                                                        # the AoE2 population limit
 REPEAT = 256                                                       # researches of one technology: "going above and beyond"
 CENSUS = 2.0                                                       # AoE2 seconds between two counts of the live units
+MORE = 18                                                          # the first slot of the third menu row, under the queue
+                                                                   # row: the items of a full first row (the dock, #1489)
 ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, item and name of each unit (#620)
          "ARSON": (6, "book", "Arson"),                            # after the slot of Gambesons
          "CAPPED_RAM": (0, "minecart", "Capped Ram"),
@@ -633,6 +638,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "FORGING": (0, "book", "Forging"),
          "FORTIFIED_WALL": (0, "book", "Fortified Wall"),
          "GALLEY": (1, "oak_boat", "Galley"),
+         "HULK": (MORE, "oak_boat", "Hulk"),                       # the first row of the dock is full
          "GAMBESONS": (5, "book", "Gambesons"),                    # slot 4: Squires (#1415)
          "GILLNETS": (5, "book", "Gillnets"),                      # the slot of Fishing Lines (AFTER)
          "GOLD_MINING": (0, "book", "Gold Mining"),
@@ -721,6 +727,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "FORGING": "Infantry and cavalry +1 attack.",
         "FORTIFIED_WALL": "Stone walls +1,200 HP, +4/+2 armor; also gates.",
         "GALLEY": "All-purpose warship with ranged attack.",
+        "HULK": "Warship with a close range melee attack.",
         "GAMBESONS": "Militia line +1 pierce armor.",
         "GILLNETS": "Fishing ships work 10 % faster, carry +5.",
         "GOLD_MINING": "Villagers mine gold 15 % faster.",
@@ -951,7 +958,7 @@ def order(g, player, rect, slot, shift=False):
         garrison.out(g, rect)
         show(g, player, rect)
         return 0
-    if slot >= ROW:
+    if ROW <= slot < MORE:
         cancel(g, player, rect, slot - ROW)
         show(g, player, rect)
         return 0

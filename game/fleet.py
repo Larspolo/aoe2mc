@@ -24,6 +24,7 @@ SPEEDS = {"FISHING_SHIP": 1.26,          # tiles per game second (AoE2 DE wiki i
           "FIRE_GALLEY": 1.36,
           "FIRE_SHIP": 1.47,
           "GALLEY": 1.36,
+          "HULK": 1.42,
           "TRANSPORT_SHIP": 1.45}
 NEAR = 3                                 # tiles from a clicked land cell to the water that a ship sails to
 PATH_CELLS = 20000                       # the path search limit (cells), as a long walk of the replay
