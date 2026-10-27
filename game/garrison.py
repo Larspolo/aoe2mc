@@ -33,9 +33,11 @@ SIZES = {                                                          # units insid
     "CASTLE": 20,
     "DOCK": 5,                                                     # fishing ships only (AoE2 DE wiki, #1949)
     "DONJON": 10,                                                  # (AoE2 DE wiki, #1873)
+    "FORTRESS": 30,                                                # the Scenario Editor (AoE2 wiki, #2137)
     "GUARD_TOWER": 5,
     "KEEP": 5,
     "KREPOST": 20,                                                 # (AoE2 DE wiki, #1872)
+    "SEA_TOWER": 5,                                                # as the towers (#2137)
     "TOWN_CENTER": 15,
     "WATCH_TOWER": 5,
 }
@@ -44,6 +46,7 @@ HERBAL = 6                  # Herbal Medicine: units inside heal 6 times as fast
 HEAL_EVERY = 5.0            # AoE2 seconds between two heal passes (fewer commands)
 BASE = {"CASTLE": 5, "TOWN_CENTER": 0,                           # arrows of an empty building (AoE2 wiki), else 1
         "DOCK": 0,                                                # (#1949)
+        "FORTRESS": 5,                                            # as the castle (#2137)
         "KREPOST": 5}                                             # (#1872)
 FISHER = "FISHING_SHIP"     # the only unit that goes into a dock (#1949)
 DOOR = 2.5                  # blocks from the door cell: there a unit goes in
