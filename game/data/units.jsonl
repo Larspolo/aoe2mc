@@ -167,7 +167,7 @@
 {"name": "PETARD", "hp": 50, "attack": 25, "melee": 0, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 500, "siege": 60}, "classes": []}
 {"name": "ALFRED_THE_ALPACA", "hp": 140, "attack": 120, "melee": 20, "pierce": 20, "range": 0, "reload": 2.0, "bonus": {"building": 100}, "classes": ["cavalry"], "sight": 6}
 {"name": "COBRA_CAR", "hp": 500, "attack": 10, "melee": 10, "pierce": 10, "range": 10, "reload": 0.25, "bonus": {"building": 10}, "classes": ["siege"]}
-{"name": "FURIOUS_THE_MONKEY_BOY", "hp": 9, "attack": 99, "melee": 99, "pierce": 99, "range": 0, "reload": 0.9, "bonus": {"building": 999}, "classes": [], "sight": 12}
+{"name": "FURIOUS_THE_MONKEY_BOY", "hp": 9, "attack": 99, "melee": 99, "pierce": 99, "range": 0, "reload": 0.9, "bonus": {"building": 999}, "classes": [], "sight": 12, "fighter": true}
 {"name": "PHOTONMAN", "hp": 80, "attack": 30, "melee": 2, "pierce": 2, "range": 10, "reload": 2.0, "bonus": {"building": 5}, "classes": ["archer", "unique"]}
 {"name": "SABOTEUR", "hp": 45, "attack": 100, "melee": 1, "pierce": 3, "range": 0, "reload": 2.0, "bonus": {"building": 500}, "classes": ["siege"], "sight": 6}
 {"name": "SHARKATZOR", "hp": 600, "attack": 33, "melee": 1, "pierce": 0, "range": 10, "reload": 2.1, "bonus": {"siege": 5}, "classes": ["siege"], "sight": 11}
