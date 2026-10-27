@@ -58,6 +58,7 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - A technology ticket can name an old building: read the `Building` field of the infobox (`{{tt|NEW|OLD before ...}}`). Update 169123 (The Last Chieftains) moved Careening and Dry Dock from the dock to the university, with new costs and effects (#1441).
 - The wiki availability chart (`{{AoE2 tech availability`) of a technology: `0` = the civ does not have it, `1`, `+` or `-` = it has it; `Default` is the value of each civ not in the list. For `civs.MISSING`, take the civs with `0` (with `Default = 0`: all civs minus the listed ones, #1504).
 - The auto mode also denies the close of an answered decision ticket (#1323, 2026-10-27): comment the decision, write it into the body of the waiting ticket and remove the decision from its "Depends on:" line (so it is a candidate at once), then add `needs-human` to the decision ticket for the close.
+- The default `python3` (3.11, `/usr/local/bin`) has no `tkinter`, also after `apt-get install -y python3-tk`: that gives it to `/usr/bin/python3.12` only. Test a Tk window with a 3.12 venv (`/usr/bin/python3.12 -m venv V && V/bin/python -m pip install -r requirements.txt pytest`) and `xvfb-run -a` (#1540).
 
 ## Code
 
@@ -113,3 +114,4 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - The first menu row has 8 item slots (0-7, slot 8 is `RALLY`), and the dock had all 8 after #1481: put a next item in `train.MORE` (slot 18 and on, the row under the queue row 9-17, #1485). Look at `grep -n "\"<BUILDING>\"" game/train.py` and the slots of its items first.
 - A new item of the town center menu in the Feudal or Castle Age breaks the `endswith(... + RALLY)` asserts of `tests/test_wheelbarrow.py`, `test_castle_age.py`, `test_imperial_age.py` (the constants `IMPERIAL`, `CASTLE`, not the label): the grep for the label does not find them; run the fast suite (#1454).
 - `git stash` and `git stash pop` (or a `sed` edit) can give a file of the same size in the same second as its `.pyc`: Python then runs the old `.pyc`, and tests fail with the old values. Delete `game/__pycache__` (and the others) after a stash before the tests (#1551).
+- Two runs of sibling tickets of one menu (#1505, #1506) took the same free slot (`MORE`) at the same time, and main went red (#1551): `tests/test_train_knight.py` checks one item per slot only on the merged code. A refill that makes several menu tickets of one building writes the slot of each item into its ticket body.
