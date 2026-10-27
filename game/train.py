@@ -47,6 +47,7 @@ It researches Caravan (trade carts walk 20 % faster, SPEEDS) in the Castle Age a
 in the Imperial Age (#1254). Coinage and Banking change the tribute fee: the game program has no tribute yet.
 The university researches Fortified Wall in the Castle Age (#1326, WALL_UPGRADES): the new and the complete own stone
 walls and gates get the fortified design and its AoE2 hit points and armor (build.design, build.upgrade).
+An age gives the complete own walls and gates the AoE2 hit points of the new age (#1372, combat.WALLS, build.upgrade).
 """
 import json
 import math
@@ -715,7 +716,7 @@ def research(g, entry):
     if entry["name"] in WALL_UPGRADES:                             # the complete own walls become the new wall (#1326)
         for site in [s for s in g.sites if s["name"] in WALL_UPGRADES[entry["name"]] and s.get("done")
                      and s["player"] == g.player]:
-            build.upgrade(g, site)
+            build.upgrade(g, site, combat.wall(site["name"], build.ages(g)))
     if entry["name"] in UPGRADES:                                  # the live units of the line get the new name
         old, new = UPGRADES[entry["name"]]
         for uuid in [u for u, n in g.soldiers.items() if n == old]:
@@ -736,6 +737,8 @@ def research(g, entry):
                 g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))
     if entry["name"] in REQUIRES:                                  # an age: all players see it, as in AoE2
         import ai                                                  # ai imports gather, gather imports this module
+        for site in [s for s in g.sites if s["name"] in combat.WALLS and s.get("done") and s["player"] == g.player]:   # #1372
+            build.upgrade(g, site, combat.wall(build.design(g, site["name"], g.player), build.ages(g) - 1), redraw=False)
         for uuid, name in g.soldiers.items():                      # the walk speed of the age (civs.UNITS, Celts)
             if civs.speed(g, name) != 1:
                 g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))
