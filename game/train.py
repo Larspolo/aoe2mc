@@ -83,6 +83,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "CHU_KO_NU": {"wood": 40, "gold": 35},
          "DOUBLE_BIT_AXE": {"food": 100, "wood": 50},
          "FERVOR": {"gold": 140},
+         "FISHING_SHIP": {"wood": 75},                                  # AoE2 DE wiki (#1383)
          "FLETCHING": {"food": 100, "gold": 50},
          "FORGING": {"food": 150},
          "FORTIFIED_WALL": {"food": 200, "wood": 100},
@@ -144,6 +145,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "CHU_KO_NU": 16,
                "DOUBLE_BIT_AXE": 25,
                "FERVOR": 50,
+               "FISHING_SHIP": 40,
                "FLETCHING": 30,
                "FORGING": 50,
                "FORTIFIED_WALL": 50,
@@ -199,6 +201,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "CASTLE": ("TREBUCHET",),                                             # and the unique unit: trains() (#708, #1351)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES"),                           # (#671, #940)
           "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS"),   # (#1326, #1374, #1352)
+          "DOCK": ("FISHING_SHIP",),                                            # (#1383)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
           "MARKET": ("TRADE_CART", "CARAVAN", "GUILDS"),                       # (#1253, #1254)
           "MILL": ("HORSE_COLLAR",),                                            # (#726)
@@ -354,6 +357,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "CHU_KO_NU": (0, "skeleton_spawn_egg", "Chu Ko Nu"),
          "DOUBLE_BIT_AXE": (0, "book", "Double-Bit Axe"),
          "FERVOR": (1, "book", "Fervor"),
+         "FISHING_SHIP": (0, "oak_boat", "Fishing Ship"),         # a ship is a boat (units.boat)
          "FLETCHING": (2, "book", "Fletching"),
          "FORGING": (0, "book", "Forging"),
          "FORTIFIED_WALL": (0, "book", "Fortified Wall"),
@@ -407,6 +411,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "DOUBLE_BIT_AXE": "Villagers chop wood 20 % faster.",
         "FEUDAL_AGE": "Advance to the Feudal Age.",
         "FERVOR": "Monks +15 % speed.",
+        "FISHING_SHIP": "Gathers food from fish.",
         "FLETCHING": "Archers, towers, town center +1 attack, +1 range.",
         "FORGING": "Infantry and cavalry +1 attack.",
         "FORTIFIED_WALL": "Stone walls +1,200 HP, +4/+2 armor; also gates.",
@@ -877,7 +882,10 @@ def tick(g, work):
 def spawn(g, rect, name):
     """Summon unit name on a free cell in front of the building rect (south side first, the middle first; the units
     take the cells one after the other) and add it to the villagers of g (a military unit: to g.soldiers, #654).
-    Returns the gather.Villager, the UUID of a military unit, or None."""
+    Returns the gather.Villager, the UUID of a military unit, or None. A dock puts its ship on the water (fleet.spawn)."""
+    if units.is_boat(units.classify(name)):
+        import fleet                                                   # fleet imports this module
+        return fleet.spawn(g, rect, name)
     cells = g.map.front(rect, "Passengers" in (units.classify(name) or {}))
     if not cells:
         return None
@@ -913,7 +921,8 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))   # also without an order (#849)
     if player not in (None, g.player):
         return uuid
-    if gather.military(name) or name in ("MONK", "TRADE_CART"):    # they walk on orders as a soldier (#1243, #1253)
+    # they take move orders as a soldier (#1243, #1253); a ship sails with fleet.py (#1383)
+    if gather.military(name) or name in ("MONK", "TRADE_CART") or units.is_boat(units.classify(name)):
         g.soldiers[uuid] = name
         return uuid
     g.villagers[uuid] = gather.Villager(uuid, pos)
