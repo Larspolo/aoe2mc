@@ -12,6 +12,7 @@ The runs start from three parts (`docs/SYSTEM.md`, "Setup steps of the owner", s
 | Scheduled task "aoe2mc autopilot" | Hourly at :06, enabled, repository `repo` of `agent.toml`, the prompt of `docs/SYSTEM.md` step 4. |
 | Pacer session "aoe2mc pacer" | Alive, the last cycle less than 15 minutes old, model Haiku, skill `pacer`. |
 | Scheduled task "aoe2mc pacer heartbeat" | Hourly at :36, enabled, fires into the pacer session (`persistent_session_id`). |
+| Scheduled task "aoe2mc autopilot haiku" (optional, #1715) | No schedule (the pacer fires it), enabled, model `claude-haiku-5-5`, the prompt of the autopilot task with the argument `max lane haiku`. |
 
 A run of the autopilot task cannot check or repair them: it has no trigger or session tools (#566). A session that
 the owner starts has them. So the owner starts a session and types `/operator`; no long-lived owner session is
@@ -52,6 +53,7 @@ Ask the owner before each repair, with one line: what is wrong and what the repa
 |---|---|
 | Pacer session dead, archived, stalled, or its context above 600,000 tokens | `create_session` (repository and environment of the autopilot task, model Haiku, title "aoe2mc pacer", message "Pacer cycle: follow .claude/skills/pacer/SKILL.md."), then `update_trigger` of the heartbeat with the new `persistent_session_id`, then archive the old session. |
 | A scheduled task is off | `update_trigger` with `enabled` true. |
+| The owner asks for the Haiku lane | `get_trigger` of the autopilot task, then `create_trigger` "aoe2mc autopilot haiku" with no cron and no `run_once_at`, the same repository and environment, `initiation` human_request, and its prompt with "the argument max" replaced by "the argument max lane haiku". Then `update_trigger` with `model` `claude-haiku-5-5` (the owner asked for it). To stop the lane: `update_trigger` with `enabled` false; the pacer then starts all runs on Opus. |
 | A scheduled task is missing | `create_trigger` with the values of section 3. |
 | A prompt or a cron differs from `docs/SYSTEM.md` | `update_trigger` with the text of `docs/SYSTEM.md`. |
 | The trigger ID in `pacer` is not the autopilot task | A PR that changes the ID in `.claude/skills/pacer/SKILL.md` (Automerge merges it). |

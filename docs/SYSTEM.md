@@ -118,6 +118,10 @@ status issue).
    the `fire_trigger` tool with the trigger ID of the task of step 4 (in `.claude/skills/pacer/SKILL.md`).
 6. **Scheduled task "aoe2mc pacer heartbeat".** Hourly at :36. Its prompt: "Pacer heartbeat: follow
    .claude/skills/pacer/SKILL.md." It wakes the pacer session when its own loop stopped.
+7. **Scheduled task "aoe2mc autopilot haiku" (optional, #1715).** No schedule: the pacer fires it. Model
+   `claude-haiku-5-5`, the prompt of step 4 with the argument `max lane haiku`. These runs take only the tickets with
+   `lane:haiku` (`ticket` skill, "Model lanes"); Opus runs take them only when nothing else is ready.
+   `tools/health.py` prints one line per lane (runs, PRs, minutes, tokens). `/operator` makes the task for you.
 
 To check or repair steps 4–6, start a session and type `/operator` (skill `operator`, #981). It checks the two
 scheduled tasks, the pacer session, the quota, CI, the PRs and the labels, and repairs them after you agree (for

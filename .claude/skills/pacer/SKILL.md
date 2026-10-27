@@ -14,11 +14,14 @@ So one pacer session starts them. It does no ticket work, it does not comment on
    there, attach it with `add_repo` (the owner and name of `repo` in `agent.toml`: Larspolo, aoe2mc) and clone it as the tool says.
 2. Run `python3 tools/usage.py --fire` in the repository. Its first output line (stdout) is K, the number of runs to
    start now. The line on stderr shows the inputs: usage, target, claims, ready tickets, `paused`.
-3. Call `mcp__claude-code-remote__fire_trigger` K times with `trigger_id` `trig_01QTrgkK5PZmqPwQ96rKp3QE`.
-   If the tool is deferred, load it first with ToolSearch (`select:mcp__claude-code-remote__fire_trigger`).
+3. Its second stdout line is `haiku H`: the runs of K that can go to the Haiku lane (#1715). Find the scheduled task
+   "aoe2mc autopilot haiku" with `mcp__claude-code-remote__list_triggers` (at most once per hour; keep its ID in your
+   context). When it is there and enabled, call `mcp__claude-code-remote__fire_trigger` H times with its ID, else H = 0.
+   Then call `fire_trigger` K − H times with `trigger_id` `trig_01QTrgkK5PZmqPwQ96rKp3QE` (the Opus task).
+   If the tools are deferred, load them first with ToolSearch (`select:mcp__claude-code-remote__fire_trigger,mcp__claude-code-remote__list_triggers`).
 4. Schedule the next cycle: `mcp__claude-code-remote__send_later`, `delay_minutes` 10, message
    "Pacer cycle: follow .claude/skills/pacer/SKILL.md." Keep only one pending cycle: do not schedule a second one.
-5. Reply with one line: the time (UTC), K, and the stderr line.
+5. Reply with one line: the time (UTC), K, H, and the stderr line.
 
 ## Rules
 

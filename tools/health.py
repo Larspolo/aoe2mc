@@ -294,6 +294,25 @@ def active_claims(now, minutes=30):
                for i in api("issues?state=open&labels=in-progress&per_page=100") if "pull_request" not in i)
 
 
+def lanes(comments):
+    """{lane: (runs, PRs, [minutes], [M eq])} of the run reports. The lane of a `Metrics:` line is its `· lane NAME`,
+    else "opus"; the M eq is the `Tokens:` line of the same comment (#1715)."""
+    out = {}
+    for c in comments:
+        body = c.get("body") or ""
+        tok = TOKENS.search(body)
+        for line in body.splitlines():
+            m = re.match(r"Metrics: ticket #\d+ · [^·]* · ([^·]*?) · (\d+(?:\.\d+)?) min", line)
+            if m:
+                lane = re.search(r"· lane (\w+)", line)
+                r = out.setdefault(lane[1] if lane else "opus", [0, 0, [], []])
+                r[0] += 1
+                r[1] += m[1].strip() == "merged" or m[1].startswith("pr #")
+                r[2].append(float(m[2]))
+                r[3] += [float(tok[1])] if tok else []
+    return {k: tuple(v) for k, v in out.items()}
+
+
 def pr_results(comments, prs):
     """The `pr #n` results of the `Metrics:` lines: (merged PRs, not merged PRs) by the present PR state (#902)."""
     merged = {p["number"] for p in prs if p.get("merged_at")}
@@ -348,6 +367,8 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
     out.append(f"Tokens per run (median of {len(tl)} Tokens lines): {fmt(med([m for m, _ in tl]))}M eq"
                + (f" · per merged PR {sum(m for m, _ in tl) / len(ok):.2f}M eq" if tl and ok else "")
                + " · largest sinks: " + ("; ".join(f"{s} {x:.0%}" for s, x in token_sinks(tl)) or "-"))
+    for name, (n, pr, mins, eq) in sorted(lanes(status_comments).items()):
+        out.append(f"Lane {name}: {n} runs, {pr} PRs, median {fmt(med(mins))} min, median {fmt(med(eq))}M eq")
     rw = release_per_week([p for p in weekly(status_comments) if p[0] >= since])
     out.append("Release per 1 % of 7-day quota: " + ("-" if rw is None else
                f"{rw[0]:.2f} points ({rw[1]:g} % to {rw[2]:g} %)"))
