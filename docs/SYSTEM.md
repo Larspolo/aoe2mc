@@ -86,7 +86,7 @@ burn, #1706). The most runs at one time is `max_runs` in `[pacing]` of `agent.to
 The target counts Opus runs. A run of a cheap lane counts its weight (#1727): a Haiku run sets `git config aoe2mc.lane haiku`,
 its claims end with ` lane haiku`, the `Usage:` lines count its runs (`· haiku N`), and `health.lane_weights` measures
 the weight from them (least squares, at least 10 intervals with Haiku runs; before that `weights` of `agent.toml`,
-0.25). `usage.py --fire` gives the ready `lane:haiku` tickets Haiku runs first, then Opus runs take the rest. `tools/tokens.py` reads the transcript of the
+0.25). `usage.py --fire` gives the ready `lane:haiku` tickets Haiku runs first, then Opus runs take the rest. A lane in `reserved` of `[pacing]` keeps its tickets for its own runs (Opus runs never take them, #1994). `tools/tokens.py` reads the transcript of the
 session and writes the `Tokens:` line of each run report: the tokens of the run and its largest sinks. `health.py`
 adds them. The `improve` skill finds the largest loss of quota from this data, or the data that is missing, and
 makes one `Process: <bottleneck>` ticket for it on the board.
@@ -113,6 +113,9 @@ on `main` yet, and the branch of an owner session is not `agent/*` or `claude/*`
 2. **Cloud environment.** At claude.ai/code, make one environment for all runs. Network access: keep "Allow package
    managers" on and add the hosts of `docs/ENVIRONMENT.md` ("Network"). Setup script: paste
    `scripts/cloud-setup.sh`. Paste it again when an agent asks (the SessionStart hook compares `SETUP_VERSION`).
+   One environment can serve two projects (#1964): paste one setup script that installs the needs of both (each
+   script lists them in `SETUP_NEEDS`). The hook of the project with no version file in `/etc` checks only its
+   `SETUP_NEEDS`, and asks for a new script only when one is missing.
 3. **Status issue.** Open issue #1 with the label `agent-status` (the first run makes it when it is missing).
 4. **Scheduled task "aoe2mc autopilot".** Hourly at :06. Repository `Larspolo/aoe2mc`, the environment of step 2.
    Its prompt: open the repository and pull `main`, read `CLAUDE.md`, follow `.claude/skills/autopilot/SKILL.md`

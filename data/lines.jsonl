@@ -1,0 +1,70 @@
+{"name": "MILITIA", "mob": "zombie", "armor": ["leather", "leather", null, null], "main": "wooden_sword", "off": null}
+{"name": "MAN_AT_ARMS", "mob": "zombie", "armor": ["chainmail", "chainmail", null, null], "main": "stone_sword", "off": "shield"}
+{"name": "LONG_SWORDSMAN", "mob": "zombie", "armor": ["iron", "iron", "chainmail", null], "main": "iron_sword", "off": "shield"}
+{"name": "TWO_HANDED_SWORDSMAN", "mob": "zombie", "armor": ["iron", "iron", "iron", "iron"], "main": "diamond_sword", "off": null}
+{"name": "CHAMPION", "mob": "zombie", "armor": ["diamond", "diamond", "diamond", "diamond"], "main": "diamond_sword", "off": "shield"}
+{"name": "HEAVY_SWORDSMAN", "mob": "zombie", "armor": ["iron", "chainmail", "chainmail", null], "main": "iron_sword", "off": "shield"}
+{"name": "EASTERN_SWORDSMAN", "mob": "husk", "armor": [["leather", "#8E2B2B"], "iron", null, null], "main": "iron_sword", "off": null}
+{"name": "EAGLE_SCOUT", "mob": "husk", "armor": [["leather", "#C89B3C"], null, null, null], "main": "wooden_sword", "off": null}
+{"name": "EAGLE_WARRIOR", "mob": "husk", "armor": [["leather", "#C89B3C"], ["leather", "#C89B3C"], null, null], "main": "stone_sword", "off": "shield"}
+{"name": "ELITE_EAGLE_WARRIOR", "mob": "husk", "armor": ["golden", ["leather", "#C89B3C"], ["leather", "#C89B3C"], ["leather", "#C89B3C"]], "main": "iron_sword", "off": "shield"}
+{"name": "CONDOTTIERO", "mob": "zombie", "armor": ["iron", "chainmail", "chainmail", "iron"], "main": "iron_sword", "off": null}
+{"name": "FLEMISH_MILITIA", "mob": "zombie_villager", "armor": [["leather", "#3B5E2B"], null, null, null], "main": "mace", "off": null}
+{"name": "FLEMISH_MILITIA_MALE", "mob": "zombie_villager", "armor": [["leather", "#3B5E2B"], null, null, null], "main": "mace", "off": null}
+{"name": "FLEMISH_MILITIA_FEMALE", "mob": "zombie_villager", "armor": [["leather", "#7A3B5E"], null, null, null], "main": "mace", "off": null}
+{"name": "SERJEANT", "mob": "zombie", "armor": ["iron", "chainmail", null, null], "main": "iron_sword", "off": "shield"}
+{"name": "SERJEANT_DONJON", "mob": "zombie", "armor": ["iron", "chainmail", null, null], "main": "iron_sword", "off": "shield"}
+{"name": "ELITE_SERJEANT", "mob": "zombie", "armor": ["iron", "iron", "chainmail", "iron"], "main": "iron_sword", "off": "shield"}
+{"name": "ELITE_SERJEANT_DONJON", "mob": "zombie", "armor": ["iron", "iron", "chainmail", "iron"], "main": "iron_sword", "off": "shield"}
+{"name": "LEGIONARY", "mob": "zombie", "armor": ["iron", "iron", null, null], "main": "iron_sword", "off": "shield"}
+{"name": "IMPERIAL_LEGIONARY", "mob": "zombie", "armor": ["golden", "iron", "iron", "iron"], "main": "iron_sword", "off": "shield"}
+{"name": "IMPERIAL_CENTURION", "mob": "zombie", "armor": ["golden", "golden", "iron", "iron"], "main": "diamond_sword", "off": "shield"}
+{"name": "CENTURION", "mob": "mounted", "armor": ["golden", "iron", "iron", null], "main": "iron_sword", "off": null}
+{"name": "ELITE_CENTURION", "mob": "mounted", "armor": ["golden", "golden", "iron", "iron"], "main": "diamond_sword", "off": null}
+{"name": "BANDIT", "mob": "zombie", "armor": [["leather", "#1D1D21"], ["leather", "#1D1D21"], null, null], "main": "stone_sword", "off": null}
+{"name": "INDIAN_TRIBESMAN", "mob": "husk", "armor": [null, null, null, null], "main": "stone_sword", "off": null}
+{"name": "HILL_TRIBESMAN", "mob": "husk", "armor": [null, ["leather", "#6B4A2B"], null, null], "main": "stone_axe", "off": null}
+{"name": "NORSE_WARRIOR", "mob": "zombie", "armor": ["iron", ["leather", "#6B4A2B"], null, null], "main": "iron_axe", "off": "shield"}
+{"name": "AMAZON_WARRIOR", "mob": "husk", "armor": [["leather", "#3F6B2A"], null, ["leather", "#3F6B2A"], null], "main": "stone_sword", "off": "shield"}
+{"name": "BERSERK", "mob": "zombie", "armor": [["leather", "#6B4A2B"], null, ["leather", "#6B4A2B"], null], "main": "iron_axe", "off": null}
+{"name": "HUSKARL", "mob": "zombie", "armor": ["iron", "chainmail", ["leather", "#6B4A2B"], null], "main": "iron_axe", "off": "shield"}
+{"name": "JAGUAR_WARRIOR", "mob": "husk", "armor": [["leather", "#D4A017"], ["leather", "#D4A017"], null, null], "main": "stone_sword", "off": null}
+{"name": "KARAMBIT_WARRIOR", "mob": "zombie", "armor": [["leather", "#9B1B1B"], null, null, null], "main": "iron_sword", "off": null, "tags": "{IsBaby: 1b}"}
+{"name": "KONNIK_DISMOUNTED", "mob": "zombie", "armor": ["iron", "iron", "chainmail", null], "main": "mace", "off": "shield"}
+{"name": "NINJA", "mob": "zombie", "armor": [["leather", "#1D1D21"], ["leather", "#1D1D21"], ["leather", "#1D1D21"], ["leather", "#1D1D21"]], "main": "iron_sword", "off": null}
+{"name": "SAMURAI", "mob": "zombie", "armor": ["iron", ["leather", "#9B1B1B"], ["leather", "#9B1B1B"], null], "main": "iron_sword", "off": null}
+{"name": "SHOTEL_WARRIOR", "mob": "husk", "armor": [["leather", "#E8E0D0"], null, null, null], "main": "iron_sword", "off": "iron_sword"}
+{"name": "TEUTONIC_KNIGHT", "mob": "zombie", "armor": ["iron", "iron", "iron", "iron"], "main": "iron_sword", "off": "shield"}
+{"name": "WOAD_RAIDER", "mob": "zombie", "armor": [["leather", "#2B4A9B"], null, ["leather", "#2B4A9B"], null], "main": "iron_sword", "off": null}
+{"name": "IROQUOIS_WARRIOR", "mob": "husk", "armor": [["leather", "#6B4A2B"], null, ["leather", "#6B4A2B"], null], "main": "stone_axe", "off": null}
+{"name": "XOLOTL_WARRIOR", "mob": "mounted", "armor": [["leather", "#C89B3C"], ["leather", "#C89B3C"], null, null], "main": "stone_sword", "off": null}
+{"name": "OBUCH", "mob": "zombie", "armor": ["iron", "chainmail", "chainmail", null], "main": "mace", "off": null}
+{"name": "URUMI_SWORDSMAN", "mob": "husk", "armor": [null, null, ["leather", "#E8E0D0"], null], "main": "golden_sword", "off": null}
+{"name": "GHULAM", "mob": "husk", "armor": ["iron", ["leather", "#2B6B6B"], null, null], "main": "trident", "off": "shield"}
+{"name": "QIZILBASH_WARRIOR", "mob": "zombie", "armor": [["leather", "#9B1B1B"], "chainmail", null, null], "main": "iron_sword", "off": "shield"}
+{"name": "IMMORTAL_MELEE", "mob": "zombie", "armor": ["golden", ["leather", "#5B2B7A"], ["leather", "#5B2B7A"], null], "main": "trident", "off": "shield"}
+{"name": "STRATEGOS", "mob": "mounted", "armor": ["golden", "golden", null, null], "main": "iron_sword", "off": "shield"}
+{"name": "STRATEGOS_WITH_TAXIARCHS", "mob": "mounted", "armor": ["golden", "golden", "iron", null], "main": "iron_sword", "off": "shield"}
+{"name": "SAKAN_AXEMAN", "mob": "zombie", "armor": [["leather", "#8E5A2B"], ["leather", "#8E5A2B"], null, null], "main": "iron_axe", "off": null}
+{"name": "SICKLE_WARRIOR", "mob": "husk", "armor": [null, ["leather", "#6B4A2B"], null, null], "main": "iron_hoe", "off": null}
+{"name": "LYSANDERS_RAIDER", "mob": "zombie", "armor": ["iron", ["leather", "#9B1B1B"], null, null], "main": "iron_sword", "off": "shield"}
+{"name": "IRON_PAGODA", "mob": "mounted", "armor": ["iron", "iron", "iron", "iron"], "main": "mace", "off": null}
+{"name": "LIAO_DAO", "mob": "zombie", "armor": ["iron", "chainmail", null, null], "main": "iron_axe", "off": null}
+{"name": "WHITE_FEATHER_GUARD", "mob": "zombie", "armor": [["leather", "#F0F0F0"], "iron", null, null], "main": "iron_sword", "off": "shield"}
+{"name": "JIAN_SWORDSMAN", "mob": "zombie", "armor": ["iron", ["leather", "#2B4A7A"], null, null], "main": "iron_sword", "off": null}
+{"name": "JIAN_SWORDSMAN_TWO_HANDED", "mob": "zombie", "armor": ["iron", "iron", ["leather", "#2B4A7A"], null], "main": "diamond_sword", "off": null}
+{"name": "RHOMPHAIA_WARRIOR", "mob": "zombie", "armor": ["iron", ["leather", "#6B4A2B"], ["leather", "#6B4A2B"], null], "main": "golden_sword", "off": null}
+{"name": "SANNAHYA", "mob": "husk", "armor": ["golden", ["leather", "#E8E0D0"], null, null], "main": "iron_sword", "off": "shield"}
+{"name": "SACRED_BAND", "mob": "zombie", "armor": ["golden", "iron", "iron", null], "main": "trident", "off": "shield"}
+{"name": "CHAMPI_SCOUT", "mob": "husk", "armor": [["leather", "#9B6B1B"], null, null, null], "main": "stone_axe", "off": null}
+{"name": "CHAMPI_WARRIOR", "mob": "husk", "armor": [["leather", "#9B6B1B"], ["leather", "#9B6B1B"], null, null], "main": "mace", "off": "shield"}
+{"name": "CHAMPI_RUNNER", "mob": "husk", "armor": [null, ["leather", "#9B6B1B"], null, null], "main": "mace", "off": null}
+{"name": "GUECHA_WARRIOR", "mob": "husk", "armor": [["leather", "#C03030"], null, ["leather", "#C03030"], null], "main": "stone_sword", "off": null}
+{"name": "KONA", "mob": "husk", "armor": [null, null, ["leather", "#6B4A2B"], null], "main": "wooden_axe", "off": null}
+{"name": "IBIRAPEMA_WARRIOR", "mob": "husk", "armor": [["leather", "#D4A017"], null, null, null], "main": "wooden_shovel", "off": null}
+{"name": "TEMPLE_GUARD", "mob": "husk", "armor": ["golden", ["leather", "#2B8B5B"], null, null], "main": "stone_sword", "off": "shield"}
+{"name": "VARANGIAN_GUARD", "mob": "zombie", "armor": ["iron", "iron", "chainmail", "chainmail"], "main": "iron_axe", "off": "shield"}
+{"name": "HEARTH_TROOP", "mob": "zombie", "armor": ["chainmail", "chainmail", "chainmail", null], "main": "iron_sword", "off": "shield"}
+{"name": "JARL", "mob": "mounted", "armor": ["iron", "chainmail", "chainmail", null], "main": "iron_axe", "off": "shield"}
+{"name": "JOMSVIKING", "mob": "zombie", "armor": ["iron", ["leather", "#1D1D21"], "chainmail", null], "main": "diamond_axe", "off": null}
+{"name": "HUSKARL_BARRACKS", "mob": "zombie", "armor": ["iron", "chainmail", ["leather", "#6B4A2B"], null], "main": "iron_axe", "off": "shield"}

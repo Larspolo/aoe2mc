@@ -10,9 +10,13 @@ docs/packaging.md merge=union
 docs/research/water.md merge=union
 # One line per owner decision, added at the end (ticket skill, "Decision tickets").
 docs/DECISIONS.md merge=union
+# One JSON object per civilization (#1914); table.load() stops on a name in two lines.
+game/data/civs.jsonl merge=union
 # One JSON object per menu item; runs add a line at the end of a building block. train.load() stops on a name in two lines (#1702).
 game/data/train.jsonl merge=union
 # One JSON object per unit (#1912); table.load() stops on a name in two lines.
 game/data/units.jsonl merge=union
 # One JSON object per building, or only a line of sight (#1913); table.load() stops on a name in two lines.
 game/data/buildings.jsonl merge=union
+# The converter tables (#1917): one JSON object per line; the order of animals.jsonl and footprint.jsonl matters (the first match wins).
+data/*.jsonl merge=union

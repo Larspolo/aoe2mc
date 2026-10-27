@@ -43,7 +43,7 @@ STATS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields if f != "classes"}, 
 # Buildings: hit points, melee and pierce armor (Dark Age base), one line per building in data/buildings.jsonl (#1913).
 # The high pierce armor makes arrows weak, as in AoE2. The towers have the AoE2 DE values of the wiki: a watch tower of
 # the Castle Age (850 hit points in the Feudal Age), #1112. The attack against ships: the "Attack bonus" of the wiki
-# infobox (#1564; the dock: the Castle Age, it does not shoot yet). A line with only a "sight" has no target.
+# infobox (#1564; the dock: the Castle Age). A line with only a "sight" has no target.
 BUILDING_ROWS = table.load("buildings.jsonl")
 BUILDINGS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields if f != "classes"}, classes=tuple(r["classes"]))
              for r in BUILDING_ROWS if "hp" in r}
@@ -76,7 +76,10 @@ SIGHT = {r["name"]: r["sight"] for r in table.load("units.jsonl") + BUILDING_ROW
 # Units that attack from a range with melee damage (AoE2): their hit takes the melee armor of the target (#800).
 MELEE_RANGED = {"BOMBARD_CANNON",
                 "CANNON_GALLEON",
+                "CATAPULT_GALLEON",               # (#1935)
                 "CHAKRAM_THROWER",                # (#1612)
+                "DRAGON_SHIP",
+                "DROMON",
                 "ELITE_CANNON_GALLEON",
                 "ELITE_CHAKRAM_THROWER",
                 "ELITE_GBETO",
@@ -88,6 +91,7 @@ MELEE_RANGED = {"BOMBARD_CANNON",
                 "GBETO",
                 "HEAVY_ROCKET_CART",
                 "HULK",
+                "LOU_CHUAN",
                 "MAMELUKE",
                 "MANGONEL",
                 "ONAGER",
@@ -102,8 +106,11 @@ MELEE_RANGED = {"BOMBARD_CANNON",
 # the creeper crew of the demolition ship dies after its blast (AoePlugin.java), as a vanilla creeper.
 BLAST = {"BOMBARD_CANNON": 0.5,
          "CANNON_GALLEON": 0.25,
+         "CATAPULT_GALLEON": 0,             # a siege ship: its shot hits only the target (#1935)
          "DEMOLITION_RAFT": 2.5,
          "DEMOLITION_SHIP": 3,
+         "DRAGON_SHIP": 0,
+         "DROMON": 0,
          "ELITE_CANNON_GALLEON": 0.3,
          "FAST_FIRE_SHIP": 0,
          "FIRE_GALLEY": 0,
@@ -111,6 +118,7 @@ BLAST = {"BOMBARD_CANNON": 0.5,
          "HEAVY_DEMOLITION_SHIP": 3.25,
          "HEAVY_ROCKET_CART": 1.25,
          "HOUFNICE": 0.7,
+         "LOU_CHUAN": 0,
          "MANGONEL": 1.0,
          "ONAGER": 1.25,
          "ROCKET_CART": 1.0,
@@ -119,11 +127,14 @@ RAM_REACH = 2.0       # blocks: a ram (a minecart with range 0) hits from next t
 CONTACT = 1.0         # tiles: the reach of a demolition ship (range 0, #1440): its raft is higher than a boat
 MIN_RANGE = {"BOMBARD_CANNON": 5,     # tiles: no shot at a unit nearer (AoE2 DE, wiki infobox "MinRange", #1350)
              "CANNON_GALLEON": 3,
+             "CATAPULT_GALLEON": 3,           # (#1935)
+             "DROMON": 3,
              "ELITE_CANNON_GALLEON": 3,
              "ELITE_ORGAN_GUN": 1,
              "HEAVY_ROCKET_CART": 2.5,
              "HEAVY_SCORPION": 2,
              "HOUFNICE": 5,
+             "LOU_CHUAN": 3,
              "MANGONEL": 3,
              "ONAGER": 3,
              "ORGAN_GUN": 1,
@@ -136,7 +147,7 @@ MIN_RANGE = {"BOMBARD_CANNON": 5,     # tiles: no shot at a unit nearer (AoE2 DE
 # "MinRange", #1546). The town center has none. Murder Holes removes it.
 FORT_MIN_RANGE = {"BOMBARD_TOWER": 1,
                   "CASTLE": 1,
-                  "DOCK": 1,                  # it shoots only with fishing ships inside (AoE2 DE): not yet
+                  "DOCK": 1,                  # it shoots only with fishing ships inside (AoE2 DE, #1949)
                   "GUARD_TOWER": 1,
                   "KEEP": 1,
                   "KREPOST": 1,

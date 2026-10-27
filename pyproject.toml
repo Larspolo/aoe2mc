@@ -25,10 +25,11 @@ aoe2mc-gui = "gui:run"            # the converter window (#1540)
 
 [tool.setuptools]
 py-modules = ["aoe2mc", "buildings", "rmap", "units", "scx", "gui"]
-packages = ["tools.mcdata"]      # aoe2mc.py reads tools/mcdata/26.3.json next to it
+packages = ["tools.mcdata", "data"]   # aoe2mc.py reads tools/mcdata/26.3.json, units.py data/*.jsonl (#1917)
 
 [tool.setuptools.package-data]
 "tools.mcdata" = ["26.3.json"]
+"data" = ["*.jsonl"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
