@@ -441,7 +441,7 @@ class Gather:
         if start is None:                                              # units, no building: a Nomad start (#1212)
             kinds = {o["kind"] for o in data["objects"] if o.get("player") == player}
             nomad = "unit" in kinds and "building" not in kinds
-            start = {r: v + NOMAD.get(r, 0) * nomad for r, v in START.items()}
+            start = civs.start(self, {r: v + NOMAD.get(r, 0) * nomad for r, v in START.items()})   # #1269
         self.stock = {**dict.fromkeys(DROP_SITES, 0), **start}             # at the drop sites (#973)
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
                       and "VILLAGER" in o["name"]]
