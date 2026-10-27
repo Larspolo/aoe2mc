@@ -487,8 +487,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "CASTLE": ("TREBUCHET",                                               # and the unique unit: trains() (#708, #1351)
                      "CONSCRIPTION",                                            # (#1455)
                      "HOARDINGS",                                               # (#1456)
-                     "SAPPERS",                                                 # (#1580)
-                     "ELITE_CHAKRAM_THROWER_UPGRADE"),                          # the Gurjaras (#1624)
+                     "SAPPERS"),                                                # (#1580); the elite upgrade: trains() (#1760)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES", "LIGHT_CAVALRY_UPGRADE", "KNIGHT",   # (#671, #940, #1396, #1397)
                      "HUSBANDRY",                                               # (#1416)
                      "CAMEL_RIDER",                                             # the Castle Age (#1550)
@@ -566,6 +565,17 @@ UNIQUE = {"BRITONS": "LONGBOWMAN", "PERSIANS": "WAR_ELEPHANT", "BYZANTINES": "CA
           "BENGALIS": "RATHA", "GURJARAS": "CHAKRAM_THROWER", "ROMANS": "CENTURION", "ARMENIANS": "COMPOSITE_BOWMAN",
           "GEORGIANS": "MONASPA"}
 build.AGE |= dict.fromkeys(UNIQUE.values(), 2) | dict.fromkeys(("ELITE_" + n for n in UNIQUE.values()), 3)   # (#1082)
+
+
+def own_civ_only():
+    """{name: the other civs} of each unique unit with an elite upgrade in COSTS, its elite unit and its upgrade: only
+    the own civ has them (civs.MISSING). A new unique unit needs no line in civs.py or TRAINS (#1760)."""
+    others = set().union(*civs.MISSING.values()) | set(UNIQUE)
+    return {n: tuple(sorted(others - {c})) for c, u in UNIQUE.items() if f"ELITE_{u}_UPGRADE" in COSTS
+            for n in (u, "ELITE_" + u, f"ELITE_{u}_UPGRADE")}
+
+
+civs.MISSING |= own_civ_only()
 MILITIA_LINE = ("MILITIA", "MAN_AT_ARMS", "LONG_SWORDSMAN", "TWO_HANDED_SWORDSMAN", "CHAMPION",   # Gambesons (#1420)
                 "FIRE_LANCER", "ELITE_FIRE_LANCER")
 
@@ -1396,7 +1406,8 @@ def lines(t, g=None):
 def trains(g, building):
     """The units and technologies of the own building: a castle trains the unique unit of the player's civilization."""
     new = {old: unit for t in UPGRADES if t in g.techs for old, unit in lines(t, g)}   # the barracks trains the new unit
-    out = [n for n in [UNIQUE.get(civs.civ(g))] if n in COSTS] * (building == "CASTLE") + list(TRAINS[building])
+    unique = [n for n in [UNIQUE.get(civs.civ(g))] if n in COSTS] * (building == "CASTLE")
+    out = unique + list(TRAINS[building]) + [f"ELITE_{n}_UPGRADE" for n in unique if f"ELITE_{n}_UPGRADE" in COSTS]   # (#1760)
     for _ in UPGRADES:                                             # a line of upgrades: mangonel, onager, siege onager
         out = [new.get(n, n) for n in out]                         # the castle: the elite unique unit (#1624)
     return tuple(out)
