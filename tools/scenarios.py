@@ -6,7 +6,7 @@ Usage:
     python tools/scenarios.py tiny OUT.aoe2scenario
     python tools/scenarios.py gallery OUT.aoe2scenario [--kinds BOU]
     python tools/scenarios.py moods OUT.aoe2scenario [--mood NIGHT]
-    python tools/scenarios.py stress|buildings|units|village|facing|walls|river|river_town|four_civs|battle|large OUT.aoe2scenario
+    python tools/scenarios.py stress|buildings|units|village|facing|walls|river|river_town|four_civs|battle|large|owner_loop OUT.aoe2scenario
 
 tiny:      24x24 tiles with land, shallow and deep water, a hill, buildings, units, a tree, a mine and fish.
 gallery:   every object type of the parser in a grid (B = buildings, O = other objects, U = units).
@@ -25,6 +25,8 @@ four_civs: an 80x80 example map (examples/four_civs.aoe2scenario): four towns of
 battle:    a 64x64 example map (examples/battle.aoe2scenario): two armies in formation, siege and a castle (#206).
 large:     a 480x480 map with hills, lakes, forests, mines and 8 players with a town, to measure the time and memory of
            a conversion (tools/measure_convert.py, #690).
+owner_loop: a 48x48 play-test map for one owner session (`human` skill, #1674): a town, a barracks, a lake with a
+           dock, a transport ship and 3 militia; the bot (player 2) with 5 militia toward the town center.
 walls:     palisade, stone and fortified walls with a gate and a corner, for 3 architecture sets (players 1, 4, 7).
 """
 import argparse
@@ -528,10 +530,63 @@ def large(path, size=480, players=8):
     return save(scn, path, "large.aoe2scenario")
 
 
+def owner_loop(path):
+    """A 48 x 48 play-test map for one owner session of the `human` skill (#1674): player 1 (Britons) in the north-west
+    with a barracks, and a lake with a dock, a transport ship and 3 militia in the south-west corner; player 2 (Franks,
+    the bot) in the south-east with 5 militia (bot.GROUP) on the diagonal toward the town center of player 1. The
+    nearest units of player 1 to the bot are the villagers at the town center, so the first attack goes there (the
+    arrows of #1204), not to the dock."""
+    scn = new_scenario(48)
+    scn.player_manager.active_players = 2
+    scn.player_manager.players[1].civilization = Civilization.BRITONS
+    scn.player_manager.players[2].civilization = Civilization.FRANKS
+    for t in scn.map_manager.terrain:
+        x, y = t.x, t.y
+        d = max(abs(x - 6), abs(y - 40))                                 # the lake in the south-west corner
+        if d <= 3:
+            t.terrain_id = TerrainId.WATER_DEEP
+        elif d <= 5:
+            t.terrain_id = TerrainId.WATER_SHALLOW
+        elif d == 6:
+            t.terrain_id = TerrainId.BEACH
+        elif y <= 1 or x >= 46 or (x <= 1 and y <= 20):
+            t.terrain_id = TerrainId.FOREST_OAK
+    um = scn.unit_manager
+    for x in range(3, 22, 2):                                            # the wood lines of both players
+        um.add_unit(PlayerId.GAIA, OtherInfo.TREE_OAK.ID, x=x + 0.5, y=3.5)
+    for y in range(26, 45, 2):
+        um.add_unit(PlayerId.GAIA, OtherInfo.TREE_OAK.ID, x=44.5, y=y + 0.5)
+    for (cx, cy), p in (((12, 12), PlayerId.ONE), ((36, 36), PlayerId.TWO)):
+        s = 1 if p == PlayerId.ONE else -1
+        for dx, dy, b in ((0, 0, BuildingInfo.TOWN_CENTER), (-5, -4, BuildingInfo.HOUSE), (-2, -5, BuildingInfo.HOUSE)):
+            um.add_unit(p, b.ID, x=cx + s * dx, y=cy + s * dy)
+        for dx, dy, u in ((-1.5, 3.5, UnitInfo.VILLAGER_MALE), (0.5, 3.5, UnitInfo.VILLAGER_FEMALE),
+                          (2.5, 3.5, UnitInfo.VILLAGER_MALE), (3.5, 1.5, UnitInfo.VILLAGER_FEMALE),
+                          (3.5, -0.5, UnitInfo.VILLAGER_MALE), (3.5, -2.5, UnitInfo.VILLAGER_FEMALE)):
+            um.add_unit(p, u.ID, x=cx + s * dx, y=cy + s * dy)
+        for dx, dy, o in ((6.5, 4.5, OtherInfo.FORAGE_BUSH), (7.5, 4.5, OtherInfo.FORAGE_BUSH),
+                          (6.5, 5.5, OtherInfo.FORAGE_BUSH), (7.5, 5.5, OtherInfo.FORAGE_BUSH),
+                          (8.5, -3.5, OtherInfo.GOLD_MINE), (9.5, -3.5, OtherInfo.GOLD_MINE),
+                          (8.5, -2.5, OtherInfo.GOLD_MINE), (-6.5, 2.5, OtherInfo.STONE_MINE),
+                          (-6.5, 3.5, OtherInfo.STONE_MINE)):
+            um.add_unit(PlayerId.GAIA, o.ID, x=cx + s * dx, y=cy + s * dy)
+        for dx, dy in ((-3.5, 5.5), (-2.5, 6.5), (-1.5, 5.5), (-3.5, 6.5)):
+            um.add_unit(PlayerId.GAIA, UnitInfo.SHEEP.ID, x=cx + s * dx, y=cy + s * dy)
+    um.add_unit(PlayerId.ONE, BuildingInfo.BARRACKS.ID, x=19.5, y=12.5)         # a building to repair (#1332)
+    um.add_unit(PlayerId.ONE, BuildingInfo.DOCK.ID, x=6.5, y=33.5)              # on the north beach of the lake
+    um.add_unit(PlayerId.ONE, UnitInfo.TRANSPORT_SHIP.ID, x=6.5, y=37.5)
+    for x in (2.5, 3.5, 4.5):                                                    # 3 militia for the ship (#1492)
+        um.add_unit(PlayerId.ONE, UnitInfo.MILITIA.ID, x=x, y=31.5)
+    for k in range(5):                                                           # the first wave of the bot
+        um.add_unit(PlayerId.TWO, UnitInfo.MILITIA.ID, x=26.5 + k, y=30.5 - k)
+    return save(scn, path, "owner_loop.aoe2scenario")
+
+
 MAKERS = {"tiny": tiny, "stress": stress, "buildings": buildings_map, "units": units_map, "village": village, "facing": facing,
           "walls": walls, "river": river, "river_town": river_town, "four_civs": four_civs, "battle": battle,
           "triggers": triggers, "large": large,
-          "moods": moods}
+          "moods": moods,
+          "owner_loop": owner_loop}
 
 
 def main():
