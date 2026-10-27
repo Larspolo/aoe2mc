@@ -31,6 +31,7 @@ In the Castle Age (#1423, AFTER): Bow Saw (wood 20 % faster), Gold Shaft Mining 
 Fishing Lines at the dock in the Feudal Age and Gillnets (after it) in the Castle Age (#1439): fishing ships gather 10 %
 faster and carry 5 more food (gather.SHIP_TECHS, fleet.rate, fleet.carry).
 Horse Collar at the mill (#726): the live and the new farms of the player have 75 more food (gather.FARM_TECHS).
+Crop Rotation at the mill in the Imperial Age, after Heavy Plow (#1578): the farms have 175 more food (FARM_TECHS).
 Wheelbarrow at the town center in the Feudal Age (#728, TECH_AGE): villagers carry 3 more resources and walk 10 % faster (gather.CARRY, gather.PACE).
 Scale Barding Armor at the blacksmith in the Feudal Age (#938): cavalry (also camels and elephants, not cavalry archers)
 gets +1 melee and +1 pierce armor (barding()).
@@ -112,6 +113,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "CHAIN_BARDING_ARMOR": {"food": 250, "gold": 150},             # AoE2 DE wiki (#1394)
          "CHAIN_MAIL_ARMOR": {"food": 200, "gold": 100},
          "CHU_KO_NU": {"wood": 40, "gold": 35},
+         "CROP_ROTATION": {"food": 250, "wood": 250},                  # the mill, Imperial Age (AoE2 DE wiki, #1578)
          "CROSSBOWMAN": {"wood": 25, "gold": 45},
          "CROSSBOWMAN_UPGRADE": {"food": 175, "gold": 100},
          "DOUBLE_BIT_AXE": {"food": 100, "wood": 50},
@@ -273,6 +275,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "CHAIN_BARDING_ARMOR": 60,
                "CHAIN_MAIL_ARMOR": 55,
                "CHU_KO_NU": 16,
+               "CROP_ROTATION": 70,
                "CROSSBOWMAN": 27,
                "CROSSBOWMAN_UPGRADE": 35,
                "DOUBLE_BIT_AXE": 25,
@@ -465,7 +468,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",
                           "BOW_SAW"),                                           # (#723, #1423)
           "MARKET": ("TRADE_CART", "CARAVAN", "GUILDS"),                       # (#1253, #1254)
-          "MILL": ("HORSE_COLLAR", "HEAVY_PLOW"),                              # (#726, #1424)
+          "MILL": ("HORSE_COLLAR", "HEAVY_PLOW",                               # (#726, #1424)
+                   "CROP_ROTATION"),                                   # (#1578)
           "MINING_CAMP": ("GOLD_MINING", "STONE_MINING",                       # (#727, #939)
                           "GOLD_SHAFT_MINING",
                           "STONE_SHAFT_MINING"),                                # (#1423)
@@ -571,6 +575,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          if barding(s) else s,
          "CHAIN_MAIL_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "infantry" in s.classes else s,
+         "CROP_ROTATION": lambda name, s: s,                       # an economy technology: gather.FARM_TECHS
          "CROSSBOWMAN_UPGRADE": lambda name, s: s,
          "DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
          "DRY_DOCK": lambda name, s: s._replace(pierce=s.pierce + 1) if ship(name, s) else s,
@@ -708,6 +713,7 @@ AFTER = {"ARBALESTER_UPGRADE": "CROSSBOWMAN_UPGRADE",
          "ELITE_EAGLE_WARRIOR_UPGRADE": "EAGLE_WARRIOR_UPGRADE",   # (#1555)
          "ELITE_CANNON_GALLEON_UPGRADE": "CHEMISTRY",             # the cannon galleon needs it (build.NEEDS)
          "CHAIN_BARDING_ARMOR": "SCALE_BARDING_ARMOR", "CHAIN_MAIL_ARMOR": "SCALE_MAIL_ARMOR",
+         "CROP_ROTATION": "HEAVY_PLOW",
          "GILLNETS": "FISHING_LINES",
          "GOLD_SHAFT_MINING": "GOLD_MINING",
          "HALBERDIER_UPGRADE": "PIKEMAN_UPGRADE",
@@ -752,6 +758,7 @@ TECH_AGE = {                                                       # the age of 
     "CHAIN_MAIL_ARMOR": 2,
     "CAVALIER_UPGRADE": 3,
     "CHAMPION_UPGRADE": 3,
+    "CROP_ROTATION": 3,
     "CROSSBOWMAN_UPGRADE": 2,
     "DOUBLE_BIT_AXE": 1,
     "DRY_DOCK": 3,
@@ -837,6 +844,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "ARSON": (6, "book", "Arson"),                            # after the slot of Gambesons
          "CAPPED_RAM": (0, "minecart", "Capped Ram"),
          "CAPPED_RAM_UPGRADE": (3, "book", "Capped Ram"),        # one slot for each line of upgrades
+         "CROP_ROTATION": (0, "book", "Crop Rotation"),               # the slot of Heavy Plow (AFTER)
          "CROSSBOWMAN": (0, "skeleton_spawn_egg", "Crossbowman"),
          "CROSSBOWMAN_UPGRADE": (2, "book", "Crossbowman"),
          "EAGLE_SCOUT": (7, "husk_spawn_egg", "Eagle Scout"),        # the free slot of the barracks (#1555)
@@ -1031,6 +1039,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "CHAMPION": "Infantry. Strong vs. eagles, buildings.",
         "CHAMPION_UPGRADE": "Upgrades two-handed swordsmen to champions.",
         "CHU_KO_NU": "Chinese archer. Shoots many arrows.",
+        "CROP_ROTATION": "Farms +175 food.",
         "CROSSBOWMAN": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "CROSSBOWMAN_UPGRADE": "Upgrades archers to crossbowmen.",
         "DOUBLE_BIT_AXE": "Villagers chop wood 20 % faster.",
