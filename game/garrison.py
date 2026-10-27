@@ -13,8 +13,9 @@ Each garrisoned villager or foot archer adds one arrow to the shot of its town c
 (#1113): `aoe arrows` of the plugin. An empty town center shoots no arrow, a castle 5 (BASE, #1201).
 
 An injured unit in a garrison gets its hit points back, as in AoE2 DE (#1262, AoE2 wiki "Garrison"): 0.2 per second in
-a castle, 0.1 in a town center or tower (HEAL). Siege units and ships do not heal (monk.healable). The same Health
-change as the monk heal (monk.py); a full unit stays full inside (Invulnerable), so it is read only once (g.whole).
+a castle, 0.1 in a town center or tower (HEAL), 6 times as fast after Herbal Medicine (HERBAL, #1585). Siege units and
+ships do not heal (monk.healable). The same Health change as the monk heal (monk.py); a full unit stays full inside
+(Invulnerable), so it is read only once (g.whole).
 
     garrison.heal(g, dt)                # gather.Gather.step: dt AoE2 seconds of healing
 
@@ -34,6 +35,7 @@ SIZES = {                                                          # units insid
     "WATCH_TOWER": 5,
 }
 HEAL = {"CASTLE": 0.2}                                           # hit points per AoE2 second inside, else 0.1
+HERBAL = 6                  # Herbal Medicine: units inside heal 6 times as fast (AoE2 DE wiki, #1585)
 HEAL_EVERY = 5.0            # AoE2 seconds between two heal passes (fewer commands)
 BASE = {"CASTLE": 5, "TOWN_CENTER": 0}                            # arrows of an empty building (AoE2 wiki), else 1
 DOOR = 2.5                  # blocks from the door cell: there a unit goes in
@@ -201,8 +203,9 @@ def heal(g, dt):
         return
     dt, g.garrison_heal, homes = g.garrison_heal, 0.0, holders(g)
     names = {o["uuid"]: o["name"] for o in g.units if o.get("uuid") in g.villagers} | g.soldiers
+    herbal = HERBAL if "HERBAL_MEDICINE" in getattr(g, "techs", ()) else 1
     for rect, us in sorted(g.garrisons.items()):
-        rate = HEAL.get(homes[rect]["name"], 0.1) if rect in homes else 0.0
+        rate = HEAL.get(homes[rect]["name"], 0.1) * herbal if rect in homes else 0.0
         for u in us:
             if u in g.whole or not rate or not monk.healable(names.get(u, "VILLAGER")) or not (h := monk.health(g, u)):
                 continue

@@ -255,6 +255,9 @@ phases read 8 · claim 1 · code 18 · verify 9 · ci 0 · conflict 5 · report 
 Result: `pr #n` when you pushed PR #n and Automerge merges it later (the usual case: you report before the merge);
 `none` only when the run stopped without a PR. `tools/health.py` counts the `pr #n` lines by the present PR state (#902).
 Put the output of `python3 tools/release.py` (the release bar of each goal, #879) above the `Usage:` line.
+Below the metrics lines, put the output of `python3 tools/tokens.py` (one `Tokens:` line for the run: the tokens of
+this session and its largest sinks; run it just before the comment). `tools/health.py` adds these lines, and the
+`improve` skill uses them as one source to find the bottleneck.
 Put the `Usage:` line of step 1.4 above the metrics lines, unchanged: `tools/health.py` measures the quota use of one
 run per hour from pairs of these lines, and `tools/usage.py --target` uses that value (#462).
 `setup`: minutes from the start time (step 4) to the claim of the first ticket (0 for later tickets).

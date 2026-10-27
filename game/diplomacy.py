@@ -6,7 +6,7 @@ the wool of its color with its name on top, then one item for each resource. A c
 resource to that player (a shift click: SHIFT × LOT, as market.SHIFT).
 AoE2 rules (AoE2 wiki, "Tribute"): the sender pays a fee of FEE % on top (100 food to send costs 130 food), and the
 receiver gets the full amount. A player needs a complete own market to send tribute. Coinage (20 %) and Banking (0 %)
-are not in the game program yet: change FEE through a table as market.FEES when they come.
+of the sender lower the fee (FEES, #1606).
 The receiver is the Gather of that player (the human player or a bot of g.bots). A player without a Gather (no program
 plays it) keeps its tribute in g.tributes.
 gather.Gather.clicks gives the item and opens the menu.
@@ -31,11 +31,13 @@ RESOURCES = {"food": "wheat", "wood": "oak_log", "gold": "gold_ingot", "stone": 
 LOT = 100                                                          # the resource of one click
 SHIFT = 5                                                          # tributes of a shift click (500)
 FEE = 30                                                           # the tribute fee in percent, paid by the sender
+FEES = {"BANKING": 0,                                              # a technology of the sender: its fee (#1606)
+        "COINAGE": 20}
 
 
 def give(g):
     """Put the item into hotbar slot SLOT of each player that has no Game menu item there."""
-    g.command(f"execute as @a unless items entity @s hotbar.{SLOT} *[custom_data={{aoe_game_menu:1b}}] "
+    g.command(f"execute as {g.who} unless items entity @s hotbar.{SLOT} *[custom_data={{aoe_game_menu:1b}}] "
               f"run item replace entity @s hotbar.{SLOT} with {ITEM}")
 
 
@@ -65,7 +67,7 @@ def items(g):
     for i, n in enumerate(others(g)):
         color = g.players[str(n)].get("color") or player_color(n)
         out.append((i, f"{color}_wool", name(g, n), ""))
-        out += [(9 * (r + 1) + i, m, f"Send {LOT} {res}", f"{cost(LOT)} {res} with the fee")
+        out += [(9 * (r + 1) + i, m, f"Send {LOT} {res}", f"{cost(g, LOT)} {res} with the fee")
                 for r, (res, m) in enumerate(RESOURCES.items())]
     return out
 
@@ -74,9 +76,14 @@ def show(g, player):
     menu.show(g, player, "Diplomacy", items(g), lambda p, slot, shift: order(g, p, slot, shift))
 
 
-def cost(n):
-    """What the sender pays for a tribute of n: n and the fee."""
-    return n * (100 + FEE) // 100
+def fee(g):
+    """The tribute fee of the player g in percent: the lowest of FEE and its technologies."""
+    return min([FEE] + [f for t, f in FEES.items() if t in getattr(g, "techs", ())])
+
+
+def cost(g, n):
+    """What the sender g pays for a tribute of n: n and the fee."""
+    return n * (100 + fee(g)) // 100
 
 
 def receiver(g, n):
@@ -89,10 +96,10 @@ def send(g, player, n, res):
     if not market.markets(g):
         build.say(g, player, "Build a market to send tribute.")
         return False
-    if g.stock[res] < cost(LOT):
+    if g.stock[res] < cost(g, LOT):
         build.say(g, player, f"Not enough {res}.")
         return False
-    market.add(g, res, -cost(LOT))
+    market.add(g, res, -cost(g, LOT))
     if (r := receiver(g, n)) is not None:
         market.add(r, res, LOT)
     else:

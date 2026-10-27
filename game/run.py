@@ -40,7 +40,8 @@ sys.path[:0] = [HERE, os.path.join(os.path.dirname(HERE), "tools")]
 import mc_check  # noqa: E402
 from rcon import Rcon  # noqa: E402
 
-JOINED = re.compile(r"[/ ]INFO\]: (\w{1,16}) joined the game$")   # a chat line starts with "<name>", not with a name
+# A chat line starts with "<name>", not with a name. Paper 26.3 writes "System chat: " and color codes (#1310).
+JOINED = re.compile(r"[/ ]INFO\]: (?:System chat: )?(?:\x1b\[[0-9;]*m)?(\w{1,16}) joined the game(?:\x1b\[0m)?$")
 PAPER = os.path.join(os.path.dirname(mc_check.CACHE), "paper")       # ~/.cache/aoe2mc/paper/VERSION/
 FILL = "https://fill.papermc.io/v3/projects/paper/versions"
 AGENT = {"User-Agent": "aoe2mc (https://github.com/Larspolo/aoe2mc)"}   # the Paper API refuses Python-urllib (403)
@@ -126,12 +127,15 @@ def properties(game_port, rcon_port, password):
 
 
 class Game:
-    """A running server with an RCON connection. Use it in a `with` block, so that the server always stops."""
+    """A running server with an RCON connection. Use it in a `with` block, so that the server always stops.
+    people: the people of a game (`--people`); sides: Minecraft name -> AoE2 player (#1310)."""
+    people = 1
 
     def __init__(self, world, version=mc_check.DEFAULT_VERSION, timeout=300, server="paper"):
         self.world, self.version, self.timeout, self.kind = os.path.abspath(world), version, timeout, server
         self.server = self.rcon = None
         self.lock, self.seen = threading.Lock(), 0     # the op thread and the game send commands
+        self.sides = {}
 
     def start(self):
         java, jvm, plugins = mc_check.java_for(self.version), [], []
@@ -181,6 +185,16 @@ class Game:
         for line in new:
             if m := JOINED.search(line):
                 self.command(f"op {m.group(1)}")
+                self.side(m.group(1))
+
+    def side(self, name):
+        """Put Minecraft player name on the team of its AoE2 player in a game of more people (decision #1308, option
+        A): the join order. The first one gets player 1, the second player 2; a later one gets no side. A player who
+        joins again keeps its side. A later menu (option C) changes this table only."""
+        n = self.sides.get(name) or len(self.sides) + 1
+        if self.people > 1 and n <= self.people:
+            self.sides[name] = n
+            self.command(f"team join p{n} {name}")
 
     def _op_loop(self):
         try:
@@ -228,17 +242,47 @@ def bench(game, n=1000):
     return n / (time.perf_counter() - t)
 
 
-def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal"):
+class Side:
+    """The Gather of a second person (#1310): Gather.run steps it as it steps a bot (Gather.bots), with the clicks of
+    the Minecraft players of its team."""
+
+    def __init__(self, g):
+        self.g = g
+
+    def step(self):
+        self.g.point()
+        for name in self.g.clicks():
+            self.g.click(name)
+        self.g.step()
+
+
+def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1):
     import gather
+
+    def make(player):
+        who = "@a" if people == 1 else f"@a[team=p{player}]"
+        for _ in range(60):                          # entities load in other threads
+            g = gather.Gather(game, data, player=player, log=log, cheats=cheats)
+            g.who = who
+            g.setup()
+            if len(g.villagers) == len(g.units):
+                return g
+            time.sleep(1)
+        return g
     with open(os.path.join(world, "aoe2mc.json")) as f:
         data = json.load(f)
     game.forceload()
-    for _ in range(60):                              # entities load in other threads
-        g = gather.Gather(game, data, log=log, cheats=cheats).setup()
-        if len(g.villagers) == len(g.units):
-            break
-        time.sleep(1)
+    game.people = people
+    g = make(1)
     g.reveal = reveal                                # "all": no fog of war for the units (fog.py, #1389)
+    if people > 1:                                   # one Gather for each person, in the join order (#1308, #1310)
+        g.bots = [Side(make(n)) for n in range(2, people + 1)]
+        for s in g.bots:                             # the same trees, bushes and mines, as with a bot
+            s.g.map.trees, s.g.map.bushes, s.g.map.mines = g.map.trees, g.map.bushes, g.map.mines
+        for name in list(game.sides):                # players who joined before the teams were there
+            game.side(name)
+        print(f"{people} people: the first Minecraft player who joins plays player 1, the second player 2.",
+              file=sys.stderr)
     if bot:
         import bot as bots
         import replay
@@ -337,15 +381,20 @@ def main(argv=None):
                     "units out of its sight are hidden (default 0: all players)")
     ap.add_argument("--cheats", action="store_true", help="--play: the AoE2 cheat codes in the chat (off as in AoE2)")
     ap.add_argument("--bot", action="store_true", help="--play: a bot plays player 2 (game/bot.py)")
+    ap.add_argument("--people", type=int, default=1, metavar="N", help="--play: N people play players 1 to N, in the "
+                    "order in which they join (#1310)")
     ap.add_argument("--bot-attack", default="10:00", metavar="MM:SS", help="--bot: its soldiers attack player 1 "
                     "from this game time (default 10:00)")
     ap.add_argument("--reveal", choices=["normal", "all"], default="normal", help="--play: AoE2 \"Reveal map\" "
                     "(default normal: enemy units out of sight are hidden; all: all units show)")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     a = ap.parse_args(argv)
+    if a.bot and a.people > 1:
+        ap.error("--bot plays player 2: use it with one person only (--people 1)")
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
         sys.exit(f"no level.dat in {a.world}")
     game = Game(a.world, a.version, server=a.server)
+    game.people = a.people                           # the join order counts from the first player (#1310)
     try:
         game.start()
         print(f"Server is ready. RCON on 127.0.0.1:{game.port}. Ctrl-C stops the server.", file=sys.stderr)
@@ -357,7 +406,7 @@ def main(argv=None):
             print("The replay ended. The server stays up: type commands, Ctrl-C stops it.", file=sys.stderr)
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
-                play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal)
+                play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal, people=a.people)
             return
         while True:
             line = input("> ").strip().lstrip("/")

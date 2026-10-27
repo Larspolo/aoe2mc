@@ -82,6 +82,7 @@ STATS = {
     "CAMEL_ARCHER": Stats(55, 7, 0, 1, 4, 2.0, {}, (ARC, CAM, UNI)),
     "CATAPHRACT": Stats(110, 9, 2, 1, 0, 1.8, {INF: 13}, (CAV, UNI)),
     "CENTURION": Stats(110, 13, 2, 3, 0, 1.9, {}, (CAV, UNI)),
+    "CHAKRAM_THROWER": Stats(40, 3, 1, 0, 5, 2.0, {"building": 1}, (INF, UNI)),   # the Gurjaras castle (#1612)
     "CHU_KO_NU": Stats(45, 8, 0, 0, 4, 3.0, {SPE: 2}, (ARC, UNI)),
     "COMPOSITE_BOWMAN": Stats(40, 4, 1, 0, 4, 2.0, {SPE: 2}, (ARC, UNI)),
     "CONQUISTADOR": Stats(55, 16, 2, 1, 6, 2.9, {SIE: 4}, (ARC, CAV, UNI)),
@@ -132,6 +133,7 @@ STATS = {
     "ELITE_CAMEL_ARCHER": Stats(60, 8, 1, 1, 4, 2.0, {}, (ARC, CAM, UNI)),
     "ELITE_CATAPHRACT": Stats(150, 12, 2, 1, 0, 1.7, {INF: 18}, (CAV, UNI)),
     "ELITE_CENTURION": Stats(155, 15, 3, 3, 0, 1.9, {}, (CAV, UNI)),
+    "ELITE_CHAKRAM_THROWER": Stats(50, 4, 1, 0, 6, 2.0, {"building": 2, INF: 1}, (INF, UNI)),
     "ELITE_CHU_KO_NU": Stats(50, 10, 0, 0, 4, 3.0, {SPE: 2}, (ARC, UNI)),
     "ELITE_COMPOSITE_BOWMAN": Stats(50, 4, 2, 0, 4, 2.0, {SPE: 2}, (ARC, UNI)),
     "ELITE_CONQUISTADOR": Stats(70, 19, 2, 2, 6, 2.9, {SIE: 6, "building": 2}, (ARC, CAV, UNI)),
@@ -171,7 +173,7 @@ STATS = {
     "BATTLE_ELEPHANT": Stats(250, 12, 1, 2, 0, 2.0, {"building": 4}, (ELE,)),
     "CONDOTTIERO": Stats(80, 10, 1, 0, 0, 1.9, {GUN: 10, "building": 2}, (INF, UNI)),
     "ELITE_BATTLE_ELEPHANT": Stats(300, 14, 1, 3, 0, 2.0, {"building": 7}, (ELE,)),
-    "ELITE_GENITOUR": Stats(55, 4, 0, 4, 4, 3.0, {ARC: 5, SPE: 3}, (ARC, CAV, UNI)),
+    "ELITE_GENITOUR": Stats(55, 4, 0, 4, 4, 3.0, {ARC: 5, SPE: 3}, (ARC, CAV, UNI)),   # the wiki infobox (#1610)
     "ELITE_STEPPE_LANCER": Stats(80, 11, 0, 2, 0, 2.0, {}, (CAV,)),
     "GENITOUR": Stats(50, 3, 0, 4, 4, 3.0, {ARC: 4, SPE: 3}, (ARC, CAV, UNI)),
     "SLINGER": Stats(35, 4, 0, 0, 5, 2.0, {INF: 4, SIE: 3, SPE: 1}, (ARC,)),
@@ -233,7 +235,7 @@ STATS = {
     "WAR_GALLEY": Stats(125, 7, 0, 4, 6, 3.0, {"building": 6, WAR: 5}, (SHIP, WAR)),   # Medium Warships (#1482)
     "WAR_HULK": Stats(110, 4, 4, 1, 1, 1.5, {FIRE: 1, "standard": -3}, (SHIP,)),   # Medium Warships (#1508)
     # others: no fight, but they can die
-    "VILLAGER": Stats(25, 3, 0, 0, 0, 2.0),
+    "VILLAGER": Stats(25, 3, 0, 0, 0, 2.0, {"building": 3, HSI: 6, "stone": 6}),   # AoE2 DE wiki (#1590)
     "KING": Stats(75, 0, 0, 0, 0, 0.0),
     "MONK": Stats(30, 0, 0, 0, 9, 0.0),
     "TRADE_CART": Stats(70, 0, 0, 0, 0, 0.0),
@@ -280,6 +282,11 @@ WALL_TAG = "aoe2mc.wall"
 # gives infantry a bonus against it (#1419).
 STANDARD = "standard"
 BUILDINGS = {k: s if k == "WONDER" else s._replace(classes=s.classes + (STANDARD,)) for k, s in BUILDINGS.items()}
+# The AoE2 class "Stone Defense" (wiki infobox "Class"): the stone walls and gates and the towers, not the castle and
+# not the palisades. The villager gets a bonus against it (#1590).
+STONE = "stone"
+BUILDINGS = {k: s._replace(classes=s.classes + (STONE,)) if k.endswith("_TOWER") or k == "KEEP" else s
+             for k, s in BUILDINGS.items()}
 WATCH = 4    # tiles of line of sight that Town Watch adds to each own building but walls, gates, farms, fish traps (#1454)
 # Line of sight in tiles (AoE2 DE, base unit or building, wiki infobox "LOS"; the house: 1 from the edge of its
 # 2 x 2 tiles, #1300) where it is not max(4, range + 2) (sight()).
@@ -298,10 +305,13 @@ SIGHT = {
     "DOCK": 8,
     "DONJON": 10,
     "ELITE_CANNON_GALLEON": 17,
+    "ELITE_GENITOUR": 6,                                               # the wiki infobox (#1610)
+    "ELITE_SHRIVAMSHA_RIDER": 6,
     "ELITE_STEPPE_LANCER": 5,
     "FIRE_GALLEY": 5,
     "FIRE_SHIP": 5,
     "GALLEON": 9,
+    "GENITOUR": 5,
     "HEAVY_DEMOLITION_SHIP": 6,
     "HULK": 5,
     "FEITORIA": 6,
@@ -321,6 +331,7 @@ SIGHT = {
     "OUTPOST": 4,
     "PALADIN": 5,
     "SIEGE_WORKSHOP": 6,
+    "SHRIVAMSHA_RIDER": 5,
     "STABLE": 6,
     "STEPPE_LANCER": 5,
     "TOWN_CENTER": 8,
@@ -335,7 +346,9 @@ SIGHT = {
 # Units that attack from a range with melee damage (AoE2): their hit takes the melee armor of the target (#800).
 MELEE_RANGED = {"BOMBARD_CANNON",
                 "CANNON_GALLEON",
+                "CHAKRAM_THROWER",                # (#1612)
                 "ELITE_CANNON_GALLEON",
+                "ELITE_CHAKRAM_THROWER",
                 "ELITE_GBETO",
                 "ELITE_MAMELUKE",
                 "ELITE_THROWING_AXEMAN",
@@ -522,7 +535,7 @@ def target_uuid(footprint):
 def wall(name, age):
     """The Stats of wall name (WALLS) in AoE2 age 0 (Dark) .. 3 (Imperial)."""
     hp, melee, pierce = WALLS[name]
-    return Stats(hp[age], 0, melee, pierce, 0, 0.0, {}, ("building",))
+    return Stats(hp[age], 0, melee, pierce, 0, 0.0, {}, ("building",) + (STONE,) * (not name.startswith("PALISADE")))
 
 
 def building(uuid, name, player, box, T=4, inside=(), s=None, low=None):
@@ -550,7 +563,8 @@ def building(uuid, name, player, box, T=4, inside=(), s=None, low=None):
         [f"aoe building {uuid} {s.hp} {s.melee} {s.pierce} {' '.join(map(str, box))}"   # after the arrows: no shot of 1
          + (f" {s.attack} {s.range * T} {round(s.reload / NORMAL * 20)} {low * T}"   # (#1546)
             if s.attack and s.range else "")
-         + (f" {','.join(s.classes)}" if STANDARD not in s.classes or bonus else "")   # a wall, a gate, the wonder (#1419)
+         + (f" {','.join(s.classes)}" if s.classes != ("building", STANDARD) or bonus else "")   # a wall, a gate, the
+                                                                            # wonder (#1419), a tower (STONE, #1590)
          + (f" {bonus}" if bonus else "")]                                  # the arrow bonus (Heated Shot, #1548)
 
 

@@ -97,7 +97,8 @@ WORK_TECHS = {"BOW_SAW": {"wood": 1.2},                            # work rate f
               "GOLD_MINING": {"gold": 1.15},
               "GOLD_SHAFT_MINING": {"gold": 1.15},
               "STONE_MINING": {"stone": 1.15},
-              "STONE_SHAFT_MINING": {"stone": 1.15}}
+              "STONE_SHAFT_MINING": {"stone": 1.15},
+              "TWO_MAN_SAW": {"wood": 1.1}}                        # (#1577)
 # Food of a hunted animal, as in AoE2 DE (the AoE2 wiki; a "COW_..." name is a cow, #1058).
 HUNT_FOOD = {"COW": 150,
              "DEER": 140,
@@ -166,6 +167,11 @@ WORK_LOOK = {"wood": ("minecraft:oak_log", "minecraft:block.wood.hit"),
 EVENTS = {"idle": "idle", "to_tree": "walk", "chop": "chop", "to_drop": "carry",    # state -> event in the log
           "to_site": "walk", "build": "build", "to_rally": "walk", "to_prey": "walk", "hunt": "hunt",
           "to_repair": "walk", "repair": "build"}
+
+
+def only(who, *filters):
+    """The selector who ("@a" or "@a[team=p2]") with more filters: only("@a[team=p2]", "name=!Alex")."""
+    return who[:-1] + "," + ",".join(filters) + "]" if who.endswith("]") else who + "[" + ",".join(filters) + "]"
 
 
 def allied(players, a, b):
@@ -493,6 +499,7 @@ class Gather:
     cheats = False                                                     # also for the adapters of Gather.__new__
     aegis = False                                                      # the cheat "aegis": all work is instant (#817)
     beyond = free_techs = noui = False                                 # cheats: repeat and free technologies, no UI (#968)
+    who = "@a"                                                         # the Minecraft players: "@a[team=pN]" for two people (#1310)
     pop_cap = None                                                     # the cheat "my cpu can handle it" (#968): 1000
     ended = None                                                       # "Victory" or "Defeat": run() stops (#819)
     board = "aoe_res"                                                  # the objective of the resources (the sidebar)
@@ -598,7 +605,8 @@ class Gather:
         # The players get the side of the units for the attack alerts of the plugin (AoePlugin.side, #1241): the team,
         # not the tag aoe2mc.pN, because cheats.destroy kills and conquest.alive counts the entities with that tag.
         self.command(f"team modify p{self.player} seeFriendlyInvisibles false")   # worlds before #1538: no cube at a building
-        self.command(f"team join p{self.player} @a")
+        if self.who == "@a":                                           # two people: run.py puts each one on its team
+            self.command(f"team join p{self.player} @a")
         build.setup(self)
         menu.setup(self)
         if self.paper:
@@ -904,22 +912,22 @@ class Gather:
         hints.tick(self)
         menu.clicks(self)
         cheats.clicks(self)
-        self.command("execute as @a unless items entity @s container.* minecraft:carrot_on_a_stick[!custom_data] "
+        self.command(f"execute as {self.who} unless items entity @s container.* minecraft:carrot_on_a_stick[!custom_data] "
                      "run give @s minecraft:carrot_on_a_stick")       # not a group item
         if self.calls % GROUP_GIVE == 0:
             for n, (slot, _) in GROUPS.items():
-                self.command(f"execute as @a unless items entity @s hotbar.{slot} *[custom_data={{aoe_group:{n}}}] "
+                self.command(f"execute as {self.who} unless items entity @s hotbar.{slot} *[custom_data={{aoe_group:{n}}}] "
                              f"run item replace entity @s hotbar.{slot} with {group_item(n)}")
             diplomacy.give(self)                                       # the Game menu item (#1588)
         self.calls += 1
-        self.command(f"execute as @a unless items entity @s container.* minecraft:{WAND} "
+        self.command(f"execute as {self.who} unless items entity @s container.* minecraft:{WAND} "
                      f'run give @s minecraft:{WAND}[item_name="Selection box"]')
         self.release()                                                 # the drags of the selection box (#992)
         objs = ("aoe_use", "aoe_talk", "aoe_box")
-        if "passed" not in "".join(self.command(f"execute if entity @a[scores={{{o}=1..}}]") for o in objs):
+        if "passed" not in "".join(self.command(f"execute if entity {only(self.who, f'scores={{{o}=1..}}')}") for o in objs):
             return []
         out = []
-        for name in (n.strip() for n in self.command("list").split(":", 1)[-1].split(",")):
+        for name in self.people():
             used = [o for o in objs if name and re.search(r"has [1-9]", self.command(f"scoreboard players get {name} {o}"))]
             if used:
                 out.append(name)
@@ -933,6 +941,14 @@ class Gather:
                 for obj in objs:
                     self.command(f"scoreboard players reset {name} {obj}")
         return out
+
+    def people(self):
+        """The names of the Minecraft players of this Gather: all, or the players of its team (#1310). Not `team list`:
+        the units are on the team too, and the server cuts a long list."""
+        names = [n.strip() for n in self.command("list").split(":", 1)[-1].split(",")]
+        if self.who == "@a":
+            return names
+        return [n for n in names if n and "passed" in self.command(f"execute if entity {only(self.who, 'name=' + n)}")]
 
     def group_in_hand(self, name):
         """The control group of the item in the main hand of player name, or None."""
@@ -1159,7 +1175,7 @@ class Gather:
         player sees, in the color of the target (POINT), up to the reach of the click; far away the dust is larger.
         hints.py writes its name and action into the action bar. Minecraft outlines a block only up to about 5
         blocks, and the order marker (#796) shows only after the click."""
-        names = [n for n in (n.strip() for n in self.command("list").split(":", 1)[-1].split(",")) if n]
+        names = [n for n in self.people() if n]
         for name in sorted(set(names) - self.sided):                   # a player who joins later (#1241)
             self.command(f"team join p{self.player} {name}")
             self.sided.add(name)
