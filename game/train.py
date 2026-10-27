@@ -77,6 +77,8 @@ import menu  # noqa: E402
 
 COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   # as in AoE2
          "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}, "FEUDAL_AGE": {"food": 500},
+         "ARBALESTER": {"wood": 25, "gold": 45},                      # AoE2 DE wiki (#1500)
+         "ARBALESTER_UPGRADE": {"food": 450, "gold": 350},            # the Imperial Age (#1500)
          "ARSON": {"food": 75, "gold": 25},                           # AoE2 DE wiki (#1419)
          "BATTERING_RAM": {"wood": 160, "gold": 75},
          "BOMBARD_CANNON": {"wood": 225, "gold": 225},               # the Imperial Age, after Chemistry (#1380)
@@ -132,6 +134,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "HALBERDIER": {"food": 35, "wood": 25},                       # AoE2 DE wiki (#1499)
          "HALBERDIER_UPGRADE": {"food": 300, "gold": 600},             # the Imperial Age (#1499)
          "HAND_CART": {"food": 300, "wood": 200},                      # the Castle Age (AoE2 DE wiki, #1453)
+         "HEAVY_CAVALRY_ARCHER": {"wood": 40, "gold": 60},            # AoE2 DE wiki (#1500)
+         "HEAVY_CAVALRY_ARCHER_UPGRADE": {"food": 900, "gold": 500},  # the Imperial Age (#1500)
          "HOARDINGS": {"food": 400, "wood": 400},                      # the castle, Imperial Age (#1456)
          "HEAVY_DEMOLITION_SHIP": {"wood": 45, "gold": 80},            # AoE2 DE wiki (#1483)
          "HEAVY_DEMOLITION_SHIP_UPGRADE": {"wood": 200, "gold": 300},  # the dock, Imperial Age (#1483)
@@ -207,6 +211,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "WOAD_RAIDER": {"food": 70, "gold": 25}}
 TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130,   # AoE2 seconds
                "ARSON": 25,
+               "ARBALESTER": 27,
+               "ARBALESTER_UPGRADE": 50,
                "BATTERING_RAM": 36,
                "BERSERK": 14,
                "BLAST_FURNACE": 100,
@@ -261,6 +267,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "HALBERDIER": 22,
                "HALBERDIER_UPGRADE": 50,
                "HAND_CART": 55,
+               "HEAVY_CAVALRY_ARCHER": 37,
+               "HEAVY_CAVALRY_ARCHER_UPGRADE": 50,
                "HOARDINGS": 75,
                "HEAVY_DEMOLITION_SHIP": 31,
                "HEAVY_DEMOLITION_SHIP_UPGRADE": 50,
@@ -344,7 +352,9 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                        "ARSON"),                                              # (#1419)
           "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER",                                          # building (#654, #670, #655)
                             "CROSSBOWMAN_UPGRADE", "ELITE_SKIRMISHER_UPGRADE", "CAVALRY_ARCHER",   # (#1396, #1397)
-                            "THUMB_RING"),                                                    # (#1421)
+                            "THUMB_RING",                                                     # (#1421)
+                            "ARBALESTER_UPGRADE",                                             # the Imperial Age (#1500)
+                            "HEAVY_CAVALRY_ARCHER_UPGRADE"),                                  # (#1500)
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING",            # (#675, #725, #724, #937, #938)
                          "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR",
                          "CHAIN_MAIL_ARMOR", "LEATHER_ARCHER_ARMOR", "CHAIN_BARDING_ARMOR",   # the Castle Age (#1394)
@@ -448,7 +458,8 @@ def masonry(name, s):
     return s._replace(hp=round(s.hp * 1.1), melee=s.melee + 1, pierce=s.pierce + 1) if "building" in s.classes and not wall else s
 
 
-TECHS = {"ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bonus.get("standard", 0) + 2})
+TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit name: UPGRADES
+         "ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bonus.get("standard", 0) + 2})
          if "infantry" in s.classes else s,                        # combat.STANDARD: not the walls (#1419)
          "BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
          "BLAST_FURNACE": lambda name, s: s._replace(attack=s.attack + 2) if melee(s) else s,
@@ -484,6 +495,7 @@ TECHS = {"ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bon
          "GUILDS": lambda name, s: s,                              # the trading fee: market.FEES
          "HALBERDIER_UPGRADE": lambda name, s: s,                  # a new unit name: UPGRADES
          "HAND_CART": lambda name, s: s,                           # no combat change: gather.CARRY and gather.PACE
+         "HEAVY_CAVALRY_ARCHER_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
          "HOARDINGS": lambda name, s: s._replace(hp=round(s.hp * 1.21)) if name == "CASTLE" else s,   # build.values
          "HEAVY_PLOW": lambda name, s: s,                          # an economy technology: gather.FARM_TECHS, FOOD_CARRY
          "HEAVY_SCORPION_UPGRADE": lambda name, s: s,
@@ -541,12 +553,14 @@ SPEEDS = {"CARAVAN": ("trade units", 1.2),                        # technology: 
 SHIPWRIGHT = (0.8, 1.54)                                           # Shipwright: ships cost 80 % wood, train 54 % faster
 CONSCRIPT = (("ARCHERY_RANGE", "BARRACKS", "CASTLE", "STABLE"), 1.33)   # Conscription: these buildings train faster
 UPGRADES = {                                                       # technology: the unit and its new unit (#941)
+    "ARBALESTER_UPGRADE": ("CROSSBOWMAN", "ARBALESTER"),
     "DEMOLITION_SHIP_UPGRADE": ("DEMOLITION_RAFT", "DEMOLITION_SHIP"),   # (#1483)
     "CAPPED_RAM_UPGRADE": ("BATTERING_RAM", "CAPPED_RAM"),           # the siege upgrades of AoE2 DE (#1352)
     "CHAMPION_UPGRADE": ("TWO_HANDED_SWORDSMAN", "CHAMPION"),
     "CROSSBOWMAN_UPGRADE": ("ARCHER", "CROSSBOWMAN"),
     "ELITE_SKIRMISHER_UPGRADE": ("SKIRMISHER", "ELITE_SKIRMISHER"),
     "HALBERDIER_UPGRADE": ("PIKEMAN", "HALBERDIER"),
+    "HEAVY_CAVALRY_ARCHER_UPGRADE": ("CAVALRY_ARCHER", "HEAVY_CAVALRY_ARCHER"),
     "HEAVY_SCORPION_UPGRADE": ("SCORPION", "HEAVY_SCORPION"),
     "HEAVY_DEMOLITION_SHIP_UPGRADE": ("DEMOLITION_SHIP", "HEAVY_DEMOLITION_SHIP"),   # (#1483)
     "HEAVY_WARSHIPS": (("WAR_GALLEY", "GALLEON"), ("FIRE_SHIP", "FAST_FIRE_SHIP")),   # (#1483)
@@ -561,7 +575,8 @@ UPGRADES = {                                                       # technology:
     "SIEGE_RAM_UPGRADE": ("CAPPED_RAM", "SIEGE_RAM"),
     "TWO_HANDED_SWORDSMAN_UPGRADE": ("LONG_SWORDSMAN", "TWO_HANDED_SWORDSMAN"),
 }
-AFTER = {"BLAST_FURNACE": "IRON_CASTING",
+AFTER = {"ARBALESTER_UPGRADE": "CROSSBOWMAN_UPGRADE",
+         "BLAST_FURNACE": "IRON_CASTING",
          "BODKIN_ARROW": "FLETCHING",
          "BOMBARD_TOWER_TECH": "CHEMISTRY",
          "BOW_SAW": "DOUBLE_BIT_AXE",
@@ -593,6 +608,7 @@ REQUIRES = {"CASTLE_AGE": (2, ("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET"
             "FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP", "DOCK")),
             "IMPERIAL_AGE": (2, ("MONASTERY", "UNIVERSITY", "SIEGE_WORKSHOP"), ("CASTLE",))}   # or one of these alone
 TECH_AGE = {                                                       # the age of a technology (build.AGE): hidden before
+    "ARBALESTER_UPGRADE": 3,
     "ARSON": 1,
     "BLAST_FURNACE": 3,
     "BLOCK_PRINTING": 3,
@@ -624,6 +640,7 @@ TECH_AGE = {                                                       # the age of 
     "GUILDS": 3,
     "HALBERDIER_UPGRADE": 3,
     "HAND_CART": 2,
+    "HEAVY_CAVALRY_ARCHER_UPGRADE": 3,
     "HOARDINGS": 3,
     "HEAVY_PLOW": 2,
     "HEAVY_SCORPION_UPGRADE": 3,
@@ -673,6 +690,8 @@ REPEAT = 256                                                       # researches 
 CENSUS = 2.0                                                       # AoE2 seconds between two counts of the live units
 MORE = 18                                                          # the first slot of the item row under the queue row
 ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, item and name of each unit (#620)
+         "ARBALESTER": (0, "skeleton_spawn_egg", "Arbalester"),
+         "ARBALESTER_UPGRADE": (2, "book", "Arbalester"),             # the slot of Crossbowman (AFTER)
          "ARSON": (6, "book", "Arson"),                            # after the slot of Gambesons
          "CAPPED_RAM": (0, "minecart", "Capped Ram"),
          "CAPPED_RAM_UPGRADE": (3, "book", "Capped Ram"),        # one slot for each line of upgrades
@@ -683,6 +702,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "HALBERDIER": (1, "zombie_spawn_egg", "Halberdier"),
          "HALBERDIER_UPGRADE": (3, "book", "Halberdier"),             # the slot of Pikeman (AFTER)
          "HAND_CART": (3, "book", "Hand Cart"),                       # the slot of Wheelbarrow (AFTER)
+         "HEAVY_CAVALRY_ARCHER": (4, "skeleton_horse_spawn_egg", "Heavy Cavalry Archer"),
+         "HEAVY_CAVALRY_ARCHER_UPGRADE": (6, "book", "Heavy Cavalry Archer"),   # slot 5: Thumb Ring
          "HOARDINGS": (3, "book", "Hoardings"),                       # after Conscription
          "HEAVY_PLOW": (0, "book", "Heavy Plow"),                     # the slot of Horse Collar (AFTER)
          "HEAVY_SCORPION": (2, "crossbow", "Heavy Scorpion"),
@@ -806,7 +827,9 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "WHEELBARROW": (3, "book", "Wheelbarrow"),
          "WOAD_RAIDER": (0, "zombie_spawn_egg", "Woad Raider")}
 # The AoE2 help text of each menu item, short (#1160): the plugin shows it as the last lore line of the item (help()).
-HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
+HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
+        "ARBALESTER_UPGRADE": "Upgrades crossbowmen to arbalesters.",
+        "ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "ARSON": "Infantry +2 attack vs. buildings.",
         "BATTERING_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
         "BERSERK": "Viking infantry. Heals itself.",
@@ -863,6 +886,8 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "HALBERDIER": "Infantry. Strong vs. cavalry; weak vs. archers.",
         "HALBERDIER_UPGRADE": "Upgrades pikemen to halberdiers.",
         "HAND_CART": "Villagers +10 % speed, +50 % carry.",
+        "HEAVY_CAVALRY_ARCHER": "Fast archer. Strong vs. infantry; weak vs. camels.",
+        "HEAVY_CAVALRY_ARCHER_UPGRADE": "Upgrades cavalry archers to heavy ones.",
         "HOARDINGS": "Castles +21 % HP.",
         "HEAVY_PLOW": "Farms +125 food; farmers carry +1 food.",
         "HEAVY_SCORPION": "Siege. Shoots bolts; weak vs. cavalry.",
