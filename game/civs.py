@@ -173,6 +173,9 @@ MISSING = {"ARSON": ("GOTHS", "MUISCA", "ROMANS"),                              
                           "MONGOLS", "MUISCA", "POLES", "PURU", "ROMANS", "SPARTANS", "TATARS", "THRACIANS", "TUPI",
                           "TURKS", "VIETNAMESE", "VIKINGS", "WEI", "WU"),
            "HEAVY_PLOW": ("KHITANS",),                                     # (#1424)
+           "HOARDINGS": ("AZTECS", "BENGALIS", "BOHEMIANS", "BULGARIANS", "BURMESE", "CHINESE", "ETHIOPIANS", "GOTHS",
+                         "HUNS", "KHITANS", "KOREANS", "MALAY", "PORTUGUESE", "ROMANS", "TATARS", "VARANGIANS",
+                         "WU"),                                            # (#1456)
            "HUSBANDRY": ("AZTECS", "CUMANS", "INCAS", "MAPUCHE", "MAYANS", "MUISCA", "TEUTONS", "TUPI", "VIKINGS"),
            "KNIGHT": ("AZTECS", "BENGALIS", "DRAVIDIANS", "GURJARAS", "HINDUSTANIS", "INCAS", "JURCHENS", "KHITANS",
                       "MAPUCHE", "MAYANS", "MUISCA", "SHU", "TUPI", "WEI", "WU"),   # the wiki chart (#1430)
