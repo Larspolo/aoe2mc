@@ -560,10 +560,13 @@ def fetch(since, until=None):
     ci = [r for r in runs if r["name"] == "CI" and r.get("status") == "completed"][:CI_JOB_RUNS]
     jobs = [j for r in ci for j in api(f"actions/runs/{r['id']}/jobs")["jobs"]]
     status = api(f"issues?state=open&labels={STATUS}")
-    # one day more: the "Started by" comment of a ticket that merged in the period can be older
-    comments = api_pages(f"issues/comments?since={since - datetime.timedelta(days=1):%Y-%m-%dT%H:%M:%SZ}")
-    status_comments = [c for c in comments if status and c["issue_url"].endswith(f"/{status[0]['number']}")
-                       and c["created_at"] >= iso]
+    # one day more: the "Started by" comment of a ticket that merged in the period can be older. Newest first: the
+    # page limit then cuts the oldest, not the run reports of the last hours (2000 comments a day, #1985)
+    early = f"{since - datetime.timedelta(days=1):%Y-%m-%dT%H:%M:%SZ}"
+    comments = api_pages(f"issues/comments?since={early}&sort=created&direction=desc",
+                         stop=lambda c: c["created_at"] < early)[::-1]
+    status_comments = api_pages(f"issues/{status[0]['number']}/comments?since={iso}") if status else []
+    status_comments = [c for c in status_comments if c["created_at"] >= iso]
     recent = [c for c in comments if c["created_at"] >= iso or c["body"].startswith("Started by")]
     prs = api_pages("pulls?state=closed&sort=updated&direction=desc", stop=lambda p: p["updated_at"] < iso)
     issues = api_pages(f"issues?state=all&since={iso}")

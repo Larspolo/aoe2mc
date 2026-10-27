@@ -27,6 +27,7 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - A new file in `.github/workflows/` or `.claude/skills/` needs a row in the table "Generic and specific files" of `docs/SYSTEM.md`, else `tests/test_system_doc.py` fails in the quick CI (#1541).
 - The label `close` (#1740) works only with the owner's `autoMode` allow rule (`~/.claude/settings.json`, written by the setup script in the environment settings, 2026-10-27): without it the label and a skill text about it got "Auto-Mode Bypass". `claude auto-mode config` shows the allow lines.
 - A background `-m mc` run imports the code of the working tree: do not `git checkout` another branch there until it ends (#1664 tested main's `units.py` for 10 minutes). Do the next ticket in a `git worktree`.
+- The repository-wide `issues/comments?since=` list is oldest first: a page limit cuts the newest comments (2000 a day, #1985). Read one issue with `issues/N/comments`, or add `sort=created&direction=desc`.
 
 ## Code
 
