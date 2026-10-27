@@ -80,6 +80,7 @@ def check_civs(row):
     assert set(row["missing"]) <= known and row["missing"] == sorted(set(row["missing"])), n
     assert row.get("unique", "MILITIA") in NAMES["units.jsonl"], n
     assert set(row.get("twice", ())) <= NAMES["train.jsonl"], n
+    assert len(row.get("hp_age", [1] * 4)) == 4 and all(isinstance(a, NUMBER) and a > 0 for a in row.get("hp_age", ())), n
     for group, value, ages in row.get("units", ()):
         assert group in civs.GROUPS and value in (*combat.Stats._fields, "speed"), (n, group, value)
         assert len(ages) == 4 and all(isinstance(a, NUMBER) for a in ages), (n, group)

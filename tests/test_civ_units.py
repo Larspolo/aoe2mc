@@ -60,7 +60,7 @@ def test_more_bonuses():
 
 
 def test_the_table_names_known_civilizations_and_groups_in_order():
-    assert list(civs.UNITS) == sorted(civs.UNITS) and set(civs.UNITS) <= set(train.UNIQUE)
+    assert list(civs.UNITS) == sorted(civs.UNITS) and set(civs.UNITS) <= {r["name"] for r in civs.ROWS}   # #2116: Mapuche
     assert list(civs.GROUPS) == sorted(civs.GROUPS)
     for civ, rules in civs.UNITS.items():
         for group, value, change in rules:

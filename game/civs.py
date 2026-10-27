@@ -41,15 +41,19 @@ RULES = {
     "camels": lambda n, s: "camel" in s.classes,
     "cavalry": lambda n, s: "cavalry" in s.classes,
     "cavalry archers": lambda n, s: "archer" in s.classes and "cavalry" in s.classes,
+    "champi scout line, archery range units": lambda n, s: "CHAMPI_" in n   # the wiki: all archers but the conquistador
+        or "archer" in s.classes and not tagged(n, "conquistador type"),     # type (#2116)
     "foot archers": lambda n, s: foot_archer(s),
     "foot archers but skirmishers": lambda n, s: foot_archer(s) and not tagged(n, "skirmishers"),
     "foot archers but skirmishers, condottieri": lambda n, s: GROUPS["foot archers but skirmishers"](n, s),
     "gunpowder": lambda n, s: "gunpowder" in s.classes,
     "infantry": lambda n, s: "infantry" in s.classes,
     "infantry, mounted": lambda n, s: "infantry" in s.classes or mounted(s),
+    "infantry, slingers, skirmishers": lambda n, s: "infantry" in s.classes or tagged(n, "slingers") or tagged(n, "skirmishers"),
     "military": lambda n, s: not n.startswith("VILLAGER"),
     "military units": lambda n, s: not civilian(n),
     "mounted": lambda n, s: mounted(s),
+    "mounted, fire lancers": lambda n, s: mounted(s) or tagged(n, "fire lancers"),
     "scout line, steppe lancers": lambda n, s: tagged(n, "scout line"),
     "siege": lambda n, s: "siege" in s.classes,
     "skirmishers, elephant archers": lambda n, s: tagged(n, "skirmishers"),
@@ -72,7 +76,8 @@ GROUPS = {g: (lambda f, g: lambda n, s: g in TAGS.get(n, ()) or f(n, s))(RULES.g
 # age]; what is a group of GROUPS (units), "buildings", "buildings but farms", "technologies", "ages", "BUILDING
 # technologies" (the technologies of the menu of that building, #1925) or a list of names; a float multiplies the cost
 # (0.0: free), an int adds to it; AoE2 rounds half up (35 × 0.75 = 26). "twice": the technologies whose effect it gets
-# twice (train.stats, #1561). "age_gifts": the resources that it gets at each new age (#1926).
+# twice (train.stats, #1561). "age_gifts": the resources that it gets at each new age (#1926). "hp_age": the
+# factor of the hit points of all its buildings, walls and gates in each age (#2116).
 ROWS = table.load("civs.jsonl")
 
 
@@ -122,6 +127,7 @@ REPAIR_TEAM = {r["name"]: r["repair_team"] for r in ROWS if "repair_team" in r}
 WORK_RATE = {r["name"]: {b: tuple(v) for b, v in r["work_rate"].items()} for r in ROWS if "work_rate" in r}
 TRAIN_RATE = {r["name"]: [tuples(b) for b in r["train_rate"]] for r in ROWS if "train_rate" in r}
 HP = {r["name"]: r["hp"] for r in ROWS if "hp" in r}
+HP_AGE = {r["name"]: r["hp_age"] for r in ROWS if "hp_age" in r}   # the factor of all buildings in each age (Byzantines)
 # The age-up bonuses (#1926, AoE2 DE wiki): train.research applies AGE_GIFTS and AGE_VILLAGERS at the end of each age,
 # train.seconds divides the time of an age by AGE_RATE, and train.missing needs no buildings for AGE_NO_BUILDINGS (the
 # game program has no other building needs). The Muisca gold discount of the ages is in COSTS (civs.jsonl).
@@ -264,9 +270,11 @@ def repair_cost(g):
                + [REPAIR_COST.get(civ(g), 1)])
 
 
-def hp(civ, building, s):
-    """The combat.Stats s of building (a name) with the hit points bonus of civilization civ (HP, #1895)."""
-    return s._replace(hp=s.hp * HP.get(civ, {}).get(building, 1))
+def hp(civ, building, s, age=0):
+    """The combat.Stats s of building (a name) with the hit points bonus of civilization civ (HP, #1895) and of its
+    age (HP_AGE: 0 = Dark .. 3 = Imperial, #2116). AoE2 rounds the hit points to a whole number."""
+    f = HP.get(civ, {}).get(building, 1) * HP_AGE.get(civ, (1,) * 4)[min(age, 3)]
+    return s if f == 1 else s._replace(hp=round(s.hp * f))
 
 
 def work_rate(g, building):

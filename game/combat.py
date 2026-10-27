@@ -222,10 +222,11 @@ def target_uuid(footprint):
     return str(uuids.uuid5(uuids.NAMESPACE_OID, "aoe2mc.building." + ".".join(map(str, footprint))))
 
 
-def wall(name, age):
-    """The Stats of wall name (WALLS) in AoE2 age 0 (Dark) .. 3 (Imperial)."""
+def wall(name, age, civ=None):
+    """The Stats of wall name (WALLS) in AoE2 age 0 (Dark) .. 3 (Imperial), with the hit points bonus of civilization
+    civ (civs.hp: Byzantines, #2116)."""
     hp, melee, pierce = WALLS[name]
-    return Stats(hp[age], 0, melee, pierce, 0, 0.0, {}, ("building",) + (STONE,) * (not name.startswith("PALISADE")))
+    return civs.hp(civ, name, Stats(hp[age], 0, melee, pierce, 0, 0.0, {}, ("building",) + (STONE,) * (not name.startswith("PALISADE"))), age)
 
 
 def building(uuid, name, player, box, T=4, inside=(), s=None, low=None):

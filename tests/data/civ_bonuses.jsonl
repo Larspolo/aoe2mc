@@ -40,7 +40,7 @@
 {"name": "BURMESE: Battle Elephants have +1/+1 armor.", "civ": "BURMESE", "bonus": "Battle Elephants have +1/+1 armor.", "in": "UNITS"}
 {"name": "BURMESE: Infantry units have +1/+2/+3 attack in the Feudal/Castle/Imperial Age.", "civ": "BURMESE", "bonus": "Infantry units have +1/+2/+3 attack in the Feudal/Castle/Imperial Age.", "in": "UNITS"}
 {"name": "BURMESE: Monastery technologies are 50% cheaper.", "civ": "BURMESE", "bonus": "Monastery technologies are 50% cheaper.", "later": "play:monks"}
-{"name": "BYZANTINES: Buildings, Walls/Gates, and Farms have +10%/+20%/+30%/+40% hit points in the Dark/Feudal/Castle/Imperial Age.", "civ": "BYZANTINES", "bonus": "Buildings, Walls/Gates, and Farms have +10%/+20%/+30%/+40% hit points in the Dark/Feudal/Castle/Imperial Age.", "gap": "play:fight"}
+{"name": "BYZANTINES: Buildings, Walls/Gates, and Farms have +10%/+20%/+30%/+40% hit points in the Dark/Feudal/Castle/Imperial Age.", "civ": "BYZANTINES", "bonus": "Buildings, Walls/Gates, and Farms have +10%/+20%/+30%/+40% hit points in the Dark/Feudal/Castle/Imperial Age.", "in": "HP_AGE"}
 {"name": "BYZANTINES: Camel Rider, Skirmisher, and Spearman lines are 25% cheaper.", "civ": "BYZANTINES", "bonus": "Camel Rider, Skirmisher, and Spearman lines are 25% cheaper.", "in": "COSTS"}
 {"name": "BYZANTINES: Fire Ships and Dromons fire 25% faster.", "civ": "BYZANTINES", "bonus": "Fire Ships and Dromons fire 25% faster.", "later": "play:naval"}
 {"name": "BYZANTINES: Advancing to the Imperial Age is 33% cheaper.", "civ": "BYZANTINES", "bonus": "Advancing to the Imperial Age is 33% cheaper.", "in": "COSTS"}
@@ -108,7 +108,7 @@
 {"name": "JAPANESE: Infantry attack 33% faster starting in the Feudal Age.", "civ": "JAPANESE", "bonus": "Infantry attack 33% faster starting in the Feudal Age.", "in": "UNITS"}
 {"name": "JAPANESE: Mounted archers +2 attack vs. Archers (except Skirmishers).", "civ": "JAPANESE", "bonus": "Mounted archers +2 attack vs. Archers (except Skirmishers).", "later": "play:fight"}
 {"name": "JURCHENS: Meat of hunted and livestock animals does not decay.", "civ": "JURCHENS", "bonus": "Meat of hunted and livestock animals does not decay.", "later": "play:hunt"}
-{"name": "JURCHENS: Mounted units and Fire Lancers attack 25% faster starting in the Feudal Age.", "civ": "JURCHENS", "bonus": "Mounted units and Fire Lancers attack 25% faster starting in the Feudal Age.", "gap": "play:fight"}
+{"name": "JURCHENS: Mounted units and Fire Lancers attack 25% faster starting in the Feudal Age.", "civ": "JURCHENS", "bonus": "Mounted units and Fire Lancers attack 25% faster starting in the Feudal Age.", "in": "UNITS"}
 {"name": "JURCHENS: Siege Engineers available in the Castle Age.", "civ": "JURCHENS", "bonus": "Siege Engineers available in the Castle Age.", "later": "play:ages"}
 {"name": "JURCHENS: Siege and fortification technologies cost wood -75%.", "civ": "JURCHENS", "bonus": "Siege and fortification technologies cost wood -75%.", "in": "COSTS"}
 {"name": "JURCHENS: Siege and fortification technologies are researched 100% faster.", "civ": "JURCHENS", "bonus": "Siege and fortification technologies are researched 100% faster.", "gap": "play:tech"}
@@ -143,7 +143,7 @@
 {"name": "MALIANS: Villagers drop off gold +10%: gold miners work 10% faster.", "civ": "MALIANS", "bonus": "Villagers drop off gold +10%: gold miners work 10% faster.", "in": "WORK"}
 {"name": "MAPUCHE: Foragers drop off food +25%.", "civ": "MAPUCHE", "bonus": "Foragers drop off food +25%.", "gap": "play:gather"}
 {"name": "MAPUCHE: Settlements can train the Spearman and Skirmisher lines in 2.15×/1.61×/same time as regular production buildings in the Feudal/Castle/Imperial Ages, respectively.", "civ": "MAPUCHE", "bonus": "Settlements can train the Spearman and Skirmisher lines in 2.15×/1.61×/same time as regular production buildings in the Feudal/Castle/Imperial Ages, respectively.", "later": "play:military-train"}
-{"name": "MAPUCHE: Infantry, Slingers, and Skirmishers get +5/10/15 hit points in the Feudal/Castle/Imperial Age.", "civ": "MAPUCHE", "bonus": "Infantry, Slingers, and Skirmishers get +5/10/15 hit points in the Feudal/Castle/Imperial Age.", "gap": "play:fight"}
+{"name": "MAPUCHE: Infantry, Slingers, and Skirmishers get +5/10/15 hit points in the Feudal/Castle/Imperial Age.", "civ": "MAPUCHE", "bonus": "Infantry, Slingers, and Skirmishers get +5/10/15 hit points in the Feudal/Castle/Imperial Age.", "in": "UNITS"}
 {"name": "MAPUCHE: Mounted units generate gold +3 per military unit killed.", "civ": "MAPUCHE", "bonus": "Mounted units generate gold +3 per military unit killed.", "later": "play:fight"}
 {"name": "MAPUCHE: Enemy Castles are revealed on the map.", "civ": "MAPUCHE", "bonus": "Enemy Castles are revealed on the map.", "later": "play:fog"}
 {"name": "MAYANS: Start the game with an Eagle Scout.", "civ": "MAYANS", "bonus": "Start the game with an Eagle Scout.", "later": "play:setup"}
@@ -155,7 +155,7 @@
 {"name": "MONGOLS: Hunters work 40% faster.", "civ": "MONGOLS", "bonus": "Hunters work 40% faster.", "in": "WORK"}
 {"name": "MUISCA: Advancing to the next Age costs gold -50%.", "civ": "MUISCA", "bonus": "Advancing to the next Age costs gold -50%.", "in": "COSTS"}
 {"name": "MUISCA: Settlements cost -33% and heal allied human units within 3 tiles by 5/10/15/15 HP/min in the Dark/Feudal/Castle/Imperial Age.", "civ": "MUISCA", "bonus": "Settlements cost -33% and heal allied human units within 3 tiles by 5/10/15/15 HP/min in the Dark/Feudal/Castle/Imperial Age.", "later": "play:build"}
-{"name": "MUISCA: The Champi Scout line and Archery Range units have +1/2/3 melee armor in the Feudal/Castle/Imperial Age.", "civ": "MUISCA", "bonus": "The Champi Scout line and Archery Range units have +1/2/3 melee armor in the Feudal/Castle/Imperial Age.", "gap": "play:fight"}
+{"name": "MUISCA: The Champi Scout line and Archery Range units have +1/2/3 melee armor in the Feudal/Castle/Imperial Age.", "civ": "MUISCA", "bonus": "The Champi Scout line and Archery Range units have +1/2/3 melee armor in the Feudal/Castle/Imperial Age.", "in": "UNITS"}
 {"name": "MUISCA: Monks regain faith 100% faster.", "civ": "MUISCA", "bonus": "Monks regain faith 100% faster.", "later": "play:monks"}
 {"name": "MUISCA: Caravan and Guilds are free.", "civ": "MUISCA", "bonus": "Caravan and Guilds are free.", "gap": "play:market"}
 {"name": "PERSIANS: Start the game with food +50, wood +50.", "civ": "PERSIANS", "bonus": "Start the game with food +50, wood +50.", "in": "START"}
