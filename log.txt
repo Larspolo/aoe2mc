@@ -1,0 +1,57 @@
+Join the server localhost:35891 (Minecraft 26.3). The replay starts now at speed 4.0. Right click the items in your hotbar, or /trigger aoe_replay set N.
+00:03 build HOUSE player 2: 211 commands
+00:03 build HOUSE player 1: 209 commands
+00:04 build HOUSE player 2: 210 commands
+00:05 build HOUSE player 1: 209 commands
+0030 offhand test: 'Test passed. Count: 1'
+0030 player aoe2mc has the following entity data: [189.4d, 185.94326323281715d, 290.6d] aoe2mc has the following entity data: [{Slot: 0b, id: "minecraft:carrot_on_a_stick", count: 1, components: {"minecraft:item_model":...
+0030 unit WILD_BOAR team None pos 166.0 450.0 | Minimap pixel: 45 116
+
+0030 unit GOAT team None pos 372.94968037314277 144.43843811438228 | Minimap pixel: 97 40
+
+0030 unit HAWK team None pos 467.0 466.0 | Minimap pixel: 120 120
+
+0030 unit DEER team None pos 230.0 206.0 | Minimap pixel: 61 55
+
+0030 unit GOAT team 1 pos 144.36943219078188 397.2413179968985 | Minimap pixel: 40 103
+
+0030 unit SCOUT_CAVALRY team 1 pos 79.7449706631527 405.79344030826326 | Minimap pixel: 23 105
+
+02:03 build LUMBER_CAMP player 1: 124 commands
+02:09 build LUMBER_CAMP player 2: 127 commands
+03:39 build HOUSE player 2: 210 commands
+04:05 build HOUSE player 1: 208 commands
+04:53 build DOCK player 2: 735 commands
+05:20 wall PALISADE_WALL player 2: 56 commands
+05:21 wall PALISADE_WALL player 2: 56 commands
+05:23 wall PALISADE_WALL player 2: 56 commands
+05:43 build HOUSE player 2: 209 commands
+06:01 build DOCK player 1: 719 commands
+06:58 build HOUSE player 1: 210 commands
+07:17 wall PALISADE_WALL player 2: 57 commands
+07:18 wall PALISADE_WALL player 2: 56 commands
+07:51 wall PALISADE_WALL player 1: 57 commands
+07:56 wall PALISADE_WALL player 1: 56 commands
+08:20 build MINING_CAMP player 2: 196 commands
+08:33 build HOUSE player 2: 211 commands
+08:45 build MILL player 1: 519 commands
+08:48 wall PALISADE_WALL player 2: 57 commands
+09:27 build BARRACKS player 1: 596 commands
+09:33 build HOUSE player 1: 207 commands
+09:58 build BARRACKS player 2: 601 commands
+1000 offhand test: 'Test failed'
+1000 player aoe2mc has the following entity data: [189.4d, 185.94326323281715d, 290.6d] aoe2mc has the following entity data: [{Slot: 0b, id: "minecraft:carrot_on_a_stick", count: 1, components: {"minecraft:item_model":...
+1000 unit WILD_BOAR team None pos 166.0 450.0 | Minimap pixel: 45 116
+
+1000 unit HAWK team None pos 467.0 466.0 | Minimap pixel: 120 120
+
+1000 unit GOAT team 1 pos 143.6508690316141 396.98123995271214 | Minimap pixel: 39 103
+
+1000 unit VILLAGER_MALE team 2 pos 304.50299590427323 178.37189866104978 | Minimap pixel: 80 48
+
+1000 unit VILLAGER_MALE team 2 pos 246.62413023985746 224.4179553001017 | Minimap pixel: 65 60
+
+1000 unit VILLAGER_MALE team 2 pos 304.4354029437594 179.55321120014943 | Minimap pixel: 80 48
+
+done
+rc=0
