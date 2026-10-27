@@ -17,8 +17,22 @@ BONUSES = {}                                                           # civ -> 
 with open(os.path.join(ROOT, "tests", "data", "civ_bonuses.jsonl")) as f:
     for r in map(json.loads, f):
         BONUSES.setdefault(r.pop("civ"), []).append(r)
-TABLES = ("AGE_GIFTS", "AGE_NO_BUILDINGS", "AGE_RATE", "AGE_VILLAGERS", "COSTS", "HP_AGE", "REPAIR", "REPAIR_COST", "START",
-          "TRAIN_RATE", "TWICE", "UNITS", "WORK")
+TABLES = (                                                             # one name per line: parallel tickets add one
+    "AGE_GIFTS",
+    "AGE_NO_BUILDINGS",
+    "AGE_RATE",
+    "AGE_VILLAGERS",
+    "BUILD_OF",
+    "COSTS",
+    "HP_AGE",
+    "REPAIR",
+    "REPAIR_COST",
+    "START",
+    "TRAIN_RATE",
+    "TWICE",
+    "UNITS",
+    "WORK",
+)
 KEYS = set(re.findall(r"`(play:[a-z-]+)`", open(os.path.join(ROOT, "docs", "ROADMAP.md")).read()))
 
 
