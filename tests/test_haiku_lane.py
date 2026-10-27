@@ -20,9 +20,8 @@ def test_an_opus_run_takes_a_lane_ticket_last():
 
 
 def test_the_pacer_gives_the_haiku_task_at_most_the_ready_lane_tickets():
-    assert usage.haiku_runs(4, 1) == 1
-    assert usage.haiku_runs(2, 5) == 2
-    assert usage.haiku_runs(0, 5) == 0
+    assert usage.lane_plan(2, 0, 10, 1, 0.25, False) == (2, 1)        # 1 Haiku run (0.25), then 1 Opus run (1.75 left)
+    assert usage.lane_plan(0, 0, 10, 5, 0.25, False) == (0, 0)
 
 
 def test_health_counts_each_lane():

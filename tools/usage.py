@@ -108,10 +108,17 @@ def runs_to_start(target, claims, ready, paused, hi=MAX_FIRE):
     return max(0, min(target - claims, max(ready, 1), hi))
 
 
-def haiku_runs(k, ready):
-    """The runs of the K to start that can go to the Haiku task "aoe2mc autopilot haiku" (#1715): at most the ready
-    `lane:haiku` tickets. The pacer starts them on the Opus task when the Haiku task does not exist."""
-    return min(k, ready)
+def lane_plan(target, claims, ready, ready_haiku, weight, paused, hi=MAX_FIRE):
+    """(K, H): the runs that the pacer starts now, and the H of them for the Haiku task (#1715, #1727). The target and
+    the claims are in Opus runs, and a Haiku run counts `weight`. The ready `lane:haiku` tickets get Haiku runs first
+    (cheap), then Opus runs take the rest of the target: at most the other ready tickets, but 1 when none is ready
+    (it refills the queue, #609). The pacer starts the H runs on the Opus task when the Haiku task does not exist."""
+    if paused or not target:
+        return 0, 0
+    room = target - claims
+    h = max(0, min(ready_haiku, hi, math.floor(room / weight + 1e-9))) if room > 0 else 0
+    o = max(0, min(math.floor(room - h * weight + 1e-9), max(ready - h, 1), hi - h))
+    return h + o, h
 
 
 def measured_burn7():
@@ -132,7 +139,7 @@ def measured_burn():
         return None
 
 
-def sample_line(usage, now, claims, release=None):
+def sample_line(usage, now, claims, release=None, lanes=None):
     """The `Usage:` line of a run report, which `tools/health.py` reads: also the 7-day usage and the release percent
     of all goals (tools/release.py), for the release progress per quota (#899)."""
     iso = lambda t: f"{datetime.datetime.fromtimestamp(t, datetime.timezone.utc):%Y-%m-%dT%H:%M:%SZ}"
@@ -140,7 +147,7 @@ def sample_line(usage, now, claims, release=None):
     line = f"Usage: {iso(now)} · usage {used * 100:.1f}% · resets {iso(reset)} · runs {claims}"
     if "seven_day" in usage:
         line += f" · week {usage['seven_day'][0] * 100:.1f}%" + ("" if release is None else f" · release {release:.1f}%")
-    return line
+    return line + "".join(f" · {k} {n}" for k, n in sorted((lanes or {}).items()) if k != "opus" and n)   # (#1727)
 
 
 def release_percent():
@@ -174,8 +181,8 @@ def main(argv=None):
         sys.exit("no rate_limit_event in the CLI output (no subscription, or the CLI changed)")
     if a.sample:
         import health
-        print(sample_line(usage, now, health.active_claims(datetime.datetime.now(datetime.timezone.utc)),
-                          release_percent()))
+        t = datetime.datetime.now(datetime.timezone.utc)
+        print(sample_line(usage, now, health.active_claims(t), release_percent(), health.lane_claims(t)))
         return
     burn, burn7 = a.burn or measured_burn() or BURN, measured_burn7() or BURN7
     if a.fire:
@@ -184,12 +191,18 @@ def main(argv=None):
         open_all = dashboard.pages("issues?state=open")
         paused = any({dashboard.STATUS, dashboard.PAUSED} <= set(dashboard.labels(i)) for i in open_all)
         ready = len(dashboard.candidates(open_all))
-        claims = health.active_claims(datetime.datetime.now(datetime.timezone.utc))
+        t = datetime.datetime.now(datetime.timezone.utc)
+        lanes = health.lane_claims(t)
+        claims = health.active_claims(t) if lanes is None else sum(lanes.values())
+        weights, source = health.lane_weights(health.status_comments())
+        eq = claims if lanes is None else health.opus_equivalent(claims, lanes, weights)   # in Opus runs (#1727)
         target = target_runs(usage, now, burn, burn7=burn7)
-        k = runs_to_start(target, claims, ready, paused)
+        k, h = lane_plan(target, eq, ready, len(dashboard.candidates(open_all, lane="haiku")), weights["haiku"], paused)
         print(k)
-        print(f"haiku {haiku_runs(k, len(dashboard.candidates(open_all, lane='haiku')))}")
-        print(f"{describe(usage, now, burn, burn7)} · claims {claims} · ready {ready} · paused {paused}", file=sys.stderr)
+        print(f"haiku {h}")
+        print(f"{describe(usage, now, burn, burn7)} · claims {claims} ({eq:.2f} Opus runs) · ready {ready} · "
+              f"paused {paused} · weights " + ", ".join(f"{n} {w:.2f} ({source[n]})" for n, w in weights.items()),
+              file=sys.stderr)
     elif a.target:
         print(target_runs(usage, now, burn, burn7=burn7))
     elif a.json:

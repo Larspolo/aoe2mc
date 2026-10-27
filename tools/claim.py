@@ -101,6 +101,13 @@ def who():
     return git("symbolic-ref", "--short", "HEAD", check=False).stdout.strip() or "unknown"
 
 
+def lane():
+    """" lane NAME" when the run set `git config aoe2mc.lane NAME` (a Haiku run, #1727), else "": the pacer
+    counts the runs of each lane (`health.lane_claims`)."""
+    name = git("config", "--get", "aoe2mc.lane", check=False).stdout.strip()
+    return f" lane {name}" if name else ""
+
+
 def push(sha, ref, remote="origin"):
     """True: the remote took the push. False: the ref exists (another run). Exit 2 on any other error."""
     r = git("push", "--porcelain", remote, f"{sha}:refs/heads/{ref}", check=False)
@@ -122,7 +129,7 @@ def claim(number, takeover=False, remote="origin"):
         if not line.startswith("Release") and not (takeover and stale(line, changed(slot(number, top), remote),
                                                                      time.time())):
             return None
-    msg = f"Claim #{number} by {who()} ({uuid.uuid4().hex})"     # unique: two runs never push the same SHA
+    msg = f"Claim #{number} by {who()} ({uuid.uuid4().hex}){lane()}"   # unique: two runs never push the same SHA
     sha = git("commit-tree", EMPTY_TREE, "-m", msg).stdout.strip()
     ref = slot(number, top + 1)
     return ref if push(sha, ref, remote) else None
@@ -195,7 +202,7 @@ def release(number, remote="origin", word="Release"):
     ref = slot(number, max(found))
     if subject(ref, remote).split(" ")[3:4] != [who()]:      # "Claim #N by <branch> (...)", "Beat #N by <branch>"
         sys.exit(f"{ref} belongs to another run: {subject(ref, remote)}")
-    sha = git("commit-tree", EMPTY_TREE, "-p", "FETCH_HEAD", "-m", f"{word} #{number} by {who()}").stdout.strip()
+    sha = git("commit-tree", EMPTY_TREE, "-p", "FETCH_HEAD", "-m", f"{word} #{number} by {who()}{lane()}").stdout.strip()
     return ref if push(sha, ref, remote) else None
 
 

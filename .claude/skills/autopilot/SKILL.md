@@ -129,7 +129,8 @@ least overlap with the work in progress (files and functions that open PRs chang
 then the lowest issue number.
 `python3 tools/dashboard.py --next` prints the candidates in this order (the rule is `dashboard.candidates()`).
 Tickets with `lane:haiku` come after all others: take one only when nothing else is ready (#1715).
-**Haiku lane.** When the argument names `lane haiku` (the scheduled task "aoe2mc autopilot haiku"), pick only with
+**Haiku lane.** When the argument names `lane haiku` (the scheduled task "aoe2mc autopilot haiku"), run
+`git config aoe2mc.lane haiku` first (the claims then tell the pacer that this run is cheap, #1727), pick only with
 `python3 tools/dashboard.py --next --lane haiku`, skip the epic check, the queue refill, the roadmap review and the
 process review, and stop when no `lane:haiku` ticket is ready. A ticket that is not as clear as its label says: release
 the claim, remove `lane:haiku`, comment why in one line, and take the next one. End the `Metrics:` line with `· lane haiku`.
