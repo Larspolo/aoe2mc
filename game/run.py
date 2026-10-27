@@ -393,6 +393,18 @@ def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=N
     return stats
 
 
+def console(game):
+    """A thread that sends each line of stdin to the server and prints the answer, also while a replay or a game runs
+    (#1777: the command line of the window, gui.py). It ends at the end of stdin (EOF)."""
+    def read():
+        for line in sys.stdin:
+            if line := line.strip().lstrip("/"):
+                print(game.command(line), flush=True)
+    t = threading.Thread(target=read, daemon=True)
+    t.start()
+    return t
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0].strip(),
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -430,6 +442,7 @@ def main(argv=None):
         if a.bench:
             print(f"{bench(game, a.bench):.0f} commands per second through RCON")
             return
+        commands = console(game)                     # type commands at any time (#1777)
         if a.replay:                                 # after the end the player can look around (#978)
             replay(game, a.world, a.speed, a.start, a.follow, view=a.view or None)
             print("The replay ended. The server stays up: type commands, Ctrl-C stops it.", file=sys.stderr)
@@ -437,10 +450,8 @@ def main(argv=None):
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
                 play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal, people=a.people)
             return
-        while True:
-            line = input("> ").strip().lstrip("/")
-            if line:
-                print(game.command(line))
+        while commands.is_alive():                   # the end of stdin stops the server; a short join keeps Ctrl-C
+            commands.join(0.5)
     except (KeyboardInterrupt, EOFError):
         pass
     finally:
