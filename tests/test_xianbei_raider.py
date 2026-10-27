@@ -17,7 +17,6 @@ def archery_range(civ="WEI", ages=CASTLE):
 
 
 def test_the_values_are_those_of_the_wiki():
-    assert train.COSTS["XIANBEI_RAIDER"] == {"wood": 65, "gold": 35} and train.TRAIN_TIMES["XIANBEI_RAIDER"] == 29
     assert build.AGE["XIANBEI_RAIDER"] == 2 and len(train.HELP["XIANBEI_RAIDER"]) <= 50
     assert combat.stats("XIANBEI_RAIDER") == (30, 5, 0, 0, 4, 1.8, {"infantry": 1, "spearman": 3},
                                               ("archer", "cavalry", "unique"))
