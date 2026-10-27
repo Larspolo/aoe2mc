@@ -10,3 +10,5 @@ docs/packaging.md merge=union
 docs/research/water.md merge=union
 # One line per owner decision, added at the end (ticket skill, "Decision tickets").
 docs/DECISIONS.md merge=union
+# One JSON object per menu item; runs add a line at the end of a building block. train.load() stops on a name in two lines (#1702).
+game/data/train.jsonl merge=union
