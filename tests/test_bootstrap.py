@@ -27,14 +27,14 @@ def test_bootstrap_writes_generic_files_and_config(tmp_path, capsys):
     assert {p for p, k in rows.items() if k == "generic"} <= set(got)
     assert set(got) - {p for p, k in rows.items() if k == "generic"} == set(bootstrap.STUBS)
     # no file of the converter, the game program, their docs and tests
-    assert not [p for p in got if p.startswith(("game/", "tests/", "datapacks/", "docs/research/"))
+    assert not [p for p in got if p.startswith(("game/", "tests/", "datapacks/", "docs/research/")) and p not in bootstrap.STUBS
                 or p in ("aoe2mc.py", "buildings.py", "units.py", "scx.py", "docs/DESIGN.md")]
     cfg = tomllib.load(open(tmp_path / "agent.toml", "rb"))
     assert (cfg["repo"], cfg["owner"], cfg["branch"], cfg["status"]["label"]) == ("me/demo", "me", "main", "agent-status")
     for p in got:
         text = open(tmp_path / p, errors="replace").read()
         assert "Larspolo" not in text and "aoe2mc" not in text, p
-    assert "Repository `me/demo`" in out and "Setup steps of the owner" in out and ".claude/skills/verify/SKILL.md" in out
+    assert "Repository `me/demo`" in out and "Setup steps of the owner" in out and "- .claude/skills/verify/SKILL.md" not in out
     assert "## How to work" in open(tmp_path / "CLAUDE.md").read()
     assert "jobs:\n  quick:" in open(tmp_path / ".github/workflows/ci.yml").read()
 

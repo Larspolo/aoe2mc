@@ -78,9 +78,51 @@ jobs:
         run: {fast}
 """
 
+PYPROJECT = """[tool.ruff]
+line-length = 130
+
+[tool.ruff.lint]
+select = ["F"]                  # the copied tools pass these rules; add more rules for the project code
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+"""
+
+CLOUD_SETUP = """#!/bin/bash
+# The setup script of the cloud environment: the owner pastes it into the environment settings (docs/SYSTEM.md).
+# Install here what the project needs before a session starts (system packages, tools).
+set -euo pipefail
+SETUP_VERSION=1   # raise it with each change: the SessionStart hook compares it with /etc/{name}-setup-version
+
+python3 -m pip install --quiet -r requirements-dev.txt || true
+echo "$SETUP_VERSION" > /etc/{name}-setup-version || true
+"""
+
+VERIFY = """---
+name: verify
+description: Verify a change to {name} before commit. Selects the check level from the type of change. Use before each commit and when a ticket says "verify".
+---
+
+# Verify a change
+
+## Level 1: lint and fast tests (each change)
+
+    {lint}
+    {fast}
+
+Both must pass before the commit. Add the next levels of the project here (slow tests, a run of the program).
+"""
+
 STUBS = {   # specific files that the generic files need, as a short start for the new project
     "agent.toml": CONFIG_TOML,
     ".github/workflows/ci.yml": CI,
+    ".claude/skills/verify/SKILL.md": VERIFY,
+    "pyproject.toml": PYPROJECT,
+    "requirements-dev.txt": "numpy      # tools/health.py\npytest\nruff\n",
+    "scripts/cloud-setup.sh": CLOUD_SETUP,
+    "tests/test_smoke.py": '"""A first test, so that pytest finds one (no test: exit 5, CI red)."""\nimport tomllib\n\n\n'
+                           'def test_agent_toml_has_the_repository():\n'
+                           '    assert "/" in tomllib.load(open("agent.toml", "rb"))["repo"]\n',
     ".gitattributes": "# Ticket runs only add lines here, so a merge keeps the new lines of both sides.\n"
                       "docs/LEARNINGS.md merge=union\n",
     "CLAUDE.md": "# {name} – guide for Claude Code\n\nThe owner is **{owner}**. The agent system: `docs/SYSTEM.md`.\n"
@@ -150,6 +192,8 @@ def bootstrap(target, repo, branch="main"):
         os.makedirs(os.path.dirname(dst) or target, exist_ok=True)
         with open(dst, "w") as f:
             f.write(rename(text.format(**values), repo, name, owner) if path != "agent.toml" else text.format(**values))
+        if path.endswith(".sh"):
+            os.chmod(dst, 0o755)
         written.append(path)
     todo = [p for p, k in rows if k == "specific" and p not in STUBS]
     return copied, written, todo

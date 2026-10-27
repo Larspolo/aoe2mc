@@ -3,8 +3,11 @@ The civilization bonuses of the players in the game program (#1089, part of #108
 the AoE2 DE civilizations (the AoE2 wiki, "Civilization bonuses" of each civilization): Gather.work_time divides the
 time of one unit of resource by the factor of the player's civilization. The keys are the gather kinds of Gather:
 "wood", "food" (forage bushes), "farm", "gold", "stone", "hunt" (hunted animals) and "sheep" (herdable animals).
-Bonuses that the game program cannot use yet: Japanese fishing ships, Malian oyster gatherers, Spanish builders, the
-Roman builders, the Georgian fortified church (+10 % near it), the Persian town centers and docks.
+Bonuses that the game program cannot use yet: Japanese fishing ships, Malian oyster gatherers, the Georgian fortified
+church (+10 % near it).
+BUILD and BUILD_WONDER hold the build speed bonuses (#1893): build.rise multiplies the work of the builders (build_rate).
+WORK_RATE holds the train and research rate of the buildings (#1894, Persian town centers and docks): train.seconds
+divides the time of an item by work_rate().
 REPAIR and REPAIR_COST hold the repair bonuses (#1730, AoE2 wiki "Repairing"): repair.tick multiplies the rate and the
 cost of the repairs of a player by them (repair_rate, repair_cost).
 
@@ -319,8 +322,13 @@ SHARED = {"CONDOTTIERO": "ITALIANS",                              # the shared u
           "GENITOUR": "BERBERS",
           "IMPERIAL_SKIRMISHER_UPGRADE": "VIETNAMESE"}
 NOT_SHARED = {"IMPERIAL_SKIRMISHER_UPGRADE": ("TURKS",)}           # no Elite Skirmisher: not with a Vietnamese ally
+BUILD = {"ROMANS": ROMAN,                                          # Romans: builders work 5 % faster
+         "SPANISH": 1.3}                                           # Spanish: builders work 30 % faster
+BUILD_WONDER = {"SPANISH": 1.2}                                   # Spanish: 20 % for wonders (AoE2 DE wiki)
 REPAIR = {"ROMANS": ROMAN}                                        # Romans: repairers work 5 % faster
 REPAIR_COST = {"GEORGIANS": 0.75}                                 # Georgians (team bonus): repairs cost -25 %
+PERSIAN = (1.05, 1.1, 1.15, 1.2)                                   # Persians: 5/10/15/20 % faster in the Dark ... Imperial Age
+WORK_RATE = {"PERSIANS": {"DOCK": PERSIAN, "TOWN_CENTER": PERSIAN}}   # the train and research rate of a building in each age
 
 
 def mounted(s):
@@ -398,6 +406,13 @@ def civ(g, player=None):
     return g.data.get("players", {}).get(str(g.player if player is None else player), {}).get("civ")
 
 
+def build_rate(g, name):
+    """The factor of the build speed of the villagers of the player of g for a site of building name (BUILD,
+    BUILD_WONDER), else 1."""
+    c = civ(g)
+    return BUILD_WONDER.get(c, BUILD.get(c, 1)) if name == "WONDER" else BUILD.get(c, 1)
+
+
 def repair_rate(g):
     """The factor of the repair rate of the villagers of the player of g (REPAIR), else 1."""
     return REPAIR.get(civ(g), 1)
@@ -410,6 +425,12 @@ def repair_cost(g):
     players = g.data.get("players", {})
     return min([REPAIR_COST.get(civ(g, p), 1) for p in players if p.isdigit() and gather.allied(players, g.player, int(p))]
                + [REPAIR_COST.get(civ(g), 1)])
+
+
+def work_rate(g, building):
+    """The factor of the train and research rate of building (a name) of the player of g in its age (WORK_RATE), else 1."""
+    import build                                                   # build imports gather, gather imports this module
+    return WORK_RATE.get(civ(g), {}).get(building, (1,) * 4)[min(build.ages(g), 3)]
 
 
 def start(g, base):
