@@ -41,9 +41,15 @@ jobs:
           TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           notes="Converted example worlds (Minecraft Java 26.3) of commit $GITHUB_SHA. Unzip a world into the saves folder of Minecraft."
+          title="Example worlds ($TAG)" pre=""
+          if [[ "$TAG" == v* ]]; then   # the release of installers.yml: its title, notes and pre-release flag (#1635)
+            notes="aoe2mc $TAG. Download the installer of your system; the README section \"Install\" has the steps. The zips are the converted example worlds (Minecraft Java 26.3): unzip a world into the saves folder of Minecraft."
+            title="aoe2mc $TAG"
+            [[ "$TAG" == *-* ]] && pre=--prerelease   # v0.1.0-rc1: a pre-release
+          fi
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release edit "$TAG" --notes "$notes"
           else
-            gh release create "$TAG" --target "$GITHUB_SHA" --title "Example worlds ($TAG)" --notes "$notes"
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "$title" --notes "$notes" $pre
           fi
           gh release upload "$TAG" out/*.zip --clobber

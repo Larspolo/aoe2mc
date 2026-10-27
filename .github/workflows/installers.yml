@@ -32,9 +32,11 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           ls -l out
-          notes="aoe2mc $TAG. Download the installer of your system; the README section \"Install\" has the steps."
+          # the same title, notes and pre-release flag as worlds.yml: the first of the two makes the release (#1635)
+          notes="aoe2mc $TAG. Download the installer of your system; the README section \"Install\" has the steps. The zips are the converted example worlds (Minecraft Java 26.3): unzip a world into the saves folder of Minecraft."
+          pre=$([[ "$TAG" == *-* ]] && echo --prerelease || true)   # v0.1.0-rc1: a pre-release
           # worlds.yml can make the release at the same time: then the create fails and the release exists
           gh release view "$TAG" > /dev/null 2>&1 \
-            || gh release create "$TAG" --target "$GITHUB_SHA" --title "aoe2mc $TAG" --notes "$notes" \
+            || gh release create "$TAG" --target "$GITHUB_SHA" --title "aoe2mc $TAG" --notes "$notes" $pre \
             || gh release view "$TAG" > /dev/null
           gh release upload "$TAG" out/* --clobber
