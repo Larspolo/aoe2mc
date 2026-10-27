@@ -43,6 +43,7 @@
 {"name": "MOUNTED_CROSSBOWMAN", "walk": 1.25}
 {"name": "MISSIONARY", "walk": 1.1}
 {"name": "PALADIN", "walk": 1.35}
+{"name": "PETARD", "walk": 0.8}
 {"name": "SAVAR", "walk": 1.35}
 {"name": "SHRIVAMSHA_RIDER", "walk": 1.6}
 {"name": "STEPPE_LANCER", "walk": 1.45}

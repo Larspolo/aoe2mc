@@ -38,7 +38,7 @@ def stats(row):
     assert set(combat.Stats._fields) == set(STATS)
     assert row["hp"] > 0 and row["attack"] >= 0 and row["range"] >= 0 and row["reload"] >= 0, row["name"]
     assert set(row["classes"]) <= CLASSES and len(set(row["classes"])) == len(row["classes"]), row["name"]
-    bonus = CLASSES | {combat.STANDARD, combat.STONE}      # the code adds these two classes to the buildings
+    bonus = CLASSES | {combat.STANDARD, combat.STONE, combat.WALL}   # the code adds these classes to the buildings
     assert set(row["bonus"]) <= bonus and all(isinstance(v, int) for v in row["bonus"].values()), row["name"]
 
 

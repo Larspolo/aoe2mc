@@ -95,7 +95,7 @@ TRAINS = {b: tuple(r["name"] for r in ROWS if r["building"] == b)    # the units
           for b in dict.fromkeys(r["building"] for r in ROWS if r["building"])}   # building, in file order
 TRAINS["DONJON"] = ("SPEARMAN",)                                  # trains() adds the Serjeant (#1873)
 TRAINS["FOLWARK"] = TRAINS["MILL"]                                 # the mill of the Poles (#1874)
-TRAINS["KREPOST"] = ()                                             # trains() adds the Konnik (#1872)
+TRAINS["KREPOST"] = ("PETARD",)                                     # trains() adds the Konnik (#1872); wiki: the petard (#2192)
 TRAINS["FORTIFIED_CHURCH"] = TRAINS["MONASTERY"]                  # the monastery of the Armenians, Georgians (#1930)
 # The unique unit of each civilization (AoE2 DE, "unique" in data/civs.jsonl, #1914), trained at its castle. A unit
 # without COSTS is not in the menu yet: it has no AoE2 combat values in combat.STATS.
