@@ -15,12 +15,12 @@ def five(used=0.3):
 
 def test_a_week_far_ahead_gets_the_runs_that_its_budget_carries_to_the_reset():
     u = five() | {"seven_day": (0.52, NOW + 145 * H, "allowed")}         # 52 % used after 23 h of 168 h
-    n = usage.target_runs(u, NOW, burn7=0.0053)
+    n = usage.target_runs(u, NOW, burn7=0.0053, free7=0)
     assert n == 0 and 0.52 + n * 145 * 0.0053 <= 1.0                     # one run would use 0.77: 129 % at the reset
     u = five() | {"seven_day": (0.3, NOW + 134 * H, "allowed")}          # 30 % after 20 % of the week
-    n = usage.target_runs(u, NOW, burn7=0.001)
+    n = usage.target_runs(u, NOW, burn7=0.001, free7=0)
     assert n == 5 and 0.3 + n * 134 * 0.001 <= 1.0 < 0.3 + (n + 1) * 134 * 0.001
-    assert usage.target_runs(u, NOW, burn7=0.0001) == usage.target_runs(five(), NOW) == 11   # a large budget: no cap
+    assert usage.target_runs(u, NOW, burn7=0.0001, free7=0) == usage.target_runs(five(), NOW) == 11   # a large budget: no cap
 
 
 def test_a_week_behind_the_time_keeps_the_count():
@@ -37,7 +37,7 @@ def test_the_line_shows_the_weekly_projection():
         "week ahead -30 pt · lasts to the reset"
     assert usage.week_line(five(), NOW) == ""
     line = usage.describe(u, NOW, burn7=0.0053)
-    assert "week ahead +38 pt · runs out" in line and "burn7 0.0053" in line and line.endswith("target 0 runs")
+    assert "week ahead +38 pt · runs out" in line and "burn7 0.0053" in line and line.endswith("target 11 runs")   # 52 % < week_free: no weekly guard
 
 
 def test_health_measures_the_weekly_burn_from_the_usage_lines():
