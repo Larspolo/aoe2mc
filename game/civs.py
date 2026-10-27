@@ -153,6 +153,7 @@ MISSING = {"BOMBARD_TOWER_TECH": ("ACHAEMENIDS", "ATHENIANS", "AZTECS", "BENGALI
                           "KOREANS", "LITHUANIANS", "MACEDONIANS", "MAGYARS", "MALAY", "MALIANS", "MAPUCHE", "MAYANS",
                           "MONGOLS", "MUISCA", "POLES", "PURU", "ROMANS", "SPARTANS", "TATARS", "THRACIANS", "TUPI",
                           "TURKS", "VIETNAMESE", "VIKINGS", "WEI", "WU"),
+           "HEAVY_PLOW": ("KHITANS",),                                     # (#1424)
            "HUSBANDRY": ("AZTECS", "CUMANS", "INCAS", "MAPUCHE", "MAYANS", "MUISCA", "TEUTONS", "TUPI", "VIKINGS"),
            "SQUIRES": ("CELTS", "GURJARAS", "KHMER", "MAGYARS", "MAPUCHE", "PORTUGUESE"),   # (#1415)
            "THUMB_RING": ("ARMENIANS", "AZTECS", "BENGALIS", "BOHEMIANS", "BRITONS", "BURGUNDIANS", "BURMESE", "CELTS",

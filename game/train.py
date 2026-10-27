@@ -110,6 +110,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "GOLD_SHAFT_MINING": {"food": 175, "wood": 75},
          "GUARD_TOWER": {"food": 100, "wood": 250},                    # the upgrade (AoE2 DE wiki "Watch Tower")
          "GUILDS": {"food": 300, "gold": 200},
+         "HEAVY_PLOW": {"food": 125, "wood": 125},                     # the Castle Age (AoE2 DE wiki, #1424)
          "HEAVY_SCORPION": {"wood": 75, "gold": 75},
          "HEAVY_SCORPION_UPGRADE": {"food": 800, "wood": 750},
          "HORSE_COLLAR": {"food": 75, "wood": 75},
@@ -203,6 +204,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "GOLD_SHAFT_MINING": 75,
                "GUARD_TOWER": 30,
                "GUILDS": 50,
+               "HEAVY_PLOW": 40,
                "HEAVY_SCORPION": 30,
                "HEAVY_SCORPION_UPGRADE": 50,
                "HORSE_COLLAR": 20,
@@ -283,7 +285,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",
                           "BOW_SAW"),                                           # (#723, #1423)
           "MARKET": ("TRADE_CART", "CARAVAN", "GUILDS"),                       # (#1253, #1254)
-          "MILL": ("HORSE_COLLAR",),                                            # (#726)
+          "MILL": ("HORSE_COLLAR", "HEAVY_PLOW"),                              # (#726, #1424)
           "MINING_CAMP": ("GOLD_MINING", "STONE_MINING",                       # (#727, #939)
                           "GOLD_SHAFT_MINING",
                           "STONE_SHAFT_MINING"),                                # (#1423)
@@ -369,6 +371,7 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "GOLD_SHAFT_MINING": lambda name, s: s,
          "GUARD_TOWER": lambda name, s: s,                         # the towers of the player: TOWER_UPGRADES
          "GUILDS": lambda name, s: s,                              # the trading fee: market.FEES
+         "HEAVY_PLOW": lambda name, s: s,                          # an economy technology: gather.FARM_TECHS, FOOD_CARRY
          "HEAVY_SCORPION_UPGRADE": lambda name, s: s,
          "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
          "HUSBANDRY": lambda name, s: s,                           # the walk speed: SPEEDS
@@ -427,6 +430,7 @@ AFTER = {"BLAST_FURNACE": "IRON_CASTING",
          "CHAIN_BARDING_ARMOR": "SCALE_BARDING_ARMOR", "CHAIN_MAIL_ARMOR": "SCALE_MAIL_ARMOR",
          "GILLNETS": "FISHING_LINES",
          "GOLD_SHAFT_MINING": "GOLD_MINING",
+         "HEAVY_PLOW": "HORSE_COLLAR",
          "IRON_CASTING": "FORGING",
          "KEEP": "GUARD_TOWER",
          "LEATHER_ARCHER_ARMOR": "PADDED_ARCHER_ARMOR",
@@ -463,6 +467,7 @@ TECH_AGE = {                                                       # the age of 
     "GOLD_SHAFT_MINING": 2,
     "GUARD_TOWER": 2,
     "GUILDS": 3,
+    "HEAVY_PLOW": 2,
     "HEAVY_SCORPION_UPGRADE": 3,
     "HORSE_COLLAR": 1,
     "HUSBANDRY": 2,
@@ -504,6 +509,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "CROSSBOWMAN_UPGRADE": (2, "book", "Crossbowman"),
          "ELITE_SKIRMISHER": (1, "drowned_spawn_egg", "Elite Skirmisher"),
          "ELITE_SKIRMISHER_UPGRADE": (3, "book", "Elite Skirmisher"),
+         "HEAVY_PLOW": (0, "book", "Heavy Plow"),                     # the slot of Horse Collar (AFTER)
          "HEAVY_SCORPION": (2, "crossbow", "Heavy Scorpion"),
          "HEAVY_SCORPION_UPGRADE": (5, "book", "Heavy Scorpion"),
          "LIGHT_CAVALRY": (0, "horse_spawn_egg", "Light Cavalry"),
@@ -633,6 +639,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "GOLD_SHAFT_MINING": "Villagers mine gold 15 % faster.",
         "GUARD_TOWER": "Watch towers +480 HP, +2 attack, +1/+1 armor.",
         "GUILDS": "Market trading fee 15 %.",
+        "HEAVY_PLOW": "Farms +125 food; farmers carry +1 food.",
         "HEAVY_SCORPION": "Siege. Shoots bolts; weak vs. cavalry.",
         "HEAVY_SCORPION_UPGRADE": "Upgrades scorpions to heavy scorpions.",
         "HORSE_COLLAR": "Farms +75 food.",
