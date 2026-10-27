@@ -10,6 +10,8 @@ when both sides only add lines, for example two new entries at one place of a ta
 and starts CI (#280). So a conflict that stays is a real one: Unconflict gives it the label `conflict`.
 Locally: `git -c merge.conflictStyle=diff3 merge origin/main`, then `python3 tools/unconflict.py` solves the add-add
 hunks (exit 1: it names the real conflict).
+In a long session, refresh the copy of the merge driver first (the SessionStart hook copied it at the start, #2096):
+`git show origin/main:tools/merge_jsonl.py > "$(git rev-parse --git-common-dir)/merge_jsonl.py"`.
 
 Merge conflict (another PR changed the same lines) → merge `origin/main` into the branch, solve the
 conflict, run `ruff check .`, the fast tests and only the `mc` tests of the files of your ticket, and push at
