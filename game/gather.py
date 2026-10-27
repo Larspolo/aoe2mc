@@ -56,6 +56,7 @@ import bossbar  # noqa: E402
 import cheats  # noqa: E402
 import civs  # noqa: E402
 import conquest  # noqa: E402
+import diplomacy  # noqa: E402
 import fleet  # noqa: E402
 import fog  # noqa: E402
 import garrison  # noqa: E402
@@ -127,7 +128,8 @@ SHIP_TECHS = {"FISHING_LINES": (1.1, 5), "GILLNETS": (1.1, 5)}     # the work ra
 HERDS = {"COW", "GOAT", "GOOSE", "LLAMA", "PIG", "SHEEP", "TURKEY", "WATER_BUFFALO"}   # herdable animals: shepherds (civs.WORK)
 VILLAGER_HIT = 3, 2.0                                              # AoE2 villager attack and reload (game seconds)
 FARM_FOOD = 175                                                    # food in one farm, as in AoE2 DE (no upgrades)
-FARM_TECHS = {"HEAVY_PLOW": 125, "HORSE_COLLAR": 75}               # food that a farm technology adds to each farm (AoE2 DE)
+FARM_TECHS = {"CROP_ROTATION": 175,
+              "HEAVY_PLOW": 125, "HORSE_COLLAR": 75}               # food that a farm technology adds to each farm (AoE2 DE)
 MINES = {"GOLD_MINE": ("gold", 800, "GOLD_MINER"), "STONE_MINE": ("stone", 350, "STONE_MINER")}   # as in AoE2
 MINE_BLOCKS = {"gold": ("gold_ore", "raw_gold_block", "stone"),                # the blocks of the converter's heap
                "stone": ("cobblestone", "andesite", "stone", "tuff")}
@@ -768,7 +770,7 @@ class Gather:
                       if n not in hp or k < 1 or combat.target_uuid([fp[i] for i in (0, 2, 1, 3)]) in alive]
         import combat                                                  # combat imports this module
         printing = monk.PRINTING * ("BLOCK_PRINTING" in getattr(self, "techs", ()))   # the monks see more (#1475)
-        watch = combat.WATCH * ("TOWN_WATCH" in getattr(self, "techs", ()))   # the buildings see more (#1454)
+        watch = combat.WATCH * len({"TOWN_PATROL", "TOWN_WATCH"} & set(getattr(self, "techs", ())))   # (#1454, #1579)
         lit = {n for n, _, _ in placed} - combat.WALLS.keys() - {"FARM", "FISH_TRAP"}   # as in AoE2
         return replay.seen(mobs, [(self.player, n, fp) for n, fp, _ in placed], self.player, self.map.T,
                            lambda n: combat.sight(n) + printing * (n == "MONK") + watch * (n in lit))
@@ -915,6 +917,7 @@ class Gather:
             for n, (slot, _) in GROUPS.items():
                 self.command(f"execute as {self.who} unless items entity @s hotbar.{slot} *[custom_data={{aoe_group:{n}}}] "
                              f"run item replace entity @s hotbar.{slot} with {group_item(n)}")
+            diplomacy.give(self)                                       # the Game menu item (#1588)
         self.calls += 1
         self.command(f"execute as {self.who} unless items entity @s container.* minecraft:{WAND} "
                      f'run give @s minecraft:{WAND}[item_name="Selection box"]')
@@ -931,6 +934,9 @@ class Gather:
                     self.wands.add(name)
                 if "aoe_use" in used and (n := self.group_in_hand(name)):
                     self.grouping[name] = n, "passed" in self.command(f"execute as {name} if predicate {SNEAK}")
+                elif "aoe_use" in used and diplomacy.in_hand(self, name):   # the Game menu item (#1588): no ray
+                    out.remove(name)
+                    diplomacy.open_menu(self, name)
                 for obj in objs:
                     self.command(f"scoreboard players reset {name} {obj}")
         return out

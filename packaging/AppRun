@@ -1,0 +1,7 @@
+#!/bin/sh
+# The start of the AppImage (#1542): with arguments the command line, without arguments the window.
+HERE="$(dirname "$(readlink -f "$0")")"
+if [ "$#" -gt 0 ]; then
+    exec "$HERE/usr/bin/aoe2mc" "$@"
+fi
+exec "$HERE/usr/bin/aoe2mc-gui"

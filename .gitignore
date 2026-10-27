@@ -12,10 +12,16 @@ preview.png
 # Minecraft server files that tools download (large), and the logs of a server or client run by hand
 .cache/
 logs/
-# Package build output
+# Package build output (also the PyInstaller bundles, packaging/aoe2mc.spec)
 build/
+dist/
 # Gradle files of the Paper plugin (game/plugin)
 .gradle/
 *.egg-info/
 # Git worktrees of agents and comparisons (never commit them)
 .claude/worktrees/
+
+# The icons of packaging/icon.py: the installer workflow draws them (#1542)
+packaging/icon.png
+packaging/icon.ico
+packaging/icon.icns

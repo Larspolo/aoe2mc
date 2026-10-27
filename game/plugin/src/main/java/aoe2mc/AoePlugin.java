@@ -84,6 +84,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              0, #1201) and 1 for each garrisoned villager or foot archer (#1113,
  *                                              game/garrison.py); 0: it does not shoot. Default 1
  *   aoe attack <selector> <target selector>    Mob#setTarget: the mob attacks with its own AI
+ *   aoe ballistics <team> on|off               Ballistics of the player (#1549): its archers and buildings aim where a
+ *                                              moving target will be
  *   aoe gate <team> <x0> <y0> <z0> <x1> <y1> <z1>
  *                                              a gate of the team (#1325, Gates.java): its doors in the box open while
  *                                              an own or allied unit is near; the units of the team plan their paths
@@ -135,6 +137,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe minimap on|off|pixel <x> <z>           the live units as dots in their team color on map 0, once per
  *                                              second (#1237, Minimap.java); pixel: the map pixel of a block
  *   aoe minimap building <x0> <z0> <x1> <z1> <team>|unbuild <x0> <z0>   a replay building as a square on map 0 (#1238)
+ *   aoe minimap fog <tile> <n>|off, see|dim <y,x0,x1> ..., tile <x> <z>
+ *                                              the fog of the view player on map 0 (#1567): black unexplored tiles,
+ *                                              dark explored tiles out of sight; tile: the fog of a block
  *   aoe where <selector> [from]                "Where <count>: <uuid> <x> <y> <z> <order 0|1> <target 0|1>, ..." for
  *                                              WHERE_PAGE units from index `from` in UUID order (#813, tools/replay_drift.py);
  *                                              target 1 also after a target or a hit since the last answer (#1169)
@@ -230,7 +235,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Cheats cheats = new Cheats(this);
     private final Deaths deaths = new Deaths(this);
     private final Alerts alerts = new Alerts(this, AoePlugin::side);   // "under attack" for the team of the target (#1231)
-    private final Minimap minimap = new Minimap(this);
+    private final Minimap minimap = new Minimap(this, u -> this.hidden.contains(u));   // no dot for a hidden unit (#1567)
     private final Gates gates = new Gates();                           // the gates of the game program (#1325)
     private final Viewer viewer = new Viewer(this);                 // the game mode switch of a replay viewer (#910)
     private final Border border = new Border();
@@ -461,11 +466,27 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // a fast arrow that rises by the fall of its flight time. The damage handler (onHit) gives the AoE2 damage.
     private static final double ARROW_SPEED = 3.0, ARROW_GRAVITY = 0.05;     // blocks per tick, blocks per tick²
 
-    private static void shoot(Mob mob, LivingEntity t) {
-        Location from = mob.getEyeLocation();
-        Vector to = t.getLocation().toVector().add(new Vector(0, t.getHeight() * 0.5, 0)).subtract(from.toVector());
+    // the sides with Ballistics (aoe ballistics, #1549); the ground friction of a walking mob (0.6 × 0.91): its velocity
+    // after a tick is its step × this factor (measured on Paper: Motion 0.0636, step 0.116 blocks per tick)
+    private static final Set<String> BALLISTICS = new HashSet<>();
+    private static final double GROUND_DRAG = 0.546;
+
+    // The aim from `from` at the middle of t, raised by the fall of the flight time. With Ballistics the shooter aims
+    // at the place where t will be when the arrow arrives: its position plus its step × the flight time (AoE2 DE wiki).
+    private static Vector lead(Entity shooter, Location from, LivingEntity t) {
+        Vector mid = t.getLocation().toVector().add(new Vector(0, t.getHeight() * 0.5, 0));
+        Vector to = mid.clone().subtract(from.toVector());
         double ticks = to.length() / ARROW_SPEED;
-        to.setY(to.getY() + 0.5 * ARROW_GRAVITY * ticks * ticks);
+        if (BALLISTICS.contains(side(shooter))) {
+            Vector v = t.getVelocity().setY(0).multiply(t.isOnGround() ? 1 / GROUND_DRAG : 1);
+            to = mid.add(v.multiply(ticks)).subtract(from.toVector());
+            ticks = to.length() / ARROW_SPEED;
+        }
+        return to.setY(to.getY() + 0.5 * ARROW_GRAVITY * ticks * ticks);
+    }
+
+    private static void shoot(Mob mob, LivingEntity t) {
+        Vector to = lead(mob, mob.getEyeLocation(), t);
         Arrow a = mob.launchProjectile(Arrow.class, to.normalize().multiply(ARROW_SPEED));
         a.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
         boolean bow = mob.getEquipment().getItemInMainHand().getType() == Material.BOW;
@@ -566,10 +587,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     private static void aim(LivingEntity fort, Location from, LivingEntity t) {
-        Vector to = t.getLocation().toVector().add(new Vector(0, t.getHeight() * 0.5, 0)).subtract(from.toVector());
-        double ticks = to.length() / ARROW_SPEED;
-        to.setY(to.getY() + 0.5 * ARROW_GRAVITY * ticks * ticks);
-        Arrow a = fort.getWorld().spawnArrow(from, to, (float) ARROW_SPEED, 0f);
+        Arrow a = fort.getWorld().spawnArrow(from, lead(fort, from, t), (float) ARROW_SPEED, 0f);
         a.setShooter(fort);
         a.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
         fort.getWorld().playSound(from, Sound.ENTITY_ARROW_SHOOT, 1.0f, 1.0f);
@@ -1709,6 +1727,15 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Arrows: " + args[2]);
             return true;
         }
+        if (args.length == 3 && args[0].equals("ballistics")) {        // the arrows lead a moving target (#1549)
+            if (args[2].equals("on")) {
+                BALLISTICS.add(args[1]);
+            } else {
+                BALLISTICS.remove(args[1]);
+            }
+            sender.sendMessage("Ballistics: " + BALLISTICS);
+            return true;
+        }
         if (args.length == 2 && args[0].equals("cheats")) {
             return cheats.command(sender, args);
         }
@@ -1730,7 +1757,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (args.length == 8 && args[0].equals("gate")) {              // the doors of a gate (#1325)
             return gates.command(sender, args);
         }
-        if ((args.length == 2 || args.length == 4 || args.length == 7) && args[0].equals("minimap")) {   // #1237, #1238
+        if (args.length >= 2 && args[0].equals("minimap")) {           // #1237, #1238, #1567
             return minimap.command(sender, args);
         }
         if (args.length >= 2 && args[0].startsWith("box")) {            // the border of the selection box (#795)
