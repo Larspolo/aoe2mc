@@ -2,7 +2,7 @@
 The fog of war for the units in the game program (#1389, epic #1387). The player does not see the enemy units out of
 the line of sight of the own and allied units, buildings and construction sites (Gather.seen_tiles, #1388). An enemy
 unit shows again when it comes into sight, as in AoE2 with the game setting "Reveal map: normal" (the default).
-`game/run.py --reveal all` turns it off (AoE2 "All visible").
+`game/run.py --reveal all` turns it off (AoE2 "All visible"). The cheat code "polo" turns it off and on (toggle, #1390).
 
 Minecraft feature: Paper Player#hideEntity through the plugin (`aoe hide`, `aoe show`, as Replay.fog, #1302). It hides
 the units only for the players on the team of the player (`team=p1`), not for a spectator. The plugin hides them also
@@ -28,7 +28,6 @@ def update(g, pos):
     """The hide and show commands for the feet positions pos {uuid: (x, y, z)} of the units; a dead unit is not in
     pos, so it gives no command. A unit inside a siege tower stays as siege_tower.py hid it."""
     import gather
-    import replay
     state = vars(g).setdefault("fog", {"hidden": set(), "at": None})
     own, foe = units(g)
     tiles = set().union(*(h.seen_tiles(pos) for h in [g, *(b.g for b in g.bots)]
@@ -39,9 +38,29 @@ def update(g, pos):
     hidden = state["hidden"]
     hide, show = sorted(out - hidden), sorted((hidden & pos.keys()) - out - towers)
     state["hidden"] = out | (hidden & towers)
+    return commands(g, "hide", hide) + commands(g, "show", show)
+
+
+def commands(g, verb, uuids):
+    """The plugin commands "aoe hide" or "aoe show" of the sorted uuids for the team of the player, below RCON_MAX."""
+    import replay
     who, k = f"@a[team=p{g.player}]", (replay.RCON_MAX - 40) // 37   # UUIDs per command (36 characters and a space)
-    return [f"aoe {verb} {who} {' '.join(u[i:i + k])}" for verb, u in (("hide", hide), ("show", show))
-            for i in range(0, len(u), k)]
+    return [f"aoe {verb} {who} {' '.join(uuids[i:i + k])}" for i in range(0, len(uuids), k)]
+
+
+def toggle(g):
+    """The cheat code "polo" (#1390): no fog (g.reveal "all") shows all hidden enemy units at once, except the units
+    inside a siege tower; a second "polo" puts the fog back at the next tick. Returns the new g.reveal."""
+    state = vars(g).setdefault("fog", {"hidden": set(), "at": None})
+    if g.reveal == "all":
+        g.reveal, state["at"] = "normal", None
+        return g.reveal
+    g.reveal = "all"
+    towers = set().union(*vars(g).get("towers", {}).values())
+    for c in commands(g, "show", sorted(state["hidden"] - towers)):
+        g.command(c)
+    state["hidden"] &= towers
+    return g.reveal
 
 
 def tick(g):
