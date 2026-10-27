@@ -18,6 +18,10 @@ resists: the tries start at the 15th interval, each converts with a chance of 13
 converted building joins the team of its new player (the plugin: its towers shoot at the old owner) and works for it
 (aoe2mc.json "player": train.homes, garrison.holders).
 
+Devotion and Faith (#1584, monastery, AoE2 DE wiki): the units of a player with them resist conversion. Devotion adds
+1 s to the minimum and maximum conversion time, Faith 4 s more: 1 and 3 more warm intervals, and the sure one later
+(RESIST, 5 s in all).
+
 Minecraft feature: the hit points are the `Health` of the mob (max_health = AoE2 hit points, combat.stats_command), so
 `data modify entity <uuid> Health` sets them. The `regeneration` effect is not used: its rates (1 health per 50, 25,
 12 ... ticks) do not match the AoE2 rate, it has no range, and the plugin cancels the natural heal of AoE2 units (#850).
@@ -59,6 +63,7 @@ REST = 62       # AoE2 seconds after a conversion before the monk can convert ag
 IMMUNE = ("KING", "QUEEN", "KHAN", "CRUSADER_KNIGHT", "HUNNIC_HORSE", "MOUNTED_SAMURAI")
 TOUCH = 1.5     # blocks between a monk and a building, ram or trebuchet that it converts: next to it (AoE2)
 NEXT = ("RAM", "TREBUCHET", "SIEGE_TOWER")   # the siege units that a monk converts only next to them
+RESIST = {"DEVOTION": 1, "FAITH": 3}   # more warm intervals and a later sure one: +1 s and +4 s (AoE2 DE wiki), 5 s in all (#1584)
 FORT = (14, 0.13, 25)   # a building: warm intervals, chance (38 % / resistance 3) and the sure interval (AoE2 wiki)
 LASTING = ("TOWN_CENTER", "CASTLE", "KREPOST", "MONASTERY", "FORTIFIED_CHURCH", "WALL", "GATE", "WONDER", "FARM",
            "FISH_TRAP")  # parts of the names of the buildings that no monk converts, also with Redemption
@@ -302,6 +307,14 @@ def win(g, uuid):
                                           "color": "gold"}))
 
 
+def resist(g, uuid):
+    """The extra conversion intervals of the unit uuid: Devotion and Faith of its player (RESIST), from the Gather of
+    that player (g or one of its bots)."""
+    player = next((o.get("player") for o in g.data["objects"] if o.get("uuid") == uuid), None)
+    techs = next((x.techs for x in (g, *(b.g for b in g.bots)) if x.player == player), ())
+    return sum(RESIST.get(t, 0) for t in techs)
+
+
 def near(g, m, target, pos):
     """True when monk m is in its conversion range of the target: next to a building, ram or trebuchet (TOUCH),
     else CONVERT tiles (and PRINTING more after Block Printing)."""
@@ -352,7 +365,8 @@ def convert(g, dt):
         while job[1] >= INTERVAL and m in g.converting:
             job[1] -= INTERVAL
             job[2] += 1
-            warm, chance, sure = FORT if fort else (WARM, CHANCE, SURE)
+            more = 0 if fort else resist(g, target)
+            warm, chance, sure = FORT if fort else (WARM + more, CHANCE, SURE + more)
             if job[2] > warm and (job[2] >= sure or g.chance.random() < chance):
                 owner = next((o.get("player") for o in g.data["objects"] if o.get("uuid") == target), None)
                 (win if fort else die if heresy(g, owner) else take)(g, target)

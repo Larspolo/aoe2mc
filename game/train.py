@@ -117,6 +117,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "CROP_ROTATION": {"food": 250, "wood": 250},                  # the mill, Imperial Age (AoE2 DE wiki, #1578)
          "CROSSBOWMAN": {"wood": 25, "gold": 45},
          "CROSSBOWMAN_UPGRADE": {"food": 175, "gold": 100},
+         "DEVOTION": {"food": 100, "gold": 200},                     # AoE2 DE wiki (#1584)
          "DOUBLE_BIT_AXE": {"food": 100, "wood": 50},
          "DRY_DOCK": {"food": 200, "gold": 400},                      # the university, after Careening (#1441)
          "EAGLE_SCOUT": {"food": 20, "gold": 50},                       # AoE2 DE wiki (#1555)
@@ -136,6 +137,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "DEMOLITION_RAFT": {"wood": 45, "gold": 80},                  # AoE2 DE wiki (#1481)
          "DEMOLITION_SHIP": {"wood": 45, "gold": 80},                  # AoE2 DE wiki (#1440)
          "DEMOLITION_SHIP_UPGRADE": {"wood": 25, "gold": 75},          # the dock, Castle Age (#1483)
+         "FAITH": {"food": 550, "gold": 750},                        # AoE2 DE wiki, after update 99311 (#1584)
          "FAST_FIRE_SHIP": {"wood": 75, "gold": 45},                   # AoE2 DE wiki (#1483)
          "FIRE_GALLEY": {"wood": 75, "gold": 45},                       # AoE2 DE wiki (#1481)
          "FIRE_SHIP": {"wood": 75, "gold": 45},                         # AoE2 DE wiki (#1440)
@@ -286,6 +288,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "CROP_ROTATION": 70,
                "CROSSBOWMAN": 27,
                "CROSSBOWMAN_UPGRADE": 35,
+               "DEVOTION": 40,
                "DOUBLE_BIT_AXE": 25,
                "DRY_DOCK": 60,
                "EAGLE_SCOUT": 46,                                  # 35 s from the Castle Age: FASTER
@@ -305,6 +308,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "DEMOLITION_RAFT": 45,
                "DEMOLITION_SHIP": 31,
                "DEMOLITION_SHIP_UPGRADE": 20,
+               "FAITH": 60,
                "FAST_FIRE_SHIP": 27,
                "FIRE_GALLEY": 49,
                "FIRE_SHIP": 27,
@@ -494,7 +498,9 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "MONASTERY": ("MONK", "FERVOR", "SANCTITY", "REDEMPTION",             # (#1243, #1261, #1264)
                         "BLOCK_PRINTING",                                       # (#1457)
                         "ATONEMENT",                                            # (#1581)
-                        "HERESY"),                                              # (#1582)
+                        "HERESY",                                               # (#1582)
+                        "DEVOTION",                                             # (#1584)
+                        "FAITH"),
           "SIEGE_WORKSHOP": ("BATTERING_RAM", "MANGONEL", "SCORPION", "SIEGE_TOWER",   # (#1349, #1362)
                              "CAPPED_RAM_UPGRADE", "SIEGE_RAM_UPGRADE", "ONAGER_UPGRADE", "SIEGE_ONAGER_UPGRADE",
                              "HEAVY_SCORPION_UPGRADE",                  # (#1352)
@@ -598,6 +604,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          if "infantry" in s.classes else s,
          "CROP_ROTATION": lambda name, s: s,                       # an economy technology: gather.FARM_TECHS
          "CROSSBOWMAN_UPGRADE": lambda name, s: s,
+         "DEVOTION": lambda name, s: s,                            # the conversion resistance: monk.resist
          "DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
          "DRY_DOCK": lambda name, s: s._replace(pierce=s.pierce + 1) if ship(name, s) else s,
          "EAGLE_WARRIOR_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
@@ -606,6 +613,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_EAGLE_WARRIOR_UPGRADE": lambda name, s: s,
          "ELITE_STEPPE_LANCER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
          "ELITE_SKIRMISHER_UPGRADE": lambda name, s: s,
+         "FAITH": lambda name, s: s,                               # the conversion resistance: monk.resist
          "FERVOR": lambda name, s: s,                              # the walk speed: SPEEDS
          "FISHING_LINES": lambda name, s: s,                       # the fishing ships: gather.SHIP_TECHS
          "FLETCHING": fletching,
@@ -737,6 +745,7 @@ AFTER = {"ARBALESTER_UPGRADE": "CROSSBOWMAN_UPGRADE",
          "HEAVY_DEMOLITION_SHIP_UPGRADE": "DEMOLITION_SHIP_UPGRADE",   # (#1483)
          "HEAVY_WARSHIPS": "MEDIUM_WARSHIPS",
          "DRY_DOCK": "CAREENING",
+         "FAITH": "DEVOTION",                                         # (#1584)
          "CHAMPION_UPGRADE": "TWO_HANDED_SWORDSMAN_UPGRADE",
          "ELITE_EAGLE_WARRIOR_UPGRADE": "EAGLE_WARRIOR_UPGRADE",   # (#1555)
          "ELITE_CANNON_GALLEON_UPGRADE": "CHEMISTRY",             # the cannon galleon needs it (build.NEEDS)
@@ -790,6 +799,7 @@ TECH_AGE = {                                                       # the age of 
     "CHAMPION_UPGRADE": 3,
     "CROP_ROTATION": 3,
     "CROSSBOWMAN_UPGRADE": 2,
+    "DEVOTION": 2,
     "DOUBLE_BIT_AXE": 1,
     "DRY_DOCK": 3,
     "EAGLE_WARRIOR_UPGRADE": 2,
@@ -798,6 +808,7 @@ TECH_AGE = {                                                       # the age of 
     "ELITE_EAGLE_WARRIOR_UPGRADE": 3,
     "ELITE_SKIRMISHER_UPGRADE": 2,
     "ELITE_STEPPE_LANCER_UPGRADE": 3,                             # (#1557)
+    "FAITH": 3,
     "FERVOR": 2,
     "FISHING_LINES": 1,
     "FLETCHING": 1,
@@ -959,8 +970,10 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "CHAMPION": (0, "zombie_spawn_egg", "Champion"),
          "CHAMPION_UPGRADE": (2, "book", "Champion"),                 # the slot of Two-Handed Swordsman (AFTER)
          "CHU_KO_NU": (0, "skeleton_spawn_egg", "Chu Ko Nu"),
+         "DEVOTION": (MORE, "book", "Devotion"),                   # the monastery (#1584)
          "DOUBLE_BIT_AXE": (0, "book", "Double-Bit Axe"),
          "DRY_DOCK": (8, "book", "Dry Dock"),                       # the slot of Careening (AFTER)
+         "FAITH": (MORE, "book", "Faith"),                         # the slot of Devotion (AFTER)
          "FERVOR": (1, "book", "Fervor"),
          "DEMOLITION_RAFT": (7, "bamboo_raft", "Demolition Raft"),   # the Feudal Age forms (#1481)
          "DEMOLITION_SHIP": (7, "bamboo_raft", "Demolition Ship"),   # the slot of the raft (#1483)
@@ -1084,6 +1097,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "CROP_ROTATION": "Farms +175 food.",
         "CROSSBOWMAN": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "CROSSBOWMAN_UPGRADE": "Upgrades archers to crossbowmen.",
+        "DEVOTION": "Units resist conversion: +1 s.",
         "DOUBLE_BIT_AXE": "Villagers chop wood 20 % faster.",
         "DRY_DOCK": "Ships +1 pierce armor.",
         "EAGLE_SCOUT": "Fast infantry scout. Strong vs. monks, siege.",
@@ -1104,6 +1118,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "DEMOLITION_RAFT": "Explodes next to ships and buildings.",
         "DEMOLITION_SHIP": "Explodes next to ships and buildings.",
         "DEMOLITION_SHIP_UPGRADE": "Upgrades demolition rafts to demolition ships.",
+        "FAITH": "Units resist conversion: +4 s more.",
         "FAST_FIRE_SHIP": "Warship that spews fire at close range.",
         "FIRE_GALLEY": "Warship that spews fire at close range.",
         "FIRE_SHIP": "Warship that spews fire at close range.",

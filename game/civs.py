@@ -209,6 +209,7 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
                                             "MUISCA", "POLES", "PURU", "ROMANS", "SAXONS", "SHU", "SICILIANS", "SLAVS",
                                             "SPARTANS", "TEUTONS", "THRACIANS", "TUPI", "VARANGIANS", "VIKINGS", "WEI",
                                             "WU"),   # the wiki chart (#1491)
+           "FAITH": ("BULGARIANS", "DANES", "GURJARAS", "JURCHENS", "MAGYARS", "TATARS"),        # (#1584)
            "FAST_FIRE_SHIP": ("ARMENIANS", "BOHEMIANS", "BULGARIANS", "BURMESE", "CELTS", "CHINESE", "ETHIOPIANS",
                               "GURJARAS", "HINDUSTANIS", "HUNS", "JURCHENS", "MUISCA", "PORTUGUESE", "SARACENS",
                               "SAXONS", "SHU", "TUPI", "TURKS", "VIETNAMESE", "VIKINGS"),   # the wiki chart (#1483)
