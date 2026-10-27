@@ -137,6 +137,7 @@ GATES = ("GATE", "PALISADE_GATE")                                  # on 4 own wa
 NEEDS = {"BOMBARD_TOWER": "BOMBARD_TOWER_TECH"}                    # a building after a technology (#1375)
 SHORE = ("DOCK",)                                                  # on water next to the land, as in AoE2 (#1382)
 GHOST = 400                                                        # block displays of one ghost: a coarser shape above
+CRANE = 1.2                                                        # the build speed factor of Treadmill Crane (#1422)
 LOCKED = "gray_dye"                                                # the item of a locked building or unit
 
 
@@ -514,7 +515,9 @@ def box(cmd):
 
 def rise(g, site, work):
     """Add work (game seconds of one builder) to the site and send the commands of the blocks that are due.
-    The wool ring stays on top of the design until the building is complete. Returns True when it is complete."""
+    The wool ring stays on top of the design until the building is complete. Returns True when it is complete.
+    Treadmill Crane: the builders of the player work 20 % faster (CRANE, AoE2 DE wiki, #1422)."""
+    work *= CRANE ** ("TREADMILL_CRANE" in getattr(g, "techs", ()) and site.get("player", g.player) == g.player)
     site["progress"] = min(1.0, site["progress"] + work / BUILD_TIMES[site["name"]])
     cmds, ring = site["commands"], site.get("ring", {})
     k = len(cmds) if site["progress"] >= 1 else math.floor(site["progress"] * len(cmds))

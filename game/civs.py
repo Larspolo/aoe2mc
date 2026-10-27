@@ -148,7 +148,9 @@ MISSING = {"BOMBARD_TOWER_TECH": ("ACHAEMENIDS", "ATHENIANS", "AZTECS", "BENGALI
                                   "TUPI", "VARANGIANS", "VIKINGS", "WEI", "WU"),
            "FORTIFIED_WALL": ("BULGARIANS", "CUMANS", "DANES", "GOTHS", "HUNS", "MAGYARS", "MALAY", "MAPUCHE", "MUISCA",
                               "PERSIANS", "SICILIANS", "TUPI", "WU"),
-           "SQUIRES": ("CELTS", "GURJARAS", "KHMER", "MAGYARS", "MAPUCHE", "PORTUGUESE")}   # (#1415)
+           "SQUIRES": ("CELTS", "GURJARAS", "KHMER", "MAGYARS", "MAPUCHE", "PORTUGUESE"),   # (#1415)
+           "TREADMILL_CRANE": ("BULGARIANS", "CHINESE", "CUMANS", "DANES", "DRAVIDIANS", "ETHIOPIANS", "HINDUSTANIS",
+                               "KHITANS", "MONGOLS", "PERSIANS", "ROMANS", "SPANISH")}   # (#1422)
 
 
 def mounted(s):
