@@ -118,6 +118,22 @@ def fisher(name):
     return name.startswith("FISHING_SHIP")
 
 
+def seen(mobs, placed, player, T):
+    """The tiles (x, y) in the line of sight of the units and buildings of player (#1300): a circle of combat.sight()
+    tiles around each one, from the tile center. mobs: units with name, player and pos (blocks, Replay.units), placed:
+    (player, name, (x0, x1, z0, z1) in blocks) as Replay.placed."""
+    import combat                                                   # combat -> gather -> build -> replay
+    objs = [(v.pos[0] / T, v.pos[2] / T, v.name) for v in mobs if v.player == player and v.pos is not None]
+    objs += [((x0 + x1) / 2 / T, (z0 + z1) / 2 / T, name) for p, name, (x0, x1, z0, z1) in placed if p == player]
+    out = set()
+    for x, y, name in objs:
+        r = combat.sight(name)
+        xs, ys = np.meshgrid(np.arange(math.floor(x - r), math.ceil(x + r)), np.arange(math.floor(y - r), math.ceil(y + r)))
+        keep = (xs + 0.5 - x) ** 2 + (ys + 0.5 - y) ** 2 <= r * r
+        out.update(zip(xs[keep].tolist(), ys[keep].tolist()))
+    return out
+
+
 def sail(g, v):
     """Move ship v one cell on its water path with /tp, facing the step. The y of the boat stays (`at @s`, `~`):
     the water carries it, and aoe2mc.json has no height for the water."""
@@ -166,6 +182,7 @@ class Replay:
         self.work = {}                          # object ID -> the resource tile that it left for a garrison (#1179)
         self.ids = {}                           # new object ID of a building -> footprint of its replay building (#876)
         self.hunted = {}                        # object ID of a hunted animal -> the tile of its carcass (#1229)
+        self.prey = {}                          # carcass tile -> UUID of its animal that is still alive (#1281)
         self.points = {}                        # object ID of a building -> its last GATHER POINT event (#1227)
         self.adopted, self.rallied = {}, 0      # temporary ID of a unit at a gather point -> its object ID (#1227)
         self.effects = {}                       # entity tag of a research text -> game time (ms) of its end (#843)
@@ -1016,6 +1033,8 @@ class Replay:
                     out.append("tp {} {} {} {}".format(v.uuid, *v.pos))
                 del self.arriving[i]
             src = self.crew.source(v)
+            if due <= t and v.tree in self.prey:
+                out += self.kill(v.tree, v)
             while due <= t and src.get(v.tree, 0) > 0:
                 src[v.tree] -= 1
                 v.load += 1
@@ -1216,7 +1235,9 @@ class Replay:
             return None
         if o["kind"] == "unit" and (food := self.gather.hunt_food(o["name"])) and "tile" in e:
             if t not in self.hunted:                                # the hunt: its carcass at the order tile (#1229)
-                self.hunted[t] = tile = int(e["tile"][0]), int(e["tile"][1])
+                self.hunted[t] = tile = self.free_tile(int(e["tile"][0]), int(e["tile"][1]))
+                if uuid := o.get("uuid"):                               # the first hunter there kills it (#1281)
+                    self.prey[tile] = uuid
                 m.carcasses[tile] = m.carcasses.get(tile, 0) + food
                 if o["name"] in self.gather.HERDS:
                     m.herds.add(tile)
@@ -1228,6 +1249,19 @@ class Replay:
             return None
         return tile if tile in m.trees or tile in m.bushes or tile in m.fish or any(tile in s for s in m.mines.values()) \
             else None
+
+    def free_tile(self, x, y):
+        """The tile nearest to (x, y) with no tree, bush, mine, fish or farm: a carcass on it would give the wrong
+        resource (gather.Map.resource, #1281)."""
+        m = self.map
+        taken = m.trees.keys() | m.bushes.keys() | m.fish.keys() | m.farms.keys() | {c for s in m.mines.values() for c in s}
+        return min(((x + dx, y + dy) for dx in range(-3, 4) for dy in range(-3, 4)
+                    if (x + dx, y + dy) not in taken), key=lambda c: (abs(c[0] - x) + abs(c[1] - y), c), default=(x, y))
+
+    def kill(self, tile, v=None):
+        """The command that kills the hunted animal of a carcass tile, once (the vanilla death, as gather.Gather)."""
+        uuid = self.prey.pop(tile, None)
+        return [f"damage {uuid} 1000 minecraft:mob_attack" + (f" by {v.uuid}" if v else "")] if uuid else []
 
     def start(self, i, v, t):
         """A unit with a resource that ends its walk next to it gathers from game time t on, at the AoE2 work rate
@@ -1533,6 +1567,8 @@ class Replay:
                 self.learn(e)
         built(to)
         out += self.enter(to) + self.expire(to)
+        for tile in list(self.prey):                                # the hunters were there in the skipped time
+            out += self.kill(tile)
         for i, t in since.items():                                  # a unit that still works: steps() catch up
             if i not in self.working or (i in moved and not self.ai):
                 self.skipped(i, t, to)

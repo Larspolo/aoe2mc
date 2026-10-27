@@ -150,6 +150,13 @@ EVENTS = {"idle": "idle", "to_tree": "walk", "chop": "chop", "to_drop": "carry",
           "to_site": "walk", "build": "build", "to_rally": "walk", "to_prey": "walk", "hunt": "hunt"}
 
 
+def allied(players, a, b):
+    """True when AoE2 players a and b are allies: the same player, or the same team number of the players of
+    aoe2mc.json (`team`). A player with no team is an enemy of all other players (#1312)."""
+    t = (players.get(str(a)) or {}).get("team")
+    return a == b or t is not None and t == (players.get(str(b)) or {}).get("team")
+
+
 def hunt_food(name):
     """The food of a hunted animal (HUNT_FOOD), else 0."""
     return HUNT_FOOD.get("COW" if name.startswith("COW_") else name, 0)
@@ -475,8 +482,8 @@ class Gather:
         self.soldiers = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit"
                          and o["player"] == player and (military(o["name"]) or o["name"] == "MONK" or o["name"].startswith(trade.CART))}
         # military units, monks and trade carts of the player: they take move orders (#1243, #1253)
-        self.enemies = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit"
-                        and o["player"] not in (0, player)}                     # units of the other players
+        self.enemies = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit" and o["player"]
+                        and not allied(data.get("players", {}), player, o["player"])}   # no allies (#1312)
         self.prey = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit" and o.get("uuid")
                      and o["player"] in (0, player) and hunt_food(o["name"])}   # animals to hunt (#1058)
         self.seen, self.dead = {}, {}                                  # hunted animal -> last feet position, carcass tile
