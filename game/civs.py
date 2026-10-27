@@ -91,7 +91,9 @@ UNITS = {"BERBERS": [("villagers", "speed", (1.05, 1.1, 1.1, 1.1))],
 # Imperial Age)]. what: a group of GROUPS (units), "buildings", "buildings but farms", "technologies", "ages" or a
 # tuple of names. A float multiplies the cost (0.0: free), an int adds to it. AoE2 rounds half up (35 × 0.75 = 26).
 SMITH = ("BLAST_FURNACE", "BODKIN_ARROW", "CHAIN_BARDING_ARMOR", "CHAIN_MAIL_ARMOR", "FLETCHING", "FORGING",
-         "IRON_CASTING", "LEATHER_ARCHER_ARMOR", "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR", "SCALE_MAIL_ARMOR")   # the blacksmith
+         "IRON_CASTING", "LEATHER_ARCHER_ARMOR", "PADDED_ARCHER_ARMOR",
+         "PLATE_BARDING_ARMOR", "PLATE_MAIL_ARMOR", "RING_ARCHER_ARMOR",   # (#1452)
+         "SCALE_BARDING_ARMOR", "SCALE_MAIL_ARMOR")   # the blacksmith
 ECONOMY = ("BOW_SAW", "CARAVAN", "CROP_ROTATION", "DOUBLE_BIT_AXE", "FISHING_LINES", "GILLNETS", "GOLD_MINING",
            "GOLD_SHAFT_MINING", "GUILDS", "HAND_CART", "HEAVY_PLOW", "HORSE_COLLAR", "STONE_MINING", "STONE_SHAFT_MINING",
            "TWO_MAN_SAW", "WHEELBARROW")   # the economic technologies but Coinage and Banking (AoE2 wiki "Burgundians")
@@ -115,10 +117,11 @@ COSTS = {"BERBERS": [("cavalry", None, (1.0, 1.0, 0.85, 0.8))],
          "INCAS": [("buildings", "stone", (0.85,) * 4), ("military", "food", (0.85, 0.8, 0.75, 0.7))],
          "ITALIANS": [("ages", None, (0.85,) * 4), ("gunpowder", None, (0.8,) * 4)],
          "JAPANESE": [(("LUMBER_CAMP", "MILL", "MINING_CAMP"), None, (0.5,) * 4)],
-         "KOREANS": [(("LEATHER_ARCHER_ARMOR", "PADDED_ARCHER_ARMOR"), None, (0.0,) * 4), ("archers", "wood", (0.5,) * 4),
+         "KOREANS": [(("LEATHER_ARCHER_ARMOR", "PADDED_ARCHER_ARMOR", "RING_ARCHER_ARMOR"), None, (0.0,) * 4), ("archers", "wood", (0.5,) * 4),
                      ("infantry", "wood", (0.5,) * 4)],
          "MAGYARS": [(("FORGING", "IRON_CASTING", "BLAST_FURNACE"), None, (0.0,) * 4), ("scout line", None, (0.85,) * 4)],
-         "MALAY": [("battle elephants", None, (1.0, 1.0, 0.75, 0.65)), (("CHAIN_MAIL_ARMOR", "SCALE_MAIL_ARMOR"), None, (0.0,) * 4)],
+         "MALAY": [("battle elephants", None, (1.0, 1.0, 0.75, 0.65)), (("CHAIN_MAIL_ARMOR", "PLATE_MAIL_ARMOR", "SCALE_MAIL_ARMOR"), None,
+                                                                              (0.0,) * 4)],
          "MALIANS": [("buildings but farms", "wood", (0.85,) * 4)],
          "MAYANS": [("foot archers but skirmishers", None, (1.0, 0.9, 0.8, 0.7))],
          "POLES": [(("BLOODLINES",), "food", (0.5,) * 4)],
@@ -172,6 +175,9 @@ MISSING = {"ARSON": ("GOTHS", "MUISCA", "ROMANS"),                              
                           "MONGOLS", "MUISCA", "POLES", "PURU", "ROMANS", "SPARTANS", "TATARS", "THRACIANS", "TUPI",
                           "TURKS", "VIETNAMESE", "VIKINGS", "WEI", "WU"),
            "HEAVY_PLOW": ("KHITANS",),                                     # (#1424)
+           "HOARDINGS": ("AZTECS", "BENGALIS", "BOHEMIANS", "BULGARIANS", "BURMESE", "CHINESE", "ETHIOPIANS", "GOTHS",
+                         "HUNS", "KHITANS", "KOREANS", "MALAY", "PORTUGUESE", "ROMANS", "TATARS", "VARANGIANS",
+                         "WU"),                                            # (#1456)
            "HUSBANDRY": ("AZTECS", "CUMANS", "INCAS", "MAPUCHE", "MAYANS", "MUISCA", "TEUTONS", "TUPI", "VIKINGS"),
            "KNIGHT": ("AZTECS", "BENGALIS", "DRAVIDIANS", "GURJARAS", "HINDUSTANIS", "INCAS", "JURCHENS", "KHITANS",
                       "MAPUCHE", "MAYANS", "MUISCA", "SHU", "TUPI", "WEI", "WU"),   # the wiki chart (#1430)
