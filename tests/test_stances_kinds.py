@@ -21,7 +21,6 @@ KINDS = {"zombie": "MILITIA", "skeleton": "ARCHER", "horse": "SCOUT_CAVALRY", "s
          "husk": "EAGLE_WARRIOR", "pillager": "HAND_CANNONEER", "zombie_villager": "FLEMISH_MILITIA",
          "creeper": "PETARD", "llama": "ALFRED_THE_ALPACA", "ocelot": "FURIOUS_THE_MONKEY_BOY", "chicken": "WAR_PENGUIN"}
 NO_RETURN = {"PETARD": "it dies in its blast, as in AoE2"}   # defensive: no unit to come back
-NO_SIGHT = {"FURIOUS_THE_MONKEY_BOY": "#1995: no armor class, so no aoe sight"}   # defensive: no attack without an order
 
 
 def test_each_kind_is_the_converter_kind_of_its_unit():
@@ -132,7 +131,7 @@ def test_defensive_for_each_mob_kind(tiny_world, tmp_path):
     with run.Game(shutil.copytree(tiny_world[0], tmp_path / "W")) as game:
         start = arena(game, "d")
         end, attacked = time.time() + 20, set()
-        fighters = {k for k, name in KINDS.items() if name not in NO_RETURN and name not in NO_SIGHT}
+        fighters = {k for k, name in KINDS.items() if name not in NO_RETURN}
         while time.time() < end and attacked < fighters:      # each hit when it comes: Alfred kills its enemy in 18 s
             attacked |= {k for k in fighters - attacked if hurt(game, f"{k}ed") or health(game, f"{k}ed") is None}
             time.sleep(0.5)
@@ -142,6 +141,6 @@ def test_defensive_for_each_mob_kind(tiny_world, tmp_path):
         time.sleep(30)
         fails = [f"{k} ({name}) defensive: " + ("did not attack the enemy in its range" if k not in attacked else
                                                f"{moved(game, f'{k}d', start[k]['d']):.1f} blocks from its place")
-                 for k, name in KINDS.items() if name not in NO_RETURN and name not in NO_SIGHT
+                 for k, name in KINDS.items() if name not in NO_RETURN
                  and (k not in attacked or moved(game, f"{k}d", start[k]["d"]) > 3)]   # as no_attack: an order ends 1.5 off
     assert not fails, "\n".join(fails)

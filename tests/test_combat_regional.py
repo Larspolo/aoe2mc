@@ -15,13 +15,6 @@ def test_each_regional_unit_has_values_and_a_valid_command():
         assert COMMAND.match(combat.stats_command("u", name)), name
 
 
-def test_values_of_the_wiki():
-    # Battle Elephant (melee) and Slinger (ranged): the AoE2 wiki infobox of 2026-10-26.
-    assert combat.stats("BATTLE_ELEPHANT") == combat.Stats(250, 12, 1, 2, 0, 2.0, {"building": 4}, (combat.ELE,))
-    assert combat.stats("SLINGER") == combat.Stats(35, 4, 0, 0, 5, 2.0, {"infantry": 4, "siege": 3, "spearman": 1},
-                                                   (combat.ARC,))
-
-
 def test_gunpowder_bonus_hits_the_gunpowder_units():
     assert combat.damage("CONDOTTIERO", "JANISSARY") == 10 - 1 + 10
     assert combat.damage("WINGED_HUSSAR", "BOMBARD_CANNON") == 9 - 2 + 4

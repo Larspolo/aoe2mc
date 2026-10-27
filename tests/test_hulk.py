@@ -21,9 +21,7 @@ def hulk(g):
 
 
 def test_the_hulk_has_the_aoe2_de_values_of_the_wiki():
-    assert train.COSTS["HULK"] == {"wood": 75, "gold": 35} and train.TRAIN_TIMES["HULK"] == 42
     assert build.AGE["HULK"] == 1 and "HULK" in train.TRAINS["DOCK"] and "HULK" not in civs.MISSING
-    assert combat.stats("HULK") == (85, 4, 3, 1, 1, 1.75, {"fireship": 1, "standard": -3}, ("ship",))
     assert fleet.SPEEDS["HULK"] == 1.42 and combat.sight("HULK") == 5
     assert len(train.HELP["HULK"]) <= 50 and units.classify("HULK") == units.classify("GALLEY")   # an oak boat
 

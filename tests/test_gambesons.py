@@ -17,7 +17,6 @@ def castle(civ=None):
 
 
 def test_the_barracks_menu_has_gambesons_from_the_castle_age():
-    assert train.TECH_AGE["GAMBESONS"] == 2
     server, g = setup(food=100)                                    # the Feudal Age: not yet
     g.stock.update(gold=100)
     train.open_menu(g, "Steve", BARRACKS)

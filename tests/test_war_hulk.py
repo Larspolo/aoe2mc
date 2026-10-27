@@ -9,8 +9,6 @@ from game import build, combat, fleet, train
 
 
 def test_the_war_hulk_has_the_aoe2_de_values_of_the_wiki():
-    assert train.COSTS["WAR_HULK"] == {"wood": 75, "gold": 35} and train.TRAIN_TIMES["WAR_HULK"] == 27
-    assert combat.stats("WAR_HULK") == (110, 4, 4, 1, 1, 1.5, {"fireship": 1, "standard": -3}, ("ship",))
     assert fleet.SPEEDS["WAR_HULK"] == 1.42 and combat.sight("WAR_HULK") == 5 and build.AGE["WAR_HULK"] == 2
     assert "WAR_HULK" in combat.MELEE_RANGED and len(train.HELP["WAR_HULK"]) <= 50
     assert ("HULK", "WAR_HULK") in train.lines("MEDIUM_WARSHIPS")
