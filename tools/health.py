@@ -272,6 +272,20 @@ def token_sinks(lines, k=6):
     return sorted(((s, x / total) for s, x in by.items()), key=lambda kv: -kv[1])[:k] if total else []
 
 
+VERIFY = re.compile(r"^Tokens: .*? · verify (.*?) · sinks ", re.M)
+
+
+def verify_minutes(comments):
+    """{check kind: (minutes, count)} summed over the `verify` fields of the `Tokens:` lines (tools/tokens.py, #1704)."""
+    out = {}
+    for c in comments:
+        for field in VERIFY.findall(c.get("body") or ""):
+            for k, m, n in re.findall(r"(\S.*?) (\d+(?:\.\d+)?)m (\d+)x(?:, |$)", field):
+                a, b = out.get(k, (0.0, 0))
+                out[k] = (a + float(m), b + int(n))
+    return out
+
+
 def weekly(comments):
     """[(time, 7-day usage %, release % or None)] of the `Usage:` lines that have the week (usage.py --sample), by time."""
     return sorted((ts(t), float(w), float(r) if r else None) for c in comments for t, w, r in WEEK.findall(c.get("body") or ""))
@@ -433,6 +447,9 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
     out.append(f"Tokens per run (median of {len(tl)} Tokens lines): {fmt(med([m for m, _ in tl]))}M eq"
                + (f" · per merged PR {sum(m for m, _ in tl) / len(ok):.2f}M eq" if tl and ok else "")
                + " · largest sinks: " + ("; ".join(f"{s} {x:.0%}" for s, x in token_sinks(tl)) or "-"))
+    vm = sorted(verify_minutes(status_comments).items(), key=lambda kv: -kv[1][0])
+    out.append("Verify commands (min, count, of the Tokens lines with a verify field): "
+               + ("; ".join(f"{k} {fmt(m)} ({n}x)" for k, (m, n) in vm) or "-"))
     for name, (n, pr, mins, eq) in sorted(lanes(status_comments).items()):
         out.append(f"Lane {name}: {n} runs, {pr} PRs, median {fmt(med(mins))} min, median {fmt(med(eq))}M eq")
     weights, source = lane_weights(status_comments)

@@ -6,6 +6,7 @@ and question. The skill `human` (a local session of the owner, `/human`) lists t
     python3 tools/owner_tasks.py --json      # the list as JSON
     python3 tools/owner_tasks.py --wait      # wait for a new ticket (#1025): exit 0 and print it, exit 1 after --hours
     python3 tools/owner_tasks.py --plan      # the plan of one session (#1674): close now, replay, play game, no game
+    python3 tools/owner_tasks.py --sample    # the closed check tickets for a sample check of the owner (#1708)
 
 Kinds: `decision` ("Decide: ..."), `play` (a play test in Minecraft: "Check ..."), `setting` (the environment, the
 scheduled task or GitHub), `outside` (a step outside the cloud), `close` (close an issue that the auto mode did not let
@@ -29,6 +30,7 @@ SETTING = re.compile(r"\b(environment|setup script|network|variable|scheduled ta
                      r"interaction limit|branch protection)\b", re.I)
 REPLAY = re.compile(r"\breplay|\.aoe2record\b|^\W*Watch:", re.I | re.M)
 PLAN = ("close now", "replay", "play game", "no game")       # the groups of --plan, in the order of a session
+SAMPLE = "owner-sample"     # a check ticket that the agent closed on its evidence; the owner checks a sample (#1708)
 
 
 def for_owner(body):
@@ -123,6 +125,11 @@ def wait(every=300, hours=12.0, clock=time.monotonic, sleep=time.sleep):
     return None
 
 
+def sample(issues):
+    """The closed check tickets with the label `owner-sample`, the oldest close first: the batch of a sample check."""
+    return sorted((i for i in issues if "pull_request" not in i and SAMPLE in labels(i)), key=lambda i: i["closed_at"] or "")
+
+
 def line(t):
     return f"#{t['number']} [{t['kind']}{', epic' * t['epic']}] {t['title']} – {t['question']}"
 
@@ -132,6 +139,7 @@ def main(argv=None):
     ap.add_argument("--show", type=int, metavar="N", help="print what the owner must do for ticket N")
     ap.add_argument("--json", action="store_true", help="print the list as JSON")
     ap.add_argument("--plan", action="store_true", help="print the plan of one session: close now, replay, play game, no game")
+    ap.add_argument("--sample", action="store_true", help="print the closed check tickets for a sample check (#1708)")
     ap.add_argument("--wait", action="store_true", help="wait for a new ticket: exit 0 and print it, else exit 1")
     ap.add_argument("--every", type=float, default=300, help="seconds between two checks of --wait (default 300)")
     ap.add_argument("--hours", type=float, default=12, help="hours that --wait waits at most (default 12)")
@@ -140,6 +148,13 @@ def main(argv=None):
         t = wait(a.every, a.hours)
         print(line(t) if t else f"No new ticket in {a.hours:g} hours.")
         return 0 if t else 1
+    if a.sample:
+        found = sample(pages(f"issues?state=closed&labels={SAMPLE}"))
+        for i in found:
+            print(f"#{i['number']} {i['title']} (closed {i['closed_at'][:10]})")
+        if not found:
+            print("No closed check waits for a sample check.")
+        return 0
     if a.show:
         issue = api(f"issues/{a.show}")
         comments = pages(f"issues/{a.show}/comments")

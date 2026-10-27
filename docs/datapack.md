@@ -193,3 +193,6 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - A timer trigger fires from the server start, before a client joins (about 30 s). To see its chat in a client
   (`mc_shot.Client`), send `tick freeze` first and `tick unfreeze` after the join: the `schedule` timers wait, and
   the chunks and entities load in a frozen game (#676).
+- A new player gets an item through the datapack pulse (`item replace entity @s weapon.offhand`, a tag against
+  repeats), not through `Data.Player` of `level.dat`: the 26.3 client ignored a `Player` tag that the converter
+  wrote (#966). The datapack also works on a server, where `level.dat` has no player.
