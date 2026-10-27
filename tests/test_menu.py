@@ -56,7 +56,7 @@ def test_gather_reads_the_menu_clicks():
     me = gather.Gather.__new__(gather.Gather)                          # only the parts that clicks() uses
     me.game, me.menus, me.sites, me.players = g, {}, [], {}
     me.corners, me.selected, me.soldiers, me.hints, me.clock = {}, set(), {}, {}, lambda: 0.0   # hints.py (#798)
-    me.calls, me.holds = 0, {}                                         # the group items (#779), drags (#992)
+    me.calls, me.holds, me.groups = 0, {}, {}                          # the group items (#779, #1812), drags (#992)
     me.paper, me.pending = False, {}                                   # the held stick (#1786)
     menu.show(me, "Steve", "Menu", [(0, "stone", "Stone", "")], lambda p, s, shift: got.append(s))
     me.clicks()
