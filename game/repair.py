@@ -9,6 +9,10 @@ the share of the hit points that it gives back; a town center takes double its w
 full repair). The stock pays whole units as the repair goes on. With too few resources the repair stops with a chat
 line, and the villagers stand idle. A building with no build cost (build.COSTS) repairs free.
 
+Allied buildings (#1361): the villagers also repair a damaged building of an allied player (gather.allied), as in AoE2
+("While players cannot construct allied buildings, they can repair them"). The own stock pays, with the build cost of
+the civilization of the ally. A building of an enemy or of no player is not repaired.
+
 Siege units (#1331): a right click with selected villagers on an own damaged siege unit (units.siege: a minecart)
 sends them next to it. AoE2 repairs siege weapons at 25 % of the building rate (SIEGE: 187.5 hit points per minute for
 the first villager, 93.75 for each other one), for half the training cost (train.price). A siege unit that moves stops
@@ -34,14 +38,21 @@ SIEGE = 0.25                # the rate of a siege unit: a share of the building 
 STILL = 0.5                 # blocks: a siege unit that moved more stops the repair
 
 
+def owners(g):
+    """{block footprint (x0, x1, z0, z1): (name, player)} of the own and the allied buildings with AoE2 hit points (a
+    target entity): the start ones and the complete construction sites of the player and of the bots (#1361)."""
+    from gather import allied                                      # gather imports this module
+    import combat
+    mine = {g.player} | {int(p) for p in g.players if int(p) and allied(g.players, g.player, int(p))}   # no Gaia
+    out = {(x0, x1, z0, z1): (o["name"], o["player"]) for o in g.data["objects"] if o["kind"] == "building"
+           and o["name"] in combat.BUILDINGS and o["player"] in mine and "footprint" in o for x0, z0, x1, z1 in [o["footprint"]]}
+    return out | {tuple(s["footprint"]): (s["name"], s["player"]) for s in g.sites + [s for b in g.bots for s in b.g.sites]
+                  if s.get("done") and s["player"] in mine and s["name"] in combat.BUILDINGS}
+
+
 def buildings(g):
-    """{block footprint (x0, x1, z0, z1): name} of the own buildings with AoE2 hit points (a target entity): the start
-    ones and the complete construction sites."""
-    import combat                                                  # combat imports gather, gather imports this module
-    out = {(x0, x1, z0, z1): o["name"] for o in g.data["objects"] if o["kind"] == "building" and o["name"] in combat.BUILDINGS
-           and o["player"] == g.player and "footprint" in o for x0, z0, x1, z1 in [o["footprint"]]}
-    return out | {tuple(s["footprint"]): s["name"] for s in g.sites
-                  if s.get("done") and s["player"] == g.player and s["name"] in combat.BUILDINGS}
+    """{block footprint (x0, x1, z0, z1): name} of the own and the allied buildings with AoE2 hit points (owners)."""
+    return {r: n for r, (n, _) in owners(g).items()}
 
 
 def uuid(rect):
@@ -56,12 +67,12 @@ def hp(g, rect):
     return int(m[1]) if m else None
 
 
-def cost(g, name):
-    """{resource: amount} for the full hit points of building name."""
+def cost(g, name, player=None):
+    """{resource: amount} for the full hit points of building name of the player of g, or of an ally (#1361)."""
     import build                                                   # build imports gather
     if name not in build.COSTS:
         return {}
-    price = build.price(g, name)
+    price = build.price(g, name, player)
     if name == "TOWN_CENTER":                                      # AoE2 wiki: 550 wood (double the wood), no stone
         return {"wood": price.get("wood", 0) * 2}
     return {r: v * SHARE for r, v in price.items()}
@@ -139,18 +150,19 @@ def tick(g, dt):
     if not work:
         return
     import combat
-    homes, g.repair_owed = buildings(g), vars(g).get("repair_owed", {})
+    homes, g.repair_owed = owners(g), vars(g).get("repair_owed", {})
     for rect, vs in sorted(work.items(), key=lambda kv: (isinstance(kv[0], str), kv[0])):
         if isinstance(rect, str):                                  # a siege unit (#1331)
             unit_tick(g, rect, vs, dt)
             continue
         now = hp(g, rect) if rect in homes else None
-        top = combat.stats(homes[rect]).hp if rect in homes else 0
+        name, player = homes.get(rect, (None, None))
+        top = combat.stats(name).hp if rect in homes else 0
         if not now or now >= top:                                  # fallen or full: the work ends
             stop(g, rect, vs)
             continue
         gain = top - now if g.aegis else min(top - now, (RATE + MORE * (len(vs) - 1)) * dt)
-        if not charge(g, rect, vs, cost(g, homes[rect]), gain / top, homes[rect]):
+        if not charge(g, rect, vs, cost(g, name, player), gain / top, name):
             continue
         g.repair_hp = vars(g).get("repair_hp", {})                 # the fractions of a hit point
         whole = g.repair_hp.get(rect, 0.0) + gain
