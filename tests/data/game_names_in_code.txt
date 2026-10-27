@@ -1,39 +1,3 @@
 # Game data in the code (#1909, tools/data_lint.py): a place (file:scope) and its count of literals with two or more
 # AoE2 names. Only delete lines or lower counts here (python3 tools/data_lint.py --shrink): new game data goes in a
 # data file (game/data/*.jsonl, data/*.jsonl). tests/test_game_names_in_code.py checks this list against the code.
-game/bot.py:NEAR 1
-game/bot.py:ORDER 1
-game/cheats.py:CAMELS 1
-game/cheats.py:CODES 1
-game/civs.py:BUILD 1
-game/civs.py:ECONOMY 1
-game/civs.py:GROUPS 1
-game/civs.py:HP 1
-game/civs.py:SHARED 1
-game/civs.py:SMITH 1
-game/civs.py:START 1
-game/civs.py:TRAIN_RATE 1
-game/civs.py:WORK 1
-game/civs.py:WORK_RATE 1
-game/diplomacy.py:FEES 1
-game/fleet.py:SPEEDS 1
-game/garrison.py:BASE 1
-game/garrison.py:SIZES 1
-game/monk.py:IMMUNE 1
-game/monk.py:LASTING 1
-game/monk.py:MONKS 1
-game/monk.py:NEXT 1
-game/monk.py:RESIST 1
-game/replay.py:Replay.society_commands 2
-game/replay.py:Replay.tech_commands 1
-game/replay.py:SPEEDS 1
-game/train.py:ARROWSLITS 1
-game/train.py:CONSCRIPT 1
-game/train.py:HEATED 1
-game/train.py:HOUSING 1
-game/train.py:HULKS 1
-game/train.py:REQUIRES 1
-game/train.py:SPEEDS 1
-game/train.py:TOWER_UPGRADES 1
-game/train.py:WALL_UPGRADES 1
-game/train.py:summon 1

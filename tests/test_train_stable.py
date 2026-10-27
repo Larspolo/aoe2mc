@@ -17,6 +17,7 @@ ELEPHANT = "7:gray_dye:Battle Elephant:100 food · 70 gold · 24 s · Needs the 
 LANCER = "20:gray_dye:Steppe Lancer:70 food · 40 gold · 24 s · Needs the Castle Age"       # (#1557)
 SHRIVAMSHA = "22:gray_dye:Shrivamsha Rider:70 food · 30 gold · 20 s · Needs the Castle Age"   # (#1612)
 HEI_GUANG = "24:gray_dye:Hei Guang Cavalry:65 food · 65 gold · 28 s · Needs the Castle Age"   # (#1954)
+XOLOTL = "26:gray_dye:Xolotl Warrior:60 food · 75 gold · 30 s · Needs the Castle Age"   # (#2009)
 
 
 def setup(food=80, done=True):
@@ -53,11 +54,11 @@ def test_a_right_click_on_the_stable_opens_its_menu():
     cmd, = menus(server)
     assert cmd.startswith("aoe menu Steve Stable ") and labels(cmd) == order(g, "STABLE")   # the full menu
     assert [item(cmd, label) for label in ("Scout Cavalry", "Bloodlines", "Knight", "Camel Rider", "Battle Elephant",
-                                           "Steppe Lancer", "Shrivamsha Rider", "Hei Guang Cavalry", "Rally point")] \
+                                           "Steppe Lancer", "Shrivamsha Rider", "Hei Guang Cavalry", "Xolotl Warrior", "Rally point")] \
         == ["0:horse_spawn_egg:Scout Cavalry:80 food · 30 s · queue 0/15", "1:book:Bloodlines:150 food · 100 gold · 50 s · research",
             "3:gray_dye:Knight:60 food · 75 gold · 30 s · Needs the Castle Age",
             "6:gray_dye:Camel Rider:55 food · 60 gold · 22 s · Needs the Castle Age", ELEPHANT, LANCER, SHRIVAMSHA, HEI_GUANG,
-            RALLY]
+            XOLOTL, RALLY]
 
 
 def test_no_menu_at_a_stable_that_is_not_complete():

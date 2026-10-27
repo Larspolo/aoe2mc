@@ -23,8 +23,10 @@ permissions:
   issues: write
 
 concurrency:
-  group: ci-${{ github.ref }}-${{ github.event_name == 'schedule' || inputs.full == true }}   # a quick run does not stop the full run
-  cancel-in-progress: true       # a new push stops the run of the old head
+  # A quick run does not stop the full run. Main gets one group per run: each merge gets a complete run, so a red
+  # main shows (#2145). A group keeps only its newest waiting run, so one group on main also dropped runs.
+  group: ci-${{ github.ref == 'refs/heads/main' && github.run_id || github.ref }}-${{ github.event_name == 'schedule' || inputs.full == true }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}   # a new push to a PR branch stops the run of the old head
 
 jobs:
   quick:

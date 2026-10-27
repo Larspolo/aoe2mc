@@ -1,9 +1,9 @@
 {"name": "HOUSE", "cost": {"wood": 25}, "time": 25, "icon": "spruce_stairs"}
-{"name": "LUMBER_CAMP", "cost": {"wood": 100}, "time": 35, "icon": "oak_log"}
-{"name": "MINING_CAMP", "cost": {"wood": 100}, "time": 35, "icon": "raw_gold_block"}
-{"name": "MILL", "cost": {"wood": 100}, "time": 35, "icon": "white_wool"}
+{"name": "LUMBER_CAMP", "cost": {"wood": 100}, "time": 35, "icon": "oak_log", "bot": 1, "near": "wood"}
+{"name": "MINING_CAMP", "cost": {"wood": 100}, "time": 35, "icon": "raw_gold_block", "bot": 3, "near": "gold"}
+{"name": "MILL", "cost": {"wood": 100}, "time": 35, "icon": "white_wool", "bot": 2, "near": "food"}
 {"name": "FARM", "cost": {"wood": 60}, "time": 15, "icon": "wheat"}
-{"name": "BARRACKS", "cost": {"wood": 175}, "time": 50, "icon": "stone_brick_wall"}
+{"name": "BARRACKS", "cost": {"wood": 175}, "time": 50, "icon": "stone_brick_wall", "bot": 4}
 {"name": "BLACKSMITH", "cost": {"wood": 150}, "time": 40, "icon": "anvil", "age": 1}
 {"name": "BOMBARD_TOWER", "cost": {"gold": 100, "stone": 125}, "time": 80, "icon": "polished_basalt", "age": 3, "needs": "BOMBARD_TOWER_TECH"}
 {"name": "ARCHERY_RANGE", "cost": {"wood": 175}, "time": 50, "icon": "target", "age": 1}
@@ -30,6 +30,7 @@
 {"name": "ARCHER", "age": 1}
 {"name": "BATTERING_RAM", "age": 2}
 {"name": "BATTLE_ELEPHANT", "age": 2}
+{"name": "BOLAS_RIDER", "age": 2}
 {"name": "BOMBARD_CANNON", "age": 3, "needs": "CHEMISTRY"}
 {"name": "CAMEL_RIDER", "age": 2}
 {"name": "CANNON_GALLEON", "age": 3, "needs": "CHEMISTRY"}
@@ -49,6 +50,7 @@
 {"name": "EAGLE_WARRIOR", "age": 2}
 {"name": "ELEPHANT_ARCHER", "age": 2}
 {"name": "ELITE_BATTLE_ELEPHANT", "age": 3}
+{"name": "ELITE_BOLAS_RIDER", "age": 3}
 {"name": "ELITE_CANNON_GALLEON", "age": 3}
 {"name": "ELITE_CARAVEL", "age": 3}
 {"name": "ELITE_EAGLE_WARRIOR", "age": 3}
@@ -100,9 +102,11 @@
 {"name": "SIEGE_RAM", "age": 3}
 {"name": "SIEGE_TOWER", "age": 2}
 {"name": "SKIRMISHER", "age": 1}
+{"name": "SLINGER", "age": 2}
 {"name": "SPEARMAN", "age": 1}
 {"name": "STEPPE_LANCER", "age": 2}
 {"name": "THIRISADAI", "age": 3}
+{"name": "TRACTION_TREBUCHET", "age": 3}
 {"name": "TRADE_CART", "age": 1}
 {"name": "TRADE_COG", "age": 1}
 {"name": "TREBUCHET", "age": 3}
@@ -111,5 +115,8 @@
 {"name": "VARANGIAN_GUARD", "age": 2}
 {"name": "WAR_HULK", "age": 2}
 {"name": "WINGED_HUSSAR", "age": 3}
+{"name": "XOLOTL_WARRIOR", "age": 2}
 {"name": "CARRACK", "age": 3}
 {"name": "IMPERIAL_CAMEL_RIDER", "age": 3}
+{"name": "SAVAR", "age": 3}
+{"name": "LEGIONARY", "age": 3}

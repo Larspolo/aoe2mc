@@ -17,7 +17,7 @@ def test_each_line_is_one_item_with_its_fields():
     rows = [json.loads(s) for s in lines]
     assert len(rows) == len(train.ITEMS) == len(train.COSTS) == len(train.HELP)
     for r in rows:
-        assert KEYS <= set(r) <= KEYS | {"age", "after", "civ", "effect", "note", "upgrade"}, r["name"]
+        assert KEYS <= set(r), r["name"]                  # other keys: test_data_files.py checks their type (#2164)
         assert r.get("civ") is None or r["building"] is None and r["civ"] in {c["name"] for c in train.civs.ROWS}, r["name"]   # (#2021)
         assert r["building"] is None or r["building"] in train.TRAINS
         assert r.get("after") is None or r["after"] in train.ITEMS

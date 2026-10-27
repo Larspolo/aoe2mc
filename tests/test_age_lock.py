@@ -1,7 +1,7 @@
 """game/build.py and game/train.py: the Feudal Age buildings and units are locked until the Feudal Age (#674)."""
 from test_build_menu import villager_map
 from menu_line import item
-from test_train_archery import CAVA, ELEA, GENI, HAND, MOCB, menus
+from test_train_archery import BOLA, CAVA, ELEA, GENI, HAND, MOCB, SLIN, menus
 from test_train_archery import setup as archery
 from test_train_menu import SKIRM
 
@@ -50,7 +50,8 @@ def test_in_the_dark_age_a_start_archery_range_shows_a_gray_archer_and_trains_no
     assert item(cmd, "Skirmisher") == SKIRM.replace("drowned_spawn_egg", "gray_dye").replace("queue 0/15",
                                                                                               "Needs the Feudal Age")
     assert [item(cmd, label) for label in ("Cavalry Archer", "Hand Cannoneer", "Genitour", "Elephant Archer",
-                                           "Mounted Crossbowman")] == [CAVA, HAND, GENI, ELEA, MOCB]   # gray as before
+                                           "Mounted Crossbowman", "Slinger", "Bolas Rider")] \
+        == [CAVA, HAND, GENI, ELEA, MOCB, SLIN, BOLA]   # gray as before
     assert train.order(g, "Steve", rect, 0) == 0 and g.stock["wood"] == 25 and not g.queues.get(rect)
     g.techs.add("FEUDAL_AGE")
     assert train.order(g, "Steve", rect, 0) == 1

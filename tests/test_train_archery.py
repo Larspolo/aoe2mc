@@ -19,6 +19,8 @@ HAND = "7:gray_dye:Hand Cannoneer:45 food · 50 gold · 34 s · Needs the Imperi
 GENI = "19:gray_dye:Genitour:40 food · 35 wood · 25 s · Needs the Castle Age"   # no civ: also the Berber unit (#1610)
 ELEA = "21:gray_dye:Elephant Archer:70 food · 80 gold · 32 s · Needs the Castle Age"   # no civ: also (#1952)
 MOCB = "23:gray_dye:Mounted Crossbowman:40 wood · 65 gold · 40 s · Needs the Castle Age"   # no civ: also (#2012)
+SLIN = "25:gray_dye:Slinger:50 food · 25 wood · 25 s · Needs the Castle Age"   # no civ: also (#2010)
+BOLA = "26:gray_dye:Bolas Rider:50 wood · 55 gold · 34 s · Needs the Castle Age"   # no civ: also (#2135)
 
 
 def setup(wood=25, gold=45, done=True):
@@ -55,8 +57,9 @@ def test_a_right_click_on_the_archery_range_opens_its_menu():
     cmd, = menus(server)
     assert cmd.startswith("aoe menu Steve Archery Range ") and labels(cmd) == order(g, "ARCHERY_RANGE")   # the full menu
     assert [item(cmd, label) for label in ("Archer", "Skirmisher", "Cavalry Archer", "Hand Cannoneer", "Genitour",
-                                           "Elephant Archer", "Mounted Crossbowman", "Rally point")] \
-        == ["0:skeleton_spawn_egg:Archer:25 wood · 45 gold · 35 s · queue 0/15", SKIRM, CAVA, HAND, GENI, ELEA, MOCB, RALLY]
+                                           "Elephant Archer", "Mounted Crossbowman", "Slinger", "Bolas Rider", "Rally point")] \
+        == ["0:skeleton_spawn_egg:Archer:25 wood · 45 gold · 35 s · queue 0/15", SKIRM, CAVA, HAND, GENI, ELEA, MOCB, SLIN,
+            BOLA, RALLY]
 
 
 def test_no_menu_at_an_archery_range_that_is_not_complete():
