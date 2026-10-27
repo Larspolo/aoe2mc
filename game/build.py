@@ -34,17 +34,21 @@ COSTS = {"HOUSE": {"wood": 25}, "LUMBER_CAMP": {"wood": 100}, "MINING_CAMP": {"w
          "BLACKSMITH": {"wood": 150},
          "ARCHERY_RANGE": {"wood": 175}, "STABLE": {"wood": 175}, "TOWN_CENTER": {"wood": 275, "stone": 100},
          "CASTLE": {"stone": 650},                                 # the Castle Age: the Imperial Age needs them (#1162)
+         "MARKET": {"wood": 175},                                  # the Feudal Age (#1251)
          "MONASTERY": {"wood": 175},
          "SIEGE_WORKSHOP": {"wood": 200},
          "UNIVERSITY": {"wood": 200},
+         "WATCH_TOWER": {"wood": 35, "stone": 125},                # AoE2 DE (wiki: 25 wood before patch 5.8)
          "WONDER": {"wood": 1000, "gold": 1000, "stone": 1000}}
 BUILD_TIMES = {"HOUSE": 25, "LUMBER_CAMP": 35, "MINING_CAMP": 35, "MILL": 35, "FARM": 15,   # AoE2 seconds,
                "BARRACKS": 50, "ARCHERY_RANGE": 50, "STABLE": 50, "TOWN_CENTER": 150,                              # one builder
                "BLACKSMITH": 40,
                "CASTLE": 200,
+               "MARKET": 60,
                "MONASTERY": 40,
                "SIEGE_WORKSHOP": 40,
                "UNIVERSITY": 60,
+               "WATCH_TOWER": 80,
                "WONDER": 3500}
 MENU = list(COSTS)                                                 # trigger value N -> MENU[N - 1]
 OBJECTIVE = "aoe_build"
@@ -52,9 +56,11 @@ ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw
          "MILL": "white_wool", "FARM": "wheat", "BARRACKS": "stone_brick_wall", "ARCHERY_RANGE": "target",
          "BLACKSMITH": "anvil", "STABLE": "hay_block",
          "CASTLE": "stone_bricks",
+         "MARKET": "barrel",                                            # the goods of the stalls
          "MONASTERY": "bell",
          "SIEGE_WORKSHOP": "grindstone",
          "UNIVERSITY": "bookshelf",
+         "WATCH_TOWER": "cracked_stone_bricks",
          "WONDER": "weathered_cut_copper_stairs",                       # the copper roof
          "TOWN_CENTER": "cobblestone"}                                  # design
 AGE_TECHS = ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE")           # the technologies of the ages, in order

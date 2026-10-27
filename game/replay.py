@@ -1446,7 +1446,8 @@ class Replay:
         send = self.send if bar else lambda cmds: None
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
                    f"bossbar set {BAR} max {max(1, int(end) // 1000)}"] +
-             ([f"tag {u} add {COUNTED}" for u in self.counted] + ["aoe deathmarks on"]) * self.ai +   # marks: #846
+             ([f"tag {u} add {COUNTED}" for u in self.counted] + ["aoe deathmarks on", "aoe minimap on"]) * self.ai +
+             # the death marks (#846) and the live units on the map item (#1237)
              self.overview())
         census = self.census if bar and self.ai else lambda: None
         while k < len(events) or self.moving:
