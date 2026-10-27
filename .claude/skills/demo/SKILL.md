@@ -70,7 +70,9 @@ owner in the session and make a ticket only when the owner agrees.
     fixed: say so in the chat. Else make a ticket with the `ticket` skill. Its context starts with "Owner feedback in
     the chat of a demo" (the date and time, the map, the `game/run.py` command, the main commit), the quote, and what
     you found in the code. Lines of one call about one topic are one ticket; one line with two topics is two tickets.
-  - Confirm in the chat: `--say "Ticket #N: TITLE"`.
+  - Confirm in the chat: `--say "Ticket #N: TITLE"`. Always write the number as `#N`: `--say` makes each `#N` a
+    link to the issue, so the owner opens it from the chat (owner request in the demo of 2026-10-27). Also for a
+    comment or a close: `--say "Comment on #N"`.
 - `SHOT PATH`: look at the image (Read tool). The owner presses F2 before or after the text: put the image on the
   ticket of the feedback of the same call or of the next call. Push it to `refs/heads/checks/N` and link it in a
   comment (`docs/LEARNINGS.md`, #614, #718). An image with no feedback after 2 calls: tell the owner what it shows and ask.
