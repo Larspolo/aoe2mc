@@ -52,7 +52,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:diplomacy` Teams and diplomacy: allied, neutral and enemy players, shared line of sight, tribute of resources
 - [ ] `play:walls` Build walls and gates; a gate opens for own units and stays closed for enemies
 - [ ] `play:repair` Villagers repair damaged buildings and siege units for a part of the cost; a damaged building shows fire
-- [ ] `play:siege` Siege units: rams against buildings, mangonels with area damage, trebuchets that pack and unpack
+- [x] `play:siege` Siege units: rams against buildings, mangonels with area damage, trebuchets that pack and unpack (epic #1348)
 - [ ] `play:naval` Docks and ships: fishing ships and fish traps gather food, warships fight on water, transport ships carry units (Minecraft boats)
 - [ ] `play:cheats` The AoE2 cheat codes in the chat when cheats are on (epic #820)
 - [ ] `play:fog` The explored area and the fog of war: a player sees only what the own units and buildings see
@@ -67,6 +67,8 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:postgame` The statistics at the end of a game of the game program, as the AoE2 achievements screen: military, economy, technology, the time of each age
 - [ ] `play:taunts` AoE2 taunts: a player types a taunt number (1-105) in the chat, and all players hear its sound and see its text
 - [ ] `play:wildlife` Wild predators as in AoE2: wolves, tigers and other predators of the map attack villagers and units near them
+- [ ] `play:farm-reseed` Farm reseeds as in AoE2: the mill queues farms, and an exhausted farm is built again by its farmer when the player has the wood
+- [ ] `play:game-modes` The AoE2 game modes in the game setup: Regicide (a king per player), Death Match (large start resources), King of the Hill (hold the monument) and Empire Wars (a running start economy)
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
@@ -77,7 +79,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `replay:record` Replay a recorded game as fully as the file allows (epic #371)
 - [ ] `replay:simulate` Simulate what the record does not contain with the rules of the game program: gathering, fights, deaths, destroyed buildings (epic #629)
 - [x] `replay:control` Control the replay in the game: pause, speed, jump to a time, a boss bar with the game time (epic #683)
-- [ ] `replay:follow` The units of the live replay follow the record: positions, gathering, no stuck units (epic #814)
+- [x] `replay:follow` The units of the live replay follow the record: positions, gathering, no stuck units (epic #814)
 - [ ] `replay:view` A spectator view: follow a player or a unit, an overview from above (epic #736)
 - [x] `replay:score` A score panel for each player: age, population, resources (estimated), military (epic #740)
 - [x] `replay:effects` Show events on the map: research and age-up at the building, attacks, a marker where units die (epic #842)
