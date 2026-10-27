@@ -12,6 +12,7 @@ Source: the infobox "LOS" of each unit page (MediaWiki API, `action=parse&prop=w
 from game import combat
 
 WIKI = {"CATAPULT_GALLEON": 14, "DRAGON_SHIP": 6, "DROMON": 14, "LOU_CHUAN": 15, "THIRISADAI": 9,   # (#1935)
+        "CHAMPI_SCOUT": 5, "CHAMPI_RUNNER": 5, "CHAMPI_WARRIOR": 6, "ELITE_CHAMPI_WARRIOR": 6,   # (#2133)
         "ALFRED_THE_ALPACA": 6, "ARAMBAI": 7, "ARBALESTER": 7, "ARCHER": 6, "ARMORED_ELEPHANT": 6,
          "BALLISTA_ELEPHANT": 7, "BATTERING_RAM": 5, "BATTLE_ELEPHANT": 7, "BERSERK": 5, "BOMBARD_CANNON": 14,
          "BOYAR": 5, "CAMEL_ARCHER": 5, "CAMEL_RIDER": 5, "CANNON_GALLEON": 15, "CAPPED_RAM": 5, "CARRACK": 6, "CATAPHRACT": 4,
