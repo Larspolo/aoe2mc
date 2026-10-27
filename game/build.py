@@ -51,6 +51,7 @@ COSTS = {"HOUSE": {"wood": 25}, "LUMBER_CAMP": {"wood": 100}, "MINING_CAMP": {"w
          "DOCK": {"wood": 150},                                    # 3 x 3 tiles on water at the shore (#1382)
          "FISH_TRAP": {"wood": 100},                               # on water, fishing ships build it (#1438)
          "FOLWARK": {"wood": 100},                                 # the mill of the Poles (civs.MISSING, #1874)
+         "FORTIFIED_CHURCH": {"wood": 200},                        # the Armenians, Georgians (civs.MISSING, #1930)
          "GATE": {"stone": 30},                                    # 4 x 1 tiles (AoE2 DE wiki, #1324)
          "KREPOST": {"stone": 350},                                # the Bulgarians only (civs.MISSING, #1872)
          "MARKET": {"wood": 175},                                  # the Feudal Age (#1251)
@@ -70,6 +71,7 @@ BUILD_TIMES = {"HOUSE": 25, "LUMBER_CAMP": 35, "MINING_CAMP": 35, "MILL": 35, "F
                "DOCK": 35,
                "FISH_TRAP": 40,
                "FOLWARK": 40,
+               "FORTIFIED_CHURCH": 50,
                "GATE": 70,
                "KREPOST": 150,
                "MARKET": 60,
@@ -93,6 +95,7 @@ ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw
          "DOCK": "dark_oak_planks",                                     # the wood of the pier
          "FISH_TRAP": "bamboo_fence",                                   # the rods of the basket
          "FOLWARK": "white_terracotta",                                 # the plaster of the hall
+         "FORTIFIED_CHURCH": "candle",                                  # the light of the altar
          "GATE": "iron_bars",                                           # the portcullis
          "KREPOST": "red_sandstone",                                    # the stone of the walls
          "MARKET": "barrel",                                            # the goods of the stalls
@@ -132,6 +135,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "ELITE_SKIRMISHER",
         "FIRE_LANCER",
         "FIRE_SHIP",
+        "FORTIFIED_CHURCH",
         "GENITOUR",
         "HEI_GUANG_CAVALRY",
         "KNIGHT",
@@ -141,6 +145,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "LONGSHIP",
         "MANGONEL",
         "MISSIONARY",
+        "MOUNTED_CROSSBOWMAN",
         "MONASTERY",
         "MONK",
         "PIKEMAN",
@@ -158,6 +163,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "BOMBARD_CANNON",
         "BOMBARD_TOWER",
         "CANNON_GALLEON",
+        "CARRACK",
         "FAST_FIRE_SHIP",
         "GALLEON",
         "HEAVY_DEMOLITION_SHIP",
@@ -184,6 +190,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "HEAVY_CAMEL_RIDER",
         "HEAVY_CAVALRY_ARCHER",
         "HEAVY_HEI_GUANG_CAVALRY",
+        "HEAVY_MOUNTED_CROSSBOWMAN",
         "HUSSAR",
         "IMPERIAL_SKIRMISHER",
         "KEEP",
@@ -223,7 +230,8 @@ def setup(g):
 def tick(g):
     """Players who joined since the last tick get the menu; all players may use the trigger (it locks after use)."""
     who = getattr(g, "who", "@a")                                      # two people: only the own team (#1310)
-    g.command(f"execute as {who} unless score @s {OBJECTIVE} matches 0.. run tellraw @s {menu()}")
+    for text in menu():
+        g.command(f"execute as {who} unless score @s {OBJECTIVE} matches 0.. run tellraw @s {text}")
     g.command(f"scoreboard players add {who} {OBJECTIVE} 0")
     g.command(f"scoreboard players enable {who} {OBJECTIVE}")
     if getattr(g, "paper", False):
@@ -355,9 +363,12 @@ def hidden(g, name):
 
 
 def menu():
+    """The chat texts of the build menu: two halves, else one command is longer than RCON takes (rcon.MAX, #1930)."""
     lines = [f"/trigger {OBJECTIVE} set {i}: {pretty(n)} ({', '.join(f'{v} {r}' for r, v in COSTS[n].items())})"
              for i, n in enumerate(MENU, 1)]
-    return json.dumps({"text": "Build: " + "\n".join(lines), "color": "gray"})
+    half = (len(lines) + 1) // 2
+    return [json.dumps({"text": text, "color": "gray"})
+            for text in ("Build: " + "\n".join(lines[:half]), "\n".join(lines[half:]))]
 
 
 def price(g, name, player=None):
@@ -692,7 +703,9 @@ def rise(g, site, work):
     Treadmill Crane: the builders of the player work 20 % faster (CRANE, AoE2 DE wiki, #1422); the civilization
     bonus multiplies with it (civs.build_rate, #1893)."""
     if site.get("player", g.player) == g.player:
-        work *= CRANE ** ("TREADMILL_CRANE" in getattr(g, "techs", ())) * civs.build_rate(g, site["name"])
+        x0, x1, z0, z1 = site["footprint"]                                 # the builders stand at its edge
+        work *= CRANE ** ("TREADMILL_CRANE" in getattr(g, "techs", ())) * civs.build_rate(g, site["name"]) \
+            * civs.church_rate(g, ((x0 + x1) / 2, (z0 + z1) / 2))      # the Georgian Fortified Church (#1930)
     site["progress"] = min(1.0, site["progress"] + work / BUILD_TIMES[site["name"]])
     cmds, ring = site["commands"], site.get("ring", {})
     k = len(cmds) if site["progress"] >= 1 else math.floor(site["progress"] * len(cmds))
