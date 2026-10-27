@@ -19,11 +19,14 @@ import gather
 import replay
 
 SPEEDS = {"FISHING_SHIP": 1.26,          # tiles per game second (AoE2 DE wiki infobox); other ships: 1.0 until a ticket
+          "DEMOLITION_SHIP": 1.52,
+          "FIRE_SHIP": 1.47,
           "GALLEY": 1.36,
           "TRANSPORT_SHIP": 1.45}
 NEAR = 3                                 # tiles from a clicked land cell to the water that a ship sails to
 PATH_CELLS = 20000                       # the path search limit (cells), as a long walk of the replay
 CHASE = 2.0                              # seconds between two range checks of a warship with a target (#1386)
+CONTACT = 1                              # blocks: a demolition ship sails next to its target (#1440)
 CARRY = 15                               # food of one fishing ship trip (AoE2 DE wiki, "Fishing Ship")
 
 
@@ -105,10 +108,11 @@ def order(g, uuids, cell):
 
 def reach(g, name):
     """Blocks from which ship name shoots: its AoE2 range (combat.STATS) less one tile, so that it stays in range when
-    the target moves a bit. 0 for a ship without an attack (a fishing ship)."""
+    the target moves a bit; CONTACT for a demolition ship (range 0, a blast, #1440). 0 for a ship without an attack
+    (a fishing ship)."""
     import combat                                                     # combat imports gather, gather this module
     s = combat.stats(name)
-    return max(1, s.range - 1) * g.map.T if s.attack and s.range else 0
+    return 0 if not s.attack else int(max(1, s.range - 1) * g.map.T) if s.range else CONTACT * (name in combat.BLAST)
 
 
 def attack(g, uuids, target):

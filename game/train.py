@@ -82,6 +82,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "BOW_SAW": {"food": 150, "wood": 100},                        # AoE2 DE wiki (#1423)
          "BERSERK": {"food": 65, "gold": 20},
          "BLAST_FURNACE": {"food": 275, "gold": 225},                  # AoE2 DE wiki (#1451)
+         "BLOCK_PRINTING": {"gold": 200},                              # AoE2 DE wiki (#1457)
          "BODKIN_ARROW": {"food": 200, "gold": 100},                   # AoE2 DE wiki (#1395)
          "BLOODLINES": {"food": 150, "gold": 100},
          "CAPPED_RAM": {"wood": 160, "gold": 75},
@@ -100,6 +101,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "ELITE_SKIRMISHER": {"food": 25, "wood": 35},
          "ELITE_SKIRMISHER_UPGRADE": {"wood": 230, "gold": 130},
          "FERVOR": {"gold": 140},
+         "DEMOLITION_SHIP": {"wood": 45, "gold": 80},                  # AoE2 DE wiki (#1440)
+         "FIRE_SHIP": {"wood": 75, "gold": 45},                         # AoE2 DE wiki (#1440)
          "FISHING_LINES": {"food": 50, "wood": 100},                   # AoE2 DE wiki (#1439)
          "FISHING_SHIP": {"wood": 75},                                  # AoE2 DE wiki (#1383)
          "FLETCHING": {"food": 100, "gold": 50},
@@ -175,6 +178,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "BATTERING_RAM": 36,
                "BERSERK": 14,
                "BLAST_FURNACE": 100,
+               "BLOCK_PRINTING": 55,
                "BLOODLINES": 50,
                "BOW_SAW": 50,
                "BODKIN_ARROW": 35,
@@ -196,6 +200,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "ELITE_SKIRMISHER": 22,
                "ELITE_SKIRMISHER_UPGRADE": 50,
                "FERVOR": 50,
+               "DEMOLITION_SHIP": 31,
+               "FIRE_SHIP": 27,
                "FISHING_LINES": 20,
                "FISHING_SHIP": 40,
                "FLETCHING": 30,
@@ -287,6 +293,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "DOCK": ("FISHING_SHIP",                                             # (#1383)
                    "GALLEY",                                                   # (#1386)
                    "TRANSPORT_SHIP",                                           # (#1385)
+                   "FIRE_SHIP",                                                # (#1440)
+                   "DEMOLITION_SHIP",                                          # (#1440)
                    "FISHING_LINES", "GILLNETS"),                                # (#1439)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",
                           "BOW_SAW"),                                           # (#723, #1423)
@@ -295,7 +303,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "MINING_CAMP": ("GOLD_MINING", "STONE_MINING",                       # (#727, #939)
                           "GOLD_SHAFT_MINING",
                           "STONE_SHAFT_MINING"),                                # (#1423)
-          "MONASTERY": ("MONK", "FERVOR", "SANCTITY", "REDEMPTION"),            # (#1243, #1261, #1264)
+          "MONASTERY": ("MONK", "FERVOR", "SANCTITY", "REDEMPTION",             # (#1243, #1261, #1264)
+                        "BLOCK_PRINTING"),                                      # (#1457)
           "SIEGE_WORKSHOP": ("BATTERING_RAM", "MANGONEL", "SCORPION", "SIEGE_TOWER",   # (#1349, #1362)
                              "CAPPED_RAM_UPGRADE", "SIEGE_RAM_UPGRADE", "ONAGER_UPGRADE", "SIEGE_ONAGER_UPGRADE",
                              "HEAVY_SCORPION_UPGRADE",                  # (#1352)
@@ -362,6 +371,7 @@ TECHS = {"ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bon
          if "infantry" in s.classes else s,                        # combat.STANDARD: not the walls (#1419)
          "BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
          "BLAST_FURNACE": lambda name, s: s._replace(attack=s.attack + 2) if melee(s) else s,
+         "BLOCK_PRINTING": lambda name, s: s,                      # the conversion range: monk.near
          "BOMBARD_TOWER_TECH": lambda name, s: s,                  # the bombard tower in the build menu: build.NEEDS
          "BOW_SAW": lambda name, s: s,                             # an economy technology: gather.WORK_TECHS
          "BODKIN_ARROW": fletching,
@@ -464,6 +474,7 @@ REQUIRES = {"CASTLE_AGE": (2, ("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET"
 TECH_AGE = {                                                       # the age of a technology (build.AGE): hidden before
     "ARSON": 1,
     "BLAST_FURNACE": 3,
+    "BLOCK_PRINTING": 3,
     "BLOODLINES": 1,
     "BODKIN_ARROW": 2,
     "BOMBARD_TOWER_TECH": 3,
@@ -557,6 +568,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "BATTERING_RAM": (0, "minecart", "Battering Ram"),         # a siege unit is a minecart (units.siege)
          "BERSERK": (0, "zombie_spawn_egg", "Berserk"),
          "BLAST_FURNACE": (0, "book", "Blast Furnace"),               # the slot of Forging
+         "BLOCK_PRINTING": (4, "book", "Block Printing"),
          "BLOODLINES": (1, "book", "Bloodlines"),
          "BODKIN_ARROW": (2, "book", "Bodkin Arrow"),                 # the slot of Fletching (AFTER)
          "BOMBARD_CANNON": (7, "tnt_minecart", "Bombard Cannon"),   # after the siege tower
@@ -571,6 +583,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "CHU_KO_NU": (0, "skeleton_spawn_egg", "Chu Ko Nu"),
          "DOUBLE_BIT_AXE": (0, "book", "Double-Bit Axe"),
          "FERVOR": (1, "book", "Fervor"),
+         "DEMOLITION_SHIP": (4, "bamboo_raft", "Demolition Ship"),   # units.classify: a raft with a creeper
+         "FIRE_SHIP": (3, "mangrove_boat", "Fire Ship"),           # units.classify: a boat with a blaze
          "FISHING_LINES": (5, "book", "Fishing Lines"),            # slots 1-4: the ships of the dock
          "FISHING_SHIP": (0, "oak_boat", "Fishing Ship"),         # a ship is a boat (units.boat)
          "FLETCHING": (2, "book", "Fletching"),
@@ -628,6 +642,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "BATTERING_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
         "BERSERK": "Viking infantry. Heals itself.",
         "BLAST_FURNACE": "Infantry and cavalry +2 attack.",
+        "BLOCK_PRINTING": "Monks +3 conversion range and line of sight.",
         "BLOODLINES": "Cavalry +20 HP.",
         "BOW_SAW": "Villagers chop wood 20 % faster.",
         "BODKIN_ARROW": "Archers, towers +1 attack, range; TC +1 attack.",
@@ -650,6 +665,8 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "ELITE_SKIRMISHER_UPGRADE": "Upgrades skirmishers to elite skirmishers.",
         "FEUDAL_AGE": "Advance to the Feudal Age.",
         "FERVOR": "Monks +15 % speed.",
+        "DEMOLITION_SHIP": "Explodes next to ships and buildings.",
+        "FIRE_SHIP": "Warship that spews fire at close range.",
         "FISHING_LINES": "Fishing ships work 10 % faster, carry +5.",
         "FISHING_SHIP": "Gathers food from fish.",
         "FLETCHING": "Archers, towers +1 attack, range; TC +1 attack.",
