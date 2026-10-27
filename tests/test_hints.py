@@ -36,7 +36,7 @@ def test_each_state_has_its_hint():
 def test_the_hint_changes_at_once_and_repeats_while_the_state_lasts():
     server, g, now = game()
     hints.tick(g)
-    assert bar(server) == {"@a": hints.TEXTS["none"]}
+    assert bar(server) == {"@a": hints.TEXTS["none-wand"]}
     server.log.clear()
     now[0] += 5
     hints.tick(g)
@@ -72,7 +72,7 @@ def test_a_player_with_a_corner_gets_an_own_hint():
 def test_clicks_send_the_hint():
     server, g, _ = game()
     g.clicks()
-    assert bar(server) == {"@a": hints.TEXTS["none"]}
+    assert bar(server) == {"@a": hints.TEXTS["none-wand"]}
 
 
 @pytest.mark.mc

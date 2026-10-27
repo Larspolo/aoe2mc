@@ -57,7 +57,11 @@ def arrive(server, g, rect):
 def test_an_order_on_the_own_town_center_sends_the_selection_inside():
     server, g = setup()
     g.choose({"v0", "v1", "v2"}, "v0")
+    now = [0.0]
+    g.clock = lambda: now[0]
     server.scores["aoe_use"] = 1
+    assert g.clicks() == []                                            # Paper: a stick use waits for a hold (#1786)
+    now[0] = gather.HOLD
     for name in g.clicks():
         g.click(name)
     assert set(g.entering) == {"v0", "v1", "v2"} and not g.menus     # an order, not the menu
