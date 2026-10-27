@@ -269,6 +269,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "FABRIC_SHIELDS": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if name in ("KAMAYUK", "ELITE_KAMAYUK", "SLINGER") else s,   # the Incas (#2047)
          "FAITH": lambda name, s: s,                               # the conversion resistance: monk.resist
+         "FARIMBA": lambda name, s: s._replace(attack=s.attack + 5) if "cavalry" in s.classes else s,   # the Malians (#2046)
          "FERVOR": lambda name, s: s,                              # the walk speed: SPEEDS
          "FISHING_LINES": lambda name, s: s,                       # the fishing ships: gather.SHIP_TECHS
          "FLETCHING": fletching,
