@@ -29,6 +29,7 @@
 {"name": "WONDER", "cost": {"wood": 1000, "gold": 1000, "stone": 1000}, "time": 3500, "icon": "weathered_cut_copper_stairs", "age": 3}
 {"name": "ARBALESTER", "age": 3}
 {"name": "ARCHER", "age": 1}
+{"name": "ARMORED_ELEPHANT", "age": 2}
 {"name": "BATTERING_RAM", "age": 2}
 {"name": "BATTLE_ELEPHANT", "age": 2}
 {"name": "BOLAS_RIDER", "age": 2}
@@ -101,6 +102,7 @@
 {"name": "SCORPION", "age": 2}
 {"name": "SCOUT_CAVALRY", "age": 1}
 {"name": "SHRIVAMSHA_RIDER", "age": 2}
+{"name": "SIEGE_ELEPHANT", "age": 3}
 {"name": "SIEGE_RAM", "age": 3}
 {"name": "SIEGE_TOWER", "age": 2}
 {"name": "SKIRMISHER", "age": 1}
