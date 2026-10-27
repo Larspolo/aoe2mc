@@ -18,13 +18,18 @@ sends them next to it. AoE2 repairs siege weapons at 25 % of the building rate (
 the first villager, 93.75 for each other one), for half the training cost (train.price). A siege unit that moves stops
 the repair, as in AoE2: the villagers stand idle.
 
+Ships (#1661): AoE2 repairs ships at the siege rate, for half the training cost, from the shore: a villager repairs
+from up to REACH tiles away. So a right click with selected villagers on an own damaged ship (fleet.SPEEDS) sends them
+to the free land cells within REACH tiles of the ship. A ship far from the shore (no such cell) is not a repair order.
+The crew of the boat has the hit points (fleet.py), as the crew of a minecart: the same commands.
+
 Minecraft feature: the plugin keeps the hit points of a building in the scoreboard aoe_hp of its target entity
 (combat.building, #660), so `scoreboard players get/set <uuid> aoe_hp` reads and sets them, and `aoe label` shows the
 new hearts of its name line. A siege unit has its hit points as the Health of its crew (the passenger of the minecart,
 AoePlugin "stats", #836): `execute as <cart> on passengers run data get/modify entity @s Health`.
 
     repair.order(g, player, cell)   # gather.Gather.click: the selection repairs the damaged building at cell
-    repair.unit_order(g, player, u) # gather.Gather.click: the selection repairs the damaged siege unit u
+    repair.unit_order(g, player, u) # gather.Gather.click: the selection repairs the damaged siege unit or ship u
     repair.tick(g, dt)              # gather.Gather.step: dt AoE2 seconds of repair
 """
 import json
@@ -36,6 +41,7 @@ MORE = 375 / 60             # hit points per AoE2 second of each other repairer
 SHARE = 0.5                 # of the build cost for the full hit points
 SIEGE = 0.25                # the rate of a siege unit: a share of the building rate (AoE2 wiki "Villager")
 STILL = 0.5                 # blocks: a siege unit that moved more stops the repair
+REACH = 2                   # tiles from a villager on the shore to the ship that it repairs (AoE2 wiki "Villager")
 
 
 def owners(g):
@@ -115,19 +121,27 @@ def send(g, who, key, goals):
         g.go(v, "to_repair", goals)
 
 
+def shore(g, cell):
+    """The free land cells within REACH tiles of the ship on the water cell cell: the villagers repair it from there."""
+    r, (x, z) = REACH * g.map.T, cell
+    return {(x + dx, z + dz) for dx in range(-r, r + 1) for dz in range(-r, r + 1) if g.map.free(x + dx, z + dz)}
+
+
 def unit_order(g, player, u):
-    """The selected villagers repair the own damaged siege unit u. Returns True, or False (no own siege unit, it has
-    its full hit points, or no villager is selected)."""
+    """The selected villagers repair the own damaged siege unit or ship u. Returns True, or False (no own siege unit
+    or ship, it has its full hit points, a ship far from the shore, or no villager is selected)."""
+    import fleet                                                   # fleet imports gather
     import units                                                   # the converter's table (gather puts it on the path)
     name, who = g.soldiers.get(u), sorted(g.selected & g.villagers.keys())
-    if not name or not units.siege(name) or not who or not (pos := g.pos(u)):
-        return False
-    h = unit_hp(g, u)
-    if not h or not 0 < h[0] < h[1]:
+    if not name or not (units.siege(name) or name in fleet.SPEEDS) or not who or not (pos := g.pos(u)):
         return False
     cell = (math.floor(pos[0]), math.floor(pos[2]))
+    goals = shore(g, cell) if name in fleet.SPEEDS else g.map.around({cell})
+    h = goals and unit_hp(g, u)
+    if not h or not 0 < h[0] < h[1]:
+        return False
     vars(g).setdefault("repair_at", {})[u] = pos                   # a move from here stops the repair
-    send(g, who, u, g.map.around({cell}))
+    send(g, who, u, goals)
     g.mark(player, {cell})
     return True
 
@@ -202,8 +216,8 @@ def charge(g, key, vs, full, share, name):
 
 
 def unit_tick(g, u, vs, dt):
-    """dt AoE2 seconds of repair of siege unit u by the villagers vs: its crew gets Health back, the stock pays half
-    the training cost for the full hit points. It stops when the unit is full, dead or moves."""
+    """dt AoE2 seconds of repair of siege unit or ship u by the villagers vs: its crew gets Health back, the stock pays
+    half the training cost for the full hit points. It stops when the unit is full, dead or moves."""
     import train                                                   # train imports gather
     name, h, pos = g.soldiers.get(u), unit_hp(g, u), g.pos(u)
     start = vars(g).get("repair_at", {}).get(u)

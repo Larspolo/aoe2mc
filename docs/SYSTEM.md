@@ -71,7 +71,11 @@ alphabetical order, `merge=union` in `.gitattributes` for files where runs only 
 
 All runs share the quota of one Claude Max account. `tools/usage.py` reads the 5-hour and the 7-day usage with one
 tiny CLI call. It computes the target number of runs: 90 % of the 5-hour window used 2 hours before the reset, then
-98 % at the reset, and the week not faster than it passes. `--fire` gives the number of runs to start now: the
+98 % at the reset, and the week not faster than it passes: when the 7-day usage is ahead of the share of the week
+that has passed, the count is at most the runs that the rest of the 7-day budget (1 − used) carries to the 7-day reset
+at the measured 7-day burn per run-hour (`health.weekly_burn`, default `BURN7`). This count can be 0: the runs then
+wait until the budget per hour is large enough again (#1695). The CLI line shows the projection
+(`week ahead +38 pt · runs out Wed 11:22`, at the mean rate of the week so far). `--fire` gives the number of runs to start now: the
 target less the runs with a claim beat in the last 25 minutes. A run cannot start other runs (no `fire_trigger`, #566),
 so the pacer session starts them (at most 4 per cycle). `tools/health.py` measures the quota use of one run from the
 `Usage:` lines of the run reports, and `usage.py` uses that value. `tools/tokens.py` reads the transcript of the

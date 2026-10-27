@@ -1,7 +1,7 @@
 """The transport ship in the game program (#1385, epic #1381). The dock trains it in the Dark Age (train.py). A right
 click with selected land units on an own transport ship loads up to SIZE of them, as in AoE2 DE (AoE2 wiki "Transport
 Ship": garrison 20, all land units): they walk to the land cell nearest to the ship with the plugin (`aoe moveto`), and
-there they go in. A click on the land with the selected loaded ship sails it to the water near that cell (fleet.order),
+there they go in. The ship does not move: a ship far from the land takes them from the nearest shore too (#1653). A click on the land with the selected loaded ship sails it to the water near that cell (fleet.order),
 and at the end of its path the units come out on the land next to the ship and walk to the clicked cell, as in AoE2 DE
 (#1652: before, they came out at a clicked cell near the ship). A right click on the selected ship unloads it at once
 on the nearest land. When the ship sinks, the units inside are lost, as in AoE2.
@@ -16,6 +16,7 @@ A unit inside has the state of a garrisoned unit (garrison.INSIDE) and the plugi
     transport.aim(g, ships, cell)     # gather.Gather.walk_to: a loaded ship sent to a land cell unloads there
     transport.tick(g)                 # gather.Gather.step: units at the ship go in, a ship at its goal unloads
 """
+import collections
 import json
 import math
 
@@ -28,6 +29,7 @@ NAME = "TRANSPORT_SHIP"
 SIZE = 20                   # units inside, as in AoE2 DE (5 before update 141935)
 DOOR = 2.5                  # blocks from the boarding cell or the ship: there a unit goes in
 SHORE = 3                   # tiles from the ship to the land that units board from or go out to
+BODY = 250000               # cells: the limit of the search of the land that the units can walk on (#1694)
 
 
 def fits(g, u):
@@ -35,21 +37,47 @@ def fits(g, u):
     return u in g.villagers or u in g.soldiers and not replay.ship(g.soldiers[u])
 
 
-def land(g, cell, n):
-    """The n free land cells nearest to the block cell (x, z) within SHORE tiles, the nearest first."""
-    r = SHORE * g.map.T
+def land(g, cell, n, tiles=SHORE):
+    """The n free land cells nearest to the block cell (x, z) within `tiles` tiles, the nearest first."""
+    r = tiles * g.map.T
     cells = [(x, z) for x in range(cell[0] - r, cell[0] + r + 1) for z in range(cell[1] - r, cell[1] + r + 1)
              if g.map.free(x, z)]
     return sorted(cells, key=lambda c: (math.dist(c, cell), c))[:n]
 
 
+def body(g, start, limit=BODY):
+    """The free land cells that a unit on the block cell start reaches on foot (8 neighbours, steps of at most 1
+    block, as Map.path), at most limit cells. Empty when start is not free land."""
+    from gather import STEPS                                       # gather imports this module
+    if not g.map.free(*start):
+        return set()
+    seen, todo = {start}, collections.deque([start])
+    while todo and len(seen) < limit:
+        x, z = todo.popleft()
+        for dx, dz in STEPS:
+            n = (x + dx, z + dz)
+            if n not in seen and g.map.free(*n) and abs(g.map.y(*n) - g.map.y(x, z)) <= 1:
+                seen.add(n)
+                todo.append(n)
+    return seen
+
+
 def order(g, player, ship):
     """The land units of the selection walk to the shore next to the own transport ship and go in. Returns True, or
-    False (no own transport ship, no unit of the selection fits, or no land near the ship)."""
+    False (no own transport ship, no unit of the selection fits, or no land on the map). The ship stays where it is: a
+    ship farther than SHORE tiles from the land takes the units from the land cell nearest to it (the owner, #1653:
+    "the units could teleport inside the ship iso the ship having to go to shore first"). The land cell is on the land
+    of the first unit of the selection (body): a nearer shore across the sea is not a goal, the units cannot walk
+    there (#1694: they walked into the sea)."""
     if g.soldiers.get(ship) != NAME or not g.paper or not (pos := g.pos(ship)):
         return False
     who = sorted(u for u in g.selected - {ship} if fits(g, u))
-    at = land(g, (math.floor(pos[0]), math.floor(pos[2])), 1)
+    cell, tiles = (math.floor(pos[0]), math.floor(pos[2])), SHORE
+    first = next((p for u in who if (p := g.pos(u))), None)
+    own = body(g, (math.floor(first[0]), math.floor(first[2]))) if first else set()
+    at = [min(own, key=lambda c: (math.dist(c, cell), c))] if own else []
+    while who and not own and not (at := land(g, cell, 1, tiles)) and tiles * g.map.T < g.map.n:
+        tiles *= 2                                                 # far from the land: look farther (#1653)
     if not who or not at:
         return False
     import ai, train                                               # ai and train import gather

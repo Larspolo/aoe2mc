@@ -38,7 +38,8 @@ def test_a_villager_crosses_water_at_its_walk_speed(tiny_world, tmp_path):
             t1 = next((t for t, z in track if z >= a), None)
             t2 = next((t for t, z in track if z >= b), time.time())
             return (b - a) / (t2 - t1) if t1 else 0.0
-        game.command(f'summon villager {x0 + 1.5} {y} {z0 + 0.5} {{NoAI:1b,Tags:["v"]}}')
+        # it starts in the water: a land unit does not walk into water deeper than 1 block (#1669), but swims out
+        game.command(f'summon villager {x0 + 1.5} {y - 2} {z0 + WET[0] + 0.5} {{NoAI:1b,Tags:["v"]}}')
         time.sleep(1)
         wet = walk("v", z0 + LONG)
         want = ai.walk_speed("VILLAGER_MALE", 4, 4.0)

@@ -5,6 +5,7 @@ and question. The skill `human` (a local session of the owner, `/human`) lists t
     python3 tools/owner_tasks.py --show N    # the section "## For the owner" of ticket N (else its last question)
     python3 tools/owner_tasks.py --json      # the list as JSON
     python3 tools/owner_tasks.py --wait      # wait for a new ticket (#1025): exit 0 and print it, exit 1 after --hours
+    python3 tools/owner_tasks.py --plan      # the plan of one session (#1674): close now, replay, play game, no game
 
 Kinds: `decision` ("Decide: ..."), `play` (a play test in Minecraft: "Check ..."), `setting` (the environment, the
 scheduled task or GitHub), `outside` (a step outside the cloud), `close` (close an issue that the auto mode did not let
@@ -26,6 +27,8 @@ OUTSIDE = re.compile(r"\b(own computer|second repository|local session|on your c
 CLOSE = re.compile(r"\b(please close|close (this|it) by hand)\b", re.I)
 SETTING = re.compile(r"\b(environment|setup script|network|variable|scheduled task|GitHub setting|secret|"
                      r"interaction limit|branch protection)\b", re.I)
+REPLAY = re.compile(r"\breplay|\.aoe2record\b|^\W*Watch:", re.I | re.M)
+PLAN = ("close now", "replay", "play game", "no game")       # the groups of --plan, in the order of a session
 
 
 def for_owner(body):
@@ -60,8 +63,24 @@ def tasks(issues, comments):
     wait = [i for i in issues if "pull_request" not in i and "needs-human" in labels(i) and MUTED not in labels(i)
             and i.get("state", "open") == "open"]
     out = [{"number": i["number"], "title": i["title"], "kind": kind(i, comments.get(i["number"], [])), "epic": "epic" in labels(i),
-            "question": ask(i, comments.get(i["number"], [])), "url": i.get("html_url", "")} for i in wait]
+            "question": ask(i, comments.get(i["number"], [])), "url": i.get("html_url", ""),
+            "replay": bool(REPLAY.search(f"{i['title']}\n{i.get('body') or ''}"))} for i in wait]
     return sorted(out, key=lambda t: (t["kind"] != "decision", t["number"]))
+
+
+def plan(found):
+    """{group of PLAN: tasks} for one session of the `human` skill (#1674): closes first, then one replay with
+    game/watch.py, one play game with game/play_guide.py, then the tickets without a game. The skill moves a ticket
+    that asks for times, values or texts to agent work (#1159)."""
+    got = {g: [] for g in PLAN}
+    for t in found:
+        if t["kind"] == "close":
+            got["close now"].append(t)
+        elif t["kind"] == "play":
+            got["replay" if t["replay"] else "play game"].append(t)
+        else:
+            got["no game"].append(t)
+    return got
 
 
 def ask(issue, comments):
@@ -112,6 +131,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--show", type=int, metavar="N", help="print what the owner must do for ticket N")
     ap.add_argument("--json", action="store_true", help="print the list as JSON")
+    ap.add_argument("--plan", action="store_true", help="print the plan of one session: close now, replay, play game, no game")
     ap.add_argument("--wait", action="store_true", help="wait for a new ticket: exit 0 and print it, else exit 1")
     ap.add_argument("--every", type=float, default=300, help="seconds between two checks of --wait (default 300)")
     ap.add_argument("--hours", type=float, default=12, help="hours that --wait waits at most (default 12)")
@@ -130,7 +150,11 @@ def main(argv=None):
     comments = {i["number"]: pages(f"issues/{i['number']}/comments") for i in issues if MUTED not in labels(i)}
     found = tasks(issues, comments)
     if a.json:
-        print(json.dumps(found, indent=1))
+        print(json.dumps(plan(found) if a.plan else found, indent=1))
+        return 0
+    if a.plan:
+        for g, ts in plan(found).items():
+            print(f"{g} ({len(ts)}):" + "".join(f"\n  {line(t)}" for t in ts))
         return 0
     for t in found:
         print(line(t))

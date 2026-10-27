@@ -203,6 +203,7 @@ class Replay:
         self.follow, self.followed = follow, (None, -math.inf)  # the spectators follow player N: (UUID, game time)
         self.pov, self.hidden = pov, set()      # the view of player N (#1302): UUIDs of the enemy units hidden from @a
         self.explored, self.fogged = {}, None   # player -> tiles it saw once; (view, seen, explored) on the minimap (#1567)
+        self.drawn, self.known = {}, {}         # footprint -> player on the minimap; view -> the enemy ones it saw (#1678)
         self.T, self.n = data["tile_size"], len(data["ground"])
         self.ground = [[None if v == "-" else int(v) for v in row.split()] for row in data["ground"]]
         self.starts = [(o.get("ref"), o["player"], o["name"], (o["footprint"][0], o["footprint"][2], o["footprint"][1],
@@ -545,7 +546,9 @@ class Replay:
         self.placed.append((player, name, (x0, x1 + 1, z0, z1 + 1)))
         self.tops[self.placed[-1][2]] = top
         self.open[self.placed[-1][2]] = {(x + dx, z + dz) for x, z in o.get("open", ())}
-        out = [f"aoe minimap building {x0} {z0} {x1 + 1} {z1 + 1} p{player}"] * self.ai   # on the map item (#1238)
+        out = [f"aoe minimap building {x0} {z0} {x1 + 1} {z1 + 1} p{player}"] * (self.ai and self.pov is None)   # on the
+        if self.ai and self.pov is None:                            # map item (#1238); with a view player: fog() (#1678)
+            self.drawn[self.placed[-1][2]] = player
         for t in trees:                                             # as gather.Gather.clear: logs, leaves and bamboo
             m.trees.pop(t)
             tx, tz = t[0] * T, t[1] * T
@@ -589,7 +592,7 @@ class Replay:
                 else:
                     del self.placed[new]
                     self.added -= 1
-                    out += [f"aoe minimap unbuild {rect[0]} {rect[2]}"] * self.ai
+                    out += [f"aoe minimap unbuild {rect[0]} {rect[2]}"] * (self.pov is None and self.drawn.pop(rect, 0) != 0)
                 out += self.fall(rect)
             elif (v := self.unit(i, name, e["player"])) is not None:
                 del self.units[i]
@@ -625,8 +628,10 @@ class Replay:
         return self.fill(max(0, x0), min(ys), max(0, z0), min(self.n, x1) - 1, top, min(self.n, z1) - 1, "air destroy")
 
     def spectate(self, e):
-        """--follow N (#738): the spectators look through the first unit of a MOVE, ORDER or spawn of player N
-        (vanilla /spectate; it takes one player, so `execute as` each spectator). The camera changes at most once per
+        """--follow N (#738): the spectators follow the first unit of a MOVE, ORDER or spawn of player N, the unit with
+        the tag FOLLOWED. On Paper the plugin moves each spectator over the shoulder of that unit each tick (Follow.java,
+        #1660); a vanilla server has no plugin, so there the spectators look through its eyes (/spectate; it takes one
+        player, so `execute as` each spectator). The camera changes at most once per
         FOLLOW_MS of game time, at once when its unit is gone (DELETE). A unit with a rider (a horse, a siege crew):
         the spectators look through the rider, else its legs fill the screen (#1095). `execute on passengers` finds
         it: the replay does not know the UUID of the rider."""
@@ -645,8 +650,9 @@ class Replay:
         self.followed = (v.uuid, e["time"])
         return [f"tag @e[tag={FOLLOWED}] remove {FOLLOWED}", f"tag {v.uuid} add {FOLLOWED}",
                 f"execute as {v.uuid} on passengers run tag {v.uuid} remove {FOLLOWED}",
-                f"execute as {v.uuid} on passengers run tag @s add {FOLLOWED}",
-                f"execute as @a[gamemode=spectator] run spectate @e[tag={FOLLOWED},limit=1] @s"]
+                f"execute as {v.uuid} on passengers run tag @s add {FOLLOWED}"] + \
+            [f"execute as @a[gamemode=spectator] run spectate @e[tag={FOLLOWED},limit=1] @s"] * \
+            (getattr(self.game, "kind", "paper") == "vanilla")
 
     def spawns(self):
         """A "spawn" event for each unit that a QUEUE command trains, at the end of its training."""
@@ -1383,7 +1389,7 @@ class Replay:
         self.hidden = out
         k = (RCON_MAX - 20) // 37                                    # UUIDs per command (36 characters and a space)
         return [f"aoe {verb} @a {' '.join(u[i:i + k])}" for verb, u in (("hide", hide), ("show", show))
-                for i in range(0, len(u), k)] + self.minimap_fog(own, tiles) * self.ai
+                for i in range(0, len(u), k)] + self.minimap_fog(own, tiles) * self.ai + self.minimap_buildings(own, tiles)
 
     def minimap_fog(self, own, tiles):
         """The fog of the view player on the map item (#1567, Minimap.java): the tiles that the view player and its
@@ -1400,6 +1406,30 @@ class Replay:
         self.fogged = (self.pov, inside, dim)
         return [f"aoe minimap fog {self.T} {n}"] * new + runs("aoe minimap see", inside - old_see) + \
             runs("aoe minimap dim", dim - old_dim)
+
+    def minimap_buildings(self, own, tiles):
+        """The buildings of the replay on the map item (#1238) with a view player (#1678): the ones of the view player
+        and its allies `own`, and the enemy ones that they saw, in the last seen state, as in AoE2: an enemy building
+        shows when a tile of it comes into the sight `tiles`, and one that died out of sight stays until its place
+        comes into sight. Only the changes; no view player: all buildings again."""
+        if not self.ai:
+            return []
+        T, placed = self.T, {rect: p for p, _, rect in self.placed}
+        want = placed
+        if self.pov is not None:
+            known = self.known.setdefault(self.pov, {})
+            for rect, p in [*known.items(), *placed.items()]:
+                if p not in own and tiles & {(x, z) for x in range(rect[0] // T, (rect[1] - 1) // T + 1)
+                                             for z in range(rect[2] // T, (rect[3] - 1) // T + 1)}:
+                    if rect in placed:
+                        known[rect] = p
+                    else:
+                        known.pop(rect, None)                       # its place is in sight: it is gone
+            want = {r: p for r, p in placed.items() if p in own} | known
+        out = [f"aoe minimap unbuild {r[0]} {r[2]}" for r in sorted(set(self.drawn) - set(want))] + \
+            [f"aoe minimap building {r[0]} {r[2]} {r[1]} {r[3]} p{p}" for r, p in sorted(want.items()) if self.drawn.get(r) != p]
+        self.drawn = dict(want)
+        return out
 
     def overview(self, join=False):
         """The view of a player at the start of the replay (#737, owner decision #782): adventure mode, a text about
@@ -1493,7 +1523,8 @@ class Replay:
     def timeline_commands(self, end):
         """A written book "Timeline" for each viewer at the end of the replay (#1068): per player its age-ups, its
         first military unit, its first castle and its resign, in time order, from the whole timeline (also the time
-        of a jump) up to `end` (ms). Each player starts a page; a long list goes on to the next page. One RCON
+        of a jump) up to `end` (ms). Each player starts a page with a heading in its player color and its team (#1643); a
+        long list goes on to the next page. One RCON
         command holds at most RCON_MAX bytes: the last lines go first."""
         import gather                                               # gather -> build -> replay: import it late
         lines, army, castle = {}, set(), set()
@@ -1518,15 +1549,20 @@ class Replay:
         while True:
             pages = []
             for p in sorted(lines):
-                name = self.player(p)[0]                                # the name and an empty line
-                rows, page = BOOK_ROWS - 1 - len(textwrap.wrap(name, BOOK_COLS)), name + "\n"
+                name, color = self.player(p)                            # the heading and an empty line
+                team = self.team(p)
+                name = f"■ {f'Team {team} · ' if team is not None else ''}{name}"
+                rows, page = BOOK_ROWS - 1 - len(textwrap.wrap(name, BOOK_COLS)), ""
+                head = {"text": name, "color": color if color != "white" else "black"}   # the sidebar color (#1643)
                 for line in lines[p]:
                     n = len(textwrap.wrap(line, BOOK_COLS))
                     if n > rows:
-                        pages.append(page.rstrip("\n"))
-                        rows, page = BOOK_ROWS, ""
+                        pages.append({"text": "", "extra": [head, {"text": "\n" + page.rstrip("\n")}]} if head
+                                     else {"text": page.strip("\n")})
+                        rows, page, head = BOOK_ROWS, "", None
                     rows, page = rows - n, page + "\n" + line
-                pages.append(page.strip("\n"))
+                pages.append({"text": "", "extra": [head, {"text": "\n" + page.rstrip("\n")}]} if head
+                             else {"text": page.strip("\n")})       # only the heading has a color, the lines are black
             book = {"title": "Timeline", "author": "aoe2mc", "pages": pages}
             cmd = "give @a minecraft:written_book[minecraft:written_book_content=" + \
                 json.dumps(book, ensure_ascii=False, separators=(",", ":")) + "]"

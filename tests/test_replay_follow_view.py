@@ -1,4 +1,5 @@
-"""Live replay --follow: the spectators look through the rider of a mounted unit, not the horse (#1095)."""
+"""Live replay --follow: the spectators follow the rider of a mounted unit, not the horse (#1095), over its shoulder
+(#1660)."""
 import json
 import os
 import re
@@ -29,8 +30,7 @@ def test_the_rider_takes_the_tag_and_the_spectators_look_through_it():
     tag = replay.FOLLOWED
     assert follow("u1") == [f"tag @e[tag={tag}] remove {tag}", f"tag u1 add {tag}",
                             f"execute as u1 on passengers run tag u1 remove {tag}",     # a rider: not the horse
-                            f"execute as u1 on passengers run tag @s add {tag}",
-                            f"execute as @a[gamemode=spectator] run spectate @e[tag={tag},limit=1] @s"]
+                            f"execute as u1 on passengers run tag @s add {tag}"]       # Paper: Follow.java
 
 
 def pos(game, who):
@@ -38,7 +38,7 @@ def pos(game, who):
 
 
 @pytest.mark.mc
-def test_a_spectator_on_a_server_looks_through_the_rider(tiny_world, tmp_path):
+def test_a_spectator_on_a_server_follows_the_rider(tiny_world, tmp_path):
     import mc_shot
     from test_mc_check import mojang_reachable
     from test_paper import paper_reachable
@@ -59,7 +59,8 @@ def test_a_spectator_on_a_server_looks_through_the_rider(tiny_world, tmp_path):
         r.units[7] = r.gather.Villager(HORSE, (20.0, 100.0, 20.0))
         out = [game.command(c) for c in r.spectate(move(0, 1, 7))]
         time.sleep(2)
-        assert "Now spectating" in out[-1] or not out[-1].strip(), out
+        assert "Added tag" in out[-1], out
         cam, horse, rider = pos(game, "aoe2mc"), pos(game, HORSE), pos(game, RIDER)
-        assert len(cam) == 3 and abs(cam[1] - rider[1]) < 0.1 < rider[1] - horse[1], (out, cam, horse, rider)
+        assert len(cam) == 3 and rider[1] - horse[1] > 0.1, (out, cam, horse, rider)
+        assert cam[1] - rider[1] > 1.5 and abs(cam[2] - (rider[2] - 4)) < 0.3, (cam, rider)   # behind the rider (#1660)
         assert f"{replay.FOLLOWED}" not in game.command(f"data get entity {HORSE} Tags")
