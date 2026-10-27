@@ -147,6 +147,14 @@ the owner login, the default branch, the status issue, the commands, the doc pat
 | `docs/DECISIONS.md` | specific | The log of the owner's decisions (one line each), the evidence of the principles. |
 | `docs/SYSTEM.md` | generic | This document. |
 | `.claude/skills/autopilot/SKILL.md` | generic | The issue numbers of the lessons. |
+| `.claude/skills/autopilot/conflict.md` | generic | The issue numbers of the lessons (merge conflicts, #1700). |
+| `.claude/skills/autopilot/github.md` | generic | The `gh api` paths and the labels. |
+| `.claude/skills/autopilot/more.md` | generic | The issue numbers of the lessons (more tickets in one run). |
+| `.claude/skills/autopilot/overlap.md` | generic | The issue numbers of the lessons (claims, takeovers). |
+| `.claude/skills/autopilot/owner.md` | generic | The issue numbers of the lessons (ask the owner, check tickets). |
+| `.claude/skills/autopilot/process.md` | generic | The issue numbers of the lessons (step 9). |
+| `.claude/skills/autopilot/queue.md` | generic | The issue numbers of the lessons (epics, refill, haiku lane). |
+| `.claude/skills/autopilot/report.md` | generic | The issue numbers of the lessons (step 8, metrics line). |
 | `.claude/skills/verify/SKILL.md` | specific | The check levels (preview image, world reader, Minecraft server, screenshots). |
 | `.claude/skills/ticket/SKILL.md` | generic | The examples. |
 | `.claude/skills/design/SKILL.md` | specific | The design of buildings, units and animals. |
