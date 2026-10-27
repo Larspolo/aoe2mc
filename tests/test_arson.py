@@ -41,7 +41,7 @@ def test_the_standard_buildings_have_their_class_and_the_walls_not():
     wall, = [c for c in combat.building(uuid, "STONE_WALL", 1, box, s=combat.wall("STONE_WALL", 1))
              if c.startswith("aoe building")]
     assert house == f"aoe building {uuid} 550 0 7 8 64 8 23 104 23"      # the default classes of the plugin
-    assert wall == f"aoe building {uuid} 1080 8 10 8 64 8 23 104 23 building"
+    assert wall == f"aoe building {uuid} 1080 8 10 8 64 8 23 104 23 building,stone"
 
 
 def test_arson_gives_infantry_two_attack_against_standard_buildings():

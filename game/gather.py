@@ -56,6 +56,7 @@ import bossbar  # noqa: E402
 import cheats  # noqa: E402
 import civs  # noqa: E402
 import conquest  # noqa: E402
+import diplomacy  # noqa: E402
 import fleet  # noqa: E402
 import fog  # noqa: E402
 import garrison  # noqa: E402
@@ -910,6 +911,7 @@ class Gather:
             for n, (slot, _) in GROUPS.items():
                 self.command(f"execute as @a unless items entity @s hotbar.{slot} *[custom_data={{aoe_group:{n}}}] "
                              f"run item replace entity @s hotbar.{slot} with {group_item(n)}")
+            diplomacy.give(self)                                       # the Game menu item (#1588)
         self.calls += 1
         self.command(f"execute as @a unless items entity @s container.* minecraft:{WAND} "
                      f'run give @s minecraft:{WAND}[item_name="Selection box"]')
@@ -926,6 +928,9 @@ class Gather:
                     self.wands.add(name)
                 if "aoe_use" in used and (n := self.group_in_hand(name)):
                     self.grouping[name] = n, "passed" in self.command(f"execute as {name} if predicate {SNEAK}")
+                elif "aoe_use" in used and diplomacy.in_hand(self, name):   # the Game menu item (#1588): no ray
+                    out.remove(name)
+                    diplomacy.open_menu(self, name)
                 for obj in objs:
                     self.command(f"scoreboard players reset {name} {obj}")
         return out

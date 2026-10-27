@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.function.Predicate;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -34,10 +36,17 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * "aoe minimap pixel X Z" gives the map pixel of block (X, Z), or "outside" (the place rule, for the tests).
  * "aoe minimap building X0 Z0 X1 Z1 TEAM" adds the footprint (X1, Z1 exclusive) of a building of the replay in the map
  * color of the team, "aoe minimap unbuild X0 Z0" removes it (#1238). The squares are under the unit dots.
+ * The fog of the view player (#1567): "aoe minimap fog T N" starts it on N × N tiles of T blocks, all unexplored
+ * (black); "aoe minimap see RUN ..." and "aoe minimap dim RUN ..." set tiles in sight (normal colors) and explored out
+ * of sight (the darkest shade of the color), RUN = "Y,X0,X1" (tiles X0 to X1 of row Y); "aoe minimap fog off" removes
+ * it. The fog goes over the base image and the buildings, under the dots. "aoe minimap tile X Z" gives the fog of
+ * block (X, Z). The units that "aoe hide" hides (the enemies out of sight) have no dot.
  */
 final class Minimap extends MapRenderer {
     static final int PERIOD = 20;                         // ticks between two updates of the dots (sendMap)
     static final int DOT = 2;                             // pixels of a dot side
+    static final byte BLACK = 29 * 4 + 3;                 // an unexplored tile: map color COLOR_BLACK, darkest shade
+    static final byte UNEXPLORED = 0, EXPLORED = 1, SEEN = 2;
     // the team color (units.TEAM_COLOR) -> the map color ID of the player color (aoe2mc.MAP_DYES); byte: ID × 4 + 2
     static final Map<NamedTextColor, Integer> COLORS = Map.of(NamedTextColor.BLUE, 25, NamedTextColor.RED, 28,
             NamedTextColor.DARK_GREEN, 27, NamedTextColor.YELLOW, 18, NamedTextColor.AQUA, 23,
@@ -46,13 +55,31 @@ final class Minimap extends MapRenderer {
     private long last = Long.MIN_VALUE;                   // the server tick of the last update
     private List<int[]> dots = new ArrayList<>();         // {px, pz} of the drawn dots and squares
     private final Map<List<Integer>, int[]> buildings = new LinkedHashMap<>();   // (x0, z0) -> {x0, z0, x1, z1, color}
+    private byte[][] fog;                                 // [tile x][tile y] -> UNEXPLORED, EXPLORED, SEEN; null: no fog
+    private int tile;                                     // blocks of a fog tile side
+    private boolean fogged;                               // the last render drew the fog: clear all pixels first
+    private MapCanvas drawn;                              // the canvas of the last render (aoe minimap tile)
     private MapView view;
     private BukkitTask task;
     private final JavaPlugin plugin;
+    private final Predicate<UUID> hidden;                 // aoe hide: no dot for these units
 
-    Minimap(JavaPlugin plugin) {
+    Minimap(JavaPlugin plugin, Predicate<UUID> hidden) {
         super(false);                                     // the same image for each player
         this.plugin = plugin;
+        this.hidden = hidden;
+    }
+
+    /** Map color c in the darkest shade (shade 3: 135/255 of the color, the map rule); no color (0 to 3): black. */
+    static byte dim(byte c) {
+        int id = (c & 0xFF) >> 2;
+        return id == 0 ? BLACK : (byte) (id * 4 + 3);
+    }
+
+    /** The fog of block coordinates (x, z): UNEXPLORED, EXPLORED, SEEN, or -1 without fog or outside the tiles. */
+    int fogAt(double x, double z) {
+        int tx = (int) Math.floor(x / tile), tz = (int) Math.floor(z / tile);
+        return fog == null || tx < 0 || tz < 0 || tx >= fog.length || tz >= fog.length ? -1 : fog[tx][tz];
     }
 
     /** The map pixel (0 to 127) of block coordinate b on a map of this center and scale, or -1 outside (the rule of
@@ -71,6 +98,7 @@ final class Minimap extends MapRenderer {
         return view;
     }
 
+    @SuppressWarnings({"deprecation", "removal"})         // getPixel: the map color byte
     boolean command(CommandSender sender, String[] args) {
         MapView v = view();
         if (v == null) {
@@ -82,6 +110,44 @@ final class Minimap extends MapRenderer {
             int px = pixel(Double.parseDouble(args[2]), v.getCenterX(), s);
             int pz = pixel(Double.parseDouble(args[3]), v.getCenterZ(), s);
             sender.sendMessage("Minimap pixel: " + (px < 0 || pz < 0 ? "outside" : px + " " + pz));
+            return true;
+        }
+        if (args.length == 4 && args[1].equals("fog")) {
+            int n = Integer.parseInt(args[3]);
+            tile = Math.max(1, Integer.parseInt(args[2]));
+            fog = new byte[n][n];                         // all UNEXPLORED
+            sender.sendMessage("Minimap fog: " + n + " tiles");
+            return true;
+        }
+        if (args.length == 3 && args[1].equals("fog")) {
+            fog = null;
+            sender.sendMessage("Minimap fog: off");
+            return true;
+        }
+        if (args.length >= 3 && (args[1].equals("see") || args[1].equals("dim"))) {
+            byte state = args[1].equals("see") ? SEEN : EXPLORED;
+            int n = 0;
+            for (int i = 2; i < args.length && fog != null; i++) {
+                String[] r = args[i].split(",");
+                int y = Integer.parseInt(r[0]);
+                for (int x = Math.max(0, Integer.parseInt(r[1])); x <= Integer.parseInt(r[2]) && x < fog.length; x++) {
+                    if (y >= 0 && y < fog.length) {
+                        fog[x][y] = state;
+                        n++;
+                    }
+                }
+            }
+            sender.sendMessage("Minimap " + args[1] + ": " + n + " tiles");
+            return true;
+        }
+        if (args.length == 4 && args[1].equals("tile")) {
+            double x = Double.parseDouble(args[2]), z = Double.parseDouble(args[3]);
+            int f = fogAt(x, z), s = v.getScale().getValue();
+            int px = pixel(x, v.getCenterX(), s), pz = pixel(z, v.getCenterZ(), s);
+            byte c = drawn == null || px < 0 || pz < 0 ? 0 : drawn.getPixel(px, pz);
+            c = c == -1 ? drawn.getBasePixel(px, pz) : c;  // the pixel of the last render: the layer or the base image
+            sender.sendMessage("Minimap tile: " + (f < 0 ? "none" : new String[] {"unexplored", "explored", "seen"}[f])
+                    + " " + (c & 0xFF));
             return true;
         }
         if (args.length == 7 && args[1].equals("building")) {
@@ -96,6 +162,10 @@ final class Minimap extends MapRenderer {
         if (args.length == 4 && args[1].equals("unbuild")) {
             buildings.remove(List.of(Integer.parseInt(args[2]), Integer.parseInt(args[3])));
             sender.sendMessage("Minimap buildings: " + buildings.size());
+            return true;
+        }
+        if (args.length != 2) {
+            sender.sendMessage("Minimap: unknown command " + String.join(" ", args));
             return true;
         }
         on = args[1].equals("on");
@@ -129,20 +199,29 @@ final class Minimap extends MapRenderer {
     }
 
     @Override
-    @SuppressWarnings("deprecation")                      // setPixel: the exact map color byte of the converter
+    @SuppressWarnings({"deprecation", "removal"})         // setPixel: the exact map color byte of the converter
     public void render(MapView map, MapCanvas canvas, Player player) {
         long now = Bukkit.getCurrentTick();
         if (!on || now == last) {                         // the canvas is shared: draw once per tick
             return;
         }
         last = now;
-        for (int[] d : dots) {                            // clear the old dots: the base image shows again
-            canvas.setPixel(d[0], d[1], (byte) -1);
+        drawn = canvas;
+        int s = map.getScale().getValue();
+        if (fogged) {                                     // the fog was on each pixel: clear all
+            for (int px = 0; px < 128; px++) {
+                for (int pz = 0; pz < 128; pz++) {
+                    canvas.setPixel(px, pz, (byte) -1);
+                }
+            }
+        } else {
+            for (int[] d : dots) {                        // clear the old dots: the base image shows again
+                canvas.setPixel(d[0], d[1], (byte) -1);
+            }
         }
         dots = new ArrayList<>();
         World world = map.getWorld() != null ? map.getWorld() : Bukkit.getWorlds().get(0);
         Scoreboard board = Bukkit.getScoreboardManager().getMainScoreboard();
-        int s = map.getScale().getValue();
         for (int[] b : buildings.values()) {              // the buildings first: the dots go on top
             int px0 = Math.max(0, pixel(b[0], map.getCenterX(), s)), pz0 = Math.max(0, pixel(b[1], map.getCenterZ(), s));
             int px1 = pixel(b[2] - 1, map.getCenterX(), s), pz1 = pixel(b[3] - 1, map.getCenterZ(), s);
@@ -153,8 +232,21 @@ final class Minimap extends MapRenderer {
                 }
             }
         }
+        fogged = fog != null;
+        int f = 1 << s, x0 = map.getCenterX() - 64 * f, z0 = map.getCenterZ() - 64 * f;
+        for (int px = 0; px < 128 && fogged; px++) {      // the fog of the tile at the pixel center
+            for (int pz = 0; pz < 128; pz++) {
+                int state = fogAt(x0 + px * f + f / 2.0, z0 + pz * f + f / 2.0);
+                if (state == UNEXPLORED) {
+                    canvas.setPixel(px, pz, BLACK);
+                } else if (state == EXPLORED) {
+                    byte c = canvas.getPixel(px, pz);     // a building square, else the base image
+                    canvas.setPixel(px, pz, dim(c == -1 ? canvas.getBasePixel(px, pz) : c));
+                }
+            }
+        }
         for (LivingEntity e : world.getLivingEntities()) {
-            if (e instanceof Player) {
+            if (e instanceof Player || hidden.test(e.getUniqueId())) {
                 continue;
             }
             Team team = board.getEntityTeam(e);

@@ -2827,8 +2827,35 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
     return sum("playsound" in line for line in lines[:work]), len(lines) - work
 
 
-def write_level_dat(path, name, spawn, yaw=SPAWN_YAW, size=None):
-    """size: the map size in blocks; the vanilla world border goes around the map (#172)."""
+# The time of day (world clock ticks) of each map color mood of a DE scenario (ColorMood, #1595): a dark mood at
+# midnight, a late one at sunset, the others at noon. The game rule advance_time is 0, so the time stays.
+NOON = 6000
+MOODS = {
+    "ARCTIC": NOON,
+    "AUTUMN": NOON,
+    "BRUMOUS": NOON,
+    "DARKNESS": 18000,
+    "DEFAULT": NOON,
+    "DESERT": NOON,
+    "EVENING": 12500,
+    "JUNGLE": NOON,
+    "MISTY": NOON,
+    "MURKY": NOON,
+    "NIGHT": 18000,
+    "RAINFOREST": NOON,
+    "SAVANNAH": NOON,
+    "SPRING": NOON,
+    "STEPPES": NOON,
+    "SUMMER": NOON,
+    "SWAMP": NOON,
+    "TWILIGHT": 13000,
+    "WINTER": NOON,
+}
+
+
+def write_level_dat(path, name, spawn, yaw=SPAWN_YAW, size=None, ticks=NOON):
+    """size: the map size in blocks; the vanilla world border goes around the map (#172). ticks: the time of day
+    (MOODS, #1595)."""
     def dim(kind, gen):
         return Compound({"type": String(f"minecraft:{kind}"), "generator": gen})
     void = Compound({"type": String("minecraft:flat"), "settings": Compound({
@@ -2863,7 +2890,7 @@ def write_level_dat(path, name, spawn, yaw=SPAWN_YAW, size=None):
                                                        "minecraft:the_end": dim("the_end", end)})},
         "weather": {"raining": Byte(0), "thundering": Byte(0), "rain_time": Int(0), "thunder_time": Int(0),
                     "clear_weather_time": Int(0)},
-        "world_clocks": {"minecraft:overworld": Compound({"total_ticks": Long(6000), "paused": Byte(0)})},
+        "world_clocks": {"minecraft:overworld": Compound({"total_ticks": Long(ticks), "paused": Byte(0)})},
     }
     d = os.path.join(os.path.dirname(path), "data", "minecraft")
     os.makedirs(d, exist_ok=True)
@@ -3160,14 +3187,15 @@ class Progress:
 
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
             barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False,
-            garrison="inside", border_design="diorama", ambience="basic", at=None):
-    """at: recorded games only, the time in ms (--at): convert the state at that time (apply_timeline)."""
+            garrison="inside", border_design="diorama", ambience="basic", at=None, mood="on"):
+    """at: recorded games only, the time in ms (--at): convert the state at that time (apply_timeline).
+    mood: "on" sets the time of day of the map color mood (MOODS), "off" keeps noon (#1595)."""
     global MC
     MC = VERSIONS[mc_version]
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
     try:
         _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-                 verbose, garrison, border_design, ambience, at)
+                 verbose, garrison, border_design, ambience, at, mood)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
@@ -3175,7 +3203,7 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
 
 
 def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-             verbose, garrison, border_design, ambience, at=None):
+             verbose, garrison, border_design, ambience, at=None, mood="on"):
     buildings.BARRIERS = barriers
     buildings.TURN, yaw = ORIENTATIONS[orientation]
     MOVED.clear()           # the counts of an earlier conversion in this process
@@ -3308,7 +3336,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     for (rx, rz), chunks in entity_regions.items():
         write_region(os.path.join(dim, "entities", f"r.{rx}.{rz}.mca"), chunks)
 
-    write_level_dat(os.path.join(out, "level.dat"), name, spawn, yaw, cols.n)
+    write_level_dat(os.path.join(out, "level.dat"), name, spawn, yaw, cols.n,
+                    MOODS.get(texts.get("mood"), NOON) if mood == "on" else NOON)
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline,
                   texts.get("mood", "DEFAULT"))
     triggers, tstats = texts.get("triggers", []), Counter()
@@ -3542,6 +3571,9 @@ def main(argv=None):
                          "full also gives each terrain group a custom biome with its own sky, fog and water colors, but "
                          "Minecraft then shows an \"Experimental Settings\" warning when the world opens; off: a "
                          "silent world without a datapack")
+    ap.add_argument("--mood", choices=("on", "off"), default="on",
+                    help="on: the time of day of the map color mood of a DE scenario (Night and Darkness at night, "
+                         "Evening and Twilight at sunset); off: noon for all maps (default on)")
     ap.add_argument("--at", type=game_time, metavar="MM:SS",
                     help="recorded game: convert the state at this game time (buildings and trained units of the "
                          "commands until then; default: the start)")
@@ -3557,7 +3589,8 @@ def main(argv=None):
     kw = dict(T=a.tile_size, H=a.level_height, seed=a.seed, preview=a.preview, arch=a.architecture,
               player_arch=a.player_architecture, with_units=not a.no_units, barriers=not a.no_barriers,
               mc_version=a.mc_version, spawn=a.spawn, birds=not a.no_birds, orientation=a.orientation,
-              verbose=a.verbose, garrison=a.garrison, border_design=a.border, ambience=a.ambience)
+              verbose=a.verbose, garrison=a.garrison, border_design=a.border, ambience=a.ambience,
+              mood=a.mood)
     try:
         if a.at is not None and not a.scenario.lower().endswith(RECORDS):
             ap.error("--at needs a recorded game (.aoe2record)")
