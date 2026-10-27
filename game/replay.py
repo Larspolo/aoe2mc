@@ -403,9 +403,9 @@ class Replay:
         ys = [by for xs, bys, zs, ids, _ in E.parts for by, i in zip(bys.tolist(), ids.tolist()) if i]
         return max(ys) - cols.surface(*o["footprint"][:2]) if ys and "footprint" in o else TALL
 
-    def draw(self, name, player, x, y):
+    def draw(self, name, player, x, y, along_z=False):
         """(Columns, Edits, object) of one building at tile (x, y) of a flat map whose corner is tile
-        (x - FLAT // 2, y - FLAT // 2), rounded down."""
+        (x - FLAT // 2, y - FLAT // 2), rounded down. along_z: a gate along z (no walls next to it tell it, #1324)."""
         T, info = self.T, self.data["players"].get(str(player), {})
         ox, oy = int(x) - FLAT // 2, int(y) - FLAT // 2            # whole tiles: the same rounding as in place_building
         cols = aoe2mc.Columns(FLAT, np.zeros((FLAT, FLAT), np.int16), np.zeros((FLAT, FLAT), np.float32),
@@ -414,6 +414,7 @@ class Replay:
         players = {player: {"arch": info.get("arch", "western"), "color": info.get("color", "light_gray")}}
         o = dict(kind="B", name=name, player=player, x=x - ox, y=y - oy, rotation=0.0, hero=False, garrisoned=False)
         walls, gates = buildings.plan_walls([o])
+        gates[id(o)] = gates.get(id(o)) or along_z
         buildings.place_building(E, cols, aoe2mc.B, o, players, walls, gates)
         return cols, E, o
 
@@ -467,12 +468,12 @@ class Replay:
         self.moving.pop(i, None)
         return out
 
-    def building(self, name, player, x, y):
+    def building(self, name, player, x, y, along_z=False):
         """The commands that draw one building at tile (x, y): its design on a flat map (like render.py), moved to
         the ground of the world. The footprint is cleared first; a foundation fills the air under the floor."""
         T, arch = self.T, self.data["players"].get(str(player), {}).get("arch", "western")
         ox, oy = int(x) - FLAT // 2, int(y) - FLAT // 2
-        cols, E, o = self.draw(name, player, x, y)
+        cols, E, o = self.draw(name, player, x, y, along_z)
         if not E.parts or "footprint" not in o:
             return []
         fx0, fz0, fx1, fz1 = o["footprint"]
