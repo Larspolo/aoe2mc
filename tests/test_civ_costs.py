@@ -67,6 +67,7 @@ def test_the_table_is_in_order_and_names_known_groups():
         for what, r, change in rules:
             assert len(change) == 4 and r in (None, "food", "wood", "gold", "stone"), civ
             assert isinstance(what, tuple) or what in civs.GROUPS or what in ("ages", "buildings", "buildings but farms",
-                                                                               "technologies"), (civ, what)
+                                                                               "technologies") \
+                or what.split()[0] in train.TRAINS and what.endswith(" technologies"), (civ, what)
             assert any(civs.has(what, n) for n in names) or civ in ("BYZANTINES", "DRAVIDIANS", "FRANKS", "HUNS",
                                                                      "ITALIANS", "MALAY", "ROMANS", "SLAVS"), (civ, what)
