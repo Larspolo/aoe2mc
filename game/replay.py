@@ -113,6 +113,11 @@ def ship(name):
     return units.is_boat(units.classify(name or ""))
 
 
+def fisher(name):
+    """True for a fishing ship: it gathers at a fish (#1283)."""
+    return name.startswith("FISHING_SHIP")
+
+
 def sail(g, v):
     """Move ship v one cell on its water path with /tp, facing the step. The y of the boat stays (`at @s`, `~`):
     the water carries it, and aoe2mc.json has no height for the water."""
@@ -765,7 +770,8 @@ class Replay:
             self.entering.pop(i, None)
             if e.get("garrison"):                                   # BACK TO WORK sends it there again
                 self.work[i] = v.tree
-            v.tree = tile if v.name.startswith("VILLAGER") else None     # a sheep of the selection does not gather
+            fish = fisher(v.name) and tile in self.map.fish         # a fishing ship only fishes (#1283)
+            v.tree = tile if v.name.startswith("VILLAGER") or fish else None    # a sheep of the selection does not gather
             if home and not (not e.get("garrison") and v.load and v.name.startswith("VILLAGER")
                              and home[1]["name"] in self.gather.DROP_SITES.get(v.res, ())):   # it drops its load
                 self.entering[i] = [*home, None]
@@ -969,7 +975,7 @@ class Replay:
                 if v.tree in self.map.farms:                            # the wheat gets younger, the farmer walks
                     self.crew.harvest(v.tree)
                     self.crew.tend(v)
-                elif v.tree in self.map.carcasses:                      # a carcass has no blocks
+                elif v.tree in self.map.carcasses or v.tree in self.map.fish:   # a carcass or a fish has no blocks
                     pass
                 elif v.res == "food":
                     self.crew.berries(v.tree)
@@ -985,7 +991,7 @@ class Replay:
                 self.working[i] = due
             else:
                 del self.working[i]
-                out += self.next_resource(i, v, due - 1000 / self.gather.AOE2_WORK[v.res])
+                out += self.next_resource(i, v, due - 1000 / self.rate(v))
         return out
 
     def next_resource(self, i, v, t):
@@ -998,21 +1004,21 @@ class Replay:
     def reachable(self, v, at):
         """(tile, path) of the resource of the kind of v within NEXT tiles of cell `at` that has something left and
         is nearest on a path from v (one path search for all of them, #869), or None."""
-        T = self.T
+        T, w = self.T, ship(v.name)
         far = {k: math.dist((at[0] / T, at[1] / T), (k[0] + 0.5, k[1] + 0.5)) for k, n in self.crew.source(v).items()
                if n > 0}
         goals = {}
         for d, k in sorted((d, k) for k, d in far.items() if d <= NEXT):
-            for c in self.map.around(self.map.spot(k)):
+            for c in self.map.around(self.map.spot(k), w):        # a fishing ship: the water next to the fish
                 goals.setdefault(c, k)                              # a cell next to two of them: the nearer one
-        path = self.map.path(v.cell, goals, PATH_CELLS)
+        path = self.map.path(v.cell, goals, PATH_CELLS, w)
         return None if path is None else (goals[path[-1] if path else v.cell], path)
 
     def go(self, i, v, tile, path, t):
         """Unit i walks on path to its resource `tile` from game time t on, and gathers there. Returns the commands
         (Paper: the first leg)."""
         v.tree = tile
-        if self.ai and path:
+        if self.ai and path and not ship(v.name):                  # a boat has no path finding: /tp steps
             cmds, due = self.order(v, path[LEG - 1:-1:LEG] + [path[-1]], t)
             if v.path:
                 self.moving[i] = due
@@ -1147,7 +1153,7 @@ class Replay:
         return garrison.leave(v.uuid, x, y, z) + [f"aoe label {v.uuid}"] * self.ai + self.arrows(rect)
 
     def resource(self, e):
-        """The tile of the tree, fruit bush, mine or farm that an ORDER targets, else None. A target that the replay
+        """The tile of the tree, fruit bush, mine, fish or farm that an ORDER targets, else None. A target that the replay
         does not know (a farm of the replay: the record has no IDs of new objects) is the farm under the order tile."""
         t, m = e.get("target"), self.map
         if "resource" in e:                                         # BACK TO WORK: the tile that the unit left
@@ -1169,7 +1175,8 @@ class Replay:
             return tile if "FARM" in o["name"] and tile in m.farms else None
         if o["kind"] != "other":
             return None
-        return tile if tile in m.trees or tile in m.bushes or any(tile in s for s in m.mines.values()) else None
+        return tile if tile in m.trees or tile in m.bushes or tile in m.fish or any(tile in s for s in m.mines.values()) \
+            else None
 
     def start(self, i, v, t):
         """A unit with a resource that ends its walk next to it gathers from game time t on, at the AoE2 work rate
@@ -1180,12 +1187,13 @@ class Replay:
             if v.cell in self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)}):
                 self.entering[i][2] = t
             return
-        if v.tree is None or v.cell not in self.crew.goals(v.tree):
+        if v.tree is None or v.cell not in (self.map.around(self.map.spot(v.tree), True) if ship(v.name)
+                                            else self.crew.goals(v.tree)):
             return
         v.res, v.load = self.map.resource(v.tree), 0
         if self.crew.source(v).get(v.tree, 0) > 0:
             self.working[i] = t + 1000 / self.rate(v)
-            if self.ai:
+            if self.ai and not ship(v.name):                        # a boat sails with /tp steps: it is there
                 self.arriving[i] = t
 
     def arrived(self, v):
@@ -1196,9 +1204,13 @@ class Replay:
         return len(m) != 3 or math.dist((float(m[0]), float(m[2])), (v.pos[0], v.pos[2])) <= NEAR
 
     def rate(self, v):
-        """The AoE2 work rate of unit v at its resource (per game second): a farm and a hunt have their own rates."""
-        return self.gather.AOE2_WORK["farm" if v.tree in self.map.farms else "hunt" if v.tree in self.map.carcasses
-                                     else v.res]
+        """The AoE2 work rate of unit v at its resource (per game second): a farm, a hunt and a fish have their own
+        rates, and a fishing ship has its own rates (#1283)."""
+        m, t = self.map, v.tree
+        if t in m.fish and ship(v.name):
+            return self.gather.SHIP_WORK["shore" if t in m.shore else "deep"]
+        return self.gather.AOE2_WORK["farm" if t in m.farms else "hunt" if t in m.carcasses else "fish" if t in m.fish
+                                     else m.resource(t)]
 
     def state(self, i):
         return aoe2mc.B.states[i]
@@ -1494,16 +1506,16 @@ class Replay:
         to the next resource when its resource is empty (#1147). The resource itself keeps its amount (the world shows
         no gather)."""
         v = self.units.get(i)
-        if t0 is None or t1 <= t0 or v is None or not v.name.startswith("VILLAGER") or v.tree is None:
+        if t0 is None or t1 <= t0 or v is None or not (v.name.startswith("VILLAGER") or fisher(v.name)) \
+                or v.tree is None:
             return
         res = self.map.resource(v.tree)
         if res not in self.gather.AOE2_WORK:
             return
-        farm, hunt = v.tree in self.map.farms, v.tree in self.map.carcasses
-        left = (self.map.farms if farm else self.map.carcasses if hunt else self.map.bushes if res == "food"
-                else self.map.trees if res == "wood" else self.map.mines.get(res, {})).get(v.tree, 0)
-        rate = self.gather.AOE2_WORK["farm" if farm else "hunt" if hunt else res]
-        n = int(rate * (t1 - t0) / 1000) if left > 0 else 0         # left 0: no resource, `res` is not sure
+        m = self.map
+        left = (m.farms if v.tree in m.farms else m.carcasses if v.tree in m.carcasses else m.fish if v.tree in m.fish
+                else m.bushes if res == "food" else m.trees if res == "wood" else m.mines.get(res, {})).get(v.tree, 0)
+        n = int(self.rate(v) * (t1 - t0) / 1000) if left > 0 else 0         # left 0: no resource, `res` is not sure
         self.resources(v.player)[res] += n
         self.gathered.setdefault(v.player, dict.fromkeys(START, 0))[res] += n     # the summary (#1097)
 

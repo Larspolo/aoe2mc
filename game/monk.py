@@ -9,7 +9,14 @@ A right click with selected monks on an enemy unit converts it (#1245), as in Ao
 monk walks into a range of 9 tiles, then tries once per conversion interval of 1.25 AoE2 seconds. The first 4 tries
 only warm up, each later one converts with a chance of 38 %, and the 9th always converts. After a conversion the monk
 rests 62 AoE2 seconds (its faith) before it can convert again. A monk cannot convert a building, a monk, a king, a hero
-or a siege unit (Atonement and Redemption are excluded until a technology ticket).
+or a siege unit (Atonement is excluded until a technology ticket).
+
+Redemption (#1264, monastery, AoE2 wiki "Redemption", "Conversion"): then a monk converts siege units and the enemy
+buildings with hit points (gather.Gather.forts), but not the LASTING ones (town center, castle, monastery, walls,
+gates, wonder, farm, fish trap ...). A monk converts a building, ram or trebuchet only next to it (TOUCH). A building
+resists: the tries start at the 15th interval, each converts with a chance of 13 %, and the 25th always converts. A
+converted building joins the team of its new player (the plugin: its towers shoot at the old owner) and works for it
+(aoe2mc.json "player": train.homes, garrison.holders).
 
 Minecraft feature: the hit points are the `Health` of the mob (max_health = AoE2 hit points, combat.stats_command), so
 `data modify entity <uuid> Health` sets them. The `regeneration` effect is not used: its rates (1 health per 50, 25,
@@ -17,7 +24,7 @@ Minecraft feature: the hit points are the `Health` of the mob (max_health = AoE2
 
     monk.heal(g, dt)        # gather.Gather.step: dt AoE2 seconds of healing
     monk.convert_order(g, monks, t)  # gather.Gather.click: the selected monks convert enemy unit t
-    monk.convert(g, dt)     # gather.Gather.step: dt AoE2 seconds of conversion
+    monk.convert(g, dt)     # gather.Gather.step: dt AoE2 seconds of conversion (also of a building with Redemption)
 
 Relics (#1246): a right click on a relic of the map (a decorated pot of the converter) with a selected monk sends the
 monk to it, and the monk picks it up: the pot block goes, and an item display of a pot rides the monk (Passengers, the
@@ -49,6 +56,11 @@ CHANCE = 0.38   # the chance of each later interval
 SURE = 9        # the 9th interval always converts
 REST = 62       # AoE2 seconds after a conversion before the monk can convert again
 IMMUNE = ("KING", "QUEEN", "KHAN", "CRUSADER_KNIGHT", "HUNNIC_HORSE", "MOUNTED_SAMURAI")
+TOUCH = 1.5     # blocks between a monk and a building, ram or trebuchet that it converts: next to it (AoE2)
+NEXT = ("RAM", "TREBUCHET", "SIEGE_TOWER")   # the siege units that a monk converts only next to them
+FORT = (14, 0.13, 25)   # a building: warm intervals, chance (38 % / resistance 3) and the sure interval (AoE2 wiki)
+LASTING = ("TOWN_CENTER", "CASTLE", "KREPOST", "MONASTERY", "FORTIFIED_CHURCH", "WALL", "GATE", "WONDER", "FARM",
+           "FISH_TRAP")  # parts of the names of the buildings that no monk converts, also with Redemption
 GOLD = 0.5      # gold per AoE2 second of one relic in a monastery: 30 per minute
 REACH = 1       # blocks between the clicked cell and the relic (the ray hits the ground next to the pot)
 NEAR = 2.5      # blocks from the relic or the door: there the monk picks it up or puts it in
@@ -213,16 +225,21 @@ def heal(g, dt):
 
 
 def convertible(g, uuid):
-    """True for an enemy unit that a monk converts: no monk (the religious units are evokers), king, hero or siege."""
+    """True for an enemy unit that a monk converts: no monk (the religious units are evokers), king, hero or siege
+    (with Redemption: siege, and an enemy building that is not LASTING)."""
+    redeemed = "REDEMPTION" in g.techs
+    if uuid in g.forts:
+        return redeemed and not any(n in g.fort_names.get(uuid, "") for n in LASTING)
     name = g.enemies.get(uuid)
-    if name is None or name in IMMUNE or units.siege(name) or "EMPEROR" in name:
+    if name is None or name in IMMUNE or units.siege(name) and not redeemed or "EMPEROR" in name:
         return False
     hero = any(o.get("hero") for o in g.data["objects"] if o.get("uuid") == uuid)
     return str((units.classify(name, hero) or {}).get("id")) != "minecraft:evoker" and not hero
 
 
 def convert_order(g, monks, target):
-    """Let the monks convert the enemy unit target. Returns False when no monk can convert it."""
+    """Let the monks convert the enemy unit or building (target UUID) target. Returns False when no monk can
+    convert it."""
     if not convertible(g, target):
         return False
     for m in monks:
@@ -253,6 +270,42 @@ def take(g, uuid):
     g.command("tellraw @a " + json.dumps({"text": f"A monk converts the {units.pretty(name)}.", "color": "gold"}))
 
 
+def win(g, uuid):
+    """Give the enemy building with the target uuid to the player of g (Redemption): its target entity joins the team
+    of the player, and its entry of aoe2mc.json gets the player, so that it trains and takes a garrison for it."""
+    import build, combat                                           # they import gather, gather imports this module
+    g.forts.pop(uuid)
+    g.sieged.discard(uuid)
+    for o in g.data["objects"]:
+        if o["kind"] == "building" and "footprint" in o and combat.target_uuid(o["footprint"]) == uuid:
+            o["player"] = g.player
+    g.command(f"team join p{g.player} {uuid}")
+    g.command("tellraw @a " + json.dumps({"text": f"A monk converts the {build.pretty(g.fort_names.get(uuid, 'BUILDING'))}.",
+                                          "color": "gold"}))
+
+
+def near(g, m, target, pos):
+    """True when monk m is in its conversion range of the target: next to a building, ram or trebuchet (TOUCH),
+    else CONVERT tiles."""
+    if target in g.forts:
+        x0, _, z0, x1, _, z1 = g.forts[target]
+        x, _, z = pos[m]
+        return math.hypot(max(x0 - x, 0, x - x1 - 1), max(z0 - z, 0, z - z1 - 1)) <= TOUCH
+    if any(n in g.enemies[target] for n in NEXT):
+        return math.dist(pos[m], pos[target]) <= TOUCH + 1         # to its middle: about 1 block from its side
+    return math.dist(pos[m], pos[target]) <= CONVERT * g.map.T
+
+
+def spot(g, m, target, pos):
+    """Where monk m walks to convert the target: the cell next to a building on the side of the monk, else the
+    target."""
+    if target not in g.forts:
+        return pos[target]
+    x0, y0, z0, x1, _, z1 = g.forts[target]
+    x, z = (min(max(math.floor(p), lo - 1), hi + 1) for p, lo, hi in ((pos[m][0], x0, x1), (pos[m][2], z0, z1)))
+    return x + 0.5, g.map.y(x, z) or y0, z + 0.5
+
+
 def convert(g, dt):
     """dt AoE2 seconds of the conversion orders of g.converting and of the rest of the monks after a conversion."""
     for m in list(g.faith):
@@ -265,12 +318,13 @@ def convert(g, dt):
     pos = g.positions(sorted(set(g.converting) | {t for t, _, _ in g.converting.values()}))
     for m, job in sorted(g.converting.items()):
         target = job[0]
-        if m not in pos or target not in pos or target not in g.enemies or m not in g.soldiers:
+        fort = target in g.forts
+        if m not in pos or target not in pos or not (fort or target in g.enemies) or m not in g.soldiers:
             del g.converting[m]                                    # one of them died or the target is converted
             continue
-        if math.dist(pos[m], pos[target]) > CONVERT * g.map.T:
+        if not near(g, m, target, pos):
             job[1:] = [0.0, 0]
-            ai.move(g, m, "MONK", g.map.T, *pos[target])           # walk into range; the order follows the target
+            ai.move(g, m, "MONK", g.map.T, *spot(g, m, target, pos))   # walk into range; the order follows the target
             continue
         if job[1] == 0 and job[2] == 0:
             g.command(f"aoe stop {m}")                             # in range: it stands and chants
@@ -280,8 +334,9 @@ def convert(g, dt):
         while job[1] >= INTERVAL and m in g.converting:
             job[1] -= INTERVAL
             job[2] += 1
-            if job[2] > WARM and (job[2] >= SURE or g.chance.random() < CHANCE):
-                take(g, target)
+            warm, chance, sure = FORT if fort else (WARM, CHANCE, SURE)
+            if job[2] > warm and (job[2] >= sure or g.chance.random() < chance):
+                (win if fort else take)(g, target)
                 g.faith[m] = REST
                 for k in [k for k, j in g.converting.items() if j[0] == target]:
                     del g.converting[k]
