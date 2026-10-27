@@ -25,6 +25,7 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - Automerge takes the first "close #N" (also "fix", "resolve") anywhere in the PR body as the ticket, also in "does not close #N": a ticket with `needs-human` then stops the merge (#984). Do not write those words before another issue number. It waits only for `quick`: a PR that changes `packaging/` or a workflow with its own PR checks gets `hold` until they pass (#1599, #1541).
 - A check ticket that waits for a fix: `git fetch origin main && git checkout -B <branch> origin/main` just before the level-4 run, and name the commit in the result (#964). A check that finds a bug: read `git log origin/main --oneline -15` and the open issues for the symptom first (#1249 was a copy of #1219, #1256).
 - A new file in `.github/workflows/` or `.claude/skills/` needs a row in the table "Generic and specific files" of `docs/SYSTEM.md`, else `tests/test_system_doc.py` fails in the quick CI (#1541).
+- The label `close` of the owner's `close.yml` (#1740) and a skill text that tells runs to add it get "Auto-Mode Bypass" too (2026-10-27): do not use the label until #1740 says that the owner allowed it.
 
 ## Code
 
