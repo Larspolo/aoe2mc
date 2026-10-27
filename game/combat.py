@@ -411,9 +411,15 @@ FORT_MIN_RANGE = {"BOMBARD_TOWER": 1,
                   "KEEP": 1,
                   "WATCH_TOWER": 1}
 # Tiles that a bolt flies past the range and hurts the enemy units on its line with half the damage (AoE2 DE, wiki
-# "Pass-through damage": "Projectiles travel Range+2 tiles in total", no friendly fire, #1401).
-PASS = {"HEAVY_SCORPION": 2,
+# "Pass-through damage": "Projectiles travel Range+2 tiles in total", no friendly fire, #1401). The chakram thrower
+# throws as a mob (no blast), with the full damage on its line (PASS_PART, #1638).
+PASS = {"CHAKRAM_THROWER": 2,
+        "ELITE_CHAKRAM_THROWER": 2,
+        "HEAVY_SCORPION": 2,
         "SCORPION": 2}
+# The part of the damage on the units behind the target, when it is not one half (wiki: "100% pass-through damage").
+PASS_PART = {"CHAKRAM_THROWER": 1.0,
+             "ELITE_CHAKRAM_THROWER": 1.0}
 DEFAULT, BUILDING = Stats(40, 4, 0, 0, 0, 2.0), Stats(1000, 0, 0, 7, 0, 0.0, {}, ("building",))
 SLIME = 0.52                    # blocks of width and height per slime size: the target of a building (#517)
 INVISIBLE = 'active_effects:[{id:"minecraft:invisibility",duration:-1,show_particles:0b}]'   # for ever, no particles
@@ -460,14 +466,15 @@ def range_command(uuid, name, T, rate=NORMAL, s=None):
     minecart) gets its blast radius in blocks last, 0 when its shot hits only the target (the Scorpion, #1062): the
     plugin then lets the minecart shoot too (#1050). Then its minimum range in blocks (MIN_RANGE, #1350), when it has
     one: it does not shoot at a target nearer than that. Then the blocks of PASS (#1401): its bolt hurts the enemy units on
-    its line up to that far past its range. A melee siege unit (the ram line, range 0) gets the reach
+    its line up to that far past its range, and the part of the damage (PASS_PART) when it is not one half. A unit that
+    shoots as a mob and has a PASS (the chakram thrower, #1638) gets "-" for the blast. A melee siege unit (the ram line, range 0) gets the reach
     RAM_REACH: a carrier pig has no melee goal, so the range goal walks it to the target and hits (#1399). A demolition
     ship (#1440) gets the reach CONTACT: its blast goes off next to the target."""
     s = s or stats(name)
     cart = (units.classify(name) or {}).get("id") == "minecraft:minecart"
-    blast = f" {BLAST.get(name, 0) * T}" if name in BLAST or cart else ""
+    blast = f" {BLAST.get(name, 0) * T}" if name in BLAST or cart else " -" if name in PASS else ""
     blast += f" {MIN_RANGE.get(name, 0) * T}" * bool(blast and (name in MIN_RANGE or name in PASS))
-    blast += f" {PASS.get(name, 0) * T}" * bool(blast and name in PASS)
+    blast += f" {PASS.get(name, 0) * T}" * bool(blast and name in PASS) + f" {PASS_PART.get(name)}" * (name in PASS_PART)
     reach = s.range * T or RAM_REACH * bool(cart and s.attack) or CONTACT * T * bool(name in BLAST and s.attack)
     return reach and (s.reload or name in BLAST) and f"aoe range {uuid} {reach} {max(1, round(s.reload / rate * 20))}{blast}" or None
 

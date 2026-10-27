@@ -16,7 +16,7 @@ def test_a_scorpion_range_command_gives_the_pass_in_blocks(name):
 
 
 def test_only_the_scorpion_line_passes_through():
-    assert set(combat.PASS) == {"SCORPION", "HEAVY_SCORPION"}
+    assert set(combat.PASS) == {"SCORPION", "HEAVY_SCORPION", "CHAKRAM_THROWER", "ELITE_CHAKRAM_THROWER"}   # (#1638)
     assert len(combat.range_command("u", "TREBUCHET", 4).split()) == 7            # no pass
     assert len(combat.range_command("u", "MANGONEL", 4).split()) == 7
 
