@@ -237,6 +237,7 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
                                      "PORTUGUESE", "PURU", "ROMANS", "SAXONS", "SLAVS", "SPARTANS", "TATARS",
                                      "THRACIANS", "TUPI", "VARANGIANS", "VIKINGS", "WEI"),   # the wiki chart (#1483)
            "HEAVY_PLOW": ("KHITANS",),                                     # (#1424)
+           "HERBAL_MEDICINE": ("BYZANTINES", "DANES", "HUNS", "KHITANS", "SHU", "TURKS", "VIKINGS", "WEI"),   # (#1585)
            "HOARDINGS": ("AZTECS", "BENGALIS", "BOHEMIANS", "BULGARIANS", "BURMESE", "CHINESE", "ETHIOPIANS", "GOTHS",
                          "HUNS", "KHITANS", "KOREANS", "MALAY", "PORTUGUESE", "ROMANS", "TATARS", "VARANGIANS",
                          "WU"),                                            # (#1456)
