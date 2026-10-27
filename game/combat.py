@@ -198,7 +198,8 @@ STATS = {
     "CAPPED_RAM": Stats(200, 3, -2, 190, 0, 5.0, {"building": 160, SIE: 50}, (SIE,)),
     "SIEGE_RAM": Stats(270, 4, -1, 195, 0, 5.0, {"building": 200, SIE: 65}, (SIE,)),
     "SIEGE_TOWER": Stats(175, 0, -2, 100, 0, 0.0, {}, (SIE,)),         # AoE2 DE wiki (#1362)
-    "TREBUCHET": Stats(150, 200, 2, 150, 16, 10.0, {"building": 250}, (SIE,)),   # AoE2 DE wiki: 150 HP (#1351)
+    "TREBUCHET": Stats(150, 200, 2, 8, 16, 10.0, {"building": 250}, (SIE,)),   # AoE2 DE wiki: 150 HP (#1351); packed
+    # armor (unpacked: trebuchet.UNPACKED, #1409)
     "BOMBARD_CANNON": Stats(80, 40, 2, 5, 12, 6.5, {"building": 200}, (GUN, SIE)),
     "PETARD": Stats(50, 25, 0, 2, 0, 2.0, {"building": 500, SIE: 60}),
     # cheat units (#818, AoE2 DE values of the wiki; the Cobra car shoots: a ranged unit)
