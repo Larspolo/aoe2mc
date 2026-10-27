@@ -352,3 +352,4 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - A world that a check script ran on once has the saved entity positions: convert a new world for each experiment (#1285).
 - `Mob#setTarget` of the plugin fires no `EntityTargetEvent`, and a mounted unit has its target on the rider, not on the horse: read `(rider(mob) != null ? rider(mob) : mob).getTarget()` and call `fight()` after a plugin target (#1334: `aoe where` said "no fight" for a scout cavalry that chased an eagle scout).
 - The AoE2 wiki page `Repair` does not exist (the API gives no `parse`): the AoE2 II repair values are on `Villager_(Age_of_Empires_II)`, section "Repairing"; `Repairing` mixes the values of all games (#1330).
+- The help line of the live replay (`replay_input.help_text`, one `tellraw` with a click for each action of `actions()`) uses 1442 of the 1446 bytes of one RCON command: a new action that needs the plugin goes into the menu only, as `MENU`, `SPECTATE` and `VIEW` (#1303).

@@ -4,7 +4,8 @@ for each action (#686): a right click with the clock pauses and continues, the f
 pearl jumps 1 minute forward, the ender eye changes to spectator mode (Paper plugin: a double tap of Shift changes
 back, #910), and the chest in the last slot opens a menu with all actions (Paper plugin, game/menu.py).
 `/trigger aoe_replay set N` does action N without the items, also on a vanilla server. The menu and the trigger also
-jump back 1 or 5 minutes (#979): Replay.run stops, and run.py restarts the server on the saved start world.
+jump back 1 or 5 minutes (#979): Replay.run stops, and run.py restarts the server on the saved start world. "View"
+goes to the view of the next player and back to all players (#1303, Replay.fog hides the units out of its sight).
 
 The items are carrots on a stick with the model of a clock, a feather, an ender pearl and a chest (`item_model`):
 Minecraft counts a right click with a carrot on a stick (the statistic `minecraft.used`), but not with a clock.
@@ -20,6 +21,7 @@ OBJECTIVE = "aoe_replay"             # the trigger: /trigger aoe_replay set N
 USE = "aoe_replay_use"                # right clicks with a carrot on a stick
 SPEEDS = (0.5, 1.0, 2.0, 4.0, 8.0)
 PAUSE, NEXT, JUMP, MENU, JUMP5, JUMP10, SPECTATE, BACK, BACK5, SPEED = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10   # SPEED + i: SPEEDS[i]
+VIEW = SPEED + len(SPEEDS)            # the view of the next player (#1303): Paper only (`aoe hide`), so not in the help
 JUMPS = {JUMP: 60000, JUMP5: 300000, JUMP10: 600000, BACK: -60000, BACK5: -300000}   # BACK: a jump back (#979)
 ITEMS = {PAUSE: (0, "clock", "Pause / continue"), NEXT: (1, "feather", "Next speed"),
          JUMP: (2, "ender_pearl", "Jump 1 minute"), SPECTATE: (7, "ender_eye", "Spectator view"),
@@ -63,7 +65,17 @@ def apply(n, control):
         control["jump"] = max(0, control.get("time", 0) + JUMPS[n])
         m, s = divmod(int(control["jump"]) // 1000, 60)                # the time of Replay.run is a float (#803)
         return f"{'Back' if JUMPS[n] < 0 else 'Jump'} to {m:02d}:{s:02d}"
+    if n == VIEW:
+        views = [None, *control.get("players", {})]               # Replay.run: player -> (name, color)
+        control["view"] = views[(views.index(control.get("view")) + 1) % len(views)]
+        return view_name(control)
     return None
+
+
+def view_name(control):
+    """The text of the view of the control state: "View: all players" or "View: Player 2 (Aztecs)"."""
+    p = control.get("view")
+    return "View: " + ("all players" if p is None else control["players"][p][0])
 
 
 class Input:
@@ -73,6 +85,7 @@ class Input:
     def __init__(self, game, every=0.2, join=5.0, clock=time.monotonic):
         self.game, self.every, self.join, self.clock = game, every, join, clock
         self.last, self.joined = -float("inf"), -float("inf")
+        self.opened = set()                                        # players with the replay menu
         if not hasattr(game, "menus"):
             game.menus = {}                                        # player -> handler of its open menu (game/menu.py)
 
@@ -102,7 +115,7 @@ class Input:
         now = self.clock()
         if now - self.last < self.every:
             return
-        self.last, g = now, self.game
+        self.last, g, self.control = now, self.game, control     # control: the menu shows the view now
         if now - self.joined >= self.join:
             self.joined = now
             self.give()
@@ -120,23 +133,30 @@ class Input:
             for player in (p.strip() for p in g.command("list").split(":", 1)[-1].split(",")):
                 if player and re.search(rf" has {MENU}\b", g.command(f"scoreboard players get {player} {OBJECTIVE}")):
                     self.open_menu(player)
-        for n in actions():
+        for n in [*actions(), VIEW]:
             if self.passed(f"@a[scores={{{OBJECTIVE}={n}}}]") and (said := apply(n, control)):
                 g.command(f"title @a actionbar {json.dumps({'text': said}, ensure_ascii=False)}")
+                if n == VIEW:                                      # the chat line in the color of the player
+                    color = control["players"][control["view"]][1] if control.get("view") is not None else "white"
+                    g.command(f"tellraw @a {json.dumps({'text': said, 'color': color}, ensure_ascii=False)}")
+                    for player in sorted(self.opened & set(g.menus)):
+                        self.open_menu(player)                     # its item names the new view
         g.command(f"scoreboard players set @a {OBJECTIVE} 0")
         g.command(f"scoreboard players enable @a {OBJECTIVE}")
 
     def open_menu(self, player):
         """The chest menu with all actions. It stays open: a click sets the trigger score of the player."""
         icons = {PAUSE: "clock", NEXT: "feather"} | {n: "ender_pearl" if JUMPS[n] > 0 else "recovery_compass"
-                                                      for n in JUMPS} | {SPEED + i: "feather" for i in range(len(SPEEDS))}
-        slots = [PAUSE, NEXT, JUMP, JUMP5, JUMP10, BACK, BACK5] + [SPEED + i for i in range(len(SPEEDS))]
-        cells = dict(zip(slots, (0, 1, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13)))
-        names = actions()
+                                                      for n in JUMPS} | {SPEED + i: "feather" for i in range(len(SPEEDS))} | \
+            {VIEW: "spyglass"}
+        slots = [PAUSE, NEXT, JUMP, JUMP5, JUMP10, BACK, BACK5] + [SPEED + i for i in range(len(SPEEDS))] + [VIEW]
+        cells = dict(zip(slots, (0, 1, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 15)))
+        names = actions() | {VIEW: view_name(getattr(self, "control", {}))}
 
         def choose(p, slot, shift):
             n = next((a for a, c in cells.items() if c == slot), None)
             if n is not None:
                 self.game.command(f"scoreboard players set {p} {OBJECTIVE} {n}")
+        self.opened.add(player)
         return menu.show(self.game, player, "Replay", [(cells[n], icons[n], names[n], f"/trigger {OBJECTIVE} set {n}")
                                                         for n in slots], choose)

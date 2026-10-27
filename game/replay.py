@@ -148,9 +148,11 @@ def live(make, speed=1.0, start=0, restart=None, **kw):
     (it puts the world back to its start state), then a fresh replay from `start` jumps forward to T: the same state
     as a new replay with a jump to T. Speed and pause stay. Without restart a jump back changes nothing. Returns the
     stats of the last run."""
-    to, paused = None, False
+    to, paused, stats = None, False, {}
     while True:
-        stats = make().run(speed, start, to=to, paused=paused, rewind=restart is not None, **kw)
+        r = make()
+        r.pov = stats.get("view", r.pov)                            # the view stays too (#1303)
+        stats = r.run(speed, start, to=to, paused=paused, rewind=restart is not None, **kw)
         if stats.get("rewind") is None:
             return stats
         to, speed, paused = max(start, stats["rewind"]), stats["speed"], stats["paused"]
@@ -160,10 +162,10 @@ def live(make, speed=1.0, start=0, restart=None, **kw):
 class Replay:
     """The timeline of aoe2mc.json `data` on a server (game.command sends one command)."""
 
-    def __init__(self, game, data, version=aoe2mc.VERSION_NAME, ai=False, follow=None):
+    def __init__(self, game, data, version=aoe2mc.VERSION_NAME, ai=False, follow=None, pov=None):
         self.game, self.data, self.ai, self.speed, self.paused = game, data, ai, 1.0, False  # ai: plugin walks
         self.follow, self.followed = follow, (None, -math.inf)  # the spectators follow player N: (UUID, game time)
-        self.pov, self.hidden = None, set()     # the view of player N (#1302): UUIDs of the enemy units hidden from @a
+        self.pov, self.hidden = pov, set()      # the view of player N (#1302): UUIDs of the enemy units hidden from @a
         self.T, self.n = data["tile_size"], len(data["ground"])
         self.ground = [[None if v == "-" else int(v) for v in row.split()] for row in data["ground"]]
         self.starts = [(o.get("ref"), o["player"], o["name"], (o["footprint"][0], o["footprint"][2], o["footprint"][1],
@@ -1321,8 +1323,8 @@ class Replay:
     def fog(self):
         """With a view player `pov`: hide the enemy units out of the sight of it and its allies for the spectators
         (Paper Player#hideEntity, plugin `aoe hide`), show the ones that came in again (#1302). Only the changes:
-        at most one hide and one show command."""
-        if self.pov is None:
+        at most one hide and one show command. Without a view player again: show all hidden units (#1303)."""
+        if self.pov is None and not self.hidden:
             return []
         import gather                                               # gather -> build -> replay: import it late
         self.grid()                                                 # the start units
@@ -1332,7 +1334,7 @@ class Replay:
         own = {p for p in {v.player for v in mobs} | {p for p, _, _ in placed} if gather.allied(teams, self.pov, p)}
         tiles = set().union(*(seen(mobs, placed, p, self.T) for p in own))
         out = {v.uuid for v in mobs if v.player not in (0, None) and v.player not in own and v.pos is not None
-               and (int(v.pos[0] // self.T), int(v.pos[2] // self.T)) not in tiles}
+               and (int(v.pos[0] // self.T), int(v.pos[2] // self.T)) not in tiles} if self.pov is not None else set()
         hide, show = sorted(out - self.hidden), sorted(self.hidden & {v.uuid for v in mobs} - out)   # not the dead
         self.hidden = out
         k = (RCON_MAX - 20) // 37                                    # UUIDs per command (36 characters and a space)
@@ -1652,7 +1654,9 @@ class Replay:
                         key=lambda e: e["time"])                     # the record ends at `last`: no spawn after it
         g0, r0, lag, n, k = start, clock(), 0.0, 0, 0                 # game time g0 (ms) at real time r0
         self.speed, self.paused = speed, paused
-        self.control = {"speed": speed, "paused": paused} | ({"jump": to} if to is not None else {})
+        self.control = {"speed": speed, "paused": paused, "view": self.pov,     # the view: replay_input VIEW (#1303)
+                        "players": {p: self.player(p) for p in sorted(int(q) for q in self.data["players"]) if p}} | \
+            ({"jump": to} if to is not None else {})
         end, shown = events[-1]["time"] if events else start, None
         send = self.send if bar else lambda cmds: None
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
@@ -1678,6 +1682,9 @@ class Replay:
                     self.control["time"] = g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed
                     poll(self.control)
                     g0, r0 = self.retime(g0, r0, clock())
+                    if self.control.get("view") != self.pov:
+                        self.pov = self.control.get("view")
+                        self.send(self.fog())
                 if (to := self.control.pop("jump", None)) is not None:
                     break
                 wait = POLL if self.paused else (now - g0) / 1000 / self.speed - (clock() - r0)
@@ -1691,7 +1698,7 @@ class Replay:
                 if rewind and to < (g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed):
                     say = text("The server restarts for the jump back: join it again.", "yellow")
                     send(self.clock_commands(to, end, self.speed, jump=True) + [f"tellraw @a {json.dumps(say)}"])
-                    return {"rewind": to, "speed": self.speed, "paused": self.paused, "events": n,
+                    return {"rewind": to, "speed": self.speed, "paused": self.paused, "view": self.pov, "events": n,
                             "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2)}
                 if to > (at := g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed):
                     skip = [x for x in events[k:] if x["time"] <= to]

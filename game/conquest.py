@@ -10,6 +10,8 @@ building has no target entity yet, so nothing can destroy it.
 Only a player that had units or buildings once can lose: a player of the scenario with nothing (most test maps), or with
 its entities not loaded yet, is not in the game. A defeated rival loses its rest (cheats.destroy) and the chat says so.
 The human player sees "Defeat" when it has nothing left, "Victory" when no rival is left; the game then ends (g.ended).
+Allies (the `team` of aoe2mc.json, gather.allied, #1313) win together, as in AoE2: "Victory" when all players of the
+other teams are defeated, also while an ally is still in the game. A defeated ally does not end the game.
 """
 import json
 import os
@@ -27,7 +29,7 @@ def alive(g, n):
     """Player n has a unit, a building or a construction site that counts in the AoE2 conquest."""
     return any(s["player"] == n for s in g.sites) or any(
         "passed" in g.command(f"execute if entity {sel}")
-        for sel in (f"@e[tag=aoe2mc.p{n},tag=!{MOUNT}]", f"@e[tag=aoe2mc.building,team=p{n}]"))
+        for sel in (f"@e[tag=aoe2mc.p{n},tag=!{MOUNT}]", f"@e[tag=aoe2mc.building,team=p{n},tag=!aoe2mc.wall]"))
 
 
 def tick(g):
@@ -45,5 +47,6 @@ def tick(g):
                 return cheats.end("Defeat", "red")(g, None)
             cheats.destroy(g, n)
             g.command("tellraw @a " + json.dumps({"text": f"Player {n} is defeated.", "color": "red"}))
-    if lost and seen - lost == {g.player}:                          # a rival lost, and no other rival is left
-        cheats.end("Victory", "gold")(g, None)
+    from gather import allied                                       # gather imports this module
+    if any(not allied(g.players, g.player, n) for n in lost) and all(allied(g.players, g.player, n) for n in seen - lost):
+        cheats.end("Victory", "gold")(g, None)                      # a rival lost, and only allies are left (#1313)

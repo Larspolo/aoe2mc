@@ -235,6 +235,14 @@ BUILDINGS = {
     "CASTLE": Stats(4800, 11, 8, 11, 8, 2.0, {}, ("building",)),
     "WONDER": Stats(4800, 0, 3, 10, 0, 0.0, {}, ("building",)),
 }
+# The walls that a player builds in the game program (#1322, AoE2 DE wiki infobox): the hit points in the Dark, Feudal,
+# Castle and Imperial Age, the melee and the pierce armor. Their targets have WALL_TAG: a wall keeps no player alive in
+# the conquest (conquest.alive). The walls of the map have no target.
+WALLS = {
+    "PALISADE_WALL": ((150, 250, 250, 250), 2, 5),
+    "STONE_WALL": ((1080, 1080, 1800, 1800), 8, 10),
+}
+WALL_TAG = "aoe2mc.wall"
 # Line of sight in tiles (AoE2 DE, base unit or building, wiki infobox "LOS"; the house: 1 from the edge of its
 # 2 x 2 tiles, #1300) where it is not max(4, range + 2) (sight()).
 SIGHT = {
@@ -400,17 +408,24 @@ def target_uuid(footprint):
     return str(uuids.uuid5(uuids.NAMESPACE_OID, "aoe2mc.building." + ".".join(map(str, footprint))))
 
 
-def building(uuid, name, player, box, T=4, inside=()):
+def wall(name, age):
+    """The Stats of wall name (WALLS) in AoE2 age 0 (Dark) .. 3 (Imperial)."""
+    hp, melee, pierce = WALLS[name]
+    return Stats(hp[age], 0, melee, pierce, 0, 0.0, {}, ("building",))
+
+
+def building(uuid, name, player, box, T=4, inside=(), s=None):
     """The commands that make building `name` of `player` a target of attacks (#517): an invisible slime without AI
     that fills the footprint takes the attacks (a mob attacks only a living entity: AoePlugin.java), and the plugin
     keeps the AoE2 hit points. box: the blocks (x0, y0, z0, x1, y1, z1), both ends included, y0 the ground.
     A building with an attack (town center, castle) also gets its attack, its range (tiles * T blocks) and its reload
     in ticks at Normal speed: the plugin lets it shoot arrows at the enemies in its range (#1111), with the AoE2
     number of arrows of the units `inside` (garrison.arrows: an empty town center shoots none, #1201).
+    s: the Stats (default: stats(name); a wall of the game program: wall(), #1322).
     At 0 hit points the plugin fills the box with air. The invisibility effect hides the slime: the tag Invisible is
     only for armor stands, the server drops it on a slime (#636)."""
     x0, y0, z0, x1, y1, z1 = box
-    s, size = stats(name), math.ceil((max(x1 - x0, z1 - z0) + 1) / SLIME)
+    s, size = s or stats(name), math.ceil((max(x1 - x0, z1 - z0) + 1) / SLIME)
     n = uuids.UUID(uuid).int
     ints = ",".join(str((n >> k & 0xFFFFFFFF) - ((n >> k & 0x80000000) << 1)) for k in (96, 64, 32, 0))
     return [f"summon slime {(x0 + x1 + 1) / 2} {y0} {(z0 + z1 + 1) / 2} {{Size:{size - 1},NoAI:1b,Silent:1b,"

@@ -11,7 +11,7 @@ Usage:
     python3 game/run.py WORLD --play --bot        # also a bot plays player 2: its villagers gather (game/bot.py)
     python3 game/run.py WORLD --play --bot --bot-attack 5:00   # its soldiers attack player 1 from 5:00 (default 10:00)
     python3 game/run.py WORLD --play --log F.jsonl  # also write a timed event log (tools/measure_gather.py reads it)
-    python3 game/run.py WORLD --replay [--speed 4] [--follow N]  # replay the recorded game of the world (game/replay.py), then wait for Ctrl-C
+    python3 game/run.py WORLD --replay [--speed 4] [--follow N] [--view N]  # replay the recorded game of the world (game/replay.py), then wait for Ctrl-C
 
 Join with Minecraft (multiplayer, localhost): players play in creative mode and get operator rights.
 The server plays the world in place (the game changes it). Server files (eula, properties, logs) go to .cache/.
@@ -274,8 +274,9 @@ def restore(saved, world):
     shutil.copytree(saved, world, dirs_exist_ok=True)
 
 
-def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None):
-    """guide: a poll(control) next to the hotbar input that gets `input` and the replay `r` (game/watch.py, #1123)."""
+def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=None):
+    """guide: a poll(control) next to the hotbar input that gets `input` and the replay `r` (game/watch.py, #1123).
+    view: the replay starts with the view of player N (#1303: the units out of its sight are hidden)."""
     import replay
     start = replay.aoe2mc.game_time(start)
     with open(os.path.join(world, "aoe2mc.json")) as f:
@@ -305,7 +306,7 @@ def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None):
     print(f"Join the server localhost:{game.game_port} (Minecraft {game.version}). The replay starts now "
           f"at speed {speed}. Right click the items in your hotbar, or /trigger aoe_replay set N.", file=sys.stderr)
     def make():
-        r = replay.Replay(game, data, game.version, ai=game.kind == "paper", follow=follow)
+        r = replay.Replay(game, data, game.version, ai=game.kind == "paper", follow=follow, pov=view)
         if guide:
             guide.r = r
         return r
@@ -330,6 +331,8 @@ def main(argv=None):
     ap.add_argument("--speed", type=float, default=1.0, help="--replay: times the game speed (default 1)")
     ap.add_argument("--from", dest="start", default="0:00", metavar="MM:SS", help="--replay: start at this game time")
     ap.add_argument("--follow", type=int, metavar="N", help="--replay: the spectators follow the units of player N")
+    ap.add_argument("--view", type=int, default=0, metavar="N", help="--replay: start with the view of player N: the "
+                    "units out of its sight are hidden (default 0: all players)")
     ap.add_argument("--cheats", action="store_true", help="--play: the AoE2 cheat codes in the chat (off as in AoE2)")
     ap.add_argument("--bot", action="store_true", help="--play: a bot plays player 2 (game/bot.py)")
     ap.add_argument("--bot-attack", default="10:00", metavar="MM:SS", help="--bot: its soldiers attack player 1 "
@@ -346,7 +349,7 @@ def main(argv=None):
             print(f"{bench(game, a.bench):.0f} commands per second through RCON")
             return
         if a.replay:                                 # after the end the player can look around (#978)
-            replay(game, a.world, a.speed, a.start, a.follow)
+            replay(game, a.world, a.speed, a.start, a.follow, view=a.view or None)
             print("The replay ended. The server stays up: type commands, Ctrl-C stops it.", file=sys.stderr)
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:

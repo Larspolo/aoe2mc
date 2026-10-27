@@ -13,6 +13,9 @@ Ages (#674): a Feudal Age building or unit (AGE) is locked until the player rese
 its item is gray, says "Needs the Feudal Age", and a click does nothing.
 Ghost (#794): while a player has a building chosen, a ghost of its design follows the ground that he looks at (block
 displays of the Paper plugin, Ghost.java): green where it can stand, red where not. ghosts() sends the shape once.
+Walls (#1322): a wall (WALLS) takes two clicks, the start and the end of the line, as the drag of AoE2. Each tile of
+the line (aoe2mc.wall_tiles, as the replay) is one construction site with the cost of one tile; a tile on a building,
+a tree or water is left out. The builders of a tile go on to the next unfinished tile of the line (gather.Gather.step).
 """
 import json
 import math
@@ -21,7 +24,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from aoe2mc import VERSION_NAME  # noqa: E402
+from aoe2mc import VERSION_NAME, wall_tiles  # noqa: E402
 from buildings import footprint  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -36,7 +39,9 @@ COSTS = {"HOUSE": {"wood": 25}, "LUMBER_CAMP": {"wood": 100}, "MINING_CAMP": {"w
          "CASTLE": {"stone": 650},                                 # the Castle Age: the Imperial Age needs them (#1162)
          "MARKET": {"wood": 175},                                  # the Feudal Age (#1251)
          "MONASTERY": {"wood": 175},
+         "PALISADE_WALL": {"wood": 3},                             # per tile (AoE2 DE wiki, #1322)
          "SIEGE_WORKSHOP": {"wood": 200},
+         "STONE_WALL": {"stone": 5},                               # per tile
          "UNIVERSITY": {"wood": 200},
          "WATCH_TOWER": {"wood": 35, "stone": 125},                # AoE2 DE (wiki: 25 wood before patch 5.8)
          "WONDER": {"wood": 1000, "gold": 1000, "stone": 1000}}
@@ -46,7 +51,9 @@ BUILD_TIMES = {"HOUSE": 25, "LUMBER_CAMP": 35, "MINING_CAMP": 35, "MILL": 35, "F
                "CASTLE": 200,
                "MARKET": 60,
                "MONASTERY": 40,
+               "PALISADE_WALL": 7,
                "SIEGE_WORKSHOP": 40,
+               "STONE_WALL": 10,
                "UNIVERSITY": 60,
                "WATCH_TOWER": 80,
                "WONDER": 3500}
@@ -58,7 +65,9 @@ ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw
          "CASTLE": "stone_bricks",
          "MARKET": "barrel",                                            # the goods of the stalls
          "MONASTERY": "bell",
+         "PALISADE_WALL": "spruce_fence",
          "SIEGE_WORKSHOP": "grindstone",
+         "STONE_WALL": "mossy_stone_bricks",
          "UNIVERSITY": "bookshelf",
          "WATCH_TOWER": "cracked_stone_bricks",
          "WONDER": "weathered_cut_copper_stairs",                       # the copper roof
@@ -66,6 +75,7 @@ ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw
 AGE_TECHS = ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE")           # the technologies of the ages, in order
 AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_TOWER",   # the AoE2 age of each
                      "ARCHER", "SKIRMISHER", "SPEARMAN", "SCOUT_CAVALRY", "TRADE_CART",  # building, unit and age
+                     "STONE_WALL",
                      "CASTLE_AGE"), 1) | {"IMPERIAL_AGE": 2} \
     | dict.fromkeys((                                                  # the Castle Age (#1082): buildings and units
         "BATTERING_RAM",
@@ -102,6 +112,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "TWO_HANDED_SWORDSMAN",
         "WONDER",
     ), 3)                                                              # (0: Dark)
+WALLS = ("PALISADE_WALL", "STONE_WALL")                            # a line of 1-tile sites with two clicks (#1322)
 GHOST = 400                                                        # block displays of one ghost: a coarser shape above
 LOCKED = "gray_dye"                                                # the item of a locked building or unit
 
@@ -273,6 +284,8 @@ def place(g, player, name, eye, d):
     cell = g.map.pick_ground(eye, d)
     if cell is None:
         return None
+    if name in WALLS:
+        return wall(g, player, name, cell)
     rect = area(g, name, cell)
     if not free(g, rect):
         say(g, player, f"No space for the {pretty(name).lower()} here.")
@@ -285,6 +298,39 @@ def place(g, player, name, eye, d):
     site = found(g, name, rect)
     g.command(f"scoreboard players set {player} {OBJECTIVE} 0")
     return site
+
+
+def wall(g, player, name, cell):
+    """The first click keeps the start cell of the wall line; the second one places a site on each free tile from the
+    start to cell (a click on the start tile: one tile). Returns the first site of the line, or None."""
+    start = vars(g).setdefault("wall_start", {}).pop(player, None)
+    if start is None or start[0] != name:
+        g.wall_start[player] = (name, cell)
+        g.command(f"tellraw {player} " + json.dumps({"text": f"{pretty(name)}: right click the end of the wall.",
+                                                       "color": "gray"}))
+        return None
+    T = g.map.T
+    rects = [r for x, z in wall_tiles(start[1][0] // T, start[1][1] // T, cell[0] // T, cell[1] // T)
+             if free(g, r := (x * T, (x + 1) * T, z * T, (z + 1) * T))]
+    if not rects:
+        say(g, player, f"No space for the {pretty(name).lower()} here.")
+        return None
+    cost = {r: v * len(rects) for r, v in price(g, name).items()}
+    if any(g.stock[r] < v for r, v in cost.items()):
+        say(g, player, f"Not enough resources: {len(rects)} tiles of {pretty(name).lower()} cost "
+                       + ", ".join(f"{v} {r}" for r, v in cost.items()) + ".")
+        return None
+    sites = [found(g, name, r) for r in rects]
+    for site in sites:
+        site["line"] = rects[0]                                        # the line: the footprint of its first tile
+    g.command(f"scoreboard players set {player} {OBJECTIVE} 0")
+    return sites[0]
+
+
+def next_tile(g, site):
+    """The nearest unfinished site of the wall line of site, or None."""
+    rest = [s for s in g.sites if "line" in site and s.get("line") == site["line"] and s["progress"] < 1 and s is not site]
+    return min(rest, key=lambda s: math.dist(s["footprint"][::2], site["footprint"][::2]), default=None)
 
 
 def near(g, name, cell, reach=12):
@@ -373,12 +419,15 @@ def target(g, site):
     """A complete building of combat.BUILDINGS gets its target entity, as a building of the map (combat.setup): the
     AoE2 hit points, and the arrows of a town center, tower or castle (#1202). wonder.tick makes the one of a wonder."""
     import combat                                                      # combat -> gather -> build: import it late
-    if site["name"] not in combat.BUILDINGS or site["name"] == "WONDER":
+    if site["name"] not in combat.BUILDINGS and site["name"] not in combat.WALLS or site["name"] == "WONDER":
         return
     x0, x1, z0, z1 = site["footprint"]
     uuid = combat.target_uuid([x0, z0, x1, z1])
     box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
-    for c in combat.building(uuid, site["name"], site["player"], box, g.map.T) + [combat.label_command(uuid, site["name"])]:
+    wall = site["name"] in combat.WALLS                                # the hit points of the age (#1322)
+    s = combat.wall(site["name"], ages(g)) if wall else None
+    for c in combat.building(uuid, site["name"], site["player"], box, g.map.T, s=s) \
+            + [f"tag {uuid} add {combat.WALL_TAG}"] * wall + [combat.label_command(uuid, site["name"])]:
         g.command(c)
     if site["player"] != g.player:                                     # an enemy building: the player can attack it
         g.forts[uuid], g.fort_names[uuid] = box, site["name"]

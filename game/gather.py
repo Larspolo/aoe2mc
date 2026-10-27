@@ -1145,6 +1145,9 @@ class Gather:
             builders = [v for v in self.villagers.values() if v.state == "build" and v.site is site]
             # AoE2: n builders need 3 / (n + 2) of the time of one
             if builders and build.rise(self, site, math.inf if self.aegis else self.tick * NORMAL * (len(builders) + 2) / 3):
+                if nxt := build.next_tile(self, site):                 # a wall line: on to its next tile (#1322)
+                    self.build(nxt, {v.uuid for v in builders})
+                    continue
                 for v in builders:                                     # complete: the builders stop
                     v.site = None
                     self.set(v, "idle")
