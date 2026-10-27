@@ -2768,11 +2768,12 @@ MAP_PULSE = ["execute as @a[tag=!aoe2mc_map] run item replace entity @s weapon.o
 
 
 def write_datapack(out, objects, ground, biome_names=(), ambience="basic", players=None, triggers=(), T=4,
-                   trigger_stats=None):
+                   trigger_stats=None, fog=None):
     """datapacks/aoe2mc: a function every 2 s plays a work sound at each building with a player near it
     (docs/datapack.md). Fixed positions, no marker entities: the check costs nothing that /tick query shows.
     Ambience (#219): particles and sounds near the players by biome; "full" also writes the custom biomes, "off"
     writes no pack (and so no teams). Teams: `team_lines`. Timer and area triggers: `trigger_files`.
+    fog: (start, end) blocks of the fog of a fog mood (FOG, #1626), a timeline of the overworld clock.
     Returns (work sounds, ambience lines)."""
     root = os.path.join(out, "datapacks", "aoe2mc")
     if ambience == "off":           # the world as before #188: no pack
@@ -2805,7 +2806,7 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
     # each player gets the map of the world in the off-hand once, so the minimap is there without a search (#966)
     team_pulse = team_pulse + MAP_PULSE
     trigger_load, trigger_fns = trigger_files(triggers, T, ground, players, trigger_stats)
-    if not lines and not groups and not team_load and not trigger_load:   # the server finds a new pack by itself
+    if not lines and not groups and not team_load and not trigger_load and not fog:   # the server finds a new pack itself
         return 0, 0
     files = {
         "pack.mcmeta": {"pack": {"description": "aoe2mc: work sounds and ambience", "pack_format": MC["pack_format"],
@@ -2819,6 +2820,12 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
         files[f"data/aoe2mc/predicate/{name}.json"] = {"type": "minecraft:random_chance", "chance": chance}
     for g in groups:
         files[f"data/aoe2mc/worldgen/biome/{g}.json"] = biome_file(g)
+    if fog:                         # a worldgen registry: the client shows the "Experimental Settings" warning (#1597)
+        files["data/aoe2mc/timeline/fog.json"] = {"clock": "minecraft:overworld", "tracks": {
+            f"minecraft:visual/{track}": {"keyframes": [{"ticks": 0, "value": float(v)}]}
+            for track, v in (("fog_start_distance", fog[0]), ("fog_end_distance", fog[1]),
+                             ("sky_fog_end_distance", fog[1]))}}
+        files["data/minecraft/tags/timeline/in_overworld.json"] = {"values": ["aoe2mc:fog"]}
     for name, data in files.items():
         path = os.path.join(root, name)
         os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -2857,6 +2864,13 @@ RAIN = {
     "MURKY",
     "RAINFOREST",
     "SWAMP",
+}
+# The fog moods (#1626): fog from start to end blocks, as the AoE2 haze (research #1597, owner decision #1625). Only
+# with --fog or --ambience full: a timeline makes the client show the "Experimental Settings" warning.
+FOG = {
+    "BRUMOUS": (4, 48),
+    "MISTY": (4, 48),
+    "MURKY": (4, 48),
 }
 
 
@@ -3194,15 +3208,16 @@ class Progress:
 
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
             barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False,
-            garrison="inside", border_design="diorama", ambience="basic", at=None, mood="on"):
+            garrison="inside", border_design="diorama", ambience="basic", at=None, mood="on", fog=False):
     """at: recorded games only, the time in ms (--at): convert the state at that time (apply_timeline).
-    mood: "on" sets the time of day of the map color mood (MOODS), "off" keeps noon (#1595)."""
+    mood: "on" sets the time of day of the map color mood (MOODS), "off" keeps noon (#1595).
+    fog: the fog of a fog mood (FOG, #1626); ambience "full" gives it too."""
     global MC
     MC = VERSIONS[mc_version]
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
     try:
         _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-                 verbose, garrison, border_design, ambience, at, mood)
+                 verbose, garrison, border_design, ambience, at, mood, fog)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
@@ -3210,7 +3225,7 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
 
 
 def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-             verbose, garrison, border_design, ambience, at=None, mood="on"):
+             verbose, garrison, border_design, ambience, at=None, mood="on", fog=False):
     buildings.BARRIERS = barriers
     buildings.TURN, yaw = ORIENTATIONS[orientation]
     MOVED.clear()           # the counts of an earlier conversion in this process
@@ -3348,7 +3363,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline,
                   texts.get("mood", "DEFAULT"))
     triggers, tstats = texts.get("triggers", []), Counter()
-    n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats)
+    haze = FOG.get(texts.get("mood")) if mood == "on" and (fog or ambience == "full") else None
+    n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze)
     k = sum("/trigger/" in f for f in trigger_files(triggers, T, ground, players)[1]) if ambience != "off" else 0
     if k:
         print(f"  timer and area triggers (chat, instructions, objects): {k}"
@@ -3358,6 +3374,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     if amb:
         print(f"  ambience (particles and sounds by biome): {amb} lines"
               + (", custom biomes (Minecraft shows the experimental warning)" if ambience == "full" else ""))
+    if haze:
+        print(f"  fog of the map mood: {haze[0]} to {haze[1]} blocks (Minecraft shows the experimental warning)")
 
     from PIL import Image
     lut = np.array([block_color(s) for s in B.states], np.uint8)
@@ -3581,11 +3599,16 @@ def main(argv=None):
     ap.add_argument("--mood", choices=("on", "off"), default="on",
                     help="on: the time of day of the map color mood of a DE scenario (Night and Darkness at night, "
                          "Evening and Twilight at sunset); off: noon for all maps (default on)")
+    ap.add_argument("--fog", action="store_true",
+                    help="fog for the fog moods of a DE scenario (Misty, Murky, Brumous); Minecraft then shows an "
+                         "\"Experimental Settings\" warning when the world opens (--ambience full gives it too)")
     ap.add_argument("--at", type=game_time, metavar="MM:SS",
                     help="recorded game: convert the state at this game time (buildings and trained units of the "
                          "commands until then; default: the start)")
     ap.add_argument("--verbose", action="store_true", help="print the time of each phase")
     a = ap.parse_args(argv)
+    if a.fog and a.ambience == "off":
+        ap.error("--fog writes a datapack: not with --ambience off")
     if a.random_map:
         if a.output is not None:
             ap.error("--random-map takes no input file: give only the output world folder")
@@ -3597,7 +3620,7 @@ def main(argv=None):
               player_arch=a.player_architecture, with_units=not a.no_units, barriers=not a.no_barriers,
               mc_version=a.mc_version, spawn=a.spawn, birds=not a.no_birds, orientation=a.orientation,
               verbose=a.verbose, garrison=a.garrison, border_design=a.border, ambience=a.ambience,
-              mood=a.mood)
+              mood=a.mood, fog=a.fog)
     try:
         if a.at is not None and not a.scenario.lower().endswith(RECORDS):
             ap.error("--at needs a recorded game (.aoe2record)")
