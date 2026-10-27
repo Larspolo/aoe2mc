@@ -92,6 +92,7 @@ ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw
 AGE_TECHS = ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE")           # the technologies of the ages, in order
 AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_TOWER",   # the AoE2 age of each
                      "ARCHER", "SKIRMISHER", "SPEARMAN", "SCOUT_CAVALRY", "TRADE_CART",  # building, unit and age
+                     "GALLEY",
                      "GATE",
                      "STONE_WALL",
                      "CASTLE_AGE"), 1) | {"IMPERIAL_AGE": 2} \
@@ -134,7 +135,8 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
     ), 3)                                                              # (0: Dark)
 WALLS = ("PALISADE_WALL", "STONE_WALL")                            # a line of 1-tile sites with two clicks (#1322)
 GATES = ("GATE", "PALISADE_GATE")                                  # on 4 own wall tiles in a line (#1324)
-NEEDS = {"BOMBARD_TOWER": "BOMBARD_TOWER_TECH"}                    # a building after a technology (#1375)
+NEEDS = {"BOMBARD_CANNON": "CHEMISTRY",                            # a unit or building after a technology (#1380)
+         "BOMBARD_TOWER": "BOMBARD_TOWER_TECH"}                    # (#1375)
 SHORE = ("DOCK",)                                                  # on water next to the land, as in AoE2 (#1382)
 GHOST = 400                                                        # block displays of one ghost: a coarser shape above
 LOCKED = "gray_dye"                                                # the item of a locked building or unit
