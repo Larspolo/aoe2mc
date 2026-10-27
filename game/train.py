@@ -496,7 +496,7 @@ TECHS = {"ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bon
          "TREADMILL_CRANE": lambda name, s: s,                     # the build speed: build.rise
          "FEUDAL_AGE": lambda name, s: s,   # the change of each technology to the AoE2 values
          "WHEELBARROW": lambda name, s: s}                         # no combat change: gather.CARRY and gather.PACE
-SPEEDS = {"CARAVAN": ("TRADE_CART", 1.2),                         # technology: the unit (or a class of combat.STATS:
+SPEEDS = {"CARAVAN": ("trade units", 1.2),                        # technology: the unit (or a class of combat.STATS:
           "FERVOR": ("MONK", 1.15),                                # lower case, or a group of civs.GROUPS) and its
           "HUSBANDRY": ("mounted", 1.1),                           # walk speed factor; cavalry, camels, elephants (#1416)
           "SQUIRES": ("infantry", 1.1)}                            # (#1415)
@@ -756,7 +756,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "CANNON_GALLEON": "Siege warship. Long range; strong vs. buildings.",
         "CAPPED_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
         "CAPPED_RAM_UPGRADE": "Upgrades battering rams to capped rams.",
-        "CARAVAN": "Trade carts +20 % speed.",
+        "CARAVAN": "Trade carts and trade cogs +20 % speed.",
         "CASTLE_AGE": "Advance to the Castle Age.",
         "CAREENING": "Ships +1 pierce armor.",
         "CATAPHRACT": "Byzantine cavalry. Strong vs. infantry.",
