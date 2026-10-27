@@ -142,6 +142,8 @@ SELECT = "aoe2mc.selected"                                         # entity tag 
 TYPE_REACH = 16                                                    # blocks: a second click selects its type this near (#743)
 WAND = "warped_fungus_on_a_stick"     # the selection wand: a second item with its own "used" statistic (#778)
 RELEASE = 0.45   # seconds without a wand use: the player released the held right click (uses come each 0.2 s, #992)
+HOLD = 0.2       # seconds: a held right click sends its next command stick use in this time, so a use with no next use
+                 # is a click (on Paper the stick also draws the selection box, #1786)
 # Control groups (#779, owner choice #745): carrots on a stick with custom_data {aoe_group:N} in hotbar slots 4..8
 # (keys 5-9), with the model of a dye. A shift right click saves the selection as group N, a right click selects it.
 GROUPS = {n: (3 + n, dye) for n, dye in enumerate(("red_dye", "yellow_dye", "lime_dye", "light_blue_dye",
@@ -574,6 +576,7 @@ class Gather:
         self.sieged = set()                                            # the targets of attack orders
         self.wands, self.corners = set(), {}                           # players who clicked the wand, player -> corner 1
         self.holds = {}                                                # player -> time of the last wand use of a drag
+        self.pending, self.looks = {}, {}                              # player -> (time, look) of a stick use (#1786)
         self.groups, self.grouping, self.calls = {}, {}, 0             # group -> units, player -> (group, shift)
         self.hints = {}                                                # target -> (hint text, time) (hints.py, #798)
         self.pointing = {}                                             # player -> text of its pointed target (#989)
@@ -939,15 +942,17 @@ class Gather:
                              f"run item replace entity @s hotbar.{slot} with {group_item(n)}")
             diplomacy.give(self)                                       # the Game menu item (#1588)
         self.calls += 1
-        self.command(f"execute as {self.who} unless items entity @s container.* minecraft:{WAND} "
-                     f'run give @s minecraft:{WAND}[item_name="Selection box"]')
+        if not self.paper:                                             # Paper: hold right click with the stick (#1786)
+            self.command(f"execute as {self.who} unless items entity @s container.* minecraft:{WAND} "
+                         f'run give @s minecraft:{WAND}[item_name="Selection box"]')
         self.release()                                                 # the drags of the selection box (#992)
         objs = ("aoe_use", "aoe_talk", "aoe_box")
         if "passed" not in "".join(self.command(f"execute if entity {only(self.who, f'scores={{{o}=1..}}')}") for o in objs):
-            return []
+            return self.short()
         out = []
         for name in self.people():
-            used = [o for o in objs if name and re.search(r"has [1-9]", self.command(f"scoreboard players get {name} {o}"))]
+            scores = {o: self.command(f"scoreboard players get {name} {o}") for o in objs} if name else {}
+            used = [o for o in objs if re.search(r"has [1-9]", scores.get(o, ""))]
             if used:
                 out.append(name)
                 if "aoe_box" in used:
@@ -957,9 +962,34 @@ class Gather:
                 elif "aoe_use" in used and diplomacy.in_hand(self, name):   # the Game menu item (#1588): no ray
                     out.remove(name)
                     diplomacy.open_menu(self, name)
+                elif "aoe_use" in used and self.paper and not (name in self.rallying or build.chosen(self, name)):
+                    out.remove(name)                                   # a click or a hold: short() or drag decides
+                    self.hold(name, int(re.search(r"has (\d+)", scores["aoe_use"])[1]))
                 for obj in objs:
                     self.command(f"scoreboard players reset {name} {obj}")
-        return out
+        return out + self.short()
+
+    def hold(self, name, uses):
+        """A command stick use on Paper (#1786, owner feedback): the first use of a held right click is also a click,
+        so it waits for HOLD seconds. A next use in that time (or two uses in one call) is a held right click: the cell
+        of the first use is corner 1 of the selection box, and the drag of #992 goes on until the release. A hold never
+        gives an order first: a held click on the ground would send the selected villagers to walk."""
+        if name in self.holds:
+            self.holds[name] = self.clock()
+            return
+        if name in self.pending or uses > 1:
+            look = self.pending.pop(name, (None, None))[1] or self.look(name)
+            self.drag(name, look and self.map.pick_ground(*look))
+            return
+        self.pending[name] = self.clock(), self.look(name)
+
+    def short(self):
+        """The players whose stick use got no next use in HOLD seconds: a short click, with the look of the use.
+        Call it after the uses of this call: a next use that came since the last call makes a hold."""
+        due = sorted(n for n, (t, _) in self.pending.items() if self.clock() - t >= HOLD)
+        for n in due:
+            self.looks[n] = self.pending.pop(n)[1]
+        return due
 
     def people(self):
         """The names of the Minecraft players of this Gather: all, or the players of its team (#1310). Not `team list`:
@@ -991,7 +1021,7 @@ class Gather:
         if (n := self.grouping.pop(name, None)) is not None:          # a group item (#779): no ray
             self.group(name, *n)
             return
-        if not (look := self.look(name)):
+        if not (look := self.looks.pop(name, None) or self.look(name)):   # a short click of hold() (#1786)
             return
         eye, d = look
         if name in self.wands:                                        # the selection wand (#778)
