@@ -55,7 +55,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `play:siege` Siege units: rams against buildings, mangonels with area damage, trebuchets that pack and unpack (epic #1348)
 - [ ] `play:naval` Docks and ships: fishing ships and fish traps gather food, warships fight on water, transport ships carry units (Minecraft boats)
 - [ ] `play:cheats` The AoE2 cheat codes in the chat when cheats are on (epic #820)
-- [ ] `play:fog` The explored area and the fog of war: a player sees only what the own units and buildings see
+- [x] `play:fog` The explored area and the fog of war: a player sees only what the own units and buildings see (epic #1387)
 - [ ] `play:save` Save a game of the game program and load it again (units, resources, queues, ages)
 - [ ] `play:hunt` Hunt and herd: villagers kill deer, lure and kill boars, and herd sheep that the first player who sees them owns
 - [ ] `play:setup` Set up a game before it starts: the starting age, starting resources, population limit, the civilizations and the number of bots
@@ -69,6 +69,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:wildlife` Wild predators as in AoE2: wolves, tigers and other predators of the map attack villagers and units near them
 - [ ] `play:farm-reseed` Farm reseeds as in AoE2: the mill queues farms, and an exhausted farm is built again by its farmer when the player has the wood
 - [ ] `play:game-modes` The AoE2 game modes in the game setup: Regicide (a king per player), Death Match (large start resources), King of the Hill (hold the monument) and Empire Wars (a running start economy)
+- [ ] `play:formations` AoE2 formations for a selected group (line, box, staggered, flank): the units keep their places on the walk, and the slowest unit sets the speed
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
