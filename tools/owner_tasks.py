@@ -10,8 +10,9 @@ and question. The skill `human` (a local session of the owner, `/human`) lists t
 
 Kinds: `decision` ("Decide: ..."), `play` (a play test in Minecraft: "Check ..."), `setting` (the environment, the
 scheduled task or GitHub), `outside` (a step outside the cloud), `close` (close an issue that the auto mode did not let
-the agent close, #862), `question` (all others). A line "Kind: <kind>" in the
-section "## For the owner" wins over the title. Token: GITHUB_TOKEN, else `gh api`. Python standard library only.
+the agent close, #862), `question` (all others). A last comment that asks for a close wins over all, then a line
+"Kind: <kind>" in the section "## For the owner" wins over the title. Token: GITHUB_TOKEN, else `gh api`. Python
+standard library only.
 """
 import argparse
 import json
@@ -40,8 +41,12 @@ def for_owner(body):
 
 
 def kind(issue, comments=()):
-    """The kind of a needs-human ticket: the "Kind:" line of "## For the owner", else from the title, the body and
-    the last agent request (a close that the auto mode denied, #862)."""
+    """The kind of a needs-human ticket: "close" when the last comment asks for a close (the work is done, the auto
+    mode denied the close, #862), else the "Kind:" line of "## For the owner", else from the title, the body and the
+    last agent request. A check ticket ("Check ...") ends with a close request: the title must not win (#1674)."""
+    comments = list(comments)
+    if comments and CLOSE.search(comments[-1].get("body") or ""):
+        return "close"
     m = re.search(r"^Kind:\s*(\w+)", for_owner(issue.get("body")), re.M | re.I)
     if m and m.group(1).lower() in KINDS:
         return m.group(1).lower()
@@ -54,7 +59,7 @@ def kind(issue, comments=()):
         return "setting"
     if OUTSIDE.search(title):
         return "outside"
-    if CLOSE.search(show(issue, list(comments))):
+    if CLOSE.search(show(issue, comments)):
         return "close"
     return "question"
 
