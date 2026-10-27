@@ -142,6 +142,7 @@ CIVILIANS = ("VILLAGER", "REPAIRER", "MONK", "KING", "TRADE", "FISHING_SHIP", "T
 SELECT = "aoe2mc.selected"                                         # entity tag of the selected units
 TYPE_REACH = 16                                                    # blocks: a second click selects its type this near (#743)
 WAND = "warped_fungus_on_a_stick"     # the selection wand: a second item with its own "used" statistic (#778)
+LEFT = "aoe_left"                     # score of a left click with the command stick (Paper plugin, #1788)
 RELEASE = 0.45   # seconds without a wand use: the player released the held right click (uses come each 0.2 s, #992)
 HOLD = 0.2       # seconds: a held right click sends its next command stick use in this time, so a use with no next use
                  # is a click (on Paper the stick also draws the selection box, #1786)
@@ -632,6 +633,7 @@ class Gather:
         menu.setup(self)
         flare.setup(self)
         if self.paper:
+            self.command(f'scoreboard objectives add {LEFT} dummy "Left click"')    # set by the plugin (#1788)
             train.lore(self)                                           # the help lines of the menus (#1160)
             self.command(allies_command(self.data.get("players", {})))   # allies do not shoot each other (#1315)
             self.command(neutral_command(self.data.get("players", {})))  # no automatic attack on neutrals (#1645)
@@ -952,6 +954,8 @@ class Gather:
             self.command(f"execute as {self.who} unless items entity @s container.* minecraft:{WAND} "
                          f'run give @s minecraft:{WAND}[item_name="Selection box"]')
         self.release()                                                 # the drags of the selection box (#992)
+        if getattr(self, "paper", False):                               # a partial Gather of tests/test_menu.py
+            self.deselect()
         objs = ("aoe_use", "aoe_talk", "aoe_box")
         if "passed" not in "".join(self.command(f"execute if entity {only(self.who, f'scores={{{o}=1..}}')}") for o in objs):
             return self.short()
@@ -996,6 +1000,16 @@ class Gather:
         for n in due:
             self.looks[n] = self.pending.pop(n)[1]
         return due
+
+    def deselect(self):
+        """Paper: a left click with the command stick (the score LEFT of the plugin, AoePlugin.onLeftClick) clears the
+        selection, as a click on empty ground in AoE2 (#1788). Vanilla has no event for it: the empty box (#992)."""
+        if "passed" not in self.command(f"execute if entity {only(self.who, f'scores={{{LEFT}=1..}}')}"):
+            return
+        for name in self.people():
+            if name and re.search(r"has [1-9]", self.command(f"scoreboard players get {name} {LEFT}")):
+                self.command(f"scoreboard players reset {name} {LEFT}")
+                self.choose(set())
 
     def people(self):
         """The names of the Minecraft players of this Gather: all, or the players of its team (#1310). Not `team list`:

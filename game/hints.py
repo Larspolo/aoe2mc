@@ -37,6 +37,8 @@ def state(g, player=None):
         kind, text = "villagers", TEXTS["villagers"].format(n=len(g.selected), s="s" * (len(g.selected) != 1))
     else:
         kind, text = "none", TEXTS["none" if getattr(g, "paper", False) else "none-wand"]   # vanilla: the wand (#1786)
+    if getattr(g, "paper", False):                                 # Paper: a left click deselects (#1788)
+        text = text.replace("Empty box: deselect", "Left click: deselect")
     if aim:                                                        # the count stays, the target replaces the help
         return "pointing", (text.split(" · ")[0] + " · " if g.selected else "") + aim
     return kind, text
