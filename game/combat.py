@@ -43,7 +43,7 @@ STATS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields if f != "classes"}, 
 # Buildings: hit points, melee and pierce armor (Dark Age base), one line per building in data/buildings.jsonl (#1913).
 # The high pierce armor makes arrows weak, as in AoE2. The towers have the AoE2 DE values of the wiki: a watch tower of
 # the Castle Age (850 hit points in the Feudal Age), #1112. The attack against ships: the "Attack bonus" of the wiki
-# infobox (#1564; the dock: the Castle Age, it does not shoot yet). A line with only a "sight" has no target.
+# infobox (#1564; the dock: the Castle Age). A line with only a "sight" has no target.
 BUILDING_ROWS = table.load("buildings.jsonl")
 BUILDINGS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields if f != "classes"}, classes=tuple(r["classes"]))
              for r in BUILDING_ROWS if "hp" in r}
@@ -147,7 +147,7 @@ MIN_RANGE = {"BOMBARD_CANNON": 5,     # tiles: no shot at a unit nearer (AoE2 DE
 # "MinRange", #1546). The town center has none. Murder Holes removes it.
 FORT_MIN_RANGE = {"BOMBARD_TOWER": 1,
                   "CASTLE": 1,
-                  "DOCK": 1,                  # it shoots only with fishing ships inside (AoE2 DE): not yet
+                  "DOCK": 1,                  # it shoots only with fishing ships inside (AoE2 DE, #1949)
                   "GUARD_TOWER": 1,
                   "KEEP": 1,
                   "KREPOST": 1,

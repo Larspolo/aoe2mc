@@ -849,7 +849,7 @@ Most common results: decorations (126), trees (53), flags (39).
 | MANGUDAI | skeleton_horse (skeleton) | no |
 | MERCHANT | evoker | no |
 | MILITIA | zombie | no |
-| MISSIONARY | evoker | no |
+| MISSIONARY | horse (evoker) | no |
 | MONK | evoker | no |
 | MONK_WITH_RELIC | evoker | no |
 | NINJA | zombie | no |

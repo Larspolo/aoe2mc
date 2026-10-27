@@ -1,6 +1,6 @@
 """
 Flares in the game program (#1234, part of #1230; owner decision #1232: B and C). A flare shows a place to the team:
-the players of the team hear a bell, see a column of end_rod particles at the place for SECONDS, and read a chat line.
+the players of the team and of its allied teams (#1942) hear a bell, see a column of end_rod particles at the place for SECONDS, and read a chat line.
 Two ways to put one: the button "Flare" of the Game menu (diplomacy.BUTTONS) puts it at the ground block that the player
 looks at, and the vanilla scoreboard trigger `/trigger aoe_flare` (players without operator rights may use it) puts it
 at the place of the player.
@@ -18,6 +18,16 @@ SOUND = "minecraft:block.note_block.bell"
 def team(player):
     """The viewer selector of the Minecraft players of the team of player name `pN`."""
     return f"@a[team={player}]"
+
+
+def teams(g):
+    """The viewer selectors of the team of the Gather g and of each allied team (the same `team` in aoe2mc.json, as
+    gather.allied, #1942): one per team, since one selector cannot name two teams."""
+    players = getattr(g, "players", {})
+    own = (players.get(str(g.player)) or {}).get("team")
+    allies = sorted(int(n) for n, p in players.items()
+                    if own is not None and n not in ("0", str(g.player)) and (p or {}).get("team") == own)
+    return [team(f"p{n}") for n in [g.player] + allies]
 
 
 def particles(x, y, z, team):
@@ -40,9 +50,9 @@ def setup(g):
 
 
 def put(g, player, x, y, z):
-    """Put a flare at block (x, y, z) for the team of the Gather g."""
+    """Put a flare at block (x, y, z) for the team of the Gather g and its allies."""
     g.flares = [f for f in getattr(g, "flares", []) if f[3] > g.clock()] + [(x, y, z, g.clock() + SECONDS)]
-    return [g.command(c) for c in commands(player, x, y, z, team(f"p{g.player}"))]
+    return [g.command(c) for t in teams(g) for c in commands(player, x, y, z, t)]
 
 
 def from_look(g, player):
@@ -68,4 +78,5 @@ def tick(g):
     if flares := getattr(g, "flares", []):
         g.flares = [f for f in flares if f[3] > g.clock()]
         for x, y, z, _ in g.flares:
-            g.command(particles(x, y, z, team(f"p{g.player}")))
+            for t in teams(g):
+                g.command(particles(x, y, z, t))
