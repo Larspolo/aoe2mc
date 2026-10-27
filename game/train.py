@@ -213,6 +213,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
          "DRY_DOCK": lambda name, s: s._replace(pierce=s.pierce + 1) if ship(name, s) else s,
          "EAGLE_WARRIOR_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
+         "ELITE_BALLISTA_ELEPHANT_UPGRADE": lambda name, s: s,    # a new unit name: UPGRADES
          "ELITE_BATTLE_ELEPHANT_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_BOYAR_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "ELITE_CAMEL_ARCHER_UPGRADE": lambda name, s: s,          # a new unit name: UPGRADES
@@ -335,6 +336,7 @@ UPGRADES = {                                                       # technology:
     "CHAMPION_UPGRADE": ("TWO_HANDED_SWORDSMAN", "CHAMPION"),
     "CROSSBOWMAN_UPGRADE": ("ARCHER", "CROSSBOWMAN"),
     "EAGLE_WARRIOR_UPGRADE": ("EAGLE_SCOUT", "EAGLE_WARRIOR"),        # (#1555)
+    "ELITE_BALLISTA_ELEPHANT_UPGRADE": ("BALLISTA_ELEPHANT", "ELITE_BALLISTA_ELEPHANT"),   # the castle of the Khmer (#1752)
     "ELITE_BATTLE_ELEPHANT_UPGRADE": ("BATTLE_ELEPHANT", "ELITE_BATTLE_ELEPHANT"),   # (#1556)
     "ELITE_BOYAR_UPGRADE": ("BOYAR", "ELITE_BOYAR"),   # the castle of the Slavs (#1721)
     "ELITE_CAMEL_ARCHER_UPGRADE": ("CAMEL_ARCHER", "ELITE_CAMEL_ARCHER"),   # the castle of the Berbers (#1723)
