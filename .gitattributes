@@ -22,3 +22,6 @@ game/data/units.jsonl merge=jsonl
 game/data/buildings.jsonl merge=jsonl
 # The converter tables (#1917): one JSON object per line; the order of animals.jsonl and footprint.jsonl matters (the first match wins).
 data/*.jsonl merge=union
+# The places of game data in the code (#1909): runs only delete lines or lower counts; tests/test_game_names_in_code.py
+# fails on two lines of one place and on a line that a merge put back.
+tests/data/game_names_in_code.txt merge=union
