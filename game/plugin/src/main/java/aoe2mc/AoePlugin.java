@@ -43,6 +43,7 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -965,6 +966,13 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     @EventHandler(ignoreCancelled = true)
+    public void onCombust(EntityCombustEvent ev) {           // the lava cauldron of a blacksmith: an invisible target
+        if (buildings.containsKey(ev.getEntity().getUniqueId())) {   // that burns shows the fire over the footprint (#1526)
+            ev.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
     public void onHurt(EntityDamageEvent ev) {               // suffocation in its walls, fire, fall ...
         Entity e = ev.getEntity();
         if (!(ev instanceof EntityDamageByEntityEvent) && buildings.containsKey(e.getUniqueId())) {
@@ -1790,6 +1798,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             for (Entity e : select(sender, args[1])) {
                 if (e instanceof LivingEntity le) {
                     le.setCollidable(false);                  // units walk up to the walls, not off the slime
+                    le.setFireTicks(0);                       // it can stand in lava before this command (#1526)
                     buildings.put(le.getUniqueId(), new Building(st, box, hp, b, range));
                     hp().getScoreFor(le).setScore(hp);
                     n++;
