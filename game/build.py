@@ -108,6 +108,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
                      "CASTLE_AGE"), 1) | {"IMPERIAL_AGE": 2} \
     | dict.fromkeys((                                                  # the Castle Age (#1082): buildings and units
         "BATTERING_RAM",
+        "BATTLE_ELEPHANT",
         "CAMEL_RIDER",
         "CASTLE",
         "CAVALRY_ARCHER",
@@ -139,6 +140,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "CAPPED_RAM",
         "CAVALIER",
         "CHAMPION",
+        "ELITE_BATTLE_ELEPHANT",
         "ELITE_CANNON_GALLEON",
         "ELITE_EAGLE_WARRIOR",
         "HALBERDIER",
@@ -152,6 +154,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "SIEGE_RAM",
         "TREBUCHET",
         "TWO_HANDED_SWORDSMAN",
+        "WINGED_HUSSAR",
         "WONDER",
     ), 3)                                                              # (0: Dark)
 WALLS = ("PALISADE_WALL", "STONE_WALL")                            # a line of 1-tile sites with two clicks (#1322)
@@ -622,6 +625,14 @@ def values(g, name, techs=None):
     return s
 
 
+def minimum(g, name, techs=None):
+    """The minimum range in tiles of building name of the player of g (combat.FORT_MIN_RANGE): 0 after Murder Holes
+    (#1547). techs: the technologies (default: those of the player)."""
+    import combat                                                      # combat -> gather -> build: import it late
+    techs = getattr(g, "techs", ()) if techs is None else techs
+    return 0 if "MURDER_HOLES" in techs else combat.FORT_MIN_RANGE.get(name, 0)
+
+
 def retower(g, before):
     """The complete own buildings get their new values after a tower technology (#1374) or Masonry (#1398, values): the
     target keeps its lost hit points, as a wall (upgrade). before: the technologies before the research. A destroyed
@@ -632,11 +643,11 @@ def retower(g, before):
         + [(*s["footprint"], s["name"]) for s in g.sites if s.get("done") and s["player"] == g.player]
     for x0, x1, z0, z1, name in rects:
         a, b, new = values(g, name, before), values(g, name), line(g, name)
-        if a == b or (hp := repair.hp(g, (x0, x1, z0, z1))) is None or hp <= 0:
+        if (a, minimum(g, new, before)) == (b, minimum(g, new)) or (hp := repair.hp(g, (x0, x1, z0, z1))) is None or hp <= 0:
             continue
         uuid = combat.target_uuid([x0, z0, x1, z1])
         box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
-        for c in [c for c in combat.building(uuid, new, g.player, box, g.map.T, s=b) if c.startswith("aoe building ")] \
+        for c in [c for c in combat.building(uuid, new, g.player, box, g.map.T, s=b, low=minimum(g, new)) if c.startswith("aoe building ")] \
                 + [f"scoreboard players set {uuid} aoe_hp {min(b.hp, hp + b.hp - a.hp)}", combat.label_command(uuid, new)]:
             g.command(c)
 
@@ -695,7 +706,7 @@ def target(g, site):
     wall, name = site["name"] in combat.WALLS, line(g, design(g, site["name"], site["player"]))   # the hit points of the age
                                                                        # (#1322), a guard tower or keep (#1374)
     s = combat.wall(name, ages(g)) if wall else values(g, name)                  # Chemistry (#1375), Masonry (#1398)
-    for c in combat.building(uuid, name, site["player"], box, g.map.T, s=s) \
+    for c in combat.building(uuid, name, site["player"], box, g.map.T, s=s, low=minimum(g, name)) \
             + [f"tag {uuid} add {combat.WALL_TAG}"] * wall + [combat.label_command(uuid, name)]:
         g.command(c)
     if site["player"] != g.player:                                     # an enemy building: the player can attack it
