@@ -225,9 +225,23 @@ def nearest(g, tile):
     return min((t for t, k in g.map.fish.items() if k > 0), key=lambda t: (math.dist(t, tile), t), default=None)
 
 
+def rate(g, fish):
+    """Food per game second of an own fishing ship at fish: the AoE2 DE rate (gather.SHIP_WORK) with the dock
+    technologies of the player (gather.SHIP_TECHS, #1439)."""
+    import train                                                      # train imports this module
+    return gather.SHIP_WORK["shore" if fish in g.map.shore else "deep"] * \
+        math.prod(f ** train.count(g, t) for t, (f, _) in gather.SHIP_TECHS.items())
+
+
+def carry(g):
+    """Food of one trip of an own fishing ship: CARRY and the more food of the dock technologies (#1439)."""
+    import train                                                      # train imports this module
+    return CARRY + sum(c * train.count(g, t) for t, (_, c) in gather.SHIP_TECHS.items())
+
+
 def work(g, v, dt):
     """One step of fishing ship v without a path, dt game seconds: at the fish it gathers at the AoE2 DE rate
-    (gather.SHIP_WORK) up to CARRY, then sails to the nearest own dock; there the food goes into the stock, and it sails
+    (rate()) up to carry(), then sails to the nearest own dock; there the food goes into the stock, and it sails
     back to its fish or to the next fish. An empty fish is removed."""
     m = g.map
     if v.state == "to_tree":
@@ -237,15 +251,16 @@ def work(g, v, dt):
         else:
             v.state, v.timer = "chop" if v.tree is not None else "idle", 0.0
     elif v.state == "chop":
-        v.timer += CARRY if getattr(g, "aegis", False) else dt * gather.SHIP_WORK["shore" if v.tree in m.shore else "deep"]
-        while v.timer >= 1 and v.load < CARRY and m.fish.get(v.tree, 0) > 0:
+        full = carry(g)
+        v.timer += full if getattr(g, "aegis", False) else dt * rate(g, v.tree)
+        while v.timer >= 1 and v.load < full and m.fish.get(v.tree, 0) > 0:
             v.timer -= 1
             v.load += 1
             m.fish[v.tree] -= 1
             g.work(v)                                                  # the splash sound and the water particles
         if m.fish.get(v.tree, 0) <= 0:
             remove(g, v.tree)
-        if v.load >= CARRY or v.tree not in m.fish:
+        if v.load >= full or v.tree not in m.fish:
             docks = set().union(*(m.around(c, water=True) for c in m.docks))
             if not docks or not sail_to(g, v, "to_drop", docks):
                 v.state = "idle"
