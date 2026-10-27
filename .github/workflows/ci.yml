@@ -79,7 +79,7 @@ jobs:
   mc:
     if: github.event_name == 'schedule' || inputs.full == true
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 60     # `-m mc` takes more than 21 minutes: 15 stopped each night run (#1677)
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -108,7 +108,10 @@ jobs:
 
   report:
     needs: [quick, slow, mc]
-    if: failure() && github.ref == 'refs/heads/main'
+    # A timeout gives `cancelled`, not `failure` (#1677). Only in the night run: a new push cancels a quick run.
+    if: >-
+      always() && github.ref == 'refs/heads/main' && (contains(needs.*.result, 'failure')
+      || (github.event_name == 'schedule' && contains(needs.*.result, 'cancelled')))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
