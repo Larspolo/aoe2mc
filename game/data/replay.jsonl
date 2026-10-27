@@ -46,6 +46,7 @@
 {"name": "CHAMPION", "walk": 0.96}
 {"name": "TWO_HANDED_SWORDSMAN", "walk": 0.96}
 {"name": "WINGED_HUSSAR", "walk": 1.5}
+{"name": "XOLOTL_WARRIOR", "walk": 1.35}
 {"name": "SCORPION", "walk": 0.65}
 {"name": "SIEGE_TOWER", "walk": 0.96}
 {"name": "TRADE_CART", "walk": 1.25}
