@@ -228,6 +228,21 @@ MOUNTED_HEROES = ("RICHARD_THE_LIONHEART", "FREDERICK_BARBAROSSA", "SALADIN", "E
 RELIGIOUS_HEROES = ("POPE", "ARCHBISHOP", "IMAM", "FRIAR", "PRIEST")
 RANGED_HEROES = ("ROBIN_HOOD", "ARCHER", "SHERIFF")
 SIEGE_HEROES = ("BAD_NEIGHBOR", "GODS_OWN_SLING", "WARWOLF", "TREBUCHET")
+# The mob in the minecart of a siege unit (owner decision on #1525, #1664): (name keys, mob, scale, extra tags). The
+# first row with a key in the name wins. The scale keeps a large mob in its cart, off the units next to it. The crew
+# keeps NoAI and Silent (mob()), so it does not walk, jump, shoot or attack by itself.
+SIEGE_CREW = (
+    (("SIEGE_RAM",), "iron_golem", 0.6, {}),                          # 1.2 × the battering ram
+    (("CAPPED_RAM",), "iron_golem", 0.55, {}),                        # 1.1 ×
+    (("BATTERING_RAM",), "iron_golem", 0.5, {}),
+    (("MANGONEL", "ONAGER"), "breeze", 0.8, {}),
+    (("SCORPION",), "piglin", 1.0, {"IsImmuneToZombification": Byte(1)}),   # else a zombified piglin in 15 s
+    (("TREBUCHET",) + SIEGE_HEROES, "warden", 0.6, {}),               # packed: × TREBUCHET_PACKED
+    (("BOMBARD_CANNON", "HOUFNICE"), "ghast", 0.3, {}),
+    (("SIEGE_TOWER",), "sniffer", 0.5, {}),
+    (("WAR_WAGON",), "horse", 0.7, {}),                               # owner: "War wagon a horse in the minecart"
+)
+TREBUCHET_PACKED = 0.6      # the size of the packed trebuchet crew, of the unpacked one (#1525)
 # Heroes that the keyword lists above do not catch -> the base unit whose look they get (with hero armor).
 # SWORD and AXE: a foot hero with a netherite sword or axe. From the hero names and the AoE2 campaigns.
 HERO_BASE = {n: base for base, names in (
@@ -393,6 +408,22 @@ def animal(n):
     return next((row[1:] for row in ANIMALS if has(n, *row[0])), None)
 
 
+def siege_scale(n):
+    """The scale of the crew mob of siege unit n (SIEGE_CREW), or None for a crew without a row."""
+    row = next((r for r in SIEGE_CREW if has(n, *r[0])), None)
+    return None if row is None else row[2] * (TREBUCHET_PACKED if row[1] == "warden" and "PACKED" in n else 1)
+
+
+def siege_crew(n):
+    """The crew mob of siege unit n from SIEGE_CREW, with its scale attribute, or None."""
+    row = next((r for r in SIEGE_CREW if has(n, *r[0])), None)
+    if row is None:
+        return None
+    _, kind, _, extra = row
+    scale = Compound({"id": String("minecraft:scale"), "base": Double(siege_scale(n))})
+    return mob(kind, hands("crossbow") if kind == "piglin" else None, attributes=List[Compound]([scale]), **extra)
+
+
 @functools.lru_cache(maxsize=None)
 def siege(n):
     """A siege unit: a minecart with a crew. The game program walks it on a carrier mob of the plugin (#836)."""
@@ -468,7 +499,9 @@ def classify(n, hero=False):
                                              "BOMBARD_CANNON", "SIEGE_TOWER", "ORGAN_GUN", "HOUFNICE",
                                              "ROCKET_CART", "WAR_WAGON", "HUSSITE_WAGON", "COBRA_CAR",
                                              "FLAMETHROWER", "CHARIOT", "RATHA", "CATAPULT"):
-        if n.endswith("_RAM") or "SIEGE_TOWER" in n:
+        if siege_crew(n):
+            crew = siege_crew(n)
+        elif n.endswith("_RAM") or "SIEGE_TOWER" in n:
             crew = soldier("zombie", "crew")
         elif has(n, "SCORPION", "WAR_WAGON", "HUSSITE", "CHARIOT", "RATHA"):
             crew = soldier("skeleton", "crew", "crossbow" if "SCORPION" in n else "bow")

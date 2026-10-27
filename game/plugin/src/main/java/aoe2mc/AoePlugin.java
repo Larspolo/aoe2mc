@@ -160,6 +160,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              carrier first (#836): an invisible small pig that walks for it
  *   aoe box <player> <x> <z> <dye>             draw the selection box from this corner to the look (#795, Border.java)
  *   aoe box-clear <player>                     end the border of the selection box
+ *   aoego <x> <z>                              (no permission) the player goes to a view of an alert place of the
+ *                                              own team (#1816, Alerts.go): the click of an attack alert line
  * Converted units have no AI (NoAI): an order turns it on. Such a unit finds no path before its first AI tick
  * (it is not "on the ground" yet), and vanilla goals (a random stroll) can take the navigation of a walking unit:
  * so the order sends the path again every 2 ticks (#437: 10 ticks made each walk 0.5 s longer), until the unit
@@ -1864,6 +1866,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (command.getName().equals("aoego")) {                       // a click on an attack alert (#1816)
+            return alerts.go(sender, args);
+        }
         if (args.length >= 2 && args[0].startsWith("ghost")) {          // the ghost of a building (#794)
             return ghost.command(sender, args, players(sender, args[1]));
         }

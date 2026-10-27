@@ -214,9 +214,11 @@ def herdable(name):
     return ("COW" if name.startswith("COW_") else name) in HERDS
 
 
-def group_item(n):
-    """The hotbar item of control group n."""
-    return (f'minecraft:carrot_on_a_stick[item_model="minecraft:{GROUPS[n][1]}",item_name="Group {n}",'
+def group_item(n, units=0):
+    """The hotbar item of control group n with units saved units: its name and lore say how to use it (#1812)."""
+    name, lore = ((f"Group {n}: {units} unit{'s' * (units != 1)}", "Right click: select · Shift + right click: save again")
+                  if units else (f"Group {n} (empty)", "Shift + right click: save the selection"))
+    return (f'minecraft:carrot_on_a_stick[item_model="minecraft:{GROUPS[n][1]}",item_name="{name}",lore=["{lore}"],'
             f"custom_data={{aoe_group:{n}}}]")
 
 
@@ -947,7 +949,7 @@ class Gather:
         if self.calls % GROUP_GIVE == 0:
             for n, (slot, _) in GROUPS.items():
                 self.command(f"execute as {self.who} unless items entity @s hotbar.{slot} *[custom_data={{aoe_group:{n}}}] "
-                             f"run item replace entity @s hotbar.{slot} with {group_item(n)}")
+                             f"run item replace entity @s hotbar.{slot} with {group_item(n, len(self.groups.get(n, ())))}")
             diplomacy.give(self)                                       # the Game menu item (#1588)
         self.calls += 1
         if not self.paper:                                             # Paper: hold right click with the stick (#1786)
@@ -1036,6 +1038,8 @@ class Gather:
             self.choose(out, min(out, default=None))
             text = f"Group {n}: {len(out)} units"
         self.command(f"title {name} actionbar " + json.dumps({"text": text}))
+        # the item names the units of the group now (#1812): the players of this Gather share the groups
+        self.command(f"item replace entity {self.who} hotbar.{GROUPS[n][0]} with {group_item(n, len(self.groups[n]))}")
 
     def click(self, name):
         if (n := self.grouping.pop(name, None)) is not None:          # a group item (#779): no ray

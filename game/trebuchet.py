@@ -9,12 +9,15 @@ carrier (`aoe speed`) and its AoE2 range (`aoe range`, combat.range_command); pa
 the plugin lets it shoot nothing.
 The armor changes when a pack or an unpack ends, as in AoE2 DE (wiki: 2 melee and 8 pierce armor packed, 1 and 150
 unpacked, #1409): the same `aoe stats` command as the technologies (stats_command).
+The warden in the minecart (#1664) gets its size of the state at the same time (`attribute ... minecraft:scale`).
 
     trebuchet.unpack(g, u, target)   # gather.Gather.attack: the trebuchet u attacks target after the walk and unpack
     trebuchet.move(g, u, cmds)       # ai.move: the commands of the walk go after the pack
     trebuchet.tick(g, dt)            # gather.Gather.step: dt AoE2 seconds of packing and unpacking
 """
 import math
+
+import units
 
 NAME = "TREBUCHET"
 PACK = 11.1                 # AoE2 seconds to pack or to unpack
@@ -43,6 +46,12 @@ def stats_command(g, u):
     """The `aoe stats` command of trebuchet u in its state (#1409)."""
     import combat
     return combat.stats_command(u, NAME, stats(g, u))
+
+
+def scale_command(u, packed):
+    """The size of the crew mob of trebuchet u: smaller packed, as in the table of decision #1525 (#1664)."""
+    s = units.siege_scale(NAME + "_PACKED" * packed)
+    return f"execute as {u} on passengers run attribute @s minecraft:scale base set {s:g}"
 
 
 def range_command(g, u, blocks=None):
@@ -118,6 +127,7 @@ def tick(g, dt):
     that is done sends its commands."""
     trebs = vars(g).setdefault("trebs", {})
     for u in sorted(u for u, n in g.soldiers.items() if n == NAME and u not in trebs):
+        g.command(scale_command(u, True))                          # a TREBUCHET of the map has the unpacked size
         g.command(range_command(g, u, 0))
         trebs[u] = ["packed", 0.0, []]
     for u in sorted(trebs):
@@ -142,7 +152,8 @@ def tick(g, dt):
             trebs[u][1] = left - dt
             continue
         trebs[u] = ["packed" if st == "packing" else "unpacked", 0.0, []]
-        g.command(stats_command(g, u))                             # the armor of the new state
+        g.command(scale_command(u, st == "packing"))               # the size and the armor of the new state
+        g.command(stats_command(g, u))
         if st == "unpacking":                                      # the range of now: a research during the unpack (#1414)
             g.command(range_command(g, u))
         for c in then:
