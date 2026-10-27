@@ -99,6 +99,7 @@ other projects with". The `roadmap` skill makes no epics for this goal: the `imp
 
 - [ ] `system:improve` The system improves itself in its own loop, over the whole system, and only where it pays (epic #908)
 - [ ] `system:reuse` The system can be set up for another project (epic #909)
+- [ ] `system:structure` The code stays easy to change: game data in data files, checks in place of rules (epic #1909)
 
 ## Principles
 
