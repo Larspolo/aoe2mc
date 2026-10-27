@@ -10,7 +10,10 @@ WORK_RATE holds the train and research rate of the buildings (#1894, Persian tow
 divides the time of an item by work_rate(). HP holds the hit points bonus of the buildings (#1895): build.values and
 combat.setup (the buildings of the map) apply it before the technologies (Masonry).
 REPAIR and REPAIR_COST hold the repair bonuses (#1730, AoE2 wiki "Repairing"): repair.tick multiplies the rate and the
-cost of the repairs of a player by them (repair_rate, repair_cost).
+cost of the repairs of a player by them (repair_rate, repair_cost). REPAIR_TEAM holds the team bonuses of the repair
+rate (#1929, AoE2 wiki "Saxons": "Repairers work 25% faster"): they count for the civilization and its allies, and
+multiply with REPAIR. The cost bonus of the Georgians is for buildings only (AoE2 wiki "Villager (Age of Empires II)":
+"The bonus does not apply to repairing units"), so siege units and ships pay the full cost.
 
 UNITS holds the bonuses of the land units of combat.STATS (#1090): hit points, attack, armor, range, reload and walk
 speed, per age. train.stats applies them before the technologies; the walk speed goes through speed(). Bonuses of
@@ -328,7 +331,8 @@ BUILD = {"ROMANS": ROMAN,                                          # Romans: bui
          "SPANISH": 1.3}                                           # Spanish: builders work 30 % faster
 BUILD_WONDER = {"SPANISH": 1.2}                                   # Spanish: 20 % for wonders (AoE2 DE wiki)
 REPAIR = {"ROMANS": ROMAN}                                        # Romans: repairers work 5 % faster
-REPAIR_COST = {"GEORGIANS": 0.75}                                 # Georgians (team bonus): repairs cost -25 %
+REPAIR_COST = {"GEORGIANS": 0.75}                                 # Georgians (team bonus): repairs of buildings cost -25 %
+REPAIR_TEAM = {"SAXONS": 1.25}                                    # Saxons (team bonus): repairers work 25 % faster
 PERSIAN = (1.05, 1.1, 1.15, 1.2)                                   # Persians: 5/10/15/20 % faster in the Dark ... Imperial Age
 WORK_RATE = {"PERSIANS": {"DOCK": PERSIAN, "TOWN_CENTER": PERSIAN}}   # the train and research rate of a building in each age
 HP = {"PERSIANS": {"DOCK": 2, "TOWN_CENTER": 2}}                   # Persians: town centers and docks have double hit points
@@ -417,13 +421,18 @@ def build_rate(g, name):
 
 
 def repair_rate(g):
-    """The factor of the repair rate of the villagers of the player of g (REPAIR), else 1."""
-    return REPAIR.get(civ(g), 1)
+    """The factor of the repair rate of the villagers of the player of g: its own bonus (REPAIR) times the largest team
+    bonus (REPAIR_TEAM) of the civilization and its allies (gather.allied)."""
+    import gather                                                  # gather imports this module
+    players = g.data.get("players", {})
+    team = max([REPAIR_TEAM.get(civ(g, p), 1) for p in players if p.isdigit() and gather.allied(players, g.player, int(p))]
+               + [REPAIR_TEAM.get(civ(g), 1)])
+    return REPAIR.get(civ(g), 1) * team
 
 
 def repair_cost(g):
-    """The factor of the repair cost of the player of g: a team bonus of REPAIR_COST counts for the civilization and
-    its allies (gather.allied); the bonuses do not add up, the smallest factor counts."""
+    """The factor of the repair cost of the buildings of the player of g: a team bonus of REPAIR_COST counts for the
+    civilization and its allies (gather.allied); the bonuses do not add up, the smallest factor counts. Not for units."""
     import gather                                                  # gather imports this module
     players = g.data.get("players", {})
     return min([REPAIR_COST.get(civ(g, p), 1) for p in players if p.isdigit() and gather.allied(players, g.player, int(p))]
