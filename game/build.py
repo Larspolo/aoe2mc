@@ -108,6 +108,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
                      "CASTLE_AGE"), 1) | {"IMPERIAL_AGE": 2} \
     | dict.fromkeys((                                                  # the Castle Age (#1082): buildings and units
         "BATTERING_RAM",
+        "BATTLE_ELEPHANT",
         "CAMEL_RIDER",
         "CASTLE",
         "CAVALRY_ARCHER",
@@ -139,6 +140,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "CAPPED_RAM",
         "CAVALIER",
         "CHAMPION",
+        "ELITE_BATTLE_ELEPHANT",
         "ELITE_CANNON_GALLEON",
         "ELITE_EAGLE_WARRIOR",
         "HALBERDIER",
@@ -152,6 +154,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "SIEGE_RAM",
         "TREBUCHET",
         "TWO_HANDED_SWORDSMAN",
+        "WINGED_HUSSAR",
         "WONDER",
     ), 3)                                                              # (0: Dark)
 WALLS = ("PALISADE_WALL", "STONE_WALL")                            # a line of 1-tile sites with two clicks (#1322)
