@@ -27,7 +27,7 @@ def test_the_values_are_those_of_aoe2_de():
     assert train.AFTER["HEAVY_WARSHIPS"] == "MEDIUM_WARSHIPS"
     assert train.AFTER["HEAVY_DEMOLITION_SHIP_UPGRADE"] == "DEMOLITION_SHIP_UPGRADE"
     assert train.lines("HEAVY_WARSHIPS") == (("WAR_GALLEY", "GALLEON"), ("FIRE_SHIP", "DRAGON_SHIP"),
-                                            ("FIRE_SHIP", "FAST_FIRE_SHIP"))
+                                            ("FIRE_SHIP", "FAST_FIRE_SHIP"), ("WAR_HULK", "CARRACK"))
     assert [fleet.SPEEDS[n] for n in ("GALLEON", "FAST_FIRE_SHIP", "HEAVY_DEMOLITION_SHIP")] == [1.36, 1.56, 1.52]
     assert [combat.sight(n) for n in ("GALLEON", "FAST_FIRE_SHIP", "HEAVY_DEMOLITION_SHIP")] == [9, 6, 6]
     assert combat.range_command("u", "HEAVY_DEMOLITION_SHIP", 4) == "aoe range u 4.0 1 13.0"   # 3.25 tiles of blast

@@ -25,7 +25,7 @@ def form(row, need, may=()):
     keys = {**need, **dict(may)}
     assert set(need) <= set(row) <= set(keys), (row["name"], sorted(set(row) ^ set(need)))
     for k, v in row.items():
-        assert isinstance(v, keys[k]) and not isinstance(v, bool), (row["name"], k, v)
+        assert isinstance(v, keys[k]) and (keys[k] is bool or not isinstance(v, bool)), (row["name"], k, v)
 
 
 STATS = {"hp": int, "attack": int, "melee": int, "pierce": int, "range": NUMBER, "reload": float, "bonus": dict,
@@ -89,8 +89,21 @@ def check_civs(row):
         assert len(ages) == 4 and all(isinstance(a, NUMBER) for a in ages), (n, what)
 
 
-CHECKS = {"buildings.jsonl": check_buildings, "civs.jsonl": check_civs, "train.jsonl": check_train,
-          "units.jsonl": check_units}
+def check_gather(row):
+    form(row, {"name": str}, {"drop": list, "work": dict, "fish": int, "shore": bool, "hunt": int, "herd": bool,
+                              "farm": int, "dark": bool, "ship": list, "civilian": bool, "mine": list, "carry": int,
+                              "pace": float, "watch": bool})
+    n = row["name"]
+    assert len(row) > 1 and set(row.get("drop", ())) <= RES and set(row.get("work", {})) <= RES, n
+    assert all(isinstance(v, NUMBER) for v in row.get("work", {}).values()), n
+    if "mine" in row:                                      # [the resource, its amount, the villager name of the miner]
+        res, amount, miner = row["mine"]
+        assert res in RES and isinstance(amount, int) and miner.isupper(), n
+    assert len(row.get("ship", (0, 0))) == 2 and all(isinstance(v, NUMBER) for v in row.get("ship", ())), n
+
+
+CHECKS = {"buildings.jsonl": check_buildings, "civs.jsonl": check_civs, "gather.jsonl": check_gather,
+          "train.jsonl": check_train, "units.jsonl": check_units}
 
 
 def test_each_data_file_has_a_check():
