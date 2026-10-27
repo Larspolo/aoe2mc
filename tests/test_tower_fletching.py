@@ -34,7 +34,7 @@ def uuid(rect):
 def values(server, rect):
     """The hit points, attack and range (blocks, tile size 1) of the last "aoe building" command of the target."""
     c = [c.split() for c in server.log if c.startswith(f"aoe building {uuid(rect)} ")][-1]
-    return int(c[3]), int(c[-3]), int(c[-2])
+    return int(c[3]), int(c[-4]), int(c[-3])
 
 
 def test_the_buildings_that_shoot_get_the_values_of_fletching_and_bodkin_arrow():

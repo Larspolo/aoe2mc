@@ -116,10 +116,12 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe sight <selector> <blocks>              an idle unit attacks an enemy in this line of sight (#775)
  *   aoe building <selector> <hp> <melee armor> <pierce armor> <x0> <y0> <z0> <x1> <y1> <z1>
  *                                              make the entity the target of a building (#517, combat.building)
- *   aoe building ... <attack> <range> <reload> the building shoots arrows: range in blocks, reload in ticks (#1111)
+ *   aoe building ... <attack> <range> <reload> <min>
+ *                                              the building shoots arrows: range in blocks, reload in ticks (#1111),
+ *                                              no shot at a unit nearer than min blocks (the AoE2 minimum range, #1546)
  *   aoe building ... <classes>                 its armor classes (default building,standard: a wall, a gate and the
  *                                              wonder are no standard building, #1419)
- *   aoe building ... <attack> <range> <reload> <classes> <bonus>
+ *   aoe building ... <attack> <range> <reload> <min> <classes> <bonus>
  *                                              the arrow bonus class:n,... (Heated Shot against ships, #1548)
  *   aoe menu <player> <title> <slot>:<material>:<name>:<lore>[:<count>] ...
  *                                              open a chest menu (#619, game/menu.py; the texts are URL-encoded)
@@ -236,7 +238,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Border border = new Border();
 
     // b: x0 y0 z0 x1 y1 z1 of box; range: the blocks from the footprint that its arrows reach, 0: no attack (#1111)
-    private record Building(Stats stats, String box, int max, int[] b, double range) {}
+    private record Building(Stats stats, String box, int max, int[] b, double range, double min) {}
 
     private final Map<UUID, Building> buildings = new HashMap<>();
     private final Map<UUID, Integer> arrows = new HashMap<>();       // the arrows of a shot of a building (#1113)
@@ -511,7 +513,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     var p = le.getLocation();
                     double dx = Math.max(0, Math.max(b[0] - p.getX(), p.getX() - b[3] - 1));
                     double dz = Math.max(0, Math.max(b[2] - p.getZ(), p.getZ() - b[5] - 1));
-                    if (dx * dx + dz * dz <= bestD && (!under(b, p) || side(le, 0) != null)) {   // no shot: the next (#1328)
+                    if (dx * dx + dz * dz <= bestD && dx * dx + dz * dz >= f.min * f.min   // minimum range (#1546)
+                            && (!under(b, p) || side(le, 0) != null)) {   // no shot: the next (#1328)
                         best = le;
                         bestD = dx * dx + dz * dz;
                     }
@@ -1915,22 +1918,23 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Sight: " + n + " units");
             return true;
         }
-        if (args.length >= 11 && args.length <= 16 && args.length != 13 && args[0].equals("building")) {
+        if ((args.length == 11 || args.length == 12 || args.length >= 15 && args.length <= 17) && args[0].equals("building")) {
             int hp;
-            double range = 0;
+            double range = 0, min = 0;
             Stats st;
             String box;
             int[] b = new int[6];
             try {
                 hp = Integer.parseInt(args[2]);
-                boolean shoots = args.length >= 14;          // attack, range in blocks, reload in ticks (#1111)
-                Set<String> classes = args.length == 12 || args.length >= 15   // the classes after the attack (#1419)
-                        ? Set.of(args[args.length == 12 ? 11 : 14].split(",")) : Set.of("building", "standard");
+                boolean shoots = args.length >= 15;          // attack, range in blocks, reload in ticks (#1111), min (#1546)
+                Set<String> classes = args.length == 12 || args.length >= 16   // the classes after the attack (#1419)
+                        ? Set.of(args[args.length == 12 ? 11 : 15].split(",")) : Set.of("building", "standard");
                 st = new Stats(shoots ? Integer.parseInt(args[11]) : 0, Integer.parseInt(args[3]),
                         Integer.parseInt(args[4]), shoots, true, classes,
-                        args.length == 16 ? bonus(args[15]) : Map.of(),   // the arrow bonus: Heated Shot (#1548)
+                        args.length == 17 ? bonus(args[16]) : Map.of(),   // the arrow bonus: Heated Shot (#1548)
                         shoots ? Integer.parseInt(args[13]) : 0);
                 range = shoots ? Double.parseDouble(args[12]) : 0;
+                min = shoots ? Double.parseDouble(args[14]) : 0;
                 var c = new ArrayList<String>();
                 for (int i = 5; i < 11; i++) {
                     b[i - 5] = Integer.parseInt(args[i]);
@@ -1946,7 +1950,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 if (e instanceof LivingEntity le) {
                     le.setCollidable(false);                  // units walk up to the walls, not off the slime
                     le.setFireTicks(0);                       // it can stand in lava before this command (#1526)
-                    buildings.put(le.getUniqueId(), new Building(st, box, hp, b, range));
+                    buildings.put(le.getUniqueId(), new Building(st, box, hp, b, range, min));
                     hp().getScoreFor(le).setScore(hp);
                     n++;
                 }

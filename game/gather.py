@@ -47,7 +47,7 @@ import types
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from aoe2mc import PASSABLE_OBJECTS, WOODS, object_footprint, object_mob, player_color, tree_kind  # noqa: E402
-from units import VILLAGER_JOBS, animal, pretty  # noqa: E402
+from units import TEAM_COLOR, VILLAGER_JOBS, animal, pretty  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
@@ -500,6 +500,8 @@ class Gather:
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
                  cheats=False, start=None):
         self.game, self.data, self.map, self.player = game, data, Map(data, player), player
+        if player != 1:
+            self.board = f"aoe_res{player}"                            # its own resources: its team sidebar (#1309)
         self.paper = getattr(game, "kind", None) == "paper"           # walks with the plugin (#437)
         chop = WORK_SECONDS if chop is None else chop
         self.tick, self.carry = tick, carry
@@ -569,12 +571,24 @@ class Gather:
         m = re.findall(NUMBER, self.command(f"data get entity {target} Pos").rsplit(":", 1)[-1])
         return tuple(map(float, m)) if len(m) == 3 else None
 
+    def color(self):
+        """The Minecraft team color of the player (units.TEAM_COLOR)."""
+        name = self.data.get("players", {}).get(str(self.player), {}).get("color") or player_color(self.player)
+        return TEAM_COLOR.get(name, "white")
+
+    def sidebars(self):
+        """The display slots of the resources of the player (#1309): the sidebar of its team color, so each team sees its
+        own player; player 1 also the sidebar of all, for a Minecraft player in no team."""
+        return ["sidebar"] * (self.player == 1) + [f"sidebar.team.{self.color()}"]
+
     def setup(self):
         for cmd in ("scoreboard objectives add aoe_use minecraft.used:minecraft.carrot_on_a_stick",
                     f"scoreboard objectives add aoe_box minecraft.used:minecraft.{WAND}",
                     "scoreboard objectives add aoe_talk minecraft.custom:minecraft.talked_to_villager",
-                    f'scoreboard objectives add {self.board} dummy "Resources"',
-                    f"scoreboard objectives setdisplay sidebar {self.board}"):
+                    f'scoreboard objectives add {self.board} dummy "Resources"'):
+            self.command(cmd)
+        for cmd in [f'team add p{self.player} "Player {self.player}"', f"team modify p{self.player} color {self.color()}"] \
+                + [f"scoreboard objectives setdisplay {slot} {self.board}" for slot in self.sidebars()]:
             self.command(cmd)
         for r in RESOURCES:
             self.command(f"scoreboard players set {r} {self.board} {self.stock[r.lower()]}")   # the start resources
