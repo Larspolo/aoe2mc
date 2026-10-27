@@ -61,6 +61,7 @@ import flare  # noqa: E402
 import fleet  # noqa: E402
 import fog  # noqa: E402
 import garrison  # noqa: E402
+import herd  # noqa: E402
 import hints  # noqa: E402
 import market  # noqa: E402
 import menu  # noqa: E402
@@ -142,6 +143,8 @@ SELECT = "aoe2mc.selected"                                         # entity tag 
 TYPE_REACH = 16                                                    # blocks: a second click selects its type this near (#743)
 WAND = "warped_fungus_on_a_stick"     # the selection wand: a second item with its own "used" statistic (#778)
 RELEASE = 0.45   # seconds without a wand use: the player released the held right click (uses come each 0.2 s, #992)
+HOLD = 0.2       # seconds: a held right click sends its next command stick use in this time, so a use with no next use
+                 # is a click (on Paper the stick also draws the selection box, #1786)
 # Control groups (#779, owner choice #745): carrots on a stick with custom_data {aoe_group:N} in hotbar slots 4..8
 # (keys 5-9), with the model of a dye. A shift right click saves the selection as group N, a right click selects it.
 GROUPS = {n: (3 + n, dye) for n, dye in enumerate(("red_dye", "yellow_dye", "lime_dye", "light_blue_dye",
@@ -203,6 +206,11 @@ def neutral_command(players):
 def hunt_food(name):
     """The food of a hunted animal (HUNT_FOOD), else 0."""
     return HUNT_FOOD.get("COW" if name.startswith("COW_") else name, 0)
+
+
+def herdable(name):
+    """True for a herdable animal (HERDS): an own one takes move orders (#1791)."""
+    return ("COW" if name.startswith("COW_") else name) in HERDS
 
 
 def group_item(n):
@@ -513,6 +521,7 @@ class Gather:
     ended = None                                                       # "Victory" or "Defeat": run() stops (#819)
     board = "aoe_res"                                                  # the objective of the resources (the sidebar)
     bots = ()                                                          # run() steps them too (bot.Bot, #856)
+    peers = ()                                                         # the Gathers of the other people (fog.py, #1631)
     reveal = "normal"                                                  # AoE2 "Reveal map"; "all": no fog (fog.py, #1389)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
@@ -543,6 +552,8 @@ class Gather:
                         and not allied(data.get("players", {}), player, o["player"])}   # no allies (#1312)
         self.prey = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit" and o.get("uuid")
                      and o["player"] in (0, player) and hunt_food(o["name"])}   # animals to hunt (#1058)
+        self.flock = {o["uuid"] for o in data["objects"] if o["kind"] == "unit" and o.get("uuid")
+                      and o["player"] == player and herdable(o["name"])}   # own herdables: select and move (#1791)
         self.seen, self.dead = {}, {}                                  # hunted animal -> last feet position, carcass tile
         self.players, self.sites = data.get("players", {}), []         # construction sites (#417)
         self.farmers, self.crops = {}, {}                              # farm tile -> UUID of its farmer, wheat age
@@ -567,6 +578,7 @@ class Gather:
         self.sieged = set()                                            # the targets of attack orders
         self.wands, self.corners = set(), {}                           # players who clicked the wand, player -> corner 1
         self.holds = {}                                                # player -> time of the last wand use of a drag
+        self.pending, self.looks = {}, {}                              # player -> (time, look) of a stick use (#1786)
         self.groups, self.grouping, self.calls = {}, {}, 0             # group -> units, player -> (group, shift)
         self.hints = {}                                                # target -> (hint text, time) (hints.py, #798)
         self.pointing = {}                                             # player -> text of its pointed target (#989)
@@ -705,9 +717,9 @@ class Gather:
         if self.paper:
             self.command(f"aoe box-clear {name}")
         (x0, x1), (z0, z1) = sorted((first[0], cell[0])), sorted((first[1], cell[1]))
-        pos = {k: v.pos for k, v in self.villagers.items()} | self.positions(list(self.soldiers))
+        pos = {k: v.pos for k, v in self.villagers.items()} | self.positions(list(self.soldiers) + sorted(self.herd()))
         inside = {u for u, p in pos.items() if x0 <= p[0] < x1 + 1 and z0 <= p[2] < z1 + 1} - garrison.inside(self)
-        pick = inside & self.soldiers.keys() or inside
+        pick = inside & self.soldiers.keys() or inside - self.flock or inside   # herdables come last (#1791)
         self.choose(pick, min(pick, default=None))
         self.command(f"title {name} actionbar " + json.dumps({"text": f"Selected: {len(pick)} units"}))
 
@@ -869,7 +881,7 @@ class Gather:
             tile = self.dead[v.prey] = int(x // self.map.T), int(z // self.map.T)
             name = self.prey.pop(v.prey)
             self.map.carcasses[tile] = self.map.carcasses.get(tile, 0) + hunt_food(name)
-            if ("COW" if name.startswith("COW_") else name) in HERDS:
+            if herdable(name):
                 self.map.herds.add(tile)
         v.tree, v.prey, v.path = self.dead.get(v.prey), None, []
         self.set(v, "to_tree" if v.tree else "idle")                   # it stands at the carcass: the next step gathers
@@ -932,15 +944,17 @@ class Gather:
                              f"run item replace entity @s hotbar.{slot} with {group_item(n)}")
             diplomacy.give(self)                                       # the Game menu item (#1588)
         self.calls += 1
-        self.command(f"execute as {self.who} unless items entity @s container.* minecraft:{WAND} "
-                     f'run give @s minecraft:{WAND}[item_name="Selection box"]')
+        if not self.paper:                                             # Paper: hold right click with the stick (#1786)
+            self.command(f"execute as {self.who} unless items entity @s container.* minecraft:{WAND} "
+                         f'run give @s minecraft:{WAND}[item_name="Selection box"]')
         self.release()                                                 # the drags of the selection box (#992)
         objs = ("aoe_use", "aoe_talk", "aoe_box")
         if "passed" not in "".join(self.command(f"execute if entity {only(self.who, f'scores={{{o}=1..}}')}") for o in objs):
-            return []
+            return self.short()
         out = []
         for name in self.people():
-            used = [o for o in objs if name and re.search(r"has [1-9]", self.command(f"scoreboard players get {name} {o}"))]
+            scores = {o: self.command(f"scoreboard players get {name} {o}") for o in objs} if name else {}
+            used = [o for o in objs if re.search(r"has [1-9]", scores.get(o, ""))]
             if used:
                 out.append(name)
                 if "aoe_box" in used:
@@ -950,9 +964,34 @@ class Gather:
                 elif "aoe_use" in used and diplomacy.in_hand(self, name):   # the Game menu item (#1588): no ray
                     out.remove(name)
                     diplomacy.open_menu(self, name)
+                elif "aoe_use" in used and self.paper and not (name in self.rallying or build.chosen(self, name)):
+                    out.remove(name)                                   # a click or a hold: short() or drag decides
+                    self.hold(name, int(re.search(r"has (\d+)", scores["aoe_use"])[1]))
                 for obj in objs:
                     self.command(f"scoreboard players reset {name} {obj}")
-        return out
+        return out + self.short()
+
+    def hold(self, name, uses):
+        """A command stick use on Paper (#1786, owner feedback): the first use of a held right click is also a click,
+        so it waits for HOLD seconds. A next use in that time (or two uses in one call) is a held right click: the cell
+        of the first use is corner 1 of the selection box, and the drag of #992 goes on until the release. A hold never
+        gives an order first: a held click on the ground would send the selected villagers to walk."""
+        if name in self.holds:
+            self.holds[name] = self.clock()
+            return
+        if name in self.pending or uses > 1:
+            look = self.pending.pop(name, (None, None))[1] or self.look(name)
+            self.drag(name, look and self.map.pick_ground(*look))
+            return
+        self.pending[name] = self.clock(), self.look(name)
+
+    def short(self):
+        """The players whose stick use got no next use in HOLD seconds: a short click, with the look of the use.
+        Call it after the uses of this call: a next use that came since the last call makes a hold."""
+        due = sorted(n for n, (t, _) in self.pending.items() if self.clock() - t >= HOLD)
+        for n in due:
+            self.looks[n] = self.pending.pop(n)[1]
+        return due
 
     def people(self):
         """The names of the Minecraft players of this Gather: all, or the players of its team (#1310). Not `team list`:
@@ -984,7 +1023,7 @@ class Gather:
         if (n := self.grouping.pop(name, None)) is not None:          # a group item (#779): no ray
             self.group(name, *n)
             return
-        if not (look := self.look(name)):
+        if not (look := self.looks.pop(name, None) or self.look(name)):   # a short click of hold() (#1786)
             return
         eye, d = look
         if name in self.wands:                                        # the selection wand (#778)
@@ -1086,7 +1125,8 @@ class Gather:
         boats = {u for u in units if replay.ship(self.soldiers.get(u, ""))}
         out = fleet.order(self, boats, cell)                           # a ship sails on the water (#1383)
         transport.aim(self, out, cell)                                 # a loaded ship unloads at a land cell (#1385)
-        who = sorted(u for u in units - boats if u in self.villagers or u in self.soldiers)
+        herd = self.herd()
+        who = sorted(u for u in units - boats if u in self.villagers or u in self.soldiers or u in herd)
         r = math.isqrt(len(who)) + 2
         cells = sorted(((x, z) for x in range(cell[0] - r, cell[0] + r + 1) for z in range(cell[1] - r, cell[1] + r + 1)
                         if self.map.free(x, z)), key=lambda c: (math.dist(c, cell), c))
@@ -1099,7 +1139,7 @@ class Gather:
                 v.tree, v.site, v.prey = None, None, None
                 self.go(v, "to_rally", {(x, z)})
             else:
-                unit = self.soldiers[u]
+                unit = self.soldiers.get(u) or self.prey[u]            # an own herdable walks too (#1791)
                 ai.move(self, u, unit, self.map.T, x + 0.5, self.map.y(x, z), z + 0.5, NORMAL * train.speed(self, unit))
         if out and name:
             self.mark(name, {cell})
@@ -1110,8 +1150,12 @@ class Gather:
         inside a building take no click (#808); an enemy only with an army selected."""
         army = self.selected and self.selected <= set(self.soldiers)
         hunters = self.selected & self.villagers.keys()               # villagers take an animal to hunt (#1058)
-        return (set(self.soldiers) | (set(self.enemies) if army else set()) | (set(self.prey) if hunters else set())) \
-            - garrison.inside(self)
+        return (set(self.soldiers) | (set(self.enemies) if army else set()) | (set(self.prey) if hunters else set())
+                | self.herd()) - garrison.inside(self)
+
+    def herd(self):
+        """The UUIDs of the live own herdable animals (#1791): a right click selects them, as in AoE2."""
+        return self.flock & self.prey.keys()
 
     def target(self, eye, d, places):
         """What a right click from eye in the view direction d picks, in the order of click(): (kind, key, block cells
@@ -1122,7 +1166,9 @@ class Gather:
         at = {k: v.pos for k, v in self.villagers.items() if k not in held} | \
             {k: p for k, p in places.items() if k in self.pickable()}
         if u := pick_unit(eye, d, at):
-            kind = "enemy" if u in self.enemies else "prey" if u in self.prey else "unit"
+            hunters = self.selected & self.villagers.keys()            # villagers hunt an own herdable (#1058, #1791)
+            kind = "enemy" if u in self.enemies else "prey" if u in self.prey and (hunters or u not in self.flock) \
+                else "unit"
             return kind, u, {(math.floor(at[u][0]), math.floor(at[u][2]))}
         if self.selected and self.selected <= set(self.soldiers) and (fort := self.pick_fort(eye, d)):
             x0, _, z0, x1, _, z1 = self.forts[fort]
@@ -1144,7 +1190,7 @@ class Gather:
             name, act = pretty(self.prey[key]), "hunt" if workers else None
         elif kind in ("enemy", "unit"):
             name = ("Enemy " if kind == "enemy" else "") + pretty(self.enemies.get(key) or self.soldiers.get(key)
-                                                                  or "VILLAGER")
+                                                                  or self.prey.get(key) or "VILLAGER")
             act = "attack" if kind == "enemy" else "build menu" if key in workers else \
                 "select all of the type" if key in self.selected and key in self.soldiers else "select"
         elif kind == "fort":
@@ -1169,15 +1215,16 @@ class Gather:
         for each unit."""
         return self.where(self.pickable())
 
-    def where(self, want):
-        """{UUID: feet} of the units want: on Paper `aoe where` answers (WHERE_PAGE units each), else `data get`."""
+    def where(self, want, sel="@e[type=!player,team=!]"):
+        """{UUID: feet} of the units want: on Paper `aoe where` answers (WHERE_PAGE units each), else `data get`.
+        want None: all units of the selector sel (Paper only)."""
         if not self.paper:
-            return self.positions(sorted(want))
+            return self.positions(sorted(want or ()))
         out, start = {}, 0
-        while m := re.search(r"Where (\d+): ?(.*)", self.command(f"aoe where @e[type=!player,team=!] {start}")):
+        while m := re.search(r"Where (\d+): ?(.*)", self.command(f"aoe where {sel} {start}")):
             for part in filter(None, m[2].split(", ")):
                 u, x, y, z = part.split()[:4]
-                if u in want:
+                if want is None or u in want:
                     out[u] = float(x), float(y), float(z)
             start += WHERE_PAGE
             if start >= int(m[1]):
@@ -1551,6 +1598,7 @@ class Gather:
                 b.step()
             conquest.tick(self)                                        # not in step(): the bot steps its own Gather
             fog.tick(self)                                             # after the bots: their units too (#1389)
+            herd.tick(self)                                            # all players: the bots capture too (#1792)
             wonder.tick(self, self.tick * NORMAL)                      # game seconds, as train.tick
             relic_victory.tick(self, self.tick * NORMAL)
             time.sleep(max(0.0, self.tick - (time.time() - t)))

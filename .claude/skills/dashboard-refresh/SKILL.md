@@ -12,11 +12,11 @@ connector, so this skill writes a saved copy (#982). It is not the #1 dashboard 
 | Dataset | File | Source |
 |---|---|---|
 | `merges` | `aoe2mc-merged-prs.json` | GitHub pulls (state closed) |
-| `tickets` | `aoe2mc-tickets.json` | GitHub issues (state all), also the `priority` column for the bands of "Open tickets over time" |
+| `tickets` | `aoe2mc-tickets.json` | GitHub issues (state all), also the `priority` column for the bands of "Open tickets over time", `parent` (the epic of a sub-issue) for "Progress over time" and `haiku` (label `lane:haiku`) |
 | `epics` | `aoe2mc-epics.json` | GitHub issues with label `epic`, the "Roadmap: `key`" line |
 | `roadmap` | `aoe2mc-roadmap.json` | `docs/ROADMAP.md` |
 | `release_bar` | `aoe2mc-release-bar.json` | `docs/RELEASE.md` (the same rules as `tools/release.py`) |
-| `usage` | `aoe2mc-usage.json` | the `Usage:` lines on the status issue (72 hours): 5-hour `usage` and `resets`, `runs`, 7-day `week`, `week_resets` and the on-track text `track` (#1696) |
+| `usage` | `aoe2mc-usage.json` | the `Usage:` lines on the status issue (72 hours): 5-hour `usage` and `resets`, `runs` and the Haiku lane runs `haiku`, 7-day `week`, `week_resets` and the on-track text `track` (#1696) |
 | `setup` | `aoe2mc-setup.json` | `tools/dashboard_artifact/setup.json` (written by hand: change it when a part of the setup changes) |
 
 URL = `artifact` of the section `[dashboard]` in `agent.toml`. Do these steps in sequence:

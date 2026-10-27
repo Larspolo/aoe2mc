@@ -46,6 +46,12 @@ def merged_prs(pulls):
             for p in rows]
 
 
+def parent(issue):
+    """The number of the epic of a sub-issue, else None: the history of the progress needs it."""
+    url = issue.get("parent_issue_url")
+    return int(url.rsplit("/", 1)[1]) if url else None
+
+
 def tickets(issues):
     def pick(names, options):
         return next((n for n in names if n in options), "")
@@ -59,7 +65,8 @@ def tickets(issues):
                         size=pick(names, ("size:S", "size:M", "size:L")).replace("size:", ""),
                         epic="epic" in names, status_issue="agent-status" in names, needs_human="needs-human" in names,
                         in_progress="in-progress" in names, blocked="blocked" in names, muted="muted" in names,
-                        process="process" in names, subs_done=subs.get("completed") or 0, subs_total=subs.get("total") or 0))
+                        process="process" in names, haiku="lane:haiku" in names, subs_done=subs.get("completed") or 0,
+                        subs_total=subs.get("total") or 0, parent=parent(i)))
     return out
 
 
@@ -135,16 +142,17 @@ def week_rate(points, now, hours=24):
 
 
 def usage(hours=72, comments=None):
-    """The `Usage:` lines: the 5-hour usage, and the 7-day usage `week` with its reset `week_resets` and the on-track
-    text `track` where the line has the week (#1696), else None. A line before #1696 has no 7-day reset: the reset of
-    another line moved by whole weeks (the 7-day window is fixed)."""
+    """The `Usage:` lines: the 5-hour usage, all runs `runs` and the Haiku lane runs `haiku` (#1727), and the 7-day
+    usage `week` with its reset `week_resets` and the on-track text `track` where the line has the week (#1696), else
+    None. A line before #1696 has no 7-day reset: the reset of another line moved by whole weeks (the 7-day window is
+    fixed)."""
     comments = health.status_comments(hours=hours) if comments is None else comments
     week = {t: w / 100 for t, w, _ in health.weekly(comments)}
     known = sorted({health.ts(r) for c in comments for _, r in WEEK_RESET.findall(c.get("body") or "")})
     points, rows = sorted(week.items()), []
-    for t, u, r, k in health.samples(comments):
+    for t, u, r, k, lanes in health.raw_samples(comments):          # the runs, not the Opus runs of the pacing
         row = dict(at=f"{t:%Y-%m-%dT%H:%M:%SZ}", usage=u, resets=f"{r:%Y-%m-%dT%H:%M:%SZ}", runs=k,
-                   week=week.get(t), week_resets=None, track=None)     # each row has each column (check)
+                   haiku=lanes.get("haiku", 0), week=week.get(t), week_resets=None, track=None)  # each column (check)
         if t in week and known:
             reset = known[-1] - WEEK * ((known[-1] - t) // WEEK)
             rate = week_rate(points, t)

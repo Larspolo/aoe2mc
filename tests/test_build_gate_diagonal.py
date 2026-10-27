@@ -28,7 +28,7 @@ def test_a_gate_goes_on_3_tiles_of_a_diagonal_wall_line_in_both_directions():
         assert g.map.free(*free) and not g.map.free(8, 8)
         assert build.rise(g, site, math.inf)
         assert g.map.free(*free) and not g.map.free(*tiles[0])                  # beside the gate: still free
-        assert any(c.startswith("setblock 8 ") and " 8 minecraft:spruce_door[facing=west," in c for c in server.log)
+        assert "fill 8 64 8 8 66 8 minecraft:iron_bars" in server.log             # the portcullis (#1656)
 
 
 def test_a_bent_line_takes_no_diagonal_gate():
@@ -68,8 +68,8 @@ def test_the_doors_of_a_diagonal_gate_close_the_passage():
 
 @pytest.mark.mc
 def test_a_diagonal_gate_opens_for_an_own_unit_and_not_for_an_enemy(tiny_world, tmp_path):
-    """Paper: the doors of diagonal_doors on the passage of a diagonal band of wall (T = 4) let an own unit through
-    and keep an enemy on its side (#1655)."""
+    """Paper: the portcullis on the cells of diagonal_doors on the passage of a diagonal band of wall (T = 4) lets an
+    own unit through and keeps an enemy on its side (#1655, #1656)."""
     from test_paper import paper_reachable
     if not paper_reachable():
         pytest.skip("Paper is not reachable")
@@ -83,14 +83,14 @@ def test_a_diagonal_gate_opens_for_an_own_unit_and_not_for_an_enemy(tiny_world, 
         for x in range(x0, x0 + n + 1):                                # the band x - z = const. from edge to edge
             for z in range(z0, z0 + n + 1):
                 u, v = (x - ox + z - oz) / 2, x - ox - (z - oz)
-                if abs(v) <= T // 2 and not T <= u < 2 * T:
-                    game.command(f"fill {x} {y} {z} {x} {y + 3} {z} stone")
+                if abs(v) <= T // 2:                                   # the passage: 3 blocks high (diagonal_gate)
+                    game.command(f"fill {x} {y + 3 * (T <= u < 2 * T)} {z} {x} {y + 3} {z} stone")
         game.command("time set midnight")
         for t in ("p1", "p2"):
             game.command(f"team add {t}")
         g = types.SimpleNamespace(command=game.command, paper=True, map=types.SimpleNamespace(T=T, y=lambda x, z: y))
-        build.doors(g, site)
-        assert "passed" in game.command(f"execute if block {ox + 6} {y} {oz + 6} minecraft:spruce_door[open=false]")
+        build.portcullis(g, site)
+        assert "passed" in game.command(f"execute if block {ox + 6} {y} {oz + 6} minecraft:iron_bars")
         units = {"own": ((12, 0), (0, 12), "p1"), "enemy": ((20, 8), (8, 20), "p2")}   # 12 blocks off the band (v)
 
         def side(tag):                                                 # x - z of the unit, local
@@ -107,7 +107,7 @@ def test_a_diagonal_gate_opens_for_an_own_unit_and_not_for_an_enemy(tiny_world, 
                 assert side("own") < -4, pos(game, "own")              # through the open gate
                 end = time.time() + 10                                 # closed again: no own unit near
                 while time.time() < end and "passed" not in game.command(f"execute if block {ox + 6} {y} {oz + 6} "
-                                                                         "minecraft:spruce_door[open=false]"):
+                                                                         "minecraft:iron_bars"):
                     time.sleep(0.5)
                 assert time.time() < end, pos(game, "own")
         assert side("enemy") > 2, pos(game, "enemy")                   # the enemy stays on its side
