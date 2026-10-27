@@ -267,6 +267,7 @@ WALL_TAG = "aoe2mc.wall"
 # gives infantry a bonus against it (#1419).
 STANDARD = "standard"
 BUILDINGS = {k: s if k == "WONDER" else s._replace(classes=s.classes + (STANDARD,)) for k, s in BUILDINGS.items()}
+WATCH = 4    # tiles of line of sight that Town Watch adds to each own building but walls, gates, farms, fish traps (#1454)
 # Line of sight in tiles (AoE2 DE, base unit or building, wiki infobox "LOS"; the house: 1 from the edge of its
 # 2 x 2 tiles, #1300) where it is not max(4, range + 2) (sight()).
 SIGHT = {

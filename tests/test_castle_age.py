@@ -24,7 +24,8 @@ def test_in_the_feudal_age_the_item_says_what_is_missing_and_a_click_does_nothin
     g.techs.add("FEUDAL_AGE")
     add(g, "BARRACKS", "MILL", "BLACKSMITH")                            # Dark Age buildings do not count
     rect = train.open_menu(g, "Steve", (3, 3))
-    assert menus(server)[-1].endswith(NEED + " (1/2)" + IMPERIAL + RALLY)
+    assert NEED + " (1/2)" + IMPERIAL in menus(server)[-1]   # Town Watch (slot 6) comes after it (#1454)
+    assert menus(server)[-1].endswith(RALLY)
     assert train.order(g, "Steve", rect, 4) == 0 and g.stock["food"] == 1000 and not g.queues.get(rect)
     assert any("Castle Age needs 2 of" in c for c in server.log)
 
@@ -35,10 +36,12 @@ def test_two_feudal_age_buildings_complete_the_need_and_a_click_queues_the_age_o
     add(g, "STABLE")
     g.sites.append({"name": "MARKET", "player": 1, "footprint": [11, 10, 13, 12], "done": True})
     rect = train.open_menu(g, "Steve", (3, 3))
-    assert menus(server)[-1].endswith(NEED.split(" · needs")[0] + " · research" + IMPERIAL + RALLY)
+    assert NEED.split(" · needs")[0] + " · research" + IMPERIAL in menus(server)[-1]   # Town Watch (slot 6) comes after it (#1454)
+    assert menus(server)[-1].endswith(RALLY)
     assert train.order(g, "Steve", rect, 4, shift=True) == 1 and (g.stock["food"], g.stock["gold"]) == (200, 800)
     assert train.order(g, "Steve", rect, 4) == 0 and (g.stock["food"], g.stock["gold"]) == (200, 800)
-    assert menus(server)[-1].endswith(NEED.split(" · needs")[0] + " · researching" + IMPERIAL + RALLY)
+    assert NEED.split(" · needs")[0] + " · researching" + IMPERIAL in menus(server)[-1]   # Town Watch (slot 6) comes after it (#1454)
+    assert menus(server)[-1].endswith(RALLY)
 
 
 def test_after_160_seconds_the_player_is_in_the_castle_age():
