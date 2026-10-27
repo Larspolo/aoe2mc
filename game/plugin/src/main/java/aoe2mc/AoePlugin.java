@@ -102,6 +102,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe lore <material> <name> <text>          the last lore line of each menu item with this material and name: the
  *                                              AoE2 help text (#1160, train.HELP; URL-encoded). Sent once at the
  *                                              setup, so the menu commands stay below the RCON limit
+ *   aoe minimap on|off|pixel <x> <z>           the live units as dots in their team color on map 0, once per
+ *                                              second (#1237, Minimap.java); pixel: the map pixel of a block
  *   aoe where <selector> [from]                "Where <count>: <uuid> <x> <y> <z> <order 0|1> <target 0|1>, ..." for
  *                                              WHERE_PAGE units from index `from` in UUID order (#813, tools/replay_drift.py);
  *                                              target 1 also after a target or a hit since the last answer (#1169)
@@ -191,6 +193,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Cheats cheats = new Cheats(this);
     private final Deaths deaths = new Deaths(this);
     private final Alerts alerts = new Alerts(this, AoePlugin::side);   // "under attack" for the team of the target (#1231)
+    private final Minimap minimap = new Minimap(this);
     private final Viewer viewer = new Viewer(this);                 // the game mode switch of a replay viewer (#910)
     private final Border border = new Border();
 
@@ -1333,6 +1336,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             sender.sendMessage("Destroy: " + n + " buildings");
             return true;
+        }
+        if ((args.length == 2 || args.length == 4) && args[0].equals("minimap")) {   // live units on map 0 (#1237)
+            return minimap.command(sender, args);
         }
         if (args.length >= 2 && args[0].startsWith("box")) {            // the border of the selection box (#795)
             return border.command(sender, args, players(sender, args[1]));
