@@ -32,7 +32,7 @@ def tick(g):
     """Look each EVERY seconds which player has units near each herdable, and give it to its new owner (capture)."""
     if not g.paper:
         return
-    state = vars(g).setdefault("herd", {"at": None})
+    state = vars(g).setdefault("capture", {"at": None})                # not "herd": Gather.herd() (#1840)
     now = g.clock()
     if state["at"] is not None and now - state["at"] < EVERY:
         return
