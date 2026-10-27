@@ -35,7 +35,7 @@ def test_the_research_gives_villagers_attack_against_buildings_walls_and_rams():
     for name in ("VILLAGER_MALE", "VILLAGER_FEMALE_FARMER"):
         old, new = combat.stats(name), train.stats(g, name)
         assert hit(new, combat.stats("HOUSE")) == hit(old, combat.stats("HOUSE")) + 15
-        assert hit(old, combat.wall("STONE_WALL", 3)) == 1 and hit(new, combat.wall("STONE_WALL", 3)) == 15   # 3 - 8 armor
+        assert hit(old, combat.wall("STONE_WALL", 3)) == 9 and hit(new, combat.wall("STONE_WALL", 3)) == 24   # +3 +6 (#1590)
         assert hit(new, combat.stats("BATTERING_RAM")) == hit(old, combat.stats("BATTERING_RAM")) + 3
         assert hit(new, combat.stats("MILITIA")) == hit(old, combat.stats("MILITIA"))
     for name in ("MILITIA", "BATTERING_RAM", "MONK"):

@@ -49,7 +49,7 @@ def test_loom_needs_no_population_room_and_changes_the_villagers():
     assert g.techs == {"LOOM"} and not any(g.queues.values())
     s = train.stats(g, "VILLAGER_MALE")
     assert (s.hp, s.melee, s.pierce) == (40, 1, 2) == (25 + 15, 0 + 1, 0 + 2) and train.stats(g, "MILITIA") == combat.stats("MILITIA")
-    assert [c for c in server.log if c.startswith("aoe stats")] == ["aoe stats v 40 3 1 2 0 - - 24"]
+    assert [c for c in server.log if c.startswith("aoe stats")] == ["aoe stats v 40 3 1 2 0 - building:3,heavysiege:6,stone:6 24"]
     assert any("Loom is researched." in c for c in server.log if c.startswith("tellraw"))
     train.open_menu(g, "Steve", (3, 3))
     assert "Loom" not in menus(server)[-1]
@@ -61,4 +61,4 @@ def test_a_new_villager_has_the_loom_values():
     g.techs.add("LOOM")
     train.queue(g, "Steve", (3, 3))
     v, = train.tick(g, 25)
-    assert f"aoe stats {v.uuid} 40 3 1 2 0 - - 24" in server.log
+    assert f"aoe stats {v.uuid} 40 3 1 2 0 - building:3,heavysiege:6,stone:6 24" in server.log
