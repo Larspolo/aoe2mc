@@ -42,7 +42,7 @@ FREE7 = CONFIG.get("pacing", {}).get("week_free", 0.60)   # below this 7-day usa
 WAIT = CONFIG.get("pacing", {}).get("max_waiting_prs", 6)   # flow brake: open agent PRs older than PR_MINUTES
 QUEUE = CONFIG.get("pacing", {}).get("max_ci_queue", 5)      # flow brake: queued CI runs (no runner yet)
 PR_MINUTES = CONFIG.get("pacing", {}).get("pr_minutes", 30)  # Automerge merges a green PR in a few minutes
-MAX_FIRE = 4        # runs that the pacer starts per cycle: each run needs a few minutes to claim its ticket
+MAX_FIRE = CONFIG.get("pacing", {}).get("max_fire", 4)   # runs that the pacer starts per cycle: each run needs a few minutes to claim its ticket
 CALL = ["claude", "-p", "Reply with OK.", "--model", "claude-haiku-5-5", "--output-format", "stream-json", "--verbose"]
 
 

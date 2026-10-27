@@ -61,11 +61,20 @@ The details are in the text at the top of `tools/claim.py`.
 | Ticket | `claim/N` (`claim/N-2` ... after a release) | `claim.py N`. The owner beats each 20 minutes (`--beat`). After 30 minutes without a beat the claim is stale: another run can take it over (`--takeover`). `--guard` before each push. |
 | Owner comment | `claim/comment-ID` | `claim.py ID --comment`: one run acts on one owner comment. |
 | Refill | `claim/refill-E-S` | `claim.py E --refill`: one run makes the sub-issues of epic E (E = 0: the whole queue, one per hour). |
-| Process review | `claim/review-<minutes>m-<slot>` | `claim.py 0 --review`: one run per time slot runs the `improve` skill. A review with no change doubles the slot. |
-| Roadmap review | `claim/roadmap-<slot>` (2-hour slot) | `claim.py 0 --roadmap`: one run per slot reviews `docs/ROADMAP.md`. |
+| Process review | `claim/review-<gap>pr-<last>-<k>` | `claim.py 0 --review`: one run runs the `improve` skill after `gap` merged PRs (50). A review with no change doubles the gap (#2039). |
+| Roadmap review | `claim/roadmap-100pr-<last>-<k>` | `claim.py 0 --roadmap`: one run reviews `docs/ROADMAP.md` after 100 merged PRs. |
 
 Other rules against conflicts: one ticket per PR, new tests in a new file, new table entries on their own line in
 alphabetical order, `merge=union` in `.gitattributes` for files where runs only add lines.
+
+Clock or count (#2039). A rule that waits for work counts merged PRs, because the speed of the project changes and a
+fixed time measures a different amount of work: the process review (50 PRs, 100 or 200 after a review with no change),
+the roadmap review (100), `Start after: N PRs after #M` and the window of `tools/health.py` (50). A rule that finds a
+stopped run or follows a real clock stays in minutes, because a stopped run merges nothing: the claim beat (20), a
+stale claim (30, or 10 with the label `conflict`), a "Started by" comment (30), the Automerge sweep (10), an old PR in
+`tools/operator_check.py` (30), the pacer (10), `unconflict.yml` (20) and the refill lock (one per hour). The quota
+windows (5 hours, 7 days) follow the subscription, the owner comments of `tools/feedback.py` (6 hours) get an answer
+in time, and a run longer than 90 minutes is about the context and the container of one run.
 
 ## The quota pacing
 
@@ -78,11 +87,11 @@ wait until the budget per hour is large enough again (#1695). Below `week_free` 
 usage there is no weekly guard: the runs fill each 5-hour window (owner, 2026-10-27). The CLI line shows the projection
 (`week ahead +38 pt · runs out Wed 11:22`, at the mean rate of the week so far). `--fire` gives the number of runs to start now: the
 target less the runs with a claim beat in the last 25 minutes. A run cannot start other runs (no `fire_trigger`, #566),
-so the pacer session starts them (at most 4 per cycle). Each cycle reads `.claude/skills/pacer/SKILL.md` again, so a change of the pacing rules reaches
+so the pacer session starts them (at most `max_fire` of `agent.toml` per cycle). Each cycle reads `.claude/skills/pacer/SKILL.md` again, so a change of the pacing rules reaches
 the long-lived pacer session at its next cycle (#1824). `tools/health.py` measures the quota use of one run from the
 `Usage:` lines of the run reports, and `usage.py` uses that value. After a plan upgrade the same work is a smaller share of the larger quota: when the burn of
 the last 2 hours is less than half of the 24-hour burn, only the last 2 hours count (`health.ratio`, 5-hour and 7-day
-burn, #1706). The most runs at one time is `max_runs` in `[pacing]` of `agent.toml` (default 16): raise it with a larger plan.
+burn, #1706). The most runs at one time is `max_runs` in `[pacing]` of `agent.toml` (default 16): raise it when the 5-hour window does not reach its limit (40 since 2026-10-27: at a burn of 0.009 per run-hour, 16 runs used only about 70 %).
 The flow brake (owner, 2026-10-27): when CI, merge conflicts or anything else stops the merges, the quota is not the
 bottleneck, and more runs only make more open PRs and more conflicts. `--fire` counts the open agent PRs older than
 `pr_minutes` without `hold` and the queued CI runs. At `max_waiting_prs` (default 6) it starts at most 1 run per
@@ -214,6 +223,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_dashboard_overlap.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_process.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_start.py` | generic | None (a test of `tools/dashboard.py`). |
+| `tests/test_dashboard_start_prs.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_feedback.py` | generic | None (a test of `tools/feedback.py`). |
 | `tests/test_health.py` | generic | None (a test of `tools/health.py`). |
 | `tests/test_health_compare.py` | generic | None (a test of `tools/health.py`). |

@@ -35,7 +35,7 @@ So one pacer session starts them. It does no ticket work, it does not comment on
 ## Rules
 
 - The command fails or prints no number → start no run. Schedule the next cycle as usual.
-- Never start more than 4 runs in one cycle. Never start a run when the status issue has `paused`.
+- Never start more runs in one cycle than `max_fire` in `[pacing]` of `agent.toml` (`--fire` already keeps K below it). Never start a run when the status issue has `paused`.
 - A "Pacer heartbeat" message (the hourly scheduled task of the pacer): do a cycle only when your last cycle is more
   than 15 minutes old, else reply "heartbeat: cycle at <time> is recent" and do nothing.
 - Stop the loop (no new `send_later`) only when the owner tells you to stop.
