@@ -8,11 +8,14 @@ Usage:
 
 GAME_PORT: the port of "Join the server localhost:PORT". The guide finds the server folder of that port in `.cache/`
 (its server.properties has the RCON port and password) and reads the chat from its `logs/latest.log`.
-STEPS.json: a JSON list of steps {"name", "setup": [commands], "task", "ask"}. A placeholder in a setup command:
+STEPS.json: a JSON list of steps {"name", "setup": [commands], "cheats": [codes], "task", "ask"}. A placeholder in a setup command:
 "{NAME}" is the first object NAME of player 1 in aoe2mc.json, "{NAMEn}" that of player n: the target UUID of a
 building (combat.target_uuid), the UUID of a unit. For example "{BARRACKS}", "{MILITIA1}", "{TOWN_CENTER2}".
-A step gives the state that it needs with its setup commands (the age, resources), or says the cheat codes:
-a Stone Wall needs the Feudal Age (build.AGE).
+A step gives the state that it needs with its setup commands (the age, resources), or with "cheats": the AoE2 cheat
+codes (game/cheats.py NAMES, `game/run.py --cheats`) that the guide runs for the first player after the setup, so that
+the owner does not type them (#2052). The guide sets the score aoe_cheat of the player, as the plugin does for a chat
+code, and waits until cheats.clicks resets it before the next code. An unknown code stops the guide before the first
+step. A Stone Wall needs the Feudal Age (build.AGE).
 The guide waits for a player, then for each step runs the setup, says the task and the question in the chat and waits
 for the answer. More chat lines in MORE seconds after the first one are one answer ("It worked, but the units" ...).
 It prints JOINED, SETUP, ASK, ANSWER and DONE lines; the `human` skill waits for them.
@@ -27,6 +30,7 @@ import time
 
 sys.path[:0] = [os.path.dirname(os.path.abspath(__file__)), os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                                                           "..", "tools")]
+import cheats  # noqa: E402
 import combat  # noqa: E402
 import mc_check  # noqa: E402
 from rcon import Rcon  # noqa: E402
@@ -35,6 +39,7 @@ CHAT = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> (.*)$")
 MORE = 20                   # seconds after the first line of an answer in which more lines belong to it
 LOAD = 8                    # seconds after the first join: the chunks load
 DONE = ("ok", "yes")        # a one-word answer ends at once
+CHEAT_WAIT = 30             # seconds that the guide waits for the game to do a cheat code (no --cheats: never)
 
 
 def out(*a):
@@ -82,12 +87,25 @@ class Guide:
         self.command, self.log, self.steps, self.values = command, log, steps, values
         self.clock, self.sleep, self.out = clock, sleep, say_log
         self.seen, self.answers = 0, []
+        bad = sorted({c for s in steps for c in s.get("cheats", [])} - set(cheats.NAMES))
+        if bad:
+            raise ValueError(f"unknown cheat codes: {', '.join(bad)} (game/cheats.py NAMES)")
 
     def say(self, msg, color="gold"):
         self.command(f"tellraw @a {json.dumps([{'text': '[check] ', 'color': 'aqua'}, {'text': msg, 'color': color}])}")
 
     def players(self):
         return [p.strip() for p in self.command("list").split(":", 1)[-1].split(",") if p.strip()]
+
+    def cheat(self, player, code):
+        """Run cheat code for player: set its score as the plugin does, then wait until cheats.clicks resets it."""
+        self.command(f"scoreboard players set {player} {cheats.OBJECTIVE} {cheats.NAMES.index(code) + 1}")
+        end = self.clock() + CHEAT_WAIT
+        while re.search(r" has \d+ ", self.command(f"scoreboard players get {player} {cheats.OBJECTIVE}")):
+            if self.clock() > end:
+                return self.out(f"CHEAT {code} -> not done in {CHEAT_WAIT} s: start game/run.py with --cheats")
+            self.sleep(0.5)
+        self.out(f"CHEAT {code} -> done")
 
     def chat(self):
         """The new chat lines of players since the last call: [(name, text)]."""
@@ -122,6 +140,8 @@ class Guide:
             for c in s.get("setup", []):
                 c = fill(c, self.values)
                 self.out(f"SETUP {c} -> {self.command(c).strip()[:120]}")
+            for c in s.get("cheats", []):
+                self.cheat(self.players()[0], c)
             self.say(f"Step {k} of {len(self.steps)}: {s['task']}")
             self.say(s["ask"], "yellow")
             self.say("When you are done, type your answer in the chat: ok, or what is wrong.", "gray")
