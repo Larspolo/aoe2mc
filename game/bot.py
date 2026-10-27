@@ -51,6 +51,7 @@ class Bot:
         self.charged = False                                           # the wave attacks: new soldiers join it
         self.time, self.looked, self.targets = 0.0, -LOOK, {}          # AoE2 seconds of the game, soldier -> target
         self.nobody = f"@a[tag=aoe2mc.bot{player}]"                     # the texts of the queues go to no player
+        self.g.share = share                                           # monk.heresy: the techs of the human player
         if share:
             self.g.map.trees, self.g.map.bushes, self.g.map.mines = share.map.trees, share.map.bushes, share.map.mines
         self.g.board = f"aoe_bot{player}"                              # not aoe_res: the sidebar of player 1

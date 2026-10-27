@@ -231,8 +231,8 @@ def heal(g, dt):
 
 
 def convertible(g, uuid):
-    """True for an enemy unit that a monk converts: no monk (the religious units are evokers), king, hero or siege
-    (with Redemption: siege, and an enemy building that is not LASTING)."""
+    """True for an enemy unit that a monk converts: no monk (the religious units are evokers; with Atonement: also
+    them), king, hero or siege (with Redemption: siege, and an enemy building that is not LASTING)."""
     redeemed = "REDEMPTION" in g.techs
     if uuid in g.forts:
         return redeemed and not any(n in g.fort_names.get(uuid, "") for n in LASTING)
@@ -240,7 +240,8 @@ def convertible(g, uuid):
     if name is None or name in IMMUNE or units.siege(name) and not redeemed or "EMPEROR" in name:
         return False
     hero = any(o.get("hero") for o in g.data["objects"] if o.get("uuid") == uuid)
-    return str((units.classify(name, hero) or {}).get("id")) != "minecraft:evoker" and not hero
+    religious = str((units.classify(name, hero) or {}).get("id")) == "minecraft:evoker"
+    return not hero and (not religious or "ATONEMENT" in g.techs)
 
 
 def convert_order(g, monks, target):
@@ -274,6 +275,22 @@ def take(g, uuid):
         g.units.append({"kind": "unit", "name": name, "player": new, "uuid": uuid,
                         "tile": [math.floor(pos[0]) / g.map.T, math.floor(pos[2]) / g.map.T]})
     g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": f"A monk converts the {units.pretty(name)}.", "color": "gold"}))
+
+
+def heresy(g, player):
+    """True when player researched Heresy (#1582): its Gather is g, a bot of g (bot.Bot) or the human Gather that the bot
+    of g shares."""
+    return any(h.player == player and "HERESY" in h.techs
+               for h in [g, *(b.g for b in g.bots), *filter(None, [getattr(g, "share", None)])])
+
+
+def die(g, uuid):
+    """The enemy unit uuid dies in place of a conversion (Heresy of its player), with its horse, camel, boat or rider."""
+    name = g.enemies.pop(uuid)
+    for run in (f"execute as {uuid} on vehicle run ", f"execute as {uuid} on passengers run ", ""):
+        g.command(run + ("kill @s" if run else f"kill {uuid}"))
+    g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": f"The {units.pretty(name)} dies (Heresy).",
+                                                               "color": "gold"}))
 
 
 def win(g, uuid):
@@ -351,7 +368,8 @@ def convert(g, dt):
             more = 0 if fort else resist(g, target)
             warm, chance, sure = FORT if fort else (WARM + more, CHANCE, SURE + more)
             if job[2] > warm and (job[2] >= sure or g.chance.random() < chance):
-                (win if fort else take)(g, target)
+                owner = next((o.get("player") for o in g.data["objects"] if o.get("uuid") == target), None)
+                (win if fort else die if heresy(g, owner) else take)(g, target)
                 g.faith[m] = REST
                 for k in [k for k, j in g.converting.items() if j[0] == target]:
                     del g.converting[k]
