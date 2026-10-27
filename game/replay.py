@@ -858,9 +858,21 @@ class Replay:
         d = math.hypot(v.pos[0] - x0, v.pos[2] - z0)
         due = t + 1000 * d / speed
         v.leg = (start, t, due)                                     # at() reads it
+        v.check = t + CLOSE if due - t > 2 * CLOSE else None        # a long leg reads the entity again (recheck())
         f = min(CATCH_UP, PATH * (self.catch_up(v, d, speed * CLOSE / 1000) if behind else 1.0))
         return [ai.speed_command(v.uuid, v.name, self.T, self.speed * f),
                 "aoe moveto {} {} {} {}".format(v.uuid, *v.pos)], due
+
+    def recheck(self, v, t):
+        """The walk speed command of unit v at game time t, CLOSE ms after the start of its long leg: its lag to the
+        replay position on the leg (at()) closes in the next CLOSE ms (catch_up), and a unit with no lag walks at its
+        speed again. A turn on a leg (an order back) costs the mob 1 to 3 s of game time that order() cannot see: a
+        villager of de-64.3 stayed 5 to 11 blocks behind for 30 s (#1293). One command per long leg."""
+        import ai                                                   # ai -> replay: import it late
+        v.check = None
+        speed = next((s for k, s in SPEEDS.items() if v.name.startswith(k)), 1.0) * self.T    # blocks per second
+        f = self.catch_up(v, math.dist(self.at(v, t)[::2], v.pos[::2]), speed * CLOSE / 1000)
+        return ai.speed_command(v.uuid, v.name, self.T, self.speed * min(CATCH_UP, PATH * f))
 
     def catch_up(self, v, d, reach=None):
         """The factor of the walk speed of unit v on a leg of d blocks to v.pos (1 to CATCH_UP): the lag of the entity
@@ -930,6 +942,8 @@ class Replay:
             v, at = self.units[i], due
             w = ship(v.name)
             ok = self.map.wet if w else self.map.free
+            if self.ai and not w and t < due and (getattr(v, "check", None) or due) <= t:
+                out.append(self.recheck(v, t))
             if self.ai and not w and due <= t:
                 legs = [c for c in v.path if self.map.free(*c)]        # a new building on a leg end: skip it
                 cmds, at = self.order(v, legs, due, behind=True) if legs else ([], due)
@@ -1548,7 +1562,9 @@ class Replay:
         census = self.census if bar and self.ai else lambda: None
         while k < len(events) or self.moving:
             step = min([*self.moving.values(), *self.working.values(), *self.effects.values(),   # walk, gather, text
-                        *(at for _, _, at in self.entering.values() if at is not None)], default=math.inf)   # go in
+                        *(at for _, _, at in self.entering.values() if at is not None),            # go in
+                        *[c for i in self.moving if self.ai and (c := getattr(self.units[i], "check", None))]],
+                       default=math.inf)                            # the recheck of a long leg (#1293)
             if k == len(events) and step > end and not finish:        # the record ends at its last event: do not wait for walks (#978)
                 break
             e = events[k] if k < len(events) and events[k]["time"] <= step else None
