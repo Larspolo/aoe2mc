@@ -10,6 +10,8 @@ the boat, so attack() sails the ship into its range of the target first. The cre
 the plugin removes its boat (the ship sinks).
 A fishing ship sent to a fish (fish_order) gathers it at the AoE2 DE rate and brings each load to the nearest own dock,
 as a villager brings its load to a drop site (#1384, work).
+A fishing ship builds a fish trap on the water (build.WATER) and then gathers it at the AoE2 DE rate, as a farmer a
+farm (#1438): Map.traps holds the own traps, Map.fish their food. An empty trap stops its ship.
 """
 import math
 
@@ -93,7 +95,7 @@ def order(g, uuids, cell):
     for v in who:
         v.prey = None                                                  # a move order ends an attack (#1386)
     for v, goal in zip(who, goals(g, cell, len(who))):
-        v.tree, v.state = None, "idle"                                 # a move order stops the fishing; the load stays
+        v.tree, v.site, v.state = None, None, "idle"                   # a move order stops the fishing; the load stays
         path = g.map.path(v.cell, {goal}, PATH_CELLS, water=True)
         if path is not None:
             v.path, v.timer = path, 0.0
@@ -183,8 +185,8 @@ def sail_to(g, v, state, cells):
 
 
 def spots(g, tile):
-    """The water cells where a ship fishes the fish on tile: on its tile and next to it."""
-    cells = g.map.cells(tile)
+    """The water cells where a ship fishes the fish on tile: on its tile and next to it; next to a fish trap."""
+    cells = g.map.traps.get(tile) or g.map.cells(tile)
     return {c for c in cells if g.map.wet(*c)} | g.map.around(cells, water=True)
 
 
@@ -203,15 +205,54 @@ def fish_order(g, name, eye, d):
     fish it. True when the click was a fish order."""
     boats = {u for u in g.selected if replay.fisher(g.soldiers.get(u, ""))}
     cell = boats and pick(g, eye, d)
-    tile = cell and (cell[0] // g.map.T, cell[1] // g.map.T)
+    tile = cell and next((t for t, c in g.map.traps.items() if cell in c), (cell[0] // g.map.T, cell[1] // g.map.T))
     if not tile or g.map.fish.get(tile, 0) <= 0 or not fish(g, boats, tile):
         return False
     g.mark(name, g.map.spot(tile))
     return True
 
 
+def trap(g, site):
+    """The tile of the fish trap of the construction site (Map.traps), as build.rise gives it to Map.building."""
+    x0, _, z0, _ = site["footprint"]
+    s, T = gather.build.footprint(site["name"]), g.map.T
+    return x0 // T + s // 2, z0 // T + s // 2
+
+
+def build_site(g, uuids, site):
+    """The own fishing ships uuids sail next to the fish trap site and build it (#1438): Gather.run counts them as
+    builders. Returns the ships with a path."""
+    x0, x1, z0, z1 = site["footprint"]
+    goals = g.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)}, water=True)
+    out = set()
+    for v in [v for u in sorted(uuids) if replay.fisher(g.soldiers.get(u, "")) and (v := ship(g, u))]:
+        v.prey, v.tree, v.site = None, None, site
+        if sail_to(g, v, "to_site", goals):
+            out.add(v.uuid)
+    return out
+
+
+def build_order(g, name, eye, d):
+    """A look of player name at an own unfinished fish trap with own fishing ships in the selection: they build it.
+    True when the click was a build order."""
+    import build                                                      # build imports this module
+    boats = {u for u in g.selected if replay.fisher(g.soldiers.get(u, ""))}
+    cell = boats and pick(g, eye, d)
+    site = cell and next((s for s in g.sites if s["progress"] < 1 and s["name"] in build.WATER
+                          and s["footprint"][0] <= cell[0] < s["footprint"][1]
+                          and s["footprint"][2] <= cell[1] < s["footprint"][3]), None)
+    if not site or not build_site(g, boats, site):
+        return False
+    x0, x1, z0, z1 = site["footprint"]
+    g.mark(name, {(x0, z0), (x1 - 1, z1 - 1)})
+    return True
+
+
 def remove(g, tile):
-    """Remove the empty fish on tile: from the map, and its mob (no loot: an empty loot table)."""
+    """Remove the empty fish on tile: from the map, and its mob (no loot: an empty loot table). An empty fish trap
+    stays (its ship stops)."""
+    if tile in g.map.traps:
+        return
     g.map.fish.pop(tile, None)
     g.map.shore.discard(tile)
     if kind := g.map.fish_mobs.pop(tile, None):
@@ -222,15 +263,19 @@ def remove(g, tile):
 
 
 def nearest(g, tile):
-    """The fish with food nearest to tile, or None: the next fish of a ship, as the next bush of a villager."""
-    return min((t for t, k in g.map.fish.items() if k > 0), key=lambda t: (math.dist(t, tile), t), default=None)
+    """The fish with food nearest to tile, or None: the next fish of a ship, as the next bush of a villager. Not a
+    fish trap: the ship of an empty trap stops, as a farmer at an empty farm."""
+    if tile in g.map.traps:
+        return tile if g.map.fish.get(tile, 0) > 0 else None
+    return min((t for t, k in g.map.fish.items() if k > 0 and t not in g.map.traps), key=lambda t: (math.dist(t, tile), t),
+               default=None)
 
 
 def rate(g, fish):
     """Food per game second of an own fishing ship at fish: the AoE2 DE rate (gather.SHIP_WORK) with the dock
     technologies of the player (gather.SHIP_TECHS, #1439)."""
     import train                                                      # train imports this module
-    return gather.SHIP_WORK["shore" if fish in g.map.shore else "deep"] * \
+    return gather.SHIP_WORK["trap" if fish in g.map.traps else "shore" if fish in g.map.shore else "deep"] * \
         math.prod(f ** train.count(g, t) for t, (f, _) in gather.SHIP_TECHS.items())
 
 
@@ -245,7 +290,9 @@ def work(g, v, dt):
     (rate()) up to carry(), then sails to the nearest own dock; there the food goes into the stock, and it sails
     back to its fish or to the next fish. An empty fish is removed."""
     m = g.map
-    if v.state == "to_tree":
+    if v.state == "to_site":                                           # next to a fish trap site: Gather.run builds
+        v.state = "build" if v.site and v.site["progress"] < 1 else "idle"
+    elif v.state == "to_tree":
         v.tree = v.tree if m.fish.get(v.tree, 0) > 0 else nearest(g, v.tree)
         if v.tree is not None and v.cell not in spots(g, v.tree):
             sail_to(g, v, "to_tree", spots(g, v.tree))
@@ -261,7 +308,7 @@ def work(g, v, dt):
             g.work(v)                                                  # the splash sound and the water particles
         if m.fish.get(v.tree, 0) <= 0:
             remove(g, v.tree)
-        if v.load >= full or v.tree not in m.fish:
+        if v.load >= full or m.fish.get(v.tree, 0) <= 0:
             docks = set().union(*(m.around(c, water=True) for c in m.docks))
             if not docks or not sail_to(g, v, "to_drop", docks):
                 v.state = "idle"
