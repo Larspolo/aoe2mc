@@ -2737,57 +2737,19 @@ def footprint(name):
     return 2
 
 
+DESIGNS = units.rows("designs.jsonl")   # a part of the name -> the design function and its arguments; the first wins
+
+
 def select(name):
     """AoE2 building name -> (design function, extra arguments)."""
-    rules = [
-        ("BUDDHA_STATUE_A", buddha_statue, {"gold": True}), ("BUDDHA_STATUE_B", buddha_statue, {"gold": True}),
-        ("BUDDHA_STATUE", buddha_statue, {}), ("INDIAN_STATUES", statues, {}), ("OLD_STONE_HEAD", stone_head, {}),
-        ("NINE_BANDS", nine_bands, {}), ("PAGODA_", small_pagoda, {}), ("TORII_GATE", torii, {}),
-        ("TROWULAN_GATE", split_gate, {}), ("REKHA_DEUL_TEMPLE", rekha_deul, {}), ("SVAN_TOWER", svan_tower, {}),
-        ("COURTYARD_WALLS", courtyard_walls, {}), ("MESOPOTAMIAN_PILLAR", pillar, {}),
-        ("MESOPOTAMIAN_GARDEN", garden, {}), ("MESOPOTAMIAN_TOMB", tomb, {}), ("BURNED_BUILDING", burned_building, {}),
-        ("SHIPYARD", shipyard, {}), ("PORT", port, {}), ("MOLE_CONSTRUCTED", mole, {}), ("MOLE_TOP", mole, {}),
-        ("MOLE_BOTTOM", mole, {}), ("MOLE", mole, {"built": False}), ("CHAIN_", harbor_chain, {}),
-        ("FLAGSHIP_OF_NEARCHOS_MOVEABLE", flagship, {}), ("HELEPOLIS", helepolis, {}),
-        ("WOODEN_BRIDGE", wooden_bridge, {}), ("GREAT_PYRAMID", great_pyramid, {}),
-        ("NUBIAN_PYRAMID", nubian_pyramid, {}), ("PYRAMID", great_pyramid, {}),
-        ("DOME_OF_THE_ROCK", dome_rock, {}), ("SANKORE", sankore, {}), ("FISH_TRAP", fish_trap, {}),
-        ("ARCH_OF_CONSTANTINE", arch_of_constantine, {}), ("COLOSSEUM", colosseum, {}), ("GOL_GUMBAZ", gol_gumbaz, {}),
-        ("SANCHI_STUPA", sanchi_stupa, {}), ("STUPA", stupa, {}), ("TEMPLE_OF_HEAVEN", temple_of_heaven, {}),
-        ("MINARET_OF_JAM", minaret_of_jam, {}), ("ORACLES_TEMPLE", oracles_temple, {}), ("MOSQUE", mosque_landmark, {}),
-        ("HALL_OF_HEROES", hall_of_heroes, {}), ("PAGAN_SHRINE", pagan_shrine, {}), ("SHRINE", shrine, {}),
-        ("BRIDGE", bridge, {}), ("AQUEDUCT", aqueduct, {}), ("AMPHITHEATRE", amphitheatre, {}),
-        ("THEATRE", theatre, {}), ("STONEHENGE", stonehenge, {}), ("CONSTRUCTION_CRANE", crane, {}),
-        ("SCAFFOLDING_WALKABLE", scaffold_walk, {}), ("SCAFFOLDING", scaffolding, {}),
-        ("CATHEDRAL", church, {}), ("CHAPEL", monastery, {}), ("MONUMENT", monument, {}), ("ARMY_TENT", army_tent, {}),
-        ("COMMANDER_TENT_DROPSITE", command_tent, {"dropsite": True}), ("COMMANDER_TENT", command_tent, {}),
-        ("COMMAND_POST", command_tent, {}), ("TENT_", army_tent, {}), ("STORAGE", storage, {}),
-        ("PASTURE", pasture, {}), ("SETTLEMENT", settlement, {}), ("WOODEN_FORT", wooden_fort, {}),
-        ("SAPPER_TUNNEL", sapper_tunnel, {}), ("MULE_CART", cart, {}), ("SUPPLY_CART", cart, {"supply": True}),
-        ("PAVILION", pavilion, {}), ("YURT", yurt, {}), ("HUT", hut, {}), ("TRADE_WORKSHOP", blacksmith, {}),
-        ("POENARI", castle, {}), ("TOWER_OF_LONDON", krepost, {}),
-        ("WONDER", wonder, {}), ("TOWN_CENTER", town_center, {}), ("KREPOST", krepost, {}),
-        ("CASTLE", castle, {}), ("FORTRESS", castle, {}), ("DONJON", donjon, {}),
-        ("BOMBARD_TOWER", tower, {"kind": "bombard"}), ("KEEP", tower, {"kind": "keep"}),
-        ("GUARD_TOWER", tower, {"kind": "guard"}), ("GATE", gate, {}), ("OUTPOST", outpost, {}),
-        ("TOWER", tower, {"kind": "watch"}), ("WALL", wall_segment, {}), ("PALISADE", wall_segment, {}),
-        ("FENCE", wall_segment, {}), ("BARRICADE", barricade, {}), ("BARRACKS", barracks, {}), ("ARCHERY_RANGE", archery_range, {}),
-        ("STABLE", stable, {}), ("SIEGE_WORKSHOP", siege_workshop, {}), ("BLACKSMITH", blacksmith, {}),
-        ("MARKET", market, {}), ("CARAVANSERAI", caravanserai, {}), ("FEITORIA", feitoria, {}),
-        ("FORTIFIED_CHURCH", fortified_church, {}), ("MONASTERY", monastery, {}),
-        ("CHURCH", monastery, {}), ("UNIVERSITY", university, {}),
-        ("FOLWARK", folwark, {}), ("MILL", mill, {}), ("LUMBER_CAMP", lumber_camp, {}),
-        ("MINING_CAMP", mining_camp, {}), ("DOCK", dock, {}), ("HARBOR", harbor, {}),
-        ("FARM", farm, {}), ("HOUSE", house, {}),
-    ]
-    for word, fn, kw in rules:
-        if word in name:
-            return fn, kw
+    for r in DESIGNS:
+        if r["name"] in name:
+            return globals()[r["design"]], r.get("args", {})
     return generic, {}
 
 
 def is_wall(name):
-    return any(k in name for k in ("WALL", "PALISADE", "FENCE", "GATE"))
+    return any(r["name"] in name for r in DESIGNS if r.get("wall"))
 
 
 SWAP = {"axis=x": "axis=z", "axis=z": "axis=x", "facing=south": "facing=east", "facing=east": "facing=south",

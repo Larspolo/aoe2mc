@@ -25,3 +25,10 @@ from the current local branch), push with `git push origin HEAD:<branch of the P
 A PR whose ticket has no `in-progress` label is free: any run can fix it (hand-off).
 If your usage limit stops you, the next run continues your work through this rule.
 
+
+## The flow brake
+
+`python3 tools/usage.py --flow` (autopilot step 2, owner, 2026-10-27) exits 1 when too many agent PRs wait (older
+than `pr_minutes`, no `hold`) or CI has a queue: then CI or the merges are the bottleneck, not the quota, and a new PR
+only makes more conflicts. The run then only repairs: fix one red, stalled or conflicted PR, also an older PR whose
+run stopped. When no PR needs a fix, do no new ticket: go to step 8 and report "flow brake: no PR to repair".
