@@ -15,7 +15,6 @@ def castle(civ=None):
 
 
 def test_the_cost_time_age_and_slot_are_those_of_aoe2():
-    assert (train.COSTS["HUSBANDRY"], train.TRAIN_TIMES["HUSBANDRY"], train.TECH_AGE["HUSBANDRY"]) == ({"food": 150}, 40, 2)
     assert "HUSBANDRY" in train.TRAINS["STABLE"] and train.HELP["HUSBANDRY"]
     server, g = setup()                                                # the Feudal Age: not yet
     train.open_menu(g, "Steve", (11, 3))

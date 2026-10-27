@@ -123,7 +123,7 @@
 {"name": "ELITE_WAR_WAGON", "hp": 200, "attack": 9, "melee": 0, "pierce": 4, "range": 5, "reload": 2.5, "bonus": {"building": 2}, "classes": ["archer", "cavalry", "unique"], "sight": 8}
 {"name": "ELITE_WOAD_RAIDER", "hp": 85, "attack": 15, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"building": 3}, "classes": ["infantry", "unique"], "sight": 7}
 {"name": "BATTLE_ELEPHANT", "hp": 250, "attack": 12, "melee": 1, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 4}, "classes": ["elephant"], "sight": 7}
-{"name": "CONDOTTIERO", "hp": 80, "attack": 10, "melee": 1, "pierce": 0, "range": 0, "reload": 1.9, "bonus": {"gunpowder": 10, "building": 2}, "classes": ["infantry", "unique"], "sight": 8}
+{"name": "CONDOTTIERO", "hp": 80, "attack": 10, "melee": 1, "pierce": 0, "range": 0, "reload": 1.9, "bonus": {"gunpowder": 10, "building": 2}, "classes": ["infantry", "unique", "condottiero"], "sight": 8, "note": "the class: the Heavy Hei Guang Cavalry bonus (#1916)"}
 {"name": "ELITE_BATTLE_ELEPHANT", "hp": 300, "attack": 14, "melee": 1, "pierce": 3, "range": 0, "reload": 2.0, "bonus": {"building": 7}, "classes": ["elephant"], "sight": 8}
 {"name": "ELITE_GENITOUR", "hp": 55, "attack": 4, "melee": 0, "pierce": 4, "range": 4, "reload": 3.0, "bonus": {"archer": 5, "spearman": 3}, "classes": ["archer", "cavalry", "unique"], "sight": 6, "note": "the wiki infobox (#1610); sight: the wiki infobox (#1610)"}
 {"name": "ELITE_STEPPE_LANCER", "hp": 80, "attack": 11, "melee": 0, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["cavalry"], "sight": 5}

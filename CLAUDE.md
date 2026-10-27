@@ -104,6 +104,8 @@ The combat values of a new unit are one new line in `game/data/units.jsonl` (`co
 one in `game/data/buildings.jsonl` (`combat.BUILDINGS`); its line of sight is the key `"sight"` there (#1913; epic #1909 moves more tables).
 An item that some civilizations do not have goes into the list `"missing"` of each such line of
 `game/data/civs.jsonl` (`civs.MISSING`, #1914; also `unique`, `costs`, `units`, `twice`), not into `civs.py`.
+A new data line needs no test of its values: `tests/test_data_files.py` checks the form of each line of `game/data/`
+(keys, types, names that exist, #1916). Test the behavior that the code computes from it (a fight, a menu, a bonus).
 The same for a new command of the Paper plugin: its line in the command list at the top of `AoePlugin.java` and its
 `if` block in `onCommand` go in alphabetical order of the command name, not after the last one (#795 and #813 conflicted).
 

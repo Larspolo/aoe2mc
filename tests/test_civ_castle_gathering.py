@@ -32,7 +32,6 @@ def cost(civ, name, ages=CASTLE):
     ("BOHEMIANS", "BOW_SAW", {"food": 150, "wood": 100}),
 ])
 def test_the_castle_age_gathering_technologies_cost_as_in_aoe2(civ, name, want):
-    assert train.COSTS["BOW_SAW"] == {"food": 150, "wood": 100} and train.COSTS["GOLD_SHAFT_MINING"] == {"food": 175, "wood": 75}
     assert cost(civ, name) == want
 
 

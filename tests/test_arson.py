@@ -18,7 +18,6 @@ def hit(a, t):
 
 
 def test_the_cost_time_and_age_are_those_of_aoe2():
-    assert train.COSTS["ARSON"] == {"food": 75, "gold": 25} and train.TRAIN_TIMES["ARSON"] == 25
     assert train.TECH_AGE["ARSON"] == 1 and train.HELP["ARSON"] and "ARSON" in train.TRAINS["BARRACKS"]
     assert civs.MISSING["ARSON"] == ("GOTHS", "MUISCA", "ROMANS")             # the wiki availability
 

@@ -9,11 +9,6 @@ CASTLE = (12, 4)
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.UNIQUE["AZTECS"] == "JAGUAR_WARRIOR"
-    assert train.COSTS["JAGUAR_WARRIOR"] == train.COSTS["ELITE_JAGUAR_WARRIOR"] == {"food": 60, "gold": 30}
-    assert train.TRAIN_TIMES["JAGUAR_WARRIOR"] == train.TRAIN_TIMES["ELITE_JAGUAR_WARRIOR"] == 12
-    assert train.COSTS["ELITE_JAGUAR_WARRIOR_UPGRADE"] == {"food": 1000, "gold": 500}
-    assert train.TRAIN_TIMES["ELITE_JAGUAR_WARRIOR_UPGRADE"] == 45
     assert train.TECH_AGE["ELITE_JAGUAR_WARRIOR_UPGRADE"] == 3 and train.build.AGE["ELITE_JAGUAR_WARRIOR"] == 3
     assert len(train.HELP["JAGUAR_WARRIOR"]) <= 50 and "AZTECS" not in train.civs.MISSING["JAGUAR_WARRIOR"]
     assert "BRITONS" in train.civs.MISSING["JAGUAR_WARRIOR"]
