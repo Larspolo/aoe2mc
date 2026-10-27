@@ -104,14 +104,16 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *             [reload ticks]                   the AoE2 values of a unit (#514, game/combat.py stats_command); a melee
  *                                              unit hits once per reload (#848, default 20: the vanilla cooldown)
  *   aoe stop <selector>                        stop the walk and turn the AI off: the unit stands still (#437)
- *   aoe range <selector> <blocks> <ticks> [blast [min [pass]]]
+ *   aoe range <selector> <blocks> <ticks> [blast [min [pass [part]]]]
  *                                              a ranged unit shoots from this range, one shot per ticks (#515); a
  *                                              shot with a blast radius in blocks hits all units near the target, and
  *                                              a siege unit (a minecart) shoots too (#1050); blast 0: a siege shot
  *                                              that hits only the target (the Scorpion, #1062); min: no shot at a
  *                                              target nearer than these blocks (the AoE2 minimum range, #1350); pass:
  *                                              the bolt flies these blocks past the range and hurts the enemy units
- *                                              on its line with half the damage (the Scorpion, #1401)
+ *                                              on its line with half the damage (the Scorpion, #1401), or with
+ *                                              this part of it; blast "-": no blast, the mob shoots and its shot
+ *                                              passes through (the chakram thrower, #1638)
  *   aoe sees <player> <uuid>                   "Sees: 1" or "Sees: 0" (Player#canSee), for checks
  *   aoe show <players> <uuid> ...              Player#showEntity: the players see these entities again (#1302)
  *   aoe sight <selector> <blocks>              an idle unit attacks an enemy in this line of sight (#775)
@@ -278,8 +280,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Order> orders = new HashMap<>();
 
     // min: no shot at a target nearer than this (blocks, the AoE2 minimum range of the Mangonel line ..., #1350)
-    // pass: the blocks that a bolt flies past the range and hurts the enemy units on its line (the Scorpion, #1401)
-    private record Range(double blocks, int ticks, double blast, boolean siege, double min, double pass) {
+    // pass: the blocks that a bolt flies past the range and hurts the enemy units on its line (the Scorpion, #1401),
+    // part: the part of the damage on them (0.5, the chakram 1.0, #1638)
+    private record Range(double blocks, int ticks, double blast, boolean siege, double min, double pass, double part) {
     }
 
     private final Map<UUID, Range> ranges = new HashMap<>();
@@ -360,6 +363,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     hit(t, b, a.damage(b.stats));
                     hitEffect(t, b, mob);
                     alerts.hit(t, true, mob);
+                } else if (a != null && range.pass > 0) {   // a chakram flies on through the units (#1638), not buildings
+                    LivingEntity v = t.getVehicle() instanceof LivingEntity h && stats.containsKey(h.getUniqueId()) ? h : t;
+                    pass(mob, v, range.blocks + range.pass, a, mob, range.part);
                 }
             }
         }
@@ -403,7 +409,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 harm(v, stats.get(v.getUniqueId()), a, from);
             }
             if (range.pass > 0) {
-                pass(mob, v, range.blocks + range.pass, a, from);
+                pass(mob, v, range.blocks + range.pass, a, from, range.part);
             }
             t.getWorld().spawnParticle(Particle.CRIT, at.clone().add(0, 1, 0), 8);
             t.getWorld().playSound(at, Sound.ENTITY_ARROW_HIT, 1.0f, 1.0f);
@@ -426,12 +432,13 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     // AoE2 pass-through damage (#1401, wiki "Pass-through damage"): the bolt flies Range + 2 tiles in a straight line
-    // and hurts each enemy unit on it with half the damage; the target took the full hit. Not own or allied units.
+    // and hurts each enemy unit on it with this part of the damage (half, the chakram all, #1638); the target took the
+    // full hit. Not own or allied units.
     // The line is in the ground plane (x, z) with the AoE2 bolt width of 0.2 tiles (BOLT). A piercing vanilla arrow
     // (PierceLevel) is no help: the siege shot hits at once (#1062), and an arrow falls short and hits own units too.
     private static final double BOLT = 0.4;           // blocks from the line to the box of a unit: 0.1 tile × 4 blocks
 
-    private void pass(Mob mob, LivingEntity target, double length, Stats a, Entity from) {
+    private void pass(Mob mob, LivingEntity target, double length, Stats a, Entity from, double part) {
         Entity unit = mob.getPassengers().isEmpty() ? mob : mob.getPassengers().get(0);    // the minecart has the team
         Location o = mob.getLocation();
         Vector dir = target.getLocation().toVector().subtract(o.toVector()).setY(0);
@@ -450,7 +457,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             Vector p = le.getLocation().toVector().subtract(o.toVector()).setY(0);
             double along = p.dot(dir), across = p.clone().subtract(dir.clone().multiply(along)).length();
             if (along > 0 && along <= length && across <= le.getWidth() / 2 + BOLT) {
-                harm(le, stats.get(le.getUniqueId()), a, from, 0.5);
+                harm(le, stats.get(le.getUniqueId()), a, from, part);
             }
         }
     }
@@ -1908,13 +1915,15 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Stats: " + n + " units");
             return true;
         }
-        if (args.length >= 4 && args.length <= 7 && args[0].equals("range")) {
+        if (args.length >= 4 && args.length <= 8 && args[0].equals("range")) {
             Range r;
+            boolean mobShot = args.length >= 5 && args[4].equals("-");   // no blast: the mob shoots (#1638)
             try {
                 r = new Range(Double.parseDouble(args[2]), Integer.parseInt(args[3]),
-                        args.length >= 5 ? Double.parseDouble(args[4]) : 0, args.length >= 5,
+                        args.length >= 5 && !mobShot ? Double.parseDouble(args[4]) : 0, args.length >= 5 && !mobShot,
                         args.length >= 6 ? Double.parseDouble(args[5]) : 0,
-                        args.length == 7 ? Double.parseDouble(args[6]) : 0);
+                        args.length >= 7 ? Double.parseDouble(args[6]) : 0,
+                        args.length == 8 ? Double.parseDouble(args[7]) : 0.5);
             } catch (NumberFormatException e) {
                 sender.sendMessage("Bad number: " + e.getMessage());
                 return true;
