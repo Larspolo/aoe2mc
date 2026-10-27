@@ -165,8 +165,18 @@ def arrowslits(name, s):
     values (build.line)."""
     return s._replace(attack=s.attack + ARROWSLITS[name]) if name in ARROWSLITS else s
 
-ARCHER_LINE = ("ARCHER", "CROSSBOWMAN", "ARBALESTER")
-LONGSHIPS = ("LONGSHIP", "ELITE_LONGSHIP")
+
+
+def forms(first):
+    """The unit first and the units that its upgrades make, in order (UPGRADES of data/train.jsonl): the archer line
+    is forms("ARCHER"). No list of names in the code (tools/data_lint.py, #2061)."""
+    pairs = [p for u in UPGRADES.values() for p in ([u] if isinstance(u[0], str) else u)]
+    out = [first]
+    while (new := next((b for a, b in pairs if a == out[-1]), None)) and new not in out:
+        out.append(new)
+    return tuple(out)
+
+
 TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit name: UPGRADES
          "ARCHITECTURE": masonry,                                  # the same effect as Masonry (#1504)
          "ARROWSLITS": arrowslits,                                 # the towers of the player: build.values
@@ -180,7 +190,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          if name in ("THROWING_AXEMAN", "ELITE_THROWING_AXEMAN") else s,  # the Franks (#2044)
          "BLAST_FURNACE": lambda name, s: s._replace(attack=s.attack + 2) if melee(s) or name in HULKS else s,
          "BLOCK_PRINTING": lambda name, s: s,                      # the conversion range: monk.near
-         "BOGSVEIGAR": lambda name, s: s._replace(attack=s.attack + 1) if name in ARCHER_LINE + LONGSHIPS else s,  # (#2021)
+         "BOGSVEIGAR": lambda name, s: s._replace(attack=s.attack + 1) if name in forms("ARCHER") + forms("LONGSHIP") else s,  # (#2021)
          "BOMBARD_TOWER_TECH": lambda name, s: s,                  # the bombard tower in the build menu: build.NEEDS
          "BOW_SAW": lambda name, s: s,                             # an economy technology: gather.WORK_TECHS
          "BRACER": fletching,
@@ -215,6 +225,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_BOYAR_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "ELITE_CAMEL_ARCHER_UPGRADE": lambda name, s: s,          # a new unit name: UPGRADES
          "ELITE_CANNON_GALLEON_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
+         "ELITE_CARAVEL_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES (#1934)
          "ELITE_CENTURION_UPGRADE": lambda name, s: s,             # a new unit name: UPGRADES
          "ELITE_CHAKRAM_THROWER_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_COMPOSITE_BOWMAN_UPGRADE": lambda name, s: s,     # a new unit name: UPGRADES
@@ -236,6 +247,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_KIPCHAK_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "ELITE_KONNIK_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
          "ELITE_LEITIS_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
+         "ELITE_LONGSHIP_UPGRADE": lambda name, s: s,              # a new unit name: UPGRADES (#1934)
          "ELITE_MONASPA_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "ELITE_OBUCH_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "ELITE_ORGAN_GUN_UPGRADE": lambda name, s: s,             # a new unit name: UPGRADES
@@ -248,6 +260,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_STEPPE_LANCER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
          "ELITE_SKIRMISHER_UPGRADE": lambda name, s: s,
          "ELITE_TARKAN_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
+         "ELITE_TURTLE_SHIP_UPGRADE": lambda name, s: s,           # a new unit name: UPGRADES (#1934)
          "ELITE_URUMI_SWORDSMAN_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
          "ELITE_VARANGIAN_GUARD_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_WAR_WAGON_UPGRADE": lambda name, s: s,            # a new unit name: UPGRADES
@@ -258,6 +271,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) or name in HULKS else s,
          "FORTIFIED_WALL": lambda name, s: s,                      # the walls of the player: WALL_UPGRADES
          "GAMBESONS": lambda name, s: s._replace(pierce=s.pierce + 1) if name in MILITIA_LINE else s,
+         "GARLAND_WARS": lambda name, s: s._replace(attack=s.attack + 4) if "infantry" in s.classes else s,  # the Aztecs (#2042)
          "GILLNETS": lambda name, s: s,                            # the fishing ships: gather.SHIP_TECHS
          "GOLD_MINING": lambda name, s: s,                         # an economy technology: gather.WORK_TECHS
          "GOLD_SHAFT_MINING": lambda name, s: s,
