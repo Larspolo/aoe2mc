@@ -69,6 +69,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "BATTERING_RAM": {"wood": 160, "gold": 75},
          "BERSERK": {"food": 65, "gold": 20},
          "BLOODLINES": {"food": 150, "gold": 100},
+         "CAPPED_RAM": {"wood": 160, "gold": 75},
+         "CAPPED_RAM_UPGRADE": {"food": 300},
          "CASTLE_AGE": {"food": 800, "gold": 200},
          "CARAVAN": {"food": 200, "gold": 200},
          "CATAPHRACT": {"food": 70, "gold": 75},
@@ -80,6 +82,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "FORTIFIED_WALL": {"food": 200, "wood": 100},
          "GOLD_MINING": {"food": 100, "wood": 75},
          "GUILDS": {"food": 300, "gold": 200},
+         "HEAVY_SCORPION": {"wood": 75, "gold": 75},
+         "HEAVY_SCORPION_UPGRADE": {"food": 800, "wood": 750},
          "HORSE_COLLAR": {"food": 75, "wood": 75},
          "HUSKARL": {"food": 75, "gold": 35},
          "IMPERIAL_AGE": {"food": 1000, "gold": 800},
@@ -91,6 +95,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "MANGONEL": {"wood": 160, "gold": 135},
          "MANGUDAI": {"wood": 55, "gold": 65},
          "MONK": {"gold": 100},
+         "ONAGER": {"wood": 160, "gold": 135},
+         "ONAGER_UPGRADE": {"food": 800, "gold": 500},
          "PADDED_ARCHER_ARMOR": {"food": 100},
          "REDEMPTION": {"gold": 475},
          "SAMURAI": {"food": 45, "gold": 30},
@@ -99,6 +105,11 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "SCALE_MAIL_ARMOR": {"food": 100},
          "SCORPION": {"wood": 75, "gold": 75},
          "SCOUT_CAVALRY": {"food": 80},
+         "SIEGE_ENGINEERS": {"food": 500, "wood": 600},
+         "SIEGE_ONAGER": {"wood": 160, "gold": 135},
+         "SIEGE_ONAGER_UPGRADE": {"food": 1450, "gold": 1000},
+         "SIEGE_RAM": {"wood": 160, "gold": 75},
+         "SIEGE_RAM_UPGRADE": {"food": 1000},
          "SKIRMISHER": {"food": 25, "wood": 35},
          "STONE_MINING": {"food": 100, "wood": 75},
          "SPEARMAN": {"food": 35, "wood": 25},
@@ -113,6 +124,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "BATTERING_RAM": 36,
                "BERSERK": 14,
                "BLOODLINES": 50,
+               "CAPPED_RAM": 36,
+               "CAPPED_RAM_UPGRADE": 50,
                "CARAVAN": 40,
                "CASTLE_AGE": 160,
                "CATAPHRACT": 20,
@@ -124,6 +137,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "FORTIFIED_WALL": 50,
                "GOLD_MINING": 30,
                "GUILDS": 50,
+               "HEAVY_SCORPION": 30,
+               "HEAVY_SCORPION_UPGRADE": 50,
                "HORSE_COLLAR": 20,
                "HUSKARL": 13,
                "IMPERIAL_AGE": 190,
@@ -135,6 +150,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "MANGONEL": 46,
                "MANGUDAI": 26,
                "MONK": 51,
+               "ONAGER": 46,
+               "ONAGER_UPGRADE": 75,
                "PADDED_ARCHER_ARMOR": 40,
                "REDEMPTION": 50,
                "SAMURAI": 9,
@@ -143,6 +160,11 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "SCALE_MAIL_ARMOR": 40,
                "SCORPION": 30,
                "SCOUT_CAVALRY": 30,
+               "SIEGE_ENGINEERS": 45,
+               "SIEGE_ONAGER": 46,
+               "SIEGE_ONAGER_UPGRADE": 150,
+               "SIEGE_RAM": 36,
+               "SIEGE_RAM_UPGRADE": 75,
                "SKIRMISHER": 22,
                "SPEARMAN": 22,
                "STONE_MINING": 30,
@@ -159,13 +181,15 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                          "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR"),
           "CASTLE": ("TREBUCHET",),                                             # and the unique unit: trains() (#708, #1351)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES"),                           # (#671, #940)
-          "UNIVERSITY": ("FORTIFIED_WALL",),                                    # (#1326)
+          "UNIVERSITY": ("FORTIFIED_WALL", "SIEGE_ENGINEERS"),                 # (#1326, #1352)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
           "MARKET": ("TRADE_CART", "CARAVAN", "GUILDS"),                       # (#1253, #1254)
           "MILL": ("HORSE_COLLAR",),                                            # (#726)
           "MINING_CAMP": ("GOLD_MINING", "STONE_MINING"),                      # (#727, #939)
           "MONASTERY": ("MONK", "FERVOR", "SANCTITY", "REDEMPTION"),            # (#1243, #1261, #1264)
-          "SIEGE_WORKSHOP": ("BATTERING_RAM", "MANGONEL", "SCORPION")}          # (#1349)
+          "SIEGE_WORKSHOP": ("BATTERING_RAM", "MANGONEL", "SCORPION",           # (#1349)
+                             "CAPPED_RAM_UPGRADE", "SIEGE_RAM_UPGRADE", "ONAGER_UPGRADE", "SIEGE_ONAGER_UPGRADE",
+                             "HEAVY_SCORPION_UPGRADE")}                 # (#1352)
 # The unique unit of each civilization (AoE2 DE), trained at its castle. A unit without COSTS is not in the menu yet:
 # it has no AoE2 combat values in combat.STATS.
 UNIQUE = {"BRITONS": "LONGBOWMAN", "PERSIANS": "WAR_ELEPHANT", "BYZANTINES": "CATAPHRACT", "CELTS": "WOAD_RAIDER",
@@ -181,7 +205,17 @@ UNIQUE = {"BRITONS": "LONGBOWMAN", "PERSIANS": "WAR_ELEPHANT", "BYZANTINES": "CA
           "BENGALIS": "RATHA", "GURJARAS": "SHRIVAMSHA_RIDER", "ROMANS": "CENTURION", "ARMENIANS": "COMPOSITE_BOWMAN",
           "GEORGIANS": "MONASPA"}
 build.AGE |= dict.fromkeys(UNIQUE.values(), 2) | dict.fromkeys(("ELITE_" + n for n in UNIQUE.values()), 3)   # (#1082)
+def engineers(name, s):
+    """Siege Engineers (AoE2 DE, wiki): a siege unit +20 % bonus attack against buildings (rounded), a ranged one
+    +1 range."""
+    if "siege" not in s.classes:
+        return s
+    bonus = {**s.bonus, "building": round(s.bonus["building"] * 1.2)} if "building" in s.bonus else s.bonus
+    return s._replace(range=s.range + (s.range > 0), bonus=bonus)
+
+
 TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
+         "CAPPED_RAM_UPGRADE": lambda name, s: s,                  # a new unit name: UPGRADES
          "CARAVAN": lambda name, s: s,                             # the walk speed: SPEEDS
          "CASTLE_AGE": lambda name, s: s,                          # an age: REQUIRES
          "DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
@@ -191,11 +225,13 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "FORTIFIED_WALL": lambda name, s: s,                      # the walls of the player: WALL_UPGRADES
          "GOLD_MINING": lambda name, s: s,                         # an economy technology: gather.WORK_TECHS
          "GUILDS": lambda name, s: s,                              # the trading fee: market.FEES
+         "HEAVY_SCORPION_UPGRADE": lambda name, s: s,
          "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
          "IMPERIAL_AGE": lambda name, s: s,                        # an age: REQUIRES
          "LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
          if "VILLAGER" in name else s,
          "MAN_AT_ARMS_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
+         "ONAGER_UPGRADE": lambda name, s: s,
          "PADDED_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "archer" in s.classes else s,
          "REDEMPTION": lambda name, s: s,                          # monks convert buildings and siege: monk.py
@@ -204,18 +240,30 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "SANCTITY": lambda name, s: s._replace(hp=s.hp + 15) if name == "MONK" else s,
          "SCALE_MAIL_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "infantry" in s.classes else s,
+         "SIEGE_ENGINEERS": engineers,
+         "SIEGE_ONAGER_UPGRADE": lambda name, s: s,
+         "SIEGE_RAM_UPGRADE": lambda name, s: s,
          "STONE_MINING": lambda name, s: s,                        # an economy technology: gather.WORK_TECHS
          "FEUDAL_AGE": lambda name, s: s,   # the change of each technology to the AoE2 values
          "WHEELBARROW": lambda name, s: s}                         # no combat change: gather.CARRY and gather.PACE
 SPEEDS = {"CARAVAN": ("TRADE_CART", 1.2),                         # technology: the unit and its walk speed factor
           "FERVOR": ("MONK", 1.15)}
-UPGRADES = {"MAN_AT_ARMS_UPGRADE": ("MILITIA", "MAN_AT_ARMS")}  # technology: the unit and its new unit (#941)
+UPGRADES = {                                                       # technology: the unit and its new unit (#941)
+    "CAPPED_RAM_UPGRADE": ("BATTERING_RAM", "CAPPED_RAM"),           # the siege upgrades of AoE2 DE (#1352)
+    "HEAVY_SCORPION_UPGRADE": ("SCORPION", "HEAVY_SCORPION"),
+    "MAN_AT_ARMS_UPGRADE": ("MILITIA", "MAN_AT_ARMS"),
+    "ONAGER_UPGRADE": ("MANGONEL", "ONAGER"),
+    "SIEGE_ONAGER_UPGRADE": ("ONAGER", "SIEGE_ONAGER"),
+    "SIEGE_RAM_UPGRADE": ("CAPPED_RAM", "SIEGE_RAM"),
+}
+AFTER = {"SIEGE_ONAGER_UPGRADE": "ONAGER_UPGRADE", "SIEGE_RAM_UPGRADE": "CAPPED_RAM_UPGRADE"}   # the upgrade before it
 WALL_UPGRADES = {"FORTIFIED_WALL": {"STONE_WALL": "FORTIFIED_WALL", "GATE": "FORTIFIED_GATE"}}   # technology: {wall: new} (#1326)
 REQUIRES = {"CASTLE_AGE": (2, ("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET")),   # n types of these buildings
             "FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP", "DOCK")),
             "IMPERIAL_AGE": (2, ("MONASTERY", "UNIVERSITY", "SIEGE_WORKSHOP"), ("CASTLE",))}   # or one of these alone
 TECH_AGE = {                                                       # the age of a technology (build.AGE): hidden before
     "BLOODLINES": 1,
+    "CAPPED_RAM_UPGRADE": 3,
     "CARAVAN": 2,
     "DOUBLE_BIT_AXE": 1,
     "FERVOR": 2,
@@ -224,13 +272,18 @@ TECH_AGE = {                                                       # the age of 
     "FORTIFIED_WALL": 2,
     "GOLD_MINING": 1,
     "GUILDS": 3,
+    "HEAVY_SCORPION_UPGRADE": 3,
     "HORSE_COLLAR": 1,
     "MAN_AT_ARMS_UPGRADE": 1,
+    "ONAGER_UPGRADE": 3,
     "PADDED_ARCHER_ARMOR": 1,
     "REDEMPTION": 2,
     "SANCTITY": 2,
     "SCALE_BARDING_ARMOR": 1,
     "SCALE_MAIL_ARMOR": 1,
+    "SIEGE_ENGINEERS": 3,
+    "SIEGE_ONAGER_UPGRADE": 3,
+    "SIEGE_RAM_UPGRADE": 3,
     "STONE_MINING": 1,
     "WHEELBARROW": 1,
 }
@@ -241,9 +294,20 @@ LIMIT = 200                                                        # the AoE2 po
 REPEAT = 256                                                       # researches of one technology: "going above and beyond"
 CENSUS = 2.0                                                       # AoE2 seconds between two counts of the live units
 ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, item and name of each unit (#620)
+         "CAPPED_RAM": (0, "minecart", "Capped Ram"),
+         "CAPPED_RAM_UPGRADE": (3, "book", "Capped Ram"),        # one slot for each line of upgrades
+         "HEAVY_SCORPION": (2, "crossbow", "Heavy Scorpion"),
+         "HEAVY_SCORPION_UPGRADE": (5, "book", "Heavy Scorpion"),
          "MILITIA": (0, "zombie_spawn_egg", "Militia"),             # the mob of units.classify
          "ARCHER": (0, "skeleton_spawn_egg", "Archer"),
+         "ONAGER": (1, "dispenser", "Onager"),
+         "ONAGER_UPGRADE": (4, "book", "Onager"),
          "SCOUT_CAVALRY": (0, "horse_spawn_egg", "Scout Cavalry"),
+         "SIEGE_ENGINEERS": (1, "book", "Siege Engineers"),
+         "SIEGE_ONAGER": (1, "dispenser", "Siege Onager"),
+         "SIEGE_ONAGER_UPGRADE": (4, "book", "Siege Onager"),
+         "SIEGE_RAM": (0, "minecart", "Siege Ram"),
+         "SIEGE_RAM_UPGRADE": (3, "book", "Siege Ram"),
          "SKIRMISHER": (1, "drowned_spawn_egg", "Skirmisher"),
          "SPEARMAN": (1, "zombie_spawn_egg", "Spearman"),
          "BATTERING_RAM": (0, "minecart", "Battering Ram"),         # a siege unit is a minecart (units.siege)
@@ -293,6 +357,8 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "BATTERING_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
         "BERSERK": "Viking infantry. Heals itself.",
         "BLOODLINES": "Cavalry +20 HP.",
+        "CAPPED_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
+        "CAPPED_RAM_UPGRADE": "Upgrades battering rams to capped rams.",
         "CARAVAN": "Trade carts +20 % speed.",
         "CASTLE_AGE": "Advance to the Castle Age.",
         "CATAPHRACT": "Byzantine cavalry. Strong vs. infantry.",
@@ -305,6 +371,8 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "FORTIFIED_WALL": "Stone walls +1,200 HP, +4/+2 armor; also gates.",
         "GOLD_MINING": "Villagers mine gold 15 % faster.",
         "GUILDS": "Market trading fee 15 %.",
+        "HEAVY_SCORPION": "Siege. Shoots bolts; weak vs. cavalry.",
+        "HEAVY_SCORPION_UPGRADE": "Upgrades scorpions to heavy scorpions.",
         "HORSE_COLLAR": "Farms +75 food.",
         "HUSKARL": "Gothic infantry. Strong vs. archers.",
         "IMPERIAL_AGE": "Advance to the Imperial Age.",
@@ -318,6 +386,8 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "MANGUDAI": "Mongol horse archer. Strong vs. siege.",
         "MILITIA": "Infantry. Strong vs. eagles; weak vs. archers.",
         "MONK": "Heals own units, converts enemy units.",
+        "ONAGER": "Siege. Hits all units near the target.",
+        "ONAGER_UPGRADE": "Upgrades mangonels to onagers.",
         "PADDED_ARCHER_ARMOR": "Archers +1 melee armor, +1 pierce armor.",
         "REDEMPTION": "Monks convert siege and most buildings.",
         "SAMURAI": "Japanese infantry. Strong vs. unique units.",
@@ -326,6 +396,11 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "SCALE_MAIL_ARMOR": "Infantry +1 melee armor, +1 pierce armor.",
         "SCORPION": "Siege. Shoots bolts; weak vs. cavalry.",
         "SCOUT_CAVALRY": "Fast. Strong vs. monks, siege; weak vs. spears.",
+        "SIEGE_ENGINEERS": "Siege +1 range, +20 % attack vs. buildings.",
+        "SIEGE_ONAGER": "Siege. Hits all units near the target.",
+        "SIEGE_ONAGER_UPGRADE": "Upgrades onagers to siege onagers.",
+        "SIEGE_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
+        "SIEGE_RAM_UPGRADE": "Upgrades capped rams to siege rams.",
         "SKIRMISHER": "Strong vs. archers, spears; weak vs. cavalry.",
         "SPEARMAN": "Strong vs. cavalry; weak vs. archers.",
         "STONE_MINING": "Villagers mine stone 15 % faster.",
@@ -359,7 +434,7 @@ def barding(s):
 def unlocked(g, name):
     """True when the player has the age of technology name (TECH_AGE). As in AoE2, the menu shows a technology only
     from its age, but a building or unit of a later age as a gray item (build.locked)."""
-    return TECH_AGE.get(name, 0) <= build.ages(g)
+    return TECH_AGE.get(name, 0) <= build.ages(g) and AFTER.get(name, "") in {""} | set(getattr(g, "techs", ()))
 
 
 def homes(g):
@@ -374,7 +449,10 @@ def trains(g, building):
     """The units and technologies of the own building: a castle trains the unique unit of the player's civilization."""
     if building != "CASTLE":
         new = {old: unit for t, (old, unit) in UPGRADES.items() if t in g.techs}     # the barracks trains the new unit
-        return tuple(new.get(n, n) for n in TRAINS[building])
+        out = list(TRAINS[building])
+        for _ in UPGRADES:                                         # a line of upgrades: mangonel, onager, siege onager
+            out = [new.get(n, n) for n in out]
+        return tuple(out)
     return tuple(n for n in [UNIQUE.get(civs.civ(g))] if n in COSTS) + TRAINS[building]
 
 
@@ -495,7 +573,8 @@ def order(g, player, rect, slot, shift=False):
         cancel(g, player, rect, slot - ROW)
         show(g, player, rect)
         return 0
-    name = next((n for n in trains(g, homes(g)[rect]) if ITEMS[n][0] == slot), None)
+    name = next((n for n in trains(g, homes(g)[rect])                # the shown item of the slot (one per line of upgrades)
+                 if ITEMS[n][0] == slot and repeatable(g, n) and unlocked(g, n)), None)
     n = 0
     while name and n < (SHIFT if shift else 1) and queue(g, player, rect[::2], name):
         n += 1
@@ -642,6 +721,8 @@ def research(g, entry):
         for uuid in [u for u, n in g.soldiers.items() if n == old]:
             g.soldiers[uuid] = new
             g.command(combat.stats_command(uuid, new, stats(g, new)))
+            if cmd := combat.range_command(uuid, new, g.map.T, s=stats(g, new)):   # the range and blast of an onager
+                g.command(cmd)
             g.command(combat.label_command(uuid, new))               # the name of a new unit (units.pretty)
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
         if stats(g, name) != combat.stats(name):

@@ -110,7 +110,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe deathmarks on|off                      a short mark where a replay unit dies (#846, Deaths.java)
  *   aoe destroy <selector>                     the buildings fall as at 0 hit points: "Destroy: <n> buildings" (#819)
  *   aoe label <selector> [name]                show the name line again (after a selection change); a name sets
- *                                              the name of a building target (#661)
+ *                                              the name of a building target (#661); a minecart: its crew (#1352)
  *   aoe lore <material> <name> <text>          the last lore line of each menu item with this material and name: the
  *                                              AoE2 help text (#1160, train.HELP; URL-encoded). Sent once at the
  *                                              setup, so the menu commands stay below the RCON limit
@@ -1811,7 +1811,13 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (args.length >= 2 && args[0].equals("label")) {
             int n = 0;
             for (Entity e : select(sender, args[1])) {
+                if (e instanceof Minecart cart && !cart.getPassengers().isEmpty()) {
+                    e = cart.getPassengers().get(0);         // a siege unit: its crew has the name line (#1352)
+                }
                 if (args.length > 2) {                       // a new name keeps the player color of the old one (#941)
+                    if (!names.containsKey(e.getUniqueId())) {
+                        nameLine(e);                         // the old name of the converter, with its color
+                    }
                     Component old = names.get(e.getUniqueId());
                     names.put(e.getUniqueId(), Component.text(String.join(" ", List.of(args).subList(2, args.length)),
                             old == null ? (e.customName() == null ? null : e.customName().color()) : old.color()));
