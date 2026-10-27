@@ -103,6 +103,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "CASTLE_AGE": {"food": 800, "gold": 200},
          "CAREENING": {"food": 100, "gold": 200},                     # the university, Castle Age (DE update 169123)
          "CARAVAN": {"food": 200, "gold": 200},
+         "CHAKRAM_THROWER": {"food": 65, "gold": 30},                  # the Gurjaras castle (AoE2 DE wiki, #1624)
          "CHAMPION": {"food": 50, "gold": 20},                         # AoE2 DE wiki (#1498)
          "CHAMPION_UPGRADE": {"food": 650, "gold": 350},               # the Imperial Age (#1498)
          "CHEMISTRY": {"food": 300, "gold": 200},                    # the university, Imperial Age (#1375)
@@ -129,6 +130,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "ELITE_BATTLE_ELEPHANT_UPGRADE": {"food": 1100, "gold": 700},    # the Imperial Age (#1556)
          "ELITE_CANNON_GALLEON": {"wood": 200, "gold": 150},           # AoE2 DE wiki (#1491)
          "ELITE_CANNON_GALLEON_UPGRADE": {"wood": 525, "gold": 500},   # the Imperial Age (#1491)
+         "ELITE_CHAKRAM_THROWER": {"food": 65, "gold": 30},
+         "ELITE_CHAKRAM_THROWER_UPGRADE": {"food": 1000, "gold": 650},   # the Imperial Age (#1624)
          "ELITE_EAGLE_WARRIOR": {"food": 20, "gold": 50},
          "ELITE_EAGLE_WARRIOR_UPGRADE": {"food": 800, "gold": 500},
          "ELITE_GENITOUR": {"food": 40, "wood": 35},
@@ -285,6 +288,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "CAPPED_RAM": 36,
                "CAPPED_RAM_UPGRADE": 50,
                "CARAVAN": 40,
+               "CHAKRAM_THROWER": 15,
                "CHAMPION": 21,
                "CHAMPION_UPGRADE": 70,
                "CHEMISTRY": 100,
@@ -313,6 +317,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "ELITE_BATTLE_ELEPHANT_UPGRADE": 100,
                "ELITE_CANNON_GALLEON": 46,
                "ELITE_CANNON_GALLEON_UPGRADE": 30,
+               "ELITE_CHAKRAM_THROWER": 15,
+               "ELITE_CHAKRAM_THROWER_UPGRADE": 45,
                "ELITE_EAGLE_WARRIOR": 20,
                "ELITE_EAGLE_WARRIOR_UPGRADE": 50,
                "ELITE_GENITOUR": 25,
@@ -479,7 +485,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "CASTLE": ("TREBUCHET",                                               # and the unique unit: trains() (#708, #1351)
                      "CONSCRIPTION",                                            # (#1455)
                      "HOARDINGS",                                               # (#1456)
-                     "SAPPERS"),                                                # (#1580)
+                     "SAPPERS",                                                 # (#1580)
+                     "ELITE_CHAKRAM_THROWER_UPGRADE"),                          # the Gurjaras (#1624)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES", "LIGHT_CAVALRY_UPGRADE", "KNIGHT",   # (#671, #940, #1396, #1397)
                      "HUSBANDRY",                                               # (#1416)
                      "CAMEL_RIDER",                                             # the Castle Age (#1550)
@@ -648,6 +655,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "EAGLE_WARRIOR_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "ELITE_BATTLE_ELEPHANT_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_CANNON_GALLEON_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
+         "ELITE_CHAKRAM_THROWER_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_EAGLE_WARRIOR_UPGRADE": lambda name, s: s,
          "ELITE_GENITOUR_UPGRADE": lambda name, s: s,              # a new unit name: UPGRADES
          "ELITE_SHRIVAMSHA_RIDER_UPGRADE": lambda name, s: s,      # a new unit name: UPGRADES
@@ -756,6 +764,7 @@ UPGRADES = {                                                       # technology:
     "EAGLE_WARRIOR_UPGRADE": ("EAGLE_SCOUT", "EAGLE_WARRIOR"),        # (#1555)
     "ELITE_BATTLE_ELEPHANT_UPGRADE": ("BATTLE_ELEPHANT", "ELITE_BATTLE_ELEPHANT"),   # (#1556)
     "ELITE_CANNON_GALLEON_UPGRADE": ("CANNON_GALLEON", "ELITE_CANNON_GALLEON"),
+    "ELITE_CHAKRAM_THROWER_UPGRADE": ("CHAKRAM_THROWER", "ELITE_CHAKRAM_THROWER"),   # the castle (#1624)
     "ELITE_EAGLE_WARRIOR_UPGRADE": ("EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"),
     "ELITE_GENITOUR_UPGRADE": ("GENITOUR", "ELITE_GENITOUR"),   # (#1610)
     "ELITE_SHRIVAMSHA_RIDER_UPGRADE": ("SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER"),   # (#1612)
@@ -856,6 +865,7 @@ TECH_AGE = {                                                       # the age of 
     "EAGLE_WARRIOR_UPGRADE": 2,
     "ELITE_BATTLE_ELEPHANT_UPGRADE": 3,
     "ELITE_CANNON_GALLEON_UPGRADE": 3,
+    "ELITE_CHAKRAM_THROWER_UPGRADE": 3,
     "ELITE_EAGLE_WARRIOR_UPGRADE": 3,
     "ELITE_GENITOUR_UPGRADE": 3,
     "ELITE_SHRIVAMSHA_RIDER_UPGRADE": 3,
@@ -948,6 +958,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "ATONEMENT": (5, "book", "Atonement"),                    # the monastery (#1581)
          "CAPPED_RAM": (0, "minecart", "Capped Ram"),
          "CAPPED_RAM_UPGRADE": (3, "book", "Capped Ram"),        # one slot for each line of upgrades
+         "CHAKRAM_THROWER": (0, "drowned_spawn_egg", "Chakram Thrower"),   # the unique unit of the Gurjaras (#1624)
          "CROP_ROTATION": (0, "book", "Crop Rotation"),               # the slot of Heavy Plow (AFTER)
          "CROSSBOWMAN": (0, "skeleton_spawn_egg", "Crossbowman"),
          "CROSSBOWMAN_UPGRADE": (2, "book", "Crossbowman"),
@@ -958,6 +969,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "ELITE_BATTLE_ELEPHANT_UPGRADE": (MORE + 1, "book", "Elite Battle Elephant"),   # the stable (#1556)
          "ELITE_CANNON_GALLEON": (MORE + 1, "dark_oak_boat", "Elite Cannon Galleon"),   # the slot of the cannon galleon
          "ELITE_CANNON_GALLEON_UPGRADE": (MORE + 3, "book", "Elite Cannon Galleon"),   # the dock (#1491)
+         "ELITE_CHAKRAM_THROWER": (0, "drowned_spawn_egg", "Elite Chakram Thrower"),   # the slot of the unique unit
+         "ELITE_CHAKRAM_THROWER_UPGRADE": (5, "book", "Elite Chakram Thrower"),   # the castle, after Sappers (#1624)
          "ELITE_EAGLE_WARRIOR": (7, "husk_spawn_egg", "Elite Eagle Warrior"),
          "ELITE_GENITOUR": (MORE + 1, "skeleton_horse_spawn_egg", "Elite Genitour"),   # the slot of the genitour
          "ELITE_GENITOUR_UPGRADE": (MORE + 2, "book", "Elite Genitour"),   # the archery range (#1610)
@@ -1148,6 +1161,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "BODKIN_ARROW": "Archers, towers +1 attack, range; TC +1 attack.",
         "BOMBARD_CANNON": "Siege. Long range; strong vs. buildings and siege.",
         "BOMBARD_TOWER_TECH": "Lets you build bombard towers.",
+        "CHAKRAM_THROWER": "Gurjara infantry. Throws discs from range.",
         "CHEMISTRY": "Archers, ranged siege, towers +1 attack.",
         "COINAGE": "Tribute fee 20 %.",
         "CONSCRIPTION": "Military buildings train 33 % faster.",
@@ -1180,6 +1194,8 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "ELITE_BATTLE_ELEPHANT_UPGRADE": "Upgrades battle elephants to elite ones.",
         "ELITE_CANNON_GALLEON": "Siege warship. Long range; strong vs. buildings.",
         "ELITE_CANNON_GALLEON_UPGRADE": "Upgrades cannon galleons to elite ones.",
+        "ELITE_CHAKRAM_THROWER": "Gurjara infantry. Throws discs from range.",
+        "ELITE_CHAKRAM_THROWER_UPGRADE": "Upgrades chakram throwers to elite ones.",
         "ELITE_EAGLE_WARRIOR": "Fast infantry. Strong vs. monks, siege, cavalry.",
         "ELITE_EAGLE_WARRIOR_UPGRADE": "Upgrades eagle warriors to elite ones.",
         "ELITE_GENITOUR": "Mounted skirmisher. Strong vs. archers.",
@@ -1372,13 +1388,11 @@ def lines(t, g=None):
 
 def trains(g, building):
     """The units and technologies of the own building: a castle trains the unique unit of the player's civilization."""
-    if building != "CASTLE":
-        new = {old: unit for t in UPGRADES if t in g.techs for old, unit in lines(t, g)}   # the barracks trains the new unit
-        out = list(TRAINS[building])
-        for _ in UPGRADES:                                         # a line of upgrades: mangonel, onager, siege onager
-            out = [new.get(n, n) for n in out]
-        return tuple(out)
-    return tuple(n for n in [UNIQUE.get(civs.civ(g))] if n in COSTS) + TRAINS[building]
+    new = {old: unit for t in UPGRADES if t in g.techs for old, unit in lines(t, g)}   # the barracks trains the new unit
+    out = [n for n in [UNIQUE.get(civs.civ(g))] if n in COSTS] * (building == "CASTLE") + list(TRAINS[building])
+    for _ in UPGRADES:                                             # a line of upgrades: mangonel, onager, siege onager
+        out = [new.get(n, n) for n in out]                         # the castle: the elite unique unit (#1624)
+    return tuple(out)
 
 
 def home(g, cell):
