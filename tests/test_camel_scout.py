@@ -1,4 +1,4 @@
-"""Camel Scout (#2130): the stable of the Gurjaras trains the camel scout from the Feudal Age (slot 26: 55 food, 60 gold,
+"""Camel Scout (#2130): the stable of the Gurjaras trains the camel scout from the Feudal Age (slot 27: 55 food, 60 gold,
 22 s), with the Feudal Age values of the AoE2 DE wiki infobox "Camel Scout". The Castle Age upgrades the live camel
 scouts to camel riders, and the stable then trains camel riders only (wiki: "automatically upgraded to Camel Riders
 upon reaching the Castle Age")."""
@@ -31,7 +31,7 @@ def test_the_values_are_those_of_aoe2():
 def test_the_stable_of_the_gurjaras_has_it_from_the_feudal_age():
     server, g = stable()
     train.open_menu(g, "Steve", STABLE)
-    assert " 26:camel_spawn_egg:Camel Scout:55 food · 60 gold · 22 s · queue 0/15 " in menus(server)[-1] + " "
+    assert " 27:camel_spawn_egg:Camel Scout:55 food · 60 gold · 22 s · queue 0/15 " in menus(server)[-1] + " "
     assert train.queue(g, "Steve", STABLE, "CAMEL_SCOUT")
     server, g = stable("BRITONS")
     train.open_menu(g, "Steve", STABLE)

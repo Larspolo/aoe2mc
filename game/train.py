@@ -88,6 +88,7 @@ def load(path=DATA):
 
 
 ROWS = load()                                                      # one line per item: data/train.jsonl (#1702)
+UNIT_ROWS, BUILDING_ROWS = table.load("units.jsonl"), table.load("buildings.jsonl")   # their keys below (#2030)
 COSTS = {r["name"]: r["cost"] for r in ROWS}                       # as in AoE2
 TRAIN_TIMES = {r["name"]: r["time"] for r in ROWS}                 # AoE2 seconds
 TRAINS = {b: tuple(r["name"] for r in ROWS if r["building"] == b)    # the units and technologies of each
@@ -221,31 +222,28 @@ def effect(e):
 
 
 TECHS = {r["name"]: effect(r["effect"]) for r in ROWS if "effect" in r}   # a technology: its change of the AoE2 values
-SPEEDS = {"CARAVAN": ("trade units", 1.2),                        # technology: the unit (or a class of combat.STATS:
-          "FERVOR": ("monks", 1.15),                               # lower case, or a group of civs.GROUPS) and its
-          "HUSBANDRY": ("mounted", 1.1),                           # walk speed factor; cavalry, camels, elephants (#1416)
-          "SQUIRES": ("infantry", 1.1)}                            # (#1415)
+# technology: the unit (or a class of combat.STATS: lower case, or a group of civs.GROUPS) and its walk speed factor
+# (#1415, #1416): the key "walk" of data/train.jsonl
+SPEEDS = {r["name"]: tuple(r["walk"]) for r in ROWS if "walk" in r}
 SHIPWRIGHT = (0.8, 1.54)                                           # Shipwright: ships cost 80 % wood, train 54 % faster
 FASTER = {"EAGLE_SCOUT": (2, 35)}                                  # unit: the age and its train time from it (#1555)
-CONSCRIPT = (("ARCHERY_RANGE", "BARRACKS", "CASTLE", "STABLE"), 1.33)   # Conscription: these buildings train faster
-ARROWSLITS = {"GUARD_TOWER": 2, "KEEP": 3, "WATCH_TOWER": 1}         # Arrowslits: the attack of each tower (#1504)
-HEATED = {"BOMBARD_TOWER": 50, "CASTLE": 4, "DOCK": 4, "GUARD_TOWER": 9, "KEEP": 10,   # Heated Shot: attack against
-          "WATCH_TOWER": 6}                 # ships (AoE2 DE wiki "Attack increase against ships", #1548)
+CONSCRIPT = (tuple(r["name"] for r in BUILDING_ROWS if r.get("conscription")),   # Conscription: these buildings
+             next(r["factor"] for r in ROWS if r["name"] == "CONSCRIPTION"))      # train faster (#1455)
+ARROWSLITS = {r["name"]: r["arrowslits"] for r in BUILDING_ROWS if "arrowslits" in r}   # the attack of each tower (#1504)
+HEATED = {r["name"]: r["heated_shot"] for r in BUILDING_ROWS if "heated_shot" in r}   # Heated Shot: attack against
+#                                           ships (AoE2 DE wiki "Attack increase against ships", #1548)
 UPGRADES = {r["name"]: tuple(map(tuple, u)) if isinstance(u[0], list) else tuple(u)   # technology: the unit and its
             for r in ROWS if (u := r.get("upgrade"))}             # new unit (#941), "upgrade" of data/train.jsonl (#1915)
 AFTER = {r["name"]: r["after"] for r in ROWS if "after" in r}     # the technology before it in its slot
-WALL_UPGRADES = {"FORTIFIED_WALL": {"STONE_WALL": "FORTIFIED_WALL", "GATE": "FORTIFIED_GATE"}}   # technology: {wall: new} (#1326)
-TOWER_UPGRADES = {"GUARD_TOWER": {"WATCH_TOWER": "GUARD_TOWER"},   # technology: {tower: the tower of its values},
-                  "KEEP": {"GUARD_TOWER": "KEEP", "WATCH_TOWER": "KEEP"}}   # in the research order (#1374)
-REQUIRES = {"CASTLE_AGE": (2, ("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET")),   # n types of these buildings
-            "FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP", "DOCK")),
-            "IMPERIAL_AGE": (2, ("MONASTERY", "UNIVERSITY", "SIEGE_WORKSHOP"), ("CASTLE",))}   # or one of these alone
+WALL_UPGRADES = {r["name"]: r["walls"] for r in ROWS if "walls" in r}   # technology: {wall: new} (#1326)
+TOWER_UPGRADES = {r["name"]: r["towers"] for r in ROWS if "towers" in r}   # technology: {tower: the tower of its
+#                                                                    values}, in the research order (file order, #1374)
+REQUIRES = {r["name"]: (r["requires"][0], *map(tuple, r["requires"][1:]))   # an age: n types of these buildings, or
+            for r in ROWS if "requires" in r}                      # one of the third list alone
 TECH_AGE = {r["name"]: r["age"] for r in ROWS if "age" in r}       # the age of a technology (build.AGE)
 AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age after each researched age (index: ages)
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
-HOUSING = {"TOWN_CENTER": 5, "HOUSE": 5, "CASTLE": 20,            # population of a complete building, as in AoE2
-           "FOLWARK": 5,                                          # (#1874)
-           "KREPOST": 20}                                         # (#1872)
+HOUSING = {r["name"]: r["housing"] for r in BUILDING_ROWS if "housing" in r}   # population of a complete building
 LIMIT = 200                                                        # the AoE2 population limit
 REPEAT = 256                                                       # researches of one technology: "going above and beyond"
 CENSUS = 2.0                                                       # AoE2 seconds between two counts of the live units
@@ -259,7 +257,8 @@ MARK = 17.0                                                        # AoE2 second
 ROW = 9                                                            # the first slot of the queue row of the menu (#706)
 
 
-HULKS = ("CARRACK", "HULK", "WAR_HULK")                                     # melee warships: the blacksmith attack too (#1509)
+HULKS = tuple(r["name"] for r in UNIT_ROWS if r.get("melee_ship"))   # melee warships: the blacksmith attack too (#1509)
+ORDERS = {r["name"] for r in UNIT_ROWS if r.get("orders")}         # not military, but they take move orders (summon)
 
 
 def melee(name, s):
@@ -794,7 +793,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     if player not in (None, g.player):
         return uuid
     # they take move orders as a soldier (#1243, #1253); a ship sails with fleet.py (#1383)
-    if gather.military(name) or name in ("MONK", "MISSIONARY", "TRADE_CART") or units.is_boat(units.classify(name)):
+    if gather.military(name) or name in ORDERS or units.is_boat(units.classify(name)):
         g.soldiers[uuid] = name
         return uuid
     g.villagers[uuid] = gather.Villager(uuid, pos)

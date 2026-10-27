@@ -40,7 +40,7 @@ def test_arena_closes_each_player_in_a_wall_circle_with_forest_inside(players):
         inside |= np.hypot(x - tc["x"], y - tc["y"]) <= rmap.WALLS["arena"]
     assert not (t[~inside] == FOREST).any()                                     # open land between the circles
     for o in d["objects"]:                                                      # the start objects are inside
-        if o["name"] not in ("STONE_WALL", "TREE_OAK_FOREST"):
+        if o["name"] not in ("RELIC", "STONE_WALL", "TREE_OAK_FOREST"):        # a relic is Gaia (#2018)
             assert inside[int(o["x"]), int(o["y"])] and t[int(o["x"]), int(o["y"])] != FOREST, o
 
 
