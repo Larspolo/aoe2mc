@@ -199,12 +199,13 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tools/dashboard.py` | generic | None (`agent.toml`). |
 | `tools/feedback.py` | generic | None (`agent.toml`). |
 | `tools/health.py` | generic | None (`agent.toml`). |
+| `tools/metrics_log.py` | generic | None (the log of the status issue comments on the branch `metrics`, #1983). |
 | `tools/report.py` | generic | None (the run report of step 8; the release bar only with a project `tools/release.py`, #1963). |
 | `tools/tokens.py` | generic | None. |
 | `tools/operator_check.py` | generic | None (`agent.toml`). |
 | `tools/owner_tasks.py` | generic | None (`agent.toml`). |
 | `tools/unconflict.py` | generic | None (solves add-add conflicts for `unconflict.yml`, #1864). |
-| `tools/merge_jsonl.py` | generic | None (the merge driver `merge=jsonl`: JSON lines by "name", #2004). |
+| `tools/merge_jsonl.py` | generic | None (the merge driver `merge=jsonl`: JSON lines by "name", a line that both sides changed by key and list item, #2004, #2064). |
 | `tests/test_agent_config.py` | generic | None (a test of `tools/agent_config.py`). |
 | `tests/test_claim.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_claim_active_pr.py` | generic | None (a test of `tools/claim.py`). |
