@@ -1,0 +1,29 @@
+locked null
+villagers 6
+click PALISADE_WALL (24, 6) eye [98.5, 77.6, 26.5] cell (98, 26)
+click PALISADE_WALL (30, 6) eye [122.5, 77.6, 26.5] cell (122, 26)
+palisade {"sites": 7, "builders": ["to_site", "to_site", "to_site", "to_site", "to_site", "to_site"]}
+palisade done [35, 7, 7]
+click STONE_WALL (2, 20) eye [10.5, 74.3, 82.5] cell (10, 82)
+click STONE_WALL (45, 20) eye [182.5, 73.6, 82.5] cell (182, 82)
+stone {"sites": 44, "builders": ["to_site", "to_site", "to_site", "to_site", "to_site", "to_site"]}
+stone done [251, 44, 44]
+click GATE (25, 20) eye [102.5, 75.6, 82.5] cell (102, 82)
+gate {"sites": [["GATE", [92, 108, 80, 84]]], "builders": ["to_site", "to_site", "to_site", "to_site", "to_site", "to_site"]}
+gate done [30, 1, 1]
+click STONE_WALL (14, 24) eye [58.5, 74.3, 98.5] cell (58, 98)
+click STONE_WALL (20, 30) eye [82.5, 74.3, 122.5] cell (82, 122)
+diag {"sites": 7, "builders": ["to_site", "to_site", "to_site", "to_site", "to_site", "to_site"]}
+diag done [45, 7, 7]
+click GATE (17, 27) eye [70.5, 75.6, 110.5] cell (70, 110)
+diag gate {"sites": [["GATE", [64, 76, 104, 116]]]}
+diag gate done [20, 1, 1]
+bars closed true
+own start [100.0, 64.0, 74.0]
+own {"pos": [100.50004195781784, 64.0, 98.19255976577186], "opened": true, "through": true}
+bars closed after {"closed": true, "seconds": 0.0}
+enemy {"pos": [100.50001072701009, 64.0, 97.97428920901538], "stays": true, "bars": true}
+wall top before [73, 73, 69]
+wall top after [74, 74, 70]
+done
+rc=0
