@@ -467,7 +467,7 @@ def show(g, player, rect):
               + state(name))
              for name in trains(g, building) if repeatable(g, name) and unlocked(g, name) for slot, item, label in [ITEMS[name]]]
     items += [RALLY] if units_of(building) else []
-    items += [garrison.UNGARRISON] if getattr(g, "garrisons", {}).get(rect) else []   # only with units inside (#808)
+    items += [garrison.ungarrison(building)] if getattr(g, "garrisons", {}).get(rect) else []   # only with units inside (#808)
     if building == "MARKET":                                           # the buy and sell rows under the queue (#1286)
         import market                                                  # only for a market
         items += [(market.ROW + slot, *item) for slot, *item in market.items(g)]
@@ -539,7 +539,7 @@ def order(g, player, rect, slot, shift=False):
         g.command(f"tellraw {player} " + json.dumps({"text": "Right click the ground for the rally point.",
                                                       "color": "gray"}))
         return 0
-    if slot == garrison.UNGARRISON[0] and getattr(g, "garrisons", {}).get(rect):   # all units come out (#808)
+    if slot == garrison.ungarrison(homes(g)[rect])[0] and getattr(g, "garrisons", {}).get(rect):   # all units come out (#808)
         garrison.out(g, rect)
         show(g, player, rect)
         return 0
