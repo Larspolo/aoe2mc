@@ -17,8 +17,9 @@ Walls (#1322): a wall (WALLS) takes two clicks, the start and the end of the lin
 the line (aoe2mc.wall_tiles, as the replay) is one construction site with the cost of one tile; a tile on a building,
 a tree or water is left out. The builders of a tile go on to the next unfinished tile of the line (gather.Gather.step).
 Gates (#1324): a gate (GATES) goes on 4 own wall tiles in a straight line along x or z, as in AoE2 (4 x 1 tiles). It
-replaces them: a wall site goes (its builders go on to the gate), a complete wall tile loses its target. The gate stays
-closed for now.
+replaces them: a wall site goes (its builders go on to the gate), a complete wall tile loses its target.
+A complete gate gets doors across its passage (#1325, doors()): on Paper the plugin opens them while an own or allied
+unit is near (aoe gate, Gates.java), as the AoE2 gate (the decision #1323).
 Fortified Wall (#1326, train.WALL_UPGRADES): the new and the complete own stone walls and gates get the fortified design
 and its hit points (design(), upgrade()); a damaged one keeps its lost hit points, as in AoE2.
 """
@@ -150,6 +151,8 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
     ), 3)                                                              # (0: Dark)
 WALLS = ("PALISADE_WALL", "STONE_WALL")                            # a line of 1-tile sites with two clicks (#1322)
 GATES = ("GATE", "PALISADE_GATE")                                  # on 4 own wall tiles in a line (#1324)
+DOORS = {"GATE": "dark_oak_door",                                      # the doors of a gate (#1325): wooden, so the units
+         "PALISADE_GATE": "spruce_door"}                               # of the team plan their paths through them
 NEEDS = {"BOMBARD_CANNON": "CHEMISTRY",                            # a unit or building after a technology (#1380)
          "BOMBARD_TOWER": "BOMBARD_TOWER_TECH",                    # (#1375)
          "CANNON_GALLEON": "CHEMISTRY"}                            # (#1484)
@@ -577,6 +580,8 @@ def rise(g, site, work):
             g.map.blocked -= {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
         g.map.building(site["name"], site["footprint"], (x0 // T + s // 2, z0 // T + s // 2), site["player"] == g.player)
         target(g, site)
+        if site["name"] in GATES:
+            doors(g, site)
     return site["progress"] >= 1
 
 
@@ -642,11 +647,32 @@ def upgrade(g, site, old, redraw=True):
     for c in Replay(g, g.data, getattr(g.game, "version", VERSION_NAME)).building(
             name, site["player"], (x0 + x1) / 2 / T, (z0 + z1) / 2 / T, along_z=z1 - z0 > x1 - x0) * redraw:   # as found()
         g.command(c)
+    if redraw and site["name"] in GATES:                               # the redraw cleared the doors
+        doors(g, site)
     uuid = combat.target_uuid([x0, z0, x1, z1])
     box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
     for c in [c for c in combat.building(uuid, name, site["player"], box, T, s=new) if c.startswith("aoe building ")] \
             + [f"scoreboard players set {uuid} aoe_hp {min(new.hp, hp + new.hp - old.hp)}", combat.label_command(uuid, name)]:
         g.command(c)
+
+
+def doors(g, site):
+    """Closed doors across the passage of the complete gate site, 2 blocks high on the walk level: one door on each
+    block of the middle 2 tiles, in the middle of the wall depth. On Paper the plugin opens them while a unit of the
+    player or an ally is within 2 blocks (aoe gate, #1325)."""
+    x0, x1, z0, z1 = site["footprint"]
+    T, along_z = g.map.T, z1 - z0 > x1 - x0
+    cells = [(x0 + T // 2, z) for z in range(z0 + T, z1 - T)] if along_z else [(x, z0 + T // 2) for x in range(x0 + T, x1 - T)]
+    y = max((v for x in range(x0, x1) for z in range(z0, z1) if (v := g.map.y(x, z)) is not None), default=None)
+    if y is None or not cells:
+        return
+    for i, (x, z) in enumerate(cells):                                 # pairs of double doors
+        for half in ("lower", "upper"):
+            g.command(f"setblock {x} {y + (half == 'upper')} {z} minecraft:{DOORS[site['name']]}[facing="
+                      f"{'east' if along_z else 'south'},half={half},hinge={('left', 'right')[i % 2]}]")
+    if getattr(g, "paper", False):
+        (ax, az), (bx, bz) = cells[0], cells[-1]
+        g.command(f"aoe gate p{site['player']} {ax} {y} {az} {bx} {y + 1} {bz}")
 
 
 def target(g, site):

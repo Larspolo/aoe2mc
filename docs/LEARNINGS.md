@@ -56,6 +56,7 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - A technology ticket can name a technology that AoE2 DE removed (Supplies, update 141935, #1418): read the `Removal` field and the `Required` field of the infobox first. A missing `Required` technology (Fishing Lines for Gillnets) goes into the same PR, else the item is never in the menu (#1439).
 - The environment has no `pytest-xdist`: `python3 -m pytest -n 4` stops at once with "unrecognized arguments: -n" (rc 4). Run the fast suite without `-n` (about 4 minutes) in the background (#1389).
 - A technology ticket can name an old building: read the `Building` field of the infobox (`{{tt|NEW|OLD before ...}}`). Update 169123 (The Last Chieftains) moved Careening and Dry Dock from the dock to the university, with new costs and effects (#1441).
+- The auto mode also denies the close of an answered decision ticket (#1323, 2026-10-27): comment the decision, write it into the body of the waiting ticket and remove the decision from its "Depends on:" line (so it is a candidate at once), then add `needs-human` to the decision ticket for the close.
 
 ## Code
 
