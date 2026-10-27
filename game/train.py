@@ -330,6 +330,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          if barding(s) else s,
          "PLATE_MAIL_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 2)
          if "infantry" in s.classes else s,
+         "RECURVE_BOW": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if {"archer", "cavalry"} <= set(s.classes) else s,   # the Magyars (#2045)
          "REDEMPTION": lambda name, s: s,                          # monks convert buildings and siege: monk.py
          "RING_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 2)
          if "archer" in s.classes else s,
