@@ -143,6 +143,10 @@ TWO_TYPES = {("train.jsonl", "effect"): (dict, str)}
 MIXED = {("train.jsonl", "effect")}       # a function name or a change of the values (train.effect(), #2098)
 
 
+# The keys with two types by design: an "effect" is data or the name of a function of game/train.py (#2098, #2122)
+TWO_TYPES = {("train.jsonl", "effect"): (dict, str)}
+
+
 @pytest.mark.parametrize("name", sorted(NAMES))
 def test_each_key_has_one_type(name):
     types = {}
