@@ -117,6 +117,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "GUARD_TOWER": {"food": 100, "wood": 250},                    # the upgrade (AoE2 DE wiki "Watch Tower")
          "GUILDS": {"food": 300, "gold": 200},
          "HAND_CART": {"food": 300, "wood": 200},                      # the Castle Age (AoE2 DE wiki, #1453)
+         "HOARDINGS": {"food": 400, "wood": 400},                      # the castle, Imperial Age (#1456)
          "HEAVY_PLOW": {"food": 125, "wood": 125},                     # the Castle Age (AoE2 DE wiki, #1424)
          "HEAVY_SCORPION": {"wood": 75, "gold": 75},
          "HEAVY_SCORPION_UPGRADE": {"food": 800, "wood": 750},
@@ -217,6 +218,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "GUARD_TOWER": 30,
                "GUILDS": 50,
                "HAND_CART": 55,
+               "HOARDINGS": 75,
                "HEAVY_PLOW": 40,
                "HEAVY_SCORPION": 30,
                "HEAVY_SCORPION_UPGRADE": 50,
@@ -287,7 +289,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                          "IRON_CASTING", "BODKIN_ARROW",                        # (#1395)
                          "BLAST_FURNACE"),                                      # the Imperial Age (#1451)
           "CASTLE": ("TREBUCHET",                                               # and the unique unit: trains() (#708, #1351)
-                     "CONSCRIPTION"),                                           # (#1455)
+                     "CONSCRIPTION",                                            # (#1455)
+                     "HOARDINGS"),                                              # (#1456)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES", "LIGHT_CAVALRY_UPGRADE", "KNIGHT",   # (#671, #940, #1396, #1397)
                      "HUSBANDRY"),                                              # (#1416)
           "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS",   # (#1326, #1374, #1352)
@@ -402,6 +405,7 @@ TECHS = {"ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bon
          "GUARD_TOWER": lambda name, s: s,                         # the towers of the player: TOWER_UPGRADES
          "GUILDS": lambda name, s: s,                              # the trading fee: market.FEES
          "HAND_CART": lambda name, s: s,                           # no combat change: gather.CARRY and gather.PACE
+         "HOARDINGS": lambda name, s: s._replace(hp=round(s.hp * 1.21)) if name == "CASTLE" else s,   # build.values
          "HEAVY_PLOW": lambda name, s: s,                          # an economy technology: gather.FARM_TECHS, FOOD_CARRY
          "HEAVY_SCORPION_UPGRADE": lambda name, s: s,
          "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
@@ -503,6 +507,7 @@ TECH_AGE = {                                                       # the age of 
     "GUARD_TOWER": 2,
     "GUILDS": 3,
     "HAND_CART": 2,
+    "HOARDINGS": 3,
     "HEAVY_PLOW": 2,
     "HEAVY_SCORPION_UPGRADE": 3,
     "HORSE_COLLAR": 1,
@@ -548,6 +553,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "ELITE_SKIRMISHER": (1, "drowned_spawn_egg", "Elite Skirmisher"),
          "ELITE_SKIRMISHER_UPGRADE": (3, "book", "Elite Skirmisher"),
          "HAND_CART": (3, "book", "Hand Cart"),                       # the slot of Wheelbarrow (AFTER)
+         "HOARDINGS": (3, "book", "Hoardings"),                       # after Conscription
          "HEAVY_PLOW": (0, "book", "Heavy Plow"),                     # the slot of Horse Collar (AFTER)
          "HEAVY_SCORPION": (2, "crossbow", "Heavy Scorpion"),
          "HEAVY_SCORPION_UPGRADE": (5, "book", "Heavy Scorpion"),
@@ -688,6 +694,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "GUARD_TOWER": "Watch towers +480 HP, +2 attack, +1/+1 armor.",
         "GUILDS": "Market trading fee 15 %.",
         "HAND_CART": "Villagers +10 % speed, +50 % carry.",
+        "HOARDINGS": "Castles +21 % HP.",
         "HEAVY_PLOW": "Farms +125 food; farmers carry +1 food.",
         "HEAVY_SCORPION": "Siege. Shoots bolts; weak vs. cavalry.",
         "HEAVY_SCORPION_UPGRADE": "Upgrades scorpions to heavy scorpions.",
