@@ -55,6 +55,8 @@
 {"name": "WILD_BOAR", "scatter": [1, 2]}
 {"name": "DEER", "scatter": [3, 1]}
 {"name": "SHORE_FISH", "shore_fish": true}
+{"name": "GREY_WOLF", "wolves": ["gold_rush", 2, 1]}
+{"name": "GREY_WOLF", "wolves": ["highland", 0, 1]}
 {"name": "FISH_SALMON", "fish": ["highland", 0, 4]}
 {"name": "FISH_DORADO", "fish": ["islands", 3, 6]}
 {"name": "FISH_TUNA", "fish": ["mediterranean", 2, 4]}
