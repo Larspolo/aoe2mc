@@ -2,6 +2,11 @@
 # Install the Python dependencies in a Claude Code cloud session, so that tests and lint work.
 set -euo pipefail
 
+# The merge driver of game/data/*.jsonl (.gitattributes, #2004): merge the lines by "name", not by union. Also local.
+# A copy in the git directory: an older branch that merges main does not have tools/merge_jsonl.py in its tree.
+( cd "${CLAUDE_PROJECT_DIR:-.}" && gd=$(git rev-parse --path-format=absolute --git-common-dir) &&
+  cp tools/merge_jsonl.py "$gd/" && git config merge.jsonl.driver "python3 $gd/merge_jsonl.py %O %A %B" ) || true
+
 if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
   exit 0
 fi

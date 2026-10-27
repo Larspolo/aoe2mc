@@ -9,6 +9,7 @@
 {"name": "BLACKSMITH", "hp": 1800, "attack": 0, "melee": 1, "pierce": 8, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 6, "note": "the Feudal Age values of the wiki (#1403)"}
 {"name": "LUMBER_CAMP", "hp": 600, "attack": 0, "melee": 0, "pierce": 7, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 6}
 {"name": "MILL", "hp": 600, "attack": 0, "melee": 0, "pierce": 7, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 6}
+{"name": "FOLWARK", "hp": 1000, "attack": 0, "melee": 0, "pierce": 7, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 6, "note": "the Dark Age values of the wiki (#1874)"}
 {"name": "MINING_CAMP", "hp": 600, "attack": 0, "melee": 0, "pierce": 7, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 6}
 {"name": "UNIVERSITY", "hp": 2100, "attack": 0, "melee": 2, "pierce": 9, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 6, "note": "the Castle Age values"}
 {"name": "BOMBARD_TOWER", "hp": 2220, "attack": 120, "melee": 3, "pierce": 9, "range": 8, "reload": 6.0, "bonus": {"ship": 40}, "classes": ["building"], "sight": 10}
