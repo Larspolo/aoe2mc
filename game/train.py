@@ -235,6 +235,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_LEITIS_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
          "ELITE_MONASPA_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "ELITE_OBUCH_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
+         "ELITE_ORGAN_GUN_UPGRADE": lambda name, s: s,             # a new unit name: UPGRADES
          "ELITE_PLUMED_ARCHER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
          "ELITE_RATHA_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "ELITE_RATTAN_ARCHER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
@@ -375,6 +376,7 @@ UPGRADES = {                                                       # technology:
     "ELITE_LEITIS_UPGRADE": ("LEITIS", "ELITE_LEITIS"),   # the castle of the Lithuanians (#1746)
     "ELITE_MONASPA_UPGRADE": ("MONASPA", "ELITE_MONASPA"),   # the castle of the Georgians (#1755)
     "ELITE_OBUCH_UPGRADE": ("OBUCH", "ELITE_OBUCH"),   # the castle of the Poles (#1747)
+    "ELITE_ORGAN_GUN_UPGRADE": ("ORGAN_GUN", "ELITE_ORGAN_GUN"),   # the castle of the Portuguese (#1890)
     "ELITE_PLUMED_ARCHER_UPGRADE": ("PLUMED_ARCHER", "ELITE_PLUMED_ARCHER"),   # the castle of the Mayans (#1887)
     "ELITE_RATHA_UPGRADE": ("RATHA", "ELITE_RATHA"),   # the castle of the Bengalis (#1891)
     "ELITE_RATTAN_ARCHER_UPGRADE": ("RATTAN_ARCHER", "ELITE_RATTAN_ARCHER"),   # the castle of the Vietnamese (#1888)
