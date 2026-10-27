@@ -14,6 +14,7 @@ from test_train_menu import RALLY, SKIRM
 from game import build, combat, gather, run, train
 
 CAVA = " 4:gray_dye:Cavalry Archer:40 wood · 60 gold · 37 s · Needs the Castle Age"   # gray before the Castle Age (#1397)
+HAND = " 18:gray_dye:Hand Cannoneer:45 food · 50 gold · 34 s · Needs the Imperial Age"   # (#1506)
 
 
 def setup(wood=25, gold=45, done=True):
@@ -47,7 +48,7 @@ def test_a_right_click_on_the_archery_range_opens_its_menu():
     server, g = setup(done=None)
     for name in g.clicks():
         g.click(name)
-    assert menus(server) == ["aoe menu Steve Archery Range 0:skeleton_spawn_egg:Archer:25 wood · 45 gold · 35 s · queue 0/15" + SKIRM + CAVA + RALLY]
+    assert menus(server) == ["aoe menu Steve Archery Range 0:skeleton_spawn_egg:Archer:25 wood · 45 gold · 35 s · queue 0/15" + SKIRM + CAVA + HAND + RALLY]
 
 
 def test_no_menu_at_an_archery_range_that_is_not_complete():
@@ -68,7 +69,7 @@ def test_a_shift_click_queues_5():
     server, g = setup(wood=1000, gold=1000)
     rect = train.open_menu(g, "Steve", (11, 3))
     assert train.order(g, "Steve", rect, 0, shift=True) == 5 and g.stock["gold"] == 1000 - 5 * 45
-    assert menus(server)[-1].endswith("queue 5/15" + CAVA + RALLY)
+    assert menus(server)[-1].endswith("queue 5/15" + CAVA + HAND + RALLY)
 
 
 def test_the_archer_appears_after_35_seconds_and_shoots_from_its_range():

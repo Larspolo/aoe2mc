@@ -140,6 +140,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "GUILDS": {"food": 300, "gold": 200},
          "HALBERDIER": {"food": 35, "wood": 25},                       # AoE2 DE wiki (#1499)
          "HALBERDIER_UPGRADE": {"food": 300, "gold": 600},             # the Imperial Age (#1499)
+         "HAND_CANNONEER": {"food": 45, "gold": 50},                  # the Imperial Age, after Chemistry (#1506)
          "HAND_CART": {"food": 300, "wood": 200},                      # the Castle Age (AoE2 DE wiki, #1453)
          "HEAVY_CAVALRY_ARCHER": {"wood": 40, "gold": 60},            # AoE2 DE wiki (#1500)
          "HEAVY_CAVALRY_ARCHER_UPGRADE": {"food": 900, "gold": 500},  # the Imperial Age (#1500)
@@ -283,6 +284,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "GUILDS": 50,
                "HALBERDIER": 22,
                "HALBERDIER_UPGRADE": 50,
+               "HAND_CANNONEER": 34,
                "HAND_CART": 55,
                "HEAVY_CAVALRY_ARCHER": 37,
                "HEAVY_CAVALRY_ARCHER_UPGRADE": 50,
@@ -375,7 +377,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                             "THUMB_RING",                                                     # (#1421)
                             "PARTHIAN_TACTICS",                                               # (#1505)
                             "ARBALESTER_UPGRADE",                                             # the Imperial Age (#1500)
-                            "HEAVY_CAVALRY_ARCHER_UPGRADE"),                                  # (#1500)
+                            "HEAVY_CAVALRY_ARCHER_UPGRADE",                                   # (#1500)
+                            "HAND_CANNONEER"),                                                # after Chemistry: build.NEEDS (#1506)
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING",            # (#675, #725, #724, #937, #938)
                          "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR",
                          "CHAIN_MAIL_ARMOR", "LEATHER_ARCHER_ARMOR", "CHAIN_BARDING_ARMOR",   # the Castle Age (#1394)
@@ -447,9 +450,10 @@ MILITIA_LINE = ("MILITIA", "MAN_AT_ARMS", "LONG_SWORDSMAN", "TWO_HANDED_SWORDSMA
 
 
 def chemistry(name, s):
-    """Chemistry (AoE2 DE, wiki): +1 attack for archers, ranged siege units and buildings that shoot. A building gets it
-    when it is complete (build.target, build.values)."""
+    """Chemistry (AoE2 DE, wiki): +1 attack for archers, ranged siege units and buildings that shoot, not for gunpowder
+    units (#1506). A building gets it when it is complete (build.target, build.values)."""
     shoots = "archer" in s.classes or "siege" in s.classes and s.range > 0 or "building" in s.classes and s.attack > 0
+    shoots = shoots and "gunpowder" not in s.classes
     return s._replace(attack=s.attack + 1) if shoots else s
 
 
@@ -766,6 +770,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "ELITE_SKIRMISHER_UPGRADE": (3, "book", "Elite Skirmisher"),
          "HALBERDIER": (1, "zombie_spawn_egg", "Halberdier"),
          "HALBERDIER_UPGRADE": (3, "book", "Halberdier"),             # the slot of Pikeman (AFTER)
+         "HAND_CANNONEER": (MORE, "pillager_spawn_egg", "Hand Cannoneer"),   # units.classify: a pillager
          "HAND_CART": (3, "book", "Hand Cart"),                       # the slot of Wheelbarrow (AFTER)
          "HEAVY_CAVALRY_ARCHER": (4, "skeleton_horse_spawn_egg", "Heavy Cavalry Archer"),
          "HEAVY_CAVALRY_ARCHER_UPGRADE": (6, "book", "Heavy Cavalry Archer"),   # slot 5: Thumb Ring
@@ -963,6 +968,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "GUILDS": "Market trading fee 15 %.",
         "HALBERDIER": "Infantry. Strong vs. cavalry; weak vs. archers.",
         "HALBERDIER_UPGRADE": "Upgrades pikemen to halberdiers.",
+        "HAND_CANNONEER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "HAND_CART": "Villagers +10 % speed, +50 % carry.",
         "HEAVY_CAVALRY_ARCHER": "Fast archer. Strong vs. infantry; weak vs. camels.",
         "HEAVY_CAVALRY_ARCHER_UPGRADE": "Upgrades cavalry archers to heavy ones.",
