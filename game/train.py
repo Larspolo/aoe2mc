@@ -68,7 +68,7 @@ import civs  # noqa: E402
 import garrison  # noqa: E402
 import menu  # noqa: E402
 
-COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   # as in AoE2
+COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   # as in AoE2
          "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}, "FEUDAL_AGE": {"food": 500},
          "BATTERING_RAM": {"wood": 160, "gold": 75},
          "BOMBARD_TOWER_TECH": {"food": 800, "wood": 400},           # the university, after Chemistry (#1375)
@@ -112,7 +112,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "LONG_SWORDSMAN": {"food": 50, "gold": 20},
          "LONG_SWORDSMAN_UPGRADE": {"food": 150, "gold": 65},
          "MAMELUKE": {"food": 55, "gold": 85},
-         "MAN_AT_ARMS": {"food": 60, "gold": 20},
+         "MAN_AT_ARMS": {"food": 50, "gold": 20},                       # AoE2 DE wiki (#1417)
          "MASONRY": {"food": 150, "wood": 175},                       # the university, Castle Age (#1398)
          "MAN_AT_ARMS_UPGRADE": {"food": 100, "gold": 40},
          "MANGONEL": {"wood": 160, "gold": 135},
