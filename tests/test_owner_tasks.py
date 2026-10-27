@@ -10,7 +10,7 @@ def issue(n, title, labels=("needs-human",), body="", pr=False):
 
 
 def test_lists_needs_human_without_muted_decisions_first():
-    issues = [issue(10, "Check the bot of player 2 in Minecraft"),
+    issues = [issue(10, "Check the bot of player 2 in the game"),
               issue(11, "Decide: the order of the cheats", ("needs-human", "feature")),
               issue(12, "Muted thing", ("needs-human", "muted")),
               issue(13, "Not waiting", ("P2",)),

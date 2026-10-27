@@ -70,21 +70,16 @@ The file `.github/labels.txt` defines the labels. The Labels workflow creates th
   It needs the Claude Code CLI and the GitHub CLI (`gh auth login`).
 - **By hand**: open a Claude Code session in this repository and type `/autopilot`.
 
-## Network for Minecraft tests
+## Network for the tests
 
-The agent starts a headless Minecraft server for tests. For this, the environment allows these hosts
-(done in #12; cloud environment menu in the session title bar → Edit → Network access → Allowed domains):
-
-    piston-meta.mojang.com
-    piston-data.mojang.com
-    libraries.minecraft.net
-
+Some tests of the project need hosts outside the package managers. `docs/ENVIRONMENT.md` (section "Network") lists
+them. Add them in the cloud environment menu in the session title bar → Edit → Network access → Allowed domains.
 Keep "Allow package managers" on. Steps: https://code.claude.com/docs/en/cloud-environments#network-access
 
 ## Setup script (faster start)
 
 Use one cloud environment for all runs. All tickets use the same tools.
-`scripts/cloud-setup.sh` installs Java 25, the Python packages and the Minecraft server jars.
+`scripts/cloud-setup.sh` installs the tools of the tests (`docs/ENVIRONMENT.md`, section "Setup script").
 The cloud keeps the result as a snapshot for about 7 days, or until you change the script or the network
 settings. Then the script runs again one time. To use it: cloud environment menu in the session title bar → Edit →
 **Setup script** → paste the content of `scripts/cloud-setup.sh` → **Save**. When the file changes, the agent
@@ -108,9 +103,9 @@ time). The scheduled task also starts one run each hour. To stop all runs: add `
 ## CI and the merge
 
 The repository is public, so GitHub Actions minutes are free (#370). CI runs only the quick checks on each PR (lint
-and fast tests, about 1 minute), so that a PR merges soon. The full suite (slow tests, Minecraft tests, package)
+and fast tests, about 1 minute), so that a PR merges soon. The full suite (slow tests, server tests, package)
 runs each night on `main` (your decision, 2026-10-26); start it by hand with Actions → CI → Run workflow → "full".
-The runs do the slow and Minecraft checks that a change needs in their own session. The workflow `automerge.yml`
+The runs do the slow and server checks that a change needs in their own session. The workflow `automerge.yml`
 merges an agent PR when its CI is green. It does not merge a PR with the label `hold`, or a PR whose ticket has `needs-human` or
 `blocked`. After each merge it starts CI on `main`; a red run on `main` opens a `P0` ticket, and the runs fix it first.
 To stop one PR, add `hold` to it. To stop all runs, add `paused` to the status issue.

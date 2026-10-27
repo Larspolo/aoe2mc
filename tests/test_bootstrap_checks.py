@@ -1,5 +1,5 @@
 """The starts of the bootstrap make CI, the SessionStart hook and the verify skill work in a new repository (#1897):
-lint and the fast tests pass right after the bootstrap."""
+lint and the fast tests pass right after the bootstrap, also the copied tests of the generic tools (#1900)."""
 import os
 import subprocess
 import sys
@@ -12,6 +12,8 @@ import bootstrap  # noqa: E402
 
 def test_lint_and_fast_tests_pass_after_the_bootstrap(tmp_path):
     bootstrap.bootstrap(str(tmp_path), "me/demo")
+    for cmd in (["git", "init", "-q"], ["git", "add", "-A"]):       # test_agent_config.py greps the git files
+        subprocess.run(cmd, cwd=tmp_path, check=True)
     for cmd in ([sys.executable, "-m", "ruff", "check", "."], [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider"]):
         r = subprocess.run(cmd, cwd=tmp_path, capture_output=True, text=True, timeout=120)
         assert r.returncode == 0, (cmd, r.stdout[-2000:], r.stderr[-2000:])

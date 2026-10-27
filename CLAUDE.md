@@ -71,7 +71,7 @@ Find code by function name with Grep. Do not read the large files from start to 
 
 Design work (buildings, objects, units, animals) follows `docs/DESIGN.md`. Do design tickets with the `design` skill.
 
-- **Minecraft features first** (owner rule, 2026-10-26). Before you write own logic, look for the Minecraft feature that
+- **Minecraft features first** (owner rule, 2026-10-26; the generic skills say "the platform features first"). Before you write own logic, look for the Minecraft feature that
   does the job, and use it: mob AI and path finding, riders (`Passengers`) and boats, the behavior class of a mob
   (passive, neutral, hostile: `docs/animals.md`), teams, scoreboards, attributes, block states, block entities, redstone,
   datapack functions. Write own logic only when Minecraft has no feature for it, and say why in the PR.
@@ -100,6 +100,7 @@ When you add an entry to a table keyed by a name (`STATS` ...), put each entry t
 own line, in alphabetical order, not at the end: parallel tickets that add to the same last line conflict (#655, #670).
 A new menu item of a building (cost, time, slot, help, age) is one new line in `game/data/train.jsonl`, at the end of
 its building block: `merge=union` keeps the lines of both sides, and `train.load()` stops on a name in two lines (#1702).
+The combat values of a new unit are one new line in `game/data/units.jsonl` (`combat.STATS`, #1912; epic #1909 moves more tables).
 The same for a new command of the Paper plugin: its line in the command list at the top of `AoePlugin.java` and its
 `if` block in `onCommand` go in alphabetical order of the command name, not after the last one (#795 and #813 conflicted).
 
