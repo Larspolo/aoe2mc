@@ -68,12 +68,14 @@ import menu  # noqa: E402
 COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   # as in AoE2
          "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}, "FEUDAL_AGE": {"food": 500},
          "BATTERING_RAM": {"wood": 160, "gold": 75},
+         "BOMBARD_TOWER_TECH": {"food": 800, "wood": 400},           # the university, after Chemistry (#1375)
          "BERSERK": {"food": 65, "gold": 20},
          "BLOODLINES": {"food": 150, "gold": 100},
          "CAPPED_RAM": {"wood": 160, "gold": 75},
          "CAPPED_RAM_UPGRADE": {"food": 300},
          "CASTLE_AGE": {"food": 800, "gold": 200},
          "CARAVAN": {"food": 200, "gold": 200},
+         "CHEMISTRY": {"food": 300, "gold": 200},                    # the university, Imperial Age (#1375)
          "CATAPHRACT": {"food": 70, "gold": 75},
          "CHU_KO_NU": {"wood": 40, "gold": 35},
          "DOUBLE_BIT_AXE": {"food": 100, "wood": 50},
@@ -125,9 +127,11 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "BATTERING_RAM": 36,
                "BERSERK": 14,
                "BLOODLINES": 50,
+               "BOMBARD_TOWER_TECH": 60,
                "CAPPED_RAM": 36,
                "CAPPED_RAM_UPGRADE": 50,
                "CARAVAN": 40,
+               "CHEMISTRY": 100,
                "CASTLE_AGE": 160,
                "CATAPHRACT": 20,
                "CHU_KO_NU": 16,
@@ -182,7 +186,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                          "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR"),
           "CASTLE": ("TREBUCHET",),                                             # and the unique unit: trains() (#708, #1351)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES"),                           # (#671, #940)
-          "UNIVERSITY": ("FORTIFIED_WALL", "SIEGE_ENGINEERS"),                 # (#1326, #1352)
+          "UNIVERSITY": ("FORTIFIED_WALL", "SIEGE_ENGINEERS", "CHEMISTRY", "BOMBARD_TOWER_TECH"),   # (#1326, #1352, #1375)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
           "MARKET": ("TRADE_CART", "CARAVAN", "GUILDS"),                       # (#1253, #1254)
           "MILL": ("HORSE_COLLAR",),                                            # (#726)
@@ -206,6 +210,13 @@ UNIQUE = {"BRITONS": "LONGBOWMAN", "PERSIANS": "WAR_ELEPHANT", "BYZANTINES": "CA
           "BENGALIS": "RATHA", "GURJARAS": "SHRIVAMSHA_RIDER", "ROMANS": "CENTURION", "ARMENIANS": "COMPOSITE_BOWMAN",
           "GEORGIANS": "MONASPA"}
 build.AGE |= dict.fromkeys(UNIQUE.values(), 2) | dict.fromkeys(("ELITE_" + n for n in UNIQUE.values()), 3)   # (#1082)
+def chemistry(name, s):
+    """Chemistry (AoE2 DE, wiki): +1 attack for archers, ranged siege units and buildings that shoot. A building gets it
+    when it is complete (build.target, train.building_stats)."""
+    shoots = "archer" in s.classes or "siege" in s.classes and s.range > 0 or "building" in s.classes and s.attack > 0
+    return s._replace(attack=s.attack + 1) if shoots else s
+
+
 def engineers(name, s):
     """Siege Engineers (AoE2 DE, wiki): a siege unit +20 % bonus attack against buildings (rounded), a ranged one
     +1 range."""
@@ -216,9 +227,11 @@ def engineers(name, s):
 
 
 TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
+         "BOMBARD_TOWER_TECH": lambda name, s: s,                  # the bombard tower in the build menu: build.NEEDS
          "CAPPED_RAM_UPGRADE": lambda name, s: s,                  # a new unit name: UPGRADES
          "CARAVAN": lambda name, s: s,                             # the walk speed: SPEEDS
          "CASTLE_AGE": lambda name, s: s,                          # an age: REQUIRES
+         "CHEMISTRY": chemistry,
          "DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
          "FERVOR": lambda name, s: s,                              # the walk speed: SPEEDS
          "FLETCHING": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if "archer" in s.classes else s,
@@ -257,13 +270,16 @@ UPGRADES = {                                                       # technology:
     "SIEGE_ONAGER_UPGRADE": ("ONAGER", "SIEGE_ONAGER"),
     "SIEGE_RAM_UPGRADE": ("CAPPED_RAM", "SIEGE_RAM"),
 }
-AFTER = {"SIEGE_ONAGER_UPGRADE": "ONAGER_UPGRADE", "SIEGE_RAM_UPGRADE": "CAPPED_RAM_UPGRADE"}   # the upgrade before it
+AFTER = {"BOMBARD_TOWER_TECH": "CHEMISTRY",                       # the technology before it
+         "SIEGE_ONAGER_UPGRADE": "ONAGER_UPGRADE",
+         "SIEGE_RAM_UPGRADE": "CAPPED_RAM_UPGRADE"}
 WALL_UPGRADES = {"FORTIFIED_WALL": {"STONE_WALL": "FORTIFIED_WALL", "GATE": "FORTIFIED_GATE"}}   # technology: {wall: new} (#1326)
 REQUIRES = {"CASTLE_AGE": (2, ("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET")),   # n types of these buildings
             "FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP", "DOCK")),
             "IMPERIAL_AGE": (2, ("MONASTERY", "UNIVERSITY", "SIEGE_WORKSHOP"), ("CASTLE",))}   # or one of these alone
 TECH_AGE = {                                                       # the age of a technology (build.AGE): hidden before
     "BLOODLINES": 1,
+    "BOMBARD_TOWER_TECH": 3,
     "CAPPED_RAM_UPGRADE": 3,
     "CARAVAN": 2,
     "DOUBLE_BIT_AXE": 1,
@@ -282,6 +298,7 @@ TECH_AGE = {                                                       # the age of 
     "SANCTITY": 2,
     "SCALE_BARDING_ARMOR": 1,
     "SCALE_MAIL_ARMOR": 1,
+    "CHEMISTRY": 3,
     "SIEGE_ENGINEERS": 3,
     "SIEGE_ONAGER_UPGRADE": 3,
     "SIEGE_RAM_UPGRADE": 3,
@@ -305,6 +322,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "ONAGER_UPGRADE": (4, "book", "Onager"),
          "SCOUT_CAVALRY": (0, "horse_spawn_egg", "Scout Cavalry"),
          "SIEGE_ENGINEERS": (1, "book", "Siege Engineers"),
+         "CHEMISTRY": (2, "book", "Chemistry"),
          "SIEGE_ONAGER": (1, "dispenser", "Siege Onager"),
          "SIEGE_ONAGER_UPGRADE": (4, "book", "Siege Onager"),
          "SIEGE_RAM": (0, "minecart", "Siege Ram"),
@@ -314,6 +332,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "BATTERING_RAM": (0, "minecart", "Battering Ram"),         # a siege unit is a minecart (units.siege)
          "BERSERK": (0, "zombie_spawn_egg", "Berserk"),
          "BLOODLINES": (1, "book", "Bloodlines"),
+         "BOMBARD_TOWER_TECH": (3, "book", "Bombard Tower"),
          "CARAVAN": (1, "book", "Caravan"),
          "CASTLE_AGE": (4, "bell", "Castle Age"),
          "CATAPHRACT": (0, "horse_spawn_egg", "Cataphract"),
@@ -358,6 +377,8 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "BATTERING_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
         "BERSERK": "Viking infantry. Heals itself.",
         "BLOODLINES": "Cavalry +20 HP.",
+        "BOMBARD_TOWER_TECH": "Lets you build bombard towers.",
+        "CHEMISTRY": "Archers, ranged siege, towers +1 attack.",
         "CAPPED_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
         "CAPPED_RAM_UPGRADE": "Upgrades battering rams to capped rams.",
         "CARAVAN": "Trade carts +20 % speed.",
@@ -695,6 +716,16 @@ def stats(g, name):
     for t in sorted(g.techs):
         for _ in range(count(g, t)):                                   # "going above and beyond" stacks (#968)
             s = TECHS[t](name, s)
+    return s
+
+
+def building_stats(g, name):
+    """The combat values of building name with the technologies of the player (TECHS: Chemistry), without the unit
+    bonuses of the civilization (civs.UNITS covers all units)."""
+    import combat                                                  # combat imports gather, gather imports this module
+    s = combat.stats(name)
+    for t in sorted(g.techs):
+        s = TECHS[t](name, s)
     return s
 
 
