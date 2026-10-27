@@ -23,8 +23,7 @@ speed, per age. train.stats applies them before the technologies; the walk speed
 this kind that the game program cannot use yet: the bonus damage (Bengali elephants and Sicilian units take less,
 Gurjara mounted units and Bohemian spearmen deal more, Bengali cavalry and Japanese mounted archers against some
 classes, Goth infantry against buildings), the Georgian and Polish regeneration, the elevation (Georgians, Tatars),
-the Lithuanian relics, the Roman infantry armor technologies, the Incan villagers with the infantry technologies,
-the Aztec and Slav monks, and the ships.
+the Lithuanian relics, the Aztec and Slav monks, and the ships.
 """
 import math
 import os
@@ -72,7 +71,9 @@ GROUPS = {g: (lambda f, g: lambda n, s: g in TAGS.get(n, ()) or f(n, s))(RULES.g
 # age]; what is a group of GROUPS (units), "buildings", "buildings but farms", "technologies", "ages", "BUILDING
 # technologies" (the technologies of the menu of that building, #1925) or a list of names; a float multiplies the cost
 # (0.0: free), an int adds to it; AoE2 rounds half up (35 × 0.75 = 26). "twice": the technologies whose effect it gets
-# twice (train.stats, #1561). "age_gifts": the resources that it gets at each new age (#1926).
+# twice (train.stats, #1561). "age_gifts": the resources that it gets at each new age (#1926). "smith_units": [group of
+# GROUPS, blacksmith technologies, times in the Dark, Feudal, Castle and Imperial Age]: the units of the group get the
+# effect of each technology that many times, also when the test of the effect does not cover them (smith, #2174).
 ROWS = table.load("civs.jsonl")
 
 
@@ -85,6 +86,7 @@ UNIQUE = {r["name"]: r["unique"] for r in ROWS if "unique" in r}
 UNITS = {r["name"]: [tuples(b) for b in r["units"]] for r in ROWS if "units" in r}
 COSTS = {r["name"]: [tuples(b) for b in r["costs"]] for r in ROWS if "costs" in r}
 TWICE = {r["name"]: tuples(r["twice"]) for r in ROWS if "twice" in r}
+SMITH_UNITS = {r["name"]: [tuples(b) for b in r["smith_units"]] for r in ROWS if "smith_units" in r}
 MISSING = {t: tuple(sorted(r["name"] for r in ROWS if t in r["missing"]))
            for t in sorted({t for r in ROWS for t in r["missing"]})}
 ELEPHANTS = tuple(r["name"] for r in ROWS if "BATTLE_ELEPHANT" not in r["missing"])   # the battle elephant (#1556)
@@ -156,6 +158,15 @@ def changes(g, name, s):
     import build                                                   # build imports gather, gather imports this module
     age = build.ages(g)
     return [(v, c[age]) for k, v, c in UNITS.get(civ(g), []) if GROUPS[k](name, s)]
+
+
+def smith(g, name, s):
+    """{technology: n} of SMITH_UNITS for unit name (combat.Stats s) in the age of g: the Inca villagers get the
+    infantry technologies from the Castle Age, the Macedonian cavalry the infantry armor, the Roman infantry twice the
+    infantry armor (AoE2 DE wiki, #2174)."""
+    import build                                                   # build imports gather, gather imports this module
+    age = build.ages(g)
+    return {t: c[age] for k, techs, c in SMITH_UNITS.get(civ(g), []) if c[age] and GROUPS[k](name, s) for t in techs}
 
 
 def units(g, name, s):
