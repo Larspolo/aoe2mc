@@ -173,13 +173,23 @@ MISSING = {"ARSON": ("GOTHS", "MUISCA", "ROMANS"),                              
            "DEMOLITION_SHIP": ("DANES", "KOREANS", "PORTUGUESE", "SAXONS", "VARANGIANS", "VIKINGS"),   # (#1481)
            "DRY_DOCK": ("BOHEMIANS", "BULGARIANS", "BURGUNDIANS", "CUMANS", "GEORGIANS", "GOTHS", "GURJARAS",
                         "HINDUSTANIS", "KHITANS", "MAPUCHE", "MONGOLS", "POLES", "ROMANS", "TEUTONS", "WEI"),   # (#1441)
+           "FAST_FIRE_SHIP": ("ARMENIANS", "BOHEMIANS", "BULGARIANS", "BURMESE", "CELTS", "CHINESE", "ETHIOPIANS",
+                              "GURJARAS", "HINDUSTANIS", "HUNS", "JURCHENS", "MUISCA", "PORTUGUESE", "SARACENS",
+                              "SAXONS", "SHU", "TUPI", "TURKS", "VIETNAMESE", "VIKINGS"),   # the wiki chart (#1483)
            "FORTIFIED_WALL": ("BULGARIANS", "CUMANS", "DANES", "GOTHS", "HUNS", "MAGYARS", "MALAY", "MAPUCHE", "MUISCA",
                               "PERSIANS", "SICILIANS", "TUPI", "WU"),
+           "GALLEON": ("AZTECS", "KHITANS", "MALIANS"),                                   # (#1483)
            "GAMBESONS": ("ACHAEMENIDS", "ATHENIANS", "BERBERS", "BOHEMIANS", "BURGUNDIANS", "CHINESE", "CUMANS",
                           "ETHIOPIANS", "GOTHS", "GURJARAS", "HINDUSTANIS", "HUNS", "INCAS", "ITALIANS", "KHMER",
                           "KOREANS", "LITHUANIANS", "MACEDONIANS", "MAGYARS", "MALAY", "MALIANS", "MAPUCHE", "MAYANS",
                           "MONGOLS", "MUISCA", "POLES", "PURU", "ROMANS", "SPARTANS", "TATARS", "THRACIANS", "TUPI",
                           "TURKS", "VIETNAMESE", "VIKINGS", "WEI", "WU"),
+           "HEAVY_DEMOLITION_SHIP": ("ACHAEMENIDS", "ATHENIANS", "AZTECS", "BENGALIS", "BOHEMIANS", "BULGARIANS",
+                                     "BURGUNDIANS", "BURMESE", "CUMANS", "DANES", "ETHIOPIANS", "GEORGIANS",
+                                     "HINDUSTANIS", "INCAS", "ITALIANS", "JAPANESE", "KHITANS", "KHMER", "KOREANS",
+                                     "LITHUANIANS", "MACEDONIANS", "MAGYARS", "MALAY", "MAPUCHE", "POLES",
+                                     "PORTUGUESE", "PURU", "ROMANS", "SAXONS", "SLAVS", "SPARTANS", "TATARS",
+                                     "THRACIANS", "TUPI", "VARANGIANS", "VIKINGS", "WEI"),   # the wiki chart (#1483)
            "HEAVY_PLOW": ("KHITANS",),                                     # (#1424)
            "HOARDINGS": ("AZTECS", "BENGALIS", "BOHEMIANS", "BULGARIANS", "BURMESE", "CHINESE", "ETHIOPIANS", "GOTHS",
                          "HUNS", "KHITANS", "KOREANS", "MALAY", "PORTUGUESE", "ROMANS", "TATARS", "VARANGIANS",
