@@ -121,6 +121,23 @@ Notes for the check of a world with the dedicated server:
   after a server run is not a format change.
 - The world icon stays `icon.png` in the world folder.
 
+## Fog
+
+Research of #1597 (26.3, real server and client). The fog distances are environment attributes:
+`minecraft:visual/fog_start_distance`, `fog_end_distance`, `sky_fog_end_distance` (and `fog_color`). A datapack can set
+them in a dimension type, a biome or a timeline (`timeline` registry, tag `#minecraft:in_overworld`, which the overworld
+dimension type names in `timelines`).
+
+- All three are worldgen registries: a datapack entry in any of them makes the single player client warn
+  "Worlds using Experimental Settings are not supported" (dimension type #1150, biome #218, timeline #1597).
+- No command sets an environment attribute. `/posteffect` (new in 26.x) has only `blur`, `creeper`,
+  `entity_outline`, `invert` and `spider`: no fog.
+- A timeline works without changing a vanilla file: `data/aoe2mc/timeline/fog.json` with `"clock": "minecraft:overworld"`
+  and one keyframe at tick 0 per track (`{"keyframes": [{"ticks": 0, "value": 4.0}]}`), plus
+  `data/minecraft/tags/timeline/in_overworld.json` with `{"values": ["aoe2mc:fog"]}`. Fog from 4 to 48 blocks gave a
+  thick haze. `tools/mc_check.py` loads it with no error, and a client that joins a server (vanilla or Paper) gets the
+  fog with no warning. The owner chooses where the converter uses it (#1625).
+
 ## Not checked
 
 - Book, sign and banner texts: aoe2mc does not write them now. Their text components are NBT since 1.21.5,
