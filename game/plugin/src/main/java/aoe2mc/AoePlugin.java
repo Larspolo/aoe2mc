@@ -84,6 +84,10 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              0, #1201) and 1 for each garrisoned villager or foot archer (#1113,
  *                                              game/garrison.py); 0: it does not shoot. Default 1
  *   aoe attack <selector> <target selector>    Mob#setTarget: the mob attacks with its own AI
+ *   aoe gate <team> <x0> <y0> <z0> <x1> <y1> <z1>
+ *                                              a gate of the team (#1325, Gates.java): its doors in the box open while
+ *                                              an own or allied unit is near; the units of the team plan their paths
+ *                                              through its closed doors
  *   aoe goals <selector>                       the goals of the first unit (#436), for checks
  *   aoe hide <players> <uuid> ...              Player#hideEntity: the players do not see these entities, also a
  *                                              player that joins later (#1302: the enemy units out of sight in the
@@ -223,6 +227,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Deaths deaths = new Deaths(this);
     private final Alerts alerts = new Alerts(this, AoePlugin::side);   // "under attack" for the team of the target (#1231)
     private final Minimap minimap = new Minimap(this);
+    private final Gates gates = new Gates();                           // the gates of the game program (#1325)
     private final Viewer viewer = new Viewer(this);                 // the game mode switch of a replay viewer (#910)
     private final Border border = new Border();
 
@@ -716,6 +721,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, this::watch, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, this::towers, 2L, 2L);
         Bukkit.getScheduler().runTaskTimer(this, this::hold, 4L, 4L);
+        Bukkit.getScheduler().runTaskTimer(this, gates::tick, Gates.PERIOD, Gates.PERIOD);
         Bukkit.getPluginManager().registerEvents(this, this);
         Bukkit.getPluginManager().registerEvents(cheats, this);
         Bukkit.getPluginManager().registerEvents(deaths, this);
@@ -1716,6 +1722,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Destroy: " + n + " buildings");
             return true;
         }
+        if (args.length == 8 && args[0].equals("gate")) {              // the doors of a gate (#1325)
+            return gates.command(sender, args);
+        }
         if ((args.length == 2 || args.length == 4 || args.length == 7) && args[0].equals("minimap")) {   // #1237, #1238
             return minimap.command(sender, args);
         }
@@ -1744,6 +1753,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 mob.setTarget(null);
                 if (rider(mob) != null) {
                     rider(mob).setTarget(null);
+                }
+                if (gates.any()) {                                     // through the doors of an own gate (#1325)
+                    mob.getPathfinder().setCanOpenDoors(gates.opens(mob));
                 }
                 mob.getPathfinder().moveTo(goal, speed);
                 orders.put(mob.getUniqueId(), new Order(goal, speed));

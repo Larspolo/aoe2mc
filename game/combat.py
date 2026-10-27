@@ -65,7 +65,7 @@ STATS = {
     "HUSSAR": Stats(75, 7, 0, 2, 0, 1.9, {}, (CAV,)),
     "KNIGHT": Stats(100, 10, 2, 2, 0, 1.8, {}, (CAV,)),
     "CAVALIER": Stats(120, 12, 2, 2, 0, 1.8, {}, (CAV,)),
-    "PALADIN": Stats(160, 14, 2, 3, 0, 1.8, {}, (CAV,)),
+    "PALADIN": Stats(160, 14, 2, 3, 0, 1.9, {}, (CAV,)),                     # ROF 1.9: the wiki infobox (#1501)
     "CAMEL_RIDER": Stats(100, 6, 0, 0, 0, 2.0, {CAV: 9}, (CAM,)),
     "HEAVY_CAMEL_RIDER": Stats(120, 7, 0, 0, 0, 2.0, {CAM: 9, CAV: 18}, (CAM,)),
     "IMPERIAL_CAMEL_RIDER": Stats(140, 8, 0, 0, 0, 1.667, {"building": 2, CAM: 9, CAV: 18}, (CAM,)),
@@ -314,6 +314,7 @@ SIGHT = {
     "MINING_CAMP": 6,
     "MONASTERY": 6,
     "OUTPOST": 4,
+    "PALADIN": 5,
     "SIEGE_WORKSHOP": 6,
     "STABLE": 6,
     "TOWN_CENTER": 8,

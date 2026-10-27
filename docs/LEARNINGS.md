@@ -57,6 +57,7 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - The environment has no `pytest-xdist`: `python3 -m pytest -n 4` stops at once with "unrecognized arguments: -n" (rc 4). Run the fast suite without `-n` (about 4 minutes) in the background (#1389).
 - A technology ticket can name an old building: read the `Building` field of the infobox (`{{tt|NEW|OLD before ...}}`). Update 169123 (The Last Chieftains) moved Careening and Dry Dock from the dock to the university, with new costs and effects (#1441).
 - The wiki availability chart (`{{AoE2 tech availability`) of a technology: `0` = the civ does not have it, `1`, `+` or `-` = it has it; `Default` is the value of each civ not in the list. For `civs.MISSING`, take the civs with `0` (with `Default = 0`: all civs minus the listed ones, #1504).
+- The auto mode also denies the close of an answered decision ticket (#1323, 2026-10-27): comment the decision, write it into the body of the waiting ticket and remove the decision from its "Depends on:" line (so it is a candidate at once), then add `needs-human` to the decision ticket for the close.
 
 ## Code
 

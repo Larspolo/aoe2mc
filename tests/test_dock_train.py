@@ -77,7 +77,7 @@ def test_a_click_on_the_land_sends_the_ship_to_the_water_next_to_it():
     uuid = trained(server, g)
     goal = fleet.order(g, {uuid}, (12, 5))[uuid]
     assert g.map.wet(*goal) and goal == (14, 5)                         # the nearest water cell
-    assert fleet.order(g, {uuid}, (3, 5)) == {}                        # far from the water: no order
+    assert fleet.order(g, {uuid}, (3, 5)) == {uuid: (14, 5)}          # far from the water: the nearest water (#1515)
 
 
 def test_the_look_at_the_water_picks_the_water_cell_and_the_selection_sails_there():

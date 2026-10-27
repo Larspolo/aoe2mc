@@ -96,11 +96,15 @@ def pick(g, eye, d, reach=64):
 
 def goals(g, cell, n):
     """n water cells (Map.wet) for n ships at the clicked block cell: the nearest ones to it, the cell itself first.
-    A land cell: the water within NEAR tiles of it. [] when there is none."""
+    A land cell: the water within NEAR tiles of it, else the water nearest to it (AoE2 sails to the nearest shore,
+    #1515). [] when there is none."""
     r = max(math.isqrt(n) + 2, NEAR * g.map.T if not g.map.wet(*cell) else 0)
-    cells = [(x, z) for x in range(cell[0] - r, cell[0] + r + 1) for z in range(cell[1] - r, cell[1] + r + 1)
-             if g.map.wet(x, z)]
-    return sorted(cells, key=lambda c: (math.dist(c, cell), c))[:n]
+    while True:
+        cells = [(x, z) for x in range(cell[0] - r, cell[0] + r + 1) for z in range(cell[1] - r, cell[1] + r + 1)
+                 if g.map.wet(x, z)]
+        if cells or r > 2 * g.map.n:
+            return sorted(cells, key=lambda c: (math.dist(c, cell), c))[:n]
+        r *= 2                                                         # a far click: a wider square, not for all clicks
 
 
 def order(g, uuids, cell):

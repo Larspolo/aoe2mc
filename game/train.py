@@ -102,6 +102,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "CHEMISTRY": {"food": 300, "gold": 200},                    # the university, Imperial Age (#1375)
          "CONSCRIPTION": {"food": 150, "gold": 150},                 # the castle, Imperial Age (#1455)
          "CATAPHRACT": {"food": 70, "gold": 75},
+         "CAVALIER": {"food": 60, "gold": 75},                          # AoE2 DE wiki (#1501)
+         "CAVALIER_UPGRADE": {"food": 300, "gold": 300},               # the Imperial Age (#1501)
          "CAVALRY_ARCHER": {"wood": 40, "gold": 60},                    # AoE2 DE wiki (#1397)
          "CHAIN_BARDING_ARMOR": {"food": 250, "gold": 150},             # AoE2 DE wiki (#1394)
          "CHAIN_MAIL_ARMOR": {"food": 200, "gold": 100},
@@ -173,6 +175,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "MONK": {"gold": 100},
          "ONAGER": {"wood": 160, "gold": 135},
          "ONAGER_UPGRADE": {"food": 800, "gold": 500},
+         "PALADIN": {"food": 60, "gold": 75},                           # AoE2 DE wiki (#1501)
+         "PALADIN_UPGRADE": {"food": 1300, "gold": 750},               # after Cavalier (#1501)
          "PADDED_ARCHER_ARMOR": {"food": 100},
          "PIKEMAN": {"food": 35, "wood": 25},
          "PIKEMAN_UPGRADE": {"food": 160, "gold": 90},
@@ -239,6 +243,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "CASTLE_AGE": 160,
                "CAREENING": 50,
                "CATAPHRACT": 20,
+               "CAVALIER": 30,
+               "CAVALIER_UPGRADE": 80,
                "CAVALRY_ARCHER": 37,
                "CHAIN_BARDING_ARMOR": 60,
                "CHAIN_MAIL_ARMOR": 55,
@@ -310,6 +316,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "MONK": 51,
                "ONAGER": 46,
                "ONAGER_UPGRADE": 75,
+               "PALADIN": 30,
+               "PALADIN_UPGRADE": 170,
                "PADDED_ARCHER_ARMOR": 40,
                "PIKEMAN": 22,
                "PIKEMAN_UPGRADE": 35,
@@ -376,7 +384,9 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                      "HOARDINGS"),                                              # (#1456)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES", "LIGHT_CAVALRY_UPGRADE", "KNIGHT",   # (#671, #940, #1396, #1397)
                      "HUSBANDRY",                                               # (#1416)
-                     "HUSSAR_UPGRADE"),                                         # the Imperial Age (#1502)
+                     "HUSSAR_UPGRADE",                                          # the Imperial Age (#1502)
+                     "CAVALIER_UPGRADE",                                        # (#1501)
+                     "PALADIN_UPGRADE"),                                        # after Cavalier (#1501)
           "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS",   # (#1326, #1374, #1352)
                          "MASONRY", "TREADMILL_CRANE",                          # (#1398, #1422) the Castle Age
                          "CHEMISTRY", "BOMBARD_TOWER_TECH",                     # (#1375)
@@ -487,6 +497,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "BODKIN_ARROW": fletching,
          "CAPPED_RAM_UPGRADE": lambda name, s: s,                  # a new unit name: UPGRADES
          "CARAVAN": lambda name, s: s,                             # the walk speed: SPEEDS
+         "CAVALIER_UPGRADE": lambda name, s: s,                    # a new unit name: UPGRADES
          "CASTLE_AGE": lambda name, s: s,                          # an age: REQUIRES
          "CAREENING": lambda name, s: s._replace(pierce=s.pierce + 1) if ship(name, s) else s,
          "CHAMPION_UPGRADE": lambda name, s: s,                    # a new unit name: UPGRADES
@@ -537,6 +548,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "MASONRY": masonry,                                       # the buildings of the player: build.values
          "MEDIUM_WARSHIPS": lambda name, s: s,                     # new unit names: UPGRADES
          "ONAGER_UPGRADE": lambda name, s: s,
+         "PALADIN_UPGRADE": lambda name, s: s,                     # a new unit name: UPGRADES
          "PADDED_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "archer" in s.classes else s,
          "PIKEMAN_UPGRADE": lambda name, s: s,
@@ -576,6 +588,7 @@ UPGRADES = {                                                       # technology:
     "ARBALESTER_UPGRADE": ("CROSSBOWMAN", "ARBALESTER"),
     "DEMOLITION_SHIP_UPGRADE": ("DEMOLITION_RAFT", "DEMOLITION_SHIP"),   # (#1483)
     "CAPPED_RAM_UPGRADE": ("BATTERING_RAM", "CAPPED_RAM"),           # the siege upgrades of AoE2 DE (#1352)
+    "CAVALIER_UPGRADE": ("KNIGHT", "CAVALIER"),
     "CHAMPION_UPGRADE": ("TWO_HANDED_SWORDSMAN", "CHAMPION"),
     "CROSSBOWMAN_UPGRADE": ("ARCHER", "CROSSBOWMAN"),
     "ELITE_CANNON_GALLEON_UPGRADE": ("CANNON_GALLEON", "ELITE_CANNON_GALLEON"),
@@ -591,6 +604,7 @@ UPGRADES = {                                                       # technology:
     "MAN_AT_ARMS_UPGRADE": ("MILITIA", "MAN_AT_ARMS"),
     "MEDIUM_WARSHIPS": (("GALLEY", "WAR_GALLEY"), ("FIRE_GALLEY", "FIRE_SHIP")),   # two lines (#1482): lines()
     "ONAGER_UPGRADE": ("MANGONEL", "ONAGER"),
+    "PALADIN_UPGRADE": ("CAVALIER", "PALADIN"),
     "PIKEMAN_UPGRADE": ("SPEARMAN", "PIKEMAN"),
     "SIEGE_ONAGER_UPGRADE": ("ONAGER", "SIEGE_ONAGER"),
     "SIEGE_RAM_UPGRADE": ("CAPPED_RAM", "SIEGE_RAM"),
@@ -618,6 +632,7 @@ AFTER = {"ARBALESTER_UPGRADE": "CROSSBOWMAN_UPGRADE",
          "KEEP": "GUARD_TOWER",
          "LEATHER_ARCHER_ARMOR": "PADDED_ARCHER_ARMOR",
          "LONG_SWORDSMAN_UPGRADE": "MAN_AT_ARMS_UPGRADE",
+         "PALADIN_UPGRADE": "CAVALIER_UPGRADE",
          "PLATE_BARDING_ARMOR": "CHAIN_BARDING_ARMOR",
          "PLATE_MAIL_ARMOR": "CHAIN_MAIL_ARMOR",
          "RING_ARCHER_ARMOR": "LEATHER_ARCHER_ARMOR",
@@ -646,6 +661,7 @@ TECH_AGE = {                                                       # the age of 
     "CHAIN_BARDING_ARMOR": 2,
     "CAREENING": 2,
     "CHAIN_MAIL_ARMOR": 2,
+    "CAVALIER_UPGRADE": 3,
     "CHAMPION_UPGRADE": 3,
     "CROSSBOWMAN_UPGRADE": 2,
     "DOUBLE_BIT_AXE": 1,
@@ -684,6 +700,7 @@ TECH_AGE = {                                                       # the age of 
     "MASONRY": 2,
     "MEDIUM_WARSHIPS": 2,
     "ONAGER_UPGRADE": 3,
+    "PALADIN_UPGRADE": 3,
     "PADDED_ARCHER_ARMOR": 1,
     "PIKEMAN_UPGRADE": 2,
     "PLATE_BARDING_ARMOR": 3,
@@ -776,6 +793,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "CASTLE_AGE": (4, "bell", "Castle Age"),
          "CAREENING": (8, "book", "Careening"),                     # the university has no rally point
          "CATAPHRACT": (0, "horse_spawn_egg", "Cataphract"),
+         "CAVALIER": (3, "horse_spawn_egg", "Cavalier"),             # the slot of the knight
+         "CAVALIER_UPGRADE": (5, "book", "Cavalier"),                 # the stable (#1501)
          "CAVALRY_ARCHER": (4, "skeleton_horse_spawn_egg", "Cavalry Archer"),
          "CHAIN_BARDING_ARMOR": (4, "book", "Chain Barding Armor"),    # the slot of the Feudal armor (AFTER)
          "CHAIN_MAIL_ARMOR": (1, "book", "Chain Mail Armor"),
@@ -826,6 +845,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "MANGONEL": (1, "dispenser", "Mangonel"),
          "MANGUDAI": (0, "skeleton_horse_spawn_egg", "Mangudai"),
          "MONK": (0, "evoker_spawn_egg", "Monk"),
+         "PALADIN": (3, "horse_spawn_egg", "Paladin"),               # the slot of the knight
+         "PALADIN_UPGRADE": (5, "book", "Paladin"),                   # the slot of Cavalier (AFTER)
          "PADDED_ARCHER_ARMOR": (3, "book", "Padded Archer Armor"),
          "PLATE_BARDING_ARMOR": (4, "book", "Plate Barding Armor"),   # the slot of the Feudal armor (AFTER)
          "PLATE_MAIL_ARMOR": (1, "book", "Plate Mail Armor"),
@@ -881,6 +902,8 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "CASTLE_AGE": "Advance to the Castle Age.",
         "CAREENING": "Ships +1 pierce armor.",
         "CATAPHRACT": "Byzantine cavalry. Strong vs. infantry.",
+        "CAVALIER": "Strong vs. archers, siege; weak vs. spears, monks.",
+        "CAVALIER_UPGRADE": "Upgrades knights to cavaliers.",
         "CAVALRY_ARCHER": "Fast archer. Strong vs. infantry; weak vs. camels.",
         "CHAIN_BARDING_ARMOR": "Cavalry +1 melee armor, +1 pierce armor.",
         "CHAIN_MAIL_ARMOR": "Infantry +1 melee armor, +1 pierce armor.",
@@ -957,6 +980,8 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "MONK": "Heals own units, converts enemy units.",
         "ONAGER": "Siege. Hits all units near the target.",
         "ONAGER_UPGRADE": "Upgrades mangonels to onagers.",
+        "PALADIN": "Strong vs. archers, siege; weak vs. spears, monks.",
+        "PALADIN_UPGRADE": "Upgrades cavaliers to paladins.",
         "PADDED_ARCHER_ARMOR": "Archers +1 melee armor, +1 pierce armor.",
         "PIKEMAN": "Infantry. Strong vs. cavalry; weak vs. archers.",
         "PIKEMAN_UPGRADE": "Upgrades spearmen to pikemen.",
