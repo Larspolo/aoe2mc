@@ -14,7 +14,7 @@ from test_train_menu import RALLY, SKIRM
 from game import build, combat, gather, run, train
 
 CAVA = " 4:gray_dye:Cavalry Archer:40 wood · 60 gold · 37 s · Needs the Castle Age"   # gray before the Castle Age (#1397)
-HAND = " 18:gray_dye:Hand Cannoneer:45 food · 50 gold · 34 s · Needs the Imperial Age"   # (#1506)
+HAND = " 7:gray_dye:Hand Cannoneer:45 food · 50 gold · 34 s · Needs the Imperial Age"   # (#1506)
 
 
 def setup(wood=25, gold=45, done=True):

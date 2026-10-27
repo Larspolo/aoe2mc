@@ -36,16 +36,16 @@ def test_the_hand_cannoneer_is_gray_before_the_imperial_age_and_before_chemistry
     server, g = setup()
     assert build.locked(g, "HAND_CANNONEER") == "Needs Chemistry"
     train.open_menu(g, "Steve", (3, 3))
-    assert f"{train.MORE}:gray_dye:Hand Cannoneer:45 food · 50 gold · 34 s · Needs Chemistry" in menus(server)[-1]
+    assert " 7:gray_dye:Hand Cannoneer:45 food · 50 gold · 34 s · Needs Chemistry" in menus(server)[-1]
     assert not train.queue(g, "Steve", (3, 3), "HAND_CANNONEER") and g.stock["food"] == 1000
     server, g = setup(techs=["CHEMISTRY"])
     train.open_menu(g, "Steve", (3, 3))
-    assert f"{train.MORE}:pillager_spawn_egg:Hand Cannoneer:45 food · 50 gold · 34 s · queue 0/15" in menus(server)[-1]
+    assert " 7:pillager_spawn_egg:Hand Cannoneer:45 food · 50 gold · 34 s · queue 0/15" in menus(server)[-1]
 
 
 def test_a_trained_hand_cannoneer_shoots_with_its_values():
     server, g = setup(techs=["CHEMISTRY"])
-    assert train.order(g, "Steve", RANGE, train.MORE) == 1 and (g.stock["food"], g.stock["gold"]) == (955, 950)
+    assert train.order(g, "Steve", RANGE, 7) == 1 and (g.stock["food"], g.stock["gold"]) == (955, 950)
     assert train.tick(g, 33) == []
     uuid, = train.tick(g, 1)
     summon, = [c for c in server.log if c.startswith("summon")]

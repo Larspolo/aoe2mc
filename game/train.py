@@ -770,7 +770,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "ELITE_SKIRMISHER_UPGRADE": (3, "book", "Elite Skirmisher"),
          "HALBERDIER": (1, "zombie_spawn_egg", "Halberdier"),
          "HALBERDIER_UPGRADE": (3, "book", "Halberdier"),             # the slot of Pikeman (AFTER)
-         "HAND_CANNONEER": (MORE, "pillager_spawn_egg", "Hand Cannoneer"),   # units.classify: a pillager
+         "HAND_CANNONEER": (7, "pillager_spawn_egg", "Hand Cannoneer"),      # units.classify: a pillager
          "HAND_CART": (3, "book", "Hand Cart"),                       # the slot of Wheelbarrow (AFTER)
          "HEAVY_CAVALRY_ARCHER": (4, "skeleton_horse_spawn_egg", "Heavy Cavalry Archer"),
          "HEAVY_CAVALRY_ARCHER_UPGRADE": (6, "book", "Heavy Cavalry Archer"),   # slot 5: Thumb Ring
@@ -871,7 +871,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "MONK": (0, "evoker_spawn_egg", "Monk"),
          "PALADIN": (3, "horse_spawn_egg", "Paladin"),               # the slot of the knight
          "PALADIN_UPGRADE": (5, "book", "Paladin"),                   # the slot of Cavalier (AFTER)
-         "PARTHIAN_TACTICS": (MORE, "book", "Parthian Tactics"),       # slot 7: the hand cannoneer (#1506)
+         "PARTHIAN_TACTICS": (MORE, "book", "Parthian Tactics"),       # slot 7: the hand cannoneer (#1551)
          "PADDED_ARCHER_ARMOR": (3, "book", "Padded Archer Armor"),
          "PLATE_BARDING_ARMOR": (4, "book", "Plate Barding Armor"),   # the slot of the Feudal armor (AFTER)
          "PLATE_MAIL_ARMOR": (1, "book", "Plate Mail Armor"),
