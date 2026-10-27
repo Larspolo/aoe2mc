@@ -86,9 +86,10 @@ GROUPS = {
 # "units": the bonuses of the land units (#1090): [group of GROUPS, value, change in the Dark, Feudal, Castle and
 # Imperial Age]; value is a field of combat.Stats or "speed" (the walk speed); an int adds, a float multiplies ("fire
 # 25 % faster" is the reload / 1.25). "costs": the cost bonuses (#1091): [what, resource or null (all), change in each
-# age]; what is a group of GROUPS (units), "buildings", "buildings but farms", "technologies", "ages" or a list of
-# names; a float multiplies the cost (0.0: free), an int adds to it; AoE2 rounds half up (35 × 0.75 = 26). "twice":
-# the technologies whose effect it gets twice (train.stats, #1561).
+# age]; what is a group of GROUPS (units), "buildings", "buildings but farms", "technologies", "ages", "BUILDING
+# technologies" (the technologies of the menu of that building, #1925) or a list of names; a float multiplies the cost
+# (0.0: free), an int adds to it; AoE2 rounds half up (35 × 0.75 = 26). "twice": the technologies whose effect it gets
+# twice (train.stats, #1561).
 ROWS = table.load("civs.jsonl")
 
 
@@ -180,6 +181,8 @@ def has(what, name):
         return name in build.COSTS and not (what == "buildings but farms" and name == "FARM")
     if what in ("ages", "technologies"):
         return name in (build.AGE_TECHS if what == "ages" else train.TECHS)
+    if what.endswith(" technologies"):                             # the menu of the building gives the list (#1925)
+        return name in train.TECHS and name in train.TRAINS.get(what.split()[0], ())
     s = combat.STATS.get("VILLAGER" if name.startswith("VILLAGER") else name)
     return s is not None and name not in train.TECHS and GROUPS[what](name, s)
 
