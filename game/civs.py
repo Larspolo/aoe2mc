@@ -6,7 +6,7 @@ time of one unit of resource by the factor of the player's civilization. The key
 Bonuses that the game program cannot use yet: Japanese fishing ships, Malian oyster gatherers.
 CHURCH_RATE is the Georgian bonus of the Fortified Church (#1930): build.rise and repair.rate multiply the work of the
 villagers in the 21-tile square around it (church_rate).
-BUILD and BUILD_WONDER hold the build speed bonuses (#1893): build.rise multiplies the work of the builders (build_rate).
+BUILD, BUILD_WONDER and BUILD_OF hold the build speed bonuses (#1893, #2115): build.rise multiplies the work of the builders (build_rate).
 WORK_RATE holds the train and research rate of the buildings (#1894, Persian town centers and docks): train.seconds
 divides the time of an item by work_rate(). TRAIN_RATE holds the train rate of unit groups (#1927, Aztec military
 units, Khitan skirmishers ...): train.seconds divides by train_rate(), also the time of their upgrades when the third
@@ -105,7 +105,8 @@ ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # th
 # first one.
 # "shared": the shared unique units of its team bonus: an ally of the civilization has them too ("Team bonus", #1619).
 # "not_shared": the shared items that it does not get from an ally (Turks: no Elite Skirmisher).
-# "build", "build_wonder": the build speed of the builders (Spanish: 20 % for wonders). "repair": the repair rate.
+# "build", "build_wonder": the build speed of the builders (Spanish: 20 % for wonders). "build_of": the build speed of
+# some buildings, {building: factor} (Sicilian fortifications and town centers, #2115). "repair": the repair rate.
 # "repair_cost": the team bonus of the repair cost of buildings (Georgians). "repair_team": the team bonus of the
 # repair rate (Saxons). "work_rate": the train and research rate of a building in each age (Persians). "train_rate":
 # [group of GROUPS, factor, also the upgrades] (#1927). "hp": the hit points factor of a building (Persians).
@@ -116,12 +117,14 @@ NOT_SHARED = {n: tuple(sorted(r["name"] for r in ROWS if n in r.get("not_shared"
               for n in sorted({n for r in ROWS for n in r.get("not_shared", ())})}
 BUILD = {r["name"]: r["build"] for r in ROWS if "build" in r}
 BUILD_WONDER = {r["name"]: r["build_wonder"] for r in ROWS if "build_wonder" in r}
+BUILD_OF = {r["name"]: r["build_of"] for r in ROWS if "build_of" in r}
 REPAIR = {r["name"]: r["repair"] for r in ROWS if "repair" in r}
 REPAIR_COST = {r["name"]: r["repair_cost"] for r in ROWS if "repair_cost" in r}
 REPAIR_TEAM = {r["name"]: r["repair_team"] for r in ROWS if "repair_team" in r}
 WORK_RATE = {r["name"]: {b: tuple(v) for b, v in r["work_rate"].items()} for r in ROWS if "work_rate" in r}
 TRAIN_RATE = {r["name"]: [tuples(b) for b in r["train_rate"]] for r in ROWS if "train_rate" in r}
 HP = {r["name"]: r["hp"] for r in ROWS if "hp" in r}
+GARRISON = {r["name"]: r["garrison"] for r in ROWS if "garrison" in r}   # units inside a building (garrison.size, #2117)
 # "extra": the second resource of a gather kind ("forage": a fruit bush), {kind: [resource, amount for each unit]}: Poles
 # and Puru stone miners, Portuguese foragers, Shu lumberjacks (#2113). Gather.second adds it at each gathered unit.
 EXTRA = {r["name"]: {k: tuple(v) for k, v in r["extra"].items()} for r in ROWS if "extra" in r}
@@ -231,9 +234,9 @@ def age_rate(g, name):
 
 def build_rate(g, name):
     """The factor of the build speed of the villagers of the player of g for a site of building name (BUILD,
-    BUILD_WONDER), else 1."""
+    BUILD_WONDER, BUILD_OF), else 1."""
     c = civ(g)
-    return BUILD_WONDER.get(c, BUILD.get(c, 1)) if name == "WONDER" else BUILD.get(c, 1)
+    return BUILD_OF.get(c, {}).get(name) or (BUILD_WONDER.get(c, BUILD.get(c, 1)) if name == "WONDER" else BUILD.get(c, 1))
 
 
 def church_rate(g, pos):
