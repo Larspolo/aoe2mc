@@ -3,7 +3,7 @@ import re
 
 from game import civs, table, train
 
-KEYS = {"name", "unique", "missing", "costs", "units", "twice"}
+KEYS = {"name", "unique", "missing", "costs", "units", "twice", "age_gifts"}
 AGES = 4
 
 
