@@ -92,6 +92,7 @@ TRAIN_TIMES = {r["name"]: r["time"] for r in ROWS}                 # AoE2 second
 TRAINS = {b: tuple(r["name"] for r in ROWS if r["building"] == b)    # the units and technologies of each
           for b in dict.fromkeys(r["building"] for r in ROWS if r["building"])}   # building, in file order
 TRAINS["KREPOST"] = ()                                             # trains() adds the Konnik (#1872)
+TRAINS["FORTIFIED_CHURCH"] = TRAINS["MONASTERY"]                  # the monastery of the Armenians, Georgians (#1930)
 # The unique unit of each civilization (AoE2 DE), trained at its castle. A unit without COSTS is not in the menu yet:
 # it has no AoE2 combat values in combat.STATS.
 UNIQUE = {"BRITONS": "LONGBOWMAN", "PERSIANS": "WAR_ELEPHANT", "BYZANTINES": "CATAPHRACT", "CELTS": "WOAD_RAIDER",
@@ -658,8 +659,9 @@ def owned(g):
 def missing(g, name):
     """The text of the buildings that technology name still needs (REQUIRES), or None."""
     n, names, *alone = REQUIRES.get(name, (0, ()))
-    has, alone = sorted(set(names) & set(owned(g))), alone[0] if alone else ()
-    if len(has) < n and not set(alone) & set(owned(g)):
+    own = {"MONASTERY" if b == "FORTIFIED_CHURCH" else b for b in owned(g)}   # the church is the monastery (#1930)
+    has, alone = sorted(set(names) & own), alone[0] if alone else ()
+    if len(has) < n and not set(alone) & own:
         return f"needs {''.join(f'a {build.pretty(b).lower()} or ' for b in alone)}{n} of {', '.join(build.pretty(b).lower() for b in names)} ({len(has)}/{n})"
 
 

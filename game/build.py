@@ -50,6 +50,7 @@ COSTS = {"HOUSE": {"wood": 25}, "LUMBER_CAMP": {"wood": 100}, "MINING_CAMP": {"w
          "CASTLE": {"stone": 650},                                 # the Castle Age: the Imperial Age needs them (#1162)
          "DOCK": {"wood": 150},                                    # 3 x 3 tiles on water at the shore (#1382)
          "FISH_TRAP": {"wood": 100},                               # on water, fishing ships build it (#1438)
+         "FORTIFIED_CHURCH": {"wood": 200},                        # the Armenians, Georgians (civs.MISSING, #1930)
          "GATE": {"stone": 30},                                    # 4 x 1 tiles (AoE2 DE wiki, #1324)
          "KREPOST": {"stone": 350},                                # the Bulgarians only (civs.MISSING, #1872)
          "MARKET": {"wood": 175},                                  # the Feudal Age (#1251)
@@ -68,6 +69,7 @@ BUILD_TIMES = {"HOUSE": 25, "LUMBER_CAMP": 35, "MINING_CAMP": 35, "MILL": 35, "F
                "CASTLE": 200,
                "DOCK": 35,
                "FISH_TRAP": 40,
+               "FORTIFIED_CHURCH": 50,
                "GATE": 70,
                "KREPOST": 150,
                "MARKET": 60,
@@ -89,6 +91,7 @@ ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw
          "CASTLE": "stone_bricks",
          "DOCK": "dark_oak_planks",                                     # the wood of the pier
          "FISH_TRAP": "bamboo_fence",                                   # the rods of the basket
+         "FORTIFIED_CHURCH": "candle",                                  # the light of the altar
          "GATE": "iron_bars",                                           # the portcullis
          "KREPOST": "red_sandstone",                                    # the stone of the walls
          "MARKET": "barrel",                                            # the goods of the stalls
@@ -125,6 +128,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "EAGLE_WARRIOR",
         "ELITE_SKIRMISHER",
         "FIRE_SHIP",
+        "FORTIFIED_CHURCH",
         "GENITOUR",
         "HEI_GUANG_CAVALRY",
         "KNIGHT",
@@ -671,7 +675,9 @@ def rise(g, site, work):
     Treadmill Crane: the builders of the player work 20 % faster (CRANE, AoE2 DE wiki, #1422); the civilization
     bonus multiplies with it (civs.build_rate, #1893)."""
     if site.get("player", g.player) == g.player:
-        work *= CRANE ** ("TREADMILL_CRANE" in getattr(g, "techs", ())) * civs.build_rate(g, site["name"])
+        x0, x1, z0, z1 = site["footprint"]                                 # the builders stand at its edge
+        work *= CRANE ** ("TREADMILL_CRANE" in getattr(g, "techs", ())) * civs.build_rate(g, site["name"]) \
+            * civs.church_rate(g, ((x0 + x1) / 2, (z0 + z1) / 2))      # the Georgian Fortified Church (#1930)
     site["progress"] = min(1.0, site["progress"] + work / BUILD_TIMES[site["name"]])
     cmds, ring = site["commands"], site.get("ring", {})
     k = len(cmds) if site["progress"] >= 1 else math.floor(site["progress"] * len(cmds))

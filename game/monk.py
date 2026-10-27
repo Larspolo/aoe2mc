@@ -95,7 +95,7 @@ def carriers(g):
 def monasteries(g):
     """The footprints of the complete own monasteries."""
     import train                                                   # train imports gather, gather imports this module
-    return {r for r, n in train.homes(g).items() if n == "MONASTERY"}
+    return {r for r, n in train.homes(g).items() if n in ("MONASTERY", "FORTIFIED_CHURCH")}   # the church too (#1930)
 
 
 def order(g, player, cell):

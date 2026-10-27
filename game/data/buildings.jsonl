@@ -19,6 +19,7 @@
 {"name": "TOWN_CENTER", "hp": 2400, "attack": 5, "melee": 3, "pierce": 5, "range": 6, "reload": 2.0, "bonus": {"ship": 5}, "classes": ["building"], "sight": 8}
 {"name": "CASTLE", "hp": 4800, "attack": 11, "melee": 8, "pierce": 11, "range": 8, "reload": 2.0, "bonus": {"ship": 11}, "classes": ["building"], "sight": 11}
 {"name": "KREPOST", "hp": 2600, "attack": 10, "melee": 8, "pierce": 11, "range": 7, "reload": 2.0, "bonus": {"ship": 10}, "classes": ["building"], "sight": 10, "note": "the Bulgarians (AoE2 DE wiki, #1872)"}
+{"name": "FORTIFIED_CHURCH", "hp": 2400, "attack": 0, "melee": 4, "pierce": 10, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 10, "note": "the Armenians, Georgians (AoE2 DE wiki, #1930)"}
 {"name": "WONDER", "hp": 4800, "attack": 0, "melee": 3, "pierce": 10, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 8}
 {"name": "DONJON", "sight": 10}
 {"name": "FEITORIA", "sight": 6}

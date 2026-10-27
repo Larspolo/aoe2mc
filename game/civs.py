@@ -3,8 +3,9 @@ The civilization bonuses of the players in the game program (#1089, part of #108
 the AoE2 DE civilizations (the AoE2 wiki, "Civilization bonuses" of each civilization): Gather.work_time divides the
 time of one unit of resource by the factor of the player's civilization. The keys are the gather kinds of Gather:
 "wood", "food" (forage bushes), "farm", "gold", "stone", "hunt" (hunted animals) and "sheep" (herdable animals).
-Bonuses that the game program cannot use yet: Japanese fishing ships, Malian oyster gatherers, the Georgian fortified
-church (+10 % near it).
+Bonuses that the game program cannot use yet: Japanese fishing ships, Malian oyster gatherers.
+CHURCH_RATE is the Georgian bonus of the Fortified Church (#1930): build.rise and repair.rate multiply the work of the
+villagers in the 21-tile square around it (church_rate).
 BUILD and BUILD_WONDER hold the build speed bonuses (#1893): build.rise multiplies the work of the builders (build_rate).
 WORK_RATE holds the train and research rate of the buildings (#1894, Persian town centers and docks): train.seconds
 divides the time of an item by work_rate(). HP holds the hit points bonus of the buildings (#1895): build.values and
@@ -327,6 +328,9 @@ MISSING |= dict.fromkeys(("SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER", "ELITE_S
 MISSING |= dict.fromkeys(("HEI_GUANG_CAVALRY", "HEAVY_HEI_GUANG_CAVALRY", "HEAVY_HEI_GUANG_CAVALRY_UPGRADE"),
                          tuple(sorted(set().union(*MISSING.values()) - {"SHU", "WEI", "WU"})))   # (AoE2 DE wiki, #1954)
 MISSING["KREPOST"] = tuple(sorted(set().union(*MISSING.values()) - {"BULGARIANS"}))   # the build menu (AoE2 DE wiki, #1872)
+CHURCH = ("ARMENIANS", "GEORGIANS")                               # the Fortified Church in place of the Monastery (#1930)
+CHURCH_RATE, CHURCH_NEAR = 1.1, 10.5                              # +10 % work in the 21-tile square around it (tiles)
+MISSING |= {"FORTIFIED_CHURCH": tuple(sorted(set().union(*MISSING.values()) - set(CHURCH))), "MONASTERY": CHURCH}
 MISSING["MISSIONARY"] = tuple(sorted(set().union(*MISSING.values()) - {"SPANISH"}))   # the monastery (AoE2 DE wiki, #1939)
 SHARED = {"CONDOTTIERO": "ITALIANS",                              # the shared unique units of the team bonuses: an ally
           "ELITE_GENITOUR": "BERBERS",                             # of the civilization has them too (AoE2 DE wiki,
@@ -425,6 +429,18 @@ def build_rate(g, name):
     BUILD_WONDER), else 1."""
     c = civ(g)
     return BUILD_WONDER.get(c, BUILD.get(c, 1)) if name == "WONDER" else BUILD.get(c, 1)
+
+
+def church_rate(g, pos):
+    """The factor of the work of a villager of the player of g at block position pos (x, z): CHURCH_RATE for a Georgian
+    in the 21-tile square around a complete own Fortified Church (AoE2 wiki "Georgians"; also to build and repair,
+    AoE2 wiki "Repairing"), else 1."""
+    if civ(g) != "GEORGIANS":
+        return 1
+    import train                                                   # train imports this module
+    near = CHURCH_NEAR * g.map.T
+    return CHURCH_RATE if any(max(abs(pos[0] - (x0 + x1) / 2), abs(pos[1] - (z0 + z1) / 2)) <= near
+                              for (x0, x1, z0, z1), n in train.homes(g).items() if n == "FORTIFIED_CHURCH") else 1
 
 
 def repair_rate(g):

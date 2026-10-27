@@ -165,9 +165,11 @@ def order(g, player, cell):
 
 
 def rate(g, vs):
-    """Hit points per AoE2 second of the repairers vs of a building, with the bonus of the civilization (#1730)."""
+    """Hit points per AoE2 second of the repairers vs of a building, with the bonus of the civilization (#1730) and the
+    mean bonus of the Fortified Church at the places of the repairers (civs.church_rate, #1930)."""
     import civs                                                    # gather puts game/ on the path
-    return (RATE + MORE * (len(vs) - 1)) * civs.repair_rate(g)
+    near = sum(civs.church_rate(g, (v.pos[0], v.pos[2])) for v in vs) / len(vs)
+    return (RATE + MORE * (len(vs) - 1)) * civs.repair_rate(g) * near
 
 
 def tick(g, dt):
