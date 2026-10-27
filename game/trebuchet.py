@@ -29,12 +29,13 @@ def state(g, u):
 
 def stats(g, u):
     """The combat values of trebuchet u with the technologies of the player (train.stats) and the armor of its state:
-    packed (also while it unpacks) the armor of combat.STATS, unpacked (also while it packs) UNPACKED."""
+    packed (also while it unpacks) the armor of combat.STATS, unpacked (also while it packs) UNPACKED and the class ram."""
     import combat                                                  # combat imports gather, gather imports this module
     import train
     s, base = train.stats(g, NAME), combat.stats(NAME)
     if state(g, u) in ("unpacked", "packing"):
-        s = s._replace(melee=s.melee - base.melee + UNPACKED[0], pierce=s.pierce - base.pierce + UNPACKED[1])
+        s = s._replace(melee=s.melee - base.melee + UNPACKED[0], pierce=s.pierce - base.pierce + UNPACKED[1],
+                       classes=(*s.classes, combat.RAM))           # only unpacked in the class "Rams" (#1402)
     return s
 
 

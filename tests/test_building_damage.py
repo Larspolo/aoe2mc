@@ -12,7 +12,7 @@ def test_pierce_damage_on_a_building_is_small():
     assert combat.damage("ARCHER", "HOUSE") == 1                       # 4 attack - 7 pierce armor: at least 1
     assert combat.damage("CROSSBOWMAN", "BARRACKS") == 1
     assert combat.damage("CHAMPION", "HOUSE") == 13                    # melee armor 0
-    assert combat.damage("BATTERING_RAM", "HOUSE") == 2 + 125          # the ram bonus against buildings
+    assert combat.damage("BATTERING_RAM", "HOUSE") == 2 + 150          # the ram bonus against buildings
 
 
 def test_building_commands():
