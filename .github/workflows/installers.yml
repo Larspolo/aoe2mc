@@ -1,0 +1,40 @@
+name: Installers
+
+# One installer per system in the release of a tag v* (#1542, part of #1539): bundles.yml builds each app bundle,
+# makes its installer and tests it; this workflow attaches the installers to the release. worlds.yml also runs on the
+# tag and attaches the example worlds to the same release. The installers are not signed (the owner, #1544).
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:   # on a tag ref: attach again; on a branch: build and test only
+
+permissions:
+  contents: write      # make the release
+
+jobs:
+  bundles:
+    uses: ./.github/workflows/bundles.yml
+  release:
+    needs: bundles
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: installer-*
+          merge-multiple: true
+          path: out
+      - name: Attach the installers to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          ls -l out
+          notes="aoe2mc $TAG. Download the installer of your system; the README section \"Install\" has the steps."
+          # worlds.yml can make the release at the same time: then the create fails and the release exists
+          gh release view "$TAG" > /dev/null 2>&1 \
+            || gh release create "$TAG" --target "$GITHUB_SHA" --title "aoe2mc $TAG" --notes "$notes" \
+            || gh release view "$TAG" > /dev/null
+          gh release upload "$TAG" out/* --clobber

@@ -83,6 +83,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "ARCHITECTURE": {"food": 300, "wood": 200},                   # the university, Imperial Age (#1504)
          "ARROWSLITS": {"food": 250, "wood": 250},                     # AoE2 DE wiki (#1504)
          "ARSON": {"food": 75, "gold": 25},                           # AoE2 DE wiki (#1419)
+         "ATONEMENT": {"gold": 325},                                  # AoE2 DE wiki (#1581)
          "BALLISTICS": {"wood": 300, "gold": 175},                    # the university, Castle Age (#1549)
          "BATTERING_RAM": {"wood": 160, "gold": 75},
          "BOMBARD_CANNON": {"wood": 225, "gold": 225},               # the Imperial Age, after Chemistry (#1380)
@@ -127,6 +128,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "ELITE_CANNON_GALLEON_UPGRADE": {"wood": 525, "gold": 500},   # the Imperial Age (#1491)
          "ELITE_EAGLE_WARRIOR": {"food": 20, "gold": 50},
          "ELITE_EAGLE_WARRIOR_UPGRADE": {"food": 800, "gold": 500},
+         "ELITE_STEPPE_LANCER": {"food": 70, "gold": 40},
+         "ELITE_STEPPE_LANCER_UPGRADE": {"food": 600, "gold": 550},   # the Imperial Age (#1557)
          "ELITE_SKIRMISHER": {"food": 25, "wood": 35},
          "ELITE_SKIRMISHER_UPGRADE": {"wood": 230, "gold": 130},
          "FERVOR": {"gold": 140},
@@ -165,6 +168,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "HEAVY_PLOW": {"food": 125, "wood": 125},                     # the Castle Age (AoE2 DE wiki, #1424)
          "HEAVY_SCORPION": {"wood": 75, "gold": 75},
          "HEAVY_SCORPION_UPGRADE": {"food": 800, "wood": 750},
+         "HERESY": {"gold": 1000},                                     # the monastery, Castle Age (#1582)
          "HEAVY_WARSHIPS": {"wood": 400, "gold": 315},                 # the dock, Imperial Age (#1483)
          "HORSE_COLLAR": {"food": 75, "wood": 75},
          "HUSBANDRY": {"food": 150},                                   # AoE2 DE wiki (#1416)
@@ -223,9 +227,11 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "STONE_SHAFT_MINING": {"food": 175, "wood": 75},
          "SPEARMAN": {"food": 35, "wood": 25},
          "SQUIRES": {"food": 100},                                    # AoE2 DE wiki (#1415)
+         "STEPPE_LANCER": {"food": 70, "gold": 40},                    # AoE2 DE wiki (#1557)
          "TEUTONIC_KNIGHT": {"food": 85, "gold": 30},
          "THROWING_AXEMAN": {"food": 55, "gold": 25},
          "THUMB_RING": {"food": 300, "wood": 250},                      # AoE2 DE wiki (#1421)
+         "TOWN_PATROL": {"food": 300, "gold": 100},                     # the Castle Age (AoE2 DE wiki, #1579)
          "TOWN_WATCH": {"food": 75},                                    # the Feudal Age (AoE2 DE wiki, #1454)
          "TRADE_CART": {"wood": 100, "gold": 50},
          "TRADE_COG": {"wood": 100, "gold": 50},                        # the Feudal Age (AoE2 DE wiki, #1485)
@@ -247,6 +253,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "ARBALESTER_UPGRADE": 50,
                "ARCHITECTURE": 70,
                "ARROWSLITS": 25,
+               "ATONEMENT": 40,
                "BALLISTICS": 60,
                "BATTERING_RAM": 36,
                "BATTLE_ELEPHANT": 24,
@@ -291,6 +298,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "ELITE_CANNON_GALLEON_UPGRADE": 30,
                "ELITE_EAGLE_WARRIOR": 20,
                "ELITE_EAGLE_WARRIOR_UPGRADE": 50,
+               "ELITE_STEPPE_LANCER": 20,
+               "ELITE_STEPPE_LANCER_UPGRADE": 55,
                "ELITE_SKIRMISHER": 22,
                "ELITE_SKIRMISHER_UPGRADE": 50,
                "FERVOR": 50,
@@ -329,6 +338,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "HEAVY_PLOW": 40,
                "HEAVY_SCORPION": 30,
                "HEAVY_SCORPION_UPGRADE": 50,
+               "HERESY": 60,
                "HEAVY_WARSHIPS": 65,
                "HORSE_COLLAR": 20,
                "HUSBANDRY": 40,
@@ -387,9 +397,11 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "SQUIRES": 40,
                "STONE_MINING": 30,
                "STONE_SHAFT_MINING": 75,
+               "STEPPE_LANCER": 24,
                "TEUTONIC_KNIGHT": 12,
                "THROWING_AXEMAN": 13,
                "THUMB_RING": 45,
+               "TOWN_PATROL": 40,
                "TOWN_WATCH": 25,
                "TRADE_CART": 51,
                "TRADE_COG": 36,
@@ -406,7 +418,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "WINGED_HUSSAR_UPGRADE": 60,
                "WOAD_RAIDER": 10}
 TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", "HAND_CART", "CASTLE_AGE", "IMPERIAL_AGE",
-                         "TOWN_WATCH"), "BARRACKS": ("MILITIA", "SPEARMAN", "MAN_AT_ARMS_UPGRADE",   # the units and technologies of each
+                         "TOWN_WATCH",
+                         "TOWN_PATROL"), "BARRACKS": ("MILITIA", "SPEARMAN", "MAN_AT_ARMS_UPGRADE",   # the units and technologies of each
                        "LONG_SWORDSMAN_UPGRADE", "PIKEMAN_UPGRADE",           # the Castle Age (#1396)
                        "HALBERDIER_UPGRADE",                                  # the Imperial Age (#1499)
                        "TWO_HANDED_SWORDSMAN_UPGRADE",                        # the Imperial Age (#1498)
@@ -445,7 +458,9 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                      "CAVALIER_UPGRADE",                                        # (#1501)
                      "BATTLE_ELEPHANT",                                         # (#1556)
                      "ELITE_BATTLE_ELEPHANT_UPGRADE",
-                     "PALADIN_UPGRADE"),                                        # after Cavalier (#1501)
+                     "PALADIN_UPGRADE",                                         # after Cavalier (#1501)
+                     "STEPPE_LANCER",                                           # Cumans, Jurchens, Khitans, Mongols,
+                     "ELITE_STEPPE_LANCER_UPGRADE"),                            # Tatars (#1557)
           "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS",   # (#1326, #1374, #1352)
                          "MASONRY", "TREADMILL_CRANE",                          # (#1398, #1422) the Castle Age
                          "CHEMISTRY", "BOMBARD_TOWER_TECH",                     # (#1375)
@@ -480,6 +495,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                           "STONE_SHAFT_MINING"),                                # (#1423)
           "MONASTERY": ("MONK", "FERVOR", "SANCTITY", "REDEMPTION",             # (#1243, #1261, #1264)
                         "BLOCK_PRINTING",                                       # (#1457)
+                        "ATONEMENT",                                            # (#1581)
+                        "HERESY",                                               # (#1582)
                         "ILLUMINATION"),                                        # (#1583)
           "SIEGE_WORKSHOP": ("BATTERING_RAM", "MANGONEL", "SCORPION", "SIEGE_TOWER",   # (#1349, #1362)
                              "CAPPED_RAM_UPGRADE", "SIEGE_RAM_UPGRADE", "ONAGER_UPGRADE", "SIEGE_ONAGER_UPGRADE",
@@ -559,6 +576,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ARROWSLITS": arrowslits,                                 # the towers of the player: build.values
          "ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bonus.get("standard", 0) + 2})
          if "infantry" in s.classes else s,                        # combat.STANDARD: not the walls (#1419)
+         "ATONEMENT": lambda name, s: s,                           # monks convert enemy monks: monk.convertible
          "BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
          "BALLISTICS": lambda name, s: s,                          # the aim of the arrows: aoe ballistics (#1549)
          "BLAST_FURNACE": lambda name, s: s._replace(attack=s.attack + 2) if melee(s) or name in HULKS else s,
@@ -589,6 +607,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_BATTLE_ELEPHANT_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_CANNON_GALLEON_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
          "ELITE_EAGLE_WARRIOR_UPGRADE": lambda name, s: s,
+         "ELITE_STEPPE_LANCER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
          "ELITE_SKIRMISHER_UPGRADE": lambda name, s: s,
          "FERVOR": lambda name, s: s,                              # the walk speed: SPEEDS
          "FISHING_LINES": lambda name, s: s,                       # the fishing ships: gather.SHIP_TECHS
@@ -610,6 +629,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "HOARDINGS": lambda name, s: s._replace(hp=round(s.hp * 1.21)) if name == "CASTLE" else s,   # build.values
          "HEAVY_PLOW": lambda name, s: s,                          # an economy technology: gather.FARM_TECHS, FOOD_CARRY
          "HEAVY_SCORPION_UPGRADE": lambda name, s: s,
+         "HERESY": lambda name, s: s,                              # a converted unit dies: monk.heresy
          "HEAVY_WARSHIPS": lambda name, s: s,                      # new unit names: UPGRADES
          "HEAVY_DEMOLITION_SHIP_UPGRADE": lambda name, s: s,
          "DEMOLITION_SHIP_UPGRADE": lambda name, s: s,
@@ -661,6 +681,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "STONE_MINING": lambda name, s: s,                        # an economy technology: gather.WORK_TECHS
          "STONE_SHAFT_MINING": lambda name, s: s,
          "THUMB_RING": lambda name, s: s._replace(reload=round(s.reload / 1.1765, 3)) if thumb(name, s) else s,
+         "TOWN_PATROL": lambda name, s: s,                         # the building sight: gather.seen_tiles
          "TOWN_WATCH": lambda name, s: s,                          # the building sight: gather.seen_tiles
          "TREADMILL_CRANE": lambda name, s: s,                     # the build speed: build.rise
          "TWO_HANDED_SWORDSMAN_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
@@ -689,6 +710,7 @@ UPGRADES = {                                                       # technology:
     "ELITE_CANNON_GALLEON_UPGRADE": ("CANNON_GALLEON", "ELITE_CANNON_GALLEON"),
     "ELITE_EAGLE_WARRIOR_UPGRADE": ("EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"),
     "ELITE_SKIRMISHER_UPGRADE": ("SKIRMISHER", "ELITE_SKIRMISHER"),
+    "ELITE_STEPPE_LANCER_UPGRADE": ("STEPPE_LANCER", "ELITE_STEPPE_LANCER"),   # (#1557)
     "HALBERDIER_UPGRADE": ("PIKEMAN", "HALBERDIER"),
     "HEAVY_CAMEL_RIDER_UPGRADE": ("CAMEL_RIDER", "HEAVY_CAMEL_RIDER"),   # (#1550)
     "HEAVY_CAVALRY_ARCHER_UPGRADE": ("CAVALRY_ARCHER", "HEAVY_CAVALRY_ARCHER"),
@@ -740,6 +762,7 @@ AFTER = {"ARBALESTER_UPGRADE": "CROSSBOWMAN_UPGRADE",
          "RING_ARCHER_ARMOR": "LEATHER_ARCHER_ARMOR",
          "SIEGE_ONAGER_UPGRADE": "ONAGER_UPGRADE", "SIEGE_RAM_UPGRADE": "CAPPED_RAM_UPGRADE",
          "STONE_SHAFT_MINING": "STONE_MINING",
+         "TOWN_PATROL": "TOWN_WATCH",
          "TWO_HANDED_SWORDSMAN_UPGRADE": "LONG_SWORDSMAN_UPGRADE",   # the upgrade before it
          "WINGED_HUSSAR_UPGRADE": "LIGHT_CAVALRY_UPGRADE"}   # in place of Hussar (AoE2 DE wiki, #1558)
 WALL_UPGRADES = {"FORTIFIED_WALL": {"STONE_WALL": "FORTIFIED_WALL", "GATE": "FORTIFIED_GATE"}}   # technology: {wall: new} (#1326)
@@ -753,6 +776,7 @@ TECH_AGE = {                                                       # the age of 
     "ARCHITECTURE": 3,
     "ARROWSLITS": 3,
     "ARSON": 1,
+    "ATONEMENT": 2,
     "BALLISTICS": 2,
     "BLAST_FURNACE": 3,
     "BLOCK_PRINTING": 3,
@@ -777,6 +801,7 @@ TECH_AGE = {                                                       # the age of 
     "ELITE_CANNON_GALLEON_UPGRADE": 3,
     "ELITE_EAGLE_WARRIOR_UPGRADE": 3,
     "ELITE_SKIRMISHER_UPGRADE": 2,
+    "ELITE_STEPPE_LANCER_UPGRADE": 3,                             # (#1557)
     "FERVOR": 2,
     "FISHING_LINES": 1,
     "FLETCHING": 1,
@@ -797,6 +822,7 @@ TECH_AGE = {                                                       # the age of 
     "HOARDINGS": 3,
     "HEAVY_PLOW": 2,
     "HEAVY_SCORPION_UPGRADE": 3,
+    "HERESY": 2,
     "HEAVY_DEMOLITION_SHIP_UPGRADE": 3,
     "HEAVY_WARSHIPS": 3,
     "HORSE_COLLAR": 1,
@@ -835,6 +861,7 @@ TECH_AGE = {                                                       # the age of 
     "STONE_MINING": 1,
     "STONE_SHAFT_MINING": 2,
     "THUMB_RING": 2,
+    "TOWN_PATROL": 2,
     "TOWN_WATCH": 1,
     "TREADMILL_CRANE": 2,
     "TWO_HANDED_SWORDSMAN_UPGRADE": 3,
@@ -854,6 +881,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "ARCHITECTURE": (6, "book", "Architecture"),              # the slot of Masonry (AFTER)
          "ARROWSLITS": (MORE + 1, "book", "Arrowslits"),
          "ARSON": (6, "book", "Arson"),                            # after the slot of Gambesons
+         "ATONEMENT": (5, "book", "Atonement"),                    # the monastery (#1581)
          "CAPPED_RAM": (0, "minecart", "Capped Ram"),
          "CAPPED_RAM_UPGRADE": (3, "book", "Capped Ram"),        # one slot for each line of upgrades
          "CROP_ROTATION": (0, "book", "Crop Rotation"),               # the slot of Heavy Plow (AFTER)
@@ -870,6 +898,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "ELITE_EAGLE_WARRIOR_UPGRADE": (MORE, "book", "Elite Eagle Warrior"),   # the slot of Eagle Warrior (AFTER)
          "ELITE_SKIRMISHER": (1, "drowned_spawn_egg", "Elite Skirmisher"),
          "ELITE_SKIRMISHER_UPGRADE": (3, "book", "Elite Skirmisher"),
+         "ELITE_STEPPE_LANCER": (MORE + 2, "horse_spawn_egg", "Elite Steppe Lancer"),   # the slot of the steppe lancer
+         "ELITE_STEPPE_LANCER_UPGRADE": (MORE + 3, "book", "Elite Steppe Lancer"),   # the stable (#1557)
          "HALBERDIER": (1, "zombie_spawn_egg", "Halberdier"),
          "HALBERDIER_UPGRADE": (3, "book", "Halberdier"),             # the slot of Pikeman (AFTER)
          "HAND_CANNONEER": (7, "pillager_spawn_egg", "Hand Cannoneer"),      # units.classify: a pillager
@@ -883,6 +913,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "HEAVY_PLOW": (0, "book", "Heavy Plow"),                     # the slot of Horse Collar (AFTER)
          "HEAVY_SCORPION": (2, "crossbow", "Heavy Scorpion"),
          "HEAVY_SCORPION_UPGRADE": (5, "book", "Heavy Scorpion"),
+         "HERESY": (6, "book", "Heresy"),
          "HEAVY_DEMOLITION_SHIP": (7, "bamboo_raft", "Heavy Demolition Ship"),
          "HEAVY_DEMOLITION_SHIP_UPGRADE": (4, "book", "Heavy Demolition Ship"),   # the slot of the ship upgrade (AFTER)
          "HEAVY_WARSHIPS": (3, "book", "Heavy Warships"),           # the slot of Medium Warships (AFTER)
@@ -997,9 +1028,11 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "SIEGE_TOWER": (6, "ladder", "Siege Tower"),               # after the slots of the upgrades
          "STONE_MINING": (1, "book", "Stone Mining"),
          "STONE_SHAFT_MINING": (1, "book", "Stone Shaft Mining"),
+         "STEPPE_LANCER": (MORE + 2, "horse_spawn_egg", "Steppe Lancer"),   # slots 20, 21 of the stable (#1557)
          "TEUTONIC_KNIGHT": (0, "zombie_spawn_egg", "Teutonic Knight"),
          "THROWING_AXEMAN": (0, "drowned_spawn_egg", "Throwing Axeman"),
          "THUMB_RING": (5, "book", "Thumb Ring"),                   # slot 4: the cavalry archer (#1397)
+         "TOWN_PATROL": (6, "book", "Town Patrol"),                 # the slot of Town Watch (AFTER)
          "TOWN_WATCH": (6, "book", "Town Watch"),                   # the free slot of the town center
          "TRADE_CART": (0, "donkey_spawn_egg", "Trade Cart"),
          "TRADE_COG": (MORE, "birch_chest_boat", "Trade Cog"),      # units.classify: a birch chest boat
@@ -1023,6 +1056,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "ARCHITECTURE": "Buildings +10 % HP, +1/+1 armor.",
         "ARROWSLITS": "Towers +1, +2, keeps +3 attack.",
         "ARSON": "Infantry +2 attack vs. buildings.",
+        "ATONEMENT": "Monks convert enemy monks.",
         "BALLISTICS": "Arrows hit moving targets.",
         "BATTERING_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
         "BATTLE_ELEPHANT": "Slow, heavy cavalry. Strong vs. buildings.",
@@ -1069,6 +1103,8 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "ELITE_EAGLE_WARRIOR_UPGRADE": "Upgrades eagle warriors to elite ones.",
         "ELITE_SKIRMISHER": "Ranged. Strong vs. archers, spearmen.",
         "ELITE_SKIRMISHER_UPGRADE": "Upgrades skirmishers to elite skirmishers.",
+        "ELITE_STEPPE_LANCER": "Cavalry with a lance. Hits from 1 tile away.",
+        "ELITE_STEPPE_LANCER_UPGRADE": "Upgrades steppe lancers to elite ones.",
         "FEUDAL_AGE": "Advance to the Feudal Age.",
         "FERVOR": "Monks +15 % speed.",
         "DEMOLITION_RAFT": "Explodes next to ships and buildings.",
@@ -1104,6 +1140,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "HEAVY_PLOW": "Farms +125 food; farmers carry +1 food.",
         "HEAVY_SCORPION": "Siege. Shoots bolts; weak vs. cavalry.",
         "HEAVY_SCORPION_UPGRADE": "Upgrades scorpions to heavy scorpions.",
+        "HERESY": "Own units that monks convert die instead.",
         "HEAVY_DEMOLITION_SHIP": "Explodes next to ships and buildings.",
         "HEAVY_DEMOLITION_SHIP_UPGRADE": "Upgrades demolition ships to heavy ones.",
         "HEAVY_WARSHIPS": "Upgrades war galleys and fire ships.",
@@ -1161,6 +1198,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "SIEGE_ONAGER_UPGRADE": "Upgrades onagers to siege onagers.",
         "SIEGE_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
         "SIEGE_RAM_UPGRADE": "Upgrades capped rams to siege rams.",
+        "STEPPE_LANCER": "Cavalry with a lance. Hits from 1 tile away.",
         "SKIRMISHER": "Strong vs. archers, spears; weak vs. cavalry.",
         "SPEARMAN": "Strong vs. cavalry; weak vs. archers.",
         "SQUIRES": "Infantry +10 % speed.",
@@ -1169,6 +1207,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "TEUTONIC_KNIGHT": "Teutonic infantry. Slow, strong armor.",
         "THROWING_AXEMAN": "Frankish infantry. Melee attack at range.",
         "THUMB_RING": "Archers fire 17.65 % faster.",
+        "TOWN_PATROL": "Buildings +4 line of sight.",
         "TOWN_WATCH": "Buildings +4 line of sight.",
         "TRADE_CART": "Brings gold from a second own market.",
         "TRADE_COG": "Brings gold from a second own dock.",
