@@ -18,9 +18,9 @@ def test_the_shares_follow_the_cost_of_the_army():
     server, me, b = with_buildings("HOUSE", "BARRACKS")
     assert b.shares() == bot.SHARE                                     # 5 villagers, the number is 20
     b.villagers = 5
-    share = b.shares()                                                 # Militia: 60 food, 20 gold
+    share = b.shares()                                                 # Militia: 50 food, 20 gold
     assert share["stone"] == 0 and share["wood"] == bot.WOOD
-    assert share["food"] == pytest.approx(3 * share["gold"]) and sum(share.values()) == pytest.approx(1)
+    assert share["food"] == pytest.approx(2.5 * share["gold"]) and sum(share.values()) == pytest.approx(1)
 
 
 def test_no_army_shares_without_a_military_building():
@@ -48,4 +48,4 @@ def test_the_bot_moves_villagers_from_stone_to_food():
     for _ in range(20):
         b.step()
     after = work(b)
-    assert after["stone"] == 0 and after["food"] == 12 and after["gold"] == 4 and after["wood"] == 4, after
+    assert after["stone"] == 0 and after["food"] == 11 and after["gold"] == 5 and after["wood"] == 4, after
