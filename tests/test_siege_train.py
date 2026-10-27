@@ -85,8 +85,9 @@ def test_a_trained_ram_has_its_values_and_drives_to_an_order_on_a_server(tmp_pat
         g = gather.Gather(game, data, tick=0.25).setup()
         x, z = 40, 40
         ram = train.summon(g, "BATTERING_RAM", (x + 0.5, float(g.map.y(x, z)), z + 0.5))
-        crew = game.command(f"data get entity {ram} Passengers[0].attributes")
-        assert ram and "175" in crew, crew                             # aoe stats: the AoE2 hit points of the ram
+        # one attribute: the server cuts the text of a long NBT answer ("..."), and the order of the list varies (#1713)
+        crew = game.command(f'data get entity {ram} Passengers[0].attributes[{{id:"minecraft:max_health"}}].base')
+        assert ram and crew.rstrip().endswith(" 175.0d"), crew         # aoe stats: the AoE2 hit points of the ram
         assert ai.move(g, ram, "BATTERING_RAM", g.map.T, x + 12.5, g.map.y(x + 12, z), z + 0.5).strip() == "Moved 1 units"
         end, pos = time.time() + 30, None
         while time.time() < end and not (pos and math.dist((pos[0], pos[2]), (x + 12.5, z + 0.5)) < 2):

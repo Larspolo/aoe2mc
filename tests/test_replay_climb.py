@@ -9,7 +9,8 @@ import pytest
 from game import ai, run
 from test_unit_ai import data
 
-STEPS, SIDE = 16, 6                        # up 1 block per block toward z, and SIDE blocks to the side (x)
+STEPS, SIDE = 32, 12                       # up 1 block per block toward z, and SIDE blocks to the side (x); a walk of
+# about 2 s: the start of the order is a small part of the time (#1713)
 
 
 @pytest.mark.mc
