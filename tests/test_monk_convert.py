@@ -34,7 +34,7 @@ def test_a_monk_converts_an_enemy_in_5_to_9_intervals():
     for seed in range(40):
         server, g = setup(("foe", "MILITIA", 2, 12.5))
         g.chance.seed(seed)
-        assert monk.order(g, {"monk"}, "foe")
+        assert monk.convert_order(g, {"monk"}, "foe")
         times.append(until_converted(g, "foe"))
         assert "foe" in g.soldiers and "foe" not in g.converting
         assert {"tag foe remove aoe2mc.p2", "tag foe add aoe2mc.p1", "team join p1 foe", "aoe stop foe"} <= set(server.log)
@@ -46,7 +46,7 @@ def test_a_monk_converts_an_enemy_in_5_to_9_intervals():
 
 def test_a_monk_out_of_range_walks_to_the_target():
     server, g = setup(("foe", "MILITIA", 2, 20.5))
-    monk.order(g, {"monk"}, "foe")
+    monk.convert_order(g, {"monk"}, "foe")
     monk.convert(g, 5.0)
     assert "aoe moveto monk 20.5 64.0 5.5" in server.log and "foe" in g.enemies
     server.entities["monk"]["Pos"] = (12.0, 64.0, 5.5)                 # in 9 blocks now: it stops and converts
@@ -56,7 +56,7 @@ def test_a_monk_out_of_range_walks_to_the_target():
 
 def test_a_converted_villager_gathers_for_the_new_player():
     server, g = setup(("v", "VILLAGER_FEMALE", 2, 10.5))
-    monk.order(g, {"monk"}, "v")
+    monk.convert_order(g, {"monk"}, "v")
     until_converted(g, "v")
     assert "v" in g.villagers and "v" not in g.soldiers and any(o["uuid"] == "v" for o in g.units)
 
@@ -64,14 +64,14 @@ def test_a_converted_villager_gathers_for_the_new_player():
 def test_no_conversion_of_a_monk_king_hero_or_siege_unit():
     server, g = setup(("m", "MONK", 2, 8.5), ("k", "KING", 2, 8.5), ("r", "BATTERING_RAM", 2, 8.5),
                       ("h", "WILLIAM_WALLACE", 2, 8.5, True), ("s", "SPEARMAN", 2, 8.5))
-    assert [monk.order(g, {"monk"}, u) for u in "mkrhs"] == [False] * 4 + [True]
+    assert [monk.convert_order(g, {"monk"}, u) for u in "mkrhs"] == [False] * 4 + [True]
 
 
 def test_the_monk_rests_62_seconds_after_a_conversion():
     server, g = setup(("a", "MILITIA", 2, 8.5), ("b", "MILITIA", 2, 9.5))
-    monk.order(g, {"monk"}, "a")
+    monk.convert_order(g, {"monk"}, "a")
     until_converted(g, "a")
-    monk.order(g, {"monk"}, "b")
+    monk.convert_order(g, {"monk"}, "b")
     assert until_converted(g, "b", limit=monk.REST - 1) == pytest.approx(monk.REST - 1)
     assert until_converted(g, "b") <= 1 + 9 * monk.INTERVAL
 
@@ -81,7 +81,7 @@ def test_the_monk_does_not_attack_and_does_not_heal_while_it_converts():
     g.choose({"monk", "own"})
     g.attack("a")
     assert "aoe attack own a" in server.log and not any(c.startswith("aoe attack monk") for c in server.log)
-    monk.order(g, g.monks(), "a")
+    monk.convert_order(g, g.monks(), "a")
     assert g.converting == {"monk": ["a", 0.0, 0]}
 
 
@@ -115,7 +115,7 @@ def test_a_monk_converts_an_enemy_militia_on_a_server(tmp_path):
         own, = [u for u, n in g.soldiers.items() if n == "MONK"]
         foe, = g.enemies
         g.choose({own})
-        assert monk.order(g, g.monks(), foe)
+        assert monk.convert_order(g, g.monks(), foe)
         t0 = time.monotonic()
         while foe in g.enemies and time.monotonic() - t0 < 30:
             g.step()

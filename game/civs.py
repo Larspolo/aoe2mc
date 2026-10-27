@@ -126,6 +126,18 @@ COSTS = {"BERBERS": [("cavalry", None, (1.0, 1.0, 0.85, 0.8))],
                          (0.0,) * 4)],
          "VIKINGS": [(("WHEELBARROW",), None, (0.0,) * 4)]}
 
+# The start-resource bonuses (#1269): civilization -> {resource: change of START} (AoE2 DE, the AoE2 wiki). In AoE2 the
+# bonus comes with the first town center (a Nomad start gets it later); here it is in the start stock. The extra
+# villagers of the Chinese (+3) and Mayans (+1) are units of the map, not of the stock. Lithuanians: +100 food for each
+# town center, here only for the first one.
+START = {"AZTECS": {"gold": 50},
+         "CHINESE": {"food": -200, "wood": -50},
+         "HUNS": {"wood": -100},                                   # no houses
+         "LITHUANIANS": {"food": 100},
+         "MAYANS": {"food": -50},
+         "PERSIANS": {"food": 50, "wood": 50},
+         "SICILIANS": {"stone": 100}}
+
 
 def mounted(s):
     return bool({"cavalry", "camel", "elephant"} & set(s.classes))
@@ -187,6 +199,12 @@ def speed(g, name):
 def civ(g):
     """The civilization of the player of g (aoe2mc.json "players"), for example "CELTS", else None."""
     return g.data.get("players", {}).get(str(g.player), {}).get("civ")
+
+
+def start(g, base):
+    """The start resources `base` with the start bonus of the civilization of the player of g (START)."""
+    bonus = START.get(civ(g), {})
+    return {r: max(0, v + bonus.get(r, 0)) for r, v in base.items()}
 
 
 def work(g, kind):

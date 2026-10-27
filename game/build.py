@@ -65,7 +65,7 @@ ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw
          "TOWN_CENTER": "cobblestone"}                                  # design
 AGE_TECHS = ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE")           # the technologies of the ages, in order
 AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_TOWER",   # the AoE2 age of each
-                     "ARCHER", "SKIRMISHER", "SPEARMAN", "SCOUT_CAVALRY",                # building, unit and age
+                     "ARCHER", "SKIRMISHER", "SPEARMAN", "SCOUT_CAVALRY", "TRADE_CART",  # building, unit and age
                      "CASTLE_AGE"), 1) | {"IMPERIAL_AGE": 2} \
     | dict.fromkeys((                                                  # the Castle Age (#1082): buildings and units
         "BATTERING_RAM",

@@ -40,7 +40,9 @@ the building; each new unit walks there (Minecraft path finding), a new villager
 The castle (#708) trains the unique unit of the civilization of its player (UNIQUE, trains()). Only the units with AoE2
 combat values (combat.STATS) are in its menu.
 The monastery trains monks in the Castle Age (#1243): a monk does not gather, so it joins g.soldiers and takes the
-move orders of the military units.
+move orders of the military units. It researches Fervor (monks walk 15 % faster, SPEEDS, speed()) and Sanctity (monks
+get 15 more hit points) in the Castle Age (#1261).
+The market trains trade carts (#1253): a trade cart also joins g.soldiers, and trade.py walks it between two own markets.
 """
 import json
 import math
@@ -66,6 +68,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "CATAPHRACT": {"food": 70, "gold": 75},
          "CHU_KO_NU": {"wood": 40, "gold": 35},
          "DOUBLE_BIT_AXE": {"food": 100, "wood": 50},
+         "FERVOR": {"gold": 140},
          "FLETCHING": {"food": 100, "gold": 50},
          "FORGING": {"food": 150},
          "GOLD_MINING": {"food": 100, "wood": 75},
@@ -81,6 +84,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "MONK": {"gold": 100},
          "PADDED_ARCHER_ARMOR": {"food": 100},
          "SAMURAI": {"food": 45, "gold": 30},
+         "SANCTITY": {"gold": 175},
          "SCALE_BARDING_ARMOR": {"food": 150},
          "SCALE_MAIL_ARMOR": {"food": 100},
          "SCOUT_CAVALRY": {"food": 80},
@@ -89,6 +93,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "SPEARMAN": {"food": 35, "wood": 25},
          "TEUTONIC_KNIGHT": {"food": 85, "gold": 30},
          "THROWING_AXEMAN": {"food": 55, "gold": 25},
+         "TRADE_CART": {"wood": 100, "gold": 50},
          "WAR_ELEPHANT": {"food": 170, "gold": 85},
          "WHEELBARROW": {"food": 175, "wood": 50},
          "WOAD_RAIDER": {"food": 70, "gold": 25}}
@@ -99,6 +104,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "CATAPHRACT": 20,
                "CHU_KO_NU": 16,
                "DOUBLE_BIT_AXE": 25,
+               "FERVOR": 50,
                "FLETCHING": 30,
                "FORGING": 50,
                "GOLD_MINING": 30,
@@ -114,6 +120,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "MONK": 51,
                "PADDED_ARCHER_ARMOR": 40,
                "SAMURAI": 9,
+               "SANCTITY": 60,
                "SCALE_BARDING_ARMOR": 45,
                "SCALE_MAIL_ARMOR": 40,
                "SCOUT_CAVALRY": 30,
@@ -122,6 +129,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "STONE_MINING": 30,
                "TEUTONIC_KNIGHT": 12,
                "THROWING_AXEMAN": 13,
+               "TRADE_CART": 51,
                "WAR_ELEPHANT": 25,
                "WHEELBARROW": 75,
                "WOAD_RAIDER": 10}
@@ -132,9 +140,10 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "CASTLE": (),                                                         # the unique unit: trains() (#708)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES"),                           # (#671, #940)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
+          "MARKET": ("TRADE_CART",),                                            # (#1253)
           "MILL": ("HORSE_COLLAR",),                                            # (#726)
           "MINING_CAMP": ("GOLD_MINING", "STONE_MINING"),                      # (#727, #939)
-          "MONASTERY": ("MONK",)}                                              # (#1243)
+          "MONASTERY": ("MONK", "FERVOR", "SANCTITY")}                          # (#1243, #1261)
 # The unique unit of each civilization (AoE2 DE), trained at its castle. A unit without COSTS is not in the menu yet:
 # it has no AoE2 combat values in combat.STATS.
 UNIQUE = {"BRITONS": "LONGBOWMAN", "PERSIANS": "WAR_ELEPHANT", "BYZANTINES": "CATAPHRACT", "CELTS": "WOAD_RAIDER",
@@ -153,6 +162,7 @@ build.AGE |= dict.fromkeys(UNIQUE.values(), 2) | dict.fromkeys(("ELITE_" + n for
 TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
          "CASTLE_AGE": lambda name, s: s,                          # an age: REQUIRES
          "DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
+         "FERVOR": lambda name, s: s,                              # the walk speed: SPEEDS
          "FLETCHING": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if "archer" in s.classes else s,
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
          "GOLD_MINING": lambda name, s: s,                         # an economy technology: gather.WORK_TECHS
@@ -165,11 +175,13 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          if "archer" in s.classes else s,
          "SCALE_BARDING_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if barding(s) else s,
+         "SANCTITY": lambda name, s: s._replace(hp=s.hp + 15) if name == "MONK" else s,
          "SCALE_MAIL_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "infantry" in s.classes else s,
          "STONE_MINING": lambda name, s: s,                        # an economy technology: gather.WORK_TECHS
          "FEUDAL_AGE": lambda name, s: s,   # the change of each technology to the AoE2 values
          "WHEELBARROW": lambda name, s: s}                         # no combat change: gather.CARRY and gather.PACE
+SPEEDS = {"FERVOR": ("MONK", 1.15)}                                # technology: the unit and its walk speed factor
 UPGRADES = {"MAN_AT_ARMS_UPGRADE": ("MILITIA", "MAN_AT_ARMS")}  # technology: the unit and its new unit (#941)
 REQUIRES = {"CASTLE_AGE": (2, ("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET")),   # n types of these buildings
             "FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP", "DOCK")),
@@ -177,12 +189,14 @@ REQUIRES = {"CASTLE_AGE": (2, ("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET"
 TECH_AGE = {                                                       # the age of a technology (build.AGE): hidden before
     "BLOODLINES": 1,
     "DOUBLE_BIT_AXE": 1,
+    "FERVOR": 2,
     "FLETCHING": 1,
     "FORGING": 1,
     "GOLD_MINING": 1,
     "HORSE_COLLAR": 1,
     "MAN_AT_ARMS_UPGRADE": 1,
     "PADDED_ARCHER_ARMOR": 1,
+    "SANCTITY": 2,
     "SCALE_BARDING_ARMOR": 1,
     "SCALE_MAIL_ARMOR": 1,
     "STONE_MINING": 1,
@@ -206,6 +220,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "CATAPHRACT": (0, "horse_spawn_egg", "Cataphract"),
          "CHU_KO_NU": (0, "skeleton_spawn_egg", "Chu Ko Nu"),
          "DOUBLE_BIT_AXE": (0, "book", "Double-Bit Axe"),
+         "FERVOR": (1, "book", "Fervor"),
          "FLETCHING": (2, "book", "Fletching"),
          "FORGING": (0, "book", "Forging"),
          "GOLD_MINING": (0, "book", "Gold Mining"),
@@ -222,11 +237,13 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "MONK": (0, "evoker_spawn_egg", "Monk"),
          "PADDED_ARCHER_ARMOR": (3, "book", "Padded Archer Armor"),
          "SAMURAI": (0, "zombie_spawn_egg", "Samurai"),
+         "SANCTITY": (2, "book", "Sanctity"),
          "SCALE_BARDING_ARMOR": (4, "book", "Scale Barding Armor"),
          "SCALE_MAIL_ARMOR": (1, "book", "Scale Mail Armor"),
          "STONE_MINING": (1, "book", "Stone Mining"),
          "TEUTONIC_KNIGHT": (0, "zombie_spawn_egg", "Teutonic Knight"),
          "THROWING_AXEMAN": (0, "drowned_spawn_egg", "Throwing Axeman"),
+         "TRADE_CART": (0, "donkey_spawn_egg", "Trade Cart"),
          "WAR_ELEPHANT": (0, "ravager_spawn_egg", "War Elephant"),
          "FEUDAL_AGE": (2, "bell", "Feudal Age"),
          "WHEELBARROW": (3, "book", "Wheelbarrow"),
@@ -240,6 +257,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "CHU_KO_NU": "Chinese archer. Shoots many arrows.",
         "DOUBLE_BIT_AXE": "Villagers chop wood 20 % faster.",
         "FEUDAL_AGE": "Advance to the Feudal Age.",
+        "FERVOR": "Monks +15 % speed.",
         "FLETCHING": "Archers, towers, town center +1 attack, +1 range.",
         "FORGING": "Infantry and cavalry +1 attack.",
         "GOLD_MINING": "Villagers mine gold 15 % faster.",
@@ -257,6 +275,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "MONK": "Heals own units, converts enemy units.",
         "PADDED_ARCHER_ARMOR": "Archers +1 melee armor, +1 pierce armor.",
         "SAMURAI": "Japanese infantry. Strong vs. unique units.",
+        "SANCTITY": "Monks +15 HP.",
         "SCALE_BARDING_ARMOR": "Cavalry +1 melee armor, +1 pierce armor.",
         "SCALE_MAIL_ARMOR": "Infantry +1 melee armor, +1 pierce armor.",
         "SCOUT_CAVALRY": "Fast. Strong vs. monks, siege; weak vs. spears.",
@@ -265,6 +284,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "STONE_MINING": "Villagers mine stone 15 % faster.",
         "TEUTONIC_KNIGHT": "Teutonic infantry. Slow, strong armor.",
         "THROWING_AXEMAN": "Frankish infantry. Melee attack at range.",
+        "TRADE_CART": "Brings gold from a second own market.",
         "VILLAGER_MALE": "Gathers, builds and repairs.",
         "WAR_ELEPHANT": "Persian elephant. Slow, very strong.",
         "WHEELBARROW": "Villagers +10 % speed, +25 % carry.",
@@ -348,10 +368,18 @@ def show(g, player, rect):
              for name in trains(g, building) if repeatable(g, name) and unlocked(g, name) for slot, item, label in [ITEMS[name]]]
     items += [RALLY] if units_of(building) else []
     items += [garrison.UNGARRISON] if getattr(g, "garrisons", {}).get(rect) else []   # only with units inside (#808)
+    if building == "MARKET":                                           # the buy and sell rows under the queue (#1286)
+        import market                                                  # only for a market
+        items += [(market.ROW + slot, *item) for slot, *item in market.items(g)]
     q = g.queues.get(rect, [])                                         # the queue row first: the plugin sets the
     items = [(ROW + i, ITEMS[name][1], ITEMS[name][2] + (f" {int(100 * q[0]['progress'])} %" if start == 0 else ""),
               "Click: cancel 1", k) for i, (name, start, k) in enumerate(groups(q)[:ROW])] + items   # items by slot
-    menu.show(g, player, build.pretty(building), items, lambda p, slot, shift: order(g, p, rect, slot, shift))
+    def click(p, slot, shift):
+        if building == "MARKET" and slot >= market.ROW:
+            market.order(g, p, slot - market.ROW, shift, lambda: show(g, p, rect))
+        else:
+            order(g, p, rect, slot, shift)
+    menu.show(g, player, build.pretty(building), items, click)
 
 
 def units_of(building):
@@ -432,7 +460,7 @@ def go(g, rect, uuid, name):
     (x, z), tile = g.rally[rect]
     if uuid not in g.villagers:                                        # a military unit walks with the plugin
         import ai                                                      # ai imports gather, gather imports this module
-        ai.move(g, uuid, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * civs.speed(g, name))
+        ai.move(g, uuid, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * speed(g, name))
     elif tile:
         g.send(tile, {uuid})
     else:
@@ -524,6 +552,12 @@ def stats(g, name):
     return s
 
 
+def speed(g, name):
+    """The factor of the walk speed of unit name: the bonus of the civilization (civs.speed) and the technologies of the
+    player (SPEEDS: Fervor, #1261)."""
+    return civs.speed(g, name) * math.prod(f ** count(g, t) for t, (unit, f) in SPEEDS.items() if unit == name)
+
+
 def research(g, entry):
     """A technology is complete: keep it in g.techs and give the live villagers and military units the new values."""
     import combat, gather                                          # gather imports this module
@@ -546,11 +580,16 @@ def research(g, entry):
             g.command(combat.stats_command(uuid, name, stats(g, name)))
         if stats(g, name).range != combat.stats(name).range:          # Fletching (#724)
             g.command(combat.range_command(uuid, name, g.map.T, s=stats(g, name)))
+    if entry["name"] in SPEEDS:                                    # the live units walk faster (Fervor)
+        import ai                                                  # ai imports gather, gather imports this module
+        for uuid, name in g.soldiers.items():
+            if name == SPEEDS[entry["name"]][0]:
+                g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))
     if entry["name"] in REQUIRES:                                  # an age: all players see it, as in AoE2
         import ai                                                  # ai imports gather, gather imports this module
         for uuid, name in g.soldiers.items():                      # the walk speed of the age (civs.UNITS, Celts)
             if civs.speed(g, name) != 1:
-                g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * civs.speed(g, name)))
+                g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))
         g.command("title @a title " + json.dumps({"text": age(g), "color": "gold"}))
         g.command("tellraw @a " + json.dumps({"text": f"Player {g.player} advances to the {age(g)}.", "color": "gold"}))
         g.command("playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1")
@@ -670,10 +709,10 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name)):   # it attacks enemies in sight (#775)
         g.command(cmd)
     import ai                                                      # ai imports gather, gather imports this module
-    g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * civs.speed(g, name)))   # also without an order (#849)
+    g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))   # also without an order (#849)
     if player not in (None, g.player):
         return uuid
-    if gather.military(name) or name == "MONK":                    # a monk walks on orders as a soldier (#1243)
+    if gather.military(name) or name in ("MONK", "TRADE_CART"):    # they walk on orders as a soldier (#1243, #1253)
         g.soldiers[uuid] = name
         return uuid
     g.villagers[uuid] = gather.Villager(uuid, pos)

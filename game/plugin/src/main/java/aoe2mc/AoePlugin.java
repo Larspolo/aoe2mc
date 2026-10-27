@@ -21,6 +21,7 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -104,6 +105,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              setup, so the menu commands stay below the RCON limit
  *   aoe minimap on|off|pixel <x> <z>           the live units as dots in their team color on map 0, once per
  *                                              second (#1237, Minimap.java); pixel: the map pixel of a block
+ *   aoe minimap building <x0> <z0> <x1> <z1> <team>|unbuild <x0> <z0>   a replay building as a square on map 0 (#1238)
  *   aoe where <selector> [from]                "Where <count>: <uuid> <x> <y> <z> <order 0|1> <target 0|1>, ..." for
  *                                              WHERE_PAGE units from index `from` in UUID order (#813, tools/replay_drift.py);
  *                                              target 1 also after a target or a hit since the last answer (#1169)
@@ -240,6 +242,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private static final double CHASE = 12.0;
     private static final double MELEE = 2.0;          // stand ground: the blocks to an enemy that a melee unit attacks
     static final String CARRIER = "aoe2mc.carrier";                  // the tag of the mob that carries a siege unit
+    private static final double[] CLIMB = {0.75, 0.15};               // up and forward (blocks per tick) out of water
     private static final double STEP = 1.25;                         // a step of 1 block with snow[layers=2] (#851)
     private static final double CARRIER_SCALE = 0.3;                 // a pig of 0.27 blocks: the minecart stays low
     private final GoalKey<Mob> rangeKey = GoalKey.of(Mob.class, new NamespacedKey("aoe2mc", "aoe_range"));
@@ -1087,6 +1090,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     steer(mob, path, o.speed);
                     glide(mob, path, o.speed);
                 }
+                climb(mob, o.goal);                    // also when its path ends in the water
             }
         }
     }
@@ -1119,6 +1123,39 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         double w = Math.min(step, d);
         mob.setVelocity(new Vector(dx / d * w - (e < 0.01 ? 0 : nx / e * push), mob.getVelocity().getY(),
                 dz / d * w - (e < 0.01 ? 0 : nz / e * push)));
+    }
+
+    // A swimming mob floats about 1.5 blocks under a bank of one block above the water, the shore of the maps: Minecraft
+    // lifts it out only when 0.6 blocks up are free (LivingEntity#travel in water), and its path ends in the water
+    // (#1208: a replay villager stayed in the water and lost its order). In front of such a bank on the way to its goal,
+    // it jumps out, as a player does.
+    private static void climb(Mob mob, Location goal) {
+        Location m = mob.getLocation();
+        double dx = goal.getX() - m.getX(), dz = goal.getZ() - m.getZ(), d = Math.hypot(dx, dz);
+        Block under = m.getBlock();
+        boolean wet = mob.isInWater() || under.getRelative(0, -1, 0).isLiquid() || under.getRelative(0, -2, 0).isLiquid();
+        if (!wet || d < 1.5) {
+            return;
+        }
+        double ahead = mob.getWidth() / 2 + 0.7;             // the next block, also 0.8 blocks from the bank
+        Block front = m.clone().add(dx / d * ahead, 0, dz / d * ahead).getBlock();
+        Block top = null;
+        for (int up = -1; up <= 2 && top == null; up++) {      // the top of the bank: a solid block, 2 free above it
+            Block b = front.getRelative(0, up, 0);
+            if (!b.isPassable() && b.getRelative(0, 1, 0).isPassable() && b.getRelative(0, 2, 0).isPassable()
+                    && !b.getRelative(0, 1, 0).isLiquid()) {
+                top = b;
+            }
+        }
+        if (top == null || top.getY() + 1 - m.getY() > 1.6) {
+            return;
+        }
+        Vector v = mob.getVelocity();
+        if (m.getY() >= top.getY() + 0.9) {                       // above the bank: over the edge
+            mob.setVelocity(new Vector(dx / d * CLIMB[1], v.getY(), dz / d * CLIMB[1]));   // it falls: no hover
+        } else if (mob.isInWater() && v.getY() <= 0.1) {
+            mob.setVelocity(new Vector(dx / d * CLIMB[1], CLIMB[0], dz / d * CLIMB[1]));
+        }
     }
 
     // A path point from i to k is not at the height of the mob. A mob of less than 1 block steers only there: on flat
@@ -1230,6 +1267,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (step != null && step.getBaseValue() < STEP) {
             step.setBaseValue(STEP);                                   // no jump on a step of one block (#829)
         }
+        AttributeInstance swim = mob.getAttribute(Attribute.WATER_MOVEMENT_EFFICIENCY);
+        if (swim != null) {         // as Depth Strider III: a path through water at about the walk speed (#1208)
+            swim.setBaseValue(1);
+        }
         Range r = ranges.get(mob.getUniqueId());
         if (r == null && mob.getScoreboardTags().contains(CARRIER) && !mob.getPassengers().isEmpty()) {
             r = ranges.get(mob.getPassengers().get(0).getUniqueId());      // the range of its siege unit (#1050)
@@ -1337,7 +1378,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Destroy: " + n + " buildings");
             return true;
         }
-        if ((args.length == 2 || args.length == 4) && args[0].equals("minimap")) {   // live units on map 0 (#1237)
+        if ((args.length == 2 || args.length == 4 || args.length == 7) && args[0].equals("minimap")) {   // #1237, #1238
             return minimap.command(sender, args);
         }
         if (args.length >= 2 && args[0].startsWith("box")) {            // the border of the selection box (#795)
