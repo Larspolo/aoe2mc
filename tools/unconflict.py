@@ -1,0 +1,94 @@
+"""Solve the merge conflicts in which both sides only add lines (#1864).
+
+Parallel tickets add entries next to each other in the same table (`TECHS` and `UPGRADES` in `game/train.py`, the
+command list of the plugin). Git then has a conflict with an empty base: nothing to choose, both sides stay.
+Run it after a failed `git merge` with `merge.conflictStyle diff3` (the workflow `unconflict.yml` does). It solves
+each conflicted file when all its hunks have an empty base, checks the result (Python compiles, JSON lines parse) and
+`git add`s it. Exit 0: all conflicts are solved, commit the merge. Exit 1: a real conflict stays (it names it).
+A table of keyed one-line entries ("KEY": ...) stays in alphabetical order (CLAUDE.md, "Code style").
+"""
+import json
+import re
+import subprocess
+import sys
+
+KEYED = re.compile(r'^\s+"([^"]+)":')     # one entry of a table keyed by a name
+
+
+def merge(ours, theirs):
+    """The lines of one add-add hunk: both sides, keyed entries sorted. None for a key with two entries."""
+    lines = ours + theirs          # no dedupe: two code blocks can each end with the same line
+    keys = [KEYED.match(t) for t in lines]
+    if not all(keys):
+        return lines
+    names = [k.group(1) for k in keys]
+    if len(set(names)) < len(names):
+        return None
+    return sorted(lines, key=lambda t: KEYED.match(t).group(1))
+
+
+def solve(text):
+    """The text with each add-add hunk solved, or (None, reason)."""
+    out, lines, i = [], text.splitlines(keepends=True), 0
+    while i < len(lines):
+        if not lines[i].startswith("<<<<<<< "):
+            out.append(lines[i])
+            i += 1
+            continue
+        ours, base, theirs, part = [], None, [], "ours"
+        i += 1
+        while i < len(lines) and not lines[i].startswith(">>>>>>> "):
+            t = lines[i]
+            if t.startswith("||||||| "):
+                part, base = "base", []
+            elif t.rstrip("\r\n") == "=======":
+                part = "theirs"
+            else:
+                (ours if part == "ours" else base if part == "base" else theirs).append(t)
+            i += 1
+        i += 1
+        if base is None:
+            return None, "no base section: set merge.conflictStyle diff3"
+        if base:
+            return None, "both sides change the same lines"
+        both = merge(ours, theirs)
+        if both is None:
+            return None, "both sides add the same key"
+        out += both
+    return "".join(out), ""
+
+
+def check(path, text):
+    """An error text when the solved file is not valid, else ""."""
+    try:
+        if path.endswith(".py"):
+            compile(text, path, "exec")
+        elif path.endswith(".jsonl"):
+            [json.loads(t) for t in text.splitlines() if t.strip()]
+        elif path.endswith(".json"):
+            json.loads(text)
+    except (SyntaxError, ValueError) as e:
+        return f"not valid after the merge: {e}"
+    return ""
+
+
+def main():
+    files = subprocess.run(["git", "diff", "--name-only", "--diff-filter=U"], capture_output=True, text=True,
+                           check=True).stdout.split()
+    solved = {}
+    for f in files:
+        text, why = solve(open(f, encoding="utf-8").read())
+        why = why or check(f, text)
+        if why:
+            print(f"{f}: {why}")
+            return 1
+        solved[f] = text
+    for f, text in solved.items():        # write only when all files are solved
+        open(f, "w", encoding="utf-8").write(text)
+        subprocess.run(["git", "add", f], check=True)
+        print(f"{f}: solved (both sides only add lines)")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

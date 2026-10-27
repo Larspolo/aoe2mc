@@ -213,6 +213,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
          "DRY_DOCK": lambda name, s: s._replace(pierce=s.pierce + 1) if ship(name, s) else s,
          "EAGLE_WARRIOR_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
+         "ELITE_ARAMBAI_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "ELITE_BALLISTA_ELEPHANT_UPGRADE": lambda name, s: s,    # a new unit name: UPGRADES
          "ELITE_BATTLE_ELEPHANT_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_BOYAR_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
@@ -221,12 +222,14 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_CENTURION_UPGRADE": lambda name, s: s,             # a new unit name: UPGRADES
          "ELITE_CHAKRAM_THROWER_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_COMPOSITE_BOWMAN_UPGRADE": lambda name, s: s,     # a new unit name: UPGRADES
+         "ELITE_COUSTILLIER_UPGRADE": lambda name, s: s,           # a new unit name: UPGRADES
          "ELITE_CONQUISTADOR_UPGRADE": lambda name, s: s,          # a new unit name: UPGRADES
          "ELITE_EAGLE_WARRIOR_UPGRADE": lambda name, s: s,
          "ELITE_GBETO_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "ELITE_GENITOUR_UPGRADE": lambda name, s: s,              # a new unit name: UPGRADES
          "ELITE_MAGYAR_HUSZAR_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
          "ELITE_GENOESE_CROSSBOWMAN_UPGRADE": lambda name, s: s,   # a new unit name: UPGRADES
+         "ELITE_GHULAM_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "ELITE_KARAMBIT_WARRIOR_UPGRADE": lambda name, s: s,      # a new unit name: UPGRADES
          "ELITE_KESHIK_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
          "ELITE_OBUCH_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
@@ -338,6 +341,7 @@ UPGRADES = {                                                       # technology:
     "CHAMPION_UPGRADE": ("TWO_HANDED_SWORDSMAN", "CHAMPION"),
     "CROSSBOWMAN_UPGRADE": ("ARCHER", "CROSSBOWMAN"),
     "EAGLE_WARRIOR_UPGRADE": ("EAGLE_SCOUT", "EAGLE_WARRIOR"),        # (#1555)
+    "ELITE_ARAMBAI_UPGRADE": ("ARAMBAI", "ELITE_ARAMBAI"),   # the castle of the Burmese (#1751)
     "ELITE_BALLISTA_ELEPHANT_UPGRADE": ("BALLISTA_ELEPHANT", "ELITE_BALLISTA_ELEPHANT"),   # the castle of the Khmer (#1752)
     "ELITE_BATTLE_ELEPHANT_UPGRADE": ("BATTLE_ELEPHANT", "ELITE_BATTLE_ELEPHANT"),   # (#1556)
     "ELITE_BOYAR_UPGRADE": ("BOYAR", "ELITE_BOYAR"),   # the castle of the Slavs (#1721)
@@ -346,12 +350,14 @@ UPGRADES = {                                                       # technology:
     "ELITE_CENTURION_UPGRADE": ("CENTURION", "ELITE_CENTURION"),   # the castle of the Romans (#1749)
     "ELITE_CHAKRAM_THROWER_UPGRADE": ("CHAKRAM_THROWER", "ELITE_CHAKRAM_THROWER"),   # the castle (#1624)
     "ELITE_COMPOSITE_BOWMAN_UPGRADE": ("COMPOSITE_BOWMAN", "ELITE_COMPOSITE_BOWMAN"),   # the castle of the Armenians (#1759)
+    "ELITE_COUSTILLIER_UPGRADE": ("COUSTILLIER", "ELITE_COUSTILLIER"),   # the castle of the Burgundians (#1753)
     "ELITE_CONQUISTADOR_UPGRADE": ("CONQUISTADOR", "ELITE_CONQUISTADOR"),   # the castle of the Spanish (#1744)
     "ELITE_EAGLE_WARRIOR_UPGRADE": ("EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"),
     "ELITE_GBETO_UPGRADE": ("GBETO", "ELITE_GBETO"),   # the castle of the Malians (#1722)
     "ELITE_GENITOUR_UPGRADE": ("GENITOUR", "ELITE_GENITOUR"),   # (#1610)
     "ELITE_MAGYAR_HUSZAR_UPGRADE": ("MAGYAR_HUSZAR", "ELITE_MAGYAR_HUSZAR"),   # the castle of the Magyars (#1743)
     "ELITE_GENOESE_CROSSBOWMAN_UPGRADE": ("GENOESE_CROSSBOWMAN", "ELITE_GENOESE_CROSSBOWMAN"),   # the castle (#1724)
+    "ELITE_GHULAM_UPGRADE": ("GHULAM", "ELITE_GHULAM"),   # the castle of the Hindustanis (#1756)
     "ELITE_KARAMBIT_WARRIOR_UPGRADE": ("KARAMBIT_WARRIOR", "ELITE_KARAMBIT_WARRIOR"),   # the castle of the Malay (#1750)
     "ELITE_KESHIK_UPGRADE": ("KESHIK", "ELITE_KESHIK"),   # the castle of the Tatars (#1745)
     "ELITE_OBUCH_UPGRADE": ("OBUCH", "ELITE_OBUCH"),   # the castle of the Poles (#1747)
