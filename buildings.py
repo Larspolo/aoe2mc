@@ -11,6 +11,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
+import units
+
 QUOIN = {"stone_bricks": "polished_andesite", "cut_sandstone": "chiseled_sandstone", "mud_bricks": "packed_mud",
          "cut_red_sandstone": "chiseled_red_sandstone", "mossy_stone_bricks": "stone_bricks",
          "smooth_sandstone": "cut_sandstone", "terracotta": "brown_terracotta"}
@@ -2725,22 +2727,7 @@ def copper_fittings(c, bars=True):
 # --------------------------------------------------------------------------------------------
 # Selection and placement
 # --------------------------------------------------------------------------------------------
-FOOTPRINT = [("SHIPYARD", 4), ("PORT", 4), ("MOLE", 2), ("CHAIN_", 1), ("FLAGSHIP_OF_NEARCHOS_MOVEABLE", 3),
-             ("WOODEN_BRIDGE", 1), ("ARCH_OF_CONSTANTINE", 3), ("COLOSSEUM", 5), ("GOL_GUMBAZ", 5),
-             ("SANCHI_STUPA", 5), ("TEMPLE_OF_HEAVEN", 5), ("MINARET_OF_JAM", 4), ("ORACLES_TEMPLE", 4), ("MOSQUE", 4),
-             ("HALL_OF_HEROES", 4), ("PAGAN_SHRINE", 3),
-             ("PAGODA_", 3), ("STUPA", 3), ("TROWULAN_GATE", 3), ("REKHA_DEUL_TEMPLE", 3), ("SVAN_TOWER", 1),
-             ("COURTYARD_WALLS", 3), ("MESOPOTAMIAN_PILLAR", 1), ("MESOPOTAMIAN_GARDEN", 3),
-             ("GREAT_PYRAMID", 6), ("NUBIAN_PYRAMID", 3), ("PYRAMID", 5),
-             ("DOME_OF_THE_ROCK", 5), ("SANKORE", 3), ("FISH_TRAP", 3), ("RUINS", 3), ("ROCK_CHURCH", 3),
-             ("CHAPEL", 3), ("BRIDGE", 3), ("AQUEDUCT", 1), ("AMPHITHEATRE", 5), ("THEATRE", 5), ("STONEHENGE", 4), ("CONSTRUCTION_CRANE", 2), ("SCAFFOLDING", 2), ("CATHEDRAL", 4), ("MONUMENT", 3),
-             ("ARMY_TENT", 2), ("PAVILION", 2), ("YURT", 2), ("HUT", 2), ("TRADE_WORKSHOP", 4),
-             ("POENARI", 4), ("TOWER_OF_LONDON", 3), ("WONDER", 5), ("TOWN_CENTER", 4), ("CASTLE", 4), ("MARKET", 4), ("SIEGE_WORKSHOP", 4),
-             ("FEITORIA", 4), ("MONASTERY", 3), ("FORTIFIED_CHURCH", 3), ("BARRACKS", 3), ("ARCHERY_RANGE", 3),
-             ("STABLE", 3), ("BLACKSMITH", 3), ("UNIVERSITY", 3), ("DOCK", 3), ("HARBOR", 3), ("FARM", 3),
-             ("KREPOST", 3), ("FOLWARK", 3), ("CARAVANSERAI", 3), ("PASTURE", 3), ("GATE", 1), ("WALL", 1),
-             ("TOWER", 1), ("OUTPOST", 1), ("FENCE", 1), ("MILL", 2), ("LUMBER_CAMP", 2),
-             ("MINING_CAMP", 2), ("HOUSE", 2), ("DONJON", 2)]
+FOOTPRINT = [(r["name"], r["size"]) for r in units.rows("footprint.jsonl")]   # the first word in the name wins
 
 
 def footprint(name):
