@@ -36,7 +36,7 @@ def test_ninjalui_gives_each_resource_and_polo_answers(tiny_world):
     assert g.stock == {"wood": 100000, "food": 100000, "gold": 100000, "stone": 100000}
     server.scores["aoe_cheat"] = cheats.NAMES.index("polo") + 1
     cheats.clicks(g)
-    assert server.log[-1].startswith('tellraw Steve {"text":"The map is open')
+    assert server.log[-1] == 'tellraw Steve {"text":"Fog of war: off"}'          # (#1390)
 
 
 def test_no_cheat_with_cheats_off(tiny_world):
