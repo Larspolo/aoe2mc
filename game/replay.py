@@ -91,21 +91,30 @@ SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, 
           "ARBALESTER": 0.96,                                                       # (#1500)
           "CAVALIER": 1.35,                                                         # (#1501)
           "CHAKRAM_THROWER": 1.15,                                                  # (#1624)
+          "ELITE_FIRE_LANCER": 0.96,                                                # (#1953)
           "ELITE_GENITOUR": 1.35,                                                   # (#1610)
           "ELITE_SKIRMISHER": 0.96,                                                 # (#1396)
           "ELITE_CHAKRAM_THROWER": 1.15,
           "ELITE_SHRIVAMSHA_RIDER": 1.6,                                            # (#1612)
           "ELITE_STEPPE_LANCER": 1.45,                                              # (#1557)
+          "ELITE_VARANGIAN_GUARD": 1.05,                                            # (#2011)
+          "FIRE_LANCER": 0.96,                                                      # (#1953)
           "GENITOUR": 1.35,                                                         # (#1610)
           "HALBERDIER": 1.0,                                                        # (#1499)
           "HEAVY_CAMEL_RIDER": 1.45,                                                # (#1550)
           "HEAVY_CAVALRY_ARCHER": 1.4,                                              # (#1500)
+          "HEAVY_MOUNTED_CROSSBOWMAN": 1.25,                                        # (#2012)
+          "HEAVY_HEI_GUANG_CAVALRY": 1.35,                                          # (#1954)
+          "HEI_GUANG_CAVALRY": 1.35,                                                # (#1954)
           "HUSSAR": 1.5,                                                            # (#1502)
           "IMPERIAL_SKIRMISHER": 0.96,                                              # (#1611)
           "LONG_SWORDSMAN": 0.9,
+          "MOUNTED_CROSSBOWMAN": 1.25,                                              # (#2012)
+          "MISSIONARY": 1.1,                                                        # (#1939)
           "PALADIN": 1.35,                                                          # (#1501)
           "SHRIVAMSHA_RIDER": 1.6,                                                  # (#1612)
           "STEPPE_LANCER": 1.45,                                                    # (#1557)
+          "VARANGIAN_GUARD": 1.05,                                                  # (#2011)
           "CHAMPION": 0.96,                                                         # (#1498)
           "TWO_HANDED_SWORDSMAN": 0.96,
           "WINGED_HUSSAR": 1.5,                                                     # (#1558)
@@ -603,7 +612,7 @@ class Replay:
                 else:
                     del self.placed[new]
                     self.added -= 1
-                    out += [f"aoe minimap unbuild {rect[0]} {rect[2]}"] * (self.pov is None and self.drawn.pop(rect, 0) != 0)
+                out += [f"aoe minimap unbuild {rect[0]} {rect[2]}"] * (self.pov is None and self.drawn.pop(rect, 0) != 0)
                 out += self.fall(rect)
             elif (v := self.unit(i, name, e["player"])) is not None:
                 del self.units[i]
@@ -1437,7 +1446,7 @@ class Replay:
         comes into sight. Only the changes; no view player: all buildings again."""
         if not self.ai:
             return []
-        T, placed = self.T, {rect: p for p, _, rect in self.placed}
+        T, placed = self.T, {rect: p for p, _, rect in [s[1:] for s in self.starts] + self.placed}   # the start ones too (#1940)
         want = placed
         if self.pov is not None:
             known = self.known.setdefault(self.pov, {})
@@ -1789,7 +1798,9 @@ class Replay:
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
                    f"bossbar set {BAR} max {max(1, int(end) // 1000)}"] +
              ([f"tag {u} add {COUNTED}" for u in self.counted] + ["aoe deathmarks on", "aoe minimap on", f"aoe minimap frame {FRAME * self.T}"]) * self.ai +
-             # the death marks (#846) and the live units on the map item (#1237)
+             # the death marks (#846) and the live units on the map item (#1237); the plugin paints the bare ground
+             # over the start objects of the base image, so the start buildings get their squares (#1940)
+             self.minimap_buildings(set(), set()) * (self.pov is None) +
              self.overview())
         census = self.census if bar and self.ai else lambda: None
         while k < len(events) or self.moving or self.builds:

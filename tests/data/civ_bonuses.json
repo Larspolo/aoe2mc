@@ -19,7 +19,7 @@
  "AZTECS": [
   {"bonus": "Start the game with an Eagle Scout.", "later": "play:setup"},
   {"bonus": "Villagers carry +3 extra resources.", "later": "play:gather"},
-  {"bonus": "All military units are created 15% faster.", "gap": "play:train"},
+  {"bonus": "All military units are created 15% faster.", "in": "TRAIN_RATE"},
   {"bonus": "Monks gain 5 HP for every researched Monastery technology.", "later": "play:monks"},
   {"bonus": "Start with gold +50.", "in": "START"}
  ],
@@ -91,7 +91,7 @@
  "DANES": [
   {"bonus": "Villagers and Fishing Ships drop off food +5%.", "gap": "play:gather"},
   {"bonus": "Units and buildings loot 25% of target's cost when destroying enemy buildings (except walls and gates).", "later": "play:fight"},
-  {"bonus": "Barracks and Siege Workshop technologies cost gold -66%.", "gap": "play:tech"},
+  {"bonus": "Barracks and Siege Workshop technologies cost gold -66%.", "in": "COSTS"},
   {"bonus": "Varangian Guards and Longships move 10% faster.", "later": "play:military-train"}
  ],
  "DRAVIDIANS": [
@@ -152,7 +152,7 @@
  "ITALIANS": [
   {"bonus": "Advancing to the next Age is 15% cheaper.", "in": "COSTS"},
   {"bonus": "Foot archers (except Skirmishers) and Condottieri +1/+1 armor.", "in": "UNITS"},
-  {"bonus": "Dock and University technologies are 25% cheaper.", "gap": "play:tech"},
+  {"bonus": "Dock and University technologies are 25% cheaper.", "in": "COSTS"},
   {"bonus": "Fishing Ships are 15% cheaper.", "later": "play:naval"},
   {"bonus": "Gunpowder units are 20% cheaper.", "in": "COSTS"}
  ],
@@ -166,12 +166,13 @@
   {"bonus": "Meat of hunted and livestock animals does not decay.", "later": "play:hunt"},
   {"bonus": "Mounted units and Fire Lancers attack 25% faster starting in the Feudal Age.", "gap": "play:fight"},
   {"bonus": "Siege Engineers available in the Castle Age.", "later": "play:ages"},
-  {"bonus": "Siege and fortification technologies cost wood -75% and are researched 100% faster.", "gap": "play:tech"},
+  {"bonus": "Siege and fortification technologies cost wood -75%.", "in": "COSTS"},
+  {"bonus": "Siege and fortification technologies are researched 100% faster.", "gap": "play:tech"},
   {"bonus": "Military units receive -50% friendly fire damage.", "later": "play:fight"}
  ],
  "KHITANS": [
   {"bonus": "The effects of Forging and Iron Casting are doubled.", "in": "TWICE"},
-  {"bonus": "Skirmishers, Genitours, and the Spearman and Scout Cavalry lines are trained and upgraded 15% faster.", "gap": "play:train"},
+  {"bonus": "Skirmishers, Genitours, and the Spearman and Scout Cavalry lines are trained and upgraded 15% faster.", "in": "TRAIN_RATE"},
   {"bonus": "Heavy Cavalry Archer upgrade available in the Castle Age and costs -50%", "later": "play:ages"}
  ],
  "KHMER": [
@@ -282,7 +283,7 @@
  ],
  "SHU": [
   {"bonus": "Lumberjacks generate food 0.7 for every wood 10.", "gap": "play:gather"},
-  {"bonus": "Archery unit technologies at the Archery Range and Blacksmith cost -25%.", "gap": "play:tech"},
+  {"bonus": "Archery unit technologies at the Archery Range and Blacksmith cost -25%.", "in": "COSTS"},
   {"bonus": "All land siege units and Lou Chuans move +10/15% faster in Castle/Imperial Age", "gap": "play:siege"}
  ],
  "SICILIANS": [
@@ -335,12 +336,12 @@
   {"bonus": "Start with +25 of each resource once the first Town Center is built.", "later": "play:setup"},
   {"bonus": "Villagers can garrison in Settlements (max 5).", "later": "play:garrison"},
   {"bonus": "Fallen units, except ships and siege weapons, return 15% of their cost.", "later": "play:fight"},
-  {"bonus": "Archery Range and Barracks technologies cost food -50%.", "gap": "play:tech"}
+  {"bonus": "Archery Range and Barracks technologies cost food -50%.", "in": "COSTS"}
  ],
  "TURKS": [
   {"bonus": "Gunpowder units have +25% hit points.", "in": "UNITS"},
   {"bonus": "Chemistry is free.", "gap": "play:tech"},
-  {"bonus": "Gunpowder technologies are 50% cheaper.", "gap": "play:tech"},
+  {"bonus": "Gunpowder technologies are 50% cheaper.", "in": "COSTS"},
   {"bonus": "Gold Miners work 25% faster.", "in": "WORK"},
   {"bonus": "Light Cavalry and Hussar upgrades are free.", "gap": "play:tech"},
   {"bonus": "Scout Cavalry line gain +1 pierce armor.", "in": "UNITS"}

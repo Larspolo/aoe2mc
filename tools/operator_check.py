@@ -16,7 +16,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from agent_config import CONFIG, ROOT  # noqa: E402
 
-PR_MINUTES = 30          # an agent PR open longer than this waits for a fix or for Automerge (autopilot step 2)
+PR_MINUTES = 30          # an agent PR open longer than this waits for a fix or for Automerge (autopilot step 2); a
+                         # time, not merged PRs: a stuck PR shows when nothing merges (#2039)
 LABELS = os.path.join(ROOT, ".github", "labels.txt")
 
 

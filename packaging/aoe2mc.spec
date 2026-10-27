@@ -10,6 +10,7 @@ ROOT = os.path.dirname(SPECPATH)
 # aoe2mc.py reads tools/mcdata/26.3.json next to itself; the parsers read their own data files (a missing file gives
 # an error only at run time, so the workflow converts a scenario and a record)
 DATAS = ([(os.path.join(ROOT, "tools", "mcdata", "26.3.json"), os.path.join("tools", "mcdata"))]
+         + [(os.path.join(ROOT, "data", "*.jsonl"), "data")]   # units.py reads them (#1917)
          + collect_data_files("AoE2ScenarioParser") + collect_data_files("mgz") + collect_data_files("aocref"))   # mgz reads aocref
 HIDDEN = collect_submodules("AoE2ScenarioParser") + collect_submodules("mgz") + ["aocref"]   # imported in functions, by name
 # the game program: the modules of game/ and tools/ import each other by their short names (run.py puts both folders
@@ -17,7 +18,8 @@ HIDDEN = collect_submodules("AoE2ScenarioParser") + collect_submodules("mgz") + 
 # from the workflow (gradlew jar): game/run.py takes it in a frozen app, so the user needs a Java runtime, no JDK.
 GAME = os.path.join(ROOT, "game")
 JAR = os.path.join(GAME, "plugin", "aoe2mc-plugin.jar")
-GAME_DATAS = DATAS + [(os.path.join(GAME, "data", "train.jsonl"), "data")] + [(JAR, "plugin")] * os.path.exists(JAR)
+# all data files of game/data (table.load: train, units, buildings; #1913)
+GAME_DATAS = DATAS + [(os.path.join(GAME, "data", "*.jsonl"), "data")] + [(JAR, "plugin")] * os.path.exists(JAR)
 
 
 def analysis(script, datas=DATAS):

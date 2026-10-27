@@ -55,6 +55,7 @@ RANGE = 4       # tiles
 EVERY = 1.0     # AoE2 seconds between two heal passes (fewer commands); a pass heals for all the time since the last one
 STILL = 0.2     # blocks: a monk that moved more since the last pass walks
 CONVERT = 9     # tiles: the conversion range
+MONKS = {"MONK": CONVERT, "MISSIONARY": 7}   # the units that heal, convert and carry relics: their conversion range (#1939)
 PRINTING = 3    # tiles of conversion range that Block Printing adds (#1457)
 INTERVAL = 1.25  # AoE2 seconds of one conversion interval
 WARM = 4        # the first intervals only warm up
@@ -94,13 +95,14 @@ def carriers(g):
 def monasteries(g):
     """The footprints of the complete own monasteries."""
     import train                                                   # train imports gather, gather imports this module
-    return {r for r, n in train.homes(g).items() if n == "MONASTERY"}
+    import combat
+    return {r for r, n in train.homes(g).items() if combat.STANDS_FOR.get(n, n) == "MONASTERY"}   # the church too (#1930)
 
 
 def order(g, player, cell):
     """A right click on the block cell with selected monks: the first free monk walks to a relic at the cell, or the
     monks with a relic walk to the door of the own monastery at the cell. False when the click is neither."""
-    monks = [u for u in sorted(g.selected) if g.soldiers.get(u) == "MONK"]
+    monks = [u for u in sorted(g.selected) if g.soldiers.get(u) in MONKS]
     if not cell or not monks or not g.paper:
         return False
     import ai, civs                                                # ai imports gather, gather imports this module
@@ -117,7 +119,8 @@ def order(g, player, cell):
         return False
     x, z = to
     for m, target in go.items():
-        ai.move(g, m, "MONK", T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * civs.speed(g, "MONK"))
+        name = g.soldiers[m]
+        ai.move(g, m, name, T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * civs.speed(g, name))
         g.fetching[m] = target
     g.mark(player, {to})
     return True
@@ -200,7 +203,7 @@ def health(g, uuid):
 
 def heal(g, dt):
     """Let each idle own monk of g heal the nearest injured own unit in its range for dt AoE2 seconds."""
-    monks = sorted(u for u, n in g.soldiers.items() if n == "MONK" and u not in carriers(g))   # a carrier: no heal
+    monks = sorted(u for u, n in g.soldiers.items() if n in MONKS and u not in carriers(g))   # a carrier: no heal
     if not monks:
         g.monk_at, g.heal_time = {}, 0.0
         return
@@ -218,7 +221,7 @@ def heal(g, dt):
     for m in monks:
         if m in inside or m in g.converting or m not in pos or m not in last or math.dist(pos[m], last[m]) > STILL:
             continue                                               # dead, inside, converts, or it walks (or just came)
-        near = sorted((math.dist(pos[m], pos[u]), u) for u in others if u != m and u not in taken)
+        near = sorted((math.dist(pos[m], pos[u]), u) for u in others if u != m and u not in taken and u in pos)
         for d, u in near:
             if d > reach:
                 break
@@ -242,7 +245,7 @@ def convertible(g, uuid):
     if name is None or name in IMMUNE or units.siege(name) and not redeemed or "EMPEROR" in name:
         return False
     hero = any(o.get("hero") for o in g.data["objects"] if o.get("uuid") == uuid)
-    religious = str((units.classify(name, hero) or {}).get("id")) == "minecraft:evoker"
+    religious = name in MONKS or str((units.classify(name, hero) or {}).get("id")) == "minecraft:evoker"
     return not hero and (not religious or "ATONEMENT" in g.techs)
 
 
@@ -270,7 +273,7 @@ def take(g, uuid):
     color = units.HEX.get(g.players.get(str(new), {}).get("color", ""), "#FFFFFF")
     g.command(f'data modify entity {uuid} CustomName.color set value "{color}"')
     g.command(f"aoe stop {uuid}")
-    if gather.military(name) or name == "MONK":
+    if gather.military(name) or name in MONKS:
         g.soldiers[uuid] = name
     elif pos := g.pos(uuid):
         g.villagers[uuid] = gather.Villager(uuid, pos)
@@ -319,14 +322,15 @@ def resist(g, uuid):
 
 def near(g, m, target, pos):
     """True when monk m is in its conversion range of the target: next to a building, ram or trebuchet (TOUCH),
-    else CONVERT tiles (and PRINTING more after Block Printing)."""
+    else the range of MONKS (and PRINTING more after Block Printing)."""
     if target in g.forts:
         x0, _, z0, x1, _, z1 = g.forts[target]
         x, _, z = pos[m]
         return math.hypot(max(x0 - x, 0, x - x1 - 1), max(z0 - z, 0, z - z1 - 1)) <= TOUCH
     if any(n in g.enemies[target] for n in NEXT):
         return math.dist(pos[m], pos[target]) <= TOUCH + 1         # to its middle: about 1 block from its side
-    return math.dist(pos[m], pos[target]) <= (CONVERT + PRINTING * ("BLOCK_PRINTING" in g.techs)) * g.map.T
+    reach = MONKS.get(g.soldiers.get(m), CONVERT) + PRINTING * ("BLOCK_PRINTING" in g.techs)
+    return math.dist(pos[m], pos[target]) <= reach * g.map.T
 
 
 def spot(g, m, target, pos):
@@ -359,7 +363,7 @@ def convert(g, dt):
             continue
         if not near(g, m, target, pos):
             job[1:] = [0.0, 0]
-            ai.move(g, m, "MONK", g.map.T, *spot(g, m, target, pos))   # walk into range; the order follows the target
+            ai.move(g, m, g.soldiers.get(m, "MONK"), g.map.T, *spot(g, m, target, pos))   # walk into range; the order follows the target
             continue
         if job[1] == 0 and job[2] == 0:
             g.command(f"aoe stop {m}")                             # in range: it stands and chants

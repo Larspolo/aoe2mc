@@ -1468,6 +1468,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             if (mob.getLocation().distanceSquared(o.goal) < 1.5 * 1.5) {
                 if (mob instanceof Villager         // its brain has no goals to drop: it strolls away (#438)
                         || mob.getScoreboardTags().contains(CARRIER)) {   // its minecart pushes it on (#836)
+                    mob.getPathfinder().stopPathfinding();   // without AI it keeps its path: Gates.through kept a gate open (#1928)
                     mob.setAI(false);               // so it stands still until the next order
                 } else if (center(mob) >= 1) {      // steer() skips path points: Minecraft walks back to them (#1078)
                     mob.getPathfinder().stopPathfinding();

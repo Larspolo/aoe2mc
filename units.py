@@ -5,9 +5,12 @@ All mobs stand still (NoAI), do not despawn (PersistenceRequired) and are silent
 Each unit gets a name tag with its AoE2 name in the player color.
 """
 import functools
+import json
 import math
+import os
 
-from nbtlib.tag import Byte, Compound, Double, Float, Int, IntArray, List, Long, Short, String
+import nbtlib
+from nbtlib.tag import Byte, Compound, Double, Float, Int, IntArray, List, Short, String
 
 # AoE2 DE player colors
 # AoE2 player color -> the nearest of the 16 chat colors of a team (`team modify ... color`)
@@ -78,57 +81,25 @@ JOKES = {   # joke and special units -> entity
     "NESSIE": lambda: mob("elder_guardian"),
 }
 
-HOGLIN = {"IsImmuneToZombification": Byte(1), "CannotBeHunted": Byte(1)}
-ANGRY = {"anger_end_time": Long(2 ** 31 - 1)}   # angry look (game time of the end); attacks all players only with gamerule universalAnger
+DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
 
-def wolf(variant):
-    return {"variant": String("minecraft:" + variant), **ANGRY}
+def rows(name):
+    """The rows of data/NAME: one JSON object per line, in file order (#1917). A new entry is one new line, so
+    parallel tickets do not conflict (`merge=union` in .gitattributes). "tags": entity NBT as SNBT."""
+    with open(os.path.join(DATA, name), encoding="utf-8") as f:
+        return [json.loads(s) for s in f if s.strip()]
+
+
+def tags(row):
+    return dict(nbtlib.parse_nbt(row["tags"])) if row.get("tags") else {}
 
 
 # AoE2 behavior -> a Minecraft mob of the same class (owner's rule in #43). docs/animals.md gives the source
 # and the reason of each row. "military": cheat units that fight for a player; the look wins.
-# The first row that matches wins.
-ANIMALS = [   # (keywords, AoE2 behavior, minecraft mob, extra tags)
-    (("ALFRED_THE_ALPACA",), "military", "llama", {"Variant": Int(1)}),
-    (("FURIOUS_THE_MONKEY_BOY",), "military", "ocelot", {}),
-    (("WAR_PENGUIN",), "military", "chicken", {}),
-    (("WAR_DOG", "STORMY_DOG"), "military", "wolf", wolf("black")),
-    (("POLAR_BEAR",), "aggressive", "polar_bear", ANGRY),
-    (("BROWN_BEAR", "BLACK_BEAR", "CROCODILE", "CAIMAN", "KOMODO", "IRON_BOAR"), "aggressive", "hoglin", HOGLIN),
-    (("SNAKE",), "aggressive", "silverfish", {}),
-    (("ARCTIC_WOLF", "SNOW_LEOPARD"), "aggressive", "wolf", wolf("snowy")),
-    (("ARABIAN_WOLF", "TIGER"), "aggressive", "wolf", wolf("striped")),
-    (("DIRE_WOLF", "PANTHER"), "aggressive", "wolf", wolf("black")),
-    (("RABID_WOLF",), "aggressive", "wolf", wolf("ashen")),
-    (("LION",), "aggressive", "wolf", wolf("chestnut")),
-    (("JAGUAR",), "aggressive", "wolf", wolf("spotted")),
-    (("LYNX",), "aggressive", "wolf", wolf("rusty")),
-    (("WOLF",), "aggressive", "wolf", wolf("pale")),
-    (("WILD_BOAR", "JAVELINA", "RHINO", "TAPIR"), "defensive", "panda",
-     {"MainGene": String("aggressive"), "HiddenGene": String("aggressive")}),
-    (("ELEPHANT", "WALRUS"), "defensive", "polar_bear", {}),
-    (("ELK",), "defensive", "llama", {"Variant": Int(2)}),
-    (("SHEEP",), "passive", "sheep", {"Color": Byte(0)}),
-    (("MOUFLON", "ARGALI", "IBEX"), "passive", "sheep", {"Color": Byte(12)}),
-    (("GOAT",), "passive", "sheep", {"Color": Byte(8)}),
-    (("COW_", "BUFFALO", "YAK"), "passive", "cow", {}),
-    (("SEAL",), "passive", "turtle", {}),
-    (("RED_FOX",), "passive", "fox", {"Type": String("red")}),
-    (("ARCTIC_FOX",), "passive", "fox", {"Type": String("snow")}),
-    (("PIG", "CAPYBARA"), "passive", "pig", {}),
-    (("TURKEY", "GOOSE", "CHICKEN", "PHEASANT", "OSTRICH", "RHEA", "PENGUIN", "PEACOCK", "FLAMINGO", "STORK",
-      "RED_CROWN_CRANE"), "passive", "chicken", {}),
-    (("ARCTIC_HARE",), "passive", "rabbit", {"RabbitType": Int(1)}),
-    (("HARE",), "passive", "rabbit", {"RabbitType": Int(0)}),
-    (("MONKEY",), "passive", "ocelot", {}),
-    (("DONKEY",), "passive", "donkey", {"Tame": Byte(1)}),
-    (("LLAMA", "ALPACA", "GUANACO", "WILD_CAMEL", "BACTRIAN_CAMEL"), "passive", "camel", {}),
-    (("DEER",), "passive", "horse", {"Variant": Int(2 | 3 << 8)}),     # chestnut, white dots
-    (("GAZELLE",), "passive", "horse", {"Variant": Int(1)}),           # creamy
-    (("ZEBRA",), "passive", "horse", {"Variant": Int(0 | 4 << 8)}),    # white, black dots
-    (("HORSE",), "passive", "horse", {"Variant": Int(0)}),
-]
+# The first row that matches wins. The hoglins cannot turn into zoglins or be hunted. "anger_end_time" 2147483647L:
+# an angry look (game time of the end); the mob attacks all players only with gamerule universalAnger.
+ANIMALS = [(tuple(r["keys"]), r["behavior"], r["mob"], tags(r)) for r in rows("animals.jsonl")]
 ANIMAL_EXACT = {"ELEPHANT"}    # "ELEPHANT" alone; the war elephants are units
 
 
@@ -137,87 +108,12 @@ VILLAGER_JOBS = [("FARMER", "farmer"), ("FORAGER", "farmer"), ("FISHERMAN", "fis
                  ("REPAIRER", "toolsmith"), ("STONE_MINER", "mason"), ("GOLD_MINER", "toolsmith"),
                  ("LUMBERJACK", "fletcher"), ("MONASTERY", "cleric")]
 
-# Standard infantry lines: name -> (mob, (helmet, chestplate, leggings, boots), main hand, off hand).
-# Each upgrade step looks a bit stronger. A piece is a material, or (leather, RGB) for dyed leather.
-# Zombies burn in the sun, so each zombie has a helmet. "mounted": the unit rides a horse.
-EAGLE = 0xC89B3C    # feather yellow of the eagle warriors
-LINES = {
-    "MILITIA": ("zombie", ("leather", "leather", None, None), "wooden_sword", None),
-    "MAN_AT_ARMS": ("zombie", ("chainmail", "chainmail", None, None), "stone_sword", "shield"),
-    "LONG_SWORDSMAN": ("zombie", ("iron", "iron", "chainmail", None), "iron_sword", "shield"),
-    "TWO_HANDED_SWORDSMAN": ("zombie", ("iron", "iron", "iron", "iron"), "diamond_sword", None),
-    "CHAMPION": ("zombie", ("diamond", "diamond", "diamond", "diamond"), "diamond_sword", "shield"),
-    "HEAVY_SWORDSMAN": ("zombie", ("iron", "chainmail", "chainmail", None), "iron_sword", "shield"),
-    "EASTERN_SWORDSMAN": ("husk", (("leather", 0x8E2B2B), "iron", None, None), "iron_sword", None),
-    "EAGLE_SCOUT": ("husk", (("leather", EAGLE), None, None, None), "wooden_sword", None),
-    "EAGLE_WARRIOR": ("husk", (("leather", EAGLE), ("leather", EAGLE), None, None), "stone_sword", "shield"),
-    "ELITE_EAGLE_WARRIOR": ("husk", ("golden", ("leather", EAGLE), ("leather", EAGLE), ("leather", EAGLE)),
-                            "iron_sword", "shield"),
-    "CONDOTTIERO": ("zombie", ("iron", "chainmail", "chainmail", "iron"), "iron_sword", None),
-    "FLEMISH_MILITIA": ("zombie_villager", (("leather", 0x3B5E2B), None, None, None), "mace", None),
-    "FLEMISH_MILITIA_MALE": ("zombie_villager", (("leather", 0x3B5E2B), None, None, None), "mace", None),
-    "FLEMISH_MILITIA_FEMALE": ("zombie_villager", (("leather", 0x7A3B5E), None, None, None), "mace", None),
-    "SERJEANT": ("zombie", ("iron", "chainmail", None, None), "iron_sword", "shield"),
-    "SERJEANT_DONJON": ("zombie", ("iron", "chainmail", None, None), "iron_sword", "shield"),
-    "ELITE_SERJEANT": ("zombie", ("iron", "iron", "chainmail", "iron"), "iron_sword", "shield"),
-    "ELITE_SERJEANT_DONJON": ("zombie", ("iron", "iron", "chainmail", "iron"), "iron_sword", "shield"),
-    "LEGIONARY": ("zombie", ("iron", "iron", None, None), "iron_sword", "shield"),
-    "IMPERIAL_LEGIONARY": ("zombie", ("golden", "iron", "iron", "iron"), "iron_sword", "shield"),
-    "IMPERIAL_CENTURION": ("zombie", ("golden", "golden", "iron", "iron"), "diamond_sword", "shield"),
-    "CENTURION": ("mounted", ("golden", "iron", "iron", None), "iron_sword", None),
-    "ELITE_CENTURION": ("mounted", ("golden", "golden", "iron", "iron"), "diamond_sword", None),
-    "BANDIT": ("zombie", (("leather", 0x1D1D21), ("leather", 0x1D1D21), None, None), "stone_sword", None),
-    "INDIAN_TRIBESMAN": ("husk", (None, None, None, None), "stone_sword", None),
-    "HILL_TRIBESMAN": ("husk", (None, ("leather", 0x6B4A2B), None, None), "stone_axe", None),
-    "NORSE_WARRIOR": ("zombie", ("iron", ("leather", 0x6B4A2B), None, None), "iron_axe", "shield"),
-}
-L, BROWN, RED, WHITE, BLACK = "leather", 0x6B4A2B, 0x9B1B1B, 0xE8E0D0, 0x1D1D21
-# Unique infantry (#83). The elite version ("ELITE_" + name) gets a gold armor trim (see line_unit).
-LINES.update({
-    "AMAZON_WARRIOR": ("husk", ((L, 0x3F6B2A), None, (L, 0x3F6B2A), None), "stone_sword", "shield"),
-    "BERSERK": ("zombie", ((L, BROWN), None, (L, BROWN), None), "iron_axe", None),
-    "HUSKARL": ("zombie", ("iron", "chainmail", (L, BROWN), None), "iron_axe", "shield"),
-    "JAGUAR_WARRIOR": ("husk", ((L, 0xD4A017), (L, 0xD4A017), None, None), "stone_sword", None),
-    "KARAMBIT_WARRIOR": ("zombie", ((L, RED), None, None, None), "iron_sword", None, {"IsBaby": Byte(1)}),
-    "KONNIK_DISMOUNTED": ("zombie", ("iron", "iron", "chainmail", None), "mace", "shield"),
-    "NINJA": ("zombie", ((L, BLACK), (L, BLACK), (L, BLACK), (L, BLACK)), "iron_sword", None),
-    "SAMURAI": ("zombie", ("iron", (L, RED), (L, RED), None), "iron_sword", None),
-    "SHOTEL_WARRIOR": ("husk", ((L, WHITE), None, None, None), "iron_sword", "iron_sword"),
-    "TEUTONIC_KNIGHT": ("zombie", ("iron", "iron", "iron", "iron"), "iron_sword", "shield"),
-    "WOAD_RAIDER": ("zombie", ((L, 0x2B4A9B), None, (L, 0x2B4A9B), None), "iron_sword", None),
-    "IROQUOIS_WARRIOR": ("husk", ((L, BROWN), None, (L, BROWN), None), "stone_axe", None),
-    "XOLOTL_WARRIOR": ("mounted", ((L, EAGLE), (L, EAGLE), None, None), "stone_sword", None),
-    "OBUCH": ("zombie", ("iron", "chainmail", "chainmail", None), "mace", None),
-    "URUMI_SWORDSMAN": ("husk", (None, None, (L, WHITE), None), "golden_sword", None),
-    "GHULAM": ("husk", ("iron", (L, 0x2B6B6B), None, None), "trident", "shield"),
-    "QIZILBASH_WARRIOR": ("zombie", ((L, RED), "chainmail", None, None), "iron_sword", "shield"),
-    "IMMORTAL_MELEE": ("zombie", ("golden", (L, 0x5B2B7A), (L, 0x5B2B7A), None), "trident", "shield"),
-    "STRATEGOS": ("mounted", ("golden", "golden", None, None), "iron_sword", "shield"),
-    "STRATEGOS_WITH_TAXIARCHS": ("mounted", ("golden", "golden", "iron", None), "iron_sword", "shield"),
-    "SAKAN_AXEMAN": ("zombie", ((L, 0x8E5A2B), (L, 0x8E5A2B), None, None), "iron_axe", None),
-    "SICKLE_WARRIOR": ("husk", (None, (L, BROWN), None, None), "iron_hoe", None),
-    "LYSANDERS_RAIDER": ("zombie", ("iron", (L, RED), None, None), "iron_sword", "shield"),
-    "IRON_PAGODA": ("mounted", ("iron", "iron", "iron", "iron"), "mace", None),
-    "LIAO_DAO": ("zombie", ("iron", "chainmail", None, None), "iron_axe", None),
-    "WHITE_FEATHER_GUARD": ("zombie", ((L, 0xF0F0F0), "iron", None, None), "iron_sword", "shield"),
-    "JIAN_SWORDSMAN": ("zombie", ("iron", (L, 0x2B4A7A), None, None), "iron_sword", None),
-    "JIAN_SWORDSMAN_TWO_HANDED": ("zombie", ("iron", "iron", (L, 0x2B4A7A), None), "diamond_sword", None),
-    "RHOMPHAIA_WARRIOR": ("zombie", ("iron", (L, BROWN), (L, BROWN), None), "golden_sword", None),
-    "SANNAHYA": ("husk", ("golden", (L, WHITE), None, None), "iron_sword", "shield"),
-    "SACRED_BAND": ("zombie", ("golden", "iron", "iron", None), "trident", "shield"),
-    "CHAMPI_SCOUT": ("husk", ((L, 0x9B6B1B), None, None, None), "stone_axe", None),
-    "CHAMPI_WARRIOR": ("husk", ((L, 0x9B6B1B), (L, 0x9B6B1B), None, None), "mace", "shield"),
-    "CHAMPI_RUNNER": ("husk", (None, (L, 0x9B6B1B), None, None), "mace", None),
-    "GUECHA_WARRIOR": ("husk", ((L, 0xC03030), None, (L, 0xC03030), None), "stone_sword", None),
-    "KONA": ("husk", (None, None, (L, BROWN), None), "wooden_axe", None),
-    "IBIRAPEMA_WARRIOR": ("husk", ((L, 0xD4A017), None, None, None), "wooden_shovel", None),
-    "TEMPLE_GUARD": ("husk", ("golden", (L, 0x2B8B5B), None, None), "stone_sword", "shield"),
-    "VARANGIAN_GUARD": ("zombie", ("iron", "iron", "chainmail", "chainmail"), "iron_axe", "shield"),
-    "HEARTH_TROOP": ("zombie", ("chainmail", "chainmail", "chainmail", None), "iron_sword", "shield"),
-    "JARL": ("mounted", ("iron", "chainmail", "chainmail", None), "iron_axe", "shield"),
-    "JOMSVIKING": ("zombie", ("iron", (L, BLACK), "chainmail", None), "diamond_axe", None),
-})
-LINES["HUSKARL_BARRACKS"] = LINES["HUSKARL"]
+# Infantry lines and unique infantry (#83): name -> (mob, (helmet, chestplate, leggings, boots), main hand, off hand
+# [, NBT]), one line each in data/lines.jsonl. Each upgrade step looks a bit stronger. A piece is a material, or
+# (leather, RGB) for dyed leather. Zombies burn in the sun, so each zombie has a helmet. "mounted": the unit rides a
+# horse. The elite version ("ELITE_" + name) gets a gold armor trim (see line_unit).
+LINES = {r["name"]: (r["mob"], tuple(tuple(p[:1]) + (int(p[1][1:], 16),) if isinstance(p, list) else p for p in r["armor"]),
+                     r["main"], r["off"], *([tags(r)] if "tags" in r else [])) for r in rows("lines.jsonl")}
 TRIM = Compound({"material": String("minecraft:gold"), "pattern": String("minecraft:sentry")})
 
 MOUNTED_HEROES = ("RICHARD_THE_LIONHEART", "FREDERICK_BARBAROSSA", "SALADIN", "EL_CID", "CHARLEMAGNE", "GENGHIS_KHAN",
@@ -465,6 +361,8 @@ def classify(n, hero=False):
         return mob("villager", VillagerData=Compound({"profession": String("minecraft:" + job),
                                                        "type": String("minecraft:plains"), "level": Int(2)}),
                    Xp=Int(1), Offers=no_trades())
+    if n == "MISSIONARY":                                     # a mounted monk (#1939)
+        return mounted("horse", mob("evoker"))
     if has(n, "MONK", "MISSIONARY", "PRIEST", "MERCHANT") and "SHIP" not in n or hero and has(n, *RELIGIOUS_HEROES):
         return mob("evoker")
     if n in ("KING", "QUEEN", "KHAN") or has(n, "EMPEROR"):
@@ -527,7 +425,7 @@ def classify(n, hero=False):
         rider = soldier("skeleton", t, "bow") if "ARCHER" in n else soldier("zombie", t, sword(t))
         return mounted("camel", rider)
 
-    infantry_exceptions = ("TEUTONIC_KNIGHT", "DISMOUNTED", "EAGLE_SCOUT", "CHAMPI_SCOUT")
+    infantry_exceptions = ("TEUTONIC_KNIGHT", "DISMOUNTED", "EAGLE_SCOUT", "CHAMPI_SCOUT", "FIRE_LANCER")   # FIRE_LANCER: infantry (#1953)
     # Mounted archers and javelin riders
     if not has(n, *infantry_exceptions) and has(n, "CAVALRY_ARCHER", "HORSE_ARCHER", "MANGUDAI", "KIPCHAK",
                                                 "MOUNTED_CROSSBOWMAN", "CONQUISTADOR", "GENITOUR", "BOLAS_RIDER",

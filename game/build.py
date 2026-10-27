@@ -50,6 +50,8 @@ COSTS = {"HOUSE": {"wood": 25}, "LUMBER_CAMP": {"wood": 100}, "MINING_CAMP": {"w
          "CASTLE": {"stone": 650},                                 # the Castle Age: the Imperial Age needs them (#1162)
          "DOCK": {"wood": 150},                                    # 3 x 3 tiles on water at the shore (#1382)
          "FISH_TRAP": {"wood": 100},                               # on water, fishing ships build it (#1438)
+         "FOLWARK": {"wood": 100},                                 # the mill of the Poles (civs.MISSING, #1874)
+         "FORTIFIED_CHURCH": {"wood": 200},                        # the Armenians, Georgians (civs.MISSING, #1930)
          "GATE": {"stone": 30},                                    # 4 x 1 tiles (AoE2 DE wiki, #1324)
          "KREPOST": {"stone": 350},                                # the Bulgarians only (civs.MISSING, #1872)
          "MARKET": {"wood": 175},                                  # the Feudal Age (#1251)
@@ -68,6 +70,8 @@ BUILD_TIMES = {"HOUSE": 25, "LUMBER_CAMP": 35, "MINING_CAMP": 35, "MILL": 35, "F
                "CASTLE": 200,
                "DOCK": 35,
                "FISH_TRAP": 40,
+               "FOLWARK": 40,
+               "FORTIFIED_CHURCH": 50,
                "GATE": 70,
                "KREPOST": 150,
                "MARKET": 60,
@@ -79,6 +83,7 @@ BUILD_TIMES = {"HOUSE": 25, "LUMBER_CAMP": 35, "MINING_CAMP": 35, "MILL": 35, "F
                "UNIVERSITY": 60,
                "WATCH_TOWER": 80,
                "WONDER": 3500}
+FOLWARK_SHARE, FOLWARK_REACH = 0.1, 4                               # of the food of a farm; tiles from the Folwark
 MENU = list(COSTS)                                                 # trigger value N -> MENU[N - 1]
 OBJECTIVE = "aoe_build"
 SNEAK = '{type:"minecraft:entity_properties",entity:"this",predicate:{flags:{is_sneaking:true}}}'   # as gather.SNEAK
@@ -89,6 +94,8 @@ ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw
          "CASTLE": "stone_bricks",
          "DOCK": "dark_oak_planks",                                     # the wood of the pier
          "FISH_TRAP": "bamboo_fence",                                   # the rods of the basket
+         "FOLWARK": "white_terracotta",                                 # the plaster of the hall
+         "FORTIFIED_CHURCH": "candle",                                  # the light of the altar
          "GATE": "iron_bars",                                           # the portcullis
          "KREPOST": "red_sandstone",                                    # the stone of the walls
          "MARKET": "barrel",                                            # the goods of the stalls
@@ -118,19 +125,27 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "BATTERING_RAM",
         "BATTLE_ELEPHANT",
         "CAMEL_RIDER",
+        "CARAVEL",
         "CASTLE",
         "CAVALRY_ARCHER",
         "CROSSBOWMAN",
         "DEMOLITION_SHIP",
         "EAGLE_WARRIOR",
+        "ELEPHANT_ARCHER",
         "ELITE_SKIRMISHER",
+        "FIRE_LANCER",
         "FIRE_SHIP",
+        "FORTIFIED_CHURCH",
         "GENITOUR",
+        "HEI_GUANG_CAVALRY",
         "KNIGHT",
         "KREPOST",
         "LIGHT_CAVALRY",
         "LONG_SWORDSMAN",
+        "LONGSHIP",
         "MANGONEL",
+        "MISSIONARY",
+        "MOUNTED_CROSSBOWMAN",
         "MONASTERY",
         "MONK",
         "PIKEMAN",
@@ -139,34 +154,50 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "SHRIVAMSHA_RIDER",
         "SIEGE_WORKSHOP",
         "STEPPE_LANCER",
+        "TURTLE_SHIP",
         "UNIVERSITY",
+        "VARANGIAN_GUARD",
         "WAR_HULK",
     ), 2) | dict.fromkeys((                                           # the Imperial Age (unique units: train.UNIQUE)
         "ARBALESTER",
         "BOMBARD_CANNON",
         "BOMBARD_TOWER",
         "CANNON_GALLEON",
+        "CARRACK",
         "FAST_FIRE_SHIP",
         "GALLEON",
         "HEAVY_DEMOLITION_SHIP",
         "CAPPED_RAM",
+        "CATAPULT_GALLEON",
         "CAVALIER",
         "CHAMPION",
+        "DRAGON_SHIP",
+        "DROMON",
         "ELITE_BATTLE_ELEPHANT",
         "ELITE_CANNON_GALLEON",
+        "ELITE_CARAVEL",
         "ELITE_EAGLE_WARRIOR",
+        "ELITE_ELEPHANT_ARCHER",
+        "ELITE_FIRE_LANCER",
         "ELITE_GENITOUR",
+        "ELITE_LONGSHIP",
         "ELITE_SHRIVAMSHA_RIDER",
         "ELITE_STEPPE_LANCER",
+        "ELITE_TURTLE_SHIP",
+        "ELITE_VARANGIAN_GUARD",
         "HALBERDIER",
         "HAND_CANNONEER",
         "HEAVY_CAMEL_RIDER",
         "HEAVY_CAVALRY_ARCHER",
+        "HEAVY_HEI_GUANG_CAVALRY",
+        "HEAVY_MOUNTED_CROSSBOWMAN",
         "HUSSAR",
         "IMPERIAL_SKIRMISHER",
         "KEEP",
+        "LOU_CHUAN",
         "ONAGER",
         "PALADIN",
+        "THIRISADAI",
         "SIEGE_RAM",
         "TREBUCHET",
         "TWO_HANDED_SWORDSMAN",
@@ -199,7 +230,8 @@ def setup(g):
 def tick(g):
     """Players who joined since the last tick get the menu; all players may use the trigger (it locks after use)."""
     who = getattr(g, "who", "@a")                                      # two people: only the own team (#1310)
-    g.command(f"execute as {who} unless score @s {OBJECTIVE} matches 0.. run tellraw @s {menu()}")
+    for text in menu():
+        g.command(f"execute as {who} unless score @s {OBJECTIVE} matches 0.. run tellraw @s {text}")
     g.command(f"scoreboard players add {who} {OBJECTIVE} 0")
     g.command(f"scoreboard players enable {who} {OBJECTIVE}")
     if getattr(g, "paper", False):
@@ -308,6 +340,20 @@ def locked(g, name):
         return f"Needs the {('Dark', 'Feudal', 'Castle', 'Imperial')[AGE[name]]} Age"
     if g is not None and name in NEEDS and NEEDS[name] not in getattr(g, "techs", ()):
         return "Needs " + pretty(NEEDS[name].removesuffix("_TECH"))
+    if g is not None and name == "TOWN_CENTER" and ages(g) < (1 if civs.civ(g) == "CUMANS" else 2) and town_center(g):
+        return "Needs the Castle Age"                                  # a second one (AoE2; the Cumans: Feudal, #1951)
+
+
+def town_center(g):
+    """True when the player has a town center: a construction site, or a complete one whose target still stands."""
+    import combat                                                      # combat imports gather, which imports this module
+    sites = [s for s in getattr(g, "sites", ()) if s["name"] == "TOWN_CENTER" and s["player"] == g.player]
+    if any(not s.get("done") for s in sites):
+        return True
+    rects = [o["footprint"] for o in g.data.get("objects", ()) if o["kind"] == "building" and o["name"] == "TOWN_CENTER"
+             and o["player"] == g.player and "footprint" in o]
+    rects += [[x0, z0, x1, z1] for s in sites for x0, x1, z0, z1 in [s["footprint"]]]
+    return any("passed" in g.command(f"execute if entity {combat.target_uuid(r)}") for r in rects)
 
 
 def hidden(g, name):
@@ -317,9 +363,12 @@ def hidden(g, name):
 
 
 def menu():
+    """The chat texts of the build menu: two halves, else one command is longer than RCON takes (rcon.MAX, #1930)."""
     lines = [f"/trigger {OBJECTIVE} set {i}: {pretty(n)} ({', '.join(f'{v} {r}' for r, v in COSTS[n].items())})"
              for i, n in enumerate(MENU, 1)]
-    return json.dumps({"text": "Build: " + "\n".join(lines), "color": "gray"})
+    half = (len(lines) + 1) // 2
+    return [json.dumps({"text": text, "color": "gray"})
+            for text in ("Build: " + "\n".join(lines[:half]), "\n".join(lines[half:]))]
 
 
 def price(g, name, player=None):
@@ -654,7 +703,9 @@ def rise(g, site, work):
     Treadmill Crane: the builders of the player work 20 % faster (CRANE, AoE2 DE wiki, #1422); the civilization
     bonus multiplies with it (civs.build_rate, #1893)."""
     if site.get("player", g.player) == g.player:
-        work *= CRANE ** ("TREADMILL_CRANE" in getattr(g, "techs", ())) * civs.build_rate(g, site["name"])
+        x0, x1, z0, z1 = site["footprint"]                                 # the builders stand at its edge
+        work *= CRANE ** ("TREADMILL_CRANE" in getattr(g, "techs", ())) * civs.build_rate(g, site["name"]) \
+            * civs.church_rate(g, ((x0 + x1) / 2, (z0 + z1) / 2))      # the Georgian Fortified Church (#1930)
     site["progress"] = min(1.0, site["progress"] + work / BUILD_TIMES[site["name"]])
     cmds, ring = site["commands"], site.get("ring", {})
     k = len(cmds) if site["progress"] >= 1 else math.floor(site["progress"] * len(cmds))
@@ -683,10 +734,24 @@ def rise(g, site, work):
             if "tiles" in site else ()                                 # beside a diagonal gate (#1655)
         g.map.building(site["name"], site["footprint"], (x0 // T + s // 2, z0 // T + s // 2), site["player"] == g.player,
                        open_cells)
+        if "FARM" in site["name"] and site["player"] == g.player:
+            folwark(g, site, (x0 // T + s // 2, z0 // T + s // 2))
         target(g, site)
         if site["name"] in GATES:
             portcullis(g, site)
     return site["progress"] >= 1
+
+
+def folwark(g, farm, tile):
+    """A new own farm with its whole footprint within FOLWARK_REACH tiles of an own complete Folwark: the player gets
+    FOLWARK_SHARE of its food at once, and the farm keeps the rest (AoE2 DE wiki "Folwark", #1874)."""
+    r = FOLWARK_REACH * g.map.T
+    x0, x1, z0, z1 = farm["footprint"]
+    if any(f["name"] == "FOLWARK" and f.get("done") and f["player"] == farm["player"] and f["footprint"][0] - r <= x0
+           and x1 <= f["footprint"][1] + r and f["footprint"][2] - r <= z0 and z1 <= f["footprint"][3] + r for f in g.sites):
+        food = int(g.map.farms[tile] * FOLWARK_SHARE + 0.5)            # 18 of 175, 55 of 550 (the wiki table)
+        g.map.farms[tile] -= food
+        g.earn("food", food)
 
 
 def design(g, name, player):

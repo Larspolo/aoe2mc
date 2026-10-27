@@ -33,7 +33,8 @@ def test_the_monastery_menu_shows_the_monk_with_its_cost_and_time():
 def test_before_the_castle_age_the_monk_is_gray_and_a_click_does_nothing():
     server, g = monastery(age=1)
     rect = train.open_menu(g, "Steve", MONASTERY)
-    assert menus(server)[-1] == "aoe menu Steve Monastery 0:gray_dye:Monk:100 gold · 51 s · Needs the Castle Age" + RALLY
+    assert menus(server)[-1] == "aoe menu Steve Monastery 0:gray_dye:Monk:100 gold · 51 s · Needs the Castle Age" \
+        " 21:gray_dye:Missionary:30 food · 100 gold · 51 s · Needs the Castle Age" + RALLY   # no civ: all units (#1939)
     assert train.order(g, "Steve", rect, 0) == 0 and g.stock["gold"] == 100 and not g.queues.get(rect)
 
 

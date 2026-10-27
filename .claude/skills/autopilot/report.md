@@ -11,11 +11,12 @@ after your report (the workflow `dashboard.yml` runs it on label changes, closed
 In the body, change only two parts and keep the rest as it is (read the body just before the change,
 other runs change it too):
 - The state comment: `<!-- agent-state: {"last_run": "<now, ISO>", "runs": <N+1>, ...} -->`. Change only these two
-  keys and keep the others (`last_review`, `review_minutes`: the review slot, #898).
+  keys and keep the others (`last_review`, `review_prs`, `last_roadmap`: the reviews, #898, #2039).
 - The section `### Process changes`: add a line `- <date>: <what changed in the skills, CLAUDE.md or
   LEARNINGS> (PR #n) — before: <numbers>` at the top, keep the last 5. When the change targets a number of
-  `tools/health.py` (phase minutes, conflicts, takeovers, quota per PR), write that number now (for example
-  "report 10 % of the run minutes / 24 h"), so that the `improve` skill can check it later (#1738). A pitfall line
+  `tools/health.py` (phase minutes, conflicts, takeovers, quota per PR), write that number now for the last 50 merged
+  PRs (`tools/health.py`, for example "report 10 % of the run minutes / 50 PRs"), so that the `improve` skill can
+  check it later on the same amount of work (#1738, #2039). A pitfall line
   (`docs/LEARNINGS.md`, a doc line) gets `— before: -`.
 
 Then add one short comment on the status issue: what you did and what is next.
@@ -34,7 +35,8 @@ phases read 8 · claim 1 · code 18 · verify 9 · ci 0 · conflict 5 · report 
 
 Result: `pr #n` when you pushed PR #n and Automerge merges it later (the usual case: you report before the merge);
 `none` only when the run stopped without a PR. `tools/health.py` counts the `pr #n` lines by the present PR state (#902).
-Put the output of `python3 tools/release.py` (the release bar of each goal, #879) above the `Usage:` line.
+`tools/report.py` puts the output of `python3 tools/release.py` (the release bar of each goal, #879) above the
+`Usage:` line, when the project has that tool (#1963).
 Below the metrics lines, put the output of `python3 tools/tokens.py` (one `Tokens:` line for the run: the tokens of
 this session and its largest sinks; run it just before the comment). `tools/health.py` adds these lines, and the
 `improve` skill uses them as one source to find the bottleneck.

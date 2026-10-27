@@ -1,5 +1,5 @@
 """The civilization bonuses of the repair (#1730, AoE2 wiki "Repairing"): Roman repairers work 5 % faster, and the
-Georgian team bonus makes the repairs of the Georgians and their allies 25 % cheaper."""
+Georgian team bonus makes the repairs of the buildings of the Georgians and their allies 25 % cheaper."""
 import pytest
 import test_repair
 import test_repair_ship
@@ -51,7 +51,8 @@ def test_the_georgian_team_bonus_makes_the_repair_25_percent_cheaper():
     assert civs.repair_cost(g) == 0.75
 
 
-def test_a_georgian_pays_less_for_the_repair_of_a_ram():
+def test_a_georgian_pays_the_normal_cost_for_the_repair_of_a_ram():
+    # AoE2 wiki "Villager (Age of Empires II)": "The bonus does not apply to repairing units" (#1929)
     server, g = test_repair_siege.setup(hp=test_repair_siege.RAM - 35)
     players(g, (1, "GEORGIANS", None))
     repair.unit_order(g, "Steve", "ram")
@@ -61,8 +62,8 @@ def test_a_georgian_pays_less_for_the_repair_of_a_ram():
         steps += 1
     full = train.price(g, "BATTERING_RAM")
     share = 35 / test_repair_siege.RAM
-    assert 100 - g.stock["wood"] == int(full["wood"] / 2 * 0.75 * share)
-    assert 100 - g.stock["gold"] == int(full["gold"] / 2 * 0.75 * share)
+    assert 100 - g.stock["wood"] == int(full["wood"] / 2 * share)
+    assert 100 - g.stock["gold"] == int(full["gold"] / 2 * share)
 
 
 def test_the_docstring_lists_no_roman_repairers_as_missing():

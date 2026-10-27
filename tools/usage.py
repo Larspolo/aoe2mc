@@ -32,7 +32,7 @@ MID, MID_LEFT = 0.90, 2.0   # aim: this share is used this many hours before the
 END = 0.98          # aim: this share is used when the 5-hour window resets
 LO, HI = 1, CONFIG.get("pacing", {}).get("max_runs", 16)   # bounds of the number of runs (`agent.toml`, #1706)
 FREE7 = CONFIG.get("pacing", {}).get("week_free", 0.60)   # below this 7-day usage only the 5-hour window counts (owner, 2026-10-27)
-MAX_FIRE = 4        # runs that the pacer starts per cycle: each run needs a few minutes to claim its ticket
+MAX_FIRE = CONFIG.get("pacing", {}).get("max_fire", 4)   # runs that the pacer starts per cycle: each run needs a few minutes to claim its ticket
 CALL = ["claude", "-p", "Reply with OK.", "--model", "claude-haiku-5-5", "--output-format", "stream-json", "--verbose"]
 
 
@@ -195,7 +195,7 @@ def main(argv=None):
         import health
         open_all = dashboard.pages("issues?state=open")
         paused = any({dashboard.STATUS, dashboard.PAUSED} <= set(dashboard.labels(i)) for i in open_all)
-        ready = len(dashboard.candidates(open_all))
+        ready = len(dashboard.candidates(open_all, reserved=()))   # all lanes: lane_plan splits them
         t = datetime.datetime.now(datetime.timezone.utc)
         lanes = health.lane_claims(t)
         claims = health.active_claims(t) if lanes is None else sum(lanes.values())
