@@ -257,6 +257,8 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
                               "MACEDONIANS", "MALAY", "MALIANS", "MAPUCHE", "MAYANS", "MUISCA", "POLES",
                               "PORTUGUESE", "PURU", "ROMANS", "SHU", "SICILIANS", "SPARTANS", "TEUTONS", "THRACIANS",
                               "TUPI", "VIETNAMESE", "VIKINGS"),   # the wiki chart (#1502)
+           "ILLUMINATION": ("CELTS", "CUMANS", "DRAVIDIANS", "GEORGIANS", "KOREANS", "MALIANS", "MAPUCHE", "MAYANS",
+                            "MONGOLS", "PERSIANS", "POLES", "PORTUGUESE", "TURKS", "VIKINGS"),   # the wiki chart (#1583)
            "KNIGHT": ("AZTECS", "BENGALIS", "DRAVIDIANS", "GURJARAS", "HINDUSTANIS", "INCAS", "JURCHENS", "KHITANS",
                       "MAPUCHE", "MAYANS", "MUISCA", "SHU", "TUPI", "WEI", "WU"),   # the wiki chart (#1430)
            "PALADIN_UPGRADE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "BENGALIS", "BERBERS", "BOHEMIANS",

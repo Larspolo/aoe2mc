@@ -185,6 +185,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "HUSSAR": {"food": 80},                                       # AoE2 DE wiki (#1502)
          "HUSSAR_UPGRADE": {"food": 500, "gold": 600},                 # the Imperial Age (#1502)
          "HUSKARL": {"food": 75, "gold": 35},
+         "ILLUMINATION": {"gold": 120},                                # the monastery, Imperial Age (#1583)
          "IMPERIAL_AGE": {"food": 1000, "gold": 800},
          "IMPERIAL_SKIRMISHER": {"food": 25, "wood": 35},              # AoE2 DE wiki (#1611)
          "IMPERIAL_SKIRMISHER_UPGRADE": {"wood": 300, "gold": 300},    # the Imperial Age (#1611)
@@ -369,6 +370,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "HUSSAR": 30,
                "HUSSAR_UPGRADE": 50,
                "HUSKARL": 13,
+               "ILLUMINATION": 65,
                "IMPERIAL_AGE": 190,
                "IMPERIAL_SKIRMISHER": 22,
                "IMPERIAL_SKIRMISHER_UPGRADE": 50,
@@ -536,7 +538,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                         "DEVOTION",                                             # (#1584)
                         "FAITH",
                         "HERBAL_MEDICINE",                                      # (#1585)
-                        "THEOCRACY"),                                           # (#1586)
+                        "THEOCRACY",                                            # (#1586)
+                        "ILLUMINATION"),                                        # (#1583)
           "SIEGE_WORKSHOP": ("BATTERING_RAM", "MANGONEL", "SCORPION", "SIEGE_TOWER",   # (#1349, #1362)
                              "CAPPED_RAM_UPGRADE", "SIEGE_RAM_UPGRADE", "ONAGER_UPGRADE", "SIEGE_ONAGER_UPGRADE",
                              "HEAVY_SCORPION_UPGRADE",                  # (#1352)
@@ -682,6 +685,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
          "HUSBANDRY": lambda name, s: s,                           # the walk speed: SPEEDS
          "HUSSAR_UPGRADE": lambda name, s: s,                      # a new unit name: UPGRADES
+         "ILLUMINATION": lambda name, s: s,                        # the rest after a conversion: monk.ILLUMINATED
          "IMPERIAL_AGE": lambda name, s: s,                        # an age: REQUIRES
          "IMPERIAL_SKIRMISHER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
          "IRON_CASTING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) or name in HULKS else s,
@@ -889,6 +893,7 @@ TECH_AGE = {                                                       # the age of 
     "HORSE_COLLAR": 1,
     "HUSBANDRY": 2,
     "HUSSAR_UPGRADE": 3,
+    "ILLUMINATION": 3,
     "IMPERIAL_SKIRMISHER_UPGRADE": 3,
     "IRON_CASTING": 2,
     "KEEP": 3,
@@ -1067,6 +1072,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "HUSSAR": (0, "horse_spawn_egg", "Hussar"),
          "HUSSAR_UPGRADE": (2, "book", "Hussar"),                     # the slot of Light Cavalry (AFTER)
          "HUSKARL": (0, "zombie_spawn_egg", "Huskarl"),
+         "ILLUMINATION": (7, "book", "Illumination"),
          "IMPERIAL_AGE": (5, "bell", "Imperial Age"),
          "IMPERIAL_SKIRMISHER": (1, "drowned_spawn_egg", "Imperial Skirmisher"),
          "IMPERIAL_SKIRMISHER_UPGRADE": (3, "book", "Imperial Skirmisher"),   # the slot of Elite Skirmisher (AFTER)
@@ -1237,6 +1243,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "HUSSAR": "Cavalry. Fast; strong vs. monks, siege.",
         "HUSSAR_UPGRADE": "Upgrades light cavalry to hussars.",
         "HUSKARL": "Gothic infantry. Strong vs. archers.",
+        "ILLUMINATION": "Monks convert again after 33 s, not 62 s.",
         "IMPERIAL_AGE": "Advance to the Imperial Age.",
         "IMPERIAL_SKIRMISHER": "Ranged. Strong vs. archers, spearmen.",
         "IMPERIAL_SKIRMISHER_UPGRADE": "Upgrades elite skirmishers to imperial ones.",
