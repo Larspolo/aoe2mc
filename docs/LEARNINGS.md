@@ -55,6 +55,7 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - The cost and time of a unit upgrade (Man-at-Arms → Long Swordsman) are `UpCost` and `UpTime` in the infobox of the unit before it, and most unit names are disambiguation pages: ask for `Long Swordsman (Age of Empires II)` (#1396).
 - A technology ticket can name a technology that AoE2 DE removed (Supplies, update 141935, #1418): read the `Removal` field and the `Required` field of the infobox first. A missing `Required` technology (Fishing Lines for Gillnets) goes into the same PR, else the item is never in the menu (#1439).
 - The environment has no `pytest-xdist`: `python3 -m pytest -n 4` stops at once with "unrecognized arguments: -n" (rc 4). Run the fast suite without `-n` (about 4 minutes) in the background (#1389).
+- A technology ticket can name an old building: read the `Building` field of the infobox (`{{tt|NEW|OLD before ...}}`). Update 169123 (The Last Chieftains) moved Careening and Dry Dock from the dock to the university, with new costs and effects (#1441).
 
 ## Code
 
