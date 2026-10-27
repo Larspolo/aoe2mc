@@ -7,15 +7,16 @@ import re
 from urllib.parse import unquote
 
 import pytest
+from menu_line import item, labels, order
 from test_gather import FakeServer, grid
 from test_train_menu import RALLY
 
 from game import build, gather, run, train
 
-ELEPHANT = " 7:gray_dye:Battle Elephant:100 food · 70 gold · 24 s · Needs the Castle Age"   # a player without a civ (#1556)
-LANCER = " 20:gray_dye:Steppe Lancer:70 food · 40 gold · 24 s · Needs the Castle Age"       # (#1557)
-SHRIVAMSHA = " 22:gray_dye:Shrivamsha Rider:70 food · 30 gold · 20 s · Needs the Castle Age"   # (#1612)
-HEI_GUANG = " 24:gray_dye:Hei Guang Cavalry:65 food · 65 gold · 28 s · Needs the Castle Age"   # (#1954)
+ELEPHANT = "7:gray_dye:Battle Elephant:100 food · 70 gold · 24 s · Needs the Castle Age"   # a player without a civ (#1556)
+LANCER = "20:gray_dye:Steppe Lancer:70 food · 40 gold · 24 s · Needs the Castle Age"       # (#1557)
+SHRIVAMSHA = "22:gray_dye:Shrivamsha Rider:70 food · 30 gold · 20 s · Needs the Castle Age"   # (#1612)
+HEI_GUANG = "24:gray_dye:Hei Guang Cavalry:65 food · 65 gold · 28 s · Needs the Castle Age"   # (#1954)
 
 
 def setup(food=80, done=True):
@@ -41,18 +42,22 @@ def menus(server):
 
 
 def test_the_build_menu_has_the_stable():
-    item, = [i for i in build.items() if i[2] == "Stable"]
-    assert item[1] == "hay_block" and item[3] == "175 wood\n50 s"
+    stable, = [i for i in build.items() if i[2] == "Stable"]
+    assert stable[1] == "hay_block" and stable[3] == "175 wood\n50 s"
 
 
 def test_a_right_click_on_the_stable_opens_its_menu():
     server, g = setup(done=None)
     for name in g.clicks():
         g.click(name)
-    assert menus(server) == ["aoe menu Steve Stable 0:horse_spawn_egg:Scout Cavalry:80 food · 30 s · queue 0/15 "
-                             "1:book:Bloodlines:150 food · 100 gold · 50 s · research"
-                             " 3:gray_dye:Knight:60 food · 75 gold · 30 s · Needs the Castle Age"
-                             " 6:gray_dye:Camel Rider:55 food · 60 gold · 22 s · Needs the Castle Age" + ELEPHANT + LANCER + SHRIVAMSHA + HEI_GUANG + RALLY]
+    cmd, = menus(server)
+    assert cmd.startswith("aoe menu Steve Stable ") and labels(cmd) == order(g, "STABLE")   # the full menu
+    assert [item(cmd, label) for label in ("Scout Cavalry", "Bloodlines", "Knight", "Camel Rider", "Battle Elephant",
+                                           "Steppe Lancer", "Shrivamsha Rider", "Hei Guang Cavalry", "Rally point")] \
+        == ["0:horse_spawn_egg:Scout Cavalry:80 food · 30 s · queue 0/15", "1:book:Bloodlines:150 food · 100 gold · 50 s · research",
+            "3:gray_dye:Knight:60 food · 75 gold · 30 s · Needs the Castle Age",
+            "6:gray_dye:Camel Rider:55 food · 60 gold · 22 s · Needs the Castle Age", ELEPHANT, LANCER, SHRIVAMSHA, HEI_GUANG,
+            RALLY]
 
 
 def test_no_menu_at_a_stable_that_is_not_complete():
@@ -73,7 +78,7 @@ def test_a_shift_click_queues_5():
     server, g = setup(food=1000)
     rect = train.open_menu(g, "Steve", (11, 3))
     assert train.order(g, "Steve", rect, 0, shift=True) == 5 and g.stock["food"] == 1000 - 5 * 80
-    assert " queue 5/15 " in menus(server)[-1]
+    assert item(menus(server)[-1], "Scout Cavalry").endswith(" queue 5/15")
 
 
 def test_the_scout_appears_after_30_seconds_as_a_rider_on_a_horse():

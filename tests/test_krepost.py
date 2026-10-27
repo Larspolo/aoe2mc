@@ -7,7 +7,7 @@ import time
 from urllib.parse import unquote
 
 import pytest
-from test_build_menu import villager_map
+from test_build_menu import own, villager_map
 from test_build_site import Server
 from test_gather import grid
 
@@ -27,7 +27,7 @@ def shown(server):
 def test_only_a_bulgarian_player_has_the_krepost_in_the_menu():
     server, g = villager_map()                                         # Britons
     build.open_menu(g, "Steve")
-    assert "Krepost" not in shown(server) and len(shown(server)) == len(build.MENU) - 3   # no Folwark, church (#1874, #1930)
+    assert "Krepost" not in shown(server) and sorted(shown(server)) == sorted(map(build.pretty, own(g)))   # (#1874, #1930)
     g.menus["Steve"]("Steve", build.MENU.index("KREPOST"), False)      # its slot: no choice
     assert not server.chosen
     server.chosen = build.MENU.index("KREPOST") + 1                    # also not with /trigger

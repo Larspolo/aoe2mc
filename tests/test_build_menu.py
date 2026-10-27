@@ -9,7 +9,7 @@ import pytest
 from test_build_site import Server
 from test_gather import grid
 
-from game import build, gather
+from game import build, civs, gather
 
 sys.path.insert(0, "tools")
 
@@ -33,6 +33,11 @@ def villager_map():
     g = gather.Gather(server, data).setup()
     g.stock["wood"] = 200
     return server, g
+
+
+def own(g):
+    """The buildings of the build menu that the civilization of the player of g has (civs.MISSING)."""
+    return [n for n in build.MENU if civs.civ(g) not in civs.MISSING.get(n, ())]
 
 
 def test_the_menu_has_one_item_per_building_with_cost_and_time():
@@ -59,7 +64,7 @@ def test_a_click_on_a_selected_villager_opens_the_menu_and_a_choice_closes_it():
     cmds = [c for c in server.log if c.startswith(("aoe menu Steve Build ", "aoe menu-add Steve Build "))]
     specs = [x for c in cmds for x in c.split(" ")[4:]]                 # more commands below the RCON limit (#1647)
     assert cmds[0].startswith(f"aoe menu Steve Build {len(build.MENU) - 1}:") and all(len(c) <= 1446 for c in cmds)
-    assert "0:spruce_stairs:House:25%20wood%0A25%20s" in specs and len(specs) == len(build.MENU) - 3   # no Krepost, Folwark, church
+    assert "0:spruce_stairs:House:25%20wood%0A25%20s" in specs and len(specs) == len(own(g))   # not the regional ones
     g.menus["Steve"]("Steve", 0, False)                                # the player clicks the house
     assert server.chosen == 1 and build.chosen(g, "Steve") == "HOUSE"
     assert "aoe menu-close Steve" in server.log and not g.menus
