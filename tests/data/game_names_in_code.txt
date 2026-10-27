@@ -14,14 +14,6 @@ buildings.py:is_wall 1
 buildings.py:select 1
 game/bot.py:NEAR 1
 game/bot.py:ORDER 1
-game/build.py:AGE 3
-game/build.py:AGE_TECHS 1
-game/build.py:BUILD_TIMES 1
-game/build.py:COSTS 1
-game/build.py:GATES 1
-game/build.py:ICONS 1
-game/build.py:NEEDS 1
-game/build.py:WALLS 1
 game/cheats.py:CAMELS 1
 game/cheats.py:CODES 1
 game/civs.py:BUILD 1
