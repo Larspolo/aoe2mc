@@ -239,6 +239,8 @@ BUILDINGS = {
 # Castle and Imperial Age, the melee and the pierce armor. Their targets have WALL_TAG: a wall keeps no player alive in
 # the conquest (conquest.alive). The walls of the map have no target.
 WALLS = {
+    "FORTIFIED_GATE": ((4000, 4000, 4000, 4000), 6, 7),             # the gate after Fortified Wall (#1326)
+    "FORTIFIED_WALL": ((3000, 3000, 3000, 3000), 12, 12),          # the stone wall after Fortified Wall (#1326)
     "GATE": ((1650, 1650, 2750, 2750), 6, 6),                         # the Feudal Age: no Dark Age gate (#1324)
     "PALISADE_GATE": ((240, 400, 400, 400), 2, 4),
     "PALISADE_WALL": ((150, 250, 250, 250), 2, 5),
