@@ -116,10 +116,10 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "LONG_SWORDSMAN_UPGRADE": {"food": 150, "gold": 65},
          "MAMELUKE": {"food": 55, "gold": 85},
          "MAN_AT_ARMS": {"food": 50, "gold": 20},                       # AoE2 DE wiki (#1417)
-         "MASONRY": {"food": 150, "wood": 175},                       # the university, Castle Age (#1398)
          "MAN_AT_ARMS_UPGRADE": {"food": 100, "gold": 40},
          "MANGONEL": {"wood": 160, "gold": 135},
          "MANGUDAI": {"wood": 55, "gold": 65},
+         "MASONRY": {"food": 150, "wood": 175},                       # the university, Castle Age (#1398)
          "MONK": {"gold": 100},
          "ONAGER": {"wood": 160, "gold": 135},
          "ONAGER_UPGRADE": {"food": 800, "gold": 500},
@@ -196,10 +196,10 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "LONG_SWORDSMAN_UPGRADE": 40,
                "MAMELUKE": 23,
                "MAN_AT_ARMS": 21,
-               "MASONRY": 50,
                "MAN_AT_ARMS_UPGRADE": 40,
                "MANGONEL": 46,
                "MANGUDAI": 26,
+               "MASONRY": 50,
                "MONK": 51,
                "ONAGER": 46,
                "ONAGER_UPGRADE": 75,
@@ -324,8 +324,8 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "LONG_SWORDSMAN_UPGRADE": lambda name, s: s,
          "LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
          if "VILLAGER" in name else s,
-         "MASONRY": masonry,                                       # the buildings of the player: build.values
          "MAN_AT_ARMS_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
+         "MASONRY": masonry,                                       # the buildings of the player: build.values
          "ONAGER_UPGRADE": lambda name, s: s,
          "PADDED_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "archer" in s.classes else s,
@@ -398,8 +398,8 @@ TECH_AGE = {                                                       # the age of 
     "LEATHER_ARCHER_ARMOR": 2,
     "LIGHT_CAVALRY_UPGRADE": 2,
     "LONG_SWORDSMAN_UPGRADE": 2,
-    "MASONRY": 2,
     "MAN_AT_ARMS_UPGRADE": 1,
+    "MASONRY": 2,
     "ONAGER_UPGRADE": 3,
     "PADDED_ARCHER_ARMOR": 1,
     "PIKEMAN_UPGRADE": 2,
@@ -554,10 +554,10 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "LOOM": "Villagers +15 HP, +1/+2 armor.",
         "MAMELUKE": "Saracen camel. Strong vs. cavalry.",
         "MAN_AT_ARMS": "Infantry. Strong vs. eagles, buildings.",
-        "MASONRY": "Buildings +10 % HP, +1/+1 armor.",
         "MAN_AT_ARMS_UPGRADE": "Upgrades militia to man-at-arms.",
         "MANGONEL": "Siege. Hits all units near the target.",
         "MANGUDAI": "Mongol horse archer. Strong vs. siege.",
+        "MASONRY": "Buildings +10 % HP, +1/+1 armor.",
         "MILITIA": "Infantry. Strong vs. eagles; weak vs. archers.",
         "MONK": "Heals own units, converts enemy units.",
         "ONAGER": "Siege. Hits all units near the target.",

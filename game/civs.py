@@ -138,7 +138,7 @@ START = {"AZTECS": {"gold": 50},
          "MAYANS": {"food": -50},
          "PERSIANS": {"food": 50, "wood": 50},
          "SICILIANS": {"stone": 100}}
-# The technologies that a civilization does not have (AoE2 wiki, the availability chart of each technology, #1373):
+# The technologies and units that a civilization does not have (AoE2 wiki, the availability chart of each, #1373):
 # the menu does not show them (train.unlocked).
 MISSING = {"BOMBARD_TOWER_TECH": ("ACHAEMENIDS", "ATHENIANS", "AZTECS", "BENGALIS", "BERBERS", "BRITONS", "BULGARIANS",
                                   "BURMESE", "CELTS", "CUMANS", "DANES", "ETHIOPIANS", "FRANKS", "GEORGIANS", "GOTHS",
@@ -146,8 +146,14 @@ MISSING = {"BOMBARD_TOWER_TECH": ("ACHAEMENIDS", "ATHENIANS", "AZTECS", "BENGALI
                                   "MACEDONIANS", "MAGYARS", "MALIANS", "MAYANS", "MONGOLS", "MUISCA", "PERSIANS", "PURU",
                                   "ROMANS", "SARACENS", "SAXONS", "SHU", "SICILIANS", "SLAVS", "SPARTANS", "THRACIANS",
                                   "TUPI", "VARANGIANS", "VIKINGS", "WEI", "WU"),
+           "CAVALRY_ARCHER": ("AZTECS", "BENGALIS", "BOHEMIANS", "BRITONS", "BURGUNDIANS", "CELTS", "DANES", "DRAVIDIANS",
+                              "FRANKS", "GURJARAS", "INCAS", "ITALIANS", "MAPUCHE", "MAYANS", "MUISCA", "POLES",
+                              "PORTUGUESE", "SAXONS", "SICILIANS", "SPANISH", "TEUTONS", "TUPI", "VARANGIANS", "VIKINGS",
+                              "WEI"),                                 # the wiki chart (#1430)
            "FORTIFIED_WALL": ("BULGARIANS", "CUMANS", "DANES", "GOTHS", "HUNS", "MAGYARS", "MALAY", "MAPUCHE", "MUISCA",
                               "PERSIANS", "SICILIANS", "TUPI", "WU"),
+           "KNIGHT": ("AZTECS", "BENGALIS", "DRAVIDIANS", "GURJARAS", "HINDUSTANIS", "INCAS", "JURCHENS", "KHITANS",
+                      "MAPUCHE", "MAYANS", "MUISCA", "SHU", "TUPI", "WEI", "WU"),   # the wiki chart (#1430)
            "SQUIRES": ("CELTS", "GURJARAS", "KHMER", "MAGYARS", "MAPUCHE", "PORTUGUESE")}   # (#1415)
 
 
