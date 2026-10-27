@@ -1055,8 +1055,8 @@ Most common results: decorations (126), trees (53), flags (39).
 | MOUNTED_SAMURAI | horse (zombie) | no |
 | HUNNIC_HORSE | horse | no |
 | ARGALI | sheep | no |
-| FIRE_LANCER | horse (zombie) | no |
-| ELITE_FIRE_LANCER | horse (zombie) | no |
+| FIRE_LANCER | pillager | no |
+| ELITE_FIRE_LANCER | pillager | no |
 | ROCKET_CART | minecart (pillager) | no |
 | HEAVY_ROCKET_CART | minecart (pillager) | no |
 | IRON_PAGODA | horse (zombie) | no |
@@ -1186,7 +1186,7 @@ Most common results: decorations (126), trees (53), flags (39).
 | PHEASANT | chicken | no |
 | FLAMING_BIRD | parrot | no |
 
-Most common results: zombie (77), horse (zombie) (63), husk (31).
+Most common results: zombie (77), horse (zombie) (61), husk (31).
 
 ## Heroes
 
