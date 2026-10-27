@@ -102,7 +102,7 @@ still in the code, add each entry on its own line, in alphabetical order, not at
 Never test the number of entries of a data table (`len(combat.SIGHT) == 154`): each new line changes it, and parallel
 tickets conflict there. Test the values (owner, #2008; `tests/test_conflict_prone.py`).
 A new menu item of a building (cost, time, slot, help, age) is one new line in `game/data/train.jsonl`, at the end of
-its building block (a technology also gets its key `"effect"`: the change of the combat values, `train.effect()`, #2029): the merge driver `tools/merge_jsonl.py` (`merge=jsonl`, #2004) merges the lines by name, and `train.load()` stops on a name in two lines (#1702).
+its building block (a technology also gets its key `"effect"`: the change of the combat values, `train.effect()`, #2029): the merge driver `tools/merge_jsonl.py` (`merge=jsonl`, #2004) merges the lines by name (a line that both sides changed: by key and list item, #2064), and `train.load()` stops on a name in two lines (#1702).
 The combat values of a new unit are one new line in `game/data/units.jsonl` (`combat.STATS`, #1912), of a new building
 one in `game/data/buildings.jsonl` (`combat.BUILDINGS`); its line of sight is the key `"sight"` there (#1913; epic #1909 moves more tables).
 The converter tables are lines in `data/*.jsonl` too (#1917): an animal in `animals.jsonl`, an infantry design in `lines.jsonl`, a footprint in `footprint.jsonl` (the first match wins: put a longer name before its part).
@@ -147,6 +147,8 @@ the tools in `tools/`, CI (`.github/workflows/`), the cloud setup script (`scrip
 hook, `.gitignore` and the claim and dashboard rules. The aim is more closed tickets for the same usage, with the same quality.
 - After each ticket (autopilot step 9): add a learning when something cost you time, correct an instruction
   that was wrong, and make a `tooling` ticket when a tool or test would have found a problem earlier.
+- After each merge conflict that you solve by hand: ask if a structure (a merge driver, a data file, a test that
+  asserts less) could have prevented it. Act only when it is good practice anyway (`autopilot/conflict.md`).
 - Only the owner can change the environment settings (setup script, network, variables), the scheduled task and the
   GitHub settings. When one of them costs time, make a `needs-human` ticket with numbered steps and the exact text.
 - One run per review (`tools/claim.py 0 --review`, after 50 merged PRs, more after reviews with no change): the `improve` skill measures the runs, CI and the environment and makes one larger improvement.

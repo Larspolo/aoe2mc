@@ -185,10 +185,10 @@ def forms(first):
 
 def test(t, name, s):
     """True when test t of an effect of data/train.jsonl holds for unit name with combat values s: {"class": C} (C in
-    s.classes), {"names": [...]}, {"prefix": P} (the name starts with P), {"forms": [first, ...]} (forms()) or
+    s.classes; a list: all of them), {"names": [...]}, {"prefix": P} (the name starts with P), {"forms": [first, ...]} (forms()) or
     {"test": F} (the function F(name, s) of this module, for a test with real logic)."""
     if "class" in t:
-        return t["class"] in s.classes
+        return set([t["class"]] if isinstance(t["class"], str) else t["class"]) <= set(s.classes)
     if "names" in t:
         return name in t["names"]
     if "prefix" in t:
@@ -258,7 +258,7 @@ MARK = 17.0                                                        # AoE2 second
 ROW = 9                                                            # the first slot of the queue row of the menu (#706)
 
 
-HULKS = ("HULK", "WAR_HULK")                                       # melee warships: the blacksmith attack too (#1509)
+HULKS = ("CARRACK", "HULK", "WAR_HULK")                                     # melee warships: the blacksmith attack too (#1509)
 
 
 def melee(name, s):
