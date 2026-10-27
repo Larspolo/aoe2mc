@@ -20,13 +20,15 @@ from aoe2mc import player_color  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
+import flare  # noqa: E402
 import market  # noqa: E402
 import menu  # noqa: E402
 
 SLOT = 3                                                           # hotbar slot of the item (key 4): groups use 4-8
 ITEM = ('minecraft:carrot_on_a_stick[item_model="minecraft:writable_book",item_name="Game menu",'
         "custom_data={aoe_game_menu:1b}]")
-BUTTONS = {0: ("writable_book", "Diplomacy", "Send tribute to other players.")}   # slot: the buttons of the Game menu
+BUTTONS = {0: ("writable_book", "Diplomacy", "Send tribute to other players."),   # slot: the buttons of the Game menu
+           1: ("end_rod", "Flare", "Show the place that you look at to your team.")}   # (#1234)
 RESOURCES = {"food": "wheat", "wood": "oak_log", "gold": "gold_ingot", "stone": "cobblestone"}   # rows 1-4
 LOT = 100                                                          # the resource of one click
 SHIFT = 5                                                          # tributes of a shift click (500)
@@ -49,7 +51,16 @@ def in_hand(g, player):
 def open_menu(g, player):
     """The Game menu: one item for each button."""
     menu.show(g, player, "Game menu", [(s, m, n, lore) for s, (m, n, lore) in BUTTONS.items()],
-              lambda p, slot, shift: slot in BUTTONS and show(g, p))
+              lambda p, slot, shift: button(g, p, slot))
+
+
+def button(g, player, slot):
+    """A click on the Game menu: the Diplomacy page, or a flare at the look of the player (the menu closes, #1234)."""
+    if slot == 0:
+        return show(g, player)
+    if slot == 1:
+        menu.close(g, player)
+        return flare.from_look(g, player)
 
 
 def others(g):
