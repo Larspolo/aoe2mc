@@ -9,11 +9,18 @@ the share of the hit points that it gives back; a town center takes double its w
 full repair). The stock pays whole units as the repair goes on. With too few resources the repair stops with a chat
 line, and the villagers stand idle. A building with no build cost (build.COSTS) repairs free.
 
+Siege units (#1331): a right click with selected villagers on an own damaged siege unit (units.siege: a minecart)
+sends them next to it. AoE2 repairs siege weapons at 25 % of the building rate (SIEGE: 187.5 hit points per minute for
+the first villager, 93.75 for each other one), for half the training cost (train.price). A siege unit that moves stops
+the repair, as in AoE2: the villagers stand idle.
+
 Minecraft feature: the plugin keeps the hit points of a building in the scoreboard aoe_hp of its target entity
 (combat.building, #660), so `scoreboard players get/set <uuid> aoe_hp` reads and sets them, and `aoe label` shows the
-new hearts of its name line.
+new hearts of its name line. A siege unit has its hit points as the Health of its crew (the passenger of the minecart,
+AoePlugin "stats", #836): `execute as <cart> on passengers run data get/modify entity @s Health`.
 
     repair.order(g, player, cell)   # gather.Gather.click: the selection repairs the damaged building at cell
+    repair.unit_order(g, player, u) # gather.Gather.click: the selection repairs the damaged siege unit u
     repair.tick(g, dt)              # gather.Gather.step: dt AoE2 seconds of repair
 """
 import json
@@ -23,6 +30,8 @@ import re
 RATE = 750 / 60             # hit points per AoE2 second of the first repairer
 MORE = 375 / 60             # hit points per AoE2 second of each other repairer
 SHARE = 0.5                 # of the build cost for the full hit points
+SIEGE = 0.25                # the rate of a siege unit: a share of the building rate (AoE2 wiki "Villager")
+STILL = 0.5                 # blocks: a siege unit that moved more stops the repair
 
 
 def buildings(g):
@@ -58,6 +67,49 @@ def cost(g, name):
     return {r: v * SHARE for r, v in price.items()}
 
 
+def crew(u):
+    """The prefix of a command that runs on the crew of siege unit u (it has the hit points)."""
+    return f"execute as {u} on passengers run "
+
+
+def unit_hp(g, u):
+    """(Health, max_health) of siege unit u, or None when the server gives no number (dead, unloaded)."""
+    from gather import NUMBER                                      # gather imports this module
+    hp = re.findall(NUMBER, g.command(crew(u) + "data get entity @s Health").rsplit(":", 1)[-1])
+    top = re.findall(r"(-?[\d.]+)", g.command(crew(u) + "attribute @s minecraft:max_health get").rsplit(" is ", 1)[-1])
+    return (float(hp[0]), float(top[0])) if hp and top else None
+
+
+def send(g, who, key, goals):
+    """The villagers who walk to goals and repair key (a building footprint, or the UUID of a siege unit)."""
+    g.repairs = vars(g).get("repairs", {})
+    for u in who:
+        v = g.villagers[u]
+        for t in [t for t, f in g.farmers.items() if f == u]:
+            del g.farmers[t]
+        v.tree, v.site, v.prey = None, None, None
+        g.repairs[u] = key
+        g.task(v, "BUILDER")
+        g.go(v, "to_repair", goals)
+
+
+def unit_order(g, player, u):
+    """The selected villagers repair the own damaged siege unit u. Returns True, or False (no own siege unit, it has
+    its full hit points, or no villager is selected)."""
+    import units                                                   # the converter's table (gather puts it on the path)
+    name, who = g.soldiers.get(u), sorted(g.selected & g.villagers.keys())
+    if not name or not units.siege(name) or not who or not (pos := g.pos(u)):
+        return False
+    h = unit_hp(g, u)
+    if not h or not 0 < h[0] < h[1]:
+        return False
+    cell = (math.floor(pos[0]), math.floor(pos[2]))
+    vars(g).setdefault("repair_at", {})[u] = pos                   # a move from here stops the repair
+    send(g, who, u, g.map.around({cell}))
+    g.mark(player, {cell})
+    return True
+
+
 def order(g, player, cell):
     """The selected villagers repair the own damaged building with the block cell (x, z) in its footprint. Returns its
     footprint, or None (no such building, it has its full hit points, or no villager is selected)."""
@@ -68,16 +120,7 @@ def order(g, player, cell):
     if rect is None or not who or not 0 < (hp(g, rect) or 0) < combat.stats(homes[rect]).hp:
         return None
     x0, x1, z0, z1 = rect
-    goals = g.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)})
-    g.repairs = vars(g).get("repairs", {})
-    for u in who:
-        v = g.villagers[u]
-        for t in [t for t, f in g.farmers.items() if f == u]:
-            del g.farmers[t]
-        v.tree, v.site, v.prey = None, None, None
-        g.repairs[u] = rect
-        g.task(v, "BUILDER")
-        g.go(v, "to_repair", goals)
+    send(g, who, rect, g.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)}))
     g.mark(player, {(x0, z0), (x1 - 1, z1 - 1)})
     return rect
 
@@ -97,24 +140,18 @@ def tick(g, dt):
         return
     import combat
     homes, g.repair_owed = buildings(g), vars(g).get("repair_owed", {})
-    for rect, vs in sorted(work.items(), key=lambda kv: kv[0]):
+    for rect, vs in sorted(work.items(), key=lambda kv: (isinstance(kv[0], str), kv[0])):
+        if isinstance(rect, str):                                  # a siege unit (#1331)
+            unit_tick(g, rect, vs, dt)
+            continue
         now = hp(g, rect) if rect in homes else None
         top = combat.stats(homes[rect]).hp if rect in homes else 0
         if not now or now >= top:                                  # fallen or full: the work ends
             stop(g, rect, vs)
             continue
         gain = top - now if g.aegis else min(top - now, (RATE + MORE * (len(vs) - 1)) * dt)
-        owed = g.repair_owed.setdefault(rect, {})
-        due = {r: owed.get(r, 0.0) + v * gain / top for r, v in cost(g, homes[rect]).items()}
-        pay = {r: math.floor(v) for r, v in due.items()}
-        if any(g.stock[r] < v for r, v in pay.items()):
-            stop(g, rect, vs, f"Not enough resources to repair the {combat.pretty(homes[rect]).lower()}.")
+        if not charge(g, rect, vs, cost(g, homes[rect]), gain / top, homes[rect]):
             continue
-        for r, v in pay.items():
-            if v:
-                g.stock[r] -= v
-                g.command(f"scoreboard players remove {r.capitalize()} {g.board} {v}")
-        g.repair_owed[rect] = {r: v - pay[r] for r, v in due.items()}
         g.repair_hp = vars(g).get("repair_hp", {})                 # the fractions of a hit point
         whole = g.repair_hp.get(rect, 0.0) + gain
         g.repair_hp[rect] = whole - math.floor(whole)
@@ -123,6 +160,43 @@ def tick(g, dt):
         g.command(f"aoe label {uuid(rect)}")
         if new >= top:
             stop(g, rect, vs)
+
+
+def charge(g, key, vs, full, share, name):
+    """Take the share of the cost full of the repair of key from the stock, in whole units (the rest is owed). Returns
+    False and stops the villagers vs with a chat line when the stock is too small."""
+    import combat
+    owed = g.repair_owed.setdefault(key, {})
+    due = {r: owed.get(r, 0.0) + v * share for r, v in full.items()}
+    pay = {r: math.floor(v + 1e-9) for r, v in due.items()}           # no unit lost to a float sum
+    if any(g.stock[r] < v for r, v in pay.items()):
+        stop(g, key, vs, f"Not enough resources to repair the {combat.pretty(name).lower()}.")
+        return False
+    for r, v in pay.items():
+        if v:
+            g.stock[r] -= v
+            g.command(f"scoreboard players remove {r.capitalize()} {g.board} {v}")
+    g.repair_owed[key] = {r: v - pay[r] for r, v in due.items()}
+    return True
+
+
+def unit_tick(g, u, vs, dt):
+    """dt AoE2 seconds of repair of siege unit u by the villagers vs: its crew gets Health back, the stock pays half
+    the training cost for the full hit points. It stops when the unit is full, dead or moves."""
+    import train                                                   # train imports gather
+    name, h, pos = g.soldiers.get(u), unit_hp(g, u), g.pos(u)
+    start = vars(g).get("repair_at", {}).get(u)
+    if not name or not h or not 0 < h[0] < h[1] or not pos or not start or math.dist(pos, start) > STILL:
+        stop(g, u, vs)                                             # full, dead, or it moves (AoE2)
+        return
+    gain = h[1] - h[0] if g.aegis else min(h[1] - h[0], (RATE + MORE * (len(vs) - 1)) * SIEGE * dt)
+    new = min(h[1], round(h[0] + gain, 2))                         # Health in steps of 0.01: pay for those
+    full = {r: v * SHARE for r, v in train.price(g, name).items()} if name in train.COSTS else {}
+    if not charge(g, u, vs, full, (new - h[0]) / h[1], name):
+        return
+    g.command(crew(u) + f"data modify entity @s Health set value {new}f")
+    if new >= h[1]:
+        stop(g, u, vs)
 
 
 def stop(g, rect, vs, text=None):
