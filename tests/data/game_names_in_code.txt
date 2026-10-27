@@ -26,14 +26,6 @@ game/civs.py:START 1
 game/civs.py:TRAIN_RATE 1
 game/civs.py:WORK 1
 game/civs.py:WORK_RATE 1
-game/combat.py:BLAST 1
-game/combat.py:BUILDING_SIGHT 1
-game/combat.py:FORT_MIN_RANGE 1
-game/combat.py:MELEE_RANGED 1
-game/combat.py:MIN_RANGE 1
-game/combat.py:PASS 1
-game/combat.py:PASS_PART 1
-game/combat.py:WALLS 1
 game/diplomacy.py:FEES 1
 game/fleet.py:SPEEDS 1
 game/garrison.py:BASE 1
