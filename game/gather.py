@@ -57,6 +57,7 @@ import cheats  # noqa: E402
 import civs  # noqa: E402
 import conquest  # noqa: E402
 import diplomacy  # noqa: E402
+import flare  # noqa: E402
 import fleet  # noqa: E402
 import fog  # noqa: E402
 import garrison  # noqa: E402
@@ -609,6 +610,7 @@ class Gather:
             self.command(f"team join p{self.player} @a")
         build.setup(self)
         menu.setup(self)
+        flare.setup(self)
         if self.paper:
             train.lore(self)                                           # the help lines of the menus (#1160)
             self.command(allies_command(self.data.get("players", {})))   # allies do not shoot each other (#1315)
@@ -909,6 +911,7 @@ class Gather:
     def clicks(self):
         """Players who clicked since the last call. Clicks in a chest menu go to the handler of the menu (#619)."""
         build.tick(self)
+        flare.tick(self)
         hints.tick(self)
         menu.clicks(self)
         cheats.clicks(self)
