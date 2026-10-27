@@ -61,6 +61,7 @@ import flare  # noqa: E402
 import fleet  # noqa: E402
 import fog  # noqa: E402
 import garrison  # noqa: E402
+import herd  # noqa: E402
 import hints  # noqa: E402
 import market  # noqa: E402
 import menu  # noqa: E402
@@ -1597,6 +1598,7 @@ class Gather:
                 b.step()
             conquest.tick(self)                                        # not in step(): the bot steps its own Gather
             fog.tick(self)                                             # after the bots: their units too (#1389)
+            herd.tick(self)                                            # all players: the bots capture too (#1792)
             wonder.tick(self, self.tick * NORMAL)                      # game seconds, as train.tick
             relic_victory.tick(self, self.tick * NORMAL)
             time.sleep(max(0.0, self.tick - (time.time() - t)))
