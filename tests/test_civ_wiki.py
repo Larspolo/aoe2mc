@@ -14,7 +14,8 @@ from game import civs
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 with open(os.path.join(ROOT, "tests", "data", "civ_bonuses.json")) as f:
     BONUSES = json.load(f)
-TABLES = ("AGE_GIFTS", "AGE_NO_BUILDINGS", "AGE_RATE", "AGE_VILLAGERS", "COSTS", "REPAIR", "REPAIR_COST", "START", "TWICE", "UNITS", "WORK")
+TABLES = ("AGE_GIFTS", "AGE_NO_BUILDINGS", "AGE_RATE", "AGE_VILLAGERS", "COSTS", "REPAIR", "REPAIR_COST", "START", "TRAIN_RATE",
+          "TWICE", "UNITS", "WORK")
 KEYS = set(re.findall(r"`(play:[a-z-]+)`", open(os.path.join(ROOT, "docs", "ROADMAP.md")).read()))
 
 

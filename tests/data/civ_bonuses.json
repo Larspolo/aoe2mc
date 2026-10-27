@@ -19,7 +19,7 @@
  "AZTECS": [
   {"bonus": "Start the game with an Eagle Scout.", "later": "play:setup"},
   {"bonus": "Villagers carry +3 extra resources.", "later": "play:gather"},
-  {"bonus": "All military units are created 15% faster.", "gap": "play:train"},
+  {"bonus": "All military units are created 15% faster.", "in": "TRAIN_RATE"},
   {"bonus": "Monks gain 5 HP for every researched Monastery technology.", "later": "play:monks"},
   {"bonus": "Start with gold +50.", "in": "START"}
  ],
@@ -171,7 +171,7 @@
  ],
  "KHITANS": [
   {"bonus": "The effects of Forging and Iron Casting are doubled.", "in": "TWICE"},
-  {"bonus": "Skirmishers, Genitours, and the Spearman and Scout Cavalry lines are trained and upgraded 15% faster.", "gap": "play:train"},
+  {"bonus": "Skirmishers, Genitours, and the Spearman and Scout Cavalry lines are trained and upgraded 15% faster.", "in": "TRAIN_RATE"},
   {"bonus": "Heavy Cavalry Archer upgrade available in the Castle Age and costs -50%", "later": "play:ages"}
  ],
  "KHMER": [

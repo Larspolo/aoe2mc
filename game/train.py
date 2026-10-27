@@ -674,11 +674,11 @@ def stats(g, name):
 def seconds(g, name, building=None):
     """The train time of unit or technology name: TRAIN_TIMES, or the time of FASTER from its age (the eagle scout trains
     in 46 s in the Feudal Age and in 35 s from the Castle Age, AoE2 DE wiki), divided by the work rate of the
-    civilization at building (civs.work_rate: Persian town centers and docks, #1894) and by its age-up rate (civs.age_rate:
-    the Malay, #1926)."""
+    civilization at building (civs.work_rate: Persian town centers and docks, #1894), its rate of the unit group
+    (civs.train_rate: Aztec military units, Khitan skirmishers, #1927) and its age-up rate (civs.age_rate: the Malay, #1926)."""
     age, time = FASTER.get(name, (9, 0))
     return (time if build.ages(g) >= age else TRAIN_TIMES[name]) / (civs.work_rate(g, building) if building else 1) \
-        / civs.age_rate(g, name)
+        / civs.train_rate(g, name) / civs.age_rate(g, name)
 
 
 def speed(g, name):
