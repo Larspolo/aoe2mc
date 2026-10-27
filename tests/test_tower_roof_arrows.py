@@ -1,5 +1,6 @@
 """The arrows of a watch tower and a castle leave the roof in a converted world (#1249): from above the edge column of
-the footprint, a steep arrow to a near enemy fell into the barrier top of that column and did no damage."""
+the footprint, a steep arrow to a near enemy fell into the barrier top of that column and did no damage. The fix of
+#1219 (a steep shot starts higher) is in volley(); tests/test_build_tower.py checks only a built watch tower."""
 import contextlib
 import io
 import json
