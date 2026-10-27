@@ -90,7 +90,8 @@ def tick(g, dt):
     for n in sorted({t["player"] for t in timers.values()}):
         left = min(t["left"] for t in timers.values() if t["player"] == n)
         if left <= 0:
-            return cheats.end("Victory" if n == g.player else "Defeat", "gold" if n == g.player else "red")(g, None)
+            from gather import allied                               # gather imports this module
+            return cheats.over(g, lambda m: allied(g.players, n, m))   # n and its allies win (#1936)
         if (y := math.ceil(left / YEAR)) != shown.get(n):                # a command only when the years change
             shown[n] = y
             g.command(f"bossbar set {bar(n)} name " + json.dumps(f"Player {n}: wonder, {y} year{'s' * (y != 1)} left"))
