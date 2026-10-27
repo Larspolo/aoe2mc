@@ -226,6 +226,11 @@ BUILDINGS = {
     "MARKET": Stats(1800, 0, 1, 8, 0, 0.0, {}, ("building",)),       # the Feudal Age values of the wiki (#1251)
     "MONASTERY": Stats(2100, 0, 0, 7, 0, 0.0, {}, ("building",)),
     "SIEGE_WORKSHOP": Stats(2100, 0, 0, 7, 0, 0.0, {}, ("building",)),
+    "BLACKSMITH": Stats(1800, 0, 1, 8, 0, 0.0, {}, ("building",)),   # the Feudal Age values of the wiki (#1403)
+    "LUMBER_CAMP": Stats(600, 0, 0, 7, 0, 0.0, {}, ("building",)),
+    "MILL": Stats(600, 0, 0, 7, 0, 0.0, {}, ("building",)),
+    "MINING_CAMP": Stats(600, 0, 0, 7, 0, 0.0, {}, ("building",)),
+    "UNIVERSITY": Stats(2100, 0, 2, 9, 0, 0.0, {}, ("building",)),   # the Castle Age values
     # the towers (AoE2 DE, wiki): a watch tower of the Castle Age (850 hit points in the Feudal Age), #1112
     "BOMBARD_TOWER": Stats(2220, 120, 3, 9, 8, 6.0, {}, ("building",)),
     "FORTIFIED_TOWER": Stats(1900, 8, 4, 7, 13, 3.0, {}, ("building",)),
