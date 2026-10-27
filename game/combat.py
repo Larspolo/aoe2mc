@@ -216,6 +216,8 @@ STATS = {
     "VMDL": Stats(25, 0, 0, 0, 0, 0.0),
     "WAR_PENGUIN": Stats(64, 16, 4, 4, 0, 2.0, {"building": 8}, (INF,)),
     # ships (#1386, AoE2 DE wiki): the hits go to the crew of the boat (AoePlugin.java)
+    "DEMOLITION_SHIP": Stats(50, 95, 1, 0, 0, 0.0, {"building": 220}, (SHIP,)),   # one blast (BLAST), then it dies
+    "FIRE_SHIP": Stats(120, 3, 2, 4, 2.5, 0.25, {"building": 2, WAR: 1}, (SHIP,)),   # (#1440) melee damage, 4 hits/s
     "FISHING_SHIP": Stats(50, 0, 1, 1, 0, 0.0, {}, (SHIP,)),
     "GALLEY": Stats(110, 6, 0, 3, 5, 3.0, {"building": 6, WAR: 5}, (SHIP, WAR)),
     # others: no fight, but they can die
@@ -274,8 +276,10 @@ SIGHT = {
     "BOMBARD_TOWER": 10,
     "CASTLE": 11,
     "CHAMPION": 5,
+    "DEMOLITION_SHIP": 6,
     "DOCK": 8,
     "DONJON": 10,
+    "FIRE_SHIP": 5,
     "FEITORIA": 6,
     "FORTIFIED_TOWER": 14,
     "GUARD_TOWER": 10,
@@ -302,6 +306,7 @@ MELEE_RANGED = {"BOMBARD_CANNON",
                 "ELITE_GBETO",
                 "ELITE_MAMELUKE",
                 "ELITE_THROWING_AXEMAN",
+                "FIRE_SHIP",
                 "GBETO",
                 "HEAVY_ROCKET_CART",
                 "MAMELUKE",
@@ -312,8 +317,12 @@ MELEE_RANGED = {"BOMBARD_CANNON",
                 "THROWING_AXEMAN",
                 "TRACTION_TREBUCHET"}
 # Blast radius in tiles of the units whose shot hits all units near the target, also own units (AoE2 DE, wiki "AOE";
-# AoE2 tapers the damage at the edge, here each unit in the radius takes the full damage() hit, #1050).
+# AoE2 tapers the damage at the edge, here each unit in the radius takes the full damage() hit, #1050). A ship has no
+# vanilla shot: the fire ship (0: it hits only the target) and the demolition ship (#1440) shoot as a siege unit, and
+# the creeper crew of the demolition ship dies after its blast (AoePlugin.java), as a vanilla creeper.
 BLAST = {"BOMBARD_CANNON": 0.5,
+         "DEMOLITION_SHIP": 3,
+         "FIRE_SHIP": 0,
          "HEAVY_ROCKET_CART": 1.25,
          "HOUFNICE": 0.7,
          "MANGONEL": 1.0,
@@ -321,6 +330,7 @@ BLAST = {"BOMBARD_CANNON": 0.5,
          "ROCKET_CART": 1.0,
          "SIEGE_ONAGER": 1.5}
 RAM_REACH = 2.0       # blocks: a ram (a minecart with range 0) hits from next to its target, on its carrier (#1399)
+CONTACT = 1.0         # tiles: the reach of a demolition ship (range 0, #1440): its raft is higher than a boat
 MIN_RANGE = {"BOMBARD_CANNON": 5,     # tiles: no shot at a unit nearer (AoE2 DE, wiki infobox "MinRange", #1350)
              "ELITE_ORGAN_GUN": 1,
              "HEAVY_ROCKET_CART": 2.5,
@@ -385,14 +395,15 @@ def range_command(uuid, name, T, rate=NORMAL, s=None):
     plugin then lets the minecart shoot too (#1050). Then its minimum range in blocks (MIN_RANGE, #1350), when it has
     one: it does not shoot at a target nearer than that. Then the blocks of PASS (#1401): its bolt hurts the enemy units on
     its line up to that far past its range. A melee siege unit (the ram line, range 0) gets the reach
-    RAM_REACH: a carrier pig has no melee goal, so the range goal walks it to the target and hits (#1399)."""
+    RAM_REACH: a carrier pig has no melee goal, so the range goal walks it to the target and hits (#1399). A demolition
+    ship (#1440) gets the reach CONTACT: its blast goes off next to the target."""
     s = s or stats(name)
     cart = (units.classify(name) or {}).get("id") == "minecraft:minecart"
     blast = f" {BLAST.get(name, 0) * T}" if name in BLAST or cart else ""
     blast += f" {MIN_RANGE.get(name, 0) * T}" * bool(blast and (name in MIN_RANGE or name in PASS))
     blast += f" {PASS.get(name, 0) * T}" * bool(blast and name in PASS)
-    reach = s.range * T or RAM_REACH * bool(cart and s.attack)
-    return reach and s.reload and f"aoe range {uuid} {reach} {max(1, round(s.reload / rate * 20))}{blast}" or None
+    reach = s.range * T or RAM_REACH * bool(cart and s.attack) or CONTACT * T * bool(name in BLAST and s.attack)
+    return reach and (s.reload or name in BLAST) and f"aoe range {uuid} {reach} {max(1, round(s.reload / rate * 20))}{blast}" or None
 
 
 def sight(name, s=None):
