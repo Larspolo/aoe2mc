@@ -1,5 +1,5 @@
-"""A damaged building wears in stages (#1522, AoePlugin.java wear): at 75 %, 50 % and 25 % of its hit points a fixed
-random share of its blocks above the floor is worn (cracked or mossy bricks, stripped logs, broken windows) or gone
+"""A damaged building wears in stages (#1522, AoePlugin.java wear): at each 1/7 of its hit points below full (6 stages,
+#1650) a fixed random share of its blocks above the floor is worn (cracked or mossy bricks, stripped logs, broken windows) or gone
 (holes, cobwebs at the last stage), more at each stage. The blocks go anywhere in the building, not from the top as a
 construction site (build.rise). A repair puts the blocks of each stage back. Barriers and block entities stay."""
 import re
@@ -43,7 +43,7 @@ def changed(a, b):
 
 
 @pytest.mark.mc
-def test_a_building_wears_in_three_stages_and_a_repair_puts_the_blocks_back(tiny_world, tmp_path):
+def test_a_building_wears_in_six_stages_and_a_repair_puts_the_blocks_back(tiny_world, tmp_path):
     from test_paper import paper_reachable
     if not paper_reachable():
         pytest.skip("Paper is not reachable")
@@ -69,23 +69,24 @@ def test_a_building_wears_in_three_stages_and_a_repair_puts_the_blocks_back(tiny
         full = blocks(game, box)
         assert full[10, y + 1, 10] == "chest" and full[9, y + 1, 9] == "barrier"
         stages = [full]
-        for hp in (400, 250, 100):                                     # 73 %, 45 %, 18 % of 550
+        for hp in (450, 380, 300, 220, 150, 60):                       # 82 %, 69 %, 55 %, 40 %, 27 %, 11 % of 550
             game.command(f"scoreboard players set {uuid} aoe_hp {hp}")
             stages.append(settle(game, box, stages[-1]))
         gone = [sum(b[p] in ("air", "cobweb") and full[p] != "air" for p in b) for b in stages]
         worn = [sum(b[p] in ("cracked_stone_bricks", "stripped_oak_log") for p in b) for b in stages]
         assert gone[0] == worn[0] == 0
-        assert 0 < gone[1] < gone[2] < gone[3] and 0 < worn[1], (gone, worn)
-        assert changed(full, stages[1]) < changed(full, stages[2]) < changed(full, stages[3])   # more at each stage
+        assert 0 < gone[1] and all(a < b for a, b in zip(gone[1:], gone[2:])) and 0 < worn[1], (gone, worn)
+        assert all(changed(full, a) < changed(full, b) for a, b in zip(stages[1:], stages[2:]))   # more at each stage
         for b in stages:
             assert all(b[p] == full[p] for p in b if full[p] in ("barrier", "chest") or p[1] == y)   # also the floor
-        holes = {p[1] for p in changed(full, stages[3]) if stages[3][p] in ("air", "cobweb")}
-        assert min(holes) <= y + 2 and max(holes) == y + 5                # not from the top only, as a construction site
-        assert "cobweb" in stages[3].values()
-        game.command(f"scoreboard players set {uuid} aoe_hp 300")      # a repair to 55 %: the blocks of stage 2 and 3
-        assert settle(game, box, stages[3]) == stages[1]
+        for b in stages[1:]:
+            holes = {p[1] for p in changed(full, b) if b[p] in ("air", "cobweb")}
+            assert min(holes) <= y + 2 and max(holes) == y + 5            # not from the top only, as a construction site
+        assert "cobweb" in stages[-1].values() and "cobweb" not in stages[-2].values()
+        game.command(f"scoreboard players set {uuid} aoe_hp 300")      # a repair to 55 %: the blocks of stages 4-6
+        assert settle(game, box, stages[-1]) == stages[3]
         game.command(f"scoreboard players set {uuid} aoe_hp 550")      # full
-        assert settle(game, box, stages[1]) == full
+        assert settle(game, box, stages[3]) == full
         errors = [ln for ln in game.server.log[start:] if re.search(r"Exception|/ERROR\]|Could not pass event", ln)
                   and "minecraftservices.com" not in ln]                   # no Mojang hosts here: not the plugin
         assert not errors, errors
