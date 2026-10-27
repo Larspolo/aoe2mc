@@ -96,9 +96,10 @@ Design work (buildings, objects, units, animals) follows `docs/DESIGN.md`. Do de
 
 Match the existing code: compact, numpy-vectorized, short comments that say why. Do not reformat code that you do
 not change. Do not add a dependency without a ticket that asks for it. Keep functions in their present file.
-When you add an entry to a table keyed by a name (`COSTS`, `TRAINS`, `STATS` ...), put each entry that you add on its
+When you add an entry to a table keyed by a name (`STATS` ...), put each entry that you add on its
 own line, in alphabetical order, not at the end: parallel tickets that add to the same last line conflict (#655, #670).
-The same for a new item of a tuple in a table (`train.TRAINS`): put it on its own line (the `"DOCK"` line conflicted 4 times in #1442).
+A new menu item of a building (cost, time, slot, help, age) is one new line in `game/data/train.jsonl`, at the end of
+its building block: `merge=union` keeps the lines of both sides, and `train.load()` stops on a name in two lines (#1702).
 The same for a new command of the Paper plugin: its line in the command list at the top of `AoePlugin.java` and its
 `if` block in `onCommand` go in alphabetical order of the command name, not after the last one (#795 and #813 conflicted).
 
