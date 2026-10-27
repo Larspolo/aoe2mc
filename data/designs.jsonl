@@ -1,0 +1,109 @@
+{"name": "BUDDHA_STATUE_A", "design": "buddha_statue", "args": {"gold": true}}
+{"name": "BUDDHA_STATUE_B", "design": "buddha_statue", "args": {"gold": true}}
+{"name": "BUDDHA_STATUE", "design": "buddha_statue"}
+{"name": "INDIAN_STATUES", "design": "statues"}
+{"name": "OLD_STONE_HEAD", "design": "stone_head"}
+{"name": "NINE_BANDS", "design": "nine_bands"}
+{"name": "PAGODA_", "design": "small_pagoda"}
+{"name": "TORII_GATE", "design": "torii"}
+{"name": "TROWULAN_GATE", "design": "split_gate"}
+{"name": "REKHA_DEUL_TEMPLE", "design": "rekha_deul"}
+{"name": "SVAN_TOWER", "design": "svan_tower"}
+{"name": "COURTYARD_WALLS", "design": "courtyard_walls"}
+{"name": "MESOPOTAMIAN_PILLAR", "design": "pillar"}
+{"name": "MESOPOTAMIAN_GARDEN", "design": "garden"}
+{"name": "MESOPOTAMIAN_TOMB", "design": "tomb"}
+{"name": "BURNED_BUILDING", "design": "burned_building"}
+{"name": "SHIPYARD", "design": "shipyard"}
+{"name": "PORT", "design": "port"}
+{"name": "MOLE_CONSTRUCTED", "design": "mole"}
+{"name": "MOLE_TOP", "design": "mole"}
+{"name": "MOLE_BOTTOM", "design": "mole"}
+{"name": "MOLE", "design": "mole", "args": {"built": false}}
+{"name": "CHAIN_", "design": "harbor_chain"}
+{"name": "FLAGSHIP_OF_NEARCHOS_MOVEABLE", "design": "flagship"}
+{"name": "HELEPOLIS", "design": "helepolis"}
+{"name": "WOODEN_BRIDGE", "design": "wooden_bridge"}
+{"name": "GREAT_PYRAMID", "design": "great_pyramid"}
+{"name": "NUBIAN_PYRAMID", "design": "nubian_pyramid"}
+{"name": "PYRAMID", "design": "great_pyramid"}
+{"name": "DOME_OF_THE_ROCK", "design": "dome_rock"}
+{"name": "SANKORE", "design": "sankore"}
+{"name": "FISH_TRAP", "design": "fish_trap"}
+{"name": "ARCH_OF_CONSTANTINE", "design": "arch_of_constantine"}
+{"name": "COLOSSEUM", "design": "colosseum"}
+{"name": "GOL_GUMBAZ", "design": "gol_gumbaz"}
+{"name": "SANCHI_STUPA", "design": "sanchi_stupa"}
+{"name": "STUPA", "design": "stupa"}
+{"name": "TEMPLE_OF_HEAVEN", "design": "temple_of_heaven"}
+{"name": "MINARET_OF_JAM", "design": "minaret_of_jam"}
+{"name": "ORACLES_TEMPLE", "design": "oracles_temple"}
+{"name": "MOSQUE", "design": "mosque_landmark"}
+{"name": "HALL_OF_HEROES", "design": "hall_of_heroes"}
+{"name": "PAGAN_SHRINE", "design": "pagan_shrine"}
+{"name": "SHRINE", "design": "shrine"}
+{"name": "BRIDGE", "design": "bridge"}
+{"name": "AQUEDUCT", "design": "aqueduct"}
+{"name": "AMPHITHEATRE", "design": "amphitheatre"}
+{"name": "THEATRE", "design": "theatre"}
+{"name": "STONEHENGE", "design": "stonehenge"}
+{"name": "CONSTRUCTION_CRANE", "design": "crane"}
+{"name": "SCAFFOLDING_WALKABLE", "design": "scaffold_walk"}
+{"name": "SCAFFOLDING", "design": "scaffolding"}
+{"name": "CATHEDRAL", "design": "church"}
+{"name": "CHAPEL", "design": "monastery"}
+{"name": "MONUMENT", "design": "monument"}
+{"name": "ARMY_TENT", "design": "army_tent"}
+{"name": "COMMANDER_TENT_DROPSITE", "design": "command_tent", "args": {"dropsite": true}}
+{"name": "COMMANDER_TENT", "design": "command_tent"}
+{"name": "COMMAND_POST", "design": "command_tent"}
+{"name": "TENT_", "design": "army_tent"}
+{"name": "STORAGE", "design": "storage"}
+{"name": "PASTURE", "design": "pasture"}
+{"name": "SETTLEMENT", "design": "settlement"}
+{"name": "WOODEN_FORT", "design": "wooden_fort"}
+{"name": "SAPPER_TUNNEL", "design": "sapper_tunnel"}
+{"name": "MULE_CART", "design": "cart"}
+{"name": "SUPPLY_CART", "design": "cart", "args": {"supply": true}}
+{"name": "PAVILION", "design": "pavilion"}
+{"name": "YURT", "design": "yurt"}
+{"name": "HUT", "design": "hut"}
+{"name": "TRADE_WORKSHOP", "design": "blacksmith"}
+{"name": "POENARI", "design": "castle"}
+{"name": "TOWER_OF_LONDON", "design": "krepost"}
+{"name": "WONDER", "design": "wonder"}
+{"name": "TOWN_CENTER", "design": "town_center"}
+{"name": "KREPOST", "design": "krepost"}
+{"name": "CASTLE", "design": "castle"}
+{"name": "FORTRESS", "design": "castle"}
+{"name": "DONJON", "design": "donjon"}
+{"name": "BOMBARD_TOWER", "design": "tower", "args": {"kind": "bombard"}}
+{"name": "KEEP", "design": "tower", "args": {"kind": "keep"}}
+{"name": "GUARD_TOWER", "design": "tower", "args": {"kind": "guard"}}
+{"name": "GATE", "design": "gate", "wall": true}
+{"name": "OUTPOST", "design": "outpost"}
+{"name": "TOWER", "design": "tower", "args": {"kind": "watch"}}
+{"name": "WALL", "design": "wall_segment", "wall": true}
+{"name": "PALISADE", "design": "wall_segment", "wall": true}
+{"name": "FENCE", "design": "wall_segment", "wall": true}
+{"name": "BARRICADE", "design": "barricade"}
+{"name": "BARRACKS", "design": "barracks"}
+{"name": "ARCHERY_RANGE", "design": "archery_range"}
+{"name": "STABLE", "design": "stable"}
+{"name": "SIEGE_WORKSHOP", "design": "siege_workshop"}
+{"name": "BLACKSMITH", "design": "blacksmith"}
+{"name": "MARKET", "design": "market"}
+{"name": "CARAVANSERAI", "design": "caravanserai"}
+{"name": "FEITORIA", "design": "feitoria"}
+{"name": "FORTIFIED_CHURCH", "design": "fortified_church"}
+{"name": "MONASTERY", "design": "monastery"}
+{"name": "CHURCH", "design": "monastery"}
+{"name": "UNIVERSITY", "design": "university"}
+{"name": "FOLWARK", "design": "folwark"}
+{"name": "MILL", "design": "mill"}
+{"name": "LUMBER_CAMP", "design": "lumber_camp"}
+{"name": "MINING_CAMP", "design": "mining_camp"}
+{"name": "DOCK", "design": "dock"}
+{"name": "HARBOR", "design": "harbor"}
+{"name": "FARM", "design": "farm"}
+{"name": "HOUSE", "design": "house"}
