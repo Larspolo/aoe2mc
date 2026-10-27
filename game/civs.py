@@ -25,6 +25,11 @@ the Lithuanian relics, the Roman infantry armor technologies, the Incan villager
 the Aztec and Slav monks, and the ships.
 """
 import math
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import table  # noqa: E402
 
 # Work-rate factor of each civilization and gather kind (AoE2 DE, the AoE2 wiki). A missing kind is 1.
 ROMAN = 1.05                                                       # Romans: villagers gather 5 % faster
@@ -69,81 +74,42 @@ GROUPS = {
     "units": lambda n, s: True,
     "villagers": lambda n, s: n.startswith("VILLAGER"),
 }
-# Civilization -> [(group, value, change in the Dark, Feudal, Castle and Imperial Age)] (AoE2 DE, the AoE2 wiki).
-# value: a field of combat.Stats or "speed" (the walk speed); an int adds, a float multiplies. "Fire 25 % faster" is
-# the reload / 1.25.
-UNITS = {"BERBERS": [("villagers", "speed", (1.05, 1.1, 1.1, 1.1))],
-         "BRITONS": [("foot archers but skirmishers", "range", (0, 0, 1, 2))],
-         "BURGUNDIANS": [("gunpowder", "attack", (1.25,) * 4)],
-         "BURMESE": [("battle elephants", "melee", (1,) * 4), ("battle elephants", "pierce", (1,) * 4),
-                     ("infantry", "attack", (0, 1, 2, 3))],
-         "CELTS": [("infantry", "speed", (1.05, 1.1, 1.15, 1.2)), ("siege", "reload", (1 / 1.25,) * 4)],
-         "CUMANS": [("mounted", "speed", (1.0, 1.05, 1.1, 1.15))],
-         "DRAVIDIANS": [("skirmishers, elephant archers", "reload", (1 / 1.25,) * 4)],
-         "ETHIOPIANS": [("archer line", "reload", (1 / 1.18,) * 4)],
-         "FRANKS": [("mounted", "hp", (1.0, 1.2, 1.2, 1.2))],
-         "HINDUSTANIS": [("camel riders", "reload", (1 / 1.2,) * 4), ("gunpowder", "melee", (1,) * 4),
-                         ("gunpowder", "pierce", (1,) * 4)],
-         "ITALIANS": [("foot archers but skirmishers, condottieri", "melee", (1,) * 4),
-                      ("foot archers but skirmishers, condottieri", "pierce", (1,) * 4)],
-         "JAPANESE": [("infantry", "reload", (1.0,) + (1 / 1.33,) * 3)],
-         "KHMER": [("battle elephants", "speed", (1.1,) * 4)],
-         "LITHUANIANS": [("spearmen, skirmishers", "speed", (1.1,) * 4)],
-         "MALIANS": [("barracks", "pierce", (0, 1, 2, 3))],
-         "MONGOLS": [("cavalry archers", "reload", (1 / 1.25,) * 4),
-                     ("scout line, steppe lancers", "hp", (1.0, 1.0, 1.2, 1.3))],
-         "SARACENS": [("camels", "hp", (1.25,) * 4)],
-         "SPANISH": [("gunpowder", "reload", (1 / 1.18,) * 4)],
-         "TEUTONS": [("infantry, mounted", "melee", (0, 0, 1, 2))],
-         "TURKS": [("gunpowder", "hp", (1.25,) * 4), ("scout line", "pierce", (1,) * 4)],
-         "VIETNAMESE": [("foot archers", "hp", (1.2,) * 4)],
-         "VIKINGS": [("infantry", "hp", (1.0, 1.2, 1.2, 1.2))]}
 
-# The cost bonuses (#1091): civilization -> [(what, resource or None (all), change in the Dark, Feudal, Castle and
-# Imperial Age)]. what: a group of GROUPS (units), "buildings", "buildings but farms", "technologies", "ages" or a
-# tuple of names. A float multiplies the cost (0.0: free), an int adds to it. AoE2 rounds half up (35 × 0.75 = 26).
+# The tables of each civilization: one line per civilization in data/civs.jsonl (#1914, `table.load`), from the AoE2 DE
+# wiki. "unique": the unique unit of its castle (train.UNIQUE). "missing": the technologies and units that it does not
+# have (the availability chart of each civilization, #1373): the menu does not show them (train.unlocked).
+# "units": the bonuses of the land units (#1090): [group of GROUPS, value, change in the Dark, Feudal, Castle and
+# Imperial Age]; value is a field of combat.Stats or "speed" (the walk speed); an int adds, a float multiplies ("fire
+# 25 % faster" is the reload / 1.25). "costs": the cost bonuses (#1091): [what, resource or null (all), change in each
+# age]; what is a group of GROUPS (units), "buildings", "buildings but farms", "technologies", "ages" or a list of
+# names; a float multiplies the cost (0.0: free), an int adds to it; AoE2 rounds half up (35 × 0.75 = 26). "twice":
+# the technologies whose effect it gets twice (train.stats, #1561).
+ROWS = table.load("civs.jsonl")
+
+
+def tuples(x):
+    """The JSON lists of a table as tuples (a tuple of names, the changes of the four ages)."""
+    return tuple(tuples(v) for v in x) if isinstance(x, list) else x
+
+
+UNIQUE = {r["name"]: r["unique"] for r in ROWS if "unique" in r}
+UNITS = {r["name"]: [tuples(b) for b in r["units"]] for r in ROWS if "units" in r}
+COSTS = {r["name"]: [tuples(b) for b in r["costs"]] for r in ROWS if "costs" in r}
+TWICE = {r["name"]: tuples(r["twice"]) for r in ROWS if "twice" in r}
+MISSING = {t: tuple(sorted(r["name"] for r in ROWS if t in r["missing"]))
+           for t in sorted({t for r in ROWS for t in r["missing"]})}
+ELEPHANTS = tuple(r["name"] for r in ROWS if "BATTLE_ELEPHANT" not in r["missing"])   # the battle elephant (#1556)
+EAGLES = tuple(r["name"] for r in ROWS if "EAGLE_SCOUT" not in r["missing"])   # the eagle line (#1555)
+LANCERS = tuple(r["name"] for r in ROWS if "STEPPE_LANCER" not in r["missing"])   # the steppe lancers (#1557)
+CHURCH_RATE, CHURCH_NEAR = 1.1, 10.5                              # +10 % work in the 21-tile square around a Fortified
+                                                                  # Church (tiles from its center, #1930)
 SMITH = ("BLAST_FURNACE", "BODKIN_ARROW", "BRACER", "CHAIN_BARDING_ARMOR", "CHAIN_MAIL_ARMOR", "FLETCHING", "FORGING",
-         "IRON_CASTING", "LEATHER_ARCHER_ARMOR", "PADDED_ARCHER_ARMOR",
-         "PLATE_BARDING_ARMOR", "PLATE_MAIL_ARMOR", "RING_ARCHER_ARMOR",   # (#1452)
-         "SCALE_BARDING_ARMOR", "SCALE_MAIL_ARMOR")   # the blacksmith
+         "IRON_CASTING", "LEATHER_ARCHER_ARMOR", "PADDED_ARCHER_ARMOR", "PLATE_BARDING_ARMOR", "PLATE_MAIL_ARMOR",
+         "RING_ARCHER_ARMOR", "SCALE_BARDING_ARMOR", "SCALE_MAIL_ARMOR")   # the blacksmith (#1452)
 ECONOMY = ("BOW_SAW", "CARAVAN", "CROP_ROTATION", "DOUBLE_BIT_AXE", "FISHING_LINES", "GILLNETS", "GOLD_MINING",
            "GOLD_SHAFT_MINING", "GUILDS", "HAND_CART", "HEAVY_PLOW", "HORSE_COLLAR", "STONE_MINING", "STONE_SHAFT_MINING",
            "TWO_MAN_SAW", "WHEELBARROW")   # the economic technologies but Coinage and Banking (AoE2 wiki "Burgundians")
-COSTS = {"BERBERS": [("cavalry", None, (1.0, 1.0, 0.85, 0.8))],
-         "BOHEMIANS": [(("BLACKSMITH", "UNIVERSITY"), "wood", (-100,) * 4),
-                       (("GOLD_MINING", "GOLD_SHAFT_MINING", "STONE_MINING", "STONE_SHAFT_MINING"), None, (0.0,) * 4)],   # (#1447)
-         "BRITONS": [(("TOWN_CENTER",), "wood", (1.0, 1.0, 0.5, 0.5))],
-         "BULGARIANS": [(("MAN_AT_ARMS_UPGRADE",), None, (0.0,) * 4), (("TOWN_CENTER",), "stone", (0.5,) * 4),
-                        (SMITH, "food", (0.5,) * 4)],
-         "BURGUNDIANS": [(("BLOODLINES",), None, (0.5,) * 4), (ECONOMY, "food", (0.6,) * 4)],   # (#1447)
-         "BURMESE": [(("BOW_SAW", "DOUBLE_BIT_AXE", "TWO_MAN_SAW"), None, (0.0,) * 4)],   # the lumber camp (#1447)
-         "BYZANTINES": [("camel riders", None, (0.75,) * 4), ("spearmen, skirmishers", None, (0.75,) * 4),
-                        (("IMPERIAL_AGE",), None, (2 / 3,) * 4)],
-         "CHINESE": [("technologies", None, (1.0, 0.95, 0.9, 0.85))],
-         "CUMANS": [(("ARCHERY_RANGE", "STABLE"), "wood", (-75,) * 4)],
-         "DRAVIDIANS": [(("MAN_AT_ARMS_UPGRADE",), None, (0.5,) * 4), ("siege", "wood", (2 / 3,) * 4)],
-         "FRANKS": [(("CASTLE",), None, (1.0, 1.0, 0.85, 0.75)), (("HORSE_COLLAR",), None, (0.0,) * 4)],
-         "GOTHS": [("infantry", None, (0.85, 0.8, 0.75, 0.7))],
-         "HINDUSTANIS": [("villagers", None, (0.92, 0.87, 0.82, 0.77))],
-         "HUNS": [("cavalry archers", None, (1.0, 1.0, 0.9, 0.8))],
-         "INCAS": [("buildings", "stone", (0.85,) * 4), ("military", "food", (0.85, 0.8, 0.75, 0.7))],
-         "ITALIANS": [("ages", None, (0.85,) * 4), ("gunpowder", None, (0.8,) * 4)],
-         "JAPANESE": [(("LUMBER_CAMP", "MILL", "MINING_CAMP"), None, (0.5,) * 4)],
-         "KOREANS": [(("LEATHER_ARCHER_ARMOR", "PADDED_ARCHER_ARMOR", "RING_ARCHER_ARMOR"), None, (0.0,) * 4), ("archers", "wood", (0.5,) * 4),
-                     ("infantry", "wood", (0.5,) * 4)],
-         "MAGYARS": [(("FORGING", "IRON_CASTING", "BLAST_FURNACE"), None, (0.0,) * 4), ("scout line", None, (0.85,) * 4)],
-         "MALAY": [("battle elephants", None, (1.0, 1.0, 0.75, 0.65)), (("CHAIN_MAIL_ARMOR", "PLATE_MAIL_ARMOR", "SCALE_MAIL_ARMOR"), None,
-                                                                              (0.0,) * 4)],
-         "MALIANS": [("buildings but farms", "wood", (0.85,) * 4)],
-         "MAYANS": [("foot archers but skirmishers", None, (1.0, 0.9, 0.8, 0.7))],
-         "POLES": [(("BLOODLINES",), "food", (0.5,) * 4)],
-         "PORTUGUESE": [("units", "gold", (0.8,) * 4)],
-         "ROMANS": [("scorpions", "gold", (0.5,) * 4)],
-         "SLAVS": [("siege", None, (0.85,) * 4)],
-         "SPANISH": [(SMITH, "gold", (0.0,) * 4)],
-         "TEUTONS": [(("FARM",), None, (0.6,) * 4)],
-         "VIETNAMESE": [(ECONOMY, "wood", (0.0,) * 4)],                    # (#1447)
-         "VIKINGS": [(("WHEELBARROW",), None, (0.0,) * 4)]}
+
 
 # The start-resource bonuses (#1269): civilization -> {resource: change of START} (AoE2 DE, the AoE2 wiki). In AoE2 the
 # bonus comes with the first town center (a Nomad start gets it later); here it is in the start stock. The extra
@@ -156,182 +122,6 @@ START = {"AZTECS": {"gold": 50},
          "MAYANS": {"food": -50},
          "PERSIANS": {"food": 50, "wood": 50},
          "SICILIANS": {"stone": 100}}
-# The technologies whose effect a civilization gets twice (AoE2 wiki, "Civilization bonuses"; train.stats, #1561).
-TWICE = {"KHITANS": ("FORGING", "IRON_CASTING")}
-# The technologies and units that a civilization does not have (AoE2 wiki, the availability chart of each, #1373):
-# the menu does not show them (train.unlocked).
-MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "BERBERS", "BYZANTINES", "CELTS",
-                            "CUMANS", "DANES", "DRAVIDIANS", "HINDUSTANIS", "HUNS", "INCAS", "JAPANESE", "KHITANS",
-                            "MACEDONIANS", "MAGYARS", "MALAY", "MAPUCHE", "MONGOLS", "MUISCA", "POLES", "PURU",
-                            "SARACENS", "SICILIANS", "SLAVS", "SPARTANS", "TATARS", "TEUTONS", "THRACIANS", "TUPI",
-                            "VIETNAMESE", "WEI"),   # the wiki chart (#1504)
-           "ARROWSLITS": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "BULGARIANS", "BURMESE", "CUMANS", "ETHIOPIANS",
-                          "GOTHS", "GURJARAS", "HINDUSTANIS", "HUNS", "KHITANS", "KHMER", "LITHUANIANS",
-                          "MACEDONIANS", "MAGYARS", "MALAY", "MALIANS", "MAYANS", "MONGOLS", "MUISCA", "PERSIANS",
-                          "PORTUGUESE", "PURU", "ROMANS", "SLAVS", "SPARTANS", "TATARS", "THRACIANS", "VARANGIANS",
-                          "WEI", "WU"),   # the wiki chart (#1504)
-           "ARSON": ("GOTHS", "MUISCA", "ROMANS"),                                          # (#1419)
-           "ATONEMENT": ("BRITONS", "BULGARIANS", "CELTS", "DANES", "FRANKS", "GEORGIANS", "GOTHS",
-                         "HINDUSTANIS", "INCAS", "KHMER", "KOREANS", "MAGYARS", "PERSIANS", "POLES", "SICILIANS",
-                         "TUPI", "WEI"),                                                # the wiki chart (#1581)
-           "BLOCK_PRINTING": ("BERBERS", "BULGARIANS", "CELTS", "CUMANS", "ETHIOPIANS", "GOTHS", "GURJARAS", "HUNS",
-                              "KHITANS", "KHMER", "MAPUCHE", "MONGOLS", "SHU", "SICILIANS", "TUPI", "TURKS",
-                              "VARANGIANS", "WU"),                                          # (#1457)
-           "BOMBARD_CANNON": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "BENGALIS", "BRITONS", "BULGARIANS",
-                              "CELTS", "CHINESE", "CUMANS", "DANES", "GEORGIANS", "HUNS", "INCAS", "JAPANESE",
-                              "KHITANS", "KHMER", "MACEDONIANS", "MAGYARS", "MAPUCHE", "MAYANS", "MONGOLS", "MUISCA",
-                              "PURU", "ROMANS", "SAXONS", "SHU", "SICILIANS", "SLAVS", "SPARTANS", "TATARS",
-                              "THRACIANS", "TUPI", "VARANGIANS", "VIKINGS", "WEI", "WU"),   # (#1443)
-           "BOMBARD_TOWER_TECH": ("ACHAEMENIDS", "ATHENIANS", "AZTECS", "BENGALIS", "BERBERS", "BRITONS", "BULGARIANS",
-                                  "BURMESE", "CELTS", "CUMANS", "DANES", "ETHIOPIANS", "FRANKS", "GEORGIANS", "GOTHS",
-                                  "GURJARAS", "HINDUSTANIS", "HUNS", "INCAS", "JAPANESE", "JURCHENS", "KHITANS", "KHMER",
-                                  "MACEDONIANS", "MAGYARS", "MALIANS", "MAYANS", "MONGOLS", "MUISCA", "PERSIANS", "PURU",
-                                  "ROMANS", "SARACENS", "SAXONS", "SHU", "SICILIANS", "SLAVS", "SPARTANS", "THRACIANS",
-                                  "TUPI", "VARANGIANS", "VIKINGS", "WEI", "WU"),
-           "BRACER": ("CELTS", "CUMANS", "FRANKS", "MALIANS", "MAPUCHE", "PERSIANS", "ROMANS", "SLAVS", "TEUTONS"),   # (#1503)
-           "CAMEL_RIDER": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "BENGALIS", "BOHEMIANS", "BRITONS",
-                           "BULGARIANS", "BURGUNDIANS", "BURMESE", "CELTS", "CHINESE", "DANES", "DRAVIDIANS",
-                           "FRANKS", "GEORGIANS", "GOTHS", "HUNS", "INCAS", "ITALIANS", "JAPANESE", "JURCHENS",
-                           "KHMER", "KOREANS", "LITHUANIANS", "MACEDONIANS", "MAGYARS", "MALAY", "MAPUCHE", "MAYANS",
-                           "MUISCA", "POLES", "PORTUGUESE", "PURU", "ROMANS", "SAXONS", "SHU", "SICILIANS", "SLAVS",
-                           "SPANISH", "SPARTANS", "TEUTONS", "THRACIANS", "TUPI", "VARANGIANS", "VIETNAMESE",
-                           "VIKINGS", "WEI", "WU"),   # the wiki chart (#1550)
-           "CANNON_GALLEON": ("ARMENIANS", "AZTECS", "BYZANTINES", "CHINESE", "CUMANS", "DANES", "GOTHS", "HUNS", "INCAS",
-                              "JURCHENS", "MAPUCHE", "MAYANS", "MUISCA", "ROMANS", "SAXONS", "SHU", "TUPI", "VARANGIANS",
-                              "VIKINGS", "WEI", "WU"),                                     # (#1484)
-           "CAVALIER_UPGRADE": ("AZTECS", "BENGALIS", "DANES", "DRAVIDIANS", "GURJARAS", "HINDUSTANIS", "INCAS", "JURCHENS",
-                                "KHITANS", "MAPUCHE", "MAYANS", "MUISCA", "SARACENS", "SHU", "TUPI", "WEI",
-                                "WU"),                                 # the wiki chart (#1501)
-           "CAVALRY_ARCHER": ("AZTECS", "BENGALIS", "BOHEMIANS", "BRITONS", "BURGUNDIANS", "CELTS", "DANES", "DRAVIDIANS",
-                              "FRANKS", "GURJARAS", "INCAS", "ITALIANS", "MAPUCHE", "MAYANS", "MUISCA", "POLES",
-                              "PORTUGUESE", "SAXONS", "SICILIANS", "SPANISH", "TEUTONS", "TUPI", "VARANGIANS", "VIKINGS",
-                              "WEI"),                                 # the wiki chart (#1430)
-           "CROP_ROTATION": ("ARMENIANS", "BOHEMIANS", "BRITONS", "CELTS", "CHINESE", "DANES", "DRAVIDIANS", "ETHIOPIANS",
-                             "HINDUSTANIS", "HUNS", "JAPANESE", "KHITANS", "KOREANS", "MONGOLS", "SARACENS", "SHU",
-                             "SPANISH", "TUPI", "TURKS", "WU"),                     # the wiki chart (#1578)
-           "DEMOLITION_RAFT": ("DANES", "KOREANS", "PORTUGUESE", "SAXONS", "VARANGIANS", "VIKINGS"),   # (#1481)
-           "DEMOLITION_SHIP": ("DANES", "KOREANS", "PORTUGUESE", "SAXONS", "VARANGIANS", "VIKINGS"),   # (#1481)
-           "DRY_DOCK": ("BOHEMIANS", "BULGARIANS", "BURGUNDIANS", "CUMANS", "GEORGIANS", "GOTHS", "GURJARAS",
-                        "HINDUSTANIS", "KHITANS", "MAPUCHE", "MONGOLS", "POLES", "ROMANS", "TEUTONS", "WEI"),   # (#1441)
-           "ELITE_CANNON_GALLEON_UPGRADE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "BRITONS", "BULGARIANS",
-                                            "BYZANTINES", "CELTS", "CHINESE", "CUMANS", "DANES", "ETHIOPIANS", "FRANKS",
-                                            "GEORGIANS", "GOTHS", "GURJARAS", "HUNS", "INCAS", "JURCHENS", "KHITANS",
-                                            "MACEDONIANS", "MAGYARS", "MALIANS", "MAPUCHE", "MAYANS", "MONGOLS",
-                                            "MUISCA", "POLES", "PURU", "ROMANS", "SAXONS", "SHU", "SICILIANS", "SLAVS",
-                                            "SPARTANS", "TEUTONS", "THRACIANS", "TUPI", "VARANGIANS", "VIKINGS", "WEI",
-                                            "WU"),   # the wiki chart (#1491)
-           "FAITH": ("BULGARIANS", "DANES", "GURJARAS", "JURCHENS", "MAGYARS", "TATARS"),        # (#1584)
-           "FAST_FIRE_SHIP": ("ARMENIANS", "BOHEMIANS", "BULGARIANS", "BURMESE", "CELTS", "CHINESE", "ETHIOPIANS",
-                              "GURJARAS", "HINDUSTANIS", "HUNS", "JURCHENS", "MUISCA", "PORTUGUESE", "SARACENS",
-                              "SAXONS", "SHU", "TUPI", "TURKS", "VIETNAMESE", "VIKINGS"),   # the wiki chart (#1483)
-           "FORTIFIED_WALL": ("BULGARIANS", "CUMANS", "DANES", "GOTHS", "HUNS", "MAGYARS", "MALAY", "MAPUCHE", "MUISCA",
-                              "PERSIANS", "SICILIANS", "TUPI", "WU"),
-           "GALLEON": ("AZTECS", "KHITANS", "MALIANS"),                                   # (#1483)
-           "GAMBESONS": ("ACHAEMENIDS", "ATHENIANS", "BERBERS", "BOHEMIANS", "BURGUNDIANS", "CHINESE", "CUMANS",
-                          "ETHIOPIANS", "GOTHS", "GURJARAS", "HINDUSTANIS", "HUNS", "INCAS", "ITALIANS", "KHMER",
-                          "KOREANS", "LITHUANIANS", "MACEDONIANS", "MAGYARS", "MALAY", "MALIANS", "MAPUCHE", "MAYANS",
-                          "MONGOLS", "MUISCA", "POLES", "PURU", "ROMANS", "SPARTANS", "TATARS", "THRACIANS", "TUPI",
-                          "TURKS", "VIETNAMESE", "VIKINGS", "WEI", "WU"),
-           "GUILDS": ("AZTECS", "BULGARIANS", "CHINESE", "DANES", "FRANKS", "GURJARAS", "HINDUSTANIS", "JAPANESE",
-                      "KHMER", "MAGYARS", "MAPUCHE", "MONGOLS", "POLES", "SARACENS", "SLAVS", "TUPI", "VIKINGS",
-                      "WEI"),                                     # the wiki chart, revision 1088694 (#1931)
-           "HAND_CANNONEER": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "BENGALIS", "BRITONS", "BULGARIANS",
-                              "BURMESE", "CELTS", "CHINESE", "CUMANS", "DANES", "ETHIOPIANS", "HUNS", "INCAS",
-                              "JURCHENS", "KHITANS", "MACEDONIANS", "MAGYARS", "MALAY", "MAPUCHE", "MAYANS",
-                              "MONGOLS", "MUISCA", "POLES", "PURU", "ROMANS", "SAXONS", "SHU", "SICILIANS", "SLAVS",
-                              "SPARTANS", "THRACIANS", "TUPI", "VARANGIANS", "VIETNAMESE", "VIKINGS", "WEI", "WU"),   # the wiki chart (#1535)
-           "HEATED_SHOT": ("BOHEMIANS", "BURGUNDIANS", "BYZANTINES", "FRANKS", "GEORGIANS", "HINDUSTANIS", "HUNS",
-                           "JAPANESE", "JURCHENS", "MAPUCHE", "MONGOLS", "MUISCA", "POLES", "ROMANS", "SARACENS",
-                           "SLAVS", "SPANISH"),                                       # the wiki chart (#1548)
-           "HEAVY_CAMEL_RIDER_UPGRADE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "BENGALIS", "BOHEMIANS",
-                                         "BRITONS", "BULGARIANS", "BURGUNDIANS", "BURMESE", "CELTS", "CHINESE",
-                                         "CUMANS", "DANES", "DRAVIDIANS", "FRANKS", "GEORGIANS", "GOTHS", "HUNS",
-                                         "INCAS", "ITALIANS", "JAPANESE", "JURCHENS", "KHMER", "KOREANS",
-                                         "LITHUANIANS", "MACEDONIANS", "MAGYARS", "MALAY", "MAPUCHE", "MAYANS",
-                                         "MUISCA", "POLES", "PORTUGUESE", "PURU", "ROMANS", "SAXONS", "SHU",
-                                         "SICILIANS", "SLAVS", "SPANISH", "SPARTANS", "TEUTONS", "THRACIANS", "TUPI",
-                                         "VARANGIANS", "VIETNAMESE", "VIKINGS", "WEI", "WU"),   # the wiki chart (#1550)
-           "HERESY": ("BENGALIS", "BRITONS", "BURGUNDIANS", "BURMESE", "CHINESE", "DANES", "DRAVIDIANS", "GOTHS",
-                      "HINDUSTANIS", "ITALIANS", "JAPANESE", "JURCHENS", "KHMER", "KOREANS", "PERSIANS", "POLES",
-                      "ROMANS", "SICILIANS", "SLAVS", "TATARS", "VARANGIANS", "VIETNAMESE", "WEI", "WU"),   # (#1582)
-           "HEAVY_DEMOLITION_SHIP": ("ACHAEMENIDS", "ATHENIANS", "AZTECS", "BENGALIS", "BOHEMIANS", "BULGARIANS",
-                                     "BURGUNDIANS", "BURMESE", "CUMANS", "DANES", "ETHIOPIANS", "GEORGIANS",
-                                     "HINDUSTANIS", "INCAS", "ITALIANS", "JAPANESE", "KHITANS", "KHMER", "KOREANS",
-                                     "LITHUANIANS", "MACEDONIANS", "MAGYARS", "MALAY", "MAPUCHE", "POLES",
-                                     "PORTUGUESE", "PURU", "ROMANS", "SAXONS", "SLAVS", "SPARTANS", "TATARS",
-                                     "THRACIANS", "TUPI", "VARANGIANS", "VIKINGS", "WEI"),   # the wiki chart (#1483)
-           "HEAVY_PLOW": ("KHITANS",),                                     # (#1424)
-           "HERBAL_MEDICINE": ("BYZANTINES", "DANES", "HUNS", "KHITANS", "SHU", "TURKS", "VIKINGS", "WEI"),   # (#1585)
-           "HOARDINGS": ("AZTECS", "BENGALIS", "BOHEMIANS", "BULGARIANS", "BURMESE", "CHINESE", "ETHIOPIANS", "GOTHS",
-                         "HUNS", "KHITANS", "KOREANS", "MALAY", "PORTUGUESE", "ROMANS", "TATARS", "VARANGIANS",
-                         "WU"),                                            # (#1456)
-           "HUSBANDRY": ("AZTECS", "CUMANS", "INCAS", "MAPUCHE", "MAYANS", "MUISCA", "TEUTONS", "TUPI", "VIKINGS"),
-           "HUSSAR_UPGRADE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "BENGALIS", "BOHEMIANS", "BRITONS",
-                              "CHINESE", "DANES", "DRAVIDIANS", "FRANKS", "INCAS", "JAPANESE", "LITHUANIANS",
-                              "MACEDONIANS", "MALAY", "MALIANS", "MAPUCHE", "MAYANS", "MUISCA", "POLES",
-                              "PORTUGUESE", "PURU", "ROMANS", "SHU", "SICILIANS", "SPARTANS", "TEUTONS", "THRACIANS",
-                              "TUPI", "VIETNAMESE", "VIKINGS"),   # the wiki chart (#1502)
-           "ILLUMINATION": ("CELTS", "CUMANS", "DRAVIDIANS", "GEORGIANS", "KOREANS", "MALIANS", "MAPUCHE", "MAYANS",
-                            "MONGOLS", "PERSIANS", "POLES", "PORTUGUESE", "TURKS", "VIKINGS"),   # the wiki chart (#1583)
-           "KNIGHT": ("AZTECS", "BENGALIS", "DRAVIDIANS", "GURJARAS", "HINDUSTANIS", "INCAS", "JURCHENS", "KHITANS",
-                      "MAPUCHE", "MAYANS", "MUISCA", "SHU", "TUPI", "WEI", "WU"),   # the wiki chart (#1430)
-           "PALADIN_UPGRADE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "BENGALIS", "BERBERS", "BOHEMIANS",
-                               "BRITONS", "BULGARIANS", "BURMESE", "CHINESE", "DANES", "DRAVIDIANS", "ETHIOPIANS",
-                               "GEORGIANS", "GOTHS", "GURJARAS", "HINDUSTANIS", "INCAS", "ITALIANS", "JAPANESE",
-                               "JURCHENS", "KHITANS", "KHMER", "KOREANS", "MACEDONIANS", "MALAY", "MALIANS", "MAPUCHE",
-                               "MAYANS", "MONGOLS", "MUISCA", "PERSIANS", "POLES", "PORTUGUESE", "PURU", "ROMANS",
-                               "SARACENS", "SAXONS", "SHU", "SICILIANS", "SLAVS", "SPARTANS", "TATARS", "THRACIANS",
-                               "TUPI", "TURKS", "VARANGIANS", "VIETNAMESE", "VIKINGS", "WEI", "WU"),   # the wiki chart (#1501)
-           "PARTHIAN_TACTICS": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "BENGALIS",
-                                "BERBERS", "BOHEMIANS", "BRITONS", "BURGUNDIANS", "BYZANTINES",
-                                "CELTS", "CHINESE", "DANES", "DRAVIDIANS", "ETHIOPIANS", "FRANKS",
-                                "GOTHS", "GURJARAS", "HINDUSTANIS", "INCAS", "ITALIANS",
-                                "JURCHENS", "KOREANS", "LITHUANIANS", "MACEDONIANS", "MALAY",
-                                "MALIANS", "MAPUCHE", "MAYANS", "MUISCA", "POLES", "PORTUGUESE",
-                                "PURU", "ROMANS", "SAXONS", "SHU", "SICILIANS", "SLAVS",
-                                "SPANISH", "SPARTANS", "TEUTONS", "THRACIANS", "TUPI",
-                                "VARANGIANS", "VIETNAMESE", "VIKINGS", "WU"),   # the wiki chart (#1505)
-           "SAPPERS": ("BENGALIS", "BERBERS", "BULGARIANS", "BURMESE", "BYZANTINES", "DANES", "DRAVIDIANS", "FRANKS",
-                       "HINDUSTANIS", "ITALIANS", "JAPANESE", "KHITANS", "KOREANS", "LITHUANIANS", "MUISCA",
-                       "SARACENS", "VARANGIANS", "WEI", "WU"),                     # the wiki chart (#1580)
-           "SHIPWRIGHT": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "BOHEMIANS", "BULGARIANS", "BURGUNDIANS", "BURMESE",
-                          "CUMANS", "FRANKS", "GEORGIANS", "HINDUSTANIS", "HUNS", "JURCHENS", "KHITANS", "KHMER",
-                          "LITHUANIANS", "MACEDONIANS", "MALIANS", "MAPUCHE", "MUISCA", "PERSIANS", "POLES", "PORTUGUESE",
-                          "PURU", "SARACENS", "SLAVS", "SPARTANS", "TATARS", "TEUTONS", "THRACIANS", "TUPI",
-                          "VIETNAMESE", "VIKINGS", "WEI", "WU"),                           # the wiki chart (#1490)
-           "SQUIRES": ("CELTS", "GURJARAS", "KHMER", "MAGYARS", "MAPUCHE", "PORTUGUESE"),   # (#1415)
-           "THEOCRACY": ("BURGUNDIANS", "CELTS", "CUMANS", "HUNS", "MALAY", "MONGOLS", "ROMANS", "SICILIANS",   # (#1586)
-                         "TATARS", "VIKINGS"),
-           "THUMB_RING": ("ARMENIANS", "AZTECS", "BENGALIS", "BOHEMIANS", "BRITONS", "BURGUNDIANS", "BURMESE", "CELTS",
-                          "FRANKS", "GEORGIANS", "GOTHS", "JURCHENS", "KHMER", "MAPUCHE", "ROMANS", "SICILIANS", "SLAVS",
-                          "TEUTONS", "TUPI", "VARANGIANS", "VIKINGS", "WU"),   # (#1421)
-           "TREADMILL_CRANE": ("BULGARIANS", "CHINESE", "CUMANS", "DANES", "DRAVIDIANS", "ETHIOPIANS", "HINDUSTANIS",
-                               "KHITANS", "MONGOLS", "PERSIANS", "ROMANS", "SPANISH"),   # (#1422)
-           "TWO_MAN_SAW": ("ARMENIANS", "AZTECS", "BERBERS", "BULGARIANS", "CELTS", "DANES", "FRANKS", "GEORGIANS",
-                           "GURJARAS", "INCAS", "KHMER", "MALAY", "MALIANS", "MONGOLS", "POLES", "ROMANS", "SICILIANS",
-                           "TATARS", "TUPI", "WEI")}                  # the wiki chart (#1577)
-ELEPHANTS = ("BENGALIS", "BURMESE", "DRAVIDIANS", "KHMER", "MALAY", "VIETNAMESE")   # the battle elephant (AoE2 DE wiki, #1556)
-MISSING |= {"BATTLE_ELEPHANT": tuple(sorted(set().union(*MISSING.values()) - set(ELEPHANTS))),
-            "ELITE_BATTLE_ELEPHANT": tuple(sorted(set().union(*MISSING.values()) - set(ELEPHANTS) | {"DRAVIDIANS"}))}   # no elite
-EAGLES = ("AZTECS", "MAYANS")                                     # the eagle line (AoE2 DE wiki; not the Incas since
-MISSING |= dict.fromkeys(("EAGLE_SCOUT", "EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"),   # The Last Chieftains, #1555)
-                         tuple(sorted(set().union(*MISSING.values()) - set(EAGLES))))
-MISSING["WINGED_HUSSAR_UPGRADE"] = tuple(sorted(set().union(*MISSING.values()) - {"LITHUANIANS", "POLES"}))   # (#1558)
-MISSING["IMPERIAL_SKIRMISHER_UPGRADE"] = tuple(sorted(set().union(*MISSING.values()) - {"VIETNAMESE"}))   # (#1611)
-LANCERS = ("CUMANS", "JURCHENS", "KHITANS", "MONGOLS", "TATARS")   # the steppe lancers (AoE2 DE wiki, #1557)
-MISSING |= dict.fromkeys(("STEPPE_LANCER", "ELITE_STEPPE_LANCER", "ELITE_STEPPE_LANCER_UPGRADE"),
-                         tuple(sorted(set().union(*MISSING.values()) - set(LANCERS))))
-MISSING |= dict.fromkeys(("GENITOUR", "ELITE_GENITOUR", "ELITE_GENITOUR_UPGRADE"),   # the Berbers (AoE2 DE wiki, #1610)
-                         tuple(sorted(set().union(*MISSING.values()) - {"BERBERS"})))
-MISSING |= dict.fromkeys(("SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER_UPGRADE"),
-                         tuple(sorted(set().union(*MISSING.values()) - {"GURJARAS"})))   # (AoE2 DE wiki, #1612)
-MISSING |= dict.fromkeys(("HEI_GUANG_CAVALRY", "HEAVY_HEI_GUANG_CAVALRY", "HEAVY_HEI_GUANG_CAVALRY_UPGRADE"),
-                         tuple(sorted(set().union(*MISSING.values()) - {"SHU", "WEI", "WU"})))   # (AoE2 DE wiki, #1954)
-MISSING["KREPOST"] = tuple(sorted(set().union(*MISSING.values()) - {"BULGARIANS"}))   # the build menu (AoE2 DE wiki, #1872)
-CHURCH = ("ARMENIANS", "GEORGIANS")                               # the Fortified Church in place of the Monastery (#1930)
-CHURCH_RATE, CHURCH_NEAR = 1.1, 10.5                              # +10 % work in the 21-tile square around it (tiles)
-MISSING |= {"FORTIFIED_CHURCH": tuple(sorted(set().union(*MISSING.values()) - set(CHURCH))), "MONASTERY": CHURCH}
-MISSING["MISSIONARY"] = tuple(sorted(set().union(*MISSING.values()) - {"SPANISH"}))   # the monastery (AoE2 DE wiki, #1939)
 SHARED = {"CONDOTTIERO": "ITALIANS",                              # the shared unique units of the team bonuses: an ally
           "ELITE_GENITOUR": "BERBERS",                             # of the civilization has them too (AoE2 DE wiki,
           "ELITE_GENITOUR_UPGRADE": "BERBERS",                     # "Team bonus", #1619)

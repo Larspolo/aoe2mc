@@ -47,6 +47,7 @@ BASE = {"CASTLE": 5, "TOWN_CENTER": 0,                           # arrows of an 
 FISHER = "FISHING_SHIP"     # the only unit that goes into a dock (#1949)
 DOOR = 2.5                  # blocks from the door cell: there a unit goes in
 UNGARRISON = (7, "oak_door", "Ungarrison", "Click: all units come out")   # a slot of the first row, before RALLY
+SLOTS = {"DOCK": 26}        # a building with a unit in slot 7 (the demolition raft): the last slot of the third row (#1949)
 INSIDE = "{Invulnerable:1b,NoAI:1b,CustomNameVisible:0b}"         # the NBT of a garrisoned unit (#807)
 OUTSIDE = "{Invulnerable:0b}"                                     # NoAI stays: the next order turns on the AI
 CREW = "{Invulnerable:1b}"                                        # the crew of a ship in a dock keeps its AI (#1949)
@@ -90,6 +91,11 @@ def arrows_command(g, rect):
     names = ["VILLAGER" if u in g.villagers else g.soldiers.get(u, "") for u in g.garrisons.get(rect, [])]
     building = holders(g).get(rect, {}).get("name")
     return f"aoe arrows {combat.target_uuid([rect[0], rect[2], rect[1], rect[3]])} {arrows(building, names)}"
+
+
+def ungarrison(building):
+    """The menu item UNGARRISON of the building, in its slot (SLOTS)."""
+    return (SLOTS.get(building, UNGARRISON[0]), *UNGARRISON[1:])
 
 
 def door(g, rect):

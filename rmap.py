@@ -415,6 +415,11 @@ COASTS = {"islands": 1,         # the beach: tiles of width on the land next to 
           "nomad": 1}
 ISLES = {"islands": 2}          # the water between two islands: tiles that each island gives up next to another one
 NOMADS = {"nomad": (6, 7)}      # no town center: each villager alone, at (tiles from the origin, tiles from each other)
+# The Gaia resources of Nomad over the whole map, as AoE2 Nomad (#1944, wiki infobox): (name, objects of a group,
+# groups per player). Pairs of sheep, single boars, 3-deer herds, 6 berry bushes, 6-tile gold and stone mines.
+SCATTER = (("SHEEP", 2, 2), ("FORAGE_BUSH", 6, 1), ("GOLD_MINE", 6, 2), ("STONE_MINE", 6, 2), ("WILD_BOAR", 1, 2),
+           ("DEER", 3, 1))
+AWAY = 12                       # tiles from each villager of Nomad to the SCATTER groups: the start is open land
 RINGS = {"gold_rush": (14, 5)}  # the forest ring around the gold: inner radius and width in tiles, gaps between players
 FISH = {"highland": (0, "FISH_SALMON", 4),    # the fish of a player: shore fish, the deep fish and its count (#1943)
         "islands": (3, "FISH_DORADO", 6),
@@ -573,9 +578,8 @@ def random_map(kind, seed, players=2):
             woodline(terrain, used, (cx, cy), WOODS[kind][:2], rng)
         start = START + (((FOREST_TREES[TERRAINS["FOREST"]], 1, 5, 0),) * WOODS[kind][2] if kind in WOODS else ())
         apart, far = [], NOMADS.get(kind, (0, 0))
-        if kind in NOMADS:            # one group for each villager, before the rest; no scout, as AoE2 Nomad (#1216)
-            alone = tuple((s[0], 1, far[0], s[3]) for s in start if s[0].startswith("VILLAGER") for _ in range(s[1]))
-            start = alone + tuple(s for s in start if not s[0].startswith("VILLAGER") and s[0] != "SCOUT_CAVALRY")
+        if kind in NOMADS:            # one group for each villager; no scout, as AoE2 Nomad (#1216); the rest: scatter()
+            start = tuple((s[0], 1, far[0], s[3]) for s in start if s[0].startswith("VILLAGER") for _ in range(s[1]))
         for name, count, dist, own in start:
             turn = rng.uniform(0, 2 * np.pi)
             for k in range(36):                                          # 36 directions, from a random one
@@ -593,6 +597,8 @@ def random_map(kind, seed, players=2):
             apart += cells * name.startswith("VILLAGER")
     if kind in FISH:
         objects += fish(terrain, FISH[kind], len(d["lands"]), rng)
+    if kind in NOMADS:
+        objects += scatter(used, len(d["lands"]), rng, [(o["x"], o["y"]) for o in objects if o["name"].startswith("VILLAGER")])
     d["terrain"] = terrain.tolist()
     d["objects"] = objects + trees(terrain)
     return d
@@ -615,6 +621,29 @@ def fish(terrain, spec, players, rng):
                 taken[max(0, x[i] - 2):x[i] + 3, max(0, y[i] - 2):y[i] + 3] = True
                 out.append({"name": name, "player": 0, "x": x[i] + 0.5, "y": y[i] + 0.5})
                 placed += 1
+    return out
+
+
+def scatter(used, players, rng, villagers):
+    """The SCATTER groups of Nomad on random free tiles of the whole map (#1944): each group on next free tiles, not
+    next to another object, at least AWAY tiles from each villager. A group with no space after 200 tries is missing."""
+    n, out = used.shape[0], []
+    x, y = np.mgrid[0:n, 0:n] + 0.5
+    used = used.copy()
+    for vx, vy in villagers:
+        used |= np.hypot(x - vx, y - vy) < AWAY
+    for name, count, groups in SCATTER:
+        for _ in range(groups * players):
+            for _ in range(200):
+                c = (int(rng.integers(n)), int(rng.integers(n)))
+                cells = sorted(square(c, 2, n), key=lambda t: (t[0] - c[0]) ** 2 + (t[1] - c[1]) ** 2)[:count]
+                if len(cells) == count and not any(used[t] for t in cells):
+                    break
+            else:
+                continue
+            for t in cells:
+                used[max(0, t[0] - 1):t[0] + 2, max(0, t[1] - 1):t[1] + 2] = True
+                out.append({"name": name, "player": 0, "x": t[0] + 0.5, "y": t[1] + 0.5})
     return out
 
 
