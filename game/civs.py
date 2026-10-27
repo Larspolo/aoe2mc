@@ -55,6 +55,7 @@ GROUPS = {
     "infantry": lambda n, s: "infantry" in s.classes,
     "infantry, mounted": lambda n, s: "infantry" in s.classes or mounted(s),
     "military": lambda n, s: not n.startswith("VILLAGER"),
+    "monks": lambda n, s: n in ("MONK", "MISSIONARY"),
     "mounted": lambda n, s: mounted(s),
     "scorpions": lambda n, s: n.endswith("SCORPION"),
     "scout line": lambda n, s: n in ("SCOUT_CAVALRY", "LIGHT_CAVALRY", "HUSSAR"),
@@ -326,6 +327,7 @@ MISSING |= dict.fromkeys(("SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER", "ELITE_S
 MISSING |= dict.fromkeys(("HEI_GUANG_CAVALRY", "HEAVY_HEI_GUANG_CAVALRY", "HEAVY_HEI_GUANG_CAVALRY_UPGRADE"),
                          tuple(sorted(set().union(*MISSING.values()) - {"SHU", "WEI", "WU"})))   # (AoE2 DE wiki, #1954)
 MISSING["KREPOST"] = tuple(sorted(set().union(*MISSING.values()) - {"BULGARIANS"}))   # the build menu (AoE2 DE wiki, #1872)
+MISSING["MISSIONARY"] = tuple(sorted(set().union(*MISSING.values()) - {"SPANISH"}))   # the monastery (AoE2 DE wiki, #1939)
 SHARED = {"CONDOTTIERO": "ITALIANS",                              # the shared unique units of the team bonuses: an ally
           "ELITE_GENITOUR": "BERBERS",                             # of the civilization has them too (AoE2 DE wiki,
           "ELITE_GENITOUR_UPGRADE": "BERBERS",                     # "Team bonus", #1619)

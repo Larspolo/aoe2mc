@@ -105,6 +105,7 @@ SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, 
           "HUSSAR": 1.5,                                                            # (#1502)
           "IMPERIAL_SKIRMISHER": 0.96,                                              # (#1611)
           "LONG_SWORDSMAN": 0.9,
+          "MISSIONARY": 1.1,                                                        # (#1939)
           "PALADIN": 1.35,                                                          # (#1501)
           "SHRIVAMSHA_RIDER": 1.6,                                                  # (#1612)
           "STEPPE_LANCER": 1.45,                                                    # (#1557)

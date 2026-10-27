@@ -181,6 +181,7 @@
 {"name": "WAR_GALLEY", "hp": 125, "attack": 7, "melee": 0, "pierce": 4, "range": 6, "reload": 3.0, "bonus": {"building": 6, "warship": 5}, "classes": ["ship", "warship"], "note": "Medium Warships (#1482)"}
 {"name": "WAR_HULK", "hp": 110, "attack": 4, "melee": 4, "pierce": 1, "range": 1, "reload": 1.5, "bonus": {"fireship": 1, "standard": -3}, "classes": ["ship"], "sight": 5, "note": "Medium Warships (#1508)"}
 {"name": "VILLAGER", "hp": 25, "attack": 3, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"building": 3, "heavysiege": 6, "stone": 6}, "classes": [], "note": "AoE2 DE wiki (#1590)"}
+{"name": "MISSIONARY", "hp": 30, "attack": 0, "melee": 0, "pierce": 0, "range": 7, "reload": 0.0, "bonus": {}, "classes": [], "note": "AoE2 DE wiki (#1939)"}
 {"name": "KING", "hp": 75, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": [], "sight": 6}
 {"name": "MONK", "hp": 30, "attack": 0, "melee": 0, "pierce": 0, "range": 9, "reload": 0.0, "bonus": {}, "classes": []}
 {"name": "TRADE_CART", "hp": 70, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": [], "sight": 7}
