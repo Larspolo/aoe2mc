@@ -223,6 +223,7 @@ STATS = {
     "FIRE_SHIP": Stats(120, 3, 2, 4, 2.5, 0.25, {"building": 2, WAR: 1}, (SHIP,)),   # (#1440) melee damage, 4 hits/s
     "FISHING_SHIP": Stats(50, 0, 1, 1, 0, 0.0, {}, (SHIP,)),
     "GALLEY": Stats(110, 6, 0, 3, 5, 3.0, {"building": 6, WAR: 5}, (SHIP, WAR)),
+    "WAR_GALLEY": Stats(125, 7, 0, 4, 6, 3.0, {"building": 6, WAR: 5}, (SHIP, WAR)),   # Medium Warships (#1482)
     # others: no fight, but they can die
     "VILLAGER": Stats(25, 3, 0, 0, 0, 2.0),
     "KING": Stats(75, 0, 0, 0, 0, 0.0),
