@@ -226,8 +226,8 @@ def heal(g, dt):
 
 
 def convertible(g, uuid):
-    """True for an enemy unit that a monk converts: no monk (the religious units are evokers), king, hero or siege
-    (with Redemption: siege, and an enemy building that is not LASTING)."""
+    """True for an enemy unit that a monk converts: no monk (the religious units are evokers; with Atonement: also
+    them), king, hero or siege (with Redemption: siege, and an enemy building that is not LASTING)."""
     redeemed = "REDEMPTION" in g.techs
     if uuid in g.forts:
         return redeemed and not any(n in g.fort_names.get(uuid, "") for n in LASTING)
@@ -235,7 +235,8 @@ def convertible(g, uuid):
     if name is None or name in IMMUNE or units.siege(name) and not redeemed or "EMPEROR" in name:
         return False
     hero = any(o.get("hero") for o in g.data["objects"] if o.get("uuid") == uuid)
-    return str((units.classify(name, hero) or {}).get("id")) != "minecraft:evoker" and not hero
+    religious = str((units.classify(name, hero) or {}).get("id")) == "minecraft:evoker"
+    return not hero and (not religious or "ATONEMENT" in g.techs)
 
 
 def convert_order(g, monks, target):

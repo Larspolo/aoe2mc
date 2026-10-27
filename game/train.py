@@ -82,6 +82,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "ARCHITECTURE": {"food": 300, "wood": 200},                   # the university, Imperial Age (#1504)
          "ARROWSLITS": {"food": 250, "wood": 250},                     # AoE2 DE wiki (#1504)
          "ARSON": {"food": 75, "gold": 25},                           # AoE2 DE wiki (#1419)
+         "ATONEMENT": {"gold": 325},                                  # AoE2 DE wiki (#1581)
          "BALLISTICS": {"wood": 300, "gold": 175},                    # the university, Castle Age (#1549)
          "BATTERING_RAM": {"wood": 160, "gold": 75},
          "BOMBARD_CANNON": {"wood": 225, "gold": 225},               # the Imperial Age, after Chemistry (#1380)
@@ -239,6 +240,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "ARBALESTER_UPGRADE": 50,
                "ARCHITECTURE": 70,
                "ARROWSLITS": 25,
+               "ATONEMENT": 40,
                "BALLISTICS": 60,
                "BATTERING_RAM": 36,
                "BATTLE_ELEPHANT": 24,
@@ -459,7 +461,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                           "GOLD_SHAFT_MINING",
                           "STONE_SHAFT_MINING"),                                # (#1423)
           "MONASTERY": ("MONK", "FERVOR", "SANCTITY", "REDEMPTION",             # (#1243, #1261, #1264)
-                        "BLOCK_PRINTING"),                                      # (#1457)
+                        "BLOCK_PRINTING",                                       # (#1457)
+                        "ATONEMENT"),                                           # (#1581)
           "SIEGE_WORKSHOP": ("BATTERING_RAM", "MANGONEL", "SCORPION", "SIEGE_TOWER",   # (#1349, #1362)
                              "CAPPED_RAM_UPGRADE", "SIEGE_RAM_UPGRADE", "ONAGER_UPGRADE", "SIEGE_ONAGER_UPGRADE",
                              "HEAVY_SCORPION_UPGRADE",                  # (#1352)
@@ -538,6 +541,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ARROWSLITS": arrowslits,                                 # the towers of the player: build.values
          "ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bonus.get("standard", 0) + 2})
          if "infantry" in s.classes else s,                        # combat.STANDARD: not the walls (#1419)
+         "ATONEMENT": lambda name, s: s,                           # monks convert enemy monks: monk.convertible
          "BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
          "BALLISTICS": lambda name, s: s,                          # the aim of the arrows: aoe ballistics (#1549)
          "BLAST_FURNACE": lambda name, s: s._replace(attack=s.attack + 2) if melee(s) or name in HULKS else s,
@@ -723,6 +727,7 @@ TECH_AGE = {                                                       # the age of 
     "ARCHITECTURE": 3,
     "ARROWSLITS": 3,
     "ARSON": 1,
+    "ATONEMENT": 2,
     "BALLISTICS": 2,
     "BLAST_FURNACE": 3,
     "BLOCK_PRINTING": 3,
@@ -819,6 +824,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "ARCHITECTURE": (6, "book", "Architecture"),              # the slot of Masonry (AFTER)
          "ARROWSLITS": (MORE + 1, "book", "Arrowslits"),
          "ARSON": (6, "book", "Arson"),                            # after the slot of Gambesons
+         "ATONEMENT": (5, "book", "Atonement"),                    # the monastery (#1581)
          "CAPPED_RAM": (0, "minecart", "Capped Ram"),
          "CAPPED_RAM_UPGRADE": (3, "book", "Capped Ram"),        # one slot for each line of upgrades
          "CROSSBOWMAN": (0, "skeleton_spawn_egg", "Crossbowman"),
@@ -981,6 +987,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "ARCHITECTURE": "Buildings +10 % HP, +1/+1 armor.",
         "ARROWSLITS": "Towers +1, +2, keeps +3 attack.",
         "ARSON": "Infantry +2 attack vs. buildings.",
+        "ATONEMENT": "Monks convert enemy monks.",
         "BALLISTICS": "Arrows hit moving targets.",
         "BATTERING_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
         "BATTLE_ELEPHANT": "Slow, heavy cavalry. Strong vs. buildings.",
