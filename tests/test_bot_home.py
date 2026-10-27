@@ -38,3 +38,12 @@ def test_the_bot_builds_a_farm_when_its_bushes_are_empty():
         if any(s["name"] == "FARM" for s in b.g.sites):
             break
     assert any(s["name"] == "FARM" for s in b.g.sites), [s["name"] for s in b.g.sites]
+
+
+def test_the_next_bush_of_an_empty_one_is_at_home():
+    """Gather.nearest (AoE2: a forager goes on to the nearest bush) takes no bush of the foe either."""
+    _, me, b = demo()
+    v = next(iter(b.g.villagers.values()))
+    v.res, v.tree = "food", OWN_BUSH
+    assert b.g.nearest(v) is None                                      # the bush of the foe is not a candidate
+    assert me.nearest(v) == FOE_BUSH                                   # player 1 takes it

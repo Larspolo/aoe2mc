@@ -57,6 +57,7 @@ class Bot:
         self.g.board = f"aoe_bot{player}"                              # not aoe_res: the sidebar of player 1
         self.failed = set()                                            # sources that a villager could not reach
         self.sides = (None, {})                                        # (own and foe places, {tile: at home}) (#1810)
+        self.g.home = self.home                                        # the next bush or mine of Gather.nearest too
 
     def setup(self):
         """Find the villagers of the player (the entities must be loaded) and make the objective of the resources."""
