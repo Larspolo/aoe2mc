@@ -75,20 +75,14 @@ import build  # noqa: E402
 import civs  # noqa: E402
 import garrison  # noqa: E402
 import menu  # noqa: E402
+import table  # noqa: E402
 
 DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "train.jsonl")
 
 
 def load(path=DATA):
-    """The items of the menus: one JSON object per line (#1702). A new item is one new line, so parallel tickets
-    do not conflict (`merge=union` in .gitattributes). Two lines of one name (both sides of a merge changed it)
-    stop the import."""
-    rows = [json.loads(s) for s in open(path, encoding="utf-8") if s.strip()]
-    names = [r["name"] for r in rows]
-    twice = sorted({n for n in names if names.count(n) > 1})
-    if twice:
-        raise ValueError(f"{path}: more than one line for {', '.join(twice)}")
-    return rows
+    """The items of the menus: one JSON object per line (#1702, `table.load`)."""
+    return table.load(path)
 
 
 ROWS = load()                                                      # one line per item: data/train.jsonl (#1702)
