@@ -14,7 +14,7 @@ def test_a_ram_gets_the_reach_of_a_melee_hit():
     assert combat.range_command("u", "CAPPED_RAM", 4).split()[3:] == ["2.0", str(round(5.0 / 1.7 * 20)), "0"]
     assert combat.range_command("u", "SIEGE_TOWER", 4) is None                 # no attack
     assert combat.range_command("u", "MILITIA", 4) is None                     # not a siege unit
-    assert combat.damage("BATTERING_RAM", "BARRACKS") == 127                  # 2 + 125 - 0 melee armor
+    assert combat.damage("BATTERING_RAM", "BARRACKS") == 152                  # 2 + 150 - 0 melee armor (#1402)
 
 
 @pytest.mark.mc
@@ -46,6 +46,6 @@ def test_a_ram_walks_to_a_barracks_and_hits_it(tiny_world, tmp_path):
             if (h := hp(game, uuid)) != seen[-1][1]:
                 seen.append((time.time(), h))
             time.sleep(0.1)
-        assert [h for _, h in seen] == [full, full - 127, full - 254], seen     # combat.damage per hit
+        assert [h for _, h in seen] == [full, full - 152, full - 304], seen     # combat.damage per hit
         gap = seen[2][0] - seen[1][0]
         assert 2.4 < gap < 4.5, seen                                          # one hit per reload: 59 ticks
