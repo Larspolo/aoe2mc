@@ -31,7 +31,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * on, a renderer on map 0 (the map of the converter, aoe2mc.write_map) draws a dot of DOT × DOT pixels for each living
  * entity in a team with a color (the teams of the players, aoe2mc.team_lines), once per PERIOD ticks. The dot has the
  * map color of the player (COLORS, as aoe2mc.map_objects): a live unit looks as a start unit. Animals and Gaia have no
- * team: no dot. The base image of the map stays: the default renderer draws it, and the pixels of this renderer that
+ * team: no dot, and a building target (combat.building, tag aoe2mc.building) neither (#1800). The base image of the map stays: the default renderer draws it, and the pixels of this renderer that
  * have no dot are transparent. The server renders a map only when its data changed, and map 0 is locked: so a task
  * sends the map (Player.sendMap) to each player who holds it, once per PERIOD.
  * "aoe minimap pixel X Z" gives the map pixel of block (X, Z), or "outside" (the place rule, for the tests).
@@ -342,8 +342,9 @@ final class Minimap extends MapRenderer {
             }
         }
         for (LivingEntity e : world.getLivingEntities()) {
-            if (e instanceof Player || hidden.test(e.getUniqueId())) {
-                continue;
+            if (e instanceof Player || hidden.test(e.getUniqueId())
+                    || e.getScoreboardTags().contains("aoe2mc.building")) {   // the target slime of a building: the
+                continue;                                     // building has its square, a dot shows it in the fog (#1800)
             }
             Team team = board.getEntityTeam(e);
             if (team == null || !team.hasColor() || !(team.color() instanceof NamedTextColor c)) {

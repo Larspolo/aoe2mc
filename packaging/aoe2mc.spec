@@ -1,5 +1,6 @@
-# PyInstaller spec of the app bundle (#1541): one folder "aoe2mc" with the window (aoe2mc-gui, gui.run of #1540) and
-# the command line (aoe2mc, aoe2mc.main). Build: python3 -m PyInstaller packaging/aoe2mc.spec (docs/packaging.md).
+# PyInstaller spec of the app bundle (#1541): one folder "aoe2mc" with the window (aoe2mc-gui, gui.run of #1540), the
+# command line (aoe2mc, aoe2mc.main) and the game program (aoe2mc-game, game/run.py main, #1778).
+# Build: python3 -m PyInstaller packaging/aoe2mc.spec (docs/packaging.md).
 import os
 import sys
 
@@ -11,14 +12,20 @@ ROOT = os.path.dirname(SPECPATH)
 DATAS = ([(os.path.join(ROOT, "tools", "mcdata", "26.3.json"), os.path.join("tools", "mcdata"))]
          + collect_data_files("AoE2ScenarioParser") + collect_data_files("mgz") + collect_data_files("aocref"))   # mgz reads aocref
 HIDDEN = collect_submodules("AoE2ScenarioParser") + collect_submodules("mgz") + ["aocref"]   # imported in functions, by name
+# the game program: the modules of game/ and tools/ import each other by their short names (run.py puts both folders
+# on sys.path), so they are top-level modules of the bundle, and their data goes next to them. The plugin jar comes
+# from the workflow (gradlew jar): game/run.py takes it in a frozen app, so the user needs a Java runtime, no JDK.
+GAME = os.path.join(ROOT, "game")
+JAR = os.path.join(GAME, "plugin", "aoe2mc-plugin.jar")
+GAME_DATAS = DATAS + [(os.path.join(GAME, "data", "train.jsonl"), "data")] + [(JAR, "plugin")] * os.path.exists(JAR)
 
 
-def analysis(script):
-    return Analysis([os.path.join(ROOT, script)], pathex=[ROOT], datas=DATAS, hiddenimports=HIDDEN,
-                    excludes=["pytest"], noarchive=False)
+def analysis(script, datas=DATAS):
+    return Analysis([os.path.join(ROOT, script)], pathex=[ROOT, GAME, os.path.join(ROOT, "tools")], datas=datas,
+                    hiddenimports=HIDDEN, excludes=["pytest"], noarchive=False)
 
 
-gui, cli = analysis("gui.py"), analysis("aoe2mc.py")
+gui, cli, game = analysis("gui.py"), analysis("aoe2mc.py"), analysis(os.path.join("game", "run.py"), GAME_DATAS)
 
 
 # the icon of packaging/icon.py (the workflow draws it first, #1542); a local build without it has the default icon
@@ -31,7 +38,8 @@ def exe(a, name, console):
 
 
 coll = COLLECT(exe(gui, "aoe2mc-gui", False), gui.binaries, gui.datas,
-               exe(cli, "aoe2mc", True), cli.binaries, cli.datas, name="aoe2mc", upx=False)
+               exe(cli, "aoe2mc", True), cli.binaries, cli.datas,
+               exe(game, "aoe2mc-game", True), game.binaries, game.datas, name="aoe2mc", upx=False)
 if sys.platform == "darwin":                                            # the app in the .dmg of the installer (#1542)
     app = BUNDLE(coll, name="aoe2mc.app", icon=ICON, bundle_identifier="io.github.larspolo.aoe2mc",
                  info_plist={"CFBundleExecutable": "aoe2mc-gui", "CFBundleDisplayName": "aoe2mc",

@@ -142,6 +142,7 @@ CIVILIANS = ("VILLAGER", "REPAIRER", "MONK", "KING", "TRADE", "FISHING_SHIP", "T
 SELECT = "aoe2mc.selected"                                         # entity tag of the selected units
 TYPE_REACH = 16                                                    # blocks: a second click selects its type this near (#743)
 WAND = "warped_fungus_on_a_stick"     # the selection wand: a second item with its own "used" statistic (#778)
+LEFT = "aoe_left"                     # score of a left click with the command stick (Paper plugin, #1788)
 RELEASE = 0.45   # seconds without a wand use: the player released the held right click (uses come each 0.2 s, #992)
 HOLD = 0.2       # seconds: a held right click sends its next command stick use in this time, so a use with no next use
                  # is a click (on Paper the stick also draws the selection box, #1786)
@@ -213,9 +214,11 @@ def herdable(name):
     return ("COW" if name.startswith("COW_") else name) in HERDS
 
 
-def group_item(n):
-    """The hotbar item of control group n."""
-    return (f'minecraft:carrot_on_a_stick[item_model="minecraft:{GROUPS[n][1]}",item_name="Group {n}",'
+def group_item(n, units=0):
+    """The hotbar item of control group n with units saved units: its name and lore say how to use it (#1812)."""
+    name, lore = ((f"Group {n}: {units} unit{'s' * (units != 1)}", "Right click: select · Shift + right click: save again")
+                  if units else (f"Group {n} (empty)", "Shift + right click: save the selection"))
+    return (f'minecraft:carrot_on_a_stick[item_model="minecraft:{GROUPS[n][1]}",item_name="{name}",lore=["{lore}"],'
             f"custom_data={{aoe_group:{n}}}]")
 
 
@@ -632,6 +635,7 @@ class Gather:
         menu.setup(self)
         flare.setup(self)
         if self.paper:
+            self.command(f'scoreboard objectives add {LEFT} dummy "Left click"')    # set by the plugin (#1788)
             train.lore(self)                                           # the help lines of the menus (#1160)
             self.command(allies_command(self.data.get("players", {})))   # allies do not shoot each other (#1315)
             self.command(neutral_command(self.data.get("players", {})))  # no automatic attack on neutrals (#1645)
@@ -842,6 +846,10 @@ class Gather:
             self.task(v, "BUILDER")
             self.go(v, "to_site", goals)
 
+    def row_busy(self, site):
+        """An earlier site of the row of site is not complete: its builders come to site after it (#1805)."""
+        return any(s.get("row") == site.get("row") and s["progress"] < 1 for s in self.sites[:self.sites.index(site)])
+
     def hunt(self, prey, who=None):
         """Send the selected villagers (or the villagers who) to hunt the animal prey, with the hunter look (#1058)."""
         if not (pos := self.pos(prey)):
@@ -941,13 +949,15 @@ class Gather:
         if self.calls % GROUP_GIVE == 0:
             for n, (slot, _) in GROUPS.items():
                 self.command(f"execute as {self.who} unless items entity @s hotbar.{slot} *[custom_data={{aoe_group:{n}}}] "
-                             f"run item replace entity @s hotbar.{slot} with {group_item(n)}")
+                             f"run item replace entity @s hotbar.{slot} with {group_item(n, len(self.groups.get(n, ())))}")
             diplomacy.give(self)                                       # the Game menu item (#1588)
         self.calls += 1
         if not self.paper:                                             # Paper: hold right click with the stick (#1786)
             self.command(f"execute as {self.who} unless items entity @s container.* minecraft:{WAND} "
                          f'run give @s minecraft:{WAND}[item_name="Selection box"]')
         self.release()                                                 # the drags of the selection box (#992)
+        if getattr(self, "paper", False):                               # a partial Gather of tests/test_menu.py
+            self.deselect()
         objs = ("aoe_use", "aoe_talk", "aoe_box")
         if "passed" not in "".join(self.command(f"execute if entity {only(self.who, f'scores={{{o}=1..}}')}") for o in objs):
             return self.short()
@@ -993,6 +1003,16 @@ class Gather:
             self.looks[n] = self.pending.pop(n)[1]
         return due
 
+    def deselect(self):
+        """Paper: a left click with the command stick (the score LEFT of the plugin, AoePlugin.onLeftClick) clears the
+        selection, as a click on empty ground in AoE2 (#1788). Vanilla has no event for it: the empty box (#992)."""
+        if "passed" not in self.command(f"execute if entity {only(self.who, f'scores={{{LEFT}=1..}}')}"):
+            return
+        for name in self.people():
+            if name and re.search(r"has [1-9]", self.command(f"scoreboard players get {name} {LEFT}")):
+                self.command(f"scoreboard players reset {name} {LEFT}")
+                self.choose(set())
+
     def people(self):
         """The names of the Minecraft players of this Gather: all, or the players of its team (#1310). Not `team list`:
         the units are on the team too, and the server cuts a long list."""
@@ -1018,6 +1038,8 @@ class Gather:
             self.choose(out, min(out, default=None))
             text = f"Group {n}: {len(out)} units"
         self.command(f"title {name} actionbar " + json.dumps({"text": text}))
+        # the item names the units of the group now (#1812): the players of this Gather share the groups
+        self.command(f"item replace entity {self.who} hotbar.{GROUPS[n][0]} with {group_item(n, len(self.groups[n]))}")
 
     def click(self, name):
         if (n := self.grouping.pop(name, None)) is not None:          # a group item (#779): no ray
@@ -1077,7 +1099,7 @@ class Gather:
         if building:                                                   # a chosen building: place its foundation
             if (site := build.place(self, name, building, eye, d)) and building in build.WATER:
                 fleet.build_site(self, self.selected, site)            # the selected fishing ships build it (#1438)
-            elif site and self.selected & self.villagers.keys():
+            elif site and self.selected & self.villagers.keys() and not self.row_busy(site):
                 self.build(site)                                       # the selected villagers build it at once, as in AoE2 (#1654)
             return
         if monk.order(self, name, self.map.pick_ground(eye, d)):      # a monk to a relic or to a monastery (#1246)

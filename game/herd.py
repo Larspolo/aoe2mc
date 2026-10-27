@@ -11,6 +11,8 @@ monk.take). The nearness rule is own logic: Minecraft has no "owner by nearness"
 """
 import math
 
+import civs
+
 EVERY = 1.0             # real seconds between two looks (fog.EVERY: the same `aoe where` cost)
 RANGE = 2               # tiles: the line of sight of a herdable (AoE2 wiki, "Herdable animal")
 
@@ -20,10 +22,14 @@ def herdable(name):
     return ("COW" if name.startswith("COW_") else name) in gather.HERDS
 
 
-def owner(counts, old):
+def owner(counts, old, celts=()):
     """The new owner of a herdable from {player: own units near it}, or old: the owner keeps it while one of its units
-    is near; else the player with the most units near (the lowest number on a tie: the same in each run)."""
-    if counts.get(old) or not counts:
+    is near; else the player with the most units near (the lowest number on a tie: the same in each run). A Celt player
+    (in celts) takes it also next to units of its owner (AoE2 wiki, "Herdable animal", #1825); a Celt owner keeps it
+    from another Celt by the first rule, so that it does not change between two Celt players each look."""
+    if counts.get(old) and old not in celts:
+        counts = {p: n for p, n in counts.items() if p in celts and p != old}
+    if not counts or counts.get(old):
         return old
     return min(counts, key=lambda p: (-counts[p], p))
 
@@ -56,7 +62,8 @@ def tick(g):
         for v, p in pos.items():
             if v in mine and math.dist((p[0], p[2]), (at[0], at[2])) <= reach:
                 counts[mine[v]] = counts.get(mine[v], 0) + 1
-        if (new := owner(counts, o["player"])) != o["player"]:
+        celts = {p for p in counts if civs.civ(g, p) == "CELTS"}
+        if (new := owner(counts, o["player"], celts)) != o["player"]:
             take(g, gathers, o, new)
 
 

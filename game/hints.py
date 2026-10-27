@@ -11,7 +11,7 @@ import json
 
 REPEAT = 1.5                                                       # seconds: before the action bar fades
 TEXTS = {                                                          # short: the action bar is one line
-    "building": "Place the {building}: right click the ground · Cancel: /trigger aoe_build set 0",
+    "building": "Place the {building}: right click the ground · Shift + right click: place more · Cancel: /trigger aoe_build set 0",
     "corner": "Selection box: right click the other corner",
     "drag": "Selection box: hold right click, look at the other corner, release · Release here: cancel",
     "military": "{n} military unit{s} · Right click: attack an enemy, stance menu · Empty box: deselect",
@@ -37,6 +37,8 @@ def state(g, player=None):
         kind, text = "villagers", TEXTS["villagers"].format(n=len(g.selected), s="s" * (len(g.selected) != 1))
     else:
         kind, text = "none", TEXTS["none" if getattr(g, "paper", False) else "none-wand"]   # vanilla: the wand (#1786)
+    if getattr(g, "paper", False):                                 # Paper: a left click deselects (#1788)
+        text = text.replace("Empty box: deselect", "Left click: deselect")
     if aim:                                                        # the count stays, the target replaces the help
         return "pointing", (text.split(" · ")[0] + " · " if g.selected else "") + aim
     return kind, text

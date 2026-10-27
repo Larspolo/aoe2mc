@@ -709,17 +709,17 @@ Most common results: decorations (126), trees (53), flags (39).
 | BACTRIAN_CAMEL | camel | no |
 | BALLISTA_ELEPHANT | ravager (skeleton) | no |
 | BANDIT | zombie | no |
-| BATTERING_RAM | minecart (zombie) | no |
+| BATTERING_RAM | minecart (iron_golem) | no |
 | BATTLE_ELEPHANT | ravager (zombie) | no |
 | BERSERK | zombie | no |
-| BOMBARD_CANNON | minecart (pillager) | no |
+| BOMBARD_CANNON | minecart (ghast) | no |
 | BOYAR | horse (zombie) | no |
 | CAMEL | camel (zombie) | no |
 | CAMEL_ARCHER | camel (skeleton) | no |
 | CAMEL_RIDER | camel (zombie) | no |
 | CANNON_GALLEON | dark_oak_boat (pillager, skeleton) | no |
 | CANOE | jungle_boat (skeleton) | no |
-| CAPPED_RAM | minecart (zombie) | no |
+| CAPPED_RAM | minecart (iron_golem) | no |
 | CARAVEL | dark_oak_boat (skeleton, skeleton) | no |
 | CART | donkey | no |
 | CATAPHRACT | horse (zombie) | no |
@@ -787,7 +787,7 @@ Most common results: decorations (126), trees (53), flags (39).
 | ELITE_THROWING_AXEMAN | drowned | no |
 | ELITE_TURTLE_SHIP | dark_oak_boat (pillager, skeleton) | no |
 | ELITE_WAR_ELEPHANT | ravager (zombie) | no |
-| ELITE_WAR_WAGON | minecart (skeleton) | no |
+| ELITE_WAR_WAGON | minecart (horse) | no |
 | ELITE_WOAD_RAIDER | zombie | no |
 | FAST_FIRE_SHIP | mangrove_boat (blaze) | no |
 | FIRE_GALLEY | mangrove_boat (blaze) | no |
@@ -810,7 +810,7 @@ Most common results: decorations (126), trees (53), flags (39).
 | HEAVY_CROSSBOWMAN | skeleton | no |
 | HEAVY_DEMOLITION_SHIP | bamboo_raft (creeper) | no |
 | HEAVY_PIKEMAN | zombie | no |
-| HEAVY_SCORPION | minecart (skeleton) | no |
+| HEAVY_SCORPION | minecart (piglin) | no |
 | HEAVY_SWORDSMAN | zombie | no |
 | HORSE_A | horse | no |
 | HORSE_B | horse | no |
@@ -845,7 +845,7 @@ Most common results: decorations (126), trees (53), flags (39).
 | MAGYAR_HUSZAR | horse (zombie) | no |
 | MAMELUKE | camel (zombie) | no |
 | MAN_AT_ARMS | zombie | no |
-| MANGONEL | minecart (vindicator) | no |
+| MANGONEL | minecart (breeze) | no |
 | MANGUDAI | skeleton_horse (skeleton) | no |
 | MERCHANT | evoker | no |
 | MILITIA | zombie | no |
@@ -854,7 +854,7 @@ Most common results: decorations (126), trees (53), flags (39).
 | MONK_WITH_RELIC | evoker | no |
 | NINJA | zombie | no |
 | NORSE_WARRIOR | zombie | no |
-| ONAGER | minecart (vindicator) | no |
+| ONAGER | minecart (breeze) | no |
 | ORGAN_GUN | minecart (pillager) | no |
 | OX_CART | donkey | no |
 | OX_WAGON | donkey | no |
@@ -872,14 +872,14 @@ Most common results: decorations (126), trees (53), flags (39).
 | RELIC_CART | donkey | no |
 | ROYAL_JANISSARY | pillager | no |
 | SAMURAI | zombie | no |
-| SCORPION | minecart (skeleton) | no |
+| SCORPION | minecart (piglin) | no |
 | SCOUT_CAVALRY | horse (zombie) | no |
 | SHARKATZOR | guardian | no |
 | SHEEP | sheep | no |
 | SHOTEL_WARRIOR | husk | no |
-| SIEGE_ONAGER | minecart (vindicator) | no |
-| SIEGE_RAM | minecart (zombie) | no |
-| SIEGE_TOWER | minecart (zombie) | no |
+| SIEGE_ONAGER | minecart (breeze) | no |
+| SIEGE_RAM | minecart (iron_golem) | no |
+| SIEGE_TOWER | minecart (sniffer) | no |
 | SKIRMISHER | drowned | no |
 | SLINGER | drowned | no |
 | SPEARMAN | zombie | no |
@@ -893,8 +893,8 @@ Most common results: decorations (126), trees (53), flags (39).
 | TRADE_CART_FULL | donkey | no |
 | TRADE_COG | birch_chest_boat (villager) | no |
 | TRANSPORT_SHIP | spruce_chest_boat (villager) | no |
-| TREBUCHET | minecart (vindicator) | no |
-| TREBUCHET_PACKED | minecart (vindicator) | no |
+| TREBUCHET | minecart (warden) | no |
+| TREBUCHET_PACKED | minecart (warden) | no |
 | TURKEY | chicken | no |
 | TURTLE_SHIP | dark_oak_boat (pillager, skeleton) | no |
 | TWO_HANDED_SWORDSMAN | zombie | no |
@@ -927,7 +927,7 @@ Most common results: decorations (126), trees (53), flags (39).
 | VMDL | villager | no |
 | WAR_ELEPHANT | ravager (zombie) | no |
 | WAR_GALLEY | dark_oak_boat (skeleton, skeleton) | no |
-| WAR_WAGON | minecart (skeleton) | no |
+| WAR_WAGON | minecart (horse) | no |
 | WATER_BUFFALO | cow | no |
 | WOAD_RAIDER | zombie | no |
 | XOLOTL_WARRIOR | horse (zombie) | no |
@@ -961,7 +961,7 @@ Most common results: decorations (126), trees (53), flags (39).
 | OBUCH | zombie | no |
 | ELITE_OBUCH | zombie | no |
 | WINGED_HUSSAR | horse (zombie) | no |
-| HOUFNICE | minecart (pillager) | no |
+| HOUFNICE | minecart (ghast) | no |
 | URUMI_SWORDSMAN | husk | no |
 | MONK_WITH_TURKISH_RELIC | evoker | no |
 | CRUSADER_KNIGHT | horse (zombie) | no |
@@ -1064,10 +1064,10 @@ Most common results: decorations (126), trees (53), flags (39).
 | GRENADIER | pillager | no |
 | LIAO_DAO | zombie | no |
 | ELITE_LIAO_DAO | zombie | no |
-| MOUNTED_TREBUCHET | minecart (vindicator) | no |
+| MOUNTED_TREBUCHET | minecart (warden) | no |
 | PAGAN_PRIEST | evoker | no |
 | PAGAN_PRIEST_WITH_RELIC | evoker | no |
-| TRACTION_TREBUCHET | minecart (vindicator) | no |
+| TRACTION_TREBUCHET | minecart (warden) | no |
 | HEI_GUANG_CAVALRY | horse (zombie) | no |
 | HEAVY_HEI_GUANG_CAVALRY | horse (zombie) | no |
 | LOU_CHUAN | oak_boat (skeleton) | no |
@@ -1240,15 +1240,15 @@ Most common results: zombie (77), horse (zombie) (63), husk (31).
 | DUKE_D_ALENCON | horse (zombie) | no |
 | LA_HIRE | zombie | no |
 | LORD_DE_GRAVILLE | horse (zombie) | no |
-| JEAN_DE_LORRAIN | minecart (pillager) | no |
+| JEAN_DE_LORRAIN | minecart (ghast) | no |
 | CONSTABLE_RICHEMONT | horse (zombie) | no |
 | GUY_JOSSELYNE | horse (zombie) | no |
-| JEAN_BUREAU | minecart (pillager) | no |
+| JEAN_BUREAU | minecart (ghast) | no |
 | SIR_JOHN_FASTOLF | horse (zombie) | no |
 | REYNALD_DE_CHATILLON | horse (zombie) | no |
 | MASTER_OF_THE_TEMPLAR | horse (zombie) | no |
-| BAD_NEIGHBOR | minecart (vindicator) | no |
-| GODS_OWN_SLING | minecart (vindicator) | no |
+| BAD_NEIGHBOR | minecart (warden) | no |
+| GODS_OWN_SLING | minecart (warden) | no |
 | ARCHER_OF_THE_EYES | skeleton | no |
 | SUBOTAI | horse (zombie) | no |
 | HUNTING_WOLF | wolf | no |
@@ -1257,8 +1257,8 @@ Most common results: zombie (77), horse (zombie) (63), husk (31).
 | SHAH | horse (zombie) | no |
 | SABOTEUR | creeper | no |
 | ORNLU_THE_WOLF | wolf | no |
-| GODS_OWN_SLING_PACKED | minecart (vindicator) | no |
-| BAD_NEIGHBOR_PACKED | minecart (vindicator) | no |
+| GODS_OWN_SLING_PACKED | minecart (warden) | no |
+| BAD_NEIGHBOR_PACKED | minecart (warden) | no |
 | GENGHIS_KHAN | horse (zombie) | no |
 | EMPEROR_IN_A_BARREL | zombie | no |
 | CUSI_YUPANQUI | zombie | no |
@@ -1343,8 +1343,8 @@ Most common results: zombie (77), horse (zombie) (63), husk (31).
 | LLYWELYN_AP_GRUFFYDD | zombie | no |
 | DAFYDD_AP_GRUFFYDD | horse (zombie) | no |
 | BERNARD_D_ARMAGNAC | horse (zombie) | no |
-| WARWOLF_TREBUCHET | minecart (vindicator) | no |
-| WARWOLF_TREBUCHET_PACKED | minecart (vindicator) | no |
+| WARWOLF_TREBUCHET | minecart (warden) | no |
+| WARWOLF_TREBUCHET_PACKED | minecart (warden) | no |
 | JACQUELINE_OF_HAINAUT | horse (zombie) | no |
 | STOERTEBEKER | zombie | no |
 | JAN_ZIZKA | zombie | no |

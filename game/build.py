@@ -16,6 +16,8 @@ displays of the Paper plugin, Ghost.java): green where it can stand, red where n
 Walls (#1322): a wall (WALLS) takes two clicks, the start and the end of the line, as the drag of AoE2. Each tile of
 the line (aoe2mc.wall_tiles, as the replay) is one construction site with the cost of one tile; a tile on a building,
 a tree or water is left out. The builders of a tile go on to the next unfinished tile of the line (gather.Gather.step).
+Rows (#1805): a sneak right click (Shift) places a foundation and keeps the choice, as the shift click of AoE2. The
+selected villagers build the foundations of the row in the order of the clicks (next_tile).
 Gates (#1324): a gate (GATES) goes on 4 own wall tiles in a straight line along x or z, as in AoE2 (4 x 1 tiles), or
 on 3 tiles of a diagonal line (3 x 3 tiles, #1655). It replaces them: a wall site goes (its builders go on to the
 gate), a complete wall tile loses its target.
@@ -77,6 +79,7 @@ BUILD_TIMES = {"HOUSE": 25, "LUMBER_CAMP": 35, "MINING_CAMP": 35, "MILL": 35, "F
                "WONDER": 3500}
 MENU = list(COSTS)                                                 # trigger value N -> MENU[N - 1]
 OBJECTIVE = "aoe_build"
+SNEAK = '{type:"minecraft:entity_properties",entity:"this",predicate:{flags:{is_sneaking:true}}}'   # as gather.SNEAK
 ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw_gold_block",   # a block of the
          "MILL": "white_wool", "FARM": "wheat", "BARRACKS": "stone_brick_wall", "ARCHERY_RANGE": "target",
          "BLACKSMITH": "anvil", "STABLE": "hay_block",
@@ -420,7 +423,13 @@ def place(g, player, name, eye, d):
                        + ", ".join(f"{v} {r}" for r, v in cost.items()) + ".")
         return None
     site = found(g, name, rect)
-    g.command(f"scoreboard players set {player} {OBJECTIVE} 0")
+    rows = vars(g).setdefault("rows", {})                              # player -> (building, row) of the sneak clicks (#1805)
+    last = rows.pop(player, None)
+    site["row"] = last[1] if last and last[0] == name else f"{player} {id(site)}"
+    if "passed" in g.command(f"execute as {player} if predicate {SNEAK}"):
+        rows[player] = name, site["row"]                               # the shift click of AoE2: the choice stays
+    else:
+        g.command(f"scoreboard players set {player} {OBJECTIVE} 0")
     return site
 
 
@@ -533,7 +542,10 @@ def gate(g, player, name, cell):
 
 
 def next_tile(g, site):
-    """The nearest unfinished site of the wall line of site, or None."""
+    """The nearest unfinished site of the wall line of site, or the first unfinished site of its row of sneak clicks
+    in the order of the clicks (#1805), or None."""
+    if "row" in site:
+        return next((s for s in g.sites if s.get("row") == site["row"] and s["progress"] < 1 and s is not site), None)
     rest = [s for s in g.sites if "line" in site and s.get("line") == site["line"] and s["progress"] < 1 and s is not site]
     return min(rest, key=lambda s: math.dist(s["footprint"][::2], site["footprint"][::2]), default=None)
 

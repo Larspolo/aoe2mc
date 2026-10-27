@@ -23,6 +23,7 @@ after an ORDER. The record names the unit only in its first command, so until th
 Replay(game, data).run(speed) plays it; commands(e) gives the commands of one event (the unit tests use it).
 With bar=True (game/run.py --replay) a boss bar shows the game time, the speed and the progress (#684).
 """
+import collections
 import functools
 import json
 import math
@@ -141,6 +142,10 @@ def fisher(name):
     return name.startswith("FISHING_SHIP")
 
 
+Seen = collections.namedtuple("Seen", "player name pos")            # a place of a unit for seen() (#1801)
+CIRCLES = {}                                                        # (x, y, sight) -> the tiles of seen()
+
+
 def seen(mobs, placed, player, T, sight=None):
     """The tiles (x, y) in the line of sight of the units and buildings of player (#1300): a circle of combat.sight()
     tiles around each one, from the tile center. mobs: units with name, player and pos (blocks, Replay.units), placed:
@@ -150,11 +155,15 @@ def seen(mobs, placed, player, T, sight=None):
     objs = [(v.pos[0] / T, v.pos[2] / T, v.name) for v in mobs if v.player == player and v.pos is not None]
     objs += [((x0 + x1) / 2 / T, (z0 + z1) / 2 / T, name) for p, name, (x0, x1, z0, z1) in placed if p == player]
     out = set()
+    if len(CIRCLES) > 20000:                                        # the places of units that stand: no growth
+        CIRCLES.clear()
     for x, y, name in objs:
         r = (sight or combat.sight)(name)
-        xs, ys = np.meshgrid(np.arange(math.floor(x - r), math.ceil(x + r)), np.arange(math.floor(y - r), math.ceil(y + r)))
-        keep = (xs + 0.5 - x) ** 2 + (ys + 0.5 - y) ** 2 <= r * r
-        out.update(zip(xs[keep].tolist(), ys[keep].tolist()))
+        if (key := (x, y, r)) not in CIRCLES:                       # most units stand still between two calls (#1801)
+            xs, ys = np.meshgrid(np.arange(math.floor(x - r), math.ceil(x + r)), np.arange(math.floor(y - r), math.ceil(y + r)))
+            keep = (xs + 0.5 - x) ** 2 + (ys + 0.5 - y) ** 2 <= r * r
+            CIRCLES[key] = list(zip(xs[keep].tolist(), ys[keep].tolist()))
+        out.update(CIRCLES[key])
     return out
 
 
@@ -1374,17 +1383,13 @@ class Replay:
         (Paper Player#hideEntity, plugin `aoe hide`), show the ones that came in again (#1302). Only the changes:
         at most one hide and one show command. Without a view player again: show all hidden units (#1303).
         On Paper also the fog of the terrain on the minimap (#1567, minimap_fog)."""
+        mobs, sight = self.explore()                                # also without a view player (#1801)
         if self.pov is None and not self.hidden and not self.fogged:
             return []
         import gather                                               # gather -> build -> replay: import it late
-        self.grid()                                                 # the start units
-        mobs = {v.uuid: v for v in [*self.units.values(), *(v for _, v in self.new)]
-                if v.uuid and hasattr(v, "player")}.values()
-        placed, teams = [s[1:] for s in self.starts] + self.placed, self.data.get("players", {})
-        own = {p for p in {v.player for v in mobs} | {p for p, _, _ in placed} if gather.allied(teams, self.pov, p)}
-        tiles = set().union(*(seen(mobs, placed, p, self.T) for p in own))
-        for p in own:                                               # allies share the sight (#1567)
-            self.explored.setdefault(p, set()).update(tiles)
+        teams = self.data.get("players", {})
+        own = {p for p in sight if gather.allied(teams, self.pov, p)}
+        tiles = set().union(*(sight[p] for p in own))               # allies share the sight (#1567)
         out = {v.uuid for v in mobs if v.player not in (0, None) and v.player not in own and v.pos is not None
                and (int(v.pos[0] // self.T), int(v.pos[2] // self.T)) not in tiles} if self.pov is not None else set()
         hide, show = sorted(out - self.hidden), sorted(self.hidden & {v.uuid for v in mobs} - out)   # not the dead
@@ -1392,6 +1397,22 @@ class Replay:
         k = (RCON_MAX - 20) // 37                                    # UUIDs per command (36 characters and a space)
         return [f"aoe {verb} @a {' '.join(u[i:i + k])}" for verb, u in (("hide", hide), ("show", show))
                 for i in range(0, len(u), k)] + self.minimap_fog(own, tiles) * self.ai + self.minimap_buildings(own, tiles)
+
+    def explore(self, trail=()):
+        """Add the sight of each player now to the tiles that it explored (#1801): from the start of the replay, also
+        without a view player and around a jump, so that a view chosen later shows all that the player saw, as in
+        AoE2. trail: more places (Seen) of the units, on the walks of a jump. Returns (the units, {player: tiles in its
+        sight})."""
+        self.grid()                                                 # the start units
+        mobs = {v.uuid: v for v in [*self.units.values(), *(v for _, v in self.new)]
+                if v.uuid and hasattr(v, "player")}.values()
+        placed = [s[1:] for s in self.starts] + self.placed
+        sight = {p: seen([*mobs, *trail], placed, p, self.T) for p in ({v.player for v in mobs} | {p for p, _, _ in placed}) - {0, None}}
+        import gather                                               # gather -> build -> replay: import it late
+        teams = self.data.get("players", {})
+        for p in sight:                                             # allies share the sight (#1567)
+            self.explored.setdefault(p, set()).update(*(t for q, t in sight.items() if gather.allied(teams, p, q)))
+        return mobs, sight
 
     def minimap_fog(self, own, tiles):
         """The fog of the view player on the map item (#1567, Minimap.java): the tiles that the view player and its
@@ -1402,7 +1423,7 @@ class Replay:
             return out
         n = self.data.get("map_size") or self.n // self.T                 # tiles of a map side
         inside = {(x, y) for x, y in tiles if 0 <= x < n and 0 <= y < n}
-        dim = {t for p in own for t in self.explored.get(p, ())} - inside
+        dim = {(x, y) for p in own for x, y in self.explored.get(p, ()) if 0 <= x < n and 0 <= y < n} - inside
         new = self.fogged is None or self.fogged[0] != self.pov
         old_see, old_dim = (set(), set()) if new else self.fogged[1:]
         self.fogged = (self.pov, inside, dim)
@@ -1639,17 +1660,23 @@ class Replay:
         appear, and each unit that a MOVE or ORDER sent, or that walks now, stands at its target (tp, no walk). The
         chat, age and research texts of the skipped time do not show (the sidebar shows the age, #805). The estimate
         of the resources gets the gather of the skipped time (skipped()). Returns the commands."""
-        out, moved = [], set()
+        out, moved, trail = [], set(), []
+        self.explore()                                              # the sight before the skipped time (#1801)
         jobs = {i: v.job for i, v in self.units.items()}            # move() gives the looks: send the last ones
         since = {} if start is None else {i: start if i in self.working else self.walk_end(v, start)
                                           for i, v in self.units.items()
                                           if (i in self.moving or i in self.working) and v.tree is not None}
+
+        def walks(ids):                                             # a place each tile on the paths (#1801)
+            trail.extend(Seen(v.player, v.name, (x + 0.5, 0.0, z + 0.5)) for i in ids
+                         if (v := self.units.get(i)) is not None and hasattr(v, "player") for x, z in v.path[::self.T])
 
         def order(e):
             for i in e["objects"]:                                  # a new order ends the work at the old resource
                 self.skipped(i, since.pop(i, None), e["time"])
             self.commands(e) if e["kind"] == "garrison" else self.move(e)   # the paths and the targets; no walks
             moved.update(e["objects"])
+            walks(e["objects"])
             since.update((i, self.walk_end(v, e["time"])) for i in e["objects"]
                          if (v := self.units.get(i)) is not None and v.tree is not None)
             for i in set(e["objects"]) & self.entering.keys():      # it is at its building at once
@@ -1659,6 +1686,7 @@ class Replay:
             for i, then in self.built(t):                           # gather next to it after the build (#1282)
                 order(then) if then else self.look(self.units[i], "none")
 
+        walks(self.moving)                                          # the walks of now
         for e in events:
             built(e["time"])
             if e["kind"] in ("move", "order", "garrison", "build", "wall") and e.get("objects"):
@@ -1707,6 +1735,7 @@ class Replay:
                 out.append("aoe moveto {} {} {} {}".format(v.uuid, *v.pos))
             else:                                                   # at its resource: it gathers (#887)
                 self.start(i, v, to)
+        self.explore(trail)                                         # the sight on the walks and at the targets (#1801)
         return out + [self.gather.profession(v.uuid, v.job) for i, v in self.units.items() if v.job != jobs.get(i)]
 
     def walk_end(self, v, t):

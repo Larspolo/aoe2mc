@@ -17,6 +17,8 @@ build/
 dist/
 # Gradle files of the Paper plugin (game/plugin)
 .gradle/
+# the plugin jar of the app bundles (the Bundles workflow, #1778)
+game/plugin/aoe2mc-plugin.jar
 *.egg-info/
 # Git worktrees of agents and comparisons (never commit them)
 .claude/worktrees/

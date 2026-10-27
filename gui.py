@@ -1,11 +1,13 @@
 """A window for the converter (#1540): select a scenario or a recorded game, set the main options and click "Convert".
 The world goes into the Minecraft saves folder. The tab "Play" starts the game program (game/run.py) on a world as a
-child process and stops it (#1775). The logic is in pure functions (argv, saves_folder, world_name, convert,
-play_argv, start_game, stop_game) that the tests call without a display: tkinter loads only in window(), and many Python installs (also the
+child process and stops it (#1775), replays a recorded game and sends the commands of its command line to the server
+(#1777). The logic is in pure functions (argv, saves_folder, world_name, convert, play_argv, has_timeline, start_game,
+send_command, stop_game) that the tests call without a display: tkinter loads only in window(), and many Python installs (also the
 cloud environment) have no tkinter."""
 import contextlib
 import glob
 import io
+import json
 import os
 import platform
 import queue
@@ -30,6 +32,7 @@ PLAY_FLAGS = (("play", "--play"), ("bot", "--bot"), ("cheats", "--cheats"))
 JAVA = {"26.3": 25}                                    # Java of each Minecraft version (mc_check reads the version JSON)
 JDK_INSTALL = {"Linux": "sudo apt-get install openjdk-{n}-jdk-headless", "Darwin": "brew install openjdk@{n}",
                "Windows": "Install the JDK {n} from https://adoptium.net/temurin/releases/?version={n}"}
+REPLAY_VALUES = (("speed", "--speed"), ("start", "--from"), ("follow", "--follow"), ("view", "--view"))
 
 
 def argv(o):
@@ -131,17 +134,35 @@ def play_argv(o):
     """The argument list of game/run.py from the dict o of the fields of the tab "Play". An empty field keeps the
     default of the game program."""
     a = [str(o["world"])]
-    for key, flag in PLAY_VALUES:
+    replay = bool(o.get("replay"))                                 # a replay is not a game: no --play, --bot, --cheats
+    for key, flag in PLAY_VALUES + REPLAY_VALUES * replay:
         v = str(o.get(key) or "").strip()
         if v:
             a += [flag, v]
-    return a + [flag for key, flag in PLAY_FLAGS if o.get(key)]
+    return a + ["--replay"] * replay + [flag for key, flag in PLAY_FLAGS * (not replay) if o.get(key)]
 
 
-def start_game(args, write, done, cmd=(sys.executable, "-u", str(GAME))):
+def has_timeline(world):
+    """True when the world was converted from a recorded game: its aoe2mc.json has a "timeline" (run.py --replay)."""
+    try:
+        with open(os.path.join(world, "aoe2mc.json")) as f:
+            return "timeline" in json.load(f)
+    except (OSError, ValueError):
+        return False
+
+
+def game_command():
+    """The command of the game program: game/run.py with this Python, or in an app bundle (sys.frozen) the program
+    aoe2mc-game next to the window (#1778)."""
+    if getattr(sys, "frozen", False):
+        return (str(Path(sys.executable).with_name("aoe2mc-game" + (".exe" if os.name == "nt" else ""))),)
+    return sys.executable, "-u", str(GAME)
+
+
+def start_game(args, write, done, cmd=None):
     """Start the game program with args as a child process. A thread sends each line of its output to write, and its
     exit code to done at the end. stdin is a pipe: with no stdin, input() in run.main() ends the game at once."""
-    p = subprocess.Popen([*cmd, *args], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+    p = subprocess.Popen([*(cmd or game_command()), *args], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                          text=True, bufsize=1, start_new_session=os.name != "nt",
                          creationflags=getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
 
@@ -151,6 +172,20 @@ def start_game(args, write, done, cmd=(sys.executable, "-u", str(GAME))):
         done(p.wait())
     threading.Thread(target=read, daemon=True).start()
     return p
+
+
+def send_command(p, text):
+    """Send the command text to the stdin of the game program p (run.console sends it to the server). Returns False
+    when the line is empty or the game program does not run."""
+    text = text.strip()
+    if not text or p is None or p.poll() is not None:
+        return False
+    try:
+        p.stdin.write(text + "\n")
+        p.stdin.flush()
+    except OSError:                                                # it ended just now
+        return False
+    return True
 
 
 def stop_game(p, wait=30):
@@ -190,12 +225,15 @@ def window():
     f.columnconfigure(1, weight=1)
     g.columnconfigure(1, weight=1)
     v = {k: tk.StringVar() for k in ("input", "output", "name", "tile_size", "level_height", "architecture", "seed",
-                                     "at", "more", "world", "server", "people", "reveal")}
-    v |= {k: tk.BooleanVar() for k, _ in FLAGS + PLAY_FLAGS}
+                                     "at", "more", "world", "server", "people", "reveal", "speed", "start", "follow",
+                                     "view", "command")}
+    v |= {k: tk.BooleanVar() for k, _ in FLAGS + PLAY_FLAGS + (("replay", ""),)}
     v["server"].set("paper")
     v["people"].set("1")
     v["reveal"].set("normal")
     v["play"].set(True)
+    v["speed"].set("1")
+    v["start"].set("0:00")
     v["tile_size"].set("4")
     v["level_height"].set("3")
     v["seed"].set("1")
@@ -251,8 +289,27 @@ def window():
     checks.grid(row=4, column=1, sticky="w")
     for key, text in (("play", "Play (villagers gather)"), ("bot", "Bot plays player 2"), ("cheats", "Cheat codes")):
         ttk.Checkbutton(checks, text=text, variable=v[key]).pack(side="left", padx=(0, 8))
+    replay = ttk.Checkbutton(g, text="Replay the recorded game (instead of a game)", variable=v["replay"])
+    replay.grid(row=5, column=1, sticky="w")
+    fields = ttk.Frame(g)
+    fields.grid(row=6, column=1, sticky="w")
+    replay_widgets = [replay]
+    for label, key, width in (("Speed", "speed", 5), ("From (MM:SS)", "start", 7), ("Follow player", "follow", 3),
+                              ("View of player", "view", 3)):
+        ttk.Label(fields, text=label).pack(side="left")
+        replay_widgets.append(ttk.Entry(fields, textvariable=v[key], width=width))
+        replay_widgets[-1].pack(side="left", padx=(2, 8))
+
+    def check_world(*_):                                            # the replay fields need a recorded game
+        ok = has_timeline(v["world"].get())
+        for w in replay_widgets:
+            w.state(["!disabled" if ok else "disabled"])
+        if not ok:
+            v["replay"].set(False)
+    v["world"].trace_add("write", check_world)
+    check_world()
     buttons = ttk.Frame(g)
-    buttons.grid(row=5, column=1, pady=6)
+    buttons.grid(row=7, column=1, pady=6)
     play = ttk.Button(buttons, text="Start game")
     play.pack(side="left")
     halt = ttk.Button(buttons, text="Stop", state="disabled")
@@ -260,6 +317,12 @@ def window():
     log = scrolledtext.ScrolledText(top, height=14, width=80, state="disabled")
     log.grid(row=1, column=0, sticky="nsew", pady=(6, 0))
     top.rowconfigure(1, weight=1)
+    line = ttk.Frame(top)
+    line.grid(row=2, column=0, sticky="ew", pady=(4, 0))
+    line.columnconfigure(1, weight=1)
+    ttk.Label(line, text="Command").grid(row=0, column=0, sticky="w")
+    command = ttk.Entry(line, textvariable=v["command"])
+    command.grid(row=0, column=1, sticky="ew", padx=4)
     q = queue.Queue()                                              # worker → window: Tk is not thread safe
     game = []                                                      # the running game program, or empty
 
@@ -297,6 +360,14 @@ def window():
             halt.state(["disabled"])
             messagebox.showerror("aoe2mc", f"The game program did not start: {e}")
 
+    def send(*_):
+        text = v["command"].get()
+        if send_command(game[0] if game else None, text):
+            q.put(("text", f"> {text.strip()}\n"))
+            v["command"].set("")
+        elif text.strip():
+            q.put(("text", "No game runs: start a game first.\n"))
+
     def stop_play(then=None):
         halt.state(["disabled"])
         if game:
@@ -333,6 +404,7 @@ def window():
     go.configure(command=start)
     play.configure(command=start_play)
     halt.configure(command=stop_play)
+    command.bind("<Return>", send)
     root.protocol("WM_DELETE_WINDOW", lambda: stop_play("quit"))   # the server must not stay up after the window
     root.after(100, poll)
     return root
