@@ -64,16 +64,23 @@ with run.Game(world) as game:
             n = int(dr.split()[-1]) if "passed" in dr and dr.split()[-1].isdigit() else 0
             drowned_max = max(drowned_max, n)
             row["drowned"] = n
+            if sec % 10 == 0:
+                forts = b.forts()
+                row["forts"] = len(forts)
+                row["on_buildings"] = sum(t in forts for t in b.targets.values())
+                hits["forts_min"] = min(hits.get("forts_min", 99), len(forts))
+                hits["on_buildings_max"] = max(hits.get("on_buildings_max", 0), row["on_buildings"])
             log.write(json.dumps(row) + "\n"); log.flush()
             if sec % 30 == 0:
-                print(json.dumps({k: row[k] for k in ("t", "alive", "targets", "p1", "drowned")}),
+                print(json.dumps({k: row.get(k) for k in ("t", "alive", "targets", "p1", "drowned", "forts", "on_buildings")}),
                       "max feet+below+head water", worst, flush=True)
-            if sec in (170, 260, 330, 420, 540, 660) and pos:
+            if sec in (540, 600, 660, 720, 780, 840, 900) and pos:
                 xs = [p[0] for p in pos.values()]; zs = [p[2] for p in pos.values()]; ys = [p[1] for p in pos.values()]
                 x, y, z = sum(xs) / len(xs), max(ys), sum(zs) / len(zs)
                 game.command(f"tp aoe2mc {x + 10:.1f} {y + 9:.1f} {z - 10:.1f} 45 35")
                 time.sleep(5)
                 c.shot(os.path.join(out, f"t{sec}.png"))
+        print("forts", hits.get("forts_min"), "on_buildings max", hits.get("on_buildings_max"))
         print("end", b.time, "worst", worst, "wet cells", wet_cells, "drowned max", drowned_max)
         print("p1 alive", len(me.positions(p1)), "of", len(p1))
         print("p1 alive list", sorted(me.soldiers[u] if u in me.soldiers else "VILLAGER" for u in me.positions(p1)))

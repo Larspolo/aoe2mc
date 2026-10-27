@@ -1,0 +1,28 @@
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Djavax.net.ssl.trustStoreType=JKS -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=37025 -Dhttp.nonProxyHosts=localhost|127.0.0.1|::1|127.*|0.*|::|169.254.*|api.anthropic.com|api-staging.anthropic.com|api-pr-preview.anthropic.com|mcp-proxy.anthropic.com|mcp-proxy-staging.anthropic.com|registry.npmjs.org|jsr.io|npm.jsr.io|pypi.org|files.pythonhosted.org|index.crates.io|proxy.golang.org|host.docker.internal|10.*|172.16.*|172.17.*|172.18.*|172.19.*|172.20.*|172.21.*|172.22.*|172.23.*|172.24.*|172.25.*|172.26.*|172.27.*|172.28.*|172.29.*|172.30.*|172.31.*|192.168.*|100.64.0.0/10|*.svc.cluster.local|*.svc.cluster.local -Djdk.http.auth.tunneling.disabledSchemes= -Djdk.http.auth.proxying.disabledSchemes=
+Note: /home/user/aoe2mc/game/plugin/src/main/java/aoe2mc/AoePlugin.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+p1 units 10 p1 soldiers ['MILITIA', 'MILITIA', 'MILITIA', 'TRANSPORT_SHIP'] bot soldiers ['MILITIA', 'MILITIA', 'MILITIA', 'MILITIA', 'MILITIA']
+{"t": 0.4, "alive": 5, "targets": 0, "p1": 10, "drowned": 0, "forts": 5, "on_buildings": 0} max feet+below+head water 0
+{"t": 30.2, "alive": 5, "targets": 0, "p1": 10, "drowned": 0, "forts": 5, "on_buildings": 0} max feet+below+head water 0
+{"t": 60.8, "alive": 5, "targets": 0, "p1": 10, "drowned": 0, "forts": 5, "on_buildings": 0} max feet+below+head water 0
+{"t": 120.3, "alive": 4, "targets": 0, "p1": 10, "drowned": 0, "forts": 5, "on_buildings": 0} max feet+below+head water 0
+{"t": 150.9, "alive": 4, "targets": 0, "p1": 10, "drowned": 0, "forts": 5, "on_buildings": 0} max feet+below+head water 0
+{"t": 210.4, "alive": 4, "targets": 0, "p1": 10, "drowned": 0, "forts": 5, "on_buildings": 0} max feet+below+head water 0
+{"t": 241.0, "alive": 4, "targets": 0, "p1": 10, "drowned": 0, "forts": 5, "on_buildings": 0} max feet+below+head water 0
+{"t": 300.5, "alive": 4, "targets": 0, "p1": 10, "drowned": 0, "forts": 5, "on_buildings": 0} max feet+below+head water 0
+{"t": 390.6, "alive": 4, "targets": 0, "p1": 10, "drowned": 0, "forts": 5, "on_buildings": 0} max feet+below+head water 0
+{"t": 450.1, "alive": 4, "targets": 0, "p1": 10, "drowned": 0, "forts": 5, "on_buildings": 0} max feet+below+head water 0
+{"t": 480.7, "alive": 5, "targets": 5, "p1": 10, "drowned": 0, "forts": 5, "on_buildings": 0} max feet+below+head water 0
+{"t": 540.2, "alive": 5, "targets": 5, "p1": 4, "drowned": 0, "forts": 5, "on_buildings": 0} max feet+below+head water 0
+{"t": 570.8, "alive": 4, "targets": 4, "p1": 1, "drowned": 0, "forts": 5, "on_buildings": 4} max feet+below+head water 0
+{"t": 630.3, "alive": 6, "targets": 6, "p1": 1, "drowned": 0, "forts": 5, "on_buildings": 6} max feet+below+head water 0
+{"t": 660.9, "alive": 7, "targets": 7, "p1": 1, "drowned": 0, "forts": 5, "on_buildings": 7} max feet+below+head water 0
+{"t": 720.4, "alive": 9, "targets": 9, "p1": 1, "drowned": 0, "forts": 4, "on_buildings": 9} max feet+below+head water 0
+{"t": 751.0, "alive": 9, "targets": 9, "p1": 1, "drowned": 0, "forts": 4, "on_buildings": 9} max feet+below+head water 0
+{"t": 810.5, "alive": 11, "targets": 11, "p1": 1, "drowned": 0, "forts": 4, "on_buildings": 11} max feet+below+head water 0
+{"t": 900.6, "alive": 12, "targets": 12, "p1": 1, "drowned": 0, "forts": 4, "on_buildings": 12} max feet+below+head water 0
+forts 4 on_buildings max 12
+end 900.5749999999681 worst 0 wet cells 0 drowned max 0
+p1 alive 1 of 10
+p1 alive list ['TRANSPORT_SHIP']
+rc=0
