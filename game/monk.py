@@ -220,7 +220,7 @@ def heal(g, dt):
     for m in monks:
         if m in inside or m in g.converting or m not in pos or m not in last or math.dist(pos[m], last[m]) > STILL:
             continue                                               # dead, inside, converts, or it walks (or just came)
-        near = sorted((math.dist(pos[m], pos[u]), u) for u in others if u != m and u not in taken)
+        near = sorted((math.dist(pos[m], pos[u]), u) for u in others if u != m and u not in taken and u in pos)
         for d, u in near:
             if d > reach:
                 break
