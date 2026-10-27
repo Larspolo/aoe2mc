@@ -1,6 +1,7 @@
 name: CI
 
-# Quick checks (lint, fast tests: about 1 minute) on each PR and on main, so that Automerge merges a PR soon.
+# Quick checks (lint, fast tests: about 4 minutes) on each PR and on main, so that Automerge merges a PR soon.
+# A PR that changes only Markdown files runs only the doc tests (about 1 minute, `tools/ci_select.py`, #2089).
 # The full suite (slow tests, Minecraft tests, package) runs each night on main, or by hand with "full" (owner
 # decision, 2026-10-26). The runs do the slow and Minecraft checks that a change needs before the push (`verify`).
 # A red run on main opens a P0 ticket, so that the runs fix main first.
@@ -31,16 +32,24 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2     # a PR checks out its merge commit: HEAD^1 is the base
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements*.txt
       - run: pip install -r requirements-dev.txt
+      # Not a job `if` or `paths-ignore`: Automerge waits for a `quick` check with conclusion success.
+      - name: Select the tests
+        id: select
+        if: github.event_name == 'pull_request'
+        run: echo "tests=$(python3 tools/ci_select.py HEAD^1)" >> "$GITHUB_OUTPUT"
       - name: Lint
+        if: steps.select.outputs.tests == ''
         run: ruff check .
       - name: Fast tests
-        run: pytest
+        run: pytest ${{ steps.select.outputs.tests }}
 
   # A CI run that GITHUB_TOKEN started (Unconflict) gives no workflow_run event, and GitHub drops the cron sweep of
   # Automerge: start the sweep after a green quick job, so that the PR merges (#734). A dispatch of GITHUB_TOKEN starts

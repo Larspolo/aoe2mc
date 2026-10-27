@@ -91,6 +91,7 @@ COSTS = {r["name"]: r["cost"] for r in ROWS}                       # as in AoE2
 TRAIN_TIMES = {r["name"]: r["time"] for r in ROWS}                 # AoE2 seconds
 TRAINS = {b: tuple(r["name"] for r in ROWS if r["building"] == b)    # the units and technologies of each
           for b in dict.fromkeys(r["building"] for r in ROWS if r["building"])}   # building, in file order
+TRAINS["DONJON"] = ("SPEARMAN",)                                  # trains() adds the Serjeant (#1873)
 TRAINS["FOLWARK"] = TRAINS["MILL"]                                 # the mill of the Poles (#1874)
 TRAINS["KREPOST"] = ()                                             # trains() adds the Konnik (#1872)
 TRAINS["FORTIFIED_CHURCH"] = TRAINS["MONASTERY"]                  # the monastery of the Armenians, Georgians (#1930)
@@ -183,6 +184,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ARROWSLITS": arrowslits,                                 # the towers of the player: build.values
          "ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bonus.get("standard", 0) + 2})
          if "infantry" in s.classes else s,                        # combat.STANDARD: not the walls (#1419)
+         "ATLATL": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if name in forms("SKIRMISHER") else s,  # the Aztecs (#2041)
          "ATONEMENT": lambda name, s: s,                           # monks convert enemy monks: monk.convertible
          "BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
          "BALLISTICS": lambda name, s: s,                          # the aim of the arrows: aoe ballistics (#1549)
@@ -447,10 +449,11 @@ def lines(t, g=None):
 
 def trains(g, building):
     """The units and technologies of the own building: a castle trains the unique unit of the player's civilization,
-    a Krepost the Konnik."""
+    a Krepost the Konnik, a Donjon the Serjeant."""
     new = {old: unit for t in UPGRADES if t in g.techs for old, unit in lines(t, g)}   # the barracks trains the new unit
     unique = [n for n in [UNIQUE.get(civs.civ(g))] if n in COSTS] * (building == "CASTLE") \
-        + ["KONNIK"] * (building == "KREPOST")                     # the Krepost trains only the Konnik (#1872)
+        + ["KONNIK"] * (building == "KREPOST") \
+        + ["SERJEANT"] * (building == "DONJON")                    # and the spearman line (AoE2 DE wiki, #1873)
     out = unique + list(TRAINS[building]) + [f"ELITE_{n}_UPGRADE" for n in unique if f"ELITE_{n}_UPGRADE" in COSTS]   # (#1760)
     out += [n for n, c in CIV_TECHS.items() if c == civs.civ(g)] * (building == "CASTLE")   # the unique technologies (#2021)
     for _ in UPGRADES:                                             # a line of upgrades: mangonel, onager, siege onager
