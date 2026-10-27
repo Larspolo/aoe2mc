@@ -110,9 +110,48 @@ def release_bar(text):
     return out
 
 
-def usage(hours=72):
-    return [dict(at=f"{t:%Y-%m-%dT%H:%M:%SZ}", usage=u, resets=f"{r:%Y-%m-%dT%H:%M:%SZ}", runs=k)
-            for t, u, r, k in health.samples(health.status_comments(hours=hours))]
+WEEK = dt.timedelta(days=7)
+WEEK_RESET = re.compile(r"^Usage: (\S+) · .*?· week resets (\S+)", re.M)
+WEEK_SLACK = 0.10       # "behind" when more than this share of the week stays unused at the reset
+
+
+def week_track(used, reset, now, rate):
+    """The on-track text of the 7-day usage `used` (0..1) at `now`, with the 7-day reset `reset` and the measured
+    rise per hour `rate` (#1696): "on track", "ahead: runs out <day hh:mm>" or "behind: <n> % unused at the reset"."""
+    at = used + rate * (reset - now).total_seconds() / 3600
+    if at > 1:
+        return f"ahead: runs out {now + dt.timedelta(hours=(1 - used) / rate):%a %H:%M}"
+    if at < 1 - WEEK_SLACK:
+        return f"behind: {round((1 - at) * 100)} % unused at the reset"
+    return "on track"
+
+
+def week_rate(points, now, hours=24):
+    """The rise of the 7-day usage per hour over the points [(time, used)] of the last `hours` up to `now` (a drop is
+    the reset), or None with less than one hour of points."""
+    pts = [p for p in points if now - dt.timedelta(hours=hours) <= p[0] <= now]
+    span = (pts[-1][0] - pts[0][0]).total_seconds() / 3600 if pts else 0
+    return sum(max(0, b[1] - a[1]) for a, b in zip(pts, pts[1:])) / span if span >= 1 else None
+
+
+def usage(hours=72, comments=None):
+    """The `Usage:` lines: the 5-hour usage, and the 7-day usage `week` with its reset `week_resets` and the on-track
+    text `track` where the line has the week (#1696), else None. A line before #1696 has no 7-day reset: the reset of
+    another line moved by whole weeks (the 7-day window is fixed)."""
+    comments = health.status_comments(hours=hours) if comments is None else comments
+    week = {t: w / 100 for t, w, _ in health.weekly(comments)}
+    known = sorted({health.ts(r) for c in comments for _, r in WEEK_RESET.findall(c.get("body") or "")})
+    points, rows = sorted(week.items()), []
+    for t, u, r, k in health.samples(comments):
+        row = dict(at=f"{t:%Y-%m-%dT%H:%M:%SZ}", usage=u, resets=f"{r:%Y-%m-%dT%H:%M:%SZ}", runs=k,
+                   week=week.get(t), week_resets=None, track=None)     # each row has each column (check)
+        if t in week and known:
+            reset = known[-1] - WEEK * ((known[-1] - t) // WEEK)
+            rate = week_rate(points, t)
+            row.update(week=week[t], week_resets=f"{reset:%Y-%m-%dT%H:%M:%SZ}",
+                       track=None if rate is None else week_track(week[t], reset, t, rate))
+        rows.append(row)
+    return rows
 
 
 def close(text, i):

@@ -30,7 +30,7 @@ def test_quota_per_merge():
 
 def test_week_and_release_from_usage_lines():
     line = usage.sample_line({"five_hour": (0.3, 0, "allowed"), "seven_day": (0.56, 0, "allowed")}, 0, 4, 61.24)
-    assert line.endswith("· runs 4 · week 56.0% · release 61.2%")
+    assert line.endswith("· runs 4 · week 56.0% · release 61.2% · week resets 1970-01-01T00:00:00Z")
     assert health.samples([{"body": line}])[0][1:] == (0.3, datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc), 4)
     old = usage.sample_line({"five_hour": (0.3, 0, "allowed")}, 3600, 4)
     pts = health.weekly([{"body": line}, {"body": old}, {"body": line.replace("1970-01-01T00:00:00Z", "1970-01-01T05:00:00Z", 1)

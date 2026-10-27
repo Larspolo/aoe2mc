@@ -147,6 +147,7 @@ def sample_line(usage, now, claims, release=None, lanes=None):
     line = f"Usage: {iso(now)} · usage {used * 100:.1f}% · resets {iso(reset)} · runs {claims}"
     if "seven_day" in usage:
         line += f" · week {usage['seven_day'][0] * 100:.1f}%" + ("" if release is None else f" · release {release:.1f}%")
+        line += f" · week resets {iso(usage['seven_day'][1])}"                  # for the dashboard (#1696)
     return line + "".join(f" · {k} {n}" for k, n in sorted((lanes or {}).items()) if k != "opus" and n)   # (#1727)
 
 
