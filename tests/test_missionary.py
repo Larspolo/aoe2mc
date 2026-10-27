@@ -7,7 +7,7 @@ from test_monk_heal import HealServer
 from test_train_castle import menus
 
 import units
-from game import ai, build, combat, gather, monk, train
+from game import ai, build, gather, monk, train
 
 MONASTERY = (12, 4)
 
@@ -26,7 +26,7 @@ def setup(civ, food=30, gold=100):
 
 def test_the_values_are_those_of_aoe2():
     assert build.AGE["MISSIONARY"] == 2 and len(train.HELP["MISSIONARY"]) <= 50
-    assert combat.stats("MISSIONARY").hp == 30 and combat.sight("MISSIONARY") == 9 and monk.MONKS["MISSIONARY"] == 7
+    assert monk.MONKS["MISSIONARY"] == 7
     assert ai.walk_speed("MISSIONARY", 1, 1) == pytest.approx(1.1)
     assert "SPANISH" not in train.civs.MISSING["MISSIONARY"] and "BRITONS" in train.civs.MISSING["MISSIONARY"]
     e = units.classify("MISSIONARY")

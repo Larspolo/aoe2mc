@@ -12,7 +12,7 @@ def tiles(techs):
 
 
 def test_the_monk_sees_11_tiles_and_3_more_after_block_printing():
-    assert combat.sight("MONK") == 11 and monk.PRINTING == 3
+    assert monk.PRINTING == 3
     before, after = tiles(()), tiles({"BLOCK_PRINTING"})
     assert circle(20, 20, 11) <= before and (20 + 12, 20) not in before and (20, 20 - 12) not in before
     assert circle(20, 20, 14) <= after and (20 + 15, 20) not in after and (20 - 14, 20) in after

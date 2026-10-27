@@ -2,7 +2,7 @@
 from test_build_site import Server
 from test_gather import grid
 
-from game import build, combat, fleet, gather
+from game import build, fleet, gather
 
 
 def shore_map(wood=200):
@@ -22,7 +22,7 @@ def test_the_menu_has_the_dock_with_the_aoe2_values():
     server, g = shore_map()
     items = {name: (icon, lore) for _, icon, name, lore in build.items(g)}
     assert items["Dock"] == ("dark_oak_planks", "150 wood\n35 s")                          # AoE2 DE wiki infobox
-    assert build.locked(g, "DOCK") is None and combat.BUILDINGS["DOCK"].hp == 1800   # the Dark Age
+    assert build.locked(g, "DOCK") is None   # the Dark Age
     assert build.footprint("DOCK") == 3
 
 

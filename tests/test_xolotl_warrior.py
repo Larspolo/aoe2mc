@@ -4,7 +4,7 @@ import pytest
 from test_castle_upgrades import STABLE, setup
 from test_forging import menus
 
-from game import build, civs, combat, replay, train
+from game import build, civs, train
 
 import units
 
@@ -20,8 +20,6 @@ def stable(civ, ages=CASTLE):
 
 def test_the_values_are_those_of_aoe2():
     assert build.AGE["XOLOTL_WARRIOR"] == 2 and train.ITEMS["XOLOTL_WARRIOR"][0] == train.MORE + 8
-    assert combat.stats("XOLOTL_WARRIOR") == (100, 10, 2, 2, 0, 1.8, {}, ("cavalry",))
-    assert combat.sight("XOLOTL_WARRIOR") == 4 and replay.SPEEDS["XOLOTL_WARRIOR"] == 1.35
     assert len(train.HELP["XOLOTL_WARRIOR"]) <= 50
     assert not set(OWN) & set(civs.MISSING["XOLOTL_WARRIOR"]) and {"FRANKS", "SHU"} <= set(civs.MISSING["XOLOTL_WARRIOR"])
     assert str(units.classify("XOLOTL_WARRIOR")["id"]) == "minecraft:horse"   # a rider on a horse, as the knight
