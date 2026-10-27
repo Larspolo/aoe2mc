@@ -478,6 +478,7 @@ class Gather:
         self.groups, self.grouping, self.calls = {}, {}, 0             # group -> units, player -> (group, shift)
         self.hints = {}                                                # target -> (hint text, time) (hints.py, #798)
         self.pointing = {}                                             # player -> text of its pointed target (#989)
+        self.sided = set()                                             # players in the team of the units (#1241)
         self.garrisons, self.entering = garrison.start(self), {}       # building -> units inside, unit -> building (#808)
 
     @property
@@ -501,6 +502,9 @@ class Gather:
         for r in RESOURCES:
             self.command(f"scoreboard players set {r} {self.board} {self.stock[r.lower()]}")   # the start resources
         self.command(f'scoreboard players display name Idle {self.board} "Idle villagers"')   # a name has no space
+        # The players get the side of the units for the attack alerts of the plugin (AoePlugin.side, #1241): the team,
+        # not the tag aoe2mc.pN, because cheats.destroy kills and conquest.alive counts the entities with that tag.
+        self.command(f"team join p{self.player} @a")
         build.setup(self)
         menu.setup(self)
         if self.paper:
@@ -951,6 +955,9 @@ class Gather:
         hints.py writes its name and action into the action bar. Minecraft outlines a block only up to about 5
         blocks, and the order marker (#796) shows only after the click."""
         names = [n for n in (n.strip() for n in self.command("list").split(":", 1)[-1].split(",")) if n]
+        for name in sorted(set(names) - self.sided):                   # a player who joins later (#1241)
+            self.command(f"team join p{self.player} {name}")
+            self.sided.add(name)
         self.pointing = {}
         places = self.places() if names else {}
         for name in names:
