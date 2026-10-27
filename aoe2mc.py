@@ -364,6 +364,7 @@ def map_description(d, path):
 def read_scenario(path):
     from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
     from AoE2ScenarioParser.datasets.terrains import TerrainId
+    from AoE2ScenarioParser.datasets.trigger_lists import ColorMood
 
     with contextlib.redirect_stdout(io.StringIO()):   # the parser prints a lot of status text
         scn = AoE2DEScenario.from_file(path)
@@ -416,7 +417,11 @@ def read_scenario(path):
                               effects=[dict(type=e.effect_type, message=e.message or "", player=e.source_player,
                                             time=e.display_time, object=kinds.get(e.object_list_unit_id),
                                             tile=[e.location_x, e.location_y],
-                                            area=[e.area_x1, e.area_y1, e.area_x2, e.area_y2]) for e in t.effects])
+                                            area=[e.area_x1, e.area_y1, e.area_x2, e.area_y2],
+                                            **({"mood": ColorMood(e.color_mood).name}     # "Change Color Mood" (#1876)
+                                               if e.effect_type == CHANGE_COLOR_MOOD and
+                                               getattr(e, "color_mood", None) in set(ColorMood) else {}))
+                                       for e in t.effects])
                          for t in scn.trigger_manager.triggers]
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
     texts["mood"] = (getattr(mood, "name", None) or str(mood or "DEFAULT")).upper()
@@ -2657,7 +2662,7 @@ def team_lines(objects, players):
 
 
 TIMER, SEND_CHAT, DISPLAY_INSTRUCTIONS, IN_AREA = 10, 3, 20, 5   # AoE2 condition and effect IDs (AoE2ScenarioParser)
-CREATE_OBJECT, REMOVE_OBJECT = 11, 15
+CREATE_OBJECT, REMOVE_OBJECT, CHANGE_COLOR_MOOD = 11, 15, 72
 
 
 def turn_area(area, size, k):
@@ -2723,13 +2728,23 @@ def object_lines(t, e, T, ground, players, stats):
     return []
 
 
-def trigger_files(triggers, T=4, ground=None, players=None, stats=None):
+def mood_lines(e):
+    """The commands of "Change Color Mood" (#1876): the time of day (MOODS) and the rain (RAIN) of the new mood, as
+    at the conversion. The game rules advance_time and advance_weather are 0, so they stay. The fog (FOG) is a
+    timeline of the dimension type: a command cannot change it, so the fog of the map mood stays."""
+    if e.get("mood") not in MOODS:
+        return []
+    return [f"time set {MOODS[e['mood']]}", f"weather {'rain' if e['mood'] in RAIN else 'clear'}"]
+
+
+def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=True):
     """(load lines, files) for the triggers that only have timer conditions (#648) or only "Objects in Area"
     conditions (#649): one function per trigger. The load function schedules a timer trigger at the AoE2 time (all
     timers must pass: the largest). The tick function runs an area trigger when units of its player are in all its
     areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
     the units leave an area. "Send Chat" is a tellraw, "Display Instructions" a subtitle for its display time;
-    "Create Object" and "Remove Object": object_lines (#656). A disabled trigger does not run."""
+    "Create Object" and "Remove Object": object_lines (#656). "Change Color Mood": mood_lines (#1876), only with mood.
+    A disabled trigger does not run."""
     load, files, tick = [], {}, []
     stats = Counter() if stats is None else stats
     ground = np.zeros((0, 0), np.int16) if ground is None else ground
@@ -2743,6 +2758,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None):
         for e in t["effects"]:
             if e["type"] in (CREATE_OBJECT, REMOVE_OBJECT):
                 lines += object_lines(t, e, T, ground, players, stats)
+                continue
+            if e["type"] == CHANGE_COLOR_MOOD:
+                lines += mood_lines(e) if mood else []
                 continue
             msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()   # AoE2 color tags
             if not msg:
@@ -2791,12 +2809,13 @@ MAP_PULSE = ["execute as @a[tag=!aoe2mc_map] run item replace entity @s weapon.o
 
 
 def write_datapack(out, objects, ground, biome_names=(), ambience="basic", players=None, triggers=(), T=4,
-                   trigger_stats=None, fog=None):
+                   trigger_stats=None, fog=None, mood=True):
     """datapacks/aoe2mc: a function every 2 s plays a work sound at each building with a player near it
     (docs/datapack.md). Fixed positions, no marker entities: the check costs nothing that /tick query shows.
     Ambience (#219): particles and sounds near the players by biome; "full" also writes the custom biomes, "off"
     writes no pack (and so no teams). Teams: `team_lines`. Timer and area triggers: `trigger_files`.
     fog: (start, end) blocks of the fog of a fog mood (FOG, #1626), a timeline of the overworld clock.
+    mood: the "Change Color Mood" effects of the triggers change the time of day (--mood on, #1876).
     Returns (work sounds, ambience lines)."""
     root = os.path.join(out, "datapacks", "aoe2mc")
     if ambience == "off":           # the world as before #188: no pack
@@ -2828,7 +2847,7 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
     team_load, team_pulse = team_lines(objects, players or {})
     # each player gets the map of the world in the off-hand once, so the minimap is there without a search (#966)
     team_pulse = team_pulse + MAP_PULSE
-    trigger_load, trigger_fns = trigger_files(triggers, T, ground, players, trigger_stats)
+    trigger_load, trigger_fns = trigger_files(triggers, T, ground, players, trigger_stats, mood)
     if not lines and not groups and not team_load and not trigger_load and not fog:   # the server finds a new pack itself
         return 0, 0
     files = {
@@ -3387,8 +3406,10 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
                   texts.get("mood", "DEFAULT"))
     triggers, tstats = texts.get("triggers", []), Counter()
     haze = FOG.get(texts.get("mood")) if mood == "on" and (fog or ambience == "full") else None
-    n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze)
-    k = sum("/trigger/" in f for f in trigger_files(triggers, T, ground, players)[1]) if ambience != "off" else 0
+    n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze,
+                            mood == "on")
+    k = sum("/trigger/" in f for f in trigger_files(triggers, T, ground, players, mood=mood == "on")[1]) \
+        if ambience != "off" else 0
     if k:
         print(f"  timer and area triggers (chat, instructions, objects): {k}"
               + "".join(f", {v} {w}" for w, v in sorted(tstats.items())))
