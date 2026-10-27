@@ -79,7 +79,11 @@ jobs:
   mc:
     if: github.event_name == 'schedule' || inputs.full == true
     runs-on: ubuntu-latest
-    timeout-minutes: 60     # `-m mc` takes more than 21 minutes: 15 stopped each night run (#1677)
+    timeout-minutes: 60     # per shard: the whole `-m mc` took more than 60 minutes in one job (#1677, #1710)
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -102,9 +106,11 @@ jobs:
           key: mc-${{ hashFiles('tools/mc_check.py', 'tools/mc_shot.py', 'game/run.py', 'game/plugin/**') }}
           restore-keys: mc-
       - name: Packages for the client screenshots (tools/mc_shot.py)
-        run: sudo apt-get update -q && sudo apt-get install -y -q xvfb imagemagick mesa-vulkan-drivers
-      - name: Minecraft server and client checks
-        run: pytest -m mc
+        run: sudo apt-get update -q && sudo apt-get install -y -q xvfb imagemagick mesa-vulkan-drivers xdotool   # xdotool: mc_shot.Client
+      - name: Minecraft server and client checks (the test files of this shard)
+        env:
+          PYTHONPATH: game:tools:.     # some test files import a game/ module by its bare name: alone they need it
+        run: pytest -m mc $(grep -l "mark\.mc\b" tests/test_*.py | sort | awk 'NR % 6 == ${{ matrix.shard }}')
 
   report:
     needs: [quick, slow, mc]

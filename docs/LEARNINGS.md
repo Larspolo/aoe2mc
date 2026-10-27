@@ -67,6 +67,8 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - A beat or guard while you work on a local branch (`t1643`): `git worktree add $SCRATCH/wt <session branch>` once, then `cd $SCRATCH/wt && python3 tools/claim.py N --beat`. No checkout or stash of the work is necessary (#1643).
 - The full `-m mc` suite has about 190 tests now: 19 of them took 25 minutes (2026-10-27, #1669), so a full run takes hours, not 21 minutes. Run the `-m mc` files that use the changed code (`grep -l "aoe moveto" tests/*.py | xargs grep -l mark.mc`) in the background.
 - The auto mode also denies the close of a check ticket that the owner answered (#1641, 2026-10-27): do not try it; comment the evidence of each criterion with `@Larspolo` and "Please close", and add `needs-human`.
+- The full `-m mc` suite (175 tests, 2026-10-27) takes more than 60 minutes in one GitHub job, not 21: CI runs it in 6 shards of test files (#1710). A job that hits its timeout ends `cancelled`, not `failure`, and skips its cache save.
+- `mcp__github__get_job_logs` with `job_id` and `return_content: true` works again for `ci.yml` jobs (2026-10-27, #1710): read the failed tests there before you run a shard locally.
 
 ## Code
 
