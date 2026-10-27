@@ -209,6 +209,7 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
                                             "MUISCA", "POLES", "PURU", "ROMANS", "SAXONS", "SHU", "SICILIANS", "SLAVS",
                                             "SPARTANS", "TEUTONS", "THRACIANS", "TUPI", "VARANGIANS", "VIKINGS", "WEI",
                                             "WU"),   # the wiki chart (#1491)
+           "FAITH": ("BULGARIANS", "DANES", "GURJARAS", "JURCHENS", "MAGYARS", "TATARS"),        # (#1584)
            "FAST_FIRE_SHIP": ("ARMENIANS", "BOHEMIANS", "BULGARIANS", "BURMESE", "CELTS", "CHINESE", "ETHIOPIANS",
                               "GURJARAS", "HINDUSTANIS", "HUNS", "JURCHENS", "MUISCA", "PORTUGUESE", "SARACENS",
                               "SAXONS", "SHU", "TUPI", "TURKS", "VIETNAMESE", "VIKINGS"),   # the wiki chart (#1483)
@@ -295,9 +296,12 @@ EAGLES = ("AZTECS", "MAYANS")                                     # the eagle li
 MISSING |= dict.fromkeys(("EAGLE_SCOUT", "EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"),   # The Last Chieftains, #1555)
                          tuple(sorted(set().union(*MISSING.values()) - set(EAGLES))))
 MISSING["WINGED_HUSSAR_UPGRADE"] = tuple(sorted(set().union(*MISSING.values()) - {"LITHUANIANS", "POLES"}))   # (#1558)
+MISSING["IMPERIAL_SKIRMISHER_UPGRADE"] = tuple(sorted(set().union(*MISSING.values()) - {"VIETNAMESE"}))   # (#1611)
 LANCERS = ("CUMANS", "JURCHENS", "KHITANS", "MONGOLS", "TATARS")   # the steppe lancers (AoE2 DE wiki, #1557)
 MISSING |= dict.fromkeys(("STEPPE_LANCER", "ELITE_STEPPE_LANCER", "ELITE_STEPPE_LANCER_UPGRADE"),
                          tuple(sorted(set().union(*MISSING.values()) - set(LANCERS))))
+MISSING |= dict.fromkeys(("GENITOUR", "ELITE_GENITOUR", "ELITE_GENITOUR_UPGRADE"),   # the Berbers (AoE2 DE wiki, #1610)
+                         tuple(sorted(set().union(*MISSING.values()) - {"BERBERS"})))
 
 
 def mounted(s):
