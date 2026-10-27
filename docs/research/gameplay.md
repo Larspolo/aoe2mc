@@ -200,6 +200,26 @@ than 1 ms per tick.
 - AoE2 has at most 200 units per player (8 players: 1600). The game program keeps 20 ticks per second with that
   count; with more than about 1500 units that get orders often, send the orders of a group in one plugin command.
 
+### Cost of the fog of war (#1473)
+
+`python3 tools/measure_units.py --units 200 --reveal all` and `--reveal normal` (#1389), the same machine and scenario,
+two runs of each, 2026-10-27. With `normal`, 100 units are own soldiers and 100 are enemies, and `fog.tick` hides the
+enemies out of sight once per second. "Fog ms" is the mean time of one `fog.tick` in the game program: the
+`aoe where` query of the positions (RCON), `Gather.seen_tiles` and the `aoe hide`/`aoe show` commands.
+
+| Reveal | Run | Commands per second | Mean tick ms | P99 tick ms | Ticks per second | Fog ms |
+|---|---|---|---|---|---|---|
+| all | 1 | 2315 | 5.70 | 40.9 | 20.0 | – |
+| all | 2 | 2053 | 5.75 | 51.0 | 20.0 | – |
+| normal | 1 | 2222 | 5.30 | 48.1 | 20.0 | 36.4 |
+| normal | 2 | 2375 | 5.85 | 61.7 | 20.0 | 25.1 |
+
+- **The fog costs no measurable server tick time**: the mean tick is 5.58 ms with the fog and 5.73 ms without it
+  (−2.6 %, inside the noise of two runs: 5.30 to 5.85 ms). The P99 tick time changes as much between two runs of one
+  setting. The ticket limit (5 %) holds, so no change of `fog.py`.
+- The game program spends 25 to 36 ms per second on `fog.tick` (2.5 % to 3.6 % of its time), with the RCON round
+  trips. It runs between the orders and does not slow the order rate (2222 and 2375 commands per second).
+
 ## Connection to the converter
 
 - The converted world is the start map. The converter stays the first step and needs only one change:

@@ -217,7 +217,9 @@ STATS = {
     "WAR_PENGUIN": Stats(64, 16, 4, 4, 0, 2.0, {"building": 8}, (INF,)),
     # ships (#1386, AoE2 DE wiki): the hits go to the crew of the boat (AoePlugin.java)
     "CANNON_GALLEON": Stats(120, 50, 0, 5, 13, 10.0, {"building": 200, SIE: 25}, (SHIP, GUN, WAR)),   # (#1484) melee damage
+    "DEMOLITION_RAFT": Stats(40, 75, 0, 0, 0, 0.0, {"building": 180}, (SHIP,)),   # (#1481) the Feudal Age form
     "DEMOLITION_SHIP": Stats(50, 95, 1, 0, 0, 0.0, {"building": 220}, (SHIP,)),   # one blast (BLAST), then it dies
+    "FIRE_GALLEY": Stats(110, 2, 1, 4, 2.5, 0.25, {WAR: 1}, (SHIP,)),   # (#1481) the Feudal Age form of the fire ship
     "FIRE_SHIP": Stats(120, 3, 2, 4, 2.5, 0.25, {"building": 2, WAR: 1}, (SHIP,)),   # (#1440) melee damage, 4 hits/s
     "FISHING_SHIP": Stats(50, 0, 1, 1, 0, 0.0, {}, (SHIP,)),
     "GALLEY": Stats(110, 6, 0, 3, 5, 3.0, {"building": 6, WAR: 5}, (SHIP, WAR)),
@@ -268,6 +270,7 @@ WALL_TAG = "aoe2mc.wall"
 # gives infantry a bonus against it (#1419).
 STANDARD = "standard"
 BUILDINGS = {k: s if k == "WONDER" else s._replace(classes=s.classes + (STANDARD,)) for k, s in BUILDINGS.items()}
+WATCH = 4    # tiles of line of sight that Town Watch adds to each own building but walls, gates, farms, fish traps (#1454)
 # Line of sight in tiles (AoE2 DE, base unit or building, wiki infobox "LOS"; the house: 1 from the edge of its
 # 2 x 2 tiles, #1300) where it is not max(4, range + 2) (sight()).
 SIGHT = {
@@ -278,9 +281,11 @@ SIGHT = {
     "CANNON_GALLEON": 15,
     "CASTLE": 11,
     "CHAMPION": 5,
+    "DEMOLITION_RAFT": 6,
     "DEMOLITION_SHIP": 6,
     "DOCK": 8,
     "DONJON": 10,
+    "FIRE_GALLEY": 5,
     "FIRE_SHIP": 5,
     "FEITORIA": 6,
     "FORTIFIED_TOWER": 14,
@@ -309,6 +314,7 @@ MELEE_RANGED = {"BOMBARD_CANNON",
                 "ELITE_GBETO",
                 "ELITE_MAMELUKE",
                 "ELITE_THROWING_AXEMAN",
+                "FIRE_GALLEY",
                 "FIRE_SHIP",
                 "GBETO",
                 "HEAVY_ROCKET_CART",
@@ -325,7 +331,9 @@ MELEE_RANGED = {"BOMBARD_CANNON",
 # the creeper crew of the demolition ship dies after its blast (AoePlugin.java), as a vanilla creeper.
 BLAST = {"BOMBARD_CANNON": 0.5,
          "CANNON_GALLEON": 0.25,
+         "DEMOLITION_RAFT": 2.5,
          "DEMOLITION_SHIP": 3,
+         "FIRE_GALLEY": 0,
          "FIRE_SHIP": 0,
          "HEAVY_ROCKET_CART": 1.25,
          "HOUFNICE": 0.7,
