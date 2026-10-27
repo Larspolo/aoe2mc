@@ -91,9 +91,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe ballistics <team> on|off               Ballistics of the player (#1549): its archers and buildings aim where a
  *                                              moving target will be
  *   aoe gate <team> <x0> <y0> <z0> <x1> <y1> <z1>
- *                                              a gate of the team (#1325, Gates.java): its doors in the box open while
- *                                              an own or allied unit is near; the units of the team plan their paths
- *                                              through its closed doors
+ *                                              a gate of the team (#1325, Gates.java): its iron bars in the box rise
+ *                                              while an own or allied unit is near or walks a path through it; the
+ *                                              units of the team plan their paths with the gate raised (#1656)
  *   aoe goals <selector>                       the goals of the first unit (#436), for checks
  *   aoe hide <players> <uuid> ...              Player#hideEntity: the players do not see these entities, also a
  *                                              player that joins later (#1302: the enemy units out of sight in the
@@ -1887,7 +1887,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Destroy: " + n + " buildings");
             return true;
         }
-        if (args.length == 8 && args[0].equals("gate")) {              // the doors of a gate (#1325)
+        if (args.length == 8 && args[0].equals("gate")) {              // the portcullis of a gate (#1325, #1656)
             return gates.command(sender, args);
         }
         if (args.length >= 2 && args[0].equals("minimap")) {           // #1237, #1238, #1567
@@ -1930,8 +1930,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 if (rider(mob) != null) {
                     rider(mob).setTarget(null);
                 }
-                if (gates.any()) {                                     // through the doors of an own gate (#1325)
-                    mob.getPathfinder().setCanOpenDoors(gates.opens(mob));
+                if (gates.any()) {                                     // through an own gate (#1325, #1656)
+                    gates.raise(mob);
                 }
                 dry(mob, goal);
                 mob.getPathfinder().moveTo(goal, speed);
