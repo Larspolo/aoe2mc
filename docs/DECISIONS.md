@@ -1,0 +1,41 @@
+# Decisions
+
+The log of the owner's decisions: one line per decision, the newest at the end. `docs/PRINCIPLES.md` generalizes
+them. Runs only add lines here (`merge=union` in `.gitattributes`).
+
+Columns: date · ticket · decision · recommendation (`taken`, `changed`: the owner combined or changed it, `other`:
+the owner chose another option, `-`: no recommendation) · principle (`P<n>`, or `new` when no principle predicts it).
+
+- 2026-10-25 · #23 · Map orientation: `--orientation ne|nw|se|sw`, the suggested default · taken · P3
+- 2026-10-25 · #43 · Big cats are hostile wolves, not ocelots · - · P1
+- 2026-10-25 · #219 · Custom biomes: option C, default B; switch the default when the warning goes away · changed · P3, P4
+- 2026-10-25 · #246 · World border default: diorama · - · new
+- 2026-10-25 · #357 · Order of the gameplay milestones: A C D B E F · - · new
+- 2026-10-26 · #431 · Minecraft path finding through a Paper plugin; Minecraft features first · - · P2
+- 2026-10-26 · #587 · Use 90 % of each 5-hour window 2 hours before the reset, then 98 % · - · P7
+- 2026-10-26 · #618 · Building choices in a Paper chest menu · - · P8
+- 2026-10-26 · #623 · Ask the owner only when several clear options have no single best one, on GitHub · - · P5
+- 2026-10-26 · #658 · Hit points: the name line with hearts (A) and shown only when hurt or selected (C) · changed · P9
+- 2026-10-26 · #668 · Assign a check only when the agent thinks it is fully okay · - · P5
+- 2026-10-26 · #686 · Replay controls: hotbar items, a chest for more, each action also a command · other · P8
+- 2026-10-26 · #745 · Selection box with two corners; control groups later · taken · P4
+- 2026-10-26 · #782 · Watcher mode: adventure mode with flight and a right-click toolbar · changed · P3
+- 2026-10-26 · #797 · Action hints in the action bar · taken · P9
+- 2026-10-26 · #820 · An epic checks its whole scope · - · P6
+- 2026-10-26 · #862 · Ask the owner only on the issue · - · P5
+- 2026-10-26 · #878 · 100 % = the full roadmap (C); A and B only as indications · - · P6
+- 2026-10-26 · #961 · Random maps: A and B · changed · P4
+- 2026-10-26 · #992 · Selection: hold right click (Paper); vanilla keeps two clicks · taken · P1, P3
+- 2026-10-26 · #1096 · Horses: scale 0.7 everywhere · taken · P2
+- 2026-10-26 · #1106 · Stances: a chest menu, as the villager · taken · P8
+- 2026-10-26 · #1159 · Never ask the owner for times or values; test them · - · P5
+- 2026-10-27 · #1232 · Flare: a menu entry and `/trigger`, no new hotbar item · other · P8
+- 2026-10-27 · #1301 · Replay terrain fog: the minimap only (C) · other · new
+- 2026-10-27 · #1308 · Player side: A for now, expand with C · other · P4
+- 2026-10-27 · #1314 · Tribute: one hotbar item for the top-right AoE2 buttons · taken · P8
+- 2026-10-27 · #1323 · A gate opens for own units · taken · P1
+- 2026-10-27 · #1525 · Siege: mobs in minecarts, no overlap · changed · P1
+- 2026-10-27 · #1544 · Installers stay unsigned · taken · P3
+- 2026-10-27 · #1625 · Fog only with `--ambience full` or `--fog` · changed · P3
+- 2026-10-27 · #1629 · Find the bottleneck from data; tokens are a hunch · - · P7
+- 2026-10-27 · #1674 · Check if the owner is really needed; group the owner's tickets in one game · - · P5

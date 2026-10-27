@@ -48,6 +48,10 @@ quota), the tokens per run and per merged PR and the largest token sinks (from t
 - Scheduling: "Taken over", "Released" and claim comments, stalled PRs, merge conflicts per PR, and the time
   from the claim to the merge.
 - `docs/LEARNINGS.md` and the "Process changes" list on the status issue (what was tried before).
+- Decisions: the share of `taken` in the lines of `docs/DECISIONS.md` that have a recommendation (2026-10-27: 9 of 19,
+  47 %), and the lines with `new` or an exception. When the share of the last 10 is lower than the one before, or 3 lines
+  have `new`, the principles do not predict the owner: update `docs/PRINCIPLES.md` (a new principle or a sharper rule,
+  with the decisions as evidence) in this review, and list the change on the status issue.
 
 ## 2. Find the largest loss
 
