@@ -82,6 +82,7 @@ STATS = {
     "CAMEL_ARCHER": Stats(55, 7, 0, 1, 4, 2.0, {}, (ARC, CAM, UNI)),
     "CATAPHRACT": Stats(110, 9, 2, 1, 0, 1.8, {INF: 13}, (CAV, UNI)),
     "CENTURION": Stats(110, 13, 2, 3, 0, 1.9, {}, (CAV, UNI)),
+    "CHAKRAM_THROWER": Stats(40, 3, 1, 0, 5, 2.0, {"building": 1}, (INF, UNI)),   # the Gurjaras castle (#1612)
     "CHU_KO_NU": Stats(45, 8, 0, 0, 4, 3.0, {SPE: 2}, (ARC, UNI)),
     "COMPOSITE_BOWMAN": Stats(40, 4, 1, 0, 4, 2.0, {SPE: 2}, (ARC, UNI)),
     "CONQUISTADOR": Stats(55, 16, 2, 1, 6, 2.9, {SIE: 4}, (ARC, CAV, UNI)),
@@ -132,6 +133,7 @@ STATS = {
     "ELITE_CAMEL_ARCHER": Stats(60, 8, 1, 1, 4, 2.0, {}, (ARC, CAM, UNI)),
     "ELITE_CATAPHRACT": Stats(150, 12, 2, 1, 0, 1.7, {INF: 18}, (CAV, UNI)),
     "ELITE_CENTURION": Stats(155, 15, 3, 3, 0, 1.9, {}, (CAV, UNI)),
+    "ELITE_CHAKRAM_THROWER": Stats(50, 4, 1, 0, 6, 2.0, {"building": 2, INF: 1}, (INF, UNI)),
     "ELITE_CHU_KO_NU": Stats(50, 10, 0, 0, 4, 3.0, {SPE: 2}, (ARC, UNI)),
     "ELITE_COMPOSITE_BOWMAN": Stats(50, 4, 2, 0, 4, 2.0, {SPE: 2}, (ARC, UNI)),
     "ELITE_CONQUISTADOR": Stats(70, 19, 2, 2, 6, 2.9, {SIE: 6, "building": 2}, (ARC, CAV, UNI)),
@@ -304,6 +306,7 @@ SIGHT = {
     "DONJON": 10,
     "ELITE_CANNON_GALLEON": 17,
     "ELITE_GENITOUR": 6,                                               # the wiki infobox (#1610)
+    "ELITE_SHRIVAMSHA_RIDER": 6,
     "ELITE_STEPPE_LANCER": 5,
     "FIRE_GALLEY": 5,
     "FIRE_SHIP": 5,
@@ -328,6 +331,7 @@ SIGHT = {
     "OUTPOST": 4,
     "PALADIN": 5,
     "SIEGE_WORKSHOP": 6,
+    "SHRIVAMSHA_RIDER": 5,
     "STABLE": 6,
     "STEPPE_LANCER": 5,
     "TOWN_CENTER": 8,
@@ -342,7 +346,9 @@ SIGHT = {
 # Units that attack from a range with melee damage (AoE2): their hit takes the melee armor of the target (#800).
 MELEE_RANGED = {"BOMBARD_CANNON",
                 "CANNON_GALLEON",
+                "CHAKRAM_THROWER",                # (#1612)
                 "ELITE_CANNON_GALLEON",
+                "ELITE_CHAKRAM_THROWER",
                 "ELITE_GBETO",
                 "ELITE_MAMELUKE",
                 "ELITE_THROWING_AXEMAN",
