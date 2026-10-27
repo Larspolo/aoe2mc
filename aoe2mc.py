@@ -2532,8 +2532,9 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
     their footprint [x0, z0, x1, z1) in blocks. Objects of a recorded game have their object ID ("ref").
     Objects that the converter did not place are not in the list.
-    A building has the free cells of its ground floor and their y ("inside", buildings.INSIDE) for a garrison,
-    and the cells of its footprint that units walk through ("open": the town center, #865).
+    A building has the free cells of its ground floor (the hall of a town center, #2054) and their y ("inside",
+    buildings.INSIDE) for a garrison, and the cells of its footprint that units walk through ("open": the town
+    center, #865).
     "ground" has one string per block row z: for each x the y where a unit stands, or "-" for water.
     "timeline" (recorded games only): the events of read_timeline, with tiles in the turned grid
     and the "names" of the selected objects (name_timeline).

@@ -43,24 +43,25 @@ def stats(row):
 
 
 def check_units(row):
-    form(row, {"name": str, **STATS}, {"sight": int, "min_range": NUMBER, "note": str})
+    form(row, {"name": str, **STATS}, {"sight": int, "min_range": NUMBER, "note": str, "sail": NUMBER, "convert": int})
     stats(row)
 
 
 def check_buildings(row):
     if "hp" in row:
-        form(row, {"name": str, **STATS, "sight": int}, {"as": str, "min_range": NUMBER, "note": str})
+        form(row, {"name": str, **STATS, "sight": int}, {"as": str, "min_range": NUMBER, "note": str, "garrison": int,
+                                                         "arrows": int})
         stats(row)
         assert row.get("as", "HOUSE") in NAMES["buildings.jsonl"], row["name"]   # combat.STANDS_FOR
     else:                                                  # no target, or a wall of the game program (combat.WALLS)
-        form(row, {"name": str}, {"sight": int, "note": str})
+        form(row, {"name": str}, {"sight": int, "note": str, "garrison": int})
         assert len(row) > 1, row["name"]
 
 
 def check_train(row):
     form(row, {"name": str, "building": (str, type(None)), "slot": int, "item": str, "label": str, "cost": dict,
                "time": int, "help": str},
-         {"age": int, "after": str, "civ": str, "upgrade": list, "note": str})
+         {"age": int, "after": str, "civ": str, "upgrade": list, "note": str, "resist": int, "tribute_fee": int})
     n = row["name"]
     assert row["building"] is None or row["building"] in NAMES["buildings.jsonl"], n
     assert 0 <= row["slot"] < 54 and row["time"] > 0 and row.get("age", 1) in (1, 2, 3), n
@@ -107,15 +108,43 @@ def check_gather(row):
 
 def check_build(row):
     form(row, {"name": str}, {"cost": dict, "time": int, "icon": str, "age": int, "needs": str, "gate": bool,
-                              "wall": bool, "age_tech": int})
+                              "wall": bool, "age_tech": int, "bot": int, "near": str})
     n = row["name"]
     assert set(row.get("cost", {})) <= RES and all(isinstance(v, int) for v in row.get("cost", {}).values()), n
     assert row.get("time", 1) > 0 and row.get("age", 1) in (1, 2, 3), n
     assert row.get("needs", "HOUSE") in NAMES["build.jsonl"] | NAMES["train.jsonl"], n
 
 
-CHECKS = {"build.jsonl": check_build, "buildings.jsonl": check_buildings, "civs.jsonl": check_civs,
-          "gather.jsonl": check_gather, "train.jsonl": check_train, "units.jsonl": check_units}
+def check_cheats(row):                                     # a cheat code: its unit, or a transform (#2034)
+    form(row, {"name": str}, {"unit": str, "transform": str, "units": list, "rule": str, "note": str})
+    assert ("unit" in row) != ("transform" in row) and ("units" in row) + ("rule" in row) == ("transform" in row), row["name"]
+    assert row["name"] == row["name"].lower(), row["name"]
+
+
+def check_monk(row):                                       # one rule of monk.py: IMMUNE, NEXT or LASTING (#2034)
+    form(row, {"name": str}, {"immune": bool, "next": bool, "lasting": bool})
+    assert len(row) == 2, row["name"]
+
+
+def check_replay(row):                                     # a walk speed (a name start), an age or a Society building
+    form(row, {"name": str}, {"walk": NUMBER, "age": int, "society": bool})
+    assert len(row) == 2 and row.get("age", 1) in (1, 2, 3) and row.get("walk", 1) > 0, row["name"]
+
+
+CHECKS = {"build.jsonl": check_build, "buildings.jsonl": check_buildings, "cheats.jsonl": check_cheats,
+          "civs.jsonl": check_civs, "gather.jsonl": check_gather, "monk.jsonl": check_monk,
+          "replay.jsonl": check_replay, "train.jsonl": check_train, "units.jsonl": check_units}
+
+
+# The keys with two types by design: an "effect" is data or the name of a function of game/train.py (#2098, #2122)
+TWO_TYPES = {("train.jsonl", "effect"): (dict, str)}
+
+
+MIXED = {("train.jsonl", "effect")}       # a function name or a change of the values (train.effect(), #2098)
+
+
+# The keys with two types by design: an "effect" is data or the name of a function of game/train.py (#2098, #2122)
+TWO_TYPES = {("train.jsonl", "effect"): (dict, str)}
 
 
 @pytest.mark.parametrize("name", sorted(NAMES))
@@ -123,8 +152,17 @@ def test_each_key_has_one_type(name):
     types = {}
     for row in rows(name):
         for k, v in row.items():
+            if (name, k) in TWO_TYPES:
+                assert isinstance(v, TWO_TYPES[name, k]), (name, row["name"], k)
+                continue
             t = float if type(v) is int else type(v)       # an int is a float without a fraction; null: none
-            assert v is None or types.setdefault(k, t) is t, (name, row["name"], k)
+            assert v is None or (name, k) in MIXED or types.setdefault(k, t) is t, (name, row["name"], k)
+
+
+def test_the_effect_name_of_a_technology_is_a_function_of_train():
+    from game import train
+    for row in rows("train.jsonl"):
+        assert callable(getattr(train, row.get("effect") if isinstance(row.get("effect"), str) else "effect")), row["name"]
 
 
 @pytest.mark.parametrize("name", sorted(NAMES))
