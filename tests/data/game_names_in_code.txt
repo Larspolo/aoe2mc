@@ -24,16 +24,6 @@ game/build.py:NEEDS 1
 game/build.py:WALLS 1
 game/cheats.py:CAMELS 1
 game/cheats.py:CODES 1
-game/civs.py:BUILD 1
-game/civs.py:ECONOMY 1
-game/civs.py:GROUPS 1
-game/civs.py:HP 1
-game/civs.py:SHARED 1
-game/civs.py:SMITH 1
-game/civs.py:START 1
-game/civs.py:TRAIN_RATE 1
-game/civs.py:WORK 1
-game/civs.py:WORK_RATE 1
 game/combat.py:BLAST 1
 game/combat.py:BUILDING_SIGHT 1
 game/combat.py:FORT_MIN_RANGE 1
