@@ -3,7 +3,7 @@ Empires II)": "Can build and repair Donjons"). They build at the villager rate: 
 import pytest
 from test_serjeant_repair import setup
 
-from game import build, gather, repair
+from game import build, civs, gather, repair
 
 SITE = (12, 14, 5, 7)                                                # block footprint (x0, x1, z0, z1), free ground
 
@@ -30,7 +30,8 @@ def test_selected_serjeants_build_an_own_donjon_site_at_the_villager_rate():
     assert any(c.startswith("aoe moveto s0 ") for c in server.log)  # it walks with the plugin path finding
     assert repair.raisers(g, s) == ["s0"]                            # it stands next to the site
     n = ticks(g, s)
-    assert n == pytest.approx(build.BUILD_TIMES["DONJON"] / gather.NORMAL / g.tick, abs=1)   # one villager: 83 s
+    rate = civs.build_rate(g, "DONJON")                              # Sicilians: fortifications 50 % faster (#2210)
+    assert n == pytest.approx(build.BUILD_TIMES["DONJON"] / gather.NORMAL / g.tick / rate, abs=1)   # one villager: 83 s
     assert not repair.raisers(g, s)                                  # complete: the Serjeant stands
 
 
