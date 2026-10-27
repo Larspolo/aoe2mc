@@ -9,8 +9,9 @@ reset, so that each window reaches the limit (#587).
     python3 tools/usage.py --sample     # Usage: <now> · usage 30.0% · resets <time> · runs 9 · week 56.0% · release 61.2%
     python3 tools/usage.py --fire       # the number of runs that the pacer session starts now (skill `pacer`, #566)
 
-BURN is the default. When the run reports on the status issue have enough `Usage:` lines (at least 5 pairs in the
-last 24 hours), `tools/health.py` measures the burn from them and this tool uses that value (#462).
+BURN and BURN7 (the same for the 7-day window, #1695) are the defaults. When the run reports on the status issue
+have enough `Usage:` lines (at least 5 pairs in the last 24 hours), `tools/health.py` measures the burns from them
+and this tool uses those values (#462).
 
 The CLI reports the usage of the subscription in a `rate_limit_event` of its stream-json output. One tiny Haiku
 call reads it, about 1 s and a few tokens. All runs share one quota, so each run sees the same numbers.
@@ -19,10 +20,12 @@ The pure functions take plain values, so the tests need no network.
 import argparse
 import datetime
 import json
+import math
 import subprocess
 import sys
 
 BURN = 0.03         # share of the 5-hour quota that one run uses per hour (16 runs used about 50 % per hour, 2026-10-25)
+BURN7 = 0.005       # share of the 7-day quota that one run uses per hour (0.0053 measured on 2026-10-27, #1695)
 MID, MID_LEFT = 0.90, 2.0   # aim: this share is used this many hours before the 5-hour window resets (#587)
 END = 0.98          # aim: this share is used when the 5-hour window resets
 LO, HI = 1, 16      # bounds of the number of runs
@@ -48,9 +51,12 @@ def read_usage(timeout=120):
     return parse(r.stdout.splitlines())
 
 
-def target_runs(usage, now, burn=BURN, end=END, lo=LO, hi=HI, mid=MID, mid_left=MID_LEFT):
+def target_runs(usage, now, burn=BURN, end=END, lo=LO, hi=HI, mid=MID, mid_left=MID_LEFT, burn7=None):
     """The number of runs that uses `mid` of the 5-hour window `mid_left` hours before its reset, and `end` at the
-    reset, with a guard for the 7-day window."""
+    reset, with a guard for the 7-day window. burn7 (the share of the 7-day quota of one run-hour, measured): a week
+    used ahead of the time gets at most the runs that its budget (1 - used) carries to the 7-day reset (#1695). This
+    count can be 0, below `lo`: the week has no budget for a run now, and the budget per hour grows while the reset
+    comes nearer. Without burn7 the count of a week ahead by more than 10 points is half."""
     if not usage or "five_hour" not in usage:
         return None
     used, reset, status = usage["five_hour"]
@@ -68,9 +74,27 @@ def target_runs(usage, now, burn=BURN, end=END, lo=LO, hi=HI, mid=MID, mid_left=
         if status7 == "rejected":
             return 0
         elapsed = 1 - max(reset7 - now, 0) / (7 * 86400)
+        if burn7 and used7 > elapsed:
+            fit = max(1 - used7, 0) / max((reset7 - now) / 3600, 0.25) / burn7
+            return min(max(lo, min(hi, n)), math.floor(fit))
         if used7 > elapsed + 0.10:
             n //= 2
     return max(lo, min(hi, n))
+
+
+def week_line(usage, now):
+    """The 7-day projection: the points ahead of the time, and when the quota runs out at the mean rate of the week
+    so far (or that it lasts to the reset), for example `week ahead +38 pt · runs out Wed 10:00`. "" without it."""
+    if "seven_day" not in usage:
+        return ""
+    used7, reset7, _ = usage["seven_day"]
+    gone = 7 * 86400 - max(reset7 - now, 0)
+    line = f"week ahead {(used7 - gone / (7 * 86400)) * 100:+.0f} pt"
+    if used7 <= 0 or gone <= 0:
+        return line
+    out = now + (1 - used7) / (used7 / gone)
+    at = datetime.datetime.fromtimestamp(out, datetime.timezone.utc)
+    return line + (f" · runs out {at:%a %H:%M}" if out < reset7 else " · lasts to the reset")
 
 
 def runs_to_start(target, claims, ready, paused, hi=MAX_FIRE):
@@ -80,6 +104,15 @@ def runs_to_start(target, claims, ready, paused, hi=MAX_FIRE):
     if paused or not target:
         return 0
     return max(0, min(target - claims, max(ready, 1), hi))
+
+
+def measured_burn7():
+    """The share of the 7-day quota of one run-hour that `tools/health.py` measures from the `Usage:` lines, or None."""
+    try:
+        import health
+        return health.weekly_burn(health.status_comments(), datetime.datetime.now(datetime.timezone.utc))
+    except Exception:                                           # no GitHub access: the old guard
+        return None
 
 
 def measured_burn():
@@ -111,12 +144,13 @@ def release_percent():
         return None
 
 
-def describe(usage, now, burn=BURN):
+def describe(usage, now, burn=BURN, burn7=None):
     out = []
     for k, (used, reset, status) in sorted(usage.items()):
         at = datetime.datetime.fromtimestamp(reset, datetime.timezone.utc)
         out.append(f"{k} {used:.0%} (resets {at:%a %H:%M} UTC, {(reset - now) / 3600:.1f} h, {status})")
-    return " · ".join(out) + f" · burn {burn:.3f} · target {target_runs(usage, now, burn)} runs"
+    week = week_line(usage, now) + (f" · burn7 {burn7:.4f}" if burn7 else "")
+    return " · ".join(out + [week] * bool(week)) + f" · burn {burn:.3f} · target {target_runs(usage, now, burn, burn7=burn7)} runs"
 
 
 def main(argv=None):
@@ -135,7 +169,7 @@ def main(argv=None):
         print(sample_line(usage, now, health.active_claims(datetime.datetime.now(datetime.timezone.utc)),
                           release_percent()))
         return
-    burn = a.burn or measured_burn() or BURN
+    burn, burn7 = a.burn or measured_burn() or BURN, measured_burn7() or BURN7
     if a.fire:
         import dashboard
         import health
@@ -143,15 +177,15 @@ def main(argv=None):
         paused = any({dashboard.STATUS, dashboard.PAUSED} <= set(dashboard.labels(i)) for i in open_all)
         ready = len(dashboard.candidates(open_all))
         claims = health.active_claims(datetime.datetime.now(datetime.timezone.utc))
-        target = target_runs(usage, now, burn)
+        target = target_runs(usage, now, burn, burn7=burn7)
         print(runs_to_start(target, claims, ready, paused))
-        print(f"{describe(usage, now, burn)} · claims {claims} · ready {ready} · paused {paused}", file=sys.stderr)
+        print(f"{describe(usage, now, burn, burn7)} · claims {claims} · ready {ready} · paused {paused}", file=sys.stderr)
     elif a.target:
-        print(target_runs(usage, now, burn))
+        print(target_runs(usage, now, burn, burn7=burn7))
     elif a.json:
-        print(json.dumps({"usage": usage, "burn": burn, "target": target_runs(usage, now, burn)}))
+        print(json.dumps({"usage": usage, "burn": burn, "burn7": burn7, "target": target_runs(usage, now, burn, burn7=burn7)}))
     else:
-        print(describe(usage, now, burn))
+        print(describe(usage, now, burn, burn7))
 
 
 if __name__ == "__main__":

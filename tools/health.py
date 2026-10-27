@@ -143,6 +143,24 @@ def burn_ratio(samples, need=5):
     return rise / claim_hours if n >= need else None
 
 
+WEEK_RUNS = re.compile(r"^Usage: (\S+) · .*?· runs (\d+) · week (\d+(?:\.\d+)?)%", re.M)
+
+
+def weekly_burn(comments, now, hours=24, need=5):
+    """Share of the 7-day quota that one run uses per hour (#1695): the sum of the rises of the 7-day usage of
+    consecutive `Usage:` lines of the last `hours`, divided by their claim-hours, as burn_ratio. A drop is the 7-day
+    reset. None with fewer than `need` intervals."""
+    pts = sorted((ts(t), int(k), float(w) / 100) for c in comments for t, k, w in WEEK_RUNS.findall(c.get("body") or ""))
+    pts = [p for p in pts if p[0] >= now - datetime.timedelta(hours=hours)]
+    rise = claim_hours = 0.0
+    n = 0
+    for a, b in zip(pts, pts[1:]):
+        h = (b[0] - a[0]).total_seconds() / 3600
+        if b[2] >= a[2] and h > 0 and a[1] + b[1] > 0:
+            rise, claim_hours, n = rise + b[2] - a[2], claim_hours + h * (a[1] + b[1]) / 2, n + 1
+    return rise / claim_hours if n >= need and rise else None
+
+
 def measured_burn(comments, now, hours=24, need=5):
     """The burn ratio of the samples of the last `hours`, or None when there are fewer than `need` intervals."""
     return burn_ratio([s for s in samples(comments) if s[0] >= now - datetime.timedelta(hours=hours)], need)

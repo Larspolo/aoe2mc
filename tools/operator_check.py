@@ -66,8 +66,9 @@ def run_checks(now):
     checks = []
     try:
         u, t, burn = usage.read_usage(), now.timestamp(), usage.measured_burn() or usage.BURN
-        target = usage.target_runs(u, t, burn) if u else None
-        checks.append(("quota", bool(u), usage.describe(u, t, burn) if u else "no usage from the CLI"))
+        burn7 = usage.measured_burn7() or usage.BURN7                  # the 7-day budget, as --fire (#1695)
+        target = usage.target_runs(u, t, burn, burn7=burn7) if u else None
+        checks.append(("quota", bool(u), usage.describe(u, t, burn, burn7) if u else "no usage from the CLI"))
     except Exception as e:                                      # no CLI or no subscription
         target = None
         checks.append(("quota", False, f"{type(e).__name__}: {e}"))
