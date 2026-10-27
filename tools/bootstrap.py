@@ -34,6 +34,7 @@ paused = "paused"
 
 [pacing]
 max_runs = 16                   # the most runs at one time (tools/usage.py)
+weights = {{ haiku = 0.25 }}     # a lane run in Opus runs (start value)
 
 [commands]                      # change these to the commands of the project
 install = "python3 -m pip install -r requirements-dev.txt"
