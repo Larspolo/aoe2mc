@@ -20,7 +20,7 @@ def test_each_ranged_siege_unit_gets_a_siege_range(name):
 
 def test_the_bombard_cannon_has_its_blast_and_a_ram_does_not_shoot():
     assert combat.range_command("u", "BOMBARD_CANNON", 4).split()[5] == "2.0"   # then the minimum range (#1350)
-    assert combat.range_command("u", "BATTERING_RAM", 4) is None                # range 0: melee
+    assert combat.range_command("u", "BATTERING_RAM", 4).split()[3:] == ["2.0", "59", "0"]   # melee reach (#1399)
     assert len(combat.range_command("u", "ARCHER", 4).split()) == 5           # not a minecart: no siege shot
 
 
