@@ -20,8 +20,11 @@ dependencies = [          # the same as requirements.txt
 [project.scripts]
 aoe2mc = "aoe2mc:main"
 
+[project.gui-scripts]
+aoe2mc-gui = "gui:run"            # the converter window (#1540)
+
 [tool.setuptools]
-py-modules = ["aoe2mc", "buildings", "rmap", "units", "scx"]
+py-modules = ["aoe2mc", "buildings", "rmap", "units", "scx", "gui"]
 packages = ["tools.mcdata"]      # aoe2mc.py reads tools/mcdata/26.3.json next to it
 
 [tool.setuptools.package-data]
