@@ -122,6 +122,7 @@ REPAIR_TEAM = {r["name"]: r["repair_team"] for r in ROWS if "repair_team" in r}
 WORK_RATE = {r["name"]: {b: tuple(v) for b, v in r["work_rate"].items()} for r in ROWS if "work_rate" in r}
 TRAIN_RATE = {r["name"]: [tuples(b) for b in r["train_rate"]] for r in ROWS if "train_rate" in r}
 HP = {r["name"]: r["hp"] for r in ROWS if "hp" in r}
+ARROWS = {r["name"]: tuples(r["arrows"]) for r in ROWS if "arrows" in r}   # factor of the base arrows in each age (#2178)
 # The age-up bonuses (#1926, AoE2 DE wiki): train.research applies AGE_GIFTS and AGE_VILLAGERS at the end of each age,
 # train.seconds divides the time of an age by AGE_RATE, and train.missing needs no buildings for AGE_NO_BUILDINGS (the
 # game program has no other building needs). The Muisca gold discount of the ages is in COSTS (civs.jsonl).
@@ -224,6 +225,13 @@ def age_rate(g, name):
     age, else 1."""
     import build                                                   # build imports gather, gather imports this module
     return AGE_RATE.get(civ(g), 1) if name in build.AGE_TECHS else 1
+
+
+def arrows(g, building, player=None):
+    """The factor of the base arrows (garrison.BASE) of building name of the player of g (or of player) in the present
+    age of g: ARROWS (the Saxon towers and castles: twice from the Castle Age, #2178), else 1."""
+    import build                                                   # build imports gather, gather imports this module
+    return next((f[build.ages(g)] for names, f in ARROWS.get(civ(g, player), ()) if building in names), 1)
 
 
 def build_rate(g, name):

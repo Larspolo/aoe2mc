@@ -626,6 +626,10 @@ def research(g, entry):
             build.upgrade(g, site, combat.wall(site["name"], build.ages(g)))
     build.retower(g, before)                                       # the complete own towers get the new values (#1374),
                                                                    # the buildings those of Masonry and Fletching (#1398, #1408)
+    if entry["name"] in build.AGE_TECHS:                           # the base arrows of the new age (civs.ARROWS, #2178)
+        names = {n for names, _ in civs.ARROWS.get(civs.civ(g), ()) for n in names}
+        for rect in [r for r, o in garrison.holders(g).items() if o["name"] in names]:
+            g.command(garrison.arrows_command(g, rect))
     if entry["name"] == "BALLISTICS" and getattr(g, "paper", False):   # the plugin aims the arrows of the player (#1549)
         g.command(f"aoe ballistics p{g.player} on")
     if entry["name"] in UPGRADES:                                  # the live units of the line get the new name

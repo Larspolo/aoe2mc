@@ -75,7 +75,7 @@ def check_train(row):
 
 
 def check_civs(row):
-    form(row, {"name": str, "missing": list}, {"unique": str, "units": list, "costs": list, "twice": list})
+    form(row, {"name": str, "missing": list}, {"unique": str, "units": list, "costs": list, "twice": list, "arrows": list})
     n, known = row["name"], NAMES["train.jsonl"] | NAMES["units.jsonl"] | NAMES["buildings.jsonl"]
     assert set(row["missing"]) <= known and row["missing"] == sorted(set(row["missing"])), n
     assert row.get("unique", "MILITIA") in NAMES["units.jsonl"], n
@@ -83,6 +83,8 @@ def check_civs(row):
     for group, value, ages in row.get("units", ()):
         assert group in civs.GROUPS and value in (*combat.Stats._fields, "speed"), (n, group, value)
         assert len(ages) == 4 and all(isinstance(a, NUMBER) for a in ages), (n, group)
+    for what, ages in row.get("arrows", ()):                 # the factor of the base arrows of buildings (#2178)
+        assert set(what) <= NAMES["buildings.jsonl"] and len(ages) == 4 and all(isinstance(a, int) for a in ages), n
     for what, res, ages in row.get("costs", ()):
         names = NAMES["train.jsonl"] | set(build.COSTS)
         if isinstance(what, list):
