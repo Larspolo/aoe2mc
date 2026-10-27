@@ -43,3 +43,4 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - The full test suite has `tools/` and `game/` on `sys.path`: a new `game/X.py` with the name of a `tools/X.py` (`health`) imports the wrong module there, but its own test file passes alone (#659). Check `ls tools/X.py` first.
 - `[f"...{o['id']}"] * ("id" in o)` evaluates the f-string also when the factor is 0 (KeyError): use `o.get('id')` in it (#681).
 - `git stash` and `git stash pop` (or a `sed` edit) can give a file of the same size in the same second as its `.pyc`: Python then runs the old `.pyc`, and tests fail with the old values. Delete `game/__pycache__` (and the others) after a stash before the tests (#1551).
+- The rule "only the own civ has its unique unit" is in `train.own_civ_only()` (#1760): `train.py` adds it to the bare `civs.MISSING`. A test that imports `from game import civs` reads another module object without it: read `train.civs.MISSING`, `train.civs.missing(...)`.

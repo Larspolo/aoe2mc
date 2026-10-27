@@ -62,4 +62,4 @@ def test_the_own_civilization_and_other_items_stay_as_before():
     _, g = game("VIETNAMESE", "BRITONS", other_team=2)
     assert not civs.missing(g, "IMPERIAL_SKIRMISHER_UPGRADE")
     _, g = game("BRITONS", "GURJARAS")                                 # not a team bonus unit
-    assert civs.missing(g, "CHAKRAM_THROWER")
+    assert train.civs.missing(g, "CHAKRAM_THROWER")             # train.py adds the rule to the bare civs (#1760)
