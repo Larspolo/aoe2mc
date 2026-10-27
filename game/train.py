@@ -93,6 +93,7 @@ TRAINS = {b: tuple(r["name"] for r in ROWS if r["building"] == b)    # the units
           for b in dict.fromkeys(r["building"] for r in ROWS if r["building"])}   # building, in file order
 TRAINS["FOLWARK"] = TRAINS["MILL"]                                 # the mill of the Poles (#1874)
 TRAINS["KREPOST"] = ()                                             # trains() adds the Konnik (#1872)
+TRAINS["FORTIFIED_CHURCH"] = TRAINS["MONASTERY"]                  # the monastery of the Armenians, Georgians (#1930)
 # The unique unit of each civilization (AoE2 DE, "unique" in data/civs.jsonl, #1914), trained at its castle. A unit
 # without COSTS is not in the menu yet: it has no AoE2 combat values in combat.STATS.
 UNIQUE = civs.UNIQUE
@@ -165,20 +166,31 @@ def arrowslits(name, s):
     values (build.line)."""
     return s._replace(attack=s.attack + ARROWSLITS[name]) if name in ARROWSLITS else s
 
-TARGETS = {r["name"]: tuple(r["units"]) for r in ROWS if "units" in r}   # the units of a technology: data/train.jsonl
+
+
+def forms(first):
+    """The unit first and the units that its upgrades make, in order (UPGRADES of data/train.jsonl): the archer line
+    is forms("ARCHER"). No list of names in the code (tools/data_lint.py, #2061)."""
+    pairs = [p for u in UPGRADES.values() for p in ([u] if isinstance(u[0], str) else u)]
+    out = [first]
+    while (new := next((b for a, b in pairs if a == out[-1]), None)) and new not in out:
+        out.append(new)
+    return tuple(out)
+
+
 TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit name: UPGRADES
          "ARCHITECTURE": masonry,                                  # the same effect as Masonry (#1504)
          "ARROWSLITS": arrowslits,                                 # the towers of the player: build.values
          "ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bonus.get("standard", 0) + 2})
          if "infantry" in s.classes else s,                        # combat.STANDARD: not the walls (#1419)
-         "ATLATL": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if name in TARGETS["ATLATL"] else s,  # the Aztecs (#2041)
+         "ATLATL": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if name in forms("SKIRMISHER") else s,  # the Aztecs (#2041)
          "ATONEMENT": lambda name, s: s,                           # monks convert enemy monks: monk.convertible
          "BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
          "BALLISTICS": lambda name, s: s,                          # the aim of the arrows: aoe ballistics (#1549)
          "BANKING": lambda name, s: s,                             # the tribute fee: diplomacy.FEES
          "BLAST_FURNACE": lambda name, s: s._replace(attack=s.attack + 2) if melee(s) or name in HULKS else s,
          "BLOCK_PRINTING": lambda name, s: s,                      # the conversion range: monk.near
-         "BOGSVEIGAR": lambda name, s: s._replace(attack=s.attack + 1) if name in TARGETS["BOGSVEIGAR"] else s,  # (#2021)
+         "BOGSVEIGAR": lambda name, s: s._replace(attack=s.attack + 1) if name in forms("ARCHER") + forms("LONGSHIP") else s,  # (#2021)
          "BOMBARD_TOWER_TECH": lambda name, s: s,                  # the bombard tower in the build menu: build.NEEDS
          "BOW_SAW": lambda name, s: s,                             # an economy technology: gather.WORK_TECHS
          "BRACER": fletching,
@@ -213,6 +225,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_BOYAR_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "ELITE_CAMEL_ARCHER_UPGRADE": lambda name, s: s,          # a new unit name: UPGRADES
          "ELITE_CANNON_GALLEON_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
+         "ELITE_CARAVEL_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES (#1934)
          "ELITE_CENTURION_UPGRADE": lambda name, s: s,             # a new unit name: UPGRADES
          "ELITE_CHAKRAM_THROWER_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_COMPOSITE_BOWMAN_UPGRADE": lambda name, s: s,     # a new unit name: UPGRADES
@@ -234,6 +247,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_KIPCHAK_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "ELITE_KONNIK_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
          "ELITE_LEITIS_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
+         "ELITE_LONGSHIP_UPGRADE": lambda name, s: s,              # a new unit name: UPGRADES (#1934)
          "ELITE_MONASPA_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "ELITE_OBUCH_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "ELITE_ORGAN_GUN_UPGRADE": lambda name, s: s,             # a new unit name: UPGRADES
@@ -246,6 +260,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_STEPPE_LANCER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
          "ELITE_SKIRMISHER_UPGRADE": lambda name, s: s,
          "ELITE_TARKAN_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
+         "ELITE_TURTLE_SHIP_UPGRADE": lambda name, s: s,           # a new unit name: UPGRADES (#1934)
          "ELITE_URUMI_SWORDSMAN_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
          "ELITE_VARANGIAN_GUARD_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_WAR_WAGON_UPGRADE": lambda name, s: s,            # a new unit name: UPGRADES
@@ -256,6 +271,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) or name in HULKS else s,
          "FORTIFIED_WALL": lambda name, s: s,                      # the walls of the player: WALL_UPGRADES
          "GAMBESONS": lambda name, s: s._replace(pierce=s.pierce + 1) if name in MILITIA_LINE else s,
+         "GARLAND_WARS": lambda name, s: s._replace(attack=s.attack + 4) if "infantry" in s.classes else s,  # the Aztecs (#2042)
          "GILLNETS": lambda name, s: s,                            # the fishing ships: gather.SHIP_TECHS
          "GOLD_MINING": lambda name, s: s,                         # an economy technology: gather.WORK_TECHS
          "GOLD_SHAFT_MINING": lambda name, s: s,
@@ -661,7 +677,8 @@ def owned(g):
 def missing(g, name):
     """The text of the buildings that technology name still needs (REQUIRES), or None."""
     n, names, *alone = REQUIRES.get(name, (0, ()))
-    own = {"MILL" if b == "FOLWARK" else b for b in owned(g)}      # the Folwark is the mill of the Poles (#1874)
+    import combat                                                  # combat imports gather, gather imports this module
+    own = {combat.STANDS_FOR.get(b, b) for b in owned(g)}          # the Folwark is a mill, the church a monastery
     has, alone = sorted(set(names) & own), alone[0] if alone else ()
     if len(has) < n and not set(alone) & own:
         return f"needs {''.join(f'a {build.pretty(b).lower()} or ' for b in alone)}{n} of {', '.join(build.pretty(b).lower() for b in names)} ({len(has)}/{n})"
