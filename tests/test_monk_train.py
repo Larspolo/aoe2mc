@@ -10,7 +10,8 @@ from game import build, train
 
 MONK = " 0:evoker_spawn_egg:Monk:100 gold · 51 s · "
 TECHS = " 1:book:Fervor:140 gold · 50 s · research 2:book:Sanctity:175 gold · 60 s · research 3:book:Redemption:475 gold · " \
-        "50 s · research"                                              # (#1261, #1264)
+        "50 s · research" \
+        " 5:book:Atonement:325 gold · 40 s · research"                # (#1261, #1264, #1581)
 RALLY = " 8:white_banner:Rally point:Click, then right click the ground"
 MONASTERY = (12, 2)                                                    # a block of the monastery of add()
 

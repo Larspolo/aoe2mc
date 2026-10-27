@@ -160,6 +160,9 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
                           "PORTUGUESE", "PURU", "ROMANS", "SLAVS", "SPARTANS", "TATARS", "THRACIANS", "VARANGIANS",
                           "WEI", "WU"),   # the wiki chart (#1504)
            "ARSON": ("GOTHS", "MUISCA", "ROMANS"),                                          # (#1419)
+           "ATONEMENT": ("BRITONS", "BULGARIANS", "CELTS", "DANES", "FRANKS", "GEORGIANS", "GOTHS",
+                         "HINDUSTANIS", "INCAS", "KHMER", "KOREANS", "MAGYARS", "PERSIANS", "POLES", "SICILIANS",
+                         "TUPI", "WEI"),                                                # the wiki chart (#1581)
            "BLOCK_PRINTING": ("BERBERS", "BULGARIANS", "CELTS", "CUMANS", "ETHIOPIANS", "GOTHS", "GURJARAS", "HUNS",
                               "KHITANS", "KHMER", "MAPUCHE", "MONGOLS", "SHU", "SICILIANS", "TUPI", "TURKS",
                               "VARANGIANS", "WU"),                                          # (#1457)
