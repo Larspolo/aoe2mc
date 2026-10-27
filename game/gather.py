@@ -1071,7 +1071,9 @@ class Gather:
             self.hunt(u)
             self.command(glow(u))
             return
-        if kind == "unit" and u in self.selected and u in self.villagers:   # a click on a selected villager (#621)
+        import combat                                                  # combat imports this module
+        if kind == "unit" and u in self.selected and (u in self.villagers   # a click on a selected villager (#621)
+                                                      or self.soldiers.get(u) in combat.REPAIRS):   # or Serjeant (#2129)
             build.open_menu(self, name)
             return
         if kind == "unit" and u in self.selected and siege_tower.out(self, u):   # its units come out (#1362)
@@ -1108,6 +1110,8 @@ class Gather:
                 fleet.build_site(self, self.selected, site)            # the selected fishing ships build it (#1438)
             elif site and self.selected & self.villagers.keys() and not self.row_busy(site):
                 self.build(site)                                       # the selected villagers build it at once, as in AoE2 (#1654)
+            if site:
+                repair.build_order(self, site, self.selected)          # the selected Serjeants build a Donjon (#2129)
             return
         if monk.order(self, name, self.map.pick_ground(eye, d)):      # a monk to a relic or to a monastery (#1246)
             return
@@ -1137,6 +1141,7 @@ class Gather:
             self.mark(name, self.map.spot(tile))
         elif self.selected and (site := build.pick(self, eye, d)):
             self.build(site)
+            repair.build_order(self, site, self.selected)              # Serjeants build a Donjon (#2129)
             x0, x1, z0, z1 = site["footprint"]
             self.mark(name, {(x0, z0), (x1 - 1, z1 - 1)})
         elif self.selected and (cell := self.map.pick_ground(eye, d)) and self.map.free(*cell):
@@ -1391,8 +1396,11 @@ class Gather:
         bossbar.tick(self)
         for site in self.sites:
             builders = [v for v in [*self.villagers.values(), *self.ships.values()] if v.state == "build" and v.site is site]
+            men = repair.raisers(self, site)                           # Serjeants at their Donjon site (#2129)
             # AoE2: n builders need 3 / (n + 2) of the time of one
-            if builders and build.rise(self, site, math.inf if self.aegis else self.tick * NORMAL * (len(builders) + 2) / 3):
+            n = len(builders) + len(men)
+            if n and build.rise(self, site, math.inf if self.aegis else self.tick * NORMAL * (n + 2) / 3):
+                repair.drop(self, men)                                 # complete: the Serjeants stand
                 if nxt := build.next_tile(self, site):                 # a wall line: on to its next tile (#1322)
                     self.build(nxt, {v.uuid for v in builders})
                     continue

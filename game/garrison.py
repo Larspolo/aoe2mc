@@ -27,12 +27,14 @@ The live replay (game/replay.py, #809) uses SIZES, cell(), enter() and leave().
 import json
 import math
 
+import civs
 import table
 from aoe2mc import GARRISONED
 
 ROWS = table.load("buildings.jsonl")                            # the keys "garrison" and "arrows" (#2034)
 
 SIZES = {r["name"]: r["garrison"] for r in ROWS if "garrison" in r}   # units inside a complete building, as in AoE2
+BY = {r["name"]: tuple(r["garrison_by"]) for r in ROWS if "garrison_by" in r}   # only these units go in (Khmer house)
 HEAL = {"CASTLE": 0.2}                                           # hit points per AoE2 second inside, else 0.1
 HERBAL = 6                  # Herbal Medicine: units inside heal 6 times as fast (AoE2 DE wiki, #1585)
 HEAL_EVERY = 5.0            # AoE2 seconds between two heal passes (fewer commands)
@@ -47,12 +49,18 @@ OUTSIDE = "{Invulnerable:0b}"                                     # NoAI stays: 
 CREW = "{Invulnerable:1b}"                                        # the crew of a ship in a dock keeps its AI (#1949)
 
 
+def size(g, name):
+    """The units inside a complete building name of the player of g: the bonus of its civilization (civs.GARRISON: a
+    Khmer house 5, Teuton towers twice, #2117), else SIZES, else 0."""
+    return civs.GARRISON.get(civs.civ(g), {}).get(name, SIZES.get(name, 0))
+
+
 def holders(g):
     """{block footprint (x0, x1, z0, z1): building entry of aoe2mc.json} of the own buildings that take a garrison:
     the start ones and the complete construction sites."""
-    out = {(x0, x1, z0, z1): o for o in g.data["objects"] if o["kind"] == "building" and o["name"] in SIZES
+    out = {(x0, x1, z0, z1): o for o in g.data["objects"] if o["kind"] == "building" and size(g, o["name"])
            and o["player"] == g.player and "footprint" in o for x0, z0, x1, z1 in [o["footprint"]]}
-    return out | {tuple(s["footprint"]): s for s in g.sites if s["name"] in SIZES and s.get("done")}
+    return out | {tuple(s["footprint"]): s for s in g.sites if size(g, s["name"]) and s.get("done")}
 
 
 def start(g):
@@ -69,7 +77,7 @@ def arrows(building, names):
     """The arrows of one shot of the building with the units `names` inside: its BASE, and 1 more for each villager or
     foot archer (an archer that is not cavalry, a camel or an elephant), as in AoE2. A bombard tower shoots one cannon
     ball (#1375). A dock: 1 for each fishing ship, at most SIZES (AoE2 DE: up to 5 arrows, #1949). A fortified church:
-    1 for each villager, no soldier (AoE2 DE: villagers and relics, #1948)."""
+    1 for each villager, no soldier (AoE2 DE: villagers and relics, #1948). A building with no attack: none."""
     import combat                                                  # combat imports gather
     if building == "BOMBARD_TOWER":
         return 1
@@ -77,6 +85,8 @@ def arrows(building, names):
         return min(SIZES["DOCK"], sum(n.startswith(FISHER) for n in names))
     if building == "FORTIFIED_CHURCH":
         return sum(n.startswith("VILLAGER") for n in names)
+    if building in combat.BUILDINGS and not combat.BUILDINGS[building].attack:   # a Khmer house does not shoot (#2117)
+        return 0
     riders = {combat.CAV, combat.CAM, combat.ELE}
     return BASE.get(building, 1) + sum(n.startswith("VILLAGER") or combat.ARC in (c := set(combat.stats(n).classes)) and not c & riders
                    for n in names)
@@ -113,7 +123,11 @@ def order(g, player, cell):
         return None
     import ai, train                                               # ai and train import gather, gather imports this module
     x, z = to
-    for u in sorted(g.selected):
+    by = BY.get(homes[rect]["name"])
+    units = [u for u in sorted(g.selected) if not by or ("VILLAGER" if u in g.villagers else g.soldiers.get(u, "")).startswith(by)]
+    if not units:                                                  # a soldier on a Khmer house: no garrison order
+        return None
+    for u in units:
         if (v := g.villagers.get(u)) is not None:                  # the villager stops its work
             v.state, v.path, v.goal, v.site = "garrison", [], None, None
         name = "VILLAGER" if u in g.villagers else g.soldiers.get(u, "")
@@ -176,7 +190,7 @@ def go_in(g, u, rect, o):
     """Unit u stands inside the building rect (entry o of holders()), on its next free cell (the center without
     "inside" cells)."""
     units, boat = g.garrisons.setdefault(rect, []), vars(g).get("ships", {}).get(u)
-    if len(units) >= SIZES[o["name"]]:                             # full: it stays at the door, as in AoE2
+    if len(units) >= size(g, o["name"]):                           # full: it stays at the door, as in AoE2
         if boat is None:
             g.command(f"aoe stop {u}")
         if (v := g.villagers.get(u) or boat) is not None:
