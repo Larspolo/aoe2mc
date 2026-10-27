@@ -191,10 +191,19 @@ class Game:
         """Put Minecraft player name on the team of its AoE2 player in a game of more people (decision #1308, option
         A): the join order. The first one gets player 1, the second player 2; a later one gets no side. A player who
         joins again keeps its side. A later menu (option C) changes this table only."""
-        n = self.sides.get(name) or len(self.sides) + 1
-        if self.people > 1 and n <= self.people:
+        n = self.sides.get(name) or next((k for k in range(1, self.people + 1) if k not in self.sides.values()), 0)
+        if self.people > 1 and n:
             self.sides[name] = n
             self.command(f"team join p{n} {name}")
+
+    def choose(self, name, n):
+        """The menu "Choose your player" (lobby.py, #1563): Minecraft player name plays AoE2 player n, when no other
+        Minecraft player has it. Returns False for a taken side."""
+        if any(k == n for p, k in self.sides.items() if p != name):
+            return False
+        self.sides[name] = n
+        self.command(f"team join p{n} {name}")
+        return True
 
     def _op_loop(self):
         try:

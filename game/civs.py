@@ -313,6 +313,12 @@ MISSING |= dict.fromkeys(("CHAKRAM_THROWER", "ELITE_CHAKRAM_THROWER", "ELITE_CHA
                          tuple(sorted(set().union(*MISSING.values()) - {"GURJARAS"})))
 MISSING |= dict.fromkeys(("SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER_UPGRADE"),
                          tuple(sorted(set().union(*MISSING.values()) - {"GURJARAS"})))   # (AoE2 DE wiki, #1612)
+SHARED = {"CONDOTTIERO": "ITALIANS",                              # the shared unique units of the team bonuses: an ally
+          "ELITE_GENITOUR": "BERBERS",                             # of the civilization has them too (AoE2 DE wiki,
+          "ELITE_GENITOUR_UPGRADE": "BERBERS",                     # "Team bonus", #1619)
+          "GENITOUR": "BERBERS",
+          "IMPERIAL_SKIRMISHER_UPGRADE": "VIETNAMESE"}
+NOT_SHARED = {"IMPERIAL_SKIRMISHER_UPGRADE": ("TURKS",)}           # no Elite Skirmisher: not with a Vietnamese ally
 
 
 def mounted(s):
@@ -371,6 +377,18 @@ def speed(g, name):
     """The factor of the walk speed of unit name for the civilization of the player of g (UNITS), else 1."""
     import combat                                                  # combat imports gather, gather imports this module
     return math.prod(c for v, c in changes(g, name, combat.stats(name)) if v == "speed")
+
+
+def missing(g, name):
+    """True when the civilization of the player of g does not have unit or technology name (MISSING), also not as the
+    shared unit of an allied player (SHARED, gather.allied)."""
+    import gather                                                  # gather imports this module
+    c = civ(g)
+    if c not in MISSING.get(name, ()):
+        return False
+    players = g.data.get("players", {})
+    return name not in SHARED or c in NOT_SHARED.get(name, ()) or not any(
+        civ(g, p) == SHARED[name] and gather.allied(players, g.player, int(p)) for p in players if p.isdigit())
 
 
 def civ(g, player=None):

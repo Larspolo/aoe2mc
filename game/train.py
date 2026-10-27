@@ -1371,9 +1371,9 @@ def ship(name, s):
 def unlocked(g, name):
     """True when the player has the age of technology name (TECH_AGE). As in AoE2, the menu shows a technology only
     from its age, but a building or unit of a later age as a gray item (build.locked), and never one that the
-    civilization of the player does not have (civs.MISSING)."""
+    civilization of the player does not have (civs.missing: also not as a team bonus of an ally, #1619)."""
     return TECH_AGE.get(name, 0) <= build.ages(g) and AFTER.get(name, "") in {""} | set(getattr(g, "techs", ())) \
-        and not (hasattr(g, "data") and civs.civ(g) in civs.MISSING.get(name, ())) \
+        and not (hasattr(g, "data") and civs.missing(g, name)) \
         and (name not in UPGRADES or bool(lines(name, g)))         # not of this civilization (#1373), no new unit (#1483)
 
 
@@ -1390,7 +1390,7 @@ def lines(t, g=None):
     only the new units that the civilization of the player has (civs.MISSING): Heavy Warships gives no fast fire ship
     to the Vikings (#1483)."""
     out = UPGRADES[t] if isinstance(UPGRADES[t][0], tuple) else (UPGRADES[t],)
-    return tuple(p for p in out if g is None or not hasattr(g, "data") or civs.civ(g) not in civs.MISSING.get(p[1], ()))
+    return tuple(p for p in out if g is None or not hasattr(g, "data") or not civs.missing(g, p[1]))
 
 
 def trains(g, building):

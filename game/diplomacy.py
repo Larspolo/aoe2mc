@@ -21,6 +21,7 @@ from aoe2mc import player_color  # noqa: E402
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import flare  # noqa: E402
+import lobby  # noqa: E402
 import market  # noqa: E402
 import menu  # noqa: E402
 
@@ -49,8 +50,9 @@ def in_hand(g, player):
 
 
 def open_menu(g, player):
-    """The Game menu: one item for each button."""
-    menu.show(g, player, "Game menu", [(s, m, n, lore) for s, (m, n, lore) in BUTTONS.items()],
+    """The Game menu: one item for each button; "Choose your player" in a game of more people (lobby.py, #1563)."""
+    buttons = BUTTONS | ({lobby.SLOT: lobby.BUTTON} if lobby.shown(g) else {})
+    menu.show(g, player, "Game menu", [(s, m, n, lore) for s, (m, n, lore) in buttons.items()],
               lambda p, slot, shift: button(g, p, slot))
 
 
@@ -61,6 +63,8 @@ def button(g, player, slot):
     if slot == 1:
         menu.close(g, player)
         return flare.from_look(g, player)
+    if slot == lobby.SLOT and lobby.shown(g):
+        return lobby.show(g, player)
 
 
 def others(g):
