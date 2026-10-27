@@ -1,9 +1,10 @@
 """The civilization bonus tables of game/civs.py against the full list of the AoE2 DE wiki bonuses (#1896, epic #1088).
 
-tests/data/civ_bonuses.json is a copy of the "Civilization bonuses" of each civilization page of the AoE2 wiki (not the
+tests/data/civ_bonuses.jsonl is a copy of the "Civilization bonuses" of each civilization page of the AoE2 wiki (not the
 team bonuses and the unique technologies). Each bonus has one state: "in" names the table of game/civs.py that holds
 it (or the game/ file that has it); "gap" names the roadmap key of a bonus whose part the game program has, but not the
-bonus yet (a ticket can add it); "later" names the roadmap key of the part that the game program does not have yet."""
+bonus yet (a ticket can add it); "later" names the roadmap key of the part that the game program does not have yet.
+One line per bonus, with the name "CIV: bonus", so that tools/merge_jsonl.py merges two tickets by line (#2100)."""
 import json
 import os
 import re
@@ -12,8 +13,10 @@ import buildings
 from game import civs
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-with open(os.path.join(ROOT, "tests", "data", "civ_bonuses.json")) as f:
-    BONUSES = json.load(f)
+BONUSES = {}                                                           # civ -> [{"bonus": ..., state: ...}], in file order
+with open(os.path.join(ROOT, "tests", "data", "civ_bonuses.jsonl")) as f:
+    for r in map(json.loads, f):
+        BONUSES.setdefault(r.pop("civ"), []).append(r)
 TABLES = ("COSTS", "REPAIR", "REPAIR_COST", "START", "TRAIN_RATE", "TWICE", "UNITS", "WORK")
 KEYS = set(re.findall(r"`(play:[a-z-]+)`", open(os.path.join(ROOT, "docs", "ROADMAP.md")).read()))
 
@@ -26,8 +29,8 @@ def test_each_civilization_is_in_the_list():
 def test_each_bonus_has_one_known_state():
     for civ, rows in BONUSES.items():
         for r in rows:
-            state = set(r) - {"bonus"}
-            assert len(state) == 1 and r["bonus"], (civ, r)
+            state = set(r) - {"bonus", "name"}
+            assert len(state) == 1 and r["bonus"] and r["name"] == f"{civ}: {r['bonus']}", (civ, r)
             if "in" in r:
                 assert r["in"] in TABLES or os.path.isfile(os.path.join(ROOT, r["in"])), (civ, r)
             else:

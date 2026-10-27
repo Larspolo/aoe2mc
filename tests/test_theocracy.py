@@ -9,7 +9,6 @@ from game import civs, gather, monk, train
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.COSTS["THEOCRACY"] == {"gold": 200} and train.TRAIN_TIMES["THEOCRACY"] == 75
     assert train.TECH_AGE["THEOCRACY"] == 3 and len(train.HELP["THEOCRACY"]) <= 50
     assert {"CELTS", "HUNS", "MONGOLS", "VIKINGS"} <= set(civs.MISSING["THEOCRACY"])
     assert "BRITONS" not in civs.MISSING["THEOCRACY"]

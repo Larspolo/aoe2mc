@@ -125,7 +125,7 @@
 {"name": "ELITE_WAR_WAGON", "hp": 200, "attack": 9, "melee": 0, "pierce": 4, "range": 5, "reload": 2.5, "bonus": {"building": 2}, "classes": ["archer", "cavalry", "unique"], "sight": 8}
 {"name": "ELITE_WOAD_RAIDER", "hp": 85, "attack": 15, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"building": 3}, "classes": ["infantry", "unique"], "sight": 7}
 {"name": "BATTLE_ELEPHANT", "hp": 250, "attack": 12, "melee": 1, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 4}, "classes": ["elephant"], "sight": 7}
-{"name": "CONDOTTIERO", "hp": 80, "attack": 10, "melee": 1, "pierce": 0, "range": 0, "reload": 1.9, "bonus": {"gunpowder": 10, "building": 2}, "classes": ["infantry", "unique"], "sight": 8}
+{"name": "CONDOTTIERO", "hp": 80, "attack": 10, "melee": 1, "pierce": 0, "range": 0, "reload": 1.9, "bonus": {"gunpowder": 10, "building": 2}, "classes": ["infantry", "unique", "condottiero"], "sight": 8, "note": "the class: the Heavy Hei Guang Cavalry bonus (#1916)"}
 {"name": "ELEPHANT_ARCHER", "hp": 220, "attack": 6, "melee": 0, "pierce": 2, "range": 4, "reload": 2.0, "bonus": {}, "classes": ["archer", "cavalry", "elephant"], "sight": 7}
 {"name": "ELITE_BATTLE_ELEPHANT", "hp": 300, "attack": 14, "melee": 1, "pierce": 3, "range": 0, "reload": 2.0, "bonus": {"building": 7}, "classes": ["elephant"], "sight": 8}
 {"name": "ELITE_ELEPHANT_ARCHER", "hp": 270, "attack": 7, "melee": 0, "pierce": 2, "range": 4, "reload": 2.0, "bonus": {}, "classes": ["archer", "cavalry", "elephant"], "sight": 7}
@@ -168,7 +168,7 @@
 {"name": "PETARD", "hp": 50, "attack": 25, "melee": 0, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 500, "siege": 60}, "classes": []}
 {"name": "ALFRED_THE_ALPACA", "hp": 140, "attack": 120, "melee": 20, "pierce": 20, "range": 0, "reload": 2.0, "bonus": {"building": 100}, "classes": ["cavalry"], "sight": 6}
 {"name": "COBRA_CAR", "hp": 500, "attack": 10, "melee": 10, "pierce": 10, "range": 10, "reload": 0.25, "bonus": {"building": 10}, "classes": ["siege"]}
-{"name": "FURIOUS_THE_MONKEY_BOY", "hp": 9, "attack": 99, "melee": 99, "pierce": 99, "range": 0, "reload": 0.9, "bonus": {"building": 999}, "classes": [], "sight": 12}
+{"name": "FURIOUS_THE_MONKEY_BOY", "hp": 9, "attack": 99, "melee": 99, "pierce": 99, "range": 0, "reload": 0.9, "bonus": {"building": 999}, "classes": [], "sight": 12, "fighter": true}
 {"name": "PHOTONMAN", "hp": 80, "attack": 30, "melee": 2, "pierce": 2, "range": 10, "reload": 2.0, "bonus": {"building": 5}, "classes": ["archer", "unique"]}
 {"name": "SABOTEUR", "hp": 45, "attack": 100, "melee": 1, "pierce": 3, "range": 0, "reload": 2.0, "bonus": {"building": 500}, "classes": ["siege"], "sight": 6}
 {"name": "SHARKATZOR", "hp": 600, "attack": 33, "melee": 1, "pierce": 0, "range": 10, "reload": 2.1, "bonus": {"siege": 5}, "classes": ["siege"], "sight": 11}
