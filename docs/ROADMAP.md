@@ -65,6 +65,8 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:unit-commands` The other AoE2 orders: patrol between points, guard a unit or building, follow a unit, attack-move (attack each enemy on the way)
 - [ ] `play:speed` Pause and game speed of the game program, as the AoE2 pause key and the speed setting: the units, queues and gathering stop and go on
 - [ ] `play:postgame` The statistics at the end of a game of the game program, as the AoE2 achievements screen: military, economy, technology, the time of each age
+- [ ] `play:taunts` AoE2 taunts: a player types a taunt number (1-105) in the chat, and all players hear its sound and see its text
+- [ ] `play:wildlife` Wild predators as in AoE2: wolves, tigers and other predators of the map attack villagers and units near them
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
@@ -83,6 +85,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `replay:team-games` Team games of up to 8 players: the score panel, the colors, the views and the summary work with all players
 - [ ] `replay:minimap` A live minimap of the replay: a Minecraft map item that shows the units and buildings of all players in their colors and changes with the game
 - [ ] `replay:fog` The view of one player in the replay: only what the units and buildings of that player see, as the AoE2 "line of sight" option of the replay
+- [ ] `replay:taunts` The taunts of the record (a chat line with a number) play their sound and show their text in the live replay
 
 ## 4. The agent system (`.claude/skills/`, `tools/`, `.github/workflows/`)
 

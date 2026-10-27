@@ -502,7 +502,8 @@ def classify(n, hero=False):
             n, "SCOUT_CAVALRY", "KNIGHT", "CAVALIER", "PALADIN", "HUSSAR", "HUSZAR", "CAVALRY", "BOYAR",
             "CATAPHRACT", "TARKAN", "KESHIK", "LEITIS", "KONNIK", "LANCER", "COUSTILLIER", "MONASPA", "SAVAR",
             "SHRIVAMSHA", "HIPPEUS", "MOUNTED", "RIDER", "HUNNIC_HORSE")):
-        return mounted("horse", soldier("zombie", t, sword(t)), t, {"Variant": Int(0 if t != 4 else 2)})
+        weapon = "trident" if "STEPPE_LANCER" in n else sword(t)        # the lance of the steppe lancer (#1557)
+        return mounted("horse", soldier("zombie", t, weapon), t, {"Variant": Int(0 if t != 4 else 2)})
 
     # Foot soldiers
     if hero and has(n, *RANGED_HEROES):
