@@ -86,13 +86,13 @@ def hp(g, rect):
 
 def cost(g, name, player=None):
     """{resource: amount} for the full hit points of building name of the player of g, or of an ally (#1361)."""
-    import build                                                   # build imports gather
+    import build, civs                                             # build imports gather
     if name not in build.COSTS:
         return {}
-    price = build.price(g, name, player)
+    price, k = build.price(g, name, player), civs.repair_cost(g)    # the Georgian team bonus (#1730)
     if name == "TOWN_CENTER":                                      # AoE2 wiki: 550 wood (double the wood), no stone
-        return {"wood": price.get("wood", 0) * 2}
-    return {r: v * SHARE for r, v in price.items()}
+        return {"wood": price.get("wood", 0) * 2 * k}
+    return {r: v * SHARE * k for r, v in price.items()}
 
 
 def crew(u):
@@ -160,6 +160,12 @@ def order(g, player, cell):
     return rect
 
 
+def rate(g, vs):
+    """Hit points per AoE2 second of the repairers vs of a building, with the bonus of the civilization (#1730)."""
+    import civs                                                    # gather puts game/ on the path
+    return (RATE + MORE * (len(vs) - 1)) * civs.repair_rate(g)
+
+
 def tick(g, dt):
     """dt AoE2 seconds of repair: the villagers in the state "repair" give their building its hit points back and the
     stock pays for them."""
@@ -184,7 +190,7 @@ def tick(g, dt):
         if not now or now >= top:                                  # fallen or full: the work ends
             stop(g, rect, vs)
             continue
-        gain = top - now if g.aegis else min(top - now, (RATE + MORE * (len(vs) - 1)) * dt)
+        gain = top - now if g.aegis else min(top - now, rate(g, vs) * dt)
         if not charge(g, rect, vs, cost(g, name, player), gain / top, name):
             continue
         g.repair_hp = vars(g).get("repair_hp", {})                 # the fractions of a hit point
@@ -218,15 +224,16 @@ def charge(g, key, vs, full, share, name):
 def unit_tick(g, u, vs, dt):
     """dt AoE2 seconds of repair of siege unit or ship u by the villagers vs: its crew gets Health back, the stock pays
     half the training cost for the full hit points. It stops when the unit is full, dead or moves."""
-    import train                                                   # train imports gather
+    import civs, train                                             # train imports gather
     name, h, pos = g.soldiers.get(u), unit_hp(g, u), g.pos(u)
     start = vars(g).get("repair_at", {}).get(u)
     if not name or not h or not 0 < h[0] < h[1] or not pos or not start or math.dist(pos, start) > STILL:
         stop(g, u, vs)                                             # full, dead, or it moves (AoE2)
         return
-    gain = h[1] - h[0] if g.aegis else min(h[1] - h[0], (RATE + MORE * (len(vs) - 1)) * SIEGE * dt)
+    gain = h[1] - h[0] if g.aegis else min(h[1] - h[0], rate(g, vs) * SIEGE * dt)
     new = min(h[1], round(h[0] + gain, 2))                         # Health in steps of 0.01: pay for those
-    full = {r: v * SHARE for r, v in train.price(g, name).items()} if name in train.COSTS else {}
+    k = civs.repair_cost(g)                                        # the Georgian team bonus (#1730)
+    full = {r: v * SHARE * k for r, v in train.price(g, name).items()} if name in train.COSTS else {}
     if not charge(g, u, vs, full, (new - h[0]) / h[1], name):
         return
     g.command(crew(u) + f"data modify entity @s Health set value {new}f")

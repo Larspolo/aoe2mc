@@ -4,7 +4,9 @@ the AoE2 DE civilizations (the AoE2 wiki, "Civilization bonuses" of each civiliz
 time of one unit of resource by the factor of the player's civilization. The keys are the gather kinds of Gather:
 "wood", "food" (forage bushes), "farm", "gold", "stone", "hunt" (hunted animals) and "sheep" (herdable animals).
 Bonuses that the game program cannot use yet: Japanese fishing ships, Malian oyster gatherers, Spanish builders, the
-Roman builders and repairers, the Georgian fortified church (+10 % near it), the Persian town centers and docks.
+Roman builders, the Georgian fortified church (+10 % near it), the Persian town centers and docks.
+REPAIR and REPAIR_COST hold the repair bonuses (#1730, AoE2 wiki "Repairing"): repair.tick multiplies the rate and the
+cost of the repairs of a player by them (repair_rate, repair_cost).
 
 UNITS holds the bonuses of the land units of combat.STATS (#1090): hit points, attack, armor, range, reload and walk
 speed, per age. train.stats applies them before the technologies; the walk speed goes through speed(). Bonuses of
@@ -317,6 +319,8 @@ SHARED = {"CONDOTTIERO": "ITALIANS",                              # the shared u
           "GENITOUR": "BERBERS",
           "IMPERIAL_SKIRMISHER_UPGRADE": "VIETNAMESE"}
 NOT_SHARED = {"IMPERIAL_SKIRMISHER_UPGRADE": ("TURKS",)}           # no Elite Skirmisher: not with a Vietnamese ally
+REPAIR = {"ROMANS": ROMAN}                                        # Romans: repairers work 5 % faster
+REPAIR_COST = {"GEORGIANS": 0.75}                                 # Georgians (team bonus): repairs cost -25 %
 
 
 def mounted(s):
@@ -392,6 +396,20 @@ def missing(g, name):
 def civ(g, player=None):
     """The civilization of the player of g, or of another player (aoe2mc.json "players"), for example "CELTS", else None."""
     return g.data.get("players", {}).get(str(g.player if player is None else player), {}).get("civ")
+
+
+def repair_rate(g):
+    """The factor of the repair rate of the villagers of the player of g (REPAIR), else 1."""
+    return REPAIR.get(civ(g), 1)
+
+
+def repair_cost(g):
+    """The factor of the repair cost of the player of g: a team bonus of REPAIR_COST counts for the civilization and
+    its allies (gather.allied); the bonuses do not add up, the smallest factor counts."""
+    import gather                                                  # gather imports this module
+    players = g.data.get("players", {})
+    return min([REPAIR_COST.get(civ(g, p), 1) for p in players if p.isdigit() and gather.allied(players, g.player, int(p))]
+               + [REPAIR_COST.get(civ(g), 1)])
 
 
 def start(g, base):

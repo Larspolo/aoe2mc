@@ -192,6 +192,14 @@ def allies_command(players):
     return "aoe allies " + (" ".join(",".join(t) for t in teams.values() if len(t) > 1) or "-")
 
 
+def neutral_command(players):
+    """The plugin command of the neutral stances of aoe2mc.json (`neutral`, AoePlugin.calm, #1645): "aoe neutral
+    p1:p2,p3 p2:p1", or "aoe neutral -" with none. The units of p1 do not attack those of p2 and p3 by themselves."""
+    return "aoe neutral " + (" ".join(f"p{n}:" + ",".join(f"p{m}" for m in p["neutral"])
+                                      for n, p in sorted(players.items(), key=lambda e: int(e[0])) if p.get("neutral"))
+                             or "-")
+
+
 def hunt_food(name):
     """The food of a hunted animal (HUNT_FOOD), else 0."""
     return HUNT_FOOD.get("COW" if name.startswith("COW_") else name, 0)
@@ -614,6 +622,7 @@ class Gather:
         if self.paper:
             train.lore(self)                                           # the help lines of the menus (#1160)
             self.command(allies_command(self.data.get("players", {})))   # allies do not shoot each other (#1315)
+            self.command(neutral_command(self.data.get("players", {})))  # no automatic attack on neutrals (#1645)
         cheats.setup(self)
         bossbar.setup(self)
         for o in self.units:                                           # the entities must be loaded (forceload)

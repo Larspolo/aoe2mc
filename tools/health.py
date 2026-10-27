@@ -4,6 +4,7 @@
     python3 tools/health.py --hours 72
     python3 tools/health.py --hours 24 --until 2026-10-26T05:15:00Z   # the 24 hours before a time (#489)
     python3 tools/health.py --hours 6 --compare                        # the last 6 hours next to the 6 before (#1697)
+    python3 tools/health.py --takeovers  # each takeover: the old run, its last report and the cause (#1703)
 
 REST only (cloud sessions give 403 for GraphQL and `search/...`). Token and `gh` fallback as in
 `tools/dashboard.py`. The parsing functions take plain JSON, so the tests need no network.
@@ -434,6 +435,55 @@ def conflict_files(files_of, n=5):
     return Counter(f for fs in files_of.values() for f in set(fs)).most_common(n)
 
 
+RUN = re.compile(r"^(?:Started|Taken over) by `([^`]+)`")
+CAUSES = ("quota", "merge conflict", "long mc test", "no report", "after the report")
+
+
+def takeovers(comments, status_comments, prs=(), since=None, full=0.95):
+    """[(time, item, old run, minutes since its last report or None, cause)] of the "Taken over by" comments (#1703).
+    The old run: the last other "Started by" or "Taken over by" branch on the item, its ticket or its PR, else the
+    PR branch. The first rule that matches gives the cause: a `Usage:` line at `full` or more after the old run
+    started (quota), an Automerge merge failure or "conflict" in the takeover text (merge conflict), `-m mc` in the
+    last report of the old run (long mc test), no report of the old run after its start (the session ended in the
+    ticket: no report), else the run reported and did not come back (after the report)."""
+    num = lambda c: int(c["issue_url"].rsplit("/", 1)[1])
+    by_pr = {p["number"]: p for p in prs}
+    out = []
+    for t in sorted((c for c in comments if (c.get("body") or "").lstrip().startswith("Taken over by")),
+                    key=lambda c: c["created_at"]):
+        when, item = t["created_at"], num(t)
+        if since is not None and ts(when) < since:
+            continue
+        rel = {item} | closes(by_pr.get(item, {})) | {n for n, p in by_pr.items() if item in closes(p)}
+        new = RUN.match(t["body"].lstrip())[1]
+        prior = [(c["created_at"], m[1]) for c in comments if num(c) in rel and c["created_at"] < when
+                 for m in [RUN.match((c.get("body") or "").lstrip())] if m and m[1] != new]
+        start, old = max(prior) if prior else (None, by_pr.get(item, {}).get("head", {}).get("ref", "?"))
+        after = lambda c: c["created_at"] < when and (start is None or c["created_at"] >= start)
+        reports = sorted((c for c in status_comments if after(c) and f"`{old}`" in (c.get("body") or "")),
+                         key=lambda c: c["created_at"])
+        last = reports[-1] if reports else None
+        if any(s[1] >= full for s in raw_samples([c for c in status_comments if after(c)])):
+            cause = "quota"
+        elif "conflict" in t["body"] or any(num(c) in rel and after(c) and (c.get("body") or "").lstrip().startswith(
+                "CI is green, but the merge failed") for c in comments):
+            cause = "merge conflict"
+        elif last and "-m mc" in last["body"]:
+            cause = "long mc test"
+        else:
+            cause = "after the report" if last else "no report"
+        out.append((when, item, old, None if last is None else round(minutes(last["created_at"], when)), cause))
+    return out
+
+
+def takeover_lines(rows):
+    """One line for each takeover and one line with the count of each cause."""
+    k = Counter(r[4] for r in rows)
+    return [f"  {w[:16].replace('T', ' ')} #{i} {old}: last report {'-' if m is None else f'{m} min'} before, {c}"
+            for w, i, old, m, c in rows] + \
+        ["Takeover causes: " + (", ".join(f"{c} {k[c]}" for c in CAUSES if k[c]) or "-")]
+
+
 def report(since, runs, jobs, status_comments, comments, prs, files, files_of=None, issues=(), issue_events=(),
            unanswered=None, reviews=None):
     out = [f"Health since {since:%Y-%m-%d %H:%M} UTC", "", "CI runs (count, median min, max min, failures):"]
@@ -447,6 +497,7 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
                + (f" ({', '.join(f'#{n}' for n in lost)})" if lost else ""))
     e = events(comments)
     out.append(f"Takeovers {e['takeovers']}, releases {e['releases']}, merge conflicts {e['conflicts']} (solved by Unconflict {e['solved']})")
+    out.append(takeover_lines(takeovers(comments, status_comments, prs, since))[-1])
     if files_of:
         out.append(f"Files of the {len(files_of)} conflicted PRs (PRs): "
                    + "; ".join(f"{f} {k}" for f, k in conflict_files(files_of)))
@@ -544,13 +595,17 @@ def utc(s):
     return t if t.tzinfo else t.replace(tzinfo=datetime.timezone.utc)
 
 
-def period(until, hours, past):
-    """The report of the `hours` before `until`; `past`: the period ends before now, so clip the items after it."""
+def period(until, hours, past, only_takeovers=False):
+    """The report of the `hours` before `until`; `past`: the period ends before now, so clip the items after it.
+    `only_takeovers`: only the takeover lines (#1703)."""
     since = until - datetime.timedelta(hours=hours)
     runs, jobs, status_comments, comments, prs, issues, events = fetch(since, until if past else None)
     if past:
         runs, status_comments, comments, prs, issues, events = clip(until, runs, status_comments, comments, prs,
                                                                     issues, events)
+    if only_takeovers:                          # the open PRs too: their branch and ticket
+        return "\n".join(takeover_lines(takeovers(comments, status_comments,
+                                                   prs + api("pulls?state=open&per_page=100"), since)))
     files_of = {n: [f["filename"] for f in api(f"pulls/{n}/files?per_page=100")] for n in conflicted(comments)}
     from feedback import fetch as unanswered
     refs = claim_refs()
@@ -581,10 +636,11 @@ def main(argv=None):
     ap.add_argument("--hours", type=float, default=24)
     ap.add_argument("--until", type=utc, help="the end of the period (ISO time, UTC, default now): compare two periods")
     ap.add_argument("--compare", action="store_true", help="also the period before, under each line that differs")
+    ap.add_argument("--takeovers", action="store_true", help="one line for each takeover and its cause (#1703)")
     a = ap.parse_args(argv)
     until = a.until or datetime.datetime.now(datetime.timezone.utc)
-    text = period(until, a.hours, bool(a.until))
-    if a.compare:
+    text = period(until, a.hours, bool(a.until), a.takeovers)
+    if a.compare and not a.takeovers:
         text = compare(text, period(until - datetime.timedelta(hours=a.hours), a.hours, True))
     print(text)
     return 0

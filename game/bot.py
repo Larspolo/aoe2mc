@@ -149,7 +149,7 @@ class Bot:
                 work[low] += 1
 
     def fight(self):
-        """Send each soldier without a live target to the nearest unit of the foe, else to its nearest building. A wave
+        """Send each soldier without a live target to the nearest unit of the foe in reach, else to its nearest building. A wave
         starts with self.group soldiers; when all of it is dead, the next wave waits for a full group again (#1051)."""
         g = self.g
         mine = g.positions(sorted(g.soldiers))                         # a dead soldier is not in it
@@ -164,13 +164,16 @@ class Bot:
         units = {o["uuid"] for o in g.data["objects"] if o["kind"] == "unit" and o["player"] == self.foe and o.get("uuid")}
         if self.share:                                                 # also the units that player 1 trained
             units |= self.share.villagers.keys() | self.share.soldiers.keys()
-        near = g.positions(sorted(units)) or \
-            {u: ((b[0] + b[3] + 1) / 2, b[1], (b[2] + b[5] + 1) / 2) for u, b in self.forts().items()}
-        orders = {}
-        for u in free if near else ():
-            if not (ok := [k for k in near if self.reach(u, mine[u], near[k])]):
+        near, forts, orders = g.positions(sorted(units)), None, {}
+        for u in free:
+            ok = {k: p for k, p in near.items() if self.reach(u, mine[u], p)}
+            if not ok:                                                 # no unit in reach, for example only a ship on
+                if forts is None:                                      # the water: the buildings, as in AoE2 (#1770)
+                    forts = {t: ((b[0] + b[3] + 1) / 2, b[1], (b[2] + b[5] + 1) / 2) for t, b in self.forts().items()}
+                ok = {k: p for k, p in forts.items() if self.reach(u, mine[u], p)}
+            if not ok:
                 continue
-            t = min(ok, key=lambda k: (math.dist(near[k], mine[u]), k))
+            t = min(ok, key=lambda k: (math.dist(ok[k], mine[u]), k))
             self.targets[u] = t
             orders.setdefault(t, []).append(u)
         for t, us in sorted(orders.items()):
