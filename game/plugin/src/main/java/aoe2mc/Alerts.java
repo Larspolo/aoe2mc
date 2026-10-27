@@ -32,7 +32,7 @@ final class Alerts {
     void hit(Entity victim, boolean building, Entity from) {
         String team = side.apply(victim);
         Location at = victim.getLocation();
-        if (team == null || from == null || team.equals(side.apply(from))
+        if (team == null || from == null || AoePlugin.allied(team, side.apply(from))
                 || !rule.due(team, building ? "buildings" : "units", at.getX(), at.getZ(), Bukkit.getCurrentTick())) {
             return;                                    // Gaia and animals have no team: no alert
         }
