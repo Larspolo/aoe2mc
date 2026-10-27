@@ -140,6 +140,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "GUILDS": {"food": 300, "gold": 200},
          "HALBERDIER": {"food": 35, "wood": 25},                       # AoE2 DE wiki (#1499)
          "HALBERDIER_UPGRADE": {"food": 300, "gold": 600},             # the Imperial Age (#1499)
+         "HAND_CANNONEER": {"food": 45, "gold": 50},                  # the Imperial Age, after Chemistry (#1506)
          "HAND_CART": {"food": 300, "wood": 200},                      # the Castle Age (AoE2 DE wiki, #1453)
          "HEAVY_CAVALRY_ARCHER": {"wood": 40, "gold": 60},            # AoE2 DE wiki (#1500)
          "HEAVY_CAVALRY_ARCHER_UPGRADE": {"food": 900, "gold": 500},  # the Imperial Age (#1500)
@@ -178,6 +179,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "ONAGER_UPGRADE": {"food": 800, "gold": 500},
          "PALADIN": {"food": 60, "gold": 75},                           # AoE2 DE wiki (#1501)
          "PALADIN_UPGRADE": {"food": 1300, "gold": 750},               # after Cavalier (#1501)
+         "PARTHIAN_TACTICS": {"food": 200, "gold": 250},               # the Imperial Age (AoE2 DE wiki, #1505)
          "PADDED_ARCHER_ARMOR": {"food": 100},
          "PIKEMAN": {"food": 35, "wood": 25},
          "PIKEMAN_UPGRADE": {"food": 160, "gold": 90},
@@ -282,6 +284,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "GUILDS": 50,
                "HALBERDIER": 22,
                "HALBERDIER_UPGRADE": 50,
+               "HAND_CANNONEER": 34,
                "HAND_CART": 55,
                "HEAVY_CAVALRY_ARCHER": 37,
                "HEAVY_CAVALRY_ARCHER_UPGRADE": 50,
@@ -320,6 +323,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "ONAGER_UPGRADE": 75,
                "PALADIN": 30,
                "PALADIN_UPGRADE": 170,
+               "PARTHIAN_TACTICS": 65,
                "PADDED_ARCHER_ARMOR": 40,
                "PIKEMAN": 22,
                "PIKEMAN_UPGRADE": 35,
@@ -371,8 +375,10 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER",                                          # building (#654, #670, #655)
                             "CROSSBOWMAN_UPGRADE", "ELITE_SKIRMISHER_UPGRADE", "CAVALRY_ARCHER",   # (#1396, #1397)
                             "THUMB_RING",                                                     # (#1421)
+                            "PARTHIAN_TACTICS",                                               # (#1505)
                             "ARBALESTER_UPGRADE",                                             # the Imperial Age (#1500)
-                            "HEAVY_CAVALRY_ARCHER_UPGRADE"),                                  # (#1500)
+                            "HEAVY_CAVALRY_ARCHER_UPGRADE",                                   # (#1500)
+                            "HAND_CANNONEER"),                                                # after Chemistry: build.NEEDS (#1506)
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING",            # (#675, #725, #724, #937, #938)
                          "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR",
                          "CHAIN_MAIL_ARMOR", "LEATHER_ARCHER_ARMOR", "CHAIN_BARDING_ARMOR",   # the Castle Age (#1394)
@@ -444,9 +450,10 @@ MILITIA_LINE = ("MILITIA", "MAN_AT_ARMS", "LONG_SWORDSMAN", "TWO_HANDED_SWORDSMA
 
 
 def chemistry(name, s):
-    """Chemistry (AoE2 DE, wiki): +1 attack for archers, ranged siege units and buildings that shoot. A building gets it
-    when it is complete (build.target, build.values)."""
+    """Chemistry (AoE2 DE, wiki): +1 attack for archers, ranged siege units and buildings that shoot, not for gunpowder
+    units (#1506). A building gets it when it is complete (build.target, build.values)."""
     shoots = "archer" in s.classes or "siege" in s.classes and s.range > 0 or "building" in s.classes and s.attack > 0
+    shoots = shoots and "gunpowder" not in s.classes
     return s._replace(attack=s.attack + 1) if shoots else s
 
 
@@ -462,6 +469,11 @@ def thumb(name, s):
     """Thumb Ring (AoE2 DE, wiki): the archers fire faster; not the skirmishers (only their accuracy) and not the
     gunpowder units."""
     return "archer" in s.classes and "gunpowder" not in s.classes and "SKIRMISHER" not in name
+
+
+def parthian(name, s):
+    """Parthian Tactics (AoE2 DE, wiki): the mounted archers (also the Arambai), not the Genitour."""
+    return "archer" in s.classes and bool({"cavalry", "camel", "elephant"} & set(s.classes)) and "GENITOUR" not in name
 
 
 def engineers(name, s):
@@ -555,6 +567,9 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "PALADIN_UPGRADE": lambda name, s: s,                     # a new unit name: UPGRADES
          "PADDED_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "archer" in s.classes else s,
+         "PARTHIAN_TACTICS": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 2,
+                                                        bonus={**s.bonus, "spearman": s.bonus.get("spearman", 0) + 2})
+         if parthian(name, s) else s,
          "PIKEMAN_UPGRADE": lambda name, s: s,
          "PLATE_BARDING_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 2)
          if barding(s) else s,
@@ -707,6 +722,7 @@ TECH_AGE = {                                                       # the age of 
     "MEDIUM_WARSHIPS": 2,
     "ONAGER_UPGRADE": 3,
     "PALADIN_UPGRADE": 3,
+    "PARTHIAN_TACTICS": 3,
     "PADDED_ARCHER_ARMOR": 1,
     "PIKEMAN_UPGRADE": 2,
     "PLATE_BARDING_ARMOR": 3,
@@ -754,6 +770,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "ELITE_SKIRMISHER_UPGRADE": (3, "book", "Elite Skirmisher"),
          "HALBERDIER": (1, "zombie_spawn_egg", "Halberdier"),
          "HALBERDIER_UPGRADE": (3, "book", "Halberdier"),             # the slot of Pikeman (AFTER)
+         "HAND_CANNONEER": (MORE, "pillager_spawn_egg", "Hand Cannoneer"),   # units.classify: a pillager
          "HAND_CART": (3, "book", "Hand Cart"),                       # the slot of Wheelbarrow (AFTER)
          "HEAVY_CAVALRY_ARCHER": (4, "skeleton_horse_spawn_egg", "Heavy Cavalry Archer"),
          "HEAVY_CAVALRY_ARCHER_UPGRADE": (6, "book", "Heavy Cavalry Archer"),   # slot 5: Thumb Ring
@@ -854,6 +871,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "MONK": (0, "evoker_spawn_egg", "Monk"),
          "PALADIN": (3, "horse_spawn_egg", "Paladin"),               # the slot of the knight
          "PALADIN_UPGRADE": (5, "book", "Paladin"),                   # the slot of Cavalier (AFTER)
+         "PARTHIAN_TACTICS": (MORE, "book", "Parthian Tactics"),       # slot 7: the hand cannoneer (#1506)
          "PADDED_ARCHER_ARMOR": (3, "book", "Padded Archer Armor"),
          "PLATE_BARDING_ARMOR": (4, "book", "Plate Barding Armor"),   # the slot of the Feudal armor (AFTER)
          "PLATE_MAIL_ARMOR": (1, "book", "Plate Mail Armor"),
@@ -950,6 +968,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "GUILDS": "Market trading fee 15 %.",
         "HALBERDIER": "Infantry. Strong vs. cavalry; weak vs. archers.",
         "HALBERDIER_UPGRADE": "Upgrades pikemen to halberdiers.",
+        "HAND_CANNONEER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "HAND_CART": "Villagers +10 % speed, +50 % carry.",
         "HEAVY_CAVALRY_ARCHER": "Fast archer. Strong vs. infantry; weak vs. camels.",
         "HEAVY_CAVALRY_ARCHER_UPGRADE": "Upgrades cavalry archers to heavy ones.",
@@ -990,6 +1009,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "ONAGER_UPGRADE": "Upgrades mangonels to onagers.",
         "PALADIN": "Strong vs. archers, siege; weak vs. spears, monks.",
         "PALADIN_UPGRADE": "Upgrades cavaliers to paladins.",
+        "PARTHIAN_TACTICS": "Cavalry archers +1/+2 armor, +2 vs. spears.",
         "PADDED_ARCHER_ARMOR": "Archers +1 melee armor, +1 pierce armor.",
         "PIKEMAN": "Infantry. Strong vs. cavalry; weak vs. archers.",
         "PIKEMAN_UPGRADE": "Upgrades spearmen to pikemen.",

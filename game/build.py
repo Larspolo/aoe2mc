@@ -138,6 +138,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "CHAMPION",
         "ELITE_CANNON_GALLEON",
         "HALBERDIER",
+        "HAND_CANNONEER",
         "HEAVY_CAMEL_RIDER",
         "HEAVY_CAVALRY_ARCHER",
         "HUSSAR",
@@ -155,7 +156,8 @@ DOORS = {"GATE": "dark_oak_door",                                      # the doo
          "PALISADE_GATE": "spruce_door"}                               # of the team plan their paths through them
 NEEDS = {"BOMBARD_CANNON": "CHEMISTRY",                            # a unit or building after a technology (#1380)
          "BOMBARD_TOWER": "BOMBARD_TOWER_TECH",                    # (#1375)
-         "CANNON_GALLEON": "CHEMISTRY"}                            # (#1484)
+         "CANNON_GALLEON": "CHEMISTRY",                            # (#1484)
+         "HAND_CANNONEER": "CHEMISTRY"}                            # (#1506)
 SHORE = ("DOCK",)                                                  # on water next to the land, as in AoE2 (#1382)
 WATER = ("FISH_TRAP",)                                             # on free water only, ships build it (#1438)
 GHOST = 400                                                        # block displays of one ghost: a coarser shape above
