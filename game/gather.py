@@ -1061,6 +1061,7 @@ class Gather:
                     self.go(v, "to_drop", set().union(*map(self.map.around, self.map.drops[v.res])))
         train.tick(self, self.tick * NORMAL)
         monk.heal(self, self.tick * NORMAL)
+        garrison.heal(self, self.tick * NORMAL)
         bossbar.tick(self)
         for site in self.sites:
             builders = [v for v in self.villagers.values() if v.state == "build" and v.site is site]
