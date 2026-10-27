@@ -11,6 +11,15 @@ session, or only in the status report. When the auto mode denies an action (for 
 it through another tool: add `needs-human` to that issue and comment the evidence and the action. When the owner did
 it, remove the label.
 
+## Close an issue
+
+The auto mode can deny a close by the API (#862, #1641). So close with the label `close` (owner, #1740): write the
+evidence comment first, then add the label (`gh api repos/OWNER/NAME/issues/N/labels -f 'labels[]=close'`). The
+workflow `close.yml` removes `close`, `needs-human` and `in-progress`, closes the issue as completed and deletes its
+claim refs. Use it for a finished epic, an answered decision ticket and a check ticket without bugs. When the auto mode
+denies the label too (a session without the owner's `autoMode` rule, #1740: `claude auto-mode config` lists its allow
+lines), do not try another way: keep the comment, add `needs-human` and "Please close".
+
 If the ticket is wrong or not possible: comment why, add `needs-human`, remove `in-progress`. Do not merge
 partial work: add `hold` to its PR (the workflow also skips a PR whose ticket has `needs-human` or `blocked`).
 
@@ -24,7 +33,6 @@ not add `needs-human`: when the bugs are closed, the check ticket is a candidate
 After a check without bugs it closes the check ticket on its evidence (owner decision B, #1708: progress does not wait
 for the owner): a comment with the evidence of each point (screenshots, real clicks, values) and a short list of what only
 a person can check (sound, the feel of a control, "is it fun": `verify` level 5, #1707), the label `owner-sample`, then the close. The owner checks a
-sample of these closed tickets later in one game (`human` skill). A denied close: keep the comment, add `needs-human`
-and "Please close" (#1641). Never ask the owner about
+sample of these closed tickets later in one game (`human` skill). The close: see "Close an issue" below. Never ask the owner about
 times, speeds, values or texts: measure them and compare them with AoE2 (owner, #1159). A look question links the image
 before next to the image after (or AoE2 next to Minecraft).
