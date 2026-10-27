@@ -17,7 +17,8 @@ def test_the_mangonel_line_has_the_blast_radius_of_the_wiki():
                             "DEMOLITION_RAFT": 2.5,                                                    # (#1481)
                             "ELITE_CANNON_GALLEON": 0.3,                                               # (#1491)
                             "FAST_FIRE_SHIP": 0, "HEAVY_DEMOLITION_SHIP": 3.25,                         # (#1483)
-                            "FIRE_GALLEY": 0}
+                            "FIRE_GALLEY": 0,
+                            "CATAPULT_GALLEON": 0, "DRAGON_SHIP": 0, "DROMON": 0, "LOU_CHUAN": 0}   # (#1935)
 
 
 def test_the_range_command_gives_the_blast_in_blocks():
