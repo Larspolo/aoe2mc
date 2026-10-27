@@ -9,7 +9,7 @@ UNITS = sorted(f"ELITE_{u}" for u in set(train.UNIQUE.values()) if f"ELITE_{u}" 
 
 
 def test_each_elite_unique_unit_has_values():
-    assert len(UNITS) >= 44                                           # a new unique unit adds one (#2008)
+    assert UNITS
     for name in UNITS:
         assert name in combat.STATS and combat.UNI in combat.stats(name).classes, name
         base, elite = combat.stats(name[6:]), combat.stats(name)

@@ -4,7 +4,7 @@ import os
 import re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-COUNT = re.compile(r"len\((?:combat|civs|train|build|buildings|units|table)\.[A-Z][A-Z_0-9]*\) *== *\d")
+COUNT = re.compile(r"len\((?:combat|civs|train|build|buildings|units|table)\.[A-Z][A-Z_0-9]*\) *(?:==|>=) *\d")
 
 
 def test_no_test_pins_the_length_of_a_table():
