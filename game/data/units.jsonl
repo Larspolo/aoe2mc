@@ -137,6 +137,7 @@
 {"name": "GRENADIER", "hp": 40, "attack": 12, "melee": 1, "pierce": 1, "range": 6, "reload": 3.45, "bonus": {"building": 4, "infantry": 9, "siege": 3, "spearman": 1}, "classes": ["archer", "gunpowder", "unique"], "sight": 9}
 {"name": "HEAVY_ROCKET_CART", "hp": 65, "attack": 5, "melee": 0, "pierce": 8, "range": 8, "reload": 5.35, "bonus": {"building": 12, "siege": 2}, "classes": ["gunpowder", "siege"]}
 {"name": "HEI_GUANG_CAVALRY", "hp": 60, "attack": 11, "melee": 4, "pierce": 3, "range": 0, "reload": 1.8, "bonus": {}, "classes": ["cavalry"]}
+{"name": "HEAVY_HEI_GUANG_CAVALRY", "hp": 90, "attack": 12, "melee": 4, "pierce": 3, "range": 0, "reload": 1.8, "bonus": {"infantry": 1, "condottiero": 1}, "classes": ["cavalry"]}
 {"name": "HOUFNICE", "hp": 90, "attack": 50, "melee": 2, "pierce": 6, "range": 12, "reload": 6.5, "bonus": {"building": 250, "siege": 20}, "classes": ["gunpowder", "siege"]}
 {"name": "IRON_PAGODA", "hp": 115, "attack": 12, "melee": 1, "pierce": 3, "range": 0, "reload": 2.16, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
 {"name": "LEGIONARY", "hp": 75, "attack": 12, "melee": 2, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 4, "infantry": 4}, "classes": ["infantry"], "sight": 7}
@@ -181,6 +182,7 @@
 {"name": "WAR_GALLEY", "hp": 125, "attack": 7, "melee": 0, "pierce": 4, "range": 6, "reload": 3.0, "bonus": {"building": 6, "warship": 5}, "classes": ["ship", "warship"], "note": "Medium Warships (#1482)"}
 {"name": "WAR_HULK", "hp": 110, "attack": 4, "melee": 4, "pierce": 1, "range": 1, "reload": 1.5, "bonus": {"fireship": 1, "standard": -3}, "classes": ["ship"], "sight": 5, "note": "Medium Warships (#1508)"}
 {"name": "VILLAGER", "hp": 25, "attack": 3, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"building": 3, "heavysiege": 6, "stone": 6}, "classes": [], "note": "AoE2 DE wiki (#1590)"}
+{"name": "MISSIONARY", "hp": 30, "attack": 0, "melee": 0, "pierce": 0, "range": 7, "reload": 0.0, "bonus": {}, "classes": [], "note": "AoE2 DE wiki (#1939)"}
 {"name": "KING", "hp": 75, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": [], "sight": 6}
 {"name": "MONK", "hp": 30, "attack": 0, "melee": 0, "pierce": 0, "range": 9, "reload": 0.0, "bonus": {}, "classes": []}
 {"name": "TRADE_CART", "hp": 70, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": [], "sight": 7}
