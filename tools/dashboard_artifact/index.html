@@ -90,7 +90,19 @@
 .ax-mini { display: flex; height: 0.375rem; border-radius: 3px; overflow: hidden; background: var(--cds-chart-muted); }
 .ax-mini > span { height: 100%; }
 .ax-link { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
-@media (max-width: 40rem) { .ax-narrow-hide { display: none; } }
+.ax-pbar { display: grid; grid-template-columns: auto 2.75rem; gap: var(--cds-gap-sm); align-items: center; justify-content: start; }
+.ax-pbar .ax-mini { height: 0.5rem; width: 4.5rem; }
+.ax-spark { display: block; cursor: crosshair; }
+.ax-pbar-n { text-align: right; font-variant-numeric: tabular-nums; }
+.ax-lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: var(--cds-gap-sm); }
+.ax-lane { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-bg);
+  padding: var(--cds-pad-sm) var(--cds-pad-md); display: grid; gap: var(--cds-gap-xs); align-content: start; min-width: 0; }
+.ax-lane-name { font-weight: var(--cds-font-weight-medium); }
+.ax-lane dl { margin: 0; display: grid; grid-template-columns: 4.5rem 1fr; gap: var(--cds-gap-xs) var(--cds-gap-sm);
+  font-size: var(--cds-font-size-caption); line-height: 1.45; }
+.ax-lane dt { color: var(--color-fg-muted); }
+.ax-lane dd { margin: 0; min-width: 0; }
+@media (max-width: 40rem) { .ax-narrow-hide { display: none; } .ax-table td:first-child { overflow-wrap: anywhere; } .ax-st { white-space: normal; } }
 </style>
 
 <div class="ax">
@@ -127,7 +139,8 @@
         <span class="ax-kpi-sub">Median minutes, last 24 hours</span></div>
       <div class="ax-kpi"><span class="ax-kpi-label">5-hour usage</span>
         <span class="ax-kpi-value dash-skeleton" data-source="summary" data-field="usage_5h" data-row="0">—</span>
-        <span class="ax-kpi-sub">At <span data-source="summary" data-field="usage_at" data-row="0">—</span></span></div>
+        <span class="ax-kpi-sub">At <span data-source="summary" data-field="usage_at" data-row="0">—</span>:
+          <span data-source="summary" data-field="runs_now" data-row="0">—</span> runs, <span data-source="summary" data-field="haiku_runs" data-row="0">—</span> on the Haiku lane</span></div>
       <div class="ax-kpi"><span class="ax-kpi-label">7-day usage</span>
         <span class="ax-kpi-value dash-skeleton" data-source="summary" data-field="usage_7d" data-row="0">—</span>
         <span class="ax-kpi-sub" data-source="summary" data-field="usage_7d_track" data-row="0">—</span></div>
@@ -257,6 +270,15 @@
           <span data-source="goal_counts" data-where="goal=system" data-field="total">—</span> roadmap features done</span>
       </button>
     </div>
+    <div class="ax-card" id="history-card">
+      <div>
+        <h2 class="ax-card-title">Progress over time</h2>
+        <p class="ax-note">The full-roadmap percent of each goal at each hour, by the rules above, from the open and close times of the tickets (UTC).
+          New tickets and epics lower it. The graph in each row below is the same for one item: hover it for the value at a time.</p>
+      </div>
+      <div class="ax-legend" id="history-legend" data-source="goal_history"></div>
+      <div class="ax-chart" id="history-chart" data-source="goal_history"></div>
+    </div>
     <div class="ax-card" id="goal-convert">
       <div>
         <h2 class="ax-card-title">Convert maps to Minecraft</h2>
@@ -269,7 +291,8 @@
             <th data-field="status">Status</th>
             <th data-field="milestone" class="ax-narrow-hide">Milestone</th>
             <th data-field="epics" class="ax-narrow-hide">Epic</th>
-            <th data-field="tickets" class="ax-num">Tickets done / all</th>
+            <th data-field="progress">Progress</th>
+            <th data-field="tickets" class="ax-num ax-narrow-hide">Tickets done / all</th>
           </tr></thead>
           <tbody></tbody>
         </table>
@@ -287,7 +310,8 @@
             <th data-field="status">Status</th>
             <th data-field="milestone" class="ax-narrow-hide">Milestone</th>
             <th data-field="epics" class="ax-narrow-hide">Epic</th>
-            <th data-field="tickets" class="ax-num">Tickets done / all</th>
+            <th data-field="progress">Progress</th>
+            <th data-field="tickets" class="ax-num ax-narrow-hide">Tickets done / all</th>
           </tr></thead>
           <tbody></tbody>
         </table>
@@ -305,11 +329,13 @@
             <th data-field="status">Status</th>
             <th data-field="milestone" class="ax-narrow-hide">Milestone</th>
             <th data-field="epics" class="ax-narrow-hide">Epic</th>
-            <th data-field="tickets" class="ax-num">Tickets done / all</th>
+            <th data-field="progress">Progress</th>
+            <th data-field="tickets" class="ax-num ax-narrow-hide">Tickets done / all</th>
           </tr></thead>
           <tbody></tbody>
         </table>
       </div>
+    </div>
     <div class="ax-card" id="goal-system">
       <div>
         <h2 class="ax-card-title">The agent system</h2>
@@ -322,7 +348,8 @@
             <th data-field="status">Status</th>
             <th data-field="milestone" class="ax-narrow-hide">Milestone</th>
             <th data-field="epics" class="ax-narrow-hide">Epic</th>
-            <th data-field="tickets" class="ax-num">Tickets done / all</th>
+            <th data-field="progress">Progress</th>
+            <th data-field="tickets" class="ax-num ax-narrow-hide">Tickets done / all</th>
           </tr></thead>
           <tbody></tbody>
         </table>
@@ -345,6 +372,9 @@
         <span class="ax-kpi-sub">Parked until later</span></div>
       <div class="ax-kpi"><span class="ax-kpi-label">Open epics</span>
         <span class="ax-kpi-value dash-skeleton" data-source="summary" data-field="open_epics" data-row="0">—</span></div>
+      <div class="ax-kpi"><span class="ax-kpi-label">Haiku lane</span>
+        <span class="ax-kpi-value dash-skeleton" data-source="summary" data-field="haiku_open" data-row="0">—</span>
+        <span class="ax-kpi-sub">Open tickets with lane:haiku</span></div>
     </div>
 
     <div class="ax-grid">
@@ -390,7 +420,7 @@
               <th data-field="priority">Priority</th>
               <th data-field="subs_done" class="ax-num">Done</th>
               <th data-field="subs_total" class="ax-num">Sub-issues</th>
-              <th data-field="share" class="ax-num">Progress</th>
+              <th data-field="share">Progress</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -407,14 +437,43 @@
       </div>
       <ol class="ax-flow">
         <li><span class="ax-flow-name">You</span><span class="ax-flow-what">Write issues and comments, set the priority labels, answer decision tickets.</span></li>
-        <li><span class="ax-flow-name">Pacer</span><span class="ax-flow-what">Reads the quota usage and starts new autopilot runs to meet the target.</span></li>
-        <li><span class="ax-flow-name">Autopilot run</span><span class="ax-flow-what">Claims the top ticket, writes the code and tests, verifies, and opens a pull request.</span></li>
-        <li><span class="ax-flow-name">CI quick</span><span class="ax-flow-what">Lint and the fast tests on the pull request.</span></li>
-        <li><span class="ax-flow-name">Automerge</span><span class="ax-flow-what">Merges the pull request when CI is green.</span></li>
+        <li><span class="ax-flow-name">Ticket</span><span class="ax-flow-what">A run writes and sizes the ticket. A clear size:S ticket with an exact spec and a merged example gets the label lane:haiku.</span></li>
+        <li><span class="ax-flow-name">Pacer</span><span class="ax-flow-what">Reads the quota usage. Starts Haiku runs for the ready lane:haiku tickets first, then Opus runs for the rest of the target.</span></li>
+        <li><span class="ax-flow-name">Autopilot run</span><span class="ax-flow-what">An Opus run claims the top ticket, a Haiku run only a lane:haiku ticket. It writes the code and tests, verifies, and opens a pull request.</span></li>
+        <li><span class="ax-flow-name">CI and automerge</span><span class="ax-flow-what">CI quick runs lint and the fast tests on the pull request. Automerge merges it when CI is green.</span></li>
         <li><span class="ax-flow-name">Main</span><span class="ax-flow-what">The nightly CI runs the slow and the Minecraft tests; a red night opens an urgent ticket.</span></li>
       </ol>
       <p class="ax-loop">Around this path: each run refills the queue from the open epics, closes finished epics and reports on the status issue.
         A regular process review changes the skills, tools and CI. Unconflict merges main into pull requests that have a conflict.</p>
+    </div>
+
+    <div class="ax-card" id="lanes-card">
+      <div>
+        <h2 class="ax-card-title">Model lanes</h2>
+        <p class="ax-note">Two kinds of autopilot run share the quota (issues 1715 and 1727). Clear, templated tickets go to the cheaper Haiku runs.
+          Now: <span data-source="summary" data-field="haiku_open" data-row="0">—</span> open lane:haiku tickets,
+          <span data-source="summary" data-field="haiku_runs" data-row="0">—</span> of <span data-source="summary" data-field="runs_now" data-row="0">—</span> runs on the Haiku lane.</p>
+      </div>
+      <div class="ax-lanes">
+        <div class="ax-lane">
+          <span class="ax-lane-name">Opus lane</span>
+          <dl>
+            <dt>Started by</dt><dd>Scheduled task “aoe2mc autopilot”: hourly at :06, and the pacer fires it.</dd>
+            <dt>Tickets</dt><dd>The top ready ticket. A lane:haiku ticket only when no other ticket is ready.</dd>
+            <dt>Work</dt><dd>The full cycle: feedback, triage, the ticket, epic checks, the queue refill, the roadmap and process reviews.</dd>
+            <dt>Quota</dt><dd>One run counts 1 in the target of the pacer.</dd>
+          </dl>
+        </div>
+        <div class="ax-lane">
+          <span class="ax-lane-name">Haiku lane</span>
+          <dl>
+            <dt>Started by</dt><dd>Scheduled task “aoe2mc autopilot haiku” (model Haiku): no schedule, only the pacer fires it, a new session each time.</dd>
+            <dt>Tickets</dt><dd>Only lane:haiku: size S, each file and value named, a merged PR with the same pattern, verify level 1. A ticket that is not clear loses the label and goes to Opus.</dd>
+            <dt>Work</dt><dd>The tickets only: no epic check, queue refill, roadmap or process review. Stops when no lane:haiku ticket is ready.</dd>
+            <dt>Quota</dt><dd>One run counts 0.25 (start value in agent.toml) until <code>tools/health.py</code> measures the weight from 10 usage intervals with Haiku runs.</dd>
+          </dl>
+        </div>
+      </div>
     </div>
 
     <div class="ax-card" id="parts-card">
@@ -463,7 +522,7 @@ dash.calc('merge_buckets', {
 dash.calc('summary', {
   inputs: ['merges', 'tickets', 'usage'],
   title: 'Headline figures',
-  description: 'Counted up to the last merge in the data: merges in the last hour and 24 hours, their mean per 15 minutes, the median minutes from open to merge, the open tickets, the latest 5-hour usage, and the latest 7-day usage with its projection to the reset (on track, ahead or behind).',
+  description: 'Counted up to the last merge in the data: merges in the last hour and 24 hours, their mean per 15 minutes, the median minutes from open to merge, the open tickets, the open tickets with lane:haiku, the latest 5-hour usage, the latest 7-day usage with its projection to the reset (on track, ahead or behind), and the runs of the latest usage line with the runs of the Haiku lane among them.',
   fn: (merges, tickets, usage) => {
     const hour = 3600 * 1000;
     const yes = (v) => v === true || v === 'true';
@@ -490,6 +549,9 @@ dash.calc('summary', {
       needs_human: open.filter((r) => yes(r.needs_human) && !yes(r.muted)).length,
       muted: open.filter((r) => yes(r.muted)).length,
       open_epics: open.filter((r) => yes(r.epic)).length,
+      haiku_open: work.filter((r) => yes(r.haiku)).length,
+      runs_now: latest ? Number(latest.runs) : null,
+      haiku_runs: latest ? Number(latest.haiku) || 0 : null,
       usage_5h: latest ? Number(latest.usage) : null,
       usage_at: latest ? latest.at : null,
       usage_7d: week ? Number(week.week) : null,
@@ -600,7 +662,7 @@ dash.calc('goal_counts', {
 dash.calc('release', {
   inputs: ['release_bar', 'roadmap', 'epics', 'tickets'],
   title: 'Release items',
-  description: 'Each item of docs/RELEASE.md (issue 878: 100 % is the full roadmap, C; milestones A and B) with its closed tickets and the tickets left, by the rules of that file and tools/release.py. A roadmap feature without a row is milestone C. A feature: the closed sub-issues of its epics; left: the open ones, at least its estimate (default: the median size of the closed epics); done without an epic counts as that median. A release check: its estimate, done when its ticket is closed. The bug reserve: its share of the feature tickets left in the goal.',
+  description: 'Each item of docs/RELEASE.md (issue 878: 100 % is the full roadmap, C; milestones A and B) with its closed tickets, the tickets left and its progress (closed ÷ all; a done item with no tickets is 1), by the rules of that file and tools/release.py. A roadmap feature without a row is milestone C. A feature: the closed sub-issues of its epics; left: the open ones, at least its estimate (default: the median size of the closed epics); done without an epic counts as that median. A release check: its estimate, done when its ticket is closed. The bug reserve: its share of the feature tickets left in the goal.',
   fn: (release_bar, roadmap, epics, tickets) => {
     const yes = (v) => v === true || v === 'true';
     const num = (v) => Number(v) || 0;
@@ -616,10 +678,10 @@ dash.calc('release', {
     rows.forEach((r, order) => {
       if (r.kind === 'reserve') return;
       const estimate = num(r.estimate) || median;
-      let item = r.title, status, done, left, list = [];
+      let item = r.title, status, done, left, list = [], refs = [];
       if (r.kind === 'feature') {
         const f = features.get(r.id);
-        const refs = f ? String(f.refs || '').split(' ').filter(Boolean) : [];
+        refs = f ? String(f.refs || '').split(' ').filter(Boolean) : [];
         list = epics.filter((e) => e.key === r.id || refs.includes(String(e.number)));
         item = f ? f.feature : list.length ? list[0].title : r.id;
         const closed = list.reduce((s, e) => s + num(e.subs_done), 0);
@@ -637,15 +699,17 @@ dash.calc('release', {
         done = closed ? estimate : 0; left = closed ? 0 : estimate;
       }
       out.push({ id: r.id, goal: r.goal, kind: r.kind, order, level: r.level || 'C', milestone: names[r.level || 'C'], item, status,
-        epics: list.map((e) => '#' + e.number).join(' '), done, left, tickets: `${done} / ${done + left}` });
+        epics: list.map((e) => '#' + e.number).join(' '), done, left, tickets: `${done} / ${done + left}`,
+        estimate, ticket: r.kind === 'check' ? r.ticket || null : null, refs: refs.join(' ') });
     });
     release_bar.forEach((r, order) => {
       if (r.kind !== 'reserve') return;
       const featureLeft = out.filter((x) => x.goal === r.goal && x.kind === 'feature').reduce((s, x) => s + x.left, 0);
       const left = Math.ceil(num(r.share) * featureLeft);
       out.push({ id: r.id, goal: r.goal, kind: 'reserve', order, level: 'C', milestone: names.C, share: num(r.share), item: r.title,
-        status: left ? 'To do' : 'Done', epics: '', done: 0, left, tickets: `0 / ${left}` });
+        status: left ? 'To do' : 'Done', epics: '', done: 0, left, tickets: `0 / ${left}`, estimate: 0, ticket: null, refs: '' });
     });
+    out.forEach((x) => { x.progress = x.done + x.left ? x.done / (x.done + x.left) : x.status === 'Done' ? 1 : 0; });
     const goals = ['convert', 'play', 'replay', 'system'];
     const kinds = { feature: 0, check: 1, reserve: 2 };
     const rank = { 'In progress': 0, 'To do': 1, 'Done': 2 };
@@ -680,6 +744,86 @@ dash.calc('release_goals', {
     };
   }),
 });
+
+dash.calc('release_history', {
+  inputs: ['release', 'tickets'],
+  title: 'Release items over time',
+  description: 'Each release item (no reserve) at each step of time (one hour; longer steps keep 200 steps at most), by the rules of the release items, from the open and close times of the tickets. A feature counts the sub-issues of its epics that were made and closed at that time, and it is done when all its epics made at that time were closed. A done feature without an epic is done from the close of the last ticket that its roadmap line names (from the start when it names none). A release check is done from the close of its ticket.',
+  fn: (release, tickets) => {
+    const hour = 3600 * 1000;
+    const when = (v) => (v ? Date.parse(v) : NaN);
+    const times = new Map(tickets.map((t) => [Number(t.number), { made: when(t.created_at), closed: t.closed_at ? when(t.closed_at) : Infinity }]));
+    const kids = new Map();
+    tickets.filter((t) => t.parent).forEach((t) => {
+      const k = Number(t.parent);
+      if (!kids.has(k)) kids.set(k, []);
+      kids.get(k).push(times.get(Number(t.number)));
+    });
+    const all = [...times.values()].flatMap((t) => [t.made, t.closed]).filter((v) => isFinite(v));
+    if (!all.length) return [];
+    const first = Math.floor(all.reduce((a, b) => Math.min(a, b)) / hour) * hour;
+    const end = all.reduce((a, b) => Math.max(a, b));
+    const step = Math.max(1, Math.ceil((end - first) / hour / 200)) * hour;
+    const grid = [];
+    for (let k = first; k < end; k += step) grid.push(k);
+    grid.push(end);
+    const out = [];
+    for (const r of release.filter((x) => x.kind !== 'reserve')) {
+      const estimate = Number(r.estimate) || 0;
+      let at;
+      if (r.kind === 'check') {
+        const closed = (times.get(Number(r.ticket)) || { closed: Infinity }).closed;
+        at = (T) => (closed <= T ? [estimate, 0] : [0, estimate]);
+      } else {
+        const epics = (String(r.epics || '').match(/\d+/g) || []).map(Number);
+        if (!epics.length && r.status === 'Done') {
+          const refs = String(r.refs || '').split(' ').filter(Boolean).map((n) => times.get(Number(n))).filter((t) => t && isFinite(t.closed));
+          const from = refs.length ? Math.max(...refs.map((t) => t.closed)) : -Infinity;
+          at = (T) => (from <= T ? [Number(r.done), 0] : [0, estimate]);
+        } else {
+          const list = epics.map((n) => times.get(n) || { made: -Infinity, closed: Infinity });
+          const subs = epics.flatMap((n) => kids.get(n) || []);
+          at = (T) => {
+            const closed = subs.filter((k) => k.closed <= T).length;
+            const made = list.filter((e) => e.made <= T);
+            if (made.length && made.every((e) => e.closed <= T)) return [Math.max(closed, 1), 0];
+            return [closed, Math.max(subs.filter((k) => k.made <= T).length, estimate) - closed];
+          };
+        }
+      }
+      for (const T of grid) {
+        const [done, left] = at(T);
+        out.push({ id: r.id, goal: r.goal, kind: r.kind, at: new Date(T).toISOString(), done, left,
+          progress: done + left ? done / (done + left) : 1 });
+      }
+    }
+    return out;
+  },
+});
+
+dash.calc('goal_history', {
+  inputs: ['release_history', 'release'],
+  title: 'Release progress per goal over time',
+  description: 'For each goal at each step of time: the full-roadmap progress (C) = closed ÷ (closed + left), with the bug reserve of the feature tickets left at that time, as in Release progress per goal.',
+  fn: (release_history, release) => {
+    const out = [];
+    const sum = (list, f) => list.reduce((s, r) => s + Number(r[f]), 0);
+    for (const goal of ['convert', 'play', 'replay', 'system']) {
+      const share = Number((release.find((r) => r.goal === goal && r.kind === 'reserve') || {}).share) || 0;
+      const steps = new Map();
+      release_history.filter((r) => r.goal === goal).forEach((r) => {
+        if (!steps.has(r.at)) steps.set(r.at, []);
+        steps.get(r.at).push(r);
+      });
+      for (const [at, rows] of steps) {
+        const done = sum(rows, 'done');
+        const left = sum(rows, 'left') + Math.ceil(share * sum(rows.filter((r) => r.kind === 'feature'), 'left'));
+        out.push({ goal, at, done, left, percent: done + left ? done / (done + left) : 0 });
+      }
+    }
+    return out;
+  },
+});
 </script>
 
 <script>
@@ -703,6 +847,7 @@ dash.calc('release_goals', {
     percent_a: (v) => pct(v),
     percent_b: (v) => pct(v),
     merged_total: (v) => count(v),
+    haiku_runs: (v) => count(v),
   };
 
   // Header figures and tiles: one-cell marks of a calc.
@@ -765,10 +910,11 @@ dash.calc('release_goals', {
     return w;
   }
 
-  function tooltip(el) {
+  function tooltip(el, fixed) {
     const tip = document.createElement('div');
     tip.className = 'ax-tip';
     tip.hidden = true;
+    if (fixed) tip.style.position = 'fixed';
     el.append(tip);
     return {
       show(x, y, lines) {
@@ -865,7 +1011,7 @@ dash.calc('release_goals', {
     if (failed(el, d)) return;
     const win = window15();
     if (!win) return;
-    const pts = d.data.map((r) => ({ t: Date.parse(r.at), u: Number(r.usage), reset: Date.parse(r.resets), runs: Number(r.runs),
+    const pts = d.data.map((r) => ({ t: Date.parse(r.at), u: Number(r.usage), reset: Date.parse(r.resets), runs: Number(r.runs), haiku: Number(r.haiku) || 0,
       w: r.week === undefined || r.week === null || r.week === '' ? null : Number(r.week), wreset: Date.parse(r.week_resets) }))
       .filter((p) => p.t >= win.from && p.t <= win.end).sort((a, b) => a.t - b.t);
     const W = el.clientWidth, H = 190;
@@ -935,7 +1081,7 @@ dash.calc('release_goals', {
           [fmtShort(new Date(p.t)), null, 'ax-tip-k'],
           [`Usage ${pct(p.u)}`],
           ...(p.w === null ? [] : [[`7-day usage ${pct(p.w)}`]]),
-          [`Runs with a claim beat: ${p.runs}`],
+          [`Runs with a claim beat: ${p.runs}` + (p.haiku ? ` (${p.haiku} Haiku)` : '')],
         ]);
       })
       .on('mouseleave', () => { dots.attr('r', 2.5); tip.hide(); });
@@ -1076,7 +1222,7 @@ dash.calc('release_goals', {
     }));
   }
 
-  // A table from rows: the cells hold words only (the marks are on the table and its headers).
+  // A table from rows: a cell holds words, a bar or a graph (the marks are on the table and its headers).
   function fillTable(id, rows, cells, keyField) {
     const table = document.getElementById(id);
     const body = table.tBodies[0];
@@ -1086,7 +1232,8 @@ dash.calc('release_goals', {
       if (keyField) tr.dataset.key = String(r[keyField]);
       for (const [field, show, cls] of cells) {
         const td = document.createElement('td');
-        td.textContent = show(r[field], r, td);
+        const v = show(r[field], r, td);
+        if (v instanceof Node) td.replaceChildren(v); else td.textContent = v;
         if (cls) td.className = cls;
         tr.append(td);
       }
@@ -1107,6 +1254,127 @@ dash.calc('release_goals', {
     tr.append(td);
     body.replaceChildren(tr);
     return null;
+  }
+
+  // A progress bar with its percent: share 0..1, or null for no tickets.
+  function progressBar(share) {
+    const box = document.createElement('span');
+    box.className = 'ax-pbar';
+    const track = document.createElement('span');
+    track.className = 'ax-mini';
+    const n = document.createElement('span');
+    n.className = 'ax-pbar-n';
+    if (share === null || isNaN(share)) n.textContent = '—';
+    else {
+      const fill = document.createElement('span');
+      fill.style.width = `${100 * share}%`;
+      fill.style.background = 'var(--ax-done)';
+      track.append(fill);
+      n.textContent = pct(share);
+    }
+    box.setAttribute('role', 'img');
+    box.setAttribute('aria-label', n.textContent === '—' ? 'No tickets' : `${n.textContent} done`);
+    box.append(track, n);
+    return box;
+  }
+
+  // The progress of one item over time on the 0..100 % box (x: the time of all items), and its percent now.
+  let pageTip = null;
+  function progressGraph(points, x, now) {
+    const W = 72, H = 18;
+    const box = document.createElement('span');
+    box.className = 'ax-pbar';
+    const n = document.createElement('span');
+    n.className = 'ax-pbar-n';
+    n.textContent = pct(now);
+    const sx = x.copy().range([1, W - 1]);
+    const y = d3.scaleLinear([0, 1], [H - 1, 1]);
+    const svg = d3.create('svg').attr('class', 'ax-spark').attr('width', W).attr('height', H).attr('viewBox', `0 0 ${W} ${H}`)
+      .attr('role', 'img').attr('aria-label', `Progress over time: ${pct(points.length ? points[0].p : 0)} at the start, ${pct(now)} now`);
+    svg.append('rect').attr('width', W).attr('height', H).attr('rx', 3).attr('fill', 'var(--cds-chart-muted)').attr('opacity', 0.5);
+    if (points.length) {
+      svg.append('path').datum(points).attr('d', d3.area().x((p) => sx(p.t)).y0(H - 1).y1((p) => y(p.p)))
+        .attr('fill', 'var(--ax-done)').attr('opacity', 0.25);
+      svg.append('path').datum(points).attr('d', d3.line().x((p) => sx(p.t)).y((p) => y(p.p)))
+        .attr('fill', 'none').attr('stroke', 'var(--ax-done)').attr('stroke-width', 1.5).attr('stroke-linejoin', 'round');
+      const dot = svg.append('circle').attr('r', 2.5).attr('fill', 'var(--ax-done)').attr('stroke', 'var(--color-panel)').attr('opacity', 0);
+      pageTip = pageTip || tooltip(document.querySelector('.ax'), true);
+      svg.on('pointermove', (event) => {
+        const p = points[d3.bisector((q) => q.t).center(points, sx.invert(d3.pointer(event)[0]))];
+        dot.attr('cx', sx(p.t)).attr('cy', y(p.p)).attr('opacity', 1);
+        pageTip.show(event.clientX, event.clientY - 6, [[fmtShort(new Date(p.t)), null, 'ax-tip-k'], [`${pct(p.p)} · ${p.done} / ${p.done + p.left} tickets`]]);
+      }).on('pointerleave', () => { dot.attr('opacity', 0); pageTip.hide(); });
+    }
+    box.append(svg.node(), n);
+    return box;
+  }
+
+  // The progress of each goal over time: one line per goal, labeled at its end, and a crosshair.
+  const GOALS = { convert: 'Convert', play: 'Play', replay: 'Replay', system: 'System' };
+  function drawHistory() {
+    const el = document.getElementById('history-chart');
+    const legend = document.getElementById('history-legend');
+    const d = dash.data('goal_history');
+    legend.replaceChildren();
+    if (failed(el, d)) return;
+    const goals = Object.keys(GOALS);
+    const color = (g) => dash.colors[goals.indexOf(g)];
+    const series = goals.map((g) => ({ goal: g, pts: d.data.filter((r) => r.goal === g)
+      .map((r) => ({ t: Date.parse(r.at), p: Number(r.percent) })).sort((a, b) => a.t - b.t) })).filter((s) => s.pts.length);
+    legend.replaceChildren(...series.map((s) => {
+      const span = document.createElement('span');
+      const sw = document.createElement('i');
+      sw.className = 'ax-swatch';
+      sw.style.background = color(s.goal);
+      span.append(sw, document.createTextNode(GOALS[s.goal]));
+      return span;
+    }));
+    if (!series.length) return;
+    const W = el.clientWidth, H = 230;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img')
+      .attr('aria-label', 'Full-roadmap progress of each goal over time');
+    const y = d3.scaleLinear([0, 1], [H - 26, 10]);
+    const left = Math.ceil(widest(svg, ['100%'])) + 10;
+    const right = Math.ceil(widest(svg, Object.values(GOALS))) + 12;
+    const times = series[0].pts.map((p) => p.t);
+    const x = d3.scaleUtc([new Date(times[0]), new Date(times[times.length - 1])], [left, W - right]);
+    svg.append('g').attr('transform', `translate(${left},0)`)
+      .call(d3.axisLeft(y).tickValues([0, 0.25, 0.5, 0.75, 1]).tickFormat(pct).tickSize(-(W - right - left)))
+      .call(styleAxis)
+      .call((g) => g.select('.domain').remove())
+      .call((g) => g.selectAll('.tick line').attr('stroke', 'var(--cds-chart-grid)'));
+    const day = d3.utcFormat('%b %-d');
+    svg.append('g').attr('transform', `translate(0,${H - 26})`)
+      .call(d3.axisBottom(x).ticks(Math.max(2, Math.floor((W - left - right) / 90))).tickFormat((t) => (t.getUTCHours() ? fmtClock(t) : day(t))))
+      .call(styleAxis)
+      .call((g) => keepInside(g, W));
+    const line = d3.line().x((p) => x(new Date(p.t))).y((p) => y(p.p));
+    for (const s of series) {
+      svg.append('path').datum(s.pts).attr('d', line).attr('fill', 'none').attr('stroke', color(s.goal))
+        .attr('stroke-width', 2).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round');
+    }
+    // Direct labels at the line ends, moved apart when they are too near.
+    const ends = series.map((s) => ({ goal: s.goal, y: y(s.pts[s.pts.length - 1].p) })).sort((a, b) => a.y - b.y);
+    ends.forEach((e, i) => { if (i && e.y - ends[i - 1].y < 13) e.y = ends[i - 1].y + 13; });
+    svg.append('g').selectAll('text').data(ends).join('text')
+      .attr('x', W - right + 6).attr('y', (e) => e.y).attr('dy', '0.32em')
+      .attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)').text((e) => GOALS[e.goal]);
+    const hair = svg.append('line').attr('y1', 10).attr('y2', H - 26).attr('stroke', 'var(--cds-chart-reference)').attr('opacity', 0);
+    const dots = svg.append('g').selectAll('circle').data(series).join('circle').attr('r', 4).attr('fill', (s) => color(s.goal))
+      .attr('stroke', 'var(--color-panel)').attr('stroke-width', 2).attr('opacity', 0);
+    const tip = tooltip(el);
+    svg.append('rect').attr('x', left).attr('y', 0).attr('width', W - right - left).attr('height', H - 26).attr('fill', 'transparent')
+      .on('pointermove', (event) => {
+        const i = d3.bisectCenter(times, x.invert(d3.pointer(event)[0]).getTime());
+        const at = x(new Date(times[i]));
+        hair.attr('x1', at).attr('x2', at).attr('opacity', 1);
+        dots.attr('cx', at).attr('cy', (s) => y((s.pts[i] || s.pts[s.pts.length - 1]).p)).attr('opacity', 1);
+        tip.show(at, d3.min(series, (s) => y((s.pts[i] || s.pts[s.pts.length - 1]).p)), [
+          [fmtShort(new Date(times[i])), null, 'ax-tip-k'],
+          ...series.map((s) => [`${GOALS[s.goal]} ${pct((s.pts[i] || s.pts[s.pts.length - 1]).p)}`, color(s.goal)]),
+        ]);
+      })
+      .on('pointerleave', () => { hair.attr('opacity', 0); dots.attr('opacity', 0); tip.hide(); });
   }
 
   function drawRecent() {
@@ -1130,11 +1398,7 @@ dash.calc('release_goals', {
       ['priority', (v) => v],
       ['subs_done', (v) => String(v), 'ax-num'],
       ['subs_total', (v) => String(v), 'ax-num'],
-      ['share', (v, r, td) => {
-        const p = Math.round(100 * Number(v));
-        td.style.background = `linear-gradient(to left, color-mix(in srgb, ${dash.colors[0]} 24%, transparent) ${p}%, transparent ${p}%)`;
-        return Number(r.subs_total) ? pct(v) : '—';
-      }, 'ax-num'],
+      ['share', (v, r) => progressBar(Number(r.subs_total) ? Number(v) : null)],
     ]);
   }
 
@@ -1153,7 +1417,18 @@ dash.calc('release_goals', {
   const STATUS = { 'Done': 'ax-st ax-st-done', 'In progress': 'ax-st ax-st-prog', 'To do': 'ax-st ax-st-todo' };
 
   function drawProgress() {
+    drawHistory();
     const goals = dash.data('release_goals');
+    const history = dash.data('release_history');
+    const byItem = new Map();
+    if (history.status === 'ok') {
+      history.data.forEach((r) => {
+        if (!byItem.has(r.id)) byItem.set(r.id, []);
+        byItem.get(r.id).push({ t: Date.parse(r.at), p: Number(r.progress), done: Number(r.done), left: Number(r.left) });
+      });
+    }
+    const span = history.status === 'ok' && history.data.length ? d3.extent(history.data, (r) => Date.parse(r.at)) : [0, 1];
+    const x = d3.scaleUtc(span.map((t) => new Date(t)), [0, 1]);
     document.querySelectorAll('.ax-stack[data-stack]').forEach((el) => {
       el.replaceChildren();
       if (goals.status !== 'ok') return;
@@ -1184,14 +1459,8 @@ dash.calc('release_goals', {
         ['status', (v, r, td) => { td.className = STATUS[v] || 'ax-st'; return v; }],
         ['milestone', (v) => v, 'ax-narrow-hide ax-nowrap'],
         ['epics', (v) => v, 'ax-narrow-hide ax-nowrap'],
-        ['tickets', (v, r, td) => {
-          const all = Number(r.done) + Number(r.left);
-          if (all) {
-            const p = Math.round((100 * Number(r.done)) / all);
-            td.style.background = `linear-gradient(to left, color-mix(in srgb, var(--ax-done) 24%, transparent) ${p}%, transparent ${p}%)`;
-          }
-          return v;
-        }, 'ax-num'],
+        ['progress', (v, r) => progressGraph(byItem.get(r.id) || [], x, Number(v))],
+        ['tickets', (v) => v, 'ax-num ax-narrow-hide'],
       ], 'id');
     }
   }
