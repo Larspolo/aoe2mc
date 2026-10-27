@@ -522,6 +522,7 @@ class Gather:
             nomad = "unit" in kinds and "building" not in kinds
             start = civs.start(self, {r: v + NOMAD.get(r, 0) * nomad for r, v in START.items()})   # #1269
         self.stock = {**dict.fromkeys(DROP_SITES, 0), **start}             # at the drop sites (#973)
+        self.spare = {}                                                # the fractions of the drop-off bonus (#2111)
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
                       and "VILLAGER" in o["name"]]
         self.villagers, self.selected = {}, set()
@@ -926,6 +927,15 @@ class Gather:
             if part := n // len(to) + (i < n % len(to)):
                 h.stock[res] += part
                 h.command(f"scoreboard players add {res.capitalize()} {h.board} {part}")
+
+    def deliver(self, res, n, forage=False):
+        """Earn the load n of resource res at a drop site with the drop-off bonus of the civilization (civs.DROP: food,
+        forage for a load of a fruit bush, #2111). AoE2 keeps the fractions: the next load gets them."""
+        f = civs.drop(self, res) * (civs.drop(self, "forage") if forage else 1)
+        self.spare[res] = self.spare.get(res, 0) + n * f
+        if whole := int(self.spare[res] + 1e-9):
+            self.spare[res] -= whole
+            self.earn(res, whole)
 
     def event(self, v, name):
         if self.log:
@@ -1341,7 +1351,7 @@ class Gather:
                 v.timer = 0.0
                 self.set(v, "chop" if self.source(v).get(v.tree, 0) > 0 else "idle")
             elif v.state == "to_drop":
-                self.earn(v.res, v.load)
+                self.deliver(v.res, v.load, v.res == "food" and v.tree in self.map.bushes)
                 v.load = 0
                 self.event(v, "drop")
                 if v.tree in self.map.farms:
