@@ -39,6 +39,8 @@ Rally points (#707): the menu item "Rally point" (RALLY) and the next right clic
 the building; each new unit walks there (Minecraft path finding), a new villager gathers at a tree, bush, mine or farm.
 The castle (#708) trains the unique unit of the civilization of its player (UNIQUE, trains()). Only the units with AoE2
 combat values (combat.STATS) are in its menu.
+The monastery trains monks in the Castle Age (#1243): a monk does not gather, so it joins g.soldiers and takes the
+move orders of the military units.
 """
 import json
 import math
@@ -76,6 +78,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "MAN_AT_ARMS": {"food": 60, "gold": 20},
          "MAN_AT_ARMS_UPGRADE": {"food": 100, "gold": 40},
          "MANGUDAI": {"wood": 55, "gold": 65},
+         "MONK": {"gold": 100},
          "PADDED_ARCHER_ARMOR": {"food": 100},
          "SAMURAI": {"food": 45, "gold": 30},
          "SCALE_BARDING_ARMOR": {"food": 150},
@@ -108,6 +111,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "MAN_AT_ARMS": 21,
                "MAN_AT_ARMS_UPGRADE": 40,
                "MANGUDAI": 26,
+               "MONK": 51,
                "PADDED_ARCHER_ARMOR": 40,
                "SAMURAI": 9,
                "SCALE_BARDING_ARMOR": 45,
@@ -129,7 +133,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES"),                           # (#671, #940)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
           "MILL": ("HORSE_COLLAR",),                                            # (#726)
-          "MINING_CAMP": ("GOLD_MINING", "STONE_MINING")}                      # (#727, #939)
+          "MINING_CAMP": ("GOLD_MINING", "STONE_MINING"),                      # (#727, #939)
+          "MONASTERY": ("MONK",)}                                              # (#1243)
 # The unique unit of each civilization (AoE2 DE), trained at its castle. A unit without COSTS is not in the menu yet:
 # it has no AoE2 combat values in combat.STATS.
 UNIQUE = {"BRITONS": "LONGBOWMAN", "PERSIANS": "WAR_ELEPHANT", "BYZANTINES": "CATAPHRACT", "CELTS": "WOAD_RAIDER",
@@ -214,6 +219,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "MAN_AT_ARMS": (0, "zombie_spawn_egg", "Man-at-Arms"),
          "MAN_AT_ARMS_UPGRADE": (2, "book", "Man-at-Arms"),
          "MANGUDAI": (0, "skeleton_horse_spawn_egg", "Mangudai"),
+         "MONK": (0, "evoker_spawn_egg", "Monk"),
          "PADDED_ARCHER_ARMOR": (3, "book", "Padded Archer Armor"),
          "SAMURAI": (0, "zombie_spawn_egg", "Samurai"),
          "SCALE_BARDING_ARMOR": (4, "book", "Scale Barding Armor"),
@@ -248,6 +254,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "MAN_AT_ARMS_UPGRADE": "Upgrades militia to man-at-arms.",
         "MANGUDAI": "Mongol horse archer. Strong vs. siege.",
         "MILITIA": "Infantry. Strong vs. eagles; weak vs. archers.",
+        "MONK": "Heals own units, converts enemy units.",
         "PADDED_ARCHER_ARMOR": "Archers +1 melee armor, +1 pierce armor.",
         "SAMURAI": "Japanese infantry. Strong vs. unique units.",
         "SCALE_BARDING_ARMOR": "Cavalry +1 melee armor, +1 pierce armor.",
@@ -666,7 +673,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * civs.speed(g, name)))   # also without an order (#849)
     if player not in (None, g.player):
         return uuid
-    if gather.military(name):
+    if gather.military(name) or name == "MONK":                    # a monk walks on orders as a soldier (#1243)
         g.soldiers[uuid] = name
         return uuid
     g.villagers[uuid] = gather.Villager(uuid, pos)
