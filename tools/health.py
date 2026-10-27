@@ -3,12 +3,14 @@
     python3 tools/health.py              # the last 24 hours
     python3 tools/health.py --hours 72
     python3 tools/health.py --hours 24 --until 2026-10-26T05:15:00Z   # the 24 hours before a time (#489)
+    python3 tools/health.py --hours 6 --compare                        # the last 6 hours next to the 6 before (#1697)
 
 REST only (cloud sessions give 403 for GraphQL and `search/...`). Token and `gh` fallback as in
 `tools/dashboard.py`. The parsing functions take plain JSON, so the tests need no network.
 """
 import argparse
 import datetime
+import difflib
 import os
 import re
 import statistics
@@ -536,15 +538,17 @@ def api_pages(path, limit=20, stop=None):
     return out
 
 
-def main(argv=None):
-    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--hours", type=float, default=24)
-    ap.add_argument("--until", type=ts, help="the end of the period (ISO time, default now): compare two periods")
-    a = ap.parse_args(argv)
-    until = a.until or datetime.datetime.now(datetime.timezone.utc)
-    since = until - datetime.timedelta(hours=a.hours)
-    runs, jobs, status_comments, comments, prs, issues, events = fetch(since, a.until)
-    if a.until:
+def utc(s):
+    """An ISO time; a time without a zone is UTC (`--until 2026-10-27T01:00`, #1697)."""
+    t = ts(s)
+    return t if t.tzinfo else t.replace(tzinfo=datetime.timezone.utc)
+
+
+def period(until, hours, past):
+    """The report of the `hours` before `until`; `past`: the period ends before now, so clip the items after it."""
+    since = until - datetime.timedelta(hours=hours)
+    runs, jobs, status_comments, comments, prs, issues, events = fetch(since, until if past else None)
+    if past:
         runs, status_comments, comments, prs, issues, events = clip(until, runs, status_comments, comments, prs,
                                                                     issues, events)
     files_of = {n: [f["filename"] for f in api(f"pulls/{n}/files?per_page=100")] for n in conflicted(comments)}
@@ -552,7 +556,37 @@ def main(argv=None):
     refs = claim_refs()
     text = report(since, runs, jobs, status_comments, comments, prs, git_files(), files_of, issues, events,
                   unanswered(), None if refs is None else review_delays(refs))
-    print(text.replace(" UTC", f" UTC until {until:%Y-%m-%d %H:%M} UTC", 1) if a.until else text)
+    return text.replace(" UTC", f" UTC until {until:%Y-%m-%d %H:%M} UTC", 1) if past else text
+
+
+def compare(last, before):
+    """The lines of two reports next to each other (#1697): a line of the last period, and under it the line of the
+    period before when it differs (`  before: ...`). Lines pair by their name (the text before the first colon, digit or
+    parenthesis)."""
+    a, b = last.splitlines(), before.splitlines()
+    key = lambda line: re.split(r"[:\d(]", line)[0]
+    out = []
+    for op, i1, i2, j1, j2 in difflib.SequenceMatcher(None, [key(x) for x in a], [key(x) for x in b],
+                                                      autojunk=False).get_opcodes():
+        if op == "equal":
+            for x, y in zip(a[i1:i2], b[j1:j2]):
+                out += [x] + [f"  before: {y.strip()}"] * (x != y)
+        else:
+            out += a[i1:i2] + [f"  before: {y.strip()}" for y in b[j1:j2]]
+    return "\n".join(out)
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    ap.add_argument("--hours", type=float, default=24)
+    ap.add_argument("--until", type=utc, help="the end of the period (ISO time, UTC, default now): compare two periods")
+    ap.add_argument("--compare", action="store_true", help="also the period before, under each line that differs")
+    a = ap.parse_args(argv)
+    until = a.until or datetime.datetime.now(datetime.timezone.utc)
+    text = period(until, a.hours, bool(a.until))
+    if a.compare:
+        text = compare(text, period(until - datetime.timedelta(hours=a.hours), a.hours, True))
+    print(text)
     return 0
 
 

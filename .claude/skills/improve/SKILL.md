@@ -27,7 +27,10 @@ now (step 1). Did they get better?
 
 ## 1. Collect the data
 
-Run `python3 tools/health.py` first (`--hours N`, default 24, about 25 s). It prints the CI runs per workflow,
+Run `python3 tools/health.py --hours 6 --compare` first (about 2 minutes, #1697): it prints the last 6 hours and, under each
+line that differs, the 6 hours before (`  before: ...`). A change of more than 20 % between the two periods (the quota
+per merged PR, the tokens per run, the phase minutes, the takeovers) is a finding: a 24-hour period shows a trend about
+12 hours late. Use `--hours 24` for the slow numbers (night runs, reopened tickets). It prints the CI runs per workflow,
 the slowest CI steps, the setup minutes, takeovers, releases, merge conflicts (and their files), the minutes of each
 phase, the quota per merged PR, the release points per 1 % of 7-day quota (the main number: progress to the goals per
 quota), the tokens per run and per merged PR and the largest token sinks (from the `Tokens:` lines), weak spots (rework, bugs of check tickets, red night runs), claim-to-merge minutes and files that do not belong in git. Collect by hand only what it does not print.
@@ -157,7 +160,7 @@ Comment 3–5 lines: the result of step 0, the numbers of the six areas, the lar
 and add the reason to `docs/LEARNINGS.md`.
 
 Then set the next review slot: `python3 tools/claim.py 0 --reviewed change` after a change (the next slot is 45
-minutes), or `--reviewed none` when no loss was large enough for a change (the slot doubles, at most 6 hours, #898).
+minutes), or `--reviewed none` when no loss was large enough for a change (the slot doubles, at most 2 hours, #898, #1697).
 
 ## Guardrails
 
