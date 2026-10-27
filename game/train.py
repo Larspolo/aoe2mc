@@ -683,6 +683,14 @@ def research(g, entry):
         g.command("tellraw @a " + json.dumps({"text": f"Player {g.player} advances to the {age(g)}.", "color": "gold"}))
         g.command("playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1")
         return
+    for r, v in civs.TECH_GIFTS.get(civs.civ(g), {}).items():       # Spanish: 20 gold, not for an age (#2175)
+        g.stock[r] += v
+        g.command(f"scoreboard players add {r.capitalize()} {g.board} {v}")
+    if entry["name"] in civs.ECONOMY:                              # Wei: free villagers at an own town center (#2175)
+        rects = [r for r, n in homes(g).items() if n == "TOWN_CENTER"]
+        for _ in range(civs.ECONOMY_VILLAGERS.get(civs.civ(g), 0) * bool(rects)):
+            if spawn(g, rects[0], "VILLAGER_MALE"):
+                g.pop += 1
     g.command(f"tellraw {entry['player']} " + json.dumps({"text": f"{ITEMS[entry['name']][2]} is researched.",
                                                           "color": "green"}))
 

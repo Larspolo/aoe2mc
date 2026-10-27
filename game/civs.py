@@ -72,7 +72,9 @@ GROUPS = {g: (lambda f, g: lambda n, s: g in TAGS.get(n, ()) or f(n, s))(RULES.g
 # age]; what is a group of GROUPS (units), "buildings", "buildings but farms", "technologies", "ages", "BUILDING
 # technologies" (the technologies of the menu of that building, #1925) or a list of names; a float multiplies the cost
 # (0.0: free), an int adds to it; AoE2 rounds half up (35 × 0.75 = 26). "twice": the technologies whose effect it gets
-# twice (train.stats, #1561). "age_gifts": the resources that it gets at each new age (#1926).
+# twice (train.stats, #1561). "age_gifts": the resources that it gets at each new age (#1926). "tech_gifts": the
+# resources that it gets for each technology but an age, "economy_villagers": the free villagers for each economic
+# technology (#2175).
 ROWS = table.load("civs.jsonl")
 
 
@@ -129,6 +131,8 @@ AGE_GIFTS = {r["name"]: r["age_gifts"] for r in ROWS if "age_gifts" in r}   # re
 AGE_NO_BUILDINGS = ("KHMER",)                                      # no buildings are required to advance
 AGE_RATE = {"MALAY": 1.66}                                         # advancing in age is 66 % faster
 AGE_VILLAGERS = {"BENGALIS": 2}                                    # each own town center spawns 2 villagers
+TECH_GIFTS = {r["name"]: r["tech_gifts"] for r in ROWS if "tech_gifts" in r}   # Spanish: gold for each technology
+ECONOMY_VILLAGERS = {r["name"]: r["economy_villagers"] for r in ROWS if "economy_villagers" in r}   # Wei (#2175)
 
 
 def tagged(n, group):
