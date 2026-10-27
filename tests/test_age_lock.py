@@ -50,7 +50,8 @@ def test_in_the_dark_age_a_start_archery_range_shows_a_gray_archer_and_trains_no
         + " 7:gray_dye:Hand Cannoneer:45 food · 50 gold · 34 s · Needs the Imperial Age" \
         + " 19:gray_dye:Genitour:40 food · 35 wood · 25 s · Needs the Castle Age" \
         + " 21:gray_dye:Elephant Archer:70 food · 80 gold · 32 s · Needs the Castle Age" \
-        + " 23:gray_dye:Mounted Crossbowman:40 wood · 65 gold · 40 s · Needs the Castle Age" + RALLY   # (#1610, #1952, #2012)
+        + " 23:gray_dye:Mounted Crossbowman:40 wood · 65 gold · 40 s · Needs the Castle Age" \
+        + " 25:gray_dye:Slinger:50 food · 25 wood · 25 s · Needs the Castle Age" + RALLY   # (#1610, #1952, #2012, #2010)
     assert train.order(g, "Steve", rect, 0) == 0 and g.stock["wood"] == 25 and not g.queues.get(rect)
     g.techs.add("FEUDAL_AGE")
     assert train.order(g, "Steve", rect, 0) == 1
