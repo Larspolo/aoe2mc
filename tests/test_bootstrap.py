@@ -28,6 +28,7 @@ def test_bootstrap_writes_generic_files_and_config(tmp_path, capsys):
     assert set(got) - {p for p, k in rows.items() if k == "generic"} == set(bootstrap.STUBS)
     # no file of the converter, the game program, their docs and tests
     assert not [p for p in got if p.startswith(("game/", "tests/", "datapacks/", "docs/research/")) and p not in bootstrap.STUBS
+                and rows.get(p) != "generic"
                 or p in ("aoe2mc.py", "buildings.py", "units.py", "scx.py", "docs/DESIGN.md")]
     cfg = tomllib.load(open(tmp_path / "agent.toml", "rb"))
     assert (cfg["repo"], cfg["owner"], cfg["branch"], cfg["status"]["label"]) == ("me/demo", "me", "main", "agent-status")

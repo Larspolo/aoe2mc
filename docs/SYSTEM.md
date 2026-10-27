@@ -110,7 +110,7 @@ status issue).
    Add the ruleset `Protect main` (Settings → Rules): no force push, no delete of `main`. Give the workflows write
    access (Settings → Actions → General → Workflow permissions), so that Automerge can merge.
 2. **Cloud environment.** At claude.ai/code, make one environment for all runs. Network access: keep "Allow package
-   managers" on and add the hosts of `docs/STEERING.md` ("Network for Minecraft tests"). Setup script: paste
+   managers" on and add the hosts of `docs/ENVIRONMENT.md` ("Network"). Setup script: paste
    `scripts/cloud-setup.sh`. Paste it again when an agent asks (the SessionStart hook compares `SETUP_VERSION`).
 3. **Status issue.** Open issue #1 with the label `agent-status` (the first run makes it when it is missing).
 4. **Scheduled task "aoe2mc autopilot".** Hourly at :06. Repository `Larspolo/aoe2mc`, the environment of step 2.
@@ -137,12 +137,16 @@ example a new pacer session when the old one has a full context). A long-lived o
 
 "Generic" files work for another project with no change, or with a change of `agent.toml` only (#905: the repository,
 the owner login, the default branch, the status issue, the commands, the doc paths). "Specific" files hold rules of aoe2mc.
+The tests of the generic tools are generic too, so that a new project has them (#1900). Not in the table: the tests
+of `tools/bootstrap.py` (they copy this repository) and the tests that need a specific tool (`tools/dashboard_data.py`,
+`tools/release.py`). `tests/test_generic_words.py` fails when a generic file names the domain of the project.
 
 | File | Kind | What is specific to aoe2mc |
 |---|---|---|
 | `agent.toml` | specific | All the project values that the generic files use. `tools/agent_config.py` reads it. |
 | `CLAUDE.md` | specific | The commands, the code map, the rules of the domain. The sections "How to work" and "Improve the process" are generic. |
-| `docs/STEERING.md` | generic | The owner login, the Mojang hosts, Minecraft in the setup script. |
+| `docs/STEERING.md` | generic | The owner login. |
+| `docs/ENVIRONMENT.md` | specific | The hosts of the tests and the tools of the setup script (Mojang, Java, Minecraft, #1900). |
 | `docs/LEARNINGS.md` | specific | The lessons of this project. The first section (environment and GitHub) is mostly generic. |
 | `docs/ROADMAP.md` | specific | The three goals and their features. |
 | `docs/PRINCIPLES.md` | specific | The direction of the project: the owner's preferences, made general from the decisions. |
@@ -183,6 +187,40 @@ the owner login, the default branch, the status issue, the commands, the doc pat
 | `tools/operator_check.py` | generic | None (`agent.toml`). |
 | `tools/owner_tasks.py` | generic | None (`agent.toml`). |
 | `tools/unconflict.py` | generic | None (solves add-add conflicts for `unconflict.yml`, #1864). |
+| `tests/test_agent_config.py` | generic | None (a test of `tools/agent_config.py`). |
+| `tests/test_claim.py` | generic | None (a test of `tools/claim.py`). |
+| `tests/test_claim_active_pr.py` | generic | None (a test of `tools/claim.py`). |
+| `tests/test_claim_code_span.py` | generic | None (a test of `tools/claim.py`). |
+| `tests/test_claim_conflict.py` | generic | None (a test of `tools/claim.py`). |
+| `tests/test_claim_refill.py` | generic | None (a test of `tools/claim.py`). |
+| `tests/test_claim_revived.py` | generic | None (a test of `tools/claim.py`). |
+| `tests/test_claim_takeover.py` | generic | None (a test of `tools/claim.py`). |
+| `tests/test_dashboard.py` | generic | None (a test of `tools/dashboard.py`). |
+| `tests/test_dashboard_decide.py` | generic | None (a test of `tools/dashboard.py`). |
+| `tests/test_dashboard_muted.py` | generic | None (a test of `tools/dashboard.py`). |
+| `tests/test_dashboard_overlap.py` | generic | None (a test of `tools/dashboard.py`). |
+| `tests/test_dashboard_process.py` | generic | None (a test of `tools/dashboard.py`). |
+| `tests/test_dashboard_start.py` | generic | None (a test of `tools/dashboard.py`). |
+| `tests/test_feedback.py` | generic | None (a test of `tools/feedback.py`). |
+| `tests/test_health.py` | generic | None (a test of `tools/health.py`). |
+| `tests/test_health_compare.py` | generic | None (a test of `tools/health.py`). |
+| `tests/test_health_conflicts.py` | generic | None (a test of `tools/health.py`). |
+| `tests/test_health_pr.py` | generic | None (a test of `tools/health.py`). |
+| `tests/test_health_reviews.py` | generic | None (a test of `tools/health.py`). |
+| `tests/test_health_takeovers.py` | generic | None (a test of `tools/health.py`). |
+| `tests/test_health_until.py` | generic | None (a test of `tools/health.py`). |
+| `tests/test_operator.py` | generic | None (a test of `tools/operator_check.py`). |
+| `tests/test_owner_tasks.py` | generic | None (a test of `tools/owner_tasks.py`). |
+| `tests/test_owner_tasks_close.py` | generic | None (a test of `tools/owner_tasks.py`). |
+| `tests/test_owner_tasks_project.py` | generic | None (a test of `tools/owner_tasks.py`). |
+| `tests/test_owner_tasks_wait.py` | generic | None (a test of `tools/owner_tasks.py`). |
+| `tests/test_tokens.py` | generic | None (a test of `tools/tokens.py`). |
+| `tests/test_tokens_verify.py` | generic | None (a test of `tools/tokens.py`). |
+| `tests/test_unconflict.py` | generic | None (a test of `tools/unconflict.py`). |
+| `tests/test_pacer.py` | generic | None (a test of `tools/usage.py`). |
+| `tests/test_usage.py` | generic | None (a test of `tools/usage.py`). |
+| `tests/test_usage_week.py` | generic | None (a test of `tools/usage.py`). |
+| `tests/test_generic_words.py` | specific | The words of aoe2mc that the generic files must not contain (#1900). |
 | `.github/workflows/ci.yml` | specific | The Python, Java and Minecraft steps, the test markers. The red-`main` ticket is generic. |
 | `.github/workflows/automerge.yml` | generic | The branch prefixes `claude/*` and `agent/*`. |
 | `.github/workflows/unconflict.yml` | generic | None. |

@@ -61,9 +61,9 @@ def test_claim_to_merge():
 
 def test_bad_files():
     files = [("aoe2mc.py", 200_000), ("docs/img/a.png", 50_000), ("out/a.png", 10), ("logs/latest.log", 10),
-             ("samples/big.aoe2record", 5 << 20), ("r.0.0.mca", 10)]
+             ("samples/big.bin", 5 << 20), ("r.0.0.mca", 10)]
     assert health.bad_files(files) == [("out/a.png", 10), ("logs/latest.log", 10),
-                                       ("samples/big.aoe2record", 5 << 20), ("r.0.0.mca", 10)]
+                                       ("samples/big.bin", 5 << 20), ("r.0.0.mca", 10)]
 
 
 def test_report():

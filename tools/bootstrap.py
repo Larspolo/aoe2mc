@@ -130,6 +130,9 @@ STUBS = {   # specific files that the generic files need, as a short start for t
                  "TODO\n\n{generic}\n@docs/LEARNINGS.md\n",
     "docs/LEARNINGS.md": "# Learnings\n\nThe agent writes here what it learned the hard way. Each line must save time "
                          "in a later session.\n\n## Environment and libraries\n\n## Code\n",
+    "docs/ENVIRONMENT.md": "# Environment\n\nThe project part of the cloud environment of {name} (`docs/STEERING.md`).\n\n"
+                           "## Network\n\nTODO: the hosts that the tests need outside the package managers.\n\n"
+                           "## Setup script\n\nTODO: the tools that `scripts/cloud-setup.sh` installs.\n",
     "docs/ROADMAP.md": "# Roadmap\n\nThe goals of {name} and their features: done (`[x]`) or missing (`[ ]`). "
                        "The `roadmap` skill makes the next epic from a missing feature.\n\n## 1. TODO\n\n"
                        "- [ ] `goal:feature` TODO\n",
