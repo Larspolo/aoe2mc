@@ -295,6 +295,7 @@ EAGLES = ("AZTECS", "MAYANS")                                     # the eagle li
 MISSING |= dict.fromkeys(("EAGLE_SCOUT", "EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"),   # The Last Chieftains, #1555)
                          tuple(sorted(set().union(*MISSING.values()) - set(EAGLES))))
 MISSING["WINGED_HUSSAR_UPGRADE"] = tuple(sorted(set().union(*MISSING.values()) - {"LITHUANIANS", "POLES"}))   # (#1558)
+MISSING["IMPERIAL_SKIRMISHER_UPGRADE"] = tuple(sorted(set().union(*MISSING.values()) - {"VIETNAMESE"}))   # (#1611)
 LANCERS = ("CUMANS", "JURCHENS", "KHITANS", "MONGOLS", "TATARS")   # the steppe lancers (AoE2 DE wiki, #1557)
 MISSING |= dict.fromkeys(("STEPPE_LANCER", "ELITE_STEPPE_LANCER", "ELITE_STEPPE_LANCER_UPGRADE"),
                          tuple(sorted(set().union(*MISSING.values()) - set(LANCERS))))
