@@ -26,7 +26,14 @@ def setup(food=150, age=1):
 
 
 def menus(server):
-    return [unquote(c) for c in server.log if c.startswith("aoe menu ")]
+    """The menu commands of the log; a long menu with its `aoe menu-add` parts as one text (#1647)."""
+    out = []
+    for c in server.log:
+        if c.startswith("aoe menu "):
+            out.append(unquote(c))
+        elif c.startswith("aoe menu-add ") and out:
+            out[-1] += " " + unquote(c.split(" ", 4)[4])
+    return out
 
 
 def test_the_build_menu_has_the_blacksmith():
