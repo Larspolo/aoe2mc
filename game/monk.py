@@ -50,6 +50,7 @@ RANGE = 4       # tiles
 EVERY = 1.0     # AoE2 seconds between two heal passes (fewer commands); a pass heals for all the time since the last one
 STILL = 0.2     # blocks: a monk that moved more since the last pass walks
 CONVERT = 9     # tiles: the conversion range
+PRINTING = 3    # tiles of conversion range that Block Printing adds (#1457)
 INTERVAL = 1.25  # AoE2 seconds of one conversion interval
 WARM = 4        # the first intervals only warm up
 CHANCE = 0.38   # the chance of each later interval
@@ -286,14 +287,14 @@ def win(g, uuid):
 
 def near(g, m, target, pos):
     """True when monk m is in its conversion range of the target: next to a building, ram or trebuchet (TOUCH),
-    else CONVERT tiles."""
+    else CONVERT tiles (and PRINTING more after Block Printing)."""
     if target in g.forts:
         x0, _, z0, x1, _, z1 = g.forts[target]
         x, _, z = pos[m]
         return math.hypot(max(x0 - x, 0, x - x1 - 1), max(z0 - z, 0, z - z1 - 1)) <= TOUCH
     if any(n in g.enemies[target] for n in NEXT):
         return math.dist(pos[m], pos[target]) <= TOUCH + 1         # to its middle: about 1 block from its side
-    return math.dist(pos[m], pos[target]) <= CONVERT * g.map.T
+    return math.dist(pos[m], pos[target]) <= (CONVERT + PRINTING * ("BLOCK_PRINTING" in g.techs)) * g.map.T
 
 
 def spot(g, m, target, pos):

@@ -141,6 +141,9 @@ START = {"AZTECS": {"gold": 50},
 # The technologies and units that a civilization does not have (AoE2 wiki, the availability chart of each, #1373):
 # the menu does not show them (train.unlocked).
 MISSING = {"ARSON": ("GOTHS", "MUISCA", "ROMANS"),                                          # (#1419)
+           "BLOCK_PRINTING": ("BERBERS", "BULGARIANS", "CELTS", "CUMANS", "ETHIOPIANS", "GOTHS", "GURJARAS", "HUNS",
+                              "KHITANS", "KHMER", "MAPUCHE", "MONGOLS", "SHU", "SICILIANS", "TUPI", "TURKS",
+                              "VARANGIANS", "WU"),                                          # (#1457)
            "BOMBARD_CANNON": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "BENGALIS", "BRITONS", "BULGARIANS",
                               "CELTS", "CHINESE", "CUMANS", "DANES", "GEORGIANS", "HUNS", "INCAS", "JAPANESE",
                               "KHITANS", "KHMER", "MACEDONIANS", "MAGYARS", "MAPUCHE", "MAYANS", "MONGOLS", "MUISCA",
