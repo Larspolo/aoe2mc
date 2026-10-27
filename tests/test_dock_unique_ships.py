@@ -67,3 +67,12 @@ def test_the_elite_upgrade_turns_the_own_ships_into_the_elite_form(name):
     assert up in g.techs and g.soldiers["s"] == f"ELITE_{name}"
     assert combat.stats_command("s", f"ELITE_{name}") in server.log
     assert train.queue(g, "Steve", (15, 12), f"ELITE_{name}") and train.queue(g, "Steve", (15, 12), name) is None
+
+
+def test_bogsveigar_gives_the_longships_and_the_archer_line_1_attack():
+    assert train.forms("ARCHER") == ("ARCHER", "CROSSBOWMAN", "ARBALESTER")
+    for name in ("LONGSHIP", "ELITE_LONGSHIP", "ARBALESTER"):
+        s = combat.stats(name)
+        assert train.TECHS["BOGSVEIGAR"](name, s).attack == s.attack + 1
+    s = combat.stats("CARAVEL")
+    assert train.TECHS["BOGSVEIGAR"]("CARAVEL", s) == s
