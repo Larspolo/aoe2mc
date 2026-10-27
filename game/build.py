@@ -19,8 +19,9 @@ a tree or water is left out. The builders of a tile go on to the next unfinished
 Gates (#1324): a gate (GATES) goes on 4 own wall tiles in a straight line along x or z, as in AoE2 (4 x 1 tiles), or
 on 3 tiles of a diagonal line (3 x 3 tiles, #1655). It replaces them: a wall site goes (its builders go on to the
 gate), a complete wall tile loses its target.
-A complete gate gets doors across its passage (#1325, doors()): on Paper the plugin opens them while an own or allied
-unit is near (aoe gate, Gates.java), as the AoE2 gate (the decision #1323).
+A complete gate gets a portcullis across its passage (#1325, #1656, portcullis()): iron bars from the ground to the top
+of the passage. On Paper the plugin raises them while an own or allied unit is near or walks a path through the gate
+(aoe gate, Gates.java), as the AoE2 gate (the decision #1323).
 Fortified Wall (#1326, train.WALL_UPGRADES): the new and the complete own stone walls and gates get the fortified design
 and its hit points (design(), upgrade()); a damaged one keeps its lost hit points, as in AoE2.
 """
@@ -167,8 +168,6 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
     ), 3)                                                              # (0: Dark)
 WALLS = ("PALISADE_WALL", "STONE_WALL")                            # a line of 1-tile sites with two clicks (#1322)
 GATES = ("GATE", "PALISADE_GATE")                                  # on 4 own wall tiles in a line (#1324)
-DOORS = {"GATE": "dark_oak_door",                                      # the doors of a gate (#1325): wooden, so the units
-         "PALISADE_GATE": "spruce_door"}                               # of the team plan their paths through them
 NEEDS = {"BOMBARD_CANNON": "CHEMISTRY",                            # a unit or building after a technology (#1380)
          "BOMBARD_TOWER": "BOMBARD_TOWER_TECH",                    # (#1375)
          "CANNON_GALLEON": "CHEMISTRY",                            # (#1484)
@@ -633,7 +632,7 @@ def rise(g, site, work):
                        open_cells)
         target(g, site)
         if site["name"] in GATES:
-            doors(g, site)
+            portcullis(g, site)
     return site["progress"] >= 1
 
 
@@ -709,8 +708,8 @@ def upgrade(g, site, old, redraw=True):
     for c in Replay(g, g.data, getattr(g.game, "version", VERSION_NAME)).building(
             name, site["player"], (x0 + x1) / 2 / T, (z0 + z1) / 2 / T, along_z=way(site)) * redraw:   # as found()
         g.command(c)
-    if redraw and site["name"] in GATES:                               # the redraw cleared the doors
-        doors(g, site)
+    if redraw and site["name"] in GATES:                               # the redraw cleared the portcullis
+        portcullis(g, site)
     uuid = combat.target_uuid([x0, z0, x1, z1])
     box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
     for c in [c for c in combat.building(uuid, name, site["player"], box, T, s=new) if c.startswith("aoe building ")] \
@@ -718,32 +717,32 @@ def upgrade(g, site, old, redraw=True):
         g.command(c)
 
 
-def doors(g, site):
-    """Closed doors across the passage of the complete gate site, 2 blocks high on the walk level: one door on each
-    block of the middle 2 tiles, in the middle of the wall depth. On Paper the plugin opens them while a unit of the
-    player or an ally is within 2 blocks (aoe gate, #1325)."""
+def portcullis(g, site):
+    """A closed portcullis across the passage of the complete gate site (#1656, the owner's look): iron bars 3 blocks
+    high from the walk level on each block of the middle 2 tiles, in the middle of the wall depth. The 4 blocks high
+    passage of a stone gate gets the raised bars on top. On Paper the plugin raises the 3 lower rows while a unit of
+    the player or an ally is within 2 blocks or walks a path through it (aoe gate, #1325)."""
     x0, x1, z0, z1 = site["footprint"]
     T, along_z = g.map.T, way(site)
     if str(along_z).startswith("diag"):
-        doors = diagonal_doors(site, T)
+        cells = [(x, z) for x, z, _, _ in diagonal_doors(site, T)]
     else:
-        doors = [(x, z, "east" if along_z else "south", ("left", "right")[i % 2])                # pairs of double doors
-                 for i, (x, z) in enumerate([(x0 + T // 2, z) for z in range(z0 + T, z1 - T)] if along_z
-                                            else [(x, z0 + T // 2) for x in range(x0 + T, x1 - T)])]
+        cells = [(x0 + T // 2, z) for z in range(z0 + T, z1 - T)] if along_z else \
+            [(x, z0 + T // 2) for x in range(x0 + T, x1 - T)]
     y = max((v for x in range(x0, x1) for z in range(z0, z1) if (v := g.map.y(x, z)) is not None), default=None)
-    if y is None or not doors:
+    if y is None or not cells:
         return
-    for x, z, facing, hinge in doors:
-        for half in ("lower", "upper"):
-            g.command(f"setblock {x} {y + (half == 'upper')} {z} minecraft:{DOORS[site['name']]}[facing="
-                      f"{facing},half={half},hinge={hinge}]")
+    top = 3 if site["name"] == "GATE" and not str(along_z).startswith("diag") else 2   # the palisade: logs above
+    for x, z in cells:
+        g.command(f"fill {x} {y} {z} {x} {y + top} {z} minecraft:iron_bars")
     if getattr(g, "paper", False):
-        (ax, bx), (az, bz) = [(min(v), max(v)) for v in list(zip(*doors))[:2]]
-        g.command(f"aoe gate p{site['player']} {ax} {y} {az} {bx} {y + 1} {bz}")
+        (ax, bx), (az, bz) = [(min(v), max(v)) for v in zip(*cells)]
+        g.command(f"aoe gate p{site['player']} {ax} {y} {az} {bx} {y + 2} {bz}")
 
 
 def diagonal_doors(site, T):
-    """[(x, z, facing, hinge)] of the doors across the passage of a diagonal gate site (#1655). The passage of
+    """[(x, z, facing, hinge)] of the doors across the passage of a diagonal gate site (#1655); portcullis() puts its
+    bars on these cells (#1656): a staircase of 2 lines that also closes the diagonal steps. The passage of
     buildings.diagonal_gate is the middle tile of the band x = z (local); a door is a thin panel on one side of its
     block, so one line of doors on the diagonal leaves gaps. The doors on the diagonal close their east side
     (facing west), the doors north of them close their south side (facing north): a closed staircase. Open, the
