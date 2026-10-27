@@ -1,7 +1,8 @@
 name: Bundles
 
-# App bundles that run without Python (#1541, part of #1539): one folder per system with the window (aoe2mc-gui)
-# and the command line (aoe2mc), built with PyInstaller from packaging/aoe2mc.spec (docs/packaging.md). Each job
+# App bundles that run without Python (#1541, part of #1539): one folder per system with the window (aoe2mc-gui),
+# the command line (aoe2mc) and the game program (aoe2mc-game with the Paper plugin jar, #1778), built with PyInstaller
+# from packaging/aoe2mc.spec (docs/packaging.md). Each job
 # converts a scenario and a record with the frozen command line: a missing data file gives an error only at run time.
 # Each job then makes the installer of its system, installs it as a user would and converts a scenario with the
 # installed command line (#1542). installers.yml attaches the installers to the release of a tag v*.
@@ -37,6 +38,15 @@ jobs:
           cache: pip
           cache-dependency-path: packaging/requirements.txt
       - run: python -m pip install -r packaging/requirements.txt
+      - uses: actions/setup-java@v4       # the JDK of the plugin build; the frozen game program runs on it too
+        with:
+          distribution: temurin
+          java-version: "25"
+      - name: Build the plugin jar
+        working-directory: game/plugin
+        run: |
+          if [ "$RUNNER_OS" = Windows ]; then ./gradlew.bat --no-daemon -q jar; else ./gradlew --no-daemon -q jar; fi
+          cp build/libs/aoe2mc-plugin.jar aoe2mc-plugin.jar     # packaging/aoe2mc.spec puts it into the bundle
       - name: Draw the icon
         run: python packaging/icon.py
       - name: Build
@@ -58,6 +68,17 @@ jobs:
           rc=$?
           cat gui.err
           test "$rc" = 124 && ! grep -q Traceback gui.err
+      - name: Start the frozen game program
+        if: runner.os == 'Linux'
+        run: |
+          python tools/scenarios.py tiny tiny.aoe2scenario > /dev/null
+          dist/aoe2mc/aoe2mc tiny.aoe2scenario out-tiny
+          game="$GITHUB_WORKSPACE/dist/aoe2mc/aoe2mc-game"
+          cd "$RUNNER_TEMP"                  # no source checkout next to it: the jar and the data of the bundle
+          "$game" "$GITHUB_WORKSPACE/out-tiny" --bench 10
+          # a command of the plugin (typed, as in a terminal): "Stance: ..." only when the bundle loaded its jar
+          printf 'aoe stance @e[limit=1]\n' | "$game" "$GITHUB_WORKSPACE/out-tiny" | tee game.out
+          grep -q "Stance:" game.out
       - uses: actions/upload-artifact@v4
         with:
           name: aoe2mc-${{ matrix.name }}
