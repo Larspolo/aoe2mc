@@ -24,7 +24,7 @@ def test_the_university_menu_shows_ballistics_in_the_castle_age():
         server, g = setup(age)
         train.open_menu(g, "Steve", (9, 9))
         assert (":book:Ballistics:" in menus(server)[-1]) == shown
-    assert f"{train.MORE + 2}:book:Ballistics:300 wood · 175 gold · 60 s · research" in menus(server)[-1]
+    assert f"{train.MORE + 3}:book:Ballistics:300 wood · 175 gold · 60 s · research" in menus(server)[-1]
 
 
 def test_the_research_turns_on_the_aim_of_the_plugin_on_paper():
