@@ -483,6 +483,7 @@ class Gather:
         self.sided = set()                                             # players in the team of the units (#1241)
         self.garrisons, self.entering = garrison.start(self), {}       # building -> units inside, unit -> building (#808)
         self.monk_at, self.heal_time = {}, 0.0                         # monk -> feet at the last heal pass (#1244)
+        monk.relics(self)                                              # the relics of the map and their monks (#1246)
 
     @property
     def wood(self):
@@ -865,6 +866,8 @@ class Gather:
         if building:                                                   # a chosen building: place its foundation
             build.place(self, name, building, eye, d)
             return
+        if monk.order(self, name, self.map.pick_ground(eye, d)):      # a monk to a relic or to a monastery (#1246)
+            return
         if garrison.order(self, name, self.map.pick_ground(eye, d)):   # the selection goes into an own building (#808)
             return
         if train.open_menu(self, name, self.map.pick_ground(eye, d)):  # an own town center or barracks (#620, #654)
@@ -1061,6 +1064,8 @@ class Gather:
                     self.go(v, "to_drop", set().union(*map(self.map.around, self.map.drops[v.res])))
         train.tick(self, self.tick * NORMAL)
         monk.heal(self, self.tick * NORMAL)
+        garrison.heal(self, self.tick * NORMAL)
+        monk.relic_tick(self, self.tick * NORMAL)
         bossbar.tick(self)
         for site in self.sites:
             builders = [v for v in self.villagers.values() if v.state == "build" and v.site is site]
