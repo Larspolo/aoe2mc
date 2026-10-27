@@ -66,10 +66,4 @@ game/train.py:TECHS 1
 game/train.py:TOWER_UPGRADES 1
 game/train.py:WALL_UPGRADES 1
 game/train.py:summon 1
-rmap.py:FISH 1
-rmap.py:FOREST_TREES 1
-rmap.py:SCATTER 1
-rmap.py:START 1
-rmap.py:TERRAINS 1
-rmap.py:fish 1
 scx.py:CIVS 1

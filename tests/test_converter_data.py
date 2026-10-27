@@ -9,6 +9,7 @@ import buildings
 import units
 
 KEYS = {"animals.jsonl": ({"keys", "behavior", "mob"}, {"tags", "note"}),
+        "rmap.jsonl": ({"name"}, {"fish", "forest", "scatter", "shore_fish", "start", "terrain"}),
         "lines.jsonl": ({"name", "mob", "armor", "main", "off"}, {"tags"}),
         "footprint.jsonl": ({"name", "size"}, set()),
         "units.jsonl": ({"name"}, {"base", "bird", "crew", "drop", "flying", "hero", "infantry", "invisible", "joke",
