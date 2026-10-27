@@ -58,6 +58,7 @@ import market  # noqa: E402
 import menu  # noqa: E402
 import monk  # noqa: E402
 import stance  # noqa: E402
+import trade  # noqa: E402
 import train  # noqa: E402
 import wonder  # noqa: E402
 
@@ -448,8 +449,8 @@ class Gather:
                       and "VILLAGER" in o["name"]]
         self.villagers, self.selected = {}, set()
         self.soldiers = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit"
-                         and o["player"] == player and (military(o["name"]) or o["name"] == "MONK")}   # military units
-        #                                                                and monks of the player: they take move orders (#1243)
+                         and o["player"] == player and (military(o["name"]) or o["name"] == "MONK" or o["name"].startswith(trade.CART))}
+        # military units, monks and trade carts of the player: they take move orders (#1243, #1253)
         self.enemies = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit"
                         and o["player"] not in (0, player)}                     # units of the other players
         self.prey = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit" and o.get("uuid")
@@ -483,6 +484,7 @@ class Gather:
         self.pointing = {}                                             # player -> text of its pointed target (#989)
         self.sided = set()                                             # players in the team of the units (#1241)
         self.garrisons, self.entering = garrison.start(self), {}       # building -> units inside, unit -> building (#808)
+        self.trade = {}                                                # trade cart -> its trade route (trade.py, #1253)
         self.monk_at, self.heal_time = {}, 0.0                         # monk -> feet at the last heal pass (#1244)
         monk.relics(self)                                              # the relics of the map and their monks (#1246)
 
@@ -869,6 +871,8 @@ class Gather:
             return
         if monk.order(self, name, self.map.pick_ground(eye, d)):      # a monk to a relic or to a monastery (#1246)
             return
+        if trade.order(self, name, self.map.pick_ground(eye, d)):     # the trade carts trade with an own market (#1253)
+            return
         if garrison.order(self, name, self.map.pick_ground(eye, d)):   # the selection goes into an own building (#808)
             return
         if train.open_menu(self, name, self.map.pick_ground(eye, d)):  # an own town center or barracks (#620, #654)
@@ -931,7 +935,9 @@ class Gather:
         elif kind == "building":
             homes, holders = train.homes(self), garrison.holders(self)
             name = pretty(homes.get(key) or holders[key]["name"])
-            act = "garrison" if key in holders and self.selected and self.paper else "train" if key in homes else None
+            carts = any(self.soldiers.get(u, "").startswith(trade.CART) for u in self.selected)
+            act = "trade" if carts and homes.get(key) == "MARKET" and len(trade.markets(self)) > 1 and self.paper else \
+                "garrison" if key in holders and self.selected and self.paper else "train" if key in homes else None
         elif kind == "ground":
             name, act = "Ground", None
         else:
@@ -1069,6 +1075,7 @@ class Gather:
         monk.heal(self, self.tick * NORMAL)
         garrison.heal(self, self.tick * NORMAL)
         monk.relic_tick(self, self.tick * NORMAL)
+        trade.tick(self)
         bossbar.tick(self)
         for site in self.sites:
             builders = [v for v in self.villagers.values() if v.state == "build" and v.site is site]

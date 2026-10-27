@@ -214,6 +214,7 @@ STATS = {
     "VILLAGER": Stats(25, 3, 0, 0, 0, 2.0),
     "KING": Stats(75, 0, 0, 0, 0, 0.0),
     "MONK": Stats(30, 0, 0, 0, 9, 0.0),
+    "TRADE_CART": Stats(70, 0, 0, 0, 0, 0.0),
 }
 # Buildings: hit points, melee and pierce armor (Dark Age base). The high pierce armor makes arrows weak, as in AoE2.
 BUILDINGS = {

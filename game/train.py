@@ -42,6 +42,7 @@ combat values (combat.STATS) are in its menu.
 The monastery trains monks in the Castle Age (#1243): a monk does not gather, so it joins g.soldiers and takes the
 move orders of the military units. It researches Fervor (monks walk 15 % faster, SPEEDS, speed()) and Sanctity (monks
 get 15 more hit points) in the Castle Age (#1261).
+The market trains trade carts (#1253): a trade cart also joins g.soldiers, and trade.py walks it between two own markets.
 """
 import json
 import math
@@ -92,6 +93,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "SPEARMAN": {"food": 35, "wood": 25},
          "TEUTONIC_KNIGHT": {"food": 85, "gold": 30},
          "THROWING_AXEMAN": {"food": 55, "gold": 25},
+         "TRADE_CART": {"wood": 100, "gold": 50},
          "WAR_ELEPHANT": {"food": 170, "gold": 85},
          "WHEELBARROW": {"food": 175, "wood": 50},
          "WOAD_RAIDER": {"food": 70, "gold": 25}}
@@ -127,6 +129,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "STONE_MINING": 30,
                "TEUTONIC_KNIGHT": 12,
                "THROWING_AXEMAN": 13,
+               "TRADE_CART": 51,
                "WAR_ELEPHANT": 25,
                "WHEELBARROW": 75,
                "WOAD_RAIDER": 10}
@@ -137,6 +140,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "CASTLE": (),                                                         # the unique unit: trains() (#708)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES"),                           # (#671, #940)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
+          "MARKET": ("TRADE_CART",),                                            # (#1253)
           "MILL": ("HORSE_COLLAR",),                                            # (#726)
           "MINING_CAMP": ("GOLD_MINING", "STONE_MINING"),                      # (#727, #939)
           "MONASTERY": ("MONK", "FERVOR", "SANCTITY")}                          # (#1243, #1261)
@@ -239,6 +243,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "STONE_MINING": (1, "book", "Stone Mining"),
          "TEUTONIC_KNIGHT": (0, "zombie_spawn_egg", "Teutonic Knight"),
          "THROWING_AXEMAN": (0, "drowned_spawn_egg", "Throwing Axeman"),
+         "TRADE_CART": (0, "donkey_spawn_egg", "Trade Cart"),
          "WAR_ELEPHANT": (0, "ravager_spawn_egg", "War Elephant"),
          "FEUDAL_AGE": (2, "bell", "Feudal Age"),
          "WHEELBARROW": (3, "book", "Wheelbarrow"),
@@ -279,6 +284,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "STONE_MINING": "Villagers mine stone 15 % faster.",
         "TEUTONIC_KNIGHT": "Teutonic infantry. Slow, strong armor.",
         "THROWING_AXEMAN": "Frankish infantry. Melee attack at range.",
+        "TRADE_CART": "Brings gold from a second own market.",
         "VILLAGER_MALE": "Gathers, builds and repairs.",
         "WAR_ELEPHANT": "Persian elephant. Slow, very strong.",
         "WHEELBARROW": "Villagers +10 % speed, +25 % carry.",
@@ -698,7 +704,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))   # also without an order (#849)
     if player not in (None, g.player):
         return uuid
-    if gather.military(name) or name == "MONK":                    # a monk walks on orders as a soldier (#1243)
+    if gather.military(name) or name in ("MONK", "TRADE_CART"):    # they walk on orders as a soldier (#1243, #1253)
         g.soldiers[uuid] = name
         return uuid
     g.villagers[uuid] = gather.Villager(uuid, pos)
