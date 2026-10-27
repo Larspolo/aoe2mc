@@ -147,6 +147,8 @@ the tools in `tools/`, CI (`.github/workflows/`), the cloud setup script (`scrip
 hook, `.gitignore` and the claim and dashboard rules. The aim is more closed tickets for the same usage, with the same quality.
 - After each ticket (autopilot step 9): add a learning when something cost you time, correct an instruction
   that was wrong, and make a `tooling` ticket when a tool or test would have found a problem earlier.
+- After each merge conflict that you solve by hand: ask if a structure (a merge driver, a data file, a test that
+  asserts less) could have prevented it. Act only when it is good practice anyway (`autopilot/conflict.md`).
 - Only the owner can change the environment settings (setup script, network, variables), the scheduled task and the
   GitHub settings. When one of them costs time, make a `needs-human` ticket with numbered steps and the exact text.
 - One run per review (`tools/claim.py 0 --review`, after 50 merged PRs, more after reviews with no change): the `improve` skill measures the runs, CI and the environment and makes one larger improvement.

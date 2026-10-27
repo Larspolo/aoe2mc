@@ -81,7 +81,7 @@ minutes of run time (or tickets) per day:
    token sinks (`Tokens:` lines). The phase shares in minutes come second.
 4. **Quality:** rework (owner corrections, reopened tickets, follow-ups of merged work), bugs found by check tickets,
    red night CI runs.
-5. **Weak spots:** merge conflicts, takeovers (`tools/health.py --takeovers`: the cause of each, #1703), refused commands, slow tests, tools missing in the environment.
+5. **Weak spots:** merge conflicts (and the `Conflict:` sentences of the run reports: causes that come again need a structure, `autopilot/conflict.md`), takeovers (`tools/health.py --takeovers`: the cause of each, #1703), refused commands, slow tests, tools missing in the environment.
 6. **Reuse:** what is aoe2mc-specific in the skills, tools and workflows, and how hard it is to set it up for
    another project (epic #909).
 7. **Code structure** (#1909): how easy the code is to change. The line `Data in the code` of `tools/health.py`
