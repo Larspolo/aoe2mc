@@ -187,6 +187,8 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
          "BALLISTICS": lambda name, s: s,                          # the aim of the arrows: aoe ballistics (#1549)
          "BANKING": lambda name, s: s,                             # the tribute fee: diplomacy.FEES
+         "BEARDED_AXE": lambda name, s: s._replace(range=s.range + 2)
+         if name in ("THROWING_AXEMAN", "ELITE_THROWING_AXEMAN") else s,  # the Franks (#2044)
          "BLAST_FURNACE": lambda name, s: s._replace(attack=s.attack + 2) if melee(s) or name in HULKS else s,
          "BLOCK_PRINTING": lambda name, s: s,                      # the conversion range: monk.near
          "BOGSVEIGAR": lambda name, s: s._replace(attack=s.attack + 1) if name in forms("ARCHER") + forms("LONGSHIP") else s,  # (#2021)
