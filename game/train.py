@@ -218,6 +218,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "TWO_HANDED_SWORDSMAN_UPGRADE": {"food": 200, "gold": 100},   # the Imperial Age (#1498)
          "WAR_ELEPHANT": {"food": 170, "gold": 85},
          "WAR_GALLEY": {"wood": 90, "gold": 30},                       # AoE2 DE wiki (#1482)
+         "WAR_HULK": {"wood": 75, "gold": 35},                         # AoE2 DE wiki (#1508)
          "WHEELBARROW": {"food": 175, "wood": 50},
          "WOAD_RAIDER": {"food": 70, "gold": 25}}
 TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130,   # AoE2 seconds
@@ -362,6 +363,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "TWO_HANDED_SWORDSMAN_UPGRADE": 45,
                "WAR_ELEPHANT": 25,
                "WAR_GALLEY": 27,
+               "WAR_HULK": 27,
                "WHEELBARROW": 75,
                "WOAD_RAIDER": 10}
 TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", "HAND_CART", "CASTLE_AGE", "IMPERIAL_AGE",
@@ -621,7 +623,8 @@ UPGRADES = {                                                       # technology:
     "LIGHT_CAVALRY_UPGRADE": ("SCOUT_CAVALRY", "LIGHT_CAVALRY"),
     "LONG_SWORDSMAN_UPGRADE": ("MAN_AT_ARMS", "LONG_SWORDSMAN"),
     "MAN_AT_ARMS_UPGRADE": ("MILITIA", "MAN_AT_ARMS"),
-    "MEDIUM_WARSHIPS": (("GALLEY", "WAR_GALLEY"), ("FIRE_GALLEY", "FIRE_SHIP")),   # two lines (#1482): lines()
+    "MEDIUM_WARSHIPS": (("GALLEY", "WAR_GALLEY"), ("FIRE_GALLEY", "FIRE_SHIP"),   # two lines (#1482): lines()
+                        ("HULK", "WAR_HULK")),                                 # (#1508)
     "ONAGER_UPGRADE": ("MANGONEL", "ONAGER"),
     "PALADIN_UPGRADE": ("CAVALIER", "PALADIN"),
     "PIKEMAN_UPGRADE": ("SPEARMAN", "PIKEMAN"),
@@ -899,6 +902,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "TWO_HANDED_SWORDSMAN_UPGRADE": (2, "book", "Two-Handed Swordsman"),   # the slot of Long Swordsman (AFTER)
          "WAR_ELEPHANT": (0, "ravager_spawn_egg", "War Elephant"),
          "WAR_GALLEY": (1, "dark_oak_boat", "War Galley"),        # the slot of the galley
+         "WAR_HULK": (MORE + 2, "dark_oak_boat", "War Hulk"),     # the slot of the hulk
          "FEUDAL_AGE": (2, "bell", "Feudal Age"),
          "WHEELBARROW": (3, "book", "Wheelbarrow"),
          "WOAD_RAIDER": (0, "zombie_spawn_egg", "Woad Raider")}
@@ -1049,6 +1053,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "VILLAGER_MALE": "Gathers, builds and repairs.",
         "WAR_ELEPHANT": "Persian elephant. Slow, very strong.",
         "WAR_GALLEY": "All-purpose warship with ranged attack.",
+        "WAR_HULK": "Warship with a close range melee attack.",
         "WHEELBARROW": "Villagers +10 % speed, +25 % carry.",
         "WOAD_RAIDER": "Celtic infantry. Fast."}
 SHIFT = 5                                                          # units of a shift click, as in AoE2

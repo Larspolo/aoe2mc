@@ -34,7 +34,8 @@ SPEEDS = {"FISHING_SHIP": 1.26,          # tiles per game second (AoE2 DE wiki i
           "HULK": 1.42,
           "TRADE_COG": 1.65,
           "TRANSPORT_SHIP": 1.45,
-          "WAR_GALLEY": 1.36}                                   # (#1482)
+          "WAR_GALLEY": 1.36,                                   # (#1482)
+          "WAR_HULK": 1.42}                                     # (#1508)
 NEAR = 3                                 # tiles from a clicked land cell to the water that a ship sails to
 PATH_CELLS = 20000                       # the path search limit (cells), as a long walk of the replay
 CHASE = 2.0                              # seconds between two range checks of a warship with a target (#1386)
