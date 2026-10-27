@@ -127,6 +127,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe sees <player> <uuid>                   "Sees: 1" or "Sees: 0" (Player#canSee), for checks
  *   aoe show <players> <uuid> ...              Player#showEntity: the players see these entities again (#1302)
  *   aoe sight <selector> <blocks>              an idle unit attacks an enemy in this line of sight (#775)
+ *   aoe sight <selector> <blocks> only|first   ... and enemy buildings: only buildings, or buildings before units
+ *                                              (#1820: the ram line and the trebuchet, the elephant and cannon galleon)
  *   aoe building <selector> <hp> <melee armor> <pierce armor> <x0> <y0> <z0> <x1> <y1> <z1>
  *                                              make the entity the target of a building (#517, combat.building)
  *   aoe building ... <attack> <range> <reload> <min>
@@ -311,6 +313,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     private final Map<UUID, Range> ranges = new HashMap<>();
     private final Map<UUID, Double> sights = new HashMap<>();       // the line of sight of a unit in blocks (#775)
+    private final Map<UUID, String> modes = new HashMap<>();        // "only" or "first": it takes buildings (#1820)
     private static final Set<String> STANCES = Set.of("aggressive", "defensive", "stand_ground", "no_attack");
     private final Map<UUID, String> stances = new HashMap<>();      // no entry: aggressive (#1104)
     private final Set<UUID> held = new HashSet<>();                 // stand ground units with a target of their own
@@ -952,16 +955,22 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (s == null && e.getVehicle() != null) {
             s = stances.get(e.getVehicle().getUniqueId());
         }
+        if (s == null && e.getScoreboardTags().contains(CARRIER) && !e.getPassengers().isEmpty()) {
+            s = stances.get(e.getPassengers().get(0).getUniqueId());   // a carrier: the stance of its siege unit (#1820)
+        }
         return s == null ? "aggressive" : s;
     }
 
     // The blocks to an enemy that a unit attacks without an order: no limit, with stand ground its range (#1104).
-    private double stanceRange(Mob mob) {
+    private double stanceRange(Entity mob) {
         if (!stance(mob).equals("stand_ground")) {
             return Double.MAX_VALUE;
         }
-        Mob fighter = rider(mob) != null ? rider(mob) : mob;
+        Entity fighter = rider(mob) != null ? rider(mob) : mob;
         Range r = ranges.get(fighter.getUniqueId());
+        if (r == null && fighter.getScoreboardTags().contains(CARRIER) && !fighter.getPassengers().isEmpty()) {
+            r = ranges.get(fighter.getPassengers().get(0).getUniqueId());   // a carrier: the range of its siege unit
+        }
         return r != null ? r.blocks() : MELEE;
     }
 
@@ -1018,11 +1027,20 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     // Each second: an idle unit with a line of sight attacks the nearest unit of another team in it (#775). Only
     // units with AoE2 values are enemies: Gaia animals, players, building targets and garrisoned units are not (#1285).
+    // A unit with a building mode (aoe sight ... only|first, #1820) also takes the nearest enemy building in its sight,
+    // as in AoE2 (wiki "Siege unit (Age of Empires II)"): "only" (the Battering Ram line, the Trebuchet) takes no
+    // units, "first" (the Armored Elephant line, the Cannon Galleon line) takes a building before a unit. A siege unit
+    // (a minecart) looks with its crew; a siege unit with range 0 (a packed trebuchet) and a unit that cannot walk
+    // (an unpacked trebuchet: speed 0) take only a target in their range.
     private void watch() {
         sights.entrySet().removeIf(en -> {
             Entity e = Bukkit.getEntity(en.getKey());
             if (e == null || !e.isValid()) {
-                return e == null || e.isDead();                       // an unloaded unit keeps its sight
+                if (e == null || e.isDead()) {                        // an unloaded unit keeps its sight
+                    modes.remove(en.getKey());
+                    return true;
+                }
+                return false;
             }
             if (e instanceof Mob m && (rider(m) != null ? rider(m) : m).getTarget() instanceof LivingEntity t
                     && t.isInvulnerable() && stats.containsKey(t.getUniqueId())) {   // it went into a building (#1285)
@@ -1030,25 +1048,57 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 f.setTarget(null);
                 f.getPathfinder().stopPathfinding();
             }
-            if (!(e instanceof Mob mob) || !idle(mob, stats.get(mob.getUniqueId()))) {
+            Entity crew = e instanceof Minecart && !e.getPassengers().isEmpty() ? e.getPassengers().get(0) : e;
+            Mob mob = e instanceof Minecart cart ? carrier(cart, false) : e instanceof Mob m ? m : null;
+            Stats st = stats.get(crew.getUniqueId());
+            if (mob != null ? !idle(mob, st) : !(e instanceof Minecart && st != null && st.attack() > 0
+                    && !stance(e).equals("no_attack"))) {           // a minecart without a carrier: no order yet
                 return false;
             }
-            double r = Math.min(en.getValue(), stanceRange(mob));
-            LivingEntity best = null;
+            double r = Math.min(en.getValue(), stanceRange(mob != null ? mob : e));
+            Range range = ranges.get(e.getUniqueId());
+            if (e instanceof Minecart && range != null && range.siege()) {
+                AttributeInstance speed = mob == null ? null : mob.getAttribute(Attribute.MOVEMENT_SPEED);
+                r = speed != null && speed.getBaseValue() <= 0 || range.blocks() <= 0 ? Math.min(r, range.blocks()) : r;
+                if (r <= 0) {
+                    return false;
+                }
+            }
+            String mode = modes.get(e.getUniqueId());
+            LivingEntity best = mode != null ? building(e, crew, r) : null;
             double bestD = r * r;
-            for (Entity o : mob.getNearbyEntities(r, r, r)) {
+            for (Entity o : best != null || "only".equals(mode) ? List.<Entity>of() : e.getNearbyEntities(r, r, r)) {
                 if (o instanceof LivingEntity le && le.isValid() && stats.containsKey(le.getUniqueId())
-                        && !buildings.containsKey(le.getUniqueId()) && !calm(mob, le) && !le.isInvulnerable()
-                        && le.getVehicle() == null && mob.getLocation().distanceSquared(le.getLocation()) <= bestD) {
+                        && !buildings.containsKey(le.getUniqueId()) && !calm(crew, le) && !le.isInvulnerable()
+                        && le.getVehicle() == null && e.getLocation().distanceSquared(le.getLocation()) <= bestD) {
                     best = le;
-                    bestD = mob.getLocation().distanceSquared(le.getLocation());
+                    bestD = e.getLocation().distanceSquared(le.getLocation());
                 }
             }
             if (best != null) {
-                engage(mob, best);
+                engage(mob != null ? mob : unit(e), best);
             }
             return false;
         });
+    }
+
+    // The target of the nearest enemy building whose box is within r blocks of unit e (#1820): no Gaia building, no
+    // building of a neutral player. crew: the entity with the team of a siege unit.
+    private LivingEntity building(Entity e, Entity crew, double r) {
+        LivingEntity best = null;
+        double bestD = r * r;
+        Location l = e.getLocation();
+        for (var en : buildings.entrySet()) {
+            int[] b = en.getValue().b();
+            double dx = Math.max(0, Math.max(b[0] - l.getX(), l.getX() - b[3] - 1));
+            double dz = Math.max(0, Math.max(b[2] - l.getZ(), l.getZ() - b[5] - 1));
+            if (dx * dx + dz * dz <= bestD && Bukkit.getEntity(en.getKey()) instanceof LivingEntity t && t.isValid()
+                    && t.getWorld() == e.getWorld() && side(t) != null && !calm(crew, t) && !calm(e, t)) {
+                best = t;
+                bestD = dx * dx + dz * dz;
+            }
+        }
+        return best;
     }
 
     @EventHandler
@@ -1871,7 +1921,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     /** True when the units of a do not attack b by themselves: the same side, an ally, or a neutral stance. */
     private static boolean calm(Entity a, Entity b) {
-        return sameTeam(a, b) || NEUTRAL.getOrDefault(side(a), Set.of()).contains(side(b));
+        String s = side(b);         // no side (the crew of a siege unit, #1820): Set.of().contains(null) throws
+        return sameTeam(a, b) || s != null && NEUTRAL.getOrDefault(side(a), Set.of()).contains(s);
     }
 
     // team -> the first team of its alliance (aoe allies, #1315): allied players are one side, as in AoE2
@@ -2032,13 +2083,13 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             int n = 0;
             for (Entity e : select(sender, args[1])) {
-                if (e instanceof Mob mob) {
-                    held.remove(mob.getUniqueId());
-                    posts.remove(mob.getUniqueId());
+                if (e instanceof Mob || e instanceof Minecart) {     // a siege unit: its minecart (#1820)
+                    held.remove(e.getUniqueId());
+                    posts.remove(e.getUniqueId());
                     if (args[2].equals("aggressive")) {
-                        stances.remove(mob.getUniqueId());
+                        stances.remove(e.getUniqueId());
                     } else {
-                        stances.put(mob.getUniqueId(), args[2]);
+                        stances.put(e.getUniqueId(), args[2]);
                     }
                     n++;
                 }
@@ -2126,7 +2177,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Sees: " + (!who.isEmpty() && e != null && who.get(0).canSee(e) ? 1 : 0));
             return true;
         }
-        if (args.length == 3 && args[0].equals("sight")) {
+        if ((args.length == 3 || args.length == 4 && Set.of("only", "first").contains(args[3]))
+                && args[0].equals("sight")) {
             double r;
             try {
                 r = Double.parseDouble(args[2]);
@@ -2136,8 +2188,15 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             int n = 0;
             for (Entity e : select(sender, args[1])) {
-                if (e instanceof Mob mob && stats.containsKey(mob.getUniqueId())) {
-                    sights.put(mob.getUniqueId(), r);
+                Entity c = e instanceof Minecart && !e.getPassengers().isEmpty() ? e.getPassengers().get(0) : sailors(e);
+                if ((c instanceof Mob || e instanceof Minecart) && stats.containsKey(c.getUniqueId())) {
+                    UUID id = (e instanceof Minecart ? e : c).getUniqueId();   // a siege unit: its minecart; a ship: its crew
+                    sights.put(id, r);
+                    if (args.length == 4) {
+                        modes.put(id, args[3]);
+                    } else {
+                        modes.remove(id);
+                    }
                     n++;
                 }
             }
