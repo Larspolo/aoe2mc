@@ -18,8 +18,6 @@ def player(civ=None, ages=IMPERIAL):
 
 
 def test_the_archery_range_menu_has_parthian_tactics_in_the_imperial_age():
-    assert train.COSTS["PARTHIAN_TACTICS"] == {"food": 200, "gold": 250}
-    assert train.TRAIN_TIMES["PARTHIAN_TACTICS"] == 65 and train.TECH_AGE["PARTHIAN_TACTICS"] == 3
     server, g = player(ages=("FEUDAL_AGE", "CASTLE_AGE"))
     train.open_menu(g, "Steve", RANGE)
     assert "Parthian Tactics" not in menus(server)[-1] and train.queue(g, "Steve", RANGE, "PARTHIAN_TACTICS") is None

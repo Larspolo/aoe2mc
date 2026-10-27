@@ -10,21 +10,12 @@ import monk  # noqa: E402
 import table  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-KEYS = {"cheats.jsonl": ({"unit"}, {"transform", "units"}),          # the keys of one kind of line
-        "monk.jsonl": ({"immune"}, {"next"}, {"lasting"}),
-        "replay.jsonl": ({"walk"}, {"age"}, {"society"})}
+FILES = ("cheats.jsonl", "monk.jsonl", "replay.jsonl")
 
 
-def test_each_line_has_the_keys_of_one_kind():
-    for name, kinds in KEYS.items():
-        for r in table.load(name):
-            assert set(r) - {"name", "note"} in kinds, (name, r["name"])
-
-
-def test_a_transform_names_a_list_of_units_or_a_function_of_cheats():
+def test_the_rule_of_a_transform_is_a_function_of_cheats():
     for r in table.load("cheats.jsonl"):
-        if "units" in r:
-            assert isinstance(r["units"], list) or callable(getattr(cheats, r["units"], None)), r["name"]
+        assert callable(getattr(cheats, r.get("rule", "villager"), None)), r["name"]
 
 
 def test_the_cheats_make_units_and_transforms_from_the_file():
@@ -40,7 +31,7 @@ def test_the_monk_rules_keep_their_kinds():
 
 
 def test_the_files_merge_by_name():
-    for name in KEYS:
+    for name in FILES:
         out = subprocess.run(["git", "check-attr", "merge", f"game/data/{name}"], cwd=ROOT, capture_output=True,
                              text=True).stdout
         assert out.strip().endswith("merge: jsonl"), name

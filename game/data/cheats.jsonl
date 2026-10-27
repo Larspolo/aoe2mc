@@ -1,13 +1,13 @@
 {"name": "alpaca simulator", "unit": "ALFRED_THE_ALPACA"}
 {"name": "cameleon", "transform": "FLAMING_CAMEL", "units": ["BACTRIAN_CAMEL", "CAMEL", "CAMEL_ARCHER", "CAMEL_RIDER", "ELITE_CAMEL_ARCHER", "HEAVY_CAMEL_RIDER", "IMPERIAL_CAMEL_RIDER"], "note": "not the Mameluke, Camel Scout and Raider, camel heroes"}
 {"name": "catzor", "unit": "SHARKATZOR"}
-{"name": "flemish reformation", "transform": "MONK", "units": "villager"}
+{"name": "flemish reformation", "transform": "MONK", "rule": "villager"}
 {"name": "furious the monkey boy", "unit": "FURIOUS_THE_MONKEY_BOY"}
-{"name": "grab your pitchforks", "transform": "FLEMISH_MILITIA", "units": "villager"}
+{"name": "grab your pitchforks", "transform": "FLEMISH_MILITIA", "rule": "villager"}
 {"name": "how do you turn this on", "unit": "COBRA_CAR"}
 {"name": "i don't exist", "unit": "WAR_PENGUIN"}
 {"name": "i love the monkey head", "unit": "VMDL"}
 {"name": "photon man", "unit": "PHOTONMAN"}
-{"name": "put on your capes", "transform": "ELITE_TEUTONIC_KNIGHT", "units": "infantry"}
+{"name": "put on your capes", "transform": "ELITE_TEUTONIC_KNIGHT", "rule": "infantry"}
 {"name": "to smithereens", "unit": "SABOTEUR"}
 {"name": "yes we khan", "transform": "GENGHIS_KHAN", "units": ["ELITE_MANGUDAI", "MANGUDAI"]}

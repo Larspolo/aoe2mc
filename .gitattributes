@@ -28,6 +28,8 @@ game/data/gather.jsonl merge=jsonl
 game/data/cheats.jsonl merge=jsonl
 game/data/monk.jsonl merge=jsonl
 game/data/replay.jsonl merge=jsonl
+# One JSON object per bonus of the wiki list, named "CIV: bonus" (#2100): two tickets that close two bonuses do not conflict.
+tests/data/civ_bonuses.jsonl merge=jsonl
 # The converter tables (#1917): one JSON object per line; the order of animals.jsonl and footprint.jsonl matters (the first match wins).
 data/*.jsonl merge=union
 # The places of game data in the code (#1909): runs only delete lines or lower counts; tests/test_game_names_in_code.py

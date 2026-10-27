@@ -237,10 +237,10 @@ CODES = {                                     # code -> the resources, the chat 
     "wimpywimpywimpy": lambda g, player: destroy(g, g.player) or end("Defeat", "red")(g, player),
     "woof woof": woof,
 }
-# The unit and transformation codes: one line per code in data/cheats.jsonl (#2034). "units" of a Transform is a list of
-# unit names or the name of a function of this module.
+# The unit and transformation codes: one line per code in data/cheats.jsonl (#2034). A Transform has "units" (a list
+# of unit names) or "rule" (the name of a function of this module).
 CODES = dict(sorted((CODES | {r["name"]: Unit(r["unit"]) if "unit" in r else Transform(r["transform"], set(
-    r["units"]).__contains__ if isinstance(r["units"], list) else globals()[r["units"]])
+    r["units"]).__contains__ if "units" in r else globals()[r["rule"]])
     for r in table.load("cheats.jsonl")}).items()))
 NAMES = sorted(CODES)                         # the score of a code is its index + 1
 
