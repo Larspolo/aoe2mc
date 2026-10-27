@@ -205,3 +205,4 @@
 {"name": "KING", "hp": 75, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": [], "sight": 6}
 {"name": "MONK", "hp": 30, "attack": 0, "melee": 0, "pierce": 0, "range": 9, "reload": 0.0, "bonus": {}, "classes": [], "orders": true, "convert": 9}
 {"name": "TRADE_CART", "hp": 70, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": [], "sight": 7, "orders": true}
+{"name": "WAR_CHARIOT", "hp": 65, "attack": 8, "melee": 0, "pierce": 5, "range": 6, "reload": 6.5, "bonus": {"building": 2}, "classes": ["cavalry", "siege", "heavysiege", "unique"], "sight": 8, "min_range": 1, "note": "the wiki infobox (#2142): the focus fire mode is one bolt of attack 8, the barrage mode is left out"}
