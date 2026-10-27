@@ -37,7 +37,7 @@ FEES = {"BANKING": 0,                                              # a technolog
 
 def give(g):
     """Put the item into hotbar slot SLOT of each player that has no Game menu item there."""
-    g.command(f"execute as @a unless items entity @s hotbar.{SLOT} *[custom_data={{aoe_game_menu:1b}}] "
+    g.command(f"execute as {g.who} unless items entity @s hotbar.{SLOT} *[custom_data={{aoe_game_menu:1b}}] "
               f"run item replace entity @s hotbar.{SLOT} with {ITEM}")
 
 
