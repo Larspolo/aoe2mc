@@ -128,6 +128,9 @@
       <div class="ax-kpi"><span class="ax-kpi-label">5-hour usage</span>
         <span class="ax-kpi-value dash-skeleton" data-source="summary" data-field="usage_5h" data-row="0">—</span>
         <span class="ax-kpi-sub">At <span data-source="summary" data-field="usage_at" data-row="0">—</span></span></div>
+      <div class="ax-kpi"><span class="ax-kpi-label">7-day usage</span>
+        <span class="ax-kpi-value dash-skeleton" data-source="summary" data-field="usage_7d" data-row="0">—</span>
+        <span class="ax-kpi-sub" data-source="summary" data-field="usage_7d_track" data-row="0">—</span></div>
     </div>
 
     <div class="ax-grid">
@@ -157,8 +160,8 @@
 
       <div class="ax-card ax-wide" id="usage-card">
         <div>
-          <h2 class="ax-card-title">5-hour usage</h2>
-          <p class="ax-note">From the <code>Usage:</code> line of each run report. A vertical dashed line is a reset of the 5-hour window. Same period as above.</p>
+          <h2 class="ax-card-title">5-hour and 7-day usage</h2>
+          <p class="ax-note">From the <code>Usage:</code> line of each run report. A vertical dashed line is a reset of the 5-hour window. The second line is the 7-day usage, and the dashed line next to it is the even pace (the share of the week that has passed). Same period as above.</p>
         </div>
         <div class="ax-chart ax-chart-sm" id="usage-chart" data-source="usage"></div>
       </div>
@@ -460,7 +463,7 @@ dash.calc('merge_buckets', {
 dash.calc('summary', {
   inputs: ['merges', 'tickets', 'usage'],
   title: 'Headline figures',
-  description: 'Counted up to the last merge in the data: merges in the last hour and 24 hours, their mean per 15 minutes, the median minutes from open to merge, the open tickets, and the latest 5-hour usage.',
+  description: 'Counted up to the last merge in the data: merges in the last hour and 24 hours, their mean per 15 minutes, the median minutes from open to merge, the open tickets, the latest 5-hour usage, and the latest 7-day usage with its projection to the reset (on track, ahead or behind).',
   fn: (merges, tickets, usage) => {
     const hour = 3600 * 1000;
     const yes = (v) => v === true || v === 'true';
@@ -472,6 +475,8 @@ dash.calc('summary', {
     const open = tickets.filter((r) => r.state === 'open');
     const work = open.filter((r) => !yes(r.epic) && !yes(r.status_issue));
     const latest = usage.slice().sort((a, b) => Date.parse(a.at) - Date.parse(b.at)).pop();
+    const week = usage.filter((r) => r.week !== undefined && r.week !== null && r.week !== '')
+      .sort((a, b) => Date.parse(a.at) - Date.parse(b.at)).pop();
     return [{
       snapshot: new Date(end).toISOString(),
       first_merge: new Date(Math.min(...prs.map((r) => r.at))).toISOString(),
@@ -487,6 +492,8 @@ dash.calc('summary', {
       open_epics: open.filter((r) => yes(r.epic)).length,
       usage_5h: latest ? Number(latest.usage) : null,
       usage_at: latest ? latest.at : null,
+      usage_7d: week ? Number(week.week) : null,
+      usage_7d_track: week && week.track ? week.track : 'Too few usage lines for a projection',
     }];
   },
 });
@@ -691,6 +698,7 @@ dash.calc('release_goals', {
     per_15min: (v) => one(v),
     median_open_min: (v) => one(v),
     usage_5h: (v) => pct(v),
+    usage_7d: (v) => pct(v),
     percent: (v) => pct(v),
     percent_a: (v) => pct(v),
     percent_b: (v) => pct(v),
@@ -857,11 +865,12 @@ dash.calc('release_goals', {
     if (failed(el, d)) return;
     const win = window15();
     if (!win) return;
-    const pts = d.data.map((r) => ({ t: Date.parse(r.at), u: Number(r.usage), reset: Date.parse(r.resets), runs: Number(r.runs) }))
+    const pts = d.data.map((r) => ({ t: Date.parse(r.at), u: Number(r.usage), reset: Date.parse(r.resets), runs: Number(r.runs),
+      w: r.week === undefined || r.week === null || r.week === '' ? null : Number(r.week), wreset: Date.parse(r.week_resets) }))
       .filter((p) => p.t >= win.from && p.t <= win.end).sort((a, b) => a.t - b.t);
     const W = el.clientWidth, H = 190;
     const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img')
-      .attr('aria-label', '5-hour usage over time');
+      .attr('aria-label', '5-hour and 7-day usage over time');
     const y = d3.scaleLinear([0, 1], [H - 26, 10]);
     const left = Math.ceil(widest(svg, ['100%'])) + 10;
     const x = d3.scaleUtc([new Date(win.from), new Date(win.end)], [left, W - 6]);
@@ -893,6 +902,26 @@ dash.calc('release_goals', {
       svg.append('path').datum(group).attr('d', line).attr('fill', 'none').attr('stroke', dash.colors[0])
         .attr('stroke-width', 2).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round');
     }
+    // The 7-day usage, and the even pace of each week: the share of the week that has passed (#1696).
+    const weekPts = pts.filter((p) => p.w !== null && !isNaN(p.w));
+    const WEEK = 7 * 24 * 60 * MIN;
+    for (const r of [...new Set(weekPts.map((p) => p.wreset))].filter((r) => !isNaN(r))) {
+      const a = Math.max(win.from, r - WEEK), b = Math.min(win.end, r);
+      if (a >= b) continue;
+      svg.append('line').attr('x1', x(new Date(a))).attr('x2', x(new Date(b)))
+        .attr('y1', y((a - (r - WEEK)) / WEEK)).attr('y2', y((b - (r - WEEK)) / WEEK))
+        .attr('stroke', dash.colors[1]).attr('stroke-width', 1.5).attr('stroke-dasharray', '5 4').attr('opacity', 0.7);
+    }
+    const wline = d3.line().x((p) => x(new Date(p.t))).y((p) => y(p.w));
+    for (const group of d3.groups(weekPts, (p) => p.wreset).map((g) => g[1])) {
+      svg.append('path').datum(group).attr('d', wline).attr('fill', 'none').attr('stroke', dash.colors[1])
+        .attr('stroke-width', 2).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round');
+    }
+    if (weekPts.length) {
+      const lastW = weekPts[weekPts.length - 1];
+      svg.append('text').attr('x', Math.min(x(new Date(lastW.t)), W - 60)).attr('y', y(lastW.w) - 6)
+        .attr('fill', dash.colors[1]).style('font-size', 'var(--cds-font-size-caption)').text('7-day');
+    }
     const dots = svg.append('g').selectAll('circle').data(pts).join('circle')
       .attr('cx', (p) => x(new Date(p.t))).attr('cy', (p) => y(p.u)).attr('r', 2.5).attr('fill', dash.colors[0]);
     const tip = tooltip(el);
@@ -905,6 +934,7 @@ dash.calc('release_goals', {
         tip.show(x(new Date(p.t)), y(p.u), [
           [fmtShort(new Date(p.t)), null, 'ax-tip-k'],
           [`Usage ${pct(p.u)}`],
+          ...(p.w === null ? [] : [[`7-day usage ${pct(p.w)}`]]),
           [`Runs with a claim beat: ${p.runs}`],
         ]);
       })
