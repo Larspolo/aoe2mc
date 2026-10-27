@@ -15,8 +15,11 @@ KEYS = {"animals.jsonl": ({"keys", "behavior", "mob"}, {"tags", "note"}),
         "scx_civs.jsonl": ({"id", "name"}, set()),
         "train.jsonl": ({"name", "seconds", "building"}, set()),
         "work_sounds.jsonl": ({"name", "sound", "when", "particle"}, set()),
+        "rmap.jsonl": ({"name"}, {"fish", "forest", "scatter", "shore_fish", "start", "terrain"}),
         "lines.jsonl": ({"name", "mob", "armor", "main", "off"}, {"tags"}),
-        "footprint.jsonl": ({"name", "size"}, set())}
+        "footprint.jsonl": ({"name", "size"}, set()),
+        "units.jsonl": ({"name"}, {"base", "bird", "crew", "drop", "flying", "hero", "infantry", "invisible", "joke",
+                                   "plain", "ruler", "tags", "tier"})}
 
 
 def test_each_line_has_its_keys():

@@ -265,7 +265,11 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_URUMI_SWORDSMAN_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
          "ELITE_VARANGIAN_GUARD_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_WAR_WAGON_UPGRADE": lambda name, s: s,            # a new unit name: UPGRADES
+         "EUPSEONG": lambda name, s: s._replace(range=s.range + 2) if name in ("GUARD_TOWER", "KEEP") else s,   # the Koreans (#2048)
+         "FABRIC_SHIELDS": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
+         if name in ("KAMAYUK", "ELITE_KAMAYUK", "SLINGER") else s,   # the Incas (#2047)
          "FAITH": lambda name, s: s,                               # the conversion resistance: monk.resist
+         "FARIMBA": lambda name, s: s._replace(attack=s.attack + 5) if "cavalry" in s.classes else s,   # the Malians (#2046)
          "FERVOR": lambda name, s: s,                              # the walk speed: SPEEDS
          "FISHING_LINES": lambda name, s: s,                       # the fishing ships: gather.SHIP_TECHS
          "FLETCHING": fletching,
@@ -300,6 +304,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "HUSSAR_UPGRADE": lambda name, s: s,                      # a new unit name: UPGRADES
          "ILLUMINATION": lambda name, s: s,                        # the rest after a conversion: monk.ILLUMINATED
          "IMPERIAL_AGE": lambda name, s: s,                        # an age: REQUIRES
+         "IMPERIAL_CAMEL_RIDER_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
          "IMPERIAL_SKIRMISHER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
          "IRON_CASTING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) or name in HULKS else s,
          "KEEP": lambda name, s: s,                                # the towers of the player: TOWER_UPGRADES
@@ -325,6 +330,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          if barding(s) else s,
          "PLATE_MAIL_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 2)
          if "infantry" in s.classes else s,
+         "RECURVE_BOW": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if {"archer", "cavalry"} <= set(s.classes) else s,   # the Magyars (#2045)
          "REDEMPTION": lambda name, s: s,                          # monks convert buildings and siege: monk.py
          "RING_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 2)
          if "archer" in s.classes else s,
@@ -391,7 +397,7 @@ MARK = 17.0                                                        # AoE2 second
 ROW = 9                                                            # the first slot of the queue row of the menu (#706)
 
 
-HULKS = ("HULK", "WAR_HULK")                                       # melee warships: the blacksmith attack too (#1509)
+HULKS = ("CARRACK", "HULK", "WAR_HULK")                                     # melee warships: the blacksmith attack too (#1509)
 
 
 def melee(s):
