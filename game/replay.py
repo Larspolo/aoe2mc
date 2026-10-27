@@ -87,12 +87,15 @@ SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, 
           "LIGHT_CAVALRY": 1.5, "KNIGHT": 1.35, "CAMEL": 1.45, "MONK": 0.7, "BATTERING_RAM": 0.5, "MANGONEL": 0.6,
           "ARBALESTER": 0.96,                                                       # (#1500)
           "CAVALIER": 1.35,                                                         # (#1501)
+          "ELITE_GENITOUR": 1.35,                                                   # (#1610)
           "ELITE_SKIRMISHER": 0.96,                                                 # (#1396)
           "ELITE_STEPPE_LANCER": 1.45,                                              # (#1557)
+          "GENITOUR": 1.35,                                                         # (#1610)
           "HALBERDIER": 1.0,                                                        # (#1499)
           "HEAVY_CAMEL_RIDER": 1.45,                                                # (#1550)
           "HEAVY_CAVALRY_ARCHER": 1.4,                                              # (#1500)
           "HUSSAR": 1.5,                                                            # (#1502)
+          "IMPERIAL_SKIRMISHER": 0.96,                                              # (#1611)
           "LONG_SWORDSMAN": 0.9,
           "PALADIN": 1.35,                                                          # (#1501)
           "STEPPE_LANCER": 1.45,                                                    # (#1557)
@@ -149,6 +152,20 @@ def seen(mobs, placed, player, T, sight=None):
     return out
 
 
+def runs(cmd, tiles):
+    """Commands `cmd Y,X0,X1 ...` for the tiles (x, y): the runs of tiles X0 to X1 in row Y, each command below
+    RCON_MAX (#1567)."""
+    out, line = [], cmd
+    for y, x in sorted((y, x) for x, y in tiles):
+        if line.endswith(f",{x - 1}") and line.rsplit(" ", 1)[1].startswith(f"{y},"):
+            line = line[:line.rfind(",")] + f",{x}"           # the run goes on
+            continue
+        if len(line) + 20 > RCON_MAX:
+            out, line = out + [line], cmd
+        line += f" {y},{x},{x}"
+    return out + [line] * (line != cmd)
+
+
 def sail(g, v):
     """Move ship v one cell on its water path with /tp, facing the step. The y of the boat stays (`at @s`, `~`):
     the water carries it, and aoe2mc.json has no height for the water."""
@@ -181,6 +198,7 @@ class Replay:
         self.game, self.data, self.ai, self.speed, self.paused = game, data, ai, 1.0, False  # ai: plugin walks
         self.follow, self.followed = follow, (None, -math.inf)  # the spectators follow player N: (UUID, game time)
         self.pov, self.hidden = pov, set()      # the view of player N (#1302): UUIDs of the enemy units hidden from @a
+        self.explored, self.fogged = {}, None   # player -> tiles it saw once; (view, seen, explored) on the minimap (#1567)
         self.T, self.n = data["tile_size"], len(data["ground"])
         self.ground = [[None if v == "-" else int(v) for v in row.split()] for row in data["ground"]]
         self.starts = [(o.get("ref"), o["player"], o["name"], (o["footprint"][0], o["footprint"][2], o["footprint"][1],
@@ -1342,8 +1360,9 @@ class Replay:
     def fog(self):
         """With a view player `pov`: hide the enemy units out of the sight of it and its allies for the spectators
         (Paper Player#hideEntity, plugin `aoe hide`), show the ones that came in again (#1302). Only the changes:
-        at most one hide and one show command. Without a view player again: show all hidden units (#1303)."""
-        if self.pov is None and not self.hidden:
+        at most one hide and one show command. Without a view player again: show all hidden units (#1303).
+        On Paper also the fog of the terrain on the minimap (#1567, minimap_fog)."""
+        if self.pov is None and not self.hidden and not self.fogged:
             return []
         import gather                                               # gather -> build -> replay: import it late
         self.grid()                                                 # the start units
@@ -1352,13 +1371,31 @@ class Replay:
         placed, teams = [s[1:] for s in self.starts] + self.placed, self.data.get("players", {})
         own = {p for p in {v.player for v in mobs} | {p for p, _, _ in placed} if gather.allied(teams, self.pov, p)}
         tiles = set().union(*(seen(mobs, placed, p, self.T) for p in own))
+        for p in own:                                               # allies share the sight (#1567)
+            self.explored.setdefault(p, set()).update(tiles)
         out = {v.uuid for v in mobs if v.player not in (0, None) and v.player not in own and v.pos is not None
                and (int(v.pos[0] // self.T), int(v.pos[2] // self.T)) not in tiles} if self.pov is not None else set()
         hide, show = sorted(out - self.hidden), sorted(self.hidden & {v.uuid for v in mobs} - out)   # not the dead
         self.hidden = out
         k = (RCON_MAX - 20) // 37                                    # UUIDs per command (36 characters and a space)
         return [f"aoe {verb} @a {' '.join(u[i:i + k])}" for verb, u in (("hide", hide), ("show", show))
-                for i in range(0, len(u), k)]
+                for i in range(0, len(u), k)] + self.minimap_fog(own, tiles) * self.ai
+
+    def minimap_fog(self, own, tiles):
+        """The fog of the view player on the map item (#1567, Minimap.java): the tiles that the view player and its
+        allies `own` never saw are black, the explored tiles out of sight `tiles` are dark. Only the changes; a new
+        view player starts the fog again (all unexplored), no view player removes it."""
+        if self.pov is None:
+            out, self.fogged = ["aoe minimap fog off"] * (self.fogged is not None), None
+            return out
+        n = self.data.get("map_size") or self.n // self.T                 # tiles of a map side
+        inside = {(x, y) for x, y in tiles if 0 <= x < n and 0 <= y < n}
+        dim = {t for p in own for t in self.explored.get(p, ())} - inside
+        new = self.fogged is None or self.fogged[0] != self.pov
+        old_see, old_dim = (set(), set()) if new else self.fogged[1:]
+        self.fogged = (self.pov, inside, dim)
+        return [f"aoe minimap fog {self.T} {n}"] * new + runs("aoe minimap see", inside - old_see) + \
+            runs("aoe minimap dim", dim - old_dim)
 
     def overview(self, join=False):
         """The view of a player at the start of the replay (#737, owner decision #782): adventure mode, a text about
