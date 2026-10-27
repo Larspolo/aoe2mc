@@ -184,6 +184,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "MANGUDAI": {"wood": 55, "gold": 65},
          "MASONRY": {"food": 150, "wood": 175},                       # the university, Castle Age (#1398)
          "MEDIUM_WARSHIPS": {"wood": 150, "gold": 100},                 # the dock, Castle Age (#1482)
+         "MURDER_HOLES": {"food": 200, "stone": 100},                  # the university, Castle Age (#1547)
          "MONK": {"gold": 100},
          "ONAGER": {"wood": 160, "gold": 135},
          "ONAGER_UPGRADE": {"food": 800, "gold": 500},
@@ -341,6 +342,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "MANGUDAI": 26,
                "MASONRY": 50,
                "MEDIUM_WARSHIPS": 50,
+               "MURDER_HOLES": 35,
                "MONK": 51,
                "ONAGER": 46,
                "ONAGER_UPGRADE": 75,
@@ -435,6 +437,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                          "ARROWSLITS",
                          "BALLISTICS",                                          # the Castle Age (#1549)
                          "HEATED_SHOT",                                         # the Castle Age (#1548)
+                         "MURDER_HOLES",                                        # the Castle Age (#1547)
                          "CAREENING", "DRY_DOCK",                               # the ships (#1441)
                          "SHIPWRIGHT"),                                         # (#1490)
           "DOCK": ("FISHING_SHIP",                                             # (#1383)
@@ -605,6 +608,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "MAN_AT_ARMS_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "MASONRY": masonry,                                       # the buildings of the player: build.values
          "MEDIUM_WARSHIPS": lambda name, s: s,                     # new unit names: UPGRADES
+         "MURDER_HOLES": lambda name, s: s,                        # no minimum range: build.minimum
          "ONAGER_UPGRADE": lambda name, s: s,
          "PALADIN_UPGRADE": lambda name, s: s,                     # a new unit name: UPGRADES
          "PADDED_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
@@ -778,6 +782,7 @@ TECH_AGE = {                                                       # the age of 
     "MAN_AT_ARMS_UPGRADE": 1,
     "MASONRY": 2,
     "MEDIUM_WARSHIPS": 2,
+    "MURDER_HOLES": 2,
     "ONAGER_UPGRADE": 3,
     "PALADIN_UPGRADE": 3,
     "PARTHIAN_TACTICS": 3,
@@ -934,6 +939,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "MAN_AT_ARMS": (0, "zombie_spawn_egg", "Man-at-Arms"),
          "MASONRY": (6, "book", "Masonry"),
          "MEDIUM_WARSHIPS": (3, "book", "Medium Warships"),         # the dock
+         "MURDER_HOLES": (MORE + 4, "book", "Murder Holes"),      # the university after Ballistics (#1547)
          "MAN_AT_ARMS_UPGRADE": (2, "book", "Man-at-Arms"),
          "MANGONEL": (1, "dispenser", "Mangonel"),
          "MANGUDAI": (0, "skeleton_horse_spawn_egg", "Mangudai"),
@@ -1086,6 +1092,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "MASONRY": "Buildings +10 % HP, +1/+1 armor.",
         "MEDIUM_WARSHIPS": "Galleys, fire galleys to war galleys, fire ships.",
         "MILITIA": "Infantry. Strong vs. eagles; weak vs. archers.",
+        "MURDER_HOLES": "Towers, castles: no minimum range.",
         "MONK": "Heals own units, converts enemy units.",
         "ONAGER": "Siege. Hits all units near the target.",
         "ONAGER_UPGRADE": "Upgrades mangonels to onagers.",
