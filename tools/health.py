@@ -3,12 +3,14 @@
     python3 tools/health.py              # the last 24 hours
     python3 tools/health.py --hours 72
     python3 tools/health.py --hours 24 --until 2026-10-26T05:15:00Z   # the 24 hours before a time (#489)
+    python3 tools/health.py --hours 6 --compare                        # the last 6 hours next to the 6 before (#1697)
 
 REST only (cloud sessions give 403 for GraphQL and `search/...`). Token and `gh` fallback as in
 `tools/dashboard.py`. The parsing functions take plain JSON, so the tests need no network.
 """
 import argparse
 import datetime
+import difflib
 import os
 import re
 import statistics
@@ -355,13 +357,29 @@ def beating_claims(now, minutes=25, remote="origin"):
     return None if lanes is None else sum(lanes.values())
 
 
-def lane_claims(now, minutes=25, remote="origin"):
-    """{lane: runs that work now} from the claim refs (#1727), or None when git cannot read them."""
+def claim_refs(remote="origin"):
+    """The lines `<key> <unix time of the last beat> <subject>` of the claim refs, or None when git cannot read them."""
     git = lambda *a: subprocess.run(["git", *a], capture_output=True, text=True, cwd=ROOT)
     if git("fetch", "-q", "--prune", remote, "+refs/heads/claim/*:refs/aoe2mc-claims/*").returncode:
         return None
     out = git("for-each-ref", "refs/aoe2mc-claims", "--format=%(refname:lstrip=2) %(committerdate:unix) %(subject)")
-    return count_lanes(out.stdout.splitlines(), now, minutes) if out.returncode == 0 else None
+    return out.stdout.splitlines() if out.returncode == 0 else None
+
+
+def lane_claims(now, minutes=25, remote="origin"):
+    """{lane: runs that work now} from the claim refs (#1727), or None when git cannot read them."""
+    lines = claim_refs(remote)
+    return None if lines is None else count_lanes(lines, now, minutes)
+
+
+def review_delays(lines):
+    """[(time, slot minutes, minutes late or None)] of the review locks `review-<minutes>m-<slot>` (tools/claim.py
+    --review, #898), by time. A slot opens one slot length after the review before it (#942): a run that takes it later
+    is late, for example when no run reaches step 9 of the autopilot (a usage limit)."""
+    got = sorted((int(t), int(m)) for k, t, *_ in (x.split(" ", 2) for x in lines)
+                 for m in re.findall(r"^review-(\d+)m-\d+$", k))
+    return [(datetime.datetime.fromtimestamp(t, datetime.timezone.utc), m,
+             None if i == 0 else round((t - got[i - 1][0]) / 60 - m)) for i, (t, m) in enumerate(got)]
 
 
 def active_claims(now, minutes=30):
@@ -417,7 +435,7 @@ def conflict_files(files_of, n=5):
 
 
 def report(since, runs, jobs, status_comments, comments, prs, files, files_of=None, issues=(), issue_events=(),
-           unanswered=None):
+           unanswered=None, reviews=None):
     out = [f"Health since {since:%Y-%m-%d %H:%M} UTC", "", "CI runs (count, median min, max min, failures):"]
     for name, (k, m, mx, fail) in ci_runs(runs, since).items():
         out.append(f"  {name}: {k}, {fmt(m)}, {fmt(mx)}, {fail}")
@@ -459,6 +477,9 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
                f"{rw[0]:.2f} points ({rw[1]:g} % to {rw[2]:g} %)"))
     w = weak_spots(issues, issue_events, prs, runs, since)
     out.append("Weak spots: " + ", ".join(f"{k} {v}" for k, v in w.items()))
+    if reviews is not None:                     # the self-improvement loop: each slot gets its review in time (#942)
+        out.append("Review slots (taken UTC, slot min, min late): " + ("; ".join(
+            f"{t:%m-%d %H:%M} {m} {'-' if late is None else f'{late:+d}'}" for t, m, late in reviews if t >= since) or "-"))
     c2m = claim_to_merge(prs, comments, since)
     out.append(f"Claim to merge (median min of {len(c2m)} PRs): {fmt(med(c2m))}")
     bad = bad_files(files)
@@ -517,22 +538,55 @@ def api_pages(path, limit=20, stop=None):
     return out
 
 
-def main(argv=None):
-    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--hours", type=float, default=24)
-    ap.add_argument("--until", type=ts, help="the end of the period (ISO time, default now): compare two periods")
-    a = ap.parse_args(argv)
-    until = a.until or datetime.datetime.now(datetime.timezone.utc)
-    since = until - datetime.timedelta(hours=a.hours)
-    runs, jobs, status_comments, comments, prs, issues, events = fetch(since, a.until)
-    if a.until:
+def utc(s):
+    """An ISO time; a time without a zone is UTC (`--until 2026-10-27T01:00`, #1697)."""
+    t = ts(s)
+    return t if t.tzinfo else t.replace(tzinfo=datetime.timezone.utc)
+
+
+def period(until, hours, past):
+    """The report of the `hours` before `until`; `past`: the period ends before now, so clip the items after it."""
+    since = until - datetime.timedelta(hours=hours)
+    runs, jobs, status_comments, comments, prs, issues, events = fetch(since, until if past else None)
+    if past:
         runs, status_comments, comments, prs, issues, events = clip(until, runs, status_comments, comments, prs,
                                                                     issues, events)
     files_of = {n: [f["filename"] for f in api(f"pulls/{n}/files?per_page=100")] for n in conflicted(comments)}
     from feedback import fetch as unanswered
+    refs = claim_refs()
     text = report(since, runs, jobs, status_comments, comments, prs, git_files(), files_of, issues, events,
-                  unanswered())
-    print(text.replace(" UTC", f" UTC until {until:%Y-%m-%d %H:%M} UTC", 1) if a.until else text)
+                  unanswered(), None if refs is None else review_delays(refs))
+    return text.replace(" UTC", f" UTC until {until:%Y-%m-%d %H:%M} UTC", 1) if past else text
+
+
+def compare(last, before):
+    """The lines of two reports next to each other (#1697): a line of the last period, and under it the line of the
+    period before when it differs (`  before: ...`). Lines pair by their name (the text before the first colon, digit or
+    parenthesis)."""
+    a, b = last.splitlines(), before.splitlines()
+    key = lambda line: re.split(r"[:\d(]", line)[0]
+    out = []
+    for op, i1, i2, j1, j2 in difflib.SequenceMatcher(None, [key(x) for x in a], [key(x) for x in b],
+                                                      autojunk=False).get_opcodes():
+        if op == "equal":
+            for x, y in zip(a[i1:i2], b[j1:j2]):
+                out += [x] + [f"  before: {y.strip()}"] * (x != y)
+        else:
+            out += a[i1:i2] + [f"  before: {y.strip()}" for y in b[j1:j2]]
+    return "\n".join(out)
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    ap.add_argument("--hours", type=float, default=24)
+    ap.add_argument("--until", type=utc, help="the end of the period (ISO time, UTC, default now): compare two periods")
+    ap.add_argument("--compare", action="store_true", help="also the period before, under each line that differs")
+    a = ap.parse_args(argv)
+    until = a.until or datetime.datetime.now(datetime.timezone.utc)
+    text = period(until, a.hours, bool(a.until))
+    if a.compare:
+        text = compare(text, period(until - datetime.timedelta(hours=a.hours), a.hours, True))
+    print(text)
     return 0
 
 

@@ -86,7 +86,8 @@ def test_release_bar_has_the_rows_and_a_reserve_for_each_goal():
 def test_usage_reads_the_usage_lines(monkeypatch):
     body = "Usage: 2026-10-26T16:45:08Z · usage 6.0% · resets 2026-10-26T21:30:00Z · runs 4 · week 5.0%"
     monkeypatch.setattr(dd.health, "status_comments", lambda hours: [{"body": body}])
-    assert dd.usage() == [dict(at="2026-10-26T16:45:08Z", usage=0.06, resets="2026-10-26T21:30:00Z", runs=4)]
+    assert dd.usage() == [dict(at="2026-10-26T16:45:08Z", usage=0.06, resets="2026-10-26T21:30:00Z", runs=4,
+                                week=0.05, week_resets=None, track=None)]
 
 
 def test_main_writes_the_seven_files(tmp_path, monkeypatch):

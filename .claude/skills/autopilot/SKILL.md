@@ -235,7 +235,7 @@ images. When the check finds a bug, it makes a bug ticket for each one, adds "De
 not add `needs-human`: when the bugs are closed, the check ticket is a candidate again and a later run checks again (owner, #668).
 After a check without bugs it closes the check ticket on its evidence (owner decision B, #1708: progress does not wait
 for the owner): a comment with the evidence of each point (screenshots, real clicks, values) and a short list of what only
-a person can check (real input by hand, the look, sound), the label `owner-sample`, then the close. The owner checks a
+a person can check (sound, the feel of a control, "is it fun": `verify` level 5, #1707), the label `owner-sample`, then the close. The owner checks a
 sample of these closed tickets later in one game (`human` skill). A denied close: keep the comment, add `needs-human`
 and "Please close" (#1641). Never ask the owner about
 times, speeds, values or texts: measure them and compare them with AoE2 (owner, #1159). A look question links the image
@@ -251,9 +251,17 @@ other runs change it too):
 - The state comment: `<!-- agent-state: {"last_run": "<now, ISO>", "runs": <N+1>, ...} -->`. Change only these two
   keys and keep the others (`last_review`, `review_minutes`: the review slot, #898).
 - The section `### Process changes`: add a line `- <date>: <what changed in the skills, CLAUDE.md or
-  LEARNINGS> (PR #n)` at the top, keep the last 5.
+  LEARNINGS> (PR #n) — before: <numbers>` at the top, keep the last 5. When the change targets a number of
+  `tools/health.py` (phase minutes, conflicts, takeovers, quota per PR), write that number now (for example
+  "report 10 % of the run minutes / 24 h"), so that the `improve` skill can check it later (#1738). A pitfall line
+  (`docs/LEARNINGS.md`, a doc line) gets `— before: -`.
 
-Then add one short comment on the status issue: what you did and what is next. A question for the owner goes on its
+Then add one short comment on the status issue: what you did and what is next.
+Write it with one command (#1701): `python3 tools/report.py --usage "<the Usage: line of step 1.4>" --text "<what you
+did, what is next>" --ticket N --size S --result "pr #M" --setup 0 --checks K --checks-min C --sinks "<list or none>"
+--phases read=8,claim=1,code=18,verify=9,ci=0,conflict=5,report=4 --post` (repeat the ticket options for each ticket,
+in the same order). It adds the release bar, the `Tokens:` line and the footer in the format below. Without `--post`
+it only prints the comment. A question for the owner goes on its
 issue, not here (see "Ask the owner" in step 6).
 End it with one metrics line for each ticket of the run (the `improve` skill reads these lines):
 

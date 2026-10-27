@@ -12,11 +12,11 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 | Two scheduled tasks (owner's account) | "aoe2mc autopilot" starts one run each hour at :06. "aoe2mc pacer heartbeat" wakes the pacer session each hour at :36. |
 | Pacer session | One long-lived cloud session. Every 10 minutes it starts the runs that the quota target misses (skill `pacer`). It does no ticket work. |
 | Runs | Cloud sessions of the autopilot task. Each run follows the skill `autopilot` with the argument `max`: tickets, one PR each. Many runs work at the same time. |
-| Skills (`.claude/skills/`) | The procedures: `autopilot` (the work cycle), `verify` (checks before a push), `ticket` (write and split tickets), `design` (design tickets), `improve` (process review), `roadmap` (epics from `docs/ROADMAP.md`), `pacer`, `operator` (checks and repairs the start of the runs, only in an owner session), `human` (guides the owner through the `needs-human` tickets on the owner's computer), `dashboard-refresh` (the data files of the owner's dashboard artifact, #982). |
+| Skills (`.claude/skills/`) | The procedures: `autopilot` (the work cycle), `verify` (checks before a push), `ticket` (write and split tickets), `design` (design tickets), `improve` (process review), `roadmap` (epics from `docs/ROADMAP.md`), `pacer`, `operator` (checks and repairs the start of the runs, only in an owner session), `human` (guides the owner through the `needs-human` tickets on the owner's computer), `demo` (a demo game on the owner's computer: a ticket for each feedback in the chat, the cause of each crash, `game/demo_watch.py`), `dashboard-refresh` (the data files of the owner's dashboard artifact, #982). |
 | Rules (`CLAUDE.md`, `docs/LEARNINGS.md`) | Each session loads them. `CLAUDE.md` has the commands, the code map and the rules. `docs/LEARNINGS.md` has the lessons for all runs. |
 | Tools (`tools/`) | `claim.py` (locks), `usage.py` (quota and the number of runs), `dashboard.py` (the status issue and the pick order), `health.py` (numbers for the review), `tokens.py` (the token sinks of a run), `operator_check.py` (the checks of the `operator` skill), `owner_tasks.py` (the tickets of the `human` skill). |
 | GitHub | The issues are the tickets. Issue #1 (label `agent-status`) is the status issue: the dashboard in its body, the run reports as comments. The labels are in `.github/labels.txt`. |
-| Workflows (`.github/workflows/`) | CI, Automerge, Unconflict, Claims, Dashboard, Coverage, Labels, Bundles (see below). |
+| Workflows (`.github/workflows/`) | CI, Automerge, Unconflict, Claims, Close, Dashboard, Coverage, Labels, Bundles (see below). |
 | Cloud environment | The setup script `scripts/cloud-setup.sh` (Java, packages, server jars), the network access, the SessionStart hook. |
 | Hooks (`.claude/hooks/`) | `session-start.sh` installs the Python packages and compares `SETUP_VERSION`. `guard-main.sh` blocks a force push, a history rewrite or a delete of `main`. |
 
@@ -154,6 +154,7 @@ the owner login, the default branch, the status issue, the commands, the doc pat
 | `.claude/skills/roadmap/SKILL.md` | specific | The three goals of aoe2mc. |
 | `.claude/skills/operator/SKILL.md` | generic | The task and session names (`aoe2mc autopilot`, `aoe2mc pacer`). |
 | `.claude/skills/human/SKILL.md` | specific | The preparation of a play test (worlds, `game/run.py`, Minecraft 26.3). |
+| `.claude/skills/demo/SKILL.md` | specific | The demo game (`--random-map arabia`, `game/run.py`, `game/demo_watch.py`, the Minecraft client folders of macOS). |
 | `.claude/skills/pacer/SKILL.md` | generic | The trigger ID, the repository path and name (it runs before the clone, so it cannot read `agent.toml`). |
 | `.claude/skills/dashboard-refresh/SKILL.md` | specific | The datasets and tabs of the owner's dashboard page (`tools/dashboard_artifact/`, `tools/dashboard_data.py`). |
 | `.claude/settings.json` | generic | The permission rules name the repository (they cannot read `agent.toml`). |
@@ -175,11 +176,14 @@ the owner login, the default branch, the status issue, the commands, the doc pat
 | `.github/workflows/automerge.yml` | generic | The branch prefixes `claude/*` and `agent/*`. |
 | `.github/workflows/unconflict.yml` | generic | None. |
 | `.github/workflows/claims.yml` | generic | None. |
+| `.github/workflows/close.yml` | generic | None. It closes the issues with the label `close` (#1740). |
 | `.github/workflows/dashboard.yml` | generic | None. |
 | `.github/workflows/coverage.yml` | specific | The coverage of the AoE2 types. |
 | `.github/workflows/labels.yml` | generic | None. |
 | `.github/workflows/bundles.yml` | specific | The app bundles of the converter (PyInstaller, `packaging/`, #1541) and their installers (#1542). |
 | `.github/workflows/installers.yml` | specific | On a tag `v*`: the installers of `bundles.yml` in the release of the tag (#1542). |
+| `.github/workflows/close.yml` | generic | The label `close`: closes the issues that the auto mode does not let a run close (#1740). |
+| `.github/workflows/worlds.yml` | specific | The worlds of `examples/` and `samples/` as zips in a release (#207). |
 | `.github/labels.txt` | generic | None. |
 | `.github/ISSUE_TEMPLATE/ticket.yml` | generic | None. |
 | `.gitattributes` | specific | The list of `merge=union` files. |

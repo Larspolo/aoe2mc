@@ -31,7 +31,7 @@ def test_no_change_doubles_the_slot_and_a_change_resets_it():
     assert state == {"last_run": "2026-10-26T07:00:00Z", "runs": 150, "last_review": "2026-10-26T07:33:20Z",
                      "review_minutes": 90}
     assert body.startswith("Dashboard\n<!-- agent-state: ") and body.endswith("### Process changes\n")
-    for want in (180, 360, 360):
+    for want in (120, 120):                                                    # REVIEW_MAX (#1697)
         body = claim.reviewed(body, False, T)
         assert claim.agent_state(body)["review_minutes"] == want
     assert claim.agent_state(claim.reviewed(body, True, T))["review_minutes"] == 45

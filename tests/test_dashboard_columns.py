@@ -38,7 +38,7 @@ def test_page_columns_follow_filters_aliases_and_tables():
 def test_the_real_page_reads_columns_that_the_data_files_have():
     cols = dd.page_columns(PAGE)
     assert {"created_at", "closed_at", "priority", "in_progress", "muted"} <= cols["tickets"]
-    assert {"merged_at", "minutes_open"} <= cols["merges"] and {"at", "usage", "resets", "runs"} == cols["usage"]
+    assert {"merged_at", "minutes_open"} <= cols["merges"] and {"at", "usage", "resets", "runs", "week", "week_resets"} == cols["usage"]
     assert {"key", "subs_total"} <= cols["epics"] and {"kind", "share", "estimate"} <= cols["release_bar"]
 
 
