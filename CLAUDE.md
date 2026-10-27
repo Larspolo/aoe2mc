@@ -109,7 +109,7 @@ The converter tables are lines in `data/*.jsonl` too (#1917): an animal in `anim
 An item that some civilizations do not have goes into the list `"missing"` of each such line of
 `game/data/civs.jsonl` (`civs.MISSING`, #1914; also `unique`, `costs`, `units`, `twice`), not into `civs.py`.
 A new data line needs no test of its values: `tests/test_data_files.py` checks the form of each line of `game/data/`
-(keys, types, names that exist, #1916): a new key goes into its check there. Test the behavior that the code computes
+(keys, types, names that exist, #1916), and `tests/test_data_keys.py` checks that the code reads each key (#2188): a new key needs no test line. Test the behavior that the code computes
 from it (a fight, a menu, a bonus).
 The same for a new command of the Paper plugin: its line in the command list at the top of `AoePlugin.java` and its
 `if` block in `onCommand` go in alphabetical order of the command name, not after the last one (#795 and #813 conflicted).
