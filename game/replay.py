@@ -120,16 +120,17 @@ def fisher(name):
     return name.startswith("FISHING_SHIP")
 
 
-def seen(mobs, placed, player, T):
+def seen(mobs, placed, player, T, sight=None):
     """The tiles (x, y) in the line of sight of the units and buildings of player (#1300): a circle of combat.sight()
     tiles around each one, from the tile center. mobs: units with name, player and pos (blocks, Replay.units), placed:
-    (player, name, (x0, x1, z0, z1) in blocks) as Replay.placed."""
+    (player, name, (x0, x1, z0, z1) in blocks) as Replay.placed. sight: name -> tiles with the technologies of the
+    player (the game program, #1475), default combat.sight."""
     import combat                                                   # combat -> gather -> build -> replay
     objs = [(v.pos[0] / T, v.pos[2] / T, v.name) for v in mobs if v.player == player and v.pos is not None]
     objs += [((x0 + x1) / 2 / T, (z0 + z1) / 2 / T, name) for p, name, (x0, x1, z0, z1) in placed if p == player]
     out = set()
     for x, y, name in objs:
-        r = combat.sight(name)
+        r = (sight or combat.sight)(name)
         xs, ys = np.meshgrid(np.arange(math.floor(x - r), math.ceil(x + r)), np.arange(math.floor(y - r), math.ceil(y + r)))
         keep = (xs + 0.5 - x) ** 2 + (ys + 0.5 - y) ** 2 <= r * r
         out.update(zip(xs[keep].tolist(), ys[keep].tolist()))
@@ -470,9 +471,10 @@ class Replay:
         self.moving.pop(i, None)
         return out
 
-    def building(self, name, player, x, y, along_z=False):
+    def building(self, name, player, x, y, along_z=False, water=None):
         """The commands that draw one building at tile (x, y): its design on a flat map (like render.py), moved to
-        the ground of the world. The footprint is cleared first; a foundation fills the air under the floor."""
+        the ground of the world. The footprint is cleared first; a foundation fills the air under the floor.
+        water: the ground y of a building on the open water (a fish trap, #1438), else the land next to it counts."""
         T, arch = self.T, self.data["players"].get(str(player), {}).get("arch", "western")
         ox, oy = int(x) - FLAT // 2, int(y) - FLAT // 2
         cols, E, o = self.draw(name, player, x, y, along_z)
@@ -489,7 +491,8 @@ class Replay:
         # next to the footprint
         free = foot - self.lifted or m.around(foot) or foot
         cells = [g for x, z in free if (g := self.ground[z][x]) is not None] or \
-            [g for x, z in m.around(foot) if (g := self.ground[z][x]) is not None]   # a dock on water: the shore (#1382)
+            [g for x, z in m.around(foot) if (g := self.ground[z][x]) is not None] or \
+            [water] * (water is not None)                           # a dock on water: the shore (#1382)
         if not cells:                                               # outside the map or on water only
             return []
         trees = [t for t in m.trees if m.cells(t) & foot]          # in AoE2 the tree is gone (chopped)

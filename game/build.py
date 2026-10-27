@@ -44,6 +44,7 @@ COSTS = {"HOUSE": {"wood": 25}, "LUMBER_CAMP": {"wood": 100}, "MINING_CAMP": {"w
          "ARCHERY_RANGE": {"wood": 175}, "STABLE": {"wood": 175}, "TOWN_CENTER": {"wood": 275, "stone": 100},
          "CASTLE": {"stone": 650},                                 # the Castle Age: the Imperial Age needs them (#1162)
          "DOCK": {"wood": 150},                                    # 3 x 3 tiles on water at the shore (#1382)
+         "FISH_TRAP": {"wood": 100},                               # on water, fishing ships build it (#1438)
          "GATE": {"stone": 30},                                    # 4 x 1 tiles (AoE2 DE wiki, #1324)
          "MARKET": {"wood": 175},                                  # the Feudal Age (#1251)
          "MONASTERY": {"wood": 175},
@@ -60,6 +61,7 @@ BUILD_TIMES = {"HOUSE": 25, "LUMBER_CAMP": 35, "MINING_CAMP": 35, "MILL": 35, "F
                "BOMBARD_TOWER": 80,
                "CASTLE": 200,
                "DOCK": 35,
+               "FISH_TRAP": 40,
                "GATE": 70,
                "MARKET": 60,
                "MONASTERY": 40,
@@ -78,6 +80,7 @@ ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw
          "BOMBARD_TOWER": "polished_basalt",                            # the cannon barrels
          "CASTLE": "stone_bricks",
          "DOCK": "dark_oak_planks",                                     # the wood of the pier
+         "FISH_TRAP": "bamboo_fence",                                   # the rods of the basket
          "GATE": "iron_bars",                                           # the portcullis
          "MARKET": "barrel",                                            # the goods of the stalls
          "MONASTERY": "bell",
@@ -92,6 +95,7 @@ ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw
 AGE_TECHS = ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE")           # the technologies of the ages, in order
 AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_TOWER",   # the AoE2 age of each
                      "ARCHER", "SKIRMISHER", "SPEARMAN", "SCOUT_CAVALRY", "TRADE_CART",  # building, unit and age
+                     "FISH_TRAP",
                      "GALLEY",
                      "GATE",
                      "STONE_WALL",
@@ -140,6 +144,7 @@ GATES = ("GATE", "PALISADE_GATE")                                  # on 4 own wa
 NEEDS = {"BOMBARD_CANNON": "CHEMISTRY",                            # a unit or building after a technology (#1380)
          "BOMBARD_TOWER": "BOMBARD_TOWER_TECH"}                    # (#1375)
 SHORE = ("DOCK",)                                                  # on water next to the land, as in AoE2 (#1382)
+WATER = ("FISH_TRAP",)                                             # on free water only, ships build it (#1438)
 GHOST = 400                                                        # block displays of one ghost: a coarser shape above
 CRANE = 1.2                                                        # the build speed factor of Treadmill Crane (#1422)
 LOCKED = "gray_dye"                                                # the item of a locked building or unit
@@ -218,7 +223,7 @@ def ghost_commands(g, player, name, rect, origin=None):
 def ghosts(g):
     """Each tick: the players who chose a building see its ghost (#794), green over a free footprint and red over a
     blocked one, as place() tests it; the ghost goes away when the choice ends (placed, cancelled)."""
-    import gather                                                      # gather imports build
+    import fleet, gather                                               # gather imports build
     who = {}
     if "passed" in g.command(f"execute if entity @a[scores={{{OBJECTIVE}=1..}}]"):
         for p in (n.strip() for n in g.command("list").split(":", 1)[-1].split(",")):
@@ -231,7 +236,8 @@ def ghosts(g):
         pos = g.pos(p)
         rot = [float(v) for v in re.findall(gather.NUMBER, g.command(f"data get entity {p} Rotation").rsplit(":", 1)[-1])]
         eye, d = pos and (pos[0], pos[1] + 1.62, pos[2]), len(rot) == 2 and gather.direction(*rot)
-        cell = pos and d and (pick_shore(g, eye, d) if name in SHORE else g.map.pick_ground(eye, d))
+        cell = pos and d and (pick_shore(g, eye, d) if name in SHORE else fleet.pick(g, eye, d) if name in WATER
+                              else g.map.pick_ground(eye, d))
         if not cell:
             continue
         rect, spot, T = area(g, name, cell), None, g.map.T
@@ -244,7 +250,8 @@ def ghosts(g):
             for c in cmds:
                 g.command(c)
             g.ghosts[p] = [name, None, spot]
-        ok = gate_rect(g, cell) if name in GATES else shore(g, rect) if name in SHORE else free(g, rect)
+        ok = gate_rect(g, cell) if name in GATES else shore(g, rect) if name in SHORE else water(g, rect) \
+            if name in WATER else free(g, rect)
         color = "green" if ok else "red"                               # a gate: on a wall, a dock: at the shore
         if g.ghosts[p][1] != color:
             g.command(f"aoe ghost-color {p} {color}")
@@ -324,6 +331,12 @@ def shore(g, rect):
     return all(g.map.wet(*c) for c in cells) and bool(g.map.around(cells))
 
 
+def water(g, rect):
+    """True when the footprint rect is all free water (a fish trap, #1438): AoE2 needs no land next to it."""
+    x0, x1, z0, z1 = rect
+    return all(g.map.wet(x, z) for x in range(x0, x1) for z in range(z0, z1))
+
+
 def surface(g, x, z):
     """The y of the water surface at the water cell (x, z), as Map.sea, or None more than 2 tiles from the land: a
     dock touches the land, and Map.sea reads the whole map there."""
@@ -348,10 +361,11 @@ def pick_shore(g, eye, d, reach=64):
 
 def place(g, player, name, eye, d):
     """Place a foundation of name at the ground that the player looks at. Returns the site or None."""
+    import fleet                                                       # fleet -> gather -> build: import it late
     if need := locked(g, name):                                        # a /trigger choice of a later age
         say(g, player, f"{pretty(name)}: {need}.")
         return None
-    cell = pick_shore(g, eye, d) if name in SHORE else g.map.pick_ground(eye, d)
+    cell = pick_shore(g, eye, d) if name in SHORE else fleet.pick(g, eye, d) if name in WATER else g.map.pick_ground(eye, d)
     if cell is None:
         return None
     if name in WALLS:
@@ -362,7 +376,10 @@ def place(g, player, name, eye, d):
     if name in SHORE and not shore(g, rect):
         say(g, player, f"A {pretty(name).lower()} must stand on water next to the shore.")
         return None
-    if name not in SHORE and not free(g, rect):
+    if name in WATER and not water(g, rect):
+        say(g, player, f"A {pretty(name).lower()} must stand on the water.")
+        return None
+    if name not in SHORE + WATER and not free(g, rect):
         say(g, player, f"No space for the {pretty(name).lower()} here.")
         return None
     cost = price(g, name)
@@ -481,19 +498,21 @@ def near(g, name, cell, reach=12):
 def found(g, name, rect):
     """Pay for name and put its foundation (a wool ring in the player color) on the free footprint rect. Returns
     the construction site."""
+    import fleet                                                       # fleet -> gather -> build: import it late
     for r, v in price(g, name).items():
         g.stock[r] -= v
         g.command(f"scoreboard players remove {r.capitalize()} {g.board} {v}")
     x0, x1, z0, z1 = rect
     color = g.players.get(str(g.player), {}).get("color", "light_gray")
-    ring = [(x, g.map.y(x, z) if g.map.y(x, z) is not None else int(g.map.sea(x, z)), z)   # a dock: on the water
+    ring = [(x, g.map.y(x, z) if g.map.y(x, z) is not None else int(fleet.level(g) if name in WATER else g.map.sea(x, z)), z)
             for x in range(x0, x1) for z in range(z0, z1) if x in (x0, x1 - 1) or z in (z0, z1 - 1)]
     for c in ring:
         g.command("setblock {} {} {} ".format(*c) + f"minecraft:{color}_wool")
     g.map.blocked |= {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
     T = g.map.T                                                        # the design, bottom up (one command each)
     cmds = Replay(g, g.data, getattr(g.game, "version", VERSION_NAME)).building(
-        design(g, name, g.player), g.player, (x0 + x1) / 2 / T, (z0 + z1) / 2 / T, along_z=z1 - z0 > x1 - x0)   # a gate along z (#1324)
+        design(g, name, g.player), g.player, (x0 + x1) / 2 / T, (z0 + z1) / 2 / T, along_z=z1 - z0 > x1 - x0,   # a gate along z (#1324)
+        water=int(fleet.level(g)) + 1 if name in WATER else None)      # a fish trap on the open water (#1438)
     site = {"name": name, "player": g.player, "footprint": rect, "commands": cmds, "sent": 0, "progress": 0.0,
             "ring": dict.fromkeys(ring, f"minecraft:{color}_wool"), "under": {}}   # under: the design blocks on the ring
     g.sites.append(site)
