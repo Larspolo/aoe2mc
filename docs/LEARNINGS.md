@@ -48,3 +48,4 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - The rule "only the own civ has its unique unit" is in `train.own_civ_only()` (#1760): `train.py` adds it to the bare `civs.MISSING`. A test that imports `from game import civs` reads another module object without it: read `train.civs.MISSING`, `train.civs.missing(...)`.
 - The "queue 0/15" of a train menu line is the queue limit, not the training time: the time is the "N s" part (`test_chakram_thrower.py`, #1724).
 - The menu line `queue 0/15` shows the queue capacity (`train.QUEUE`), not the train time: a test that expects the time there fails (#1726).
+- `ls X 2>&1; cat > X <<EOF` in one call writes over an existing test file: the `ls` output comes too late (#1945 overwrote `tests/test_random_map_kinds.py`, `git checkout` saved it). Run the `ls` in its own call, or write with `set -o noclobber`.
