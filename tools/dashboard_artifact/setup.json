@@ -3,14 +3,21 @@
   "part": "Autopilot runs",
   "group": "Runs",
   "when": "Hourly at :06, and each time the pacer starts one",
-  "does": "One unattended cloud session: reads your feedback, triages new issues, does tickets (one PR each) and reports on the status issue",
+  "does": "One unattended cloud session on Opus: reads your feedback, triages new issues, does tickets (one PR each) and reports on the status issue; takes a lane:haiku ticket only when no other ticket is ready",
   "where": "Scheduled task “aoe2mc autopilot”, .claude/skills/autopilot"
+ },
+ {
+  "part": "Haiku runs",
+  "group": "Runs",
+  "when": "Only when the pacer starts one (no schedule); a new session each time",
+  "does": "One unattended cloud session on Haiku: does only lane:haiku tickets (one PR each) and stops when none is ready; no triage, refill, roadmap or process review",
+  "where": "Scheduled task “aoe2mc autopilot haiku” (argument max lane haiku), .claude/skills/autopilot"
  },
  {
   "part": "Pacer session",
   "group": "Runs",
   "when": "A cycle every 10 minutes",
-  "does": "Reads the 5-hour and 7-day usage and starts 0 to 4 new runs, so that usage follows the target",
+  "does": "Runs on Haiku. Reads the 5-hour and 7-day usage and starts 0 to 4 new runs, so that usage follows the target: Haiku runs for the ready lane:haiku tickets first, then Opus runs",
   "where": ".claude/skills/pacer, tools/usage.py --fire"
  },
  {
@@ -24,8 +31,15 @@
   "part": "Quota target",
   "group": "Rules",
   "when": "Each pacer cycle",
-  "does": "90 % of the 5-hour window 2 hours before the reset, then 98 % at the reset; the 7-day window limits it too",
+  "does": "90 % of the 5-hour window 2 hours before the reset, then 98 % at the reset; the 7-day window limits it too. The target counts Opus runs: a Haiku run counts its weight",
   "where": "tools/usage.py"
+ },
+ {
+  "part": "Model lanes",
+  "group": "Rules",
+  "when": "When a run writes a ticket, and each pacer cycle",
+  "does": "The ticket skill adds lane:haiku to a clear size:S ticket with an exact spec, a merged example and verify level 1. A Haiku run counts 0.25 Opus run until tools/health.py measures the weight (10 usage intervals with Haiku runs)",
+  "where": ".claude/skills/ticket (Model lanes), agent.toml [pacing] weights, tools/health.py lane_weights"
  },
  {
   "part": "Claims",
