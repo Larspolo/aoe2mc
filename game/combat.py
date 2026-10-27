@@ -523,6 +523,7 @@ def building(uuid, name, player, box, T=4, inside=(), s=None):
     only for armor stands, the server drops it on a slime (#636)."""
     x0, y0, z0, x1, y1, z1 = box
     s, size = s or stats(name), math.ceil((max(x1 - x0, z1 - z0) + 1) / SLIME)
+    bonus = ",".join(f"{c}:{n}" for c, n in sorted(s.bonus.items())) * bool(s.attack and s.range)
     n = uuids.UUID(uuid).int
     ints = ",".join(str((n >> k & 0xFFFFFFFF) - ((n >> k & 0x80000000) << 1)) for k in (96, 64, 32, 0))
     return [f"summon slime {(x0 + x1 + 1) / 2} {y0} {(z0 + z1 + 1) / 2} {{Size:{size - 1},NoAI:1b,Silent:1b,"
@@ -531,7 +532,8 @@ def building(uuid, name, player, box, T=4, inside=(), s=None):
         [f"aoe arrows {uuid} {garrison.arrows(name, inside)}"] * bool(s.attack and s.range) + \
         [f"aoe building {uuid} {s.hp} {s.melee} {s.pierce} {' '.join(map(str, box))}"   # after the arrows: no shot of 1
          + (f" {s.attack} {s.range * T} {round(s.reload / NORMAL * 20)}" if s.attack and s.range else "")
-         + (f" {','.join(s.classes)}" if STANDARD not in s.classes else "")]   # a wall, a gate, the wonder (#1419)
+         + (f" {','.join(s.classes)}" if STANDARD not in s.classes or bonus else "")   # a wall, a gate, the wonder (#1419)
+         + (f" {bonus}" if bonus else "")]                                  # the arrow bonus (Heated Shot, #1548)
 
 
 def building_box(o, ground):
