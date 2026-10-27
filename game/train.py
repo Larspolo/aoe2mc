@@ -102,7 +102,9 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "ELITE_SKIRMISHER": {"food": 25, "wood": 35},
          "ELITE_SKIRMISHER_UPGRADE": {"wood": 230, "gold": 130},
          "FERVOR": {"gold": 140},
+         "DEMOLITION_RAFT": {"wood": 45, "gold": 80},                  # AoE2 DE wiki (#1481)
          "DEMOLITION_SHIP": {"wood": 45, "gold": 80},                  # AoE2 DE wiki (#1440)
+         "FIRE_GALLEY": {"wood": 75, "gold": 45},                       # AoE2 DE wiki (#1481)
          "FIRE_SHIP": {"wood": 75, "gold": 45},                         # AoE2 DE wiki (#1440)
          "FISHING_LINES": {"food": 50, "wood": 100},                   # AoE2 DE wiki (#1439)
          "FISHING_SHIP": {"wood": 75},                                  # AoE2 DE wiki (#1383)
@@ -206,7 +208,9 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "ELITE_SKIRMISHER": 22,
                "ELITE_SKIRMISHER_UPGRADE": 50,
                "FERVOR": 50,
+               "DEMOLITION_RAFT": 45,
                "DEMOLITION_SHIP": 31,
+               "FIRE_GALLEY": 49,
                "FIRE_SHIP": 27,
                "FISHING_LINES": 20,
                "FISHING_SHIP": 40,
@@ -310,6 +314,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                    "TRANSPORT_SHIP",                                           # (#1385)
                    "FIRE_SHIP",                                                # (#1440)
                    "DEMOLITION_SHIP",                                          # (#1440)
+                   "FIRE_GALLEY",                                              # (#1481)
+                   "DEMOLITION_RAFT",                                          # (#1481)
                    "FISHING_LINES", "GILLNETS"),                                # (#1439)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",
                           "BOW_SAW"),                                           # (#723, #1423)
@@ -617,7 +623,9 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "CHU_KO_NU": (0, "skeleton_spawn_egg", "Chu Ko Nu"),
          "DOUBLE_BIT_AXE": (0, "book", "Double-Bit Axe"),
          "FERVOR": (1, "book", "Fervor"),
+         "DEMOLITION_RAFT": (7, "bamboo_raft", "Demolition Raft"),   # the Feudal Age forms (#1481)
          "DEMOLITION_SHIP": (4, "bamboo_raft", "Demolition Ship"),   # units.classify: a raft with a creeper
+         "FIRE_GALLEY": (6, "mangrove_boat", "Fire Galley"),
          "FIRE_SHIP": (3, "mangrove_boat", "Fire Ship"),           # units.classify: a boat with a blaze
          "FISHING_LINES": (5, "book", "Fishing Lines"),            # slots 1-4: the ships of the dock
          "FISHING_SHIP": (0, "oak_boat", "Fishing Ship"),         # a ship is a boat (units.boat)
@@ -703,7 +711,9 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "ELITE_SKIRMISHER_UPGRADE": "Upgrades skirmishers to elite skirmishers.",
         "FEUDAL_AGE": "Advance to the Feudal Age.",
         "FERVOR": "Monks +15 % speed.",
+        "DEMOLITION_RAFT": "Explodes next to ships and buildings.",
         "DEMOLITION_SHIP": "Explodes next to ships and buildings.",
+        "FIRE_GALLEY": "Warship that spews fire at close range.",
         "FIRE_SHIP": "Warship that spews fire at close range.",
         "FISHING_LINES": "Fishing ships work 10 % faster, carry +5.",
         "FISHING_SHIP": "Gathers food from fish.",
