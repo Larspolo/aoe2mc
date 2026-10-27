@@ -232,8 +232,10 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_GHULAM_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "ELITE_KARAMBIT_WARRIOR_UPGRADE": lambda name, s: s,      # a new unit name: UPGRADES
          "ELITE_KESHIK_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
+         "ELITE_LEITIS_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
          "ELITE_OBUCH_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "ELITE_SERJEANT_UPGRADE": lambda name, s: s,              # a new unit name: UPGRADES
+         "ELITE_SHOTEL_WARRIOR_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
          "ELITE_SHRIVAMSHA_RIDER_UPGRADE": lambda name, s: s,      # a new unit name: UPGRADES
          "ELITE_STEPPE_LANCER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
          "ELITE_SKIRMISHER_UPGRADE": lambda name, s: s,
@@ -360,8 +362,10 @@ UPGRADES = {                                                       # technology:
     "ELITE_GHULAM_UPGRADE": ("GHULAM", "ELITE_GHULAM"),   # the castle of the Hindustanis (#1756)
     "ELITE_KARAMBIT_WARRIOR_UPGRADE": ("KARAMBIT_WARRIOR", "ELITE_KARAMBIT_WARRIOR"),   # the castle of the Malay (#1750)
     "ELITE_KESHIK_UPGRADE": ("KESHIK", "ELITE_KESHIK"),   # the castle of the Tatars (#1745)
+    "ELITE_LEITIS_UPGRADE": ("LEITIS", "ELITE_LEITIS"),   # the castle of the Lithuanians (#1746)
     "ELITE_OBUCH_UPGRADE": ("OBUCH", "ELITE_OBUCH"),   # the castle of the Poles (#1747)
     "ELITE_SERJEANT_UPGRADE": ("SERJEANT", "ELITE_SERJEANT"),   # the castle of the Sicilians (#1748)
+    "ELITE_SHOTEL_WARRIOR_UPGRADE": ("SHOTEL_WARRIOR", "ELITE_SHOTEL_WARRIOR"),   # the castle (#1725)
     "ELITE_SHRIVAMSHA_RIDER_UPGRADE": ("SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER"),   # (#1612)
     "ELITE_SKIRMISHER_UPGRADE": ("SKIRMISHER", "ELITE_SKIRMISHER"),
     "ELITE_TARKAN_UPGRADE": ("TARKAN", "ELITE_TARKAN"),   # the castle of the Huns (#1726)
