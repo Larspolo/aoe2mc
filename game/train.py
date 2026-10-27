@@ -247,6 +247,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_SKIRMISHER_UPGRADE": lambda name, s: s,
          "ELITE_TARKAN_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "ELITE_URUMI_SWORDSMAN_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
+         "ELITE_WAR_WAGON_UPGRADE": lambda name, s: s,            # a new unit name: UPGRADES
          "FAITH": lambda name, s: s,                               # the conversion resistance: monk.resist
          "FERVOR": lambda name, s: s,                              # the walk speed: SPEEDS
          "FISHING_LINES": lambda name, s: s,                       # the fishing ships: gather.SHIP_TECHS
@@ -383,6 +384,7 @@ UPGRADES = {                                                       # technology:
     "ELITE_TARKAN_UPGRADE": ("TARKAN", "ELITE_TARKAN"),   # the castle of the Huns (#1726)
     "ELITE_STEPPE_LANCER_UPGRADE": ("STEPPE_LANCER", "ELITE_STEPPE_LANCER"),   # (#1557)
     "ELITE_URUMI_SWORDSMAN_UPGRADE": ("URUMI_SWORDSMAN", "ELITE_URUMI_SWORDSMAN"),   # the castle of the Dravidians (#1754)
+    "ELITE_WAR_WAGON_UPGRADE": ("WAR_WAGON", "ELITE_WAR_WAGON"),   # the castle of the Koreans (#1889)
     "HALBERDIER_UPGRADE": ("PIKEMAN", "HALBERDIER"),
     "HEAVY_CAMEL_RIDER_UPGRADE": ("CAMEL_RIDER", "HEAVY_CAMEL_RIDER"),   # (#1550)
     "HEAVY_CAVALRY_ARCHER_UPGRADE": ("CAVALRY_ARCHER", "HEAVY_CAVALRY_ARCHER"),
