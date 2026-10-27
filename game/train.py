@@ -76,6 +76,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "BOMBARD_TOWER_TECH": {"food": 800, "wood": 400},           # the university, after Chemistry (#1375)
          "BOW_SAW": {"food": 150, "wood": 100},                        # AoE2 DE wiki (#1423)
          "BERSERK": {"food": 65, "gold": 20},
+         "BLAST_FURNACE": {"food": 275, "gold": 225},                  # AoE2 DE wiki (#1451)
          "BODKIN_ARROW": {"food": 200, "gold": 100},                   # AoE2 DE wiki (#1395)
          "BLOODLINES": {"food": 150, "gold": 100},
          "CAPPED_RAM": {"wood": 160, "gold": 75},
@@ -160,6 +161,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
 TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130,   # AoE2 seconds
                "BATTERING_RAM": 36,
                "BERSERK": 14,
+               "BLAST_FURNACE": 100,
                "BLOODLINES": 50,
                "BOW_SAW": 50,
                "BODKIN_ARROW": 35,
@@ -252,7 +254,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING",            # (#675, #725, #724, #937, #938)
                          "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR",
                          "CHAIN_MAIL_ARMOR", "LEATHER_ARCHER_ARMOR", "CHAIN_BARDING_ARMOR",   # the Castle Age (#1394)
-                         "IRON_CASTING", "BODKIN_ARROW"),                       # (#1395)
+                         "IRON_CASTING", "BODKIN_ARROW",                        # (#1395)
+                         "BLAST_FURNACE"),                                      # the Imperial Age (#1451)
           "CASTLE": ("TREBUCHET",),                                             # and the unique unit: trains() (#708, #1351)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES", "LIGHT_CAVALRY_UPGRADE", "KNIGHT"),   # (#671, #940, #1396, #1397)
           "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS",   # (#1326, #1374, #1352)
@@ -321,6 +324,7 @@ def masonry(name, s):
 
 
 TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
+         "BLAST_FURNACE": lambda name, s: s._replace(attack=s.attack + 2) if melee(s) else s,
          "BOMBARD_TOWER_TECH": lambda name, s: s,                  # the bombard tower in the build menu: build.NEEDS
          "BOW_SAW": lambda name, s: s,                             # an economy technology: gather.WORK_TECHS
          "BODKIN_ARROW": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if "archer" in s.classes else s,
@@ -392,7 +396,8 @@ UPGRADES = {                                                       # technology:
     "SIEGE_ONAGER_UPGRADE": ("ONAGER", "SIEGE_ONAGER"),
     "SIEGE_RAM_UPGRADE": ("CAPPED_RAM", "SIEGE_RAM"),
 }
-AFTER = {"BODKIN_ARROW": "FLETCHING",
+AFTER = {"BLAST_FURNACE": "IRON_CASTING",
+         "BODKIN_ARROW": "FLETCHING",
          "BOMBARD_TOWER_TECH": "CHEMISTRY",
          "BOW_SAW": "DOUBLE_BIT_AXE",
          "CHAIN_BARDING_ARMOR": "SCALE_BARDING_ARMOR", "CHAIN_MAIL_ARMOR": "SCALE_MAIL_ARMOR",
@@ -410,6 +415,7 @@ REQUIRES = {"CASTLE_AGE": (2, ("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET"
             "FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP", "DOCK")),
             "IMPERIAL_AGE": (2, ("MONASTERY", "UNIVERSITY", "SIEGE_WORKSHOP"), ("CASTLE",))}   # or one of these alone
 TECH_AGE = {                                                       # the age of a technology (build.AGE): hidden before
+    "BLAST_FURNACE": 3,
     "BLOODLINES": 1,
     "BODKIN_ARROW": 2,
     "BOMBARD_TOWER_TECH": 3,
@@ -493,6 +499,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "SQUIRES": (4, "book", "Squires"),                        # after the slot of Pikeman
          "BATTERING_RAM": (0, "minecart", "Battering Ram"),         # a siege unit is a minecart (units.siege)
          "BERSERK": (0, "zombie_spawn_egg", "Berserk"),
+         "BLAST_FURNACE": (0, "book", "Blast Furnace"),               # the slot of Forging
          "BLOODLINES": (1, "book", "Bloodlines"),
          "BODKIN_ARROW": (2, "book", "Bodkin Arrow"),                 # the slot of Fletching (AFTER)
          "BOW_SAW": (0, "book", "Bow Saw"),                           # the slot of Double-Bit Axe (AFTER)
@@ -556,6 +563,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
 HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "BATTERING_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
         "BERSERK": "Viking infantry. Heals itself.",
+        "BLAST_FURNACE": "Infantry and cavalry +2 attack.",
         "BLOODLINES": "Cavalry +20 HP.",
         "BOW_SAW": "Villagers chop wood 20 % faster.",
         "BODKIN_ARROW": "Archers +1 attack, +1 range.",
