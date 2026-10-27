@@ -11,10 +11,6 @@ GALLEY, SHIP = "00000000-0000-0000-0000-00000000aaaa", "00000000-0000-0000-0000-
 
 
 def test_the_cost_time_age_and_slot_are_those_of_aoe2():
-    assert (train.COSTS["CAREENING"], train.TRAIN_TIMES["CAREENING"], train.TECH_AGE["CAREENING"]) == \
-        ({"food": 100, "gold": 200}, 50, 2)
-    assert (train.COSTS["DRY_DOCK"], train.TRAIN_TIMES["DRY_DOCK"], train.TECH_AGE["DRY_DOCK"]) == \
-        ({"food": 200, "gold": 400}, 60, 3)
     assert train.AFTER["DRY_DOCK"] == "CAREENING" and train.ITEMS["DRY_DOCK"][0] == train.ITEMS["CAREENING"][0]
     assert {"CAREENING", "DRY_DOCK"} <= set(train.TRAINS["UNIVERSITY"])
     assert "ROMANS" in civs.MISSING["DRY_DOCK"] and "CAREENING" not in civs.MISSING

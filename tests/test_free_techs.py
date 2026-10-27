@@ -1,5 +1,5 @@
 """The technologies that a civilization gets free in AoE2 DE cost nothing for its player in the game program (#1924,
-gap list of #1088; the "Civilization bonuses" of the AoE2 wiki in tests/data/civ_bonuses.json): rules of civs.COSTS."""
+gap list of #1088; the "Civilization bonuses" of the AoE2 wiki in tests/data/civ_bonuses.jsonl): rules of civs.COSTS."""
 import pytest
 from test_dock_train import dock_map
 

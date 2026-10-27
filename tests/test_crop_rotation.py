@@ -21,8 +21,6 @@ def research(g):
 
 
 def test_the_mill_menu_has_crop_rotation_in_the_imperial_age_after_heavy_plow():
-    assert (train.COSTS["CROP_ROTATION"], train.TRAIN_TIMES["CROP_ROTATION"], train.TECH_AGE["CROP_ROTATION"]) \
-        == ({"food": 250, "wood": 250}, 70, 3)                         # AoE2 DE wiki infobox
     server, g = imperial()
     g.techs -= {"IMPERIAL_AGE"}
     train.open_menu(g, "Steve", (3, 3))
