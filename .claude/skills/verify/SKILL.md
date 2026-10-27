@@ -65,7 +65,12 @@ in the game (light, textures, connected fences and panes), what the player sees 
 - Direction of a mob: look at it from the side, 8–10 blocks away, pitch 10. A top view does not show the head.
 - Look at each image with the Read tool and describe it in the PR body. Comment the result on the ticket.
 
-Only what no tool can judge (real input by hand, the look, sound) goes to the owner (owner, #1159). An agent measures
+The agent judges the look and the clicks itself (owner, 2026-10-27, #1707: 59 check runs in 24 h used 11 % of the run
+minutes, and 28 of them ended with `needs-human`). Real input: `mc_shot.Client` clicks the menus and presses the keys
+of a real client. The look: put the `mc_shot.py` image next to the AoE2 reference image (`tools/refimage.py`, as the
+`design` skill does), list the differences and write the verdict. A look point goes to the owner only when the agent
+cannot decide, and the comment says why. Only what no tool can judge goes to the owner: sound, the feel of a control
+(delay, how hard it is to aim) and "is it fun" (owner, #1159, #1707). An agent measures
 times, speeds and values and reads the texts in the game (menu items, lore, chat) itself, and compares them with AoE2:
 never ask the owner about them. A look question ("does X look different enough from Y?") links the image before next
 to the image after, or the AoE2 image next to the Minecraft image.

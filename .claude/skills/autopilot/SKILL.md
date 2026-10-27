@@ -235,7 +235,7 @@ images. When the check finds a bug, it makes a bug ticket for each one, adds "De
 not add `needs-human`: when the bugs are closed, the check ticket is a candidate again and a later run checks again (owner, #668).
 After a check without bugs it closes the check ticket on its evidence (owner decision B, #1708: progress does not wait
 for the owner): a comment with the evidence of each point (screenshots, real clicks, values) and a short list of what only
-a person can check (real input by hand, the look, sound), the label `owner-sample`, then the close. The owner checks a
+a person can check (sound, the feel of a control, "is it fun": `verify` level 5, #1707), the label `owner-sample`, then the close. The owner checks a
 sample of these closed tickets later in one game (`human` skill). A denied close: keep the comment, add `needs-human`
 and "Please close" (#1641). Never ask the owner about
 times, speeds, values or texts: measure them and compare them with AoE2 (owner, #1159). A look question links the image
