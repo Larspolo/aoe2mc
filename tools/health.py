@@ -12,6 +12,7 @@ REST only (cloud sessions give 403 for GraphQL and `search/...`). Token and `gh`
 import argparse
 import datetime
 import difflib
+import math
 import os
 import re
 import statistics
@@ -567,7 +568,7 @@ def fetch(since, until=None):
     recent = [c for c in comments if c["created_at"] >= iso or c["body"].startswith("Started by")]
     prs = api_pages("pulls?state=closed&sort=updated&direction=desc", stop=lambda p: p["updated_at"] < iso)
     issues = api_pages(f"issues?state=all&since={iso}")
-    events = api_pages("issues/events?", limit=5, stop=lambda e: e["created_at"] < iso)
+    events = api_pages("issues/events?", limit=event_pages(since), stop=lambda e: e["created_at"] < iso)
     return runs, jobs, status_comments, recent, prs, issues, events
 
 
@@ -577,6 +578,15 @@ def clip(until, runs, status_comments, comments, prs, issues, events):
     return ([r for r in runs if early(r["created_at"])], [c for c in status_comments if early(c["created_at"])],
             [c for c in comments if early(c["created_at"])], [p for p in prs if early(p.get("closed_at"))],
             [i for i in issues if early(i["created_at"])], [e for e in events if early(e["created_at"])])
+
+
+EVENT_PAGES_PER_DAY = 100   # the repository has about 65 pages of issue events a day, newest first (#2005)
+
+
+def event_pages(since, now=None):
+    """The page limit of `issues/events?` from now back to since: EVENT_PAGES_PER_DAY for each 24 hours."""
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    return max(5, math.ceil((now - since).total_seconds() / 86400 * EVENT_PAGES_PER_DAY))
 
 
 COMMENT_PAGES = 100   # the repository has about 1100 comments a day: 20 pages cut the last hours of 2 days (#1717)
