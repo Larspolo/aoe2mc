@@ -3,6 +3,7 @@ seconds) from the Feudal Age (#760). A click queues it once; after the research 
 from urllib.parse import unquote
 
 import pytest
+from menu_line import item, labels, order
 from test_gather import FakeServer, grid
 
 from game import gather, train
@@ -26,7 +27,9 @@ def menus(server):
 def test_the_lumber_camp_menu_has_double_bit_axe():
     server, g = setup()
     assert train.open_menu(g, "Steve", (2, 3)) == (2, 4, 2, 4)
-    assert menus(server) == ["aoe menu Steve Lumber Camp 0:book:Double-Bit Axe:100 food · 50 wood · 25 s · research"]
+    cmd, = menus(server)
+    assert cmd.startswith("aoe menu Steve Lumber Camp ") and labels(cmd) == order(g, "LUMBER_CAMP")   # the full menu
+    assert item(cmd, "Double-Bit Axe") == "0:book:Double-Bit Axe:100 food · 50 wood · 25 s · research"
 
 
 def test_no_double_bit_axe_in_the_dark_age():
@@ -42,7 +45,7 @@ def test_a_click_queues_double_bit_axe_once_and_takes_its_cost():
     rect = train.open_menu(g, "Steve", (3, 3))
     assert train.order(g, "Steve", rect, 0, shift=True) == 1 and (g.stock["food"], g.stock["wood"]) == (400, 450)
     assert train.order(g, "Steve", rect, 0) == 0 and (g.stock["food"], g.stock["wood"]) == (400, 450)
-    assert menus(server)[-1].endswith("0:book:Double-Bit Axe:100 food · 50 wood · 25 s · researching")
+    assert item(menus(server)[-1], "Double-Bit Axe") == "0:book:Double-Bit Axe:100 food · 50 wood · 25 s · researching"
 
 
 def test_not_enough_resources():
