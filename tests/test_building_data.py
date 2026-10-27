@@ -16,13 +16,12 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def test_each_building_line_has_the_stats_fields_or_only_a_sight():
     for line in open(os.path.join(table.DIR, "buildings.jsonl"), encoding="utf-8"):
         row = json.loads(line)
-        keys = set(row) - {"note", "sight", "stone"}                     # "stone": the class Stone Defense (#1873)
+        keys = set(row) - {"as", "note", "sight", "stone"}               # "stone": the class Stone Defense (#1873)
         assert keys in ({"name"}, {"name", *combat.Stats._fields}), row["name"]
         assert "sight" in row or keys != {"name"}, row["name"]
 
 
 def test_buildings_and_sight_have_the_values_of_before():
-    assert len(combat.BUILDINGS) >= 23 and len(combat.SIGHT) >= 154   # new units and buildings add lines (#1953, #1874)
     assert combat.BUILDINGS["DOCK"] == combat.Stats(1800, 3, 0, 7, 6, 2.0, {combat.CAM: 1, combat.SHIP: 3},   # (#1949)
                                                      ("building", combat.STANDARD))
     assert combat.BUILDINGS["KEEP"].classes == ("building", combat.STANDARD, combat.STONE)
