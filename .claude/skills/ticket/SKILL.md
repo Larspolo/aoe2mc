@@ -110,6 +110,17 @@ A research result that waits for the owner (options, milestones, "the owner deci
 for each decision, with the options and your recommendation, before the research ticket closes. A decision that
 is only in a document is lost: milestones 2 and 3 of the replay research (#31) waited without a ticket until the owner asked (#371).
 
+## Model lanes
+
+A cheap Haiku run takes the tickets with the label `lane:haiku` (#1715). Add it only when all of these are true:
+- `size:S`, and the body names each file and function to change, the exact values (from the wiki, with the source)
+  and, for a menu item, the slot (see "Rules").
+- A merged PR did the same pattern (name it in the body, for example "as #1572"). Examples: "Research X at Y",
+  "Train X at Y".
+- Verify level 1 is enough: no Minecraft server, no screenshot, no look to judge.
+- Not a decision, design, check, process or epic ticket, and no "Depends on:" that is open.
+When you are not sure, do not add it: an Opus run takes the ticket.
+
 ## Rules
 
 - One goal per ticket. If you write "and also", make two tickets.

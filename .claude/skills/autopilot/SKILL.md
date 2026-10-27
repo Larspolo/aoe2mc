@@ -128,6 +128,11 @@ Candidates: open issues without `needs-human`, `blocked`, `epic`, `agent-status`
 least overlap with the work in progress (files and functions that open PRs change or claimed tickets name, #487),
 then the lowest issue number.
 `python3 tools/dashboard.py --next` prints the candidates in this order (the rule is `dashboard.candidates()`).
+Tickets with `lane:haiku` come after all others: take one only when nothing else is ready (#1715).
+**Haiku lane.** When the argument names `lane haiku` (the scheduled task "aoe2mc autopilot haiku"), pick only with
+`python3 tools/dashboard.py --next --lane haiku`, skip the epic check, the queue refill, the roadmap review and the
+process review, and stop when no `lane:haiku` ticket is ready. A ticket that is not as clear as its label says: release
+the claim, remove `lane:haiku`, comment why in one line, and take the next one. End the `Metrics:` line with `· lane haiku`.
 Epics first: an epic is never a candidate, so its rest of the work needs sub-issues. Before you claim a ticket, look
 at the open epics (label `epic`, not `needs-human`, not `muted`, any priority) with no open sub-issue, at most 3 per run. The
 priority does not matter here: a check of `P2` and `P3` epics was skipped, and six finished epics stayed open (#799).

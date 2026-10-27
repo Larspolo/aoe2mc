@@ -108,6 +108,12 @@ def runs_to_start(target, claims, ready, paused, hi=MAX_FIRE):
     return max(0, min(target - claims, max(ready, 1), hi))
 
 
+def haiku_runs(k, ready):
+    """The runs of the K to start that can go to the Haiku task "aoe2mc autopilot haiku" (#1715): at most the ready
+    `lane:haiku` tickets. The pacer starts them on the Opus task when the Haiku task does not exist."""
+    return min(k, ready)
+
+
 def measured_burn7():
     """The share of the 7-day quota of one run-hour that `tools/health.py` measures from the `Usage:` lines, or None."""
     try:
@@ -180,7 +186,9 @@ def main(argv=None):
         ready = len(dashboard.candidates(open_all))
         claims = health.active_claims(datetime.datetime.now(datetime.timezone.utc))
         target = target_runs(usage, now, burn, burn7=burn7)
-        print(runs_to_start(target, claims, ready, paused))
+        k = runs_to_start(target, claims, ready, paused)
+        print(k)
+        print(f"haiku {haiku_runs(k, len(dashboard.candidates(open_all, lane='haiku')))}")
         print(f"{describe(usage, now, burn, burn7)} · claims {claims} · ready {ready} · paused {paused}", file=sys.stderr)
     elif a.target:
         print(target_runs(usage, now, burn, burn7=burn7))

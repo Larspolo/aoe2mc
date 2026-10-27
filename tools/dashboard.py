@@ -78,21 +78,27 @@ def overlap(issue, busy):
     return sorted(names(issue.get("body")) & busy)
 
 
-def candidates(issues, busy=frozenset(), now=None):
+LANE = "lane:"     # a lane label names the model of the runs that take the ticket (`lane:haiku`, #1715)
+
+
+def candidates(issues, busy=frozenset(), now=None, lane=None):
     """The ticket candidates in the pick order of the autopilot skill (step 5): priority, then the overlap with the
     work in progress (busy, from work(); fewer merge conflicts, #487), then the ticket number.
     issues: the open issues and PRs. A dependency is closed when it is not open: an open PR is open too (#243).
     A ticket waits until the time of its "Start after:" line (#496). A decision ticket ("Decide: ...") is never a
-    candidate: only the owner answers it, also when the owner removed `needs-human` with the answer (#1569)."""
+    candidate: only the owner answers it, also when the owner removed `needs-human` with the answer (#1569).
+    lane ("haiku"): only the tickets with `lane:haiku`. No lane (the Opus runs): the lane tickets come after all others,
+    so an Opus run takes one only when nothing else is ready (#1715)."""
     now = now or datetime.datetime.now(datetime.timezone.utc)
     open_numbers = {i["number"] for i in issues}
     issues = [i for i in issues if "pull_request" not in i]
 
     def rank(i):
         p = next((k for k, name in enumerate(PRIORITY) if name in labels(i)), len(PRIORITY))
-        return p, len(overlap(i, busy)), i["number"]
+        return lane is None and any(n.startswith(LANE) for n in labels(i)), p, len(overlap(i, busy)), i["number"]
     ready = [i for i in issues if not labels(i) & SKIP and not any(d in open_numbers for d in depends(i))
-             and not (start_after(i) or now) > now and not i.get("title", "").startswith("Decide:")]
+             and not (start_after(i) or now) > now and not i.get("title", "").startswith("Decide:")
+             and (lane is None or LANE + lane in labels(i))]
     return sorted(ready, key=rank)
 
 
@@ -238,13 +244,14 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--dry-run", action="store_true", help="print the body, do not change the issue")
     ap.add_argument("--next", action="store_true", help="print the candidates in pick order")
+    ap.add_argument("--lane", help="with --next: only the tickets of this lane (haiku, #1715)")
     a = ap.parse_args(argv)
     open_all = pages("issues?state=open")                       # issues and PRs
     issues = [i for i in open_all if "pull_request" not in i]
     if a.next:
         prs = [i["number"] for i in open_all if "pull_request" in i]
         busy = work(open_all, {n: [f["filename"] for f in pages(f"pulls/{n}/files", 3)] for n in prs})
-        for i in candidates(open_all, busy):
+        for i in candidates(open_all, busy, lane=a.lane):
             ov = overlap(i, busy)
             print(f"#{i['number']} {i['title']} ({tag(i, 'P')}, {tag(i, 'size:')}, overlap {len(ov)}"
                   + (f": {' '.join(ov)}" if ov else "") + ")")
