@@ -77,8 +77,20 @@ Show clear feedback: a larger mark on the target, a visible selection border, a 
 bar, damage stages that look different from construction (#823, #988, #793, #797, #1332). An action that surprises
 the player is a bug ("this is not nice", #989).
 
+## P10. Fix the cause in all places, with a check or a structure, not a rule
+
+When one cause shows in many places, fix all of them, not only the place that you saw. Prefer a structure that
+prevents the fault (a data file, a merge driver, a workflow) or a check that fails (a test, a lint) to a rule that each
+agent must remember. The owner should not have to ask for the wider fix.
+- One table of `game/train.py` moved to a data file. The owner asked "Should we generalise this further?" (#1702) and
+  then made the epic for all game data (#1909): by content, not by size, and a lint, not a question for each run.
+- A label and a workflow close the tickets, not the owner (#1740). The merge workflow solves `.jsonl` conflicts (#1864).
+- Avoid structures that conflict: a test of the length of a data file conflicts and tests nothing real (#2008).
+
 ## Tensions
 
 - P1 against P8: AoE2 has many buttons, Minecraft has 9 hotbar slots. Up to now P8 won: group the AoE2 buttons (#1314).
 - P4 against P6: "fine for now" is a step, not the end. An epic stays open until the later step is done or excluded.
 - P5 against quality: the owner does not check each item. A check closes on the agent's evidence, and the owner checks a sample later (#1708).
+- P4 and P7 against P10: a pilot is "fine for now" and can wait for its numbers, but the epic for all places starts at
+  once, with the pilot as its first sub-issue (#1909).
