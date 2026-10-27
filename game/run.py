@@ -28,6 +28,7 @@ import os
 import re
 import secrets
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -407,6 +408,8 @@ def main(argv=None):
         ap.error("--bot plays player 2: use it with one person only (--people 1)")
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
         sys.exit(f"no level.dat in {a.world}")
+    if hasattr(signal, "SIGBREAK"):                  # Windows: the window (gui.stop_game) sends Ctrl-Break (#1775)
+        signal.signal(signal.SIGBREAK, signal.default_int_handler)
     game = Game(a.world, a.version, server=a.server)
     game.people = a.people                           # the join order counts from the first player (#1310)
     try:

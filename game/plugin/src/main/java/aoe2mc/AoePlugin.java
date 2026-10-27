@@ -373,6 +373,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     alerts.hit(t, true, mob);
                 } else if (a != null && range.pass > 0) {   // a chakram flies on through the units (#1638), not buildings
                     LivingEntity v = t.getVehicle() instanceof LivingEntity h && stats.containsKey(h.getUniqueId()) ? h : t;
+                    if (v.isValid() && stats.containsKey(v.getUniqueId())) {   // AoE2 accuracy 100 % (wiki): the target
+                        harm(v, stats.get(v.getUniqueId()), a, mob);        // takes the hit, the trident only shows it
+                    }                                                      // and can miss (#1713, onHit)
                     pass(mob, v, range.blocks + range.pass, a, mob, range.part);
                 }
             }
@@ -804,6 +807,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Entity from = ev.getDamager();
         if (from instanceof Projectile p && p.getShooter() instanceof Entity shooter) {
             from = shooter;
+            Range r = ranges.get(shooter.getUniqueId());
+            if (r != null && r.pass > 0 && !r.siege) {      // the chakram: RangeGoal gave the damage at the throw (#1713)
+                ev.setCancelled(true);
+                p.remove();
+                return;
+            }
         }
         Stats a = stats.get(from.getUniqueId()), t = stats.get(ev.getEntity().getUniqueId());
         Building b = buildings.get(ev.getEntity().getUniqueId());
@@ -1385,6 +1394,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (mob.getVehicle() instanceof Boat || mob.isInWater()) {
             return;                                             // a unit in the water swims out (#1208)
         }
+        // findPath sets the target of the navigation to goal: with the last path still on, moveTo then takes that old
+        // path again (a not done path to the same target), and the unit keeps its last order (#1713)
+        mob.getPathfinder().stopPathfinding();
         var path = mob.getPathfinder().findPath(goal);
         if (path != null && path.getPoints().stream().anyMatch(AoePlugin::deep) && (old = malus(mob, -1f)) != null) {
             wet.put(mob.getUniqueId(), old);

@@ -1169,15 +1169,16 @@ class Gather:
         for each unit."""
         return self.where(self.pickable())
 
-    def where(self, want):
-        """{UUID: feet} of the units want: on Paper `aoe where` answers (WHERE_PAGE units each), else `data get`."""
+    def where(self, want, sel="@e[type=!player,team=!]"):
+        """{UUID: feet} of the units want: on Paper `aoe where` answers (WHERE_PAGE units each), else `data get`.
+        want None: all units of the selector sel (Paper only)."""
         if not self.paper:
-            return self.positions(sorted(want))
+            return self.positions(sorted(want or ()))
         out, start = {}, 0
-        while m := re.search(r"Where (\d+): ?(.*)", self.command(f"aoe where @e[type=!player,team=!] {start}")):
+        while m := re.search(r"Where (\d+): ?(.*)", self.command(f"aoe where {sel} {start}")):
             for part in filter(None, m[2].split(", ")):
                 u, x, y, z = part.split()[:4]
-                if u in want:
+                if want is None or u in want:
                     out[u] = float(x), float(y), float(z)
             start += WHERE_PAGE
             if start >= int(m[1]):
