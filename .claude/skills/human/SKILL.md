@@ -68,6 +68,11 @@ Pitfalls of the session of #1674 (avoid them):
 - The owner can answer in two chat lines: `game/play_guide.py` takes the lines of 20 s as one answer.
 - macOS: the first start of a downloaded app or JDK can need System Settings → Privacy & Security → "Open Anyway" (#1668).
 
+Sample check (owner decision B, #1708): agents close check tickets on their evidence with the label `owner-sample`.
+Run `python3 tools/owner_tasks.py --sample` and offer some of these tickets (the oldest first) as one more play game or
+replay, with the owner points of their last agent comment. A finding becomes a bug ticket (step 5). Remove
+`owner-sample` from each ticket that the owner checked, also without a finding.
+
 Wait for the next ticket (#1025): start `python3 tools/owner_tasks.py --wait` with `run_in_background` and end the
 turn. While it waits, the session uses no model turn (one GitHub request each 5 minutes, at most 12 hours). Exit 0:
 it printed the new ticket in the format of the list: show it and ask the owner with `AskUserQuestion` whether to do

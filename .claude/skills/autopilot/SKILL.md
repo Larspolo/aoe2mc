@@ -40,7 +40,7 @@ Put the method after the path (`... -X PATCH`): the permission rules match the s
 | Priority | `P0` (do next), `P1`, `P2`, `P3` (later) |
 | Size | `size:S` (one short PR), `size:M` (one PR), `size:L` (too large: split first) |
 | Kind | `bug`, `feature`, `tooling`, `design`, `docs`, `cleanup` |
-| Flow | `needs-human` (waits for the owner), `blocked` (waits for another ticket), `in-progress`, `epic` (parent of sub-issues), `agent-status` (the status issue), `paused` |
+| Flow | `needs-human` (waits for the owner), `blocked` (waits for another ticket), `in-progress`, `epic` (parent of sub-issues), `agent-status` (the status issue), `paused`, `owner-sample` (a closed check for the owner's sample, #1708) |
 | PR | `hold` (the Automerge workflow does not merge it), `conflict` (the workflow could not merge it: fix it in step 2) |
 
 ## Runs can overlap
@@ -233,7 +233,11 @@ a small check ticket without `needs-human` first (#580). An agent runs the check
 simulated clicks through the same functions as the player input, `tools/mc_shot.py`) and comments the results and the
 images. When the check finds a bug, it makes a bug ticket for each one, adds "Depends on: #bug" to the check ticket, and does
 not add `needs-human`: when the bugs are closed, the check ticket is a candidate again and a later run checks again (owner, #668).
-Only after a check without bugs it adds `needs-human` with a short list of what only a person can check (real input by hand, the look, sound). Never ask the owner about
+After a check without bugs it closes the check ticket on its evidence (owner decision B, #1708: progress does not wait
+for the owner): a comment with the evidence of each point (screenshots, real clicks, values) and a short list of what only
+a person can check (real input by hand, the look, sound), the label `owner-sample`, then the close. The owner checks a
+sample of these closed tickets later in one game (`human` skill). A denied close: keep the comment, add `needs-human`
+and "Please close" (#1641). Never ask the owner about
 times, speeds, values or texts: measure them and compare them with AoE2 (owner, #1159). A look question links the image
 before next to the image after (or AoE2 next to Minecraft).
 
