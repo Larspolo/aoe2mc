@@ -16,7 +16,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 | Rules (`CLAUDE.md`, `docs/LEARNINGS.md`) | Each session loads them. `CLAUDE.md` has the commands, the code map and the rules. `docs/LEARNINGS.md` has the lessons for all runs. |
 | Tools (`tools/`) | `claim.py` (locks), `usage.py` (quota and the number of runs), `dashboard.py` (the status issue and the pick order), `health.py` (numbers for the review), `tokens.py` (the token sinks of a run), `operator_check.py` (the checks of the `operator` skill), `owner_tasks.py` (the tickets of the `human` skill). |
 | GitHub | The issues are the tickets. Issue #1 (label `agent-status`) is the status issue: the dashboard in its body, the run reports as comments. The labels are in `.github/labels.txt`. |
-| Workflows (`.github/workflows/`) | CI, Automerge, Unconflict, Claims, Dashboard, Coverage, Labels, Bundles (see below). |
+| Workflows (`.github/workflows/`) | CI, Automerge, Unconflict, Claims, Close, Dashboard, Coverage, Labels, Bundles (see below). |
 | Cloud environment | The setup script `scripts/cloud-setup.sh` (Java, packages, server jars), the network access, the SessionStart hook. |
 | Hooks (`.claude/hooks/`) | `session-start.sh` installs the Python packages and compares `SETUP_VERSION`. `guard-main.sh` blocks a force push, a history rewrite or a delete of `main`. |
 
@@ -175,6 +175,7 @@ the owner login, the default branch, the status issue, the commands, the doc pat
 | `.github/workflows/automerge.yml` | generic | The branch prefixes `claude/*` and `agent/*`. |
 | `.github/workflows/unconflict.yml` | generic | None. |
 | `.github/workflows/claims.yml` | generic | None. |
+| `.github/workflows/close.yml` | generic | None. It closes the issues with the label `close` (#1740). |
 | `.github/workflows/dashboard.yml` | generic | None. |
 | `.github/workflows/coverage.yml` | specific | The coverage of the AoE2 types. |
 | `.github/workflows/labels.yml` | generic | None. |
