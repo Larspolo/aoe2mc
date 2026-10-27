@@ -12,7 +12,7 @@ from game import combat, gather, train
 build = train.build                                                    # the module that train uses
 SHOP = (2, 6, 2, 6)                                                    # block footprint (x0, x1, z0, z1)
 WIKI = {"BATTERING_RAM": ({"wood": 160, "gold": 75}, 36), "MANGONEL": ({"wood": 160, "gold": 135}, 46),
-        "SCORPION": ({"wood": 75, "gold": 75}, 30)}
+        "SCORPION": ({"wood": 75, "gold": 75}, 30), "SIEGE_TOWER": ({"wood": 100, "gold": 120}, 36)}   # (#1362)
 
 
 def setup(ages=2):
@@ -42,7 +42,7 @@ def test_the_siege_units_are_locked_before_the_castle_age(ages):
     server, g = setup(ages)
     train.open_menu(g, "Steve", (3, 3))
     assert all(build.locked(g, n) == "Needs the Castle Age" for n in WIKI)
-    assert menus(server)[-1].count(":gray_dye:") == 3
+    assert menus(server)[-1].count(":gray_dye:") == len(WIKI)
     assert not train.queue(g, "Steve", (3, 3), "MANGONEL") and g.stock["wood"] == 1000
 
 

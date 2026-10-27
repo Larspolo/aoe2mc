@@ -98,6 +98,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "SCALE_BARDING_ARMOR": {"food": 150},
          "SCALE_MAIL_ARMOR": {"food": 100},
          "SCORPION": {"wood": 75, "gold": 75},
+         "SIEGE_TOWER": {"wood": 100, "gold": 120},                  # the Castle Age (AoE2 DE wiki, #1362)
          "SCOUT_CAVALRY": {"food": 80},
          "SKIRMISHER": {"food": 25, "wood": 35},
          "STONE_MINING": {"food": 100, "wood": 75},
@@ -142,6 +143,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "SCALE_BARDING_ARMOR": 45,
                "SCALE_MAIL_ARMOR": 40,
                "SCORPION": 30,
+               "SIEGE_TOWER": 36,
                "SCOUT_CAVALRY": 30,
                "SKIRMISHER": 22,
                "SPEARMAN": 22,
@@ -165,7 +167,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "MILL": ("HORSE_COLLAR",),                                            # (#726)
           "MINING_CAMP": ("GOLD_MINING", "STONE_MINING"),                      # (#727, #939)
           "MONASTERY": ("MONK", "FERVOR", "SANCTITY", "REDEMPTION"),            # (#1243, #1261, #1264)
-          "SIEGE_WORKSHOP": ("BATTERING_RAM", "MANGONEL", "SCORPION")}          # (#1349)
+          "SIEGE_WORKSHOP": ("BATTERING_RAM", "MANGONEL", "SCORPION", "SIEGE_TOWER")}   # (#1349, #1362)
 # The unique unit of each civilization (AoE2 DE), trained at its castle. A unit without COSTS is not in the menu yet:
 # it has no AoE2 combat values in combat.STATS.
 UNIQUE = {"BRITONS": "LONGBOWMAN", "PERSIANS": "WAR_ELEPHANT", "BYZANTINES": "CATAPHRACT", "CELTS": "WOAD_RAIDER",
@@ -279,6 +281,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "SCALE_BARDING_ARMOR": (4, "book", "Scale Barding Armor"),
          "SCALE_MAIL_ARMOR": (1, "book", "Scale Mail Armor"),
          "SCORPION": (2, "crossbow", "Scorpion"),
+         "SIEGE_TOWER": (3, "ladder", "Siege Tower"),
          "STONE_MINING": (1, "book", "Stone Mining"),
          "TEUTONIC_KNIGHT": (0, "zombie_spawn_egg", "Teutonic Knight"),
          "THROWING_AXEMAN": (0, "drowned_spawn_egg", "Throwing Axeman"),
@@ -325,6 +328,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "SCALE_BARDING_ARMOR": "Cavalry +1 melee armor, +1 pierce armor.",
         "SCALE_MAIL_ARMOR": "Infantry +1 melee armor, +1 pierce armor.",
         "SCORPION": "Siege. Shoots bolts; weak vs. cavalry.",
+        "SIEGE_TOWER": "Siege. Carries 10 infantry, archers or villagers.",
         "SCOUT_CAVALRY": "Fast. Strong vs. monks, siege; weak vs. spears.",
         "SKIRMISHER": "Strong vs. archers, spears; weak vs. cavalry.",
         "SPEARMAN": "Strong vs. cavalry; weak vs. archers.",

@@ -60,6 +60,7 @@ import menu  # noqa: E402
 import monk  # noqa: E402
 import relic_victory  # noqa: E402
 import repair  # noqa: E402
+import siege_tower  # noqa: E402
 import stance  # noqa: E402
 import trade  # noqa: E402
 import train  # noqa: E402
@@ -910,10 +911,14 @@ class Gather:
         if kind == "unit" and u in self.selected and u in self.villagers:   # a click on a selected villager (#621)
             build.open_menu(self, name)
             return
+        if kind == "unit" and u in self.selected and siege_tower.out(self, u):   # its units come out (#1362)
+            return
         if kind == "unit" and u in self.selected and u in self.soldiers:    # a click on a selected soldier (#1107)
             stance.open_menu(self, name, u)
             return
         if kind == "unit" and repair.unit_order(self, name, u):        # villagers repair an own damaged siege unit (#1331)
+            return
+        if kind == "unit" and siege_tower.order(self, name, u):        # the selection goes into a siege tower (#1362)
             return
         if kind == "unit":
             self.select(u)
@@ -1081,6 +1086,7 @@ class Gather:
         """One tick: walk one block, chop, drop the wood, or build."""
         self.fall()
         garrison.tick(self)
+        siege_tower.tick(self)
         for v in self.villagers.values():
             if v.state in ("to_tree", "to_drop", "to_site", "to_rally", "to_prey", "to_repair") and v.path:
                 self.follow(v) if self.paper else walk(self, v)
