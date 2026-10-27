@@ -91,11 +91,12 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *             [reload ticks]                   the AoE2 values of a unit (#514, game/combat.py stats_command); a melee
  *                                              unit hits once per reload (#848, default 20: the vanilla cooldown)
  *   aoe stop <selector>                        stop the walk and turn the AI off: the unit stands still (#437)
- *   aoe range <selector> <blocks> <ticks> [blast]
+ *   aoe range <selector> <blocks> <ticks> [blast [min]]
  *                                              a ranged unit shoots from this range, one shot per ticks (#515); a
  *                                              shot with a blast radius in blocks hits all units near the target, and
  *                                              a siege unit (a minecart) shoots too (#1050); blast 0: a siege shot
- *                                              that hits only the target (the Scorpion, #1062)
+ *                                              that hits only the target (the Scorpion, #1062); min: no shot at a
+ *                                              target nearer than these blocks (the AoE2 minimum range, #1350)
  *   aoe sees <player> <uuid>                   "Sees: 1" or "Sees: 0" (Player#canSee), for checks
  *   aoe show <players> <uuid> ...              Player#showEntity: the players see these entities again (#1302)
  *   aoe sight <selector> <blocks>              an idle unit attacks an enemy in this line of sight (#775)
@@ -230,6 +231,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         final double speed;
         final int start = Bukkit.getCurrentTick();
         int fails;
+        int at = -1;                                // steer(): the tick, place and velocity of the last steer (#1344)
+        double px, pz, vx, vz;
 
         Order(Location goal, double speed) {
             this.goal = goal;
@@ -239,7 +242,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     private final Map<UUID, Order> orders = new HashMap<>();
 
-    private record Range(double blocks, int ticks, double blast, boolean siege) {
+    // min: no shot at a target nearer than this (blocks, the AoE2 minimum range of the Mangonel line ..., #1350)
+    private record Range(double blocks, int ticks, double blast, boolean siege, double min) {
     }
 
     private final Map<UUID, Range> ranges = new HashMap<>();
@@ -288,9 +292,13 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             LivingEntity t = mob.getTarget();
             // a building: the range to its nearest side, and no sight of the eye of its target in the walls (#608)
             boolean wall = buildings.containsKey(t.getUniqueId());
-            boolean near = (wall ? gap(mob, t) : mob.getLocation().distanceSquared(t.getLocation()))
-                    <= range.blocks * range.blocks && (wall || mob.hasLineOfSight(t));
-            if (near) {
+            double d2 = wall ? gap(mob, t) : mob.getLocation().distanceSquared(t.getLocation());
+            boolean near = d2 <= range.blocks * range.blocks && (wall || mob.hasLineOfSight(t));
+            boolean close = d2 < range.min * range.min;  // inside the minimum range: it stays and does not shoot (#1350)
+            if (close) {
+                mob.getPathfinder().stopPathfinding();
+                near = false;
+            } else if (near) {
                 mob.getPathfinder().stopPathfinding();
             } else if (held.contains(mob.getUniqueId())) {
                 mob.getPathfinder().stopPathfinding();               // stand ground: no walk (#1104)
@@ -1159,7 +1167,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
                 var path = pf.getCurrentPath();
                 if (path != null) {
-                    steer(mob, path, o.speed);
+                    steer(mob, path, o);
                     glide(mob, path, o.speed);
                 }
                 climb(mob, o.goal);                    // also when its path ends in the water
@@ -1171,8 +1179,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // corner of a block and fell back (#1022), an eagle scout walked up at 56 % of its speed (#851). On the ground it
     // aims at the last path point up to LOOK blocks ahead of the point next to it, whose points between are at most OFF
     // blocks off the line. Each tick the input of the mob (Minecraft MoveControl) pushes toward its next point n with
-    // step x (1 - GROUND): the velocity takes that push away again.
-    private static void steer(Mob mob, Pathfinder.PathResult path, double speed) {
+    // step x (1 - GROUND): the velocity takes that push away again. The path follow can pass n in the same tick, after
+    // steer(), and the input then pushes toward the next point: a horse walked 27 % faster to the north-west (#1344).
+    // So after the first tick it takes away the real push of the last tick (the move less the velocity, at most the
+    // push): its errors cancel from tick to tick, and the mean speed is the walk speed.
+    private static void steer(Mob mob, Pathfinder.PathResult path, Order o) {
+        double speed = o.speed;
         AttributeInstance attr = mob.getAttribute(Attribute.MOVEMENT_SPEED);
         List<Location> points = path.getPoints();
         int i = path.getNextPointIndex();
@@ -1189,12 +1201,25 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         double step = WALK * attr.getValue() * attr.getValue() * speed / 20, push = step * (1 - GROUND);
         double dx = p.getX() - mx, dz = p.getZ() - mz, d = Math.hypot(dx, dz);
         double nx = n.getX() - mx, nz = n.getZ() - mz, e = Math.hypot(nx, nz);
+        if (e > 0.01) {
+            nx *= push / e;
+            nz *= push / e;
+        }
+        if (o.at == Bukkit.getCurrentTick() - 1) {     // the real push of the last tick: the move less the velocity (#1344)
+            double ax = m.getX() - o.px - o.vx, az = m.getZ() - o.pz - o.vz, a = Math.hypot(ax, az);
+            nx = a > push ? ax / a * push : ax;
+            nz = a > push ? az / a * push : az;
+        }
         if (d < 0.05) {
             return;
         }
-        double w = Math.min(step, d);
-        mob.setVelocity(new Vector(dx / d * w - (e < 0.01 ? 0 : nx / e * push), mob.getVelocity().getY(),
-                dz / d * w - (e < 0.01 ? 0 : nz / e * push)));
+        double w = Math.min(step, d), vx = dx / d * w - nx, vz = dz / d * w - nz;
+        mob.setVelocity(new Vector(vx, mob.getVelocity().getY(), vz));
+        o.px = m.getX();
+        o.pz = m.getZ();
+        o.vx = vx;
+        o.vz = vz;
+        o.at = Bukkit.getCurrentTick();
     }
 
     // A swimming mob floats about 1.5 blocks under a bank of one block above the water, the shore of the maps: Minecraft
@@ -1569,11 +1594,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Stats: " + n + " units");
             return true;
         }
-        if ((args.length == 4 || args.length == 5) && args[0].equals("range")) {
+        if (args.length >= 4 && args.length <= 6 && args[0].equals("range")) {
             Range r;
             try {
                 r = new Range(Double.parseDouble(args[2]), Integer.parseInt(args[3]),
-                        args.length == 5 ? Double.parseDouble(args[4]) : 0, args.length == 5);
+                        args.length >= 5 ? Double.parseDouble(args[4]) : 0, args.length >= 5,
+                        args.length == 6 ? Double.parseDouble(args[5]) : 0);
             } catch (NumberFormatException e) {
                 sender.sendMessage("Bad number: " + e.getMessage());
                 return true;

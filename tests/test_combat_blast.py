@@ -15,8 +15,8 @@ def test_the_mangonel_line_has_the_blast_radius_of_the_wiki():
 
 
 def test_the_range_command_gives_the_blast_in_blocks():
-    assert combat.range_command("u", "ONAGER", 4).split()[3:] == ["32", str(round(6.0 / 1.7 * 20)), "5.0"]
-    assert combat.range_command("u", "SIEGE_ONAGER", 2).split()[-1] == "3.0"
+    assert combat.range_command("u", "ONAGER", 4).split()[3:6] == ["32", str(round(6.0 / 1.7 * 20)), "5.0"]
+    assert combat.range_command("u", "SIEGE_ONAGER", 2).split()[5] == "3.0"          # then the minimum range (#1350)
     assert len(combat.range_command("u", "ARCHER", 4).split()) == 5           # no blast: one target
 
 

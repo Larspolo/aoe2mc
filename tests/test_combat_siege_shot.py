@@ -14,12 +14,12 @@ SHOOTERS = ("SCORPION", "HEAVY_SCORPION", "TREBUCHET", "BOMBARD_CANNON", "ORGAN_
 @pytest.mark.parametrize("name", SHOOTERS)
 def test_each_ranged_siege_unit_gets_a_siege_range(name):
     words = combat.range_command("u", name, 4).split()
-    assert len(words) == 6 and float(words[3]) == combat.stats(name).range * 4
+    assert len(words) == 6 + (name in combat.MIN_RANGE) and float(words[3]) == combat.stats(name).range * 4
     assert float(words[5]) == combat.BLAST.get(name, 0) * 4                    # blast 0: the target only
 
 
 def test_the_bombard_cannon_has_its_blast_and_a_ram_does_not_shoot():
-    assert combat.range_command("u", "BOMBARD_CANNON", 4).split()[-1] == "2.0"
+    assert combat.range_command("u", "BOMBARD_CANNON", 4).split()[5] == "2.0"   # then the minimum range (#1350)
     assert combat.range_command("u", "BATTERING_RAM", 4) is None                # range 0: melee
     assert len(combat.range_command("u", "ARCHER", 4).split()) == 5           # not a minecart: no siege shot
 

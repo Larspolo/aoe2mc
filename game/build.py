@@ -19,6 +19,8 @@ a tree or water is left out. The builders of a tile go on to the next unfinished
 Gates (#1324): a gate (GATES) goes on 4 own wall tiles in a straight line along x or z, as in AoE2 (4 x 1 tiles). It
 replaces them: a wall site goes (its builders go on to the gate), a complete wall tile loses its target. The gate stays
 closed for now.
+Fortified Wall (#1326, train.WALL_UPGRADES): the new and the complete own stone walls and gates get the fortified design
+and its hit points (design(), upgrade()); a damaged one keeps its lost hit points, as in AoE2.
 """
 import json
 import math
@@ -162,13 +164,17 @@ def shape(blocks, limit=GHOST):
             cells.setdefault((x // k, y // k, z // k), v)
 
 
-def ghost_commands(g, player, name, rect):
+def ghost_commands(g, player, name, rect, origin=None):
     """The plugin commands that give player the ghost of building name: its design at rect (x0, x1, z0, z1) without
-    the cleared air and the foundation, relative to the floor of the north-west corner. At most 1446 bytes per RCON
+    the cleared air and the foundation, relative to the floor of the north-west corner, or of the block column origin
+    (x, z) where the plugin puts the ghost (a gate: the tile under the cursor, #1357). At most 1446 bytes per RCON
     command: the shape goes in parts. An empty list where the design does not stand (outside the map, on water)."""
-    if name not in g.shapes:
+    T, (ox, oz) = g.map.T, origin or (rect[0], rect[2])
+    along_z = rect[3] - rect[2] > rect[1] - rect[0]                    # a gate along z
+    key = name if (along_z, rect[0] - ox, rect[2] - oz) == (False, 0, 0) else (name, along_z, rect[0] - ox, rect[2] - oz)
+    if key not in g.shapes:
         cmds = Replay(g, g.data, getattr(g.game, "version", VERSION_NAME)).building(
-            name, g.player, rect[0] / g.map.T + footprint(name) / 2, rect[2] / g.map.T + footprint(name) / 2)
+            name, g.player, (rect[0] + rect[1]) / 2 / T, (rect[2] + rect[3]) / 2 / T, along_z=along_z)
         blocks, base = {}, None
         for c in cmds:
             b, state = box(c) or (None, None)
@@ -179,11 +185,11 @@ def ghost_commands(g, player, name, rect):
             if state.split("[")[0] in ("air", "minecraft:air", "barrier", "minecraft:barrier"):
                 continue
             for x in range(b[0], b[3] + 1):
-                blocks[x - rect[0], b[1] - base, b[2] - rect[2]] = state.removeprefix("minecraft:")
+                blocks[x - ox, b[1] - base, b[2] - oz] = state.removeprefix("minecraft:")
         if not blocks:
             return []
-        g.shapes[name] = shape(blocks)
-    parts, k = g.shapes[name]
+        g.shapes[key] = shape(blocks)
+    parts, k = g.shapes[key]
     out, line = [f"aoe ghost-clear {player}"], ""
     for (x, y, z), state in sorted(parts.items()):
         t = f" {x}/{y}/{z}/{state}"
@@ -212,13 +218,16 @@ def ghosts(g):
         cell = pos and len(rot) == 2 and g.map.pick_ground((pos[0], pos[1] + 1.62, pos[2]), gather.direction(*rot))
         if not cell:
             continue
-        rect = area(g, name, cell)
-        if g.ghosts.get(p, [None])[0] != name:
-            if not (cmds := ghost_commands(g, p, name, rect)):
+        rect, spot, T = area(g, name, cell), None, g.map.T
+        if name in GATES:                                              # on the wall tiles of gate_rect, else along x
+            corner = (cell[0] // T * T, cell[1] // T * T)
+            spot = gate_rect(g, cell) or (corner[0] - 2 * T, corner[0] + 2 * T, corner[1], corner[1] + T)
+        if g.ghosts.get(p, [None])[0] != name or g.ghosts[p][2:] != [spot]:
+            if not (cmds := ghost_commands(g, p, name, spot or rect, spot and corner)):
                 continue
             for c in cmds:
                 g.command(c)
-            g.ghosts[p] = [name, None]
+            g.ghosts[p] = [name, None, spot]
         color = "green" if (gate_rect(g, cell) if name in GATES else free(g, rect)) else "red"   # a gate: on a wall
         if g.ghosts[p][1] != color:
             g.command(f"aoe ghost-color {p} {color}")
@@ -431,7 +440,7 @@ def found(g, name, rect):
     g.map.blocked |= {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
     T = g.map.T                                                        # the design, bottom up (one command each)
     cmds = Replay(g, g.data, getattr(g.game, "version", VERSION_NAME)).building(
-        name, g.player, (x0 + x1) / 2 / T, (z0 + z1) / 2 / T, along_z=z1 - z0 > x1 - x0)   # a gate along z (#1324)
+        design(g, name, g.player), g.player, (x0 + x1) / 2 / T, (z0 + z1) / 2 / T, along_z=z1 - z0 > x1 - x0)   # a gate along z (#1324)
     site = {"name": name, "player": g.player, "footprint": rect, "commands": cmds, "sent": 0, "progress": 0.0,
             "ring": dict.fromkeys(ring, f"minecraft:{color}_wool"), "under": {}}   # under: the design blocks on the ring
     g.sites.append(site)
@@ -487,6 +496,32 @@ def rise(g, site, work):
     return site["progress"] >= 1
 
 
+def design(g, name, player):
+    """The design of building name of player: a stone wall (gate) of the player after Fortified Wall is a fortified
+    wall (gate), #1326."""
+    import train                                                       # train imports this module
+    new = {old: wall for t, walls in train.WALL_UPGRADES.items() if t in getattr(g, "techs", ()) for old, wall in walls.items()}
+    return new.get(name, name) if player == g.player else name
+
+
+def upgrade(g, site):
+    """The complete wall site gets the design and the hit points of its new wall after a wall technology (#1326): the
+    target keeps its lost hit points, as in AoE2 (the score aoe_hp, repair.hp). A destroyed wall stays air."""
+    import combat, repair                                              # combat -> gather -> build: import it late
+    x0, x1, z0, z1 = site["footprint"]
+    if (hp := repair.hp(g, (x0, x1, z0, z1))) is None or hp <= 0:
+        return
+    name, T = design(g, site["name"], site["player"]), g.map.T
+    for c in Replay(g, g.data, getattr(g.game, "version", VERSION_NAME)).building(
+            name, site["player"], (x0 + x1) / 2 / T, (z0 + z1) / 2 / T, along_z=z1 - z0 > x1 - x0):   # as found()
+        g.command(c)
+    uuid, old, new = combat.target_uuid([x0, z0, x1, z1]), combat.wall(site["name"], ages(g)), combat.wall(name, ages(g))
+    box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
+    for c in [c for c in combat.building(uuid, name, site["player"], box, T, s=new) if c.startswith("aoe building ")] \
+            + [f"scoreboard players set {uuid} aoe_hp {min(new.hp, hp + new.hp - old.hp)}", combat.label_command(uuid, name)]:
+        g.command(c)
+
+
 def target(g, site):
     """A complete building of combat.BUILDINGS gets its target entity, as a building of the map (combat.setup): the
     AoE2 hit points, and the arrows of a town center, tower or castle (#1202). wonder.tick makes the one of a wonder."""
@@ -496,10 +531,10 @@ def target(g, site):
     x0, x1, z0, z1 = site["footprint"]
     uuid = combat.target_uuid([x0, z0, x1, z1])
     box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
-    wall = site["name"] in combat.WALLS                                # the hit points of the age (#1322)
-    s = combat.wall(site["name"], ages(g)) if wall else None
-    for c in combat.building(uuid, site["name"], site["player"], box, g.map.T, s=s) \
-            + [f"tag {uuid} add {combat.WALL_TAG}"] * wall + [combat.label_command(uuid, site["name"])]:
+    wall, name = site["name"] in combat.WALLS, design(g, site["name"], site["player"])   # the hit points of the age (#1322)
+    s = combat.wall(name, ages(g)) if wall else None
+    for c in combat.building(uuid, name, site["player"], box, g.map.T, s=s) \
+            + [f"tag {uuid} add {combat.WALL_TAG}"] * wall + [combat.label_command(uuid, name)]:
         g.command(c)
     if site["player"] != g.player:                                     # an enemy building: the player can attack it
         g.forts[uuid], g.fort_names[uuid] = box, site["name"]
