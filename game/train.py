@@ -93,6 +93,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "HEAVY_SCORPION": {"wood": 75, "gold": 75},
          "HEAVY_SCORPION_UPGRADE": {"food": 800, "wood": 750},
          "HORSE_COLLAR": {"food": 75, "wood": 75},
+         "HUSBANDRY": {"food": 150},                                   # AoE2 DE wiki (#1416)
          "HUSKARL": {"food": 75, "gold": 35},
          "IMPERIAL_AGE": {"food": 1000, "gold": 800},
          "IRON_CASTING": {"food": 220, "gold": 120},
@@ -156,6 +157,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "HEAVY_SCORPION": 30,
                "HEAVY_SCORPION_UPGRADE": 50,
                "HORSE_COLLAR": 20,
+               "HUSBANDRY": 40,
                "HUSKARL": 13,
                "IMPERIAL_AGE": 190,
                "IRON_CASTING": 75,
@@ -202,7 +204,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                          "CHAIN_MAIL_ARMOR", "LEATHER_ARCHER_ARMOR", "CHAIN_BARDING_ARMOR",   # the Castle Age (#1394)
                          "IRON_CASTING", "BODKIN_ARROW"),                       # (#1395)
           "CASTLE": ("TREBUCHET",),                                             # and the unique unit: trains() (#708, #1351)
-          "STABLE": ("SCOUT_CAVALRY", "BLOODLINES"),                           # (#671, #940)
+          "STABLE": ("SCOUT_CAVALRY", "BLOODLINES", "HUSBANDRY"),              # (#671, #940, #1416)
           "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS"),   # (#1326, #1374, #1352)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
           "MARKET": ("TRADE_CART", "CARAVAN", "GUILDS"),                       # (#1253, #1254)
@@ -255,6 +257,7 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "GUILDS": lambda name, s: s,                              # the trading fee: market.FEES
          "HEAVY_SCORPION_UPGRADE": lambda name, s: s,
          "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
+         "HUSBANDRY": lambda name, s: s,                           # the walk speed: SPEEDS
          "IMPERIAL_AGE": lambda name, s: s,                        # an age: REQUIRES
          "IRON_CASTING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
          "KEEP": lambda name, s: s,                                # the towers of the player: TOWER_UPGRADES
@@ -278,8 +281,9 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "STONE_MINING": lambda name, s: s,                        # an economy technology: gather.WORK_TECHS
          "FEUDAL_AGE": lambda name, s: s,   # the change of each technology to the AoE2 values
          "WHEELBARROW": lambda name, s: s}                         # no combat change: gather.CARRY and gather.PACE
-SPEEDS = {"CARAVAN": ("TRADE_CART", 1.2),                         # technology: the unit and its walk speed factor
-          "FERVOR": ("MONK", 1.15)}
+SPEEDS = {"CARAVAN": ("TRADE_CART", 1.2),                         # technology: the unit (or a group of civs.GROUPS)
+          "FERVOR": ("MONK", 1.15),                                # and its walk speed factor
+          "HUSBANDRY": ("mounted", 1.1)}                           # cavalry, camels, elephants (#1416)
 UPGRADES = {                                                       # technology: the unit and its new unit (#941)
     "CAPPED_RAM_UPGRADE": ("BATTERING_RAM", "CAPPED_RAM"),           # the siege upgrades of AoE2 DE (#1352)
     "HEAVY_SCORPION_UPGRADE": ("SCORPION", "HEAVY_SCORPION"),
@@ -316,6 +320,7 @@ TECH_AGE = {                                                       # the age of 
     "GUILDS": 3,
     "HEAVY_SCORPION_UPGRADE": 3,
     "HORSE_COLLAR": 1,
+    "HUSBANDRY": 2,
     "IRON_CASTING": 2,
     "KEEP": 3,
     "LEATHER_ARCHER_ARMOR": 2,
@@ -374,6 +379,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "GUARD_TOWER": (2, "book", "Guard Tower"),
          "GUILDS": (2, "book", "Guilds"),
          "HORSE_COLLAR": (0, "book", "Horse Collar"),
+         "HUSBANDRY": (4, "book", "Husbandry"),
          "HUSKARL": (0, "zombie_spawn_egg", "Huskarl"),
          "IMPERIAL_AGE": (5, "bell", "Imperial Age"),
          "IRON_CASTING": (0, "book", "Iron Casting"),                 # the slot of Forging
@@ -431,6 +437,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "HEAVY_SCORPION": "Siege. Shoots bolts; weak vs. cavalry.",
         "HEAVY_SCORPION_UPGRADE": "Upgrades scorpions to heavy scorpions.",
         "HORSE_COLLAR": "Farms +75 food.",
+        "HUSBANDRY": "Mounted units walk 10 % faster.",
         "HUSKARL": "Gothic infantry. Strong vs. archers.",
         "IMPERIAL_AGE": "Advance to the Imperial Age.",
         "IRON_CASTING": "Infantry and cavalry +1 attack.",
@@ -761,7 +768,13 @@ def stats(g, name):
 def speed(g, name):
     """The factor of the walk speed of unit name: the bonus of the civilization (civs.speed) and the technologies of the
     player (SPEEDS: Fervor, #1261)."""
-    return civs.speed(g, name) * math.prod(f ** count(g, t) for t, (unit, f) in SPEEDS.items() if unit == name)
+    return civs.speed(g, name) * math.prod(f ** count(g, t) for t, (unit, f) in SPEEDS.items() if faster(unit, name))
+
+
+def faster(unit, name):
+    """True when the SPEEDS entry unit (a unit name or a group of civs.GROUPS) covers unit name."""
+    import combat                                                  # combat imports gather, gather imports this module
+    return unit == name or unit in civs.GROUPS and civs.GROUPS[unit](name, combat.stats(name))
 
 
 def research(g, entry):
@@ -799,7 +812,7 @@ def research(g, entry):
     if entry["name"] in SPEEDS:                                    # the live units walk faster (Fervor)
         import ai                                                  # ai imports gather, gather imports this module
         for uuid, name in g.soldiers.items():
-            if name == SPEEDS[entry["name"]][0]:
+            if faster(SPEEDS[entry["name"]][0], name):
                 g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))
     if entry["name"] in REQUIRES:                                  # an age: all players see it, as in AoE2
         import ai                                                  # ai imports gather, gather imports this module

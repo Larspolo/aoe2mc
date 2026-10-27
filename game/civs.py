@@ -141,7 +141,8 @@ START = {"AZTECS": {"gold": 50},
 # The technologies that a civilization does not have (AoE2 wiki, the availability chart of each technology, #1373):
 # the menu does not show them (train.unlocked).
 MISSING = {"FORTIFIED_WALL": ("BULGARIANS", "CUMANS", "DANES", "GOTHS", "HUNS", "MAGYARS", "MALAY", "MAPUCHE", "MUISCA",
-                              "PERSIANS", "SICILIANS", "TUPI", "WU")}
+                              "PERSIANS", "SICILIANS", "TUPI", "WU"),
+           "HUSBANDRY": ("AZTECS", "CUMANS", "INCAS", "MAPUCHE", "MAYANS", "MUISCA", "TEUTONS", "TUPI", "VIKINGS")}
 
 
 def mounted(s):
