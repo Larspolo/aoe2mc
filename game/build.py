@@ -49,6 +49,7 @@ COSTS = {"HOUSE": {"wood": 25}, "LUMBER_CAMP": {"wood": 100}, "MINING_CAMP": {"w
          "ARCHERY_RANGE": {"wood": 175}, "STABLE": {"wood": 175}, "TOWN_CENTER": {"wood": 275, "stone": 100},
          "CASTLE": {"stone": 650},                                 # the Castle Age: the Imperial Age needs them (#1162)
          "DOCK": {"wood": 150},                                    # 3 x 3 tiles on water at the shore (#1382)
+         "DONJON": {"wood": 50, "stone": 175},                     # the Sicilians only (civs.MISSING, #1873)
          "FISH_TRAP": {"wood": 100},                               # on water, fishing ships build it (#1438)
          "GATE": {"stone": 30},                                    # 4 x 1 tiles (AoE2 DE wiki, #1324)
          "KREPOST": {"stone": 350},                                # the Bulgarians only (civs.MISSING, #1872)
@@ -67,6 +68,7 @@ BUILD_TIMES = {"HOUSE": 25, "LUMBER_CAMP": 35, "MINING_CAMP": 35, "MILL": 35, "F
                "BOMBARD_TOWER": 80,
                "CASTLE": 200,
                "DOCK": 35,
+               "DONJON": 83,                                       # 125 s less the Sicilian bonus (AoE2 DE wiki, #1873)
                "FISH_TRAP": 40,
                "GATE": 70,
                "KREPOST": 150,
@@ -88,6 +90,7 @@ ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw
          "BOMBARD_TOWER": "polished_basalt",                            # the cannon barrels
          "CASTLE": "stone_bricks",
          "DOCK": "dark_oak_planks",                                     # the wood of the pier
+         "DONJON": "mossy_cobblestone",                                 # the stone of the base
          "FISH_TRAP": "bamboo_fence",                                   # the rods of the basket
          "GATE": "iron_bars",                                           # the portcullis
          "KREPOST": "red_sandstone",                                    # the stone of the walls

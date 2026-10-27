@@ -22,7 +22,7 @@ def test_each_building_line_has_the_stats_fields_or_only_a_sight():
 
 
 def test_buildings_and_sight_have_the_values_of_before():
-    assert len(combat.BUILDINGS) == 22 and len(combat.SIGHT) == 147
+    assert len(combat.BUILDINGS) == 23 and len(combat.SIGHT) == 147
     assert combat.BUILDINGS["DOCK"] == combat.Stats(1800, 0, 0, 7, 0, 0.0, {combat.SHIP: 3}, ("building", combat.STANDARD))
     assert combat.BUILDINGS["KEEP"].classes == ("building", combat.STANDARD, combat.STONE)
     assert combat.BUILDINGS["WONDER"].classes == ("building",)

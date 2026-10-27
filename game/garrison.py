@@ -29,6 +29,7 @@ from aoe2mc import GARRISONED
 SIZES = {                                                          # units inside a complete building, as in AoE2
     "BOMBARD_TOWER": 5,
     "CASTLE": 20,
+    "DONJON": 10,                                                  # (AoE2 DE wiki, #1873)
     "GUARD_TOWER": 5,
     "KEEP": 5,
     "KREPOST": 20,                                                 # (AoE2 DE wiki, #1872)
