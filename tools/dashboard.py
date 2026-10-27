@@ -79,16 +79,18 @@ def overlap(issue, busy):
 
 
 LANE = "lane:"     # a lane label names the model of the runs that take the ticket (`lane:haiku`, #1715)
+RESERVED = tuple(CONFIG.get("pacing", {}).get("reserved", ()))   # lanes whose tickets Opus runs never take (#1994)
 
 
-def candidates(issues, busy=frozenset(), now=None, lane=None):
+def candidates(issues, busy=frozenset(), now=None, lane=None, reserved=RESERVED):
     """The ticket candidates in the pick order of the autopilot skill (step 5): priority, then the overlap with the
     work in progress (busy, from work(); fewer merge conflicts, #487), then the ticket number.
     issues: the open issues and PRs. A dependency is closed when it is not open: an open PR is open too (#243).
     A ticket waits until the time of its "Start after:" line (#496). A decision ticket ("Decide: ...") is never a
     candidate: only the owner answers it, also when the owner removed `needs-human` with the answer (#1569).
     lane ("haiku"): only the tickets with `lane:haiku`. No lane (the Opus runs): the lane tickets come after all others,
-    so an Opus run takes one only when nothing else is ready (#1715)."""
+    so an Opus run takes one only when nothing else is ready (#1715), and never one of a `reserved` lane (#1994).
+    `reserved=()` counts all ready tickets (the pacer splits them into lanes itself)."""
     now = now or datetime.datetime.now(datetime.timezone.utc)
     open_numbers = {i["number"] for i in issues}
     issues = [i for i in issues if "pull_request" not in i]
@@ -98,7 +100,7 @@ def candidates(issues, busy=frozenset(), now=None, lane=None):
         return lane is None and any(n.startswith(LANE) for n in labels(i)), p, len(overlap(i, busy)), i["number"]
     ready = [i for i in issues if not labels(i) & SKIP and not any(d in open_numbers for d in depends(i))
              and not (start_after(i) or now) > now and not i.get("title", "").startswith("Decide:")
-             and (lane is None or LANE + lane in labels(i))]
+             and (LANE + lane in labels(i) if lane else not {LANE + r for r in reserved} & labels(i))]
     return sorted(ready, key=rank)
 
 
