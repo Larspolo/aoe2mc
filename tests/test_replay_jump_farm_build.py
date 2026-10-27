@@ -29,11 +29,11 @@ def jump(timeline, ai):
 @pytest.mark.parametrize("ai", [False, True])
 def test_the_builder_of_a_farm_farms_it_in_a_jump(ai):
     food = jump([farm_build(0)], ai).get("food", 0)
-    assert food >= gather.AOE2_WORK["farm"] * (END - 30000) / 1000             # less the walk and the start
+    assert food >= gather.AOE2_WORK["farm"] * (END - 30000 - 15000) / 1000     # less the walk, the build (#1282)
 
 
 @pytest.mark.parametrize("ai", [False, True])
 def test_a_builder_stops_chopping(ai):
     got = jump([order(0, 20, (5.5, 10.5)), farm_build(100000)], ai)
     assert gather.AOE2_WORK["wood"] * 80 <= got["wood"] <= gather.AOE2_WORK["wood"] * 100   # 0 to 100 s only
-    assert got["food"] >= gather.AOE2_WORK["farm"] * (END - 130000) / 1000
+    assert got["food"] >= gather.AOE2_WORK["farm"] * (END - 130000 - 15000) / 1000
