@@ -1352,12 +1352,16 @@ class Gather:
             elif v.state == "chop":
                 v.timer += self.tick
                 src = self.source(v)
-                work = self.work_time("farm" if v.tree in self.map.farms else "hunt" if v.tree in self.map.carcasses else v.res,
-                                      v.tree in self.map.herds)
+                kind = "farm" if v.tree in self.map.farms else "hunt" if v.tree in self.map.carcasses else v.res
+                work = self.work_time(kind, v.tree in self.map.herds)
+                last = civs.last(self, "sheep" if v.tree in self.map.herds else kind)
+                take = 1 if last == 1 else 1 / last                    # 1: the amounts stay whole numbers
                 while v.timer >= work and v.load < self.limit(v.res) and src.get(v.tree, 0) > 0:
                     v.timer -= work
                     v.load += 1
-                    src[v.tree] -= 1
+                    src[v.tree] -= take
+                    if src[v.tree] < 1e-6:                             # 455 takes of 1 / 1.3 empty 350 stone
+                        src[v.tree] = 0
                     self.work(v)
                     if v.tree in self.map.farms:
                         self.harvest(v.tree)
@@ -1367,9 +1371,9 @@ class Gather:
                     elif v.res == "food":
                         self.berries(v.tree)
                     elif v.res != "wood":
-                        if src[v.tree] == 0:
+                        if src[v.tree] <= 0:
                             self.dig(v.tree, v.res)
-                    elif src[v.tree] == 0:
+                    elif src[v.tree] <= 0:
                         self.fell(v.tree)
                     else:
                         self.trunk(v.tree)

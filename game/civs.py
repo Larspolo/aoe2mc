@@ -110,6 +110,7 @@ ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # th
 # repair rate (Saxons). "work_rate": the train and research rate of a building in each age (Persians). "train_rate":
 # [group of GROUPS, factor, also the upgrades] (#1927). "hp": the hit points factor of a building (Persians).
 WORK = {r["name"]: r["work"] for r in ROWS if "work" in r}
+LAST = {r["name"]: r["last"] for r in ROWS if "last" in r}   # resources last longer: a gathered unit takes 1 / factor (#2112)
 START = {r["name"]: r["start"] for r in ROWS if "start" in r}
 SHARED = dict(sorted((n, r["name"]) for r in ROWS for n in r.get("shared", ())))
 NOT_SHARED = {n: tuple(sorted(r["name"] for r in ROWS if n in r.get("not_shared", ())))
@@ -294,3 +295,9 @@ def start(g, base):
 def work(g, kind):
     """The work-rate factor of the civilization of the player of g for gather kind (WORK), else 1."""
     return WORK.get(civ(g), {}).get(kind, 1)
+
+
+def last(g, kind):
+    """The factor of how long a resource of gather kind lasts for the civilization of the player of g (LAST), else 1:
+    as in AoE2, the villager gets the same amount per trip, but the source loses less (Mayans, Puru, Tatar herds)."""
+    return LAST.get(civ(g), {}).get(kind, 1)
