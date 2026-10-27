@@ -89,6 +89,7 @@ SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, 
           "ARCHER": 0.96, "SKIRMISHER": 0.96, "CROSSBOWMAN": 0.96, "CAVALRY_ARCHER": 1.4, "SCOUT": 1.2,
           "LIGHT_CAVALRY": 1.5, "KNIGHT": 1.35, "CAMEL": 1.45, "MONK": 0.7, "BATTERING_RAM": 0.5, "MANGONEL": 0.6,
           "ARBALESTER": 0.96,                                                       # (#1500)
+          "ARMORED_ELEPHANT": 0.6,                                                  # (#2139)
           "CAVALIER": 1.35,                                                         # (#1501)
           "CHAKRAM_THROWER": 1.15,                                                  # (#1624)
           "ELITE_FIRE_LANCER": 0.96,                                                # (#1953)
@@ -114,6 +115,7 @@ SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, 
           "MISSIONARY": 1.1,                                                        # (#1939)
           "PALADIN": 1.35,                                                          # (#1501)
           "SHRIVAMSHA_RIDER": 1.6,                                                  # (#1612)
+          "SIEGE_ELEPHANT": 0.6,                                                    # (#2139)
           "STEPPE_LANCER": 1.45,                                                    # (#1557)
           "VARANGIAN_GUARD": 1.05,                                                  # (#2011)
           "CHAMPION": 0.96,                                                         # (#1498)
