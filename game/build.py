@@ -152,6 +152,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "SIEGE_RAM",
         "TREBUCHET",
         "TWO_HANDED_SWORDSMAN",
+        "WINGED_HUSSAR",
         "WONDER",
     ), 3)                                                              # (0: Dark)
 WALLS = ("PALISADE_WALL", "STONE_WALL")                            # a line of 1-tile sites with two clicks (#1322)

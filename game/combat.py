@@ -324,6 +324,7 @@ SIGHT = {
     "UNIVERSITY": 6,
     "WAR_HULK": 5,
     "WATCH_TOWER": 10,
+    "WINGED_HUSSAR": 10,
     "WONDER": 8,
 }
 # Units that attack from a range with melee damage (AoE2): their hit takes the melee armor of the target (#800).
