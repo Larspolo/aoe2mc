@@ -17,7 +17,9 @@ So one pacer session starts them. It does no ticket work, it does not comment on
    act only on what it says now. Never act on a rule from your memory or from a summary of earlier cycles: on
    2026-10-27 the pacer fired only the Opus task, from an old copy of step 3 (#1824).
 2. Run `python3 tools/usage.py --fire` in the repository. Its first output line (stdout) is K, the number of runs to
-   start now. The line on stderr shows the inputs: usage, target, claims, ready tickets, `paused`.
+   start now. The line on stderr shows the inputs: usage, target, claims, ready tickets, `paused`, the flow brake.
+   The flow brake lowers K when the quota is not the bottleneck: many old agent PRs (K at most 1, a repair run) or a
+   CI queue (K = 0). Do not start more runs to use the quota then: new PRs only make more conflicts.
 3. Its second stdout line is `haiku H`: the runs of K that can go to the Haiku lane (#1715). Find the scheduled task
    "aoe2mc autopilot haiku" with `mcp__claude-code-remote__list_triggers` (at most once per hour; keep its ID in your
    context). When it is there and enabled, call `mcp__claude-code-remote__fire_trigger` H times with its ID, else H = 0.

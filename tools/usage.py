@@ -8,6 +8,13 @@ reset, so that each window reaches the limit (#587).
     python3 tools/usage.py --json
     python3 tools/usage.py --sample     # Usage: <now> · usage 30.0% · resets <time> · runs 9 · week 56.0% · release 61.2%
     python3 tools/usage.py --fire       # the number of runs that the pacer session starts now (skill `pacer`, #566)
+    python3 tools/usage.py --flow       # exit 1 when the flow brake is on: the runs repair PRs, no new ticket
+
+The flow brake (owner, 2026-10-27): the quota is not the only bottleneck. When CI, merge conflicts or anything else
+stops the merges, the agent PRs build up, and a night of new PRs gives many conflicts. So `--fire` counts the open
+agent PRs older than `pr_minutes` (they wait for something that is not the quota) and the queued CI runs. At
+`max_waiting_prs` it starts at most 1 run per cycle, and that run only repairs PRs (autopilot step 2). At
+`max_ci_queue` it starts no run: a run cannot make CI faster. The limits are in `[pacing]` of `agent.toml`.
 
 BURN and BURN7 (the same for the 7-day window, #1695) are the defaults. When the run reports on the status issue
 have enough `Usage:` lines (at least 5 pairs in the last 24 hours), `tools/health.py` measures the burns from them
@@ -32,6 +39,9 @@ MID, MID_LEFT = 0.90, 2.0   # aim: this share is used this many hours before the
 END = 0.98          # aim: this share is used when the 5-hour window resets
 LO, HI = 1, CONFIG.get("pacing", {}).get("max_runs", 16)   # bounds of the number of runs (`agent.toml`, #1706)
 FREE7 = CONFIG.get("pacing", {}).get("week_free", 0.60)   # below this 7-day usage only the 5-hour window counts (owner, 2026-10-27)
+WAIT = CONFIG.get("pacing", {}).get("max_waiting_prs", 6)   # flow brake: open agent PRs older than PR_MINUTES
+QUEUE = CONFIG.get("pacing", {}).get("max_ci_queue", 5)      # flow brake: queued CI runs (no runner yet)
+PR_MINUTES = CONFIG.get("pacing", {}).get("pr_minutes", 30)  # Automerge merges a green PR in a few minutes
 MAX_FIRE = 4        # runs that the pacer starts per cycle: each run needs a few minutes to claim its ticket
 CALL = ["claude", "-p", "Reply with OK.", "--model", "claude-haiku-5-5", "--output-format", "stream-json", "--verbose"]
 
@@ -125,6 +135,34 @@ def lane_plan(target, claims, ready, ready_haiku, weight, paused, hi=MAX_FIRE):
     return h + o, h
 
 
+def waiting_prs(prs, now, minutes=PR_MINUTES):
+    """The open agent PRs (branch `claude/*` or `agent/*`) older than `minutes`, without `hold` (the owner holds
+    those): each waits for a fix, a conflict merge or CI, not for the quota."""
+    old = now - minutes * 60
+    return [p for p in prs if p["head"]["ref"].startswith(("claude/", "agent/"))
+            and "hold" not in {x["name"] for x in p.get("labels", [])}
+            and datetime.datetime.fromisoformat(p["created_at"].replace("Z", "+00:00")).timestamp() < old]
+
+
+def flow_cap(waiting, queued, max_waiting=WAIT, max_queue=QUEUE):
+    """(cap, reason): the most runs that the pacer starts now when the flow is the bottleneck, not the quota.
+    cap None: no brake. Too many queued CI runs: 0 (a run cannot make CI faster). Too many waiting PRs: 1, a run that
+    only repairs PRs (autopilot step 2), so that the open PRs go down before new PRs come."""
+    if queued >= max_queue:
+        return 0, f"brake: CI queue {queued} >= {max_queue}"
+    if waiting >= max_waiting:
+        return 1, f"brake: {waiting} waiting PRs >= {max_waiting}, repair only"
+    return None, f"flow ok: {waiting} waiting PRs, CI queue {queued}"
+
+
+def read_flow(now):
+    """(cap, reason) from GitHub: the open PRs and the queued workflow runs."""
+    import dashboard
+    prs = dashboard.pages("pulls?state=open")
+    queued = dashboard.api("actions/runs?status=queued&per_page=1")["total_count"]
+    return flow_cap(len(waiting_prs(prs, now)), queued)
+
+
 def measured_burn7():
     """The share of the 7-day quota of one run-hour that `tools/health.py` measures from the `Usage:` lines, or None."""
     try:
@@ -180,7 +218,12 @@ def main(argv=None):
     ap.add_argument("--sample", action="store_true", help="print the Usage: line for the run report")
     ap.add_argument("--burn", type=float, help="share of the 5-hour quota per run-hour (default: measured, else BURN)")
     ap.add_argument("--fire", action="store_true", help="print the number of runs that the pacer starts now")
+    ap.add_argument("--flow", action="store_true", help="exit 1 when the flow brake is on (repair PRs, no new ticket)")
     a = ap.parse_args(argv)
+    if a.flow:                                                  # no quota call: autopilot step 2 asks only this
+        cap, reason = read_flow(datetime.datetime.now(datetime.timezone.utc).timestamp())
+        print(reason)
+        sys.exit(int(cap is not None))
     usage, now = read_usage(), datetime.datetime.now(datetime.timezone.utc).timestamp()
     if not usage:
         sys.exit("no rate_limit_event in the CLI output (no subscription, or the CLI changed)")
@@ -203,10 +246,13 @@ def main(argv=None):
         eq = claims if lanes is None else health.opus_equivalent(claims, lanes, weights)   # in Opus runs (#1727)
         target = target_runs(usage, now, burn, burn7=burn7)
         k, h = lane_plan(target, eq, ready, len(dashboard.candidates(open_all, lane="haiku")), weights["haiku"], paused)
+        cap, flow = read_flow(now)
+        if cap is not None:                                     # the flow is the bottleneck: Opus runs repair the PRs
+            k, h = min(k, cap), 0
         print(k)
         print(f"haiku {h}")
         print(f"{describe(usage, now, burn, burn7)} · claims {claims} ({eq:.2f} Opus runs) · ready {ready} · "
-              f"paused {paused} · weights " + ", ".join(f"{n} {w:.2f} ({source[n]})" for n, w in weights.items()),
+              f"paused {paused} · {flow} · weights " + ", ".join(f"{n} {w:.2f} ({source[n]})" for n, w in weights.items()),
               file=sys.stderr)
     elif a.target:
         print(target_runs(usage, now, burn, burn7=burn7))

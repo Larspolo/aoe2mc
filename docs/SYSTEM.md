@@ -83,6 +83,11 @@ the long-lived pacer session at its next cycle (#1824). `tools/health.py` measur
 `Usage:` lines of the run reports, and `usage.py` uses that value. After a plan upgrade the same work is a smaller share of the larger quota: when the burn of
 the last 2 hours is less than half of the 24-hour burn, only the last 2 hours count (`health.ratio`, 5-hour and 7-day
 burn, #1706). The most runs at one time is `max_runs` in `[pacing]` of `agent.toml` (default 16): raise it with a larger plan.
+The flow brake (owner, 2026-10-27): when CI, merge conflicts or anything else stops the merges, the quota is not the
+bottleneck, and more runs only make more open PRs and more conflicts. `--fire` counts the open agent PRs older than
+`pr_minutes` without `hold` and the queued CI runs. At `max_waiting_prs` (default 6) it starts at most 1 run per
+cycle, at `max_ci_queue` (default 5) none. A run asks `usage.py --flow` in autopilot step 2: with the brake on it only
+repairs PRs and takes no new ticket.
 The target counts Opus runs. A run of a cheap lane counts its weight (#1727): a Haiku run sets `git config aoe2mc.lane haiku`,
 its claims end with ` lane haiku`, the `Usage:` lines count its runs (`· haiku N`), and `health.lane_weights` measures
 the weight from them (least squares, at least 10 intervals with Haiku runs; before that `weights` of `agent.toml`,

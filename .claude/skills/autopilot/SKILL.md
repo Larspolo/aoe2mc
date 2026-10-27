@@ -56,6 +56,7 @@ List open PRs. For each PR that the agent opened (branch `claude/*` or `agent/*`
 - CI red, stalled (`overlap.md`) or owner review comments → take it over and fix it now: continue at
   step 6.8. That is the work of this cycle.
 - Merge conflict (label `conflict`, or `mergeable_state` is `dirty`, often with no CI run) → `conflict.md`.
+- `python3 tools/usage.py --flow` exits 1 (flow brake) → repair one PR or go to step 8: no new ticket (`overlap.md`).
 
 Then read the last CI run on main (`/actions/workflows/ci.yml/runs?branch=main&per_page=1`, `conclusion`: the quick
 checks, after each merge) and the last night run (`...&event=schedule&per_page=1`: the full suite). If one is red,
