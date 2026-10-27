@@ -47,12 +47,22 @@ def owners(g):
     out = {(x0, x1, z0, z1): (o["name"], o["player"]) for o in g.data["objects"] if o["kind"] == "building"
            and o["name"] in combat.BUILDINGS and o["player"] in mine and "footprint" in o for x0, z0, x1, z1 in [o["footprint"]]}
     return out | {tuple(s["footprint"]): (s["name"], s["player"]) for s in g.sites + [s for b in g.bots for s in b.g.sites]
-                  if s.get("done") and s["player"] in mine and s["name"] in combat.BUILDINGS}
+                  if s.get("done") and s["player"] in mine and (s["name"] in combat.BUILDINGS or s["name"] in combat.WALLS)}
 
 
 def buildings(g):
     """{block footprint (x0, x1, z0, z1): name} of the own and the allied buildings with AoE2 hit points (owners)."""
     return {r: n for r, (n, _) in owners(g).items()}
+
+
+def full(g, name, player):
+    """The full hit points of building name of player: a wall or gate has those of its design in the age of its
+    player (combat.wall, as build.target, #1360)."""
+    import build, combat                                           # build imports gather
+    if name not in combat.WALLS:
+        return combat.stats(name).hp
+    who = next((b.g for b in g.bots if b.g.player == player), g)   # an allied bot: its techs and age
+    return combat.wall(build.design(who, name, player), build.ages(who)).hp
 
 
 def uuid(rect):
@@ -124,11 +134,10 @@ def unit_order(g, player, u):
 def order(g, player, cell):
     """The selected villagers repair the own damaged building with the block cell (x, z) in its footprint. Returns its
     footprint, or None (no such building, it has its full hit points, or no villager is selected)."""
-    import combat
-    homes = buildings(g)
+    homes = owners(g)
     rect = next((r for r in homes if cell and r[0] <= cell[0] < r[1] and r[2] <= cell[1] < r[3]), None)
     who = sorted(g.selected & g.villagers.keys())
-    if rect is None or not who or not 0 < (hp(g, rect) or 0) < combat.stats(homes[rect]).hp:
+    if rect is None or not who or not 0 < (hp(g, rect) or 0) < full(g, *homes[rect]):
         return None
     x0, x1, z0, z1 = rect
     send(g, who, rect, g.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)}))
@@ -149,7 +158,6 @@ def tick(g, dt):
             work.setdefault(rect, []).append(v)
     if not work:
         return
-    import combat
     homes, g.repair_owed = owners(g), vars(g).get("repair_owed", {})
     for rect, vs in sorted(work.items(), key=lambda kv: (isinstance(kv[0], str), kv[0])):
         if isinstance(rect, str):                                  # a siege unit (#1331)
@@ -157,7 +165,7 @@ def tick(g, dt):
             continue
         now = hp(g, rect) if rect in homes else None
         name, player = homes.get(rect, (None, None))
-        top = combat.stats(name).hp if rect in homes else 0
+        top = full(g, name, player) if rect in homes else 0
         if not now or now >= top:                                  # fallen or full: the work ends
             stop(g, rect, vs)
             continue

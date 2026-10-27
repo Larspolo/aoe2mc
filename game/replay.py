@@ -85,7 +85,7 @@ PATH_CELLS = 20000          # cells that one path search may look at: a unit wit
 SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, "PIKEMAN": 1.0, "EAGLE": 1.1,
           "ARCHER": 0.96, "SKIRMISHER": 0.96, "CROSSBOWMAN": 0.96, "CAVALRY_ARCHER": 1.4, "SCOUT": 1.2,
           "LIGHT_CAVALRY": 1.5, "KNIGHT": 1.35, "CAMEL": 1.45, "MONK": 0.7, "BATTERING_RAM": 0.5, "MANGONEL": 0.6,
-          "SCORPION": 0.65, "TRADE_CART": 1.25}   # walk speed of common units, tiles per game second (AoE2 DE)
+          "SCORPION": 0.65, "SIEGE_TOWER": 0.96, "TRADE_CART": 1.25}   # walk speed of common units, tiles per game second (AoE2 DE)
 
 
 def pretty(name):

@@ -28,6 +28,8 @@ speed of game/ai.py), and `aoe stop` stops them when they arrive (#437). The own
 block) is only for the vanilla server.
 A sidebar scoreboard shows wood, food, gold and stone of player 1. A boss bar shows the selected unit (bossbar.py, #659).
 The action bar shows the actions that the player can do in the selection state now (hints.py, #798).
+A right click on free ground with selected units moves them there (walk_to, #1368): each unit to its own free cell
+near the click; military units with the plugin path finding, villagers stop their work.
 
 The program sees a click in two statistics: the use of the stick, and "talked to villager" (a right click on a
 villager is an interaction with the entity, not a use of the item). Then it reads the position and the view of
@@ -60,6 +62,7 @@ import menu  # noqa: E402
 import monk  # noqa: E402
 import relic_victory  # noqa: E402
 import repair  # noqa: E402
+import siege_tower  # noqa: E402
 import stance  # noqa: E402
 import trade  # noqa: E402
 import train  # noqa: E402
@@ -910,10 +913,14 @@ class Gather:
         if kind == "unit" and u in self.selected and u in self.villagers:   # a click on a selected villager (#621)
             build.open_menu(self, name)
             return
+        if kind == "unit" and u in self.selected and siege_tower.out(self, u):   # its units come out (#1362)
+            return
         if kind == "unit" and u in self.selected and u in self.soldiers:    # a click on a selected soldier (#1107)
             stance.open_menu(self, name, u)
             return
         if kind == "unit" and repair.unit_order(self, name, u):        # villagers repair an own damaged siege unit (#1331)
+            return
+        if kind == "unit" and siege_tower.order(self, name, u):        # the selection goes into a siege tower (#1362)
             return
         if kind == "unit":
             self.select(u)
@@ -953,6 +960,32 @@ class Gather:
             self.build(site)
             x0, x1, z0, z1 = site["footprint"]
             self.mark(name, {(x0, z0), (x1 - 1, z1 - 1)})
+        elif self.selected and (cell := self.map.pick_ground(eye, d)) and self.map.free(*cell):
+            self.walk_to(name, cell)                                   # the move order of AoE2 (#1368)
+
+    def walk_to(self, name, cell):
+        """The selected units walk to the free block cell (x, z), as the move order of AoE2 (#1368): each one to its own
+        free cell near it, the nearest cells first (no formation yet). Military units walk with the plugin path finding
+        at their AoE2 speed; villagers stop their work and walk there. Returns the cells {uuid: cell}."""
+        import ai                                                      # ai imports this module
+        who = sorted(u for u in self.selected if u in self.villagers or u in self.soldiers)
+        r = math.isqrt(len(who)) + 2
+        cells = sorted(((x, z) for x in range(cell[0] - r, cell[0] + r + 1) for z in range(cell[1] - r, cell[1] + r + 1)
+                        if self.map.free(x, z)), key=lambda c: (math.dist(c, cell), c))
+        out = dict(zip(who, cells))
+        for u, (x, z) in out.items():
+            if u in self.villagers:
+                v = self.villagers[u]
+                for t in [t for t, f in self.farmers.items() if f == u]:
+                    del self.farmers[t]
+                v.tree, v.site, v.prey = None, None, None
+                self.go(v, "to_rally", {(x, z)})
+            else:
+                unit = self.soldiers[u]
+                ai.move(self, u, unit, self.map.T, x + 0.5, self.map.y(x, z), z + 0.5, NORMAL * train.speed(self, unit))
+        if out:
+            self.mark(name, {cell})
+        return out
 
     def pickable(self):
         """The UUIDs of the soldiers and enemies that a right click can pick (villagers: their own positions). Units
@@ -1005,7 +1038,7 @@ class Gather:
             act = "trade" if carts and homes.get(key) == "MARKET" and len(trade.markets(self)) > 1 and self.paper else \
                 "garrison" if key in holders and self.selected and self.paper else "train" if key in homes else None
         elif kind == "ground":
-            name, act = "Ground", None
+            name, act = "Ground", "move" if self.selected else None    # the move order (#1368)
         else:
             res = self.map.resource(key)
             name = {"tree": "Tree", "bush": "Berry bush", "farm": "Farm"}.get(kind, f"{res.capitalize()} mine")
@@ -1081,6 +1114,7 @@ class Gather:
         """One tick: walk one block, chop, drop the wood, or build."""
         self.fall()
         garrison.tick(self)
+        siege_tower.tick(self)
         for v in self.villagers.values():
             if v.state in ("to_tree", "to_drop", "to_site", "to_rally", "to_prey", "to_repair") and v.path:
                 self.follow(v) if self.paper else walk(self, v)
