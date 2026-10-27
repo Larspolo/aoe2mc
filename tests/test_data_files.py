@@ -118,13 +118,16 @@ CHECKS = {"build.jsonl": check_build, "buildings.jsonl": check_buildings, "civs.
           "gather.jsonl": check_gather, "train.jsonl": check_train, "units.jsonl": check_units}
 
 
+MIXED = {("train.jsonl", "effect")}       # a function name or a change of the values (train.effect(), #2098)
+
+
 @pytest.mark.parametrize("name", sorted(NAMES))
 def test_each_key_has_one_type(name):
     types = {}
     for row in rows(name):
         for k, v in row.items():
             t = float if type(v) is int else type(v)       # an int is a float without a fraction; null: none
-            assert v is None or types.setdefault(k, t) is t, (name, row["name"], k)
+            assert v is None or (name, k) in MIXED or types.setdefault(k, t) is t, (name, row["name"], k)
 
 
 @pytest.mark.parametrize("name", sorted(NAMES))
