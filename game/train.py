@@ -226,6 +226,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_GENOESE_CROSSBOWMAN_UPGRADE": lambda name, s: s,   # a new unit name: UPGRADES
          "ELITE_KARAMBIT_WARRIOR_UPGRADE": lambda name, s: s,      # a new unit name: UPGRADES
          "ELITE_KESHIK_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
+         "ELITE_KONNIK_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
          "ELITE_OBUCH_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "ELITE_SHRIVAMSHA_RIDER_UPGRADE": lambda name, s: s,      # a new unit name: UPGRADES
          "ELITE_STEPPE_LANCER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
@@ -346,6 +347,7 @@ UPGRADES = {                                                       # technology:
     "ELITE_GENOESE_CROSSBOWMAN_UPGRADE": ("GENOESE_CROSSBOWMAN", "ELITE_GENOESE_CROSSBOWMAN"),   # the castle (#1724)
     "ELITE_KARAMBIT_WARRIOR_UPGRADE": ("KARAMBIT_WARRIOR", "ELITE_KARAMBIT_WARRIOR"),   # the castle of the Malay (#1750)
     "ELITE_KESHIK_UPGRADE": ("KESHIK", "ELITE_KESHIK"),   # the castle of the Tatars (#1745)
+    "ELITE_KONNIK_UPGRADE": ("KONNIK", "ELITE_KONNIK"),   # the castle of the Bulgarians (#1757)
     "ELITE_OBUCH_UPGRADE": ("OBUCH", "ELITE_OBUCH"),   # the castle of the Poles (#1747)
     "ELITE_SHRIVAMSHA_RIDER_UPGRADE": ("SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER"),   # (#1612)
     "ELITE_SKIRMISHER_UPGRADE": ("SKIRMISHER", "ELITE_SKIRMISHER"),
