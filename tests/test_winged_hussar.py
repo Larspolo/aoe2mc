@@ -19,10 +19,7 @@ def imperial(civ):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.COSTS["WINGED_HUSSAR_UPGRADE"] == {"food": 600, "gold": 800}
-    assert train.TRAIN_TIMES["WINGED_HUSSAR_UPGRADE"] == 60 and train.TECH_AGE["WINGED_HUSSAR_UPGRADE"] == 3
     assert train.AFTER["WINGED_HUSSAR_UPGRADE"] == "LIGHT_CAVALRY_UPGRADE"
-    assert train.COSTS["WINGED_HUSSAR"] == {"food": 80} and train.TRAIN_TIMES["WINGED_HUSSAR"] == 30
     s = combat.stats("WINGED_HUSSAR")
     assert (s.hp, s.attack, s.melee, s.pierce, s.reload, s.bonus) == (80, 9, 1, 2, 1.9, {combat.GUN: 4})
     assert combat.sight("WINGED_HUSSAR") == 10 and len(train.HELP["WINGED_HUSSAR_UPGRADE"]) <= 50

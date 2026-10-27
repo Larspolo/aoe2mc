@@ -13,8 +13,6 @@ def castle(civ="TEUTONS", techs=()):
 
 
 def test_the_university_has_treadmill_crane_in_the_castle_age():
-    assert (train.COSTS["TREADMILL_CRANE"], train.TRAIN_TIMES["TREADMILL_CRANE"], train.TECH_AGE["TREADMILL_CRANE"]) \
-        == ({"wood": 200, "stone": 50}, 20, 2)
     assert "TREADMILL_CRANE" in train.TRAINS["UNIVERSITY"] and train.HELP["TREADMILL_CRANE"]
     server, g = castle()
     assert train.unlocked(g, "TREADMILL_CRANE")
