@@ -145,6 +145,8 @@ START = {"AZTECS": {"gold": 50},
          "MAYANS": {"food": -50},
          "PERSIANS": {"food": 50, "wood": 50},
          "SICILIANS": {"stone": 100}}
+# The technologies whose effect a civilization gets twice (AoE2 wiki, "Civilization bonuses"; train.stats, #1561).
+TWICE = {"KHITANS": ("FORGING", "IRON_CASTING")}
 # The technologies and units that a civilization does not have (AoE2 wiki, the availability chart of each, #1373):
 # the menu does not show them (train.unlocked).
 MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "BERBERS", "BYZANTINES", "CELTS",
