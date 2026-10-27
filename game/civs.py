@@ -91,7 +91,7 @@ UNITS = {"BERBERS": [("villagers", "speed", (1.05, 1.1, 1.1, 1.1))],
 # The cost bonuses (#1091): civilization -> [(what, resource or None (all), change in the Dark, Feudal, Castle and
 # Imperial Age)]. what: a group of GROUPS (units), "buildings", "buildings but farms", "technologies", "ages" or a
 # tuple of names. A float multiplies the cost (0.0: free), an int adds to it. AoE2 rounds half up (35 × 0.75 = 26).
-SMITH = ("BLAST_FURNACE", "BODKIN_ARROW", "CHAIN_BARDING_ARMOR", "CHAIN_MAIL_ARMOR", "FLETCHING", "FORGING",
+SMITH = ("BLAST_FURNACE", "BODKIN_ARROW", "BRACER", "CHAIN_BARDING_ARMOR", "CHAIN_MAIL_ARMOR", "FLETCHING", "FORGING",
          "IRON_CASTING", "LEATHER_ARCHER_ARMOR", "PADDED_ARCHER_ARMOR",
          "PLATE_BARDING_ARMOR", "PLATE_MAIL_ARMOR", "RING_ARCHER_ARMOR",   # (#1452)
          "SCALE_BARDING_ARMOR", "SCALE_MAIL_ARMOR")   # the blacksmith
@@ -162,6 +162,7 @@ MISSING = {"ARSON": ("GOTHS", "MUISCA", "ROMANS"),                              
                                   "MACEDONIANS", "MAGYARS", "MALIANS", "MAYANS", "MONGOLS", "MUISCA", "PERSIANS", "PURU",
                                   "ROMANS", "SARACENS", "SAXONS", "SHU", "SICILIANS", "SLAVS", "SPARTANS", "THRACIANS",
                                   "TUPI", "VARANGIANS", "VIKINGS", "WEI", "WU"),
+           "BRACER": ("CELTS", "CUMANS", "FRANKS", "MALIANS", "MAPUCHE", "PERSIANS", "ROMANS", "SLAVS", "TEUTONS"),   # (#1503)
            "CANNON_GALLEON": ("ARMENIANS", "AZTECS", "BYZANTINES", "CHINESE", "CUMANS", "DANES", "GOTHS", "HUNS", "INCAS",
                               "JURCHENS", "MAPUCHE", "MAYANS", "MUISCA", "ROMANS", "SAXONS", "SHU", "TUPI", "VARANGIANS",
                               "VIKINGS", "WEI", "WU"),                                     # (#1484)

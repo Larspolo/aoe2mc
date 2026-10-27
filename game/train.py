@@ -84,6 +84,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "BOMBARD_CANNON": {"wood": 225, "gold": 225},               # the Imperial Age, after Chemistry (#1380)
          "BOMBARD_TOWER_TECH": {"food": 800, "wood": 400},           # the university, after Chemistry (#1375)
          "BOW_SAW": {"food": 150, "wood": 100},                        # AoE2 DE wiki (#1423)
+         "BRACER": {"food": 300, "gold": 200},                         # the blacksmith, Imperial Age (#1503)
          "BERSERK": {"food": 65, "gold": 20},
          "BLAST_FURNACE": {"food": 275, "gold": 225},                  # AoE2 DE wiki (#1451)
          "BLOCK_PRINTING": {"gold": 200},                              # AoE2 DE wiki (#1457)
@@ -225,6 +226,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "BLOCK_PRINTING": 55,
                "BLOODLINES": 50,
                "BOW_SAW": 50,
+               "BRACER": 40,
                "BODKIN_ARROW": 35,
                "BOMBARD_CANNON": 56,
                "BOMBARD_TOWER_TECH": 60,
@@ -374,7 +376,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                          "BLAST_FURNACE",                                       # the Imperial Age (#1451)
                          "PLATE_MAIL_ARMOR",                                    # (#1452)
                          "RING_ARCHER_ARMOR",
-                         "PLATE_BARDING_ARMOR"),
+                         "PLATE_BARDING_ARMOR",
+                         "BRACER"),                                             # (#1503)
           "CASTLE": ("TREBUCHET",                                               # and the unique unit: trains() (#708, #1351)
                      "CONSCRIPTION",                                            # (#1455)
                      "HOARDINGS"),                                              # (#1456)
@@ -442,7 +445,7 @@ def chemistry(name, s):
 
 
 def fletching(name, s):
-    """Fletching and Bodkin Arrow (AoE2 DE, wiki): archers and the buildings that shoot +1 attack and +1 range, the town
+    """Fletching, Bodkin Arrow and Bracer (AoE2 DE, wiki): archers and the buildings that shoot +1 attack and +1 range, the town
     center +1 attack only (#1408). A complete building gets it at once (build.retower), a new one when it is complete."""
     if "archer" in s.classes or "building" in s.classes and s.attack > 0:
         return s._replace(attack=s.attack + 1, range=s.range + (name != "TOWN_CENTER"))
@@ -481,6 +484,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "BLOCK_PRINTING": lambda name, s: s,                      # the conversion range: monk.near
          "BOMBARD_TOWER_TECH": lambda name, s: s,                  # the bombard tower in the build menu: build.NEEDS
          "BOW_SAW": lambda name, s: s,                             # an economy technology: gather.WORK_TECHS
+         "BRACER": fletching,
          "BODKIN_ARROW": fletching,
          "CAPPED_RAM_UPGRADE": lambda name, s: s,                  # a new unit name: UPGRADES
          "CARAVAN": lambda name, s: s,                             # the walk speed: SPEEDS
@@ -601,6 +605,7 @@ AFTER = {"ARBALESTER_UPGRADE": "CROSSBOWMAN_UPGRADE",
          "BODKIN_ARROW": "FLETCHING",
          "BOMBARD_TOWER_TECH": "CHEMISTRY",
          "BOW_SAW": "DOUBLE_BIT_AXE",
+         "BRACER": "BODKIN_ARROW",
          "HEAVY_DEMOLITION_SHIP_UPGRADE": "DEMOLITION_SHIP_UPGRADE",   # (#1483)
          "HEAVY_WARSHIPS": "MEDIUM_WARSHIPS",
          "DRY_DOCK": "CAREENING",
@@ -639,6 +644,7 @@ TECH_AGE = {                                                       # the age of 
     "BODKIN_ARROW": 2,
     "BOMBARD_TOWER_TECH": 3,
     "BOW_SAW": 2,
+    "BRACER": 3,
     "CAPPED_RAM_UPGRADE": 3,
     "CARAVAN": 2,
     "CHAIN_BARDING_ARMOR": 2,
@@ -768,6 +774,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "BODKIN_ARROW": (2, "book", "Bodkin Arrow"),                 # the slot of Fletching (AFTER)
          "BOMBARD_CANNON": (7, "tnt_minecart", "Bombard Cannon"),   # after the siege tower
          "BOW_SAW": (0, "book", "Bow Saw"),                           # the slot of Double-Bit Axe (AFTER)
+         "BRACER": (2, "book", "Bracer"),                             # the slot of Bodkin Arrow (AFTER)
          "BOMBARD_TOWER_TECH": (5, "book", "Bombard Tower"),
          "CANNON_GALLEON": (MORE + 1, "dark_oak_boat", "Cannon Galleon"),   # units.classify: a dark oak boat with a pillager
          "CARAVAN": (1, "book", "Caravan"),
@@ -869,6 +876,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "BLOCK_PRINTING": "Monks +3 conversion range and line of sight.",
         "BLOODLINES": "Cavalry +20 HP.",
         "BOW_SAW": "Villagers chop wood 20 % faster.",
+        "BRACER": "Archers, towers +1 attack, range; TC +1 attack.",
         "BODKIN_ARROW": "Archers, towers +1 attack, range; TC +1 attack.",
         "BOMBARD_CANNON": "Siege. Long range; strong vs. buildings and siege.",
         "BOMBARD_TOWER_TECH": "Lets you build bombard towers.",
