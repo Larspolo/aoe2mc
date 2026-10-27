@@ -1,6 +1,7 @@
 """A window for the converter (#1540): select a scenario or a recorded game, set the main options and click "Convert".
-The world goes into the Minecraft saves folder. The logic is in pure functions (argv, saves_folder, world_name,
-convert) that the tests call without a display: tkinter loads only in window(), and many Python installs (also the
+The world goes into the Minecraft saves folder. The tab "Play" starts the game program (game/run.py) on a world as a
+child process and stops it (#1775). The logic is in pure functions (argv, saves_folder, world_name, convert,
+play_argv, start_game, stop_game) that the tests call without a display: tkinter loads only in window(), and many Python installs (also the
 cloud environment) have no tkinter."""
 import contextlib
 import io
@@ -8,6 +9,9 @@ import os
 import platform
 import queue
 import shlex
+import signal
+import subprocess
+import sys
 import threading
 import traceback
 from pathlib import Path
@@ -17,6 +21,9 @@ RECORDS = (".aoe2record", ".mgz", ".mgx", ".mgl")                  # --at works 
 VALUES = (("name", "--name"), ("tile_size", "--tile-size"), ("level_height", "--level-height"),
           ("architecture", "--architecture"), ("seed", "--seed"))
 FLAGS = (("preview", "--preview"), ("no_units", "--no-units"))
+GAME = Path(__file__).resolve().parent / "game" / "run.py"
+PLAY_VALUES = (("server", "--server"), ("people", "--people"), ("reveal", "--reveal"))
+PLAY_FLAGS = (("play", "--play"), ("bot", "--bot"), ("cheats", "--cheats"))
 
 
 def argv(o):
@@ -82,6 +89,48 @@ def convert(args, write):
             return f"{type(e).__name__}: {e}"
 
 
+def play_argv(o):
+    """The argument list of game/run.py from the dict o of the fields of the tab "Play". An empty field keeps the
+    default of the game program."""
+    a = [str(o["world"])]
+    for key, flag in PLAY_VALUES:
+        v = str(o.get(key) or "").strip()
+        if v:
+            a += [flag, v]
+    return a + [flag for key, flag in PLAY_FLAGS if o.get(key)]
+
+
+def start_game(args, write, done, cmd=(sys.executable, "-u", str(GAME))):
+    """Start the game program with args as a child process. A thread sends each line of its output to write, and its
+    exit code to done at the end. stdin is a pipe: with no stdin, input() in run.main() ends the game at once."""
+    p = subprocess.Popen([*cmd, *args], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                         text=True, bufsize=1, start_new_session=os.name != "nt",
+                         creationflags=getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
+
+    def read():
+        for line in p.stdout:
+            write(line)
+        done(p.wait())
+    threading.Thread(target=read, daemon=True).start()
+    return p
+
+
+def stop_game(p, wait=30):
+    """Stop the game program like Ctrl-C: run.main() then stops the server in all modes (--play does not read stdin).
+    Kill its process group (with the server) when it does not end in wait seconds. Returns the exit code."""
+    if p.poll() is not None:
+        return p.returncode
+    p.send_signal(signal.CTRL_BREAK_EVENT if os.name == "nt" else signal.SIGINT)
+    try:
+        return p.wait(wait)
+    except subprocess.TimeoutExpired:
+        if os.name == "nt":
+            p.kill()
+        else:
+            os.killpg(p.pid, signal.SIGKILL)
+        return p.wait()
+
+
 def window():
     """The converter window (not yet in its main loop)."""
     import tkinter as tk
@@ -90,14 +139,25 @@ def window():
     import buildings
     root = tk.Tk()
     root.title("aoe2mc: AoE2 to Minecraft")
-    f = ttk.Frame(root, padding=8)
-    f.grid(sticky="nsew")
+    top = ttk.Frame(root, padding=8)
+    top.grid(sticky="nsew")
     root.columnconfigure(0, weight=1)
     root.rowconfigure(0, weight=1)
+    top.columnconfigure(0, weight=1)
+    tabs = ttk.Notebook(top)
+    tabs.grid(row=0, column=0, sticky="ew")
+    f, g = ttk.Frame(tabs, padding=4), ttk.Frame(tabs, padding=4)
+    tabs.add(f, text="Convert")
+    tabs.add(g, text="Play")
     f.columnconfigure(1, weight=1)
+    g.columnconfigure(1, weight=1)
     v = {k: tk.StringVar() for k in ("input", "output", "name", "tile_size", "level_height", "architecture", "seed",
-                                     "at", "more")}
-    v |= {k: tk.BooleanVar() for k, _ in FLAGS}
+                                     "at", "more", "world", "server", "people", "reveal")}
+    v |= {k: tk.BooleanVar() for k, _ in FLAGS + PLAY_FLAGS}
+    v["server"].set("paper")
+    v["people"].set("1")
+    v["reveal"].set("normal")
+    v["play"].set(True)
     v["tile_size"].set("4")
     v["level_height"].set("3")
     v["seed"].set("1")
@@ -134,10 +194,36 @@ def window():
     ttk.Checkbutton(checks, text="No units", variable=v["no_units"]).pack(side="left", padx=8)
     go = ttk.Button(f, text="Convert")
     go.grid(row=len(rows) + 1, column=1, pady=6)
-    log = scrolledtext.ScrolledText(f, height=14, width=80, state="disabled")
-    log.grid(row=len(rows) + 2, column=0, columnspan=3, sticky="nsew")
-    f.rowconfigure(len(rows) + 2, weight=1)
+
+    def pick_world():
+        p = filedialog.askdirectory(initialdir=str(saves_folder()) if saves_folder().is_dir() else None)
+        if p:
+            v["world"].set(p)
+
+    ttk.Label(g, text="World folder").grid(row=0, column=0, sticky="w", pady=2)
+    ttk.Entry(g, textvariable=v["world"], width=50).grid(row=0, column=1, sticky="ew", padx=4)
+    ttk.Button(g, text="Browse...", command=pick_world).grid(row=0, column=2)
+    for r, (label, key, values) in enumerate((("Server", "server", ("paper", "vanilla")),
+                                              ("Reveal map", "reveal", ("normal", "all"))), 1):
+        ttk.Label(g, text=label).grid(row=r, column=0, sticky="w", pady=2)
+        ttk.Combobox(g, textvariable=v[key], values=values, state="readonly").grid(row=r, column=1, sticky="w", padx=4)
+    ttk.Label(g, text="People (players 1 to N)").grid(row=3, column=0, sticky="w", pady=2)
+    ttk.Spinbox(g, textvariable=v["people"], from_=1, to=8, width=5).grid(row=3, column=1, sticky="w", padx=4)
+    checks = ttk.Frame(g)
+    checks.grid(row=4, column=1, sticky="w")
+    for key, text in (("play", "Play (villagers gather)"), ("bot", "Bot plays player 2"), ("cheats", "Cheat codes")):
+        ttk.Checkbutton(checks, text=text, variable=v[key]).pack(side="left", padx=(0, 8))
+    buttons = ttk.Frame(g)
+    buttons.grid(row=5, column=1, pady=6)
+    play = ttk.Button(buttons, text="Start game")
+    play.pack(side="left")
+    halt = ttk.Button(buttons, text="Stop", state="disabled")
+    halt.pack(side="left", padx=8)
+    log = scrolledtext.ScrolledText(top, height=14, width=80, state="disabled")
+    log.grid(row=1, column=0, sticky="nsew", pady=(6, 0))
+    top.rowconfigure(1, weight=1)
     q = queue.Queue()                                              # worker → window: Tk is not thread safe
+    game = []                                                      # the running game program, or empty
 
     def start():
         o = {k: x.get() for k, x in v.items()}
@@ -153,6 +239,30 @@ def window():
         threading.Thread(target=lambda: q.put(("done", convert(args, lambda s: q.put(("text", s))), o["output"])),
                          daemon=True).start()
 
+    def start_play():
+        o = {k: x.get() for k, x in v.items()}
+        if not o["world"] or not os.path.isfile(os.path.join(o["world"], "level.dat")):
+            messagebox.showerror("aoe2mc", "Select a world folder (a folder with level.dat).")
+            return
+        if o["bot"] and str(o["people"]).strip() not in ("", "1"):
+            messagebox.showerror("aoe2mc", "The bot plays player 2: use it with one person only.")
+            return
+        play.state(["disabled"])
+        halt.state(["!disabled"])
+        try:
+            game[:] = [start_game(play_argv(o), lambda s: q.put(("text", s)), lambda rc: q.put(("ended", rc)))]
+        except OSError as e:
+            play.state(["!disabled"])
+            halt.state(["disabled"])
+            messagebox.showerror("aoe2mc", f"The game program did not start: {e}")
+
+    def stop_play(then=None):
+        halt.state(["disabled"])
+        if game:
+            threading.Thread(target=lambda: (stop_game(game[0]), then and q.put((then,))), daemon=True).start()
+        elif then:
+            q.put((then,))
+
     def poll():
         while not q.empty():
             item = q.get()
@@ -161,15 +271,28 @@ def window():
                 log.insert("end", item[1])
                 log.see("end")
                 log.configure(state="disabled")
+            elif item[0] == "ended":
+                game.clear()
+                play.state(["!disabled"])
+                halt.state(["disabled"])
+                q.put(("text", f"The game program ended (exit code {item[1]}).\n"))
+            elif item[0] == "quit":
+                root.destroy()
+                return
             else:
                 go.state(["!disabled"])
                 if item[1]:
                     messagebox.showerror("aoe2mc", item[1])
                 else:
-                    messagebox.showinfo("aoe2mc", f"The world is in {item[2]}.\nOpen it in Minecraft Java 26.3.")
+                    v["world"].set(item[2])
+                    messagebox.showinfo("aoe2mc", f"The world is in {item[2]}.\nOpen it in Minecraft Java 26.3, "
+                                        "or start a game on it in the tab \"Play\".")
         root.after(100, poll)
 
     go.configure(command=start)
+    play.configure(command=start_play)
+    halt.configure(command=stop_play)
+    root.protocol("WM_DELETE_WINDOW", lambda: stop_play("quit"))   # the server must not stay up after the window
     root.after(100, poll)
     return root
 
