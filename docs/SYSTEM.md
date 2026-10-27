@@ -86,7 +86,7 @@ burn, #1706). The most runs at one time is `max_runs` in `[pacing]` of `agent.to
 The target counts Opus runs. A run of a cheap lane counts its weight (#1727): a Haiku run sets `git config aoe2mc.lane haiku`,
 its claims end with ` lane haiku`, the `Usage:` lines count its runs (`· haiku N`), and `health.lane_weights` measures
 the weight from them (least squares, at least 10 intervals with Haiku runs; before that `weights` of `agent.toml`,
-0.25). `usage.py --fire` gives the ready `lane:haiku` tickets Haiku runs first, then Opus runs take the rest. `tools/tokens.py` reads the transcript of the
+0.25). `usage.py --fire` gives the ready `lane:haiku` tickets Haiku runs first, then Opus runs take the rest. A lane in `reserved` of `[pacing]` keeps its tickets for its own runs (Opus runs never take them, #1994). `tools/tokens.py` reads the transcript of the
 session and writes the `Tokens:` line of each run report: the tokens of the run and its largest sinks. `health.py`
 adds them. The `improve` skill finds the largest loss of quota from this data, or the data that is missing, and
 makes one `Process: <bottleneck>` ticket for it on the board.
