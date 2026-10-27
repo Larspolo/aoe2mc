@@ -251,7 +251,10 @@ other runs change it too):
 - The state comment: `<!-- agent-state: {"last_run": "<now, ISO>", "runs": <N+1>, ...} -->`. Change only these two
   keys and keep the others (`last_review`, `review_minutes`: the review slot, #898).
 - The section `### Process changes`: add a line `- <date>: <what changed in the skills, CLAUDE.md or
-  LEARNINGS> (PR #n)` at the top, keep the last 5.
+  LEARNINGS> (PR #n) — before: <numbers>` at the top, keep the last 5. When the change targets a number of
+  `tools/health.py` (phase minutes, conflicts, takeovers, quota per PR), write that number now (for example
+  "report 10 % of the run minutes / 24 h"), so that the `improve` skill can check it later (#1738). A pitfall line
+  (`docs/LEARNINGS.md`, a doc line) gets `— before: -`.
 
 Then add one short comment on the status issue: what you did and what is next. A question for the owner goes on its
 issue, not here (see "Ask the owner" in step 6).
