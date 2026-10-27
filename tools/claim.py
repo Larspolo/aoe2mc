@@ -53,7 +53,7 @@ import uuid
 from agent_config import CONFIG
 
 EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
-REVIEW, REVIEW_MAX = 45, 360    # minutes: the first and the longest slot of the process review (#898)
+REVIEW, REVIEW_MAX = 45, 120    # minutes: the first and the longest slot of the process review (#898, #1697)
 ROADMAP = 120               # minutes: the slot of the review of docs/ROADMAP.md
 STATUS = CONFIG["status"]["issue"]   # the status issue: its state comment holds the review slot
 STALE = 30 * 60             # seconds without a claim or beat: the run stopped (usage limit, crash)
