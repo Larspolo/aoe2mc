@@ -97,6 +97,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "FORGING": {"food": 150},
          "FORTIFIED_WALL": {"food": 200, "wood": 100},
          "GALLEY": {"wood": 90, "gold": 30},                           # AoE2 DE wiki (#1386)
+         "GAMBESONS": {"food": 50, "gold": 100},                       # AoE2 DE wiki (#1420)
          "GOLD_MINING": {"food": 100, "wood": 75},
          "GUARD_TOWER": {"food": 100, "wood": 250},                    # the upgrade (AoE2 DE wiki "Watch Tower")
          "GUILDS": {"food": 300, "gold": 200},
@@ -178,6 +179,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "FORGING": 50,
                "FORTIFIED_WALL": 50,
                "GALLEY": 36,
+               "GAMBESONS": 25,
                "GOLD_MINING": 30,
                "GUARD_TOWER": 30,
                "GUILDS": 50,
@@ -234,7 +236,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "WOAD_RAIDER": 10}
 TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", "CASTLE_AGE", "IMPERIAL_AGE"), "BARRACKS": ("MILITIA", "SPEARMAN", "MAN_AT_ARMS_UPGRADE",   # the units and technologies of each
                        "LONG_SWORDSMAN_UPGRADE", "PIKEMAN_UPGRADE",           # the Castle Age (#1396)
-                       "SQUIRES"),                                            # (#1415)
+                       "SQUIRES", "GAMBESONS"),                                          # (#1415)
           "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER",                                          # building (#654, #670, #655)
                             "CROSSBOWMAN_UPGRADE", "ELITE_SKIRMISHER_UPGRADE", "CAVALRY_ARCHER"),   # (#1396, #1397)
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING",            # (#675, #725, #724, #937, #938)
@@ -269,6 +271,10 @@ UNIQUE = {"BRITONS": "LONGBOWMAN", "PERSIANS": "WAR_ELEPHANT", "BYZANTINES": "CA
           "BENGALIS": "RATHA", "GURJARAS": "SHRIVAMSHA_RIDER", "ROMANS": "CENTURION", "ARMENIANS": "COMPOSITE_BOWMAN",
           "GEORGIANS": "MONASPA"}
 build.AGE |= dict.fromkeys(UNIQUE.values(), 2) | dict.fromkeys(("ELITE_" + n for n in UNIQUE.values()), 3)   # (#1082)
+MILITIA_LINE = ("MILITIA", "MAN_AT_ARMS", "LONG_SWORDSMAN", "TWO_HANDED_SWORDSMAN", "CHAMPION",   # Gambesons (#1420)
+                "FIRE_LANCER", "ELITE_FIRE_LANCER")
+
+
 def chemistry(name, s):
     """Chemistry (AoE2 DE, wiki): +1 attack for archers, ranged siege units and buildings that shoot. A building gets it
     when it is complete (build.target, build.values)."""
@@ -312,6 +318,7 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "FLETCHING": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if "archer" in s.classes else s,
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
          "FORTIFIED_WALL": lambda name, s: s,                      # the walls of the player: WALL_UPGRADES
+         "GAMBESONS": lambda name, s: s._replace(pierce=s.pierce + 1) if name in MILITIA_LINE else s,
          "GOLD_MINING": lambda name, s: s,                         # an economy technology: gather.WORK_TECHS
          "GUARD_TOWER": lambda name, s: s,                         # the towers of the player: TOWER_UPGRADES
          "GUILDS": lambda name, s: s,                              # the trading fee: market.FEES
@@ -390,6 +397,7 @@ TECH_AGE = {                                                       # the age of 
     "FLETCHING": 1,
     "FORGING": 1,
     "FORTIFIED_WALL": 2,
+    "GAMBESONS": 2,
     "GOLD_MINING": 1,
     "GUARD_TOWER": 2,
     "GUILDS": 3,
@@ -471,6 +479,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "FORGING": (0, "book", "Forging"),
          "FORTIFIED_WALL": (0, "book", "Fortified Wall"),
          "GALLEY": (1, "oak_boat", "Galley"),
+         "GAMBESONS": (5, "book", "Gambesons"),                    # slot 4: Squires (#1415)
          "GOLD_MINING": (0, "book", "Gold Mining"),
          "GUARD_TOWER": (2, "book", "Guard Tower"),
          "GUILDS": (2, "book", "Guilds"),
@@ -537,6 +546,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "FORGING": "Infantry and cavalry +1 attack.",
         "FORTIFIED_WALL": "Stone walls +1,200 HP, +4/+2 armor; also gates.",
         "GALLEY": "All-purpose warship with ranged attack.",
+        "GAMBESONS": "Militia line +1 pierce armor.",
         "GOLD_MINING": "Villagers mine gold 15 % faster.",
         "GUARD_TOWER": "Watch towers +480 HP, +2 attack, +1/+1 armor.",
         "GUILDS": "Market trading fee 15 %.",
