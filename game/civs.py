@@ -205,6 +205,11 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
                           "KOREANS", "LITHUANIANS", "MACEDONIANS", "MAGYARS", "MALAY", "MALIANS", "MAPUCHE", "MAYANS",
                           "MONGOLS", "MUISCA", "POLES", "PURU", "ROMANS", "SPARTANS", "TATARS", "THRACIANS", "TUPI",
                           "TURKS", "VIETNAMESE", "VIKINGS", "WEI", "WU"),
+           "HAND_CANNONEER": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "BENGALIS", "BRITONS", "BULGARIANS",
+                              "BURMESE", "CELTS", "CHINESE", "CUMANS", "DANES", "ETHIOPIANS", "HUNS", "INCAS",
+                              "JURCHENS", "KHITANS", "MACEDONIANS", "MAGYARS", "MALAY", "MAPUCHE", "MAYANS",
+                              "MONGOLS", "MUISCA", "POLES", "PURU", "ROMANS", "SAXONS", "SHU", "SICILIANS", "SLAVS",
+                              "SPARTANS", "THRACIANS", "TUPI", "VARANGIANS", "VIETNAMESE", "VIKINGS", "WEI", "WU"),   # the wiki chart (#1535)
            "HEAVY_DEMOLITION_SHIP": ("ACHAEMENIDS", "ATHENIANS", "AZTECS", "BENGALIS", "BOHEMIANS", "BULGARIANS",
                                      "BURGUNDIANS", "BURMESE", "CUMANS", "DANES", "ETHIOPIANS", "GEORGIANS",
                                      "HINDUSTANIS", "INCAS", "ITALIANS", "JAPANESE", "KHITANS", "KHMER", "KOREANS",
