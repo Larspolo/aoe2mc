@@ -23,11 +23,13 @@
 {"name": "PALISADE_WALL", "cost": {"wood": 3}, "time": 7, "icon": "spruce_fence", "wall": true}
 {"name": "SIEGE_WORKSHOP", "cost": {"wood": 200}, "time": 40, "icon": "grindstone", "age": 2}
 {"name": "STONE_WALL", "cost": {"stone": 5}, "time": 10, "icon": "mossy_stone_bricks", "wall": true, "age": 1}
+{"name": "TEMPLE_GUARD", "age": 2}
 {"name": "UNIVERSITY", "cost": {"wood": 200}, "time": 60, "icon": "bookshelf", "age": 2}
 {"name": "WATCH_TOWER", "cost": {"wood": 35, "stone": 125}, "time": 80, "icon": "cracked_stone_bricks", "age": 1}
 {"name": "WONDER", "cost": {"wood": 1000, "gold": 1000, "stone": 1000}, "time": 3500, "icon": "weathered_cut_copper_stairs", "age": 3}
 {"name": "ARBALESTER", "age": 3}
 {"name": "ARCHER", "age": 1}
+{"name": "ARMORED_ELEPHANT", "age": 2}
 {"name": "BATTERING_RAM", "age": 2}
 {"name": "BATTLE_ELEPHANT", "age": 2}
 {"name": "BOLAS_RIDER", "age": 2}
@@ -61,6 +63,7 @@
 {"name": "ELITE_SHRIVAMSHA_RIDER", "age": 3}
 {"name": "ELITE_SKIRMISHER", "age": 2}
 {"name": "ELITE_STEPPE_LANCER", "age": 3}
+{"name": "ELITE_TEMPLE_GUARD", "age": 3}
 {"name": "ELITE_TURTLE_SHIP", "age": 3}
 {"name": "ELITE_VARANGIAN_GUARD", "age": 3}
 {"name": "FAST_FIRE_SHIP", "age": 3}
@@ -99,6 +102,7 @@
 {"name": "SCORPION", "age": 2}
 {"name": "SCOUT_CAVALRY", "age": 1}
 {"name": "SHRIVAMSHA_RIDER", "age": 2}
+{"name": "SIEGE_ELEPHANT", "age": 3}
 {"name": "SIEGE_RAM", "age": 3}
 {"name": "SIEGE_TOWER", "age": 2}
 {"name": "SKIRMISHER", "age": 1}
