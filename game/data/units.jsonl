@@ -1,8 +1,8 @@
-{"name": "MILITIA", "hp": 40, "attack": 4, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry"]}
-{"name": "MAN_AT_ARMS", "hp": 45, "attack": 6, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry"], "sight": 6}
-{"name": "LONG_SWORDSMAN", "hp": 60, "attack": 9, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry"], "sight": 6}
-{"name": "TWO_HANDED_SWORDSMAN", "hp": 65, "attack": 12, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry"], "sight": 7}
-{"name": "CHAMPION", "hp": 70, "attack": 13, "melee": 1, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry"], "sight": 7}
+{"name": "MILITIA", "hp": 40, "attack": 4, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry"], "gambesons": true}
+{"name": "MAN_AT_ARMS", "hp": 45, "attack": 6, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry"], "sight": 6, "gambesons": true}
+{"name": "LONG_SWORDSMAN", "hp": 60, "attack": 9, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry"], "sight": 6, "gambesons": true}
+{"name": "TWO_HANDED_SWORDSMAN", "hp": 65, "attack": 12, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry"], "sight": 7, "gambesons": true}
+{"name": "CHAMPION", "hp": 70, "attack": 13, "melee": 1, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry"], "sight": 7, "gambesons": true}
 {"name": "SPEARMAN", "hp": 45, "attack": 3, "melee": 0, "pierce": 0, "range": 0, "reload": 3.0, "bonus": {"cavalry": 15, "camel": 12, "elephant": 15}, "classes": ["infantry", "spearman"]}
 {"name": "PIKEMAN", "hp": 55, "attack": 4, "melee": 0, "pierce": 0, "range": 0, "reload": 3.0, "bonus": {"cavalry": 22, "camel": 18, "elephant": 25}, "classes": ["infantry", "spearman"], "sight": 6}
 {"name": "HALBERDIER", "hp": 60, "attack": 6, "melee": 0, "pierce": 0, "range": 0, "reload": 3.0, "bonus": {"cavalry": 32, "camel": 26, "elephant": 28}, "classes": ["infantry", "spearman"], "sight": 6}
@@ -136,9 +136,9 @@
 {"name": "STEPPE_LANCER", "hp": 60, "attack": 9, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["cavalry"], "sight": 5}
 {"name": "WINGED_HUSSAR", "hp": 80, "attack": 9, "melee": 1, "pierce": 2, "range": 0, "reload": 1.9, "bonus": {"gunpowder": 4}, "classes": ["cavalry"], "sight": 10}
 {"name": "ARMORED_ELEPHANT", "hp": 180, "attack": 4, "melee": -2, "pierce": 140, "range": 0, "reload": 3.0, "bonus": {"building": 90, "siege": 25}, "classes": ["cavalry", "elephant", "siege", "ram"], "sight": 6}
-{"name": "ELITE_FIRE_LANCER", "hp": 85, "attack": 10, "melee": 2, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"building": 1, "cavalry": 15, "camel": 12, "elephant": 15}, "classes": ["infantry", "gunpowder"], "sight": 8, "note": "the wiki infobox (#1953)"}
+{"name": "ELITE_FIRE_LANCER", "hp": 85, "attack": 10, "melee": 2, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"building": 1, "cavalry": 15, "camel": 12, "elephant": 15}, "classes": ["infantry", "gunpowder"], "sight": 8, "gambesons": true, "note": "the wiki infobox (#1953)"}
 {"name": "ELITE_VARANGIAN_GUARD", "hp": 80, "attack": 17, "melee": 2, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry"], "sight": 6, "note": "the wiki infobox (#2011)"}
-{"name": "FIRE_LANCER", "hp": 65, "attack": 9, "melee": 1, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"building": 1, "cavalry": 5, "camel": 4, "elephant": 5}, "classes": ["infantry", "gunpowder"], "sight": 7}
+{"name": "FIRE_LANCER", "hp": 65, "attack": 9, "melee": 1, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"building": 1, "cavalry": 5, "camel": 4, "elephant": 5}, "classes": ["infantry", "gunpowder"], "sight": 7, "gambesons": true}
 {"name": "GRENADIER", "hp": 40, "attack": 12, "melee": 1, "pierce": 1, "range": 6, "reload": 3.45, "bonus": {"building": 4, "infantry": 9, "siege": 3, "spearman": 1}, "classes": ["archer", "gunpowder", "unique"], "sight": 9}
 {"name": "HEAVY_ROCKET_CART", "hp": 65, "attack": 5, "melee": 0, "pierce": 8, "range": 8, "reload": 5.35, "bonus": {"building": 12, "siege": 2}, "classes": ["gunpowder", "siege"]}
 {"name": "HEI_GUANG_CAVALRY", "hp": 60, "attack": 11, "melee": 4, "pierce": 3, "range": 0, "reload": 1.8, "bonus": {}, "classes": ["cavalry"]}
@@ -191,16 +191,16 @@
 {"name": "GALLEY", "hp": 110, "attack": 6, "melee": 0, "pierce": 3, "range": 5, "reload": 3.0, "bonus": {"building": 6, "warship": 5}, "classes": ["ship", "warship"]}
 {"name": "GALLEON", "hp": 155, "attack": 9, "melee": 0, "pierce": 6, "range": 7, "reload": 3.0, "bonus": {"building": 6, "warship": 9, "ram": 3}, "classes": ["ship", "warship"], "sight": 9, "note": "Heavy Warships (#1483)"}
 {"name": "HEAVY_DEMOLITION_SHIP", "hp": 70, "attack": 120, "melee": 2, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {"building": 280}, "classes": ["ship"], "sight": 6, "note": "(#1483)"}
-{"name": "HULK", "hp": 85, "attack": 4, "melee": 3, "pierce": 1, "range": 1, "reload": 1.75, "bonus": {"fireship": 1, "standard": -3}, "classes": ["ship"], "sight": 5, "note": "AoE2 DE wiki (#1489): melee hits at range 1"}
+{"name": "HULK", "hp": 85, "attack": 4, "melee": 3, "pierce": 1, "range": 1, "reload": 1.75, "bonus": {"fireship": 1, "standard": -3}, "classes": ["ship"], "sight": 5, "melee_ship": true, "note": "AoE2 DE wiki (#1489): melee hits at range 1"}
 {"name": "LONGSHIP", "hp": 125, "attack": 5, "melee": 0, "pierce": 3, "range": 6, "reload": 3.0, "bonus": {"ram": 2, "warship": 1}, "classes": ["ship", "warship"], "sight": 8, "note": "AoE2 DE wiki (#1934): 4 arrows in AoE2, one here"}
 {"name": "TURTLE_SHIP", "hp": 260, "attack": 20, "melee": 2, "pierce": 7, "range": 6, "reload": 6.0, "bonus": {"building": 7, "heavysiege": 2, "siege": 2}, "classes": ["ship", "gunpowder", "unique", "warship"], "sight": 8, "note": "AoE2 DE wiki (#1934): the cannon (melee damage), no rockets"}
 {"name": "LOU_CHUAN", "hp": 175, "attack": 25, "melee": 0, "pierce": 9, "range": 13, "reload": 5.5, "bonus": {"building": 180, "siege": 10}, "classes": ["ship", "warship"], "sight": 15, "note": "AoE2 DE wiki (#1935) the anti-building attack (melee)"}
 {"name": "THIRISADAI", "hp": 250, "attack": 10, "melee": 2, "pierce": 11, "range": 7, "reload": 3.45, "bonus": {"building": 7, "ram": 4, "warship": 7}, "classes": ["ship", "warship", "unique"], "sight": 9, "note": "AoE2 DE wiki (#1935) the main arrow"}
 {"name": "WAR_GALLEY", "hp": 125, "attack": 7, "melee": 0, "pierce": 4, "range": 6, "reload": 3.0, "bonus": {"building": 6, "warship": 5}, "classes": ["ship", "warship"], "note": "Medium Warships (#1482)"}
-{"name": "WAR_HULK", "hp": 110, "attack": 4, "melee": 4, "pierce": 1, "range": 1, "reload": 1.5, "bonus": {"fireship": 1, "standard": -3}, "classes": ["ship"], "sight": 5, "note": "Medium Warships (#1508)"}
-{"name": "CARRACK", "hp": 135, "attack": 4, "melee": 5, "pierce": 1, "range": 1, "reload": 1.5, "bonus": {"fireship": 1, "standard": -3}, "classes": ["ship"], "sight": 6, "note": "Heavy Warships, AoE2 DE wiki \"Carrack (unit)\" (#1933)"}
+{"name": "WAR_HULK", "hp": 110, "attack": 4, "melee": 4, "pierce": 1, "range": 1, "reload": 1.5, "bonus": {"fireship": 1, "standard": -3}, "classes": ["ship"], "sight": 5, "melee_ship": true, "note": "Medium Warships (#1508)"}
+{"name": "CARRACK", "hp": 135, "attack": 4, "melee": 5, "pierce": 1, "range": 1, "reload": 1.5, "bonus": {"fireship": 1, "standard": -3}, "classes": ["ship"], "sight": 6, "melee_ship": true, "note": "Heavy Warships, AoE2 DE wiki \"Carrack (unit)\" (#1933)"}
 {"name": "VILLAGER", "hp": 25, "attack": 3, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"building": 3, "heavysiege": 6, "stone": 6}, "classes": [], "note": "AoE2 DE wiki (#1590)"}
-{"name": "MISSIONARY", "hp": 30, "attack": 0, "melee": 0, "pierce": 0, "range": 7, "reload": 0.0, "bonus": {}, "classes": [], "note": "AoE2 DE wiki (#1939)"}
+{"name": "MISSIONARY", "hp": 30, "attack": 0, "melee": 0, "pierce": 0, "range": 7, "reload": 0.0, "bonus": {}, "classes": [], "orders": true, "note": "AoE2 DE wiki (#1939)"}
 {"name": "KING", "hp": 75, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": [], "sight": 6}
-{"name": "MONK", "hp": 30, "attack": 0, "melee": 0, "pierce": 0, "range": 9, "reload": 0.0, "bonus": {}, "classes": []}
-{"name": "TRADE_CART", "hp": 70, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": [], "sight": 7}
+{"name": "MONK", "hp": 30, "attack": 0, "melee": 0, "pierce": 0, "range": 9, "reload": 0.0, "bonus": {}, "classes": [], "orders": true}
+{"name": "TRADE_CART", "hp": 70, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": [], "sight": 7, "orders": true}

@@ -15,7 +15,7 @@ PATH = os.path.join(table.DIR, "units.jsonl")
 def test_each_line_has_the_stats_fields():
     for line in open(PATH, encoding="utf-8"):
         row = json.loads(line)
-        assert set(row) - {"note", "sight"} == {"name", *combat.Stats._fields}, row["name"]
+        assert set(row) - {"gambesons", "melee_ship", "note", "orders", "sight"} == {"name", *combat.Stats._fields}, row["name"]
         assert isinstance(row["bonus"], dict) and isinstance(row["classes"], list), row["name"]
         assert all(isinstance(row[f], (int, float)) for f in ("hp", "attack", "melee", "pierce", "range", "reload"))
 
