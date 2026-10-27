@@ -47,6 +47,7 @@ import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -78,6 +79,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              game/garrison.py); 0: it does not shoot. Default 1
  *   aoe attack <selector> <target selector>    Mob#setTarget: the mob attacks with its own AI
  *   aoe goals <selector>                       the goals of the first unit (#436), for checks
+ *   aoe hide <players> <uuid> ...              Player#hideEntity: the players do not see these entities, also a
+ *                                              player that joins later (#1302: the enemy units out of sight in the
+ *                                              view of one replay player)
  *   aoe stance <selector> <aggressive|defensive|stand_ground|no_attack>
  *                                              the AoE2 stance of a unit (#1104): no_attack never attacks without an
  *                                              order, stand_ground attacks only an enemy in its range and does not walk,
@@ -92,6 +96,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              shot with a blast radius in blocks hits all units near the target, and
  *                                              a siege unit (a minecart) shoots too (#1050); blast 0: a siege shot
  *                                              that hits only the target (the Scorpion, #1062)
+ *   aoe sees <player> <uuid>                   "Sees: 1" or "Sees: 0" (Player#canSee), for checks
+ *   aoe show <players> <uuid> ...              Player#showEntity: the players see these entities again (#1302)
  *   aoe sight <selector> <blocks>              an idle unit attacks an enemy in this line of sight (#775)
  *   aoe building <selector> <hp> <melee armor> <pierce armor> <x0> <y0> <z0> <x1> <y1> <z1>
  *                                              make the entity the target of a building (#517, combat.building)
@@ -208,6 +214,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     private final Map<UUID, Building> buildings = new HashMap<>();
     private final Map<UUID, Integer> arrows = new HashMap<>();       // the arrows of a shot of a building (#1113)
+    private final Set<UUID> hidden = new HashSet<>();                 // aoe hide: also for a player that joins later
     private final Map<UUID, Component> names = new HashMap<>();      // the name in the name line (#661)
     private static final int HEARTS = 5;
     private static final int WHERE_PAGE = 40;                          // aoe where: about 3000 bytes per answer
@@ -603,6 +610,16 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         sender.sendMessage("Menu: " + n + " players");
         return true;
+    }
+
+    @EventHandler
+    public void onJoin(PlayerJoinEvent ev) {                           // the view of one replay player (#1302)
+        for (UUID u : hidden) {
+            Entity e = Bukkit.getEntity(u);
+            if (e != null) {
+                ev.getPlayer().hideEntity(this, e);
+            }
+        }
     }
 
     @EventHandler
@@ -1582,6 +1599,17 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Range: " + n + " units");
             return true;
         }
+        if (args.length == 3 && args[0].equals("sees")) {
+            var who = players(sender, args[1]);
+            Entity e;
+            try {
+                e = Bukkit.getEntity(UUID.fromString(args[2]));
+            } catch (IllegalArgumentException x) {
+                e = null;
+            }
+            sender.sendMessage("Sees: " + (!who.isEmpty() && e != null && who.get(0).canSee(e) ? 1 : 0));
+            return true;
+        }
         if (args.length == 3 && args[0].equals("sight")) {
             double r;
             try {
@@ -1646,6 +1674,38 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 keys.add(g.getKey().getNamespacedKey().getKey());
             }
             sender.sendMessage("Goals: " + String.join(" ", keys));
+            return true;
+        }
+        if (args.length >= 3 && (args[0].equals("hide") || args[0].equals("show"))) {   // one command per second (#1302)
+            boolean hide = args[0].equals("hide");
+            var who = players(sender, args[1]);
+            int n = 0;
+            for (int i = 2; i < args.length; i++) {
+                UUID u;
+                try {
+                    u = UUID.fromString(args[i]);
+                } catch (IllegalArgumentException e) {
+                    continue;
+                }
+                if (hide) {
+                    hidden.add(u);
+                } else {
+                    hidden.remove(u);
+                }
+                Entity e = Bukkit.getEntity(u);
+                if (e == null) {
+                    continue;
+                }
+                for (Player p : who) {
+                    if (hide) {
+                        p.hideEntity(this, e);
+                    } else {
+                        p.showEntity(this, e);
+                    }
+                }
+                n++;
+            }
+            sender.sendMessage((hide ? "Hidden: " : "Shown: ") + n + " entities, " + who.size() + " players");
             return true;
         }
         if (args.length == 3 && args[0].equals("speed")) {          // the attribute command fails on a minecart (#836)

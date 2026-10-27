@@ -163,6 +163,7 @@ class Replay:
     def __init__(self, game, data, version=aoe2mc.VERSION_NAME, ai=False, follow=None):
         self.game, self.data, self.ai, self.speed, self.paused = game, data, ai, 1.0, False  # ai: plugin walks
         self.follow, self.followed = follow, (None, -math.inf)  # the spectators follow player N: (UUID, game time)
+        self.pov, self.hidden = None, set()     # the view of player N (#1302): UUIDs of the enemy units hidden from @a
         self.T, self.n = data["tile_size"], len(data["ground"])
         self.ground = [[None if v == "-" else int(v) for v in row.split()] for row in data["ground"]]
         self.starts = [(o.get("ref"), o["player"], o["name"], (o["footprint"][0], o["footprint"][2], o["footprint"][1],
@@ -1317,6 +1318,27 @@ class Replay:
         return [f"bossbar set {BAR} name {json.dumps(text(name), ensure_ascii=False)}",
                 f"bossbar set {BAR} value {min(int(now) // 1000, max(1, int(end) // 1000))}", f"bossbar set {BAR} players @a"]
 
+    def fog(self):
+        """With a view player `pov`: hide the enemy units out of the sight of it and its allies for the spectators
+        (Paper Player#hideEntity, plugin `aoe hide`), show the ones that came in again (#1302). Only the changes:
+        at most one hide and one show command."""
+        if self.pov is None:
+            return []
+        import gather                                               # gather -> build -> replay: import it late
+        self.grid()                                                 # the start units
+        mobs = {v.uuid: v for v in [*self.units.values(), *(v for _, v in self.new)]
+                if v.uuid and hasattr(v, "player")}.values()
+        placed, teams = [s[1:] for s in self.starts] + self.placed, self.data.get("players", {})
+        own = {p for p in {v.player for v in mobs} | {p for p, _, _ in placed} if gather.allied(teams, self.pov, p)}
+        tiles = set().union(*(seen(mobs, placed, p, self.T) for p in own))
+        out = {v.uuid for v in mobs if v.player not in (0, None) and v.player not in own and v.pos is not None
+               and (int(v.pos[0] // self.T), int(v.pos[2] // self.T)) not in tiles}
+        hide, show = sorted(out - self.hidden), sorted(self.hidden & {v.uuid for v in mobs} - out)   # not the dead
+        self.hidden = out
+        k = (RCON_MAX - 20) // 37                                    # UUIDs per command (36 characters and a space)
+        return [f"aoe {verb} @a {' '.join(u[i:i + k])}" for verb, u in (("hide", hide), ("show", show))
+                for i in range(0, len(u), k)]
+
     def overview(self, join=False):
         """The view of a player at the start of the replay (#737, owner decision #782): adventure mode, a text about
         the spectator view, and a place high above the map that looks down at its center (VIEW_PITCH) in the
@@ -1689,6 +1711,7 @@ class Replay:
                 shown = int(now) // 1000
                 census()
                 send(self.clock_commands(now, end, self.speed) + self.score_commands() + self.overview(join=True))
+                self.send(self.fog())
             if e is None:
                 self.send(self.steps(now))
                 continue
