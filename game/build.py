@@ -16,8 +16,9 @@ displays of the Paper plugin, Ghost.java): green where it can stand, red where n
 Walls (#1322): a wall (WALLS) takes two clicks, the start and the end of the line, as the drag of AoE2. Each tile of
 the line (aoe2mc.wall_tiles, as the replay) is one construction site with the cost of one tile; a tile on a building,
 a tree or water is left out. The builders of a tile go on to the next unfinished tile of the line (gather.Gather.step).
-Gates (#1324): a gate (GATES) goes on 4 own wall tiles in a straight line along x or z, as in AoE2 (4 x 1 tiles). It
-replaces them: a wall site goes (its builders go on to the gate), a complete wall tile loses its target.
+Gates (#1324): a gate (GATES) goes on 4 own wall tiles in a straight line along x or z, as in AoE2 (4 x 1 tiles), or
+on 3 tiles of a diagonal line (3 x 3 tiles, #1655). It replaces them: a wall site goes (its builders go on to the
+gate), a complete wall tile loses its target.
 A complete gate gets doors across its passage (#1325, doors()): on Paper the plugin opens them while an own or allied
 unit is near (aoe gate, Gates.java), as the AoE2 gate (the decision #1323).
 Fortified Wall (#1326, train.WALL_UPGRADES): the new and the complete own stone walls and gates get the fortified design
@@ -214,13 +215,14 @@ def shape(blocks, limit=GHOST):
             cells.setdefault((x // k, y // k, z // k), v)
 
 
-def ghost_commands(g, player, name, rect, origin=None):
+def ghost_commands(g, player, name, rect, origin=None, way=None):
     """The plugin commands that give player the ghost of building name: its design at rect (x0, x1, z0, z1) without
     the cleared air and the foundation, relative to the floor of the north-west corner, or of the block column origin
     (x, z) where the plugin puts the ghost (a gate: the tile under the cursor, #1357). At most 1446 bytes per RCON
-    command: the shape goes in parts. An empty list where the design does not stand (outside the map, on water)."""
+    command: the shape goes in parts. An empty list where the design does not stand (outside the map, on water).
+    way: the way of a gate (gate_spot), else from the shape of rect."""
     T, (ox, oz) = g.map.T, origin or (rect[0], rect[2])
-    along_z = rect[3] - rect[2] > rect[1] - rect[0]                    # a gate along z
+    along_z = rect[3] - rect[2] > rect[1] - rect[0] if way is None else way   # a gate along z or diagonal (#1655)
     key = name if (along_z, rect[0] - ox, rect[2] - oz) == (False, 0, 0) else (name, along_z, rect[0] - ox, rect[2] - oz)
     if key not in g.shapes:
         cmds = Replay(g, g.data, getattr(g.game, "version", VERSION_NAME)).building(
@@ -270,16 +272,16 @@ def ghosts(g):
                               else g.map.pick_ground(eye, d))
         if not cell:
             continue
-        rect, spot, T = area(g, name, cell), None, g.map.T
-        if name in GATES:                                              # on the wall tiles of gate_rect, else along x
+        rect, spot, way, T = area(g, name, cell), None, None, g.map.T
+        if name in GATES:                                              # on the wall tiles of gate_spot, else along x
             corner = (cell[0] // T * T, cell[1] // T * T)
-            spot = gate_rect(g, cell) or (corner[0] - 2 * T, corner[0] + 2 * T, corner[1], corner[1] + T)
-        if g.ghosts.get(p, [None])[0] != name or g.ghosts[p][2:] != [spot]:
-            if not (cmds := ghost_commands(g, p, name, spot or rect, spot and corner)):
+            spot, way, _ = gate_spot(g, cell) or ((corner[0] - 2 * T, corner[0] + 2 * T, corner[1], corner[1] + T), False, None)
+        if g.ghosts.get(p, [None])[0] != name or g.ghosts[p][2:] != [spot, way]:
+            if not (cmds := ghost_commands(g, p, name, spot or rect, spot and corner, way)):
                 continue
             for c in cmds:
                 g.command(c)
-            g.ghosts[p] = [name, None, spot]
+            g.ghosts[p] = [name, None, spot, way]
         ok = gate_rect(g, cell) if name in GATES else shore(g, rect) if name in SHORE else water(g, rect) \
             if name in WATER else free(g, rect)
         color = "green" if ok else "red"                               # a gate: on a wall, a dock: at the shore
@@ -463,34 +465,58 @@ def wall_tiles_of(g):
 
 
 def gate_rect(g, cell):
-    """The block footprint (x0, x1, z0, z1) of a gate on 4 own wall tiles in a line along x or z, with the tile of
-    the block cell in it (the tile in the middle first), or None."""
+    """The block footprint (x0, x1, z0, z1) of a gate on the own wall line at the block cell (gate_spot), or None."""
+    return (gate_spot(g, cell) or (None,))[0]
+
+
+def gate_spot(g, cell):
+    """(footprint, way, tiles) of a gate on the own wall tiles at the block cell, or None: 4 tiles in a line along x
+    (way False) or z (True), else 3 tiles on a diagonal ("diag+": x and z grow, "diag-": z falls; #1655) with a
+    footprint of 3 x 3 tiles, as the diagonal gates of AoE2 and of the converter (buildings.diagonal_gate). The
+    tile in the middle first."""
     T, own = g.map.T, wall_tiles_of(g)
     tx, tz = cell[0] // T, cell[1] // T
     for d in (2, 1, 3, 0):                                             # the offset of the clicked tile in the gate
-        if all((tx - d + i, tz) in own for i in range(4)):
-            return (tx - d) * T, (tx - d + 4) * T, tz * T, (tz + 1) * T
-        if all((tx, tz - d + i) in own for i in range(4)):
-            return tx * T, (tx + 1) * T, (tz - d) * T, (tz - d + 4) * T
+        for along_z in (False, True):
+            t = [(tx, tz - d + i) if along_z else (tx - d + i, tz) for i in range(4)]
+            if all(c in own for c in t):
+                return (t[0][0] * T, (t[-1][0] + 1) * T, t[0][1] * T, (t[-1][1] + 1) * T), along_z, t
+    for d in (1, 0, 2):
+        for k in (1, -1):
+            t = [(tx - d + i, tz + k * (i - d)) for i in range(3)]
+            if all(c in own for c in t):
+                z0 = min(t[0][1], t[2][1])
+                return ((tx - d) * T, (tx - d + 3) * T, z0 * T, (z0 + 3) * T), "diag+" if k > 0 else "diag-", t
     return None
 
 
+def way(site):
+    """The way of the gate site for Replay.building (gate_spot), or of a straight one from its footprint."""
+    x0, x1, z0, z1 = site["footprint"]
+    return site.get("way", z1 - z0 > x1 - x0)
+
+
+def tile_cells(g, tiles):
+    T = g.map.T
+    return {(x, z) for tx, tz in tiles for x in range(tx * T, tx * T + T) for z in range(tz * T, tz * T + T)}
+
+
 def gate(g, player, name, cell):
-    """Put a gate on the own wall line at cell: it replaces the 4 wall tiles under it (AoE2: no refund). Returns the
-    site, or None (no straight wall line of 4 tiles there, not enough resources)."""
-    rect = gate_rect(g, cell)
-    if rect is None:
-        say(g, player, f"A {pretty(name).lower()} must go on 4 tiles of an own wall in a straight line.")
+    """Put a gate on the own wall line at cell: it replaces the wall tiles under it (gate_spot; AoE2: no refund).
+    Returns the site, or None (no wall line of 4 straight or 3 diagonal tiles there, not enough resources)."""
+    spot = gate_spot(g, cell)
+    if spot is None:
+        say(g, player, f"A {pretty(name).lower()} must go on 4 tiles of an own wall in a straight line, or on 3 "
+                       "diagonal tiles.")
         return None
+    rect, way, tiles = spot
     cost = price(g, name)
     if any(g.stock[r] < v for r, v in cost.items()):
         say(g, player, f"Not enough resources: a {pretty(name).lower()} costs "
                        + ", ".join(f"{v} {r}" for r, v in cost.items()) + ".")
         return None
     import combat                                                      # combat -> gather -> build: import it late
-    x0, x1, z0, z1 = rect
-    T, own = g.map.T, wall_tiles_of(g)
-    old = [s for t, s in own.items() if s and x0 <= t[0] * T < x1 and z0 <= t[1] * T < z1]
+    old = [s for t, s in wall_tiles_of(g).items() if s and t in tiles]
     builders = {v.uuid for v in getattr(g, "villagers", {}).values() if v.site in old}
     for s in old:
         g.sites.remove(s)
@@ -499,7 +525,7 @@ def gate(g, player, name, cell):
         else:                                                          # the wool ring of a foundation goes
             for p, state in s["ring"].items():
                 g.command("setblock {} {} {} ".format(*p) + s["under"].get(p, "minecraft:air"))
-    site = found(g, name, rect)
+    site = found(g, name, rect, way, tiles)
     g.command(f"scoreboard players set {player} {OBJECTIVE} 0")
     if builders:
         g.build(site, builders)
@@ -525,9 +551,10 @@ def near(g, name, cell, reach=12):
     return None
 
 
-def found(g, name, rect):
+def found(g, name, rect, way=None, tiles=None):
     """Pay for name and put its foundation (a wool ring in the player color) on the free footprint rect. Returns
-    the construction site."""
+    the construction site. way: the way of a gate (gate_spot); tiles: the tiles of a diagonal gate, the other tiles
+    of its footprint stay free (#1655)."""
     import fleet                                                       # fleet -> gather -> build: import it late
     for r, v in price(g, name).items():
         g.stock[r] -= v
@@ -538,13 +565,18 @@ def found(g, name, rect):
             for x in range(x0, x1) for z in range(z0, z1) if x in (x0, x1 - 1) or z in (z0, z1 - 1)]
     for c in ring:
         g.command("setblock {} {} {} ".format(*c) + f"minecraft:{color}_wool")
-    g.map.blocked |= {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
+    g.map.blocked |= {(x, z) for x in range(x0, x1) for z in range(z0, z1)} if tiles is None else tile_cells(g, tiles)
     T = g.map.T                                                        # the design, bottom up (one command each)
     cmds = Replay(g, g.data, getattr(g.game, "version", VERSION_NAME)).building(
-        design(g, name, g.player), g.player, (x0 + x1) / 2 / T, (z0 + z1) / 2 / T, along_z=z1 - z0 > x1 - x0,   # a gate along z (#1324)
+        design(g, name, g.player), g.player, (x0 + x1) / 2 / T, (z0 + z1) / 2 / T,
+        along_z=z1 - z0 > x1 - x0 if way is None else way,             # a gate along z (#1324) or diagonal (#1655)
         water=int(fleet.level(g)) + 1 if name in WATER else None)      # a fish trap on the open water (#1438)
     site = {"name": name, "player": g.player, "footprint": rect, "commands": cmds, "sent": 0, "progress": 0.0,
             "ring": dict.fromkeys(ring, f"minecraft:{color}_wool"), "under": {}}   # under: the design blocks on the ring
+    if way is not None:
+        site["way"] = way
+    if tiles is not None and str(way).startswith("diag"):
+        site["tiles"] = tiles
     g.sites.append(site)
     return site
 
@@ -595,7 +627,10 @@ def rise(g, site, work):
         s, T = footprint(site["name"]), g.map.T
         if "FARM" in site["name"]:                                     # free ground again: the farmer stands on it
             g.map.blocked -= {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
-        g.map.building(site["name"], site["footprint"], (x0 // T + s // 2, z0 // T + s // 2), site["player"] == g.player)
+        open_cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)} - tile_cells(g, site["tiles"]) \
+            if "tiles" in site else ()                                 # beside a diagonal gate (#1655)
+        g.map.building(site["name"], site["footprint"], (x0 // T + s // 2, z0 // T + s // 2), site["player"] == g.player,
+                       open_cells)
         target(g, site)
         if site["name"] in GATES:
             doors(g, site)
@@ -672,7 +707,7 @@ def upgrade(g, site, old, redraw=True):
     if new == old or (hp := repair.hp(g, (x0, x1, z0, z1))) is None or hp <= 0:
         return
     for c in Replay(g, g.data, getattr(g.game, "version", VERSION_NAME)).building(
-            name, site["player"], (x0 + x1) / 2 / T, (z0 + z1) / 2 / T, along_z=z1 - z0 > x1 - x0) * redraw:   # as found()
+            name, site["player"], (x0 + x1) / 2 / T, (z0 + z1) / 2 / T, along_z=way(site)) * redraw:   # as found()
         g.command(c)
     if redraw and site["name"] in GATES:                               # the redraw cleared the doors
         doors(g, site)
@@ -688,18 +723,37 @@ def doors(g, site):
     block of the middle 2 tiles, in the middle of the wall depth. On Paper the plugin opens them while a unit of the
     player or an ally is within 2 blocks (aoe gate, #1325)."""
     x0, x1, z0, z1 = site["footprint"]
-    T, along_z = g.map.T, z1 - z0 > x1 - x0
-    cells = [(x0 + T // 2, z) for z in range(z0 + T, z1 - T)] if along_z else [(x, z0 + T // 2) for x in range(x0 + T, x1 - T)]
+    T, along_z = g.map.T, way(site)
+    if str(along_z).startswith("diag"):
+        doors = diagonal_doors(site, T)
+    else:
+        doors = [(x, z, "east" if along_z else "south", ("left", "right")[i % 2])                # pairs of double doors
+                 for i, (x, z) in enumerate([(x0 + T // 2, z) for z in range(z0 + T, z1 - T)] if along_z
+                                            else [(x, z0 + T // 2) for x in range(x0 + T, x1 - T)])]
     y = max((v for x in range(x0, x1) for z in range(z0, z1) if (v := g.map.y(x, z)) is not None), default=None)
-    if y is None or not cells:
+    if y is None or not doors:
         return
-    for i, (x, z) in enumerate(cells):                                 # pairs of double doors
+    for x, z, facing, hinge in doors:
         for half in ("lower", "upper"):
             g.command(f"setblock {x} {y + (half == 'upper')} {z} minecraft:{DOORS[site['name']]}[facing="
-                      f"{'east' if along_z else 'south'},half={half},hinge={('left', 'right')[i % 2]}]")
+                      f"{facing},half={half},hinge={hinge}]")
     if getattr(g, "paper", False):
-        (ax, az), (bx, bz) = cells[0], cells[-1]
+        (ax, bx), (az, bz) = [(min(v), max(v)) for v in list(zip(*doors))[:2]]
         g.command(f"aoe gate p{site['player']} {ax} {y} {az} {bx} {y + 1} {bz}")
+
+
+def diagonal_doors(site, T):
+    """[(x, z, facing, hinge)] of the doors across the passage of a diagonal gate site (#1655). The passage of
+    buildings.diagonal_gate is the middle tile of the band x = z (local); a door is a thin panel on one side of its
+    block, so one line of doors on the diagonal leaves gaps. The doors on the diagonal close their east side
+    (facing west), the doors north of them close their south side (facing north): a closed staircase. Open, the
+    panels go to the sides that the passage does not cross. "diag-" mirrors z."""
+    x0, x1, z0, z1 = site["footprint"]
+    out = [(i, i, "west", "left") for i in range(T, 2 * T)] + [(i, i - 1, "north", "right") for i in range(T + 1, 2 * T)]
+    if site.get("way") == "diag-":                                     # the mirror swaps north and south and the hinges
+        flip = {"north": "south", "west": "west", "left": "right", "right": "left"}
+        out = [(x, 3 * T - 1 - z, flip[f], flip[h]) for x, z, f, h in out]
+    return [(x0 + x, z0 + z, f, h) for x, z, f, h in out]
 
 
 def target(g, site):
