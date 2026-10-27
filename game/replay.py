@@ -388,7 +388,7 @@ class Replay:
         self.placed.append((player, name, (x0, x1 + 1, z0, z1 + 1)))
         self.tops[self.placed[-1][2]] = top
         self.open[self.placed[-1][2]] = {(x + dx, z + dz) for x, z in o.get("open", ())}
-        out = []
+        out = [f"aoe minimap building {x0} {z0} {x1 + 1} {z1 + 1} p{player}"] * self.ai   # on the map item (#1238)
         for t in trees:                                             # as gather.Gather.clear: logs, leaves and bamboo
             m.trees.pop(t)
             tx, tz = t[0] * T, t[1] * T
@@ -432,6 +432,7 @@ class Replay:
                 else:
                     del self.placed[new]
                     self.added -= 1
+                    out += [f"aoe minimap unbuild {rect[0]} {rect[2]}"] * self.ai
                 out += self.fall(rect)
             elif (v := self.unit(i, name, e["player"])) is not None:
                 del self.units[i]

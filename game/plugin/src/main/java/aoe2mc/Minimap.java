@@ -1,6 +1,7 @@
 package aoe2mc;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +32,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * have no dot are transparent. The server renders a map only when its data changed, and map 0 is locked: so a task
  * sends the map (Player.sendMap) to each player who holds it, once per PERIOD.
  * "aoe minimap pixel X Z" gives the map pixel of block (X, Z), or "outside" (the place rule, for the tests).
+ * "aoe minimap building X0 Z0 X1 Z1 TEAM" adds the footprint (X1, Z1 exclusive) of a building of the replay in the map
+ * color of the team, "aoe minimap unbuild X0 Z0" removes it (#1238). The squares are under the unit dots.
  */
 final class Minimap extends MapRenderer {
     static final int PERIOD = 20;                         // ticks between two updates of the dots (sendMap)
@@ -41,7 +44,8 @@ final class Minimap extends MapRenderer {
             NamedTextColor.DARK_PURPLE, 24, NamedTextColor.GRAY, 21, NamedTextColor.GOLD, 15, NamedTextColor.WHITE, 22);
     private boolean on;
     private long last = Long.MIN_VALUE;                   // the server tick of the last update
-    private List<int[]> dots = new ArrayList<>();         // {px, pz} of the drawn dots
+    private List<int[]> dots = new ArrayList<>();         // {px, pz} of the drawn dots and squares
+    private final Map<List<Integer>, int[]> buildings = new LinkedHashMap<>();   // (x0, z0) -> {x0, z0, x1, z1, color}
     private MapView view;
     private BukkitTask task;
     private final JavaPlugin plugin;
@@ -78,6 +82,20 @@ final class Minimap extends MapRenderer {
             int px = pixel(Double.parseDouble(args[2]), v.getCenterX(), s);
             int pz = pixel(Double.parseDouble(args[3]), v.getCenterZ(), s);
             sender.sendMessage("Minimap pixel: " + (px < 0 || pz < 0 ? "outside" : px + " " + pz));
+            return true;
+        }
+        if (args.length == 7 && args[1].equals("building")) {
+            Team team = Bukkit.getScoreboardManager().getMainScoreboard().getTeam(args[6]);
+            int c = team != null && team.hasColor() && team.color() instanceof NamedTextColor n ? COLORS.getOrDefault(n, 8) : 8;
+            int[] r = {Integer.parseInt(args[2]), Integer.parseInt(args[3]), Integer.parseInt(args[4]),
+                Integer.parseInt(args[5]), c * 4 + 2};
+            buildings.put(List.of(r[0], r[1]), r);
+            sender.sendMessage("Minimap buildings: " + buildings.size());
+            return true;
+        }
+        if (args.length == 4 && args[1].equals("unbuild")) {
+            buildings.remove(List.of(Integer.parseInt(args[2]), Integer.parseInt(args[3])));
+            sender.sendMessage("Minimap buildings: " + buildings.size());
             return true;
         }
         on = args[1].equals("on");
@@ -125,6 +143,16 @@ final class Minimap extends MapRenderer {
         World world = map.getWorld() != null ? map.getWorld() : Bukkit.getWorlds().get(0);
         Scoreboard board = Bukkit.getScoreboardManager().getMainScoreboard();
         int s = map.getScale().getValue();
+        for (int[] b : buildings.values()) {              // the buildings first: the dots go on top
+            int px0 = Math.max(0, pixel(b[0], map.getCenterX(), s)), pz0 = Math.max(0, pixel(b[1], map.getCenterZ(), s));
+            int px1 = pixel(b[2] - 1, map.getCenterX(), s), pz1 = pixel(b[3] - 1, map.getCenterZ(), s);
+            for (int px = px0; px <= px1; px++) {
+                for (int pz = pz0; pz <= pz1; pz++) {
+                    canvas.setPixel(px, pz, (byte) b[4]);
+                    dots.add(new int[] {px, pz});
+                }
+            }
+        }
         for (LivingEntity e : world.getLivingEntities()) {
             if (e instanceof Player) {
                 continue;

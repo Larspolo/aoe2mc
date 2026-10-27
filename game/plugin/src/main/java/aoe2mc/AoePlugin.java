@@ -104,6 +104,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              setup, so the menu commands stay below the RCON limit
  *   aoe minimap on|off|pixel <x> <z>           the live units as dots in their team color on map 0, once per
  *                                              second (#1237, Minimap.java); pixel: the map pixel of a block
+ *   aoe minimap building <x0> <z0> <x1> <z1> <team>|unbuild <x0> <z0>   a replay building as a square on map 0 (#1238)
  *   aoe where <selector> [from]                "Where <count>: <uuid> <x> <y> <z> <order 0|1> <target 0|1>, ..." for
  *                                              WHERE_PAGE units from index `from` in UUID order (#813, tools/replay_drift.py);
  *                                              target 1 also after a target or a hit since the last answer (#1169)
@@ -1337,7 +1338,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Destroy: " + n + " buildings");
             return true;
         }
-        if ((args.length == 2 || args.length == 4) && args[0].equals("minimap")) {   // live units on map 0 (#1237)
+        if ((args.length == 2 || args.length == 4 || args.length == 7) && args[0].equals("minimap")) {   // #1237, #1238
             return minimap.command(sender, args);
         }
         if (args.length >= 2 && args[0].startsWith("box")) {            // the border of the selection box (#795)
