@@ -1,0 +1,69 @@
+"""The civilization bonuses of the repair (#1730, AoE2 wiki "Repairing"): Roman repairers work 5 % faster, and the
+Georgian team bonus makes the repairs of the Georgians and their allies 25 % cheaper."""
+import pytest
+import test_repair
+import test_repair_ship
+import test_repair_siege
+
+from game import civs, repair, train
+
+
+def players(g, *rows):
+    """Set the players of g: (number, civilization, team) rows."""
+    g.data["players"] = {str(n): {"civ": c} | ({"team": t} if t else {}) for n, c, t in rows}
+
+
+def tick(setup, key, civ):
+    server, g = setup()
+    players(g, (1, civ, None))
+    store = server.hp if key == "house" else server.health
+    k = repair.uuid(test_repair.HOUSE) if key == "house" else key
+    if key == "house":
+        repair.order(g, "Steve", (4, 5))
+    else:
+        repair.unit_order(g, "Steve", key)
+    before = store[k]
+    g.villagers["v0"].state = "repair"
+    repair.tick(g, 8.0)
+    repair.tick(g, 8.0)
+    return store[k] - before
+
+
+@pytest.mark.parametrize("setup, key", [(lambda: test_repair.setup(house=100), "house"),
+                                        (lambda: test_repair_siege.setup(hp=50.0), "ram"),
+                                        (lambda: test_repair_ship.setup(hp=30.0), "ship")])
+def test_roman_repairers_work_5_percent_faster(setup, key):
+    plain, roman = tick(setup, key, "BRITONS"), tick(setup, key, "ROMANS")
+    assert roman == pytest.approx(plain * 1.05, abs=1)                 # whole hit points of a building
+
+
+def test_the_georgian_team_bonus_makes_the_repair_25_percent_cheaper():
+    _, g = test_repair.setup()
+    base = repair.cost(g, "HOUSE")
+    assert base == {"wood": 12.5}
+    players(g, (1, "GEORGIANS", None), (2, "BRITONS", None))
+    assert repair.cost(g, "HOUSE") == {"wood": 12.5 * 0.75} and repair.cost(g, "TOWN_CENTER") == {"wood": 550 * 0.75}
+    players(g, (1, "BRITONS", 1), (2, "GEORGIANS", 1))                  # an ally of the Georgians
+    assert repair.cost(g, "HOUSE") == {"wood": 12.5 * 0.75}
+    players(g, (1, "BRITONS", 1), (2, "GEORGIANS", 2))                  # an enemy: no bonus
+    assert repair.cost(g, "HOUSE") == base
+    players(g, (1, "GEORGIANS", 1), (2, "GEORGIANS", 1))                # the bonuses do not add up
+    assert civs.repair_cost(g) == 0.75
+
+
+def test_a_georgian_pays_less_for_the_repair_of_a_ram():
+    server, g = test_repair_siege.setup(hp=test_repair_siege.RAM - 35)
+    players(g, (1, "GEORGIANS", None))
+    repair.unit_order(g, "Steve", "ram")
+    steps = 0
+    while g.villagers["v0"].state != "idle" and steps < 5000:
+        g.step()
+        steps += 1
+    full = train.price(g, "BATTERING_RAM")
+    share = 35 / test_repair_siege.RAM
+    assert 100 - g.stock["wood"] == int(full["wood"] / 2 * 0.75 * share)
+    assert 100 - g.stock["gold"] == int(full["gold"] / 2 * 0.75 * share)
+
+
+def test_the_docstring_lists_no_roman_repairers_as_missing():
+    assert "repairers" not in civs.__doc__.split("REPAIR and")[0]

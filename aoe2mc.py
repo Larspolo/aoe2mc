@@ -394,6 +394,11 @@ def read_scenario(path):
         players[p.player_id] = {"color": color if p.player_id else "light_gray", "arch": arch,
                                 "civ": getattr(civ, "name", "?"),
                                 "view": view if view[0] is not None and min(view) >= 0 else None}
+        neutral = [i for i, d in enumerate(p.diplomacy or [], 1) if d == 1 and i != p.player_id and i <= 8]
+        if p.player_id and neutral:             # the stance neutral (1) of DiplomacyState: no automatic attack (#1645)
+            players[p.player_id]["neutral"] = neutral
+    for n, t in scenario_teams(scn.player_manager.players).items():
+        players[n]["team"] = t
 
     msg = scn.message_manager
     texts = {k: getattr(msg, k, "") or "" for k in CHAPTERS}
@@ -469,6 +474,24 @@ def read_record(path):
                                 x=o.position.x, y=o.position.y, rotation=0.0, garrisoned=False,
                                 ref=o.instance_id, holder=None))
     return size, terrain, elevation, terrain_names, {k: "" for k in CHAPTERS}, objects, players
+
+
+def scenario_teams(players):
+    """{player: team number} of the allies of a scenario (#1793): the stance ally (0 of DiplomacyState) is one way,
+    so only the players that are allies of each other count. Allies of an ally join its team."""
+    ally = {p.player_id: {i for i, d in enumerate(p.diplomacy or [], 1) if d == 0 and i != p.player_id and i <= 8}
+            for p in players if p.player_id}
+    teams = []
+    for a in sorted(ally):
+        team, todo = set(), [a]
+        while todo:
+            b = todo.pop()
+            if b not in team:
+                team.add(b)
+                todo += [c for c in ally.get(b, ()) if b in ally.get(c, ())]
+        if len(team) > 1 and team not in teams:
+            teams.append(team)
+    return team_numbers(teams)
 
 
 def team_numbers(teams):
@@ -2546,7 +2569,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         objs.append(e)
     data = {"map_size": size, "tile_size": T, "level_height": H, "mood": mood,
             "players": {str(pid): {"civ": p["civ"], "color": p["color"], "arch": p["arch"]}
-                        | {k: p[k] for k in ("team",) if k in p} for pid, p in sorted(players.items())},
+                        | {k: p[k] for k in ("team", "neutral") if k in p} for pid, p in sorted(players.items())},
             "objects": objs}
     n, wet = cols.n, cols.wtop > cols.top
     data["ground"] = [" ".join("-" if wet[x, z] else str(ground[x, z]) for x in range(n)) for z in range(n)]
