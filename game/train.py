@@ -96,6 +96,7 @@ COSTS = {r["name"]: r["cost"] for r in ROWS}                       # as in AoE2
 TRAIN_TIMES = {r["name"]: r["time"] for r in ROWS}                 # AoE2 seconds
 TRAINS = {b: tuple(r["name"] for r in ROWS if r["building"] == b)    # the units and technologies of each
           for b in dict.fromkeys(r["building"] for r in ROWS if r["building"])}   # building, in file order
+TRAINS["KREPOST"] = ()                                             # trains() adds the Konnik (#1872)
 # The unique unit of each civilization (AoE2 DE), trained at its castle. A unit without COSTS is not in the menu yet:
 # it has no AoE2 combat values in combat.STATS.
 UNIQUE = {"BRITONS": "LONGBOWMAN", "PERSIANS": "WAR_ELEPHANT", "BYZANTINES": "CATAPHRACT", "CELTS": "WOAD_RAIDER",
@@ -416,7 +417,8 @@ REQUIRES = {"CASTLE_AGE": (2, ("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET"
 TECH_AGE = {r["name"]: r["age"] for r in ROWS if "age" in r}       # the age of a technology (build.AGE)
 AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age after each researched age (index: ages)
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
-HOUSING = {"TOWN_CENTER": 5, "HOUSE": 5, "CASTLE": 20}             # population of a complete building, as in AoE2
+HOUSING = {"TOWN_CENTER": 5, "HOUSE": 5, "CASTLE": 20,            # population of a complete building, as in AoE2
+           "KREPOST": 20}                                         # (#1872)
 LIMIT = 200                                                        # the AoE2 population limit
 REPEAT = 256                                                       # researches of one technology: "going above and beyond"
 CENSUS = 2.0                                                       # AoE2 seconds between two counts of the live units
@@ -479,9 +481,11 @@ def lines(t, g=None):
 
 
 def trains(g, building):
-    """The units and technologies of the own building: a castle trains the unique unit of the player's civilization."""
+    """The units and technologies of the own building: a castle trains the unique unit of the player's civilization,
+    a Krepost the Konnik."""
     new = {old: unit for t in UPGRADES if t in g.techs for old, unit in lines(t, g)}   # the barracks trains the new unit
-    unique = [n for n in [UNIQUE.get(civs.civ(g))] if n in COSTS] * (building == "CASTLE")
+    unique = [n for n in [UNIQUE.get(civs.civ(g))] if n in COSTS] * (building == "CASTLE") \
+        + ["KONNIK"] * (building == "KREPOST")                     # the Krepost trains only the Konnik (#1872)
     out = unique + list(TRAINS[building]) + [f"ELITE_{n}_UPGRADE" for n in unique if f"ELITE_{n}_UPGRADE" in COSTS]   # (#1760)
     for _ in UPGRADES:                                             # a line of upgrades: mangonel, onager, siege onager
         out = [new.get(n, n) for n in out]                         # the castle: the elite unique unit (#1624)

@@ -264,6 +264,7 @@ BUILDINGS = {
     "WATCH_TOWER": Stats(1020, 5, 1, 7, 8, 2.0, {SHIP: 5}, ("building",)),
     "TOWN_CENTER": Stats(2400, 5, 3, 5, 6, 2.0, {SHIP: 5}, ("building",)),
     "CASTLE": Stats(4800, 11, 8, 11, 8, 2.0, {SHIP: 11}, ("building",)),
+    "KREPOST": Stats(2600, 10, 8, 11, 7, 2.0, {SHIP: 10}, ("building",)),   # the Bulgarians (AoE2 DE wiki, #1872)
     "WONDER": Stats(4800, 0, 3, 10, 0, 0.0, {}, ("building",)),
 }
 # The walls that a player builds in the game program (#1322, AoE2 DE wiki infobox): the hit points in the Dark, Feudal,
@@ -506,6 +507,7 @@ FORT_MIN_RANGE = {"BOMBARD_TOWER": 1,
                   "DOCK": 1,                  # it shoots only with fishing ships inside (AoE2 DE): not yet
                   "GUARD_TOWER": 1,
                   "KEEP": 1,
+                  "KREPOST": 1,
                   "WATCH_TOWER": 1}
 # Tiles that a bolt flies past the range and hurts the enemy units on its line with half the damage (AoE2 DE, wiki
 # "Pass-through damage": "Projectiles travel Range+2 tiles in total", no friendly fire, #1401). The chakram thrower
