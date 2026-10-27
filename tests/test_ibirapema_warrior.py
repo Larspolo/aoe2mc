@@ -1,0 +1,72 @@
+"""Ibirapema Warrior (#2158): the Tupi barracks trains the Ibirapema Warrior from the Castle Age (slot 23: 30 food, 60
+gold, 24 s) and researches Elite Ibirapema Warrior in the Imperial Age (slot 24: 1000 food, 600 gold, 60 s; the Tupi
+bonus of the barracks halves the food), with the values of the AoE2 DE wiki infobox "Ibirapema Warrior" (revision
+1089699). The upgrade turns the live units into elite ones, and the barracks then trains the elite one. Only the Tupi
+have it."""
+from test_castle_upgrades import BARRACKS, research, setup
+from test_forging import menus
+
+import units
+from game import build, civs, combat, replay, train
+
+CASTLE = ("FEUDAL_AGE", "CASTLE_AGE")
+IMPERIAL = CASTLE + ("IMPERIAL_AGE",)
+UNIT = " 23:husk_spawn_egg:Ibirapema Warrior:30 food · 60 gold · 24 s · queue 0/15 "
+
+
+def barracks(civ="TUPI", ages=IMPERIAL):
+    server, g = setup(ages=ages)
+    g.data["players"] = {"1": {"civ": civ}}
+    g.soldiers["iw"] = "IBIRAPEMA_WARRIOR"
+    return server, g
+
+
+def test_the_values_are_those_of_the_wiki():
+    assert train.COSTS["IBIRAPEMA_WARRIOR"] == {"food": 30, "gold": 60} and train.TRAIN_TIMES["IBIRAPEMA_WARRIOR"] == 24
+    assert train.TRAIN_TIMES["ELITE_IBIRAPEMA_WARRIOR"] == 24
+    assert train.COSTS["ELITE_IBIRAPEMA_WARRIOR_UPGRADE"] == {"food": 1000, "gold": 600}   # the Tupi pay half the food
+    assert train.TRAIN_TIMES["ELITE_IBIRAPEMA_WARRIOR_UPGRADE"] == 60
+    assert build.AGE["IBIRAPEMA_WARRIOR"] == 2 and build.AGE["ELITE_IBIRAPEMA_WARRIOR"] == 3
+    assert combat.stats("IBIRAPEMA_WARRIOR") == (80, 8, 2, 1, 0, 2.0, {"standard": 1}, ("infantry", "unique"))
+    assert combat.stats("ELITE_IBIRAPEMA_WARRIOR") == (90, 11, 2, 1, 0, 2.0, {"standard": 2}, ("infantry", "unique"))
+    assert replay.SPEEDS["IBIRAPEMA_WARRIOR"] == replay.SPEEDS["ELITE_IBIRAPEMA_WARRIOR"] == 1.0
+    for unit in ("IBIRAPEMA_WARRIOR", "ELITE_IBIRAPEMA_WARRIOR"):
+        assert combat.sight(unit) == 5 and len(train.HELP[unit]) <= 50
+        assert units.classify(unit)["id"] == "minecraft:husk"
+    assert len(train.HELP["ELITE_IBIRAPEMA_WARRIOR_UPGRADE"]) <= 50
+
+
+def test_only_the_tupi_have_it():
+    have = set().union(*civs.MISSING.values())
+    for name in ("IBIRAPEMA_WARRIOR", "ELITE_IBIRAPEMA_WARRIOR", "ELITE_IBIRAPEMA_WARRIOR_UPGRADE"):
+        assert have - set(civs.MISSING[name]) == {"TUPI"}, name
+
+
+def test_the_menu_has_the_unit_from_the_castle_age_for_the_tupi():
+    server, g = barracks(ages=("FEUDAL_AGE",))
+    train.open_menu(g, "Steve", BARRACKS)
+    assert " 23:gray_dye:Ibirapema Warrior:30 food · 60 gold · 24 s · Needs the Castle Age" in menus(server)[-1]
+    server, g = barracks(ages=CASTLE)
+    train.open_menu(g, "Steve", BARRACKS)
+    menu = menus(server)[-1] + " "
+    assert UNIT in menu and "Elite Ibirapema Warrior" not in menu           # the upgrade: the Imperial Age
+    for civ in ("BRITONS", "MAPUCHE"):
+        server, g = barracks(civ, CASTLE)
+        train.open_menu(g, "Steve", BARRACKS)
+        assert "Ibirapema Warrior" not in menus(server)[-1], civ
+        assert train.queue(g, "Steve", BARRACKS, "IBIRAPEMA_WARRIOR") is None, civ
+
+
+def test_the_upgrade_changes_the_live_and_the_new_units():
+    server, g = barracks()
+    train.open_menu(g, "Steve", BARRACKS)
+    assert " 24:book:Elite Ibirapema Warrior:500 food · 600 gold · 60 s · research " in menus(server)[-1] + " "
+    research(g, BARRACKS, "ELITE_IBIRAPEMA_WARRIOR_UPGRADE")
+    assert g.soldiers["iw"] == "ELITE_IBIRAPEMA_WARRIOR"
+    assert combat.stats_command("iw", "ELITE_IBIRAPEMA_WARRIOR") in server.log
+    train.open_menu(g, "Steve", BARRACKS)
+    menu = menus(server)[-1] + " "
+    assert " 23:husk_spawn_egg:Elite Ibirapema Warrior:30 food · 60 gold · 24 s · queue 0/15 " in menu
+    assert ":Ibirapema Warrior:" not in menu and "24:book" not in menu
+    assert train.queue(g, "Steve", BARRACKS, "ELITE_IBIRAPEMA_WARRIOR")
+    assert train.queue(g, "Steve", BARRACKS, "IBIRAPEMA_WARRIOR") is None
