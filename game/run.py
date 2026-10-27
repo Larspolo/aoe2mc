@@ -120,10 +120,12 @@ SPIGOT = "world-settings:\n  default:\n    entity-activation-range:\n" + "".join
 
 def properties(game_port, rcon_port, password):
     """server.properties: only local players can join (127.0.0.1). They play in creative mode (#292).
-    A missing white-list becomes "true" in 26.3: then no player can join (#285)."""
+    A missing white-list becomes "true" in 26.3: then no player can join (#285). Each player is an operator
+    (op_joined): the output of RCON and console commands (the "fill" of a falling building) must not go to its chat (#1799)."""
     return (f"online-mode=false\nserver-ip=127.0.0.1\nserver-port={game_port}\nwhite-list=false\n"
             f"enable-rcon=true\nrcon.port={rcon_port}\nrcon.password={password}\n"
             "spawn-protection=0\nmax-tick-time=-1\nenable-query=false\nbroadcast-rcon-to-ops=false\n"
+            "broadcast-console-to-ops=false\n"
             "gamemode=creative\nforce-gamemode=true\n")
 
 
