@@ -129,6 +129,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "HEAVY_SCORPION_UPGRADE": {"food": 800, "wood": 750},
          "HORSE_COLLAR": {"food": 75, "wood": 75},
          "HUSBANDRY": {"food": 150},                                   # AoE2 DE wiki (#1416)
+         "HUSSAR": {"food": 80},                                       # AoE2 DE wiki (#1502)
+         "HUSSAR_UPGRADE": {"food": 500, "gold": 600},                 # the Imperial Age (#1502)
          "HUSKARL": {"food": 75, "gold": 35},
          "IMPERIAL_AGE": {"food": 1000, "gold": 800},
          "IRON_CASTING": {"food": 220, "gold": 120},
@@ -243,6 +245,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "HEAVY_SCORPION_UPGRADE": 50,
                "HORSE_COLLAR": 20,
                "HUSBANDRY": 40,
+               "HUSSAR": 30,
+               "HUSSAR_UPGRADE": 50,
                "HUSKARL": 13,
                "IMPERIAL_AGE": 190,
                "IRON_CASTING": 75,
@@ -323,7 +327,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                      "CONSCRIPTION",                                            # (#1455)
                      "HOARDINGS"),                                              # (#1456)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES", "LIGHT_CAVALRY_UPGRADE", "KNIGHT",   # (#671, #940, #1396, #1397)
-                     "HUSBANDRY"),                                              # (#1416)
+                     "HUSBANDRY",                                               # (#1416)
+                     "HUSSAR_UPGRADE"),                                         # the Imperial Age (#1502)
           "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS",   # (#1326, #1374, #1352)
                          "MASONRY", "TREADMILL_CRANE",                          # (#1398, #1422) the Castle Age
                          "CHEMISTRY", "BOMBARD_TOWER_TECH",                     # (#1375)
@@ -448,6 +453,7 @@ TECHS = {"ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bon
          "HEAVY_SCORPION_UPGRADE": lambda name, s: s,
          "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
          "HUSBANDRY": lambda name, s: s,                           # the walk speed: SPEEDS
+         "HUSSAR_UPGRADE": lambda name, s: s,                      # a new unit name: UPGRADES
          "IMPERIAL_AGE": lambda name, s: s,                        # an age: REQUIRES
          "IRON_CASTING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
          "KEEP": lambda name, s: s,                                # the towers of the player: TOWER_UPGRADES
@@ -498,6 +504,7 @@ UPGRADES = {                                                       # technology:
     "ELITE_SKIRMISHER_UPGRADE": ("SKIRMISHER", "ELITE_SKIRMISHER"),
     "HALBERDIER_UPGRADE": ("PIKEMAN", "HALBERDIER"),
     "HEAVY_SCORPION_UPGRADE": ("SCORPION", "HEAVY_SCORPION"),
+    "HUSSAR_UPGRADE": ("LIGHT_CAVALRY", "HUSSAR"),
     "LIGHT_CAVALRY_UPGRADE": ("SCOUT_CAVALRY", "LIGHT_CAVALRY"),
     "LONG_SWORDSMAN_UPGRADE": ("MAN_AT_ARMS", "LONG_SWORDSMAN"),
     "MAN_AT_ARMS_UPGRADE": ("MILITIA", "MAN_AT_ARMS"),
@@ -518,6 +525,7 @@ AFTER = {"BLAST_FURNACE": "IRON_CASTING",
          "HALBERDIER_UPGRADE": "PIKEMAN_UPGRADE",
          "HAND_CART": "WHEELBARROW",
          "HEAVY_PLOW": "HORSE_COLLAR",
+         "HUSSAR_UPGRADE": "LIGHT_CAVALRY_UPGRADE",
          "IRON_CASTING": "FORGING",
          "KEEP": "GUARD_TOWER",
          "LEATHER_ARCHER_ARMOR": "PADDED_ARCHER_ARMOR",
@@ -568,6 +576,7 @@ TECH_AGE = {                                                       # the age of 
     "HEAVY_SCORPION_UPGRADE": 3,
     "HORSE_COLLAR": 1,
     "HUSBANDRY": 2,
+    "HUSSAR_UPGRADE": 3,
     "IRON_CASTING": 2,
     "KEEP": 3,
     "LEATHER_ARCHER_ARMOR": 2,
@@ -680,6 +689,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "GUILDS": (2, "book", "Guilds"),
          "HORSE_COLLAR": (0, "book", "Horse Collar"),
          "HUSBANDRY": (4, "book", "Husbandry"),
+         "HUSSAR": (0, "horse_spawn_egg", "Hussar"),
+         "HUSSAR_UPGRADE": (2, "book", "Hussar"),                     # the slot of Light Cavalry (AFTER)
          "HUSKARL": (0, "zombie_spawn_egg", "Huskarl"),
          "IMPERIAL_AGE": (5, "bell", "Imperial Age"),
          "IRON_CASTING": (0, "book", "Iron Casting"),                 # the slot of Forging
@@ -781,6 +792,8 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "HEAVY_SCORPION_UPGRADE": "Upgrades scorpions to heavy scorpions.",
         "HORSE_COLLAR": "Farms +75 food.",
         "HUSBANDRY": "Mounted units walk 10 % faster.",
+        "HUSSAR": "Cavalry. Fast; strong vs. monks, siege.",
+        "HUSSAR_UPGRADE": "Upgrades light cavalry to hussars.",
         "HUSKARL": "Gothic infantry. Strong vs. archers.",
         "IMPERIAL_AGE": "Advance to the Imperial Age.",
         "IRON_CASTING": "Infantry and cavalry +1 attack.",

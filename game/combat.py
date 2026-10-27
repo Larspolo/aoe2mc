@@ -291,6 +291,7 @@ SIGHT = {
     "FORTIFIED_TOWER": 14,
     "GUARD_TOWER": 10,
     "HOUSE": 2,
+    "HUSSAR": 10,
     "KEEP": 10,
     "KREPOST": 10,
     "LIGHT_CAVALRY": 8,
