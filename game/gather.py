@@ -28,6 +28,8 @@ speed of game/ai.py), and `aoe stop` stops them when they arrive (#437). The own
 block) is only for the vanilla server.
 A sidebar scoreboard shows wood, food, gold and stone of player 1. A boss bar shows the selected unit (bossbar.py, #659).
 The action bar shows the actions that the player can do in the selection state now (hints.py, #798).
+A right click on free ground with selected units moves them there (walk_to, #1368): each unit to its own free cell
+near the click; military units with the plugin path finding, villagers stop their work.
 
 The program sees a click in two statistics: the use of the stick, and "talked to villager" (a right click on a
 villager is an interaction with the entity, not a use of the item). Then it reads the position and the view of
@@ -953,6 +955,32 @@ class Gather:
             self.build(site)
             x0, x1, z0, z1 = site["footprint"]
             self.mark(name, {(x0, z0), (x1 - 1, z1 - 1)})
+        elif self.selected and (cell := self.map.pick_ground(eye, d)) and self.map.free(*cell):
+            self.walk_to(name, cell)                                   # the move order of AoE2 (#1368)
+
+    def walk_to(self, name, cell):
+        """The selected units walk to the free block cell (x, z), as the move order of AoE2 (#1368): each one to its own
+        free cell near it, the nearest cells first (no formation yet). Military units walk with the plugin path finding
+        at their AoE2 speed; villagers stop their work and walk there. Returns the cells {uuid: cell}."""
+        import ai                                                      # ai imports this module
+        who = sorted(u for u in self.selected if u in self.villagers or u in self.soldiers)
+        r = math.isqrt(len(who)) + 2
+        cells = sorted(((x, z) for x in range(cell[0] - r, cell[0] + r + 1) for z in range(cell[1] - r, cell[1] + r + 1)
+                        if self.map.free(x, z)), key=lambda c: (math.dist(c, cell), c))
+        out = dict(zip(who, cells))
+        for u, (x, z) in out.items():
+            if u in self.villagers:
+                v = self.villagers[u]
+                for t in [t for t, f in self.farmers.items() if f == u]:
+                    del self.farmers[t]
+                v.tree, v.site, v.prey = None, None, None
+                self.go(v, "to_rally", {(x, z)})
+            else:
+                unit = self.soldiers[u]
+                ai.move(self, u, unit, self.map.T, x + 0.5, self.map.y(x, z), z + 0.5, NORMAL * train.speed(self, unit))
+        if out:
+            self.mark(name, {cell})
+        return out
 
     def pickable(self):
         """The UUIDs of the soldiers and enemies that a right click can pick (villagers: their own positions). Units
@@ -1005,7 +1033,7 @@ class Gather:
             act = "trade" if carts and homes.get(key) == "MARKET" and len(trade.markets(self)) > 1 and self.paper else \
                 "garrison" if key in holders and self.selected and self.paper else "train" if key in homes else None
         elif kind == "ground":
-            name, act = "Ground", None
+            name, act = "Ground", "move" if self.selected else None    # the move order (#1368)
         else:
             res = self.map.resource(key)
             name = {"tree": "Tree", "bush": "Berry bush", "farm": "Farm"}.get(kind, f"{res.capitalize()} mine")
