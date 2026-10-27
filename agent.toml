@@ -29,6 +29,9 @@ server = "python3 -m pytest -m mc"
 play = "Minecraft client"       # a needs-human body with this text is a play test
 replay = '\.aoe2record\b'        # a regex: a ticket with a match goes into the group "replay" of --plan
 
+[lint]                          # tools/health.py counts the lines of this list (#1909)
+data = "tests/data/game_names_in_code.txt"   # the places of domain data left in the code: only gets shorter
+
 [docs]
 system = "docs/SYSTEM.md"
 steering = "docs/STEERING.md"
