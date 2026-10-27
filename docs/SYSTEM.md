@@ -113,6 +113,9 @@ on `main` yet, and the branch of an owner session is not `agent/*` or `claude/*`
 2. **Cloud environment.** At claude.ai/code, make one environment for all runs. Network access: keep "Allow package
    managers" on and add the hosts of `docs/ENVIRONMENT.md` ("Network"). Setup script: paste
    `scripts/cloud-setup.sh`. Paste it again when an agent asks (the SessionStart hook compares `SETUP_VERSION`).
+   One environment can serve two projects (#1964): paste one setup script that installs the needs of both (each
+   script lists them in `SETUP_NEEDS`). The hook of the project with no version file in `/etc` checks only its
+   `SETUP_NEEDS`, and asks for a new script only when one is missing.
 3. **Status issue.** Open issue #1 with the label `agent-status` (the first run makes it when it is missing).
 4. **Scheduled task "aoe2mc autopilot".** Hourly at :06. Repository `Larspolo/aoe2mc`, the environment of step 2.
    Its prompt: open the repository and pull `main`, read `CLAUDE.md`, follow `.claude/skills/autopilot/SKILL.md`
@@ -142,6 +145,7 @@ the owner login, the default branch, the status issue, the commands, the doc pat
 The tests of the generic tools are generic too, so that a new project has them (#1900). Not in the table: the tests
 of `tools/bootstrap.py` (they copy this repository) and the tests that need a specific tool (`tools/dashboard_data.py`,
 `tools/release.py`). `tests/test_generic_words.py` fails when a generic file names the domain of the project.
+`tests/test_generic_tools.py` fails when a generic file names a `tools/X.py` that is not a generic row (#1963).
 
 | File | Kind | What is specific to aoe2mc |
 |---|---|---|
@@ -185,6 +189,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tools/dashboard.py` | generic | None (`agent.toml`). |
 | `tools/feedback.py` | generic | None (`agent.toml`). |
 | `tools/health.py` | generic | None (`agent.toml`). |
+| `tools/report.py` | generic | None (the run report of step 8; the release bar only with a project `tools/release.py`, #1963). |
 | `tools/tokens.py` | generic | None. |
 | `tools/operator_check.py` | generic | None (`agent.toml`). |
 | `tools/owner_tasks.py` | generic | None (`agent.toml`). |
@@ -216,12 +221,14 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_owner_tasks_close.py` | generic | None (a test of `tools/owner_tasks.py`). |
 | `tests/test_owner_tasks_project.py` | generic | None (a test of `tools/owner_tasks.py`). |
 | `tests/test_owner_tasks_wait.py` | generic | None (a test of `tools/owner_tasks.py`). |
+| `tests/test_report.py` | generic | None (a test of `tools/report.py`). |
 | `tests/test_tokens.py` | generic | None (a test of `tools/tokens.py`). |
 | `tests/test_tokens_verify.py` | generic | None (a test of `tools/tokens.py`). |
 | `tests/test_unconflict.py` | generic | None (a test of `tools/unconflict.py`). |
 | `tests/test_pacer.py` | generic | None (a test of `tools/usage.py`). |
 | `tests/test_usage.py` | generic | None (a test of `tools/usage.py`). |
 | `tests/test_usage_week.py` | generic | None (a test of `tools/usage.py`). |
+| `tests/test_generic_tools.py` | specific | The tools of aoe2mc that generic files may name (`OPTIONAL`, #1963). |
 | `tests/test_generic_words.py` | specific | The words of aoe2mc that the generic files must not contain (#1900). |
 | `.github/workflows/ci.yml` | specific | The Python, Java and Minecraft steps, the test markers. The red-`main` ticket is generic. |
 | `.github/workflows/automerge.yml` | generic | The branch prefixes `claude/*` and `agent/*`. |
