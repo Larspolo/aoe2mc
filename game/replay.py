@@ -105,6 +105,7 @@ SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, 
           "HEAVY_HEI_GUANG_CAVALRY": 1.35,                                          # (#1954)
           "HEI_GUANG_CAVALRY": 1.35,                                                # (#1954)
           "HUSSAR": 1.5,                                                            # (#1502)
+          "IMPERIAL_CAMEL_RIDER": 1.45,                                             # (#2013)
           "IMPERIAL_SKIRMISHER": 0.96,                                              # (#1611)
           "LONG_SWORDSMAN": 0.9,
           "MISSIONARY": 1.1,                                                        # (#1939)
