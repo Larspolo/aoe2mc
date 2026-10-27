@@ -57,6 +57,7 @@ import cheats  # noqa: E402
 import civs  # noqa: E402
 import conquest  # noqa: E402
 import fleet  # noqa: E402
+import fog  # noqa: E402
 import garrison  # noqa: E402
 import hints  # noqa: E402
 import market  # noqa: E402
@@ -487,6 +488,7 @@ class Gather:
     ended = None                                                       # "Victory" or "Defeat": run() stops (#819)
     board = "aoe_res"                                                  # the objective of the resources (the sidebar)
     bots = ()                                                          # run() steps them too (bot.Bot, #856)
+    reveal = "normal"                                                  # AoE2 "Reveal map"; "all": no fog (fog.py, #1389)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
                  cheats=False, start=None):
@@ -1082,7 +1084,10 @@ class Gather:
         """{UUID: feet} of pickable() for the pointing mark. On Paper one `aoe where` answer has WHERE_PAGE units
         (#813): the units of the players are on their teams (the pulse of the datapack, #358). Else one `data get`
         for each unit."""
-        want = self.pickable()
+        return self.where(self.pickable())
+
+    def where(self, want):
+        """{UUID: feet} of the units want: on Paper `aoe where` answers (WHERE_PAGE units each), else `data get`."""
         if not self.paper:
             return self.positions(sorted(want))
         out, start = {}, 0
@@ -1455,6 +1460,7 @@ class Gather:
             for b in self.bots:
                 b.step()
             conquest.tick(self)                                        # not in step(): the bot steps its own Gather
+            fog.tick(self)                                             # after the bots: their units too (#1389)
             wonder.tick(self, self.tick * NORMAL)                      # game seconds, as train.tick
             relic_victory.tick(self, self.tick * NORMAL)
             time.sleep(max(0.0, self.tick - (time.time() - t)))

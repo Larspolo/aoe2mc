@@ -11,6 +11,7 @@ Usage:
     python3 game/run.py WORLD --play --bot        # also a bot plays player 2: its villagers gather (game/bot.py)
     python3 game/run.py WORLD --play --bot --bot-attack 5:00   # its soldiers attack player 1 from 5:00 (default 10:00)
     python3 game/run.py WORLD --play --log F.jsonl  # also write a timed event log (tools/measure_gather.py reads it)
+    python3 game/run.py WORLD --play --reveal all  # no fog of war: also the enemy units out of sight show (game/fog.py)
     python3 game/run.py WORLD --replay [--speed 4] [--follow N] [--view N]  # replay the recorded game of the world (game/replay.py), then wait for Ctrl-C
 
 Join with Minecraft (multiplayer, localhost): players play in creative mode and get operator rights.
@@ -227,7 +228,7 @@ def bench(game, n=1000):
     return n / (time.perf_counter() - t)
 
 
-def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00"):
+def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal"):
     import gather
     with open(os.path.join(world, "aoe2mc.json")) as f:
         data = json.load(f)
@@ -237,6 +238,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         if len(g.villagers) == len(g.units):
             break
         time.sleep(1)
+    g.reveal = reveal                                # "all": no fog of war for the units (fog.py, #1389)
     if bot:
         import bot as bots
         import replay
@@ -337,6 +339,8 @@ def main(argv=None):
     ap.add_argument("--bot", action="store_true", help="--play: a bot plays player 2 (game/bot.py)")
     ap.add_argument("--bot-attack", default="10:00", metavar="MM:SS", help="--bot: its soldiers attack player 1 "
                     "from this game time (default 10:00)")
+    ap.add_argument("--reveal", choices=["normal", "all"], default="normal", help="--play: AoE2 \"Reveal map\" "
+                    "(default normal: enemy units out of sight are hidden; all: all units show)")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     a = ap.parse_args(argv)
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
@@ -353,7 +357,7 @@ def main(argv=None):
             print("The replay ended. The server stays up: type commands, Ctrl-C stops it.", file=sys.stderr)
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
-                play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack)
+                play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal)
             return
         while True:
             line = input("> ").strip().lstrip("/")
