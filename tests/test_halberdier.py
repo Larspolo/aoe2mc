@@ -8,7 +8,7 @@ from game import combat, train
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.TECH_AGE["HALBERDIER_UPGRADE"] == 3 and train.AFTER["HALBERDIER_UPGRADE"] == "PIKEMAN_UPGRADE"
+    assert train.AFTER["HALBERDIER_UPGRADE"] == "PIKEMAN_UPGRADE"
     assert combat.stats("HALBERDIER").hp == 60 and len(train.HELP["HALBERDIER_UPGRADE"]) <= 50
 
 

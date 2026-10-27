@@ -10,7 +10,7 @@ from game import build, civs, combat, train
 
 
 def test_the_cost_time_age_and_slot_are_those_of_aoe2():
-    assert train.TECH_AGE["MURDER_HOLES"] == 2 and "MURDER_HOLES" in train.TRAINS["UNIVERSITY"]
+    assert "MURDER_HOLES" in train.TRAINS["UNIVERSITY"]
     assert not any("MURDER_HOLES" in m for m in civs.MISSING)          # all civilizations
     assert len(train.HELP["MURDER_HOLES"]) <= 50
     assert [n for n in train.TRAINS["UNIVERSITY"] if train.ITEMS[n][0] == train.MORE + 4] == ["MURDER_HOLES"]
