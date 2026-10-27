@@ -42,7 +42,7 @@ def test_the_castle_menu_has_the_unique_unit_of_the_civilization():
 def test_a_unique_unit_without_combat_values_is_not_in_the_menu():
     assert all(u in combat.STATS for u in train.UNIQUE.values() if u in train.COSTS)
     server, g = setup("AZTECS")                                        # JAGUAR_WARRIOR: not in combat.STATS yet
-    assert train.trains(g, "CASTLE") == ("TREBUCHET",) and train.queue(g, "Steve", (12, 4), "LONGBOWMAN") is None
+    assert train.trains(g, "CASTLE") == train.TRAINS["CASTLE"] and train.queue(g, "Steve", (12, 4), "LONGBOWMAN") is None
 
 
 def test_a_click_queues_the_unit_and_takes_its_cost():
