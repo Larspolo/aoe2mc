@@ -216,6 +216,7 @@ def unit_tick(g, u, vs, dt):
     if not charge(g, u, vs, full, (new - h[0]) / h[1], name):
         return
     g.command(crew(u) + f"data modify entity @s Health set value {new}f")
+    g.command(f"aoe label {u}")                                   # the hearts: a data change fires no event (#1521)
     if new >= h[1]:
         stop(g, u, vs)
 
