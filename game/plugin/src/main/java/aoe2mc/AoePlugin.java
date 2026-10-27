@@ -43,6 +43,7 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -52,6 +53,7 @@ import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.EntityTransformEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
@@ -226,6 +228,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * The name line of a unit or building (#661, owner decision #658): the custom name of the mob holds the name and 5 hearts
  * ("Militia ❤❤❤❤❤", red: full, gray: empty, each heart 20 % of the hit points). It is visible only for a hurt unit or a
  * selected one (tag aoe2mc.selected, game/gather.py), as the bars in AoE2. Each hit and "aoe stats" update it.
+ * A left click with the command stick (a carrot_on_a_stick with no item name: a control group item and the Game menu
+ * item have one) on air, a block or a unit is cancelled (no broken block, no hit) and sets the score aoe_left of the
+ * player to 1: game/gather.py clears the selection, as a click on empty ground in AoE2 (#1788).
  */
 public final class AoePlugin extends JavaPlugin implements Listener {
     // ranged: the unit shoots; pierces: its hit takes the pierce armor (not so for a Throwing Axeman, #800);
@@ -672,6 +677,17 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         return o != null ? o : sb.registerNewObjective("aoe_menu", Criteria.DUMMY, Component.text("Menu"));
     }
 
+    private static boolean commandStick(ItemStack it) {
+        return it != null && it.getType() == Material.CARROT_ON_A_STICK && !(it.hasItemMeta() && it.getItemMeta().hasItemName());
+    }
+
+    private static void leftClick(Player p) {
+        Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
+        Objective o = sb.getObjective("aoe_left");
+        (o != null ? o : sb.registerNewObjective("aoe_left", Criteria.DUMMY, Component.text("Left click")))
+                .getScore(p.getName()).setScore(1);
+    }
+
     private static Menu menuOf(Player p) {
         return p.getOpenInventory().getTopInventory().getHolder(false) instanceof Menu m ? m : null;
     }
@@ -761,6 +777,15 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     @EventHandler
+    public void onLeftClick(PlayerInteractEvent ev) {                  // deselect (#1788)
+        if ((ev.getAction() == Action.LEFT_CLICK_AIR || ev.getAction() == Action.LEFT_CLICK_BLOCK)
+                && commandStick(ev.getPlayer().getInventory().getItemInMainHand())) {
+            ev.setCancelled(true);                                     // creative mode: no broken block
+            leftClick(ev.getPlayer());
+        }
+    }
+
+    @EventHandler
     public void onMenuClick(InventoryClickEvent ev) {
         if (!(ev.getView().getTopInventory().getHolder(false) instanceof Menu)) {
             return;
@@ -802,6 +827,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onHit(EntityDamageByEntityEvent ev) {
         Entity from = ev.getDamager();
+        if (from instanceof Player p && commandStick(p.getInventory().getItemInMainHand())) {
+            ev.setCancelled(true);                                     // a left click on a unit deselects (#1788)
+            leftClick(p);
+            return;
+        }
         if (from instanceof Projectile p && p.getShooter() instanceof Entity shooter) {
             from = shooter;
         }
