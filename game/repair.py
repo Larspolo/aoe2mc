@@ -32,6 +32,9 @@ and repair Donjons"). Selected Serjeants on an own damaged Donjon walk next to i
 repair it when they stand within NEAR blocks of its footprint (the key "repairs" of their line in units.jsonl,
 combat.REPAIRS). The wiki gives no own rate: they count as villagers. A
 new move or attack order (gather.Gather.walk_to, attack) ends their repair (drop).
+They also build an own unfinished Donjon site (#2129): a right click with selected Serjeants on it, or the placement of
+the site with them selected (build_order). The Serjeants within NEAR blocks of its footprint count as builders at the
+villager rate (raisers, gather.Gather.step).
 
 Minecraft feature: the plugin keeps the hit points of a building in the scoreboard aoe_hp of its target entity
 (combat.building, #660), so `scoreboard players get/set <uuid> aoe_hp` reads and sets them, and `aoe label` shows the
@@ -177,23 +180,48 @@ def order(g, player, cell):
     return rect
 
 
-def march(g, men, rect, goals):
-    """The Serjeants men walk to the free cells goals next to the Donjon rect and repair it there (#2128)."""
+def march(g, men, rect, goals, job="mending", what=None):
+    """The Serjeants men walk to the free cells goals next to the Donjon rect and repair it there (#2128), or build the
+    site what there (job "raising", #2129)."""
     import ai, train                                               # ai and train import gather
     from gather import NORMAL
-    g.mending = vars(g).get("mending", {})
+    jobs = vars(g).setdefault(job, {})
     cells = sorted(goals)
     for k, u in enumerate(men):
         x, z = cells[k * len(cells) // len(men)] if cells else ((rect[0] + rect[1]) // 2, rect[3])
         name = g.soldiers[u]
         ai.move(g, u, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, NORMAL * train.speed(g, name))
-        g.mending[u] = rect
+        jobs[u] = rect if what is None else what
 
 
 def drop(g, units):
-    """The units get another order: the Serjeants among them stop their repair."""
+    """The units get another order: the Serjeants among them stop their repair or their build."""
     for u in units:
         vars(g).get("mending", {}).pop(u, None)
+        vars(g).get("raising", {}).pop(u, None)
+
+
+def build_order(g, site, units):
+    """The Serjeants among units build the own unfinished site of their building (#2129). Returns them."""
+    import combat
+    men = sorted(u for u in units if combat.REPAIRS.get(g.soldiers.get(u)) == site["name"])
+    if not men or site["progress"] >= 1 or site.get("player", g.player) != g.player:
+        return []
+    x0, x1, z0, z1 = rect = site["footprint"]
+    march(g, men, rect, g.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)}), "raising", site)
+    return men
+
+
+def raisers(g, site):
+    """The Serjeants that build site and stand within NEAR blocks of its footprint (#2129)."""
+    raising, out = vars(g).get("raising", {}), []
+    x0, x1, z0, z1 = site["footprint"]
+    for u, s in sorted(raising.items()):
+        if not (u in g.soldiers and (pos := g.pos(u))):
+            del raising[u]                                         # dead
+        elif s is site and x0 - NEAR <= pos[0] < x1 + NEAR and z0 - NEAR <= pos[2] < z1 + NEAR:
+            out.append(u)
+    return out
 
 
 def rate(g, vs):
