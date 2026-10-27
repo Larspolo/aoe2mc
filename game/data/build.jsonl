@@ -11,6 +11,7 @@
 {"name": "TOWN_CENTER", "cost": {"wood": 275, "stone": 100}, "time": 150, "icon": "cobblestone"}
 {"name": "CASTLE", "cost": {"stone": 650}, "time": 200, "icon": "stone_bricks", "age": 2}
 {"name": "DOCK", "cost": {"wood": 150}, "time": 35, "icon": "dark_oak_planks"}
+{"name": "DONJON", "cost": {"wood": 50, "stone": 175}, "time": 83, "icon": "mossy_cobblestone"}
 {"name": "FISH_TRAP", "cost": {"wood": 100}, "time": 40, "icon": "bamboo_fence", "age": 1}
 {"name": "FOLWARK", "cost": {"wood": 100}, "time": 40, "icon": "white_terracotta"}
 {"name": "FORTIFIED_CHURCH", "cost": {"wood": 200}, "time": 50, "icon": "candle", "age": 2}

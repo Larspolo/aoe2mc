@@ -22,7 +22,7 @@
 {"name": "KREPOST", "hp": 2600, "attack": 10, "melee": 8, "pierce": 11, "range": 7, "reload": 2.0, "bonus": {"ship": 10}, "classes": ["building"], "sight": 10, "note": "the Bulgarians (AoE2 DE wiki, #1872)", "garrison": 20, "arrows": 5, "min_range": 1}
 {"name": "FORTIFIED_CHURCH", "hp": 2400, "attack": 0, "melee": 4, "pierce": 10, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 10, "as": "MONASTERY", "note": "the Armenians, Georgians (AoE2 DE wiki, #1930)"}
 {"name": "WONDER", "hp": 4800, "attack": 0, "melee": 3, "pierce": 10, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 8}
-{"name": "DONJON", "sight": 10}
+{"name": "DONJON", "hp": 1250, "attack": 5, "melee": 1, "pierce": 7, "range": 8, "reload": 2.0, "bonus": {"ship": 6}, "classes": ["building"], "sight": 10, "min_range": 1, "stone": true, "note": "the Sicilians, the Feudal Age values (AoE2 DE wiki, #1873)", "garrison": 10}
 {"name": "FEITORIA", "sight": 6}
 {"name": "OUTPOST", "sight": 4}
 {"name": "FORTIFIED_GATE", "hp_ages": [4000, 4000, 4000, 4000], "melee": 6, "pierce": 7}

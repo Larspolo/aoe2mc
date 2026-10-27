@@ -173,8 +173,8 @@ class Bot:
                 work[low] += 1
 
     def fight(self):
-        """Send each soldier without a live target to the nearest unit of the foe in reach, else to its nearest building. A wave
-        starts with self.group soldiers; when all of it is dead, the next wave waits for a full group again (#1051)."""
+        """Send each soldier without a live target to the nearest unit of the foe in reach and in the sight of the bot
+        (#2050), else to its nearest building. A wave starts with self.group soldiers; when all of it is dead, the next wave waits for a full group again (#1051)."""
         g = self.g
         mine = g.positions(sorted(g.soldiers))                         # a dead soldier is not in it
         self.charged = len(mine) >= self.group or self.charged and bool(mine)
@@ -182,13 +182,17 @@ class Bot:
             return
         live = {t for t in set(self.targets.values()) if "passed" in g.command(f"execute if entity {t}")}
         self.targets = {u: t for u, t in self.targets.items() if u in mine and t in live}
-        free = sorted(mine.keys() - self.targets.keys())
-        if not free:
-            return
+        if not mine.keys() - {u for u, t in self.targets.items() if t not in g.forts}:
+            return                                                     # all soldiers fight units
         units = {o["uuid"] for o in g.data["objects"] if o["kind"] == "unit" and o["player"] == self.foe and o.get("uuid")}
         if self.share:                                                 # also the units that player 1 trained
             units |= self.share.villagers.keys() | self.share.soldiers.keys()
-        near, forts, orders = g.positions(sorted(units)), None, {}
+        seen, T = g.seen_tiles(), g.map.T                              # the AoE2 AI sees only its sight (#2050)
+        near = {k: p for k, p in g.positions(sorted(units)).items() if (int(p[0] // T), int(p[2] // T)) in seen}
+        self.targets = {u: t for u, t in self.targets.items()          # a unit that comes in sight goes before a
+                        if t not in g.forts or not any(self.reach(u, mine[u], p) for p in near.values())}   # building
+        free = sorted(mine.keys() - self.targets.keys())
+        forts, orders = None, {}
         for u in free:
             ok = {k: p for k, p in near.items() if self.reach(u, mine[u], p)}
             if not ok:                                                 # no unit in reach, for example only a ship on

@@ -15,7 +15,8 @@ range trains archers (#670): they shoot from their AoE2 range (combat.range_comm
 cavalry (#671): a rider on a horse (the Passengers of units.make_entity); the horse is the unit.
 The barracks trains spearmen (#729) and the archery range skirmishers (#730, a drowned that throws tridents) in the
 Feudal Age: before it, the menu shows a gray item (build.locked).
-Technologies (#655): a technology (TECHS) is an item of the menu of its building and uses the queue of the units, as in
+Technologies (#655): a technology (TECHS: its key "effect" in
+data/train.jsonl, effect(), #2029) is an item of the menu of its building and uses the queue of the units, as in
 AoE2, but needs no population room. A click queues it once; when it is complete it goes into g.techs, leaves the menu
 and changes the values of the live and the new units (stats()). Loom: villagers get 15 hit points and 1/2 armor.
 Ages (#672): the Feudal Age is a technology of the town center that needs 2 types of Dark Age buildings (REQUIRES). The
@@ -91,6 +92,7 @@ COSTS = {r["name"]: r["cost"] for r in ROWS}                       # as in AoE2
 TRAIN_TIMES = {r["name"]: r["time"] for r in ROWS}                 # AoE2 seconds
 TRAINS = {b: tuple(r["name"] for r in ROWS if r["building"] == b)    # the units and technologies of each
           for b in dict.fromkeys(r["building"] for r in ROWS if r["building"])}   # building, in file order
+TRAINS["DONJON"] = ("SPEARMAN",)                                  # trains() adds the Serjeant (#1873)
 TRAINS["FOLWARK"] = TRAINS["MILL"]                                 # the mill of the Poles (#1874)
 TRAINS["KREPOST"] = ()                                             # trains() adds the Konnik (#1872)
 TRAINS["FORTIFIED_CHURCH"] = TRAINS["MONASTERY"]                  # the monastery of the Armenians, Georgians (#1930)
@@ -112,8 +114,6 @@ def own_civ_only():
 
 
 civs.MISSING |= own_civ_only()
-MILITIA_LINE = ("MILITIA", "MAN_AT_ARMS", "LONG_SWORDSMAN", "TWO_HANDED_SWORDSMAN", "CHAMPION",   # Gambesons (#1420)
-                "FIRE_LANCER", "ELITE_FIRE_LANCER")
 
 
 def chemistry(name, s):
@@ -135,7 +135,8 @@ def fletching(name, s):
 def thumb(name, s):
     """Thumb Ring (AoE2 DE, wiki): the archers fire faster; not the skirmishers (only their accuracy) and not the
     gunpowder units."""
-    return "archer" in s.classes and "gunpowder" not in s.classes and "SKIRMISHER" not in name
+    fast = "archer" in s.classes and "gunpowder" not in s.classes and "SKIRMISHER" not in name
+    return s._replace(reload=round(s.reload / 1.1765, 3)) if fast else s
 
 
 def parthian(name, s):
@@ -167,6 +168,11 @@ def arrowslits(name, s):
     return s._replace(attack=s.attack + ARROWSLITS[name]) if name in ARROWSLITS else s
 
 
+def heated(name, s):
+    """Heated Shot (AoE2 DE, wiki): the arrows of the own towers get more attack against ships (HEATED, #1548)."""
+    return s._replace(bonus={**s.bonus, "ship": s.bonus.get("ship", 0) + HEATED[name]}) if name in HEATED else s
+
+
 
 def forms(first):
     """The unit first and the units that its upgrades make, in order (UPGRADES of data/train.jsonl): the archer line
@@ -178,187 +184,43 @@ def forms(first):
     return tuple(out)
 
 
-TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit name: UPGRADES
-         "ARCHITECTURE": masonry,                                  # the same effect as Masonry (#1504)
-         "ARROWSLITS": arrowslits,                                 # the towers of the player: build.values
-         "ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bonus.get("standard", 0) + 2})
-         if "infantry" in s.classes else s,                        # combat.STANDARD: not the walls (#1419)
-         "ATONEMENT": lambda name, s: s,                           # monks convert enemy monks: monk.convertible
-         "BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
-         "BALLISTICS": lambda name, s: s,                          # the aim of the arrows: aoe ballistics (#1549)
-         "BANKING": lambda name, s: s,                             # the tribute fee: diplomacy.FEES
-         "BEARDED_AXE": lambda name, s: s._replace(range=s.range + 2)
-         if name in ("THROWING_AXEMAN", "ELITE_THROWING_AXEMAN") else s,  # the Franks (#2044)
-         "BLAST_FURNACE": lambda name, s: s._replace(attack=s.attack + 2) if melee(s) or name in HULKS else s,
-         "BLOCK_PRINTING": lambda name, s: s,                      # the conversion range: monk.near
-         "BOGSVEIGAR": lambda name, s: s._replace(attack=s.attack + 1) if name in forms("ARCHER") + forms("LONGSHIP") else s,  # (#2021)
-         "BOMBARD_TOWER_TECH": lambda name, s: s,                  # the bombard tower in the build menu: build.NEEDS
-         "BOW_SAW": lambda name, s: s,                             # an economy technology: gather.WORK_TECHS
-         "BRACER": fletching,
-         "BODKIN_ARROW": fletching,
-         "CAPPED_RAM_UPGRADE": lambda name, s: s,                  # a new unit name: UPGRADES
-         "CARAVAN": lambda name, s: s,                             # the walk speed: SPEEDS
-         "CAVALIER_UPGRADE": lambda name, s: s,                    # a new unit name: UPGRADES
-         "CASTLE_AGE": lambda name, s: s._replace(attack=s.attack + 3, bonus={**s.bonus, "cavalry": 2, "camel": 1,
-                                                                            "ship": 1})
-         if name == "EAGLE_SCOUT" else s,                          # an age: REQUIRES; the eagle scout (#1555)
-         "CAREENING": lambda name, s: s._replace(pierce=s.pierce + 1) if ship(name, s) else s,
-         "CHAMPION_UPGRADE": lambda name, s: s,                    # a new unit name: UPGRADES
-         "CHIEFTAINS": lambda name, s: s._replace(bonus={**s.bonus, "cavalry": s.bonus.get("cavalry", 0) + 5,
-                                                         "camel": s.bonus.get("camel", 0) + 4})
-         if "infantry" in s.classes else s,                        # the Vikings (#2021)
-         "CHEMISTRY": chemistry,
-         "COINAGE": lambda name, s: s,                             # the tribute fee: diplomacy.FEES
-         "CONSCRIPTION": lambda name, s: s,                        # the train speed: CONSCRIPT, tick()
-         "CHAIN_BARDING_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
-         if barding(s) else s,
-         "CHAIN_MAIL_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
-         if "infantry" in s.classes else s,
-         "CROP_ROTATION": lambda name, s: s,                       # an economy technology: gather.FARM_TECHS
-         "CROSSBOWMAN_UPGRADE": lambda name, s: s,
-         "DEVOTION": lambda name, s: s,                            # the conversion resistance: monk.resist
-         "DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
-         "DRY_DOCK": lambda name, s: s._replace(pierce=s.pierce + 1) if ship(name, s) else s,
-         "EAGLE_WARRIOR_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
-         "ELITE_ARAMBAI_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
-         "ELITE_BALLISTA_ELEPHANT_UPGRADE": lambda name, s: s,    # a new unit name: UPGRADES
-         "ELITE_BATTLE_ELEPHANT_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
-         "ELITE_BOYAR_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
-         "ELITE_CAMEL_ARCHER_UPGRADE": lambda name, s: s,          # a new unit name: UPGRADES
-         "ELITE_CANNON_GALLEON_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
-         "ELITE_CARAVEL_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES (#1934)
-         "ELITE_CENTURION_UPGRADE": lambda name, s: s,             # a new unit name: UPGRADES
-         "ELITE_CHAKRAM_THROWER_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
-         "ELITE_COMPOSITE_BOWMAN_UPGRADE": lambda name, s: s,     # a new unit name: UPGRADES
-         "ELITE_COUSTILLIER_UPGRADE": lambda name, s: s,           # a new unit name: UPGRADES
-         "ELITE_CONQUISTADOR_UPGRADE": lambda name, s: s,          # a new unit name: UPGRADES
-         "ELITE_EAGLE_WARRIOR_UPGRADE": lambda name, s: s,
-         "ELITE_ELEPHANT_ARCHER_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
-         "ELITE_GBETO_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
-         "ELITE_FIRE_LANCER_UPGRADE": lambda name, s: s,           # a new unit name: UPGRADES
-         "ELITE_GENITOUR_UPGRADE": lambda name, s: s,              # a new unit name: UPGRADES
-         "ELITE_JAGUAR_WARRIOR_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
-         "ELITE_MAGYAR_HUSZAR_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
-         "ELITE_GENOESE_CROSSBOWMAN_UPGRADE": lambda name, s: s,   # a new unit name: UPGRADES
-         "ELITE_GHULAM_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
-         "ELITE_HUSSITE_WAGON_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
-         "ELITE_KAMAYUK_UPGRADE": lambda name, s: s,              # a new unit name: UPGRADES
-        "ELITE_KARAMBIT_WARRIOR_UPGRADE": lambda name, s: s,      # a new unit name: UPGRADES
-         "ELITE_KESHIK_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
-         "ELITE_KIPCHAK_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
-         "ELITE_KONNIK_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
-         "ELITE_LEITIS_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
-         "ELITE_LONGSHIP_UPGRADE": lambda name, s: s,              # a new unit name: UPGRADES (#1934)
-         "ELITE_MONASPA_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
-         "ELITE_OBUCH_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
-         "ELITE_ORGAN_GUN_UPGRADE": lambda name, s: s,             # a new unit name: UPGRADES
-         "ELITE_PLUMED_ARCHER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
-         "ELITE_RATHA_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
-         "ELITE_RATTAN_ARCHER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
-         "ELITE_SERJEANT_UPGRADE": lambda name, s: s,              # a new unit name: UPGRADES
-         "ELITE_SHOTEL_WARRIOR_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
-         "ELITE_SHRIVAMSHA_RIDER_UPGRADE": lambda name, s: s,      # a new unit name: UPGRADES
-         "ELITE_STEPPE_LANCER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
-         "ELITE_SKIRMISHER_UPGRADE": lambda name, s: s,
-         "ELITE_TARKAN_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
-         "ELITE_TURTLE_SHIP_UPGRADE": lambda name, s: s,           # a new unit name: UPGRADES (#1934)
-         "ELITE_URUMI_SWORDSMAN_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
-         "ELITE_VARANGIAN_GUARD_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
-         "ELITE_WAR_WAGON_UPGRADE": lambda name, s: s,            # a new unit name: UPGRADES
-         "EUPSEONG": lambda name, s: s._replace(range=s.range + 2) if name in ("GUARD_TOWER", "KEEP") else s,   # the Koreans (#2048)
-         "FABRIC_SHIELDS": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
-         if name in ("KAMAYUK", "ELITE_KAMAYUK", "SLINGER") else s,   # the Incas (#2047)
-         "FAITH": lambda name, s: s,                               # the conversion resistance: monk.resist
-         "FARIMBA": lambda name, s: s._replace(attack=s.attack + 5) if "cavalry" in s.classes else s,   # the Malians (#2046)
-         "FERVOR": lambda name, s: s,                              # the walk speed: SPEEDS
-         "FISHING_LINES": lambda name, s: s,                       # the fishing ships: gather.SHIP_TECHS
-         "FLETCHING": fletching,
-         "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) or name in HULKS else s,
-         "FORTIFIED_WALL": lambda name, s: s,                      # the walls of the player: WALL_UPGRADES
-         "FUROR_CELTICA": lambda name, s: s._replace(hp=round(s.hp * 1.4)) if "siege" in s.classes else s,   # the Celts (#2043)
-         "GAMBESONS": lambda name, s: s._replace(pierce=s.pierce + 1) if name in MILITIA_LINE else s,
-         "GARLAND_WARS": lambda name, s: s._replace(attack=s.attack + 4) if "infantry" in s.classes else s,  # the Aztecs (#2042)
-         "GILLNETS": lambda name, s: s,                            # the fishing ships: gather.SHIP_TECHS
-         "GOLD_MINING": lambda name, s: s,                         # an economy technology: gather.WORK_TECHS
-         "GOLD_SHAFT_MINING": lambda name, s: s,
-         "GUARD_TOWER": lambda name, s: s,                         # the towers of the player: TOWER_UPGRADES
-         "GUILDS": lambda name, s: s,                              # the trading fee: market.FEES
-         "HALBERDIER_UPGRADE": lambda name, s: s,                  # a new unit name: UPGRADES
-         "HAND_CART": lambda name, s: s,                           # no combat change: gather.CARRY and gather.PACE
-         "HEATED_SHOT": lambda name, s: s._replace(bonus={**s.bonus, "ship": s.bonus.get("ship", 0) + HEATED[name]})
-         if name in HEATED else s,                                 # the arrows of the own towers on ships (#1548)
-         "HEAVY_CAMEL_RIDER_UPGRADE": lambda name, s: s,           # a new unit name: UPGRADES
-         "HEAVY_CAVALRY_ARCHER_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
-         "HEAVY_HEI_GUANG_CAVALRY_UPGRADE": lambda name, s: s,     # a new unit name: UPGRADES
-         "HEAVY_MOUNTED_CROSSBOWMAN_UPGRADE": lambda name, s: s,   # a new unit name: UPGRADES
-         "HOARDINGS": lambda name, s: s._replace(hp=round(s.hp * 1.21)) if name == "CASTLE" else s,   # build.values
-         "HEAVY_PLOW": lambda name, s: s,                          # an economy technology: gather.FARM_TECHS, FOOD_CARRY
-         "HEAVY_SCORPION_UPGRADE": lambda name, s: s,
-         "HERESY": lambda name, s: s,                              # a converted unit dies: monk.heresy
-         "HEAVY_WARSHIPS": lambda name, s: s,                      # new unit names: UPGRADES
-         "HERBAL_MEDICINE": lambda name, s: s,                     # the heal in a garrison: garrison.heal
-         "HEAVY_DEMOLITION_SHIP_UPGRADE": lambda name, s: s,
-         "DEMOLITION_SHIP_UPGRADE": lambda name, s: s,
-         "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
-         "HUSBANDRY": lambda name, s: s,                           # the walk speed: SPEEDS
-         "HUSSAR_UPGRADE": lambda name, s: s,                      # a new unit name: UPGRADES
-         "ILLUMINATION": lambda name, s: s,                        # the rest after a conversion: monk.ILLUMINATED
-         "IMPERIAL_AGE": lambda name, s: s,                        # an age: REQUIRES
-         "IMPERIAL_CAMEL_RIDER_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
-         "IMPERIAL_SKIRMISHER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
-         "IRON_CASTING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) or name in HULKS else s,
-         "KEEP": lambda name, s: s,                                # the towers of the player: TOWER_UPGRADES
-         "LEATHER_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
-         if "archer" in s.classes else s,
-         "LIGHT_CAVALRY_UPGRADE": lambda name, s: s,
-         "LONG_SWORDSMAN_UPGRADE": lambda name, s: s,
-         "LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
-         if "VILLAGER" in name else s,
-         "MAN_AT_ARMS_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
-         "MASONRY": masonry,                                       # the buildings of the player: build.values
-         "MEDIUM_WARSHIPS": lambda name, s: s,                     # new unit names: UPGRADES
-         "MURDER_HOLES": lambda name, s: s,                        # no minimum range: build.minimum
-         "ONAGER_UPGRADE": lambda name, s: s,
-         "PALADIN_UPGRADE": lambda name, s: s,                     # a new unit name: UPGRADES
-         "PADDED_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
-         if "archer" in s.classes else s,
-         "PARTHIAN_TACTICS": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 2,
-                                                        bonus={**s.bonus, "spearman": s.bonus.get("spearman", 0) + 2})
-         if parthian(name, s) else s,
-         "PIKEMAN_UPGRADE": lambda name, s: s,
-         "PLATE_BARDING_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 2)
-         if barding(s) else s,
-         "PLATE_MAIL_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 2)
-         if "infantry" in s.classes else s,
-         "RECURVE_BOW": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if {"archer", "cavalry"} <= set(s.classes) else s,   # the Magyars (#2045)
-         "REDEMPTION": lambda name, s: s,                          # monks convert buildings and siege: monk.py
-         "RING_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 2)
-         if "archer" in s.classes else s,
-         "SCALE_BARDING_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
-         if barding(s) else s,
-         "SANCTITY": lambda name, s: s._replace(hp=s.hp + 15) if name in monk.MONKS else s,
-         "SAPPERS": lambda name, s: s._replace(bonus={**s.bonus, "building": s.bonus.get("building", 0) + 15,
-                                                      "ram": s.bonus.get("ram", 0) + 3})
-         if name.startswith("VILLAGER") else s,                    # the walls too: "building" is also stone defense
-         "SCALE_MAIL_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
-         if "infantry" in s.classes else s,
-         "SHIPWRIGHT": lambda name, s: s,                          # the ships: SHIPWRIGHT, price() and tick()
-         "SIEGE_ENGINEERS": engineers,
-         "SIEGE_ONAGER_UPGRADE": lambda name, s: s,
-         "SIEGE_RAM_UPGRADE": lambda name, s: s,
-         "SQUIRES": lambda name, s: s,                             # the walk speed: SPEEDS
-         "STONE_MINING": lambda name, s: s,                        # an economy technology: gather.WORK_TECHS
-         "STONE_SHAFT_MINING": lambda name, s: s,
-         "THEOCRACY": lambda name, s: s,                           # one monk of a group rests: monk.convert
-         "THUMB_RING": lambda name, s: s._replace(reload=round(s.reload / 1.1765, 3)) if thumb(name, s) else s,
-         "TOWN_PATROL": lambda name, s: s,                         # the building sight: gather.seen_tiles
-         "TOWN_WATCH": lambda name, s: s,                          # the building sight: gather.seen_tiles
-         "TREADMILL_CRANE": lambda name, s: s,                     # the build speed: build.rise
-         "TWO_HANDED_SWORDSMAN_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
-         "TWO_MAN_SAW": lambda name, s: s,                         # an economy technology: gather.WORK_TECHS
-         "WINGED_HUSSAR_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
-         "FEUDAL_AGE": lambda name, s: s,   # the change of each technology to the AoE2 values
-         "WHEELBARROW": lambda name, s: s}                         # no combat change: gather.CARRY and gather.PACE
+def test(t, name, s):
+    """True when test t of an effect of data/train.jsonl holds for unit name with combat values s: {"class": C} (C in
+    s.classes; a list: all of them), {"names": [...]}, {"prefix": P} (the name starts with P), {"forms": [first, ...]} (forms()) or
+    {"test": F} (the function F(name, s) of this module, for a test with real logic)."""
+    if "class" in t:
+        return set([t["class"]] if isinstance(t["class"], str) else t["class"]) <= set(s.classes)
+    if "names" in t:
+        return name in t["names"]
+    if "prefix" in t:
+        return name.startswith(t["prefix"])
+    if "forms" in t:
+        return any(name in forms(f) for f in t["forms"])
+    return globals()[t["test"]](name, s)
+
+
+def effect(e):
+    """The function (name, s) -> s of the key "effect" of a technology of data/train.jsonl (#2029): the name of a
+    function of this module (an effect with real logic), or {"if": [tests], "add": {field: n}, "times": {field: f},
+    "bonus": {class: n}}. The unit gets the change when one of the tests holds (test(); no "if": each unit). {}: no
+    change of the combat values, the effect is in another place (its "note")."""
+    if isinstance(e, str):
+        return globals()[e]
+    if not e:
+        return lambda name, s: s
+
+    def change(name, s):
+        if "if" in e and not any(test(t, name, s) for t in e["if"]):
+            return s
+        new = {k: getattr(s, k) + n for k, n in e.get("add", {}).items()}
+        new |= {k: round(getattr(s, k) * f) for k, f in e.get("times", {}).items()}
+        if "bonus" in e:
+            new["bonus"] = {**s.bonus, **{k: s.bonus.get(k, 0) + n for k, n in e["bonus"].items()}}
+        return s._replace(**new)
+    return change
+
+
+TECHS = {r["name"]: effect(r["effect"]) for r in ROWS if "effect" in r}   # a technology: its change of the AoE2 values
 SPEEDS = {"CARAVAN": ("trade units", 1.2),                        # technology: the unit (or a class of combat.STATS:
           "FERVOR": ("monks", 1.15),                               # lower case, or a group of civs.GROUPS) and its
           "HUSBANDRY": ("mounted", 1.1),                           # walk speed factor; cavalry, camels, elephants (#1416)
@@ -400,17 +262,27 @@ ROW = 9                                                            # the first s
 HULKS = ("CARRACK", "HULK", "WAR_HULK")                                     # melee warships: the blacksmith attack too (#1509)
 
 
-def melee(s):
+def melee(name, s):
     """True for the combat values s of an infantry or cavalry unit (also camels and elephants): the units of the melee
     attack upgrades of the AoE2 blacksmith. Cavalry archers get the archer upgrades."""
     return bool({"infantry", "cavalry", "camel", "elephant"} & set(s.classes)) and "archer" not in s.classes
 
 
-def barding(s):
+def barding(name, s):
     """True for the combat values s of a cavalry unit (also camels and elephants): the units of the barding armor
     upgrades of the AoE2 blacksmith. Cavalry archers get the archer armor upgrades. A mounted unit keeps its values
     on the horse (its UUID in aoe2mc.json), so the horse gets the armor (#850)."""
     return bool({"cavalry", "camel", "elephant"} & set(s.classes)) and "archer" not in s.classes
+
+
+def smith(name, s):
+    """True for the units of the attack upgrades of the AoE2 blacksmith: melee() and the melee warships (HULKS)."""
+    return melee(name, s) or name in HULKS
+
+
+def monks(name, s):
+    """True for the monks (monk.MONKS): Sanctity."""
+    return name in monk.MONKS
 
 
 def ship(name, s):
@@ -447,10 +319,11 @@ def lines(t, g=None):
 
 def trains(g, building):
     """The units and technologies of the own building: a castle trains the unique unit of the player's civilization,
-    a Krepost the Konnik."""
+    a Krepost the Konnik, a Donjon the Serjeant."""
     new = {old: unit for t in UPGRADES if t in g.techs for old, unit in lines(t, g)}   # the barracks trains the new unit
     unique = [n for n in [UNIQUE.get(civs.civ(g))] if n in COSTS] * (building == "CASTLE") \
-        + ["KONNIK"] * (building == "KREPOST")                     # the Krepost trains only the Konnik (#1872)
+        + ["KONNIK"] * (building == "KREPOST") \
+        + ["SERJEANT"] * (building == "DONJON")                    # and the spearman line (AoE2 DE wiki, #1873)
     out = unique + list(TRAINS[building]) + [f"ELITE_{n}_UPGRADE" for n in unique if f"ELITE_{n}_UPGRADE" in COSTS]   # (#1760)
     out += [n for n, c in CIV_TECHS.items() if c == civs.civ(g)] * (building == "CASTLE")   # the unique technologies (#2021)
     for _ in UPGRADES:                                             # a line of upgrades: mangonel, onager, siege onager
