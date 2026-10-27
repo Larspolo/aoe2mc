@@ -30,8 +30,8 @@ def test_selected_serjeants_build_an_own_donjon_site_at_the_villager_rate():
     assert any(c.startswith("aoe moveto s0 ") for c in server.log)  # it walks with the plugin path finding
     assert repair.raisers(g, s) == ["s0"]                            # it stands next to the site
     n = ticks(g, s)
-    rate = civs.BUILD_OF["SICILIANS"]["DONJON"]                      # Sicilians build a Donjon 50 % faster (#2210)
-    assert n == pytest.approx(build.BUILD_TIMES["DONJON"] / gather.NORMAL / g.tick / rate, abs=1)   # one villager
+    rate = civs.build_rate(g, "DONJON")                              # the Sicilians build a Donjon faster (#2115)
+    assert n == pytest.approx(build.BUILD_TIMES["DONJON"] / rate / gather.NORMAL / g.tick, abs=1)
     assert not repair.raisers(g, s)                                  # complete: the Serjeant stands
 
 
