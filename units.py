@@ -324,6 +324,8 @@ def classify(n, hero=False):
         return boat("oak", [crew])
 
     # Siege weapons: minecarts with a crew
+    if "MOUNTED_TREBUCHET" in n:      # a camel unit that carries its trebuchet (#2191): the trebuchet crew rides a camel
+        return mounted("camel", siege_crew(n))
     if hero and has(n, *HEROES["siege"]) or n.endswith("_RAM") or has(n, "MANGONEL", "ONAGER", "SCORPION", "TREBUCHET",
                                              "BOMBARD_CANNON", "SIEGE_TOWER", "ORGAN_GUN", "HOUFNICE",
                                              "ROCKET_CART", "WAR_WAGON", "HUSSITE_WAGON", "COBRA_CAR",

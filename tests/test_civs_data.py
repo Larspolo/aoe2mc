@@ -3,17 +3,14 @@ import re
 
 from game import civs, table, train
 
-KEYS = {"name", "unique", "missing", "costs", "units", "twice", "age_gifts", "work", "start", "shared", "not_shared",
-        "build", "build_wonder", "repair", "repair_cost", "repair_team", "work_rate", "train_rate", "hp",
-        "arrows"}
 AGES = 4
 
 
-def test_each_line_has_the_known_keys_and_a_civilization_name():
+def test_each_line_has_the_missing_list_and_a_civilization_name():
     rows = table.load("civs.jsonl")
     assert [r["name"] for r in rows] == sorted(r["name"] for r in rows)        # one line per civ, in name order
     for r in rows:
-        assert set(r) <= KEYS and "missing" in r, r["name"]
+        assert "missing" in r, r["name"]           # another key: tests/test_data_keys.py (#2188)
         assert re.fullmatch(r"[A-Z_]+", r["name"])
         assert r["missing"] == sorted(set(r["missing"])), r["name"]
 
