@@ -41,6 +41,7 @@ FIRE = "fireship"                                     # the AoE2 class "Fire Shi
 UNIT_ROWS = table.load("units.jsonl")
 STATS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields if f != "classes"}, classes=tuple(r["classes"]))
          for r in UNIT_ROWS}
+REPAIRS = {r["name"]: r["repairs"] for r in UNIT_ROWS if "repairs" in r}   # a soldier that repairs a building (#2128)
 # Buildings: hit points, melee and pierce armor (Dark Age base), one line per building in data/buildings.jsonl (#1913).
 # The high pierce armor makes arrows weak, as in AoE2. The towers have the AoE2 DE values of the wiki: a watch tower of
 # the Castle Age (850 hit points in the Feudal Age), #1112. The attack against ships: the "Attack bonus" of the wiki
