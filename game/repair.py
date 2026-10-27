@@ -57,11 +57,11 @@ def buildings(g):
 
 def full(g, name, player):
     """The full hit points of building name of player: a wall or gate has those of its design in the age of its
-    player (combat.wall, as build.target, #1360)."""
+    player (combat.wall, as build.target, #1360), a watch tower those of its tower technology (build.line, #1374)."""
     import build, combat                                           # build imports gather
-    if name not in combat.WALLS:
-        return combat.stats(name).hp
     who = next((b.g for b in g.bots if b.g.player == player), g)   # an allied bot: its techs and age
+    if name not in combat.WALLS:
+        return combat.stats(build.line(who, name)).hp
     return combat.wall(build.design(who, name, player), build.ages(who)).hp
 
 
