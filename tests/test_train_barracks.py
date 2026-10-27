@@ -1,4 +1,4 @@
-"""game/train.py: a right click on an own barracks opens its menu with "Militia"; a militia costs 60 food and 20 gold,
+"""game/train.py: a right click on an own barracks opens its menu with "Militia"; a militia costs 50 food and 20 gold,
 appears after 21 AoE2 seconds and joins the military units of the player (#654)."""
 import contextlib
 import io
@@ -13,7 +13,7 @@ from test_train_menu import FEUDAL, RALLY, SPEAR
 from game import combat, gather, run, train
 
 
-def setup(food=60, gold=20, done=True):
+def setup(food=50, gold=20, done=True):
     """A flat 24 × 24 map (tile size 1): a town center of player 1 at blocks x 2-4, z 2-4, a barracks at x 10-12,
     z 2-4 (a start one, or a built site when done is a bool) and a villager. Steve stands south of the barracks."""
     objects = [{"kind": "building", "name": "TOWN_CENTER", "player": 1, "tile": [3.5, 3.5], "footprint": [2, 2, 5, 5]},
@@ -38,7 +38,7 @@ def test_a_right_click_on_the_barracks_opens_its_menu():
     server, g = setup(done=None)
     for name in g.clicks():
         g.click(name)
-    assert menus(server) == ["aoe menu Steve Barracks 0:zombie_spawn_egg:Militia:60 food · 20 gold · 21 s · queue 0/15" + SPEAR + RALLY]
+    assert menus(server) == ["aoe menu Steve Barracks 0:zombie_spawn_egg:Militia:50 food · 20 gold · 21 s · queue 0/15" + SPEAR + RALLY]
     assert not any(g.queues.values())
 
 
@@ -107,7 +107,7 @@ def test_a_trained_militia_exists_on_a_server(tmp_path):
     with run.Game(tmp_path / "W") as game:
         game.forceload()
         g = gather.Gather(game, data, tick=0.25, start={}).setup()
-        g.stock.update(food=60, gold=20)
+        g.stock.update(food=50, gold=20)
         rect, = train.homes(g)
         assert train.queue(g, "nobody", rect[::2], "MILITIA")
         uuid, = train.tick(g, train.TRAIN_TIMES["MILITIA"])

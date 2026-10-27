@@ -46,7 +46,7 @@ import time
 import types
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from aoe2mc import PASSABLE_OBJECTS, WOODS, object_footprint, player_color, tree_kind  # noqa: E402
+from aoe2mc import PASSABLE_OBJECTS, WOODS, object_footprint, object_mob, player_color, tree_kind  # noqa: E402
 from units import VILLAGER_JOBS, animal, pretty  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -88,9 +88,12 @@ AOE2_WORK, NORMAL = {"wood": 0.39, "food": 0.31, "farm": 0.33, "gold": 0.38, "st
 WORK_SECONDS = {r: 1 / (w * NORMAL) for r, w in AOE2_WORK.items()}    # real seconds per unit, as at Normal speed
 CARRY = {"WHEELBARROW": 3}                                         # more resources per trip, as in AoE2 (#728)
 PACE = {"WHEELBARROW": 1.1}                                        # the villager walk speed factor, as in AoE2
-WORK_TECHS = {"DOUBLE_BIT_AXE": {"wood": 1.2},                     # work rate factors of the economy technologies (AoE2)
+WORK_TECHS = {"BOW_SAW": {"wood": 1.2},                            # work rate factors of the economy technologies (AoE2)
+              "DOUBLE_BIT_AXE": {"wood": 1.2},
               "GOLD_MINING": {"gold": 1.15},
-              "STONE_MINING": {"stone": 1.15}}
+              "GOLD_SHAFT_MINING": {"gold": 1.15},
+              "STONE_MINING": {"stone": 1.15},
+              "STONE_SHAFT_MINING": {"stone": 1.15}}
 # Food of a hunted animal, as in AoE2 DE (the AoE2 wiki; a "COW_..." name is a cow, #1058).
 HUNT_FOOD = {"COW": 150,
              "DEER": 140,
@@ -202,6 +205,7 @@ class Map:
         self.carcasses = {}                                            # tile -> food of the carcasses of hunts (#1058)
         self.herds = set()                                             # carcass tiles of herdable animals (HERDS)
         self.fish, self.shore = {}, set()                              # tile -> food of a fish (#1283), shore fish
+        self.fish_mobs, self.docks = {}, []                            # tile -> mob of a fish; own dock cells (#1384)
         for o in data["objects"]:
             if o["kind"] == "building":
                 x0, z0, x1, z1 = o["footprint"]
@@ -210,6 +214,7 @@ class Map:
             elif o["kind"] == "other" and o["name"] in FISH_FOOD:      # a fish is passable: no barrier
                 tile = int(o["tile"][0]), int(o["tile"][1])
                 self.fish[tile] = FISH_FOOD[o["name"]]
+                self.fish_mobs[tile] = object_mob(o["name"])
                 if o["name"] in SHORE_FISH:                            # the tiles of the shore fish
                     self.shore.add(tile)
             elif o["kind"] == "other" and not any(k in o["name"] for k in PASSABLE_OBJECTS):
@@ -248,6 +253,8 @@ class Map:
         for r, names in DROP_SITES.items():
             if own and any(k in name for k in names):
                 self.drops[r].append(cells)
+        if own and "DOCK" in name:                                     # the drop site of the fishing ships (#1384)
+            self.docks.append(cells)
 
     def cells(self, tile):
         T = self.T
@@ -969,6 +976,8 @@ class Gather:
         if train.open_menu(self, name, fleet.pick(self, eye, d)):     # a dock is on the water (#1383)
             return
         if market.open_menu(self, name, self.map.pick_ground(eye, d)):  # an own market: buy and sell (#1252)
+            return
+        if fleet.fish_order(self, name, eye, d):                     # the fishing ships fish (#1384)
             return
         tile = self.map.pick_tree(eye, d)
         if tile and self.selected:
