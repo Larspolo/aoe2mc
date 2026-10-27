@@ -113,6 +113,7 @@ SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, 
           "MOUNTED_CROSSBOWMAN": 1.25,                                              # (#2012)
           "MISSIONARY": 1.1,                                                        # (#1939)
           "PALADIN": 1.35,                                                          # (#1501)
+          "SAVAR": 1.35,                                                            # (#2014)
           "SHRIVAMSHA_RIDER": 1.6,                                                  # (#1612)
           "STEPPE_LANCER": 1.45,                                                    # (#1557)
           "VARANGIAN_GUARD": 1.05,                                                  # (#2011)
