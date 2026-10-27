@@ -78,6 +78,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * Orders for the units of the game program, with Minecraft path finding (#435). Vanilla has no command for
  * "walk to this point", so this plugin gives one to RCON:
  *   aoe moveto <selector> <x> <y> <z> [speed]   walk on the path of Mob#getPathfinder
+ *   aoe neutral <team>:<team>,...|- ...        the neutral stances of the players (#1645): the units and buildings of
+ *                                              the first team do not attack the units of the listed teams by
+ *                                              themselves (an order does). Each call replaces all stances; "-": none
  *   aoe allies <team>,<team>,...|- ...         the alliances of the players (#1315): allied teams are one side for the
  *                                              arrows of buildings, the hit back and the attack alerts. Each call
  *                                              replaces all alliances; "-": no allies
@@ -146,6 +149,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe minimap fog <tile> <n>|off, see|dim <y,x0,x1> ..., tile <x> <z>
  *                                              the fog of the view player on map 0 (#1567): black unexplored tiles,
  *                                              dark explored tiles out of sight; tile: the fog of a block
+ *   aoe minimap frame <side>|off, square <name>   a white square of <side> blocks around each player on map 0, only
+ *                                              for that player (#1762); square: its pixels and color
  *   aoe where <selector> [from]                "Where <count>: <uuid> <x> <y> <z> <order 0|1> <target 0|1>, ..." for
  *                                              WHERE_PAGE units from index `from` in UUID order (#813, tools/replay_drift.py);
  *                                              target 1 also after a target or a hit since the last answer (#1169)
@@ -526,7 +531,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             for (Entity o : fort.getWorld().getNearbyEntities(c, f.range + half, f.range + 16, f.range + half)) {
                 if (o instanceof LivingEntity le && le.isValid() && stats.containsKey(le.getUniqueId())
                         && !buildings.containsKey(le.getUniqueId()) && !le.isInvulnerable() && le.getVehicle() == null
-                        && !sameTeam(fort, le)) {
+                        && !calm(fort, le)) {
                     var p = le.getLocation();
                     double dx = Math.max(0, Math.max(b[0] - p.getX(), p.getX() - b[3] - 1));
                     double dz = Math.max(0, Math.max(b[2] - p.getZ(), p.getZ() - b[5] - 1));
@@ -983,7 +988,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             double bestD = r * r;
             for (Entity o : mob.getNearbyEntities(r, r, r)) {
                 if (o instanceof LivingEntity le && le.isValid() && stats.containsKey(le.getUniqueId())
-                        && !buildings.containsKey(le.getUniqueId()) && !sameTeam(mob, le) && !le.isInvulnerable()
+                        && !buildings.containsKey(le.getUniqueId()) && !calm(mob, le) && !le.isInvulnerable()
                         && le.getVehicle() == null && mob.getLocation().distanceSquared(le.getLocation()) <= bestD) {
                     best = le;
                     bestD = mob.getLocation().distanceSquared(le.getLocation());
@@ -1776,6 +1781,14 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         return allied(side(a), side(b));
     }
 
+    // team -> the teams that it is neutral to (aoe neutral, #1645): no automatic attack on their units, as in AoE2
+    private static final Map<String, Set<String>> NEUTRAL = new HashMap<>();
+
+    /** True when the units of a do not attack b by themselves: the same side, an ally, or a neutral stance. */
+    private static boolean calm(Entity a, Entity b) {
+        return sameTeam(a, b) || NEUTRAL.getOrDefault(side(a), Set.of()).contains(side(b));
+    }
+
     // team -> the first team of its alliance (aoe allies, #1315): allied players are one side, as in AoE2
     private static final Map<String, String> ALLIES = new HashMap<>();
 
@@ -1870,6 +1883,17 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         if (args.length >= 2 && args[0].startsWith("box")) {            // the border of the selection box (#795)
             return border.command(sender, args, players(sender, args[1]));
+        }
+        if (args.length >= 2 && args[0].equals("neutral")) {           // the neutral stances of the players (#1645)
+            NEUTRAL.clear();
+            for (int i = 1; i < args.length; i++) {
+                String[] st = args[i].split(":");
+                if (st.length == 2) {
+                    NEUTRAL.put(st[0], Set.of(st[1].split(",")));
+                }
+            }
+            sender.sendMessage("Neutral: " + NEUTRAL);
+            return true;
         }
         if (args.length >= 5 && args[0].equals("moveto")) {
             double x, y, z, speed;

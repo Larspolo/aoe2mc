@@ -301,6 +301,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
               f"{bot_attack}.", file=sys.stderr)
     import combat
     combat.setup(game, data)                         # AoE2 hit points and damage (#514)
+    if game.kind == "paper":                         # the view square of each player on map 0 (#1762)
+        import replay
+        game.command(f"aoe minimap frame {replay.FRAME * data['tile_size']}")
     print(f"Join the server localhost:{game.game_port} (Minecraft {game.version}, multiplayer, direct connection).\n"
           f"{len(g.villagers)} villagers of player 1. Hold the carrot on a stick: right click a villager to select it,\n"
           "then right click a tree, a fruit bush or a mine. To build: /trigger aoe_build set N (the menu is in the chat),\n"
