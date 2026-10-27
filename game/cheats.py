@@ -16,6 +16,7 @@ The end and destroy codes (#819): "i r winner" and "resign" show the title "Vict
 g.ended, which ends gather.Gather.run. "torpedo<n>" destroys player n, "black death" all other players (AoE2 has a bug
 here: it kills only one player) and "wimpywimpywimpy" the own player (a defeat). The buildings of the player fall as
 at 0 hit points (the plugin, `aoe destroy`), its units die (`kill` with the team and the tag of the player, #358).
+Its construction sites (also the complete ones and those of a bot) become air, its queues empty, and its bot stops (#1657).
 A transformation cheat (#967) turns each own unit of its "from" kind into its "to" unit: the new unit appears at the place
 of the old one with the same share of hit points, and the old one (with its riders) goes. The selection keeps the rest.
 "natural wonders" gives the control of the Gaia animals and takes the control of the own units (not reversible).
@@ -74,12 +75,36 @@ def destroy(g, n):
     gone = {combat.target_uuid(o["footprint"]) for o in g.data["objects"]
             if o["kind"] == "building" and o["player"] == n and "footprint" in o}
     g.sieged |= gone & g.forts.keys()                              # Gather.fall frees their footprints
+    ruin(g, n)
     if n == g.player:
         g.choose(set())
         g.villagers, g.soldiers = {}, {}
     else:
         dead = {o.get("uuid") for o in g.data["objects"] if o["player"] == n}
         g.enemies = {u: k for u, k in g.enemies.items() if u not in dead}
+
+
+def ruin(g, n):
+    """Remove the construction sites (complete or not) and the queues of player n, also of a bot (#1657): a site has no
+    target entity until it is complete, so `aoe destroy` leaves its blocks, and the queue of a bot spawns new units.
+    The blocks of each site become air (above the water: a fish trap or a dock keeps it), and the bot of player n stops."""
+    import combat, fleet                                           # they import gather, which imports this module
+    gathers = [g, *(b.g for b in g.bots)]
+    for h in gathers:
+        for s in [s for s in h.sites if s["player"] == n]:
+            x0, x1, z0, z1 = s["footprint"]
+            bx0, y0, bz0, bx1, y1, bz1 = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
+            y0 = max(y0, int(fleet.level(g)) + 1)
+            g.command(f"fill {bx0} {y0} {bz0} {bx1} {y1} {bz1} minecraft:air")
+            for m in {id(k.map): k.map for k in gathers}.values():    # paths go through the footprint again
+                for x in range(x0, x1):
+                    for z in range(z0, z1):
+                        m.blocked.discard((x, z))
+                        m.ground[z][x] = y0
+        h.sites = [s for s in h.sites if s["player"] != n]
+        if h.player == n:
+            h.queues.clear()
+    g.bots = [b for b in g.bots if b.g.player != n]
 
 
 def flag(attr, text):
