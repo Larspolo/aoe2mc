@@ -752,6 +752,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         reach(fighter, enemy.getLocation());
         unit(fighter).setTarget(enemy);
+        fight(mob);                                    // Mob#setTarget of a plugin fires no EntityTargetEvent (#1334)
         if (stance(mob).equals("stand_ground")) {
             held.add(fighter.getUniqueId());
         } else if (stance(mob).equals("defensive")) {
@@ -1685,9 +1686,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             var parts = new ArrayList<String>();
             for (Entity e : found.subList(Math.min(from, found.size()), Math.min(from + WHERE_PAGE, found.size()))) {
                 Location l = e.getLocation();
+                Mob f = e instanceof Mob mob ? (rider(mob) != null ? rider(mob) : mob) : null;   // a rider has the target (#1334)
                 parts.add(String.format(java.util.Locale.ROOT, "%s %.2f %.2f %.2f %d %d", e.getUniqueId(), l.getX(),
                         l.getY(), l.getZ(), orders.containsKey(e.getUniqueId()) ? 1 : 0,
-                        fought.remove(e.getUniqueId()) | (e instanceof Mob mob && mob.getTarget() != null) ? 1 : 0));
+                        fought.remove(e.getUniqueId()) | (f != null && f.getTarget() != null) ? 1 : 0));
             }
             sender.sendMessage("Where " + found.size() + ": " + String.join(", ", parts));
             return true;
