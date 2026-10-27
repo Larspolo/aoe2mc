@@ -39,7 +39,7 @@ STATS = {
     "MILITIA": Stats(40, 4, 0, 1, 0, 2.0, {}, (INF,)),
     "MAN_AT_ARMS": Stats(45, 6, 0, 1, 0, 2.0, {}, (INF,)),
     "LONG_SWORDSMAN": Stats(60, 9, 0, 1, 0, 2.0, {}, (INF,)),
-    "TWO_HANDED_SWORDSMAN": Stats(60, 12, 0, 1, 0, 2.0, {}, (INF,)),
+    "TWO_HANDED_SWORDSMAN": Stats(65, 12, 0, 1, 0, 2.0, {}, (INF,)),
     "CHAMPION": Stats(70, 13, 1, 1, 0, 2.0, {}, (INF,)),
     "SPEARMAN": Stats(45, 3, 0, 0, 0, 3.0, SPEAR, (INF, SPE)),
     "PIKEMAN": Stats(55, 4, 0, 0, 0, 3.0, {CAV: 22, CAM: 18, ELE: 25}, (INF, SPE)),
