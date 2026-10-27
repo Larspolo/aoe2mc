@@ -1004,13 +1004,18 @@ class Gather:
 
     def deselect(self):
         """Paper: a left click with the command stick (the score LEFT of the plugin, AoePlugin.onLeftClick) clears the
-        selection, as a click on empty ground in AoE2 (#1788). Vanilla has no event for it: the empty box (#992)."""
+        selection, as a click on empty ground in AoE2 (#1788), and ends the choice of a building (#2056). Vanilla has no
+        event for it: the empty box (#992)."""
         if "passed" not in self.command(f"execute if entity {only(self.who, f'scores={{{LEFT}=1..}}')}"):
             return
         for name in self.people():
             if name and re.search(r"has [1-9]", self.command(f"scoreboard players get {name} {LEFT}")):
                 self.command(f"scoreboard players reset {name} {LEFT}")
                 self.choose(set())
+                vars(self).get("rows", {}).pop(name, None)             # the sneak clicks of build.place (#1805)
+                vars(self).get("wall_start", {}).pop(name, None)
+                if re.search(r"has [1-9]", self.command(f"scoreboard players get {name} {build.OBJECTIVE}")):
+                    self.command(f"scoreboard players set {name} {build.OBJECTIVE} 0")   # build.ghosts clears the ghost (#2056)
 
     def people(self):
         """The names of the Minecraft players of this Gather: all, or the players of its team (#1310). Not `team list`:

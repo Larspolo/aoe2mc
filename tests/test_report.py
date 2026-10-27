@@ -9,6 +9,7 @@ TOKENS = "Tokens: 0.55M eq · calls 34 · write 0.08M · read 3.10M · out 0.02M
 
 def test_the_report_parses_into_the_same_numbers(monkeypatch, capsys):
     monkeypatch.setattr(report, "tool", lambda *a: {"release.py": "Release bar", "tokens.py": "x\n" + TOKENS}[a[0]])
+    monkeypatch.setattr(report, "git_lane", lambda: None)  # the run can set `git config aoe2mc.lane` (#2093)
     report.main(["--text", "Did #1.", "--usage", USAGE, "--ticket", "1", "--size", "S", "--result", "pr #2",
                  "--setup", "2", "--checks", "1", "--checks-min", "4",
                  "--phases", "read=1,claim=1,code=1,verify=1,ci=0,conflict=0,report=1"])
