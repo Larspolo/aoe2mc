@@ -28,6 +28,7 @@
 {"name": "ELITE_STEPPE_LANCER", "walk": 1.45}
 {"name": "ELITE_VARANGIAN_GUARD", "walk": 1.05}
 {"name": "FIRE_LANCER", "walk": 0.96}
+{"name": "FLEMISH_MILITIA", "walk": 0.94}
 {"name": "GENITOUR", "walk": 1.35}
 {"name": "HALBERDIER", "walk": 1.0}
 {"name": "HEAVY_CAMEL_RIDER", "walk": 1.45}
