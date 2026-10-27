@@ -38,8 +38,9 @@ GUN = "gunpowder"                                     # the targets of the Condo
 SHIP, WAR = "ship", "warship"                         # the ships; "warship": the AoE2 class "Long-range warship"
 FIRE = "fireship"                                     # the AoE2 class "Fire Ships" (the hulk bonus, #1489)
 # The values of each unit: one line per unit in data/units.jsonl (#1912). "note" is the source of a value.
+UNIT_ROWS = table.load("units.jsonl")
 STATS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields if f != "classes"}, classes=tuple(r["classes"]))
-         for r in table.load("units.jsonl")}
+         for r in UNIT_ROWS}
 # Buildings: hit points, melee and pierce armor (Dark Age base), one line per building in data/buildings.jsonl (#1913).
 # The high pierce armor makes arrows weak, as in AoE2. The towers have the AoE2 DE values of the wiki: a watch tower of
 # the Castle Age (850 hit points in the Feudal Age), #1112. The attack against ships: the "Attack bonus" of the wiki
@@ -51,14 +52,7 @@ BUILDINGS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields if f != "classes
 # The walls that a player builds in the game program (#1322, AoE2 DE wiki infobox): the hit points in the Dark, Feudal,
 # Castle and Imperial Age, the melee and the pierce armor. Their targets have WALL_TAG: a wall keeps no player alive in
 # the conquest (conquest.alive). The walls of the map have no target.
-WALLS = {
-    "FORTIFIED_GATE": ((4000, 4000, 4000, 4000), 6, 7),             # the gate after Fortified Wall (#1326)
-    "FORTIFIED_WALL": ((3000, 3000, 3000, 3000), 12, 12),          # the stone wall after Fortified Wall (#1326)
-    "GATE": ((1650, 1650, 2750, 2750), 6, 6),                         # the Feudal Age: no Dark Age gate (#1324)
-    "PALISADE_GATE": ((240, 400, 400, 400), 2, 4),
-    "PALISADE_WALL": ((150, 250, 250, 250), 2, 5),
-    "STONE_WALL": ((1080, 1080, 1800, 1800), 8, 10),
-}
+WALLS = {r["name"]: (tuple(r["hp_ages"]), r["melee"], r["pierce"]) for r in BUILDING_ROWS if "hp_ages" in r}
 WALL_TAG = "aoe2mc.wall"
 # The AoE2 class "Standard Buildings" (wiki "Armor class"): all buildings but the walls, the gates and the wonder. Arson
 # gives infantry a bonus against it (#1419).
@@ -73,100 +67,30 @@ WATCH = 4    # tiles of line of sight that Town Watch adds to each own building 
 # Line of sight in tiles (AoE2 DE, wiki infobox "LOS"; the house: 1 from the edge of its 2 x 2 tiles, #1300) where it
 # is not max(4, range + 2) (sight()). A unit of more ages has its first value; the infantry values have the +2 of the
 # Feudal Age, as the infobox shows them (tests/test_unit_sight.py, #1878). The key "sight" of a line in the data files (#1913).
-SIGHT = {r["name"]: r["sight"] for r in table.load("units.jsonl") + BUILDING_ROWS if "sight" in r}
+SIGHT = {r["name"]: r["sight"] for r in UNIT_ROWS + BUILDING_ROWS if "sight" in r}
 # Units that attack from a range with melee damage (AoE2): their hit takes the melee armor of the target (#800).
-MELEE_RANGED = {"BOMBARD_CANNON",
-                "CANNON_GALLEON",
-                "CATAPULT_GALLEON",               # (#1935)
-                "CHAKRAM_THROWER",                # (#1612)
-                "DRAGON_SHIP",
-                "DROMON",
-                "ELITE_CANNON_GALLEON",
-                "ELITE_CHAKRAM_THROWER",
-                "ELITE_GBETO",
-                "ELITE_MAMELUKE",
-                "ELITE_THROWING_AXEMAN",
-                "ELITE_TURTLE_SHIP",              # the cannon (AoE2 DE wiki, #1934)
-                "FAST_FIRE_SHIP",
-                "FIRE_GALLEY",
-                "FIRE_SHIP",
-                "GBETO",
-                "HEAVY_ROCKET_CART",
-                "HULK",
-                "LOU_CHUAN",
-                "MAMELUKE",
-                "MANGONEL",
-                "ONAGER",
-                "ROCKET_CART",
-                "SIEGE_ONAGER",
-                "THROWING_AXEMAN",
-                "TRACTION_TREBUCHET",
-                "TURTLE_SHIP",
-                "WAR_HULK"}
+# The key "melee_ranged" of a line of data/units.jsonl.
+MELEE_RANGED = {r["name"] for r in UNIT_ROWS if r.get("melee_ranged")}
 # Blast radius in tiles of the units whose shot hits all units near the target, also own units (AoE2 DE, wiki "AOE";
 # AoE2 tapers the damage at the edge, here each unit in the radius takes the full damage() hit, #1050). A ship has no
 # vanilla shot: the fire ship (0: it hits only the target) and the demolition ship (#1440) shoot as a siege unit, and
 # the creeper crew of the demolition ship dies after its blast (AoePlugin.java), as a vanilla creeper.
-BLAST = {"BOMBARD_CANNON": 0.5,
-         "CANNON_GALLEON": 0.25,
-         "CATAPULT_GALLEON": 0,             # a siege ship: its shot hits only the target (#1935)
-         "DEMOLITION_RAFT": 2.5,
-         "DEMOLITION_SHIP": 3,
-         "DRAGON_SHIP": 0,
-         "DROMON": 0,
-         "ELITE_CANNON_GALLEON": 0.3,
-         "ELITE_TURTLE_SHIP": 0.5,                             # the cannon (AoE2 DE wiki "AOE", #1934)
-         "FAST_FIRE_SHIP": 0,
-         "FIRE_GALLEY": 0,
-         "FIRE_SHIP": 0,
-         "HEAVY_DEMOLITION_SHIP": 3.25,
-         "HEAVY_ROCKET_CART": 1.25,
-         "HOUFNICE": 0.7,
-         "LOU_CHUAN": 0,
-         "MANGONEL": 1.0,
-         "ONAGER": 1.25,
-         "ROCKET_CART": 1.0,
-         "SIEGE_ONAGER": 1.5,
-         "TURTLE_SHIP": 0.5}
+# The key "blast" of a line of data/units.jsonl.
+BLAST = {r["name"]: r["blast"] for r in UNIT_ROWS if "blast" in r}
 RAM_REACH = 2.0       # blocks: a ram (a minecart with range 0) hits from next to its target, on its carrier (#1399)
 CONTACT = 1.0         # tiles: the reach of a demolition ship (range 0, #1440): its raft is higher than a boat
-MIN_RANGE = {"BOMBARD_CANNON": 5,     # tiles: no shot at a unit nearer (AoE2 DE, wiki infobox "MinRange", #1350)
-             "CANNON_GALLEON": 3,
-             "CATAPULT_GALLEON": 3,           # (#1935)
-             "DROMON": 3,
-             "ELITE_CANNON_GALLEON": 3,
-             "ELITE_ORGAN_GUN": 1,
-             "HEAVY_ROCKET_CART": 2.5,
-             "HEAVY_SCORPION": 2,
-             "HOUFNICE": 5,
-             "LOU_CHUAN": 3,
-             "MANGONEL": 3,
-             "ONAGER": 3,
-             "ORGAN_GUN": 1,
-             "ROCKET_CART": 2.5,
-             "SCORPION": 2,
-             "SIEGE_ONAGER": 3,
-             "TRACTION_TREBUCHET": 4,
-             "TREBUCHET": 4}
+# Tiles: no shot at a unit nearer (AoE2 DE, wiki infobox "MinRange", #1350). The key "min_range" of data/units.jsonl.
+MIN_RANGE = {r["name"]: r["min_range"] for r in UNIT_ROWS if "min_range" in r}
 # The minimum range of the buildings that shoot, in tiles from the edge of the footprint (AoE2 DE, wiki infobox
 # "MinRange", #1546). The town center has none. Murder Holes removes it.
-FORT_MIN_RANGE = {"BOMBARD_TOWER": 1,
-                  "CASTLE": 1,
-                  "DOCK": 1,                  # it shoots only with fishing ships inside (AoE2 DE, #1949)
-                  "GUARD_TOWER": 1,
-                  "KEEP": 1,
-                  "KREPOST": 1,
-                  "WATCH_TOWER": 1}
+# The key "min_range" of a line of data/buildings.jsonl (the dock shoots only with fishing ships inside, #1949).
+FORT_MIN_RANGE = {r["name"]: r["min_range"] for r in BUILDING_ROWS if "min_range" in r}
 # Tiles that a bolt flies past the range and hurts the enemy units on its line with half the damage (AoE2 DE, wiki
 # "Pass-through damage": "Projectiles travel Range+2 tiles in total", no friendly fire, #1401). The chakram thrower
 # throws as a mob (no blast), with the full damage on its line (PASS_PART, #1638).
-PASS = {"CHAKRAM_THROWER": 2,
-        "ELITE_CHAKRAM_THROWER": 2,
-        "HEAVY_SCORPION": 2,
-        "SCORPION": 2}
+PASS = {r["name"]: r["pass"] for r in UNIT_ROWS if "pass" in r}               # the key "pass" of data/units.jsonl
 # The part of the damage on the units behind the target, when it is not one half (wiki: "100% pass-through damage").
-PASS_PART = {"CHAKRAM_THROWER": 1.0,
-             "ELITE_CHAKRAM_THROWER": 1.0}
+PASS_PART = {r["name"]: r["pass_part"] for r in UNIT_ROWS if "pass_part" in r}
 DEFAULT, BUILDING = Stats(40, 4, 0, 0, 0, 2.0), Stats(1000, 0, 0, 7, 0, 0.0, {}, ("building",))
 SLIME = 0.52                    # blocks of width and height per slime size: the target of a building (#517)
 INVISIBLE = 'active_effects:[{id:"minecraft:invisibility",duration:-1,show_particles:0b}]'   # for ever, no particles
@@ -236,16 +160,7 @@ def sight(name, s=None):
 # The units that also take enemy buildings in their sight (#1820, AoE2 wiki "Siege unit (Age of Empires II)": "Battering
 # Ram line automatically attack only buildings", "Trebuchets automatically attack only buildings", "The Armored
 # Elephant and Cannon Galleon lines prioritize attacking enemy buildings over units"): "only" or "first".
-BUILDING_SIGHT = {
-    "ARMORED_ELEPHANT": "first",
-    "BATTERING_RAM": "only",
-    "CANNON_GALLEON": "first",
-    "CAPPED_RAM": "only",
-    "ELITE_CANNON_GALLEON": "first",
-    "SIEGE_ELEPHANT": "first",
-    "SIEGE_RAM": "only",
-    "TREBUCHET": "only",
-}
+BUILDING_SIGHT = {r["name"]: r["building_sight"] for r in UNIT_ROWS if "building_sight" in r}   # data/units.jsonl
 
 
 def sight_command(uuid, name, T, s=None):

@@ -68,7 +68,7 @@
   {"bonus": "Camel Rider, Skirmisher, and Spearman lines are 25% cheaper.", "in": "COSTS"},
   {"bonus": "Fire Ships and Dromons fire 25% faster.", "later": "play:naval"},
   {"bonus": "Advancing to the Imperial Age is 33% cheaper.", "in": "COSTS"},
-  {"bonus": "Town Watch and Town Patrol are free.", "gap": "play:tech"}
+  {"bonus": "Town Watch and Town Patrol are free.", "in": "COSTS"}
  ],
  "CELTS": [
   {"bonus": "Infantry units move 5%/10%/15%/20% faster in the Dark/Feudal/Castle/Imperial Age.", "in": "UNITS"},
@@ -104,7 +104,7 @@
  "ETHIOPIANS": [
   {"bonus": "The Archer line fires 18% faster.", "in": "UNITS"},
   {"bonus": "Receive food +100, gold +100 whenever a new Age is reached.", "in": "AGE_GIFTS"},
-  {"bonus": "The Pikeman upgrade is free.", "gap": "play:tech"}
+  {"bonus": "The Pikeman upgrade is free.", "in": "COSTS"}
  ],
  "FRANKS": [
   {"bonus": "Farm upgrades are free.", "in": "COSTS"},
@@ -294,7 +294,7 @@
  ],
  "SLAVS": [
   {"bonus": "Farmers work 15% faster.", "in": "WORK"},
-  {"bonus": "Arson and Gambesons are free.", "gap": "play:tech"},
+  {"bonus": "Arson and Gambesons are free.", "in": "COSTS"},
   {"bonus": "Siege Workshop units are 15% cheaper.", "in": "COSTS"},
   {"bonus": "Monks move 20% faster.", "later": "play:monks"}
  ],
@@ -313,19 +313,19 @@
  "TATARS": [
   {"bonus": "Herdable animals contain food +50%.", "gap": "play:gather"},
   {"bonus": "Units deal +20% damage when attacking from higher elevations (+50% instead of +25%).", "later": "play:fight"},
-  {"bonus": "Parthian Tactics and Thumb Ring are free.", "gap": "play:tech"},
+  {"bonus": "Parthian Tactics and Thumb Ring are free.", "in": "COSTS"},
   {"bonus": "Two Sheep spawn near newly-constructed Town Centers starting in the Castle Age.", "later": "play:build"}
  ],
  "TEUTONS": [
   {"bonus": "Monks have double healing range.", "later": "play:monks"},
   {"bonus": "Towers garrison twice as many units.", "gap": "play:garrison"},
-  {"bonus": "Murder Holes and Herbal Medicine are free.", "gap": "play:tech"},
+  {"bonus": "Murder Holes and Herbal Medicine are free.", "in": "COSTS"},
   {"bonus": "Farms are 40% cheaper.", "in": "COSTS"},
   {"bonus": "Town Centers can garrison +10 units.", "gap": "play:garrison"},
   {"bonus": "Infantry and mounted units receive +1/+2 melee armor in the Castle/Imperial Age.", "in": "UNITS"}
  ],
  "THRACIANS": [
-  {"bonus": "Elite Skirmisher upgrade is free.", "gap": "play:tech"},
+  {"bonus": "Elite Skirmisher upgrade is free.", "in": "COSTS"},
   {"bonus": "(Elite/Imperial) Skirmishers regenerate 5 (10) hit points per minute.", "later": "play:health"},
   {"bonus": "Battle Drills is available in the Classical Age.", "later": "play:ages"},
   {"bonus": "All buildings except Town Centers can be built on any elevation.", "later": "play:build"},
@@ -340,10 +340,10 @@
  ],
  "TURKS": [
   {"bonus": "Gunpowder units have +25% hit points.", "in": "UNITS"},
-  {"bonus": "Chemistry is free.", "gap": "play:tech"},
+  {"bonus": "Chemistry is free.", "in": "COSTS"},
   {"bonus": "Gunpowder technologies are 50% cheaper.", "in": "COSTS"},
   {"bonus": "Gold Miners work 25% faster.", "in": "WORK"},
-  {"bonus": "Light Cavalry and Hussar upgrades are free.", "gap": "play:tech"},
+  {"bonus": "Light Cavalry and Hussar upgrades are free.", "in": "COSTS"},
   {"bonus": "Scout Cavalry line gain +1 pierce armor.", "in": "UNITS"}
  ],
  "VARANGIANS": [
@@ -355,7 +355,7 @@
  "VIETNAMESE": [
   {"bonus": "Foot archers and Skirmishers +20% hit points.", "in": "UNITS"},
   {"bonus": "Reveal enemy initial Town Centers location at the start of the game.", "later": "play:fog"},
-  {"bonus": "Conscription is free.", "gap": "play:tech"},
+  {"bonus": "Conscription is free.", "in": "COSTS"},
   {"bonus": "Economic technologies (except Coinage and Banking) cost no wood and are researched 100% faster.", "in": "COSTS"}
  ],
  "VIKINGS": [
