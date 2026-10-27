@@ -48,7 +48,7 @@ def test_a_done_bombard_tower_shoots_with_the_aoe2_values_and_chemistry():
     assert build.rise(g, site, math.inf)
     uuid = combat.target_uuid([12, 8, 13, 9])
     shot = next(c for c in server.log if c.startswith(f"aoe building {uuid} "))
-    assert shot.startswith(f"aoe building {uuid} 2220 3 9 ") and shot.endswith(f" 121 8 {round(6.0 / 1.7 * 20)} 1 building,standard ship:40")   # +1 Chemistry
+    assert shot.startswith(f"aoe building {uuid} 2220 3 9 ") and shot.endswith(f" 121 8 {round(6.0 / 1.7 * 20)} 1 building,standard,stone ship:40")   # +1 Chemistry
     assert f"aoe arrows {uuid} 1" in server.log
     assert garrison.arrows("BOMBARD_TOWER", ["VILLAGER"] * 5) == 1    # one cannon ball, no arrows of a garrison
     assert train.stats(g, "ARCHER").attack == combat.stats("ARCHER").attack + 1   # Chemistry for the archers

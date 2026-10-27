@@ -209,6 +209,7 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
                                             "MUISCA", "POLES", "PURU", "ROMANS", "SAXONS", "SHU", "SICILIANS", "SLAVS",
                                             "SPARTANS", "TEUTONS", "THRACIANS", "TUPI", "VARANGIANS", "VIKINGS", "WEI",
                                             "WU"),   # the wiki chart (#1491)
+           "FAITH": ("BULGARIANS", "DANES", "GURJARAS", "JURCHENS", "MAGYARS", "TATARS"),        # (#1584)
            "FAST_FIRE_SHIP": ("ARMENIANS", "BOHEMIANS", "BULGARIANS", "BURMESE", "CELTS", "CHINESE", "ETHIOPIANS",
                               "GURJARAS", "HINDUSTANIS", "HUNS", "JURCHENS", "MUISCA", "PORTUGUESE", "SARACENS",
                               "SAXONS", "SHU", "TUPI", "TURKS", "VIETNAMESE", "VIKINGS"),   # the wiki chart (#1483)
@@ -246,6 +247,7 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
                                      "PORTUGUESE", "PURU", "ROMANS", "SAXONS", "SLAVS", "SPARTANS", "TATARS",
                                      "THRACIANS", "TUPI", "VARANGIANS", "VIKINGS", "WEI"),   # the wiki chart (#1483)
            "HEAVY_PLOW": ("KHITANS",),                                     # (#1424)
+           "HERBAL_MEDICINE": ("BYZANTINES", "DANES", "HUNS", "KHITANS", "SHU", "TURKS", "VIKINGS", "WEI"),   # (#1585)
            "HOARDINGS": ("AZTECS", "BENGALIS", "BOHEMIANS", "BULGARIANS", "BURMESE", "CHINESE", "ETHIOPIANS", "GOTHS",
                          "HUNS", "KHITANS", "KOREANS", "MALAY", "PORTUGUESE", "ROMANS", "TATARS", "VARANGIANS",
                          "WU"),                                            # (#1456)
@@ -284,11 +286,16 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
                           "PURU", "SARACENS", "SLAVS", "SPARTANS", "TATARS", "TEUTONS", "THRACIANS", "TUPI",
                           "VIETNAMESE", "VIKINGS", "WEI", "WU"),                           # the wiki chart (#1490)
            "SQUIRES": ("CELTS", "GURJARAS", "KHMER", "MAGYARS", "MAPUCHE", "PORTUGUESE"),   # (#1415)
+           "THEOCRACY": ("BURGUNDIANS", "CELTS", "CUMANS", "HUNS", "MALAY", "MONGOLS", "ROMANS", "SICILIANS",   # (#1586)
+                         "TATARS", "VIKINGS"),
            "THUMB_RING": ("ARMENIANS", "AZTECS", "BENGALIS", "BOHEMIANS", "BRITONS", "BURGUNDIANS", "BURMESE", "CELTS",
                           "FRANKS", "GEORGIANS", "GOTHS", "JURCHENS", "KHMER", "MAPUCHE", "ROMANS", "SICILIANS", "SLAVS",
                           "TEUTONS", "TUPI", "VARANGIANS", "VIKINGS", "WU"),   # (#1421)
            "TREADMILL_CRANE": ("BULGARIANS", "CHINESE", "CUMANS", "DANES", "DRAVIDIANS", "ETHIOPIANS", "HINDUSTANIS",
-                               "KHITANS", "MONGOLS", "PERSIANS", "ROMANS", "SPANISH")}   # (#1422)
+                               "KHITANS", "MONGOLS", "PERSIANS", "ROMANS", "SPANISH"),   # (#1422)
+           "TWO_MAN_SAW": ("ARMENIANS", "AZTECS", "BERBERS", "BULGARIANS", "CELTS", "DANES", "FRANKS", "GEORGIANS",
+                           "GURJARAS", "INCAS", "KHMER", "MALAY", "MALIANS", "MONGOLS", "POLES", "ROMANS", "SICILIANS",
+                           "TATARS", "TUPI", "WEI")}                  # the wiki chart (#1577)
 ELEPHANTS = ("BENGALIS", "BURMESE", "DRAVIDIANS", "KHMER", "MALAY", "VIETNAMESE")   # the battle elephant (AoE2 DE wiki, #1556)
 MISSING |= {"BATTLE_ELEPHANT": tuple(sorted(set().union(*MISSING.values()) - set(ELEPHANTS))),
             "ELITE_BATTLE_ELEPHANT": tuple(sorted(set().union(*MISSING.values()) - set(ELEPHANTS) | {"DRAVIDIANS"}))}   # no elite
@@ -296,9 +303,14 @@ EAGLES = ("AZTECS", "MAYANS")                                     # the eagle li
 MISSING |= dict.fromkeys(("EAGLE_SCOUT", "EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"),   # The Last Chieftains, #1555)
                          tuple(sorted(set().union(*MISSING.values()) - set(EAGLES))))
 MISSING["WINGED_HUSSAR_UPGRADE"] = tuple(sorted(set().union(*MISSING.values()) - {"LITHUANIANS", "POLES"}))   # (#1558)
+MISSING["IMPERIAL_SKIRMISHER_UPGRADE"] = tuple(sorted(set().union(*MISSING.values()) - {"VIETNAMESE"}))   # (#1611)
 LANCERS = ("CUMANS", "JURCHENS", "KHITANS", "MONGOLS", "TATARS")   # the steppe lancers (AoE2 DE wiki, #1557)
 MISSING |= dict.fromkeys(("STEPPE_LANCER", "ELITE_STEPPE_LANCER", "ELITE_STEPPE_LANCER_UPGRADE"),
                          tuple(sorted(set().union(*MISSING.values()) - set(LANCERS))))
+MISSING |= dict.fromkeys(("GENITOUR", "ELITE_GENITOUR", "ELITE_GENITOUR_UPGRADE"),   # the Berbers (AoE2 DE wiki, #1610)
+                         tuple(sorted(set().union(*MISSING.values()) - {"BERBERS"})))
+MISSING |= dict.fromkeys(("SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER_UPGRADE"),
+                         tuple(sorted(set().union(*MISSING.values()) - {"GURJARAS"})))   # (AoE2 DE wiki, #1612)
 
 
 def mounted(s):

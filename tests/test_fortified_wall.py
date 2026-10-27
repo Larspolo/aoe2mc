@@ -43,7 +43,7 @@ def walls(server, g, z, n):
 def test_the_cost_time_age_and_values_are_those_of_aoe2():
     assert train.COSTS["FORTIFIED_WALL"] == {"food": 200, "wood": 100} and train.TRAIN_TIMES["FORTIFIED_WALL"] == 50
     assert train.TECH_AGE["FORTIFIED_WALL"] == 2 and train.HELP["FORTIFIED_WALL"]
-    assert combat.wall("FORTIFIED_WALL", 2) == combat.Stats(3000, 0, 12, 12, 0, 0.0, {}, ("building",))
+    assert combat.wall("FORTIFIED_WALL", 2) == combat.Stats(3000, 0, 12, 12, 0, 0.0, {}, ("building", "stone"))
 
 
 def test_the_university_menu_shows_fortified_wall_from_the_castle_age():

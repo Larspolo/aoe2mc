@@ -8,7 +8,8 @@ units, and a monk that walks does not heal.
 A right click with selected monks on an enemy unit converts it (#1245), as in AoE2 DE (AoE2 wiki, "Conversion"): the
 monk walks into a range of 9 tiles, then tries once per conversion interval of 1.25 AoE2 seconds. The first 4 tries
 only warm up, each later one converts with a chance of 38 %, and the 9th always converts. After a conversion the monk
-rests 62 AoE2 seconds (its faith) before it can convert again. A monk cannot convert a building, a monk, a king, a hero
+rests 62 AoE2 seconds (its faith) before it can convert again; so do all monks in range that convert the same unit,
+but after Theocracy (#1586) only the monk that converts it. A monk cannot convert a building, a monk, a king, a hero
 or a siege unit (Atonement is excluded until a technology ticket).
 
 Redemption (#1264, monastery, AoE2 wiki "Redemption", "Conversion"): then a monk converts siege units and the enemy
@@ -17,6 +18,10 @@ gates, wonder, farm, fish trap ...). A monk converts a building, ram or trebuche
 resists: the tries start at the 15th interval, each converts with a chance of 13 %, and the 25th always converts. A
 converted building joins the team of its new player (the plugin: its towers shoot at the old owner) and works for it
 (aoe2mc.json "player": train.homes, garrison.holders).
+
+Devotion and Faith (#1584, monastery, AoE2 DE wiki): the units of a player with them resist conversion. Devotion adds
+1 s to the minimum and maximum conversion time, Faith 4 s more: 1 and 3 more warm intervals, and the sure one later
+(RESIST, 5 s in all).
 
 Minecraft feature: the hit points are the `Health` of the mob (max_health = AoE2 hit points, combat.stats_command), so
 `data modify entity <uuid> Health` sets them. The `regeneration` effect is not used: its rates (1 health per 50, 25,
@@ -60,6 +65,7 @@ ILLUMINATED = 33   # the rest after Illumination: 87.5 % faster (AoE2 wiki "Illu
 IMMUNE = ("KING", "QUEEN", "KHAN", "CRUSADER_KNIGHT", "HUNNIC_HORSE", "MOUNTED_SAMURAI")
 TOUCH = 1.5     # blocks between a monk and a building, ram or trebuchet that it converts: next to it (AoE2)
 NEXT = ("RAM", "TREBUCHET", "SIEGE_TOWER")   # the siege units that a monk converts only next to them
+RESIST = {"DEVOTION": 1, "FAITH": 3}   # more warm intervals and a later sure one: +1 s and +4 s (AoE2 DE wiki), 5 s in all (#1584)
 FORT = (14, 0.13, 25)   # a building: warm intervals, chance (38 % / resistance 3) and the sure interval (AoE2 wiki)
 LASTING = ("TOWN_CENTER", "CASTLE", "KREPOST", "MONASTERY", "FORTIFIED_CHURCH", "WALL", "GATE", "WONDER", "FARM",
            "FISH_TRAP")  # parts of the names of the buildings that no monk converts, also with Redemption
@@ -303,6 +309,14 @@ def win(g, uuid):
                                           "color": "gold"}))
 
 
+def resist(g, uuid):
+    """The extra conversion intervals of the unit uuid: Devotion and Faith of its player (RESIST), from the Gather of
+    that player (g or one of its bots)."""
+    player = next((o.get("player") for o in g.data["objects"] if o.get("uuid") == uuid), None)
+    techs = next((x.techs for x in (g, *(b.g for b in g.bots)) if x.player == player), ())
+    return sum(RESIST.get(t, 0) for t in techs)
+
+
 def near(g, m, target, pos):
     """True when monk m is in its conversion range of the target: next to a building, ram or trebuchet (TOUCH),
     else CONVERT tiles (and PRINTING more after Block Printing)."""
@@ -336,6 +350,8 @@ def convert(g, dt):
     import ai                                                      # ai imports gather, gather imports this module
     pos = g.positions(sorted(set(g.converting) | {t for t, _, _ in g.converting.values()}))
     for m, job in sorted(g.converting.items()):
+        if m not in g.converting:
+            continue                                               # its group converted the target in this pass
         target = job[0]
         fort = target in g.forts
         if m not in pos or target not in pos or not (fort or target in g.enemies) or m not in g.soldiers:
@@ -353,10 +369,14 @@ def convert(g, dt):
         while job[1] >= INTERVAL and m in g.converting:
             job[1] -= INTERVAL
             job[2] += 1
-            warm, chance, sure = FORT if fort else (WARM, CHANCE, SURE)
+            more = 0 if fort else resist(g, target)
+            warm, chance, sure = FORT if fort else (WARM + more, CHANCE, SURE + more)
             if job[2] > warm and (job[2] >= sure or g.chance.random() < chance):
+                group = [k for k, j in g.converting.items() if j[0] == target]
+                rest = [m] if "THEOCRACY" in g.techs else [k for k in group if k in pos and near(g, k, target, pos)]
                 owner = next((o.get("player") for o in g.data["objects"] if o.get("uuid") == target), None)
                 (win if fort else die if heresy(g, owner) else take)(g, target)
-                g.faith[m] = ILLUMINATED if "ILLUMINATION" in g.techs else REST
-                for k in [k for k, j in g.converting.items() if j[0] == target]:
+                for k in group:
                     del g.converting[k]
+                for k in rest:
+                    g.faith[k] = ILLUMINATED if "ILLUMINATION" in g.techs else REST   # the group in range (Theocracy: one)
