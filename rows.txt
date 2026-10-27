@@ -1,0 +1,22 @@
+Note: /home/user/aoe2mc/game/plugin/src/main/java/aoe2mc/AoePlugin.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+p1 units 10 p1 soldiers ['MILITIA', 'MILITIA', 'MILITIA', 'TRANSPORT_SHIP'] bot soldiers ['MILITIA', 'MILITIA', 'MILITIA', 'MILITIA', 'MILITIA']
+{"t": 30.2, "alive": 5, "targets": 0, "p1": 10, "drowned": 0} max feet+below+head water 0
+{"t": 60.8, "alive": 5, "targets": 0, "p1": 10, "drowned": 0} max feet+below+head water 0
+{"t": 120.3, "alive": 4, "targets": 0, "p1": 10, "drowned": 0} max feet+below+head water 0
+{"t": 150.9, "alive": 4, "targets": 0, "p1": 10, "drowned": 0} max feet+below+head water 0
+{"t": 210.4, "alive": 4, "targets": 0, "p1": 10, "drowned": 0} max feet+below+head water 0
+{"t": 241.0, "alive": 4, "targets": 0, "p1": 10, "drowned": 0} max feet+below+head water 0
+{"t": 300.5, "alive": 4, "targets": 0, "p1": 10, "drowned": 0} max feet+below+head water 0
+{"t": 390.6, "alive": 4, "targets": 0, "p1": 10, "drowned": 0} max feet+below+head water 0
+{"t": 450.1, "alive": 4, "targets": 0, "p1": 10, "drowned": 0} max feet+below+head water 0
+{"t": 480.7, "alive": 5, "targets": 5, "p1": 10, "drowned": 0} max feet+below+head water 0
+{"t": 540.2, "alive": 5, "targets": 5, "p1": 4, "drowned": 0} max feet+below+head water 0
+{"t": 570.8, "alive": 5, "targets": 5, "p1": 1, "drowned": 0} max feet+below+head water 0
+{"t": 630.3, "alive": 7, "targets": 0, "p1": 1, "drowned": 0} max feet+below+head water 0
+{"t": 660.9, "alive": 8, "targets": 0, "p1": 1, "drowned": 0} max feet+below+head water 0
+{"t": 720.4, "alive": 9, "targets": 0, "p1": 1, "drowned": 0} max feet+below+head water 0
+end 720.3749999999874 worst 0 wet cells 0 drowned max 0
+p1 alive 1 of 10
+p1 alive list ['TRANSPORT_SHIP']
+rc=0
