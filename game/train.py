@@ -226,6 +226,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_GENITOUR_UPGRADE": lambda name, s: s,              # a new unit name: UPGRADES
          "ELITE_MAGYAR_HUSZAR_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
          "ELITE_GENOESE_CROSSBOWMAN_UPGRADE": lambda name, s: s,   # a new unit name: UPGRADES
+         "ELITE_GHULAM_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "ELITE_KARAMBIT_WARRIOR_UPGRADE": lambda name, s: s,      # a new unit name: UPGRADES
          "ELITE_KESHIK_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
          "ELITE_OBUCH_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
@@ -350,6 +351,7 @@ UPGRADES = {                                                       # technology:
     "ELITE_GENITOUR_UPGRADE": ("GENITOUR", "ELITE_GENITOUR"),   # (#1610)
     "ELITE_MAGYAR_HUSZAR_UPGRADE": ("MAGYAR_HUSZAR", "ELITE_MAGYAR_HUSZAR"),   # the castle of the Magyars (#1743)
     "ELITE_GENOESE_CROSSBOWMAN_UPGRADE": ("GENOESE_CROSSBOWMAN", "ELITE_GENOESE_CROSSBOWMAN"),   # the castle (#1724)
+    "ELITE_GHULAM_UPGRADE": ("GHULAM", "ELITE_GHULAM"),   # the castle of the Hindustanis (#1756)
     "ELITE_KARAMBIT_WARRIOR_UPGRADE": ("KARAMBIT_WARRIOR", "ELITE_KARAMBIT_WARRIOR"),   # the castle of the Malay (#1750)
     "ELITE_KESHIK_UPGRADE": ("KESHIK", "ELITE_KESHIK"),   # the castle of the Tatars (#1745)
     "ELITE_OBUCH_UPGRADE": ("OBUCH", "ELITE_OBUCH"),   # the castle of the Poles (#1747)
