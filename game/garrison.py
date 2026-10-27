@@ -1,9 +1,10 @@
 """Garrisons in the game program (#808, part of #793). An order of the selected units on an own building with room
 sends them into it, as in AoE2: they walk to its door with the plugin (`aoe moveto`), then stand on the free cells
-of its ground floor ("inside" in aoe2mc.json, the cells of the converter, #807), in the state of a garrisoned unit of
-the converter: Invulnerable, NoAI, no visible name and the tag aoe2mc.GARRISONED. They leave the selection, and
-orders skip them. The menu item UNGARRISON of the building (train.show) lets them out next to the door, and so does
-the fall of the building (its target entity of the plugin is gone), alive, as in AoE2.
+of its ground floor, in a town center of its hall upstairs (#2054; "inside" in aoe2mc.json, the cells of the converter,
+#807), in the state of a garrisoned unit of the converter: Invulnerable, NoAI, no visible name and the tag
+aoe2mc.GARRISONED. They leave the selection, and orders skip them. The menu item UNGARRISON of the building
+(train.show) lets them out next to the door, and so does the fall of the building (its target entity of the plugin is
+gone), alive, as in AoE2.
 
     garrison.order(g, player, cell)     # gather.Gather.click: the selection goes into the building at cell
     garrison.tick(g)                    # gather.Gather.step: units at the door go in, a fallen building lets them out
