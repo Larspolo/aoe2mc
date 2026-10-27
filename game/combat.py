@@ -45,6 +45,7 @@ STATS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields if f != "classes"}, 
 # the Castle Age (850 hit points in the Feudal Age), #1112. The attack against ships: the "Attack bonus" of the wiki
 # infobox (#1564; the dock: the Castle Age). A line with only a "sight" has no target.
 BUILDING_ROWS = table.load("buildings.jsonl")
+STANDS_FOR = {r["name"]: r["as"] for r in BUILDING_ROWS if "as" in r}   # a regional building: the one it replaces (#1874, #1930)
 BUILDINGS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields if f != "classes"}, classes=tuple(r["classes"]))
              for r in BUILDING_ROWS if "hp" in r}
 # The walls that a player builds in the game program (#1322, AoE2 DE wiki infobox): the hit points in the Dark, Feudal,

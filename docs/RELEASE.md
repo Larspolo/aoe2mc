@@ -130,3 +130,4 @@ Bug reserve: 0.3
 |---|---|---|---|---|
 | `system:improve` | A | | | |
 | `system:reuse` | C | | | |
+| `system:structure` | A | | | |
