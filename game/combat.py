@@ -66,8 +66,8 @@ STATS = {
     "KNIGHT": Stats(100, 10, 2, 2, 0, 1.8, {}, (CAV,)),
     "CAVALIER": Stats(120, 12, 2, 2, 0, 1.8, {}, (CAV,)),
     "PALADIN": Stats(160, 14, 2, 3, 0, 1.9, {}, (CAV,)),                     # ROF 1.9: the wiki infobox (#1501)
-    "CAMEL_RIDER": Stats(100, 6, 0, 0, 0, 2.0, {CAV: 9}, (CAM,)),
-    "HEAVY_CAMEL_RIDER": Stats(120, 7, 0, 0, 0, 2.0, {CAM: 9, CAV: 18}, (CAM,)),
+    "CAMEL_RIDER": Stats(100, 6, 0, 0, 0, 2.0, {CAV: 9, CAM: 5, SHIP: 5}, (CAM,)),   # the wiki infobox (#1550)
+    "HEAVY_CAMEL_RIDER": Stats(120, 7, 0, 0, 0, 2.0, {CAM: 9, CAV: 18, SHIP: 9}, (CAM,)),
     "IMPERIAL_CAMEL_RIDER": Stats(140, 8, 0, 0, 0, 1.667, {"building": 2, CAM: 9, CAV: 18}, (CAM,)),
     "WAR_ELEPHANT": Stats(450, 15, 1, 2, 0, 2.0, {"building": 30}, (ELE, UNI)),
     "ELITE_WAR_ELEPHANT": Stats(600, 20, 1, 3, 0, 2.0, {"building": 30}, (ELE, UNI)),
@@ -287,6 +287,7 @@ SIGHT = {
     "BARRACKS": 6,
     "BLACKSMITH": 6,
     "BOMBARD_TOWER": 10,
+    "CAMEL_RIDER": 5,                                                  # the wiki infobox (#1550)
     "CANNON_GALLEON": 15,
     "CASTLE": 11,
     "CHAMPION": 5,
@@ -304,6 +305,7 @@ SIGHT = {
     "FEITORIA": 6,
     "FORTIFIED_TOWER": 14,
     "GUARD_TOWER": 10,
+    "HEAVY_CAMEL_RIDER": 5,
     "HOUSE": 2,
     "HUSSAR": 10,
     "KEEP": 10,

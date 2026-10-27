@@ -105,6 +105,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "CHEMISTRY": {"food": 300, "gold": 200},                    # the university, Imperial Age (#1375)
          "CONSCRIPTION": {"food": 150, "gold": 150},                 # the castle, Imperial Age (#1455)
          "CATAPHRACT": {"food": 70, "gold": 75},
+         "CAMEL_RIDER": {"food": 55, "gold": 60},                       # AoE2 DE wiki (#1550)
          "CAVALIER": {"food": 60, "gold": 75},                          # AoE2 DE wiki (#1501)
          "CAVALIER_UPGRADE": {"food": 300, "gold": 300},               # the Imperial Age (#1501)
          "CAVALRY_ARCHER": {"wood": 40, "gold": 60},                    # AoE2 DE wiki (#1397)
@@ -152,6 +153,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "HAND_CANNONEER": {"food": 45, "gold": 50},                  # the Imperial Age, after Chemistry (#1506)
          "HAND_CART": {"food": 300, "wood": 200},                      # the Castle Age (AoE2 DE wiki, #1453)
          "HEATED_SHOT": {"food": 350, "gold": 100},                    # the university, Castle Age (#1548)
+         "HEAVY_CAMEL_RIDER": {"food": 55, "gold": 60},                 # AoE2 DE wiki (#1550)
+         "HEAVY_CAMEL_RIDER_UPGRADE": {"food": 325, "gold": 360},       # the Imperial Age (#1550)
          "HEAVY_CAVALRY_ARCHER": {"wood": 40, "gold": 60},            # AoE2 DE wiki (#1500)
          "HEAVY_CAVALRY_ARCHER_UPGRADE": {"food": 900, "gold": 500},  # the Imperial Age (#1500)
          "HOARDINGS": {"food": 400, "wood": 400},                      # the castle, Imperial Age (#1456)
@@ -263,6 +266,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "CASTLE_AGE": 160,
                "CAREENING": 50,
                "CATAPHRACT": 20,
+               "CAMEL_RIDER": 22,
                "CAVALIER": 30,
                "CAVALIER_UPGRADE": 80,
                "CAVALRY_ARCHER": 37,
@@ -310,6 +314,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "HAND_CANNONEER": 34,
                "HAND_CART": 55,
                "HEATED_SHOT": 30,
+               "HEAVY_CAMEL_RIDER": 22,
+               "HEAVY_CAMEL_RIDER_UPGRADE": 105,
                "HEAVY_CAVALRY_ARCHER": 37,
                "HEAVY_CAVALRY_ARCHER_UPGRADE": 50,
                "HOARDINGS": 75,
@@ -424,6 +430,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                      "HOARDINGS"),                                              # (#1456)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES", "LIGHT_CAVALRY_UPGRADE", "KNIGHT",   # (#671, #940, #1396, #1397)
                      "HUSBANDRY",                                               # (#1416)
+                     "CAMEL_RIDER",                                             # the Castle Age (#1550)
+                     "HEAVY_CAMEL_RIDER_UPGRADE",                               # the Imperial Age (#1550)
                      "HUSSAR_UPGRADE",                                          # the Imperial Age (#1502)
                      "WINGED_HUSSAR_UPGRADE",                                   # Poles, Lithuanians (#1558)
                      "CAVALIER_UPGRADE",                                        # (#1501)
@@ -586,6 +594,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "HAND_CART": lambda name, s: s,                           # no combat change: gather.CARRY and gather.PACE
          "HEATED_SHOT": lambda name, s: s._replace(bonus={**s.bonus, "ship": s.bonus.get("ship", 0) + HEATED[name]})
          if name in HEATED else s,                                 # the arrows of the own towers on ships (#1548)
+         "HEAVY_CAMEL_RIDER_UPGRADE": lambda name, s: s,           # a new unit name: UPGRADES
          "HEAVY_CAVALRY_ARCHER_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
          "HOARDINGS": lambda name, s: s._replace(hp=round(s.hp * 1.21)) if name == "CASTLE" else s,   # build.values
          "HEAVY_PLOW": lambda name, s: s,                          # an economy technology: gather.FARM_TECHS, FOOD_CARRY
@@ -666,6 +675,7 @@ UPGRADES = {                                                       # technology:
     "ELITE_EAGLE_WARRIOR_UPGRADE": ("EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"),
     "ELITE_SKIRMISHER_UPGRADE": ("SKIRMISHER", "ELITE_SKIRMISHER"),
     "HALBERDIER_UPGRADE": ("PIKEMAN", "HALBERDIER"),
+    "HEAVY_CAMEL_RIDER_UPGRADE": ("CAMEL_RIDER", "HEAVY_CAMEL_RIDER"),   # (#1550)
     "HEAVY_CAVALRY_ARCHER_UPGRADE": ("CAVALRY_ARCHER", "HEAVY_CAVALRY_ARCHER"),
     "HEAVY_SCORPION_UPGRADE": ("SCORPION", "HEAVY_SCORPION"),
     "HEAVY_DEMOLITION_SHIP_UPGRADE": ("DEMOLITION_SHIP", "HEAVY_DEMOLITION_SHIP"),   # (#1483)
@@ -765,6 +775,7 @@ TECH_AGE = {                                                       # the age of 
     "HALBERDIER_UPGRADE": 3,
     "HAND_CART": 2,
     "HEATED_SHOT": 2,
+    "HEAVY_CAMEL_RIDER_UPGRADE": 3,
     "HEAVY_CAVALRY_ARCHER_UPGRADE": 3,
     "HOARDINGS": 3,
     "HEAVY_PLOW": 2,
@@ -844,6 +855,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "HAND_CANNONEER": (7, "pillager_spawn_egg", "Hand Cannoneer"),      # units.classify: a pillager
          "HAND_CART": (3, "book", "Hand Cart"),                       # the slot of Wheelbarrow (AFTER)
          "HEATED_SHOT": (MORE + 2, "book", "Heated Shot"),
+         "HEAVY_CAMEL_RIDER": (6, "camel_spawn_egg", "Heavy Camel Rider"),   # the slot of the camel rider
+         "HEAVY_CAMEL_RIDER_UPGRADE": (MORE, "book", "Heavy Camel Rider"),   # the stable (#1550)
          "HEAVY_CAVALRY_ARCHER": (4, "skeleton_horse_spawn_egg", "Heavy Cavalry Archer"),
          "HEAVY_CAVALRY_ARCHER_UPGRADE": (6, "book", "Heavy Cavalry Archer"),   # slot 5: Thumb Ring
          "HOARDINGS": (3, "book", "Hoardings"),                       # after Conscription
@@ -891,6 +904,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "CASTLE_AGE": (4, "bell", "Castle Age"),
          "CAREENING": (8, "book", "Careening"),                     # the university has no rally point
          "CATAPHRACT": (0, "horse_spawn_egg", "Cataphract"),
+         "CAMEL_RIDER": (6, "camel_spawn_egg", "Camel Rider"),          # the stable (#1550)
          "CAVALIER": (3, "horse_spawn_egg", "Cavalier"),             # the slot of the knight
          "CAVALIER_UPGRADE": (5, "book", "Cavalier"),                 # the stable (#1501)
          "CAVALRY_ARCHER": (4, "skeleton_horse_spawn_egg", "Cavalry Archer"),
@@ -1008,6 +1022,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "CASTLE_AGE": "Advance to the Castle Age.",
         "CAREENING": "Ships +1 pierce armor.",
         "CATAPHRACT": "Byzantine cavalry. Strong vs. infantry.",
+        "CAMEL_RIDER": "Strong vs. cavalry; weak vs. spears, archers.",
         "CAVALIER": "Strong vs. archers, siege; weak vs. spears, monks.",
         "CAVALIER_UPGRADE": "Upgrades knights to cavaliers.",
         "CAVALRY_ARCHER": "Fast archer. Strong vs. infantry; weak vs. camels.",
@@ -1058,6 +1073,8 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "HAND_CANNONEER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "HAND_CART": "Villagers +10 % speed, +50 % carry.",
         "HEATED_SHOT": "Towers, castles, docks + attack vs. ships.",
+        "HEAVY_CAMEL_RIDER": "Strong vs. cavalry; weak vs. spears, archers.",
+        "HEAVY_CAMEL_RIDER_UPGRADE": "Upgrades camel riders to heavy ones.",
         "HEAVY_CAVALRY_ARCHER": "Fast archer. Strong vs. infantry; weak vs. camels.",
         "HEAVY_CAVALRY_ARCHER_UPGRADE": "Upgrades cavalry archers to heavy ones.",
         "HOARDINGS": "Castles +21 % HP.",
