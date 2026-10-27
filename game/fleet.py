@@ -30,6 +30,7 @@ SPEEDS = {"FISHING_SHIP": 1.26,          # tiles per game second (AoE2 DE wiki i
           "GALLEON": 1.36,
           "HEAVY_DEMOLITION_SHIP": 1.52,
           "GALLEY": 1.36,
+          "HULK": 1.42,
           "TRADE_COG": 1.65,
           "TRANSPORT_SHIP": 1.45,
           "WAR_GALLEY": 1.36}                                   # (#1482)

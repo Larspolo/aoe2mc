@@ -12,7 +12,7 @@ def test_the_two_ships_have_the_aoe2_de_values_of_the_wiki():
     assert train.COSTS["FIRE_GALLEY"] == {"wood": 75, "gold": 45} and train.TRAIN_TIMES["FIRE_GALLEY"] == 49
     assert train.COSTS["DEMOLITION_RAFT"] == {"wood": 45, "gold": 80} and train.TRAIN_TIMES["DEMOLITION_RAFT"] == 45
     assert build.AGE["FIRE_GALLEY"] == build.AGE["DEMOLITION_RAFT"] == 1                    # the Feudal Age
-    assert combat.stats("FIRE_GALLEY") == (110, 2, 1, 4, 2.5, 0.25, {"warship": 1}, ("ship",))
+    assert combat.stats("FIRE_GALLEY") == (110, 2, 1, 4, 2.5, 0.25, {"warship": 1}, ("ship", "fireship"))
     assert combat.stats("DEMOLITION_RAFT") == (40, 75, 0, 0, 0, 0.0, {"building": 180}, ("ship",))
     assert fleet.SPEEDS["FIRE_GALLEY"] == 1.36 and fleet.SPEEDS["DEMOLITION_RAFT"] == 1.42
     assert combat.sight("FIRE_GALLEY") == 5 and combat.sight("DEMOLITION_RAFT") == 6

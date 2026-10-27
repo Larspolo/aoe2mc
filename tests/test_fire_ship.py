@@ -19,7 +19,7 @@ def test_the_two_ships_have_the_aoe2_de_values_of_the_wiki():
     assert build.AGE["FIRE_SHIP"] == build.AGE["DEMOLITION_SHIP"] == 2                      # the Castle Age
     assert ("DEMOLITION_RAFT", "DEMOLITION_SHIP") in train.lines("DEMOLITION_SHIP_UPGRADE")   # (#1483)
     assert ("FIRE_GALLEY", "FIRE_SHIP") in train.lines("MEDIUM_WARSHIPS")
-    assert combat.stats("FIRE_SHIP") == (120, 3, 2, 4, 2.5, 0.25, {"building": 2, "warship": 1}, ("ship",))
+    assert combat.stats("FIRE_SHIP") == (120, 3, 2, 4, 2.5, 0.25, {"building": 2, "warship": 1}, ("ship", "fireship"))
     assert combat.stats("DEMOLITION_SHIP") == (50, 95, 1, 0, 0, 0.0, {"building": 220}, ("ship",))
     assert fleet.SPEEDS["FIRE_SHIP"] == 1.47 and fleet.SPEEDS["DEMOLITION_SHIP"] == 1.52
     assert combat.sight("FIRE_SHIP") == 5 and combat.sight("DEMOLITION_SHIP") == 6

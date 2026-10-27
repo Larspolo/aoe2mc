@@ -33,6 +33,7 @@ RAM = "ram"                                           # the rams, the siege towe
 UNI = "unique"                                        # the unique units of the castles (the Samurai bonus)
 GUN = "gunpowder"                                     # the targets of the Condottiero and Winged Hussar bonus (#1007)
 SHIP, WAR = "ship", "warship"                         # the ships; "warship": the AoE2 class "Long-range warship"
+FIRE = "fireship"                                     # the AoE2 class "Fire Ships" (the hulk bonus, #1489)
 SPEAR = {CAV: 15, CAM: 12, ELE: 15}                   # spearman bonus, more in the later ages of the line
 STATS = {
     # infantry: militia line and spearman line
@@ -220,13 +221,14 @@ STATS = {
     "CANNON_GALLEON": Stats(120, 50, 0, 5, 13, 10.0, {"building": 200, SIE: 25}, (SHIP, GUN, WAR)),   # (#1484) melee damage
     "DEMOLITION_RAFT": Stats(40, 75, 0, 0, 0, 0.0, {"building": 180}, (SHIP,)),   # (#1481) the Feudal Age form
     "DEMOLITION_SHIP": Stats(50, 95, 1, 0, 0, 0.0, {"building": 220}, (SHIP,)),   # one blast (BLAST), then it dies
-    "FAST_FIRE_SHIP": Stats(140, 4, 3, 7, 2.5, 0.25, {"building": 3, WAR: 1}, (SHIP,)),   # Heavy Warships (#1483)
-    "FIRE_GALLEY": Stats(110, 2, 1, 4, 2.5, 0.25, {WAR: 1}, (SHIP,)),   # (#1481) the Feudal Age form of the fire ship
-    "FIRE_SHIP": Stats(120, 3, 2, 4, 2.5, 0.25, {"building": 2, WAR: 1}, (SHIP,)),   # (#1440) melee damage, 4 hits/s
+    "FAST_FIRE_SHIP": Stats(140, 4, 3, 7, 2.5, 0.25, {"building": 3, WAR: 1}, (SHIP, FIRE)),   # Heavy Warships (#1483)
+    "FIRE_GALLEY": Stats(110, 2, 1, 4, 2.5, 0.25, {WAR: 1}, (SHIP, FIRE)),   # (#1481) the Feudal Age form of the fire ship
+    "FIRE_SHIP": Stats(120, 3, 2, 4, 2.5, 0.25, {"building": 2, WAR: 1}, (SHIP, FIRE)),   # (#1440) melee damage, 4 hits/s
     "FISHING_SHIP": Stats(50, 0, 1, 1, 0, 0.0, {}, (SHIP,)),
     "GALLEY": Stats(110, 6, 0, 3, 5, 3.0, {"building": 6, WAR: 5}, (SHIP, WAR)),
     "GALLEON": Stats(155, 9, 0, 6, 7, 3.0, {"building": 6, WAR: 9, RAM: 3}, (SHIP, WAR)),   # Heavy Warships (#1483)
     "HEAVY_DEMOLITION_SHIP": Stats(70, 120, 2, 0, 0, 0.0, {"building": 280}, (SHIP,)),   # (#1483)
+    "HULK": Stats(85, 4, 3, 1, 1, 1.75, {FIRE: 1, "standard": -3}, (SHIP,)),   # AoE2 DE wiki (#1489): melee hits at range 1
     "WAR_GALLEY": Stats(125, 7, 0, 4, 6, 3.0, {"building": 6, WAR: 5}, (SHIP, WAR)),   # Medium Warships (#1482)
     # others: no fight, but they can die
     "VILLAGER": Stats(25, 3, 0, 0, 0, 2.0),
@@ -295,6 +297,7 @@ SIGHT = {
     "FIRE_SHIP": 5,
     "GALLEON": 9,
     "HEAVY_DEMOLITION_SHIP": 6,
+    "HULK": 5,
     "FEITORIA": 6,
     "FORTIFIED_TOWER": 14,
     "GUARD_TOWER": 10,
@@ -329,6 +332,7 @@ MELEE_RANGED = {"BOMBARD_CANNON",
                 "FIRE_SHIP",
                 "GBETO",
                 "HEAVY_ROCKET_CART",
+                "HULK",
                 "MAMELUKE",
                 "MANGONEL",
                 "ONAGER",
