@@ -54,6 +54,7 @@ MAX_FILL = 32768            # blocks of one /fill command
 FORMATION = 2              # blocks between the units of a group in a formation (#410)
 LEG = 48                    # path cells of one plugin order: within the reach of a Minecraft path search (#438)
 CATCH_UP = 1.5              # the largest factor of the walk speed of a unit behind its replay position (#1168)
+CLOSE = 5000                # ms of game time in which a unit behind its replay position closes the lag (#1291)
 PATH = 1.15                 # the walk speed factor of each plugin leg: a Minecraft path is longer than the leg (#1168)
 POCKET = 64                 # cells: less free land around a builder is a pocket of its walls and the water (#1275)
 RECENT = 10000              # ms: a unit whose last leg ended this short a time ago can still walk it (catch_up)
@@ -851,21 +852,24 @@ class Replay:
         d = math.hypot(v.pos[0] - x0, v.pos[2] - z0)
         due = t + 1000 * d / speed
         v.leg = (start, t, due)                                     # at() reads it
-        f = min(CATCH_UP, PATH * (self.catch_up(v, d) if behind else 1.0))
+        f = min(CATCH_UP, PATH * (self.catch_up(v, d, speed * CLOSE / 1000) if behind else 1.0))
         return [ai.speed_command(v.uuid, v.name, self.T, self.speed * f),
                 "aoe moveto {} {} {} {}".format(v.uuid, *v.pos)], due
 
-    def catch_up(self, v, d):
-        """The factor of the walk speed of unit v on a leg of d blocks to v.pos (1 to CATCH_UP): the entity distance to
-        v.pos over d. The Minecraft path is longer than the straight leg (trees, steps on a slope), and each leg starts
-        at the replay time, not at the arrival: without it, villagers of de-64.3 walked at 89 to 94 % of their AoE2
-        speed (#1168). One command per leg that order() gives as behind."""
+    def catch_up(self, v, d, reach=None):
+        """The factor of the walk speed of unit v on a leg of d blocks to v.pos (1 to CATCH_UP): the lag of the entity
+        (its distance to v.pos less d) is closed in the first `reach` blocks of the leg (default: all of it). The
+        Minecraft path is longer than the straight leg (trees, steps on a slope), and each leg starts at the replay
+        time, not at the arrival: without it, villagers of de-64.3 walked at 89 to 94 % of their AoE2 speed (#1168).
+        With the whole leg, a lag of 10 blocks on a long leg stayed above 4 blocks for 30 s (#1291). One command per
+        leg that order() gives as behind."""
         if d < 1:
             return 1.0
         m = re.findall(self.gather.NUMBER, self.game.command(f"data get entity {v.uuid} Pos").rsplit(":", 1)[-1])
         if len(m) != 3:
             return 1.0
-        return min(CATCH_UP, max(1.0, math.dist((float(m[0]), float(m[2])), (v.pos[0], v.pos[2])) / d))
+        lag = math.dist((float(m[0]), float(m[2])), (v.pos[0], v.pos[2])) - d
+        return min(CATCH_UP, max(1.0, 1 + lag / min(d, reach or d)))
 
     def at(self, v, t):
         """The replay position of unit v at game time t (ms): on the line of its leg while it walks, else v.pos.
