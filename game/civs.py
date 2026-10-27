@@ -210,6 +210,9 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
                               "JURCHENS", "KHITANS", "MACEDONIANS", "MAGYARS", "MALAY", "MAPUCHE", "MAYANS",
                               "MONGOLS", "MUISCA", "POLES", "PURU", "ROMANS", "SAXONS", "SHU", "SICILIANS", "SLAVS",
                               "SPARTANS", "THRACIANS", "TUPI", "VARANGIANS", "VIETNAMESE", "VIKINGS", "WEI", "WU"),   # the wiki chart (#1535)
+           "HEATED_SHOT": ("BOHEMIANS", "BURGUNDIANS", "BYZANTINES", "FRANKS", "GEORGIANS", "HINDUSTANIS", "HUNS",
+                           "JAPANESE", "JURCHENS", "MAPUCHE", "MONGOLS", "MUISCA", "POLES", "ROMANS", "SARACENS",
+                           "SLAVS", "SPANISH"),                                       # the wiki chart (#1548)
            "HEAVY_DEMOLITION_SHIP": ("ACHAEMENIDS", "ATHENIANS", "AZTECS", "BENGALIS", "BOHEMIANS", "BULGARIANS",
                                      "BURGUNDIANS", "BURMESE", "CUMANS", "DANES", "ETHIOPIANS", "GEORGIANS",
                                      "HINDUSTANIS", "INCAS", "ITALIANS", "JAPANESE", "KHITANS", "KHMER", "KOREANS",
@@ -255,6 +258,9 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
                           "TEUTONS", "TUPI", "VARANGIANS", "VIKINGS", "WU"),   # (#1421)
            "TREADMILL_CRANE": ("BULGARIANS", "CHINESE", "CUMANS", "DANES", "DRAVIDIANS", "ETHIOPIANS", "HINDUSTANIS",
                                "KHITANS", "MONGOLS", "PERSIANS", "ROMANS", "SPANISH")}   # (#1422)
+EAGLES = ("AZTECS", "MAYANS")                                     # the eagle line (AoE2 DE wiki; not the Incas since
+MISSING |= dict.fromkeys(("EAGLE_SCOUT", "EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"),   # The Last Chieftains, #1555)
+                         tuple(sorted(set().union(*MISSING.values()) - set(EAGLES))))
 
 
 def mounted(s):

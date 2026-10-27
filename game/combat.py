@@ -46,8 +46,8 @@ STATS = {
     "PIKEMAN": Stats(55, 4, 0, 0, 0, 3.0, {CAV: 22, CAM: 18, ELE: 25}, (INF, SPE)),
     "HALBERDIER": Stats(60, 6, 0, 0, 0, 3.0, {CAV: 32, CAM: 26, ELE: 28}, (INF, SPE)),
     "EAGLE_SCOUT": Stats(50, 4, 0, 2, 0, 2.0, {SIE: 3}, (INF,)),               # the Dark and Feudal Age values
-    "EAGLE_WARRIOR": Stats(55, 7, 0, 3, 0, 2.0, {CAM: 2, CAV: 3, SIE: 3}, (INF,)),
-    "ELITE_EAGLE_WARRIOR": Stats(60, 9, 0, 4, 0, 2.0, {CAM: 3, CAV: 4, SIE: 5}, (INF,)),
+    "EAGLE_WARRIOR": Stats(55, 7, 0, 3, 0, 2.0, {CAM: 2, CAV: 3, SIE: 3, SHIP: 1}, (INF,)),   # AoE2 DE wiki (#1555)
+    "ELITE_EAGLE_WARRIOR": Stats(60, 9, 0, 4, 0, 2.0, {CAM: 3, CAV: 4, SIE: 5, SHIP: 2}, (INF,)),
     # archers: the attack is pierce damage
     "ARCHER": Stats(30, 4, 0, 0, 4, 2.0, {SPE: 3}, (ARC,)),
     "CROSSBOWMAN": Stats(35, 5, 0, 0, 5, 2.0, {SPE: 3}, (ARC,)),
@@ -532,6 +532,7 @@ def building(uuid, name, player, box, T=4, inside=(), s=None):
     only for armor stands, the server drops it on a slime (#636)."""
     x0, y0, z0, x1, y1, z1 = box
     s, size = s or stats(name), math.ceil((max(x1 - x0, z1 - z0) + 1) / SLIME)
+    bonus = ",".join(f"{c}:{n}" for c, n in sorted(s.bonus.items())) * bool(s.attack and s.range)
     n = uuids.UUID(uuid).int
     ints = ",".join(str((n >> k & 0xFFFFFFFF) - ((n >> k & 0x80000000) << 1)) for k in (96, 64, 32, 0))
     return [f"summon slime {(x0 + x1 + 1) / 2} {y0} {(z0 + z1 + 1) / 2} {{Size:{size - 1},NoAI:1b,Silent:1b,"
@@ -541,7 +542,8 @@ def building(uuid, name, player, box, T=4, inside=(), s=None):
         [f"aoe building {uuid} {s.hp} {s.melee} {s.pierce} {' '.join(map(str, box))}"   # after the arrows: no shot of 1
          + (f" {s.attack} {s.range * T} {round(s.reload / NORMAL * 20)} {FORT_MIN_RANGE.get(name, 0) * T}"   # (#1546)
             if s.attack and s.range else "")
-         + (f" {','.join(s.classes)}" if STANDARD not in s.classes else "")]   # a wall, a gate, the wonder (#1419)
+         + (f" {','.join(s.classes)}" if STANDARD not in s.classes or bonus else "")   # a wall, a gate, the wonder (#1419)
+         + (f" {bonus}" if bonus else "")]                                  # the arrow bonus (Heated Shot, #1548)
 
 
 def building_box(o, ground):

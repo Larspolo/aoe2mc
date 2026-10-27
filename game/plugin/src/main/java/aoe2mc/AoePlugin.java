@@ -119,6 +119,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              no shot at a unit nearer than min blocks (the AoE2 minimum range, #1546)
  *   aoe building ... <classes>                 its armor classes (default building,standard: a wall, a gate and the
  *                                              wonder are no standard building, #1419)
+ *   aoe building ... <attack> <range> <reload> <min> <classes> <bonus>
+ *                                              the arrow bonus class:n,... (Heated Shot against ships, #1548)
  *   aoe menu <player> <title> <slot>:<material>:<name>:<lore>[:<count>] ...
  *                                              open a chest menu (#619, game/menu.py; the texts are URL-encoded)
  *   aoe menu-close <player>                    close the menu of the player
@@ -1892,7 +1894,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Sight: " + n + " units");
             return true;
         }
-        if ((args.length == 11 || args.length == 12 || args.length == 15 || args.length == 16) && args[0].equals("building")) {
+        if ((args.length == 11 || args.length == 12 || args.length >= 15 && args.length <= 17) && args[0].equals("building")) {
             int hp;
             double range = 0, min = 0;
             Stats st;
@@ -1901,10 +1903,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             try {
                 hp = Integer.parseInt(args[2]);
                 boolean shoots = args.length >= 15;          // attack, range in blocks, reload in ticks (#1111), min (#1546)
-                Set<String> classes = args.length == 12 || args.length == 16   // the classes last (#1419)
-                        ? Set.of(args[args.length - 1].split(",")) : Set.of("building", "standard");
+                Set<String> classes = args.length == 12 || args.length >= 16   // the classes after the attack (#1419)
+                        ? Set.of(args[args.length == 12 ? 11 : 15].split(",")) : Set.of("building", "standard");
                 st = new Stats(shoots ? Integer.parseInt(args[11]) : 0, Integer.parseInt(args[3]),
-                        Integer.parseInt(args[4]), shoots, true, classes, Map.of(),
+                        Integer.parseInt(args[4]), shoots, true, classes,
+                        args.length == 17 ? bonus(args[16]) : Map.of(),   // the arrow bonus: Heated Shot (#1548)
                         shoots ? Integer.parseInt(args[13]) : 0);
                 range = shoots ? Double.parseDouble(args[12]) : 0;
                 min = shoots ? Double.parseDouble(args[14]) : 0;
@@ -1914,7 +1917,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     c.add(Integer.toString(b[i - 5]));
                 }
                 box = String.join(" ", c);
-            } catch (NumberFormatException e) {
+            } catch (RuntimeException e) {                 // a bad number or a bonus without ":"
                 sender.sendMessage("Bad number: " + e.getMessage());
                 return true;
             }
