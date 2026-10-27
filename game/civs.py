@@ -54,6 +54,7 @@ GROUPS = {
     "siege": lambda n, s: "siege" in s.classes,
     "skirmishers, elephant archers": lambda n, s: "SKIRMISHER" in n or n.endswith("ELEPHANT_ARCHER"),
     "spearmen, skirmishers": lambda n, s: "spearman" in s.classes or "SKIRMISHER" in n,
+    "trade units": lambda n, s: n in ("TRADE_CART", "TRADE_COG"),
     "units": lambda n, s: True,
     "villagers": lambda n, s: n.startswith("VILLAGER"),
 }
