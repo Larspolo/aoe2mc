@@ -32,7 +32,8 @@ def menus(server):
 def test_the_castle_menu_has_the_unique_unit_of_the_civilization():
     server, g = setup()
     assert train.open_menu(g, "Steve", (12, 4)) == (10, 14, 2, 6)
-    assert menus(server) == ["aoe menu Steve Castle 0:skeleton_spawn_egg:Longbowman:35 wood · 40 gold · 18 s · queue 0/15"]
+    assert [m.split(" 1:")[0] for m in menus(server)] == [                # item 1: the trebuchet (#1351)
+        "aoe menu Steve Castle 0:skeleton_spawn_egg:Longbowman:35 wood · 40 gold · 18 s · queue 0/15"]
     server, g = setup("PERSIANS")
     train.open_menu(g, "Steve", (12, 4))
     assert menus(server)[-1].startswith("aoe menu Steve Castle 0:ravager_spawn_egg:War Elephant:170 food · 85 gold")
@@ -41,7 +42,7 @@ def test_the_castle_menu_has_the_unique_unit_of_the_civilization():
 def test_a_unique_unit_without_combat_values_is_not_in_the_menu():
     assert all(u in combat.STATS for u in train.UNIQUE.values() if u in train.COSTS)
     server, g = setup("AZTECS")                                        # JAGUAR_WARRIOR: not in combat.STATS yet
-    assert train.trains(g, "CASTLE") == () and train.queue(g, "Steve", (12, 4), "LONGBOWMAN") is None
+    assert train.trains(g, "CASTLE") == ("TREBUCHET",) and train.queue(g, "Steve", (12, 4), "LONGBOWMAN") is None
 
 
 def test_a_click_queues_the_unit_and_takes_its_cost():
