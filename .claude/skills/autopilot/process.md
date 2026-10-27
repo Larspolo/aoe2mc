@@ -26,7 +26,8 @@ dashboard counts them.
 After step 8, run `python3 tools/claim.py 0 --review`: exit 0 means that this run does the process review of the
 time slot (#898; the slot is 45 minutes, and longer after reviews with no change). Then run the `improve` skill.
 Run it also when this run failed, or when a ticket took more than 90 minutes. The `improve` skill reviews the whole
-system (how runs start, the loop, time and quota, quality, weak spots, reuse), checks the last change, and makes one
+system (how runs start, the loop, time and quota, quality, weak spots, reuse, code structure), checks the last change
+and the misses (owner tickets for the system), and makes one
 change only when a loss is above its threshold (#900). The questions above stay the small check of each ticket. Then run `python3 tools/claim.py 0 --roadmap`: exit 0 means that this run
 reviews the feature list of `docs/ROADMAP.md` (the `roadmap` skill, one review per 2 hours).
 Do not change a priority that the owner set. Propose it.

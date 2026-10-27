@@ -96,16 +96,18 @@ TRAINS["KREPOST"] = ()                                             # trains() ad
 # The unique unit of each civilization (AoE2 DE, "unique" in data/civs.jsonl, #1914), trained at its castle. A unit
 # without COSTS is not in the menu yet: it has no AoE2 combat values in combat.STATS.
 UNIQUE = civs.UNIQUE
+CIV_TECHS = {r["name"]: r["civ"] for r in ROWS if "civ" in r}      # a unique technology: its civ (castle, #2021)
 build.AGE |= dict.fromkeys(UNIQUE.values(), 2) | dict.fromkeys(("ELITE_" + n for n in UNIQUE.values()), 3)   # (#1082)
 
 
 def own_civ_only():
     """{name: the other civs} of each unique unit with an elite upgrade in COSTS, its elite unit and its upgrade: only
     the own civ has them (civs.MISSING). A new unique unit needs no line in civs.py, and its elite upgrade has
-    `"building": null` in data/train.jsonl: trains() adds it to the castle of the own civ (#1760)."""
+    `"building": null` in data/train.jsonl: trains() adds it to the castle of the own civ (#1760). The same for a unique
+    technology: its key `"civ"` (CIV_TECHS, #2021)."""
     others = set().union(*civs.MISSING.values()) | set(UNIQUE)
     return {n: tuple(sorted(others - {c})) for c, u in UNIQUE.items() if f"ELITE_{u}_UPGRADE" in COSTS
-            for n in (u, "ELITE_" + u, f"ELITE_{u}_UPGRADE")}
+            for n in (u, "ELITE_" + u, f"ELITE_{u}_UPGRADE")} | {n: tuple(sorted(others - {c})) for n, c in CIV_TECHS.items()}
 
 
 civs.MISSING |= own_civ_only()
@@ -163,6 +165,18 @@ def arrowslits(name, s):
     values (build.line)."""
     return s._replace(attack=s.attack + ARROWSLITS[name]) if name in ARROWSLITS else s
 
+
+
+def forms(first):
+    """The unit first and the units that its upgrades make, in order (UPGRADES of data/train.jsonl): the archer line
+    is forms("ARCHER"). No list of names in the code (tools/data_lint.py, #2061)."""
+    pairs = [p for u in UPGRADES.values() for p in ([u] if isinstance(u[0], str) else u)]
+    out = [first]
+    while (new := next((b for a, b in pairs if a == out[-1]), None)) and new not in out:
+        out.append(new)
+    return tuple(out)
+
+
 TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit name: UPGRADES
          "ARCHITECTURE": masonry,                                  # the same effect as Masonry (#1504)
          "ARROWSLITS": arrowslits,                                 # the towers of the player: build.values
@@ -174,6 +188,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "BANKING": lambda name, s: s,                             # the tribute fee: diplomacy.FEES
          "BLAST_FURNACE": lambda name, s: s._replace(attack=s.attack + 2) if melee(s) or name in HULKS else s,
          "BLOCK_PRINTING": lambda name, s: s,                      # the conversion range: monk.near
+         "BOGSVEIGAR": lambda name, s: s._replace(attack=s.attack + 1) if name in forms("ARCHER") + forms("LONGSHIP") else s,  # (#2021)
          "BOMBARD_TOWER_TECH": lambda name, s: s,                  # the bombard tower in the build menu: build.NEEDS
          "BOW_SAW": lambda name, s: s,                             # an economy technology: gather.WORK_TECHS
          "BRACER": fletching,
@@ -186,6 +201,9 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          if name == "EAGLE_SCOUT" else s,                          # an age: REQUIRES; the eagle scout (#1555)
          "CAREENING": lambda name, s: s._replace(pierce=s.pierce + 1) if ship(name, s) else s,
          "CHAMPION_UPGRADE": lambda name, s: s,                    # a new unit name: UPGRADES
+         "CHIEFTAINS": lambda name, s: s._replace(bonus={**s.bonus, "cavalry": s.bonus.get("cavalry", 0) + 5,
+                                                         "camel": s.bonus.get("camel", 0) + 4})
+         if "infantry" in s.classes else s,                        # the Vikings (#2021)
          "CHEMISTRY": chemistry,
          "COINAGE": lambda name, s: s,                             # the tribute fee: diplomacy.FEES
          "CONSCRIPTION": lambda name, s: s,                        # the train speed: CONSCRIPT, tick()
@@ -205,6 +223,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_BOYAR_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "ELITE_CAMEL_ARCHER_UPGRADE": lambda name, s: s,          # a new unit name: UPGRADES
          "ELITE_CANNON_GALLEON_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
+         "ELITE_CARAVEL_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES (#1934)
          "ELITE_CENTURION_UPGRADE": lambda name, s: s,             # a new unit name: UPGRADES
          "ELITE_CHAKRAM_THROWER_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_COMPOSITE_BOWMAN_UPGRADE": lambda name, s: s,     # a new unit name: UPGRADES
@@ -226,6 +245,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_KIPCHAK_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "ELITE_KONNIK_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
          "ELITE_LEITIS_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
+         "ELITE_LONGSHIP_UPGRADE": lambda name, s: s,              # a new unit name: UPGRADES (#1934)
          "ELITE_MONASPA_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "ELITE_OBUCH_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "ELITE_ORGAN_GUN_UPGRADE": lambda name, s: s,             # a new unit name: UPGRADES
@@ -238,7 +258,9 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_STEPPE_LANCER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
          "ELITE_SKIRMISHER_UPGRADE": lambda name, s: s,
          "ELITE_TARKAN_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
+         "ELITE_TURTLE_SHIP_UPGRADE": lambda name, s: s,           # a new unit name: UPGRADES (#1934)
          "ELITE_URUMI_SWORDSMAN_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
+         "ELITE_VARANGIAN_GUARD_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_WAR_WAGON_UPGRADE": lambda name, s: s,            # a new unit name: UPGRADES
          "FAITH": lambda name, s: s,                               # the conversion resistance: monk.resist
          "FERVOR": lambda name, s: s,                              # the walk speed: SPEEDS
@@ -418,6 +440,7 @@ def trains(g, building):
     unique = [n for n in [UNIQUE.get(civs.civ(g))] if n in COSTS] * (building == "CASTLE") \
         + ["KONNIK"] * (building == "KREPOST")                     # the Krepost trains only the Konnik (#1872)
     out = unique + list(TRAINS[building]) + [f"ELITE_{n}_UPGRADE" for n in unique if f"ELITE_{n}_UPGRADE" in COSTS]   # (#1760)
+    out += [n for n, c in CIV_TECHS.items() if c == civs.civ(g)] * (building == "CASTLE")   # the unique technologies (#2021)
     for _ in UPGRADES:                                             # a line of upgrades: mangonel, onager, siege onager
         out = [new.get(n, n) for n in out]                         # the castle: the elite unique unit (#1624)
     return tuple(out)

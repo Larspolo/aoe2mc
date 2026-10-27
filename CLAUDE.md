@@ -96,8 +96,9 @@ Design work (buildings, objects, units, animals) follows `docs/DESIGN.md`. Do de
 
 Match the existing code: compact, numpy-vectorized, short comments that say why. Do not reformat code that you do
 not change. Do not add a dependency without a ticket that asks for it. Keep functions in their present file.
-When you add an entry to a table keyed by a name (`STATS` ...), put each entry that you add on its
-own line, in alphabetical order, not at the end: parallel tickets that add to the same last line conflict (#655, #670).
+Game data (AoE2 units, buildings, technologies, objects, terrains, civilizations, their values) goes in a `.jsonl` data
+file, not in a literal of the code: the fast test of `tools/data_lint.py` fails on a new one (#1909). Where a table is
+still in the code, add each entry on its own line, in alphabetical order, not at the end (#655, #670).
 A new menu item of a building (cost, time, slot, help, age) is one new line in `game/data/train.jsonl`, at the end of
 its building block: the merge driver `tools/merge_jsonl.py` (`merge=jsonl`, #2004) merges the lines by name, and `train.load()` stops on a name in two lines (#1702).
 The combat values of a new unit are one new line in `game/data/units.jsonl` (`combat.STATS`, #1912), of a new building
