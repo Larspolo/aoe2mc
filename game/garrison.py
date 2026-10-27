@@ -185,8 +185,8 @@ def leave(u, x, y, z):
 
 
 def inside(g):
-    """The UUIDs of the units inside a building: orders and the selection skip them."""
-    return {u for us in g.garrisons.values() for u in us}
+    """The UUIDs of the units inside a building or a siege tower (siege_tower.py): orders and the selection skip them."""
+    return {u for us in [*g.garrisons.values(), *vars(g).get("towers", {}).values()] for u in us}
 
 
 def heal(g, dt):
