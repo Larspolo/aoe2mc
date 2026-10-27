@@ -177,6 +177,7 @@ SHORE = ("DOCK",)                                                  # on water ne
 WATER = ("FISH_TRAP",)                                             # on free water only, ships build it (#1438)
 GHOST = 400                                                        # block displays of one ghost: a coarser shape above
 CRANE = 1.2                                                        # the build speed factor of Treadmill Crane (#1422)
+NOT_UNITS = ("block_display", "interaction", "item_display", "marker", "text_display")   # ghosts, name lines
 LOCKED = "gray_dye"                                                # the item of a locked building or unit
 
 
@@ -565,7 +566,9 @@ def found(g, name, rect, way=None, tiles=None):
             for x in range(x0, x1) for z in range(z0, z1) if x in (x0, x1 - 1) or z in (z0, z1 - 1)]
     for c in ring:
         g.command("setblock {} {} {} ".format(*c) + f"minecraft:{color}_wool")
-    g.map.blocked |= {(x, z) for x in range(x0, x1) for z in range(z0, z1)} if tiles is None else tile_cells(g, tiles)
+    cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)} if tiles is None else tile_cells(g, tiles)
+    g.map.blocked |= cells
+    clear(g, cells)
     T = g.map.T                                                        # the design, bottom up (one command each)
     cmds = Replay(g, g.data, getattr(g.game, "version", VERSION_NAME)).building(
         design(g, name, g.player), g.player, (x0 + x1) / 2 / T, (z0 + z1) / 2 / T,
@@ -579,6 +582,31 @@ def found(g, name, rect, way=None, tiles=None):
         site["tiles"] = tiles
     g.sites.append(site)
     return site
+
+
+def clear(g, cells):
+    """Move each unit whose feet are on the cells of a new foundation to the nearest free cell next to them, as in AoE2
+    (#1769): else the blocks of the site suffocate it. On Paper all mobs of all players and the animals, else the own
+    units. A rider moves with its vehicle: a /tp of a passenger dismounts it. Returns {UUID: cell}."""
+    xs, zs = [x for x, _ in cells], [z for _, z in cells]
+    ring = sorted(g.map.around(cells))
+    if not ring:
+        return {}
+    sel = "@e[type=!player,{}x={},y=-64,z={},dx={},dy=400,dz={}]".format(
+        "".join(f"type=!{t}," for t in NOT_UNITS), min(xs), min(zs), max(xs) - min(xs), max(zs) - min(zs))
+    pos = g.where(None, sel) if g.paper else g.positions(sorted({*g.villagers, *g.soldiers}))
+    moved = {}
+    for u, (fx, fy, fz) in sorted(pos.items()):
+        if (math.floor(fx), math.floor(fz)) in cells:
+            x, z = min(ring, key=lambda c: ((c[0] + 0.5 - fx) ** 2 + (c[1] + 0.5 - fz) ** 2, c))
+            y = g.map.y(x, z)
+            to = f"{x + 0.5} {y} {z + 0.5}"
+            if not g.command(f"execute as {u} on vehicle run tp @s {to}").strip():   # no vehicle
+                g.command(f"tp {u} {to}")
+            if (v := g.villagers.get(u)) is not None:
+                v.pos = (x + 0.5, float(y), z + 0.5)
+            moved[u] = (x, z)
+    return moved
 
 
 def pick(g, eye, d):
