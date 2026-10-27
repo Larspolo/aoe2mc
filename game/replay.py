@@ -154,6 +154,7 @@ class Replay:
         self.garrisons = {}                     # building footprint -> object IDs of the units inside it
         self.work = {}                          # object ID -> the resource tile that it left for a garrison (#1179)
         self.ids = {}                           # new object ID of a building -> footprint of its replay building (#876)
+        self.hunted = {}                        # object ID of a hunted animal -> the tile of its carcass (#1229)
         self.effects = {}                       # entity tag of a research text -> game time (ms) of its end (#843)
         self.refs = {o["ref"]: o for o in data["objects"] if o.get("ref") is not None}
         self.rng = np.random.default_rng(1)
@@ -276,7 +277,19 @@ class Replay:
                         x0, x1, z0, z1 = self.placed[-1][2]
                         out += self.move(dict(e, kind="order", target=-1,
                                               tile=[(x0 + x1) / 2 / self.T, (z0 + z1) / 2 / self.T]))
+                    elif (kinds := [r for r, s in self.gather.DROP_SITES.items() if name in s and name != "TOWN_CENTER"]) \
+                            and e.get("objects") and (k := self.near(kinds, self.placed[-1][2])) is not None:
+                        out += self.move(dict(e, kind="order", target=-1, tile=[k[0] + 0.5, k[1] + 0.5], resource=k))
         return out
+
+    def near(self, kinds, rect):
+        """The tile of the nearest tree, bush or mine of the resources `kinds` within NEXT tiles of the building rect,
+        or None: AoE2 sends the builders of a lumber camp, mill or mining camp to gather there (#1229)."""
+        m, T = self.map, self.T
+        c = (rect[0] + rect[1]) / 2 / T, (rect[2] + rect[3]) / 2 / T
+        src = {"wood": m.trees, "food": m.bushes, **m.mines}
+        far = sorted((math.dist(c, (k[0] + 0.5, k[1] + 0.5)), k) for r in kinds for k, n in src.get(r, {}).items() if n > 0)
+        return far[0][1] if far and far[0][0] <= NEXT else None
 
     def research(self, e, color):
         """The name of the technology 2 blocks above the roof of its building, and particles at the roof (#843).
@@ -670,11 +683,12 @@ class Replay:
         target tile."""
         self.grid()
         goals = self.goals(e)
-        inside = {u for us in self.garrisons.values() for u in us}   # AoE2: a unit inside takes no orders
+        inside = {u: r for r, us in self.garrisons.items() for u in us}   # AoE2 selects no unit inside: an order
+        out0 = [c for i in e["objects"] if i in inside for c in self.leave(i, inside[i])]   # says it is out (#1229)
         group = [(i, v) for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"]))
-                 if (v := self.unit(i, name, e["player"])) is not None and i not in inside]
+                 if (v := self.unit(i, name, e["player"])) is not None]
         tile = self.resource(e)
-        if tile in self.map.farms:                                  # a farmer stands on the farm
+        if tile in self.map.farms or tile in self.map.carcasses:    # a farmer stands on the farm, a hunter at the carcass
             goals = self.crew.goals(tile)
         home = self.holder(e)
         if home and e.get("target") not in self.refs:              # a building of the replay: next to it (#876)
@@ -686,7 +700,7 @@ class Replay:
             self.entering.pop(i, None)
             if e.get("garrison"):                                   # BACK TO WORK sends it there again
                 self.work[i] = v.tree
-            v.tree = tile
+            v.tree = tile if v.name.startswith("VILLAGER") else None     # a sheep of the selection does not gather
             if home and not (not e.get("garrison") and v.load and v.name.startswith("VILLAGER")
                              and home[1]["name"] in self.gather.DROP_SITES.get(v.res, ())):   # it drops its load
                 self.entering[i] = [*home, None]
@@ -701,7 +715,7 @@ class Replay:
             first = []
         boats = boats if wet else []
         if not group and not boats:
-            return first
+            return out0 + first
         looks = [c for _, v in group for c in self.look(v, self.gather.job_of(self.map, tile) if tile else "none")]
         to_tile = not (e["kind"] == "order" and e.get("target") is not None)
         slots = self.formation([v for _, v in group], e["tile"]) if to_tile and group else {}
@@ -738,7 +752,7 @@ class Replay:
                 self.start(i, v, e["time"])
             else:
                 self.moving[i] = due
-        return first + looks + out
+        return out0 + first + looks + out
 
     def look(self, v, task):
         """The command that gives villager v the look of the AoE2 task (`LUMBERJACK` ..., "none": no work), when it
@@ -881,6 +895,8 @@ class Replay:
                 if v.tree in self.map.farms:                            # the wheat gets younger, the farmer walks
                     self.crew.harvest(v.tree)
                     self.crew.tend(v)
+                elif v.tree in self.map.carcasses:                      # a carcass has no blocks
+                    pass
                 elif v.res == "food":
                     self.crew.berries(v.tree)
                 elif v.res != "wood":
@@ -1043,6 +1059,19 @@ class Replay:
             out += garrison.leave(v.uuid, x, y, z) + [f"aoe label {v.uuid}"] * self.ai
         return out + self.arrows(rect)
 
+    def leave(self, i, rect):
+        """Unit i comes out of the building rect alone, on the first free cell next to it (release()). Returns the
+        commands."""
+        import garrison
+        self.garrisons[rect].remove(i)
+        self.work.pop(i, None)                                      # a new order: no BACK TO WORK
+        if not self.garrisons[rect]:
+            del self.garrisons[rect]
+        (x, z), v = (self.map.front(rect) or [((rect[0] + rect[1]) // 2, rect[3])])[0], self.units[i]
+        y = self.map.y(x, z) or 0
+        v.pos = (x + 0.5, float(y), z + 0.5)
+        return garrison.leave(v.uuid, x, y, z) + [f"aoe label {v.uuid}"] * self.ai + self.arrows(rect)
+
     def resource(self, e):
         """The tile of the tree, fruit bush, mine or farm that an ORDER targets, else None. A target that the replay
         does not know (a farm of the replay: the record has no IDs of new objects) is the farm under the order tile."""
@@ -1054,6 +1083,13 @@ class Replay:
             return m.farm_at.get((int(e["tile"][0] * self.T), int(e["tile"][1] * self.T)))
         if not o or "tile" not in o:
             return None
+        if o["kind"] == "unit" and (food := self.gather.hunt_food(o["name"])) and "tile" in e:
+            if t not in self.hunted:                                # the hunt: its carcass at the order tile (#1229)
+                self.hunted[t] = tile = int(e["tile"][0]), int(e["tile"][1])
+                m.carcasses[tile] = m.carcasses.get(tile, 0) + food
+                if o["name"] in self.gather.HERDS:
+                    m.herds.add(tile)
+            return self.hunted[t]
         tile = int(o["tile"][0]), int(o["tile"][1])
         if o["kind"] == "building":
             return tile if "FARM" in o["name"] and tile in m.farms else None
@@ -1086,8 +1122,9 @@ class Replay:
         return len(m) != 3 or math.dist((float(m[0]), float(m[2])), (v.pos[0], v.pos[2])) <= NEAR
 
     def rate(self, v):
-        """The AoE2 work rate of unit v at its resource (per game second): a farm has its own rate."""
-        return self.gather.AOE2_WORK["farm" if v.tree in self.map.farms else v.res]
+        """The AoE2 work rate of unit v at its resource (per game second): a farm and a hunt have their own rates."""
+        return self.gather.AOE2_WORK["farm" if v.tree in self.map.farms else "hunt" if v.tree in self.map.carcasses
+                                     else v.res]
 
     def state(self, i):
         return aoe2mc.B.states[i]
@@ -1326,11 +1363,13 @@ class Replay:
                     self.entering[i][2] = e["time"]
             elif e["kind"] in ("build", "wall", "spawn", "delete", "ungarrison"):
                 builders = e.get("objects", ()) if e["kind"] in ("build", "wall") else ()
+                trees = {i: v.tree for i in builders if (v := self.units.get(i)) is not None}
                 for i in builders:                                  # a builder ends the work at its resource
                     self.skipped(i, since.pop(i, None), e["time"])
                 out += self.enter(e["time"]) + self.commands(e)
-                since.update((i, self.walk_end(v, e["time"])) for i in builders     # the builders of a farm farm it
-                             if (v := self.units.get(i)) is not None and v.tree in self.map.farms)
+                since.update((i, self.walk_end(v, e["time"])) for i in builders     # the builders of a farm farm it,
+                             if (v := self.units.get(i)) is not None                  # of a camp gather next to it
+                             and (v.tree in self.map.farms or v.tree not in (None, trees.get(i))))
             elif e["kind"] == "back_to_work" and e.get("objects"):  # the units work again from now (#1179)
                 out += self.enter(e["time"])
                 cmds, ids = self.back(e)
@@ -1377,10 +1416,10 @@ class Replay:
         res = self.map.resource(v.tree)
         if res not in self.gather.AOE2_WORK:
             return
-        farm = v.tree in self.map.farms
-        left = (self.map.farms if farm else self.map.bushes if res == "food" else self.map.trees if res == "wood"
-                else self.map.mines.get(res, {})).get(v.tree, 0)
-        rate = self.gather.AOE2_WORK["farm" if farm else res]
+        farm, hunt = v.tree in self.map.farms, v.tree in self.map.carcasses
+        left = (self.map.farms if farm else self.map.carcasses if hunt else self.map.bushes if res == "food"
+                else self.map.trees if res == "wood" else self.map.mines.get(res, {})).get(v.tree, 0)
+        rate = self.gather.AOE2_WORK["farm" if farm else "hunt" if hunt else res]
         n = int(rate * (t1 - t0) / 1000) if left > 0 else 0         # left 0: no resource, `res` is not sure
         self.resources(v.player)[res] += n
         self.gathered.setdefault(v.player, dict.fromkeys(START, 0))[res] += n     # the summary (#1097)
