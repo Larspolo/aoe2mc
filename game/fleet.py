@@ -23,8 +23,11 @@ import replay
 SPEEDS = {"FISHING_SHIP": 1.26,          # tiles per game second (AoE2 DE wiki infobox); other ships: 1.0 until a ticket
           "CANNON_GALLEON": 1.05,
           "CARAVEL": 1.36,                                      # (#1934)
+          "CATAPULT_GALLEON": 1.0,                              # (#1935)
           "DEMOLITION_RAFT": 1.42,
           "DEMOLITION_SHIP": 1.52,
+          "DRAGON_SHIP": 1.56,                                  # (#1935)
+          "DROMON": 1.2,                                        # (#1935)
           "ELITE_CANNON_GALLEON": 1.05,
           "ELITE_CARAVEL": 1.36,                                # (#1934)
           "ELITE_LONGSHIP": 1.46,                               # (#1934)
@@ -37,6 +40,8 @@ SPEEDS = {"FISHING_SHIP": 1.26,          # tiles per game second (AoE2 DE wiki i
           "GALLEY": 1.36,
           "HULK": 1.42,
           "LONGSHIP": 1.46,                                     # (#1934)
+          "LOU_CHUAN": 1.15,                                    # (#1935)
+          "THIRISADAI": 1.25,                                   # (#1935)
           "TRADE_COG": 1.65,
           "TRANSPORT_SHIP": 1.45,
           "TURTLE_SHIP": 1.0,                                   # (#1934)

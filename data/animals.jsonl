@@ -1,0 +1,36 @@
+{"keys": ["ALFRED_THE_ALPACA"], "behavior": "military", "mob": "llama", "tags": "{Variant: 1}"}
+{"keys": ["FURIOUS_THE_MONKEY_BOY"], "behavior": "military", "mob": "ocelot"}
+{"keys": ["WAR_PENGUIN"], "behavior": "military", "mob": "chicken"}
+{"keys": ["WAR_DOG", "STORMY_DOG"], "behavior": "military", "mob": "wolf", "tags": "{variant: \"minecraft:black\", anger_end_time: 2147483647L}"}
+{"keys": ["POLAR_BEAR"], "behavior": "aggressive", "mob": "polar_bear", "tags": "{anger_end_time: 2147483647L}"}
+{"keys": ["BROWN_BEAR", "BLACK_BEAR", "CROCODILE", "CAIMAN", "KOMODO", "IRON_BOAR"], "behavior": "aggressive", "mob": "hoglin", "tags": "{IsImmuneToZombification: 1b, CannotBeHunted: 1b}"}
+{"keys": ["SNAKE"], "behavior": "aggressive", "mob": "silverfish"}
+{"keys": ["ARCTIC_WOLF", "SNOW_LEOPARD"], "behavior": "aggressive", "mob": "wolf", "tags": "{variant: \"minecraft:snowy\", anger_end_time: 2147483647L}"}
+{"keys": ["ARABIAN_WOLF", "TIGER"], "behavior": "aggressive", "mob": "wolf", "tags": "{variant: \"minecraft:striped\", anger_end_time: 2147483647L}"}
+{"keys": ["DIRE_WOLF", "PANTHER"], "behavior": "aggressive", "mob": "wolf", "tags": "{variant: \"minecraft:black\", anger_end_time: 2147483647L}"}
+{"keys": ["RABID_WOLF"], "behavior": "aggressive", "mob": "wolf", "tags": "{variant: \"minecraft:ashen\", anger_end_time: 2147483647L}"}
+{"keys": ["LION"], "behavior": "aggressive", "mob": "wolf", "tags": "{variant: \"minecraft:chestnut\", anger_end_time: 2147483647L}"}
+{"keys": ["JAGUAR"], "behavior": "aggressive", "mob": "wolf", "tags": "{variant: \"minecraft:spotted\", anger_end_time: 2147483647L}"}
+{"keys": ["LYNX"], "behavior": "aggressive", "mob": "wolf", "tags": "{variant: \"minecraft:rusty\", anger_end_time: 2147483647L}"}
+{"keys": ["WOLF"], "behavior": "aggressive", "mob": "wolf", "tags": "{variant: \"minecraft:pale\", anger_end_time: 2147483647L}"}
+{"keys": ["WILD_BOAR", "JAVELINA", "RHINO", "TAPIR"], "behavior": "defensive", "mob": "panda", "tags": "{MainGene: \"aggressive\", HiddenGene: \"aggressive\"}"}
+{"keys": ["ELEPHANT", "WALRUS"], "behavior": "defensive", "mob": "polar_bear"}
+{"keys": ["ELK"], "behavior": "defensive", "mob": "llama", "tags": "{Variant: 2}"}
+{"keys": ["SHEEP"], "behavior": "passive", "mob": "sheep", "tags": "{Color: 0b}"}
+{"keys": ["MOUFLON", "ARGALI", "IBEX"], "behavior": "passive", "mob": "sheep", "tags": "{Color: 12b}"}
+{"keys": ["GOAT"], "behavior": "passive", "mob": "sheep", "tags": "{Color: 8b}"}
+{"keys": ["COW_", "BUFFALO", "YAK"], "behavior": "passive", "mob": "cow"}
+{"keys": ["SEAL"], "behavior": "passive", "mob": "turtle"}
+{"keys": ["RED_FOX"], "behavior": "passive", "mob": "fox", "tags": "{Type: \"red\"}"}
+{"keys": ["ARCTIC_FOX"], "behavior": "passive", "mob": "fox", "tags": "{Type: \"snow\"}"}
+{"keys": ["PIG", "CAPYBARA"], "behavior": "passive", "mob": "pig"}
+{"keys": ["TURKEY", "GOOSE", "CHICKEN", "PHEASANT", "OSTRICH", "RHEA", "PENGUIN", "PEACOCK", "FLAMINGO", "STORK", "RED_CROWN_CRANE"], "behavior": "passive", "mob": "chicken"}
+{"keys": ["ARCTIC_HARE"], "behavior": "passive", "mob": "rabbit", "tags": "{RabbitType: 1}"}
+{"keys": ["HARE"], "behavior": "passive", "mob": "rabbit", "tags": "{RabbitType: 0}"}
+{"keys": ["MONKEY"], "behavior": "passive", "mob": "ocelot"}
+{"keys": ["DONKEY"], "behavior": "passive", "mob": "donkey", "tags": "{Tame: 1b}"}
+{"keys": ["LLAMA", "ALPACA", "GUANACO", "WILD_CAMEL", "BACTRIAN_CAMEL"], "behavior": "passive", "mob": "camel"}
+{"keys": ["DEER"], "behavior": "passive", "mob": "horse", "tags": "{Variant: 770}", "note": "chestnut, white dots"}
+{"keys": ["GAZELLE"], "behavior": "passive", "mob": "horse", "tags": "{Variant: 1}", "note": "creamy"}
+{"keys": ["ZEBRA"], "behavior": "passive", "mob": "horse", "tags": "{Variant: 1024}", "note": "white, black dots"}
+{"keys": ["HORSE"], "behavior": "passive", "mob": "horse", "tags": "{Variant: 0}"}
