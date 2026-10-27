@@ -47,13 +47,4 @@ game/replay.py:Replay.society_commands 2
 game/replay.py:Replay.tech_commands 1
 game/replay.py:SPEEDS 1
 game/train.py:TECHS 1
-rmap.py:FISH 1
-rmap.py:FOREST_TREES 1
-rmap.py:SCATTER 1
-rmap.py:START 1
-rmap.py:TERRAINS 1
-rmap.py:fish 1
-game/train.py:TOWER_UPGRADES 1
-game/train.py:WALL_UPGRADES 1
-game/train.py:summon 1
 scx.py:CIVS 1
