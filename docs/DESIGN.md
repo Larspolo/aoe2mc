@@ -92,7 +92,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Market stall | lean-to of roof stairs on `*_fence` posts; wool awning in stripes for flat-roof sets | `fish_trap`, `nine_bands`, `outpost`, `flagship` +38 more |
 | Cloth awning or tent roof that slopes | `*_wool_stairs` and `*_wool_slab` (player color or `white_*`) | `command_tent`, `pasture`, `stupa`, `army_tent` +22 more |
 | Upper floor (inside) | `*_planks` floor and a `ladder` | `helepolis`, `wooden_fort`, `outpost`, `tower` +39 more |
-| Painted trim (deck edge, band) | `*_concrete` (player color) | `torii`, `stupa`, `pyramid`, `dock` +3 more |
+| Painted trim (deck edge, band) | `*_concrete` (player color) | `torii`, `stupa`, `pyramid`, `feitoria` +2 more |
 | Painted plaster roof or ledge | `*_concrete_stairs` and `*_concrete_slab` | no design |
 | Red-painted stone (Indian, Mesoamerican, East Asian temples) | `cinnabar`, `cinnabar_bricks`, `polished_cinnabar`, `chiseled_cinnabar` | `rekha_deul`, `pagoda` |
 | Yellow ochre stone (African, Middle Eastern sets) | `sulfur_bricks`, `polished_sulfur`, `chiseled_sulfur` | `sankore` |

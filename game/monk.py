@@ -48,6 +48,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import table  # noqa: E402
 import units  # noqa: E402
 
 RATE = 2.5      # hit points per AoE2 second of one monk: 150 per minute
@@ -55,7 +56,8 @@ RANGE = 4       # tiles
 EVERY = 1.0     # AoE2 seconds between two heal passes (fewer commands); a pass heals for all the time since the last one
 STILL = 0.2     # blocks: a monk that moved more since the last pass walks
 CONVERT = 9     # tiles: the conversion range
-MONKS = {"MONK": CONVERT, "MISSIONARY": 7}   # the units that heal, convert and carry relics: their conversion range (#1939)
+# The units that heal, convert and carry relics: their conversion range (#1939, the key "convert" of data/units.jsonl)
+MONKS = {r["name"]: r["convert"] for r in table.load("units.jsonl") if "convert" in r}
 PRINTING = 3    # tiles of conversion range that Block Printing adds (#1457)
 INTERVAL = 1.25  # AoE2 seconds of one conversion interval
 WARM = 4        # the first intervals only warm up
@@ -63,13 +65,15 @@ CHANCE = 0.38   # the chance of each later interval
 SURE = 9        # the 9th interval always converts
 REST = 62       # AoE2 seconds after a conversion before the monk can convert again
 ILLUMINATED = 33   # the rest after Illumination: 87.5 % faster (AoE2 wiki "Illumination", #1583)
-IMMUNE = ("KING", "QUEEN", "KHAN", "CRUSADER_KNIGHT", "HUNNIC_HORSE", "MOUNTED_SAMURAI")
+RULES = table.load("monk.jsonl")                                  # the names of IMMUNE, NEXT and LASTING (#2034)
+IMMUNE = tuple(r["name"] for r in RULES if r.get("immune"))
 TOUCH = 1.5     # blocks between a monk and a building, ram or trebuchet that it converts: next to it (AoE2)
-NEXT = ("RAM", "TREBUCHET", "SIEGE_TOWER")   # the siege units that a monk converts only next to them
-RESIST = {"DEVOTION": 1, "FAITH": 3}   # more warm intervals and a later sure one: +1 s and +4 s (AoE2 DE wiki), 5 s in all (#1584)
+NEXT = tuple(r["name"] for r in RULES if r.get("next"))   # the siege units that a monk converts only next to them
+# More warm intervals and a later sure one: +1 s and +4 s (AoE2 DE wiki), 5 s in all (#1584, "resist" of data/train.jsonl)
+RESIST = {r["name"]: r["resist"] for r in table.load("train.jsonl") if "resist" in r}
 FORT = (14, 0.13, 25)   # a building: warm intervals, chance (38 % / resistance 3) and the sure interval (AoE2 wiki)
-LASTING = ("TOWN_CENTER", "CASTLE", "KREPOST", "MONASTERY", "FORTIFIED_CHURCH", "WALL", "GATE", "WONDER", "FARM",
-           "FISH_TRAP")  # parts of the names of the buildings that no monk converts, also with Redemption
+# Parts of the names of the buildings that no monk converts, also with Redemption
+LASTING = tuple(r["name"] for r in RULES if r.get("lasting"))
 GOLD = 0.5      # gold per AoE2 second of one relic in a monastery: 30 per minute
 REACH = 1       # blocks between the clicked cell and the relic (the ray hits the ground next to the pot)
 NEAR = 2.5      # blocks from the relic or the door: there the monk picks it up or puts it in
