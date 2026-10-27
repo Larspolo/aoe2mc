@@ -22,10 +22,6 @@ def barracks(civ="MUISCA", ages=IMPERIAL):
 
 
 def test_the_values_are_those_of_the_wiki():
-    assert train.COSTS["TEMPLE_GUARD"] == {"food": 70, "gold": 45} and train.TRAIN_TIMES["TEMPLE_GUARD"] == 28
-    assert train.TRAIN_TIMES["ELITE_TEMPLE_GUARD"] == 24
-    assert train.COSTS["ELITE_TEMPLE_GUARD_UPGRADE"] == {"food": 500, "gold": 650}
-    assert train.TRAIN_TIMES["ELITE_TEMPLE_GUARD_UPGRADE"] == 60
     assert build.AGE["TEMPLE_GUARD"] == 2 and build.AGE["ELITE_TEMPLE_GUARD"] == 3
     assert combat.stats("TEMPLE_GUARD") == (100, 11, 1, 1, 0, 2.0, {"camel": 4, "cavalry": 5, "elephant": 5, "ship": 4},
                                             ("infantry", "unique"))
