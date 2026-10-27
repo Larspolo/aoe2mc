@@ -266,6 +266,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_URUMI_SWORDSMAN_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
          "ELITE_VARANGIAN_GUARD_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_WAR_WAGON_UPGRADE": lambda name, s: s,            # a new unit name: UPGRADES
+         "EUPSEONG": lambda name, s: s._replace(range=s.range + 2) if name in ("GUARD_TOWER", "KEEP") else s,   # the Koreans (#2048)
          "FABRIC_SHIELDS": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if name in ("KAMAYUK", "ELITE_KAMAYUK", "SLINGER") else s,   # the Incas (#2047)
          "FAITH": lambda name, s: s,                               # the conversion resistance: monk.resist
@@ -330,6 +331,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          if barding(s) else s,
          "PLATE_MAIL_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 2)
          if "infantry" in s.classes else s,
+         "RECURVE_BOW": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if {"archer", "cavalry"} <= set(s.classes) else s,   # the Magyars (#2045)
          "REDEMPTION": lambda name, s: s,                          # monks convert buildings and siege: monk.py
          "RING_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 2)
          if "archer" in s.classes else s,
