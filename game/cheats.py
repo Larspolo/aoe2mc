@@ -104,7 +104,8 @@ def cpu(g, player):
 def noui(g, player):
     """Hide the user interface of the game program (the sidebar, the boss bar, the hints), or show it again."""
     g.noui = not g.noui
-    g.command("scoreboard objectives setdisplay sidebar" + f" {g.board}" * (not g.noui))
+    for slot in g.sidebars():                                   # also the team sidebar (#1309)
+        g.command(f"scoreboard objectives setdisplay {slot}" + f" {g.board}" * (not g.noui))
     g.command(f"bossbar set {bossbar.bar(g)} players" + " @a" * (not g.noui))
 
 
