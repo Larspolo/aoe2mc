@@ -92,6 +92,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "FLETCHING": {"food": 100, "gold": 50},
          "FORGING": {"food": 150},
          "FORTIFIED_WALL": {"food": 200, "wood": 100},
+         "GALLEY": {"wood": 90, "gold": 30},                           # AoE2 DE wiki (#1386)
          "GOLD_MINING": {"food": 100, "wood": 75},
          "GUARD_TOWER": {"food": 100, "wood": 250},                    # the upgrade (AoE2 DE wiki "Watch Tower")
          "GUILDS": {"food": 300, "gold": 200},
@@ -166,6 +167,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "FLETCHING": 30,
                "FORGING": 50,
                "FORTIFIED_WALL": 50,
+               "GALLEY": 36,
                "GOLD_MINING": 30,
                "GUARD_TOWER": 30,
                "GUILDS": 50,
@@ -228,7 +230,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "CASTLE": ("TREBUCHET",),                                             # and the unique unit: trains() (#708, #1351)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES", "LIGHT_CAVALRY_UPGRADE"),  # (#671, #940, #1396)
           "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS"),   # (#1326, #1374, #1352)
-          "DOCK": ("FISHING_SHIP",),                                            # (#1383)
+          "DOCK": ("FISHING_SHIP", "GALLEY"),                                  # (#1383, #1386)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
           "MARKET": ("TRADE_CART", "CARAVAN", "GUILDS"),                       # (#1253, #1254)
           "MILL": ("HORSE_COLLAR",),                                            # (#726)
@@ -423,6 +425,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "FLETCHING": (2, "book", "Fletching"),
          "FORGING": (0, "book", "Forging"),
          "FORTIFIED_WALL": (0, "book", "Fortified Wall"),
+         "GALLEY": (1, "oak_boat", "Galley"),
          "GOLD_MINING": (0, "book", "Gold Mining"),
          "GUARD_TOWER": (2, "book", "Guard Tower"),
          "GUILDS": (2, "book", "Guilds"),
@@ -483,6 +486,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "FLETCHING": "Archers, towers, town center +1 attack, +1 range.",
         "FORGING": "Infantry and cavalry +1 attack.",
         "FORTIFIED_WALL": "Stone walls +1,200 HP, +4/+2 armor; also gates.",
+        "GALLEY": "All-purpose warship with ranged attack.",
         "GOLD_MINING": "Villagers mine gold 15 % faster.",
         "GUARD_TOWER": "Watch towers +480 HP, +2 attack, +1/+1 armor.",
         "GUILDS": "Market trading fee 15 %.",

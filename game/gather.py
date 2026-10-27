@@ -697,6 +697,7 @@ class Gather:
         trebs = {u for u in self.selected if self.soldiers.get(u) == trebuchet.NAME}
         for u in sorted(trebs):                                        # it unpacks first (#1351)
             trebuchet.unpack(self, u, target)
+        fleet.attack(self, {u for u in self.selected if replay.ship(self.soldiers.get(u, ""))}, target)   # (#1386)
         for u in sorted(self.selected - monks - trebs):
             self.command(ai.speed_command(u, self.soldiers[u], self.map.T, NORMAL * train.speed(self, self.soldiers[u])))
         if not monks and not trebs:
