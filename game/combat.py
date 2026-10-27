@@ -28,6 +28,8 @@ from units import pretty  # noqa: E402
 Stats = namedtuple("Stats", "hp attack melee pierce range reload bonus classes", defaults=({}, ()))
 
 INF, ARC, CAV, CAM, ELE, SIE, SPE = "infantry", "archer", "cavalry", "camel", "elephant", "siege", "spearman"
+HSI = "heavysiege"                                    # the Hussite Wagon and Ballista Elephant lines (wiki "Armor class", #1402)
+RAM = "ram"                                           # the rams, the siege tower, the unpacked trebuchet, the Armored Elephant line
 UNI = "unique"                                        # the unique units of the castles (the Samurai bonus)
 GUN = "gunpowder"                                     # the targets of the Condottiero and Winged Hussar bonus (#1007)
 SPEAR = {CAV: 15, CAM: 12, ELE: 15}                   # spearman bonus, more in the later ages of the line
@@ -72,7 +74,7 @@ STATS = {
     # #1005: a Kamayuk hits from AoE2 range 1: a melee hit. #1041: the base values of the wiki without the civilization
     # bonus (Berserk 54 HP, Janissary 35 HP, Mangudai and Samurai reload, Genoese armor, Rattan Archer HP, Teutonic armor)
     "ARAMBAI": Stats(60, 12, 0, 1, 5, 2.0, {SIE: 2}, (ARC, CAV, UNI)),
-    "BALLISTA_ELEPHANT": Stats(250, 9, 0, 3, 5, 2.5, {"building": 5}, (CAV, ELE, SIE, UNI)),
+    "BALLISTA_ELEPHANT": Stats(250, 9, 0, 3, 5, 2.5, {"building": 5}, (CAV, ELE, SIE, UNI, HSI)),
     "BERSERK": Stats(54, 12, 1, 1, 0, 2.0, {"building": 2}, (INF, UNI)),
     "BOYAR": Stats(100, 12, 4, 2, 0, 1.9, {}, (CAV, UNI)),
     "CAMEL_ARCHER": Stats(55, 7, 0, 1, 4, 2.0, {}, (ARC, CAM, UNI)),
@@ -90,7 +92,7 @@ STATS = {
     "GENOESE_CROSSBOWMAN": Stats(45, 6, 1, 0, 4, 2.0, {CAV: 5, CAM: 4, ELE: 5}, (ARC, UNI)),
     "GHULAM": Stats(60, 9, 0, 3, 0, 2.0, {ARC: 5, "building": 2}, (INF, UNI)),
     "HUSKARL": Stats(60, 10, 0, 6, 0, 2.0, {ARC: 6, "building": 2}, (INF, UNI)),
-    "HUSSITE_WAGON": Stats(160, 10, 0, 7, 6, 3.45, {SIE: 3, "building": 1}, (SIE, UNI)),
+    "HUSSITE_WAGON": Stats(160, 10, 0, 7, 6, 3.45, {SIE: 3, "building": 1}, (SIE, UNI, HSI)),
     "JAGUAR_WARRIOR": Stats(65, 15, 1, 2, 0, 2.0, {INF: 5, "building": 2}, (INF, UNI)),
     "JANISSARY": Stats(35, 17, 1, 0, 7, 3.45, {SIE: 2}, (ARC, GUN, UNI)),
     "KAMAYUK": Stats(70, 7, 1, 0, 0, 2.0, {CAV: 8, CAM: 6, ELE: 20}, (INF, UNI)),
@@ -122,7 +124,7 @@ STATS = {
     # vs standard buildings and vs all buildings. No class here: shock infantry, ships, cavalry archers. #1075: without the
     # civilization bonus, as the base units (#1041)
     "ELITE_ARAMBAI": Stats(65, 14, 0, 2, 5, 2.0, {SIE: 2}, (ARC, CAV, UNI)),
-    "ELITE_BALLISTA_ELEPHANT": Stats(280, 10, 0, 3, 5, 2.5, {"building": 8}, (CAV, ELE, SIE, UNI)),
+    "ELITE_BALLISTA_ELEPHANT": Stats(280, 10, 0, 3, 5, 2.5, {"building": 8}, (CAV, ELE, SIE, UNI, HSI)),
     "ELITE_BERSERK": Stats(62, 14, 2, 1, 0, 2.0, {"building": 3}, (INF, UNI)),
     "ELITE_BOYAR": Stats(130, 14, 8, 3, 0, 1.9, {}, (CAV, UNI)),
     "ELITE_CAMEL_ARCHER": Stats(60, 8, 1, 1, 4, 2.0, {}, (ARC, CAM, UNI)),
@@ -136,7 +138,7 @@ STATS = {
     "ELITE_GENOESE_CROSSBOWMAN": Stats(50, 6, 1, 0, 4, 2.0, {CAV: 7, CAM: 6, ELE: 7}, (ARC, UNI)),
     "ELITE_GHULAM": Stats(70, 11, 0, 6, 0, 2.0, {ARC: 6, "building": 2}, (INF, UNI)),
     "ELITE_HUSKARL": Stats(70, 12, 0, 8, 0, 2.0, {ARC: 10, "building": 3}, (INF, UNI)),
-    "ELITE_HUSSITE_WAGON": Stats(230, 13, 1, 10, 6, 3.45, {SIE: 3, "building": 2}, (SIE, UNI)),
+    "ELITE_HUSSITE_WAGON": Stats(230, 13, 1, 10, 6, 3.45, {SIE: 3, "building": 2}, (SIE, UNI, HSI)),
     "ELITE_JAGUAR_WARRIOR": Stats(75, 19, 2, 2, 0, 2.0, {INF: 6, "building": 2}, (INF, UNI)),
     "ELITE_JANISSARY": Stats(40, 22, 2, 0, 8, 3.45, {SIE: 3}, (ARC, GUN, UNI)),
     "ELITE_KAMAYUK": Stats(80, 8, 1, 1, 0, 2.0, {CAV: 12, CAM: 10, ELE: 20}, (INF, UNI)),
@@ -176,7 +178,7 @@ STATS = {
     # units of the DLCs Dynasties of India, Return of Rome and The Three Kingdoms (#1009, AoE2 wiki, DE, base unit, no civilization bonus;
     # Iron Pagoda: reload 2.16 without the Jurchen bonus). No class here: shock infantry, rams, ships; the charged
     # attacks (Fire Lancer) and "ignores armor" (Rocket Cart) are not modeled
-    "ARMORED_ELEPHANT": Stats(180, 4, -2, 140, 0, 3.0, {"building": 90, SIE: 25}, (CAV, ELE, SIE)),
+    "ARMORED_ELEPHANT": Stats(180, 4, -2, 140, 0, 3.0, {"building": 90, SIE: 25}, (CAV, ELE, SIE, RAM)),
     "FIRE_LANCER": Stats(65, 9, 1, 0, 0, 2.0, {"building": 1, CAV: 5, CAM: 4, ELE: 5}, (INF, GUN)),
     "GRENADIER": Stats(40, 12, 1, 1, 6, 3.45, {"building": 4, INF: 9, SIE: 3, SPE: 1}, (ARC, GUN, UNI)),
     "HEAVY_ROCKET_CART": Stats(65, 5, 0, 8, 8, 5.35, {"building": 12, SIE: 2}, (GUN, SIE)),
@@ -185,23 +187,23 @@ STATS = {
     "IRON_PAGODA": Stats(115, 12, 1, 3, 0, 2.16, {}, (CAV, UNI)),
     "LEGIONARY": Stats(75, 12, 2, 2, 0, 2.0, {"building": 4, INF: 4}, (INF,)),
     "ROCKET_CART": Stats(45, 5, 0, 6, 7, 5.5, {"building": 7, SIE: 2}, (GUN, SIE)),
-    "SIEGE_ELEPHANT": Stats(220, 4, -2, 150, 0, 3.0, {"building": 105, SIE: 35}, (CAV, ELE, SIE)),
+    "SIEGE_ELEPHANT": Stats(220, 4, -2, 150, 0, 3.0, {"building": 105, SIE: 35}, (CAV, ELE, SIE, RAM)),
     "TRACTION_TREBUCHET": Stats(115, 50, 1, 8, 14, 11.0, {"building": 230}, (SIE,)),
     "WHITE_FEATHER_GUARD": Stats(95, 7, 0, 2, 0, 2.0, {"building": 2, CAV: 8, CAM: 6, ELE: 8}, (INF, UNI)),
     # siege
-    "MANGONEL": Stats(50, 40, 0, 6, 7, 6.0, {"building": 35}, (SIE,)),
-    "ONAGER": Stats(60, 55, 0, 8, 8, 6.0, {"building": 45, SIE: 12}, (SIE,)),
-    "SIEGE_ONAGER": Stats(70, 75, 0, 8, 8, 6.0, {"building": 60, SIE: 12}, (SIE,)),
-    "SCORPION": Stats(40, 12, 0, 6, 7, 3.6, {ELE: 6}, (SIE,)),
-    "HEAVY_SCORPION": Stats(60, 14, 1, 8, 7, 3.6, {"building": 6, ELE: 10, INF: 2}, (SIE,)),
-    "BATTERING_RAM": Stats(175, 2, -3, 180, 0, 5.0, {"building": 125}, (SIE,)),
-    "CAPPED_RAM": Stats(200, 3, -2, 190, 0, 5.0, {"building": 160, SIE: 50}, (SIE,)),
-    "SIEGE_RAM": Stats(270, 4, -1, 195, 0, 5.0, {"building": 200, SIE: 65}, (SIE,)),
-    "SIEGE_TOWER": Stats(175, 0, -2, 100, 0, 0.0, {}, (SIE,)),         # AoE2 DE wiki (#1362)
+    "MANGONEL": Stats(50, 40, 0, 6, 7, 6.0, {"building": 35, HSI: 40, SIE: 12}, (SIE,)),   # AoE2 DE wiki (#1402)
+    "ONAGER": Stats(60, 55, 0, 8, 8, 6.0, {"building": 45, HSI: 50, SIE: 12}, (SIE,)),
+    "SIEGE_ONAGER": Stats(70, 75, 0, 8, 8, 6.0, {"building": 60, HSI: 50, SIE: 12}, (SIE,)),
+    "SCORPION": Stats(40, 11, 0, 7, 7, 3.6, {"building": 3, ELE: 7, INF: 1, RAM: 1}, (SIE,)),
+    "HEAVY_SCORPION": Stats(60, 14, 1, 8, 7, 3.6, {"building": 6, ELE: 10, INF: 2, RAM: 2}, (SIE,)),
+    "BATTERING_RAM": Stats(175, 2, -3, 180, 0, 5.0, {"building": 150, SIE: 40}, (SIE, RAM)),
+    "CAPPED_RAM": Stats(200, 3, -2, 190, 0, 5.0, {"building": 160, SIE: 50}, (SIE, RAM)),
+    "SIEGE_RAM": Stats(270, 4, -1, 195, 0, 5.0, {"building": 200, SIE: 65}, (SIE, RAM)),
+    "SIEGE_TOWER": Stats(175, 0, -2, 100, 0, 0.0, {}, (SIE, RAM)),         # AoE2 DE wiki (#1362)
     "TRANSPORT_SHIP": Stats(70, 0, 0, 2, 0, 0.0, {}, ()),              # AoE2 DE wiki (#1385)
     "TREBUCHET": Stats(150, 200, 2, 8, 16, 10.0, {"building": 250}, (SIE,)),   # AoE2 DE wiki: 150 HP (#1351); packed
     # armor (unpacked: trebuchet.UNPACKED, #1409)
-    "BOMBARD_CANNON": Stats(80, 40, 2, 5, 12, 6.5, {"building": 200}, (GUN, SIE)),
+    "BOMBARD_CANNON": Stats(80, 40, 2, 5, 12, 6.5, {"building": 200, HSI: 40, SIE: 20}, (GUN, SIE)),
     "PETARD": Stats(50, 25, 0, 2, 0, 2.0, {"building": 500, SIE: 60}),
     # cheat units (#818, AoE2 DE values of the wiki; the Cobra car shoots: a ranged unit)
     "ALFRED_THE_ALPACA": Stats(140, 120, 20, 20, 0, 2.0, {"building": 100}, (CAV,)),
@@ -288,7 +290,8 @@ SIGHT = {
     "WONDER": 8,
 }
 # Units that attack from a range with melee damage (AoE2): their hit takes the melee armor of the target (#800).
-MELEE_RANGED = {"ELITE_GBETO",
+MELEE_RANGED = {"BOMBARD_CANNON",
+                "ELITE_GBETO",
                 "ELITE_MAMELUKE",
                 "ELITE_THROWING_AXEMAN",
                 "GBETO",

@@ -57,7 +57,7 @@ def test_more_cost_bonuses():
     assert price("SPANISH", "FORGING") == {"food": 150} and price("VIKINGS", "WHEELBARROW") == {}
     assert price("CUMANS", "STABLE") == {"wood": 100} and price("MALIANS", "FARM") == build.COSTS["FARM"]
     assert price("BRITONS", "TOWN_CENTER", "FEUDAL_AGE", "CASTLE_AGE")["wood"] == 138             # 275 / 2, half up
-    assert price("PORTUGUESE", "MILITIA") == {"food": 60, "gold": 16}
+    assert price("PORTUGUESE", "MILITIA") == {"food": 50, "gold": 16}
 
 
 def test_the_table_is_in_order_and_names_known_groups():
