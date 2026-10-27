@@ -72,8 +72,10 @@ to the image after, or the AoE2 image next to the Minecraft image.
 
 Examples for the game: unit facing, light, entity behavior.
 For what only a person can see, make a check ticket with: the scenario or the command that makes the
-test world, and exact steps for the owner. It gets `needs-human` only after an agent ran the check (server, simulated
-clicks, screenshots), commented the results and the images, and listed the points that only a person can check (#580).
+test world, and exact steps for the owner. An agent runs the check (server, simulated clicks, screenshots), comments
+the results and the images, and lists the points that only a person can check (#580). Then it closes the ticket on
+this evidence with the label `owner-sample`, not `needs-human` (owner decision B, #1708): the owner checks a sample of
+the closed checks later (`human` skill, `tools/owner_tasks.py --sample`).
 A check that finds a bug does not go to the owner: make the bug tickets, add "Depends on: #bug" to the check ticket and
 check again when they are closed (#668).
 Example steps: ("Open the world. Stand at X Y Z. Look north. The knight must

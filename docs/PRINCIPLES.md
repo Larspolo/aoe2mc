@@ -81,4 +81,4 @@ the player is a bug ("this is not nice", #989).
 
 - P1 against P8: AoE2 has many buttons, Minecraft has 9 hotbar slots. Up to now P8 won: group the AoE2 buttons (#1314).
 - P4 against P6: "fine for now" is a step, not the end. An epic stays open until the later step is done or excluded.
-- P5 against quality: the owner does not check each item. A sampled check is the open question of #1708.
+- P5 against quality: the owner does not check each item. A check closes on the agent's evidence, and the owner checks a sample later (#1708).

@@ -39,3 +39,4 @@ the owner chose another option, `-`: no recommendation) · principle (`P<n>`, or
 - 2026-10-27 · #1625 · Fog only with `--ambience full` or `--fog` · changed · P3
 - 2026-10-27 · #1629 · Find the bottleneck from data; tokens are a hunch · - · P7
 - 2026-10-27 · #1674 · Check if the owner is really needed; group the owner's tickets in one game · - · P5
+- 2026-10-27 · #1708 · A check closes on the agent's evidence; the owner checks a sample (`owner-sample`) · taken · P5
