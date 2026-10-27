@@ -222,8 +222,10 @@ def effect(e):
 
 TECHS = {r["name"]: effect(r["effect"]) for r in ROWS if "effect" in r}   # a technology: its change of the AoE2 values
 SPEEDS = {"CARAVAN": ("trade units", 1.2),                        # technology: the unit (or a class of combat.STATS:
-          "FERVOR": ("monks", 1.15),                               # lower case, or a group of civs.GROUPS) and its
-          "HUSBANDRY": ("mounted", 1.1),                           # walk speed factor; cavalry, camels, elephants (#1416)
+          "CARVEL_HULL": ("ships", 1.1),                           # lower case, or a group of civs.GROUPS) and its
+          "CLINKER_CONSTRUCTION": ("ships", 1.1),                  # walk speed factor; the ships: fleet.speed (#2136)
+          "FERVOR": ("monks", 1.15),
+          "HUSBANDRY": ("mounted", 1.1),                           # cavalry, camels, elephants (#1416)
           "SQUIRES": ("infantry", 1.1)}                            # (#1415)
 SHIPWRIGHT = (0.8, 1.54)                                           # Shipwright: ships cost 80 % wood, train 54 % faster
 FASTER = {"EAGLE_SCOUT": (2, 35)}                                  # unit: the age and its train time from it (#1555)
@@ -645,9 +647,9 @@ def research(g, entry):
         if stats(g, name).range != combat.stats(name).range:          # Fletching (#724)
             g.command(combat.range_command(uuid, name, g.map.T, s=stats(g, name)))
     if entry["name"] in SPEEDS:                                    # the live units walk faster (Fervor)
-        import ai                                                  # ai imports gather, gather imports this module
-        for uuid, name in g.soldiers.items():
-            if faster(SPEEDS[entry["name"]][0], name):
+        import ai, fleet                                           # ai imports gather, gather imports this module
+        for uuid, name in g.soldiers.items():                      # a ship: fleet.tick reads speed() (#2136)
+            if faster(SPEEDS[entry["name"]][0], name) and name not in fleet.SPEEDS:
                 g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))
     if entry["name"] in REQUIRES:                                  # an age: all players see it, as in AoE2
         import ai                                                  # ai imports gather, gather imports this module

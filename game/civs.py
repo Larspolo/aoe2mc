@@ -71,6 +71,7 @@ GROUPS = {
     "scout line": lambda n, s: n in ("SCOUT_CAVALRY", "LIGHT_CAVALRY", "HUSSAR"),
     "scout line, steppe lancers": lambda n, s: n in ("SCOUT_CAVALRY", "LIGHT_CAVALRY", "HUSSAR", "STEPPE_LANCER",
                                                      "ELITE_STEPPE_LANCER"),
+    "ships": lambda n, s: "ship" in s.classes or n.endswith(("_COG", "_SHIP")),   # also the trade cog and transport ship
     "siege": lambda n, s: "siege" in s.classes,
     "skirmishers, elephant archers": lambda n, s: "SKIRMISHER" in n or n.endswith("ELEPHANT_ARCHER"),
     "skirmishers, genitours, spearman and scout lines": lambda n, s: "SKIRMISHER" in n or "GENITOUR" in n
