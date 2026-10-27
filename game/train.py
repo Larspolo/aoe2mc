@@ -56,6 +56,8 @@ An age gives the complete own walls and gates the AoE2 hit points of the new age
 It researches Guard Tower in the Castle Age and Keep (after Guard Tower) in the Imperial Age (#1374, TOWER_UPGRADES):
 the new and the complete own watch towers get the AoE2 hit points, attack and armor of the guard tower or the keep
 (build.line, build.retower). The look of the tower stays.
+It researches Shipwright in the Imperial Age (#1490, SHIPWRIGHT): the ships of the dock cost 20 % less wood (price())
+and train 54 % faster (tick()); the technologies of the dock do not change.
 """
 import json
 import math
@@ -166,6 +168,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "SCALE_BARDING_ARMOR": {"food": 150},
          "SCALE_MAIL_ARMOR": {"food": 100},
          "SCORPION": {"wood": 75, "gold": 75},
+         "SHIPWRIGHT": {"food": 1000, "gold": 300},                    # the university, Imperial Age (#1490)
          "SIEGE_TOWER": {"wood": 100, "gold": 120},                  # the Castle Age (AoE2 DE wiki, #1362)
          "SCOUT_CAVALRY": {"food": 80},
          "SIEGE_ENGINEERS": {"food": 500, "wood": 600},
@@ -283,6 +286,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "SCALE_BARDING_ARMOR": 45,
                "SCALE_MAIL_ARMOR": 40,
                "SCORPION": 30,
+               "SHIPWRIGHT": 60,
                "SIEGE_TOWER": 36,
                "SCOUT_CAVALRY": 30,
                "SIEGE_ENGINEERS": 45,
@@ -334,7 +338,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS",   # (#1326, #1374, #1352)
                          "MASONRY", "TREADMILL_CRANE",                          # (#1398, #1422) the Castle Age
                          "CHEMISTRY", "BOMBARD_TOWER_TECH",                     # (#1375)
-                         "CAREENING", "DRY_DOCK"),                              # the ships (#1441)
+                         "CAREENING", "DRY_DOCK",                               # the ships (#1441)
+                         "SHIPWRIGHT"),                                         # (#1490)
           "DOCK": ("FISHING_SHIP",                                             # (#1383)
                    "GALLEY",                                                   # (#1386)
                    "TRANSPORT_SHIP",                                           # (#1385)
@@ -485,6 +490,7 @@ TECHS = {"ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bon
          "SANCTITY": lambda name, s: s._replace(hp=s.hp + 15) if name == "MONK" else s,
          "SCALE_MAIL_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "infantry" in s.classes else s,
+         "SHIPWRIGHT": lambda name, s: s,                          # the ships: SHIPWRIGHT, price() and tick()
          "SIEGE_ENGINEERS": engineers,
          "SIEGE_ONAGER_UPGRADE": lambda name, s: s,
          "SIEGE_RAM_UPGRADE": lambda name, s: s,
@@ -500,6 +506,7 @@ SPEEDS = {"CARAVAN": ("trade units", 1.2),                        # technology: 
           "FERVOR": ("MONK", 1.15),                                # lower case, or a group of civs.GROUPS) and its
           "HUSBANDRY": ("mounted", 1.1),                           # walk speed factor; cavalry, camels, elephants (#1416)
           "SQUIRES": ("infantry", 1.1)}                            # (#1415)
+SHIPWRIGHT = (0.8, 1.54)                                           # Shipwright: ships cost 80 % wood, train 54 % faster
 CONSCRIPT = (("ARCHERY_RANGE", "BARRACKS", "CASTLE", "STABLE"), 1.33)   # Conscription: these buildings train faster
 UPGRADES = {                                                       # technology: the unit and its new unit (#941)
     "CAPPED_RAM_UPGRADE": ("BATTERING_RAM", "CAPPED_RAM"),           # the siege upgrades of AoE2 DE (#1352)
@@ -600,6 +607,7 @@ TECH_AGE = {                                                       # the age of 
     "SCALE_MAIL_ARMOR": 1,
     "CHEMISTRY": 3,
     "CONSCRIPTION": 3,
+    "SHIPWRIGHT": 3,
     "SIEGE_ENGINEERS": 3,
     "SIEGE_ONAGER_UPGRADE": 3,
     "SIEGE_RAM_UPGRADE": 3,
@@ -722,6 +730,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "SCALE_BARDING_ARMOR": (4, "book", "Scale Barding Armor"),
          "SCALE_MAIL_ARMOR": (1, "book", "Scale Mail Armor"),
          "SCORPION": (2, "crossbow", "Scorpion"),
+         "SHIPWRIGHT": (MORE, "book", "Shipwright"),                # slot 8 is Careening (#1441)
          "SIEGE_TOWER": (6, "ladder", "Siege Tower"),               # after the slots of the upgrades
          "STONE_MINING": (1, "book", "Stone Mining"),
          "STONE_SHAFT_MINING": (1, "book", "Stone Shaft Mining"),
@@ -732,7 +741,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "TRADE_CART": (0, "donkey_spawn_egg", "Trade Cart"),
          "TRADE_COG": (MORE, "birch_chest_boat", "Trade Cog"),      # units.classify: a birch chest boat
          "TRANSPORT_SHIP": (2, "spruce_chest_boat", "Transport Ship"),   # units.classify: a spruce chest boat
-         "TREADMILL_CRANE": (7, "book", "Treadmill Crane"),         # the last free slot of the university
+         "TREADMILL_CRANE": (7, "book", "Treadmill Crane"),
          "TREBUCHET": (1, "minecart", "Trebuchet"),                 # after the unique unit
          "WAR_ELEPHANT": (0, "ravager_spawn_egg", "War Elephant"),
          "WAR_GALLEY": (1, "dark_oak_boat", "War Galley"),        # the slot of the galley
@@ -837,6 +846,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "SCORPION": "Siege. Shoots bolts; weak vs. cavalry.",
         "SIEGE_TOWER": "Siege. Carries 10 infantry, archers or villagers.",
         "SCOUT_CAVALRY": "Fast. Strong vs. monks, siege; weak vs. spears.",
+        "SHIPWRIGHT": "Ships -20 % wood, train 54 % faster.",
         "SIEGE_ENGINEERS": "Siege +1 range, +20 % attack vs. buildings.",
         "SIEGE_ONAGER": "Siege. Hits all units near the target.",
         "SIEGE_ONAGER_UPGRADE": "Upgrades onagers to siege onagers.",
@@ -1119,8 +1129,18 @@ def repeatable(g, name):
 
 def price(g, name):
     """The cost of unit or technology name with the bonuses of the civilization (civs.COSTS, #1091); a technology is
-    free with the cheat "tech tech one two free" (#968)."""
-    return {} if name in TECHS and getattr(g, "free_techs", False) else civs.cost(g, name, COSTS[name])
+    free with the cheat "tech tech one two free" (#968). Shipwright: a ship costs 20 % less wood (#1490)."""
+    if name in TECHS and getattr(g, "free_techs", False):
+        return {}
+    cost = civs.cost(g, name, COSTS[name])
+    if "wood" in cost and shipwright(g, name):
+        cost["wood"] = int(cost["wood"] * SHIPWRIGHT[0] + 0.5)
+    return cost
+
+
+def shipwright(g, name):
+    """True when name is a ship of the dock and the player researched Shipwright (#1490)."""
+    return "SHIPWRIGHT" in getattr(g, "techs", ()) and name in units_of("DOCK")
 
 
 def queued(g, name):
@@ -1293,6 +1313,7 @@ def tick(g, work):
             room -= 1
             q[0]["waits"] = False
         rate = CONSCRIPT[1] if rect in fast and q[0]["name"] not in TECHS else 1   # units only, not technologies
+        rate *= SHIPWRIGHT[1] if shipwright(g, q[0]["name"]) else 1          # the ships of a dock, not its technologies
         q[0]["progress"] += 1 if getattr(g, "aegis", False) else work * rate / TRAIN_TIMES[q[0]["name"]]   # cheats.aegis
         if q[0]["progress"] >= 1 and q[0]["name"] in TECHS:
             research(g, q.pop(0))

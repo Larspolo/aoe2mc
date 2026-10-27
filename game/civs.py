@@ -192,6 +192,11 @@ MISSING = {"ARSON": ("GOTHS", "MUISCA", "ROMANS"),                              
                               "TUPI", "VIETNAMESE", "VIKINGS"),   # the wiki chart (#1502)
            "KNIGHT": ("AZTECS", "BENGALIS", "DRAVIDIANS", "GURJARAS", "HINDUSTANIS", "INCAS", "JURCHENS", "KHITANS",
                       "MAPUCHE", "MAYANS", "MUISCA", "SHU", "TUPI", "WEI", "WU"),   # the wiki chart (#1430)
+           "SHIPWRIGHT": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "BOHEMIANS", "BULGARIANS", "BURGUNDIANS", "BURMESE",
+                          "CUMANS", "FRANKS", "GEORGIANS", "HINDUSTANIS", "HUNS", "JURCHENS", "KHITANS", "KHMER",
+                          "LITHUANIANS", "MACEDONIANS", "MALIANS", "MAPUCHE", "MUISCA", "PERSIANS", "POLES", "PORTUGUESE",
+                          "PURU", "SARACENS", "SLAVS", "SPARTANS", "TATARS", "TEUTONS", "THRACIANS", "TUPI",
+                          "VIETNAMESE", "VIKINGS", "WEI", "WU"),                           # the wiki chart (#1490)
            "SQUIRES": ("CELTS", "GURJARAS", "KHMER", "MAGYARS", "MAPUCHE", "PORTUGUESE"),   # (#1415)
            "THUMB_RING": ("ARMENIANS", "AZTECS", "BENGALIS", "BOHEMIANS", "BRITONS", "BURGUNDIANS", "BURMESE", "CELTS",
                           "FRANKS", "GEORGIANS", "GOTHS", "JURCHENS", "KHMER", "MAPUCHE", "ROMANS", "SICILIANS", "SLAVS",
