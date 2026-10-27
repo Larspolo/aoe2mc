@@ -343,71 +343,8 @@ CONSCRIPT = (("ARCHERY_RANGE", "BARRACKS", "CASTLE", "STABLE"), 1.33)   # Conscr
 ARROWSLITS = {"GUARD_TOWER": 2, "KEEP": 3, "WATCH_TOWER": 1}         # Arrowslits: the attack of each tower (#1504)
 HEATED = {"BOMBARD_TOWER": 50, "CASTLE": 4, "DOCK": 4, "GUARD_TOWER": 9, "KEEP": 10,   # Heated Shot: attack against
           "WATCH_TOWER": 6}                 # ships (AoE2 DE wiki "Attack increase against ships", #1548)
-UPGRADES = {                                                       # technology: the unit and its new unit (#941)
-    "ARBALESTER_UPGRADE": ("CROSSBOWMAN", "ARBALESTER"),
-    "DEMOLITION_SHIP_UPGRADE": ("DEMOLITION_RAFT", "DEMOLITION_SHIP"),   # (#1483)
-    "CAPPED_RAM_UPGRADE": ("BATTERING_RAM", "CAPPED_RAM"),           # the siege upgrades of AoE2 DE (#1352)
-    "CAVALIER_UPGRADE": ("KNIGHT", "CAVALIER"),
-    "CHAMPION_UPGRADE": ("TWO_HANDED_SWORDSMAN", "CHAMPION"),
-    "CROSSBOWMAN_UPGRADE": ("ARCHER", "CROSSBOWMAN"),
-    "EAGLE_WARRIOR_UPGRADE": ("EAGLE_SCOUT", "EAGLE_WARRIOR"),        # (#1555)
-    "ELITE_ARAMBAI_UPGRADE": ("ARAMBAI", "ELITE_ARAMBAI"),   # the castle of the Burmese (#1751)
-    "ELITE_BALLISTA_ELEPHANT_UPGRADE": ("BALLISTA_ELEPHANT", "ELITE_BALLISTA_ELEPHANT"),   # the castle of the Khmer (#1752)
-    "ELITE_BATTLE_ELEPHANT_UPGRADE": ("BATTLE_ELEPHANT", "ELITE_BATTLE_ELEPHANT"),   # (#1556)
-    "ELITE_BOYAR_UPGRADE": ("BOYAR", "ELITE_BOYAR"),   # the castle of the Slavs (#1721)
-    "ELITE_CAMEL_ARCHER_UPGRADE": ("CAMEL_ARCHER", "ELITE_CAMEL_ARCHER"),   # the castle of the Berbers (#1723)
-    "ELITE_CANNON_GALLEON_UPGRADE": ("CANNON_GALLEON", "ELITE_CANNON_GALLEON"),
-    "ELITE_CENTURION_UPGRADE": ("CENTURION", "ELITE_CENTURION"),   # the castle of the Romans (#1749)
-    "ELITE_CHAKRAM_THROWER_UPGRADE": ("CHAKRAM_THROWER", "ELITE_CHAKRAM_THROWER"),   # the castle (#1624)
-    "ELITE_COMPOSITE_BOWMAN_UPGRADE": ("COMPOSITE_BOWMAN", "ELITE_COMPOSITE_BOWMAN"),   # the castle of the Armenians (#1759)
-    "ELITE_COUSTILLIER_UPGRADE": ("COUSTILLIER", "ELITE_COUSTILLIER"),   # the castle of the Burgundians (#1753)
-    "ELITE_CONQUISTADOR_UPGRADE": ("CONQUISTADOR", "ELITE_CONQUISTADOR"),   # the castle of the Spanish (#1744)
-    "ELITE_EAGLE_WARRIOR_UPGRADE": ("EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"),
-    "ELITE_GBETO_UPGRADE": ("GBETO", "ELITE_GBETO"),   # the castle of the Malians (#1722)
-    "ELITE_GENITOUR_UPGRADE": ("GENITOUR", "ELITE_GENITOUR"),   # (#1610)
-    "ELITE_MAGYAR_HUSZAR_UPGRADE": ("MAGYAR_HUSZAR", "ELITE_MAGYAR_HUSZAR"),   # the castle of the Magyars (#1743)
-    "ELITE_GENOESE_CROSSBOWMAN_UPGRADE": ("GENOESE_CROSSBOWMAN", "ELITE_GENOESE_CROSSBOWMAN"),   # the castle (#1724)
-    "ELITE_GHULAM_UPGRADE": ("GHULAM", "ELITE_GHULAM"),   # the castle of the Hindustanis (#1756)
-    "ELITE_HUSSITE_WAGON_UPGRADE": ("HUSSITE_WAGON", "ELITE_HUSSITE_WAGON"),   # the castle of the Bohemians (#1758)
-    "ELITE_KAMAYUK_UPGRADE": ("KAMAYUK", "ELITE_KAMAYUK"),   # the castle of the Incas (#1886)
-    "ELITE_KARAMBIT_WARRIOR_UPGRADE": ("KARAMBIT_WARRIOR", "ELITE_KARAMBIT_WARRIOR"),   # the castle of the Malay (#1750)
-    "ELITE_KESHIK_UPGRADE": ("KESHIK", "ELITE_KESHIK"),   # the castle of the Tatars (#1745)
-    "ELITE_KIPCHAK_UPGRADE": ("KIPCHAK", "ELITE_KIPCHAK"),   # the castle of the Cumans (#1885)
-    "ELITE_KONNIK_UPGRADE": ("KONNIK", "ELITE_KONNIK"),   # the castle of the Bulgarians (#1757)
-    "ELITE_LEITIS_UPGRADE": ("LEITIS", "ELITE_LEITIS"),   # the castle of the Lithuanians (#1746)
-    "ELITE_MONASPA_UPGRADE": ("MONASPA", "ELITE_MONASPA"),   # the castle of the Georgians (#1755)
-    "ELITE_OBUCH_UPGRADE": ("OBUCH", "ELITE_OBUCH"),   # the castle of the Poles (#1747)
-    "ELITE_PLUMED_ARCHER_UPGRADE": ("PLUMED_ARCHER", "ELITE_PLUMED_ARCHER"),   # the castle of the Mayans (#1887)
-    "ELITE_RATHA_UPGRADE": ("RATHA", "ELITE_RATHA"),   # the castle of the Bengalis (#1891)
-    "ELITE_RATTAN_ARCHER_UPGRADE": ("RATTAN_ARCHER", "ELITE_RATTAN_ARCHER"),   # the castle of the Vietnamese (#1888)
-    "ELITE_SERJEANT_UPGRADE": ("SERJEANT", "ELITE_SERJEANT"),   # the castle of the Sicilians (#1748)
-    "ELITE_SHOTEL_WARRIOR_UPGRADE": ("SHOTEL_WARRIOR", "ELITE_SHOTEL_WARRIOR"),   # the castle (#1725)
-    "ELITE_SHRIVAMSHA_RIDER_UPGRADE": ("SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER"),   # (#1612)
-    "ELITE_SKIRMISHER_UPGRADE": ("SKIRMISHER", "ELITE_SKIRMISHER"),
-    "ELITE_TARKAN_UPGRADE": ("TARKAN", "ELITE_TARKAN"),   # the castle of the Huns (#1726)
-    "ELITE_STEPPE_LANCER_UPGRADE": ("STEPPE_LANCER", "ELITE_STEPPE_LANCER"),   # (#1557)
-    "ELITE_URUMI_SWORDSMAN_UPGRADE": ("URUMI_SWORDSMAN", "ELITE_URUMI_SWORDSMAN"),   # the castle of the Dravidians (#1754)
-    "HALBERDIER_UPGRADE": ("PIKEMAN", "HALBERDIER"),
-    "HEAVY_CAMEL_RIDER_UPGRADE": ("CAMEL_RIDER", "HEAVY_CAMEL_RIDER"),   # (#1550)
-    "HEAVY_CAVALRY_ARCHER_UPGRADE": ("CAVALRY_ARCHER", "HEAVY_CAVALRY_ARCHER"),
-    "HEAVY_SCORPION_UPGRADE": ("SCORPION", "HEAVY_SCORPION"),
-    "HEAVY_DEMOLITION_SHIP_UPGRADE": ("DEMOLITION_SHIP", "HEAVY_DEMOLITION_SHIP"),   # (#1483)
-    "HEAVY_WARSHIPS": (("WAR_GALLEY", "GALLEON"), ("FIRE_SHIP", "FAST_FIRE_SHIP")),   # (#1483)
-    "HUSSAR_UPGRADE": ("LIGHT_CAVALRY", "HUSSAR"),
-    "IMPERIAL_SKIRMISHER_UPGRADE": ("ELITE_SKIRMISHER", "IMPERIAL_SKIRMISHER"),   # (#1611)
-    "LIGHT_CAVALRY_UPGRADE": ("SCOUT_CAVALRY", "LIGHT_CAVALRY"),
-    "LONG_SWORDSMAN_UPGRADE": ("MAN_AT_ARMS", "LONG_SWORDSMAN"),
-    "MAN_AT_ARMS_UPGRADE": ("MILITIA", "MAN_AT_ARMS"),
-    "MEDIUM_WARSHIPS": (("GALLEY", "WAR_GALLEY"), ("FIRE_GALLEY", "FIRE_SHIP"),   # two lines (#1482): lines()
-                        ("HULK", "WAR_HULK")),                                 # (#1508)
-    "ONAGER_UPGRADE": ("MANGONEL", "ONAGER"),
-    "PALADIN_UPGRADE": ("CAVALIER", "PALADIN"),
-    "PIKEMAN_UPGRADE": ("SPEARMAN", "PIKEMAN"),
-    "SIEGE_ONAGER_UPGRADE": ("ONAGER", "SIEGE_ONAGER"),
-    "SIEGE_RAM_UPGRADE": ("CAPPED_RAM", "SIEGE_RAM"),
-    "TWO_HANDED_SWORDSMAN_UPGRADE": ("LONG_SWORDSMAN", "TWO_HANDED_SWORDSMAN"),
-    "WINGED_HUSSAR_UPGRADE": ("LIGHT_CAVALRY", "WINGED_HUSSAR"),
-}
+UPGRADES = {r["name"]: tuple(map(tuple, u)) if isinstance(u[0], list) else tuple(u)   # technology: the unit and its
+            for r in ROWS if (u := r.get("upgrade"))}             # new unit (#941), "upgrade" of data/train.jsonl (#1915)
 AFTER = {r["name"]: r["after"] for r in ROWS if "after" in r}     # the technology before it in its slot
 WALL_UPGRADES = {"FORTIFIED_WALL": {"STONE_WALL": "FORTIFIED_WALL", "GATE": "FORTIFIED_GATE"}}   # technology: {wall: new} (#1326)
 TOWER_UPGRADES = {"GUARD_TOWER": {"WATCH_TOWER": "GUARD_TOWER"},   # technology: {tower: the tower of its values},
