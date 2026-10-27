@@ -18,6 +18,8 @@
 {"name": "LONGBOWMAN", "hp": 35, "attack": 6, "melee": 0, "pierce": 0, "range": 5, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"]}
 {"name": "CAVALRY_ARCHER", "hp": 50, "attack": 6, "melee": 0, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "cavalry"], "sight": 5}
 {"name": "HEAVY_CAVALRY_ARCHER", "hp": 60, "attack": 7, "melee": 1, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 4}, "classes": ["archer", "cavalry"]}
+{"name": "HEAVY_MOUNTED_CROSSBOWMAN", "hp": 55, "attack": 8, "melee": 2, "pierce": 0, "range": 4, "reload": 2.5, "bonus": {"spearman": 1}, "classes": ["archer", "cavalry"], "sight": 6, "note": "the wiki infobox (#2012)"}
+{"name": "MOUNTED_CROSSBOWMAN", "hp": 45, "attack": 7, "melee": 2, "pierce": 0, "range": 4, "reload": 2.5, "bonus": {"spearman": 1}, "classes": ["archer", "cavalry"], "sight": 6, "note": "the wiki infobox (#2012)"}
 {"name": "HAND_CANNONEER", "hp": 40, "attack": 17, "melee": 1, "pierce": 0, "range": 7, "reload": 3.45, "bonus": {"infantry": 10, "spearman": 1}, "classes": ["archer", "gunpowder"]}
 {"name": "SCOUT_CAVALRY", "hp": 45, "attack": 3, "melee": 0, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["cavalry"]}
 {"name": "LIGHT_CAVALRY", "hp": 60, "attack": 7, "melee": 0, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["cavalry"], "sight": 8}
