@@ -49,6 +49,7 @@ The market trains trade carts (#1253): a trade cart also joins g.soldiers, and t
 It researches Caravan (trade carts walk 20 % faster, SPEEDS) in the Castle Age and Guilds (trading fee 15 %, market.FEES)
 in the Imperial Age (#1254). Coinage and Banking change the tribute fee: the game program has no tribute yet.
 The barracks researches Squires in the Castle Age (#1415): all infantry of the player walks 10 % faster (SPEEDS, a class).
+It researches Arson in the Feudal Age (#1419): infantry gets +2 attack against the standard buildings (combat.STANDARD).
 The university researches Fortified Wall in the Castle Age (#1326, WALL_UPGRADES): the new and the complete own stone
 walls and gates get the fortified design and its AoE2 hit points and armor (build.design, build.upgrade).
 An age gives the complete own walls and gates the AoE2 hit points of the new age (#1372, combat.WALLS, build.upgrade).
@@ -74,6 +75,7 @@ import menu  # noqa: E402
 
 COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   # as in AoE2
          "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}, "FEUDAL_AGE": {"food": 500},
+         "ARSON": {"food": 75, "gold": 25},                           # AoE2 DE wiki (#1419)
          "BATTERING_RAM": {"wood": 160, "gold": 75},
          "BOMBARD_CANNON": {"wood": 225, "gold": 225},               # the Imperial Age, after Chemistry (#1380)
          "BOMBARD_TOWER_TECH": {"food": 800, "wood": 400},           # the university, after Chemistry (#1375)
@@ -168,6 +170,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "WHEELBARROW": {"food": 175, "wood": 50},
          "WOAD_RAIDER": {"food": 70, "gold": 25}}
 TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130,   # AoE2 seconds
+               "ARSON": 25,
                "BATTERING_RAM": 36,
                "BERSERK": 14,
                "BLAST_FURNACE": 100,
@@ -263,7 +266,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "WOAD_RAIDER": 10}
 TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", "CASTLE_AGE", "IMPERIAL_AGE"), "BARRACKS": ("MILITIA", "SPEARMAN", "MAN_AT_ARMS_UPGRADE",   # the units and technologies of each
                        "LONG_SWORDSMAN_UPGRADE", "PIKEMAN_UPGRADE",           # the Castle Age (#1396)
-                       "SQUIRES", "GAMBESONS"),                                          # (#1415)
+                       "SQUIRES", "GAMBESONS",                                           # (#1415)
+                       "ARSON"),                                              # (#1419)
           "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER",                                          # building (#654, #670, #655)
                             "CROSSBOWMAN_UPGRADE", "ELITE_SKIRMISHER_UPGRADE", "CAVALRY_ARCHER",   # (#1396, #1397)
                             "THUMB_RING"),                                                    # (#1421)
@@ -344,7 +348,9 @@ def masonry(name, s):
     return s._replace(hp=round(s.hp * 1.1), melee=s.melee + 1, pierce=s.pierce + 1) if "building" in s.classes and not wall else s
 
 
-TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
+TECHS = {"ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bonus.get("standard", 0) + 2})
+         if "infantry" in s.classes else s,                        # combat.STANDARD: not the walls (#1419)
+         "BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
          "BLAST_FURNACE": lambda name, s: s._replace(attack=s.attack + 2) if melee(s) else s,
          "BOMBARD_TOWER_TECH": lambda name, s: s,                  # the bombard tower in the build menu: build.NEEDS
          "BOW_SAW": lambda name, s: s,                             # an economy technology: gather.WORK_TECHS
@@ -444,6 +450,7 @@ REQUIRES = {"CASTLE_AGE": (2, ("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET"
             "FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP", "DOCK")),
             "IMPERIAL_AGE": (2, ("MONASTERY", "UNIVERSITY", "SIEGE_WORKSHOP"), ("CASTLE",))}   # or one of these alone
 TECH_AGE = {                                                       # the age of a technology (build.AGE): hidden before
+    "ARSON": 1,
     "BLAST_FURNACE": 3,
     "BLOODLINES": 1,
     "BODKIN_ARROW": 2,
@@ -503,6 +510,7 @@ LIMIT = 200                                                        # the AoE2 po
 REPEAT = 256                                                       # researches of one technology: "going above and beyond"
 CENSUS = 2.0                                                       # AoE2 seconds between two counts of the live units
 ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, item and name of each unit (#620)
+         "ARSON": (6, "book", "Arson"),                            # after the slot of Gambesons
          "CAPPED_RAM": (0, "minecart", "Capped Ram"),
          "CAPPED_RAM_UPGRADE": (3, "book", "Capped Ram"),        # one slot for each line of upgrades
          "CROSSBOWMAN": (0, "skeleton_spawn_egg", "Crossbowman"),
@@ -602,6 +610,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "WOAD_RAIDER": (0, "zombie_spawn_egg", "Woad Raider")}
 # The AoE2 help text of each menu item, short (#1160): the plugin shows it as the last lore line of the item (help()).
 HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
+        "ARSON": "Infantry +2 attack vs. buildings.",
         "BATTERING_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
         "BERSERK": "Viking infantry. Heals itself.",
         "BLAST_FURNACE": "Infantry and cavalry +2 attack.",

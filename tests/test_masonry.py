@@ -27,7 +27,7 @@ def test_the_university_menu_shows_masonry_in_the_castle_age():
 def test_the_values_of_masonry():
     _, g = setup()
     g.techs.add("MASONRY")
-    assert build.values(g, "HOUSE") == combat.Stats(605, 0, 1, 8, 0, 0.0, {}, ("building",))
+    assert build.values(g, "HOUSE") == combat.Stats(605, 0, 1, 8, 0, 0.0, {}, ("building", combat.STANDARD))
     assert build.values(g, "WATCH_TOWER")[:4] == (1122, 5, 2, 8)
     assert build.values(g, "STONE_WALL") == combat.stats("STONE_WALL")       # no change for walls and gates
     g.techs.add("GUARD_TOWER")

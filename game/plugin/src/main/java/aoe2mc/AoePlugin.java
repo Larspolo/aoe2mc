@@ -109,6 +109,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe building <selector> <hp> <melee armor> <pierce armor> <x0> <y0> <z0> <x1> <y1> <z1>
  *                                              make the entity the target of a building (#517, combat.building)
  *   aoe building ... <attack> <range> <reload> the building shoots arrows: range in blocks, reload in ticks (#1111)
+ *   aoe building ... <classes>                 its armor classes (default building,standard: a wall, a gate and the
+ *                                              wonder are no standard building, #1419)
  *   aoe menu <player> <title> <slot>:<material>:<name>:<lore>[:<count>] ...
  *                                              open a chest menu (#619, game/menu.py; the texts are URL-encoded)
  *   aoe menu-close <player>                    close the menu of the player
@@ -1749,7 +1751,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Sight: " + n + " units");
             return true;
         }
-        if ((args.length == 11 || args.length == 14) && args[0].equals("building")) {
+        if (args.length >= 11 && args.length <= 15 && args.length != 13 && args[0].equals("building")) {
             int hp;
             double range = 0;
             Stats st;
@@ -1757,9 +1759,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             int[] b = new int[6];
             try {
                 hp = Integer.parseInt(args[2]);
-                boolean shoots = args.length == 14;          // attack, range in blocks, reload in ticks (#1111)
+                boolean shoots = args.length >= 14;          // attack, range in blocks, reload in ticks (#1111)
+                Set<String> classes = args.length == 12 || args.length == 15   // the classes last (#1419)
+                        ? Set.of(args[args.length - 1].split(",")) : Set.of("building", "standard");
                 st = new Stats(shoots ? Integer.parseInt(args[11]) : 0, Integer.parseInt(args[3]),
-                        Integer.parseInt(args[4]), shoots, true, Set.of("building"), Map.of(),
+                        Integer.parseInt(args[4]), shoots, true, classes, Map.of(),
                         shoots ? Integer.parseInt(args[13]) : 0);
                 range = shoots ? Double.parseDouble(args[12]) : 0;
                 var c = new ArrayList<String>();
