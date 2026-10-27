@@ -31,6 +31,7 @@ import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.AbstractSkeleton;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Boat;
+import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Minecart;
@@ -180,6 +181,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * A hit on the rider takes the hit points of the horse, and the rider dies with the horse (#732).
  * A ship (#1386) is a boat with a crew (units.py): aoe stats, aoe range and aoe attack go to the crew, also as a
  * target. A hit on the boat hurts the crew, the boat does not break, and the boat goes when its crew dies (it sinks).
+ * The fire ship and the demolition ship (#1440) shoot as a siege unit (aoe range with a blast): the blaze and the
+ * creeper of their crew have no vanilla shot. The creeper crew of a demolition ship dies after its one blast.
  * A horse regenerates by itself in vanilla, an AoE2 unit does not: the plugin cancels the REGEN healing of a unit
  * with AoE2 values (#850). Other reasons (a later Monk heal) stay.
  * A building is blocks, and a mob attacks only a living entity: an invisible mob without AI (a slime of the size of
@@ -396,6 +399,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         t.getWorld().spawnParticle(Particle.EXPLOSION, at.clone().add(0, 0.5, 0), 1);
         t.getWorld().playSound(at, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
+        if (from instanceof Creeper c) {      // the demolition ship (#1440): one blast, then it dies, as a creeper. No
+            c.setHealth(0);                   // vanilla explosion: it breaks no block, and the damage is the AoE2 one
+        }
     }
 
     // AoE2 pass-through damage (#1401, wiki "Pass-through damage"): the bolt flies Range + 2 tiles in a straight line
@@ -963,6 +969,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Entity e = ev.getEntity();
         if (!(ev instanceof EntityDamageByEntityEvent) && buildings.containsKey(e.getUniqueId())) {
             ev.setCancelled(true);
+        } else if (ev.getCause() == EntityDamageEvent.DamageCause.DROWNING && e.getVehicle() instanceof Boat
+                && stats.containsKey(e.getUniqueId())) {
+            ev.setCancelled(true);                            // the blaze crew of a fire ship in the rain (#1440)
         } else if (names.containsKey(e.getUniqueId())) {      // the new health is set after the event
             Bukkit.getScheduler().runTask(this, () -> nameLine(e));
         }
@@ -1470,7 +1479,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         var goals = Bukkit.getMobGoals();
         if (r != null && (mob instanceof RangedEntity || r.siege)) {
             for (var g : goals.getAllGoals(mob)) {
-                if (SHOTS.contains(g.getKey().getNamespacedKey().getKey())) {
+                String k = g.getKey().getNamespacedKey().getKey();
+                if (SHOTS.contains(k) || r.siege && k.equals("melee_attack")) {   // the creeper of a demolition ship
                     goals.removeGoal(mob, g.getKey());
                 }
             }
