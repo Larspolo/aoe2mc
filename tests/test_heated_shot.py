@@ -85,7 +85,7 @@ def test_the_arrow_of_a_tower_with_heated_shot_hits_a_ship_harder_on_a_server(ti
         assert game.command("aoe stats @e[tag=s,limit=1] 1000 4 0 1 0 ship - 20").strip() == "Stats: 1 units"
         s = combat.stats("WATCH_TOWER")
         cmds = combat.building(uuid, "WATCH_TOWER", 1, box, s=s._replace(bonus={"ship": 6}))
-        assert cmds[-1].endswith(" building,standard ship:6")
+        assert cmds[-1].endswith(" building,standard,stone ship:6")
         for c in cmds:
             assert "Bad" not in game.command(c)
         end = time.time() + 20

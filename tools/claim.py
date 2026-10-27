@@ -10,7 +10,8 @@ a second push of another claim commit is never a fast-forward. Later claims of t
     python3 tools/claim.py N --takeover   # take the ticket from a dead run (stale or released claim, #502)
     python3 tools/claim.py N --show       # print the claim refs and the owner
     python3 tools/claim.py N --beat       # show that the own run is alive (at least every 20 minutes)
-    python3 tools/claim.py N --stale      # exit 0: the owner made no claim or beat for 30 minutes (stopped run)
+    python3 tools/claim.py N --stale      # exit 0: the owner made no claim or beat for 30 minutes (stopped run),
+                                          # 10 minutes when its PR has the label `conflict` (#1773)
     python3 tools/claim.py N --guard      # before each push: beat, and exit 1 when a PR of another branch closes N
                                           # or a union merge brought back LEARNINGS lines that main removed (#563)
     python3 tools/claim.py N --guard --pr-branch B   # the same, but the open PR of branch B (taken over) is allowed
@@ -58,6 +59,7 @@ ROADMAP = 120               # minutes: the slot of the review of docs/ROADMAP.md
 STATUS = CONFIG["status"]["issue"]   # the status issue: its state comment holds the review slot
 STALE = 30 * 60             # seconds without a claim or beat: the run stopped (usage limit, crash)
 RECENT = 30 * 60            # seconds: a "Started by" comment of another branch owns the ticket for this time (#288)
+CONFLICT = 10 * 60          # seconds: the stale time of a ticket whose PR has the label `conflict` (#1773)
 
 
 def git(*args, check=True):
@@ -118,7 +120,7 @@ def push(sha, ref, remote="origin"):
     sys.exit(f"git push failed:\n{r.stdout}{r.stderr}")
 
 
-def claim(number, takeover=False, remote="origin"):
+def claim(number, takeover=False, remote="origin", limit=STALE):
     """Push a new claim commit to the next free slot. The slot is free only when there is no claim yet or the
     last claim was released. A takeover also takes a stale claim, but never a live one: three runs took over
     one hand-off in 15 seconds, and each pushed the next slot (#502)."""
@@ -127,7 +129,7 @@ def claim(number, takeover=False, remote="origin"):
     if top:
         line = subject(slot(number, top), remote)
         if not line.startswith("Release") and not (takeover and stale(line, changed(slot(number, top), remote),
-                                                                     time.time())):
+                                                                     time.time(), limit)):
             return None
     msg = f"Claim #{number} by {who()} ({uuid.uuid4().hex}){lane()}"   # unique: two runs never push the same SHA
     sha = git("commit-tree", EMPTY_TREE, "-m", msg).stdout.strip()
@@ -274,6 +276,30 @@ def active_pr(pulls, number, me, now, limit=RECENT):
     return None
 
 
+def conflict_pr(pulls, number, now, pushed, limit=CONFLICT):
+    """Number of an open PR that closes ticket `number`, has the label `conflict` (Automerge could not merge it) and
+    no new commit for `limit` seconds, else None. pushed(p): the Unix time of its head commit. Its run reported and
+    went on to the next ticket, so its claim has no beat: 9 of 12 takeovers in 24 hours waited 30 minutes (#1773)."""
+    for p in pulls:
+        if p["state"] == "open" and "conflict" in [x["name"] for x in p.get("labels", [])] \
+                and closes(number).search(prose(p["body"])) and now - pushed(p) >= limit:
+            return p["number"]
+    return None
+
+
+def head_time(p):
+    t = api(f"commits/{p['head']['sha']}")["commit"]["committer"]["date"]
+    return datetime.datetime.fromisoformat(t.replace("Z", "+00:00")).timestamp()
+
+
+def stale_limit(number, remote="origin"):
+    """CONFLICT seconds when a PR of ticket `number` waits on a merge conflict (`conflict_pr`), else STALE."""
+    if not on_github(remote):
+        return STALE
+    pr = conflict_pr(api("pulls?state=open&per_page=100"), number, time.time(), head_time)
+    return CONFLICT if pr else STALE
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("number", type=int, help="ticket number (--comment: the comment ID, --refill: the epic)")
@@ -282,7 +308,8 @@ def main(argv=None):
     g.add_argument("--takeover", action="store_true", help="claim the next slot also when the open claim is stale")
     g.add_argument("--show", action="store_true", help="print the claim refs and their tip commits")
     g.add_argument("--beat", action="store_true", help="show that the own run is alive")
-    g.add_argument("--stale", action="store_true", help="exit 0 when the open claim had no beat for 30 minutes")
+    g.add_argument("--stale", action="store_true", help="exit 0 when the open claim had no beat for 30 "
+                   "minutes (10 when its PR has the label `conflict` and no new commit for 10 minutes)")
     g.add_argument("--guard", action="store_true", help="before a push: beat; exit 1 when another branch has a PR")
     g.add_argument("--comment", action="store_true", help="lock the owner comment with this ID")
     g.add_argument("--refill", action="store_true", help="lock the new sub-issues of this epic (0: the whole refill)")
@@ -329,7 +356,8 @@ def main(argv=None):
             print(ref, subject(ref, a.remote), f"({age:.0f} min ago)")
         if a.stale:
             ref = slot(a.number, max(found)) if found else None
-            return 0 if ref and stale(subject(ref, a.remote), changed(ref, a.remote), time.time()) else 1
+            return 0 if ref and stale(subject(ref, a.remote), changed(ref, a.remote), time.time(),
+                                      stale_limit(a.number, a.remote)) else 1
         return 0
     if a.beat:
         ref = release(a.number, a.remote, word="Beat")
@@ -365,7 +393,7 @@ def main(argv=None):
         if pr:
             print(f"owned by another run: its PR #{pr} closes #{a.number} and changed less than 30 minutes ago")
             return 1
-    ref = claim(a.number, a.takeover, a.remote)
+    ref = claim(a.number, a.takeover, a.remote, stale_limit(a.number, a.remote) if a.takeover else STALE)
     if ref:
         print(f"claimed {ref}")
         return 0

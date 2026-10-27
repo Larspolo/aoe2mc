@@ -93,9 +93,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe ballistics <team> on|off               Ballistics of the player (#1549): its archers and buildings aim where a
  *                                              moving target will be
  *   aoe gate <team> <x0> <y0> <z0> <x1> <y1> <z1>
- *                                              a gate of the team (#1325, Gates.java): its doors in the box open while
- *                                              an own or allied unit is near; the units of the team plan their paths
- *                                              through its closed doors
+ *                                              a gate of the team (#1325, Gates.java): its iron bars in the box rise
+ *                                              while an own or allied unit is near or walks a path through it; the
+ *                                              units of the team plan their paths with the gate raised (#1656)
  *   aoe goals <selector>                       the goals of the first unit (#436), for checks
  *   aoe hide <players> <uuid> ...              Player#hideEntity: the players do not see these entities, also a
  *                                              player that joins later (#1302: the enemy units out of sight in the
@@ -378,6 +378,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     alerts.hit(t, true, mob);
                 } else if (a != null && range.pass > 0) {   // a chakram flies on through the units (#1638), not buildings
                     LivingEntity v = t.getVehicle() instanceof LivingEntity h && stats.containsKey(h.getUniqueId()) ? h : t;
+                    if (v.isValid() && stats.containsKey(v.getUniqueId())) {   // AoE2 accuracy 100 % (wiki): the target
+                        harm(v, stats.get(v.getUniqueId()), a, mob);        // takes the hit, the trident only shows it
+                    }                                                      // and can miss (#1713, onHit)
                     pass(mob, v, range.blocks + range.pass, a, mob, range.part);
                 }
             }
@@ -834,6 +837,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         if (from instanceof Projectile p && p.getShooter() instanceof Entity shooter) {
             from = shooter;
+            Range r = ranges.get(shooter.getUniqueId());
+            if (r != null && r.pass > 0 && !r.siege) {      // the chakram: RangeGoal gave the damage at the throw (#1713)
+                ev.setCancelled(true);
+                p.remove();
+                return;
+            }
         }
         Stats a = stats.get(from.getUniqueId()), t = stats.get(ev.getEntity().getUniqueId());
         Building b = buildings.get(ev.getEntity().getUniqueId());
@@ -1415,6 +1424,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (mob.getVehicle() instanceof Boat || mob.isInWater()) {
             return;                                             // a unit in the water swims out (#1208)
         }
+        // findPath sets the target of the navigation to goal: with the last path still on, moveTo then takes that old
+        // path again (a not done path to the same target), and the unit keeps its last order (#1713)
+        mob.getPathfinder().stopPathfinding();
         var path = mob.getPathfinder().findPath(goal);
         if (path != null && path.getPoints().stream().anyMatch(AoePlugin::deep) && (old = malus(mob, -1f)) != null) {
             wet.put(mob.getUniqueId(), old);
@@ -1905,7 +1917,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Destroy: " + n + " buildings");
             return true;
         }
-        if (args.length == 8 && args[0].equals("gate")) {              // the doors of a gate (#1325)
+        if (args.length == 8 && args[0].equals("gate")) {              // the portcullis of a gate (#1325, #1656)
             return gates.command(sender, args);
         }
         if (args.length >= 2 && args[0].equals("minimap")) {           // #1237, #1238, #1567
@@ -1948,8 +1960,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 if (rider(mob) != null) {
                     rider(mob).setTarget(null);
                 }
-                if (gates.any()) {                                     // through the doors of an own gate (#1325)
-                    mob.getPathfinder().setCanOpenDoors(gates.opens(mob));
+                if (gates.any()) {                                     // through an own gate (#1325, #1656)
+                    gates.raise(mob);
                 }
                 dry(mob, goal);
                 mob.getPathfinder().moveTo(goal, speed);
