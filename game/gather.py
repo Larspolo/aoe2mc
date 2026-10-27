@@ -513,6 +513,7 @@ class Gather:
     ended = None                                                       # "Victory" or "Defeat": run() stops (#819)
     board = "aoe_res"                                                  # the objective of the resources (the sidebar)
     bots = ()                                                          # run() steps them too (bot.Bot, #856)
+    peers = ()                                                         # the Gathers of the other people (fog.py, #1631)
     reveal = "normal"                                                  # AoE2 "Reveal map"; "all": no fog (fog.py, #1389)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,

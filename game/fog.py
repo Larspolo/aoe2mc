@@ -8,9 +8,19 @@ Minecraft feature: Paper Player#hideEntity through the plugin (`aoe hide`, `aoe 
 the units only for the players on the team of the player (`team=p1`), not for a spectator. The plugin hides them also
 for a player who joins later. Only the changes go out: at most one hide and one show command per update (RCON_MAX).
 
-    fog.tick(g)    # gather.Gather.run: once each EVERY seconds, on Paper only
+    fog.tick(g)    # gather.Gather.run: once each EVERY seconds, on Paper only; run.Side.step for player 2 (#1631)
 """
 EVERY = 1.0             # real seconds between two updates (Replay.fog: one each second of the replay)
+
+
+def gathers(g):
+    """The Gather g and the other Gathers of the game: its bots and, in a game of two people, the Gathers of the other
+    persons (g.peers, run.play, #1631), each one time."""
+    out = [g]
+    for h in [*(b.g for b in g.bots), *g.peers]:
+        if all(h is not o for o in out):
+            out.append(h)
+    return out
 
 
 def units(g):
@@ -18,7 +28,7 @@ def units(g):
     enemy units: of aoe2mc.json and of the enemy bots)."""
     import gather                                                  # gather imports fog
     own, foe = {}, dict(g.enemies)
-    for h in [g, *(b.g for b in g.bots)]:
+    for h in gathers(g):
         mine = dict.fromkeys(h.villagers, "VILLAGER") | h.soldiers
         (own if gather.allied(g.players, g.player, h.player) else foe).update(mine)
     return own, {u: n for u, n in foe.items() if u not in own}     # a converted unit is own (monk.py)
@@ -28,7 +38,7 @@ def targets(g):
     """The target UUIDs of the own and allied buildings and construction sites (combat.target_uuid): Gather.where
     answers the live ones in the same commands as the units, so a destroyed building costs no command (#1470)."""
     import combat, gather
-    return {combat.target_uuid(fp) for h in [g, *(b.g for b in g.bots)] if gather.allied(g.players, g.player, h.player)
+    return {combat.target_uuid(fp) for h in gathers(g) if gather.allied(g.players, g.player, h.player)
             for fp in [o["footprint"] for o in h.data["objects"]
                        if o["kind"] == "building" and o["player"] == h.player and "footprint" in o]
             + [[s["footprint"][i] for i in (0, 2, 1, 3)] for s in h.sites]}
@@ -40,7 +50,7 @@ def update(g, pos):
     import gather
     state = vars(g).setdefault("fog", {"hidden": set(), "at": None})
     own, foe = units(g)
-    tiles = set().union(*(h.seen_tiles(pos, pos.keys()) for h in [g, *(b.g for b in g.bots)]
+    tiles = set().union(*(h.seen_tiles(pos, pos.keys()) for h in gathers(g)
                           if gather.allied(g.players, g.player, h.player)))   # a destroyed building sees nothing
     towers = set().union(*vars(g).get("towers", {}).values())
     out = {u for u, p in pos.items() if u in foe and u not in towers
