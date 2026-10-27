@@ -267,6 +267,9 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
                                 "PURU", "ROMANS", "SAXONS", "SHU", "SICILIANS", "SLAVS",
                                 "SPANISH", "SPARTANS", "TEUTONS", "THRACIANS", "TUPI",
                                 "VARANGIANS", "VIETNAMESE", "VIKINGS", "WU"),   # the wiki chart (#1505)
+           "SAPPERS": ("BENGALIS", "BERBERS", "BULGARIANS", "BURMESE", "BYZANTINES", "DANES", "DRAVIDIANS", "FRANKS",
+                       "HINDUSTANIS", "ITALIANS", "JAPANESE", "KHITANS", "KOREANS", "LITHUANIANS", "MUISCA",
+                       "SARACENS", "VARANGIANS", "WEI", "WU"),                     # the wiki chart (#1580)
            "SHIPWRIGHT": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "BOHEMIANS", "BULGARIANS", "BURGUNDIANS", "BURMESE",
                           "CUMANS", "FRANKS", "GEORGIANS", "HINDUSTANIS", "HUNS", "JURCHENS", "KHITANS", "KHMER",
                           "LITHUANIANS", "MACEDONIANS", "MALIANS", "MAPUCHE", "MUISCA", "PERSIANS", "POLES", "PORTUGUESE",
