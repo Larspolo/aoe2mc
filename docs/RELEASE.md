@@ -39,7 +39,7 @@ Bug reserve: 0.3
 | `convert:large` | B | | | |
 | `convert:minimap` | A | | | |
 | `convert:random-maps` | C | | | |
-| `convert:random-maps-more` | C | 4 | | |
+| `convert:random-maps-more` | C | | | |
 | `convert:mood` | C | | | |
 | `convert-check-maps` | B | 5 | A test set of 20 real maps (the ranked map pool, 3 campaigns, 2 old .scx scenarios) converts with no error, no unit in a block and no load error on a server | |
 | `convert-check-look` | B | 3 | A person checks the screenshots of the test set; the fixes of what they find | |
@@ -59,14 +59,14 @@ Bug reserve: 0.3
 | `play:menu` | B | | | |
 | `play:health` | B | | | |
 | `play:military-train` | B | | | |
-| `play:tech` | A | 8 | | |
+| `play:tech` | A | | | |
 | `play:ages` | A | 6 | | |
 | `play:feedback` | B | | | |
 | `play:control` | B | | | |
 | `play:garrison` | B | | | |
 | `play:arrows` | C | | | |
-| `play:win` | B | 3 | | |
-| `play:walls` | A | 5 | | |
+| `play:win` | B | | | |
+| `play:walls` | A | | | |
 | `play:civs` | C | | | |
 | `play:monks` | C | | | |
 | `play:market` | C | | | |
@@ -81,7 +81,7 @@ Bug reserve: 0.3
 | `play:diplomacy` | C | | | |
 | `play:hunt` | C | | | |
 | `play:setup` | C | | | |
-| `play:alerts` | C | 3 | | |
+| `play:alerts` | C | | | |
 | `play:scenario` | C | 6 | | |
 | `play:minimap` | C | 3 | | |
 | `play:spectate` | C | 2 | | |
@@ -93,6 +93,8 @@ Bug reserve: 0.3
 | `play:farm-reseed` | C | 2 | | |
 | `play:game-modes` | C | 4 | | |
 | `play:formations` | C | 3 | | |
+| `play:town-bell` | C | 2 | | |
+| `play:delete` | C | 1 | | |
 | `play-check-game` | B | 5 | An agent plays a full game against the bot with a script, from the Dark Age to a win or a loss (about 30 minutes): no server error, no stuck unit | |
 | `play-check-speed` | B | 2 | With 200 units of each player, the server keeps 20 ticks per second | |
 | `play-check-kit` | B | 2 | A play-test kit: how to start and join, the controls, how to report a bug | |
@@ -114,9 +116,9 @@ Bug reserve: 0.3
 | `replay:score` | A | | | |
 | `replay:effects` | C | | | |
 | `replay:postgame` | C | | | |
-| `replay:team-games` | C | 3 | | |
-| `replay:minimap` | C | 3 | | |
-| `replay:fog` | C | 3 | | |
+| `replay:team-games` | C | | | |
+| `replay:minimap` | C | | | |
+| `replay:fog` | C | | | |
 | `replay:taunts` | C | 1 | | |
 | `replay-check-full` | B | 5 | A complex record (a team game of about 40 minutes with castles and large fights) replays from start to end with no error | |
 | `replay-check-follow` | B | 3 | The position tool (#813) shows no stray unit and less than 5 % stuck units on that record | |

@@ -91,6 +91,7 @@ COSTS = {r["name"]: r["cost"] for r in ROWS}                       # as in AoE2
 TRAIN_TIMES = {r["name"]: r["time"] for r in ROWS}                 # AoE2 seconds
 TRAINS = {b: tuple(r["name"] for r in ROWS if r["building"] == b)    # the units and technologies of each
           for b in dict.fromkeys(r["building"] for r in ROWS if r["building"])}   # building, in file order
+TRAINS["FOLWARK"] = TRAINS["MILL"]                                 # the mill of the Poles (#1874)
 TRAINS["KREPOST"] = ()                                             # trains() adds the Konnik (#1872)
 # The unique unit of each civilization (AoE2 DE, "unique" in data/civs.jsonl, #1914), trained at its castle. A unit
 # without COSTS is not in the menu yet: it has no AoE2 combat values in combat.STATS.
@@ -347,6 +348,7 @@ TECH_AGE = {r["name"]: r["age"] for r in ROWS if "age" in r}       # the age of 
 AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age after each researched age (index: ages)
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
 HOUSING = {"TOWN_CENTER": 5, "HOUSE": 5, "CASTLE": 20,            # population of a complete building, as in AoE2
+           "FOLWARK": 5,                                          # (#1874)
            "KREPOST": 20}                                         # (#1872)
 LIMIT = 200                                                        # the AoE2 population limit
 REPEAT = 256                                                       # researches of one technology: "going above and beyond"
@@ -651,8 +653,9 @@ def missing(g, name):
     n, names, *alone = REQUIRES.get(name, (0, ()))
     if civs.civ(g) in civs.AGE_NO_BUILDINGS:                       # the Khmer (#1926)
         return None
-    has, alone = sorted(set(names) & set(owned(g))), alone[0] if alone else ()
-    if len(has) < n and not set(alone) & set(owned(g)):
+    own = {"MILL" if b == "FOLWARK" else b for b in owned(g)}      # the Folwark is the mill of the Poles (#1874)
+    has, alone = sorted(set(names) & own), alone[0] if alone else ()
+    if len(has) < n and not set(alone) & own:
         return f"needs {''.join(f'a {build.pretty(b).lower()} or ' for b in alone)}{n} of {', '.join(build.pretty(b).lower() for b in names)} ({len(has)}/{n})"
 
 
