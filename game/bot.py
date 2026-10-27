@@ -56,6 +56,8 @@ class Bot:
             self.g.map.trees, self.g.map.bushes, self.g.map.mines = share.map.trees, share.map.bushes, share.map.mines
         self.g.board = f"aoe_bot{player}"                              # not aoe_res: the sidebar of player 1
         self.failed = set()                                            # sources that a villager could not reach
+        self.sides = (None, {})                                        # (own and foe places, {tile: at home}) (#1810)
+        self.g.home = self.home                                        # the next bush or mine of Gather.nearest too
 
     def setup(self):
         """Find the villagers of the player (the entities must be loaded) and make the objective of the resources."""
@@ -70,8 +72,29 @@ class Bot:
         """{tile: amount} of the trees, the fruit bushes and the own farms without a farmer, or the mines of res."""
         m = self.g.map
         if res == "food":                                              # a farm takes one farmer (Gather.send)
-            return {**m.bushes, **{t: k for t, k in m.farms.items() if t in m.own_farms and t not in self.g.farmers}}
-        return m.trees if res == "wood" else m.mines[res]
+            return self.home({**m.bushes, **{t: k for t, k in m.farms.items() if t in m.own_farms and t not in self.g.farmers}})
+        return self.home(m.trees if res == "wood" else m.mines[res])
+
+    def home(self, sources):
+        """The sources {tile: amount} whose tile is not nearer to a building of the foe than to an own town center or
+        drop site (#1810): an AoE2 AI gathers at its own base. Else the bot sent its villagers to the bushes next to the
+        town center of the foe when its own ones were empty, and they died there; now it builds farms (build)."""
+        g, T = self.g, self.g.map.T
+        own = tuple(sorted((sum(x for x, _ in c) / len(c), sum(z for _, z in c) / len(c))
+                           for r in sorted(g.map.drops) for c in g.map.drops[r] if c))
+        foe = tuple(sorted({((x0 + x1) / 2, (z0 + z1) / 2) for o in g.data["objects"] if o["kind"] == "building"
+                            and o["player"] == self.foe and "footprint" in o for x0, z0, x1, z1 in [o["footprint"]]} |
+                           {((x0 + x1) / 2, (z0 + z1) / 2) for s in (self.share.sites if self.share else ())
+                            if s["player"] == self.foe for x0, x1, z0, z1 in [s["footprint"]]}))
+        if not own or not foe:
+            return sources
+        if self.sides[0] != (own, foe):                                # a new building: decide each tile again
+            self.sides = ((own, foe), {})
+        at = self.sides[1]
+        for t in sources.keys() - at.keys():
+            c = ((t[0] + 0.5) * T, (t[1] + 0.5) * T)
+            at[t] = min(math.dist(c, p) for p in own) <= min(math.dist(c, p) for p in foe)
+        return {t: k for t, k in sources.items() if at[t]}
 
     def step(self):
         """One tick of the gather game of the player, then orders for the idle villagers."""
@@ -213,7 +236,7 @@ class Bot:
 
     def build(self):
         """Start the next house, farm or building of ORDER when the bot can pay for it and no site of it is unfinished.
-        A farm when no food source is left (#1026), at most one for each food villager of the shares."""
+        A farm when no food source is left at its base (#1026, #1810), at most one for each food villager of the shares."""
         g = self.g
         if open_ := [s for s in g.sites if not s.get("done")]:           # one site at a time
             for site in open_:                                         # its builder left or died (#1121)
