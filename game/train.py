@@ -311,6 +311,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "KEEP": lambda name, s: s,                                # the towers of the player: TOWER_UPGRADES
          "LEATHER_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "archer" in s.classes else s,
+         "LEGIONARY_UPGRADE": lambda name, s: s,                   # a new unit name: UPGRADES
          "LIGHT_CAVALRY_UPGRADE": lambda name, s: s,
          "LONG_SWORDSMAN_UPGRADE": lambda name, s: s,
          "LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
