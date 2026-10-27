@@ -91,6 +91,12 @@ ground, no attack) has a **chest menu of the Paper plugin**, with the same behav
 banner), a click sets the stance of the selection, and the menu closes. The menu has room for more unit commands
 later (formations, delete). Not chosen: a hotbar item that goes to the next stance, and a chat command. Epic #1103.
 
+**Owner decision (2026-10-27): go to places** (#1828, option B). A "Go to" compass in hotbar slot 2 (key 3) opens a
+**chest menu** with each own town center, each saved control group and the next idle villager (the AoE2 keys H, a
+double press of a group number, and "."). A click puts the player above the place, facing it, and a click on a group
+selects it too (`game/goto.py`, #1830). The F key stays free (no swap-hands use) until the owner decides on it. A click
+on an attack alert line in the chat goes to its place with the same view (`Alerts.view`, #1816).
+
 ### Smallest playable milestone: "villagers gather wood"
 
 1. The converter writes `aoe2mc.json` into the world folder: each object with its AoE2 ID, name, owner,
@@ -430,3 +436,4 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - A real-client check (`mc_shot.Client`) that aims with `tp aoe2mc X Y Z YAW PITCH` above the ground: the player falls in about 1 s, so the look changes before the click. Put a `barrier` block under the feet first (#1815). `xdotool mousedown 3` and `mouseup 3` give a held right click of the command stick.
 - A click on a chat line with `mc_shot.Client` (GUI scale 3, 1280 × 720): the last line is at y = 720 - 40 × 3 - 9 × 3 // 2 (587), after `key("t")`. A `run_command` click of a command with a permission can show a confirmation screen: give the click its own plugin command with no permission (`aoego`, #1816). A teleport in creative mode does not fly: the player falls; call `setFlying(true)` when `getAllowFlight()`.
 - The hit points of a building in a game: `scoreboard players get <target UUID> aoe_hp` (`combat.target_uuid(footprint)`; the plugin keeps them there, not in the slime health). With the number of attackers this measures the AoE2 damage rate in a check (#964: 4 militia, 8.6 HP/s from a dock).
+- `mc_shot.Client`: `key("3")` did not change the hotbar slot in two runs (#1830): turn the wheel (`xdo("click", "5")`, one slot per click, some get lost) until `execute if items entity NAME weapon.mainhand ...` passes. `data get entity NAME Inventory` comes back cut ("...") over RCON: test an item with `execute if items`.
