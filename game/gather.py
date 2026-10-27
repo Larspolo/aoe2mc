@@ -88,9 +88,12 @@ AOE2_WORK, NORMAL = {"wood": 0.39, "food": 0.31, "farm": 0.33, "gold": 0.38, "st
 WORK_SECONDS = {r: 1 / (w * NORMAL) for r, w in AOE2_WORK.items()}    # real seconds per unit, as at Normal speed
 CARRY = {"WHEELBARROW": 3}                                         # more resources per trip, as in AoE2 (#728)
 PACE = {"WHEELBARROW": 1.1}                                        # the villager walk speed factor, as in AoE2
-WORK_TECHS = {"DOUBLE_BIT_AXE": {"wood": 1.2},                     # work rate factors of the economy technologies (AoE2)
+WORK_TECHS = {"BOW_SAW": {"wood": 1.2},                            # work rate factors of the economy technologies (AoE2)
+              "DOUBLE_BIT_AXE": {"wood": 1.2},
               "GOLD_MINING": {"gold": 1.15},
-              "STONE_MINING": {"stone": 1.15}}
+              "GOLD_SHAFT_MINING": {"gold": 1.15},
+              "STONE_MINING": {"stone": 1.15},
+              "STONE_SHAFT_MINING": {"stone": 1.15}}
 # Food of a hunted animal, as in AoE2 DE (the AoE2 wiki; a "COW_..." name is a cow, #1058).
 HUNT_FOOD = {"COW": 150,
              "DEER": 140,
