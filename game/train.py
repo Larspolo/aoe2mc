@@ -87,6 +87,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "MANGUDAI": {"wood": 55, "gold": 65},
          "MONK": {"gold": 100},
          "PADDED_ARCHER_ARMOR": {"food": 100},
+         "REDEMPTION": {"gold": 475},
          "SAMURAI": {"food": 45, "gold": 30},
          "SANCTITY": {"gold": 175},
          "SCALE_BARDING_ARMOR": {"food": 150},
@@ -125,6 +126,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "MANGUDAI": 26,
                "MONK": 51,
                "PADDED_ARCHER_ARMOR": 40,
+               "REDEMPTION": 50,
                "SAMURAI": 9,
                "SANCTITY": 60,
                "SCALE_BARDING_ARMOR": 45,
@@ -149,7 +151,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "MARKET": ("TRADE_CART", "CARAVAN", "GUILDS"),                       # (#1253, #1254)
           "MILL": ("HORSE_COLLAR",),                                            # (#726)
           "MINING_CAMP": ("GOLD_MINING", "STONE_MINING"),                      # (#727, #939)
-          "MONASTERY": ("MONK", "FERVOR", "SANCTITY")}                          # (#1243, #1261)
+          "MONASTERY": ("MONK", "FERVOR", "SANCTITY", "REDEMPTION")}            # (#1243, #1261, #1264)
 # The unique unit of each civilization (AoE2 DE), trained at its castle. A unit without COSTS is not in the menu yet:
 # it has no AoE2 combat values in combat.STATS.
 UNIQUE = {"BRITONS": "LONGBOWMAN", "PERSIANS": "WAR_ELEPHANT", "BYZANTINES": "CATAPHRACT", "CELTS": "WOAD_RAIDER",
@@ -181,6 +183,7 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "MAN_AT_ARMS_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "PADDED_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "archer" in s.classes else s,
+         "REDEMPTION": lambda name, s: s,                          # monks convert buildings and siege: monk.py
          "SCALE_BARDING_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if barding(s) else s,
          "SANCTITY": lambda name, s: s._replace(hp=s.hp + 15) if name == "MONK" else s,
@@ -207,6 +210,7 @@ TECH_AGE = {                                                       # the age of 
     "HORSE_COLLAR": 1,
     "MAN_AT_ARMS_UPGRADE": 1,
     "PADDED_ARCHER_ARMOR": 1,
+    "REDEMPTION": 2,
     "SANCTITY": 2,
     "SCALE_BARDING_ARMOR": 1,
     "SCALE_MAIL_ARMOR": 1,
@@ -249,6 +253,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "MANGUDAI": (0, "skeleton_horse_spawn_egg", "Mangudai"),
          "MONK": (0, "evoker_spawn_egg", "Monk"),
          "PADDED_ARCHER_ARMOR": (3, "book", "Padded Archer Armor"),
+         "REDEMPTION": (3, "book", "Redemption"),
          "SAMURAI": (0, "zombie_spawn_egg", "Samurai"),
          "SANCTITY": (2, "book", "Sanctity"),
          "SCALE_BARDING_ARMOR": (4, "book", "Scale Barding Armor"),
@@ -289,6 +294,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "MILITIA": "Infantry. Strong vs. eagles; weak vs. archers.",
         "MONK": "Heals own units, converts enemy units.",
         "PADDED_ARCHER_ARMOR": "Archers +1 melee armor, +1 pierce armor.",
+        "REDEMPTION": "Monks convert siege and most buildings.",
         "SAMURAI": "Japanese infantry. Strong vs. unique units.",
         "SANCTITY": "Monks +15 HP.",
         "SCALE_BARDING_ARMOR": "Cavalry +1 melee armor, +1 pierce armor.",
