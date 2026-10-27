@@ -34,7 +34,7 @@ def show(g, uuid):
     g.bar, n = uuid, len(g.selected)
     stance = getattr(g, "stances", {}).get(uuid)                       # not aggressive (#1107)
     text = pretty(name(g, uuid)) + (f" ({n})" if n > 1 else "") + (f" · {pretty(stance)}" if stance else "")
-    for c in (f"bossbar set {bar(g)} name {json.dumps(text)}", f"bossbar set {bar(g)} players" + " @a" * (not g.noui),
+    for c in (f"bossbar set {bar(g)} name {json.dumps(text)}", f"bossbar set {bar(g)} players" + f" {getattr(g, 'who', '@a')}" * (not g.noui),
               f"execute store result bossbar {bar(g)} max run attribute {uuid} minecraft:max_health get"):
         g.command(c)
     if tick(g):

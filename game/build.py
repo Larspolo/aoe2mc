@@ -180,9 +180,10 @@ def setup(g):
 
 def tick(g):
     """Players who joined since the last tick get the menu; all players may use the trigger (it locks after use)."""
-    g.command(f"execute as @a unless score @s {OBJECTIVE} matches 0.. run tellraw @s {menu()}")
-    g.command(f"scoreboard players add @a {OBJECTIVE} 0")
-    g.command(f"scoreboard players enable @a {OBJECTIVE}")
+    who = getattr(g, "who", "@a")                                      # two people: only the own team (#1310)
+    g.command(f"execute as {who} unless score @s {OBJECTIVE} matches 0.. run tellraw @s {menu()}")
+    g.command(f"scoreboard players add {who} {OBJECTIVE} 0")
+    g.command(f"scoreboard players enable {who} {OBJECTIVE}")
     if getattr(g, "paper", False):
         ghosts(g)
 
@@ -244,8 +245,8 @@ def ghosts(g):
     blocked one, as place() tests it; the ghost goes away when the choice ends (placed, cancelled)."""
     import fleet, gather                                               # gather imports build
     who = {}
-    if "passed" in g.command(f"execute if entity @a[scores={{{OBJECTIVE}=1..}}]"):
-        for p in (n.strip() for n in g.command("list").split(":", 1)[-1].split(",")):
+    if "passed" in g.command(f"execute if entity {gather.only(g.who, f'scores={{{OBJECTIVE}=1..}}')}"):
+        for p in g.people():
             if p and (name := chosen(g, p)) and not locked(g, name):
                 who[p] = name
     for p in [p for p in g.ghosts if p not in who]:

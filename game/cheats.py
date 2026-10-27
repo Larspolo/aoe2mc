@@ -106,7 +106,7 @@ def noui(g, player):
     g.noui = not g.noui
     for slot in g.sidebars():                                   # also the team sidebar (#1309)
         g.command(f"scoreboard objectives setdisplay {slot}" + f" {g.board}" * (not g.noui))
-    g.command(f"bossbar set {bossbar.bar(g)} players" + " @a" * (not g.noui))
+    g.command(f"bossbar set {bossbar.bar(g)} players" + f" {g.who}" * (not g.noui))
 
 
 def woof(g, player):
@@ -245,10 +245,11 @@ def apply(g, player, code):
 
 def clicks(g):
     """Do the cheat of each player who typed a code since the last call. Returns the (player, code) pairs."""
-    if not g.cheats or "passed" not in g.command(f"execute if entity @a[scores={{{OBJECTIVE}=1..}}]"):
+    import gather                                                      # gather imports this module
+    if not g.cheats or "passed" not in g.command(f"execute if entity {gather.only(g.who, f'scores={{{OBJECTIVE}=1..}}')}"):
         return []
     out = []
-    for player in (n.strip() for n in g.command("list").split(":", 1)[-1].split(",")):
+    for player in g.people():                                          # two people: only the own team (#1310)
         m = player and re.search(r" has (\d+) ", g.command(f"scoreboard players get {player} {OBJECTIVE}"))
         if m and 0 < int(m.group(1)) <= len(NAMES):
             g.command(f"scoreboard players reset {player} {OBJECTIVE}")
