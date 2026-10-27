@@ -463,9 +463,10 @@ def conflicted(comments):
                    if (c.get("body") or "").lstrip().startswith("CI is green, but the merge failed")})
 
 
-def conflict_files(files_of, n=5):
-    """The n files that the most conflicted PRs change: where parallel tickets meet (files_of: PR -> file names)."""
-    return Counter(f for fs in files_of.values() for f in set(fs)).most_common(n)
+def conflict_files(files_of, n=5, prefix=""):
+    """The n files (names that start with prefix) that the most conflicted PRs change: where parallel tickets meet
+    (files_of: PR -> file names)."""
+    return Counter(f for fs in files_of.values() for f in set(fs) if f.startswith(prefix)).most_common(n)
 
 
 RUN = re.compile(r"^(?:Started|Taken over) by `([^`]+)`")
@@ -534,6 +535,9 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
     if files_of:
         out.append(f"Files of the {len(files_of)} conflicted PRs (PRs): "
                    + "; ".join(f"{f} {k}" for f, k in conflict_files(files_of)))
+        shared = [(f, k) for f, k in conflict_files(files_of, prefix="tests/") if k > 1]
+        if shared:                                         # a count or a list of the data in a test (owner, #2008)
+            out.append("Test files of 2 or more conflicted PRs (PRs): " + "; ".join(f"{f} {k}" for f, k in shared))
     s = [x for x in samples(status_comments) if x[0] >= since]
     b, r = burn_pairs(s), burn_ratio(s)
     out.append(f"Burn per run-hour (ratio of sums of {len(s)} Usage lines, used by usage.py): "
