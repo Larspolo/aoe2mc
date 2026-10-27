@@ -165,6 +165,8 @@ MISSING = {"ARSON": ("GOTHS", "MUISCA", "ROMANS"),                              
                               "FRANKS", "GURJARAS", "INCAS", "ITALIANS", "MAPUCHE", "MAYANS", "MUISCA", "POLES",
                               "PORTUGUESE", "SAXONS", "SICILIANS", "SPANISH", "TEUTONS", "TUPI", "VARANGIANS", "VIKINGS",
                               "WEI"),                                 # the wiki chart (#1430)
+           "DEMOLITION_RAFT": ("DANES", "KOREANS", "PORTUGUESE", "SAXONS", "VARANGIANS", "VIKINGS"),   # (#1481)
+           "DEMOLITION_SHIP": ("DANES", "KOREANS", "PORTUGUESE", "SAXONS", "VARANGIANS", "VIKINGS"),   # (#1481)
            "FORTIFIED_WALL": ("BULGARIANS", "CUMANS", "DANES", "GOTHS", "HUNS", "MAGYARS", "MALAY", "MAPUCHE", "MUISCA",
                               "PERSIANS", "SICILIANS", "TUPI", "WU"),
            "GAMBESONS": ("ACHAEMENIDS", "ATHENIANS", "BERBERS", "BOHEMIANS", "BURGUNDIANS", "CHINESE", "CUMANS",
