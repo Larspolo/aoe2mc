@@ -703,7 +703,7 @@ def values(g, name, techs=None):
     import combat, train                                               # combat -> gather -> build: import it late
     techs = getattr(g, "techs", ()) if techs is None else techs
     name = line(g, name, techs)
-    s = combat.stats(name)
+    s = civs.hp(civs.civ(g) if hasattr(g, "data") else None, name, combat.stats(name))   # before Masonry (#1895)
     for t in sorted(techs):
         s = train.TECHS[t](name, s)
     return s
