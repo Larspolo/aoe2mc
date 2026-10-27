@@ -65,7 +65,7 @@ def test_a_trained_unit_is_a_rider_with_its_aoe2_values(building, name, mount, r
 def test_each_menu_slot_of_a_building_has_one_item():
     """Two items in one slot: a click orders only the first one."""
     for building, names in train.TRAINS.items():
-        slots = [train.ITEMS[n][0] for n in names if n not in train.AFTER]
+        slots = [train.ITEMS[n][0] for n in names if train.AFTER.get(n) not in names]   # AFTER: the slot of the one before
         assert len(slots) == len(set(slots)), building
 
 

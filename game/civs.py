@@ -173,6 +173,13 @@ MISSING = {"ARSON": ("GOTHS", "MUISCA", "ROMANS"),                              
            "DEMOLITION_SHIP": ("DANES", "KOREANS", "PORTUGUESE", "SAXONS", "VARANGIANS", "VIKINGS"),   # (#1481)
            "DRY_DOCK": ("BOHEMIANS", "BULGARIANS", "BURGUNDIANS", "CUMANS", "GEORGIANS", "GOTHS", "GURJARAS",
                         "HINDUSTANIS", "KHITANS", "MAPUCHE", "MONGOLS", "POLES", "ROMANS", "TEUTONS", "WEI"),   # (#1441)
+           "ELITE_CANNON_GALLEON_UPGRADE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "BRITONS", "BULGARIANS",
+                                            "BYZANTINES", "CELTS", "CHINESE", "CUMANS", "DANES", "ETHIOPIANS", "FRANKS",
+                                            "GEORGIANS", "GOTHS", "GURJARAS", "HUNS", "INCAS", "JURCHENS", "KHITANS",
+                                            "MACEDONIANS", "MAGYARS", "MALIANS", "MAPUCHE", "MAYANS", "MONGOLS",
+                                            "MUISCA", "POLES", "PURU", "ROMANS", "SAXONS", "SHU", "SICILIANS", "SLAVS",
+                                            "SPARTANS", "TEUTONS", "THRACIANS", "TUPI", "VARANGIANS", "VIKINGS", "WEI",
+                                            "WU"),   # the wiki chart (#1491)
            "FAST_FIRE_SHIP": ("ARMENIANS", "BOHEMIANS", "BULGARIANS", "BURMESE", "CELTS", "CHINESE", "ETHIOPIANS",
                               "GURJARAS", "HINDUSTANIS", "HUNS", "JURCHENS", "MUISCA", "PORTUGUESE", "SARACENS",
                               "SAXONS", "SHU", "TUPI", "TURKS", "VIETNAMESE", "VIKINGS"),   # the wiki chart (#1483)
