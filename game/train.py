@@ -236,6 +236,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_LEITIS_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
          "ELITE_MONASPA_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "ELITE_OBUCH_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
+         "ELITE_ORGAN_GUN_UPGRADE": lambda name, s: s,             # a new unit name: UPGRADES
          "ELITE_PLUMED_ARCHER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
          "ELITE_RATHA_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "ELITE_RATTAN_ARCHER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
