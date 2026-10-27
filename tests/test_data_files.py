@@ -56,13 +56,14 @@ def check_buildings(row):
 def check_train(row):
     form(row, {"name": str, "building": (str, type(None)), "slot": int, "item": str, "label": str, "cost": dict,
                "time": int, "help": str},
-         {"age": int, "after": str, "upgrade": list, "note": str})
+         {"age": int, "after": str, "civ": str, "upgrade": list, "note": str})
     n = row["name"]
     assert row["building"] is None or row["building"] in NAMES["buildings.jsonl"], n
-    assert 0 <= row["slot"] < 27 and row["time"] > 0 and row.get("age", 1) in (1, 2, 3), n
+    assert 0 <= row["slot"] < 54 and row["time"] > 0 and row.get("age", 1) in (1, 2, 3), n
     assert set(row["cost"]) <= RES and all(isinstance(v, int) and v >= 0 for v in row["cost"].values()), n
     assert 0 < len(row["help"]) <= 50 and row["label"] and row["item"] == row["item"].lower(), n   # the menu width
     assert row.get("after", n) in NAMES["train.jsonl"] and row.get("after") != n, n
+    assert row.get("civ", "BRITONS") in NAMES["civs.jsonl"], n                  # a unique technology of the castle
     if "upgrade" in row:
         pairs = row["upgrade"] if isinstance(row["upgrade"][0], list) else [row["upgrade"]]
         assert all(len(p) == 2 and set(p) <= NAMES["units.jsonl"] for p in pairs), n
