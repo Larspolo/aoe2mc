@@ -53,6 +53,7 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - AoE2 values (hit points, attack, `ROF`, armor) of a unit or building: the MediaWiki API `api.php?action=parse&page=NAME&prop=wikitext&format=json&redirects=1` (User-Agent of `tools/refimage.py`) gives the infobox fields. A name of several games is a disambiguation page: use `Watch_Tower_(Age_of_Empires_II)` (#1112).
 - A wait loop on `ruff check . && python3 -m pytest ...` output: do not wait for `passed`, ruff prints "All checks passed!" first. Wait for an `echo rc=$?` line (#1243).
 - The cost and time of a unit upgrade (Man-at-Arms → Long Swordsman) are `UpCost` and `UpTime` in the infobox of the unit before it, and most unit names are disambiguation pages: ask for `Long Swordsman (Age of Empires II)` (#1396).
+- The environment has no `pytest-xdist`: `python3 -m pytest -n 4` stops at once with "unrecognized arguments: -n" (rc 4). Run the fast suite without `-n` (about 4 minutes) in the background (#1389).
 
 ## Code
 
@@ -100,5 +101,6 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - `Gather.bots` holds `bot.Bot` objects, not `Gather`: read a Gather attribute of a bot (`sites`, `stock`, `villagers`) through `b.g` (#1220: `wonder.found` read `b.sites` and stopped each game with a bot; only `-m mc tests/test_bot_gather.py` found it).
 - A check ticket that finds a bug: `git fetch origin main` and read `git log origin/main --oneline -15` and the open issues for the symptom before you make the bug ticket. #1249 was a copy of #1219, which a parallel run fixed in the same hour (#1256).
 - A replay ticket that moves one unit: reproduce it offline first (a `Replay(Fake(), data)` over the timeline of the converted record, the unit put in by hand: the units of a record exist only on a server), not with three `replay_drift.py` runs of 10 minutes (#1275).
+- `tests/test_siege_walk.py` `summon()` seeds the UUIDs with the length of the tag: two units with tags of the same length fail with "Unable to summon entity due to duplicate UUIDs" (#1386). Use tags of other lengths.
 - A new item in the menu of a training building changes the exact menu strings of other tests: `grep -ln "aoe menu Steve <Label>" tests/` (#1397: the archery range in `test_age_lock.py`, `test_train_archery.py`; the stable in `test_train_stable.py`) and fix them in the same PR. A help line (`train.HELP`) has at most 50 characters (`tests/test_menu_help.py`).
 - `train.TRAINS` holds the items of a building in one tuple line: parallel tickets that add to the same building conflict there (#1362 and #1352, #1375 and #1374). Put each new item on its own line of the tuple, and take a free menu slot of `train.ITEMS` (`grep '"<BUILDING>"' game/train.py` first: #1375 and #1374 both took slots 2 and 3).
