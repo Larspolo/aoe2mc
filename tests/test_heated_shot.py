@@ -36,13 +36,13 @@ def test_the_university_menu_shows_it_in_the_castle_age():
 def test_the_arrows_of_the_towers_hit_ships_harder():
     _, g = setup(2)
     galley = combat.stats("GALLEY")
-    assert hit(build.values(g, "WATCH_TOWER"), galley) == 2             # 5 - 3 pierce armor
+    assert hit(build.values(g, "WATCH_TOWER"), galley) == 7             # 5 - 3 pierce armor + 5 vs. ships (#1564)
     g.techs.add("HEATED_SHOT")
-    assert hit(build.values(g, "WATCH_TOWER"), galley) == 2 + 6
+    assert hit(build.values(g, "WATCH_TOWER"), galley) == 7 + 6
     assert hit(build.values(g, "WATCH_TOWER"), combat.stats("MILITIA")) == 5 - 1   # not against land units
-    assert build.values(g, "CASTLE").bonus["ship"] == build.values(g, "DOCK").bonus["ship"] == 4
+    assert (build.values(g, "CASTLE").bonus["ship"], build.values(g, "DOCK").bonus["ship"]) == (11 + 4, 3 + 4)
     g.techs |= {"GUARD_TOWER", "KEEP"}
-    assert build.values(g, "WATCH_TOWER").bonus["ship"] == 10                     # the values of a keep
+    assert build.values(g, "WATCH_TOWER").bonus["ship"] == 8 + 10                 # the values of a keep
     assert build.values(g, "HOUSE") == combat.stats("HOUSE")
 
 
@@ -52,12 +52,13 @@ def test_the_research_gives_the_own_towers_the_bonus():
     server.hp[uuid(MAP)] = 1000                                        # the tower lost 20 hit points
     research(g, "HEATED_SHOT", 30)
     cmd, = [c for c in server.log if c.startswith(f"aoe building {uuid(MAP)} ")]
-    assert cmd.endswith(" 5 8 24 1 building,standard ship:6")    # attack, range (T = 1), reload, min, classes, bonus
+    assert cmd.endswith(" 5 8 24 1 building,standard ship:11")    # attack, range (T = 1), reload, min, classes, bonus
     assert server.hp[uuid(MAP)] == 1000
 
 
 def test_a_building_without_a_bonus_keeps_its_short_command():
-    tc = combat.building(combat.target_uuid([2, 2, 6, 6]), "TOWN_CENTER", 1, (8, 64, 8, 23, 104, 23))[-1]
+    s = combat.stats("TOWN_CENTER")._replace(bonus={})                # all buildings that shoot have a bonus (#1564)
+    tc = combat.building(combat.target_uuid([2, 2, 6, 6]), "TOWN_CENTER", 1, (8, 64, 8, 23, 104, 23), s=s)[-1]
     assert tc.endswith(" 5 24 24 0")
 
 
