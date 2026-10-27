@@ -185,6 +185,9 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
                               "FRANKS", "GURJARAS", "INCAS", "ITALIANS", "MAPUCHE", "MAYANS", "MUISCA", "POLES",
                               "PORTUGUESE", "SAXONS", "SICILIANS", "SPANISH", "TEUTONS", "TUPI", "VARANGIANS", "VIKINGS",
                               "WEI"),                                 # the wiki chart (#1430)
+           "CROP_ROTATION": ("ARMENIANS", "BOHEMIANS", "BRITONS", "CELTS", "CHINESE", "DANES", "DRAVIDIANS", "ETHIOPIANS",
+                             "HINDUSTANIS", "HUNS", "JAPANESE", "KHITANS", "KOREANS", "MONGOLS", "SARACENS", "SHU",
+                             "SPANISH", "TUPI", "TURKS", "WU"),                     # the wiki chart (#1578)
            "DEMOLITION_RAFT": ("DANES", "KOREANS", "PORTUGUESE", "SAXONS", "VARANGIANS", "VIKINGS"),   # (#1481)
            "DEMOLITION_SHIP": ("DANES", "KOREANS", "PORTUGUESE", "SAXONS", "VARANGIANS", "VIKINGS"),   # (#1481)
            "DRY_DOCK": ("BOHEMIANS", "BULGARIANS", "BURGUNDIANS", "CUMANS", "GEORGIANS", "GOTHS", "GURJARAS",
