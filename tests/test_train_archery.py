@@ -19,6 +19,7 @@ GENI = " 19:gray_dye:Genitour:40 food · 35 wood · 25 s · Needs the Castle Age
 ELEA = " 21:gray_dye:Elephant Archer:70 food · 80 gold · 32 s · Needs the Castle Age"   # no civ: also (#1952)
 MOCB = " 23:gray_dye:Mounted Crossbowman:40 wood · 65 gold · 40 s · Needs the Castle Age"   # no civ: also (#2012)
 SLIN = " 25:gray_dye:Slinger:50 food · 25 wood · 25 s · Needs the Castle Age"   # no civ: also (#2010)
+BOLA = " 26:gray_dye:Bolas Rider:50 wood · 55 gold · 34 s · Needs the Castle Age"   # no civ: also (#2135)
 
 
 def setup(wood=25, gold=45, done=True):
@@ -52,7 +53,7 @@ def test_a_right_click_on_the_archery_range_opens_its_menu():
     server, g = setup(done=None)
     for name in g.clicks():
         g.click(name)
-    assert menus(server) == ["aoe menu Steve Archery Range 0:skeleton_spawn_egg:Archer:25 wood · 45 gold · 35 s · queue 0/15" + SKIRM + CAVA + HAND + GENI + ELEA + MOCB + SLIN + RALLY]
+    assert menus(server) == ["aoe menu Steve Archery Range 0:skeleton_spawn_egg:Archer:25 wood · 45 gold · 35 s · queue 0/15" + SKIRM + CAVA + HAND + GENI + ELEA + MOCB + SLIN + BOLA + RALLY]
 
 
 def test_no_menu_at_an_archery_range_that_is_not_complete():
@@ -73,7 +74,7 @@ def test_a_shift_click_queues_5():
     server, g = setup(wood=1000, gold=1000)
     rect = train.open_menu(g, "Steve", (11, 3))
     assert train.order(g, "Steve", rect, 0, shift=True) == 5 and g.stock["gold"] == 1000 - 5 * 45
-    assert menus(server)[-1].endswith("queue 5/15" + CAVA + HAND + GENI + ELEA + MOCB + SLIN + RALLY)
+    assert menus(server)[-1].endswith("queue 5/15" + CAVA + HAND + GENI + ELEA + MOCB + SLIN + BOLA + RALLY)
 
 
 def test_the_archer_appears_after_35_seconds_and_shoots_from_its_range():
