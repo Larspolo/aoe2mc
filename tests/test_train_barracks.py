@@ -14,7 +14,8 @@ from game import combat, gather, run, train
 
 EAGLE = " 7:gray_dye:Eagle Scout:20 food · 50 gold · 46 s · Needs the Feudal Age"   # a player without a civ (#1555)
 FIRE = " 19:gray_dye:Fire Lancer:45 wood · 45 gold · 35 s · Needs the Castle Age"   # a player without a civ (#1953)
-VG = " 21:gray_dye:Varangian Guard:65 food · 45 gold · 30 s · Needs the Castle Age"   # a player without a civ (#2011)
+VG = (" 21:gray_dye:Varangian Guard:65 food · 45 gold · 30 s · Needs the Castle Age"   # a player without a civ (#2011)
+      " 23:gray_dye:Jian Swordsman:45 food · 50 gold · 35 s · Needs the Castle Age")   # (#2134)
 
 
 def setup(food=50, gold=20, done=True):
