@@ -111,8 +111,8 @@ def test_a_fishing_ship_and_its_crew_sail_to_the_goal_on_a_server(tiny_world, tm
         ints = [int(i) for i in re.findall(r"-?\d+", uuid.rsplit(":", 1)[-1])]
         h = "".join(f"{i & 0xFFFFFFFF:08x}" for i in ints)
         uuid = f"{h[:8]}-{h[8:12]}-{h[12:16]}-{h[16:20]}-{h[20:]}"
-        g = types.SimpleNamespace(map=m, command=game.command, soldiers={uuid: "FISHING_SHIP"},
-                                  ships={uuid: gather.Villager(uuid, (3.5, y, 3.5))})
+        g = types.SimpleNamespace(map=m, command=game.command, soldiers={uuid: "FISHING_SHIP"},   # fleet.tick reads
+                                  ships={uuid: gather.Villager(uuid, (3.5, y, 3.5))}, data={}, player=1)  # the civ (#1687)
         assert fleet.order(g, {uuid}, (18, 15)) == {uuid: (18, 15)}
         for _ in range(60):
             fleet.tick(g, 0.5)
