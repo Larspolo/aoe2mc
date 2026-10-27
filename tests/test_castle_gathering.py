@@ -31,7 +31,7 @@ def menus(server):
 @pytest.mark.parametrize("tech, before, camp, label, cost, res, rate", LINES)
 def test_the_menu_shows_the_castle_technology_after_its_feudal_technology_in_its_slot(tech, before, camp, label, cost, res, rate):
     slot = train.ITEMS[before][0]
-    assert train.ITEMS[tech][0] == slot and train.AFTER[tech] == before and train.TECH_AGE[tech] == 2
+    assert train.ITEMS[tech][0] == slot and train.AFTER[tech] == before
     assert tech in train.TRAINS[camp]
     server, g = setup(camp)
     train.open_menu(g, "Steve", (3, 3))

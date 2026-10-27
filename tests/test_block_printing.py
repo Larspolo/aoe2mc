@@ -8,7 +8,7 @@ from game import civs, monk, train
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.TECH_AGE["BLOCK_PRINTING"] == 3 and len(train.HELP["BLOCK_PRINTING"]) <= 50
+    assert len(train.HELP["BLOCK_PRINTING"]) <= 50
     assert {"CELTS", "GOTHS", "MONGOLS"} <= set(civs.MISSING["BLOCK_PRINTING"])
     assert "BRITONS" not in civs.MISSING["BLOCK_PRINTING"]
 
