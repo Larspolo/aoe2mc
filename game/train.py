@@ -176,6 +176,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "HUSSAR_UPGRADE": {"food": 500, "gold": 600},                 # the Imperial Age (#1502)
          "HUSKARL": {"food": 75, "gold": 35},
          "IMPERIAL_AGE": {"food": 1000, "gold": 800},
+         "IMPERIAL_SKIRMISHER": {"food": 25, "wood": 35},              # AoE2 DE wiki (#1611)
+         "IMPERIAL_SKIRMISHER_UPGRADE": {"wood": 300, "gold": 300},    # the Imperial Age (#1611)
          "IRON_CASTING": {"food": 220, "gold": 120},
          "JANISSARY": {"food": 60, "gold": 55},
          "KEEP": {"food": 500, "wood": 350},                           # the upgrade (AoE2 DE wiki "Guard Tower")
@@ -345,6 +347,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "HUSSAR_UPGRADE": 50,
                "HUSKARL": 13,
                "IMPERIAL_AGE": 190,
+               "IMPERIAL_SKIRMISHER": 22,
+               "IMPERIAL_SKIRMISHER_UPGRADE": 50,
                "IRON_CASTING": 75,
                "JANISSARY": 21,
                "KEEP": 75,
@@ -432,6 +436,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                             "THUMB_RING",                                                     # (#1421)
                             "PARTHIAN_TACTICS",                                               # (#1505)
                             "ARBALESTER_UPGRADE",                                             # the Imperial Age (#1500)
+                            "IMPERIAL_SKIRMISHER_UPGRADE",                                    # Vietnamese (#1611)
                             "HEAVY_CAVALRY_ARCHER_UPGRADE",                                   # (#1500)
                             "HAND_CANNONEER"),                                                # after Chemistry: build.NEEDS (#1506)
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING",            # (#675, #725, #724, #937, #938)
@@ -634,6 +639,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "HUSBANDRY": lambda name, s: s,                           # the walk speed: SPEEDS
          "HUSSAR_UPGRADE": lambda name, s: s,                      # a new unit name: UPGRADES
          "IMPERIAL_AGE": lambda name, s: s,                        # an age: REQUIRES
+         "IMPERIAL_SKIRMISHER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
          "IRON_CASTING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) or name in HULKS else s,
          "KEEP": lambda name, s: s,                                # the towers of the player: TOWER_UPGRADES
          "LEATHER_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
@@ -714,6 +720,7 @@ UPGRADES = {                                                       # technology:
     "HEAVY_DEMOLITION_SHIP_UPGRADE": ("DEMOLITION_SHIP", "HEAVY_DEMOLITION_SHIP"),   # (#1483)
     "HEAVY_WARSHIPS": (("WAR_GALLEY", "GALLEON"), ("FIRE_SHIP", "FAST_FIRE_SHIP")),   # (#1483)
     "HUSSAR_UPGRADE": ("LIGHT_CAVALRY", "HUSSAR"),
+    "IMPERIAL_SKIRMISHER_UPGRADE": ("ELITE_SKIRMISHER", "IMPERIAL_SKIRMISHER"),   # (#1611)
     "LIGHT_CAVALRY_UPGRADE": ("SCOUT_CAVALRY", "LIGHT_CAVALRY"),
     "LONG_SWORDSMAN_UPGRADE": ("MAN_AT_ARMS", "LONG_SWORDSMAN"),
     "MAN_AT_ARMS_UPGRADE": ("MILITIA", "MAN_AT_ARMS"),
@@ -748,6 +755,7 @@ AFTER = {"ARBALESTER_UPGRADE": "CROSSBOWMAN_UPGRADE",
          "HAND_CART": "WHEELBARROW",
          "HEAVY_PLOW": "HORSE_COLLAR",
          "HUSSAR_UPGRADE": "LIGHT_CAVALRY_UPGRADE",
+         "IMPERIAL_SKIRMISHER_UPGRADE": "ELITE_SKIRMISHER_UPGRADE",
          "IRON_CASTING": "FORGING",
          "KEEP": "GUARD_TOWER",
          "LEATHER_ARCHER_ARMOR": "PADDED_ARCHER_ARMOR",
@@ -824,6 +832,7 @@ TECH_AGE = {                                                       # the age of 
     "HORSE_COLLAR": 1,
     "HUSBANDRY": 2,
     "HUSSAR_UPGRADE": 3,
+    "IMPERIAL_SKIRMISHER_UPGRADE": 3,
     "IRON_CASTING": 2,
     "KEEP": 3,
     "LEATHER_ARCHER_ARMOR": 2,
@@ -988,6 +997,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "HUSSAR_UPGRADE": (2, "book", "Hussar"),                     # the slot of Light Cavalry (AFTER)
          "HUSKARL": (0, "zombie_spawn_egg", "Huskarl"),
          "IMPERIAL_AGE": (5, "bell", "Imperial Age"),
+         "IMPERIAL_SKIRMISHER": (1, "drowned_spawn_egg", "Imperial Skirmisher"),
+         "IMPERIAL_SKIRMISHER_UPGRADE": (3, "book", "Imperial Skirmisher"),   # the slot of Elite Skirmisher (AFTER)
          "IRON_CASTING": (0, "book", "Iron Casting"),                 # the slot of Forging
          "JANISSARY": (0, "pillager_spawn_egg", "Janissary"),
          "KEEP": (3, "book", "Keep"),
@@ -1144,6 +1155,8 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "HUSSAR_UPGRADE": "Upgrades light cavalry to hussars.",
         "HUSKARL": "Gothic infantry. Strong vs. archers.",
         "IMPERIAL_AGE": "Advance to the Imperial Age.",
+        "IMPERIAL_SKIRMISHER": "Ranged. Strong vs. archers, spearmen.",
+        "IMPERIAL_SKIRMISHER_UPGRADE": "Upgrades elite skirmishers to imperial ones.",
         "IRON_CASTING": "Infantry, cavalry and hulks +1 attack.",
         "JANISSARY": "Turkish gunner. Strong vs. infantry.",
         "KEEP": "Guard towers +750 HP, +1 attack, +1/+1 armor.",
