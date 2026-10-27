@@ -1,9 +1,10 @@
 """Numbers of the whole system for the `improve` skill: CI, environment, repository and scheduling (#242).
 
-    python3 tools/health.py              # the last 24 hours
-    python3 tools/health.py --hours 72
+    python3 tools/health.py              # the last 50 merged PRs (#2039)
+    python3 tools/health.py --hours 72   # a time window: the night runs, the quota
     python3 tools/health.py --hours 24 --until 2026-10-26T05:15:00Z   # the 24 hours before a time (#489)
     python3 tools/health.py --hours 6 --compare                        # the last 6 hours next to the 6 before (#1697)
+    python3 tools/health.py --prs 50 --compare   # the last 50 merged PRs next to the 50 before (#1909)
     python3 tools/health.py --takeovers  # each takeover: the old run, its last report and the cause (#1703)
 
 REST only (cloud sessions give 403 for GraphQL and `search/...`). Token and `gh` fallback as in
@@ -24,7 +25,8 @@ import numpy
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from agent_config import CONFIG  # noqa: E402
-from dashboard import api, closes  # noqa: E402
+from dashboard import api, closes, merges  # noqa: E402
+from feedback import by_owner  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -34,6 +36,8 @@ DENY_OK = ("docs/", "samples/")           # ... except .png in these folders
 BIG = 1 << 20
 OWNER = CONFIG["owner"]                   # a reopen by the owner is rework (#899)
 STATUS = CONFIG["status"]["label"]
+PRS = 50                                  # the default period: the last 50 merged PRs (#2039)
+MISS_LABELS = {"cleanup", "process", "tooling"}   # an owner ticket of these kinds is a miss of the improve loop (#1909)
 
 
 def ts(s):
@@ -319,6 +323,26 @@ def weak_spots(issues, events, prs, runs, since):
                               and ts(r["run_started_at"]) >= since for r in runs)}
 
 
+def misses(issues, since):
+    """The numbers of the issues that the owner opened since `since` to change the system (a label of MISS_LABELS):
+    each one is a change that the improve loop did not find itself (#1909). The agent writes with the owner's login
+    too: its tickets have the footer, the GitHub App or the "## Goal" form of the `ticket` skill. The issue form of the
+    owner starts with "### Goal"."""
+    return sorted(i["number"] for i in issues if "pull_request" not in i and ts(i["created_at"]) >= since
+                  and by_owner(i) and not (i.get("body") or "").lstrip().startswith("## Goal")
+                  and MISS_LABELS & {lb["name"] for lb in i.get("labels", [])})
+
+
+def data_rows(path=None):
+    """The (place, count) lines of the list of domain data that is still in the code (`[lint] data` of agent.toml,
+    #1909; "#" starts a comment), or None when the project has no such list."""
+    path = path or CONFIG.get("lint", {}).get("data")
+    if not path or not os.path.exists(os.path.join(ROOT, path)):
+        return None
+    with open(os.path.join(ROOT, path), encoding="utf-8") as f:
+        return [(p, int(n)) for p, n in (s.split() for s in f if s.strip() and not s.startswith("#"))]
+
+
 def status_comments(hours=24):
     """The comments on the status issue of the last `hours`."""
     status = api(f"issues?state=open&labels={STATUS}")
@@ -374,14 +398,17 @@ def lane_claims(now, minutes=25, remote="origin"):
     return None if lines is None else count_lanes(lines, now, minutes)
 
 
-def review_delays(lines):
-    """[(time, slot minutes, minutes late or None)] of the review locks `review-<minutes>m-<slot>` (tools/claim.py
-    --review, #898), by time. A slot opens one slot length after the review before it (#942): a run that takes it later
-    is late, for example when no run reaches step 9 of the autopilot (a usage limit)."""
-    got = sorted((int(t), int(m)) for k, t, *_ in (x.split(" ", 2) for x in lines)
-                 for m in re.findall(r"^review-(\d+)m-\d+$", k))
-    return [(datetime.datetime.fromtimestamp(t, datetime.timezone.utc), m,
-             None if i == 0 else round((t - got[i - 1][0]) / 60 - m)) for i, (t, m) in enumerate(got)]
+def review_delays(lines, merged=None, since=None):
+    """[(time, gap, PRs late or None)] of the review locks `review-<gap>pr-...` (tools/claim.py --review, #898, #2039),
+    by time. A review opens `gap` merged PRs after the review before it (#942): the PRs that merged between two locks
+    above the gap are late, for example when no run reaches step 9 of the autopilot (a usage limit). The count starts
+    at the lock before, so the PRs of that review itself count too. merged: the merge times after `since`; None for
+    the first lock and when the lock before is before `since` (the merge times do not cover it)."""
+    at = lambda t: datetime.datetime.fromtimestamp(t, datetime.timezone.utc)
+    got = sorted((at(int(t)), int(g)) for k, t, *_ in (x.split(" ", 2) for x in lines)
+                 for g in re.findall(r"^review-(\d+)pr-", k))
+    return [(t, g, None if i == 0 or merged is None or got[i - 1][0] < since else
+             sum(got[i - 1][0] < m <= t for m in merged) - g) for i, (t, g) in enumerate(got)]
 
 
 def active_claims(now, minutes=30):
@@ -486,7 +513,7 @@ def takeover_lines(rows):
 
 
 def report(since, runs, jobs, status_comments, comments, prs, files, files_of=None, issues=(), issue_events=(),
-           unanswered=None, reviews=None):
+           unanswered=None, reviews=None, data_rows=None):
     out = [f"Health since {since:%Y-%m-%d %H:%M} UTC", "", "CI runs (count, median min, max min, failures):"]
     for name, (k, m, mx, fail) in ci_runs(runs, since).items():
         out.append(f"  {name}: {k}, {fmt(m)}, {fmt(mx)}, {fail}")
@@ -529,8 +556,14 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
                f"{rw[0]:.2f} points ({rw[1]:g} % to {rw[2]:g} %)"))
     w = weak_spots(issues, issue_events, prs, runs, since)
     out.append("Weak spots: " + ", ".join(f"{k} {v}" for k, v in w.items()))
+    m = misses(issues, since)
+    out.append(f"Misses (owner tickets for the system, improve step 0): {len(m)}"
+               + (f" ({', '.join(f'#{n}' for n in m)})" if m else ""))
+    if data_rows is not None:                   # the list only gets shorter (#1909)
+        out.append(f"Data in the code ([lint] data of agent.toml): {sum(n for _, n in data_rows)} literals "
+                   f"in {len(data_rows)} places")
     if reviews is not None:                     # the self-improvement loop: each slot gets its review in time (#942)
-        out.append("Review slots (taken UTC, slot min, min late): " + ("; ".join(
+        out.append("Review slots (taken UTC, gap PRs, PRs late): " + ("; ".join(
             f"{t:%m-%d %H:%M} {m} {'-' if late is None else f'{late:+d}'}" for t, m, late in reviews if t >= since) or "-"))
     c2m = claim_to_merge(prs, comments, since)
     out.append(f"Claim to merge (median min of {len(c2m)} PRs): {fmt(med(c2m))}")
@@ -624,9 +657,23 @@ def period(until, hours, past, only_takeovers=False):
     files_of = {n: [f["filename"] for f in api(f"pulls/{n}/files?per_page=100")] for n in conflicted(comments)}
     from feedback import fetch as unanswered
     refs = claim_refs()
+    merged = sorted(t for p in prs if p.get("merged_at") and (t := ts(p["merged_at"])) >= since)
     text = report(since, runs, jobs, status_comments, comments, prs, git_files(), files_of, issues, events,
-                  unanswered(), None if refs is None else review_delays(refs))
+                  unanswered(), None if refs is None else review_delays(refs, merged, since), data_rows())
     return text.replace(" UTC", f" UTC until {until:%Y-%m-%d %H:%M} UTC", 1) if past else text
+
+
+def merge_times(n, until):
+    """The merge times of the newest n + 1 PRs on the default branch up to `until`, newest first (`dashboard.merges`)."""
+    return [t for t, _ in merges(until=until, n=n + 1)]
+
+
+def pr_hours(times, until, n):
+    """The hours of the last n merged PRs before `until` and of the n PRs before them (`--prs`, #1909). `times`: the
+    merge times, newest first. A window of PRs keeps its size when the speed of the project changes; a window of hours
+    does not (about 350 merges a day on 2026-10-27)."""
+    a, b = times[min(n, len(times) - 1)], times[min(2 * n, len(times) - 1)]
+    return (until - a).total_seconds() / 3600, (a - b).total_seconds() / 3600
 
 
 def compare(last, before):
@@ -648,15 +695,21 @@ def compare(last, before):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--hours", type=float, default=24)
+    ap.add_argument("--hours", type=float, help="a period of hours, not of merged PRs (the night runs, the quota)")
+    ap.add_argument("--prs", type=int, help="the period of the last N merged PRs (default 50 without --hours, #1909)")
     ap.add_argument("--until", type=utc, help="the end of the period (ISO time, UTC, default now): compare two periods")
     ap.add_argument("--compare", action="store_true", help="also the period before, under each line that differs")
     ap.add_argument("--takeovers", action="store_true", help="one line for each takeover and its cause (#1703)")
     a = ap.parse_args(argv)
     until = a.until or datetime.datetime.now(datetime.timezone.utc)
-    text = period(until, a.hours, bool(a.until), a.takeovers)
+    hours = before = a.hours
+    if a.prs or not a.hours:                     # a count of merged PRs measures the same work at each speed (#2039)
+        a.prs = a.prs or PRS
+        hours, before = pr_hours(merge_times(2 * a.prs, until), until, a.prs)
+        print(f"Period: the last {a.prs} merged PRs ({hours:.1f} h), before: the {a.prs} PRs before ({before:.1f} h)")
+    text = period(until, hours, bool(a.until), a.takeovers)
     if a.compare and not a.takeovers:
-        text = compare(text, period(until - datetime.timedelta(hours=a.hours), a.hours, True))
+        text = compare(text, period(until - datetime.timedelta(hours=hours), before, True))
     print(text)
     return 0
 

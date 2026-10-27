@@ -45,6 +45,7 @@ STATS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields if f != "classes"}, 
 # the Castle Age (850 hit points in the Feudal Age), #1112. The attack against ships: the "Attack bonus" of the wiki
 # infobox (#1564; the dock: the Castle Age). A line with only a "sight" has no target.
 BUILDING_ROWS = table.load("buildings.jsonl")
+STANDS_FOR = {r["name"]: r["as"] for r in BUILDING_ROWS if "as" in r}   # a regional building: the one it replaces (#1874, #1930)
 BUILDINGS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields if f != "classes"}, classes=tuple(r["classes"]))
              for r in BUILDING_ROWS if "hp" in r}
 # The walls that a player builds in the game program (#1322, AoE2 DE wiki infobox): the hit points in the Dark, Feudal,
@@ -85,6 +86,7 @@ MELEE_RANGED = {"BOMBARD_CANNON",
                 "ELITE_GBETO",
                 "ELITE_MAMELUKE",
                 "ELITE_THROWING_AXEMAN",
+                "ELITE_TURTLE_SHIP",              # the cannon (AoE2 DE wiki, #1934)
                 "FAST_FIRE_SHIP",
                 "FIRE_GALLEY",
                 "FIRE_SHIP",
@@ -99,6 +101,7 @@ MELEE_RANGED = {"BOMBARD_CANNON",
                 "SIEGE_ONAGER",
                 "THROWING_AXEMAN",
                 "TRACTION_TREBUCHET",
+                "TURTLE_SHIP",
                 "WAR_HULK"}
 # Blast radius in tiles of the units whose shot hits all units near the target, also own units (AoE2 DE, wiki "AOE";
 # AoE2 tapers the damage at the edge, here each unit in the radius takes the full damage() hit, #1050). A ship has no
@@ -112,6 +115,7 @@ BLAST = {"BOMBARD_CANNON": 0.5,
          "DRAGON_SHIP": 0,
          "DROMON": 0,
          "ELITE_CANNON_GALLEON": 0.3,
+         "ELITE_TURTLE_SHIP": 0.5,                             # the cannon (AoE2 DE wiki "AOE", #1934)
          "FAST_FIRE_SHIP": 0,
          "FIRE_GALLEY": 0,
          "FIRE_SHIP": 0,
@@ -122,7 +126,8 @@ BLAST = {"BOMBARD_CANNON": 0.5,
          "MANGONEL": 1.0,
          "ONAGER": 1.25,
          "ROCKET_CART": 1.0,
-         "SIEGE_ONAGER": 1.5}
+         "SIEGE_ONAGER": 1.5,
+         "TURTLE_SHIP": 0.5}
 RAM_REACH = 2.0       # blocks: a ram (a minecart with range 0) hits from next to its target, on its carrier (#1399)
 CONTACT = 1.0         # tiles: the reach of a demolition ship (range 0, #1440): its raft is higher than a boat
 MIN_RANGE = {"BOMBARD_CANNON": 5,     # tiles: no shot at a unit nearer (AoE2 DE, wiki infobox "MinRange", #1350)
