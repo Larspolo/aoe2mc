@@ -1,0 +1,13 @@
+{
+ "a": {
+  "rc": -2
+ },
+ "b": {
+  "hidden_before": 4,
+  "reveal_before": "normal",
+  "ended": "Victory",
+  "reveal_after": "all",
+  "hidden_after": 0,
+  "p2_alive": "Test passed. Count: 4"
+ }
+}
