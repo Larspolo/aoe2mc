@@ -413,6 +413,8 @@ def read_scenario(path):
                                             tile=[e.location_x, e.location_y],
                                             area=[e.area_x1, e.area_y1, e.area_x2, e.area_y2]) for e in t.effects])
                          for t in scn.trigger_manager.triggers]
+    mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
+    texts["mood"] = (getattr(mood, "name", None) or str(mood or "DEFAULT")).upper()
 
     objects = []
     for player, player_units in enumerate(scn.unit_manager.units):
@@ -2509,7 +2511,7 @@ def write_region(path, chunks):
         f.write(header + body)
 
 
-def write_objects(path, size, T, H, players, objects, cols, ground, timeline=None):
+def write_objects(path, size, T, H, players, objects, cols, ground, timeline=None, mood="DEFAULT"):
     """aoe2mc.json: the data that a game program needs (docs/research/gameplay.md). Tiles are in the turned grid
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
     their footprint [x0, z0, x1, z1) in blocks. Objects of a recorded game have their object ID ("ref").
@@ -2518,7 +2520,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     and the cells of its footprint that units walk through ("open": the town center, #865).
     "ground" has one string per block row z: for each x the y where a unit stands, or "-" for water.
     "timeline" (recorded games only): the events of read_timeline, with tiles in the turned grid
-    and the "names" of the selected objects (name_timeline)."""
+    and the "names" of the selected objects (name_timeline).
+    "mood": the map color mood of a DE scenario (ColorMood name, #1594), else "DEFAULT"."""
     kinds = {"U": "unit", "B": "building", "O": "other"}
     objs = []
     for o in objects:
@@ -2541,7 +2544,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
             cells, y, _ = buildings.INSIDE[o["ref"]]
             e["inside"] = {"y": int(y), "cells": [[int(x), int(z)] for x, z in cells[:GARRISON_CELLS]]}
         objs.append(e)
-    data = {"map_size": size, "tile_size": T, "level_height": H,
+    data = {"map_size": size, "tile_size": T, "level_height": H, "mood": mood,
             "players": {str(pid): {"civ": p["civ"], "color": p["color"], "arch": p["arch"]}
                         | {k: p[k] for k in ("team",) if k in p} for pid, p in sorted(players.items())},
             "objects": objs}
@@ -3306,7 +3309,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         write_region(os.path.join(dim, "entities", f"r.{rx}.{rz}.mca"), chunks)
 
     write_level_dat(os.path.join(out, "level.dat"), name, spawn, yaw, cols.n)
-    write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline)
+    write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline,
+                  texts.get("mood", "DEFAULT"))
     triggers, tstats = texts.get("triggers", []), Counter()
     n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats)
     k = sum("/trigger/" in f for f in trigger_files(triggers, T, ground, players)[1]) if ambience != "off" else 0
