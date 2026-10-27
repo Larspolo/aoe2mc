@@ -420,7 +420,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     // An arrow from above the edge of the footprint next to the target, aimed as the arrow of an archer (shoot): from
     // the center the arrow hits the own roof (#1202). Arrow k starts on a ring around that point, so that the arrows of
-    // one shot do not fly as one; the start is above the highest block of the 3 x 3 columns around the point.
+    // one shot do not fly as one; the start is above the highest block of the 3 x 3 columns around the point. A steep
+    // shot (a tall tower, a near target) starts higher: the straight line to the target leaves the 3 x 3 columns above
+    // their highest block, else the arrow hits the own roof (#1219).
     private static void volley(LivingEntity fort, int[] b, LivingEntity t, int k) {
         var p = t.getLocation();
         Location from = new Location(fort.getWorld(), Math.max(b[0] + 0.5, Math.min(b[3] + 0.5, p.getX())), 0,
@@ -433,7 +435,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
         }
         from.add(k == 0 ? 0 : 0.6 * Math.cos(k * 2.4), 0, k == 0 ? 0 : 0.6 * Math.sin(k * 2.4));
-        from.setY(top + 1.5 + 0.2 * (k % 3));
+        double ty = p.getY() + t.getHeight() * 0.5, h = Math.hypot(p.getX() - from.getX(), p.getZ() - from.getZ());
+        double y = top + 1.5;
+        if (h > 3) {                                                   // the line at 1.5 blocks: at least top + 1
+            y = Math.max(y, (top + 1 - ty * 1.5 / h) / (1 - 1.5 / h));
+        }
+        from.setY(y + 0.2 * (k % 3));
         Vector to = t.getLocation().toVector().add(new Vector(0, t.getHeight() * 0.5, 0)).subtract(from.toVector());
         double ticks = to.length() / ARROW_SPEED;
         to.setY(to.getY() + 0.5 * ARROW_GRAVITY * ticks * ticks);
