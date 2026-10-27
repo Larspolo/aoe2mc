@@ -39,7 +39,7 @@ def test_each_unit_and_technology_of_the_menus_has_an_age():
     names = {n for ns in train.TRAINS.values() for n in ns} | set(train.UNIQUE.values()) | set(build.COSTS)
     assert {n for n in names if n not in train.TECHS} - {"VILLAGER_MALE", "MILITIA", "HOUSE", "LUMBER_CAMP",
                                                          "MINING_CAMP", "MILL", "FARM", "BARRACKS", "TOWN_CENTER",
-                                                         "PALISADE_GATE", "PALISADE_WALL", "DOCK"} \
+                                                         "PALISADE_GATE", "PALISADE_WALL", "DOCK", "FISHING_SHIP"} \
         <= build.AGE.keys()
     assert {n for n in names if n in train.TECHS} - {"LOOM", "FEUDAL_AGE"} <= train.TECH_AGE.keys() | build.AGE.keys()
 
