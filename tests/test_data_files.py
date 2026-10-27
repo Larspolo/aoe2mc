@@ -41,15 +41,33 @@ def stats(row):
 
 
 def check_units(row):
-    form(row, {"name": str, **STATS}, {"sight": int, "note": str})
+    form(row, {"name": str, **STATS}, {"sight": int, "note": str, "melee_ranged": bool, "min_range": NUMBER,
+                                       "pass": int, "pass_part": float, "blast": NUMBER,
+                                       "building_sight": str})
+    assert row.get("building_sight", "only") in ("first", "only"), row["name"]       # combat.BUILDING_SIGHT
+    assert row.get("min_range", -1) < row["range"] and row.get("pass", 1) > 0, row["name"]
     stats(row)
+
+
+def check_build(row):
+    form(row, {"name": str}, {"age": int, "age_tech": int, "cost": dict, "gate": bool, "icon": str, "needs": str,
+                              "time": int, "wall": bool})
+    n = row["name"]
+    assert len(row) > 1 and row.get("age", 1) in (1, 2, 3) and row.get("age_tech", 1) in (1, 2, 3), n
+    assert ("cost" in row) == ("time" in row) == ("icon" in row) and row.get("time", 1) > 0, n    # a building site
+    assert set(row.get("cost", ())) <= RES and all(isinstance(v, int) and v >= 0 for v in row.get("cost", {}).values()), n
+    assert row.get("icon", "x") == row.get("icon", "x").lower() and row.get("needs", "LOOM") in NAMES["train.jsonl"], n
 
 
 def check_buildings(row):
     if "hp" in row:
-        form(row, {"name": str, **STATS, "sight": int}, {"as": str, "note": str})
+        form(row, {"name": str, **STATS, "sight": int}, {"as": str, "note": str, "min_range": NUMBER})
         stats(row)
+        assert row.get("min_range", -1) < row["range"], row["name"]
         assert row.get("as", "HOUSE") in NAMES["buildings.jsonl"], row["name"]   # combat.STANDS_FOR
+    elif "hp_ages" in row:                                 # a wall or gate: combat.WALLS
+        form(row, {"name": str, "hp_ages": list, "melee": int, "pierce": int}, {"sight": int, "note": str})
+        assert len(row["hp_ages"]) == 4 and all(isinstance(h, int) and h > 0 for h in row["hp_ages"]), row["name"]
     else:                                                  # only a line of sight: no target
         form(row, {"name": str, "sight": int}, {"note": str})
 
@@ -102,7 +120,7 @@ def check_gather(row):
     assert len(row.get("ship", (0, 0))) == 2 and all(isinstance(v, NUMBER) for v in row.get("ship", ())), n
 
 
-CHECKS = {"buildings.jsonl": check_buildings, "civs.jsonl": check_civs, "gather.jsonl": check_gather,
+CHECKS = {"build.jsonl": check_build, "buildings.jsonl": check_buildings, "civs.jsonl": check_civs, "gather.jsonl": check_gather,
           "train.jsonl": check_train, "units.jsonl": check_units}
 
 
