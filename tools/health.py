@@ -355,13 +355,29 @@ def beating_claims(now, minutes=25, remote="origin"):
     return None if lanes is None else sum(lanes.values())
 
 
-def lane_claims(now, minutes=25, remote="origin"):
-    """{lane: runs that work now} from the claim refs (#1727), or None when git cannot read them."""
+def claim_refs(remote="origin"):
+    """The lines `<key> <unix time of the last beat> <subject>` of the claim refs, or None when git cannot read them."""
     git = lambda *a: subprocess.run(["git", *a], capture_output=True, text=True, cwd=ROOT)
     if git("fetch", "-q", "--prune", remote, "+refs/heads/claim/*:refs/aoe2mc-claims/*").returncode:
         return None
     out = git("for-each-ref", "refs/aoe2mc-claims", "--format=%(refname:lstrip=2) %(committerdate:unix) %(subject)")
-    return count_lanes(out.stdout.splitlines(), now, minutes) if out.returncode == 0 else None
+    return out.stdout.splitlines() if out.returncode == 0 else None
+
+
+def lane_claims(now, minutes=25, remote="origin"):
+    """{lane: runs that work now} from the claim refs (#1727), or None when git cannot read them."""
+    lines = claim_refs(remote)
+    return None if lines is None else count_lanes(lines, now, minutes)
+
+
+def review_delays(lines):
+    """[(time, slot minutes, minutes late or None)] of the review locks `review-<minutes>m-<slot>` (tools/claim.py
+    --review, #898), by time. A slot opens one slot length after the review before it (#942): a run that takes it later
+    is late, for example when no run reaches step 9 of the autopilot (a usage limit)."""
+    got = sorted((int(t), int(m)) for k, t, *_ in (x.split(" ", 2) for x in lines)
+                 for m in re.findall(r"^review-(\d+)m-\d+$", k))
+    return [(datetime.datetime.fromtimestamp(t, datetime.timezone.utc), m,
+             None if i == 0 else round((t - got[i - 1][0]) / 60 - m)) for i, (t, m) in enumerate(got)]
 
 
 def active_claims(now, minutes=30):
@@ -417,7 +433,7 @@ def conflict_files(files_of, n=5):
 
 
 def report(since, runs, jobs, status_comments, comments, prs, files, files_of=None, issues=(), issue_events=(),
-           unanswered=None):
+           unanswered=None, reviews=None):
     out = [f"Health since {since:%Y-%m-%d %H:%M} UTC", "", "CI runs (count, median min, max min, failures):"]
     for name, (k, m, mx, fail) in ci_runs(runs, since).items():
         out.append(f"  {name}: {k}, {fmt(m)}, {fmt(mx)}, {fail}")
@@ -459,6 +475,9 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
                f"{rw[0]:.2f} points ({rw[1]:g} % to {rw[2]:g} %)"))
     w = weak_spots(issues, issue_events, prs, runs, since)
     out.append("Weak spots: " + ", ".join(f"{k} {v}" for k, v in w.items()))
+    if reviews is not None:                     # the self-improvement loop: each slot gets its review in time (#942)
+        out.append("Review slots (taken UTC, slot min, min late): " + ("; ".join(
+            f"{t:%m-%d %H:%M} {m} {'-' if late is None else f'{late:+d}'}" for t, m, late in reviews if t >= since) or "-"))
     c2m = claim_to_merge(prs, comments, since)
     out.append(f"Claim to merge (median min of {len(c2m)} PRs): {fmt(med(c2m))}")
     bad = bad_files(files)
@@ -530,8 +549,9 @@ def main(argv=None):
                                                                     issues, events)
     files_of = {n: [f["filename"] for f in api(f"pulls/{n}/files?per_page=100")] for n in conflicted(comments)}
     from feedback import fetch as unanswered
+    refs = claim_refs()
     text = report(since, runs, jobs, status_comments, comments, prs, git_files(), files_of, issues, events,
-                  unanswered())
+                  unanswered(), None if refs is None else review_delays(refs))
     print(text.replace(" UTC", f" UTC until {until:%Y-%m-%d %H:%M} UTC", 1) if a.until else text)
     return 0
 
