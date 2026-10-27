@@ -24,14 +24,14 @@ def test_the_barracks_menu_has_gambesons_from_the_castle_age():
     assert "Gambesons" not in menus(server)[-1] and train.queue(g, "Steve", BARRACKS, "GAMBESONS") is None
     server, g = castle()
     train.open_menu(g, "Steve", BARRACKS)
-    assert " 4:book:Gambesons:50 food · 100 gold · 25 s · research " in menus(server)[-1] + " "
+    assert " 5:book:Gambesons:50 food · 100 gold · 25 s · research " in menus(server)[-1] + " "
 
 
 def test_the_research_gives_the_militia_line_one_pierce_armor():
     server, g = castle()
     old = {n: train.stats(g, n) for n in ("MILITIA", "LONG_SWORDSMAN", "CHAMPION", "SPEARMAN", "ARCHER")}
     rect = train.open_menu(g, "Steve", BARRACKS)
-    assert train.order(g, "Steve", rect, 4) == 1
+    assert train.order(g, "Steve", rect, 5) == 1
     train.tick(g, 25)
     assert "GAMBESONS" in g.techs and g.stock["food"] == 50 and g.stock["gold"] == 0
     for n in ("MILITIA", "LONG_SWORDSMAN", "CHAMPION"):

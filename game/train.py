@@ -450,7 +450,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "FLETCHING": (2, "book", "Fletching"),
          "FORGING": (0, "book", "Forging"),
          "FORTIFIED_WALL": (0, "book", "Fortified Wall"),
-         "GAMBESONS": (4, "book", "Gambesons"),
+         "GAMBESONS": (5, "book", "Gambesons"),                    # slot 4: Squires (#1415)
          "GOLD_MINING": (0, "book", "Gold Mining"),
          "GUARD_TOWER": (2, "book", "Guard Tower"),
          "GUILDS": (2, "book", "Guilds"),
