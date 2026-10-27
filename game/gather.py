@@ -504,6 +504,7 @@ class Gather:
     bots = ()                                                          # run() steps them too (bot.Bot, #856)
     peers = ()                                                         # the Gathers of the other people (fog.py, #1631)
     reveal = "normal"                                                  # AoE2 "Reveal map"; "all": no fog (fog.py, #1389)
+    speed = 1.0                                                        # times the Normal speed: shorter real steps (#2057)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
                  cheats=False, start=None):
@@ -1631,4 +1632,4 @@ class Gather:
             herd.tick(self)                                            # all players: the bots capture too (#1792)
             wonder.tick(self, self.tick * NORMAL)                      # game seconds, as train.tick
             relic_victory.tick(self, self.tick * NORMAL)
-            time.sleep(max(0.0, self.tick - (time.time() - t)))
+            time.sleep(max(0.0, self.tick / self.speed - (time.time() - t)))   # a step stays tick game seconds
