@@ -155,9 +155,17 @@ def shoot(world, out, views=None, version=None, size=(1280, 720), settle=8.0, ti
                  "--uuid", "00000000-0000-0000-0000-000000000001", "--accessToken", "0", "--userType", "legacy",
                  "--width", str(size[0]), "--height", str(size[1]), "--quickPlaySingleplayer", name],
                 cwd=game, env=env, stdout=log, stderr=subprocess.STDOUT)
-            t0 = time.time()
+            t0, loaded, warned = time.time(), None, not shutil.which("xdotool")
             for i, path in enumerate(outs, 1):
-                while f"aoe2mc view {i}" not in open(log_path, errors="replace").read():
+                while f"aoe2mc view {i}" not in (text := open(log_path, errors="replace").read()):
+                    # A timeline file (--fog) stops the world at "Worlds using Experimental Settings" (#1641): Tab,
+                    # Tab and Enter press its second button "I Know What I'm Doing!". In the game the keys do nothing.
+                    loaded = loaded or ("Loaded" in text and "advancements" in text and time.time())
+                    if not warned and loaded and time.time() - loaded > 15:
+                        for k in ("Tab", "Tab", "Return"):
+                            subprocess.run(["xdotool", "key", k], env=env)
+                            time.sleep(0.5)
+                        warned = True
                     if client.poll() is not None or time.time() - t0 > timeout:
                         shutil.copy(log_path, out + ".log")
                         subprocess.run(["import", "-window", "root", out], env=env)   # the screen that stops it
