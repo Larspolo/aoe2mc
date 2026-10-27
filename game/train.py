@@ -178,6 +178,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "ONAGER_UPGRADE": {"food": 800, "gold": 500},
          "PALADIN": {"food": 60, "gold": 75},                           # AoE2 DE wiki (#1501)
          "PALADIN_UPGRADE": {"food": 1300, "gold": 750},               # after Cavalier (#1501)
+         "PARTHIAN_TACTICS": {"food": 200, "gold": 250},               # the Imperial Age (AoE2 DE wiki, #1505)
          "PADDED_ARCHER_ARMOR": {"food": 100},
          "PIKEMAN": {"food": 35, "wood": 25},
          "PIKEMAN_UPGRADE": {"food": 160, "gold": 90},
@@ -320,6 +321,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "ONAGER_UPGRADE": 75,
                "PALADIN": 30,
                "PALADIN_UPGRADE": 170,
+               "PARTHIAN_TACTICS": 65,
                "PADDED_ARCHER_ARMOR": 40,
                "PIKEMAN": 22,
                "PIKEMAN_UPGRADE": 35,
@@ -371,6 +373,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER",                                          # building (#654, #670, #655)
                             "CROSSBOWMAN_UPGRADE", "ELITE_SKIRMISHER_UPGRADE", "CAVALRY_ARCHER",   # (#1396, #1397)
                             "THUMB_RING",                                                     # (#1421)
+                            "PARTHIAN_TACTICS",                                               # (#1505)
                             "ARBALESTER_UPGRADE",                                             # the Imperial Age (#1500)
                             "HEAVY_CAVALRY_ARCHER_UPGRADE"),                                  # (#1500)
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING",            # (#675, #725, #724, #937, #938)
@@ -464,6 +467,11 @@ def thumb(name, s):
     return "archer" in s.classes and "gunpowder" not in s.classes and "SKIRMISHER" not in name
 
 
+def parthian(name, s):
+    """Parthian Tactics (AoE2 DE, wiki): the mounted archers (also the Arambai), not the Genitour."""
+    return "archer" in s.classes and bool({"cavalry", "camel", "elephant"} & set(s.classes)) and "GENITOUR" not in name
+
+
 def engineers(name, s):
     """Siege Engineers (AoE2 DE, wiki): a siege unit +20 % bonus attack against buildings (rounded), a ranged one
     +1 range."""
@@ -555,6 +563,9 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "PALADIN_UPGRADE": lambda name, s: s,                     # a new unit name: UPGRADES
          "PADDED_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "archer" in s.classes else s,
+         "PARTHIAN_TACTICS": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 2,
+                                                        bonus={**s.bonus, "spearman": s.bonus.get("spearman", 0) + 2})
+         if parthian(name, s) else s,
          "PIKEMAN_UPGRADE": lambda name, s: s,
          "PLATE_BARDING_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 2)
          if barding(s) else s,
@@ -707,6 +718,7 @@ TECH_AGE = {                                                       # the age of 
     "MEDIUM_WARSHIPS": 2,
     "ONAGER_UPGRADE": 3,
     "PALADIN_UPGRADE": 3,
+    "PARTHIAN_TACTICS": 3,
     "PADDED_ARCHER_ARMOR": 1,
     "PIKEMAN_UPGRADE": 2,
     "PLATE_BARDING_ARMOR": 3,
@@ -854,6 +866,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "MONK": (0, "evoker_spawn_egg", "Monk"),
          "PALADIN": (3, "horse_spawn_egg", "Paladin"),               # the slot of the knight
          "PALADIN_UPGRADE": (5, "book", "Paladin"),                   # the slot of Cavalier (AFTER)
+         "PARTHIAN_TACTICS": (MORE, "book", "Parthian Tactics"),       # slot 7: the hand cannoneer (#1506)
          "PADDED_ARCHER_ARMOR": (3, "book", "Padded Archer Armor"),
          "PLATE_BARDING_ARMOR": (4, "book", "Plate Barding Armor"),   # the slot of the Feudal armor (AFTER)
          "PLATE_MAIL_ARMOR": (1, "book", "Plate Mail Armor"),
@@ -990,6 +1003,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "ONAGER_UPGRADE": "Upgrades mangonels to onagers.",
         "PALADIN": "Strong vs. archers, siege; weak vs. spears, monks.",
         "PALADIN_UPGRADE": "Upgrades cavaliers to paladins.",
+        "PARTHIAN_TACTICS": "Cavalry archers +1/+2 armor, +2 vs. spears.",
         "PADDED_ARCHER_ARMOR": "Archers +1 melee armor, +1 pierce armor.",
         "PIKEMAN": "Infantry. Strong vs. cavalry; weak vs. archers.",
         "PIKEMAN_UPGRADE": "Upgrades spearmen to pikemen.",
