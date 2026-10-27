@@ -52,7 +52,7 @@ def test_the_research_gives_the_own_towers_the_bonus():
     server.hp[uuid(MAP)] = 1000                                        # the tower lost 20 hit points
     research(g, "HEATED_SHOT", 30)
     cmd, = [c for c in server.log if c.startswith(f"aoe building {uuid(MAP)} ")]
-    assert cmd.endswith(" 5 8 24 1 building,standard ship:6")    # attack, range (T = 1), reload, min, classes, bonus
+    assert cmd.endswith(" 5 8 24 1 building,standard,stone ship:6")    # attack, range (T = 1), reload, min, classes, bonus
     assert server.hp[uuid(MAP)] == 1000
 
 

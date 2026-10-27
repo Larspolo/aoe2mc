@@ -233,7 +233,7 @@ STATS = {
     "WAR_GALLEY": Stats(125, 7, 0, 4, 6, 3.0, {"building": 6, WAR: 5}, (SHIP, WAR)),   # Medium Warships (#1482)
     "WAR_HULK": Stats(110, 4, 4, 1, 1, 1.5, {FIRE: 1, "standard": -3}, (SHIP,)),   # Medium Warships (#1508)
     # others: no fight, but they can die
-    "VILLAGER": Stats(25, 3, 0, 0, 0, 2.0),
+    "VILLAGER": Stats(25, 3, 0, 0, 0, 2.0, {"building": 3, HSI: 6, "stone": 6}),   # AoE2 DE wiki (#1590)
     "KING": Stats(75, 0, 0, 0, 0, 0.0),
     "MONK": Stats(30, 0, 0, 0, 9, 0.0),
     "TRADE_CART": Stats(70, 0, 0, 0, 0, 0.0),
@@ -279,6 +279,11 @@ WALL_TAG = "aoe2mc.wall"
 # gives infantry a bonus against it (#1419).
 STANDARD = "standard"
 BUILDINGS = {k: s if k == "WONDER" else s._replace(classes=s.classes + (STANDARD,)) for k, s in BUILDINGS.items()}
+# The AoE2 class "Stone Defense" (wiki infobox "Class"): the stone walls and gates and the towers, not the castle and
+# not the palisades. The villager gets a bonus against it (#1590).
+STONE = "stone"
+BUILDINGS = {k: s._replace(classes=s.classes + (STONE,)) if k.endswith("_TOWER") or k == "KEEP" else s
+             for k, s in BUILDINGS.items()}
 WATCH = 4    # tiles of line of sight that Town Watch adds to each own building but walls, gates, farms, fish traps (#1454)
 # Line of sight in tiles (AoE2 DE, base unit or building, wiki infobox "LOS"; the house: 1 from the edge of its
 # 2 x 2 tiles, #1300) where it is not max(4, range + 2) (sight()).
@@ -517,7 +522,7 @@ def target_uuid(footprint):
 def wall(name, age):
     """The Stats of wall name (WALLS) in AoE2 age 0 (Dark) .. 3 (Imperial)."""
     hp, melee, pierce = WALLS[name]
-    return Stats(hp[age], 0, melee, pierce, 0, 0.0, {}, ("building",))
+    return Stats(hp[age], 0, melee, pierce, 0, 0.0, {}, ("building",) + (STONE,) * (not name.startswith("PALISADE")))
 
 
 def building(uuid, name, player, box, T=4, inside=(), s=None):
@@ -543,7 +548,8 @@ def building(uuid, name, player, box, T=4, inside=(), s=None):
         [f"aoe building {uuid} {s.hp} {s.melee} {s.pierce} {' '.join(map(str, box))}"   # after the arrows: no shot of 1
          + (f" {s.attack} {s.range * T} {round(s.reload / NORMAL * 20)} {FORT_MIN_RANGE.get(name, 0) * T}"   # (#1546)
             if s.attack and s.range else "")
-         + (f" {','.join(s.classes)}" if STANDARD not in s.classes or bonus else "")   # a wall, a gate, the wonder (#1419)
+         + (f" {','.join(s.classes)}" if s.classes != ("building", STANDARD) or bonus else "")   # a wall, a gate, the
+                                                                            # wonder (#1419), a tower (STONE, #1590)
          + (f" {bonus}" if bonus else "")]                                  # the arrow bonus (Heated Shot, #1548)
 
 
