@@ -222,6 +222,7 @@ BUILDINGS = {
     "BARRACKS": Stats(1200, 0, 0, 7, 0, 0.0, {}, ("building",)),
     "ARCHERY_RANGE": Stats(1500, 0, 0, 7, 0, 0.0, {}, ("building",)),
     "STABLE": Stats(1500, 0, 0, 7, 0, 0.0, {}, ("building",)),
+    "DOCK": Stats(1800, 0, 0, 7, 0, 0.0, {}, ("building",)),         # AoE2 DE wiki, the Dark Age (#1382)
     "MARKET": Stats(1800, 0, 1, 8, 0, 0.0, {}, ("building",)),       # the Feudal Age values of the wiki (#1251)
     "MONASTERY": Stats(2100, 0, 0, 7, 0, 0.0, {}, ("building",)),
     "SIEGE_WORKSHOP": Stats(2100, 0, 0, 7, 0, 0.0, {}, ("building",)),
@@ -301,6 +302,7 @@ BLAST = {"BOMBARD_CANNON": 0.5,
          "ONAGER": 1.25,
          "ROCKET_CART": 1.0,
          "SIEGE_ONAGER": 1.5}
+RAM_REACH = 2.0       # blocks: a ram (a minecart with range 0) hits from next to its target, on its carrier (#1399)
 MIN_RANGE = {"BOMBARD_CANNON": 5,     # tiles: no shot at a unit nearer (AoE2 DE, wiki infobox "MinRange", #1350)
              "ELITE_ORGAN_GUN": 1,
              "HEAVY_ROCKET_CART": 2.5,
@@ -364,13 +366,15 @@ def range_command(uuid, name, T, rate=NORMAL, s=None):
     minecart) gets its blast radius in blocks last, 0 when its shot hits only the target (the Scorpion, #1062): the
     plugin then lets the minecart shoot too (#1050). Then its minimum range in blocks (MIN_RANGE, #1350), when it has
     one: it does not shoot at a target nearer than that. Then the blocks of PASS (#1401): its bolt hurts the enemy units on
-    its line up to that far past its range."""
+    its line up to that far past its range. A melee siege unit (the ram line, range 0) gets the reach
+    RAM_REACH: a carrier pig has no melee goal, so the range goal walks it to the target and hits (#1399)."""
     s = s or stats(name)
     cart = (units.classify(name) or {}).get("id") == "minecraft:minecart"
     blast = f" {BLAST.get(name, 0) * T}" if name in BLAST or cart else ""
     blast += f" {MIN_RANGE.get(name, 0) * T}" * bool(blast and (name in MIN_RANGE or name in PASS))
     blast += f" {PASS.get(name, 0) * T}" * bool(blast and name in PASS)
-    return s.range and s.reload and f"aoe range {uuid} {s.range * T} {max(1, round(s.reload / rate * 20))}{blast}" or None
+    reach = s.range * T or RAM_REACH * bool(cart and s.attack)
+    return reach and s.reload and f"aoe range {uuid} {reach} {max(1, round(s.reload / rate * 20))}{blast}" or None
 
 
 def sight(name, s=None):

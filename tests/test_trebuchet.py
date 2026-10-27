@@ -38,8 +38,9 @@ def test_an_attack_order_stops_the_walk_and_shoots_after_the_unpack_time():
     treb(server, g)
     g.choose({"t"}, "t")
     server.log.clear()
-    g.attack("fort")
-    assert server.log[:2] == ["aoe stop t", "aoe speed t 0"] and trebuchet.state(g, "t") == "unpacking"
+    g.attack("fort")                                                  # no position: in range (#1400)
+    assert [c for c in server.log if c.startswith("aoe ")][:2] == ["aoe stop t", "aoe speed t 0"]
+    assert trebuchet.state(g, "t") == "unpacking"
     assert not any(c.startswith(("aoe attack", "aoe range")) for c in server.log)
     trebuchet.tick(g, 11.0)
     assert not any(c.startswith(("aoe attack", "aoe range")) for c in server.log)

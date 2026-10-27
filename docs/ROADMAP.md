@@ -22,6 +22,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `convert:minimap` A filled Minecraft map item of the whole AoE2 map at the spawn, as the AoE2 minimap (epic #837)
 - [ ] `convert:random-maps` Make a world from an AoE2 random map script (`.rms`: Arabia, Arena, Black Forest) and a seed, with no scenario file
 - [ ] `convert:random-maps-more` More random map scripts of the ranked pool and the classic ones (Nomad, Islands, Gold Rush, Highland, Mediterranean) with their player starts
+- [ ] `convert:mood` The map color mood and weather of a DE scenario (`map_color_mood`: morning, noon, evening, night, snow, fog) as the Minecraft time of day, weather and fog
 
 ## 2. Play AoE2 in Minecraft (`game/`)
 
