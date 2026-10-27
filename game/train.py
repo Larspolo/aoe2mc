@@ -400,7 +400,23 @@ def show(g, player, rect):
             market.order(g, p, slot - market.ROW, shift, lambda: show(g, p, rect))
         else:
             order(g, p, rect, slot, shift)
+    click.rect, click.key = rect, shown(g, rect)                       # refresh() compares the key (#1335)
     menu.show(g, player, build.pretty(building), items, click)
+
+
+def shown(g, rect):
+    """What an open menu of the building rect shows of its queue: the groups and the progress of the first unit in
+    10 % steps. refresh() shows the menu again only when it changes, so the RCON commands stay few (#1335)."""
+    q = g.queues.get(rect, [])
+    return tuple(groups(q)), int(10 * q[0]["progress"]) if q else 0
+
+
+def refresh(g):
+    """Show each open training menu again when its queue changed (a unit is done, 10 % more progress, #1335)."""
+    for player, handler in list(getattr(g, "menus", {}).items()):
+        rect = getattr(handler, "rect", None)
+        if rect in homes(g) and handler.key != shown(g, rect):
+            show(g, player, rect)
 
 
 def units_of(building):
@@ -690,6 +706,7 @@ def tick(g, work):
         elif q[0]["progress"] >= 1 and (v := spawn(g, rect, q.pop(0)["name"])):
             out.append(v)
             g.pop += 1
+    refresh(g)
     sidebar(g)
     return out
 
