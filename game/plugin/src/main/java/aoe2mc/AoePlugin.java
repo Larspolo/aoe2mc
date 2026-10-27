@@ -70,6 +70,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * Orders for the units of the game program, with Minecraft path finding (#435). Vanilla has no command for
  * "walk to this point", so this plugin gives one to RCON:
  *   aoe moveto <selector> <x> <y> <z> [speed]   walk on the path of Mob#getPathfinder
+ *   aoe allies <team>,<team>,...|- ...         the alliances of the players (#1315): allied teams are one side for the
+ *                                              arrows of buildings, the hit back and the attack alerts. Each call
+ *                                              replaces all alliances; "-": no allies
  *   aoe arrows <uuid> <n>                      the arrows of each shot of a building: its base (an empty town center
  *                                              0, #1201) and 1 for each garrisoned villager or foot archer (#1113,
  *                                              game/garrison.py); 0: it does not shoot. Default 1
@@ -1364,8 +1367,15 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     private static boolean sameTeam(Entity a, Entity b) {
-        String s = side(a);
-        return s != null && s.equals(side(b));
+        return allied(side(a), side(b));
+    }
+
+    // team -> the first team of its alliance (aoe allies, #1315): allied players are one side, as in AoE2
+    private static final Map<String, String> ALLIES = new HashMap<>();
+
+    /** True when the sides a and b (side()) are the same player or allies. No side: no ally of anyone. */
+    static boolean allied(String a, String b) {
+        return a != null && b != null && ALLIES.getOrDefault(a, a).equals(ALLIES.getOrDefault(b, b));
     }
 
     // The team name, else the player tag aoe2mc.pN: the pulse of the datapack puts a unit in its team only when its
@@ -1395,6 +1405,19 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length >= 2 && args[0].startsWith("ghost")) {          // the ghost of a building (#794)
             return ghost.command(sender, args, players(sender, args[1]));
+        }
+        if (args.length >= 2 && args[0].equals("allies")) {            // the alliances of the players (#1315)
+            ALLIES.clear();
+            for (int i = 1; i < args.length; i++) {
+                if (!args[i].equals("-")) {
+                    String[] teams = args[i].split(",");
+                    for (String t : teams) {
+                        ALLIES.put(t, teams[0]);
+                    }
+                }
+            }
+            sender.sendMessage("Allies: " + ALLIES);
+            return true;
         }
         if (args.length == 3 && args[0].equals("arrows")) {            // a garrison adds arrows (#1113)
             try {
