@@ -32,8 +32,9 @@ import train  # noqa: E402
 SHARE = {"food": 0.4, "wood": 0.3, "gold": 0.2, "stone": 0.1}     # the villagers on each resource (a simple AoE2 bot)
 WOOD = 0.2                                                         # the wood share for farms and houses with an army
 QUEUED = 2                                                         # units in the queue of each building of the bot
-ORDER = ("LUMBER_CAMP", "MILL", "MINING_CAMP", "BARRACKS")         # the build order after the houses
-NEAR = {"LUMBER_CAMP": "wood", "MILL": "food", "MINING_CAMP": "gold"}   # a drop site goes next to its resource
+# The build order after the houses (the key "bot" of data/build.jsonl), and the resource that a drop site goes next to
+ORDER = tuple(r["name"] for r in sorted((r for r in build.ROWS if "bot" in r), key=lambda r: r["bot"]))
+NEAR = {r["name"]: r["near"] for r in build.ROWS if "near" in r}
 HOUSE_GAP = 2                                                      # a new house at this many units below the limit
 ATTACK = 600.0                                                     # AoE2 seconds: the first attack at 10:00
 LOOK = 2.0                                                         # AoE2 seconds between two looks for targets

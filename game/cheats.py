@@ -38,6 +38,7 @@ from urllib.parse import quote
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import bossbar  # noqa: E402
+import table  # noqa: E402
 from units import is_bird  # noqa: E402
 
 Unit = namedtuple("Unit", "name")             # the effect of a unit cheat
@@ -46,8 +47,6 @@ Transform = namedtuple("Transform", "to units")   # a transformation cheat: own 
 OBJECTIVE = "aoe_cheat"
 ALL = {"food": 100000, "wood": 100000, "gold": 100000, "stone": 100000}
 FOG = {"all": "Fog of war: off", "normal": "Fog of war: on"}       # the chat answer of "polo" for each g.reveal
-CAMELS = {"BACTRIAN_CAMEL", "CAMEL", "CAMEL_ARCHER", "CAMEL_RIDER", "ELITE_CAMEL_ARCHER", "HEAVY_CAMEL_RIDER",
-          "IMPERIAL_CAMEL_RIDER"}               # "cameleon": not the Mameluke, Camel Scout and Raider, camel heroes
 NUMBER = r"-?\d+(?:\.\d+)?"
 
 
@@ -207,20 +206,11 @@ def wonders(g, player):
     g.command(f'tellraw {player} {{"text":"You control nature: {len(g.soldiers)} animals"}}')
 
 
-CODES = {                                     # code -> the resources, the chat answer, a function, a Unit or a Transform
+CODES = {                                     # code -> the resources, the chat answer or a function
     "aegis": aegis,
-    "alpaca simulator": Unit("ALFRED_THE_ALPACA"),
     "black death": lambda g, player: [destroy(g, n) for n in others(g)],
-    "cameleon": Transform("FLAMING_CAMEL", CAMELS.__contains__),
-    "catzor": Unit("SHARKATZOR"),
     "cheese steak jimmy's": {"food": 10000},
-    "flemish reformation": Transform("MONK", villager),
-    "furious the monkey boy": Unit("FURIOUS_THE_MONKEY_BOY"),
     "going above and beyond": flag("beyond", "Technologies: up to 256 researches"),
-    "grab your pitchforks": Transform("FLEMISH_MILITIA", villager),
-    "how do you turn this on": Unit("COBRA_CAR"),
-    "i don't exist": Unit("WAR_PENGUIN"),
-    "i love the monkey head": Unit("VMDL"),
     "i r winner": end("Victory", "gold"),
     "lumberjack": {"wood": 10000},
     "marco": "polo",                          # an easter egg (#1057)
@@ -229,16 +219,13 @@ CODES = {                                     # code -> the resources, the chat 
     "ninjaconnor": ALL,
     "ninjalui": ALL,
     "noui": noui,
-    "photon man": Unit("PHOTONMAN"),
     "polo": polo,
-    "put on your capes": Transform("ELITE_TEUTONIC_KNIGHT", infantry),
     "resign": end("Defeat", "red"),
     "robin hood": {"gold": 10000},
     "rock on": {"stone": 10000},
     "rowshep": ALL,
     "sharing is caring": flag("sharing", "Sharing is caring: your income goes to your allies"),
     "tech tech one two free": flag("free_techs", "Technologies are free"),
-    "to smithereens": Unit("SABOTEUR"),
     "torpedo1": lambda g, player: destroy(g, 1),
     "torpedo2": lambda g, player: destroy(g, 2),
     "torpedo3": lambda g, player: destroy(g, 3),
@@ -249,8 +236,12 @@ CODES = {                                     # code -> the resources, the chat 
     "torpedo8": lambda g, player: destroy(g, 8),
     "wimpywimpywimpy": lambda g, player: destroy(g, g.player) or end("Defeat", "red")(g, player),
     "woof woof": woof,
-    "yes we khan": Transform("GENGHIS_KHAN", {"ELITE_MANGUDAI", "MANGUDAI"}.__contains__),
 }
+# The unit and transformation codes: one line per code in data/cheats.jsonl (#2034). "units" of a Transform is a list of
+# unit names or the name of a function of this module.
+CODES = dict(sorted((CODES | {r["name"]: Unit(r["unit"]) if "unit" in r else Transform(r["transform"], set(
+    r["units"]).__contains__ if isinstance(r["units"], list) else globals()[r["units"]])
+    for r in table.load("cheats.jsonl")}).items()))
 NAMES = sorted(CODES)                         # the score of a code is its index + 1
 
 
