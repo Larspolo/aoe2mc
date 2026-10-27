@@ -91,6 +91,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "CASTLE_AGE": {"food": 800, "gold": 200},
          "CAREENING": {"food": 100, "gold": 200},                     # the university, Castle Age (DE update 169123)
          "CARAVAN": {"food": 200, "gold": 200},
+         "CHAMPION": {"food": 50, "gold": 20},                         # AoE2 DE wiki (#1498)
+         "CHAMPION_UPGRADE": {"food": 650, "gold": 350},               # the Imperial Age (#1498)
          "CHEMISTRY": {"food": 300, "gold": 200},                    # the university, Imperial Age (#1375)
          "CONSCRIPTION": {"food": 150, "gold": 150},                 # the castle, Imperial Age (#1455)
          "CATAPHRACT": {"food": 70, "gold": 75},
@@ -187,6 +189,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "TRANSPORT_SHIP": {"wood": 125},                               # the Dark Age (AoE2 DE wiki, #1385)
          "TREADMILL_CRANE": {"wood": 200, "stone": 50},               # AoE2 DE wiki (#1422)
          "TREBUCHET": {"wood": 200, "gold": 200},                   # the castle, Imperial Age (#1351)
+         "TWO_HANDED_SWORDSMAN": {"food": 50, "gold": 20},             # AoE2 DE wiki (#1498)
+         "TWO_HANDED_SWORDSMAN_UPGRADE": {"food": 200, "gold": 100},   # the Imperial Age (#1498)
          "WAR_ELEPHANT": {"food": 170, "gold": 85},
          "WAR_GALLEY": {"wood": 90, "gold": 30},                       # AoE2 DE wiki (#1482)
          "WHEELBARROW": {"food": 175, "wood": 50},
@@ -206,6 +210,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "CAPPED_RAM": 36,
                "CAPPED_RAM_UPGRADE": 50,
                "CARAVAN": 40,
+               "CHAMPION": 21,
+               "CHAMPION_UPGRADE": 70,
                "CHEMISTRY": 100,
                "CONSCRIPTION": 60,
                "CASTLE_AGE": 160,
@@ -304,6 +310,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "TRANSPORT_SHIP": 46,
                "TREADMILL_CRANE": 20,
                "TREBUCHET": 50,
+               "TWO_HANDED_SWORDSMAN": 21,
+               "TWO_HANDED_SWORDSMAN_UPGRADE": 45,
                "WAR_ELEPHANT": 25,
                "WAR_GALLEY": 27,
                "WHEELBARROW": 75,
@@ -312,6 +320,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                          "TOWN_WATCH"), "BARRACKS": ("MILITIA", "SPEARMAN", "MAN_AT_ARMS_UPGRADE",   # the units and technologies of each
                        "LONG_SWORDSMAN_UPGRADE", "PIKEMAN_UPGRADE",           # the Castle Age (#1396)
                        "HALBERDIER_UPGRADE",                                  # the Imperial Age (#1499)
+                       "TWO_HANDED_SWORDSMAN_UPGRADE",                        # the Imperial Age (#1498)
+                       "CHAMPION_UPGRADE",                                    # (#1498)
                        "SQUIRES", "GAMBESONS",                                           # (#1415)
                        "ARSON"),                                              # (#1419)
           "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER",                                          # building (#654, #670, #655)
@@ -428,6 +438,7 @@ TECHS = {"ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bon
          "CARAVAN": lambda name, s: s,                             # the walk speed: SPEEDS
          "CASTLE_AGE": lambda name, s: s,                          # an age: REQUIRES
          "CAREENING": lambda name, s: s._replace(pierce=s.pierce + 1) if ship(name, s) else s,
+         "CHAMPION_UPGRADE": lambda name, s: s,                    # a new unit name: UPGRADES
          "CHEMISTRY": chemistry,
          "CONSCRIPTION": lambda name, s: s,                        # the train speed: CONSCRIPT, tick()
          "CHAIN_BARDING_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
@@ -494,6 +505,7 @@ TECHS = {"ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bon
          "THUMB_RING": lambda name, s: s._replace(reload=round(s.reload / 1.1765, 3)) if thumb(name, s) else s,
          "TOWN_WATCH": lambda name, s: s,                          # the building sight: gather.seen_tiles
          "TREADMILL_CRANE": lambda name, s: s,                     # the build speed: build.rise
+         "TWO_HANDED_SWORDSMAN_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
          "FEUDAL_AGE": lambda name, s: s,   # the change of each technology to the AoE2 values
          "WHEELBARROW": lambda name, s: s}                         # no combat change: gather.CARRY and gather.PACE
 SPEEDS = {"CARAVAN": ("trade units", 1.2),                        # technology: the unit (or a class of combat.STATS:
@@ -503,6 +515,7 @@ SPEEDS = {"CARAVAN": ("trade units", 1.2),                        # technology: 
 CONSCRIPT = (("ARCHERY_RANGE", "BARRACKS", "CASTLE", "STABLE"), 1.33)   # Conscription: these buildings train faster
 UPGRADES = {                                                       # technology: the unit and its new unit (#941)
     "CAPPED_RAM_UPGRADE": ("BATTERING_RAM", "CAPPED_RAM"),           # the siege upgrades of AoE2 DE (#1352)
+    "CHAMPION_UPGRADE": ("TWO_HANDED_SWORDSMAN", "CHAMPION"),
     "CROSSBOWMAN_UPGRADE": ("ARCHER", "CROSSBOWMAN"),
     "ELITE_SKIRMISHER_UPGRADE": ("SKIRMISHER", "ELITE_SKIRMISHER"),
     "HALBERDIER_UPGRADE": ("PIKEMAN", "HALBERDIER"),
@@ -516,12 +529,14 @@ UPGRADES = {                                                       # technology:
     "PIKEMAN_UPGRADE": ("SPEARMAN", "PIKEMAN"),
     "SIEGE_ONAGER_UPGRADE": ("ONAGER", "SIEGE_ONAGER"),
     "SIEGE_RAM_UPGRADE": ("CAPPED_RAM", "SIEGE_RAM"),
+    "TWO_HANDED_SWORDSMAN_UPGRADE": ("LONG_SWORDSMAN", "TWO_HANDED_SWORDSMAN"),
 }
 AFTER = {"BLAST_FURNACE": "IRON_CASTING",
          "BODKIN_ARROW": "FLETCHING",
          "BOMBARD_TOWER_TECH": "CHEMISTRY",
          "BOW_SAW": "DOUBLE_BIT_AXE",
          "DRY_DOCK": "CAREENING",
+         "CHAMPION_UPGRADE": "TWO_HANDED_SWORDSMAN_UPGRADE",
          "CHAIN_BARDING_ARMOR": "SCALE_BARDING_ARMOR", "CHAIN_MAIL_ARMOR": "SCALE_MAIL_ARMOR",
          "GILLNETS": "FISHING_LINES",
          "GOLD_SHAFT_MINING": "GOLD_MINING",
@@ -537,7 +552,8 @@ AFTER = {"BLAST_FURNACE": "IRON_CASTING",
          "PLATE_MAIL_ARMOR": "CHAIN_MAIL_ARMOR",
          "RING_ARCHER_ARMOR": "LEATHER_ARCHER_ARMOR",
          "SIEGE_ONAGER_UPGRADE": "ONAGER_UPGRADE", "SIEGE_RAM_UPGRADE": "CAPPED_RAM_UPGRADE",
-         "STONE_SHAFT_MINING": "STONE_MINING"}   # the upgrade before it
+         "STONE_SHAFT_MINING": "STONE_MINING",
+         "TWO_HANDED_SWORDSMAN_UPGRADE": "LONG_SWORDSMAN_UPGRADE"}   # the upgrade before it
 WALL_UPGRADES = {"FORTIFIED_WALL": {"STONE_WALL": "FORTIFIED_WALL", "GATE": "FORTIFIED_GATE"}}   # technology: {wall: new} (#1326)
 TOWER_UPGRADES = {"GUARD_TOWER": {"WATCH_TOWER": "GUARD_TOWER"},   # technology: {tower: the tower of its values},
                   "KEEP": {"GUARD_TOWER": "KEEP", "WATCH_TOWER": "KEEP"}}   # in the research order (#1374)
@@ -557,6 +573,7 @@ TECH_AGE = {                                                       # the age of 
     "CHAIN_BARDING_ARMOR": 2,
     "CAREENING": 2,
     "CHAIN_MAIL_ARMOR": 2,
+    "CHAMPION_UPGRADE": 3,
     "CROSSBOWMAN_UPGRADE": 2,
     "DOUBLE_BIT_AXE": 1,
     "DRY_DOCK": 3,
@@ -609,6 +626,7 @@ TECH_AGE = {                                                       # the age of 
     "THUMB_RING": 2,
     "TOWN_WATCH": 1,
     "TREADMILL_CRANE": 2,
+    "TWO_HANDED_SWORDSMAN_UPGRADE": 3,
     "WHEELBARROW": 1,
 }
 AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age after each researched age (index: ages)
@@ -671,6 +689,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "CAVALRY_ARCHER": (4, "skeleton_horse_spawn_egg", "Cavalry Archer"),
          "CHAIN_BARDING_ARMOR": (4, "book", "Chain Barding Armor"),    # the slot of the Feudal armor (AFTER)
          "CHAIN_MAIL_ARMOR": (1, "book", "Chain Mail Armor"),
+         "CHAMPION": (0, "zombie_spawn_egg", "Champion"),
+         "CHAMPION_UPGRADE": (2, "book", "Champion"),                 # the slot of Two-Handed Swordsman (AFTER)
          "CHU_KO_NU": (0, "skeleton_spawn_egg", "Chu Ko Nu"),
          "DOUBLE_BIT_AXE": (0, "book", "Double-Bit Axe"),
          "DRY_DOCK": (8, "book", "Dry Dock"),                       # the slot of Careening (AFTER)
@@ -734,6 +754,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "TRANSPORT_SHIP": (2, "spruce_chest_boat", "Transport Ship"),   # units.classify: a spruce chest boat
          "TREADMILL_CRANE": (7, "book", "Treadmill Crane"),         # the last free slot of the university
          "TREBUCHET": (1, "minecart", "Trebuchet"),                 # after the unique unit
+         "TWO_HANDED_SWORDSMAN": (0, "zombie_spawn_egg", "Two-Handed Swordsman"),
+         "TWO_HANDED_SWORDSMAN_UPGRADE": (2, "book", "Two-Handed Swordsman"),   # the slot of Long Swordsman (AFTER)
          "WAR_ELEPHANT": (0, "ravager_spawn_egg", "War Elephant"),
          "WAR_GALLEY": (1, "dark_oak_boat", "War Galley"),        # the slot of the galley
          "FEUDAL_AGE": (2, "bell", "Feudal Age"),
@@ -763,6 +785,8 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "CAVALRY_ARCHER": "Fast archer. Strong vs. infantry; weak vs. camels.",
         "CHAIN_BARDING_ARMOR": "Cavalry +1 melee armor, +1 pierce armor.",
         "CHAIN_MAIL_ARMOR": "Infantry +1 melee armor, +1 pierce armor.",
+        "CHAMPION": "Infantry. Strong vs. eagles, buildings.",
+        "CHAMPION_UPGRADE": "Upgrades two-handed swordsmen to champions.",
         "CHU_KO_NU": "Chinese archer. Shoots many arrows.",
         "CROSSBOWMAN": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "CROSSBOWMAN_UPGRADE": "Upgrades archers to crossbowmen.",
@@ -856,6 +880,8 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "TRANSPORT_SHIP": "Carries 20 land units across the water.",
         "TREADMILL_CRANE": "Villagers build 20 % faster.",
         "TREBUCHET": "Siege. Long range vs. buildings; unpacks to shoot.",
+        "TWO_HANDED_SWORDSMAN": "Infantry. Strong vs. eagles, buildings.",
+        "TWO_HANDED_SWORDSMAN_UPGRADE": "Upgrades long swordsmen to two-handed.",
         "VILLAGER_MALE": "Gathers, builds and repairs.",
         "WAR_ELEPHANT": "Persian elephant. Slow, very strong.",
         "WAR_GALLEY": "All-purpose warship with ranged attack.",
