@@ -504,18 +504,21 @@ def design(g, name, player):
     return new.get(name, name) if player == g.player else name
 
 
-def upgrade(g, site):
-    """The complete wall site gets the design and the hit points of its new wall after a wall technology (#1326): the
-    target keeps its lost hit points, as in AoE2 (the score aoe_hp, repair.hp). A destroyed wall stays air."""
+def upgrade(g, site, old, redraw=True):
+    """The complete wall site gets the hit points of its wall in the present age (combat.wall), and with redraw the
+    design of its new wall after a wall technology (#1326). old: its Stats before the change (the old wall, or the
+    last age: #1372). The target keeps its lost hit points, as in AoE2 (the score aoe_hp, repair.hp). A destroyed
+    wall stays air."""
     import combat, repair                                              # combat -> gather -> build: import it late
     x0, x1, z0, z1 = site["footprint"]
-    if (hp := repair.hp(g, (x0, x1, z0, z1))) is None or hp <= 0:
-        return
     name, T = design(g, site["name"], site["player"]), g.map.T
+    new = combat.wall(name, ages(g))
+    if new == old or (hp := repair.hp(g, (x0, x1, z0, z1))) is None or hp <= 0:
+        return
     for c in Replay(g, g.data, getattr(g.game, "version", VERSION_NAME)).building(
-            name, site["player"], (x0 + x1) / 2 / T, (z0 + z1) / 2 / T, along_z=z1 - z0 > x1 - x0):   # as found()
+            name, site["player"], (x0 + x1) / 2 / T, (z0 + z1) / 2 / T, along_z=z1 - z0 > x1 - x0) * redraw:   # as found()
         g.command(c)
-    uuid, old, new = combat.target_uuid([x0, z0, x1, z1]), combat.wall(site["name"], ages(g)), combat.wall(name, ages(g))
+    uuid = combat.target_uuid([x0, z0, x1, z1])
     box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
     for c in [c for c in combat.building(uuid, name, site["player"], box, T, s=new) if c.startswith("aoe building ")] \
             + [f"scoreboard players set {uuid} aoe_hp {min(new.hp, hp + new.hp - old.hp)}", combat.label_command(uuid, name)]:
