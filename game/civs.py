@@ -8,7 +8,9 @@ CHURCH_RATE is the Georgian bonus of the Fortified Church (#1930): build.rise an
 villagers in the 21-tile square around it (church_rate).
 BUILD and BUILD_WONDER hold the build speed bonuses (#1893): build.rise multiplies the work of the builders (build_rate).
 WORK_RATE holds the train and research rate of the buildings (#1894, Persian town centers and docks): train.seconds
-divides the time of an item by work_rate(). HP holds the hit points bonus of the buildings (#1895): build.values and
+divides the time of an item by work_rate(). TRAIN_RATE holds the train rate of unit groups (#1927, Aztec military
+units, Khitan skirmishers ...): train.seconds divides by train_rate(), also the time of their upgrades when the third
+field is True. HP holds the hit points bonus of the buildings (#1895): build.values and
 combat.setup (the buildings of the map) apply it before the technologies (Masonry).
 REPAIR and REPAIR_COST hold the repair bonuses (#1730, AoE2 wiki "Repairing"): repair.tick multiplies the rate and the
 cost of the repairs of a player by them (repair_rate, repair_cost). REPAIR_TEAM holds the team bonuses of the repair
@@ -61,6 +63,8 @@ GROUPS = {
     "infantry": lambda n, s: "infantry" in s.classes,
     "infantry, mounted": lambda n, s: "infantry" in s.classes or mounted(s),
     "military": lambda n, s: not n.startswith("VILLAGER"),
+    "military units": lambda n, s: not n.startswith(("VILLAGER", "REPAIRER", "MONK", "MISSIONARY", "KING", "TRADE",
+                                                     "FISHING_SHIP", "TRANSPORT")),   # not gather.CIVILIANS
     "monks": lambda n, s: n in ("MONK", "MISSIONARY"),
     "mounted": lambda n, s: mounted(s),
     "scorpions": lambda n, s: n.endswith("SCORPION"),
@@ -69,6 +73,8 @@ GROUPS = {
                                                      "ELITE_STEPPE_LANCER"),
     "siege": lambda n, s: "siege" in s.classes,
     "skirmishers, elephant archers": lambda n, s: "SKIRMISHER" in n or n.endswith("ELEPHANT_ARCHER"),
+    "skirmishers, genitours, spearman and scout lines": lambda n, s: "SKIRMISHER" in n or "GENITOUR" in n
+        or "spearman" in s.classes or n in ("SCOUT_CAVALRY", "LIGHT_CAVALRY", "HUSSAR", "WINGED_HUSSAR"),
     "spearmen, skirmishers": lambda n, s: "spearman" in s.classes or "SKIRMISHER" in n,
     "trade units": lambda n, s: n in ("TRADE_CART", "TRADE_COG"),
     "units": lambda n, s: True,
@@ -136,6 +142,8 @@ REPAIR_COST = {"GEORGIANS": 0.75}                                 # Georgians (t
 REPAIR_TEAM = {"SAXONS": 1.25}                                    # Saxons (team bonus): repairers work 25 % faster
 PERSIAN = (1.05, 1.1, 1.15, 1.2)                                   # Persians: 5/10/15/20 % faster in the Dark ... Imperial Age
 WORK_RATE = {"PERSIANS": {"DOCK": PERSIAN, "TOWN_CENTER": PERSIAN}}   # the train and research rate of a building in each age
+TRAIN_RATE = {"AZTECS": [("military units", 1.15, False)],         # created 15 % faster (AoE2 DE wiki, #1927)
+              "KHITANS": [("skirmishers, genitours, spearman and scout lines", 1.15, True)]}   # trained and upgraded
 HP = {"PERSIANS": {"DOCK": 2, "TOWN_CENTER": 2}}                   # Persians: town centers and docks have double hit points
 
 
@@ -261,6 +269,16 @@ def work_rate(g, building):
     """The factor of the train and research rate of building (a name) of the player of g in its age (WORK_RATE), else 1."""
     import build                                                   # build imports gather, gather imports this module
     return WORK_RATE.get(civ(g), {}).get(building, (1,) * 4)[min(build.ages(g), 3)]
+
+
+def train_rate(g, name):
+    """The factor of the train rate of unit name of the player of g (TRAIN_RATE), also of an upgrade technology
+    (train.UPGRADES) to a unit of the group when the bonus has its upgrades, else 1."""
+    import combat, train                                           # train imports this module
+    unit = name in combat.STATS
+    news = [name] if unit else [new for _, new in train.lines(name)] if name in train.UPGRADES else []
+    return math.prod(f for group, f, upgrades in TRAIN_RATE.get(civ(g), ()) if (unit or upgrades)
+                     and any(GROUPS[group](n, combat.stats(n)) for n in news))
 
 
 def start(g, base):
