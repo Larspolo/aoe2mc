@@ -12,6 +12,8 @@ A fishing ship sent to a fish (fish_order) gathers it at the AoE2 DE rate and br
 as a villager brings its load to a drop site (#1384, work).
 A fishing ship builds a fish trap on the water (build.WATER) and then gathers it at the AoE2 DE rate, as a farmer a
 farm (#1438): Map.traps holds the own traps, Map.fish their food. An empty trap stops its ship.
+A trade cog sent to a second own dock (trade_order) sails between that dock and its home dock (the nearest other own
+dock), and each arrival at home gives the gold of the AoE2 trade formula (trade.gold), as a trade cart (#1485).
 """
 import math
 
@@ -24,6 +26,7 @@ SPEEDS = {"FISHING_SHIP": 1.26,          # tiles per game second (AoE2 DE wiki i
           "FIRE_GALLEY": 1.36,
           "FIRE_SHIP": 1.47,
           "GALLEY": 1.36,
+          "TRADE_COG": 1.65,
           "TRANSPORT_SHIP": 1.45,
           "WAR_GALLEY": 1.36}                                   # (#1482)
 NEAR = 3                                 # tiles from a clicked land cell to the water that a ship sails to
@@ -31,6 +34,7 @@ PATH_CELLS = 20000                       # the path search limit (cells), as a l
 CHASE = 2.0                              # seconds between two range checks of a warship with a target (#1386)
 CONTACT = 1                              # blocks: a demolition ship sails next to its target (#1440)
 CARRY = 15                               # food of one fishing ship trip (AoE2 DE wiki, "Fishing Ship")
+COG = "TRADE_COG"
 
 
 def ship(g, uuid):
@@ -219,6 +223,54 @@ def fish_order(g, name, eye, d):
     return True
 
 
+def docks(g):
+    """The block footprints of the complete own docks."""
+    import train                                                      # train imports this module
+    return sorted(r for r, n in train.homes(g).items() if n == "DOCK")
+
+
+def pier(g, rect):
+    """The water cells next to the dock rect (x0, x1, z0, z1): a trade cog stops there."""
+    return g.map.around({(x, z) for x in range(rect[0], rect[1]) for z in range(rect[2], rect[3])}, water=True)
+
+
+def trade_order(g, player, cell):
+    """The selected trade cogs trade with the own dock with the block cell (x, z) in its footprint (#1485), as the
+    trade carts with a market (trade.order). Returns its footprint, or None (no own dock there, no cog selected or no
+    second own dock): the click is then not a trade order."""
+    own = docks(g)
+    rect = next((r for r in own if cell and r[0] <= cell[0] < r[1] and r[2] <= cell[1] < r[3]), None)
+    cogs = [v for u in sorted(g.selected) if g.soldiers.get(u, "").startswith(COG) and (v := ship(g, u))]
+    if rect is None or not cogs or len(own) < 2:
+        return None
+    mid = lambda r: ((r[0] + r[1]) / 2, (r[2] + r[3]) / 2)            # noqa: E731
+    for v in cogs:
+        home = min((r for r in own if r != rect), key=lambda r: (math.dist(mid(r), v.cell), r))
+        v.prey, v.tree, v.site = None, None, None
+        v.route = {"home": home, "dock": rect, "to": rect, "rest": getattr(v, "route", {}).get("rest", 0.0)}
+        sail_to(g, v, "to_trade", pier(g, rect))
+    g.mark(player, {(rect[0], rect[2]), (rect[1] - 1, rect[3] - 1)})
+    return rect
+
+
+def route(g, v):
+    """Trade cog v is at a dock of its route: at home it gives the gold of the trip (the fraction stays for the next
+    trip, as in AoE2), then it sails to the other dock. A dock that fell ends the route."""
+    import trade                                                      # trade imports gather, gather this module
+    r, own = v.route, docks(g)
+    if r["home"] not in own or r["dock"] not in own:
+        v.state = "idle"
+        return
+    if r["to"] == r["home"]:
+        r["rest"] += trade.gold(trade.center(r["home"], g.map.T), trade.center(r["dock"], g.map.T), g.map.n / g.map.T)
+        n, r["rest"] = int(r["rest"]), r["rest"] - int(r["rest"])
+        if n:
+            g.command(f"scoreboard players add Gold {g.board} {n}")
+            g.stock["gold"] += n
+    r["to"] = r["dock"] if r["to"] == r["home"] else r["home"]
+    sail_to(g, v, "to_trade", pier(g, r["to"]))
+
+
 def trap(g, site):
     """The tile of the fish trap of the construction site (Map.traps), as build.rise gives it to Map.building."""
     x0, _, z0, _ = site["footprint"]
@@ -297,7 +349,9 @@ def work(g, v, dt):
     (rate()) up to carry(), then sails to the nearest own dock; there the food goes into the stock, and it sails
     back to its fish or to the next fish. An empty fish is removed."""
     m = g.map
-    if v.state == "to_site":                                           # next to a fish trap site: Gather.run builds
+    if v.state == "to_trade":                                          # at a dock of its trade route (#1485)
+        route(g, v)
+    elif v.state == "to_site":                                           # next to a fish trap site: Gather.run builds
         v.state = "build" if v.site and v.site["progress"] < 1 else "idle"
     elif v.state == "to_tree":
         v.tree = v.tree if m.fish.get(v.tree, 0) > 0 else nearest(g, v.tree)
