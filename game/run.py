@@ -328,7 +328,17 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
           "then right click a tree, a fruit bush or a mine. To build: /trigger aoe_build set N (the menu is in the chat),\n"
           "then right click the ground. Right click your town center to train a villager (50 food). Ctrl-C stops.", file=sys.stderr)
     g.run(seconds)
+    if g.ended:
+        unveil(g)
     return g
+
+
+def unveil(g):
+    """As in AoE2, no fog of war after "Victory" or "Defeat": all units of all players show (#2051)."""
+    import fog
+    for x in [g, *(getattr(s, "g", None) for s in g.bots)]:
+        if x is not None and x.reveal != "all":
+            fog.toggle(x)
 
 
 KEEP = ("playerdata", "stats", "advancements", "session.lock")   # the players stay where they are after a restart
@@ -452,8 +462,12 @@ def main(argv=None):
             print("The replay ended. The server stays up: type commands, Ctrl-C stops it.", file=sys.stderr)
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
-                play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal, people=a.people)
-            return
+                g = play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal,
+                         people=a.people)
+            if not getattr(g, "ended", None):
+                return
+            print(f"The game ended ({g.ended}). The server stays up: type commands, Ctrl-C stops it.",
+                  file=sys.stderr)                   # the player can look around, as after a replay (#2051)
         while commands.is_alive():                   # the end of stdin stops the server; a short join keeps Ctrl-C
             commands.join(0.5)
     except (KeyboardInterrupt, EOFError):

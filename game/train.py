@@ -188,6 +188,8 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
          "BALLISTICS": lambda name, s: s,                          # the aim of the arrows: aoe ballistics (#1549)
          "BANKING": lambda name, s: s,                             # the tribute fee: diplomacy.FEES
+         "BEARDED_AXE": lambda name, s: s._replace(range=s.range + 2)
+         if name in ("THROWING_AXEMAN", "ELITE_THROWING_AXEMAN") else s,  # the Franks (#2044)
          "BLAST_FURNACE": lambda name, s: s._replace(attack=s.attack + 2) if melee(s) or name in HULKS else s,
          "BLOCK_PRINTING": lambda name, s: s,                      # the conversion range: monk.near
          "BOGSVEIGAR": lambda name, s: s._replace(attack=s.attack + 1) if name in forms("ARCHER") + forms("LONGSHIP") else s,  # (#2021)
@@ -270,6 +272,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "FLETCHING": fletching,
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) or name in HULKS else s,
          "FORTIFIED_WALL": lambda name, s: s,                      # the walls of the player: WALL_UPGRADES
+         "FUROR_CELTICA": lambda name, s: s._replace(hp=round(s.hp * 1.4)) if "siege" in s.classes else s,   # the Celts (#2043)
          "GAMBESONS": lambda name, s: s._replace(pierce=s.pierce + 1) if name in MILITIA_LINE else s,
          "GARLAND_WARS": lambda name, s: s._replace(attack=s.attack + 4) if "infantry" in s.classes else s,  # the Aztecs (#2042)
          "GILLNETS": lambda name, s: s,                            # the fishing ships: gather.SHIP_TECHS
@@ -284,6 +287,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "HEAVY_CAMEL_RIDER_UPGRADE": lambda name, s: s,           # a new unit name: UPGRADES
          "HEAVY_CAVALRY_ARCHER_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
          "HEAVY_HEI_GUANG_CAVALRY_UPGRADE": lambda name, s: s,     # a new unit name: UPGRADES
+         "HEAVY_MOUNTED_CROSSBOWMAN_UPGRADE": lambda name, s: s,   # a new unit name: UPGRADES
          "HOARDINGS": lambda name, s: s._replace(hp=round(s.hp * 1.21)) if name == "CASTLE" else s,   # build.values
          "HEAVY_PLOW": lambda name, s: s,                          # an economy technology: gather.FARM_TECHS, FOOD_CARRY
          "HEAVY_SCORPION_UPGRADE": lambda name, s: s,
@@ -388,7 +392,7 @@ MARK = 17.0                                                        # AoE2 second
 ROW = 9                                                            # the first slot of the queue row of the menu (#706)
 
 
-HULKS = ("HULK", "WAR_HULK")                                       # melee warships: the blacksmith attack too (#1509)
+HULKS = ("CARRACK", "HULK", "WAR_HULK")                                     # melee warships: the blacksmith attack too (#1509)
 
 
 def melee(s):
