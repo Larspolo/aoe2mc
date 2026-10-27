@@ -367,7 +367,7 @@ MARK = 17.0                                                        # AoE2 second
 ROW = 9                                                            # the first slot of the queue row of the menu (#706)
 
 
-HULKS = ("HULK", "WAR_HULK")                                       # melee warships: the blacksmith attack too (#1509)
+HULKS = ("CARRACK", "HULK", "WAR_HULK")                                     # melee warships: the blacksmith attack too (#1509)
 
 
 def melee(s):

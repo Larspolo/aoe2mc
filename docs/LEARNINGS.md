@@ -50,3 +50,4 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - The menu line `queue 0/15` shows the queue capacity (`train.QUEUE`), not the train time: a test that expects the time there fails (#1726).
 - `ls X 2>&1; cat > X <<EOF` in one call writes over an existing test file: the `ls` output comes too late (#1945 overwrote `tests/test_random_map_kinds.py`, `git checkout` saved it). Run the `ls` in its own call, or write with `set -o noclobber`.
 - `train.UPGRADES` comes from the key `"upgrade": [OLD, NEW]` of the line of the technology in `game/data/train.jsonl` (#1915): a ticket that says "add a `UPGRADES` line in `game/train.py`" means that key now.
+- A test of a data file (`game/data/*.jsonl`) must not check the exact number of lines: each new unit or building adds one, and the parallel tickets then fail (`tests/test_building_data.py` had `len(combat.SIGHT) == 147`, #1933). Check `>=` or named entries.

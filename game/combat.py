@@ -76,6 +76,7 @@ SIGHT = {r["name"]: r["sight"] for r in table.load("units.jsonl") + BUILDING_ROW
 # Units that attack from a range with melee damage (AoE2): their hit takes the melee armor of the target (#800).
 MELEE_RANGED = {"BOMBARD_CANNON",
                 "CANNON_GALLEON",
+                "CARRACK",                        # (#1933)
                 "CHAKRAM_THROWER",                # (#1612)
                 "ELITE_CANNON_GALLEON",
                 "ELITE_CHAKRAM_THROWER",

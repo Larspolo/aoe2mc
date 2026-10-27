@@ -22,6 +22,7 @@ import replay
 
 SPEEDS = {"FISHING_SHIP": 1.26,          # tiles per game second (AoE2 DE wiki infobox); other ships: 1.0 until a ticket
           "CANNON_GALLEON": 1.05,
+          "CARRACK": 1.52,                                      # (#1933)
           "DEMOLITION_RAFT": 1.42,
           "DEMOLITION_SHIP": 1.52,
           "ELITE_CANNON_GALLEON": 1.05,

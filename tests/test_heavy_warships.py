@@ -26,7 +26,7 @@ def test_the_values_are_those_of_aoe2_de():
         assert len(train.HELP[t]) <= 50 and t in train.TRAINS["DOCK"]
     assert train.AFTER["HEAVY_WARSHIPS"] == "MEDIUM_WARSHIPS"
     assert train.AFTER["HEAVY_DEMOLITION_SHIP_UPGRADE"] == "DEMOLITION_SHIP_UPGRADE"
-    assert train.lines("HEAVY_WARSHIPS") == (("WAR_GALLEY", "GALLEON"), ("FIRE_SHIP", "FAST_FIRE_SHIP"))
+    assert train.lines("HEAVY_WARSHIPS") == (("WAR_GALLEY", "GALLEON"), ("FIRE_SHIP", "FAST_FIRE_SHIP"), ("WAR_HULK", "CARRACK"))
     assert combat.stats("GALLEON") == (155, 9, 0, 6, 7, 3.0, {"building": 6, "warship": 9, "ram": 3}, ("ship", "warship"))
     assert combat.stats("FAST_FIRE_SHIP") == (140, 4, 3, 7, 2.5, 0.25, {"building": 3, "warship": 1},
                                               ("ship", "fireship"))   # the class "Fire Ships": the hulk bonus (#1489)

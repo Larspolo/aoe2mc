@@ -197,6 +197,7 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
            "CANNON_GALLEON": ("ARMENIANS", "AZTECS", "BYZANTINES", "CHINESE", "CUMANS", "DANES", "GOTHS", "HUNS", "INCAS",
                               "JURCHENS", "MAPUCHE", "MAYANS", "MUISCA", "ROMANS", "SAXONS", "SHU", "TUPI", "VARANGIANS",
                               "VIKINGS", "WEI", "WU"),                                     # (#1484)
+           "CARRACK": ("BRITONS", "DANES", "GEORGIANS", "HUNS", "MONGOLS", "ROMANS", "TUPI"),   # the wiki chart (#1933)
            "CAVALIER_UPGRADE": ("AZTECS", "BENGALIS", "DANES", "DRAVIDIANS", "GURJARAS", "HINDUSTANIS", "INCAS", "JURCHENS",
                                 "KHITANS", "MAPUCHE", "MAYANS", "MUISCA", "SARACENS", "SHU", "TUPI", "WEI",
                                 "WU"),                                 # the wiki chart (#1501)
