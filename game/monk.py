@@ -267,7 +267,7 @@ def take(g, uuid):
         g.villagers[uuid] = gather.Villager(uuid, pos)
         g.units.append({"kind": "unit", "name": name, "player": new, "uuid": uuid,
                         "tile": [math.floor(pos[0]) / g.map.T, math.floor(pos[2]) / g.map.T]})
-    g.command("tellraw @a " + json.dumps({"text": f"A monk converts the {units.pretty(name)}.", "color": "gold"}))
+    g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": f"A monk converts the {units.pretty(name)}.", "color": "gold"}))
 
 
 def win(g, uuid):
@@ -280,7 +280,7 @@ def win(g, uuid):
         if o["kind"] == "building" and "footprint" in o and combat.target_uuid(o["footprint"]) == uuid:
             o["player"] = g.player
     g.command(f"team join p{g.player} {uuid}")
-    g.command("tellraw @a " + json.dumps({"text": f"A monk converts the {build.pretty(g.fort_names.get(uuid, 'BUILDING'))}.",
+    g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": f"A monk converts the {build.pretty(g.fort_names.get(uuid, 'BUILDING'))}.",
                                           "color": "gold"}))
 
 

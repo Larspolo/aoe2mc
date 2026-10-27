@@ -611,7 +611,7 @@ def research(g, entry):
         for uuid, name in g.soldiers.items():                      # the walk speed of the age (civs.UNITS, Celts)
             if civs.speed(g, name) != 1:
                 g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))
-        g.command("title @a title " + json.dumps({"text": age(g), "color": "gold"}))
+        g.command(f"title @a[team=p{g.player}] title " + json.dumps({"text": age(g), "color": "gold"}))  # the own team only
         g.command("tellraw @a " + json.dumps({"text": f"Player {g.player} advances to the {age(g)}.", "color": "gold"}))
         g.command("playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1")
         return

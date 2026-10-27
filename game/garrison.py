@@ -158,7 +158,7 @@ def out(g, rect):
         if (v := g.villagers.get(u)) is not None:
             v.pos, v.state = (x + 0.5, float(y), z + 0.5), "idle"
     if units:
-        g.command("tellraw @a " + json.dumps({"text": f"{len(units)} units came out", "color": "gray"}))
+        g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": f"{len(units)} units came out", "color": "gray"}))
     return units
 
 
