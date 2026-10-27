@@ -976,6 +976,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     mob.setAI(false);               // so it stands still until the next order
                 } else if (center(mob) >= 1) {      // steer() skips path points: Minecraft walks back to them (#1078)
                     mob.getPathfinder().stopPathfinding();
+                } else if (elsewhere(mob, o.goal)) {
+                    mob.getPathfinder().stopPathfinding();
+                    mob.setVelocity(new Vector(0, mob.getVelocity().getY(), 0));   // a fast unit slid on (#1292)
                 }
                 return true;                                          // arrived
             }
@@ -1005,6 +1008,15 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             return false;
         });
+    }
+
+    // The path ends on another block than the goal (the goal block has no place to stand, so the path ends at the
+    // nearest free block): the rest of the path only passes the goal, a move without an order (#1292: an eagle scout
+    // of the replay walked 2 blocks past its replay position).
+    private static boolean elsewhere(Mob mob, Location goal) {
+        var path = mob.getPathfinder().getCurrentPath();
+        Location end = path == null ? null : path.getFinalPoint();
+        return end == null || end.getBlockX() != goal.getBlockX() || end.getBlockZ() != goal.getBlockZ();
     }
 
     // The mob is on the ground beyond the next point of its path. Down a slope it lands past the point after each
