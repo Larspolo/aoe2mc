@@ -102,6 +102,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "CROSSBOWMAN_UPGRADE": {"food": 175, "gold": 100},
          "DOUBLE_BIT_AXE": {"food": 100, "wood": 50},
          "DRY_DOCK": {"food": 200, "gold": 400},                      # the university, after Careening (#1441)
+         "ELITE_CANNON_GALLEON": {"wood": 200, "gold": 150},           # AoE2 DE wiki (#1491)
+         "ELITE_CANNON_GALLEON_UPGRADE": {"wood": 525, "gold": 500},   # the Imperial Age (#1491)
          "ELITE_SKIRMISHER": {"food": 25, "wood": 35},
          "ELITE_SKIRMISHER_UPGRADE": {"wood": 230, "gold": 130},
          "FERVOR": {"gold": 140},
@@ -219,6 +221,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "CROSSBOWMAN_UPGRADE": 35,
                "DOUBLE_BIT_AXE": 25,
                "DRY_DOCK": 60,
+               "ELITE_CANNON_GALLEON": 46,
+               "ELITE_CANNON_GALLEON_UPGRADE": 30,
                "ELITE_SKIRMISHER": 22,
                "ELITE_SKIRMISHER_UPGRADE": 50,
                "FERVOR": 50,
@@ -344,6 +348,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                    "FIRE_GALLEY",                                              # (#1481)
                    "DEMOLITION_RAFT",                                          # (#1481)
                    "MEDIUM_WARSHIPS",                                          # the war galley, fire ship (#1482)
+                   "ELITE_CANNON_GALLEON_UPGRADE",                             # after Chemistry (#1491)
                    "FISHING_LINES", "GILLNETS"),                                # (#1439)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",
                           "BOW_SAW"),                                           # (#723, #1423)
@@ -437,6 +442,7 @@ TECHS = {"ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bon
          "CROSSBOWMAN_UPGRADE": lambda name, s: s,
          "DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
          "DRY_DOCK": lambda name, s: s._replace(pierce=s.pierce + 1) if ship(name, s) else s,
+         "ELITE_CANNON_GALLEON_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
          "ELITE_SKIRMISHER_UPGRADE": lambda name, s: s,
          "FERVOR": lambda name, s: s,                              # the walk speed: SPEEDS
          "FISHING_LINES": lambda name, s: s,                       # the fishing ships: gather.SHIP_TECHS
@@ -504,6 +510,7 @@ CONSCRIPT = (("ARCHERY_RANGE", "BARRACKS", "CASTLE", "STABLE"), 1.33)   # Conscr
 UPGRADES = {                                                       # technology: the unit and its new unit (#941)
     "CAPPED_RAM_UPGRADE": ("BATTERING_RAM", "CAPPED_RAM"),           # the siege upgrades of AoE2 DE (#1352)
     "CROSSBOWMAN_UPGRADE": ("ARCHER", "CROSSBOWMAN"),
+    "ELITE_CANNON_GALLEON_UPGRADE": ("CANNON_GALLEON", "ELITE_CANNON_GALLEON"),
     "ELITE_SKIRMISHER_UPGRADE": ("SKIRMISHER", "ELITE_SKIRMISHER"),
     "HALBERDIER_UPGRADE": ("PIKEMAN", "HALBERDIER"),
     "HEAVY_SCORPION_UPGRADE": ("SCORPION", "HEAVY_SCORPION"),
@@ -522,6 +529,7 @@ AFTER = {"BLAST_FURNACE": "IRON_CASTING",
          "BOMBARD_TOWER_TECH": "CHEMISTRY",
          "BOW_SAW": "DOUBLE_BIT_AXE",
          "DRY_DOCK": "CAREENING",
+         "ELITE_CANNON_GALLEON_UPGRADE": "CHEMISTRY",             # the cannon galleon needs it (build.NEEDS)
          "CHAIN_BARDING_ARMOR": "SCALE_BARDING_ARMOR", "CHAIN_MAIL_ARMOR": "SCALE_MAIL_ARMOR",
          "GILLNETS": "FISHING_LINES",
          "GOLD_SHAFT_MINING": "GOLD_MINING",
@@ -560,6 +568,7 @@ TECH_AGE = {                                                       # the age of 
     "CROSSBOWMAN_UPGRADE": 2,
     "DOUBLE_BIT_AXE": 1,
     "DRY_DOCK": 3,
+    "ELITE_CANNON_GALLEON_UPGRADE": 3,
     "ELITE_SKIRMISHER_UPGRADE": 2,
     "FERVOR": 2,
     "FISHING_LINES": 1,
@@ -624,6 +633,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "CAPPED_RAM_UPGRADE": (3, "book", "Capped Ram"),        # one slot for each line of upgrades
          "CROSSBOWMAN": (0, "skeleton_spawn_egg", "Crossbowman"),
          "CROSSBOWMAN_UPGRADE": (2, "book", "Crossbowman"),
+         "ELITE_CANNON_GALLEON": (MORE + 1, "dark_oak_boat", "Elite Cannon Galleon"),   # the slot of the cannon galleon
+         "ELITE_CANNON_GALLEON_UPGRADE": (MORE + 3, "book", "Elite Cannon Galleon"),   # the dock (#1491)
          "ELITE_SKIRMISHER": (1, "drowned_spawn_egg", "Elite Skirmisher"),
          "ELITE_SKIRMISHER_UPGRADE": (3, "book", "Elite Skirmisher"),
          "HALBERDIER": (1, "zombie_spawn_egg", "Halberdier"),
@@ -768,6 +779,8 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "CROSSBOWMAN_UPGRADE": "Upgrades archers to crossbowmen.",
         "DOUBLE_BIT_AXE": "Villagers chop wood 20 % faster.",
         "DRY_DOCK": "Ships +1 pierce armor.",
+        "ELITE_CANNON_GALLEON": "Siege warship. Long range; strong vs. buildings.",
+        "ELITE_CANNON_GALLEON_UPGRADE": "Upgrades cannon galleons to elite ones.",
         "ELITE_SKIRMISHER": "Ranged. Strong vs. archers, spearmen.",
         "ELITE_SKIRMISHER_UPGRADE": "Upgrades skirmishers to elite skirmishers.",
         "FEUDAL_AGE": "Advance to the Feudal Age.",

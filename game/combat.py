@@ -220,6 +220,7 @@ STATS = {
     "CANNON_GALLEON": Stats(120, 50, 0, 5, 13, 10.0, {"building": 200, SIE: 25}, (SHIP, GUN, WAR)),   # (#1484) melee damage
     "DEMOLITION_RAFT": Stats(40, 75, 0, 0, 0, 0.0, {"building": 180}, (SHIP,)),   # (#1481) the Feudal Age form
     "DEMOLITION_SHIP": Stats(50, 95, 1, 0, 0, 0.0, {"building": 220}, (SHIP,)),   # one blast (BLAST), then it dies
+    "ELITE_CANNON_GALLEON": Stats(150, 60, 0, 6, 15, 10.0, {"building": 275, SIE: 25}, (SHIP, GUN, WAR)),   # (#1491)
     "FIRE_GALLEY": Stats(110, 2, 1, 4, 2.5, 0.25, {WAR: 1}, (SHIP,)),   # (#1481) the Feudal Age form of the fire ship
     "FIRE_SHIP": Stats(120, 3, 2, 4, 2.5, 0.25, {"building": 2, WAR: 1}, (SHIP,)),   # (#1440) melee damage, 4 hits/s
     "FISHING_SHIP": Stats(50, 0, 1, 1, 0, 0.0, {}, (SHIP,)),
@@ -287,6 +288,7 @@ SIGHT = {
     "DEMOLITION_SHIP": 6,
     "DOCK": 8,
     "DONJON": 10,
+    "ELITE_CANNON_GALLEON": 17,
     "FIRE_GALLEY": 5,
     "FIRE_SHIP": 5,
     "FEITORIA": 6,
@@ -315,6 +317,7 @@ SIGHT = {
 # Units that attack from a range with melee damage (AoE2): their hit takes the melee armor of the target (#800).
 MELEE_RANGED = {"BOMBARD_CANNON",
                 "CANNON_GALLEON",
+                "ELITE_CANNON_GALLEON",
                 "ELITE_GBETO",
                 "ELITE_MAMELUKE",
                 "ELITE_THROWING_AXEMAN",
@@ -337,6 +340,7 @@ BLAST = {"BOMBARD_CANNON": 0.5,
          "CANNON_GALLEON": 0.25,
          "DEMOLITION_RAFT": 2.5,
          "DEMOLITION_SHIP": 3,
+         "ELITE_CANNON_GALLEON": 0.3,
          "FIRE_GALLEY": 0,
          "FIRE_SHIP": 0,
          "HEAVY_ROCKET_CART": 1.25,
@@ -349,6 +353,7 @@ RAM_REACH = 2.0       # blocks: a ram (a minecart with range 0) hits from next t
 CONTACT = 1.0         # tiles: the reach of a demolition ship (range 0, #1440): its raft is higher than a boat
 MIN_RANGE = {"BOMBARD_CANNON": 5,     # tiles: no shot at a unit nearer (AoE2 DE, wiki infobox "MinRange", #1350)
              "CANNON_GALLEON": 3,
+             "ELITE_CANNON_GALLEON": 3,
              "ELITE_ORGAN_GUN": 1,
              "HEAVY_ROCKET_CART": 2.5,
              "HEAVY_SCORPION": 2,

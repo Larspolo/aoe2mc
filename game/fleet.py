@@ -24,6 +24,7 @@ SPEEDS = {"FISHING_SHIP": 1.26,          # tiles per game second (AoE2 DE wiki i
           "CANNON_GALLEON": 1.05,
           "DEMOLITION_RAFT": 1.42,
           "DEMOLITION_SHIP": 1.52,
+          "ELITE_CANNON_GALLEON": 1.05,
           "FIRE_GALLEY": 1.36,
           "FIRE_SHIP": 1.47,
           "GALLEY": 1.36,
