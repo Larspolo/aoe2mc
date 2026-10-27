@@ -37,7 +37,8 @@ def test_no_wheelbarrow_in_the_dark_age():
 def test_the_town_center_menu_has_wheelbarrow():
     server, g = setup()
     train.open_menu(g, "Steve", (3, 3))
-    assert menus(server)[-1].endswith(" 3:book:Wheelbarrow:175 food · 50 wood · 75 s · research" + CASTLE + RALLY)
+    assert " 3:book:Wheelbarrow:175 food · 50 wood · 75 s · research" + CASTLE in menus(server)[-1]   # Town Watch (slot 6) comes after it (#1454)
+    assert menus(server)[-1].endswith(RALLY)
 
 
 def test_a_click_queues_wheelbarrow_once_and_takes_its_cost():
@@ -45,7 +46,8 @@ def test_a_click_queues_wheelbarrow_once_and_takes_its_cost():
     rect = train.open_menu(g, "Steve", (3, 3))
     assert train.order(g, "Steve", rect, 3, shift=True) == 1 and (g.stock["food"], g.stock["wood"]) == (825, 950)
     assert train.order(g, "Steve", rect, 3) == 0 and g.stock["food"] == 825
-    assert menus(server)[-1].endswith(" 3:book:Wheelbarrow:175 food · 50 wood · 75 s · researching" + CASTLE + RALLY)
+    assert " 3:book:Wheelbarrow:175 food · 50 wood · 75 s · researching" + CASTLE in menus(server)[-1]   # Town Watch (slot 6) comes after it (#1454)
+    assert menus(server)[-1].endswith(RALLY)
 
 
 def test_wheelbarrow_gives_more_carry_after_75_seconds():

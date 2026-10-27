@@ -55,6 +55,7 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - The cost and time of a unit upgrade (Man-at-Arms → Long Swordsman) are `UpCost` and `UpTime` in the infobox of the unit before it, and most unit names are disambiguation pages: ask for `Long Swordsman (Age of Empires II)` (#1396).
 - A technology ticket can name a technology that AoE2 DE removed (Supplies, update 141935, #1418): read the `Removal` field and the `Required` field of the infobox first. A missing `Required` technology (Fishing Lines for Gillnets) goes into the same PR, else the item is never in the menu (#1439).
 - The environment has no `pytest-xdist`: `python3 -m pytest -n 4` stops at once with "unrecognized arguments: -n" (rc 4). Run the fast suite without `-n` (about 4 minutes) in the background (#1389).
+- A technology ticket can name an old building: read the `Building` field of the infobox (`{{tt|NEW|OLD before ...}}`). Update 169123 (The Last Chieftains) moved Careening and Dry Dock from the dock to the university, with new costs and effects (#1441).
 
 ## Code
 
@@ -106,3 +107,4 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - A new item in the menu of a training building changes the exact menu strings of other tests: `grep -ln "aoe menu Steve <Label>" tests/` (#1397: the archery range in `test_age_lock.py`, `test_train_archery.py`; the stable in `test_train_stable.py`) and fix them in the same PR. A help line (`train.HELP`) has at most 50 characters (`tests/test_menu_help.py`).
 - `train.TRAINS` holds the items of a building in one tuple line: parallel tickets that add to the same building conflict there (#1362 and #1352, #1375 and #1374). Put each new item on its own line of the tuple, and take a free menu slot of `train.ITEMS` (`grep '"<BUILDING>"' game/train.py` first: #1375 and #1374 both took slots 2 and 3).
 - The first menu row has 8 item slots (0-7, slot 8 is `RALLY`), and the dock had all 8 after #1481: put a next item in `train.MORE` (slot 18 and on, the row under the queue row 9-17, #1485). Look at `grep -n "\"<BUILDING>\"" game/train.py` and the slots of its items first.
+- A new item of the town center menu in the Feudal or Castle Age breaks the `endswith(... + RALLY)` asserts of `tests/test_wheelbarrow.py`, `test_castle_age.py`, `test_imperial_age.py` (the constants `IMPERIAL`, `CASTLE`, not the label): the grep for the label does not find them; run the fast suite (#1454).
