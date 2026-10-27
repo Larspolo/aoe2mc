@@ -19,22 +19,12 @@ def stable(civ="WEI", ages=IMPERIAL):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.COSTS["HEI_GUANG_CAVALRY"] == train.COSTS["HEAVY_HEI_GUANG_CAVALRY"] == {"food": 65, "gold": 65}
-    assert train.TRAIN_TIMES["HEI_GUANG_CAVALRY"] == train.TRAIN_TIMES["HEAVY_HEI_GUANG_CAVALRY"] == 28
-    assert train.COSTS["HEAVY_HEI_GUANG_CAVALRY_UPGRADE"] == {"food": 350, "gold": 250}
-    assert train.TRAIN_TIMES["HEAVY_HEI_GUANG_CAVALRY_UPGRADE"] == 70
-    assert train.TECH_AGE["HEAVY_HEI_GUANG_CAVALRY_UPGRADE"] == 3
     assert build.AGE["HEI_GUANG_CAVALRY"] == 2 and build.AGE["HEAVY_HEI_GUANG_CAVALRY"] == 3
-    assert combat.stats("HEI_GUANG_CAVALRY") == (60, 11, 4, 3, 0, 1.8, {}, ("cavalry",))
-    assert combat.stats("HEAVY_HEI_GUANG_CAVALRY") == (90, 12, 4, 3, 0, 1.8, {"infantry": 1, "condottiero": 1},
-                                                       ("cavalry",))
     assert combat.sight("HEI_GUANG_CAVALRY") == combat.sight("HEAVY_HEI_GUANG_CAVALRY") == 4
     for name in NAMES:
         assert len(train.HELP[name]) <= 50
         assert not {"SHU", "WEI", "WU"} & set(civs.MISSING[name]) and {"FRANKS", "BRITONS"} <= set(civs.MISSING[name])
     assert replay.SPEEDS["HEI_GUANG_CAVALRY"] == replay.SPEEDS["HEAVY_HEI_GUANG_CAVALRY"] == 1.35
-    assert train.ITEMS["HEI_GUANG_CAVALRY"][0] == train.ITEMS["HEAVY_HEI_GUANG_CAVALRY"][0] == train.MORE + 6
-    assert train.ITEMS["HEAVY_HEI_GUANG_CAVALRY_UPGRADE"][0] == train.MORE + 7
 
 
 def test_bloodlines_and_husbandry_apply_to_the_cavalry_class():

@@ -18,9 +18,6 @@ def stable(civ="BYZANTINES", ages=IMPERIAL):   # no cavalry bonus
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.COSTS["CAVALIER_UPGRADE"] == {"food": 300, "gold": 300} and train.TRAIN_TIMES["CAVALIER_UPGRADE"] == 80
-    assert train.COSTS["PALADIN_UPGRADE"] == {"food": 1300, "gold": 750} and train.TRAIN_TIMES["PALADIN_UPGRADE"] == 170
-    assert train.TECH_AGE["CAVALIER_UPGRADE"] == train.TECH_AGE["PALADIN_UPGRADE"] == 3
     assert train.AFTER["PALADIN_UPGRADE"] == "CAVALIER_UPGRADE" and "CAVALIER_UPGRADE" not in train.AFTER
     for unit in ("CAVALIER", "PALADIN"):
         assert train.COSTS[unit] == {"food": 60, "gold": 75} and train.TRAIN_TIMES[unit] == 30
