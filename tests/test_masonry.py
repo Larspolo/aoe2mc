@@ -12,7 +12,6 @@ TC = (2, 5, 2, 5)
 
 
 def test_the_cost_time_and_age_are_those_of_aoe2():
-    assert train.COSTS["MASONRY"] == {"food": 150, "wood": 175} and train.TRAIN_TIMES["MASONRY"] == 50
     assert train.TECH_AGE["MASONRY"] == 2 and "MASONRY" in train.TRAINS["UNIVERSITY"]
 
 

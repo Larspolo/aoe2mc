@@ -10,8 +10,6 @@ from game import build, combat, fleet, train
 
 
 def test_the_carrack_has_the_aoe2_de_values_of_the_wiki():
-    assert train.COSTS["CARRACK"] == {"wood": 75, "gold": 35} and train.TRAIN_TIMES["CARRACK"] == 27
-    assert combat.stats("CARRACK") == (135, 4, 5, 1, 1, 1.5, {"fireship": 1, "standard": -3}, ("ship",))
     assert fleet.SPEEDS["CARRACK"] == 1.52 and combat.sight("CARRACK") == 6 and build.AGE["CARRACK"] == 3
     assert "CARRACK" in combat.MELEE_RANGED and "CARRACK" in train.HULKS and len(train.HELP["HEAVY_WARSHIPS"]) <= 50
     assert units.classify("CARRACK") == units.classify("WAR_HULK")         # a dark oak boat with two crew

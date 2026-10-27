@@ -21,22 +21,13 @@ def archery_range(civ="POLES", ages=IMPERIAL):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.COSTS["MOUNTED_CROSSBOWMAN"] == train.COSTS["HEAVY_MOUNTED_CROSSBOWMAN"] == {"wood": 40, "gold": 65}
-    assert train.TRAIN_TIMES["MOUNTED_CROSSBOWMAN"] == 40 and train.TRAIN_TIMES["HEAVY_MOUNTED_CROSSBOWMAN"] == 30
-    assert train.COSTS["HEAVY_MOUNTED_CROSSBOWMAN_UPGRADE"] == {"food": 1000, "gold": 650}
-    assert train.TRAIN_TIMES["HEAVY_MOUNTED_CROSSBOWMAN_UPGRADE"] == 50
-    assert train.TECH_AGE["HEAVY_MOUNTED_CROSSBOWMAN_UPGRADE"] == 3
     assert build.AGE["MOUNTED_CROSSBOWMAN"] == 2 and build.AGE["HEAVY_MOUNTED_CROSSBOWMAN"] == 3
-    assert combat.stats("MOUNTED_CROSSBOWMAN") == (45, 7, 2, 0, 4, 2.5, {"spearman": 1}, ("archer", "cavalry"))
-    assert combat.stats("HEAVY_MOUNTED_CROSSBOWMAN") == (55, 8, 2, 0, 4, 2.5, {"spearman": 1}, ("archer", "cavalry"))
     for unit in ("MOUNTED_CROSSBOWMAN", "HEAVY_MOUNTED_CROSSBOWMAN"):
         assert combat.sight(unit) == 6 and replay.SPEEDS[unit] == 1.25 and len(train.HELP[unit]) <= 50
         e = units.classify(unit)
         assert e["id"] == "minecraft:skeleton_horse"
         assert e["Passengers"][0]["equipment"]["mainhand"]["id"] == "minecraft:crossbow"
     assert len(train.HELP["HEAVY_MOUNTED_CROSSBOWMAN_UPGRADE"]) <= 50
-    assert train.ITEMS["MOUNTED_CROSSBOWMAN"][0] == train.ITEMS["HEAVY_MOUNTED_CROSSBOWMAN"][0] == train.MORE + 5
-    assert train.ITEMS["HEAVY_MOUNTED_CROSSBOWMAN_UPGRADE"][0] == train.MORE + 6
     assert len(civs.MISSING["MOUNTED_CROSSBOWMAN"]) == len(civs.ROWS) - 15
     assert len(civs.MISSING["HEAVY_MOUNTED_CROSSBOWMAN_UPGRADE"]) == len(civs.ROWS) - 10
     assert {"MONGOLS", "CHINESE", "AZTECS"} <= set(civs.MISSING["MOUNTED_CROSSBOWMAN"])

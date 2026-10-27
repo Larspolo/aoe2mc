@@ -16,7 +16,7 @@ def test_the_menu_shows_the_wonder_gray_before_the_imperial_age():
     g.techs.add("IMPERIAL_AGE")
     item, = [i for i in build.items(g) if i[2] == "Wonder"]
     assert item[1] == "weathered_cut_copper_stairs" and "Needs" not in item[3]
-    assert len(build.MENU) <= 27                                       # one chest
+    assert len(build.MENU) <= 54                                       # 6 rows: the most of the plugin menu (#1873)
 
 
 def test_a_wonder_site_costs_the_aoe2_resources_and_finishes_after_its_build_time():
