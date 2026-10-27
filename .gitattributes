@@ -18,3 +18,5 @@ game/data/train.jsonl merge=union
 game/data/units.jsonl merge=union
 # One JSON object per building, or only a line of sight (#1913); table.load() stops on a name in two lines.
 game/data/buildings.jsonl merge=union
+# The converter tables (#1917): one JSON object per line; the order of animals.jsonl and footprint.jsonl matters (the first match wins).
+data/*.jsonl merge=union

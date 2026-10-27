@@ -26,7 +26,8 @@ def test_the_values_are_those_of_aoe2_de():
         assert len(train.HELP[t]) <= 50 and t in train.TRAINS["DOCK"]
     assert train.AFTER["HEAVY_WARSHIPS"] == "MEDIUM_WARSHIPS"
     assert train.AFTER["HEAVY_DEMOLITION_SHIP_UPGRADE"] == "DEMOLITION_SHIP_UPGRADE"
-    assert train.lines("HEAVY_WARSHIPS") == (("WAR_GALLEY", "GALLEON"), ("FIRE_SHIP", "FAST_FIRE_SHIP"))
+    assert train.lines("HEAVY_WARSHIPS") == (("WAR_GALLEY", "GALLEON"), ("FIRE_SHIP", "DRAGON_SHIP"),
+                                            ("FIRE_SHIP", "FAST_FIRE_SHIP"))
     assert [fleet.SPEEDS[n] for n in ("GALLEON", "FAST_FIRE_SHIP", "HEAVY_DEMOLITION_SHIP")] == [1.36, 1.56, 1.52]
     assert [combat.sight(n) for n in ("GALLEON", "FAST_FIRE_SHIP", "HEAVY_DEMOLITION_SHIP")] == [9, 6, 6]
     assert combat.range_command("u", "HEAVY_DEMOLITION_SHIP", 4) == "aoe range u 4.0 1 13.0"   # 3.25 tiles of blast
@@ -94,4 +95,4 @@ def test_a_civilization_gets_only_the_new_ships_that_it_has():
     server, g = imperial("AZTECS", ["MEDIUM_WARSHIPS", "HEAVY_WARSHIPS"])   # no galleon, a fast fire ship
     train.open_menu(g, "Steve", (15, 12))
     menu = menus(server)[-1]
-    assert "1:dark_oak_boat:War Galley:" in menu and "Galleon" not in menu and "Fast Fire Ship" in menu
+    assert "1:dark_oak_boat:War Galley:" in menu and ":Galleon:" not in menu and "Fast Fire Ship" in menu

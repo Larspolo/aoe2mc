@@ -127,6 +127,8 @@ A cheap Haiku run takes the tickets with the label `lane:haiku` (#1715). Add it 
 - Verify level 1 is enough: no server, no screenshot, no look to judge.
 - Not a decision, design, check, process or epic ticket, and no "Depends on:" that is open.
 When you are not sure, do not add it: an Opus run takes the ticket.
+While `reserved` in `[pacing]` of `agent.toml` names the lane, Opus runs never take its tickets (#1994): make
+enough `lane:haiku` tickets in the refill, else the Haiku runs find none.
 
 ## Rules
 

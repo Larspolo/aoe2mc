@@ -195,7 +195,7 @@ def main(argv=None):
         import health
         open_all = dashboard.pages("issues?state=open")
         paused = any({dashboard.STATUS, dashboard.PAUSED} <= set(dashboard.labels(i)) for i in open_all)
-        ready = len(dashboard.candidates(open_all))
+        ready = len(dashboard.candidates(open_all, reserved=()))   # all lanes: lane_plan splits them
         t = datetime.datetime.now(datetime.timezone.utc)
         lanes = health.lane_claims(t)
         claims = health.active_claims(t) if lanes is None else sum(lanes.values())
