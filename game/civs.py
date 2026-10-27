@@ -326,6 +326,8 @@ MISSING |= dict.fromkeys(("SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER", "ELITE_S
                          tuple(sorted(set().union(*MISSING.values()) - {"GURJARAS"})))   # (AoE2 DE wiki, #1612)
 MISSING |= dict.fromkeys(("HEI_GUANG_CAVALRY", "HEAVY_HEI_GUANG_CAVALRY", "HEAVY_HEI_GUANG_CAVALRY_UPGRADE"),
                          tuple(sorted(set().union(*MISSING.values()) - {"SHU", "WEI", "WU"})))   # (AoE2 DE wiki, #1954)
+MISSING["FOLWARK"] = tuple(sorted(set().union(*MISSING.values()) - {"POLES"}))   # the mill of the Poles (#1874)
+MISSING["MILL"] = ("POLES",)
 MISSING["KREPOST"] = tuple(sorted(set().union(*MISSING.values()) - {"BULGARIANS"}))   # the build menu (AoE2 DE wiki, #1872)
 MISSING["MISSIONARY"] = tuple(sorted(set().union(*MISSING.values()) - {"SPANISH"}))   # the monastery (AoE2 DE wiki, #1939)
 SHARED = {"CONDOTTIERO": "ITALIANS",                              # the shared unique units of the team bonuses: an ally
