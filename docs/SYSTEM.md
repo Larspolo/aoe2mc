@@ -18,7 +18,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 | GitHub | The issues are the tickets. Issue #1 (label `agent-status`) is the status issue: the dashboard in its body, the run reports as comments. The labels are in `.github/labels.txt`. |
 | Workflows (`.github/workflows/`) | CI, Automerge, Unconflict, Claims, Close, Dashboard, Coverage, Labels, Bundles (see below). |
 | Cloud environment | The setup script `scripts/cloud-setup.sh` (Java, packages, server jars), the network access, the SessionStart hook. |
-| Hooks (`.claude/hooks/`) | `session-start.sh` installs the Python packages and compares `SETUP_VERSION`. `guard-main.sh` blocks a force push, a history rewrite or a delete of `main`. |
+| Hooks (`.claude/hooks/`) | `session-start.sh` installs the Python packages, registers the merge driver `merge=jsonl` (#2004) and compares `SETUP_VERSION`. `guard-main.sh` blocks a force push, a history rewrite or a delete of `main`. |
 
 ### Workflows
 
@@ -194,6 +194,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tools/operator_check.py` | generic | None (`agent.toml`). |
 | `tools/owner_tasks.py` | generic | None (`agent.toml`). |
 | `tools/unconflict.py` | generic | None (solves add-add conflicts for `unconflict.yml`, #1864). |
+| `tools/merge_jsonl.py` | generic | None (the merge driver `merge=jsonl`: JSON lines by "name", #2004). |
 | `tests/test_agent_config.py` | generic | None (a test of `tools/agent_config.py`). |
 | `tests/test_claim.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_claim_active_pr.py` | generic | None (a test of `tools/claim.py`). |
@@ -225,6 +226,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_tokens.py` | generic | None (a test of `tools/tokens.py`). |
 | `tests/test_tokens_verify.py` | generic | None (a test of `tools/tokens.py`). |
 | `tests/test_unconflict.py` | generic | None (a test of `tools/unconflict.py`). |
+| `tests/test_merge_jsonl.py` | generic | None (a test of `tools/merge_jsonl.py`). |
 | `tests/test_pacer.py` | generic | None (a test of `tools/usage.py`). |
 | `tests/test_usage.py` | generic | None (a test of `tools/usage.py`). |
 | `tests/test_usage_week.py` | generic | None (a test of `tools/usage.py`). |
@@ -244,4 +246,4 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `.github/workflows/worlds.yml` | specific | The worlds of `examples/` and `samples/` as zips in a release (#207). |
 | `.github/labels.txt` | generic | None. |
 | `.github/ISSUE_TEMPLATE/ticket.yml` | generic | None. |
-| `.gitattributes` | specific | The list of `merge=union` files. |
+| `.gitattributes` | specific | The list of `merge=union` files, and `merge=jsonl` for `game/data/*.jsonl` (`tools/merge_jsonl.py`, #2004). |

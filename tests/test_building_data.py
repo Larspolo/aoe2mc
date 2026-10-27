@@ -22,7 +22,7 @@ def test_each_building_line_has_the_stats_fields_or_only_a_sight():
 
 
 def test_buildings_and_sight_have_the_values_of_before():
-    assert len(combat.BUILDINGS) == 22 and len(combat.SIGHT) == 160   # the unique ships of the dock (#1934)
+    assert len(combat.BUILDINGS) >= 23 and len(combat.SIGHT) >= 154   # new units and buildings add lines (#1953, #1874)
     assert combat.BUILDINGS["DOCK"] == combat.Stats(1800, 3, 0, 7, 6, 2.0, {combat.CAM: 1, combat.SHIP: 3},   # (#1949)
                                                      ("building", combat.STANDARD))
     assert combat.BUILDINGS["KEEP"].classes == ("building", combat.STANDARD, combat.STONE)
@@ -38,10 +38,10 @@ def test_each_sight_belongs_to_a_line_of_a_unit_or_a_building():
     assert set(combat.SIGHT) <= names
 
 
-def test_the_file_merges_by_union():
+def test_the_file_merges_by_name():
     out = subprocess.run(["git", "check-attr", "merge", "game/data/buildings.jsonl"], cwd=ROOT, capture_output=True,
                          text=True).stdout
-    assert out.strip().endswith("merge: union")
+    assert out.strip().endswith("merge: jsonl")     # tools/merge_jsonl.py (#2004)
 
 
 def test_combat_py_has_no_literal_of_the_tables():

@@ -47,7 +47,8 @@ def test_each_ship_shows_in_the_dock_of_its_civs_in_the_imperial_age(name):
     for civ in sorted(have):
         server, g = imperial(civ)
         train.open_menu(g, "Steve", (15, 12))
-        assert f"{slot}:{item}:{LABELS[name]}:{price} · {time} s · queue 0/15" in menus(server)[-1], civ
+        t = round(time / train.civs.train_rate(g, name), 1)            # the Aztecs: 15 % faster (#1927)
+        assert f"{slot}:{item}:{LABELS[name]}:{price} · {t:g} s · queue 0/15" in menus(server)[-1], civ
     server, g = imperial(sorted(have)[0])
     g.techs -= {build.AGE_TECHS[2]}                                       # the Castle Age: a gray item
     train.open_menu(g, "Steve", (15, 12))

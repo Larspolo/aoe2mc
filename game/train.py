@@ -91,6 +91,7 @@ COSTS = {r["name"]: r["cost"] for r in ROWS}                       # as in AoE2
 TRAIN_TIMES = {r["name"]: r["time"] for r in ROWS}                 # AoE2 seconds
 TRAINS = {b: tuple(r["name"] for r in ROWS if r["building"] == b)    # the units and technologies of each
           for b in dict.fromkeys(r["building"] for r in ROWS if r["building"])}   # building, in file order
+TRAINS["FOLWARK"] = TRAINS["MILL"]                                 # the mill of the Poles (#1874)
 TRAINS["KREPOST"] = ()                                             # trains() adds the Konnik (#1872)
 # The unique unit of each civilization (AoE2 DE, "unique" in data/civs.jsonl, #1914), trained at its castle. A unit
 # without COSTS is not in the menu yet: it has no AoE2 combat values in combat.STATS.
@@ -213,6 +214,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_EAGLE_WARRIOR_UPGRADE": lambda name, s: s,
          "ELITE_ELEPHANT_ARCHER_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_GBETO_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
+         "ELITE_FIRE_LANCER_UPGRADE": lambda name, s: s,           # a new unit name: UPGRADES
          "ELITE_GENITOUR_UPGRADE": lambda name, s: s,              # a new unit name: UPGRADES
          "ELITE_JAGUAR_WARRIOR_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
          "ELITE_MAGYAR_HUSZAR_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
@@ -349,6 +351,7 @@ TECH_AGE = {r["name"]: r["age"] for r in ROWS if "age" in r}       # the age of 
 AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age after each researched age (index: ages)
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
 HOUSING = {"TOWN_CENTER": 5, "HOUSE": 5, "CASTLE": 20,            # population of a complete building, as in AoE2
+           "FOLWARK": 5,                                          # (#1874)
            "KREPOST": 20}                                         # (#1872)
 LIMIT = 200                                                        # the AoE2 population limit
 REPEAT = 256                                                       # researches of one technology: "going above and beyond"
@@ -651,8 +654,9 @@ def owned(g):
 def missing(g, name):
     """The text of the buildings that technology name still needs (REQUIRES), or None."""
     n, names, *alone = REQUIRES.get(name, (0, ()))
-    has, alone = sorted(set(names) & set(owned(g))), alone[0] if alone else ()
-    if len(has) < n and not set(alone) & set(owned(g)):
+    own = {"MILL" if b == "FOLWARK" else b for b in owned(g)}      # the Folwark is the mill of the Poles (#1874)
+    has, alone = sorted(set(names) & own), alone[0] if alone else ()
+    if len(has) < n and not set(alone) & own:
         return f"needs {''.join(f'a {build.pretty(b).lower()} or ' for b in alone)}{n} of {', '.join(build.pretty(b).lower() for b in names)} ({len(has)}/{n})"
 
 
@@ -675,9 +679,11 @@ def stats(g, name):
 def seconds(g, name, building=None):
     """The train time of unit or technology name: TRAIN_TIMES, or the time of FASTER from its age (the eagle scout trains
     in 46 s in the Feudal Age and in 35 s from the Castle Age, AoE2 DE wiki), divided by the work rate of the
-    civilization at building (civs.work_rate: Persian town centers and docks, #1894)."""
+    civilization at building (civs.work_rate: Persian town centers and docks, #1894) and its rate of the unit group
+    (civs.train_rate: Aztec military units, Khitan skirmishers, #1927)."""
     age, time = FASTER.get(name, (9, 0))
-    return (time if build.ages(g) >= age else TRAIN_TIMES[name]) / (civs.work_rate(g, building) if building else 1)
+    return (time if build.ages(g) >= age else TRAIN_TIMES[name]) / (civs.work_rate(g, building) if building else 1) \
+        / civs.train_rate(g, name)
 
 
 def speed(g, name):

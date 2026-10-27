@@ -1,10 +1,11 @@
-"""The menu items of the game program are one JSON line each in game/data/train.jsonl, with `merge=union` (#1702)."""
+"""The menu items of the game program are one JSON line each in game/data/train.jsonl, with `merge=jsonl` (#1702, #2004)."""
 import json
 import os
 import subprocess
 
 import pytest
 
+import merge_jsonl
 from game import train
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -29,10 +30,10 @@ def test_two_lines_of_one_name_stop_the_load(tmp_path):
         train.load(str(p))
 
 
-def test_the_file_merges_by_union():
+def test_the_file_merges_by_name():
     out = subprocess.run(["git", "check-attr", "merge", "game/data/train.jsonl"], cwd=ROOT, capture_output=True,
                          text=True).stdout
-    assert out.strip().endswith("merge: union")
+    assert out.strip().endswith("merge: jsonl")     # tools/merge_jsonl.py (#2004)
 
 
 def test_two_new_items_of_one_building_merge_without_a_conflict(tmp_path):
@@ -44,7 +45,7 @@ def test_two_new_items_of_one_building_merge_without_a_conflict(tmp_path):
     base.write_text("".join(lines), encoding="utf-8")
     ours.write_text("".join(lines[:end] + new[:1] + lines[end:]), encoding="utf-8")
     theirs.write_text("".join(lines[:end] + new[1:] + lines[end:]), encoding="utf-8")
-    assert subprocess.run(["git", "merge-file", "--union", str(ours), str(base), str(theirs)]).returncode == 0
+    assert merge_jsonl.main(["merge_jsonl.py", str(base), str(ours), str(theirs)]) == 0   # merge=jsonl (#2004)
     rows = train.load(str(ours))
     barracks = [r["name"] for r in rows if r["building"] == "BARRACKS"]
     assert barracks[-2:] == ["TEST_A", "TEST_B"] and len(rows) == len(lines) + 2
