@@ -55,6 +55,7 @@ GROUPS = {
     "infantry": lambda n, s: "infantry" in s.classes,
     "infantry, mounted": lambda n, s: "infantry" in s.classes or mounted(s),
     "military": lambda n, s: not n.startswith("VILLAGER"),
+    "monks": lambda n, s: n in ("MONK", "MISSIONARY"),
     "mounted": lambda n, s: mounted(s),
     "scorpions": lambda n, s: n.endswith("SCORPION"),
     "scout line": lambda n, s: n in ("SCOUT_CAVALRY", "LIGHT_CAVALRY", "HUSSAR"),
@@ -230,6 +231,9 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
                           "KOREANS", "LITHUANIANS", "MACEDONIANS", "MAGYARS", "MALAY", "MALIANS", "MAPUCHE", "MAYANS",
                           "MONGOLS", "MUISCA", "POLES", "PURU", "ROMANS", "SPARTANS", "TATARS", "THRACIANS", "TUPI",
                           "TURKS", "VIETNAMESE", "VIKINGS", "WEI", "WU"),
+           "GUILDS": ("AZTECS", "BULGARIANS", "CHINESE", "DANES", "FRANKS", "GURJARAS", "HINDUSTANIS", "JAPANESE",
+                      "KHMER", "MAGYARS", "MAPUCHE", "MONGOLS", "POLES", "SARACENS", "SLAVS", "TUPI", "VIKINGS",
+                      "WEI"),                                     # the wiki chart, revision 1088694 (#1931)
            "HAND_CANNONEER": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "BENGALIS", "BRITONS", "BULGARIANS",
                               "BURMESE", "CELTS", "CHINESE", "CUMANS", "DANES", "ETHIOPIANS", "HUNS", "INCAS",
                               "JURCHENS", "KHITANS", "MACEDONIANS", "MAGYARS", "MALAY", "MAPUCHE", "MAYANS",
@@ -320,7 +324,10 @@ MISSING |= dict.fromkeys(("GENITOUR", "ELITE_GENITOUR", "ELITE_GENITOUR_UPGRADE"
                          tuple(sorted(set().union(*MISSING.values()) - {"BERBERS"})))
 MISSING |= dict.fromkeys(("SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER_UPGRADE"),
                          tuple(sorted(set().union(*MISSING.values()) - {"GURJARAS"})))   # (AoE2 DE wiki, #1612)
+MISSING |= dict.fromkeys(("HEI_GUANG_CAVALRY", "HEAVY_HEI_GUANG_CAVALRY", "HEAVY_HEI_GUANG_CAVALRY_UPGRADE"),
+                         tuple(sorted(set().union(*MISSING.values()) - {"SHU", "WEI", "WU"})))   # (AoE2 DE wiki, #1954)
 MISSING["KREPOST"] = tuple(sorted(set().union(*MISSING.values()) - {"BULGARIANS"}))   # the build menu (AoE2 DE wiki, #1872)
+MISSING["MISSIONARY"] = tuple(sorted(set().union(*MISSING.values()) - {"SPANISH"}))   # the monastery (AoE2 DE wiki, #1939)
 SHARED = {"CONDOTTIERO": "ITALIANS",                              # the shared unique units of the team bonuses: an ally
           "ELITE_GENITOUR": "BERBERS",                             # of the civilization has them too (AoE2 DE wiki,
           "ELITE_GENITOUR_UPGRADE": "BERBERS",                     # "Team bonus", #1619)
