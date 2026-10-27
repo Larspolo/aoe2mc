@@ -314,6 +314,10 @@ MIN_RANGE = {"BOMBARD_CANNON": 5,     # tiles: no shot at a unit nearer (AoE2 DE
              "SIEGE_ONAGER": 3,
              "TRACTION_TREBUCHET": 4,
              "TREBUCHET": 4}
+# Tiles that a bolt flies past the range and hurts the enemy units on its line with half the damage (AoE2 DE, wiki
+# "Pass-through damage": "Projectiles travel Range+2 tiles in total", no friendly fire, #1401).
+PASS = {"HEAVY_SCORPION": 2,
+        "SCORPION": 2}
 DEFAULT, BUILDING = Stats(40, 4, 0, 0, 0, 2.0), Stats(1000, 0, 0, 7, 0, 0.0, {}, ("building",))
 SLIME = 0.52                    # blocks of width and height per slime size: the target of a building (#517)
 INVISIBLE = 'active_effects:[{id:"minecraft:invisibility",duration:-1,show_particles:0b}]'   # for ever, no particles
@@ -359,11 +363,13 @@ def range_command(uuid, name, T, rate=NORMAL, s=None):
     melee unit. s: the values with technologies (Fletching, #724), default those of AoE2 unit name. A siege unit (a
     minecart) gets its blast radius in blocks last, 0 when its shot hits only the target (the Scorpion, #1062): the
     plugin then lets the minecart shoot too (#1050). Then its minimum range in blocks (MIN_RANGE, #1350), when it has
-    one: it does not shoot at a target nearer than that."""
+    one: it does not shoot at a target nearer than that. Then the blocks of PASS (#1401): its bolt hurts the enemy units on
+    its line up to that far past its range."""
     s = s or stats(name)
     cart = (units.classify(name) or {}).get("id") == "minecraft:minecart"
     blast = f" {BLAST.get(name, 0) * T}" if name in BLAST or cart else ""
-    blast += f" {MIN_RANGE.get(name, 0) * T}" * bool(blast and name in MIN_RANGE)
+    blast += f" {MIN_RANGE.get(name, 0) * T}" * bool(blast and (name in MIN_RANGE or name in PASS))
+    blast += f" {PASS.get(name, 0) * T}" * bool(blast and name in PASS)
     return s.range and s.reload and f"aoe range {uuid} {s.range * T} {max(1, round(s.reload / rate * 20))}{blast}" or None
 
 

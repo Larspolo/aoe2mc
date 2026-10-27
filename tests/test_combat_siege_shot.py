@@ -14,7 +14,7 @@ SHOOTERS = ("SCORPION", "HEAVY_SCORPION", "TREBUCHET", "BOMBARD_CANNON", "ORGAN_
 @pytest.mark.parametrize("name", SHOOTERS)
 def test_each_ranged_siege_unit_gets_a_siege_range(name):
     words = combat.range_command("u", name, 4).split()
-    assert len(words) == 6 + (name in combat.MIN_RANGE) and float(words[3]) == combat.stats(name).range * 4
+    assert len(words) == 6 + (name in combat.MIN_RANGE) + (name in combat.PASS) and float(words[3]) == combat.stats(name).range * 4
     assert float(words[5]) == combat.BLAST.get(name, 0) * 4                    # blast 0: the target only
 
 
