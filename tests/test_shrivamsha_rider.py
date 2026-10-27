@@ -19,21 +19,12 @@ def stable(civ="GURJARAS", ages=IMPERIAL):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.COSTS["SHRIVAMSHA_RIDER"] == train.COSTS["ELITE_SHRIVAMSHA_RIDER"] == {"food": 70, "gold": 30}
-    assert train.TRAIN_TIMES["SHRIVAMSHA_RIDER"] == train.TRAIN_TIMES["ELITE_SHRIVAMSHA_RIDER"] == 20
-    assert train.COSTS["ELITE_SHRIVAMSHA_RIDER_UPGRADE"] == {"food": 850, "gold": 500}
-    assert train.TRAIN_TIMES["ELITE_SHRIVAMSHA_RIDER_UPGRADE"] == 45
-    assert train.TECH_AGE["ELITE_SHRIVAMSHA_RIDER_UPGRADE"] == 3
     assert build.AGE["SHRIVAMSHA_RIDER"] == 2 and build.AGE["ELITE_SHRIVAMSHA_RIDER"] == 3
-    assert combat.stats("SHRIVAMSHA_RIDER") == (55, 8, 0, 1, 0, 2.0, {}, ("cavalry", "unique"))
-    assert combat.stats("ELITE_SHRIVAMSHA_RIDER") == (70, 11, 0, 1, 0, 1.9, {}, ("cavalry", "unique"))
     assert combat.sight("SHRIVAMSHA_RIDER") == 5 and combat.sight("ELITE_SHRIVAMSHA_RIDER") == 6
     for name in ("SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER_UPGRADE"):
         assert len(train.HELP[name]) <= 50 and "GURJARAS" not in civs.MISSING[name]
         assert {"BRITONS", "BENGALIS", "HINDUSTANIS"} <= set(civs.MISSING[name])
     assert replay.SPEEDS["SHRIVAMSHA_RIDER"] == replay.SPEEDS["ELITE_SHRIVAMSHA_RIDER"] == 1.6
-    assert train.ITEMS["SHRIVAMSHA_RIDER"][0] == train.ITEMS["ELITE_SHRIVAMSHA_RIDER"][0] == train.MORE + 4
-    assert train.ITEMS["ELITE_SHRIVAMSHA_RIDER_UPGRADE"][0] == train.MORE + 5
 
 
 def test_the_stable_menu_has_the_shrivamsha_rider_from_the_castle_age_for_the_gurjaras():

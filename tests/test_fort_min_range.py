@@ -20,7 +20,7 @@ def attack(name, T=4):
 
 def test_the_minimum_ranges_of_the_wiki():
     assert combat.FORT_MIN_RANGE == {"BOMBARD_TOWER": 1, "CASTLE": 1, "DOCK": 1, "GUARD_TOWER": 1, "KEEP": 1,
-                                     "KREPOST": 1, "WATCH_TOWER": 1}
+                                     "DONJON": 1, "KREPOST": 1, "WATCH_TOWER": 1}
 
 
 @pytest.mark.parametrize("name", ["BOMBARD_TOWER", "CASTLE", "GUARD_TOWER", "KEEP", "WATCH_TOWER"])

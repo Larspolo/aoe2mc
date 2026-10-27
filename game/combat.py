@@ -58,10 +58,11 @@ WALL_TAG = "aoe2mc.wall"
 # gives infantry a bonus against it (#1419).
 STANDARD = "standard"
 BUILDINGS = {k: s if k == "WONDER" else s._replace(classes=s.classes + (STANDARD,)) for k, s in BUILDINGS.items()}
-# The AoE2 class "Stone Defense" (wiki infobox "Class"): the stone walls and gates and the towers, not the castle and
-# not the palisades. The villager gets a bonus against it (#1590).
+# The AoE2 class "Stone Defense" (wiki infobox "Class"): the stone walls and gates, the towers and the Donjon
+# (#1873), not the castle and not the palisades. The villager gets a bonus against it (#1590).
 STONE = "stone"
-BUILDINGS = {k: s._replace(classes=s.classes + (STONE,)) if k.endswith("_TOWER") or k == "KEEP" else s
+STONE_ROWS = {r["name"] for r in BUILDING_ROWS if r.get("stone")}   # "stone": true in buildings.jsonl (#1873)
+BUILDINGS = {k: s._replace(classes=s.classes + (STONE,)) if k.endswith("_TOWER") or k == "KEEP" or k in STONE_ROWS else s
              for k, s in BUILDINGS.items()}
 WATCH = 4    # tiles of line of sight that Town Watch adds to each own building but walls, gates, farms, fish traps (#1454)
 # Line of sight in tiles (AoE2 DE, wiki infobox "LOS"; the house: 1 from the edge of its 2 x 2 tiles, #1300) where it
@@ -161,15 +162,16 @@ def sight(name, s=None):
 # Ram line automatically attack only buildings", "Trebuchets automatically attack only buildings", "The Armored
 # Elephant and Cannon Galleon lines prioritize attacking enemy buildings over units"): "only" or "first".
 BUILDING_SIGHT = {r["name"]: r["building_sight"] for r in UNIT_ROWS if "building_sight" in r}   # data/units.jsonl
+FIGHTERS = {r["name"] for r in UNIT_ROWS if r.get("fighter")}   # no armor class, but fights as a soldier (#1995)
 
 
 def sight_command(uuid, name, T, s=None):
     """The plugin command that lets an idle soldier attack the nearest enemy unit in its line of sight (tiles * T
     blocks, #775), and the enemy buildings for the units of BUILDING_SIGHT (#1820). None for a unit that does not
-    fight (villager, monk, king)."""
+    fight (villager, monk, king): no armor class, except the FIGHTERS (Furious the Monkey Boy, #1995)."""
     s = s or stats(name)
     mode = f" {BUILDING_SIGHT[name]}" if name in BUILDING_SIGHT else ""
-    return f"aoe sight {uuid} {sight(name, s) * T}{mode}" if s.classes and s.attack else None
+    return f"aoe sight {uuid} {sight(name, s) * T}{mode}" if (s.classes or name in FIGHTERS) and s.attack else None
 
 
 STANCES = ("aggressive", "defensive", "stand_ground", "no_attack")

@@ -11,10 +11,13 @@ from test_bot_gather import bot_map
 from game import bot, combat, gather, run
 
 
-def armed(n=2, attack=60.0):
+def armed(n=2, attack=60.0, sight=False):
     """bot_map with n militia of player 2 at its town center. The fake server answers `execute if entity` for each
-    entity with a position and for the targets of the buildings in `server.forts`."""
+    entity with a position and for the targets of the buildings in `server.forts`. The bot sees the whole map, unless
+    sight: then only the AoE2 sight of its units and buildings (#2050)."""
     server, me, b = bot_map()
+    if not sight:
+        b.g.seen_tiles = lambda *a, **k: {(x, z) for x in range(32) for z in range(32)}
     b.attack, b.group = attack, n                                      # all n soldiers are one wave (#1051)
     for i in range(n):
         u = f"m{i}"
