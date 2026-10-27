@@ -61,6 +61,7 @@ import flare  # noqa: E402
 import fleet  # noqa: E402
 import fog  # noqa: E402
 import garrison  # noqa: E402
+import herd  # noqa: E402
 import hints  # noqa: E402
 import market  # noqa: E402
 import menu  # noqa: E402
@@ -521,6 +522,7 @@ class Gather:
     ended = None                                                       # "Victory" or "Defeat": run() stops (#819)
     board = "aoe_res"                                                  # the objective of the resources (the sidebar)
     bots = ()                                                          # run() steps them too (bot.Bot, #856)
+    peers = ()                                                         # the Gathers of the other people (fog.py, #1631)
     reveal = "normal"                                                  # AoE2 "Reveal map"; "all": no fog (fog.py, #1389)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
@@ -842,6 +844,10 @@ class Gather:
             self.task(v, "BUILDER")
             self.go(v, "to_site", goals)
 
+    def row_busy(self, site):
+        """An earlier site of the row of site is not complete: its builders come to site after it (#1805)."""
+        return any(s.get("row") == site.get("row") and s["progress"] < 1 for s in self.sites[:self.sites.index(site)])
+
     def hunt(self, prey, who=None):
         """Send the selected villagers (or the villagers who) to hunt the animal prey, with the hunter look (#1058)."""
         if not (pos := self.pos(prey)):
@@ -1089,7 +1095,7 @@ class Gather:
         if building:                                                   # a chosen building: place its foundation
             if (site := build.place(self, name, building, eye, d)) and building in build.WATER:
                 fleet.build_site(self, self.selected, site)            # the selected fishing ships build it (#1438)
-            elif site and self.selected & self.villagers.keys():
+            elif site and self.selected & self.villagers.keys() and not self.row_busy(site):
                 self.build(site)                                       # the selected villagers build it at once, as in AoE2 (#1654)
             return
         if monk.order(self, name, self.map.pick_ground(eye, d)):      # a monk to a relic or to a monastery (#1246)
@@ -1610,6 +1616,7 @@ class Gather:
                 b.step()
             conquest.tick(self)                                        # not in step(): the bot steps its own Gather
             fog.tick(self)                                             # after the bots: their units too (#1389)
+            herd.tick(self)                                            # all players: the bots capture too (#1792)
             wonder.tick(self, self.tick * NORMAL)                      # game seconds, as train.tick
             relic_victory.tick(self, self.tick * NORMAL)
             time.sleep(max(0.0, self.tick - (time.time() - t)))

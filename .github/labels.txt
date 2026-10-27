@@ -23,3 +23,4 @@ hold|fbca04|On a PR: the Automerge workflow does not merge it
 conflict|b60205|On a PR: the Automerge workflow could not merge it
 lane:haiku|c2e0c6|A clear, templated ticket for a Haiku run (ticket skill, "Model lanes")
 process|5319e7|Improves the agent system itself: the loop, the tools, the setup
+close|0e8a16|The Close workflow closes this issue as completed (#1740)

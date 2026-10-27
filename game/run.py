@@ -262,10 +262,12 @@ class Side:
         self.g = g
 
     def step(self):
+        import fog
         self.g.point()
         for name in self.g.clicks():
             self.g.click(name)
         self.g.step()
+        fog.tick(self.g)                             # the fog of war of its team (#1631)
 
 
 def bot_seat(players, people):
@@ -299,6 +301,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         g.bots = [Side(make(n)) for n in range(2, people + 1)]
         for s in g.bots:                             # the same trees, bushes and mines, as with a bot
             s.g.map.trees, s.g.map.bushes, s.g.map.mines = g.map.trees, g.map.bushes, g.map.mines
+            s.g.reveal, s.g.peers = reveal, [g, *(o.g for o in g.bots)]   # its fog sees all units (#1631)
         for name in list(game.sides):                # players who joined before the teams were there
             game.side(name)
         print(f"{people} people: the first Minecraft player who joins plays player 1, the second player 2.",
