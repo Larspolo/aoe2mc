@@ -51,7 +51,7 @@ def test_a_trained_bombard_cannon_shoots_with_its_values_and_minimum_range():
     summon, = [c for c in server.log if c.startswith("summon")]
     assert units.siege("BOMBARD_CANNON") and re.match(r"summon minecraft:minecart ", summon)
     s = train.stats(g, "BOMBARD_CANNON")
-    assert s.attack == combat.stats("BOMBARD_CANNON").attack + 1               # Chemistry: +1 for ranged siege
+    assert s.attack == combat.stats("BOMBARD_CANNON").attack                   # Chemistry: no +1 for gunpowder (#1506)
     assert combat.stats_command(uuid, "BOMBARD_CANNON", s) in server.log
     shot = combat.range_command(uuid, "BOMBARD_CANNON", g.map.T, s=s)
     assert shot in server.log and shot.split()[-2:] == [f"{0.5 * g.map.T}", f"{5 * g.map.T}"]   # blast, minimum range
