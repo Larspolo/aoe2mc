@@ -12,6 +12,12 @@ the fall of the building (its target entity of the plugin is gone), alive, as in
 Each garrisoned villager or foot archer adds one arrow to the shot of its town center, tower or castle, as in AoE2
 (#1113): `aoe arrows` of the plugin. An empty town center shoots no arrow, a castle 5 (BASE, #1201).
 
+An injured unit in a garrison gets its hit points back, as in AoE2 DE (#1262, AoE2 wiki "Garrison"): 0.2 per second in
+a castle, 0.1 in a town center or tower (HEAL). Siege units and ships do not heal (monk.healable). The same Health
+change as the monk heal (monk.py); a full unit stays full inside (Invulnerable), so it is read only once (g.whole).
+
+    garrison.heal(g, dt)                # gather.Gather.step: dt AoE2 seconds of healing
+
 The live replay (game/replay.py, #809) uses SIZES, cell(), enter() and leave().
 """
 import json
@@ -27,6 +33,8 @@ SIZES = {                                                          # units insid
     "TOWN_CENTER": 15,
     "WATCH_TOWER": 5,
 }
+HEAL = {"CASTLE": 0.2}                                           # hit points per AoE2 second inside, else 0.1
+HEAL_EVERY = 5.0            # AoE2 seconds between two heal passes (fewer commands)
 BASE = {"CASTLE": 5, "TOWN_CENTER": 0}                            # arrows of an empty building (AoE2 wiki), else 1
 DOOR = 2.5                  # blocks from the door cell: there a unit goes in
 UNGARRISON = (7, "oak_door", "Ungarrison", "Click: all units come out")   # a slot of the first row, before RALLY
@@ -80,13 +88,13 @@ def order(g, player, cell):
     rect = next((r for r in holders(g) if cell and r[0] <= cell[0] < r[1] and r[2] <= cell[1] < r[3]), None)
     if rect is None or not g.selected or not g.paper or (to := door(g, rect)) is None:
         return None
-    import ai, civs                                                # ai imports gather, gather imports this module
+    import ai, train                                               # ai and train import gather, gather imports this module
     x, z = to
     for u in sorted(g.selected):
         if (v := g.villagers.get(u)) is not None:                  # the villager stops its work
             v.state, v.path, v.goal, v.site = "garrison", [], None, None
         name = "VILLAGER" if u in g.villagers else g.soldiers.get(u, "")
-        ai.move(g, u, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * civs.speed(g, name))
+        ai.move(g, u, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * train.speed(g, name))
         g.entering[u] = rect
     g.mark(player, {to})
     return rect
@@ -176,3 +184,24 @@ def leave(u, x, y, z):
 def inside(g):
     """The UUIDs of the units inside a building: orders and the selection skip them."""
     return {u for us in g.garrisons.values() for u in us}
+
+
+def heal(g, dt):
+    """Give the injured units in the garrisons of g their hit points back for dt AoE2 seconds (HEAL)."""
+    import monk                                                    # monk imports gather, gather imports this module
+    inside = set().union(*g.garrisons.values())
+    g.whole = vars(g).get("whole", set()) & inside                 # a unit that left can come back injured
+    g.garrison_heal = vars(g).get("garrison_heal", 0.0) + dt if inside else 0.0   # no heal time for an empty one
+    if g.garrison_heal < HEAL_EVERY:
+        return
+    dt, g.garrison_heal, homes = g.garrison_heal, 0.0, holders(g)
+    names = {o["uuid"]: o["name"] for o in g.units if o.get("uuid") in g.villagers} | g.soldiers
+    for rect, us in sorted(g.garrisons.items()):
+        rate = HEAL.get(homes[rect]["name"], 0.1) if rect in homes else 0.0
+        for u in us:
+            if u in g.whole or not rate or not monk.healable(names.get(u, "VILLAGER")) or not (h := monk.health(g, u)):
+                continue
+            if h[0] >= h[1]:
+                g.whole.add(u)
+                continue
+            g.command(f"data modify entity {u} Health set value {round(min(h[1], h[0] + rate * dt), 2)}f")

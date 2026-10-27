@@ -97,3 +97,4 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - An AoE2 value in a ticket can be wrong (#1113 said an empty town center shoots 1 arrow; the wiki infobox says 0, #1201): check each AoE2 number of a ticket with the MediaWiki API before the code.
 - `pgrep -f "java -Xmx2G" | xargs kill` also matches its own shell command line and kills the tool call (exit 144): write the pattern as `"[j]ava -Xmx2G"` (#1213).
 - `Gather.bots` holds `bot.Bot` objects, not `Gather`: read a Gather attribute of a bot (`sites`, `stock`, `villagers`) through `b.g` (#1220: `wonder.found` read `b.sites` and stopped each game with a bot; only `-m mc tests/test_bot_gather.py` found it).
+- A check ticket that finds a bug: `git fetch origin main` and read `git log origin/main --oneline -15` and the open issues for the symptom before you make the bug ticket. #1249 was a copy of #1219, which a parallel run fixed in the same hour (#1256).
