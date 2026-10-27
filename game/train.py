@@ -219,6 +219,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_CANNON_GALLEON_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
          "ELITE_CENTURION_UPGRADE": lambda name, s: s,             # a new unit name: UPGRADES
          "ELITE_CHAKRAM_THROWER_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
+         "ELITE_COMPOSITE_BOWMAN_UPGRADE": lambda name, s: s,     # a new unit name: UPGRADES
          "ELITE_CONQUISTADOR_UPGRADE": lambda name, s: s,          # a new unit name: UPGRADES
          "ELITE_EAGLE_WARRIOR_UPGRADE": lambda name, s: s,
          "ELITE_GBETO_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
@@ -340,6 +341,7 @@ UPGRADES = {                                                       # technology:
     "ELITE_CANNON_GALLEON_UPGRADE": ("CANNON_GALLEON", "ELITE_CANNON_GALLEON"),
     "ELITE_CENTURION_UPGRADE": ("CENTURION", "ELITE_CENTURION"),   # the castle of the Romans (#1749)
     "ELITE_CHAKRAM_THROWER_UPGRADE": ("CHAKRAM_THROWER", "ELITE_CHAKRAM_THROWER"),   # the castle (#1624)
+    "ELITE_COMPOSITE_BOWMAN_UPGRADE": ("COMPOSITE_BOWMAN", "ELITE_COMPOSITE_BOWMAN"),   # the castle of the Armenians (#1759)
     "ELITE_CONQUISTADOR_UPGRADE": ("CONQUISTADOR", "ELITE_CONQUISTADOR"),   # the castle of the Spanish (#1744)
     "ELITE_EAGLE_WARRIOR_UPGRADE": ("EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"),
     "ELITE_GBETO_UPGRADE": ("GBETO", "ELITE_GBETO"),   # the castle of the Malians (#1722)
