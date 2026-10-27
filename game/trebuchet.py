@@ -7,6 +7,8 @@ seconds. A new trebuchet, and one of the map, is packed.
 Minecraft feature: the trebuchet stays the same minecart on its carrier (#836). Unpacked: movement_speed 0 on the
 carrier (`aoe speed`) and its AoE2 range (`aoe range`, combat.range_command); packed: the walk speed and range 0, so
 the plugin lets it shoot nothing.
+The armor changes when a pack or an unpack ends, as in AoE2 DE (wiki: 2 melee and 8 pierce armor packed, 1 and 150
+unpacked, #1409): the same `aoe stats` command as the technologies (stats_command).
 
     trebuchet.unpack(g, u, target)   # gather.Gather.attack: the trebuchet u attacks target after the walk and unpack
     trebuchet.move(g, u, cmds)       # ai.move: the commands of the walk go after the pack
@@ -17,11 +19,29 @@ import math
 NAME = "TREBUCHET"
 PACK = 11.1                 # AoE2 seconds to pack or to unpack
 MARGIN = 0.5                # blocks: it unpacks this far inside its range, so that the plugin can shoot
+UNPACKED = (1, 150)         # melee and pierce armor unpacked (AoE2 DE wiki); packed: combat.STATS
 
 
 def state(g, u):
     """"packed", "walking" (packed, to the range of a target), "unpacking", "unpacked" or "packing"."""
     return vars(g).setdefault("trebs", {}).get(u, ["packed"])[0]
+
+
+def stats(g, u):
+    """The combat values of trebuchet u with the technologies of the player (train.stats) and the armor of its state:
+    packed (also while it unpacks) the armor of combat.STATS, unpacked (also while it packs) UNPACKED."""
+    import combat                                                  # combat imports gather, gather imports this module
+    import train
+    s, base = train.stats(g, NAME), combat.stats(NAME)
+    if state(g, u) in ("unpacked", "packing"):
+        s = s._replace(melee=s.melee - base.melee + UNPACKED[0], pierce=s.pierce - base.pierce + UNPACKED[1])
+    return s
+
+
+def stats_command(g, u):
+    """The `aoe stats` command of trebuchet u in its state (#1409)."""
+    import combat
+    return combat.stats_command(u, NAME, stats(g, u))
 
 
 def range_command(g, u, blocks=None):
@@ -121,5 +141,6 @@ def tick(g, dt):
             trebs[u][1] = left - dt
             continue
         trebs[u] = ["packed" if st == "packing" else "unpacked", 0.0, []]
+        g.command(stats_command(g, u))                             # the armor of the new state
         for c in then:
             _ = unpack(g, u, c[1]) if isinstance(c, tuple) else g.command(c)   # ("walk", target): to its range

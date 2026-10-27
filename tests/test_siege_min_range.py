@@ -19,7 +19,7 @@ def test_the_minimum_ranges_of_the_wiki():
 @pytest.mark.parametrize("name", sorted(combat.MIN_RANGE))
 def test_the_range_command_gives_the_minimum_range_in_blocks(name):
     t = combat.range_command("u", name, 4).split()
-    assert len(t) == 7 and float(t[6]) == combat.MIN_RANGE[name] * 4
+    assert len(t) == 7 + (name in combat.PASS) and float(t[6]) == combat.MIN_RANGE[name] * 4
     assert float(t[3]) == combat.stats(name).range * 4                  # the range stays
 
 

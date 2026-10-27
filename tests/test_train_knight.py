@@ -31,17 +31,17 @@ def menu(server):
 def test_the_castle_age_menu_has_the_unit_with_its_cost(building, name, label, cost):
     server, g = setup(building)
     train.open_menu(g, "Steve", (11, 3))
-    assert f"2:{train.ITEMS[name][1]}:{label}:{cost} · queue 0/15 " in menu(server)
+    assert f"{train.ITEMS[name][0]}:{train.ITEMS[name][1]}:{label}:{cost} · queue 0/15 " in menu(server)
     assert train.ITEMS[name][1] in ("horse_spawn_egg", "skeleton_horse_spawn_egg")
 
 
-@pytest.mark.parametrize("building, label", [("STABLE", "Knight"), ("ARCHERY_RANGE", "Cavalry Archer")])
-def test_the_unit_is_gray_before_the_castle_age(building, label):
+@pytest.mark.parametrize("building, label, slot", [("STABLE", "Knight", 3), ("ARCHERY_RANGE", "Cavalry Archer", 4)])
+def test_the_unit_is_gray_before_the_castle_age(building, label, slot):
     server, g = setup(building, ages=("FEUDAL_AGE",))
     train.open_menu(g, "Steve", (11, 3))
-    assert re.search(f"2:gray_dye:{label}:[^ ]* .* Needs the Castle Age", menu(server))
+    assert re.search(f"{slot}:gray_dye:{label}:[^ ]* .* Needs the Castle Age", menu(server))
     rect = train.home(g, (11, 3))
-    assert train.order(g, "Steve", rect, 2) == 0 and g.stock == {"food": 1000, "wood": 1000, "gold": 1000, "stone": 0}
+    assert train.order(g, "Steve", rect, slot) == 0 and g.stock == {"food": 1000, "wood": 1000, "gold": 1000, "stone": 0}
 
 
 @pytest.mark.parametrize("building, name, mount, rider", [
@@ -51,7 +51,7 @@ def test_the_unit_is_gray_before_the_castle_age(building, label):
 def test_a_trained_unit_is_a_rider_with_its_aoe2_values(building, name, mount, rider):
     server, g = setup(building)
     rect = train.open_menu(g, "Steve", (11, 3))
-    assert train.order(g, "Steve", rect, 2) == 1 and g.queues[rect][0]["name"] == name
+    assert train.order(g, "Steve", rect, train.ITEMS[name][0]) == 1 and g.queues[rect][0]["name"] == name
     assert train.tick(g, train.TRAIN_TIMES[name] - 1) == []
     uuid, = train.tick(g, 1)
     summon, = [c for c in server.log if c.startswith("summon")]

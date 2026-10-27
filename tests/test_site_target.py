@@ -63,10 +63,11 @@ def test_a_house_takes_hits_without_arrows_and_an_enemy_site_is_a_fort():
     assert uuid in g.forts and g.fort_names[uuid] == "HOUSE"
 
 
-def test_a_farm_or_a_mill_gets_no_target():
-    for name in ("FARM", "MILL"):
-        _, _, log = built(name)
-        assert not [c for c in log if c.startswith(("aoe building", "summon slime"))]
+def test_a_farm_gets_no_target_and_a_mill_gets_one():
+    _, _, log = built("FARM")                                         # its farmers stand on it
+    assert not [c for c in log if c.startswith(("aoe building", "summon slime"))]
+    _, _, log = built("MILL")                                         # AoE2 DE: 600 hit points (#1403)
+    assert [c.split()[3] for c in log if c.startswith("aoe building")] == ["600"]
 
 
 @pytest.mark.mc

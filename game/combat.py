@@ -198,7 +198,8 @@ STATS = {
     "CAPPED_RAM": Stats(200, 3, -2, 190, 0, 5.0, {"building": 160, SIE: 50}, (SIE,)),
     "SIEGE_RAM": Stats(270, 4, -1, 195, 0, 5.0, {"building": 200, SIE: 65}, (SIE,)),
     "SIEGE_TOWER": Stats(175, 0, -2, 100, 0, 0.0, {}, (SIE,)),         # AoE2 DE wiki (#1362)
-    "TREBUCHET": Stats(150, 200, 2, 150, 16, 10.0, {"building": 250}, (SIE,)),   # AoE2 DE wiki: 150 HP (#1351)
+    "TREBUCHET": Stats(150, 200, 2, 8, 16, 10.0, {"building": 250}, (SIE,)),   # AoE2 DE wiki: 150 HP (#1351); packed
+    # armor (unpacked: trebuchet.UNPACKED, #1409)
     "BOMBARD_CANNON": Stats(80, 40, 2, 5, 12, 6.5, {"building": 200}, (GUN, SIE)),
     "PETARD": Stats(50, 25, 0, 2, 0, 2.0, {"building": 500, SIE: 60}),
     # cheat units (#818, AoE2 DE values of the wiki; the Cobra car shoots: a ranged unit)
@@ -226,6 +227,11 @@ BUILDINGS = {
     "MARKET": Stats(1800, 0, 1, 8, 0, 0.0, {}, ("building",)),       # the Feudal Age values of the wiki (#1251)
     "MONASTERY": Stats(2100, 0, 0, 7, 0, 0.0, {}, ("building",)),
     "SIEGE_WORKSHOP": Stats(2100, 0, 0, 7, 0, 0.0, {}, ("building",)),
+    "BLACKSMITH": Stats(1800, 0, 1, 8, 0, 0.0, {}, ("building",)),   # the Feudal Age values of the wiki (#1403)
+    "LUMBER_CAMP": Stats(600, 0, 0, 7, 0, 0.0, {}, ("building",)),
+    "MILL": Stats(600, 0, 0, 7, 0, 0.0, {}, ("building",)),
+    "MINING_CAMP": Stats(600, 0, 0, 7, 0, 0.0, {}, ("building",)),
+    "UNIVERSITY": Stats(2100, 0, 2, 9, 0, 0.0, {}, ("building",)),   # the Castle Age values
     # the towers (AoE2 DE, wiki): a watch tower of the Castle Age (850 hit points in the Feudal Age), #1112
     "BOMBARD_TOWER": Stats(2220, 120, 3, 9, 8, 6.0, {}, ("building",)),
     "FORTIFIED_TOWER": Stats(1900, 8, 4, 7, 13, 3.0, {}, ("building",)),
@@ -316,6 +322,10 @@ MIN_RANGE = {"BOMBARD_CANNON": 5,     # tiles: no shot at a unit nearer (AoE2 DE
              "SIEGE_ONAGER": 3,
              "TRACTION_TREBUCHET": 4,
              "TREBUCHET": 4}
+# Tiles that a bolt flies past the range and hurts the enemy units on its line with half the damage (AoE2 DE, wiki
+# "Pass-through damage": "Projectiles travel Range+2 tiles in total", no friendly fire, #1401).
+PASS = {"HEAVY_SCORPION": 2,
+        "SCORPION": 2}
 DEFAULT, BUILDING = Stats(40, 4, 0, 0, 0, 2.0), Stats(1000, 0, 0, 7, 0, 0.0, {}, ("building",))
 SLIME = 0.52                    # blocks of width and height per slime size: the target of a building (#517)
 INVISIBLE = 'active_effects:[{id:"minecraft:invisibility",duration:-1,show_particles:0b}]'   # for ever, no particles
@@ -361,12 +371,14 @@ def range_command(uuid, name, T, rate=NORMAL, s=None):
     melee unit. s: the values with technologies (Fletching, #724), default those of AoE2 unit name. A siege unit (a
     minecart) gets its blast radius in blocks last, 0 when its shot hits only the target (the Scorpion, #1062): the
     plugin then lets the minecart shoot too (#1050). Then its minimum range in blocks (MIN_RANGE, #1350), when it has
-    one: it does not shoot at a target nearer than that. A melee siege unit (the ram line, range 0) gets the reach
+    one: it does not shoot at a target nearer than that. Then the blocks of PASS (#1401): its bolt hurts the enemy units on
+    its line up to that far past its range. A melee siege unit (the ram line, range 0) gets the reach
     RAM_REACH: a carrier pig has no melee goal, so the range goal walks it to the target and hits (#1399)."""
     s = s or stats(name)
     cart = (units.classify(name) or {}).get("id") == "minecraft:minecart"
     blast = f" {BLAST.get(name, 0) * T}" if name in BLAST or cart else ""
-    blast += f" {MIN_RANGE.get(name, 0) * T}" * bool(blast and name in MIN_RANGE)
+    blast += f" {MIN_RANGE.get(name, 0) * T}" * bool(blast and (name in MIN_RANGE or name in PASS))
+    blast += f" {PASS.get(name, 0) * T}" * bool(blast and name in PASS)
     reach = s.range * T or RAM_REACH * bool(cart and s.attack)
     return reach and s.reload and f"aoe range {uuid} {reach} {max(1, round(s.reload / rate * 20))}{blast}" or None
 

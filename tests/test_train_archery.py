@@ -13,7 +13,7 @@ from test_train_menu import RALLY, SKIRM
 
 from game import build, combat, gather, run, train
 
-CAVA = " 2:gray_dye:Cavalry Archer:40 wood · 60 gold · 37 s · Needs the Castle Age"   # gray before the Castle Age (#1397)
+CAVA = " 4:gray_dye:Cavalry Archer:40 wood · 60 gold · 37 s · Needs the Castle Age"   # gray before the Castle Age (#1397)
 
 
 def setup(wood=25, gold=45, done=True):

@@ -56,6 +56,7 @@ import bossbar  # noqa: E402
 import cheats  # noqa: E402
 import civs  # noqa: E402
 import conquest  # noqa: E402
+import fleet  # noqa: E402
 import garrison  # noqa: E402
 import hints  # noqa: E402
 import market  # noqa: E402
@@ -445,7 +446,8 @@ def marker(m, cells, kind, who, colors=MARK, points=MARK_POINTS, scale=1.5):
     xs, zs = [c[0] for c in cells], [c[1] for c in cells]
     cx, cz = (min(xs) + max(xs) + 1) / 2, (min(zs) + max(zs) + 1) / 2
     r = max(max(xs) - min(xs) + 1, max(zs) - min(zs) + 1) / 2 + 0.5
-    y = m.y(int(cx), int(cz)) or 0
+    y = m.y(int(cx), int(cz))
+    y = m.sea(int(cx), int(cz)) if y is None and hasattr(m, "sea") else y or 0    # a ship order on the water (#1383)
     return [f"particle minecraft:dust{{color:{colors[kind]},scale:{scale}}} {cx + r * math.cos(a):.2f} {y + 0.2:.2f} "
             f"{cz + r * math.sin(a):.2f} 0 0 0 0 1 force {who}"
             for a in (2 * math.pi * k / points for k in range(points))]
@@ -497,8 +499,10 @@ class Gather:
                       and "VILLAGER" in o["name"]]
         self.villagers, self.selected = {}, set()
         self.soldiers = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit"
-                         and o["player"] == player and (military(o["name"]) or o["name"] == "MONK" or o["name"].startswith(trade.CART))}
-        # military units, monks and trade carts of the player: they take move orders (#1243, #1253)
+                         and o["player"] == player and (military(o["name"]) or o["name"] == "MONK" or o["name"].startswith(trade.CART)
+                              or replay.ship(o["name"]))}
+        # military units, monks, trade carts and ships of the player: they take move orders (#1243, #1253, #1383)
+        self.ships = {}                         # UUID of an own ship -> Villager with its water path (fleet.py, #1383)
         self.enemies = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit" and o["player"]
                         and not allied(data.get("players", {}), player, o["player"])}   # no allies (#1312)
         self.prey = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit" and o.get("uuid")
@@ -962,6 +966,8 @@ class Gather:
             return
         if train.open_menu(self, name, self.map.pick_ground(eye, d)):  # an own town center or barracks (#620, #654)
             return
+        if train.open_menu(self, name, fleet.pick(self, eye, d)):     # a dock is on the water (#1383)
+            return
         if market.open_menu(self, name, self.map.pick_ground(eye, d)):  # an own market: buy and sell (#1252)
             return
         tile = self.map.pick_tree(eye, d)
@@ -974,18 +980,24 @@ class Gather:
             self.mark(name, {(x0, z0), (x1 - 1, z1 - 1)})
         elif self.selected and (cell := self.map.pick_ground(eye, d)) and self.map.free(*cell):
             self.walk_to(name, cell)                                   # the move order of AoE2 (#1368)
+        elif any(replay.ship(self.soldiers.get(u, "")) for u in self.selected) \
+                and (cell := fleet.pick(self, eye, d)) and self.map.wet(*cell):
+            self.walk_to(name, cell)                                   # the ships sail on the water (#1383)
 
     def walk_to(self, name, cell):
         """The selected units walk to the free block cell (x, z), as the move order of AoE2 (#1368): each one to its own
         free cell near it, the nearest cells first (no formation yet). Military units walk with the plugin path finding
-        at their AoE2 speed; villagers stop their work and walk there. Returns the cells {uuid: cell}."""
+        at their AoE2 speed; villagers stop their work and walk there. Ships sail to the water near it (fleet.order, also
+        at a water cell). Returns the cells {uuid: cell}."""
         import ai                                                      # ai imports this module
-        who = sorted(u for u in self.selected if u in self.villagers or u in self.soldiers)
+        boats = {u for u in self.selected if replay.ship(self.soldiers.get(u, ""))}
+        out = fleet.order(self, boats, cell)                           # a ship sails on the water (#1383)
+        who = sorted(u for u in self.selected - boats if u in self.villagers or u in self.soldiers)
         r = math.isqrt(len(who)) + 2
         cells = sorted(((x, z) for x in range(cell[0] - r, cell[0] + r + 1) for z in range(cell[1] - r, cell[1] + r + 1)
                         if self.map.free(x, z)), key=lambda c: (math.dist(c, cell), c))
-        out = dict(zip(who, cells))
-        for u, (x, z) in out.items():
+        out |= dict(zip(who, cells))
+        for u, (x, z) in [(u, c) for u, c in out.items() if u not in boats]:
             if u in self.villagers:
                 v = self.villagers[u]
                 for t in [t for t, f in self.farmers.items() if f == u]:
@@ -1191,6 +1203,7 @@ class Gather:
         garrison.heal(self, self.tick * NORMAL)
         repair.tick(self, self.tick * NORMAL)
         trebuchet.tick(self, self.tick * NORMAL)
+        fleet.tick(self, self.tick * NORMAL)
         monk.relic_tick(self, self.tick * NORMAL)
         trade.tick(self)
         bossbar.tick(self)
