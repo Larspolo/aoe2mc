@@ -106,7 +106,7 @@ jobs:
           key: mc-${{ hashFiles('tools/mc_check.py', 'tools/mc_shot.py', 'game/run.py', 'game/plugin/**') }}
           restore-keys: mc-
       - name: Packages for the client screenshots (tools/mc_shot.py)
-        run: sudo apt-get update -q && sudo apt-get install -y -q xvfb imagemagick mesa-vulkan-drivers
+        run: sudo apt-get update -q && sudo apt-get install -y -q xvfb imagemagick mesa-vulkan-drivers xdotool   # xdotool: mc_shot.Client
       - name: Minecraft server and client checks (the test files of this shard)
         env:
           PYTHONPATH: game:tools:.     # some test files import a game/ module by its bare name: alone they need it
