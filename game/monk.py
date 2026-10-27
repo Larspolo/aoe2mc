@@ -228,6 +228,7 @@ def heal(g, dt):
             if hurt[u] and hurt[u][0] < hurt[u][1]:
                 hp = min(hurt[u][1], hurt[u][0] + RATE * dt)
                 g.command(f"data modify entity {u} Health set value {round(hp, 2)}f")
+                g.command(f"execute at {u} anchored eyes run particle minecraft:heart ^ ^ ^ 0.3 0.3 0.3 0 2")   # #1634
                 taken.add(u)
                 break
 
