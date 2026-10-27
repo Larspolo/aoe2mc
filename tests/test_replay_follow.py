@@ -35,11 +35,18 @@ def test_follow_names_only_units_of_the_player_at_most_once_per_15_seconds():
     assert play(tl, 2) == ["u2"]
 
 
-def test_the_command_goes_to_each_spectator():
-    r = replay.Replay(Fake(), data([]), follow=1)
-    r.grid()
-    r.units[7] = r.gather.Villager("u1", (0.0, 70.0, 0.0))
-    assert r.spectate(move(0, 1, 7))[-1] == f"execute as @a[gamemode=spectator] run spectate @e[tag={replay.FOLLOWED},limit=1] @s"
+def test_the_command_goes_to_each_spectator_on_a_vanilla_server():
+    """Paper: the plugin moves the spectators over the shoulder of the tagged unit (Follow.java, #1660), no /spectate."""
+    cmds = {}
+    for kind in ("vanilla", "paper"):
+        game = Fake()
+        game.kind = kind
+        r = replay.Replay(game, data([]), follow=1)
+        r.grid()
+        r.units[7] = r.gather.Villager("u1", (0.0, 70.0, 0.0))
+        cmds[kind] = r.spectate(move(0, 1, 7))
+    assert cmds["vanilla"][-1] == f"execute as @a[gamemode=spectator] run spectate @e[tag={replay.FOLLOWED},limit=1] @s"
+    assert cmds["paper"] == cmds["vanilla"][:-1] and cmds["paper"][1] == f"tag u1 add {replay.FOLLOWED}"
 
 
 def test_a_deleted_unit_gives_the_camera_to_the_next_event():
@@ -52,7 +59,7 @@ def test_without_follow_no_spectate():
 
 
 @pytest.mark.mc
-def test_a_spectator_on_a_server_looks_through_the_followed_unit(tiny_world, tmp_path):
+def test_a_spectator_on_a_server_looks_over_the_shoulder_of_the_followed_unit(tiny_world, tmp_path):
     import json
     import shutil
     import time
@@ -80,4 +87,6 @@ def test_a_spectator_on_a_server_looks_through_the_followed_unit(tiny_world, tmp
         pos = game.command("data get entity aoe2mc Pos")
         assert out and "error" not in out[0].lower(), out
         xyz = [float(v) for v in re.findall(r"(-?[\d.]+)d", pos)]
-        assert len(xyz) == 3 and abs(xyz[0] - 20.5) + abs(xyz[2] - 20.5) < 0.5, (out, pos)   # the camera is the unit
+        # over the shoulder (#1660): 4 blocks behind the unit (yaw 0 looks south, +z) and 2 above its eyes
+        assert len(xyz) == 3 and abs(xyz[0] - 20.5) < 0.3 and abs(xyz[2] - 16.5) < 0.3, (out, pos)
+        assert 101.5 < xyz[1] < 102.5, pos

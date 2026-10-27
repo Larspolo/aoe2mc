@@ -244,6 +244,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Minimap minimap = new Minimap(this, u -> this.hidden.contains(u));   // no dot for a hidden unit (#1567)
     private final Gates gates = new Gates();                           // the gates of the game program (#1325)
     private final Viewer viewer = new Viewer(this);                 // the game mode switch of a replay viewer (#910)
+    private final Follow camera = new Follow();                     // the follow camera of a replay (#738, #1660)
     private final Border border = new Border();
 
     // b: x0 y0 z0 x1 y1 z1 of box; range: the blocks from the footprint that its arrows reach, 0: no attack (#1111)
@@ -775,6 +776,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         Bukkit.getScheduler().runTaskTimer(this, this::follow, 2L, 2L);
+        Bukkit.getScheduler().runTaskTimer(this, camera::tick, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::steer, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, ghost::tick, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, border::tick, 4L, 4L);
