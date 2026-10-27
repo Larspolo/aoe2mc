@@ -94,3 +94,4 @@ The GitHub REST API cannot upload images. Describe them in the PR body:
   0-2; the server keeps them (#526).
 - Inside of a design: `tools/render.py building NAME OUT.png --cut 2` (#265); exact layers: `c.get(x, y, z)` on a `Canvas` (#255). `vary()` materials: `render.building_blocks(NAME, arch, variant=v)` (#146). `render.py world` draws Y >= 50 (`--y0 -64` for `--border`); `--scale 4` gives about 800 px like `docs/images/` (#262).
 - The free space of a design is `-1` (unset) or `air`: an open hall (the western `TOWN_CENTER`) has no `air` cell inside. `buildings.rooms()` takes both, the `air` cells first (#807).
+- The free space of a design is `-1` (unset) or `air`: an open hall (the western `TOWN_CENTER`) has no `air` cell inside. `buildings.rooms()` takes both, the `air` cells first (#807).
