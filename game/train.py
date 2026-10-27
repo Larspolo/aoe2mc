@@ -511,7 +511,7 @@ def show(g, player, rect):
             return missing(g, name) or ("researching" if queued(g, name) else "research")
         return f"queue {n}/{QUEUE}"
     items = [(slot, build.LOCKED if build.locked(g, name) else item, label,
-              (" · ".join(f"{v} {r}" for r, v in price(g, name).items()) or "free") + f" · {seconds(g, name)} s · "
+              (" · ".join(f"{v} {r}" for r, v in price(g, name).items()) or "free") + f" · {round(seconds(g, name, building), 1):g} s · "
               + state(name))
              for name in trains(g, building) if repeatable(g, name) and unlocked(g, name) for slot, item, label in [ITEMS[name]]]
     items += [RALLY] if units_of(building) else []
@@ -727,11 +727,12 @@ def stats(g, name):
     return s
 
 
-def seconds(g, name):
+def seconds(g, name, building=None):
     """The train time of unit or technology name: TRAIN_TIMES, or the time of FASTER from its age (the eagle scout trains
-    in 46 s in the Feudal Age and in 35 s from the Castle Age, AoE2 DE wiki)."""
+    in 46 s in the Feudal Age and in 35 s from the Castle Age, AoE2 DE wiki), divided by the work rate of the
+    civilization at building (civs.work_rate: Persian town centers and docks, #1894)."""
     age, time = FASTER.get(name, (9, 0))
-    return time if build.ages(g) >= age else TRAIN_TIMES[name]
+    return (time if build.ages(g) >= age else TRAIN_TIMES[name]) / (civs.work_rate(g, building) if building else 1)
 
 
 def speed(g, name):
@@ -855,8 +856,8 @@ def tick(g, work):
         if g.marks[tag] <= 0:
             del g.marks[tag]
             g.command(f"kill @e[tag={tag}]")
-    cap, out = limit(g), []
-    fast = {r for r, n in homes(g).items() if n in CONSCRIPT[0]} if "CONSCRIPTION" in g.techs else set()   # (#1455)
+    cap, out, home = limit(g), [], homes(g)
+    fast = {r for r, n in home.items() if n in CONSCRIPT[0]} if "CONSCRIPTION" in g.techs else set()   # (#1455)
     room = cap - g.pop - sum(1 for q in g.queues.values() if q and q[0]["progress"] > 0 and q[0]["name"] not in TECHS)
     for rect, q in g.queues.items():
         if not q:
@@ -872,7 +873,7 @@ def tick(g, work):
             q[0]["waits"] = False
         rate = CONSCRIPT[1] if rect in fast and q[0]["name"] not in TECHS else 1   # units only, not technologies
         rate *= SHIPWRIGHT[1] if shipwright(g, q[0]["name"]) else 1          # the ships of a dock, not its technologies
-        q[0]["progress"] += 1 if getattr(g, "aegis", False) else work * rate / seconds(g, q[0]["name"])   # cheats.aegis
+        q[0]["progress"] += 1 if getattr(g, "aegis", False) else work * rate / seconds(g, q[0]["name"], home.get(rect))   # cheats.aegis
         if q[0]["progress"] >= 1 and q[0]["name"] in TECHS:
             research(g, q.pop(0))
         elif q[0]["progress"] >= 1 and (v := spawn(g, rect, q.pop(0)["name"])):

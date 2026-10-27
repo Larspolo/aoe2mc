@@ -4,7 +4,9 @@ the AoE2 DE civilizations (the AoE2 wiki, "Civilization bonuses" of each civiliz
 time of one unit of resource by the factor of the player's civilization. The keys are the gather kinds of Gather:
 "wood", "food" (forage bushes), "farm", "gold", "stone", "hunt" (hunted animals) and "sheep" (herdable animals).
 Bonuses that the game program cannot use yet: Japanese fishing ships, Malian oyster gatherers, Spanish builders, the
-Roman builders, the Georgian fortified church (+10 % near it), the Persian town centers and docks.
+Roman builders, the Georgian fortified church (+10 % near it).
+WORK_RATE holds the train and research rate of the buildings (#1894, Persian town centers and docks): train.seconds
+divides the time of an item by work_rate().
 REPAIR and REPAIR_COST hold the repair bonuses (#1730, AoE2 wiki "Repairing"): repair.tick multiplies the rate and the
 cost of the repairs of a player by them (repair_rate, repair_cost).
 
@@ -321,6 +323,8 @@ SHARED = {"CONDOTTIERO": "ITALIANS",                              # the shared u
 NOT_SHARED = {"IMPERIAL_SKIRMISHER_UPGRADE": ("TURKS",)}           # no Elite Skirmisher: not with a Vietnamese ally
 REPAIR = {"ROMANS": ROMAN}                                        # Romans: repairers work 5 % faster
 REPAIR_COST = {"GEORGIANS": 0.75}                                 # Georgians (team bonus): repairs cost -25 %
+PERSIAN = (1.05, 1.1, 1.15, 1.2)                                   # Persians: 5/10/15/20 % faster in the Dark ... Imperial Age
+WORK_RATE = {"PERSIANS": {"DOCK": PERSIAN, "TOWN_CENTER": PERSIAN}}   # the train and research rate of a building in each age
 
 
 def mounted(s):
@@ -410,6 +414,12 @@ def repair_cost(g):
     players = g.data.get("players", {})
     return min([REPAIR_COST.get(civ(g, p), 1) for p in players if p.isdigit() and gather.allied(players, g.player, int(p))]
                + [REPAIR_COST.get(civ(g), 1)])
+
+
+def work_rate(g, building):
+    """The factor of the train and research rate of building (a name) of the player of g in its age (WORK_RATE), else 1."""
+    import build                                                   # build imports gather, gather imports this module
+    return WORK_RATE.get(civ(g), {}).get(building, (1,) * 4)[min(build.ages(g), 3)]
 
 
 def start(g, base):
