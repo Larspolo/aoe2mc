@@ -82,6 +82,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "CARAVAN": {"food": 200, "gold": 200},
          "CHEMISTRY": {"food": 300, "gold": 200},                    # the university, Imperial Age (#1375)
          "CATAPHRACT": {"food": 70, "gold": 75},
+         "CAVALRY_ARCHER": {"wood": 40, "gold": 60},                    # AoE2 DE wiki (#1397)
          "CHAIN_BARDING_ARMOR": {"food": 250, "gold": 150},             # AoE2 DE wiki (#1394)
          "CHAIN_MAIL_ARMOR": {"food": 200, "gold": 100},
          "CHU_KO_NU": {"wood": 40, "gold": 35},
@@ -106,6 +107,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "IRON_CASTING": {"food": 220, "gold": 120},
          "JANISSARY": {"food": 60, "gold": 55},
          "KEEP": {"food": 500, "wood": 350},                           # the upgrade (AoE2 DE wiki "Guard Tower")
+         "KNIGHT": {"food": 60, "gold": 75},                            # AoE2 DE wiki (#1397)
          "LEATHER_ARCHER_ARMOR": {"food": 150, "gold": 150},
          "LIGHT_CAVALRY": {"food": 80},
          "LIGHT_CAVALRY_UPGRADE": {"food": 150, "gold": 50},
@@ -160,6 +162,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "CHEMISTRY": 100,
                "CASTLE_AGE": 160,
                "CATAPHRACT": 20,
+               "CAVALRY_ARCHER": 37,
                "CHAIN_BARDING_ARMOR": 60,
                "CHAIN_MAIL_ARMOR": 55,
                "CHU_KO_NU": 16,
@@ -184,6 +187,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "IRON_CASTING": 75,
                "JANISSARY": 21,
                "KEEP": 75,
+               "KNIGHT": 30,
                "LEATHER_ARCHER_ARMOR": 55,
                "LIGHT_CAVALRY": 30,
                "LIGHT_CAVALRY_UPGRADE": 45,
@@ -230,13 +234,13 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                        "LONG_SWORDSMAN_UPGRADE", "PIKEMAN_UPGRADE",           # the Castle Age (#1396)
                        "SQUIRES"),                                            # (#1415)
           "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER",                                          # building (#654, #670, #655)
-                            "CROSSBOWMAN_UPGRADE", "ELITE_SKIRMISHER_UPGRADE"),
+                            "CROSSBOWMAN_UPGRADE", "ELITE_SKIRMISHER_UPGRADE", "CAVALRY_ARCHER"),   # (#1396, #1397)
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING",            # (#675, #725, #724, #937, #938)
                          "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR",
                          "CHAIN_MAIL_ARMOR", "LEATHER_ARCHER_ARMOR", "CHAIN_BARDING_ARMOR",   # the Castle Age (#1394)
                          "IRON_CASTING", "BODKIN_ARROW"),                       # (#1395)
           "CASTLE": ("TREBUCHET",),                                             # and the unique unit: trains() (#708, #1351)
-          "STABLE": ("SCOUT_CAVALRY", "BLOODLINES", "LIGHT_CAVALRY_UPGRADE"),  # (#671, #940, #1396)
+          "STABLE": ("SCOUT_CAVALRY", "BLOODLINES", "LIGHT_CAVALRY_UPGRADE", "KNIGHT"),   # (#671, #940, #1396, #1397)
           "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS",   # (#1326, #1374, #1352)
                          "MASONRY", "CHEMISTRY", "BOMBARD_TOWER_TECH"),         # (#1398, #1375)
           "DOCK": ("FISHING_SHIP",),                                            # (#1383)
@@ -454,6 +458,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "CARAVAN": (1, "book", "Caravan"),
          "CASTLE_AGE": (4, "bell", "Castle Age"),
          "CATAPHRACT": (0, "horse_spawn_egg", "Cataphract"),
+         "CAVALRY_ARCHER": (4, "skeleton_horse_spawn_egg", "Cavalry Archer"),
          "CHAIN_BARDING_ARMOR": (4, "book", "Chain Barding Armor"),    # the slot of the Feudal armor (AFTER)
          "CHAIN_MAIL_ARMOR": (1, "book", "Chain Mail Armor"),
          "CHU_KO_NU": (0, "skeleton_spawn_egg", "Chu Ko Nu"),
@@ -472,6 +477,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "IRON_CASTING": (0, "book", "Iron Casting"),                 # the slot of Forging
          "JANISSARY": (0, "pillager_spawn_egg", "Janissary"),
          "KEEP": (3, "book", "Keep"),
+         "KNIGHT": (3, "horse_spawn_egg", "Knight"),                # after the upgrades
          "LEATHER_ARCHER_ARMOR": (3, "book", "Leather Archer Armor"),
          "LONGBOWMAN": (0, "skeleton_spawn_egg", "Longbowman"),
          "LOOM": (1, "book", "Loom"),                               # a book for a technology (#618)
@@ -512,6 +518,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "CARAVAN": "Trade carts +20 % speed.",
         "CASTLE_AGE": "Advance to the Castle Age.",
         "CATAPHRACT": "Byzantine cavalry. Strong vs. infantry.",
+        "CAVALRY_ARCHER": "Fast archer. Strong vs. infantry; weak vs. camels.",
         "CHAIN_BARDING_ARMOR": "Cavalry +1 melee armor, +1 pierce armor.",
         "CHAIN_MAIL_ARMOR": "Infantry +1 melee armor, +1 pierce armor.",
         "CHU_KO_NU": "Chinese archer. Shoots many arrows.",
@@ -537,6 +544,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "IRON_CASTING": "Infantry and cavalry +1 attack.",
         "JANISSARY": "Turkish gunner. Strong vs. infantry.",
         "KEEP": "Guard towers +750 HP, +1 attack, +1/+1 armor.",
+        "KNIGHT": "Strong vs. archers, siege; weak vs. spears, monks.",
         "LEATHER_ARCHER_ARMOR": "Archers +1 melee armor, +1 pierce armor.",
         "LIGHT_CAVALRY": "Cavalry. Fast; strong vs. monks, siege.",
         "LIGHT_CAVALRY_UPGRADE": "Upgrades scout cavalry to light cavalry.",
