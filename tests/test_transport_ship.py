@@ -52,59 +52,59 @@ def test_land_units_walk_to_the_shore_and_ride_the_ship():
     assert i("execute as ship on passengers run ride m mount @s") < i("ride s mount m") \
         < i("execute as s on passengers run ride v mount @s")         # a horse takes one rider: on its rider
     assert f"data merge entity v {garrison.INSIDE}" in server.log and "aoe hide @a s" in server.log
-    assert g.holds == {"ship": ["m", "s", "v"]} and not g.loading
+    assert g.cargo == {"ship": ["m", "s", "v"]} and not g.loading
     assert {"m", "s", "v"} <= garrison.inside(g) and g.selected == {"f"} and g.villagers["v"].state == "garrison"
 
 
 def test_a_full_ship_takes_no_more():
     server, g = setup()
-    g.holds = {"ship": [f"x{k}" for k in range(19)]}
+    g.cargo = {"ship": [f"x{k}" for k in range(19)]}
     transport.order(g, "Steve", "ship")
     for u in ("m", "s"):
         server.entities[u]["Pos"] = (14.0, 64.0, 5.5)                   # next to the ship
     transport.tick(g)
-    assert g.holds["ship"][-1] == "m" and len(g.holds["ship"]) == 20 and "s" not in garrison.inside(g)
+    assert g.cargo["ship"][-1] == "m" and len(g.cargo["ship"]) == 20 and "s" not in garrison.inside(g)
 
 
 def test_a_click_on_the_selected_ship_unloads_it_on_the_nearest_land():
     server, g = setup()
-    g.holds = {"ship": ["m", "s"]}
+    g.cargo = {"ship": ["m", "s"]}
     server.log.clear()
-    assert transport.out(g, "ship") == ["m", "s"] and not g.holds
+    assert transport.out(g, "ship") == ["m", "s"] and not g.cargo
     tps = [c.split() for c in server.log if c.startswith("tp ")]
     assert [t[1] for t in tps] == ["s", "m"] and tps[0][2:] == ["13.5", "64", "5.5"]   # the top of the stack first
     assert all(g.map.free(math.floor(float(t[2])), math.floor(float(t[4]))) for t in tps)
     assert server.log[1] == "ride s dismount" and f"data merge entity m {garrison.OUTSIDE}" in server.log
     server.entities["ship"]["Pos"] = (22.5, 63.0, 20.5)                 # far from the land: they stay inside
-    g.holds = {"ship": ["m"]}
-    assert transport.out(g, "ship") == [] and g.holds == {"ship": ["m"]}
+    g.cargo = {"ship": ["m"]}
+    assert transport.out(g, "ship") == [] and g.cargo == {"ship": ["m"]}
 
 
 def test_a_loaded_ship_sent_to_the_land_unloads_there_after_the_trip():
     server, g = setup()
-    g.holds = {"ship": ["m", "v"]}
+    g.cargo = {"ship": ["m", "v"]}
     g.choose({"ship"}, "ship")
     out = g.walk_to("Steve", (12, 15))
     assert g.map.wet(*out["ship"]) and g.unloads == {"ship": (12, 15)}
     transport.tick(g)
-    assert g.holds                                                      # it sails first
+    assert g.cargo                                                      # it sails first
     for _ in range(30):
         fleet.tick(g, 1.0)
     transport.tick(g)
-    assert not g.holds and not g.unloads
+    assert not g.cargo and not g.unloads
     tps = [c.split() for c in server.log if c.startswith("tp ")]
     assert {(math.floor(float(t[2])), math.floor(float(t[4]))) for t in tps} == {(12, 15), (11, 15)}
-    g.holds = {"ship": ["m"]}
+    g.cargo = {"ship": ["m"]}
     g.walk_to("Steve", (20, 20))                                       # onto the water: no unload
     assert not g.unloads
 
 
 def test_the_units_of_a_sunk_ship_are_lost():
     server, g = setup()
-    g.holds = {"ship": ["m", "v"]}
+    g.cargo = {"ship": ["m", "v"]}
     del g.soldiers["ship"]
     transport.tick(g)
-    assert not g.holds and {"kill m", "kill v"} <= set(server.log)
+    assert not g.cargo and {"kill m", "kill v"} <= set(server.log)
 
 
 @pytest.mark.mc
