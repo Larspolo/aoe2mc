@@ -234,6 +234,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_KESHIK_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
          "ELITE_KONNIK_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
          "ELITE_LEITIS_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
+         "ELITE_MONASPA_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "ELITE_OBUCH_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "ELITE_SERJEANT_UPGRADE": lambda name, s: s,              # a new unit name: UPGRADES
          "ELITE_SHOTEL_WARRIOR_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
@@ -365,6 +366,7 @@ UPGRADES = {                                                       # technology:
     "ELITE_KESHIK_UPGRADE": ("KESHIK", "ELITE_KESHIK"),   # the castle of the Tatars (#1745)
     "ELITE_KONNIK_UPGRADE": ("KONNIK", "ELITE_KONNIK"),   # the castle of the Bulgarians (#1757)
     "ELITE_LEITIS_UPGRADE": ("LEITIS", "ELITE_LEITIS"),   # the castle of the Lithuanians (#1746)
+    "ELITE_MONASPA_UPGRADE": ("MONASPA", "ELITE_MONASPA"),   # the castle of the Georgians (#1755)
     "ELITE_OBUCH_UPGRADE": ("OBUCH", "ELITE_OBUCH"),   # the castle of the Poles (#1747)
     "ELITE_SERJEANT_UPGRADE": ("SERJEANT", "ELITE_SERJEANT"),   # the castle of the Sicilians (#1748)
     "ELITE_SHOTEL_WARRIOR_UPGRADE": ("SHOTEL_WARRIOR", "ELITE_SHOTEL_WARRIOR"),   # the castle (#1725)
