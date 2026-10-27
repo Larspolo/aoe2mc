@@ -7,6 +7,7 @@ that cost the most: a result stays in the context, so each later call reads it a
     python3 tools/tokens.py               # the Tokens: line of the newest session (autopilot step 8)
     python3 tools/tokens.py --top 15      # the 15 largest sinks, one per line
     python3 tools/tokens.py FILE.jsonl    # another transcript
+    python3 tools/tokens.py --verify      # the minutes and repeats of each check command (#1704)
 
 The unit is "eq": input-token equivalents with the API price ratios (input 1, cache write 1.25 for 5 minutes and 2 for
 1 hour, cache read 0.1, output 5). The subscription quota is not public, but it follows the cost of the calls.
@@ -14,6 +15,9 @@ A sink costs its tokens (about 4 characters each) written once to the cache, the
 Sink `base`: the system prompt, the tools, CLAUDE.md and LEARNINGS, which each call reads again; `repo` is the part
 in the repository (CLAUDE.md and its `@` files), the rest only the environment settings change (connectors, tools). Sink `output`: text,
 thinking and tool input. The rest of the eq (not in the sinks): owner messages, hook text and the carried output.
+Field `verify` (#1704): the wall minutes and the count of the check commands (`pytest`, `ruff`, `mc_check.py`, `mc_shot.py`,
+`render.py`, and `wait`: a loop that waits for the output of a background check), from the time of a tool call to the
+time of its result. A background command has its minutes in the wait loop or the notification, not in its own call.
 The pure functions take plain records, so the tests need no files.
 """
 import argparse
@@ -23,6 +27,7 @@ import os
 import re
 import sys
 from collections import defaultdict
+from datetime import datetime
 
 W_IN, W_5M, W_1H, W_READ, W_OUT = 1.0, 1.25, 2.0, 0.1, 5.0
 CHARS = 4                    # characters per token (an estimate: the transcript has no token count of a result)
@@ -62,6 +67,56 @@ def label(name, inp):
     if name.startswith("mcp__"):
         return "mcp " + name.split("__")[-1]
     return name
+
+
+CHECKS = (("pytest -m mc", r"pytest\b.*-m\s+['\"]?mc\b"), ("pytest -m slow", r"pytest\b.*-m\s+['\"]?slow\b"),
+          ("pytest files", r"pytest\b.*\btests/\S+\.py"), ("pytest", r"\bpytest\b"), ("ruff", r"\bruff\b"),
+          ("mc_check.py", r"mc_check\.py"), ("mc_shot.py", r"mc_shot\.py"), ("render.py", r"render\.py"))
+WAIT = r"\buntil\b|\bsleep\b"                 # a wait loop (LEARNINGS #413): its minutes are the minutes of a check
+OUTPUT = r"rc=|\.out\b|\.log\b"               # the output of a background check that a wait loop reads
+
+
+def check(cmd):
+    """The check kind of a Bash command, or None. A command with several checks (`ruff && pytest`) gets the first
+    one of CHECKS, the one that takes the most time. A wait loop for the output of a check is `wait`, a wait loop for
+    something else (a server) is None."""
+    if re.search(WAIT, cmd):
+        return "wait" if re.search("|".join(rx for _, rx in CHECKS) + "|" + OUTPUT, cmd) else None
+    return next((k for k, rx in CHECKS if re.search(rx, cmd)), None)
+
+
+def when(r):
+    """The time of a transcript record in seconds, or None."""
+    t = r.get("timestamp")
+    return datetime.fromisoformat(t.replace("Z", "+00:00")).timestamp() if t else None
+
+
+def verify(records):
+    """{check kind: [wall minutes, count]} of the check commands of one chain of records (#1704)."""
+    start, out = {}, defaultdict(lambda: [0.0, 0])
+    for r in records:
+        msg = r.get("message") or {}
+        content = msg.get("content")
+        if r.get("type") == "assistant" and isinstance(content, list):
+            for b in content:
+                if b.get("type") == "tool_use" and b.get("name") == "Bash":
+                    k = check((b.get("input") or {}).get("command", ""))
+                    if k:
+                        start[b["id"]] = (k, when(r))
+        elif r.get("type") == "user" and isinstance(content, list):
+            for b in content:
+                if b.get("type") == "tool_result" and b.get("tool_use_id") in start:
+                    k, t0 = start.pop(b["tool_use_id"])
+                    t1 = when(r)
+                    out[k][0] += (t1 - t0) / 60 if t0 is not None and t1 is not None else 0
+                    out[k][1] += 1
+    return dict(out)
+
+
+def verify_field(v, k=4):
+    """The `verify` field of the Tokens: line: the k check kinds with the most minutes (`pytest 4.1m 2x`)."""
+    top = sorted(v.items(), key=lambda kv: -kv[1][0])[:k]
+    return "verify " + (", ".join(f"{s} {m:.1f}m {n}x" for s, (m, n) in top) or "-")
 
 
 def size(content):
@@ -136,8 +191,8 @@ def kind(lab):
     return lab if lab.startswith(("base", "output", "Skill", "mcp", "Agent")) else lab.split(" ", 1)[0]
 
 
-def line(t, k=5, repo=None):
-    """The `Tokens:` line of the run report (tools/health.py reads it)."""
+def line(t, k=5, repo=None, checks=None):
+    """The `Tokens:` line of the run report (tools/health.py reads it). checks: the verify() of the run (#1704)."""
     g = defaultdict(float)
     for s, x in t["sinks"].items():
         g[kind(s)] += x
@@ -145,7 +200,8 @@ def line(t, k=5, repo=None):
     m = lambda x: f"{x / 1e6:.2f}M"
     return (f"Tokens: {m(t['eq'])} eq · calls {t['calls']} · write {m(t['write'])} · read {m(t['read'])} · "
             f"out {m(t['out'])} · peak {t['peak'] / 1e3:.0f}k · base {t['base'] / 1e3:.0f}k"
-            + ("" if repo is None else f" (repo {repo / 1e3:.0f}k)") + " · sinks "
+            + ("" if repo is None else f" (repo {repo / 1e3:.0f}k)")
+            + ("" if checks is None else " · " + verify_field(checks)) + " · sinks "
             + ", ".join(f"{s} {x / t['eq']:.0%}" for s, x in top))
 
 
@@ -179,13 +235,23 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("file", nargs="?", help="a transcript (default: the newest session of this directory)")
     ap.add_argument("--top", type=int, help="print the N largest sinks, one per line")
+    ap.add_argument("--verify", action="store_true", help="print each check command kind: minutes and count (#1704)")
     a = ap.parse_args(argv)
     path = a.file or newest()
     if not path:
         sys.exit("no transcript in ~/.claude/projects for this directory")
     subs = sorted(glob.glob(os.path.join(path[:-len(".jsonl")], "subagents", "*.jsonl")))
-    t = merge([analyse(load(path))] + [analyse(load(s)) for s in subs])
-    print(line(t, repo=repo_base()))
+    chains = [load(path)] + [load(s) for s in subs]
+    t = merge([analyse(c) for c in chains])
+    v = defaultdict(lambda: [0.0, 0])
+    for c in chains:
+        for s, (m, n) in verify(c).items():
+            v[s][0] += m
+            v[s][1] += n
+    print(line(t, repo=repo_base(), checks=dict(v)))
+    if a.verify:
+        for s, (m, n) in sorted(v.items(), key=lambda kv: -kv[1][0]):
+            print(f"  {m:6.1f} min  {n:3d}x  {s}")
     for s, x in sorted(t["sinks"].items(), key=lambda kv: -kv[1])[:a.top or 0]:
         print(f"  {x / t['eq']:5.1%}  {x / 1e3:8.0f}k  {s}")
     return 0
