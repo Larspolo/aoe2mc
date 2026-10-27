@@ -1702,8 +1702,9 @@ def dock(c, w, st, col, T, ctx):
     for x in list(range(0, w, 3)) + [w - 1]:
         for z in list(range(0, w, 3)) + [w - 1]:
             c.box(x, x + 1, -8, 1, z, z + 1, "spruce_log")                 # piles
-    c.box(0, w, 1, 2, 0, 1, f"{col}_concrete"); c.box(0, 1, 1, 2, 0, w, f"{col}_concrete")   # painted deck edge
-    c.box(w - 1, w, 1, 2, 0, w, f"{col}_concrete"); c.box(0, w, 1, 2, w - 1, w, f"{col}_concrete")
+    # dark deck edge: an edge in the player color looks like the foundation ring of an unfinished dock (#2059)
+    c.box(0, w, 1, 2, 0, 1, "dark_oak_planks"); c.box(0, 1, 1, 2, 0, w, "dark_oak_planks")
+    c.box(w - 1, w, 1, 2, 0, w, "dark_oak_planks"); c.box(0, w, 1, 2, w - 1, w, "dark_oak_planks")
     m = w // 2
     for z in range(m - 1, m + 1):                                          # steps down to the water
         c.set(0, 1, z, "spruce_stairs[facing=east,half=bottom,shape=straight]")

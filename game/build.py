@@ -483,6 +483,8 @@ def found(g, name, rect, way=None, tiles=None):
     color = g.players.get(str(g.player), {}).get("color", "light_gray")
     ring = [(x, g.map.y(x, z) if g.map.y(x, z) is not None else int(fleet.level(g) if name in WATER else g.map.sea(x, z)), z)
             for x in range(x0, x1) for z in range(z0, z1) if x in (x0, x1 - 1) or z in (z0, z1 - 1)]
+    under = {c: "minecraft:water" for c in ring if g.map.y(c[0], c[2]) is None   # a dock or a fish trap: the water
+             and "Test passed" in g.command("execute if block {} {} {} minecraft:water".format(*c))}   # comes back (#2059)
     for c in ring:
         g.command("setblock {} {} {} ".format(*c) + f"minecraft:{color}_wool")
     cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)} if tiles is None else tile_cells(g, tiles)
@@ -494,7 +496,7 @@ def found(g, name, rect, way=None, tiles=None):
         along_z=z1 - z0 > x1 - x0 if way is None else way,             # a gate along z (#1324) or diagonal (#1655)
         water=int(fleet.level(g)) + 1 if name in WATER else None)      # a fish trap on the open water (#1438)
     site = {"name": name, "player": g.player, "footprint": rect, "commands": cmds, "sent": 0, "progress": 0.0,
-            "ring": dict.fromkeys(ring, f"minecraft:{color}_wool"), "under": {}}   # under: the design blocks on the ring
+            "ring": dict.fromkeys(ring, f"minecraft:{color}_wool"), "under": under}   # under: the design blocks on the ring
     if way is not None:
         site["way"] = way
     if tiles is not None and str(way).startswith("diag"):
@@ -572,7 +574,7 @@ def rise(g, site, work):
             g.command("setblock {} {} {} ".format(*p) + ring[p])
     if site["progress"] >= 1 and not site.get("done"):                 # complete: the building works (#419)
         site["done"] = True
-        for p in [p for p in ring if p not in hit]:                    # the ring goes: the design or air
+        for p in [p for p in ring if p not in hit]:                    # the ring goes: the design, the water or air
             g.command("setblock {} {} {} ".format(*p) + site["under"].get(p, "minecraft:air"))
         x0, x1, z0, z1 = site["footprint"]
         s, T = footprint(site["name"]), g.map.T
