@@ -4,7 +4,10 @@ import os
 import re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-COUNT = re.compile(r"len\((?:combat|civs|train|build|buildings|units|table)\.[A-Z][A-Z_0-9]*\) *(?:==|>=) *\d")
+COUNT = re.compile(r"len\((?:combat|civs|train|build|buildings|units|table)\.[A-Z][A-Z_0-9]*\) *(?:==|>=) *\d"
+                   r"|len\((?:combat|civs|train|build|buildings|units|table)\.(?!ROWS\))[A-Z][A-Z_0-9]*\) *[-+] *(?:[2-9]|\d\d)")
+# The second form: the length of the build menu less 4 (the hidden regional buildings) changed in 3 PRs on 2026-10-27.
+# Allowed: "- 1" (the last index changes with the data) and civs.ROWS (only a new civilization adds a line).
 
 
 def test_no_test_pins_the_length_of_a_table():
