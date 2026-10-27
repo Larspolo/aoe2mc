@@ -15,7 +15,8 @@ def test_the_minimum_ranges_of_the_wiki():
                                 "ROCKET_CART": 2.5, "SCORPION": 2, "SIEGE_ONAGER": 3, "TRACTION_TREBUCHET": 4,
                                 "TREBUCHET": 4,
                                 "CANNON_GALLEON": 3,                                                  # (#1484)
-                                "ELITE_CANNON_GALLEON": 3}                                            # (#1491)
+                                "ELITE_CANNON_GALLEON": 3,                                            # (#1491)
+                                "CATAPULT_GALLEON": 3, "DROMON": 3, "LOU_CHUAN": 3}                   # (#1935)
 
 
 @pytest.mark.parametrize("name", sorted(combat.MIN_RANGE))
