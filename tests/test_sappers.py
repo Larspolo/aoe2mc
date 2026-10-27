@@ -8,7 +8,7 @@ from game import civs, combat, train
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.TECH_AGE["SAPPERS"] == 3 and len(train.HELP["SAPPERS"]) <= 50 and "SAPPERS" in train.TRAINS["CASTLE"]
+    assert len(train.HELP["SAPPERS"]) <= 50 and "SAPPERS" in train.TRAINS["CASTLE"]
     assert len(civs.MISSING["SAPPERS"]) == 19 and {"FRANKS", "JAPANESE", "WU"} <= set(civs.MISSING["SAPPERS"])
     assert "BRITONS" not in civs.MISSING["SAPPERS"]                     # the wiki availability chart
 

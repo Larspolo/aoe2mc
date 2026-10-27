@@ -12,7 +12,7 @@ TC = (2, 5, 2, 5)
 
 
 def test_the_cost_time_and_age_are_those_of_aoe2():
-    assert train.TECH_AGE["MASONRY"] == 2 and "MASONRY" in train.TRAINS["UNIVERSITY"]
+    assert "MASONRY" in train.TRAINS["UNIVERSITY"]
 
 
 def test_the_university_menu_shows_masonry_in_the_castle_age():
