@@ -121,7 +121,7 @@ status issue).
    files on `main` and the owner's comments; stop at once on `paused` or a usage limit.
 5. **Pacer session.** Start one cloud session with the same repository and environment, and send it
    "Pacer cycle: follow .claude/skills/pacer/SKILL.md." It schedules its own next cycle every 10 minutes and needs
-   the `fire_trigger` tool with the trigger ID of the task of step 4 (in `.claude/skills/pacer/SKILL.md`).
+   the `fire_trigger` tool with the trigger ID of the task of step 4 (`trigger` in `[pacing]` of `agent.toml`, #1898).
 6. **Scheduled task "aoe2mc pacer heartbeat".** Hourly at :36. Its prompt: "Pacer heartbeat: follow
    .claude/skills/pacer/SKILL.md." It wakes the pacer session when its own loop stopped.
 7. **Scheduled task "aoe2mc autopilot haiku" (optional, #1715).** No schedule: the pacer fires it. Model
