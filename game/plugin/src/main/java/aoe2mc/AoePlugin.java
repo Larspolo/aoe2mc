@@ -231,6 +231,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         final double speed;
         final int start = Bukkit.getCurrentTick();
         int fails;
+        int at = -1;                                // steer(): the tick, place and velocity of the last steer (#1344)
+        double px, pz, vx, vz;
 
         Order(Location goal, double speed) {
             this.goal = goal;
@@ -1165,7 +1167,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
                 var path = pf.getCurrentPath();
                 if (path != null) {
-                    steer(mob, path, o.speed);
+                    steer(mob, path, o);
                     glide(mob, path, o.speed);
                 }
                 climb(mob, o.goal);                    // also when its path ends in the water
@@ -1177,8 +1179,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // corner of a block and fell back (#1022), an eagle scout walked up at 56 % of its speed (#851). On the ground it
     // aims at the last path point up to LOOK blocks ahead of the point next to it, whose points between are at most OFF
     // blocks off the line. Each tick the input of the mob (Minecraft MoveControl) pushes toward its next point n with
-    // step x (1 - GROUND): the velocity takes that push away again.
-    private static void steer(Mob mob, Pathfinder.PathResult path, double speed) {
+    // step x (1 - GROUND): the velocity takes that push away again. The path follow can pass n in the same tick, after
+    // steer(), and the input then pushes toward the next point: a horse walked 27 % faster to the north-west (#1344).
+    // So after the first tick it takes away the real push of the last tick (the move less the velocity, at most the
+    // push): its errors cancel from tick to tick, and the mean speed is the walk speed.
+    private static void steer(Mob mob, Pathfinder.PathResult path, Order o) {
+        double speed = o.speed;
         AttributeInstance attr = mob.getAttribute(Attribute.MOVEMENT_SPEED);
         List<Location> points = path.getPoints();
         int i = path.getNextPointIndex();
@@ -1195,12 +1201,25 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         double step = WALK * attr.getValue() * attr.getValue() * speed / 20, push = step * (1 - GROUND);
         double dx = p.getX() - mx, dz = p.getZ() - mz, d = Math.hypot(dx, dz);
         double nx = n.getX() - mx, nz = n.getZ() - mz, e = Math.hypot(nx, nz);
+        if (e > 0.01) {
+            nx *= push / e;
+            nz *= push / e;
+        }
+        if (o.at == Bukkit.getCurrentTick() - 1) {     // the real push of the last tick: the move less the velocity (#1344)
+            double ax = m.getX() - o.px - o.vx, az = m.getZ() - o.pz - o.vz, a = Math.hypot(ax, az);
+            nx = a > push ? ax / a * push : ax;
+            nz = a > push ? az / a * push : az;
+        }
         if (d < 0.05) {
             return;
         }
-        double w = Math.min(step, d);
-        mob.setVelocity(new Vector(dx / d * w - (e < 0.01 ? 0 : nx / e * push), mob.getVelocity().getY(),
-                dz / d * w - (e < 0.01 ? 0 : nz / e * push)));
+        double w = Math.min(step, d), vx = dx / d * w - nx, vz = dz / d * w - nz;
+        mob.setVelocity(new Vector(vx, mob.getVelocity().getY(), vz));
+        o.px = m.getX();
+        o.pz = m.getZ();
+        o.vx = vx;
+        o.vz = vz;
+        o.at = Bukkit.getCurrentTick();
     }
 
     // A swimming mob floats about 1.5 blocks under a bank of one block above the water, the shore of the maps: Minecraft
