@@ -272,6 +272,22 @@ def take(g, uuid):
     g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": f"A monk converts the {units.pretty(name)}.", "color": "gold"}))
 
 
+def heresy(g, player):
+    """True when player researched Heresy (#1582): its Gather is g, a bot of g (bot.Bot) or the human Gather that the bot
+    of g shares."""
+    return any(h.player == player and "HERESY" in h.techs
+               for h in [g, *(b.g for b in g.bots), *filter(None, [getattr(g, "share", None)])])
+
+
+def die(g, uuid):
+    """The enemy unit uuid dies in place of a conversion (Heresy of its player), with its horse, camel, boat or rider."""
+    name = g.enemies.pop(uuid)
+    for run in (f"execute as {uuid} on vehicle run ", f"execute as {uuid} on passengers run ", ""):
+        g.command(run + ("kill @s" if run else f"kill {uuid}"))
+    g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": f"The {units.pretty(name)} dies (Heresy).",
+                                                               "color": "gold"}))
+
+
 def win(g, uuid):
     """Give the enemy building with the target uuid to the player of g (Redemption): its target entity joins the team
     of the player, and its entry of aoe2mc.json gets the player, so that it trains and takes a garrison for it."""
@@ -338,7 +354,8 @@ def convert(g, dt):
             job[2] += 1
             warm, chance, sure = FORT if fort else (WARM, CHANCE, SURE)
             if job[2] > warm and (job[2] >= sure or g.chance.random() < chance):
-                (win if fort else take)(g, target)
+                owner = next((o.get("player") for o in g.data["objects"] if o.get("uuid") == target), None)
+                (win if fort else die if heresy(g, owner) else take)(g, target)
                 g.faith[m] = REST
                 for k in [k for k, j in g.converting.items() if j[0] == target]:
                     del g.converting[k]

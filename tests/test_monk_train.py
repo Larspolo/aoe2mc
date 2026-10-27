@@ -26,7 +26,8 @@ def monastery(gold=100, age=2):
 def test_the_monastery_menu_shows_the_monk_with_its_cost_and_time():
     server, g = monastery()
     assert train.open_menu(g, "Steve", MONASTERY) is not None
-    assert menus(server)[-1] == "aoe menu Steve Monastery" + MONK + "queue 0/15" + TECHS + RALLY
+    menu = menus(server)[-1]                                       # the Castle Age technologies after them (#1582)
+    assert menu.startswith("aoe menu Steve Monastery" + MONK + "queue 0/15" + TECHS + " ") and menu.endswith(RALLY)
 
 
 def test_before_the_castle_age_the_monk_is_gray_and_a_click_does_nothing():
