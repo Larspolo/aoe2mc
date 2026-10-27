@@ -33,8 +33,8 @@ def test_the_dock_trains_the_transport_ship_with_the_aoe2_values():
     assert fleet.speed("TRANSPORT_SHIP", 4) == pytest.approx(1.45 * 4)
     server, g = dock_map()
     rect = train.open_menu(g, "Steve", (15, 12))
-    assert "1:spruce_chest_boat:Transport Ship:125 wood · 46 s · queue 0/15" in menus(server)[-1]
-    assert train.order(g, "Steve", rect, 1) == 1 and g.stock["wood"] == 75
+    assert "2:spruce_chest_boat:Transport Ship:125 wood · 46 s · queue 0/15" in menus(server)[-1]
+    assert train.order(g, "Steve", rect, 2) == 1 and g.stock["wood"] == 75
     uuid, = train.tick(g, 46)
     assert g.soldiers[uuid] == "TRANSPORT_SHIP" and uuid in g.ships
 
