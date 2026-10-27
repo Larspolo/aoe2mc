@@ -24,6 +24,8 @@ def test_check_kinds():
     assert tokens.check("until grep -q 'Done (' logs/latest.log; do sleep 2; done") == "wait"
     assert tokens.check("until curl -s localhost:25565; do sleep 2; done") is None
     assert tokens.check("git status --short") is None
+    assert tokens.check("cat > pr.md <<'EOF'\nRan `pytest -m mc` and ruff.\nEOF\ngh api x -F body=@pr.md") is None
+    assert tokens.check("cat > a.md <<'EOF'\npytest -m mc\nEOF\npython3 -m pytest -q tests/test_a.py") == "pytest files"
 
 
 def test_verify_minutes_and_repeats():

@@ -74,12 +74,14 @@ CHECKS = (("pytest -m mc", r"pytest\b.*-m\s+['\"]?mc\b"), ("pytest -m slow", r"p
           ("mc_check.py", r"mc_check\.py"), ("mc_shot.py", r"mc_shot\.py"), ("render.py", r"render\.py"))
 WAIT = r"\buntil\b|\bsleep\b"                 # a wait loop (LEARNINGS #413): its minutes are the minutes of a check
 OUTPUT = r"rc=|\.out\b|\.log\b"               # the output of a background check that a wait loop reads
+HEREDOC = re.compile(r"<<-?\s*['\"]?(\w+)['\"]?.*?^\s*\1\s*$", re.M | re.S)   # text (a PR body, a file), no command
 
 
 def check(cmd):
     """The check kind of a Bash command, or None. A command with several checks (`ruff && pytest`) gets the first
     one of CHECKS, the one that takes the most time. A wait loop for the output of a check is `wait`, a wait loop for
-    something else (a server) is None."""
+    something else (a server) is None. The text of a heredoc does not count."""
+    cmd = HEREDOC.sub("", cmd)
     if re.search(WAIT, cmd):
         return "wait" if re.search("|".join(rx for _, rx in CHECKS) + "|" + OUTPUT, cmd) else None
     return next((k for k, rx in CHECKS if re.search(rx, cmd)), None)
