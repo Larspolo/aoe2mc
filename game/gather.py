@@ -43,6 +43,7 @@ import random
 import re
 import sys
 import time
+import types
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from aoe2mc import PASSABLE_OBJECTS, WOODS, object_footprint, player_color, tree_kind  # noqa: E402
@@ -705,6 +706,17 @@ class Gather:
     def positions(self, uuids):
         """{uuid: feet position} of the loaded units; a dead unit is not in it."""
         return {u: p for u in uuids if (p := self.pos(u))}
+
+    def seen_tiles(self, pos=None):
+        """The tiles (x, y) in the AoE2 line of sight of the own units, buildings and construction sites (#1388, the
+        fog of war: epic #1387), with replay.seen. pos: {uuid: feet position} of the own units, else from the server."""
+        names = dict.fromkeys(self.villagers, "VILLAGER") | self.soldiers
+        pos = self.positions(list(names)) if pos is None else pos
+        mobs = [types.SimpleNamespace(name=names[u], player=self.player, pos=p) for u, p in pos.items() if u in names]
+        placed = [(self.player, o["name"], tuple(o["footprint"][i] for i in (0, 2, 1, 3))) for o in self.data["objects"]
+                  if o["kind"] == "building" and o["player"] == self.player and "footprint" in o]
+        placed += [(self.player, s["name"], s["footprint"]) for s in self.sites]   # also a foundation, as in AoE2
+        return replay.seen(mobs, placed, self.player, self.map.T)
 
     def task(self, v, name):
         """Give the villager the look of its AoE2 task (`LUMBERJACK` ...), with the table of the converter."""
