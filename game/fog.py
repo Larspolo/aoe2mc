@@ -3,6 +3,7 @@ The fog of war for the units in the game program (#1389, epic #1387). The player
 the line of sight of the own and allied units, buildings and construction sites (Gather.seen_tiles, #1388). An enemy
 unit shows again when it comes into sight, as in AoE2 with the game setting "Reveal map: normal" (the default).
 `game/run.py --reveal all` turns it off (AoE2 "All visible"). The cheat code "polo" turns it off and on (toggle, #1390).
+The castle technology Spies turns it off for ever (reveal, #2193).
 
 Minecraft feature: Paper Player#hideEntity through the plugin (`aoe hide`, `aoe show`, as Replay.fog, #1302). It hides
 the units only for the players on the team of the player (`team=p1`), not for a spectator. The plugin hides them also
@@ -76,17 +77,23 @@ def toggle(g):
         g.reveal, state["at"] = "normal", None
         return g.reveal
     g.reveal = "all"
+    reveal(g)
+    return g.reveal
+
+
+def reveal(g):
+    """Show all hidden enemy units at once, except the units inside a siege tower: "polo" and Spies (#2193)."""
+    state = vars(g).setdefault("fog", {"hidden": set(), "at": None})
     towers = set().union(*vars(g).get("towers", {}).values())
     for c in commands(g, "show", sorted(state["hidden"] - towers)):
         g.command(c)
     state["hidden"] &= towers
-    return g.reveal
 
 
 def tick(g):
     """Update the fog each EVERY seconds: hide the enemy units that left the sight, show the ones that came in."""
-    if not g.paper or g.reveal == "all":
-        return
+    if not g.paper or g.reveal == "all" or "SPIES" in getattr(g, "techs", ()):   # Spies: the player sees what the
+        return                                                     # enemies see, so all their units (#2193)
     state = vars(g).setdefault("fog", {"hidden": set(), "at": None})
     now = g.clock()
     if state["at"] is not None and now - state["at"] < EVERY:
