@@ -1,13 +1,3 @@
 # Game data in the code (#1909, tools/data_lint.py): a place (file:scope) and its count of literals with two or more
 # AoE2 names. Only delete lines or lower counts here (python3 tools/data_lint.py --shrink): new game data goes in a
 # data file (game/data/*.jsonl, data/*.jsonl). tests/test_game_names_in_code.py checks this list against the code.
-game/civs.py:BUILD 1
-game/civs.py:ECONOMY 1
-game/civs.py:GROUPS 1
-game/civs.py:HP 1
-game/civs.py:SHARED 1
-game/civs.py:SMITH 1
-game/civs.py:START 1
-game/civs.py:TRAIN_RATE 1
-game/civs.py:WORK 1
-game/civs.py:WORK_RATE 1
