@@ -12,6 +12,9 @@ So one pacer session starts them. It does no ticket work, it does not comment on
 
 1. `git -C /home/user/aoe2mc pull -q origin main` (the rules in this file can change). If the repository is not
    there, attach it with `add_repo` (the owner and name of `repo` in `agent.toml`: Larspolo, aoe2mc) and clone it as the tool says.
+   Then read this file again with the Read tool (`/home/user/aoe2mc/.claude/skills/pacer/SKILL.md`), each cycle, and
+   act only on what it says now. Never act on a rule from your memory or from a summary of earlier cycles: on
+   2026-10-27 the pacer fired only the Opus task, from an old copy of step 3 (#1824).
 2. Run `python3 tools/usage.py --fire` in the repository. Its first output line (stdout) is K, the number of runs to
    start now. The line on stderr shows the inputs: usage, target, claims, ready tickets, `paused`.
 3. Its second stdout line is `haiku H`: the runs of K that can go to the Haiku lane (#1715). Find the scheduled task
@@ -21,7 +24,8 @@ So one pacer session starts them. It does no ticket work, it does not comment on
    If the tools are deferred, load them first with ToolSearch (`select:mcp__claude-code-remote__fire_trigger,mcp__claude-code-remote__list_triggers`).
 4. Schedule the next cycle: `mcp__claude-code-remote__send_later`, `delay_minutes` 10, message
    "Pacer cycle: follow .claude/skills/pacer/SKILL.md." Keep only one pending cycle: do not schedule a second one.
-5. Reply with one line: the time (UTC), K, H, and the stderr line.
+5. Reply with one line: the time (UTC), K, H, and the stderr line. No other text: each line stays in the context of
+   this long session.
 
 ## Rules
 
