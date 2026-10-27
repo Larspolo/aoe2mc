@@ -915,8 +915,12 @@ class Gather:
     def nearest(self, v):
         """The nearest bush or mine of the resource of v with something left, or None."""
         T = self.map.T
-        full = [t for t, k in self.source(v).items() if k > 0]
+        full = [t for t, k in self.home(self.source(v)).items() if k > 0]
         return min(full, key=lambda t: math.dist(v.cell, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), default=None)
+
+    def home(self, sources):
+        """The sources {tile: amount} that nearest() may take: all. The bot takes only the ones at its base (#1810)."""
+        return sources
 
     def go(self, v, state, goals):
         if self.paper:                                                 # Minecraft finds the path (#437)
