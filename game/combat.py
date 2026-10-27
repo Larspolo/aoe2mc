@@ -201,6 +201,7 @@ STATS = {
     "CAPPED_RAM": Stats(200, 3, -2, 190, 0, 5.0, {"building": 160, SIE: 50}, (SIE, RAM)),
     "SIEGE_RAM": Stats(270, 4, -1, 195, 0, 5.0, {"building": 200, SIE: 65}, (SIE, RAM)),
     "SIEGE_TOWER": Stats(175, 0, -2, 100, 0, 0.0, {}, (SIE, RAM)),         # AoE2 DE wiki (#1362)
+    "TRANSPORT_SHIP": Stats(70, 0, 0, 2, 0, 0.0, {}, ()),              # AoE2 DE wiki (#1385)
     "TREBUCHET": Stats(150, 200, 2, 8, 16, 10.0, {"building": 250}, (SIE,)),   # AoE2 DE wiki: 150 HP (#1351); packed
     # armor (unpacked: trebuchet.UNPACKED, #1409)
     "BOMBARD_CANNON": Stats(80, 40, 2, 5, 12, 6.5, {"building": 200, HSI: 40, SIE: 20}, (GUN, SIE)),

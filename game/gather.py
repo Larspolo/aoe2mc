@@ -68,6 +68,7 @@ import repair  # noqa: E402
 import siege_tower  # noqa: E402
 import stance  # noqa: E402
 import trade  # noqa: E402
+import transport  # noqa: E402
 import train  # noqa: E402
 import trebuchet  # noqa: E402
 import wonder  # noqa: E402
@@ -942,12 +943,16 @@ class Gather:
             return
         if kind == "unit" and u in self.selected and siege_tower.out(self, u):   # its units come out (#1362)
             return
+        if kind == "unit" and u in self.selected and transport.out(self, u):   # on the nearest land (#1385)
+            return
         if kind == "unit" and u in self.selected and u in self.soldiers:    # a click on a selected soldier (#1107)
             stance.open_menu(self, name, u)
             return
         if kind == "unit" and repair.unit_order(self, name, u):        # villagers repair an own damaged siege unit (#1331)
             return
         if kind == "unit" and siege_tower.order(self, name, u):        # the selection goes into a siege tower (#1362)
+            return
+        if kind == "unit" and transport.order(self, name, u):          # the selection goes into a transport ship (#1385)
             return
         if kind == "unit":
             self.select(u)
@@ -1005,6 +1010,7 @@ class Gather:
         import ai                                                      # ai imports this module
         boats = {u for u in self.selected if replay.ship(self.soldiers.get(u, ""))}
         out = fleet.order(self, boats, cell)                           # a ship sails on the water (#1383)
+        transport.aim(self, out, cell)                                 # a loaded ship unloads at a land cell (#1385)
         who = sorted(u for u in self.selected - boats if u in self.villagers or u in self.soldiers)
         r = math.isqrt(len(who)) + 2
         cells = sorted(((x, z) for x in range(cell[0] - r, cell[0] + r + 1) for z in range(cell[1] - r, cell[1] + r + 1)
@@ -1155,6 +1161,7 @@ class Gather:
         self.fall()
         garrison.tick(self)
         siege_tower.tick(self)
+        transport.tick(self)
         for v in self.villagers.values():
             if v.state in ("to_tree", "to_drop", "to_site", "to_rally", "to_prey", "to_repair") and v.path:
                 self.follow(v) if self.paper else walk(self, v)
