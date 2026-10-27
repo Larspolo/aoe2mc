@@ -317,6 +317,9 @@ MISSING |= dict.fromkeys(("GENITOUR", "ELITE_GENITOUR", "ELITE_GENITOUR_UPGRADE"
                          tuple(sorted(set().union(*MISSING.values()) - {"BERBERS"})))
 MISSING |= dict.fromkeys(("SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER_UPGRADE"),
                          tuple(sorted(set().union(*MISSING.values()) - {"GURJARAS"})))   # (AoE2 DE wiki, #1612)
+FIRE_LANCERS = ("CHINESE", "JURCHENS", "KHITANS", "KOREANS", "VIETNAMESE")   # the fire lancer (AoE2 DE wiki, #1953)
+MISSING |= dict.fromkeys(("FIRE_LANCER", "ELITE_FIRE_LANCER", "ELITE_FIRE_LANCER_UPGRADE"),
+                         tuple(sorted(set().union(*MISSING.values()) - set(FIRE_LANCERS))))
 MISSING["KREPOST"] = tuple(sorted(set().union(*MISSING.values()) - {"BULGARIANS"}))   # the build menu (AoE2 DE wiki, #1872)
 SHARED = {"CONDOTTIERO": "ITALIANS",                              # the shared unique units of the team bonuses: an ally
           "ELITE_GENITOUR": "BERBERS",                             # of the civilization has them too (AoE2 DE wiki,

@@ -527,7 +527,7 @@ def classify(n, hero=False):
         rider = soldier("skeleton", t, "bow") if "ARCHER" in n else soldier("zombie", t, sword(t))
         return mounted("camel", rider)
 
-    infantry_exceptions = ("TEUTONIC_KNIGHT", "DISMOUNTED", "EAGLE_SCOUT", "CHAMPI_SCOUT")
+    infantry_exceptions = ("TEUTONIC_KNIGHT", "DISMOUNTED", "EAGLE_SCOUT", "CHAMPI_SCOUT", "FIRE_LANCER")   # FIRE_LANCER: infantry (#1953)
     # Mounted archers and javelin riders
     if not has(n, *infantry_exceptions) and has(n, "CAVALRY_ARCHER", "HORSE_ARCHER", "MANGUDAI", "KIPCHAK",
                                                 "MOUNTED_CROSSBOWMAN", "CONQUISTADOR", "GENITOUR", "BOLAS_RIDER",

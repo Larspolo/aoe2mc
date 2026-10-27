@@ -156,6 +156,7 @@ SIGHT = {
     "DOCK": 8,
     "DONJON": 10,
     "ELITE_CANNON_GALLEON": 17,
+    "ELITE_FIRE_LANCER": 8,                                            # the wiki infobox (#1953)
     "ELITE_GENITOUR": 6,                                               # the wiki infobox (#1610)
     "ELITE_SHRIVAMSHA_RIDER": 6,
     "ELITE_STEPPE_LANCER": 5,
