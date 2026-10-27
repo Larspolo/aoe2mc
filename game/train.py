@@ -49,6 +49,7 @@ The market trains trade carts (#1253): a trade cart also joins g.soldiers, and t
 It researches Caravan (trade carts walk 20 % faster, SPEEDS) in the Castle Age and Guilds (trading fee 15 %, market.FEES)
 in the Imperial Age (#1254). Coinage and Banking change the tribute fee: the game program has no tribute yet.
 The barracks researches Squires in the Castle Age (#1415): all infantry of the player walks 10 % faster (SPEEDS, a class).
+It researches Arson in the Feudal Age (#1419): infantry gets +2 attack against the standard buildings (combat.STANDARD).
 The university researches Fortified Wall in the Castle Age (#1326, WALL_UPGRADES): the new and the complete own stone
 walls and gates get the fortified design and its AoE2 hit points and armor (build.design, build.upgrade).
 An age gives the complete own walls and gates the AoE2 hit points of the new age (#1372, combat.WALLS, build.upgrade).
@@ -74,6 +75,7 @@ import menu  # noqa: E402
 
 COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   # as in AoE2
          "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}, "FEUDAL_AGE": {"food": 500},
+         "ARSON": {"food": 75, "gold": 25},                           # AoE2 DE wiki (#1419)
          "BATTERING_RAM": {"wood": 160, "gold": 75},
          "BOMBARD_CANNON": {"wood": 225, "gold": 225},               # the Imperial Age, after Chemistry (#1380)
          "BOMBARD_TOWER_TECH": {"food": 800, "wood": 400},           # the university, after Chemistry (#1375)
@@ -129,10 +131,10 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "LONG_SWORDSMAN_UPGRADE": {"food": 150, "gold": 65},
          "MAMELUKE": {"food": 55, "gold": 85},
          "MAN_AT_ARMS": {"food": 50, "gold": 20},                       # AoE2 DE wiki (#1417)
-         "MASONRY": {"food": 150, "wood": 175},                       # the university, Castle Age (#1398)
          "MAN_AT_ARMS_UPGRADE": {"food": 100, "gold": 40},
          "MANGONEL": {"wood": 160, "gold": 135},
          "MANGUDAI": {"wood": 55, "gold": 65},
+         "MASONRY": {"food": 150, "wood": 175},                       # the university, Castle Age (#1398)
          "MONK": {"gold": 100},
          "ONAGER": {"wood": 160, "gold": 135},
          "ONAGER_UPGRADE": {"food": 800, "gold": 500},
@@ -168,6 +170,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "WHEELBARROW": {"food": 175, "wood": 50},
          "WOAD_RAIDER": {"food": 70, "gold": 25}}
 TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130,   # AoE2 seconds
+               "ARSON": 25,
                "BATTERING_RAM": 36,
                "BERSERK": 14,
                "BLAST_FURNACE": 100,
@@ -223,10 +226,10 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "LONG_SWORDSMAN_UPGRADE": 40,
                "MAMELUKE": 23,
                "MAN_AT_ARMS": 21,
-               "MASONRY": 50,
                "MAN_AT_ARMS_UPGRADE": 40,
                "MANGONEL": 46,
                "MANGUDAI": 26,
+               "MASONRY": 50,
                "MONK": 51,
                "ONAGER": 46,
                "ONAGER_UPGRADE": 75,
@@ -263,7 +266,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "WOAD_RAIDER": 10}
 TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", "CASTLE_AGE", "IMPERIAL_AGE"), "BARRACKS": ("MILITIA", "SPEARMAN", "MAN_AT_ARMS_UPGRADE",   # the units and technologies of each
                        "LONG_SWORDSMAN_UPGRADE", "PIKEMAN_UPGRADE",           # the Castle Age (#1396)
-                       "SQUIRES", "GAMBESONS"),                                          # (#1415)
+                       "SQUIRES", "GAMBESONS",                                           # (#1415)
+                       "ARSON"),                                              # (#1419)
           "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER",                                          # building (#654, #670, #655)
                             "CROSSBOWMAN_UPGRADE", "ELITE_SKIRMISHER_UPGRADE", "CAVALRY_ARCHER",   # (#1396, #1397)
                             "THUMB_RING"),                                                    # (#1421)
@@ -320,6 +324,14 @@ def chemistry(name, s):
     return s._replace(attack=s.attack + 1) if shoots else s
 
 
+def fletching(name, s):
+    """Fletching and Bodkin Arrow (AoE2 DE, wiki): archers and the buildings that shoot +1 attack and +1 range, the town
+    center +1 attack only (#1408). A complete building gets it at once (build.retower), a new one when it is complete."""
+    if "archer" in s.classes or "building" in s.classes and s.attack > 0:
+        return s._replace(attack=s.attack + 1, range=s.range + (name != "TOWN_CENTER"))
+    return s
+
+
 def thumb(name, s):
     """Thumb Ring (AoE2 DE, wiki): the archers fire faster; not the skirmishers (only their accuracy) and not the
     gunpowder units."""
@@ -344,11 +356,13 @@ def masonry(name, s):
     return s._replace(hp=round(s.hp * 1.1), melee=s.melee + 1, pierce=s.pierce + 1) if "building" in s.classes and not wall else s
 
 
-TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
+TECHS = {"ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bonus.get("standard", 0) + 2})
+         if "infantry" in s.classes else s,                        # combat.STANDARD: not the walls (#1419)
+         "BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
          "BLAST_FURNACE": lambda name, s: s._replace(attack=s.attack + 2) if melee(s) else s,
          "BOMBARD_TOWER_TECH": lambda name, s: s,                  # the bombard tower in the build menu: build.NEEDS
          "BOW_SAW": lambda name, s: s,                             # an economy technology: gather.WORK_TECHS
-         "BODKIN_ARROW": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if "archer" in s.classes else s,
+         "BODKIN_ARROW": fletching,
          "CAPPED_RAM_UPGRADE": lambda name, s: s,                  # a new unit name: UPGRADES
          "CARAVAN": lambda name, s: s,                             # the walk speed: SPEEDS
          "CASTLE_AGE": lambda name, s: s,                          # an age: REQUIRES
@@ -362,7 +376,7 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "ELITE_SKIRMISHER_UPGRADE": lambda name, s: s,
          "FERVOR": lambda name, s: s,                              # the walk speed: SPEEDS
          "FISHING_LINES": lambda name, s: s,                       # the fishing ships: gather.SHIP_TECHS
-         "FLETCHING": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if "archer" in s.classes else s,
+         "FLETCHING": fletching,
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
          "FORTIFIED_WALL": lambda name, s: s,                      # the walls of the player: WALL_UPGRADES
          "GAMBESONS": lambda name, s: s._replace(pierce=s.pierce + 1) if name in MILITIA_LINE else s,
@@ -384,8 +398,8 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "LONG_SWORDSMAN_UPGRADE": lambda name, s: s,
          "LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
          if "VILLAGER" in name else s,
-         "MASONRY": masonry,                                       # the buildings of the player: build.values
          "MAN_AT_ARMS_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
+         "MASONRY": masonry,                                       # the buildings of the player: build.values
          "ONAGER_UPGRADE": lambda name, s: s,
          "PADDED_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "archer" in s.classes else s,
@@ -444,6 +458,7 @@ REQUIRES = {"CASTLE_AGE": (2, ("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET"
             "FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP", "DOCK")),
             "IMPERIAL_AGE": (2, ("MONASTERY", "UNIVERSITY", "SIEGE_WORKSHOP"), ("CASTLE",))}   # or one of these alone
 TECH_AGE = {                                                       # the age of a technology (build.AGE): hidden before
+    "ARSON": 1,
     "BLAST_FURNACE": 3,
     "BLOODLINES": 1,
     "BODKIN_ARROW": 2,
@@ -476,8 +491,8 @@ TECH_AGE = {                                                       # the age of 
     "LEATHER_ARCHER_ARMOR": 2,
     "LIGHT_CAVALRY_UPGRADE": 2,
     "LONG_SWORDSMAN_UPGRADE": 2,
-    "MASONRY": 2,
     "MAN_AT_ARMS_UPGRADE": 1,
+    "MASONRY": 2,
     "ONAGER_UPGRADE": 3,
     "PADDED_ARCHER_ARMOR": 1,
     "PIKEMAN_UPGRADE": 2,
@@ -503,6 +518,7 @@ LIMIT = 200                                                        # the AoE2 po
 REPEAT = 256                                                       # researches of one technology: "going above and beyond"
 CENSUS = 2.0                                                       # AoE2 seconds between two counts of the live units
 ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, item and name of each unit (#620)
+         "ARSON": (6, "book", "Arson"),                            # after the slot of Gambesons
          "CAPPED_RAM": (0, "minecart", "Capped Ram"),
          "CAPPED_RAM_UPGRADE": (3, "book", "Capped Ram"),        # one slot for each line of upgrades
          "CROSSBOWMAN": (0, "skeleton_spawn_egg", "Crossbowman"),
@@ -602,12 +618,13 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "WOAD_RAIDER": (0, "zombie_spawn_egg", "Woad Raider")}
 # The AoE2 help text of each menu item, short (#1160): the plugin shows it as the last lore line of the item (help()).
 HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
+        "ARSON": "Infantry +2 attack vs. buildings.",
         "BATTERING_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
         "BERSERK": "Viking infantry. Heals itself.",
         "BLAST_FURNACE": "Infantry and cavalry +2 attack.",
         "BLOODLINES": "Cavalry +20 HP.",
         "BOW_SAW": "Villagers chop wood 20 % faster.",
-        "BODKIN_ARROW": "Archers +1 attack, +1 range.",
+        "BODKIN_ARROW": "Archers, towers +1 attack, range; TC +1 attack.",
         "BOMBARD_CANNON": "Siege. Long range; strong vs. buildings and siege.",
         "BOMBARD_TOWER_TECH": "Lets you build bombard towers.",
         "CHEMISTRY": "Archers, ranged siege, towers +1 attack.",
@@ -629,7 +646,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "FERVOR": "Monks +15 % speed.",
         "FISHING_LINES": "Fishing ships work 10 % faster, carry +5.",
         "FISHING_SHIP": "Gathers food from fish.",
-        "FLETCHING": "Archers, towers, town center +1 attack, +1 range.",
+        "FLETCHING": "Archers, towers +1 attack, range; TC +1 attack.",
         "FORGING": "Infantry and cavalry +1 attack.",
         "FORTIFIED_WALL": "Stone walls +1,200 HP, +4/+2 armor; also gates.",
         "GALLEY": "All-purpose warship with ranged attack.",
@@ -659,10 +676,10 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "LOOM": "Villagers +15 HP, +1/+2 armor.",
         "MAMELUKE": "Saracen camel. Strong vs. cavalry.",
         "MAN_AT_ARMS": "Infantry. Strong vs. eagles, buildings.",
-        "MASONRY": "Buildings +10 % HP, +1/+1 armor.",
         "MAN_AT_ARMS_UPGRADE": "Upgrades militia to man-at-arms.",
         "MANGONEL": "Siege. Hits all units near the target.",
         "MANGUDAI": "Mongol horse archer. Strong vs. siege.",
+        "MASONRY": "Buildings +10 % HP, +1/+1 armor.",
         "MILITIA": "Infantry. Strong vs. eagles; weak vs. archers.",
         "MONK": "Heals own units, converts enemy units.",
         "ONAGER": "Siege. Hits all units near the target.",
@@ -1003,6 +1020,7 @@ def research(g, entry):
     import combat, gather                                          # gather imports this module
     if entry["name"] in g.techs:                                   # a repeat: "going above and beyond" (#968)
         g.repeats[entry["name"]] = g.repeats.get(entry["name"], 0) + 1
+    before = set(g.techs)
     g.techs.add(entry["name"])
     if (more := gather.FARM_TECHS.get(entry["name"])):             # the new and the live own farms get more food
         g.map.farm_food += more
@@ -1013,8 +1031,8 @@ def research(g, entry):
         for site in [s for s in g.sites if s["name"] in WALL_UPGRADES[entry["name"]] and s.get("done")
                      and s["player"] == g.player]:
             build.upgrade(g, site, combat.wall(site["name"], build.ages(g)))
-    if entry["name"] in TOWER_UPGRADES or entry["name"] == "MASONRY":   # the complete own towers (#1374) and buildings
-        build.retower(g, g.techs - {entry["name"]})                # (#1398) get the new values
+    build.retower(g, before)                                       # the complete own towers get the new values (#1374),
+                                                                   # the buildings those of Masonry and Fletching (#1398, #1408)
     if entry["name"] in UPGRADES:                                  # the live units of the line get the new name
         old, new = UPGRADES[entry["name"]]
         for uuid in [u for u, n in g.soldiers.items() if n == old]:

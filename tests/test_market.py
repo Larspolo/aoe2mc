@@ -18,7 +18,7 @@ def test_the_market_is_gray_in_the_dark_age():
 
 def test_the_market_has_the_aoe2_hit_points_and_armor():
     s = combat.stats("MARKET")
-    assert (s.hp, s.melee, s.pierce, s.classes) == (1800, 1, 8, ("building",))
+    assert (s.hp, s.melee, s.pierce, s.classes) == (1800, 1, 8, ("building", "standard"))
 
 
 def test_a_complete_market_counts_for_the_castle_age():
