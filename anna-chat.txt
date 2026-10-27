@@ -1,0 +1,10 @@
+anna joined the game
+ben joined the game
+Build: /trigger aoe_build set 1: House (25 wood)\n/trigger aoe_build set 2: Lumber Camp (100 wood)\n/trigger aoe_build set 3: Mining Camp (100 wood)\n/trigger aoe_build set 4: Mill (100 wood)\n/trigger aoe_build set 5: Farm (60 wood)\n/trigger aoe_build set 6: Barracks (175 wood)\n/trigger aoe_build set 7: Blacksmith (150 wood)\n/trigger aoe_build set 8: Bombard Tower (100 gold, 125 stone)\n/trigger aoe_build set 9: Archery Range (175 wood)\n/trigger aoe_build set 10: Stable (175 wood)\n/trigger aoe_build set 11: Town Center (275 wood, 100 stone)\n/trigger aoe_build set 12: Castle (650 stone)\n/trigger aoe_build set 13: Dock (150 wood)\n/trigger aoe_build set 14: Fish Trap (100 wood)\n/trigger aoe_build set 15: Gate (30 stone)\n/trigger aoe_build set 16: Krepost (350 stone)\n/trigger aoe_build set 17: Market (175 wood)\n/trigger aoe_build set 18: Monastery (175 wood)\n/trigger aoe_build set 19: Palisade Gate (30 wood)\n/trigger aoe_build set 20: Palisade Wall (3 wood)\n/trigger aoe_build set 21: Siege Workshop (200 wood)\n/trigger aoe_build set 22: Stone Wall (5 stone)\n/trigger aoe_build set 23: University (200 wood)\n/trigger aoe_build set 24: Watch Tower (35 wood, 125 stone)\n/trigger aoe_build set 25: Wonder (1000 wood, 1000 gold, 1000 stone)
+Player 1 built a wonder.
+Player 2 built a wonder.
+Player 3 built a wonder.
+Player 4 built a wonder.
+Not enough resources: a feudal age costs 500 food.
+Your units are under attack at 224 78
+Player 2 advances to the Feudal Age.
