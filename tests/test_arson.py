@@ -29,7 +29,7 @@ def test_the_barracks_menu_has_arson_in_the_feudal_age():
     assert "Arson" not in menus(server)[-1]
     server, g = setup()
     train.open_menu(g, "Steve", BARRACKS)
-    assert " 5:book:Arson:75 food · 25 gold · 25 s · research " in menus(server)[-1] + " "
+    assert " 6:book:Arson:75 food · 25 gold · 25 s · research " in menus(server)[-1] + " "
 
 
 def test_the_standard_buildings_have_their_class_and_the_walls_not():
