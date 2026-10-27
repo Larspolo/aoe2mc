@@ -47,6 +47,7 @@ It researches Caravan (trade carts walk 20 % faster, SPEEDS) in the Castle Age a
 in the Imperial Age (#1254). Coinage and Banking change the tribute fee: the game program has no tribute yet.
 The university researches Fortified Wall in the Castle Age (#1326, WALL_UPGRADES): the new and the complete own stone
 walls and gates get the fortified design and its AoE2 hit points and armor (build.design, build.upgrade).
+An age gives the complete own walls and gates the AoE2 hit points of the new age (#1372, combat.WALLS, build.upgrade).
 It researches Guard Tower in the Castle Age and Keep (after Guard Tower) in the Imperial Age (#1374, TOWER_UPGRADES):
 the new and the complete own watch towers get the AoE2 hit points, attack and armor of the guard tower or the keep
 (build.line, build.retower). The look of the tower stays.
@@ -109,6 +110,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "SCALE_BARDING_ARMOR": {"food": 150},
          "SCALE_MAIL_ARMOR": {"food": 100},
          "SCORPION": {"wood": 75, "gold": 75},
+         "SIEGE_TOWER": {"wood": 100, "gold": 120},                  # the Castle Age (AoE2 DE wiki, #1362)
          "SCOUT_CAVALRY": {"food": 80},
          "SIEGE_ENGINEERS": {"food": 500, "wood": 600},
          "SIEGE_ONAGER": {"wood": 160, "gold": 135},
@@ -166,6 +168,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "SCALE_BARDING_ARMOR": 45,
                "SCALE_MAIL_ARMOR": 40,
                "SCORPION": 30,
+               "SIEGE_TOWER": 36,
                "SCOUT_CAVALRY": 30,
                "SIEGE_ENGINEERS": 45,
                "SIEGE_ONAGER": 46,
@@ -194,7 +197,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "MILL": ("HORSE_COLLAR",),                                            # (#726)
           "MINING_CAMP": ("GOLD_MINING", "STONE_MINING"),                      # (#727, #939)
           "MONASTERY": ("MONK", "FERVOR", "SANCTITY", "REDEMPTION"),            # (#1243, #1261, #1264)
-          "SIEGE_WORKSHOP": ("BATTERING_RAM", "MANGONEL", "SCORPION",           # (#1349)
+          "SIEGE_WORKSHOP": ("BATTERING_RAM", "MANGONEL", "SCORPION", "SIEGE_TOWER",   # (#1349, #1362)
                              "CAPPED_RAM_UPGRADE", "SIEGE_RAM_UPGRADE", "ONAGER_UPGRADE", "SIEGE_ONAGER_UPGRADE",
                              "HEAVY_SCORPION_UPGRADE")}                 # (#1352)
 # The unique unit of each civilization (AoE2 DE), trained at its castle. A unit without COSTS is not in the menu yet:
@@ -358,6 +361,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "SCALE_BARDING_ARMOR": (4, "book", "Scale Barding Armor"),
          "SCALE_MAIL_ARMOR": (1, "book", "Scale Mail Armor"),
          "SCORPION": (2, "crossbow", "Scorpion"),
+         "SIEGE_TOWER": (6, "ladder", "Siege Tower"),               # after the slots of the upgrades
          "STONE_MINING": (1, "book", "Stone Mining"),
          "TEUTONIC_KNIGHT": (0, "zombie_spawn_egg", "Teutonic Knight"),
          "THROWING_AXEMAN": (0, "drowned_spawn_egg", "Throwing Axeman"),
@@ -412,6 +416,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "SCALE_BARDING_ARMOR": "Cavalry +1 melee armor, +1 pierce armor.",
         "SCALE_MAIL_ARMOR": "Infantry +1 melee armor, +1 pierce armor.",
         "SCORPION": "Siege. Shoots bolts; weak vs. cavalry.",
+        "SIEGE_TOWER": "Siege. Carries 10 infantry, archers or villagers.",
         "SCOUT_CAVALRY": "Fast. Strong vs. monks, siege; weak vs. spears.",
         "SIEGE_ENGINEERS": "Siege +1 range, +20 % attack vs. buildings.",
         "SIEGE_ONAGER": "Siege. Hits all units near the target.",
@@ -450,8 +455,10 @@ def barding(s):
 
 def unlocked(g, name):
     """True when the player has the age of technology name (TECH_AGE). As in AoE2, the menu shows a technology only
-    from its age, but a building or unit of a later age as a gray item (build.locked)."""
-    return TECH_AGE.get(name, 0) <= build.ages(g) and AFTER.get(name, "") in {""} | set(getattr(g, "techs", ()))
+    from its age, but a building or unit of a later age as a gray item (build.locked), and never one that the
+    civilization of the player does not have (civs.MISSING)."""
+    return TECH_AGE.get(name, 0) <= build.ages(g) and AFTER.get(name, "") in {""} | set(getattr(g, "techs", ())) \
+        and not (hasattr(g, "data") and civs.civ(g) in civs.MISSING.get(name, ()))   # not of this civilization (#1373)
 
 
 def homes(g):
@@ -732,7 +739,7 @@ def research(g, entry):
     if entry["name"] in WALL_UPGRADES:                             # the complete own walls become the new wall (#1326)
         for site in [s for s in g.sites if s["name"] in WALL_UPGRADES[entry["name"]] and s.get("done")
                      and s["player"] == g.player]:
-            build.upgrade(g, site)
+            build.upgrade(g, site, combat.wall(site["name"], build.ages(g)))
     if entry["name"] in TOWER_UPGRADES:                            # the complete own towers get the new values (#1374)
         build.retower(g, g.techs - {entry["name"]})
     if entry["name"] in UPGRADES:                                  # the live units of the line get the new name
@@ -755,6 +762,8 @@ def research(g, entry):
                 g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))
     if entry["name"] in REQUIRES:                                  # an age: all players see it, as in AoE2
         import ai                                                  # ai imports gather, gather imports this module
+        for site in [s for s in g.sites if s["name"] in combat.WALLS and s.get("done") and s["player"] == g.player]:   # #1372
+            build.upgrade(g, site, combat.wall(build.design(g, site["name"], g.player), build.ages(g) - 1), redraw=False)
         for uuid, name in g.soldiers.items():                      # the walk speed of the age (civs.UNITS, Celts)
             if civs.speed(g, name) != 1:
                 g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))
