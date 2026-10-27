@@ -1,9 +1,9 @@
 """game/repair.py: selected Serjeants build an own Donjon site, as in AoE2 DE (#2129, AoE2 wiki "Serjeant (Age of
-Empires II)": "Can build and repair Donjons"). They build at the villager rate: the wiki gives no own rate."""
+Empires II)": "Can build and repair Donjons"). They build at the villager rate (with the Sicilian bonus): the wiki gives no own rate."""
 import pytest
 from test_serjeant_repair import setup
 
-from game import build, gather, repair
+from game import build, civs, gather, repair
 
 SITE = (12, 14, 5, 7)                                                # block footprint (x0, x1, z0, z1), free ground
 
@@ -30,7 +30,8 @@ def test_selected_serjeants_build_an_own_donjon_site_at_the_villager_rate():
     assert any(c.startswith("aoe moveto s0 ") for c in server.log)  # it walks with the plugin path finding
     assert repair.raisers(g, s) == ["s0"]                            # it stands next to the site
     n = ticks(g, s)
-    assert n == pytest.approx(build.BUILD_TIMES["DONJON"] / gather.NORMAL / g.tick, abs=1)   # one villager: 83 s
+    rate = civs.build_rate(g, "DONJON")                              # the Sicilian fortifications: 1.5 (#2210)
+    assert rate > 1 and n == pytest.approx(build.BUILD_TIMES["DONJON"] / rate / gather.NORMAL / g.tick, abs=1)
     assert not repair.raisers(g, s)                                  # complete: the Serjeant stands
 
 
