@@ -165,20 +165,20 @@ def arrowslits(name, s):
     values (build.line)."""
     return s._replace(attack=s.attack + ARROWSLITS[name]) if name in ARROWSLITS else s
 
-ARCHER_LINE = ("ARCHER", "CROSSBOWMAN", "ARBALESTER")
-LONGSHIPS = ("LONGSHIP", "ELITE_LONGSHIP")
+TARGETS = {r["name"]: tuple(r["units"]) for r in ROWS if "units" in r}   # the units of a technology: data/train.jsonl
 TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit name: UPGRADES
          "ARCHITECTURE": masonry,                                  # the same effect as Masonry (#1504)
          "ARROWSLITS": arrowslits,                                 # the towers of the player: build.values
          "ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bonus.get("standard", 0) + 2})
          if "infantry" in s.classes else s,                        # combat.STANDARD: not the walls (#1419)
+         "ATLATL": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if name in TARGETS["ATLATL"] else s,  # the Aztecs (#2041)
          "ATONEMENT": lambda name, s: s,                           # monks convert enemy monks: monk.convertible
          "BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
          "BALLISTICS": lambda name, s: s,                          # the aim of the arrows: aoe ballistics (#1549)
          "BANKING": lambda name, s: s,                             # the tribute fee: diplomacy.FEES
          "BLAST_FURNACE": lambda name, s: s._replace(attack=s.attack + 2) if melee(s) or name in HULKS else s,
          "BLOCK_PRINTING": lambda name, s: s,                      # the conversion range: monk.near
-         "BOGSVEIGAR": lambda name, s: s._replace(attack=s.attack + 1) if name in ARCHER_LINE + LONGSHIPS else s,  # (#2021)
+         "BOGSVEIGAR": lambda name, s: s._replace(attack=s.attack + 1) if name in TARGETS["BOGSVEIGAR"] else s,  # (#2021)
          "BOMBARD_TOWER_TECH": lambda name, s: s,                  # the bombard tower in the build menu: build.NEEDS
          "BOW_SAW": lambda name, s: s,                             # an economy technology: gather.WORK_TECHS
          "BRACER": fletching,
