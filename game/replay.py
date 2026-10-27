@@ -116,6 +116,7 @@ SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, 
           "CHAMPION": 0.96,                                                         # (#1498)
           "TWO_HANDED_SWORDSMAN": 0.96,
           "WINGED_HUSSAR": 1.5,                                                     # (#1558)
+          "XOLOTL_WARRIOR": 1.35,                                                   # (#2009)
           "SCORPION": 0.65, "SIEGE_TOWER": 0.96, "TRADE_CART": 1.25}   # walk speed of common units, tiles per game second (AoE2 DE)
 
 
