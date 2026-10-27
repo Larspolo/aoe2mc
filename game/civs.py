@@ -255,6 +255,9 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
                           "TEUTONS", "TUPI", "VARANGIANS", "VIKINGS", "WU"),   # (#1421)
            "TREADMILL_CRANE": ("BULGARIANS", "CHINESE", "CUMANS", "DANES", "DRAVIDIANS", "ETHIOPIANS", "HINDUSTANIS",
                                "KHITANS", "MONGOLS", "PERSIANS", "ROMANS", "SPANISH")}   # (#1422)
+EAGLES = ("AZTECS", "MAYANS")                                     # the eagle line (AoE2 DE wiki; not the Incas since
+MISSING |= dict.fromkeys(("EAGLE_SCOUT", "EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"),   # The Last Chieftains, #1555)
+                         tuple(sorted(set().union(*MISSING.values()) - set(EAGLES))))
 
 
 def mounted(s):

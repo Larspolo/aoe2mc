@@ -46,8 +46,8 @@ STATS = {
     "PIKEMAN": Stats(55, 4, 0, 0, 0, 3.0, {CAV: 22, CAM: 18, ELE: 25}, (INF, SPE)),
     "HALBERDIER": Stats(60, 6, 0, 0, 0, 3.0, {CAV: 32, CAM: 26, ELE: 28}, (INF, SPE)),
     "EAGLE_SCOUT": Stats(50, 4, 0, 2, 0, 2.0, {SIE: 3}, (INF,)),               # the Dark and Feudal Age values
-    "EAGLE_WARRIOR": Stats(55, 7, 0, 3, 0, 2.0, {CAM: 2, CAV: 3, SIE: 3}, (INF,)),
-    "ELITE_EAGLE_WARRIOR": Stats(60, 9, 0, 4, 0, 2.0, {CAM: 3, CAV: 4, SIE: 5}, (INF,)),
+    "EAGLE_WARRIOR": Stats(55, 7, 0, 3, 0, 2.0, {CAM: 2, CAV: 3, SIE: 3, SHIP: 1}, (INF,)),   # AoE2 DE wiki (#1555)
+    "ELITE_EAGLE_WARRIOR": Stats(60, 9, 0, 4, 0, 2.0, {CAM: 3, CAV: 4, SIE: 5, SHIP: 2}, (INF,)),
     # archers: the attack is pierce damage
     "ARCHER": Stats(30, 4, 0, 0, 4, 2.0, {SPE: 3}, (ARC,)),
     "CROSSBOWMAN": Stats(35, 5, 0, 0, 5, 2.0, {SPE: 3}, (ARC,)),
