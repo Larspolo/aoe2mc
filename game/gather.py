@@ -121,7 +121,8 @@ FISH_FOOD = {"BOX_TURTLES": 200,
              "GREAT_FISH_MARLIN": 350,
              "SHORE_FISH": 200}
 SHORE_FISH = {"BOX_TURTLES", "SHORE_FISH"}
-SHIP_WORK = {"deep": 0.42, "shore": 0.24}                          # the work rate of a fishing ship (AoE2 DE wiki)
+SHIP_WORK = {"deep": 0.42, "shore": 0.24, "trap": 0.35}            # the work rate of a fishing ship (AoE2 DE wiki)
+TRAP_FOOD = 715                                                    # food in one fish trap, as in AoE2 DE (#1438)
 SHIP_TECHS = {"FISHING_LINES": (1.1, 5), "GILLNETS": (1.1, 5)}     # the work rate factor and the more food of a trip (#1439)
 HERDS = {"COW", "GOAT", "GOOSE", "LLAMA", "PIG", "SHEEP", "TURKEY", "WATER_BUFFALO"}   # herdable animals: shepherds (civs.WORK)
 VILLAGER_HIT = 3, 2.0                                              # AoE2 villager attack and reload (game seconds)
@@ -210,6 +211,7 @@ class Map:
         self.herds = set()                                             # carcass tiles of herdable animals (HERDS)
         self.fish, self.shore = {}, set()                              # tile -> food of a fish (#1283), shore fish
         self.fish_mobs, self.docks = {}, []                            # tile -> mob of a fish; own dock cells (#1384)
+        self.traps = {}                                                # own fish trap tile -> its cells (#1438)
         for o in data["objects"]:
             if o["kind"] == "building":
                 x0, z0, x1, z1 = o["footprint"]
@@ -254,6 +256,8 @@ class Map:
             self.farm_at.update(dict.fromkeys(cells, tile))
             return
         self.blocked |= cells - {tuple(c) for c in open_cells}
+        if own and "FISH_TRAP" in name and tile:                       # the food of the fishing ships (#1438)
+            self.fish[tile], self.traps[tile] = TRAP_FOOD, cells
         for r, names in DROP_SITES.items():
             if own and any(k in name for k in names):
                 self.drops[r].append(cells)
@@ -981,7 +985,8 @@ class Gather:
             return
         building = build.chosen(self, name)
         if building:                                                   # a chosen building: place its foundation
-            build.place(self, name, building, eye, d)
+            if (site := build.place(self, name, building, eye, d)) and building in build.WATER:
+                fleet.build_site(self, self.selected, site)            # the selected fishing ships build it (#1438)
             return
         if monk.order(self, name, self.map.pick_ground(eye, d)):      # a monk to a relic or to a monastery (#1246)
             return
@@ -996,6 +1001,8 @@ class Gather:
         if train.open_menu(self, name, fleet.pick(self, eye, d)):     # a dock is on the water (#1383)
             return
         if market.open_menu(self, name, self.map.pick_ground(eye, d)):  # an own market: buy and sell (#1252)
+            return
+        if fleet.build_order(self, name, eye, d):                    # the fishing ships build a fish trap (#1438)
             return
         if fleet.fish_order(self, name, eye, d):                     # the fishing ships fish (#1384)
             return
@@ -1242,7 +1249,7 @@ class Gather:
         trade.tick(self)
         bossbar.tick(self)
         for site in self.sites:
-            builders = [v for v in self.villagers.values() if v.state == "build" and v.site is site]
+            builders = [v for v in [*self.villagers.values(), *self.ships.values()] if v.state == "build" and v.site is site]
             # AoE2: n builders need 3 / (n + 2) of the time of one
             if builders and build.rise(self, site, math.inf if self.aegis else self.tick * NORMAL * (len(builders) + 2) / 3):
                 if nxt := build.next_tile(self, site):                 # a wall line: on to its next tile (#1322)
@@ -1250,7 +1257,11 @@ class Gather:
                     continue
                 for v in builders:                                     # complete: the builders stop
                     v.site = None
-                    self.set(v, "idle")
+                    if v.uuid in self.ships:                           # a fishing ship fishes its new fish trap
+                        v.state = "idle"
+                        fleet.fish(self, {v.uuid}, fleet.trap(self, site))
+                    else:
+                        self.set(v, "idle")
         self.idle()
 
     def work_time(self, res, herd=False):

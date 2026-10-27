@@ -471,9 +471,10 @@ class Replay:
         self.moving.pop(i, None)
         return out
 
-    def building(self, name, player, x, y, along_z=False):
+    def building(self, name, player, x, y, along_z=False, water=None):
         """The commands that draw one building at tile (x, y): its design on a flat map (like render.py), moved to
-        the ground of the world. The footprint is cleared first; a foundation fills the air under the floor."""
+        the ground of the world. The footprint is cleared first; a foundation fills the air under the floor.
+        water: the ground y of a building on the open water (a fish trap, #1438), else the land next to it counts."""
         T, arch = self.T, self.data["players"].get(str(player), {}).get("arch", "western")
         ox, oy = int(x) - FLAT // 2, int(y) - FLAT // 2
         cols, E, o = self.draw(name, player, x, y, along_z)
@@ -490,7 +491,8 @@ class Replay:
         # next to the footprint
         free = foot - self.lifted or m.around(foot) or foot
         cells = [g for x, z in free if (g := self.ground[z][x]) is not None] or \
-            [g for x, z in m.around(foot) if (g := self.ground[z][x]) is not None]   # a dock on water: the shore (#1382)
+            [g for x, z in m.around(foot) if (g := self.ground[z][x]) is not None] or \
+            [water] * (water is not None)                           # a dock on water: the shore (#1382)
         if not cells:                                               # outside the map or on water only
             return []
         trees = [t for t in m.trees if m.cells(t) & foot]          # in AoE2 the tree is gone (chopped)
