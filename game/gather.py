@@ -581,6 +581,7 @@ class Gather:
         self.command(f'scoreboard players display name Idle {self.board} "Idle villagers"')   # a name has no space
         # The players get the side of the units for the attack alerts of the plugin (AoePlugin.side, #1241): the team,
         # not the tag aoe2mc.pN, because cheats.destroy kills and conquest.alive counts the entities with that tag.
+        self.command(f"team modify p{self.player} seeFriendlyInvisibles false")   # worlds before #1538: no cube at a building
         self.command(f"team join p{self.player} @a")
         build.setup(self)
         menu.setup(self)
