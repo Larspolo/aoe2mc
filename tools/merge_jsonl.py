@@ -3,7 +3,10 @@
 
 `merge=union` keeps the old and the new version of a line that one side changed, and `table.load()` then stops
 ("more than one line for X", #1890, #1934). This driver takes, for each name, the side that changed it. A name
-that both sides changed to different lines is a conflict: the file gets conflict markers and the exit code is 1.
+that both sides changed to different lines gets a merge of its keys: a list takes the items that each side added
+and removed (the "missing" list of each civilization line in `civs.jsonl`: two new unique units change all lines,
+owner request 2026-10-27), another key takes the side that changed it. A key that both sides changed in another way is
+a conflict: the file gets conflict markers and the exit code is 1.
 
     python3 tools/merge_jsonl.py BASE OURS THEIRS     # git: merge.jsonl.driver "python3 tools/merge_jsonl.py %O %A %B"
 
@@ -33,6 +36,41 @@ def rows_of(lines):
     return out
 
 
+def merge_list(o, a, b):
+    """The list `a` with the items that `b` added to `o` and without the items that `b` removed, or None when an item
+    is not hashable. Sorted when all three lists are sorted (the "missing" lists are)."""
+    try:
+        add, gone = [x for x in b if x not in set(o)], set(o) - set(b)
+    except TypeError:
+        return None
+    out = [x for x in a if x not in gone] + [x for x in add if x not in set(a)]
+    return sorted(out) if all(v == sorted(v) for v in (o, a, b)) else out
+
+
+def merge_line(o, a, b):
+    """The 3-way merge of one line that both sides changed, or None (a conflict)."""
+    try:
+        o, a, b = json.loads(o), json.loads(a), json.loads(b)
+    except (TypeError, ValueError):
+        return None
+    if not all(isinstance(v, dict) for v in (o, a, b)):
+        return None
+    out = {}
+    for k in list(a) + [k for k in b if k not in a]:
+        x, y, z = o.get(k), a.get(k), b.get(k)
+        if y == z or z == x:
+            v = y
+        elif y == x:
+            v = z
+        elif all(isinstance(v, list) for v in (x, y, z)) and (v := merge_list(x, y, z)) is not None:
+            pass
+        else:
+            return None
+        if v is not None or (k in a and k in b):
+            out[k] = v
+    return json.dumps(out, ensure_ascii=False) + "\n"
+
+
 def merge(base, ours, theirs):
     """(lines, conflicts): the merged lines in the order of `ours`, the new lines of `theirs` after their
     neighbour above in `theirs` and after the new lines of `ours` there (as `merge=union`)."""
@@ -52,6 +90,8 @@ def merge(base, ours, theirs):
             pick = a
         elif a == o:
             pick = b                                     # changed (or deleted) only on their side
+        elif (pick := merge_line(o, a, b)) is not None:
+            pass
         else:
             conflicts += 1
             lines += ["<<<<<<< ours\n", a or "", "=======\n", b or "", ">>>>>>> theirs\n"]

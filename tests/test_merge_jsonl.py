@@ -48,8 +48,8 @@ def test_changes_of_different_lines_give_one_line_per_name(tmp_path):
 
 
 def test_a_line_changed_on_both_sides_is_a_conflict(tmp_path):
-    ours = [BASE[0], line("BRITONS", missing=["B"]), BASE[2]]
-    theirs = [BASE[0], line("BRITONS", missing=["C"]), BASE[2]]
+    ours = [BASE[0], line("BRITONS", missing=["A"], wonder="B"), BASE[2]]     # one key, two values: lists merge
+    theirs = [BASE[0], line("BRITONS", missing=["A"], wonder="C"), BASE[2]]
     rc, lines = merged(tmp_path, ours, theirs)
     assert rc != 0
     assert lines == [BASE[0], "<<<<<<< ours\n", ours[1], "=======\n", theirs[1], ">>>>>>> theirs\n", BASE[2]]
