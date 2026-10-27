@@ -105,6 +105,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "CHEMISTRY": {"food": 300, "gold": 200},                    # the university, Imperial Age (#1375)
          "CONSCRIPTION": {"food": 150, "gold": 150},                 # the castle, Imperial Age (#1455)
          "CATAPHRACT": {"food": 70, "gold": 75},
+         "CAMEL_RIDER": {"food": 55, "gold": 60},                       # AoE2 DE wiki (#1550)
          "CAVALIER": {"food": 60, "gold": 75},                          # AoE2 DE wiki (#1501)
          "CAVALIER_UPGRADE": {"food": 300, "gold": 300},               # the Imperial Age (#1501)
          "CAVALRY_ARCHER": {"wood": 40, "gold": 60},                    # AoE2 DE wiki (#1397)
@@ -154,6 +155,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "HAND_CANNONEER": {"food": 45, "gold": 50},                  # the Imperial Age, after Chemistry (#1506)
          "HAND_CART": {"food": 300, "wood": 200},                      # the Castle Age (AoE2 DE wiki, #1453)
          "HEATED_SHOT": {"food": 350, "gold": 100},                    # the university, Castle Age (#1548)
+         "HEAVY_CAMEL_RIDER": {"food": 55, "gold": 60},                 # AoE2 DE wiki (#1550)
+         "HEAVY_CAMEL_RIDER_UPGRADE": {"food": 325, "gold": 360},       # the Imperial Age (#1550)
          "HEAVY_CAVALRY_ARCHER": {"wood": 40, "gold": 60},            # AoE2 DE wiki (#1500)
          "HEAVY_CAVALRY_ARCHER_UPGRADE": {"food": 900, "gold": 500},  # the Imperial Age (#1500)
          "HOARDINGS": {"food": 400, "wood": 400},                      # the castle, Imperial Age (#1456)
@@ -186,6 +189,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "MANGUDAI": {"wood": 55, "gold": 65},
          "MASONRY": {"food": 150, "wood": 175},                       # the university, Castle Age (#1398)
          "MEDIUM_WARSHIPS": {"wood": 150, "gold": 100},                 # the dock, Castle Age (#1482)
+         "MURDER_HOLES": {"food": 200, "stone": 100},                  # the university, Castle Age (#1547)
          "MONK": {"gold": 100},
          "ONAGER": {"wood": 160, "gold": 135},
          "ONAGER_UPGRADE": {"food": 800, "gold": 500},
@@ -233,6 +237,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "WAR_GALLEY": {"wood": 90, "gold": 30},                       # AoE2 DE wiki (#1482)
          "WAR_HULK": {"wood": 75, "gold": 35},                         # AoE2 DE wiki (#1508)
          "WHEELBARROW": {"food": 175, "wood": 50},
+         "WINGED_HUSSAR": {"food": 80},                                # AoE2 DE wiki (#1558)
+         "WINGED_HUSSAR_UPGRADE": {"food": 600, "gold": 800},          # the Imperial Age (#1558)
          "WOAD_RAIDER": {"food": 70, "gold": 25}}
 TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130,   # AoE2 seconds
                "ARSON": 25,
@@ -263,6 +269,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "CASTLE_AGE": 160,
                "CAREENING": 50,
                "CATAPHRACT": 20,
+               "CAMEL_RIDER": 22,
                "CAVALIER": 30,
                "CAVALIER_UPGRADE": 80,
                "CAVALRY_ARCHER": 37,
@@ -312,6 +319,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "HAND_CANNONEER": 34,
                "HAND_CART": 55,
                "HEATED_SHOT": 30,
+               "HEAVY_CAMEL_RIDER": 22,
+               "HEAVY_CAMEL_RIDER_UPGRADE": 105,
                "HEAVY_CAVALRY_ARCHER": 37,
                "HEAVY_CAVALRY_ARCHER_UPGRADE": 50,
                "HOARDINGS": 75,
@@ -344,6 +353,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "MANGUDAI": 26,
                "MASONRY": 50,
                "MEDIUM_WARSHIPS": 50,
+               "MURDER_HOLES": 35,
                "MONK": 51,
                "ONAGER": 46,
                "ONAGER_UPGRADE": 75,
@@ -391,6 +401,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "WAR_GALLEY": 27,
                "WAR_HULK": 27,
                "WHEELBARROW": 75,
+               "WINGED_HUSSAR": 30,
+               "WINGED_HUSSAR_UPGRADE": 60,
                "WOAD_RAIDER": 10}
 TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", "HAND_CART", "CASTLE_AGE", "IMPERIAL_AGE",
                          "TOWN_WATCH"), "BARRACKS": ("MILITIA", "SPEARMAN", "MAN_AT_ARMS_UPGRADE",   # the units and technologies of each
@@ -424,7 +436,10 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                      "HOARDINGS"),                                              # (#1456)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES", "LIGHT_CAVALRY_UPGRADE", "KNIGHT",   # (#671, #940, #1396, #1397)
                      "HUSBANDRY",                                               # (#1416)
+                     "CAMEL_RIDER",                                             # the Castle Age (#1550)
+                     "HEAVY_CAMEL_RIDER_UPGRADE",                               # the Imperial Age (#1550)
                      "HUSSAR_UPGRADE",                                          # the Imperial Age (#1502)
+                     "WINGED_HUSSAR_UPGRADE",                                   # Poles, Lithuanians (#1558)
                      "CAVALIER_UPGRADE",                                        # (#1501)
                      "BATTLE_ELEPHANT",                                         # (#1556)
                      "ELITE_BATTLE_ELEPHANT_UPGRADE",
@@ -438,6 +453,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                          "ARROWSLITS",
                          "BALLISTICS",                                          # the Castle Age (#1549)
                          "HEATED_SHOT",                                         # the Castle Age (#1548)
+                         "MURDER_HOLES",                                        # the Castle Age (#1547)
                          "CAREENING", "DRY_DOCK",                               # the ships (#1441)
                          "SHIPWRIGHT"),                                         # (#1490)
           "DOCK": ("FISHING_SHIP",                                             # (#1383)
@@ -587,6 +603,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "HAND_CART": lambda name, s: s,                           # no combat change: gather.CARRY and gather.PACE
          "HEATED_SHOT": lambda name, s: s._replace(bonus={**s.bonus, "ship": s.bonus.get("ship", 0) + HEATED[name]})
          if name in HEATED else s,                                 # the arrows of the own towers on ships (#1548)
+         "HEAVY_CAMEL_RIDER_UPGRADE": lambda name, s: s,           # a new unit name: UPGRADES
          "HEAVY_CAVALRY_ARCHER_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
          "HOARDINGS": lambda name, s: s._replace(hp=round(s.hp * 1.21)) if name == "CASTLE" else s,   # build.values
          "HEAVY_PLOW": lambda name, s: s,                          # an economy technology: gather.FARM_TECHS, FOOD_CARRY
@@ -609,6 +626,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "MAN_AT_ARMS_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "MASONRY": masonry,                                       # the buildings of the player: build.values
          "MEDIUM_WARSHIPS": lambda name, s: s,                     # new unit names: UPGRADES
+         "MURDER_HOLES": lambda name, s: s,                        # no minimum range: build.minimum
          "ONAGER_UPGRADE": lambda name, s: s,
          "PALADIN_UPGRADE": lambda name, s: s,                     # a new unit name: UPGRADES
          "PADDED_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
@@ -640,6 +658,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "TOWN_WATCH": lambda name, s: s,                          # the building sight: gather.seen_tiles
          "TREADMILL_CRANE": lambda name, s: s,                     # the build speed: build.rise
          "TWO_HANDED_SWORDSMAN_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
+         "WINGED_HUSSAR_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "FEUDAL_AGE": lambda name, s: s,   # the change of each technology to the AoE2 values
          "WHEELBARROW": lambda name, s: s}                         # no combat change: gather.CARRY and gather.PACE
 SPEEDS = {"CARAVAN": ("trade units", 1.2),                        # technology: the unit (or a class of combat.STATS:
@@ -666,6 +685,7 @@ UPGRADES = {                                                       # technology:
     "ELITE_SKIRMISHER_UPGRADE": ("SKIRMISHER", "ELITE_SKIRMISHER"),
     "ELITE_STEPPE_LANCER_UPGRADE": ("STEPPE_LANCER", "ELITE_STEPPE_LANCER"),   # (#1557)
     "HALBERDIER_UPGRADE": ("PIKEMAN", "HALBERDIER"),
+    "HEAVY_CAMEL_RIDER_UPGRADE": ("CAMEL_RIDER", "HEAVY_CAMEL_RIDER"),   # (#1550)
     "HEAVY_CAVALRY_ARCHER_UPGRADE": ("CAVALRY_ARCHER", "HEAVY_CAVALRY_ARCHER"),
     "HEAVY_SCORPION_UPGRADE": ("SCORPION", "HEAVY_SCORPION"),
     "HEAVY_DEMOLITION_SHIP_UPGRADE": ("DEMOLITION_SHIP", "HEAVY_DEMOLITION_SHIP"),   # (#1483)
@@ -682,6 +702,7 @@ UPGRADES = {                                                       # technology:
     "SIEGE_ONAGER_UPGRADE": ("ONAGER", "SIEGE_ONAGER"),
     "SIEGE_RAM_UPGRADE": ("CAPPED_RAM", "SIEGE_RAM"),
     "TWO_HANDED_SWORDSMAN_UPGRADE": ("LONG_SWORDSMAN", "TWO_HANDED_SWORDSMAN"),
+    "WINGED_HUSSAR_UPGRADE": ("LIGHT_CAVALRY", "WINGED_HUSSAR"),
 }
 AFTER = {"ARBALESTER_UPGRADE": "CROSSBOWMAN_UPGRADE",
          "ARCHITECTURE": "MASONRY",
@@ -713,7 +734,8 @@ AFTER = {"ARBALESTER_UPGRADE": "CROSSBOWMAN_UPGRADE",
          "RING_ARCHER_ARMOR": "LEATHER_ARCHER_ARMOR",
          "SIEGE_ONAGER_UPGRADE": "ONAGER_UPGRADE", "SIEGE_RAM_UPGRADE": "CAPPED_RAM_UPGRADE",
          "STONE_SHAFT_MINING": "STONE_MINING",
-         "TWO_HANDED_SWORDSMAN_UPGRADE": "LONG_SWORDSMAN_UPGRADE"}   # the upgrade before it
+         "TWO_HANDED_SWORDSMAN_UPGRADE": "LONG_SWORDSMAN_UPGRADE",   # the upgrade before it
+         "WINGED_HUSSAR_UPGRADE": "LIGHT_CAVALRY_UPGRADE"}   # in place of Hussar (AoE2 DE wiki, #1558)
 WALL_UPGRADES = {"FORTIFIED_WALL": {"STONE_WALL": "FORTIFIED_WALL", "GATE": "FORTIFIED_GATE"}}   # technology: {wall: new} (#1326)
 TOWER_UPGRADES = {"GUARD_TOWER": {"WATCH_TOWER": "GUARD_TOWER"},   # technology: {tower: the tower of its values},
                   "KEEP": {"GUARD_TOWER": "KEEP", "WATCH_TOWER": "KEEP"}}   # in the research order (#1374)
@@ -764,6 +786,7 @@ TECH_AGE = {                                                       # the age of 
     "HALBERDIER_UPGRADE": 3,
     "HAND_CART": 2,
     "HEATED_SHOT": 2,
+    "HEAVY_CAMEL_RIDER_UPGRADE": 3,
     "HEAVY_CAVALRY_ARCHER_UPGRADE": 3,
     "HOARDINGS": 3,
     "HEAVY_PLOW": 2,
@@ -781,6 +804,7 @@ TECH_AGE = {                                                       # the age of 
     "MAN_AT_ARMS_UPGRADE": 1,
     "MASONRY": 2,
     "MEDIUM_WARSHIPS": 2,
+    "MURDER_HOLES": 2,
     "ONAGER_UPGRADE": 3,
     "PALADIN_UPGRADE": 3,
     "PARTHIAN_TACTICS": 3,
@@ -806,6 +830,7 @@ TECH_AGE = {                                                       # the age of 
     "TOWN_WATCH": 1,
     "TREADMILL_CRANE": 2,
     "TWO_HANDED_SWORDSMAN_UPGRADE": 3,
+    "WINGED_HUSSAR_UPGRADE": 3,
     "WHEELBARROW": 1,
 }
 AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age after each researched age (index: ages)
@@ -843,6 +868,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "HAND_CANNONEER": (7, "pillager_spawn_egg", "Hand Cannoneer"),      # units.classify: a pillager
          "HAND_CART": (3, "book", "Hand Cart"),                       # the slot of Wheelbarrow (AFTER)
          "HEATED_SHOT": (MORE + 2, "book", "Heated Shot"),
+         "HEAVY_CAMEL_RIDER": (6, "camel_spawn_egg", "Heavy Camel Rider"),   # the slot of the camel rider
+         "HEAVY_CAMEL_RIDER_UPGRADE": (MORE, "book", "Heavy Camel Rider"),   # the stable (#1550)
          "HEAVY_CAVALRY_ARCHER": (4, "skeleton_horse_spawn_egg", "Heavy Cavalry Archer"),
          "HEAVY_CAVALRY_ARCHER_UPGRADE": (6, "book", "Heavy Cavalry Archer"),   # slot 5: Thumb Ring
          "HOARDINGS": (3, "book", "Hoardings"),                       # after Conscription
@@ -890,6 +917,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "CASTLE_AGE": (4, "bell", "Castle Age"),
          "CAREENING": (8, "book", "Careening"),                     # the university has no rally point
          "CATAPHRACT": (0, "horse_spawn_egg", "Cataphract"),
+         "CAMEL_RIDER": (6, "camel_spawn_egg", "Camel Rider"),          # the stable (#1550)
          "CAVALIER": (3, "horse_spawn_egg", "Cavalier"),             # the slot of the knight
          "CAVALIER_UPGRADE": (5, "book", "Cavalier"),                 # the stable (#1501)
          "CAVALRY_ARCHER": (4, "skeleton_horse_spawn_egg", "Cavalry Archer"),
@@ -938,6 +966,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "MAN_AT_ARMS": (0, "zombie_spawn_egg", "Man-at-Arms"),
          "MASONRY": (6, "book", "Masonry"),
          "MEDIUM_WARSHIPS": (3, "book", "Medium Warships"),         # the dock
+         "MURDER_HOLES": (MORE + 4, "book", "Murder Holes"),      # the university after Ballistics (#1547)
          "MAN_AT_ARMS_UPGRADE": (2, "book", "Man-at-Arms"),
          "MANGONEL": (1, "dispenser", "Mangonel"),
          "MANGUDAI": (0, "skeleton_horse_spawn_egg", "Mangudai"),
@@ -976,6 +1005,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "WAR_HULK": (MORE + 2, "dark_oak_boat", "War Hulk"),     # the slot of the hulk
          "FEUDAL_AGE": (2, "bell", "Feudal Age"),
          "WHEELBARROW": (3, "book", "Wheelbarrow"),
+         "WINGED_HUSSAR": (0, "horse_spawn_egg", "Winged Hussar"),
+         "WINGED_HUSSAR_UPGRADE": (2, "book", "Winged Hussar"),       # the slot of Light Cavalry (AFTER)
          "WOAD_RAIDER": (0, "zombie_spawn_egg", "Woad Raider")}
 # The AoE2 help text of each menu item, short (#1160): the plugin shows it as the last lore line of the item (help()).
 HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
@@ -1005,6 +1036,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "CASTLE_AGE": "Advance to the Castle Age.",
         "CAREENING": "Ships +1 pierce armor.",
         "CATAPHRACT": "Byzantine cavalry. Strong vs. infantry.",
+        "CAMEL_RIDER": "Strong vs. cavalry; weak vs. spears, archers.",
         "CAVALIER": "Strong vs. archers, siege; weak vs. spears, monks.",
         "CAVALIER_UPGRADE": "Upgrades knights to cavaliers.",
         "CAVALRY_ARCHER": "Fast archer. Strong vs. infantry; weak vs. camels.",
@@ -1057,6 +1089,8 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "HAND_CANNONEER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "HAND_CART": "Villagers +10 % speed, +50 % carry.",
         "HEATED_SHOT": "Towers, castles, docks + attack vs. ships.",
+        "HEAVY_CAMEL_RIDER": "Strong vs. cavalry; weak vs. spears, archers.",
+        "HEAVY_CAMEL_RIDER_UPGRADE": "Upgrades camel riders to heavy ones.",
         "HEAVY_CAVALRY_ARCHER": "Fast archer. Strong vs. infantry; weak vs. camels.",
         "HEAVY_CAVALRY_ARCHER_UPGRADE": "Upgrades cavalry archers to heavy ones.",
         "HOARDINGS": "Castles +21 % HP.",
@@ -1091,6 +1125,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "MASONRY": "Buildings +10 % HP, +1/+1 armor.",
         "MEDIUM_WARSHIPS": "Galleys, fire galleys to war galleys, fire ships.",
         "MILITIA": "Infantry. Strong vs. eagles; weak vs. archers.",
+        "MURDER_HOLES": "Towers, castles: no minimum range.",
         "MONK": "Heals own units, converts enemy units.",
         "ONAGER": "Siege. Hits all units near the target.",
         "ONAGER_UPGRADE": "Upgrades mangonels to onagers.",
@@ -1139,6 +1174,8 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "WAR_GALLEY": "All-purpose warship with ranged attack.",
         "WAR_HULK": "Warship with a close range melee attack.",
         "WHEELBARROW": "Villagers +10 % speed, +25 % carry.",
+        "WINGED_HUSSAR": "Polish cavalry. Fast; strong vs. monks.",
+        "WINGED_HUSSAR_UPGRADE": "Upgrades light cavalry to winged hussars.",
         "WOAD_RAIDER": "Celtic infantry. Fast."}
 SHIFT = 5                                                          # units of a shift click, as in AoE2
 RALLY = (8, "white_banner", "Rally point", "Click, then right click the ground")   # last slot of the first row

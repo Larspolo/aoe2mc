@@ -66,8 +66,8 @@ STATS = {
     "KNIGHT": Stats(100, 10, 2, 2, 0, 1.8, {}, (CAV,)),
     "CAVALIER": Stats(120, 12, 2, 2, 0, 1.8, {}, (CAV,)),
     "PALADIN": Stats(160, 14, 2, 3, 0, 1.9, {}, (CAV,)),                     # ROF 1.9: the wiki infobox (#1501)
-    "CAMEL_RIDER": Stats(100, 6, 0, 0, 0, 2.0, {CAV: 9}, (CAM,)),
-    "HEAVY_CAMEL_RIDER": Stats(120, 7, 0, 0, 0, 2.0, {CAM: 9, CAV: 18}, (CAM,)),
+    "CAMEL_RIDER": Stats(100, 6, 0, 0, 0, 2.0, {CAV: 9, CAM: 5, SHIP: 5}, (CAM,)),   # the wiki infobox (#1550)
+    "HEAVY_CAMEL_RIDER": Stats(120, 7, 0, 0, 0, 2.0, {CAM: 9, CAV: 18, SHIP: 9}, (CAM,)),
     "IMPERIAL_CAMEL_RIDER": Stats(140, 8, 0, 0, 0, 1.667, {"building": 2, CAM: 9, CAV: 18}, (CAM,)),
     "WAR_ELEPHANT": Stats(450, 15, 1, 2, 0, 2.0, {"building": 30}, (ELE, UNI)),
     "ELITE_WAR_ELEPHANT": Stats(600, 20, 1, 3, 0, 2.0, {"building": 30}, (ELE, UNI)),
@@ -244,7 +244,7 @@ BUILDINGS = {
     "BARRACKS": Stats(1200, 0, 0, 7, 0, 0.0, {}, ("building",)),
     "ARCHERY_RANGE": Stats(1500, 0, 0, 7, 0, 0.0, {}, ("building",)),
     "STABLE": Stats(1500, 0, 0, 7, 0, 0.0, {}, ("building",)),
-    "DOCK": Stats(1800, 0, 0, 7, 0, 0.0, {}, ("building",)),         # AoE2 DE wiki, the Dark Age (#1382)
+    "DOCK": Stats(1800, 0, 0, 7, 0, 0.0, {SHIP: 3}, ("building",)),   # AoE2 DE wiki, the Dark Age (#1382)
     "MARKET": Stats(1800, 0, 1, 8, 0, 0.0, {}, ("building",)),       # the Feudal Age values of the wiki (#1251)
     "MONASTERY": Stats(2100, 0, 0, 7, 0, 0.0, {}, ("building",)),
     "SIEGE_WORKSHOP": Stats(2100, 0, 0, 7, 0, 0.0, {}, ("building",)),
@@ -253,14 +253,15 @@ BUILDINGS = {
     "MILL": Stats(600, 0, 0, 7, 0, 0.0, {}, ("building",)),
     "MINING_CAMP": Stats(600, 0, 0, 7, 0, 0.0, {}, ("building",)),
     "UNIVERSITY": Stats(2100, 0, 2, 9, 0, 0.0, {}, ("building",)),   # the Castle Age values
-    # the towers (AoE2 DE, wiki): a watch tower of the Castle Age (850 hit points in the Feudal Age), #1112
-    "BOMBARD_TOWER": Stats(2220, 120, 3, 9, 8, 6.0, {}, ("building",)),
-    "FORTIFIED_TOWER": Stats(1900, 8, 4, 7, 13, 3.0, {}, ("building",)),
-    "GUARD_TOWER": Stats(1500, 7, 2, 8, 8, 2.0, {}, ("building",)),
-    "KEEP": Stats(2250, 8, 3, 9, 8, 2.0, {}, ("building",)),
-    "WATCH_TOWER": Stats(1020, 5, 1, 7, 8, 2.0, {}, ("building",)),
-    "TOWN_CENTER": Stats(2400, 5, 3, 5, 6, 2.0, {}, ("building",)),
-    "CASTLE": Stats(4800, 11, 8, 11, 8, 2.0, {}, ("building",)),
+    # the towers (AoE2 DE, wiki): a watch tower of the Castle Age (850 hit points in the Feudal Age), #1112. The attack
+    # against ships: the "Attack bonus" of the wiki infobox (#1564; the dock: the Castle Age, it does not shoot yet)
+    "BOMBARD_TOWER": Stats(2220, 120, 3, 9, 8, 6.0, {SHIP: 40}, ("building",)),
+    "FORTIFIED_TOWER": Stats(1900, 8, 4, 7, 13, 3.0, {SHIP: 12}, ("building",)),
+    "GUARD_TOWER": Stats(1500, 7, 2, 8, 8, 2.0, {SHIP: 7}, ("building",)),
+    "KEEP": Stats(2250, 8, 3, 9, 8, 2.0, {SHIP: 8}, ("building",)),
+    "WATCH_TOWER": Stats(1020, 5, 1, 7, 8, 2.0, {SHIP: 5}, ("building",)),
+    "TOWN_CENTER": Stats(2400, 5, 3, 5, 6, 2.0, {SHIP: 5}, ("building",)),
+    "CASTLE": Stats(4800, 11, 8, 11, 8, 2.0, {SHIP: 11}, ("building",)),
     "WONDER": Stats(4800, 0, 3, 10, 0, 0.0, {}, ("building",)),
 }
 # The walls that a player builds in the game program (#1322, AoE2 DE wiki infobox): the hit points in the Dark, Feudal,
@@ -287,6 +288,7 @@ SIGHT = {
     "BARRACKS": 6,
     "BLACKSMITH": 6,
     "BOMBARD_TOWER": 10,
+    "CAMEL_RIDER": 5,                                                  # the wiki infobox (#1550)
     "CANNON_GALLEON": 15,
     "CASTLE": 11,
     "CHAMPION": 5,
@@ -305,6 +307,7 @@ SIGHT = {
     "FEITORIA": 6,
     "FORTIFIED_TOWER": 14,
     "GUARD_TOWER": 10,
+    "HEAVY_CAMEL_RIDER": 5,
     "HOUSE": 2,
     "HUSSAR": 10,
     "KEEP": 10,
@@ -326,6 +329,7 @@ SIGHT = {
     "UNIVERSITY": 6,
     "WAR_HULK": 5,
     "WATCH_TOWER": 10,
+    "WINGED_HUSSAR": 10,
     "WONDER": 8,
 }
 # Units that attack from a range with melee damage (AoE2): their hit takes the melee armor of the target (#800).
@@ -521,19 +525,21 @@ def wall(name, age):
     return Stats(hp[age], 0, melee, pierce, 0, 0.0, {}, ("building",))
 
 
-def building(uuid, name, player, box, T=4, inside=(), s=None):
+def building(uuid, name, player, box, T=4, inside=(), s=None, low=None):
     """The commands that make building `name` of `player` a target of attacks (#517): an invisible slime without AI
     that fills the footprint takes the attacks (a mob attacks only a living entity: AoePlugin.java), and the plugin
     keeps the AoE2 hit points. box: the blocks (x0, y0, z0, x1, y1, z1), both ends included, y0 the ground.
     A building with an attack (town center, castle) also gets its attack, its range (tiles * T blocks) and its reload
     in ticks at Normal speed: the plugin lets it shoot arrows at the enemies in its range (#1111), with the AoE2
     number of arrows of the units `inside` (garrison.arrows: an empty town center shoots none, #1201), and its
-    minimum range in blocks (FORT_MIN_RANGE, 0 for the town center): no shot at a unit nearer (#1546).
+    minimum range in blocks (FORT_MIN_RANGE, 0 for the town center): no shot at a unit nearer (#1546). low: the
+    minimum range in tiles (default FORT_MIN_RANGE; 0 after Murder Holes: build.minimum, #1547).
     s: the Stats (default: stats(name); a wall of the game program: wall(), #1322).
     At 0 hit points the plugin fills the box with air. The invisibility effect hides the slime: the tag Invisible is
     only for armor stands, the server drops it on a slime (#636)."""
     x0, y0, z0, x1, y1, z1 = box
     s, size = s or stats(name), math.ceil((max(x1 - x0, z1 - z0) + 1) / SLIME)
+    low = FORT_MIN_RANGE.get(name, 0) if low is None else low
     bonus = ",".join(f"{c}:{n}" for c, n in sorted(s.bonus.items())) * bool(s.attack and s.range)
     n = uuids.UUID(uuid).int
     ints = ",".join(str((n >> k & 0xFFFFFFFF) - ((n >> k & 0x80000000) << 1)) for k in (96, 64, 32, 0))
@@ -542,7 +548,7 @@ def building(uuid, name, player, box, T=4, inside=(), s=None):
             f"team join p{player} {uuid}"] + \
         [f"aoe arrows {uuid} {garrison.arrows(name, inside)}"] * bool(s.attack and s.range) + \
         [f"aoe building {uuid} {s.hp} {s.melee} {s.pierce} {' '.join(map(str, box))}"   # after the arrows: no shot of 1
-         + (f" {s.attack} {s.range * T} {round(s.reload / NORMAL * 20)} {FORT_MIN_RANGE.get(name, 0) * T}"   # (#1546)
+         + (f" {s.attack} {s.range * T} {round(s.reload / NORMAL * 20)} {low * T}"   # (#1546)
             if s.attack and s.range else "")
          + (f" {','.join(s.classes)}" if STANDARD not in s.classes or bonus else "")   # a wall, a gate, the wonder (#1419)
          + (f" {bonus}" if bonus else "")]                                  # the arrow bonus (Heated Shot, #1548)

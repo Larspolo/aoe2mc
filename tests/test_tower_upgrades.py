@@ -45,8 +45,8 @@ def test_the_cost_time_age_and_order_are_those_of_aoe2():
     assert train.COSTS["GUARD_TOWER"] == {"food": 100, "wood": 250} and train.TRAIN_TIMES["GUARD_TOWER"] == 30
     assert train.COSTS["KEEP"] == {"food": 500, "wood": 350} and train.TRAIN_TIMES["KEEP"] == 75
     assert (train.TECH_AGE["GUARD_TOWER"], train.TECH_AGE["KEEP"]) == (2, 3) and train.AFTER["KEEP"] == "GUARD_TOWER"
-    assert combat.stats("GUARD_TOWER") == combat.Stats(1500, 7, 2, 8, 8, 2.0, {}, ("building", "standard"))
-    assert combat.stats("KEEP") == combat.Stats(2250, 8, 3, 9, 8, 2.0, {}, ("building", "standard"))
+    assert combat.stats("GUARD_TOWER") == combat.Stats(1500, 7, 2, 8, 8, 2.0, {"ship": 7}, ("building", "standard"))
+    assert combat.stats("KEEP") == combat.Stats(2250, 8, 3, 9, 8, 2.0, {"ship": 8}, ("building", "standard"))
 
 
 def test_the_university_menu_shows_guard_tower_in_the_castle_age_and_keep_after_it_in_the_imperial_age():
@@ -66,7 +66,7 @@ def test_the_research_gives_the_towers_the_values_of_the_guard_tower_and_then_of
     server.hp[uuid(MAP)] = 520                                     # 500 hit points lost
     research(g, "GUARD_TOWER", 30)
     assert server.hp[uuid(MAP)] == 1000                            # +480 hit points
-    assert any(c.startswith(f"aoe building {uuid(MAP)} 1500 2 8 ") and c.split()[-4:-2] == ["7", "8"]   # attack, range
+    assert any(c.startswith(f"aoe building {uuid(MAP)} 1500 2 8 ") and c.split()[12:14] == ["7", "8"]   # attack, range
                for c in server.log)
     assert f"aoe label {uuid(MAP)} Guard Tower" in server.log
     assert not any(c.startswith("summon ") for c in server.log)    # the same target
