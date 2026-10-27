@@ -4,6 +4,7 @@
     python3 tools/health.py --hours 72
     python3 tools/health.py --hours 24 --until 2026-10-26T05:15:00Z   # the 24 hours before a time (#489)
     python3 tools/health.py --hours 6 --compare                        # the last 6 hours next to the 6 before (#1697)
+    python3 tools/health.py --prs 50 --compare   # the last 50 merged PRs next to the 50 before (#1909)
     python3 tools/health.py --takeovers  # each takeover: the old run, its last report and the cause (#1703)
 
 REST only (cloud sessions give 403 for GraphQL and `search/...`). Token and `gh` fallback as in
@@ -12,6 +13,7 @@ REST only (cloud sessions give 403 for GraphQL and `search/...`). Token and `gh`
 import argparse
 import datetime
 import difflib
+import math
 import os
 import re
 import statistics
@@ -24,6 +26,7 @@ import numpy
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from agent_config import CONFIG  # noqa: E402
 from dashboard import api, closes  # noqa: E402
+from feedback import by_owner  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -33,6 +36,7 @@ DENY_OK = ("docs/", "samples/")           # ... except .png in these folders
 BIG = 1 << 20
 OWNER = CONFIG["owner"]                   # a reopen by the owner is rework (#899)
 STATUS = CONFIG["status"]["label"]
+MISS_LABELS = {"cleanup", "process", "tooling"}   # an owner ticket of these kinds is a miss of the improve loop (#1909)
 
 
 def ts(s):
@@ -318,6 +322,26 @@ def weak_spots(issues, events, prs, runs, since):
                               and ts(r["run_started_at"]) >= since for r in runs)}
 
 
+def misses(issues, since):
+    """The numbers of the issues that the owner opened since `since` to change the system (a label of MISS_LABELS):
+    each one is a change that the improve loop did not find itself (#1909). The agent writes with the owner's login
+    too: its tickets have the footer, the GitHub App or the "## Goal" form of the `ticket` skill. The issue form of the
+    owner starts with "### Goal"."""
+    return sorted(i["number"] for i in issues if "pull_request" not in i and ts(i["created_at"]) >= since
+                  and by_owner(i) and not (i.get("body") or "").lstrip().startswith("## Goal")
+                  and MISS_LABELS & {lb["name"] for lb in i.get("labels", [])})
+
+
+def data_rows(path=None):
+    """The (place, count) lines of the list of domain data that is still in the code (`[lint] data` of agent.toml,
+    #1909; "#" starts a comment), or None when the project has no such list."""
+    path = path or CONFIG.get("lint", {}).get("data")
+    if not path or not os.path.exists(os.path.join(ROOT, path)):
+        return None
+    with open(os.path.join(ROOT, path), encoding="utf-8") as f:
+        return [(p, int(n)) for p, n in (s.split() for s in f if s.strip() and not s.startswith("#"))]
+
+
 def status_comments(hours=24):
     """The comments on the status issue of the last `hours`."""
     status = api(f"issues?state=open&labels={STATUS}")
@@ -485,7 +509,7 @@ def takeover_lines(rows):
 
 
 def report(since, runs, jobs, status_comments, comments, prs, files, files_of=None, issues=(), issue_events=(),
-           unanswered=None, reviews=None):
+           unanswered=None, reviews=None, data_rows=None):
     out = [f"Health since {since:%Y-%m-%d %H:%M} UTC", "", "CI runs (count, median min, max min, failures):"]
     for name, (k, m, mx, fail) in ci_runs(runs, since).items():
         out.append(f"  {name}: {k}, {fmt(m)}, {fmt(mx)}, {fail}")
@@ -528,6 +552,12 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
                f"{rw[0]:.2f} points ({rw[1]:g} % to {rw[2]:g} %)"))
     w = weak_spots(issues, issue_events, prs, runs, since)
     out.append("Weak spots: " + ", ".join(f"{k} {v}" for k, v in w.items()))
+    m = misses(issues, since)
+    out.append(f"Misses (owner tickets for the system, improve step 0): {len(m)}"
+               + (f" ({', '.join(f'#{n}' for n in m)})" if m else ""))
+    if data_rows is not None:                   # the list only gets shorter (#1909)
+        out.append(f"Data in the code ([lint] data of agent.toml): {sum(n for _, n in data_rows)} literals "
+                   f"in {len(data_rows)} places")
     if reviews is not None:                     # the self-improvement loop: each slot gets its review in time (#942)
         out.append("Review slots (taken UTC, slot min, min late): " + ("; ".join(
             f"{t:%m-%d %H:%M} {m} {'-' if late is None else f'{late:+d}'}" for t, m, late in reviews if t >= since) or "-"))
@@ -567,7 +597,7 @@ def fetch(since, until=None):
     recent = [c for c in comments if c["created_at"] >= iso or c["body"].startswith("Started by")]
     prs = api_pages("pulls?state=closed&sort=updated&direction=desc", stop=lambda p: p["updated_at"] < iso)
     issues = api_pages(f"issues?state=all&since={iso}")
-    events = api_pages("issues/events?", limit=5, stop=lambda e: e["created_at"] < iso)
+    events = api_pages("issues/events?", limit=event_pages(since), stop=lambda e: e["created_at"] < iso)
     return runs, jobs, status_comments, recent, prs, issues, events
 
 
@@ -577,6 +607,15 @@ def clip(until, runs, status_comments, comments, prs, issues, events):
     return ([r for r in runs if early(r["created_at"])], [c for c in status_comments if early(c["created_at"])],
             [c for c in comments if early(c["created_at"])], [p for p in prs if early(p.get("closed_at"))],
             [i for i in issues if early(i["created_at"])], [e for e in events if early(e["created_at"])])
+
+
+EVENT_PAGES_PER_DAY = 100   # the repository has about 65 pages of issue events a day, newest first (#2005)
+
+
+def event_pages(since, now=None):
+    """The page limit of `issues/events?` from now back to since: EVENT_PAGES_PER_DAY for each 24 hours."""
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    return max(5, math.ceil((now - since).total_seconds() / 86400 * EVENT_PAGES_PER_DAY))
 
 
 COMMENT_PAGES = 100   # the repository has about 1100 comments a day: 20 pages cut the last hours of 2 days (#1717)
@@ -615,8 +654,29 @@ def period(until, hours, past, only_takeovers=False):
     from feedback import fetch as unanswered
     refs = claim_refs()
     text = report(since, runs, jobs, status_comments, comments, prs, git_files(), files_of, issues, events,
-                  unanswered(), None if refs is None else review_delays(refs))
+                  unanswered(), None if refs is None else review_delays(refs), data_rows())
     return text.replace(" UTC", f" UTC until {until:%Y-%m-%d %H:%M} UTC", 1) if past else text
+
+
+def merge_times(n, until):
+    """The merge times of the newest n + 1 PRs on the default branch up to `until`, newest first: the commits with a PR
+    number at the end of the subject (squash merges, "Title (#N)")."""
+    out = []
+    for page in range(1, 11):
+        cs = api(f"commits?sha={CONFIG['branch']}&per_page=100&page={page}")
+        out += [t for c in cs if re.search(r"\(#\d+\)$", c["commit"]["message"].split("\n")[0])
+                and (t := ts(c["commit"]["committer"]["date"])) <= until]
+        if len(out) > n or len(cs) < 100:
+            break
+    return out[:n + 1]
+
+
+def pr_hours(times, until, n):
+    """The hours of the last n merged PRs before `until` and of the n PRs before them (`--prs`, #1909). `times`: the
+    merge times, newest first. A window of PRs keeps its size when the speed of the project changes; a window of hours
+    does not (about 350 merges a day on 2026-10-27)."""
+    a, b = times[min(n, len(times) - 1)], times[min(2 * n, len(times) - 1)]
+    return (until - a).total_seconds() / 3600, (a - b).total_seconds() / 3600
 
 
 def compare(last, before):
@@ -639,14 +699,19 @@ def compare(last, before):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--hours", type=float, default=24)
+    ap.add_argument("--prs", type=int, help="the period of the last N merged PRs, not of --hours (#1909)")
     ap.add_argument("--until", type=utc, help="the end of the period (ISO time, UTC, default now): compare two periods")
     ap.add_argument("--compare", action="store_true", help="also the period before, under each line that differs")
     ap.add_argument("--takeovers", action="store_true", help="one line for each takeover and its cause (#1703)")
     a = ap.parse_args(argv)
     until = a.until or datetime.datetime.now(datetime.timezone.utc)
-    text = period(until, a.hours, bool(a.until), a.takeovers)
+    hours = before = a.hours
+    if a.prs:
+        hours, before = pr_hours(merge_times(2 * a.prs, until), until, a.prs)
+        print(f"Period: the last {a.prs} merged PRs ({hours:.1f} h), before: the {a.prs} PRs before ({before:.1f} h)")
+    text = period(until, hours, bool(a.until), a.takeovers)
     if a.compare and not a.takeovers:
-        text = compare(text, period(until - datetime.timedelta(hours=a.hours), a.hours, True))
+        text = compare(text, period(until - datetime.timedelta(hours=hours), before, True))
     print(text)
     return 0
 

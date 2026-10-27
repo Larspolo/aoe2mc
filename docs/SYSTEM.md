@@ -18,7 +18,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 | GitHub | The issues are the tickets. Issue #1 (label `agent-status`) is the status issue: the dashboard in its body, the run reports as comments. The labels are in `.github/labels.txt`. |
 | Workflows (`.github/workflows/`) | CI, Automerge, Unconflict, Claims, Close, Dashboard, Coverage, Labels, Bundles (see below). |
 | Cloud environment | The setup script `scripts/cloud-setup.sh` (Java, packages, server jars), the network access, the SessionStart hook. |
-| Hooks (`.claude/hooks/`) | `session-start.sh` installs the Python packages and compares `SETUP_VERSION`. `guard-main.sh` blocks a force push, a history rewrite or a delete of `main`. |
+| Hooks (`.claude/hooks/`) | `session-start.sh` installs the Python packages, registers the merge driver `merge=jsonl` (#2004) and compares `SETUP_VERSION`. `guard-main.sh` blocks a force push, a history rewrite or a delete of `main`. |
 
 ### Workflows
 
@@ -86,7 +86,7 @@ burn, #1706). The most runs at one time is `max_runs` in `[pacing]` of `agent.to
 The target counts Opus runs. A run of a cheap lane counts its weight (#1727): a Haiku run sets `git config aoe2mc.lane haiku`,
 its claims end with ` lane haiku`, the `Usage:` lines count its runs (`· haiku N`), and `health.lane_weights` measures
 the weight from them (least squares, at least 10 intervals with Haiku runs; before that `weights` of `agent.toml`,
-0.25). `usage.py --fire` gives the ready `lane:haiku` tickets Haiku runs first, then Opus runs take the rest. `tools/tokens.py` reads the transcript of the
+0.25). `usage.py --fire` gives the ready `lane:haiku` tickets Haiku runs first, then Opus runs take the rest. A lane in `reserved` of `[pacing]` keeps its tickets for its own runs (Opus runs never take them, #1994). `tools/tokens.py` reads the transcript of the
 session and writes the `Tokens:` line of each run report: the tokens of the run and its largest sinks. `health.py`
 adds them. The `improve` skill finds the largest loss of quota from this data, or the data that is missing, and
 makes one `Process: <bottleneck>` ticket for it on the board.
@@ -194,6 +194,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tools/operator_check.py` | generic | None (`agent.toml`). |
 | `tools/owner_tasks.py` | generic | None (`agent.toml`). |
 | `tools/unconflict.py` | generic | None (solves add-add conflicts for `unconflict.yml`, #1864). |
+| `tools/merge_jsonl.py` | generic | None (the merge driver `merge=jsonl`: JSON lines by "name", #2004). |
 | `tests/test_agent_config.py` | generic | None (a test of `tools/agent_config.py`). |
 | `tests/test_claim.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_claim_active_pr.py` | generic | None (a test of `tools/claim.py`). |
@@ -215,7 +216,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_health_pr.py` | generic | None (a test of `tools/health.py`). |
 | `tests/test_health_reviews.py` | generic | None (a test of `tools/health.py`). |
 | `tests/test_health_takeovers.py` | generic | None (a test of `tools/health.py`). |
-| `tests/test_health_until.py` | generic | None (a test of `tools/health.py`). |
+| `tests/test_health_misses.py` | generic | None (a test of `tools/health.py`). |
 | `tests/test_operator.py` | generic | None (a test of `tools/operator_check.py`). |
 | `tests/test_owner_tasks.py` | generic | None (a test of `tools/owner_tasks.py`). |
 | `tests/test_owner_tasks_close.py` | generic | None (a test of `tools/owner_tasks.py`). |
@@ -225,6 +226,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_tokens.py` | generic | None (a test of `tools/tokens.py`). |
 | `tests/test_tokens_verify.py` | generic | None (a test of `tools/tokens.py`). |
 | `tests/test_unconflict.py` | generic | None (a test of `tools/unconflict.py`). |
+| `tests/test_merge_jsonl.py` | generic | None (a test of `tools/merge_jsonl.py`). |
 | `tests/test_pacer.py` | generic | None (a test of `tools/usage.py`). |
 | `tests/test_usage.py` | generic | None (a test of `tools/usage.py`). |
 | `tests/test_usage_week.py` | generic | None (a test of `tools/usage.py`). |
@@ -244,4 +246,4 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `.github/workflows/worlds.yml` | specific | The worlds of `examples/` and `samples/` as zips in a release (#207). |
 | `.github/labels.txt` | generic | None. |
 | `.github/ISSUE_TEMPLATE/ticket.yml` | generic | None. |
-| `.gitattributes` | specific | The list of `merge=union` files. |
+| `.gitattributes` | specific | The list of `merge=union` files, and `merge=jsonl` for `game/data/*.jsonl` (`tools/merge_jsonl.py`, #2004). |

@@ -15,8 +15,8 @@ def test_the_haiku_lane_takes_only_its_tickets():
 
 def test_an_opus_run_takes_a_lane_ticket_last():
     issues = [issue(1, "P3"), issue(2, "P0", "lane:haiku"), issue(3, "P2")]
-    assert [i["number"] for i in dashboard.candidates(issues)] == [3, 1, 2]
-    assert [i["number"] for i in dashboard.candidates([issue(2, "P0", "lane:haiku")])] == [2]
+    assert [i["number"] for i in dashboard.candidates(issues, reserved=())] == [3, 1, 2]   # no reserved lane (#1994)
+    assert [i["number"] for i in dashboard.candidates([issue(2, "P0", "lane:haiku")], reserved=())] == [2]
 
 
 def test_the_pacer_gives_the_haiku_task_at_most_the_ready_lane_tickets():
