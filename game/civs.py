@@ -230,6 +230,9 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
                           "KOREANS", "LITHUANIANS", "MACEDONIANS", "MAGYARS", "MALAY", "MALIANS", "MAPUCHE", "MAYANS",
                           "MONGOLS", "MUISCA", "POLES", "PURU", "ROMANS", "SPARTANS", "TATARS", "THRACIANS", "TUPI",
                           "TURKS", "VIETNAMESE", "VIKINGS", "WEI", "WU"),
+           "GUILDS": ("AZTECS", "BULGARIANS", "CHINESE", "DANES", "FRANKS", "GURJARAS", "HINDUSTANIS", "JAPANESE",
+                      "KHMER", "MAGYARS", "MAPUCHE", "MONGOLS", "POLES", "SARACENS", "SLAVS", "TUPI", "VIKINGS",
+                      "WEI"),                                     # the wiki chart, revision 1088694 (#1931)
            "HAND_CANNONEER": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "BENGALIS", "BRITONS", "BULGARIANS",
                               "BURMESE", "CELTS", "CHINESE", "CUMANS", "DANES", "ETHIOPIANS", "HUNS", "INCAS",
                               "JURCHENS", "KHITANS", "MACEDONIANS", "MAGYARS", "MALAY", "MAPUCHE", "MAYANS",
