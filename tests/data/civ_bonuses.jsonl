@@ -15,7 +15,7 @@
 {"name": "AZTECS: Monks gain 5 HP for every researched Monastery technology.", "civ": "AZTECS", "bonus": "Monks gain 5 HP for every researched Monastery technology.", "later": "play:monks"}
 {"name": "AZTECS: Start with gold +50.", "civ": "AZTECS", "bonus": "Start with gold +50.", "in": "START"}
 {"name": "BENGALIS: Elephant units receive 25% less bonus damage and are more resistant to conversion.", "civ": "BENGALIS", "bonus": "Elephant units receive 25% less bonus damage and are more resistant to conversion.", "later": "play:fight"}
-{"name": "BENGALIS: All Town Centers spawn 2 Villagers when the next Age is reached.", "civ": "BENGALIS", "bonus": "All Town Centers spawn 2 Villagers when the next Age is reached.", "gap": "play:ages"}
+{"name": "BENGALIS: All Town Centers spawn 2 Villagers when the next Age is reached.", "civ": "BENGALIS", "bonus": "All Town Centers spawn 2 Villagers when the next Age is reached.", "in": "AGE_VILLAGERS"}
 {"name": "BENGALIS: Cavalry units +2 attack vs Skirmishers.", "civ": "BENGALIS", "bonus": "Cavalry units +2 attack vs Skirmishers.", "later": "play:fight"}
 {"name": "BENGALIS: Ships regenerate 15 HP per minute.", "civ": "BENGALIS", "bonus": "Ships regenerate 15 HP per minute.", "later": "play:naval"}
 {"name": "BENGALIS: Monks +3/+3 armor.", "civ": "BENGALIS", "bonus": "Monks +3/+3 armor.", "later": "play:monks"}
@@ -61,13 +61,13 @@
 {"name": "DANES: Units and buildings loot 25% of target's cost when destroying enemy buildings (except walls and gates).", "civ": "DANES", "bonus": "Units and buildings loot 25% of target's cost when destroying enemy buildings (except walls and gates).", "later": "play:fight"}
 {"name": "DANES: Barracks and Siege Workshop technologies cost gold -66%.", "civ": "DANES", "bonus": "Barracks and Siege Workshop technologies cost gold -66%.", "in": "COSTS"}
 {"name": "DANES: Varangian Guards and Longships move 10% faster.", "civ": "DANES", "bonus": "Varangian Guards and Longships move 10% faster.", "later": "play:military-train"}
-{"name": "DRAVIDIANS: Receive wood 200 when advancing to the next Age.", "civ": "DRAVIDIANS", "bonus": "Receive wood 200 when advancing to the next Age.", "gap": "play:ages"}
+{"name": "DRAVIDIANS: Receive wood 200 when advancing to the next Age.", "civ": "DRAVIDIANS", "bonus": "Receive wood 200 when advancing to the next Age.", "in": "AGE_GIFTS"}
 {"name": "DRAVIDIANS: Fishermen, Oyster gatherers, and Fishing Ships carry +15.", "civ": "DRAVIDIANS", "bonus": "Fishermen, Oyster gatherers, and Fishing Ships carry +15.", "later": "play:naval"}
 {"name": "DRAVIDIANS: Barracks technologies cost -50%.", "civ": "DRAVIDIANS", "bonus": "Barracks technologies cost -50%.", "in": "COSTS"}
 {"name": "DRAVIDIANS: Siege units cost wood -33%.", "civ": "DRAVIDIANS", "bonus": "Siege units cost wood -33%.", "in": "COSTS"}
 {"name": "DRAVIDIANS: Skirmishers and Elephant Archers attack 25% faster.", "civ": "DRAVIDIANS", "bonus": "Skirmishers and Elephant Archers attack 25% faster.", "in": "UNITS"}
 {"name": "ETHIOPIANS: The Archer line fires 18% faster.", "civ": "ETHIOPIANS", "bonus": "The Archer line fires 18% faster.", "in": "UNITS"}
-{"name": "ETHIOPIANS: Receive food +100, gold +100 whenever a new Age is reached.", "civ": "ETHIOPIANS", "bonus": "Receive food +100, gold +100 whenever a new Age is reached.", "gap": "play:ages"}
+{"name": "ETHIOPIANS: Receive food +100, gold +100 whenever a new Age is reached.", "civ": "ETHIOPIANS", "bonus": "Receive food +100, gold +100 whenever a new Age is reached.", "in": "AGE_GIFTS"}
 {"name": "ETHIOPIANS: The Pikeman upgrade is free.", "civ": "ETHIOPIANS", "bonus": "The Pikeman upgrade is free.", "in": "COSTS"}
 {"name": "FRANKS: Farm upgrades are free.", "civ": "FRANKS", "bonus": "Farm upgrades are free.", "in": "COSTS"}
 {"name": "FRANKS: Castles are 15%/25% cheaper in the Castle/Imperial Age.", "civ": "FRANKS", "bonus": "Castles are 15%/25% cheaper in the Castle/Imperial Age.", "in": "COSTS"}
@@ -116,7 +116,7 @@
 {"name": "KHITANS: The effects of Forging and Iron Casting are doubled.", "civ": "KHITANS", "bonus": "The effects of Forging and Iron Casting are doubled.", "in": "TWICE"}
 {"name": "KHITANS: Skirmishers, Genitours, and the Spearman and Scout Cavalry lines are trained and upgraded 15% faster.", "civ": "KHITANS", "bonus": "Skirmishers, Genitours, and the Spearman and Scout Cavalry lines are trained and upgraded 15% faster.", "in": "TRAIN_RATE"}
 {"name": "KHITANS: Heavy Cavalry Archer upgrade available in the Castle Age and costs -50%", "civ": "KHITANS", "bonus": "Heavy Cavalry Archer upgrade available in the Castle Age and costs -50%", "later": "play:ages"}
-{"name": "KHMER: No buildings are required to advance to the next age or to unlock other buildings.", "civ": "KHMER", "bonus": "No buildings are required to advance to the next age or to unlock other buildings.", "gap": "play:ages"}
+{"name": "KHMER: No buildings are required to advance to the next age or to unlock other buildings.", "civ": "KHMER", "bonus": "No buildings are required to advance to the next age or to unlock other buildings.", "in": "AGE_NO_BUILDINGS"}
 {"name": "KHMER: Battle Elephants move 10% faster.", "civ": "KHMER", "bonus": "Battle Elephants move 10% faster.", "in": "UNITS"}
 {"name": "KHMER: Farmers don't carry food but rather add it directly to the stockpile without any drop-off, but work 5% slower.", "civ": "KHMER", "bonus": "Farmers don't carry food but rather add it directly to the stockpile without any drop-off, but work 5% slower.", "in": "WORK"}
 {"name": "KHMER: Villagers (and Kings) can garrison in Houses.", "civ": "KHMER", "bonus": "Villagers (and Kings) can garrison in Houses.", "gap": "play:garrison"}
@@ -134,7 +134,7 @@
 {"name": "MAGYARS: Forging, Iron Casting, and Blast Furnace are free.", "civ": "MAGYARS", "bonus": "Forging, Iron Casting, and Blast Furnace are free.", "in": "COSTS"}
 {"name": "MAGYARS: Scout Cavalry line is 15% cheaper.", "civ": "MAGYARS", "bonus": "Scout Cavalry line is 15% cheaper.", "in": "COSTS"}
 {"name": "MAGYARS: Villagers kill predators in one strike.", "civ": "MAGYARS", "bonus": "Villagers kill predators in one strike.", "later": "play:hunt"}
-{"name": "MALAY: Advancing in Age is +66% faster.", "civ": "MALAY", "bonus": "Advancing in Age is +66% faster.", "gap": "play:ages"}
+{"name": "MALAY: Advancing in Age is +66% faster.", "civ": "MALAY", "bonus": "Advancing in Age is +66% faster.", "in": "AGE_RATE"}
 {"name": "MALAY: Fish Traps are 33% cheaper and provide food 3×.", "civ": "MALAY", "bonus": "Fish Traps are 33% cheaper and provide food 3×.", "later": "play:naval"}
 {"name": "MALAY: Battle Elephants are 25% cheaper in the Castle Age, 35% cheaper in the Imperial Age.", "civ": "MALAY", "bonus": "Battle Elephants are 25% cheaper in the Castle Age, 35% cheaper in the Imperial Age.", "in": "COSTS"}
 {"name": "MALAY: Infantry armor upgrades are free.", "civ": "MALAY", "bonus": "Infantry armor upgrades are free.", "in": "COSTS"}
@@ -153,7 +153,7 @@
 {"name": "MONGOLS: Cavalry archers fire 25% faster.", "civ": "MONGOLS", "bonus": "Cavalry archers fire 25% faster.", "in": "UNITS"}
 {"name": "MONGOLS: Scout Cavalry-line and Steppe Lancers +20/30% hit points in the Castle/Imperial Age.", "civ": "MONGOLS", "bonus": "Scout Cavalry-line and Steppe Lancers +20/30% hit points in the Castle/Imperial Age.", "in": "UNITS"}
 {"name": "MONGOLS: Hunters work 40% faster.", "civ": "MONGOLS", "bonus": "Hunters work 40% faster.", "in": "WORK"}
-{"name": "MUISCA: Advancing to the next Age costs gold -50%.", "civ": "MUISCA", "bonus": "Advancing to the next Age costs gold -50%.", "gap": "play:ages"}
+{"name": "MUISCA: Advancing to the next Age costs gold -50%.", "civ": "MUISCA", "bonus": "Advancing to the next Age costs gold -50%.", "in": "COSTS"}
 {"name": "MUISCA: Settlements cost -33% and heal allied human units within 3 tiles by 5/10/15/15 HP/min in the Dark/Feudal/Castle/Imperial Age.", "civ": "MUISCA", "bonus": "Settlements cost -33% and heal allied human units within 3 tiles by 5/10/15/15 HP/min in the Dark/Feudal/Castle/Imperial Age.", "later": "play:build"}
 {"name": "MUISCA: The Champi Scout line and Archery Range units have +1/2/3 melee armor in the Feudal/Castle/Imperial Age.", "civ": "MUISCA", "bonus": "The Champi Scout line and Archery Range units have +1/2/3 melee armor in the Feudal/Castle/Imperial Age.", "gap": "play:fight"}
 {"name": "MUISCA: Monks regain faith 100% faster.", "civ": "MUISCA", "bonus": "Monks regain faith 100% faster.", "later": "play:monks"}
