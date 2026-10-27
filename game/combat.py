@@ -58,10 +58,11 @@ WALL_TAG = "aoe2mc.wall"
 # gives infantry a bonus against it (#1419).
 STANDARD = "standard"
 BUILDINGS = {k: s if k == "WONDER" else s._replace(classes=s.classes + (STANDARD,)) for k, s in BUILDINGS.items()}
-# The AoE2 class "Stone Defense" (wiki infobox "Class"): the stone walls and gates and the towers, not the castle and
-# not the palisades. The villager gets a bonus against it (#1590).
+# The AoE2 class "Stone Defense" (wiki infobox "Class"): the stone walls and gates, the towers and the Donjon
+# (#1873), not the castle and not the palisades. The villager gets a bonus against it (#1590).
 STONE = "stone"
-BUILDINGS = {k: s._replace(classes=s.classes + (STONE,)) if k.endswith("_TOWER") or k == "KEEP" else s
+STONE_ROWS = {r["name"] for r in BUILDING_ROWS if r.get("stone")}   # "stone": true in buildings.jsonl (#1873)
+BUILDINGS = {k: s._replace(classes=s.classes + (STONE,)) if k.endswith("_TOWER") or k == "KEEP" or k in STONE_ROWS else s
              for k, s in BUILDINGS.items()}
 WATCH = 4    # tiles of line of sight that Town Watch adds to each own building but walls, gates, farms, fish traps (#1454)
 # Line of sight in tiles (AoE2 DE, wiki infobox "LOS"; the house: 1 from the edge of its 2 x 2 tiles, #1300) where it
