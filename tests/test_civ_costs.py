@@ -61,12 +61,13 @@ def test_more_cost_bonuses():
 
 
 def test_the_table_is_in_order_and_names_known_groups():
-    assert list(civs.COSTS) == sorted(civs.COSTS) and set(civs.COSTS) <= set(train.UNIQUE)
+    assert list(civs.COSTS) == sorted(civs.COSTS) and set(civs.COSTS) <= {r["name"] for r in civs.ROWS}
     names = set(train.COSTS) | set(build.COSTS)
     for civ, rules in civs.COSTS.items():
         for what, r, change in rules:
             assert len(change) == 4 and r in (None, "food", "wood", "gold", "stone"), civ
             assert isinstance(what, tuple) or what in civs.GROUPS or what in ("ages", "buildings", "buildings but farms",
-                                                                               "technologies"), (civ, what)
+                                                                               "technologies") \
+                or what.split()[0] in train.TRAINS and what.endswith(" technologies"), (civ, what)
             assert any(civs.has(what, n) for n in names) or civ in ("BYZANTINES", "DRAVIDIANS", "FRANKS", "HUNS",
                                                                      "ITALIANS", "MALAY", "ROMANS", "SLAVS"), (civ, what)

@@ -3,8 +3,9 @@ The civilization bonuses of the players in the game program (#1089, part of #108
 the AoE2 DE civilizations (the AoE2 wiki, "Civilization bonuses" of each civilization): Gather.work_time divides the
 time of one unit of resource by the factor of the player's civilization. The keys are the gather kinds of Gather:
 "wood", "food" (forage bushes), "farm", "gold", "stone", "hunt" (hunted animals) and "sheep" (herdable animals).
-Bonuses that the game program cannot use yet: Japanese fishing ships, Malian oyster gatherers, the Georgian fortified
-church (+10 % near it).
+Bonuses that the game program cannot use yet: Japanese fishing ships, Malian oyster gatherers.
+CHURCH_RATE is the Georgian bonus of the Fortified Church (#1930): build.rise and repair.rate multiply the work of the
+villagers in the 21-tile square around it (church_rate).
 BUILD and BUILD_WONDER hold the build speed bonuses (#1893): build.rise multiplies the work of the builders (build_rate).
 WORK_RATE holds the train and research rate of the buildings (#1894, Persian town centers and docks): train.seconds
 divides the time of an item by work_rate(). TRAIN_RATE holds the train rate of unit groups (#1927, Aztec military
@@ -86,9 +87,10 @@ GROUPS = {
 # "units": the bonuses of the land units (#1090): [group of GROUPS, value, change in the Dark, Feudal, Castle and
 # Imperial Age]; value is a field of combat.Stats or "speed" (the walk speed); an int adds, a float multiplies ("fire
 # 25 % faster" is the reload / 1.25). "costs": the cost bonuses (#1091): [what, resource or null (all), change in each
-# age]; what is a group of GROUPS (units), "buildings", "buildings but farms", "technologies", "ages" or a list of
-# names; a float multiplies the cost (0.0: free), an int adds to it; AoE2 rounds half up (35 × 0.75 = 26). "twice":
-# the technologies whose effect it gets twice (train.stats, #1561).
+# age]; what is a group of GROUPS (units), "buildings", "buildings but farms", "technologies", "ages", "BUILDING
+# technologies" (the technologies of the menu of that building, #1925) or a list of names; a float multiplies the cost
+# (0.0: free), an int adds to it; AoE2 rounds half up (35 × 0.75 = 26). "twice": the technologies whose effect it gets
+# twice (train.stats, #1561).
 ROWS = table.load("civs.jsonl")
 
 
@@ -107,6 +109,8 @@ ELEPHANTS = tuple(r["name"] for r in ROWS if "BATTLE_ELEPHANT" not in r["missing
 EAGLES = tuple(r["name"] for r in ROWS if "EAGLE_SCOUT" not in r["missing"])   # the eagle line (#1555)
 LANCERS = tuple(r["name"] for r in ROWS if "STEPPE_LANCER" not in r["missing"])   # the steppe lancers (#1557)
 FIRE_LANCERS = tuple(r["name"] for r in ROWS if "FIRE_LANCER" not in r["missing"])   # the fire lancer (#1953)
+CHURCH_RATE, CHURCH_NEAR = 1.1, 10.5                              # +10 % work in the 21-tile square around a Fortified
+                                                                  # Church (tiles from its center, #1930)
 SMITH = ("BLAST_FURNACE", "BODKIN_ARROW", "BRACER", "CHAIN_BARDING_ARMOR", "CHAIN_MAIL_ARMOR", "FLETCHING", "FORGING",
          "IRON_CASTING", "LEATHER_ARCHER_ARMOR", "PADDED_ARCHER_ARMOR", "PLATE_BARDING_ARMOR", "PLATE_MAIL_ARMOR",
          "RING_ARCHER_ARMOR", "SCALE_BARDING_ARMOR", "SCALE_MAIL_ARMOR")   # the blacksmith (#1452)
@@ -180,6 +184,8 @@ def has(what, name):
         return name in build.COSTS and not (what == "buildings but farms" and name == "FARM")
     if what in ("ages", "technologies"):
         return name in (build.AGE_TECHS if what == "ages" else train.TECHS)
+    if what.endswith(" technologies"):                             # the menu of the building gives the list (#1925)
+        return name in train.TECHS and name in train.TRAINS.get(what.split()[0], ())
     s = combat.STATS.get("VILLAGER" if name.startswith("VILLAGER") else name)
     return s is not None and name not in train.TECHS and GROUPS[what](name, s)
 
@@ -225,6 +231,18 @@ def build_rate(g, name):
     BUILD_WONDER), else 1."""
     c = civ(g)
     return BUILD_WONDER.get(c, BUILD.get(c, 1)) if name == "WONDER" else BUILD.get(c, 1)
+
+
+def church_rate(g, pos):
+    """The factor of the work of a villager of the player of g at block position pos (x, z): CHURCH_RATE for a Georgian
+    in the 21-tile square around a complete own Fortified Church (AoE2 wiki "Georgians"; also to build and repair,
+    AoE2 wiki "Repairing"), else 1."""
+    if civ(g) != "GEORGIANS":
+        return 1
+    import train                                                   # train imports this module
+    near = CHURCH_NEAR * g.map.T
+    return CHURCH_RATE if any(max(abs(pos[0] - (x0 + x1) / 2), abs(pos[1] - (z0 + z1) / 2)) <= near
+                              for (x0, x1, z0, z1), n in train.homes(g).items() if n == "FORTIFIED_CHURCH") else 1
 
 
 def repair_rate(g):
