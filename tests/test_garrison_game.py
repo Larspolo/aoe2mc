@@ -180,7 +180,7 @@ def test_garrison_on_a_server(tmp_path):
     with open(tmp_path / "W" / "aoe2mc.json") as f:
         data = json.load(f)
     tc_o = next(o for o in data["objects"] if o["name"] == "TOWN_CENTER")
-    assert len(tc_o["inside"]["cells"]) == garrison.SIZES["CASTLE"]
+    assert len(tc_o["inside"]["cells"]) >= garrison.SIZES["TOWN_CENTER"]       # the hall upstairs (#2054)
     enemy = next(o["uuid"] for o in data["objects"] if o["kind"] == "unit" and o["player"] == 2)
     with run.Game(tmp_path / "W") as game:
         game.forceload()
