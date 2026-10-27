@@ -63,7 +63,7 @@ def test_after_190_seconds_the_player_is_in_the_imperial_age():
     train.tick(g, 1)
     assert train.age(g) == "Imperial Age" and "IMPERIAL_AGE" in g.techs and not g.queues.get(rect)
     assert server.log.count('scoreboard objectives modify aoe_res displayname "Resources (Imperial Age)"') == 1
-    assert 'title @a title {"text": "Imperial Age", "color": "gold"}' in server.log
+    assert 'title @a[team=p1] title {"text": "Imperial Age", "color": "gold"}' in server.log
     assert any(c.startswith("tellraw @a") and "Player 1 advances to the Imperial Age." in c for c in server.log)
     assert any(c.startswith("playsound minecraft:ui.toast.challenge_complete") for c in server.log)
     train.show(g, "Steve", rect)
