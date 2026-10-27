@@ -149,6 +149,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "SIEGE_WORKSHOP",
         "STEPPE_LANCER",
         "UNIVERSITY",
+        "VARANGIAN_GUARD",
         "WAR_HULK",
     ), 2) | dict.fromkeys((                                           # the Imperial Age (unique units: train.UNIQUE)
         "ARBALESTER",
@@ -172,6 +173,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "ELITE_GENITOUR",
         "ELITE_SHRIVAMSHA_RIDER",
         "ELITE_STEPPE_LANCER",
+        "ELITE_VARANGIAN_GUARD",
         "HALBERDIER",
         "HAND_CANNONEER",
         "HEAVY_CAMEL_RIDER",

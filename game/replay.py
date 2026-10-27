@@ -97,6 +97,7 @@ SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, 
           "ELITE_CHAKRAM_THROWER": 1.15,
           "ELITE_SHRIVAMSHA_RIDER": 1.6,                                            # (#1612)
           "ELITE_STEPPE_LANCER": 1.45,                                              # (#1557)
+          "ELITE_VARANGIAN_GUARD": 1.05,                                            # (#2011)
           "FIRE_LANCER": 0.96,                                                      # (#1953)
           "GENITOUR": 1.35,                                                         # (#1610)
           "HALBERDIER": 1.0,                                                        # (#1499)
@@ -113,6 +114,7 @@ SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, 
           "PALADIN": 1.35,                                                          # (#1501)
           "SHRIVAMSHA_RIDER": 1.6,                                                  # (#1612)
           "STEPPE_LANCER": 1.45,                                                    # (#1557)
+          "VARANGIAN_GUARD": 1.05,                                                  # (#2011)
           "CHAMPION": 0.96,                                                         # (#1498)
           "TWO_HANDED_SWORDSMAN": 0.96,
           "WINGED_HUSSAR": 1.5,                                                     # (#1558)
