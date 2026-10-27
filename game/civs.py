@@ -54,6 +54,7 @@ GROUPS = {
     "siege": lambda n, s: "siege" in s.classes,
     "skirmishers, elephant archers": lambda n, s: "SKIRMISHER" in n or n.endswith("ELEPHANT_ARCHER"),
     "spearmen, skirmishers": lambda n, s: "spearman" in s.classes or "SKIRMISHER" in n,
+    "trade units": lambda n, s: n in ("TRADE_CART", "TRADE_COG"),
     "units": lambda n, s: True,
     "villagers": lambda n, s: n.startswith("VILLAGER"),
 }
@@ -161,6 +162,9 @@ MISSING = {"ARSON": ("GOTHS", "MUISCA", "ROMANS"),                              
                                   "MACEDONIANS", "MAGYARS", "MALIANS", "MAYANS", "MONGOLS", "MUISCA", "PERSIANS", "PURU",
                                   "ROMANS", "SARACENS", "SAXONS", "SHU", "SICILIANS", "SLAVS", "SPARTANS", "THRACIANS",
                                   "TUPI", "VARANGIANS", "VIKINGS", "WEI", "WU"),
+           "CANNON_GALLEON": ("ARMENIANS", "AZTECS", "BYZANTINES", "CHINESE", "CUMANS", "DANES", "GOTHS", "HUNS", "INCAS",
+                              "JURCHENS", "MAPUCHE", "MAYANS", "MUISCA", "ROMANS", "SAXONS", "SHU", "TUPI", "VARANGIANS",
+                              "VIKINGS", "WEI", "WU"),                                     # (#1484)
            "CAVALRY_ARCHER": ("AZTECS", "BENGALIS", "BOHEMIANS", "BRITONS", "BURGUNDIANS", "CELTS", "DANES", "DRAVIDIANS",
                               "FRANKS", "GURJARAS", "INCAS", "ITALIANS", "MAPUCHE", "MAYANS", "MUISCA", "POLES",
                               "PORTUGUESE", "SAXONS", "SICILIANS", "SPANISH", "TEUTONS", "TUPI", "VARANGIANS", "VIKINGS",
@@ -181,8 +185,18 @@ MISSING = {"ARSON": ("GOTHS", "MUISCA", "ROMANS"),                              
                          "HUNS", "KHITANS", "KOREANS", "MALAY", "PORTUGUESE", "ROMANS", "TATARS", "VARANGIANS",
                          "WU"),                                            # (#1456)
            "HUSBANDRY": ("AZTECS", "CUMANS", "INCAS", "MAPUCHE", "MAYANS", "MUISCA", "TEUTONS", "TUPI", "VIKINGS"),
+           "HUSSAR_UPGRADE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "BENGALIS", "BOHEMIANS", "BRITONS",
+                              "CHINESE", "DANES", "DRAVIDIANS", "FRANKS", "INCAS", "JAPANESE", "LITHUANIANS",
+                              "MACEDONIANS", "MALAY", "MALIANS", "MAPUCHE", "MAYANS", "MUISCA", "POLES",
+                              "PORTUGUESE", "PURU", "ROMANS", "SHU", "SICILIANS", "SPARTANS", "TEUTONS", "THRACIANS",
+                              "TUPI", "VIETNAMESE", "VIKINGS"),   # the wiki chart (#1502)
            "KNIGHT": ("AZTECS", "BENGALIS", "DRAVIDIANS", "GURJARAS", "HINDUSTANIS", "INCAS", "JURCHENS", "KHITANS",
                       "MAPUCHE", "MAYANS", "MUISCA", "SHU", "TUPI", "WEI", "WU"),   # the wiki chart (#1430)
+           "SHIPWRIGHT": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "BOHEMIANS", "BULGARIANS", "BURGUNDIANS", "BURMESE",
+                          "CUMANS", "FRANKS", "GEORGIANS", "HINDUSTANIS", "HUNS", "JURCHENS", "KHITANS", "KHMER",
+                          "LITHUANIANS", "MACEDONIANS", "MALIANS", "MAPUCHE", "MUISCA", "PERSIANS", "POLES", "PORTUGUESE",
+                          "PURU", "SARACENS", "SLAVS", "SPARTANS", "TATARS", "TEUTONS", "THRACIANS", "TUPI",
+                          "VIETNAMESE", "VIKINGS", "WEI", "WU"),                           # the wiki chart (#1490)
            "SQUIRES": ("CELTS", "GURJARAS", "KHMER", "MAGYARS", "MAPUCHE", "PORTUGUESE"),   # (#1415)
            "THUMB_RING": ("ARMENIANS", "AZTECS", "BENGALIS", "BOHEMIANS", "BRITONS", "BURGUNDIANS", "BURMESE", "CELTS",
                           "FRANKS", "GEORGIANS", "GOTHS", "JURCHENS", "KHMER", "MAPUCHE", "ROMANS", "SICILIANS", "SLAVS",

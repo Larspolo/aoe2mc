@@ -13,7 +13,8 @@ def test_the_minimum_ranges_of_the_wiki():
     assert combat.MIN_RANGE == {"BOMBARD_CANNON": 5, "ELITE_ORGAN_GUN": 1, "HEAVY_ROCKET_CART": 2.5,   # tiles, AoE2 DE
                                 "HEAVY_SCORPION": 2, "HOUFNICE": 5, "MANGONEL": 3, "ONAGER": 3, "ORGAN_GUN": 1,
                                 "ROCKET_CART": 2.5, "SCORPION": 2, "SIEGE_ONAGER": 3, "TRACTION_TREBUCHET": 4,
-                                "TREBUCHET": 4}
+                                "TREBUCHET": 4,
+                                "CANNON_GALLEON": 3}                                                  # (#1484)
 
 
 @pytest.mark.parametrize("name", sorted(combat.MIN_RANGE))

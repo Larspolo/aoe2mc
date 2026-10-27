@@ -21,6 +21,7 @@ import gather
 import replay
 
 SPEEDS = {"FISHING_SHIP": 1.26,          # tiles per game second (AoE2 DE wiki infobox); other ships: 1.0 until a ticket
+          "CANNON_GALLEON": 1.05,
           "DEMOLITION_RAFT": 1.42,
           "DEMOLITION_SHIP": 1.52,
           "FIRE_GALLEY": 1.36,
@@ -28,7 +29,8 @@ SPEEDS = {"FISHING_SHIP": 1.26,          # tiles per game second (AoE2 DE wiki i
           "GALLEY": 1.36,
           "HULK": 1.42,
           "TRADE_COG": 1.65,
-          "TRANSPORT_SHIP": 1.45}
+          "TRANSPORT_SHIP": 1.45,
+          "WAR_GALLEY": 1.36}                                   # (#1482)
 NEAR = 3                                 # tiles from a clicked land cell to the water that a ship sails to
 PATH_CELLS = 20000                       # the path search limit (cells), as a long walk of the replay
 CHASE = 2.0                              # seconds between two range checks of a warship with a target (#1386)
@@ -155,9 +157,11 @@ def chase(g, v):
     return {}
 
 
-def speed(name, T):
-    """Blocks per game second of ship name."""
-    return next((s for k, s in SPEEDS.items() if name.startswith(k)), 1.0) * T
+def speed(name, T, g=None):
+    """Blocks per game second of ship name; with g, also the factor of the technologies and the civilization of its
+    player (train.speed: Caravan for the trade cog, #1497)."""
+    import train                                                      # train imports gather, gather this module
+    return next((s for k, s in SPEEDS.items() if name.startswith(k)), 1.0) * T * (train.speed(g, name) if g else 1)
 
 
 def tick(g, dt):
@@ -174,7 +178,7 @@ def tick(g, dt):
         if not v.path:
             work(g, v, dt)
             continue
-        v.timer += dt * speed(g.soldiers[u], g.map.T)
+        v.timer += dt * speed(g.soldiers[u], g.map.T, g)
         while v.path:
             if not g.map.wet(*v.path[0]):
                 v.path = g.map.path(v.cell, {v.path[-1]}, PATH_CELLS, water=True) or [] if g.map.wet(*v.path[-1]) else []
