@@ -16,8 +16,8 @@ def workshop(civ="BOHEMIANS"):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.COSTS["HOUFNICE_UPGRADE"] == {"food": 1100, "gold": 800} and train.TRAIN_TIMES["HOUFNICE_UPGRADE"] == 140
-    assert train.TECH_AGE["HOUFNICE_UPGRADE"] == 3 and build.AGE["HOUFNICE"] == 3 and build.NEEDS["HOUFNICE"] == "CHEMISTRY"
+    # the cost and time of the upgrade: the menu line below (no copy of train.jsonl, #2182)
+    assert build.AGE["HOUFNICE"] == build.AGE["BOMBARD_CANNON"] and build.NEEDS["HOUFNICE"] == "CHEMISTRY"
     assert train.COSTS["HOUFNICE"] == train.COSTS["BOMBARD_CANNON"] and len(train.HELP["HOUFNICE"]) <= 50
     s, b = combat.STATS["HOUFNICE"], combat.STATS["BOMBARD_CANNON"]
     assert (s.hp, s.attack, s.pierce, s.bonus["building"], s.bonus["heavysiege"]) == (90, 50, 6, 250, 50)
@@ -45,3 +45,11 @@ def test_the_upgrade_changes_the_live_and_the_new_bombard_cannons():
     assert " 7:tnt_minecart:Houfnice:225 wood · 225 gold · 56 s · queue 0/15 " in menu
     assert "Bombard Cannon" not in menu and "8:book" not in menu
     assert train.queue(g, "Steve", WORKSHOP, "HOUFNICE")
+
+
+def test_no_upgrade_before_the_imperial_age():
+    server, g = setup(ages=("FEUDAL_AGE", "CASTLE_AGE"))
+    g.data["players"] = {"1": {"civ": "BOHEMIANS"}}
+    train.open_menu(g, "Steve", WORKSHOP)
+    assert ":book:Houfnice:" not in menus(server)[-1]
+    assert train.queue(g, "Steve", WORKSHOP, "HOUFNICE_UPGRADE") is None

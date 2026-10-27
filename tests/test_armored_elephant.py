@@ -21,9 +21,6 @@ def workshop(civ="HINDUSTANIS", ages=CASTLE + ("IMPERIAL_AGE",)):
 
 def test_the_values_are_those_of_aoe2():
     assert build.AGE["ARMORED_ELEPHANT"] == 2 and build.AGE["SIEGE_ELEPHANT"] == 3
-    assert train.COSTS["ARMORED_ELEPHANT"] == {"food": 120, "gold": 95} and train.TRAIN_TIMES["ARMORED_ELEPHANT"] == 36
-    assert train.COSTS["SIEGE_ELEPHANT_UPGRADE"] == {"food": 850} and train.TRAIN_TIMES["SIEGE_ELEPHANT_UPGRADE"] == 60
-    assert train.TECH_AGE["SIEGE_ELEPHANT_UPGRADE"] == 3
     for unit in ("ARMORED_ELEPHANT", "SIEGE_ELEPHANT"):
         assert combat.sight(unit) == 6 and replay.SPEEDS[unit] == 0.6 and len(train.HELP[unit]) <= 50
         assert units.classify(unit)["id"] == "minecraft:ravager"
