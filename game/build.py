@@ -98,6 +98,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
                      "DEMOLITION_RAFT",
                      "FIRE_GALLEY",
                      "FISH_TRAP",
+                     "TRADE_COG",
                      "GALLEY",
                      "GATE",
                      "STONE_WALL",

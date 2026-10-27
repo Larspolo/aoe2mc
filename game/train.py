@@ -178,6 +178,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "THUMB_RING": {"food": 300, "wood": 250},                      # AoE2 DE wiki (#1421)
          "TOWN_WATCH": {"food": 75},                                    # the Feudal Age (AoE2 DE wiki, #1454)
          "TRADE_CART": {"wood": 100, "gold": 50},
+         "TRADE_COG": {"wood": 100, "gold": 50},                        # the Feudal Age (AoE2 DE wiki, #1485)
          "TRANSPORT_SHIP": {"wood": 125},                               # the Dark Age (AoE2 DE wiki, #1385)
          "TREADMILL_CRANE": {"wood": 200, "stone": 50},               # AoE2 DE wiki (#1422)
          "TREBUCHET": {"wood": 200, "gold": 200},                   # the castle, Imperial Age (#1351)
@@ -288,6 +289,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "THUMB_RING": 45,
                "TOWN_WATCH": 25,
                "TRADE_CART": 51,
+               "TRADE_COG": 36,
                "TRANSPORT_SHIP": 46,
                "TREADMILL_CRANE": 20,
                "TREBUCHET": 50,
@@ -322,6 +324,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "DOCK": ("FISHING_SHIP",                                             # (#1383)
                    "GALLEY",                                                   # (#1386)
                    "TRANSPORT_SHIP",                                           # (#1385)
+                   "TRADE_COG",                                                # (#1485)
                    "FIRE_SHIP",                                                # (#1440)
                    "DEMOLITION_SHIP",                                          # (#1440)
                    "CANNON_GALLEON",                                           # after Chemistry: build.NEEDS (#1484)
@@ -589,6 +592,7 @@ HOUSING = {"TOWN_CENTER": 5, "HOUSE": 5, "CASTLE": 20}             # population 
 LIMIT = 200                                                        # the AoE2 population limit
 REPEAT = 256                                                       # researches of one technology: "going above and beyond"
 CENSUS = 2.0                                                       # AoE2 seconds between two counts of the live units
+MORE = 18                                                          # the first slot of the item row under the queue row
 ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, item and name of each unit (#620)
          "ARSON": (6, "book", "Arson"),                            # after the slot of Gambesons
          "CAPPED_RAM": (0, "minecart", "Capped Ram"),
@@ -632,7 +636,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "BOMBARD_CANNON": (7, "tnt_minecart", "Bombard Cannon"),   # after the siege tower
          "BOW_SAW": (0, "book", "Bow Saw"),                           # the slot of Double-Bit Axe (AFTER)
          "BOMBARD_TOWER_TECH": (5, "book", "Bombard Tower"),
-         "CANNON_GALLEON": (18, "dark_oak_boat", "Cannon Galleon"),   # 2 * ROW: under the queue row, the first row is full
+         "CANNON_GALLEON": (MORE + 1, "dark_oak_boat", "Cannon Galleon"),   # units.classify: a dark oak boat with a pillager
          "CARAVAN": (1, "book", "Caravan"),
          "CASTLE_AGE": (4, "bell", "Castle Age"),
          "CAREENING": (8, "book", "Careening"),                     # the university has no rally point
@@ -696,6 +700,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "THUMB_RING": (5, "book", "Thumb Ring"),                   # slot 4: the cavalry archer (#1397)
          "TOWN_WATCH": (6, "book", "Town Watch"),                   # the free slot of the town center
          "TRADE_CART": (0, "donkey_spawn_egg", "Trade Cart"),
+         "TRADE_COG": (MORE, "birch_chest_boat", "Trade Cog"),      # units.classify: a birch chest boat
          "TRANSPORT_SHIP": (2, "spruce_chest_boat", "Transport Ship"),   # units.classify: a spruce chest boat
          "TREADMILL_CRANE": (7, "book", "Treadmill Crane"),         # the last free slot of the university
          "TREBUCHET": (1, "minecart", "Trebuchet"),                 # after the unique unit
@@ -811,6 +816,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "THUMB_RING": "Archers fire 17.65 % faster.",
         "TOWN_WATCH": "Buildings +4 line of sight.",
         "TRADE_CART": "Brings gold from a second own market.",
+        "TRADE_COG": "Brings gold from a second own dock.",
         "TRANSPORT_SHIP": "Carries 20 land units across the water.",
         "TREADMILL_CRANE": "Villagers build 20 % faster.",
         "TREBUCHET": "Siege. Long range vs. buildings; unpacks to shoot.",
@@ -984,7 +990,7 @@ def order(g, player, rect, slot, shift=False):
         garrison.out(g, rect)
         show(g, player, rect)
         return 0
-    if ROW <= slot < 2 * ROW:                                          # the queue row; items of a full first row go below
+    if ROW <= slot < MORE:                                         # the queue row; MORE: more items (#1485)
         cancel(g, player, rect, slot - ROW)
         show(g, player, rect)
         return 0

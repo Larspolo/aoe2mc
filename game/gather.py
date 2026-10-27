@@ -994,6 +994,8 @@ class Gather:
             return
         if trade.order(self, name, self.map.pick_ground(eye, d)):     # the trade carts trade with an own market (#1253)
             return
+        if fleet.trade_order(self, name, fleet.pick(self, eye, d)):   # the trade cogs trade with an own dock (#1485)
+            return
         if repair.order(self, name, self.map.pick_ground(eye, d)):    # villagers repair an own damaged building (#1330)
             return
         if garrison.order(self, name, self.map.pick_ground(eye, d)):   # the selection goes into an own building (#808)
