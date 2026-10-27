@@ -130,7 +130,7 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
    `dirty`, read `conflict.md` first: GitHub runs no CI on a PR with a merge conflict, so no CI event comes.
    Do not wait for CI and do not merge by hand: CI runs only the quick checks on each PR (lint and fast tests,
    about 1 minute), and the Automerge workflow merges the PR when CI is green, removes `in-progress` and deletes the
-   branch. The slow and Minecraft tests run only each night on main: do the levels of the `verify` skill that the
+   branch. The slow and server tests run only each night on main: do the levels of the `verify` skill that the
    change needs (slow tests, server check) before the push. Continue with step 7 and the next ticket. Step 2 of a
    later cycle finds a red or conflicted PR.
 9. CI red → find the cause, fix, push. After 3 failed attempts stop: comment the cause on the ticket,

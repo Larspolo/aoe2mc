@@ -14,7 +14,7 @@ dashboard counts them.
 - Did you do the same kind of task for the second time? → write a skill for it in `.claude/skills/`.
 - Would a test or tool have found a problem earlier? → make a `tooling` ticket (`P1` if it blocks other tickets).
 - Did you see a bug outside the ticket? → make a ticket. Do not fix it in this PR.
-- Did you write own logic where Minecraft has a feature for it (CLAUDE.md: "Minecraft features first")? → use the
+- Did you write own logic where the platform has a feature for it (CLAUDE.md: the platform features first)? → use the
   feature in this PR when it is small, else make a ticket.
 - Did you install a package or download a file by hand? → add it to `scripts/cloud-setup.sh` (raise `SETUP_VERSION`).
 - Was a check slow, or CI red, for a reason outside your code (install, download, cache, network)? → fix it

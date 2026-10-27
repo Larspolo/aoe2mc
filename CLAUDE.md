@@ -71,7 +71,7 @@ Find code by function name with Grep. Do not read the large files from start to 
 
 Design work (buildings, objects, units, animals) follows `docs/DESIGN.md`. Do design tickets with the `design` skill.
 
-- **Minecraft features first** (owner rule, 2026-10-26). Before you write own logic, look for the Minecraft feature that
+- **Minecraft features first** (owner rule, 2026-10-26; the generic skills say "the platform features first"). Before you write own logic, look for the Minecraft feature that
   does the job, and use it: mob AI and path finding, riders (`Passengers`) and boats, the behavior class of a mob
   (passive, neutral, hostile: `docs/animals.md`), teams, scoreboards, attributes, block states, block entities, redstone,
   datapack functions. Write own logic only when Minecraft has no feature for it, and say why in the PR.
