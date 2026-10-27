@@ -842,6 +842,10 @@ class Gather:
             self.task(v, "BUILDER")
             self.go(v, "to_site", goals)
 
+    def row_busy(self, site):
+        """An earlier site of the row of site is not complete: its builders come to site after it (#1805)."""
+        return any(s.get("row") == site.get("row") and s["progress"] < 1 for s in self.sites[:self.sites.index(site)])
+
     def hunt(self, prey, who=None):
         """Send the selected villagers (or the villagers who) to hunt the animal prey, with the hunter look (#1058)."""
         if not (pos := self.pos(prey)):
@@ -1077,7 +1081,7 @@ class Gather:
         if building:                                                   # a chosen building: place its foundation
             if (site := build.place(self, name, building, eye, d)) and building in build.WATER:
                 fleet.build_site(self, self.selected, site)            # the selected fishing ships build it (#1438)
-            elif site and self.selected & self.villagers.keys():
+            elif site and self.selected & self.villagers.keys() and not self.row_busy(site):
                 self.build(site)                                       # the selected villagers build it at once, as in AoE2 (#1654)
             return
         if monk.order(self, name, self.map.pick_ground(eye, d)):      # a monk to a relic or to a monastery (#1246)
