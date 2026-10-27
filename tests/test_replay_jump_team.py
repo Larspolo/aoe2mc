@@ -79,6 +79,6 @@ def test_the_team_game_gathers_after_a_jump(tmp_path):
     r = replay.Replay(game, d)
     r.run(clock=lambda: game.now, sleep=game.sleep, log=None, to=to)
     got = {p: r.gathered.get(p, {}) for p in (1, 2, 3, 4)}
-    assert got[4]["wood"] >= 500, got
+    assert got[4]["wood"] >= 1000, got
     for p, food in {1: 3200, 2: 3000, 3: 3000, 4: 3050}.items():
         assert got[p]["food"] >= food / 2, got

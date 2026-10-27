@@ -25,6 +25,7 @@ FEES = {"GUILDS": 15}                                              # a technolog
 CIV_FEES = {"SARACENS": 5}                                         # the civilization bonus of the Saracens
 ITEMS = {"wood": "oak_log", "food": "wheat", "stone": "cobblestone"}   # the menu item of each resource
 SELL = 9                                                           # the first slot of the sell row
+ROW = 18                                                           # the buy row in the menu of the market (train.show, #1286)
 
 
 def rates(g):
@@ -96,13 +97,13 @@ def trade(g, player, resource, buy):
     return True
 
 
-def order(g, player, slot, shift=False):
+def order(g, player, slot, shift=False, refresh=None):
     """A click on the menu item in slot: 1 trade (a shift click: SHIFT, while the stock allows), then refresh the
-    menu with the new prices. Returns the number of trades."""
+    menu with the new prices (refresh(), else show()). Returns the number of trades."""
     names, buy = list(RATES), slot < SELL
     i = slot if buy else slot - SELL
     n = 0
     while 0 <= i < len(names) and n < (SHIFT if shift else 1) and trade(g, player, names[i], buy):
         n += 1
-    show(g, player)
+    (refresh or (lambda: show(g, player)))()
     return n

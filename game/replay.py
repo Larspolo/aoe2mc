@@ -16,6 +16,9 @@ a MOVE, an ORDER on something else, or the end of its work without a next resour
 Garrisons (#809): a GARRISON command, or an ORDER on an own start building with garrison room (game/garrison.py SIZES),
 puts the units inside it when they arrive (the state of the converter, #807), and UNGARRISON lets them out next to it.
 A villager with resources and an ORDER on a drop site drops them and does not go in.
+Gather points (#1227): a trained unit walks to the last GATHER POINT of its building, and a villager there gathers, as
+after an ORDER. The record names the unit only in its first command, so until then it has a temporary negative ID
+(rally()); unit() gives its state to the real ID.
 
 Replay(game, data).run(speed) plays it; commands(e) gives the commands of one event (the unit tests use it).
 With bar=True (game/run.py --replay) a boss bar shows the game time, the speed and the progress (#684).
@@ -156,6 +159,8 @@ class Replay:
         self.work = {}                          # object ID -> the resource tile that it left for a garrison (#1179)
         self.ids = {}                           # new object ID of a building -> footprint of its replay building (#876)
         self.hunted = {}                        # object ID of a hunted animal -> the tile of its carcass (#1229)
+        self.points = {}                        # object ID of a building -> its last GATHER POINT event (#1227)
+        self.adopted, self.rallied = {}, 0      # temporary ID of a unit at a gather point -> its object ID (#1227)
         self.effects = {}                       # entity tag of a research text -> game time (ms) of its end (#843)
         self.refs = {o["ref"]: o for o in data["objects"] if o.get("ref") is not None}
         self.rng = np.random.default_rng(1)
@@ -228,6 +233,9 @@ class Replay:
             return self.build(e)
         if kind == "spawn":
             return self.spawn(e)
+        if kind == "gather_point" and e.get("objects"):
+            self.points.update(dict.fromkeys(e["objects"], e))
+            return []
         if kind in ("move", "order") and e.get("objects"):
             return self.move(e)
         if kind == "garrison" and e.get("objects"):
@@ -622,7 +630,19 @@ class Replay:
             import combat                                           # combat -> gather -> build -> replay
             out += [combat.stats_command(v.uuid, v.name)] + [c for c in [combat.range_command(v.uuid, v.name, self.T)] if c]
             out.append(f"tag {v.uuid} add {COUNTED}")              # census() counts it
-        return out
+        return out + self.rally(e, v)
+
+    def rally(self, e, v):
+        """The unit v of spawn event e walks to the gather point of its building, with a temporary negative ID, as
+        after a MOVE (a point on the ground) or an ORDER (a point on a resource or an object). Returns the commands."""
+        p = self.points.get(e.get("building"))
+        if p is None:
+            return []
+        self.rallied += 1
+        i = -self.rallied
+        self.units[i] = v
+        return self.move(dict(p, time=e["time"], kind="order" if p.get("target") is not None else "move",
+                              objects=[i], names=[v.name]))
 
     def grid(self):
         """The gather.Map of the world with the buildings of the replay. The first call also finds the units of the
@@ -650,7 +670,15 @@ class Replay:
         if i not in self.units and name:
             k = next((k for k, (p, v) in enumerate(self.new) if p == player and v.name == name), None)
             if k is not None:
-                self.units[i] = self.new.pop(k)[1]
+                self.units[i] = v = self.new.pop(k)[1]
+                for j in [j for j, u in self.units.items() if j < 0 and u is v]:   # it was at a gather point
+                    del self.units[j]
+                    self.adopted[j] = i
+                    for state in (self.moving, self.working, self.arriving, self.entering, self.work):
+                        if j in state:
+                            state[i] = state.pop(j)
+                    for us in self.garrisons.values():                     # a gather point on a building
+                        us[:] = [i if u == j else u for u in us]
         return self.units.get(i)
 
     def goals(self, e, water=False):
@@ -1394,6 +1422,10 @@ class Replay:
                                           for i, v in self.units.items()
                                           if (i in self.moving or i in self.working) and v.tree is not None}
         for e in events:
+            if e["kind"] in ("move", "order", "garrison", "build", "wall") and e.get("objects"):
+                for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"])):
+                    self.unit(i, name, e["player"])                 # a unit of a gather point gets its ID (#1227)
+                since.update((self.adopted[j], since.pop(j)) for j in list(since) if j in self.adopted)
             if e["kind"] in ("move", "order", "garrison") and e.get("objects"):
                 for i in e["objects"]:                              # a new order ends the work at the old resource
                     self.skipped(i, since.pop(i, None), e["time"])
@@ -1408,7 +1440,10 @@ class Replay:
                 trees = {i: v.tree for i in builders if (v := self.units.get(i)) is not None}
                 for i in builders:                                  # a builder ends the work at its resource
                     self.skipped(i, since.pop(i, None), e["time"])
+                rallied = self.rallied
                 out += self.enter(e["time"]) + self.commands(e)
+                if self.rallied > rallied and (v := self.units[-self.rallied]).tree is not None:   # (#1227)
+                    since[-self.rallied] = self.walk_end(v, e["time"])
                 since.update((i, self.walk_end(v, e["time"])) for i in builders     # the builders of a farm farm it,
                              if (v := self.units.get(i)) is not None                  # of a camp gather next to it
                              and (v.tree in self.map.farms or v.tree not in (None, trees.get(i))))
@@ -1418,6 +1453,8 @@ class Replay:
                 out += cmds
                 moved.update(ids)
                 since.update((i, self.walk_end(self.units[i], e["time"])) for i in ids)
+            elif e["kind"] == "gather_point":
+                self.commands(e)
             elif e["kind"] == "age" and e.get("age"):                 # the sidebar shows it, no title
                 self.age(e)
             elif e["kind"] == "research" and e.get("technology"):     # no text, but the summary counts it
