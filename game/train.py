@@ -129,6 +129,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "ELITE_CANNON_GALLEON_UPGRADE": {"wood": 525, "gold": 500},   # the Imperial Age (#1491)
          "ELITE_EAGLE_WARRIOR": {"food": 20, "gold": 50},
          "ELITE_EAGLE_WARRIOR_UPGRADE": {"food": 800, "gold": 500},
+         "ELITE_GENITOUR": {"food": 40, "wood": 35},
+         "ELITE_GENITOUR_UPGRADE": {"food": 500, "wood": 450},         # the Imperial Age (#1610)
          "ELITE_STEPPE_LANCER": {"food": 70, "gold": 40},
          "ELITE_STEPPE_LANCER_UPGRADE": {"food": 600, "gold": 550},   # the Imperial Age (#1557)
          "ELITE_SKIRMISHER": {"food": 25, "wood": 35},
@@ -149,6 +151,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "GALLEON": {"wood": 90, "gold": 30},                          # AoE2 DE wiki (#1483)
          "GALLEY": {"wood": 90, "gold": 30},                           # AoE2 DE wiki (#1386)
          "HULK": {"wood": 75, "gold": 35},                             # AoE2 DE wiki (#1489)
+         "GENITOUR": {"food": 40, "wood": 35},                         # AoE2 DE wiki (#1610)
          "GAMBESONS": {"food": 50, "gold": 100},                       # AoE2 DE wiki (#1420)
          "GILLNETS": {"food": 150, "wood": 200},                       # AoE2 DE wiki (#1439)
          "GOLD_MINING": {"food": 100, "wood": 75},
@@ -302,6 +305,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "ELITE_CANNON_GALLEON_UPGRADE": 30,
                "ELITE_EAGLE_WARRIOR": 20,
                "ELITE_EAGLE_WARRIOR_UPGRADE": 50,
+               "ELITE_GENITOUR": 25,
+               "ELITE_GENITOUR_UPGRADE": 60,
                "ELITE_STEPPE_LANCER": 20,
                "ELITE_STEPPE_LANCER_UPGRADE": 55,
                "ELITE_SKIRMISHER": 22,
@@ -323,6 +328,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "GALLEY": 36,
                "HULK": 42,
                "GAMBESONS": 25,
+               "GENITOUR": 25,
                "GILLNETS": 45,
                "GOLD_MINING": 30,
                "GOLD_SHAFT_MINING": 75,
@@ -442,7 +448,9 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                             "ARBALESTER_UPGRADE",                                             # the Imperial Age (#1500)
                             "IMPERIAL_SKIRMISHER_UPGRADE",                                    # Vietnamese (#1611)
                             "HEAVY_CAVALRY_ARCHER_UPGRADE",                                   # (#1500)
-                            "HAND_CANNONEER"),                                                # after Chemistry: build.NEEDS (#1506)
+                            "HAND_CANNONEER",                                                 # after Chemistry: build.NEEDS (#1506)
+                            "GENITOUR",                                                       # Berbers (#1610)
+                            "ELITE_GENITOUR_UPGRADE"),                                        # the Imperial Age
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING",            # (#675, #725, #724, #937, #938)
                          "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR",
                          "CHAIN_MAIL_ARMOR", "LEATHER_ARCHER_ARMOR", "CHAIN_BARDING_ARMOR",   # the Castle Age (#1394)
@@ -616,6 +624,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_BATTLE_ELEPHANT_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_CANNON_GALLEON_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
          "ELITE_EAGLE_WARRIOR_UPGRADE": lambda name, s: s,
+         "ELITE_GENITOUR_UPGRADE": lambda name, s: s,              # a new unit name: UPGRADES
          "ELITE_STEPPE_LANCER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
          "ELITE_SKIRMISHER_UPGRADE": lambda name, s: s,
          "FAITH": lambda name, s: s,                               # the conversion resistance: monk.resist
@@ -719,6 +728,7 @@ UPGRADES = {                                                       # technology:
     "ELITE_BATTLE_ELEPHANT_UPGRADE": ("BATTLE_ELEPHANT", "ELITE_BATTLE_ELEPHANT"),   # (#1556)
     "ELITE_CANNON_GALLEON_UPGRADE": ("CANNON_GALLEON", "ELITE_CANNON_GALLEON"),
     "ELITE_EAGLE_WARRIOR_UPGRADE": ("EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"),
+    "ELITE_GENITOUR_UPGRADE": ("GENITOUR", "ELITE_GENITOUR"),   # (#1610)
     "ELITE_SKIRMISHER_UPGRADE": ("SKIRMISHER", "ELITE_SKIRMISHER"),
     "ELITE_STEPPE_LANCER_UPGRADE": ("STEPPE_LANCER", "ELITE_STEPPE_LANCER"),   # (#1557)
     "HALBERDIER_UPGRADE": ("PIKEMAN", "HALBERDIER"),
@@ -814,6 +824,7 @@ TECH_AGE = {                                                       # the age of 
     "ELITE_BATTLE_ELEPHANT_UPGRADE": 3,
     "ELITE_CANNON_GALLEON_UPGRADE": 3,
     "ELITE_EAGLE_WARRIOR_UPGRADE": 3,
+    "ELITE_GENITOUR_UPGRADE": 3,
     "ELITE_SKIRMISHER_UPGRADE": 2,
     "ELITE_STEPPE_LANCER_UPGRADE": 3,                             # (#1557)
     "FAITH": 3,
@@ -910,6 +921,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "ELITE_CANNON_GALLEON": (MORE + 1, "dark_oak_boat", "Elite Cannon Galleon"),   # the slot of the cannon galleon
          "ELITE_CANNON_GALLEON_UPGRADE": (MORE + 3, "book", "Elite Cannon Galleon"),   # the dock (#1491)
          "ELITE_EAGLE_WARRIOR": (7, "husk_spawn_egg", "Elite Eagle Warrior"),
+         "ELITE_GENITOUR": (MORE + 1, "skeleton_horse_spawn_egg", "Elite Genitour"),   # the slot of the genitour
+         "ELITE_GENITOUR_UPGRADE": (MORE + 2, "book", "Elite Genitour"),   # the archery range (#1610)
          "ELITE_EAGLE_WARRIOR_UPGRADE": (MORE, "book", "Elite Eagle Warrior"),   # the slot of Eagle Warrior (AFTER)
          "ELITE_SKIRMISHER": (1, "drowned_spawn_egg", "Elite Skirmisher"),
          "ELITE_SKIRMISHER_UPGRADE": (3, "book", "Elite Skirmisher"),
@@ -998,6 +1011,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "GALLEON": (1, "dark_oak_boat", "Galleon"),              # the slot of the war galley (#1483)
          "GALLEY": (1, "oak_boat", "Galley"),
          "HULK": (MORE + 2, "oak_boat", "Hulk"),                   # after the trade cog and the cannon galleon
+         "GENITOUR": (MORE + 1, "skeleton_horse_spawn_egg", "Genitour"),   # slots 19, 20 of the archery range (#1610)
          "GAMBESONS": (5, "book", "Gambesons"),                    # slot 4: Squires (#1415)
          "GILLNETS": (5, "book", "Gillnets"),                      # the slot of Fishing Lines (AFTER)
          "GOLD_MINING": (0, "book", "Gold Mining"),
@@ -1120,6 +1134,8 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "ELITE_CANNON_GALLEON_UPGRADE": "Upgrades cannon galleons to elite ones.",
         "ELITE_EAGLE_WARRIOR": "Fast infantry. Strong vs. monks, siege, cavalry.",
         "ELITE_EAGLE_WARRIOR_UPGRADE": "Upgrades eagle warriors to elite ones.",
+        "ELITE_GENITOUR": "Mounted skirmisher. Strong vs. archers.",
+        "ELITE_GENITOUR_UPGRADE": "Upgrades genitours to elite ones.",
         "ELITE_SKIRMISHER": "Ranged. Strong vs. archers, spearmen.",
         "ELITE_SKIRMISHER_UPGRADE": "Upgrades skirmishers to elite skirmishers.",
         "ELITE_STEPPE_LANCER": "Cavalry with a lance. Hits from 1 tile away.",
@@ -1141,6 +1157,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "GALLEON": "All-purpose warship with ranged attack.",
         "GALLEY": "All-purpose warship with ranged attack.",
         "HULK": "Warship with a close range melee attack.",
+        "GENITOUR": "Mounted skirmisher. Strong vs. archers.",
         "GAMBESONS": "Militia line +1 pierce armor.",
         "GILLNETS": "Fishing ships work 10 % faster, carry +5.",
         "GOLD_MINING": "Villagers mine gold 15 % faster.",

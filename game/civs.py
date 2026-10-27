@@ -299,6 +299,8 @@ MISSING["IMPERIAL_SKIRMISHER_UPGRADE"] = tuple(sorted(set().union(*MISSING.value
 LANCERS = ("CUMANS", "JURCHENS", "KHITANS", "MONGOLS", "TATARS")   # the steppe lancers (AoE2 DE wiki, #1557)
 MISSING |= dict.fromkeys(("STEPPE_LANCER", "ELITE_STEPPE_LANCER", "ELITE_STEPPE_LANCER_UPGRADE"),
                          tuple(sorted(set().union(*MISSING.values()) - set(LANCERS))))
+MISSING |= dict.fromkeys(("GENITOUR", "ELITE_GENITOUR", "ELITE_GENITOUR_UPGRADE"),   # the Berbers (AoE2 DE wiki, #1610)
+                         tuple(sorted(set().union(*MISSING.values()) - {"BERBERS"})))
 
 
 def mounted(s):
