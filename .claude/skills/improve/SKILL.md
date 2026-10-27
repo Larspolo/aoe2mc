@@ -35,6 +35,8 @@ quota), the tokens per run and per merged PR and the largest token sinks (from t
 - Tokens: `python3 tools/tokens.py --top 15` on this run (the sinks one by one: which file, which command). The
   `Tokens:` lines of `tools/health.py` give only the groups. The token counts are estimates (API price ratios, about
   4 characters per token): compare them with the rise of the `Usage:` lines before you trust them.
+- Verify: `tools/health.py` "Verify commands" sums the `verify` fields of the `Tokens:` lines (the minutes and the count
+  of `pytest`, `pytest -m mc`, `ruff`, `mc_shot.py`, the wait loops ...; `python3 tools/tokens.py --verify` for one run, #1704).
 - Agent: the last 20 run comments by the agent on the status issue (label `agent-status`). Each has a line
   `Metrics: ticket #n · size · result · minutes · setup m min · checks k · checks c min · time sinks: ...`.
   Also the tickets and PRs closed in that period, and rework (tickets that the owner reopened, or that came
