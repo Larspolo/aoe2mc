@@ -300,6 +300,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "HUSSAR_UPGRADE": lambda name, s: s,                      # a new unit name: UPGRADES
          "ILLUMINATION": lambda name, s: s,                        # the rest after a conversion: monk.ILLUMINATED
          "IMPERIAL_AGE": lambda name, s: s,                        # an age: REQUIRES
+         "IMPERIAL_CAMEL_RIDER_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
          "IMPERIAL_SKIRMISHER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
          "IRON_CASTING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) or name in HULKS else s,
          "KEEP": lambda name, s: s,                                # the towers of the player: TOWER_UPGRADES
