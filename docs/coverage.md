@@ -1064,7 +1064,7 @@ Most common results: decorations (126), trees (53), flags (39).
 | GRENADIER | pillager | no |
 | LIAO_DAO | zombie | no |
 | ELITE_LIAO_DAO | zombie | no |
-| MOUNTED_TREBUCHET | minecart (warden) | no |
+| MOUNTED_TREBUCHET | camel (warden) | no |
 | PAGAN_PRIEST | evoker | no |
 | PAGAN_PRIEST_WITH_RELIC | evoker | no |
 | TRACTION_TREBUCHET | minecart (warden) | no |
