@@ -55,6 +55,7 @@
 {"name": "SCORPION", "walk": 0.65}
 {"name": "SIEGE_TOWER", "walk": 0.96}
 {"name": "TRADE_CART", "walk": 1.25}
+{"name": "MOUNTED_TREBUCHET", "walk": 0.8}
 {"name": "FEUDAL_AGE", "age": 1}
 {"name": "CASTLE_AGE", "age": 2}
 {"name": "IMPERIAL_AGE", "age": 3}
