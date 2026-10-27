@@ -27,6 +27,7 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - A new file in `.github/workflows/` or `.claude/skills/` needs a row in the table "Generic and specific files" of `docs/SYSTEM.md`, else `tests/test_system_doc.py` fails in the quick CI (#1541).
 - The label `close` (#1740) works only with the owner's `autoMode` allow rule (`~/.claude/settings.json`, written by the setup script in the environment settings, 2026-10-27): without it the label and a skill text about it got "Auto-Mode Bypass". `claude auto-mode config` shows the allow lines.
 - A background `-m mc` run imports the code of the working tree: do not `git checkout` another branch there until it ends (#1664 tested main's `units.py` for 10 minutes). Do the next ticket in a `git worktree`.
+- `$TMPDIR` is empty in the cloud sessions: `cat > $TMPDIR/x.py <<EOF` writes `/x.py`, and a `cat > $TMPDIR/x` without a heredoc waits for input until the 120 s timeout (#2032). Use the scratchpad path.
 
 ## Code
 
@@ -57,3 +58,4 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - `tools/data_lint.py --shrink` in a run deleted 98 valid lines of `tests/data/game_names_in_code.txt` (#2035): read `git diff` after it; delete the lines of your places by hand (`sed -i "/^units\.py:/d"`).
 - `tools/data_lint.py --shrink` while main has new places (red `test_game_names_in_code.py`) wrote a list of 3 lines: run `git diff --stat` after it; delete the lines of your places with `sed` instead (#2033).
 - A new check over the whole code (a lint with a list of known cases) can turn main red: PRs that merged after its CI run add new cases (#2026: `ARCHER_LINE`, `LONGSHIPS`, fixed in #2061). After the merge of such a check, read the next CI run on main.
+- A new `data/*.jsonl` file needs its line in `KEYS` of `tests/test_converter_data.py` (the test compares the file list). Put it after the `animals.jsonl` line, not at the end: parallel tickets change the last line (#2036, #2072).

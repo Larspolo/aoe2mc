@@ -12,9 +12,10 @@ import zlib
 
 import numpy as np
 
+import units
+
 FORMATS = {b"1.21"}             # format versions that this reader knows (genie-scx: player data version 1.14)
-CIVS = ["GAIA", "BRITONS", "FRANKS", "GOTHS", "TEUTONS", "JAPANESE", "CHINESE", "BYZANTINES", "PERSIANS", "SARACENS",
-        "TURKS", "VIKINGS", "MONGOLS", "CELTS", "SPANISH", "AZTECS", "MAYANS", "HUNS", "KOREANS"]  # the DE IDs too
+CIVS = [r["name"] for r in units.rows("scx_civs.jsonl")]   # the index is the civilization ID, the DE IDs too
 
 
 class ScxError(ValueError):
