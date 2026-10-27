@@ -119,7 +119,7 @@
 {"name": "KHMER: No buildings are required to advance to the next age or to unlock other buildings.", "civ": "KHMER", "bonus": "No buildings are required to advance to the next age or to unlock other buildings.", "in": "AGE_NO_BUILDINGS"}
 {"name": "KHMER: Battle Elephants move 10% faster.", "civ": "KHMER", "bonus": "Battle Elephants move 10% faster.", "in": "UNITS"}
 {"name": "KHMER: Farmers don't carry food but rather add it directly to the stockpile without any drop-off, but work 5% slower.", "civ": "KHMER", "bonus": "Farmers don't carry food but rather add it directly to the stockpile without any drop-off, but work 5% slower.", "in": "WORK"}
-{"name": "KHMER: Villagers (and Kings) can garrison in Houses.", "civ": "KHMER", "bonus": "Villagers (and Kings) can garrison in Houses.", "gap": "play:garrison"}
+{"name": "KHMER: Villagers (and Kings) can garrison in Houses.", "civ": "KHMER", "bonus": "Villagers (and Kings) can garrison in Houses.", "in": "GARRISON"}
 {"name": "KOREANS: Stone Miners work 20% faster.", "civ": "KOREANS", "bonus": "Stone Miners work 20% faster.", "in": "WORK"}
 {"name": "KOREANS: Padded Archer Armor-line technologies, Watch Tower line upgrades, and the Bombard Tower technology are free (Bombard Tower requires Chemistry).", "civ": "KOREANS", "bonus": "Padded Archer Armor-line technologies, Watch Tower line upgrades, and the Bombard Tower technology are free (Bombard Tower requires Chemistry).", "in": "COSTS"}
 {"name": "KOREANS: Archer and infantry units cost wood -50%.", "civ": "KOREANS", "bonus": "Archer and infantry units cost wood -50%.", "in": "COSTS"}
@@ -190,7 +190,7 @@
 {"name": "SHU: Archery unit technologies at the Archery Range and Blacksmith cost -25%.", "civ": "SHU", "bonus": "Archery unit technologies at the Archery Range and Blacksmith cost -25%.", "in": "COSTS"}
 {"name": "SHU: All land siege units and Lou Chuans move +10/15% faster in Castle/Imperial Age", "civ": "SHU", "bonus": "All land siege units and Lou Chuans move +10/15% faster in Castle/Imperial Age", "gap": "play:siege"}
 {"name": "SICILIANS: Start with stone +100.", "civ": "SICILIANS", "bonus": "Start with stone +100.", "in": "START"}
-{"name": "SICILIANS: Fortifications built 50%, Town Centers built 100% faster.", "civ": "SICILIANS", "bonus": "Fortifications built 50%, Town Centers built 100% faster.", "gap": "play:build"}
+{"name": "SICILIANS: Fortifications built 50%, Town Centers built 100% faster.", "civ": "SICILIANS", "bonus": "Fortifications built 50%, Town Centers built 100% faster.", "in": "BUILD_OF"}
 {"name": "SICILIANS: Land military units (except siege weapons) receive 40% less bonus damage.", "civ": "SICILIANS", "bonus": "Land military units (except siege weapons) receive 40% less bonus damage.", "later": "play:fight"}
 {"name": "SICILIANS: Farm upgrades provide additional food +125%.", "civ": "SICILIANS", "bonus": "Farm upgrades provide additional food +125%.", "gap": "play:gather"}
 {"name": "SLAVS: Farmers work 15% faster.", "civ": "SLAVS", "bonus": "Farmers work 15% faster.", "in": "WORK"}
@@ -210,10 +210,10 @@
 {"name": "TATARS: Parthian Tactics and Thumb Ring are free.", "civ": "TATARS", "bonus": "Parthian Tactics and Thumb Ring are free.", "in": "COSTS"}
 {"name": "TATARS: Two Sheep spawn near newly-constructed Town Centers starting in the Castle Age.", "civ": "TATARS", "bonus": "Two Sheep spawn near newly-constructed Town Centers starting in the Castle Age.", "later": "play:build"}
 {"name": "TEUTONS: Monks have double healing range.", "civ": "TEUTONS", "bonus": "Monks have double healing range.", "later": "play:monks"}
-{"name": "TEUTONS: Towers garrison twice as many units.", "civ": "TEUTONS", "bonus": "Towers garrison twice as many units.", "gap": "play:garrison"}
+{"name": "TEUTONS: Towers garrison twice as many units.", "civ": "TEUTONS", "bonus": "Towers garrison twice as many units.", "in": "GARRISON"}
 {"name": "TEUTONS: Murder Holes and Herbal Medicine are free.", "civ": "TEUTONS", "bonus": "Murder Holes and Herbal Medicine are free.", "in": "COSTS"}
 {"name": "TEUTONS: Farms are 40% cheaper.", "civ": "TEUTONS", "bonus": "Farms are 40% cheaper.", "in": "COSTS"}
-{"name": "TEUTONS: Town Centers can garrison +10 units.", "civ": "TEUTONS", "bonus": "Town Centers can garrison +10 units.", "gap": "play:garrison"}
+{"name": "TEUTONS: Town Centers can garrison +10 units.", "civ": "TEUTONS", "bonus": "Town Centers can garrison +10 units.", "in": "GARRISON"}
 {"name": "TEUTONS: Infantry and mounted units receive +1/+2 melee armor in the Castle/Imperial Age.", "civ": "TEUTONS", "bonus": "Infantry and mounted units receive +1/+2 melee armor in the Castle/Imperial Age.", "in": "UNITS"}
 {"name": "THRACIANS: Elite Skirmisher upgrade is free.", "civ": "THRACIANS", "bonus": "Elite Skirmisher upgrade is free.", "in": "COSTS"}
 {"name": "THRACIANS: (Elite/Imperial) Skirmishers regenerate 5 (10) hit points per minute.", "civ": "THRACIANS", "bonus": "(Elite/Imperial) Skirmishers regenerate 5 (10) hit points per minute.", "later": "play:health"}
