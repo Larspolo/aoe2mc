@@ -84,5 +84,5 @@ def test_the_wand_commands_work_on_a_server(tiny_world, tmp_path):
         x, z = map(int, v.cell)
         box(g, (x - 2, z - 2), (x + 2, z + 2))
         assert g.selected == {v.uuid}
-        bad = [(c, out) for c, out in sent if any(w in out for w in ("Unknown", "Incorrect", "Invalid", "Expected"))]
+        bad = [(c, out) for c, out in sent if any(w in out for w in ("Unknown", "Incorrect", "Invalid", "Expected", "Failed to parse"))]
         assert not bad, bad

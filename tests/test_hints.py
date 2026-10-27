@@ -93,5 +93,5 @@ def test_the_hint_commands_work_on_a_server(tiny_world, tmp_path):
         g.corners["Steve"] = (0, 0)
         hints.tick(g)
         assert len([c for c, _ in sent if " actionbar " in c]) == 2
-        bad = [(c, out) for c, out in sent if any(w in out for w in ("Unknown", "Incorrect", "Invalid", "Expected"))]
+        bad = [(c, out) for c, out in sent if any(w in out for w in ("Unknown", "Incorrect", "Invalid", "Expected", "Failed to parse"))]
         assert not bad, bad

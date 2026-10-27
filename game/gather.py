@@ -146,7 +146,7 @@ RELEASE = 0.45   # seconds without a wand use: the player released the held righ
 GROUPS = {n: (3 + n, dye) for n, dye in enumerate(("red_dye", "yellow_dye", "lime_dye", "light_blue_dye",
                                                      "magenta_dye"), 1)}   # group: hotbar slot, item model
 GROUP_GIVE = 20                                                    # clicks() calls between two checks of the items
-SNEAK = '{condition:"minecraft:entity_properties",entity:"this",predicate:{flags:{is_sneaking:true}}}'
+SNEAK = '{type:"minecraft:entity_properties",entity:"this",predicate:{flags:{is_sneaking:true}}}'
 MARK = {"go": "[0.2,1.0,0.2]", "attack": "[1.0,0.15,0.15]"}       # dust colors of the order marker (#796): green, red
 SIEGE_GLOW = 3                                                     # seconds of the glow of an attacked building (#991)
 MARK_POINTS = 12                                                   # dust points on the ring of the order marker
