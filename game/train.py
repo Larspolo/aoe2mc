@@ -89,6 +89,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "BOW_SAW": {"food": 150, "wood": 100},                        # AoE2 DE wiki (#1423)
          "BRACER": {"food": 300, "gold": 200},                         # the blacksmith, Imperial Age (#1503)
          "BERSERK": {"food": 65, "gold": 20},
+         "BATTLE_ELEPHANT": {"food": 100, "gold": 70},                    # AoE2 DE wiki (#1556)
          "BLAST_FURNACE": {"food": 275, "gold": 225},                  # AoE2 DE wiki (#1451)
          "BLOCK_PRINTING": {"gold": 200},                              # AoE2 DE wiki (#1457)
          "BODKIN_ARROW": {"food": 200, "gold": 100},                   # AoE2 DE wiki (#1395)
@@ -117,6 +118,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "EAGLE_SCOUT": {"food": 20, "gold": 50},                       # AoE2 DE wiki (#1555)
          "EAGLE_WARRIOR": {"food": 20, "gold": 50},
          "EAGLE_WARRIOR_UPGRADE": {"food": 200, "gold": 200},
+         "ELITE_BATTLE_ELEPHANT": {"food": 100, "gold": 70},
+         "ELITE_BATTLE_ELEPHANT_UPGRADE": {"food": 1100, "gold": 700},    # the Imperial Age (#1556)
          "ELITE_CANNON_GALLEON": {"wood": 200, "gold": 150},           # AoE2 DE wiki (#1491)
          "ELITE_CANNON_GALLEON_UPGRADE": {"wood": 525, "gold": 500},   # the Imperial Age (#1491)
          "ELITE_EAGLE_WARRIOR": {"food": 20, "gold": 50},
@@ -228,6 +231,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "WAR_GALLEY": {"wood": 90, "gold": 30},                       # AoE2 DE wiki (#1482)
          "WAR_HULK": {"wood": 75, "gold": 35},                         # AoE2 DE wiki (#1508)
          "WHEELBARROW": {"food": 175, "wood": 50},
+         "WINGED_HUSSAR": {"food": 80},                                # AoE2 DE wiki (#1558)
+         "WINGED_HUSSAR_UPGRADE": {"food": 600, "gold": 800},          # the Imperial Age (#1558)
          "WOAD_RAIDER": {"food": 70, "gold": 25}}
 TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FEUDAL_AGE": 130,   # AoE2 seconds
                "ARSON": 25,
@@ -237,6 +242,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "ARROWSLITS": 25,
                "BALLISTICS": 60,
                "BATTERING_RAM": 36,
+               "BATTLE_ELEPHANT": 24,
                "BERSERK": 14,
                "BLAST_FURNACE": 100,
                "BLOCK_PRINTING": 55,
@@ -270,6 +276,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "EAGLE_SCOUT": 46,                                  # 35 s from the Castle Age: FASTER
                "EAGLE_WARRIOR": 35,
                "EAGLE_WARRIOR_UPGRADE": 50,
+               "ELITE_BATTLE_ELEPHANT": 24,
+               "ELITE_BATTLE_ELEPHANT_UPGRADE": 100,
                "ELITE_CANNON_GALLEON": 46,
                "ELITE_CANNON_GALLEON_UPGRADE": 30,
                "ELITE_EAGLE_WARRIOR": 20,
@@ -381,6 +389,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "WAR_GALLEY": 27,
                "WAR_HULK": 27,
                "WHEELBARROW": 75,
+               "WINGED_HUSSAR": 30,
+               "WINGED_HUSSAR_UPGRADE": 60,
                "WOAD_RAIDER": 10}
 TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", "HAND_CART", "CASTLE_AGE", "IMPERIAL_AGE",
                          "TOWN_WATCH"), "BARRACKS": ("MILITIA", "SPEARMAN", "MAN_AT_ARMS_UPGRADE",   # the units and technologies of each
@@ -415,7 +425,10 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES", "LIGHT_CAVALRY_UPGRADE", "KNIGHT",   # (#671, #940, #1396, #1397)
                      "HUSBANDRY",                                               # (#1416)
                      "HUSSAR_UPGRADE",                                          # the Imperial Age (#1502)
+                     "WINGED_HUSSAR_UPGRADE",                                   # Poles, Lithuanians (#1558)
                      "CAVALIER_UPGRADE",                                        # (#1501)
+                     "BATTLE_ELEPHANT",                                         # (#1556)
+                     "ELITE_BATTLE_ELEPHANT_UPGRADE",
                      "PALADIN_UPGRADE"),                                        # after Cavalier (#1501)
           "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS",   # (#1326, #1374, #1352)
                          "MASONRY", "TREADMILL_CRANE",                          # (#1398, #1422) the Castle Age
@@ -554,6 +567,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
          "DRY_DOCK": lambda name, s: s._replace(pierce=s.pierce + 1) if ship(name, s) else s,
          "EAGLE_WARRIOR_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
+         "ELITE_BATTLE_ELEPHANT_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_CANNON_GALLEON_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
          "ELITE_EAGLE_WARRIOR_UPGRADE": lambda name, s: s,
          "ELITE_SKIRMISHER_UPGRADE": lambda name, s: s,
@@ -626,6 +640,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "TOWN_WATCH": lambda name, s: s,                          # the building sight: gather.seen_tiles
          "TREADMILL_CRANE": lambda name, s: s,                     # the build speed: build.rise
          "TWO_HANDED_SWORDSMAN_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
+         "WINGED_HUSSAR_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "FEUDAL_AGE": lambda name, s: s,   # the change of each technology to the AoE2 values
          "WHEELBARROW": lambda name, s: s}                         # no combat change: gather.CARRY and gather.PACE
 SPEEDS = {"CARAVAN": ("trade units", 1.2),                        # technology: the unit (or a class of combat.STATS:
@@ -646,6 +661,7 @@ UPGRADES = {                                                       # technology:
     "CHAMPION_UPGRADE": ("TWO_HANDED_SWORDSMAN", "CHAMPION"),
     "CROSSBOWMAN_UPGRADE": ("ARCHER", "CROSSBOWMAN"),
     "EAGLE_WARRIOR_UPGRADE": ("EAGLE_SCOUT", "EAGLE_WARRIOR"),        # (#1555)
+    "ELITE_BATTLE_ELEPHANT_UPGRADE": ("BATTLE_ELEPHANT", "ELITE_BATTLE_ELEPHANT"),   # (#1556)
     "ELITE_CANNON_GALLEON_UPGRADE": ("CANNON_GALLEON", "ELITE_CANNON_GALLEON"),
     "ELITE_EAGLE_WARRIOR_UPGRADE": ("EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"),
     "ELITE_SKIRMISHER_UPGRADE": ("SKIRMISHER", "ELITE_SKIRMISHER"),
@@ -666,6 +682,7 @@ UPGRADES = {                                                       # technology:
     "SIEGE_ONAGER_UPGRADE": ("ONAGER", "SIEGE_ONAGER"),
     "SIEGE_RAM_UPGRADE": ("CAPPED_RAM", "SIEGE_RAM"),
     "TWO_HANDED_SWORDSMAN_UPGRADE": ("LONG_SWORDSMAN", "TWO_HANDED_SWORDSMAN"),
+    "WINGED_HUSSAR_UPGRADE": ("LIGHT_CAVALRY", "WINGED_HUSSAR"),
 }
 AFTER = {"ARBALESTER_UPGRADE": "CROSSBOWMAN_UPGRADE",
          "ARCHITECTURE": "MASONRY",
@@ -697,7 +714,8 @@ AFTER = {"ARBALESTER_UPGRADE": "CROSSBOWMAN_UPGRADE",
          "RING_ARCHER_ARMOR": "LEATHER_ARCHER_ARMOR",
          "SIEGE_ONAGER_UPGRADE": "ONAGER_UPGRADE", "SIEGE_RAM_UPGRADE": "CAPPED_RAM_UPGRADE",
          "STONE_SHAFT_MINING": "STONE_MINING",
-         "TWO_HANDED_SWORDSMAN_UPGRADE": "LONG_SWORDSMAN_UPGRADE"}   # the upgrade before it
+         "TWO_HANDED_SWORDSMAN_UPGRADE": "LONG_SWORDSMAN_UPGRADE",   # the upgrade before it
+         "WINGED_HUSSAR_UPGRADE": "LIGHT_CAVALRY_UPGRADE"}   # in place of Hussar (AoE2 DE wiki, #1558)
 WALL_UPGRADES = {"FORTIFIED_WALL": {"STONE_WALL": "FORTIFIED_WALL", "GATE": "FORTIFIED_GATE"}}   # technology: {wall: new} (#1326)
 TOWER_UPGRADES = {"GUARD_TOWER": {"WATCH_TOWER": "GUARD_TOWER"},   # technology: {tower: the tower of its values},
                   "KEEP": {"GUARD_TOWER": "KEEP", "WATCH_TOWER": "KEEP"}}   # in the research order (#1374)
@@ -728,6 +746,7 @@ TECH_AGE = {                                                       # the age of 
     "DOUBLE_BIT_AXE": 1,
     "DRY_DOCK": 3,
     "EAGLE_WARRIOR_UPGRADE": 2,
+    "ELITE_BATTLE_ELEPHANT_UPGRADE": 3,
     "ELITE_CANNON_GALLEON_UPGRADE": 3,
     "ELITE_EAGLE_WARRIOR_UPGRADE": 3,
     "ELITE_SKIRMISHER_UPGRADE": 2,
@@ -789,6 +808,7 @@ TECH_AGE = {                                                       # the age of 
     "TOWN_WATCH": 1,
     "TREADMILL_CRANE": 2,
     "TWO_HANDED_SWORDSMAN_UPGRADE": 3,
+    "WINGED_HUSSAR_UPGRADE": 3,
     "WHEELBARROW": 1,
 }
 AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age after each researched age (index: ages)
@@ -811,6 +831,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "EAGLE_SCOUT": (7, "husk_spawn_egg", "Eagle Scout"),        # the free slot of the barracks (#1555)
          "EAGLE_WARRIOR": (7, "husk_spawn_egg", "Eagle Warrior"),    # the slot of the eagle scout
          "EAGLE_WARRIOR_UPGRADE": (MORE, "book", "Eagle Warrior"),
+         "ELITE_BATTLE_ELEPHANT": (7, "ravager_spawn_egg", "Elite Battle Elephant"),   # the slot of the battle elephant
+         "ELITE_BATTLE_ELEPHANT_UPGRADE": (MORE + 1, "book", "Elite Battle Elephant"),   # the stable (#1556)
          "ELITE_CANNON_GALLEON": (MORE + 1, "dark_oak_boat", "Elite Cannon Galleon"),   # the slot of the cannon galleon
          "ELITE_CANNON_GALLEON_UPGRADE": (MORE + 3, "book", "Elite Cannon Galleon"),   # the dock (#1491)
          "ELITE_EAGLE_WARRIOR": (7, "husk_spawn_egg", "Elite Eagle Warrior"),
@@ -853,7 +875,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "SPEARMAN": (1, "zombie_spawn_egg", "Spearman"),
          "SQUIRES": (4, "book", "Squires"),                        # after the slot of Pikeman
          "BALLISTICS": (MORE + 3, "book", "Ballistics"),          # 18: Shipwright, 19: Arrowslits, 20: Heated Shot
-         "MURDER_HOLES": (MORE + 4, "book", "Murder Holes"),      # the university after Ballistics (#1547)
+         "BATTLE_ELEPHANT": (7, "ravager_spawn_egg", "Battle Elephant"),   # the stable (#1556)
          "BATTERING_RAM": (0, "minecart", "Battering Ram"),         # a siege unit is a minecart (units.siege)
          "BERSERK": (0, "zombie_spawn_egg", "Berserk"),
          "BLAST_FURNACE": (0, "book", "Blast Furnace"),               # the slot of Forging
@@ -917,6 +939,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "MAN_AT_ARMS": (0, "zombie_spawn_egg", "Man-at-Arms"),
          "MASONRY": (6, "book", "Masonry"),
          "MEDIUM_WARSHIPS": (3, "book", "Medium Warships"),         # the dock
+         "MURDER_HOLES": (MORE + 4, "book", "Murder Holes"),      # the university after Ballistics (#1547)
          "MAN_AT_ARMS_UPGRADE": (2, "book", "Man-at-Arms"),
          "MANGONEL": (1, "dispenser", "Mangonel"),
          "MANGUDAI": (0, "skeleton_horse_spawn_egg", "Mangudai"),
@@ -954,6 +977,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "WAR_HULK": (MORE + 2, "dark_oak_boat", "War Hulk"),     # the slot of the hulk
          "FEUDAL_AGE": (2, "bell", "Feudal Age"),
          "WHEELBARROW": (3, "book", "Wheelbarrow"),
+         "WINGED_HUSSAR": (0, "horse_spawn_egg", "Winged Hussar"),
+         "WINGED_HUSSAR_UPGRADE": (2, "book", "Winged Hussar"),       # the slot of Light Cavalry (AFTER)
          "WOAD_RAIDER": (0, "zombie_spawn_egg", "Woad Raider")}
 # The AoE2 help text of each menu item, short (#1160): the plugin shows it as the last lore line of the item (help()).
 HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
@@ -964,6 +989,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "ARSON": "Infantry +2 attack vs. buildings.",
         "BALLISTICS": "Arrows hit moving targets.",
         "BATTERING_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
+        "BATTLE_ELEPHANT": "Slow, heavy cavalry. Strong vs. buildings.",
         "BERSERK": "Viking infantry. Heals itself.",
         "BLAST_FURNACE": "Infantry, cavalry and hulks +2 attack.",
         "BLOCK_PRINTING": "Monks +3 conversion range and line of sight.",
@@ -997,6 +1023,8 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "EAGLE_SCOUT": "Fast infantry scout. Strong vs. monks, siege.",
         "EAGLE_WARRIOR": "Fast infantry. Strong vs. monks, siege, cavalry.",
         "EAGLE_WARRIOR_UPGRADE": "Upgrades eagle scouts to eagle warriors.",
+        "ELITE_BATTLE_ELEPHANT": "Slow, heavy cavalry. Strong vs. buildings.",
+        "ELITE_BATTLE_ELEPHANT_UPGRADE": "Upgrades battle elephants to elite ones.",
         "ELITE_CANNON_GALLEON": "Siege warship. Long range; strong vs. buildings.",
         "ELITE_CANNON_GALLEON_UPGRADE": "Upgrades cannon galleons to elite ones.",
         "ELITE_EAGLE_WARRIOR": "Fast infantry. Strong vs. monks, siege, cavalry.",
@@ -1112,6 +1140,8 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "WAR_GALLEY": "All-purpose warship with ranged attack.",
         "WAR_HULK": "Warship with a close range melee attack.",
         "WHEELBARROW": "Villagers +10 % speed, +25 % carry.",
+        "WINGED_HUSSAR": "Polish cavalry. Fast; strong vs. monks.",
+        "WINGED_HUSSAR_UPGRADE": "Upgrades light cavalry to winged hussars.",
         "WOAD_RAIDER": "Celtic infantry. Fast."}
 SHIFT = 5                                                          # units of a shift click, as in AoE2
 RALLY = (8, "white_banner", "Rally point", "Click, then right click the ground")   # last slot of the first row
