@@ -159,9 +159,11 @@ def chase(g, v):
     return {}
 
 
-def speed(name, T):
-    """Blocks per game second of ship name."""
-    return next((s for k, s in SPEEDS.items() if name.startswith(k)), 1.0) * T
+def speed(name, T, g=None):
+    """Blocks per game second of ship name; with g, also the factor of the technologies and the civilization of its
+    player (train.speed: Caravan for the trade cog, #1497)."""
+    import train                                                      # train imports gather, gather this module
+    return next((s for k, s in SPEEDS.items() if name.startswith(k)), 1.0) * T * (train.speed(g, name) if g else 1)
 
 
 def tick(g, dt):
@@ -178,7 +180,7 @@ def tick(g, dt):
         if not v.path:
             work(g, v, dt)
             continue
-        v.timer += dt * speed(g.soldiers[u], g.map.T)
+        v.timer += dt * speed(g.soldiers[u], g.map.T, g)
         while v.path:
             if not g.map.wet(*v.path[0]):
                 v.path = g.map.path(v.cell, {v.path[-1]}, PATH_CELLS, water=True) or [] if g.map.wet(*v.path[-1]) else []
