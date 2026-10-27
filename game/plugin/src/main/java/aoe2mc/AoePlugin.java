@@ -125,6 +125,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              the arrow bonus class:n,... (Heated Shot against ships, #1548)
  *   aoe menu <player> <title> <slot>:<material>:<name>:<lore>[:<count>] ...
  *                                              open a chest menu (#619, game/menu.py; the texts are URL-encoded)
+ *   aoe menu-add <player> <title> <slot>:<material>:<name>:<lore>[:<count>] ...
+ *                                              more items of the open menu with this title (one RCON command holds
+ *                                              at most 1446 bytes, #1647)
  *   aoe menu-close <player>                    close the menu of the player
  *   aoe cheats <code>,<code>,...|-             the AoE2 cheat codes in the chat (#816, Cheats.java; URL-encoded)
  *   aoe deathmarks on|off                      a short mark where a replay unit dies (#846, Deaths.java)
@@ -698,6 +701,34 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 p.openInventory(inv);
             }
             n++;
+        }
+        sender.sendMessage("Menu: " + n + " players");
+        return true;
+    }
+
+    /** aoe menu-add: put more items into the open menu of the title (the rest of a long menu, game/menu.py). */
+    private static boolean menuAdd(CommandSender sender, String[] args) {
+        var items = new ArrayList<Map.Entry<Integer, ItemStack>>();
+        for (int i = 3; i < args.length; i++) {
+            var it = item(args[i]);
+            if (it == null) {
+                sender.sendMessage("Bad item: " + args[i]);
+                return true;
+            }
+            items.add(it);
+        }
+        String title = text(args[2]);
+        int n = 0;
+        for (Player p : players(sender, args[1])) {
+            Menu open = menuOf(p);
+            if (open != null && open.title.equals(title)) {
+                for (var it : items) {
+                    if (it.getKey() < open.inventory.getSize()) {
+                        open.inventory.setItem(it.getKey(), it.getValue());
+                    }
+                }
+                n++;
+            }
         }
         sender.sendMessage("Menu: " + n + " players");
         return true;
@@ -2045,6 +2076,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         if (args.length >= 3 && args[0].equals("menu")) {
             return menu(sender, args);
+        }
+        if (args.length >= 3 && args[0].equals("menu-add")) {
+            return menuAdd(sender, args);
         }
         if (args.length == 2 && args[0].equals("menu-close")) {
             int n = 0;

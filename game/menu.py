@@ -4,10 +4,17 @@ Chest menus in the game program (#619, part of #618). Vanilla has no clickable i
 inventory, and a click on an item sets the score aoe_menu of the player to slot + 1 (a shift click: -(slot + 1)). The player takes no item, and the
 menu stays open, so a second click queues one more (owner, 2026-10-26). `aoe menu-close <player>` closes it.
 The texts are URL-encoded: RCON splits the arguments at spaces, and ":" splits the fields of an item.
+One RCON command holds at most rcon.MAX bytes: a longer menu goes out as `aoe menu` with the item of the last slot (it
+gives the size of the inventory) and `aoe menu-add` commands with the other items (#1647).
 gather.Gather.clicks calls clicks(): it reads and resets the score and calls the handler of the open menu.
 """
+import os
 import re
+import sys
 from urllib.parse import quote
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from rcon import MAX  # noqa: E402
 
 OBJECTIVE = "aoe_menu"
 
@@ -19,12 +26,34 @@ def setup(g):
 def command(player, title, items):
     """The plugin command that opens a menu. items: (slot, material, name, lore) or (slot, material, name, lore,
     count) with lore "" for none, and lines of the lore split by a new line. count: the item count (#706)."""
-    def q(s):
-        return quote(str(s), safe="")
-    return " ".join([f"aoe menu {player} {q(title)}"] +
-                    [f"{int(slot)}:{material.removeprefix('minecraft:')}:{q(name)}:{q(lore)}"
-                     + (f":{int(more[0])}" if more and more[0] != 1 else "")
-                     for slot, material, name, lore, *more in items])
+    return " ".join([f"aoe menu {player} {q(title)}"] + [spec(it) for it in items])
+
+
+def q(s):
+    return quote(str(s), safe="")
+
+
+def spec(item):
+    """The plugin text of one item: slot:material:name:lore[:count]."""
+    slot, material, name, lore, *more = item
+    return (f"{int(slot)}:{material.removeprefix('minecraft:')}:{q(name)}:{q(lore)}"
+            + (f":{int(more[0])}" if more and more[0] != 1 else ""))
+
+
+def commands(player, title, items, limit=MAX):
+    """The plugin commands of one menu, each at most limit bytes: command() when it fits, else `aoe menu` with the
+    item of the last slot first (the plugin takes the size of the inventory from it) and `aoe menu-add` commands with
+    the other items."""
+    if len((one := command(player, title, items)).encode()) <= limit:
+        return [one]
+    specs = sorted((spec(it) for it in items), key=lambda s: -int(s.split(":", 1)[0]))
+    out, head = [], f"aoe menu {player} {q(title)}"
+    for s in specs:
+        if out and len(f"{out[-1]} {s}".encode()) <= limit:
+            out[-1] += " " + s
+        else:
+            out.append(f"{head if not out else f'aoe menu-add {player} {q(title)}'} {s}")
+    return out
 
 
 def lore(g, material, name, text):
@@ -36,7 +65,7 @@ def lore(g, material, name, text):
 def show(g, player, title, items, handler):
     """Open (or refresh) a menu for player; handler(player, slot, shift) gets each click."""
     g.menus[player] = handler
-    return g.command(command(player, title, items))
+    return [g.command(c) for c in commands(player, title, items)][0]
 
 
 def close(g, player):
