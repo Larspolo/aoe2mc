@@ -465,6 +465,8 @@ def classify(n, hero=False):
         return mob("villager", VillagerData=Compound({"profession": String("minecraft:" + job),
                                                        "type": String("minecraft:plains"), "level": Int(2)}),
                    Xp=Int(1), Offers=no_trades())
+    if n == "MISSIONARY":                                     # a mounted monk (#1939)
+        return mounted("horse", mob("evoker"))
     if has(n, "MONK", "MISSIONARY", "PRIEST", "MERCHANT") and "SHIP" not in n or hero and has(n, *RELIGIOUS_HEROES):
         return mob("evoker")
     if n in ("KING", "QUEEN", "KHAN") or has(n, "EMPEROR"):

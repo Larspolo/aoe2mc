@@ -75,6 +75,7 @@ import build  # noqa: E402
 import civs  # noqa: E402
 import garrison  # noqa: E402
 import menu  # noqa: E402
+import monk  # noqa: E402
 import table  # noqa: E402
 
 DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "train.jsonl")
@@ -224,6 +225,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_LEITIS_UPGRADE": lambda name, s: s,                # a new unit name: UPGRADES
          "ELITE_MONASPA_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
          "ELITE_OBUCH_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
+         "ELITE_ORGAN_GUN_UPGRADE": lambda name, s: s,             # a new unit name: UPGRADES
          "ELITE_PLUMED_ARCHER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
          "ELITE_RATHA_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "ELITE_RATTAN_ARCHER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
@@ -253,6 +255,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          if name in HEATED else s,                                 # the arrows of the own towers on ships (#1548)
          "HEAVY_CAMEL_RIDER_UPGRADE": lambda name, s: s,           # a new unit name: UPGRADES
          "HEAVY_CAVALRY_ARCHER_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
+         "HEAVY_HEI_GUANG_CAVALRY_UPGRADE": lambda name, s: s,     # a new unit name: UPGRADES
          "HOARDINGS": lambda name, s: s._replace(hp=round(s.hp * 1.21)) if name == "CASTLE" else s,   # build.values
          "HEAVY_PLOW": lambda name, s: s,                          # an economy technology: gather.FARM_TECHS, FOOD_CARRY
          "HEAVY_SCORPION_UPGRADE": lambda name, s: s,
@@ -296,7 +299,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          if "archer" in s.classes else s,
          "SCALE_BARDING_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if barding(s) else s,
-         "SANCTITY": lambda name, s: s._replace(hp=s.hp + 15) if name == "MONK" else s,
+         "SANCTITY": lambda name, s: s._replace(hp=s.hp + 15) if name in monk.MONKS else s,
          "SAPPERS": lambda name, s: s._replace(bonus={**s.bonus, "building": s.bonus.get("building", 0) + 15,
                                                       "ram": s.bonus.get("ram", 0) + 3})
          if name.startswith("VILLAGER") else s,                    # the walls too: "building" is also stone defense
@@ -320,7 +323,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "FEUDAL_AGE": lambda name, s: s,   # the change of each technology to the AoE2 values
          "WHEELBARROW": lambda name, s: s}                         # no combat change: gather.CARRY and gather.PACE
 SPEEDS = {"CARAVAN": ("trade units", 1.2),                        # technology: the unit (or a class of combat.STATS:
-          "FERVOR": ("MONK", 1.15),                                # lower case, or a group of civs.GROUPS) and its
+          "FERVOR": ("monks", 1.15),                               # lower case, or a group of civs.GROUPS) and its
           "HUSBANDRY": ("mounted", 1.1),                           # walk speed factor; cavalry, camels, elephants (#1416)
           "SQUIRES": ("infantry", 1.1)}                            # (#1415)
 SHIPWRIGHT = (0.8, 1.54)                                           # Shipwright: ships cost 80 % wood, train 54 % faster
@@ -865,7 +868,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     if player not in (None, g.player):
         return uuid
     # they take move orders as a soldier (#1243, #1253); a ship sails with fleet.py (#1383)
-    if gather.military(name) or name in ("MONK", "TRADE_CART") or units.is_boat(units.classify(name)):
+    if gather.military(name) or name in ("MONK", "MISSIONARY", "TRADE_CART") or units.is_boat(units.classify(name)):
         g.soldiers[uuid] = name
         return uuid
     g.villagers[uuid] = gather.Villager(uuid, pos)

@@ -60,6 +60,7 @@ GROUPS = {
     "infantry": lambda n, s: "infantry" in s.classes,
     "infantry, mounted": lambda n, s: "infantry" in s.classes or mounted(s),
     "military": lambda n, s: not n.startswith("VILLAGER"),
+    "monks": lambda n, s: n in ("MONK", "MISSIONARY"),
     "mounted": lambda n, s: mounted(s),
     "scorpions": lambda n, s: n.endswith("SCORPION"),
     "scout line": lambda n, s: n in ("SCOUT_CAVALRY", "LIGHT_CAVALRY", "HUSSAR"),
