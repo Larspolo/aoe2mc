@@ -9,7 +9,8 @@ for each armor class of the target. `damage` is the AoE2 damage rule (#514); the
 A ranged unit shoots from its AoE2 range, one shot per reload time (#515, `aoe range`, `range_command`).
 The Mangonel line hits all units in its blast radius around the target (#1050, `BLAST`). It does not shoot at a target inside its minimum range (`MIN_RANGE`, #1350).
 A melee unit hits once per reload time too (#848, the last value of `stats_command`).
-An idle soldier attacks the nearest enemy unit in its AoE2 line of sight (#775, `aoe sight`, `sight_command`).
+An idle soldier attacks the nearest enemy unit in its AoE2 line of sight (#775, `aoe sight`, `sight_command`); rams,
+trebuchets, Armored Elephants and Cannon Galleons also take the nearest enemy building in it (#1820, `BUILDING_SIGHT`).
 """
 import math
 import os
@@ -584,11 +585,28 @@ def sight(name, s=None):
     return SIGHT.get(name, max(4, s.range + 2))
 
 
+# The units that also take enemy buildings in their sight (#1820, AoE2 wiki "Siege unit (Age of Empires II)": "Battering
+# Ram line automatically attack only buildings", "Trebuchets automatically attack only buildings", "The Armored
+# Elephant and Cannon Galleon lines prioritize attacking enemy buildings over units"): "only" or "first".
+BUILDING_SIGHT = {
+    "ARMORED_ELEPHANT": "first",
+    "BATTERING_RAM": "only",
+    "CANNON_GALLEON": "first",
+    "CAPPED_RAM": "only",
+    "ELITE_CANNON_GALLEON": "first",
+    "SIEGE_ELEPHANT": "first",
+    "SIEGE_RAM": "only",
+    "TREBUCHET": "only",
+}
+
+
 def sight_command(uuid, name, T, s=None):
     """The plugin command that lets an idle soldier attack the nearest enemy unit in its line of sight (tiles * T
-    blocks, #775). None for a unit that does not fight (villager, monk, king)."""
+    blocks, #775), and the enemy buildings for the units of BUILDING_SIGHT (#1820). None for a unit that does not
+    fight (villager, monk, king)."""
     s = s or stats(name)
-    return f"aoe sight {uuid} {sight(name, s) * T}" if s.classes and s.attack else None
+    mode = f" {BUILDING_SIGHT[name]}" if name in BUILDING_SIGHT else ""
+    return f"aoe sight {uuid} {sight(name, s) * T}{mode}" if s.classes and s.attack else None
 
 
 STANCES = ("aggressive", "defensive", "stand_ground", "no_attack")
