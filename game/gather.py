@@ -88,9 +88,9 @@ BUSH_FOOD = 125                                                    # food in one
 AOE2_WORK, NORMAL = {"wood": 0.39, "food": 0.31, "farm": 0.33, "gold": 0.38, "stone": 0.36, "hunt": 0.41,
                      "fish": 0.43}, 1.7                            # fish: a fisherman at a shore fish (#1283)
 WORK_SECONDS = {r: 1 / (w * NORMAL) for r, w in AOE2_WORK.items()}    # real seconds per unit, as at Normal speed
-CARRY = {"WHEELBARROW": 3}                                         # more resources per trip, as in AoE2 (#728)
+CARRY = {"HAND_CART": 7, "WHEELBARROW": 3}                         # more resources per trip: 10, 13, 20 (AoE2 wiki, #728, #1453)
 FOOD_CARRY = {"HEAVY_PLOW": 1}                                     # more food only per trip, as in AoE2 (#1424)
-PACE = {"WHEELBARROW": 1.1}                                        # the villager walk speed factor, as in AoE2
+PACE = {"HAND_CART": 1.1, "WHEELBARROW": 1.1}                      # the villager walk speed factor, as in AoE2
 WORK_TECHS = {"BOW_SAW": {"wood": 1.2},                            # work rate factors of the economy technologies (AoE2)
               "DOUBLE_BIT_AXE": {"wood": 1.2},
               "GOLD_MINING": {"gold": 1.15},
@@ -724,16 +724,23 @@ class Gather:
         """{uuid: feet position} of the loaded units; a dead unit is not in it."""
         return {u: p for u in uuids if (p := self.pos(u))}
 
-    def seen_tiles(self, pos=None):
+    def seen_tiles(self, pos=None, alive=None):
         """The tiles (x, y) in the AoE2 line of sight of the own units, buildings and construction sites (#1388, the
-        fog of war: epic #1387), with replay.seen. pos: {uuid: feet position} of the own units, else from the server."""
+        fog of war: epic #1387), with replay.seen. pos: {uuid: feet position} of the own units, else from the server.
+        alive: the UUIDs of the live entities (Gather.where); an own building whose target is not in it is destroyed
+        and sees nothing (#1470). None: all buildings stand."""
         names = dict.fromkeys(self.villagers, "VILLAGER") | self.soldiers
         pos = self.positions(list(names)) if pos is None else pos
         mobs = [types.SimpleNamespace(name=names[u], player=self.player, pos=p) for u, p in pos.items() if u in names]
-        placed = [(self.player, o["name"], tuple(o["footprint"][i] for i in (0, 2, 1, 3))) for o in self.data["objects"]
+        placed = [(o["name"], tuple(o["footprint"][i] for i in (0, 2, 1, 3)), 1.0) for o in self.data["objects"]
                   if o["kind"] == "building" and o["player"] == self.player and "footprint" in o]
-        placed += [(self.player, s["name"], s["footprint"]) for s in self.sites]   # also a foundation, as in AoE2
-        return replay.seen(mobs, placed, self.player, self.map.T)
+        placed += [(s["name"], s["footprint"], s["progress"]) for s in self.sites]   # also a foundation, as in AoE2
+        if alive is not None:                                          # only a complete building of BUILDINGS or
+            import combat                                              # WALLS has a target (combat.setup, build.target)
+            hp = combat.BUILDINGS.keys() | combat.WALLS.keys()
+            placed = [(n, fp, k) for n, fp, k in placed
+                      if n not in hp or k < 1 or combat.target_uuid([fp[i] for i in (0, 2, 1, 3)]) in alive]
+        return replay.seen(mobs, [(self.player, n, fp) for n, fp, _ in placed], self.player, self.map.T)
 
     def task(self, v, name):
         """Give the villager the look of its AoE2 task (`LUMBERJACK` ...), with the table of the converter."""
