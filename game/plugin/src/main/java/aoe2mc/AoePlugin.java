@@ -49,6 +49,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
+import org.bukkit.event.entity.EntityTransformEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -1028,6 +1029,14 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     @EventHandler(ignoreCancelled = true)
+    public void onDrown(EntityTransformEvent ev) {           // a unit stays a unit under water: no Drowned (#1658)
+        if (ev.getTransformReason() == EntityTransformEvent.TransformReason.DROWNED
+                && stats.containsKey(ev.getEntity().getUniqueId())) {
+            ev.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
     public void onCombust(EntityCombustEvent ev) {           // the lava cauldron of a blacksmith: an invisible target
         if (buildings.containsKey(ev.getEntity().getUniqueId())) {   // that burns shows the fire over the footprint (#1526)
             ev.setCancelled(true);
@@ -1695,6 +1704,15 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
     }
 
+    private static boolean afloat(Entity e) {                // the crew of a ship on the water (#1658)
+        return e.getVehicle() instanceof Boat boat && boat.isInWater();
+    }
+
+    private boolean ranged(Mob mob) {
+        Stats s = stats.get(mob.getUniqueId());
+        return s != null && s.ranged();
+    }
+
     private static boolean sameTeam(Entity a, Entity b) {
         return allied(side(a), side(b));
     }
@@ -2150,6 +2168,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             int n = 0;
             for (Entity e : select(sender, args[1])) {
                 Mob mob = unit(e);
+                if (mob != null && afloat(target) && !(mob.getVehicle() instanceof Boat)
+                        && !ranged(rider(mob) != null ? rider(mob) : mob)) {
+                    continue;                                    // a land melee unit cannot reach a ship (#1658)
+                }
                 if (mob != null && mob != target && !sameTeam(mob, target)) {
                     orders.remove(mob.getUniqueId());
                     posts.remove(mob.getUniqueId());            // an order: a defensive unit chases to the end
