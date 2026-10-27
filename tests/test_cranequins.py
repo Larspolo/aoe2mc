@@ -8,7 +8,7 @@ from game import build, civs, train
 
 IMPERIAL = ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE")
 CIVS = {"BRITONS", "DANES", "FRANKS", "SAXONS", "SICILIANS", "VARANGIANS"}
-ITEM = " 28:book:Cranequins:300 food · 200 gold · 70 s · research "
+ITEM = " 29:book:Cranequins:300 food · 200 gold · 70 s · research "
 
 
 def player(civ="FRANKS", ages=IMPERIAL):
@@ -43,7 +43,7 @@ def test_the_mounted_crossbowmen_get_range_and_attack_against_infantry():
     names = ("MOUNTED_CROSSBOWMAN", "HEAVY_MOUNTED_CROSSBOWMAN", "CAVALRY_ARCHER", "ARCHER")
     old = {n: train.stats(g, n) for n in names}
     rect = train.open_menu(g, "Steve", RANGE)
-    assert train.order(g, "Steve", rect, 28) == 1
+    assert train.order(g, "Steve", rect, 29) == 1
     train.tick(g, 70)
     assert "CRANEQUINS" in g.techs
     for n in names[:2]:
