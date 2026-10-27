@@ -19,6 +19,8 @@ a tree or water is left out. The builders of a tile go on to the next unfinished
 Gates (#1324): a gate (GATES) goes on 4 own wall tiles in a straight line along x or z, as in AoE2 (4 x 1 tiles). It
 replaces them: a wall site goes (its builders go on to the gate), a complete wall tile loses its target. The gate stays
 closed for now.
+Fortified Wall (#1326, train.WALL_UPGRADES): the new and the complete own stone walls and gates get the fortified design
+and its hit points (design(), upgrade()); a damaged one keeps its lost hit points, as in AoE2.
 """
 import json
 import math
@@ -430,7 +432,7 @@ def found(g, name, rect):
     g.map.blocked |= {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
     T = g.map.T                                                        # the design, bottom up (one command each)
     cmds = Replay(g, g.data, getattr(g.game, "version", VERSION_NAME)).building(
-        name, g.player, (x0 + x1) / 2 / T, (z0 + z1) / 2 / T, along_z=z1 - z0 > x1 - x0)   # a gate along z (#1324)
+        design(g, name, g.player), g.player, (x0 + x1) / 2 / T, (z0 + z1) / 2 / T, along_z=z1 - z0 > x1 - x0)   # a gate along z (#1324)
     site = {"name": name, "player": g.player, "footprint": rect, "commands": cmds, "sent": 0, "progress": 0.0,
             "ring": dict.fromkeys(ring, f"minecraft:{color}_wool"), "under": {}}   # under: the design blocks on the ring
     g.sites.append(site)
@@ -486,6 +488,32 @@ def rise(g, site, work):
     return site["progress"] >= 1
 
 
+def design(g, name, player):
+    """The design of building name of player: a stone wall (gate) of the player after Fortified Wall is a fortified
+    wall (gate), #1326."""
+    import train                                                       # train imports this module
+    new = {old: wall for t, walls in train.WALL_UPGRADES.items() if t in getattr(g, "techs", ()) for old, wall in walls.items()}
+    return new.get(name, name) if player == g.player else name
+
+
+def upgrade(g, site):
+    """The complete wall site gets the design and the hit points of its new wall after a wall technology (#1326): the
+    target keeps its lost hit points, as in AoE2 (the score aoe_hp, repair.hp). A destroyed wall stays air."""
+    import combat, repair                                              # combat -> gather -> build: import it late
+    x0, x1, z0, z1 = site["footprint"]
+    if (hp := repair.hp(g, (x0, x1, z0, z1))) is None or hp <= 0:
+        return
+    name, T = design(g, site["name"], site["player"]), g.map.T
+    for c in Replay(g, g.data, getattr(g.game, "version", VERSION_NAME)).building(
+            name, site["player"], (x0 + x1) / 2 / T, (z0 + z1) / 2 / T, along_z=z1 - z0 > x1 - x0):   # as found()
+        g.command(c)
+    uuid, old, new = combat.target_uuid([x0, z0, x1, z1]), combat.wall(site["name"], ages(g)), combat.wall(name, ages(g))
+    box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
+    for c in [c for c in combat.building(uuid, name, site["player"], box, T, s=new) if c.startswith("aoe building ")] \
+            + [f"scoreboard players set {uuid} aoe_hp {min(new.hp, hp + new.hp - old.hp)}", combat.label_command(uuid, name)]:
+        g.command(c)
+
+
 def target(g, site):
     """A complete building of combat.BUILDINGS gets its target entity, as a building of the map (combat.setup): the
     AoE2 hit points, and the arrows of a town center, tower or castle (#1202). wonder.tick makes the one of a wonder."""
@@ -495,10 +523,10 @@ def target(g, site):
     x0, x1, z0, z1 = site["footprint"]
     uuid = combat.target_uuid([x0, z0, x1, z1])
     box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
-    wall = site["name"] in combat.WALLS                                # the hit points of the age (#1322)
-    s = combat.wall(site["name"], ages(g)) if wall else None
-    for c in combat.building(uuid, site["name"], site["player"], box, g.map.T, s=s) \
-            + [f"tag {uuid} add {combat.WALL_TAG}"] * wall + [combat.label_command(uuid, site["name"])]:
+    wall, name = site["name"] in combat.WALLS, design(g, site["name"], site["player"])   # the hit points of the age (#1322)
+    s = combat.wall(name, ages(g)) if wall else None
+    for c in combat.building(uuid, name, site["player"], box, g.map.T, s=s) \
+            + [f"tag {uuid} add {combat.WALL_TAG}"] * wall + [combat.label_command(uuid, name)]:
         g.command(c)
     if site["player"] != g.player:                                     # an enemy building: the player can attack it
         g.forts[uuid], g.fort_names[uuid] = box, site["name"]

@@ -45,6 +45,8 @@ get 15 more hit points) in the Castle Age (#1261).
 The market trains trade carts (#1253): a trade cart also joins g.soldiers, and trade.py walks it between two own markets.
 It researches Caravan (trade carts walk 20 % faster, SPEEDS) in the Castle Age and Guilds (trading fee 15 %, market.FEES)
 in the Imperial Age (#1254). Coinage and Banking change the tribute fee: the game program has no tribute yet.
+The university researches Fortified Wall in the Castle Age (#1326, WALL_UPGRADES): the new and the complete own stone
+walls and gates get the fortified design and its AoE2 hit points and armor (build.design, build.upgrade).
 """
 import json
 import math
@@ -75,6 +77,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "FERVOR": {"gold": 140},
          "FLETCHING": {"food": 100, "gold": 50},
          "FORGING": {"food": 150},
+         "FORTIFIED_WALL": {"food": 200, "wood": 100},
          "GOLD_MINING": {"food": 100, "wood": 75},
          "GUILDS": {"food": 300, "gold": 200},
          "HORSE_COLLAR": {"food": 75, "wood": 75},
@@ -117,6 +120,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "FERVOR": 50,
                "FLETCHING": 30,
                "FORGING": 50,
+               "FORTIFIED_WALL": 50,
                "GOLD_MINING": 30,
                "GUILDS": 50,
                "HORSE_COLLAR": 20,
@@ -153,6 +157,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                          "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR"),
           "CASTLE": (),                                                         # the unique unit: trains() (#708)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES"),                           # (#671, #940)
+          "UNIVERSITY": ("FORTIFIED_WALL",),                                    # (#1326)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
           "MARKET": ("TRADE_CART", "CARAVAN", "GUILDS"),                       # (#1253, #1254)
           "MILL": ("HORSE_COLLAR",),                                            # (#726)
@@ -181,6 +186,7 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "FERVOR": lambda name, s: s,                              # the walk speed: SPEEDS
          "FLETCHING": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if "archer" in s.classes else s,
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
+         "FORTIFIED_WALL": lambda name, s: s,                      # the walls of the player: WALL_UPGRADES
          "GOLD_MINING": lambda name, s: s,                         # an economy technology: gather.WORK_TECHS
          "GUILDS": lambda name, s: s,                              # the trading fee: market.FEES
          "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
@@ -202,6 +208,7 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
 SPEEDS = {"CARAVAN": ("TRADE_CART", 1.2),                         # technology: the unit and its walk speed factor
           "FERVOR": ("MONK", 1.15)}
 UPGRADES = {"MAN_AT_ARMS_UPGRADE": ("MILITIA", "MAN_AT_ARMS")}  # technology: the unit and its new unit (#941)
+WALL_UPGRADES = {"FORTIFIED_WALL": {"STONE_WALL": "FORTIFIED_WALL", "GATE": "FORTIFIED_GATE"}}   # technology: {wall: new} (#1326)
 REQUIRES = {"CASTLE_AGE": (2, ("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET")),   # n types of these buildings
             "FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP", "DOCK")),
             "IMPERIAL_AGE": (2, ("MONASTERY", "UNIVERSITY", "SIEGE_WORKSHOP"), ("CASTLE",))}   # or one of these alone
@@ -212,6 +219,7 @@ TECH_AGE = {                                                       # the age of 
     "FERVOR": 2,
     "FLETCHING": 1,
     "FORGING": 1,
+    "FORTIFIED_WALL": 2,
     "GOLD_MINING": 1,
     "GUILDS": 3,
     "HORSE_COLLAR": 1,
@@ -247,6 +255,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "FERVOR": (1, "book", "Fervor"),
          "FLETCHING": (2, "book", "Fletching"),
          "FORGING": (0, "book", "Forging"),
+         "FORTIFIED_WALL": (0, "book", "Fortified Wall"),
          "GOLD_MINING": (0, "book", "Gold Mining"),
          "GUILDS": (2, "book", "Guilds"),
          "HORSE_COLLAR": (0, "book", "Horse Collar"),
@@ -290,6 +299,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "FERVOR": "Monks +15 % speed.",
         "FLETCHING": "Archers, towers, town center +1 attack, +1 range.",
         "FORGING": "Infantry and cavalry +1 attack.",
+        "FORTIFIED_WALL": "Stone walls +1,200 HP, +4/+2 armor; also gates.",
         "GOLD_MINING": "Villagers mine gold 15 % faster.",
         "GUILDS": "Market trading fee 15 %.",
         "HORSE_COLLAR": "Farms +75 food.",
@@ -558,7 +568,7 @@ def repeatable(g, name):
     times with the cheat "going above and beyond" (#968; ages and unit upgrades stay once). The effects stack: stats()
     and the gather tables take count()."""
     return name not in g.techs or getattr(g, "beyond", False) and name not in REQUIRES and name not in UPGRADES \
-        and count(g, name) < REPEAT
+        and name not in WALL_UPGRADES and count(g, name) < REPEAT
 
 
 def price(g, name):
@@ -619,6 +629,10 @@ def research(g, entry):
         for t in g.map.own_farms:
             if g.map.farms.get(t, 0) > 0:
                 g.map.farms[t] += more
+    if entry["name"] in WALL_UPGRADES:                             # the complete own walls become the new wall (#1326)
+        for site in [s for s in g.sites if s["name"] in WALL_UPGRADES[entry["name"]] and s.get("done")
+                     and s["player"] == g.player]:
+            build.upgrade(g, site)
     if entry["name"] in UPGRADES:                                  # the live units of the line get the new name
         old, new = UPGRADES[entry["name"]]
         for uuid in [u for u, n in g.soldiers.items() if n == old]:
