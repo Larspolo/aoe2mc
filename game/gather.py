@@ -37,6 +37,7 @@ import heapq
 import json
 import math
 import os
+import random
 import re
 import sys
 import time
@@ -483,6 +484,8 @@ class Gather:
         self.sided = set()                                             # players in the team of the units (#1241)
         self.garrisons, self.entering = garrison.start(self), {}       # building -> units inside, unit -> building (#808)
         self.monk_at, self.heal_time = {}, 0.0                         # monk -> feet at the last heal pass (#1244)
+        self.converting, self.faith = {}, {}                           # monk -> conversion order, monk -> rest (#1245)
+        self.chance = random.Random(1)                                 # the conversion chance: the same in each run
 
     @property
     def wood(self):
@@ -631,11 +634,19 @@ class Gather:
         return (pos[0], pos[1] + 1.62, pos[2]), direction(*map(float, rot))
 
     def attack(self, target):
-        """Send the selected military units to attack the unit target, with their AoE2 walk speed (ai.py)."""
+        """Send the selected military units to attack the unit target, with their AoE2 walk speed (ai.py). A monk does
+        not attack: it converts (monk.order, #1245) or stays."""
         import ai                                                      # ai imports this module
-        for u in sorted(self.selected):
+        monks = self.monks()
+        for u in sorted(self.selected - monks):
             self.command(ai.speed_command(u, self.soldiers[u], self.map.T, NORMAL * civs.speed(self, self.soldiers[u])))
-        return self.command(f"aoe attack @e[tag={SELECT}] {target}")
+        if not monks:
+            return self.command(f"aoe attack @e[tag={SELECT}] {target}")
+        return [self.command(f"aoe attack {u} {target}") for u in sorted(self.selected - monks)]
+
+    def monks(self):
+        """The selected monks."""
+        return {u for u in self.selected if self.soldiers.get(u) == "MONK"}
 
     def positions(self, uuids):
         """{uuid: feet position} of the loaded units; a dead unit is not in it."""
@@ -835,6 +846,7 @@ class Gather:
             return
         kind, u, _ = self.target(eye, d, self.positions(sorted(self.pickable()))) or (None, None, None)
         if kind == "enemy":
+            monk.order(self, self.monks(), u)                          # the monks convert it, the others attack (#1245)
             self.attack(u)
             self.command(glow(u))                                     # the order marker of an attack (#796)
             return
@@ -1061,6 +1073,7 @@ class Gather:
                     self.go(v, "to_drop", set().union(*map(self.map.around, self.map.drops[v.res])))
         train.tick(self, self.tick * NORMAL)
         monk.heal(self, self.tick * NORMAL)
+        monk.convert(self, self.tick * NORMAL)
         bossbar.tick(self)
         for site in self.sites:
             builders = [v for v in self.villagers.values() if v.state == "build" and v.site is site]
