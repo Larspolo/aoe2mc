@@ -19,7 +19,8 @@ def test_the_university_has_chemistry_and_then_bombard_tower():
     assert (train.COSTS["CHEMISTRY"], train.TRAIN_TIMES["CHEMISTRY"], train.TECH_AGE["CHEMISTRY"]) \
         == ({"food": 300, "gold": 200}, 100, 3)
     assert (train.COSTS["BOMBARD_TOWER_TECH"], train.TRAIN_TIMES["BOMBARD_TOWER_TECH"]) == ({"food": 800, "wood": 400}, 60)
-    assert train.TRAINS["UNIVERSITY"][-2:] == ("CHEMISTRY", "BOMBARD_TOWER_TECH")
+    u = train.TRAINS["UNIVERSITY"]
+    assert u.index("BOMBARD_TOWER_TECH") == u.index("CHEMISTRY") + 1
     server, g = imperial()
     assert train.unlocked(g, "CHEMISTRY") and not train.unlocked(g, "BOMBARD_TOWER_TECH")   # after Chemistry
     g.techs.add("CHEMISTRY")
