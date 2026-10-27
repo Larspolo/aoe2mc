@@ -12,9 +12,9 @@ def test_building_command_has_the_attack():
     uuid = "00000000-0000-0000-0000-000000000001"
     box = (8, 64, 8, 23, 104, 23)
     tc, = [c for c in combat.building(uuid, "TOWN_CENTER", 1, box) if c.startswith("aoe building")]
-    assert tc == f"aoe building {uuid} 2400 3 5 8 64 8 23 104 23 5 24 24 0"    # attack 5, 6 tiles, 2 s / 1.7 * 20 ticks
+    assert tc == f"aoe building {uuid} 2400 3 5 8 64 8 23 104 23 5 24 24 0 building,standard ship:5"   # attack 5, 6 tiles, 2 s / 1.7 * 20 ticks
     castle, = [c for c in combat.building(uuid, "CASTLE", 1, box, T=2) if c.startswith("aoe building")]
-    assert castle.endswith(" 11 16 24 2")                                # min 1 tile × 2 (#1546)
+    assert castle.endswith(" 11 16 24 2 building,standard ship:11")   # min 1 tile × 2 (#1546)
     house, = [c for c in combat.building(uuid, "HOUSE", 1, box) if c.startswith("aoe building")]
     assert house == f"aoe building {uuid} 550 0 7 8 64 8 23 104 23"           # no attack: no arrows
 

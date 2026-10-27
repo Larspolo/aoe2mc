@@ -25,9 +25,9 @@ def test_each_tower_has_its_aoe2_values(name):
 def test_a_tower_gets_its_attack_in_the_building_command():
     uuid = "00000000-0000-0000-0000-000000000001"
     cmd, = [c for c in combat.building(uuid, "WATCH_TOWER", 1, (8, 64, 8, 11, 76, 11)) if c.startswith("aoe building")]
-    assert cmd == f"aoe building {uuid} 1020 1 7 8 64 8 11 76 11 5 32 24 4"   # 8 tiles of 4 blocks, 2 s / 1.7 * 20
+    assert cmd == f"aoe building {uuid} 1020 1 7 8 64 8 11 76 11 5 32 24 4 building,standard ship:5"   # 8 tiles of 4 blocks, 2 s / 1.7 * 20
     cmd, = [c for c in combat.building(uuid, "BOMBARD_TOWER", 1, (8, 64, 8, 11, 76, 11)) if c.startswith("aoe building")]
-    assert cmd.endswith(" 120 32 71 4")
+    assert cmd.endswith(" 120 32 71 4 building,standard ship:40")
 
 
 @pytest.mark.mc
