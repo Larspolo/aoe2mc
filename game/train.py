@@ -196,6 +196,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "RING_ARCHER_ARMOR": {"food": 250, "gold": 250},
          "SAMURAI": {"food": 45, "gold": 30},
          "SANCTITY": {"gold": 175},
+         "SAPPERS": {"food": 400, "wood": 200},                        # the castle, Imperial Age (#1580)
          "SCALE_BARDING_ARMOR": {"food": 150},
          "SCALE_MAIL_ARMOR": {"food": 100},
          "SCORPION": {"wood": 75, "gold": 75},
@@ -348,6 +349,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "RING_ARCHER_ARMOR": 70,
                "SAMURAI": 9,
                "SANCTITY": 60,
+               "SAPPERS": 10,
                "SCALE_BARDING_ARMOR": 45,
                "SCALE_MAIL_ARMOR": 40,
                "SCORPION": 30,
@@ -409,7 +411,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                          "BRACER"),                                             # (#1503)
           "CASTLE": ("TREBUCHET",                                               # and the unique unit: trains() (#708, #1351)
                      "CONSCRIPTION",                                            # (#1455)
-                     "HOARDINGS"),                                              # (#1456)
+                     "HOARDINGS",                                               # (#1456)
+                     "SAPPERS"),                                                # (#1580)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES", "LIGHT_CAVALRY_UPGRADE", "KNIGHT",   # (#671, #940, #1396, #1397)
                      "HUSBANDRY",                                               # (#1416)
                      "HUSSAR_UPGRADE",                                          # the Imperial Age (#1502)
@@ -609,6 +612,9 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "SCALE_BARDING_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if barding(s) else s,
          "SANCTITY": lambda name, s: s._replace(hp=s.hp + 15) if name == "MONK" else s,
+         "SAPPERS": lambda name, s: s._replace(bonus={**s.bonus, "building": s.bonus.get("building", 0) + 15,
+                                                      "ram": s.bonus.get("ram", 0) + 3})
+         if name.startswith("VILLAGER") else s,                    # the walls too: "building" is also stone defense
          "SCALE_MAIL_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "infantry" in s.classes else s,
          "SHIPWRIGHT": lambda name, s: s,                          # the ships: SHIPWRIGHT, price() and tick()
@@ -769,6 +775,7 @@ TECH_AGE = {                                                       # the age of 
     "REDEMPTION": 2,
     "RING_ARCHER_ARMOR": 3,
     "SANCTITY": 2,
+    "SAPPERS": 3,
     "SCALE_BARDING_ARMOR": 1,
     "SCALE_MAIL_ARMOR": 1,
     "CHEMISTRY": 3,
@@ -925,6 +932,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "RING_ARCHER_ARMOR": (3, "book", "Ring Archer Armor"),
          "SAMURAI": (0, "zombie_spawn_egg", "Samurai"),
          "SANCTITY": (2, "book", "Sanctity"),
+         "SAPPERS": (4, "book", "Sappers"),                         # after Hoardings
          "SCALE_BARDING_ARMOR": (4, "book", "Scale Barding Armor"),
          "SCALE_MAIL_ARMOR": (1, "book", "Scale Mail Armor"),
          "SCORPION": (2, "crossbow", "Scorpion"),
@@ -1073,6 +1081,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "RING_ARCHER_ARMOR": "Archers +1 melee armor, +2 pierce armor.",
         "SAMURAI": "Japanese infantry. Strong vs. unique units.",
         "SANCTITY": "Monks +15 HP.",
+        "SAPPERS": "Villagers +15 attack vs. buildings, +3 vs. rams.",
         "SCALE_BARDING_ARMOR": "Cavalry +1 melee armor, +1 pierce armor.",
         "SCALE_MAIL_ARMOR": "Infantry +1 melee armor, +1 pierce armor.",
         "SCORPION": "Siege. Shoots bolts; weak vs. cavalry.",
