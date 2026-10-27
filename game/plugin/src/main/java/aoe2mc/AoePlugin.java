@@ -27,6 +27,7 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.AbstractArrow;
+import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.AbstractSkeleton;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
@@ -91,12 +92,14 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *             [reload ticks]                   the AoE2 values of a unit (#514, game/combat.py stats_command); a melee
  *                                              unit hits once per reload (#848, default 20: the vanilla cooldown)
  *   aoe stop <selector>                        stop the walk and turn the AI off: the unit stands still (#437)
- *   aoe range <selector> <blocks> <ticks> [blast [min]]
+ *   aoe range <selector> <blocks> <ticks> [blast [min [pass]]]
  *                                              a ranged unit shoots from this range, one shot per ticks (#515); a
  *                                              shot with a blast radius in blocks hits all units near the target, and
  *                                              a siege unit (a minecart) shoots too (#1050); blast 0: a siege shot
  *                                              that hits only the target (the Scorpion, #1062); min: no shot at a
- *                                              target nearer than these blocks (the AoE2 minimum range, #1350)
+ *                                              target nearer than these blocks (the AoE2 minimum range, #1350); pass:
+ *                                              the bolt flies these blocks past the range and hurts the enemy units
+ *                                              on its line with half the damage (the Scorpion, #1401)
  *   aoe sees <player> <uuid>                   "Sees: 1" or "Sees: 0" (Player#canSee), for checks
  *   aoe show <players> <uuid> ...              Player#showEntity: the players see these entities again (#1302)
  *   aoe sight <selector> <blocks>              an idle unit attacks an enemy in this line of sight (#775)
@@ -165,6 +168,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * The shot hits at once (as at a building) each unit with AoE2 values within the blast radius of the target, also own
  * units (AoE2 friendly fire), each with the damage rule; an explosion particle shows it, and no block breaks.
  * A siege unit with blast 0 (the Scorpion, Trebuchet, Organ Gun, #1062) hits only its target at once.
+ * A Scorpion bolt (pass > 0) also hurts the enemy units on its line up to Range + 2 tiles, with half the damage (#1401).
  * A mounted unit (#710) is a horse (its UUID in aoe2mc.json) with a rider: a horse has no attack goal. The rider gets
  * the values of "aoe stats", the range of "aoe range" and the target of "aoe attack", and the horse gets AI without goals:
  * a riding mob walks with the navigation of its vehicle (vanilla Mob#getNavigation), so the horse follows the rider.
@@ -243,7 +247,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Order> orders = new HashMap<>();
 
     // min: no shot at a target nearer than this (blocks, the AoE2 minimum range of the Mangonel line ..., #1350)
-    private record Range(double blocks, int ticks, double blast, boolean siege, double min) {
+    // pass: the blocks that a bolt flies past the range and hurts the enemy units on its line (the Scorpion, #1401)
+    private record Range(double blocks, int ticks, double blast, boolean siege, double min, double pass) {
     }
 
     private final Map<UUID, Range> ranges = new HashMap<>();
@@ -310,7 +315,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             int now = Bukkit.getCurrentTick();
             if (now >= next && near && range.siege) {
                 next = now + range.ticks;
-                blast(mob, t, range.blast);
+                blast(mob, t, range);
             } else if (now >= next && near && mob instanceof RangedEntity r) {
                 if (mob instanceof AbstractSkeleton || mob instanceof Pillager) {
                     shoot(mob, t);            // the vanilla shot misses (#634), and fails for a crossbow (#633)
@@ -347,8 +352,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     // A blast shot (#1050): each unit with AoE2 values within r blocks of the target takes the AoE2 damage of the
     // shooter, also its own units. A mounted unit has the hit points of its horse (#732): only the horse counts.
-    // r 0: a siege shot that hits only the target (#1062).
-    private void blast(Mob mob, LivingEntity t, double r) {
+    // r 0: a siege shot that hits only the target (#1062), and with a pass the enemy units on its line (#1401).
+    private void blast(Mob mob, LivingEntity t, Range range) {
+        double r = range.blast;
         Entity from = crew(mob);
         Stats a = stats.get(from.getUniqueId());
         if (a == null) {
@@ -365,6 +371,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             if (v.isValid() && stats.containsKey(v.getUniqueId())) {
                 harm(v, stats.get(v.getUniqueId()), a, from);
             }
+            if (range.pass > 0) {
+                pass(mob, v, range.blocks + range.pass, a, from);
+            }
             t.getWorld().spawnParticle(Particle.CRIT, at.clone().add(0, 1, 0), 8);
             t.getWorld().playSound(at, Sound.ENTITY_ARROW_HIT, 1.0f, 1.0f);
             return;
@@ -380,6 +389,36 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         t.getWorld().spawnParticle(Particle.EXPLOSION, at.clone().add(0, 0.5, 0), 1);
         t.getWorld().playSound(at, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
+    }
+
+    // AoE2 pass-through damage (#1401, wiki "Pass-through damage"): the bolt flies Range + 2 tiles in a straight line
+    // and hurts each enemy unit on it with half the damage; the target took the full hit. Not own or allied units.
+    // The line is in the ground plane (x, z) with the AoE2 bolt width of 0.2 tiles (BOLT). A piercing vanilla arrow
+    // (PierceLevel) is no help: the siege shot hits at once (#1062), and an arrow falls short and hits own units too.
+    private static final double BOLT = 0.4;           // blocks from the line to the box of a unit: 0.1 tile × 4 blocks
+
+    private void pass(Mob mob, LivingEntity target, double length, Stats a, Entity from) {
+        Entity unit = mob.getPassengers().isEmpty() ? mob : mob.getPassengers().get(0);    // the minecart has the team
+        Location o = mob.getLocation();
+        Vector dir = target.getLocation().toVector().subtract(o.toVector()).setY(0);
+        if (dir.lengthSquared() < 1e-6) {
+            return;
+        }
+        dir.normalize();
+        Location mid = o.clone().add(dir.clone().multiply(length / 2));
+        for (Entity e : o.getWorld().getNearbyEntities(mid, length / 2 + 1, 4, length / 2 + 1)) {
+            if (!(e instanceof LivingEntity le) || le == target || !le.isValid() || !stats.containsKey(le.getUniqueId())
+                    || buildings.containsKey(le.getUniqueId()) || le == from || le == mob
+                    || le.getVehicle() instanceof LivingEntity h && stats.containsKey(h.getUniqueId())   // the horse counts
+                    || sameTeam(unit, le) || sameTeam(from, le)) {
+                continue;
+            }
+            Vector p = le.getLocation().toVector().subtract(o.toVector()).setY(0);
+            double along = p.dot(dir), across = p.clone().subtract(dir.clone().multiply(along)).length();
+            if (along > 0 && along <= length && across <= le.getWidth() / 2 + BOLT) {
+                harm(le, stats.get(le.getUniqueId()), a, from, 0.5);
+            }
+        }
     }
 
     // The squared distance from the feet of the mob to the nearest point of the box of the target.
@@ -726,11 +765,16 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     // The AoE2 damage of attacker values a on the victim with values t (#514), and the attack back.
     private void harm(LivingEntity victim, Stats t, Stats a, Entity from) {
+        harm(victim, t, a, from, 1.0);
+    }
+
+    // part: the part of the AoE2 damage (0.5 for a unit behind the target of a Scorpion bolt, #1401)
+    private void harm(LivingEntity victim, Stats t, Stats a, Entity from, double part) {
         alerts.hit(victim, false, from);                  // before the hit: a unit that dies of it is attacked too
         fight(victim);
         fight(from);
         victim.playHurtAnimation(0);
-        victim.setHealth(Math.max(0, victim.getHealth() - a.damage(t)));     // 0 kills it
+        victim.setHealth(Math.max(0, victim.getHealth() - a.damage(t) * part));     // 0 kills it
         nameLine(victim);
         if (victim.getHealth() > 0 && from instanceof LivingEntity attacker) {
             attackBack(victim, attacker, t);
@@ -1161,6 +1205,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         for (var e : orders.entrySet()) {
             if (Bukkit.getEntity(e.getKey()) instanceof Mob mob && mob.isValid()) {
                 Order o = e.getValue();
+                if (mob instanceof AbstractHorse h && (h.isEatingGrass() || h.isRearing())) {
+                    h.setEatingGrass(false);            // an eating horse has no AI step and no path follow (#1359)
+                    h.setRearing(false);
+                }
                 var pf = mob.getPathfinder();
                 if (pf.getCurrentPath() == null && Bukkit.getCurrentTick() - o.start < 4) {
                     pf.moveTo(o.goal, o.speed);         // a unit without AI finds its path a tick later: try each tick
@@ -1594,12 +1642,13 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Stats: " + n + " units");
             return true;
         }
-        if (args.length >= 4 && args.length <= 6 && args[0].equals("range")) {
+        if (args.length >= 4 && args.length <= 7 && args[0].equals("range")) {
             Range r;
             try {
                 r = new Range(Double.parseDouble(args[2]), Integer.parseInt(args[3]),
                         args.length >= 5 ? Double.parseDouble(args[4]) : 0, args.length >= 5,
-                        args.length == 6 ? Double.parseDouble(args[5]) : 0);
+                        args.length >= 6 ? Double.parseDouble(args[5]) : 0,
+                        args.length == 7 ? Double.parseDouble(args[6]) : 0);
             } catch (NumberFormatException e) {
                 sender.sendMessage("Bad number: " + e.getMessage());
                 return true;

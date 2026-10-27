@@ -90,7 +90,8 @@ UNITS = {"BERBERS": [("villagers", "speed", (1.05, 1.1, 1.1, 1.1))],
 # The cost bonuses (#1091): civilization -> [(what, resource or None (all), change in the Dark, Feudal, Castle and
 # Imperial Age)]. what: a group of GROUPS (units), "buildings", "buildings but farms", "technologies", "ages" or a
 # tuple of names. A float multiplies the cost (0.0: free), an int adds to it. AoE2 rounds half up (35 × 0.75 = 26).
-SMITH = ("FLETCHING", "FORGING", "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR", "SCALE_MAIL_ARMOR")   # the blacksmith
+SMITH = ("BODKIN_ARROW", "CHAIN_BARDING_ARMOR", "CHAIN_MAIL_ARMOR", "FLETCHING", "FORGING", "IRON_CASTING",
+         "LEATHER_ARCHER_ARMOR", "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR", "SCALE_MAIL_ARMOR")   # the blacksmith
 COSTS = {"BERBERS": [("cavalry", None, (1.0, 1.0, 0.85, 0.8))],
          "BOHEMIANS": [(("BLACKSMITH", "UNIVERSITY"), "wood", (-100,) * 4), (("GOLD_MINING", "STONE_MINING"), None, (0.0,) * 4)],
          "BRITONS": [(("TOWN_CENTER",), "wood", (1.0, 1.0, 0.5, 0.5))],
@@ -110,10 +111,10 @@ COSTS = {"BERBERS": [("cavalry", None, (1.0, 1.0, 0.85, 0.8))],
          "INCAS": [("buildings", "stone", (0.85,) * 4), ("military", "food", (0.85, 0.8, 0.75, 0.7))],
          "ITALIANS": [("ages", None, (0.85,) * 4), ("gunpowder", None, (0.8,) * 4)],
          "JAPANESE": [(("LUMBER_CAMP", "MILL", "MINING_CAMP"), None, (0.5,) * 4)],
-         "KOREANS": [(("PADDED_ARCHER_ARMOR",), None, (0.0,) * 4), ("archers", "wood", (0.5,) * 4),
+         "KOREANS": [(("LEATHER_ARCHER_ARMOR", "PADDED_ARCHER_ARMOR"), None, (0.0,) * 4), ("archers", "wood", (0.5,) * 4),
                      ("infantry", "wood", (0.5,) * 4)],
-         "MAGYARS": [(("FORGING",), None, (0.0,) * 4), ("scout line", None, (0.85,) * 4)],
-         "MALAY": [("battle elephants", None, (1.0, 1.0, 0.75, 0.65)), (("SCALE_MAIL_ARMOR",), None, (0.0,) * 4)],
+         "MAGYARS": [(("FORGING", "IRON_CASTING"), None, (0.0,) * 4), ("scout line", None, (0.85,) * 4)],
+         "MALAY": [("battle elephants", None, (1.0, 1.0, 0.75, 0.65)), (("CHAIN_MAIL_ARMOR", "SCALE_MAIL_ARMOR"), None, (0.0,) * 4)],
          "MALIANS": [("buildings but farms", "wood", (0.85,) * 4)],
          "MAYANS": [("foot archers but skirmishers", None, (1.0, 0.9, 0.8, 0.7))],
          "POLES": [(("BLOODLINES",), "food", (0.5,) * 4)],

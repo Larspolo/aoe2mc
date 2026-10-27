@@ -1,0 +1,112 @@
+"""
+The own ships of the game program (#1383, epic #1381). A dock trains fishing ships (train.TRAINS): the new ship floats
+on a water cell in front of the dock (spawn). A selected ship sails to the water cell that the player clicks (order),
+or to the water nearest to a clicked land cell. A boat has no Minecraft path finding, so the ship moves with /tp steps
+on a water path of gather.Map (Map.path with water, replay.sail), as the ships of the live replay (#866): own logic,
+because Minecraft has no feature for it. It never goes onto the land: each step is on a water cell (Map.wet).
+"""
+import math
+
+import gather
+import replay
+
+SPEEDS = {"FISHING_SHIP": 1.26}          # tiles per game second (AoE2 DE wiki infobox); other ships: 1.0 until a ticket
+NEAR = 3                                 # tiles from a clicked land cell to the water that a ship sails to
+PATH_CELLS = 20000                       # the path search limit (cells), as a long walk of the replay
+
+
+def ship(g, uuid):
+    """The gather.Villager of own ship uuid (its path and position), made at the first use."""
+    if uuid not in g.ships:
+        pos = g.pos(uuid)
+        if not pos:
+            return None
+        g.ships[uuid] = gather.Villager(uuid, pos)
+    return g.ships[uuid]
+
+
+def spawn(g, rect, name):
+    """Summon the ship name of g.player on a water cell in front of the dock rect (the cells one after the other, as
+    train.spawn). Returns its UUID, or None."""
+    import train                                                      # train imports this module
+    cells = g.map.front(rect, water=True)
+    if not cells:
+        return None
+    k = g.trained[rect] = g.trained.get(rect, -1) + 1
+    x, z = cells[k % len(cells)]
+    pos = (x + 0.5, g.map.sea(x, z), z + 0.5)
+    uuid = train.summon(g, name, pos)
+    if uuid is not None:
+        g.ships[uuid] = gather.Villager(uuid, pos)
+        if rect in g.rally:                                            # its rally point: on the water
+            order(g, [uuid], g.rally[rect][0])
+    return uuid
+
+
+def level(g):
+    """The y of the water surface of the map, as Map.sea on the open water (the lowest land - 1): real maps have all
+    water at elevation 0."""
+    if getattr(g.map, "level", None) is None:
+        g.map.level = g.map.sea(-99, -99, 0)                           # reach 0: the whole map
+    return g.map.level
+
+
+def pick(g, eye, d, reach=64):
+    """The block cell (x, z) of the land or of the water surface that the ray from eye in direction d hits first, or
+    None. Map.pick_ground goes through the water: a ship and a dock are on it."""
+    top = level(g)
+    for k in range(1, reach * 4):
+        x, y, z = (eye[i] + d[i] * k / 4 for i in range(3))
+        bx, bz = math.floor(x), math.floor(z)
+        if not (0 <= bx < g.map.n and 0 <= bz < g.map.n):
+            return None
+        ground = g.map.y(bx, bz)
+        if y < (top if ground is None else ground):
+            return bx, bz
+    return None
+
+
+def goals(g, cell, n):
+    """n water cells (Map.wet) for n ships at the clicked block cell: the nearest ones to it, the cell itself first.
+    A land cell: the water within NEAR tiles of it. [] when there is none."""
+    r = max(math.isqrt(n) + 2, NEAR * g.map.T if not g.map.wet(*cell) else 0)
+    cells = [(x, z) for x in range(cell[0] - r, cell[0] + r + 1) for z in range(cell[1] - r, cell[1] + r + 1)
+             if g.map.wet(x, z)]
+    return sorted(cells, key=lambda c: (math.dist(c, cell), c))[:n]
+
+
+def order(g, uuids, cell):
+    """The own ships uuids sail to the clicked block cell (x, z): each one to its own water cell near it. Returns
+    {uuid: goal cell} of the ships that found a water path."""
+    who = [v for u in sorted(uuids) if (v := ship(g, u))]
+    out = {}
+    for v, goal in zip(who, goals(g, cell, len(who))):
+        path = g.map.path(v.cell, {goal}, PATH_CELLS, water=True)
+        if path is not None:
+            v.path, v.timer = path, 0.0
+            out[v.uuid] = goal
+    return out
+
+
+def speed(name, T):
+    """Blocks per game second of ship name."""
+    return next((s for k, s in SPEEDS.items() if name.startswith(k)), 1.0) * T
+
+
+def tick(g, dt):
+    """Move each own ship with a path by the blocks of dt game seconds, one water cell per /tp step. A cell that is
+    no water any more (a new dock on the way) gives a new path to the goal, or the ship stops."""
+    for u, v in list(g.ships.items()):
+        if u not in g.soldiers:                                        # dead or converted
+            del g.ships[u]
+            continue
+        v.timer = v.timer + dt * speed(g.soldiers[u], g.map.T) if v.path else 0.0
+        while v.path:
+            if not g.map.wet(*v.path[0]):
+                v.path = g.map.path(v.cell, {v.path[-1]}, PATH_CELLS, water=True) or [] if g.map.wet(*v.path[-1]) else []
+                continue
+            step = math.dist(v.cell, v.path[0])
+            if v.timer < step:
+                break
+            v.timer -= step
+            replay.sail(g, v)

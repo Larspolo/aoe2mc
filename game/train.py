@@ -73,6 +73,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "BATTERING_RAM": {"wood": 160, "gold": 75},
          "BOMBARD_TOWER_TECH": {"food": 800, "wood": 400},           # the university, after Chemistry (#1375)
          "BERSERK": {"food": 65, "gold": 20},
+         "BODKIN_ARROW": {"food": 200, "gold": 100},                   # AoE2 DE wiki (#1395)
          "BLOODLINES": {"food": 150, "gold": 100},
          "CAPPED_RAM": {"wood": 160, "gold": 75},
          "CAPPED_RAM_UPGRADE": {"food": 300},
@@ -80,9 +81,16 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "CARAVAN": {"food": 200, "gold": 200},
          "CHEMISTRY": {"food": 300, "gold": 200},                    # the university, Imperial Age (#1375)
          "CATAPHRACT": {"food": 70, "gold": 75},
+         "CHAIN_BARDING_ARMOR": {"food": 250, "gold": 150},             # AoE2 DE wiki (#1394)
+         "CHAIN_MAIL_ARMOR": {"food": 200, "gold": 100},
          "CHU_KO_NU": {"wood": 40, "gold": 35},
+         "CROSSBOWMAN": {"wood": 25, "gold": 45},
+         "CROSSBOWMAN_UPGRADE": {"food": 175, "gold": 100},
          "DOUBLE_BIT_AXE": {"food": 100, "wood": 50},
+         "ELITE_SKIRMISHER": {"food": 25, "wood": 35},
+         "ELITE_SKIRMISHER_UPGRADE": {"wood": 230, "gold": 130},
          "FERVOR": {"gold": 140},
+         "FISHING_SHIP": {"wood": 75},                                  # AoE2 DE wiki (#1383)
          "FLETCHING": {"food": 100, "gold": 50},
          "FORGING": {"food": 150},
          "FORTIFIED_WALL": {"food": 200, "wood": 100},
@@ -94,9 +102,15 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "HORSE_COLLAR": {"food": 75, "wood": 75},
          "HUSKARL": {"food": 75, "gold": 35},
          "IMPERIAL_AGE": {"food": 1000, "gold": 800},
+         "IRON_CASTING": {"food": 220, "gold": 120},
          "JANISSARY": {"food": 60, "gold": 55},
          "KEEP": {"food": 500, "wood": 350},                           # the upgrade (AoE2 DE wiki "Guard Tower")
+         "LEATHER_ARCHER_ARMOR": {"food": 150, "gold": 150},
+         "LIGHT_CAVALRY": {"food": 80},
+         "LIGHT_CAVALRY_UPGRADE": {"food": 150, "gold": 50},
          "LONGBOWMAN": {"wood": 35, "gold": 40},
+         "LONG_SWORDSMAN": {"food": 50, "gold": 20},
+         "LONG_SWORDSMAN_UPGRADE": {"food": 150, "gold": 65},
          "MAMELUKE": {"food": 55, "gold": 85},
          "MAN_AT_ARMS": {"food": 60, "gold": 20},
          "MAN_AT_ARMS_UPGRADE": {"food": 100, "gold": 40},
@@ -106,6 +120,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "ONAGER": {"wood": 160, "gold": 135},
          "ONAGER_UPGRADE": {"food": 800, "gold": 500},
          "PADDED_ARCHER_ARMOR": {"food": 100},
+         "PIKEMAN": {"food": 35, "wood": 25},
+         "PIKEMAN_UPGRADE": {"food": 160, "gold": 90},
          "REDEMPTION": {"gold": 475},
          "SAMURAI": {"food": 45, "gold": 30},
          "SANCTITY": {"gold": 175},
@@ -133,6 +149,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "BATTERING_RAM": 36,
                "BERSERK": 14,
                "BLOODLINES": 50,
+               "BODKIN_ARROW": 35,
                "BOMBARD_TOWER_TECH": 60,
                "CAPPED_RAM": 36,
                "CAPPED_RAM_UPGRADE": 50,
@@ -140,9 +157,16 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "CHEMISTRY": 100,
                "CASTLE_AGE": 160,
                "CATAPHRACT": 20,
+               "CHAIN_BARDING_ARMOR": 60,
+               "CHAIN_MAIL_ARMOR": 55,
                "CHU_KO_NU": 16,
+               "CROSSBOWMAN": 27,
+               "CROSSBOWMAN_UPGRADE": 35,
                "DOUBLE_BIT_AXE": 25,
+               "ELITE_SKIRMISHER": 22,
+               "ELITE_SKIRMISHER_UPGRADE": 50,
                "FERVOR": 50,
+               "FISHING_SHIP": 40,
                "FLETCHING": 30,
                "FORGING": 50,
                "FORTIFIED_WALL": 50,
@@ -154,9 +178,15 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "HORSE_COLLAR": 20,
                "HUSKARL": 13,
                "IMPERIAL_AGE": 190,
+               "IRON_CASTING": 75,
                "JANISSARY": 21,
                "KEEP": 75,
+               "LEATHER_ARCHER_ARMOR": 55,
+               "LIGHT_CAVALRY": 30,
+               "LIGHT_CAVALRY_UPGRADE": 45,
                "LONGBOWMAN": 18,
+               "LONG_SWORDSMAN": 21,
+               "LONG_SWORDSMAN_UPGRADE": 40,
                "MAMELUKE": 23,
                "MAN_AT_ARMS": 21,
                "MAN_AT_ARMS_UPGRADE": 40,
@@ -166,6 +196,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "ONAGER": 46,
                "ONAGER_UPGRADE": 75,
                "PADDED_ARCHER_ARMOR": 40,
+               "PIKEMAN": 22,
+               "PIKEMAN_UPGRADE": 35,
                "REDEMPTION": 50,
                "SAMURAI": 9,
                "SANCTITY": 60,
@@ -189,14 +221,19 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "WAR_ELEPHANT": 25,
                "WHEELBARROW": 75,
                "WOAD_RAIDER": 10}
-TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", "CASTLE_AGE", "IMPERIAL_AGE"), "BARRACKS": ("MILITIA", "SPEARMAN", "MAN_AT_ARMS_UPGRADE"),   # the units and technologies of each
-          "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER"),                                         # building (#654, #670, #655)
+TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", "CASTLE_AGE", "IMPERIAL_AGE"), "BARRACKS": ("MILITIA", "SPEARMAN", "MAN_AT_ARMS_UPGRADE",   # the units and technologies of each
+                       "LONG_SWORDSMAN_UPGRADE", "PIKEMAN_UPGRADE"),          # the Castle Age (#1396)
+          "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER",                                          # building (#654, #670, #655)
+                            "CROSSBOWMAN_UPGRADE", "ELITE_SKIRMISHER_UPGRADE"),
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING",            # (#675, #725, #724, #937, #938)
-                         "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR"),
+                         "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR",
+                         "CHAIN_MAIL_ARMOR", "LEATHER_ARCHER_ARMOR", "CHAIN_BARDING_ARMOR",   # the Castle Age (#1394)
+                         "IRON_CASTING", "BODKIN_ARROW"),                       # (#1395)
           "CASTLE": ("TREBUCHET",),                                             # and the unique unit: trains() (#708, #1351)
-          "STABLE": ("SCOUT_CAVALRY", "BLOODLINES"),                           # (#671, #940)
+          "STABLE": ("SCOUT_CAVALRY", "BLOODLINES", "LIGHT_CAVALRY_UPGRADE"),  # (#671, #940, #1396)
           "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS",   # (#1326, #1374, #1352)
                          "CHEMISTRY", "BOMBARD_TOWER_TECH"),                    # (#1375)
+          "DOCK": ("FISHING_SHIP",),                                            # (#1383)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
           "MARKET": ("TRADE_CART", "CARAVAN", "GUILDS"),                       # (#1253, #1254)
           "MILL": ("HORSE_COLLAR",),                                            # (#726)
@@ -238,11 +275,18 @@ def engineers(name, s):
 
 TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
          "BOMBARD_TOWER_TECH": lambda name, s: s,                  # the bombard tower in the build menu: build.NEEDS
+         "BODKIN_ARROW": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if "archer" in s.classes else s,
          "CAPPED_RAM_UPGRADE": lambda name, s: s,                  # a new unit name: UPGRADES
          "CARAVAN": lambda name, s: s,                             # the walk speed: SPEEDS
          "CASTLE_AGE": lambda name, s: s,                          # an age: REQUIRES
          "CHEMISTRY": chemistry,
+         "CHAIN_BARDING_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
+         if barding(s) else s,
+         "CHAIN_MAIL_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
+         if "infantry" in s.classes else s,
+         "CROSSBOWMAN_UPGRADE": lambda name, s: s,
          "DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
+         "ELITE_SKIRMISHER_UPGRADE": lambda name, s: s,
          "FERVOR": lambda name, s: s,                              # the walk speed: SPEEDS
          "FLETCHING": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if "archer" in s.classes else s,
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
@@ -253,13 +297,19 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "HEAVY_SCORPION_UPGRADE": lambda name, s: s,
          "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
          "IMPERIAL_AGE": lambda name, s: s,                        # an age: REQUIRES
+         "IRON_CASTING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
          "KEEP": lambda name, s: s,                                # the towers of the player: TOWER_UPGRADES
+         "LEATHER_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
+         if "archer" in s.classes else s,
+         "LIGHT_CAVALRY_UPGRADE": lambda name, s: s,
+         "LONG_SWORDSMAN_UPGRADE": lambda name, s: s,
          "LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
          if "VILLAGER" in name else s,
          "MAN_AT_ARMS_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "ONAGER_UPGRADE": lambda name, s: s,
          "PADDED_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "archer" in s.classes else s,
+         "PIKEMAN_UPGRADE": lambda name, s: s,
          "REDEMPTION": lambda name, s: s,                          # monks convert buildings and siege: monk.py
          "SCALE_BARDING_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if barding(s) else s,
@@ -276,16 +326,25 @@ SPEEDS = {"CARAVAN": ("TRADE_CART", 1.2),                         # technology: 
           "FERVOR": ("MONK", 1.15)}
 UPGRADES = {                                                       # technology: the unit and its new unit (#941)
     "CAPPED_RAM_UPGRADE": ("BATTERING_RAM", "CAPPED_RAM"),           # the siege upgrades of AoE2 DE (#1352)
+    "CROSSBOWMAN_UPGRADE": ("ARCHER", "CROSSBOWMAN"),
+    "ELITE_SKIRMISHER_UPGRADE": ("SKIRMISHER", "ELITE_SKIRMISHER"),
     "HEAVY_SCORPION_UPGRADE": ("SCORPION", "HEAVY_SCORPION"),
+    "LIGHT_CAVALRY_UPGRADE": ("SCOUT_CAVALRY", "LIGHT_CAVALRY"),
+    "LONG_SWORDSMAN_UPGRADE": ("MAN_AT_ARMS", "LONG_SWORDSMAN"),
     "MAN_AT_ARMS_UPGRADE": ("MILITIA", "MAN_AT_ARMS"),
     "ONAGER_UPGRADE": ("MANGONEL", "ONAGER"),
+    "PIKEMAN_UPGRADE": ("SPEARMAN", "PIKEMAN"),
     "SIEGE_ONAGER_UPGRADE": ("ONAGER", "SIEGE_ONAGER"),
     "SIEGE_RAM_UPGRADE": ("CAPPED_RAM", "SIEGE_RAM"),
 }
-AFTER = {"BOMBARD_TOWER_TECH": "CHEMISTRY",                       # the technology or upgrade before it
+AFTER = {"BODKIN_ARROW": "FLETCHING",
+         "BOMBARD_TOWER_TECH": "CHEMISTRY",
+         "CHAIN_BARDING_ARMOR": "SCALE_BARDING_ARMOR", "CHAIN_MAIL_ARMOR": "SCALE_MAIL_ARMOR",
+         "IRON_CASTING": "FORGING",
          "KEEP": "GUARD_TOWER",
-         "SIEGE_ONAGER_UPGRADE": "ONAGER_UPGRADE",
-         "SIEGE_RAM_UPGRADE": "CAPPED_RAM_UPGRADE"}
+         "LEATHER_ARCHER_ARMOR": "PADDED_ARCHER_ARMOR",
+         "LONG_SWORDSMAN_UPGRADE": "MAN_AT_ARMS_UPGRADE",
+         "SIEGE_ONAGER_UPGRADE": "ONAGER_UPGRADE", "SIEGE_RAM_UPGRADE": "CAPPED_RAM_UPGRADE"}   # the upgrade before it
 WALL_UPGRADES = {"FORTIFIED_WALL": {"STONE_WALL": "FORTIFIED_WALL", "GATE": "FORTIFIED_GATE"}}   # technology: {wall: new} (#1326)
 TOWER_UPGRADES = {"GUARD_TOWER": {"WATCH_TOWER": "GUARD_TOWER"},   # technology: {tower: the tower of its values},
                   "KEEP": {"GUARD_TOWER": "KEEP", "WATCH_TOWER": "KEEP"}}   # in the research order (#1374)
@@ -294,10 +353,15 @@ REQUIRES = {"CASTLE_AGE": (2, ("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET"
             "IMPERIAL_AGE": (2, ("MONASTERY", "UNIVERSITY", "SIEGE_WORKSHOP"), ("CASTLE",))}   # or one of these alone
 TECH_AGE = {                                                       # the age of a technology (build.AGE): hidden before
     "BLOODLINES": 1,
+    "BODKIN_ARROW": 2,
     "BOMBARD_TOWER_TECH": 3,
     "CAPPED_RAM_UPGRADE": 3,
     "CARAVAN": 2,
+    "CHAIN_BARDING_ARMOR": 2,
+    "CHAIN_MAIL_ARMOR": 2,
+    "CROSSBOWMAN_UPGRADE": 2,
     "DOUBLE_BIT_AXE": 1,
+    "ELITE_SKIRMISHER_UPGRADE": 2,
     "FERVOR": 2,
     "FLETCHING": 1,
     "FORGING": 1,
@@ -307,10 +371,15 @@ TECH_AGE = {                                                       # the age of 
     "GUILDS": 3,
     "HEAVY_SCORPION_UPGRADE": 3,
     "HORSE_COLLAR": 1,
+    "IRON_CASTING": 2,
     "KEEP": 3,
+    "LEATHER_ARCHER_ARMOR": 2,
+    "LIGHT_CAVALRY_UPGRADE": 2,
+    "LONG_SWORDSMAN_UPGRADE": 2,
     "MAN_AT_ARMS_UPGRADE": 1,
     "ONAGER_UPGRADE": 3,
     "PADDED_ARCHER_ARMOR": 1,
+    "PIKEMAN_UPGRADE": 2,
     "REDEMPTION": 2,
     "SANCTITY": 2,
     "SCALE_BARDING_ARMOR": 1,
@@ -331,12 +400,22 @@ CENSUS = 2.0                                                       # AoE2 second
 ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, item and name of each unit (#620)
          "CAPPED_RAM": (0, "minecart", "Capped Ram"),
          "CAPPED_RAM_UPGRADE": (3, "book", "Capped Ram"),        # one slot for each line of upgrades
+         "CROSSBOWMAN": (0, "skeleton_spawn_egg", "Crossbowman"),
+         "CROSSBOWMAN_UPGRADE": (2, "book", "Crossbowman"),
+         "ELITE_SKIRMISHER": (1, "drowned_spawn_egg", "Elite Skirmisher"),
+         "ELITE_SKIRMISHER_UPGRADE": (3, "book", "Elite Skirmisher"),
          "HEAVY_SCORPION": (2, "crossbow", "Heavy Scorpion"),
          "HEAVY_SCORPION_UPGRADE": (5, "book", "Heavy Scorpion"),
+         "LIGHT_CAVALRY": (0, "horse_spawn_egg", "Light Cavalry"),
+         "LIGHT_CAVALRY_UPGRADE": (2, "book", "Light Cavalry"),
+         "LONG_SWORDSMAN": (0, "zombie_spawn_egg", "Long Swordsman"),
+         "LONG_SWORDSMAN_UPGRADE": (2, "book", "Long Swordsman"),
          "MILITIA": (0, "zombie_spawn_egg", "Militia"),             # the mob of units.classify
          "ARCHER": (0, "skeleton_spawn_egg", "Archer"),
          "ONAGER": (1, "dispenser", "Onager"),
          "ONAGER_UPGRADE": (4, "book", "Onager"),
+         "PIKEMAN": (1, "zombie_spawn_egg", "Pikeman"),
+         "PIKEMAN_UPGRADE": (3, "book", "Pikeman"),
          "SCOUT_CAVALRY": (0, "horse_spawn_egg", "Scout Cavalry"),
          "SIEGE_ENGINEERS": (1, "book", "Siege Engineers"),
          "CHEMISTRY": (4, "book", "Chemistry"),            # after Guard Tower and Keep
@@ -349,13 +428,17 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "BATTERING_RAM": (0, "minecart", "Battering Ram"),         # a siege unit is a minecart (units.siege)
          "BERSERK": (0, "zombie_spawn_egg", "Berserk"),
          "BLOODLINES": (1, "book", "Bloodlines"),
+         "BODKIN_ARROW": (2, "book", "Bodkin Arrow"),                 # the slot of Fletching (AFTER)
          "BOMBARD_TOWER_TECH": (5, "book", "Bombard Tower"),
          "CARAVAN": (1, "book", "Caravan"),
          "CASTLE_AGE": (4, "bell", "Castle Age"),
          "CATAPHRACT": (0, "horse_spawn_egg", "Cataphract"),
+         "CHAIN_BARDING_ARMOR": (4, "book", "Chain Barding Armor"),    # the slot of the Feudal armor (AFTER)
+         "CHAIN_MAIL_ARMOR": (1, "book", "Chain Mail Armor"),
          "CHU_KO_NU": (0, "skeleton_spawn_egg", "Chu Ko Nu"),
          "DOUBLE_BIT_AXE": (0, "book", "Double-Bit Axe"),
          "FERVOR": (1, "book", "Fervor"),
+         "FISHING_SHIP": (0, "oak_boat", "Fishing Ship"),         # a ship is a boat (units.boat)
          "FLETCHING": (2, "book", "Fletching"),
          "FORGING": (0, "book", "Forging"),
          "FORTIFIED_WALL": (0, "book", "Fortified Wall"),
@@ -365,8 +448,10 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "HORSE_COLLAR": (0, "book", "Horse Collar"),
          "HUSKARL": (0, "zombie_spawn_egg", "Huskarl"),
          "IMPERIAL_AGE": (5, "bell", "Imperial Age"),
+         "IRON_CASTING": (0, "book", "Iron Casting"),                 # the slot of Forging
          "JANISSARY": (0, "pillager_spawn_egg", "Janissary"),
          "KEEP": (3, "book", "Keep"),
+         "LEATHER_ARCHER_ARMOR": (3, "book", "Leather Archer Armor"),
          "LONGBOWMAN": (0, "skeleton_spawn_egg", "Longbowman"),
          "LOOM": (1, "book", "Loom"),                               # a book for a technology (#618)
          "MAMELUKE": (0, "camel_spawn_egg", "Mameluke"),
@@ -397,6 +482,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "BATTERING_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
         "BERSERK": "Viking infantry. Heals itself.",
         "BLOODLINES": "Cavalry +20 HP.",
+        "BODKIN_ARROW": "Archers +1 attack, +1 range.",
         "BOMBARD_TOWER_TECH": "Lets you build bombard towers.",
         "CHEMISTRY": "Archers, ranged siege, towers +1 attack.",
         "CAPPED_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
@@ -404,10 +490,17 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "CARAVAN": "Trade carts +20 % speed.",
         "CASTLE_AGE": "Advance to the Castle Age.",
         "CATAPHRACT": "Byzantine cavalry. Strong vs. infantry.",
+        "CHAIN_BARDING_ARMOR": "Cavalry +1 melee armor, +1 pierce armor.",
+        "CHAIN_MAIL_ARMOR": "Infantry +1 melee armor, +1 pierce armor.",
         "CHU_KO_NU": "Chinese archer. Shoots many arrows.",
+        "CROSSBOWMAN": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
+        "CROSSBOWMAN_UPGRADE": "Upgrades archers to crossbowmen.",
         "DOUBLE_BIT_AXE": "Villagers chop wood 20 % faster.",
+        "ELITE_SKIRMISHER": "Ranged. Strong vs. archers, spearmen.",
+        "ELITE_SKIRMISHER_UPGRADE": "Upgrades skirmishers to elite skirmishers.",
         "FEUDAL_AGE": "Advance to the Feudal Age.",
         "FERVOR": "Monks +15 % speed.",
+        "FISHING_SHIP": "Gathers food from fish.",
         "FLETCHING": "Archers, towers, town center +1 attack, +1 range.",
         "FORGING": "Infantry and cavalry +1 attack.",
         "FORTIFIED_WALL": "Stone walls +1,200 HP, +4/+2 armor; also gates.",
@@ -419,9 +512,15 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "HORSE_COLLAR": "Farms +75 food.",
         "HUSKARL": "Gothic infantry. Strong vs. archers.",
         "IMPERIAL_AGE": "Advance to the Imperial Age.",
+        "IRON_CASTING": "Infantry and cavalry +1 attack.",
         "JANISSARY": "Turkish gunner. Strong vs. infantry.",
         "KEEP": "Guard towers +750 HP, +1 attack, +1/+1 armor.",
+        "LEATHER_ARCHER_ARMOR": "Archers +1 melee armor, +1 pierce armor.",
+        "LIGHT_CAVALRY": "Cavalry. Fast; strong vs. monks, siege.",
+        "LIGHT_CAVALRY_UPGRADE": "Upgrades scout cavalry to light cavalry.",
         "LONGBOWMAN": "Briton archer. Long range.",
+        "LONG_SWORDSMAN": "Infantry. Strong vs. eagles, buildings.",
+        "LONG_SWORDSMAN_UPGRADE": "Upgrades men-at-arms to long swordsmen.",
         "LOOM": "Villagers +15 HP, +1/+2 armor.",
         "MAMELUKE": "Saracen camel. Strong vs. cavalry.",
         "MAN_AT_ARMS": "Infantry. Strong vs. eagles, buildings.",
@@ -433,6 +532,8 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "ONAGER": "Siege. Hits all units near the target.",
         "ONAGER_UPGRADE": "Upgrades mangonels to onagers.",
         "PADDED_ARCHER_ARMOR": "Archers +1 melee armor, +1 pierce armor.",
+        "PIKEMAN": "Infantry. Strong vs. cavalry; weak vs. archers.",
+        "PIKEMAN_UPGRADE": "Upgrades spearmen to pikemen.",
         "REDEMPTION": "Monks convert siege and most buildings.",
         "SAMURAI": "Japanese infantry. Strong vs. unique units.",
         "SANCTITY": "Monks +15 HP.",
@@ -785,7 +886,9 @@ def research(g, entry):
             g.command(combat.label_command(uuid, new))               # the name of a new unit (units.pretty)
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
         if stats(g, name) != combat.stats(name):
-            g.command(combat.stats_command(uuid, name, stats(g, name)))
+            import trebuchet                                       # trebuchet imports this module: import it late
+            g.command(trebuchet.stats_command(g, uuid) if name == trebuchet.NAME   # the armor of its state (#1409)
+                      else combat.stats_command(uuid, name, stats(g, name)))
         if stats(g, name).range != combat.stats(name).range:          # Fletching (#724)
             g.command(combat.range_command(uuid, name, g.map.T, s=stats(g, name)))
     if entry["name"] in SPEEDS:                                    # the live units walk faster (Fervor)
@@ -887,7 +990,10 @@ def tick(g, work):
 def spawn(g, rect, name):
     """Summon unit name on a free cell in front of the building rect (south side first, the middle first; the units
     take the cells one after the other) and add it to the villagers of g (a military unit: to g.soldiers, #654).
-    Returns the gather.Villager, the UUID of a military unit, or None."""
+    Returns the gather.Villager, the UUID of a military unit, or None. A dock puts its ship on the water (fleet.spawn)."""
+    if units.is_boat(units.classify(name)):
+        import fleet                                                   # fleet imports this module
+        return fleet.spawn(g, rect, name)
     cells = g.map.front(rect, "Passengers" in (units.classify(name) or {}))
     if not cells:
         return None
@@ -923,7 +1029,8 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))   # also without an order (#849)
     if player not in (None, g.player):
         return uuid
-    if gather.military(name) or name in ("MONK", "TRADE_CART"):    # they walk on orders as a soldier (#1243, #1253)
+    # they take move orders as a soldier (#1243, #1253); a ship sails with fleet.py (#1383)
+    if gather.military(name) or name in ("MONK", "TRADE_CART") or units.is_boat(units.classify(name)):
         g.soldiers[uuid] = name
         return uuid
     g.villagers[uuid] = gather.Villager(uuid, pos)
