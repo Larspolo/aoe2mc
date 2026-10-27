@@ -73,6 +73,7 @@ import menu  # noqa: E402
 COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   # as in AoE2
          "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}, "FEUDAL_AGE": {"food": 500},
          "BATTERING_RAM": {"wood": 160, "gold": 75},
+         "BOMBARD_CANNON": {"wood": 225, "gold": 225},               # the Imperial Age, after Chemistry (#1380)
          "BOMBARD_TOWER_TECH": {"food": 800, "wood": 400},           # the university, after Chemistry (#1375)
          "BOW_SAW": {"food": 150, "wood": 100},                        # AoE2 DE wiki (#1423)
          "BERSERK": {"food": 65, "gold": 20},
@@ -165,6 +166,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "BLOODLINES": 50,
                "BOW_SAW": 50,
                "BODKIN_ARROW": 35,
+               "BOMBARD_CANNON": 56,
                "BOMBARD_TOWER_TECH": 60,
                "CAPPED_RAM": 36,
                "CAPPED_RAM_UPGRADE": 50,
@@ -272,7 +274,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "MONASTERY": ("MONK", "FERVOR", "SANCTITY", "REDEMPTION"),            # (#1243, #1261, #1264)
           "SIEGE_WORKSHOP": ("BATTERING_RAM", "MANGONEL", "SCORPION", "SIEGE_TOWER",   # (#1349, #1362)
                              "CAPPED_RAM_UPGRADE", "SIEGE_RAM_UPGRADE", "ONAGER_UPGRADE", "SIEGE_ONAGER_UPGRADE",
-                             "HEAVY_SCORPION_UPGRADE")}                 # (#1352)
+                             "HEAVY_SCORPION_UPGRADE",                  # (#1352)
+                             "BOMBARD_CANNON")}                         # after Chemistry: build.NEEDS (#1380)
 # The unique unit of each civilization (AoE2 DE), trained at its castle. A unit without COSTS is not in the menu yet:
 # it has no AoE2 combat values in combat.STATS.
 UNIQUE = {"BRITONS": "LONGBOWMAN", "PERSIANS": "WAR_ELEPHANT", "BYZANTINES": "CATAPHRACT", "CELTS": "WOAD_RAIDER",
@@ -502,6 +505,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "BLAST_FURNACE": (0, "book", "Blast Furnace"),               # the slot of Forging
          "BLOODLINES": (1, "book", "Bloodlines"),
          "BODKIN_ARROW": (2, "book", "Bodkin Arrow"),                 # the slot of Fletching (AFTER)
+         "BOMBARD_CANNON": (7, "tnt_minecart", "Bombard Cannon"),   # after the siege tower
          "BOW_SAW": (0, "book", "Bow Saw"),                           # the slot of Double-Bit Axe (AFTER)
          "BOMBARD_TOWER_TECH": (5, "book", "Bombard Tower"),
          "CARAVAN": (1, "book", "Caravan"),
@@ -567,6 +571,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "BLOODLINES": "Cavalry +20 HP.",
         "BOW_SAW": "Villagers chop wood 20 % faster.",
         "BODKIN_ARROW": "Archers +1 attack, +1 range.",
+        "BOMBARD_CANNON": "Siege. Long range; strong vs. buildings and siege.",
         "BOMBARD_TOWER_TECH": "Lets you build bombard towers.",
         "CHEMISTRY": "Archers, ranged siege, towers +1 attack.",
         "CAPPED_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
