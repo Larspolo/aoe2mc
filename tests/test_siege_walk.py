@@ -63,6 +63,7 @@ def test_a_ram_and_a_cobra_car_drive_to_an_order(tiny_world, tmp_path):
             p = data(game, tag, "Pos")
             assert math.dist((p[0], p[2]), (x0 + 20.5, z0 + dz + 0.5)) < 2.5, (tag, p)
         assert "Count: 2" in game.command("execute if entity @e[tag=aoe2mc.carrier]")       # one pig for each
-        crew = game.command("data get entity @e[type=minecart,tag=ram,limit=1] Passengers[0].attributes")
+        crew = game.command("execute as @e[type=minecart,tag=ram,limit=1] on passengers run "   # the attribute list is
+                            "attribute @s minecraft:max_health base get")      # too long for the data output (#1664)
         assert "175" in crew                                           # aoe stats: the crew has the AoE2 hit points
         assert game.command("aoe stop @e[type=minecart,tag=ram]").strip() == "Stopped 1 units"

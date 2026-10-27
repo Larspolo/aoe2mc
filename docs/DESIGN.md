@@ -226,3 +226,23 @@ best one is not listed).
 - **Deterministic output:** the same scenario and seed give the same world. Code that draws random numbers per
   block ID goes in state-name order (see `docs/LEARNINGS.md`).
 - **Valid states:** each block state passes `mcvalid` (`tests/test_buildings.py` checks all designs).
+
+## 5. Units
+
+### Siege units
+
+A siege unit is a minecart on a carrier mob of the game program (#836). The mob in the minecart (the crew) gives each
+siege unit its own look (owner decision on #1525: "Minecart but with D as well for the mob in the minecart. War wagon a
+horse in the minecart", #1664). The crew has the hit points and the name line. It keeps `NoAI` and `Silent`: it does
+not walk, jump, shoot, attack or make sounds by itself. `units.SIEGE_CREW` holds the table.
+
+| AoE2 unit | Mob in the minecart | Scale | Note |
+|---|---|---|---|
+| Battering Ram, Capped Ram, Siege Ram | `iron_golem` | 0.5, 0.55, 0.6 | 1.0, 1.1, 1.2 × the battering ram |
+| Mangonel, Onager, Siege Onager | `breeze` | 0.8 | |
+| Scorpion, Heavy Scorpion | `piglin` with a crossbow | 1.0 | `IsImmuneToZombification` 1 |
+| Trebuchet | `warden` | 0.6 unpacked, 0.36 packed | `game/trebuchet.py` sets the size when a pack or an unpack ends |
+| Bombard Cannon, Houfnice | `ghast` | 0.3 | |
+| Siege Tower | `sniffer` | 0.5 | the units inside ride the crew (`game/siege_tower.py`) |
+| War Wagon, Elite War Wagon | `horse` | 0.7 | |
+| Organ Gun, Rocket Cart, Cobra Car, Hussite Wagon | unchanged | 1.0 | a cart with the present crew |
