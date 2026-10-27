@@ -1,0 +1,44 @@
+name: Close
+
+# Closes each open issue with the label `close` as completed (#1740). The auto mode denies an agent the close of an
+# issue (#862, #1323, #1641), so a run adds the label after its evidence comment, and this job does the close.
+on:
+  issues:
+    types: [labeled]
+  schedule:
+    - cron: "17 * * * *"     # each hour: labels that an event missed
+  workflow_dispatch:
+
+permissions:
+  issues: write          # labels, comments, close
+  actions: write         # gh workflow run claims.yml
+
+concurrency:
+  group: close
+  cancel-in-progress: false
+
+jobs:
+  close:
+    if: github.event_name != 'issues' || github.event.label.name == 'close'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Close the issues with the label close
+        env:
+          GH_TOKEN: ${{ github.token }}
+          R: ${{ github.repository }}
+        run: |
+          n=0
+          for i in $(gh api --paginate "repos/$R/issues?state=open&labels=close&per_page=100" \
+                       --jq '.[] | select(.pull_request | not) | .number'); do
+            labels=$(gh api "repos/$R/issues/$i" --jq '[.labels[].name] | join(" ")')
+            if [[ " $labels " == *" agent-status "* ]]; then echo "skip #$i: the status issue"; continue; fi
+            for l in close needs-human in-progress; do
+              gh api "repos/$R/issues/$i/labels/$l" -X DELETE > /dev/null 2>&1 || true
+            done
+            gh api "repos/$R/issues/$i/comments" -f body="Closed by the Close workflow (label \`close\`, #1740)." > /dev/null
+            gh api "repos/$R/issues/$i" -X PATCH -f state=closed -f state_reason=completed > /dev/null
+            echo "closed #$i"; n=$((n + 1))
+          done
+          # A close by GITHUB_TOKEN starts no workflow: delete the claim refs now.
+          if [ "$n" -gt 0 ]; then gh workflow run claims.yml --repo "$R" || true; fi
