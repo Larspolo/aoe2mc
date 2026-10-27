@@ -434,8 +434,10 @@ def barding(s):
 
 def unlocked(g, name):
     """True when the player has the age of technology name (TECH_AGE). As in AoE2, the menu shows a technology only
-    from its age, but a building or unit of a later age as a gray item (build.locked)."""
-    return TECH_AGE.get(name, 0) <= build.ages(g) and AFTER.get(name, "") in {""} | set(getattr(g, "techs", ()))
+    from its age, but a building or unit of a later age as a gray item (build.locked), and never one that the
+    civilization of the player does not have (civs.MISSING)."""
+    return TECH_AGE.get(name, 0) <= build.ages(g) and AFTER.get(name, "") in {""} | set(getattr(g, "techs", ())) \
+        and not (hasattr(g, "data") and civs.civ(g) in civs.MISSING.get(name, ()))   # not of this civilization (#1373)
 
 
 def homes(g):
