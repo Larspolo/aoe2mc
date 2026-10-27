@@ -13,6 +13,7 @@ Token: GITHUB_TOKEN. Without it the script uses `gh api` (cloud sessions). Pytho
 """
 import argparse
 import datetime
+import functools
 import json
 import os
 import re
@@ -51,6 +52,49 @@ def start_after(issue):
     return datetime.datetime.fromisoformat(f"{m.group(1)}T{m.group(2) or '00:00'}+00:00")
 
 
+def start_after_prs(issue):
+    """(N, M) of a "Start after: N PRs after #M" line (#2039): the ticket waits until N PRs merged after PR #M, for
+    example to measure a change. A count of merged PRs measures the same work at each speed of the project."""
+    m = re.search(r"^Start after:\s*(\d+) PRs? after #(\d+)", issue.get("body") or "", re.M)
+    return (int(m[1]), int(m[2])) if m else None
+
+
+MERGE = re.compile(r"\(#(\d+)\)$")    # the subject of a squash merge on the default branch: "Title (#N)"
+
+
+def ts(text):
+    return datetime.datetime.fromisoformat(text.replace("Z", "+00:00"))
+
+
+def merges(since=None, until=None, n=None, pages=10):
+    """[(time, PR number)] of the PRs merged into the default branch, newest first (#2039): all after `since`, up to
+    `until` (datetimes), at most `n`. The squash commits "Title (#N)" count; the generated commits of the workflows do
+    not."""
+    out, q = [], f"&since={since:%Y-%m-%dT%H:%M:%SZ}" if since else ""
+    for page in range(1, pages + 1):
+        cs = api(f"commits?sha={CONFIG['branch']}&per_page=100&page={page}{q}")
+        for c in cs:
+            m, t = MERGE.search(c["commit"]["message"].split("\n")[0]), ts(c["commit"]["committer"]["date"])
+            if m and (until is None or t <= until):
+                out.append((t, int(m[1])))
+        if len(cs) < 100 or n is not None and len(out) >= n:
+            break
+    return out if n is None else out[:n]
+
+
+@functools.cache
+def prs_after(number):
+    """The number of PRs merged after PR #number, or None when it is not merged (yet)."""
+    t = api(f"pulls/{number}").get("merged_at")
+    return None if not t else sum(n != number for _, n in merges(since=ts(t)))
+
+
+def waits(issue, after=prs_after):
+    """True while the "Start after: N PRs after #M" line of the issue holds it. after(M): the merged PRs after #M."""
+    s = start_after_prs(issue)
+    return bool(s) and (after(s[1]) or 0) < s[0]
+
+
 def names(text):
     """File and function names in backticks: `buildings.py`, `tools/dashboard.py`, `furnish()`, `aoe2mc.convert()`.
     Files become their base name, functions "name()", so the names of tickets and of PR file lists match."""
@@ -82,11 +126,12 @@ LANE = "lane:"     # a lane label names the model of the runs that take the tick
 RESERVED = tuple(CONFIG.get("pacing", {}).get("reserved", ()))   # lanes whose tickets Opus runs never take (#1994)
 
 
-def candidates(issues, busy=frozenset(), now=None, lane=None, reserved=RESERVED):
+def candidates(issues, busy=frozenset(), now=None, lane=None, reserved=RESERVED, after=prs_after):
     """The ticket candidates in the pick order of the autopilot skill (step 5): priority, then the overlap with the
     work in progress (busy, from work(); fewer merge conflicts, #487), then the ticket number.
     issues: the open issues and PRs. A dependency is closed when it is not open: an open PR is open too (#243).
-    A ticket waits until the time of its "Start after:" line (#496). A decision ticket ("Decide: ...") is never a
+    A ticket waits until the time of its "Start after:" line (#496), or until N PRs merged after PR #M ("Start after:
+    N PRs after #M", #2039; `after` counts them, only for such a ticket). A decision ticket ("Decide: ...") is never a
     candidate: only the owner answers it, also when the owner removed `needs-human` with the answer (#1569).
     lane ("haiku"): only the tickets with `lane:haiku`. No lane (the Opus runs): the lane tickets come after all others,
     so an Opus run takes one only when nothing else is ready (#1715), and never one of a `reserved` lane (#1994).
@@ -100,7 +145,8 @@ def candidates(issues, busy=frozenset(), now=None, lane=None, reserved=RESERVED)
         return lane is None and any(n.startswith(LANE) for n in labels(i)), p, len(overlap(i, busy)), i["number"]
     ready = [i for i in issues if not labels(i) & SKIP and not any(d in open_numbers for d in depends(i))
              and not (start_after(i) or now) > now and not i.get("title", "").startswith("Decide:")
-             and (LANE + lane in labels(i) if lane else not {LANE + r for r in reserved} & labels(i))]
+             and (LANE + lane in labels(i) if lane else not {LANE + r for r in reserved} & labels(i))
+             and not waits(i, after)]                       # last: it reads GitHub
     return sorted(ready, key=rank)
 
 

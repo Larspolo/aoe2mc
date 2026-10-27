@@ -1,0 +1,54 @@
+{"name": "TOWN_CENTER", "drop": ["wood", "food", "gold", "stone"]}
+{"name": "LUMBER_CAMP", "drop": ["wood"]}
+{"name": "MILL", "drop": ["food"]}
+{"name": "FOLWARK", "drop": ["food"]}
+{"name": "MINING_CAMP", "drop": ["gold", "stone"]}
+{"name": "BOW_SAW", "work": {"wood": 1.2}}
+{"name": "BOX_TURTLES", "fish": 200, "shore": true}
+{"name": "COW", "hunt": 150, "herd": true}
+{"name": "CROP_ROTATION", "farm": 175}
+{"name": "DEER", "hunt": 140}
+{"name": "DOLPHIN", "fish": 350}
+{"name": "DOUBLE_BIT_AXE", "work": {"wood": 1.2}}
+{"name": "FARM", "dark": true}
+{"name": "FISHING_LINES", "ship": [1.1, 5]}
+{"name": "FISHING_SHIP", "civilian": true}
+{"name": "FISH_DORADO", "fish": 225}
+{"name": "FISH_PERCH", "fish": 200}
+{"name": "FISH_SALMON", "fish": 225}
+{"name": "FISH_SNAPPER", "fish": 225}
+{"name": "FISH_TRAP", "dark": true}
+{"name": "FISH_TUNA", "fish": 225}
+{"name": "GILLNETS", "ship": [1.1, 5]}
+{"name": "GOAT", "hunt": 100, "herd": true}
+{"name": "GOLD_MINE", "mine": ["gold", 800, "GOLD_MINER"]}
+{"name": "GOLD_MINING", "work": {"gold": 1.15}}
+{"name": "GOLD_SHAFT_MINING", "work": {"gold": 1.15}}
+{"name": "GOOSE", "hunt": 100, "herd": true}
+{"name": "GREAT_FISH_MARLIN", "fish": 350}
+{"name": "HAND_CART", "carry": 7, "pace": 1.1}
+{"name": "HEAVY_PLOW", "farm": 125}
+{"name": "HORSE_COLLAR", "farm": 75}
+{"name": "IBEX", "hunt": 140}
+{"name": "JAVELINA", "hunt": 340}
+{"name": "KING", "civilian": true}
+{"name": "LLAMA", "hunt": 100, "herd": true}
+{"name": "MISSIONARY", "civilian": true}
+{"name": "MONK", "civilian": true}
+{"name": "PIG", "hunt": 100, "herd": true}
+{"name": "REPAIRER", "civilian": true}
+{"name": "SHEEP", "hunt": 100, "herd": true}
+{"name": "SHORE_FISH", "fish": 200, "shore": true}
+{"name": "STONE_MINE", "mine": ["stone", 350, "STONE_MINER"]}
+{"name": "STONE_MINING", "work": {"stone": 1.15}}
+{"name": "STONE_SHAFT_MINING", "work": {"stone": 1.15}}
+{"name": "TOWN_PATROL", "watch": true}
+{"name": "TOWN_WATCH", "watch": true}
+{"name": "TRADE", "civilian": true}
+{"name": "TRANSPORT", "civilian": true}
+{"name": "TURKEY", "hunt": 100, "herd": true}
+{"name": "TWO_MAN_SAW", "work": {"wood": 1.1}}
+{"name": "VILLAGER", "civilian": true}
+{"name": "WATER_BUFFALO", "hunt": 150, "herd": true}
+{"name": "WHEELBARROW", "carry": 3, "pace": 1.1}
+{"name": "WILD_BOAR", "hunt": 340}
