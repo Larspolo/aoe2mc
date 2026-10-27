@@ -43,7 +43,7 @@ def test_a_unique_unit_without_combat_values_is_not_in_the_menu(monkeypatch):
     assert all(u in combat.STATS for u in train.UNIQUE.values() if u in train.COSTS)
     monkeypatch.delitem(train.COSTS, "JAGUAR_WARRIOR")                 # the rule needs one unit that the data does not list
     server, g = setup("AZTECS")
-    assert train.trains(g, "CASTLE") == train.TRAINS["CASTLE"] and train.queue(g, "Steve", (12, 4), "LONGBOWMAN") is None
+    assert train.trains(g, "CASTLE") == train.TRAINS["CASTLE"] + ("GARLAND_WARS",) and train.queue(g, "Steve", (12, 4), "LONGBOWMAN") is None
 
 
 def test_a_click_queues_the_unit_and_takes_its_cost():

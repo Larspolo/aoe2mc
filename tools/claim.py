@@ -17,9 +17,9 @@ a second push of another claim commit is never a fast-forward. Later claims of t
     python3 tools/claim.py N --guard --pr-branch B   # the same, but the open PR of branch B (taken over) is allowed
     python3 tools/claim.py ID --comment   # lock owner comment ID (autopilot step 3); exit 1: another run handles it
     python3 tools/claim.py E --refill     # lock the sub-issues of epic E (0: the whole queue refill, autopilot step 5)
-    python3 tools/claim.py 0 --review     # lock the process review of this time slot (`improve` skill, #898)
-    python3 tools/claim.py 0 --reviewed change   # after the review: "change" or "none" sets the next slot length
-    python3 tools/claim.py 0 --roadmap    # lock the review of docs/ROADMAP.md of this 2-hour slot (`roadmap` skill)
+    python3 tools/claim.py 0 --review     # lock the process review after 50 merged PRs (`improve` skill, #898, #2039)
+    python3 tools/claim.py 0 --reviewed change   # after the review: "change" or "none" sets the next gap
+    python3 tools/claim.py 0 --roadmap    # lock the review of docs/ROADMAP.md after 100 merged PRs (`roadmap` skill)
 
 Two runs did one ticket (#288): one commented "Started by" and worked without the claim ref. So a claim also fails
 when another branch commented "Started by" in the last 30 minutes or has an active PR for the ticket (#491), and `--guard` stops a run before its push when it does not own the claim or another branch has a PR for the ticket. The GitHub checks run only for a GitHub remote.
@@ -35,9 +35,11 @@ closed sub-issues of epic E (a new lock when a sub-issue closes), or the UTC hou
 a ticket E with no sub-issue (#855).
 
 Parallel runs read the same `runs` counter of the status issue, so "every 5th run" lost 7 of 10 process reviews
-(#898). So `--review` locks the review of a time slot: `claim/review-<minutes>m-<slot>`, and only when the last
-review (`last_review` in the state comment of #1) is at least one slot length ago. A review with no change doubles
-the slot length (45, 90, 180, 360 minutes), a change sets it back to 45 (`--reviewed`).
+(#898). So `--review` locks one review: `claim/review-<gap>pr-<last review>-<k>`, and only when `gap` PRs merged after
+the last review (`last_review` in the state comment of #1). A review with no change doubles the gap (50, 100, 200
+merged PRs), a change sets it back to 50 (`--reviewed`). `--roadmap` locks the roadmap review the same way, 100 merged
+PRs after `last_roadmap`. A gap counts merged PRs, not minutes: the speed of the project changes (#2039). The other
+times of this tool stay in seconds: a run that stopped merges nothing, so only the clock finds it.
 
 Exit 2: git failed for another reason (network, permission). The workflow `claims.yml` deletes the refs
 of a closed ticket: the session proxy gives 403 for branch deletes.
@@ -54,9 +56,10 @@ import uuid
 from agent_config import CONFIG
 
 EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
-REVIEW, REVIEW_MAX = 45, 120    # minutes: the first and the longest slot of the process review (#898, #1697)
-ROADMAP = 120               # minutes: the slot of the review of docs/ROADMAP.md
-STATUS = CONFIG["status"]["issue"]   # the status issue: its state comment holds the review slot
+REVIEW, REVIEW_MAX = 50, 200    # merged PRs: the first and the longest gap of the process review (#898, #1697, #2039)
+ROADMAP = 100               # merged PRs between two reviews of docs/ROADMAP.md (#2039)
+STATUS = CONFIG["status"]["issue"]   # the status issue: its state comment holds the last reviews
+# The times below find a run that stopped: a stopped run merges nothing, so they stay on the clock (#2039).
 STALE = 30 * 60             # seconds without a claim or beat: the run stopped (usage limit, crash)
 RECENT = 30 * 60            # seconds: a "Started by" comment of another branch owns the ticket for this time (#288)
 CONFLICT = 10 * 60          # seconds: the stale time of a ticket whose PR has the label `conflict` (#1773)
@@ -168,26 +171,45 @@ def agent_state(body):
     return json.loads(m[1]) if m else {}
 
 
-def review_slot(state, now=None):
-    """The lock key of the process review at time `now` for the agent state, or None when the last review is less
-    than one slot length ago."""
-    now, minutes = now or time.time(), state.get("review_minutes", REVIEW)
-    last = state.get("last_review")
-    if last and now - datetime.datetime.fromisoformat(last.replace("Z", "+00:00")).timestamp() < minutes * 60:
+def pr_slot(last, gap, merged):
+    """The lock key of a review that waits for `gap` merged PRs after the time `last` (ISO, or None: no review yet), or
+    None when fewer PRs merged since then. merged: the PRs merged after `last`. The key holds `last` and the number of
+    full gaps: one run takes each review, and a review that a run did not finish opens again one gap later."""
+    if merged < gap:
         return None
-    return f"{minutes}m-{int(now // (minutes * 60))}"
+    return f"{gap}pr-{re.sub(r'[^0-9TZ]', '', last or '') or 'none'}-{merged // gap}"
 
 
-def reviewed(body, changed, now=None):
-    """The body of the status issue after a review: a change sets the slot back to REVIEW minutes, no change doubles
-    it (at most REVIEW_MAX). The other keys of the state comment stay."""
-    state = agent_state(body)
-    t = datetime.datetime.fromtimestamp(now or time.time(), datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    state.update(last_review=t, review_minutes=REVIEW if changed else
-                 min(2 * state.get("review_minutes", REVIEW), REVIEW_MAX))
+def merged_since(last, gap, remote="origin"):
+    """The number of PRs merged after the ISO time `last`. With no last review, or without GitHub (the tests): `gap`,
+    so the review starts."""
+    if not last or not on_github(remote):
+        return gap
+    from dashboard import merges
+    try:
+        return len(merges(since=datetime.datetime.fromisoformat(last.replace("Z", "+00:00"))))
+    except Exception as e:                              # exit 2 like a git error, not 1 ("another run does it")
+        sys.exit(f"GitHub API failed for the merged PRs: {e}")
+
+
+def utc(now=None):
+    return datetime.datetime.fromtimestamp(now or time.time(), datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def with_state(body, state):
+    """The body of the status issue with `state` in its state comment."""
     new = f"<!-- agent-state: {json.dumps(state)} -->"
     old = re.search(r"<!-- agent-state: \{.*?\} -->", body or "")
     return body.replace(old[0], new) if old else new + "\n" + (body or "")
+
+
+def reviewed(body, changed, now=None):
+    """The body of the status issue after a review: a change sets the gap back to REVIEW merged PRs, no change doubles
+    it (at most REVIEW_MAX). The other keys of the state comment stay; `review_minutes` (the time slot before #2039)
+    goes."""
+    state = {k: v for k, v in agent_state(body).items() if k != "review_minutes"}
+    gap = REVIEW if changed else min(2 * state.get("review_prs", REVIEW), REVIEW_MAX)
+    return with_state(body, {**state, "last_review": utc(now), "review_prs": gap})
 
 
 def claim_lock(kind, key, remote="origin"):
@@ -313,9 +335,9 @@ def main(argv=None):
     g.add_argument("--guard", action="store_true", help="before a push: beat; exit 1 when another branch has a PR")
     g.add_argument("--comment", action="store_true", help="lock the owner comment with this ID")
     g.add_argument("--refill", action="store_true", help="lock the new sub-issues of this epic (0: the whole refill)")
-    g.add_argument("--review", action="store_true", help="lock the process review of this time slot (number 0)")
-    g.add_argument("--reviewed", choices=("change", "none"), help="after the review: set the next slot length")
-    g.add_argument("--roadmap", action="store_true", help="lock the roadmap review of this 2-hour slot (number 0)")
+    g.add_argument("--review", action="store_true", help="lock the process review after its gap of merged PRs (number 0)")
+    g.add_argument("--reviewed", choices=("change", "none"), help="after the review: set the next gap")
+    g.add_argument("--roadmap", action="store_true", help="lock the roadmap review after 100 merged PRs (number 0)")
     ap.add_argument("--state", help="--refill: the state part of the lock (default: closed sub-issues, or the hour)")
     ap.add_argument("--pr-branch", metavar="BRANCH", help="--guard: the branch of a PR that this run took over")
     ap.add_argument("--remote", default="origin")
@@ -327,12 +349,19 @@ def main(argv=None):
         print(f"comment {a.number}: another run handles it")
         return 1
     if a.review or a.roadmap:
-        key = review_slot(agent_state(api(f"issues/{STATUS}")["body"]) if on_github(a.remote) else {}) \
-            if a.review else str(int(time.time() // (ROADMAP * 60)))
-        if key and claim_lock("review" if a.review else "roadmap", key, a.remote):
-            print(f"claimed {'review' if a.review else 'roadmap'} {key}")
+        body = api(f"issues/{STATUS}")["body"] if on_github(a.remote) else ""
+        state, kind = agent_state(body), "review" if a.review else "roadmap"
+        last, gap = (state.get("last_review"), state.get("review_prs", REVIEW)) if a.review else \
+            (state.get("last_roadmap"), ROADMAP)
+        key = pr_slot(last, gap, merged_since(last, gap, a.remote))
+        if key and claim_lock(kind, key, a.remote):
+            if a.roadmap and on_github(a.remote):         # the roadmap skill has no end step: count from its start
+                from dashboard import api as call
+                body = api(f"issues/{STATUS}")["body"]    # read again: other runs and the dashboard change it too
+                call(f"issues/{STATUS}", "PATCH", {"body": with_state(body, {**agent_state(body), "last_roadmap": utc()})})
+            print(f"claimed {kind} {key}")
             return 0
-        print("no review now: the last one is less than one slot ago, or another run does it")
+        print(f"no {kind} now: fewer than {gap} PRs merged since the last one, or another run does it")
         return 1
     if a.reviewed:
         from dashboard import api as call

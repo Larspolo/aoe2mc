@@ -32,7 +32,7 @@ MID, MID_LEFT = 0.90, 2.0   # aim: this share is used this many hours before the
 END = 0.98          # aim: this share is used when the 5-hour window resets
 LO, HI = 1, CONFIG.get("pacing", {}).get("max_runs", 16)   # bounds of the number of runs (`agent.toml`, #1706)
 FREE7 = CONFIG.get("pacing", {}).get("week_free", 0.60)   # below this 7-day usage only the 5-hour window counts (owner, 2026-10-27)
-MAX_FIRE = 4        # runs that the pacer starts per cycle: each run needs a few minutes to claim its ticket
+MAX_FIRE = CONFIG.get("pacing", {}).get("max_fire", 4)   # runs that the pacer starts per cycle: each run needs a few minutes to claim its ticket
 CALL = ["claude", "-p", "Reply with OK.", "--model", "claude-haiku-5-5", "--output-format", "stream-json", "--verbose"]
 
 
