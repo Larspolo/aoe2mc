@@ -605,7 +605,7 @@ class Replay:
                 else:
                     del self.placed[new]
                     self.added -= 1
-                    out += [f"aoe minimap unbuild {rect[0]} {rect[2]}"] * (self.pov is None and self.drawn.pop(rect, 0) != 0)
+                out += [f"aoe minimap unbuild {rect[0]} {rect[2]}"] * (self.pov is None and self.drawn.pop(rect, 0) != 0)
                 out += self.fall(rect)
             elif (v := self.unit(i, name, e["player"])) is not None:
                 del self.units[i]
@@ -1439,7 +1439,7 @@ class Replay:
         comes into sight. Only the changes; no view player: all buildings again."""
         if not self.ai:
             return []
-        T, placed = self.T, {rect: p for p, _, rect in self.placed}
+        T, placed = self.T, {rect: p for p, _, rect in [s[1:] for s in self.starts] + self.placed}   # the start ones too (#1940)
         want = placed
         if self.pov is not None:
             known = self.known.setdefault(self.pov, {})
@@ -1791,7 +1791,9 @@ class Replay:
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
                    f"bossbar set {BAR} max {max(1, int(end) // 1000)}"] +
              ([f"tag {u} add {COUNTED}" for u in self.counted] + ["aoe deathmarks on", "aoe minimap on", f"aoe minimap frame {FRAME * self.T}"]) * self.ai +
-             # the death marks (#846) and the live units on the map item (#1237)
+             # the death marks (#846) and the live units on the map item (#1237); the plugin paints the bare ground
+             # over the start objects of the base image, so the start buildings get their squares (#1940)
+             self.minimap_buildings(set(), set()) * (self.pov is None) +
              self.overview())
         census = self.census if bar and self.ai else lambda: None
         while k < len(events) or self.moving or self.builds:
