@@ -111,5 +111,5 @@ def test_the_group_commands_work_on_a_server(tiny_world, tmp_path):
         g.choose(set())
         g.group("aoe2mc", 1, False)
         assert g.selected == {v.uuid}
-        bad = [(c, out) for c, out in sent if any(w in out for w in ("Unknown", "Incorrect", "Invalid", "Expected"))]
+        bad = [(c, out) for c, out in sent if any(w in out for w in ("Unknown", "Incorrect", "Invalid", "Expected", "Failed to parse"))]
         assert not bad, bad
