@@ -133,6 +133,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "ELITE_EAGLE_WARRIOR_UPGRADE": {"food": 800, "gold": 500},
          "ELITE_GENITOUR": {"food": 40, "wood": 35},
          "ELITE_GENITOUR_UPGRADE": {"food": 500, "wood": 450},         # the Imperial Age (#1610)
+         "ELITE_SHRIVAMSHA_RIDER": {"food": 70, "gold": 30},
+         "ELITE_SHRIVAMSHA_RIDER_UPGRADE": {"food": 850, "gold": 500},   # the Imperial Age (#1612)
          "ELITE_STEPPE_LANCER": {"food": 70, "gold": 40},
          "ELITE_STEPPE_LANCER_UPGRADE": {"food": 600, "gold": 550},   # the Imperial Age (#1557)
          "ELITE_SKIRMISHER": {"food": 25, "wood": 35},
@@ -224,6 +226,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "SCALE_MAIL_ARMOR": {"food": 100},
          "SCORPION": {"wood": 75, "gold": 75},
          "SHIPWRIGHT": {"food": 1000, "gold": 300},                    # the university, Imperial Age (#1490)
+         "SHRIVAMSHA_RIDER": {"food": 70, "gold": 30},                # the stable of the Gurjaras (#1612)
          "SIEGE_TOWER": {"wood": 100, "gold": 120},                  # the Castle Age (AoE2 DE wiki, #1362)
          "SCOUT_CAVALRY": {"food": 80},
          "SIEGE_ENGINEERS": {"food": 500, "wood": 600},
@@ -238,6 +241,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "SQUIRES": {"food": 100},                                    # AoE2 DE wiki (#1415)
          "STEPPE_LANCER": {"food": 70, "gold": 40},                    # AoE2 DE wiki (#1557)
          "TEUTONIC_KNIGHT": {"food": 85, "gold": 30},
+         "THEOCRACY": {"gold": 200},                                   # AoE2 DE wiki (#1586)
          "THROWING_AXEMAN": {"food": 55, "gold": 25},
          "THUMB_RING": {"food": 300, "wood": 250},                      # AoE2 DE wiki (#1421)
          "TOWN_PATROL": {"food": 300, "gold": 100},                     # the Castle Age (AoE2 DE wiki, #1579)
@@ -313,6 +317,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "ELITE_EAGLE_WARRIOR_UPGRADE": 50,
                "ELITE_GENITOUR": 25,
                "ELITE_GENITOUR_UPGRADE": 60,
+               "ELITE_SHRIVAMSHA_RIDER": 20,
+               "ELITE_SHRIVAMSHA_RIDER_UPGRADE": 45,
                "ELITE_STEPPE_LANCER": 20,
                "ELITE_STEPPE_LANCER_UPGRADE": 55,
                "ELITE_SKIRMISHER": 22,
@@ -404,6 +410,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "SCALE_MAIL_ARMOR": 40,
                "SCORPION": 30,
                "SHIPWRIGHT": 60,
+               "SHRIVAMSHA_RIDER": 20,
                "SIEGE_TOWER": 36,
                "SCOUT_CAVALRY": 30,
                "SIEGE_ENGINEERS": 45,
@@ -418,6 +425,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "STONE_SHAFT_MINING": 75,
                "STEPPE_LANCER": 24,
                "TEUTONIC_KNIGHT": 12,
+               "THEOCRACY": 75,
                "THROWING_AXEMAN": 13,
                "THUMB_RING": 45,
                "TOWN_PATROL": 40,
@@ -483,7 +491,9 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                      "ELITE_BATTLE_ELEPHANT_UPGRADE",
                      "PALADIN_UPGRADE",                                         # after Cavalier (#1501)
                      "STEPPE_LANCER",                                           # Cumans, Jurchens, Khitans, Mongols,
-                     "ELITE_STEPPE_LANCER_UPGRADE"),                            # Tatars (#1557)
+                     "ELITE_STEPPE_LANCER_UPGRADE",                             # Tatars (#1557)
+                     "SHRIVAMSHA_RIDER",                                        # the Gurjaras (#1612)
+                     "ELITE_SHRIVAMSHA_RIDER_UPGRADE"),
           "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS",   # (#1326, #1374, #1352)
                          "MASONRY", "TREADMILL_CRANE",                          # (#1398, #1422) the Castle Age
                          "CHEMISTRY", "BOMBARD_TOWER_TECH",                     # (#1375)
@@ -525,7 +535,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                         "HERESY",                                               # (#1582)
                         "DEVOTION",                                             # (#1584)
                         "FAITH",
-                        "HERBAL_MEDICINE"),                                     # (#1585)
+                        "HERBAL_MEDICINE",                                      # (#1585)
+                        "THEOCRACY"),                                           # (#1586)
           "SIEGE_WORKSHOP": ("BATTERING_RAM", "MANGONEL", "SCORPION", "SIEGE_TOWER",   # (#1349, #1362)
                              "CAPPED_RAM_UPGRADE", "SIEGE_RAM_UPGRADE", "ONAGER_UPGRADE", "SIEGE_ONAGER_UPGRADE",
                              "HEAVY_SCORPION_UPGRADE",                  # (#1352)
@@ -542,7 +553,7 @@ UNIQUE = {"BRITONS": "LONGBOWMAN", "PERSIANS": "WAR_ELEPHANT", "BYZANTINES": "CA
           "MALAY": "KARAMBIT_WARRIOR", "VIETNAMESE": "RATTAN_ARCHER", "BULGARIANS": "KONNIK", "CUMANS": "KIPCHAK",
           "LITHUANIANS": "LEITIS", "TATARS": "KESHIK", "BURGUNDIANS": "COUSTILLIER", "SICILIANS": "SERJEANT",
           "POLES": "OBUCH", "BOHEMIANS": "HUSSITE_WAGON", "HINDUSTANIS": "GHULAM", "DRAVIDIANS": "URUMI_SWORDSMAN",
-          "BENGALIS": "RATHA", "GURJARAS": "SHRIVAMSHA_RIDER", "ROMANS": "CENTURION", "ARMENIANS": "COMPOSITE_BOWMAN",
+          "BENGALIS": "RATHA", "GURJARAS": "CHAKRAM_THROWER", "ROMANS": "CENTURION", "ARMENIANS": "COMPOSITE_BOWMAN",
           "GEORGIANS": "MONASPA"}
 build.AGE |= dict.fromkeys(UNIQUE.values(), 2) | dict.fromkeys(("ELITE_" + n for n in UNIQUE.values()), 3)   # (#1082)
 MILITIA_LINE = ("MILITIA", "MAN_AT_ARMS", "LONG_SWORDSMAN", "TWO_HANDED_SWORDSMAN", "CHAMPION",   # Gambesons (#1420)
@@ -639,6 +650,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_CANNON_GALLEON_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
          "ELITE_EAGLE_WARRIOR_UPGRADE": lambda name, s: s,
          "ELITE_GENITOUR_UPGRADE": lambda name, s: s,              # a new unit name: UPGRADES
+         "ELITE_SHRIVAMSHA_RIDER_UPGRADE": lambda name, s: s,      # a new unit name: UPGRADES
          "ELITE_STEPPE_LANCER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
          "ELITE_SKIRMISHER_UPGRADE": lambda name, s: s,
          "FAITH": lambda name, s: s,                               # the conversion resistance: monk.resist
@@ -714,6 +726,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "SQUIRES": lambda name, s: s,                             # the walk speed: SPEEDS
          "STONE_MINING": lambda name, s: s,                        # an economy technology: gather.WORK_TECHS
          "STONE_SHAFT_MINING": lambda name, s: s,
+         "THEOCRACY": lambda name, s: s,                           # one monk of a group rests: monk.convert
          "THUMB_RING": lambda name, s: s._replace(reload=round(s.reload / 1.1765, 3)) if thumb(name, s) else s,
          "TOWN_PATROL": lambda name, s: s,                         # the building sight: gather.seen_tiles
          "TOWN_WATCH": lambda name, s: s,                          # the building sight: gather.seen_tiles
@@ -745,6 +758,7 @@ UPGRADES = {                                                       # technology:
     "ELITE_CANNON_GALLEON_UPGRADE": ("CANNON_GALLEON", "ELITE_CANNON_GALLEON"),
     "ELITE_EAGLE_WARRIOR_UPGRADE": ("EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"),
     "ELITE_GENITOUR_UPGRADE": ("GENITOUR", "ELITE_GENITOUR"),   # (#1610)
+    "ELITE_SHRIVAMSHA_RIDER_UPGRADE": ("SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER"),   # (#1612)
     "ELITE_SKIRMISHER_UPGRADE": ("SKIRMISHER", "ELITE_SKIRMISHER"),
     "ELITE_STEPPE_LANCER_UPGRADE": ("STEPPE_LANCER", "ELITE_STEPPE_LANCER"),   # (#1557)
     "HALBERDIER_UPGRADE": ("PIKEMAN", "HALBERDIER"),
@@ -844,6 +858,7 @@ TECH_AGE = {                                                       # the age of 
     "ELITE_CANNON_GALLEON_UPGRADE": 3,
     "ELITE_EAGLE_WARRIOR_UPGRADE": 3,
     "ELITE_GENITOUR_UPGRADE": 3,
+    "ELITE_SHRIVAMSHA_RIDER_UPGRADE": 3,
     "ELITE_SKIRMISHER_UPGRADE": 2,
     "ELITE_STEPPE_LANCER_UPGRADE": 3,                             # (#1557)
     "FAITH": 3,
@@ -907,6 +922,7 @@ TECH_AGE = {                                                       # the age of 
     "SQUIRES": 2,
     "STONE_MINING": 1,
     "STONE_SHAFT_MINING": 2,
+    "THEOCRACY": 3,
     "THUMB_RING": 2,
     "TOWN_PATROL": 2,
     "TOWN_WATCH": 1,
@@ -946,6 +962,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "ELITE_GENITOUR": (MORE + 1, "skeleton_horse_spawn_egg", "Elite Genitour"),   # the slot of the genitour
          "ELITE_GENITOUR_UPGRADE": (MORE + 2, "book", "Elite Genitour"),   # the archery range (#1610)
          "ELITE_EAGLE_WARRIOR_UPGRADE": (MORE, "book", "Elite Eagle Warrior"),   # the slot of Eagle Warrior (AFTER)
+         "ELITE_SHRIVAMSHA_RIDER": (MORE + 4, "horse_spawn_egg", "Elite Shrivamsha Rider"),   # the slot of the rider
+         "ELITE_SHRIVAMSHA_RIDER_UPGRADE": (MORE + 5, "book", "Elite Shrivamsha Rider"),   # the stable (#1612)
          "ELITE_SKIRMISHER": (1, "drowned_spawn_egg", "Elite Skirmisher"),
          "ELITE_SKIRMISHER_UPGRADE": (3, "book", "Elite Skirmisher"),
          "ELITE_STEPPE_LANCER": (MORE + 2, "horse_spawn_egg", "Elite Steppe Lancer"),   # the slot of the steppe lancer
@@ -979,6 +997,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "PIKEMAN": (1, "zombie_spawn_egg", "Pikeman"),
          "PIKEMAN_UPGRADE": (3, "book", "Pikeman"),
          "SCOUT_CAVALRY": (0, "horse_spawn_egg", "Scout Cavalry"),
+         "SHRIVAMSHA_RIDER": (MORE + 4, "horse_spawn_egg", "Shrivamsha Rider"),   # slots 22, 23 of the stable (#1612)
          "SIEGE_ENGINEERS": (1, "book", "Siege Engineers"),
          "CHEMISTRY": (4, "book", "Chemistry"),            # after Guard Tower and Keep
          "COINAGE": (3, "book", "Coinage"),                        # the market (#1606)
@@ -1087,6 +1106,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "STONE_SHAFT_MINING": (1, "book", "Stone Shaft Mining"),
          "STEPPE_LANCER": (MORE + 2, "horse_spawn_egg", "Steppe Lancer"),   # slots 20, 21 of the stable (#1557)
          "TEUTONIC_KNIGHT": (0, "zombie_spawn_egg", "Teutonic Knight"),
+         "THEOCRACY": (MORE + 2, "book", "Theocracy"),              # the monastery (#1586)
          "THROWING_AXEMAN": (0, "drowned_spawn_egg", "Throwing Axeman"),
          "THUMB_RING": (5, "book", "Thumb Ring"),                   # slot 4: the cavalry archer (#1397)
          "TOWN_PATROL": (6, "book", "Town Patrol"),                 # the slot of Town Watch (AFTER)
@@ -1164,6 +1184,8 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "ELITE_EAGLE_WARRIOR_UPGRADE": "Upgrades eagle warriors to elite ones.",
         "ELITE_GENITOUR": "Mounted skirmisher. Strong vs. archers.",
         "ELITE_GENITOUR_UPGRADE": "Upgrades genitours to elite ones.",
+        "ELITE_SHRIVAMSHA_RIDER": "Fast light cavalry of the Gurjaras.",
+        "ELITE_SHRIVAMSHA_RIDER_UPGRADE": "Upgrades shrivamsha riders to elite ones.",
         "ELITE_SKIRMISHER": "Ranged. Strong vs. archers, spearmen.",
         "ELITE_SKIRMISHER_UPGRADE": "Upgrades skirmishers to elite skirmishers.",
         "ELITE_STEPPE_LANCER": "Cavalry with a lance. Hits from 1 tile away.",
@@ -1257,6 +1279,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "SCALE_BARDING_ARMOR": "Cavalry +1 melee armor, +1 pierce armor.",
         "SCALE_MAIL_ARMOR": "Infantry +1 melee armor, +1 pierce armor.",
         "SCORPION": "Siege. Shoots bolts; weak vs. cavalry.",
+        "SHRIVAMSHA_RIDER": "Fast light cavalry of the Gurjaras.",
         "SIEGE_TOWER": "Siege. Carries 10 infantry, archers or villagers.",
         "SCOUT_CAVALRY": "Fast. Strong vs. monks, siege; weak vs. spears.",
         "SHIPWRIGHT": "Ships -20 % wood, train 54 % faster.",
@@ -1272,6 +1295,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "STONE_MINING": "Villagers mine stone 15 % faster.",
         "STONE_SHAFT_MINING": "Villagers mine stone 15 % faster.",
         "TEUTONIC_KNIGHT": "Teutonic infantry. Slow, strong armor.",
+        "THEOCRACY": "Only one monk of a group rests.",
         "THROWING_AXEMAN": "Frankish infantry. Melee attack at range.",
         "THUMB_RING": "Archers fire 17.65 % faster.",
         "TOWN_PATROL": "Buildings +4 line of sight.",

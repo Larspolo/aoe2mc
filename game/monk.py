@@ -8,7 +8,8 @@ units, and a monk that walks does not heal.
 A right click with selected monks on an enemy unit converts it (#1245), as in AoE2 DE (AoE2 wiki, "Conversion"): the
 monk walks into a range of 9 tiles, then tries once per conversion interval of 1.25 AoE2 seconds. The first 4 tries
 only warm up, each later one converts with a chance of 38 %, and the 9th always converts. After a conversion the monk
-rests 62 AoE2 seconds (its faith) before it can convert again. A monk cannot convert a building, a monk, a king, a hero
+rests 62 AoE2 seconds (its faith) before it can convert again; so do all monks in range that convert the same unit,
+but after Theocracy (#1586) only the monk that converts it. A monk cannot convert a building, a monk, a king, a hero
 or a siege unit (Atonement is excluded until a technology ticket).
 
 Redemption (#1264, monastery, AoE2 wiki "Redemption", "Conversion"): then a monk converts siege units and the enemy
@@ -348,6 +349,8 @@ def convert(g, dt):
     import ai                                                      # ai imports gather, gather imports this module
     pos = g.positions(sorted(set(g.converting) | {t for t, _, _ in g.converting.values()}))
     for m, job in sorted(g.converting.items()):
+        if m not in g.converting:
+            continue                                               # its group converted the target in this pass
         target = job[0]
         fort = target in g.forts
         if m not in pos or target not in pos or not (fort or target in g.enemies) or m not in g.soldiers:
@@ -368,8 +371,11 @@ def convert(g, dt):
             more = 0 if fort else resist(g, target)
             warm, chance, sure = FORT if fort else (WARM + more, CHANCE, SURE + more)
             if job[2] > warm and (job[2] >= sure or g.chance.random() < chance):
+                group = [k for k, j in g.converting.items() if j[0] == target]
+                rest = [m] if "THEOCRACY" in g.techs else [k for k in group if k in pos and near(g, k, target, pos)]
                 owner = next((o.get("player") for o in g.data["objects"] if o.get("uuid") == target), None)
                 (win if fort else die if heresy(g, owner) else take)(g, target)
-                g.faith[m] = REST
-                for k in [k for k, j in g.converting.items() if j[0] == target]:
+                for k in group:
                     del g.converting[k]
+                for k in rest:
+                    g.faith[k] = REST                              # each monk of the group in range (Theocracy: one)

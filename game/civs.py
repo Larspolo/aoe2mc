@@ -284,6 +284,8 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
                           "PURU", "SARACENS", "SLAVS", "SPARTANS", "TATARS", "TEUTONS", "THRACIANS", "TUPI",
                           "VIETNAMESE", "VIKINGS", "WEI", "WU"),                           # the wiki chart (#1490)
            "SQUIRES": ("CELTS", "GURJARAS", "KHMER", "MAGYARS", "MAPUCHE", "PORTUGUESE"),   # (#1415)
+           "THEOCRACY": ("BURGUNDIANS", "CELTS", "CUMANS", "HUNS", "MALAY", "MONGOLS", "ROMANS", "SICILIANS",   # (#1586)
+                         "TATARS", "VIKINGS"),
            "THUMB_RING": ("ARMENIANS", "AZTECS", "BENGALIS", "BOHEMIANS", "BRITONS", "BURGUNDIANS", "BURMESE", "CELTS",
                           "FRANKS", "GEORGIANS", "GOTHS", "JURCHENS", "KHMER", "MAPUCHE", "ROMANS", "SICILIANS", "SLAVS",
                           "TEUTONS", "TUPI", "VARANGIANS", "VIKINGS", "WU"),   # (#1421)
@@ -305,6 +307,8 @@ MISSING |= dict.fromkeys(("STEPPE_LANCER", "ELITE_STEPPE_LANCER", "ELITE_STEPPE_
                          tuple(sorted(set().union(*MISSING.values()) - set(LANCERS))))
 MISSING |= dict.fromkeys(("GENITOUR", "ELITE_GENITOUR", "ELITE_GENITOUR_UPGRADE"),   # the Berbers (AoE2 DE wiki, #1610)
                          tuple(sorted(set().union(*MISSING.values()) - {"BERBERS"})))
+MISSING |= dict.fromkeys(("SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER_UPGRADE"),
+                         tuple(sorted(set().union(*MISSING.values()) - {"GURJARAS"})))   # (AoE2 DE wiki, #1612)
 
 
 def mounted(s):
