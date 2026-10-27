@@ -28,6 +28,8 @@ Padded Archer Armor at the blacksmith in the Feudal Age (#937, TECH_AGE): archer
 Double-Bit Axe at the lumber camp (#723): villagers chop wood 20 % faster (gather.WORK_TECHS, gather.Gather.work_time).
 Gold Mining at the mining camp (#727): villagers mine gold 15 % faster. Stone Mining (#939): stone 15 % faster.
 In the Castle Age (#1423, AFTER): Bow Saw (wood 20 % faster), Gold Shaft Mining and Stone Shaft Mining (15 % faster).
+Fishing Lines at the dock in the Feudal Age and Gillnets (after it) in the Castle Age (#1439): fishing ships gather 10 %
+faster and carry 5 more food (gather.SHIP_TECHS, fleet.rate, fleet.carry).
 Horse Collar at the mill (#726): the live and the new farms of the player have 75 more food (gather.FARM_TECHS).
 Wheelbarrow at the town center in the Feudal Age (#728, TECH_AGE): villagers carry 3 more resources and walk 10 % faster (gather.CARRY, gather.PACE).
 Scale Barding Armor at the blacksmith in the Feudal Age (#938): cavalry (also camels and elephants, not cavalry archers)
@@ -94,11 +96,13 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "ELITE_SKIRMISHER": {"food": 25, "wood": 35},
          "ELITE_SKIRMISHER_UPGRADE": {"wood": 230, "gold": 130},
          "FERVOR": {"gold": 140},
+         "FISHING_LINES": {"food": 50, "wood": 100},                   # AoE2 DE wiki (#1439)
          "FISHING_SHIP": {"wood": 75},                                  # AoE2 DE wiki (#1383)
          "FLETCHING": {"food": 100, "gold": 50},
          "FORGING": {"food": 150},
          "FORTIFIED_WALL": {"food": 200, "wood": 100},
          "GAMBESONS": {"food": 50, "gold": 100},                       # AoE2 DE wiki (#1420)
+         "GILLNETS": {"food": 150, "wood": 200},                       # AoE2 DE wiki (#1439)
          "GOLD_MINING": {"food": 100, "wood": 75},
          "GOLD_SHAFT_MINING": {"food": 175, "wood": 75},
          "GUARD_TOWER": {"food": 100, "wood": 250},                    # the upgrade (AoE2 DE wiki "Watch Tower")
@@ -178,11 +182,13 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "ELITE_SKIRMISHER": 22,
                "ELITE_SKIRMISHER_UPGRADE": 50,
                "FERVOR": 50,
+               "FISHING_LINES": 20,
                "FISHING_SHIP": 40,
                "FLETCHING": 30,
                "FORGING": 50,
                "FORTIFIED_WALL": 50,
                "GAMBESONS": 25,
+               "GILLNETS": 45,
                "GOLD_MINING": 30,
                "GOLD_SHAFT_MINING": 75,
                "GUARD_TOWER": 30,
@@ -252,7 +258,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES", "LIGHT_CAVALRY_UPGRADE", "KNIGHT"),   # (#671, #940, #1396, #1397)
           "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS",   # (#1326, #1374, #1352)
                          "MASONRY", "CHEMISTRY", "BOMBARD_TOWER_TECH"),         # (#1398, #1375)
-          "DOCK": ("FISHING_SHIP",),                                            # (#1383)
+          "DOCK": ("FISHING_SHIP",                                              # (#1383)
+                   "FISHING_LINES", "GILLNETS"),                                # (#1439)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",
                           "BOW_SAW"),                                           # (#723, #1423)
           "MARKET": ("TRADE_CART", "CARAVAN", "GUILDS"),                       # (#1253, #1254)
@@ -324,10 +331,12 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
          "ELITE_SKIRMISHER_UPGRADE": lambda name, s: s,
          "FERVOR": lambda name, s: s,                              # the walk speed: SPEEDS
+         "FISHING_LINES": lambda name, s: s,                       # the fishing ships: gather.SHIP_TECHS
          "FLETCHING": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if "archer" in s.classes else s,
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
          "FORTIFIED_WALL": lambda name, s: s,                      # the walls of the player: WALL_UPGRADES
          "GAMBESONS": lambda name, s: s._replace(pierce=s.pierce + 1) if name in MILITIA_LINE else s,
+         "GILLNETS": lambda name, s: s,                            # the fishing ships: gather.SHIP_TECHS
          "GOLD_MINING": lambda name, s: s,                         # an economy technology: gather.WORK_TECHS
          "GOLD_SHAFT_MINING": lambda name, s: s,
          "GUARD_TOWER": lambda name, s: s,                         # the towers of the player: TOWER_UPGRADES
@@ -383,6 +392,7 @@ AFTER = {"BODKIN_ARROW": "FLETCHING",
          "BOMBARD_TOWER_TECH": "CHEMISTRY",
          "BOW_SAW": "DOUBLE_BIT_AXE",
          "CHAIN_BARDING_ARMOR": "SCALE_BARDING_ARMOR", "CHAIN_MAIL_ARMOR": "SCALE_MAIL_ARMOR",
+         "GILLNETS": "FISHING_LINES",
          "GOLD_SHAFT_MINING": "GOLD_MINING",
          "IRON_CASTING": "FORGING",
          "KEEP": "GUARD_TOWER",
@@ -409,10 +419,12 @@ TECH_AGE = {                                                       # the age of 
     "DOUBLE_BIT_AXE": 1,
     "ELITE_SKIRMISHER_UPGRADE": 2,
     "FERVOR": 2,
+    "FISHING_LINES": 1,
     "FLETCHING": 1,
     "FORGING": 1,
     "FORTIFIED_WALL": 2,
     "GAMBESONS": 2,
+    "GILLNETS": 2,
     "GOLD_MINING": 1,
     "GOLD_SHAFT_MINING": 2,
     "GUARD_TOWER": 2,
@@ -492,11 +504,13 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "CHU_KO_NU": (0, "skeleton_spawn_egg", "Chu Ko Nu"),
          "DOUBLE_BIT_AXE": (0, "book", "Double-Bit Axe"),
          "FERVOR": (1, "book", "Fervor"),
+         "FISHING_LINES": (5, "book", "Fishing Lines"),            # slots 1-4: the ships of the dock
          "FISHING_SHIP": (0, "oak_boat", "Fishing Ship"),         # a ship is a boat (units.boat)
          "FLETCHING": (2, "book", "Fletching"),
          "FORGING": (0, "book", "Forging"),
          "FORTIFIED_WALL": (0, "book", "Fortified Wall"),
          "GAMBESONS": (5, "book", "Gambesons"),                    # slot 4: Squires (#1415)
+         "GILLNETS": (5, "book", "Gillnets"),                      # the slot of Fishing Lines (AFTER)
          "GOLD_MINING": (0, "book", "Gold Mining"),
          "GOLD_SHAFT_MINING": (0, "book", "Gold Shaft Mining"),
          "GUARD_TOWER": (2, "book", "Guard Tower"),
@@ -561,11 +575,13 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "ELITE_SKIRMISHER_UPGRADE": "Upgrades skirmishers to elite skirmishers.",
         "FEUDAL_AGE": "Advance to the Feudal Age.",
         "FERVOR": "Monks +15 % speed.",
+        "FISHING_LINES": "Fishing ships work 10 % faster, carry +5.",
         "FISHING_SHIP": "Gathers food from fish.",
         "FLETCHING": "Archers, towers, town center +1 attack, +1 range.",
         "FORGING": "Infantry and cavalry +1 attack.",
         "FORTIFIED_WALL": "Stone walls +1,200 HP, +4/+2 armor; also gates.",
         "GAMBESONS": "Militia line +1 pierce armor.",
+        "GILLNETS": "Fishing ships work 10 % faster, carry +5.",
         "GOLD_MINING": "Villagers mine gold 15 % faster.",
         "GOLD_SHAFT_MINING": "Villagers mine gold 15 % faster.",
         "GUARD_TOWER": "Watch towers +480 HP, +2 attack, +1/+1 armor.",
