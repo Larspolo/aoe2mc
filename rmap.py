@@ -16,15 +16,15 @@ import sys
 
 import numpy as np
 
-# The terrain constants of the RMS language -> AoE2 terrain IDs (AoE2ScenarioParser TerrainId values).
-TERRAINS = {"GRASS": 0, "WATER": 1, "BEACH": 2, "DIRT3": 3, "SHALLOW": 4, "LEAVES": 5, "DIRT": 6, "FARM": 7,
-            "DEAD_FARM": 8, "GRASS3": 9, "FOREST": 10, "DIRT2": 11, "GRASS2": 12, "PALM_DESERT": 13, "DESERT": 14,
-            "JUNGLE": 17, "BAMBOO": 18, "PINE_FOREST": 19, "OAK_FOREST": 20, "SNOW_FOREST": 21, "DEEP_WATER": 22,
-            "MED_WATER": 23, "ROAD": 24, "ROAD2": 25, "SNOW": 32, "ICE": 35, "ROCK": 40}
-# The tree of each forest terrain: the game puts one on each forest tile, a scenario keeps them as objects.
-FOREST_TREES = {10: "TREE_OAK_FOREST", 13: "TREE_PALM_FOREST", 17: "TREE_JUNGLE", 18: "TREE_BAMBOO_FOREST",
-                19: "TREE_PINE_FOREST", 20: "TREE_OAK_FOREST", 21: "TREE_SNOW_PINE", 48: "TREE_DRAGON",
-                49: "TREE_BAOBAB", 50: "TREE_ACACIA", 55: "TREE_MANGROVE", 56: "TREE_RAINFOREST"}
+from units import rows
+
+# The lines of data/rmap.jsonl (#2037): "terrain": the AoE2 terrain ID (AoE2ScenarioParser TerrainId value) of a
+# terrain constant of the RMS language. "forest": the forest terrains of a tree: the game puts one on each forest tile,
+# a scenario keeps them as objects. "start", "scatter", "fish", "shore_fish": see START, SCATTER, FISH and fish().
+RMAP = rows("rmap.jsonl")
+TERRAINS = {r["name"]: r["terrain"] for r in RMAP if "terrain" in r}
+FOREST_TREES = dict(sorted((t, r["name"]) for r in RMAP for t in r.get("forest", ())))
+SHORE_FISH = next(r["name"] for r in RMAP if r.get("shore_fish"))
 SIZES = {1: 120, 2: 120, 3: 144, 4: 144, 5: 168, 6: 168, 7: 200, 8: 200}    # AoE2 map size of a player count
 LABELS = ((120, "TINY_MAP"), (144, "SMALL_MAP"), (168, "MEDIUM_MAP"), (200, "LARGE_MAP"), (220, "HUGE_MAP"))
 RING = 0.35                     # the circle of the player lands: radius in map sizes
@@ -312,9 +312,7 @@ create_terrain GRASS3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
 """
 # The start objects of each player: (name, count, distance in tiles from the town center, owner: 0 = Gaia, 1 = the
 # player). A group of more than one object stands on next tiles.
-START = (("VILLAGER_MALE", 2, 4, 1), ("VILLAGER_FEMALE", 1, 4, 1), ("SCOUT_CAVALRY", 1, 6, 1), ("SHEEP", 4, 7, 1),
-         ("FORAGE_BUSH", 6, 9, 0), ("GOLD_MINE", 7, 11, 0), ("STONE_MINE", 5, 13, 0), ("WILD_BOAR", 1, 15, 0),
-         ("WILD_BOAR", 1, 16, 0), ("DEER", 3, 18, 0), ("GOLD_MINE", 4, 19, 0), ("STONE_MINE", 4, 20, 0))
+START = tuple((r["name"], *r["start"]) for r in RMAP if "start" in r)
 # Arena: each player in a circle of stone walls with a forest inside it (WALLS), open grass land between the circles.
 ARENA = """
 <LAND_GENERATION>
@@ -417,14 +415,11 @@ ISLES = {"islands": 2}          # the water between two islands: tiles that each
 NOMADS = {"nomad": (6, 7)}      # no town center: each villager alone, at (tiles from the origin, tiles from each other)
 # The Gaia resources of Nomad over the whole map, as AoE2 Nomad (#1944, wiki infobox): (name, objects of a group,
 # groups per player). Pairs of sheep, single boars, 3-deer herds, 6 berry bushes, 6-tile gold and stone mines.
-SCATTER = (("SHEEP", 2, 2), ("FORAGE_BUSH", 6, 1), ("GOLD_MINE", 6, 2), ("STONE_MINE", 6, 2), ("WILD_BOAR", 1, 2),
-           ("DEER", 3, 1))
+SCATTER = tuple((r["name"], *r["scatter"]) for r in RMAP if "scatter" in r)
 AWAY = 12                       # tiles from each villager of Nomad to the SCATTER groups: the start is open land
 RINGS = {"gold_rush": (14, 5)}  # the forest ring around the gold: inner radius and width in tiles, gaps between players
-FISH = {"highland": (0, "FISH_SALMON", 4),    # the fish of a player: shore fish, the deep fish and its count (#1943)
-        "islands": (3, "FISH_DORADO", 6),
-        "mediterranean": (2, "FISH_TUNA", 4),
-        "nomad": (2, "FISH_TUNA", 4)}
+# The fish of a map kind: shore fish, the deep fish and its count (#1943).
+FISH = {r["fish"][0]: (r["fish"][1], r["name"], r["fish"][2]) for r in RMAP if "fish" in r}
 WOODS = {"arabia": (10, 30, 3), # the wood line of each player (tiles from the town center, forest tiles) and its
          "gold_rush": (10, 30, 3)}  # single trees (stragglers, at 4 to 6 tiles), as in AoE2 (#1144)
 
@@ -610,7 +605,7 @@ def fish(terrain, spec, players, rng):
     shore, deep, count = spec
     water = terrain == TERRAINS["WATER"]
     taken, out = np.zeros(terrain.shape, bool), []
-    for name, k, where in (("SHORE_FISH", shore, water & dilate(terrain == TERRAINS["BEACH"], 1)),
+    for name, k, where in ((SHORE_FISH, shore, water & dilate(terrain == TERRAINS["BEACH"], 1)),
                            (deep, count, water & ~dilate(~water, 2))):
         x, y = np.nonzero(where)
         placed = 0

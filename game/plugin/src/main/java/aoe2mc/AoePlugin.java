@@ -31,6 +31,7 @@ import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.AbstractSkeleton;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Boat;
+import org.bukkit.entity.Camel;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
@@ -197,7 +198,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * does not attack an enemy in its sight; "stand ground" does so only for an enemy in its range (a melee unit: next to
  * it), keeps its place (RangeGoal shoots without a walk) and drops the target when it goes out of the range.
  * "defensive" (#1105) attacks as "aggressive" (the default), but keeps the place where its fight started: past its range
- * + CHASE from it, or when the target is dead, it drops the target and walks back there with an order (as aoe moveto).
+ * + CHASE from it, when its target is past its sight + CHASE from it (#1968), or when the target is dead, it drops the
+ * target and walks back there with an order (as aoe moveto).
  * An order (aoe moveto, aoe attack) works with each stance, as in AoE2, and drops the place.
  * A villager walks with its brain, not with goals: it gets NoAI when it arrives, else it strolls away (#438).
  * `aoe stop` stops a walk and sets NoAI (#437: a villager without a path).
@@ -327,6 +329,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private static final double STEP = 1.25;                         // a step of 1 block with snow[layers=2] (#851)
     private static final double CARRIER_SCALE = 0.3;                 // a pig of 0.27 blocks: the minecart stays low
     private final GoalKey<Mob> rangeKey = GoalKey.of(Mob.class, new NamespacedKey("aoe2mc", "aoe_range"));
+    private final GoalKey<Mob> chaseKey = GoalKey.of(Mob.class, new NamespacedKey("aoe2mc", "aoe_chase"));
+    // the vanilla goals that walk a mob to its target (the llama spits as a melee unit): a melee unit without one gets
+    // "aoe_chase" (#1968)
+    private static final Set<String> MELEES = Set.of("melee_attack", "zombie_attack", "ocelot_attack", "skeleton_melee",
+            "spear_use", "ranged_attack", "ranged_bow_attack", "ranged_crossbow_attack");
     // the vanilla ranged goals that "aoe_range" replaces
     private static final Set<String> SHOTS = Set.of("ranged_attack", "ranged_bow_attack", "ranged_crossbow_attack",
             "skeleton_melee");
@@ -403,6 +410,51 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         @Override
         public GoalKey<Mob> getKey() {
             return rangeKey;
+        }
+
+        @Override
+        public EnumSet<GoalType> getTypes() {
+            return EnumSet.of(GoalType.MOVE, GoalType.LOOK);
+        }
+    }
+
+    /** Walk a melee unit to its target when the mob kind has no vanilla melee goal (the chicken of the War Penguin,
+     *  #1968): Minecraft has no attack goal for it. siege() makes the hit next to the target. */
+    private final class ChaseGoal implements Goal<Mob> {
+        private final Mob mob;
+        private int ticks;
+
+        ChaseGoal(Mob mob) {
+            this.mob = mob;
+        }
+
+        @Override
+        public boolean shouldActivate() {
+            LivingEntity t = mob.getTarget();
+            return t != null && t.isValid() && !t.isDead();
+        }
+
+        @Override
+        public void stop() {
+            mob.getPathfinder().stopPathfinding();
+        }
+
+        @Override
+        public void tick() {
+            LivingEntity t = mob.getTarget();
+            if (held.contains(mob.getUniqueId())                    // stand ground: no walk (#1104)
+                    || mob.getBoundingBox().expand(REACH, 0, REACH).overlaps(t.getBoundingBox())) {
+                mob.getPathfinder().stopPathfinding();
+            } else if (!mob.getPathfinder().hasPath() || ++ticks % 10 == 0) {     // the target can move
+                reach(mob, t.getLocation());
+                mob.getPathfinder().moveTo(t);
+            }
+            mob.lookAt(t);
+        }
+
+        @Override
+        public GoalKey<Mob> getKey() {
+            return chaseKey;
         }
 
         @Override
@@ -1012,8 +1064,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             Mob f = rider(mob) != null ? rider(mob) : mob;
             Range r = ranges.get(f.getUniqueId());
             LivingEntity t = f.getTarget();
-            if (t != null && t.isValid() && !t.isDead() && mob.getLocation().distanceSquared(en.getValue())
-                    <= Math.pow((r != null ? r.blocks() : MELEE) + CHASE, 2)) {
+            double far = Math.pow((r != null ? r.blocks() : MELEE) + CHASE, 2);
+            double gone = Math.pow(Math.max(r != null ? r.blocks() : MELEE, sights.getOrDefault(en.getKey(), 0.0))
+                    + CHASE, 2);                       // the target left its sight + CHASE: back too (#1968)
+            if (t != null && t.isValid() && !t.isDead() && mob.getLocation().distanceSquared(en.getValue()) <= far
+                    && t.getLocation().distanceSquared(en.getValue()) <= gone) {
                 return false;
             }
             f.setTarget(null);
@@ -1441,6 +1496,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             if (Bukkit.getEntity(id) instanceof Mob mob && !stats.get(id).ranged && mob.getTarget() instanceof LivingEntity t
                     && t.isValid() && (buildings.containsKey(t.getUniqueId()) || stats.containsKey(t.getUniqueId()))
                     && ready(mob, stats.get(id)) && mob.getBoundingBox().expand(REACH, 0, REACH).overlaps(t.getBoundingBox())) {
+                if (mob.getAttribute(Attribute.ATTACK_DAMAGE) == null) {
+                    // Mob#attack throws on a kind without it (a chicken, a camel), and the throw stopped this loop for
+                    // the units after it (#1968). onHit takes the AoE2 damage, so the value does not matter.
+                    mob.registerAttribute(Attribute.ATTACK_DAMAGE);
+                }
                 mob.swingMainHand();
                 mob.attack(t);
             }
@@ -1466,8 +1526,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             Order o = e.getValue();
             if (mob.getLocation().distanceSquared(o.goal) < 1.5 * 1.5) {
-                if (mob instanceof Villager         // its brain has no goals to drop: it strolls away (#438)
-                        || mob.getScoreboardTags().contains(CARRIER)) {   // its minecart pushes it on (#836)
+                // a brain has no goals to drop: it strolls away (#438, #1968); a minecart pushes its carrier on (#836)
+                if (mob instanceof Villager || mob instanceof Camel || mob.getScoreboardTags().contains(CARRIER)) {
                     mob.getPathfinder().stopPathfinding();   // without AI it keeps its path: Gates.through kept a gate open (#1928)
                     mob.setAI(false);               // so it stands still until the next order
                 } else if (center(mob) >= 1) {      // steer() skips path points: Minecraft walks back to them (#1078)
@@ -1872,14 +1932,20 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             if (!goals.hasGoal(mob, rangeKey)) {
                 goals.addGoal(mob, 4, new RangeGoal(mob, r));          // the priority of the vanilla bow goal
             }
+        } else if (r == null && rider(mob) == null && mob.getVehicle() == null && !(mob instanceof Villager)
+                && stats.get(mob.getUniqueId()) instanceof Stats s && !s.ranged()
+                && s.attack() > 0 && !goals.hasGoal(mob, chaseKey) && goals.getAllGoals(mob).stream()
+                        .noneMatch(g -> MELEES.contains(g.getKey().getNamespacedKey().getKey()))) {
+            goals.addGoal(mob, 2, new ChaseGoal(mob));                 // the priority of the vanilla melee goal
         }
         return mob;
     }
 
     // The goals that a unit keeps: swim, and attack the target of an order. The keys of the other goals (26.3):
     // nearest_attackable and hurt_by choose targets, random_stroll, look_at_player, panic, tempt, breed, flee_sun ...
-    private static final Set<String> KEEP = Set.of("float", "melee_attack", "zombie_attack", "skeleton_melee",
-            "spear_use", "ranged_attack", "ranged_bow_attack", "ranged_crossbow_attack", "aoe_range");
+    private static final Set<String> KEEP = Set.of("float", "melee_attack", "zombie_attack", "ocelot_attack",
+            "skeleton_melee", "spear_use", "ranged_attack", "ranged_bow_attack", "ranged_crossbow_attack", "aoe_range",
+            "aoe_chase");
 
     static boolean keep(String goal) {
         return KEEP.contains(goal);
