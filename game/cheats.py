@@ -5,8 +5,8 @@ game/plugin Cheats.java): a chat text that is a code (also "/code") does not go 
 aoe_cheat of the player to the number of the code in NAMES (1 = the first). gather.Gather.clicks calls clicks(): it
 reads and resets the score and does the effect. Vanilla has no event for a chat text, so the plugin is necessary.
 The codes and amounts of AoE2 DE: the AoE2 wiki, "Cheat code (Age of Empires II)" (10,000 of one resource since
-The Forgotten, before it 1,000). Minecraft has no fog of war: "polo" only answers in the chat, and "marco" answers
-"polo", an easter egg with the name of the owner (Larspolo, #1057).
+The Forgotten, before it 1,000). "polo" removes the fog of war of the units (fog.toggle, #1390): all hidden enemy units
+show; a second "polo" puts the fog back. "marco" answers "polo", an easter egg with the name of the owner (Larspolo, #1057).
 "aegis" (#817) is a toggle: g.aegis makes building (gather.Gather.step), training and research (train.tick) and
 gathering (gather.Gather.work_time) instant, and a hunted animal dies at the first hit (gather.Gather.strike, #1058), for
 all players as in AoE2.
@@ -25,7 +25,7 @@ research a technology up to train.REPEAT times with stacked effects (train.count
 bar and the hints, or shows them again.
 Excluded and partial codes (owner, #820, #985):
 - "!mute", "!nomute": excluded. The game program has no taunts, so the codes have nothing to silence.
-- "marco", "polo": done as they are. Minecraft has no fog of war, so the codes only answer in the chat ("marco": "polo").
+- "marco": done as it is. The fog of war hides only units, not the map: "marco" only answers in the chat ("polo").
 - "sharing is caring": waits for allies (#969). The game program has no allies yet.
 """
 import os
@@ -43,7 +43,7 @@ Transform = namedtuple("Transform", "to units")   # a transformation cheat: own 
 
 OBJECTIVE = "aoe_cheat"
 ALL = {"food": 100000, "wood": 100000, "gold": 100000, "stone": 100000}
-MAP = "The map is open already: Minecraft has no fog of war."
+FOG = {"all": "Fog of war: off", "normal": "Fog of war: on"}       # the chat answer of "polo" for each g.reveal
 CAMELS = {"BACTRIAN_CAMEL", "CAMEL", "CAMEL_ARCHER", "CAMEL_RIDER", "ELITE_CAMEL_ARCHER", "HEAVY_CAMEL_RIDER",
           "IMPERIAL_CAMEL_RIDER"}               # "cameleon": not the Mameluke, Camel Scout and Raider, camel heroes
 NUMBER = r"-?\d+(?:\.\d+)?"
@@ -88,6 +88,12 @@ def flag(attr, text):
         setattr(g, attr, True)
         g.command(f'tellraw {player} {{"text":"{text}"}}')
     return effect
+
+
+def polo(g, player):
+    """Remove the fog of war, or put it back (#1390)."""
+    import fog                                                  # fog -> gather -> cheats: import it late
+    g.command(f'tellraw {player} {{"text":"{FOG[fog.toggle(g)]}"}}')
 
 
 def cpu(g, player):
@@ -186,7 +192,7 @@ CODES = {                                     # code -> the resources, the chat 
     "ninjalui": ALL,
     "noui": noui,
     "photon man": Unit("PHOTONMAN"),
-    "polo": MAP,
+    "polo": polo,
     "put on your capes": Transform("ELITE_TEUTONIC_KNIGHT", infantry),
     "resign": end("Defeat", "red"),
     "robin hood": {"gold": 10000},

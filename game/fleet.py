@@ -4,6 +4,10 @@ on a water cell in front of the dock (spawn). A selected ship sails to the water
 or to the water nearest to a clicked land cell. A boat has no Minecraft path finding, so the ship moves with /tp steps
 on a water path of gather.Map (Map.path with water, replay.sail), as the ships of the live replay (#866): own logic,
 because Minecraft has no feature for it. It never goes onto the land: each step is on a water cell (Map.wet).
+A warship (the galley, #1386) attacks with the crew of its boat: the plugin gives the crew the AoE2 values (aoe stats),
+the range goal and the target (aoe attack), and the crew shoots the Minecraft arrows of an archer. The crew cannot move
+the boat, so attack() sails the ship into its range of the target first. The crew has the hit points: when it dies,
+the plugin removes its boat (the ship sinks).
 A fishing ship sent to a fish (fish_order) gathers it at the AoE2 DE rate and brings each load to the nearest own dock,
 as a villager brings its load to a drop site (#1384, work).
 """
@@ -12,9 +16,12 @@ import math
 import gather
 import replay
 
-SPEEDS = {"FISHING_SHIP": 1.26}          # tiles per game second (AoE2 DE wiki infobox); other ships: 1.0 until a ticket
+SPEEDS = {"FISHING_SHIP": 1.26,          # tiles per game second (AoE2 DE wiki infobox); other ships: 1.0 until a ticket
+          "GALLEY": 1.36,
+          "TRANSPORT_SHIP": 1.45}
 NEAR = 3                                 # tiles from a clicked land cell to the water that a ship sails to
 PATH_CELLS = 20000                       # the path search limit (cells), as a long walk of the replay
+CHASE = 2.0                              # seconds between two range checks of a warship with a target (#1386)
 CARRY = 15                               # food of one fishing ship trip (AoE2 DE wiki, "Fishing Ship")
 
 
@@ -83,6 +90,8 @@ def order(g, uuids, cell):
     {uuid: goal cell} of the ships that found a water path."""
     who = [v for u in sorted(uuids) if (v := ship(g, u))]
     out = {}
+    for v in who:
+        v.prey = None                                                  # a move order ends an attack (#1386)
     for v, goal in zip(who, goals(g, cell, len(who))):
         v.tree, v.state = None, "idle"                                 # a move order stops the fishing; the load stays
         path = g.map.path(v.cell, {goal}, PATH_CELLS, water=True)
@@ -90,6 +99,47 @@ def order(g, uuids, cell):
             v.path, v.timer = path, 0.0
             out[v.uuid] = goal
     return out
+
+
+def reach(g, name):
+    """Blocks from which ship name shoots: its AoE2 range (combat.STATS) less one tile, so that it stays in range when
+    the target moves a bit. 0 for a ship without an attack (a fishing ship)."""
+    import combat                                                     # combat imports gather, gather this module
+    s = combat.stats(name)
+    return max(1, s.range - 1) * g.map.T if s.attack and s.range else 0
+
+
+def attack(g, uuids, target):
+    """The own warships uuids attack the unit target (#1386): the plugin gives the target to the crew (aoe attack),
+    and each ship out of range sails to the water cell nearest to it in its range of the target. tick() sails it
+    again when the target moves away. Returns {uuid: goal cell} of the ships that sail."""
+    out = {}
+    for u in sorted(uuids):
+        if (v := ship(g, u)) and reach(g, g.soldiers.get(u, "")):
+            v.prey = target
+            out |= chase(g, v)
+    return out
+
+
+def chase(g, v):
+    """Sail warship v into its range of its target v.prey: {uuid: goal cell}, or {} when it is in range, the target is
+    gone (v.prey: None) or no water cell in range has a path."""
+    pos = g.pos(v.prey)
+    if not pos:
+        v.prey, v.path = None, []
+        return {}
+    r, at = reach(g, g.soldiers[v.uuid]), (math.floor(pos[0]), math.floor(pos[2]))
+    if math.dist(v.cell, at) <= r:
+        v.path = []
+        return {}
+    cells = sorted(((x, z) for x in range(at[0] - r, at[0] + r + 1) for z in range(at[1] - r, at[1] + r + 1)
+                    if math.dist((x, z), at) <= r and g.map.wet(x, z)), key=lambda c: (math.dist(c, v.cell), c))
+    for goal in cells[:4]:                                             # the nearest ones: a lake behind the land fails
+        path = g.map.path(v.cell, {goal}, PATH_CELLS, water=True)
+        if path is not None:
+            v.path, v.timer = path, 0.0
+            return {v.uuid: goal}
+    return {}
 
 
 def speed(name, T):
@@ -105,6 +155,9 @@ def tick(g, dt):
         if u not in g.soldiers:                                        # dead or converted
             del g.ships[u]
             continue
+        if v.prey and not v.path and g.clock() >= getattr(v, "chased", 0.0):   # the target moved away (#1386)
+            v.chased = g.clock() + CHASE
+            chase(g, v)
         if not v.path:
             work(g, v, dt)
             continue
@@ -173,9 +226,23 @@ def nearest(g, tile):
     return min((t for t, k in g.map.fish.items() if k > 0), key=lambda t: (math.dist(t, tile), t), default=None)
 
 
+def rate(g, fish):
+    """Food per game second of an own fishing ship at fish: the AoE2 DE rate (gather.SHIP_WORK) with the dock
+    technologies of the player (gather.SHIP_TECHS, #1439)."""
+    import train                                                      # train imports this module
+    return gather.SHIP_WORK["shore" if fish in g.map.shore else "deep"] * \
+        math.prod(f ** train.count(g, t) for t, (f, _) in gather.SHIP_TECHS.items())
+
+
+def carry(g):
+    """Food of one trip of an own fishing ship: CARRY and the more food of the dock technologies (#1439)."""
+    import train                                                      # train imports this module
+    return CARRY + sum(c * train.count(g, t) for t, (_, c) in gather.SHIP_TECHS.items())
+
+
 def work(g, v, dt):
     """One step of fishing ship v without a path, dt game seconds: at the fish it gathers at the AoE2 DE rate
-    (gather.SHIP_WORK) up to CARRY, then sails to the nearest own dock; there the food goes into the stock, and it sails
+    (rate()) up to carry(), then sails to the nearest own dock; there the food goes into the stock, and it sails
     back to its fish or to the next fish. An empty fish is removed."""
     m = g.map
     if v.state == "to_tree":
@@ -185,15 +252,16 @@ def work(g, v, dt):
         else:
             v.state, v.timer = "chop" if v.tree is not None else "idle", 0.0
     elif v.state == "chop":
-        v.timer += CARRY if getattr(g, "aegis", False) else dt * gather.SHIP_WORK["shore" if v.tree in m.shore else "deep"]
-        while v.timer >= 1 and v.load < CARRY and m.fish.get(v.tree, 0) > 0:
+        full = carry(g)
+        v.timer += full if getattr(g, "aegis", False) else dt * rate(g, v.tree)
+        while v.timer >= 1 and v.load < full and m.fish.get(v.tree, 0) > 0:
             v.timer -= 1
             v.load += 1
             m.fish[v.tree] -= 1
             g.work(v)                                                  # the splash sound and the water particles
         if m.fish.get(v.tree, 0) <= 0:
             remove(g, v.tree)
-        if v.load >= CARRY or v.tree not in m.fish:
+        if v.load >= full or v.tree not in m.fish:
             docks = set().union(*(m.around(c, water=True) for c in m.docks))
             if not docks or not sail_to(g, v, "to_drop", docks):
                 v.state = "idle"
