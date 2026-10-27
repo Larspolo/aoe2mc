@@ -266,6 +266,14 @@ class Side:
         self.g.step()
 
 
+def bot_seat(players, people):
+    """(player, foe) of the bot (#1794): it plays the player after the people, and attacks the first person who is
+    not its ally (aoe2mc.json teams, gather.allied), else player 1."""
+    import gather
+    player = people + 1
+    return player, next((p for p in range(1, player) if not gather.allied(players, player, p)), 1)
+
+
 def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1):
     import gather
 
@@ -293,12 +301,14 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
             game.side(name)
         print(f"{people} people: the first Minecraft player who joins plays player 1, the second player 2.",
               file=sys.stderr)
-    if bot:
+    if bot:                                          # after the people, next to their Sides (#1794)
         import bot as bots
         import replay
-        g.bots = [bots.Bot(game, data, share=g, log=log, attack=replay.aoe2mc.game_time(bot_attack) / 1000).setup()]
-        print(f"A bot plays player 2: {len(g.bots[0].g.villagers)} villagers gather, its soldiers attack at "
-              f"{bot_attack}.", file=sys.stderr)
+        player, foe = bot_seat(data["players"], people)
+        g.bots = [*g.bots, bots.Bot(game, data, player=player, share=g, log=log, foe=foe,
+                                    attack=replay.aoe2mc.game_time(bot_attack) / 1000).setup()]
+        print(f"A bot plays player {player}: {len(g.bots[-1].g.villagers)} villagers gather, its soldiers attack "
+              f"player {foe} at {bot_attack}.", file=sys.stderr)
     import combat
     combat.setup(game, data)                         # AoE2 hit points and damage (#514)
     if game.kind == "paper":                         # the view square of each player on map 0 (#1762)
@@ -393,17 +403,16 @@ def main(argv=None):
     ap.add_argument("--view", type=int, default=0, metavar="N", help="--replay: start with the view of player N: the "
                     "units out of its sight are hidden (default 0: all players)")
     ap.add_argument("--cheats", action="store_true", help="--play: the AoE2 cheat codes in the chat (off as in AoE2)")
-    ap.add_argument("--bot", action="store_true", help="--play: a bot plays player 2 (game/bot.py)")
+    ap.add_argument("--bot", action="store_true", help="--play: a bot plays the player after the people (player 2 "
+                    "with one person, player 3 with --people 2) and attacks them (game/bot.py)")
     ap.add_argument("--people", type=int, default=1, metavar="N", help="--play: N people play players 1 to N, in the "
-                    "order in which they join (#1310)")
-    ap.add_argument("--bot-attack", default="10:00", metavar="MM:SS", help="--bot: its soldiers attack player 1 "
+                    "order in which they join (#1310); with --bot the bot plays player N + 1")
+    ap.add_argument("--bot-attack", default="10:00", metavar="MM:SS", help="--bot: its soldiers attack its foe "
                     "from this game time (default 10:00)")
     ap.add_argument("--reveal", choices=["normal", "all"], default="normal", help="--play: AoE2 \"Reveal map\" "
                     "(default normal: enemy units out of sight are hidden; all: all units show)")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     a = ap.parse_args(argv)
-    if a.bot and a.people > 1:
-        ap.error("--bot plays player 2: use it with one person only (--people 1)")
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
         sys.exit(f"no level.dat in {a.world}")
     if hasattr(signal, "SIGBREAK"):                  # Windows: the window (gui.stop_game) sends Ctrl-Break (#1775)
