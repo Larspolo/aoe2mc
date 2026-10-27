@@ -1,0 +1,10 @@
+[
+ {"name": "1192-sidebar", "at": "3:00", "where": "building:TOWN_CENTER", "what": "the team game at 3:00",
+  "ask": "#1192: Look at the sidebar on the right. Are the team groups and the player colors easy to read?"},
+ {"name": "1239-minimap", "task": "Move the map from your off hand into an empty hotbar slot, select it, and look down at it.",
+  "ask": "#1239: Is the map easy to read, and are the unit dots big enough? The sidebar covers the middle of the map: must the sidebar move or hide while you hold the map?"},
+ {"name": "739-follow", "task": "Double tap Shift: the camera follows a unit of player 1. Watch for about one minute, then double tap Shift again to come back.",
+  "ask": "#739: Is the follow camera comfortable (height, shake, how often it changes the unit)? Did the overview at the start show enough of the map?"},
+ {"name": "1087-end", "at": "end", "where": "building:TOWN_CENTER", "what": "the end of the replay",
+  "ask": "#1087 and #1192: Press T and read the end summary in the chat. Then right click the timeline book and turn a page. Are the summary and the book easy to read? Is the 'Replay ended' title over the chat OK?"}
+]

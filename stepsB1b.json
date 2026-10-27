@@ -1,0 +1,11 @@
+[
+ {"name": "1332-repair", "setup": ["scoreboard players set {BARRACKS} aoe_hp 300", "tp @a 78 72 76 facing 78 64 50"],
+  "task": "Fresh world. The barracks has 300 of 1200 hit points again. Select 2 villagers near the town center (west of here) and right click the barracks. Watch the repair to the end.",
+  "ask": "#1332 (you said: the right click is easy, the damage is clear): do the blocks come back in a way that looks like a repair? Does anything look wrong (fire, smoke)?"},
+ {"name": "1492-ship", "setup": ["tp @a 54 72 92 facing 34 64 122"],
+  "task": "You are at your dock on the lake. Select the 3 militia here, then right click the transport ship: they board. Then select the ship and right click land on the south shore of the lake. Do it twice: once near the water, once farther inland.",
+  "ask": "#1492: Were the boarding and the unload easy? Do the ship, the boarding and the unload look and feel right?"},
+ {"name": "1327-walls", "setup": ["tp @a 60 74 70 facing 48 64 48"],
+  "task": "Type 'aegis' (instant building) and 'rock on' (stone) in the chat. Select a villager, right click it again for the build menu (no costs in it today: a workaround), choose Stone Wall and build a line with two right clicks. Then put a Gate on the wall, and send a unit through the gate.",
+  "ask": "#1327: Was the click order of the wall and the gate clear? Does the gate look right when it opens for your unit?"}
+]

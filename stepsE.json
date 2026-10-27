@@ -1,0 +1,11 @@
+[
+ {"name": "1235-unit-alert", "setup": ["tp @a 52 72 92 facing 48 64 102", "damage {MILITIA1} 1 minecraft:mob_attack by {MILITIA2}"],
+  "task": "Listen: an enemy militia just hit one of your militia at the dock (a server command).",
+  "ask": "#1235: Did you hear a goat horn and see the chat line 'Your units are under attack'? Is the horn too loud, too quiet or good?"},
+ {"name": "1235-building-alert", "setup": ["tp @a 78 72 76 facing 78 64 50", "damage {BARRACKS} 1 minecraft:mob_attack by {MILITIA2}"],
+  "task": "Listen: an enemy militia just hit your barracks (a server command).",
+  "ask": "#1235: Did you hear a town bell and see the chat line 'Your buildings are under attack'? Is the bell too loud, too quiet or good?"},
+ {"name": "1235-flare", "setup": ["time set day"],
+  "task": "Press 4 (the Game menu item in the hotbar), right click, and click 'Flare'. Look at a place on the ground first: the flare goes there.",
+  "ask": "#1235: Did you hear the bell of the flare, and is the column easy to see in the day?"}
+]

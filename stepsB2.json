@@ -1,0 +1,11 @@
+[
+ {"name": "1204-arrows", "setup": ["tp @a 52 76 72 facing 48 64 48"],
+  "task": "The bot (player 2, south-east) attacks at 3:00 game time (about 1.5 minutes after the server start) with 5 militia. Now select 3 villagers and right click your town center: they go inside, and the town center shoots 3 arrows. Watch the enemy come, and the arrows. Answer when the attack is over.",
+  "ask": "#1204: Do the town center arrows look like AoE2 arrows (they start at the roof, the arc, the count)?"},
+ {"name": "964-bot", "task": "No new task: think back to the attack.",
+  "ask": "#964: Could you see and follow the attack (sound, view, the sidebar)?"},
+ {"name": "1518-fog", "task": "No new task: think back to the attack.",
+  "ask": "#1518: Did the enemy units pop in and out at the edge of your sight in a way that disturbed you?"},
+ {"name": "1138-victory", "task": "Type torpedo2 in the chat: player 2 falls and you win. If the server stops after the title, answer in the Claude session.",
+  "ask": "#1138: Is the Victory title easy to see, and does it stay long enough? Does the end of the game feel clear?"}
+]
