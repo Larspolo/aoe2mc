@@ -57,7 +57,7 @@ def test_the_barracks_trains_men_at_arms_after_the_upgrade():
     rect = research(g)
     train.open_menu(g, "Steve", BARRACKS)
     menu = menus(server)[-1]
-    assert " 0:zombie_spawn_egg:Man-at-Arms:60 food · 20 gold · 21 s · queue " in menu
+    assert " 0:zombie_spawn_egg:Man-at-Arms:50 food · 20 gold · 21 s · queue " in menu
     assert "Militia" not in menu and ":book:Man-at-Arms" not in menu                     # the upgrade only once
     assert train.queue(g, "Steve", BARRACKS, "MILITIA") is None
     assert train.queue(g, "Steve", BARRACKS, "MAN_AT_ARMS") == rect

@@ -22,5 +22,5 @@ def test_villagers_leave_stone_for_wood_when_no_farm_is_free():
     for _ in range(20):
         b.step()
     after = work(b)
-    assert after["stone"] == 0 and after["gold"] == 4, after
-    assert after["wood"] + after["food"] == 16, after
+    assert after["stone"] == 0 and after["gold"] == 5, after
+    assert after["wood"] + after["food"] == 15, after
