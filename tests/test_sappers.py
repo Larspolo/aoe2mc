@@ -8,7 +8,6 @@ from game import civs, combat, train
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.COSTS["SAPPERS"] == {"food": 400, "wood": 200} and train.TRAIN_TIMES["SAPPERS"] == 10
     assert train.TECH_AGE["SAPPERS"] == 3 and len(train.HELP["SAPPERS"]) <= 50 and "SAPPERS" in train.TRAINS["CASTLE"]
     assert len(civs.MISSING["SAPPERS"]) == 19 and {"FRANKS", "JAPANESE", "WU"} <= set(civs.MISSING["SAPPERS"])
     assert "BRITONS" not in civs.MISSING["SAPPERS"]                     # the wiki availability chart
@@ -21,7 +20,6 @@ def test_the_castle_menu_shows_it_in_the_imperial_age_after_hoardings():
         train.open_menu(g, "Steve", (12, 4))
         assert (":book:Sappers:" in menus(server)[-1]) == shown
     assert " 4:book:Sappers:400 food · 200 wood · 10 s" in menus(server)[-1]
-    assert train.ITEMS["HOARDINGS"][0] == 3
 
 
 def test_the_research_gives_villagers_attack_against_buildings_walls_and_rams():

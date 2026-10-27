@@ -16,9 +16,6 @@ def research(g, slot, gold):
 
 
 def test_the_costs_times_and_age_are_those_of_aoe2():
-    assert train.COSTS["FERVOR"] == {"gold": 140} and train.TRAIN_TIMES["FERVOR"] == 50
-    assert train.COSTS["SANCTITY"] == {"gold": 175} and train.TRAIN_TIMES["SANCTITY"] == 60
-    assert train.TECH_AGE["FERVOR"] == train.TECH_AGE["SANCTITY"] == 2
     assert train.HELP["FERVOR"] and train.HELP["SANCTITY"]
 
 

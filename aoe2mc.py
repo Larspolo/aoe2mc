@@ -272,13 +272,7 @@ def read_rms(path, seed):
 # Object IDs of old scenarios that DE keeps only in its data file (the DE editor hides them, #576) -> the DE object of
 # the same look. Buildings of later ages take the base building. Not here: projectiles. The corner of a palisade gate
 # (795) is a palisade post, the battering ram (35) has a new ID in DE (#772).
-OLD_IDS = {248: "STONE_MINE", 262: "FORAGE_BUSH", 415: "STUMP", 737: "STUMP",
-           35: "BATTERING_RAM", 617: "TOWN_CENTER", 621: "TOWN_CENTER", 795: "PALISADE_WALL",
-           144: "RUBBLE_2_X_2", 146: "RUBBLE_3_X_3", 147: "RUBBLE_1_X_1", 817: "STATUE_CIVILIZATION",
-           178: "BROKEN_CART", 443: "BROKEN_CART", 735: "TREBUCHET_PACKED", 451: "DOLPHIN",
-           10: "ARCHERY_RANGE", 20: "BARRACKS", 498: "BARRACKS", 30: "MONASTERY", 32: "MONASTERY", 116: "MARKET",
-           137: "MARKET", 129: "MILL", 133: "DOCK", 807: "DOCK", 150: "SIEGE_WORKSHOP", 210: "UNIVERSITY",
-           464: "HOUSE", 465: "HOUSE", 563: "BLACKSMITH", 585: "MINING_CAMP", 586: "MINING_CAMP"}
+OLD_IDS = {r["id"]: r["name"] for r in units.rows("old_ids.jsonl")}
 FLAGX, SHALLOWS_OBJECT = 162, 447   # an invisible editor flag (units.INVISIBLE); shallows: the terrain of its tile
 
 
@@ -712,14 +706,8 @@ def apply_timeline(objects, timeline, at):
     return [o for o in out if o.get("ref") is None or o["ref"] not in deleted], stats
 
 
-TRAIN = {"VILLAGER": (25, "TOWN_CENTER"), "MILITIA": (21, "BARRACKS"), "MAN_AT_ARMS": (21, "BARRACKS"),
-         "SPEARMAN": (22, "BARRACKS"), "PIKEMAN": (22, "BARRACKS"), "EAGLE": (35, "BARRACKS"),
-         "ARCHER": (35, "ARCHERY_RANGE"), "SKIRMISHER": (22, "ARCHERY_RANGE"), "CROSSBOWMAN": (27, "ARCHERY_RANGE"),
-         "CAVALRY_ARCHER": (34, "ARCHERY_RANGE"), "SCOUT_CAVALRY": (30, "STABLE"), "LIGHT_CAVALRY": (30, "STABLE"),
-         "CAMEL": (30, "STABLE"), "KNIGHT": (30, "STABLE"), "FISHING_SHIP": (40, "DOCK"), "GALLEY": (60, "DOCK"),
-         "FIRE_GALLEY": (36, "DOCK"), "TRANSPORT_SHIP": (36, "DOCK"), "TRADE_COG": (36, "DOCK"),
-         "BATTERING_RAM": (36, "SIEGE_WORKSHOP"), "MANGONEL": (46, "SIEGE_WORKSHOP"), "SCORPION": (30, "SIEGE_WORKSHOP"),
-         "MONK": (51, "MONASTERY"), "TRADE_CART": (50, "MARKET")}   # common units: seconds of training (DE), building
+# Common units: seconds of training (DE), building. The first name that starts the unit name wins.
+TRAIN = {r["name"]: (r["seconds"], r["building"]) for r in units.rows("train.jsonl")}
 RESEARCH_S = {"Loom": 25, "Town Watch": 25, "Town Patrol": 40, "Wheelbarrow": 75, "Hand Cart": 55,
               "Feudal Age": 130, "Castle Age": 160, "Imperial Age": 190}   # the town center researches: they delay units
 UNIT_USE = {"move", "order", "build", "wall", "patrol", "follow", "formation", "attack_move", "back_to_work", "stance",
@@ -1434,7 +1422,8 @@ def decor(E, cols, name, rect, rng):
     put = lambda dx, dy, dz, b: E.add([cx + dx], [y + dy], [cz + dz], b)
     pick = lambda opts: opts[int(rng.integers(len(opts)))]
     n = name
-    if n.startswith(("STATUE", "TROPAION", "STELAE", "HERO_SHRINE")):
+    kind = OBJECT.get(n, {}).get("decor")
+    if n.startswith(STATUES):
         E.box(cx - 1, cx + 1, y, y + 1, cz - 1, cz + 1, "polished_andesite")
         h = 5 if "COLUMN" in n else 3
         for dy in range(1, h):
@@ -1446,7 +1435,7 @@ def decor(E, cols, name, rect, rng):
                 put(dx, dy, dz, "quartz_pillar")
         E.box(cx - 1, cx + 2, y + 4, y + 5, cz - 1, cz + 2, "smooth_quartz_slab[type=bottom]")
         put(0, 1, 0, "chiseled_quartz_block")
-    elif "MARKET_STALL" in n or "GOODS" in n or n in ("MEDITERRANEAN_STALL", "MESOPOTAMIAN_STALL"):
+    elif "MARKET_STALL" in n or "GOODS" in n or kind == "stall":
         for dx, dz in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
             put(dx, 1, dz, "oak_fence"); put(dx, 2, dz, "oak_fence")
         wool = pick(["red", "yellow", "blue", "green", "orange", "white"])
@@ -1532,19 +1521,19 @@ def decor(E, cols, name, rect, rng):
                     E.add([x], [yy], [z], "black_carpet", hard=False)
                 elif rng.random() < 0.8 and yy - 1 == cols.top[min(max(x, 0), cols.n - 1), min(max(z, 0), cols.n - 1)]:
                     E.add([x], [yy - 1], [z], "dirt_path")
-    elif n in ("HEAD", "IMPALED_CORPSE", "IMPALED_CORPSE_ANTIQUITY"):
+    elif kind == "head":
         h = 2 if n.startswith("IMPALED_CORPSE") else 0
         for dy in range(h):
             put(0, dy, 0, "spruce_fence")
         put(0, h, 0, "skeleton_skull[rotation=8]")
         if h:
             put(1, 0, 0, "bone_block[axis=x]")
-    elif n in ("TREASURE_CHEST", "LOOT"):
+    elif kind == "loot":
         put(0, 0, 0, "chest[facing=south]" if n == "TREASURE_CHEST" else "barrel[facing=up]")
         put(1, 0, 0, "gold_block" if n == "TREASURE_CHEST" else "raw_gold_block")
     elif n == "LEATHERWORKING_EQUIPMENT":
         put(0, 0, 0, "loom[facing=south]"); put(1, 0, 0, "spruce_fence"); put(1, 1, 0, "brown_carpet")
-    elif n in ("ARCHAIC_FENCE", "STAKE_BARRICADE"):
+    elif kind == "fence":
         for x in range(x0, x1):
             yy = cols.surface(x, cz)
             if n == "ARCHAIC_FENCE":
@@ -1570,7 +1559,7 @@ def decor(E, cols, name, rect, rng):
         put(0, 0, 0, "water[level=0]" if min(x1 - x0, z1 - z0) >= 3 else rim)     # small tiles: no rim, no water
         for dx, dz in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
             put(dx, 1, dz, "quartz_pillar" if "ANTIQUITY" in n else "stone_brick_wall")
-    elif n in ("WATER_POTS", "AMPHORAE"):
+    elif kind == "pots":
         pot = "decorated_pot[facing=south,cracked=false]"
         for dx, dz in ((0, 0), (1, 0), (0, 1)):
             put(dx, 0, dz, pot)
@@ -1763,13 +1752,15 @@ def player_color(p, players=None):
 # Place all objects of the scenario.
 # --------------------------------------------------------------------------------------------
 MOUNTAINS = ("MOUNTAIN", "SNOW_MOUNTAIN")
-MONUMENTS = ("BUDDHA_STATUE", "INDIAN_STATUES", "OLD_STONE_HEAD", "NINE_BANDS", "PAGODA_", "TORII_GATE", "STUPA",
-             "TROWULAN_GATE", "REKHA_DEUL_TEMPLE", "SVAN_TOWER", "MEDITERRANEAN_COURTYARD_WALLS",
-             "MESOPOTAMIAN_PILLAR", "MESOPOTAMIAN_GARDEN", "MESOPOTAMIAN_TOMB", "BURNED_BUILDING", "CONSTRUCTION_CRANE", "SCAFFOLDING", "THEATRE",
-             "STONEHENGE")    # buildings.py designs
-PASSABLE_OBJECTS = ("FLOWER", "FERN", "RUG", "GRASS", "PLANT", "OYSTER", "FISH", "RELIC", "GRAVE", "BONFIRE",
-                    "PATH_", "BLACK_TILE", "ICE_NAVIGABLE", "DOLPHIN", "BOX_TURTLES", "KELP", "WATER_LILY",
-                    "FALLEN_LEAVES", "STUMP", "WOODEN_ROAD")
+# The other objects of AoE2 (#2036). "mob": a part of the name, the first line wins; "monument" (a buildings.py
+# design), "obstacle": the start of the name; "passable": a part of the name; "decor": the design in decor() (a
+# start of the name for "statue", else the full name); "map_color", "scatter", "no_blocks": the full name.
+OBJECTS = units.rows("objects.jsonl")
+OBJECT = {r["name"]: r for r in OBJECTS}
+MONUMENTS = tuple(r["name"] for r in OBJECTS if r.get("monument"))
+PASSABLE_OBJECTS = tuple(r["name"] for r in OBJECTS if r.get("passable"))
+OBSTACLES = tuple(r["name"] for r in OBJECTS if r.get("obstacle"))
+STATUES = tuple(r["name"] for r in OBJECTS if r.get("decor") == "statue")
 
 
 def object_footprint(o, T):
@@ -1897,7 +1888,7 @@ def place_objects(objects, players, cols, rng):
                 "dead_bush" if "DEAD" in name else "short_grass"
             E.add([bx], [y], [bz], plant, hard=False)
             stats["plants"] += 1
-        elif kind == "O" and (name.startswith("RUBBLE") or "SKELETON" in name or name in ("LUMBER", "FLOWER_BED")
+        elif kind == "O" and (name.startswith("RUBBLE") or "SKELETON" in name or OBJECT.get(name, {}).get("scatter")
                               or "CART" in name or name.startswith("TORCH") or name == "SIGN"):
             things = (["cobblestone", "gravel", "mossy_cobblestone"] if name.startswith("RUBBLE") else
                       ["bone_block[axis=x]", "bone_block[axis=z]"] if "SKELETON" in name else
@@ -1911,7 +1902,7 @@ def place_objects(objects, players, cols, rng):
             if name.startswith("TORCH") or name == "SIGN":
                 E.add([bx], [y + 1], [bz], "torch" if name.startswith("TORCH") else "oak_fence")
             stats["decorations"] += 1
-        elif kind == "O" and (name in ("CRATER", "SMOKE", "CRACKS") or name.startswith("WATERFALL")):
+        elif kind == "O" and (OBJECT.get(name, {}).get("no_blocks") or name.startswith("WATERFALL")):
             pass
         elif kind == "O" and "ROCK" in name:
             mound(E, cols, bx, bz, T * 0.4, 2, ["mossy_cobblestone", "cobblestone", "stone"], rng)
@@ -1949,10 +1940,8 @@ def place_objects(objects, players, cols, rng):
                 stats["skipped (unknown to the parser)"] += 1
             elif kind != "U" and not object_mob(name):
                 stats["skipped (other objects)"] += 1
-        if kind == "O" and (("TREE" in name and "STUMP" not in name) or name in ("GOLD_MINE", "STONE_MINE", "QUARRY")
-                            or "FORAGE" in name or "FRUIT_BUSH" in name or name.startswith(("CLIFF", *MOUNTAINS, "ROCK", "STATUE", "TROPAION",
-                            "STELAE", "THOLOS", "HERO_SHRINE", "WELL", "HAY_STACK", "MARKET_STALL", "FOUNTAIN",
-                            "MEDITERRANEAN_STALL", "MESOPOTAMIAN_STALL"))):
+        if kind == "O" and (("TREE" in name and "STUMP" not in name) or "FORAGE" in name or "FRUIT_BUSH" in name
+                            or name.startswith(("CLIFF", *MOUNTAINS, "ROCK", *OBSTACLES))):
             obstacle(E, cols, E.footprint)
         elif kind == "O" and E.footprint and not any(k in name for k in PASSABLE_OBJECTS):
             x0, x1, z0, z1 = E.footprint            # other objects with blocks: no units on top of them
@@ -1967,8 +1956,7 @@ def place_objects(objects, players, cols, rng):
 # --------------------------------------------------------------------------------------------
 # Units -> entities
 # --------------------------------------------------------------------------------------------
-FISH = [("SALMON", "salmon"), ("DORADO", "tropical_fish"), ("SNAPPER", "tropical_fish"), ("FISH", "cod"),
-        ("DOLPHIN", "dolphin"), ("BOX_TURTLES", "turtle"), ("HOWLER_MONKEY", "ocelot")]
+FISH = [(r["name"], r["mob"]) for r in OBJECTS if "mob" in r]
 OBJECT_MOBS = {"WHALE": "dolphin"}    # exact names: BEACHED_WHALE is a carcass, not a mob. No whale mob: the dolphin
 LAND_MOBS = ("turtle", "ocelot")      # is the nearest large sea animal
 
@@ -2590,15 +2578,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
 
 # Work sounds at buildings (#220): name part -> (sound, predicate, particle). Only Minecraft sounds; the villager
 # work sounds exist in 26.3. The first matching rule wins.
-WORK_SOUNDS = [
-    ("BLACKSMITH", "block.anvil.use", "sometimes", "lava"), ("MARKET", "entity.villager.trade", "sometimes", None),
-    ("TOWN_CENTER", "block.bell.use", "rare", None), ("LUMBER_CAMP", "item.axe.strip", "sometimes", None),
-    ("MINING_CAMP", "block.stone.break", "sometimes", None), ("DOCK", "entity.villager.work_fisherman", "sometimes", None),
-    ("MONASTERY", "entity.villager.work_cleric", "sometimes", None), ("MILL", "entity.villager.work_farmer", "sometimes", None),
-    ("ARCHERY_RANGE", "entity.villager.work_fletcher", "sometimes", None),
-    ("UNIVERSITY", "entity.villager.work_librarian", "sometimes", None),
-    ("SIEGE_WORKSHOP", "entity.villager.work_mason", "sometimes", None),
-]
+WORK_SOUNDS = [(r["name"], r["sound"], r["when"], r["particle"]) for r in units.rows("work_sounds.jsonl")]
 CHANCE = {"sometimes": 0.25, "rare": 0.03}      # per pulse of 2 s
 
 # Ambience per terrain group (#219): vanilla biomes of `terrain_style` -> particle and sound near each player in such
@@ -3022,7 +3002,7 @@ def map_colors(img):
 MAP_DYES = {"black": 29, "blue": 25, "brown": 26, "cyan": 23, "gray": 21, "green": 27, "light_blue": 17,
             "light_gray": 22, "lime": 19, "magenta": 16, "orange": 15, "pink": 20, "purple": 24, "red": 28,
             "white": 8, "yellow": 18}
-MAP_MINES = {"GOLD_MINE": 30, "STONE_MINE": 11}
+MAP_MINES = {r["name"]: r["map_color"] for r in OBJECTS if "map_color" in r}
 
 
 def map_objects(colors, s, c, objects, players=None, T=4):

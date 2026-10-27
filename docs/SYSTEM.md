@@ -24,12 +24,13 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 
 | Workflow | When | What |
 |---|---|---|
-| `ci.yml` (CI) | Each PR, each push to `main`, each night | Quick checks (lint, fast tests) on each PR. The full suite each night on `main`. A red `main` opens a `P0` ticket. |
+| `ci.yml` (CI) | Each PR, each push to `main`, each night | Quick checks (lint, fast tests) on each PR; a Markdown-only PR runs only the doc tests (`tools/ci_select.py`, #2089). The full suite each night on `main`. A red `main` opens a `P0` ticket. |
 | `automerge.yml` (Automerge) | After CI, every 5 minutes, by hand | Merges an agent PR with green CI. Skips `hold` and tickets with `needs-human` or `blocked`. Then starts CI on `main`, Coverage, Claims and Dashboard. |
 | `unconflict.yml` (Unconflict) | Every 20 minutes, after each merge | Merges `main` into a conflicted agent PR when git solves the conflict alone (`merge=union` files) or both sides only add lines (`tools/unconflict.py`, #1864), and starts CI. |
 | `claims.yml` (Claims) | A ticket closes, each day | Deletes the claim refs of closed tickets and old comment locks. The runs cannot delete refs (403). |
 | `dashboard.yml` (Dashboard) | Label changes, closed issues and PRs, each hour | Writes the dashboard in the body of the status issue (`tools/dashboard.py`). |
 | `coverage.yml` (Coverage) | Each push to `main` | Writes `docs/coverage.md`, `MAX` of `tests/test_coverage.py` and a column of `docs/DESIGN.md`. PRs do not change these files, so they do not conflict there. |
+| `metrics.yml` (Metrics) | Each 15 minutes, by hand with `days` | Writes the status issue comments to the orphan branch `metrics` (`tools/metrics_log.py`, one file per day). `tools/health.py` reads them and only the newest comments from the API (#1983). |
 | `labels.yml` (Labels) | A change of `.github/labels.txt` | Creates the labels. |
 
 ## The loop of a run
@@ -92,6 +93,13 @@ the long-lived pacer session at its next cycle (#1824). `tools/health.py` measur
 `Usage:` lines of the run reports, and `usage.py` uses that value. After a plan upgrade the same work is a smaller share of the larger quota: when the burn of
 the last 2 hours is less than half of the 24-hour burn, only the last 2 hours count (`health.ratio`, 5-hour and 7-day
 burn, #1706). The most runs at one time is `max_runs` in `[pacing]` of `agent.toml` (default 16): raise it when the 5-hour window does not reach its limit (40 since 2026-10-27: at a burn of 0.009 per run-hour, 16 runs used only about 70 %).
+The flow brake (owner, 2026-10-27): when CI, merge conflicts or anything else stops the merges, the quota is not the
+bottleneck, and more runs only make more open PRs and more conflicts. `--fire` counts the open agent PRs older than
+`pr_minutes` without `hold` and the queued CI runs. At `max_waiting_prs` (default 10) it starts at most 1 run per
+cycle, at `max_ci_queue` (default 5) none. A run asks `usage.py --flow` in autopilot step 2: with the brake on it only
+repairs PRs and takes no new ticket.
+A PR with the label `conflict` and no new commit for 10 minutes is stalled: a run takes it over (`claim.py`, #1773).
+Automerge adds the label when the merge of a green PR fails, Unconflict when its merge of main finds a real conflict.
 The target counts Opus runs. A run of a cheap lane counts its weight (#1727): a Haiku run sets `git config aoe2mc.lane haiku`,
 its claims end with ` lane haiku`, the `Usage:` lines count its runs (`· haiku N`), and `health.lane_weights` measures
 the weight from them (least squares, at least 10 intervals with Haiku runs; before that `weights` of `agent.toml`,
@@ -198,6 +206,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tools/dashboard.py` | generic | None (`agent.toml`). |
 | `tools/feedback.py` | generic | None (`agent.toml`). |
 | `tools/health.py` | generic | None (`agent.toml`). |
+| `tools/metrics_log.py` | generic | None (the log of the status issue comments on the branch `metrics`, #1983). |
 | `tools/report.py` | generic | None (the run report of step 8; the release bar only with a project `tools/release.py`, #1963). |
 | `tools/tokens.py` | generic | None. |
 | `tools/operator_check.py` | generic | None (`agent.toml`). |
@@ -249,6 +258,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `.github/workflows/close.yml` | generic | None. It closes the issues with the label `close` (#1740). |
 | `.github/workflows/dashboard.yml` | generic | None. |
 | `.github/workflows/coverage.yml` | specific | The coverage of the AoE2 types. |
+| `.github/workflows/metrics.yml` | generic | None. |
 | `.github/workflows/labels.yml` | generic | None. |
 | `.github/workflows/bundles.yml` | specific | The app bundles of the converter (PyInstaller, `packaging/`, #1541) and their installers (#1542). |
 | `.github/workflows/installers.yml` | specific | On a tag `v*`: the installers of `bundles.yml` in the release of the tag (#1542). |
@@ -256,4 +266,4 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `.github/workflows/worlds.yml` | specific | The worlds of `examples/` and `samples/` as zips in a release (#207). |
 | `.github/labels.txt` | generic | None. |
 | `.github/ISSUE_TEMPLATE/ticket.yml` | generic | None. |
-| `.gitattributes` | specific | The list of `merge=union` files, and `merge=jsonl` for `game/data/*.jsonl` (`tools/merge_jsonl.py`, #2004). |
+| `.gitattributes` | specific | The list of `merge=union` files, and `merge=jsonl` for `game/data/*.jsonl` and `tests/data/civ_bonuses.jsonl` (`tools/merge_jsonl.py`, #2004, #2100). |

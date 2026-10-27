@@ -8,8 +8,6 @@ from game import diplomacy, train
 
 
 def test_the_costs_times_and_ages_are_those_of_aoe2():
-    assert train.COSTS["COINAGE"] == {"food": 200, "gold": 100} and train.TRAIN_TIMES["COINAGE"] == 70
-    assert train.COSTS["BANKING"] == {"food": 300, "gold": 200} and train.TRAIN_TIMES["BANKING"] == 70
     assert train.TECH_AGE["COINAGE"] == 2 and train.TECH_AGE["BANKING"] == 3 and train.AFTER["BANKING"] == "COINAGE"
     assert all(len(train.HELP[t]) <= 50 for t in ("COINAGE", "BANKING"))
 

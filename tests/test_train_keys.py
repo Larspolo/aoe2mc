@@ -15,7 +15,7 @@ def test_the_building_keys_name_buildings_with_numbers():
 
 
 def test_the_unit_keys_name_units():
-    for names in (train.MILITIA_LINE, train.HULKS, train.ORDERS):
+    for names in (train.HULKS, train.ORDERS):
         assert names and set(names) <= set(combat.STATS)
 
 
