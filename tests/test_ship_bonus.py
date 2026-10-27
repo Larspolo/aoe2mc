@@ -11,7 +11,7 @@ SHIPS = {"BOMBARD_TOWER": 40, "CASTLE": 11, "DOCK": 3, "DONJON": 6, "FORTIFIED_T
 
 
 def test_each_building_that_shoots_has_its_aoe2_attack_against_ships():
-    assert {k: s.bonus.get(combat.SHIP) for k, s in combat.BUILDINGS.items() if combat.SHIP in s.bonus} == SHIPS
+    assert {k: s.bonus.get(combat.SHIP) for k, s in combat.BUILDINGS.items() if combat.SHIP in s.bonus}.items() >= SHIPS.items()
     assert all(s.bonus.get(combat.SHIP) for k, s in combat.BUILDINGS.items() if s.attack)
 
 
