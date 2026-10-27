@@ -41,3 +41,22 @@ functions.
 systems). It starts by hand (`workflow_dispatch`), from the release workflow (`workflow_call`, #1542) and on a PR that
 changes `packaging/` or the workflow. Each job converts the two samples with the frozen command line. The Linux job
 also opens the frozen window under `xvfb-run`. Each job uploads its folder as the artifact `aoe2mc-<os>-<arch>`.
+
+## Installers
+
+Each job of `bundles.yml` then makes the installer of its system from the bundle, installs it as a user would and
+converts `samples/test_village.aoe2scenario` with the installed command line (#1542). It uploads the installer as the
+artifact `installer-<os>-<arch>`. The version is the tag without `v` (`0.0.0-dev` on a branch).
+
+| System | Installer | Made with | Test in the job |
+|---|---|---|---|
+| Windows | `aoe2mc-<version>-windows-x64-setup.exe` | Inno Setup, `packaging/windows.iss`: a per-user install (no admin), a Start menu item, an uninstaller | `/VERYSILENT /DIR=...` |
+| macOS | `aoe2mc-<version>-macos-arm64.dmg`, `...-macos-x86_64.dmg` | the `BUNDLE` of `packaging/aoe2mc.spec` (`aoe2mc.app`) in `hdiutil create` | `hdiutil attach`, copy the app |
+| Linux | `aoe2mc-<version>-linux-x86_64.AppImage` | `appimagetool` 1.9.0, `packaging/AppRun` (arguments: the command line, none: the window), `packaging/aoe2mc.desktop` | `--appimage-extract` |
+
+`packaging/icon.py` draws the icon (an own image: a grass block with a tower) as `icon.png`, `icon.ico` and
+`icon.icns` before the build; these files are not in git. The installers are not signed (the owner chose this in
+#1544): the README section "Install" tells the user how to go past the warning.
+
+`.github/workflows/installers.yml` runs on a tag `v*`: it calls `bundles.yml` and attaches the four installers to the
+release of the tag. `worlds.yml` also runs on the tag and attaches the example worlds to the same release.

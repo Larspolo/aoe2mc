@@ -158,7 +158,8 @@ the owner login, the default branch, the status issue, the commands, the doc pat
 | `.github/workflows/dashboard.yml` | generic | None. |
 | `.github/workflows/coverage.yml` | specific | The coverage of the AoE2 types. |
 | `.github/workflows/labels.yml` | generic | None. |
-| `.github/workflows/bundles.yml` | specific | The app bundles of the converter (PyInstaller, `packaging/`, #1541). |
+| `.github/workflows/bundles.yml` | specific | The app bundles of the converter (PyInstaller, `packaging/`, #1541) and their installers (#1542). |
+| `.github/workflows/installers.yml` | specific | On a tag `v*`: the installers of `bundles.yml` in the release of the tag (#1542). |
 | `.github/labels.txt` | generic | None. |
 | `.github/ISSUE_TEMPLATE/ticket.yml` | generic | None. |
 | `.gitattributes` | specific | The list of `merge=union` files. |
