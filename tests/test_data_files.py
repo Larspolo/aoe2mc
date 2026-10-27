@@ -118,11 +118,18 @@ CHECKS = {"build.jsonl": check_build, "buildings.jsonl": check_buildings, "civs.
           "gather.jsonl": check_gather, "train.jsonl": check_train, "units.jsonl": check_units}
 
 
+# The keys with two types by design: an "effect" is data or the name of a function of game/train.py (#2098, #2122)
+TWO_TYPES = {("train.jsonl", "effect"): (dict, str)}
+
+
 @pytest.mark.parametrize("name", sorted(NAMES))
 def test_each_key_has_one_type(name):
     types = {}
     for row in rows(name):
         for k, v in row.items():
+            if (name, k) in TWO_TYPES:
+                assert isinstance(v, TWO_TYPES[name, k]), (name, row["name"], k)
+                continue
             t = float if type(v) is int else type(v)       # an int is a float without a fraction; null: none
             assert v is None or types.setdefault(k, t) is t, (name, row["name"], k)
 
