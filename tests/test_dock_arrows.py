@@ -66,8 +66,8 @@ def test_a_fishing_ship_goes_into_the_dock_and_comes_out_with_ungarrison():
     assert g.garrisons[DOCK] == [uuid]
 
     train.open_menu(g, "Steve", (15, 12))
-    assert "Ungarrison" in menus(server)[-1]
-    assert garrison.out(g, DOCK) == [uuid]
+    assert "26:oak_door:Ungarrison" in menus(server)[-1] and ":Demolition Raft:" in menus(server)[-1]   # slot 7
+    assert train.order(g, "Steve", DOCK, 26) == 0 and DOCK not in g.garrisons   # the menu item: all come out
     tp = [c for c in server.log if c.startswith(f"tp {uuid} ")][-1].split()
     cell = (int(float(tp[2])), int(float(tp[4])))
     assert g.map.wet(*cell) and cell in fleet.pier(g, DOCK)          # back on the water next to the dock
@@ -90,3 +90,9 @@ def test_a_click_on_the_dock_on_the_water_sends_the_selected_fishing_ship_in():
     g.select(uuid)
     g.click("Steve")                                                   # Steve looks east and down at the dock
     assert g.entering == {uuid: DOCK}
+
+
+def test_no_menu_item_of_a_garrison_building_is_in_its_ungarrison_slot():
+    for building in garrison.SIZES:
+        slots = {train.ITEMS[n][0] for n in train.TRAINS.get(building, ())}
+        assert garrison.ungarrison(building)[0] not in slots, building
