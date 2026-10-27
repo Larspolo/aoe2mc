@@ -78,6 +78,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "CASTLE_AGE": {"food": 800, "gold": 200},
          "CARAVAN": {"food": 200, "gold": 200},
          "CATAPHRACT": {"food": 70, "gold": 75},
+         "CHAIN_BARDING_ARMOR": {"food": 250, "gold": 150},             # AoE2 DE wiki (#1394)
+         "CHAIN_MAIL_ARMOR": {"food": 200, "gold": 100},
          "CHU_KO_NU": {"wood": 40, "gold": 35},
          "DOUBLE_BIT_AXE": {"food": 100, "wood": 50},
          "FERVOR": {"gold": 140},
@@ -94,6 +96,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "IMPERIAL_AGE": {"food": 1000, "gold": 800},
          "JANISSARY": {"food": 60, "gold": 55},
          "KEEP": {"food": 500, "wood": 350},                           # the upgrade (AoE2 DE wiki "Guard Tower")
+         "LEATHER_ARCHER_ARMOR": {"food": 150, "gold": 150},
          "LONGBOWMAN": {"wood": 35, "gold": 40},
          "MAMELUKE": {"food": 55, "gold": 85},
          "MAN_AT_ARMS": {"food": 60, "gold": 20},
@@ -136,6 +139,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "CARAVAN": 40,
                "CASTLE_AGE": 160,
                "CATAPHRACT": 20,
+               "CHAIN_BARDING_ARMOR": 60,
+               "CHAIN_MAIL_ARMOR": 55,
                "CHU_KO_NU": 16,
                "DOUBLE_BIT_AXE": 25,
                "FERVOR": 50,
@@ -152,6 +157,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "IMPERIAL_AGE": 190,
                "JANISSARY": 21,
                "KEEP": 75,
+               "LEATHER_ARCHER_ARMOR": 55,
                "LONGBOWMAN": 18,
                "MAMELUKE": 23,
                "MAN_AT_ARMS": 21,
@@ -188,7 +194,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
 TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", "CASTLE_AGE", "IMPERIAL_AGE"), "BARRACKS": ("MILITIA", "SPEARMAN", "MAN_AT_ARMS_UPGRADE"),   # the units and technologies of each
           "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER"),                                         # building (#654, #670, #655)
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING",            # (#675, #725, #724, #937, #938)
-                         "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR"),
+                         "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR",
+                         "CHAIN_MAIL_ARMOR", "LEATHER_ARCHER_ARMOR", "CHAIN_BARDING_ARMOR"),   # the Castle Age (#1394)
           "CASTLE": ("TREBUCHET",),                                             # and the unique unit: trains() (#708, #1351)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES"),                           # (#671, #940)
           "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS"),   # (#1326, #1374, #1352)
@@ -228,6 +235,10 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "CAPPED_RAM_UPGRADE": lambda name, s: s,                  # a new unit name: UPGRADES
          "CARAVAN": lambda name, s: s,                             # the walk speed: SPEEDS
          "CASTLE_AGE": lambda name, s: s,                          # an age: REQUIRES
+         "CHAIN_BARDING_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
+         if barding(s) else s,
+         "CHAIN_MAIL_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
+         if "infantry" in s.classes else s,
          "DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
          "FERVOR": lambda name, s: s,                              # the walk speed: SPEEDS
          "FLETCHING": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if "archer" in s.classes else s,
@@ -240,6 +251,8 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
          "IMPERIAL_AGE": lambda name, s: s,                        # an age: REQUIRES
          "KEEP": lambda name, s: s,                                # the towers of the player: TOWER_UPGRADES
+         "LEATHER_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
+         if "archer" in s.classes else s,
          "LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
          if "VILLAGER" in name else s,
          "MAN_AT_ARMS_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
@@ -268,7 +281,8 @@ UPGRADES = {                                                       # technology:
     "SIEGE_ONAGER_UPGRADE": ("ONAGER", "SIEGE_ONAGER"),
     "SIEGE_RAM_UPGRADE": ("CAPPED_RAM", "SIEGE_RAM"),
 }
-AFTER = {"KEEP": "GUARD_TOWER", "SIEGE_ONAGER_UPGRADE": "ONAGER_UPGRADE", "SIEGE_RAM_UPGRADE": "CAPPED_RAM_UPGRADE"}   # the upgrade before it
+AFTER = {"CHAIN_BARDING_ARMOR": "SCALE_BARDING_ARMOR", "CHAIN_MAIL_ARMOR": "SCALE_MAIL_ARMOR", "KEEP": "GUARD_TOWER",
+         "LEATHER_ARCHER_ARMOR": "PADDED_ARCHER_ARMOR", "SIEGE_ONAGER_UPGRADE": "ONAGER_UPGRADE", "SIEGE_RAM_UPGRADE": "CAPPED_RAM_UPGRADE"}   # the upgrade before it
 WALL_UPGRADES = {"FORTIFIED_WALL": {"STONE_WALL": "FORTIFIED_WALL", "GATE": "FORTIFIED_GATE"}}   # technology: {wall: new} (#1326)
 TOWER_UPGRADES = {"GUARD_TOWER": {"WATCH_TOWER": "GUARD_TOWER"},   # technology: {tower: the tower of its values},
                   "KEEP": {"GUARD_TOWER": "KEEP", "WATCH_TOWER": "KEEP"}}   # in the research order (#1374)
@@ -279,6 +293,8 @@ TECH_AGE = {                                                       # the age of 
     "BLOODLINES": 1,
     "CAPPED_RAM_UPGRADE": 3,
     "CARAVAN": 2,
+    "CHAIN_BARDING_ARMOR": 2,
+    "CHAIN_MAIL_ARMOR": 2,
     "DOUBLE_BIT_AXE": 1,
     "FERVOR": 2,
     "FLETCHING": 1,
@@ -290,6 +306,7 @@ TECH_AGE = {                                                       # the age of 
     "HEAVY_SCORPION_UPGRADE": 3,
     "HORSE_COLLAR": 1,
     "KEEP": 3,
+    "LEATHER_ARCHER_ARMOR": 2,
     "MAN_AT_ARMS_UPGRADE": 1,
     "ONAGER_UPGRADE": 3,
     "PADDED_ARCHER_ARMOR": 1,
@@ -332,6 +349,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "CARAVAN": (1, "book", "Caravan"),
          "CASTLE_AGE": (4, "bell", "Castle Age"),
          "CATAPHRACT": (0, "horse_spawn_egg", "Cataphract"),
+         "CHAIN_BARDING_ARMOR": (4, "book", "Chain Barding Armor"),    # the slot of the Feudal armor (AFTER)
+         "CHAIN_MAIL_ARMOR": (1, "book", "Chain Mail Armor"),
          "CHU_KO_NU": (0, "skeleton_spawn_egg", "Chu Ko Nu"),
          "DOUBLE_BIT_AXE": (0, "book", "Double-Bit Axe"),
          "FERVOR": (1, "book", "Fervor"),
@@ -346,6 +365,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "IMPERIAL_AGE": (5, "bell", "Imperial Age"),
          "JANISSARY": (0, "pillager_spawn_egg", "Janissary"),
          "KEEP": (3, "book", "Keep"),
+         "LEATHER_ARCHER_ARMOR": (3, "book", "Leather Archer Armor"),
          "LONGBOWMAN": (0, "skeleton_spawn_egg", "Longbowman"),
          "LOOM": (1, "book", "Loom"),                               # a book for a technology (#618)
          "MAMELUKE": (0, "camel_spawn_egg", "Mameluke"),
@@ -381,6 +401,8 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "CARAVAN": "Trade carts +20 % speed.",
         "CASTLE_AGE": "Advance to the Castle Age.",
         "CATAPHRACT": "Byzantine cavalry. Strong vs. infantry.",
+        "CHAIN_BARDING_ARMOR": "Cavalry +1 melee armor, +1 pierce armor.",
+        "CHAIN_MAIL_ARMOR": "Infantry +1 melee armor, +1 pierce armor.",
         "CHU_KO_NU": "Chinese archer. Shoots many arrows.",
         "DOUBLE_BIT_AXE": "Villagers chop wood 20 % faster.",
         "FEUDAL_AGE": "Advance to the Feudal Age.",
@@ -398,6 +420,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "IMPERIAL_AGE": "Advance to the Imperial Age.",
         "JANISSARY": "Turkish gunner. Strong vs. infantry.",
         "KEEP": "Guard towers +750 HP, +1 attack, +1/+1 armor.",
+        "LEATHER_ARCHER_ARMOR": "Archers +1 melee armor, +1 pierce armor.",
         "LONGBOWMAN": "Briton archer. Long range.",
         "LOOM": "Villagers +15 HP, +1/+2 armor.",
         "MAMELUKE": "Saracen camel. Strong vs. cavalry.",

@@ -486,7 +486,8 @@ class Replay:
         # "ground" over a tree is the top of its barriers and trunk (#870): take the other cells, else the free cells
         # next to the footprint
         free = foot - self.lifted or m.around(foot) or foot
-        cells = [g for x, z in free if (g := self.ground[z][x]) is not None]
+        cells = [g for x, z in free if (g := self.ground[z][x]) is not None] or \
+            [g for x, z in m.around(foot) if (g := self.ground[z][x]) is not None]   # a dock on water: the shore (#1382)
         if not cells:                                               # outside the map or on water only
             return []
         trees = [t for t in m.trees if m.cells(t) & foot]          # in AoE2 the tree is gone (chopped)
