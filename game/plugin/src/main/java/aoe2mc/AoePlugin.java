@@ -30,6 +30,7 @@ import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.AbstractSkeleton;
 import org.bukkit.entity.Arrow;
+import org.bukkit.entity.Boat;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Minecart;
@@ -49,6 +50,8 @@ import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.vehicle.VehicleDamageEvent;
+import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -175,6 +178,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * the values of "aoe stats", the range of "aoe range" and the target of "aoe attack", and the horse gets AI without goals:
  * a riding mob walks with the navigation of its vehicle (vanilla Mob#getNavigation), so the horse follows the rider.
  * A hit on the rider takes the hit points of the horse, and the rider dies with the horse (#732).
+ * A ship (#1386) is a boat with a crew (units.py): aoe stats, aoe range and aoe attack go to the crew, also as a
+ * target. A hit on the boat hurts the crew, the boat does not break, and the boat goes when its crew dies (it sinks).
  * A horse regenerates by itself in vanilla, an AoE2 unit does not: the plugin cancels the REGEN healing of a unit
  * with AoE2 values (#850). Other reasons (a later Monk heal) stay.
  * A building is blocks, and a mob attacks only a living entity: an invisible mob without AI (a slime of the size of
@@ -913,12 +918,43 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     @EventHandler
     public void onDeath(EntityDeathEvent ev) {               // the rider dies with its horse, else it stays (#732)
         stances.remove(ev.getEntity().getUniqueId());
+        if (stats.containsKey(ev.getEntity().getUniqueId()) && ev.getEntity().getVehicle() instanceof Boat boat) {
+            ev.getDrops().clear();                               // the crew of a ship at 0 hit points: the ship sinks (#1386)
+            boat.getPassengers().stream().filter(p -> p != ev.getEntity() && !(p instanceof Player)).forEach(Entity::remove);
+            boat.remove();
+        }
         if (stats.containsKey(ev.getEntity().getUniqueId())) {
             for (Entity p : ev.getEntity().getPassengers()) {
                 if (p instanceof LivingEntity r && stats.containsKey(r.getUniqueId())) {
                     r.setHealth(0);
                 }
             }
+        }
+    }
+
+    // A hit on the boat of a ship goes to its crew, which has the AoE2 values (#1386): the vanilla boat breaks after a
+    // few arrows and drops an item. An arrow that hits the boat hurts the crew with the AoE2 damage of its shooter.
+    @EventHandler(ignoreCancelled = true)
+    public void onBoatHit(VehicleDamageEvent ev) {
+        if (!(sailors(ev.getVehicle()) instanceof LivingEntity c) || !stats.containsKey(c.getUniqueId())) {
+            return;
+        }
+        ev.setCancelled(true);
+        Entity from = ev.getAttacker();
+        if (from instanceof Projectile p) {
+            p.remove();                                  // one hit per arrow
+            from = p.getShooter() instanceof Entity shooter ? shooter : null;
+        }
+        Stats a = from == null ? null : stats.get(from.getUniqueId());
+        if (a != null && c.isValid() && !sameTeam(from, c)) {
+            harm(c, stats.get(c.getUniqueId()), a, from);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBoatBreak(VehicleDestroyEvent ev) {       // a ship sinks only at 0 hit points of its crew (#1386)
+        if (sailors(ev.getVehicle()) instanceof LivingEntity c && stats.containsKey(c.getUniqueId())) {
+            ev.setCancelled(true);
         }
     }
 
@@ -1390,12 +1426,21 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         return pig;
     }
 
+    /** The crew of a ship (a boat, units.py): its first passenger, a mob with the AoE2 values (#1386). Else e. */
+    static Entity sailors(Entity e) {
+        return e instanceof Boat && !e.getPassengers().isEmpty() && e.getPassengers().get(0) instanceof LivingEntity c
+                ? c : e;
+    }
+
     /** The entity that walks for e: the carrier of a siege unit, else e. */
     private static Entity walker(Entity e) {
         return e instanceof Minecart cart && carrier(cart, false) != null ? carrier(cart, false) : e;
     }
 
     private Mob unit(Entity e) {
+        if (e instanceof Boat && sailors(e) instanceof Mob c) {
+            return unit(c);                              // a ship: the crew takes the orders, fleet.py sails (#1386)
+        }
         if (e instanceof Minecart cart) {
             Mob c = carrier(cart, true);
             return c == null ? null : unit(c);
@@ -1624,8 +1669,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             int n = 0;
             for (Entity e : select(sender, args[1])) {
-                Entity t = e instanceof Minecart && !e.getPassengers().isEmpty() ? e.getPassengers().get(0) : e;
-                if (t instanceof LivingEntity le) {                // a siege unit: its crew takes the hits (#836)
+                Entity t = e instanceof Minecart && !e.getPassengers().isEmpty() ? e.getPassengers().get(0) : sailors(e);
+                if (t instanceof LivingEntity le) {                // a siege unit or a ship: its crew takes the hits (#836, #1386)
                     AttributeInstance max = le.getAttribute(Attribute.MAX_HEALTH);
                     if (max != null) {                     // keep the lost hit points, as AoE2 does for Bloodlines (#940)
                         double lost = Math.max(0, max.getValue() - le.getHealth());
@@ -1660,6 +1705,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 if (rider(e) instanceof RangedEntity) {
                     e = rider(e);                                // a mounted archer: the rider shoots (#710)
                 }
+                e = sailors(e);                                     // a ship: its crew shoots (#1386)
                 if (e instanceof Minecart cart && r.siege) {
                     ranges.put(cart.getUniqueId(), r);           // its carrier shoots (unit())
                     Mob c = carrier(cart, false);
@@ -1890,7 +1936,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         if (args.length == 3 && args[0].equals("attack")) {
             List<Entity> targets = select(sender, args[2]);
-            if (targets.isEmpty() || !(targets.get(0) instanceof LivingEntity target)) {
+            if (targets.isEmpty() || !(sailors(targets.get(0)) instanceof LivingEntity target)) {   // a ship: its crew
                 sender.sendMessage("No target");
                 return true;
             }

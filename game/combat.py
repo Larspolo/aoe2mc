@@ -32,6 +32,7 @@ HSI = "heavysiege"                                    # the Hussite Wagon and Ba
 RAM = "ram"                                           # the rams, the siege tower, the unpacked trebuchet, the Armored Elephant line
 UNI = "unique"                                        # the unique units of the castles (the Samurai bonus)
 GUN = "gunpowder"                                     # the targets of the Condottiero and Winged Hussar bonus (#1007)
+SHIP, WAR = "ship", "warship"                         # the ships; "warship": the AoE2 class "Long-range warship"
 SPEAR = {CAV: 15, CAM: 12, ELE: 15}                   # spearman bonus, more in the later ages of the line
 STATS = {
     # infantry: militia line and spearman line
@@ -200,6 +201,7 @@ STATS = {
     "CAPPED_RAM": Stats(200, 3, -2, 190, 0, 5.0, {"building": 160, SIE: 50}, (SIE, RAM)),
     "SIEGE_RAM": Stats(270, 4, -1, 195, 0, 5.0, {"building": 200, SIE: 65}, (SIE, RAM)),
     "SIEGE_TOWER": Stats(175, 0, -2, 100, 0, 0.0, {}, (SIE, RAM)),         # AoE2 DE wiki (#1362)
+    "TRANSPORT_SHIP": Stats(70, 0, 0, 2, 0, 0.0, {}, ()),              # AoE2 DE wiki (#1385)
     "TREBUCHET": Stats(150, 200, 2, 8, 16, 10.0, {"building": 250}, (SIE,)),   # AoE2 DE wiki: 150 HP (#1351); packed
     # armor (unpacked: trebuchet.UNPACKED, #1409)
     "BOMBARD_CANNON": Stats(80, 40, 2, 5, 12, 6.5, {"building": 200, HSI: 40, SIE: 20}, (GUN, SIE)),
@@ -213,6 +215,9 @@ STATS = {
     "SHARKATZOR": Stats(600, 33, 1, 0, 10, 2.1, {SIE: 5}, (SIE,)),
     "VMDL": Stats(25, 0, 0, 0, 0, 0.0),
     "WAR_PENGUIN": Stats(64, 16, 4, 4, 0, 2.0, {"building": 8}, (INF,)),
+    # ships (#1386, AoE2 DE wiki): the hits go to the crew of the boat (AoePlugin.java)
+    "FISHING_SHIP": Stats(50, 0, 1, 1, 0, 0.0, {}, (SHIP,)),
+    "GALLEY": Stats(110, 6, 0, 3, 5, 3.0, {"building": 6, WAR: 5}, (SHIP, WAR)),
     # others: no fight, but they can die
     "VILLAGER": Stats(25, 3, 0, 0, 0, 2.0),
     "KING": Stats(75, 0, 0, 0, 0, 0.0),
