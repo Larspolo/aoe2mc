@@ -16,8 +16,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def test_each_building_line_has_the_stats_fields_or_only_a_sight():
     for line in open(os.path.join(table.DIR, "buildings.jsonl"), encoding="utf-8"):
         row = json.loads(line)
-        keys = set(row) - {"arrows", "as", "garrison", "note", "sight"}   # garrison.py (#2034)
-        assert keys in ({"name"}, {"name", *combat.Stats._fields}), row["name"]
+        keys = set(row) - {"arrows", "as", "garrison", "min_range", "note", "sight"}   # garrison.py (#2034)
+        assert keys in ({"name"}, {"name", *combat.Stats._fields}, {"name", "hp_ages", "melee", "pierce"}), row["name"]
         assert "sight" in row or keys != {"name"}, row["name"]
 
 

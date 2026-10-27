@@ -2,7 +2,7 @@
 {"name": "BARRACKS", "hp": 1200, "attack": 0, "melee": 0, "pierce": 7, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 6}
 {"name": "ARCHERY_RANGE", "hp": 1500, "attack": 0, "melee": 0, "pierce": 7, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 6}
 {"name": "STABLE", "hp": 1500, "attack": 0, "melee": 0, "pierce": 7, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 6}
-{"name": "DOCK", "hp": 1800, "attack": 3, "melee": 0, "pierce": 7, "range": 6, "reload": 2.0, "bonus": {"camel": 1, "ship": 3}, "classes": ["building"], "sight": 8, "note": "AoE2 DE wiki, the Dark Age (#1382); it shoots only with fishing ships inside (garrison.arrows, #1949); the reload of the town center (no wiki value)", "garrison": 5, "arrows": 0}
+{"name": "DOCK", "hp": 1800, "attack": 3, "melee": 0, "pierce": 7, "range": 6, "reload": 2.0, "bonus": {"camel": 1, "ship": 3}, "classes": ["building"], "sight": 8, "note": "AoE2 DE wiki, the Dark Age (#1382); it shoots only with fishing ships inside (garrison.arrows, #1949); the reload of the town center (no wiki value)", "garrison": 5, "arrows": 0, "min_range": 1}
 {"name": "MARKET", "hp": 1800, "attack": 0, "melee": 1, "pierce": 8, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 6, "note": "the Feudal Age values of the wiki (#1251)"}
 {"name": "MONASTERY", "hp": 2100, "attack": 0, "melee": 0, "pierce": 7, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 6}
 {"name": "SIEGE_WORKSHOP", "hp": 2100, "attack": 0, "melee": 0, "pierce": 7, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 6}
@@ -12,16 +12,22 @@
 {"name": "FOLWARK", "hp": 1000, "attack": 0, "melee": 0, "pierce": 7, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 6, "as": "MILL", "note": "the Dark Age values of the wiki (#1874)"}
 {"name": "MINING_CAMP", "hp": 600, "attack": 0, "melee": 0, "pierce": 7, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 6}
 {"name": "UNIVERSITY", "hp": 2100, "attack": 0, "melee": 2, "pierce": 9, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 6, "note": "the Castle Age values"}
-{"name": "BOMBARD_TOWER", "hp": 2220, "attack": 120, "melee": 3, "pierce": 9, "range": 8, "reload": 6.0, "bonus": {"ship": 40}, "classes": ["building"], "sight": 10, "garrison": 5}
+{"name": "BOMBARD_TOWER", "hp": 2220, "attack": 120, "melee": 3, "pierce": 9, "range": 8, "reload": 6.0, "bonus": {"ship": 40}, "classes": ["building"], "sight": 10, "garrison": 5, "min_range": 1}
 {"name": "FORTIFIED_TOWER", "hp": 1900, "attack": 8, "melee": 4, "pierce": 7, "range": 13, "reload": 3.0, "bonus": {"ship": 12}, "classes": ["building"], "sight": 14}
-{"name": "GUARD_TOWER", "hp": 1500, "attack": 7, "melee": 2, "pierce": 8, "range": 8, "reload": 2.0, "bonus": {"ship": 7}, "classes": ["building"], "sight": 10, "garrison": 5}
-{"name": "KEEP", "hp": 2250, "attack": 8, "melee": 3, "pierce": 9, "range": 8, "reload": 2.0, "bonus": {"ship": 8}, "classes": ["building"], "sight": 10, "garrison": 5}
-{"name": "WATCH_TOWER", "hp": 1020, "attack": 5, "melee": 1, "pierce": 7, "range": 8, "reload": 2.0, "bonus": {"ship": 5}, "classes": ["building"], "sight": 10, "garrison": 5}
+{"name": "GUARD_TOWER", "hp": 1500, "attack": 7, "melee": 2, "pierce": 8, "range": 8, "reload": 2.0, "bonus": {"ship": 7}, "classes": ["building"], "sight": 10, "garrison": 5, "min_range": 1}
+{"name": "KEEP", "hp": 2250, "attack": 8, "melee": 3, "pierce": 9, "range": 8, "reload": 2.0, "bonus": {"ship": 8}, "classes": ["building"], "sight": 10, "garrison": 5, "min_range": 1}
+{"name": "WATCH_TOWER", "hp": 1020, "attack": 5, "melee": 1, "pierce": 7, "range": 8, "reload": 2.0, "bonus": {"ship": 5}, "classes": ["building"], "sight": 10, "garrison": 5, "min_range": 1}
 {"name": "TOWN_CENTER", "hp": 2400, "attack": 5, "melee": 3, "pierce": 5, "range": 6, "reload": 2.0, "bonus": {"ship": 5}, "classes": ["building"], "sight": 8, "garrison": 15, "arrows": 0}
-{"name": "CASTLE", "hp": 4800, "attack": 11, "melee": 8, "pierce": 11, "range": 8, "reload": 2.0, "bonus": {"ship": 11}, "classes": ["building"], "sight": 11, "garrison": 20, "arrows": 5}
-{"name": "KREPOST", "hp": 2600, "attack": 10, "melee": 8, "pierce": 11, "range": 7, "reload": 2.0, "bonus": {"ship": 10}, "classes": ["building"], "sight": 10, "note": "the Bulgarians (AoE2 DE wiki, #1872)", "garrison": 20, "arrows": 5}
+{"name": "CASTLE", "hp": 4800, "attack": 11, "melee": 8, "pierce": 11, "range": 8, "reload": 2.0, "bonus": {"ship": 11}, "classes": ["building"], "sight": 11, "garrison": 20, "arrows": 5, "min_range": 1}
+{"name": "KREPOST", "hp": 2600, "attack": 10, "melee": 8, "pierce": 11, "range": 7, "reload": 2.0, "bonus": {"ship": 10}, "classes": ["building"], "sight": 10, "note": "the Bulgarians (AoE2 DE wiki, #1872)", "garrison": 20, "arrows": 5, "min_range": 1}
 {"name": "FORTIFIED_CHURCH", "hp": 2400, "attack": 0, "melee": 4, "pierce": 10, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 10, "as": "MONASTERY", "note": "the Armenians, Georgians (AoE2 DE wiki, #1930)"}
 {"name": "WONDER", "hp": 4800, "attack": 0, "melee": 3, "pierce": 10, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 8}
 {"name": "DONJON", "sight": 10}
 {"name": "FEITORIA", "sight": 6}
 {"name": "OUTPOST", "sight": 4}
+{"name": "FORTIFIED_GATE", "hp_ages": [4000, 4000, 4000, 4000], "melee": 6, "pierce": 7}
+{"name": "FORTIFIED_WALL", "hp_ages": [3000, 3000, 3000, 3000], "melee": 12, "pierce": 12}
+{"name": "GATE", "hp_ages": [1650, 1650, 2750, 2750], "melee": 6, "pierce": 6}
+{"name": "PALISADE_GATE", "hp_ages": [240, 400, 400, 400], "melee": 2, "pierce": 4}
+{"name": "PALISADE_WALL", "hp_ages": [150, 250, 250, 250], "melee": 2, "pierce": 5}
+{"name": "STONE_WALL", "hp_ages": [1080, 1080, 1800, 1800], "melee": 8, "pierce": 10}

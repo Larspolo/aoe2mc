@@ -10,12 +10,15 @@ import combat  # noqa: E402
 import table  # noqa: E402
 
 PATH = os.path.join(table.DIR, "units.jsonl")
+# The keys that only some lines have (#2032: the combat properties of combat.py).
+OPTIONAL = {"blast", "building_sight", "convert", "melee_ranged", "min_range", "note", "pass", "pass_part", "sail",
+            "sight"}   # convert: monk.py, sail: fleet.py (#2034)
 
 
 def test_each_line_has_the_stats_fields():
     for line in open(PATH, encoding="utf-8"):
         row = json.loads(line)
-        assert set(row) - {"convert", "note", "sail", "sight"} == {"name", *combat.Stats._fields}, row["name"]
+        assert set(row) - OPTIONAL == {"name", *combat.Stats._fields}, row["name"]
         assert isinstance(row["bonus"], dict) and isinstance(row["classes"], list), row["name"]
         assert all(isinstance(row[f], (int, float)) for f in ("hp", "attack", "melee", "pierce", "range", "reload"))
 
