@@ -6,7 +6,7 @@ import os
 
 import pytest
 
-from game import build, civs, combat, table
+from game import build, civs, combat, table, train
 
 RES = {"food", "wood", "gold", "stone"}
 
@@ -75,11 +75,15 @@ def check_train(row):
 
 
 def check_civs(row):
-    form(row, {"name": str, "missing": list}, {"unique": str, "units": list, "costs": list, "twice": list})
+    form(row, {"name": str, "missing": list}, {"unique": str, "units": list, "costs": list, "twice": list,
+                    "also": dict, "more": dict})
     n, known = row["name"], NAMES["train.jsonl"] | NAMES["units.jsonl"] | NAMES["buildings.jsonl"]
     assert set(row["missing"]) <= known and row["missing"] == sorted(set(row["missing"])), n
     assert row.get("unique", "MILITIA") in NAMES["units.jsonl"], n
     assert set(row.get("twice", ())) <= NAMES["train.jsonl"], n
+    for t, group in row.get("also", {}).items():                   # one more group gets the effect (#2173)
+        assert group in civs.GROUPS and isinstance(train.EFFECTS.get(t, {}), dict) and t in train.TECHS | train.SPEEDS, (n, t)
+    assert all(t in train.TECHS and isinstance(f, NUMBER) for t, f in row.get("more", {}).items()), n
     for group, value, ages in row.get("units", ()):
         assert group in civs.GROUPS and value in (*combat.Stats._fields, "speed"), (n, group, value)
         assert len(ages) == 4 and all(isinstance(a, NUMBER) for a in ages), (n, group)

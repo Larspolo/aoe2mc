@@ -201,11 +201,12 @@ def test(t, name, s):
     return globals()[t["test"]](name, s)
 
 
-def effect(e):
+def effect(e, more=1):
     """The function (name, s) -> s of the key "effect" of a technology of data/train.jsonl (#2029): the name of a
     function of this module (an effect with real logic), or {"if": [tests], "add": {field: n}, "times": {field: f},
     "bonus": {class: n}}. The unit gets the change when one of the tests holds (test(); no "if": each unit). {}: no
-    change of the combat values, the effect is in another place (its "note")."""
+    change of the combat values, the effect is in another place (its "note"). more: the factor of the change
+    (civs.MORE, #2173)."""
     if isinstance(e, str):
         return globals()[e]
     if not e:
@@ -214,15 +215,17 @@ def effect(e):
     def change(name, s):
         if "if" in e and not any(test(t, name, s) for t in e["if"]):
             return s
-        new = {k: getattr(s, k) + n for k, n in e.get("add", {}).items()}
-        new |= {k: round(getattr(s, k) * f) for k, f in e.get("times", {}).items()}
+        part = (lambda n: n) if more == 1 else (lambda n: round(n * more))
+        new = {k: getattr(s, k) + part(n) for k, n in e.get("add", {}).items()}
+        new |= {k: round(getattr(s, k) * (f if more == 1 else 1 + (f - 1) * more)) for k, f in e.get("times", {}).items()}
         if "bonus" in e:
-            new["bonus"] = {**s.bonus, **{k: s.bonus.get(k, 0) + n for k, n in e["bonus"].items()}}
+            new["bonus"] = {**s.bonus, **{k: s.bonus.get(k, 0) + part(n) for k, n in e["bonus"].items()}}
         return s._replace(**new)
     return change
 
 
 TECHS = {r["name"]: effect(r["effect"]) for r in ROWS if "effect" in r}   # a technology: its change of the AoE2 values
+EFFECTS = {r["name"]: r["effect"] for r in ROWS if "effect" in r}   # the key "effect" itself: civs.ALSO, civs.MORE
 # technology: the unit (or a class of combat.STATS: lower case, or a group of civs.GROUPS) and its walk speed factor
 # (#1415, #1416): the key "walk" of data/train.jsonl
 SPEEDS = {r["name"]: tuple(r["walk"]) for r in ROWS if "walk" in r}
@@ -591,9 +594,13 @@ def stats(g, name):
     the player (combat.stats and TECHS), twice for civs.TWICE (#1561)."""
     import combat                                                  # combat imports gather, gather imports this module
     s, twice = civs.units(g, name, combat.stats(name)), civs.TWICE.get(civs.civ(g), ())
+    also, more = civs.ALSO.get(civs.civ(g), {}), civs.MORE.get(civs.civ(g), {})
     for t in sorted(g.techs):
+        e = TECHS[t] if t not in more else effect(EFFECTS[t], more[t])   # Varangian Bloodlines +50 % (#2173)
+        if t in also and civs.GROUPS[also[t]](name, s):              # Bohemian Sanctity: the villagers too (#2173)
+            e = effect({k: v for k, v in EFFECTS[t].items() if k != "if"})
         for _ in range(count(g, t) * (1 + (t in twice))):              # "going above and beyond" stacks (#968)
-            s = TECHS[t](name, s)
+            s = e(name, s)
     return s
 
 
@@ -609,8 +616,11 @@ def seconds(g, name, building=None):
 
 def speed(g, name):
     """The factor of the walk speed of unit name: the bonus of the civilization (civs.speed) and the technologies of the
-    player (SPEEDS: Fervor, #1261; Squires for the class infantry, #1415; Husbandry for the mounted units, #1416)."""
-    return civs.speed(g, name) * math.prod(f ** count(g, t) for t, (unit, f) in SPEEDS.items() if faster(unit, name))
+    player (SPEEDS: Fervor, #1261; Squires for the class infantry, #1415; Husbandry for the mounted units, #1416), with
+    the changes of civs.ALSO and civs.MORE (Bohemian Fervor for the villagers, Varangian Caravan +50 %, #2173)."""
+    also, more = civs.ALSO.get(civs.civ(g), {}), civs.MORE.get(civs.civ(g), {})
+    return civs.speed(g, name) * math.prod((1 + (f - 1) * more[t] if t in more else f) ** count(g, t)
+                                           for t, (unit, f) in SPEEDS.items() if faster(unit, name) or t in also and faster(also[t], name))
 
 
 def faster(unit, name):
