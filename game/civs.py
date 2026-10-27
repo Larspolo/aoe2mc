@@ -33,53 +33,35 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import table  # noqa: E402
 
-# Work-rate factor of each civilization and gather kind (AoE2 DE, the AoE2 wiki). A missing kind is 1.
-ROMAN = 1.05                                                       # Romans: villagers gather 5 % faster
-WORK = {"BRITONS": {"sheep": 1.25},                                # shepherds work 25 % faster
-        "CELTS": {"wood": 1.15},                                   # lumberjacks work 15 % faster
-        "FRANKS": {"food": 1.15},                                  # foragers work 15 % faster
-        "KHMER": {"farm": 0.95},                                   # farmers work 5 % slower (no drop-off)
-        "KOREANS": {"stone": 1.2},                                 # stone miners work 20 % faster
-        "MALIANS": {"gold": 1.1},                                  # gold miners work 10 % faster
-        "MONGOLS": {"hunt": 1.4},                                  # hunters work 40 % faster
-        "ROMANS": dict.fromkeys(("farm", "food", "gold", "hunt", "sheep", "stone", "wood"), ROMAN),
-        "SLAVS": {"farm": 1.15},                                   # farmers work 15 % faster
-        "TURKS": {"gold": 1.25}}                                   # gold miners work 25 % faster
-
-# The units of each group (unit name, combat.Stats). "Mounted" in AoE2: cavalry, camels and elephants.
-GROUPS = {
-    "archer line": lambda n, s: n in ("ARCHER", "CROSSBOWMAN", "ARBALESTER"),
+# The units of each group (unit name, combat.Stats). "Mounted" in AoE2: cavalry, camels and elephants. A unit is in a
+# group by the rule here, or by the key "groups" of its line in data/units.jsonl (a group of names: "archer line").
+RULES = {
     "archers": lambda n, s: "archer" in s.classes,
-    "barracks": lambda n, s: "infantry" in s.classes and ("unique" not in s.classes or n == "CONDOTTIERO"),
-    "battle elephants": lambda n, s: n in ("BATTLE_ELEPHANT", "ELITE_BATTLE_ELEPHANT"),
-    "camel riders": lambda n, s: n in ("CAMEL_RIDER", "HEAVY_CAMEL_RIDER", "IMPERIAL_CAMEL_RIDER"),
+    "barracks": lambda n, s: "infantry" in s.classes and "unique" not in s.classes,
     "camels": lambda n, s: "camel" in s.classes,
     "cavalry": lambda n, s: "cavalry" in s.classes,
     "cavalry archers": lambda n, s: "archer" in s.classes and "cavalry" in s.classes,
     "foot archers": lambda n, s: foot_archer(s),
-    "foot archers but skirmishers": lambda n, s: foot_archer(s) and "SKIRMISHER" not in n,
-    "foot archers but skirmishers, condottieri": lambda n, s: n == "CONDOTTIERO" or GROUPS["foot archers but skirmishers"](n, s),
+    "foot archers but skirmishers": lambda n, s: foot_archer(s) and not tagged(n, "skirmishers"),
+    "foot archers but skirmishers, condottieri": lambda n, s: GROUPS["foot archers but skirmishers"](n, s),
     "gunpowder": lambda n, s: "gunpowder" in s.classes,
     "infantry": lambda n, s: "infantry" in s.classes,
     "infantry, mounted": lambda n, s: "infantry" in s.classes or mounted(s),
     "military": lambda n, s: not n.startswith("VILLAGER"),
-    "military units": lambda n, s: not n.startswith(("VILLAGER", "REPAIRER", "MONK", "MISSIONARY", "KING", "TRADE",
-                                                     "FISHING_SHIP", "TRANSPORT")),   # not gather.CIVILIANS
-    "monks": lambda n, s: n in ("MONK", "MISSIONARY"),
+    "military units": lambda n, s: not civilian(n),
     "mounted": lambda n, s: mounted(s),
-    "scorpions": lambda n, s: n.endswith("SCORPION"),
-    "scout line": lambda n, s: n in ("SCOUT_CAVALRY", "LIGHT_CAVALRY", "HUSSAR"),
-    "scout line, steppe lancers": lambda n, s: n in ("SCOUT_CAVALRY", "LIGHT_CAVALRY", "HUSSAR", "STEPPE_LANCER",
-                                                     "ELITE_STEPPE_LANCER"),
+    "scout line, steppe lancers": lambda n, s: tagged(n, "scout line"),
     "siege": lambda n, s: "siege" in s.classes,
-    "skirmishers, elephant archers": lambda n, s: "SKIRMISHER" in n or n.endswith("ELEPHANT_ARCHER"),
-    "skirmishers, genitours, spearman and scout lines": lambda n, s: "SKIRMISHER" in n or "GENITOUR" in n
-        or "spearman" in s.classes or n in ("SCOUT_CAVALRY", "LIGHT_CAVALRY", "HUSSAR", "WINGED_HUSSAR"),
-    "spearmen, skirmishers": lambda n, s: "spearman" in s.classes or "SKIRMISHER" in n,
-    "trade units": lambda n, s: n in ("TRADE_CART", "TRADE_COG"),
+    "skirmishers, elephant archers": lambda n, s: tagged(n, "skirmishers"),
+    "skirmishers, genitours, spearman and scout lines": lambda n, s: "spearman" in s.classes
+        or tagged(n, "skirmishers") or tagged(n, "scout line"),
+    "spearmen, skirmishers": lambda n, s: "spearman" in s.classes or tagged(n, "skirmishers"),
     "units": lambda n, s: True,
     "villagers": lambda n, s: n.startswith("VILLAGER"),
 }
+TAGS = {r["name"]: tuple(r["groups"]) for r in table.load("units.jsonl") if "groups" in r}
+GROUPS = {g: (lambda f, g: lambda n, s: g in TAGS.get(n, ()) or f(n, s))(RULES.get(g, lambda n, s: False), g)
+          for g in sorted(set(RULES) | {g for t in TAGS.values() for g in t})}
 
 # The tables of each civilization: one line per civilization in data/civs.jsonl (#1914, `table.load`), from the AoE2 DE
 # wiki. "unique": the unique unit of its castle (train.UNIQUE). "missing": the technologies and units that it does not
@@ -111,42 +93,35 @@ LANCERS = tuple(r["name"] for r in ROWS if "STEPPE_LANCER" not in r["missing"]) 
 FIRE_LANCERS = tuple(r["name"] for r in ROWS if "FIRE_LANCER" not in r["missing"])   # the fire lancer (#1953)
 CHURCH_RATE, CHURCH_NEAR = 1.1, 10.5                              # +10 % work in the 21-tile square around a Fortified
                                                                   # Church (tiles from its center, #1930)
-SMITH = ("BLAST_FURNACE", "BODKIN_ARROW", "BRACER", "CHAIN_BARDING_ARMOR", "CHAIN_MAIL_ARMOR", "FLETCHING", "FORGING",
-         "IRON_CASTING", "LEATHER_ARCHER_ARMOR", "PADDED_ARCHER_ARMOR", "PLATE_BARDING_ARMOR", "PLATE_MAIL_ARMOR",
-         "RING_ARCHER_ARMOR", "SCALE_BARDING_ARMOR", "SCALE_MAIL_ARMOR")   # the blacksmith (#1452)
-ECONOMY = ("BOW_SAW", "CARAVAN", "CROP_ROTATION", "DOUBLE_BIT_AXE", "FISHING_LINES", "GILLNETS", "GOLD_MINING",
-           "GOLD_SHAFT_MINING", "GUILDS", "HAND_CART", "HEAVY_PLOW", "HORSE_COLLAR", "STONE_MINING", "STONE_SHAFT_MINING",
-           "TWO_MAN_SAW", "WHEELBARROW")   # the economic technologies but Coinage and Banking (AoE2 wiki "Burgundians")
-
-
-# The start-resource bonuses (#1269): civilization -> {resource: change of START} (AoE2 DE, the AoE2 wiki). In AoE2 the
-# bonus comes with the first town center (a Nomad start gets it later); here it is in the start stock. The extra
-# villagers of the Chinese (+3) and Mayans (+1) are units of the map, not of the stock. Lithuanians: +100 food for each
-# town center, here only for the first one.
-START = {"AZTECS": {"gold": 50},
-         "CHINESE": {"food": -200, "wood": -50},
-         "HUNS": {"wood": -100},                                   # no houses
-         "LITHUANIANS": {"food": 100},
-         "MAYANS": {"food": -50},
-         "PERSIANS": {"food": 50, "wood": 50},
-         "SICILIANS": {"stone": 100}}
-SHARED = {"CONDOTTIERO": "ITALIANS",                              # the shared unique units of the team bonuses: an ally
-          "ELITE_GENITOUR": "BERBERS",                             # of the civilization has them too (AoE2 DE wiki,
-          "ELITE_GENITOUR_UPGRADE": "BERBERS",                     # "Team bonus", #1619)
-          "GENITOUR": "BERBERS",
-          "IMPERIAL_SKIRMISHER_UPGRADE": "VIETNAMESE"}
-NOT_SHARED = {"IMPERIAL_SKIRMISHER_UPGRADE": ("TURKS",)}           # no Elite Skirmisher: not with a Vietnamese ally
-BUILD = {"ROMANS": ROMAN,                                          # Romans: builders work 5 % faster
-         "SPANISH": 1.3}                                           # Spanish: builders work 30 % faster
-BUILD_WONDER = {"SPANISH": 1.2}                                   # Spanish: 20 % for wonders (AoE2 DE wiki)
-REPAIR = {"ROMANS": ROMAN}                                        # Romans: repairers work 5 % faster
-REPAIR_COST = {"GEORGIANS": 0.75}                                 # Georgians (team bonus): repairs of buildings cost -25 %
-REPAIR_TEAM = {"SAXONS": 1.25}                                    # Saxons (team bonus): repairers work 25 % faster
-PERSIAN = (1.05, 1.1, 1.15, 1.2)                                   # Persians: 5/10/15/20 % faster in the Dark ... Imperial Age
-WORK_RATE = {"PERSIANS": {"DOCK": PERSIAN, "TOWN_CENTER": PERSIAN}}   # the train and research rate of a building in each age
-TRAIN_RATE = {"AZTECS": [("military units", 1.15, False)],         # created 15 % faster (AoE2 DE wiki, #1927)
-              "KHITANS": [("skirmishers, genitours, spearman and scout lines", 1.15, True)]}   # trained and upgraded
-HP = {"PERSIANS": {"DOCK": 2, "TOWN_CENTER": 2}}                   # Persians: town centers and docks have double hit points
+TECH_ROWS = table.load("train.jsonl")
+SMITH = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("building") == "BLACKSMITH"))   # the blacksmith (#1452)
+ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # the economic technologies but Coinage and
+                                                                            # Banking (AoE2 wiki "Burgundians")
+# The bonuses of each civilization, keys of its line in data/civs.jsonl (AoE2 DE, the AoE2 wiki):
+# "work": the work-rate factor of each gather kind (a missing kind is 1).
+# "start": the start-resource bonus (#1269), {resource: change of START}. In AoE2 the bonus comes with the first town
+# center (a Nomad start gets it later); here it is in the start stock. The extra villagers of the Chinese (+3) and
+# Mayans (+1) are units of the map, not of the stock. Lithuanians: +100 food for each town center, here only for the
+# first one.
+# "shared": the shared unique units of its team bonus: an ally of the civilization has them too ("Team bonus", #1619).
+# "not_shared": the shared items that it does not get from an ally (Turks: no Elite Skirmisher).
+# "build", "build_wonder": the build speed of the builders (Spanish: 20 % for wonders). "repair": the repair rate.
+# "repair_cost": the team bonus of the repair cost of buildings (Georgians). "repair_team": the team bonus of the
+# repair rate (Saxons). "work_rate": the train and research rate of a building in each age (Persians). "train_rate":
+# [group of GROUPS, factor, also the upgrades] (#1927). "hp": the hit points factor of a building (Persians).
+WORK = {r["name"]: r["work"] for r in ROWS if "work" in r}
+START = {r["name"]: r["start"] for r in ROWS if "start" in r}
+SHARED = dict(sorted((n, r["name"]) for r in ROWS for n in r.get("shared", ())))
+NOT_SHARED = {n: tuple(sorted(r["name"] for r in ROWS if n in r.get("not_shared", ())))
+              for n in sorted({n for r in ROWS for n in r.get("not_shared", ())})}
+BUILD = {r["name"]: r["build"] for r in ROWS if "build" in r}
+BUILD_WONDER = {r["name"]: r["build_wonder"] for r in ROWS if "build_wonder" in r}
+REPAIR = {r["name"]: r["repair"] for r in ROWS if "repair" in r}
+REPAIR_COST = {r["name"]: r["repair_cost"] for r in ROWS if "repair_cost" in r}
+REPAIR_TEAM = {r["name"]: r["repair_team"] for r in ROWS if "repair_team" in r}
+WORK_RATE = {r["name"]: {b: tuple(v) for b, v in r["work_rate"].items()} for r in ROWS if "work_rate" in r}
+TRAIN_RATE = {r["name"]: [tuples(b) for b in r["train_rate"]] for r in ROWS if "train_rate" in r}
+HP = {r["name"]: r["hp"] for r in ROWS if "hp" in r}
 # The age-up bonuses (#1926, AoE2 DE wiki): train.research applies AGE_GIFTS and AGE_VILLAGERS at the end of each age,
 # train.seconds divides the time of an age by AGE_RATE, and train.missing needs no buildings for AGE_NO_BUILDINGS (the
 # game program has no other building needs). The Muisca gold discount of the ages is in COSTS (civs.jsonl).
@@ -154,6 +129,17 @@ AGE_GIFTS = {r["name"]: r["age_gifts"] for r in ROWS if "age_gifts" in r}   # re
 AGE_NO_BUILDINGS = ("KHMER",)                                      # no buildings are required to advance
 AGE_RATE = {"MALAY": 1.66}                                         # advancing in age is 66 % faster
 AGE_VILLAGERS = {"BENGALIS": 2}                                    # each own town center spawns 2 villagers
+
+
+def tagged(n, group):
+    """True when the line of unit n in data/units.jsonl names group in its key "groups"."""
+    return group in TAGS.get(n, ())
+
+
+def civilian(n):
+    """True for the civilian units of gather.CIVILIANS (villagers, monks, trade units ...)."""
+    import gather                                                  # gather imports this module
+    return n.startswith(gather.CIVILIANS)
 
 
 def mounted(s):
