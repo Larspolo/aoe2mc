@@ -6,6 +6,7 @@ tick time with 200, 500 and 1000 moving units.
 Usage:
     python3 tools/measure_units.py [--units 200,500,1000] [--scenario battle] [--seconds 30] [--period 5]
     python3 tools/measure_units.py --world WORLD      # a converted world (the tool works on a copy)
+    python3 tools/measure_units.py --reveal normal    # also the fog of war of the units (game/fog.py) each second
 
 The tool converts the scenario (`tools/scenarios.py`, as `tools/tick_cost.py`) and starts the Paper server of the
 game program without a client. It summons husks (the mob of most units) on free ground cells near the map center,
@@ -13,6 +14,8 @@ and adds units up to each count of --units in the same server. Each unit gets th
 (`ai.speed_command`) and every --period seconds its own `aoe moveto` (`ai.move`, Minecraft path finding of the Paper
 plugin) to a random free cell near its home. Minecraft measures the ticks itself (`/tick query`, the last 100 ticks):
 no own profiler. The commands per second are the moveto commands divided by the time to send them.
+With `--reveal normal` (#1389) half of the units are own soldiers of player 1 and half enemies of player 2, and
+fog.tick of a Gather hides the enemies out of their sight each second; the column "fog ms" is its mean time.
 """
 import argparse
 import os
@@ -67,15 +70,17 @@ def tps(mean):
 
 
 def report(rows):
-    lines = ["units | commands per second | mean tick ms | P99 tick ms | ticks per second | orders that reached a unit",
-             "---|---|---|---|---|---"]
+    fog = any("fog" in r for r in rows)
+    lines = ["units | commands per second | mean tick ms | P99 tick ms | ticks per second | orders that reached a unit"
+             + " | fog ms" * fog, "---|---|---|---|---|---" + "|---" * fog]
     return "\n".join(lines + [f"{r['units']} | {r['rate']:.0f} | {r['mean']:.2f} | {r['p99']:.2f} | {tps(r['mean']):.1f} | "
-                              f"{r['moved']:.0%}" for r in rows])
+                              f"{r['moved']:.0%}" + (f" | {r['fog']:.1f}" if fog else "") for r in rows])
 
 
-def measure(world, counts, seconds=30, period=5.0, version=None, log=print):
+def measure(world, counts, seconds=30, period=5.0, version=None, log=print, reveal="all"):
     """One row per count of units: {"units", "rate", "mean", "p99", "moved"} (moved: the share of the orders that
-    reached their unit). The units of a count stay for the next one."""
+    reached their unit), with reveal "normal" also "fog" (ms of one fog.tick). The units of a count stay for the
+    next one."""
     import json
 
     import ai
@@ -91,6 +96,7 @@ def measure(world, counts, seconds=30, period=5.0, version=None, log=print):
     with run.Game(world, version or mc_check.DEFAULT_VERSION) as game:
         game.forceload()
         time.sleep(10)                                             # chunks and entities load in other threads
+        g, fogs = (gather.Gather(game, data) if reveal == "normal" else None), []
         for count in counts:
             for i in range(len(units), count):
                 s, ints = unit_uuid(i)
@@ -98,6 +104,9 @@ def measure(world, counts, seconds=30, period=5.0, version=None, log=print):
                 game.command(f"summon minecraft:husk {x + 0.5} {m.y(x, z)} {z + 0.5} {{UUID:[I;{','.join(map(str, ints))}],"
                              f"Tags:[\"{TAG}\"],NoAI:1b,PersistenceRequired:1b,Silent:1b}}")
                 units.append((s, x, z))
+                if g:                                              # even: own soldiers, odd: enemies (fog.py)
+                    game.command(f"team join p{1 + i % 2} {s}")
+                    (g.soldiers if i % 2 == 0 else g.enemies)[s] = NAME
             sent, moved, busy, samples, t_end = 0, 0, 0.0, [], time.monotonic() + seconds
             while time.monotonic() < t_end:
                 t0 = time.monotonic()
@@ -111,11 +120,17 @@ def measure(world, counts, seconds=30, period=5.0, version=None, log=print):
                     moved += "Moved 1 " in ai.move(game, s, NAME, T, tx + 0.5, m.y(tx, tz), tz + 0.5)
                 sent += 2 * len(units)                             # ai.move: the speed and the moveto
                 busy += time.monotonic() - t0
+                while g and period - (time.monotonic() - t0) > 1.0:
+                    t1 = time.monotonic()
+                    vars(g).get("fog", {})["at"] = None            # one update each second here
+                    gather.fog.tick(g)
+                    fogs.append(time.monotonic() - t1)
+                    time.sleep(max(0.0, 1.0 - (time.monotonic() - t1)))
                 time.sleep(max(0.0, period - (time.monotonic() - t0)))
                 samples.append(parse(game.command("tick query")))
             row = {"units": count, "rate": sent / busy if busy else 0.0,
                    "mean": statistics.median(s[0] for s in samples), "p99": max(s[1] for s in samples),
-                   "moved": moved / (sent / 2) if sent else 0.0}
+                   "moved": moved / (sent / 2) if sent else 0.0} | ({"fog": 1000 * statistics.mean(fogs)} if fogs else {})
             if log:
                 log(f"{count} units: {row['rate']:.0f} commands/s, mean {row['mean']:.2f} ms, P99 {row['p99']:.2f} ms, "
                     f"orders that reached a unit {row['moved']:.0%}")
@@ -131,13 +146,15 @@ def main(argv=None):
     ap.add_argument("--seconds", type=float, default=30, help="measure time per count (default 30)")
     ap.add_argument("--period", type=float, default=5.0, help="seconds between two orders of a unit (default 5)")
     ap.add_argument("--version", help="Minecraft version of the server (default: mc_check.DEFAULT_VERSION)")
+    ap.add_argument("--reveal", choices=["normal", "all"], default="all", help="normal: also the fog of war of the "
+                    "units each second (game/fog.py, #1389); default all: no fog, as game/run.py --reveal all")
     a = ap.parse_args(argv)
     counts = sorted(int(c) for c in a.units.split(","))
     import mc_check
     import tick_cost
     with tempfile.TemporaryDirectory(dir=mc_check.workdir()) as tmp:
         world = shutil.copytree(a.world, os.path.join(tmp, "World")) if a.world else tick_cost.convert(a.scenario, tmp)
-        rows = measure(world, counts, a.seconds, a.period, a.version)
+        rows = measure(world, counts, a.seconds, a.period, a.version, reveal=a.reveal)
     print(report(rows))
     return 0
 
