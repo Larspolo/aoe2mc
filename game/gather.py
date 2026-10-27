@@ -96,7 +96,8 @@ WORK_TECHS = {"BOW_SAW": {"wood": 1.2},                            # work rate f
               "GOLD_MINING": {"gold": 1.15},
               "GOLD_SHAFT_MINING": {"gold": 1.15},
               "STONE_MINING": {"stone": 1.15},
-              "STONE_SHAFT_MINING": {"stone": 1.15}}
+              "STONE_SHAFT_MINING": {"stone": 1.15},
+              "TWO_MAN_SAW": {"wood": 1.1}}                        # (#1577)
 # Food of a hunted animal, as in AoE2 DE (the AoE2 wiki; a "COW_..." name is a cow, #1058).
 HUNT_FOOD = {"COW": 150,
              "DEER": 140,

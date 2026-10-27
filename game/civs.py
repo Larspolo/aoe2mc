@@ -283,7 +283,10 @@ MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "
                           "FRANKS", "GEORGIANS", "GOTHS", "JURCHENS", "KHMER", "MAPUCHE", "ROMANS", "SICILIANS", "SLAVS",
                           "TEUTONS", "TUPI", "VARANGIANS", "VIKINGS", "WU"),   # (#1421)
            "TREADMILL_CRANE": ("BULGARIANS", "CHINESE", "CUMANS", "DANES", "DRAVIDIANS", "ETHIOPIANS", "HINDUSTANIS",
-                               "KHITANS", "MONGOLS", "PERSIANS", "ROMANS", "SPANISH")}   # (#1422)
+                               "KHITANS", "MONGOLS", "PERSIANS", "ROMANS", "SPANISH"),   # (#1422)
+           "TWO_MAN_SAW": ("ARMENIANS", "AZTECS", "BERBERS", "BULGARIANS", "CELTS", "DANES", "FRANKS", "GEORGIANS",
+                           "GURJARAS", "INCAS", "KHMER", "MALAY", "MALIANS", "MONGOLS", "POLES", "ROMANS", "SICILIANS",
+                           "TATARS", "TUPI", "WEI")}                  # the wiki chart (#1577)
 ELEPHANTS = ("BENGALIS", "BURMESE", "DRAVIDIANS", "KHMER", "MALAY", "VIETNAMESE")   # the battle elephant (AoE2 DE wiki, #1556)
 MISSING |= {"BATTLE_ELEPHANT": tuple(sorted(set().union(*MISSING.values()) - set(ELEPHANTS))),
             "ELITE_BATTLE_ELEPHANT": tuple(sorted(set().union(*MISSING.values()) - set(ELEPHANTS) | {"DRAVIDIANS"}))}   # no elite
