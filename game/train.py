@@ -128,8 +128,9 @@ def chemistry(name, s):
 
 def fletching(name, s):
     """Fletching, Bodkin Arrow and Bracer (AoE2 DE, wiki): archers and the buildings that shoot +1 attack and +1 range, the town
-    center +1 attack only (#1408). A complete building gets it at once (build.retower), a new one when it is complete."""
-    if "archer" in s.classes or "building" in s.classes and s.attack > 0:
+    center +1 attack only (#1408). A complete building gets it at once (build.retower), a new one when it is complete.
+    Not the Fortress of the Scenario Editor (AoE2 wiki, #2137)."""
+    if "archer" in s.classes or "building" in s.classes and s.attack > 0 and name != "FORTRESS":
         return s._replace(attack=s.attack + 1, range=s.range + (name != "TOWN_CENTER"))
     return s
 
