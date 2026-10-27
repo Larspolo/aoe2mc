@@ -12,6 +12,7 @@ Usage:
     python3 game/run.py WORLD --play --bot --bot-attack 5:00   # its soldiers attack player 1 from 5:00 (default 10:00)
     python3 game/run.py WORLD --play --log F.jsonl  # also write a timed event log (tools/measure_gather.py reads it)
     python3 game/run.py WORLD --play --reveal all  # no fog of war: also the enemy units out of sight show (game/fog.py)
+    python3 game/run.py WORLD --play --speed 2     # twice the AoE2 Normal speed: /tick rate 40 and shorter steps (#2057)
     python3 game/run.py WORLD --replay [--speed 4] [--follow N] [--view N]  # replay the recorded game of the world (game/replay.py), then wait for Ctrl-C
 
 Join with Minecraft (multiplayer, localhost): players play in creative mode and get operator rights.
@@ -282,7 +283,8 @@ def bot_seat(players, people):
     return player, next((p for p in range(1, player) if not gather.allied(players, player, p)), 1)
 
 
-def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1):
+def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1,
+         speed=1.0):
     import gather
 
     def make(player):
@@ -327,6 +329,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
           f"{len(g.villagers)} villagers of player 1. Hold the carrot on a stick: right click a villager to select it,\n"
           "then right click a tree, a fruit bush or a mine. To build: /trigger aoe_build set N (the menu is in the chat),\n"
           "then right click the ground. Right click your town center to train a villager (50 food). Ctrl-C stops.", file=sys.stderr)
+    if speed != 1:                                   # Minecraft makes the mobs, paths and plugin faster (#2057)
+        game.command(f"tick rate {TICKS * speed:g}")
+        g.speed = speed
     g.run(seconds)
     if g.ended:
         unveil(g)
@@ -339,6 +344,9 @@ def unveil(g):
     for x in [g, *(getattr(s, "g", None) for s in g.bots)]:
         if x is not None and x.reveal != "all":
             fog.toggle(x)
+
+
+TICKS = 20                                           # the normal Minecraft tick rate: game ticks per second
 
 
 KEEP = ("playerdata", "stats", "advancements", "session.lock")   # the players stay where they are after a restart
@@ -428,7 +436,8 @@ def main(argv=None):
     ap.add_argument("--bench", type=int, metavar="N", help="send N commands, print the commands per second, stop")
     ap.add_argument("--play", action="store_true", help="play: villagers of player 1 gather resources (aoe2mc.json)")
     ap.add_argument("--replay", action="store_true", help="replay the timeline of a recorded game (aoe2mc.json)")
-    ap.add_argument("--speed", type=float, default=1.0, help="--replay: times the game speed (default 1)")
+    ap.add_argument("--speed", type=float, default=1.0, help="--replay, --play: times the game speed "
+                    "(default 1; --play: the server ticks faster too)")
     ap.add_argument("--from", dest="start", default="0:00", metavar="MM:SS", help="--replay: start at this game time")
     ap.add_argument("--follow", type=int, metavar="N", help="--replay: the spectators follow the units of player N")
     ap.add_argument("--view", type=int, default=0, metavar="N", help="--replay: start with the view of player N: the "
@@ -463,7 +472,7 @@ def main(argv=None):
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
                 g = play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal,
-                         people=a.people)
+                         people=a.people, speed=a.speed)
             if not getattr(g, "ended", None):
                 return
             print(f"The game ended ({g.ended}). The server stays up: type commands, Ctrl-C stops it.",

@@ -9,11 +9,11 @@ from game.gather import Map
 T = 4
 
 
-def town_center(arch):
+def town_center(arch, ref=None):
     cols = aoe2mc.Columns(16, np.zeros((16, 16), np.int16), np.zeros((16, 16), np.float32), {0: "GRASS_1"}, T, 3,
                           np.random.default_rng(1))
     E = aoe2mc.Edits(cols)
-    o = dict(kind="B", name="TOWN_CENTER", player=1, x=8.0, y=8.0, rotation=0.0, hero=False, garrisoned=False)
+    o = dict(kind="B", name="TOWN_CENTER", player=1, x=8.0, y=8.0, rotation=0.0, hero=False, garrisoned=False, ref=ref)
     buildings.place_building(E, cols, aoe2mc.B, o, {1: {"color": "blue", "arch": arch}}, set(), {})
     last = {}
     for xs, ys, zs, ids, _ in E.parts:

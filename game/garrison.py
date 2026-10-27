@@ -1,9 +1,10 @@
 """Garrisons in the game program (#808, part of #793). An order of the selected units on an own building with room
 sends them into it, as in AoE2: they walk to its door with the plugin (`aoe moveto`), then stand on the free cells
-of its ground floor ("inside" in aoe2mc.json, the cells of the converter, #807), in the state of a garrisoned unit of
-the converter: Invulnerable, NoAI, no visible name and the tag aoe2mc.GARRISONED. They leave the selection, and
-orders skip them. The menu item UNGARRISON of the building (train.show) lets them out next to the door, and so does
-the fall of the building (its target entity of the plugin is gone), alive, as in AoE2.
+of its ground floor, in a town center of its hall upstairs (#2054; "inside" in aoe2mc.json, the cells of the converter,
+#807), in the state of a garrisoned unit of the converter: Invulnerable, NoAI, no visible name and the tag
+aoe2mc.GARRISONED. They leave the selection, and orders skip them. The menu item UNGARRISON of the building
+(train.show) lets them out next to the door, and so does the fall of the building (its target entity of the plugin is
+gone), alive, as in AoE2.
 
     garrison.order(g, player, cell)     # gather.Gather.click: the selection goes into the building at cell
     garrison.tick(g)                    # gather.Gather.step: units at the door go in, a fallen building lets them out
@@ -26,25 +27,16 @@ The live replay (game/replay.py, #809) uses SIZES, cell(), enter() and leave().
 import json
 import math
 
+import table
 from aoe2mc import GARRISONED
 
-SIZES = {                                                          # units inside a complete building, as in AoE2
-    "BOMBARD_TOWER": 5,
-    "CASTLE": 20,
-    "DOCK": 5,                                                     # fishing ships only (AoE2 DE wiki, #1949)
-    "DONJON": 10,                                                  # (AoE2 DE wiki, #1873)
-    "GUARD_TOWER": 5,
-    "KEEP": 5,
-    "KREPOST": 20,                                                 # (AoE2 DE wiki, #1872)
-    "TOWN_CENTER": 15,
-    "WATCH_TOWER": 5,
-}
+ROWS = table.load("buildings.jsonl")                            # the keys "garrison" and "arrows" (#2034)
+
+SIZES = {r["name"]: r["garrison"] for r in ROWS if "garrison" in r}   # units inside a complete building, as in AoE2
 HEAL = {"CASTLE": 0.2}                                           # hit points per AoE2 second inside, else 0.1
 HERBAL = 6                  # Herbal Medicine: units inside heal 6 times as fast (AoE2 DE wiki, #1585)
 HEAL_EVERY = 5.0            # AoE2 seconds between two heal passes (fewer commands)
-BASE = {"CASTLE": 5, "TOWN_CENTER": 0,                           # arrows of an empty building (AoE2 wiki), else 1
-        "DOCK": 0,                                                # (#1949)
-        "KREPOST": 5}                                             # (#1872)
+BASE = {r["name"]: r["arrows"] for r in ROWS if "arrows" in r}   # arrows of an empty building (AoE2 wiki), else 1
 FISHER = "FISHING_SHIP"     # the only unit that goes into a dock (#1949)
 DOOR = 2.5                  # blocks from the door cell: there a unit goes in
 UNGARRISON = (7, "oak_door", "Ungarrison", "Click: all units come out")   # a slot of the first row, before RALLY
