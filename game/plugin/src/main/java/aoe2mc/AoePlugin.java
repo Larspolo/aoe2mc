@@ -209,9 +209,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * the footprint, game/combat.py building) stands in the building and takes the attacks, so that the vanilla attack
  * goals and paths work (#517). The plugin keeps the hit points of the building (a building has more than the
  * 1024 of max_health) in the scoreboard aoe_hp, cancels all other damage to it and from it (no suffocation in the
- * walls, no slime touch), and at 0 removes it and fills the box of the building with air. At 75 %, 50 % and 25 % of
- * its hit points the building wears in stages: more worn blocks and holes at each stage, back at a repair (wear,
- * #1522). The vanilla melee goal hits only a target in sight, and the eye of the slime is in the walls: so a unit next to the slime that has it as
+ * walls, no slime touch), and at 0 removes it and fills the box of the building with air. At each 1/7 of its hit
+ * points below full the building wears one stage more (6 stages): more worn blocks and holes at each stage, back at a
+ * repair (wear, #1522, #1650). The vanilla melee goal hits only a target in sight, and the eye of the slime is in the walls: so a unit next to the slime that has it as
  * target hits it once per AoE2 reload (Mob#attack, the vanilla hit with the swing; #848). A ranged unit shoots
  * a building from its range to the nearest side of the target, without sight of the eye (#608). Its arrow sticks
  * in the walls, so the goal takes the hit points for each shot, and an arrow that hits the slime does nothing.
@@ -1140,7 +1140,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             var rnd = ThreadLocalRandom.current();
             int fires = !score.isScoreSet() || score.getScore() * 4 >= b.max * 3 ? 0   // smoke from 75 %, as AoE2
-                    : burning ? 1 + (int) (3 * (1 - 2.0 * score.getScore() / b.max)) + (stage(score.getScore(), b.max) / 3) * 2
+                    : burning ? 1 + (int) (3 * (1 - 2.0 * score.getScore() / b.max)) + (stage(score.getScore(), b.max) / 5) * 2
                     : 1;                                     // 1 fire at half, 4 at 25 %, 6 near 0
             for (int i = 0; i < fires; i++) {
                 int x = rnd.nextInt(b.b[0], b.b[3] + 1), z = rnd.nextInt(b.b[2], b.b[5] + 1);
@@ -1160,14 +1160,17 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     /** The original blocks of a worn building (by block key) and its damage stage (#1522). */
     private record Wear(int[] stage, Map<Long, BlockData> blocks) {}
 
-    private static final double[] HOLES = {0, 0.05, 0.15, 0.35};      // share of the blocks that are gone, per stage
-    private static final double[] WORN = {0, 0.30, 0.50, 0.70};       // share of the blocks that are worn or gone
-    private static final double COBWEB = 0.06;                        // of the holes at stage 3: cobwebs, not air
+    // Share of the blocks that are gone, and that are worn or gone, per stage (#1650: 6 stages for a smooth change,
+    // the owner). Each stage changes only the blocks between its share and the share of the stage before it.
+    private static final double[] HOLES = {0, 0.03, 0.06, 0.10, 0.15, 0.24, 0.35};
+    private static final double[] WORN = {0, 0.15, 0.30, 0.40, 0.50, 0.60, 0.70};
+    private static final int LAST = HOLES.length - 1;                 // almost broken
+    private static final double COBWEB = 0.06;                        // of the holes at the last stage: cobwebs, not air
 
-    /** The damage stage of a building with hp of max hit points: 0 above 75 %, 1, 2, 3 at 25 % and less, as the fire
-     *  steps of AoE2 (#1522). */
+    /** The damage stage of a building with hp of max hit points: 0 above 6/7, then one stage more at each 1/7 below
+     *  full, LAST at 1/7 and less (#1522, #1650). */
     static int stage(int hp, int max) {
-        return hp * 4 > max * 3 ? 0 : hp * 2 > max ? 1 : hp * 4 > max ? 2 : 3;
+        return Math.max(0, Math.min(LAST, LAST + 1 - (hp * (LAST + 1) + max - 1) / max));   // the ceiling of hp * 7 / max
     }
 
     /** A fixed random number in [0, 1) of the block (x, y, z): the same blocks go first at each damage and come back
@@ -1210,7 +1213,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     /** Show the damage stage of building t (#1522): at each stage a fixed random share of its blocks above the floor
-     *  is worn (worn()) or gone (holes, cobwebs at stage 3), more at each stage, so that almost destroyed looks clearly
+     *  is worn (worn()) or gone (holes, cobwebs at the last stage), more at each stage, so that almost destroyed looks clearly
      *  other than a little damaged. The blocks go anywhere in the building, not from the top as a construction site
      *  (build.rise). A repair puts the blocks of each stage back. No change to barriers, block entities and fluids: the
      *  units never stand in a block (a hole only removes one), and no item drops (no block updates). */
@@ -1241,7 +1244,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             double r = chance(x, y, z);
             BlockData to = e.getValue();
             if (r < HOLES[stage]) {
-                to = Bukkit.createBlockData(stage == 3 && r < COBWEB ? Material.COBWEB : Material.AIR);
+                to = Bukkit.createBlockData(stage == LAST && r < COBWEB ? Material.COBWEB : Material.AIR);
             } else if (r < WORN[stage]) {
                 BlockData v = worn(e.getValue());
                 to = v != null ? v : to;
