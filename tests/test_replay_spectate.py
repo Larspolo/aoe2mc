@@ -50,7 +50,7 @@ def test_a_double_tap_of_shift_changes_the_game_mode_on_a_server(tiny_world, tmp
     world = shutil.copytree(tiny_world[0], tmp_path / "W")
     with run.Game(world) as game, mc_shot.Client(game.game_port, game.version) as client:
         client.wait_join(lambda: "aoe2mc" in game.command("list").split(":", 1)[-1])
-        time.sleep(5)                                                  # the world is drawn
+        time.sleep(10)                                                 # the world is drawn: slow frames lose keys
 
         def mode():
             return game.command("data get entity aoe2mc playerGameType").rsplit(" ", 1)[-1]
@@ -60,10 +60,10 @@ def test_a_double_tap_of_shift_changes_the_game_mode_on_a_server(tiny_world, tmp
 
         def taps(n):
             for _ in range(n):
-                client.xdo("keydown", "Shift_L")
-                time.sleep(0.1)
+                client.xdo("keydown", "Shift_L")                       # 0.15 s: the client reads the key once a
+                time.sleep(0.15)                                       # frame, and software frames are slow (#1213)
                 client.xdo("keyup", "Shift_L")
-                time.sleep(0.08)
+                time.sleep(0.15)
             time.sleep(1.5)
 
         game.command(f"tag aoe2mc add {replay.VIEWER}")

@@ -51,6 +51,7 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - A wait loop on an output file (`until grep -q ... OUT`) of a second run reads the old file of the first run: `rm -f OUT` before the new run, or use a new name (#738).
 - Run `tools/claim.py N` in its own tool call and read its exit code before the label and the "Started by" comment: in parallel tool calls they run also on exit 1, on a ticket of another run (#965).
 - AoE2 values (hit points, attack, `ROF`, armor) of a unit or building: the MediaWiki API `api.php?action=parse&page=NAME&prop=wikitext&format=json&redirects=1` (User-Agent of `tools/refimage.py`) gives the infobox fields. A name of several games is a disambiguation page: use `Watch_Tower_(Age_of_Empires_II)` (#1112).
+- A wait loop on `ruff check . && python3 -m pytest ...` output: do not wait for `passed`, ruff prints "All checks passed!" first. Wait for an `echo rc=$?` line (#1243).
 
 ## Code
 
@@ -94,4 +95,5 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - A ticket can name a new test file that exists already (`tests/test_replay_jump_gather.py`, #1147): run `ls` on the name before you write it, else `cat >` overwrites the old tests.
 - AoE2 terrain 1 is `WATER_SHALLOW` (the normal DE water, rmap `WATER`), terrain 4 is `SHALLOWS` (walkable): `terrain_style` matches "SHALLOW" in both and makes both 1 block deep until #1198. Check a river with `world_reader.py --section`, not the preview (no depth shade).
 - An AoE2 value in a ticket can be wrong (#1113 said an empty town center shoots 1 arrow; the wiki infobox says 0, #1201): check each AoE2 number of a ticket with the MediaWiki API before the code.
+- `pgrep -f "java -Xmx2G" | xargs kill` also matches its own shell command line and kills the tool call (exit 144): write the pattern as `"[j]ava -Xmx2G"` (#1213).
 - `Gather.bots` holds `bot.Bot` objects, not `Gather`: read a Gather attribute of a bot (`sites`, `stock`, `villagers`) through `b.g` (#1220: `wonder.found` read `b.sites` and stopped each game with a bot; only `-m mc tests/test_bot_gather.py` found it).
