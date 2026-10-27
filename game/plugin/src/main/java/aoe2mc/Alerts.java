@@ -88,6 +88,16 @@ final class Alerts {
             p.sendMessage(Component.text("No alert of your team there", NamedTextColor.GRAY));
             return true;
         }
+        Location view = view(p, at);
+        plugin.getLogger().info("Go " + p.getName() + ": " + view.getBlockX() + " " + view.getBlockY() + " "
+                + view.getBlockZ());
+        return true;
+    }
+
+    /** Put player p UP blocks above and BACK blocks south of the place at, in free air above the highest block, and
+     * let it look at the place: the view of an alert (aoego) and of the "Go to" menu (aoe view, game/goto.py, #1830).
+     * In creative mode it flies there, else slow falling stops the fall damage. Returns the view. */
+    static Location view(Player p, Location at) {
         Location view = at.clone().add(0, UP, BACK);
         double free = at.getWorld().getHighestBlockYAt(view.getBlockX(), view.getBlockZ()) + 1;
         view.setY(Math.max(view.getY(), free));
@@ -98,8 +108,6 @@ final class Alerts {
         } else {                                       // adventure (two people): it sinks slowly, with no damage
             p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, FALL, 0, true, false));
         }
-        plugin.getLogger().info("Go " + p.getName() + ": " + view.getBlockX() + " " + view.getBlockY() + " "
-                + view.getBlockZ());
-        return true;
+        return view;
     }
 }
