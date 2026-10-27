@@ -65,10 +65,12 @@ def test_ungarrison_puts_them_out_next_to_the_building(ai):
     assert ("aoe label u1" in sent) == ai
 
 
-def test_a_unit_inside_takes_no_move():
+def test_a_move_takes_a_unit_out():
+    """AoE2 selects no unit inside a building: a MOVE in the record says that the unit is out (#1229)."""
     tl = [order(0, [7], 50), dict(time=15000, player=1, kind="move", objects=[7], tile=[1.5, 1.5], names=["VILLAGER_MALE"])]
     r, sent = play(tl, 30000)
-    assert r.garrisons == {RECT: [7]} and r.units[7].cell == (30, 30)
+    x, z = r.units[7].cell                                             # the tile 1.5 1.5: cells 4 to 7
+    assert r.garrisons == {} and 4 <= x < 8 and 4 <= z < 8 and "tag u1 remove aoe2mc.garrisoned" in sent
 
 
 def test_a_villager_with_wood_drops_it_and_stays_out():
