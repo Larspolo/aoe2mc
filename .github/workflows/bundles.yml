@@ -86,7 +86,10 @@ jobs:
         run: |
           f="dist/aoe2mc-$VERSION-${{ matrix.name }}.dmg"
           mkdir dmg && ditto dist/aoe2mc.app dmg/aoe2mc.app && ln -s /Applications dmg/Applications
-          hdiutil create -volname aoe2mc -srcfolder dmg -ov -format UDZO "$f"
+          for i in 1 2 3 4 5; do        # "hdiutil: create failed - Resource busy" happens on the runners
+            hdiutil create -volname aoe2mc -srcfolder dmg -ov -format UDZO "$f" && break
+            test "$i" -lt 5 && sleep 10
+          done
           # install it as a user would: open the image, copy the app, then convert with its command line
           hdiutil attach "$f" -mountpoint /Volumes/aoe2mc -nobrowse
           mkdir -p ~/Applications && ditto /Volumes/aoe2mc/aoe2mc.app ~/Applications/aoe2mc.app
@@ -97,6 +100,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           f="dist/aoe2mc-$VERSION-linux-x86_64.AppImage"
+          sudo apt-get install -y desktop-file-utils    # appimagetool checks the .desktop file with it
           mkdir -p AppDir/usr/bin && cp -a dist/aoe2mc/. AppDir/usr/bin/
           cp packaging/AppRun packaging/aoe2mc.desktop AppDir/ && cp packaging/icon.png AppDir/aoe2mc.png
           curl -sSfLo appimagetool \
