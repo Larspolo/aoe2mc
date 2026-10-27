@@ -6,7 +6,7 @@ import os
 
 import pytest
 
-from game import build, civs, combat, table
+from game import build, civs, combat, table, train
 
 RES = {"food", "wood", "gold", "stone"}
 
@@ -60,7 +60,7 @@ def check_buildings(row):
 def check_train(row):
     form(row, {"name": str, "building": (str, type(None)), "slot": int, "item": str, "label": str, "cost": dict,
                "time": int, "help": str},
-         {"age": int, "after": str, "civ": str, "upgrade": list, "note": str})
+         {"age": int, "after": str, "civ": str, "upgrade": list, "note": str, "effect": (dict, str)})
     n = row["name"]
     assert row["building"] is None or row["building"] in NAMES["buildings.jsonl"], n
     assert 0 <= row["slot"] < 54 and row["time"] > 0 and row.get("age", 1) in (1, 2, 3), n
@@ -68,6 +68,7 @@ def check_train(row):
     assert 0 < len(row["help"]) <= 50 and row["label"] and row["item"] == row["item"].lower(), n   # the menu width
     assert row.get("after", n) in NAMES["train.jsonl"] and row.get("after") != n, n
     assert row.get("civ", "BRITONS") in NAMES["civs.jsonl"], n                  # a unique technology of the castle
+    assert not isinstance(row.get("effect"), str) or callable(getattr(train, row["effect"], None)), n   # train.effect
     if "upgrade" in row:
         pairs = row["upgrade"] if isinstance(row["upgrade"][0], list) else [row["upgrade"]]
         assert all(len(p) == 2 and set(p) <= NAMES["units.jsonl"] for p in pairs), n
@@ -118,11 +119,16 @@ CHECKS = {"build.jsonl": check_build, "buildings.jsonl": check_buildings, "civs.
           "gather.jsonl": check_gather, "train.jsonl": check_train, "units.jsonl": check_units}
 
 
+TWO_TYPES = {("train.jsonl", "effect")}                     # the name of a function, or a dict (train.effect, #2029)
+
+
 @pytest.mark.parametrize("name", sorted(NAMES))
 def test_each_key_has_one_type(name):
     types = {}
     for row in rows(name):
         for k, v in row.items():
+            if (name, k) in TWO_TYPES:
+                continue
             t = float if type(v) is int else type(v)       # an int is a float without a fraction; null: none
             assert v is None or types.setdefault(k, t) is t, (name, row["name"], k)
 
