@@ -12,3 +12,5 @@ docs/research/water.md merge=union
 docs/DECISIONS.md merge=union
 # One JSON object per menu item; runs add a line at the end of a building block. train.load() stops on a name in two lines (#1702).
 game/data/train.jsonl merge=union
+# One JSON object per unit (#1912); table.load() stops on a name in two lines.
+game/data/units.jsonl merge=union

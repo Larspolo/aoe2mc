@@ -318,6 +318,7 @@ MISSING |= dict.fromkeys(("GENITOUR", "ELITE_GENITOUR", "ELITE_GENITOUR_UPGRADE"
                          tuple(sorted(set().union(*MISSING.values()) - {"BERBERS"})))
 MISSING |= dict.fromkeys(("SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER_UPGRADE"),
                          tuple(sorted(set().union(*MISSING.values()) - {"GURJARAS"})))   # (AoE2 DE wiki, #1612)
+MISSING["KREPOST"] = tuple(sorted(set().union(*MISSING.values()) - {"BULGARIANS"}))   # the build menu (AoE2 DE wiki, #1872)
 MISSING["MISSIONARY"] = tuple(sorted(set().union(*MISSING.values()) - {"SPANISH"}))   # the monastery (AoE2 DE wiki, #1939)
 SHARED = {"CONDOTTIERO": "ITALIANS",                              # the shared unique units of the team bonuses: an ally
           "ELITE_GENITOUR": "BERBERS",                             # of the civilization has them too (AoE2 DE wiki,

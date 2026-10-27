@@ -24,6 +24,10 @@ fast = "python3 -m pytest"
 slow = "python3 -m pytest -m slow"
 server = "python3 -m pytest -m mc"
 
+[owner_tasks]                   # tools/owner_tasks.py
+play = "Minecraft client"       # a needs-human body with this text is a play test
+replay = '\.aoe2record\b'        # a regex: a ticket with a match goes into the group "replay" of --plan
+
 [docs]
 system = "docs/SYSTEM.md"
 steering = "docs/STEERING.md"

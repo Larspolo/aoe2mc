@@ -34,5 +34,5 @@ After a check without bugs it closes the check ticket on its evidence (owner dec
 for the owner): a comment with the evidence of each point (screenshots, real clicks, values) and a short list of what only
 a person can check (sound, the feel of a control, "is it fun": `verify` level 5, #1707), the label `owner-sample`, then the close. The owner checks a
 sample of these closed tickets later in one game (`human` skill). The close: see "Close an issue" below. Never ask the owner about
-times, speeds, values or texts: measure them and compare them with AoE2 (owner, #1159). A look question links the image
-before next to the image after (or AoE2 next to Minecraft).
+times, speeds, values or texts: measure them and compare them with the original (owner, #1159). A look question links the image
+before next to the image after (or the original next to the result).

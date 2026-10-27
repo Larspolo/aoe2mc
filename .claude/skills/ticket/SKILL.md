@@ -20,7 +20,7 @@ Body:
 ## Context
 <Where in the code: the files and functions that the ticket will change, in backticks (`buildings.py`, `furnish()`),
  why, and the evidence (output, image, test).
- The Minecraft feature that does the job (CLAUDE.md: "Minecraft features first"), or why there is none.>
+ The platform feature that does the job (CLAUDE.md: the platform features first), or why there is none.>
 
 ## Acceptance criteria
 - [ ] <A result that a test or a check can show.>
@@ -53,10 +53,10 @@ name each file and function that the ticket changes, and no others (tools that o
    Make the first sub-issue small and useful alone.
 2. Give the sub-issues the priority of the parent and the order of the work (lower number = first).
 3. Add `epic` to the parent. Its acceptance criteria check that the whole goal is covered, not only the sub-issues
-   (owner rule, 2026-10-26, #820): name the full scope (a list, a table, or a source such as the AoE2 wiki) and a check
+   (owner rule, 2026-10-26, #820): name the full scope (a list, a table, or a source such as a wiki of the original) and a check
    that each item of it works, or that the owner excluded it in a comment on the epic. "All sub-issues are closed" is
-   never the only criterion; it can be an extra line. Example: "Each code of the DE list on the AoE2 wiki works in the
-   game program, or the owner excluded it." The epic closes when all its criteria are met.
+   never the only criterion; it can be an extra line. Example: "Each code of the list on the wiki works in the
+   program, or the owner excluded it." The epic closes when all its criteria are met.
 
 ## needs-human tickets
 
@@ -68,8 +68,8 @@ can prepare and guide it:
 
     ## For the owner
     Kind: play            (or decision, setting, outside, close, question)
-    World: python3 tools/scenarios.py village out/v.aoe2scenario && python3 aoe2mc.py out/v.aoe2scenario out/V
-    Start: python3 game/run.py out/V --play
+    World: <the command that makes the test data, from CLAUDE.md>
+    Start: <the command that starts the program, from CLAUDE.md>
     1. <one step that the owner does>
     2. ...
     Reply: <what the owner must write on the ticket>
@@ -85,10 +85,10 @@ the `human` skill gives them to `game/watch.py` (#1123). The place is `chopper`,
 
 A check ticket ("check X in the game") starts without `needs-human`: an agent runs the check first (`verify`, level 4),
 comments the results and screenshots with the list of what only a person can check (#580, #1707): sound, the feel of a control (delay, how hard it is to aim), "is it fun".
-The agent judges the clicks (`mc_shot.Client`) and the look (screenshot next to the AoE2 image) itself; a look point
+The agent judges the clicks (`mc_shot.Client`) and the look (screenshot next to the image of the original) itself; a look point
 goes to the owner only when the agent cannot decide, with the reason (`verify`, level 5).
 Then it closes the ticket on this evidence with the label `owner-sample` (owner decision B, #1708), not `needs-human`.
-No owner point for times, speeds, values or texts: the agent measures them against AoE2 (#1159). A look point links an
+No owner point for times, speeds, values or texts: the agent measures them against the original (#1159). A look point links an
 image before and an image after.
 When the check finds bugs, the check ticket depends on the bug tickets and closes only after a check without bugs (#668).
 
@@ -120,7 +120,7 @@ A cheap Haiku run takes the tickets with the label `lane:haiku` (#1715). Add it 
   and, for a menu item, the slot (see "Rules").
 - A merged PR did the same pattern (name it in the body, for example "as #1572"). Examples: "Research X at Y",
   "Train X at Y".
-- Verify level 1 is enough: no Minecraft server, no screenshot, no look to judge.
+- Verify level 1 is enough: no server, no screenshot, no look to judge.
 - Not a decision, design, check, process or epic ticket, and no "Depends on:" that is open.
 When you are not sure, do not add it: an Opus run takes the ticket.
 

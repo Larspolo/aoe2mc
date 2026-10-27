@@ -25,7 +25,7 @@ For each one, read its acceptance criteria and all its comments. An owner commen
 first: handle it as in step 3 (lock, answer). Do not post a request that the epic already has (#820: two runs asked
 the same thing, and no run answered the owner's question between them). An epic without a criterion that checks that the
 whole goal is covered (owner rule, #820: never only "All sub-issues are closed") gets one first (`ticket` skill, "Split
-an L ticket"). Check that criterion against the full scope (for "all X": the full list, for example the AoE2 wiki) and
+an L ticket"). Check that criterion against the full scope (for "all X": the full list, for example a wiki of the original) and
 name each missing item. Close the epic with a comment only when all criteria are met
 (name the evidence for each, then the label `close`: `owner.md`, "Close an issue", #1740). Else lock the epic first: `python3 tools/claim.py E --refill`
 (E = the epic; exit 1: another run makes its sub-issue, skip the epic, #505). Then make one sub-issue (same priority)

@@ -8,7 +8,8 @@ and question. The skill `human` (a local session of the owner, `/human`) lists t
     python3 tools/owner_tasks.py --plan      # the plan of one session (#1674): close now, replay, play game, no game
     python3 tools/owner_tasks.py --sample    # the closed check tickets for a sample check of the owner (#1708)
 
-Kinds: `decision` ("Decide: ..."), `play` (a play test in Minecraft: "Check ..."), `setting` (the environment, the
+Kinds: `decision` ("Decide: ..."), `play` (a play test of the program: "Check ...", or a body
+with the `play` text of `agent.toml`, section `[owner_tasks]`), `setting` (the environment, the
 scheduled task or GitHub), `outside` (a step outside the cloud), `close` (close an issue that the auto mode did not let
 the agent close, #862), `question` (all others). A last comment that asks for a close wins over all, then a line
 "Kind: <kind>" in the section "## For the owner" wins over the title. Token: GITHUB_TOKEN, else `gh api`. Python
@@ -22,6 +23,7 @@ import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from agent_config import CONFIG  # noqa: E402
 from dashboard import MUTED, api, labels, pages, question  # noqa: E402
 
 KINDS = ["decision", "play", "setting", "outside", "close", "question"]
@@ -29,7 +31,9 @@ OUTSIDE = re.compile(r"\b(own computer|second repository|local session|on your c
 CLOSE = re.compile(r"\b(please close|close (this|it) by hand)\b", re.I)
 SETTING = re.compile(r"\b(environment|setup script|network|variable|scheduled task|GitHub setting|secret|"
                      r"interaction limit|branch protection)\b", re.I)
-REPLAY = re.compile(r"\breplay|\.aoe2record\b|^\W*Watch:", re.I | re.M)
+PROJECT = CONFIG.get("owner_tasks", {})    # the words of the project: a play test, a recorded game
+PLAY = PROJECT.get("play")
+REPLAY = re.compile(r"\breplay|^\W*Watch:" + "".join(f"|{r}" for r in [PROJECT.get("replay")] if r), re.I | re.M)
 PLAN = ("close now", "replay", "play game", "no game")       # the groups of --plan, in the order of a session
 SAMPLE = "owner-sample"     # a check ticket that the agent closed on its evidence; the owner checks a sample (#1708)
 
@@ -53,7 +57,7 @@ def kind(issue, comments=()):
     title = issue.get("title") or ""
     if title.startswith("Decide:"):
         return "decision"
-    if re.match(r"(Check|Play|Test)\b", title) or "Minecraft client" in (issue.get("body") or ""):
+    if re.match(r"(Check|Play|Test)\b", title) or PLAY and PLAY in (issue.get("body") or ""):
         return "play"
     if SETTING.search(title):
         return "setting"
