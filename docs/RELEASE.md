@@ -40,6 +40,7 @@ Bug reserve: 0.3
 | `convert:minimap` | A | | | |
 | `convert:random-maps` | C | | | |
 | `convert:random-maps-more` | C | 4 | | |
+| `convert:mood` | C | | | |
 | `convert-check-maps` | B | 5 | A test set of 20 real maps (the ranked map pool, 3 campaigns, 2 old .scx scenarios) converts with no error, no unit in a block and no load error on a server | |
 | `convert-check-look` | B | 3 | A person checks the screenshots of the test set; the fixes of what they find | |
 | `convert-check-speed` | B | 1 | A 480 × 480 map converts in less than 10 minutes and 8 GB | |

@@ -14,7 +14,7 @@ WIKI = {
     "SIEGE_ONAGER": Stats(70, 75, 0, 8, 8, 6.0, {"building": 60, HSI: 50, SIE: 12}, (SIE,)),
     "SIEGE_RAM": Stats(270, 4, -1, 195, 0, 5.0, {"building": 200, SIE: 65}, (SIE, RAM)),
     "SIEGE_TOWER": Stats(175, 0, -2, 100, 0, 0.0, {}, (SIE, RAM)),
-    "TREBUCHET": Stats(150, 200, 1, 150, 16, 10.0, {"building": 250}, (SIE, RAM)),     # unpacked
+    "TREBUCHET": Stats(150, 200, 2, 8, 16, 10.0, {"building": 250}, (SIE,)),           # packed: trebuchet.UNPACKED
 }
 
 
