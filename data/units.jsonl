@@ -1,0 +1,337 @@
+{"name": "SIEGE_RAM", "crew": ["iron_golem", 0.6]}
+{"name": "CAPPED_RAM", "crew": ["iron_golem", 0.55]}
+{"name": "BATTERING_RAM", "crew": ["iron_golem", 0.5]}
+{"name": "MANGONEL", "crew": ["breeze", 0.8]}
+{"name": "ONAGER", "crew": ["breeze", 0.8]}
+{"name": "SCORPION", "crew": ["piglin", 1.0], "tags": "{IsImmuneToZombification:1b}"}
+{"name": "TREBUCHET", "crew": ["warden", 0.6], "hero": "siege"}
+{"name": "BAD_NEIGHBOR", "crew": ["warden", 0.6], "hero": "siege"}
+{"name": "GODS_OWN_SLING", "crew": ["warden", 0.6], "hero": "siege"}
+{"name": "WARWOLF", "crew": ["warden", 0.6], "hero": "siege"}
+{"name": "BOMBARD_CANNON", "crew": ["ghast", 0.3]}
+{"name": "HOUFNICE", "crew": ["ghast", 0.3]}
+{"name": "SIEGE_TOWER", "crew": ["sniffer", 0.5]}
+{"name": "WAR_WAGON", "crew": ["horse", 0.7]}
+{"name": "MAP_REVEAL", "invisible": "map revealer"}
+{"name": "INVISIBLE_OBJECT", "invisible": "invisible object"}
+{"name": "BLOCKER", "invisible": "path blocker"}
+{"name": "HINT_OBJECT", "invisible": "editor hint"}
+{"name": "DUMMY_TARGET", "invisible": "attack target"}
+{"name": "TRICKLE", "invisible": "resource trickle"}
+{"name": "RESOURCE_ENABLER", "invisible": "resource trickle"}
+{"name": "AURA_QUEST_INDICATOR", "invisible": "quest marker"}
+{"name": "PLACEHOLDER", "invisible": "placeholder"}
+{"name": "DISABLED", "invisible": "disabled unit"}
+{"name": "OUTLW", "invisible": "unused unit"}
+{"name": "RFARC", "invisible": "unused unit"}
+{"name": "TREASURE_CHEST", "joke": "chest_minecart"}
+{"name": "TORCH_", "joke": "torch"}
+{"name": "PHOTONMAN", "joke": "space_suit"}
+{"name": "SHARKATZOR", "joke": "guardian"}
+{"name": "NESSIE", "joke": "elder_guardian"}
+{"name": "MACAW", "flying": ["parrot", 0]}
+{"name": "FLAMING_BIRD", "flying": ["parrot", 0]}
+{"name": "FALCON", "flying": ["parrot", 4]}
+{"name": "HAWK", "flying": ["parrot", 4]}
+{"name": "VULTURE", "flying": ["parrot", 4]}
+{"name": "CONDOR", "flying": ["parrot", 4]}
+{"name": "SEAGULLS", "flying": ["parrot", 4]}
+{"name": "RAVEN", "flying": ["bat", null]}
+{"name": "OWL", "flying": ["bat", null]}
+{"name": "BUTTERFLY1", "flying": ["bee", null]}
+{"name": "BUTTERFLY2", "flying": ["bee", null]}
+{"name": "BUTTERFLY3", "flying": ["bee", null]}
+{"name": "PEACOCK", "bird": true}
+{"name": "FLAMINGO", "bird": true}
+{"name": "STORK", "bird": true}
+{"name": "RED_CROWN_CRANE", "bird": true}
+{"name": "MILITIA", "tier": 1}
+{"name": "MAN_AT_ARMS", "tier": 2}
+{"name": "LONG_SWORDSMAN", "tier": 3}
+{"name": "TWO_HANDED_SWORDSMAN", "tier": 4}
+{"name": "CHAMPION", "tier": 4}
+{"name": "SPEARMAN", "tier": 1}
+{"name": "PIKEMAN", "tier": 2}
+{"name": "HALBERDIER", "tier": 3}
+{"name": "ARCHER", "tier": 1, "hero": "ranged"}
+{"name": "CROSSBOWMAN", "tier": 2}
+{"name": "ARBALESTER", "tier": 3}
+{"name": "SKIRMISHER", "tier": 1}
+{"name": "ELITE_SKIRMISHER", "tier": 2}
+{"name": "IMPERIAL_SKIRMISHER", "tier": 3}
+{"name": "HAND_CANNONEER", "tier": 3}
+{"name": "SCOUT_CAVALRY", "tier": 1}
+{"name": "LIGHT_CAVALRY", "tier": 2}
+{"name": "HUSSAR", "tier": 3}
+{"name": "WINGED_HUSSAR", "tier": 4}
+{"name": "KNIGHT", "tier": 2}
+{"name": "CAVALIER", "tier": 3}
+{"name": "PALADIN", "tier": 4}
+{"name": "CAMEL_SCOUT", "tier": 1}
+{"name": "CAMEL_RIDER", "tier": 2}
+{"name": "HEAVY_CAMEL_RIDER", "tier": 3}
+{"name": "IMPERIAL_CAMEL_RIDER", "tier": 4}
+{"name": "CAVALRY_ARCHER", "tier": 2}
+{"name": "HEAVY_CAVALRY_ARCHER", "tier": 3}
+{"name": "EAGLE_SCOUT", "tier": 1, "infantry": true}
+{"name": "EAGLE_WARRIOR", "tier": 2}
+{"name": "ELITE_EAGLE_WARRIOR", "tier": 3}
+{"name": "BATTLE_ELEPHANT", "tier": 2}
+{"name": "ELITE_BATTLE_ELEPHANT", "tier": 3}
+{"name": "STEPPE_LANCER", "tier": 2}
+{"name": "ELITE_STEPPE_LANCER", "tier": 3}
+{"name": "RICHARD_THE_LIONHEART", "hero": "mounted"}
+{"name": "FREDERICK_BARBAROSSA", "hero": "mounted"}
+{"name": "SALADIN", "hero": "mounted"}
+{"name": "EL_CID", "hero": "mounted"}
+{"name": "CHARLEMAGNE", "hero": "mounted"}
+{"name": "GENGHIS_KHAN", "hero": "mounted"}
+{"name": "ATTILA", "hero": "mounted"}
+{"name": "BLEDA", "hero": "mounted"}
+{"name": "TAMERLANE", "hero": "mounted"}
+{"name": "SUBOTAI", "hero": "mounted"}
+{"name": "BELISARIUS", "hero": "mounted"}
+{"name": "ROLAND", "hero": "mounted"}
+{"name": "LANCELOT", "hero": "mounted"}
+{"name": "GAWAIN", "hero": "mounted"}
+{"name": "KING_ARTHUR", "hero": "mounted"}
+{"name": "SIEUR_", "hero": "mounted"}
+{"name": "CONSTABLE", "hero": "mounted"}
+{"name": "VYTAUTAS", "hero": "mounted"}
+{"name": "TSAR_KONSTANTIN", "hero": "mounted"}
+{"name": "JOHN_THE_FEARLESS", "hero": "mounted"}
+{"name": "WILLIAM_THE_CONQUEROR", "hero": "mounted"}
+{"name": "HENRY_THE_LION", "hero": "mounted"}
+{"name": "ALEXANDER_NEVSKI", "hero": "mounted"}
+{"name": "KOTYAN", "hero": "mounted"}
+{"name": "BABUR", "hero": "mounted"}
+{"name": "ULRICH", "hero": "mounted"}
+{"name": "ALEXANDER", "hero": "mounted"}
+{"name": "LU_BU", "hero": "mounted"}
+{"name": "GUAN_YU", "hero": "mounted"}
+{"name": "ZHAO_YUN", "hero": "mounted"}
+{"name": "TOKHTAMYSH", "hero": "mounted"}
+{"name": "KHAN", "hero": "mounted", "ruler": true}
+{"name": "POPE", "hero": "religious"}
+{"name": "ARCHBISHOP", "hero": "religious"}
+{"name": "IMAM", "hero": "religious"}
+{"name": "FRIAR", "hero": "religious"}
+{"name": "PRIEST", "hero": "religious"}
+{"name": "ROBIN_HOOD", "hero": "ranged"}
+{"name": "SHERIFF", "hero": "ranged"}
+{"name": "KHOSRAU", "base": "PALADIN"}
+{"name": "THE_BLACK_PRINCE", "base": "PALADIN"}
+{"name": "THEODORIC_THE_GOTH", "base": "PALADIN"}
+{"name": "MORDRED", "base": "PALADIN"}
+{"name": "VLAD_DRACULA", "base": "PALADIN"}
+{"name": "MINAMOTO", "base": "PALADIN"}
+{"name": "KING_BELA_IV", "base": "PALADIN"}
+{"name": "CHARLES_MARTEL", "base": "PALADIN"}
+{"name": "PRITHVIRAJ", "base": "PALADIN"}
+{"name": "DUKE_D_ALENCON", "base": "PALADIN"}
+{"name": "LORD_DE_GRAVILLE", "base": "PALADIN"}
+{"name": "GUY_JOSSELYNE", "base": "PALADIN"}
+{"name": "SIR_JOHN_FASTOLF", "base": "PALADIN"}
+{"name": "REYNALD_DE_CHATILLON", "base": "PALADIN"}
+{"name": "MASTER_OF_THE_TEMPLAR", "base": "PALADIN"}
+{"name": "KUSHLUK", "base": "PALADIN"}
+{"name": "KING_SANCHO", "base": "PALADIN"}
+{"name": "KING_ALFONSO", "base": "PALADIN"}
+{"name": "HENRY_V", "base": "PALADIN"}
+{"name": "MUSA_IBN_NUSAYR", "base": "PALADIN"}
+{"name": "TARIQ_IBN_ZIYAD", "base": "PALADIN"}
+{"name": "RICHARD_DE_CLARE", "base": "PALADIN"}
+{"name": "TRISTAN", "base": "PALADIN"}
+{"name": "HENRY_II", "base": "PALADIN"}
+{"name": "YEKUNO_AMLAK", "base": "PALADIN"}
+{"name": "SU_DINGFANG", "base": "PALADIN"}
+{"name": "MIKLOS_TOLDI", "base": "PALADIN"}
+{"name": "ZAWISZA_THE_BLACK", "base": "PALADIN"}
+{"name": "WANG_TONG", "base": "PALADIN"}
+{"name": "IVAYLO", "base": "PALADIN"}
+{"name": "CUMAN_CHIEF", "base": "PALADIN"}
+{"name": "PRITHVI", "base": "PALADIN"}
+{"name": "OSMAN", "base": "PALADIN"}
+{"name": "EDWARD_LONGSHANKS", "base": "PALADIN"}
+{"name": "GILBERT_DE_CLARE", "base": "PALADIN"}
+{"name": "PHILIP_THE_GOOD", "base": "PALADIN"}
+{"name": "ROBERT_GUISCARD", "base": "PALADIN"}
+{"name": "ROGER_BOSSO", "base": "PALADIN"}
+{"name": "BOHEMOND", "base": "PALADIN"}
+{"name": "DAFYDD_AP_GRUFFYDD", "base": "PALADIN"}
+{"name": "BERNARD_D_ARMAGNAC", "base": "PALADIN"}
+{"name": "JACQUELINE_OF_HAINAUT", "base": "PALADIN"}
+{"name": "JADWIGA", "base": "PALADIN"}
+{"name": "JOGAILA", "base": "PALADIN"}
+{"name": "KESTUTIS", "base": "PALADIN"}
+{"name": "ALGIRDAS", "base": "PALADIN"}
+{"name": "DMITRY_OF_MOSCOW", "base": "PALADIN"}
+{"name": "MIKHAIL_OF_TVER", "base": "PALADIN"}
+{"name": "MIHIRA_BHOJA", "base": "PALADIN"}
+{"name": "SHAH_ISMAIL", "base": "PALADIN"}
+{"name": "SELIM_THE_GRIM", "base": "PALADIN"}
+{"name": "THOROS", "base": "PALADIN"}
+{"name": "TAMAR", "base": "PALADIN"}
+{"name": "YURY", "base": "PALADIN"}
+{"name": "IVANE", "base": "PALADIN"}
+{"name": "ZAKARE", "base": "PALADIN"}
+{"name": "STEPHAN", "base": "PALADIN"}
+{"name": "MLEH", "base": "PALADIN"}
+{"name": "ARTAPHERNES", "base": "PALADIN"}
+{"name": "DATIS", "base": "PALADIN"}
+{"name": "DARIUS", "base": "PALADIN"}
+{"name": "ISMAIL", "base": "PALADIN"}
+{"name": "SHAH", "base": "PALADIN"}
+{"name": "CAO_CAO", "base": "PALADIN"}
+{"name": "LIU_BEI", "base": "PALADIN"}
+{"name": "SUN_JIAN", "base": "PALADIN"}
+{"name": "ZHANG_FEI", "base": "PALADIN"}
+{"name": "SUN_CE", "base": "PALADIN"}
+{"name": "SUN_QUAN", "base": "PALADIN"}
+{"name": "DONG_ZHUO", "base": "PALADIN"}
+{"name": "YUAN_SHAO", "base": "PALADIN"}
+{"name": "CAO_CAO_CAMPAIGN", "base": "PALADIN"}
+{"name": "LIU_BEI_CAMPAIGN", "base": "PALADIN"}
+{"name": "SUN_JIAN_CAMPAIGN", "base": "PALADIN"}
+{"name": "PHILIP", "base": "PALADIN"}
+{"name": "PARMENION", "base": "PALADIN"}
+{"name": "CLEITUS", "base": "PALADIN"}
+{"name": "HEPHAISTION", "base": "PALADIN"}
+{"name": "LAUTARO", "base": "PALADIN"}
+{"name": "SCYTHIAN_SCOUT", "base": "SCOUT_CAVALRY"}
+{"name": "FRANCISCO_DE_ORELLANA", "base": "CONQUISTADOR"}
+{"name": "GONZALO_PIZARRO", "base": "CONQUISTADOR"}
+{"name": "QUTLUGH", "base": "CAVALRY_ARCHER"}
+{"name": "DAGNAJAN", "base": "BATTLE_ELEPHANT"}
+{"name": "GIDAJAN", "base": "BATTLE_ELEPHANT"}
+{"name": "JAYANEGARA", "base": "BATTLE_ELEPHANT"}
+{"name": "SURYAVARMAN_I", "base": "BATTLE_ELEPHANT"}
+{"name": "UDAYADITYAVARMAN_I", "base": "BATTLE_ELEPHANT"}
+{"name": "JAYAVIRAVARMAN", "base": "BATTLE_ELEPHANT"}
+{"name": "BAYINNAUNG", "base": "BATTLE_ELEPHANT"}
+{"name": "TABINSHWEHTI", "base": "BATTLE_ELEPHANT"}
+{"name": "AMOGHAVARSHA", "base": "BATTLE_ELEPHANT"}
+{"name": "RAJENDRA_CHOLA", "base": "BATTLE_ELEPHANT"}
+{"name": "IBRAHIM_LODI", "base": "BATTLE_ELEPHANT"}
+{"name": "PORUS", "base": "BATTLE_ELEPHANT"}
+{"name": "AETHELFRITH", "base": "SWORD"}
+{"name": "SIEGFRIED", "base": "SWORD"}
+{"name": "KITABATAKE", "base": "SWORD"}
+{"name": "VASCO_DA_GAMA", "base": "SWORD"}
+{"name": "CUAUHTEMOC", "base": "SWORD"}
+{"name": "JOAN_THE_MAID", "base": "SWORD"}
+{"name": "WILLIAM_WALLACE", "base": "SWORD"}
+{"name": "FRANCESCO_SFORZA", "base": "SWORD"}
+{"name": "JOAN_OF_ARC", "base": "SWORD"}
+{"name": "LA_HIRE", "base": "SWORD"}
+{"name": "TOPA_YUPANQUI", "base": "SWORD"}
+{"name": "CUSI_YUPANQUI", "base": "SWORD"}
+{"name": "ADMIRAL_YI_SUN_SHIN", "base": "SWORD"}
+{"name": "NOBUNAGA", "base": "SWORD"}
+{"name": "SUNDJATA", "base": "SWORD"}
+{"name": "PRINCESS_YODIT", "base": "SWORD"}
+{"name": "YODIT", "base": "SWORD"}
+{"name": "ITZCOATL", "base": "SWORD"}
+{"name": "PACAL_II", "base": "SWORD"}
+{"name": "PACHACUTI", "base": "SWORD"}
+{"name": "HUAYNA_CAPAC", "base": "SWORD"}
+{"name": "SUMANGURU", "base": "SWORD"}
+{"name": "GAJAH_MADA", "base": "SWORD"}
+{"name": "RADEN_WIJAYA", "base": "SWORD"}
+{"name": "SUNDA_ROYAL_FIGHTER", "base": "SWORD"}
+{"name": "LE_LOI", "base": "SWORD"}
+{"name": "LE_LAI", "base": "SWORD"}
+{"name": "LE_TRIEN", "base": "SWORD"}
+{"name": "LUU_NHAN_CHU", "base": "SWORD"}
+{"name": "BUI_BI", "base": "SWORD"}
+{"name": "DINH_LE", "base": "SWORD"}
+{"name": "IVAYLO_DISMOUNTED", "base": "SWORD"}
+{"name": "LLYWELYN_AP_GRUFFYDD", "base": "SWORD"}
+{"name": "STOERTEBEKER", "base": "SWORD"}
+{"name": "JAN_ZIZKA", "base": "SWORD"}
+{"name": "GENERAL_ARAIYAN", "base": "SWORD"}
+{"name": "ZHOU_YU", "base": "SWORD"}
+{"name": "WHITE_TIGER_YAN", "base": "SWORD"}
+{"name": "LIU_BIAO", "base": "SWORD"}
+{"name": "ALEXANDER_DISMOUNTED", "base": "SWORD"}
+{"name": "NEARCHOS", "base": "SWORD"}
+{"name": "GALVARINO", "base": "SWORD"}
+{"name": "PACANCHIQUE", "base": "SWORD"}
+{"name": "CUNHAMBEBE", "base": "SWORD"}
+{"name": "TOSTIG_GODWINSON", "base": "SWORD"}
+{"name": "SCYTHIAN_WILD_WOMAN", "base": "SWORD"}
+{"name": "LEIF_ERIKSON", "base": "AXE"}
+{"name": "ERIK_THE_RED", "base": "AXE"}
+{"name": "ALARIC_THE_GOTH", "base": "AXE"}
+{"name": "ATAULF", "base": "AXE"}
+{"name": "HARALD_HARDRADA", "base": "AXE"}
+{"name": "HROLF_THE_GANGER", "base": "AXE"}
+{"name": "NORSE_CHIEFTAIN", "base": "AXE"}
+{"name": "LITTLE_JOHN", "base": "AXE"}
+{"name": "THRACIAN_CHIEFTAIN", "base": "AXE"}
+{"name": "HARALD", "base": "AXE"}
+{"name": "ULF_OSPAKSSON", "base": "AXE"}
+{"name": "HALLDOR_SNORRASON", "base": "AXE"}
+{"name": "FINN_ARNASON", "base": "AXE"}
+{"name": "KALF_ARNASON", "base": "AXE"}
+{"name": "SOSSO_GUARD", "base": "HOPLITE"}
+{"name": "POLEMARCH", "base": "HOPLITE"}
+{"name": "POLEMARCH_2", "base": "HOPLITE"}
+{"name": "POLEMARCH_3", "base": "HOPLITE"}
+{"name": "POLEMARCH_4", "base": "HOPLITE"}
+{"name": "POLEMARCH_3_WITH_EPHORATE", "base": "HOPLITE"}
+{"name": "POLEMARCH_4_WITH_EPHORATE", "base": "HOPLITE"}
+{"name": "POLEMARCH_3_WITH_MORAI", "base": "HOPLITE"}
+{"name": "POLEMARCH_4_WITH_MORAI", "base": "HOPLITE"}
+{"name": "ARISTAGORAS", "base": "HOPLITE"}
+{"name": "DIONYSIUS", "base": "HOPLITE"}
+{"name": "ARISTIDES", "base": "HOPLITE"}
+{"name": "MILTIADES", "base": "HOPLITE"}
+{"name": "THEMISTOCLES", "base": "HOPLITE"}
+{"name": "LEONIDAS", "base": "HOPLITE"}
+{"name": "BRASIDAS", "base": "HOPLITE"}
+{"name": "LYSANDER", "base": "HOPLITE"}
+{"name": "POLYCRITUS", "base": "HOPLITE"}
+{"name": "CLEON", "base": "HOPLITE"}
+{"name": "PERDICCAS", "base": "HOPLITE"}
+{"name": "THE_MIDDLEBROOK", "base": "ARCHER"}
+{"name": "ARTEMISIA", "base": "ARCHER"}
+{"name": "GUACOLDA", "base": "ARCHER"}
+{"name": "ARARIBOIA", "base": "ARCHER"}
+{"name": "EINAR_PAUNCH_SHAKER", "base": "ARCHER"}
+{"name": "GUGLIELMO_EMBRIACO", "base": "CROSSBOWMAN"}
+{"name": "MUSTAFA_PASHA", "base": "JANISSARY"}
+{"name": "JEAN_DE_LORRAIN", "base": "BOMBARD_CANNON"}
+{"name": "JEAN_BUREAU", "base": "BOMBARD_CANNON"}
+{"name": "YU_JI", "base": "MONK"}
+{"name": "ZHANG_JUE", "base": "MONK"}
+{"name": "ZHUGE_LIANG", "base": "MONK"}
+{"name": "ENVOY", "base": "VILLAGER_MALE"}
+{"name": "CHAND_BARDAI", "base": "VILLAGER_MALE"}
+{"name": "SANYOGITA", "base": "VILLAGER_FEMALE"}
+{"name": "YOUNG_JADWIGA", "base": "VILLAGER_FEMALE"}
+{"name": "DREKI", "base": "LONGSHIP"}
+{"name": "SABOTEUR", "base": "PETARD"}
+{"name": "HUNTING_WOLF", "base": "DIRE_WOLF"}
+{"name": "ORNLU_THE_WOLF", "base": "DIRE_WOLF"}
+{"name": "BUCEPHALUS", "base": "HORSE"}
+{"name": "DIRE_WOLF", "plain": true}
+{"name": "HORSE", "plain": true}
+{"name": "VILLAGER_MALE", "plain": true}
+{"name": "VILLAGER_FEMALE", "plain": true}
+{"name": "KING", "ruler": true}
+{"name": "QUEEN", "ruler": true}
+{"name": "TEUTONIC_KNIGHT", "infantry": true}
+{"name": "DISMOUNTED", "infantry": true}
+{"name": "CHAMPI_SCOUT", "infantry": true}
+{"name": "FIRE_LANCER", "infantry": true}
+{"name": "ANTIQUITY", "drop": true}
+{"name": "BARRACKS", "drop": true}
+{"name": "DONJON", "drop": true}
+{"name": "EMPTY", "drop": true}
+{"name": "FEMALE", "drop": true}
+{"name": "FULL", "drop": true}
+{"name": "KREPOST", "drop": true}
+{"name": "MALE", "drop": true}
+{"name": "ORIGINAL", "drop": true}
+{"name": "STABLE", "drop": true}
