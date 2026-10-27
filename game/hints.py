@@ -15,7 +15,8 @@ TEXTS = {                                                          # short: the 
     "corner": "Selection box: right click the other corner",
     "drag": "Selection box: hold right click, look at the other corner, release · Release here: cancel",
     "military": "{n} military unit{s} · Right click: attack an enemy, stance menu · Empty box: deselect",
-    "none": "Right click: select a unit · Wand: selection box",
+    "none": "Right click: select a unit · Hold right click: selection box",
+    "none-wand": "Right click: select a unit · Wand: selection box",
     "villagers": "{n} villager{s} · Right click: gather, build, build menu · Empty box: deselect",
 }
 
@@ -35,7 +36,7 @@ def state(g, player=None):
     elif g.selected:
         kind, text = "villagers", TEXTS["villagers"].format(n=len(g.selected), s="s" * (len(g.selected) != 1))
     else:
-        kind, text = "none", TEXTS["none"]
+        kind, text = "none", TEXTS["none" if getattr(g, "paper", False) else "none-wand"]   # vanilla: the wand (#1786)
     if getattr(g, "paper", False):                                 # Paper: a left click deselects (#1788)
         text = text.replace("Empty box: deselect", "Left click: deselect")
     if aim:                                                        # the count stays, the target replaces the help
@@ -58,6 +59,6 @@ def tick(g):
         del shown[p]
     for target, text in targets.items():
         last = shown.get(target, (None, 0))
-        if last[0] != text or now - last[1] >= REPEAT and text != TEXTS["none"]:   # the idle hint shows once
+        if last[0] != text or now - last[1] >= REPEAT and text not in (TEXTS["none"], TEXTS["none-wand"]):   # the idle hint shows once
             g.command(f"title {target} actionbar " + json.dumps({"text": text, "color": "gray"}))
             shown[target] = (text, now)

@@ -124,6 +124,11 @@ Item 6 (fog of war) has no ticket.
 Selection of many units (#742): the owner chose in #745 a selection wand with two corners for the AoE2 selection box
 (option A, #778: `Gather.box`, item `warped_fungus_on_a_stick` with its own "used" statistic `aoe_box`), and hotbar
 items for the control groups later (option C, #779). A radius selection (option B) was not chosen.
+On Paper the owner replaced the wand with the command stick (#1786, demo feedback): hold right click with the stick
+to draw the box (`Gather.hold`, then the drag of #992), release to select. The first use of a hold is also a click, so a
+stick use waits `HOLD` (0.2 s, the use period of a held button): a next use in that time makes a hold, else
+`Gather.short` runs the click with the look of the use. A short click is one loop call (`tick` 0.25 s) later than before.
+No pending use while a foundation or a rally point waits. Vanilla keeps the wand and its two clicks.
 Control groups (#779, `Gather.group`): carrots on a stick "Group 1" to "Group 5" in hotbar slots 5 to 9
 (`custom_data` `{aoe_group:N}`). A shift right click (vanilla predicate `is_sneaking`) saves the selection as group N,
 a right click selects the live units of group N. The click item is `carrot_on_a_stick[!custom_data]`.
@@ -419,4 +424,5 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - A unit that dies with no attacker (about 2 HP per real second, `Fire` 0, `Air` 300, `HurtTime` > 0) suffocates in a block: look for a site footprint on it (`g.sites`, #1769). RCON cuts a long `data get entity U`: ask for one path (`data get entity U Health`).
 - The tables `train.COSTS`, `TRAIN_TIMES`, `TRAINS`, `TECH_AGE`, `AFTER`, `ITEMS` and `HELP` come from `game/data/train.jsonl` (#1702): add a new menu item as one line at the end of its building block (the line order is the order of `TRAINS`), not in `game/train.py`. `merge=union` keeps the lines of both sides of a merge.
 - A left click of a real client (`client.xdo("click", "1")`) on Paper: on air and on a block the plugin gets `PlayerInteractEvent` (`LEFT_CLICK_AIR`, `LEFT_CLICK_BLOCK`; cancel it, and a creative player breaks no block), on a mob `EntityDamageByEntityEvent` with the player as damager. Vanilla has no event for it (#992, #1788).
+- A chat line "[Server: …]" in a game: a console command of the plugin (`Bukkit.dispatchCommand(Bukkit.getConsoleSender(), …)`) goes to all operators, and each player is one (`op_joined`): `run.properties` turns off `broadcast-console-to-ops` and `broadcast-rcon-to-ops` (#1799). A check script that prints the last 5 client chat lines finds such text (#1138).
 - `@e[team=!]` misses the units of a fresh world: the datapack pulse puts them in their team some seconds after the start (`Where 0` in a test that selects at once, #1769). The UUID of a mounted unit in `aoe2mc.json` is its horse (the root vehicle); a `/tp` of a rider dismounts it: move the vehicle (`execute as U on vehicle run tp @s ...`).
