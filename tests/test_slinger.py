@@ -6,7 +6,7 @@ from test_train_knight import menu, setup
 from game import build, civs, combat, train
 
 RANGE = (11, 3)
-UNIT = 23                                                              # after the elephant archer (21, 22)
+UNIT = 25                                                              # after the mounted crossbowman (23, 24)
 
 
 def player(civ="INCAS"):
