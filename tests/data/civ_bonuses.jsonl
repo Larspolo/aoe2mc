@@ -190,7 +190,7 @@
 {"name": "SHU: Archery unit technologies at the Archery Range and Blacksmith cost -25%.", "civ": "SHU", "bonus": "Archery unit technologies at the Archery Range and Blacksmith cost -25%.", "in": "COSTS"}
 {"name": "SHU: All land siege units and Lou Chuans move +10/15% faster in Castle/Imperial Age", "civ": "SHU", "bonus": "All land siege units and Lou Chuans move +10/15% faster in Castle/Imperial Age", "gap": "play:siege"}
 {"name": "SICILIANS: Start with stone +100.", "civ": "SICILIANS", "bonus": "Start with stone +100.", "in": "START"}
-{"name": "SICILIANS: Fortifications built 50%, Town Centers built 100% faster.", "civ": "SICILIANS", "bonus": "Fortifications built 50%, Town Centers built 100% faster.", "gap": "play:build"}
+{"name": "SICILIANS: Fortifications built 50%, Town Centers built 100% faster.", "civ": "SICILIANS", "bonus": "Fortifications built 50%, Town Centers built 100% faster.", "in": "BUILD_OF"}
 {"name": "SICILIANS: Land military units (except siege weapons) receive 40% less bonus damage.", "civ": "SICILIANS", "bonus": "Land military units (except siege weapons) receive 40% less bonus damage.", "later": "play:fight"}
 {"name": "SICILIANS: Farm upgrades provide additional food +125%.", "civ": "SICILIANS", "bonus": "Farm upgrades provide additional food +125%.", "gap": "play:gather"}
 {"name": "SLAVS: Farmers work 15% faster.", "civ": "SLAVS", "bonus": "Farmers work 15% faster.", "in": "WORK"}
