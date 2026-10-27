@@ -6,3 +6,5 @@ docs/research/gameplay.md merge=union
 docs/research/replays.md merge=union
 docs/minecraft-versions.md merge=union
 docs/datapack.md merge=union
+# One line per owner decision, added at the end (ticket skill, "Decision tickets").
+docs/DECISIONS.md merge=union

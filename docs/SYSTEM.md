@@ -129,6 +129,8 @@ the owner login, the default branch, the status issue, the commands, the doc pat
 | `docs/STEERING.md` | generic | The owner login, the Mojang hosts, Minecraft in the setup script. |
 | `docs/LEARNINGS.md` | specific | The lessons of this project. The first section (environment and GitHub) is mostly generic. |
 | `docs/ROADMAP.md` | specific | The three goals and their features. |
+| `docs/PRINCIPLES.md` | specific | The direction of the project: the owner's preferences, made general from the decisions. |
+| `docs/DECISIONS.md` | specific | The log of the owner's decisions (one line each), the evidence of the principles. |
 | `docs/SYSTEM.md` | generic | This document. |
 | `.claude/skills/autopilot/SKILL.md` | generic | The issue numbers of the lessons. |
 | `.claude/skills/verify/SKILL.md` | specific | The check levels (preview image, world reader, Minecraft server, screenshots). |
