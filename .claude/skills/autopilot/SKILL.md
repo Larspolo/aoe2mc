@@ -40,7 +40,7 @@ Put the method after the path (`... -X PATCH`): the permission rules match the s
 | Priority | `P0` (do next), `P1`, `P2`, `P3` (later) |
 | Size | `size:S` (one short PR), `size:M` (one PR), `size:L` (too large: split first) |
 | Kind | `bug`, `feature`, `tooling`, `design`, `docs`, `cleanup` |
-| Flow | `needs-human` (waits for the owner), `blocked` (waits for another ticket), `in-progress`, `epic` (parent of sub-issues), `agent-status` (the status issue), `paused` |
+| Flow | `needs-human` (waits for the owner), `blocked` (waits for another ticket), `in-progress`, `epic` (parent of sub-issues), `agent-status` (the status issue), `paused`, `owner-sample` (a closed check for the owner's sample, #1708) |
 | PR | `hold` (the Automerge workflow does not merge it), `conflict` (the workflow could not merge it: fix it in step 2) |
 
 ## Runs can overlap
@@ -129,7 +129,8 @@ least overlap with the work in progress (files and functions that open PRs chang
 then the lowest issue number.
 `python3 tools/dashboard.py --next` prints the candidates in this order (the rule is `dashboard.candidates()`).
 Tickets with `lane:haiku` come after all others: take one only when nothing else is ready (#1715).
-**Haiku lane.** When the argument names `lane haiku` (the scheduled task "aoe2mc autopilot haiku"), pick only with
+**Haiku lane.** When the argument names `lane haiku` (the scheduled task "aoe2mc autopilot haiku"), run
+`git config aoe2mc.lane haiku` first (the claims then tell the pacer that this run is cheap, #1727), pick only with
 `python3 tools/dashboard.py --next --lane haiku`, skip the epic check, the queue refill, the roadmap review and the
 process review, and stop when no `lane:haiku` ticket is ready. A ticket that is not as clear as its label says: release
 the claim, remove `lane:haiku`, comment why in one line, and take the next one. End the `Metrics:` line with `· lane haiku`.
@@ -232,7 +233,11 @@ a small check ticket without `needs-human` first (#580). An agent runs the check
 simulated clicks through the same functions as the player input, `tools/mc_shot.py`) and comments the results and the
 images. When the check finds a bug, it makes a bug ticket for each one, adds "Depends on: #bug" to the check ticket, and does
 not add `needs-human`: when the bugs are closed, the check ticket is a candidate again and a later run checks again (owner, #668).
-Only after a check without bugs it adds `needs-human` with a short list of what only a person can check (real input by hand, the look, sound). Never ask the owner about
+After a check without bugs it closes the check ticket on its evidence (owner decision B, #1708: progress does not wait
+for the owner): a comment with the evidence of each point (screenshots, real clicks, values) and a short list of what only
+a person can check (sound, the feel of a control, "is it fun": `verify` level 5, #1707), the label `owner-sample`, then the close. The owner checks a
+sample of these closed tickets later in one game (`human` skill). A denied close: keep the comment, add `needs-human`
+and "Please close" (#1641). Never ask the owner about
 times, speeds, values or texts: measure them and compare them with AoE2 (owner, #1159). A look question links the image
 before next to the image after (or AoE2 next to Minecraft).
 
@@ -246,9 +251,17 @@ other runs change it too):
 - The state comment: `<!-- agent-state: {"last_run": "<now, ISO>", "runs": <N+1>, ...} -->`. Change only these two
   keys and keep the others (`last_review`, `review_minutes`: the review slot, #898).
 - The section `### Process changes`: add a line `- <date>: <what changed in the skills, CLAUDE.md or
-  LEARNINGS> (PR #n)` at the top, keep the last 5.
+  LEARNINGS> (PR #n) — before: <numbers>` at the top, keep the last 5. When the change targets a number of
+  `tools/health.py` (phase minutes, conflicts, takeovers, quota per PR), write that number now (for example
+  "report 10 % of the run minutes / 24 h"), so that the `improve` skill can check it later (#1738). A pitfall line
+  (`docs/LEARNINGS.md`, a doc line) gets `— before: -`.
 
-Then add one short comment on the status issue: what you did and what is next. A question for the owner goes on its
+Then add one short comment on the status issue: what you did and what is next.
+Write it with one command (#1701): `python3 tools/report.py --usage "<the Usage: line of step 1.4>" --text "<what you
+did, what is next>" --ticket N --size S --result "pr #M" --setup 0 --checks K --checks-min C --sinks "<list or none>"
+--phases read=8,claim=1,code=18,verify=9,ci=0,conflict=5,report=4 --post` (repeat the ticket options for each ticket,
+in the same order). It adds the release bar, the `Tokens:` line and the footer in the format below. Without `--post`
+it only prints the comment. A question for the owner goes on its
 issue, not here (see "Ask the owner" in step 6).
 End it with one metrics line for each ticket of the run (the `improve` skill reads these lines):
 

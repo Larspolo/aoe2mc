@@ -51,3 +51,7 @@ The trench that the owner saw (#155) has two possible causes:
 
 To test the rule, make a test scenario with `tools/scenarios.py` (a river at elevation 2 between land at elevation
 2), because no real map here has raised water.
+
+## Pitfalls
+
+- AoE2 terrain 1 is `WATER_SHALLOW` (the normal DE water, rmap `WATER`), terrain 4 is `SHALLOWS` (walkable): `terrain_style` matches "SHALLOW" in both and makes both 1 block deep until #1198. Check a river with `world_reader.py --section`, not the preview (no depth shade).

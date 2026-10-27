@@ -69,6 +69,8 @@ FOLLOW_MS = 15000           # ms of game time: the camera of --follow changes it
 EFFECT_MS = 10000           # ms of game time that the research text stays
 SCALE = 4                   # size of the research text: a spectator sees it from 40 blocks
 START = {"food": 200, "wood": 200, "gold": 100, "stone": 200}   # the AoE2 standard start resources (#932)
+FRAME = 27                  # tiles of a side of the view square on map 0 (#1762): AoE2 DE at 1920 × 1080 shows about
+                            # 1920 × 850 pixels of land (no HUD), a tile is 96 × 48 pixels (2304 px²): 708 tiles = 27²
 VIEWER = "aoe_viewer"        # player tag: the player got the overview of the map (#737)
 VIEW_PITCH = 60             # degrees down of the overview
 VIEW_FALL = 60              # seconds of slow falling after the overview
@@ -1757,7 +1759,7 @@ class Replay:
         send = self.send if bar else lambda cmds: None
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
                    f"bossbar set {BAR} max {max(1, int(end) // 1000)}"] +
-             ([f"tag {u} add {COUNTED}" for u in self.counted] + ["aoe deathmarks on", "aoe minimap on"]) * self.ai +
+             ([f"tag {u} add {COUNTED}" for u in self.counted] + ["aoe deathmarks on", "aoe minimap on", f"aoe minimap frame {FRAME * self.T}"]) * self.ai +
              # the death marks (#846) and the live units on the map item (#1237)
              self.overview())
         census = self.census if bar and self.ai else lambda: None

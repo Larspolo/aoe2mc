@@ -44,7 +44,8 @@ Check each ticket: is the owner really needed (#1674)? Read its body and its las
    needs a close). Close it as completed with an evidence comment (what proves each criterion), then tell the owner.
 2. **Agent work**: the point asks for times, speeds, values or texts (#1159), or tests and agent checks cover it
    already. Measure it in this session, or remove `needs-human` with a comment that names the evidence.
-3. **Owner needed**: a look, a feel, real input by hand, a decision or a setting.
+3. **Owner needed**: sound, the feel of a control, "is it fun", a look that the agent could not decide (it says why,
+   #1707), a decision or a setting. Clicks and a look next to the AoE2 image are agent work (`verify`, level 5).
 
 Then run `python3 tools/owner_tasks.py --plan`: it puts each ticket into "close now", "replay", "play game" or
 "no game". Move the tickets of group 2 out, and show the plan to the owner: one replay with `game/watch.py` for all
@@ -67,6 +68,11 @@ Pitfalls of the session of #1674 (avoid them):
 - `game/run.py --replay` without `game/watch.py` starts at once and ends before the owner joins: use `game/watch.py`.
 - The owner can answer in two chat lines: `game/play_guide.py` takes the lines of 20 s as one answer.
 - macOS: the first start of a downloaded app or JDK can need System Settings → Privacy & Security → "Open Anyway" (#1668).
+
+Sample check (owner decision B, #1708): agents close check tickets on their evidence with the label `owner-sample`.
+Run `python3 tools/owner_tasks.py --sample` and offer some of these tickets (the oldest first) as one more play game or
+replay, with the owner points of their last agent comment. A finding becomes a bug ticket (step 5). Remove
+`owner-sample` from each ticket that the owner checked, also without a finding.
 
 Wait for the next ticket (#1025): start `python3 tools/owner_tasks.py --wait` with `run_in_background` and end the
 turn. While it waits, the session uses no model turn (one GitHub request each 5 minutes, at most 12 hours). Exit 0:

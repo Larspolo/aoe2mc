@@ -60,3 +60,9 @@ artifact `installer-<os>-<arch>`. The version is the tag without `v` (`0.0.0-dev
 
 `.github/workflows/installers.yml` runs on a tag `v*`: it calls `bundles.yml` and attaches the four installers to the
 release of the tag. `worlds.yml` also runs on the tag and attaches the example worlds to the same release.
+
+## Pitfalls
+
+- The default `python3` (3.11, `/usr/local/bin`) has no `tkinter`, also after `apt-get install -y python3-tk`: that gives it to `/usr/bin/python3.12` only. Test a Tk window with a 3.12 venv (`/usr/bin/python3.12 -m venv V && V/bin/python -m pip install -r requirements.txt pytest`) and `xvfb-run -a` (#1540).
+- Automerge waits only for `quick`: a PR that changes `packaging/` or a workflow with its own PR checks (`Bundles`) gets `hold` until those checks are green (#1599: two of four jobs failed first).
+- Actions artifacts (`/actions/artifacts/ID/zip`) do not download in the cloud: the proxy blocks `*.blob.core.windows.net`; release assets (`github.com/.../releases/download/...`) work. Check a bundle with a local build (`packaging/aoe2mc.spec` in a 3.12 venv, `apt-get install -y python3-tk` first). The auto mode denies running a downloaded `appimagetool`. Under Xvfb (no window manager) no field has the key focus: click into each field with `xdotool mousemove X Y click 1` before `xdotool type` (#1545).

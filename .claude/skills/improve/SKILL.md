@@ -20,14 +20,18 @@ data gap gets its own ticket on the board (step 3), so that the owner sees the w
 
 ## 0. Check the last change
 
-Read the newest line of "Process changes" on the status issue that has `before:` numbers. Compute the same numbers
-now (step 1). Did they get better?
+Read the newest line of "Process changes" on the status issue that has `before:` numbers: a line of a review or of a
+ticket run (autopilot step 8, #1738); skip `before: -` (a pitfall line). Compute the same numbers now (step 1).
+Did they get better?
 - Yes, or too early to say (less than 10 Metrics lines since the change) → keep it. Say so in the report.
 - No → undo it or try another way to fix the same loss. This is the change of this review. Say so in the report.
 
 ## 1. Collect the data
 
-Run `python3 tools/health.py` first (`--hours N`, default 24, about 25 s). It prints the CI runs per workflow,
+Run `python3 tools/health.py --hours 6 --compare` first (about 2 minutes, #1697): it prints the last 6 hours and, under each
+line that differs, the 6 hours before (`  before: ...`). A change of more than 20 % between the two periods (the quota
+per merged PR, the tokens per run, the phase minutes, the takeovers) is a finding: a 24-hour period shows a trend about
+12 hours late. Use `--hours 24` for the slow numbers (night runs, reopened tickets). It prints the CI runs per workflow,
 the slowest CI steps, the setup minutes, takeovers, releases, merge conflicts (and their files), the minutes of each
 phase, the quota per merged PR, the release points per 1 % of 7-day quota (the main number: progress to the goals per
 quota), the tokens per run and per merged PR and the largest token sinks (from the `Tokens:` lines), weak spots (rework, bugs of check tickets, red night runs), claim-to-merge minutes and files that do not belong in git. Collect by hand only what it does not print.
@@ -35,6 +39,8 @@ quota), the tokens per run and per merged PR and the largest token sinks (from t
 - Tokens: `python3 tools/tokens.py --top 15` on this run (the sinks one by one: which file, which command). The
   `Tokens:` lines of `tools/health.py` give only the groups. The token counts are estimates (API price ratios, about
   4 characters per token): compare them with the rise of the `Usage:` lines before you trust them.
+- Verify: `tools/health.py` "Verify commands" sums the `verify` fields of the `Tokens:` lines (the minutes and the count
+  of `pytest`, `pytest -m mc`, `ruff`, `mc_shot.py`, the wait loops ...; `python3 tools/tokens.py --verify` for one run, #1704).
 - Agent: the last 20 run comments by the agent on the status issue (label `agent-status`). Each has a line
   `Metrics: ticket #n · size · result · minutes · setup m min · checks k · checks c min · time sinks: ...`.
   Also the tickets and PRs closed in that period, and rework (tickets that the owner reopened, or that came
@@ -155,7 +161,7 @@ Comment 3–5 lines: the result of step 0, the numbers of the six areas, the lar
 and add the reason to `docs/LEARNINGS.md`.
 
 Then set the next review slot: `python3 tools/claim.py 0 --reviewed change` after a change (the next slot is 45
-minutes), or `--reviewed none` when no loss was large enough for a change (the slot doubles, at most 6 hours, #898).
+minutes), or `--reviewed none` when no loss was large enough for a change (the slot doubles, at most 2 hours, #898, #1697).
 
 ## Guardrails
 
