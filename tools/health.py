@@ -343,11 +343,16 @@ def data_rows(path=None):
         return [(p, int(n)) for p, n in (s.split() for s in f if s.strip() and not s.startswith("#"))]
 
 
-def status_comments(hours=24):
-    """The comments on the status issue of the last `hours`."""
-    status = api(f"issues?state=open&labels={STATUS}")
-    since = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=hours)
-    return api_pages(f"issues/{status[0]['number']}/comments?since={since:%Y-%m-%dT%H:%M:%SZ}", COMMENT_PAGES) if status else []
+def status_comments(hours=24, since=None):
+    """The comments on the status issue of the last `hours` (or since `since`): the log on the branch `metrics`
+    (`metrics_log.py`, #1983) and the API comments that changed after its newest one; the API alone without the log."""
+    import metrics_log
+    since = since or datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=hours)
+    stored = metrics_log.load(since)
+    last = metrics_log.newest(stored or [])
+    tail = metrics_log.api_comments(metrics_log.parse(last) if last else since)
+    out = {c["id"]: c for c in (stored or []) + tail if c["created_at"] >= f"{since:%Y-%m-%dT%H:%M:%SZ}"}
+    return sorted(out.values(), key=lambda c: (c["created_at"], c["id"]))
 
 
 def count_beating(lines, now, minutes=25):
@@ -593,17 +598,14 @@ def fetch(since, until=None):
             break
     ci = [r for r in runs if r["name"] == "CI" and r.get("status") == "completed"][:CI_JOB_RUNS]
     jobs = [j for r in ci for j in api(f"actions/runs/{r['id']}/jobs")["jobs"]]
-    status = api(f"issues?state=open&labels={STATUS}")
     # one day more: the "Started by" comment of a ticket that merged in the period can be older
     comments = api_pages(f"issues/comments?since={since - datetime.timedelta(days=1):%Y-%m-%dT%H:%M:%SZ}", COMMENT_PAGES)
-    # from their own endpoint: about 350 a day, the repository has about 1100 (#1982)
-    status_comments = [c for c in api_pages(f"issues/{status[0]['number']}/comments?since={iso}", COMMENT_PAGES)
-                       if c["created_at"] >= iso] if status else []
+    reports = status_comments(since=since)        # the log and the API (#1982, #1983)
     recent = [c for c in comments if c["created_at"] >= iso or c["body"].startswith("Started by")]
     prs = api_pages("pulls?state=closed&sort=updated&direction=desc", stop=lambda p: p["updated_at"] < iso)
     issues = api_pages(f"issues?state=all&since={iso}")
     events = api_pages("issues/events?", limit=event_pages(since), stop=lambda e: e["created_at"] < iso)
-    return runs, jobs, status_comments, recent, prs, issues, events
+    return runs, jobs, reports, recent, prs, issues, events
 
 
 def clip(until, runs, status_comments, comments, prs, issues, events):

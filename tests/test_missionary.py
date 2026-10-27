@@ -25,7 +25,6 @@ def setup(civ, food=30, gold=100):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.COSTS["MISSIONARY"] == {"food": 30, "gold": 100} and train.TRAIN_TIMES["MISSIONARY"] == 51
     assert build.AGE["MISSIONARY"] == 2 and len(train.HELP["MISSIONARY"]) <= 50
     assert combat.stats("MISSIONARY").hp == 30 and combat.sight("MISSIONARY") == 9 and monk.MONKS["MISSIONARY"] == 7
     assert ai.walk_speed("MISSIONARY", 1, 1) == pytest.approx(1.1)

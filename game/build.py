@@ -155,8 +155,7 @@ def ghosts(g):
         pos = g.pos(p)
         rot = [float(v) for v in re.findall(gather.NUMBER, g.command(f"data get entity {p} Rotation").rsplit(":", 1)[-1])]
         eye, d = pos and (pos[0], pos[1] + 1.62, pos[2]), len(rot) == 2 and gather.direction(*rot)
-        cell = pos and d and (pick_shore(g, eye, d) if name in SHORE else fleet.pick(g, eye, d) if name in WATER
-                              else g.map.pick_ground(eye, d))
+        cell = pos and d and (fleet.pick(g, eye, d) if name in SHORE + WATER else g.map.pick_ground(eye, d))
         if not cell:
             continue
         rect, spot, way, T = area(g, name, cell), None, None, g.map.T
@@ -280,35 +279,13 @@ def water(g, rect):
     return all(g.map.wet(x, z) for x in range(x0, x1) for z in range(z0, z1))
 
 
-def surface(g, x, z):
-    """The y of the water surface at the water cell (x, z), as Map.sea, or None more than 2 tiles from the land: a
-    dock touches the land, and Map.sea reads the whole map there."""
-    return g.map.sea(x, z, 2 * g.map.T + 1) if any(
-        g.map.y(x + dx, z + dz) is not None for dx in range(-2 * g.map.T - 1, 2 * g.map.T + 2)
-        for dz in range(-2 * g.map.T - 1, 2 * g.map.T + 2)) else None
-
-
-def pick_shore(g, eye, d, reach=64):
-    """The block cell (x, z) of the ground or of the water surface near the land that the ray from eye in direction d
-    hits first, or None: Map.pick_ground goes through the water, and a dock stands on it (#1382)."""
-    for k in range(1, reach * 4):
-        x, y, z = (eye[i] + d[i] * k / 4 for i in range(3))
-        bx, bz = math.floor(x), math.floor(z)
-        if not (0 <= bx < g.map.n and 0 <= bz < g.map.n):
-            return None
-        top = g.map.y(bx, bz)
-        if (top if top is not None else surface(g, bx, bz) or -1e9) > y:
-            return bx, bz
-    return None
-
-
 def place(g, player, name, eye, d):
     """Place a foundation of name at the ground that the player looks at. Returns the site or None."""
     import fleet                                                       # fleet -> gather -> build: import it late
     if need := locked(g, name):                                        # a /trigger choice of a later age
         say(g, player, f"{pretty(name)}: {need}.")
         return None
-    cell = pick_shore(g, eye, d) if name in SHORE else fleet.pick(g, eye, d) if name in WATER else g.map.pick_ground(eye, d)
+    cell = fleet.pick(g, eye, d) if name in SHORE + WATER else g.map.pick_ground(eye, d)   # as the ghost (#2058)
     if cell is None:
         return None
     if name in WALLS:
@@ -483,6 +460,8 @@ def found(g, name, rect, way=None, tiles=None):
     color = g.players.get(str(g.player), {}).get("color", "light_gray")
     ring = [(x, g.map.y(x, z) if g.map.y(x, z) is not None else int(fleet.level(g) if name in WATER else g.map.sea(x, z)), z)
             for x in range(x0, x1) for z in range(z0, z1) if x in (x0, x1 - 1) or z in (z0, z1 - 1)]
+    under = {c: "minecraft:water" for c in ring if g.map.y(c[0], c[2]) is None   # a dock or a fish trap: the water
+             and "Test passed" in g.command("execute if block {} {} {} minecraft:water".format(*c))}   # comes back (#2059)
     for c in ring:
         g.command("setblock {} {} {} ".format(*c) + f"minecraft:{color}_wool")
     cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)} if tiles is None else tile_cells(g, tiles)
@@ -494,7 +473,7 @@ def found(g, name, rect, way=None, tiles=None):
         along_z=z1 - z0 > x1 - x0 if way is None else way,             # a gate along z (#1324) or diagonal (#1655)
         water=int(fleet.level(g)) + 1 if name in WATER else None)      # a fish trap on the open water (#1438)
     site = {"name": name, "player": g.player, "footprint": rect, "commands": cmds, "sent": 0, "progress": 0.0,
-            "ring": dict.fromkeys(ring, f"minecraft:{color}_wool"), "under": {}}   # under: the design blocks on the ring
+            "ring": dict.fromkeys(ring, f"minecraft:{color}_wool"), "under": under}   # under: the design blocks on the ring
     if way is not None:
         site["way"] = way
     if tiles is not None and str(way).startswith("diag"):
@@ -572,7 +551,7 @@ def rise(g, site, work):
             g.command("setblock {} {} {} ".format(*p) + ring[p])
     if site["progress"] >= 1 and not site.get("done"):                 # complete: the building works (#419)
         site["done"] = True
-        for p in [p for p in ring if p not in hit]:                    # the ring goes: the design or air
+        for p in [p for p in ring if p not in hit]:                    # the ring goes: the design, the water or air
             g.command("setblock {} {} {} ".format(*p) + site["under"].get(p, "minecraft:air"))
         x0, x1, z0, z1 = site["footprint"]
         s, T = footprint(site["name"]), g.map.T

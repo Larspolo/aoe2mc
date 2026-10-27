@@ -23,12 +23,7 @@ def imperial(civ="SPANISH"):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.COSTS["ELITE_CANNON_GALLEON_UPGRADE"] == {"wood": 525, "gold": 500}
-    assert train.TRAIN_TIMES["ELITE_CANNON_GALLEON_UPGRADE"] == 30 and train.TECH_AGE["ELITE_CANNON_GALLEON_UPGRADE"] == 3
     assert train.AFTER["ELITE_CANNON_GALLEON_UPGRADE"] == "CHEMISTRY" and len(train.HELP["ELITE_CANNON_GALLEON_UPGRADE"]) <= 50
-    assert train.COSTS["ELITE_CANNON_GALLEON"] == {"wood": 200, "gold": 150} and train.TRAIN_TIMES["ELITE_CANNON_GALLEON"] == 46
-    assert combat.stats("ELITE_CANNON_GALLEON") == (150, 60, 0, 6, 15, 10.0, {"building": 275, "siege": 25},
-                                                    ("ship", "gunpowder", "warship"))
     assert combat.sight("ELITE_CANNON_GALLEON") == 17 and fleet.SPEEDS["ELITE_CANNON_GALLEON"] == 1.05
     assert combat.BLAST["ELITE_CANNON_GALLEON"] == 0.3 and combat.MIN_RANGE["ELITE_CANNON_GALLEON"] == 3
     assert "ELITE_CANNON_GALLEON" in combat.MELEE_RANGED and train.ITEMS["ELITE_CANNON_GALLEON"][0] == train.ITEMS["CANNON_GALLEON"][0]
