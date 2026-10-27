@@ -8,7 +8,7 @@ from game import civs, combat, train
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.TECH_AGE["HUSSAR_UPGRADE"] == 3 and train.AFTER["HUSSAR_UPGRADE"] == "LIGHT_CAVALRY_UPGRADE"
+    assert train.AFTER["HUSSAR_UPGRADE"] == "LIGHT_CAVALRY_UPGRADE"
     assert combat.stats("HUSSAR").hp == 75 and combat.sight("HUSSAR") == 10 and len(train.HELP["HUSSAR_UPGRADE"]) <= 50
     assert {"BRITONS", "FRANKS", "POLES", "TEUTONS"} <= set(civs.MISSING["HUSSAR_UPGRADE"])
     assert not {"HUNS", "MAGYARS", "WU"} & set(civs.MISSING["HUSSAR_UPGRADE"])

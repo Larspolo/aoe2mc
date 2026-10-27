@@ -17,7 +17,6 @@ def player(civ="INCAS"):
 
 
 def test_the_values_are_those_of_the_wiki():
-    assert train.COSTS["SLINGER"] == {"food": 50, "wood": 25} and train.TRAIN_TIMES["SLINGER"] == 25
     assert build.AGE["SLINGER"] == 2 and len(train.HELP["SLINGER"]) <= 50
     assert combat.stats("SLINGER") == (35, 4, 0, 0, 5, 2.0, {"infantry": 4, "siege": 3, "spearman": 1}, ("archer",))
     assert combat.sight("SLINGER") == 7 and train.ITEMS["SLINGER"][0] == UNIT

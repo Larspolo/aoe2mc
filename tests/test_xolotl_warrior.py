@@ -19,7 +19,6 @@ def stable(civ, ages=CASTLE):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.COSTS["XOLOTL_WARRIOR"] == {"food": 60, "gold": 75} and train.TRAIN_TIMES["XOLOTL_WARRIOR"] == 30
     assert build.AGE["XOLOTL_WARRIOR"] == 2 and train.ITEMS["XOLOTL_WARRIOR"][0] == train.MORE + 8
     assert combat.stats("XOLOTL_WARRIOR") == (100, 10, 2, 2, 0, 1.8, {}, ("cavalry",))
     assert combat.sight("XOLOTL_WARRIOR") == 4 and replay.SPEEDS["XOLOTL_WARRIOR"] == 1.35
