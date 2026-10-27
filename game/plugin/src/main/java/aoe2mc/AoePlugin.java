@@ -278,6 +278,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     private final Map<UUID, Order> orders = new HashMap<>();
+    private final Map<UUID, Float> wet = new HashMap<>();       // the water malus of a unit before dry() blocked it
+    private boolean noMalus;                                    // the warning of malus() once
 
     // min: no shot at a target nearer than this (blocks, the AoE2 minimum range of the Mangonel line ..., #1350)
     // pass: the blocks that a bolt flies past the range and hurts the enemy units on its line (the Scorpion, #1401),
@@ -1364,6 +1366,51 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         });
     }
 
+    // A land unit keeps out of water deeper than 1 block (AoE2: only ships go there), but walks through the 1-block
+    // shallows (#1198, #1669). PathType.WATER is the type of both, and Paper has no malus setter: the server has the
+    // Mojang names at run time (Mob#setPathfindingMalus). A malus of -1 blocks the water, so only for an order whose
+    // path goes through deep water: then the unit walks around the lake, or stops at the shore. The crew of a ship sails.
+    private void dry(Mob mob, Location goal) {
+        Float old = wet.remove(mob.getUniqueId());
+        if (old != null) {
+            malus(mob, old);                                    // the water of the last order is open again
+        }
+        if (mob.getVehicle() instanceof Boat || mob.isInWater()) {
+            return;                                             // a unit in the water swims out (#1208)
+        }
+        var path = mob.getPathfinder().findPath(goal);
+        if (path != null && path.getPoints().stream().anyMatch(AoePlugin::deep) && (old = malus(mob, -1f)) != null) {
+            wet.put(mob.getUniqueId(), old);
+        }
+    }
+
+    // Water above or under the water of a path point: deeper than 1 block. A unit that sinks walks on the floor
+    // (water above it), a horse swims at the top (water under it).
+    private static boolean deep(Location p) {
+        Block b = p.getBlock();
+        return b.getType() == Material.WATER && (b.getRelative(0, 1, 0).getType() == Material.WATER
+                || b.getRelative(0, -1, 0).getType() == Material.WATER);
+    }
+
+    // Set the path malus of PathType.WATER of the mob. Returns the malus before, or null when the server has no such
+    // method (another mapping): then the unit walks as before.
+    private Float malus(Mob mob, float value) {
+        try {
+            Object handle = mob.getClass().getMethod("getHandle").invoke(mob);
+            Class<?> type = Class.forName("net.minecraft.world.level.pathfinder.PathType");
+            Object water = type.getField("WATER").get(null);
+            float old = (float) handle.getClass().getMethod("getPathfindingMalus", type).invoke(handle, water);
+            handle.getClass().getMethod("setPathfindingMalus", type, float.class).invoke(handle, water, value);
+            return old;
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            if (!noMalus) {
+                getLogger().warning("aoe2mc: no path malus: " + e);
+                noMalus = true;
+            }
+            return null;
+        }
+    }
+
     // The path ends on another block than the goal (the goal block has no place to stand, so the path ends at the
     // nearest free block): the rest of the path only passes the goal, a move without an order (#1292: an eagle scout
     // of the replay walked 2 blocks past its replay position).
@@ -1848,6 +1895,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 if (gates.any()) {                                     // through the doors of an own gate (#1325)
                     mob.getPathfinder().setCanOpenDoors(gates.opens(mob));
                 }
+                dry(mob, goal);
                 mob.getPathfinder().moveTo(goal, speed);
                 orders.put(mob.getUniqueId(), new Order(goal, speed));
                 n++;
