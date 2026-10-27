@@ -48,6 +48,9 @@ in the Imperial Age (#1254). Coinage and Banking change the tribute fee: the gam
 The university researches Fortified Wall in the Castle Age (#1326, WALL_UPGRADES): the new and the complete own stone
 walls and gates get the fortified design and its AoE2 hit points and armor (build.design, build.upgrade).
 An age gives the complete own walls and gates the AoE2 hit points of the new age (#1372, combat.WALLS, build.upgrade).
+It researches Guard Tower in the Castle Age and Keep (after Guard Tower) in the Imperial Age (#1374, TOWER_UPGRADES):
+the new and the complete own watch towers get the AoE2 hit points, attack and armor of the guard tower or the keep
+(build.line, build.retower). The look of the tower stays.
 """
 import json
 import math
@@ -82,6 +85,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "FORGING": {"food": 150},
          "FORTIFIED_WALL": {"food": 200, "wood": 100},
          "GOLD_MINING": {"food": 100, "wood": 75},
+         "GUARD_TOWER": {"food": 100, "wood": 250},                    # the upgrade (AoE2 DE wiki "Watch Tower")
          "GUILDS": {"food": 300, "gold": 200},
          "HEAVY_SCORPION": {"wood": 75, "gold": 75},
          "HEAVY_SCORPION_UPGRADE": {"food": 800, "wood": 750},
@@ -89,6 +93,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "HUSKARL": {"food": 75, "gold": 35},
          "IMPERIAL_AGE": {"food": 1000, "gold": 800},
          "JANISSARY": {"food": 60, "gold": 55},
+         "KEEP": {"food": 500, "wood": 350},                           # the upgrade (AoE2 DE wiki "Guard Tower")
          "LONGBOWMAN": {"wood": 35, "gold": 40},
          "MAMELUKE": {"food": 55, "gold": 85},
          "MAN_AT_ARMS": {"food": 60, "gold": 20},
@@ -138,6 +143,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "FORGING": 50,
                "FORTIFIED_WALL": 50,
                "GOLD_MINING": 30,
+               "GUARD_TOWER": 30,
                "GUILDS": 50,
                "HEAVY_SCORPION": 30,
                "HEAVY_SCORPION_UPGRADE": 50,
@@ -145,6 +151,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "HUSKARL": 13,
                "IMPERIAL_AGE": 190,
                "JANISSARY": 21,
+               "KEEP": 75,
                "LONGBOWMAN": 18,
                "MAMELUKE": 23,
                "MAN_AT_ARMS": 21,
@@ -184,7 +191,7 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                          "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR"),
           "CASTLE": ("TREBUCHET",),                                             # and the unique unit: trains() (#708, #1351)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES"),                           # (#671, #940)
-          "UNIVERSITY": ("FORTIFIED_WALL", "SIEGE_ENGINEERS"),                 # (#1326, #1352)
+          "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS"),   # (#1326, #1374, #1352)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",),                                   # (#723)
           "MARKET": ("TRADE_CART", "CARAVAN", "GUILDS"),                       # (#1253, #1254)
           "MILL": ("HORSE_COLLAR",),                                            # (#726)
@@ -227,10 +234,12 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "FORGING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
          "FORTIFIED_WALL": lambda name, s: s,                      # the walls of the player: WALL_UPGRADES
          "GOLD_MINING": lambda name, s: s,                         # an economy technology: gather.WORK_TECHS
+         "GUARD_TOWER": lambda name, s: s,                         # the towers of the player: TOWER_UPGRADES
          "GUILDS": lambda name, s: s,                              # the trading fee: market.FEES
          "HEAVY_SCORPION_UPGRADE": lambda name, s: s,
          "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
          "IMPERIAL_AGE": lambda name, s: s,                        # an age: REQUIRES
+         "KEEP": lambda name, s: s,                                # the towers of the player: TOWER_UPGRADES
          "LOOM": lambda name, s: s._replace(hp=s.hp + 15, melee=s.melee + 1, pierce=s.pierce + 2)
          if "VILLAGER" in name else s,
          "MAN_AT_ARMS_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
@@ -259,8 +268,10 @@ UPGRADES = {                                                       # technology:
     "SIEGE_ONAGER_UPGRADE": ("ONAGER", "SIEGE_ONAGER"),
     "SIEGE_RAM_UPGRADE": ("CAPPED_RAM", "SIEGE_RAM"),
 }
-AFTER = {"SIEGE_ONAGER_UPGRADE": "ONAGER_UPGRADE", "SIEGE_RAM_UPGRADE": "CAPPED_RAM_UPGRADE"}   # the upgrade before it
+AFTER = {"KEEP": "GUARD_TOWER", "SIEGE_ONAGER_UPGRADE": "ONAGER_UPGRADE", "SIEGE_RAM_UPGRADE": "CAPPED_RAM_UPGRADE"}   # the upgrade before it
 WALL_UPGRADES = {"FORTIFIED_WALL": {"STONE_WALL": "FORTIFIED_WALL", "GATE": "FORTIFIED_GATE"}}   # technology: {wall: new} (#1326)
+TOWER_UPGRADES = {"GUARD_TOWER": {"WATCH_TOWER": "GUARD_TOWER"},   # technology: {tower: the tower of its values},
+                  "KEEP": {"GUARD_TOWER": "KEEP", "WATCH_TOWER": "KEEP"}}   # in the research order (#1374)
 REQUIRES = {"CASTLE_AGE": (2, ("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET")),   # n types of these buildings
             "FEUDAL_AGE": (2, ("BARRACKS", "MILL", "LUMBER_CAMP", "MINING_CAMP", "DOCK")),
             "IMPERIAL_AGE": (2, ("MONASTERY", "UNIVERSITY", "SIEGE_WORKSHOP"), ("CASTLE",))}   # or one of these alone
@@ -274,9 +285,11 @@ TECH_AGE = {                                                       # the age of 
     "FORGING": 1,
     "FORTIFIED_WALL": 2,
     "GOLD_MINING": 1,
+    "GUARD_TOWER": 2,
     "GUILDS": 3,
     "HEAVY_SCORPION_UPGRADE": 3,
     "HORSE_COLLAR": 1,
+    "KEEP": 3,
     "MAN_AT_ARMS_UPGRADE": 1,
     "ONAGER_UPGRADE": 3,
     "PADDED_ARCHER_ARMOR": 1,
@@ -326,11 +339,13 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "FORGING": (0, "book", "Forging"),
          "FORTIFIED_WALL": (0, "book", "Fortified Wall"),
          "GOLD_MINING": (0, "book", "Gold Mining"),
+         "GUARD_TOWER": (2, "book", "Guard Tower"),
          "GUILDS": (2, "book", "Guilds"),
          "HORSE_COLLAR": (0, "book", "Horse Collar"),
          "HUSKARL": (0, "zombie_spawn_egg", "Huskarl"),
          "IMPERIAL_AGE": (5, "bell", "Imperial Age"),
          "JANISSARY": (0, "pillager_spawn_egg", "Janissary"),
+         "KEEP": (3, "book", "Keep"),
          "LONGBOWMAN": (0, "skeleton_spawn_egg", "Longbowman"),
          "LOOM": (1, "book", "Loom"),                               # a book for a technology (#618)
          "MAMELUKE": (0, "camel_spawn_egg", "Mameluke"),
@@ -374,6 +389,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "FORGING": "Infantry and cavalry +1 attack.",
         "FORTIFIED_WALL": "Stone walls +1,200 HP, +4/+2 armor; also gates.",
         "GOLD_MINING": "Villagers mine gold 15 % faster.",
+        "GUARD_TOWER": "Watch towers +480 HP, +2 attack, +1/+1 armor.",
         "GUILDS": "Market trading fee 15 %.",
         "HEAVY_SCORPION": "Siege. Shoots bolts; weak vs. cavalry.",
         "HEAVY_SCORPION_UPGRADE": "Upgrades scorpions to heavy scorpions.",
@@ -381,6 +397,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "HUSKARL": "Gothic infantry. Strong vs. archers.",
         "IMPERIAL_AGE": "Advance to the Imperial Age.",
         "JANISSARY": "Turkish gunner. Strong vs. infantry.",
+        "KEEP": "Guard towers +750 HP, +1 attack, +1/+1 armor.",
         "LONGBOWMAN": "Briton archer. Long range.",
         "LOOM": "Villagers +15 HP, +1/+2 armor.",
         "MAMELUKE": "Saracen camel. Strong vs. cavalry.",
@@ -723,6 +740,8 @@ def research(g, entry):
         for site in [s for s in g.sites if s["name"] in WALL_UPGRADES[entry["name"]] and s.get("done")
                      and s["player"] == g.player]:
             build.upgrade(g, site, combat.wall(site["name"], build.ages(g)))
+    if entry["name"] in TOWER_UPGRADES:                            # the complete own towers get the new values (#1374)
+        build.retower(g, g.techs - {entry["name"]})
     if entry["name"] in UPGRADES:                                  # the live units of the line get the new name
         old, new = UPGRADES[entry["name"]]
         for uuid in [u for u, n in g.soldiers.items() if n == old]:
