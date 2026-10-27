@@ -72,6 +72,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}, "FEUDAL_AGE": {"food": 500},
          "BATTERING_RAM": {"wood": 160, "gold": 75},
          "BERSERK": {"food": 65, "gold": 20},
+         "BODKIN_ARROW": {"food": 200, "gold": 100},                   # AoE2 DE wiki (#1395)
          "BLOODLINES": {"food": 150, "gold": 100},
          "CAPPED_RAM": {"wood": 160, "gold": 75},
          "CAPPED_RAM_UPGRADE": {"food": 300},
@@ -95,6 +96,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "HORSE_COLLAR": {"food": 75, "wood": 75},
          "HUSKARL": {"food": 75, "gold": 35},
          "IMPERIAL_AGE": {"food": 1000, "gold": 800},
+         "IRON_CASTING": {"food": 220, "gold": 120},
          "JANISSARY": {"food": 60, "gold": 55},
          "KEEP": {"food": 500, "wood": 350},                           # the upgrade (AoE2 DE wiki "Guard Tower")
          "LEATHER_ARCHER_ARMOR": {"food": 150, "gold": 150},
@@ -135,6 +137,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "BATTERING_RAM": 36,
                "BERSERK": 14,
                "BLOODLINES": 50,
+               "BODKIN_ARROW": 35,
                "CAPPED_RAM": 36,
                "CAPPED_RAM_UPGRADE": 50,
                "CARAVAN": 40,
@@ -157,6 +160,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "HORSE_COLLAR": 20,
                "HUSKARL": 13,
                "IMPERIAL_AGE": 190,
+               "IRON_CASTING": 75,
                "JANISSARY": 21,
                "KEEP": 75,
                "LEATHER_ARCHER_ARMOR": 55,
@@ -197,7 +201,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER"),                                         # building (#654, #670, #655)
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING",            # (#675, #725, #724, #937, #938)
                          "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR",
-                         "CHAIN_MAIL_ARMOR", "LEATHER_ARCHER_ARMOR", "CHAIN_BARDING_ARMOR"),   # the Castle Age (#1394)
+                         "CHAIN_MAIL_ARMOR", "LEATHER_ARCHER_ARMOR", "CHAIN_BARDING_ARMOR",   # the Castle Age (#1394)
+                         "IRON_CASTING", "BODKIN_ARROW"),                       # (#1395)
           "CASTLE": ("TREBUCHET",),                                             # and the unique unit: trains() (#708, #1351)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES"),                           # (#671, #940)
           "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS"),   # (#1326, #1374, #1352)
@@ -235,6 +240,7 @@ def engineers(name, s):
 
 
 TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
+         "BODKIN_ARROW": lambda name, s: s._replace(attack=s.attack + 1, range=s.range + 1) if "archer" in s.classes else s,
          "CAPPED_RAM_UPGRADE": lambda name, s: s,                  # a new unit name: UPGRADES
          "CARAVAN": lambda name, s: s,                             # the walk speed: SPEEDS
          "CASTLE_AGE": lambda name, s: s,                          # an age: REQUIRES
@@ -253,6 +259,7 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "HEAVY_SCORPION_UPGRADE": lambda name, s: s,
          "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
          "IMPERIAL_AGE": lambda name, s: s,                        # an age: REQUIRES
+         "IRON_CASTING": lambda name, s: s._replace(attack=s.attack + 1) if melee(s) else s,
          "KEEP": lambda name, s: s,                                # the towers of the player: TOWER_UPGRADES
          "LEATHER_ARCHER_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if "archer" in s.classes else s,
@@ -284,7 +291,10 @@ UPGRADES = {                                                       # technology:
     "SIEGE_ONAGER_UPGRADE": ("ONAGER", "SIEGE_ONAGER"),
     "SIEGE_RAM_UPGRADE": ("CAPPED_RAM", "SIEGE_RAM"),
 }
-AFTER = {"CHAIN_BARDING_ARMOR": "SCALE_BARDING_ARMOR", "CHAIN_MAIL_ARMOR": "SCALE_MAIL_ARMOR", "KEEP": "GUARD_TOWER",
+AFTER = {"BODKIN_ARROW": "FLETCHING",
+         "CHAIN_BARDING_ARMOR": "SCALE_BARDING_ARMOR", "CHAIN_MAIL_ARMOR": "SCALE_MAIL_ARMOR",
+         "IRON_CASTING": "FORGING",
+         "KEEP": "GUARD_TOWER",
          "LEATHER_ARCHER_ARMOR": "PADDED_ARCHER_ARMOR", "SIEGE_ONAGER_UPGRADE": "ONAGER_UPGRADE", "SIEGE_RAM_UPGRADE": "CAPPED_RAM_UPGRADE"}   # the upgrade before it
 WALL_UPGRADES = {"FORTIFIED_WALL": {"STONE_WALL": "FORTIFIED_WALL", "GATE": "FORTIFIED_GATE"}}   # technology: {wall: new} (#1326)
 TOWER_UPGRADES = {"GUARD_TOWER": {"WATCH_TOWER": "GUARD_TOWER"},   # technology: {tower: the tower of its values},
@@ -294,6 +304,7 @@ REQUIRES = {"CASTLE_AGE": (2, ("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET"
             "IMPERIAL_AGE": (2, ("MONASTERY", "UNIVERSITY", "SIEGE_WORKSHOP"), ("CASTLE",))}   # or one of these alone
 TECH_AGE = {                                                       # the age of a technology (build.AGE): hidden before
     "BLOODLINES": 1,
+    "BODKIN_ARROW": 2,
     "CAPPED_RAM_UPGRADE": 3,
     "CARAVAN": 2,
     "CHAIN_BARDING_ARMOR": 2,
@@ -308,6 +319,7 @@ TECH_AGE = {                                                       # the age of 
     "GUILDS": 3,
     "HEAVY_SCORPION_UPGRADE": 3,
     "HORSE_COLLAR": 1,
+    "IRON_CASTING": 2,
     "KEEP": 3,
     "LEATHER_ARCHER_ARMOR": 2,
     "MAN_AT_ARMS_UPGRADE": 1,
@@ -349,6 +361,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "BATTERING_RAM": (0, "minecart", "Battering Ram"),         # a siege unit is a minecart (units.siege)
          "BERSERK": (0, "zombie_spawn_egg", "Berserk"),
          "BLOODLINES": (1, "book", "Bloodlines"),
+         "BODKIN_ARROW": (2, "book", "Bodkin Arrow"),                 # the slot of Fletching (AFTER)
          "CARAVAN": (1, "book", "Caravan"),
          "CASTLE_AGE": (4, "bell", "Castle Age"),
          "CATAPHRACT": (0, "horse_spawn_egg", "Cataphract"),
@@ -367,6 +380,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "HORSE_COLLAR": (0, "book", "Horse Collar"),
          "HUSKARL": (0, "zombie_spawn_egg", "Huskarl"),
          "IMPERIAL_AGE": (5, "bell", "Imperial Age"),
+         "IRON_CASTING": (0, "book", "Iron Casting"),                 # the slot of Forging
          "JANISSARY": (0, "pillager_spawn_egg", "Janissary"),
          "KEEP": (3, "book", "Keep"),
          "LEATHER_ARCHER_ARMOR": (3, "book", "Leather Archer Armor"),
@@ -400,6 +414,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "BATTERING_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
         "BERSERK": "Viking infantry. Heals itself.",
         "BLOODLINES": "Cavalry +20 HP.",
+        "BODKIN_ARROW": "Archers +1 attack, +1 range.",
         "CAPPED_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
         "CAPPED_RAM_UPGRADE": "Upgrades battering rams to capped rams.",
         "CARAVAN": "Trade carts +20 % speed.",
@@ -423,6 +438,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "HORSE_COLLAR": "Farms +75 food.",
         "HUSKARL": "Gothic infantry. Strong vs. archers.",
         "IMPERIAL_AGE": "Advance to the Imperial Age.",
+        "IRON_CASTING": "Infantry and cavalry +1 attack.",
         "JANISSARY": "Turkish gunner. Strong vs. infantry.",
         "KEEP": "Guard towers +750 HP, +1 attack, +1/+1 armor.",
         "LEATHER_ARCHER_ARMOR": "Archers +1 melee armor, +1 pierce armor.",
