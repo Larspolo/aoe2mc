@@ -746,8 +746,10 @@ class Gather:
                       if n not in hp or k < 1 or combat.target_uuid([fp[i] for i in (0, 2, 1, 3)]) in alive]
         import combat                                                  # combat imports this module
         printing = monk.PRINTING * ("BLOCK_PRINTING" in getattr(self, "techs", ()))   # the monks see more (#1475)
+        watch = combat.WATCH * ("TOWN_WATCH" in getattr(self, "techs", ()))   # the buildings see more (#1454)
+        lit = {n for n, _, _ in placed} - combat.WALLS.keys() - {"FARM", "FISH_TRAP"}   # as in AoE2
         return replay.seen(mobs, [(self.player, n, fp) for n, fp, _ in placed], self.player, self.map.T,
-                           lambda n: combat.sight(n) + printing * (n == "MONK"))
+                           lambda n: combat.sight(n) + printing * (n == "MONK") + watch * (n in lit))
 
     def task(self, v, name):
         """Give the villager the look of its AoE2 task (`LUMBERJACK` ...), with the table of the converter."""
@@ -991,6 +993,8 @@ class Gather:
         if monk.order(self, name, self.map.pick_ground(eye, d)):      # a monk to a relic or to a monastery (#1246)
             return
         if trade.order(self, name, self.map.pick_ground(eye, d)):     # the trade carts trade with an own market (#1253)
+            return
+        if fleet.trade_order(self, name, fleet.pick(self, eye, d)):   # the trade cogs trade with an own dock (#1485)
             return
         if repair.order(self, name, self.map.pick_ground(eye, d)):    # villagers repair an own damaged building (#1330)
             return

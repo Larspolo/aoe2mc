@@ -1,6 +1,7 @@
 """game/train.py, game/fleet.py and game/combat.py: an own dock trains the hulk in the Feudal Age with its AoE2 DE values
 (wiki infobox "Hulk", The Last Chieftains), and a hulk sails next to an enemy ship (range 1) and attacks it with melee
-damage (#1489). The first row of the dock menu is full: the hulk is in the third row (train.MORE). Fake server."""
+damage (#1489). The first row of the dock menu is full: the hulk is in the third row, after the trade cog (train.MORE + 1).
+Fake server."""
 import math
 
 from test_dock_train import DOCK, dock_map
@@ -14,7 +15,7 @@ def hulk(g):
     """A hulk of player 1 from the dock, in the Feudal Age."""
     g.techs = {"FEUDAL_AGE"}
     g.stock["gold"] = 100
-    assert train.order(g, "Steve", train.open_menu(g, "Steve", (15, 12)), train.MORE) == 1
+    assert train.order(g, "Steve", train.open_menu(g, "Steve", (15, 12)), train.MORE + 1) == 1
     uuid, = train.tick(g, 42)
     return uuid
 
@@ -37,18 +38,18 @@ def test_the_hulk_hits_with_melee_damage_more_vs_fire_ships_and_less_vs_building
 def test_the_dock_menu_has_the_hulk_in_the_third_row_from_the_feudal_age():
     server, g = dock_map()
     train.open_menu(g, "Steve", (15, 12))
-    assert f"{train.MORE}:gray_dye:Hulk:75 wood · 35 gold · 42 s · Needs the Feudal Age" in menus(server)[-1]
-    assert train.order(g, "Steve", DOCK, train.MORE) == 0
+    assert f"{train.MORE + 1}:gray_dye:Hulk:75 wood · 35 gold · 42 s · Needs the Feudal Age" in menus(server)[-1]
+    assert train.order(g, "Steve", DOCK, train.MORE + 1) == 0
     uuid = hulk(g)
     assert g.soldiers[uuid] == "HULK" and uuid in g.ships and (g.stock["wood"], g.stock["gold"]) == (125, 65)
     train.open_menu(g, "Steve", (15, 12))
-    assert f"{train.MORE}:oak_boat:Hulk:75 wood · 35 gold · 42 s · queue 0/15" in menus(server)[-1]
+    assert f"{train.MORE + 1}:oak_boat:Hulk:75 wood · 35 gold · 42 s · queue 0/15" in menus(server)[-1]
 
 
 def test_a_click_in_the_queue_row_still_cancels_a_unit():
     server, g = dock_map()
     g.techs, g.stock["gold"] = {"FEUDAL_AGE"}, 100
-    assert train.order(g, "Steve", DOCK, train.MORE) == 1 and g.stock["wood"] == 125
+    assert train.order(g, "Steve", DOCK, train.MORE + 1) == 1 and g.stock["wood"] == 125
     assert train.order(g, "Steve", DOCK, train.ROW) == 0 and g.stock["wood"] == 200 and not g.queues.get(DOCK)
 
 

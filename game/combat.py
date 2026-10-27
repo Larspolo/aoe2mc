@@ -202,6 +202,7 @@ STATS = {
     "CAPPED_RAM": Stats(200, 3, -2, 190, 0, 5.0, {"building": 160, SIE: 50}, (SIE, RAM)),
     "SIEGE_RAM": Stats(270, 4, -1, 195, 0, 5.0, {"building": 200, SIE: 65}, (SIE, RAM)),
     "SIEGE_TOWER": Stats(175, 0, -2, 100, 0, 0.0, {}, (SIE, RAM)),         # AoE2 DE wiki (#1362)
+    "TRADE_COG": Stats(80, 0, 0, 6, 0, 0.0, {}, ()),                   # AoE2 DE wiki (#1485)
     "TRANSPORT_SHIP": Stats(70, 0, 0, 2, 0, 0.0, {}, ()),              # AoE2 DE wiki (#1385)
     "TREBUCHET": Stats(150, 200, 2, 8, 16, 10.0, {"building": 250}, (SIE,)),   # AoE2 DE wiki: 150 HP (#1351); packed
     # armor (unpacked: trebuchet.UNPACKED, #1409)
@@ -271,6 +272,7 @@ WALL_TAG = "aoe2mc.wall"
 # gives infantry a bonus against it (#1419).
 STANDARD = "standard"
 BUILDINGS = {k: s if k == "WONDER" else s._replace(classes=s.classes + (STANDARD,)) for k, s in BUILDINGS.items()}
+WATCH = 4    # tiles of line of sight that Town Watch adds to each own building but walls, gates, farms, fish traps (#1454)
 # Line of sight in tiles (AoE2 DE, base unit or building, wiki infobox "LOS"; the house: 1 from the edge of its
 # 2 x 2 tiles, #1300) where it is not max(4, range + 2) (sight()).
 SIGHT = {
@@ -303,6 +305,7 @@ SIGHT = {
     "SIEGE_WORKSHOP": 6,
     "STABLE": 6,
     "TOWN_CENTER": 8,
+    "TRADE_COG": 6,
     "TWO_HANDED_SWORDSMAN": 5,
     "UNIVERSITY": 6,
     "WATCH_TOWER": 10,
