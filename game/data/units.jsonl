@@ -1,14 +1,14 @@
 {"name": "MILITIA", "hp": 40, "attack": 4, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry"]}
-{"name": "MAN_AT_ARMS", "hp": 45, "attack": 6, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry"]}
-{"name": "LONG_SWORDSMAN", "hp": 60, "attack": 9, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry"]}
-{"name": "TWO_HANDED_SWORDSMAN", "hp": 65, "attack": 12, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry"]}
-{"name": "CHAMPION", "hp": 70, "attack": 13, "melee": 1, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry"]}
+{"name": "MAN_AT_ARMS", "hp": 45, "attack": 6, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry"], "sight": 6}
+{"name": "LONG_SWORDSMAN", "hp": 60, "attack": 9, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry"], "sight": 6}
+{"name": "TWO_HANDED_SWORDSMAN", "hp": 65, "attack": 12, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry"], "sight": 7}
+{"name": "CHAMPION", "hp": 70, "attack": 13, "melee": 1, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry"], "sight": 7}
 {"name": "SPEARMAN", "hp": 45, "attack": 3, "melee": 0, "pierce": 0, "range": 0, "reload": 3.0, "bonus": {"cavalry": 15, "camel": 12, "elephant": 15}, "classes": ["infantry", "spearman"]}
-{"name": "PIKEMAN", "hp": 55, "attack": 4, "melee": 0, "pierce": 0, "range": 0, "reload": 3.0, "bonus": {"cavalry": 22, "camel": 18, "elephant": 25}, "classes": ["infantry", "spearman"]}
-{"name": "HALBERDIER", "hp": 60, "attack": 6, "melee": 0, "pierce": 0, "range": 0, "reload": 3.0, "bonus": {"cavalry": 32, "camel": 26, "elephant": 28}, "classes": ["infantry", "spearman"]}
-{"name": "EAGLE_SCOUT", "hp": 50, "attack": 4, "melee": 0, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"siege": 3}, "classes": ["infantry"], "note": "the Dark and Feudal Age values"}
-{"name": "EAGLE_WARRIOR", "hp": 55, "attack": 7, "melee": 0, "pierce": 3, "range": 0, "reload": 2.0, "bonus": {"camel": 2, "cavalry": 3, "siege": 3, "ship": 1}, "classes": ["infantry"], "note": "AoE2 DE wiki (#1555)"}
-{"name": "ELITE_EAGLE_WARRIOR", "hp": 60, "attack": 9, "melee": 0, "pierce": 4, "range": 0, "reload": 2.0, "bonus": {"camel": 3, "cavalry": 4, "siege": 5, "ship": 2}, "classes": ["infantry"]}
+{"name": "PIKEMAN", "hp": 55, "attack": 4, "melee": 0, "pierce": 0, "range": 0, "reload": 3.0, "bonus": {"cavalry": 22, "camel": 18, "elephant": 25}, "classes": ["infantry", "spearman"], "sight": 6}
+{"name": "HALBERDIER", "hp": 60, "attack": 6, "melee": 0, "pierce": 0, "range": 0, "reload": 3.0, "bonus": {"cavalry": 32, "camel": 26, "elephant": 28}, "classes": ["infantry", "spearman"], "sight": 6}
+{"name": "EAGLE_SCOUT", "hp": 50, "attack": 4, "melee": 0, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"siege": 3}, "classes": ["infantry"], "sight": 5, "note": "the Dark and Feudal Age values"}
+{"name": "EAGLE_WARRIOR", "hp": 55, "attack": 7, "melee": 0, "pierce": 3, "range": 0, "reload": 2.0, "bonus": {"camel": 2, "cavalry": 3, "siege": 3, "ship": 1}, "classes": ["infantry"], "sight": 8, "note": "AoE2 DE wiki (#1555)"}
+{"name": "ELITE_EAGLE_WARRIOR", "hp": 60, "attack": 9, "melee": 0, "pierce": 4, "range": 0, "reload": 2.0, "bonus": {"camel": 3, "cavalry": 4, "siege": 5, "ship": 2}, "classes": ["infantry"], "sight": 8}
 {"name": "ARCHER", "hp": 30, "attack": 4, "melee": 0, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 3}, "classes": ["archer"]}
 {"name": "CROSSBOWMAN", "hp": 35, "attack": 5, "melee": 0, "pierce": 0, "range": 5, "reload": 2.0, "bonus": {"spearman": 3}, "classes": ["archer"]}
 {"name": "ARBALESTER", "hp": 40, "attack": 6, "melee": 0, "pierce": 0, "range": 5, "reload": 2.0, "bonus": {"spearman": 3}, "classes": ["archer"]}
@@ -16,171 +16,171 @@
 {"name": "ELITE_SKIRMISHER", "hp": 35, "attack": 3, "melee": 0, "pierce": 4, "range": 5, "reload": 3.0, "bonus": {"archer": 4, "spearman": 3}, "classes": ["archer"]}
 {"name": "IMPERIAL_SKIRMISHER", "hp": 35, "attack": 4, "melee": 0, "pierce": 5, "range": 5, "reload": 3.0, "bonus": {"archer": 5, "spearman": 4}, "classes": ["archer"]}
 {"name": "LONGBOWMAN", "hp": 35, "attack": 6, "melee": 0, "pierce": 0, "range": 5, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"]}
-{"name": "CAVALRY_ARCHER", "hp": 50, "attack": 6, "melee": 0, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "cavalry"]}
+{"name": "CAVALRY_ARCHER", "hp": 50, "attack": 6, "melee": 0, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "cavalry"], "sight": 5}
 {"name": "HEAVY_CAVALRY_ARCHER", "hp": 60, "attack": 7, "melee": 1, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 4}, "classes": ["archer", "cavalry"]}
 {"name": "HAND_CANNONEER", "hp": 40, "attack": 17, "melee": 1, "pierce": 0, "range": 7, "reload": 3.45, "bonus": {"infantry": 10, "spearman": 1}, "classes": ["archer", "gunpowder"]}
 {"name": "SCOUT_CAVALRY", "hp": 45, "attack": 3, "melee": 0, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["cavalry"]}
-{"name": "LIGHT_CAVALRY", "hp": 60, "attack": 7, "melee": 0, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["cavalry"]}
-{"name": "HUSSAR", "hp": 75, "attack": 7, "melee": 0, "pierce": 2, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry"]}
+{"name": "LIGHT_CAVALRY", "hp": 60, "attack": 7, "melee": 0, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["cavalry"], "sight": 8}
+{"name": "HUSSAR", "hp": 75, "attack": 7, "melee": 0, "pierce": 2, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry"], "sight": 10}
 {"name": "KNIGHT", "hp": 100, "attack": 10, "melee": 2, "pierce": 2, "range": 0, "reload": 1.8, "bonus": {}, "classes": ["cavalry"]}
 {"name": "CAVALIER", "hp": 120, "attack": 12, "melee": 2, "pierce": 2, "range": 0, "reload": 1.8, "bonus": {}, "classes": ["cavalry"]}
-{"name": "PALADIN", "hp": 160, "attack": 14, "melee": 2, "pierce": 3, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry"], "note": "ROF 1.9: the wiki infobox (#1501)"}
-{"name": "CAMEL_RIDER", "hp": 100, "attack": 6, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"cavalry": 9, "camel": 5, "ship": 5}, "classes": ["camel"], "note": "the wiki infobox (#1550)"}
-{"name": "HEAVY_CAMEL_RIDER", "hp": 120, "attack": 7, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"camel": 9, "cavalry": 18, "ship": 9}, "classes": ["camel"]}
-{"name": "IMPERIAL_CAMEL_RIDER", "hp": 140, "attack": 8, "melee": 0, "pierce": 0, "range": 0, "reload": 1.667, "bonus": {"building": 2, "camel": 9, "cavalry": 18}, "classes": ["camel"]}
-{"name": "WAR_ELEPHANT", "hp": 450, "attack": 15, "melee": 1, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 30}, "classes": ["elephant", "unique"]}
-{"name": "ELITE_WAR_ELEPHANT", "hp": 600, "attack": 20, "melee": 1, "pierce": 3, "range": 0, "reload": 2.0, "bonus": {"building": 30}, "classes": ["elephant", "unique"]}
+{"name": "PALADIN", "hp": 160, "attack": 14, "melee": 2, "pierce": 3, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry"], "sight": 5, "note": "ROF 1.9: the wiki infobox (#1501)"}
+{"name": "CAMEL_RIDER", "hp": 100, "attack": 6, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"cavalry": 9, "camel": 5, "ship": 5}, "classes": ["camel"], "sight": 5, "note": "the wiki infobox (#1550); sight: the wiki infobox (#1550)"}
+{"name": "HEAVY_CAMEL_RIDER", "hp": 120, "attack": 7, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"camel": 9, "cavalry": 18, "ship": 9}, "classes": ["camel"], "sight": 5}
+{"name": "IMPERIAL_CAMEL_RIDER", "hp": 140, "attack": 8, "melee": 0, "pierce": 0, "range": 0, "reload": 1.667, "bonus": {"building": 2, "camel": 9, "cavalry": 18}, "classes": ["camel"], "sight": 5}
+{"name": "WAR_ELEPHANT", "hp": 450, "attack": 15, "melee": 1, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 30}, "classes": ["elephant", "unique"], "sight": 7}
+{"name": "ELITE_WAR_ELEPHANT", "hp": 600, "attack": 20, "melee": 1, "pierce": 3, "range": 0, "reload": 2.0, "bonus": {"building": 30}, "classes": ["elephant", "unique"], "sight": 8}
 {"name": "ARAMBAI", "hp": 60, "attack": 12, "melee": 0, "pierce": 1, "range": 5, "reload": 2.0, "bonus": {"siege": 2}, "classes": ["archer", "cavalry", "unique"]}
 {"name": "BALLISTA_ELEPHANT", "hp": 250, "attack": 9, "melee": 0, "pierce": 3, "range": 5, "reload": 2.5, "bonus": {"building": 5}, "classes": ["cavalry", "elephant", "siege", "unique", "heavysiege"]}
-{"name": "BERSERK", "hp": 54, "attack": 12, "melee": 1, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"building": 2}, "classes": ["infantry", "unique"]}
-{"name": "BOYAR", "hp": 100, "attack": 12, "melee": 4, "pierce": 2, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"]}
-{"name": "CAMEL_ARCHER", "hp": 55, "attack": 7, "melee": 0, "pierce": 1, "range": 4, "reload": 2.0, "bonus": {}, "classes": ["archer", "camel", "unique"]}
+{"name": "BERSERK", "hp": 54, "attack": 12, "melee": 1, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"building": 2}, "classes": ["infantry", "unique"], "sight": 5}
+{"name": "BOYAR", "hp": 100, "attack": 12, "melee": 4, "pierce": 2, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
+{"name": "CAMEL_ARCHER", "hp": 55, "attack": 7, "melee": 0, "pierce": 1, "range": 4, "reload": 2.0, "bonus": {}, "classes": ["archer", "camel", "unique"], "sight": 5}
 {"name": "CATAPHRACT", "hp": 110, "attack": 9, "melee": 2, "pierce": 1, "range": 0, "reload": 1.8, "bonus": {"infantry": 13}, "classes": ["cavalry", "unique"]}
 {"name": "CENTURION", "hp": 110, "attack": 13, "melee": 2, "pierce": 3, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"]}
-{"name": "CHAKRAM_THROWER", "hp": 40, "attack": 3, "melee": 1, "pierce": 0, "range": 5, "reload": 2.0, "bonus": {"building": 1}, "classes": ["infantry", "unique"], "note": "the Gurjaras castle (#1612)"}
+{"name": "CHAKRAM_THROWER", "hp": 40, "attack": 3, "melee": 1, "pierce": 0, "range": 5, "reload": 2.0, "bonus": {"building": 1}, "classes": ["infantry", "unique"], "sight": 9, "note": "the Gurjaras castle (#1612)"}
 {"name": "CHU_KO_NU", "hp": 45, "attack": 8, "melee": 0, "pierce": 0, "range": 4, "reload": 3.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"]}
-{"name": "COMPOSITE_BOWMAN", "hp": 40, "attack": 4, "melee": 1, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"]}
+{"name": "COMPOSITE_BOWMAN", "hp": 40, "attack": 4, "melee": 1, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"], "sight": 7}
 {"name": "CONQUISTADOR", "hp": 55, "attack": 16, "melee": 2, "pierce": 1, "range": 6, "reload": 2.9, "bonus": {"siege": 4}, "classes": ["archer", "cavalry", "unique"]}
-{"name": "COUSTILLIER", "hp": 115, "attack": 8, "melee": 2, "pierce": 2, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"]}
-{"name": "ELITE_TEUTONIC_KNIGHT", "hp": 110, "attack": 17, "melee": 8, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 4}, "classes": ["infantry", "unique"]}
+{"name": "COUSTILLIER", "hp": 115, "attack": 8, "melee": 2, "pierce": 2, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
+{"name": "ELITE_TEUTONIC_KNIGHT", "hp": 110, "attack": 17, "melee": 8, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 4}, "classes": ["infantry", "unique"], "sight": 7}
 {"name": "FLAMING_CAMEL", "hp": 55, "attack": 20, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"building": 200, "cavalry": 50, "camel": 50, "elephant": 130, "siege": 25}, "classes": ["camel", "unique"]}
-{"name": "FLEMISH_MILITIA", "hp": 40, "attack": 5, "melee": 1, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"cavalry": 6, "camel": 4, "elephant": 6}, "classes": ["infantry", "unique"]}
-{"name": "GBETO", "hp": 40, "attack": 10, "melee": 0, "pierce": 0, "range": 5, "reload": 2.0, "bonus": {}, "classes": ["infantry", "unique"]}
-{"name": "GENGHIS_KHAN", "hp": 300, "attack": 25, "melee": 2, "pierce": 2, "range": 5, "reload": 2.0, "bonus": {"siege": 3}, "classes": ["archer", "cavalry", "unique"]}
-{"name": "GENOESE_CROSSBOWMAN", "hp": 45, "attack": 6, "melee": 1, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"cavalry": 5, "camel": 4, "elephant": 5}, "classes": ["archer", "unique"]}
-{"name": "GHULAM", "hp": 60, "attack": 9, "melee": 0, "pierce": 3, "range": 0, "reload": 2.0, "bonus": {"archer": 5, "building": 2}, "classes": ["infantry", "unique"]}
-{"name": "HUSKARL", "hp": 60, "attack": 10, "melee": 0, "pierce": 6, "range": 0, "reload": 2.0, "bonus": {"archer": 6, "building": 2}, "classes": ["infantry", "unique"]}
+{"name": "FLEMISH_MILITIA", "hp": 40, "attack": 5, "melee": 1, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"cavalry": 6, "camel": 4, "elephant": 6}, "classes": ["infantry", "unique"], "sight": 7}
+{"name": "GBETO", "hp": 40, "attack": 10, "melee": 0, "pierce": 0, "range": 5, "reload": 2.0, "bonus": {}, "classes": ["infantry", "unique"], "sight": 8}
+{"name": "GENGHIS_KHAN", "hp": 300, "attack": 25, "melee": 2, "pierce": 2, "range": 5, "reload": 2.0, "bonus": {"siege": 3}, "classes": ["archer", "cavalry", "unique"], "sight": 4}
+{"name": "GENOESE_CROSSBOWMAN", "hp": 45, "attack": 6, "melee": 1, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"cavalry": 5, "camel": 4, "elephant": 5}, "classes": ["archer", "unique"], "sight": 8}
+{"name": "GHULAM", "hp": 60, "attack": 9, "melee": 0, "pierce": 3, "range": 0, "reload": 2.0, "bonus": {"archer": 5, "building": 2}, "classes": ["infantry", "unique"], "sight": 8}
+{"name": "HUSKARL", "hp": 60, "attack": 10, "melee": 0, "pierce": 6, "range": 0, "reload": 2.0, "bonus": {"archer": 6, "building": 2}, "classes": ["infantry", "unique"], "sight": 5}
 {"name": "HUSSITE_WAGON", "hp": 160, "attack": 10, "melee": 0, "pierce": 7, "range": 6, "reload": 3.45, "bonus": {"siege": 3, "building": 1}, "classes": ["siege", "unique", "heavysiege"]}
-{"name": "JAGUAR_WARRIOR", "hp": 65, "attack": 15, "melee": 1, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"infantry": 5, "building": 2}, "classes": ["infantry", "unique"]}
-{"name": "JANISSARY", "hp": 35, "attack": 17, "melee": 1, "pierce": 0, "range": 7, "reload": 3.45, "bonus": {"siege": 2}, "classes": ["archer", "gunpowder", "unique"]}
-{"name": "KAMAYUK", "hp": 70, "attack": 7, "melee": 1, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"cavalry": 8, "camel": 6, "elephant": 20}, "classes": ["infantry", "unique"]}
-{"name": "KARAMBIT_WARRIOR", "hp": 30, "attack": 7, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry", "unique"]}
-{"name": "KESHIK", "hp": 120, "attack": 9, "melee": 1, "pierce": 2, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"]}
+{"name": "JAGUAR_WARRIOR", "hp": 65, "attack": 15, "melee": 1, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"infantry": 5, "building": 2}, "classes": ["infantry", "unique"], "sight": 5}
+{"name": "JANISSARY", "hp": 35, "attack": 17, "melee": 1, "pierce": 0, "range": 7, "reload": 3.45, "bonus": {"siege": 2}, "classes": ["archer", "gunpowder", "unique"], "sight": 10}
+{"name": "KAMAYUK", "hp": 70, "attack": 7, "melee": 1, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"cavalry": 8, "camel": 6, "elephant": 20}, "classes": ["infantry", "unique"], "sight": 6}
+{"name": "KARAMBIT_WARRIOR", "hp": 30, "attack": 7, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry", "unique"], "sight": 5}
+{"name": "KESHIK", "hp": 120, "attack": 9, "melee": 1, "pierce": 2, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
 {"name": "KIPCHAK", "hp": 40, "attack": 4, "melee": 0, "pierce": 0, "range": 4, "reload": 2.2, "bonus": {"spearman": 1}, "classes": ["archer", "cavalry", "unique"]}
-{"name": "KONNIK", "hp": 100, "attack": 12, "melee": 2, "pierce": 2, "range": 0, "reload": 2.4, "bonus": {}, "classes": ["cavalry", "unique"]}
-{"name": "LEITIS", "hp": 100, "attack": 13, "melee": 1, "pierce": 1, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"]}
-{"name": "MAGYAR_HUSZAR", "hp": 80, "attack": 10, "melee": 0, "pierce": 2, "range": 0, "reload": 1.8, "bonus": {"siege": 5}, "classes": ["cavalry", "unique"]}
+{"name": "KONNIK", "hp": 100, "attack": 12, "melee": 2, "pierce": 2, "range": 0, "reload": 2.4, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
+{"name": "LEITIS", "hp": 100, "attack": 13, "melee": 1, "pierce": 1, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
+{"name": "MAGYAR_HUSZAR", "hp": 80, "attack": 10, "melee": 0, "pierce": 2, "range": 0, "reload": 1.8, "bonus": {"siege": 5}, "classes": ["cavalry", "unique"], "sight": 5}
 {"name": "MAMELUKE", "hp": 80, "attack": 8, "melee": 0, "pierce": 0, "range": 3, "reload": 2.0, "bonus": {"cavalry": 9}, "classes": ["camel", "unique"]}
 {"name": "MANGUDAI", "hp": 60, "attack": 6, "melee": 0, "pierce": 0, "range": 4, "reload": 2.1, "bonus": {"siege": 3, "spearman": 1}, "classes": ["archer", "cavalry", "unique"]}
 {"name": "MONASPA", "hp": 70, "attack": 12, "melee": 3, "pierce": 2, "range": 0, "reload": 1.8, "bonus": {}, "classes": ["cavalry", "unique"]}
-{"name": "OBUCH", "hp": 80, "attack": 8, "melee": 2, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 4}, "classes": ["infantry", "unique"]}
-{"name": "ORGAN_GUN", "hp": 50, "attack": 6, "melee": 2, "pierce": 4, "range": 7, "reload": 3.45, "bonus": {"infantry": 2}, "classes": ["gunpowder", "siege", "unique"]}
+{"name": "OBUCH", "hp": 80, "attack": 8, "melee": 2, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 4}, "classes": ["infantry", "unique"], "sight": 5}
+{"name": "ORGAN_GUN", "hp": 50, "attack": 6, "melee": 2, "pierce": 4, "range": 7, "reload": 3.45, "bonus": {"infantry": 2}, "classes": ["gunpowder", "siege", "unique"], "sight": 8}
 {"name": "PLUMED_ARCHER", "hp": 50, "attack": 5, "melee": 0, "pierce": 1, "range": 4, "reload": 1.9, "bonus": {"infantry": 1, "spearman": 2}, "classes": ["archer", "unique"]}
 {"name": "RATHA", "hp": 100, "attack": 5, "melee": 3, "pierce": 1, "range": 4, "reload": 2.0, "bonus": {"spearman": 1}, "classes": ["archer", "cavalry", "unique"]}
 {"name": "RATTAN_ARCHER", "hp": 35, "attack": 6, "melee": 0, "pierce": 4, "range": 4, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"]}
-{"name": "SAMURAI", "hp": 70, "attack": 10, "melee": 1, "pierce": 1, "range": 0, "reload": 1.9, "bonus": {"building": 2, "unique": 10}, "classes": ["infantry", "unique"]}
-{"name": "SERJEANT", "hp": 75, "attack": 8, "melee": 4, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 2}, "classes": ["infantry", "unique"]}
-{"name": "SHOTEL_WARRIOR", "hp": 45, "attack": 16, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry", "unique"]}
-{"name": "SHRIVAMSHA_RIDER", "hp": 55, "attack": 8, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["cavalry", "unique"]}
-{"name": "TARKAN", "hp": 100, "attack": 8, "melee": 1, "pierce": 3, "range": 0, "reload": 1.9, "bonus": {"building": 8}, "classes": ["cavalry", "unique"]}
-{"name": "TEUTONIC_KNIGHT", "hp": 90, "attack": 14, "melee": 7, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 4}, "classes": ["infantry", "unique"]}
+{"name": "SAMURAI", "hp": 70, "attack": 10, "melee": 1, "pierce": 1, "range": 0, "reload": 1.9, "bonus": {"building": 2, "unique": 10}, "classes": ["infantry", "unique"], "sight": 6}
+{"name": "SERJEANT", "hp": 75, "attack": 8, "melee": 4, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 2}, "classes": ["infantry", "unique"], "sight": 5}
+{"name": "SHOTEL_WARRIOR", "hp": 45, "attack": 16, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry", "unique"], "sight": 5}
+{"name": "SHRIVAMSHA_RIDER", "hp": 55, "attack": 8, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
+{"name": "TARKAN", "hp": 100, "attack": 8, "melee": 1, "pierce": 3, "range": 0, "reload": 1.9, "bonus": {"building": 8}, "classes": ["cavalry", "unique"], "sight": 5}
+{"name": "TEUTONIC_KNIGHT", "hp": 90, "attack": 14, "melee": 7, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 4}, "classes": ["infantry", "unique"], "sight": 5}
 {"name": "THROWING_AXEMAN", "hp": 60, "attack": 7, "melee": 0, "pierce": 0, "range": 5, "reload": 2.0, "bonus": {"building": 1}, "classes": ["infantry", "unique"]}
-{"name": "URUMI_SWORDSMAN", "hp": 55, "attack": 9, "melee": 1, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"building": 1}, "classes": ["infantry", "unique"]}
-{"name": "WAR_WAGON", "hp": 150, "attack": 9, "melee": 0, "pierce": 2, "range": 4, "reload": 2.5, "bonus": {"building": 2}, "classes": ["archer", "cavalry", "unique"]}
-{"name": "WOAD_RAIDER", "hp": 70, "attack": 11, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"building": 2}, "classes": ["infantry", "unique"]}
+{"name": "URUMI_SWORDSMAN", "hp": 55, "attack": 9, "melee": 1, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"building": 1}, "classes": ["infantry", "unique"], "sight": 5}
+{"name": "WAR_WAGON", "hp": 150, "attack": 9, "melee": 0, "pierce": 2, "range": 4, "reload": 2.5, "bonus": {"building": 2}, "classes": ["archer", "cavalry", "unique"], "sight": 7}
+{"name": "WOAD_RAIDER", "hp": 70, "attack": 11, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"building": 2}, "classes": ["infantry", "unique"], "sight": 5}
 {"name": "ELITE_ARAMBAI", "hp": 65, "attack": 14, "melee": 0, "pierce": 2, "range": 5, "reload": 2.0, "bonus": {"siege": 2}, "classes": ["archer", "cavalry", "unique"]}
 {"name": "ELITE_BALLISTA_ELEPHANT", "hp": 280, "attack": 10, "melee": 0, "pierce": 3, "range": 5, "reload": 2.5, "bonus": {"building": 8}, "classes": ["cavalry", "elephant", "siege", "unique", "heavysiege"]}
-{"name": "ELITE_BERSERK", "hp": 62, "attack": 14, "melee": 2, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"building": 3}, "classes": ["infantry", "unique"]}
-{"name": "ELITE_BOYAR", "hp": 130, "attack": 14, "melee": 8, "pierce": 3, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"]}
-{"name": "ELITE_CAMEL_ARCHER", "hp": 60, "attack": 8, "melee": 1, "pierce": 1, "range": 4, "reload": 2.0, "bonus": {}, "classes": ["archer", "camel", "unique"]}
-{"name": "ELITE_CATAPHRACT", "hp": 150, "attack": 12, "melee": 2, "pierce": 1, "range": 0, "reload": 1.7, "bonus": {"infantry": 18}, "classes": ["cavalry", "unique"]}
+{"name": "ELITE_BERSERK", "hp": 62, "attack": 14, "melee": 2, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"building": 3}, "classes": ["infantry", "unique"], "sight": 7}
+{"name": "ELITE_BOYAR", "hp": 130, "attack": 14, "melee": 8, "pierce": 3, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
+{"name": "ELITE_CAMEL_ARCHER", "hp": 60, "attack": 8, "melee": 1, "pierce": 1, "range": 4, "reload": 2.0, "bonus": {}, "classes": ["archer", "camel", "unique"], "sight": 5}
+{"name": "ELITE_CATAPHRACT", "hp": 150, "attack": 12, "melee": 2, "pierce": 1, "range": 0, "reload": 1.7, "bonus": {"infantry": 18}, "classes": ["cavalry", "unique"], "sight": 5}
 {"name": "ELITE_CENTURION", "hp": 155, "attack": 15, "melee": 3, "pierce": 3, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"]}
-{"name": "ELITE_CHAKRAM_THROWER", "hp": 50, "attack": 4, "melee": 1, "pierce": 0, "range": 6, "reload": 2.0, "bonus": {"building": 2, "infantry": 1}, "classes": ["infantry", "unique"]}
+{"name": "ELITE_CHAKRAM_THROWER", "hp": 50, "attack": 4, "melee": 1, "pierce": 0, "range": 6, "reload": 2.0, "bonus": {"building": 2, "infantry": 1}, "classes": ["infantry", "unique"], "sight": 10}
 {"name": "ELITE_CHU_KO_NU", "hp": 50, "attack": 10, "melee": 0, "pierce": 0, "range": 4, "reload": 3.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"]}
-{"name": "ELITE_COMPOSITE_BOWMAN", "hp": 50, "attack": 4, "melee": 2, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"]}
-{"name": "ELITE_CONQUISTADOR", "hp": 70, "attack": 19, "melee": 2, "pierce": 2, "range": 6, "reload": 2.9, "bonus": {"siege": 6, "building": 2}, "classes": ["archer", "cavalry", "unique"]}
-{"name": "ELITE_COUSTILLIER", "hp": 145, "attack": 11, "melee": 2, "pierce": 2, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"]}
-{"name": "ELITE_GBETO", "hp": 50, "attack": 13, "melee": 0, "pierce": 0, "range": 6, "reload": 2.0, "bonus": {}, "classes": ["infantry", "unique"]}
-{"name": "ELITE_GENOESE_CROSSBOWMAN", "hp": 50, "attack": 6, "melee": 1, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"cavalry": 7, "camel": 6, "elephant": 7}, "classes": ["archer", "unique"]}
-{"name": "ELITE_GHULAM", "hp": 70, "attack": 11, "melee": 0, "pierce": 6, "range": 0, "reload": 2.0, "bonus": {"archer": 6, "building": 2}, "classes": ["infantry", "unique"]}
-{"name": "ELITE_HUSKARL", "hp": 70, "attack": 12, "melee": 0, "pierce": 8, "range": 0, "reload": 2.0, "bonus": {"archer": 10, "building": 3}, "classes": ["infantry", "unique"]}
+{"name": "ELITE_COMPOSITE_BOWMAN", "hp": 50, "attack": 4, "melee": 2, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"], "sight": 7}
+{"name": "ELITE_CONQUISTADOR", "hp": 70, "attack": 19, "melee": 2, "pierce": 2, "range": 6, "reload": 2.9, "bonus": {"siege": 6, "building": 2}, "classes": ["archer", "cavalry", "unique"], "sight": 9}
+{"name": "ELITE_COUSTILLIER", "hp": 145, "attack": 11, "melee": 2, "pierce": 2, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
+{"name": "ELITE_GBETO", "hp": 50, "attack": 13, "melee": 0, "pierce": 0, "range": 6, "reload": 2.0, "bonus": {}, "classes": ["infantry", "unique"], "sight": 9}
+{"name": "ELITE_GENOESE_CROSSBOWMAN", "hp": 50, "attack": 6, "melee": 1, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"cavalry": 7, "camel": 6, "elephant": 7}, "classes": ["archer", "unique"], "sight": 8}
+{"name": "ELITE_GHULAM", "hp": 70, "attack": 11, "melee": 0, "pierce": 6, "range": 0, "reload": 2.0, "bonus": {"archer": 6, "building": 2}, "classes": ["infantry", "unique"], "sight": 8}
+{"name": "ELITE_HUSKARL", "hp": 70, "attack": 12, "melee": 0, "pierce": 8, "range": 0, "reload": 2.0, "bonus": {"archer": 10, "building": 3}, "classes": ["infantry", "unique"], "sight": 7}
 {"name": "ELITE_HUSSITE_WAGON", "hp": 230, "attack": 13, "melee": 1, "pierce": 10, "range": 6, "reload": 3.45, "bonus": {"siege": 3, "building": 2}, "classes": ["siege", "unique", "heavysiege"]}
-{"name": "ELITE_JAGUAR_WARRIOR", "hp": 75, "attack": 19, "melee": 2, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"infantry": 6, "building": 2}, "classes": ["infantry", "unique"]}
+{"name": "ELITE_JAGUAR_WARRIOR", "hp": 75, "attack": 19, "melee": 2, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"infantry": 6, "building": 2}, "classes": ["infantry", "unique"], "sight": 7}
 {"name": "ELITE_JANISSARY", "hp": 40, "attack": 22, "melee": 2, "pierce": 0, "range": 8, "reload": 3.45, "bonus": {"siege": 3}, "classes": ["archer", "gunpowder", "unique"]}
-{"name": "ELITE_KAMAYUK", "hp": 80, "attack": 8, "melee": 1, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"cavalry": 12, "camel": 10, "elephant": 20}, "classes": ["infantry", "unique"]}
-{"name": "ELITE_KARAMBIT_WARRIOR", "hp": 40, "attack": 8, "melee": 1, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"building": 1}, "classes": ["infantry", "unique"]}
-{"name": "ELITE_KESHIK", "hp": 145, "attack": 11, "melee": 1, "pierce": 3, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"]}
+{"name": "ELITE_KAMAYUK", "hp": 80, "attack": 8, "melee": 1, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"cavalry": 12, "camel": 10, "elephant": 20}, "classes": ["infantry", "unique"], "sight": 7}
+{"name": "ELITE_KARAMBIT_WARRIOR", "hp": 40, "attack": 8, "melee": 1, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"building": 1}, "classes": ["infantry", "unique"], "sight": 5}
+{"name": "ELITE_KESHIK", "hp": 145, "attack": 11, "melee": 1, "pierce": 3, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
 {"name": "ELITE_KIPCHAK", "hp": 45, "attack": 5, "melee": 0, "pierce": 0, "range": 4, "reload": 2.2, "bonus": {"spearman": 1}, "classes": ["archer", "cavalry", "unique"]}
-{"name": "ELITE_KONNIK", "hp": 120, "attack": 14, "melee": 2, "pierce": 2, "range": 0, "reload": 2.4, "bonus": {}, "classes": ["cavalry", "unique"]}
-{"name": "ELITE_LEITIS", "hp": 130, "attack": 16, "melee": 2, "pierce": 1, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"]}
+{"name": "ELITE_KONNIK", "hp": 120, "attack": 14, "melee": 2, "pierce": 2, "range": 0, "reload": 2.4, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
+{"name": "ELITE_LEITIS", "hp": 130, "attack": 16, "melee": 2, "pierce": 1, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
 {"name": "ELITE_LONGBOWMAN", "hp": 40, "attack": 7, "melee": 0, "pierce": 1, "range": 6, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"]}
-{"name": "ELITE_MAGYAR_HUSZAR", "hp": 90, "attack": 11, "melee": 0, "pierce": 2, "range": 0, "reload": 1.8, "bonus": {"siege": 8}, "classes": ["cavalry", "unique"]}
+{"name": "ELITE_MAGYAR_HUSZAR", "hp": 90, "attack": 11, "melee": 0, "pierce": 2, "range": 0, "reload": 1.8, "bonus": {"siege": 8}, "classes": ["cavalry", "unique"], "sight": 6}
 {"name": "ELITE_MAMELUKE", "hp": 90, "attack": 10, "melee": 1, "pierce": 0, "range": 3, "reload": 2.0, "bonus": {"cavalry": 12}, "classes": ["camel", "unique"]}
 {"name": "ELITE_MANGUDAI", "hp": 60, "attack": 8, "melee": 1, "pierce": 0, "range": 4, "reload": 2.1, "bonus": {"siege": 5, "spearman": 1}, "classes": ["archer", "cavalry", "unique"]}
-{"name": "ELITE_MONASPA", "hp": 80, "attack": 14, "melee": 5, "pierce": 2, "range": 0, "reload": 1.8, "bonus": {}, "classes": ["cavalry", "unique"]}
-{"name": "ELITE_OBUCH", "hp": 95, "attack": 10, "melee": 2, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 6}, "classes": ["infantry", "unique"]}
+{"name": "ELITE_MONASPA", "hp": 80, "attack": 14, "melee": 5, "pierce": 2, "range": 0, "reload": 1.8, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
+{"name": "ELITE_OBUCH", "hp": 95, "attack": 10, "melee": 2, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 6}, "classes": ["infantry", "unique"], "sight": 5}
 {"name": "ELITE_ORGAN_GUN", "hp": 70, "attack": 8, "melee": 2, "pierce": 6, "range": 7, "reload": 3.45, "bonus": {"infantry": 2, "siege": 1, "building": 1}, "classes": ["gunpowder", "siege", "unique"]}
-{"name": "ELITE_PLUMED_ARCHER", "hp": 65, "attack": 5, "melee": 0, "pierce": 2, "range": 5, "reload": 1.9, "bonus": {"infantry": 2, "spearman": 2}, "classes": ["archer", "unique"]}
+{"name": "ELITE_PLUMED_ARCHER", "hp": 65, "attack": 5, "melee": 0, "pierce": 2, "range": 5, "reload": 1.9, "bonus": {"infantry": 2, "spearman": 2}, "classes": ["archer", "unique"], "sight": 6}
 {"name": "ELITE_RATHA", "hp": 115, "attack": 6, "melee": 3, "pierce": 3, "range": 4, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "cavalry", "unique"], "note": "ranged mode (#1891)"}
-{"name": "ELITE_RATTAN_ARCHER", "hp": 40, "attack": 7, "melee": 0, "pierce": 6, "range": 5, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"]}
-{"name": "ELITE_SAMURAI", "hp": 80, "attack": 12, "melee": 1, "pierce": 1, "range": 0, "reload": 1.9, "bonus": {"building": 3, "unique": 12}, "classes": ["infantry", "unique"]}
-{"name": "ELITE_SERJEANT", "hp": 85, "attack": 11, "melee": 6, "pierce": 3, "range": 0, "reload": 2.0, "bonus": {"building": 3}, "classes": ["infantry", "unique"]}
-{"name": "ELITE_SHOTEL_WARRIOR", "hp": 50, "attack": 18, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"building": 1}, "classes": ["infantry", "unique"]}
-{"name": "ELITE_SHRIVAMSHA_RIDER", "hp": 70, "attack": 11, "melee": 0, "pierce": 1, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"]}
-{"name": "ELITE_TARKAN", "hp": 150, "attack": 11, "melee": 1, "pierce": 4, "range": 0, "reload": 1.9, "bonus": {"building": 10}, "classes": ["cavalry", "unique"]}
+{"name": "ELITE_RATTAN_ARCHER", "hp": 40, "attack": 7, "melee": 0, "pierce": 6, "range": 5, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"], "sight": 6}
+{"name": "ELITE_SAMURAI", "hp": 80, "attack": 12, "melee": 1, "pierce": 1, "range": 0, "reload": 1.9, "bonus": {"building": 3, "unique": 12}, "classes": ["infantry", "unique"], "sight": 7}
+{"name": "ELITE_SERJEANT", "hp": 85, "attack": 11, "melee": 6, "pierce": 3, "range": 0, "reload": 2.0, "bonus": {"building": 3}, "classes": ["infantry", "unique"], "sight": 7}
+{"name": "ELITE_SHOTEL_WARRIOR", "hp": 50, "attack": 18, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"building": 1}, "classes": ["infantry", "unique"], "sight": 5}
+{"name": "ELITE_SHRIVAMSHA_RIDER", "hp": 70, "attack": 11, "melee": 0, "pierce": 1, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 6}
+{"name": "ELITE_TARKAN", "hp": 150, "attack": 11, "melee": 1, "pierce": 4, "range": 0, "reload": 1.9, "bonus": {"building": 10}, "classes": ["cavalry", "unique"], "sight": 7}
 {"name": "ELITE_THROWING_AXEMAN", "hp": 70, "attack": 8, "melee": 1, "pierce": 0, "range": 6, "reload": 2.0, "bonus": {"building": 2}, "classes": ["infantry", "unique"]}
-{"name": "ELITE_URUMI_SWORDSMAN", "hp": 65, "attack": 11, "melee": 1, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"building": 2}, "classes": ["infantry", "unique"]}
-{"name": "ELITE_WAR_WAGON", "hp": 200, "attack": 9, "melee": 0, "pierce": 4, "range": 5, "reload": 2.5, "bonus": {"building": 2}, "classes": ["archer", "cavalry", "unique"]}
-{"name": "ELITE_WOAD_RAIDER", "hp": 85, "attack": 15, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"building": 3}, "classes": ["infantry", "unique"]}
-{"name": "BATTLE_ELEPHANT", "hp": 250, "attack": 12, "melee": 1, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 4}, "classes": ["elephant"]}
-{"name": "CONDOTTIERO", "hp": 80, "attack": 10, "melee": 1, "pierce": 0, "range": 0, "reload": 1.9, "bonus": {"gunpowder": 10, "building": 2}, "classes": ["infantry", "unique"]}
-{"name": "ELITE_BATTLE_ELEPHANT", "hp": 300, "attack": 14, "melee": 1, "pierce": 3, "range": 0, "reload": 2.0, "bonus": {"building": 7}, "classes": ["elephant"]}
-{"name": "ELITE_GENITOUR", "hp": 55, "attack": 4, "melee": 0, "pierce": 4, "range": 4, "reload": 3.0, "bonus": {"archer": 5, "spearman": 3}, "classes": ["archer", "cavalry", "unique"], "note": "the wiki infobox (#1610)"}
-{"name": "ELITE_STEPPE_LANCER", "hp": 80, "attack": 11, "melee": 0, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["cavalry"]}
-{"name": "GENITOUR", "hp": 50, "attack": 3, "melee": 0, "pierce": 4, "range": 4, "reload": 3.0, "bonus": {"archer": 4, "spearman": 3}, "classes": ["archer", "cavalry", "unique"]}
+{"name": "ELITE_URUMI_SWORDSMAN", "hp": 65, "attack": 11, "melee": 1, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"building": 2}, "classes": ["infantry", "unique"], "sight": 5}
+{"name": "ELITE_WAR_WAGON", "hp": 200, "attack": 9, "melee": 0, "pierce": 4, "range": 5, "reload": 2.5, "bonus": {"building": 2}, "classes": ["archer", "cavalry", "unique"], "sight": 8}
+{"name": "ELITE_WOAD_RAIDER", "hp": 85, "attack": 15, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"building": 3}, "classes": ["infantry", "unique"], "sight": 7}
+{"name": "BATTLE_ELEPHANT", "hp": 250, "attack": 12, "melee": 1, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 4}, "classes": ["elephant"], "sight": 7}
+{"name": "CONDOTTIERO", "hp": 80, "attack": 10, "melee": 1, "pierce": 0, "range": 0, "reload": 1.9, "bonus": {"gunpowder": 10, "building": 2}, "classes": ["infantry", "unique"], "sight": 8}
+{"name": "ELITE_BATTLE_ELEPHANT", "hp": 300, "attack": 14, "melee": 1, "pierce": 3, "range": 0, "reload": 2.0, "bonus": {"building": 7}, "classes": ["elephant"], "sight": 8}
+{"name": "ELITE_GENITOUR", "hp": 55, "attack": 4, "melee": 0, "pierce": 4, "range": 4, "reload": 3.0, "bonus": {"archer": 5, "spearman": 3}, "classes": ["archer", "cavalry", "unique"], "sight": 6, "note": "the wiki infobox (#1610); sight: the wiki infobox (#1610)"}
+{"name": "ELITE_STEPPE_LANCER", "hp": 80, "attack": 11, "melee": 0, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["cavalry"], "sight": 5}
+{"name": "GENITOUR", "hp": 50, "attack": 3, "melee": 0, "pierce": 4, "range": 4, "reload": 3.0, "bonus": {"archer": 4, "spearman": 3}, "classes": ["archer", "cavalry", "unique"], "sight": 5}
 {"name": "SLINGER", "hp": 35, "attack": 4, "melee": 0, "pierce": 0, "range": 5, "reload": 2.0, "bonus": {"infantry": 4, "siege": 3, "spearman": 1}, "classes": ["archer"]}
-{"name": "STEPPE_LANCER", "hp": 60, "attack": 9, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["cavalry"]}
-{"name": "WINGED_HUSSAR", "hp": 80, "attack": 9, "melee": 1, "pierce": 2, "range": 0, "reload": 1.9, "bonus": {"gunpowder": 4}, "classes": ["cavalry"]}
-{"name": "ARMORED_ELEPHANT", "hp": 180, "attack": 4, "melee": -2, "pierce": 140, "range": 0, "reload": 3.0, "bonus": {"building": 90, "siege": 25}, "classes": ["cavalry", "elephant", "siege", "ram"]}
-{"name": "FIRE_LANCER", "hp": 65, "attack": 9, "melee": 1, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"building": 1, "cavalry": 5, "camel": 4, "elephant": 5}, "classes": ["infantry", "gunpowder"]}
-{"name": "GRENADIER", "hp": 40, "attack": 12, "melee": 1, "pierce": 1, "range": 6, "reload": 3.45, "bonus": {"building": 4, "infantry": 9, "siege": 3, "spearman": 1}, "classes": ["archer", "gunpowder", "unique"]}
+{"name": "STEPPE_LANCER", "hp": 60, "attack": 9, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["cavalry"], "sight": 5}
+{"name": "WINGED_HUSSAR", "hp": 80, "attack": 9, "melee": 1, "pierce": 2, "range": 0, "reload": 1.9, "bonus": {"gunpowder": 4}, "classes": ["cavalry"], "sight": 10}
+{"name": "ARMORED_ELEPHANT", "hp": 180, "attack": 4, "melee": -2, "pierce": 140, "range": 0, "reload": 3.0, "bonus": {"building": 90, "siege": 25}, "classes": ["cavalry", "elephant", "siege", "ram"], "sight": 6}
+{"name": "FIRE_LANCER", "hp": 65, "attack": 9, "melee": 1, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"building": 1, "cavalry": 5, "camel": 4, "elephant": 5}, "classes": ["infantry", "gunpowder"], "sight": 7}
+{"name": "GRENADIER", "hp": 40, "attack": 12, "melee": 1, "pierce": 1, "range": 6, "reload": 3.45, "bonus": {"building": 4, "infantry": 9, "siege": 3, "spearman": 1}, "classes": ["archer", "gunpowder", "unique"], "sight": 9}
 {"name": "HEAVY_ROCKET_CART", "hp": 65, "attack": 5, "melee": 0, "pierce": 8, "range": 8, "reload": 5.35, "bonus": {"building": 12, "siege": 2}, "classes": ["gunpowder", "siege"]}
 {"name": "HEI_GUANG_CAVALRY", "hp": 60, "attack": 11, "melee": 4, "pierce": 3, "range": 0, "reload": 1.8, "bonus": {}, "classes": ["cavalry"]}
 {"name": "HEAVY_HEI_GUANG_CAVALRY", "hp": 90, "attack": 12, "melee": 4, "pierce": 3, "range": 0, "reload": 1.8, "bonus": {"infantry": 1, "condottiero": 1}, "classes": ["cavalry"]}
 {"name": "HOUFNICE", "hp": 90, "attack": 50, "melee": 2, "pierce": 6, "range": 12, "reload": 6.5, "bonus": {"building": 250, "siege": 20}, "classes": ["gunpowder", "siege"]}
-{"name": "IRON_PAGODA", "hp": 115, "attack": 12, "melee": 1, "pierce": 3, "range": 0, "reload": 2.16, "bonus": {}, "classes": ["cavalry", "unique"]}
-{"name": "LEGIONARY", "hp": 75, "attack": 12, "melee": 2, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 4, "infantry": 4}, "classes": ["infantry"]}
+{"name": "IRON_PAGODA", "hp": 115, "attack": 12, "melee": 1, "pierce": 3, "range": 0, "reload": 2.16, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
+{"name": "LEGIONARY", "hp": 75, "attack": 12, "melee": 2, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 4, "infantry": 4}, "classes": ["infantry"], "sight": 7}
 {"name": "ROCKET_CART", "hp": 45, "attack": 5, "melee": 0, "pierce": 6, "range": 7, "reload": 5.5, "bonus": {"building": 7, "siege": 2}, "classes": ["gunpowder", "siege"]}
-{"name": "SIEGE_ELEPHANT", "hp": 220, "attack": 4, "melee": -2, "pierce": 150, "range": 0, "reload": 3.0, "bonus": {"building": 105, "siege": 35}, "classes": ["cavalry", "elephant", "siege", "ram"]}
-{"name": "TRACTION_TREBUCHET", "hp": 115, "attack": 50, "melee": 1, "pierce": 8, "range": 14, "reload": 11.0, "bonus": {"building": 230}, "classes": ["siege"]}
+{"name": "SIEGE_ELEPHANT", "hp": 220, "attack": 4, "melee": -2, "pierce": 150, "range": 0, "reload": 3.0, "bonus": {"building": 105, "siege": 35}, "classes": ["cavalry", "elephant", "siege", "ram"], "sight": 6}
+{"name": "TRACTION_TREBUCHET", "hp": 115, "attack": 50, "melee": 1, "pierce": 8, "range": 14, "reload": 11.0, "bonus": {"building": 230}, "classes": ["siege"], "sight": 18}
 {"name": "WHITE_FEATHER_GUARD", "hp": 95, "attack": 7, "melee": 0, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 2, "cavalry": 8, "camel": 6, "elephant": 8}, "classes": ["infantry", "unique"]}
 {"name": "MANGONEL", "hp": 50, "attack": 40, "melee": 0, "pierce": 6, "range": 7, "reload": 6.0, "bonus": {"building": 35, "heavysiege": 40, "siege": 12}, "classes": ["siege"], "note": "AoE2 DE wiki (#1402)"}
 {"name": "ONAGER", "hp": 60, "attack": 55, "melee": 0, "pierce": 8, "range": 8, "reload": 6.0, "bonus": {"building": 45, "heavysiege": 50, "siege": 12}, "classes": ["siege"]}
 {"name": "SIEGE_ONAGER", "hp": 70, "attack": 75, "melee": 0, "pierce": 8, "range": 8, "reload": 6.0, "bonus": {"building": 60, "heavysiege": 50, "siege": 12}, "classes": ["siege"]}
 {"name": "SCORPION", "hp": 40, "attack": 11, "melee": 0, "pierce": 7, "range": 7, "reload": 3.6, "bonus": {"building": 3, "elephant": 7, "infantry": 1, "ram": 1}, "classes": ["siege"]}
 {"name": "HEAVY_SCORPION", "hp": 60, "attack": 14, "melee": 1, "pierce": 8, "range": 7, "reload": 3.6, "bonus": {"building": 6, "elephant": 10, "infantry": 2, "ram": 2}, "classes": ["siege"]}
-{"name": "BATTERING_RAM", "hp": 175, "attack": 2, "melee": -3, "pierce": 180, "range": 0, "reload": 5.0, "bonus": {"building": 150, "siege": 40}, "classes": ["siege", "ram"]}
-{"name": "CAPPED_RAM", "hp": 200, "attack": 3, "melee": -2, "pierce": 190, "range": 0, "reload": 5.0, "bonus": {"building": 160, "siege": 50}, "classes": ["siege", "ram"]}
-{"name": "SIEGE_RAM", "hp": 270, "attack": 4, "melee": -1, "pierce": 195, "range": 0, "reload": 5.0, "bonus": {"building": 200, "siege": 65}, "classes": ["siege", "ram"]}
-{"name": "SIEGE_TOWER", "hp": 175, "attack": 0, "melee": -2, "pierce": 100, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["siege", "ram"], "note": "AoE2 DE wiki (#1362)"}
-{"name": "TRADE_COG", "hp": 80, "attack": 0, "melee": 0, "pierce": 6, "range": 0, "reload": 0.0, "bonus": {}, "classes": [], "note": "AoE2 DE wiki (#1485)"}
-{"name": "TRANSPORT_SHIP", "hp": 70, "attack": 0, "melee": 0, "pierce": 2, "range": 0, "reload": 0.0, "bonus": {}, "classes": [], "note": "AoE2 DE wiki (#1385)"}
-{"name": "TREBUCHET", "hp": 150, "attack": 200, "melee": 2, "pierce": 8, "range": 16, "reload": 10.0, "bonus": {"building": 250}, "classes": ["siege"], "note": "AoE2 DE wiki: 150 HP (#1351); packed"}
+{"name": "BATTERING_RAM", "hp": 175, "attack": 2, "melee": -3, "pierce": 180, "range": 0, "reload": 5.0, "bonus": {"building": 150, "siege": 40}, "classes": ["siege", "ram"], "sight": 5}
+{"name": "CAPPED_RAM", "hp": 200, "attack": 3, "melee": -2, "pierce": 190, "range": 0, "reload": 5.0, "bonus": {"building": 160, "siege": 50}, "classes": ["siege", "ram"], "sight": 5}
+{"name": "SIEGE_RAM", "hp": 270, "attack": 4, "melee": -1, "pierce": 195, "range": 0, "reload": 5.0, "bonus": {"building": 200, "siege": 65}, "classes": ["siege", "ram"], "sight": 5}
+{"name": "SIEGE_TOWER", "hp": 175, "attack": 0, "melee": -2, "pierce": 100, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["siege", "ram"], "sight": 6, "note": "AoE2 DE wiki (#1362)"}
+{"name": "TRADE_COG", "hp": 80, "attack": 0, "melee": 0, "pierce": 6, "range": 0, "reload": 0.0, "bonus": {}, "classes": [], "sight": 6, "note": "AoE2 DE wiki (#1485)"}
+{"name": "TRANSPORT_SHIP", "hp": 70, "attack": 0, "melee": 0, "pierce": 2, "range": 0, "reload": 0.0, "bonus": {}, "classes": [], "sight": 5, "note": "AoE2 DE wiki (#1385)"}
+{"name": "TREBUCHET", "hp": 150, "attack": 200, "melee": 2, "pierce": 8, "range": 16, "reload": 10.0, "bonus": {"building": 250}, "classes": ["siege"], "sight": 19, "note": "AoE2 DE wiki: 150 HP (#1351); packed"}
 {"name": "BOMBARD_CANNON", "hp": 80, "attack": 40, "melee": 2, "pierce": 5, "range": 12, "reload": 6.5, "bonus": {"building": 200, "heavysiege": 40, "siege": 20}, "classes": ["gunpowder", "siege"]}
 {"name": "PETARD", "hp": 50, "attack": 25, "melee": 0, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 500, "siege": 60}, "classes": []}
-{"name": "ALFRED_THE_ALPACA", "hp": 140, "attack": 120, "melee": 20, "pierce": 20, "range": 0, "reload": 2.0, "bonus": {"building": 100}, "classes": ["cavalry"]}
+{"name": "ALFRED_THE_ALPACA", "hp": 140, "attack": 120, "melee": 20, "pierce": 20, "range": 0, "reload": 2.0, "bonus": {"building": 100}, "classes": ["cavalry"], "sight": 6}
 {"name": "COBRA_CAR", "hp": 500, "attack": 10, "melee": 10, "pierce": 10, "range": 10, "reload": 0.25, "bonus": {"building": 10}, "classes": ["siege"]}
-{"name": "FURIOUS_THE_MONKEY_BOY", "hp": 9, "attack": 99, "melee": 99, "pierce": 99, "range": 0, "reload": 0.9, "bonus": {"building": 999}, "classes": []}
+{"name": "FURIOUS_THE_MONKEY_BOY", "hp": 9, "attack": 99, "melee": 99, "pierce": 99, "range": 0, "reload": 0.9, "bonus": {"building": 999}, "classes": [], "sight": 12}
 {"name": "PHOTONMAN", "hp": 80, "attack": 30, "melee": 2, "pierce": 2, "range": 10, "reload": 2.0, "bonus": {"building": 5}, "classes": ["archer", "unique"]}
-{"name": "SABOTEUR", "hp": 45, "attack": 100, "melee": 1, "pierce": 3, "range": 0, "reload": 2.0, "bonus": {"building": 500}, "classes": ["siege"]}
-{"name": "SHARKATZOR", "hp": 600, "attack": 33, "melee": 1, "pierce": 0, "range": 10, "reload": 2.1, "bonus": {"siege": 5}, "classes": ["siege"]}
+{"name": "SABOTEUR", "hp": 45, "attack": 100, "melee": 1, "pierce": 3, "range": 0, "reload": 2.0, "bonus": {"building": 500}, "classes": ["siege"], "sight": 6}
+{"name": "SHARKATZOR", "hp": 600, "attack": 33, "melee": 1, "pierce": 0, "range": 10, "reload": 2.1, "bonus": {"siege": 5}, "classes": ["siege"], "sight": 11}
 {"name": "VMDL", "hp": 25, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": []}
-{"name": "WAR_PENGUIN", "hp": 64, "attack": 16, "melee": 4, "pierce": 4, "range": 0, "reload": 2.0, "bonus": {"building": 8}, "classes": ["infantry"]}
-{"name": "CANNON_GALLEON", "hp": 120, "attack": 50, "melee": 0, "pierce": 5, "range": 13, "reload": 10.0, "bonus": {"building": 200, "siege": 25}, "classes": ["ship", "gunpowder", "warship"], "note": "(#1484) melee damage"}
-{"name": "DEMOLITION_RAFT", "hp": 40, "attack": 75, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {"building": 180}, "classes": ["ship"], "note": "(#1481) the Feudal Age form"}
-{"name": "DEMOLITION_SHIP", "hp": 50, "attack": 95, "melee": 1, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {"building": 220}, "classes": ["ship"], "note": "one blast (BLAST), then it dies"}
-{"name": "ELITE_CANNON_GALLEON", "hp": 150, "attack": 60, "melee": 0, "pierce": 6, "range": 15, "reload": 10.0, "bonus": {"building": 275, "siege": 25}, "classes": ["ship", "gunpowder", "warship"], "note": "(#1491)"}
-{"name": "FAST_FIRE_SHIP", "hp": 140, "attack": 4, "melee": 3, "pierce": 7, "range": 2.5, "reload": 0.25, "bonus": {"building": 3, "warship": 1}, "classes": ["ship", "fireship"], "note": "Heavy Warships (#1483)"}
-{"name": "FIRE_GALLEY", "hp": 110, "attack": 2, "melee": 1, "pierce": 4, "range": 2.5, "reload": 0.25, "bonus": {"warship": 1}, "classes": ["ship", "fireship"], "note": "(#1481) the Feudal Age form of the fire ship"}
-{"name": "FIRE_SHIP", "hp": 120, "attack": 3, "melee": 2, "pierce": 4, "range": 2.5, "reload": 0.25, "bonus": {"building": 2, "warship": 1}, "classes": ["ship", "fireship"], "note": "(#1440) melee damage, 4 hits/s"}
-{"name": "FISHING_SHIP", "hp": 50, "attack": 0, "melee": 1, "pierce": 1, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["ship"]}
+{"name": "WAR_PENGUIN", "hp": 64, "attack": 16, "melee": 4, "pierce": 4, "range": 0, "reload": 2.0, "bonus": {"building": 8}, "classes": ["infantry"], "sight": 6}
+{"name": "CANNON_GALLEON", "hp": 120, "attack": 50, "melee": 0, "pierce": 5, "range": 13, "reload": 10.0, "bonus": {"building": 200, "siege": 25}, "classes": ["ship", "gunpowder", "warship"], "sight": 15, "note": "(#1484) melee damage"}
+{"name": "DEMOLITION_RAFT", "hp": 40, "attack": 75, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {"building": 180}, "classes": ["ship"], "sight": 6, "note": "(#1481) the Feudal Age form"}
+{"name": "DEMOLITION_SHIP", "hp": 50, "attack": 95, "melee": 1, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {"building": 220}, "classes": ["ship"], "sight": 6, "note": "one blast (BLAST), then it dies"}
+{"name": "ELITE_CANNON_GALLEON", "hp": 150, "attack": 60, "melee": 0, "pierce": 6, "range": 15, "reload": 10.0, "bonus": {"building": 275, "siege": 25}, "classes": ["ship", "gunpowder", "warship"], "sight": 17, "note": "(#1491)"}
+{"name": "FAST_FIRE_SHIP", "hp": 140, "attack": 4, "melee": 3, "pierce": 7, "range": 2.5, "reload": 0.25, "bonus": {"building": 3, "warship": 1}, "classes": ["ship", "fireship"], "sight": 6, "note": "Heavy Warships (#1483)"}
+{"name": "FIRE_GALLEY", "hp": 110, "attack": 2, "melee": 1, "pierce": 4, "range": 2.5, "reload": 0.25, "bonus": {"warship": 1}, "classes": ["ship", "fireship"], "sight": 5, "note": "(#1481) the Feudal Age form of the fire ship"}
+{"name": "FIRE_SHIP", "hp": 120, "attack": 3, "melee": 2, "pierce": 4, "range": 2.5, "reload": 0.25, "bonus": {"building": 2, "warship": 1}, "classes": ["ship", "fireship"], "sight": 5, "note": "(#1440) melee damage, 4 hits/s"}
+{"name": "FISHING_SHIP", "hp": 50, "attack": 0, "melee": 1, "pierce": 1, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["ship"], "sight": 5}
 {"name": "GALLEY", "hp": 110, "attack": 6, "melee": 0, "pierce": 3, "range": 5, "reload": 3.0, "bonus": {"building": 6, "warship": 5}, "classes": ["ship", "warship"]}
-{"name": "GALLEON", "hp": 155, "attack": 9, "melee": 0, "pierce": 6, "range": 7, "reload": 3.0, "bonus": {"building": 6, "warship": 9, "ram": 3}, "classes": ["ship", "warship"], "note": "Heavy Warships (#1483)"}
-{"name": "HEAVY_DEMOLITION_SHIP", "hp": 70, "attack": 120, "melee": 2, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {"building": 280}, "classes": ["ship"], "note": "(#1483)"}
-{"name": "HULK", "hp": 85, "attack": 4, "melee": 3, "pierce": 1, "range": 1, "reload": 1.75, "bonus": {"fireship": 1, "standard": -3}, "classes": ["ship"], "note": "AoE2 DE wiki (#1489): melee hits at range 1"}
+{"name": "GALLEON", "hp": 155, "attack": 9, "melee": 0, "pierce": 6, "range": 7, "reload": 3.0, "bonus": {"building": 6, "warship": 9, "ram": 3}, "classes": ["ship", "warship"], "sight": 9, "note": "Heavy Warships (#1483)"}
+{"name": "HEAVY_DEMOLITION_SHIP", "hp": 70, "attack": 120, "melee": 2, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {"building": 280}, "classes": ["ship"], "sight": 6, "note": "(#1483)"}
+{"name": "HULK", "hp": 85, "attack": 4, "melee": 3, "pierce": 1, "range": 1, "reload": 1.75, "bonus": {"fireship": 1, "standard": -3}, "classes": ["ship"], "sight": 5, "note": "AoE2 DE wiki (#1489): melee hits at range 1"}
 {"name": "WAR_GALLEY", "hp": 125, "attack": 7, "melee": 0, "pierce": 4, "range": 6, "reload": 3.0, "bonus": {"building": 6, "warship": 5}, "classes": ["ship", "warship"], "note": "Medium Warships (#1482)"}
-{"name": "WAR_HULK", "hp": 110, "attack": 4, "melee": 4, "pierce": 1, "range": 1, "reload": 1.5, "bonus": {"fireship": 1, "standard": -3}, "classes": ["ship"], "note": "Medium Warships (#1508)"}
+{"name": "WAR_HULK", "hp": 110, "attack": 4, "melee": 4, "pierce": 1, "range": 1, "reload": 1.5, "bonus": {"fireship": 1, "standard": -3}, "classes": ["ship"], "sight": 5, "note": "Medium Warships (#1508)"}
 {"name": "VILLAGER", "hp": 25, "attack": 3, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"building": 3, "heavysiege": 6, "stone": 6}, "classes": [], "note": "AoE2 DE wiki (#1590)"}
-{"name": "KING", "hp": 75, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": []}
+{"name": "KING", "hp": 75, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": [], "sight": 6}
 {"name": "MONK", "hp": 30, "attack": 0, "melee": 0, "pierce": 0, "range": 9, "reload": 0.0, "bonus": {}, "classes": []}
-{"name": "TRADE_CART", "hp": 70, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": []}
+{"name": "TRADE_CART", "hp": 70, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": [], "sight": 7}
