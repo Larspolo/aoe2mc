@@ -27,6 +27,7 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.AbstractArrow;
+import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.AbstractSkeleton;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
@@ -1161,6 +1162,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         for (var e : orders.entrySet()) {
             if (Bukkit.getEntity(e.getKey()) instanceof Mob mob && mob.isValid()) {
                 Order o = e.getValue();
+                if (mob instanceof AbstractHorse h && (h.isEatingGrass() || h.isRearing())) {
+                    h.setEatingGrass(false);            // an eating horse has no AI step and no path follow (#1359)
+                    h.setRearing(false);
+                }
                 var pf = mob.getPathfinder();
                 if (pf.getCurrentPath() == null && Bukkit.getCurrentTick() - o.start < 4) {
                     pf.moveTo(o.goal, o.speed);         // a unit without AI finds its path a tick later: try each tick
