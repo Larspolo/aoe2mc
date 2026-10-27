@@ -263,6 +263,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_VARANGIAN_GUARD_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_WAR_WAGON_UPGRADE": lambda name, s: s,            # a new unit name: UPGRADES
          "FAITH": lambda name, s: s,                               # the conversion resistance: monk.resist
+         "FARIMBA": lambda name, s: s._replace(attack=s.attack + 5) if "cavalry" in s.classes else s,   # the Malians (#2046)
          "FERVOR": lambda name, s: s,                              # the walk speed: SPEEDS
          "FISHING_LINES": lambda name, s: s,                       # the fishing ships: gather.SHIP_TECHS
          "FLETCHING": fletching,
