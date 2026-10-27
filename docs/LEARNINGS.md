@@ -48,3 +48,4 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - The rule "only the own civ has its unique unit" is in `train.own_civ_only()` (#1760): `train.py` adds it to the bare `civs.MISSING`. A test that imports `from game import civs` reads another module object without it: read `train.civs.MISSING`, `train.civs.missing(...)`.
 - The "queue 0/15" of a train menu line is the queue limit, not the training time: the time is the "N s" part (`test_chakram_thrower.py`, #1724).
 - The menu line `queue 0/15` shows the queue capacity (`train.QUEUE`), not the train time: a test that expects the time there fails (#1726).
+- `train.UPGRADES` comes from the key `"upgrade": [OLD, NEW]` of the line of the technology in `game/data/train.jsonl` (#1915): a ticket that says "add a `UPGRADES` line in `game/train.py`" means that key now.
