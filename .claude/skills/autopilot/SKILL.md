@@ -255,6 +255,9 @@ phases read 8 · claim 1 · code 18 · verify 9 · ci 0 · conflict 5 · report 
 Result: `pr #n` when you pushed PR #n and Automerge merges it later (the usual case: you report before the merge);
 `none` only when the run stopped without a PR. `tools/health.py` counts the `pr #n` lines by the present PR state (#902).
 Put the output of `python3 tools/release.py` (the release bar of each goal, #879) above the `Usage:` line.
+Below the metrics lines, put the output of `python3 tools/tokens.py` (one `Tokens:` line for the run: the tokens of
+this session and its largest sinks; run it just before the comment). `tools/health.py` adds these lines, and the
+`improve` skill finds the token bottleneck in them.
 Put the `Usage:` line of step 1.4 above the metrics lines, unchanged: `tools/health.py` measures the quota use of one
 run per hour from pairs of these lines, and `tools/usage.py --target` uses that value (#462).
 `setup`: minutes from the start time (step 4) to the claim of the first ticket (0 for later tickets).
@@ -271,6 +274,8 @@ GitHub sends this comment to the owner as a notification. Do not comment when no
 Answer these questions. Do the action for each "yes". Spend little time.
 A PR that changes the agent system gets the label `process` (`/issues/N/labels -f "labels[]=process"`, #901): the
 dashboard counts them.
+- Did one sink use more than 10 % of the tokens of the run (`python3 tools/tokens.py --top 5`)? → read less next time
+  (`Grep`, a line range, `| tail`), and add a line where the next run sees it when it is a pattern.
 - Did something cost you time that one line of text prevents? → a pitfall of one topic (the game program, the replay,
   Paper, the server, records, a design) goes to the end of the "Pitfalls" section of its document (the list in
   `docs/LEARNINGS.md`, "Environment and libraries"); only a line for all runs goes to the end of its section in

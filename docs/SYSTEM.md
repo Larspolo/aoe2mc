@@ -14,7 +14,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 | Runs | Cloud sessions of the autopilot task. Each run follows the skill `autopilot` with the argument `max`: tickets, one PR each. Many runs work at the same time. |
 | Skills (`.claude/skills/`) | The procedures: `autopilot` (the work cycle), `verify` (checks before a push), `ticket` (write and split tickets), `design` (design tickets), `improve` (process review), `roadmap` (epics from `docs/ROADMAP.md`), `pacer`, `operator` (checks and repairs the start of the runs, only in an owner session), `human` (guides the owner through the `needs-human` tickets on the owner's computer), `dashboard-refresh` (the data files of the owner's dashboard artifact, #982). |
 | Rules (`CLAUDE.md`, `docs/LEARNINGS.md`) | Each session loads them. `CLAUDE.md` has the commands, the code map and the rules. `docs/LEARNINGS.md` has the lessons for all runs. |
-| Tools (`tools/`) | `claim.py` (locks), `usage.py` (quota and the number of runs), `dashboard.py` (the status issue and the pick order), `health.py` (numbers for the review), `operator_check.py` (the checks of the `operator` skill), `owner_tasks.py` (the tickets of the `human` skill). |
+| Tools (`tools/`) | `claim.py` (locks), `usage.py` (quota and the number of runs), `dashboard.py` (the status issue and the pick order), `health.py` (numbers for the review), `tokens.py` (the token sinks of a run), `operator_check.py` (the checks of the `operator` skill), `owner_tasks.py` (the tickets of the `human` skill). |
 | GitHub | The issues are the tickets. Issue #1 (label `agent-status`) is the status issue: the dashboard in its body, the run reports as comments. The labels are in `.github/labels.txt`. |
 | Workflows (`.github/workflows/`) | CI, Automerge, Unconflict, Claims, Dashboard, Coverage, Labels (see below). |
 | Cloud environment | The setup script `scripts/cloud-setup.sh` (Java, packages, server jars), the network access, the SessionStart hook. |
@@ -74,7 +74,9 @@ tiny CLI call. It computes the target number of runs: 90 % of the 5-hour window 
 98 % at the reset, and the week not faster than it passes. `--fire` gives the number of runs to start now: the
 target less the runs with a claim beat in the last 25 minutes. A run cannot start other runs (no `fire_trigger`, #566),
 so the pacer session starts them (at most 4 per cycle). `tools/health.py` measures the quota use of one run from the
-`Usage:` lines of the run reports, and `usage.py` uses that value.
+`Usage:` lines of the run reports, and `usage.py` uses that value. `tools/tokens.py` reads the transcript of the
+session and writes the `Tokens:` line of each run report: the tokens of the run and its largest sinks. `health.py`
+adds them, and the `improve` skill makes one `Process: tokens - <sink>` ticket per token bottleneck.
 
 ## The steering
 
@@ -149,6 +151,7 @@ the owner login, the default branch, the status issue, the commands, the doc pat
 | `tools/dashboard.py` | generic | None (`agent.toml`). |
 | `tools/feedback.py` | generic | None (`agent.toml`). |
 | `tools/health.py` | generic | None (`agent.toml`). |
+| `tools/tokens.py` | generic | None. |
 | `tools/operator_check.py` | generic | None (`agent.toml`). |
 | `tools/owner_tasks.py` | generic | None (`agent.toml`). |
 | `.github/workflows/ci.yml` | specific | The Python, Java and Minecraft steps, the test markers. The red-`main` ticket is generic. |

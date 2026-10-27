@@ -11,6 +11,10 @@ Make at most one improvement per review, only where it pays, and stop changing t
 (owner, #900: "only where it makes sense ... in the broadest sense"). The main number is the release progress per
 quota (`tools/health.py`, #899): the game goals 1 to 3 of `docs/ROADMAP.md`. Goal 4 of that file is this system.
 
+**Tokens are the bottleneck** (owner, 2026-10-27). The quota limits the number of runs, not the run minutes. So
+measure each loss in tokens first (`eq`: input-token equivalents, `tools/tokens.py`), and minutes second. Each token
+bottleneck gets its own ticket on the board (step 3), so that the owner sees the work on it.
+
 ## 0. Check the last change
 
 Read the newest line of "Process changes" on the status issue that has `before:` numbers. Compute the same numbers
@@ -23,8 +27,11 @@ now (step 1). Did they get better?
 Run `python3 tools/health.py` first (`--hours N`, default 24, about 25 s). It prints the CI runs per workflow,
 the slowest CI steps, the setup minutes, takeovers, releases, merge conflicts (and their files), the minutes of each
 phase, the quota per merged PR, the release points per 1 % of 7-day quota (the main number: progress to the goals per
-quota), weak spots (rework, bugs of check tickets, red night runs), claim-to-merge minutes and files that do not belong in git. Collect by hand only what it does not print.
+quota), the tokens per run and per merged PR and the largest token sinks (from the `Tokens:` lines), weak spots (rework, bugs of check tickets, red night runs), claim-to-merge minutes and files that do not belong in git. Collect by hand only what it does not print.
 
+- Tokens: `python3 tools/tokens.py --top 15` on this run (the sinks one by one: which file, which command). The
+  `Tokens:` lines of `tools/health.py` give only the groups. When a group is large and you do not know its cause,
+  make the data better first: a finer label in `tools/tokens.py` (`label()`), or a new field. That is a valid change.
 - Agent: the last 20 run comments by the agent on the status issue (label `agent-status`). Each has a line
   `Metrics: ticket #n · size · result · minutes · setup m min · checks k · checks c min · time sinks: ...`.
   Also the tickets and PRs closed in that period, and rework (tickets that the owner reopened, or that came
@@ -47,7 +54,8 @@ Go through the six areas. For each one, note its largest loss in minutes of run 
    target, idle runs (no ticket ready, stopped at once), runs that hit the usage limit.
 2. **The loop:** the steps of `.claude/skills/autopilot` and the phase minutes of the `Metrics:` lines
    (`read`, `claim`, `code`, `verify`, `ci`, `conflict`, `report`); steps that cost time and change nothing.
-3. **Time and quota:** the phase shares, the quota per merged ticket, the release progress per quota.
+3. **Tokens and quota:** the largest token sinks (share of all `eq`), the tokens per merged PR, the peak context,
+   the quota per merged ticket, the release progress per quota. The phase shares in minutes come second.
 4. **Quality:** rework (owner corrections, reopened tickets, follow-ups of merged work), bugs found by check tickets,
    red night CI runs.
 5. **Weak spots:** merge conflicts, takeovers, refused commands, slow tests, tools missing in the environment.
@@ -55,7 +63,7 @@ Go through the six areas. For each one, note its largest loss in minutes of run 
    another project (epic #909).
 
 The threshold: change something only when the largest loss is above about 5 % of the run minutes of the period,
-or one ticket per day, or a quality problem that a person would see. Else make no change ("no change" in step 5).
+or a token sink above 10 % of all `eq`, or one ticket per day, or a quality problem that a person would see. Else make no change ("no change" in step 5).
 
 Compute the numbers of all areas: tickets per run, median minutes for `size:S` and `size:M` tickets
 (last 5 runs against the 5 runs before), setup minutes, verify rounds per PR, CI rounds per PR, the minutes from the PR
@@ -84,12 +92,26 @@ patterns and their fixes:
 | Scheduling | Dead claims, stalled PRs | Better claim or takeover rules (`tools/claim.py`, autopilot) |
 | Scheduling | Merge conflicts in generated files | A merge driver in `.gitattributes`, or generate the file in CI |
 | Scheduling | Runs stop because no ticket is ready | Split epics earlier |
+| Tokens | Sink `base` large (each call reads it again) | The `repo` part: shorter `CLAUDE.md` and `LEARNINGS.md`, topic lines to the docs that load only when needed. The rest (system prompt, tool definitions of the connectors): a `needs-human` ticket to turn off connectors that runs do not use |
+| Tokens | Sink `Read` or `Bash cat`/`sed` of large files | Better code map, `Grep` and line ranges, a smaller file |
+| Tokens | Sink `Bash pytest` or another long command output | `-q`, `\| tail -N`, a tool option for a short summary |
+| Tokens | Sink `mcp ...` or `Bash gh` (JSON of the GitHub API) | `minimal_output`, `--jq` with the needed fields, a tool in `tools/` |
+| Tokens | High `peak` context, many calls per ticket | Fewer tickets per run (a result is read again by each later call), subagents for searches |
+| Tokens | Sink `output` large | Shorter reports and PR text, less thinking on routine steps |
 | Local | Permission denials in local runs | Add the safe command to `.claude/settings.json` |
 
 ## 3. Make the improvement
 
 One change per review, for the largest loss above the threshold. Write down the numbers that the change must make
 better ("before" numbers) before you change something.
+
+**A token bottleneck is a ticket** (owner, 2026-10-27). For the largest token sink above the threshold, look for an
+open ticket with the title `Process: tokens - <sink>`. None → make one (`ticket` skill, labels `process`, `tooling`,
+`P1`): the sink, its share of all `eq`, the tokens per run and per merged PR (the before-numbers), the cause from
+`tools/tokens.py --top`, and one small step that makes the share smaller. Then do that step in this review when it is
+small. Work iteratively: one step per review, measure it in step 0 of the next review (at least 10 `Tokens:` lines),
+and close the ticket when the sink is below the threshold, or add the next step to it. Then the next sink gets its
+ticket.
 First list the open `tooling` and process tickets (`/issues?state=open&labels=tooling`, and titles that start with
 "Process:"). When one already names the pattern, do not make a second change: claim that ticket (`tools/claim.py N`)
 and do it as this improvement, or, when another run owns it, choose the next pattern. PR #917 of a review and the
