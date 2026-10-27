@@ -37,7 +37,7 @@ and a record. `packaging/aoe2mc.spec` puts these data files in the bundle:
 | the data files of `AoE2ScenarioParser` | the scenario reader |
 | the data files of `mgz` | the record reader |
 | the data files of `aocref` (`data/constants.json`, `data/datasets/*.json`) | `mgz.reference` (records) |
-| `game/data/train.jsonl` (as `data/train.jsonl`) | `game/train.py`, next to itself |
+| `game/data/*.jsonl` (as `data/`: `train.jsonl`, `units.jsonl`, `civs.jsonl`) | `game/table.py` (`table.load`), next to itself |
 | `game/plugin/aoe2mc-plugin.jar` (as `plugin/aoe2mc-plugin.jar`) | `game/run.py` `plugin_jar` in a frozen app |
 
 The spec also adds all submodules of `AoE2ScenarioParser` and `mgz` as hidden imports: `aoe2mc.py` imports them in
