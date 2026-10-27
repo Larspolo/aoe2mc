@@ -9,7 +9,7 @@ When the argument names `lane haiku` (the scheduled task "aoe2mc autopilot haiku
 `git config aoe2mc.lane haiku` first (the claims then tell the pacer that this run is cheap, #1727), pick only with
 `python3 tools/dashboard.py --next --lane haiku`, skip the epic check, the queue refill, the roadmap review and the
 process review, and stop when no `lane:haiku` ticket is ready. A ticket that is not as clear as its label says: release
-the claim, remove `lane:haiku`, comment why in one line, and take the next one. End the `Metrics:` line with `· lane haiku`.
+the claim, remove `lane:haiku`, comment why in one line, and take the next one. Write the report with `tools/report.py` (`report.md`): it adds `· lane haiku` from the git config (#1982).
 
 ## Large tickets (step 4)
 

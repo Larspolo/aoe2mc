@@ -1,0 +1,61 @@
+{"name": "GRASS", "terrain": 0}
+{"name": "WATER", "terrain": 1}
+{"name": "BEACH", "terrain": 2}
+{"name": "DIRT3", "terrain": 3}
+{"name": "SHALLOW", "terrain": 4}
+{"name": "LEAVES", "terrain": 5}
+{"name": "DIRT", "terrain": 6}
+{"name": "FARM", "terrain": 7}
+{"name": "DEAD_FARM", "terrain": 8}
+{"name": "GRASS3", "terrain": 9}
+{"name": "FOREST", "terrain": 10}
+{"name": "DIRT2", "terrain": 11}
+{"name": "GRASS2", "terrain": 12}
+{"name": "PALM_DESERT", "terrain": 13}
+{"name": "DESERT", "terrain": 14}
+{"name": "JUNGLE", "terrain": 17}
+{"name": "BAMBOO", "terrain": 18}
+{"name": "PINE_FOREST", "terrain": 19}
+{"name": "OAK_FOREST", "terrain": 20}
+{"name": "SNOW_FOREST", "terrain": 21}
+{"name": "DEEP_WATER", "terrain": 22}
+{"name": "MED_WATER", "terrain": 23}
+{"name": "ROAD", "terrain": 24}
+{"name": "ROAD2", "terrain": 25}
+{"name": "SNOW", "terrain": 32}
+{"name": "ICE", "terrain": 35}
+{"name": "ROCK", "terrain": 40}
+{"name": "TREE_OAK_FOREST", "forest": [10, 20]}
+{"name": "TREE_PALM_FOREST", "forest": [13]}
+{"name": "TREE_JUNGLE", "forest": [17]}
+{"name": "TREE_BAMBOO_FOREST", "forest": [18]}
+{"name": "TREE_PINE_FOREST", "forest": [19]}
+{"name": "TREE_SNOW_PINE", "forest": [21]}
+{"name": "TREE_DRAGON", "forest": [48]}
+{"name": "TREE_BAOBAB", "forest": [49]}
+{"name": "TREE_ACACIA", "forest": [50]}
+{"name": "TREE_MANGROVE", "forest": [55]}
+{"name": "TREE_RAINFOREST", "forest": [56]}
+{"name": "VILLAGER_MALE", "start": [2, 4, 1]}
+{"name": "VILLAGER_FEMALE", "start": [1, 4, 1]}
+{"name": "SCOUT_CAVALRY", "start": [1, 6, 1]}
+{"name": "SHEEP", "start": [4, 7, 1]}
+{"name": "FORAGE_BUSH", "start": [6, 9, 0]}
+{"name": "GOLD_MINE", "start": [7, 11, 0]}
+{"name": "STONE_MINE", "start": [5, 13, 0]}
+{"name": "WILD_BOAR", "start": [1, 15, 0]}
+{"name": "WILD_BOAR", "start": [1, 16, 0]}
+{"name": "DEER", "start": [3, 18, 0]}
+{"name": "GOLD_MINE", "start": [4, 19, 0]}
+{"name": "STONE_MINE", "start": [4, 20, 0]}
+{"name": "SHEEP", "scatter": [2, 2]}
+{"name": "FORAGE_BUSH", "scatter": [6, 1]}
+{"name": "GOLD_MINE", "scatter": [6, 2]}
+{"name": "STONE_MINE", "scatter": [6, 2]}
+{"name": "WILD_BOAR", "scatter": [1, 2]}
+{"name": "DEER", "scatter": [3, 1]}
+{"name": "SHORE_FISH", "shore_fish": true}
+{"name": "FISH_SALMON", "fish": ["highland", 0, 4]}
+{"name": "FISH_DORADO", "fish": ["islands", 3, 6]}
+{"name": "FISH_TUNA", "fish": ["mediterranean", 2, 4]}
+{"name": "FISH_TUNA", "fish": ["nomad", 2, 4]}
