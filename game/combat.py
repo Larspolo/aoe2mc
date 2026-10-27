@@ -9,7 +9,8 @@ for each armor class of the target. `damage` is the AoE2 damage rule (#514); the
 A ranged unit shoots from its AoE2 range, one shot per reload time (#515, `aoe range`, `range_command`).
 The Mangonel line hits all units in its blast radius around the target (#1050, `BLAST`). It does not shoot at a target inside its minimum range (`MIN_RANGE`, #1350).
 A melee unit hits once per reload time too (#848, the last value of `stats_command`).
-An idle soldier attacks the nearest enemy unit in its AoE2 line of sight (#775, `aoe sight`, `sight_command`).
+An idle soldier attacks the nearest enemy unit in its AoE2 line of sight (#775, `aoe sight`, `sight_command`); rams,
+trebuchets, Armored Elephants and Cannon Galleons also take the nearest enemy building in it (#1820, `BUILDING_SIGHT`).
 """
 import math
 import os
@@ -19,6 +20,7 @@ from collections import namedtuple
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from gather import NORMAL  # noqa: E402
+import civs  # noqa: E402
 import garrison  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -159,6 +161,7 @@ STATS = {
     "ELITE_OBUCH": Stats(95, 10, 2, 2, 0, 2.0, {"building": 6}, (INF, UNI)),
     "ELITE_ORGAN_GUN": Stats(70, 8, 2, 6, 7, 3.45, {INF: 2, SIE: 1, "building": 1}, (GUN, SIE, UNI)),
     "ELITE_PLUMED_ARCHER": Stats(65, 5, 0, 2, 5, 1.9, {INF: 2, SPE: 2}, (ARC, UNI)),
+    "ELITE_RATHA": Stats(115, 6, 3, 3, 4, 2.0, {SPE: 2}, (ARC, CAV, UNI)),   # ranged mode (#1891)
     "ELITE_RATTAN_ARCHER": Stats(40, 7, 0, 6, 5, 2.0, {SPE: 2}, (ARC, UNI)),
     "ELITE_SAMURAI": Stats(80, 12, 1, 1, 0, 1.9, {"building": 3, UNI: 12}, (INF, UNI)),
     "ELITE_SERJEANT": Stats(85, 11, 6, 3, 0, 2.0, {"building": 3}, (INF, UNI)),
@@ -583,11 +586,28 @@ def sight(name, s=None):
     return SIGHT.get(name, max(4, s.range + 2))
 
 
+# The units that also take enemy buildings in their sight (#1820, AoE2 wiki "Siege unit (Age of Empires II)": "Battering
+# Ram line automatically attack only buildings", "Trebuchets automatically attack only buildings", "The Armored
+# Elephant and Cannon Galleon lines prioritize attacking enemy buildings over units"): "only" or "first".
+BUILDING_SIGHT = {
+    "ARMORED_ELEPHANT": "first",
+    "BATTERING_RAM": "only",
+    "CANNON_GALLEON": "first",
+    "CAPPED_RAM": "only",
+    "ELITE_CANNON_GALLEON": "first",
+    "SIEGE_ELEPHANT": "first",
+    "SIEGE_RAM": "only",
+    "TREBUCHET": "only",
+}
+
+
 def sight_command(uuid, name, T, s=None):
     """The plugin command that lets an idle soldier attack the nearest enemy unit in its line of sight (tiles * T
-    blocks, #775). None for a unit that does not fight (villager, monk, king)."""
+    blocks, #775), and the enemy buildings for the units of BUILDING_SIGHT (#1820). None for a unit that does not
+    fight (villager, monk, king)."""
     s = s or stats(name)
-    return f"aoe sight {uuid} {sight(name, s) * T}" if s.classes and s.attack else None
+    mode = f" {BUILDING_SIGHT[name]}" if name in BUILDING_SIGHT else ""
+    return f"aoe sight {uuid} {sight(name, s) * T}{mode}" if s.classes and s.attack else None
 
 
 STANCES = ("aggressive", "defensive", "stand_ground", "no_attack")
@@ -613,9 +633,10 @@ def setup(game, data):
             held.setdefault(o["holder"], []).append(o["name"])
     for o in data["objects"]:
         if o["kind"] == "building" and o["player"] and "footprint" in o and o["name"] in BUILDINGS:
-            uuid = target_uuid(o["footprint"])
+            uuid, civ = target_uuid(o["footprint"]), data.get("players", {}).get(str(o["player"]), {}).get("civ")
             for c in building(uuid, o["name"], o["player"], building_box(o, ground), data.get("tile_size", 4),
-                              held.get(o.get("ref"), ())) + [label_command(uuid, o["name"])]:
+                              held.get(o.get("ref"), ()), civs.hp(civ, o["name"], stats(o["name"]))) \
+                    + [label_command(uuid, o["name"])]:
                 game.command(c)
     units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] and o.get("uuid")]
     for o in units:                                  # the plugin answers "Range: 0 units" for a mob that cannot shoot

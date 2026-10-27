@@ -15,6 +15,7 @@ paused = "paused"               # this label on the status issue stops all runs
 max_runs = 16                   # the most runs at one time (tools/usage.py); raise it with a larger plan (#1706)
 week_free = 0.60                # below this 7-day usage the runs fill each 5-hour window, no weekly pace (tools/usage.py)
 weights = { haiku = 0.25 }       # a lane run in Opus runs: the start value until the Usage: lines measure it (#1727)
+trigger = "trig_01QTrgkK5PZmqPwQ96rKp3QE"   # the scheduled task "aoe2mc autopilot": the pacer fires it (#1898)
 
 [commands]
 install = "python3 -m pip install -r requirements-dev.txt"

@@ -24,8 +24,8 @@ The session tools are in the MCP server `claude-code-remote`. They are deferred:
 (`+claude-code-remote`). This skill uses `list_triggers`, `get_trigger`, `update_trigger`, `create_trigger`,
 `fire_trigger`, `list_sessions`, `get_session`, `list_events`, `create_session`, `send_later` and the archive tool of
 the sessions (`archive_session`). When a name differs, use the tool of the same function and fix the name here.
-Do not write a trigger ID or a session ID into git, except the trigger ID that `pacer` already names (the pacer needs
-it before the clone): read the IDs with `list_triggers` and `list_sessions` (tag or title `pacer`).
+Do not write a trigger ID or a session ID into git, except the ID of the autopilot task in `trigger` of `[pacing]` in
+`agent.toml` (the pacer reads it, #1898): read the IDs with `list_triggers` and `list_sessions` (tag or title `pacer`).
 Without `claude-code-remote` tools (a run, a local CLI): do only part 1a and say that the rest needs an owner session.
 
 ## 1. Check
@@ -37,8 +37,8 @@ a. Run `python3 tools/operator_check.py` in the repository. It checks what needs
 b. **Scheduled tasks** (`list_triggers`, then `get_trigger` for each one): both tasks exist and are enabled; the cron
    is `6 * * * *` (autopilot) and `36 * * * *` (heartbeat), in UTC; the autopilot prompt has each point of
    `docs/SYSTEM.md` step 4; the heartbeat prompt is "Pacer heartbeat: follow .claude/skills/pacer/SKILL.md." and its
-   `persistent_session_id` is the pacer session of 1c; the trigger ID in `.claude/skills/pacer/SKILL.md` is the ID
-   of the autopilot task.
+   `persistent_session_id` is the pacer session of 1c; `trigger` in `[pacing]` of `agent.toml` is the ID of the
+   autopilot task.
 c. **Pacer session** (`list_sessions`, `get_session`, `list_events`): it exists and is not archived; its last
    event is a "Pacer cycle" reply less than 15 minutes old; it has one pending `send_later`; its context use. A
    context above 600,000 tokens, or a last cycle older than 75 minutes (the heartbeat did not wake it), is a problem.
@@ -56,7 +56,7 @@ Ask the owner before each repair, with one line: what is wrong and what the repa
 | The owner asks for the Haiku lane | `get_trigger` of the autopilot task, then `create_trigger` "aoe2mc autopilot haiku" with `create_new_session_on_fire` true (else it fires into this session, #1718), no cron and no `run_once_at`, the same repository and environment, `initiation` human_request, and its prompt with "the argument max" replaced by "the argument max lane haiku". Then `update_trigger` with `model` `claude-haiku-5-5` (the owner asked for it). To stop the lane: `update_trigger` with `enabled` false; the pacer then starts all runs on Opus. A Haiku task bound to a session (`persistent_session_id`): `update_trigger` with `enabled` false and the name "aoe2mc autopilot haiku (wrong, delete)", make the task again, and ask the owner to delete the wrong one in the app (the auto mode can deny a delete). |
 | A scheduled task is missing | `create_trigger` with the values of section 3. |
 | A prompt or a cron differs from `docs/SYSTEM.md` | `update_trigger` with the text of `docs/SYSTEM.md`. |
-| The trigger ID in `pacer` is not the autopilot task | A PR that changes the ID in `.claude/skills/pacer/SKILL.md` (Automerge merges it). |
+| `trigger` in `agent.toml` is not the autopilot task | A PR that changes `trigger` in `[pacing]` of `agent.toml` (Automerge merges it). |
 | A label is missing | Run the Labels workflow (`/actions/workflows/labels.yml/dispatches -f ref=main`), or make the label with `gh api repos/OWNER/NAME/labels -f name=... -f color=... -f description=...` from `.github/labels.txt` (#980). |
 | No run in 2 hours, target above 0 | `fire_trigger` of the autopilot task once, then check the pacer (1c). |
 | Owner comments without an answer | `fire_trigger` of the autopilot task once: its step 3 answers them. |
@@ -69,7 +69,7 @@ For a new repository, first run `python3 tools/bootstrap.py DIR --repo OWNER/NAM
 1. `create_trigger` "NAME autopilot": cron `6 * * * *`, the repository and the environment, the prompt of
    `docs/SYSTEM.md` step 4 with the repository name.
 2. `create_session` "NAME pacer" (model Haiku), message "Pacer cycle: follow .claude/skills/pacer/SKILL.md.". Write the
-   trigger ID of step 1 into `.claude/skills/pacer/SKILL.md` and push it (a PR).
+   trigger ID of step 1 into `trigger` of `[pacing]` in `agent.toml` and push it (a PR).
 3. `create_trigger` "NAME pacer heartbeat": cron `36 * * * *`, prompt "Pacer heartbeat: follow
    .claude/skills/pacer/SKILL.md.", `persistent_session_id` the session of step 2.
 4. Do the checks of section 1.
