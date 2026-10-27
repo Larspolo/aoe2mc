@@ -46,7 +46,8 @@ BUILDINGS = {
     "BARRACKS": Stats(1200, 0, 0, 7, 0, 0.0, {}, ("building",)),
     "ARCHERY_RANGE": Stats(1500, 0, 0, 7, 0, 0.0, {}, ("building",)),
     "STABLE": Stats(1500, 0, 0, 7, 0, 0.0, {}, ("building",)),
-    "DOCK": Stats(1800, 0, 0, 7, 0, 0.0, {SHIP: 3}, ("building",)),   # AoE2 DE wiki, the Dark Age (#1382)
+    "DOCK": Stats(1800, 3, 0, 7, 6, 2.0, {CAM: 1, SHIP: 3}, ("building",)),   # AoE2 DE wiki, the Dark Age (#1382); it
+    # shoots only with fishing ships inside (garrison.arrows, #1949); the reload of the town center (no wiki value)
     "MARKET": Stats(1800, 0, 1, 8, 0, 0.0, {}, ("building",)),       # the Feudal Age values of the wiki (#1251)
     "MONASTERY": Stats(2100, 0, 0, 7, 0, 0.0, {}, ("building",)),
     "SIEGE_WORKSHOP": Stats(2100, 0, 0, 7, 0, 0.0, {}, ("building",)),
@@ -56,7 +57,7 @@ BUILDINGS = {
     "MINING_CAMP": Stats(600, 0, 0, 7, 0, 0.0, {}, ("building",)),
     "UNIVERSITY": Stats(2100, 0, 2, 9, 0, 0.0, {}, ("building",)),   # the Castle Age values
     # the towers (AoE2 DE, wiki): a watch tower of the Castle Age (850 hit points in the Feudal Age), #1112. The attack
-    # against ships: the "Attack bonus" of the wiki infobox (#1564; the dock: the Castle Age, it does not shoot yet)
+    # against ships: the "Attack bonus" of the wiki infobox (#1564; the dock: the Castle Age)
     "BOMBARD_TOWER": Stats(2220, 120, 3, 9, 8, 6.0, {SHIP: 40}, ("building",)),
     "FORTIFIED_TOWER": Stats(1900, 8, 4, 7, 13, 3.0, {SHIP: 12}, ("building",)),
     "GUARD_TOWER": Stats(1500, 7, 2, 8, 8, 2.0, {SHIP: 7}, ("building",)),
@@ -304,7 +305,7 @@ MIN_RANGE = {"BOMBARD_CANNON": 5,     # tiles: no shot at a unit nearer (AoE2 DE
 # "MinRange", #1546). The town center has none. Murder Holes removes it.
 FORT_MIN_RANGE = {"BOMBARD_TOWER": 1,
                   "CASTLE": 1,
-                  "DOCK": 1,                  # it shoots only with fishing ships inside (AoE2 DE): not yet
+                  "DOCK": 1,                  # it shoots only with fishing ships inside (AoE2 DE, #1949)
                   "GUARD_TOWER": 1,
                   "KEEP": 1,
                   "KREPOST": 1,
