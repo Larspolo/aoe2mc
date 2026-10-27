@@ -30,6 +30,7 @@ FLAGS = (("preview", "--preview"), ("no_units", "--no-units"))
 GAME = Path(__file__).resolve().parent / "game" / "run.py"
 PLAY_VALUES = (("server", "--server"), ("people", "--people"), ("reveal", "--reveal"))
 PLAY_FLAGS = (("play", "--play"), ("bot", "--bot"), ("cheats", "--cheats"))
+BOT_VALUES = (("bot_attack", "--bot-attack"),)                     # only with --bot (#1870)
 JAVA = {"26.3": 25}                                    # Java of each Minecraft version (mc_check reads the version JSON)
 JDK_INSTALL = {"Linux": "sudo apt-get install openjdk-{n}-jdk-headless", "Darwin": "brew install openjdk@{n}",
                "Windows": "Install the JDK {n} from https://adoptium.net/temurin/releases/?version={n}"}
@@ -137,7 +138,8 @@ def play_argv(o):
     default of the game program."""
     a = [str(o["world"])]
     replay = bool(o.get("replay"))                                 # a replay is not a game: no --play, --bot, --cheats
-    for key, flag in PLAY_VALUES + REPLAY_VALUES * replay:
+    bot = bool(o.get("bot")) and not replay
+    for key, flag in PLAY_VALUES + REPLAY_VALUES * replay + BOT_VALUES * bot:
         v = str(o.get(key) or "").strip()
         if v:
             a += [flag, v]
@@ -227,8 +229,8 @@ def window():
     f.columnconfigure(1, weight=1)
     g.columnconfigure(1, weight=1)
     v = {k: tk.StringVar() for k in ("input", "output", "name", "tile_size", "level_height", "architecture", "seed",
-                                     "random_map", "at", "more", "world", "server", "people", "reveal", "speed", "start", "follow",
-                                     "view", "command")}
+                                     "random_map", "at", "more", "world", "server", "people", "reveal", "speed", "start",
+                                     "follow", "view", "command", "bot_attack")}
     v |= {k: tk.BooleanVar() for k, _ in FLAGS + PLAY_FLAGS + (("replay", ""),)}
     v["server"].set("paper")
     v["people"].set("1")
@@ -236,6 +238,7 @@ def window():
     v["play"].set(True)
     v["speed"].set("1")
     v["start"].set("0:00")
+    v["bot_attack"].set("10:00")
     v["tile_size"].set("4")
     v["level_height"].set("3")
     v["seed"].set("1")
@@ -294,6 +297,11 @@ def window():
     checks.grid(row=4, column=1, sticky="w")
     for key, text in (("play", "Play (villagers gather)"), ("bot", "Bot plays player 2"), ("cheats", "Cheat codes")):
         ttk.Checkbutton(checks, text=text, variable=v[key]).pack(side="left", padx=(0, 8))
+    ttk.Label(checks, text="Bot attacks at (MM:SS)").pack(side="left")
+    bot_attack = ttk.Entry(checks, textvariable=v["bot_attack"], width=7)
+    bot_attack.pack(side="left", padx=(2, 0))
+    v["bot"].trace_add("write", lambda *_: bot_attack.state(["!disabled" if v["bot"].get() else "disabled"]))
+    bot_attack.state(["disabled"])
     replay = ttk.Checkbutton(g, text="Replay the recorded game (instead of a game)", variable=v["replay"])
     replay.grid(row=5, column=1, sticky="w")
     fields = ttk.Frame(g)

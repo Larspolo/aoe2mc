@@ -520,6 +520,7 @@ class Gather:
     cheats = False                                                     # also for the adapters of Gather.__new__
     aegis = False                                                      # the cheat "aegis": all work is instant (#817)
     beyond = free_techs = noui = False                                 # cheats: repeat and free technologies, no UI (#968)
+    sharing = False                                                    # cheat "sharing is caring": income to the allies (#969)
     who = "@a"                                                         # the Minecraft players: "@a[team=pN]" for two people (#1310)
     pop_cap = None                                                     # the cheat "my cpu can handle it" (#968): 1000
     ended = None                                                       # "Victory" or "Defeat": run() stops (#819)
@@ -937,6 +938,17 @@ class Gather:
         v.state = state
         self.event(v, EVENTS[state])
 
+    def earn(self, res, n):
+        """Add the income n of resource res to the stock and the sidebar. After the cheat "sharing is caring" (#969) the
+        income goes to the allied Gathers (fog.gathers) in equal parts, as in AoE2; with no ally the player keeps it."""
+        import fog                                                     # fog imports gather
+        to = [h for h in fog.gathers(self) if h.player != self.player and allied(self.players, self.player, h.player)]
+        to = to if self.sharing and to else [self]
+        for i, h in enumerate(to):
+            if part := n // len(to) + (i < n % len(to)):
+                h.stock[res] += part
+                h.command(f"scoreboard players add {res.capitalize()} {h.board} {part}")
+
     def event(self, v, name):
         if self.log:
             self.log.write(json.dumps({"t": round(self.clock() - self.t0, 3), "villager": v.uuid, "event": name,
@@ -1337,8 +1349,7 @@ class Gather:
                 v.timer = 0.0
                 self.set(v, "chop" if self.source(v).get(v.tree, 0) > 0 else "idle")
             elif v.state == "to_drop":
-                self.command(f"scoreboard players add {v.res.capitalize()} {self.board} {v.load}")
-                self.stock[v.res] += v.load
+                self.earn(v.res, v.load)
                 v.load = 0
                 self.event(v, "drop")
                 if v.tree in self.map.farms:
