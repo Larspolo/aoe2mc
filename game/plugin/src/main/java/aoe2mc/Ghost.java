@@ -8,7 +8,9 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
+import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.command.CommandSender;
@@ -144,7 +146,11 @@ final class Ghost {
             if (s.shown.isEmpty()) {
                 continue;
             }
-            RayTraceResult r = p.rayTraceBlocks(REACH);
+            // Plants, barriers and water under the look made the ghost jump to the head and back (#2053):
+            // the ray stops only on the solid ground, the water surface counts as ground
+            Location eye = p.getEyeLocation();
+            RayTraceResult r = p.getWorld().rayTraceBlocks(eye, eye.getDirection(), REACH,
+                    FluidCollisionMode.SOURCE_ONLY, true, b -> b.getType() != Material.BARRIER);
             Block b = r == null ? null : r.getHitBlock();
             if (b == null) {
                 continue;
