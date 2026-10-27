@@ -240,6 +240,7 @@ STATS = {
     # others: no fight, but they can die
     "VILLAGER": Stats(25, 3, 0, 0, 0, 2.0, {"building": 3, HSI: 6, "stone": 6}),   # AoE2 DE wiki (#1590)
     "KING": Stats(75, 0, 0, 0, 0, 0.0),
+    "MISSIONARY": Stats(30, 0, 0, 0, 7, 0.0),                     # AoE2 DE wiki (#1939)
     "MONK": Stats(30, 0, 0, 0, 9, 0.0),
     "TRADE_CART": Stats(70, 0, 0, 0, 0, 0.0),
 }
@@ -405,6 +406,7 @@ SIGHT = {
     "MARKET": 6,
     "MILL": 6,
     "MINING_CAMP": 6,
+    "MISSIONARY": 9,                                              # AoE2 DE wiki (#1939)
     "MONASTERY": 6,
     "OBUCH": 5,
     "ORGAN_GUN": 8,

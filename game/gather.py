@@ -139,7 +139,7 @@ MINE_BLOCKS = {"gold": ("gold_ore", "raw_gold_block", "stone"),                #
                "stone": ("cobblestone", "andesite", "stone", "tuff")}
 STEPS = [(dx, dz) for dx in (-1, 0, 1) for dz in (-1, 0, 1) if dx or dz]
 NUMBER = r"(-?[\d.]+(?:E-?\d+)?)[df]"
-CIVILIANS = ("VILLAGER", "REPAIRER", "MONK", "KING", "TRADE", "FISHING_SHIP", "TRANSPORT")
+CIVILIANS = ("VILLAGER", "REPAIRER", "MONK", "MISSIONARY", "KING", "TRADE", "FISHING_SHIP", "TRANSPORT")
 SELECT = "aoe2mc.selected"                                         # entity tag of the selected units
 TYPE_REACH = 16                                                    # blocks: a second click selects its type this near (#743)
 WAND = "warped_fungus_on_a_stick"     # the selection wand: a second item with its own "used" statistic (#778)
@@ -549,7 +549,7 @@ class Gather:
                       and "VILLAGER" in o["name"]]
         self.villagers, self.selected = {}, set()
         self.soldiers = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit"
-                         and o["player"] == player and (military(o["name"]) or o["name"] == "MONK" or o["name"].startswith(trade.CART)
+                         and o["player"] == player and (military(o["name"]) or o["name"] in monk.MONKS or o["name"].startswith(trade.CART)
                               or replay.ship(o["name"]))}
         # military units, monks, trade carts and ships of the player: they take move orders (#1243, #1253, #1383)
         self.ships = {}                         # UUID of an own ship -> Villager with its water path (fleet.py, #1383)
@@ -778,7 +778,7 @@ class Gather:
 
     def monks(self):
         """The selected monks."""
-        return {u for u in self.selected if self.soldiers.get(u) == "MONK"}
+        return {u for u in self.selected if self.soldiers.get(u) in monk.MONKS}
 
     def positions(self, uuids):
         """{uuid: feet position} of the loaded units; a dead unit is not in it."""
@@ -805,7 +805,7 @@ class Gather:
         watch = combat.WATCH * len({"TOWN_PATROL", "TOWN_WATCH"} & set(getattr(self, "techs", ())))   # (#1454, #1579)
         lit = {n for n, _, _ in placed} - combat.WALLS.keys() - {"FARM", "FISH_TRAP"}   # as in AoE2
         return replay.seen(mobs, [(self.player, n, fp) for n, fp, _ in placed], self.player, self.map.T,
-                           lambda n: combat.sight(n) + printing * (n == "MONK") + watch * (n in lit))
+                           lambda n: combat.sight(n) + printing * (n in monk.MONKS) + watch * (n in lit))
 
     def task(self, v, name):
         """Give the villager the look of its AoE2 task (`LUMBERJACK` ...), with the table of the converter."""
