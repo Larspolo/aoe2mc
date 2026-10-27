@@ -165,6 +165,9 @@ MISSING = {"ARSON": ("GOTHS", "MUISCA", "ROMANS"),                              
            "CANNON_GALLEON": ("ARMENIANS", "AZTECS", "BYZANTINES", "CHINESE", "CUMANS", "DANES", "GOTHS", "HUNS", "INCAS",
                               "JURCHENS", "MAPUCHE", "MAYANS", "MUISCA", "ROMANS", "SAXONS", "SHU", "TUPI", "VARANGIANS",
                               "VIKINGS", "WEI", "WU"),                                     # (#1484)
+           "CAVALIER_UPGRADE": ("AZTECS", "BENGALIS", "DANES", "DRAVIDIANS", "GURJARAS", "HINDUSTANIS", "INCAS", "JURCHENS",
+                                "KHITANS", "MAPUCHE", "MAYANS", "MUISCA", "SARACENS", "SHU", "TUPI", "WEI",
+                                "WU"),                                 # the wiki chart (#1501)
            "CAVALRY_ARCHER": ("AZTECS", "BENGALIS", "BOHEMIANS", "BRITONS", "BURGUNDIANS", "CELTS", "DANES", "DRAVIDIANS",
                               "FRANKS", "GURJARAS", "INCAS", "ITALIANS", "MAPUCHE", "MAYANS", "MUISCA", "POLES",
                               "PORTUGUESE", "SAXONS", "SICILIANS", "SPANISH", "TEUTONS", "TUPI", "VARANGIANS", "VIKINGS",
@@ -209,6 +212,13 @@ MISSING = {"ARSON": ("GOTHS", "MUISCA", "ROMANS"),                              
                               "TUPI", "VIETNAMESE", "VIKINGS"),   # the wiki chart (#1502)
            "KNIGHT": ("AZTECS", "BENGALIS", "DRAVIDIANS", "GURJARAS", "HINDUSTANIS", "INCAS", "JURCHENS", "KHITANS",
                       "MAPUCHE", "MAYANS", "MUISCA", "SHU", "TUPI", "WEI", "WU"),   # the wiki chart (#1430)
+           "PALADIN_UPGRADE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "BENGALIS", "BERBERS", "BOHEMIANS",
+                               "BRITONS", "BULGARIANS", "BURMESE", "CHINESE", "DANES", "DRAVIDIANS", "ETHIOPIANS",
+                               "GEORGIANS", "GOTHS", "GURJARAS", "HINDUSTANIS", "INCAS", "ITALIANS", "JAPANESE",
+                               "JURCHENS", "KHITANS", "KHMER", "KOREANS", "MACEDONIANS", "MALAY", "MALIANS", "MAPUCHE",
+                               "MAYANS", "MONGOLS", "MUISCA", "PERSIANS", "POLES", "PORTUGUESE", "PURU", "ROMANS",
+                               "SARACENS", "SAXONS", "SHU", "SICILIANS", "SLAVS", "SPARTANS", "TATARS", "THRACIANS",
+                               "TUPI", "TURKS", "VARANGIANS", "VIETNAMESE", "VIKINGS", "WEI", "WU"),   # the wiki chart (#1501)
            "SHIPWRIGHT": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "BOHEMIANS", "BULGARIANS", "BURGUNDIANS", "BURMESE",
                           "CUMANS", "FRANKS", "GEORGIANS", "HINDUSTANIS", "HUNS", "JURCHENS", "KHITANS", "KHMER",
                           "LITHUANIANS", "MACEDONIANS", "MALIANS", "MAPUCHE", "MUISCA", "PERSIANS", "POLES", "PORTUGUESE",
