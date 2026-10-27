@@ -12,6 +12,9 @@ from test_train_menu import RALLY
 
 from game import build, gather, run, train
 
+ELEPHANT = " 7:gray_dye:Battle Elephant:100 food · 70 gold · 24 s · Needs the Castle Age"   # a player without a civ (#1556)
+LANCER = " 20:gray_dye:Steppe Lancer:70 food · 40 gold · 24 s · Needs the Castle Age"       # (#1557)
+
 
 def setup(food=80, done=True):
     """A flat 24 × 24 map (tile size 1): a town center of player 1 at blocks x 2-4, z 2-4, a stable at x 10-12,
@@ -46,7 +49,7 @@ def test_a_right_click_on_the_stable_opens_its_menu():
         g.click(name)
     assert menus(server) == ["aoe menu Steve Stable 0:horse_spawn_egg:Scout Cavalry:80 food · 30 s · queue 0/15 "
                              "1:book:Bloodlines:150 food · 100 gold · 50 s · research"
-                             " 3:gray_dye:Knight:60 food · 75 gold · 30 s · Needs the Castle Age" + RALLY]
+                             " 3:gray_dye:Knight:60 food · 75 gold · 30 s · Needs the Castle Age" + ELEPHANT + LANCER + RALLY]
 
 
 def test_no_menu_at_a_stable_that_is_not_complete():

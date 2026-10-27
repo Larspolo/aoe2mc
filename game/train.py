@@ -89,6 +89,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "BOW_SAW": {"food": 150, "wood": 100},                        # AoE2 DE wiki (#1423)
          "BRACER": {"food": 300, "gold": 200},                         # the blacksmith, Imperial Age (#1503)
          "BERSERK": {"food": 65, "gold": 20},
+         "BATTLE_ELEPHANT": {"food": 100, "gold": 70},                    # AoE2 DE wiki (#1556)
          "BLAST_FURNACE": {"food": 275, "gold": 225},                  # AoE2 DE wiki (#1451)
          "BLOCK_PRINTING": {"gold": 200},                              # AoE2 DE wiki (#1457)
          "BODKIN_ARROW": {"food": 200, "gold": 100},                   # AoE2 DE wiki (#1395)
@@ -117,6 +118,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "EAGLE_SCOUT": {"food": 20, "gold": 50},                       # AoE2 DE wiki (#1555)
          "EAGLE_WARRIOR": {"food": 20, "gold": 50},
          "EAGLE_WARRIOR_UPGRADE": {"food": 200, "gold": 200},
+         "ELITE_BATTLE_ELEPHANT": {"food": 100, "gold": 70},
+         "ELITE_BATTLE_ELEPHANT_UPGRADE": {"food": 1100, "gold": 700},    # the Imperial Age (#1556)
          "ELITE_CANNON_GALLEON": {"wood": 200, "gold": 150},           # AoE2 DE wiki (#1491)
          "ELITE_CANNON_GALLEON_UPGRADE": {"wood": 525, "gold": 500},   # the Imperial Age (#1491)
          "ELITE_EAGLE_WARRIOR": {"food": 20, "gold": 50},
@@ -239,6 +242,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "ARROWSLITS": 25,
                "BALLISTICS": 60,
                "BATTERING_RAM": 36,
+               "BATTLE_ELEPHANT": 24,
                "BERSERK": 14,
                "BLAST_FURNACE": 100,
                "BLOCK_PRINTING": 55,
@@ -272,6 +276,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "EAGLE_SCOUT": 46,                                  # 35 s from the Castle Age: FASTER
                "EAGLE_WARRIOR": 35,
                "EAGLE_WARRIOR_UPGRADE": 50,
+               "ELITE_BATTLE_ELEPHANT": 24,
+               "ELITE_BATTLE_ELEPHANT_UPGRADE": 100,
                "ELITE_CANNON_GALLEON": 46,
                "ELITE_CANNON_GALLEON_UPGRADE": 30,
                "ELITE_EAGLE_WARRIOR": 20,
@@ -420,6 +426,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                      "HUSBANDRY",                                               # (#1416)
                      "HUSSAR_UPGRADE",                                          # the Imperial Age (#1502)
                      "CAVALIER_UPGRADE",                                        # (#1501)
+                     "BATTLE_ELEPHANT",                                         # (#1556)
+                     "ELITE_BATTLE_ELEPHANT_UPGRADE",
                      "PALADIN_UPGRADE",                                         # after Cavalier (#1501)
                      "STEPPE_LANCER",                                           # Cumans, Jurchens, Khitans, Mongols,
                      "ELITE_STEPPE_LANCER_UPGRADE"),                            # Tatars (#1557)
@@ -559,6 +567,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "DOUBLE_BIT_AXE": lambda name, s: s,                      # an economy technology: gather.WORK_TECHS
          "DRY_DOCK": lambda name, s: s._replace(pierce=s.pierce + 1) if ship(name, s) else s,
          "EAGLE_WARRIOR_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
+         "ELITE_BATTLE_ELEPHANT_UPGRADE": lambda name, s: s,       # a new unit name: UPGRADES
          "ELITE_CANNON_GALLEON_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
          "ELITE_EAGLE_WARRIOR_UPGRADE": lambda name, s: s,
          "ELITE_STEPPE_LANCER_UPGRADE": lambda name, s: s,         # a new unit name: UPGRADES
@@ -651,6 +660,7 @@ UPGRADES = {                                                       # technology:
     "CHAMPION_UPGRADE": ("TWO_HANDED_SWORDSMAN", "CHAMPION"),
     "CROSSBOWMAN_UPGRADE": ("ARCHER", "CROSSBOWMAN"),
     "EAGLE_WARRIOR_UPGRADE": ("EAGLE_SCOUT", "EAGLE_WARRIOR"),        # (#1555)
+    "ELITE_BATTLE_ELEPHANT_UPGRADE": ("BATTLE_ELEPHANT", "ELITE_BATTLE_ELEPHANT"),   # (#1556)
     "ELITE_CANNON_GALLEON_UPGRADE": ("CANNON_GALLEON", "ELITE_CANNON_GALLEON"),
     "ELITE_EAGLE_WARRIOR_UPGRADE": ("EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"),
     "ELITE_SKIRMISHER_UPGRADE": ("SKIRMISHER", "ELITE_SKIRMISHER"),
@@ -734,6 +744,7 @@ TECH_AGE = {                                                       # the age of 
     "DOUBLE_BIT_AXE": 1,
     "DRY_DOCK": 3,
     "EAGLE_WARRIOR_UPGRADE": 2,
+    "ELITE_BATTLE_ELEPHANT_UPGRADE": 3,
     "ELITE_CANNON_GALLEON_UPGRADE": 3,
     "ELITE_EAGLE_WARRIOR_UPGRADE": 3,
     "ELITE_SKIRMISHER_UPGRADE": 2,
@@ -817,6 +828,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "EAGLE_SCOUT": (7, "husk_spawn_egg", "Eagle Scout"),        # the free slot of the barracks (#1555)
          "EAGLE_WARRIOR": (7, "husk_spawn_egg", "Eagle Warrior"),    # the slot of the eagle scout
          "EAGLE_WARRIOR_UPGRADE": (MORE, "book", "Eagle Warrior"),
+         "ELITE_BATTLE_ELEPHANT": (7, "ravager_spawn_egg", "Elite Battle Elephant"),   # the slot of the battle elephant
+         "ELITE_BATTLE_ELEPHANT_UPGRADE": (MORE + 1, "book", "Elite Battle Elephant"),   # the stable (#1556)
          "ELITE_CANNON_GALLEON": (MORE + 1, "dark_oak_boat", "Elite Cannon Galleon"),   # the slot of the cannon galleon
          "ELITE_CANNON_GALLEON_UPGRADE": (MORE + 3, "book", "Elite Cannon Galleon"),   # the dock (#1491)
          "ELITE_EAGLE_WARRIOR": (7, "husk_spawn_egg", "Elite Eagle Warrior"),
@@ -861,6 +874,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "SPEARMAN": (1, "zombie_spawn_egg", "Spearman"),
          "SQUIRES": (4, "book", "Squires"),                        # after the slot of Pikeman
          "BALLISTICS": (MORE + 3, "book", "Ballistics"),          # 18: Shipwright, 19: Arrowslits, 20: Heated Shot
+         "BATTLE_ELEPHANT": (7, "ravager_spawn_egg", "Battle Elephant"),   # the stable (#1556)
          "BATTERING_RAM": (0, "minecart", "Battering Ram"),         # a siege unit is a minecart (units.siege)
          "BERSERK": (0, "zombie_spawn_egg", "Berserk"),
          "BLAST_FURNACE": (0, "book", "Blast Furnace"),               # the slot of Forging
@@ -972,6 +986,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "ARSON": "Infantry +2 attack vs. buildings.",
         "BALLISTICS": "Arrows hit moving targets.",
         "BATTERING_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
+        "BATTLE_ELEPHANT": "Slow, heavy cavalry. Strong vs. buildings.",
         "BERSERK": "Viking infantry. Heals itself.",
         "BLAST_FURNACE": "Infantry, cavalry and hulks +2 attack.",
         "BLOCK_PRINTING": "Monks +3 conversion range and line of sight.",
@@ -1005,6 +1020,8 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "EAGLE_SCOUT": "Fast infantry scout. Strong vs. monks, siege.",
         "EAGLE_WARRIOR": "Fast infantry. Strong vs. monks, siege, cavalry.",
         "EAGLE_WARRIOR_UPGRADE": "Upgrades eagle scouts to eagle warriors.",
+        "ELITE_BATTLE_ELEPHANT": "Slow, heavy cavalry. Strong vs. buildings.",
+        "ELITE_BATTLE_ELEPHANT_UPGRADE": "Upgrades battle elephants to elite ones.",
         "ELITE_CANNON_GALLEON": "Siege warship. Long range; strong vs. buildings.",
         "ELITE_CANNON_GALLEON_UPGRADE": "Upgrades cannon galleons to elite ones.",
         "ELITE_EAGLE_WARRIOR": "Fast infantry. Strong vs. monks, siege, cavalry.",
