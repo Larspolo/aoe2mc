@@ -11,7 +11,9 @@ Gold per trip (AoE2 wiki, "Market (Age of Empires II)", trading): 0.46 * d * (d 
 in tiles between the market centers less 5 tiles on each axis, at least 0.1. The cart keeps the fraction for its next
 trip, as in AoE2 (fractional gold).
 
-Minecraft feature: the walk is the path finding of the Paper plugin (`aoe moveto`, ai.py) at the AoE2 speed.
+Minecraft feature: the walk is the path finding of the Paper plugin (`aoe moveto`, ai.py) at the AoE2 speed. One
+Minecraft path search reaches only about 128 blocks, so a long way goes in legs of LEG cells of the path of gather.Map,
+as in the live replay (#438, #1305: a cart turned back after 125 of 170 blocks).
 
     trade.order(g, player, cell)   # gather.Gather.click: a right click on an own market
     trade.tick(g)                  # gather.Gather.step: the arrivals
@@ -21,6 +23,9 @@ import math
 GOLD = (0.46, 0.3)      # the factors of the AoE2 formula
 FREE = 5                # tiles of each axis that give no gold
 ARRIVE = 1.5            # blocks from the door cell: the cart is there
+LEG = 48                # path cells of one plugin order: within the reach of a Minecraft path search (replay.LEG)
+NEAR = 3                # blocks from the end of a leg: the next leg starts
+PATH_CELLS = 20000      # cells that one path search may look at (replay.PATH_CELLS)
 CART = "TRADE_CART"
 
 
@@ -41,14 +46,22 @@ def markets(g):
     return sorted(r for r, n in train.homes(g).items() if n == "MARKET")
 
 
-def walk(g, uuid, rect):
-    """Send cart uuid to the door cell of the market rect. Returns the cell, or None."""
-    import ai, train                                               # both import gather, gather imports this module
+def walk(g, uuid, rect, pos):
+    """Send cart uuid at block position pos to the door cell of the market rect, in legs of LEG cells of the path.
+    Returns the end cells of the legs (the door last; the cart walks to the first one now), or None."""
     if not (to := next(iter(g.map.front(rect)), None)):
         return None
-    x, z = to
+    path = g.map.path((int(pos[0]), int(pos[2])), {to}, PATH_CELLS)
+    legs = (path[LEG - 1:-1:LEG] if path else []) + [to]
+    leg(g, uuid, legs[0])
+    return legs
+
+
+def leg(g, uuid, cell):
+    """The plugin walks cart uuid to the block cell (x, z) at the AoE2 speed of a trade cart (Caravan: train.speed)."""
+    import ai, train                                               # both import gather, gather imports this module
+    x, z = cell
     ai.move(g, uuid, CART, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * train.speed(g, CART))
-    return to
 
 
 def order(g, player, cell):
@@ -66,8 +79,9 @@ def order(g, player, cell):
             continue
         mid = lambda r: ((r[0] + r[1]) / 2, (r[2] + r[3]) / 2)    # noqa: E731
         home = min((r for r in own if r != rect), key=lambda r: (math.dist(mid(r), (pos[u][0], pos[u][2])), r))
-        if (to := walk(g, u, rect)) is not None:
-            g.trade[u] = {"home": home, "market": rect, "to": rect, "cell": to, "rest": g.trade.get(u, {}).get("rest", 0.0)}
+        if (legs := walk(g, u, rect, pos[u])) is not None:
+            g.trade[u] = {"home": home, "market": rect, "to": rect, "cell": legs[-1], "legs": legs,
+                          "rest": g.trade.get(u, {}).get("rest", 0.0)}
     g.mark(player, {(rect[0], rect[2]), (rect[1] - 1, rect[3] - 1)})
     return rect
 
@@ -82,6 +96,12 @@ def tick(g):
         if u not in pos or not g.soldiers.get(u, "").startswith(CART) or not {t["home"], t["market"]} <= own:
             del g.trade[u]                                         # dead, or a market fell: the route ends
             continue
+        if len(legs := t.get("legs") or []) > 1:                   # on a long way: the next leg at the end of one
+            x, z = legs[0]
+            if math.dist((pos[u][0], pos[u][2]), (x + 0.5, z + 0.5)) <= NEAR:
+                legs.pop(0)
+                leg(g, u, legs[0])
+            continue
         x, z = t["cell"]
         if math.dist((pos[u][0], pos[u][2]), (x + 0.5, z + 0.5)) > ARRIVE:
             continue
@@ -92,4 +112,5 @@ def tick(g):
                 g.command(f"scoreboard players add Gold {g.board} {n}")
                 g.stock["gold"] += n
         t["to"] = t["market"] if t["to"] == t["home"] else t["home"]
-        t["cell"] = walk(g, u, t["to"]) or t["cell"]
+        if (legs := walk(g, u, t["to"], pos[u])) is not None:
+            t["cell"], t["legs"] = legs[-1], legs

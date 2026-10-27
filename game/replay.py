@@ -177,6 +177,7 @@ class Replay:
         self.working = {}                       # object ID -> game time (ms) of its next gather step (#631)
         self.arriving = {}                      # object ID -> game time (ms) of its work start, until it is there (#766)
         self.entering = {}                      # object ID -> [footprint, building entry, arrival (ms) or None] (#809)
+        self.builds = {}                        # object ID of a builder -> (game time (ms) of the build end, order then) (#1282)
         self.garrisons = {}                     # building footprint -> object IDs of the units inside it
         self.work = {}                          # object ID -> the resource tile that it left for a garrison (#1179)
         self.ids = {}                           # new object ID of a building -> footprint of its replay building (#876)
@@ -306,14 +307,46 @@ class Replay:
                     for i, n in zip(e.get("objects", ()), e.get("names") or [None] * len(e.get("objects", ()))):
                         out += self.side(i, self.unit(i, n, e["player"]), self.placed[-1][2])
                         out += self.look(self.unit(i, n, e["player"]), "BUILDER")
+                    then = None
                     if "FARM" in name and e.get("objects"):       # AoE2: the builders of a farm farm it (#719)
                         x0, x1, z0, z1 = self.placed[-1][2]
-                        out += self.move(dict(e, kind="order", target=-1,
-                                              tile=[(x0 + x1) / 2 / self.T, (z0 + z1) / 2 / self.T]))
+                        then = dict(e, kind="order", target=-1, tile=[(x0 + x1) / 2 / self.T, (z0 + z1) / 2 / self.T])
                     elif (kinds := [r for r, s in self.gather.DROP_SITES.items() if name in s and name != "TOWN_CENTER"]) \
                             and e.get("objects") and (k := self.near(kinds, self.placed[-1][2])) is not None:
-                        out += self.move(dict(e, kind="order", target=-1, tile=[k[0] + 0.5, k[1] + 0.5], resource=k))
+                        then = dict(e, kind="order", target=-1, tile=[k[0] + 0.5, k[1] + 0.5], resource=k)
+                    if e["kind"] == "build":
+                        out += self.construct(e, name, self.placed[-1][2], then)
         return out
+
+    def construct(self, e, name, rect, then):
+        """The builders of a BUILD stop their work, walk next to the foundation rect and build for the AoE2 build time
+        with n builders, t × 3 / (n + 2) (t: build.BUILD_TIMES, one builder; 0 for a building that it does not
+        list). Then the ORDER `then` starts (built()), else they stand idle: before, the builders of a house gathered
+        while they built (#1282). Returns the commands."""
+        import build                                                # gather -> build -> replay: import it late
+        group = [(i, v) for i, n in zip(e.get("objects", ()), e.get("names") or [None] * len(e.get("objects", ())))
+                 if (v := self.unit(i, n, e["player"])) is not None and v.name.startswith("VILLAGER")]
+        x0, x1, z0, z1 = rect
+        goals = self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)})
+        work = 1000 * build.BUILD_TIMES.get(name, 0) * 3 / (len(group) + 2)
+        out = []
+        for i, v in group:
+            for state in (self.working, self.arriving, self.entering):
+                state.pop(i, None)
+            if self.ai:
+                v.pos = self.at(v, e["time"])                       # it stops its leg where it is
+            v.path = self.map.path(v.cell, goals, PATH_CELLS) or []
+            due = self.walk_end(v, e["time"]) + work
+            out += self.go(i, v, None, v.path, e["time"])
+            self.builds[i] = due, then and dict(then, time=due, objects=[i], names=[None])
+        return out
+
+    def built(self, t):
+        """The builders whose build ends until game time t (ms), in time order: (object ID, ORDER or None) (#1282)."""
+        done = sorted((due, i, then) for i, (due, then) in self.builds.items() if due <= t)
+        for _, i, _ in done:
+            del self.builds[i]
+        return [(i, then) for _, i, then in done]
 
     def near(self, kinds, rect):
         """The tile of the nearest tree, bush or mine of the resources `kinds` within NEXT tiles of the building rect,
@@ -521,6 +554,7 @@ class Replay:
                 self.working.pop(i, None)
                 self.arriving.pop(i, None)
                 self.entering.pop(i, None)
+                self.builds.pop(i, None)
                 for us in self.garrisons.values():
                     us[:] = [u for u in us if u != i]
                 self.pop[e["player"]] = max(0, self.pop.get(e["player"], 0) - 1)
@@ -697,7 +731,7 @@ class Replay:
                 for j in [j for j, u in self.units.items() if j < 0 and u is v]:   # it was at a gather point
                     del self.units[j]
                     self.adopted[j] = i
-                    for state in (self.moving, self.working, self.arriving, self.entering, self.work):
+                    for state in (self.moving, self.working, self.arriving, self.entering, self.work, self.builds):
                         if j in state:
                             state[i] = state.pop(j)
                     for us in self.garrisons.values():                     # a gather point on a building
@@ -783,6 +817,7 @@ class Replay:
             goals = self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)})
         for i, v in group:                                          # a new MOVE or ORDER stops the work
             self.working.pop(i, None)
+            self.builds.pop(i, None)
             self.arriving.pop(i, None)
             self.entering.pop(i, None)
             if e.get("garrison"):                                   # BACK TO WORK sends it there again
@@ -954,6 +989,8 @@ class Replay:
     def steps(self, t):
         """The commands of the steps (/tp), legs (plugin orders) and gather steps that are due at game time t (ms)."""
         out = self.expire(t)
+        for i, then in self.built(t):                               # the builders gather or stand idle (#1282)
+            out += self.move(then) if then else self.look(self.units[i], "none")
         sink = types.SimpleNamespace(map=self.map, command=out.append)
         for i, due in list(self.moving.items()):
             v, at = self.units[i], due
@@ -1485,32 +1522,37 @@ class Replay:
         since = {} if start is None else {i: start if i in self.working else self.walk_end(v, start)
                                           for i, v in self.units.items()
                                           if (i in self.moving or i in self.working) and v.tree is not None}
+
+        def order(e):
+            for i in e["objects"]:                                  # a new order ends the work at the old resource
+                self.skipped(i, since.pop(i, None), e["time"])
+            self.commands(e) if e["kind"] == "garrison" else self.move(e)   # the paths and the targets; no walks
+            moved.update(e["objects"])
+            since.update((i, self.walk_end(v, e["time"])) for i in e["objects"]
+                         if (v := self.units.get(i)) is not None and v.tree is not None)
+            for i in set(e["objects"]) & self.entering.keys():      # it is at its building at once
+                self.entering[i][2] = e["time"]
+
+        def built(t):                                               # the builders of a farm farm it, of a camp
+            for i, then in self.built(t):                           # gather next to it after the build (#1282)
+                order(then) if then else self.look(self.units[i], "none")
+
         for e in events:
+            built(e["time"])
             if e["kind"] in ("move", "order", "garrison", "build", "wall") and e.get("objects"):
                 for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"])):
                     self.unit(i, name, e["player"])                 # a unit of a gather point gets its ID (#1227)
                 since.update((self.adopted[j], since.pop(j)) for j in list(since) if j in self.adopted)
             if e["kind"] in ("move", "order", "garrison") and e.get("objects"):
-                for i in e["objects"]:                              # a new order ends the work at the old resource
-                    self.skipped(i, since.pop(i, None), e["time"])
-                self.commands(e) if e["kind"] == "garrison" else self.move(e)   # the paths and the targets; no walks
-                moved.update(e["objects"])
-                since.update((i, self.walk_end(v, e["time"])) for i in e["objects"]
-                             if (v := self.units.get(i)) is not None and v.tree is not None)
-                for i in set(e["objects"]) & self.entering.keys():  # it is at its building at once
-                    self.entering[i][2] = e["time"]
+                order(e)
             elif e["kind"] in ("build", "wall", "spawn", "delete", "ungarrison"):
                 builders = e.get("objects", ()) if e["kind"] in ("build", "wall") else ()
-                trees = {i: v.tree for i in builders if (v := self.units.get(i)) is not None}
                 for i in builders:                                  # a builder ends the work at its resource
                     self.skipped(i, since.pop(i, None), e["time"])
                 rallied = self.rallied
                 out += self.enter(e["time"]) + self.commands(e)
                 if self.rallied > rallied and (v := self.units[-self.rallied]).tree is not None:   # (#1227)
                     since[-self.rallied] = self.walk_end(v, e["time"])
-                since.update((i, self.walk_end(v, e["time"])) for i in builders     # the builders of a farm farm it,
-                             if (v := self.units.get(i)) is not None                  # of a camp gather next to it
-                             and (v.tree in self.map.farms or v.tree not in (None, trees.get(i))))
             elif e["kind"] == "back_to_work" and e.get("objects"):  # the units work again from now (#1179)
                 out += self.enter(e["time"])
                 cmds, ids = self.back(e)
@@ -1523,6 +1565,7 @@ class Replay:
                 self.age(e)
             elif e["kind"] == "research" and e.get("technology"):     # no text, but the summary counts it
                 self.learn(e)
+        built(to)
         out += self.enter(to) + self.expire(to)
         for tile in list(self.prey):                                # the hunters were there in the skipped time
             out += self.kill(tile)
@@ -1596,8 +1639,9 @@ class Replay:
              # the death marks (#846) and the live units on the map item (#1237)
              self.overview())
         census = self.census if bar and self.ai else lambda: None
-        while k < len(events) or self.moving:
+        while k < len(events) or self.moving or self.builds:
             step = min([*self.moving.values(), *self.working.values(), *self.effects.values(),   # walk, gather, text
+                        *(due for due, _ in self.builds.values()),                                # a build ends
                         *(at for _, _, at in self.entering.values() if at is not None),            # go in
                         *[c for i in self.moving if self.ai and (c := getattr(self.units[i], "check", None))]],
                        default=math.inf)                            # the recheck of a long leg (#1293)

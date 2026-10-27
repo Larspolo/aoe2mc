@@ -53,7 +53,7 @@ def test_a_hunter_gathers_the_carcass_in_play():
 def test_the_builder_of_a_lumber_camp_chops_next_to_it(ai):
     r = run([CAMP], [TREE], ai)
     assert r.units[7].tree == (5, 10)
-    assert ai or r.gathered[1]["wood"] >= gather.AOE2_WORK["wood"] * (END - 30000) / 1000
+    assert ai or r.gathered[1]["wood"] >= gather.AOE2_WORK["wood"] * (END - 30000 - 35000) / 1000   # the build, #1282
 
 
 @pytest.mark.parametrize("ai", [False, True])

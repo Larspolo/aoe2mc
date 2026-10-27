@@ -49,7 +49,7 @@ def test_a_wonder_that_stands_for_the_timer_wins():
     assert not g.ended
     assert 'bossbar set aoe2mc:wonder_p1 name "Player 1: wonder, 1 year left"' in server.log
     tick(g, 3)
-    assert g.ended == "Victory" and 'title @a title {"text":"Victory","color":"gold"}' in server.log
+    assert g.ended == "Victory" and 'title @a[team=p1] title {"text":"Victory","color":"gold"}' in server.log
 
 
 def test_a_destroyed_wonder_stops_the_timer_and_the_bar_goes():
@@ -66,7 +66,7 @@ def test_a_destroyed_wonder_stops_the_timer_and_the_bar_goes():
 def test_the_wonder_of_a_rival_ends_the_game_with_defeat():
     server, g, uuid, _ = start({**SITE, "player": 2})
     tick(g, wonder.years(None) * wonder.YEAR)
-    assert g.ended == "Defeat" and 'title @a title {"text":"Defeat","color":"red"}' in server.log
+    assert g.ended == "Defeat" and 'title @a[team=p1] title {"text":"Defeat","color":"red"}' in server.log
 
 
 def test_an_unfinished_wonder_has_no_timer():

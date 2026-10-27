@@ -157,6 +157,16 @@ def allied(players, a, b):
     return a == b or t is not None and t == (players.get(str(b)) or {}).get("team")
 
 
+def allies_command(players):
+    """The plugin command that makes the allied players of aoe2mc.json (`team`) one side (AoePlugin.allied, #1315):
+    "aoe allies p1,p3 p2,p4", or "aoe allies -" with no alliance."""
+    teams = {}
+    for n, p in sorted(players.items(), key=lambda e: int(e[0])):
+        if p.get("team") is not None:
+            teams.setdefault(p["team"], []).append(f"p{n}")
+    return "aoe allies " + (" ".join(",".join(t) for t in teams.values() if len(t) > 1) or "-")
+
+
 def hunt_food(name):
     """The food of a hunted animal (HUNT_FOOD), else 0."""
     return HUNT_FOOD.get("COW" if name.startswith("COW_") else name, 0)
@@ -549,6 +559,7 @@ class Gather:
         menu.setup(self)
         if self.paper:
             train.lore(self)                                           # the help lines of the menus (#1160)
+            self.command(allies_command(self.data.get("players", {})))   # allies do not shoot each other (#1315)
         cheats.setup(self)
         bossbar.setup(self)
         for o in self.units:                                           # the entities must be loaded (forceload)

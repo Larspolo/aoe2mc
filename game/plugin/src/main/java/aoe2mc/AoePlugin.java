@@ -70,6 +70,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * Orders for the units of the game program, with Minecraft path finding (#435). Vanilla has no command for
  * "walk to this point", so this plugin gives one to RCON:
  *   aoe moveto <selector> <x> <y> <z> [speed]   walk on the path of Mob#getPathfinder
+ *   aoe allies <team>,<team>,...|- ...         the alliances of the players (#1315): allied teams are one side for the
+ *                                              arrows of buildings, the hit back and the attack alerts. Each call
+ *                                              replaces all alliances; "-": no allies
  *   aoe arrows <uuid> <n>                      the arrows of each shot of a building: its base (an empty town center
  *                                              0, #1201) and 1 for each garrisoned villager or foot archer (#1113,
  *                                              game/garrison.py); 0: it does not shoot. Default 1
@@ -413,7 +416,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     var p = le.getLocation();
                     double dx = Math.max(0, Math.max(b[0] - p.getX(), p.getX() - b[3] - 1));
                     double dz = Math.max(0, Math.max(b[2] - p.getZ(), p.getZ() - b[5] - 1));
-                    if (dx * dx + dz * dz <= bestD) {
+                    if (dx * dx + dz * dz <= bestD && (!under(b, p) || side(le, 0) != null)) {   // no shot: the next (#1328)
                         best = le;
                         bestD = dx * dx + dz * dz;
                     }
@@ -435,7 +438,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // their highest block, else the arrow hits the own roof (#1219).
     private static void volley(LivingEntity fort, int[] b, LivingEntity t, int k) {
         var p = t.getLocation();
-        if (p.getX() >= b[0] && p.getX() < b[3] + 1 && p.getZ() >= b[2] && p.getZ() < b[5] + 1) {
+        if (under(b, p)) {
             Location side = side(t, k);                                // under the building: the roof is above it
             if (side != null) {
                 aim(fort, side, t);
@@ -461,8 +464,13 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         aim(fort, from, t);
     }
 
+    private static boolean under(int[] b, Location p) {
+        return p.getX() >= b[0] && p.getX() < b[3] + 1 && p.getZ() >= b[2] && p.getZ() < b[5] + 1;
+    }
+
     // A target under its building (the passage of a town center, #865): the arrow starts next to it at head height,
-    // on a free side with no block on the way, else there is no shot (#1285). Arrow k tries the sides from side k.
+    // on a free side with no block on the way, else towers() takes the next enemy (#1285, #1328). Arrow k tries the
+    // sides from side k.
     private static Location side(LivingEntity t, int k) {
         Location eye = t.getLocation().add(0, t.getHeight() * 0.8, 0);
         for (int i = 0; i < 4; i++) {
@@ -1365,8 +1373,15 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     private static boolean sameTeam(Entity a, Entity b) {
-        String s = side(a);
-        return s != null && s.equals(side(b));
+        return allied(side(a), side(b));
+    }
+
+    // team -> the first team of its alliance (aoe allies, #1315): allied players are one side, as in AoE2
+    private static final Map<String, String> ALLIES = new HashMap<>();
+
+    /** True when the sides a and b (side()) are the same player or allies. No side: no ally of anyone. */
+    static boolean allied(String a, String b) {
+        return a != null && b != null && ALLIES.getOrDefault(a, a).equals(ALLIES.getOrDefault(b, b));
     }
 
     // The team name, else the player tag aoe2mc.pN: the pulse of the datapack puts a unit in its team only when its
@@ -1396,6 +1411,19 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length >= 2 && args[0].startsWith("ghost")) {          // the ghost of a building (#794)
             return ghost.command(sender, args, players(sender, args[1]));
+        }
+        if (args.length >= 2 && args[0].equals("allies")) {            // the alliances of the players (#1315)
+            ALLIES.clear();
+            for (int i = 1; i < args.length; i++) {
+                if (!args[i].equals("-")) {
+                    String[] teams = args[i].split(",");
+                    for (String t : teams) {
+                        ALLIES.put(t, teams[0]);
+                    }
+                }
+            }
+            sender.sendMessage("Allies: " + ALLIES);
+            return true;
         }
         if (args.length == 3 && args[0].equals("arrows")) {            // a garrison adds arrows (#1113)
             try {
