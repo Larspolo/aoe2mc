@@ -3,8 +3,9 @@ The civilization bonuses of the players in the game program (#1089, part of #108
 the AoE2 DE civilizations (the AoE2 wiki, "Civilization bonuses" of each civilization): Gather.work_time divides the
 time of one unit of resource by the factor of the player's civilization. The keys are the gather kinds of Gather:
 "wood", "food" (forage bushes), "farm", "gold", "stone", "hunt" (hunted animals) and "sheep" (herdable animals).
-Bonuses that the game program cannot use yet: Japanese fishing ships, Malian oyster gatherers, Spanish builders, the
-Roman builders, the Georgian fortified church (+10 % near it), the Persian town centers and docks.
+Bonuses that the game program cannot use yet: Japanese fishing ships, Malian oyster gatherers, the Georgian fortified
+church (+10 % near it), the Persian town centers and docks.
+BUILD and BUILD_WONDER hold the build speed bonuses (#1893): build.rise multiplies the work of the builders (build_rate).
 REPAIR and REPAIR_COST hold the repair bonuses (#1730, AoE2 wiki "Repairing"): repair.tick multiplies the rate and the
 cost of the repairs of a player by them (repair_rate, repair_cost).
 
@@ -319,6 +320,9 @@ SHARED = {"CONDOTTIERO": "ITALIANS",                              # the shared u
           "GENITOUR": "BERBERS",
           "IMPERIAL_SKIRMISHER_UPGRADE": "VIETNAMESE"}
 NOT_SHARED = {"IMPERIAL_SKIRMISHER_UPGRADE": ("TURKS",)}           # no Elite Skirmisher: not with a Vietnamese ally
+BUILD = {"ROMANS": ROMAN,                                          # Romans: builders work 5 % faster
+         "SPANISH": 1.3}                                           # Spanish: builders work 30 % faster
+BUILD_WONDER = {"SPANISH": 1.2}                                   # Spanish: 20 % for wonders (AoE2 DE wiki)
 REPAIR = {"ROMANS": ROMAN}                                        # Romans: repairers work 5 % faster
 REPAIR_COST = {"GEORGIANS": 0.75}                                 # Georgians (team bonus): repairs cost -25 %
 
@@ -396,6 +400,13 @@ def missing(g, name):
 def civ(g, player=None):
     """The civilization of the player of g, or of another player (aoe2mc.json "players"), for example "CELTS", else None."""
     return g.data.get("players", {}).get(str(g.player if player is None else player), {}).get("civ")
+
+
+def build_rate(g, name):
+    """The factor of the build speed of the villagers of the player of g for a site of building name (BUILD,
+    BUILD_WONDER), else 1."""
+    c = civ(g)
+    return BUILD_WONDER.get(c, BUILD.get(c, 1)) if name == "WONDER" else BUILD.get(c, 1)
 
 
 def repair_rate(g):

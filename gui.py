@@ -23,6 +23,7 @@ from pathlib import Path
 
 INPUTS = (".aoe2scenario", ".aoe2record", ".mgz", ".mgx", ".mgl", ".scx")
 RECORDS = (".aoe2record", ".mgz", ".mgx", ".mgl")                  # --at works only for these (aoe2mc.RECORDS)
+RANDOM_MAPS = ("arabia", "arena", "black_forest", "gold_rush", "highland", "islands", "mediterranean", "nomad")  # (#1871)
 VALUES = (("name", "--name"), ("tile_size", "--tile-size"), ("level_height", "--level-height"),
           ("architecture", "--architecture"), ("seed", "--seed"))
 FLAGS = (("preview", "--preview"), ("no_units", "--no-units"))
@@ -38,15 +39,16 @@ REPLAY_VALUES = (("speed", "--speed"), ("start", "--from"), ("follow", "--follow
 
 def argv(o):
     """The argument list of aoe2mc.main() from the dict o of the window fields. An empty field keeps the default of
-    the converter; "More options" is split as a shell line."""
-    a = [str(o["input"]), str(o["output"])]
+    the converter; "More options" is split as a shell line. A random map (--random-map) takes no input file."""
+    kind = o.get("random_map")
+    a = [str(o["output"]), "--random-map", kind] if kind else [str(o["input"]), str(o["output"])]
     for key, flag in VALUES:
         v = str(o.get(key) or "").strip()
         if v:
             a += [flag, v]
     a += [flag for key, flag in FLAGS if o.get(key)]
     at = str(o.get("at") or "").strip()
-    if at and str(o["input"]).lower().endswith(RECORDS):
+    if at and not kind and str(o["input"]).lower().endswith(RECORDS):
         a += ["--at", at]
     return a + shlex.split(o.get("more") or "")
 
@@ -227,8 +229,8 @@ def window():
     f.columnconfigure(1, weight=1)
     g.columnconfigure(1, weight=1)
     v = {k: tk.StringVar() for k in ("input", "output", "name", "tile_size", "level_height", "architecture", "seed",
-                                     "at", "more", "world", "server", "people", "reveal", "speed", "start", "follow",
-                                     "view", "command", "bot_attack")}
+                                     "random_map", "at", "more", "world", "server", "people", "reveal", "speed", "start",
+                                     "follow", "view", "command", "bot_attack")}
     v |= {k: tk.BooleanVar() for k, _ in FLAGS + PLAY_FLAGS + (("replay", ""),)}
     v["server"].set("paper")
     v["people"].set("1")
@@ -254,7 +256,8 @@ def window():
         if p:
             v["output"].set(p)
 
-    rows = (("Input file", "input", pick_input), ("World folder", "output", pick_output), ("World name", "name", None),
+    rows = (("Input file", "input", pick_input), ("Random map (no input file)", "random_map", None),
+            ("World folder", "output", pick_output), ("World name", "name", None),
             ("Tile size (blocks)", "tile_size", None), ("Level height (blocks)", "level_height", None),
             ("Architecture", "architecture", None), ("Seed", "seed", None), ("Time (MM:SS, record)", "at", None),
             ("More options", "more", None))
@@ -262,6 +265,8 @@ def window():
         ttk.Label(f, text=label).grid(row=r, column=0, sticky="w", pady=2)
         if key == "architecture":
             e = ttk.Combobox(f, textvariable=v[key], values=[""] + sorted(buildings.ARCH), state="readonly")
+        elif key == "random_map":
+            e = ttk.Combobox(f, textvariable=v[key], values=("",) + RANDOM_MAPS, state="readonly")
         else:
             e = ttk.Entry(f, textvariable=v[key], width=50)
         e.grid(row=r, column=1, sticky="ew", padx=4)
@@ -336,8 +341,8 @@ def window():
 
     def start():
         o = {k: x.get() for k, x in v.items()}
-        if not o["input"] or not o["output"]:
-            messagebox.showerror("aoe2mc", "Select the input file and the world folder.")
+        if not (o["input"] or o["random_map"]) or not o["output"]:
+            messagebox.showerror("aoe2mc", "Select the input file (or a random map) and the world folder.")
             return
         try:
             args = argv(o)

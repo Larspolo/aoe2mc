@@ -640,8 +640,10 @@ def box(cmd):
 def rise(g, site, work):
     """Add work (game seconds of one builder) to the site and send the commands of the blocks that are due.
     The wool ring stays on top of the design until the building is complete. Returns True when it is complete.
-    Treadmill Crane: the builders of the player work 20 % faster (CRANE, AoE2 DE wiki, #1422)."""
-    work *= CRANE ** ("TREADMILL_CRANE" in getattr(g, "techs", ()) and site.get("player", g.player) == g.player)
+    Treadmill Crane: the builders of the player work 20 % faster (CRANE, AoE2 DE wiki, #1422); the civilization
+    bonus multiplies with it (civs.build_rate, #1893)."""
+    if site.get("player", g.player) == g.player:
+        work *= CRANE ** ("TREADMILL_CRANE" in getattr(g, "techs", ())) * civs.build_rate(g, site["name"])
     site["progress"] = min(1.0, site["progress"] + work / BUILD_TIMES[site["name"]])
     cmds, ring = site["commands"], site.get("ring", {})
     k = len(cmds) if site["progress"] >= 1 else math.floor(site["progress"] * len(cmds))
