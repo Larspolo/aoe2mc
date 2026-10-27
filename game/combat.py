@@ -20,6 +20,7 @@ from collections import namedtuple
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from gather import NORMAL  # noqa: E402
+import civs  # noqa: E402
 import garrison  # noqa: E402
 import table  # noqa: E402
 
@@ -429,9 +430,10 @@ def setup(game, data):
             held.setdefault(o["holder"], []).append(o["name"])
     for o in data["objects"]:
         if o["kind"] == "building" and o["player"] and "footprint" in o and o["name"] in BUILDINGS:
-            uuid = target_uuid(o["footprint"])
+            uuid, civ = target_uuid(o["footprint"]), data.get("players", {}).get(str(o["player"]), {}).get("civ")
             for c in building(uuid, o["name"], o["player"], building_box(o, ground), data.get("tile_size", 4),
-                              held.get(o.get("ref"), ())) + [label_command(uuid, o["name"])]:
+                              held.get(o.get("ref"), ()), civs.hp(civ, o["name"], stats(o["name"]))) \
+                    + [label_command(uuid, o["name"])]:
                 game.command(c)
     units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] and o.get("uuid")]
     for o in units:                                  # the plugin answers "Range: 0 units" for a mob that cannot shoot
