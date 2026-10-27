@@ -241,6 +241,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "SQUIRES": {"food": 100},                                    # AoE2 DE wiki (#1415)
          "STEPPE_LANCER": {"food": 70, "gold": 40},                    # AoE2 DE wiki (#1557)
          "TEUTONIC_KNIGHT": {"food": 85, "gold": 30},
+         "THEOCRACY": {"gold": 200},                                   # AoE2 DE wiki (#1586)
          "THROWING_AXEMAN": {"food": 55, "gold": 25},
          "THUMB_RING": {"food": 300, "wood": 250},                      # AoE2 DE wiki (#1421)
          "TOWN_PATROL": {"food": 300, "gold": 100},                     # the Castle Age (AoE2 DE wiki, #1579)
@@ -424,6 +425,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "STONE_SHAFT_MINING": 75,
                "STEPPE_LANCER": 24,
                "TEUTONIC_KNIGHT": 12,
+               "THEOCRACY": 75,
                "THROWING_AXEMAN": 13,
                "THUMB_RING": 45,
                "TOWN_PATROL": 40,
@@ -533,7 +535,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                         "HERESY",                                               # (#1582)
                         "DEVOTION",                                             # (#1584)
                         "FAITH",
-                        "HERBAL_MEDICINE"),                                     # (#1585)
+                        "HERBAL_MEDICINE",                                      # (#1585)
+                        "THEOCRACY"),                                           # (#1586)
           "SIEGE_WORKSHOP": ("BATTERING_RAM", "MANGONEL", "SCORPION", "SIEGE_TOWER",   # (#1349, #1362)
                              "CAPPED_RAM_UPGRADE", "SIEGE_RAM_UPGRADE", "ONAGER_UPGRADE", "SIEGE_ONAGER_UPGRADE",
                              "HEAVY_SCORPION_UPGRADE",                  # (#1352)
@@ -723,6 +726,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "SQUIRES": lambda name, s: s,                             # the walk speed: SPEEDS
          "STONE_MINING": lambda name, s: s,                        # an economy technology: gather.WORK_TECHS
          "STONE_SHAFT_MINING": lambda name, s: s,
+         "THEOCRACY": lambda name, s: s,                           # one monk of a group rests: monk.convert
          "THUMB_RING": lambda name, s: s._replace(reload=round(s.reload / 1.1765, 3)) if thumb(name, s) else s,
          "TOWN_PATROL": lambda name, s: s,                         # the building sight: gather.seen_tiles
          "TOWN_WATCH": lambda name, s: s,                          # the building sight: gather.seen_tiles
@@ -918,6 +922,7 @@ TECH_AGE = {                                                       # the age of 
     "SQUIRES": 2,
     "STONE_MINING": 1,
     "STONE_SHAFT_MINING": 2,
+    "THEOCRACY": 3,
     "THUMB_RING": 2,
     "TOWN_PATROL": 2,
     "TOWN_WATCH": 1,
@@ -1101,6 +1106,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "STONE_SHAFT_MINING": (1, "book", "Stone Shaft Mining"),
          "STEPPE_LANCER": (MORE + 2, "horse_spawn_egg", "Steppe Lancer"),   # slots 20, 21 of the stable (#1557)
          "TEUTONIC_KNIGHT": (0, "zombie_spawn_egg", "Teutonic Knight"),
+         "THEOCRACY": (MORE + 2, "book", "Theocracy"),              # the monastery (#1586)
          "THROWING_AXEMAN": (0, "drowned_spawn_egg", "Throwing Axeman"),
          "THUMB_RING": (5, "book", "Thumb Ring"),                   # slot 4: the cavalry archer (#1397)
          "TOWN_PATROL": (6, "book", "Town Patrol"),                 # the slot of Town Watch (AFTER)
@@ -1289,6 +1295,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "STONE_MINING": "Villagers mine stone 15 % faster.",
         "STONE_SHAFT_MINING": "Villagers mine stone 15 % faster.",
         "TEUTONIC_KNIGHT": "Teutonic infantry. Slow, strong armor.",
+        "THEOCRACY": "Only one monk of a group rests.",
         "THROWING_AXEMAN": "Frankish infantry. Melee attack at range.",
         "THUMB_RING": "Archers fire 17.65 % faster.",
         "TOWN_PATROL": "Buildings +4 line of sight.",
