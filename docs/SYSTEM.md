@@ -77,7 +77,8 @@ at the measured 7-day burn per run-hour (`health.weekly_burn`, default `BURN7`).
 wait until the budget per hour is large enough again (#1695). The CLI line shows the projection
 (`week ahead +38 pt · runs out Wed 11:22`, at the mean rate of the week so far). `--fire` gives the number of runs to start now: the
 target less the runs with a claim beat in the last 25 minutes. A run cannot start other runs (no `fire_trigger`, #566),
-so the pacer session starts them (at most 4 per cycle). `tools/health.py` measures the quota use of one run from the
+so the pacer session starts them (at most 4 per cycle). Each cycle reads `.claude/skills/pacer/SKILL.md` again, so a change of the pacing rules reaches
+the long-lived pacer session at its next cycle (#1824). `tools/health.py` measures the quota use of one run from the
 `Usage:` lines of the run reports, and `usage.py` uses that value. After a plan upgrade the same work is a smaller share of the larger quota: when the burn of
 the last 2 hours is less than half of the 24-hour burn, only the last 2 hours count (`health.ratio`, 5-hour and 7-day
 burn, #1706). The most runs at one time is `max_runs` in `[pacing]` of `agent.toml` (default 16): raise it with a larger plan.
