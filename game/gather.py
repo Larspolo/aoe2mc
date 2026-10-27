@@ -722,7 +722,7 @@ class Gather:
         the mouse in AoE2. A release on corner 1 cancels the box (a click with no drag)."""
         for name in sorted(n for n, t in self.holds.items() if self.clock() - t > RELEASE):
             del self.holds[name]
-            cell = (look := self.look(name)) and self.map.pick_ground(*look)
+            cell = (look := self.look(name)) and fleet.pick(self, *look)   # also on deep water (#2060)
             if cell and cell != self.corners.get(name):
                 self.box(name, cell)
                 continue
@@ -992,7 +992,7 @@ class Gather:
             return
         if name in self.pending or uses > 1:
             look = self.pending.pop(name, (None, None))[1] or self.look(name)
-            self.drag(name, look and self.map.pick_ground(*look))
+            self.drag(name, look and fleet.pick(self, *look))
             return
         self.pending[name] = self.clock(), self.look(name)
 
@@ -1056,7 +1056,7 @@ class Gather:
         eye, d = look
         if name in self.wands:                                        # the selection wand (#778)
             self.wands.discard(name)
-            (self.drag if self.paper else self.box)(name, self.map.pick_ground(eye, d))
+            (self.drag if self.paper else self.box)(name, fleet.pick(self, eye, d))   # the water too (#2060)
             return
         if (rect := self.rallying.pop(name, None)) and (cell := self.map.pick_ground(eye, d)):   # the menu item (#707)
             train.rally(self, rect, cell, self.map.pick_tree(eye, d))
