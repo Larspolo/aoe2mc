@@ -605,10 +605,12 @@ def line(g, name, techs=None):
 
 def values(g, name, techs=None):
     """The AoE2 values of building name of the player of g: those of its tower (line, #1374) with the building
-    technologies (train.TECHS: Chemistry, Masonry, #1398). techs: the technologies (default: those of the player)."""
+    technologies (train.TECHS: Chemistry, Masonry, #1398). techs: the technologies (default: those of the player). A
+    technology sees the name of the tower of the values (Arrowslits: a keep +3, #1504)."""
     import combat, train                                               # combat -> gather -> build: import it late
     techs = getattr(g, "techs", ()) if techs is None else techs
-    s = combat.stats(line(g, name, techs))
+    name = line(g, name, techs)
+    s = combat.stats(name)
     for t in sorted(techs):
         s = train.TECHS[t](name, s)
     return s
