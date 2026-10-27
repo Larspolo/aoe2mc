@@ -870,6 +870,7 @@ class Gather:
             self.select(u)
             return
         if kind == "fort":
+            monk.convert_order(self, self.monks(), u)                 # with Redemption (#1264)
             self.sieged.add(u)
             self.attack(u)
             x0, _, z0, x1, _, z1 = self.forts[u]
