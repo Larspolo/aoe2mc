@@ -1115,7 +1115,8 @@ class Gather:
             self.mark(name, {(x0, z0), (x1, z1)}, "attack")
             import combat                                              # combat imports this module
             what = self.fort_names.get(u, "")
-            for c in siege_mark(u, what, combat.stats(what).hp, name):
+            full = civs.hp(civs.civ(self, self.fort_players.get(u, 0)), what, combat.stats(what)).hp   # Persians (#1895)
+            for c in siege_mark(u, what, full, name):
                 self.command(c)
             return
         building = build.chosen(self, name)
