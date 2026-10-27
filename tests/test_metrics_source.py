@@ -3,10 +3,11 @@ import datetime
 import subprocess
 
 import health
+import metrics_log
 import report
 
 SINCE = datetime.datetime(2026, 10, 27, 12, tzinfo=datetime.timezone.utc)
-REPORT = {"created_at": "2026-10-27T18:00:00Z", "issue_url": "x/issues/1", "body": "Metrics: ticket #5 · lane haiku"}
+REPORT = {"id": 7, "created_at": "2026-10-27T18:00:00Z", "issue_url": "x/issues/1", "body": "Metrics: ticket #5 · lane haiku"}
 
 
 def fake_api(path):
@@ -21,6 +22,8 @@ def fake_api(path):
 
 def test_the_status_comments_come_from_the_status_issue(monkeypatch):
     monkeypatch.setattr(health, "api", fake_api)
+    monkeypatch.setattr(metrics_log, "api", fake_api)
+    monkeypatch.setattr(metrics_log, "load", lambda since: None)          # no log: the API alone (#1983)
     _, _, status_comments, recent, *_ = health.fetch(SINCE)
     assert status_comments == [REPORT]
 

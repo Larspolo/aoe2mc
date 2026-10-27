@@ -2,6 +2,7 @@
 import datetime
 
 import health
+import metrics_log
 
 NOW = datetime.datetime.now(datetime.timezone.utc)
 
@@ -21,6 +22,8 @@ def fake(monkeypatch, per_hour=300):
             return {"workflow_runs": []}
         return []
     monkeypatch.setattr(health, "api", api)
+    monkeypatch.setattr(metrics_log, "api", api)                 # the status comments (#1983)
+    monkeypatch.setattr(metrics_log, "load", lambda since: None)
     return pages
 
 
