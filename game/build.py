@@ -51,6 +51,7 @@ COSTS = {"HOUSE": {"wood": 25}, "LUMBER_CAMP": {"wood": 100}, "MINING_CAMP": {"w
          "DOCK": {"wood": 150},                                    # 3 x 3 tiles on water at the shore (#1382)
          "FISH_TRAP": {"wood": 100},                               # on water, fishing ships build it (#1438)
          "GATE": {"stone": 30},                                    # 4 x 1 tiles (AoE2 DE wiki, #1324)
+         "KREPOST": {"stone": 350},                                # the Bulgarians only (civs.MISSING, #1872)
          "MARKET": {"wood": 175},                                  # the Feudal Age (#1251)
          "MONASTERY": {"wood": 175},
          "PALISADE_GATE": {"wood": 30},
@@ -68,6 +69,7 @@ BUILD_TIMES = {"HOUSE": 25, "LUMBER_CAMP": 35, "MINING_CAMP": 35, "MILL": 35, "F
                "DOCK": 35,
                "FISH_TRAP": 40,
                "GATE": 70,
+               "KREPOST": 150,
                "MARKET": 60,
                "MONASTERY": 40,
                "PALISADE_GATE": 30,
@@ -88,6 +90,7 @@ ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw
          "DOCK": "dark_oak_planks",                                     # the wood of the pier
          "FISH_TRAP": "bamboo_fence",                                   # the rods of the basket
          "GATE": "iron_bars",                                           # the portcullis
+         "KREPOST": "red_sandstone",                                    # the stone of the walls
          "MARKET": "barrel",                                            # the goods of the stalls
          "MONASTERY": "bell",
          "PALISADE_GATE": "stripped_spruce_log",                        # the beam over the passage
@@ -124,6 +127,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "FIRE_SHIP",
         "GENITOUR",
         "KNIGHT",
+        "KREPOST",
         "LIGHT_CAVALRY",
         "LONG_SWORDSMAN",
         "MANGONEL",
@@ -306,6 +310,12 @@ def locked(g, name):
         return "Needs " + pretty(NEEDS[name].removesuffix("_TECH"))
 
 
+def hidden(g, name):
+    """True when the civilization of the player of g does not have building name (civs.MISSING: a regional building
+    such as the Krepost, #1872): the build menu does not show it, as in AoE2."""
+    return g is not None and hasattr(g, "data") and civs.missing(g, name)
+
+
 def menu():
     lines = [f"/trigger {OBJECTIVE} set {i}: {pretty(n)} ({', '.join(f'{v} {r}' for r, v in COSTS[n].items())})"
              for i, n in enumerate(MENU, 1)]
@@ -327,19 +337,20 @@ def items(g=None):
 
 
 def open_menu(g, player):
-    """Show the build menu. A click sets the trigger score, as /trigger aoe_build set N does, and closes the menu."""
+    """Show the build menu. A click sets the trigger score, as /trigger aoe_build set N does, and closes the menu.
+    A building that the civilization does not have is not in it (hidden); the other items keep their slots."""
     def choose(p, slot, shift):                                        # shift: one building all the same
-        if slot < len(MENU) and not locked(g, MENU[slot]):
+        if slot < len(MENU) and not locked(g, MENU[slot]) and not hidden(g, MENU[slot]):
             g.command(f"scoreboard players set {p} {OBJECTIVE} {slot + 1}")
             chest.close(g, p)
-    return chest.show(g, player, "Build", items(g), choose)
+    return chest.show(g, player, "Build", [it for it in items(g) if not hidden(g, MENU[it[0]])], choose)
 
 
 def chosen(g, player):
     """The building that the player chose with /trigger, or None."""
     out = g.command(f"scoreboard players get {player} {OBJECTIVE}")
     n = int(out.split(" has ")[1].split()[0]) if " has " in out else 0
-    return MENU[n - 1] if 0 < n <= len(MENU) else None
+    return MENU[n - 1] if 0 < n <= len(MENU) and not hidden(g, MENU[n - 1]) else None   # /trigger: as the menu
 
 
 def say(g, player, text):

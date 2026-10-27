@@ -6,7 +6,7 @@ from test_tower_upgrades import setup
 
 from game import build, combat
 
-SHIPS = {"BOMBARD_TOWER": 40, "CASTLE": 11, "DOCK": 3, "FORTIFIED_TOWER": 12, "GUARD_TOWER": 7, "KEEP": 8,
+SHIPS = {"BOMBARD_TOWER": 40, "CASTLE": 11, "DOCK": 3, "FORTIFIED_TOWER": 12, "GUARD_TOWER": 7, "KEEP": 8, "KREPOST": 10,
          "TOWN_CENTER": 5, "WATCH_TOWER": 5}
 
 
