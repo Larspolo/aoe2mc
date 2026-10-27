@@ -96,23 +96,24 @@ def analyze(samples):
         k = out.setdefault(kind(rows[0]["name"]), {"units": 0, "d": [], "stuck": 0, "stray": 0, "died": 0,
                                                      "still": 0.0})
         k["units"] += 1
-        far, stuck, stray, died, last, last_d = None, False, False, False, None, 0.0
+        far, stuck, stray, died, last, last_d, last_raw = None, False, False, False, None, 0.0, 0.0
         for s in rows:
             if s["x"] is None:
                 died |= last is not None                           # gone after it was seen
                 continue
-            d = max(0.0, ((s["x"] - s["rx"]) ** 2 + (s["z"] - s["rz"]) ** 2) ** 0.5 - s.get("slack", 0))
+            raw = ((s["x"] - s["rx"]) ** 2 + (s["z"] - s["rz"]) ** 2) ** 0.5
+            d = max(0.0, raw - s.get("slack", 0))
             k["d"].append(d)
             far = (far if far is not None else s["t"]) if d > STUCK_BLOCKS else None
             stuck |= far is not None and s["t"] - far > STUCK_SECONDS * 1000
             if last and (last["rx"], last["rz"]) == (s["rx"], s["rz"]) and not any(
                     r.get(k) for r in (last, s) for k in ("order", "target")):    # no order, no fight, no new leg
                 stray |= ((s["x"] - last["x"]) ** 2 + (s["z"] - last["z"]) ** 2) ** 0.5 > STRAY_BLOCKS and \
-                    d >= last_d                                    # nearer the replay position: the end of a walk
+                    raw >= last_raw          # nearer the replay position: the end of a walk (raw: the slack goes, #1333)
             if last and last.get("order") and s.get("order") and min(d, last_d) > STUCK_BLOCKS and \
                     ((s["x"] - last["x"]) ** 2 + (s["z"] - last["z"]) ** 2) ** 0.5 < STILL_BLOCKS:
                 k["still"] += (s["t"] - last["t"]) / 1000              # held in place with an order
-            last, last_d = s, d
+            last, last_d, last_raw = s, d, raw
         k["stuck"] += stuck
         k["stray"] += stray
         k["died"] += died
