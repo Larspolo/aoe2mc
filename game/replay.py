@@ -52,6 +52,7 @@ FORMATION = 2              # blocks between the units of a group in a formation 
 LEG = 48                    # path cells of one plugin order: within the reach of a Minecraft path search (#438)
 CATCH_UP = 1.5              # the largest factor of the walk speed of a unit behind its replay position (#1168)
 PATH = 1.15                 # the walk speed factor of each plugin leg: a Minecraft path is longer than the leg (#1168)
+POCKET = 64                 # cells: less free land around a builder is a pocket of its walls and the water (#1275)
 RECENT = 10000              # ms: a unit whose last leg ended this short a time ago can still walk it (catch_up)
 TALL = 48                   # blocks above the ground that a DELETE clears for a start building (no height in aoe2mc.json)
 BAR = "aoe2mc:replay"       # the boss bar with the game time (#684)
@@ -272,6 +273,7 @@ class Replay:
                 if len(self.placed) > k:
                     out += self.push_out(self.placed[-1][2])               # it finds the units (grid())
                     for i, n in zip(e.get("objects", ()), e.get("names") or [None] * len(e.get("objects", ()))):
+                        out += self.side(i, self.unit(i, n, e["player"]), self.placed[-1][2])
                         out += self.look(self.unit(i, n, e["player"]), "BUILDER")
                     if "FARM" in name and e.get("objects"):       # AoE2: the builders of a farm farm it (#719)
                         x0, x1, z0, z1 = self.placed[-1][2]
@@ -362,6 +364,40 @@ class Replay:
                 v.path = [min(free, key=lambda c: (math.dist(c, v.cell), c))]
                 self.gather.walk(types.SimpleNamespace(map=self.map, command=out.append), v)
                 self.moving.pop(i, None)                                # it stops there
+        return out
+
+    def pocket(self, cell):
+        """The free land cells that a unit at cell reaches when they are fewer than POCKET (walls, buildings and water
+        close it in), else None. 4 neighbours: gather.Map.path cuts no corner, so a diagonal gap is closed."""
+        m, seen, todo = self.map, {cell}, [cell]
+        while todo and len(seen) < POCKET:
+            x, z = todo.pop()
+            for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                n = (x + dx, z + dz)
+                if n not in seen and m.free(*n) and abs(m.y(*n) - (m.y(x, z) or m.y(*n))) <= 1:
+                    seen.add(n)
+                    todo.append(n)
+        return seen if len(seen) < POCKET else None
+
+    def side(self, i, v, rect=None):
+        """A unit in a pocket steps to the nearest free cell out of it, as in AoE2: a builder that the new building
+        rect closes in goes next to rect on the open side (it walks around the foundation), a unit in an older pocket
+        (an order with no path on land, rect None) over the nearest wall. Else its next walk swims (#1275)."""
+        if v is None or v.cell is None or not (inside := self.pocket(v.cell)):
+            return []
+        if rect:
+            x0, x1, z0, z1 = rect
+            near = self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)})
+        else:
+            x, z, r = *v.cell, self.T * 2
+            near = {(x + dx, z + dz) for dx in range(-r, r + 1) for dz in range(-r, r + 1) if self.map.free(x + dx, z + dz)}
+        c = next((c for c in sorted(near - inside, key=lambda c: (math.dist(c, v.cell), c)) if not self.pocket(c)), None)
+        if c is None:
+            return []
+        out = []
+        v.path = [c]
+        self.gather.walk(types.SimpleNamespace(map=self.map, command=out.append), v)
+        self.moving.pop(i, None)
         return out
 
     def building(self, name, player, x, y):
@@ -727,6 +763,9 @@ class Replay:
                 v.pos = self.at(v, e["time"])                       # it stops its leg where it is
                 end = slots.get(v) or min(goals, key=lambda c: (math.dist(c, v.cell), c))
                 path = self.map.path(v.cell, {end}, PATH_CELLS)
+                if path is None and (cmds := self.side(i, v)):
+                    out += cmds
+                    path = self.map.path(v.cell, {end}, PATH_CELLS)
                 if path is None and (cmds := self.detour(i, v, tile, e["time"])) is not None:
                     out += cmds
                     continue
@@ -743,6 +782,9 @@ class Replay:
             w = ship(v.name)
             v.path = (self.map.path(v.cell, {slots[v]}, PATH_CELLS) if v in slots else None) or \
                 self.map.path(v.cell, wet if w else goals, PATH_CELLS, w)
+            if v.path is None and not w and (cmds := self.side(i, v)):
+                out += cmds
+                v.path = self.map.path(v.cell, goals, PATH_CELLS)
             if v.path is None and not w and self.detour(i, v, tile, e["time"]) is not None:
                 continue
             v.path = v.path or []
