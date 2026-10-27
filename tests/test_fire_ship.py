@@ -17,7 +17,8 @@ def test_the_two_ships_have_the_aoe2_de_values_of_the_wiki():
     assert train.COSTS["FIRE_SHIP"] == {"wood": 75, "gold": 45} and train.TRAIN_TIMES["FIRE_SHIP"] == 27
     assert train.COSTS["DEMOLITION_SHIP"] == {"wood": 45, "gold": 80} and train.TRAIN_TIMES["DEMOLITION_SHIP"] == 31
     assert build.AGE["FIRE_SHIP"] == build.AGE["DEMOLITION_SHIP"] == 2                      # the Castle Age
-    assert "DEMOLITION_SHIP" in train.TRAINS["DOCK"] and ("FIRE_GALLEY", "FIRE_SHIP") in train.lines("MEDIUM_WARSHIPS")
+    assert ("DEMOLITION_RAFT", "DEMOLITION_SHIP") in train.lines("DEMOLITION_SHIP_UPGRADE")   # (#1483)
+    assert ("FIRE_GALLEY", "FIRE_SHIP") in train.lines("MEDIUM_WARSHIPS")
     assert combat.stats("FIRE_SHIP") == (120, 3, 2, 4, 2.5, 0.25, {"building": 2, "warship": 1}, ("ship",))
     assert combat.stats("DEMOLITION_SHIP") == (50, 95, 1, 0, 0, 0.0, {"building": 220}, ("ship",))
     assert fleet.SPEEDS["FIRE_SHIP"] == 1.47 and fleet.SPEEDS["DEMOLITION_SHIP"] == 1.52
@@ -45,12 +46,11 @@ def test_the_dock_menu_has_the_two_ships_in_the_castle_age():
     train.open_menu(g, "Steve", (15, 12))
     menu = menus(server)[-1]
     assert "Fire Ship" not in menu                                     # after Medium Warships (#1482)
-    assert "4:gray_dye:Demolition Ship:45 wood · 80 gold · 31 s · Needs the Castle Age" in menu
-    assert train.order(g, "Steve", DOCK, 4) == 0
-    g.techs |= {"CASTLE_AGE", "MEDIUM_WARSHIPS"}
+    assert "Demolition Ship" not in menu                                # after its upgrade (#1483)
+    g.techs |= {"CASTLE_AGE", "MEDIUM_WARSHIPS", "DEMOLITION_SHIP_UPGRADE"}
     train.open_menu(g, "Steve", (15, 12))
     assert "6:mangrove_boat:Fire Ship:75 wood · 45 gold · 27 s · queue 0/15" in menus(server)[-1]
-    assert train.order(g, "Steve", DOCK, 6) == 1 and train.order(g, "Steve", DOCK, 4) == 1
+    assert train.order(g, "Steve", DOCK, 6) == 1 and train.order(g, "Steve", DOCK, 7) == 1
     fire, = train.tick(g, 27)
     demo, = train.tick(g, 31)
     assert (g.soldiers[fire], g.soldiers[demo]) == ("FIRE_SHIP", "DEMOLITION_SHIP")
@@ -60,9 +60,9 @@ def test_the_dock_menu_has_the_two_ships_in_the_castle_age():
 
 def test_a_demolition_ship_sails_next_to_an_enemy_ship():
     server, g = dock_map(wood=400)
-    g.techs, g.stock["gold"] = {"FEUDAL_AGE", "CASTLE_AGE"}, 200
+    g.techs, g.stock["gold"] = {"FEUDAL_AGE", "CASTLE_AGE", "DEMOLITION_SHIP_UPGRADE"}, 200
     train.open_menu(g, "Steve", (15, 12))
-    assert train.order(g, "Steve", DOCK, 4) == 1
+    assert train.order(g, "Steve", DOCK, 7) == 1
     demo, = train.tick(g, 31)
     server.entities["enemy"] = {"Pos": (21.5, 63.0, 2.5)}
     goal = fleet.attack(g, {demo}, "enemy")[demo]

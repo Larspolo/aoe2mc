@@ -111,6 +111,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "FERVOR": {"gold": 140},
          "DEMOLITION_RAFT": {"wood": 45, "gold": 80},                  # AoE2 DE wiki (#1481)
          "DEMOLITION_SHIP": {"wood": 45, "gold": 80},                  # AoE2 DE wiki (#1440)
+         "DEMOLITION_SHIP_UPGRADE": {"wood": 25, "gold": 75},          # the dock, Castle Age (#1483)
+         "FAST_FIRE_SHIP": {"wood": 75, "gold": 45},                   # AoE2 DE wiki (#1483)
          "FIRE_GALLEY": {"wood": 75, "gold": 45},                       # AoE2 DE wiki (#1481)
          "FIRE_SHIP": {"wood": 75, "gold": 45},                         # AoE2 DE wiki (#1440)
          "FISHING_LINES": {"food": 50, "wood": 100},                   # AoE2 DE wiki (#1439)
@@ -118,6 +120,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "FLETCHING": {"food": 100, "gold": 50},
          "FORGING": {"food": 150},
          "FORTIFIED_WALL": {"food": 200, "wood": 100},
+         "GALLEON": {"wood": 90, "gold": 30},                          # AoE2 DE wiki (#1483)
          "GALLEY": {"wood": 90, "gold": 30},                           # AoE2 DE wiki (#1386)
          "GAMBESONS": {"food": 50, "gold": 100},                       # AoE2 DE wiki (#1420)
          "GILLNETS": {"food": 150, "wood": 200},                       # AoE2 DE wiki (#1439)
@@ -129,9 +132,12 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "HALBERDIER_UPGRADE": {"food": 300, "gold": 600},             # the Imperial Age (#1499)
          "HAND_CART": {"food": 300, "wood": 200},                      # the Castle Age (AoE2 DE wiki, #1453)
          "HOARDINGS": {"food": 400, "wood": 400},                      # the castle, Imperial Age (#1456)
+         "HEAVY_DEMOLITION_SHIP": {"wood": 45, "gold": 80},            # AoE2 DE wiki (#1483)
+         "HEAVY_DEMOLITION_SHIP_UPGRADE": {"wood": 200, "gold": 300},  # the dock, Imperial Age (#1483)
          "HEAVY_PLOW": {"food": 125, "wood": 125},                     # the Castle Age (AoE2 DE wiki, #1424)
          "HEAVY_SCORPION": {"wood": 75, "gold": 75},
          "HEAVY_SCORPION_UPGRADE": {"food": 800, "wood": 750},
+         "HEAVY_WARSHIPS": {"wood": 400, "gold": 315},                 # the dock, Imperial Age (#1483)
          "HORSE_COLLAR": {"food": 75, "wood": 75},
          "HUSBANDRY": {"food": 150},                                   # AoE2 DE wiki (#1416)
          "HUSSAR": {"food": 80},                                       # AoE2 DE wiki (#1502)
@@ -233,6 +239,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "FERVOR": 50,
                "DEMOLITION_RAFT": 45,
                "DEMOLITION_SHIP": 31,
+               "DEMOLITION_SHIP_UPGRADE": 20,
+               "FAST_FIRE_SHIP": 27,
                "FIRE_GALLEY": 49,
                "FIRE_SHIP": 27,
                "FISHING_LINES": 20,
@@ -240,6 +248,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "FLETCHING": 30,
                "FORGING": 50,
                "FORTIFIED_WALL": 50,
+               "GALLEON": 27,
                "GALLEY": 36,
                "GAMBESONS": 25,
                "GILLNETS": 45,
@@ -251,9 +260,12 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "HALBERDIER_UPGRADE": 50,
                "HAND_CART": 55,
                "HOARDINGS": 75,
+               "HEAVY_DEMOLITION_SHIP": 31,
+               "HEAVY_DEMOLITION_SHIP_UPGRADE": 50,
                "HEAVY_PLOW": 40,
                "HEAVY_SCORPION": 30,
                "HEAVY_SCORPION_UPGRADE": 50,
+               "HEAVY_WARSHIPS": 65,
                "HORSE_COLLAR": 20,
                "HUSBANDRY": 40,
                "HUSSAR": 30,
@@ -354,11 +366,13 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                    "GALLEY",                                                   # (#1386)
                    "TRANSPORT_SHIP",                                           # (#1385)
                    "TRADE_COG",                                                # (#1485)
-                   "DEMOLITION_SHIP",                                          # (#1440)
                    "CANNON_GALLEON",                                           # after Chemistry: build.NEEDS (#1484)
                    "FIRE_GALLEY",                                              # (#1481)
                    "DEMOLITION_RAFT",                                          # (#1481)
                    "MEDIUM_WARSHIPS",                                          # the war galley, fire ship (#1482)
+                   "HEAVY_WARSHIPS",                                           # the galleon, fast fire ship (#1483)
+                   "DEMOLITION_SHIP_UPGRADE",                                  # (#1483)
+                   "HEAVY_DEMOLITION_SHIP_UPGRADE",                            # (#1483)
                    "FISHING_LINES", "GILLNETS"),                                # (#1439)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",
                           "BOW_SAW"),                                           # (#723, #1423)
@@ -470,6 +484,9 @@ TECHS = {"ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bon
          "HOARDINGS": lambda name, s: s._replace(hp=round(s.hp * 1.21)) if name == "CASTLE" else s,   # build.values
          "HEAVY_PLOW": lambda name, s: s,                          # an economy technology: gather.FARM_TECHS, FOOD_CARRY
          "HEAVY_SCORPION_UPGRADE": lambda name, s: s,
+         "HEAVY_WARSHIPS": lambda name, s: s,                      # new unit names: UPGRADES
+         "HEAVY_DEMOLITION_SHIP_UPGRADE": lambda name, s: s,
+         "DEMOLITION_SHIP_UPGRADE": lambda name, s: s,
          "HORSE_COLLAR": lambda name, s: s,                        # an economy technology: gather.FARM_TECHS
          "HUSBANDRY": lambda name, s: s,                           # the walk speed: SPEEDS
          "HUSSAR_UPGRADE": lambda name, s: s,                      # a new unit name: UPGRADES
@@ -521,12 +538,15 @@ SPEEDS = {"CARAVAN": ("trade units", 1.2),                        # technology: 
 SHIPWRIGHT = (0.8, 1.54)                                           # Shipwright: ships cost 80 % wood, train 54 % faster
 CONSCRIPT = (("ARCHERY_RANGE", "BARRACKS", "CASTLE", "STABLE"), 1.33)   # Conscription: these buildings train faster
 UPGRADES = {                                                       # technology: the unit and its new unit (#941)
+    "DEMOLITION_SHIP_UPGRADE": ("DEMOLITION_RAFT", "DEMOLITION_SHIP"),   # (#1483)
     "CAPPED_RAM_UPGRADE": ("BATTERING_RAM", "CAPPED_RAM"),           # the siege upgrades of AoE2 DE (#1352)
     "CHAMPION_UPGRADE": ("TWO_HANDED_SWORDSMAN", "CHAMPION"),
     "CROSSBOWMAN_UPGRADE": ("ARCHER", "CROSSBOWMAN"),
     "ELITE_SKIRMISHER_UPGRADE": ("SKIRMISHER", "ELITE_SKIRMISHER"),
     "HALBERDIER_UPGRADE": ("PIKEMAN", "HALBERDIER"),
     "HEAVY_SCORPION_UPGRADE": ("SCORPION", "HEAVY_SCORPION"),
+    "HEAVY_DEMOLITION_SHIP_UPGRADE": ("DEMOLITION_SHIP", "HEAVY_DEMOLITION_SHIP"),   # (#1483)
+    "HEAVY_WARSHIPS": (("WAR_GALLEY", "GALLEON"), ("FIRE_SHIP", "FAST_FIRE_SHIP")),   # (#1483)
     "HUSSAR_UPGRADE": ("LIGHT_CAVALRY", "HUSSAR"),
     "LIGHT_CAVALRY_UPGRADE": ("SCOUT_CAVALRY", "LIGHT_CAVALRY"),
     "LONG_SWORDSMAN_UPGRADE": ("MAN_AT_ARMS", "LONG_SWORDSMAN"),
@@ -542,6 +562,8 @@ AFTER = {"BLAST_FURNACE": "IRON_CASTING",
          "BODKIN_ARROW": "FLETCHING",
          "BOMBARD_TOWER_TECH": "CHEMISTRY",
          "BOW_SAW": "DOUBLE_BIT_AXE",
+         "HEAVY_DEMOLITION_SHIP_UPGRADE": "DEMOLITION_SHIP_UPGRADE",   # (#1483)
+         "HEAVY_WARSHIPS": "MEDIUM_WARSHIPS",
          "DRY_DOCK": "CAREENING",
          "CHAMPION_UPGRADE": "TWO_HANDED_SWORDSMAN_UPGRADE",
          "CHAIN_BARDING_ARMOR": "SCALE_BARDING_ARMOR", "CHAIN_MAIL_ARMOR": "SCALE_MAIL_ARMOR",
@@ -590,6 +612,7 @@ TECH_AGE = {                                                       # the age of 
     "FLETCHING": 1,
     "FORGING": 1,
     "FORTIFIED_WALL": 2,
+    "DEMOLITION_SHIP_UPGRADE": 2,
     "GAMBESONS": 2,
     "GILLNETS": 2,
     "GOLD_MINING": 1,
@@ -601,6 +624,8 @@ TECH_AGE = {                                                       # the age of 
     "HOARDINGS": 3,
     "HEAVY_PLOW": 2,
     "HEAVY_SCORPION_UPGRADE": 3,
+    "HEAVY_DEMOLITION_SHIP_UPGRADE": 3,
+    "HEAVY_WARSHIPS": 3,
     "HORSE_COLLAR": 1,
     "HUSBANDRY": 2,
     "HUSSAR_UPGRADE": 3,
@@ -659,6 +684,9 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "HEAVY_PLOW": (0, "book", "Heavy Plow"),                     # the slot of Horse Collar (AFTER)
          "HEAVY_SCORPION": (2, "crossbow", "Heavy Scorpion"),
          "HEAVY_SCORPION_UPGRADE": (5, "book", "Heavy Scorpion"),
+         "HEAVY_DEMOLITION_SHIP": (7, "bamboo_raft", "Heavy Demolition Ship"),
+         "HEAVY_DEMOLITION_SHIP_UPGRADE": (4, "book", "Heavy Demolition Ship"),   # the slot of the ship upgrade (AFTER)
+         "HEAVY_WARSHIPS": (3, "book", "Heavy Warships"),           # the slot of Medium Warships (AFTER)
          "LIGHT_CAVALRY": (0, "horse_spawn_egg", "Light Cavalry"),
          "LIGHT_CAVALRY_UPGRADE": (2, "book", "Light Cavalry"),
          "LONG_SWORDSMAN": (0, "zombie_spawn_egg", "Long Swordsman"),
@@ -704,7 +732,9 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "DRY_DOCK": (8, "book", "Dry Dock"),                       # the slot of Careening (AFTER)
          "FERVOR": (1, "book", "Fervor"),
          "DEMOLITION_RAFT": (7, "bamboo_raft", "Demolition Raft"),   # the Feudal Age forms (#1481)
-         "DEMOLITION_SHIP": (4, "bamboo_raft", "Demolition Ship"),   # units.classify: a raft with a creeper
+         "DEMOLITION_SHIP": (7, "bamboo_raft", "Demolition Ship"),   # the slot of the raft (#1483)
+         "DEMOLITION_SHIP_UPGRADE": (4, "book", "Demolition Ship"),   # (#1483)
+         "FAST_FIRE_SHIP": (6, "mangrove_boat", "Fast Fire Ship"),   # the slot of the fire ship (#1483)
          "FIRE_GALLEY": (6, "mangrove_boat", "Fire Galley"),
          "FIRE_SHIP": (6, "mangrove_boat", "Fire Ship"),           # the slot of the fire galley (#1482)
          "FISHING_LINES": (5, "book", "Fishing Lines"),            # slots 1-4: the ships of the dock
@@ -712,6 +742,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "FLETCHING": (2, "book", "Fletching"),
          "FORGING": (0, "book", "Forging"),
          "FORTIFIED_WALL": (0, "book", "Fortified Wall"),
+         "GALLEON": (1, "dark_oak_boat", "Galleon"),              # the slot of the war galley (#1483)
          "GALLEY": (1, "oak_boat", "Galley"),
          "GAMBESONS": (5, "book", "Gambesons"),                    # slot 4: Squires (#1415)
          "GILLNETS": (5, "book", "Gillnets"),                      # the slot of Fishing Lines (AFTER)
@@ -807,6 +838,8 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "FERVOR": "Monks +15 % speed.",
         "DEMOLITION_RAFT": "Explodes next to ships and buildings.",
         "DEMOLITION_SHIP": "Explodes next to ships and buildings.",
+        "DEMOLITION_SHIP_UPGRADE": "Upgrades demolition rafts to demolition ships.",
+        "FAST_FIRE_SHIP": "Warship that spews fire at close range.",
         "FIRE_GALLEY": "Warship that spews fire at close range.",
         "FIRE_SHIP": "Warship that spews fire at close range.",
         "FISHING_LINES": "Fishing ships work 10 % faster, carry +5.",
@@ -814,6 +847,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "FLETCHING": "Archers, towers +1 attack, range; TC +1 attack.",
         "FORGING": "Infantry and cavalry +1 attack.",
         "FORTIFIED_WALL": "Stone walls +1,200 HP, +4/+2 armor; also gates.",
+        "GALLEON": "All-purpose warship with ranged attack.",
         "GALLEY": "All-purpose warship with ranged attack.",
         "GAMBESONS": "Militia line +1 pierce armor.",
         "GILLNETS": "Fishing ships work 10 % faster, carry +5.",
@@ -828,6 +862,9 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "HEAVY_PLOW": "Farms +125 food; farmers carry +1 food.",
         "HEAVY_SCORPION": "Siege. Shoots bolts; weak vs. cavalry.",
         "HEAVY_SCORPION_UPGRADE": "Upgrades scorpions to heavy scorpions.",
+        "HEAVY_DEMOLITION_SHIP": "Explodes next to ships and buildings.",
+        "HEAVY_DEMOLITION_SHIP_UPGRADE": "Upgrades demolition ships to heavy ones.",
+        "HEAVY_WARSHIPS": "Upgrades war galleys and fire ships.",
         "HORSE_COLLAR": "Farms +75 food.",
         "HUSBANDRY": "Mounted units walk 10 % faster.",
         "HUSSAR": "Cavalry. Fast; strong vs. monks, siege.",
@@ -928,7 +965,8 @@ def unlocked(g, name):
     from its age, but a building or unit of a later age as a gray item (build.locked), and never one that the
     civilization of the player does not have (civs.MISSING)."""
     return TECH_AGE.get(name, 0) <= build.ages(g) and AFTER.get(name, "") in {""} | set(getattr(g, "techs", ())) \
-        and not (hasattr(g, "data") and civs.civ(g) in civs.MISSING.get(name, ()))   # not of this civilization (#1373)
+        and not (hasattr(g, "data") and civs.civ(g) in civs.MISSING.get(name, ())) \
+        and (name not in UPGRADES or bool(lines(name, g)))         # not of this civilization (#1373), no new unit (#1483)
 
 
 def homes(g):
@@ -939,15 +977,18 @@ def homes(g):
     return out | {tuple(s["footprint"]): s["name"] for s in g.sites if s["name"] in TRAINS and s.get("done")}
 
 
-def lines(t):
-    """The (unit, new unit) pairs of upgrade technology t (UPGRADES): Medium Warships upgrades two lines (#1482)."""
-    return UPGRADES[t] if isinstance(UPGRADES[t][0], tuple) else (UPGRADES[t],)
+def lines(t, g=None):
+    """The (unit, new unit) pairs of upgrade technology t (UPGRADES): Medium Warships upgrades two lines (#1482). With g,
+    only the new units that the civilization of the player has (civs.MISSING): Heavy Warships gives no fast fire ship
+    to the Vikings (#1483)."""
+    out = UPGRADES[t] if isinstance(UPGRADES[t][0], tuple) else (UPGRADES[t],)
+    return tuple(p for p in out if g is None or not hasattr(g, "data") or civs.civ(g) not in civs.MISSING.get(p[1], ()))
 
 
 def trains(g, building):
     """The units and technologies of the own building: a castle trains the unique unit of the player's civilization."""
     if building != "CASTLE":
-        new = {old: unit for t in UPGRADES if t in g.techs for old, unit in lines(t)}   # the barracks trains the new unit
+        new = {old: unit for t in UPGRADES if t in g.techs for old, unit in lines(t, g)}   # the barracks trains the new unit
         out = list(TRAINS[building])
         for _ in UPGRADES:                                         # a line of upgrades: mangonel, onager, siege onager
             out = [new.get(n, n) for n in out]
@@ -1237,7 +1278,7 @@ def research(g, entry):
     build.retower(g, before)                                       # the complete own towers get the new values (#1374),
                                                                    # the buildings those of Masonry and Fletching (#1398, #1408)
     if entry["name"] in UPGRADES:                                  # the live units of the line get the new name
-        for uuid, new in [(u, new) for old, new in lines(entry["name"]) for u, n in g.soldiers.items() if n == old]:
+        for uuid, new in [(u, new) for old, new in lines(entry["name"], g) for u, n in g.soldiers.items() if n == old]:
             g.soldiers[uuid] = new
             g.command(combat.stats_command(uuid, new, stats(g, new)))
             if cmd := combat.range_command(uuid, new, g.map.T, s=stats(g, new)):   # the range and blast of an onager
