@@ -9,7 +9,7 @@ from game import build, civs, combat, train
 BARRACKS = (17, 3)
 
 
-def player(civ="AZTECS", ages=("FEUDAL_AGE",)):
+def player(civ="MAYANS", ages=("FEUDAL_AGE",)):
     server, g = setup()
     g.stock.update(food=10000, gold=10000)
     g.techs.update(ages)
@@ -39,7 +39,8 @@ def test_the_barracks_menu_has_the_eagle_scout_only_for_the_aztecs_and_the_mayan
     for civ in civs.EAGLES:
         server, g = player(civ)
         train.open_menu(g, "Steve", BARRACKS)
-        assert " 7:husk_spawn_egg:Eagle Scout:20 food · 50 gold · 46 s · queue 0/15" in menus(server)[-1]
+        time = {"AZTECS": 40, "MAYANS": 46}[civ]                     # Aztecs: 46 s / 1.15 (#1927)
+        assert f" 7:husk_spawn_egg:Eagle Scout:20 food · 50 gold · {time} s · queue 0/15" in menus(server)[-1]
     server, g = player("INCAS")
     train.open_menu(g, "Steve", BARRACKS)
     assert "Eagle" not in menus(server)[-1] and train.queue(g, "Steve", BARRACKS, "EAGLE_SCOUT") is None
