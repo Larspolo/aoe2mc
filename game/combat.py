@@ -159,6 +159,7 @@ STATS = {
     "ELITE_OBUCH": Stats(95, 10, 2, 2, 0, 2.0, {"building": 6}, (INF, UNI)),
     "ELITE_ORGAN_GUN": Stats(70, 8, 2, 6, 7, 3.45, {INF: 2, SIE: 1, "building": 1}, (GUN, SIE, UNI)),
     "ELITE_PLUMED_ARCHER": Stats(65, 5, 0, 2, 5, 1.9, {INF: 2, SPE: 2}, (ARC, UNI)),
+    "ELITE_RATHA": Stats(115, 6, 3, 3, 4, 2.0, {SPE: 2}, (ARC, CAV, UNI)),   # ranged mode (#1891)
     "ELITE_RATTAN_ARCHER": Stats(40, 7, 0, 6, 5, 2.0, {SPE: 2}, (ARC, UNI)),
     "ELITE_SAMURAI": Stats(80, 12, 1, 1, 0, 1.9, {"building": 3, UNI: 12}, (INF, UNI)),
     "ELITE_SERJEANT": Stats(85, 11, 6, 3, 0, 2.0, {"building": 3}, (INF, UNI)),
