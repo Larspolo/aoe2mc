@@ -37,6 +37,7 @@ import heapq
 import json
 import math
 import os
+import random
 import re
 import sys
 import time
@@ -488,6 +489,8 @@ class Gather:
         self.garrisons, self.entering = garrison.start(self), {}       # building -> units inside, unit -> building (#808)
         self.trade = {}                                                # trade cart -> its trade route (trade.py, #1253)
         self.monk_at, self.heal_time = {}, 0.0                         # monk -> feet at the last heal pass (#1244)
+        self.converting, self.faith = {}, {}                           # monk -> conversion order, monk -> rest (#1245)
+        self.chance = random.Random(1)                                 # the conversion chance: the same in each run
         monk.relics(self)                                              # the relics of the map and their monks (#1246)
 
     @property
@@ -637,11 +640,19 @@ class Gather:
         return (pos[0], pos[1] + 1.62, pos[2]), direction(*map(float, rot))
 
     def attack(self, target):
-        """Send the selected military units to attack the unit target, with their AoE2 walk speed (ai.py)."""
+        """Send the selected military units to attack the unit target, with their AoE2 walk speed (ai.py). A monk does
+        not attack: it converts (monk.convert_order, #1245) or stays."""
         import ai                                                      # ai imports this module
-        for u in sorted(self.selected):
+        monks = self.monks()
+        for u in sorted(self.selected - monks):
             self.command(ai.speed_command(u, self.soldiers[u], self.map.T, NORMAL * train.speed(self, self.soldiers[u])))
-        return self.command(f"aoe attack @e[tag={SELECT}] {target}")
+        if not monks:
+            return self.command(f"aoe attack @e[tag={SELECT}] {target}")
+        return [self.command(f"aoe attack {u} {target}") for u in sorted(self.selected - monks)]
+
+    def monks(self):
+        """The selected monks."""
+        return {u for u in self.selected if self.soldiers.get(u) == "MONK"}
 
     def positions(self, uuids):
         """{uuid: feet position} of the loaded units; a dead unit is not in it."""
@@ -841,6 +852,7 @@ class Gather:
             return
         kind, u, _ = self.target(eye, d, self.positions(sorted(self.pickable()))) or (None, None, None)
         if kind == "enemy":
+            monk.convert_order(self, self.monks(), u)                    # the monks convert it, the others attack (#1245)
             self.attack(u)
             self.command(glow(u))                                     # the order marker of an attack (#796)
             return
@@ -1075,6 +1087,7 @@ class Gather:
                     self.go(v, "to_drop", set().union(*map(self.map.around, self.map.drops[v.res])))
         train.tick(self, self.tick * NORMAL)
         monk.heal(self, self.tick * NORMAL)
+        monk.convert(self, self.tick * NORMAL)
         garrison.heal(self, self.tick * NORMAL)
         monk.relic_tick(self, self.tick * NORMAL)
         trade.tick(self)
