@@ -722,7 +722,7 @@ class Gather:
         the mouse in AoE2. A release on corner 1 cancels the box (a click with no drag)."""
         for name in sorted(n for n, t in self.holds.items() if self.clock() - t > RELEASE):
             del self.holds[name]
-            cell = (look := self.look(name)) and self.map.pick_ground(*look)
+            cell = (look := self.look(name)) and fleet.pick(self, *look)   # also on deep water (#2060)
             if cell and cell != self.corners.get(name):
                 self.box(name, cell)
                 continue
@@ -743,6 +743,7 @@ class Gather:
         not attack: it converts (monk.convert_order, #1245) or stays."""
         import ai                                                      # ai imports this module
         monks = self.monks()
+        repair.drop(self, self.selected)                               # Serjeants stop a repair (#2128)
         trebs = {u for u in self.selected if self.soldiers.get(u) == trebuchet.NAME}
         for u in sorted(trebs):                                        # it unpacks first (#1351)
             trebuchet.unpack(self, u, target)
@@ -991,7 +992,7 @@ class Gather:
             return
         if name in self.pending or uses > 1:
             look = self.pending.pop(name, (None, None))[1] or self.look(name)
-            self.drag(name, look and self.map.pick_ground(*look))
+            self.drag(name, look and fleet.pick(self, *look))
             return
         self.pending[name] = self.clock(), self.look(name)
 
@@ -1055,7 +1056,7 @@ class Gather:
         eye, d = look
         if name in self.wands:                                        # the selection wand (#778)
             self.wands.discard(name)
-            (self.drag if self.paper else self.box)(name, self.map.pick_ground(eye, d))
+            (self.drag if self.paper else self.box)(name, fleet.pick(self, eye, d))   # the water too (#2060)
             return
         if (rect := self.rallying.pop(name, None)) and (cell := self.map.pick_ground(eye, d)):   # the menu item (#707)
             train.rally(self, rect, cell, self.map.pick_tree(eye, d))
@@ -1152,6 +1153,7 @@ class Gather:
         {uuid: cell}."""
         import ai                                                      # ai imports this module
         units = self.selected if units is None else set(units)
+        repair.drop(self, units)                                       # Serjeants stop a repair (#2128)
         boats = {u for u in units if replay.ship(self.soldiers.get(u, ""))}
         out = fleet.order(self, boats, cell)                           # a ship sails on the water (#1383)
         transport.aim(self, out, cell)                                 # a loaded ship unloads at a land cell (#1385)

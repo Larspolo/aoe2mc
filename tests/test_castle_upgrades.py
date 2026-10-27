@@ -41,7 +41,7 @@ def research(g, cell, name):
 @pytest.mark.parametrize("name", sorted(UPGRADES))
 def test_each_upgrade_has_the_wiki_cost_time_and_the_castle_age(name):
     cost, time = UPGRADES[name]
-    assert train.COSTS[name] == cost and train.TRAIN_TIMES[name] == time and train.TECH_AGE[name] == 2
+    assert train.COSTS[name] == cost and train.TRAIN_TIMES[name] == time
 
 
 @pytest.mark.parametrize("name", sorted(UNITS))

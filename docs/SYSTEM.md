@@ -28,7 +28,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 | `automerge.yml` (Automerge) | After CI, every 5 minutes, by hand | Merges an agent PR with green CI. Skips `hold` and tickets with `needs-human` or `blocked`. Then starts CI on `main`, Coverage, Claims and Dashboard. |
 | `unconflict.yml` (Unconflict) | Every 20 minutes, after each merge | Merges `main` into a conflicted agent PR when git solves the conflict alone (`merge=union` files) or both sides only add lines (`tools/unconflict.py`, #1864), and starts CI. |
 | `claims.yml` (Claims) | A ticket closes, each day | Deletes the claim refs of closed tickets and old comment locks. The runs cannot delete refs (403). |
-| `dashboard.yml` (Dashboard) | Label changes, closed issues and PRs, each hour | Writes the dashboard in the body of the status issue (`tools/dashboard.py`). |
+| `dashboard.yml` (Dashboard) | Every 10 minutes (not on events: the API rate limit, #2168) | Writes the dashboard in the body of the status issue (`tools/dashboard.py`). |
 | `coverage.yml` (Coverage) | Each push to `main` | Writes `docs/coverage.md`, `MAX` of `tests/test_coverage.py` and a column of `docs/DESIGN.md`. PRs do not change these files, so they do not conflict there. |
 | `metrics.yml` (Metrics) | Each 15 minutes, by hand with `days` | Writes the status issue comments to the orphan branch `metrics` (`tools/metrics_log.py`, one file per day). `tools/health.py` reads them and only the newest comments from the API (#1983). |
 | `labels.yml` (Labels) | A change of `.github/labels.txt` | Creates the labels. |

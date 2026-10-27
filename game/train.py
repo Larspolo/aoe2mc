@@ -127,8 +127,9 @@ def chemistry(name, s):
 
 def fletching(name, s):
     """Fletching, Bodkin Arrow and Bracer (AoE2 DE, wiki): archers and the buildings that shoot +1 attack and +1 range, the town
-    center +1 attack only (#1408). A complete building gets it at once (build.retower), a new one when it is complete."""
-    if "archer" in s.classes or "building" in s.classes and s.attack > 0:
+    center +1 attack only (#1408). A complete building gets it at once (build.retower), a new one when it is complete.
+    Not the Fortress of the Scenario Editor (AoE2 wiki, #2137)."""
+    if "archer" in s.classes or "building" in s.classes and s.attack > 0 and name != "FORTRESS":
         return s._replace(attack=s.attack + 1, range=s.range + (name != "TOWN_CENTER"))
     return s
 
@@ -232,6 +233,8 @@ CONSCRIPT = (tuple(r["name"] for r in BUILDING_ROWS if r.get("conscription")),  
 ARROWSLITS = {r["name"]: r["arrowslits"] for r in BUILDING_ROWS if "arrowslits" in r}   # the attack of each tower (#1504)
 HEATED = {r["name"]: r["heated_shot"] for r in BUILDING_ROWS if "heated_shot" in r}   # Heated Shot: attack against
 #                                           ships (AoE2 DE wiki "Attack increase against ships", #1548)
+PER_ENEMY = {r["name"]: (r["per_enemy"], r["most"]) for r in ROWS if "per_enemy" in r}   # Spies: the cost for each
+#                                           enemy civilian unit (the name starts with one of them) and the most (#2193)
 UPGRADES = {r["name"]: tuple(map(tuple, u)) if isinstance(u[0], list) else tuple(u)   # technology: the unit and its
             for r in ROWS if (u := r.get("upgrade"))}             # new unit (#941), "upgrade" of data/train.jsonl (#1915)
 AFTER = {r["name"]: r["after"] for r in ROWS if "after" in r}     # the technology before it in its slot
@@ -533,10 +536,21 @@ def price(g, name):
     free with the cheat "tech tech one two free" (#968). Shipwright: a ship costs 20 % less wood (#1490)."""
     if name in TECHS and getattr(g, "free_techs", False):
         return {}
-    cost = civs.cost(g, name, COSTS[name])
+    cost = civs.cost(g, name, per_enemy(g, name))
     if "wood" in cost and shipwright(g, name):
         cost["wood"] = int(cost["wood"] * SHIPWRIGHT[0] + 0.5)
     return cost
+
+
+def per_enemy(g, name):
+    """The cost of name before the civilization bonuses: COSTS, or for PER_ENEMY (Spies, #2193) that cost for each
+    enemy civilian unit, at least once and at most the "most" of the line (AoE2 DE wiki: 200 to 30,000 gold)."""
+    if name not in PER_ENEMY:
+        return COSTS[name]
+    import fog                                                     # fog imports gather, gather imports this module
+    kinds, most = PER_ENEMY[name]
+    n = max(1, sum(any(u.startswith(k) for k in kinds) for u in fog.units(g)[1].values()))
+    return {r: min(v * n, most.get(r, v * n)) for r, v in COSTS[name].items()}
 
 
 def shipwright(g, name):
@@ -627,6 +641,9 @@ def research(g, entry):
                                                                    # the buildings those of Masonry and Fletching (#1398, #1408)
     if entry["name"] == "BALLISTICS" and getattr(g, "paper", False):   # the plugin aims the arrows of the player (#1549)
         g.command(f"aoe ballistics p{g.player} on")
+    if entry["name"] == "SPIES":                                   # the enemy units show for ever (#2193)
+        import fog                                                 # fog imports gather, gather imports this module
+        fog.reveal(g)
     if entry["name"] in UPGRADES:                                  # the live units of the line get the new name
         for uuid, new in [(u, new) for old, new in lines(entry["name"], g) for u, n in g.soldiers.items() if n == old]:
             g.soldiers[uuid] = new
