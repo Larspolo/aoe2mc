@@ -227,6 +227,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ELITE_EAGLE_WARRIOR_UPGRADE": lambda name, s: s,
          "ELITE_GBETO_UPGRADE": lambda name, s: s,                 # a new unit name: UPGRADES
          "ELITE_GENITOUR_UPGRADE": lambda name, s: s,              # a new unit name: UPGRADES
+         "ELITE_JAGUAR_WARRIOR_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
          "ELITE_MAGYAR_HUSZAR_UPGRADE": lambda name, s: s,        # a new unit name: UPGRADES
          "ELITE_GENOESE_CROSSBOWMAN_UPGRADE": lambda name, s: s,   # a new unit name: UPGRADES
          "ELITE_GHULAM_UPGRADE": lambda name, s: s,               # a new unit name: UPGRADES
@@ -359,6 +360,7 @@ UPGRADES = {                                                       # technology:
     "ELITE_EAGLE_WARRIOR_UPGRADE": ("EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"),
     "ELITE_GBETO_UPGRADE": ("GBETO", "ELITE_GBETO"),   # the castle of the Malians (#1722)
     "ELITE_GENITOUR_UPGRADE": ("GENITOUR", "ELITE_GENITOUR"),   # (#1610)
+    "ELITE_JAGUAR_WARRIOR_UPGRADE": ("JAGUAR_WARRIOR", "ELITE_JAGUAR_WARRIOR"),   # the castle of the Aztecs (#1884)
     "ELITE_MAGYAR_HUSZAR_UPGRADE": ("MAGYAR_HUSZAR", "ELITE_MAGYAR_HUSZAR"),   # the castle of the Magyars (#1743)
     "ELITE_GENOESE_CROSSBOWMAN_UPGRADE": ("GENOESE_CROSSBOWMAN", "ELITE_GENOESE_CROSSBOWMAN"),   # the castle (#1724)
     "ELITE_GHULAM_UPGRADE": ("GHULAM", "ELITE_GHULAM"),   # the castle of the Hindustanis (#1756)
