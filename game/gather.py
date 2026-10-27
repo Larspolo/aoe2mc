@@ -59,6 +59,7 @@ import market  # noqa: E402
 import menu  # noqa: E402
 import monk  # noqa: E402
 import relic_victory  # noqa: E402
+import repair  # noqa: E402
 import stance  # noqa: E402
 import trade  # noqa: E402
 import train  # noqa: E402
@@ -147,7 +148,8 @@ WORK_LOOK = {"wood": ("minecraft:oak_log", "minecraft:block.wood.hit"),
              "gold": ("minecraft:gold_ore", "minecraft:block.stone.hit"),
              "stone": ("minecraft:stone", "minecraft:block.stone.hit")}
 EVENTS = {"idle": "idle", "to_tree": "walk", "chop": "chop", "to_drop": "carry",    # state -> event in the log
-          "to_site": "walk", "build": "build", "to_rally": "walk", "to_prey": "walk", "hunt": "hunt"}
+          "to_site": "walk", "build": "build", "to_rally": "walk", "to_prey": "walk", "hunt": "hunt",
+          "to_repair": "walk", "repair": "build"}
 
 
 def allied(players, a, b):
@@ -929,6 +931,8 @@ class Gather:
             return
         if trade.order(self, name, self.map.pick_ground(eye, d)):     # the trade carts trade with an own market (#1253)
             return
+        if repair.order(self, name, self.map.pick_ground(eye, d)):    # villagers repair an own damaged building (#1330)
+            return
         if garrison.order(self, name, self.map.pick_ground(eye, d)):   # the selection goes into an own building (#808)
             return
         if train.open_menu(self, name, self.map.pick_ground(eye, d)):  # an own town center or barracks (#620, #654)
@@ -1072,12 +1076,14 @@ class Gather:
         self.fall()
         garrison.tick(self)
         for v in self.villagers.values():
-            if v.state in ("to_tree", "to_drop", "to_site", "to_rally", "to_prey") and v.path:
+            if v.state in ("to_tree", "to_drop", "to_site", "to_rally", "to_prey", "to_repair") and v.path:
                 self.follow(v) if self.paper else walk(self, v)
             elif v.state == "to_rally":
                 self.set(v, "idle")
             elif v.state == "to_site":
                 self.set(v, "build" if v.site["progress"] < 1 else "idle")
+            elif v.state == "to_repair":
+                self.set(v, "repair")
             elif v.state == "to_prey":
                 v.timer = 0.0
                 self.set(v, "hunt")
@@ -1131,6 +1137,7 @@ class Gather:
         monk.heal(self, self.tick * NORMAL)
         monk.convert(self, self.tick * NORMAL)
         garrison.heal(self, self.tick * NORMAL)
+        repair.tick(self, self.tick * NORMAL)
         monk.relic_tick(self, self.tick * NORMAL)
         trade.tick(self)
         bossbar.tick(self)
