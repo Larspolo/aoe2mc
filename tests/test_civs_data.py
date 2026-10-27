@@ -4,7 +4,7 @@ import re
 from game import civs, table, train
 
 KEYS = {"name", "unique", "missing", "costs", "units", "twice", "age_gifts", "work", "start", "shared", "not_shared",
-        "build", "build_wonder", "repair", "repair_cost", "repair_team", "work_rate", "train_rate", "hp"}
+        "build", "build_of", "build_wonder", "repair", "repair_cost", "repair_team", "work_rate", "train_rate", "hp"}
 AGES = 4
 
 
