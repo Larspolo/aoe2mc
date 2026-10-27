@@ -90,6 +90,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "CASTLE_AGE": {"food": 800, "gold": 200},
          "CARAVAN": {"food": 200, "gold": 200},
          "CHEMISTRY": {"food": 300, "gold": 200},                    # the university, Imperial Age (#1375)
+         "CONSCRIPTION": {"food": 150, "gold": 150},                 # the castle, Imperial Age (#1455)
          "CATAPHRACT": {"food": 70, "gold": 75},
          "CAVALRY_ARCHER": {"wood": 40, "gold": 60},                    # AoE2 DE wiki (#1397)
          "CHAIN_BARDING_ARMOR": {"food": 250, "gold": 150},             # AoE2 DE wiki (#1394)
@@ -191,6 +192,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "CAPPED_RAM_UPGRADE": 50,
                "CARAVAN": 40,
                "CHEMISTRY": 100,
+               "CONSCRIPTION": 60,
                "CASTLE_AGE": 160,
                "CATAPHRACT": 20,
                "CAVALRY_ARCHER": 37,
@@ -293,7 +295,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                          "PLATE_MAIL_ARMOR",                                    # (#1452)
                          "RING_ARCHER_ARMOR",
                          "PLATE_BARDING_ARMOR"),
-          "CASTLE": ("TREBUCHET",),                                             # and the unique unit: trains() (#708, #1351)
+          "CASTLE": ("TREBUCHET",                                               # and the unique unit: trains() (#708, #1351)
+                     "CONSCRIPTION"),                                           # (#1455)
           "STABLE": ("SCOUT_CAVALRY", "BLOODLINES", "LIGHT_CAVALRY_UPGRADE", "KNIGHT",   # (#671, #940, #1396, #1397)
                      "HUSBANDRY"),                                              # (#1416)
           "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS",   # (#1326, #1374, #1352)
@@ -388,6 +391,7 @@ TECHS = {"ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bon
          "CARAVAN": lambda name, s: s,                             # the walk speed: SPEEDS
          "CASTLE_AGE": lambda name, s: s,                          # an age: REQUIRES
          "CHEMISTRY": chemistry,
+         "CONSCRIPTION": lambda name, s: s,                        # the train speed: CONSCRIPT, tick()
          "CHAIN_BARDING_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if barding(s) else s,
          "CHAIN_MAIL_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
@@ -452,6 +456,7 @@ SPEEDS = {"CARAVAN": ("TRADE_CART", 1.2),                         # technology: 
           "FERVOR": ("MONK", 1.15),                                # lower case, or a group of civs.GROUPS) and its
           "HUSBANDRY": ("mounted", 1.1),                           # walk speed factor; cavalry, camels, elephants (#1416)
           "SQUIRES": ("infantry", 1.1)}                            # (#1415)
+CONSCRIPT = (("ARCHERY_RANGE", "BARRACKS", "CASTLE", "STABLE"), 1.33)   # Conscription: these buildings train faster
 UPGRADES = {                                                       # technology: the unit and its new unit (#941)
     "CAPPED_RAM_UPGRADE": ("BATTERING_RAM", "CAPPED_RAM"),           # the siege upgrades of AoE2 DE (#1352)
     "CROSSBOWMAN_UPGRADE": ("ARCHER", "CROSSBOWMAN"),
@@ -538,6 +543,7 @@ TECH_AGE = {                                                       # the age of 
     "SCALE_BARDING_ARMOR": 1,
     "SCALE_MAIL_ARMOR": 1,
     "CHEMISTRY": 3,
+    "CONSCRIPTION": 3,
     "SIEGE_ENGINEERS": 3,
     "SIEGE_ONAGER_UPGRADE": 3,
     "SIEGE_RAM_UPGRADE": 3,
@@ -579,6 +585,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "SCOUT_CAVALRY": (0, "horse_spawn_egg", "Scout Cavalry"),
          "SIEGE_ENGINEERS": (1, "book", "Siege Engineers"),
          "CHEMISTRY": (4, "book", "Chemistry"),            # after Guard Tower and Keep
+         "CONSCRIPTION": (2, "book", "Conscription"),      # after the trebuchet
          "SIEGE_ONAGER": (1, "dispenser", "Siege Onager"),
          "SIEGE_ONAGER_UPGRADE": (4, "book", "Siege Onager"),
          "SIEGE_RAM": (0, "minecart", "Siege Ram"),
@@ -673,6 +680,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "BOMBARD_CANNON": "Siege. Long range; strong vs. buildings and siege.",
         "BOMBARD_TOWER_TECH": "Lets you build bombard towers.",
         "CHEMISTRY": "Archers, ranged siege, towers +1 attack.",
+        "CONSCRIPTION": "Military buildings train 33 % faster.",
         "CAPPED_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
         "CAPPED_RAM_UPGRADE": "Upgrades battering rams to capped rams.",
         "CARAVAN": "Trade carts +20 % speed.",
@@ -1173,6 +1181,7 @@ def tick(g, work):
             del g.marks[tag]
             g.command(f"kill @e[tag={tag}]")
     cap, out = limit(g), []
+    fast = {r for r, n in homes(g).items() if n in CONSCRIPT[0]} if "CONSCRIPTION" in g.techs else set()   # (#1455)
     room = cap - g.pop - sum(1 for q in g.queues.values() if q and q[0]["progress"] > 0 and q[0]["name"] not in TECHS)
     for rect, q in g.queues.items():
         if not q:
@@ -1186,7 +1195,8 @@ def tick(g, work):
                 continue
             room -= 1
             q[0]["waits"] = False
-        q[0]["progress"] += 1 if getattr(g, "aegis", False) else work / TRAIN_TIMES[q[0]["name"]]   # cheats.aegis
+        rate = CONSCRIPT[1] if rect in fast and q[0]["name"] not in TECHS else 1   # units only, not technologies
+        q[0]["progress"] += 1 if getattr(g, "aegis", False) else work * rate / TRAIN_TIMES[q[0]["name"]]   # cheats.aegis
         if q[0]["progress"] >= 1 and q[0]["name"] in TECHS:
             research(g, q.pop(0))
         elif q[0]["progress"] >= 1 and (v := spawn(g, rect, q.pop(0)["name"])):
