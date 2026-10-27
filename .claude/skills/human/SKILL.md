@@ -44,7 +44,8 @@ Check each ticket: is the owner really needed (#1674)? Read its body and its las
    needs a close). Close it as completed with an evidence comment (what proves each criterion), then tell the owner.
 2. **Agent work**: the point asks for times, speeds, values or texts (#1159), or tests and agent checks cover it
    already. Measure it in this session, or remove `needs-human` with a comment that names the evidence.
-3. **Owner needed**: a look, a feel, real input by hand, a decision or a setting.
+3. **Owner needed**: sound, the feel of a control, "is it fun", a look that the agent could not decide (it says why,
+   #1707), a decision or a setting. Clicks and a look next to the AoE2 image are agent work (`verify`, level 5).
 
 Then run `python3 tools/owner_tasks.py --plan`: it puts each ticket into "close now", "replay", "play game" or
 "no game". Move the tickets of group 2 out, and show the plan to the owner: one replay with `game/watch.py` for all
