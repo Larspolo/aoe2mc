@@ -11,6 +11,9 @@ issue = 1                       # the status issue: the dashboard and the state 
 label = "agent-status"
 paused = "paused"               # this label on the status issue stops all runs
 
+[pacing]
+max_runs = 16                   # the most runs at one time (tools/usage.py); raise it with a larger plan (#1706)
+
 [commands]
 install = "python3 -m pip install -r requirements-dev.txt"
 lint = "ruff check ."

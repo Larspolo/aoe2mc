@@ -32,6 +32,9 @@ issue = 1
 label = "agent-status"
 paused = "paused"
 
+[pacing]
+max_runs = 16                   # the most runs at one time (tools/usage.py)
+
 [commands]                      # change these to the commands of the project
 install = "python3 -m pip install -r requirements-dev.txt"
 lint = "ruff check ."

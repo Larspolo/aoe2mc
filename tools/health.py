@@ -134,13 +134,31 @@ def burn_ratio(samples, need=5):
     claim-hours (hours x mean claims) of consecutive samples in the same window, or None with fewer than `need` such
     intervals. Not a median of pairs: a pair with few claims gives a large value, because the runs between tickets
     and the other sessions also use the quota (0.111 against 0.059 on 2026-10-26, #582)."""
-    rise = claim_hours = 0.0
-    n = 0
+    out = []
     for a, b in zip(samples, samples[1:]):
         h = (b[0] - a[0]).total_seconds() / 3600
         if abs((b[2] - a[2]).total_seconds()) < 600 and b[1] >= a[1] and h > 0 and a[3] + b[3] > 0:
-            rise, claim_hours, n = rise + b[1] - a[1], claim_hours + h * (a[3] + b[3]) / 2, n + 1
-    return rise / claim_hours if n >= need else None
+            out.append((b[0], b[1] - a[1], h * (a[3] + b[3]) / 2))
+    return ratio(out, need)
+
+
+DROP_HOURS = 2      # the period that shows a plan upgrade in the burn (#1706)
+
+
+def ratio(intervals, need):
+    """The sum of the rises divided by the sum of the claim-hours of the intervals [(end, rise, claim-hours)], or None
+    with fewer than `need`. When the intervals of the last DROP_HOURS (at least `need`) give less than half of that,
+    only they count: after a plan upgrade a run uses a smaller share of the larger quota at once, and the old intervals
+    would keep the target too low for a day (#1706)."""
+    def of(iv):
+        return sum(r for _, r, _ in iv) / sum(c for _, _, c in iv) if len(iv) >= need else None
+    whole = of(intervals)
+    if whole:
+        end = max(t for t, _, _ in intervals) - datetime.timedelta(hours=DROP_HOURS)
+        last = of([i for i in intervals if i[0] > end])
+        if last and last < whole / 2:
+            return last
+    return whole
 
 
 WEEK_RUNS = re.compile(r"^Usage: (\S+) · .*?· runs (\d+) · week (\d+(?:\.\d+)?)%", re.M)
@@ -149,16 +167,12 @@ WEEK_RUNS = re.compile(r"^Usage: (\S+) · .*?· runs (\d+) · week (\d+(?:\.\d+)
 def weekly_burn(comments, now, hours=24, need=5):
     """Share of the 7-day quota that one run uses per hour (#1695): the sum of the rises of the 7-day usage of
     consecutive `Usage:` lines of the last `hours`, divided by their claim-hours, as burn_ratio. A drop is the 7-day
-    reset. None with fewer than `need` intervals."""
+    reset. None with fewer than `need` intervals. A plan upgrade: `ratio`."""
     pts = sorted((ts(t), int(k), float(w) / 100) for c in comments for t, k, w in WEEK_RUNS.findall(c.get("body") or ""))
     pts = [p for p in pts if p[0] >= now - datetime.timedelta(hours=hours)]
-    rise = claim_hours = 0.0
-    n = 0
-    for a, b in zip(pts, pts[1:]):
-        h = (b[0] - a[0]).total_seconds() / 3600
-        if b[2] >= a[2] and h > 0 and a[1] + b[1] > 0:
-            rise, claim_hours, n = rise + b[2] - a[2], claim_hours + h * (a[1] + b[1]) / 2, n + 1
-    return rise / claim_hours if n >= need and rise else None
+    out = [(b[0], b[2] - a[2], (b[0] - a[0]).total_seconds() / 3600 * (a[1] + b[1]) / 2) for a, b in zip(pts, pts[1:])
+           if b[2] >= a[2] and b[0] > a[0] and a[1] + b[1] > 0]
+    return ratio(out, need) or None
 
 
 def measured_burn(comments, now, hours=24, need=5):

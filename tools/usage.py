@@ -24,11 +24,13 @@ import math
 import subprocess
 import sys
 
+from agent_config import CONFIG
+
 BURN = 0.03         # share of the 5-hour quota that one run uses per hour (16 runs used about 50 % per hour, 2026-10-25)
 BURN7 = 0.005       # share of the 7-day quota that one run uses per hour (0.0053 measured on 2026-10-27, #1695)
 MID, MID_LEFT = 0.90, 2.0   # aim: this share is used this many hours before the 5-hour window resets (#587)
 END = 0.98          # aim: this share is used when the 5-hour window resets
-LO, HI = 1, 16      # bounds of the number of runs
+LO, HI = 1, CONFIG.get("pacing", {}).get("max_runs", 16)   # bounds of the number of runs (`agent.toml`, #1706)
 MAX_FIRE = 4        # runs that the pacer starts per cycle: each run needs a few minutes to claim its ticket
 CALL = ["claude", "-p", "Reply with OK.", "--model", "claude-haiku-5-5", "--output-format", "stream-json", "--verbose"]
 
@@ -150,7 +152,7 @@ def describe(usage, now, burn=BURN, burn7=None):
         at = datetime.datetime.fromtimestamp(reset, datetime.timezone.utc)
         out.append(f"{k} {used:.0%} (resets {at:%a %H:%M} UTC, {(reset - now) / 3600:.1f} h, {status})")
     week = week_line(usage, now) + (f" · burn7 {burn7:.4f}" if burn7 else "")
-    return " · ".join(out + [week] * bool(week)) + f" · burn {burn:.3f} · target {target_runs(usage, now, burn, burn7=burn7)} runs"
+    return " · ".join(out + [week] * bool(week)) + f" · burn {burn:.3f} · max {HI} runs · target {target_runs(usage, now, burn, burn7=burn7)} runs"
 
 
 def main(argv=None):
