@@ -1,8 +1,10 @@
 package aoe2mc;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -15,6 +17,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Vector;
 
 import net.kyori.adventure.text.Component;
@@ -24,7 +27,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
 
 /**
  * The attack alerts of the game program (#1231): when an enemy hits a unit or a building of a team, the online players
- * of that team hear a sound and see "Your units are under attack at X Z" (AlertRule: one alert per place). The town
+ * of that team hear a sound and see "Your units are under attack at X Z" (AlertRule: one alert per place). The online
+ * players of the allied teams hear another horn and see "Your ally is under attack at X Z" (#1941). The town
  * bell for buildings, a goat horn for units: vanilla sounds. The server log gets each alert too (tests/test_alerts.py).
  * A click on the alert line runs "/aoego X Z" (#1816, the AoE2 key "go to last alert"): the player who clicks goes to a
  * view of the place (flying in creative, else with slow falling). The command has no permission, so a player who is no operator can use it and the client shows no
@@ -33,6 +37,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 final class Alerts {
     static final String BELL = "minecraft:block.bell.use";
     static final String HORN = "minecraft:item.goat_horn.sound.0";
+    static final String ALLY = "minecraft:item.goat_horn.sound.1";        // another horn: an ally is attacked (#1941)
     static final int KEEP = 10;                                            // alert places of a team for "aoego"
     static final double UP = 12, BACK = 12;                                // the view: blocks above and south of it
     static final int FALL = 200;                                           // ticks of slow falling without flight
@@ -46,16 +51,30 @@ final class Alerts {
         this.side = side;
     }
 
-    /** A hit on the unit or building victim by from: an alert for the team of the victim when it is due. */
+    /** A hit on the unit or building victim by from: an alert for the team of the victim and for its allies (#1941)
+     * when it is due. */
     void hit(Entity victim, boolean building, Entity from) {
         String team = side.apply(victim);
-        Location at = victim.getLocation();
-        if (team == null || from == null || AoePlugin.allied(team, side.apply(from))
-                || !rule.due(team, building ? "buildings" : "units", at.getX(), at.getZ(), Bukkit.getCurrentTick())) {
+        if (team == null || from == null || AoePlugin.allied(team, side.apply(from))) {
             return;                                    // Gaia and animals have no team: no alert
         }
-        String text = "Your " + (building ? "buildings" : "units") + " are under attack at " + at.getBlockX() + " "
-                + at.getBlockZ();
+        Location at = victim.getLocation();
+        long tick = Bukkit.getCurrentTick();
+        String where = " under attack at " + at.getBlockX() + " " + at.getBlockZ();
+        if (rule.due(team, building ? "buildings" : "units", at.getX(), at.getZ(), tick)) {
+            alert(team, "Your " + (building ? "buildings" : "units") + " are" + where, at, building ? BELL : HORN);
+        }
+        List<String> teams = new ArrayList<>();                        // the scoreboard teams: also with no client
+        for (Team t : Bukkit.getScoreboardManager().getMainScoreboard().getTeams()) {
+            teams.add(t.getName());
+        }
+        for (String t : rule.allies(team, teams, AoePlugin::allied, at.getX(), at.getZ(), tick)) {
+            alert(t, "Your ally is" + where, at, ALLY);
+        }
+    }
+
+    /** Send the alert text with the sound to the online players of the team, and keep the place for "aoego". */
+    private void alert(String team, String text, Location at, String sound) {
         plugin.getLogger().info("Alert " + team + ": " + text);
         Deque<Location> last = places.computeIfAbsent(team, t -> new ArrayDeque<>());
         last.addFirst(at.clone());
@@ -68,7 +87,7 @@ final class Alerts {
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (team.equals(side.apply(p))) {
                 p.sendMessage(line);
-                p.playSound(p.getLocation(), building ? BELL : HORN, 1.0f, 1.0f);
+                p.playSound(p.getLocation(), sound, 1.0f, 1.0f);
             }
         }
     }

@@ -57,13 +57,24 @@ def aegis(g, player):
 
 
 def end(text, color):
+    """The cheat or rule that ends the game with text ("Victory" or "Defeat") for player g.player and its allies."""
     def effect(g, player):
-        g.command(f'title @a[team=p{g.player}] title {{"text":"{text}","color":"{color}"}}')
-        g.ended = text
-        import relic_victory, wonder                                   # they import cheats: import them late
-        wonder.close(g)
-        relic_victory.close(g)
+        import gather                                                  # gather imports cheats: import it late
+        over(g, lambda n: gather.allied(g.players, g.player, n) == (text == "Victory"))
     return effect
+
+
+def over(g, won):
+    """End the game: the team of each person gets its own title (#1936), "Victory" when won(its player), else "Defeat",
+    and each Gather of the game stops (g.ended). A bot (h.share) has no Minecraft player and gets no title."""
+    import fog, relic_victory, wonder                                  # they import cheats: import them late
+    for h in fog.gathers(g):
+        text, color = ("Victory", "gold") if won(h.player) else ("Defeat", "red")
+        if not getattr(h, "share", None):
+            g.command(f'title @a[team=p{h.player}] title {{"text":"{text}","color":"{color}"}}')
+        h.ended = text
+        wonder.close(h)
+        relic_victory.close(h)
 
 
 def destroy(g, n):
@@ -105,7 +116,7 @@ def ruin(g, n):
         h.sites = [s for s in h.sites if s["player"] != n]
         if h.player == n:
             h.queues.clear()
-    g.bots = [b for b in g.bots if b.g.player != n]
+    g.bots = [b for b in g.bots if b.g.player != n or not getattr(b.g, "share", None)]   # a person keeps its Side: over() titles it (#1936)
 
 
 def flag(attr, text):

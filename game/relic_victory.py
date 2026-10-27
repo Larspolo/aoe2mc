@@ -58,7 +58,8 @@ def tick(g, dt):
         g.command("tellraw @a " + json.dumps({"text": f"Player {n} holds all relics.", "color": "yellow"}))
     t["left"] -= dt
     if t["left"] <= 0:
-        return cheats.end("Victory" if n == g.player else "Defeat", "gold" if n == g.player else "red")(g, None)
+        from gather import allied                               # gather imports this module
+        return cheats.over(g, lambda m: allied(g.players, n, m))   # n and its allies win (#1936)
     if (y := math.ceil(t["left"] / wonder.YEAR)) != t["shown"]:       # a command only when the years change
         t["shown"] = y
         g.command(f"bossbar set {BAR} name " + json.dumps(f"Player {n}: relics, {y} year{'s' * (y != 1)} left"))
