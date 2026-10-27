@@ -205,6 +205,11 @@ def hunt_food(name):
     return HUNT_FOOD.get("COW" if name.startswith("COW_") else name, 0)
 
 
+def herdable(name):
+    """True for a herdable animal (HERDS): an own one takes move orders (#1791)."""
+    return ("COW" if name.startswith("COW_") else name) in HERDS
+
+
 def group_item(n):
     """The hotbar item of control group n."""
     return (f'minecraft:carrot_on_a_stick[item_model="minecraft:{GROUPS[n][1]}",item_name="Group {n}",'
@@ -543,6 +548,8 @@ class Gather:
                         and not allied(data.get("players", {}), player, o["player"])}   # no allies (#1312)
         self.prey = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit" and o.get("uuid")
                      and o["player"] in (0, player) and hunt_food(o["name"])}   # animals to hunt (#1058)
+        self.flock = {o["uuid"] for o in data["objects"] if o["kind"] == "unit" and o.get("uuid")
+                      and o["player"] == player and herdable(o["name"])}   # own herdables: select and move (#1791)
         self.seen, self.dead = {}, {}                                  # hunted animal -> last feet position, carcass tile
         self.players, self.sites = data.get("players", {}), []         # construction sites (#417)
         self.farmers, self.crops = {}, {}                              # farm tile -> UUID of its farmer, wheat age
@@ -705,9 +712,9 @@ class Gather:
         if self.paper:
             self.command(f"aoe box-clear {name}")
         (x0, x1), (z0, z1) = sorted((first[0], cell[0])), sorted((first[1], cell[1]))
-        pos = {k: v.pos for k, v in self.villagers.items()} | self.positions(list(self.soldiers))
+        pos = {k: v.pos for k, v in self.villagers.items()} | self.positions(list(self.soldiers) + sorted(self.herd()))
         inside = {u for u, p in pos.items() if x0 <= p[0] < x1 + 1 and z0 <= p[2] < z1 + 1} - garrison.inside(self)
-        pick = inside & self.soldiers.keys() or inside
+        pick = inside & self.soldiers.keys() or inside - self.flock or inside   # herdables come last (#1791)
         self.choose(pick, min(pick, default=None))
         self.command(f"title {name} actionbar " + json.dumps({"text": f"Selected: {len(pick)} units"}))
 
@@ -869,7 +876,7 @@ class Gather:
             tile = self.dead[v.prey] = int(x // self.map.T), int(z // self.map.T)
             name = self.prey.pop(v.prey)
             self.map.carcasses[tile] = self.map.carcasses.get(tile, 0) + hunt_food(name)
-            if ("COW" if name.startswith("COW_") else name) in HERDS:
+            if herdable(name):
                 self.map.herds.add(tile)
         v.tree, v.prey, v.path = self.dead.get(v.prey), None, []
         self.set(v, "to_tree" if v.tree else "idle")                   # it stands at the carcass: the next step gathers
@@ -1086,7 +1093,8 @@ class Gather:
         boats = {u for u in units if replay.ship(self.soldiers.get(u, ""))}
         out = fleet.order(self, boats, cell)                           # a ship sails on the water (#1383)
         transport.aim(self, out, cell)                                 # a loaded ship unloads at a land cell (#1385)
-        who = sorted(u for u in units - boats if u in self.villagers or u in self.soldiers)
+        herd = self.herd()
+        who = sorted(u for u in units - boats if u in self.villagers or u in self.soldiers or u in herd)
         r = math.isqrt(len(who)) + 2
         cells = sorted(((x, z) for x in range(cell[0] - r, cell[0] + r + 1) for z in range(cell[1] - r, cell[1] + r + 1)
                         if self.map.free(x, z)), key=lambda c: (math.dist(c, cell), c))
@@ -1099,7 +1107,7 @@ class Gather:
                 v.tree, v.site, v.prey = None, None, None
                 self.go(v, "to_rally", {(x, z)})
             else:
-                unit = self.soldiers[u]
+                unit = self.soldiers.get(u) or self.prey[u]            # an own herdable walks too (#1791)
                 ai.move(self, u, unit, self.map.T, x + 0.5, self.map.y(x, z), z + 0.5, NORMAL * train.speed(self, unit))
         if out and name:
             self.mark(name, {cell})
@@ -1110,8 +1118,12 @@ class Gather:
         inside a building take no click (#808); an enemy only with an army selected."""
         army = self.selected and self.selected <= set(self.soldiers)
         hunters = self.selected & self.villagers.keys()               # villagers take an animal to hunt (#1058)
-        return (set(self.soldiers) | (set(self.enemies) if army else set()) | (set(self.prey) if hunters else set())) \
-            - garrison.inside(self)
+        return (set(self.soldiers) | (set(self.enemies) if army else set()) | (set(self.prey) if hunters else set())
+                | self.herd()) - garrison.inside(self)
+
+    def herd(self):
+        """The UUIDs of the live own herdable animals (#1791): a right click selects them, as in AoE2."""
+        return self.flock & self.prey.keys()
 
     def target(self, eye, d, places):
         """What a right click from eye in the view direction d picks, in the order of click(): (kind, key, block cells
@@ -1122,7 +1134,9 @@ class Gather:
         at = {k: v.pos for k, v in self.villagers.items() if k not in held} | \
             {k: p for k, p in places.items() if k in self.pickable()}
         if u := pick_unit(eye, d, at):
-            kind = "enemy" if u in self.enemies else "prey" if u in self.prey else "unit"
+            hunters = self.selected & self.villagers.keys()            # villagers hunt an own herdable (#1058, #1791)
+            kind = "enemy" if u in self.enemies else "prey" if u in self.prey and (hunters or u not in self.flock) \
+                else "unit"
             return kind, u, {(math.floor(at[u][0]), math.floor(at[u][2]))}
         if self.selected and self.selected <= set(self.soldiers) and (fort := self.pick_fort(eye, d)):
             x0, _, z0, x1, _, z1 = self.forts[fort]
@@ -1144,7 +1158,7 @@ class Gather:
             name, act = pretty(self.prey[key]), "hunt" if workers else None
         elif kind in ("enemy", "unit"):
             name = ("Enemy " if kind == "enemy" else "") + pretty(self.enemies.get(key) or self.soldiers.get(key)
-                                                                  or "VILLAGER")
+                                                                  or self.prey.get(key) or "VILLAGER")
             act = "attack" if kind == "enemy" else "build menu" if key in workers else \
                 "select all of the type" if key in self.selected and key in self.soldiers else "select"
         elif kind == "fort":

@@ -24,7 +24,7 @@ def setup(g):
 
 
 def name(g, uuid):
-    return g.soldiers.get(uuid) or next((o["name"] for o in g.units if o["uuid"] == uuid), "")
+    return g.soldiers.get(uuid) or getattr(g, "prey", {}).get(uuid) or next((o["name"] for o in g.units if o["uuid"] == uuid), "")
 
 
 def show(g, uuid):
