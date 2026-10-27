@@ -32,6 +32,7 @@ import org.bukkit.entity.AbstractSkeleton;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.Creeper;
+import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Minecart;
@@ -40,6 +41,7 @@ import org.bukkit.entity.Pig;
 import org.bukkit.entity.Pillager;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.TextDisplay;
 import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -65,7 +67,10 @@ import org.bukkit.scoreboard.Criteria;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
+import org.bukkit.util.Transformation;
 import org.bukkit.util.Vector;
+import org.joml.AxisAngle4f;
+import org.joml.Vector3f;
 
 import com.destroystokyo.paper.entity.Pathfinder;
 import com.destroystokyo.paper.entity.RangedEntity;
@@ -267,6 +272,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Wear> wear = new HashMap<>();             // the damage stage of a building and its blocks (#1522)
     private final Set<UUID> hidden = new HashSet<>();                 // aoe hide: also for a player that joins later
     private final Map<UUID, Component> names = new HashMap<>();      // the name in the name line (#661)
+    private final Map<UUID, TextDisplay> labels = new HashMap<>();   // the name line over the roof of a building (#1811)
+    static final String LABEL = "aoe2mc.label";                       // the tag of that text display
     private static final int HEARTS = 5;
     private static final int WHERE_PAGE = 40;                          // aoe where: about 3000 bytes per answer
     private final Map<UUID, Integer> lastHit = new HashMap<>();      // tick of the last melee hit of a unit
@@ -1138,6 +1145,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             buildings.remove(target.getUniqueId());
             wear.remove(target.getUniqueId());
             names.remove(target.getUniqueId());
+            label(target, b, null);
             score.resetScore();
             target.remove();
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "fill " + b.box + " minecraft:air");
@@ -1331,10 +1339,41 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         double hp = b != null ? hp().getScoreFor(e).getScore() : le.getHealth();
         double max = b != null ? b.max : attr != null ? attr.getValue() : hp;
         int full = hp <= 0 ? 0 : Math.max(1, (int) Math.ceil(HEARTS * hp / max - 1e-9));
-        le.customName(Component.text().append(name).append(Component.text(" "))
+        Component line = Component.text().append(name).append(Component.text(" "))
                 .append(Component.text("❤".repeat(full), NamedTextColor.RED))
-                .append(Component.text("❤".repeat(HEARTS - full), NamedTextColor.DARK_GRAY)).build());
-        le.setCustomNameVisible(hp < max || le.getScoreboardTags().contains("aoe2mc.selected"));
+                .append(Component.text("❤".repeat(HEARTS - full), NamedTextColor.DARK_GRAY)).build();
+        boolean show = hp < max || le.getScoreboardTags().contains("aoe2mc.selected");
+        le.customName(line);
+        le.setCustomNameVisible(show && b == null);
+        if (b != null) {                                      // the client draws no name of an invisible mob (#1811)
+            label(e, b, show ? line : null);
+        }
+    }
+
+    /** Show text over the roof of the building of target e (a text display: not a mob, so no invisibility rule), or
+     *  remove it (text null). */
+    private void label(Entity e, Building b, Component text) {
+        TextDisplay d = labels.get(e.getUniqueId());
+        if (d != null && (text == null || !d.isValid())) {
+            d.remove();
+            labels.remove(e.getUniqueId());
+            d = null;
+        }
+        if (text == null) {
+            return;
+        }
+        if (d == null) {
+            Location at = new Location(e.getWorld(), (b.b[0] + b.b[3] + 1) / 2.0, b.b[4] + 2.5, (b.b[2] + b.b[5] + 1) / 2.0);
+            d = e.getWorld().spawn(at, TextDisplay.class, t -> {         // over the smoke of the damage (#1522)
+                t.setBillboard(Display.Billboard.CENTER);
+                t.setTransformation(new Transformation(new Vector3f(), new AxisAngle4f(),
+                        new Vector3f(Deaths.SCALE, Deaths.SCALE, Deaths.SCALE), new AxisAngle4f()));
+                t.setPersistent(false);
+                t.addScoreboardTag(LABEL);
+            });
+            labels.put(e.getUniqueId(), d);
+        }
+        d.text(text);
     }
 
     private boolean ready(Entity unit, Stats a) {
