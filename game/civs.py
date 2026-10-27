@@ -147,7 +147,17 @@ START = {"AZTECS": {"gold": 50},
          "SICILIANS": {"stone": 100}}
 # The technologies and units that a civilization does not have (AoE2 wiki, the availability chart of each, #1373):
 # the menu does not show them (train.unlocked).
-MISSING = {"ARSON": ("GOTHS", "MUISCA", "ROMANS"),                                          # (#1419)
+MISSING = {"ARCHITECTURE": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "AZTECS", "BERBERS", "BYZANTINES", "CELTS",
+                            "CUMANS", "DANES", "DRAVIDIANS", "HINDUSTANIS", "HUNS", "INCAS", "JAPANESE", "KHITANS",
+                            "MACEDONIANS", "MAGYARS", "MALAY", "MAPUCHE", "MONGOLS", "MUISCA", "POLES", "PURU",
+                            "SARACENS", "SICILIANS", "SLAVS", "SPARTANS", "TATARS", "TEUTONS", "THRACIANS", "TUPI",
+                            "VIETNAMESE", "WEI"),   # the wiki chart (#1504)
+           "ARROWSLITS": ("ACHAEMENIDS", "ARMENIANS", "ATHENIANS", "BULGARIANS", "BURMESE", "CUMANS", "ETHIOPIANS",
+                          "GOTHS", "GURJARAS", "HINDUSTANIS", "HUNS", "KHITANS", "KHMER", "LITHUANIANS",
+                          "MACEDONIANS", "MAGYARS", "MALAY", "MALIANS", "MAYANS", "MONGOLS", "MUISCA", "PERSIANS",
+                          "PORTUGUESE", "PURU", "ROMANS", "SLAVS", "SPARTANS", "TATARS", "THRACIANS", "VARANGIANS",
+                          "WEI", "WU"),   # the wiki chart (#1504)
+           "ARSON": ("GOTHS", "MUISCA", "ROMANS"),                                          # (#1419)
            "BLOCK_PRINTING": ("BERBERS", "BULGARIANS", "CELTS", "CUMANS", "ETHIOPIANS", "GOTHS", "GURJARAS", "HUNS",
                               "KHITANS", "KHMER", "MAPUCHE", "MONGOLS", "SHU", "SICILIANS", "TUPI", "TURKS",
                               "VARANGIANS", "WU"),                                          # (#1457)

@@ -79,6 +79,8 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "ARCHER": {"wood": 25, "gold": 45}, "LOOM": {"gold": 50}, "FEUDAL_AGE": {"food": 500},
          "ARBALESTER": {"wood": 25, "gold": 45},                      # AoE2 DE wiki (#1500)
          "ARBALESTER_UPGRADE": {"food": 450, "gold": 350},            # the Imperial Age (#1500)
+         "ARCHITECTURE": {"food": 300, "wood": 200},                   # the university, Imperial Age (#1504)
+         "ARROWSLITS": {"food": 250, "wood": 250},                     # AoE2 DE wiki (#1504)
          "ARSON": {"food": 75, "gold": 25},                           # AoE2 DE wiki (#1419)
          "BATTERING_RAM": {"wood": 160, "gold": 75},
          "BOMBARD_CANNON": {"wood": 225, "gold": 225},               # the Imperial Age, after Chemistry (#1380)
@@ -215,6 +217,8 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "ARSON": 25,
                "ARBALESTER": 27,
                "ARBALESTER_UPGRADE": 50,
+               "ARCHITECTURE": 70,
+               "ARROWSLITS": 25,
                "BATTERING_RAM": 36,
                "BERSERK": 14,
                "BLAST_FURNACE": 100,
@@ -376,6 +380,8 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
           "UNIVERSITY": ("FORTIFIED_WALL", "GUARD_TOWER", "KEEP", "SIEGE_ENGINEERS",   # (#1326, #1374, #1352)
                          "MASONRY", "TREADMILL_CRANE",                          # (#1398, #1422) the Castle Age
                          "CHEMISTRY", "BOMBARD_TOWER_TECH",                     # (#1375)
+                         "ARCHITECTURE",                                        # the Imperial Age (#1504)
+                         "ARROWSLITS",
                          "CAREENING", "DRY_DOCK",                               # the ships (#1441)
                          "SHIPWRIGHT"),                                         # (#1490)
           "DOCK": ("FISHING_SHIP",                                             # (#1383)
@@ -463,7 +469,14 @@ def masonry(name, s):
     return s._replace(hp=round(s.hp * 1.1), melee=s.melee + 1, pierce=s.pierce + 1) if "building" in s.classes and not wall else s
 
 
+def arrowslits(name, s):
+    """Arrowslits (AoE2 DE, wiki): a watch tower +1, a guard tower +2 and a keep +3 attack. name: the tower of its
+    values (build.line)."""
+    return s._replace(attack=s.attack + ARROWSLITS[name]) if name in ARROWSLITS else s
+
 TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit name: UPGRADES
+         "ARCHITECTURE": masonry,                                  # the same effect as Masonry (#1504)
+         "ARROWSLITS": arrowslits,                                 # the towers of the player: build.values
          "ARSON": lambda name, s: s._replace(bonus={**s.bonus, "standard": s.bonus.get("standard", 0) + 2})
          if "infantry" in s.classes else s,                        # combat.STANDARD: not the walls (#1419)
          "BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
@@ -558,6 +571,7 @@ SPEEDS = {"CARAVAN": ("trade units", 1.2),                        # technology: 
           "SQUIRES": ("infantry", 1.1)}                            # (#1415)
 SHIPWRIGHT = (0.8, 1.54)                                           # Shipwright: ships cost 80 % wood, train 54 % faster
 CONSCRIPT = (("ARCHERY_RANGE", "BARRACKS", "CASTLE", "STABLE"), 1.33)   # Conscription: these buildings train faster
+ARROWSLITS = {"GUARD_TOWER": 2, "KEEP": 3, "WATCH_TOWER": 1}         # Arrowslits: the attack of each tower (#1504)
 UPGRADES = {                                                       # technology: the unit and its new unit (#941)
     "ARBALESTER_UPGRADE": ("CROSSBOWMAN", "ARBALESTER"),
     "DEMOLITION_SHIP_UPGRADE": ("DEMOLITION_RAFT", "DEMOLITION_SHIP"),   # (#1483)
@@ -583,6 +597,7 @@ UPGRADES = {                                                       # technology:
     "TWO_HANDED_SWORDSMAN_UPGRADE": ("LONG_SWORDSMAN", "TWO_HANDED_SWORDSMAN"),
 }
 AFTER = {"ARBALESTER_UPGRADE": "CROSSBOWMAN_UPGRADE",
+         "ARCHITECTURE": "MASONRY",
          "BLAST_FURNACE": "IRON_CASTING",
          "BODKIN_ARROW": "FLETCHING",
          "BOMBARD_TOWER_TECH": "CHEMISTRY",
@@ -617,6 +632,8 @@ REQUIRES = {"CASTLE_AGE": (2, ("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET"
             "IMPERIAL_AGE": (2, ("MONASTERY", "UNIVERSITY", "SIEGE_WORKSHOP"), ("CASTLE",))}   # or one of these alone
 TECH_AGE = {                                                       # the age of a technology (build.AGE): hidden before
     "ARBALESTER_UPGRADE": 3,
+    "ARCHITECTURE": 3,
+    "ARROWSLITS": 3,
     "ARSON": 1,
     "BLAST_FURNACE": 3,
     "BLOCK_PRINTING": 3,
@@ -701,6 +718,8 @@ MORE = 18                                                          # the first s
 ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, item and name of each unit (#620)
          "ARBALESTER": (0, "skeleton_spawn_egg", "Arbalester"),
          "ARBALESTER_UPGRADE": (2, "book", "Arbalester"),             # the slot of Crossbowman (AFTER)
+         "ARCHITECTURE": (6, "book", "Architecture"),              # the slot of Masonry (AFTER)
+         "ARROWSLITS": (MORE + 1, "book", "Arrowslits"),
          "ARSON": (6, "book", "Arson"),                            # after the slot of Gambesons
          "CAPPED_RAM": (0, "minecart", "Capped Ram"),
          "CAPPED_RAM_UPGRADE": (3, "book", "Capped Ram"),        # one slot for each line of upgrades
@@ -841,6 +860,8 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
 HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "ARBALESTER_UPGRADE": "Upgrades crossbowmen to arbalesters.",
         "ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
+        "ARCHITECTURE": "Buildings +10 % HP, +1/+1 armor.",
+        "ARROWSLITS": "Towers +1, +2, keeps +3 attack.",
         "ARSON": "Infantry +2 attack vs. buildings.",
         "BATTERING_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
         "BERSERK": "Viking infantry. Heals itself.",
