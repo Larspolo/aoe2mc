@@ -40,6 +40,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 import aoe2mc  # noqa: E402
 import buildings  # noqa: E402
+import table  # noqa: E402
 import units  # noqa: E402
 
 # Dye color of a player (aoe2mc.PLAYER_COLORS) -> text color of /tellraw and /title
@@ -85,42 +86,12 @@ NEAR = 2                    # blocks: a unit of the plugin this near to its repl
 WAIT = 1000                 # ms of game time between two position checks of a unit that is late on its path (#766)
 LATE = 60000                # ms of game time: a unit that is still not at its resource then goes there with /tp
 PATH_CELLS = 20000          # cells that one path search may look at: a unit with no path stays (no time lag)
-SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, "PIKEMAN": 1.0, "EAGLE": 1.1,
-          "ARCHER": 0.96, "SKIRMISHER": 0.96, "CROSSBOWMAN": 0.96, "CAVALRY_ARCHER": 1.4, "SCOUT": 1.2,
-          "LIGHT_CAVALRY": 1.5, "KNIGHT": 1.35, "CAMEL": 1.45, "MONK": 0.7, "BATTERING_RAM": 0.5, "MANGONEL": 0.6,
-          "ARBALESTER": 0.96,                                                       # (#1500)
-          "CAVALIER": 1.35,                                                         # (#1501)
-          "CHAKRAM_THROWER": 1.15,                                                  # (#1624)
-          "ELITE_FIRE_LANCER": 0.96,                                                # (#1953)
-          "ELITE_GENITOUR": 1.35,                                                   # (#1610)
-          "ELITE_SKIRMISHER": 0.96,                                                 # (#1396)
-          "ELITE_CHAKRAM_THROWER": 1.15,
-          "ELITE_SHRIVAMSHA_RIDER": 1.6,                                            # (#1612)
-          "ELITE_STEPPE_LANCER": 1.45,                                              # (#1557)
-          "ELITE_VARANGIAN_GUARD": 1.05,                                            # (#2011)
-          "FIRE_LANCER": 0.96,                                                      # (#1953)
-          "GENITOUR": 1.35,                                                         # (#1610)
-          "HALBERDIER": 1.0,                                                        # (#1499)
-          "HEAVY_CAMEL_RIDER": 1.45,                                                # (#1550)
-          "HEAVY_CAVALRY_ARCHER": 1.4,                                              # (#1500)
-          "HEAVY_MOUNTED_CROSSBOWMAN": 1.25,                                        # (#2012)
-          "HEAVY_HEI_GUANG_CAVALRY": 1.35,                                          # (#1954)
-          "HEI_GUANG_CAVALRY": 1.35,                                                # (#1954)
-          "HUSSAR": 1.5,                                                            # (#1502)
-          "IMPERIAL_CAMEL_RIDER": 1.45,                                             # (#2013)
-          "IMPERIAL_SKIRMISHER": 0.96,                                              # (#1611)
-          "LONG_SWORDSMAN": 0.9,
-          "MOUNTED_CROSSBOWMAN": 1.25,                                              # (#2012)
-          "MISSIONARY": 1.1,                                                        # (#1939)
-          "PALADIN": 1.35,                                                          # (#1501)
-          "SHRIVAMSHA_RIDER": 1.6,                                                  # (#1612)
-          "STEPPE_LANCER": 1.45,                                                    # (#1557)
-          "VARANGIAN_GUARD": 1.05,                                                  # (#2011)
-          "CHAMPION": 0.96,                                                         # (#1498)
-          "TWO_HANDED_SWORDSMAN": 0.96,
-          "WINGED_HUSSAR": 1.5,                                                     # (#1558)
-          "XOLOTL_WARRIOR": 1.35,                                                   # (#2009)
-          "SCORPION": 0.65, "SIEGE_TOWER": 0.96, "TRADE_CART": 1.25}   # walk speed of common units, tiles per game second (AoE2 DE)
+# The walk speed of common units, tiles per game second (AoE2 DE), the ages and the Society buildings: one line per
+# name in data/replay.jsonl (#2034). A walk speed name is the start of the unit names.
+ROWS = table.load("replay.jsonl")
+SPEEDS = {r["name"]: r["walk"] for r in ROWS if "walk" in r}
+AGES = tuple(r["name"] for r in sorted((r for r in ROWS if "age" in r), key=lambda r: r["age"]))   # (#1067)
+SOCIETY = tuple(r["name"] for r in ROWS if r.get("society"))      # the buildings of the Society tab (#1086)
 
 
 def pretty(name):
@@ -1526,7 +1497,7 @@ class Replay:
             name, color = self.label(p)
             times = self.reached.get(p, {})
             ages = ", ".join(f"{pretty(a).removesuffix(' Age')} {mmss(times[a]) if a in times else '-'}"
-                             for a in ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE"))
+                             for a in AGES)
             out.append("tellraw @a " + json.dumps([text(name, color), text(
                 f": {ages}, technologies {self.researched.get(p, 0)}")]))
         return out
@@ -1539,7 +1510,7 @@ class Replay:
         for e in self.data.get("timeline", []):
             p = e.get("player")
             name = e.get("name") or self.kinds.get(e.get("type"), ("?", ""))[1]
-            if e["kind"] == "build" and name in ("CASTLE", "WONDER") and (p, tuple(e.get("tile", ()))) not in seen:
+            if e["kind"] == "build" and name in SOCIETY and (p, tuple(e.get("tile", ()))) not in seen:
                 seen.add((p, tuple(e.get("tile", ()))))
                 built[p, name] = built.get((p, name), 0) + 1
             elif e["kind"] == "tribute" and e.get("to"):
@@ -1549,9 +1520,10 @@ class Replay:
         for p in self.ranked(self.pop.keys() | self.vhigh.keys() | sent.keys() | got.keys() | {q for q, _ in built}
                              - {None}):
             name, color = self.label(p)
+            counts = "".join(f"{n.lower()}s {built.get((p, n), 0)}, " for n in SOCIETY)   # castles N, wonders N
             out.append("tellraw @a " + json.dumps([text(name, color), text(
-                f": castles {built.get((p, 'CASTLE'), 0)}, wonders {built.get((p, 'WONDER'), 0)}, tribute sent "
-                f"{sent.get(p, 0)}, received {got.get(p, 0)}, villager high {self.vhigh.get(p, 0)} (est.)")]))
+                f": {counts}tribute sent {sent.get(p, 0)}, received {got.get(p, 0)}, villager high "
+                f"{self.vhigh.get(p, 0)} (est.)")]))
         return out
 
     def timeline_commands(self, end):
