@@ -49,9 +49,15 @@ system shows a warning the first time. The steps below go past it.
   click "More info", then "Run anyway". The installer needs no admin rights. Start "aoe2mc" from the Start menu.
   The command line is `aoe2mc.exe` in the install folder (default `%LOCALAPPDATA%\Programs\aoe2mc`).
 - macOS: open `aoe2mc-<version>-macos-arm64.dmg` (Apple silicon) or `aoe2mc-<version>-macos-x86_64.dmg` (Intel) and
-  drag `aoe2mc` into "Applications". The first time, right click the app and select "Open", then "Open" again. If
-  macOS does not show "Open", go to "System Settings" → "Privacy & Security" and click "Open Anyway". The command
-  line is `/Applications/aoe2mc.app/Contents/MacOS/aoe2mc`.
+  drag `aoe2mc` into "Applications". The first time, macOS 15 (Sequoia) and later show ""aoe2mc" Not Opened"
+  ("Apple could not verify ..."). Do these steps:
+  1. Click "Done". Do not click "Move to Bin".
+  2. Open "System Settings" → "Privacy & Security". Below "Security", the line ""aoe2mc" was blocked ..." shows
+     (for about one hour after the blocked open). Click "Open Anyway" and use Touch ID or your password.
+  3. Open the app again and click "Open Anyway".
+
+  On macOS 14 and earlier: right click the app, select "Open", then click "Open" again. The command line is
+  `/Applications/aoe2mc.app/Contents/MacOS/aoe2mc`.
 - Linux: make the file executable (`chmod +x aoe2mc-<version>-linux-x86_64.AppImage`) and start it: without
   arguments it opens the window, with arguments it is the command line
   (`./aoe2mc-<version>-linux-x86_64.AppImage MyMap.aoe2scenario MyMapWorld`). If it says that FUSE is missing,

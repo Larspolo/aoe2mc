@@ -63,6 +63,7 @@ of its document (named below; add at its end, do not change other lines: `merge=
 - The auto mode denies a tag push ("Create Public Surface": a tag `v*` makes a release) and the run of a downloaded binary (`appimagetool`, "Code from External"): test a release step in the PR workflow and make a `needs-human` ticket for the tag (#1542, #1608).
 - Automerge waits only for `quick`: a PR that changes `packaging/` or a workflow with its own PR checks (`Bundles`) gets `hold` until those checks are green (#1599: two of four jobs failed first).
 - Actions artifacts (`/actions/artifacts/ID/zip`) do not download in the cloud: the proxy blocks `*.blob.core.windows.net`; release assets (`github.com/.../releases/download/...`) work. Check a bundle with a local build (`packaging/aoe2mc.spec` in a 3.12 venv, `apt-get install -y python3-tk` first). The auto mode denies running a downloaded `appimagetool`. Under Xvfb (no window manager) no field has the key focus: click into each field with `xdotool mousemove X Y click 1` before `xdotool type` (#1545).
+- `tools/claim.py` takes the run name from the current local branch: run each `claim.py` (claim, beat, guard, release) on the session branch, also while a next ticket waits on a local branch (`t1668`). A claim made there belongs to "t1668", and the beats of the session branch fail (#1668).
 
 ## Code
 
