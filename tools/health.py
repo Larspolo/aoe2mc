@@ -562,8 +562,9 @@ def fetch(since, until=None):
     status = api(f"issues?state=open&labels={STATUS}")
     # one day more: the "Started by" comment of a ticket that merged in the period can be older
     comments = api_pages(f"issues/comments?since={since - datetime.timedelta(days=1):%Y-%m-%dT%H:%M:%SZ}", COMMENT_PAGES)
-    status_comments = [c for c in comments if status and c["issue_url"].endswith(f"/{status[0]['number']}")
-                       and c["created_at"] >= iso]
+    # from their own endpoint: about 350 a day, the repository has about 1100 (#1982)
+    status_comments = [c for c in api_pages(f"issues/{status[0]['number']}/comments?since={iso}", COMMENT_PAGES)
+                       if c["created_at"] >= iso] if status else []
     recent = [c for c in comments if c["created_at"] >= iso or c["body"].startswith("Started by")]
     prs = api_pages("pulls?state=closed&sort=updated&direction=desc", stop=lambda p: p["updated_at"] < iso)
     issues = api_pages(f"issues?state=all&since={iso}")

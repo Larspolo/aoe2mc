@@ -45,6 +45,12 @@ def metrics(ticket, size, result, minutes=None, setup=0, checks=0, checks_min=0,
             + " · ".join(f"{k} {num(v)}" for k, v in p.items()) + (f" · lane {lane}" if lane else ""))
 
 
+def git_lane():
+    """The lane of the run: `git config aoe2mc.lane` (the Haiku lane sets it, #1727), else None (#1982)."""
+    r = subprocess.run(["git", "config", "--get", "aoe2mc.lane"], capture_output=True, text=True)
+    return r.stdout.strip() or None
+
+
 def tool(*args):
     """The output of another tool of this directory, without its trailing newline."""
     r = subprocess.run([sys.executable, os.path.join(HERE, args[0]), *args[1:]], capture_output=True, text=True)
@@ -75,8 +81,9 @@ def main(argv=None):
     def at(values, i, default):
         return values[i] if i < len(values) else default
 
+    lane = git_lane()
     lines = [metrics(t, a.size[i], a.result[i], at(a.minutes, i, None), at(a.setup, i, 0), at(a.checks, i, 0),
-                     at(a.checks_min, i, 0), at(a.sinks, i, "none"), at(a.phases, i, ""), at(a.lane, i, None))
+                     at(a.checks_min, i, 0), at(a.sinks, i, "none"), at(a.phases, i, ""), at(a.lane, i, lane))
              for i, t in enumerate(a.ticket)]
     usage = a.usage or (tool("usage.py", "--sample").splitlines() or [""])[-1]
     body = report(a.text, usage, lines)
