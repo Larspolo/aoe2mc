@@ -89,11 +89,11 @@ def test_siege_engineers_adds_range_and_attack_against_buildings():
     research(g, UNIVERSITY, "SIEGE_ENGINEERS")
     m, r, s = (train.stats(g, n) for n in ("MANGONEL", "BATTERING_RAM", "SCORPION"))
     assert (m.range, m.bonus["building"]) == (8, 42)                           # 7 + 1, 35 × 1.2
-    assert (r.range, r.bonus["building"]) == (0, 150)                          # a ram: no range, 125 × 1.2
-    assert s.range == 8 and "building" not in s.bonus
+    assert (r.range, r.bonus["building"]) == (0, 180)                          # a ram: no range, 150 × 1.2
+    assert (s.range, s.bonus["building"]) == (8, 4)                            # 3 × 1.2 (#1402)
     assert train.stats(g, "ARCHER") == combat.stats("ARCHER")                  # not a siege unit
     assert "aoe range m 8 71 1.0 3" in server.log                              # range 8 blocks (T 1), blast, min range
-    assert "aoe stats r 175 2 -3 180 0 siege building:150 59" in server.log    # the plugin hits buildings with 150 more
+    assert "aoe stats r 175 2 -3 180 0 siege,ram building:180,siege:40 59" in server.log   # 180 more vs. buildings
 
 
 @pytest.mark.mc

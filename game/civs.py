@@ -140,8 +140,15 @@ START = {"AZTECS": {"gold": 50},
          "SICILIANS": {"stone": 100}}
 # The technologies that a civilization does not have (AoE2 wiki, the availability chart of each technology, #1373):
 # the menu does not show them (train.unlocked).
-MISSING = {"FORTIFIED_WALL": ("BULGARIANS", "CUMANS", "DANES", "GOTHS", "HUNS", "MAGYARS", "MALAY", "MAPUCHE", "MUISCA",
-                              "PERSIANS", "SICILIANS", "TUPI", "WU")}
+MISSING = {"BOMBARD_TOWER_TECH": ("ACHAEMENIDS", "ATHENIANS", "AZTECS", "BENGALIS", "BERBERS", "BRITONS", "BULGARIANS",
+                                  "BURMESE", "CELTS", "CUMANS", "DANES", "ETHIOPIANS", "FRANKS", "GEORGIANS", "GOTHS",
+                                  "GURJARAS", "HINDUSTANIS", "HUNS", "INCAS", "JAPANESE", "JURCHENS", "KHITANS", "KHMER",
+                                  "MACEDONIANS", "MAGYARS", "MALIANS", "MAYANS", "MONGOLS", "MUISCA", "PERSIANS", "PURU",
+                                  "ROMANS", "SARACENS", "SAXONS", "SHU", "SICILIANS", "SLAVS", "SPARTANS", "THRACIANS",
+                                  "TUPI", "VARANGIANS", "VIKINGS", "WEI", "WU"),
+           "FORTIFIED_WALL": ("BULGARIANS", "CUMANS", "DANES", "GOTHS", "HUNS", "MAGYARS", "MALAY", "MAPUCHE", "MUISCA",
+                              "PERSIANS", "SICILIANS", "TUPI", "WU"),
+           "SQUIRES": ("CELTS", "GURJARAS", "KHMER", "MAGYARS", "MAPUCHE", "PORTUGUESE")}   # (#1415)
 
 
 def mounted(s):

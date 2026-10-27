@@ -35,7 +35,7 @@ def test_the_unpack_gives_the_unpacked_armor_and_the_pack_the_packed_armor():
     trebuchet.tick(g, 11.0)
     assert stats_of(server) == []                                      # still packed while it unpacks
     trebuchet.tick(g, 0.2)
-    assert stats_of(server) == [(1, 150, "siege")] and trebuchet.state(g, "t") == "unpacked"
+    assert stats_of(server) == [(1, 150, "siege,ram")] and trebuchet.state(g, "t") == "unpacked"
     server.log.clear()
     trebuchet.move(g, "t", [])
     trebuchet.tick(g, 5.0)
@@ -51,5 +51,5 @@ def test_a_research_keeps_the_armor_of_the_state():
     trebuchet.tick(g, 11.2)
     server.log.clear()
     train.research(g, {"name": "SIEGE_ENGINEERS", "player": "Steve"})   # a change of the trebuchet values
-    assert stats_of(server) == [(1, 150, "siege")]                     # not the packed armor of train.stats
+    assert stats_of(server) == [(1, 150, "siege,ram")]                     # not the packed armor of train.stats
     assert trebuchet.stats(g, "t").range == train.stats(g, "TREBUCHET").range > combat.stats("TREBUCHET").range
