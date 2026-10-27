@@ -256,6 +256,10 @@ WALLS = {
     "STONE_WALL": ((1080, 1080, 1800, 1800), 8, 10),
 }
 WALL_TAG = "aoe2mc.wall"
+# The AoE2 class "Standard Buildings" (wiki "Armor class"): all buildings but the walls, the gates and the wonder. Arson
+# gives infantry a bonus against it (#1419).
+STANDARD = "standard"
+BUILDINGS = {k: s if k == "WONDER" else s._replace(classes=s.classes + (STANDARD,)) for k, s in BUILDINGS.items()}
 # Line of sight in tiles (AoE2 DE, base unit or building, wiki infobox "LOS"; the house: 1 from the edge of its
 # 2 x 2 tiles, #1300) where it is not max(4, range + 2) (sight()).
 SIGHT = {
@@ -471,7 +475,8 @@ def building(uuid, name, player, box, T=4, inside=(), s=None):
             f"team join p{player} {uuid}"] + \
         [f"aoe arrows {uuid} {garrison.arrows(name, inside)}"] * bool(s.attack and s.range) + \
         [f"aoe building {uuid} {s.hp} {s.melee} {s.pierce} {' '.join(map(str, box))}"   # after the arrows: no shot of 1
-         + (f" {s.attack} {s.range * T} {round(s.reload / NORMAL * 20)}" if s.attack and s.range else "")]
+         + (f" {s.attack} {s.range * T} {round(s.reload / NORMAL * 20)}" if s.attack and s.range else "")
+         + (f" {','.join(s.classes)}" if STANDARD not in s.classes else "")]   # a wall, a gate, the wonder (#1419)
 
 
 def building_box(o, ground):
