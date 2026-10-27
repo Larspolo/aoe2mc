@@ -168,13 +168,23 @@ class Bot:
             {u: ((b[0] + b[3] + 1) / 2, b[1], (b[2] + b[5] + 1) / 2) for u, b in self.forts().items()}
         orders = {}
         for u in free if near else ():
-            t = min(near, key=lambda k: (math.dist(near[k], mine[u]), k))
+            if not (ok := [k for k in near if self.reach(u, mine[u], near[k])]):
+                continue
+            t = min(ok, key=lambda k: (math.dist(near[k], mine[u]), k))
             self.targets[u] = t
             orders.setdefault(t, []).append(u)
         for t, us in sorted(orders.items()):
             if t in g.forts:
                 g.sieged.add(t)                                        # Gather.fall frees its footprint
             ai.attack(g.game, us, [g.soldiers[u] for u in us], g.map.T, t)
+
+    def reach(self, u, at, to):
+        """True when soldier u at `at` can attack a target at `to`. AoE2: a land unit cannot walk to a ship on the water
+        (#1658): it attacks a target on a water cell only with its range, from the land. A ship attacks all."""
+        wet = self.g.map.y(math.floor(to[0]), math.floor(to[2])) is None
+        if not wet or self.g.map.y(math.floor(at[0]), math.floor(at[2])) is None:
+            return True
+        return math.dist(at[::2], to[::2]) <= combat.stats(self.g.soldiers[u]).range * self.g.map.T
 
     def forts(self):
         """{target UUID: box} of the buildings of the foe whose target entity lives."""
