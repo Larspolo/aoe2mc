@@ -71,6 +71,7 @@ import relic_victory  # noqa: E402
 import repair  # noqa: E402
 import siege_tower  # noqa: E402
 import stance  # noqa: E402
+import table  # noqa: E402
 import trade  # noqa: E402
 import transport  # noqa: E402
 import train  # noqa: E402
@@ -78,8 +79,9 @@ import trebuchet  # noqa: E402
 import wonder  # noqa: E402
 
 RESOURCES = ("Wood", "Food", "Gold", "Stone")
-DROP_SITES = {"wood": ("TOWN_CENTER", "LUMBER_CAMP"), "food": ("TOWN_CENTER", "MILL", "FOLWARK"),   # as in AoE2 (#389)
-              "gold": ("TOWN_CENTER", "MINING_CAMP"), "stone": ("TOWN_CENTER", "MINING_CAMP")}
+# The gather tables: one line per name in data/gather.jsonl (#2033, `table.load`), values as in AoE2 (#389)
+ROWS = table.load("gather.jsonl")
+DROP_SITES = {r.lower(): tuple(t["name"] for t in ROWS if r.lower() in t.get("drop", ())) for r in RESOURCES}
 START = replay.START                                               # the AoE2 standard start resources (#973)
 NOMAD = {"wood": 275, "stone": 100}     # AoE2 Nomad (wiki "Nomad (map)"): no building at the start, the cost of a town center
 TREE_WOOD = 100                                                    # wood in one tree, as in AoE2
@@ -92,54 +94,28 @@ BUSH_FOOD = 125                                                    # food in one
 AOE2_WORK, NORMAL = {"wood": 0.39, "food": 0.31, "farm": 0.33, "gold": 0.38, "stone": 0.36, "hunt": 0.41,
                      "fish": 0.43}, 1.7                            # fish: a fisherman at a shore fish (#1283)
 WORK_SECONDS = {r: 1 / (w * NORMAL) for r, w in AOE2_WORK.items()}    # real seconds per unit, as at Normal speed
-CARRY = {"HAND_CART": 7, "WHEELBARROW": 3}                         # more resources per trip: 10, 13, 20 (AoE2 wiki, #728, #1453)
+CARRY = {t['name']: t['carry'] for t in ROWS if 'carry' in t}
 FOOD_CARRY = {"HEAVY_PLOW": 1}                                     # more food only per trip, as in AoE2 (#1424)
-PACE = {"HAND_CART": 1.1, "WHEELBARROW": 1.1}                      # the villager walk speed factor, as in AoE2
-WORK_TECHS = {"BOW_SAW": {"wood": 1.2},                            # work rate factors of the economy technologies (AoE2)
-              "DOUBLE_BIT_AXE": {"wood": 1.2},
-              "GOLD_MINING": {"gold": 1.15},
-              "GOLD_SHAFT_MINING": {"gold": 1.15},
-              "STONE_MINING": {"stone": 1.15},
-              "STONE_SHAFT_MINING": {"stone": 1.15},
-              "TWO_MAN_SAW": {"wood": 1.1}}                        # (#1577)
-# Food of a hunted animal, as in AoE2 DE (the AoE2 wiki; a "COW_..." name is a cow, #1058).
-HUNT_FOOD = {"COW": 150,
-             "DEER": 140,
-             "GOAT": 100,
-             "GOOSE": 100,
-             "IBEX": 140,
-             "JAVELINA": 340,
-             "LLAMA": 100,
-             "PIG": 100,
-             "SHEEP": 100,
-             "TURKEY": 100,
-             "WATER_BUFFALO": 150,
-             "WILD_BOAR": 340}
+PACE = {t['name']: t['pace'] for t in ROWS if 'pace' in t}
+WORK_TECHS = {t['name']: t['work'] for t in ROWS if 'work' in t}   # work rate factors (#1577)
+# Food of a hunted animal, as in AoE2 DE (a "COW_..." name is a cow, #1058).
+HUNT_FOOD = {t['name']: t['hunt'] for t in ROWS if 'hunt' in t}
 # Food of a fish, as in AoE2 DE (the AoE2 wiki, "Fishing", #1283). Villagers reach the shore fish from the land.
-FISH_FOOD = {"BOX_TURTLES": 200,
-             "DOLPHIN": 350,
-             "FISH_DORADO": 225,
-             "FISH_PERCH": 200,
-             "FISH_SALMON": 225,
-             "FISH_SNAPPER": 225,
-             "FISH_TUNA": 225,
-             "GREAT_FISH_MARLIN": 350,
-             "SHORE_FISH": 200}
-SHORE_FISH = {"BOX_TURTLES", "SHORE_FISH"}
+FISH_FOOD = {t['name']: t['fish'] for t in ROWS if 'fish' in t}
+SHORE_FISH = {t['name'] for t in ROWS if t.get('shore')}
 SHIP_WORK = {"deep": 0.42, "shore": 0.24, "trap": 0.35}            # the work rate of a fishing ship (AoE2 DE wiki)
 TRAP_FOOD = 715                                                    # food in one fish trap, as in AoE2 DE (#1438)
-SHIP_TECHS = {"FISHING_LINES": (1.1, 5), "GILLNETS": (1.1, 5)}     # the work rate factor and the more food of a trip (#1439)
-HERDS = {"COW", "GOAT", "GOOSE", "LLAMA", "PIG", "SHEEP", "TURKEY", "WATER_BUFFALO"}   # herdable animals: shepherds (civs.WORK)
+SHIP_TECHS = {t['name']: tuple(t['ship']) for t in ROWS if 'ship' in t}   # the work rate factor and the more food of a trip (#1439)
+HERDS = {t['name'] for t in ROWS if t.get('herd')}   # herdable animals: shepherds (civs.WORK)
 VILLAGER_HIT = 3, 2.0                                              # AoE2 villager attack and reload (game seconds)
 FARM_FOOD = 175                                                    # food in one farm, as in AoE2 DE (no upgrades)
-FARM_TECHS = {"CROP_ROTATION": 175,
-              "HEAVY_PLOW": 125, "HORSE_COLLAR": 75}               # food that a farm technology adds to each farm (AoE2 DE)
-MINES = {"GOLD_MINE": ("gold", 800, "GOLD_MINER"), "STONE_MINE": ("stone", 350, "STONE_MINER")}   # as in AoE2
+FARM_TECHS = {t['name']: t['farm'] for t in ROWS if 'farm' in t}
+MINES = {t['name']: tuple(t['mine']) for t in ROWS if 'mine' in t}   # as in AoE2
 MINE_BLOCKS = {"gold": ("gold_ore", "raw_gold_block", "stone"),                # the blocks of the converter's heap
                "stone": ("cobblestone", "andesite", "stone", "tuff")}
 STEPS = [(dx, dz) for dx in (-1, 0, 1) for dz in (-1, 0, 1) if dx or dz]
 NUMBER = r"(-?[\d.]+(?:E-?\d+)?)[df]"
-CIVILIANS = ("VILLAGER", "REPAIRER", "MONK", "MISSIONARY", "KING", "TRADE", "FISHING_SHIP", "TRANSPORT")
+CIVILIANS = tuple(t['name'] for t in ROWS if t.get('civilian'))
 SELECT = "aoe2mc.selected"                                         # entity tag of the selected units
 TYPE_REACH = 16                                                    # blocks: a second click selects its type this near (#743)
 WAND = "warped_fungus_on_a_stick"     # the selection wand: a second item with its own "used" statistic (#778)
@@ -802,8 +778,8 @@ class Gather:
                       if n not in hp or k < 1 or combat.target_uuid([fp[i] for i in (0, 2, 1, 3)]) in alive]
         import combat                                                  # combat imports this module
         printing = monk.PRINTING * ("BLOCK_PRINTING" in getattr(self, "techs", ()))   # the monks see more (#1475)
-        watch = combat.WATCH * len({"TOWN_PATROL", "TOWN_WATCH"} & set(getattr(self, "techs", ())))   # (#1454, #1579)
-        lit = {n for n, _, _ in placed} - combat.WALLS.keys() - {"FARM", "FISH_TRAP"}   # as in AoE2
+        watch = combat.WATCH * len({t['name'] for t in ROWS if t.get('watch')} & set(getattr(self, "techs", ())))   # (#1454, #1579)
+        lit = {n for n, _, _ in placed} - combat.WALLS.keys() - {t['name'] for t in ROWS if t.get('dark')}   # as in AoE2
         return replay.seen(mobs, [(self.player, n, fp) for n, fp, _ in placed], self.player, self.map.T,
                            lambda n: combat.sight(n) + printing * (n in monk.MONKS) + watch * (n in lit))
 
