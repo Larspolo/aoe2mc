@@ -113,6 +113,9 @@ on `main` yet, and the branch of an owner session is not `agent/*` or `claude/*`
 2. **Cloud environment.** At claude.ai/code, make one environment for all runs. Network access: keep "Allow package
    managers" on and add the hosts of `docs/ENVIRONMENT.md` ("Network"). Setup script: paste
    `scripts/cloud-setup.sh`. Paste it again when an agent asks (the SessionStart hook compares `SETUP_VERSION`).
+   One environment can serve two projects (#1964): paste one setup script that installs the needs of both (each
+   script lists them in `SETUP_NEEDS`). The hook of the project with no version file in `/etc` checks only its
+   `SETUP_NEEDS`, and asks for a new script only when one is missing.
 3. **Status issue.** Open issue #1 with the label `agent-status` (the first run makes it when it is missing).
 4. **Scheduled task "aoe2mc autopilot".** Hourly at :06. Repository `Larspolo/aoe2mc`, the environment of step 2.
    Its prompt: open the repository and pull `main`, read `CLAUDE.md`, follow `.claude/skills/autopilot/SKILL.md`
