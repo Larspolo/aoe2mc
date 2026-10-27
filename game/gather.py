@@ -909,6 +909,8 @@ class Gather:
         if kind == "unit" and u in self.selected and u in self.soldiers:    # a click on a selected soldier (#1107)
             stance.open_menu(self, name, u)
             return
+        if kind == "unit" and repair.unit_order(self, name, u):        # villagers repair an own damaged siege unit (#1331)
+            return
         if kind == "unit":
             self.select(u)
             return
