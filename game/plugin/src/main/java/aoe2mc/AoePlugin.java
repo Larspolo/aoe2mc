@@ -163,6 +163,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              target 1 also after a target or a hit since the last answer (#1169)
  *   aoe speed <selector> <speed>               the movement_speed of each unit; a siege unit (a minecart) gets its
  *                                              carrier first (#836): an invisible small pig that walks for it
+ *   aoe view <player> <x> <z>                  the player goes above the block x z and faces it (#1830, Alerts.view):
+ *                                              the "Go to" menu, game/goto.py
  *   aoe box <player> <x> <z> <dye>             draw the selection box from this corner to the look (#795, Border.java)
  *   aoe box-clear <player>                     end the border of the selection box
  *   aoego <x> <z>                              (no permission) the player goes to a view of an alert place of the
@@ -2279,6 +2281,17 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
             }
             sender.sendMessage("Closed: " + n + " menus");
+            return true;
+        }
+        if (args.length == 4 && args[0].equals("view")) {             // the "Go to" menu (#1830, game/goto.py)
+            int n = 0;
+            for (Player p : players(sender, args[1])) {
+                double x = Double.parseDouble(args[2]), z = Double.parseDouble(args[3]);
+                int top = p.getWorld().getHighestBlockYAt((int) Math.floor(x), (int) Math.floor(z));
+                Alerts.view(p, new Location(p.getWorld(), x, top + 1, z));
+                n++;
+            }
+            sender.sendMessage("View: " + n + " players");
             return true;
         }
         if ((args.length == 2 || args.length == 3) && args[0].equals("where")) {

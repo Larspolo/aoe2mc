@@ -61,6 +61,7 @@ import flare  # noqa: E402
 import fleet  # noqa: E402
 import fog  # noqa: E402
 import garrison  # noqa: E402
+import goto  # noqa: E402
 import herd  # noqa: E402
 import hints  # noqa: E402
 import market  # noqa: E402
@@ -914,8 +915,12 @@ class Gather:
     def nearest(self, v):
         """The nearest bush or mine of the resource of v with something left, or None."""
         T = self.map.T
-        full = [t for t, k in self.source(v).items() if k > 0]
+        full = [t for t, k in self.home(self.source(v)).items() if k > 0]
         return min(full, key=lambda t: math.dist(v.cell, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), default=None)
+
+    def home(self, sources):
+        """The sources {tile: amount} that nearest() may take: all. The bot takes only the ones at its base (#1810)."""
+        return sources
 
     def go(self, v, state, goals):
         if self.paper:                                                 # Minecraft finds the path (#437)
@@ -953,6 +958,7 @@ class Gather:
                 self.command(f"execute as {self.who} unless items entity @s hotbar.{slot} *[custom_data={{aoe_group:{n}}}] "
                              f"run item replace entity @s hotbar.{slot} with {group_item(n, len(self.groups.get(n, ())))}")
             diplomacy.give(self)                                       # the Game menu item (#1588)
+            goto.give(self)                                            # the "Go to" compass (#1830)
         self.calls += 1
         if not self.paper:                                             # Paper: hold right click with the stick (#1786)
             self.command(f"execute as {self.who} unless items entity @s container.* minecraft:{WAND} "
@@ -976,6 +982,9 @@ class Gather:
                 elif "aoe_use" in used and diplomacy.in_hand(self, name):   # the Game menu item (#1588): no ray
                     out.remove(name)
                     diplomacy.open_menu(self, name)
+                elif "aoe_use" in used and goto.in_hand(self, name):    # the "Go to" compass (#1830): no ray
+                    out.remove(name)
+                    goto.open_menu(self, name)
                 elif "aoe_use" in used and self.paper and not (name in self.rallying or build.chosen(self, name)):
                     out.remove(name)                                   # a click or a hold: short() or drag decides
                     self.hold(name, int(re.search(r"has (\d+)", scores["aoe_use"])[1]))
