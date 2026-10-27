@@ -1,6 +1,6 @@
 """game/train.py: the market researches Caravan (200 food, 200 gold, 40 s, Castle Age: trade carts walk 20 % faster)
 and Guilds (300 food, 200 gold, 50 s, Imperial Age: trading fee 15 %), as on the AoE2 wiki infoboxes (#1254).
-Coinage and Banking change the tribute fee: the game program has no tribute, so they are not in the menu."""
+Coinage and Banking change the tribute fee: tests/test_coinage_banking.py (#1606)."""
 from test_loom import menus
 from test_trade_cart import FAR, HOME, setup
 
@@ -27,7 +27,6 @@ def test_the_costs_times_and_ages_are_those_of_aoe2():
     assert train.COSTS["GUILDS"] == {"food": 300, "gold": 200} and train.TRAIN_TIMES["GUILDS"] == 50
     assert train.TECH_AGE["CARAVAN"] == 2 and train.TECH_AGE["GUILDS"] == 3
     assert train.HELP["CARAVAN"] and train.HELP["GUILDS"]
-    assert not {"COINAGE", "BANKING"} & set(train.TRAINS["MARKET"])
 
 
 def test_the_market_menu_shows_each_technology_from_its_age():

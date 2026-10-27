@@ -85,6 +85,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "ARSON": {"food": 75, "gold": 25},                           # AoE2 DE wiki (#1419)
          "ATONEMENT": {"gold": 325},                                  # AoE2 DE wiki (#1581)
          "BALLISTICS": {"wood": 300, "gold": 175},                    # the university, Castle Age (#1549)
+         "BANKING": {"food": 300, "gold": 200},                      # the market, Imperial Age (#1606)
          "BATTERING_RAM": {"wood": 160, "gold": 75},
          "BOMBARD_CANNON": {"wood": 225, "gold": 225},               # the Imperial Age, after Chemistry (#1380)
          "BOMBARD_TOWER_TECH": {"food": 800, "wood": 400},           # the university, after Chemistry (#1375)
@@ -105,6 +106,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 50, "gold": 20},   #
          "CHAMPION": {"food": 50, "gold": 20},                         # AoE2 DE wiki (#1498)
          "CHAMPION_UPGRADE": {"food": 650, "gold": 350},               # the Imperial Age (#1498)
          "CHEMISTRY": {"food": 300, "gold": 200},                    # the university, Imperial Age (#1375)
+         "COINAGE": {"food": 200, "gold": 100},                      # the market, Castle Age (#1606)
          "CONSCRIPTION": {"food": 150, "gold": 150},                 # the castle, Imperial Age (#1455)
          "CATAPHRACT": {"food": 70, "gold": 75},
          "CAMEL_RIDER": {"food": 55, "gold": 60},                       # AoE2 DE wiki (#1550)
@@ -262,6 +264,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "ARROWSLITS": 25,
                "ATONEMENT": 40,
                "BALLISTICS": 60,
+               "BANKING": 70,
                "BATTERING_RAM": 36,
                "BATTLE_ELEPHANT": 24,
                "BERSERK": 14,
@@ -280,6 +283,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "CHAMPION": 21,
                "CHAMPION_UPGRADE": 70,
                "CHEMISTRY": 100,
+               "COINAGE": 70,
                "CONSCRIPTION": 60,
                "CASTLE_AGE": 160,
                "CAREENING": 50,
@@ -504,7 +508,9 @@ TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", 
                    "FISHING_LINES", "GILLNETS"),                                # (#1439)
           "LUMBER_CAMP": ("DOUBLE_BIT_AXE",
                           "BOW_SAW"),                                           # (#723, #1423)
-          "MARKET": ("TRADE_CART", "CARAVAN", "GUILDS"),                       # (#1253, #1254)
+          "MARKET": ("TRADE_CART", "CARAVAN", "GUILDS",                        # (#1253, #1254)
+                     "COINAGE",                                               # the Castle Age (#1606)
+                     "BANKING"),                                              # the Imperial Age (#1606)
           "MILL": ("HORSE_COLLAR", "HEAVY_PLOW",                               # (#726, #1424)
                    "CROP_ROTATION"),                                   # (#1578)
           "MINING_CAMP": ("GOLD_MINING", "STONE_MINING",                       # (#727, #939)
@@ -598,6 +604,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "ATONEMENT": lambda name, s: s,                           # monks convert enemy monks: monk.convertible
          "BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in s.classes else s,
          "BALLISTICS": lambda name, s: s,                          # the aim of the arrows: aoe ballistics (#1549)
+         "BANKING": lambda name, s: s,                             # the tribute fee: diplomacy.FEES
          "BLAST_FURNACE": lambda name, s: s._replace(attack=s.attack + 2) if melee(s) or name in HULKS else s,
          "BLOCK_PRINTING": lambda name, s: s,                      # the conversion range: monk.near
          "BOMBARD_TOWER_TECH": lambda name, s: s,                  # the bombard tower in the build menu: build.NEEDS
@@ -613,6 +620,7 @@ TECHS = {"ARBALESTER_UPGRADE": lambda name, s: s,                  # a new unit 
          "CAREENING": lambda name, s: s._replace(pierce=s.pierce + 1) if ship(name, s) else s,
          "CHAMPION_UPGRADE": lambda name, s: s,                    # a new unit name: UPGRADES
          "CHEMISTRY": chemistry,
+         "COINAGE": lambda name, s: s,                             # the tribute fee: diplomacy.FEES
          "CONSCRIPTION": lambda name, s: s,                        # the train speed: CONSCRIPT, tick()
          "CHAIN_BARDING_ARMOR": lambda name, s: s._replace(melee=s.melee + 1, pierce=s.pierce + 1)
          if barding(s) else s,
@@ -758,6 +766,7 @@ UPGRADES = {                                                       # technology:
 }
 AFTER = {"ARBALESTER_UPGRADE": "CROSSBOWMAN_UPGRADE",
          "ARCHITECTURE": "MASONRY",
+         "BANKING": "COINAGE",
          "BLAST_FURNACE": "IRON_CASTING",
          "BODKIN_ARROW": "FLETCHING",
          "BOMBARD_TOWER_TECH": "CHEMISTRY",
@@ -805,6 +814,7 @@ TECH_AGE = {                                                       # the age of 
     "ARSON": 1,
     "ATONEMENT": 2,
     "BALLISTICS": 2,
+    "BANKING": 3,
     "BLAST_FURNACE": 3,
     "BLOCK_PRINTING": 3,
     "BLOODLINES": 1,
@@ -883,6 +893,7 @@ TECH_AGE = {                                                       # the age of 
     "SCALE_BARDING_ARMOR": 1,
     "SCALE_MAIL_ARMOR": 1,
     "CHEMISTRY": 3,
+    "COINAGE": 2,
     "CONSCRIPTION": 3,
     "SHIPWRIGHT": 3,
     "SIEGE_ENGINEERS": 3,
@@ -964,6 +975,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "SCOUT_CAVALRY": (0, "horse_spawn_egg", "Scout Cavalry"),
          "SIEGE_ENGINEERS": (1, "book", "Siege Engineers"),
          "CHEMISTRY": (4, "book", "Chemistry"),            # after Guard Tower and Keep
+         "COINAGE": (3, "book", "Coinage"),                        # the market (#1606)
          "CONSCRIPTION": (2, "book", "Conscription"),      # after the trebuchet
          "SIEGE_ONAGER": (1, "dispenser", "Siege Onager"),
          "SIEGE_ONAGER_UPGRADE": (4, "book", "Siege Onager"),
@@ -973,6 +985,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "SPEARMAN": (1, "zombie_spawn_egg", "Spearman"),
          "SQUIRES": (4, "book", "Squires"),                        # after the slot of Pikeman
          "BALLISTICS": (MORE + 3, "book", "Ballistics"),          # 18: Shipwright, 19: Arrowslits, 20: Heated Shot
+         "BANKING": (3, "book", "Banking"),                        # the slot of Coinage (AFTER)
          "BATTLE_ELEPHANT": (7, "ravager_spawn_egg", "Battle Elephant"),   # the stable (#1556)
          "BATTERING_RAM": (0, "minecart", "Battering Ram"),         # a siege unit is a minecart (units.siege)
          "BERSERK": (0, "zombie_spawn_egg", "Berserk"),
@@ -1096,6 +1109,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "ARSON": "Infantry +2 attack vs. buildings.",
         "ATONEMENT": "Monks convert enemy monks.",
         "BALLISTICS": "Arrows hit moving targets.",
+        "BANKING": "Tributes are free.",
         "BATTERING_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
         "BATTLE_ELEPHANT": "Slow, heavy cavalry. Strong vs. buildings.",
         "BERSERK": "Viking infantry. Heals itself.",
@@ -1108,6 +1122,7 @@ HELP = {"ARBALESTER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "BOMBARD_CANNON": "Siege. Long range; strong vs. buildings and siege.",
         "BOMBARD_TOWER_TECH": "Lets you build bombard towers.",
         "CHEMISTRY": "Archers, ranged siege, towers +1 attack.",
+        "COINAGE": "Tribute fee 20 %.",
         "CONSCRIPTION": "Military buildings train 33 % faster.",
         "CANNON_GALLEON": "Siege warship. Long range; strong vs. buildings.",
         "CAPPED_RAM": "Siege. Strong vs. buildings; weak vs. melee.",
