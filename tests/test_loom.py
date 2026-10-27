@@ -3,7 +3,8 @@ the research the villagers have 15 more hit points and 1/2 more armor, and the i
 from urllib.parse import unquote
 
 from test_gather import FakeServer, grid
-from test_train_menu import FEUDAL, RALLY
+from menu_line import item
+from test_train_menu import LOOM
 
 from game import combat, gather, train
 
@@ -26,8 +27,7 @@ def menus(server):
 def test_the_town_center_menu_has_loom():
     server, g = setup()
     train.open_menu(g, "Steve", (3, 3))
-    assert menus(server) == ["aoe menu Steve Town Center 0:villager_spawn_egg:Villager:50 food · 25 s · queue 0/15 "
-                             "1:book:Loom:50 gold · 25 s · research" + FEUDAL + RALLY]
+    assert len(menus(server)) == 1 and item(menus(server)[0], "Loom") == LOOM
 
 
 def test_a_click_queues_loom_once_and_takes_its_cost():
@@ -35,7 +35,7 @@ def test_a_click_queues_loom_once_and_takes_its_cost():
     rect = train.open_menu(g, "Steve", (3, 3))
     assert train.order(g, "Steve", rect, 1, shift=True) == 1 and g.stock["gold"] == 450
     assert train.order(g, "Steve", rect, 1) == 0 and g.stock["gold"] == 450
-    assert menus(server)[-1].endswith("1:book:Loom:50 gold · 25 s · researching" + FEUDAL + RALLY)
+    assert item(menus(server)[-1], "Loom") == LOOM + "ing"
 
 
 def test_loom_needs_no_population_room_and_changes_the_villagers():

@@ -17,3 +17,16 @@ def test_no_test_pins_the_length_of_a_table():
             with open(os.path.join(ROOT, "tests", name), encoding="utf-8") as f:
                 bad += [f"{name}:{i}" for i, line in enumerate(f, 1) if COUNT.search(line)]
     assert not bad, f"a test pins the length of a table (#2008): {bad}"
+
+
+# A literal value of a train.jsonl line (#2182): tests/test_data_files.py checks the form, the wiki gives the value.
+COPY = re.compile(r"train\.(?:COSTS|TRAIN_TIMES|TECH_AGE)\[[^\]]*\] *== *[\d{]")
+
+
+def test_no_test_copies_a_value_of_train_jsonl():
+    bad = []
+    for name in sorted(os.listdir(os.path.join(ROOT, "tests"))):
+        if name.endswith(".py"):
+            with open(os.path.join(ROOT, "tests", name), encoding="utf-8") as f:
+                bad += [f"{name}:{i}" for i, line in enumerate(f, 1) if COPY.search(line)]
+    assert not bad, f"a test copies a cost, a train time or an age of train.jsonl (#2182): {bad}"

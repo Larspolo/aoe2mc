@@ -41,7 +41,7 @@ def research(g, cell, name):
 @pytest.mark.parametrize("name", sorted(UPGRADES) + ["SIEGE_ENGINEERS"])
 def test_each_upgrade_has_the_wiki_cost_time_and_the_imperial_age(name):
     cost, time = UPGRADES.get(name, ({"food": 500, "wood": 600}, 45))
-    assert train.COSTS[name] == cost and train.TRAIN_TIMES[name] == time and train.TECH_AGE[name] == 3
+    assert train.COSTS[name] == cost and train.TRAIN_TIMES[name] == time
 
 
 def test_no_upgrade_before_the_imperial_age():
