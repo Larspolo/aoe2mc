@@ -14,7 +14,8 @@ def test_the_menu_has_the_walls_with_the_aoe2_values_and_the_age_lock():
     assert items["Stone Wall"] == (build.LOCKED, "5 stone\n10 s\nNeeds the Feudal Age")
     g.techs = {"FEUDAL_AGE"}
     assert dict((n, i) for _, i, n, _ in build.items(g))["Stone Wall"] == "mossy_stone_bricks"
-    assert combat.WALLS == {"PALISADE_WALL": ((150, 250, 250, 250), 2, 5), "STONE_WALL": ((1080, 1080, 1800, 1800), 8, 10)}
+    assert {n: combat.WALLS[n] for n in build.WALLS} == {"PALISADE_WALL": ((150, 250, 250, 250), 2, 5),
+                                                         "STONE_WALL": ((1080, 1080, 1800, 1800), 8, 10)}
 
 
 def test_two_clicks_make_a_line_of_sites_and_take_the_cost_of_each_tile():

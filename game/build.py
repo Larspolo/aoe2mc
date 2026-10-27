@@ -16,6 +16,9 @@ displays of the Paper plugin, Ghost.java): green where it can stand, red where n
 Walls (#1322): a wall (WALLS) takes two clicks, the start and the end of the line, as the drag of AoE2. Each tile of
 the line (aoe2mc.wall_tiles, as the replay) is one construction site with the cost of one tile; a tile on a building,
 a tree or water is left out. The builders of a tile go on to the next unfinished tile of the line (gather.Gather.step).
+Gates (#1324): a gate (GATES) goes on 4 own wall tiles in a straight line along x or z, as in AoE2 (4 x 1 tiles). It
+replaces them: a wall site goes (its builders go on to the gate), a complete wall tile loses its target. The gate stays
+closed for now.
 """
 import json
 import math
@@ -37,8 +40,10 @@ COSTS = {"HOUSE": {"wood": 25}, "LUMBER_CAMP": {"wood": 100}, "MINING_CAMP": {"w
          "BLACKSMITH": {"wood": 150},
          "ARCHERY_RANGE": {"wood": 175}, "STABLE": {"wood": 175}, "TOWN_CENTER": {"wood": 275, "stone": 100},
          "CASTLE": {"stone": 650},                                 # the Castle Age: the Imperial Age needs them (#1162)
+         "GATE": {"stone": 30},                                    # 4 x 1 tiles (AoE2 DE wiki, #1324)
          "MARKET": {"wood": 175},                                  # the Feudal Age (#1251)
          "MONASTERY": {"wood": 175},
+         "PALISADE_GATE": {"wood": 30},
          "PALISADE_WALL": {"wood": 3},                             # per tile (AoE2 DE wiki, #1322)
          "SIEGE_WORKSHOP": {"wood": 200},
          "STONE_WALL": {"stone": 5},                               # per tile
@@ -49,8 +54,10 @@ BUILD_TIMES = {"HOUSE": 25, "LUMBER_CAMP": 35, "MINING_CAMP": 35, "MILL": 35, "F
                "BARRACKS": 50, "ARCHERY_RANGE": 50, "STABLE": 50, "TOWN_CENTER": 150,                              # one builder
                "BLACKSMITH": 40,
                "CASTLE": 200,
+               "GATE": 70,
                "MARKET": 60,
                "MONASTERY": 40,
+               "PALISADE_GATE": 30,
                "PALISADE_WALL": 7,
                "SIEGE_WORKSHOP": 40,
                "STONE_WALL": 10,
@@ -63,8 +70,10 @@ ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw
          "MILL": "white_wool", "FARM": "wheat", "BARRACKS": "stone_brick_wall", "ARCHERY_RANGE": "target",
          "BLACKSMITH": "anvil", "STABLE": "hay_block",
          "CASTLE": "stone_bricks",
+         "GATE": "iron_bars",                                           # the portcullis
          "MARKET": "barrel",                                            # the goods of the stalls
          "MONASTERY": "bell",
+         "PALISADE_GATE": "stripped_spruce_log",                        # the beam over the passage
          "PALISADE_WALL": "spruce_fence",
          "SIEGE_WORKSHOP": "grindstone",
          "STONE_WALL": "mossy_stone_bricks",
@@ -75,6 +84,7 @@ ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw
 AGE_TECHS = ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE")           # the technologies of the ages, in order
 AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_TOWER",   # the AoE2 age of each
                      "ARCHER", "SKIRMISHER", "SPEARMAN", "SCOUT_CAVALRY", "TRADE_CART",  # building, unit and age
+                     "GATE",
                      "STONE_WALL",
                      "CASTLE_AGE"), 1) | {"IMPERIAL_AGE": 2} \
     | dict.fromkeys((                                                  # the Castle Age (#1082): buildings and units
@@ -113,6 +123,7 @@ AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_T
         "WONDER",
     ), 3)                                                              # (0: Dark)
 WALLS = ("PALISADE_WALL", "STONE_WALL")                            # a line of 1-tile sites with two clicks (#1322)
+GATES = ("GATE", "PALISADE_GATE")                                  # on 4 own wall tiles in a line (#1324)
 GHOST = 400                                                        # block displays of one ghost: a coarser shape above
 LOCKED = "gray_dye"                                                # the item of a locked building or unit
 
@@ -208,7 +219,7 @@ def ghosts(g):
             for c in cmds:
                 g.command(c)
             g.ghosts[p] = [name, None]
-        color = "green" if free(g, rect) else "red"
+        color = "green" if (gate_rect(g, cell) if name in GATES else free(g, rect)) else "red"   # a gate: on a wall
         if g.ghosts[p][1] != color:
             g.command(f"aoe ghost-color {p} {color}")
             g.ghosts[p][1] = color
@@ -286,6 +297,8 @@ def place(g, player, name, eye, d):
         return None
     if name in WALLS:
         return wall(g, player, name, cell)
+    if name in GATES:
+        return gate(g, player, name, cell)
     rect = area(g, name, cell)
     if not free(g, rect):
         say(g, player, f"No space for the {pretty(name).lower()} here.")
@@ -327,6 +340,63 @@ def wall(g, player, name, cell):
     return sites[0]
 
 
+def wall_tiles_of(g):
+    """The own wall tiles of the player of g: {(tile x, tile z): the site, or None for a wall of the map}."""
+    T, out = g.map.T, {}
+    for o in g.data["objects"]:
+        if o["kind"] == "building" and o["player"] == g.player and "WALL" in o["name"] and "footprint" in o:
+            x0, z0, x1, z1 = o["footprint"]
+            if x1 - x0 == z1 - z0 == T:
+                out[x0 // T, z0 // T] = None
+    out.update({(s["footprint"][0] // T, s["footprint"][2] // T): s for s in g.sites
+                if s["name"] in WALLS and s["player"] == g.player})
+    return out
+
+
+def gate_rect(g, cell):
+    """The block footprint (x0, x1, z0, z1) of a gate on 4 own wall tiles in a line along x or z, with the tile of
+    the block cell in it (the tile in the middle first), or None."""
+    T, own = g.map.T, wall_tiles_of(g)
+    tx, tz = cell[0] // T, cell[1] // T
+    for d in (2, 1, 3, 0):                                             # the offset of the clicked tile in the gate
+        if all((tx - d + i, tz) in own for i in range(4)):
+            return (tx - d) * T, (tx - d + 4) * T, tz * T, (tz + 1) * T
+        if all((tx, tz - d + i) in own for i in range(4)):
+            return tx * T, (tx + 1) * T, (tz - d) * T, (tz - d + 4) * T
+    return None
+
+
+def gate(g, player, name, cell):
+    """Put a gate on the own wall line at cell: it replaces the 4 wall tiles under it (AoE2: no refund). Returns the
+    site, or None (no straight wall line of 4 tiles there, not enough resources)."""
+    rect = gate_rect(g, cell)
+    if rect is None:
+        say(g, player, f"A {pretty(name).lower()} must go on 4 tiles of an own wall in a straight line.")
+        return None
+    cost = price(g, name)
+    if any(g.stock[r] < v for r, v in cost.items()):
+        say(g, player, f"Not enough resources: a {pretty(name).lower()} costs "
+                       + ", ".join(f"{v} {r}" for r, v in cost.items()) + ".")
+        return None
+    import combat                                                      # combat -> gather -> build: import it late
+    x0, x1, z0, z1 = rect
+    T, own = g.map.T, wall_tiles_of(g)
+    old = [s for t, s in own.items() if s and x0 <= t[0] * T < x1 and z0 <= t[1] * T < z1]
+    builders = {v.uuid for v in getattr(g, "villagers", {}).values() if v.site in old}
+    for s in old:
+        g.sites.remove(s)
+        if s["progress"] >= 1:                                         # a complete tile: its target goes
+            g.command(f"kill {combat.target_uuid([s['footprint'][i] for i in (0, 2, 1, 3)])}")
+        else:                                                          # the wool ring of a foundation goes
+            for p, state in s["ring"].items():
+                g.command("setblock {} {} {} ".format(*p) + s["under"].get(p, "minecraft:air"))
+    site = found(g, name, rect)
+    g.command(f"scoreboard players set {player} {OBJECTIVE} 0")
+    if builders:
+        g.build(site, builders)
+    return site
+
+
 def next_tile(g, site):
     """The nearest unfinished site of the wall line of site, or None."""
     rest = [s for s in g.sites if "line" in site and s.get("line") == site["line"] and s["progress"] < 1 and s is not site]
@@ -358,8 +428,9 @@ def found(g, name, rect):
     for c in ring:
         g.command("setblock {} {} {} ".format(*c) + f"minecraft:{color}_wool")
     g.map.blocked |= {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
-    s = footprint(name)                                                # the design, bottom up (one command each)
-    cmds = Replay(g, g.data, getattr(g.game, "version", VERSION_NAME)).building(name, g.player, x0 / g.map.T + s / 2, z0 / g.map.T + s / 2)
+    T = g.map.T                                                        # the design, bottom up (one command each)
+    cmds = Replay(g, g.data, getattr(g.game, "version", VERSION_NAME)).building(
+        name, g.player, (x0 + x1) / 2 / T, (z0 + z1) / 2 / T, along_z=z1 - z0 > x1 - x0)   # a gate along z (#1324)
     site = {"name": name, "player": g.player, "footprint": rect, "commands": cmds, "sent": 0, "progress": 0.0,
             "ring": dict.fromkeys(ring, f"minecraft:{color}_wool"), "under": {}}   # under: the design blocks on the ring
     g.sites.append(site)
