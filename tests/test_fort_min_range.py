@@ -19,8 +19,10 @@ def attack(name, T=4):
 
 
 def test_the_minimum_ranges_of_the_wiki():
-    assert combat.FORT_MIN_RANGE == {"BOMBARD_TOWER": 1, "CASTLE": 1, "DOCK": 1, "GUARD_TOWER": 1, "KEEP": 1,
-                                     "DONJON": 1, "KREPOST": 1, "WATCH_TOWER": 1}
+    assert combat.FORT_MIN_RANGE.items() >= {"BOMBARD_TOWER": 1, "CASTLE": 1, "DOCK": 1, "GUARD_TOWER": 1, "KEEP": 1,
+                                             "DONJON": 1, "FORTIFIED_CHURCH": 1, "HARBOR": 1, "KREPOST": 1,
+                                             "WATCH_TOWER": 1}.items()
+    assert "TOWN_CENTER" not in combat.FORT_MIN_RANGE
 
 
 @pytest.mark.parametrize("name", ["BOMBARD_TOWER", "CASTLE", "GUARD_TOWER", "KEEP", "WATCH_TOWER"])

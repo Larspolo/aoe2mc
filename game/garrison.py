@@ -33,7 +33,9 @@ SIZES = {                                                          # units insid
     "CASTLE": 20,
     "DOCK": 5,                                                     # fishing ships only (AoE2 DE wiki, #1949)
     "DONJON": 10,                                                  # (AoE2 DE wiki, #1873)
+    "FORTIFIED_CHURCH": 10,                                        # (AoE2 DE wiki, #1948)
     "GUARD_TOWER": 5,
+    "HARBOR": 10,                                                  # (AoE2 DE wiki, #1948)
     "KEEP": 5,
     "KREPOST": 20,                                                 # (AoE2 DE wiki, #1872)
     "TOWN_CENTER": 15,
@@ -44,11 +46,13 @@ HERBAL = 6                  # Herbal Medicine: units inside heal 6 times as fast
 HEAL_EVERY = 5.0            # AoE2 seconds between two heal passes (fewer commands)
 BASE = {"CASTLE": 5, "TOWN_CENTER": 0,                           # arrows of an empty building (AoE2 wiki), else 1
         "DOCK": 0,                                                # (#1949)
+        "FORTIFIED_CHURCH": 0, "HARBOR": 4,                       # (#1948)
         "KREPOST": 5}                                             # (#1872)
 FISHER = "FISHING_SHIP"     # the only unit that goes into a dock (#1949)
 DOOR = 2.5                  # blocks from the door cell: there a unit goes in
 UNGARRISON = (7, "oak_door", "Ungarrison", "Click: all units come out")   # a slot of the first row, before RALLY
-SLOTS = {"DOCK": 26}        # a building with a unit in slot 7 (the demolition raft): the last slot of the third row (#1949)
+SPARE = 26                  # the last slot of the third row: UNGARRISON of a building with an item in slot 7 (the
+                            # demolition raft of the dock #1949, Illumination of the fortified church #1948)
 INSIDE = "{Invulnerable:1b,NoAI:1b,CustomNameVisible:0b}"         # the NBT of a garrisoned unit (#807)
 OUTSIDE = "{Invulnerable:0b}"                                     # NoAI stays: the next order turns on the AI
 CREW = "{Invulnerable:1b}"                                        # the crew of a ship in a dock keeps its AI (#1949)
@@ -75,12 +79,15 @@ def start(g):
 def arrows(building, names):
     """The arrows of one shot of the building with the units `names` inside: its BASE, and 1 more for each villager or
     foot archer (an archer that is not cavalry, a camel or an elephant), as in AoE2. A bombard tower shoots one cannon
-    ball (#1375). A dock: 1 for each fishing ship, at most SIZES (AoE2 DE: up to 5 arrows, #1949)."""
+    ball (#1375). A dock: 1 for each fishing ship, at most SIZES (AoE2 DE: up to 5 arrows, #1949). A fortified church:
+    1 for each villager, no soldier (AoE2 DE: villagers and relics, #1948)."""
     import combat                                                  # combat imports gather
     if building == "BOMBARD_TOWER":
         return 1
     if building == "DOCK":
         return min(SIZES["DOCK"], sum(n.startswith(FISHER) for n in names))
+    if building == "FORTIFIED_CHURCH":
+        return sum(n.startswith("VILLAGER") for n in names)
     riders = {combat.CAV, combat.CAM, combat.ELE}
     return BASE.get(building, 1) + sum(n.startswith("VILLAGER") or combat.ARC in (c := set(combat.stats(n).classes)) and not c & riders
                    for n in names)
@@ -95,8 +102,10 @@ def arrows_command(g, rect):
 
 
 def ungarrison(building):
-    """The menu item UNGARRISON of the building, in its slot (SLOTS)."""
-    return (SLOTS.get(building, UNGARRISON[0]), *UNGARRISON[1:])
+    """The menu item UNGARRISON of the building, in its slot: SPARE when a menu item of the building is in its slot."""
+    import train                                                   # train imports garrison
+    used = {train.ITEMS[n][0] for n in train.TRAINS.get(building, ())}
+    return (SPARE if UNGARRISON[0] in used else UNGARRISON[0], *UNGARRISON[1:])
 
 
 def door(g, rect):
