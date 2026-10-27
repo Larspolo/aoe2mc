@@ -141,7 +141,7 @@ class Guide:
         ux, uz = ((toward[0] - x) / d, (toward[1] - z) / d) if d else (0.7, 0.7)
         px, pz = x + 6 * ux, z + 6 * uz
         g.command(f"tag @a add {replay.VIEWER}")                    # else overview(join=True) moves them up high
-        g.command("gamemode creative @a")
+        g.command("gamemode adventure @a")                          # a double tap of Shift: spectator (Viewer.onInput, #1642)
         face = f"entity {uuid} eyes" if uuid else f"{x:.1f} ~ {z:.1f}"
         if y is None:                                               # no height: the top of the ground (Minecraft)
             g.command(f"spreadplayers {px:.1f} {pz:.1f} 0 1 false @a")
