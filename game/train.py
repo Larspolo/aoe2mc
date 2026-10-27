@@ -45,6 +45,7 @@ get 15 more hit points) in the Castle Age (#1261).
 The market trains trade carts (#1253): a trade cart also joins g.soldiers, and trade.py walks it between two own markets.
 It researches Caravan (trade carts walk 20 % faster, SPEEDS) in the Castle Age and Guilds (trading fee 15 %, market.FEES)
 in the Imperial Age (#1254). Coinage and Banking change the tribute fee: the game program has no tribute yet.
+The barracks researches Squires in the Castle Age (#1415): all infantry of the player walks 10 % faster (SPEEDS, a class).
 The university researches Fortified Wall in the Castle Age (#1326, WALL_UPGRADES): the new and the complete own stone
 walls and gates get the fortified design and its AoE2 hit points and armor (build.design, build.upgrade).
 An age gives the complete own walls and gates the AoE2 hit points of the new age (#1372, combat.WALLS, build.upgrade).
@@ -126,6 +127,7 @@ COSTS = {"VILLAGER_MALE": {"food": 50}, "MILITIA": {"food": 60, "gold": 20},   #
          "SKIRMISHER": {"food": 25, "wood": 35},
          "STONE_MINING": {"food": 100, "wood": 75},
          "SPEARMAN": {"food": 35, "wood": 25},
+         "SQUIRES": {"food": 100},                                    # AoE2 DE wiki (#1415)
          "TEUTONIC_KNIGHT": {"food": 85, "gold": 30},
          "THROWING_AXEMAN": {"food": 55, "gold": 25},
          "TRADE_CART": {"wood": 100, "gold": 50},
@@ -189,6 +191,7 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "SIEGE_RAM_UPGRADE": 75,
                "SKIRMISHER": 22,
                "SPEARMAN": 22,
+               "SQUIRES": 40,
                "STONE_MINING": 30,
                "TEUTONIC_KNIGHT": 12,
                "THROWING_AXEMAN": 13,
@@ -197,7 +200,9 @@ TRAIN_TIMES = {"VILLAGER_MALE": 25, "MILITIA": 21, "ARCHER": 35, "LOOM": 25, "FE
                "WAR_ELEPHANT": 25,
                "WHEELBARROW": 75,
                "WOAD_RAIDER": 10}
-TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", "CASTLE_AGE", "IMPERIAL_AGE"), "BARRACKS": ("MILITIA", "SPEARMAN", "MAN_AT_ARMS_UPGRADE"),   # the units and technologies of each
+TRAINS = {"TOWN_CENTER": ("VILLAGER_MALE", "LOOM", "FEUDAL_AGE", "WHEELBARROW", "CASTLE_AGE", "IMPERIAL_AGE"),   # the units and technologies of each
+          "BARRACKS": ("MILITIA", "SPEARMAN", "MAN_AT_ARMS_UPGRADE",
+                       "SQUIRES"),                                             # (#1415)
           "ARCHERY_RANGE": ("ARCHER", "SKIRMISHER"),                                         # building (#654, #670, #655)
           "BLACKSMITH": ("FORGING", "SCALE_MAIL_ARMOR", "FLETCHING",            # (#675, #725, #724, #937, #938)
                          "PADDED_ARCHER_ARMOR", "SCALE_BARDING_ARMOR",
@@ -278,11 +283,13 @@ TECHS = {"BLOODLINES": lambda name, s: s._replace(hp=s.hp + 20) if "cavalry" in 
          "SIEGE_ENGINEERS": engineers,
          "SIEGE_ONAGER_UPGRADE": lambda name, s: s,
          "SIEGE_RAM_UPGRADE": lambda name, s: s,
+         "SQUIRES": lambda name, s: s,                             # the walk speed: SPEEDS
          "STONE_MINING": lambda name, s: s,                        # an economy technology: gather.WORK_TECHS
          "FEUDAL_AGE": lambda name, s: s,   # the change of each technology to the AoE2 values
          "WHEELBARROW": lambda name, s: s}                         # no combat change: gather.CARRY and gather.PACE
-SPEEDS = {"CARAVAN": ("TRADE_CART", 1.2),                         # technology: the unit and its walk speed factor
-          "FERVOR": ("MONK", 1.15)}
+SPEEDS = {"CARAVAN": ("TRADE_CART", 1.2),                         # technology: the unit (or a class of combat.STATS:
+          "FERVOR": ("MONK", 1.15),                                # lower case) and its walk speed factor
+          "SQUIRES": ("infantry", 1.1)}                            # (#1415)
 UPGRADES = {                                                       # technology: the unit and its new unit (#941)
     "CAPPED_RAM_UPGRADE": ("BATTERING_RAM", "CAPPED_RAM"),           # the siege upgrades of AoE2 DE (#1352)
     "HEAVY_SCORPION_UPGRADE": ("SCORPION", "HEAVY_SCORPION"),
@@ -332,6 +339,7 @@ TECH_AGE = {                                                       # the age of 
     "SIEGE_ENGINEERS": 3,
     "SIEGE_ONAGER_UPGRADE": 3,
     "SIEGE_RAM_UPGRADE": 3,
+    "SQUIRES": 2,
     "STONE_MINING": 1,
     "WHEELBARROW": 1,
 }
@@ -358,6 +366,7 @@ ITEMS = {"VILLAGER_MALE": (0, "villager_spawn_egg", "Villager"),   # menu slot, 
          "SIEGE_RAM_UPGRADE": (3, "book", "Siege Ram"),
          "SKIRMISHER": (1, "drowned_spawn_egg", "Skirmisher"),
          "SPEARMAN": (1, "zombie_spawn_egg", "Spearman"),
+         "SQUIRES": (4, "book", "Squires"),                        # slot 3: Supplies
          "BATTERING_RAM": (0, "minecart", "Battering Ram"),         # a siege unit is a minecart (units.siege)
          "BERSERK": (0, "zombie_spawn_egg", "Berserk"),
          "BLOODLINES": (1, "book", "Bloodlines"),
@@ -469,6 +478,7 @@ HELP = {"ARCHER": "Ranged. Strong vs. infantry; weak vs. skirmishers.",
         "SIEGE_RAM_UPGRADE": "Upgrades capped rams to siege rams.",
         "SKIRMISHER": "Strong vs. archers, spears; weak vs. cavalry.",
         "SPEARMAN": "Strong vs. cavalry; weak vs. archers.",
+        "SQUIRES": "Infantry +10 % speed.",
         "STONE_MINING": "Villagers mine stone 15 % faster.",
         "TEUTONIC_KNIGHT": "Teutonic infantry. Slow, strong armor.",
         "THROWING_AXEMAN": "Frankish infantry. Melee attack at range.",
@@ -765,8 +775,14 @@ def stats(g, name):
 
 def speed(g, name):
     """The factor of the walk speed of unit name: the bonus of the civilization (civs.speed) and the technologies of the
-    player (SPEEDS: Fervor, #1261)."""
-    return civs.speed(g, name) * math.prod(f ** count(g, t) for t, (unit, f) in SPEEDS.items() if unit == name)
+    player (SPEEDS: Fervor, #1261; Squires for the class infantry, #1415)."""
+    return civs.speed(g, name) * math.prod(f ** count(g, t) for t, (unit, f) in SPEEDS.items() if faster(unit, name))
+
+
+def faster(unit, name):
+    """True when the SPEEDS entry unit (a unit name, or a class of combat.STATS in lower case) is unit name."""
+    import combat                                                  # combat imports gather, gather imports this module
+    return unit == name or unit.islower() and unit in combat.stats(name).classes
 
 
 def research(g, entry):
@@ -804,7 +820,7 @@ def research(g, entry):
     if entry["name"] in SPEEDS:                                    # the live units walk faster (Fervor)
         import ai                                                  # ai imports gather, gather imports this module
         for uuid, name in g.soldiers.items():
-            if name == SPEEDS[entry["name"]][0]:
+            if faster(SPEEDS[entry["name"]][0], name):
                 g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))
     if entry["name"] in REQUIRES:                                  # an age: all players see it, as in AoE2
         import ai                                                  # ai imports gather, gather imports this module
