@@ -1,0 +1,115 @@
+{"name": "HOUSE", "cost": {"wood": 25}, "time": 25, "icon": "spruce_stairs"}
+{"name": "LUMBER_CAMP", "cost": {"wood": 100}, "time": 35, "icon": "oak_log"}
+{"name": "MINING_CAMP", "cost": {"wood": 100}, "time": 35, "icon": "raw_gold_block"}
+{"name": "MILL", "cost": {"wood": 100}, "time": 35, "icon": "white_wool"}
+{"name": "FARM", "cost": {"wood": 60}, "time": 15, "icon": "wheat"}
+{"name": "BARRACKS", "cost": {"wood": 175}, "time": 50, "icon": "stone_brick_wall"}
+{"name": "BLACKSMITH", "cost": {"wood": 150}, "time": 40, "icon": "anvil", "age": 1}
+{"name": "BOMBARD_TOWER", "cost": {"gold": 100, "stone": 125}, "time": 80, "icon": "polished_basalt", "age": 3, "needs": "BOMBARD_TOWER_TECH"}
+{"name": "ARCHERY_RANGE", "cost": {"wood": 175}, "time": 50, "icon": "target", "age": 1}
+{"name": "STABLE", "cost": {"wood": 175}, "time": 50, "icon": "hay_block", "age": 1}
+{"name": "TOWN_CENTER", "cost": {"wood": 275, "stone": 100}, "time": 150, "icon": "cobblestone"}
+{"name": "CASTLE", "cost": {"stone": 650}, "time": 200, "icon": "stone_bricks", "age": 2}
+{"name": "DOCK", "cost": {"wood": 150}, "time": 35, "icon": "dark_oak_planks"}
+{"name": "FISH_TRAP", "cost": {"wood": 100}, "time": 40, "icon": "bamboo_fence", "age": 1}
+{"name": "FOLWARK", "cost": {"wood": 100}, "time": 40, "icon": "white_terracotta"}
+{"name": "FORTIFIED_CHURCH", "cost": {"wood": 200}, "time": 50, "icon": "candle", "age": 2}
+{"name": "GATE", "cost": {"stone": 30}, "time": 70, "icon": "iron_bars", "gate": true, "age": 1}
+{"name": "KREPOST", "cost": {"stone": 350}, "time": 150, "icon": "red_sandstone", "age": 2}
+{"name": "MARKET", "cost": {"wood": 175}, "time": 60, "icon": "barrel", "age": 1}
+{"name": "MONASTERY", "cost": {"wood": 175}, "time": 40, "icon": "bell", "age": 2}
+{"name": "PALISADE_GATE", "cost": {"wood": 30}, "time": 30, "icon": "stripped_spruce_log", "gate": true}
+{"name": "PALISADE_WALL", "cost": {"wood": 3}, "time": 7, "icon": "spruce_fence", "wall": true}
+{"name": "SIEGE_WORKSHOP", "cost": {"wood": 200}, "time": 40, "icon": "grindstone", "age": 2}
+{"name": "STONE_WALL", "cost": {"stone": 5}, "time": 10, "icon": "mossy_stone_bricks", "wall": true, "age": 1}
+{"name": "UNIVERSITY", "cost": {"wood": 200}, "time": 60, "icon": "bookshelf", "age": 2}
+{"name": "WATCH_TOWER", "cost": {"wood": 35, "stone": 125}, "time": 80, "icon": "cracked_stone_bricks", "age": 1}
+{"name": "WONDER", "cost": {"wood": 1000, "gold": 1000, "stone": 1000}, "time": 3500, "icon": "weathered_cut_copper_stairs", "age": 3}
+{"name": "ARBALESTER", "age": 3}
+{"name": "ARCHER", "age": 1}
+{"name": "BATTERING_RAM", "age": 2}
+{"name": "BATTLE_ELEPHANT", "age": 2}
+{"name": "BOMBARD_CANNON", "age": 3, "needs": "CHEMISTRY"}
+{"name": "CAMEL_RIDER", "age": 2}
+{"name": "CANNON_GALLEON", "age": 3, "needs": "CHEMISTRY"}
+{"name": "CAPPED_RAM", "age": 3}
+{"name": "CARAVEL", "age": 2}
+{"name": "CASTLE_AGE", "age": 1, "age_tech": 2}
+{"name": "CATAPULT_GALLEON", "age": 3}
+{"name": "CAVALIER", "age": 3}
+{"name": "CAVALRY_ARCHER", "age": 2}
+{"name": "CHAMPION", "age": 3}
+{"name": "CROSSBOWMAN", "age": 2}
+{"name": "DEMOLITION_RAFT", "age": 1}
+{"name": "DEMOLITION_SHIP", "age": 2}
+{"name": "DRAGON_SHIP", "age": 3}
+{"name": "DROMON", "age": 3}
+{"name": "EAGLE_SCOUT", "age": 1}
+{"name": "EAGLE_WARRIOR", "age": 2}
+{"name": "ELEPHANT_ARCHER", "age": 2}
+{"name": "ELITE_BATTLE_ELEPHANT", "age": 3}
+{"name": "ELITE_CANNON_GALLEON", "age": 3}
+{"name": "ELITE_CARAVEL", "age": 3}
+{"name": "ELITE_EAGLE_WARRIOR", "age": 3}
+{"name": "ELITE_ELEPHANT_ARCHER", "age": 3}
+{"name": "ELITE_FIRE_LANCER", "age": 3}
+{"name": "ELITE_GENITOUR", "age": 3}
+{"name": "ELITE_LONGSHIP", "age": 3}
+{"name": "ELITE_SHRIVAMSHA_RIDER", "age": 3}
+{"name": "ELITE_SKIRMISHER", "age": 2}
+{"name": "ELITE_STEPPE_LANCER", "age": 3}
+{"name": "ELITE_TURTLE_SHIP", "age": 3}
+{"name": "ELITE_VARANGIAN_GUARD", "age": 3}
+{"name": "FAST_FIRE_SHIP", "age": 3}
+{"name": "FEUDAL_AGE", "age_tech": 1}
+{"name": "FIRE_GALLEY", "age": 1}
+{"name": "FIRE_LANCER", "age": 2}
+{"name": "FIRE_SHIP", "age": 2}
+{"name": "GALLEON", "age": 3}
+{"name": "GALLEY", "age": 1}
+{"name": "GENITOUR", "age": 2}
+{"name": "HALBERDIER", "age": 3}
+{"name": "HAND_CANNONEER", "age": 3, "needs": "CHEMISTRY"}
+{"name": "HEAVY_CAMEL_RIDER", "age": 3}
+{"name": "HEAVY_CAVALRY_ARCHER", "age": 3}
+{"name": "HEAVY_DEMOLITION_SHIP", "age": 3}
+{"name": "HEAVY_HEI_GUANG_CAVALRY", "age": 3}
+{"name": "HEAVY_MOUNTED_CROSSBOWMAN", "age": 3}
+{"name": "HEI_GUANG_CAVALRY", "age": 2}
+{"name": "HULK", "age": 1}
+{"name": "HUSSAR", "age": 3}
+{"name": "IMPERIAL_AGE", "age": 2, "age_tech": 3}
+{"name": "IMPERIAL_SKIRMISHER", "age": 3}
+{"name": "KEEP", "age": 3}
+{"name": "KNIGHT", "age": 2}
+{"name": "LIGHT_CAVALRY", "age": 2}
+{"name": "LONGSHIP", "age": 2}
+{"name": "LONG_SWORDSMAN", "age": 2}
+{"name": "LOU_CHUAN", "age": 3}
+{"name": "MANGONEL", "age": 2}
+{"name": "MISSIONARY", "age": 2}
+{"name": "MONK", "age": 2}
+{"name": "MOUNTED_CROSSBOWMAN", "age": 2}
+{"name": "ONAGER", "age": 3}
+{"name": "PALADIN", "age": 3}
+{"name": "PIKEMAN", "age": 2}
+{"name": "SCORPION", "age": 2}
+{"name": "SCOUT_CAVALRY", "age": 1}
+{"name": "SHRIVAMSHA_RIDER", "age": 2}
+{"name": "SIEGE_RAM", "age": 3}
+{"name": "SIEGE_TOWER", "age": 2}
+{"name": "SKIRMISHER", "age": 1}
+{"name": "SPEARMAN", "age": 1}
+{"name": "STEPPE_LANCER", "age": 2}
+{"name": "THIRISADAI", "age": 3}
+{"name": "TRADE_CART", "age": 1}
+{"name": "TRADE_COG", "age": 1}
+{"name": "TREBUCHET", "age": 3}
+{"name": "TURTLE_SHIP", "age": 2}
+{"name": "TWO_HANDED_SWORDSMAN", "age": 3}
+{"name": "VARANGIAN_GUARD", "age": 2}
+{"name": "WAR_HULK", "age": 2}
+{"name": "WINGED_HUSSAR", "age": 3}
+{"name": "XOLOTL_WARRIOR", "age": 2}
+{"name": "CARRACK", "age": 3}
+{"name": "IMPERIAL_CAMEL_RIDER", "age": 3}
