@@ -47,8 +47,9 @@ def check_units(row):
 
 def check_buildings(row):
     if "hp" in row:
-        form(row, {"name": str, **STATS, "sight": int}, {"note": str})
+        form(row, {"name": str, **STATS, "sight": int}, {"as": str, "note": str})
         stats(row)
+        assert row.get("as", "HOUSE") in NAMES["buildings.jsonl"], row["name"]   # combat.STANDS_FOR
     else:                                                  # only a line of sight: no target
         form(row, {"name": str, "sight": int}, {"note": str})
 
@@ -79,9 +80,11 @@ def check_civs(row):
         assert group in civs.GROUPS and value in (*combat.Stats._fields, "speed"), (n, group, value)
         assert len(ages) == 4 and all(isinstance(a, NUMBER) for a in ages), (n, group)
     for what, res, ages in row.get("costs", ()):
-        rules = ("buildings", "buildings but farms", "technologies", "ages")
         names = NAMES["train.jsonl"] | set(build.COSTS)
-        assert set(what) <= names if isinstance(what, list) else what in civs.GROUPS or what in rules, (n, what)
+        if isinstance(what, list):
+            assert set(what) <= names, (n, what)
+        else:                                              # a rule of civs.has that covers at least one name
+            assert any(civs.has(what, x) for x in sorted(names | NAMES["units.jsonl"])), (n, what)
         assert res is None or res in RES, (n, what, res)
         assert len(ages) == 4 and all(isinstance(a, NUMBER) for a in ages), (n, what)
 
