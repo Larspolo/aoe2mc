@@ -1,0 +1,60 @@
+name: Bundles
+
+# App bundles that run without Python (#1541, part of #1539): one folder per system with the window (aoe2mc-gui)
+# and the command line (aoe2mc), built with PyInstaller from packaging/aoe2mc.spec (docs/packaging.md). Each job
+# converts a scenario and a record with the frozen command line: a missing data file gives an error only at run time.
+on:
+  workflow_dispatch:
+  workflow_call:        # the release workflow (#1542)
+  pull_request:
+    paths: [packaging/**, .github/workflows/bundles.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: windows-latest, name: windows-x86_64}
+          - {os: macos-latest, name: macos-arm64}
+          - {os: macos-15-intel, name: macos-x86_64}   # macos-13 is retired: the last x86_64 macOS image
+          - {os: ubuntu-22.04, name: linux-x86_64}     # an old glibc: the bundle runs on more Linux systems
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: packaging/requirements.txt
+      - run: python -m pip install -r packaging/requirements.txt
+      - name: Build
+        run: python -m PyInstaller --noconfirm packaging/aoe2mc.spec
+      - name: Convert a scenario and a record with the frozen command line
+        run: |
+          for f in test_village.aoe2scenario de-64.3.aoe2record; do
+            dist/aoe2mc/aoe2mc "samples/$f" "out-$f"
+            test -f "out-$f/level.dat"
+            find "out-$f" -path "*/region/*.mca" | grep -q .
+          done
+      - name: Open the frozen window
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get install -y xvfb
+          # the window stays open until the timeout (exit 124); an error at the start ends it before that
+          set +e
+          timeout 20 xvfb-run -a dist/aoe2mc/aoe2mc-gui 2> gui.err
+          rc=$?
+          cat gui.err
+          test "$rc" = 124 && ! grep -q Traceback gui.err
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aoe2mc-${{ matrix.name }}
+          path: dist/aoe2mc
