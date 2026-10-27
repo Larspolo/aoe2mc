@@ -91,11 +91,12 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *             [reload ticks]                   the AoE2 values of a unit (#514, game/combat.py stats_command); a melee
  *                                              unit hits once per reload (#848, default 20: the vanilla cooldown)
  *   aoe stop <selector>                        stop the walk and turn the AI off: the unit stands still (#437)
- *   aoe range <selector> <blocks> <ticks> [blast]
+ *   aoe range <selector> <blocks> <ticks> [blast [min]]
  *                                              a ranged unit shoots from this range, one shot per ticks (#515); a
  *                                              shot with a blast radius in blocks hits all units near the target, and
  *                                              a siege unit (a minecart) shoots too (#1050); blast 0: a siege shot
- *                                              that hits only the target (the Scorpion, #1062)
+ *                                              that hits only the target (the Scorpion, #1062); min: no shot at a
+ *                                              target nearer than these blocks (the AoE2 minimum range, #1350)
  *   aoe sees <player> <uuid>                   "Sees: 1" or "Sees: 0" (Player#canSee), for checks
  *   aoe show <players> <uuid> ...              Player#showEntity: the players see these entities again (#1302)
  *   aoe sight <selector> <blocks>              an idle unit attacks an enemy in this line of sight (#775)
@@ -239,7 +240,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     private final Map<UUID, Order> orders = new HashMap<>();
 
-    private record Range(double blocks, int ticks, double blast, boolean siege) {
+    // min: no shot at a target nearer than this (blocks, the AoE2 minimum range of the Mangonel line ..., #1350)
+    private record Range(double blocks, int ticks, double blast, boolean siege, double min) {
     }
 
     private final Map<UUID, Range> ranges = new HashMap<>();
@@ -288,9 +290,13 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             LivingEntity t = mob.getTarget();
             // a building: the range to its nearest side, and no sight of the eye of its target in the walls (#608)
             boolean wall = buildings.containsKey(t.getUniqueId());
-            boolean near = (wall ? gap(mob, t) : mob.getLocation().distanceSquared(t.getLocation()))
-                    <= range.blocks * range.blocks && (wall || mob.hasLineOfSight(t));
-            if (near) {
+            double d2 = wall ? gap(mob, t) : mob.getLocation().distanceSquared(t.getLocation());
+            boolean near = d2 <= range.blocks * range.blocks && (wall || mob.hasLineOfSight(t));
+            boolean close = d2 < range.min * range.min;  // inside the minimum range: it stays and does not shoot (#1350)
+            if (close) {
+                mob.getPathfinder().stopPathfinding();
+                near = false;
+            } else if (near) {
                 mob.getPathfinder().stopPathfinding();
             } else if (held.contains(mob.getUniqueId())) {
                 mob.getPathfinder().stopPathfinding();               // stand ground: no walk (#1104)
@@ -1569,11 +1575,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Stats: " + n + " units");
             return true;
         }
-        if ((args.length == 4 || args.length == 5) && args[0].equals("range")) {
+        if (args.length >= 4 && args.length <= 6 && args[0].equals("range")) {
             Range r;
             try {
                 r = new Range(Double.parseDouble(args[2]), Integer.parseInt(args[3]),
-                        args.length == 5 ? Double.parseDouble(args[4]) : 0, args.length == 5);
+                        args.length >= 5 ? Double.parseDouble(args[4]) : 0, args.length >= 5,
+                        args.length == 6 ? Double.parseDouble(args[5]) : 0);
             } catch (NumberFormatException e) {
                 sender.sendMessage("Bad number: " + e.getMessage());
                 return true;

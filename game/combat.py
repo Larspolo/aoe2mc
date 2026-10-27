@@ -7,7 +7,7 @@ base unit: no Blacksmith or University upgrades, no civilization bonuses. `range
 for each armor class of the target. `damage` is the AoE2 damage rule (#514); the Paper plugin applies it
 (`aoe stats` gives a mob its values, `stats_command`).
 A ranged unit shoots from its AoE2 range, one shot per reload time (#515, `aoe range`, `range_command`).
-The Mangonel line hits all units in its blast radius around the target (#1050, `BLAST`).
+The Mangonel line hits all units in its blast radius around the target (#1050, `BLAST`). It does not shoot at a target inside its minimum range (`MIN_RANGE`, #1350).
 A melee unit hits once per reload time too (#848, the last value of `stats_command`).
 An idle soldier attacks the nearest enemy unit in its AoE2 line of sight (#775, `aoe sight`, `sight_command`).
 """
@@ -297,6 +297,19 @@ BLAST = {"BOMBARD_CANNON": 0.5,
          "ONAGER": 1.25,
          "ROCKET_CART": 1.0,
          "SIEGE_ONAGER": 1.5}
+MIN_RANGE = {"BOMBARD_CANNON": 5,     # tiles: no shot at a unit nearer (AoE2 DE, wiki infobox "MinRange", #1350)
+             "ELITE_ORGAN_GUN": 1,
+             "HEAVY_ROCKET_CART": 2.5,
+             "HEAVY_SCORPION": 2,
+             "HOUFNICE": 5,
+             "MANGONEL": 3,
+             "ONAGER": 3,
+             "ORGAN_GUN": 1,
+             "ROCKET_CART": 2.5,
+             "SCORPION": 2,
+             "SIEGE_ONAGER": 3,
+             "TRACTION_TREBUCHET": 4,
+             "TREBUCHET": 4}
 DEFAULT, BUILDING = Stats(40, 4, 0, 0, 0, 2.0), Stats(1000, 0, 0, 7, 0, 0.0, {}, ("building",))
 SLIME = 0.52                    # blocks of width and height per slime size: the target of a building (#517)
 INVISIBLE = 'active_effects:[{id:"minecraft:invisibility",duration:-1,show_particles:0b}]'   # for ever, no particles
@@ -341,10 +354,12 @@ def range_command(uuid, name, T, rate=NORMAL, s=None):
     reload time at `rate` game seconds per real second (default: Normal game speed, as the walk speed). None for a
     melee unit. s: the values with technologies (Fletching, #724), default those of AoE2 unit name. A siege unit (a
     minecart) gets its blast radius in blocks last, 0 when its shot hits only the target (the Scorpion, #1062): the
-    plugin then lets the minecart shoot too (#1050)."""
+    plugin then lets the minecart shoot too (#1050). Then its minimum range in blocks (MIN_RANGE, #1350), when it has
+    one: it does not shoot at a target nearer than that."""
     s = s or stats(name)
     cart = (units.classify(name) or {}).get("id") == "minecraft:minecart"
     blast = f" {BLAST.get(name, 0) * T}" if name in BLAST or cart else ""
+    blast += f" {MIN_RANGE.get(name, 0) * T}" * bool(blast and name in MIN_RANGE)
     return s.range and s.reload and f"aoe range {uuid} {s.range * T} {max(1, round(s.reload / rate * 20))}{blast}" or None
 
 

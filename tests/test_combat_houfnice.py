@@ -11,6 +11,6 @@ def test_the_values_of_the_wiki():
 
 
 def test_both_get_a_siege_range_with_their_blast():
-    assert combat.range_command("u", "HOUFNICE", 4).split()[3:] == ["48", str(round(6.5 / 1.7 * 20)), "2.8"]
-    assert combat.range_command("u", "HEAVY_ROCKET_CART", 4).split()[-1] == "5.0"
-    assert combat.range_command("u", "ROCKET_CART", 4).split()[-1] == "4.0"
+    assert combat.range_command("u", "HOUFNICE", 4).split()[3:6] == ["48", str(round(6.5 / 1.7 * 20)), "2.8"]
+    assert combat.range_command("u", "HEAVY_ROCKET_CART", 4).split()[5] == "5.0"     # then the minimum range (#1350)
+    assert combat.range_command("u", "ROCKET_CART", 4).split()[5] == "4.0"
