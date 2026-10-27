@@ -21,4 +21,4 @@ def test_slow_to_98_percent_in_the_last_two_hours():
 
 def test_above_90_percent_early_uses_the_end_aim():
     assert target(0.92, 3.0) == usage.LO                                # no negative aim
-    assert target(0.50, 2.1) == usage.HI                                # 6 minutes to reach 90 %: as fast as possible
+    assert target(0.50, 2.1) == min(usage.HI, round(0.40 / 0.25 / 0.05))   # 6 minutes to reach 90 %: the quarter-hour floor

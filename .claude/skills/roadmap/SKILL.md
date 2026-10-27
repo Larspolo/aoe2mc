@@ -1,6 +1,6 @@
 ---
 name: roadmap
-description: Turn the three goals of aoe2mc (convert maps, play AoE2 in Minecraft, replay a recorded game) into epics. Use in the queue refill (autopilot step 5) when the open epics have no work left, and when `python3 tools/claim.py 0 --roadmap` gives the roadmap review to the run (once per 2 hours) to review the feature list in docs/ROADMAP.md.
+description: Turn the three goals of aoe2mc (convert maps, play AoE2 in Minecraft, replay a recorded game) into epics. Use in the queue refill (autopilot step 5) when the open epics have no work left, and when `python3 tools/claim.py 0 --roadmap` gives the roadmap review to the run (once per 100 merged PRs) to review the feature list in docs/ROADMAP.md.
 ---
 
 # Plan toward the goals
@@ -41,7 +41,7 @@ column of `docs/RELEASE.md`.
 
 ## Review the feature list (the roadmap review)
 
-When `python3 tools/claim.py 0 --roadmap` exits 0 (one run per 2-hour slot, #898), after step 8 of the autopilot skill:
+When `python3 tools/claim.py 0 --roadmap` exits 0 (one run after each 100 merged PRs, #898, #2039), after step 8 of the autopilot skill:
 
 1. Mark a feature done (`[x]`, with the epic number) when its epic is closed.
 2. Compare each goal with AoE2 DE and with the code: what does a player see or do in AoE2 that the converter, the
