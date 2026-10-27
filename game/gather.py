@@ -121,6 +121,7 @@ FISH_FOOD = {"BOX_TURTLES": 200,
              "SHORE_FISH": 200}
 SHORE_FISH = {"BOX_TURTLES", "SHORE_FISH"}
 SHIP_WORK = {"deep": 0.42, "shore": 0.24}                          # the work rate of a fishing ship (AoE2 DE wiki)
+SHIP_TECHS = {"FISHING_LINES": (1.1, 5), "GILLNETS": (1.1, 5)}     # the work rate factor and the more food of a trip (#1439)
 HERDS = {"COW", "GOAT", "GOOSE", "LLAMA", "PIG", "SHEEP", "TURKEY", "WATER_BUFFALO"}   # herdable animals: shepherds (civs.WORK)
 VILLAGER_HIT = 3, 2.0                                              # AoE2 villager attack and reload (game seconds)
 FARM_FOOD = 175                                                    # food in one farm, as in AoE2 DE (no upgrades)
