@@ -1,0 +1,73 @@
+{
+ "before": {
+  "s": 31,
+  "sites": [
+   {
+    "name": "FARM",
+    "footprint": [
+     132,
+     144,
+     148,
+     160
+    ],
+    "done": true
+   },
+   {
+    "name": "HOUSE",
+    "footprint": [
+     128,
+     136,
+     120,
+     128
+    ],
+    "done": true
+   },
+   {
+    "name": "FARM",
+    "footprint": [
+     148,
+     160,
+     132,
+     144
+    ],
+    "done": false
+   }
+  ],
+  "queues": {
+   "(128, 144, 128, 144)": [
+    {
+     "name": "VILLAGER_MALE",
+     "progress": 0.0,
+     "player": "@a[tag=aoe2mc.bot2]",
+     "waits": true
+    },
+    {
+     "name": "VILLAGER_MALE",
+     "progress": 0.0,
+     "player": "@a[tag=aoe2mc.bot2]"
+    }
+   ]
+  },
+  "p2": "Test passed. Count: 5"
+ },
+ "end": {
+  "ended": "Victory",
+  "s": 3.0,
+  "bots": 0,
+  "chat": [
+   "[17:44:33] [Render thread/INFO]: [System] [CHAT] aoe2mc joined the game",
+   "[17:44:33] [Render thread/INFO]: [System] [CHAT] Your game mode has been updated to Adventure Mode",
+   "[17:44:33] [Render thread/INFO]: [System] [CHAT] Build: /trigger aoe_build set 1: House (25 wood)\\n/trigger aoe_build set 2: Lumber Camp (100 wood)\\n/trigger aoe_build set 3: Mining Camp (100 wood)\\n/trigger aoe_build set 4: Mill (100 wood)\\n/trigger aoe_build set 5: Farm (60 wood)\\n/trigger aoe_build set 6: Barracks (175 wood)\\n/trigger aoe_build set 7: Blacksmith (150 wood)\\n/trigger aoe_build set 8: Bombard Tower (100 gold, 125 stone)\\n/trigger aoe_build set 9: Archery Range (175 wood)\\n/trigger aoe_build set 10: Stable (175 wood)\\n/trigger aoe_build set 11: Town Center (275 wood, 100 stone)\\n/trigger aoe_build set 12: Castle (650 stone)\\n/trigger aoe_build set 13: Dock (150 wood)\\n/trigger aoe_build set 14: Fish Trap (100 wood)\\n/trigger aoe_build set 15: Gate (30 stone)\\n/trigger aoe_build set 16: Market (175 wood)\\n/trigger aoe_build set 17: Monastery (175 wood)\\n/trigger aoe_build set 18: Palisade Gate (30 wood)\\n/trigger aoe_build set 19: Palisade Wall (3 wood)\\n/trigger aoe_build set 20: Siege Workshop (200 wood)\\n/trigger aoe_build set 21: Stone Wall (5 stone)\\n/trigger aoe_build set 22: University (200 wood)\\n/trigger aoe_build set 23: Watch Tower (35 wood, 125 stone)\\n/trigger aoe_build set 24: Wonder (1000 wood, 1000 gold, 1000 stone)",
+   "[17:45:12] [Render thread/INFO]: [System] [CHAT] Player 2 is defeated."
+  ]
+ },
+ "after": {
+  "p2": "Test failed",
+  "p2_team": "Test failed",
+  "site_blocks": {
+   "FARM(132, 144, 148, 160)": "No blocks were filled",
+   "HOUSE(128, 136, 120, 128)": "No blocks were filled",
+   "FARM(148, 160, 132, 144)": "No blocks were filled"
+  }
+ }
+}
