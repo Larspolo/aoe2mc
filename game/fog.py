@@ -24,14 +24,24 @@ def units(g):
     return own, {u: n for u, n in foe.items() if u not in own}     # a converted unit is own (monk.py)
 
 
+def targets(g):
+    """The target UUIDs of the own and allied buildings and construction sites (combat.target_uuid): Gather.where
+    answers the live ones in the same commands as the units, so a destroyed building costs no command (#1470)."""
+    import combat, gather
+    return {combat.target_uuid(fp) for h in [g, *(b.g for b in g.bots)] if gather.allied(g.players, g.player, h.player)
+            for fp in [o["footprint"] for o in h.data["objects"]
+                       if o["kind"] == "building" and o["player"] == h.player and "footprint" in o]
+            + [[s["footprint"][i] for i in (0, 2, 1, 3)] for s in h.sites]}
+
+
 def update(g, pos):
-    """The hide and show commands for the feet positions pos {uuid: (x, y, z)} of the units; a dead unit is not in
-    pos, so it gives no command. A unit inside a siege tower stays as siege_tower.py hid it."""
+    """The hide and show commands for the feet positions pos {uuid: (x, y, z)} of the units and the building targets
+    (targets); a dead unit is not in pos, so it gives no command, and a destroyed building gives no sight. A unit inside a siege tower stays as siege_tower.py hid it."""
     import gather
     state = vars(g).setdefault("fog", {"hidden": set(), "at": None})
     own, foe = units(g)
-    tiles = set().union(*(h.seen_tiles(pos) for h in [g, *(b.g for b in g.bots)]
-                          if gather.allied(g.players, g.player, h.player)))
+    tiles = set().union(*(h.seen_tiles(pos, pos.keys()) for h in [g, *(b.g for b in g.bots)]
+                          if gather.allied(g.players, g.player, h.player)))   # a destroyed building sees nothing
     towers = set().union(*vars(g).get("towers", {}).values())
     out = {u for u, p in pos.items() if u in foe and u not in towers
            and (int(p[0] // g.map.T), int(p[2] // g.map.T)) not in tiles}
@@ -73,5 +83,5 @@ def tick(g):
         return
     state["at"] = now
     own, foe = units(g)
-    for c in update(g, g.where(set(own) | set(foe))):
+    for c in update(g, g.where(set(own) | set(foe) | targets(g))):
         g.command(c)
