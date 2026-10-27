@@ -17,7 +17,8 @@ HIDDEN = collect_submodules("AoE2ScenarioParser") + collect_submodules("mgz") + 
 # from the workflow (gradlew jar): game/run.py takes it in a frozen app, so the user needs a Java runtime, no JDK.
 GAME = os.path.join(ROOT, "game")
 JAR = os.path.join(GAME, "plugin", "aoe2mc-plugin.jar")
-GAME_DATAS = DATAS + [(os.path.join(GAME, "data", "*.jsonl"), "data")] + [(JAR, "plugin")] * os.path.exists(JAR)   # table.load (#1914)
+# all data files of game/data (table.load: train, units, buildings; #1913)
+GAME_DATAS = DATAS + [(os.path.join(GAME, "data", "*.jsonl"), "data")] + [(JAR, "plugin")] * os.path.exists(JAR)
 
 
 def analysis(script, datas=DATAS):

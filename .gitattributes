@@ -16,3 +16,5 @@ game/data/civs.jsonl merge=union
 game/data/train.jsonl merge=union
 # One JSON object per unit (#1912); table.load() stops on a name in two lines.
 game/data/units.jsonl merge=union
+# One JSON object per building, or only a line of sight (#1913); table.load() stops on a name in two lines.
+game/data/buildings.jsonl merge=union
