@@ -41,6 +41,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import civs  # noqa: E402
 import herd  # noqa: E402
 import menu as chest  # noqa: E402  (menu() below is the chat text)
+import monk  # noqa: E402
 from replay import Replay  # noqa: E402
 import table  # noqa: E402
 
@@ -49,6 +50,7 @@ import table  # noqa: E402
 ROWS = table.load("build.jsonl")
 COSTS = {r["name"]: r["cost"] for r in ROWS if "cost" in r}
 BUILD_TIMES = {r["name"]: r["time"] for r in ROWS if "time" in r}
+MILITARY = {r["name"] for r in ROWS if r.get("military")}         # the AoE2 "Handicap" speeds them up (civs.work_rate, #2474)
 FOLWARK_SHARE, FOLWARK_REACH = 0.1, 4                               # of the food of a farm; tiles from the Folwark
 MENU = list(COSTS)                                                 # trigger value N -> MENU[N - 1]
 OBJECTIVE = "aoe_build"
@@ -192,18 +194,26 @@ def locked(g, name):
         return f"Needs the {('Dark', 'Feudal', 'Castle', 'Imperial')[age]} Age"
     if g is not None and name in NEEDS and NEEDS[name] not in getattr(g, "techs", ()):
         return "Needs " + pretty(NEEDS[name].removesuffix("_TECH"))
+    if name == "TOWN_CENTER" and getattr(g, "mode", None) == "sudden-death" and town_center(g):
+        return "Sudden Death: only one town center"                    # (#2407)
+    if getattr(g, "mode", None) == "capture-the-relic":
+        import combat                                                  # combat -> gather -> build: import it late
+        if combat.STANDS_FOR.get(name, name) == "MONASTERY":           # the fortified church too (#1930)
+            return "Capture the Relic: no more monasteries"            # (#2458)
     if g is not None and name == "TOWN_CENTER" and ages(g) < (1 if civs.civ(g) == "CUMANS" else 2) and town_center(g):
         return "Needs the Castle Age"                                  # a second one (AoE2; the Cumans: Feudal, #1951)
 
 
-def town_center(g):
-    """True when the player has a town center: a construction site, or a complete one whose target still stands."""
+def town_center(g, player=None):
+    """True when the player (default g.player) has a town center: a construction site, or a complete one whose target
+    still stands."""
     import combat                                                      # combat imports gather, which imports this module
-    sites = [s for s in getattr(g, "sites", ()) if s["name"] == "TOWN_CENTER" and s["player"] == g.player]
+    player = g.player if player is None else player
+    sites = [s for s in getattr(g, "sites", ()) if s["name"] == "TOWN_CENTER" and s["player"] == player]
     if any(not s.get("done") for s in sites):
         return True
     rects = [o["footprint"] for o in g.data.get("objects", ()) if o["kind"] == "building" and o["name"] == "TOWN_CENTER"
-             and o["player"] == g.player and "footprint" in o]
+             and o["player"] == player and "footprint" in o]
     rects += [[x0, z0, x1, z1] for s in sites for x0, x1, z0, z1 in [s["footprint"]]]
     return any("passed" in g.command(f"execute if entity {combat.target_uuid(r)}") for r in rects)
 
@@ -453,12 +463,12 @@ def near(g, name, cell, reach=12):
     return None
 
 
-def found(g, name, rect, way=None, tiles=None):
+def found(g, name, rect, way=None, tiles=None, free=False):
     """Pay for name and put its foundation (a wool ring in the player color) on the free footprint rect. Returns
     the construction site. way: the way of a gate (gate_spot); tiles: the tiles of a diagonal gate, the other tiles
-    of its footprint stay free (#1655)."""
+    of its footprint stay free (#1655). free: no cost (the start town of a game mode, empire_wars.py, #2408)."""
     import fleet                                                       # fleet -> gather -> build: import it late
-    for r, v in price(g, name).items():
+    for r, v in () if free else price(g, name).items():
         g.stock[r] -= v
         g.command(f"scoreboard players remove {r.capitalize()} {g.board} {v}")
     x0, x1, z0, z1 = rect
@@ -573,7 +583,7 @@ def rise(g, site, work):
         if "FARM" in site["name"] and site["player"] == g.player:
             folwark(g, site, (x0 // T + s // 2, z0 // T + s // 2))
         if site["name"] == "TOWN_CENTER" and site["player"] == g.player:
-            g.town_center()
+            g.town_center(tuple(site["footprint"]))
         target(g, site)
         if site["name"] in GATES:
             portcullis(g, site)
@@ -581,6 +591,8 @@ def rise(g, site, work):
             g.earn("food", food)                                       # Saxon camps, Wu military buildings (#2114)
         if site["player"] == g.player and (born := civs.built_units(g, site["name"])):
             herd.spawn(g, site["footprint"], *born)                    # Tatar sheep at a town center (#2313)
+        if site["player"] == g.player:
+            monk.free_relic(g, site)                                   # the first Armenian Fortified Church (#2419)
     return site["progress"] >= 1
 
 
@@ -659,7 +671,8 @@ def values(g, name, techs=None):
     name = line(g, name, techs)
     wall = name in combat.WALLS or name.endswith(("_WALL", "_GATE"))   # its age: combat.wall (upgrade, #1372)
     s = civs.hp(civs.civ(g) if hasattr(g, "data") else None, name, combat.stats(name),
-                0 if wall else sum(t in techs for t in AGE_TECHS))    # before Masonry (#1895), of the age (#2116)
+                0 if wall else sum(t in techs for t in AGE_TECHS),    # before Masonry (#1895), of the age (#2116)
+                civs.handicap(g.data, g.player) if hasattr(g, "data") else 1)   # #2474
     for t in sorted(techs):
         s = train.TECHS[t](name, s)
     return s
@@ -700,7 +713,7 @@ def upgrade(g, site, old, redraw=True):
     import combat, repair                                              # combat -> gather -> build: import it late
     x0, x1, z0, z1 = site["footprint"]
     name, T = design(g, site["name"], site["player"]), g.map.T
-    new = combat.wall(name, ages(g), civs.civ(g, site["player"]))
+    new = combat.wall(name, ages(g), civs.civ(g, site["player"]), civs.handicap(g.data, site["player"]))
     if new == old or (hp := repair.hp(g, (x0, x1, z0, z1))) is None or hp <= 0:
         return
     for c in Replay(g, g.data, getattr(g.game, "version", VERSION_NAME)).building(
@@ -757,14 +770,15 @@ def target(g, site):
     """A complete building of combat.BUILDINGS gets its target entity, as a building of the map (combat.setup): the
     AoE2 hit points, and the arrows of a town center, tower or castle (#1202). wonder.tick makes the one of a wonder."""
     import combat                                                      # combat -> gather -> build: import it late
-    if site["name"] not in combat.BUILDINGS and site["name"] not in combat.WALLS or site["name"] == "WONDER":
+    if site["name"] not in combat.BUILDINGS and site["name"] not in combat.WALLS or site["name"] == "WONDER" \
+            or site.get("lasting"):                                    # the monastery of Capture the Relic (#2458)
         return
     x0, x1, z0, z1 = site["footprint"]
     uuid = combat.target_uuid([x0, z0, x1, z1])
     box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
     wall, name = site["name"] in combat.WALLS, line(g, design(g, site["name"], site["player"]))   # the hit points of the age
                                                                        # (#1322), a guard tower or keep (#1374)
-    s = combat.wall(name, ages(g), civs.civ(g, site["player"])) if wall else values(g, name)   # Chemistry (#1375), Masonry (#1398)
+    s = combat.wall(name, ages(g), civs.civ(g, site["player"]), civs.handicap(g.data, site["player"])) if wall else values(g, name)   # Chemistry (#1375), Masonry (#1398)
     for c in combat.building(uuid, name, site["player"], box, g.map.T, s=s, low=minimum(g, name),
                              factor=civs.arrows(g, name, site["player"])) \
             + [f"tag {uuid} add {combat.WALL_TAG}"] * wall + [combat.label_command(uuid, name)]:

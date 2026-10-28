@@ -43,7 +43,8 @@ def stats(row):
 
 
 def check_units(row):
-    form(row, {"name": str, **STATS}, {"sight": int, "min_range": NUMBER, "note": str, "sail": NUMBER, "convert": int})
+    form(row, {"name": str, **STATS}, {"sight": int, "min_range": NUMBER, "note": str, "sail": NUMBER, "convert": int,
+                                       "accuracy": NUMBER})
     stats(row)
 
 
@@ -62,7 +63,7 @@ def check_train(row):
     form(row, {"name": str, "building": (str, type(None)), "slot": int, "item": str, "label": str, "cost": dict,
                "time": int, "help": str},
          {"age": int, "after": str, "civ": str, "civs": list, "faster": list, "upgrade": list, "note": str,
-          "resist": int, "tribute_fee": int})
+          "resist": int, "tribute_fee": int, "full_tech_tree": str})
     n = row["name"]
     only(row)
     assert row["building"] is None or row["building"] in NAMES["buildings.jsonl"], n
@@ -103,9 +104,12 @@ def check_civs(row):
     for t, group in row.get("also", {}).items():                   # one more group gets the effect (#2173)
         assert group in civs.GROUPS and isinstance(train.EFFECTS.get(t, {}), dict) and t in train.TECHS | train.SPEEDS, (n, t)
     assert all(t in train.TECHS and isinstance(f, NUMBER) for t, f in row.get("more", {}).items()), n
+    for key in ("housing", "sight"):                                    # building -> number (#2118)
+        assert set(row.get(key, {})) <= NAMES["buildings.jsonl"] and all(type(v) is int for v in row.get(key, {}).values()), n
+    assert len(row.get("pop_cap", (0, 0))) == 2, n
     for group, value, ages in row.get("units", ()):
         classes = {f"bonus:{c}" for t in (*combat.STATS.values(), *combat.BUILDINGS.values()) for c in t.classes}
-        assert group in civs.GROUPS and value in (*combat.Stats._fields, "speed", "taken", *classes), (n, group, value)   # (#2249)
+        assert group in civs.GROUPS and value in (*combat.Stats._fields, "friendly", "speed", "taken", *classes), (n, group, value)   # (#2249)
         assert len(ages) == 4 and all(isinstance(a, NUMBER) for a in ages), (n, group)
     for what, ages in row.get("arrows", ()):                 # the factor of the base arrows of buildings (#2178)
         assert set(what) <= NAMES["buildings.jsonl"] and len(ages) == 4 and all(isinstance(a, int) for a in ages), n
@@ -124,10 +128,11 @@ def check_civs(row):
 def check_gather(row):
     form(row, {"name": str}, {"drop": list, "work": dict, "fish": int, "shore": bool, "hunt": int, "herd": bool,
                               "farm": int, "dark": bool, "ship": list, "civilian": bool, "mine": list, "carry": int,
-                              "pace": float, "watch": bool, "decay": float})
+                              "pace": float, "watch": bool, "decay": float, "res": str})
     n = row["name"]
     assert len(row) > 1 and set(row.get("drop", ())) <= RES | {"meat"} and set(row.get("work", {})) <= RES, n
     assert all(isinstance(v, NUMBER) for v in row.get("work", {}).values()), n
+    assert row.get("res", "food") in RES and ("res" not in row or "fish" in row), n   # an oyster: gold (#2465)
     if "mine" in row:                                      # [the resource, its amount, the villager name of the miner]
         res, amount, miner = row["mine"]
         assert res in RES and isinstance(amount, int) and miner.isupper(), n
@@ -136,7 +141,8 @@ def check_gather(row):
 
 def check_build(row):
     form(row, {"name": str}, {"cost": dict, "time": int, "icon": str, "age": int, "needs": str, "gate": bool,
-                              "wall": bool, "age_tech": int, "bot": int, "near": str, "civs": list})
+                              "wall": bool, "age_tech": int, "bot": int, "near": str, "civs": list,
+                              "full_tech_tree": str, "military": bool})
     n = row["name"]
     only(row)
     assert set(row.get("cost", {})) <= RES and all(isinstance(v, int) for v in row.get("cost", {}).values()), n
@@ -162,13 +168,21 @@ def check_replay(row):                                     # a walk speed (a nam
 
 def check_setup(row):                                      # a value of a setting of the game setup (#2264)
     form(row, {"name": str}, {"resources": dict, "ages": int, "skip": list, "note": str, "units": list,
-                              "turbo": float, "slow": list})
-    assert sum(k in row for k in ("resources", "ages", "units", "turbo")) == 1, row["name"]   # a resource level, a
-    assert set(row.get("units", ())) <= NAMES["units.jsonl"], row["name"]  # start age (#2265), a game mode (#2347)
-    assert set(row.get("slow", ())) <= NAMES["train.jsonl"] | NAMES["build.jsonl"], row["name"]   # or Turbo (#2359)
+                              "age": str, "buildings": dict, "villagers": dict, "wonder_years": int, "sides": dict,
+                              "treaty": str,                                  # Wonder Race (#2406)
+                              "side_buildings": dict, "ring": dict, "turbo": float, "slow": list})
+    assert sum(k in row for k in ("resources", "ages", "units", "buildings", "wonder_years", "turbo")) == 1, row["name"]   # a resource level, a start age
+    assert all(set(v) == {"food", "wood", "gold", "stone"} for v in row.get("sides", {}).values()), row["name"]   # #2441
+    assert set(row.get("units", ())) <= NAMES["units.jsonl"], row["name"]  # (#2265) or a game mode (#2347)
+    assert row.get("treaty", "endless") == "endless", row["name"]   # Wonder Race: a treaty with no end (#2406)
+    assert set(row.get("slow", ())) <= NAMES["train.jsonl"] | NAMES["build.jsonl"], row["name"]   # Turbo (#2359)
     assert set(row.get("resources", RES)) == {"food", "wood", "gold", "stone"}, row["name"]
     assert all(isinstance(v, int) and v >= 0 for v in row.get("resources", {}).values()), row["name"]
     assert row.get("ages", 0) in range(5) and set(row.get("skip", ())) <= NAMES["train.jsonl"], row["name"]
+    assert set(row.get("buildings", ())) <= NAMES["build.jsonl"] and set(row.get("villagers", ())) <= RES, row["name"]
+    assert set(row.get("side_buildings", ())) <= set(row.get("sides", ())), row["name"]   # #2462
+    assert all(set(v) <= NAMES["build.jsonl"] for v in row.get("side_buildings", {}).values()), row["name"]
+    assert {row["ring"][k] for k in ("wall", "gate")} <= NAMES["build.jsonl"] if "ring" in row else True, row["name"]
 
 
 def check_taunts(row):                                     # a taunt: its number and AoE2 text (#2234)

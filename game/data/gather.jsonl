@@ -4,6 +4,7 @@
 {"name": "FOLWARK", "drop": ["food"]}
 {"name": "MINING_CAMP", "drop": ["gold", "stone"]}
 {"name": "MULE_CART", "drop": ["wood", "gold", "stone", "meat"], "civilian": true}
+{"name": "SETTLEMENT", "drop": ["wood", "food", "gold", "stone"]}
 {"name": "BOW_SAW", "work": {"wood": 1.2}}
 {"name": "BOX_TURTLES", "fish": 200, "shore": true}
 {"name": "COW", "hunt": 150, "herd": true, "decay": 0.25}
@@ -36,6 +37,7 @@
 {"name": "LLAMA", "hunt": 100, "herd": true, "decay": 0.25}
 {"name": "MISSIONARY", "civilian": true}
 {"name": "MONK", "civilian": true}
+{"name": "OYSTER", "fish": 450, "shore": true, "res": "gold"}
 {"name": "PIG", "hunt": 100, "herd": true, "decay": 0.25}
 {"name": "REPAIRER", "civilian": true}
 {"name": "SHEEP", "hunt": 100, "herd": true, "decay": 0.25}

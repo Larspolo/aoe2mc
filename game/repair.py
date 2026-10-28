@@ -84,7 +84,8 @@ def full(g, name, player):
     who = next((b.g for b in g.bots if b.g.player == player), g)   # an allied bot: its techs and age
     if name not in combat.WALLS:
         return build.values(who, name).hp
-    return combat.wall(build.design(who, name, player), build.ages(who), civs.civ(who, player)).hp
+    return combat.wall(build.design(who, name, player), build.ages(who), civs.civ(who, player),
+                       civs.handicap(who.data, player)).hp
 
 
 def uuid(rect):
@@ -134,6 +135,25 @@ def send(g, who, key, goals):
         g.repairs[u] = key
         g.task(v, "BUILDER")
         g.go(v, "to_repair", goals)
+
+
+def resume(g, u, key, state):
+    """Villager u of a loaded game repairs key again (a building footprint or the UUID of a siege unit, savegame, #2380):
+    "to_repair" walks to it again, "repair" works on at its place. Returns False when key is gone."""
+    import fleet                                                   # fleet imports gather
+    if isinstance(key, str) and (pos := g.pos(key)):
+        cell = (math.floor(pos[0]), math.floor(pos[2]))
+        goals = shore(g, cell) if g.soldiers.get(key) in fleet.SPEEDS else g.map.around({cell})
+    elif isinstance(key, tuple) and key in owners(g):
+        goals = g.map.around({(x, z) for x in range(key[0], key[1]) for z in range(key[2], key[3])})
+    else:
+        return False
+    if state == "to_repair":
+        send(g, [u], key, goals)
+    else:
+        g.repairs = vars(g).get("repairs", {})
+        g.repairs[u] = key
+    return True
 
 
 def shore(g, cell):

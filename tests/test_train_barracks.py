@@ -4,10 +4,10 @@ import contextlib
 import io
 import json
 import re
-from urllib.parse import unquote
 
 import pytest
 from menu_line import item, labels, order
+from test_forging import menus                                         # also the `aoe menu-add` parts (#1647)
 from test_gather import FakeServer, grid
 from test_train_menu import FEUDAL, RALLY, SPEAR
 
@@ -34,10 +34,6 @@ def setup(food=50, gold=20, done=True):
     g.stock.update(food=food, gold=gold)
     server.scores["aoe_use"] = 1
     return server, g
-
-
-def menus(server):
-    return [unquote(c) for c in server.log if c.startswith("aoe menu ")]
 
 
 def test_a_right_click_on_the_barracks_opens_its_menu():

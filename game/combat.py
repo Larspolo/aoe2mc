@@ -84,6 +84,7 @@ RAM_REACH = 2.0       # blocks: a ram (a minecart with range 0) hits from next t
 CONTACT = 1.0         # tiles: the reach of a demolition ship (range 0, #1440): its raft is higher than a boat
 # Tiles: no shot at a unit nearer (AoE2 DE, wiki infobox "MinRange", #1350). The key "min_range" of data/units.jsonl.
 MIN_RANGE = {r["name"]: r["min_range"] for r in UNIT_ROWS if "min_range" in r}
+ACCURACY = {r["name"]: r["accuracy"] for r in UNIT_ROWS if "accuracy" in r}   # siege shots at units that hit (#2479)
 # The minimum range of the buildings that shoot, in tiles from the edge of the footprint (AoE2 DE, wiki infobox
 # "MinRange", #1546). The town center has none. Murder Holes removes it.
 # The key "min_range" of a line of data/buildings.jsonl (the dock shoots only with fishing ships inside, #1949).
@@ -91,6 +92,9 @@ FORT_MIN_RANGE = {r["name"]: r["min_range"] for r in BUILDING_ROWS if "min_range
 # Tiles that a bolt flies past the range and hurts the enemy units on its line with half the damage (AoE2 DE, wiki
 # "Pass-through damage": "Projectiles travel Range+2 tiles in total", no friendly fire, #1401). The chakram thrower
 # throws as a mob (no blast), with the full damage on its line (PASS_PART, #1638).
+# Gold per AoE2 minute while the unit attacks enemy units, not buildings (AoE2 DE wiki: the Varangian Guard 35, #2376).
+# The key "attack_gold" of data/units.jsonl; game/spoils.py gives it.
+ATTACK_GOLD = {r["name"]: r["attack_gold"] for r in UNIT_ROWS if "attack_gold" in r}
 PASS = {r["name"]: r["pass"] for r in UNIT_ROWS if "pass" in r}               # the key "pass" of data/units.jsonl
 # The part of the damage on the units behind the target, when it is not one half (wiki: "100% pass-through damage").
 PASS_PART = {r["name"]: r["pass_part"] for r in UNIT_ROWS if "pass_part" in r}
@@ -132,20 +136,23 @@ def elevation_command(data):
         return None
     players = sorted(data.get("players", {}).items(), key=lambda p: int(p[0]))
     return " ".join([f"aoe elevation {data['level_height']}"] + [f"p{n}:" + ":".join(f"{f:g}" for f in
-                                                                   civs.elevation(p.get("civ"))) for n, p in players])
+                                                                   civs.elevation(full.get("civ"))) for n, p in players
+                                                                   for full in [{} if data.get("full_tech_tree") else p]])
 
 
-def stats_command(uuid, name, s=None, taken=1.0):
+def stats_command(uuid, name, s=None, taken=1.0, friendly=1.0):
     """The plugin command that gives entity `uuid` the values of AoE2 unit `name` (or the values s, for example with
     technologies, #655): max_health = hit points (at most 1024, the limit of the attribute), the lost hit points stay lost
     (a new unit has full health, #940), and the values of `damage` (the same rule in AoePlugin.java). The range kind:
     0 melee, 1 ranged, 2 ranged with melee damage (MELEE_RANGED, #800). Then the reload in ticks at Normal speed: a melee unit hits once per reload (#848). Last, only when it is
-    not 1, the factor of the bonus damage that the unit takes (civs.taken, #2248)."""
+    not 1, the factor of the bonus damage that the unit takes (civs.taken, #2248), and when friendly is not 1, the factor
+    of the friendly fire that it takes (civs.friendly, #2418)."""
     s = s or stats(name)
     bonus = ",".join(f"{c}:{n}" for c, n in sorted(s.bonus.items())) or "-"
     kind = 0 if s.range <= 0 else 2 if name in MELEE_RANGED else 1
     return (f"aoe stats {uuid} {min(s.hp, 1024)} {s.attack} {s.melee} {s.pierce} {kind} "
-            f"{','.join(s.classes) or '-'} {bonus} {round(s.reload / NORMAL * 20) or 20}" + f" {taken:g}" * (taken != 1))
+            f"{','.join(s.classes) or '-'} {bonus} {round(s.reload / NORMAL * 20) or 20}"
+            + f" {taken:g}" * (taken != 1 or friendly != 1) + f" {friendly:g}" * (friendly != 1))
 
 
 def label_command(uuid, name=None):
@@ -173,6 +180,13 @@ def range_command(uuid, name, T, rate=NORMAL, s=None):
     blast += f" {PASS.get(name, 0) * T}" * bool(blast and name in PASS) + f" {PASS_PART.get(name)}" * (name in PASS_PART)
     reach = s.range * T or RAM_REACH * bool(cart and s.attack) or CONTACT * T * bool(name in BLAST and s.attack)
     return reach and (s.reload or name in BLAST) and f"aoe range {uuid} {reach} {max(1, round(s.reload / rate * 20))}{blast}" or None
+
+
+def accuracy_command(uuid, name, bonus=0.0):
+    """The plugin command of the AoE2 accuracy of a siege shot at a unit (the key "accuracy" of data/units.jsonl: the
+    Trebuchet 15 %, #2479) plus bonus (the civilization key "accuracy": Huns +35 %), or None when each shot hits."""
+    part = min(1.0, ACCURACY.get(name, 1.0) + bonus)
+    return f"aoe accuracy {uuid} {part:g}" if part < 1 else None
 
 
 def sight(name, s=None):
@@ -224,15 +238,25 @@ def setup(game, data):
     for o in data["objects"]:
         if o["kind"] == "building" and o["player"] and "footprint" in o and o["name"] in BUILDINGS:
             uuid, civ = target_uuid(o["footprint"]), data.get("players", {}).get(str(o["player"]), {}).get("civ")
+            civ = None if data.get("full_tech_tree") else civ          # no civilization bonus (#2354)
             for c in building(uuid, o["name"], o["player"], building_box(o, ground), data.get("tile_size", 4),
-                              held.get(o.get("ref"), ()), civs.hp(civ, o["name"], stats(o["name"]))) \
+                              held.get(o.get("ref"), ()), civs.hp(civ, o["name"], stats(o["name"]), 0,
+                                                                  civs.handicap(data, o["player"]))) \
                     + [label_command(uuid, o["name"])]:
                 game.command(c)
     units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] and o.get("uuid")]
     for o in units:                                  # the plugin answers "Range: 0 units" for a mob that cannot shoot
         if cmd := range_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
-    n = sum(game.command(stats_command(o["uuid"], o["name"])).strip() == "Stats: 1 units" for o in units)
+    n = sum(game.command(stats_command(o["uuid"], o["name"], villager(data, o))).strip() == "Stats: 1 units" for o in units)
+    import spoils                                    # spoils imports this module
+    for o in units:                                  # the hits of a Varangian Guard make gold (#2376)
+        if cmd := spoils.tag_command(o["uuid"], o["name"]):
+            game.command(cmd)
+    for o in units:                                  # a trebuchet misses units (#2479), with the bonus of its civ
+        civ = None if data.get("full_tech_tree") else data.get("players", {}).get(str(o["player"]), {}).get("civ")
+        if cmd := accuracy_command(o["uuid"], o["name"], civs.value("accuracy", civ, {}).get(o["name"], 0.0)):
+            game.command(cmd)
     for o in units:                                  # after the stats: the plugin needs them for the sight
         if cmd := sight_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
@@ -242,16 +266,23 @@ def setup(game, data):
     return n
 
 
+def villager(data, o):
+    """The Stats of unit object o of aoe2mc.json data with the hit points of the handicap of its owner when it is a
+    villager (#2474), else None (stats_command takes its values)."""
+    f = civs.handicap(data, o["player"])
+    return stats(o["name"])._replace(hp=round(stats(o["name"]).hp * f)) if f != 1 and o["name"].startswith("VILLAGER") else None
+
+
 def target_uuid(footprint):
     """The UUID of the target entity of the building with block footprint [x0, z0, x1, z1): the same in each run."""
     return str(uuids.uuid5(uuids.NAMESPACE_OID, "aoe2mc.building." + ".".join(map(str, footprint))))
 
 
-def wall(name, age, civ=None):
+def wall(name, age, civ=None, factor=1):
     """The Stats of wall name (WALLS) in AoE2 age 0 (Dark) .. 3 (Imperial), with the hit points bonus of civilization
-    civ (civs.hp: Byzantines, #2116)."""
+    civ (civs.hp: Byzantines, #2116) and the factor of the owner's handicap (#2474)."""
     hp, melee, pierce = WALLS[name]
-    return civs.hp(civ, name, Stats(hp[age], 0, melee, pierce, 0, 0.0, {}, ("building", WALL) + (STONE,) * (not name.startswith("PALISADE"))), age)
+    return civs.hp(civ, name, Stats(hp[age], 0, melee, pierce, 0, 0.0, {}, ("building", WALL) + (STONE,) * (not name.startswith("PALISADE"))), age, factor)
 
 
 def building(uuid, name, player, box, T=4, inside=(), s=None, low=None, factor=1):

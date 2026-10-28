@@ -25,7 +25,7 @@ trigger = "trig_01QTrgkK5PZmqPwQ96rKp3QE"   # the scheduled task "aoe2mc autopil
 [commands]
 install = "python3 -m pip install -r requirements-dev.txt"
 lint = "ruff check ."
-fast = "python3 -m pytest"
+fast = "python3 -m pytest -n auto"
 slow = "python3 -m pytest -m slow"
 server = "python3 -m pytest -m mc"
 
