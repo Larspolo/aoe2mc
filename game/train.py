@@ -269,6 +269,24 @@ ROW = 9                                                            # the first s
 
 
 HULKS = tuple(r["name"] for r in UNIT_ROWS if r.get("melee_ship"))   # melee warships: the blacksmith attack too (#1509)
+# Siphons and Incendiaries (#2165): technology: the key "charge" or "detonate" of its line of data/train.jsonl and its
+# values: {"if": [tests], "attack": n, "blast": tiles, "bonus": {class: n}}, a charge also "reload" (s) and "shots"
+FIRE = {r["name"]: (k, r[k]) for r in ROWS for k in ("charge", "detonate") if k in r}
+
+
+def fire_commands(g, uuid, name, techs=None):
+    """The plugin commands of the charge attack (`aoe charge`) and the blast at death (`aoe detonate`) of an own ship
+    after the research of their technologies (FIRE, #2165), or of the technologies techs only. Vanilla has no second
+    attack and no "on death" command."""
+    import combat, gather                                          # both import gather, gather imports this module
+    out = []
+    for tech, (kind, c) in FIRE.items():
+        if tech not in (g.techs if techs is None else techs) or not any(test(t, name, combat.stats(name)) for t in c["if"]):
+            continue
+        bonus, blast = ",".join(f"{k}:{v}" for k, v in sorted(c["bonus"].items())) or "-", c["blast"] * g.map.T
+        out.append(f"aoe charge {uuid} {max(1, round(c['reload'] / gather.NORMAL * 20))} {c['attack']} {c['shots']} "
+                   f"{blast} {bonus}" if kind == "charge" else f"aoe detonate {uuid} {c['attack']} {blast} {bonus}")
+    return out
 ORDERS = {r["name"] for r in UNIT_ROWS if r.get("orders")}         # not military, but they take move orders (summon)
 
 
@@ -675,6 +693,8 @@ def research(g, entry):
             continue                                               # packed: range 0, the unpack sends the range (#1414)
         if stats(g, name).range != combat.stats(name).range:          # Fletching (#724)
             g.command(combat.range_command(uuid, name, g.map.T, s=stats(g, name)))
+    for cmd in [c for uuid, name in g.soldiers.items() for c in fire_commands(g, uuid, name, {entry["name"]})]:
+        g.command(cmd)                                             # the live fire ships: Siphons, Incendiaries (#2165)
     if entry["name"] in SPEEDS:                                    # the live units walk faster (Fervor)
         import ai, fleet                                           # ai imports gather, gather imports this module
         for uuid, name in g.soldiers.items():                      # a ship: fleet.tick reads speed() (#2136)
@@ -832,6 +852,8 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))   # also without an order (#849)
     if player not in (None, g.player):
         return uuid
+    for cmd in fire_commands(g, uuid, name):                       # a new fire ship after Siphons (#2165)
+        g.command(cmd)
     # they take move orders as a soldier (#1243, #1253); a ship sails with fleet.py (#1383)
     if gather.military(name) or name in ORDERS or units.is_boat(units.classify(name)):
         g.soldiers[uuid] = name
