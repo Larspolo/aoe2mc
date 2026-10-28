@@ -442,6 +442,9 @@ def read_scenario(path):
                                                   if c.condition_type == PLAYER_DEFEATED else {}),
                                                **({"quantity": c.quantity, "unit": c.unit_object}   # (#2714)
                                                   if c.condition_type == UNITS_GARRISONED else {}),
+                                               **({"ref": c.unit_object, "player": c.source_player   # (#2756)
+                                                   if c.condition_type == OBJECT_VISIBLE_MULTIPLAYER else 1}
+                                                  if c.condition_type in VISIBLE else {}),
                                                **({"player": c.source_player, "target": c.target_player,   # (#2757)
                                                    "diplomacy": c.quantity}            # the stance is the quantity
                                                   if c.condition_type == DIPLOMACY_STATE else {}))
@@ -2694,7 +2697,7 @@ def write_region(path, chunks):
 
 def write_objects(path, size, T, H, players, objects, cols, ground, timeline=None, mood="DEFAULT", map_ground=None,
                   victory=None, messages=None,
-                  research=(), tech_states=()):
+                  research=(), tech_states=(), visible=()):
     """aoe2mc.json: the data that a game program needs (docs/research/gameplay.md). Tiles are in the turned grid
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
     their footprint [x0, z0, x1, z1) in blocks. Objects of a recorded game have their object ID ("ref").
@@ -2709,6 +2712,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     "mood": the map color mood of a DE scenario (ColorMood name, #1594), else "DEFAULT".
     "research": the "Research Technology" effects of the triggers (research_list, #2577), if any.
     "tech_states": the [player, technology] pairs of the conditions on aoe_techstate (tech_state_list, #2769), if any.
+    "visible": the [ref, player] pairs of the "Object (Not) Visible" conditions (visible_list, #2756), if any.
     "map_ground": the map bytes of map 0 without the objects (map_colors), one hex string per pixel row z: the live
     minimap of the plugin paints them where no live object is (#1940).
     "victory" (DE scenarios only): the victory setting of the scenario, {"condition": a name of run.VICTORIES or
@@ -2752,6 +2756,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         data["research"] = list(research)
     if tech_states:
         data["tech_states"] = list(tech_states)
+    if visible:
+        data["visible"] = [list(v) for v in visible]
     if map_ground is not None:
         data["map_ground"] = [bytes(row).hex() for row in np.asarray(map_ground, np.uint8)]
     with open(path, "w") as f:
@@ -2866,6 +2872,9 @@ MODIFY_RESOURCE = 52                                               # "Modify Res
 MODIFY_RESOURCE_BY_VARIABLE = 53                                   # "Modify Resource by Variable" (#2768)
 MODIFY_VARIABLE_BY_VARIABLE = 100                                  # "Modify Variable by Variable" (#2713)
 OBJECT_HP = 23                                                     # "Object HP", the hit points of one object (#2701)
+OBJECT_NOT_VISIBLE = 16                                            # the conditions "Object (Not) Visible" (#2756)
+OBJECT_VISIBLE = 15
+OBJECT_VISIBLE_MULTIPLAYER = 27
 OR = 29
 OWN_FEWER_OBJECTS = 4                                              # conditions on the units of a player (#2573)
 OWN_OBJECTS = 3
@@ -2892,12 +2901,16 @@ UNLOAD = 17                                                        # "Unload" (#
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
+VISIBLE = (OBJECT_NOT_VISIBLE, OBJECT_VISIBLE, OBJECT_VISIBLE_MULTIPLAYER)  # the sight of a player: the game program
 TICKED = COUNTED + (                                               # conditions of the tick function, one per line
     ACCUMULATE_ATTRIBUTE,
     DIFFICULTY_LEVEL,
     DIPLOMACY_STATE,
     DISPLAY_TIMER_TRIGGERED,
     OBJECT_HP,
+    OBJECT_NOT_VISIBLE,
+    OBJECT_VISIBLE,
+    OBJECT_VISIBLE_MULTIPLAYER,
     PLAYER_DEFEATED,
     RESEARCHED,
     RESEARCHING_TECH,
@@ -3665,6 +3678,9 @@ SCORE_TESTS = {
     DIFFICULTY_LEVEL: lambda c: f"score #level aoe_difficulty matches {c.get('quantity', 0)}",
     DIPLOMACY_STATE: lambda c: f"score #p{c['player']}.p{c['target']} aoe_dipstate matches {c['diplomacy'] + 1}",
     DISPLAY_TIMER_TRIGGERED: lambda c: f"score #done{c.get('slot', 0)} aoe_timer matches 1..",   # set at 0 (#2702)
+    OBJECT_NOT_VISIBLE: lambda c: f"score #r{c['ref']}.p{c['player']} aoe_seen matches 0",
+    OBJECT_VISIBLE: lambda c: f"score #r{c['ref']}.p{c['player']} aoe_seen matches 1",
+    OBJECT_VISIBLE_MULTIPLAYER: lambda c: f"score #r{c['ref']}.p{c['player']} aoe_seen matches 1",
     PLAYER_DEFEATED: lambda c: f"score #p{c['player']} aoe_lost matches 1..",   # conquest, regicide (#2710)
     RESEARCHED: lambda c: f"score #p{c['player']}.{c['technology']} aoe_tech matches 1..",
     RESEARCHING_TECH: lambda c: f"score #p{c['player']}.{c['technology']} aoe_techstate matches 2",
@@ -3701,7 +3717,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
     the units leave an area. A "Variable Value" condition runs in the tick function as an area (#2611), a "Research
     Technology" condition too: the game program sets the score #p<player>.<technology> of aoe_tech (#2656), and an
-    "Accumulate Attribute" condition of a resource: resource_score (#2655). A "Destroy Object" condition
+    "Accumulate Attribute" condition of a resource: resource_score (#2655), an "Object (Not) Visible" condition: the
+    game program sets the score #r<ref>.p<player> of aoe_seen (#2756). A "Destroy Object" condition
     (OBJECT_TESTS) tests the tag aoe2mc.r<ref> of its unit and its marker (#2618), "Bring Object to Area" the tag in
     the box of the area (#2620), "Bring Object to Object" the other tag within one tile of it (#2771). An inverted
     object condition swaps the two tests of OBJECT_TESTS. "OR" splits the conditions into groups (or_groups, #2765):
@@ -3753,6 +3770,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     or c["type"] == ACCUMULATE_ATTRIBUTE and resource_score(c) is None
                     or c["type"] == OBJECT_HP and (c.get("ref", -1) < 0 or variable_range(c) is None)
                     or c["type"] == UNITS_GARRISONED and c.get("unit", -1) < 0
+                    or c["type"] in VISIBLE and (c.get("ref") is None or c["ref"] < 0 or c.get("player", -1) <= 0)
                     or c["type"] == PLAYER_DEFEATED and c.get("player", -1) <= 0   # Gaia: no defeat (#2710)
                     for c in conds):                                   # unit classes: not yet
             continue
@@ -3846,7 +3864,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
-    for word in ("aoe_difficulty", "aoe_gar", "aoe_lost", "aoe_tech", "aoe_techstate"):   # only the game program sets them
+    for word in ("aoe_difficulty", "aoe_gar", "aoe_lost", "aoe_seen", "aoe_tech", "aoe_techstate"):  # the game program
         if any(f" {word} " in x for x in tick):
             setup[f"scoreboard objectives add {word} dummy"] = None
     if switch:
@@ -3876,6 +3894,13 @@ def tech_state_list(triggers):
     their score of aoe_techstate (game/scenario.py)."""
     tick = trigger_files(triggers)[1].get("data/aoe2mc/function/tick.mcfunction", "")
     return sorted({(int(n), t) for n, t in re.findall(r"#p(\d+)\.(\w+) aoe_techstate ", tick)})
+
+
+def visible_list(triggers):
+    """The [ref, player] pairs of the "Object (Not) Visible" conditions that trigger_files writes, for aoe2mc.json
+    "visible" (#2756): the scenario mode of the game program sets the score #r<ref>.p<player> of aoe_seen."""
+    tick = trigger_files(triggers)[1].get("data/aoe2mc/function/tick.mcfunction", "")
+    return sorted({(int(r), int(p)) for r, p in re.findall(r"#r(\d+)\.p(\d+) aoe_seen", tick)})
 
 
 # The map of the world goes into the off-hand of each player once, through the tag aoe2mc_map (#966).
@@ -4610,7 +4635,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     img = Image.fromarray(np.clip(img * shade[..., None], 0, 255).astype(np.uint8))
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline,
                   texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0], texts.get("global_victory"), texts,
-                  research_list(texts.get("triggers", [])), tech_state_list(texts.get("triggers", [])))
+                  research_list(texts.get("triggers", [])), tech_state_list(texts.get("triggers", [])),
+                  visible_list(texts.get("triggers", [])))
     triggers, tstats = texts.get("triggers", []), Counter()
     haze = FOG.get(texts.get("mood")) if mood == "on" and (fog or ambience == "full") else None
     n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze,
