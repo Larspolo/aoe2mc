@@ -412,7 +412,7 @@ def read_scenario(path):
                                                    "object": c.object_list, "group": c.object_group,
                                                    "class": c.object_type}
                                                   if c.condition_type in COUNTED else
-                                                  {"quantity": c.quantity} if c.condition_type == TRIGGER_CHANCE else {}),
+                                                  {"quantity": c.quantity} if c.condition_type in (TRIGGER_CHANCE, DIFFICULTY_LEVEL) else {}),
                                                **({"quantity": c.quantity, "variable": c.variable,   # (#2611)
                                                    "comparison": c.comparison}
                                                   if c.condition_type == VARIABLE_VALUE else {}),
@@ -2771,6 +2771,7 @@ CLEAR_INSTRUCTIONS = 21                                            # "Clear Inst
 CREATE_OBJECT = 11
 DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
 DECLARE_VICTORY = 13                                               # "Declare Victory" (#2542)
+DIFFICULTY_LEVEL = 19                                              # the condition "Difficulty Level" (#2704)
 DISPLAY_INSTRUCTIONS = 20
 DISPLAY_TIMER = 37                                                 # "Display Timer" (#2572)
 FREEZE_OBJECT = 22                                                 # "Freeze Object" (#2608)
@@ -2793,7 +2794,7 @@ TRIGGER_CHANCE = 20                                                # the conditi
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
-TICKED = COUNTED + (VARIABLE_VALUE, RESEARCHED, ACCUMULATE_ATTRIBUTE)  # conditions of the tick function
+TICKED = COUNTED + (ACCUMULATE_ATTRIBUTE, DIFFICULTY_LEVEL, RESEARCHED, VARIABLE_VALUE)  # conditions of the tick function
 ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")     # attributes 0-3: the score holders of gather.RESOURCES (#2655)
 STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list (AoE2 attributes 0 to 3)
 OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
@@ -3209,6 +3210,18 @@ EFFECTS = {
 Effect = namedtuple("Effect", "t T ground players stats mood files setup")
 
 
+# The test of each condition on a score (execute if <test>), one line per condition in alphabetical order (#2613):
+# "Difficulty Level" (#2704): the score #level of aoe_difficulty is the AoE2 value of the difficulty of the game
+# (scenario.setup); "Research Technology" (#2656): the game program sets #p<player>.<technology> of aoe_tech;
+# "Variable Value" (#2611): the score #v<N> of aoe_var. A world with no game program has no score: no fire.
+SCORE_TESTS = {
+    ACCUMULATE_ATTRIBUTE: resource_score,
+    DIFFICULTY_LEVEL: lambda c: f"score #level aoe_difficulty matches {c.get('quantity', 0)}",
+    RESEARCHED: lambda c: f"score #p{c['player']}.{c['technology']} aoe_tech matches 1..",
+    VARIABLE_VALUE: lambda c: f"score #v{c['variable']} aoe_var matches {variable_range(c)}",
+}
+
+
 def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=True):
     """(load lines, files) for the triggers that only have timer conditions (#648) or only "Objects in Area",
     "Own Objects" and "Own Fewer Objects" conditions (#649, #2573): one function per trigger. "Own Objects" counts the
@@ -3246,10 +3259,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         fn, n = f"aoe2mc:trigger/{t['id']}", t["id"]
         tests, unless, counts = [], [], []
         for i, c in enumerate(conds):
-            if c["type"] in (VARIABLE_VALUE, RESEARCHED, ACCUMULATE_ATTRIBUTE):   # a score: of the variable (#2611),
-                test = f"score #v{c['variable']} aoe_var matches {variable_range(c)}" if c["type"] == VARIABLE_VALUE \
-                    else resource_score(c) if c["type"] == ACCUMULATE_ATTRIBUTE \
-                    else f"score #p{c['player']}.{c['technology']} aoe_tech matches 1.."   # of a technology (#2656)
+            if c["type"] in SCORE_TESTS:                               # a score of the world or the game
+                test = SCORE_TESTS[c["type"]](c)
                 tests.append(f"if {test}")
                 unless.append(f"unless {test}")
                 continue
@@ -3301,8 +3312,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
-    if any(" aoe_tech " in x for x in tick):                         # a "Research Technology" condition (#2656)
-        setup["scoreboard objectives add aoe_tech dummy"] = None
+    for word in ("aoe_difficulty", "aoe_tech"):                       # a score that only the game program sets
+        if any(f" {word} " in x for x in tick):
+            setup[f"scoreboard objectives add {word} dummy"] = None
     load[:0] = setup
     if tick or any(k.endswith("_chance.mcfunction") for k in files):
         load.insert(0, "scoreboard objectives add aoe_trig dummy")
