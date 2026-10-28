@@ -22,6 +22,26 @@ def herdable(name):
     return ("COW" if name.startswith("COW_") else name) in gather.HERDS
 
 
+def spawn(g, rect, name, n):
+    """Summon n own herdables name on the free cells next to the building with block footprint rect (gather.Map.front),
+    and add them to the objects, the prey and the flock of g: they are herdables of the player, as the ones of the map
+    (Tatar sheep at a new town center, #2313)."""
+    import numpy as np
+    import units
+    players = {int(p): v for p, v in g.data.get("players", {}).items() if p.isdigit()}
+    for x, z in g.map.front(rect)[:n]:
+        pos = (x + 0.5, float(g.map.y(x, z)), z + 0.5)
+        o = {"kind": "unit", "name": name, "player": g.player, "tile": [x / g.map.T, z / g.map.T]}
+        nbt = units.make_entity(o, players, pos, np.random.default_rng())     # a new random UUID
+        kind = str(nbt.pop("id"))
+        del nbt["Pos"]
+        o["uuid"] = units.uuid_str(nbt["UUID"])
+        g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}")
+        g.data["objects"].append(o)
+        g.prey[o["uuid"]] = name
+        g.flock.add(o["uuid"])
+
+
 def owner(counts, old, celts=()):
     """The new owner of a herdable from {player: own units near it}, or old: the owner keeps it while one of its units
     is near; else the player with the most units near (the lowest number on a tie: the same in each run). A Celt player

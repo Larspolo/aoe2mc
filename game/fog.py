@@ -3,7 +3,8 @@ The fog of war for the units in the game program (#1389, epic #1387). The player
 the line of sight of the own and allied units, buildings and construction sites (Gather.seen_tiles, #1388). An enemy
 unit shows again when it comes into sight, as in AoE2 with the game setting "Reveal map: normal" (the default).
 `game/run.py --reveal all` turns it off (AoE2 "All visible"). The cheat code "polo" turns it off and on (toggle, #1390).
-The castle technology Spies turns it off for ever (reveal, #2193).
+The castle technology Spies turns it off for ever (reveal, #2193). The Mapuche see the enemy castles, the Vietnamese
+the enemy start town centers at the start (revealed, civs.REVEAL, #2311).
 
 Minecraft feature: Paper Player#hideEntity through the plugin (`aoe hide`, `aoe show`, as Replay.fog, #1302). It hides
 the units only for the players on the team of the player (`team=p1`), not for a spectator. The plugin hides them also
@@ -53,6 +54,8 @@ def update(g, pos):
     own, foe = units(g)
     tiles = set().union(*(h.seen_tiles(pos, pos.keys()) for h in gathers(g)
                           if gather.allied(g.players, g.player, h.player)))   # a destroyed building sees nothing
+    tiles |= revealed(g, start=not state.setdefault("started", False))
+    state["started"] = True
     towers = set().union(*vars(g).get("towers", {}).values())
     out = {u for u, p in pos.items() if u in foe and u not in towers
            and (int(p[0] // g.map.T), int(p[2] // g.map.T)) not in tiles}
@@ -60,6 +63,27 @@ def update(g, pos):
     hide, show = sorted(out - hidden), sorted((hidden & pos.keys()) - out - towers)
     state["hidden"] = out | (hidden & towers)
     return commands(g, "hide", hide) + commands(g, "show", show)
+
+
+def revealed(g, start=False):
+    """The tiles of the enemy buildings that the civilization of the player sees at any distance (civs.REVEAL, #2311):
+    the Mapuche see the enemy castles, the Vietnamese the enemy town centers of aoe2mc.json at the start (start: the
+    first update) of the game. The game program has no explored tiles, so a revealed building gives sight on its tiles."""
+    import civs, gather
+    kinds = civs.REVEAL.get(civs.civ(g), ())
+    if not kinds:
+        return set()
+    T, out = g.map.T, set()
+    for name, first in kinds:
+        rects = [[o["footprint"][i] for i in (0, 2, 1, 3)] + [o["player"]] for o in g.data["objects"]
+                 if o["kind"] == "building" and o["name"] == name and "footprint" in o]
+        rects += [[*s["footprint"], h.player] for h in gathers(g) for s in h.sites
+                  if s["name"] == name and s["progress"] >= 1] * (not first)   # a castle of the game: complete
+        for x0, x1, z0, z1, p in rects * (start or not first):
+            if p and not gather.allied(g.players, g.player, p):
+                out |= {(x, z) for x in range(int(x0 // T), int((x1 - 1) // T) + 1)
+                        for z in range(int(z0 // T), int((z1 - 1) // T) + 1)}
+    return out
 
 
 def commands(g, verb, uuids):
