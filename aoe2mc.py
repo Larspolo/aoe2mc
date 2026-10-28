@@ -800,6 +800,11 @@ def train(unit):
     return next((v for k, v in TRAIN.items() if unit.startswith(k)), None)
 
 
+def train_ms(unit):
+    """The training time of a unit name in ms: TRAIN, else 30 s."""
+    return (train(unit) or (30,))[0] * 1000
+
+
 def training(timeline):
     """The trainings of a recorded game: (end time ms, QUEUE event, building ID) for each unit, in the order of the
     QUEUE commands. A building trains one unit after the other; its research (RESEARCH_S) delays them. The record
@@ -809,7 +814,7 @@ def training(timeline):
         kind, t = e["kind"], e["time"]
         if kind in ("queue", "research") and e.get("objects"):
             name = e.get("name", "") if kind == "queue" else e.get("technology", "")
-            s = ((train(name) or (30,))[0] if kind == "queue" else RESEARCH_S.get(name, 0)) * 1000
+            s = train_ms(name) if kind == "queue" else RESEARCH_S.get(name, 0) * 1000
             for n in range(max(1, int(e.get("amount", 1))) if kind == "queue" else 1):
                 b = e["objects"][n % len(e["objects"])]
                 busy[b] = max(busy.get(b, 0), t) + s
