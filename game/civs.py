@@ -160,6 +160,12 @@ AGE_VILLAGERS = {"BENGALIS": 2}                                    # each own to
 # each economic technology (Wei, #2175).
 TECH_GIFTS = {r["name"]: r["tech_gifts"] for r in ROWS if "tech_gifts" in r}
 ECONOMY_VILLAGERS = {r["name"]: r["economy_villagers"] for r in ROWS if "economy_villagers" in r}
+# Resources for kills and deaths (game/spoils.py, #2271): "fallen" the part of the cost of a fallen own unit (Tupi),
+# "kill_gold" the gold for each military unit that a mounted unit kills (Mapuche), "loot" the part of the cost of a
+# destroyed enemy building (Danes).
+FALLEN = {r["name"]: r["fallen"] for r in ROWS if "fallen" in r}
+KILL_GOLD = {r["name"]: r["kill_gold"] for r in ROWS if "kill_gold" in r}
+LOOT = {r["name"]: r["loot"] for r in ROWS if "loot" in r}
 
 
 def tagged(n, group):
