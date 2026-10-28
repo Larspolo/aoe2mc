@@ -45,3 +45,6 @@ the owner chose another option, `-`: no recommendation) · principle (`P<n>`, or
 - 2026-10-27 · #1702 · Generalise: put the large tables into line-based data files, not only `train.TRAINS` · other · new (P10)
 - 2026-10-27 · #1909 · All game data in data files, by content, not by size; a lint, not a question for each run; measure in merged PRs, not hours · changed · P10
 - 2026-10-27 · #2055 · Transport ship: the ship sails to the shore of the units first, then they board (changes #1653) · changed · P1
+- 2026-10-28 · #2648 · Bot difficulty: the six AoE2 names, the values of each level in a data file · taken · P1
+- 2026-10-28 · #2585 · Minimap click: a map in an item frame near the town center, a wand click on a pixel · taken · P2, P1
+- 2026-10-28 · #2233 · Taunts: a vanilla sound only with a good Minecraft match, else text only · other · P3, P1

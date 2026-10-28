@@ -25,4 +25,4 @@ def test_triggers_scenario_and_table(tmp_path):
     rows = triggers.table(n).splitlines()
     assert rows[2].startswith("| condition | `TIMER` | 2 | `schedule function")         # the most common type first
     assert all(r.count("|") == 5 for r in rows)
-    assert any("`TASK_OBJECT` | 0 | not supported" in r for r in rows)
+    assert any("`OBJECT_SELECTED` | 0 | not supported" in r for r in rows)   # Task Object: #2646
