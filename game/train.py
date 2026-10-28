@@ -78,6 +78,7 @@ import civs  # noqa: E402
 import garrison  # noqa: E402
 import menu  # noqa: E402
 import monk  # noqa: E402
+import record  # noqa: E402
 import table  # noqa: E402
 
 DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "train.jsonl")
@@ -616,6 +617,7 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
     k = vars(g).get("doctrines", {}).get(homes(g)[rect], 0)            # its doctrine stays (#2483)
     q.append({"name": name, "progress": 0.0, "player": player} | ({"paid": cost} if cost != COSTS[name] else {})
              | ({"doctrine": k} if k and name not in TECHS else {}))
+    record.queued(g, name, rect)                                       # Record Game (#2649)
     return rect
 
 
@@ -838,6 +840,8 @@ def research(g, entry, start=False, rect=None):
         g.repeats[entry["name"]] = g.repeats.get(entry["name"], 0) + 1
     before = set(g.techs)
     g.techs.add(entry["name"])
+    if not start:
+        record.aged(g, entry["name"])                                  # Record Game (#2649)
     if start:                                                      # free: not in the score (score.py, #2355)
         vars(g).setdefault("given", set()).add(entry["name"])
     if (more := gather.FARM_TECHS.get(entry["name"])):             # the new and the live own farms get more food
@@ -1021,6 +1025,7 @@ def tick(g, work):
         elif q[0]["progress"] >= 1 and (v := spawn(g, rect, q[0]["name"])):   # no room: it waits in the queue (#2470)
             q.pop(0)
             out.append(v)
+            record.trained(g, v)                                       # its object ID (#2649)
             g.pop += 1
     refresh(g)
     sidebar(g)

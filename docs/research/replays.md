@@ -199,6 +199,11 @@ used mines and farms, and the exact unit paths. Next: #438 lets Minecraft path f
 - `mgz` source: `mgz/model/definitions.py` (the `Match`, `Map`, `Tile`, `Object`, `Action` classes) and
   `mgz/fast/actions.py` (the payload of `MOVE`, `ORDER`, `BUILD`, `WALL`).
 
+## Taunt sounds (decision #2233, 2026-10-28)
+
+A taunt plays a vanilla Minecraft sound only when a good Minecraft sound fits it ("Yes", "No", a laugh); all other
+taunts show only their text. The AoE2 taunt sounds are not free to copy (#2662).
+
 ## Pitfalls
 
 Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
