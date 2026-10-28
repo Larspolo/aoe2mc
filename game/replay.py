@@ -1372,11 +1372,20 @@ class Replay:
         for i, due in list(self.working.items()):
             v = self.units[i]
             if i in self.arriving and due <= t:                     # Paper: the real unit can be late (#766)
-                if due - self.arriving[i] < LATE and not self.arrived(v):
-                    self.working[i] = due + WAIT
-                    continue
+                late = due - self.arriving[i] >= LATE
+                if not late and (at := self.entity(v)) and math.dist(at, v.pos[::2]) > NEAR:
+                    if v.stand is None or math.dist(at, v.stand[:2]) >= 0.5:
+                        v.stand = (*at, due)
+                    stuck = due - v.stand[2] >= STILL                   # it stands: the plugin dropped its walk (#2709)
+                    if not stuck or not v.again:
+                        self.working[i] = due + WAIT
+                        if stuck:                                       # one new walk order, then /tp
+                            v.again, v.stand = True, None
+                            out.append("aoe moveto {} {} {} {}".format(v.uuid, *v.pos))
+                        continue
+                    late = True
                 out.append(f"aoe stop {v.uuid}")                     # ends its walk order: no brain turns it (#867)
-                if due - self.arriving[i] >= LATE:
+                if late:
                     out.append("tp {} {} {} {}".format(v.uuid, *v.pos))
                 del self.arriving[i]
             src = self.crew.source(v)
@@ -1656,14 +1665,7 @@ class Replay:
         if self.crew.source(v).get(v.tree, 0) > 0:
             self.working[i] = t + 1000 / self.rate(v)
             if self.ai and not ship(v.name):                        # a boat sails with /tp steps: it is there
-                self.arriving[i] = t
-
-    def arrived(self, v):
-        """True when the entity of unit v is at most NEAR blocks from its replay position, or its position is unknown.
-        The plugin walks a unit on its Minecraft path, which is slower than the AoE2 speed on slopes and around trees:
-        the replay takes it at the end of its walk at the AoE2 time, so the first gather step waits for it (#766)."""
-        m = re.findall(self.gather.NUMBER, self.game.command(f"data get entity {v.uuid} Pos").rsplit(":", 1)[-1])
-        return len(m) != 3 or math.dist((float(m[0]), float(m[2])), (v.pos[0], v.pos[2])) <= NEAR
+                self.arriving[i], v.again, v.stand = t, False, None
 
     def rate(self, v):
         """The AoE2 work rate of unit v at its resource (per game second): a farm, a hunt and a fish have their own
@@ -1991,7 +1993,7 @@ class Replay:
         def order(e):
             for i in e["objects"]:                                  # a new order ends the work at the old resource
                 self.skipped(i, since.pop(i, None), e["time"])
-            self.commands(e) if e["kind"] == "garrison" else self.move(e)   # the paths and the targets; no walks
+            out.extend(c for c in self.commands(e) if c.startswith("aoe stance "))   # the paths, targets, stances
             moved.update(e["objects"])
             walks(e["objects"])
             since.update((i, self.walk_end(v, e["time"])) for i in e["objects"]
@@ -2006,12 +2008,17 @@ class Replay:
         walks(self.moving)                                          # the walks of now
         for e in events:
             built(e["time"])
-            if e["kind"] in ("move", "order", "garrison", "build", "wall") and e.get("objects"):
+            if e["kind"] in aoe2mc.UNIT_USE | {"stop"} and e.get("objects"):
                 for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"])):
                     self.unit(i, name, e["player"])                 # a unit of a gather point gets its ID (#1227)
                 since.update((self.adopted[j], since.pop(j)) for j in list(since) if j in self.adopted)
-            if e["kind"] in ("move", "order", "garrison") and e.get("objects"):
+            if e["kind"] in ("move", "order", "garrison", "patrol", "attack_move", "follow", "guard", "autoscout") \
+                    and e.get("objects"):                           # also the orders of #2550 to #2553, #2678 (#2734)
                 order(e)
+            elif e["kind"] in ("stance", "formation", "stop") and e.get("objects"):   # only their state (#2734)
+                for i in e["objects"] if e["kind"] == "stop" else ():
+                    self.skipped(i, since.pop(i, None), e["time"])
+                out += self.commands(e)
             elif e["kind"] in ("build", "wall", "spawn", "delete", "ungarrison"):
                 builders = e.get("objects", ()) if e["kind"] in ("build", "wall") else ()
                 for i in builders:                                  # a builder ends the work at its resource
@@ -2052,6 +2059,9 @@ class Replay:
                 out.append("aoe moveto {} {} {} {}".format(v.uuid, *v.pos))
             else:                                                   # at its resource: it gathers (#887)
                 self.start(i, v, to)
+        for i in sorted(self.patrols.keys() | self.scouts.keys()):  # they walk on after the jump (#2734)
+            if i in self.units and i not in self.moving and i not in inside:
+                out += self.patrol_on(i, to) if i in self.patrols else self.scout_on(i, to)
         self.explore(trail)                                         # the sight on the walks and at the targets (#1801)
         return out + [self.gather.profession(v.uuid, v.job) for i, v in self.units.items() if v.job != jobs.get(i)]
 

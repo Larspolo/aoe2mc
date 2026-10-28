@@ -32,7 +32,7 @@ MAP = {
     ("condition", "BRING_OBJECT_TO_AREA"): "`execute if entity @e[tag=ref-N,x=..,dx=..]` (tag of the object)",
     ("condition", "OWN_OBJECTS"): "`execute store result score ... if entity @e[tag=aoe2mc.pN]`, then `if score ... matches N..` (units only, #2573)",
     ("condition", "OWN_FEWER_OBJECTS"): "`execute store result score ... if entity @e[tag=aoe2mc.pN]`, then `if score ... matches ..N` (units only, #2573)",
-    ("condition", "DESTROY_OBJECT"): "`execute unless entity @e[tag=ref-N]`",
+    ("condition", "DESTROY_OBJECT"): "`execute unless entity @e[tag=aoe2mc.rN]` in the tick function (units, #2618); a building: not supported yet",
     ("condition", "CAPTURE_OBJECT"): "`execute if entity @e[tag=ref-N,team=pN]`",
     ("condition", "OBJECT_HP"): "`execute store result score ... run data get entity @e[tag=aoe2mc.rN,limit=1] Health` in the tick function, then `if score ... matches` (#2701)",
     ("condition", "VARIABLE_VALUE"): "`execute if score #vN aoe_var matches ..` in the tick function, once (#2611)",
@@ -51,6 +51,7 @@ MAP = {
     ("effect", "REPLACE_OBJECT"): "`tag` of the old units, `execute at` each one `run summon` of the new entity of the target player (`units.make_entity()`), then `kill` of the old units and their mounts (#2703); buildings: not supported yet",
     ("effect", "KILL_OBJECT"): "`kill @e[tag=aoe2mc.pN,type=..,x=..,y=..,z=..,dx=..,dy=..,dz=..]`, no area: the whole map (#2568)",
     ("effect", "DAMAGE_OBJECT"): "`execute as @e[tag=aoe2mc.pN,type=..,x=..,dx=..] run damage @s N` (N in AoE2 hit points; timer and area triggers: #2571); heal: not supported yet",
+    ("effect", "HEAL_OBJECT"): "`execute as @e[tag=aoe2mc.pN,type=..,x=..,dx=..] store result score` of Health and max_health, `scoreboard players add`, then `store result entity @s Health` (AoE2 hit points, not above the maximum, #2692)",
     ("effect", "TELEPORT_OBJECT"): "`tp @e[tag=aoe2mc.pN,x=..,dx=..] x y z` and the mounts of the riders (#2569)",
     ("effect", "CHANGE_OBJECT_NAME"): "`execute as @e[tag=aoe2mc.pN,type=..,x=..,dx=..] run data modify entity @s CustomName.text set value \"...\"` (the player color stays, #2616)",
     ("effect", "CHANGE_OWNERSHIP"): "`tag` `aoe2mc.pN` and `team join pN` of the units in the area and their mounts (timer and area triggers: #2570); Gaia: not supported yet",
@@ -70,6 +71,7 @@ MAP = {
     ("effect", "MODIFY_RESOURCE"): "`scoreboard players add`/`remove` on `#pN.<resource> aoe_res`, a set on `aoe_set`; the game program puts it into the stock (`--mode scenario`: `scenario.resources`, #2576)",
     ("effect", "RESEARCH_TECHNOLOGY"): "`scoreboard players set #rN.I aoe_tech 1`: the scenario mode of the game program gives the technology (#2577)",
     ("effect", "CHANGE_COLOR_MOOD"): "`time set` and `weather` of the mood (`MOODS`, `RAIN`; timer and area triggers: #1876); the fog stays",
+    ("effect", "CHANGE_PLAYER_COLOR"): "`team modify pN color`: the chat color of the new player color (`units.TEAM_COLOR`) on the names and the glow of the units; the wool of the sheep and the banners keep the old color (#2712)",
     ("effect", "CHANGE_DIPLOMACY"): "`scoreboard players set #pN.pM aoe_dip`: the scenario mode of the game program changes the stance (#2645)",
 }
 
