@@ -11,7 +11,12 @@ A scenario trigger with the effect "Declare Victory" ends the game (#2542): its 
 and its allies see "Victory", the others "Defeat" (cheats.over). Minecraft feature: a scoreboard, no own logic in the
 world.
 
+A trigger with the effect "Task Object" (#2646) tags the units in its area and writes the target block into the storage
+aoe2mc:tasks (aoe2mc.task_lines): tasks() walks the tagged units there with the path finding of the Paper plugin
+(aoe moveto, a selector), then removes the tags and the key. Vanilla has no walk-to command.
+
     scenario.victory(g)    # gather.Gather.run, in the scenario mode
+    scenario.tick(g)       # the book, the tasks
 """
 import json
 import os
@@ -60,12 +65,25 @@ def unread(who):
     return f"{who[:-1]},tag=!{TAG}]" if who.endswith("]") else f"{who}[tag=!{TAG}]"
 
 
+def tasks(g):
+    """Walk the units of each "Task Object" of the storage aoe2mc:tasks to its block (one RCON read for all tasks),
+    then remove its tag from the units and its key from the storage, so it walks them once."""
+    got = g.command("data get storage aoe2mc:tasks") or ""
+    for k, x, y, z in re.findall(r"\b(k\d+_\d+): \[(-?[\d.]+)d, (-?[\d.]+)d, (-?[\d.]+)d\]", got):
+        sel = f"@e[tag=aoe_task{k[1:]}]"
+        g.command(f"aoe moveto {sel} {x} {y} {z}")
+        g.command(f"tag {sel} remove aoe_task{k[1:]}")
+        g.command(f"data remove storage aoe2mc:tasks {k}")
+
+
 def tick(g):
     """Give each person who joined since the last check the book, and show the instructions in the chat: the people,
-    not the bots (bot.Bot), once each EVERY seconds. gather.Gather.run calls it in the scenario mode."""
+    not the bots (bot.Bot), once each EVERY seconds; then the tasks of the triggers (tasks). gather.Gather.run calls it
+    in the scenario mode."""
     if g.clock() < vars(g).get("book_at", 0.0):
         return
     g.book_at = g.clock() + EVERY
+    tasks(g)
     messages = g.data.get("messages", {})
     text = re.sub(r"<[^<>]*>", "", messages.get("instructions", "")).strip()   # AoE2 color tags (book_pages)
     for who in sorted({x.who for x in [g, *(s.g for s in g.bots if not hasattr(s, "charged"))]}):

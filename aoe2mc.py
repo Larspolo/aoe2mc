@@ -2718,6 +2718,7 @@ COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions 
 CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 14, 15, 18, 72
 DAMAGE_OBJECT = 24                                                     # "Damage Object" (#2571)
 DECLARE_VICTORY = 13                                                   # "Declare Victory" (#2542)
+TASK_OBJECT = 12                                                       # "Task Object" (#2646)
 TELEPORT_OBJECT = 35
 CHANGE_VARIABLE, VARIABLE_VALUE = 56, 22                               # the scenario variables (#2611)
 TICKED = COUNTED + (VARIABLE_VALUE,)                               # conditions of the tick function
@@ -2884,6 +2885,24 @@ def variable_range(c):
     return {0: f"{q}", 1: f"..{q - 1}", 2: f"{q + 1}..", 3: f"..{q}", 4: f"{q}.."}.get(c.get("comparison"))
 
 
+def task_lines(t, i, e, T, ground):
+    """The commands of "Task Object" (#2646), effect i of trigger t: the units of the player in the area get the tag
+    aoe_task<t>_<i>, and the storage aoe2mc:tasks gets the key k<t>_<i> with the block of the middle of the tile, on the
+    ground. Vanilla has no walk-to command: the scenario mode of the game program reads the storage (scenario.tasks)
+    and walks the tagged units there with the Paper plugin (aoe moveto). A rider gives its tag to its horse (units.MOUNT):
+    the plugin walks the horse. No area or no tile: no line."""
+    if min(e.get("tile", [-1])) < 0 or min(e.get("area", [-1])) < 0:
+        return []
+    x, z = (int((v + 0.5) * T) for v in e["tile"])
+    if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
+        return []
+    k = f"{t['id']}_{i}"
+    return [f"tag {unit_selector(e, T)} add aoe_task{k}",
+            f"execute as @e[tag=aoe_task{k}] on vehicle run tag @s add aoe_task{k}",
+            f"execute as @e[tag=aoe_task{k}] on vehicle on passengers run tag @s remove aoe_task{k}",
+            f"data modify storage aoe2mc:tasks k{k} set value [{x + 0.5}d, {int(ground[x, z])}.0d, {z + 0.5}d]"]
+
+
 def unit_selector(e, T):
     """The area_selector of the units of the player of an effect. A Gaia unit has no tag (units.make_entity): the
     entities with no tag and not the players."""
@@ -2987,6 +3006,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Change View": view_lines (#2610).
     "Clear Instructions": title @a clear (#2609).
     "Play Sound": sound_lines (#2644).
+    "Task Object": task_lines (#2646).
     A disabled trigger does not run."""
     load, files, tick, win = [], {}, [], False
     stats = Counter() if stats is None else stats
@@ -3000,7 +3020,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     for c in conds):                                   # unit classes: not yet
             continue
         lines = []
-        for e in t["effects"]:
+        for i, e in enumerate(t["effects"]):
             if e["type"] in (CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT):
                 lines += object_lines(t, e, T, ground, players, stats)
                 continue
@@ -3040,6 +3060,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if e["type"] == PLAY_SOUND:
                 lines += sound_lines(e, T, ground)
+                continue
+            if e["type"] == TASK_OBJECT:
+                lines += task_lines(t, i, e, T, ground)
                 continue
             if e["type"] == CLEAR_INSTRUCTIONS:                            # no message
                 lines.append("title @a clear")
