@@ -163,12 +163,12 @@
 {"name": "PERSIANS: Parthian Tactics available in the Castle Age.", "civ": "PERSIANS", "bonus": "Parthian Tactics available in the Castle Age.", "later": "play:ages"}
 {"name": "PERSIANS: Can build Caravanserais in the Imperial Age.", "civ": "PERSIANS", "bonus": "Can build Caravanserais in the Imperial Age.", "later": "play:market"}
 {"name": "POLES: Villagers regenerate 10/15/20 hit points per minute in the Feudal/Castle/Imperial Age.", "civ": "POLES", "bonus": "Villagers regenerate 10/15/20 hit points per minute in the Feudal/Castle/Imperial Age.", "later": "play:health"}
-{"name": "POLES: Stone miners generate gold 33% in addition to stone.", "civ": "POLES", "bonus": "Stone miners generate gold 33% in addition to stone.", "gap": "play:gather"}
+{"name": "POLES: Stone miners generate gold 33% in addition to stone.", "civ": "POLES", "bonus": "Stone miners generate gold 33% in addition to stone.", "in": "EXTRA"}
 {"name": "POLES: Bloodlines and Scout Cavalry-line upgrades cost food -50%.", "civ": "POLES", "bonus": "Bloodlines and Scout Cavalry-line upgrades cost food -50%.", "in": "COSTS"}
 {"name": "PORTUGUESE: All units cost gold –20%.", "civ": "PORTUGUESE", "bonus": "All units cost gold –20%.", "in": "COSTS"}
 {"name": "PORTUGUESE: All ships have +10% hit points.", "civ": "PORTUGUESE", "bonus": "All ships have +10% hit points.", "later": "play:naval"}
-{"name": "PORTUGUESE: Foragers generate wood in addition to food (wood 0.33 food per).", "civ": "PORTUGUESE", "bonus": "Foragers generate wood in addition to food (wood 0.33 food per).", "gap": "play:gather"}
-{"name": "PURU: Villagers gathering from Stone Mines generate food 0.69 stone per.", "civ": "PURU", "bonus": "Villagers gathering from Stone Mines generate food 0.69 stone per.", "gap": "play:gather"}
+{"name": "PORTUGUESE: Foragers generate wood in addition to food (wood 0.33 food per).", "civ": "PORTUGUESE", "bonus": "Foragers generate wood in addition to food (wood 0.33 food per).", "in": "EXTRA"}
+{"name": "PURU: Villagers gathering from Stone Mines generate food 0.69 stone per.", "civ": "PURU", "bonus": "Villagers gathering from Stone Mines generate food 0.69 stone per.", "in": "EXTRA"}
 {"name": "PURU: Stone Mines last 30% longer.", "civ": "PURU", "bonus": "Stone Mines last 30% longer.", "gap": "play:gather"}
 {"name": "PURU: Villagers and Fishing Ships gather from Oysters 15% faster.", "civ": "PURU", "bonus": "Villagers and Fishing Ships gather from Oysters 15% faster.", "later": "play:naval"}
 {"name": "PURU: Cavalry units heal 25 hit points per minute when no enemy units are within 10 tiles radius, starting in the Classical Age.", "civ": "PURU", "bonus": "Cavalry units heal 25 hit points per minute when no enemy units are within 10 tiles radius, starting in the Classical Age.", "later": "play:health"}
@@ -186,7 +186,7 @@
 {"name": "SAXONS: Foot soldiers cost -5% per Town Center or Castle controlled (maximum -20%).", "civ": "SAXONS", "bonus": "Foot soldiers cost -5% per Town Center or Castle controlled (maximum -20%).", "gap": "play:train"}
 {"name": "SAXONS: Towers and Castles fire +100% base arrows starting in Castle Age.", "civ": "SAXONS", "bonus": "Towers and Castles fire +100% base arrows starting in Castle Age.", "in": "ARROWS"}
 {"name": "SAXONS: Longships and Catapult Galleons have +20% hit points.", "civ": "SAXONS", "bonus": "Longships and Catapult Galleons have +20% hit points.", "later": "play:naval"}
-{"name": "SHU: Lumberjacks generate food 0.7 for every wood 10.", "civ": "SHU", "bonus": "Lumberjacks generate food 0.7 for every wood 10.", "gap": "play:gather"}
+{"name": "SHU: Lumberjacks generate food 0.7 for every wood 10.", "civ": "SHU", "bonus": "Lumberjacks generate food 0.7 for every wood 10.", "in": "EXTRA"}
 {"name": "SHU: Archery unit technologies at the Archery Range and Blacksmith cost -25%.", "civ": "SHU", "bonus": "Archery unit technologies at the Archery Range and Blacksmith cost -25%.", "in": "COSTS"}
 {"name": "SHU: All land siege units and Lou Chuans move +10/15% faster in Castle/Imperial Age", "civ": "SHU", "bonus": "All land siege units and Lou Chuans move +10/15% faster in Castle/Imperial Age", "in": "UNITS"}
 {"name": "SICILIANS: Start with stone +100.", "civ": "SICILIANS", "bonus": "Start with stone +100.", "in": "START"}
