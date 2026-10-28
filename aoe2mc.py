@@ -418,7 +418,10 @@ def read_scenario(path):
                                                   if c.condition_type == VARIABLE_VALUE else {}),
                                                **({"quantity": c.quantity, "player": c.source_player,   # (#2655)
                                                    "attribute": c.attribute}
-                                                  if c.condition_type == ACCUMULATE_ATTRIBUTE else {}))
+                                                  if c.condition_type == ACCUMULATE_ATTRIBUTE else {}),
+                                               **({"player": c.source_player,                 # (#2656)
+                                                   "technology": techs.get(c.technology, str(c.technology))}
+                                                  if c.condition_type == RESEARCHED else {}))
                                           for c in t.conditions],
                               effects=[dict(type=e.effect_type, message=e.message or "", player=e.source_player,
                                             time=e.display_time, object=kinds.get(e.object_list_unit_id),
@@ -462,7 +465,8 @@ def read_scenario(path):
             garrisoned = u.garrisoned_in_id not in (None, -1)
             objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name, id=u.unit_const,
                                 player=player, x=u.x, y=u.y, rotation=float(u.rotation or 0), garrisoned=garrisoned,
-                                ref=u.reference_id, holder=u.garrisoned_in_id if garrisoned else None))
+                                ref=u.reference_id, holder=u.garrisoned_in_id if garrisoned else None,
+                                ref_tag=True))      # the tag aoe2mc.r<ref> for the triggers (#2617), not in a record
     return size, terrain, elevation, terrain_names, texts, objects, players
 
 
@@ -2773,12 +2777,14 @@ TELEPORT_OBJECT = 35
 CHANGE_VARIABLE, VARIABLE_VALUE = 56, 22                               # the scenario variables (#2611)
 ACCUMULATE_ATTRIBUTE = 8                                               # a resource of a player (#2655)
 ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")                         # attributes 0-3: the score holders of gather.RESOURCES
-TICKED = COUNTED + (VARIABLE_VALUE, ACCUMULATE_ATTRIBUTE)          # conditions of the tick function
+RESEARCHED = 9                                                         # the condition "Research Technology" (#2656)
+TICKED = COUNTED + (VARIABLE_VALUE, ACCUMULATE_ATTRIBUTE, RESEARCHED)  # conditions of the tick function
 FREEZE_OBJECT = 22                                                     # "Freeze Object" (#2608)
 RESEARCH_TECHNOLOGY = 2
 CHANGE_OBJECT_NAME = 26                                                # "Change Object Name" (#2616)
 CHANGE_VIEW = 16                                                       # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                                # "Clear Instructions" (#2609)
+PATROL, ATTACK_MOVE = 19, 30                                           # "Patrol", "Attack Move" (#2647)
 PLAY_SOUND = 4                                                         # "Play Sound" (#2644)
 SOUNDS = [(r["name"], r["sound"]) for r in units.rows("sounds.jsonl")]  # AoE2 sound name part -> vanilla sound
 
@@ -2968,10 +2974,15 @@ def task_lines(t, i, e, T, ground):
     if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
         return []
     k = f"{t['id']}_{i}"
-    return [f"tag {unit_selector(e, T)} add aoe_task{k}",
-            f"execute as @e[tag=aoe_task{k}] on vehicle run tag @s add aoe_task{k}",
-            f"execute as @e[tag=aoe_task{k}] on vehicle on passengers run tag @s remove aoe_task{k}",
-            f"data modify storage aoe2mc:tasks k{k} set value [{x + 0.5}d, {int(ground[x, z])}.0d, {z + 0.5}d]"]
+    return tag_lines(e, T, f"aoe_task{k}") + \
+        [f"data modify storage aoe2mc:tasks k{k} set value [{x + 0.5}d, {int(ground[x, z])}.0d, {z + 0.5}d]"]
+
+
+def tag_lines(e, T, tag):
+    """The commands that give the units of the player of an effect in its area the tag (task_lines, order_lines). A
+    rider gives its tag to its horse (units.MOUNT): the plugin walks the horse."""
+    return [f"tag {unit_selector(e, T)} add {tag}", f"execute as @e[tag={tag}] on vehicle run tag @s add {tag}",
+            f"execute as @e[tag={tag}] on vehicle on passengers run tag @s remove {tag}"]
 
 
 def resource_score(c):
@@ -3010,6 +3021,23 @@ def freeze_lines(e, T):
     at = unit_selector(e, T)
     return [f"execute as {at} on vehicle run data merge entity @s {{NoAI:1b}}",
             f"execute as {at} run data merge entity @s {{NoAI:1b}}"]
+
+
+def order_lines(t, i, e, T, ground):
+    """The commands of "Patrol" and "Attack Move" (#2647), effect i of trigger t. Vanilla has no walk-to command: the
+    units of the player in the area get the tag aoe_order<trigger>_<i> (tag_lines: a rider gives it to its horse), and
+    the order goes into the list of the data storage aoe2mc:orders as one text "<order> <tag> x y z" (the block of the
+    tile on the ground; a patrol also the middle of the area, where it turns back). The scenario mode of the game program (game/scenario.py orders) empties
+    the list with RCON and walks the tagged units with the Paper plugin."""
+    if min(e.get("tile", [-1])) < 0 or min(e.get("area", [-1])) < 0:
+        return []
+    a = e["area"]
+    blocks = [(int((x + 0.5) * T), int((z + 0.5) * T)) for x, z in (e["tile"], ((a[0] + a[2]) / 2, (a[1] + a[3]) / 2))]
+    if not all(0 <= x < ground.shape[0] and 0 <= z < ground.shape[1] for x, z in blocks):
+        return []
+    tag, order = f"aoe_order{t['id']}_{i}", "patrol" if e["type"] == PATROL else "attack_move"
+    where = " ".join(f"{x} {int(ground[x, z])} {z}" for x, z in blocks[:1 + (e["type"] == PATROL)])
+    return tag_lines(e, T, tag) + [f'data modify storage aoe2mc:orders list append value "{order} {tag} {where}"']
 
 
 def view_lines(e, T, ground):
@@ -3083,6 +3111,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Teleport Object": teleport_lines (#2569).
     "Change Variable": variable_lines; a "Variable Value" condition runs in the tick function as an area (#2611).
     An "Accumulate Attribute" condition of a resource runs in the tick function too: resource_score (#2655).
+    A "Research Technology" condition too: the game program sets the score #p<player>.<technology> of aoe_tech (#2656).
     "Declare Victory" sets the score #p<player> of aoe_win to 1: the scenario mode of the game program ends the game.
     "Change Diplomacy" sets the score #p<player>.p<target> of aoe_dip to the stance + 1 and #any of aoe_dip to 1: the
     scenario mode changes the stance (#2645).
@@ -3091,6 +3120,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Research Technology": a score in aoe_tech for the game program (research_list, #2577).
     "Change View": view_lines (#2610).
     "Clear Instructions": title @a clear (#2609).
+    "Patrol" and "Attack Move": order_lines (#2647).
     "Play Sound": sound_lines (#2644).
     "Task Object": task_lines (#2646).
     A disabled trigger does not run."""
@@ -3108,8 +3138,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 chance and len([c for c in conds if c["type"] == TRIGGER_CHANCE]) > 1 or \
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds) or \
                 any(c["type"] == VARIABLE_VALUE and (c.get("variable", -1) < 0 or variable_range(c) is None)
-                    for c in conds) or \
-                any(c["type"] == ACCUMULATE_ATTRIBUTE and resource_score(c) is None for c in conds):                                   # unit classes: not yet
+                    or c["type"] == RESEARCHED and (c.get("player", -1) <= 0 or not c.get("technology"))
+                    or c["type"] == ACCUMULATE_ATTRIBUTE and resource_score(c) is None
+                    for c in conds):                                   # unit classes: not yet
             continue
         lines = []
         for i, e in enumerate(t["effects"]):
@@ -3166,6 +3197,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             if e["type"] == CHANGE_VIEW:
                 lines += view_lines(e, T, ground)
                 continue
+            if e["type"] in (PATROL, ATTACK_MOVE):
+                lines += order_lines(t, i, e, T, ground)
             if e["type"] == PLAY_SOUND:
                 lines += sound_lines(e, T, ground)
                 continue
@@ -3189,9 +3222,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         fn, n = f"aoe2mc:trigger/{t['id']}", t["id"]
         tests, unless, counts = [], [], []
         for i, c in enumerate(conds):
-            if c["type"] in (VARIABLE_VALUE, ACCUMULATE_ATTRIBUTE):     # a score of the variable (#2611)
-                test = resource_score(c) if c["type"] == ACCUMULATE_ATTRIBUTE else \
-                    f"score #v{c['variable']} aoe_var matches {variable_range(c)}"
+            if c["type"] in (VARIABLE_VALUE, RESEARCHED, ACCUMULATE_ATTRIBUTE):   # a score: of the variable (#2611),
+                test = f"score #v{c['variable']} aoe_var matches {variable_range(c)}" if c["type"] == VARIABLE_VALUE \
+                    else resource_score(c) if c["type"] == ACCUMULATE_ATTRIBUTE \
+                    else f"score #p{c['player']}.{c['technology']} aoe_tech matches 1.."   # of a technology (#2656)
                 tests.append(f"if {test}")
                 unless.append(f"unless {test}")
                 continue
@@ -3240,7 +3274,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         load.append(run)
     if money:                                                          # resource_lines (#2576)
         load[:0] = ["scoreboard objectives add aoe_res dummy", "scoreboard objectives add aoe_set dummy"]
-    if any(" aoe_tech 1" in f for f in files.values()):
+    if any(" aoe_tech 1" in f for f in files.values()) or any(" aoe_tech " in x for x in tick):
         load.insert(0, "scoreboard objectives add aoe_tech dummy")
     names = sorted({f"#v{x['variable']}" for t in triggers for x in t["conditions"] + t["effects"]
                     if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE) and x.get("variable", -1) >= 0})

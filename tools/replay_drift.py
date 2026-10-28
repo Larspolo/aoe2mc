@@ -4,7 +4,8 @@ Measure how far the units of a live replay on Paper are from their replay positi
 
 Usage:
     python3 tools/replay_drift.py samples/de-64.3.aoe2record [--speed 4] [--until 10:00] [--log OUT.jsonl] [--server-log OUT.log]
-    python3 tools/replay_drift.py WORLD ...                    # a converted world of a record (the tool copies it)
+    python3 tools/replay_drift.py WORLD ...                    # a converted world of a record (the tool copies it;
+                                                               # it stops on a world that a game saved, #2667)
     python3 tools/replay_drift.py --read OUT.jsonl             # only print the table of a log
 
 The tool converts the record (or copies the world: the game saves its changes there, #718), starts Paper without a
@@ -168,6 +169,23 @@ def keep_log(game, path):
         shutil.copyfile(log, path)
 
 
+def played(world, data, near=2):
+    """The object IDs of the start units whose entity in world stands more than near blocks (without height) from
+    its tile in aoe2mc.json: a world that a game saved stands at the place where that game stopped (#2667: eagle scout
+    1665 of de-64.3 stood at its 11:55 place, 366 blocks away, and the drift of a later run was wrong)."""
+    import uuid
+    import world_reader
+    pos = {}
+    for e in world_reader.World(world).entities():
+        if "UUID" in e:
+            a = [int(v) & 0xFFFFFFFF for v in e["UUID"]]
+            pos[str(uuid.UUID(int=a[0] << 96 | a[1] << 64 | a[2] << 32 | a[3]))] = [float(v) for v in e["Pos"]]
+    T = data["tile_size"]
+    return [o["ref"] for o in data["objects"] if o["kind"] == "unit" and o.get("ref") is not None
+            and o.get("uuid") in pos and math.dist((pos[o["uuid"]][0], pos[o["uuid"]][2]),
+                                                    (o["tile"][0] * T, o["tile"][1] * T)) > near]
+
+
 def measure(src, speed=4.0, until=None, every=10, log=None, version=None, server_log=None):
     """Play the replay of src (a record or a converted world) on Paper; returns the samples. server_log: copy the
     server log to this file at the end, also after an error."""
@@ -185,6 +203,9 @@ def measure(src, speed=4.0, until=None, every=10, log=None, version=None, server
                 aoe2mc.convert(src, world)
         with open(os.path.join(world, "aoe2mc.json")) as f:
             data = json.load(f)
+        if os.path.isdir(src) and (moved := played(world, data)):
+            raise SystemExit(f"{src}: a game saved this world, {len(moved)} start units are not at their tile "
+                             f"(object IDs {moved[:5]}). Convert the record again, or give the record.")
         with run.Game(world, version or mc_check.DEFAULT_VERSION) as game:
             game.forceload()
             import combat
