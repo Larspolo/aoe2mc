@@ -60,6 +60,7 @@ def tick(g):
 
 def test_the_sidebar_has_one_line_per_player_and_changes_after_an_event():
     server, g, bot = two_sides()
+    g.explore_at = float("inf")                                        # no explored tiles: tests/test_score_explored.py
     server.log.clear()
     tick(g)
     lines = [c for c in server.log if c.startswith("scoreboard players set Score")]

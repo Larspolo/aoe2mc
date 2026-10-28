@@ -6,7 +6,7 @@
 {"name": "ARMENIANS: Fortified Churches replace Monasteries, and the first one constructed receives a free Relic.", "civ": "ARMENIANS", "bonus": "Fortified Churches replace Monasteries, and the first one constructed receives a free Relic.", "in": "free_relic"}
 {"name": "ARMENIANS: Long Swordsman and above, and Spearman line available one Age earlier.", "civ": "ARMENIANS", "bonus": "Long Swordsman and above, and Spearman line available one Age earlier.", "in": "EARLIER"}
 {"name": "ARMENIANS: The Galley line and Dromons* fire one additional projectile each, which deal 1 attack and advertised attack, respectively.", "civ": "ARMENIANS", "bonus": "The Galley line and Dromons* fire one additional projectile each, which deal 1 attack and advertised attack, respectively.", "in": "volley"}
-{"name": "ATHENIANS: Athenians can be changed between Economic, Naval, and Military at the Town Center.", "civ": "ATHENIANS", "bonus": "Athenians can be changed between Economic, Naval, and Military at the Town Center.", "later": "play:setup"}
+{"name": "ATHENIANS: Athenians can be changed between Economic, Naval, and Military at the Town Center.", "civ": "ATHENIANS", "bonus": "Athenians can be changed between Economic, Naval, and Military at the Town Center.", "in": "policies"}
 {"name": "ATHENIANS: Lumberjacks generate food 1 for every wood 14.7.", "civ": "ATHENIANS", "bonus": "Lumberjacks generate food 1 for every wood 14.7.", "in": "EXTRA"}
 {"name": "ATHENIANS: Hoplites move 15% faster.", "civ": "ATHENIANS", "bonus": "Hoplites move 15% faster.", "in": "UNITS"}
 {"name": "AZTECS: Start the game with an Eagle Scout.", "civ": "AZTECS", "bonus": "Start the game with an Eagle Scout.", "in": "game/data/civs.jsonl"}
@@ -51,7 +51,7 @@
 {"name": "CELTS: Non-Celt herdable animals can be converted regardless of units next to them.", "civ": "CELTS", "bonus": "Non-Celt herdable animals can be converted regardless of units next to them.", "in": "game/herd.py"}
 {"name": "CHINESE: Start game with +3 Villagers, but with food -200, wood -50.", "civ": "CHINESE", "bonus": "Start game with +3 Villagers, but with food -200, wood -50.", "in": "START"}
 {"name": "CHINESE: Town Centers support 15 population (instead of 5) and have +7 Line of Sight.", "civ": "CHINESE", "bonus": "Town Centers support 15 population (instead of 5) and have +7 Line of Sight.", "in": "HOUSING"}
-{"name": "CHINESE: Technologies are 5%/10%/15% cheaper in the Feudal/Castle/Imperial Age, respectively.", "civ": "CHINESE", "bonus": "Technologies are 5%/10%/15% cheaper in the Feudal/Castle/Imperial Age, respectively.", "in": "COSTS"}
+{"name": "CHINESE: Technologies are 5%/10%/15% cheaper in the Feudal/Castle/Imperial Age, respectively.", "civ": "CHINESE", "bonus": "Technologies are 5%/10%/15% cheaper in the Feudal/Castle/Imperial Age, respectively.", "in": ["COSTS", "UNITS"]}
 {"name": "CHINESE: Fire Galley line and Fire Lancers move 5%/10% faster in the Castle/Imperial Age.", "civ": "CHINESE", "bonus": "Fire Galley line and Fire Lancers move 5%/10% faster in the Castle/Imperial Age.", "in": "UNITS"}
 {"name": "CUMANS: A second Town Center can be built in the Feudal Age.", "civ": "CUMANS", "bonus": "A second Town Center can be built in the Feudal Age.", "in": "game/build.py"}
 {"name": "CUMANS: Archery Ranges and Stables cost wood -75.", "civ": "CUMANS", "bonus": "Archery Ranges and Stables cost wood -75.", "in": "COSTS"}
@@ -128,7 +128,7 @@
 {"name": "LITHUANIANS: Spearman line and Skirmishers move 10% faster.", "civ": "LITHUANIANS", "bonus": "Spearman line and Skirmishers move 10% faster.", "in": "UNITS"}
 {"name": "LITHUANIANS: Each garrisoned Relic gives +1 attack to Knights and Leitis (maximum +4).", "civ": "LITHUANIANS", "bonus": "Each garrisoned Relic gives +1 attack to Knights and Leitis (maximum +4).", "in": "RELIC_ATTACK"}
 {"name": "MACEDONIANS: Take 10% less damage from enemies on higher elevation.", "civ": "MACEDONIANS", "bonus": "Take 10% less damage from enemies on higher elevation.", "in": "ELEVATION"}
-{"name": "MACEDONIANS: Recruitment Doctrines are available at the Barracks, Archery Range, and Stable.", "civ": "MACEDONIANS", "bonus": "Recruitment Doctrines are available at the Barracks, Archery Range, and Stable.", "later": "play:military-train"}
+{"name": "MACEDONIANS: Recruitment Doctrines are available at the Barracks, Archery Range, and Stable.", "civ": "MACEDONIANS", "bonus": "Recruitment Doctrines are available at the Barracks, Archery Range, and Stable.", "in": "doctrines"}
 {"name": "MACEDONIANS: Infantry armor upgrades also benefit cavalry.", "civ": "MACEDONIANS", "bonus": "Infantry armor upgrades also benefit cavalry.", "in": "SMITH_UNITS"}
 {"name": "MACEDONIANS: Siege weapons have +1 pierce armor and +30% anti-building damage.", "civ": "MACEDONIANS", "bonus": "Siege weapons have +1 pierce armor and +30% anti-building damage.", "in": "UNITS"}
 {"name": "MAGYARS: Forging, Iron Casting, and Blast Furnace are free.", "civ": "MAGYARS", "bonus": "Forging, Iron Casting, and Blast Furnace are free.", "in": "COSTS"}
@@ -173,7 +173,7 @@
 {"name": "PURU: Stone Mines last 30% longer.", "civ": "PURU", "bonus": "Stone Mines last 30% longer.", "in": "LAST"}
 {"name": "PURU: Villagers and Fishing Ships gather from Oysters 15% faster.", "civ": "PURU", "bonus": "Villagers and Fishing Ships gather from Oysters 15% faster.", "in": "WORK"}
 {"name": "PURU: Cavalry units heal 25 hit points per minute when no enemy units are within 10 tiles radius, starting in the Classical Age.", "civ": "PURU", "bonus": "Cavalry units heal 25 hit points per minute when no enemy units are within 10 tiles radius, starting in the Classical Age.", "in": "REGEN"}
-{"name": "PURU: Lemboi cost -10/19/27% and gain +1/2/3 attack in the Civic/Classical/Imperial Ages respectively.", "civ": "PURU", "bonus": "Lemboi cost -10/19/27% and gain +1/2/3 attack in the Civic/Classical/Imperial Ages respectively.", "later": "play:military-train"}
+{"name": "PURU: Lemboi cost -10/19/27% and gain +1/2/3 attack in the Civic/Classical/Imperial Ages respectively.", "civ": "PURU", "bonus": "Lemboi cost -10/19/27% and gain +1/2/3 attack in the Civic/Classical/Imperial Ages respectively.", "in": ["COSTS", "UNITS"]}
 {"name": "ROMANS: Villagers gather, build, and repair 5% faster.", "civ": "ROMANS", "bonus": "Villagers gather, build, and repair 5% faster.", "in": "WORK"}
 {"name": "ROMANS: Galley-line and Dromon +1/+1 armor.", "civ": "ROMANS", "bonus": "Galley-line and Dromon +1/+1 armor.", "in": "UNITS"}
 {"name": "ROMANS: Infantry receives double the effect from Blacksmith armor upgrades.", "civ": "ROMANS", "bonus": "Infantry receives double the effect from Blacksmith armor upgrades.", "in": "SMITH_UNITS"}
@@ -203,7 +203,7 @@
 {"name": "SPANISH: Cannon Galleon projectiles can track moving targets and move faster.", "civ": "SPANISH", "bonus": "Cannon Galleon projectiles can track moving targets and move faster.", "in": "lead"}
 {"name": "SPANISH: Gunpowder units fire 18% faster.", "civ": "SPANISH", "bonus": "Gunpowder units fire 18% faster.", "in": "UNITS"}
 {"name": "SPANISH: Receive gold 20 for each technology researched.", "civ": "SPANISH", "bonus": "Receive gold 20 for each technology researched.", "in": "TECH_GIFTS"}
-{"name": "SPARTANS: A Polemarch is spawned for free in both the Civic Age and Classical Age.", "civ": "SPARTANS", "bonus": "A Polemarch is spawned for free in both the Civic Age and Classical Age.", "later": "play:ages"}
+{"name": "SPARTANS: A Polemarch is spawned for free in both the Civic Age and Classical Age.", "civ": "SPARTANS", "bonus": "A Polemarch is spawned for free in both the Civic Age and Classical Age.", "in": "age_units"}
 {"name": "SPARTANS: Villagers and Fishing Ships drop off 10% more food.", "civ": "SPARTANS", "bonus": "Villagers and Fishing Ships drop off 10% more food.", "in": "DROP"}
 {"name": "SPARTANS: The Elite Hoplite upgrade is available in the Classical Age.", "civ": "SPARTANS", "bonus": "The Elite Hoplite upgrade is available in the Classical Age.", "in": "EARLIER"}
 {"name": "TATARS: Herdable animals contain food +50%.", "civ": "TATARS", "bonus": "Herdable animals contain food +50%.", "in": "LAST"}

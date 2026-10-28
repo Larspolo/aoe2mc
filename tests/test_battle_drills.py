@@ -12,7 +12,7 @@ UPGRADE = "TWO_HANDED_SWORDSMAN_UPGRADE"
 
 def g(civ, ages):
     _, g = setup(civ, ages)
-    g.techs.add(train.AFTER[UPGRADE])                                  # Long Swordsman before it
+    g.techs.add(train.BY_KEY["after"][UPGRADE])                                  # Long Swordsman before it
     return g
 
 

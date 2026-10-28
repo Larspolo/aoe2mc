@@ -115,6 +115,8 @@ civilizations that have it, sorted) on its own line of `game/data/train.jsonl` o
 `costs`, `units`, `twice`), not into `civs.py`.
 A new key of `game/data/civs.jsonl` (a civilization bonus) is one line in `game/data/civ_keys.jsonl` (what it does, its
 issue) and `civs.value("key", civ, default)` in the module that applies it: no new table or comment in `game/civs.py` (#2281).
+A new key of `game/data/train.jsonl` is one line in `game/data/train_keys.jsonl` and `train.value("key", name, default)`
+in the module that reads it, not a new table of `game/train.py` (#2507).
 A new data line needs no test of its values: `tests/test_data_files.py` checks the form of each line of `game/data/`
 (keys, types, names that exist, #1916), and `tests/test_data_keys.py` checks that the code reads each key (#2188): a new key needs no test line. Test the behavior that the code computes
 from it (a fight, a menu, a bonus).
@@ -122,6 +124,8 @@ The same for a new command of the Paper plugin: its line in the command list at 
 `if` block in `onCommand` go in alphabetical order of the command name, not after the last one (#795 and #813 conflicted).
 A new game setting of `game/run.py` (a lobby setting, epic #2263) is one line in `run.SETTINGS` and an option of the
 same name, not a new keyword of `play()` (#2373).
+A new game mode (`--mode`) is one line in `game/data/setup.jsonl` (keys `"help"`, `"module"`, `"age"`, `"loaded"`,
+`"bots"`: `run.MODES`) and its module with `setup(g, mode)`, not a change of `play()` (#2521).
 
 ## How to verify
 
