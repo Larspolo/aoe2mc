@@ -41,13 +41,17 @@ def test_change_variable_adds_to_the_score():
     assert stats == Counter({"change variable": 1})
 
 
+def ctx(stats):
+    return aoe2mc.Effect(None, 4, None, None, stats, True, {}, {})       # the context of a trigger (#2613)
+
+
 def test_the_operations():
-    lines = [aoe2mc.variable_lines(change(op, 4), Counter()) for op in (SET, SUBTRACT, MULTIPLY, DIVIDE)]
+    lines = [aoe2mc.variable_lines(change(op, 4), ctx(Counter())) for op in (SET, SUBTRACT, MULTIPLY, DIVIDE)]
     assert lines[:2] == [["scoreboard players set #v2 aoe_var 4"], ["scoreboard players remove #v2 aoe_var 4"]]
     assert lines[2] == ["scoreboard players set #c4 aoe_var 4", "scoreboard players operation #v2 aoe_var *= #c4 aoe_var"]
     assert lines[3][1] == "scoreboard players operation #v2 aoe_var /= #c4 aoe_var"
     stats = Counter()
-    assert aoe2mc.variable_lines(change(DIVIDE, 0), stats) == [] and stats == Counter({"change variable (not supported)": 1})
+    assert aoe2mc.variable_lines(change(DIVIDE, 0), ctx(stats)) == [] and stats == Counter({"change variable (not supported)": 1})
 
 
 def test_variable_value_fires_in_the_tick_function_once():
