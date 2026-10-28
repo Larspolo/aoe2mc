@@ -240,6 +240,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_claim_active_pr.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_claim_code_span.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_claim_conflict.py` | generic | None (a test of `tools/claim.py`). |
+| `tests/test_claim_exit.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_claim_first.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_claim_refill.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_claim_release_label.py` | generic | None (a test of `tools/claim.py`). |
