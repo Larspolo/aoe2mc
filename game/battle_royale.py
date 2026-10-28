@@ -65,8 +65,8 @@ def setup(g, mode="battle-royale"):
 
 
 def start(g):
-    """The start of the mode: each player (not Gaia) loses its town centers ("aoe destroy" of their targets: Gather.fall
-    frees the footprints) and its villagers (kill, also the units of a player with no Gather), and each Gather of a
+    """The start of the mode: each player (not Gaia) loses its town centers ("aoe destroy" of their targets, Gather.free
+    frees the footprints: no razing and no loot, #3113) and its villagers (kill, also the units of a player with no Gather), and each Gather of a
     player has 0 of the resources of the key "none" (stone), but an infinite level keeps them (gather.Endless)."""
     import combat, gather                                              # combat imports gather, gather imports the modes
     objs = [o for o in g.data["objects"] if o["player"] and o["player"] > 0]
@@ -77,8 +77,9 @@ def start(g):
         g.command(f"aoe destroy {u}")
     for u in sorted(dead):
         g.command(f"kill {u}")
+    for u in sorted(gone):                                             # no razing and no loot: not Gather.fall (#3113)
+        g.free(u)
     for x in [g, *(b.g for b in getattr(g, "bots", ()))]:
-        x.sieged |= gone & x.forts.keys()
         x.villagers = {u: v for u, v in x.villagers.items() if u not in dead}
         x.units = [o for o in x.units if o.get("uuid") not in dead]
         x.enemies = {u: k for u, k in x.enemies.items() if u not in dead}

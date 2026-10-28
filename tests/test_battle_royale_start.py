@@ -46,9 +46,11 @@ def test_the_town_centers_and_the_villagers_of_the_players_go():
         dict(kind="unit", name="SCOUT_CAVALRY", player=1, uuid="s1")]
     tc = combat.target_uuid(TC)
     g.forts, g.villagers, g.enemies = {tc: (4, 64, 4, 7, 70, 7)}, {"v2": None}, {"v2": "VILLAGER_MALE", "s1": "X"}
+    freed = []
+    g.free = freed.append                                              # Gather.free frees the footprint (#3113)
     battle_royale.start(g)
     assert [c for c in g.log if c.startswith(("aoe destroy", "kill"))] == [f"aoe destroy {tc}", "kill v2"]
-    assert g.sieged == {tc} and g.villagers == {} and g.enemies == {"s1": "X"}   # Gather.fall frees the footprint
+    assert freed == [tc] and g.sieged == set() and g.villagers == {} and g.enemies == {"s1": "X"}
 
 
 def test_a_loaded_game_keeps_its_town():
