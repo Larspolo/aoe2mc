@@ -5881,8 +5881,9 @@ def main(argv=None):
                     help="fog for the fog moods of a DE scenario (Misty, Murky, Brumous); Minecraft then shows an "
                          "\"Experimental Settings\" warning when the world opens (--ambience full gives it too)")
     ap.add_argument("--resource-pack", action="store_true",
-                    help="write resourcepacks/resources.zip into the world: single player loads it with the world, and the zombie "
-                         "units get a human face")
+                    help="write resourcepacks/resources.zip into the world: single player loads it with the world, and the units "
+                         "get an AoE2 look (faces, armor, weapons). Cost (docs/resourcepack.md, #2747): 4.8 MB, the same server "
+                         "tick time, about +1 %% frame time")
     ap.add_argument("--at", type=game_time, metavar="MM:SS",
                     help="recorded game: convert the state at this game time (buildings and trained units of the "
                          "commands until then; default: the start)")
