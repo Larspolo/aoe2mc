@@ -451,6 +451,17 @@ def civ_choices(values):
     return out
 
 
+def apply_civs(data, civs):
+    """Write the --civ choices {player: civilization} into the players of aoe2mc.json. A player whose scenario locks
+    its civilization ("Lock Civilizations", #3295) keeps the scenario civilization: a line on stderr says why."""
+    for player, name in (civs or {}).items():
+        p = data.setdefault("players", {}).setdefault(str(player), {})
+        if p.get("lock_civ"):
+            print(f"player {player}: the scenario locks its civilization, --civ {name} is not used", file=sys.stderr)
+            continue
+        p["civ"] = name
+
+
 def handicap_choices(values):
     """{player: percent} of the --handicap values ("1=150", #2474): the AoE2 setting "Handicap", 100 to 200 in steps of
     5. A wrong value stops with a message."""
@@ -552,8 +563,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         return g
     with open(os.path.join(world, "aoe2mc.json")) as f:
         data = json.load(f)
-    for player, name in (settings["civ"] or {}).items():         # before the Gathers: all bonuses (civs.civ) follow it
-        data.setdefault("players", {}).setdefault(str(player), {})["civ"] = name
+    apply_civs(data, settings["civ"])                             # before the Gathers: all bonuses (civs.civ) follow it
     for player, pct in (settings["handicap"] or {}).items():     # before the Gathers: the start resources (#2474)
         data.setdefault("players", {}).setdefault(str(player), {})["handicap"] = pct
     for player, team in (settings["teams"] or {}).items():       # gather.allied and the scoreboard teams follow it

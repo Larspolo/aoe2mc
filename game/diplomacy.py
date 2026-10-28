@@ -118,7 +118,8 @@ def others(g):
 
 def name(g, n):
     civ = getattr(g, "trigger_civs", {}).get(str(n)) or build.pretty(g.players[str(n)].get("civ") or "")
-    return f"Player {n}" + (f" ({civ})" if civ else "")              # a scenario trigger renames it (#2905)
+    who = g.players[str(n)].get("name") or f"Player {n}"            # the name of the scenario player (#3295)
+    return who + (f" ({civ})" if civ else "")                        # a scenario trigger renames it (#2905)
 
 
 def items(g):
