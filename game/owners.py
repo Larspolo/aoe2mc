@@ -67,8 +67,10 @@ def give(g, uuid, new):
                 o.selected.discard(uuid)
                 o.command(f"data merge entity {uuid} {{Glowing:0b}}")
                 o.command(f"tag {uuid} remove {gather.SELECT}")
-            if not gather.allied(o.players, o.player, new):
+            if new and not gather.allied(o.players, o.player, new):
                 o.enemies[uuid] = name
+            elif not new and (gather.hunt_food(name) or gather.predator(name)):   # Gaia: an animal is prey (#2998)
+                o.prey[uuid] = name
         elif gather.soldier(name):
             o.soldiers[uuid] = name
         elif uuid not in o.villagers and (pos := o.pos(uuid)):

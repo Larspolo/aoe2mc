@@ -25,7 +25,11 @@ def lines(**k):
 def test_the_units_of_player_1_in_the_area_go_to_player_2():
     sel = aoe2mc.area_selector(trig()["effects"][0], 4)
     assert "tag=aoe2mc.p1" in sel and "x=8," in sel and "z=12," in sel
-    assert lines() == [f"tag {sel} add aoe2mc.own",                    # the old tag selects them: mark them first
+    assert lines() == [f"tag {sel} add aoe_order5_0",
+                      "execute as @e[tag=aoe_order5_0] on vehicle run tag @s add aoe_order5_0",
+                      "execute as @e[tag=aoe_order5_0] on vehicle on passengers run tag @s remove aoe_order5_0",
+                      'data modify storage aoe2mc:orders list append value "owner aoe_order5_0 1 2"',
+                      f"tag {sel} add aoe2mc.own",                    # the old tag selects them: mark them first
                        "execute as @e[tag=aoe2mc.own] on vehicle run tag @s add aoe2mc.own",   # and their horses
                        "tag @e[tag=aoe2mc.own] remove aoe2mc.p1", "tag @e[tag=aoe2mc.own] add aoe2mc.p2",
                        "team join p2 @e[tag=aoe2mc.own]", "tag @e[tag=aoe2mc.own] remove aoe2mc.own"]

@@ -3422,7 +3422,10 @@ def owner_lines(e, c):
     stats["change ownership"] += 1
     own = "@e[tag=aoe2mc.own]"
     to = [f"tag {own} add aoe2mc.p{new}", f"team join p{new} {own}" if new else f"team leave {own}"]
-    return [f"tag {unit_selector(e, T)} add aoe2mc.own",
+    # the order tag (#2998): the game program gives the same units to the new owner (scenario.orders)
+    tag = f"aoe_order{c.t['id']}_{effect_index(e, c)}"
+    return [*tag_lines(e, T, tag), f'data modify storage aoe2mc:orders list append value "owner {tag} {old} {new}"',
+            f"tag {unit_selector(e, T)} add aoe2mc.own",
             f"execute as {own} on vehicle run tag @s add aoe2mc.own",
             f"tag {own} remove aoe2mc.p{old}", *to, f"tag {own} remove aoe2mc.own"]
 
