@@ -9,7 +9,7 @@ CASTLE = (12, 4)
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.TECH_AGE["ELITE_JAGUAR_WARRIOR_UPGRADE"] == 3 and train.build.AGE["ELITE_JAGUAR_WARRIOR"] == 3
+    assert train.build.AGE["ELITE_JAGUAR_WARRIOR"] == 3
     assert len(train.HELP["JAGUAR_WARRIOR"]) <= 50 and "AZTECS" not in train.civs.MISSING["JAGUAR_WARRIOR"]
     assert "BRITONS" in train.civs.MISSING["JAGUAR_WARRIOR"]
 

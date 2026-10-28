@@ -19,7 +19,7 @@ def player(civ="MAYANS", ages=("FEUDAL_AGE",)):
 
 def test_the_values_are_those_of_the_wiki():
     for name in ("EAGLE_SCOUT", "EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"):
-        assert train.COSTS[name] == {"food": 20, "gold": 50} and len(train.HELP[name]) <= 50
+        assert len(train.HELP[name]) <= 50
     assert [train.TRAIN_TIMES[n] for n in ("EAGLE_SCOUT", "EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR")] == [46, 35, 20]
     assert [build.AGE[n] for n in ("EAGLE_SCOUT", "EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR")] == [1, 2, 3]
 

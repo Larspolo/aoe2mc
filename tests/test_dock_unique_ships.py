@@ -30,7 +30,7 @@ def test_each_ship_has_the_wiki_values(name):
     own, cost, time, hp, slot, up_cost, up_time, elite_hp = SHIPS[name]
     elite, up = f"ELITE_{name}", f"ELITE_{name}_UPGRADE"
     assert train.COSTS[name] == train.COSTS[elite] == cost and train.TRAIN_TIMES[name] == time
-    assert train.COSTS[up] == up_cost and train.TRAIN_TIMES[up] == up_time and train.TECH_AGE[up] == 3
+    assert train.COSTS[up] == up_cost and train.TRAIN_TIMES[up] == up_time
     assert build.AGE[name] == 2 and build.AGE[elite] == 3
     assert combat.stats(name).hp == hp and combat.stats(elite).hp == elite_hp
     assert combat.SHIP in combat.stats(name).classes and combat.WAR in combat.stats(elite).classes

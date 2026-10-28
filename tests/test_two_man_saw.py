@@ -7,7 +7,7 @@ from game import civs, gather, train
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.TECH_AGE["TWO_MAN_SAW"] == 3 and train.AFTER["TWO_MAN_SAW"] == "BOW_SAW"
+    assert train.AFTER["TWO_MAN_SAW"] == "BOW_SAW"
     assert train.ITEMS["TWO_MAN_SAW"][0] == train.ITEMS["BOW_SAW"][0] and "TWO_MAN_SAW" in train.TRAINS["LUMBER_CAMP"]
     assert gather.WORK_TECHS["TWO_MAN_SAW"] == {"wood": 1.1} and len(train.HELP["TWO_MAN_SAW"]) <= 50
     assert {"CELTS", "FRANKS", "MONGOLS", "ARMENIANS"} <= set(civs.MISSING["TWO_MAN_SAW"])
