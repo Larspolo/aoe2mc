@@ -17,6 +17,9 @@ A trigger with the effect "Change Diplomacy" sets the score #p<N>.p<M> of aoe_di
 (#2645): diplomacy() changes the stance of player N to player M in the players of aoe2mc.json and sends the plugin
 commands of the alliances and neutral stances (gather.allies_command, gather.neutral_command).
 
+The conditions "Researching Technology" and "Technology State" (#2769) test the score #p<N>.<technology> of
+aoe_techstate: tech_states() sets it to the AoE2 TechnologyState from the queues and g.techs of player N.
+
 The condition "Difficulty Level" (#2704) tests the score #level of aoe_difficulty: setup() sets it to the AoE2 value
 ("aoe2" of game/data/difficulty.jsonl) of the setting "AI difficulty" (run.py --ai-difficulty).
 
@@ -104,6 +107,7 @@ def tick(g):
     gather.Gather.run calls it in the scenario mode. Also the technologies of the triggers (research, #2577)."""
     research(g)
     garrisons(g)
+    tech_states(g)
     if g.clock() < vars(g).get("book_at", 0.0):
         return
     g.book_at = g.clock() + EVERY
@@ -225,6 +229,35 @@ def garrisons(g):
             if o.get("ref") is not None and sent.get(o["ref"], 0) != n:   # the objective starts with no score: 0
                 g.command(f"scoreboard players set #g{o['ref']} aoe_gar {n}")
                 sent[o["ref"]] = n
+
+
+def tech_states(g):
+    """Once per game second: the score #p<N>.<technology> of aoe_techstate of each pair of aoe2mc.json "tech_states"
+    (the conditions "Researching Technology" and "Technology State", #2769) is the AoE2 TechnologyState of the
+    technology for player N (tech_state). One command per change; a player with no Gather keeps no score."""
+    if g.clock() < vars(g).get("tech_state_at", 0.0):
+        return
+    g.tech_state_at = g.clock() + 1.0
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    sent = vars(g).setdefault("tech_state_sent", {})
+    for n, name in g.data.get("tech_states", ()):
+        if n in sides and name in train.TECHS and sent.get((n, name)) != (v := tech_state(sides[n], name)):
+            g.command(f"scoreboard players set #p{n}.{name} aoe_techstate {v}")
+            sent[(n, name)] = v
+
+
+def tech_state(x, name):
+    """The AoE2 TechnologyState of technology name for the Gather x: 3 researched, 2 researching (the head of a queue),
+    4 queued, -1 disabled (the civilization does not have it), 1 ready (train.unlocked: its age and its technology
+    before it), else 0."""
+    if name in x.techs:
+        return 3
+    queues = [[e["name"] for e in q] for q in x.queues.values()]
+    if any(q[:1] == [name] for q in queues):
+        return 2
+    if any(name in q for q in queues):
+        return 4
+    return -1 if train.civs.missing(x, name) else 1 if train.unlocked(x, name) else 0
 
 
 def victory(g):
