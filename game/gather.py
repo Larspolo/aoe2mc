@@ -86,7 +86,7 @@ DROP_SITES = {r.lower(): tuple(t["name"] for t in ROWS if r.lower() in t.get("dr
 MEAT_SITES = tuple(t["name"] for t in ROWS if "meat" in t.get("drop", ()))   # hunted food only (mule cart, #2194)
 START = replay.START                                               # the AoE2 standard start resources (#973)
 # AoE2 DE setting "Starting resources" (wiki "Random map", without the civilization bonus): run.py --resources (#2264)
-LEVELS = {r["name"]: r["resources"] for r in table.load("setup.jsonl")}
+LEVELS = {r["name"]: r["resources"] for r in table.load("setup.jsonl") if "resources" in r}
 NOMAD = {"wood": 275, "stone": 100}     # AoE2 Nomad (wiki "Nomad (map)"): no building at the start, the cost of a town center
 TREE_WOOD = 100                                                    # wood in one tree, as in AoE2
 # plants of the ground that are not in #minecraft:replaceable: the trunk on a slope removes them from its row (#1124)
