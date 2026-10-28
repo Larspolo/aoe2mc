@@ -78,6 +78,7 @@ MAP = {
     ("effect", "DISABLE_UNIT_ATTACKABLE"): "`data merge entity @s {Invulnerable:1b}` of the units of the player in the area (#2695)",
     ("effect", "ENABLE_UNIT_ATTACKABLE"): "`data merge entity @s {Invulnerable:0b}` of the units in the area, not the garrisoned ones (#2695)",
     ("effect", "FREEZE_OBJECT"): "`data merge entity @s {NoAI:1b}` of the units in the area and their mounts (#2608)",
+    ("effect", "CHANGE_OBJECT_VISIBILITY"): "`effect give @s minecraft:invisibility infinite 0 true` (or `effect clear`) of the selected units, the units in the area and their mounts, and `CustomNameVisible` of the name tag; all players see it, Minecraft cannot hide an entity from one player only (#2862)",
     ("effect", "CHANGE_VIEW"): "`tp @a[team=pN] x y z` to the tile, on the ground (the player is the camera, #2610)",
     ("effect", "PLAY_SOUND"): "`playsound` of the vanilla sound of the name part (`data/sounds.jsonl`), at the tile or at each player (#2644)",
     ("effect", "DISPLAY_TIMER"): "`bossbar` aoe2mc:timerN and a `schedule function` each second with the time left (timer and area triggers: #2572)",

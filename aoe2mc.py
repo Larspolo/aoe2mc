@@ -505,6 +505,9 @@ def read_scenario(path):
                                                if e.effect_type == CHANGE_DIPLOMACY else {}),
                                             **({"target": e.target_player, "visibility": e.visibility_state}   # (#2774)
                                                if e.effect_type == SET_PLAYER_VISIBILITY else {}),
+                                            **({"target": e.target_player, "visibility": e.visibility_state,   # #2862
+                                                "selected": list(e.selected_object_ids or [])}
+                                               if e.effect_type == CHANGE_OBJECT_VISIBILITY else {}),
                                             **({"target": e.target_player, "quantity": e.quantity,   # (#2576)
                                                 "resource": e.tribute_list} if e.effect_type == TRIBUTE else {}),
                                             **({"operation": e.operation, "quantity": e.quantity,
@@ -2172,6 +2175,7 @@ def free_carpets(E, cols):
 def seat_count(ship):
     return 1 if "_chest_" in str(ship["id"]) else 2      # a chest boat has one seat
 CHAIN = 4                   # units per boat seat: each garrisoned unit rides the unit below it (#382)
+NAME_HIDDEN = "aoe2mc.name_hidden"  # entity tag of a unit whose name tag a trigger hid with the unit (#2862)
 GARRISONED = "aoe2mc.garrisoned"    # entity tag of a unit inside its building (#807; the game program: #808)
 MADE_INSIDE = "aoe2mc.made_inside"  # entity tag of a unit that a trigger made inside a building: the game program adds
                                     # it to the garrison of the building (#2764)
@@ -2859,6 +2863,7 @@ CHANGE_OBJECT_HP = 27                                              # "Change Obj
 CHANGE_OBJECT_NAME = 26                                            # "Change Object Name" (#2616)
 CHANGE_OBJECT_SPEED = 33                                           # "Change Object Speed" (#2694)
 CHANGE_OBJECT_STANCE = 36                                          # "Change Object Stance" (#2705)
+CHANGE_OBJECT_VISIBILITY = 107                                     # "Change Object Visibility" (#2862)
 CHANGE_OWNERSHIP = 18
 CHANGE_PLAYER_COLOR = 89                                           # "Change Player Color" (#2712)
 CHANGE_PLAYER_NAME = 45                                            # "Change Player Name" (#2711)
@@ -3421,6 +3426,30 @@ def attackable_lines(e, c):
     return [f"execute as {unit_selector(e, c.T)}{guard} run data merge entity @s {{Invulnerable:{int(disable)}b}}"]
 
 
+def object_visibility_lines(e, c):
+    """The commands of "Change Object Visibility" (#2862): the selected units and the units of the player in the area,
+    and the mounts of the riders, get the effect invisibility with no particles (the entity tag Invisible is only for
+    armor stands), and a shown name tag hides with them. "Explored" hides them too: AoE2 shows no units in the fog.
+    "Visible" clears the effect and shows the name tag again. Minecraft cannot hide an entity from one player only:
+    all players see the change, whatever the target player."""
+    if e.get("visibility") not in (0, 1, 2):
+        return []
+    sels = [f"@e[tag=aoe2mc.r{r}]" for r in e.get("selected", ())] + \
+        [unit_selector(e, c.T)] * (min(e.get("area", [-1])) >= 0)
+    c.stats["change object visibility"] += bool(sels)
+    if e["visibility"] == 0:
+        return [line for at in sels for line in (
+            f"execute as {at} on vehicle run effect clear @s minecraft:invisibility",
+            f"execute as {at} run effect clear @s minecraft:invisibility",
+            f"execute as {at[:-1]},tag={NAME_HIDDEN}] run data merge entity @s {{CustomNameVisible:1b}}",
+            f"tag {at[:-1]},tag={NAME_HIDDEN}] remove {NAME_HIDDEN}")]
+    return [line for at in sels for line in (
+        f"execute as {at} on vehicle run effect give @s minecraft:invisibility infinite 0 true",
+        f"execute as {at} run effect give @s minecraft:invisibility infinite 0 true",
+        f"tag {at[:-1]},nbt={{CustomNameVisible:1b}}] add {NAME_HIDDEN}",
+        f"execute as {at} run data merge entity @s {{CustomNameVisible:0b}}")]
+
+
 def freeze_lines(e, c):
     """The commands of "Freeze Object" (#2608): the units of the player in the area and the mounts of the riders get
     NoAI, so they stay in their place (AoE2: they do not move until a new order)."""
@@ -3719,6 +3748,7 @@ EFFECTS = {
     CHANGE_OBJECT_NAME: name_lines,
     CHANGE_OBJECT_SPEED: speed_lines,
     CHANGE_OBJECT_STANCE: stance_lines,
+    CHANGE_OBJECT_VISIBILITY: object_visibility_lines,
     CHANGE_OWNERSHIP: owner_lines,
     CHANGE_PLAYER_COLOR: color_lines,
     CHANGE_PLAYER_NAME: player_name_lines,
