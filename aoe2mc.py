@@ -2779,8 +2779,8 @@ CHANGE_DIPLOMACY = 1                                               # "Change Dip
 CHANGE_OBJECT_NAME = 26                                            # "Change Object Name" (#2616)
 CHANGE_OBJECT_STANCE = 36                                          # "Change Object Stance" (#2705)
 CHANGE_OWNERSHIP = 18
-CHANGE_PLAYER_NAME = 45                                            # "Change Player Name" (#2711)
 CHANGE_PLAYER_COLOR = 89                                           # "Change Player Color" (#2712)
+CHANGE_PLAYER_NAME = 45                                            # "Change Player Name" (#2711)
 CHANGE_VARIABLE = 56                                               # the scenario variables (#2611)
 CHANGE_VIEW = 16                                                   # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
@@ -3302,8 +3302,8 @@ EFFECTS = {
     CHANGE_OBJECT_NAME: name_lines,
     CHANGE_OBJECT_STANCE: stance_lines,
     CHANGE_OWNERSHIP: owner_lines,
-    CHANGE_PLAYER_NAME: player_name_lines,
     CHANGE_PLAYER_COLOR: color_lines,
+    CHANGE_PLAYER_NAME: player_name_lines,
     CHANGE_VARIABLE: variable_lines,
     CHANGE_VIEW: view_lines,
     CLEAR_INSTRUCTIONS: clear_lines,
