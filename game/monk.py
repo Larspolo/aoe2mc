@@ -95,6 +95,15 @@ def relics(g):
     return g.relics
 
 
+def free_relic(g, site):
+    """Put the free relics of the civilization (key free_relic, {building: relics}) into the complete own building
+    site: only into the first one of the game (AoE2 DE wiki "Armenians": the first Fortified Church, #2419)."""
+    import civs                                                    # civs imports gather, gather imports this module
+    n = civs.value("free_relic", civs.civ(g), {}).get(site["name"], 0)
+    if n and not any(r.get("free") for r in relics(g)):
+        g.relics += [{"at": None, "monk": None, "home": tuple(site["footprint"]), "free": True} for _ in range(n)]
+
+
 def carriers(g):
     """{monk UUID: relic index} of the monks that carry a relic."""
     return {r["monk"]: i for i, r in enumerate(relics(g)) if r["monk"]}
