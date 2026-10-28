@@ -37,7 +37,7 @@ MAP = {
     ("condition", "VARIABLE_VALUE"): "`execute if score #vN aoe_var matches ..` in the tick function, once (#2611)",
     ("condition", "CHANCE"): "`execute store result score ... run random value 1..100` once per second (alone, after the timers or with the ticked conditions: #2574)",
     ("condition", "PLAYER_DEFEATED"): "`execute unless entity @e[team=pN]`",
-    ("condition", "ACCUMULATE_ATTRIBUTE"): NO_ECONOMY,
+    ("condition", "ACCUMULATE_ATTRIBUTE"): "`execute if score Gold aoe_resN matches Q..`: the resource scores of the game program (#2655)",
     ("condition", "RESEARCH_TECHNOLOGY"): NO_ECONOMY,
     ("condition", "OBJECT_SELECTED"): "not supported: Minecraft has no selection",
     ("effect", "SEND_CHAT"): "`tellraw @a[team=pN] {\"text\": ...}`",

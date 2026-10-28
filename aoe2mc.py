@@ -415,7 +415,10 @@ def read_scenario(path):
                                                   {"quantity": c.quantity} if c.condition_type == TRIGGER_CHANCE else {}),
                                                **({"quantity": c.quantity, "variable": c.variable,   # (#2611)
                                                    "comparison": c.comparison}
-                                                  if c.condition_type == VARIABLE_VALUE else {}))
+                                                  if c.condition_type == VARIABLE_VALUE else {}),
+                                               **({"quantity": c.quantity, "player": c.source_player,   # (#2655)
+                                                   "attribute": c.attribute}
+                                                  if c.condition_type == ACCUMULATE_ATTRIBUTE else {}))
                                           for c in t.conditions],
                               effects=[dict(type=e.effect_type, message=e.message or "", player=e.source_player,
                                             time=e.display_time, object=kinds.get(e.object_list_unit_id),
@@ -2768,7 +2771,9 @@ STANCES = (0, 1, 3)                                                    # Diploma
 TASK_OBJECT = 12                                                       # "Task Object" (#2646)
 TELEPORT_OBJECT = 35
 CHANGE_VARIABLE, VARIABLE_VALUE = 56, 22                               # the scenario variables (#2611)
-TICKED = COUNTED + (VARIABLE_VALUE,)                               # conditions of the tick function
+ACCUMULATE_ATTRIBUTE = 8                                               # a resource of a player (#2655)
+ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")                         # attributes 0-3: the score holders of gather.RESOURCES
+TICKED = COUNTED + (VARIABLE_VALUE, ACCUMULATE_ATTRIBUTE)          # conditions of the tick function
 FREEZE_OBJECT = 22                                                     # "Freeze Object" (#2608)
 RESEARCH_TECHNOLOGY = 2
 CHANGE_OBJECT_NAME = 26                                                # "Change Object Name" (#2616)
@@ -2969,6 +2974,16 @@ def task_lines(t, i, e, T, ground):
             f"data modify storage aoe2mc:tasks k{k} set value [{x + 0.5}d, {int(ground[x, z])}.0d, {z + 0.5}d]"]
 
 
+def resource_score(c):
+    """The score test of an "Accumulate Attribute" condition (#2655): the resource score of the game program (the
+    holder Food, Wood, Stone or Gold of `Gather.board`: aoe_res for player 1, aoe_res<N> for the others) at the quantity
+    or more; None for an attribute that is no resource. A world without the game program has no such score."""
+    a, p = c.get("attribute", -1), c.get("player", 0)
+    if not 0 <= a < len(ATTRIBUTES) or p <= 0:
+        return None
+    return f"score {ATTRIBUTES[a]} aoe_res{p if p > 1 else ''} matches {max(c.get('quantity') or 0, 0)}.."
+
+
 def unit_selector(e, T):
     """The area_selector of the units of the player of an effect. A Gaia unit has no tag (units.make_entity): the
     entities with no tag and not the players."""
@@ -3067,6 +3082,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Damage Object": damage_lines (#2571). "Display Timer": timer_lines (#2572).
     "Teleport Object": teleport_lines (#2569).
     "Change Variable": variable_lines; a "Variable Value" condition runs in the tick function as an area (#2611).
+    An "Accumulate Attribute" condition of a resource runs in the tick function too: resource_score (#2655).
     "Declare Victory" sets the score #p<player> of aoe_win to 1: the scenario mode of the game program ends the game.
     "Change Diplomacy" sets the score #p<player>.p<target> of aoe_dip to the stance + 1 and #any of aoe_dip to 1: the
     scenario mode changes the stance (#2645).
@@ -3092,7 +3108,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 chance and len([c for c in conds if c["type"] == TRIGGER_CHANCE]) > 1 or \
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds) or \
                 any(c["type"] == VARIABLE_VALUE and (c.get("variable", -1) < 0 or variable_range(c) is None)
-                    for c in conds):                                   # unit classes: not yet
+                    for c in conds) or \
+                any(c["type"] == ACCUMULATE_ATTRIBUTE and resource_score(c) is None for c in conds):                                   # unit classes: not yet
             continue
         lines = []
         for i, e in enumerate(t["effects"]):
@@ -3172,8 +3189,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         fn, n = f"aoe2mc:trigger/{t['id']}", t["id"]
         tests, unless, counts = [], [], []
         for i, c in enumerate(conds):
-            if c["type"] == VARIABLE_VALUE:                            # a score of the variable (#2611)
-                test = f"score #v{c['variable']} aoe_var matches {variable_range(c)}"
+            if c["type"] in (VARIABLE_VALUE, ACCUMULATE_ATTRIBUTE):     # a score of the variable (#2611)
+                test = resource_score(c) if c["type"] == ACCUMULATE_ATTRIBUTE else \
+                    f"score #v{c['variable']} aoe_var matches {variable_range(c)}"
                 tests.append(f"if {test}")
                 unless.append(f"unless {test}")
                 continue
