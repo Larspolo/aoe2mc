@@ -83,6 +83,7 @@ RESOURCES = ("Wood", "Food", "Gold", "Stone")
 # The gather tables: one line per name in data/gather.jsonl (#2033, `table.load`), values as in AoE2 (#389)
 ROWS = table.load("gather.jsonl")
 DROP_SITES = {r.lower(): tuple(t["name"] for t in ROWS if r.lower() in t.get("drop", ())) for r in RESOURCES}
+MEAT_SITES = tuple(t["name"] for t in ROWS if "meat" in t.get("drop", ()))   # hunted food only (mule cart, #2194)
 START = replay.START                                               # the AoE2 standard start resources (#973)
 NOMAD = {"wood": 275, "stone": 100}     # AoE2 Nomad (wiki "Nomad (map)"): no building at the start, the cost of a town center
 TREE_WOOD = 100                                                    # wood in one tree, as in AoE2
@@ -208,7 +209,7 @@ class Map:
         self.ground = [[None if v == "-" else int(v) for v in row.split()] for row in data["ground"]]
         self.n = len(self.ground)
         self.blocked, self.trees, self.feet, self.woods, self.bushes = set(), {}, {}, {}, {}
-        self.drops = {r: [] for r in DROP_SITES}                       # resource -> footprints of the drop sites
+        self.drops = {r: [] for r in (*DROP_SITES, "meat")}            # resource -> footprints of the drop sites
         self.mines = {r: {} for r, _, _ in MINES.values()}             # resource -> {tile: amount}
         self.mine_at = {}                                              # block cell -> tile of its mine
         self.farms, self.farm_at = {}, {}                              # farm tile -> food; block cell -> farm tile
@@ -264,7 +265,7 @@ class Map:
         self.blocked |= cells - {tuple(c) for c in open_cells}
         if own and "FISH_TRAP" in name and tile:                       # the food of the fishing ships (#1438)
             self.fish[tile], self.traps[tile] = TRAP_FOOD, cells
-        for r, names in DROP_SITES.items():
+        for r, names in [*DROP_SITES.items(), ("meat", MEAT_SITES)]:
             if own and any(k in name for k in names):
                 self.drops[r].append(cells)
         if own and "DOCK" in name:                                     # the drop site of the fishing ships (#1384)
@@ -1396,7 +1397,8 @@ class Gather:
                     else:
                         self.trunk(v.tree)
                 if v.load >= self.limit(v.res) or src.get(v.tree, 0) <= 0:
-                    self.go(v, "to_drop", set().union(*map(self.map.around, self.map.drops[v.res])))
+                    meat = self.map.drops["meat"] if v.res == "food" and v.tree in self.map.carcasses else []
+                    self.go(v, "to_drop", set().union(*map(self.map.around, self.map.drops[v.res] + meat)))
         train.tick(self, self.tick * NORMAL)
         monk.heal(self, self.tick * NORMAL)
         monk.convert(self, self.tick * NORMAL)
