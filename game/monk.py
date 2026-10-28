@@ -236,7 +236,8 @@ def heal(g, dt):
     others = sorted(u for u, n in names.items() if u not in inside and healable(n))
     pos = g.positions(others)
     last, g.monk_at = g.monk_at, {m: pos[m] for m in monks if m in pos}
-    reach = RANGE * g.map.T
+    import civs                                                    # civs imports gather, gather imports this module
+    reach = RANGE * civs.HEAL_RANGE.get(civs.civ(g), 1) * g.map.T   # the Teutons: twice (#2269)
     hurt, taken = {}, set()
     for m in monks:
         if m in inside or m in g.converting or m not in pos or m not in last or math.dist(pos[m], last[m]) > STILL:

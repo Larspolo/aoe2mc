@@ -68,6 +68,7 @@ import market  # noqa: E402
 import menu  # noqa: E402
 import monk  # noqa: E402
 import regen  # noqa: E402
+import regicide  # noqa: E402
 import relic_victory  # noqa: E402
 import repair  # noqa: E402
 import siege_tower  # noqa: E402
@@ -526,6 +527,7 @@ class Gather:
     speed = 1.0                                                        # times the Normal speed: shorter real steps (#2057)
     later = {}                                                         # the bonus of the first town center (civs.TOWN_CENTER)
     victory = "standard"                                               # AoE2 "Victory"; "conquest": no wonder, no relics (#2316)
+    mode = "standard"                                                  # AoE2 game mode; "regicide": the King (#2347)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
                  cheats=False, start=None, resources="standard", pop_limit=None):
@@ -1504,6 +1506,7 @@ class Gather:
         monk.heal(self, self.tick * NORMAL)
         monk.convert(self, self.tick * NORMAL)
         garrison.heal(self, self.tick * NORMAL)
+        garrison.pasture(self, self.tick * NORMAL)
         regen.tick(self, self.tick * NORMAL)
         repair.tick(self, self.tick * NORMAL)
         trebuchet.tick(self, self.tick * NORMAL)
@@ -1781,6 +1784,8 @@ class Gather:
             for b in self.bots:
                 b.step()
             conquest.tick(self)                                        # not in step(): the bot steps its own Gather
+            if self.mode == "regicide":                                # a player without its King loses (#2347)
+                regicide.tick(self)
             fog.tick(self)                                             # after the bots: their units too (#1389)
             herd.tick(self)                                            # all players: the bots capture too (#1792)
             if self.victory == "standard":                             # a wonder or all relics win too (#2316)
