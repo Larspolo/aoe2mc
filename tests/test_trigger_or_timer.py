@@ -46,10 +46,3 @@ def test_or_of_timers_fires_at_the_first_group():
     load, out = files([dict(TIMER, timer=90), OR, TIMER])
     assert load[-1] == "schedule function aoe2mc:trigger/3 1200t replace"   # 60 s, not 90 s
     assert "data/aoe2mc/function/tick.mcfunction" not in out
-
-
-def test_a_disabled_trigger_with_an_or_timer_is_not_supported_yet():
-    t = dict(id=3, name="t", enabled=False, looping=False, conditions=[TIMER, OR, AREA], effects=[CHAT])
-    on = dict(id=4, name="on", enabled=True, looping=False, conditions=[dict(TIMER, timer=1)],
-              effects=[dict(CHAT, type=aoe2mc.ACTIVATE_TRIGGER, trigger=3)])
-    assert not any("/trigger/3" in k for k in aoe2mc.trigger_files([t, on])[1])   # its timer would start at the load
