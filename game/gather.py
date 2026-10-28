@@ -1707,8 +1707,8 @@ class Gather:
         trade.tick(self)
         trade.heal(self, self.tick * NORMAL)
         train.haste(self, self.tick * NORMAL)
+        amounts.tick(self)                                             # before the bar: tests read its last command
         bossbar.tick(self)
-        amounts.tick(self)
         for site in self.sites:
             builders = [v for v in [*self.villagers.values(), *self.ships.values()] if v.state == "build" and v.site is site]
             men = repair.raisers(self, site)                           # Serjeants at their Donjon site (#2129)
