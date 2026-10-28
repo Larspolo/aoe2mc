@@ -46,6 +46,7 @@ SLOT = "inventory.26"                                                  # the las
 TAG = "aoe_book"                                                       # a person who has the book
 EVERY = 1.0                                                            # seconds between two checks for new people
 ORDERS = "aoe2mc:orders"                                               # the data storage of the trigger orders (#2647)
+COSTS = "aoe2mc:costs"                                                 # the storage of "Change Object Cost" (#2776)
 NEAR = 3                                                               # blocks: a patrol turns back this near its point
 LEVELS = {r["name"]: r["aoe2"] for r in table.load("difficulty.jsonl")}  # "AI difficulty" -> AoE2 DifficultyLevel
 
@@ -109,6 +110,7 @@ def tick(g):
     g.book_at = g.clock() + EVERY
     tasks(g)
     orders(g)
+    costs(g)
     messages = g.data.get("messages", {})
     text = re.sub(r"<[^<>]*>", "", messages.get("instructions", "")).strip()   # AoE2 color tags (book_pages)
     for who in sorted({x.who for x in [g, *(s.g for s in g.bots if not hasattr(s, "charged"))]}):
@@ -129,8 +131,10 @@ def orders(g):
     replay.Replay.attack_move) and removes the tag. A patrol (g.patrols: [tag, [tile, middle of the area], leg]) walks
     to the tile and back, again and again: it turns when one of its units is NEAR its point, and ends when no unit has
     the tag. A new patrol with the same tag (a looping trigger) replaces the old one. A "Change Object Stance" order
-    (aoe2mc.stance_lines, #2705) sets the stance of the tagged units and removes the tag."""
-    new = re.findall(r'"(patrol|attack_move|stance) (aoe_order[\w.]+) (-?\d+(?: -?\d+)*)"',
+    (aoe2mc.stance_lines, #2705) sets the stance of the tagged units and removes the tag. A "Stop Object" order
+    (aoe2mc.stop_lines, #2754) stops the tagged units (`aoe stop`), ends their patrols as a new order of a person does
+    (gather.Gather.end_patrols, #2674) and removes the tag."""
+    new = re.findall(r'"(patrol|attack_move|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"',
                      g.command(f"data get storage {ORDERS} list") or "")
     if new:
         g.command(f"data remove storage {ORDERS} list")
@@ -140,6 +144,12 @@ def orders(g):
         if order == "stance":                                          # "Change Object Stance" (#2705)
             import combat                                              # combat -> gather -> scenario
             g.command(f"aoe stance {sel} {combat.STANCES[p[0]]}")
+            g.command(f"tag {sel} remove {tag}")
+            continue
+        if order == "stop":                                            # "Stop Object" (#2754)
+            for q in patrols:
+                g.command(f"tag {sel} remove {q[0]}")
+            g.command(f"aoe stop {sel}")
             g.command(f"tag {sel} remove {tag}")
             continue
         if order == "attack_move":
@@ -157,6 +167,20 @@ def orders(g):
             g.command(f"aoe moveto @e[tag={tag}] {' '.join(map(str, points[q[2] % 2]))}")
         elif "passed" not in g.command(f"execute if entity @e[tag={tag}]"):
             patrols.remove(q)
+
+
+def costs(g):
+    """The new costs of "Change Object Cost" (aoe2mc.cost_lines, #2776): read and empty the list of the data storage
+    COSTS, and keep each cost in trigger_costs of the side of its player (the people and the bots): civs.cost uses it
+    in place of the cost with the civilization bonuses, in the menus and when the player pays. A later line wins."""
+    new = re.findall(r'"(\d+) (\w+)((?: [a-z]+=\d+)*)"', g.command(f"data get storage {COSTS} list") or "")
+    if new:
+        g.command(f"data remove storage {COSTS} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for player, name, cost in new:
+        if int(player) in sides:
+            vars(sides[int(player)]).setdefault("trigger_costs", {})[name] = \
+                {r: int(v) for r, v in (part.split("=") for part in cost.split())}
 
 
 def bot_seats(players, people):
