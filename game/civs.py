@@ -223,6 +223,10 @@ REVEAL = {r["name"]: [tuple(b) for b in r["reveal"]] for r in ROWS if "reveal" i
 # (Lithuanian knights and Leitis), "faith" the factor of the speed of the monks that regain faith (Muisca: 100 % faster).
 RELIC_ATTACK = {r["name"]: tuples(r["relic_attack"]) for r in ROWS if "relic_attack" in r}
 FAITH = {r["name"]: r["faith"] for r in ROWS if "faith" in r}
+# Herdable animals in a building make food (garrison.pasture, #2342): "herd_food" {building: [size, a, b]}, at most size
+# animals in each, a × ln(F / b + 1) food per AoE2 minute for F food of the animals in all of them (Gurjara mills: 10, 15,
+# 200, AoE2 DE wiki).
+HERD_FOOD = {r["name"]: {b: tuple(v) for b, v in r["herd_food"].items()} for r in ROWS if "herd_food" in r}
 
 
 def tagged(n, group):
