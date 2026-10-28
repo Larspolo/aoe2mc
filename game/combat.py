@@ -91,6 +91,9 @@ FORT_MIN_RANGE = {r["name"]: r["min_range"] for r in BUILDING_ROWS if "min_range
 # Tiles that a bolt flies past the range and hurts the enemy units on its line with half the damage (AoE2 DE, wiki
 # "Pass-through damage": "Projectiles travel Range+2 tiles in total", no friendly fire, #1401). The chakram thrower
 # throws as a mob (no blast), with the full damage on its line (PASS_PART, #1638).
+# Gold per AoE2 minute while the unit attacks enemy units, not buildings (AoE2 DE wiki: the Varangian Guard 35, #2376).
+# The key "attack_gold" of data/units.jsonl; game/spoils.py gives it.
+ATTACK_GOLD = {r["name"]: r["attack_gold"] for r in UNIT_ROWS if "attack_gold" in r}
 PASS = {r["name"]: r["pass"] for r in UNIT_ROWS if "pass" in r}               # the key "pass" of data/units.jsonl
 # The part of the damage on the units behind the target, when it is not one half (wiki: "100% pass-through damage").
 PASS_PART = {r["name"]: r["pass_part"] for r in UNIT_ROWS if "pass_part" in r}
@@ -136,17 +139,19 @@ def elevation_command(data):
                                                                    for full in [{} if data.get("full_tech_tree") else p]])
 
 
-def stats_command(uuid, name, s=None, taken=1.0):
+def stats_command(uuid, name, s=None, taken=1.0, friendly=1.0):
     """The plugin command that gives entity `uuid` the values of AoE2 unit `name` (or the values s, for example with
     technologies, #655): max_health = hit points (at most 1024, the limit of the attribute), the lost hit points stay lost
     (a new unit has full health, #940), and the values of `damage` (the same rule in AoePlugin.java). The range kind:
     0 melee, 1 ranged, 2 ranged with melee damage (MELEE_RANGED, #800). Then the reload in ticks at Normal speed: a melee unit hits once per reload (#848). Last, only when it is
-    not 1, the factor of the bonus damage that the unit takes (civs.taken, #2248)."""
+    not 1, the factor of the bonus damage that the unit takes (civs.taken, #2248), and when friendly is not 1, the factor
+    of the friendly fire that it takes (civs.friendly, #2418)."""
     s = s or stats(name)
     bonus = ",".join(f"{c}:{n}" for c, n in sorted(s.bonus.items())) or "-"
     kind = 0 if s.range <= 0 else 2 if name in MELEE_RANGED else 1
     return (f"aoe stats {uuid} {min(s.hp, 1024)} {s.attack} {s.melee} {s.pierce} {kind} "
-            f"{','.join(s.classes) or '-'} {bonus} {round(s.reload / NORMAL * 20) or 20}" + f" {taken:g}" * (taken != 1))
+            f"{','.join(s.classes) or '-'} {bonus} {round(s.reload / NORMAL * 20) or 20}"
+            + f" {taken:g}" * (taken != 1 or friendly != 1) + f" {friendly:g}" * (friendly != 1))
 
 
 def label_command(uuid, name=None):
@@ -235,6 +240,10 @@ def setup(game, data):
         if cmd := range_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
     n = sum(game.command(stats_command(o["uuid"], o["name"])).strip() == "Stats: 1 units" for o in units)
+    import spoils                                    # spoils imports this module
+    for o in units:                                  # the hits of a Varangian Guard make gold (#2376)
+        if cmd := spoils.tag_command(o["uuid"], o["name"]):
+            game.command(cmd)
     for o in units:                                  # after the stats: the plugin needs them for the sight
         if cmd := sight_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)

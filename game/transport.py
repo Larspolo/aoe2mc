@@ -22,6 +22,7 @@ import collections
 import json
 import math
 
+import civs
 import replay
 import units as unit_types
 from aoe2mc import GARRISONED
@@ -113,11 +114,16 @@ def ride(g, u, units):
     return f"ride {u} mount {last}"
 
 
+def size(g):
+    """The units that a transport ship of the player of g takes: SIZE, more for the Saracens (the key "transport", #2344)."""
+    return SIZE + civs.value("transport", civs.civ(g), 0)
+
+
 def go_in(g, u, ship):
     """Unit u rides the transport ship: on its crew, or on the top unit inside. A full ship: it stays on the shore."""
     units = vars(g).setdefault("cargo", {}).setdefault(ship, [])
     g.command(f"aoe stop {u}")
-    if len(units) >= SIZE:
+    if len(units) >= size(g):
         if (v := g.villagers.get(u)) is not None:
             v.state = "idle"
         return

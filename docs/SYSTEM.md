@@ -24,7 +24,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 
 | Workflow | When | What |
 |---|---|---|
-| `ci.yml` (CI) | Each PR, each push to `main`, each night | Quick checks (lint, fast tests) on each PR; a Markdown-only PR runs only the doc tests (`tools/ci_select.py`, #2089). The full suite each night on `main`. A red `main` opens a `P0` ticket. |
+| `ci.yml` (CI) | Each PR, each push to `main`, each night | Quick checks (lint, fast tests) on each PR; a Markdown-only PR runs only the doc tests (`tools/ci_select.py`, #2089); a change of `game/plugin` also compiles the Paper plugin (#2437). The full suite each night on `main`. A red `main` opens a `P0` ticket. |
 | `automerge.yml` (Automerge) | After CI, every 5 minutes, by hand | Merges an agent PR with green CI. Skips `hold` and tickets with `needs-human` or `blocked`. Then starts CI on `main`, Coverage, Claims and Dashboard. |
 | `unconflict.yml` (Unconflict) | Every 20 minutes, after each merge | Merges `main` into a conflicted agent PR when git solves the conflict alone (`merge=union` files) or both sides only add lines (`tools/unconflict.py`, #1864), and starts CI. |
 | `claims.yml` (Claims) | A ticket closes, each day | Deletes the claim refs of closed tickets and old comment locks. The runs cannot delete refs (403). |
