@@ -428,6 +428,8 @@ def read_scenario(path):
                                                if e.effect_type == CHANGE_COLOR_MOOD and
                                                getattr(e, "color_mood", None) in set(ColorMood) else {}),
                                             **({"quantity": e.quantity} if e.effect_type == DAMAGE_OBJECT else {}),
+                                            **({"stance": e.attack_stance}                # (#2705)
+                                               if e.effect_type == CHANGE_OBJECT_STANCE else {}),
                                             **({"quantity": e.quantity, "variable": e.variable,   # (#2611)
                                                 "operation": e.operation}
                                                if e.effect_type == CHANGE_VARIABLE else {}),
@@ -435,6 +437,9 @@ def read_scenario(path):
                                                if e.effect_type == CHANGE_OWNERSHIP else {}),
                                             **({"color": e.player_color}                 # (#2712)
                                                if e.effect_type == CHANGE_PLAYER_COLOR else {}),
+                                            **({"target": e.target_player,                # "Replace Object" (#2703)
+                                                "object2": kinds.get(e.object_list_unit_id_2)}
+                                               if e.effect_type == REPLACE_OBJECT else {}),
                                             **({"target": e.target_player, "diplomacy": e.diplomacy}   # (#2645)
                                                if e.effect_type == CHANGE_DIPLOMACY else {}),
                                             **({"target": e.target_player, "quantity": e.quantity,   # (#2576)
@@ -751,7 +756,7 @@ TRAIN = {r["name"]: (r["seconds"], r["building"]) for r in units.rows("train.jso
 RESEARCH_S = {"Loom": 25, "Town Watch": 25, "Town Patrol": 40, "Wheelbarrow": 75, "Hand Cart": 55,
               "Feudal Age": 130, "Castle Age": 160, "Imperial Age": 190}   # the town center researches: they delay units
 UNIT_USE = {"move", "order", "build", "wall", "patrol", "follow", "formation", "attack_move", "back_to_work", "stance",
-            "garrison"}
+            "garrison", "autoscout"}
 BUILDING_USE = {"queue", "research", "gather_point", "ungarrison", "sell", "buy"}
 WORK = re.compile(r"TREE|.*BUSH|.*_MINE|.*FARM")                     # an ORDER on these: a villager gathers
 
@@ -2762,6 +2767,7 @@ ATTACK_MOVE = 30                                                   # "Attack Mov
 CHANGE_COLOR_MOOD = 72
 CHANGE_DIPLOMACY = 1                                               # "Change Diplomacy" (#2645)
 CHANGE_OBJECT_NAME = 26                                            # "Change Object Name" (#2616)
+CHANGE_OBJECT_STANCE = 36                                          # "Change Object Stance" (#2705)
 CHANGE_OWNERSHIP = 18
 CHANGE_PLAYER_COLOR = 89                                           # "Change Player Color" (#2712)
 CHANGE_VARIABLE = 56                                               # the scenario variables (#2611)
@@ -2782,6 +2788,7 @@ OWN_OBJECTS = 3
 PATROL = 19                                                        # "Patrol" (#2647)
 PLAY_SOUND = 4                                                     # "Play Sound" (#2644)
 REMOVE_OBJECT = 15
+REPLACE_OBJECT = 43                                                # "Replace Object" (#2703)
 RESEARCHED = 9                                                     # the condition "Research Technology" (#2656)
 RESEARCH_TECHNOLOGY = 2                                            # "Research Technology" (#2577)
 SEND_CHAT = 3
@@ -2922,6 +2929,34 @@ def owner_lines(e, c):
             f"execute as {own} on vehicle run tag @s add aoe2mc.own",
             f"tag {own} remove aoe2mc.p{old}", f"tag {own} add aoe2mc.p{new}",
             f"team join p{new} {own}", f"tag {own} remove aoe2mc.own"]
+
+
+def replace_lines(e, c):
+    """The commands of "Replace Object" (#2703): a summon of the entity of the new type (units.make_entity, as "Create
+    Object") of the target player at each unit of the effect (effect_units), then a kill of the old units and their
+    mounts. Minecraft cannot change the type of a mob. A temporary tag marks the old units first: a new unit of the
+    same entity type and player must stay. A type with no entity (a building) is not supported yet."""
+    T, stats = c.T, c.stats
+    kind, name = e.get("object2") or (None, None)
+    found = effect_units(e, T) if e.get("object") else None
+    nbt = units.make_entity(dict(name=name, player=max(e.get("target", -1), 0), rotation=math.pi / 2), c.players or {},
+                            (0.0, 0.0, 0.0), np.random.default_rng(c.t["id"])) if kind in ("U", "H") else None
+    if found is None or nbt is None:
+        stats["replace (not supported yet)"] += 1
+        return []
+    stats["replace"] += 1
+    at, top, old = found
+    entity = str(nbt.pop("id"))
+    del nbt["Pos"]
+    parts = [nbt]                                                      # Minecraft gives new UUIDs (object_lines)
+    while parts:
+        part = parts.pop()
+        part.pop("UUID", None)
+        parts += list(part.get("Passengers", []))
+    mark = "@e[tag=aoe2mc.replace]"
+    ride = [f"execute as {mark} on vehicle run kill @s"] if top is not old else []   # a rider: its mount goes too
+    return [f"tag {at} add aoe2mc.replace", f"execute at {mark} run summon {entity} ~ ~ ~ {nbt.snbt()}"] + ride + \
+        [f"kill {mark}"]
 
 
 def resource_lines(e, c):
@@ -3065,6 +3100,16 @@ def order_lines(e, c):
     return tag_lines(e, T, tag) + [f'data modify storage aoe2mc:orders list append value "{order} {tag} {where}"']
 
 
+def stance_lines(e, c):
+    """The commands of "Change Object Stance" (#2705). Vanilla has no stance: as order_lines, the units of the player in
+    the area get the tag aoe_order<trigger>_<effect index>, and the order "stance <tag> <attack_stance>" (0 aggressive,
+    1 defensive, 2 stand ground, 3 no attack) goes into the storage aoe2mc:orders for game/scenario.py orders."""
+    if e.get("stance") not in (0, 1, 2, 3):
+        return []
+    tag = f"aoe_order{c.t['id']}_{effect_index(e, c)}"
+    return tag_lines(e, c.T, tag) + [f'data modify storage aoe2mc:orders list append value "stance {tag} {e["stance"]}"']
+
+
 def view_lines(e, c):
     """The commands of "Change View" (#2610): in Minecraft the player is the camera, so a tp of the players of the
     team pN (team_lines) to the middle of the tile, on the ground. Player -1 or 0: all players."""
@@ -3183,6 +3228,7 @@ EFFECTS = {
     CHANGE_COLOR_MOOD: mood_lines,
     CHANGE_DIPLOMACY: diplomacy_lines,
     CHANGE_OBJECT_NAME: name_lines,
+    CHANGE_OBJECT_STANCE: stance_lines,
     CHANGE_OWNERSHIP: owner_lines,
     CHANGE_PLAYER_COLOR: color_lines,
     CHANGE_VARIABLE: variable_lines,
@@ -3199,6 +3245,7 @@ EFFECTS = {
     PATROL: order_lines,
     PLAY_SOUND: sound_lines,
     REMOVE_OBJECT: object_lines,
+    REPLACE_OBJECT: replace_lines,
     RESEARCH_TECHNOLOGY: research_lines,
     SEND_CHAT: chat_lines,
     TASK_OBJECT: task_lines,
