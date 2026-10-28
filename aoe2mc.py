@@ -3316,17 +3316,18 @@ def player_name_lines(e, c):
 def owner_lines(e, c):
     """The commands of "Change Ownership" (#2570): the units of the player in the area (area_selector) and their
     mounts get the tag and the team of the target player. A temporary tag marks them first: the selector uses the old
-    player tag. Gaia has no player tag and no team: not supported yet."""
+    player tag. Gaia (target 0, #2908) has no player tag and no team: they lose the tag and leave the team. A Gaia
+    source is not supported yet: unit_selector finds only the Gaia units with no tag."""
     old, new, T, stats = e["player"], e.get("target", -1), c.T, c.stats
-    if old <= 0 or new <= 0 or old == new:
+    if old <= 0 or new < 0 or old == new:
         stats["change ownership (not supported yet)"] += old != new
         return []
     stats["change ownership"] += 1
     own = "@e[tag=aoe2mc.own]"
+    to = [f"tag {own} add aoe2mc.p{new}", f"team join p{new} {own}"] if new else [f"team leave {own}"]
     return [f"tag {area_selector(e, T)} add aoe2mc.own",
             f"execute as {own} on vehicle run tag @s add aoe2mc.own",
-            f"tag {own} remove aoe2mc.p{old}", f"tag {own} add aoe2mc.p{new}",
-            f"team join p{new} {own}", f"tag {own} remove aoe2mc.own"]
+            f"tag {own} remove aoe2mc.p{old}", *to, f"tag {own} remove aoe2mc.own"]
 
 
 def replace_lines(e, c):
