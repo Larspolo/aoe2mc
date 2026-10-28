@@ -31,6 +31,8 @@ RULES = {
     "foot archers but skirmishers": lambda n, s: foot_archer(s) and not tagged(n, "skirmishers"),
     "foot archers but skirmishers, condottieri": lambda n, s: GROUPS["foot archers but skirmishers"](n, s),
     "gunpowder": lambda n, s: "gunpowder" in s.classes,
+    "human units": lambda n, s: not tagged(n, "self-destructing") and not tagged(n, "scout line")   # the Muisca
+        and "siege" not in s.classes and not GROUPS["ships"](n, s),   # Settlement heal (AoE2 DE wiki, #2432)
     "infantry": lambda n, s: "infantry" in s.classes,
     "infantry, mounted": lambda n, s: "infantry" in s.classes or mounted(s),
     "infantry, slingers, skirmishers": lambda n, s: "infantry" in s.classes or tagged(n, "slingers") or tagged(n, "skirmishers"),
@@ -137,6 +139,8 @@ TRAIN_RATE = {r["name"]: [tuples(b) for b in r["train_rate"]] for r in ROWS if "
 HP = {r["name"]: r["hp"] for r in ROWS if "hp" in r}
 ARROWS = {r["name"]: tuples(r["arrows"]) for r in ROWS if "arrows" in r}   # factor of the base arrows in each age (#2178)
 GARRISON = {r["name"]: r["garrison"] for r in ROWS if "garrison" in r}   # units inside a building (garrison.size, #2117)
+TRAINS = {r["name"]: r["trains"] for r in ROWS if "trains" in r}         # more units of a building (Mapuche, #2432)
+HEAL_AURA = {r["name"]: r["heal_aura"] for r in ROWS if "heal_aura" in r}   # buildings that heal near them (Muisca)
 HEAL_RANGE = {r["name"]: r["heal_range"] for r in ROWS if "heal_range" in r}   # factor of the monk heal range (#2269)
 TECH_HP = {r["name"]: [tuples(b) for b in r["tech_hp"]] for r in ROWS if "tech_hp" in r}
 EARLIER = {r["name"]: set(r["earlier"]) for r in ROWS if "earlier" in r}   # one age earlier (build.locked, #2268)
@@ -150,6 +154,9 @@ EXTRA = {r["name"]: {k: tuple(v) for k, v in r["extra"].items()} for r in ROWS i
 DROP_EXTRA = {r["name"]: {k: tuple(v) for k, v in r["drop_extra"].items()} for r in ROWS if "drop_extra" in r}
 PER_MINUTE = {r["name"]: {k: tuple(v) for k, v in r["per_minute"].items()} for r in ROWS if "per_minute" in r}
 CARRY = {r["name"]: [tuple(b) for b in r["carry"]] for r in ROWS if "carry" in r}
+HOUSING = {r["name"]: r["housing"] for r in ROWS if "housing" in r}   # population of a building in place of train.HOUSING
+SIGHT = {r["name"]: r["sight"] for r in ROWS if "sight" in r}       # extra tiles of line of sight of a building (#2118)
+POP_CAP = {r["name"]: tuple(r["pop_cap"]) for r in ROWS if "pop_cap" in r}   # (age, extra population limit from it)
 # The age-up bonuses (#1926, AoE2 DE wiki): train.research applies AGE_GIFTS and AGE_VILLAGERS at the end of each age,
 # train.seconds divides the time of an age by AGE_RATE, and train.missing needs no buildings for AGE_NO_BUILDINGS (the
 # game program has no other building needs). The Muisca gold discount of the ages is in COSTS (civs.jsonl).
@@ -420,6 +427,14 @@ def ship_work(g):
     """The factor of the work rate of a fishing ship of the player of g in its age (the key "ship_work"), else 1."""
     import build                                                   # build imports gather, gather imports this module
     return value("ship_work", civ(g), (1,) * 4)[min(build.ages(g), 3)]
+
+
+def train_time(g, building, name):
+    """The factor of the train time of unit name at building (a name) of the player of g in its age: a unit of a line of
+    TRAINS (Mapuche Settlements, #2432), else 1."""
+    import build                                                   # build imports gather, gather imports this module
+    t = TRAINS.get(civ(g), {}).get(building)
+    return t["time"][min(build.ages(g), 3)] if t and any(name in line for line in t["lines"]) else 1
 
 
 def train_rate(g, name):

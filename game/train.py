@@ -388,8 +388,12 @@ def lines(t, g=None):
 
 
 def slots(building, name):
-    """(slot, item, label) of name in the menu of building: ITEMS, with the slot shift of SHIFTS."""
+    """(slot, item, label) of name in the menu of building: ITEMS, with the slot shift of SHIFTS. A unit line of
+    civs.TRAINS (the Mapuche Settlement) comes after the items of the building, one slot per line (#2432)."""
     slot, item, label = ITEMS[name]
+    lines = [line for c in civs.TRAINS.values() for line in c.get(building, {}).get("lines", ())]
+    if (i := next((k for k, line in enumerate(lines) if name in line), None)) is not None:
+        return 1 + max(slots(building, n)[0] for n in TRAINS[building]) + i, item, label
     return slot + SHIFTS.get(building, {}).get(name, 0), item, label
 
 
@@ -402,6 +406,7 @@ def trains(g, building):
         + ["SERJEANT"] * (building == "DONJON")                    # and the spearman line (AoE2 DE wiki, #1873)
     out = unique + list(TRAINS[building]) + [f"ELITE_{n}_UPGRADE" for n in unique if f"ELITE_{n}_UPGRADE" in COSTS]   # (#1760)
     out += [n for n, c in CIV_TECHS.items() if c == civs.civ(g)] * (building == "CASTLE")   # the unique technologies (#2021)
+    out += [line[0] for line in civs.TRAINS.get(civs.civ(g), {}).get(building, {}).get("lines", ())]   # Mapuche (#2432)
     for _ in UPGRADES:                                             # a line of upgrades: mangonel, onager, siege onager
         out = [new.get(n, n) for n in out]                         # the castle: the elite unique unit (#1624)
     return tuple(dict.fromkeys(out))                               # the camel scout becomes the camel rider (#2130)
@@ -685,10 +690,12 @@ def seconds(g, name, building=None):
     in 46 s in the Feudal Age and in 35 s from the Castle Age, AoE2 DE wiki), divided by the work rate of the
     civilization at building (civs.work_rate: Persian town centers and docks, #1894), its rate of the unit group
     (civs.train_rate: Aztec military units, Khitan skirmishers, #1927) and its age-up rate (civs.age_rate: the Malay, #1926),
-    times its research time of the technology (civs.research_time: the Gothic Loom at once, #2172)."""
+    times its research time of the technology (civs.research_time: the Gothic Loom at once, #2172) and its time factor
+    at building (civs.train_time: Mapuche Settlements, #2432)."""
     age, time = FASTER.get(name, (9, 0))
     return (time if build.ages(g) >= age else TRAIN_TIMES[name]) / (civs.work_rate(g, building) if building else 1) \
-        / civs.train_rate(g, name) / civs.age_rate(g, name) * civs.research_time(g, name)
+        / civs.train_rate(g, name) / civs.age_rate(g, name) * civs.research_time(g, name) \
+        * (civs.train_time(g, building, name) if building else 1)
 
 
 def speed(g, name):
@@ -819,14 +826,18 @@ def research(g, entry, start=False):
 
 
 def limit(g):
-    """The population limit: 5 per complete own town center and house, 20 per castle, at most max_pop()."""
-    return min(max_pop(g), sum(HOUSING.get(n, 0) for n in owned(g)))
+    """The population limit: 5 per complete own town center and house, 20 per castle (civs.HOUSING: other values of
+    a civilization, #2118), at most max_pop()."""
+    own = civs.HOUSING.get(civs.civ(g), {})
+    return min(max_pop(g), sum(own.get(n, HOUSING.get(n, 0)) for n in owned(g)))
 
 
 def max_pop(g):
-    """The highest population limit: the setting of the game (Gather.pop_limit, run.py --pop-limit, #2266), else LIMIT;
-    1000 with the cheat "my cpu can handle it" (#968)."""
-    return getattr(g, "pop_cap", None) or getattr(g, "pop_limit", None) or LIMIT
+    """The highest population limit: the setting of the game (Gather.pop_limit, run.py --pop-limit, #2266), else LIMIT,
+    with the extra limit of civs.POP_CAP from its age (the Goths, #2118); 1000 with the cheat "my cpu can handle it"
+    (#968)."""
+    age, extra = civs.POP_CAP.get(civs.civ(g), (0, 0))
+    return getattr(g, "pop_cap", None) or (getattr(g, "pop_limit", None) or LIMIT) + extra * (build.ages(g) >= age)
 
 
 def census(g):
@@ -895,10 +906,11 @@ def tick(g, work):
         rate = CONSCRIPT[1] if rect in fast and q[0]["name"] not in TECHS else 1   # units only, not technologies
         rate *= SHIPWRIGHT[1] if shipwright(g, q[0]["name"]) else 1          # the ships of a dock, not its technologies
         time = 0 if getattr(g, "aegis", False) else seconds(g, q[0]["name"], home.get(rect))   # cheats.aegis
-        q[0]["progress"] += work * rate / time if time else 1                # 0: the Gothic Loom at once (#2172)
+        q[0]["progress"] = min(1, q[0]["progress"] + (work * rate / time if time else 1))   # 0: the Gothic Loom at once (#2172)
         if q[0]["progress"] >= 1 and q[0]["name"] in TECHS:
             research(g, q.pop(0))
-        elif q[0]["progress"] >= 1 and (v := spawn(g, rect, q.pop(0)["name"])):
+        elif q[0]["progress"] >= 1 and (v := spawn(g, rect, q[0]["name"])):   # no room: it waits in the queue (#2470)
+            q.pop(0)
             out.append(v)
             g.pop += 1
     refresh(g)

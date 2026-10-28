@@ -3,7 +3,7 @@
 Measure how far the units of a live replay on Paper are from their replay positions (#813).
 
 Usage:
-    python3 tools/replay_drift.py samples/de-64.3.aoe2record [--speed 4] [--until 10:00] [--log OUT.jsonl]
+    python3 tools/replay_drift.py samples/de-64.3.aoe2record [--speed 4] [--until 10:00] [--log OUT.jsonl] [--server-log OUT.log]
     python3 tools/replay_drift.py WORLD ...                    # a converted world of a record (the tool copies it)
     python3 tools/replay_drift.py --read OUT.jsonl             # only print the table of a log
 
@@ -161,8 +161,16 @@ def table(stats):
                      for r in rows)
 
 
-def measure(src, speed=4.0, until=None, every=10, log=None, version=None):
-    """Play the replay of src (a record or a converted world) on Paper; returns the samples."""
+def keep_log(game, path):
+    """Copy the server log of game to path before run.Game deletes its folder (#2464: the "no path" lines)."""
+    log = os.path.join(game.folder, "logs", "latest.log")
+    if os.path.isfile(log):
+        shutil.copyfile(log, path)
+
+
+def measure(src, speed=4.0, until=None, every=10, log=None, version=None, server_log=None):
+    """Play the replay of src (a record or a converted world) on Paper; returns the samples. server_log: copy the
+    server log to this file at the end, also after an error."""
     import aoe2mc
     import mc_check
     import replay
@@ -203,6 +211,9 @@ def measure(src, speed=4.0, until=None, every=10, log=None, version=None):
                 r.run(speed, bar=True, poll=poll, log=None)     # bar: as run.py --replay (tags, census)
             except Done:
                 pass
+            finally:
+                if server_log:
+                    keep_log(game, server_log)
     return samples
 
 
@@ -216,6 +227,7 @@ def main(argv=None):
     ap.add_argument("--log", metavar="FILE", help="write the samples (JSON lines)")
     ap.add_argument("--read", metavar="FILE", help="only print the table of a log")
     ap.add_argument("--version", help="Minecraft version of the server")
+    ap.add_argument("--server-log", metavar="FILE", help="copy the server log to this file at the end (#2464)")
     a = ap.parse_args(argv)
     if a.read:
         with open(a.read) as f:
@@ -225,7 +237,7 @@ def main(argv=None):
         until = aoe2mc.game_time(a.until) if a.until else None
         with contextlib.ExitStack() as stack:
             log = stack.enter_context(open(a.log, "w")) if a.log else None
-            samples = measure(a.src, a.speed, until, a.every, log, a.version)
+            samples = measure(a.src, a.speed, until, a.every, log, a.version, a.server_log)
     else:
         ap.error("give a record, a world or --read FILE")
     print(table(analyze(samples)))
