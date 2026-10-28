@@ -17,6 +17,7 @@ Usage:
     python3 game/run.py WORLD --play --age castle      # the AoE2 setting "Starting age" (#2265)
     python3 game/run.py WORLD --play --all-techs       # the AoE2 setting "All Techs" (#2298)
     python3 game/run.py WORLD --play --victory conquest  # the AoE2 setting "Victory": no wonder or relic win (#2316)
+    python3 game/run.py WORLD --play --victory regicide  # a King for each player: its death is the defeat (#2357)
     python3 game/run.py WORLD --play --civ 1=BRITONS --civ 2=FRANKS   # the civilization of each player (#2267)
     python3 game/run.py WORLD --play --teams 1,1,2,2   # the team of each player, - is no team (#2296)
     python3 game/run.py WORLD --play --load SAVE   # go on with a saved game: Ctrl-C of --play saves into saves/ (#2255)
@@ -322,7 +323,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     teams: {player: team or None} in place of the teams of the scenario (team_choices, #2296).
     all_techs: the AoE2 setting "All Techs" for all players and bots (civs.missing, #2298).
     age: the AoE2 setting "Starting age" of each player and bot (train.STARTS, #2265).
-    victory: the AoE2 setting "Victory": "standard" (conquest, a wonder or all relics) or "conquest" (#2316)."""
+    victory: the AoE2 setting "Victory": "standard" (conquest, a wonder or all relics), "conquest" (#2316) or "regicide"
+    (a King for each player, its death is the defeat, conquest.crown, #2357)."""
     import gather
 
     def make(player):
@@ -367,6 +369,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
               f"player {foe} at {bot_attack}.", file=sys.stderr)
     import combat
     combat.setup(game, data)                         # AoE2 hit points and damage (#514)
+    if victory == "regicide" and not state:          # a King for each player (#2357)
+        import conquest
+        conquest.crown(g, [g, *(s.g for s in g.bots)])
     if not state and age != "dark":                  # after the base values: the technologies change them
         import train
         for x in [g, *(s.g for s in g.bots)]:
@@ -512,8 +517,9 @@ def main(argv=None):
                     "the Death Match resources)")
     ap.add_argument("--all-techs", action="store_true", help="--play: the AoE2 setting \"All Techs\": each civilization "
                     "has the generic units and technologies that its tech tree does not have (the bonuses stay)")
-    ap.add_argument("--victory", choices=["standard", "conquest"], default="standard", help="--play: the AoE2 setting "
-                    "\"Victory\" (default standard: conquest, a wonder or all relics; conquest: only the conquest)")
+    ap.add_argument("--victory", choices=["standard", "conquest", "regicide"], default="standard", help="--play: the AoE2 setting "
+                    "\"Victory\" (default standard: conquest, a wonder or all relics; conquest: only the conquest; regicide: a King "
+                    "for each player, its death is the defeat)")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")

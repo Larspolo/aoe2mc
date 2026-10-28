@@ -1,6 +1,7 @@
 """#2316: `run.py --play --victory conquest` is the AoE2 setting "Victory" = Conquest (wiki "Victory conditions"):
 only the conquest wins, a wonder or all relics start no timer. "standard" (the default): all three wins."""
 import os
+import re
 import sys
 import types
 
@@ -77,4 +78,4 @@ def test_the_victory_option_goes_to_play(tmp_path, monkeypatch, capsys):
     assert seen["victory"] == "standard"
     with pytest.raises(SystemExit):
         run.main(["--help"])
-    assert "{standard,conquest}" in capsys.readouterr().out
+    assert re.search(r"\{standard,conquest[,\w]*\}", capsys.readouterr().out)   # more values can follow (#2357)

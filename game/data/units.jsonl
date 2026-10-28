@@ -210,7 +210,7 @@
 {"name": "CARRACK", "hp": 135, "attack": 4, "melee": 5, "pierce": 1, "range": 1, "reload": 1.5, "bonus": {"fireship": 1, "standard": -3}, "classes": ["ship"], "sight": 6, "melee_ranged": true, "melee_ship": true, "note": "Heavy Warships, AoE2 DE wiki \"Carrack (unit)\" (#1933)", "sail": 1.52}
 {"name": "VILLAGER", "hp": 25, "attack": 3, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"building": 3, "heavysiege": 6, "stone": 6}, "classes": [], "note": "AoE2 DE wiki (#1590)"}
 {"name": "MISSIONARY", "hp": 30, "attack": 0, "melee": 0, "pierce": 0, "range": 7, "reload": 0.0, "bonus": {}, "classes": [], "orders": true, "note": "AoE2 DE wiki (#1939)", "groups": ["monks"], "convert": 7}
-{"name": "KING", "hp": 75, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": [], "sight": 6}
+{"name": "KING", "hp": 75, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": [], "sight": 6, "orders": true}
 {"name": "MONK", "hp": 30, "attack": 0, "melee": 0, "pierce": 0, "range": 9, "reload": 0.0, "bonus": {}, "classes": [], "groups": ["monks"], "orders": true, "convert": 9}
 {"name": "TRADE_CART", "hp": 70, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": [], "sight": 7, "groups": ["trade units"], "orders": true}
 {"name": "WAR_CHARIOT", "hp": 65, "attack": 8, "melee": 0, "pierce": 5, "range": 6, "reload": 6.5, "bonus": {"building": 2}, "classes": ["cavalry", "siege", "heavysiege", "unique"], "sight": 8, "min_range": 1, "note": "the wiki infobox (#2142): the focus fire mode is one bolt of attack 8, the barrage mode is left out"}
