@@ -2808,9 +2808,11 @@ CREATE_GARRISONED_OBJECT = 49                                      # "Create Gar
 CREATE_OBJECT = 11
 DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
 DECLARE_VICTORY = 13                                               # "Declare Victory" (#2542)
+DISABLE_UNIT_ATTACKABLE = 98                                       # "Disable Unit Attackable" (#2695)
 DIFFICULTY_LEVEL = 19                                              # the condition "Difficulty Level" (#2704)
 DISPLAY_INSTRUCTIONS = 20
 DISPLAY_TIMER = 37                                                 # "Display Timer" (#2572)
+ENABLE_UNIT_ATTACKABLE = 99                                       # "Enable Unit Attackable" (#2695)
 DISPLAY_TIMER_TRIGGERED = 55                                       # the condition of its score (#2702)
 FREEZE_OBJECT = 22                                                 # "Freeze Object" (#2608)
 HEAL_OBJECT = 34                                                   # "Heal Object" (#2692)
@@ -3218,6 +3220,16 @@ def sound_lines(e, c):
     return [f"playsound minecraft:{sound} master @a {x + 0.5} {int(ground[x, z])} {z + 0.5}"]
 
 
+def attackable_lines(e, c):
+    """The commands of "Disable Unit Attackable" and "Enable Unit Attackable" (#2695): the tag Invulnerable of the
+    units of the player in the area. Enable keeps the garrisoned units invulnerable (#807)."""
+    if min(e.get("area", [-1])) < 0:
+        return []
+    disable = e["type"] == DISABLE_UNIT_ATTACKABLE
+    guard = "" if disable else f" unless entity @s[tag={GARRISONED}]"
+    return [f"execute as {unit_selector(e, c.T)}{guard} run data merge entity @s {{Invulnerable:{int(disable)}b}}"]
+
+
 def freeze_lines(e, c):
     """The commands of "Freeze Object" (#2608): the units of the player in the area and the mounts of the riders get
     NoAI, so they stay in their place (AoE2: they do not move until a new order)."""
@@ -3432,8 +3444,10 @@ EFFECTS = {
     DAMAGE_OBJECT: damage_lines,
     DEACTIVATE_TRIGGER: switch_lines,
     DECLARE_VICTORY: victory_lines,
+    DISABLE_UNIT_ATTACKABLE: attackable_lines,
     DISPLAY_INSTRUCTIONS: instruction_lines,
     DISPLAY_TIMER: timer_lines,
+    ENABLE_UNIT_ATTACKABLE: attackable_lines,
     FREEZE_OBJECT: freeze_lines,
     HEAL_OBJECT: heal_lines,
     KILL_OBJECT: object_lines,
