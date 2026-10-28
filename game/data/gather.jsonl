@@ -3,7 +3,7 @@
 {"name": "MILL", "drop": ["food"]}
 {"name": "FOLWARK", "drop": ["food"]}
 {"name": "MINING_CAMP", "drop": ["gold", "stone"]}
-{"name": "MULE_CART", "drop": ["wood", "gold", "stone", "meat"]}
+{"name": "MULE_CART", "drop": ["wood", "gold", "stone", "meat"], "civilian": true}
 {"name": "BOW_SAW", "work": {"wood": 1.2}}
 {"name": "BOX_TURTLES", "fish": 200, "shore": true}
 {"name": "COW", "hunt": 150, "herd": true, "decay": 0.25}
