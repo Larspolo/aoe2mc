@@ -92,6 +92,7 @@ ROWS = table.load("replay.jsonl")
 SPEEDS = {r["name"]: r["walk"] for r in ROWS if "walk" in r}
 AGES = tuple(r["name"] for r in sorted((r for r in ROWS if "age" in r), key=lambda r: r["age"]))   # (#1067)
 SOCIETY = tuple(r["name"] for r in ROWS if r.get("society"))      # the buildings of the Society tab (#1086)
+TAUNTS = {r["name"]: r["text"] for r in table.load("taunts.jsonl")}   # number: the AoE2 text (wiki "Taunt", #2234)
 
 
 def pretty(name):
@@ -105,6 +106,15 @@ def start_job(name):
 
 def text(s, color=None):
     return {"text": s, "color": color} if color else {"text": s}
+
+
+def taunt(chat):
+    """The chat line with the AoE2 text of its taunt: "11" and "11 haha" (a number, then other text) are taunt 11,
+    "11 (Herb laugh)" (#2234). Other lines stay as they are."""
+    n = chat.strip().split(" ", 1)[0]
+    if n not in TAUNTS:
+        return chat
+    return f"{chat} ({TAUNTS[n].removeprefix('(').removesuffix(')')})"
 
 
 def mmss(ms):
@@ -306,7 +316,7 @@ class Replay:
             return self.delete(e)
         if kind == "chat" and e.get("text"):
             name, color = self.player(e["player"]) if e.get("player") else ("Game", "white")
-            return ["tellraw @a " + json.dumps([text(f"<{name}> ", color), text(e["text"])])]
+            return ["tellraw @a " + json.dumps([text(f"<{name}> ", color), text(taunt(e["text"]))])]
         name, color = self.player(e.get("player"))
         if kind == "age" and e.get("age"):
             self.age(e)
