@@ -8,13 +8,11 @@ A player with no town center at the start (a Nomad map) is not in the mode until
 into the sets of conquest.py (g.defeated, g.conquest_seen), so conquest.tick gives the "Victory" when only allies are
 left, as regicide.py.
 """
-import json
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
-import cheats  # noqa: E402
 import conquest  # noqa: E402
 
 
@@ -44,10 +42,6 @@ def tick(g):
         if n not in towns:
             continue
         seen.add(n)
-        lost.add(n)
-        if n == g.player:
-            return cheats.end("Defeat", "red")(g, None)
-        cheats.destroy(g, n)
-        g.command("tellraw @a " + json.dumps({"text": f"The town center of player {n} fell: player {n} is defeated.",
-                                              "color": "red"}))
-        g.conquest_at = 0.0                                            # conquest.tick: the "Victory" check now
+        conquest.defeat(g, n, f"The town center of player {n} fell: player {n} is defeated.")   # also conquest.scored, the end (#3103)
+        if g.ended:
+            return

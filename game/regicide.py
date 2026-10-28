@@ -13,12 +13,10 @@ site of each building of "sites" (the Castle, free) next to the town center. "st
 of each level of run.py --resources, and "swap" the technologies that the mode puts in place of others (train.unlocked:
 Treason for Spies). Treason lets the enemy Kings glow (reveal).
 """
-import json
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import cheats  # noqa: E402
 import conquest  # noqa: E402
 import table  # noqa: E402
 
@@ -108,11 +106,6 @@ def tick(g):
         if has_king(g, n):
             continue
         seen.add(n)
-        lost.add(n)
-        conquest.scored(g, n)                                          # a "Player Defeated" trigger (#2710)
-        if n == g.player:
-            return cheats.end("Defeat", "red")(g, None)
-        cheats.destroy(g, n)
-        g.command("tellraw @a " + json.dumps({"text": f"The King of player {n} died: player {n} is defeated.",
-                                              "color": "red"}))
-        g.conquest_at = 0.0                                            # conquest.tick: the "Victory" check now
+        conquest.defeat(g, n, f"The King of player {n} died: player {n} is defeated.")   # also conquest.scored, the end (#3103)
+        if g.ended:
+            return
