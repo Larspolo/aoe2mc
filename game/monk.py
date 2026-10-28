@@ -145,6 +145,7 @@ def order(g, player, cell):
     else:
         return False
     x, z = to
+    g.new_order(go)
     for m, target in go.items():
         name = g.soldiers[m]
         ai.move(g, m, name, T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * civs.speed(g, name))
@@ -303,6 +304,7 @@ def convert_order(g, monks, target):
     convert it."""
     if not convertible(g, target):
         return False
+    g.new_order(monks)
     for m in monks:
         g.converting[m] = [target, 0.0, 0]                         # target, AoE2 seconds of the interval, intervals
     return True
