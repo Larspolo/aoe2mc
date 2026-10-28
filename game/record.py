@@ -21,6 +21,11 @@ import aoe2mc  # noqa: E402
 class Recorder:
     def __init__(self, path, objects):
         self.f, self.time, self.ids, self.clock = open(path, "w"), 0.0, {}, None   # game seconds; UUID or footprint -> ID
+        self.rects = {}                                                # UUID of a building -> its footprint (x0, x1, z0, z1)
+        for o in objects:
+            if o["kind"] == "building" and "footprint" in o:
+                x0, z0, x1, z1 = o["footprint"]
+                self.remember((x0, x1, z0, z1))
         keys = [(start_key(o), o.get("ref")) for o in objects]
         self.ids = {k: ref for k, ref in keys if k and ref is not None}
         self.top = max(self.ids.values(), default=0)
@@ -34,8 +39,18 @@ class Recorder:
         self.f.write(json.dumps(line) + "\n")
         self.f.flush()
 
+    def remember(self, rect):
+        """Keep the UUID of the building of footprint rect (x0, x1, z0, z1): an attack names the building by it (#3004)."""
+        import combat                                                  # combat imports gather, which imports this module
+        self.rects[combat.target_uuid([rect[0], rect[2], rect[1], rect[3]])] = tuple(int(v) for v in rect)
+
     def id(self, thing):
-        """The object ID of a UUID or a building footprint (x0, x1, z0, z1): a new one gets the next ID."""
+        """The object ID of a UUID or a building footprint (x0, x1, z0, z1): a new one gets the next ID. The UUID of a
+        building (an attack, Gather.attack) is the ID of its footprint."""
+        if isinstance(thing, str):
+            thing = self.rects.get(thing, thing)
+        else:
+            self.remember(thing)
         k = thing if isinstance(thing, str) else key(thing)
         if k not in self.ids:
             self.top += 1
@@ -135,6 +150,8 @@ def ordered(g, kind, units, cell=None, target=None):
         data["tile"] = [round((cell[0] + 0.5) / g.map.T, 3), round((cell[1] + 0.5) / g.map.T, 3)]
     if target is not None:
         data["target"] = g.record.id(target)
+        if target in g.record.rects:                                   # a building: the tile of its middle (#3004)
+            data["tile"] = tile(g, g.record.rects[target])
     event(g, kind, **data)
 
 
