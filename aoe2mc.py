@@ -405,8 +405,12 @@ def read_scenario(path):
                    for i, t in enumerate(scn.trigger_manager.triggers) if t.display_as_objective)
     texts["objectives"] = "\n".join(f"- {g}" for _, _, g in goals if g)
     techs = {t.ID: t.name for t in TechInfo}                    # the names of game/data/train.jsonl
+    entities = {u.reference_id for us in scn.unit_manager.units for u in us   # the objects that are entities with the
+                if kinds.get(u.unit_const, ("?",))[0] in ("U", "H")}         # tag aoe2mc.r<ref> (#2617), not blocks
     texts["triggers"] = [dict(id=t.trigger_id, name=t.name, enabled=bool(t.enabled), looping=bool(t.looping),
                               conditions=[dict(type=c.condition_type, timer=c.timer, inverted=bool(c.inverted),
+                                               **({"ref": c.unit_object, "unit": c.unit_object in entities}   # #2618
+                                                  if c.condition_type in OBJECT_TESTS else {}),
                                                **({"quantity": c.quantity, "player": c.source_player,
                                                    "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2],
                                                    "object": c.object_list, "group": c.object_group,
@@ -2774,6 +2778,17 @@ TELEPORT_OBJECT = 35
 CHANGE_VARIABLE, VARIABLE_VALUE = 56, 22                               # the scenario variables (#2611)
 RESEARCHED = 9                                                         # the condition "Research Technology" (#2656)
 TICKED = COUNTED + (VARIABLE_VALUE, RESEARCHED)                    # conditions of the tick function
+DESTROY_OBJECT = 6                                                     # the condition "Destroy Object" (#2618)
+# The conditions on one object of the map (its tag aoe2mc.r<ref>, #2617): the test of the tick function when it holds,
+# when it does not hold (a looping trigger fires again after that), and the tick lines before the test. "Destroy
+# Object": a marker entity follows the unit; the unit is dead when the marker is loaded and the unit is not there. A
+# unit in a chunk that is not loaded is no entity for a command, and its marker is not loaded too (#2618).
+OBJECT_TESTS = {DESTROY_OBJECT: ("if entity @e[tag=aoe2mc.m{ref}] unless entity @e[tag=aoe2mc.r{ref}]",
+                                 "if entity @e[tag=aoe2mc.r{ref}]",
+                                 ("execute as @e[tag=aoe2mc.r{ref}] at @s unless entity @e[tag=aoe2mc.m{ref}] run "
+                                  "summon marker ~ ~ ~ {{Tags:[\"aoe2mc.m{ref}\"]}}",
+                                  "execute as @e[tag=aoe2mc.r{ref}] at @s run tp @e[tag=aoe2mc.m{ref}] ~ ~ ~"))}
+TICKED += tuple(OBJECT_TESTS)
 FREEZE_OBJECT = 22                                                     # "Freeze Object" (#2608)
 RESEARCH_TECHNOLOGY = 2
 CHANGE_OBJECT_NAME = 26                                                # "Change Object Name" (#2616)
@@ -3107,6 +3122,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Patrol" and "Attack Move": order_lines (#2647).
     "Play Sound": sound_lines (#2644).
     "Task Object": task_lines (#2646).
+    "Destroy Object" (OBJECT_TESTS): the tick function tests the tag aoe2mc.r<ref> of its unit and its marker (#2618).
     A disabled trigger does not run."""
     load, files, tick, win, dip, money = [], {}, [], False, False, False
     stats = Counter() if stats is None else stats
@@ -3118,6 +3134,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         # once per second, as AoE2 does, with `random value 1..100`
         chance = (TRIGGER_CHANCE, False) in kinds
         rest = kinds - {(TRIGGER_CHANCE, False)}
+        if any(c["type"] in OBJECT_TESTS and (c.get("ref", -1) is None or c.get("ref", -1) < 0 or not c.get("unit"))
+               for c in conds):                                        # no object, or a building: blocks, no entity
+            stats["object condition (not an entity, not supported yet)"] += t["enabled"]
+            continue
         if not t["enabled"] or not conds or not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED}) or \
                 chance and len([c for c in conds if c["type"] == TRIGGER_CHANCE]) > 1 or \
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds) or \
@@ -3210,6 +3230,12 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     else f"score #p{c['player']}.{c['technology']} aoe_tech matches 1.."   # technology of the game (#2656)
                 tests.append(f"if {test}")
                 unless.append(f"unless {test}")
+                continue
+            if c["type"] in OBJECT_TESTS:                              # the tag of the object (#2618)
+                test, other, before = OBJECT_TESTS[c["type"]]
+                counts += [x.format(ref=c["ref"]) for x in before]
+                tests.append(test.format(ref=c["ref"]))
+                unless.append(other.format(ref=c["ref"]))
                 continue
             if c["type"] not in COUNTED:                               # a timer or the chance
                 continue
