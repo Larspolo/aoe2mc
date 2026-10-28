@@ -1635,14 +1635,19 @@ class Gather:
 
     def aura_rate(self, v, kind):
         """The factor of the work rate of v for resource kind: the "rate" of civs.AURA within its "range" (tiles from the
-        footprint) of an own complete aura building that is still a drop site of kind (AoE2 wiki "Thracians"), else 1."""
+        footprint) of an own complete aura building that is still a drop site of kind (AoE2 wiki "Thracians"), else 1;
+        times the best "aura" of an upgraded own building near v (train.ONE_BUILDING: Economic Town Center, #2484)."""
         a, m = self.map.aura, self.map
+        x, z = v.pos[0], v.pos[2]
+        best = max([1] + [aura["rate"] for rect, name in getattr(self, "upgraded", {}).items()
+                          if (aura := train.ONE_BUILDING.get(name)) and rect in train.homes(self)
+                          and max(rect[0] - x, x - rect[1], rect[2] - z, z - rect[3]) <= aura["range"] * m.T])
         if kind not in a.get("resources", ()):
-            return 1
-        x, z, near = v.pos[0], v.pos[2], a["range"] * m.T
-        return a["rate"] if any(max(min(c[0] for c in cs) - x, x - max(c[0] for c in cs) - 1,
-                                    min(c[1] for c in cs) - z, z - max(c[1] for c in cs) - 1) <= near
-                                for cs in m.auras if cs in m.drops[kind]) else 1
+            return best
+        near = a["range"] * m.T
+        return best * a["rate"] if any(max(min(c[0] for c in cs) - x, x - max(c[0] for c in cs) - 1,
+                                           min(c[1] for c in cs) - z, z - max(c[1] for c in cs) - 1) <= near
+                                       for cs in m.auras if cs in m.drops[kind]) else best
 
     def move(self, v):
         import ai                                                      # ai imports gather
@@ -1891,7 +1896,8 @@ class Gather:
                 capture_relic.tick(self)
             elif self.mode == "defend-the-wonder":                     # the attackers win when the Wonder falls (#2441)
                 defend_wonder.tick(self)
-            elif self.mode == "scenario":                              # the book of the scenario texts (#2541)
+            elif self.mode == "scenario":                              # the book (#2541), a trigger "Declare Victory" (#2542)
+                scenario.victory(self)
                 scenario.tick(self)
             fog.tick(self)                                             # after the bots: their units too (#1389)
             herd.tick(self)                                            # all players: the bots capture too (#1792)

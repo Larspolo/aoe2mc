@@ -424,7 +424,9 @@ def read_scenario(path):
                                             **({"target": e.target_player}                # "Change Ownership" (#2570)
                                                if e.effect_type == CHANGE_OWNERSHIP else {}),
                                             **({"technology": techs.get(e.technology, str(e.technology))}   # #2577
-                                               if e.effect_type == RESEARCH_TECHNOLOGY else {}))
+                                               if e.effect_type == RESEARCH_TECHNOLOGY else {}),
+                                            **({"unit": e.time_unit, "timer": e.timer}   # "Display Timer" (#2572)
+                                               if e.effect_type == DISPLAY_TIMER else {}))
                                        for e in t.effects])
                          for t in scn.trigger_manager.triggers]
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
@@ -2709,13 +2711,17 @@ def team_lines(objects, players):
 
 
 TIMER, SEND_CHAT, DISPLAY_INSTRUCTIONS, IN_AREA = 10, 3, 20, 5   # AoE2 condition and effect IDs (AoE2ScenarioParser)
+DISPLAY_TIMER = 37                                                     # "Display Timer" (#2572)
+TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 OWN_OBJECTS, OWN_FEWER_OBJECTS = 3, 4                              # conditions on the units of a player (#2573)
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
 CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 14, 15, 18, 72
 DAMAGE_OBJECT = 24                                                     # "Damage Object" (#2571)
+DECLARE_VICTORY = 13                                                   # "Declare Victory" (#2542)
 TELEPORT_OBJECT = 35
 FREEZE_OBJECT = 22                                                     # "Freeze Object" (#2608)
 RESEARCH_TECHNOLOGY = 2
+CLEAR_INSTRUCTIONS = 21                                                # "Clear Instructions" (#2609)
 
 
 def turn_area(area, size, k):
@@ -2865,6 +2871,42 @@ def mood_lines(e):
     return [f"time set {MOODS[e['mood']]}", f"weather {'rain' if e['mood'] in RAIN else 'clear'}"]
 
 
+def timer_lines(t, e):
+    """(commands, files) of "Display Timer" (#2572): the boss bar aoe2mc:timer<slot> with the text of the effect, "%d"
+    is the time left in the unit of the effect (TIME_UNITS; m:ss for minutes and seconds). The function
+    aoe2mc:timer/<slot> runs each second (schedule): it lowers the score #t<slot> of aoe_timer, the bar and the
+    text, and removes the bar at 0. A new timer in the same slot replaces the old one, as in AoE2."""
+    unit, slot = e.get("unit", 2), e.get("timer", 0)
+    sec, bar, fn = max(int(e["time"] * TIME_UNITS.get(unit, 1)), 1), f"aoe2mc:timer{slot}", f"aoe2mc:timer/{slot}"
+    msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip() or "%d"   # AoE2 color tags
+    score = lambda n: {"score": {"name": f"#{n}{slot}", "objective": "aoe_timer"}}  # noqa: E731
+    per = TIME_UNITS.get(unit, 1) if unit in (0, 1) else 1
+    left = [score("m"), {"text": ":"}, score("z"), score("s")] if unit == 3 else [score("u" if per > 1 else "t")]
+    before, _, after = msg.partition("%d")
+    name = json.dumps([{"text": before}] + left * ("%d" in msg) + [{"text": after}], ensure_ascii=False)
+    show = [f"scoreboard players operation #u{slot} aoe_timer = #t{slot} aoe_timer",
+            f"scoreboard players add #u{slot} aoe_timer {per - 1}",           # the years or minutes left, rounded up
+            f"scoreboard players set #d{slot} aoe_timer {per}",
+            f"scoreboard players operation #u{slot} aoe_timer /= #d{slot} aoe_timer"] if per > 1 else []
+    if unit == 3:
+        show += [f"scoreboard players set #d{slot} aoe_timer 60",
+                 f"scoreboard players operation #m{slot} aoe_timer = #t{slot} aoe_timer",
+                 f"scoreboard players operation #m{slot} aoe_timer /= #d{slot} aoe_timer",
+                 f"scoreboard players operation #s{slot} aoe_timer = #t{slot} aoe_timer",
+                 f"scoreboard players operation #s{slot} aoe_timer %= #d{slot} aoe_timer",
+                 f"scoreboard players reset #z{slot} aoe_timer",                # a zero before 0-9 seconds
+                 f"execute if score #s{slot} aoe_timer matches ..9 run scoreboard players set #z{slot} aoe_timer 0"]
+    show += [f"execute store result bossbar {bar} value run scoreboard players get #t{slot} aoe_timer",
+             f"bossbar set {bar} name {name}"]
+    tick = [f"scoreboard players remove #t{slot} aoe_timer 1"] + show + \
+        [f"execute if score #t{slot} aoe_timer matches ..0 run bossbar remove {bar}",
+         f"execute if score #t{slot} aoe_timer matches 1.. run schedule function {fn} 1s replace"]
+    lines = ["scoreboard objectives add aoe_timer dummy", f"bossbar remove {bar}", f"bossbar add {bar} \"\"",
+             f"bossbar set {bar} max {sec}", f"bossbar set {bar} players @a",
+             f"scoreboard players set #t{slot} aoe_timer {sec}"] + show + [f"schedule function {fn} 1s replace"]
+    return lines, {f"data/aoe2mc/function/timer/{slot}.mcfunction": "\n".join(tick) + "\n"}
+
+
 def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=True):
     """(load lines, files) for the triggers that only have timer conditions (#648) or only "Objects in Area",
     "Own Objects" and "Own Fewer Objects" conditions (#649, #2573): one function per trigger. "Own Objects" counts the
@@ -2874,12 +2916,14 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
     the units leave an area. "Send Chat" is a tellraw, "Display Instructions" a subtitle for its display time;
     "Create Object" and "Remove Object": object_lines (#656). "Change Color Mood": mood_lines (#1876), only with mood. "Change Ownership": owner_lines (#2570).
-    "Damage Object": damage_lines (#2571).
+    "Damage Object": damage_lines (#2571). "Display Timer": timer_lines (#2572).
     "Teleport Object": teleport_lines (#2569).
+    "Declare Victory" sets the score #p<player> of aoe_win to 1: the scenario mode of the game program ends the game.
     "Freeze Object": freeze_lines (#2608).
     "Research Technology": a score in aoe_tech for the game program (research_list, #2577).
+    "Clear Instructions": title @a clear (#2609).
     A disabled trigger does not run."""
-    load, files, tick = [], {}, []
+    load, files, tick, win = [], {}, [], False
     stats = Counter() if stats is None else stats
     ground = np.zeros((0, 0), np.int16) if ground is None else ground
     for t in triggers:
@@ -2906,11 +2950,24 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             if e["type"] == DAMAGE_OBJECT:
                 lines += damage_lines(e, T, stats)
                 continue
+            if e["type"] == DECLARE_VICTORY:                           # the scenario mode reads the score (#2542)
+                lines.append(f"scoreboard players set #p{max(e['player'], 0)} aoe_win 1")
+                stats["declare victory"] += 1
+                win = True
+                continue
+            if e["type"] == DISPLAY_TIMER:
+                more, timer = timer_lines(t, e)
+                lines += more
+                files.update(timer)
+                continue
             if e["type"] == TELEPORT_OBJECT:
                 lines += teleport_lines(e, T, ground)
                 continue
             if e["type"] == FREEZE_OBJECT:
                 lines += freeze_lines(e, T)
+                continue
+            if e["type"] == CLEAR_INSTRUCTIONS:                            # no message
+                lines.append("title @a clear")
                 continue
             msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()   # AoE2 color tags
             if not msg:
@@ -2953,6 +3010,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         load.append(run)
     if any(" aoe_tech 1" in f for f in files.values()):
         load.insert(0, "scoreboard objectives add aoe_tech dummy")
+    if win:
+        load.insert(0, "scoreboard objectives add aoe_win dummy")
     if tick:
         load.insert(0, "scoreboard objectives add aoe_trig dummy")
         files["data/minecraft/tags/function/tick.json"] = {"values": ["aoe2mc:tick"]}

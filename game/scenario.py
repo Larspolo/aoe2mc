@@ -5,7 +5,15 @@ settings. The converter writes them into aoe2mc.json "players" ("resources", "po
 them (a random map, a recorded game, an old scenario) keeps the lobby values.
 Each person also gets a written book with the scenario texts (aoe2mc.json "messages": objectives, hints,
 instructions ...), as the "Objectives" window of AoE2 DE, and the chat shows the instructions at the start (#2541).
-The trigger effect "Research Technology" (#2577) sets a score of the datapack; tick() gives the technology.
+The trigger effect "Research Technology" (#2577) sets a score of the datapack; research() (in tick()) gives the
+technology.
+
+A scenario trigger with the effect "Declare Victory" ends the game (#2542): its datapack function sets the score
+#p<N> of aoe_win to 1 (aoe2mc.trigger_files), and victory() reads it with RCON once per conquest.EVERY seconds. Player N
+and its allies see "Victory", the others "Defeat" (cheats.over). Minecraft feature: a scoreboard, no own logic in the
+world.
+
+    scenario.victory(g)    # gather.Gather.run, in the scenario mode
 """
 import json
 import os
@@ -119,3 +127,15 @@ def research(g):
                   file=sys.stderr)
             continue
         train.research(sides[r["player"]], {"name": r["technology"], "player": "@a"}, start=True)
+
+
+def victory(g):
+    """End the game when a trigger declared the victory of a player (the score #p<N> of aoe_win is 1)."""
+    import cheats, conquest                                            # they import gather: import them late
+    if g.ended or g.clock() < vars(g).get("win_at", 0.0):
+        return
+    g.win_at = g.clock() + conquest.EVERY
+    for n in sorted(int(p) for p in g.players if int(p)):
+        got = re.search(r" has (-?\d+) ", g.command(f"scoreboard players get #p{n} aoe_win") or "")
+        if got and int(got[1]) > 0:
+            return cheats.over(g, lambda m: gather.allied(g.players, n, m))   # allies win together
