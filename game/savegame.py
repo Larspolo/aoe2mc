@@ -26,8 +26,8 @@ FIELDS = ("stock", "spare", "seconds", "repeats", "pop")              # dicts an
 PACKED = ("queues", "trained", "sites", "rally",                       # with tuples (a building rect, a cell): pack()
           "sieged",                                                    # the targets of attack orders: Gather.fall (#2537)
           "soldiers", "units")                                         # the units of the game, trained or upgraded (#2532)
-OPTIONAL = ("limit_left", "policy", "rates", "relic_timer", "switches", "wonder_shown", "wonders",   # only on a Gather that
-            "wonders_gone")                                            # has them (#2324; the policy: #2515)
+OPTIONAL = ("limit_left", "policy", "rates", "relic_timer", "switches", "upgraded", "wonder_shown", "wonders",   # only on a
+            "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
