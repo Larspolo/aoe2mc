@@ -8,6 +8,7 @@ that cost the most: a result stays in the context, so each later call reads it a
     python3 tools/tokens.py --top 15      # the 15 largest sinks, one per line
     python3 tools/tokens.py FILE.jsonl    # another transcript
     python3 tools/tokens.py --verify      # the minutes and repeats of each check command (#1704)
+    python3 tools/tokens.py --phases      # the measured phase minutes of each claimed ticket (`report.py` uses them)
 
 The unit is "eq": input-token equivalents with the API price ratios (input 1, cache write 1.25 for 5 minutes and 2 for
 1 hour, cache read 0.1, output 5). The subscription quota is not public, but it follows the cost of the calls.
@@ -20,6 +21,9 @@ Field `cost`: the API list price of the calls in $, by the model of each call (`
 Field `verify` (#1704): the wall minutes and the count of the check commands (`pytest`, `ruff`, `mc_check.py`, `mc_shot.py`,
 `render.py`, and `wait`: a loop that waits for the output of a background check), from the time of a tool call to the
 time of its result. A background command has its minutes in the wait loop or the notification, not in its own call.
+Phases (`--phases`): each tool call gets a phase (`phase()`), and the wall time from the call to the next call of the
+session counts for it. A call `claim.py N` that wins starts ticket N; the time before the first claim counts for
+the first ticket. The phases that runs gave by hand were guesses: 37 minutes for a 6.5-minute run (2026-10-28).
 The pure functions take plain records, so the tests need no files.
 """
 import argparse
@@ -147,6 +151,66 @@ def verify_field(v, k=4):
     return "verify " + (", ".join(f"{s} {m:.1f}m {n}x" for s, (m, n) in top) or "-")
 
 
+# The phase of a Bash command: the first pattern that matches (`report.md`, phases; health.PHASES).
+PHASE_RULES = (("conflict", r"merge_main\.py|unconflict\.py|\bgit merge\b"),
+               ("ci", r"ship_pr\.py|\bgit push\b|/pulls\b|check-runs|mergeable|claim\.py \d+ --guard"),
+               ("report", r"report\.py|tokens\.py|health\.py"),
+               ("claim", r"claim\.py|cycle_start\.py|dashboard\.py|feedback\.py|usage\.py"),
+               ("code", r"\bsed -i\b|\bcat >|\bpython3 - <<|\btee\b"))
+ORDER = ("conflict", "verify", "ci", "code", "claim", "report", "read")   # a call with several tools: the first here
+CLAIMED = re.compile(r"claim\.py (\d+)\s*(?:$|[;&|)\n])")          # `claim.py N` with no option: a claim
+
+
+def phase(name, inp):
+    """The phase of one tool call: read, claim, code, verify, ci, conflict or report."""
+    if name == "Bash":
+        cmd = HEREDOC.sub("", inp.get("command", ""))
+        if check(cmd):
+            return "verify"
+        return next((k for k, rx in PHASE_RULES if re.search(rx, cmd)), "read")
+    if name in ("Edit", "Write", "NotebookEdit", "MultiEdit"):
+        return "code"
+    if name.startswith("mcp__github__"):
+        return "ci" if re.search(r"pull_request|check|job", name) else "report" if "comment" in name else "read"
+    return "read"
+
+
+def phases(records):
+    """{ticket: {phase: minutes}} of one chain of records, in the order of the tickets; the time before the first
+    claim counts for the first ticket (key None when no claim won)."""
+    calls = []                                        # (time, phase, claimed ticket or None)
+    claims, won = {}, set()
+    for r in records:
+        msg = r.get("message") or {}
+        content = msg.get("content")
+        if r.get("type") == "assistant" and isinstance(content, list):
+            tools = [b for b in content if b.get("type") == "tool_use"]
+            if tools and when(r) is not None:
+                ps = [phase(b.get("name", ""), b.get("input") or {}) for b in tools]
+                calls.append([when(r), min(ps, key=ORDER.index), None])
+                for b in tools:
+                    m = CLAIMED.search((b.get("input") or {}).get("command", "") + "\n") if b.get("name") == "Bash" else None
+                    if m:
+                        claims[b["id"]] = (len(calls) - 1, int(m[1]))
+        elif r.get("type") == "user" and isinstance(content, list):
+            for b in content:
+                if b.get("type") == "tool_result" and b.get("tool_use_id") in claims:
+                    text = b.get("content") if isinstance(b.get("content"), str) else " ".join(
+                        x.get("text", "") for x in b.get("content") or [] if isinstance(x, dict))
+                    i, n = claims.pop(b["tool_use_id"])
+                    if re.search(rf"claimed claim/{n}\b", text or "") and n not in won:
+                        won.add(n)
+                        calls[i][2] = n
+    out, ticket = {}, None
+    first = next((c[2] for c in calls if c[2] is not None), None)
+    for (t, ph, claimed), nxt in zip(calls, calls[1:] + [None]):
+        ticket = claimed if claimed is not None else ticket
+        key = ticket if ticket is not None else first
+        m = out.setdefault(key, dict.fromkeys(("read", "claim", "code", "verify", "ci", "conflict", "report"), 0.0))
+        m[ph] += ((nxt[0] if nxt else t) - t) / 60
+    return out
+
+
 def size(content):
     """Tokens of a tool result (string or list of blocks)."""
     if isinstance(content, str):
@@ -269,6 +333,7 @@ def main(argv=None):
     ap.add_argument("file", nargs="?", help="a transcript (default: the newest session of this directory)")
     ap.add_argument("--top", type=int, help="print the N largest sinks, one per line")
     ap.add_argument("--verify", action="store_true", help="print each check command kind: minutes and count (#1704)")
+    ap.add_argument("--phases", action="store_true", help="print the measured phase minutes of each claimed ticket")
     a = ap.parse_args(argv)
     path = a.file or newest()
     if not path:
@@ -281,6 +346,10 @@ def main(argv=None):
         for s, (m, n) in verify(c).items():
             v[s][0] += m
             v[s][1] += n
+    if a.phases:
+        for n, p in phases(chains[0]).items():
+            print(f"#{n}: " + ",".join(f"{k}={m:.0f}" for k, m in p.items()))
+        return 0
     print(line(t, repo=repo_base(), checks=dict(v)))
     if a.verify:
         for s, (m, n) in sorted(v.items(), key=lambda kv: -kv[1][0]):

@@ -250,6 +250,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_tokens.py` | generic | None (a test of `tools/tokens.py`). |
 | `tests/test_tokens_verify.py` | generic | None (a test of `tools/tokens.py`). |
 | `tests/test_tokens_cost.py` | generic | None (a test of `tools/tokens.py`). |
+| `tests/test_tokens_phases.py` | generic | None (a test of `tools/tokens.py`). |
 | `tests/test_unconflict.py` | generic | None (a test of `tools/unconflict.py`). |
 | `tests/test_merge_main.py` | generic | None (a test of `tools/merge_main.py`). |
 | `tests/test_cycle_start.py` | generic | None (a test of `tools/cycle_start.py`). |

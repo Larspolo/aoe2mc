@@ -6,11 +6,12 @@ line of the run start (the release bar only when the project has `release.py`), 
         --phases read=8,claim=1,code=18,verify=9,ci=0,conflict=5,report=4 [--ticket ...] [--post]
 
 Repeat the ticket options for each ticket of the run, in the same order. `--minutes` defaults to the sum of the
-phases. `--post` comments the report on the status issue (label `agent-status`) and sets `last_run` and `runs` of its
+phases. Without `--phases` a ticket gets the phases that `tokens.py --phases` measures in the transcript. `--post` comments the report on the status issue (label `agent-status`) and sets `last_run` and `runs` of its
 state comment, else it prints the comment.
 """
 import argparse
 import os
+import re
 import subprocess
 import sys
 
@@ -63,6 +64,12 @@ def tool(*args):
     return r.stdout.rstrip("\n") if r.returncode == 0 else ""
 
 
+def measured():
+    """{ticket: "read=8,claim=1,..."} of this session (`tokens.py --phases`): the phases of a ticket without `--phases`.
+    The key "None" holds the time of a run with no won claim."""
+    return {m[1]: m[2] for m in re.finditer(r"^#(\d+|None): (\S+)$", tool("tokens.py", "--phases"), re.M)}
+
+
 def report(text, usage, lines, release=None, tokens=None):
     """The comment: text, release bar (none when it is empty), `Usage:`, `Metrics:` and `Tokens:` lines, footer."""
     release = tool("release.py") if release is None else release
@@ -94,8 +101,10 @@ def main(argv=None):
         return values[i] if i < len(values) else default
 
     lane = git_lane()
+    got = measured() if len(a.phases) < n else {}
+    own = lambda t: got.get(str(t)) or (got.get("None", "") if n == 1 else "")    # measured, not guessed (2026-10-28)
     lines = [metrics(t, a.size[i], a.result[i], at(a.minutes, i, None), at(a.setup, i, 0), at(a.checks, i, 0),
-                     at(a.checks_min, i, 0), at(a.sinks, i, "none"), at(a.phases, i, ""), at(a.lane, i, lane))
+                     at(a.checks_min, i, 0), at(a.sinks, i, "none"), at(a.phases, i, own(t)), at(a.lane, i, lane))
              for i, t in enumerate(a.ticket)]
     usage = a.usage or (tool("usage.py", "--sample").splitlines() or [""])[-1]
     body = report(a.text, usage, lines)

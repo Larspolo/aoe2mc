@@ -22,7 +22,7 @@ other runs change it too):
 Then add one short comment on the status issue: what you did and what is next.
 Write it with one command (#1701): `python3 tools/report.py --usage "<the Usage: line of step 1.2>" --text "<what you
 did, what is next>" --ticket N --size S --result "pr #M" --setup 0 --checks K --checks-min C --sinks "<list or none>"
---phases read=8,claim=1,code=18,verify=9,ci=0,conflict=5,report=4 --post` (repeat the ticket options for each ticket,
+--post` (repeat the ticket options for each ticket,
 in the same order). It adds the release bar, the `Tokens:` line and the footer in the format below. Without `--post`
 it only prints the comment. A question for the owner goes on its
 issue, not here (`owner.md`).
@@ -44,8 +44,8 @@ Put the `Usage:` line of step 1.2 above the metrics lines, unchanged: `tools/hea
 run per hour from pairs of these lines, and `tools/usage.py --target` uses that value (#462).
 `setup`: minutes from the start time (step 4) to the claim of the first ticket (0 for later tickets).
 `checks <k>`: rounds of the `verify` skill before the push; `checks <c> min`: their minutes in total.
-`phases` (#899): whole minutes of the ticket in each phase, from the times that you note (`date -u +%T`) when a phase
-starts: `read` (feedback, triage, the ticket and the code), `claim` (pick and claim), `code` (change and tests),
+`phases` (#899): whole minutes of the ticket in each phase. `report.py` measures them in the transcript
+(`tokens.py --phases`): do not give `--phases` (the guesses of the runs were 2 to 6 times too large, 2026-10-28). `read` (feedback, triage, the ticket and the code), `claim` (pick and claim), `code` (change and tests),
 `verify` (the checks of the `verify` skill), `ci` (wait for or fix CI after the push), `conflict` (merges with main),
 `report` (PR text, status comment, process step 9). Keep the fields in this order: `tools/health.py` sums them.
 
