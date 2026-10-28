@@ -29,6 +29,11 @@ player loads it with the world. Without the option, the world is the same as bef
 - Single player (`--quickPlaySingleplayer`) loads the pack with no prompt: the log shows
   `Reloading ResourceManager: vanilla, vanilla, server/00000000/<uuid>` after the world loads.
 - A pack that fails to load gives the prompt `multiplayer.texturePrompt.failure` (`WorldOpenFlows`).
+- Multiplayer (`game/run.py`, #2740): `run.PackServer` serves the zip over HTTP on 127.0.0.1 (a free port), and
+  `server.properties` gets `resource-pack`, `resource-pack-sha1`, `require-resource-pack=true` and
+  `resource-pack-prompt` (`run.PROMPT`). Before the join the client shows "This server requires the use of a custom
+  resource pack." with the prompt text and the buttons "Proceed" and "Disconnect". `mc_shot.Client` at 1280 × 720:
+  click (407, 488) for "Proceed"; the player is in `list` only after it.
 
 ## Pitfalls
 
