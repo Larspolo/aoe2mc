@@ -20,11 +20,12 @@ So one pacer session starts them. It does no ticket work, it does not comment on
    start now. The line on stderr shows the inputs: usage, target, claims, ready tickets, `paused`, the flow brake.
    The flow brake lowers K when the quota is not the bottleneck: many old agent PRs (K at most 1, a repair run) or a
    CI queue (K = 0). Do not start more runs to use the quota then: new PRs only make more conflicts.
-3. Its second stdout line is `haiku H`: the runs of K that can go to the Haiku lane (#1715). Find the scheduled task
-   "aoe2mc autopilot haiku" with `mcp__claude-code-remote__list_triggers` (at most once per hour; keep its ID in your
-   context). When it is there and enabled, call `mcp__claude-code-remote__fire_trigger` H times with its ID, else H = 0.
-   Then call `fire_trigger` K − H times with the `trigger_id` of `trigger` in `[pacing]` of `agent.toml` (the Opus
-   task, #1898). If that value is empty, start no Opus run and reply "no trigger in agent.toml: the owner must run
+3. Its next stdout lines are `<lane> N`, one per lane (`haiku H`, `deep D`): the runs of K for that lane (#1715).
+   Find the scheduled task "aoe2mc autopilot <lane>" of each lane with `mcp__claude-code-remote__list_triggers` (at
+   most once per hour; keep the IDs in your context). When it is there and enabled, call
+   `mcp__claude-code-remote__fire_trigger` N times with its ID, else start no run for that lane (its tickets wait).
+   Then call `fire_trigger` K minus the sum of all lane lines times, with the `trigger_id` of
+   `trigger` in `[pacing]` of `agent.toml` (the Opus task, #1898). If that value is empty, start no Opus run and reply "no trigger in agent.toml: the owner must run
    /operator".
    If the tools are deferred, load them first with ToolSearch (`select:mcp__claude-code-remote__fire_trigger,mcp__claude-code-remote__list_triggers`).
 4. Schedule the next cycle: `mcp__claude-code-remote__send_later`, `delay_minutes` 10, message

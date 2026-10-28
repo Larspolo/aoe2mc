@@ -150,6 +150,10 @@ on `main` yet, and the branch of an owner session is not `agent/*` or `claude/*`
    `claude-haiku-5-5`, the prompt of step 4 with the argument `max lane haiku`. These runs take only the tickets with
    `lane:haiku` (`ticket` skill, "Model lanes"); Opus runs take them only when nothing else is ready.
    `tools/health.py` prints one line per lane (runs, PRs, minutes, tokens). `/operator` makes the task for you.
+8. **Scheduled task "aoe2mc autopilot deep" (owner, 2026-10-28).** No schedule: the pacer fires it. Model
+   `claude-opus-5-5` at the default effort (the main task runs at low effort), the prompt of step 4 with the argument
+   `max lane deep`. These runs take the tickets with `lane:deep` and do the epic check, the queue refill, the roadmap
+   review and the process review (`autopilot/queue.md`, "Deep lane").
 
 To check or repair steps 4–6, start a session and type `/operator` (skill `operator`, #981). It checks the two
 scheduled tasks, the pacer session, the quota, CI, the PRs and the labels, and repairs them after you agree (for
@@ -226,6 +230,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_claim_revived.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_claim_takeover.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_dashboard.py` | generic | None (a test of `tools/dashboard.py`). |
+| `tests/test_deep_lane.py` | generic | None (a test of `tools/usage.py`, `tools/claim.py` and `tools/dashboard.py`). |
 | `tests/test_dashboard_claimed.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_decide.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_muted.py` | generic | None (a test of `tools/dashboard.py`). |

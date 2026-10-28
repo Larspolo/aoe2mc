@@ -143,6 +143,13 @@ def lane():
     return f" lane {name}" if name else ""
 
 
+def deep_lane():
+    """True when this run may do the process review, the roadmap review and the queue refill: always, but only the
+    runs of the deep lane while `reserved` in `[pacing]` of agent.toml names `deep` (owner, 2026-10-28): the main runs
+    work at low effort, and these steps steer many later tickets."""
+    return "deep" not in CONFIG.get("pacing", {}).get("reserved", ()) or lane() == " lane deep"
+
+
 def push(sha, ref, remote="origin"):
     """True: the remote took the push. False: the ref exists (another run). Exit 2 on any other error."""
     r = git("push", "--porcelain", remote, f"{sha}:refs/heads/{ref}", check=False)
@@ -412,6 +419,10 @@ def main(argv=None):
             print(f"claimed comment {a.number}")
             return 0
         print(f"comment {a.number}: another run handles it")
+        return 1
+    if (a.review or a.roadmap or a.refill) and not deep_lane():
+        print(f"the deep lane does the {'process review' if a.review else 'roadmap review' if a.roadmap else 'queue refill'}"
+              " (`reserved` in agent.toml names `deep`): skip it")
         return 1
     if a.review or a.roadmap:
         body = api(f"issues/{STATUS}")["body"] if on_github(a.remote) else ""
