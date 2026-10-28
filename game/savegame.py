@@ -43,6 +43,7 @@ COUNTERS = (                                                           # the par
     "cart_heal",                                                       # trade.py
     "garrison_heal",                                                   # garrison.py
     "herd_food",
+    "military_time",                                                   # regen.py
     "regen_time",
     "repair_hp",                                                       # repair.py
     "repair_owed",
@@ -146,6 +147,7 @@ NOT_SAVED = (                                                          # the fie
     "ghosts",                                                          # build.py: the shown building to place
     "goto_idle",                                                       # goto.py: the next idle unit to show
     "home",                                                            # bot.py: the town center of a bot
+    "hurried",                                                         # regen.military: again in its next pass
     "kings",                                                           # regicide.setup makes it again
     "limit_at",                                                        # time_limit.py: the next check time
     "limit_shown",                                                     # time_limit.py: the shown text
