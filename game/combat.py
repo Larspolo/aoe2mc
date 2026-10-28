@@ -106,12 +106,13 @@ def stats(name):
     return STATS.get("VILLAGER" if name.startswith("VILLAGER") else name) or BUILDINGS.get(name) or (BUILDING if name.endswith(("_WALL", "_GATE", "_TOWER")) else DEFAULT)
 
 
-def damage(attacker, target):
+def damage(attacker, target, a=None, t=None, taken=1.0):
     """AoE2 damage of one hit: max(1, attack - armor + bonus). Melee hits the melee armor, a ranged unit the pierce armor
-    (but a MELEE_RANGED unit the melee armor)."""
-    a, t = stats(attacker), stats(target)
+    (but a MELEE_RANGED unit the melee armor). a and t: other values of the two units (train.stats); taken: the factor
+    of the bonus damage that the target takes (civs.taken, Sicilian units, #2248), rounded half up as in the plugin."""
+    a, t = a or stats(attacker), t or stats(target)
     armor = t.pierce if a.range and attacker not in MELEE_RANGED else t.melee
-    return max(1, max(0, a.attack - armor) + sum(a.bonus.get(c, 0) for c in t.classes))
+    return max(1, max(0, a.attack - armor) + math.floor(sum(a.bonus.get(c, 0) for c in t.classes) * taken + 0.5))
 
 
 def elevation(dy, H, attacker_civ=None, target_civ=None):
@@ -134,16 +135,17 @@ def elevation_command(data):
                                                                    civs.elevation(p.get("civ"))) for n, p in players])
 
 
-def stats_command(uuid, name, s=None):
+def stats_command(uuid, name, s=None, taken=1.0):
     """The plugin command that gives entity `uuid` the values of AoE2 unit `name` (or the values s, for example with
     technologies, #655): max_health = hit points (at most 1024, the limit of the attribute), the lost hit points stay lost
     (a new unit has full health, #940), and the values of `damage` (the same rule in AoePlugin.java). The range kind:
-    0 melee, 1 ranged, 2 ranged with melee damage (MELEE_RANGED, #800). Last the reload in ticks at Normal speed: a melee unit hits once per reload (#848)."""
+    0 melee, 1 ranged, 2 ranged with melee damage (MELEE_RANGED, #800). Then the reload in ticks at Normal speed: a melee unit hits once per reload (#848). Last, only when it is
+    not 1, the factor of the bonus damage that the unit takes (civs.taken, #2248)."""
     s = s or stats(name)
     bonus = ",".join(f"{c}:{n}" for c, n in sorted(s.bonus.items())) or "-"
     kind = 0 if s.range <= 0 else 2 if name in MELEE_RANGED else 1
     return (f"aoe stats {uuid} {min(s.hp, 1024)} {s.attack} {s.melee} {s.pierce} {kind} "
-            f"{','.join(s.classes) or '-'} {bonus} {round(s.reload / NORMAL * 20) or 20}")
+            f"{','.join(s.classes) or '-'} {bonus} {round(s.reload / NORMAL * 20) or 20}" + f" {taken:g}" * (taken != 1))
 
 
 def label_command(uuid, name=None):

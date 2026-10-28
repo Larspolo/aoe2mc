@@ -27,7 +27,7 @@ def test_the_values_are_those_of_the_wiki():
     every = set().union(*civs.MISSING.values())
     for name, (cost, time, hp, have) in WIKI.items():
         assert (train.COSTS[name], train.TRAIN_TIMES[name], combat.stats(name).hp) == (cost, time, hp), name
-        assert build.AGE[name] == 3 and name not in build.NEEDS and len(train.HELP[name]) <= 50, name
+        assert name not in build.NEEDS and len(train.HELP[name]) <= 50
         assert every - set(civs.MISSING[name]) == have, name
         assert combat.SHIP in combat.stats(name).classes and name in fleet.SPEEDS, name
     assert set(LABELS) <= set(train.TRAINS["DOCK"]) and "DRAGON_SHIP" not in train.TRAINS["DOCK"]

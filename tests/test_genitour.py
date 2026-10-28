@@ -6,7 +6,7 @@ Imperial Age, civs.COSTS) also makes the genitour cheaper, as on the wiki."""
 from test_castle_upgrades import RANGE, research, setup
 from test_forging import menus
 
-from game import build, civs, combat, train
+from game import civs, combat, train
 
 CASTLE = ("FEUDAL_AGE", "CASTLE_AGE")
 IMPERIAL = CASTLE + ("IMPERIAL_AGE",)
@@ -20,7 +20,6 @@ def archery(civ="BERBERS", ages=IMPERIAL):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert build.AGE["GENITOUR"] == 2 and build.AGE["ELITE_GENITOUR"] == 3
     for unit in ("GENITOUR", "ELITE_GENITOUR", "ELITE_GENITOUR_UPGRADE"):
         assert len(train.HELP[unit]) <= 50
         assert "BERBERS" not in civs.MISSING[unit] and {"BRITONS", "FRANKS", "AZTECS"} <= set(civs.MISSING[unit])

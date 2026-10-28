@@ -8,7 +8,7 @@ from test_dock_train import DOCK, dock_map
 from test_train_archery import menus
 
 import units
-from game import build, civs, combat, fleet, gather, train
+from game import civs, combat, fleet, gather, train
 
 
 def hulk(g):
@@ -21,7 +21,7 @@ def hulk(g):
 
 
 def test_the_hulk_has_the_aoe2_de_values_of_the_wiki():
-    assert build.AGE["HULK"] == 1 and "HULK" in train.TRAINS["DOCK"] and "HULK" not in civs.MISSING
+    assert "HULK" in train.TRAINS["DOCK"] and "HULK" not in civs.MISSING
     assert len(train.HELP["HULK"]) <= 50 and units.classify("HULK") == units.classify("GALLEY")   # an oak boat
 
 

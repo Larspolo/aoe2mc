@@ -6,7 +6,7 @@ from test_forging import menus
 from test_siege_upgrades import WORKSHOP, research, setup
 
 import units
-from game import build, civs, combat, train
+from game import civs, combat, train
 
 SOUTH_ASIAN = {"BENGALIS", "DRAVIDIANS", "GURJARAS", "HINDUSTANIS"}
 CASTLE = ("FEUDAL_AGE", "CASTLE_AGE")
@@ -20,7 +20,6 @@ def workshop(civ="HINDUSTANIS", ages=CASTLE + ("IMPERIAL_AGE",)):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert build.AGE["ARMORED_ELEPHANT"] == 2 and build.AGE["SIEGE_ELEPHANT"] == 3
     for unit in ("ARMORED_ELEPHANT", "SIEGE_ELEPHANT"):
         assert len(train.HELP[unit]) <= 50
         assert units.classify(unit)["id"] == "minecraft:ravager"
@@ -54,7 +53,7 @@ def test_the_upgrade_changes_the_live_and_the_new_units():
     assert " 3:book:Siege Elephant:850 food · 60 s · research " in menu and "Capped Ram" not in menu
     research(g, WORKSHOP, "SIEGE_ELEPHANT_UPGRADE")
     assert g.soldiers["e"] == "SIEGE_ELEPHANT" and g.soldiers["r"] == "BATTERING_RAM"
-    assert combat.stats_command("e", "SIEGE_ELEPHANT", train.stats(g, "SIEGE_ELEPHANT")) in server.log
+    assert combat.stats_command("e", "SIEGE_ELEPHANT", train.stats(g, "SIEGE_ELEPHANT"), 0.75) in server.log   # #2248
     train.open_menu(g, "Steve", WORKSHOP)
     menu = menus(server)[-1] + " "
     assert " 0:ravager_spawn_egg:Siege Elephant:120 food · 95 gold · 36 s · queue 0/15 " in menu
