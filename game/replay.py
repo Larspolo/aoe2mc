@@ -70,6 +70,9 @@ EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
 TRAIL = 3                   # tiles: a follower farther than this from its target walks to it again (#2551)
 TRAIL_MS = 1000             # ms of game time between two checks of the followers (#2551)
+FIGHT_MS = 60000            # ms of game time: an attack order this near in time to one of a fight joins it (#2948)
+FIGHT_TILES = 12            # tiles: an attack order this near to one of a fight joins it (#2948)
+FIGHT_UNITS = 10            # attacking units of a large fight (#2948)
 FAR = 8                     # tiles: a target unit this far from the tile of the ORDER (its place in AoE2) is no attack
                             # target: in de-64.3 a spearman chased a villager 200 blocks from it across the map (#2635)
 FOLLOW_MS = 15000           # ms of game time: the camera of --follow changes its unit at most this often (#738)
@@ -186,6 +189,46 @@ def runs(cmd, tiles):
             out, line = out + [line], cmd
         line += f" {y},{x},{x}"
     return out + [line] * (line != cmd)
+
+
+def owners(objects, events):
+    """{object ID: player} of a record (#2948): the start objects (`ref`, no animals: a herd changes its owner) and
+    each ID that a player selects in a command (a player selects only own units and buildings)."""
+    out = {o["ref"]: o["player"] for o in objects
+           if o.get("ref") is not None and o.get("player") and not units.animal(o["name"])}
+    for e in events:
+        if e["kind"] in aoe2mc.UNIT_USE | aoe2mc.BUILDING_USE and e.get("player"):
+            out.update(dict.fromkeys(e.get("objects", ()), e["player"]))
+    return out
+
+
+def fights(events, owner):
+    """The large fights of a record (#2948): the record has no deaths (#1086), so a fight is a group of attack orders
+    (an ORDER on a unit or building of another player, not of Gaia, and an ATTACK_MOVE), each less than FIGHT_MS and FIGHT_TILES from
+    another one of the group, of two or more players and FIGHT_UNITS or more attacking units. owner: owners().
+    Returns [{"start", "end" (ms), "tile" [x, y], "players", "units"}], the largest first."""
+    groups = []
+    for e in events:
+        p, t = e.get("player"), e.get("target")
+        if "tile" not in e or not p or not (e["kind"] == "attack_move" or
+                                            e["kind"] == "order" and owner.get(t) not in (None, 0, p)):
+            continue
+        near = [g for g in groups if e["time"] - g[-1]["time"] <= FIGHT_MS
+                and any(math.dist(e["tile"], f["tile"]) <= FIGHT_TILES for f in g)]
+        for g in near[1:]:                                          # the order joins two groups
+            near[0] += g
+            groups.remove(g)
+        if near:
+            near[0].append(e)
+        else:
+            groups.append([e])
+    out = []
+    for g in groups:
+        players, ids = sorted({e["player"] for e in g}), {i for e in g for i in e.get("objects", ())}
+        if len(players) > 1 and len(ids) >= FIGHT_UNITS:
+            out.append({"start": min(e["time"] for e in g), "end": max(e["time"] for e in g), "players": players,
+                        "tile": [round(sum(e["tile"][k] for e in g) / len(g), 1) for k in (0, 1)], "units": len(ids)})
+    return sorted(out, key=lambda f: (-f["units"], f["start"]))
 
 
 def sail(g, v):
@@ -2241,3 +2284,16 @@ class Replay:
         span = (events[-1]["time"] - start) / 1000 / speed if events else 0                 # at the start speed
         return {"events": n, "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2),
                 "rate": round(self.sent / self.busy) if self.busy else 0, "need": round(self.sent / span) if span else 0}
+
+
+if __name__ == "__main__":
+    import argparse
+    ap = argparse.ArgumentParser(description="Information of a recorded game for the live replay.")
+    ap.add_argument("record", help="the .aoe2record file")
+    ap.add_argument("--fights", action="store_true", help="print the large fights of the record (#2948)")
+    a = ap.parse_args()
+    if a.fights:
+        timeline = aoe2mc.read_timeline(a.record) or []
+        for f in fights(timeline, owners(aoe2mc.read_record(a.record)[5], timeline)):
+            print(f"{mmss(f['start'])}-{mmss(f['end'])} tile ({f['tile'][0]:g}, {f['tile'][1]:g}) "
+                  f"players {', '.join(map(str, f['players']))} units {f['units']}")
