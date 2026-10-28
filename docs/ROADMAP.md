@@ -45,18 +45,18 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `play:stances` Unit stances (aggressive, defensive, stand ground, no attack): an idle unit attacks the enemies in its line of sight and comes back (epic #1103)
 - [x] `play:garrison` Garrison units in buildings (epic #810)
 - [x] `play:arrows` The town center, towers and castles shoot arrows at enemies in range, more arrows with a garrison (epic #1110)
-- [ ] `play:win` Win and lose: destroy all buildings, a wonder, relics; a title for the end of the game
+- [x] `play:win` Win and lose: destroy all buildings, a wonder, relics; a title for the end of the game (epic #1134)
 - [x] `play:monks` Monks heal and convert, relics in monasteries (epic #1242)
 - [x] `play:market` Market trade and trade carts (epic #1250)
 - [x] `play:two-players` Two human players against each other on one server (epic #1306)
 - [x] `play:diplomacy` Teams and diplomacy: allied, neutral and enemy players, shared line of sight, tribute of resources (epic #1311)
 - [x] `play:walls` Build walls and gates; a gate opens for own units and stays closed for enemies (epic #1321)
-- [ ] `play:repair` Villagers repair damaged buildings and siege units for a part of the cost; a damaged building shows fire
+- [x] `play:repair` Villagers repair damaged buildings and siege units for a part of the cost; a damaged building shows fire (epic #1329)
 - [x] `play:siege` Siege units: rams against buildings, mangonels with area damage, trebuchets that pack and unpack (epic #1348)
 - [x] `play:naval` Docks and ships: fishing ships and fish traps gather food, warships fight on water, transport ships carry units (Minecraft boats) (epic #1381)
 - [x] `play:cheats` The AoE2 cheat codes in the chat when cheats are on (epic #820)
 - [x] `play:fog` The explored area and the fog of war: a player sees only what the own units and buildings see (epic #1387)
-- [ ] `play:save` Save a game of the game program and load it again (units, resources, queues, ages)
+- [x] `play:save` Save a game of the game program and load it again (units, resources, queues, ages) (epic #2253)
 - [ ] `play:hunt` Hunt and herd: villagers kill deer, lure and kill boars, and herd sheep that the first player who sees them owns
 - [ ] `play:setup` Set up a game before it starts: the starting age, starting resources, population limit, the civilizations and the number of bots
 - [ ] `play:scenario` Play a converted scenario in the game program: its objectives, triggers and victory conditions work, the scenario AI players are bots
@@ -75,6 +75,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:auto-gather` Villagers go on to work as in AoE2: a villager that builds a lumber camp, mining camp or mill gathers the nearest resource of that kind next, and the builder of a farm farms it
 - [ ] `play:co-op` Co-op as in AoE2: two or more Minecraft players control one AoE2 player (one civilization, one stock and population), each with an own selection
 - [ ] `play:unit-sounds` The AoE2 sounds of the units and buildings: a voice line when the player selects a unit and gives an order, the sound of a selected building, the age-up fanfare
+- [ ] `play:campaign` Play a campaign in the game program: its scenarios in order, the next scenario after a victory, the intro and history texts of each scenario
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
@@ -94,8 +95,10 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `replay:minimap` A live minimap of the replay: a Minecraft map item that shows the units and buildings of all players in their colors and changes with the game (epic #1236)
 - [x] `replay:fog` The view of one player in the replay: only what the units and buildings of that player see, as the AoE2 "line of sight" option of the replay (epic #1299)
 - [ ] `replay:taunts` The taunts of the record (a chat line with a number) play their sound and show their text in the live replay
-- [ ] `replay:flares` The flares of the record (a player marks a place for the allies) show at their place in the live replay: a beacon light and a chat line in the player color
+- [x] `replay:flares` The flares of the record (a player marks a place for the allies) show at their place in the live replay: a beacon light and a chat line in the player color (epic #2401)
 - [ ] `replay:orders` The other orders of the record change the units of the live replay: stances, formations, patrol and the town bell
+- [ ] `replay:production` A production panel of each player in the live replay, as the AoE2 DE replay overlay: the units in training and the technologies in research, with their progress
+- [ ] `replay:highlights` A list of the large fights of the record (where and when many units die): a jump to the time and the place of each fight
 
 ## 4. The agent system (`.claude/skills/`, `tools/`, `.github/workflows/`)
 

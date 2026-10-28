@@ -198,6 +198,11 @@ def check_setup(row):                                      # a value of a settin
     assert {row["ring"][k] for k in ("wall", "gate")} <= NAMES["build.jsonl"] if "ring" in row else True, row["name"]
 
 
+def check_difficulty(row):                                 # a level of "AI difficulty" of the bot (#2661)
+    form(row, {"name": str, "aoe2": int, "gather": NUMBER, "attack": NUMBER, "soldiers": int, "note": str})
+    assert row["gather"] > 0 and row["attack"] > 0 and row["soldiers"] >= 1, row["name"]
+
+
 def check_taunts(row):                                     # a taunt: its number and AoE2 text (#2234)
     form(row, {"name": str, "text": str}, {"sound": str})                  # sound: a vanilla match (#2662)
     assert row["name"].isdigit() and row["name"] == str(int(row["name"])) and row["text"], row["name"]
@@ -209,6 +214,7 @@ CHECKS = {                                                 # one file per line: 
     "cheats.jsonl": check_cheats,
     "civ_keys.jsonl": check_civ_keys,
     "civs.jsonl": check_civs,
+    "difficulty.jsonl": check_difficulty,
     "gather.jsonl": check_gather,
     "monk.jsonl": check_monk,
     "replay.jsonl": check_replay,

@@ -33,7 +33,8 @@ def orders(sent):
 
 def test_a_move_is_one_plugin_order_with_the_walk_speed():
     r, sent, _ = play([dict(time=1000, player=1, kind="move", objects=[7], tile=[10.5, 10.5], names=["VILLAGER_MALE"])])
-    assert sent == [ai.speed_command("u1", "VILLAGER_MALE", 4, 4.0 * replay.PATH), "aoe moveto u1 42.5 70.0 42.5"]
+    assert sent == [ai.speed_command("u1", "VILLAGER_MALE", 4, 4.0 * replay.PATH), "aoe moveto u1 42.5 70.0 42.5",
+                    "data get entity u1 Pos"]                           # is it there (Replay.settle, #2633)
     assert not any(c.startswith("tp ") for c in sent) and not r.moving
     assert r.units[7].pos == (42.5, 70.0, 42.5)                          # the replay takes the unit at its goal
     assert ai.walk_speed("VILLAGER_MALE", 4, 4.0) == 4 * 0.8 * 4         # 4 times the game speed
@@ -74,7 +75,7 @@ def test_the_replay_needs_few_commands_for_walks():
     tl = [dict(time=1000 * k, player=1, kind="move", objects=[7, 8], tile=[2.5 + 10 * (k % 2), 10.5]) for k in range(20)]
     _, sent, stats = play(tl, (VIL, MIL, HOUSE))
     reads = [c for c in sent if c.startswith("data get entity ")]
-    assert len(sent) - len(reads) == 20 * 2 * 2 and len(reads) == 19 * 2 and stats["lag"] < 0.1
+    assert len(sent) - len(reads) == 20 * 2 * 2 and len(reads) == 19 * 2 + 2 and stats["lag"] < 0.1   # + settle()
 
 
 def test_without_the_plugin_the_units_walk_with_tp():

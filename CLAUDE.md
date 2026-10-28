@@ -128,6 +128,9 @@ A new game setting of `game/run.py` (a lobby setting, epic #2263) is one line in
 same name, not a new keyword of `play()` (#2373).
 A new game mode (`--mode`) is one line in `game/data/setup.jsonl` (keys `"help"`, `"module"`, `"age"`, `"loaded"`,
 `"bots"`: `run.MODES`) and its module with `setup(g, mode)`, not a change of `play()` (#2521).
+A new trigger effect of the converter is one line in `aoe2mc.EFFECTS` (its ID constant on its own line, both in
+alphabetical order) and its handler `x_lines(e, c)`, not a change of `trigger_files` (#2613); a condition on a score
+is one line in `aoe2mc.SCORE_TESTS` (#2704).
 
 ## How to verify
 

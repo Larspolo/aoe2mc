@@ -10,6 +10,7 @@ Usage:
     python3 game/run.py WORLD --play --cheats     # also the AoE2 cheat codes in the chat (game/cheats.py)
     python3 game/run.py WORLD --play --bot        # also a bot plays player 2: its villagers gather (game/bot.py)
     python3 game/run.py WORLD --play --bot --bot-attack 5:00   # its soldiers attack player 1 from 5:00 (default 10:00)
+    python3 game/run.py WORLD --play --bot --ai-difficulty hard   # the AoE2 setting "AI difficulty" (#2661)
     python3 game/run.py WORLD --play --log F.jsonl  # also write a timed event log (tools/measure_gather.py reads it)
     python3 game/run.py WORLD --play --record F.jsonl  # Record Game: --replay --replay-file F.jsonl plays it (#2649)
     python3 game/run.py WORLD --play --bot --treaty 20:00   # the AoE2 setting "Treaty length": no attack before 20:00 (#2297)
@@ -377,6 +378,7 @@ VICTORIES = {                        # the AoE2 setting "Victory" (--victory, Ga
 # the same name. A new setting is one line here, in alphabetical order, not a change of the play() lines (#2373).
 SETTINGS = {
     "age": "dark",                    # "Starting age" (train.STARTS, #2265)
+    "ai_difficulty": "standard",      # "AI difficulty" of the bots (bot.LEVELS, game/data/difficulty.jsonl, #2661)
     "all_techs": False,               # "All Techs" (civs.missing, #2298)
     "civ": None,                      # {player: civilization} in place of the scenario's (civ_choices, #2267)
     "empire_wars": False,             # "Empire Wars Mode" on top of the mode (ON_TOP, #2490)
@@ -472,9 +474,13 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
             attack = "never"
         g.bots = [*g.bots, bots.Bot(game, data, player=player, share=g, log=log, foe=foe,
                                     attack=math.inf if attack == "never" else replay.aoe2mc.game_time(attack) / 1000,
-                                    resources=settings["resources"], pop_limit=settings["pop_limit"]).setup()]
-        print(f"A bot plays player {player}: {len(g.bots[-1].g.villagers)} villagers gather, its soldiers attack "
-              f"player {foe} {'never' if attack == 'never' else 'at ' + attack}.", file=sys.stderr)
+                                    resources=settings["resources"], pop_limit=settings["pop_limit"],
+                                    difficulty=settings["ai_difficulty"]).setup()]
+        at = math.inf if attack == "never" else \
+            replay.aoe2mc.game_time(attack) / 1000 * bots.LEVELS[settings["ai_difficulty"]]["attack"]
+        print(f"A bot ({settings['ai_difficulty']}) plays player {player}: {len(g.bots[-1].g.villagers)} villagers "
+              f"gather, its soldiers attack player {foe} "
+              f"{'never' if at == math.inf else 'at %d:%02d' % divmod(round(at), 60)}.", file=sys.stderr)
     import combat
     combat.setup(game, data)                         # AoE2 hit points and damage (#514)
     modes = {settings["mode"], *(m for m in ON_TOP if settings[m.replace("-", "_")])} - {"standard"}   # (#2490)
@@ -640,6 +646,15 @@ def given(ap, argv):
             x.default = d
 
 
+def ctrl_c():
+    """Ctrl-C (and the Stop of the window, gui.stop_game) stops the game with a KeyboardInterrupt. Python keeps a SIGINT
+    that the parent ignores (a background job, nohup): then the game did not stop, and gui.stop_game killed the server
+    after 30 s with no save (#2658)."""
+    signal.signal(signal.SIGINT, signal.default_int_handler)
+    if hasattr(signal, "SIGBREAK"):                  # Windows: the window (gui.stop_game) sends Ctrl-Break (#1775)
+        signal.signal(signal.SIGBREAK, signal.default_int_handler)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0].strip(),
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -660,6 +675,10 @@ def main(argv=None):
                     "with one person, player 3 with --people 2) and attacks them (game/bot.py)")
     ap.add_argument("--people", type=int, default=1, metavar="N", help="--play: N people play players 1 to N, in the "
                     "order in which they join (#1310); with --bot the bot plays player N + 1")
+    levels = [r["name"] for r in table.load("difficulty.jsonl")]           # in the order of the AoE2 lobby
+    ap.add_argument("--ai-difficulty", choices=levels, default="standard", help="--bot: the AoE2 setting \"AI "
+                    f"difficulty\" ({', '.join(levels)}; default standard): the gather rate of the bot, the time of "
+                    "its first attack (times --bot-attack) and the soldiers of its first wave")
     ap.add_argument("--bot-attack", default="10:00", metavar="MM:SS", help="--bot: its soldiers attack its foe "
                     "from this game time (default 10:00)")
     ap.add_argument("--treaty", default="0:00", metavar="MM:SS", help="--play: the AoE2 setting \"Treaty length\": "
@@ -736,8 +755,7 @@ def main(argv=None):
             teams = team_choices(a.teams, json.load(f).get("players", {}))
     if a.load:                                       # the saved world replaces the world (the player files stay)
         restore(os.path.join(a.load, "world"), a.world)
-    if hasattr(signal, "SIGBREAK"):                  # Windows: the window (gui.stop_game) sends Ctrl-Break (#1775)
-        signal.signal(signal.SIGBREAK, signal.default_int_handler)
+    ctrl_c()
     game = Game(a.world, a.version, server=a.server)
     game.people = a.people                           # the join order counts from the first player (#1310)
     game.settings = {k: getattr(a, k) for k in savegame.SETTINGS}   # savegame.dump keeps them (#2325)
