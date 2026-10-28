@@ -452,6 +452,10 @@ def read_scenario(path):
                                                          [e.resource_2, e.resource_2_quantity],
                                                          [e.resource_3, e.resource_3_quantity]]}
                                                if e.effect_type == CHANGE_OBJECT_COST else {}),
+                                            **({"attribute": e.object_attributes, "operation": e.operation,   # #2763
+                                                "quantity": e.quantity, "class": e.armour_attack_class,
+                                                "aa": e.armour_attack_quantity}
+                                               if e.effect_type == MODIFY_ATTRIBUTE else {}),
                                             **({"stance": e.attack_stance}                # (#2705)
                                                if e.effect_type == CHANGE_OBJECT_STANCE else {}),
                                             **({"quantity": e.quantity, "variable": e.variable,   # (#2611)
@@ -2821,6 +2825,7 @@ FREEZE_OBJECT = 22                                                 # "Freeze Obj
 HEAL_OBJECT = 34                                                   # "Heal Object" (#2692)
 IN_AREA = 5
 KILL_OBJECT = 14
+MODIFY_ATTRIBUTE = 51                                              # "Modify Attribute" (#2763)
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
 OBJECT_HP = 23                                                     # "Object HP", the hit points of one object (#2701)
 OR = 29
@@ -3258,6 +3263,28 @@ def cost_lines(e, c):
     return [f'data modify storage aoe2mc:costs list append value "{" ".join([str(e["player"]), name, *cost])}"']
 
 
+# The ObjectAttribute IDs of "Modify Attribute" that the game program has in combat.Stats (#2763): attribute ->
+# the Stats field; armor (8) and attack (9) by their class (3 pierce, 4 melee), as in AoE2.
+STAT_ATTRIBUTES = {0: "hp", 10: "reload", 12: "range"}
+CLASS_ATTRIBUTES = {(8, 3): "pierce", (8, 4): "melee", (9, 3): "attack", (9, 4): "attack"}
+
+
+def attribute_lines(e, c):
+    """The command of "Modify Attribute" (#2763): the change "<player> <name> <Stats field> <operation> <quantity>"
+    goes into the list of the data storage aoe2mc:attributes. A converted world has no combat values: the scenario mode
+    of the game program (game/scenario.py attributes) empties the list and changes the values of the unit type of the
+    player (train.stats). An attribute outside STAT_ATTRIBUTES and CLASS_ATTRIBUTES: not supported in the stats."""
+    _, name = e.get("object") or (None, None)
+    a = e.get("attribute")
+    field = STAT_ATTRIBUTES.get(a) or CLASS_ATTRIBUTES.get((a, e.get("class")))
+    q = e.get("aa") if a in (8, 9) else e.get("quantity")
+    if not name or e["player"] <= 0 or not field or e.get("operation") not in range(1, 6) or q is None:
+        c.stats["modify attribute (not supported)"] += 1
+        return []
+    c.stats["modify attribute"] += 1
+    return [f'data modify storage aoe2mc:attributes list append value "{e["player"]} {name} {field} {e["operation"]} {q:g}"']
+
+
 def order_lines(e, c):
     """The commands of "Patrol" and "Attack Move" (#2647). Vanilla has no walk-to command: the units of the player in
     the area get the tag aoe_order<trigger>_<effect index> (tag_lines: a rider gives it to its horse), and the order
@@ -3457,6 +3484,7 @@ EFFECTS = {
     FREEZE_OBJECT: freeze_lines,
     HEAL_OBJECT: heal_lines,
     KILL_OBJECT: object_lines,
+    MODIFY_ATTRIBUTE: attribute_lines,
     MODIFY_RESOURCE: resource_lines,
     PATROL: order_lines,
     PLAY_SOUND: sound_lines,
