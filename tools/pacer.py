@@ -12,7 +12,9 @@ Each scheduled task has an API trigger (a URL and a token, made in the Claude ap
 `weights` in `[pacing]` of `agent.toml`. A lane without a URL gets no runs: its tickets wait, as with the session.
 Exit 1 when a call fails: the workflow run goes red. HTTP 429 is no failure: a task takes at most 30 starts per hour,
 an account 100 API starts per hour (the docs of the scheduled tasks, "Usage and limits"); the next cycle starts the
-runs that the target still misses. No retry: each call that succeeds starts a run, so a retry can start two.
+runs that the target still misses. No retry: each call that succeeds starts a run, so a retry can start two. When a
+lane task is at its limit, the main task gets the blocked runs, up to the main runs of a new plan without that lane:
+the Haiku lane got all 8 runs of each cycle, 48 an hour (2026-10-28).
 """
 import argparse
 import datetime
@@ -76,6 +78,22 @@ def main(argv=None, env=os.environ):
                     failed.append(f"{task}: HTTP {e.code}")
             except Exception as e:                      # URLError, timeout
                 failed.append(f"{task}: {e}")
+    blocked = sum(1 for t, *_ in todo if t in limited and t != "main") - sum(started[t] for t in limited)
+    if blocked > 0 and "main" not in limited:          # give the room of the blocked lane runs to the main task
+        k2, runs2, _ = usage.fire(found, now, usage.measured_burn() or usage.BURN, usage.measured_burn7() or usage.BURN7,
+                                  skip=limited)
+        more = calls(min(blocked, k2 - sum(runs2.values())), {}, env)
+        for task, url, token in more:
+            try:
+                send(url, token)
+                started[task] += 1
+            except urllib.error.HTTPError as e:
+                if e.code != 429:
+                    failed.append(f"{task}: HTTP {e.code}")
+                break
+            except Exception as e:
+                failed.append(f"{task}: {e}")
+                break
     if a.dry_run:
         started = {t: sum(1 for x, *_ in todo if x == t) for t in started}
     print(f"Pacer {datetime.datetime.now(datetime.timezone.utc):%H:%MZ}: K={k}, "

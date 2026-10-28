@@ -33,7 +33,7 @@ def server():
 def run(monkeypatch, k, runs, env, argv=(), mode="workflow"):
     monkeypatch.setattr(pacer, "MODE", mode)
     monkeypatch.setattr(pacer.usage, "read_usage", lambda: {"five_hour": (0.2, 0, "allowed")})
-    monkeypatch.setattr(pacer.usage, "fire", lambda *a: (k, dict(runs), "inputs"))
+    monkeypatch.setattr(pacer.usage, "fire", lambda *a, skip=(): (k, {t: 0 if t in skip else n for t, n in runs.items()}, "x"))
     monkeypatch.setattr(pacer.usage, "measured_burn", lambda: None)
     monkeypatch.setattr(pacer.usage, "measured_burn7", lambda: None)
     with pytest.raises(SystemExit) as e:
@@ -60,7 +60,7 @@ def test_a_lane_without_a_url_gets_no_call(monkeypatch, server, capsys):
 def test_a_failed_call_gives_exit_1_and_a_429_stops_only_its_task(monkeypatch, server, capsys):
     url, got = server
     env = {"PACER_URL_HAIKU": f"{url}/limit", "PACER_TOKEN_HAIKU": "th"}
-    assert run(monkeypatch, 4, {"haiku": 4}, env) == 0            # the hourly limit is no failure
+    assert run(monkeypatch, 4, {"haiku": 4}, env) == 0            # the hourly limit is no failure; no main URL
     assert len(got) == 1 and "hourly limit: haiku" in capsys.readouterr().out
     env = {"PACER_URL_MAIN": f"{url}/down", "PACER_TOKEN_MAIN": "tm"}
     assert run(monkeypatch, 1, {}, env) == 1
@@ -89,3 +89,12 @@ def test_the_session_pacer_gets_no_run_while_the_workflow_paces(monkeypatch, cap
     pacer.usage.main(["--fire"])
     out, err = capsys.readouterr()
     assert out.split() == ["0", "haiku", "0"] and "the session starts no run" in err
+
+
+def test_the_main_task_gets_the_runs_of_a_lane_at_its_limit(monkeypatch, server, capsys):
+    url, got = server
+    env = {"PACER_URL_HAIKU": f"{url}/limit", "PACER_TOKEN_HAIKU": "th", "PACER_URL_MAIN": f"{url}/main",
+           "PACER_TOKEN_MAIN": "tm"}
+    assert run(monkeypatch, 5, {"haiku": 4}, env) == 0            # 1 main run, then 4 blocked haiku runs to main
+    assert [p for p, *_ in got] == ["/limit"] + ["/main"] * 5
+    assert '"main": 5' in capsys.readouterr().out
