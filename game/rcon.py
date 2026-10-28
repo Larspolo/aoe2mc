@@ -3,7 +3,9 @@ A small RCON client (Source RCON protocol, as the vanilla Minecraft server speak
 
 A packet is: int32 length, int32 request id, int32 type, ASCII payload, two zero bytes (little-endian).
 Types: 3 = login, 2 = command, 0 = response. A failed login answers with request id -1.
-The server splits an answer into packets of at most 4096 bytes.
+The server splits an answer into parts of 4096 characters (UTF-16 units, sent as UTF-8) and sends no end mark: after a
+full part, the client sends an empty RESPONSE packet, and the "Unknown request" answer to it marks the end (#3040).
+Each answer has the request id of its command: the client drops the late answers of a command that timed out.
 """
 import socket
 import struct
@@ -20,17 +22,20 @@ class RconError(Exception):
 class Rcon:
     def __init__(self, host, port, password, timeout=10, retry=30):
         """Connect and log in. retry: seconds to try again while the server does not listen yet."""
+        self.addr, self.password, self.timeout, self.id, self.sock = (host, port), password, timeout, 0, None
+        self._connect(retry)
+
+    def _connect(self, retry=0):
         end = time.time() + retry
         while True:
             try:
-                self.sock = socket.create_connection((host, port), timeout=timeout)
+                self.sock = socket.create_connection(self.addr, timeout=self.timeout)
                 break
             except OSError:
                 if time.time() > end:
                     raise
                 time.sleep(0.5)
-        self.id = 0
-        if self._request(LOGIN, password)[0] == -1:
+        if self._request(LOGIN, self.password)[0] == -1:
             self.close()
             raise RconError("RCON login failed (wrong password)")
 
@@ -48,16 +53,33 @@ class Rcon:
         rid, _ = struct.unpack("<ii", self._recv(8))
         return rid, self._recv(size - 8)[:-2]
 
-    def _request(self, kind, payload):
+    def _send(self, kind, payload):
         self.id += 1
         body = struct.pack("<ii", self.id, kind) + payload.encode("utf-8") + b"\0\0"
         self.sock.sendall(struct.pack("<i", len(body)) + body)
-        rid, part = self._packet()
-        data = part
-        while len(part) >= 4096:              # a long answer continues in the next packet
-            part = self._packet()[1]
-            data += part
-        return rid, data.decode("utf-8")
+        return self.id
+
+    def _part(self, *rids):
+        """The next packet with one of the ids rids (or -1, a failed login): the late answers of older ids go away."""
+        while True:
+            rid, part = self._packet()
+            if rid in rids or rid == -1:
+                return rid, part
+
+    def _request(self, kind, payload):
+        if self.sock is None:                 # the last command timed out: its stream is not safe (#3040)
+            self._connect()
+        try:
+            rid = self._send(kind, payload)
+            got, data = self._part(rid)
+            if kind == COMMAND and len(data.decode("utf-8").encode("utf-16-le")) == 2 * 4096:
+                end = self._send(RESPONSE, "")    # after the first part: the server reads it alone
+                while (part := self._part(rid, end))[0] == rid:
+                    data += part[1]
+        except (OSError, RconError):
+            self.close()
+            raise
+        return got, data.decode("utf-8")
 
     def command(self, cmd):
         """Send one command (without "/") and return the answer of the server. A command longer than MAX bytes is an
@@ -67,7 +89,9 @@ class Rcon:
         return self._request(COMMAND, cmd)[1]
 
     def close(self):
-        self.sock.close()
+        if self.sock is not None:
+            self.sock.close()
+            self.sock = None
 
     def __enter__(self):
         return self

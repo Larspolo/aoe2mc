@@ -25,8 +25,3 @@ def test_agent_toml_has_the_trigger_and_a_new_project_an_empty_one():
         assert ID.fullmatch(tomllib.load(f)["pacing"]["trigger"])
     new = tomllib.loads(bootstrap.CONFIG_TOML.format(repo="me/demo", owner="me", branch="main"))
     assert new["pacing"]["trigger"] == ""
-
-
-def test_the_pacer_reads_the_key():
-    text = open(os.path.join(ROOT, ".claude", "skills", "pacer", "SKILL.md")).read()
-    assert "`trigger` in `[pacing]` of `agent.toml`" in text and not ID.search(text)

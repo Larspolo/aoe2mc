@@ -3,7 +3,7 @@ name: Claims
 # Deletes the claim refs (claim/N, claim/N-2 ...) of a closed ticket (tools/claim.py, #211).
 # The runs cannot do it: the session proxy gives 403 for branch deletes.
 # It also deletes the comment locks (claim/comment-ID, #320) and the review locks (claim/review-*,
-# claim/roadmap-*, #898) that are older than one day.
+# claim/roadmap-*, #898) and the "Fix main" locks (claim/fixmain-SHA, #3480) that are older than one day.
 on:
   issues:
     types: [closed]
@@ -40,7 +40,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           old=$(date -u -d '1 day ago' +%FT%TZ)
-          for kind in comment review roadmap; do gh api --paginate \
+          for kind in comment review roadmap fixmain; do gh api --paginate \
             "repos/$GITHUB_REPOSITORY/git/matching-refs/heads/claim/$kind-" --jq '.[] | "\(.ref) \(.object.sha)"'
           done | while read -r ref sha; do
             when=$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$sha" --jq .committer.date)
