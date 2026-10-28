@@ -33,6 +33,7 @@ MAP = {
     ("condition", "OWN_OBJECTS"): "`execute store result score ... if entity @e[tag=aoe2mc.pN]`, then `if score ... matches N..` (units only, #2573)",
     ("condition", "OWN_FEWER_OBJECTS"): "`execute store result score ... if entity @e[tag=aoe2mc.pN]`, then `if score ... matches ..N` (units only, #2573)",
     ("condition", "DESTROY_OBJECT"): "`execute unless entity @e[tag=aoe2mc.rN]` in the tick function (units, #2618); a building: not supported yet",
+    ("condition", "OBJECT_ATTACKED"): "`execute if entity @e[tag=aoe2mc.rN,nbt=!{HurtTime:0s}]` in the tick function: the unit took damage from any attacker in the last 10 ticks, vanilla has no attacker in a selector (units, #2779); a building: not supported yet",
     ("condition", "CAPTURE_OBJECT"): "`execute if entity @e[tag=aoe2mc.rN,tag=aoe2mc.pN]` in the tick function (units, #2619); a building: not supported yet",
     ("condition", "VARIABLE_VALUE"): "`execute if score #vN aoe_var matches ..` in the tick function, once (#2611)",
     ("condition", "CHANCE"): "`execute store result score ... run random value 1..100` once per second (alone, after the timers or with the ticked conditions: #2574)",
