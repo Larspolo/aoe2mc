@@ -12,6 +12,8 @@ and its allies see "Victory", the others "Defeat" (cheats.over). Minecraft featu
 world.
 
     scenario.victory(g)    # gather.Gather.run, in the scenario mode
+
+The trigger effects "Patrol" and "Attack Move" (#2647) walk the units with the Paper plugin: orders().
 """
 import json
 import os
@@ -27,6 +29,8 @@ import train  # noqa: E402
 SLOT = "inventory.26"                                                  # the last slot of the inventory: not the hotbar
 TAG = "aoe_book"                                                       # a person who has the book
 EVERY = 1.0                                                            # seconds between two checks for new people
+ORDERS = "aoe2mc:orders"                                               # the data storage of the trigger orders (#2647)
+NEAR = 3                                                               # blocks: a patrol turns back this near its point
 
 
 def book(who, messages):
@@ -62,10 +66,12 @@ def unread(who):
 
 def tick(g):
     """Give each person who joined since the last check the book, and show the instructions in the chat: the people,
-    not the bots (bot.Bot), once each EVERY seconds. gather.Gather.run calls it in the scenario mode."""
+    not the bots (bot.Bot), once each EVERY seconds. Then give the orders of the triggers (orders()).
+    gather.Gather.run calls it in the scenario mode."""
     if g.clock() < vars(g).get("book_at", 0.0):
         return
     g.book_at = g.clock() + EVERY
+    orders(g)
     messages = g.data.get("messages", {})
     text = re.sub(r"<[^<>]*>", "", messages.get("instructions", "")).strip()   # AoE2 color tags (book_pages)
     for who in sorted({x.who for x in [g, *(s.g for s in g.bots if not hasattr(s, "charged"))]}):
@@ -77,6 +83,37 @@ def tick(g):
         if text:
             g.command(f"tellraw {sel} " + json.dumps({"text": text, "color": "gold"}))
         g.command(f"tag {sel} add {TAG}")
+
+
+def orders(g):
+    """The "Patrol" and "Attack Move" orders of the triggers (aoe2mc.order_lines, #2647): read and empty the list of
+    the data storage ORDERS, and walk the tagged units with the Paper plugin (`aoe moveto`, Minecraft path finding).
+    An attack move gives them the aggressive stance (the plugin attacks the enemies on the way, as
+    replay.Replay.attack_move) and removes the tag. A patrol (g.patrols: [tag, [tile, middle of the area], leg]) walks
+    to the tile and back, again and again: it turns when one of its units is NEAR its point, and ends when no unit has
+    the tag. A new patrol with the same tag (a looping trigger) replaces the old one."""
+    new = re.findall(r'"(patrol|attack_move) (aoe_order[\w.]+) (-?\d+(?: -?\d+)*)"',
+                     g.command(f"data get storage {ORDERS} list") or "")
+    if new:
+        g.command(f"data remove storage {ORDERS} list")
+    patrols = vars(g).setdefault("patrols", [])
+    for order, tag, where in new:
+        p, sel = [int(v) for v in where.split()], f"@e[tag={tag}]"
+        if order == "attack_move":
+            g.command(f"aoe stance {sel} aggressive")
+            g.command(f"aoe moveto {sel} {p[0]} {p[1]} {p[2]}")
+            g.command(f"tag {sel} remove {tag}")
+            continue
+        patrols[:] = [q for q in patrols if q[0] != tag] + [[tag, [p[:3], p[3:6]], 0]]
+        g.command(f"aoe moveto {sel} {p[0]} {p[1]} {p[2]}")
+    for q in list(patrols):
+        tag, points, leg = q
+        x, y, z = points[leg % 2]
+        if "passed" in g.command(f"execute positioned {x} {y} {z} if entity @e[tag={tag},distance=..{NEAR}]"):
+            q[2] = leg + 1
+            g.command(f"aoe moveto @e[tag={tag}] {' '.join(map(str, points[q[2] % 2]))}")
+        elif "passed" not in g.command(f"execute if entity @e[tag={tag}]"):
+            patrols.remove(q)
 
 
 def bot_seats(players, people):

@@ -2722,6 +2722,7 @@ TICKED = COUNTED + (VARIABLE_VALUE,)                               # conditions 
 FREEZE_OBJECT = 22                                                     # "Freeze Object" (#2608)
 CHANGE_VIEW = 16                                                       # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                                # "Clear Instructions" (#2609)
+PATROL, ATTACK_MOVE = 19, 30                                           # "Patrol", "Attack Move" (#2647)
 
 
 def turn_area(area, size, k):
@@ -2882,6 +2883,27 @@ def freeze_lines(e, T):
             f"execute as {at} run data merge entity @s {{NoAI:1b}}"]
 
 
+def order_lines(t, i, e, T, ground):
+    """The commands of "Patrol" and "Attack Move" (#2647), effect i of trigger t. Vanilla has no walk-to command: the
+    units of the player in the area get the tag aoe_order<trigger>_<i> (a rider: its horse, the walker of the plugin,
+    as freeze_lines), and the order goes into the list of the data
+    storage aoe2mc:orders as one text "<order> <tag> x y z" (the block of the tile on the ground; a patrol also the
+    middle of the area, where it turns back). The scenario mode of the game program (game/scenario.py orders) empties
+    the list with RCON and walks the tagged units with the Paper plugin."""
+    if min(e.get("tile", [-1])) < 0 or min(e.get("area", [-1])) < 0:
+        return []
+    a = e["area"]
+    blocks = [(int((x + 0.5) * T), int((z + 0.5) * T)) for x, z in (e["tile"], ((a[0] + a[2]) / 2, (a[1] + a[3]) / 2))]
+    if not all(0 <= x < ground.shape[0] and 0 <= z < ground.shape[1] for x, z in blocks):
+        return []
+    tag, order = f"aoe_order{t['id']}_{i}", "patrol" if e["type"] == PATROL else "attack_move"
+    where = " ".join(f"{x} {int(ground[x, z])} {z}" for x, z in blocks[:1 + (e["type"] == PATROL)])
+    at = unit_selector(e, T)
+    return [f"tag {at} add {tag}", f"execute as {at} on vehicle run tag @s add {tag}",
+            f"execute as @e[tag={tag},tag={units.MOUNT}] on passengers run tag @s remove {tag}",
+            f'data modify storage aoe2mc:orders list append value "{order} {tag} {where}"']
+
+
 def view_lines(e, T, ground):
     """The commands of "Change View" (#2610): in Minecraft the player is the camera, so a tp of the players of the
     team pN (team_lines) to the middle of the tile, on the ground. Player -1 or 0: all players."""
@@ -2955,6 +2977,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Freeze Object": freeze_lines (#2608).
     "Change View": view_lines (#2610).
     "Clear Instructions": title @a clear (#2609).
+    "Patrol" and "Attack Move": order_lines (#2647).
     A disabled trigger does not run."""
     load, files, tick, win = [], {}, [], False
     stats = Counter() if stats is None else stats
@@ -2968,7 +2991,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     for c in conds):                                   # unit classes: not yet
             continue
         lines = []
-        for e in t["effects"]:
+        for i, e in enumerate(t["effects"]):
             if e["type"] in (CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT):
                 lines += object_lines(t, e, T, ground, players, stats)
                 continue
@@ -3002,6 +3025,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if e["type"] == CHANGE_VIEW:
                 lines += view_lines(e, T, ground)
+                continue
+            if e["type"] in (PATROL, ATTACK_MOVE):
+                lines += order_lines(t, i, e, T, ground)
                 continue
             if e["type"] == CLEAR_INSTRUCTIONS:                            # no message
                 lines.append("title @a clear")
