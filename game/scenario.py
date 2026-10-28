@@ -34,6 +34,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import garrison  # noqa: E402
 import gather  # noqa: E402
 import rcon  # noqa: E402
 import replay  # noqa: E402
@@ -54,10 +55,16 @@ def book(who, messages):
     title in bold) into the inventory slot SLOT of who: one command holds at most rcon.MAX bytes, so the pages after the
     first command go in with the item modifier set_written_book_pages (mode append). No command when all texts are
     empty."""
-    out, pages = [], [page(p) for p in replay.aoe2mc.book_pages(messages)]
-    head = (f"item replace entity {who} {SLOT} with written_book[written_book_content="
-            '{title:"Objectives",author:"aoe2mc",pages:[', "]}]")
-    more = (f'item modify entity {who} {SLOT} {{type:"minecraft:set_written_book_pages",mode:"append",pages:[', "]}")
+    return written(who, SLOT, "Objectives", replay.aoe2mc.book_pages(messages))
+
+
+def written(who, slot, title, parts):
+    """The commands that put a written book with title and the pages parts ((title or None, text), page) into slot of
+    who, in commands of at most rcon.MAX bytes (book; the recap book of recap.py, #2660)."""
+    out, pages = [], [page(p) for p in parts]
+    head = (f"item replace entity {who} {slot} with written_book[written_book_content="
+            f'{{title:{json.dumps(title)},author:"aoe2mc",pages:[', "]}]")
+    more = (f'item modify entity {who} {slot} {{type:"minecraft:set_written_book_pages",mode:"append",pages:[', "]}")
     while pages:
         start, end = more if out else head
         n = 1
@@ -96,6 +103,7 @@ def tick(g):
     not the bots (bot.Bot), once each EVERY seconds; then the tasks of the triggers (tasks) and their orders (orders).
     gather.Gather.run calls it in the scenario mode. Also the technologies of the triggers (research, #2577)."""
     research(g)
+    garrisons(g)
     if g.clock() < vars(g).get("book_at", 0.0):
         return
     g.book_at = g.clock() + EVERY
@@ -204,6 +212,19 @@ def research(g):
                   file=sys.stderr)
             continue
         train.research(sides[r["player"]], {"name": r["technology"], "player": "@a"}, start=True)
+
+
+def garrisons(g):
+    """The score #g<ref> of aoe_gar of each converted building of a player (the people and the bots) that takes a
+    garrison: the number of units inside (garrison.holders, g.garrisons), for the condition "Units Garrisoned" of the
+    triggers (aoe2mc.trigger_files, #2714). One command per change: a unit goes in, all come out, the building falls."""
+    sent = vars(g).setdefault("garrison_sent", {})
+    for x in [g, *(s.g for s in g.bots)]:
+        for rect, o in sorted(garrison.holders(x).items()) if "objects" in x.data else ():
+            n = len(x.garrisons.get(rect, ()))
+            if o.get("ref") is not None and sent.get(o["ref"], 0) != n:   # the objective starts with no score: 0
+                g.command(f"scoreboard players set #g{o['ref']} aoe_gar {n}")
+                sent[o["ref"]] = n
 
 
 def victory(g):
