@@ -102,7 +102,7 @@ If there is no candidate, go to step 8 and report "No ticket is ready".
 Claim it with `python3 tools/claim.py N`. It pushes a unique commit to the ref `claim/N` without force, so only one
 run can win (#211). Exit 1: another run owns the ticket, pick the next candidate (do not comment). It also exits 1
 when another branch commented "Started by" less than 30 minutes ago (#288), or when an open PR of another
-branch closes the ticket and changed less than 30 minutes ago (#491). Never comment "Started by" before exit 0.
+branch closes the ticket and changed less than 30 minutes ago (#491), or when the issue is closed (#2339). Never comment "Started by" before exit 0.
 Exit 0: add `in-progress` and comment "Started by `<your branch>`." (one line).
 Each time you remove `in-progress` without a merge (hand-off, `blocked`, `needs-human`), run
 `python3 tools/claim.py N --release` too, else no other run can claim the ticket again.
