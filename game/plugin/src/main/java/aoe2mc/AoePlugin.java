@@ -130,6 +130,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              friendly: the factor of the blast damage of own and allied units on it
  *                                              (Jurchen military units 0.5, #2418, default 1)
  *   aoe stop <selector>                        stop the walk and turn the AI off: the unit stands still (#437)
+ *   aoe unwear <selector>                      forget the kept blocks of the damage stages of each building target: the
+ *                                              next stage keeps the blocks of a new design (a wall technology, #3071)
  *   aoe range <selector> <blocks> <ticks> [blast [min [pass [part]]]]
  *                                              a ranged unit shoots from this range, one shot per ticks (#515); a
  *                                              shot with a blast radius in blocks hits all units near the target, and
@@ -2802,6 +2804,16 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
             }
             sender.sendMessage("Stopped " + n + " units");
+            return true;
+        }
+        if (args.length == 2 && args[0].equals("unwear")) {            // a redraw after a wall technology (#3071)
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                if (wear.remove(e.getUniqueId()) != null) {
+                    n++;
+                }
+            }
+            sender.sendMessage("Unwear: " + n + " buildings");
             return true;
         }
         if (args.length >= 3 && args[0].equals("menu")) {
