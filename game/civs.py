@@ -44,6 +44,7 @@ RULES = {
     "champi scout line, archery range units": lambda n, s: "CHAMPI_" in n   # the wiki: all archers but the conquistador
         or "archer" in s.classes and not tagged(n, "conquistador type"),     # type (#2116)
     "elephants": lambda n, s: "elephant" in s.classes,
+    "fire galley line, fire lancers": lambda n, s: tagged(n, "fire galley line") or tagged(n, "fire lancers"),
     "foot archers": lambda n, s: foot_archer(s),
     "foot archers but skirmishers": lambda n, s: foot_archer(s) and not tagged(n, "skirmishers"),
     "foot archers but skirmishers, condottieri": lambda n, s: GROUPS["foot archers but skirmishers"](n, s),
@@ -144,6 +145,8 @@ ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # th
 WORK = {r["name"]: r["work"] for r in ROWS if "work" in r}
 LAST = {r["name"]: r["last"] for r in ROWS if "last" in r}   # resources last longer: a gathered unit takes 1 / factor (#2112)
 START = {r["name"]: r["start"] for r in ROWS if "start" in r}
+DECAY = {r["name"]: r["decay"] for r in ROWS if "decay" in r}   # the factor of the decay of carcasses (Jurchens: 0, #2310)
+PREDATOR_HIT = {r["name"]: r["predator_hit"] for r in ROWS if "predator_hit" in r}   # villager attack bonus (Magyars)
 TOWN_CENTER = {r["name"]: r["town_center"] for r in ROWS if "town_center" in r}
 BUSHES = {r["name"]: r["bushes"] for r in ROWS if "bushes" in r}
 DROP = {r["name"]: r["drop"] for r in ROWS if "drop" in r}
@@ -437,6 +440,17 @@ def drop(g, kind):
 def work(g, kind):
     """The work-rate factor of the civilization of the player of g for gather kind (WORK), else 1."""
     return WORK.get(civ(g), {}).get(kind, 1)
+
+
+def decay(g):
+    """The factor of the decay of the carcasses that the player of g kills (DECAY), else 1 (#2310)."""
+    return DECAY.get(civ(g), 1)
+
+
+def predator_hit(g):
+    """The attack bonus of the villagers of the player of g against predators (PREDATOR_HIT), else 0 (#2310): the
+    Magyars get +30 (AoE2 wiki, "Magyars"), so a villager kills each predator in one strike."""
+    return PREDATOR_HIT.get(civ(g), 0)
 
 
 def last(g, kind):
