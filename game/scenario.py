@@ -54,10 +54,16 @@ def book(who, messages):
     title in bold) into the inventory slot SLOT of who: one command holds at most rcon.MAX bytes, so the pages after the
     first command go in with the item modifier set_written_book_pages (mode append). No command when all texts are
     empty."""
-    out, pages = [], [page(p) for p in replay.aoe2mc.book_pages(messages)]
-    head = (f"item replace entity {who} {SLOT} with written_book[written_book_content="
-            '{title:"Objectives",author:"aoe2mc",pages:[', "]}]")
-    more = (f'item modify entity {who} {SLOT} {{type:"minecraft:set_written_book_pages",mode:"append",pages:[', "]}")
+    return written(who, SLOT, "Objectives", replay.aoe2mc.book_pages(messages))
+
+
+def written(who, slot, title, parts):
+    """The commands that put a written book with title and the pages parts ((title or None, text), page) into slot of
+    who, in commands of at most rcon.MAX bytes (book; the recap book of recap.py, #2660)."""
+    out, pages = [], [page(p) for p in parts]
+    head = (f"item replace entity {who} {slot} with written_book[written_book_content="
+            f'{{title:{json.dumps(title)},author:"aoe2mc",pages:[', "]}]")
+    more = (f'item modify entity {who} {slot} {{type:"minecraft:set_written_book_pages",mode:"append",pages:[', "]}")
     while pages:
         start, end = more if out else head
         n = 1
