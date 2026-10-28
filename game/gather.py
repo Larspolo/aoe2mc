@@ -47,7 +47,7 @@ import types
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from aoe2mc import PASSABLE_OBJECTS, WOODS, object_footprint, object_mob, player_color, tree_kind  # noqa: E402
-from units import TEAM_COLOR, VILLAGER_JOBS, animal, pretty  # noqa: E402
+from units import IDLE_JOB, TEAM_COLOR, VILLAGER_JOBS, animal, pretty  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
@@ -995,7 +995,7 @@ class Gather:
 
     def task(self, v, name):
         """Give the villager the look of its AoE2 task (`LUMBERJACK` ...), with the table of the converter."""
-        job = dict(VILLAGER_JOBS).get(name, "none")
+        job = dict(VILLAGER_JOBS).get(name, IDLE_JOB)
         if v.job != job:                                               # a merge keeps the level and the type
             v.job = job
             self.command(profession(v.uuid, job))

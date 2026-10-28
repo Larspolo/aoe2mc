@@ -71,6 +71,10 @@ VILLAGER_JOBS = [("FARMER", "farmer"), ("FORAGER", "farmer"), ("FISHERMAN", "fis
                  ("SHEPHERD", "shepherd"), ("HERDER", "shepherd"), ("HUNTER", "butcher"), ("BUILDER", "mason"),
                  ("REPAIRER", "toolsmith"), ("STONE_MINER", "mason"), ("GOLD_MINER", "toolsmith"),
                  ("LUMBERJACK", "fletcher"), ("MONASTERY", "cleric")]
+# The look of a villager with no task: a nitwit never takes a job site. A villager with no profession and a job site
+# in reach ran the vanilla YieldJobSite each tick, a path search to each villager near it: 65 % of the server tick of
+# the live replay of de-63.0 after 20 minutes, a tick of 60 to 90 ms (#2761).
+IDLE_JOB = "nitwit"
 
 # Infantry lines and unique infantry (#83): name -> (mob, (helmet, chestplate, leggings, boots), main hand, off hand
 # [, NBT]), one line each in data/lines.jsonl. Each upgrade step looks a bit stronger. A piece is a material, or
@@ -424,7 +428,7 @@ def describe(n, hero=False):
 
     # Villagers, monks, kings, traders
     if n.startswith("VILLAGER") or n.startswith("REPAIRER"):
-        job = next((j for k, j in VILLAGER_JOBS if k in n), "none")
+        job = next((j for k, j in VILLAGER_JOBS if k in n), IDLE_JOB)
         return mob("villager", VillagerData=Compound({"profession": String("minecraft:" + job),
                                                        "type": String("minecraft:plains"), "level": Int(2)}),
                    Xp=Int(1), Offers=no_trades())
