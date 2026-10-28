@@ -284,6 +284,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_cycle_start.py` | generic | None (a test of `tools/cycle_start.py`). |
 | `tests/test_ship_pr.py` | generic | None (a test of `tools/ship_pr.py`). |
 | `tests/test_merge_jsonl.py` | generic | None (a test of `tools/merge_jsonl.py`). |
+| `tests/test_merge_jsonl_order.py` | generic | None (a test of `tools/merge_jsonl.py`: the line order of a move, #3065). |
 | `tests/test_pacer.py` | generic | None (a test of `tools/usage.py`). |
 | `tests/test_pacer_script.py` | generic | None (a test of `tools/pacer.py`). |
 | `tests/test_usage.py` | generic | None (a test of `tools/usage.py`). |

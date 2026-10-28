@@ -7,6 +7,8 @@ both sides changed merges key by key, also in nested objects, and a list of uniq
 each side only adds or only removes names (#2064: two new units in the "missing" lists of almost all lines of
 civs.jsonl). A key that both sides changed to different values, or a list that one side changed in place (the pair
 "upgrade"), is a conflict: the file gets conflict markers around the two lines and the exit code is 1.
+The line order comes from the side that moved lines (some tables are choice lists in file order); two different moves
+are a conflict around the whole files (#3065).
 
     python3 tools/merge_jsonl.py BASE OURS THEIRS     # git: merge.jsonl.driver "python3 tools/merge_jsonl.py %O %A %B"
 
@@ -44,10 +46,14 @@ def rows_of(lines):
 
 def order(ours, theirs):
     """The keys of `ours` in their order, and the new keys of `theirs` after their neighbour above in `theirs` and
-    after the new keys of `ours` there (as `merge=union`)."""
+    after the new keys of `ours` there (as `merge=union`). A new key with no neighbour below goes to the end: after a
+    move on the side of `ours`, its old neighbour above is not the last key any more (#3065)."""
     out, mine, seq = list(ours), set(ours), list(theirs)
     for i, k in enumerate(seq):
         if k in mine:
+            continue
+        if not any(j in out for j in seq[i + 1:]):
+            out.append(k)
             continue
         above = [j for j in seq[:i] if j in out]
         at = out.index(above[-1]) + 1 if above else 0
@@ -79,11 +85,20 @@ def value(o, a, b):
     raise Conflict
 
 
+def common(side, base, ours, theirs):
+    """The keys of all three versions in the order of `side`."""
+    return [k for k in side if k in base and k in ours and k in theirs]
+
+
 def merge(base, ours, theirs):
     """(lines, conflicts): the merged lines in the order of `ours`, the new lines of `theirs` after their
-    neighbour above in `theirs` and after the new lines of `ours` there (as `merge=union`)."""
+    neighbour above in `theirs` and after the new lines of `ours` there (as `merge=union`). When only `theirs` moved
+    lines, the order of `theirs` with the new lines of `ours`; two different moves are one conflict (#3065)."""
+    old, a, b = (common(x, base, ours, theirs) for x in (base, ours, theirs))
+    if a != old and b != old and a != b:                 # both sides moved lines in different ways
+        return ["<<<<<<< ours\n", *ours.values(), "=======\n", *theirs.values(), ">>>>>>> theirs\n"], 1
     lines, conflicts = [], 0
-    for k in order(ours, theirs):
+    for k in order(theirs, ours) if a == old != b else order(ours, theirs):
         o, a, b = base.get(k), ours.get(k), theirs.get(k)
         if a == b or b == o:
             pick = a
