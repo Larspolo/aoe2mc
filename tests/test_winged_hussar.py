@@ -19,7 +19,7 @@ def imperial(civ):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.AFTER["WINGED_HUSSAR_UPGRADE"] == "LIGHT_CAVALRY_UPGRADE"
+    assert train.BY_KEY["after"]["WINGED_HUSSAR_UPGRADE"] == "LIGHT_CAVALRY_UPGRADE"
     s = combat.stats("WINGED_HUSSAR")
     assert (s.hp, s.attack, s.melee, s.pierce, s.reload, s.bonus) == (80, 9, 1, 2, 1.9, {combat.GUN: 4})
     assert len(train.HELP["WINGED_HUSSAR_UPGRADE"]) <= 50

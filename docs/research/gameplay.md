@@ -101,6 +101,8 @@ on an attack alert line in the chat goes to its place with the same view (`Alert
 
 1. The converter writes `aoe2mc.json` into the world folder: each object with its AoE2 ID, name, owner,
    tile position and the UUID of its entity.
+   The "players" of a scenario also have the start "resources", the "pop_limit" and "computer" of the
+   tab "Players" of the editor (#2539).
 2. The program starts the vanilla server with RCON, reads `aoe2mc.json` and gives each unit of player 1 a tag.
 3. Input: the player holds a "command stick" (`carrot_on_a_stick`). A right click on a villager selects it
    (glowing). A right click on a tree sends the villager there. The datapack detects the click with the
@@ -490,3 +492,5 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - An in-game check of the game program needs no clicks (#2381): with a `mc_shot.Client` joined, `g = run.play(game, W, seconds=2)` gives the Gather; drive it with `train.queue`, `build.found`, `Gather.build`, `Gather.send`, then `g.run(N)`; a load is `run.restore(SAVE/world, W)` and `run.play(..., state=savegame.read(SAVE))`. Copy the values that you compare (`json.loads(json.dumps(...))`): a dict that holds the live `g.queues` lists shows their later state.
 - The mode setup chain of `run.play` (`if settings["mode"] == ...` / `elif`) and the last line of the `form(...)` keys of `check_setup` (`tests/test_data_files.py`) conflict on each new mode: #2406 needed 6 merges of main in 90 minutes. Add a new `elif` branch before `elif settings["mode"] != "standard"`, a new key on its own line before the last line, and do not change the lines of other modes.
 - A unit that walks away with no order and no target ("stray" in `tools/replay_drift.py`) can still have its Minecraft path: on a slope `steer()` and `glide()` take the mob past path points that Minecraft does not count, so after the arrival it walks back to them, up to 25 blocks (#2303). The plugin stops the path at the arrival when its next point is not at the goal (`behind()`). To find what moves a unit between two samples, log the state changes of each unit (order, target, a path with no order) in a scratch copy of the plugin.
+- A split menu (longer than one RCON command, `menu.commands`) sends its items with the last slot first: a test of the full order (`menu_line.order`) must accept that order too (`test_train_barracks.py`, #2483). `test_loom.menus` joins the `aoe menu-add` parts now, as `test_forging.menus`.
+- A `monkeypatch.setattr` on `from game import X` does not reach `run.play`: `run.py` imports the bare `X`, another module object. Patch the bare module (`import X as plain`, `tests/test_start_buildings.py`, #2429).

@@ -9,8 +9,8 @@ CASTLE = (12, 4)
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.CIV_TECHS == {"CHIEFTAINS": "VIKINGS", "BOGSVEIGAR": "VIKINGS"} | {
-        n: c for n, c in train.CIV_TECHS.items() if n not in ("CHIEFTAINS", "BOGSVEIGAR")}
+    assert train.BY_KEY["civ"] == {"CHIEFTAINS": "VIKINGS", "BOGSVEIGAR": "VIKINGS"} | {
+        n: c for n, c in train.BY_KEY["civ"].items() if n not in ("CHIEFTAINS", "BOGSVEIGAR")}
     for name in ("CHIEFTAINS", "BOGSVEIGAR"):
         assert len(train.HELP[name]) <= 50 and "VIKINGS" not in train.civs.MISSING[name]
         assert "BRITONS" in train.civs.MISSING[name]

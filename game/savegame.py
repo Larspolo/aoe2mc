@@ -11,7 +11,10 @@ The save also keeps the wonder and relic victory timers and the market prices (#
 settings of the command line (`run.py` options, "settings"), the attack time and wave of the bot (#2325), the relics and the monk
 orders (#2412: `monk.relics`, the conversions and the rest of the monks), the orders of the ships, the routes of the
 trade carts and the state of the trebuchets (#2413), the passed time of the treaty (#2409), and the units inside the
-transport ships and siege towers and the units on the way to them (#2411).
+transport ships and siege towers and the units on the way to them (#2411). The military units and villagers that the
+player trained, and the new names of the upgrades, go into the save too (#2532): the world has their mobs, the Gather
+counts them, gives them orders and upgrades them. The cheats that the player turned on go into the save too (#2533), and the
+doctrines of the buildings, the targets of the attack orders and the fog toggle of "polo" (#2537).
 """
 import json
 import os
@@ -20,12 +23,21 @@ import time
 
 FILE = "savegame.json"
 FIELDS = ("stock", "spare", "seconds", "repeats", "pop")              # dicts and numbers of Gather, as they are
-PACKED = ("queues", "trained", "sites", "rally")                       # with tuples (a building rect, a cell): pack()
+PACKED = ("queues", "trained", "sites", "rally",                       # with tuples (a building rect, a cell): pack()
+          "sieged",                                                    # the targets of attack orders: Gather.fall (#2537)
+          "soldiers", "units")                                         # the units of the game, trained or upgraded (#2532)
 OPTIONAL = ("limit_left", "policy", "rates", "relic_timer", "switches", "wonder_shown", "wonders",   # only on a Gather that
             "wonders_gone")                                            # has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
+CHEATS = (                                                             # game/cheats.py: the cheats that the player
+    "aegis",                                                           # turned on (#2533)
+    "beyond",
+    "free_techs",
+    "pop_cap",
+    "sharing",
+)
 COUNTERS = (                                                           # the parts that a tick did not use yet (#2514):
     "aura_time",                                                       # regen.py
     "cart_heal",                                                       # trade.py
@@ -72,8 +84,13 @@ SPOILS = (                                                             # spoils.
     "attack_ticks",                                                    # (the world keeps the scores, #2513)
     "kills",
 )
+TOGGLES = (                                                            # the choices of the player (#2537):
+    "doctrines",                                                       # train.py: the doctrine of each building (#2483)
+    "reveal",                                                          # fog.toggle: the cheat "polo" (#1390)
+)
 RIDERS = ("berths", "boarding", "cargo", "loading", "towers", "unloads")   # transport.py, siege_tower.py (#2411)
 KEPT = (                                                               # the fields of Gather that only some have, pack():
+    *CHEATS,
     *COUNTERS,
     *LEFT,                                                             # one tuple per line, in alphabetical order
     *MONK,                                                             # (parallel tickets add one, #2453)
@@ -82,6 +99,7 @@ KEPT = (                                                               # the fie
     *ROUTES,
     *SCORE,
     *SPOILS,
+    *TOGGLES,
     *VICTORY,
 )
 JOB = ("state", "load", "res", "job", "lap", "prey")                  # fields of a gather.Villager, as they are
@@ -106,6 +124,46 @@ SETTINGS = (                                                           # run.py 
     "treaty",
     "victory",
     "victory_value",
+)
+NOT_SAVED = (                                                          # the fields that game/*.py sets on a Gather and the save
+    # does not keep, one per line with its reason, in alphabetical order (tests/test_savegame_fields.py, #2535)
+    "bar",                                                             # bossbar.py: the shown unit
+    "board",                                                           # bot.py: the scoreboard of a bot
+    "bots",                                                            # run.play makes the bots again
+    "capture",                                                         # herd.py: a tick timer
+    "census",                                                          # train.py: a tick timer
+    "conquest_at",                                                     # conquest.py: the next check time
+    "data",                                                            # aoe2mc.json of the world
+    "defend_at",                                                       # defend_wonder.py: the next check time
+    "defender",                                                        # defend_wonder.setup makes it again
+    "enemies",                                                         # the enemy units of aoe2mc.json: a dead one has no position
+    "explore_at",                                                      # score.py: the next check time
+    "flares",                                                          # flare.py: the flares of a replay
+    "fog",                                                             # fog.py: the next tick hides the units again
+    "ghosts",                                                          # build.py: the shown building to place
+    "goto_idle",                                                       # goto.py: the next idle unit to show
+    "home",                                                            # bot.py: the town center of a bot
+    "kings",                                                           # regicide.setup makes it again
+    "limit_at",                                                        # time_limit.py: the next check time
+    "limit_shown",                                                     # time_limit.py: the shown text
+    "noui",                                                            # the cheat "noui": only the hints
+    "peers",                                                           # run.py: the players of the game
+    "player",                                                          # run.py: the player number
+    "regicide_at",                                                     # regicide.py: the next check time
+    "repair_at",                                                       # repair.py: the next check time
+    "repairs",                                                         # orders(): the repair of each villager
+    "rows",                                                            # build.py: the shown building to place
+    "score_at",                                                        # score.py: the next check time
+    "shapes",                                                          # build.py: the shown building to place
+    "share",                                                           # bot.py: the techs of the human player
+    "speed",                                                           # run.py: the --speed option
+    "sudden_death_at",                                                 # sudden_death.py: the next check time
+    "victory",                                                         # run.py: from the saved settings
+    "victory_value",                                                   # run.py: from the saved settings
+    "wall_start",                                                      # build.py: the first corner of a wall
+    "who",                                                             # the player name on the server
+    "wonder",                                                          # defend_wonder.setup makes it again
+    "wonder_at",                                                       # wonder.py: the next check time
 )
 SKIP = ("session.lock",)                                               # the lock of the running server
 

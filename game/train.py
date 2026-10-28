@@ -25,15 +25,15 @@ The Castle Age (#1080) needs the Feudal Age (build.AGE: a gray item before it) a
 The Imperial Age (#1081) needs the Castle Age and a castle, or 2 types of Castle Age buildings (REQUIRES).
 Forging at the blacksmith (#675): infantry and cavalry get +1 attack. Fletching (#724): archers (also cavalry archers and
 skirmishers) get +1 attack and +1 range.
-Padded Archer Armor at the blacksmith in the Feudal Age (#937, TECH_AGE): archers get +1 melee and +1 pierce armor.
+Padded Archer Armor at the blacksmith in the Feudal Age (#937, the key "age"): archers get +1 melee and +1 pierce armor.
 Double-Bit Axe at the lumber camp (#723): villagers chop wood 20 % faster (gather.WORK_TECHS, gather.Gather.work_time).
 Gold Mining at the mining camp (#727): villagers mine gold 15 % faster. Stone Mining (#939): stone 15 % faster.
-In the Castle Age (#1423, AFTER): Bow Saw (wood 20 % faster), Gold Shaft Mining and Stone Shaft Mining (15 % faster).
+In the Castle Age (#1423, the key "after"): Bow Saw (wood 20 % faster), Gold Shaft Mining and Stone Shaft Mining (15 % faster).
 Fishing Lines at the dock in the Feudal Age and Gillnets (after it) in the Castle Age (#1439): fishing ships gather 10 %
 faster and carry 5 more food (gather.SHIP_TECHS, fleet.rate, fleet.carry).
 Horse Collar at the mill (#726): the live and the new farms of the player have 75 more food (gather.FARM_TECHS).
 Crop Rotation at the mill in the Imperial Age, after Heavy Plow (#1578): the farms have 175 more food (FARM_TECHS).
-Wheelbarrow at the town center in the Feudal Age (#728, TECH_AGE): villagers carry 3 more resources and walk 10 % faster (gather.CARRY, gather.PACE).
+Wheelbarrow at the town center in the Feudal Age (#728, the key "age"): villagers carry 3 more resources and walk 10 % faster (gather.CARRY, gather.PACE).
 Scale Barding Armor at the blacksmith in the Feudal Age (#938): cavalry (also camels and elephants, not cavalry archers)
 gets +1 melee and +1 pierce armor (barding()).
 Bloodlines at the stable in the Feudal Age (#940): cavalry gets 20 more hit points, also a live unit (it keeps its lost
@@ -45,17 +45,17 @@ the building; each new unit walks there (Minecraft path finding), a new villager
 The castle (#708) trains the unique unit of the civilization of its player (UNIQUE, trains()). Only the units with AoE2
 combat values (combat.STATS) are in its menu.
 The monastery trains monks in the Castle Age (#1243): a monk does not gather, so it joins g.soldiers and takes the
-move orders of the military units. It researches Fervor (monks walk 15 % faster, SPEEDS, speed()) and Sanctity (monks
+move orders of the military units. It researches Fervor (monks walk 15 % faster, the key "walk", speed()) and Sanctity (monks
 get 15 more hit points) in the Castle Age (#1261).
 The market trains trade carts (#1253): a trade cart also joins g.soldiers, and trade.py walks it between two own markets.
-It researches Caravan (trade carts walk 20 % faster, SPEEDS) in the Castle Age and Guilds (trading fee 15 %, market.FEES)
+It researches Caravan (trade carts walk 20 % faster, the key "walk") in the Castle Age and Guilds (trading fee 15 %, market.FEES)
 in the Imperial Age (#1254). Coinage and Banking change the tribute fee: the game program has no tribute yet.
-The barracks researches Squires in the Castle Age (#1415): all infantry of the player walks 10 % faster (SPEEDS, a class).
+The barracks researches Squires in the Castle Age (#1415): all infantry of the player walks 10 % faster (the key "walk", a class).
 It researches Arson in the Feudal Age (#1419): infantry gets +2 attack against the standard buildings (combat.STANDARD).
-The university researches Fortified Wall in the Castle Age (#1326, WALL_UPGRADES): the new and the complete own stone
+The university researches Fortified Wall in the Castle Age (#1326, the key "walls"): the new and the complete own stone
 walls and gates get the fortified design and its AoE2 hit points and armor (build.design, build.upgrade).
 An age gives the complete own walls and gates the AoE2 hit points of the new age (#1372, combat.WALLS, build.upgrade).
-It researches Guard Tower in the Castle Age and Keep (after Guard Tower) in the Imperial Age (#1374, TOWER_UPGRADES):
+It researches Guard Tower in the Castle Age and Keep (after Guard Tower) in the Imperial Age (#1374, the key "towers"):
 the new and the complete own watch towers get the AoE2 hit points, attack and armor of the guard tower or the keep
 (build.line, build.retower). The look of the tower stays.
 It researches Shipwright in the Imperial Age (#1490, SHIPWRIGHT): the ships of the dock cost 20 % less wood (price())
@@ -108,7 +108,19 @@ SHIFTS = {b: {n: sum(1 + max(SLOTS[x] for x in TRAINS[p]) for p in ms[:i]) for i
 # The unique unit of each civilization (AoE2 DE, "unique" in data/civs.jsonl, #1914), trained at its castle. A unit
 # without COSTS is not in the menu yet: it has no AoE2 combat values in combat.STATS.
 UNIQUE = civs.UNIQUE
-CIV_TECHS = {r["name"]: r["civ"] for r in ROWS if "civ" in r}      # a unique technology: its civ (castle, #2021)
+# The value of each key of data/train.jsonl that value() reads, by item: one line per key in data/train_keys.jsonl (what
+# it does, its issue, #2507), as civs.value (#2281). A new key then needs no new table here.
+KEYS = {r["name"]: f"{r['text']} (#{r['issue']})" for r in table.load("train_keys.jsonl")}
+BY_KEY = {k: {r["name"]: r[k] for r in ROWS if k in r} for k in sorted(KEYS)}
+
+
+def value(key, name, default=None):
+    """The value of key of data/train.jsonl for item name (BY_KEY), else default. A key needs its line in
+    train_keys.jsonl."""
+    assert key in KEYS, key
+    return BY_KEY[key].get(name, default)
+
+
 build.AGE |= dict.fromkeys(UNIQUE.values(), 2) | dict.fromkeys(("ELITE_" + n for n in UNIQUE.values()), 3)   # (#1082)
 
 
@@ -116,10 +128,10 @@ def own_civ_only():
     """{name: the other civs} of each unique unit with an elite upgrade in COSTS, its elite unit and its upgrade: only
     the own civ has them (civs.MISSING). A new unique unit needs no line in civs.py, and its elite upgrade has
     `"building": null` in data/train.jsonl: trains() adds it to the castle of the own civ (#1760). The same for a unique
-    technology: its key `"civ"` (CIV_TECHS, #2021)."""
+    technology: its key `"civ"` (#2021)."""
     others = set().union(*civs.MISSING.values()) | set(UNIQUE)
     return {n: tuple(sorted(others - {c})) for c, u in UNIQUE.items() if f"ELITE_{u}_UPGRADE" in COSTS
-            for n in (u, "ELITE_" + u, f"ELITE_{u}_UPGRADE")} | {n: tuple(sorted(others - {c})) for n, c in CIV_TECHS.items()}
+            for n in (u, "ELITE_" + u, f"ELITE_{u}_UPGRADE")} | {n: tuple(sorted(others - {c})) for n, c in BY_KEY["civ"].items()}
 
 
 civs.MISSING |= own_civ_only()
@@ -236,15 +248,10 @@ def effect(e, more=1):
 
 
 TECHS = {r["name"]: effect(r["effect"]) for r in ROWS if "effect" in r}   # a technology: its change of the AoE2 values
-EFFECTS = {r["name"]: r["effect"] for r in ROWS if "effect" in r}   # the key "effect" itself: civs.ALSO, civs.MORE
+DOCTRINES = {r["name"]: r["building"] for r in ROWS if r.get("doctrine")}   # the switch of the Recruitment Doctrines (#2483)
 EACH = {r["name"]: effect({k: v for k, v in r["effect"].items() if k != "if"})   # the same change for each unit
         for r in ROWS if isinstance(r.get("effect"), dict)}       # (civs.SMITH_UNITS, #2174)
-# technology: the unit (or a class of combat.STATS: lower case, or a group of civs.GROUPS) and its walk speed factor
-# (#1415, #1416): the key "walk" of data/train.jsonl
-SPEEDS = {r["name"]: tuple(r["walk"]) for r in ROWS if "walk" in r}
 SHIPWRIGHT = (0.8, 1.54)                                           # Shipwright: ships cost 80 % wood, train 54 % faster
-FASTER = {r["name"]: tuple(r["faster"]) for r in ROWS if "faster" in r}   # unit: the age and its train time from it
-#                                                                    (#1555), the key "faster" of data/train.jsonl (#2155)
 CONSCRIPT = (tuple(r["name"] for r in BUILDING_ROWS if r.get("conscription")),   # Conscription: these buildings
              next(r["factor"] for r in ROWS if r["name"] == "CONSCRIPTION"))      # train faster (#1455)
 ARROWSLITS = {r["name"]: r["arrowslits"] for r in BUILDING_ROWS if "arrowslits" in r}   # the attack of each tower (#1504)
@@ -254,16 +261,14 @@ PER_ENEMY = {r["name"]: (r["per_enemy"], r["most"]) for r in ROWS if "per_enemy"
 #                                           enemy civilian unit (the name starts with one of them) and the most (#2193)
 UPGRADES = {r["name"]: tuple(map(tuple, u)) if isinstance(u[0], list) else tuple(u)   # technology: the unit and its
             for r in ROWS if (u := r.get("upgrade"))}             # new unit (#941), "upgrade" of data/train.jsonl (#1915)
-AFTER = {r["name"]: r["after"] for r in ROWS if "after" in r}     # the technology before it in its slot
-WALL_UPGRADES = {r["name"]: r["walls"] for r in ROWS if "walls" in r}   # technology: {wall: new} (#1326)
-TOWER_UPGRADES = {r["name"]: r["towers"] for r in ROWS if "towers" in r}   # technology: {tower: the tower of its
-#                                                                    values}, in the research order (file order, #1374)
 REQUIRES = {r["name"]: (r["requires"][0], *map(tuple, r["requires"][1:]))   # an age: n types of these buildings, or
             for r in ROWS if "requires" in r}                      # one of the third list alone
-TECH_AGE = {r["name"]: r["age"] for r in ROWS if "age" in r}       # the age of a technology (build.AGE)
 AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age after each researched age (index: ages)
 # AoE2 DE setting "Starting age" (game/data/setup.jsonl): the researched ages and the skipped technologies (#2265)
 STARTS = {r["name"]: r for r in table.load("setup.jsonl") if "ages" in r}
+SWAPS = {r["name"]: r["swap"] for r in table.load("setup.jsonl") if "swap" in r}   # a game mode: {old: new} (#2388)
+AGAIN = {r["name"] for r in ROWS if r.get("again")}                # a technology that a player researches again (Treason)
+GLOW = {r["name"]: r["glow"] for r in ROWS if "glow" in r}         # the enemy Kings glow for so many seconds (#2388)
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
 HOUSING = {r["name"]: r["housing"] for r in BUILDING_ROWS if "housing" in r}   # population of a complete building
 AGE_COUNT = {r["name"]: r["age_count"] for r in BUILDING_ROWS if "age_count" in r}   # types of the age rule: the Settlement 2 (#2420)
@@ -351,13 +356,21 @@ def ship(name, s):
 
 
 def unlocked(g, name):
-    """True when the player has the age of technology name (TECH_AGE). As in AoE2, the menu shows a technology only
+    """True when the player has the age of technology name (the key "age"). As in AoE2, the menu shows a technology only
     from its age, but a building or unit of a later age as a gray item (build.locked), and never one that the
     civilization of the player does not have (civs.missing: also not as a team bonus of an ally, #1619)."""
-    return TECH_AGE.get(name, 0) - civs.earlier(g, name) <= build.ages(g) and AFTER.get(name, "") in {""} | set(getattr(g, "techs", ())) \
+    return value("age", name, 0) - civs.earlier(g, name) <= build.ages(g) and value("after", name, "") in {""} | set(getattr(g, "techs", ())) \
         and not (hasattr(g, "data") and civs.missing(g, name)) \
-        and (name not in UPGRADES or name in REQUIRES or bool(lines(name, g)))   # not of this civilization (#1373), no
-                                                                   # new unit (#1483); an age also upgrades (#2130)
+        and (name not in UPGRADES or name in REQUIRES or bool(lines(name, g))) and not swapped(g, name)   # not of this
+                                                                   # civilization (#1373), no new unit (#1483); an
+                                                                   # age also upgrades (#2130)
+
+
+def swapped(g, name):
+    """True when the game mode of g puts another technology in place of name, or name is the technology of another
+    mode (SWAPS: Treason only in Regicide, in place of Spies, #2388)."""
+    swap = SWAPS.get(getattr(g, "mode", "standard"), {})
+    return name in swap or name not in swap.values() and any(name in s.values() for s in SWAPS.values())
 
 
 def homes(g):
@@ -401,7 +414,7 @@ def trains(g, building):
         + ["KONNIK"] * (building == "KREPOST") \
         + ["SERJEANT"] * (building == "DONJON")                    # and the spearman line (AoE2 DE wiki, #1873)
     out = unique + list(TRAINS[building]) + [f"ELITE_{n}_UPGRADE" for n in unique if f"ELITE_{n}_UPGRADE" in COSTS]   # (#1760)
-    out += [n for n, c in CIV_TECHS.items() if c == civs.civ(g)] * (building == "CASTLE")   # the unique technologies (#2021)
+    out += [n for n, c in BY_KEY["civ"].items() if c == civs.civ(g)] * (building == "CASTLE")   # the unique technologies (#2021)
     more = civs.TRAINS.get(civs.civ(g), {}).get(building, {}).get("lines", ())
     out += [line[0] for line in more] + [t for line in more for t in line_upgrades(line)]   # Mapuche (#2432, #2487)
     for _ in UPGRADES:                                             # a line of upgrades: mangonel, onager, siege onager
@@ -442,7 +455,7 @@ def show(g, player, rect):
             return missing(g, name) or ("researching" if queued(g, name) else "research")
         return f"queue {n}/{QUEUE}"
     items = [(slot, build.LOCKED if build.locked(g, name) else item, label,
-              (" · ".join(f"{v} {r}" for r, v in price(g, name).items()) or "free") + f" · {round(seconds(g, name, building), 1):g} s · "
+              (" · ".join(f"{v} {r}" for r, v in price(g, name, building).items()) or "free") + f" · {round(seconds(g, name, building), 1):g} s · "
               + state(name))
              for name in trains(g, building) if repeatable(g, name) and unlocked(g, name) for slot, item, label in [slots(building, name)]]
     items += [RALLY] if units_of(building) else []
@@ -572,6 +585,9 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
         return None
     if name in TECHS and (not repeatable(g, name) or queued(g, name)) or not unlocked(g, name):   # a technology once
         return None
+    if name in DOCTRINES:                                              # no queue: at once (#2483)
+        switch(g, player, homes(g)[rect])
+        return rect
     if need := build.locked(g, name):                                  # a unit or an age of a later age (#674)
         build.say(g, player, f"{build.pretty(name)}: {need}.")
         return None
@@ -582,7 +598,7 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
     if len(q) >= QUEUE:
         build.say(g, player, f"The queue is full ({QUEUE} units).")
         return None
-    cost = price(g, name)
+    cost = price(g, name, homes(g)[rect])
     if any(g.stock[r] < v for r, v in cost.items()):
         build.say(g, player, f"Not enough resources: a {build.pretty(name).lower()} costs "
                              + ", ".join(f"{v} {r}" for r, v in cost.items()) + ".")
@@ -590,7 +606,9 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
     for r, v in cost.items():
         g.stock[r] -= v
         g.command(f"scoreboard players remove {r.capitalize()} {g.board} {v}")
-    q.append({"name": name, "progress": 0.0, "player": player} | ({"paid": cost} if cost != COSTS[name] else {}))
+    k = vars(g).get("doctrines", {}).get(homes(g)[rect], 0)            # its doctrine stays (#2483)
+    q.append({"name": name, "progress": 0.0, "player": player} | ({"paid": cost} if cost != COSTS[name] else {})
+             | ({"doctrine": k} if k and name not in TECHS else {}))
     return rect
 
 
@@ -605,13 +623,14 @@ def repeatable(g, name):
     and the gather tables take count()."""
     if name in civs.policies(g).get("effects", ()):                # a policy: each one but the active one (#2485)
         return name != civs.policy(g)[0]
-    return name not in g.techs or getattr(g, "beyond", False) and name not in REQUIRES and name not in UPGRADES \
-        and name not in WALL_UPGRADES and count(g, name) < REPEAT
+    return name not in g.techs or name in AGAIN or getattr(g, "beyond", False) and name not in REQUIRES and name not in UPGRADES \
+        and value("walls", name) is None and count(g, name) < REPEAT
 
 
-def price(g, name):
+def price(g, name, building=None):
     """The cost of unit or technology name with the bonuses of the civilization (civs.COSTS, #1091); a technology is
-    free with the cheat "tech tech one two free" (#968). Shipwright: a ship costs 20 % less wood (#1490)."""
+    free with the cheat "tech tech one two free" (#968). Shipwright: a ship costs 20 % less wood (#1490). A unit of
+    building: the food and wood factor of its Recruitment Doctrine (doctrine(), Macedonians, #2483)."""
     if name in TECHS and getattr(g, "free_techs", False):
         return {}
     if name in (p := civs.policies(g)).get("effects", ()):          # a switch of policy: the gold of the next one (#2485)
@@ -620,7 +639,24 @@ def price(g, name):
     cost = civs.cost(g, name, per_enemy(g, name))
     if "wood" in cost and shipwright(g, name):
         cost["wood"] = int(cost["wood"] * SHIPWRIGHT[0] + 0.5)
+    if building and name not in TECHS and (f := doctrine(g, building)[1]) != 1:
+        cost.update((r, int(v * f + 0.5)) for r, v in cost.items() if r in ("food", "wood"))   # gold stays
     return cost
+
+
+def doctrine(g, building, k=None):
+    """[name, food and wood factor, time factor] of the Recruitment Doctrine k (default: the present one) of building
+    (the civ key "doctrines": Macedonians at the barracks, archery range and stable, AoE2 wiki, #2483), else no change."""
+    rows = civs.value("doctrines", civs.civ(g), []) if building in DOCTRINES.values() else []
+    return rows[vars(g).get("doctrines", {}).get(building, 0) if k is None else k] if rows else ["Balanced", 1, 1]
+
+
+def switch(g, player, building):
+    """The next Recruitment Doctrine of the building type, free and at once (the menu item of DOCTRINES): it changes
+    the cost and time of the units queued from now on, not of the queued ones (AoE2 wiki "Macedonians (Chronicles)")."""
+    d = vars(g).setdefault("doctrines", {})
+    d[building] = (d.get(building, 0) + 1) % len(civs.value("doctrines", civs.civ(g)))
+    build.say(g, player, f"{build.pretty(building)}: {doctrine(g, building)[0]} Recruitment.")
 
 
 def per_enemy(g, name):
@@ -676,7 +712,7 @@ def stats(g, name):
     s, twice = civs.units(g, name, combat.stats(name)), civs.TWICE.get(civs.civ(g), ())
     times, also, more = civs.smith(g, name, s), civs.ALSO.get(civs.civ(g), {}), civs.MORE.get(civs.civ(g), {})
     for t in sorted(g.techs):
-        e = (EACH if t in times else TECHS)[t] if t not in more else effect(EFFECTS[t], more[t])   # Varangian
+        e = (EACH if t in times else TECHS)[t] if t not in more else effect(value("effect", t), more[t])   # Varangian
         if t in also and civs.GROUPS[also[t]](name, s):              # Bloodlines +50 %; Bohemian Sanctity: the
             e = EACH[t]                                            # villagers too (#2173)
         for _ in range(count(g, t) * (1 + (t in twice)) * times.get(t, 1)):   # "going above and beyond" stacks (#968)
@@ -689,30 +725,32 @@ def stats(g, name):
     return s
 
 
-def seconds(g, name, building=None):
-    """The train time of unit or technology name: TRAIN_TIMES, or the time of FASTER from its age (the eagle scout trains
+def seconds(g, name, building=None, k=None):
+    """The train time of unit or technology name: TRAIN_TIMES, or the time of its key "faster" from its age (the eagle scout trains
     in 46 s in the Feudal Age and in 35 s from the Castle Age, AoE2 DE wiki), divided by the work rate of the
     civilization at building (civs.work_rate: Persian town centers and docks, #1894), its rate of the unit group
     (civs.train_rate: Aztec military units, Khitan skirmishers, #1927) and its age-up rate (civs.age_rate: the Malay, #1926),
     times its research time of the technology (civs.research_time: the Gothic Loom at once, #2172) and its time factor
-    at building (civs.train_time: Mapuche Settlements, #2432)."""
-    age, time = FASTER.get(name, (9, 0))
+    at building (civs.train_time: Mapuche Settlements, #2432), and of the Recruitment Doctrine k of a unit (doctrine(),
+    default the present one, #2483)."""
+    age, time = value("faster", name, (9, 0))
     return (time if build.ages(g) >= age else TRAIN_TIMES[name]) / (civs.work_rate(g, building) if building else 1) \
-        / civs.train_rate(g, name) / civs.age_rate(g, name) * civs.research_time(g, name) \
-        * (civs.train_time(g, building, name) if building else 1)
+        / civs.train_rate(g, name) / civs.age_rate(g, name) * civs.research_time(g, name) / civs.turbo(g, name) \
+        * (civs.train_time(g, building, name) if building else 1) \
+        * (doctrine(g, building, k)[2] if building and name not in TECHS else 1)
 
 
 def speed(g, name):
     """The factor of the walk speed of unit name: the bonus of the civilization (civs.speed) and the technologies of the
-    player (SPEEDS: Fervor, #1261; Squires for the class infantry, #1415; Husbandry for the mounted units, #1416), with
+    player (the key "walk": Fervor, #1261; Squires for the class infantry, #1415; Husbandry for the mounted units, #1416), with
     the changes of civs.ALSO and civs.MORE (Bohemian Fervor for the villagers, Varangian Caravan +50 %, #2173)."""
     also, more = civs.ALSO.get(civs.civ(g), {}), civs.MORE.get(civs.civ(g), {})
     return civs.speed(g, name) * math.prod((1 + (f - 1) * more[t] if t in more else f) ** count(g, t)
-                                           for t, (unit, f) in SPEEDS.items() if faster(unit, name) or t in also and faster(also[t], name))
+                                           for t, (unit, f) in BY_KEY["walk"].items() if faster(unit, name) or t in also and faster(also[t], name))
 
 
 def faster(unit, name):
-    """True when the SPEEDS entry unit (a unit name, a class of combat.STATS in lower case or a group of civs.GROUPS)
+    """True when the "walk" entry unit (a unit name, a class of combat.STATS in lower case or a group of civs.GROUPS)
     covers unit name."""
     import combat                                                  # combat imports gather, gather imports this module
     s = combat.stats(name)
@@ -727,7 +765,7 @@ def start(g, setting):
     for t in build.AGE_TECHS[:s["ages"]]:
         research(g, {"name": t}, start=True)
     skip = (*build.AGE_TECHS, *s.get("skip", ()))
-    while todo := [t for t in TECHS if t not in g.techs and t not in skip and TECH_AGE.get(t, 0) < s["ages"]
+    while todo := [t for t in TECHS if t not in g.techs and t not in skip and value("age", t, 0) < s["ages"]
                    and unlocked(g, t)]:                            # in passes: a technology after the one before it
         for t in todo:
             research(g, {"name": t}, start=True)
@@ -754,8 +792,8 @@ def research(g, entry, start=False):
         for t in g.map.own_farms:
             if g.map.farms.get(t, 0) > 0:
                 g.map.farms[t] += more
-    if entry["name"] in WALL_UPGRADES:                             # the complete own walls become the new wall (#1326)
-        for site in [s for s in g.sites if s["name"] in WALL_UPGRADES[entry["name"]] and s.get("done")
+    if walls := value("walls", entry["name"]):                    # the complete own walls become the new wall (#1326)
+        for site in [s for s in g.sites if s["name"] in walls and s.get("done")
                      and s["player"] == g.player]:
             build.upgrade(g, site, combat.wall(site["name"], build.ages(g), civs.civ(g), civs.handicap(g.data, g.player)))
     build.retower(g, before)                                       # the complete own towers get the new values (#1374),
@@ -766,6 +804,9 @@ def research(g, entry, start=False):
             g.command(garrison.arrows_command(g, rect))
     if entry["name"] == "BALLISTICS" and getattr(g, "paper", False):   # the plugin aims the arrows of the player (#1549)
         g.command(f"aoe ballistics p{g.player} on")
+    if entry["name"] in GLOW:                                      # Treason: the enemy Kings glow (#2388)
+        import regicide                                            # regicide imports gather, gather imports this module
+        regicide.reveal(g, GLOW[entry["name"]])
     if entry["name"] == "SPIES":                                   # the enemy units show for ever (#2193)
         import fog                                                 # fog imports gather, gather imports this module
         fog.reveal(g)
@@ -791,10 +832,10 @@ def research(g, entry, start=False):
             g.command(combat.range_command(uuid, name, g.map.T, s=stats(g, name)))
     for cmd in [c for uuid, name in g.soldiers.items() for c in fire_commands(g, uuid, name, {entry["name"]})]:
         g.command(cmd)                                             # the live fire ships: Siphons, Incendiaries (#2165)
-    if entry["name"] in SPEEDS:                                    # the live units walk faster (Fervor)
+    if entry["name"] in BY_KEY["walk"]:                            # the live units walk faster (Fervor)
         import ai, fleet                                           # ai imports gather, gather imports this module
         for uuid, name in g.soldiers.items():                      # a ship: fleet.tick reads speed() (#2136)
-            if faster(SPEEDS[entry["name"]][0], name) and name not in fleet.SPEEDS:
+            if faster(value("walk", entry["name"])[0], name) and name not in fleet.SPEEDS:
                 g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))
     if entry["name"] in REQUIRES:                                  # an age: all players see it, as in AoE2
         import ai                                                  # ai imports gather, gather imports this module
@@ -916,7 +957,8 @@ def tick(g, work):
             q[0]["waits"] = False
         rate = CONSCRIPT[1] if rect in fast and q[0]["name"] not in TECHS else 1   # units only, not technologies
         rate *= SHIPWRIGHT[1] if shipwright(g, q[0]["name"]) else 1          # the ships of a dock, not its technologies
-        time = 0 if getattr(g, "aegis", False) else seconds(g, q[0]["name"], home.get(rect))   # cheats.aegis
+        time = 0 if getattr(g, "aegis", False) else \
+            seconds(g, q[0]["name"], home.get(rect), q[0].get("doctrine", 0))   # cheats.aegis; the doctrine of the queue (#2483)
         q[0]["progress"] = min(1, q[0]["progress"] + (work * rate / time if time else 1))   # 0: the Gothic Loom at once (#2172)
         if q[0]["progress"] >= 1 and q[0]["name"] in TECHS:
             research(g, q.pop(0))
