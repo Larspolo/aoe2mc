@@ -465,6 +465,8 @@ def read_scenario(path):
                                                if e.effect_type == CREATE_GARRISONED_OBJECT else {}),
                                             **({"target": e.target_player, "diplomacy": e.diplomacy}   # (#2645)
                                                if e.effect_type == CHANGE_DIPLOMACY else {}),
+                                            **({"target": e.target_player, "visibility": e.visibility_state}   # (#2774)
+                                               if e.effect_type == SET_PLAYER_VISIBILITY else {}),
                                             **({"target": e.target_player, "quantity": e.quantity,   # (#2576)
                                                 "resource": e.tribute_list} if e.effect_type == TRIBUTE else {}),
                                             **({"operation": e.operation, "quantity": e.quantity,
@@ -2828,6 +2830,7 @@ REPLACE_OBJECT = 43                                                # "Replace Ob
 RESEARCHED = 9                                                     # the condition "Research Technology" (#2656)
 RESEARCH_TECHNOLOGY = 2                                            # "Research Technology" (#2577)
 SEND_CHAT = 3
+SET_PLAYER_VISIBILITY = 41                                         # "Set Player Visibility" (#2774)
 STOP_OBJECT = 29                                                   # "Stop Object" (#2754)
 TASK_OBJECT = 12                                                   # "Task Object" (#2646)
 TELEPORT_OBJECT = 35
@@ -3410,6 +3413,18 @@ def instruction_lines(e, c):
     return [f"title @a times 10 {ticks} 20", f"title @a subtitle {text}", 'title @a title ""']
 
 
+def visibility_lines(e, c):
+    """The commands of "Set Player Visibility" (#2774): the score #p<player>.p<target> of aoe_vis is the state + 1
+    (VisibilityState: 0 visible, 1 explored, 2 invisible) and #any of aoe_vis is 1: the scenario mode of the game
+    program shows the units of the target to the player out of sight, or hides them again."""
+    a, b = e["player"], e.get("target", -1)
+    if e.get("visibility") not in (0, 1, 2) or a <= 0 or b <= 0 or a == b:
+        return []
+    c.setup["scoreboard objectives add aoe_vis dummy"] = None
+    c.stats["set player visibility"] += 1
+    return [f"scoreboard players set #p{a}.p{b} aoe_vis {e['visibility'] + 1}", "scoreboard players set #any aoe_vis 1"]
+
+
 # The handler of each trigger effect: (effect, Effect context) -> commands. A new effect is one line here, in
 # alphabetical order, and its handler function (#2613): no change of trigger_files.
 EFFECTS = {
@@ -3444,6 +3459,7 @@ EFFECTS = {
     REPLACE_OBJECT: replace_lines,
     RESEARCH_TECHNOLOGY: research_lines,
     SEND_CHAT: chat_lines,
+    SET_PLAYER_VISIBILITY: visibility_lines,
     STOP_OBJECT: stop_lines,
     TASK_OBJECT: task_lines,
     TELEPORT_OBJECT: teleport_lines,

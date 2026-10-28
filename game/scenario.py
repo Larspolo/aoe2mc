@@ -242,6 +242,7 @@ def victory(g):
         return
     g.win_at = g.clock() + conquest.EVERY
     diplomacy(g)
+    visibility(g)
     for n in sorted(int(p) for p in g.players if int(p)):
         got = re.search(r" has (-?\d+) ", g.command(f"scoreboard players get #p{n} aoe_win") or "")
         if got and int(got[1]) > 0:
@@ -286,6 +287,26 @@ def diplomacy(g):
     g.command(gather.allies_command(g.players))
     if not treaty.holds(g):
         g.command(gather.neutral_command(g.players))
+
+
+def visibility(g):
+    """Apply "Set Player Visibility" (#2774, aoe2mc.visibility_lines): the score #p<N>.p<M> of aoe_vis is the state + 1.
+    "Visible" puts M into the list "sees" of player N in the players of aoe2mc.json (fog.update then does not hide the
+    units of M from N), "explored" and "invisible" take it out again. Then reset the scores."""
+    got = re.search(r" has (-?\d+) ", g.command("scoreboard players get #any aoe_vis") or "")
+    if not got or int(got[1]) < 1:
+        return
+    g.command("scoreboard players reset #any aoe_vis")
+    ns = sorted(int(p) for p in g.players if int(p))
+    for n in ns:
+        for m in ns:
+            got = n != m and re.search(r" has (-?\d+) ", g.command(f"scoreboard players get #p{n}.p{m} aoe_vis") or "")
+            if got and int(got[1]) in (1, 2, 3):
+                row = g.players[str(n)]
+                sees = set(row.get("sees", [])) - {m} | ({m} if int(got[1]) == 1 else set())
+                row.pop("sees", None)
+                row.update({"sees": sorted(sees)} if sees else {})
+                g.command(f"scoreboard players reset #p{n}.p{m} aoe_vis")
 
 
 def resources(g):

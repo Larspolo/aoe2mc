@@ -82,6 +82,7 @@ MAP = {
     ("effect", "CHANGE_COLOR_MOOD"): "`time set` and `weather` of the mood (`MOODS`, `RAIN`; timer and area triggers: #1876); the fog stays",
     ("effect", "CHANGE_PLAYER_COLOR"): "`team modify pN color`: the chat color of the new player color (`units.TEAM_COLOR`) on the names and the glow of the units; the wool of the sheep and the banners keep the old color (#2712)",
     ("effect", "CHANGE_DIPLOMACY"): "`scoreboard players set #pN.pM aoe_dip`: the scenario mode of the game program changes the stance (#2645)",
+    ("effect", "SET_PLAYER_VISIBILITY"): "`scoreboard players set #pN.pM aoe_vis`: the scenario mode of the game program shows the units of player M to player N out of sight, or hides them again (`fog.py`, #2774)",
 }
 
 
