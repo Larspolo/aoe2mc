@@ -364,6 +364,16 @@ def research_time(g, name):
     return math.prod(f for what, f in RESEARCH_TIME.get(civ(g), ()) if has(what, name))
 
 
+TURBO = next(r for r in table.load("setup.jsonl") if "turbo" in r)    # the AoE2 setting "Turbo Mode" (#2359)
+
+
+def turbo(g, name=None):
+    """The factor of the AoE2 setting "Turbo Mode" (aoe2mc.json "turbo", run.py --turbo) for the work of a building on
+    item name, the build of a site of building name, or (no name) the gather and carry of villagers and fishing ships:
+    TURBO, but 1 for its "slow" items and without the setting."""
+    return TURBO["turbo"] if getattr(g, "data", {}).get("turbo") and name not in TURBO["slow"] else 1
+
+
 def build_rate(g, name):
     """The factor of the build speed of the villagers of the player of g for a site of building name (BUILD,
     BUILD_WONDER, BUILD_OF), else 1."""

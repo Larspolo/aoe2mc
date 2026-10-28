@@ -735,7 +735,7 @@ def seconds(g, name, building=None, k=None):
     default the present one, #2483)."""
     age, time = value("faster", name, (9, 0))
     return (time if build.ages(g) >= age else TRAIN_TIMES[name]) / (civs.work_rate(g, building) if building else 1) \
-        / civs.train_rate(g, name) / civs.age_rate(g, name) * civs.research_time(g, name) \
+        / civs.train_rate(g, name) / civs.age_rate(g, name) * civs.research_time(g, name) / civs.turbo(g, name) \
         * (civs.train_time(g, building, name) if building else 1) \
         * (doctrine(g, building, k)[2] if building and name not in TECHS else 1)
 
