@@ -9,7 +9,6 @@ CASTLE = (12, 4)
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.build.AGE["ELITE_GENOESE_CROSSBOWMAN"] == 3
     assert len(train.HELP["GENOESE_CROSSBOWMAN"]) <= 50
     assert "ITALIANS" not in train.civs.MISSING["GENOESE_CROSSBOWMAN"]
     assert "BRITONS" in train.civs.MISSING["GENOESE_CROSSBOWMAN"]

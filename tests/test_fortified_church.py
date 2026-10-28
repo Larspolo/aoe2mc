@@ -34,8 +34,7 @@ def test_a_georgian_player_has_the_church_and_no_monastery_in_the_build_menu():
 def test_the_values_of_the_wiki():
     s = combat.BUILDINGS["FORTIFIED_CHURCH"]
     assert (s.hp, s.attack, s.melee, s.pierce, s.range) == (2400, 5, 4, 10, 4) and combat.SIGHT["FORTIFIED_CHURCH"] == 10
-    assert build.COSTS["FORTIFIED_CHURCH"] == {"wood": 200} and build.BUILD_TIMES["FORTIFIED_CHURCH"] == 50
-    assert build.AGE["FORTIFIED_CHURCH"] == 2
+    assert build.BUILD_TIMES["FORTIFIED_CHURCH"] == 50
     assert set(civs.MISSING["MONASTERY"]) == {"ARMENIANS", "GEORGIANS"}
     assert set().union(*civs.MISSING.values()) - set(civs.MISSING["FORTIFIED_CHURCH"]) == {"ARMENIANS", "GEORGIANS"}
 

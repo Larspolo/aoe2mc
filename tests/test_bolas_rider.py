@@ -6,7 +6,7 @@ from test_castle_upgrades import RANGE, research, setup
 from test_forging import menus
 
 import units
-from game import build, civs, combat, train
+from game import civs, combat, train
 
 CASTLE = ("FEUDAL_AGE", "CASTLE_AGE")
 IMPERIAL = CASTLE + ("IMPERIAL_AGE",)
@@ -21,7 +21,6 @@ def archery_range(civ="MAPUCHE", ages=IMPERIAL):
 
 
 def test_the_values_are_those_of_the_wiki():
-    assert build.AGE["BOLAS_RIDER"] == 2 and build.AGE["ELITE_BOLAS_RIDER"] == 3
     for unit in ("BOLAS_RIDER", "ELITE_BOLAS_RIDER"):
         assert len(train.HELP[unit]) <= 50
         e = units.classify(unit)

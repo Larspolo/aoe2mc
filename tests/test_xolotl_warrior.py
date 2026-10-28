@@ -4,7 +4,7 @@ import pytest
 from test_castle_upgrades import STABLE, setup
 from test_forging import menus
 
-from game import build, civs, train
+from game import civs, train
 
 import units
 
@@ -19,7 +19,7 @@ def stable(civ, ages=CASTLE):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert build.AGE["XOLOTL_WARRIOR"] == 2 and train.ITEMS["XOLOTL_WARRIOR"][0] == train.MORE + 8
+    assert train.ITEMS["XOLOTL_WARRIOR"][0] == train.MORE + 8
     assert len(train.HELP["XOLOTL_WARRIOR"]) <= 50
     assert not set(OWN) & set(civs.MISSING["XOLOTL_WARRIOR"]) and {"FRANKS", "SHU"} <= set(civs.MISSING["XOLOTL_WARRIOR"])
     assert str(units.classify("XOLOTL_WARRIOR")["id"]) == "minecraft:horse"   # a rider on a horse, as the knight

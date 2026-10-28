@@ -12,9 +12,9 @@
 {"name": "ARCHER", "hp": 30, "attack": 4, "melee": 0, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 3}, "classes": ["archer"], "groups": ["archer line"]}
 {"name": "CROSSBOWMAN", "hp": 35, "attack": 5, "melee": 0, "pierce": 0, "range": 5, "reload": 2.0, "bonus": {"spearman": 3}, "classes": ["archer"], "groups": ["archer line"]}
 {"name": "ARBALESTER", "hp": 40, "attack": 6, "melee": 0, "pierce": 0, "range": 5, "reload": 2.0, "bonus": {"spearman": 3}, "classes": ["archer"], "groups": ["archer line"]}
-{"name": "SKIRMISHER", "hp": 30, "attack": 2, "melee": 0, "pierce": 3, "range": 4, "reload": 3.0, "bonus": {"archer": 3, "spearman": 3}, "classes": ["archer"], "groups": ["skirmishers"]}
-{"name": "ELITE_SKIRMISHER", "hp": 35, "attack": 3, "melee": 0, "pierce": 4, "range": 5, "reload": 3.0, "bonus": {"archer": 4, "spearman": 3}, "classes": ["archer"], "groups": ["skirmishers"]}
-{"name": "IMPERIAL_SKIRMISHER", "hp": 35, "attack": 4, "melee": 0, "pierce": 5, "range": 5, "reload": 3.0, "bonus": {"archer": 5, "spearman": 4}, "classes": ["archer"], "groups": ["skirmishers"]}
+{"name": "SKIRMISHER", "hp": 30, "attack": 2, "melee": 0, "pierce": 3, "range": 4, "reload": 3.0, "bonus": {"archer": 3, "spearman": 3}, "classes": ["archer", "skirmisher"], "groups": ["skirmishers"]}
+{"name": "ELITE_SKIRMISHER", "hp": 35, "attack": 3, "melee": 0, "pierce": 4, "range": 5, "reload": 3.0, "bonus": {"archer": 4, "spearman": 3}, "classes": ["archer", "skirmisher"], "groups": ["skirmishers"]}
+{"name": "IMPERIAL_SKIRMISHER", "hp": 35, "attack": 4, "melee": 0, "pierce": 5, "range": 5, "reload": 3.0, "bonus": {"archer": 5, "spearman": 4}, "classes": ["archer", "skirmisher"], "groups": ["skirmishers"]}
 {"name": "LONGBOWMAN", "hp": 35, "attack": 6, "melee": 0, "pierce": 0, "range": 5, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"]}
 {"name": "CAVALRY_ARCHER", "hp": 50, "attack": 6, "melee": 0, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "cavalry"], "sight": 5}
 {"name": "HEAVY_CAVALRY_ARCHER", "hp": 60, "attack": 7, "melee": 1, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 4}, "classes": ["archer", "cavalry"]}
@@ -196,7 +196,7 @@
 {"name": "FAST_FIRE_SHIP", "hp": 140, "attack": 4, "melee": 3, "pierce": 7, "range": 2.5, "reload": 0.25, "bonus": {"building": 3, "warship": 1}, "classes": ["ship", "fireship"], "sight": 6, "note": "Heavy Warships (#1483)", "sail": 1.56, "melee_ranged": true, "blast": 0}
 {"name": "FIRE_GALLEY", "hp": 110, "attack": 2, "melee": 1, "pierce": 4, "range": 2.5, "reload": 0.25, "bonus": {"warship": 1}, "classes": ["ship", "fireship"], "sight": 5, "note": "(#1481) the Feudal Age form of the fire ship", "sail": 1.36, "melee_ranged": true, "blast": 0}
 {"name": "FIRE_SHIP", "hp": 120, "attack": 3, "melee": 2, "pierce": 4, "range": 2.5, "reload": 0.25, "bonus": {"building": 2, "warship": 1}, "classes": ["ship", "fireship"], "sight": 5, "note": "(#1440) melee damage, 4 hits/s", "sail": 1.47, "melee_ranged": true, "blast": 0}
-{"name": "FISHING_SHIP", "hp": 50, "attack": 0, "melee": 1, "pierce": 1, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["ship"], "sight": 5, "sail": 1.26}
+{"name": "FISHING_SHIP", "hp": 50, "attack": 0, "melee": 1, "pierce": 1, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["ship"], "sight": 5, "sail": 1.26, "groups": ["fishing ships"]}
 {"name": "GALLEY", "hp": 110, "attack": 6, "melee": 0, "pierce": 3, "range": 5, "reload": 3.0, "bonus": {"building": 6, "warship": 5}, "classes": ["ship", "warship"], "sail": 1.36}
 {"name": "GALLEON", "hp": 155, "attack": 9, "melee": 0, "pierce": 6, "range": 7, "reload": 3.0, "bonus": {"building": 6, "warship": 9, "ram": 3}, "classes": ["ship", "warship"], "sight": 9, "note": "Heavy Warships (#1483)", "sail": 1.36}
 {"name": "HEAVY_DEMOLITION_SHIP", "hp": 70, "attack": 120, "melee": 2, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {"building": 280}, "classes": ["ship"], "sight": 6, "note": "(#1483)", "sail": 1.52, "blast": 3.25}

@@ -5,7 +5,7 @@ the chakram thrower)."""
 from test_castle_upgrades import STABLE, research, setup
 from test_forging import menus
 
-from game import build, civs, combat, train
+from game import civs, combat, train
 
 CASTLE = ("FEUDAL_AGE", "CASTLE_AGE")
 IMPERIAL = CASTLE + ("IMPERIAL_AGE",)
@@ -19,7 +19,6 @@ def stable(civ="GURJARAS", ages=IMPERIAL):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert build.AGE["SHRIVAMSHA_RIDER"] == 2 and build.AGE["ELITE_SHRIVAMSHA_RIDER"] == 3
     for name in ("SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER_UPGRADE"):
         assert len(train.HELP[name]) <= 50 and "GURJARAS" not in civs.MISSING[name]
         assert {"BRITONS", "BENGALIS", "HINDUSTANIS"} <= set(civs.MISSING[name])

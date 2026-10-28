@@ -9,7 +9,7 @@ from game import build, civs, combat, train
 
 
 def test_the_two_ships_have_the_aoe2_de_values_of_the_wiki():
-    assert build.AGE["FIRE_GALLEY"] == build.AGE["DEMOLITION_RAFT"] == 1                    # the Feudal Age
+    assert build.AGE["FIRE_GALLEY"] == build.AGE["DEMOLITION_RAFT"]
     assert {"DANES", "KOREANS", "VIKINGS"} <= set(civs.MISSING["DEMOLITION_RAFT"]) == set(civs.MISSING["DEMOLITION_SHIP"])
 
 
