@@ -22,9 +22,8 @@ UNITS holds the bonuses of the land units of combat.STATS (#1090): hit points, a
 speed, per age. train.stats applies them before the technologies; the walk speed goes through speed(). The value
 "bonus" with a float multiplies the bonus damage that the unit deals (Gurjara mounted units, Bohemian spearmen,
 #2248); the value "taken" is the factor of the bonus damage that the unit takes (Bengali elephants, Sicilian units:
-taken(), the plugin applies it at each hit). Bonuses of this kind that the game program cannot use yet: the bonus
-damage of Bengali cavalry and Japanese mounted archers against some classes and of Goth infantry against buildings,
-the elevation (Georgians, Tatars), the Lithuanian relics, the Aztec and Slav monks, and the ships.
+taken(), the plugin applies it at each hit); the value "bonus:CLASS" adds attack against a class (#2249). Bonuses of
+this kind that the game program cannot use yet: the elevation (Georgians, Tatars), the Lithuanian relics, the Aztec and Slav monks, and the ships.
 REGEN holds the regeneration of the units (#2247): regen.tick gives them their hit points back.
 """
 import math
@@ -79,8 +78,8 @@ GROUPS = {g: (lambda f, g: lambda n, s: g in TAGS.get(n, ()) or f(n, s))(RULES.g
 # have (the availability chart of each civilization, #1373): the menu does not show them (train.unlocked). The items
 # that few civilizations have are in ONLY, not here.
 # "units": the bonuses of the land units (#1090): [group of GROUPS, value, change in the Dark, Feudal, Castle and
-# Imperial Age]; value is a field of combat.Stats or "speed" (the walk speed); an int adds, a float multiplies ("fire
-# 25 % faster" is the reload / 1.25). "costs": the cost bonuses (#1091): [what, resource or null (all), change in each
+# Imperial Age]; value is a field of combat.Stats, "speed" (the walk speed) or "bonus:CLASS" (the attack against a
+# class of combat.Stats.classes, #2249); an int adds, a float multiplies ("fire 25 % faster" is the reload / 1.25). "costs": the cost bonuses (#1091): [what, resource or null (all), change in each
 # age]; what is a group of GROUPS (units), "buildings", "buildings but farms", "technologies", "ages", "BUILDING
 # technologies" (the technologies of the menu of that building, #1925) or a list of names; a float multiplies the cost
 # (0.0: free), an int adds to it; AoE2 rounds half up (35 × 0.75 = 26). "twice": the technologies whose effect it gets
@@ -240,9 +239,11 @@ def units(g, name, s):
     """The combat.Stats s of unit name with the bonuses of the civilization of the player of g (UNITS), the walk speed
     aside (speed)."""
     for v, c in changes(g, name, s):
-        if v == "bonus" and isinstance(c, float):                  # a factor of each bonus (#2248)
+        if v.startswith("bonus:") and c:                           # the attack against a class (#2249)
+            s = s._replace(bonus={**s.bonus, v[6:]: s.bonus.get(v[6:], 0) + c})
+        elif v == "bonus" and isinstance(c, float):                # a factor of each bonus (#2248)
             s = s._replace(bonus={k: math.floor(n * c + 0.5) for k, n in s.bonus.items()})
-        elif v not in ("speed", "taken"):
+        elif v not in ("speed", "taken") and not v.startswith("bonus:"):
             old = getattr(s, v)
             s = s._replace(**{v: round(old * c, 3 if v == "reload" else None) if isinstance(c, float) else old + c})
     return s

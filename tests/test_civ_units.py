@@ -67,7 +67,7 @@ def test_the_table_names_known_civilizations_and_groups_in_order():
     assert list(civs.GROUPS) == sorted(civs.GROUPS)
     for civ, rules in civs.UNITS.items():
         for group, value, change in rules:
-            assert len(change) == 4 and (value in ("speed", "taken") or value in combat.Stats._fields), civ
+            assert len(change) == 4 and (value in ("speed", "taken") or value in combat.Stats._fields or value.startswith("bonus:")), civ
             assert any(civs.GROUPS[group](n, s) for n, s in combat.STATS.items()), group
 
 
