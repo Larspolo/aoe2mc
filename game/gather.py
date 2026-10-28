@@ -1500,6 +1500,8 @@ class Gather:
         if len(pos) > 1:
             out |= replay.formation_cells(self.map.free, [(u, p[0], p[2], rank(self.soldiers[u]), False)
                                                           for u, p in pos.items()], (cell[0] + 0.5, cell[1] + 0.5), "Line", self.map.T)
+        # a group in formation walks at the speed of its slowest unit (#3415): tiles per AoE2 second
+        pace = min(ai.walk_speed(self.soldiers[u], 1) * train.speed(self, self.soldiers[u], u) for u in pos) if len(pos) > 1 else None
         who = sorted(u for u in units - boats - out.keys() if u in self.villagers or u in self.soldiers or u in herd)
         r = math.isqrt(len(who)) + 2
         cells = sorted(((x, z) for x in range(cell[0] - r, cell[0] + r + 1) for z in range(cell[1] - r, cell[1] + r + 1)
@@ -1512,7 +1514,8 @@ class Gather:
                 self.go(v, "to_rally", {(x, z)})
             else:
                 unit = self.soldiers.get(u) or self.prey[u]            # an own herdable walks too (#1791)
-                ai.move(self, u, unit, self.map.T, x + 0.5, self.map.y(x, z), z + 0.5, NORMAL * train.speed(self, unit, u))
+                speed = pace / ai.walk_speed(unit, 1) if pace is not None and u in pos else train.speed(self, unit, u)
+                ai.move(self, u, unit, self.map.T, x + 0.5, self.map.y(x, z), z + 0.5, NORMAL * speed)
         if out and name:
             self.mark(name, {cell})
             record.ordered(self, "move", set(out), cell)               # Record Game (#2649)
