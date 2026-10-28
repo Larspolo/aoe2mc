@@ -66,6 +66,7 @@ class Bot:
         self.g.share = share                                           # monk.heresy: the techs of the human player
         if share:
             self.g.map.trees, self.g.map.bushes, self.g.map.mines = share.map.trees, share.map.bushes, share.map.mines
+            self.g.relics = share.relics                                # one list: each relic exists once (#3116)
         self.failed = set()                                            # sources that a villager could not reach
         self.sides = (None, {})                                        # (own and foe places, {tile: at home}) (#1810)
         self.g.home = self.home                                        # the next bush or mine of Gather.nearest too
