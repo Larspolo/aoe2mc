@@ -2854,6 +2854,7 @@ CLEAR_INSTRUCTIONS = 21                                            # "Clear Inst
 CLEAR_TIMER = 57                                                   # "Clear Timer" (#2696)
 COMPARE_VARIABLES = 78                                             # the condition "Compare Variables" (#2698)
 COUNT_UNITS_INTO_VARIABLE = 101                                    # "Count Units into Variable" (#2697)
+CREATE_DECISION = 90                                               # "Create Decision" (#2886)
 CREATE_GARRISONED_OBJECT = 49                                      # "Create Garrisoned Object" (#2764)
 CREATE_OBJECT = 11
 CREATE_OBJECT_ARMOR = 78                                           # "Create Object Armor" (#2855)
@@ -4092,6 +4093,24 @@ def chat_lines(e, c):
     return [f"tellraw @a {text}"] if (text := message_text(e)) else []
 
 
+def decision_lines(e, c):
+    """The commands of "Create Decision" (#2886): the question and its two options in the chat of each player, as the
+    decision box of AoE2 DE. A click on option k runs `/trigger aoe_decision set <decision id × 10 + k>` (a trigger
+    objective: no operator rights); the tick function keeps the last click in #last of aoe_decision (DECISION_TICK)
+    for the condition "Decision Triggered". Only string IDs of the game files, no texts: not supported."""
+    plain = lambda t: re.sub(r"<[^<>]*>", "", t or "").replace("\r", "").strip()
+    texts = [plain(e["message"]), plain(e.get("option1")), plain(e.get("option2"))]
+    if not all(texts) or e.get("decision", -1) < 0:
+        c.stats["create decision (no text, not supported yet)"] += 1
+        return []
+    c.setup["scoreboard objectives add aoe_decision trigger"] = None
+    c.stats["create decision"] += 1
+    click = lambda k: {"text": f"[{texts[k]}]", "color": "gold", "click_event": {
+        "action": "run_command", "command": f"/trigger aoe_decision set {e['decision'] * 10 + k}"}}
+    return ["scoreboard players enable @a aoe_decision",
+            "tellraw @a " + json.dumps([texts[0], " ", click(1), " ", click(2)], ensure_ascii=False)]
+
+
 def instruction_lines(e, c):
     """The commands of "Display Instructions": a subtitle for the display time of the effect (AoE2 default: 10 s)."""
     if not (text := message_text(e)):
@@ -4123,6 +4142,7 @@ EFFECT_KEYS = {
     CHANGE_TRAIN_LOCATION: {"button": "button_location",                                                       # #2864
                             "object2": lambda e, kinds, techs: kinds.get(e.object_list_unit_id_2)},
     COUNT_UNITS_INTO_VARIABLE: {"variable2": "variable2"},   # (#2697)
+    CREATE_DECISION: {"decision": "decision_id", "option1": "message_option1", "option2": "message_option2"},
     CREATE_OBJECT_ARMOR: {"class": "armour_attack_class", "aa": "armour_attack_quantity"},   # (#2855)
     CREATE_OBJECT_ATTACK: {"class": "armour_attack_class", "aa": "armour_attack_quantity"},  # (#2855)
     INITIATE_RESEARCH: {"selected": lambda e, kinds, techs: list(e.selected_object_ids or []),   # (#2772)
@@ -4138,6 +4158,11 @@ EFFECT_KEYS = {
     STORE_KEY_VALUE: {"variable": "variable"},                         # (#2887)
     TRAIN_UNIT: {"quantity": "quantity", "selected": lambda e, kinds, techs: list(e.selected_object_ids or [])},   # (#2772)
 }
+
+
+# The tick lines of "Create Decision" (decision_lines, #2886): the last click of a player goes into #last
+DECISION_TICK = ["execute as @a[scores={aoe_decision=1..}] run scoreboard players operation #last aoe_decision = @s "
+                 "aoe_decision", "scoreboard players set @a[scores={aoe_decision=1..}] aoe_decision 0"]
 
 
 # The handler of each trigger effect: (effect, Effect context) -> commands. A new effect is one line here, in
@@ -4173,6 +4198,7 @@ EFFECTS = {
     CLEAR_INSTRUCTIONS: clear_lines,
     CLEAR_TIMER: clear_timer_lines,
     COUNT_UNITS_INTO_VARIABLE: count_lines,
+    CREATE_DECISION: decision_lines,
     CREATE_GARRISONED_OBJECT: garrisoned_lines,
     CREATE_OBJECT: object_lines,
     CREATE_OBJECT_ARMOR: create_lines,
@@ -4472,6 +4498,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                  "aoe_vic"):                                                        # the scores of the game program
         if any(f" {word} " in x for x in tick):
             setup[f"scoreboard objectives add {word} dummy"] = None
+    if "scoreboard objectives add aoe_decision trigger" in setup:     # the clicks of "Create Decision" (#2886)
+        tick += DECISION_TICK
     if switch:
         setup["scoreboard objectives add aoe_on dummy"] = None
     load[:0] = setup

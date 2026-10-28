@@ -69,6 +69,7 @@ MAP = {
     ("effect", "DISPLAY_INSTRUCTIONS"): "`title @a actionbar` (short text) or `title @a subtitle`",
     ("effect", "CLEAR_INSTRUCTIONS"): "`title @a clear` (#2609)",
     ("effect", "CLEAR_TIMER"): "`bossbar remove aoe2mc:timerN` and `schedule clear aoe2mc:timer/N` of the slot N (#2696)",
+    ("effect", "CREATE_DECISION"): "`scoreboard players enable @a aoe_decision` (a `trigger` objective) and `tellraw @a` with the question and two options; a click runs `/trigger aoe_decision set <id × 10 + option>`, the tick function keeps it in `#last` (#2886); only string IDs: not supported yet",
     ("effect", "CREATE_GARRISONED_OBJECT"): "`summon` of the unit (`units.make_entity()`) in the state of a garrisoned unit (`Invulnerable`, `NoAI`, tags `aoe2mc.garrisoned`, `aoe2mc.made_inside`) on the inside cells of each selected building; the game program adds it to the garrison (#2764); a ship or ram holder: not supported yet",
     ("effect", "CREATE_OBJECT"): "`summon` of the entity of `units.make_entity()` (units, timer triggers: #656); a building: the order `create` of the scenario mode, a complete building (#2911)",
     ("effect", "CREATE_OBJECT_ARMOR"): "the change \"N NAME melee 2 V\" or \"N NAME pierce 2 V\" in the storage `aoe2mc:attributes` (an add, as AoE2 adds the entries of one class): the scenario mode of the game program adds V to the melee or pierce armor of the unit type of the player (`train.stats`, #2855); the other armor classes are not supported",
