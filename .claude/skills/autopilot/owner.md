@@ -20,8 +20,8 @@ claim refs. Use it for a finished epic, an answered decision ticket and a check 
 denies the label too (a session without the owner's `autoMode` rule, #1740: `claude auto-mode config` lists its allow
 lines), do not try another way: keep the comment, add `needs-human` and "Please close".
 
-If the ticket is wrong or not possible: comment why, add `needs-human`, remove `in-progress`. Do not merge
-partial work: add `hold` to its PR (the workflow also skips a PR whose ticket has `needs-human` or `blocked`).
+If the ticket is wrong or not possible: comment why, add `needs-human`, run `python3 tools/claim.py N --release` (it
+removes `in-progress`). Do not merge partial work: add `hold` to its PR (the workflow also skips a PR whose ticket has `needs-human` or `blocked`).
 
 ## Check tickets (step 7)
 

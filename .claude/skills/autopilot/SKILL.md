@@ -101,8 +101,9 @@ Claim it with `python3 tools/claim.py N`. It pushes a unique commit to the ref `
 run can win (#211). Exit 0: the ticket is yours; the tool added `in-progress` and "Started by `<your branch>`.".
 Exit 1: it names the run that was first (a claim, a "Started by" of the last 30 minutes, an open PR changed in the
 last 30 minutes, or a closed issue): pick the next candidate. Never comment "Started by" yourself (#288, #1749).
-Each time you remove `in-progress` without a merge (hand-off, `blocked`, `needs-human`), run
-`python3 tools/claim.py N --release` too, else no other run can claim the ticket again.
+Each time you give a ticket back without a merge (hand-off, `blocked`, `needs-human`), run
+`python3 tools/claim.py N --release`: it releases the claim and removes `in-progress` (#3234), so that another run
+can claim the ticket again.
 The workflow `claims.yml` deletes the refs when the ticket closes.
 
 ## 6. Do the ticket
@@ -122,7 +123,7 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
    (MSG.txt: subject in STE imperative, what and why, `Closes #<number>`; BODY.md: what changed, how you verified).
    It runs ruff and the tests (`--tested`: you ran them on this tree), commits, runs the guard (hard rule before each
    push: it fails when the claim is not yours or another branch has a PR that closes #N, #288), pushes and opens the
-   PR. Exit 3: do not push: `claim.py N --release` (when the claim is yours), remove `in-progress`, comment the reason
+   PR. Exit 3: do not push: `claim.py N --release` (when the claim is yours; it removes `in-progress`), comment the reason
    in one line on the ticket and pick the next ticket.
 8. It prints `mergeable_state`. `dirty`: run `python3 tools/merge_main.py --push N` (`conflict.md`).
    Do not wait for CI and do not merge by hand: CI runs only the quick checks on each PR (lint and fast tests,
@@ -131,7 +132,7 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
    change needs (slow tests, server check) before the push. Continue with step 7 and the next ticket. Step 2 of a
    later cycle finds a red or conflicted PR.
 9. CI red → find the cause, fix, push. After 3 failed attempts stop: comment the cause on the ticket,
-   add `blocked` or `needs-human` and `hold`, remove `in-progress`, and go to step 8 of the skill (report).
+   add `blocked` or `needs-human` and `hold`, run `claim.py N --release` (it removes `in-progress`), and go to step 8 of the skill (report).
 10. Merge conflict → as in 8.
 11. CI green → the Automerge workflow merges. Add label `hold` to the PR if it must not merge yet.
 
