@@ -44,6 +44,7 @@ RULES = {
     "champi scout line, archery range units": lambda n, s: "CHAMPI_" in n   # the wiki: all archers but the conquistador
         or "archer" in s.classes and not tagged(n, "conquistador type"),     # type (#2116)
     "elephants": lambda n, s: "elephant" in s.classes,
+    "fire galley line, fire lancers": lambda n, s: tagged(n, "fire galley line") or tagged(n, "fire lancers"),
     "foot archers": lambda n, s: foot_archer(s),
     "foot archers but skirmishers": lambda n, s: foot_archer(s) and not tagged(n, "skirmishers"),
     "foot archers but skirmishers, condottieri": lambda n, s: GROUPS["foot archers but skirmishers"](n, s),

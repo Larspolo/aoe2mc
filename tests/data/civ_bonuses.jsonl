@@ -21,7 +21,7 @@
 {"name": "BENGALIS: Monks +3/+3 armor.", "civ": "BENGALIS", "bonus": "Monks +3/+3 armor.", "later": "play:monks"}
 {"name": "BERBERS: Villagers move 5% faster in Dark Age, 10% faster starting in Feudal Age.", "civ": "BERBERS", "bonus": "Villagers move 5% faster in Dark Age, 10% faster starting in Feudal Age.", "in": "UNITS"}
 {"name": "BERBERS: Cavalry units are 15%/20% cheaper in the Castle/Imperial Age.", "civ": "BERBERS", "bonus": "Cavalry units are 15%/20% cheaper in the Castle/Imperial Age.", "in": "COSTS"}
-{"name": "BERBERS: Ships move 10% faster.", "civ": "BERBERS", "bonus": "Ships move 10% faster.", "later": "play:naval"}
+{"name": "BERBERS: Ships move 10% faster.", "civ": "BERBERS", "bonus": "Ships move 10% faster.", "in": "UNITS"}
 {"name": "BOHEMIANS: Blacksmiths and Universities cost wood -100.", "civ": "BOHEMIANS", "bonus": "Blacksmiths and Universities cost wood -100.", "in": "COSTS"}
 {"name": "BOHEMIANS: Chemistry and Hand Cannoneer available in Castle Age.", "civ": "BOHEMIANS", "bonus": "Chemistry and Hand Cannoneer available in Castle Age.", "in": "EARLIER"}
 {"name": "BOHEMIANS: Spearman-line deals +25% bonus damage.", "civ": "BOHEMIANS", "bonus": "Spearman-line deals +25% bonus damage.", "in": "UNITS"}
@@ -42,7 +42,7 @@
 {"name": "BURMESE: Monastery technologies are 50% cheaper.", "civ": "BURMESE", "bonus": "Monastery technologies are 50% cheaper.", "later": "play:monks"}
 {"name": "BYZANTINES: Buildings, Walls/Gates, and Farms have +10%/+20%/+30%/+40% hit points in the Dark/Feudal/Castle/Imperial Age.", "civ": "BYZANTINES", "bonus": "Buildings, Walls/Gates, and Farms have +10%/+20%/+30%/+40% hit points in the Dark/Feudal/Castle/Imperial Age.", "in": "HP_AGE"}
 {"name": "BYZANTINES: Camel Rider, Skirmisher, and Spearman lines are 25% cheaper.", "civ": "BYZANTINES", "bonus": "Camel Rider, Skirmisher, and Spearman lines are 25% cheaper.", "in": "COSTS"}
-{"name": "BYZANTINES: Fire Ships and Dromons fire 25% faster.", "civ": "BYZANTINES", "bonus": "Fire Ships and Dromons fire 25% faster.", "later": "play:naval"}
+{"name": "BYZANTINES: Fire Ships and Dromons fire 25% faster.", "civ": "BYZANTINES", "bonus": "Fire Ships and Dromons fire 25% faster.", "in": "UNITS"}
 {"name": "BYZANTINES: Advancing to the Imperial Age is 33% cheaper.", "civ": "BYZANTINES", "bonus": "Advancing to the Imperial Age is 33% cheaper.", "in": "COSTS"}
 {"name": "BYZANTINES: Town Watch and Town Patrol are free.", "civ": "BYZANTINES", "bonus": "Town Watch and Town Patrol are free.", "in": "COSTS"}
 {"name": "CELTS: Infantry units move 5%/10%/15%/20% faster in the Dark/Feudal/Castle/Imperial Age.", "civ": "CELTS", "bonus": "Infantry units move 5%/10%/15%/20% faster in the Dark/Feudal/Castle/Imperial Age.", "in": "UNITS"}
@@ -52,7 +52,7 @@
 {"name": "CHINESE: Start game with +3 Villagers, but with food -200, wood -50.", "civ": "CHINESE", "bonus": "Start game with +3 Villagers, but with food -200, wood -50.", "in": "START"}
 {"name": "CHINESE: Town Centers support 15 population (instead of 5) and have +7 Line of Sight.", "civ": "CHINESE", "bonus": "Town Centers support 15 population (instead of 5) and have +7 Line of Sight.", "gap": "play:train"}
 {"name": "CHINESE: Technologies are 5%/10%/15% cheaper in the Feudal/Castle/Imperial Age, respectively.", "civ": "CHINESE", "bonus": "Technologies are 5%/10%/15% cheaper in the Feudal/Castle/Imperial Age, respectively.", "in": "COSTS"}
-{"name": "CHINESE: Fire Galley line and Fire Lancers move 5%/10% faster in the Castle/Imperial Age.", "civ": "CHINESE", "bonus": "Fire Galley line and Fire Lancers move 5%/10% faster in the Castle/Imperial Age.", "later": "play:naval"}
+{"name": "CHINESE: Fire Galley line and Fire Lancers move 5%/10% faster in the Castle/Imperial Age.", "civ": "CHINESE", "bonus": "Fire Galley line and Fire Lancers move 5%/10% faster in the Castle/Imperial Age.", "in": "UNITS"}
 {"name": "CUMANS: A second Town Center can be built in the Feudal Age.", "civ": "CUMANS", "bonus": "A second Town Center can be built in the Feudal Age.", "in": "game/build.py"}
 {"name": "CUMANS: Archery Ranges and Stables cost wood -75.", "civ": "CUMANS", "bonus": "Archery Ranges and Stables cost wood -75.", "in": "COSTS"}
 {"name": "CUMANS: Siege Workshop and Battering Ram available in Feudal Age; Capped Ram upgrade available in Castle Age.", "civ": "CUMANS", "bonus": "Siege Workshop and Battering Ram available in Feudal Age; Capped Ram upgrade available in Castle Age.", "in": "EARLIER"}
@@ -181,7 +181,7 @@
 {"name": "SARACENS: The commodity trading fee is 5%.", "civ": "SARACENS", "bonus": "The commodity trading fee is 5%.", "in": "game/market.py"}
 {"name": "SARACENS: Markets cost wood 75.", "civ": "SARACENS", "bonus": "Markets cost wood 75.", "in": "COSTS"}
 {"name": "SARACENS: Transport Ships have double hit points and +20 carry capacity.", "civ": "SARACENS", "bonus": "Transport Ships have double hit points and +20 carry capacity.", "later": "play:naval"}
-{"name": "SARACENS: Galleys attack 25% faster.", "civ": "SARACENS", "bonus": "Galleys attack 25% faster.", "later": "play:naval"}
+{"name": "SARACENS: Galleys attack 25% faster.", "civ": "SARACENS", "bonus": "Galleys attack 25% faster.", "in": "UNITS"}
 {"name": "SARACENS: Camel units +25% hit points.", "civ": "SARACENS", "bonus": "Camel units +25% hit points.", "in": "UNITS"}
 {"name": "SAXONS: Mills, Lumber Camps, and Mining Camps provide food 35 when built.", "civ": "SAXONS", "bonus": "Mills, Lumber Camps, and Mining Camps provide food 35 when built.", "in": "BUILT_FOOD"}
 {"name": "SAXONS: Foot soldiers cost -5% per Town Center or Castle controlled (maximum -20%).", "civ": "SAXONS", "bonus": "Foot soldiers cost -5% per Town Center or Castle controlled (maximum -20%).", "in": "COST_PER"}
@@ -236,7 +236,7 @@
 {"name": "VARANGIANS: Bloodlines and Caravan give +50% effect.", "civ": "VARANGIANS", "bonus": "Bloodlines and Caravan give +50% effect.", "in": "MORE"}
 {"name": "VARANGIANS: Varangian Guards attack 25% faster.", "civ": "VARANGIANS", "bonus": "Varangian Guards attack 25% faster.", "in": "UNITS"}
 {"name": "VARANGIANS: Varangian Guards generate gold +50%.", "civ": "VARANGIANS", "bonus": "Varangian Guards generate gold +50%.", "later": "play:military-train"}
-{"name": "VARANGIANS: Longships and Catapult Galleons attack 15% faster.", "civ": "VARANGIANS", "bonus": "Longships and Catapult Galleons attack 15% faster.", "later": "play:naval"}
+{"name": "VARANGIANS: Longships and Catapult Galleons attack 15% faster.", "civ": "VARANGIANS", "bonus": "Longships and Catapult Galleons attack 15% faster.", "in": "UNITS"}
 {"name": "VIETNAMESE: Foot archers and Skirmishers +20% hit points.", "civ": "VIETNAMESE", "bonus": "Foot archers and Skirmishers +20% hit points.", "in": "UNITS"}
 {"name": "VIETNAMESE: Reveal enemy initial Town Centers location at the start of the game.", "civ": "VIETNAMESE", "bonus": "Reveal enemy initial Town Centers location at the start of the game.", "later": "play:fog"}
 {"name": "VIETNAMESE: Conscription is free.", "civ": "VIETNAMESE", "bonus": "Conscription is free.", "in": "COSTS"}
