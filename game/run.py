@@ -14,6 +14,7 @@ Usage:
     python3 game/run.py WORLD --play --reveal all  # no fog of war: also the enemy units out of sight show (game/fog.py)
     python3 game/run.py WORLD --play --speed 2     # twice the AoE2 Normal speed: /tick rate 40 and shorter steps (#2057)
     python3 game/run.py WORLD --play --resources high  # the AoE2 setting "Starting resources" (#2264)
+    python3 game/run.py WORLD --play --age castle      # the AoE2 setting "Starting age" (#2265)
     python3 game/run.py WORLD --play --all-techs       # the AoE2 setting "All Techs" (#2298)
     python3 game/run.py WORLD --play --civ 1=BRITONS --civ 2=FRANKS   # the civilization of each player (#2267)
     python3 game/run.py WORLD --play --teams 1,1,2,2   # the team of each player, - is no team (#2296)
@@ -322,12 +323,13 @@ def team_choices(value, players):
 
 def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1,
          speed=1.0, state=None, resources="standard", civ=None, teams=None,
-         all_techs=False, pop_limit=None):
+         all_techs=False, age="dark", pop_limit=None):
     """state: the saved state of the players (savegame.dump) for a loaded game (#2255).
     resources: the AoE2 setting "Starting resources" of each player and bot (gather.LEVELS, #2264).
     civ: {player: civilization} in place of the civilization of the scenario (civ_choices, #2267).
     teams: {player: team or None} in place of the teams of the scenario (team_choices, #2296).
     all_techs: the AoE2 setting "All Techs" for all players and bots (civs.missing, #2298).
+    age: the AoE2 setting "Starting age" of each player and bot (train.STARTS, #2265).
     pop_limit: the AoE2 setting "Population limit" of each player and bot (train.LIMITS, #2266)."""
     import gather
 
@@ -373,6 +375,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
               f"player {foe} at {bot_attack}.", file=sys.stderr)
     import combat
     combat.setup(game, data)                         # AoE2 hit points and damage (#514)
+    if not state and age != "dark":                  # after the base values: the technologies change them
+        import train
+        for x in [g, *(s.g for s in g.bots)]:
+            train.start(x, age)
     if game.kind == "paper":                         # the view square of each player on map 0 (#1762)
         import replay
         game.command(f"aoe minimap frame {replay.FRAME * data['tile_size']}")
@@ -506,6 +512,9 @@ def main(argv=None):
                     "from this game time (default 10:00)")
     ap.add_argument("--reveal", choices=["normal", "all"], default="normal", help="--play: AoE2 \"Reveal map\" "
                     "(default normal: enemy units out of sight are hidden; all: all units show)")
+    ap.add_argument("--age", choices=["dark", "feudal", "castle", "imperial", "post-imperial"], default="dark",
+                    help="--play: the AoE2 setting \"Starting age\" of each player, with the technologies of the "
+                    "earlier ages (default dark; post-imperial: all technologies)")
     ap.add_argument("--resources", choices=["standard", "low", "medium", "high", "ultra"], default="standard",
                     help="--play: the AoE2 setting \"Starting resources\" of each player (default standard; ultra: "
                     "the Death Match resources)")
@@ -554,7 +563,7 @@ def main(argv=None):
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
                 g = play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal,
                          people=a.people, speed=a.speed, state=state, resources=a.resources, civ=civ,
-                         teams=teams, all_techs=a.all_techs, pop_limit=a.pop_limit)
+                         teams=teams, all_techs=a.all_techs, age=a.age, pop_limit=a.pop_limit)
             if not getattr(g, "ended", None):
                 return
             print(f"The game ended ({g.ended}). The server stays up: type commands, Ctrl-C stops it.",
