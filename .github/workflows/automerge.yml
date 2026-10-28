@@ -34,6 +34,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - uses: actions/checkout@v4      # main's merge drivers for land() (#3199)
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5  # pip for ruff: the system Python of the runner refuses it (#2631)
+        with:
+          python-version: "3.12"
+      - name: Set up the merge drivers
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config merge.conflictStyle diff3     # tools/unconflict.py needs the base of each hunk
+          cp tools/unconflict.py tools/merge_jsonl.py "$RUNNER_TEMP/"   # main's copy: the job checks out PR branches
+          git config merge.jsonl.driver "python3 $RUNNER_TEMP/merge_jsonl.py %O %A %B"   # game/data/*.jsonl (#2004)
+          python3 -m pip install -q "$(grep '^ruff' requirements-dev.txt)"
       - name: Merge the green agent PRs
         env:
           GH_TOKEN: ${{ github.token }}
@@ -43,6 +57,34 @@ jobs:
           SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           merged=0 conflict=0 labels=0
+          # GitHub computes "mergeable" without merge=jsonl and merge=union. A PR that only our drivers can merge
+          # waited for Unconflict and a new CI run, and main moved again in that time: 396 failed merges in 24 hours,
+          # 383 of them solved by the drivers (#3199). land() merges main with the drivers, pushes the merge commit
+          # and prints its sha; the PR then merges at once. CI on main finds a break of logic between two PRs.
+          land() {    # land N BRANCH SHA
+            local n=$1 branch=$2 sha=$3 py
+            git fetch -q origin main "$branch" && git checkout -q -f -B "$branch" "$sha" || return 1
+            if ! git merge -q --no-edit origin/main >&2; then
+              if ! { python3 "$RUNNER_TEMP/unconflict.py" >&2 && git commit -q --no-edit; }; then
+                git merge --abort; echo "#$n: a real conflict" >&2; return 1
+              fi
+            fi
+            [ "$(git rev-parse HEAD)" != "$sha" ] || { echo "#$n: main is in the branch already" >&2; return 1; }
+            py=$(git diff --name-only --diff-filter=d origin/main -- '*.py')
+            if [ -n "$py" ] && ! ruff check -q $py >&2; then   # for example a function that both sides define (#2631)
+              echo "#$n: the merge fails ruff" >&2; return 1
+            fi
+            git push -q origin "HEAD:$branch" >&2 || { echo "#$n: the push failed" >&2; return 1; }  # for example a workflow change on main
+            git rev-parse HEAD
+          }
+          squash() {  # squash N SHA: GitHub computes the merge state of a new head after a few seconds
+            local try
+            for try in 1 2 3 4 5 6; do
+              sleep 5
+              gh api "repos/$R/pulls/$1/merge" -X PUT -f merge_method=squash -f sha="$2" > merge.json 2> err.txt && return 0
+            done
+            cat merge.json err.txt; return 1
+          }
           merge() {   # merge PR_JSON SHA: SHA is the head that CI tested
             local pr=$1 sha=$2 n branch ticket t
             n=$(jq -r .number <<<"$pr"); branch=$(jq -r .head.ref <<<"$pr")
@@ -65,14 +107,21 @@ jobs:
               if [ "$(gh api "repos/$R/pulls/$n" --jq .merged)" = true ]; then
                 echo "#$n: another Automerge run merged it"; return
               fi
-              if gh api "repos/$R/pulls/$n" --jq .head.sha | grep -qx "$sha"; then   # else a new push came: no conflict
+              if ! gh api "repos/$R/pulls/$n" --jq .head.sha | grep -qx "$sha"; then   # a new push came: no conflict
+                return
+              fi
+              local why new
+              why=$(jq -r '.message // empty' merge.json 2>/dev/null || true)
+              if new=$(land "$n" "$branch" "$sha") && squash "$n" "$new"; then
+                echo "#$n: merged main with our merge drivers, then merged at once (#3199)"
+              else
                 gh api "repos/$R/issues/$n/labels" -f "labels[]=conflict" >/dev/null
                 printf 'CI is green, but the merge failed (%s). Merge `origin/main` into the branch and push (autopilot step 2).\n' \
-                  "$(jq -r '.message // empty' merge.json 2>/dev/null || true)" > body.md
+                  "$why" > body.md
                 gh api "repos/$R/issues/$n/comments" -F body=@body.md >/dev/null
                 conflict=1
+                return
               fi
-              return
             fi
             echo "merged #$n"; merged=1
             if gh api "repos/$R/pulls/$n/files?per_page=100" --jq '.[].filename' | grep -Fqx .github/labels.txt; then
