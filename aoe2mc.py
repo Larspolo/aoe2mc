@@ -2573,7 +2573,7 @@ def write_region(path, chunks):
 
 
 def write_objects(path, size, T, H, players, objects, cols, ground, timeline=None, mood="DEFAULT", map_ground=None,
-                  victory=None):
+                  victory=None, messages=None):
     """aoe2mc.json: the data that a game program needs (docs/research/gameplay.md). Tiles are in the turned grid
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
     their footprint [x0, z0, x1, z1) in blocks. Objects of a recorded game have their object ID ("ref").
@@ -2589,7 +2589,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     "map_ground": the map bytes of map 0 without the objects (map_colors), one hex string per pixel row z: the live
     minimap of the plugin paints them where no live object is (#1940).
     "victory" (DE scenarios only): the victory setting of the scenario, {"condition": a name of run.VICTORIES or
-    "custom" (only its triggers end the game), "score" or "years" of that condition} (#2566)."""
+    "custom" (only its triggers end the game), "score" or "years" of that condition} (#2566).
+    "messages": the scenario texts of CHAPTERS that are not empty (chapter -> text): the book of the scenario mode (#2541)."""
     kinds = {"U": "unit", "B": "building", "O": "other"}
     objs = []
     for o in objects:
@@ -2622,6 +2623,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         data["timeline"] = timeline
     if victory is not None:
         data["victory"] = victory
+    if messages and (texts := {k: v for k, v in messages.items() if k in CHAPTERS and (v or "").strip()}):
+        data["messages"] = texts
     if map_ground is not None:
         data["map_ground"] = [bytes(row).hex() for row in np.asarray(map_ground, np.uint8)]
     with open(path, "w") as f:
@@ -3524,7 +3527,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     shade *= np.where(depth > 0, np.clip(1.6 - 0.2 * depth, 1, 1.4), 1)     # shallow water is lighter, as on a map item
     img = Image.fromarray(np.clip(img * shade[..., None], 0, 255).astype(np.uint8))
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline,
-                  texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0], texts.get("global_victory"))
+                  texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0], texts.get("global_victory"), texts)
     triggers, tstats = texts.get("triggers", []), Counter()
     haze = FOG.get(texts.get("mood")) if mood == "on" and (fog or ambience == "full") else None
     n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze,
