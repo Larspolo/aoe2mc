@@ -653,7 +653,7 @@ def seconds(g, name, building=None):
     times its research time of the technology (civs.research_time: the Gothic Loom at once, #2172)."""
     age, time = FASTER.get(name, (9, 0))
     return (time if build.ages(g) >= age else TRAIN_TIMES[name]) / (civs.work_rate(g, building) if building else 1) \
-        / civs.train_rate(g, name) / civs.age_rate(g, name) * civs.research_time(g, name)
+        / civs.train_rate(g, name) / civs.age_rate(g, name) * civs.research_time(g, name) / civs.turbo(g, name)
 
 
 def speed(g, name):

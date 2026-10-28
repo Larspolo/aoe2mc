@@ -334,13 +334,14 @@ def rate(g, fish):
     technologies of the player (gather.SHIP_TECHS, #1439)."""
     import train                                                      # train imports this module
     return gather.SHIP_WORK["trap" if fish in g.map.traps else "shore" if fish in g.map.shore else "deep"] * \
-        math.prod(f ** train.count(g, t) for t, (f, _) in gather.SHIP_TECHS.items())
+        math.prod(f ** train.count(g, t) for t, (f, _) in gather.SHIP_TECHS.items()) * gather.civs.turbo(g)
 
 
 def carry(g):
     """Food of one trip of an own fishing ship: CARRY and the more food of the dock technologies (#1439)."""
     import train                                                      # train imports this module
-    return CARRY + sum(c * train.count(g, t) for t, (_, c) in gather.SHIP_TECHS.items())
+    n = CARRY + sum(c * train.count(g, t) for t, (_, c) in gather.SHIP_TECHS.items())
+    return n if gather.civs.turbo(g) == 1 else round(n * gather.civs.turbo(g))   # Turbo Mode (#2359)
 
 
 def work(g, v, dt):

@@ -156,8 +156,9 @@ def check_replay(row):                                     # a walk speed (a nam
 
 
 def check_setup(row):                                      # a value of a setting of the game setup (#2264)
-    form(row, {"name": str}, {"resources": dict, "ages": int, "skip": list, "note": str})
-    assert ("resources" in row) != ("ages" in row), row["name"]           # a resource level or a start age (#2265)
+    form(row, {"name": str}, {"resources": dict, "ages": int, "skip": list, "note": str, "turbo": float, "slow": list})
+    assert len({"resources", "ages", "turbo"} & set(row)) == 1, row["name"]   # a resource level, start age (#2265), Turbo
+    assert set(row.get("slow", ())) <= NAMES["train.jsonl"] | NAMES["build.jsonl"], row["name"]   # (#2359)
     assert set(row.get("resources", RES)) == {"food", "wood", "gold", "stone"}, row["name"]
     assert all(isinstance(v, int) and v >= 0 for v in row.get("resources", {}).values()), row["name"]
     assert row.get("ages", 0) in range(5) and set(row.get("skip", ())) <= NAMES["train.jsonl"], row["name"]
