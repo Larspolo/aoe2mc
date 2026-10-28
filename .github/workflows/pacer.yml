@@ -45,13 +45,16 @@ jobs:
           PACER_URL_DEEP: ${{ secrets.PACER_URL_DEEP }}
           PACER_TOKEN_DEEP: ${{ secrets.PACER_TOKEN_DEEP }}
         run: |
-          end=$((SECONDS + 330 * 60)) failed=0
+          end=$((SECONDS + 330 * 60))
           while [ $SECONDS -lt $end ]; do
             git fetch -q --depth 1 origin main && git reset -q --hard FETCH_HEAD   # the newest code and switch
             python3 -c "import tomllib, sys; sys.exit(tomllib.load(open('agent.toml', 'rb'))['pacing'].get('pacer') != 'workflow')" \
               || { echo "pacer is not \"workflow\" in agent.toml: stop the loop"; exit 0; }
-            python3 tools/pacer.py || failed=1
+            if ! python3 tools/pacer.py; then          # a failed call (HTTP 401, 500): red now, not after 5.5 hours
+              sleep 600                                # the next cycle waits as usual: no fast loop of red runs
+              gh workflow run pacer.yml --repo "$GITHUB_REPOSITORY" --ref main
+              exit 1
+            fi
             sleep 600
           done
           gh workflow run pacer.yml --repo "$GITHUB_REPOSITORY" --ref main   # the next loop
-          exit $failed
