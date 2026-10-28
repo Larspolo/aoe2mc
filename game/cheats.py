@@ -12,8 +12,8 @@ gathering (gather.Gather.work_time) instant, and a hunted animal dies at the fir
 all players as in AoE2.
 A unit cheat (#818; the DE list of the wiki, "Units") summons its unit at the town center of the player, as a trained
 unit (train.spawn): it costs nothing and counts in the population. Without a town center no unit appears, as in AoE2.
-The end and destroy codes (#819): "i r winner" and "resign" show the title "Victory" or "Defeat" to all players and set
-g.ended, which ends gather.Gather.run. "torpedo<n>" destroys player n, "black death" all other players (AoE2 has a bug
+The end and destroy codes (#819): "i r winner" shows the title "Victory" to all players and sets g.ended, which ends
+gather.Gather.run. "resign" puts the own player out, and the others play on (conquest.defeat, #3105). "torpedo<n>" destroys player n, "black death" all other players (AoE2 has a bug
 here: it kills only one player) and "wimpywimpywimpy" the own player (a defeat). The buildings of the player fall as
 at 0 hit points (the plugin, `aoe destroy`), its units die (`kill` with the team and the tag of the player, #358).
 Its construction sites (also the complete ones and those of a bot) become air, its queues empty, and its bot stops (#1657).
@@ -63,20 +63,32 @@ def end(text, color):
     return effect
 
 
+def defeat(g, n):
+    """The own player n resigns: it is out, the others play on (conquest.defeat, decision #3103)."""
+    import conquest                                                    # conquest imports cheats: import it late
+    conquest.defeat(g, n)
+
+
+def title(g, n, text, color):
+    """Show the title text to the people of player n (the team p<n>, #1936)."""
+    g.command(f'title @a[team=p{n}] title {{"text":"{text}","color":"{color}"}}')
+
+
 def over(g, won):
     """End the game: the team of each person gets its own title (#1936), "Victory" when won(its player), else "Defeat",
     and each Gather of the game stops (g.ended). A bot (h.share) has no Minecraft player and gets no title. Each person
     gets the recap book, and its order items go (recap.give, #2660)."""
-    import fog, hill, relic_victory, time_limit, wonder                # they import cheats: import them late
+    import fog, hill, relic_victory, time_limit, treaty, wonder       # they import cheats: import them late
     for h in fog.gathers(g):
         text, color = ("Victory", "gold") if won(h.player) else ("Defeat", "red")
         if not getattr(h, "share", None):
-            g.command(f'title @a[team=p{h.player}] title {{"text":"{text}","color":"{color}"}}')
+            title(g, h.player, text, color)
         h.ended = text
         wonder.close(h)
         relic_victory.close(h)
         hill.close(h)
         time_limit.close(h)
+        treaty.close(h)
     import recap                                                       # the recap book and the end hotbar (#2660)
     recap.give(g, won)
 
@@ -225,7 +237,7 @@ CODES = {                                     # code -> the resources, the chat 
     "ninjalui": ALL,
     "noui": noui,
     "polo": polo,
-    "resign": end("Defeat", "red"),
+    "resign": lambda g, player: defeat(g, g.player),
     "robin hood": {"gold": 10000},
     "rock on": {"stone": 10000},
     "rowshep": ALL,
@@ -239,7 +251,7 @@ CODES = {                                     # code -> the resources, the chat 
     "torpedo6": lambda g, player: destroy(g, 6),
     "torpedo7": lambda g, player: destroy(g, 7),
     "torpedo8": lambda g, player: destroy(g, 8),
-    "wimpywimpywimpy": lambda g, player: destroy(g, g.player) or end("Defeat", "red")(g, player),
+    "wimpywimpywimpy": lambda g, player: defeat(g, g.player) or g.ended and destroy(g, g.player),
     "woof woof": woof,
 }
 # The unit and transformation codes: one line per code in data/cheats.jsonl (#2034). A Transform has "units" (a list

@@ -85,7 +85,7 @@ def test_the_death_of_a_rival_king_defeats_its_player(monkeypatch):
     server.log.clear()
     check(g)
     assert g.defeated == {2} and "aoe destroy @e[tag=aoe2mc.building,team=p2]" in server.log
-    assert any("The King of player 2 died" in c for c in server.log) and g.conquest_at == 0.0
+    assert any("The King of player 2 died" in c for c in server.log)
 
 
 def test_the_death_of_the_own_king_is_a_defeat(monkeypatch):

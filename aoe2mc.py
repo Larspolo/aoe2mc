@@ -288,7 +288,7 @@ def read_scx(path):
     try:
         s = scx.read(path)
     except scx.ScxError as e:
-        raise OptionError(str(e)) from None
+        raise ScxFormatError(str(e)) from None
     w, h = s["width"], s["height"]
     size = max(w, h)
     terrain, elevation = (np.pad(a, ((0, size - w), (0, size - h)), mode="edge") for a in (s["terrain"], s["elevation"]))
@@ -2757,10 +2757,11 @@ def ambience_lines(biome_names):
 
 
 def team_lines(objects, players):
-    """(load, pulse) commands: one team per player with units, in the player color (#358). The pulse puts new
-    units in their team: a load function reaches only the entities of loaded chunks."""
+    """(load, pulse) commands: one team per player with units or of the scenario (1 to 8), in the player color (#358,
+    #3088). The pulse puts new units in their team: a load function reaches only the entities of loaded chunks."""
     load, pulse = [], []
-    for n in sorted({o["player"] for o in objects if o["kind"] == "U" and o["player"]}):
+    ids = {o["player"] for o in objects if o["kind"] == "U" and o["player"]} | {n for n in players if 0 < n <= 8}
+    for n in sorted(ids):
         p = players.get(n, {})
         civ = "" if p.get("civ") in (None, "RANDOM") else str(p["civ"]).replace("_", " ").title()
         load += [f'team add p{n} "Player {n}{f" ({civ})" if civ else ""}"',
@@ -3421,7 +3422,10 @@ def owner_lines(e, c):
     stats["change ownership"] += 1
     own = "@e[tag=aoe2mc.own]"
     to = [f"tag {own} add aoe2mc.p{new}", f"team join p{new} {own}" if new else f"team leave {own}"]
-    return [f"tag {unit_selector(e, T)} add aoe2mc.own",
+    # the order tag (#2998): the game program gives the same units to the new owner (scenario.orders)
+    tag = f"aoe_order{c.t['id']}_{effect_index(e, c)}"
+    return [*tag_lines(e, T, tag), f'data modify storage aoe2mc:orders list append value "owner {tag} {old} {new}"',
+            f"tag {unit_selector(e, T)} add aoe2mc.own",
             f"execute as {own} on vehicle run tag @s add aoe2mc.own",
             f"tag {own} remove aoe2mc.p{old}", *to, f"tag {own} remove aoe2mc.own"]
 
@@ -4678,6 +4682,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             continue
         run = f"schedule function {fn} {ticks}t replace"
         again = run if conds else f"schedule function {fn} 20t replace"   # no conditions: AoE2 checks once per second
+        if any(e["type"] == DEACTIVATE_TRIGGER and e.get("trigger") == n for e in t["effects"]):   # on itself (#3077)
+            again = f"execute if score #{n} aoe_on matches 1 run {again}"
         files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines + [again] * t["looping"]) + "\n"
         load += [run] * t["enabled"]
     names = sorted({f"#v{x[k]}" for t in triggers for x in t["conditions"] + t["effects"]
@@ -5800,6 +5806,10 @@ class OptionError(ValueError):
     """A command-line option that does not match the scenario."""
 
 
+class ScxFormatError(OptionError):
+    """An old scenario (.scx) that scx.py cannot read: a campaign gives the DE editor steps for it (#3036)."""
+
+
 def int_range(lo, hi):
     def parse(v):
         try:
@@ -5914,7 +5924,7 @@ def convert_campaign(src, out, only=None, name=None, **kw):
                     try:
                         convert(path, os.path.join(out, f"{i} {stem}"), name=f"{name} {i}" if name else stem, **kw)
                         continue
-                    except OptionError as e:      # another format version, or a file that scx.py cannot read
+                    except ScxFormatError as e:   # another format version, or a file that scx.py cannot read
                         print(f"{i} {fn}: {e}")
             old.append((i, fn, data))
         if old:
@@ -5964,7 +5974,7 @@ def main(argv=None):
     ap.add_argument("--tile-size", type=int_range(1, 16), default=4, help="blocks per tile (default 4)")
     ap.add_argument("--level-height", type=int_range(1, 16), default=3, help="blocks per elevation level (default 3)")
     ap.add_argument("--name", help="world name in the Minecraft menu")
-    ap.add_argument("--seed", type=int, default=1, help="seed for random details and random maps (default 1)")
+    ap.add_argument("--seed", type=int_range(0, 2**63 - 1), default=1, help="seed for random details and random maps (default 1)")
     ap.add_argument("--preview", action="store_true", help="also write preview.png")
     ap.add_argument("--architecture", choices=sorted(buildings.ARCH),
                     help="use one architecture set for all players (default: from each player's civilization)")

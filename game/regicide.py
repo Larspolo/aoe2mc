@@ -13,12 +13,10 @@ site of each building of "sites" (the Castle, free) next to the town center. "st
 of each level of run.py --resources, and "swap" the technologies that the mode puts in place of others (train.unlocked:
 Treason for Spies). Treason lets the enemy Kings glow (reveal).
 """
-import json
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import cheats  # noqa: E402
 import conquest  # noqa: E402
 import table  # noqa: E402
 
@@ -43,7 +41,8 @@ def setup(g, mode="regicide", start=True):
     for x in gathers.values():
         start_stock(x, MODES[mode], level)
     g.kings = set()
-    for n in sorted(int(p) for p in g.players if int(p)):
+    lost = vars(g).get("defeated", set())                              # a loaded game: its King died before the save
+    for n in sorted(int(p) for p in g.players if int(p) and int(p) not in lost):
         for o in g.data["objects"]:
             if o["kind"] == "unit" and o["player"] == n and o["name"] in MODES[mode]["units"] and "uuid" in o:
                 g.command(f"tag {o['uuid']} add {KING}")
@@ -98,6 +97,12 @@ def reveal(g, seconds):
         g.command(f"effect give @e[tag=aoe2mc.p{n},tag={KING}] minecraft:glowing {real} 0 true")
 
 
+def treason(g, entry):
+    """The research of Treason (the key "on_research" of data/train.jsonl, #3243): the enemy Kings glow for the
+    seconds of its key "glow"."""
+    import train                                                       # train imports gather, gather this module
+    reveal(g, train.value("glow", entry["name"]))
+
 def tick(g):
     """Check the Kings each conquest.EVERY seconds: defeat each player whose Kings all died."""
     if g.ended or g.clock() < vars(g).get("regicide_at", 0.0):
@@ -108,11 +113,6 @@ def tick(g):
         if has_king(g, n):
             continue
         seen.add(n)
-        lost.add(n)
-        conquest.scored(g, n)                                          # a "Player Defeated" trigger (#2710)
-        if n == g.player:
-            return cheats.end("Defeat", "red")(g, None)
-        cheats.destroy(g, n)
-        g.command("tellraw @a " + json.dumps({"text": f"The King of player {n} died: player {n} is defeated.",
-                                              "color": "red"}))
-        g.conquest_at = 0.0                                            # conquest.tick: the "Victory" check now
+        conquest.defeat(g, n, f"The King of player {n} died: player {n} is defeated.")   # also conquest.scored, the end (#3103)
+        if g.ended:
+            return

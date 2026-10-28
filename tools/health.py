@@ -146,7 +146,8 @@ def lane_weights(comments, need=10):
 def lane_fit(comments, need=10):
     """({lane: weight}, {lane: "measured", "start" or "noisy, fit W"}, {lane: standard error}, pairs). Least squares of the
     5-hour usage rise of each interval on its Opus and lane claim-hours; a lane with fewer than `need` intervals with
-    its runs keeps the start weight of `agent.toml` (#1727). A fit whose standard error is larger than its weight keeps
+    its runs keeps the start weight of `agent.toml` (#1727) and counts as that many Opus runs in the fit: else the
+    usage of its runs goes to the other weights (#3137: 9 new deep runs moved the Haiku weight from 0.67 to 0.89). A fit whose standard error is larger than its weight keeps
     the start weight too ("noisy"): the weight of 50 PRs jumped from 0.40 to the clip 1.00 in 40 minutes (#2852)."""
     rows = []
     for a, b in zip(raw_samples(comments), raw_samples(comments)[1:]):
@@ -157,7 +158,8 @@ def lane_fit(comments, need=10):
     fit = [k for k in LANES if sum(r[2][k] > 0 for r in rows) >= need]
     weights, source, errors = dict(LANES), dict.fromkeys(LANES, "start"), {}
     if fit and sum(r[1] > 0 for r in rows) >= need:
-        x = numpy.array([[r[1]] + [r[2][k] for k in fit] for r in rows])
+        x = numpy.array([[r[1] + sum(w * r[2][k] for k, w in LANES.items() if k not in fit)] + [r[2][k] for k in fit]
+                         for r in rows])
         y = numpy.array([r[0] for r in rows])
         b = numpy.linalg.lstsq(x, y, rcond=None)[0]
         dof = len(rows) - x.shape[1]

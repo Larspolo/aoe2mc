@@ -6,7 +6,7 @@ from test_monk_convert import setup, until_converted
 from test_monk_techs import MONASTERY, research
 from test_monk_train import monastery
 
-from game import civs, monk, train
+from game import civs, gather, monk, train
 
 
 def test_the_values_are_those_of_aoe2():
@@ -30,7 +30,8 @@ def test_the_monastery_researches_it_in_slot_6_in_the_castle_age():
 def converted(heretic):
     """The own monk converts the militia "foe" of player 2; heretic: player 2 has Heresy (a bot of g)."""
     server, g = setup(("foe", "MILITIA", 2, 12.5))
-    g.bots = [SimpleNamespace(g=SimpleNamespace(player=2, techs={"HERESY"} if heretic else set()))]
+    g.bots = [SimpleNamespace(g=gather.Gather(server, g.data, player=2))]       # owners.give reads its lists (#2993)
+    g.bots[0].g.techs = {"HERESY"} if heretic else set()
     g.chance.seed(1)
     assert monk.convert_order(g, {"monk"}, "foe")
     until_converted(g, "foe")

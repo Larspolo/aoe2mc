@@ -35,6 +35,7 @@ import json
 import math
 
 import civs
+import ruins
 import table
 from aoe2mc import GARRISONED, MADE_INSIDE
 
@@ -67,9 +68,9 @@ def size(g, name):
 
 def holders(g):
     """{block footprint (x0, x1, z0, z1): building entry of aoe2mc.json} of the own buildings that take a garrison:
-    the start ones and the complete construction sites."""
+    the start ones and the complete construction sites, not the fallen ones (ruins.py)."""
     out = {(x0, x1, z0, z1): o for o in g.data["objects"] if o["kind"] == "building" and size(g, o["name"])
-           and o["player"] == g.player and "footprint" in o for x0, z0, x1, z1 in [o["footprint"]]}
+           and o["player"] == g.player and "footprint" in o and not ruins.fallen(g, o) for x0, z0, x1, z1 in [o["footprint"]]}
     return out | {tuple(s["footprint"]): s for s in g.sites if size(g, s["name"]) and s.get("done")}
 
 

@@ -21,7 +21,8 @@ def test_kill_object_of_a_hero_kills_the_hero_and_its_horse():
 
 def test_change_ownership_teleport_and_freeze_select_the_type_tag_of_the_monk():
     change = lines([dict(effect(aoe2mc.CHANGE_OWNERSHIP, "MONK", player=2, area=(0, 0, 9, 9)), target=1)])
-    assert change[0] == "tag @e[tag=aoe2mc.p2,tag=!aoe2mc.mount,tag=aoe2mc.t125,x=0,y=-64,z=0,dx=39,dy=383,dz=39] add aoe2mc.own"
+    assert change[0] == "tag @e[tag=aoe2mc.p2,tag=!aoe2mc.mount,tag=aoe2mc.t125,x=0,y=-64,z=0,dx=39,dy=383,dz=39] add aoe_order7_0"                                  # the order tag first (#2998)
+    assert change[4] == "tag @e[tag=aoe2mc.p2,tag=!aoe2mc.mount,tag=aoe2mc.t125,x=0,y=-64,z=0,dx=39,dy=383,dz=39] add aoe2mc.own"
     teleport = lines([effect(aoe2mc.TELEPORT_OBJECT, "MONK", player=1, area=(0, 0, 9, 9), tile=(5, 5))])
     assert all("tag=aoe2mc.t125," in line for line in teleport) and len(teleport) == 2
     freeze = lines([effect(aoe2mc.FREEZE_OBJECT, "MONK", player=1, area=(0, 0, 9, 9))])

@@ -77,6 +77,7 @@ import regen  # noqa: E402
 import regicide  # noqa: E402
 import relic_victory  # noqa: E402
 import repair  # noqa: E402
+import ruins  # noqa: E402
 import scenario  # noqa: E402
 import score  # noqa: E402
 import spectator  # noqa: E402
@@ -525,6 +526,14 @@ def military(name):
     return not name.startswith(CIVILIANS) and (animal(name) or ("military",))[0] == "military"
 
 
+def soldier(name):
+    """True for a unit that takes move orders as a soldier (g.soldiers), not the jobs of a villager: a military unit, a
+    monk, a trade cart, a ship, and the units with the key "orders" or "moves" (train.ORDERS, build.MOVES). One rule for
+    Gather.__init__, train.summon and owners.give (#2993): a converted trade cart was a villager."""
+    return military(name) or name in monk.MONKS or name.startswith(trade.CART) or replay.ship(name) \
+        or name in train.ORDERS or name in build.MOVES
+
+
 def walk(g, v):
     """Move unit v one cell on its path with /tp, facing the step (g.map, g.command: Gather or replay.Replay)."""
     x, z = v.path.pop(0)
@@ -652,8 +661,7 @@ class Gather:
                       and "VILLAGER" in o["name"]]
         self.villagers, self.selected = {}, set()
         self.soldiers = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit"
-                         and o["player"] == player and (military(o["name"]) or o["name"] in monk.MONKS or o["name"].startswith(trade.CART)
-                              or replay.ship(o["name"]))}
+                         and o["player"] == player and soldier(o["name"])}
         # military units, monks, trade carts and ships of the player: they take move orders (#1243, #1253, #1383)
         self.ships = {}                         # UUID of an own ship -> Villager with its water path (fleet.py, #1383)
         self.enemies = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit" and o["player"]
@@ -688,6 +696,7 @@ class Gather:
         self.fort_players = {combat.target_uuid(o["footprint"]): o["player"] for o in data["objects"]
                              if o["kind"] == "building" and "footprint" in o}  # target UUID -> owner (bot.forts, #1819)
         self.sieged = set()                                            # the targets of attack orders
+        self.ruins = set()                                             # footprints of fallen start buildings (ruins.py)
         self.wands, self.corners = set(), {}                           # players who clicked the wand, player -> corner 1
         self.holds = {}                                                # player -> time of the last wand use of a drag
         self.pending, self.looks = {}, {}                              # player -> (time, look) of a stick use (#1786)
@@ -1579,6 +1588,7 @@ class Gather:
     def step(self):
         """One tick: walk one block, chop, drop the wood, or build."""
         self.fall()
+        ruins.tick(self)
         garrison.tick(self)
         siege_tower.tick(self)
         transport.tick(self)

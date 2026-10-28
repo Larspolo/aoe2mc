@@ -113,6 +113,18 @@ def main_ci():
 RED = ("failure", "timed_out", "cancelled")
 
 
+def merged_fix(log, closed):
+    """The first commit of `log` (format `%s%x1f%b%x1e`) that closes a closed "Fix main" ticket or starts with "Fix main"."""
+    for rec in log.split("\x1e"):
+        subject, _, body = rec.strip().partition("\x1f")
+        fixed = [int(n) for n in CLOSE.findall(body) if int(n) in closed]
+        if fixed:
+            return f"{subject} (#{fixed[0]})"
+        if subject.startswith("Fix main"):
+            return subject
+    return ""
+
+
 def fixed_after(closed, start):
     """The "Fix main" issues of `closed` that closed after `start` (a "YYYY-MM-DDTHH:MM" UTC time of a red run), as
     "#N title". A fix merged by a PR closes its ticket, so the Main CI line names it (#3225)."""
@@ -164,10 +176,15 @@ def main(argv=None):
     ci = main_ci()
     fix = [f"#{n} {i['title']}" for n, i in issues.items() if "P0" in dashboard.labels(i) and i["title"].startswith("Fix main")]
     red = [c for c in ci if c[1] in RED]
-    done = subprocess.run(["git", "log", f"origin/{CONFIG['branch']}", f"--since={min(t for *_, t in red)}Z",
-                           "--format=%s", "--grep=^Fix main"], capture_output=True, text=True).stdout.split("\n")[0] if red else ""
-    closed = fixed_after(dashboard.api("issues?state=closed&sort=updated&direction=desc&per_page=100"),
-                         min(t for *_, t in red)) if red else []
+    done, closed = "", []
+    if red:
+        since = min(t for *_, t in red)
+        fixes = {i["number"] for i in dashboard.pages(f"issues?state=closed&labels=P0&since={since}:00Z")
+                 if i["title"].startswith("Fix main")}
+        log = subprocess.run(["git", "log", f"origin/{CONFIG['branch']}", f"--since={since}Z",
+                              "--format=%s%x1f%b%x1e"], capture_output=True, text=True).stdout
+        done = merged_fix(log, fixes)
+        closed = fixed_after(dashboard.api("issues?state=closed&sort=updated&direction=desc&per_page=100"), since)
     section("Main CI", [" · ".join(f"{n} {c} ({sha}, {t})" for n, c, sha, t in ci) + (
         "" if not red else " → red: open P0 tickets \"Fix main\": " + ("; ".join(fix) or "none")
         + (f"; merged after the red run: {done}" if done else "")
