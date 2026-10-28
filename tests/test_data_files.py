@@ -94,6 +94,7 @@ def check_civs(row):
     assert not set(row["missing"]) & set(civs.ONLY), n                    # one form for each item (#2235)
     assert row.get("unique", "MILITIA") in NAMES["units.jsonl"], n
     assert set(row.get("twice", ())) <= NAMES["train.jsonl"], n
+    assert len(row.get("hp_age", [1] * 4)) == 4 and all(isinstance(a, NUMBER) and a > 0 for a in row.get("hp_age", ())), n
     for t, group in row.get("also", {}).items():                   # one more group gets the effect (#2173)
         assert group in civs.GROUPS and isinstance(train.EFFECTS.get(t, {}), dict) and t in train.TECHS | train.SPEEDS, (n, t)
     assert all(t in train.TECHS and isinstance(f, NUMBER) for t, f in row.get("more", {}).items()), n

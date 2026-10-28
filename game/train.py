@@ -673,7 +673,7 @@ def research(g, entry):
     if entry["name"] in WALL_UPGRADES:                             # the complete own walls become the new wall (#1326)
         for site in [s for s in g.sites if s["name"] in WALL_UPGRADES[entry["name"]] and s.get("done")
                      and s["player"] == g.player]:
-            build.upgrade(g, site, combat.wall(site["name"], build.ages(g)))
+            build.upgrade(g, site, combat.wall(site["name"], build.ages(g), civs.civ(g)))
     build.retower(g, before)                                       # the complete own towers get the new values (#1374),
                                                                    # the buildings those of Masonry and Fletching (#1398, #1408)
     if entry["name"] in build.AGE_TECHS:                           # the base arrows of the new age (civs.ARROWS, #2178)
@@ -711,7 +711,8 @@ def research(g, entry):
     if entry["name"] in REQUIRES:                                  # an age: all players see it, as in AoE2
         import ai                                                  # ai imports gather, gather imports this module
         for site in [s for s in g.sites if s["name"] in combat.WALLS and s.get("done") and s["player"] == g.player]:   # #1372
-            build.upgrade(g, site, combat.wall(build.design(g, site["name"], g.player), build.ages(g) - 1), redraw=False)
+            build.upgrade(g, site, combat.wall(build.design(g, site["name"], g.player), build.ages(g) - 1, civs.civ(g)),
+                          redraw=False)
         for uuid, name in g.soldiers.items():                      # the walk speed of the age (civs.UNITS, Celts)
             if civs.speed(g, name) != 1:
                 g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))
