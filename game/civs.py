@@ -1,31 +1,13 @@
 """
-The civilization bonuses of the players in the game program (#1089, part of #1088). WORK holds the work-rate bonuses of
-the AoE2 DE civilizations (the AoE2 wiki, "Civilization bonuses" of each civilization): Gather.work_time divides the
-time of one unit of resource by the factor of the player's civilization. The keys are the gather kinds of Gather:
-"wood", "food" (forage bushes), "farm", "gold", "stone", "hunt" (hunted animals) and "sheep" (herdable animals).
-Bonuses that the game program cannot use yet: Japanese fishing ships, Malian oyster gatherers.
+The civilization bonuses of the players in the game program (#1089, part of #1088). Each civilization has one line in
+data/civs.jsonl (#1914), and each key of those lines has one line in data/civ_keys.jsonl (#2281): what it does, its
+issue. BY_KEY[key][civ] (or value(key, civ, default)) holds the value of each key: a new key is one line in each data
+file and the code that applies it (repair.py, build.py, train.py ...), no new line here. The tables in capitals below
+are the older names of some keys.
+Bonuses that the game program cannot use yet: Japanese fishing ships, Malian oyster gatherers, the Slav monks
+and the ships.
 CHURCH_RATE is the Georgian bonus of the Fortified Church (#1930): build.rise and repair.rate multiply the work of the
 villagers in the 21-tile square around it (church_rate).
-BUILD, BUILD_WONDER and BUILD_OF hold the build speed bonuses (#1893, #2115): build.rise multiplies the work of the builders (build_rate).
-WORK_RATE holds the train and research rate of the buildings (#1894, Persian town centers and docks): train.seconds
-divides the time of an item by work_rate(). TRAIN_RATE holds the train rate of unit groups (#1927, Aztec military
-units, Khitan skirmishers ...): train.seconds divides by train_rate(), also the time of their upgrades when the third
-field is True. HP holds the hit points bonus of the buildings (#1895): build.values and
-combat.setup (the buildings of the map) apply it before the technologies (Masonry).
-REPAIR and REPAIR_COST hold the repair bonuses (#1730, AoE2 wiki "Repairing"): repair.tick multiplies the rate and the
-cost of the repairs of a player by them (repair_rate, repair_cost). REPAIR_TEAM holds the team bonuses of the repair
-rate (#1929, AoE2 wiki "Saxons": "Repairers work 25% faster"): they count for the civilization and its allies, and
-multiply with REPAIR. The cost bonus of the Georgians is for buildings only (AoE2 wiki "Villager (Age of Empires II)":
-"The bonus does not apply to repairing units"), so siege units and ships pay the full cost.
-
-UNITS holds the bonuses of the land units of combat.STATS (#1090): hit points, attack, armor, range, reload and walk
-speed, per age. train.stats applies them before the technologies; the walk speed goes through speed(). The value
-"bonus" with a float multiplies the bonus damage that the unit deals (Gurjara mounted units, Bohemian spearmen,
-#2248); the value "taken" is the factor of the bonus damage that the unit takes (Bengali elephants, Sicilian units:
-taken(), the plugin applies it at each hit); the value "bonus:CLASS" adds attack against a class (#2249). Bonuses of
-this kind that the game program cannot use yet: the Lithuanian relics, the Slav monks, and the ships.
-REGEN holds the regeneration of the units (#2247): regen.tick gives them their hit points back.
-ELEVATION holds the elevation factors of the damage (#2307): combat.elevation and the plugin (aoe elevation).
 """
 import math
 import os
@@ -76,28 +58,30 @@ TAGS = {r["name"]: tuple(r["groups"]) for r in table.load("units.jsonl") if "gro
 GROUPS = {g: (lambda f, g: lambda n, s: g in TAGS.get(n, ()) or f(n, s))(RULES.get(g, lambda n, s: False), g)
           for g in sorted(set(RULES) | {g for t in TAGS.values() for g in t})}
 
-# The tables of each civilization: one line per civilization in data/civs.jsonl (#1914, `table.load`), from the AoE2 DE
-# wiki. "unique": the unique unit of its castle (train.UNIQUE). "missing": the technologies and units that it does not
-# have (the availability chart of each civilization, #1373): the menu does not show them (train.unlocked). The items
-# that few civilizations have are in ONLY, not here.
-# "units": the bonuses of the land units (#1090): [group of GROUPS, value, change in the Dark, Feudal, Castle and
-# Imperial Age]; value is a field of combat.Stats, "speed" (the walk speed) or "bonus:CLASS" (the attack against a
-# class of combat.Stats.classes, #2249; a float multiplies it, #2272); an int adds, a float multiplies ("fire 25 % faster" is the reload / 1.25). "costs": the cost bonuses (#1091): [what, resource or null (all), change in each
-# age]; what is a group of GROUPS (units), "buildings", "buildings but farms", "technologies", "ages", "BUILDING
-# technologies" (the technologies of the menu of that building, #1925) or a list of names; a float multiplies the cost
-# (0.0: free), an int adds to it; AoE2 rounds half up (35 × 0.75 = 26). "twice": the technologies whose effect it gets
-# twice (train.stats, #1561). "age_gifts": the resources that it gets at each new age (#1926). "hp_age": the
-# factor of the hit points of all its buildings, walls and gates in each age (#2116). "smith_units": [group of
-# GROUPS, blacksmith technologies, times in the Dark, Feudal, Castle and Imperial Age]: the units of the group get the
-# effect of each technology that many times, also when the test of the effect does not cover them (smith, #2174).
-# "cost_per": the cost bonuses for each complete own building (#2177): [group of GROUPS, the buildings, the share less
-# for each, the most share less] (Saxons: foot soldiers cost 5 % less per town center or castle, at most 20 %).
+# One line per civilization (#1914), from the AoE2 DE wiki; the keys: data/civ_keys.jsonl (#2281).
 ROWS = table.load("civs.jsonl")
 
 
 def tuples(x):
     """The JSON lists of a table as tuples (a tuple of names, the changes of the four ages)."""
     return tuple(tuples(v) for v in x) if isinstance(x, list) else x
+
+
+def frozen(x):
+    """A JSON value with tuples for its lists, also inside a dict (the form of BY_KEY)."""
+    if isinstance(x, dict):
+        return {k: frozen(v) for k, v in x.items()}
+    return tuple(frozen(v) for v in x) if isinstance(x, (list, tuple)) else x
+
+
+KEYS = {r["name"]: f"{r['text']} (#{r['issue']})" for r in table.load("civ_keys.jsonl")}   # what each key does (#2281)
+BY_KEY = {k: {r["name"]: frozen(r[k]) for r in ROWS if k in r} for k in sorted(KEYS)}
+
+
+def value(key, civ, default=None):
+    """The value of key of data/civs.jsonl for civ (BY_KEY), else default. A key needs its line in civ_keys.jsonl."""
+    assert key in KEYS, key
+    return BY_KEY[key].get(civ, default)
 
 
 UNIQUE = {r["name"]: r["unique"] for r in ROWS if "unique" in r}
@@ -126,29 +110,6 @@ TECH_ROWS = table.load("train.jsonl")
 SMITH = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("building") == "BLACKSMITH"))   # the blacksmith (#1452)
 ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # the economic technologies but Coinage and
                                                                             # Banking (AoE2 wiki "Burgundians")
-# The bonuses of each civilization, keys of its line in data/civs.jsonl (AoE2 DE, the AoE2 wiki):
-# "work": the work-rate factor of each gather kind (a missing kind is 1).
-# "drop": the factor of a load at the drop site: "food" for each food load (also of the fishing ships), "forage" for
-# a load of a fruit bush only (#2111).
-# "start": the start-resource bonus (#1269), {resource: change of START}. In AoE2 the bonus comes with the first town
-# center (a Nomad start gets it later); here it is in the start stock. The extra villagers of the Chinese (+3) and
-# Mayans (+1) are units of the map, not of the stock. Lithuanians: +100 food for each town center, here only for the
-# first one.
-# "town_center": the resources that the first town center gives (Tupi +25 of each, #2293): in the start stock when the
-# player has a town center at the start, else when its first town center is complete (build.rise).
-# "bushes": [count, food] of the forage bushes next to the town center at the start (Gurjaras: 2 of 175, #2293).
-# "shared": the shared unique units of its team bonus: an ally of the civilization has them too ("Team bonus", #1619).
-# "not_shared": the shared items that it does not get from an ally (Turks: no Elite Skirmisher).
-# "build", "build_wonder": the build speed of the builders (Spanish: 20 % for wonders). "build_of": the build speed of
-# some buildings, {building: factor} (Sicilian fortifications and town centers, #2115). "built_food": the food that
-# a complete building gives, {building: food} (Saxons, Wu, #2114). "built_units": the herdables that a complete
-# building gives, {building: [unit, number in the Dark, Feudal, Castle and Imperial Age]} (Tatar sheep, #2313).
-# "repair": the repair rate.
-# "repair_cost": the team bonus of the repair cost of buildings (Georgians). "repair_team": the team bonus of the
-# repair rate (Saxons). "work_rate": the train and research rate of a building in each age (Persians). "train_rate":
-# [group of GROUPS, factor, also the upgrades] (#1927). "hp": the hit points factor of a building (Persians).
-# "research_time": [technologies (a rule of has), factor of the research time] (#2172: Achaemenid stable technologies
-# 50 % faster, Jurchen siege and fortification technologies 100 % faster, the Gothic Loom at once).
 WORK = {r["name"]: r["work"] for r in ROWS if "work" in r}
 LAST = {r["name"]: r["last"] for r in ROWS if "last" in r}   # resources last longer: a gathered unit takes 1 / factor (#2112)
 START = {r["name"]: r["start"] for r in ROWS if "start" in r}
@@ -177,30 +138,17 @@ ARROWS = {r["name"]: tuples(r["arrows"]) for r in ROWS if "arrows" in r}   # fac
 VOLLEY = {r["name"]: r["volley"] for r in ROWS if "volley" in r}
 GARRISON = {r["name"]: r["garrison"] for r in ROWS if "garrison" in r}   # units inside a building (garrison.size, #2117)
 HEAL_RANGE = {r["name"]: r["heal_range"] for r in ROWS if "heal_range" in r}   # factor of the monk heal range (#2269)
-# [group of GROUPS, building, hit points]: the units of the group get the hit points for each technology of the menu of
-# that building that the player has (the Aztec monks: +5 for each monastery technology, #2269).
 TECH_HP = {r["name"]: [tuples(b) for b in r["tech_hp"]] for r in ROWS if "tech_hp" in r}
 EARLIER = {r["name"]: set(r["earlier"]) for r in ROWS if "earlier" in r}   # one age earlier (build.locked, #2268)
 HP_AGE = {r["name"]: r["hp_age"] for r in ROWS if "hp_age" in r}   # the factor of all buildings in each age (Byzantines)
-# Technologies with another effect for the civilization (#2173, train.stats, train.speed): "also" gives the effect to
-# one more group of GROUPS too (Bohemians: Fervor and Sanctity for the villagers), "more" multiplies the change of the
-# effect (Varangians: Bloodlines and Caravan +50 %).
 ALSO = {r["name"]: r["also"] for r in ROWS if "also" in r}
 MORE = {r["name"]: r["more"] for r in ROWS if "more" in r}
 FARM_UPGRADES = {r["name"]: r["farm_upgrades"] for r in ROWS if "farm_upgrades" in r}   # the factor of the food of the
 #                                                                   farm upgrades (Sicilians: +125 %, train.research, #2230)
 RESEARCH_TIME = {r["name"]: [tuples(b) for b in r["research_time"]] for r in ROWS if "research_time" in r}
-# "extra": the second resource of a gather kind ("forage": a fruit bush), {kind: [resource, amount for each unit]}: Poles
-# and Puru stone miners, Portuguese foragers, Shu lumberjacks (#2113). Gather.second adds it at each gathered unit.
 EXTRA = {r["name"]: {k: tuple(v) for k, v in r["extra"].items()} for r in ROWS if "extra" in r}
-# "drop_extra": a second resource at the drop site, {kind: [resource, factor of the load]}: "hunt" (hunters and
-# shepherds), "fish" (fishermen), "ship" (fishing ships). Varangians: +10 % gold, +5 % for the ships (#2308).
 DROP_EXTRA = {r["name"]: {k: tuple(v) for k, v in r["drop_extra"].items()} for r in ROWS if "drop_extra" in r}
-# "per_minute": a resource for each AoE2 minute of work of a gather kind, {kind: [resource, amount]}: Thracian
-# hunters and shepherds 3 gold while they gather from animals (#2308).
 PER_MINUTE = {r["name"]: {k: tuple(v) for k, v in r["per_minute"].items()} for r in ROWS if "per_minute" in r}
-# "carry": the extra load of a villager, [[gather kind or null (all), extra]]: Aztec villagers +3, Goth hunters +15
-# (#2270). Gather.limit adds it.
 CARRY = {r["name"]: [tuple(b) for b in r["carry"]] for r in ROWS if "carry" in r}
 # The age-up bonuses (#1926, AoE2 DE wiki): train.research applies AGE_GIFTS and AGE_VILLAGERS at the end of each age,
 # train.seconds divides the time of an age by AGE_RATE, and train.missing needs no buildings for AGE_NO_BUILDINGS (the
@@ -209,27 +157,12 @@ AGE_GIFTS = {r["name"]: r["age_gifts"] for r in ROWS if "age_gifts" in r}   # re
 AGE_NO_BUILDINGS = ("KHMER",)                                      # no buildings are required to advance
 AGE_RATE = {"MALAY": 1.66}                                         # advancing in age is 66 % faster
 AGE_VILLAGERS = {"BENGALIS": 2}                                    # each own town center spawns 2 villagers
-# "tech_gifts": the resources for each technology but an age (Spanish), "economy_villagers": the free villagers for
-# each economic technology (Wei, #2175).
 TECH_GIFTS = {r["name"]: r["tech_gifts"] for r in ROWS if "tech_gifts" in r}
-# "regen": the regeneration of units (#2247): [group of GROUPS or a list of unit names, hit points per AoE2 minute in
-# the Dark, Feudal, Castle and Imperial Age] (Polish villagers, Georgian mounted units, Wu infantry, Thracian elite
-# skirmishers, Bengali ships). A third value: the rule counts only with no enemy unit within that many tiles (Puru cavalry,
-# #2334). regen.tick gives them back.
 REGEN = {r["name"]: [tuples(b) for b in r["regen"]] for r in ROWS if "regen" in r}
-ECONOMY_VILLAGERS = {r["name"]: r["economy_villagers"] for r in ROWS if "economy_villagers" in r}
-# Resources for kills and deaths (game/spoils.py, #2271): "fallen" the part of the cost of a fallen own unit (Tupi),
-# "kill_gold" the gold for each military unit that a mounted unit kills (Mapuche), "loot" the part of the cost of a
-# destroyed enemy building (Danes).
 FALLEN = {r["name"]: r["fallen"] for r in ROWS if "fallen" in r}
 KILL_GOLD = {r["name"]: r["kill_gold"] for r in ROWS if "kill_gold" in r}
 LOOT = {r["name"]: r["loot"] for r in ROWS if "loot" in r}
-# "reveal": the enemy buildings that the player sees under the fog of war (fog.revealed, #2311): [building, true: only
-# the ones of aoe2mc.json and only at the start of the game] (Mapuche castles, Vietnamese start town centers).
 REVEAL = {r["name"]: [tuple(b) for b in r["reveal"]] for r in ROWS if "reveal" in r}
-# The elevation factors of the damage (#2307, AoE2 wiki "Elevation"): "up" multiplies the hits of a unit or building of
-# the civilization from higher ground, "low" the hits that it takes from lower ground, "high" the hits that it takes
-# from higher ground. The key "elevation" of a line in civs.jsonl changes them (Tatars, Georgians, Macedonians).
 ELEVATION = {r["name"]: r["elevation"] for r in ROWS if "elevation" in r}
 ELEVATION_BASE = {"up": 1.25, "low": 0.75, "high": 1.0}
 
@@ -240,13 +173,8 @@ def elevation(civ):
     return e["up"], e["low"], e["high"]
 
 
-# The relic and monk bonuses (game/monk.py, #2314): "relic_attack" [units, attack per relic in an own monastery, most]
-# (Lithuanian knights and Leitis), "faith" the factor of the speed of the monks that regain faith (Muisca: 100 % faster).
 RELIC_ATTACK = {r["name"]: tuples(r["relic_attack"]) for r in ROWS if "relic_attack" in r}
 FAITH = {r["name"]: r["faith"] for r in ROWS if "faith" in r}
-# Herdable animals in a building make food (garrison.pasture, #2342): "herd_food" {building: [size, a, b]}, at most size
-# animals in each, a × ln(F / b + 1) food per AoE2 minute for F food of the animals in all of them (Gurjara mills: 10, 15,
-# 200, AoE2 DE wiki).
 HERD_FOOD = {r["name"]: {b: tuple(v) for b, v in r["herd_food"].items()} for r in ROWS if "herd_food" in r}
 
 
