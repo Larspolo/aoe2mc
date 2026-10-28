@@ -15,6 +15,7 @@ Usage:
     python3 game/run.py WORLD --play --record F.jsonl  # Record Game: --replay --replay-file F.jsonl plays it (#2649)
     python3 game/run.py WORLD --play --bot --treaty 20:00   # the AoE2 setting "Treaty length": no attack before 20:00 (#2297)
     python3 game/run.py WORLD --play --reveal all  # no fog of war: also the enemy units out of sight show (game/fog.py)
+    python3 game/run.py WORLD --play --reveal explored  # the whole map starts explored on the minimap (#2932)
     python3 game/run.py WORLD --play --speed 2     # twice the AoE2 Normal speed: /tick rate 40 and shorter steps (#2057)
     python3 game/run.py WORLD --play --resources high  # the AoE2 setting "Starting resources" (#2264)
     python3 game/run.py WORLD --play --age castle      # the AoE2 setting "Starting age" (#2265)
@@ -771,8 +772,9 @@ def main(argv=None):
                     "from this game time (default 10:00)")
     ap.add_argument("--treaty", default="0:00", metavar="MM:SS", help="--play: the AoE2 setting \"Treaty length\": "
                     "no player can attack another player before this game time (default 0:00: no treaty)")
-    ap.add_argument("--reveal", choices=["normal", "all"], default="normal", help="--play: AoE2 \"Reveal map\" "
-                    "(default normal: enemy units out of sight are hidden; all: all units show)")
+    ap.add_argument("--reveal", choices=["normal", "explored", "all"], default="normal", help="--play: AoE2 \"Reveal "
+                    "map\" (default normal: enemy units out of sight are hidden; explored: also, but the whole map "
+                    "starts explored on the minimap; all: all units show)")
     ap.add_argument("--age", choices=["dark", "feudal", "castle", "imperial", "post-imperial"], default="dark",
                     help="--play: the AoE2 setting \"Starting age\" of each player, with the technologies of the "
                     "earlier ages (default dark; post-imperial: all technologies)")
