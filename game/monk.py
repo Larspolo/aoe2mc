@@ -323,6 +323,8 @@ def take(g, uuid):
     g.command(f"aoe stop {uuid}")
     owners.give(g, uuid, new)                                      # the lists of all sides (#2993)
     g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": f"A monk converts the {units.pretty(name)}.", "color": "gold"}))
+    import train                                                   # train imports this module (#3502)
+    g.command(f"execute at {uuid} run playsound {train.EVENT_SOUNDS['convert']} master @a ~ ~ ~ 1 1")
 
 
 def heresy(g, player):

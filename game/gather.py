@@ -1786,6 +1786,9 @@ class Gather:
                     ships = {v.uuid for v in builders if v.uuid in self.ships}
                     sail = fleet.build_site(self, ships, nxt) if nxt["name"] in build.WATER else set()   # the next trap (#3114)
                     builders = [v for v in builders if v.uuid in ships - sail]   # the ships that stay: they fish below
+                x0, x1, z0, z1 = site["footprint"]                     # the AoE2 sound of a complete site (#3502)
+                self.command(f"playsound {train.EVENT_SOUNDS['built']} master @a[team=p{site['player']}] "
+                             f"{(x0 + x1) / 2} ~ {(z0 + z1) / 2} 1 1")
                 for v in builders:                                     # complete: the builders stop
                     v.site = None
                     if v.uuid in self.ships:                           # a fishing ship fishes its new fish trap
