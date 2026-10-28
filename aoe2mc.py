@@ -2019,7 +2019,7 @@ def object_mob(name):
 PASSABLE = ("short_grass", "tall_grass", "large_fern", "petals", "moss_carpet", "mushroom", "allium", "bluet",
             "tulip", "lily_of", "fern", "wheat", "poppy", "dandelion", "cornflower", "daisy", "water",
             "seagrass", "dead_bush", "sweet_berry", "rail", "carpet", "banner", "button", "lantern", "snow[", "kelp",
-            "lily_pad", "bush[", "shrub", "dry_grass")
+            "lily_pad", "bush[", "shrub", "dry_grass", "wildflowers", "leaf_litter")
 
 
 def passable_states(states):
