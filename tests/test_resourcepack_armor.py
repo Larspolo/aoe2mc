@@ -59,10 +59,10 @@ def test_the_pack_has_an_equipment_file_and_textures_for_each_unit(tmp_path):
     aoe2mc.write_resourcepack(str(tmp_path))
     with zipfile.ZipFile(tmp_path / "resourcepacks" / "resources.zip") as z:
         files = set(z.namelist())
-        for name in units.LOOKS:
+        for name in set(units.LOOKS) & set(units.dressed()):           # a unit with no armor needs no asset (#2743)
             n = name.lower()
             layers = json.loads(z.read(f"assets/aoe2mc/equipment/{n}.json"))["layers"]
-            assert sorted(layers) == ["humanoid", "humanoid_leggings"]
+            assert {"humanoid", "humanoid_leggings"} <= set(layers)            # and "horse_body" for a mount (#2743)
             assert layers["humanoid"][0] == {"texture": f"aoe2mc:{n}", "dyeable": {"color_when_undyed": 0xFFFFFF}}
             for layer in layers:
                 for end in ("", "_overlay"):

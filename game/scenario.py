@@ -21,6 +21,9 @@ commands of the alliances and neutral stances (gather.allies_command, gather.neu
 The conditions "Researching Technology" and "Technology State" (#2769) test the score #p<N>.<technology> of
 aoe_techstate: tech_states() sets it to the AoE2 TechnologyState from the queues and g.techs of player N.
 
+The condition "Object Has Action" (#2867) tests the score #r<ref> of aoe_action: actions() sets it to the AoE2
+UnitAIAction of the order of the villager (ACTIONS).
+
 The condition "Difficulty Level" (#2704) tests the score #level of aoe_difficulty: setup() sets it to the AoE2 value
 ("aoe2" of game/data/difficulty.jsonl) of the setting "AI difficulty" (run.py --ai-difficulty).
 
@@ -54,6 +57,11 @@ ORDERS = "aoe2mc:orders"                                               # the dat
 ATTRIBUTES = "aoe2mc:attributes"                                       # the storage of "Modify Attribute" (#2763)
 MENUS = "aoe2mc:menus"                                                 # the storage of "Enable/Disable" (#2775)
 COSTS = "aoe2mc:costs"                                                 # the storage of "Change Object Cost" (#2776)
+TIMES = "aoe2mc:times"                                                 # "Change Technology Research Time" (#2820)
+PLACES = "aoe2mc:places"                                               # "Change Train/Technology Location" (#2864)
+UNSELECTABLE = "aoe2mc.unselectable"                                   # the tag of "Disable Object Selection" (aoe2mc)
+NAMES = "aoe2mc:names"                                                 # the storage of "Change Technology Name" (#2821)
+READS = "aoe2mc:reads"                                                 # "Modify Variable by Attribute" (#2858)
 NEAR = 3                                                               # blocks: a patrol turns back this near its point
 LEVELS = {r["name"]: r["aoe2"] for r in table.load("difficulty.jsonl")}  # "AI difficulty" -> AoE2 DifficultyLevel
 
@@ -113,15 +121,21 @@ def tick(g):
     research(g)
     garrisons(g)
     tech_states(g)
+    actions(g)
     if g.clock() < vars(g).get("book_at", 0.0):
         return
     g.book_at = g.clock() + EVERY
     tasks(g)
     orders(g)
+    selection(g)
     menus(g)
     visible(g)
     attributes(g)
+    reads(g)
     costs(g)
+    times(g)
+    names(g)
+    places(g)
     messages = g.data.get("messages", {})
     text = re.sub(r"<[^<>]*>", "", messages.get("instructions", "")).strip()   # AoE2 color tags (book_pages)
     for who in sorted({x.who for x in [g, *(s.g for s in g.bots if not hasattr(s, "charged"))]}):
@@ -162,24 +176,39 @@ def orders(g):
     the tag. A new patrol with the same tag (a looping trigger) replaces the old one. A "Change Object Stance" order
     (aoe2mc.stance_lines, #2705) sets the stance of the tagged units and removes the tag. A "Stop Object" order
     (aoe2mc.stop_lines, #2754) stops the tagged units (`aoe stop`), ends their patrols as a new order of a person does
-    (gather.Gather.end_patrols, #2674) and removes the tag. An "Unload" order (#2773): unload(). A "Lock Gate" or
-    "Unlock Gate" order (aoe2mc.gate_lines, #2762) locks or unlocks the gate of its reference: gate()."""
+    (gather.Gather.end_patrols, #2674) and removes the tag. A "Change Object Range" order (aoe2mc.range_lines, #2767)
+    gives each tagged ranged unit its new range (ranges) and removes the tag. An "Unload" order (#2773): unload(). A
+    "Lock Gate" or "Unlock Gate" order (aoe2mc.gate_lines, #2762) locks or unlocks the gate of its reference: gate(). A
+    "Place Foundation" order (aoe2mc.foundation_lines, #2825): foundation(). "Train Unit" and "Initiate Research"
+    (aoe2mc.train_lines, #2772): queues(). A "Build Object" order (aoe2mc.build_lines, #2863): finish()."""
     got = g.command(f"data get storage {ORDERS} list") or ""
-    new = re.findall(r'"(patrol|attack_move|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"', got)
+    new = re.findall(r'"(patrol|attack_move|range|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"', got)
     unloads = re.findall(r'"unload (\d+) (\d+) ?(-?\d+ -?\d+ -?\d+)?"', got)
     gates = re.findall(r'"(lock|unlock) (\d+)"', got)
-    if new or unloads or gates:
+    found = re.findall(r'"found (\d+) (\w+) (\d+) (\d+)"', got)
+    queued = re.findall(r'"(train|research) (\d+) (\w+) ?(\d+)?"', got)
+    builds = re.findall(r'"build (\d+) (\w+) (-?\d+) (-?\d+) (-?\d+) (-?\d+)"', got)
+    if new or unloads or gates or found or queued or builds:
         g.command(f"data remove storage {ORDERS} list")
+    queues(g, queued)
     for player, ref, where in unloads:
         unload(g, int(player), int(ref), where)
     for order, ref in gates:
         gate(g, order, int(ref))
+    for player, name, x, y in found:
+        foundation(g, int(player), name, (int(x), int(y)))
+    for player, name, *area in builds:
+        finish(g, int(player), name, [int(v) for v in area])
     patrols = vars(g).setdefault("patrols", [])
     for order, tag, where in new:
         p, sel = [int(v) for v in where.split()], f"@e[tag={tag}]"
         if order == "stance":                                          # "Change Object Stance" (#2705)
             import combat                                              # combat -> gather -> scenario
             g.command(f"aoe stance {sel} {combat.STANCES[p[0]]}")
+            g.command(f"tag {sel} remove {tag}")
+            continue
+        if order == "range":                                           # "Change Object Range" (#2767)
+            ranges(g, tag, *p)
             g.command(f"tag {sel} remove {tag}")
             continue
         if order == "stop":                                            # "Stop Object" (#2754)
@@ -205,6 +234,70 @@ def orders(g):
             patrols.remove(q)
 
 
+def ranges(g, tag, operation, quantity):
+    """Send the new range of each ranged unit with the tag (`aoe range`): the AoE2 operation (1 set, 2 add, 3 subtract,
+    4 multiply, 5 divide) on its range in tiles, not below 0. The own units have the values with the technologies of
+    the player (train.stats). A melee unit keeps its range: Minecraft gives it no shot."""
+    import combat                                                  # combat -> gather -> scenario
+    own = {u["uuid"]: u["name"] for u in g.units if "uuid" in u} | dict(g.soldiers)
+    every = {o["uuid"]: o["name"] for o in g.data.get("objects", []) if o["kind"] == "unit" and "uuid" in o} | own
+    for uuid, name in sorted(every.items()):
+        s = train.stats(g, name) if uuid in own else combat.stats(name)
+        if s.range <= 0 or "passed" not in g.command(f"execute as {uuid} if entity @s[tag={tag}]"):
+            continue
+        r = s.range
+        new = [quantity, r + quantity, r - quantity, r * quantity, r / quantity if quantity else r][operation - 1]
+        if cmd := combat.range_command(uuid, name, g.map.T, s=s._replace(range=max(0, new))):
+            g.command(cmd)
+
+
+def selection(g):
+    """The units of "Disable Object Selection" (aoe2mc.selection_lines, #2854): read the UUIDs with the tag UNSELECTABLE
+    (one `aoe where` per check, not one command per click) into g.unselectable, which the clicks, the selection box and
+    the double click skip (gather.Gather.unpickable). A selected unit that gets the tag leaves the selection. Vanilla
+    has no `aoe where`: there all units stay selectable."""
+    if not getattr(g, "paper", False):
+        return
+    g.unselectable = set(g.where(None, f"@e[tag={UNSELECTABLE}]"))
+    if g.selected & g.unselectable:
+        g.choose(g.selected - g.unselectable)
+
+
+def foundation(g, player, name, tile):
+    """A "Place Foundation" order (aoe2mc.foundation_lines, #2825): the construction site of building name of the
+    player (a person or a bot) with the tile in its middle, for free as in AoE2, when the place is free and flat as for
+    a click of the player (build.free, shore, water, level). Its villagers build it as any site. A wall, a gate, a
+    building that the game program cannot build or a blocked place: nothing."""
+    import build                                                       # build imports gather
+    if name not in build.MENU or name in build.WALLS + build.GATES:
+        return
+    ok = build.shore if name in build.SHORE else build.water if name in build.WATER else build.free
+    for x in [g, *(s.g for s in g.bots)]:
+        if x.player != player or "objects" not in x.data:
+            continue
+        T = x.map.T
+        rect = build.area(x, name, (tile[0] * T + T // 2, tile[1] * T + T // 2))
+        if ok(x, rect) and build.level(x, name, rect):
+            build.found(x, name, rect, free=True)
+
+
+def finish(g, player, name, area):
+    """A "Build Object" order (aoe2mc.build_lines, #2863): each construction site of the player (a person or a bot) of
+    building name (ANY: each building) with its middle tile in the area [x1, y1, x2, y2] (-1: the whole map) is
+    complete at once, with no villager work (build.rise with no end of work, as empire_wars.town). Its builders stop in
+    the next step of the Gather. No such site: nothing, as in AoE2."""
+    import build                                                       # build imports gather
+    for x in [g, *(s.g for s in g.bots)]:
+        if x.player != player:
+            continue
+        T = x.map.T
+        for site in [s for s in x.sites if not s.get("done") and name in ("ANY", s["name"])]:
+            x0, x1, z0, z1 = site["footprint"]
+            tx, ty = (x0 + x1) // 2 // T, (z0 + z1) // 2 // T
+            if area[0] < 0 or area[0] <= tx <= area[2] and area[1] <= ty <= area[3]:
+                build.rise(x, site, float("inf"))
+
+
 def unload(g, player, ref, where):
     """An "Unload" order (aoe2mc.unload_lines, #2773): the units inside the building ref of the player (a person or a
     bot: garrison.holders) come out (garrison.out), and `aoe moveto` walks them to the block "x y z" when the order has
@@ -216,6 +309,22 @@ def unload(g, player, ref, where):
         for u in garrison.out(x, rect) if rect is not None else []:
             if where:
                 x.command(f"aoe moveto {u} {where}")
+
+
+def queues(g, queued):
+    """The "train <ref> <unit> <quantity>" and "research <ref> <technology>" orders of the triggers (#2772): queue them
+    at the converted building of that reference, for its player (the people and the bots), as clicks of its menu
+    (train.queue): the player pays, and a full queue, a missing technology or too few resources stop the rest."""
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    refs = {o["ref"]: o for o in g.data.get("objects", ()) if o["kind"] == "building" and o.get("ref") is not None}
+    for _, ref, name, n in queued:
+        o = refs.get(int(ref))
+        if o is None or (x := sides.get(o["player"])) is None:
+            continue
+        x0, z0, _, _ = o["footprint"]
+        for _ in range(int(n or 1)):
+            if not train.queue(x, getattr(x, "who", "@a"), (x0, z0), name):
+                break
 
 
 def costs(g):
@@ -232,13 +341,56 @@ def costs(g):
                 {r: int(v) for r, v in (part.split("=") for part in cost.split())}
 
 
+def times(g):
+    """The new research times of "Change Technology Research Time" (aoe2mc.tech_time_lines, #2820): read and empty the
+    list of the data storage TIMES, and keep each time (AoE2 seconds) in trigger_times of the side of its player (the
+    people and the bots): train.seconds uses it in place of the time of game/data/train.jsonl. A later line wins."""
+    new = re.findall(r'"(\d+) (\w+) (\d+)"', g.command(f"data get storage {TIMES} list") or "")
+    if new:
+        g.command(f"data remove storage {TIMES} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for player, name, s in new:
+        if int(player) in sides:
+            vars(sides[int(player)]).setdefault("trigger_times", {})[name] = int(s)
+
+
+def places(g):
+    """The new places of "Change Train Location" and "Change Technology Location" (aoe2mc.location_lines, #2864): read
+    and empty the list of the data storage PLACES, and keep each place (building, AoE2 button) in trigger_places of the
+    side of its player (the people and the bots): train.trains and train.placed use it. A later line wins."""
+    new = re.findall(r'"(\d+) (\w+) (\w+) (-?\d+)"', g.command(f"data get storage {PLACES} list") or "")
+    if new:
+        g.command(f"data remove storage {PLACES} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for player, name, building, button in new:
+        if int(player) in sides and name in train.ITEMS:
+            vars(sides[int(player)]).setdefault("trigger_places", {})[name] = [building, int(button)]
+
+
+def names(g):
+    """The new names of "Change Technology Name" (aoe2mc.tech_name_lines, #2821): read and empty the list of the data
+    storage NAMES, and keep each name in trigger_names of the side of its player (the people and the bots): the menus
+    of that player show it (train.show). A later line wins. Minecraft prints a text with a double quote in single
+    quotes."""
+    got = g.command(f"data get storage {NAMES} list") or ""
+    new = re.findall(r'"(\d+) (\w+) ((?:[^"\\]|\\.)*)"|\'(\d+) (\w+) ((?:[^\'\\]|\\.)*)\'', got)
+    if new:
+        g.command(f"data remove storage {NAMES} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for found in new:
+        player, name, text = found[:3] if found[0] else found[3:]
+        if int(player) in sides:
+            vars(sides[int(player)]).setdefault("trigger_names", {})[name] = re.sub(r"\\(.)", r"\1", text)
+
+
 def attributes(g):
     """The changes of "Modify Attribute" (aoe2mc.attribute_lines, #2763): read and empty the list of the data storage
-    ATTRIBUTES, and add each change to trigger_attributes of the side of its player (the people and the bots):
+    ATTRIBUTES, and add each change to trigger_attributes of the side of its player (the people and the bots; a
+    unit type or a class "@<class>" of "Modify Attribute for Class", train.applies, #2859):
     train.stats applies them in order, so the units that the player trains later get the new values. The units of the
     type that exist get the new values at once (the same commands as a technology, train.research)."""
     import civs, combat                                                # combat -> gather -> scenario
-    new = re.findall(r'"(\d+) (\w+) (\w+) ([1-5]) (-?[\d.]+)"', g.command(f"data get storage {ATTRIBUTES} list") or "")
+    new = re.findall(r'"(\d+) (@?\w+) (\w+) ([1-5]) (-?[\d.]+)"', g.command(f"data get storage {ATTRIBUTES} list") or "")
     if new:
         g.command(f"data remove storage {ATTRIBUTES} list")
     sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
@@ -246,12 +398,29 @@ def attributes(g):
         if (x := sides.get(int(player))) is None or field not in combat.Stats._fields:
             continue
         vars(x).setdefault("trigger_attributes", []).append([name, field, int(op), float(q)])
-        s = train.stats(x, name)
-        for uuid in [u["uuid"] for u in x.units if "uuid" in u and u["name"] == name] + \
-                [u for u, n in x.soldiers.items() if n == name]:
-            x.command(combat.stats_command(uuid, name, s, civs.taken(x, name), civs.friendly(x, name)))
-            if field == "range" and (cmd := combat.range_command(uuid, name, x.map.T, s=s)):
+        for uuid, n in [(u["uuid"], u["name"]) for u in x.units if "uuid" in u] + list(x.soldiers.items()):
+            if not train.applies(name, n):                             # a type, or a class (#2859)
+                continue
+            s = train.stats(x, n)
+            x.command(combat.stats_command(uuid, n, s, civs.taken(x, n), civs.friendly(x, n)))
+            if field == "range" and (cmd := combat.range_command(uuid, n, x.map.T, s=s)):
                 x.command(cmd)
+
+
+def reads(g):
+    """The requests of "Modify Variable by Attribute" (aoe2mc.variable_by_attribute_lines, #2858): read and empty the
+    list of the data storage READS, and change the score #v<N> of aoe_var by the value of the unit type of the player
+    (train.stats; AoE2 variables are whole numbers) with a scoreboard operation."""
+    import combat                                                      # combat -> gather -> scenario
+    new = re.findall(r'"(\d+) (\w+) (\w+) ([1-5]) (\d+)"', g.command(f"data get storage {READS} list") or "")
+    if new:
+        g.command(f"data remove storage {READS} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for player, name, field, op, v in new:
+        if (x := sides.get(int(player))) is None or field not in combat.Stats._fields:
+            continue
+        g.command(f"scoreboard players set #read aoe_var {int(getattr(train.stats(x, name), field))}")
+        g.command(f"scoreboard players operation #v{v} aoe_var {('', '+', '-', '*', '/')[int(op) - 1]}= #read aoe_var")
 
 
 def menus(g):
@@ -381,6 +550,43 @@ def tech_states(g):
             sent[(n, name)] = v
 
 
+# The state of a villager (gather.Villager) -> the AoE2 UnitAIAction of "Object Has Action" (#2867), one per line in
+# alphabetical order. aoe2mc.OBJECT_ACTIONS lists the same values: the converter writes only these conditions.
+ACTIONS = {
+    "build": 3,                                                        # BUILD
+    "chop": 10,                                                        # GATHER: wood, food, gold, stone, a farm
+    "garrison": 18,                                                    # ENTER
+    "hunt": 14,                                                        # HUNT
+    "idle": 24,                                                        # IDLE
+    "repair": 19,                                                      # REPAIR
+    "to_drop": 10,                                                     # GATHER: the walk to the drop site
+    "to_prey": 14,                                                     # HUNT
+    "to_rally": 11,                                                    # MOVE
+    "to_repair": 19,                                                   # REPAIR
+    "to_site": 3,                                                      # BUILD
+    "to_tree": 10,                                                     # GATHER
+}
+
+
+def actions(g):
+    """Once per game second: the score #r<ref> of aoe_action of each unit of aoe2mc.json "actions" (the condition
+    "Object Has Action", #2867) is the AoE2 UnitAIAction of its villager state (ACTIONS); 0 for another unit, a dead
+    one or an unknown state. One command per change."""
+    if g.clock() < vars(g).get("action_at", 0.0):
+        return
+    g.action_at = g.clock() + 1.0
+    refs = g.data.get("actions", ())
+    if not refs:
+        return
+    uuids = {o["ref"]: o["uuid"] for o in g.data["objects"] if o.get("ref") in refs and "uuid" in o}
+    states = {u: v.state for x in [g, *(s.g for s in g.bots)] for u, v in x.villagers.items()}
+    sent = vars(g).setdefault("action_sent", {})
+    for ref in refs:
+        if sent.get(ref) != (v := ACTIONS.get(states.get(uuids.get(ref)), 0)):
+            g.command(f"scoreboard players set #r{ref} aoe_action {v}")
+            sent[ref] = v
+
+
 def tech_state(x, name):
     """The AoE2 TechnologyState of technology name for the Gather x: 3 researched, 2 researching (the head of a queue),
     4 queued, -1 disabled (the civilization does not have it), 1 ready (train.unlocked: its age and its technology
@@ -431,6 +637,16 @@ def stance(players, n, m, kind):
     row["team"] = other["team"]
 
 
+def mirror(players, n, m):
+    """"Mirror Diplomacy" (#2822): player n takes the stance of player m toward each other player (m has no stance
+    toward itself). The allies of m come last, so that n stays in their team: an alliance is a team (stance), so n is
+    then an ally of m too. Else the stance between n and m stays."""
+    kinds = {k: "ally" if gather.allied(players, m, k) else "neutral" if k in players[str(m)].get("neutral", ()) else
+             "enemy" for k in sorted(int(p) for p in players if int(p)) if k not in (n, m)}
+    for k in sorted(kinds, key=lambda k: kinds[k] == "ally"):
+        stance(players, n, k, kinds[k])
+
+
 def states(g):
     """Set the score #p<N>.p<M> of aoe_dipstate to the stance of player N to player M + 1 (STANCES): the condition
     "Diplomacy State" of the converted world tests it (#2757)."""
@@ -455,6 +671,12 @@ def diplomacy(g):
             if got and int(got[1]) in STANCES:
                 stance(g.players, n, m, STANCES[int(got[1])])
                 g.command(f"scoreboard players reset #p{n}.p{m} aoe_dip")
+    for n in ns:                                                       # "Mirror Diplomacy" (#2822), after the changes
+        for m in ns:
+            got = n != m and re.search(r" has (-?\d+) ", g.command(f"scoreboard players get #m{n}.p{m} aoe_dip") or "")
+            if got and int(got[1]) > 0:
+                mirror(g.players, n, m)
+                g.command(f"scoreboard players reset #m{n}.p{m} aoe_dip")
     states(g)
     g.command(gather.allies_command(g.players))
     if not treaty.holds(g):
