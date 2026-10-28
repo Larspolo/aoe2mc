@@ -112,6 +112,9 @@ def destroy(g, n):
     else:
         dead = {o.get("uuid") for o in g.data["objects"] if o["player"] == n}
         g.enemies = {u: k for u, k in g.enemies.items() if u not in dead}
+    import owners                                                      # owners -> build -> gather -> this module
+    owners.killed(g, {o["uuid"] for o in g.data["objects"] if o["player"] == n and o.get("uuid")}
+                  | {u for u, p in g.data.get(owners.KEY, {}).items() if p == n})   # update_enemies keeps them out (#2996)
 
 
 def ruin(g, n):

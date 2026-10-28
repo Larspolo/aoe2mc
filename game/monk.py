@@ -335,6 +335,7 @@ def heresy(g, player):
 def die(g, uuid):
     """The enemy unit uuid dies in place of a conversion (Heresy of its player), with its horse, camel, boat or rider."""
     name = g.enemies.pop(uuid)
+    owners.killed(g, {uuid})                                           # update_enemies keeps it out (#2996)
     for run in (f"execute as {uuid} on vehicle run ", f"execute as {uuid} on passengers run ", ""):
         g.command(run + ("kill @s" if run else f"kill {uuid}"))
     g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": f"The {units.pretty(name)} dies (Heresy).",
