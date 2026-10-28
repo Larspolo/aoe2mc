@@ -8,8 +8,22 @@ points (#2257), and the orders of the units (#2258): the job, target and load of
 the repair, #2380), the farmers, stances, control groups and garrisons. A villager keeps no path: after the load it walks
 again with Minecraft path finding (P2).
 The save also keeps the wonder and relic victory timers and the market prices (#2324), the game settings of the
-command line (`run.py` options, "settings"), the attack time and wave of the bot (#2325), and the relics and the monk
-orders (#2412: `monk.relics`, the conversions and the rest of the monks).
+SETTINGS = (                                                           # run.py options (#2325, #2409): one per line
+    "all_techs",
+    "bot",
+    "bot_attack",
+    "cheats",
+    "civ",
+    "end_age",
+    "full_tech_tree",
+    "mode",
+    "people",
+    "pop_limit",
+    "reveal",
+    "teams",
+    "treaty",
+    "victory",
+)
 """
 import json
 import os
@@ -25,7 +39,22 @@ MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at",
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
 JOB = ("state", "load", "res", "job", "lap", "prey")                  # fields of a gather.Villager, as they are
 BOT = ("time", "charged", "attack")                                    # fields of a bot.Bot, as they are (#2325)
-SETTINGS = ("all_techs", "bot", "bot_attack", "cheats", "civ", "full_tech_tree", "people", "reveal", "teams", "victory")   # run.py options
+SETTINGS = (                                                           # run.py options (#2325, #2409): one per line,
+    "all_techs",                                                       # in alphabetical order (parallel tickets add)
+    "bot",
+    "bot_attack",
+    "cheats",
+    "civ",
+    "end_age",
+    "full_tech_tree",
+    "mode",
+    "people",
+    "pop_limit",
+    "reveal",
+    "teams",
+    "treaty",
+    "victory",
+)
 SKIP = ("session.lock",)                                               # the lock of the running server
 
 
@@ -71,6 +100,8 @@ def dump(g):
         d["players"][str(b.g.player)]["bot"] = {f: getattr(b, f) for f in BOT}
     if getattr(g.game, "settings", None):
         d["settings"] = dict(g.game.settings)
+    if getattr(g.game, "treaty", 0):                                   # treaty.start: the time goes on (#2409)
+        d["treaty_time"] = g.game.treaty_time
     return d
 
 
