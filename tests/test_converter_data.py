@@ -9,6 +9,7 @@ import buildings
 import units
 
 KEYS = {"animals.jsonl": ({"keys", "behavior", "mob"}, {"tags", "note"}),
+        "looks.jsonl": ({"name", "pattern", "accent"}, {"crest"}),
         "sounds.jsonl": ({"name", "sound"}, set()),
         "designs.jsonl": ({"name", "design"}, {"args", "wall"}),
         "objects.jsonl": ({"name"}, {"decor", "map_color", "mob", "monument", "no_blocks", "obstacle", "passable", "scatter"}),
@@ -19,6 +20,7 @@ KEYS = {"animals.jsonl": ({"keys", "behavior", "mob"}, {"tags", "note"}),
         "rmap.jsonl": ({"name"}, {"fish", "forest", "scatter", "shore_fish", "start", "terrain", "wolves"}),
         "lines.jsonl": ({"name", "mob", "armor", "main", "off"}, {"tags"}),
         "footprint.jsonl": ({"name", "size"}, set()),
+        "weapons.jsonl": ({"name", "weapon"}, set()),
         "units.jsonl": ({"name"}, {"base", "bird", "crew", "drop", "flying", "hero", "infantry", "invisible", "joke",
                                    "plain", "ruler", "tags", "tier"})}
 

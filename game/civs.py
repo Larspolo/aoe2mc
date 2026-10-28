@@ -312,6 +312,8 @@ def missing(g, name):
     The AoE2 setting "Full Tech Tree" (aoe2mc.json "full_tech_tree", run.py --full-tech-tree) also gives the ONLY items,
     with the exceptions of FULL (#2354)."""
     import gather                                                  # gather imports this module
+    if name in vars(g).get("trigger_menus", {}):                   # "Enable/Disable Object" of a scenario (#2775)
+        return not g.trigger_menus[name]
     c = real(g)
     if g.data.get("full_tech_tree") and (f := FULL.get(name)) != "own" and (f or name in GENERIC or name in ONLY):
         return f == "none"
