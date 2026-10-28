@@ -171,6 +171,8 @@ NOT_SAVED = (                                                          # the fie
     "limit_at",                                                        # time_limit.py: the next check time
     "limit_shown",                                                     # time_limit.py: the shown text
     "noui",                                                            # the cheat "noui": only the hints
+    "owners_at",                                                       # scenario.owners: the next check time
+    "owners_sent",                                                     # scenario.owners: a load sets the same score again
     "peers",                                                           # run.py: the players of the game
     "player",                                                          # run.py: the player number
     "record",                                                          # record.py: run.play opens the file of --record again
