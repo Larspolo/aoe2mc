@@ -521,6 +521,9 @@ def read_scenario(path):
                                             **({"operation": e.operation, "variable": e.variable,   # (#2768)
                                                 "resource": e.tribute_list}
                                                if e.effect_type == MODIFY_RESOURCE_BY_VARIABLE else {}),
+                                            **({"operation": e.operation, "variable": e.variable,   # (#2823)
+                                                "resource": e.tribute_list}
+                                               if e.effect_type == MODIFY_VARIABLE_BY_RESOURCE else {}),
                                             **({"technology": techs.get(e.technology, str(e.technology))}   # #2577
                                                if e.effect_type == RESEARCH_TECHNOLOGY else {}),
                                             **({"unit": e.time_unit, "timer": e.timer}   # "Display Timer" (#2572)
@@ -2899,6 +2902,7 @@ MIRROR_DIPLOMACY = 109                                             # "Mirror Dip
 MODIFY_ATTRIBUTE = 51                                              # "Modify Attribute" (#2763)
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
 MODIFY_RESOURCE_BY_VARIABLE = 53                                   # "Modify Resource by Variable" (#2768)
+MODIFY_VARIABLE_BY_RESOURCE = 86                                   # "Modify Variable by Resource" (#2823)
 MODIFY_VARIABLE_BY_VARIABLE = 100                                  # "Modify Variable by Variable" (#2713)
 OBJECT_HP = 23                                                     # "Object HP", the hit points of one object (#2701)
 OBJECT_NOT_VISIBLE = 16                                            # the conditions "Object (Not) Visible" (#2756)
@@ -3306,6 +3310,18 @@ def resource_by_variable_lines(e, c):
     if (op := OPERATIONS.get(e["operation"])) == "set":
         return [f"scoreboard players operation {target} aoe_set = {v}", f"scoreboard players reset {target} aoe_res"]
     return [f"scoreboard players operation {target} aoe_res {'+' if op == 'add' else '-'}= {v}"] if op in ("add", "remove") else []
+
+
+def variable_by_resource_lines(e, c):
+    """The command of "Modify Variable by Resource" (#2823): variable N (operation)= the stock of the resource, the
+    score of the game program (Gather.board, as resource_score: aoe_res for player 1, aoe_res<P> for the others)."""
+    r, p, v, op = e.get("resource", -1), e.get("player", 0), e.get("variable", -1), e.get("operation")
+    if not 0 <= r < len(ATTRIBUTES) or p <= 0 or v < 0 or op not in (1, 2, 3, 4, 5):
+        c.stats["modify variable by resource (not supported)"] += 1
+        return []
+    c.stats["modify variable by resource"] += 1
+    return [f"scoreboard players operation #v{v} aoe_var {('', '+', '-', '*', '/')[op - 1]}= "
+            f"{ATTRIBUTES[r]} aoe_res{p if p > 1 else ''}"]
 
 
 def teleport_lines(e, c):
@@ -3796,6 +3812,7 @@ EFFECTS = {
     MODIFY_ATTRIBUTE: attribute_lines,
     MODIFY_RESOURCE: resource_lines,
     MODIFY_RESOURCE_BY_VARIABLE: resource_by_variable_lines,
+    MODIFY_VARIABLE_BY_RESOURCE: variable_by_resource_lines,
     MODIFY_VARIABLE_BY_VARIABLE: variable_by_variable_lines,
     PATROL: order_lines,
     PLAY_SOUND: sound_lines,
@@ -4028,7 +4045,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         load += [run] * t["enabled"]
     names = sorted({f"#v{x[k]}" for t in triggers for x in t["conditions"] + t["effects"]
                     for k in ("variable", "variable2")   # "Modify Variable by Variable" has two (#2713)
-                    if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE, MODIFY_VARIABLE_BY_VARIABLE, COMPARE_VARIABLES) and x.get(k, -1) >= 0})
+                    if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE, COMPARE_VARIABLES, MODIFY_VARIABLE_BY_RESOURCE,
+                                     MODIFY_VARIABLE_BY_VARIABLE) and x.get(k, -1) >= 0})
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
