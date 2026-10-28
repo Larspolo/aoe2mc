@@ -156,9 +156,11 @@ def check_replay(row):                                     # a walk speed (a nam
 
 
 def check_setup(row):                                      # a value of a setting of the game setup (#2264)
-    form(row, {"name": str, "resources": dict})
-    assert set(row["resources"]) == {"food", "wood", "gold", "stone"}, row["name"]
-    assert all(isinstance(v, int) and v >= 0 for v in row["resources"].values()), row["name"]
+    form(row, {"name": str}, {"resources": dict, "ages": int, "skip": list, "note": str})
+    assert ("resources" in row) != ("ages" in row), row["name"]           # a resource level or a start age (#2265)
+    assert set(row.get("resources", RES)) == {"food", "wood", "gold", "stone"}, row["name"]
+    assert all(isinstance(v, int) and v >= 0 for v in row.get("resources", {}).values()), row["name"]
+    assert row.get("ages", 0) in range(5) and set(row.get("skip", ())) <= NAMES["train.jsonl"], row["name"]
 
 
 def check_taunts(row):                                     # a taunt: its number and AoE2 text (#2234)

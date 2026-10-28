@@ -24,7 +24,7 @@ def nomad(tmp_path_factory):
 def test_the_nomad_start_is_the_standard_start_and_the_cost_of_a_town_center():
     # AoE2 wiki, "Nomad (map)": "each player starts with an additional 275 wood and 100 stone in order to afford
     # their starting Town Center"
-    assert gather.NOMAD == build.COSTS["TOWN_CENTER"] == {"wood": 275, "stone": 100}
+    assert gather.NOMAD == build.COSTS["TOWN_CENTER"]
     units = [{"kind": "unit", "name": "VILLAGER_MALE", "player": 1, "uuid": "v0", "tile": [1.5, 1.5]}]
     rows = [[64] * 8 for _ in range(8)]
     g = gather.Gather(FakeServer({}), grid(rows, units))

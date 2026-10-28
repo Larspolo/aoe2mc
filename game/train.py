@@ -262,6 +262,8 @@ REQUIRES = {r["name"]: (r["requires"][0], *map(tuple, r["requires"][1:]))   # an
             for r in ROWS if "requires" in r}                      # one of the third list alone
 TECH_AGE = {r["name"]: r["age"] for r in ROWS if "age" in r}       # the age of a technology (build.AGE)
 AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age after each researched age (index: ages)
+# AoE2 DE setting "Starting age" (game/data/setup.jsonl): the researched ages and the skipped technologies (#2265)
+STARTS = {r["name"]: r for r in table.load("setup.jsonl") if "ages" in r}
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
 HOUSING = {r["name"]: r["housing"] for r in BUILDING_ROWS if "housing" in r}   # population of a complete building
 LIMIT = 200                                                        # the AoE2 population limit
@@ -675,8 +677,23 @@ def faster(unit, name):
     return unit == name or unit in civs.GROUPS and civs.GROUPS[unit](name, s) or unit.islower() and unit in s.classes
 
 
-def research(g, entry):
-    """A technology is complete: keep it in g.techs and give the live villagers and military units the new values."""
+def start(g, setting):
+    """The AoE2 DE setting "Starting age" (STARTS, run.py --age): the player starts with the ages and with all
+    technologies of the earlier ages that its civilization has (AoE2 wiki "Random map"); "post-imperial" with all
+    technologies except "skip" (wiki "Post-Imperial Age"). No age bonus pays: the player does not advance (#2265)."""
+    s = STARTS[setting]
+    for t in build.AGE_TECHS[:s["ages"]]:
+        research(g, {"name": t}, start=True)
+    skip = (*build.AGE_TECHS, *s.get("skip", ()))
+    while todo := [t for t in TECHS if t not in g.techs and t not in skip and TECH_AGE.get(t, 0) < s["ages"]
+                   and unlocked(g, t)]:                            # in passes: a technology after the one before it
+        for t in todo:
+            research(g, {"name": t}, start=True)
+
+
+def research(g, entry, start=False):
+    """A technology is complete: keep it in g.techs and give the live villagers and military units the new values.
+    start: a technology of the start age (start()): no text and no bonus of an age or technology."""
     import combat, gather                                          # gather imports this module
     if entry["name"] in g.techs:                                   # a repeat: "going above and beyond" (#968)
         g.repeats[entry["name"]] = g.repeats.get(entry["name"], 0) + 1
@@ -734,6 +751,8 @@ def research(g, entry):
         for uuid, name in g.soldiers.items():                      # the walk speed of the age (civs.UNITS, Celts)
             if civs.speed(g, name) != 1:
                 g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))
+        if start:
+            return
         for r, v in civs.AGE_GIFTS.get(civs.civ(g), {}).items():    # Dravidians, Ethiopians (#1926)
             g.stock[r] += v
             g.command(f"scoreboard players add {r.capitalize()} {g.board} {v}")
@@ -744,6 +763,8 @@ def research(g, entry):
         g.command(f"title @a[team=p{g.player}] title " + json.dumps({"text": age(g), "color": "gold"}))  # the own team only
         g.command("tellraw @a " + json.dumps({"text": f"Player {g.player} advances to the {age(g)}.", "color": "gold"}))
         g.command("playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1")
+        return
+    if start:
         return
     for r, v in civs.TECH_GIFTS.get(civs.civ(g), {}).items():       # Spanish: 20 gold, not for an age (#2175)
         g.stock[r] += v
@@ -780,7 +801,7 @@ def census(g):
         g.selected.discard(u)
         for t in [t for t, f in g.farmers.items() if f == u]:
             del g.farmers[t]
-    g.pop, g.census = len(live), 0.0
+    g.pop, g.census = sum(g.soldiers.get(u) not in build.MOVES for u in live), 0.0   # a mule cart is a building
     sidebar(g)
 
 
@@ -886,7 +907,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     for cmd in fire_commands(g, uuid, name):                       # a new fire ship after Siphons (#2165)
         g.command(cmd)
     # they take move orders as a soldier (#1243, #1253); a ship sails with fleet.py (#1383)
-    if gather.military(name) or name in ORDERS or units.is_boat(units.classify(name)):
+    if gather.military(name) or name in ORDERS or name in build.MOVES or units.is_boat(units.classify(name)):
         g.soldiers[uuid] = name
         return uuid
     g.villagers[uuid] = gather.Villager(uuid, pos)

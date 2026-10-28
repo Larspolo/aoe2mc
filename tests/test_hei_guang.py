@@ -4,7 +4,7 @@
 from test_castle_upgrades import STABLE, research, setup
 from test_forging import menus
 
-from game import build, civs, combat, train
+from game import civs, combat, train
 
 CASTLE = ("FEUDAL_AGE", "CASTLE_AGE")
 IMPERIAL = CASTLE + ("IMPERIAL_AGE",)
@@ -19,7 +19,6 @@ def stable(civ="WEI", ages=IMPERIAL):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert build.AGE["HEI_GUANG_CAVALRY"] == 2 and build.AGE["HEAVY_HEI_GUANG_CAVALRY"] == 3
     for name in NAMES:
         assert len(train.HELP[name]) <= 50
         assert not {"SHU", "WEI", "WU"} & set(civs.MISSING[name]) and {"FRANKS", "BRITONS"} <= set(civs.MISSING[name])

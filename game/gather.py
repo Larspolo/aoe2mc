@@ -86,7 +86,7 @@ DROP_SITES = {r.lower(): tuple(t["name"] for t in ROWS if r.lower() in t.get("dr
 MEAT_SITES = tuple(t["name"] for t in ROWS if "meat" in t.get("drop", ()))   # hunted food only (mule cart, #2194)
 START = replay.START                                               # the AoE2 standard start resources (#973)
 # AoE2 DE setting "Starting resources" (wiki "Random map", without the civilization bonus): run.py --resources (#2264)
-LEVELS = {r["name"]: r["resources"] for r in table.load("setup.jsonl")}
+LEVELS = {r["name"]: r["resources"] for r in table.load("setup.jsonl") if "resources" in r}
 NOMAD = {"wood": 275, "stone": 100}     # AoE2 Nomad (wiki "Nomad (map)"): no building at the start, the cost of a town center
 TREE_WOOD = 100                                                    # wood in one tree, as in AoE2
 # plants of the ground that are not in #minecraft:replaceable: the trunk on a slope removes them from its row (#1124)
@@ -267,11 +267,16 @@ class Map:
         self.blocked |= cells - {tuple(c) for c in open_cells}
         if own and "FISH_TRAP" in name and tile:                       # the food of the fishing ships (#1438)
             self.fish[tile], self.traps[tile] = TRAP_FOOD, cells
-        for r, names in [*DROP_SITES.items(), ("meat", MEAT_SITES)]:
-            if own and any(k in name for k in names):
-                self.drops[r].append(cells)
+        if own:
+            self.drop_site(name, cells)
         if own and "DOCK" in name:                                     # the drop site of the fishing ships (#1384)
             self.docks.append(cells)
+
+    def drop_site(self, name, cells):
+        """Add the cells of an own drop site to the drops of each resource that building name takes."""
+        for r, names in [*DROP_SITES.items(), ("meat", MEAT_SITES)]:
+            if any(k in name for k in names):
+                self.drops[r].append(cells)
 
     def cells(self, tile):
         T = self.T
@@ -509,6 +514,7 @@ class Gather:
     peers = ()                                                         # the Gathers of the other people (fog.py, #1631)
     reveal = "normal"                                                  # AoE2 "Reveal map"; "all": no fog (fog.py, #1389)
     speed = 1.0                                                        # times the Normal speed: shorter real steps (#2057)
+    later = {}                                                         # the bonus of the first town center (civs.TOWN_CENTER)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
                  cheats=False, start=None, resources="standard"):
@@ -525,7 +531,10 @@ class Gather:
             kinds = {o["kind"] for o in data["objects"] if o.get("player") == player}
             nomad = "unit" in kinds and "building" not in kinds
             base = LEVELS[resources]
-            start = civs.start(self, {r: v + NOMAD.get(r, 0) * nomad for r, v in base.items()})   # #1269
+            tc = civs.TOWN_CENTER.get(civs.civ(self), {})              # Tupi: with the first town center (#2293)
+            self.later = dict(tc) if nomad else {}
+            start = civs.start(self, {r: v + NOMAD.get(r, 0) * nomad + tc.get(r, 0) * (not nomad)
+                                      for r, v in base.items()})       # #1269
         self.stock = {**dict.fromkeys(DROP_SITES, 0), **start}             # at the drop sites (#973)
         self.spare = {}                                                # the fractions of the drop-off bonus (#2111)
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
@@ -627,6 +636,7 @@ class Gather:
             train.lore(self)                                           # the help lines of the menus (#1160)
             self.command(allies_command(self.data.get("players", {})))   # allies do not shoot each other (#1315)
             self.command(neutral_command(self.data.get("players", {})))  # no automatic attack on neutrals (#1645)
+        self.forage()
         cheats.setup(self)
         bossbar.setup(self)
         for o in self.units:                                           # the entities must be loaded (forceload)
@@ -636,6 +646,43 @@ class Gather:
         train.census(self)                                             # the population and the limit (#613)
         self.idle()
         return self
+
+    def forage(self):
+        """The start forage bushes of the civilization (civs.BUSHES, Gurjaras: 2 of 175 food, #2293) on the free tiles
+        next to the own town center of the map, the south side first: AoE2 puts them under the town center, where here
+        the villagers walk through. The blocks of a converted bush: berries around, leaves in the middle, dirt below."""
+        count, food = civs.BUSHES.get(civs.civ(self), (0, 0))
+        tc = next((o for o in self.data["objects"] if o["kind"] == "building" and o["name"] == "TOWN_CENTER"
+                   and o["player"] == self.player), None)
+        if not count or tc is None:
+            return
+        m, T = self.map, self.map.T
+        x0, z0, x1, z1 = tc["footprint"]
+        tx0, tz0, tx1, tz1 = x0 // T, z0 // T, (x1 - 1) // T, (z1 - 1) // T
+        units = {(int(o["tile"][0]), int(o["tile"][1])) for o in self.data["objects"] if o["kind"] == "unit" and "tile" in o}
+        ring = [(x, z) for x in range(tx0 - 1, tx1 + 2) for z in range(tz0 - 1, tz1 + 2)
+                if not (tx0 <= x <= tx1 and tz0 <= z <= tz1) and (x, z) not in units
+                and all(m.free(*c) for c in m.cells((x, z)))]
+        ring.sort(key=lambda t: (abs(t[0] - (tx0 + tx1) / 2) + abs(t[1] - (tz0 + tz1) / 2), -t[1], t[0]))
+        for tile in ring[:count]:
+            m.bushes[tile] = food
+            m.blocked |= m.cells(tile)
+            bx, bz = tile[0] * T, tile[1] * T
+            for x, z in sorted(m.cells(tile)):
+                y = m.y(x, z)
+                self.command(f"setblock {x} {y - 1} {z} minecraft:grass_block")
+                if x in (bx, bx + T - 1) or z in (bz, bz + T - 1):
+                    self.command(f"setblock {x} {y} {z} minecraft:sweet_berry_bush[age=3]")
+                else:
+                    self.command(f"fill {x} {y} {z} {x} {y + 1} {z} minecraft:oak_leaves[persistent=true]")
+
+    def town_center(self):
+        """The first own town center is complete (build.rise): the bonus of a Nomad start comes now (civs.TOWN_CENTER,
+        Tupi +25 of each resource, #2293)."""
+        for r, n in sorted(self.later.items()):
+            self.stock[r] += n
+            self.command(f"scoreboard players add {r.capitalize()} {self.board} {n}")
+        self.later = {}
 
     def idle(self):
         """Show the number of idle villagers in the sidebar, as the idle villager button of AoE2 (#744), only when it
@@ -888,6 +935,12 @@ class Gather:
         spot = self.map.spot(tile)
         return {c for c in spot if self.map.free(*c)} if tile in self.map.farms else self.map.around(spot)
 
+    def drop_goals(self, v):
+        """The cells next to the drop sites of the load of a villager (a carcass: also the mule cart, #2194)."""
+        build.moved_carts(self)                                        # a mule cart can be at a new place (#2209)
+        meat = self.map.drops["meat"] if v.res == "food" and v.tree in self.map.carcasses else []
+        return set().union(*map(self.map.around, self.map.drops[v.res] + meat))
+
     def source(self, v):
         """The resources left in the tree, bush, mine or farm of a villager: {tile: amount} of its kind."""
         if v.tree in self.map.farms:
@@ -934,14 +987,16 @@ class Gather:
                 h.stock[res] += part
                 h.command(f"scoreboard players add {res.capitalize()} {h.board} {part}")
 
-    def deliver(self, res, n, forage=False):
+    def deliver(self, res, n, forage=False, kind=None):
         """Earn the load n of resource res at a drop site with the drop-off bonus of the civilization (civs.DROP: food,
-        forage for a load of a fruit bush, #2111). AoE2 keeps the fractions: the next load gets them."""
+        forage for a load of a fruit bush, #2111), and the second resource of gather kind (civs.DROP_EXTRA: "hunt",
+        "fish", "ship", #2308). AoE2 keeps the fractions: the next load gets them."""
         f = civs.drop(self, res) * (civs.drop(self, "forage") if forage else 1)
-        self.spare[res] = self.spare.get(res, 0) + n * f
-        if whole := int(self.spare[res] + 1e-9):
-            self.spare[res] -= whole
-            self.earn(res, whole)
+        for r, m in [(res, n * f)] + [(b[0], n * b[1]) for b in [civs.drop_extra(self, kind)] if b]:
+            self.spare[r] = self.spare.get(r, 0) + m
+            if whole := int(self.spare[r] + 1e-9):
+                self.spare[r] -= whole
+                self.earn(r, whole)
 
     def event(self, v, name):
         if self.log:
@@ -1360,7 +1415,8 @@ class Gather:
                 v.timer = 0.0
                 self.set(v, "chop" if self.source(v).get(v.tree, 0) > 0 else "idle")
             elif v.state == "to_drop":
-                self.deliver(v.res, v.load, v.res == "food" and v.tree in self.map.bushes)
+                self.deliver(v.res, v.load, v.res == "food" and v.tree in self.map.bushes,
+                             "hunt" if v.tree in self.map.carcasses else "fish" if v.tree in self.map.fish else None)
                 v.load = 0
                 self.event(v, "drop")
                 if v.tree in self.map.farms:
@@ -1381,6 +1437,8 @@ class Gather:
                 last = civs.last(self, "sheep" if v.tree in self.map.herds else kind)
                 take = 1 if last == 1 else 1 / last                    # 1: the amounts stay whole numbers
                 most = self.limit(v.res, "sheep" if v.tree in self.map.herds else kind)
+                if v.load < most and src.get(v.tree, 0) > 0:
+                    self.trickle(kind, self.tick)
                 while v.timer >= work and v.load < most and src.get(v.tree, 0) > 0:
                     v.timer -= work
                     v.load += 1
@@ -1404,8 +1462,7 @@ class Gather:
                     else:
                         self.trunk(v.tree)
                 if v.load >= most or src.get(v.tree, 0) <= 0:
-                    meat = self.map.drops["meat"] if v.res == "food" and v.tree in self.map.carcasses else []
-                    self.go(v, "to_drop", set().union(*map(self.map.around, self.map.drops[v.res] + meat)))
+                    self.go(v, "to_drop", self.drop_goals(v))
         train.tick(self, self.tick * NORMAL)
         monk.heal(self, self.tick * NORMAL)
         monk.convert(self, self.tick * NORMAL)
@@ -1438,11 +1495,13 @@ class Gather:
 
     def work_time(self, res, herd=False):
         """Real seconds per unit of resource res ("farm" for farms) with the technologies of the player (WORK_TECHS) and
-        the work-rate bonus of its civilization (civs.WORK; herd: the carcass of a herdable animal, for shepherds)."""
+        the work-rate bonus of its civilization (civs.WORK; herd: the carcass of a herdable animal, for shepherds).
+        civs.MORE multiplies the change of a technology (Armenians: the mule cart technologies 40 % more, #2309)."""
         if self.aegis:
             return 0.0                                                 # a full load in one work step
-        rate = civs.work(self, "sheep" if herd else res)
-        return self.chop.get(res, self.chop.get("food")) / rate / math.prod(WORK_TECHS.get(t, {}).get(res, 1) ** train.count(self, t) for t in self.techs)
+        rate, more = civs.work(self, "sheep" if herd else res), civs.MORE.get(civs.civ(self), {})
+        return self.chop.get(res, self.chop.get("food")) / rate / math.prod(
+            (1 + (WORK_TECHS.get(t, {}).get(res, 1) - 1) * more.get(t, 1)) ** train.count(self, t) for t in self.techs)
 
     def move(self, v):
         import ai                                                      # ai imports gather
@@ -1458,6 +1517,16 @@ class Gather:
         if bonus := civs.extra(self, "forage" if v.tree in self.map.bushes else v.res):
             res, n = bonus
             self.seconds[res] = self.seconds.get(res, 0) + n
+            if whole := int(self.seconds[res] + 1e-9):
+                self.seconds[res] -= whole
+                self.earn(res, whole)
+
+    def trickle(self, kind, dt):
+        """dt real seconds of work at gather kind earn the resource of the civilization for each AoE2 minute
+        (civs.PER_MINUTE, #2308: Thracian hunters and shepherds 3 gold). The fractions add up as in second."""
+        if bonus := civs.per_minute(self, kind):
+            res, n = bonus
+            self.seconds[res] = self.seconds.get(res, 0) + n * dt * NORMAL / 60
             if whole := int(self.seconds[res] + 1e-9):
                 self.seconds[res] -= whole
                 self.earn(res, whole)

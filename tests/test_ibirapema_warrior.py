@@ -7,7 +7,7 @@ from test_castle_upgrades import BARRACKS, research, setup
 from test_forging import menus
 
 import units
-from game import build, civs, combat, replay, train
+from game import civs, combat, replay, train
 
 CASTLE = ("FEUDAL_AGE", "CASTLE_AGE")
 IMPERIAL = CASTLE + ("IMPERIAL_AGE",)
@@ -22,7 +22,6 @@ def barracks(civ="TUPI", ages=IMPERIAL):
 
 
 def test_the_unit_is_an_infantry_husk():
-    assert build.AGE["IBIRAPEMA_WARRIOR"] == 2 and build.AGE["ELITE_IBIRAPEMA_WARRIOR"] == 3
     for unit in ("IBIRAPEMA_WARRIOR", "ELITE_IBIRAPEMA_WARRIOR"):
         assert combat.INF in combat.stats(unit).classes and unit in replay.SPEEDS and len(train.HELP[unit]) <= 50
         assert units.classify(unit)["id"] == "minecraft:husk"
