@@ -1395,11 +1395,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
     }
 
-    // A hit on the boat of a ship goes to its crew, which has the AoE2 values (#1386): the vanilla boat breaks after a
-    // few arrows and drops an item. An arrow that hits the boat hurts the crew with the AoE2 damage of its shooter.
+    // A hit on the boat of a ship or the minecart of a siege unit goes to its crew, which has the AoE2 values (#1386,
+    // #3014): the vanilla vehicle breaks after a few arrows and drops an item. An arrow that hits it hurts the crew
+    // with the AoE2 damage of its shooter.
     @EventHandler(ignoreCancelled = true)
     public void onBoatHit(VehicleDamageEvent ev) {
-        if (!(sailors(ev.getVehicle()) instanceof LivingEntity c) || !stats.containsKey(c.getUniqueId())) {
+        if (!(crew(ev.getVehicle()) instanceof LivingEntity c) || !stats.containsKey(c.getUniqueId())) {
             return;
         }
         ev.setCancelled(true);
@@ -1418,8 +1419,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onBoatBreak(VehicleDestroyEvent ev) {       // a ship sinks only at 0 hit points of its crew (#1386)
-        if (sailors(ev.getVehicle()) instanceof LivingEntity c && stats.containsKey(c.getUniqueId())) {
+    public void onBoatBreak(VehicleDestroyEvent ev) {       // a ship sinks only at 0 hit points of its crew (#1386, #3014)
+        if (crew(ev.getVehicle()) instanceof LivingEntity c && stats.containsKey(c.getUniqueId())) {
             ev.setCancelled(true);
         }
     }
