@@ -14,7 +14,7 @@
 {"name": "AZTECS: All military units are created 15% faster.", "civ": "AZTECS", "bonus": "All military units are created 15% faster.", "in": "TRAIN_RATE"}
 {"name": "AZTECS: Monks gain 5 HP for every researched Monastery technology.", "civ": "AZTECS", "bonus": "Monks gain 5 HP for every researched Monastery technology.", "later": "play:monks"}
 {"name": "AZTECS: Start with gold +50.", "civ": "AZTECS", "bonus": "Start with gold +50.", "in": "START"}
-{"name": "BENGALIS: Elephant units receive 25% less bonus damage and are more resistant to conversion.", "civ": "BENGALIS", "bonus": "Elephant units receive 25% less bonus damage and are more resistant to conversion.", "later": "play:fight"}
+{"name": "BENGALIS: Elephant units receive 25% less bonus damage and are more resistant to conversion.", "civ": "BENGALIS", "bonus": "Elephant units receive 25% less bonus damage and are more resistant to conversion.", "in": "UNITS"}
 {"name": "BENGALIS: All Town Centers spawn 2 Villagers when the next Age is reached.", "civ": "BENGALIS", "bonus": "All Town Centers spawn 2 Villagers when the next Age is reached.", "in": "AGE_VILLAGERS"}
 {"name": "BENGALIS: Cavalry units +2 attack vs Skirmishers.", "civ": "BENGALIS", "bonus": "Cavalry units +2 attack vs Skirmishers.", "later": "play:fight"}
 {"name": "BENGALIS: Ships regenerate 15 HP per minute.", "civ": "BENGALIS", "bonus": "Ships regenerate 15 HP per minute.", "later": "play:naval"}
@@ -24,7 +24,7 @@
 {"name": "BERBERS: Ships move 10% faster.", "civ": "BERBERS", "bonus": "Ships move 10% faster.", "later": "play:naval"}
 {"name": "BOHEMIANS: Blacksmiths and Universities cost wood -100.", "civ": "BOHEMIANS", "bonus": "Blacksmiths and Universities cost wood -100.", "in": "COSTS"}
 {"name": "BOHEMIANS: Chemistry and Hand Cannoneer available in Castle Age.", "civ": "BOHEMIANS", "bonus": "Chemistry and Hand Cannoneer available in Castle Age.", "later": "play:ages"}
-{"name": "BOHEMIANS: Spearman-line deals +25% bonus damage.", "civ": "BOHEMIANS", "bonus": "Spearman-line deals +25% bonus damage.", "later": "play:fight"}
+{"name": "BOHEMIANS: Spearman-line deals +25% bonus damage.", "civ": "BOHEMIANS", "bonus": "Spearman-line deals +25% bonus damage.", "in": "UNITS"}
 {"name": "BOHEMIANS: Fervor and Sanctity affect Villagers.", "civ": "BOHEMIANS", "bonus": "Fervor and Sanctity affect Villagers.", "gap": "play:tech"}
 {"name": "BOHEMIANS: Mining Camp technologies are free.", "civ": "BOHEMIANS", "bonus": "Mining Camp technologies are free.", "in": "COSTS"}
 {"name": "BRITONS: Town Centers cost wood -50% starting in the Castle Age.", "civ": "BRITONS", "bonus": "Town Centers cost wood -50% starting in the Castle Age.", "in": "COSTS"}
@@ -85,7 +85,7 @@
 {"name": "GURJARAS: Start the game with a Camel Scout.", "civ": "GURJARAS", "bonus": "Start the game with a Camel Scout.", "later": "play:setup"}
 {"name": "GURJARAS: Starts with 2 Forage Bushes with food 175 each under the Town Center.", "civ": "GURJARAS", "bonus": "Starts with 2 Forage Bushes with food 175 each under the Town Center.", "later": "play:setup"}
 {"name": "GURJARAS: Can garrison Mills with herdable animals to produce food.", "civ": "GURJARAS", "bonus": "Can garrison Mills with herdable animals to produce food.", "later": "play:garrison"}
-{"name": "GURJARAS: Mounted units deal +20%/+30%/+40% bonus damage in the Feudal/Castle/Imperial Age.", "civ": "GURJARAS", "bonus": "Mounted units deal +20%/+30%/+40% bonus damage in the Feudal/Castle/Imperial Age.", "later": "play:fight"}
+{"name": "GURJARAS: Mounted units deal +20%/+30%/+40% bonus damage in the Feudal/Castle/Imperial Age.", "civ": "GURJARAS", "bonus": "Mounted units deal +20%/+30%/+40% bonus damage in the Feudal/Castle/Imperial Age.", "in": "UNITS"}
 {"name": "HINDUSTANIS: Villagers are 8/13/18/23% cheaper in the Dark/Feudal/Castle/Imperial Age.", "civ": "HINDUSTANIS", "bonus": "Villagers are 8/13/18/23% cheaper in the Dark/Feudal/Castle/Imperial Age.", "in": "COSTS"}
 {"name": "HINDUSTANIS: Camel Riders attack 20% faster.", "civ": "HINDUSTANIS", "bonus": "Camel Riders attack 20% faster.", "in": "UNITS"}
 {"name": "HINDUSTANIS: Gunpowder units have +1/+1 armor.", "civ": "HINDUSTANIS", "bonus": "Gunpowder units have +1/+1 armor.", "in": "UNITS"}
@@ -191,7 +191,7 @@
 {"name": "SHU: All land siege units and Lou Chuans move +10/15% faster in Castle/Imperial Age", "civ": "SHU", "bonus": "All land siege units and Lou Chuans move +10/15% faster in Castle/Imperial Age", "in": "UNITS"}
 {"name": "SICILIANS: Start with stone +100.", "civ": "SICILIANS", "bonus": "Start with stone +100.", "in": "START"}
 {"name": "SICILIANS: Fortifications built 50%, Town Centers built 100% faster.", "civ": "SICILIANS", "bonus": "Fortifications built 50%, Town Centers built 100% faster.", "in": "BUILD_OF"}
-{"name": "SICILIANS: Land military units (except siege weapons) receive 40% less bonus damage.", "civ": "SICILIANS", "bonus": "Land military units (except siege weapons) receive 40% less bonus damage.", "later": "play:fight"}
+{"name": "SICILIANS: Land military units (except siege weapons) receive 40% less bonus damage.", "civ": "SICILIANS", "bonus": "Land military units (except siege weapons) receive 40% less bonus damage.", "in": "UNITS"}
 {"name": "SICILIANS: Farm upgrades provide additional food +125%.", "civ": "SICILIANS", "bonus": "Farm upgrades provide additional food +125%.", "in": "FARM_UPGRADES"}
 {"name": "SLAVS: Farmers work 15% faster.", "civ": "SLAVS", "bonus": "Farmers work 15% faster.", "in": "WORK"}
 {"name": "SLAVS: Arson and Gambesons are free.", "civ": "SLAVS", "bonus": "Arson and Gambesons are free.", "in": "COSTS"}

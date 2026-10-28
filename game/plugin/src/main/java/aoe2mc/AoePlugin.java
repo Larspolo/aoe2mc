@@ -112,8 +112,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              defensive chases an enemy only CHASE blocks past its range (#1105)
  *   aoe stance <selector>                      the stance of the first unit (#1107), for checks
  *   aoe stats <selector> <hp> <attack> <melee armor> <pierce armor> <ranged 0|1|2> <classes|-> <class:bonus,...|->
- *             [reload ticks]                   the AoE2 values of a unit (#514, game/combat.py stats_command); a melee
- *                                              unit hits once per reload (#848, default 20: the vanilla cooldown)
+ *             [reload ticks [taken]]           the AoE2 values of a unit (#514, game/combat.py stats_command); a melee
+ *                                              unit hits once per reload (#848, default 20: the vanilla cooldown);
+ *                                              taken: the factor of the bonus damage that it takes (#2248, default 1)
  *   aoe stop <selector>                        stop the walk and turn the AI off: the unit stands still (#437)
  *   aoe range <selector> <blocks> <ticks> [blast [min [pass [part]]]]
  *                                              a ranged unit shoots from this range, one shot per ticks (#515); a
@@ -255,15 +256,21 @@ import net.kyori.adventure.text.format.NamedTextColor;
  */
 public final class AoePlugin extends JavaPlugin implements Listener {
     // ranged: the unit shoots; pierces: its hit takes the pierce armor (not so for a Throwing Axeman, #800);
-    // reload: the ticks between two melee hits (#848)
+    // reload: the ticks between two melee hits (#848); taken: the factor of the bonus damage that the unit takes (#2248)
     private record Stats(int attack, int melee, int pierce, boolean ranged, boolean pierces, Set<String> classes,
-                         Map<String, Integer> bonus, int reload) {
+                         Map<String, Integer> bonus, int reload, double taken) {
+        Stats(int attack, int melee, int pierce, boolean ranged, boolean pierces, Set<String> classes,
+              Map<String, Integer> bonus, int reload) {
+            this(attack, melee, pierce, ranged, pierces, classes, bonus, reload, 1.0);
+        }
+
         int damage(Stats t) {                                 // the same rule as game/combat.py damage()
             int bonus = 0;
             for (String c : t.classes) {
                 bonus += this.bonus.getOrDefault(c, 0);
             }
-            return Math.max(1, Math.max(0, attack - (pierces ? t.pierce : t.melee)) + bonus);
+            return (int) Math.max(1, Math.max(0, attack - (pierces ? t.pierce : t.melee))
+                    + Math.floor(bonus * t.taken + 0.5));     // rounded half up, as combat.damage
         }
     }
 
@@ -2243,14 +2250,15 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Stance: " + n + " units");
             return true;
         }
-        if ((args.length == 9 || args.length == 10) && args[0].equals("stats")) {
+        if (args.length >= 9 && args.length <= 11 && args[0].equals("stats")) {
             double hp;
             Stats st;
             try {
                 hp = Double.parseDouble(args[2]);
                 st = new Stats(Integer.parseInt(args[3]), Integer.parseInt(args[4]), Integer.parseInt(args[5]),
                         !args[6].equals("0"), args[6].equals("1"), args[7].equals("-") ? Set.of() : Set.of(args[7].split(",")),
-                        bonus(args[8]), args.length == 10 ? Integer.parseInt(args[9]) : 20);
+                        bonus(args[8]), args.length >= 10 ? Integer.parseInt(args[9]) : 20,
+                        args.length == 11 ? Double.parseDouble(args[10]) : 1.0);   // the bonus damage taken (#2248)
             } catch (RuntimeException e) {                 // a bad number or a bonus without ":"
                 sender.sendMessage("Bad value: " + e.getMessage());
                 return true;

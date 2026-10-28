@@ -680,7 +680,7 @@ def research(g, entry):
     if entry["name"] in UPGRADES:                                  # the live units of the line get the new name
         for uuid, new in [(u, new) for old, new in lines(entry["name"], g) for u, n in g.soldiers.items() if n == old]:
             g.soldiers[uuid] = new
-            g.command(combat.stats_command(uuid, new, stats(g, new)))
+            g.command(combat.stats_command(uuid, new, stats(g, new), civs.taken(g, new)))
             if cmd := combat.range_command(uuid, new, g.map.T, s=stats(g, new)):   # the range and blast of an onager
                 g.command(cmd)
             g.command(combat.label_command(uuid, new))               # the name of a new unit (units.pretty)
@@ -688,7 +688,7 @@ def research(g, entry):
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
         if stats(g, name) != combat.stats(name):
             g.command(trebuchet.stats_command(g, uuid) if name == trebuchet.NAME   # the armor of its state (#1409)
-                      else combat.stats_command(uuid, name, stats(g, name)))
+                      else combat.stats_command(uuid, name, stats(g, name), civs.taken(g, name)))
         if name == trebuchet.NAME and trebuchet.state(g, uuid) != "unpacked":
             continue                                               # packed: range 0, the unpack sends the range (#1414)
         if stats(g, name).range != combat.stats(name).range:          # Fletching (#724)
@@ -843,7 +843,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     uuid = units.uuid_str(nbt["UUID"])
     g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}")
     import combat, gather                                          # both import gather, gather imports this module
-    g.command(combat.stats_command(uuid, name, stats(g, name)))
+    g.command(combat.stats_command(uuid, name, stats(g, name), civs.taken(g, name)))
     if cmd := combat.range_command(uuid, name, g.map.T, s=stats(g, name)):   # an archer shoots from its range (#670)
         g.command(cmd)
     if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name)):   # it attacks enemies in sight (#775)

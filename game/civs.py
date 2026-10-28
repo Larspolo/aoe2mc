@@ -19,10 +19,12 @@ multiply with REPAIR. The cost bonus of the Georgians is for buildings only (AoE
 "The bonus does not apply to repairing units"), so siege units and ships pay the full cost.
 
 UNITS holds the bonuses of the land units of combat.STATS (#1090): hit points, attack, armor, range, reload and walk
-speed, per age. train.stats applies them before the technologies; the walk speed goes through speed(). Bonuses of
-this kind that the game program cannot use yet: the bonus damage (Bengali elephants and Sicilian units take less,
-Gurjara mounted units and Bohemian spearmen deal more, Bengali cavalry and Japanese mounted archers against some
-classes, Goth infantry against buildings), the Georgian and Polish regeneration, the elevation (Georgians, Tatars),
+speed, per age. train.stats applies them before the technologies; the walk speed goes through speed(). The value
+"bonus" with a float multiplies the bonus damage that the unit deals (Gurjara mounted units, Bohemian spearmen,
+#2248); the value "taken" is the factor of the bonus damage that the unit takes (Bengali elephants, Sicilian units:
+taken(), the plugin applies it at each hit). Bonuses of this kind that the game program cannot use yet: the bonus
+damage of Bengali cavalry and Japanese mounted archers against some classes and of Goth infantry against buildings,
+the Georgian and Polish regeneration, the elevation (Georgians, Tatars),
 the Lithuanian relics, the Aztec and Slav monks, and the ships.
 """
 import math
@@ -40,12 +42,15 @@ RULES = {
     "camels": lambda n, s: "camel" in s.classes,
     "cavalry": lambda n, s: "cavalry" in s.classes,
     "cavalry archers": lambda n, s: "archer" in s.classes and "cavalry" in s.classes,
+    "elephants": lambda n, s: "elephant" in s.classes,
     "foot archers": lambda n, s: foot_archer(s),
     "foot archers but skirmishers": lambda n, s: foot_archer(s) and not tagged(n, "skirmishers"),
     "foot archers but skirmishers, condottieri": lambda n, s: GROUPS["foot archers but skirmishers"](n, s),
     "gunpowder": lambda n, s: "gunpowder" in s.classes,
     "infantry": lambda n, s: "infantry" in s.classes,
     "infantry, mounted": lambda n, s: "infantry" in s.classes or mounted(s),
+    "land military units but siege": lambda n, s: not civilian(n) and "siege" not in s.classes
+        and not GROUPS["ships"](n, s),
     "land siege, Lou Chuans": lambda n, s: "siege" in s.classes,   # the ships of the group: "groups" (data/units.jsonl)
     "military": lambda n, s: not n.startswith("VILLAGER"),
     "military units": lambda n, s: not civilian(n),
@@ -56,6 +61,7 @@ RULES = {
     "skirmishers, elephant archers": lambda n, s: tagged(n, "skirmishers"),
     "skirmishers, genitours, spearman and scout lines": lambda n, s: "spearman" in s.classes
         or tagged(n, "skirmishers") or tagged(n, "scout line"),
+    "spearman line": lambda n, s: "spearman" in s.classes,
     "spearmen, skirmishers": lambda n, s: "spearman" in s.classes or tagged(n, "skirmishers"),
     "units": lambda n, s: True,
     "villagers": lambda n, s: n.startswith("VILLAGER"),
@@ -202,10 +208,18 @@ def units(g, name, s):
     """The combat.Stats s of unit name with the bonuses of the civilization of the player of g (UNITS), the walk speed
     aside (speed)."""
     for v, c in changes(g, name, s):
-        if v != "speed":
+        if v == "bonus" and isinstance(c, float):                  # a factor of each bonus (#2248)
+            s = s._replace(bonus={k: math.floor(n * c + 0.5) for k, n in s.bonus.items()})
+        elif v not in ("speed", "taken"):
             old = getattr(s, v)
             s = s._replace(**{v: round(old * c, 3 if v == "reload" else None) if isinstance(c, float) else old + c})
     return s
+
+
+def taken(g, name):
+    """The factor of the bonus damage that unit name of the player of g takes (UNITS, value "taken"), else 1 (#2248)."""
+    import combat                                                  # combat imports gather, gather imports this module
+    return math.prod(c for v, c in changes(g, name, combat.stats(name)) if v == "taken")
 
 
 def has(what, name):
