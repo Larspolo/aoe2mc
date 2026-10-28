@@ -96,6 +96,8 @@ Bug reserve: 0.3
 | `play:town-bell` | C | 2 | | |
 | `play:delete` | C | 1 | | |
 | `play:auto-gather` | C | 2 | | |
+| `play:co-op` | C | 3 | | |
+| `play:unit-sounds` | C | 3 | | |
 | `play-check-game` | B | 5 | An agent plays a full game against the bot with a script, from the Dark Age to a win or a loss (about 30 minutes): no server error, no stuck unit | |
 | `play-check-speed` | B | 2 | With 200 units of each player, the server keeps 20 ticks per second | |
 | `play-check-kit` | B | 2 | A play-test kit: how to start and join, the controls, how to report a bug | |
