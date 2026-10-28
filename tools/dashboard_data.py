@@ -141,7 +141,7 @@ def week_rate(points, now, hours=24):
     return sum(max(0, b[1] - a[1]) for a, b in zip(pts, pts[1:])) / span if span >= 1 else None
 
 
-def usage(hours=72, comments=None):
+def usage(hours=168, comments=None):   # 7 days: the chart "Merges per point of 7-day usage" shows all of it
     """The `Usage:` lines: the 5-hour usage, all runs `runs` and the Haiku lane runs `haiku` (#1727), and the 7-day
     usage `week` with its reset `week_resets` and the on-track text `track` where the line has the week (#1696), else
     None. A line before #1696 has no 7-day reset: the reset of another line moved by whole weeks (the 7-day window is
