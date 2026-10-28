@@ -415,7 +415,10 @@ def read_scenario(path):
                                                   {"quantity": c.quantity} if c.condition_type == TRIGGER_CHANCE else {}),
                                                **({"quantity": c.quantity, "variable": c.variable,   # (#2611)
                                                    "comparison": c.comparison}
-                                                  if c.condition_type == VARIABLE_VALUE else {}))
+                                                  if c.condition_type == VARIABLE_VALUE else {}),
+                                               **({"player": c.source_player,                 # (#2656)
+                                                   "technology": techs.get(c.technology, str(c.technology))}
+                                                  if c.condition_type == RESEARCHED else {}))
                                           for c in t.conditions],
                               effects=[dict(type=e.effect_type, message=e.message or "", player=e.source_player,
                                             time=e.display_time, object=kinds.get(e.object_list_unit_id),
@@ -2775,6 +2778,7 @@ OWN_OBJECTS = 3
 PATROL = 19                                                        # "Patrol" (#2647)
 PLAY_SOUND = 4                                                     # "Play Sound" (#2644)
 REMOVE_OBJECT = 15
+RESEARCHED = 9                                                     # the condition "Research Technology" (#2656)
 RESEARCH_TECHNOLOGY = 2                                            # "Research Technology" (#2577)
 SEND_CHAT = 3
 TASK_OBJECT = 12                                                   # "Task Object" (#2646)
@@ -2785,7 +2789,7 @@ TRIGGER_CHANCE = 20                                                # the conditi
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
-TICKED = COUNTED + (VARIABLE_VALUE,)                               # conditions of the tick function
+TICKED = COUNTED + (VARIABLE_VALUE, RESEARCHED)                   # conditions of the tick function
 STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list (AoE2 attributes 0 to 3)
 OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
 STANCES = (0, 1, 3)                                # DiplomacyState: ally, neutral, enemy
@@ -3197,8 +3201,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     entity, so they do not count. The load function schedules a timer trigger at the AoE2 time (all
     timers must pass: the largest). The tick function runs an area trigger when units of its player are in all its
     areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
-    the units leave an area. A "Variable Value" condition runs in the tick function as an area (#2611). The commands
-    of each effect come from its handler in EFFECTS.
+    the units leave an area. A "Variable Value" condition runs in the tick function as an area (#2611), a "Research
+    Technology" condition too: the game program sets the score #p<player>.<technology> of aoe_tech (#2656). The
+    commands of each effect come from its handler in EFFECTS.
     A disabled trigger does not run."""
     load, files, tick, setup = [], {}, [], {}
     stats = Counter() if stats is None else stats
@@ -3214,6 +3219,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 chance and len([c for c in conds if c["type"] == TRIGGER_CHANCE]) > 1 or \
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds) or \
                 any(c["type"] == VARIABLE_VALUE and (c.get("variable", -1) < 0 or variable_range(c) is None)
+                    or c["type"] == RESEARCHED and (c.get("player", -1) <= 0 or not c.get("technology"))
                     for c in conds):                                   # unit classes: not yet
             continue
         ctx = Effect(t, T, ground, players, stats, mood, files, setup)
@@ -3223,8 +3229,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         fn, n = f"aoe2mc:trigger/{t['id']}", t["id"]
         tests, unless, counts = [], [], []
         for i, c in enumerate(conds):
-            if c["type"] == VARIABLE_VALUE:                            # a score of the variable (#2611)
-                test = f"score #v{c['variable']} aoe_var matches {variable_range(c)}"
+            if c["type"] in (VARIABLE_VALUE, RESEARCHED):              # a score: of the variable (#2611), of a
+                test = f"score #v{c['variable']} aoe_var matches {variable_range(c)}" if c["type"] == VARIABLE_VALUE \
+                    else f"score #p{c['player']}.{c['technology']} aoe_tech matches 1.."   # technology of the game (#2656)
                 tests.append(f"if {test}")
                 unless.append(f"unless {test}")
                 continue
@@ -3276,6 +3283,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
+    if any(" aoe_tech " in x for x in tick):                         # a "Research Technology" condition (#2656)
+        setup["scoreboard objectives add aoe_tech dummy"] = None
     load[:0] = setup
     if tick or any(k.endswith("_chance.mcfunction") for k in files):
         load.insert(0, "scoreboard objectives add aoe_trig dummy")
