@@ -611,6 +611,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     if settings["age"] == "dark" and (ages := [MODES[m]["age"] for m in modes if "age" in MODES[m]]):   # (#2408)
         import train                                             # the latest start age of the modes (#2441)
         settings["age"] = max(ages, key=lambda a: train.STARTS[a]["ages"])
+    for x in [g, *(s.g for s in g.bots)]:                        # before the age: train.research sets the scores (#3089)
+        x.modes = frozenset(modes)                               # gather.has_mode: build.locked, Gather.run (#2490)
+        if MODES[settings["mode"]].get("bots") or x is g:
+            x.mode = settings["mode"]                            # build.locked of each player (#2407)
     if not state and settings["age"] != "dark":                  # after the base values: the technologies change them
         import train
         for x in [g, *(s.g for s in g.bots)]:
@@ -623,10 +627,6 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     if not state and start_buildings.used(data):     # the Georgian mule cart (#2429), not twice after a load
         for x in [g, *(s.g for s in g.bots)]:
             start_buildings.place(x)
-    for x in [g, *(s.g for s in g.bots)]:
-        x.modes = frozenset(modes)                               # gather.has_mode: build.locked, Gather.run (#2490)
-        if MODES[settings["mode"]].get("bots") or x is g:
-            x.mode = settings["mode"]                            # build.locked of each player (#2407)
     for mode in sorted(modes):                                   # after the age: the town of Empire Wars, the Wonder;
         line = MODES[mode]                                       # the Kings go to the Gathers of the bots (#2347)
         if "module" in line and not (state and line.get("loaded") == "skip"):   # a loaded game has its town, relic
