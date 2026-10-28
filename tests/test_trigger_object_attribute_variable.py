@@ -33,7 +33,7 @@ def lines(effects, stats=None):
 def test_hit_points_add_the_score_of_the_variable():
     stats = Counter()
     setup, files = build([effect(HP, ADD)], stats)[:2]
-    assert f"execute as {AT} run function aoe2mc:hp/var_add_3" in lines([effect(HP, ADD)])
+    assert f"execute as {AT} unless predicate aoe2mc:rider run function aoe2mc:hp/var_add_3" in lines([effect(HP, ADD)])
     f = files["data/aoe2mc/function/hp/var_add_3.mcfunction"].splitlines()
     assert f[0] == "execute store result score #hp aoe_hp run attribute @s minecraft:max_health base get"
     assert "scoreboard players operation #hp aoe_hp += #v3 aoe_var" in f

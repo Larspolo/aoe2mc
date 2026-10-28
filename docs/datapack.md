@@ -199,3 +199,8 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - A unit in a chunk that is not loaded is no entity for a command: `execute unless entity @e[tag=X]` is true before a
   player comes near, so a "unit is dead" test fired at once on a server with no player (#2618). Test the absence only
   where the unit was: a `marker` entity that follows the unit each tick is not loaded either (`OBJECT_TESTS`).
+- A predicate file of 26.3 names its kind with the key `"type"` (`"minecraft:entity_properties"`), not the older
+  `"condition"`, and an entity predicate has namespaced keys: `{"minecraft:vehicle": {"minecraft:entity_type": [...]}}`,
+  not `"vehicle"`, `"type"`. Else the server says "Failed to load datapacks" and never prints "Done", so a `-m mc`
+  test waits 300 s for nothing (#2976). Read `logs/latest.log` of the server directory for the cause; copy the form
+  from a vanilla file of mcmeta `26.3-data` (`data/minecraft/loot_table/entities/zombie.json` has a vehicle).

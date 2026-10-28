@@ -23,9 +23,10 @@ def lines(effects, stats=None, T=4):
 
 def test_damage_object_damages_each_unit_of_the_player_in_the_area():
     stats = Counter()
-    line, = lines([effect(20)], stats)
+    line, ride = lines([effect(20)], stats)
     assert line == ("execute as @e[tag=aoe2mc.p1,tag=!aoe2mc.mount,x=8,y=-64,z=12,dx=11,dy=383,dz=11] "
-                    "run damage @s 20")                                # AoE2 hit points: max_health in the game program
+                    "unless predicate aoe2mc:rider run damage @s 20")  # AoE2 hit points: max_health in the game program
+    assert ride.endswith(" if predicate aoe2mc:rider on vehicle run damage @s 20")   # its mount has them (#2976)
     assert stats == Counter(damage=1)
 
 
@@ -35,7 +36,7 @@ def test_a_unit_type_filters_the_entity_type():
 
 
 def test_a_gaia_effect_does_not_damage_the_players():
-    line, = lines([effect(5, player=0)])
+    line = lines([effect(5, player=0)])[0]
     assert line.startswith("execute as @e[tag=aoe2mc.p0,tag=!aoe2mc.mount,x=8,")   # Gaia: p0 (#2916)
 
 

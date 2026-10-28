@@ -29,7 +29,7 @@ def test_kill_ownership_and_damage_act_only_on_the_selected_archers():
     assert not all_of_player_2(out), out
     assert "kill @e[tag=aoe2mc.p2,tag=aoe2mc.r10]" in out
     assert "tag @e[tag=aoe2mc.p2,tag=aoe2mc.r11] add aoe2mc.own" in out
-    assert "execute as @e[tag=aoe2mc.p2,tag=aoe2mc.r11] run damage @s 5" in out
+    assert "execute as @e[tag=aoe2mc.p2,tag=aoe2mc.r11] unless predicate aoe2mc:rider run damage @s 5" in out
 
 
 def test_teleport_task_and_freeze_need_no_area_with_a_selection():

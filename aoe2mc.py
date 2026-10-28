@@ -3076,6 +3076,25 @@ def effect_units(e, T):
     return f"@e[type={top['id']},{at[3:]}", top, nbt
 
 
+def hp_runs(found, c):
+    """The `execute ... run` prefixes that reach the hit points of the units of effect_units `found` (#2976): the game
+    program keeps the hit points of a rider on its living mount (units.MOUNTS, `aoe stats`), of a unit on foot, a siege
+    unit (its crew in a minecart) and a ship (its crew in a boat) on the unit. A unit type gives one prefix; no type:
+    the predicate aoe2mc:rider (rider_predicate) splits the units, so each unit changes once."""
+    at, top, nbt = found
+    if top is not None:
+        mounted = top is not nbt and str(nbt["id"]) in units.MOUNTS
+        return [f"execute as {at} {'on vehicle ' * mounted}run"]
+    c.files["data/aoe2mc/predicate/rider.json"] = rider_predicate()
+    return [f"execute as {at} unless predicate aoe2mc:rider run", f"execute as {at} if predicate aoe2mc:rider on vehicle run"]
+
+
+def rider_predicate():
+    """The predicate aoe2mc:rider: the entity rides a living mount (units.MOUNTS), which keeps its hit points (hp_runs)."""
+    return {"type": "minecraft:entity_properties", "entity": "this",
+            "predicate": {"minecraft:vehicle": {"minecraft:entity_type": list(units.MOUNTS)}}}
+
+
 def damage_lines(e, c):
     """The commands of "Damage Object" (#2571): a `damage` of each unit of the effect (effect_units) by its amount.
     The amount is in AoE2 hit points: the game program gives each unit max_health = its AoE2 hit points
@@ -3086,11 +3105,10 @@ def damage_lines(e, c):
     if found is None:
         stats["damage (building, not supported yet)" if q else "damage (no amount)"] += 1
         return []
-    at = found[0]                                                      # Gaia: the tag aoe2mc.p0 (effect_units)
-    stats["damage"] += 1
+    stats["damage"] += 1                                               # Gaia: the tag aoe2mc.p0 (effect_units)
     if q < 0:
-        return heal_commands(at, -q, c)
-    return [f"execute as {at} run damage @s {q}"]                      # damage takes one entity
+        return heal_commands(found, -q, c)
+    return [f"{run} damage @s {q}" for run in hp_runs(found, c)]       # damage takes one entity
 
 
 def attack_lines(e, c, armor=None, q=None):
@@ -3166,7 +3184,7 @@ def object_attribute_by_variable_lines(e, c):
              "execute store result storage aoe2mc:hp value int 1 run scoreboard players get #hp aoe_hp",
              "function aoe2mc:hp/apply with storage aoe2mc:hp"]) + "\n"
         c.files["data/aoe2mc/function/hp/apply.mcfunction"] = "$attribute @s minecraft:max_health base set $(value)\n"
-        return [f"execute as {found[0]} run function aoe2mc:{name}"]
+        return [f"{run} function aoe2mc:{name}" for run in hp_runs(found, c)]
     s = "aoe2mc:object_attribute_by_variable"
     c.files["data/aoe2mc/function/object_attribute_by_variable.mcfunction"] = \
         "$attribute @s $(attribute) modifier add $(id) $(value) add_value\n"
@@ -3222,9 +3240,8 @@ def hp_lines(e, c):
         stats["change object hp (not supported yet)"] += 1
         return []
     stats["change object hp"] += 1
-    at = found[0]
     if op == "set":
-        return [f"execute as {at} run attribute @s minecraft:max_health base set {min(max(q, 1), 1024)}"]
+        return [f"{run} attribute @s minecraft:max_health base set {min(max(q, 1), 1024)}" for run in hp_runs(found, c)]
     c.setup["scoreboard objectives add aoe_hp dummy"] = None
     if op in ("multiply", "divide"):
         change = [f"scoreboard players set #k aoe_hp {q}",
@@ -3240,7 +3257,7 @@ def hp_lines(e, c):
          "execute store result storage aoe2mc:hp value int 1 run scoreboard players get #hp aoe_hp",
          "function aoe2mc:hp/apply with storage aoe2mc:hp"]) + "\n"
     c.files["data/aoe2mc/function/hp/apply.mcfunction"] = "$attribute @s minecraft:max_health base set $(value)\n"
-    return [f"execute as {at} run function aoe2mc:{name}"]
+    return [f"{run} function aoe2mc:{name}" for run in hp_runs(found, c)]
 
 
 def heal_lines(e, c):
@@ -3253,17 +3270,19 @@ def heal_lines(e, c):
         stats["heal (building or no amount, not supported yet)" if q else "heal (no amount)"] += 1
         return []
     stats["heal"] += 1
-    return heal_commands(found[0], q, c)                               # Gaia: not the players (effect_units)
+    return heal_commands(found, q, c)                                  # Gaia: not the players (effect_units)
 
 
-def heal_commands(at, q, c):
-    """The units of selector `at` get q AoE2 hit points back, not above their maximum (heal_lines, damage_lines)."""
+def heal_commands(found, q, c):
+    """The units of effect_units `found` get q AoE2 hit points back, not above their maximum (heal_lines, damage_lines).
+    A rider: its mount (hp_runs)."""
     c.setup["scoreboard objectives add aoe_hp dummy"] = c.setup["scoreboard objectives add aoe_max dummy"] = None
-    return [f"execute as {at} store result score @s aoe_hp run data get entity @s Health",
-            f"execute as {at} store result score @s aoe_max run attribute @s minecraft:max_health get",
-            f"execute as {at} run scoreboard players add @s aoe_hp {q}",
-            f"execute as {at} run scoreboard players operation @s aoe_hp < @s aoe_max",
-            f"execute as {at} store result entity @s Health float 1 run scoreboard players get @s aoe_hp"]
+    return [f"{run.removesuffix(' run')} {line}" for run in hp_runs(found, c) for line in (
+        "store result score @s aoe_hp run data get entity @s Health",
+        "store result score @s aoe_max run attribute @s minecraft:max_health get",
+        f"run scoreboard players add @s aoe_hp {q}",
+        "run scoreboard players operation @s aoe_hp < @s aoe_max",
+        "store result entity @s Health float 1 run scoreboard players get @s aoe_hp")]
 
 
 def speed_lines(e, c):
@@ -4556,9 +4575,11 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if c["type"] == OBJECT_HP:                                 # the Health of the object (tag aoe2mc.r<ref>): none when dead
                 tag = f"aoe2mc.r{c['ref']}"
-                counts += [f"scoreboard players reset #{n}.{i} aoe_trig",
-                           f"execute if entity @e[tag={tag},limit=1] store result score #{n}.{i} aoe_trig "
-                           f"run data get entity @e[tag={tag},limit=1] Health"]
+                files["data/aoe2mc/predicate/rider.json"] = rider_predicate()   # a rider: its mount (#2976)
+                counts += [f"scoreboard players reset #{n}.{i} aoe_trig"] + [
+                    f"execute as @e[tag={tag},limit=1] {ride} store result score #{n}.{i} aoe_trig "
+                    f"run data get entity @s Health"
+                    for ride in ("unless predicate aoe2mc:rider", "if predicate aoe2mc:rider on vehicle")]
                 tests.append(f"if score #{n}.{i} aoe_trig matches {variable_range(c)}")
                 unless.append(f"unless score #{n}.{i} aoe_trig matches {variable_range(c)}")
             if c["type"] not in COUNTED:                               # a timer or the chance
