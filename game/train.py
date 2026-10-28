@@ -96,7 +96,7 @@ TRAINS = {b: tuple(r["name"] for r in ROWS if r["building"] == b)    # the units
           for b in dict.fromkeys(r["building"] for r in ROWS if r["building"])}   # building, in file order
 TRAINS["DONJON"] = ("SPEARMAN",)                                  # trains() adds the Serjeant (#1873)
 TRAINS["FOLWARK"] = TRAINS["MILL"]                                 # the mill of the Poles (#1874)
-TRAINS["KREPOST"] = ()                                             # trains() adds the Konnik (#1872)
+TRAINS["KREPOST"] = ("PETARD",)                                     # trains() adds the Konnik (#1872); wiki: the petard (#2192)
 TRAINS["FORTIFIED_CHURCH"] = TRAINS["MONASTERY"]                  # the monastery of the Armenians, Georgians (#1930)
 # The unique unit of each civilization (AoE2 DE, "unique" in data/civs.jsonl, #1914), trained at its castle. A unit
 # without COSTS is not in the menu yet: it has no AoE2 combat values in combat.STATS.
@@ -647,6 +647,10 @@ def research(g, entry):
             build.upgrade(g, site, combat.wall(site["name"], build.ages(g)))
     build.retower(g, before)                                       # the complete own towers get the new values (#1374),
                                                                    # the buildings those of Masonry and Fletching (#1398, #1408)
+    if entry["name"] in build.AGE_TECHS:                           # the base arrows of the new age (civs.ARROWS, #2178)
+        names = {n for names, _ in civs.ARROWS.get(civs.civ(g), ()) for n in names}
+        for rect in [r for r, o in garrison.holders(g).items() if o["name"] in names]:
+            g.command(garrison.arrows_command(g, rect))
     if entry["name"] == "BALLISTICS" and getattr(g, "paper", False):   # the plugin aims the arrows of the player (#1549)
         g.command(f"aoe ballistics p{g.player} on")
     if entry["name"] == "SPIES":                                   # the enemy units show for ever (#2193)
@@ -691,6 +695,14 @@ def research(g, entry):
         g.command("tellraw @a " + json.dumps({"text": f"Player {g.player} advances to the {age(g)}.", "color": "gold"}))
         g.command("playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1")
         return
+    for r, v in civs.TECH_GIFTS.get(civs.civ(g), {}).items():       # Spanish: 20 gold, not for an age (#2175)
+        g.stock[r] += v
+        g.command(f"scoreboard players add {r.capitalize()} {g.board} {v}")
+    if entry["name"] in civs.ECONOMY:                              # Wei: free villagers at an own town center (#2175)
+        rects = [r for r, n in homes(g).items() if n == "TOWN_CENTER"]
+        for _ in range(civs.ECONOMY_VILLAGERS.get(civs.civ(g), 0) * bool(rects)):
+            if spawn(g, rects[0], "VILLAGER_MALE"):
+                g.pop += 1
     g.command(f"tellraw {entry['player']} " + json.dumps({"text": f"{ITEMS[entry['name']][2]} is researched.",
                                                           "color": "green"}))
 

@@ -120,6 +120,7 @@ ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # th
 # "research_time": [technologies (a rule of has), factor of the research time] (#2172: Achaemenid stable technologies
 # 50 % faster, Jurchen siege and fortification technologies 100 % faster, the Gothic Loom at once).
 WORK = {r["name"]: r["work"] for r in ROWS if "work" in r}
+LAST = {r["name"]: r["last"] for r in ROWS if "last" in r}   # resources last longer: a gathered unit takes 1 / factor (#2112)
 START = {r["name"]: r["start"] for r in ROWS if "start" in r}
 DROP = {r["name"]: r["drop"] for r in ROWS if "drop" in r}
 SHARED = dict(sorted((n, r["name"]) for r in ROWS for n in r.get("shared", ())))
@@ -134,6 +135,7 @@ REPAIR_TEAM = {r["name"]: r["repair_team"] for r in ROWS if "repair_team" in r}
 WORK_RATE = {r["name"]: {b: tuple(v) for b, v in r["work_rate"].items()} for r in ROWS if "work_rate" in r}
 TRAIN_RATE = {r["name"]: [tuples(b) for b in r["train_rate"]] for r in ROWS if "train_rate" in r}
 HP = {r["name"]: r["hp"] for r in ROWS if "hp" in r}
+ARROWS = {r["name"]: tuples(r["arrows"]) for r in ROWS if "arrows" in r}   # factor of the base arrows in each age (#2178)
 GARRISON = {r["name"]: r["garrison"] for r in ROWS if "garrison" in r}   # units inside a building (garrison.size, #2117)
 RESEARCH_TIME = {r["name"]: [tuples(b) for b in r["research_time"]] for r in ROWS if "research_time" in r}
 # "extra": the second resource of a gather kind ("forage": a fruit bush), {kind: [resource, amount for each unit]}: Poles
@@ -146,6 +148,10 @@ AGE_GIFTS = {r["name"]: r["age_gifts"] for r in ROWS if "age_gifts" in r}   # re
 AGE_NO_BUILDINGS = ("KHMER",)                                      # no buildings are required to advance
 AGE_RATE = {"MALAY": 1.66}                                         # advancing in age is 66 % faster
 AGE_VILLAGERS = {"BENGALIS": 2}                                    # each own town center spawns 2 villagers
+# "tech_gifts": the resources for each technology but an age (Spanish), "economy_villagers": the free villagers for
+# each economic technology (Wei, #2175).
+TECH_GIFTS = {r["name"]: r["tech_gifts"] for r in ROWS if "tech_gifts" in r}
+ECONOMY_VILLAGERS = {r["name"]: r["economy_villagers"] for r in ROWS if "economy_villagers" in r}
 
 
 def tagged(n, group):
@@ -248,6 +254,13 @@ def age_rate(g, name):
     return AGE_RATE.get(civ(g), 1) if name in build.AGE_TECHS else 1
 
 
+def arrows(g, building, player=None):
+    """The factor of the base arrows (garrison.BASE) of building name of the player of g (or of player) in the present
+    age of g: ARROWS (the Saxon towers and castles: twice from the Castle Age, #2178), else 1."""
+    import build                                                   # build imports gather, gather imports this module
+    return next((f[build.ages(g)] for names, f in ARROWS.get(civ(g, player), ()) if building in names), 1)
+
+
 def research_time(g, name):
     """The factor of the research time of technology name for the civilization of the player of g (RESEARCH_TIME),
     else 1."""
@@ -327,6 +340,12 @@ def drop(g, kind):
 def work(g, kind):
     """The work-rate factor of the civilization of the player of g for gather kind (WORK), else 1."""
     return WORK.get(civ(g), {}).get(kind, 1)
+
+
+def last(g, kind):
+    """The factor of how long a resource of gather kind lasts for the civilization of the player of g (LAST), else 1:
+    as in AoE2, the villager gets the same amount per trip, but the source loses less (Mayans, Puru, Tatar herds)."""
+    return LAST.get(civ(g), {}).get(kind, 1)
 
 
 def extra(g, kind):
