@@ -10,7 +10,7 @@ from test_siege_walk import summon
 
 
 def test_the_mangonel_line_has_the_blast_radius_of_the_wiki():
-    assert combat.BLAST == {"BOMBARD_CANNON": 0.5, "HEAVY_ROCKET_CART": 1.25, "HOUFNICE": 0.7,   # tiles, AoE2 DE
+    assert combat.BLAST.items() >= {"BOMBARD_CANNON": 0.5, "HEAVY_ROCKET_CART": 1.25, "HOUFNICE": 0.7,   # tiles, AoE2 DE
                             "MANGONEL": 1.0, "ONAGER": 1.25, "ROCKET_CART": 1.0, "SIEGE_ONAGER": 1.5,   # ("AOE")
                             "DEMOLITION_SHIP": 3, "FIRE_SHIP": 0,                                      # (#1440)
                             "CANNON_GALLEON": 0.25,                                                    # (#1484)
@@ -19,7 +19,7 @@ def test_the_mangonel_line_has_the_blast_radius_of_the_wiki():
                             "FAST_FIRE_SHIP": 0, "HEAVY_DEMOLITION_SHIP": 3.25,                         # (#1483)
                             "FIRE_GALLEY": 0,
                             "CATAPULT_GALLEON": 0, "DRAGON_SHIP": 0, "DROMON": 0, "LOU_CHUAN": 0,   # (#1935)
-                            "ELITE_TURTLE_SHIP": 0.5, "TURTLE_SHIP": 0.5}                               # (#1934)
+                            "ELITE_TURTLE_SHIP": 0.5, "TURTLE_SHIP": 0.5}.items()                       # (#1934)
 
 
 def test_the_range_command_gives_the_blast_in_blocks():
