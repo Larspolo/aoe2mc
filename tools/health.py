@@ -703,7 +703,7 @@ def clip(until, runs, status_comments, comments, prs, issues, events):
             [i for i in issues if early(i["created_at"])], [e for e in events if early(e["created_at"])])
 
 
-EVENT_PAGES_PER_DAY = 100   # the repository has about 65 pages of issue events a day, newest first (#2005)
+EVENT_PAGES_PER_DAY = 170   # 107 pages of issue events in 24 hours (2026-10-28, 22:56 UTC), newest first (#2005, #3433)
 
 
 def event_pages(since, now=None):
