@@ -61,7 +61,7 @@ WATERLOGGABLE = {k for k, v in BLOCK_PROPS.items() if "waterlogged" in v}
 # Output format per Minecraft Java version (docs/minecraft-versions.md): only 26.3 (#427); a later 26.x version can
 # get its own entry. The code uses the 26.3 block and entity names (#428).
 VERSIONS = {
-    "26.3": dict(name="26.3", data_version=5023, pack_format=121),
+    "26.3": dict(name="26.3", data_version=5023, pack_format=121, resource_format=97),   # resource: version.json
 }
 VERSION_NAME = "26.3"        # the default output version
 DATA_VERSION = VERSIONS[VERSION_NAME]["data_version"]
@@ -3543,6 +3543,82 @@ MAP_PULSE = ["execute as @a[tag=!aoe2mc_map] run item replace entity @s weapon.o
              "tag @a[tag=!aoe2mc_map] add aoe2mc_map"]
 
 
+# The resource pack of --resource-pack (#2738): human textures for the zombie units. Boxes (u, v, w, h, d, part) of
+# the 64 x 64 entity models (a box puts its six faces at u, v); the left limbs mirror the right ones.
+SKIN_BOXES = {
+    "zombie": [(0, 0, 8, 8, 8, "head"), (16, 16, 8, 12, 4, "shirt"), (40, 16, 4, 12, 4, "arm"), (0, 16, 4, 12, 4, "leg")],
+    "villager": [(0, 0, 8, 10, 8, "head"), (24, 0, 2, 4, 2, "skin"), (16, 20, 8, 12, 6, "shirt"),
+                 (44, 22, 4, 12, 4, "arm"), (0, 22, 4, 12, 4, "leg")],
+}
+SKINS = {   # texture -> (model, skin color); the hair, clothes and face colors are the same for all
+    "entity/zombie/husk.png": ("zombie", (196, 140, 98)),
+    "entity/zombie/zombie.png": ("zombie", (226, 176, 136)),
+    "entity/zombie_villager/zombie_villager.png": ("villager", (214, 160, 120)),
+}
+HAIR, SHIRT, PANTS, SHOES, EYE, MOUTH = (74, 50, 30), (122, 92, 56), (72, 64, 110), (52, 40, 30), (50, 90, 160), (140, 60, 50)
+
+
+def skin_texture(model, tone):
+    """A 64 x 64 entity texture with a human skin tone and face (#2738): each box of the model gets the color of its
+    part on all six faces, the head gets hair, and the front of the head eyes, brows and a mouth."""
+    from PIL import Image, ImageDraw
+    im = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    dark = tuple(int(c * 0.8) for c in tone)
+
+    def box(u, v, w, h, k, color, rows=None):                  # rows: only the top (>0) or bottom (<0) rows of the sides
+        if rows is None or rows > 0:                            # top and bottom; with rows only the top
+            d.rectangle([u + k, v, u + k + (1 if rows is None else 0) * w + w - 1, v + k - 1], fill=color)
+        y0, y1 = (v + k, v + k + h - 1) if rows is None else (v + k, v + k + rows - 1) if rows > 0 else (v + k + h + rows, v + k + h - 1)
+        d.rectangle([u, y0, u + 2 * k + 2 * w - 1, y1], fill=color)                # the four sides
+    for u, v, w, h, k, part in SKIN_BOXES[model]:
+        if part == "head":
+            box(u, v, w, h, k, tone)
+            box(u, v, w, h, k, HAIR, 2)
+            d.rectangle([u + 2 * k + w, v + k, u + 2 * k + 2 * w - 1, v + k + h - 3], fill=HAIR)   # the back of the head
+            e = v + k + h - 6                                       # the eye row: the face is 8 or 10 high
+            for x, w2 in ((u + k + 1, 1), (u + k + 5, -1)):
+                d.point([(x, e - 1), (x + w2, e - 1)], fill=HAIR)  # brows
+                d.point([(x, e)], fill=(240, 240, 240))
+                d.point([(x + w2, e)], fill=EYE)
+            if model == "zombie":
+                d.point([(u + k + 3, e + 1), (u + k + 4, e + 1)], fill=dark)   # nose (a villager has its own box)
+            d.line([(u + k + 2, e + 3), (u + k + 5, e + 3)], fill=MOUTH)
+        elif part == "skin":
+            box(u, v, w, h, k, tone)
+        elif part == "arm":
+            box(u, v, w, h, k, SHIRT)
+            box(u, v, w, h, k, tone, -3)                            # the hand
+            d.rectangle([u + k + w, v, u + k + 2 * w - 1, v + k - 1], fill=tone)
+        else:
+            box(u, v, w, h, k, PANTS if part == "leg" else SHIRT)
+            if part == "leg":
+                box(u, v, w, h, k, SHOES, -2)
+                d.rectangle([u + k + w, v, u + k + 2 * w - 1, v + k - 1], fill=SHOES)
+    return im
+
+
+def write_resourcepack(out):
+    """--resource-pack (#2738): resourcepacks/resources.zip in the world folder, which single player loads with the
+    world (26.x: LevelResource.MAP_RESOURCE_FILE; a world of an older version had resources.zip at its top, and the
+    client moves it there, ResourcePackLocationFileFix). The zombie units get a human face. Same bytes for each
+    conversion: sorted names, a fixed time."""
+    import io
+    import zipfile
+    files = {"pack.mcmeta": json.dumps({"pack": {
+        "description": "aoe2mc: units with a human face", "pack_format": MC["resource_format"],
+        "min_format": MC["resource_format"], "max_format": MC["resource_format"]}}, indent=1).encode()}
+    for path, (model, tone) in SKINS.items():
+        buf = io.BytesIO()
+        skin_texture(model, tone).save(buf, "PNG")
+        files["assets/minecraft/textures/" + path] = buf.getvalue()
+    os.makedirs(os.path.join(out, "resourcepacks"), exist_ok=True)
+    with zipfile.ZipFile(os.path.join(out, "resourcepacks", "resources.zip"), "w", zipfile.ZIP_DEFLATED) as z:
+        for name in sorted(files):
+            z.writestr(zipfile.ZipInfo(name, (1980, 1, 1, 0, 0, 0)), files[name], zipfile.ZIP_DEFLATED)
+    return sorted(files)
+
+
 def write_datapack(out, objects, ground, biome_names=(), ambience="basic", players=None, triggers=(), T=4,
                    trigger_stats=None, fog=None, mood=True):
     """datapacks/aoe2mc: a function every 2 s plays a work sound at each building with a player near it
@@ -3985,16 +4061,18 @@ class Progress:
 
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
             barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False,
-            garrison="inside", border_design="diorama", ambience="basic", at=None, mood="on", fog=False):
+            garrison="inside", border_design="diorama", ambience="basic", at=None, mood="on", fog=False,
+            resource_pack=False):
     """at: recorded games only, the time in ms (--at): convert the state at that time (apply_timeline).
     mood: "on" sets the time of day of the map color mood (MOODS), "off" keeps noon (#1595).
-    fog: the fog of a fog mood (FOG, #1626); ambience "full" gives it too."""
+    fog: the fog of a fog mood (FOG, #1626); ambience "full" gives it too.
+    resource_pack: resources.zip with human faces for the zombie units (#2738)."""
     global MC
     MC = VERSIONS[mc_version]
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
     try:
         _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-                 verbose, garrison, border_design, ambience, at, mood, fog)
+                 verbose, garrison, border_design, ambience, at, mood, fog, resource_pack)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
@@ -4002,7 +4080,7 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
 
 
 def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-             verbose, garrison, border_design, ambience, at=None, mood="on", fog=False):
+             verbose, garrison, border_design, ambience, at=None, mood="on", fog=False, resource_pack=False):
     buildings.BARRIERS = barriers
     buildings.TURN, yaw = ORIENTATIONS[orientation]
     MOVED.clear()           # the counts of an earlier conversion in this process
@@ -4152,6 +4230,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     haze = FOG.get(texts.get("mood")) if mood == "on" and (fog or ambience == "full") else None
     n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze,
                             mood == "on")
+    if resource_pack:
+        print(f"  resource pack (resourcepacks/resources.zip): {len(write_resourcepack(out)) - 1} textures")
     k = sum("/trigger/" in f for f in trigger_files(triggers, T, ground, players, mood=mood == "on")[1]) \
         if ambience != "off" else 0
     if k:
@@ -4383,6 +4463,9 @@ def main(argv=None):
     ap.add_argument("--fog", action="store_true",
                     help="fog for the fog moods of a DE scenario (Misty, Murky, Brumous); Minecraft then shows an "
                          "\"Experimental Settings\" warning when the world opens (--ambience full gives it too)")
+    ap.add_argument("--resource-pack", action="store_true",
+                    help="write resourcepacks/resources.zip into the world: single player loads it with the world, and the zombie "
+                         "units get a human face")
     ap.add_argument("--at", type=game_time, metavar="MM:SS",
                     help="recorded game: convert the state at this game time (buildings and trained units of the "
                          "commands until then; default: the start)")
@@ -4401,7 +4484,7 @@ def main(argv=None):
               player_arch=a.player_architecture, with_units=not a.no_units, barriers=not a.no_barriers,
               mc_version=a.mc_version, spawn=a.spawn, birds=not a.no_birds, orientation=a.orientation,
               verbose=a.verbose, garrison=a.garrison, border_design=a.border, ambience=a.ambience,
-              mood=a.mood, fog=a.fog)
+              mood=a.mood, fog=a.fog, resource_pack=a.resource_pack)
     try:
         if a.at is not None and not a.scenario.lower().endswith(RECORDS):
             ap.error("--at needs a recorded game (.aoe2record)")
