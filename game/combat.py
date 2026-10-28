@@ -232,14 +232,15 @@ def setup(game, data):
             uuid, civ = target_uuid(o["footprint"]), data.get("players", {}).get(str(o["player"]), {}).get("civ")
             civ = None if data.get("full_tech_tree") else civ          # no civilization bonus (#2354)
             for c in building(uuid, o["name"], o["player"], building_box(o, ground), data.get("tile_size", 4),
-                              held.get(o.get("ref"), ()), civs.hp(civ, o["name"], stats(o["name"]))) \
+                              held.get(o.get("ref"), ()), civs.hp(civ, o["name"], stats(o["name"]), 0,
+                                                                  civs.handicap(data, o["player"]))) \
                     + [label_command(uuid, o["name"])]:
                 game.command(c)
     units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] and o.get("uuid")]
     for o in units:                                  # the plugin answers "Range: 0 units" for a mob that cannot shoot
         if cmd := range_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
-    n = sum(game.command(stats_command(o["uuid"], o["name"])).strip() == "Stats: 1 units" for o in units)
+    n = sum(game.command(stats_command(o["uuid"], o["name"], villager(data, o))).strip() == "Stats: 1 units" for o in units)
     import spoils                                    # spoils imports this module
     for o in units:                                  # the hits of a Varangian Guard make gold (#2376)
         if cmd := spoils.tag_command(o["uuid"], o["name"]):
@@ -253,16 +254,23 @@ def setup(game, data):
     return n
 
 
+def villager(data, o):
+    """The Stats of unit object o of aoe2mc.json data with the hit points of the handicap of its owner when it is a
+    villager (#2474), else None (stats_command takes its values)."""
+    f = civs.handicap(data, o["player"])
+    return stats(o["name"])._replace(hp=round(stats(o["name"]).hp * f)) if f != 1 and o["name"].startswith("VILLAGER") else None
+
+
 def target_uuid(footprint):
     """The UUID of the target entity of the building with block footprint [x0, z0, x1, z1): the same in each run."""
     return str(uuids.uuid5(uuids.NAMESPACE_OID, "aoe2mc.building." + ".".join(map(str, footprint))))
 
 
-def wall(name, age, civ=None):
+def wall(name, age, civ=None, factor=1):
     """The Stats of wall name (WALLS) in AoE2 age 0 (Dark) .. 3 (Imperial), with the hit points bonus of civilization
-    civ (civs.hp: Byzantines, #2116)."""
+    civ (civs.hp: Byzantines, #2116) and the factor of the owner's handicap (#2474)."""
     hp, melee, pierce = WALLS[name]
-    return civs.hp(civ, name, Stats(hp[age], 0, melee, pierce, 0, 0.0, {}, ("building", WALL) + (STONE,) * (not name.startswith("PALISADE"))), age)
+    return civs.hp(civ, name, Stats(hp[age], 0, melee, pierce, 0, 0.0, {}, ("building", WALL) + (STONE,) * (not name.startswith("PALISADE"))), age, factor)
 
 
 def building(uuid, name, player, box, T=4, inside=(), s=None, low=None, factor=1):

@@ -36,6 +36,7 @@ SETTINGS = (                                                           # run.py 
     "civ",
     "end_age",
     "full_tech_tree",
+    "handicap",
     "mode",
     "people",
     "pop_limit",
