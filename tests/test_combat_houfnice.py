@@ -5,7 +5,7 @@ from game import combat
 def test_the_values_of_the_wiki():
     h, r = combat.stats("HOUFNICE"), combat.stats("HEAVY_ROCKET_CART")
     assert (h.hp, h.attack, h.melee, h.pierce, h.range, h.reload) == (90, 50, 2, 6, 12, 6.5)
-    assert h.bonus == {"building": 250, combat.SIE: 20} and combat.SIE in h.classes
+    assert h.bonus == {"building": 250, combat.HSI: 50, combat.SIE: 20} and combat.SIE in h.classes   # +50 heavy siege (#2143)
     assert (r.hp, r.attack, r.melee, r.pierce, r.range, r.reload) == (65, 5, 0, 8, 8, 5.35)
     assert r.bonus == {"building": 12, combat.SIE: 2} and "HEAVY_ROCKET_CART" in combat.MELEE_RANGED
 

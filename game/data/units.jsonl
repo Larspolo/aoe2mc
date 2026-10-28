@@ -12,9 +12,9 @@
 {"name": "ARCHER", "hp": 30, "attack": 4, "melee": 0, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 3}, "classes": ["archer"], "groups": ["archer line"]}
 {"name": "CROSSBOWMAN", "hp": 35, "attack": 5, "melee": 0, "pierce": 0, "range": 5, "reload": 2.0, "bonus": {"spearman": 3}, "classes": ["archer"], "groups": ["archer line"]}
 {"name": "ARBALESTER", "hp": 40, "attack": 6, "melee": 0, "pierce": 0, "range": 5, "reload": 2.0, "bonus": {"spearman": 3}, "classes": ["archer"], "groups": ["archer line"]}
-{"name": "SKIRMISHER", "hp": 30, "attack": 2, "melee": 0, "pierce": 3, "range": 4, "reload": 3.0, "bonus": {"archer": 3, "spearman": 3}, "classes": ["archer"], "groups": ["skirmishers"]}
-{"name": "ELITE_SKIRMISHER", "hp": 35, "attack": 3, "melee": 0, "pierce": 4, "range": 5, "reload": 3.0, "bonus": {"archer": 4, "spearman": 3}, "classes": ["archer"], "groups": ["skirmishers"]}
-{"name": "IMPERIAL_SKIRMISHER", "hp": 35, "attack": 4, "melee": 0, "pierce": 5, "range": 5, "reload": 3.0, "bonus": {"archer": 5, "spearman": 4}, "classes": ["archer"], "groups": ["skirmishers"]}
+{"name": "SKIRMISHER", "hp": 30, "attack": 2, "melee": 0, "pierce": 3, "range": 4, "reload": 3.0, "bonus": {"archer": 3, "spearman": 3}, "classes": ["archer", "skirmisher"], "groups": ["skirmishers"]}
+{"name": "ELITE_SKIRMISHER", "hp": 35, "attack": 3, "melee": 0, "pierce": 4, "range": 5, "reload": 3.0, "bonus": {"archer": 4, "spearman": 3}, "classes": ["archer", "skirmisher"], "groups": ["skirmishers"]}
+{"name": "IMPERIAL_SKIRMISHER", "hp": 35, "attack": 4, "melee": 0, "pierce": 5, "range": 5, "reload": 3.0, "bonus": {"archer": 5, "spearman": 4}, "classes": ["archer", "skirmisher"], "groups": ["skirmishers"]}
 {"name": "LONGBOWMAN", "hp": 35, "attack": 6, "melee": 0, "pierce": 0, "range": 5, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"]}
 {"name": "CAVALRY_ARCHER", "hp": 50, "attack": 6, "melee": 0, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "cavalry"], "sight": 5}
 {"name": "HEAVY_CAVALRY_ARCHER", "hp": 60, "attack": 7, "melee": 1, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 4}, "classes": ["archer", "cavalry"]}
@@ -150,7 +150,7 @@
 {"name": "HEAVY_ROCKET_CART", "hp": 65, "attack": 5, "melee": 0, "pierce": 8, "range": 8, "reload": 5.35, "bonus": {"building": 12, "siege": 2}, "classes": ["gunpowder", "siege"], "melee_ranged": true, "blast": 1.25, "min_range": 2.5}
 {"name": "HEI_GUANG_CAVALRY", "hp": 60, "attack": 11, "melee": 4, "pierce": 3, "range": 0, "reload": 1.8, "bonus": {}, "classes": ["cavalry"], "groups": ["hei guang cavalry"]}
 {"name": "HEAVY_HEI_GUANG_CAVALRY", "hp": 90, "attack": 12, "melee": 4, "pierce": 3, "range": 0, "reload": 1.8, "bonus": {"infantry": 1, "condottiero": 1}, "classes": ["cavalry"], "groups": ["hei guang cavalry"]}
-{"name": "HOUFNICE", "hp": 90, "attack": 50, "melee": 2, "pierce": 6, "range": 12, "reload": 6.5, "bonus": {"building": 250, "siege": 20}, "classes": ["gunpowder", "siege"], "blast": 0.7, "min_range": 5}
+{"name": "HOUFNICE", "hp": 90, "attack": 50, "melee": 2, "pierce": 6, "range": 12, "reload": 6.5, "bonus": {"building": 250, "heavysiege": 50, "siege": 20}, "classes": ["gunpowder", "siege"], "melee_ranged": true, "blast": 0.7, "min_range": 5}
 {"name": "IRON_PAGODA", "hp": 115, "attack": 12, "melee": 1, "pierce": 3, "range": 0, "reload": 2.16, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
 {"name": "LEGIONARY", "hp": 75, "attack": 12, "melee": 2, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 4, "infantry": 4}, "classes": ["infantry"], "sight": 7}
 {"name": "ROCKET_CART", "hp": 45, "attack": 5, "melee": 0, "pierce": 6, "range": 7, "reload": 5.5, "bonus": {"building": 7, "siege": 2}, "classes": ["gunpowder", "siege"], "melee_ranged": true, "blast": 1.0, "min_range": 2.5}
