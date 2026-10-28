@@ -223,8 +223,19 @@ final class Minimap extends MapRenderer {
         return f == null || tx < 0 || tz < 0 || tx >= f.length || tz >= f.length ? -1 : f[tx][tz];
     }
 
+    /** The fog that a player of team side sees: the fog of its team, else the fog without a team (the replay), or
+     * null: no fog (#2583; the sight edge, Sight.java, #3330). */
+    byte[][] fogOf(String side) {
+        return side != null && fogs.containsKey(side) ? fogs.get(side) : this.fog;
+    }
+
+    /** The blocks of a fog tile side. */
+    int tile() {
+        return tile;
+    }
+
     /** The team name of player p, or null. */
-    private static String team(Player p) {
+    static String team(Player p) {
         Team t = Bukkit.getScoreboardManager().getMainScoreboard().getEntryTeam(p.getName());
         return t == null ? null : t.getName();
     }
@@ -430,7 +441,7 @@ final class Minimap extends MapRenderer {
         last.put(id, now);
         drawn = canvas;
         String side = team(player);
-        byte[][] fog = side != null && fogs.containsKey(side) ? fogs.get(side) : this.fog;   // the fog of its team (#2583)
+        byte[][] fog = fogOf(side);                       // the fog of its team (#2583)
         Set<List<Integer>> seen = side != null ? known.get(side) : null;      // null: all buildings show
         if (side != null) {
             drawnOf.put(side, canvas);

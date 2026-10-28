@@ -46,7 +46,7 @@ jobs:
           git fetch -q origin main
           now=$(date +%s)
           for n in $(gh api "repos/$R/pulls?state=open&per_page=100" --jq ".[] | select(.head.repo.full_name == \"$R\")
-                     | select(.head.ref | test(\"^(agent|claude)/\")) | select([.labels[].name] | index(\"hold\") | not)
+                     | select(.head.ref | test(\"^(agent/|claude/|ccr-)\")) | select([.labels[].name] | index(\"hold\") | not)
                      | .number"); do
             for try in 1 2 3; do                    # GitHub computes the merge state after the first request
               pr=$(gh api "repos/$R/pulls/$n")

@@ -44,6 +44,10 @@ name each missing item. Close the epic with a comment only when all criteria are
 (name the evidence for each, then the label `close`: `owner.md`, "Close an issue", #1740). Else lock the epic first: `python3 tools/claim.py E --refill`
 (E = the epic; exit 1: another run makes its sub-issue, skip the epic, #505). Then make one sub-issue (same priority)
 for the criteria that an agent can do. A criterion that needs the owner stays on the epic. Then pick again (#176, #155 waited while P3 tickets ran).
+Release checks: when `cycle_start.py` prints the section "Release checks (no ticket, make them in the refill)", a deep
+run makes a check ticket for each listed check (`roadmap` skill, "Release checks"), also when the open epics have work
+left, and writes its number in the `ticket` column of `docs/RELEASE.md` (a PR). Lock it first:
+`python3 tools/claim.py 0 --refill` (exit 1: another run makes them, #3342).
 Refill the queue when fewer candidates are ready than the target number of runs, so that parallel runs always find
 work: N = the target and R = the ready tickets of `python3 tools/usage.py --fire` (its stderr line). Refill only when
 R < N, and make at most 2 × N − R tickets, so the queue stays at most twice the target (owner, #664: when fewer runs work
@@ -54,8 +58,7 @@ up to 10 sub-issues (within the cap) for its open goals, then pick again. The pa
 than the ready tickets for this (`agent.toml`): many runs close tickets faster than one refill makes them (#650;
 2026-10-28: 3 ready tickets for 40 target runs). It starts them only while an open ticket is less than 60 minutes old
 (`usage.refill_runs`), else 1: an empty refill run costs quota.
-Give `lane:haiku` to each new `size:S` ticket that names the place of its change and needs no look at a render or the
-real game, and when you are not sure (`ticket` skill, "Model lanes"); judge the others, do not aim at a number.
+Give each new ticket its lane (`ticket` skill, "Model lanes").
 Also lock each epic E with `python3 tools/claim.py E --refill` before you make its tickets (exit 1: skip that epic, #505).
 A `muted` ticket or epic (the owner mutes it until later, 2026-10-26) is out of all these steps: no split, no check, no
 new sub-issues, no `needs-human`. Still answer an owner comment on it (step 3).

@@ -44,6 +44,8 @@ def test_the_barracks_menu_has_the_champi_scout_only_for_four_civilizations():
 def test_the_upgrades_change_the_live_and_the_new_units():
     server, g = player(ages=("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE"))
     g.soldiers["c"] = "CHAMPI_SCOUT"
+    g.game.entities.setdefault("c", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
+    g.sites.append({"name": "HOUSE", "player": 1, "footprint": [20, 22, 20, 22], "done": True})   # room for one more unit
     rect = train.open_menu(g, "Steve", BARRACKS)
     assert " 27:book:Champi Runner:90 food · 60 gold · 40 s · research" in menus(server)[-1]
     for old, new, cost, time in (("CHAMPI_SCOUT", "CHAMPI_RUNNER", "90 food · 60 gold", 40),

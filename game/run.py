@@ -338,6 +338,8 @@ class Game:
         if self.people > 1 and n:
             self.sides[name] = n
             self.command(f"team join p{n} {name}")
+            for cmd in [f"aoe hide {name} team"] * (getattr(self, "kind", "paper") == "paper"):
+                self.command(cmd)            # the hides of the own team only: the plugin hid all on the join (#3070)
         elif self.people > 1:
             for cmd in [*SPECTATORS * (not self.spectators), f"team join spec {name}", f"gamemode spectator {name}",
                         *[f"aoe show {name} all"] * (getattr(self, "kind", "paper") == "paper")]:
@@ -352,6 +354,8 @@ class Game:
             return False
         self.sides[name] = n
         self.command(f"team join p{n} {name}")
+        for cmd in [f"aoe hide {name} team"] * (getattr(self, "kind", "paper") == "paper"):
+            self.command(cmd)                # a side change keeps the hides of the old team (#3070)
         if name in getattr(self, "spectators", ()):  # a spectator who takes a free side plays again (#2898)
             self.spectators = self.spectators - {name}
             self.command(f"gamemode creative {name}")

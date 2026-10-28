@@ -52,7 +52,7 @@ def game(pos):
     objects = [dict(kind="unit", name="MILITIA", player=1, uuid="s1", tile=[2, 2]),
                dict(kind="unit", name="MILITIA", player=2, uuid="e5", ref=5, tile=[4, 4]),
                dict(kind="building", name="HOUSE", player=2, ref=6, footprint=[26, 26, 28, 28], tile=[26, 26])]
-    server = FakeServer({})
+    server = FakeServer({u: {"Pos": p} for u, p in pos.items()})          # alive at the census (#3122)
     data = grid([[64] * 30 for _ in range(30)], objects)
     data["players"] = {"0": {}, "1": {}, "2": {}}
     g = gather.Gather(server, data).setup()

@@ -20,7 +20,7 @@ def files(conds, stats=None):
 
 def test_the_tick_function_tests_the_hurt_time_of_the_unit():
     assert files([attacked()])["data/aoe2mc/function/tick.mcfunction"].splitlines() == [
-        "execute if entity @e[tag=aoe2mc.r5,nbt=!{HurtTime:0s}] unless score #3 aoe_trig matches 1 "
+        "execute if entity @e[tag=aoe2mc.r5,predicate=aoe2mc:attacked] unless score #3 aoe_trig matches 1 "
         "run function aoe2mc:trigger/3"]
 
 
@@ -34,3 +34,9 @@ def test_read_scenario_keeps_the_object_and_the_map_names_the_command():
     assert aoe2mc.OBJECT_ATTACKED in aoe2mc.OBJECT_TESTS           # read_scenario adds ref, unit and player
     assert "HurtTime" in triggers.MAP[("condition", "OBJECT_ATTACKED")]
     assert "#2779" in triggers.MAP[("condition", "OBJECT_ATTACKED")]
+
+
+def test_the_predicate_accepts_the_hurt_time_or_the_hit_tag_of_the_plugin():      # #3085
+    pred = files([attacked()])["data/aoe2mc/predicate/attacked.json"]
+    assert pred == aoe2mc.attacked_predicate() and pred["type"] == "minecraft:any_of"
+    assert [t.get("term", t)["predicate"]["minecraft:nbt"] for t in pred["terms"]] == ["{HurtTime:0s}", '{Tags:["aoe2mc.hit"]}']

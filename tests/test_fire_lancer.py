@@ -16,6 +16,7 @@ def barracks(civ="JURCHENS", ages=IMPERIAL):
     server, g = setup(ages=ages)
     g.data["players"] = {"1": {"civ": civ}}
     g.soldiers["fl"] = "FIRE_LANCER"
+    g.game.entities.setdefault("fl", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     return server, g
 
 
