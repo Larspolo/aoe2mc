@@ -426,6 +426,9 @@ def read_scenario(path):
                                                **({"quantity": c.quantity, "variable": c.variable,   # (#2611)
                                                    "comparison": c.comparison}
                                                   if c.condition_type == VARIABLE_VALUE else {}),
+                                               **({"variable": c.variable, "variable2": c.variable2,   # (#2698)
+                                                   "comparison": c.comparison}
+                                                  if c.condition_type == COMPARE_VARIABLES else {}),
                                                **({"quantity": c.quantity, "player": c.source_player,   # (#2655)
                                                    "attribute": c.attribute}
                                                   if c.condition_type == ACCUMULATE_ATTRIBUTE else {}),
@@ -2862,6 +2865,7 @@ CHANGE_VARIABLE = 56                                               # the scenari
 CHANGE_VIEW = 16                                                   # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
 CLEAR_TIMER = 57                                                   # "Clear Timer" (#2696)
+COMPARE_VARIABLES = 78                                             # the condition "Compare Variables" (#2698)
 CREATE_GARRISONED_OBJECT = 49                                      # "Create Garrisoned Object" (#2764)
 CREATE_OBJECT = 11
 DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
@@ -2919,6 +2923,7 @@ COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions 
 VISIBLE = (OBJECT_NOT_VISIBLE, OBJECT_VISIBLE, OBJECT_VISIBLE_MULTIPLAYER)  # the sight of a player: the game program
 TICKED = COUNTED + (                                               # conditions of the tick function, one per line
     ACCUMULATE_ATTRIBUTE,
+    COMPARE_VARIABLES,
     DIFFICULTY_LEVEL,
     DIPLOMACY_STATE,
     DISPLAY_TIMER_TRIGGERED,
@@ -3331,6 +3336,20 @@ def variable_range(c):
     Less or Equal, Larger or Equal."""
     q = c.get("quantity") or 0
     return {0: f"{q}", 1: f"..{q - 1}", 2: f"{q + 1}..", 3: f"..{q}", 4: f"{q}.."}.get(c.get("comparison"))
+
+
+def compare_test(c):
+    """The score test of a "Compare Variables" condition (#2698): `score #vA aoe_var <op> #vB aoe_var`. Comparison 5
+    (not equal) is "=", negated by compare_negated; None for a missing variable."""
+    a, b, cmp = c.get("variable", -1), c.get("variable2", -1), c.get("comparison")
+    if a < 0 or b < 0 or cmp not in range(6):
+        return None
+    return f"score #v{a} aoe_var {('=', '<', '>', '<=', '>=', '=')[cmp]} #v{b} aoe_var"
+
+
+def compare_negated(c):
+    """True when the test of a "Compare Variables" condition fails on a match: "not equal", or "Inverted" (#2698)."""
+    return (c.get("comparison") == 5) != c["inverted"]
 
 
 def task_lines(e, c):
@@ -3747,10 +3766,11 @@ Effect = namedtuple("Effect", "t T ground players stats mood files setup switch 
 # "Difficulty Level" (#2704): the score #level of aoe_difficulty is the AoE2 value of the difficulty of the game
 # (scenario.setup); "Research Technology" (#2656): the game program sets #p<player>.<technology> of aoe_tech;
 # "Researching Technology" and "Technology State" (#2769): the game program sets #p<player>.<technology> of
-# aoe_techstate to the AoE2 TechnologyState (2: researching); "Variable Value" (#2611): the score #v<N> of aoe_var. A
-# world with no game program has no score: no fire.
+# aoe_techstate to the AoE2 TechnologyState (2: researching); "Compare Variables" (#2698): two scores of aoe_var;
+# "Variable Value" (#2611): the score #v<N> of aoe_var. A world with no game program has no score: no fire.
 SCORE_TESTS = {
     ACCUMULATE_ATTRIBUTE: resource_score,
+    COMPARE_VARIABLES: compare_test,
     DIFFICULTY_LEVEL: lambda c: f"score #level aoe_difficulty matches {c.get('quantity', 0)}",
     DIPLOMACY_STATE: lambda c: f"score #p{c['player']}.p{c['target']} aoe_dipstate matches {c['diplomacy'] + 1}",
     DISPLAY_TIMER_TRIGGERED: lambda c: f"score #done{c.get('slot', 0)} aoe_timer matches 1..",   # set at 0 (#2702)
@@ -3841,13 +3861,14 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             stats["OR with a timer or a chance (not supported yet)"] += t["enabled"]
             continue
         if not (t["enabled"] or t["id"] in on and t["id"] not in chancy) or not conds or \
-                not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED} | {(k, True) for k in OBJECT_TESTS} | {(TRIGGER_ACTIVE, True)}) or \
+                not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED} | {(k, True) for k in OBJECT_TESTS} | {(TRIGGER_ACTIVE, True)} | {(COMPARE_VARIABLES, True)}) or \
                 chance and len([c for c in conds if c["type"] == TRIGGER_CHANCE]) > 1 or \
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds) or \
                 any(c["type"] == VARIABLE_VALUE and (c.get("variable", -1) < 0 or variable_range(c) is None)
                     or c["type"] in (RESEARCHED, RESEARCHING_TECH, TECHNOLOGY_STATE)
                     and (c.get("player", -1) <= 0 or not c.get("technology"))
                     or c["type"] == ACCUMULATE_ATTRIBUTE and resource_score(c) is None
+                    or c["type"] == COMPARE_VARIABLES and compare_test(c) is None
                     or c["type"] == OBJECT_HP and (c.get("ref", -1) < 0 or variable_range(c) is None)
                     or c["type"] == UNITS_GARRISONED and c.get("unit", -1) < 0
                     or c["type"] in VISIBLE and (c.get("ref") is None or c["ref"] < 0 or c.get("player", -1) <= 0)
@@ -3868,8 +3889,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             tests, unless = groups_tests[which[i]], groups_unless[which[i]]
             if c["type"] in SCORE_TESTS:                               # a score of the world or the game
                 test = SCORE_TESTS[c["type"]](c)
-                tests.append(f"if {test}")
-                unless.append(f"unless {test}")
+                no = c["type"] == COMPARE_VARIABLES and compare_negated(c)   # "not equal" or "inverted": unless
+                tests.append(f"{'unless' if no else 'if'} {test}")
+                unless.append(f"{'if' if no else 'unless'} {test}")
                 continue
             if c["type"] in OBJECT_TESTS:                              # the tag of the object (#2618)
                 test, other, before = OBJECT_TESTS[c["type"]]
@@ -3941,7 +3963,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         load += [run] * t["enabled"]
     names = sorted({f"#v{x[k]}" for t in triggers for x in t["conditions"] + t["effects"]
                     for k in ("variable", "variable2")   # "Modify Variable by Variable" has two (#2713)
-                    if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE, MODIFY_VARIABLE_BY_VARIABLE) and x.get(k, -1) >= 0})
+                    if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE, MODIFY_VARIABLE_BY_VARIABLE, COMPARE_VARIABLES) and x.get(k, -1) >= 0})
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0

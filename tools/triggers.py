@@ -38,6 +38,7 @@ MAP = {
     ("condition", "CAPTURE_OBJECT"): "`execute if entity @e[tag=aoe2mc.rN,tag=aoe2mc.pN]` in the tick function (units, #2619); a building: not supported yet",
     ("condition", "DISPLAY_TIMER_TRIGGERED"): "`execute if score #doneN aoe_timer matches 1..` in the tick function: the timer sets the score at 0 (#2702)",
     ("condition", "OBJECT_HP"): "`execute store result score ... run data get entity @e[tag=aoe2mc.rN,limit=1] Health` in the tick function, then `if score ... matches` (#2701)",
+    ("condition", "COMPARE_VARIABLES"): "`execute if score #vA aoe_var <op> #vB aoe_var` in the tick function, once; `unless` for not equal and inverted (#2698)",
     ("condition", "VARIABLE_VALUE"): "`execute if score #vN aoe_var matches ..` in the tick function, once (#2611)",
     ("condition", "AND"): "the default between two conditions: all conditions of one group in one `execute if ... if ...` line (#2765)",
     ("condition", "OR"): "one `execute if ... run function` line per group in the tick function, with the same fire score `#N aoe_trig`: the trigger runs once (not yet with a timer or a chance, #2765)",
