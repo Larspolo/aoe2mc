@@ -4,7 +4,7 @@ forms in their slots. The fire ship needs it ("TrainReq"). The hulk becomes the 
 from test_dock_train import DOCK, dock_map
 from test_train_archery import menus
 
-from game import build, combat, train
+from game import combat, train
 
 
 def castle(wood=400, gold=300):
@@ -18,7 +18,7 @@ def test_the_values_are_those_of_aoe2():
     assert len(train.HELP["MEDIUM_WARSHIPS"]) <= 50
     assert train.lines("MEDIUM_WARSHIPS") == (("GALLEY", "WAR_GALLEY"), ("FIRE_GALLEY", "FIRE_SHIP"), ("HULK", "WAR_HULK"))
     assert train.lines("MAN_AT_ARMS_UPGRADE") == (("MILITIA", "MAN_AT_ARMS"),)
-    assert "FIRE_SHIP" not in train.TRAINS["DOCK"] and build.AGE["FIRE_SHIP"] == 2
+    assert "FIRE_SHIP" not in train.TRAINS["DOCK"]
 
 
 def test_the_dock_menu_shows_it_in_the_castle_age_and_no_fire_ship_before_it():

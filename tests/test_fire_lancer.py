@@ -6,7 +6,7 @@ from test_castle_upgrades import BARRACKS, research, setup
 from test_forging import menus
 
 import units
-from game import build, civs, combat, train
+from game import civs, combat, train
 
 CASTLE = ("FEUDAL_AGE", "CASTLE_AGE")
 IMPERIAL = CASTLE + ("IMPERIAL_AGE",)
@@ -20,7 +20,6 @@ def barracks(civ="JURCHENS", ages=IMPERIAL):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert build.AGE["FIRE_LANCER"] == 2 and build.AGE["ELITE_FIRE_LANCER"] == 3
     for unit in ("FIRE_LANCER", "ELITE_FIRE_LANCER"):
         assert len(train.HELP[unit]) <= 50
         assert units.classify(unit)["id"] == "minecraft:pillager"

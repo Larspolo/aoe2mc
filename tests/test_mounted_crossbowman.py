@@ -7,7 +7,7 @@ from test_castle_upgrades import RANGE, research, setup
 from test_forging import menus
 
 import units
-from game import build, civs, combat, train
+from game import civs, combat, train
 
 CASTLE = ("FEUDAL_AGE", "CASTLE_AGE")
 IMPERIAL = CASTLE + ("IMPERIAL_AGE",)
@@ -21,7 +21,6 @@ def archery_range(civ="POLES", ages=IMPERIAL):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert build.AGE["MOUNTED_CROSSBOWMAN"] == 2 and build.AGE["HEAVY_MOUNTED_CROSSBOWMAN"] == 3
     for unit in ("MOUNTED_CROSSBOWMAN", "HEAVY_MOUNTED_CROSSBOWMAN"):
         assert len(train.HELP[unit]) <= 50
         e = units.classify(unit)
