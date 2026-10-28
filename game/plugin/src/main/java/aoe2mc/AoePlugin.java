@@ -324,6 +324,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Sight sight = new Sight(minimap);                 // the edge of the line of sight (#3330)
 
     // b: x0 y0 z0 x1 y1 z1 of box; range: the blocks from the footprint that its arrows reach, 0: no attack (#1111)
+    private static final int MAX_FILL = 32768;                    // blocks of one /fill (the 26.3 default, #3076)
     private record Building(Stats stats, String box, int max, int[] b, double range, double min) {}
 
     private final Map<UUID, Building> buildings = new HashMap<>();
@@ -1538,7 +1539,20 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             label(target, b, null);
             score.resetScore();
             target.remove();
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "fill " + b.box + " minecraft:air");
+            clear(b.box);
+        }
+    }
+
+    /** Fill the box "x0 y0 z0 x1 y1 z1" with air in layers of at most MAX_FILL blocks: the server refuses a larger
+     *  fill, and a large building at a large tile size has more (#3076; Replay.fill does the same). */
+    private static void clear(String box) {
+        int[] c = java.util.Arrays.stream(box.trim().split("\\s+")).mapToInt(Integer::parseInt).toArray();
+        int x0 = Math.min(c[0], c[3]), x1 = Math.max(c[0], c[3]), y0 = Math.min(c[1], c[4]), y1 = Math.max(c[1], c[4]);
+        int z0 = Math.min(c[2], c[5]), z1 = Math.max(c[2], c[5]);
+        int step = Math.max(1, MAX_FILL / ((x1 - x0 + 1) * (z1 - z0 + 1)));
+        for (int y = y0; y <= y1; y += step) {
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "fill " + x0 + " " + y + " " + z0 + " " + x1 + " "
+                + Math.min(y + step - 1, y1) + " " + z1 + " minecraft:air");
         }
     }
 
