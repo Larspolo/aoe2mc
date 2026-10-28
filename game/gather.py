@@ -52,6 +52,7 @@ from units import TEAM_COLOR, VILLAGER_JOBS, animal, pretty  # noqa: E402
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import replay  # noqa: E402  (build imports it too)
+import battle_royale  # noqa: E402
 import bossbar  # noqa: E402
 import capture_relic  # noqa: E402
 import cheats  # noqa: E402
@@ -1815,6 +1816,8 @@ class Gather:
                 regicide.tick(self)
             elif self.mode == "sudden-death":                          # a player without its town center loses (#2407)
                 sudden_death.tick(self)
+            elif self.mode == "battle-royale":                         # the Corruption takes the map (#2439)
+                battle_royale.tick(self, self.tick * NORMAL)
             elif self.mode == "capture-the-relic":                     # the center relic in a monastery wins (#2440)
                 capture_relic.tick(self)
             fog.tick(self)                                             # after the bots: their units too (#1389)
