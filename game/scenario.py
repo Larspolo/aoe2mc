@@ -54,6 +54,7 @@ ORDERS = "aoe2mc:orders"                                               # the dat
 ATTRIBUTES = "aoe2mc:attributes"                                       # the storage of "Modify Attribute" (#2763)
 MENUS = "aoe2mc:menus"                                                 # the storage of "Enable/Disable" (#2775)
 COSTS = "aoe2mc:costs"                                                 # the storage of "Change Object Cost" (#2776)
+UNSELECTABLE = "aoe2mc.unselectable"                                   # the tag of "Disable Object Selection" (aoe2mc)
 NAMES = "aoe2mc:names"                                                 # the storage of "Change Technology Name" (#2821)
 LOCATIONS = "aoe2mc:locations"                                         # the storage of "Add Train Location" (#2865)
 NEAR = 3                                                               # blocks: a patrol turns back this near its point
@@ -120,6 +121,7 @@ def tick(g):
     g.book_at = g.clock() + EVERY
     tasks(g)
     orders(g)
+    selection(g)
     menus(g)
     visible(g)
     attributes(g)
@@ -217,6 +219,18 @@ def orders(g):
             g.command(f"aoe moveto @e[tag={tag}] {' '.join(map(str, points[q[2] % 2]))}")
         elif "passed" not in g.command(f"execute if entity @e[tag={tag}]"):
             patrols.remove(q)
+
+
+def selection(g):
+    """The units of "Disable Object Selection" (aoe2mc.selection_lines, #2854): read the UUIDs with the tag UNSELECTABLE
+    (one `aoe where` per check, not one command per click) into g.unselectable, which the clicks, the selection box and
+    the double click skip (gather.Gather.unpickable). A selected unit that gets the tag leaves the selection. Vanilla
+    has no `aoe where`: there all units stay selectable."""
+    if not getattr(g, "paper", False):
+        return
+    g.unselectable = set(g.where(None, f"@e[tag={UNSELECTABLE}]"))
+    if g.selected & g.unselectable:
+        g.choose(g.selected - g.unselectable)
 
 
 def foundation(g, player, name, tile):
