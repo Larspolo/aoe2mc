@@ -1975,6 +1975,13 @@ class Replay:
         self.drawn = dict(want)
         return out
 
+    def place_view(self, tile):
+        """The commands that put the viewers above a tile (#2950): replay_input.place_commands at its ground."""
+        x, z = (min(self.n - 1, max(0, int(c * self.T))) for c in tile)
+        y = self.ground[z][x] if self.ground[z][x] is not None else next(
+            (g for row in self.ground for g in row if g is not None), 64)
+        return replay_input.place_commands(tile, self.T, y)
+
     def overview(self, join=False):
         """The view of a player at the start of the replay (#737, owner decision #782): adventure mode, a text about
         the spectator view, and a place high above the map that looks down at its center (VIEW_PITCH) in the
@@ -2397,6 +2404,9 @@ class Replay:
                     if self.control.get("view") != self.pov:
                         self.pov = self.control.get("view")
                         self.send(self.fog())
+                    if (place := self.control.pop("place", None)) is not None:      # a fight jump (#2950)
+                        self.follow = None                          # the follow view ends
+                        self.send(self.place_view(place))
                 if (to := self.control.pop("jump", None)) is not None:
                     break
                 wait = POLL if self.paused else (now - g0) / 1000 / self.speed - (clock() - r0)
