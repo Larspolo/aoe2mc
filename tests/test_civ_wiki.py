@@ -25,6 +25,8 @@ TABLES = (                                                            # one per 
     "BUILD_OF",
     "COSTS",
     "ECONOMY_VILLAGERS",
+    "EXTRA",
+    "DROP",
     "GARRISON",
     "REPAIR",
     "REPAIR_COST",
