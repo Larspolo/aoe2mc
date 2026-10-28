@@ -44,6 +44,7 @@ COUNTERS = (                                                           # the par
     "cart_heal",                                                       # trade.py
     "garrison_heal",                                                   # garrison.py
     "herd_food",
+    "hero_time",                                                       # regen.py: the heroes
     "military_time",                                                   # regen.py
     "regen_time",
     "repair_hp",                                                       # repair.py
@@ -149,6 +150,7 @@ NOT_SAVED = (                                                          # the fie
     "explore_at",                                                      # score.py: the next check time
     "flares",                                                          # flare.py: the flares of a replay
     "fog",                                                             # fog.py: the next tick hides the units again; explored()
+    "garrison_sent",                                                   # scenario.garrisons: a load sends them again
     "ghosts",                                                          # build.py: the shown building to place
     "goto_idle",                                                       # goto.py: the next idle unit to show
     "haste_time",                                                      # train.haste: a tick timer
