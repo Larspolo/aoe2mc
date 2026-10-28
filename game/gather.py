@@ -1499,7 +1499,8 @@ class Gather:
         pos = self.positions(army) if len(army) > 1 else {}            # 2 or more: the AoE2 line formation (#3414)
         if len(pos) > 1:
             out |= replay.formation_cells(self.map.free, [(u, p[0], p[2], rank(self.soldiers[u]), False)
-                                                          for u, p in pos.items()], (cell[0] + 0.5, cell[1] + 0.5), "Line", self.map.T)
+                                                          for u, p in pos.items()], (cell[0] + 0.5, cell[1] + 0.5), "Line", self.map.T,
+                                                          long=True)
         # a group in formation walks at the speed of its slowest unit (#3415): tiles per AoE2 second
         pace = min(ai.walk_speed(self.soldiers[u], 1) * train.speed(self, self.soldiers[u], u) for u in pos) if len(pos) > 1 else None
         who = sorted(u for u in units - boats - out.keys() if u in self.villagers or u in self.soldiers or u in herd)
