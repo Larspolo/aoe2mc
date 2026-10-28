@@ -145,6 +145,10 @@ def reveal(g):
         g.command(f"aoe minimap fog off p{g.player}")
 
 
+def spies(g, entry):
+    """The research of Spies (the key "on_research" of data/train.jsonl, #3243): the enemy units show for ever (#2193)."""
+    reveal(g)
+
 def tick(g):
     """Update the fog each EVERY seconds: hide the enemy units that left the sight, show the ones that came in."""
     if not g.paper or g.reveal == "all" or "SPIES" in getattr(g, "techs", ()):   # Spies: the player sees what the

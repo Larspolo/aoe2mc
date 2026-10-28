@@ -163,6 +163,12 @@ def label_command(uuid, name=None):
     return f"aoe label {uuid}" + (f" {pretty(name)}" if name else "")
 
 
+def ballistics(g, entry):
+    """The research of Ballistics (the key "on_research" of data/train.jsonl, #3243): on Paper the plugin aims the
+    arrows of the player at the place where a moving target will be (#1549)."""
+    if getattr(g, "paper", False):
+        g.command(f"aoe ballistics p{g.player} on")
+
 def range_command(uuid, name, T, rate=NORMAL, s=None):
     """The plugin command that lets a ranged unit shoot from its AoE2 range (tiles * T blocks), with one shot per
     reload time at `rate` game seconds per real second (default: Normal game speed, as the walk speed). None for a
