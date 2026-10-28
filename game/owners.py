@@ -18,6 +18,30 @@ def add(g, uuid, name, player):
             o.enemies[uuid] = name
 
 
+def give_building(g, target, new):
+    """Give the enemy building target to player new on each side of the game (Redemption, #2994): its owner (fort_players),
+    its box in forts of each side that is not new, and its construction site (train.homes reads the sites of the Gather
+    of the owner)."""
+    import build, combat                                               # build imports gather, gather imports this module
+    sides = build.sides(g)
+    box = next((o.forts[target] for o in sides if target in o.forts), None)
+    for o in sides:
+        vars(o).setdefault("fort_players", {})[target] = new
+        o.forts.pop(target, None)
+        if box is not None and o.player != new:
+            o.forts[target] = box
+        for s in [s for s in o.sites if o.player != new and combat.target_uuid(site_box(s)) == target]:
+            o.sites.remove(s)
+            s["player"] = new
+            next(x for x in (g, *sides) if x.player == new).sites.append(s)
+
+
 def player(g, uuid):
     """The player of the unit uuid: its aoe2mc.json object, else the record of add(), else None."""
     return next((o.get("player") for o in g.data["objects"] if o.get("uuid") == uuid), g.data.get(KEY, {}).get(uuid))
+
+
+def site_box(site):
+    """The footprint of a construction site in the order of combat.target_uuid (build.target)."""
+    x0, x1, z0, z1 = site["footprint"]
+    return [x0, z0, x1, z1]
