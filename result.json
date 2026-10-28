@@ -1,0 +1,131 @@
+{
+ "steps": [
+  "07:28:58 play",
+  "07:29:09 frame",
+  "07:29:12 kill the enemy in sight",
+  "07:29:12 flare",
+  "07:29:27 click"
+ ],
+ "table": [
+  39,
+  64,
+  40
+ ],
+ "frame": "Glow Item Frame has the following entity data: {id: \"minecraft:filled_map\", count: 1, components: {\"minecraft:map_id\": 0}}",
+ "units": [
+  {
+   "name": "VILLAGER_MALE",
+   "player": 1,
+   "pos": [
+    18.0,
+    64.0,
+    58.0
+   ],
+   "hidden_for_p1": false,
+   "tile": "Minimap tile: seen 102",
+   "pixel": "Minimap pixel: 33 53"
+  },
+  {
+   "name": "MILITIA",
+   "player": 1,
+   "pos": [
+    14.0,
+    64.0,
+    18.0
+   ],
+   "hidden_for_p1": false,
+   "tile": "Minimap tile: seen 102",
+   "pixel": "Minimap pixel: 31 33"
+  },
+  {
+   "name": "MILITIA",
+   "player": 2,
+   "pos": [
+    54.0,
+    64.0,
+    46.0
+   ],
+   "hidden_for_p1": false,
+   "tile": "Minimap tile: seen 114",
+   "pixel": "Minimap pixel: 51 47"
+  },
+  {
+   "name": "MILITIA",
+   "player": 2,
+   "pos": [
+    122.0,
+    64.0,
+    34.0
+   ],
+   "hidden_for_p1": true,
+   "tile": "Minimap tile: unexplored 119",
+   "pixel": "Minimap pixel: 85 41"
+  },
+  {
+   "name": "VILLAGER_MALE",
+   "player": 2,
+   "pos": [
+    138.0,
+    64.0,
+    118.0
+   ],
+   "hidden_for_p1": true,
+   "tile": "Minimap tile: unexplored 119",
+   "pixel": "Minimap pixel: 93 83"
+  }
+ ],
+ "buildings": [
+  {
+   "name": "TOWN_CENTER",
+   "player": 1,
+   "tile": "Minimap tile: seen 102"
+  },
+  {
+   "name": "HOUSE",
+   "player": 1,
+   "tile": "Minimap tile: seen 102"
+  },
+  {
+   "name": "TOWN_CENTER",
+   "player": 2,
+   "tile": "Minimap tile: unexplored 119"
+  }
+ ],
+ "flare": [
+  30,
+  70
+ ],
+ "click_block": [
+  21,
+  149
+ ],
+ "villager": {
+  "before": [
+   18.0,
+   64.0,
+   58.0
+  ],
+  "after": [
+   18.5,
+   64.0,
+   130.8
+  ],
+  "goal": [
+   21,
+   149
+  ],
+  "state": "to_rally",
+  "dist_to_click_before": 91.0,
+  "dist_to_click_after": 18.4
+ },
+ "log_errors": [
+  "com.mojang.authlib.exceptions.MinecraftClientException: Failed to read from https://discovery.minecraftservices.com/minecraft/client due to discovery.minecraftservices.com",
+  "Caused by: java.net.UnknownHostException: discovery.minecraftservices.com",
+  "com.mojang.authlib.exceptions.MinecraftClientException: Services are unavailable",
+  "com.mojang.authlib.exceptions.MinecraftClientException: Services are unavailable",
+  "com.mojang.authlib.exceptions.MinecraftClientException: Failed to read from https://discovery.minecraftservices.com/minecraft/client due to discovery.minecraftservices.com",
+  "Caused by: java.net.UnknownHostException: discovery.minecraftservices.com",
+  "[07:28:59] [Server thread/ERROR]: Block-attached entity at invalid position: null",
+  "[07:29:09] [Server thread/ERROR]: Block-attached entity at invalid position: null"
+ ]
+}
