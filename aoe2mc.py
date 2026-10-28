@@ -2072,6 +2072,7 @@ def free_carpets(E, cols):
 def seat_count(ship):
     return 1 if "_chest_" in str(ship["id"]) else 2      # a chest boat has one seat
 CHAIN = 4                   # units per boat seat: each garrisoned unit rides the unit below it (#382)
+NAME_HIDDEN = "aoe2mc.name_hidden"  # entity tag of a unit whose name tag a trigger hid with the unit (#2862)
 GARRISONED = "aoe2mc.garrisoned"    # entity tag of a unit inside its building (#807; the game program: #808)
 NO_TARGET = "aoe2mc.notarget"       # entity tag: no unit or tower chooses it as a target (AoePlugin calm, #2826)
 MADE_INSIDE = "aoe2mc.made_inside"  # entity tag of a unit that a trigger made inside a building: the game program adds
@@ -2755,6 +2756,7 @@ CHANGE_OBJECT_NAME = 26                                            # "Change Obj
 CHANGE_OBJECT_PLAYER_COLOR = 58                                    # "Change Object Player Color" (#2824)
 CHANGE_OBJECT_SPEED = 33                                           # "Change Object Speed" (#2694)
 CHANGE_OBJECT_STANCE = 36                                          # "Change Object Stance" (#2705)
+CHANGE_OBJECT_VISIBILITY = 107                                     # "Change Object Visibility" (#2862)
 CHANGE_OWNERSHIP = 18
 CHANGE_PLAYER_COLOR = 89                                           # "Change Player Color" (#2712)
 CHANGE_PLAYER_NAME = 45                                            # "Change Player Name" (#2711)
@@ -2782,6 +2784,7 @@ ENABLE_UNIT_TARGETING = 62                                         # "Enable Uni
 DISPLAY_TIMER_TRIGGERED = 55                                       # the condition of its score (#2702)
 FREEZE_OBJECT = 22                                                 # "Freeze Object" (#2608)
 HEAL_OBJECT = 34                                                   # "Heal Object" (#2692)
+INITIATE_RESEARCH = 76                                             # "Initiate Research" (#2772)
 IN_AREA = 5
 KILL_OBJECT = 14
 LOCK_GATE = 7                                                      # "Lock Gate", "Unlock Gate" (#2762)
@@ -2815,6 +2818,7 @@ TECHNOLOGY_STATE = 21                                              # the conditi
 TELEPORT_OBJECT = 35
 ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER = 8, 9
 TIMER = 10
+TRAIN_UNIT = 75                                                    # "Train Unit" (#2772)
 TRIBUTE = 5                                                        # "Tribute" (#2576)
 TRIGGER_ACTIVE = 79                                                # the condition "Trigger Active" (#2699)
 TRIGGER_CHANCE = 20                                                # the condition "Chance" (#2574)
@@ -3398,6 +3402,30 @@ def attackable_lines(e, c):
     return [f"execute as {unit_selector(e, c.T)}{guard} run data merge entity @s {{Invulnerable:{int(disable)}b}}"]
 
 
+def object_visibility_lines(e, c):
+    """The commands of "Change Object Visibility" (#2862): the selected units and the units of the player in the area,
+    and the mounts of the riders, get the effect invisibility with no particles (the entity tag Invisible is only for
+    armor stands), and a shown name tag hides with them. "Explored" hides them too: AoE2 shows no units in the fog.
+    "Visible" clears the effect and shows the name tag again. Minecraft cannot hide an entity from one player only:
+    all players see the change, whatever the target player."""
+    if e.get("visibility") not in (0, 1, 2):
+        return []
+    sels = [f"@e[tag=aoe2mc.r{r}]" for r in e.get("selected", ())] + \
+        [unit_selector(e, c.T)] * (min(e.get("area", [-1])) >= 0)
+    c.stats["change object visibility"] += bool(sels)
+    if e["visibility"] == 0:
+        return [line for at in sels for line in (
+            f"execute as {at} on vehicle run effect clear @s minecraft:invisibility",
+            f"execute as {at} run effect clear @s minecraft:invisibility",
+            f"execute as {at[:-1]},tag={NAME_HIDDEN}] run data merge entity @s {{CustomNameVisible:1b}}",
+            f"tag {at[:-1]},tag={NAME_HIDDEN}] remove {NAME_HIDDEN}")]
+    return [line for at in sels for line in (
+        f"execute as {at} on vehicle run effect give @s minecraft:invisibility infinite 0 true",
+        f"execute as {at} run effect give @s minecraft:invisibility infinite 0 true",
+        f"tag {at[:-1]},nbt={{CustomNameVisible:1b}}] add {NAME_HIDDEN}",
+        f"execute as {at} run data merge entity @s {{CustomNameVisible:0b}}")]
+
+
 def targeting_lines(e, c):
     """The command of "Disable Unit Targeting" and "Enable Unit Targeting" (#2826): the tag NO_TARGET of the units of
     the player in the area. The game program chooses no tagged unit as a target; an attack order still hits it (AoE2)."""
@@ -3558,6 +3586,22 @@ def unload_lines(e, c):
         0 <= x < ground.shape[0] and 0 <= z < ground.shape[1] else ""
     p = e["player"]
     return [f'data modify storage aoe2mc:orders list append value "unload {p} {r}{where}"' for r in holders]
+
+
+def train_lines(e, c):
+    """The commands of "Train Unit" and "Initiate Research" (#2772). A converted world has no queues: for each selected
+    object the order "train <ref> <unit> <quantity>" or "research <ref> <technology>" goes into the list of the data
+    storage aoe2mc:orders. The scenario mode of the game program (game/scenario.py orders) queues it at the building of
+    that reference as a click of its menu does: the player pays, as in AoE2."""
+    research = e["type"] == INITIATE_RESEARCH
+    name = e.get("technology") if research else (e.get("object") or (None, None))[1]
+    refs = [r for r in e.get("selected", []) if r >= 0]
+    if not name or not refs or e["player"] <= 0:
+        c.stats["train or research (not supported)"] += 1
+        return []
+    c.stats["train or research"] += 1
+    order = f"research {{}} {name}" if research else f"train {{}} {name} {max(e.get('quantity', 1), 1)}"
+    return [f'data modify storage aoe2mc:orders list append value "{order.format(r)}"' for r in refs]
 
 
 def view_lines(e, c):
@@ -3768,6 +3812,7 @@ EFFECT_KEYS = {
     CHANGE_OBJECT_PLAYER_COLOR: {"color": "player_color"},
     CHANGE_OBJECT_SPEED: {"quantity": "quantity"},
     CHANGE_OBJECT_STANCE: {"stance": "attack_stance"},
+    CHANGE_OBJECT_VISIBILITY: {"target": "target_player", "visibility": "visibility_state", "selected": _selected},
     CHANGE_OWNERSHIP: {"target": "target_player"},
     CHANGE_PLAYER_COLOR: {"color": "player_color"},
     CHANGE_TECHNOLOGY_COST: {"cost": _cost, "technology": _tech},
@@ -3781,6 +3826,7 @@ EFFECT_KEYS = {
     ENABLE_DISABLE_OBJECT: {"enabled": "enabled", "technology": _tech},
     ENABLE_DISABLE_TECHNOLOGY: {"enabled": "enabled", "technology": _tech},
     HEAL_OBJECT: {"quantity": "quantity"},
+    INITIATE_RESEARCH: {"selected": _selected, "technology": _tech},   # (#2772)
     LOCK_GATE: {"selected": _selected},
     MIRROR_DIPLOMACY: {"target": "target_player"},
     MODIFY_ATTRIBUTE: {"attribute": "object_attributes", "operation": "operation", "quantity": "quantity", "class": "armour_attack_class", "aa": "armour_attack_quantity"},
@@ -3792,6 +3838,7 @@ EFFECT_KEYS = {
     REPLACE_OBJECT: {"target": "target_player", "object2": _object2},
     RESEARCH_TECHNOLOGY: {"technology": _tech},
     SET_PLAYER_VISIBILITY: {"target": "target_player", "visibility": "visibility_state"},
+    TRAIN_UNIT: {"quantity": "quantity", "selected": _selected},   # (#2772)
     TRIBUTE: {"target": "target_player", "quantity": "quantity", "resource": "tribute_list"},
     UNLOAD: {"selected": _selected},
     UNLOCK_GATE: {"selected": _selected},
@@ -3813,6 +3860,7 @@ EFFECTS = {
     CHANGE_OBJECT_PLAYER_COLOR: object_color_lines,
     CHANGE_OBJECT_SPEED: speed_lines,
     CHANGE_OBJECT_STANCE: stance_lines,
+    CHANGE_OBJECT_VISIBILITY: object_visibility_lines,
     CHANGE_OWNERSHIP: owner_lines,
     CHANGE_PLAYER_COLOR: color_lines,
     CHANGE_PLAYER_NAME: player_name_lines,
@@ -3837,6 +3885,7 @@ EFFECTS = {
     ENABLE_UNIT_TARGETING: targeting_lines,
     FREEZE_OBJECT: freeze_lines,
     HEAL_OBJECT: heal_lines,
+    INITIATE_RESEARCH: train_lines,
     KILL_OBJECT: object_lines,
     LOCK_GATE: gate_lines,
     MIRROR_DIPLOMACY: mirror_lines,
@@ -3856,6 +3905,7 @@ EFFECTS = {
     STOP_OBJECT: stop_lines,
     TASK_OBJECT: task_lines,
     TELEPORT_OBJECT: teleport_lines,
+    TRAIN_UNIT: train_lines,
     TRIBUTE: resource_lines,
     UNLOAD: unload_lines,
     UNLOCK_GATE: gate_lines,
