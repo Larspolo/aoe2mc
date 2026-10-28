@@ -45,6 +45,7 @@
 {"name": "repair_team", "text": "The team bonus of the repair rate (Saxons: \"Repairers work 25% faster\"): it counts for the civilization and its allies, and multiplies with \"repair\".", "issue": 1929}
 {"name": "research_time", "text": "[technologies (a rule of has), factor of the research time] (Achaemenid stable technologies 50 % faster, Jurchen siege and fortification technologies 100 % faster, the Gothic Loom at once).", "issue": 2172}
 {"name": "reveal", "text": "The enemy buildings that the player sees under the fog of war (fog.revealed): [building, true: only the ones of aoe2mc.json and only at the start of the game] (Mapuche castles, Vietnamese start town centers).", "issue": 2311}
+{"name": "scout", "text": "The start scout of the civilization in place of the Scout Cavalry (Aztecs and Mayans: Eagle Scout, Gurjaras: Camel Scout). scout.swap at the start of a new game.", "issue": 2391}
 {"name": "shared", "text": "The shared unique units of its team bonus: an ally of the civilization has them too (\"Team bonus\").", "issue": 1619}
 {"name": "ship_work", "text": "The factor of the work rate of a fishing ship in each age, [Dark, Feudal, Castle, Imperial] (Japanese). fleet.rate multiplies by civs.ship_work().", "issue": 2333}
 {"name": "smith_units", "text": "[group of GROUPS, blacksmith technologies, times in the Dark, Feudal, Castle and Imperial Age]: the units of the group get the effect of each technology that many times, also when the test of the effect does not cover them (train.smith).", "issue": 2174}
