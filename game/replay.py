@@ -2094,8 +2094,10 @@ class Replay:
         self.speed, self.paused = speed, paused
         if self.ai:
             import ai                                               # ai -> replay: import it late
-            self.send([ai.speed_command(v.uuid, v.name, self.T, 0 if paused else speed)
-                       for v in map(self.units.get, self.moving) if v and v.uuid])
+            # a unit on its last or only leg is not in self.moving, but the plugin still walks it (#3024)
+            walking = set(self.moving) | {i for i, v in self.units.items() if (getattr(v, "leg", None) or (0, 0, 0))[2] > g}
+            self.send([ai.speed_command(v.uuid, v.name, self.T, 0 if paused else speed * PATH)
+                       for v in map(self.units.get, sorted(walking)) if v and v.uuid])
         return g, r
 
     def jump(self, events, to, start=None):
