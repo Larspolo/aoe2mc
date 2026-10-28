@@ -458,6 +458,7 @@ SETTINGS = {
     "teams": None,                    # {player: team or None} in place of the scenario's (team_choices, #2296)
     "treaty": "0:00",                 # "Treaty length" (MM:SS): before it no player can attack another (treaty.py, #2297)
     "turbo": False,                   # "Turbo Mode" (civs.turbo, #2359)
+    "unlock_speed": False,            # "Lock Speed" off: the button "Game speed" of the Game menu (diplomacy.faster, #2933)
     "victory": "standard",            # "Victory" (VICTORIES)
     "victory_value": None,            # the years of "time-limit", the points of "score" (time_limit.YEARS, POINTS)
 }
@@ -514,11 +515,13 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     g.reveal = reveal                                # "all": no fog of war for the units (fog.py, #1389)
     g.victory = settings["victory"]                              # Gather.run: the wonder and relic wins only in "standard"
     g.victory_value = settings["victory_value"]                  # time_limit.tick (#2356)
+    g.unlock_speed = settings["unlock_speed"]                    # the Game menu of player 1 (diplomacy.faster, #2933)
     if people > 1:                                   # one Gather for each person, in the join order (#1308, #1310)
         g.bots = [Side(make(n)) for n in range(2, people + 1)]
         for s in g.bots:                             # the same trees, bushes and mines, as with a bot
             s.g.map.trees, s.g.map.bushes, s.g.map.mines = g.map.trees, g.map.bushes, g.map.mines
             s.g.reveal, s.g.peers = reveal, [g, *(o.g for o in g.bots)]   # its fog sees all units (#1631)
+            s.g.unlock_speed = settings["unlock_speed"]          # each person has the Game menu (#2933)
         for name in list(game.sides):                # players who joined before the teams were there
             game.side(name)
         print(f"{people} people: the first Minecraft player who joins plays player 1, the second player 2.",
@@ -775,6 +778,8 @@ def main(argv=None):
                     "through the own units and buildings)")
     ap.add_argument("--turbo", action="store_true", help="--play: the AoE2 setting \"Turbo Mode\": buildings, "
                     "gatherers and builders work 2.5 times faster (not villagers, trade units, castles, towers, wonders)")
+    ap.add_argument("--unlock-speed", action="store_true", help="--play: the AoE2 setting \"Lock Speed\" off: the "
+                    "button \"Game speed\" of the Game menu changes the speed of the game (1, 1.5, 2, as --speed)")
     ap.add_argument("--mode", choices=sorted(MODES), default="standard", help="--play: the AoE2 game mode (default "
                     "standard; " + "; ".join(f"{k}: {v['help']}" for k, v in sorted(MODES.items()) if k != "standard") + ")")
     ap.add_argument("--empire-wars", action="store_true", help="--play: the AoE2 setting \"Empire Wars Mode\" on top "

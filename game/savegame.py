@@ -132,6 +132,7 @@ SETTINGS = (                                                           # run.py 
     "sudden_death",
     "teams",
     "treaty",
+    "unlock_speed",
     "victory",
     "victory_value",
 )
@@ -185,6 +186,7 @@ NOT_SAVED = (                                                          # the fie
     "sudden_death_at",                                                 # sudden_death.py: the next check time
     "tech_state_at",                                                   # scenario.py: the next check time
     "tech_state_sent",                                                 # scenario.tech_states: a load sends them again
+    "unlock_speed",                                                    # run.py: from the saved settings
     "unselectable",                                                    # scenario.selection: the world keeps the tags, the next check reads them
     "victory",                                                         # run.py: from the saved settings
     "victory_timer_at",                                                # scenario.py: the next check time
