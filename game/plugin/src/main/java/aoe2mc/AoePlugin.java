@@ -2528,7 +2528,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             int n = 0;
             for (Entity e : select(sender, args[1])) {
-                if (e instanceof Mob || e instanceof Minecart) {     // a siege unit: its minecart (#1820)
+                if (e instanceof Mob || e instanceof Minecart || e instanceof Boat) {   // a siege unit: its minecart (#1820); a ship: its boat (#3018)
                     held.remove(e.getUniqueId());
                     posts.remove(e.getUniqueId());
                     if (args[2].equals("aggressive")) {
