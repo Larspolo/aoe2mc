@@ -22,7 +22,7 @@ The README already uses this style. Keep it.
 | Convert | `python3 aoe2mc.py IN.aoe2scenario OUTWorld --preview` |
 | Look at a world | `python3 tools/world_reader.py OUTWorld [X Y Z]` (`--section x\|z C A0 A1 Y0 Y1`: a vertical section as text) |
 | 3D image | `python3 tools/render.py building CASTLE --arch western OUT.png` (`--cut 3`: the rooms inside; or `world OUTWorld X0 Z0 X1 Z1 OUT.png`) |
-| Check states | `tools/mcvalid.py` (`block_error`, `entity_error`, `biome_error`) |
+| Check states | `tools/mcvalid.py` (`block_error`, `entity_error`, `biome_error`, `sound_error`) |
 | Coverage of AoE2 types | `python3 tools/coverage.py OUT.md` (designs, mappings, fallbacks). Do not commit `docs/coverage.md`: CI on main does it, and `tools/feature_table.py` for `docs/DESIGN.md` |
 | System numbers | `python3 tools/health.py [--hours N]` (CI, setup, takeovers, conflicts, files in git; `improve` skill) |
 | Start of the runs | `python3 tools/operator_check.py` (quota, ready tickets, CI, old PRs, labels, owner comments; the owner types `/operator` for the scheduled tasks and the pacer session, #981) |
@@ -128,6 +128,8 @@ A new game setting of `game/run.py` (a lobby setting, epic #2263) is one line in
 same name, not a new keyword of `play()` (#2373).
 A new game mode (`--mode`) is one line in `game/data/setup.jsonl` (keys `"help"`, `"module"`, `"age"`, `"loaded"`,
 `"bots"`: `run.MODES`) and its module with `setup(g, mode)`, not a change of `play()` (#2521).
+A new trigger effect of the converter is one line in `aoe2mc.EFFECTS` (its ID constant on its own line, both in
+alphabetical order) and its handler `x_lines(e, c)`, not a change of `trigger_files` (#2613).
 
 ## How to verify
 

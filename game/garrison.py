@@ -106,8 +106,10 @@ def arrows_command(g, rect):
     """The plugin command that gives the building rect the arrows of its garrison (#1113)."""
     import civs, combat
     names = ["VILLAGER" if u in g.villagers else g.soldiers.get(u, "") for u in g.garrisons.get(rect, [])]
+    import train                                                   # train imports this module
     building = holders(g).get(rect, {}).get("name")
-    return f"aoe arrows {combat.target_uuid([rect[0], rect[2], rect[1], rect[3]])} {arrows(building, names, civs.arrows(g, building))}"
+    more = train.value("arrows", vars(g).get("upgraded", {}).get(rect), 0)   # the Defensive Town Center (#2497)
+    return f"aoe arrows {combat.target_uuid([rect[0], rect[2], rect[1], rect[3]])} {arrows(building, names, civs.arrows(g, building)) + more}"
 
 
 def ungarrison(building):

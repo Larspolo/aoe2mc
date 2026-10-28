@@ -17,6 +17,10 @@ most one working villager from a resource above its share to the resource most b
 Attack (#859): until the game time `attack` (AoE2 seconds) the soldiers stay at their buildings. Then each soldier
 without a live target attacks the nearest unit of player `foe`, else its nearest building, with the mob AI of the
 plugin (`ai.attack`, `aoe attack`). A soldier gets a new target when its target dies.
+
+Difficulty (#2661, decision #2648): the AoE2 DE setting "AI difficulty" (run.py --ai-difficulty) is one line of
+game/data/difficulty.jsonl (LEVELS): "gather" times the work rate of the bot villagers, "attack" times the time of the
+first attack, "soldiers" in the first wave. AoE2 does not publish what each level changes: the values are a guess.
 """
 import math
 import os
@@ -27,6 +31,8 @@ import ai  # noqa: E402
 import build  # noqa: E402
 import combat  # noqa: E402
 import gather  # noqa: E402
+import herd  # noqa: E402
+import table  # noqa: E402
 import train  # noqa: E402
 
 SHARE = {"food": 0.4, "wood": 0.3, "gold": 0.2, "stone": 0.1}     # the villagers on each resource (a simple AoE2 bot)
@@ -38,17 +44,22 @@ NEAR = {r["name"]: r["near"] for r in build.ROWS if "near" in r}
 HOUSE_GAP = 2                                                      # a new house at this many units below the limit
 ATTACK = 600.0                                                     # AoE2 seconds: the first attack at 10:00
 LOOK = 2.0                                                         # AoE2 seconds between two looks for targets
-GROUP = 5                                                          # soldiers of a wave, as an AoE2 bot army
+LEVELS = {r["name"]: r for r in table.load("difficulty.jsonl")}    # "AI difficulty", in the order of the AoE2 lobby
 
 
 class Bot:
-    def __init__(self, game, data, player=2, share=None, villagers=20, attack=ATTACK, foe=1, group=GROUP, **kw):
+    def __init__(self, game, data, player=2, share=None, villagers=20, attack=ATTACK, foe=1, group=None,
+                 difficulty="standard", **kw):
         """share: the Gather of the human player. Both then use the same trees, bushes and mines.
         villagers: the bot trains villagers up to this number, then soldiers.
-        attack: the game time (AoE2 seconds) of the first attack on player foe.
-        group: the soldiers of the first wave; until then they stay at their buildings (#1051)."""
+        attack: the game time (AoE2 seconds) of the first attack on player foe, times the "attack" of the difficulty.
+        group: the soldiers of the first wave (default: the "soldiers" of the difficulty); until then they stay at
+        their buildings (#1051). difficulty: a name of LEVELS (#2661)."""
+        level = LEVELS[difficulty]
         self.g = gather.Gather(game, data, player=player, **kw)
-        self.villagers, self.attack, self.foe, self.share, self.group = villagers, attack, foe, share, group
+        self.g.chop = {k: s / level["gather"] for k, s in self.g.chop.items()}   # seconds per unit: work_time
+        self.villagers, self.attack, self.foe, self.share = villagers, attack * level["attack"], foe, share
+        self.group = level["soldiers"] if group is None else group
         self.charged = False                                           # the wave attacks: new soldiers join it
         self.time, self.looked, self.targets = 0.0, -LOOK, {}          # AoE2 seconds of the game, soldier -> target
         self.nobody = f"@a[tag=aoe2mc.bot{player}]"                     # the texts of the queues go to no player
@@ -184,7 +195,8 @@ class Bot:
         self.targets = {u: t for u, t in self.targets.items() if u in mine and t in live}
         if not mine.keys() - {u for u, t in self.targets.items() if t not in g.forts}:
             return                                                     # all soldiers fight units
-        units = {o["uuid"] for o in g.data["objects"] if o["kind"] == "unit" and o["player"] == self.foe and o.get("uuid")}
+        units = {o["uuid"] for o in g.data["objects"] if o["kind"] == "unit" and o["player"] == self.foe and o.get("uuid")
+                 and not herd.herdable(o["name"])}                     # AoE2: a sheep is captured, not attacked (#2049)
         if self.share:                                                 # also the units that player 1 trained
             units |= self.share.villagers.keys() | self.share.soldiers.keys()
         seen, T = g.seen_tiles(), g.map.T                              # the AoE2 AI sees only its sight (#2050)

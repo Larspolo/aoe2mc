@@ -31,7 +31,9 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - A run with an open PR that does the next ticket in a local commit (`more.md`): beat the claim of the PR's ticket too (`claim.py N --beat`) until it merges. A red PR with no beat for 10 minutes is "stalled": another run took #2211 over while its run worked on #2173.
 - Wait for a background command by the task ID of its own result: a typed file name from an earlier task waits the full 580 s for nothing (#2342, #2357).
 - `git stash` during an unfinished merge drops `MERGE_HEAD`: the next commit is no merge commit. To test main without your change, use `git worktree add` (#2281).
+- The refill lock `claim.py 0 --refill` does not lock an epic: run `claim.py E --refill` for each epic E before you make its sub-issues, and list its open sub-issues again just before. A parallel run made 4 of the same trigger tickets in the same minute (#2612 copied #2609, #2621 copied #2611).
 - The fast suite stops at one percent and runs on: add `-o faulthandler_timeout=90` (pytest dumps the stack of a test that runs longer). #2484: `train.start()` looped for ever on a technology that never goes into `g.techs`.
+- `git checkout --ours FILE` in a merge takes your whole file: it drops the hunks of main that merged with no conflict (#2627 lost the `name_timeline` change of #2659). Resolve only the marker hunks, then read `git diff origin/main --stat` and the hunk list of the file: only your change may differ.
 
 ## Code
 

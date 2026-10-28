@@ -78,6 +78,7 @@ import civs  # noqa: E402
 import garrison  # noqa: E402
 import menu  # noqa: E402
 import monk  # noqa: E402
+import record  # noqa: E402
 import table  # noqa: E402
 
 DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "train.jsonl")
@@ -105,7 +106,8 @@ TRAINS |= {b: sum((TRAINS[m] for m in ms), ()) for b, ms in MENUS.items()}
 SLOTS = {r["name"]: r["slot"] for r in ROWS}
 # An upgrade of one building (the key "one_building", #2484: the Achaemenid town centers): it changes only the building
 # that researches it, and that building takes only one of them (g.upgraded: footprint -> name). Its "aura": the
-# villagers within "range" tiles of that building work "rate" times as fast (Gather.aura_rate).
+# villagers within "range" tiles of that building work "rate" times as fast (Gather.aura_rate); the own military units
+# heal "heal" hit points per AoE2 minute and walk "speed" times as fast (regen.military, #2496).
 ONE_BUILDING = {r["name"]: r.get("aura") for r in ROWS if r.get("one_building")}
 SHIFTS = {b: {n: sum(1 + max(SLOTS[x] for x in TRAINS[p]) for p in ms[:i]) for i, m in enumerate(ms) for n in TRAINS[m]}
           for b, ms in MENUS.items()}
@@ -615,6 +617,7 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
     k = vars(g).get("doctrines", {}).get(homes(g)[rect], 0)            # its doctrine stays (#2483)
     q.append({"name": name, "progress": 0.0, "player": player} | ({"paid": cost} if cost != COSTS[name] else {})
              | ({"doctrine": k} if k and name not in TECHS else {}))
+    record.queued(g, name, rect)                                       # Record Game (#2649)
     return rect
 
 
@@ -755,12 +758,13 @@ def seconds(g, name, building=None, k=None):
         * (doctrine(g, building, k)[2] if building and name not in TECHS else 1)
 
 
-def speed(g, name):
+def speed(g, name, uuid=None):
     """The factor of the walk speed of unit name: the bonus of the civilization (civs.speed) and the technologies of the
     player (the key "walk": Fervor, #1261; Squires for the class infantry, #1415; Husbandry for the mounted units, #1416), with
-    the changes of civs.ALSO and civs.MORE (Bohemian Fervor for the villagers, Varangian Caravan +50 %, #2173)."""
+    the changes of civs.ALSO and civs.MORE (Bohemian Fervor for the villagers, Varangian Caravan +50 %, #2173); unit uuid
+    near a Military Town Center walks faster (g.hurried, regen.military, #2496)."""
     also, more = civs.ALSO.get(civs.civ(g), {}), civs.MORE.get(civs.civ(g), {})
-    return civs.speed(g, name) * math.prod((1 + (f - 1) * more[t] if t in more else f) ** count(g, t)
+    return civs.speed(g, name) * vars(g).get("hurried", {}).get(uuid, 1) * math.prod((1 + (f - 1) * more[t] if t in more else f) ** count(g, t)
                                            for t, (unit, f) in BY_KEY["walk"].items() if faster(unit, name) or t in also and faster(also[t], name))
 
 
@@ -786,6 +790,36 @@ def start(g, setting):
             research(g, {"name": t}, start=True)
 
 
+HASTE_EVERY = 2.0                                                  # AoE2 seconds between two checks of haste()
+
+
+def haste(g, dt):
+    """The own military units within the "attack_aura" range (tiles from the footprint) of an upgraded own building
+    attack "rate" times as fast (the Defensive Town Center: +17.65 %, 8 tiles, #2497): a unit that comes in or goes out
+    gets its values again, with the reload / rate. g.hasted: {uuid: rate} of the fast units. A trebuchet keeps its
+    values (the values of its state: trebuchet.stats_command)."""
+    import combat, trebuchet                                       # both import this module: import them late
+    auras = [(r, a) for r, n in vars(g).get("upgraded", {}).items() if (a := value("attack_aura", n))]
+    hasted = vars(g).get("hasted", {})
+    g.haste_time = vars(g).get("haste_time", 0.0) + dt if auras or hasted else 0.0
+    if g.haste_time < HASTE_EVERY:
+        return
+    g.haste_time, own, T = 0.0, homes(g), g.map.T
+    fast = {u: rate for u, (x, _, z) in g.positions(sorted(u for u, n in g.soldiers.items() if n != trebuchet.NAME)).items()
+            if (rate := max([a["rate"] for r, a in auras if r in own
+                             and max(r[0] - x, x - r[1], r[2] - z, z - r[3]) <= a["range"] * T], default=1)) != 1}
+    for u in sorted(fast.keys() ^ hasted.keys() | {u for u in fast if fast[u] != hasted.get(u)}):
+        name = g.soldiers.get(u)
+        if name is None:
+            continue
+        s = stats(g, name)
+        s = s._replace(reload=s.reload / fast.get(u, 1))
+        g.command(combat.stats_command(u, name, s, civs.taken(g, name), civs.friendly(g, name)))
+        if cmd := combat.range_command(u, name, T, s=s):
+            g.command(cmd)
+    g.hasted = fast
+
+
 def research(g, entry, start=False, rect=None):
     """A technology is complete: keep it in g.techs and give the live villagers and military units the new values.
     start: a technology of the start age (start()): no text and no bonus of an age or technology. An upgrade of one
@@ -798,11 +832,18 @@ def research(g, entry, start=False, rect=None):
         return
     if entry["name"] in ONE_BUILDING:
         vars(g).setdefault("upgraded", {})[rect] = entry["name"]
+        build.retower(g, g.techs, rect)                            # the values of this building only (#2497)
+        if value("arrows", entry["name"]):
+            g.command(garrison.arrows_command(g, rect))
         return
     if entry["name"] in g.techs:                                   # a repeat: "going above and beyond" (#968)
         g.repeats[entry["name"]] = g.repeats.get(entry["name"], 0) + 1
     before = set(g.techs)
     g.techs.add(entry["name"])
+    if not start:
+        record.aged(g, entry["name"])                                  # Record Game (#2649)
+    if gather.has_mode(g, "scenario"):                             # a trigger condition "Research Technology" (#2656)
+        g.command(f"scoreboard players set #p{g.player}.{entry['name']} aoe_tech 1")
     if start:                                                      # free: not in the score (score.py, #2355)
         vars(g).setdefault("given", set()).add(entry["name"])
     if (more := gather.FARM_TECHS.get(entry["name"])):             # the new and the live own farms get more food
@@ -841,6 +882,8 @@ def research(g, entry, start=False, rect=None):
                 g.command(cmd)
             g.command(combat.label_command(uuid, new))               # the name of a new unit (units.pretty)
     import trebuchet                                               # trebuchet imports this module: import it late
+    if vars(g).get("hasted"):                                      # the values below have no haste: haste() sends
+        g.hasted = {}                                              # them again (#2497)
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
         if stats(g, name) != combat.stats(name):
             g.command(trebuchet.stats_command(g, uuid) if name == trebuchet.NAME   # the armor of its state (#1409)
@@ -984,6 +1027,7 @@ def tick(g, work):
         elif q[0]["progress"] >= 1 and (v := spawn(g, rect, q[0]["name"])):   # no room: it waits in the queue (#2470)
             q.pop(0)
             out.append(v)
+            record.trained(g, v)                                       # its object ID (#2649)
             g.pop += 1
     refresh(g)
     sidebar(g)

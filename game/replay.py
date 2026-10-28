@@ -70,6 +70,8 @@ EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
 TRAIL = 3                   # tiles: a follower farther than this from its target walks to it again (#2551)
 TRAIL_MS = 1000             # ms of game time between two checks of the followers (#2551)
+FAR = 8                     # tiles: a target unit this far from the tile of the ORDER (its place in AoE2) is no attack
+                            # target: in de-64.3 a spearman chased a villager 200 blocks from it across the map (#2635)
 FOLLOW_MS = 15000           # ms of game time: the camera of --follow changes its unit at most this often (#738)
 EFFECT_MS = 10000           # ms of game time that the research text stays
 SCALE = 4                   # size of the research text: a spectator sees it from 40 blocks
@@ -99,6 +101,7 @@ SPEEDS = {r["name"]: r["walk"] for r in ROWS if "walk" in r}
 AGES = tuple(r["name"] for r in sorted((r for r in ROWS if "age" in r), key=lambda r: r["age"]))   # (#1067)
 SOCIETY = tuple(r["name"] for r in ROWS if r.get("society"))      # the buildings of the Society tab (#1086)
 TAUNTS = {r["name"]: r["text"] for r in table.load("taunts.jsonl")}   # number: the AoE2 text (wiki "Taunt", #2234)
+TAUNT_SOUNDS = {r["name"]: r["sound"] for r in table.load("taunts.jsonl") if "sound" in r}   # a good vanilla match only (#2233, #2662)
 
 
 def pretty(name):
@@ -121,6 +124,12 @@ def taunt(chat):
     if n not in TAUNTS:
         return chat
     return f"{chat} ({TAUNTS[n].removeprefix('(').removesuffix(')')})"
+
+
+def taunt_sound(chat):
+    """The playsound command of the taunt of this chat line, or none: the other taunts are text only (#2233, #2662)."""
+    n = chat.strip().split(" ", 1)[0]
+    return [f"playsound minecraft:{TAUNT_SOUNDS[n]} master @a ~ ~ ~ 1 1 1"] if n in TAUNT_SOUNDS else []
 
 
 def mmss(ms):
@@ -350,7 +359,8 @@ class Replay:
             return []
         if kind == "chat" and e.get("text"):
             name, color = self.player(e["player"]) if e.get("player") else ("Game", "white")
-            return ["tellraw @a " + json.dumps([text(f"<{name}> ", color), text(taunt(e["text"]))])]
+            return (["tellraw @a " + json.dumps([text(f"<{name}> ", color), text(taunt(e["text"]))])]
+                    + taunt_sound(e["text"]))
         name, color = self.player(e.get("player"))
         if kind == "flare" and e.get("tile"):                     # a view player sees only its flares (#2403)
             seen = self.pov is None or self.pov == e.get("player") or self.pov in e.get("to", [self.pov])
@@ -850,11 +860,11 @@ class Replay:
         return self.units.get(i)
 
     def goals(self, e, water=False):
-        """The cells that the units of a MOVE or ORDER go to: next to the target object of an ORDER, else the
-        target tile (or next to it, when it is blocked). water: the water cells for a ship, next to the target
-        object, else the water cell nearest to the target tile within 3 tiles (#866)."""
+        """The cells that the units of a MOVE or ORDER go to: next to the target object of an ORDER (not a unit that
+        is far() from the tile), else the target tile (or next to it, when it is blocked). water: the water cells for a
+        ship, next to the target object, else the water cell nearest to the target tile within 3 tiles (#866)."""
         m, T, t = self.map, self.T, e.get("target")
-        if e["kind"] == "order" and t is not None and (t in self.units or t in self.refs):
+        if e["kind"] == "order" and t is not None and (t in self.units or t in self.refs) and not self.far(e):
             o = self.refs.get(t, {})
             if t in self.units:
                 cells = {self.units[t].cell}
@@ -882,11 +892,20 @@ class Replay:
         if e["kind"] != "order" or t is None:
             return None
         if t in self.units:
-            return self.units[t].uuid if self.units[t].player not in (0, p) else None
+            return self.units[t].uuid if self.units[t].player not in (0, p) and not self.far(e) else None
         o = self.refs.get(t, {})
         if o.get("kind") == "building" and "footprint" in o and o["name"] in combat.BUILDINGS and o["player"] not in (0, p):
             return combat.target_uuid(o["footprint"])
         return None
+
+    def far(self, e):
+        """True when the target unit of ORDER e stands more than FAR tiles from the tile of e in the replay: the
+        record has the target at the tile, so the units walk to the tile (#2635)."""
+        u, tile = self.units.get(e.get("target")), e.get("tile")
+        if u is None or tile is None:
+            return False
+        x, _, z = self.at(u, e["time"])
+        return math.hypot(x / self.T - tile[0], z / self.T - tile[1]) > FAR
 
     def target_mark(self, e):
         """The red order marker at the target of an attack ORDER, as the game program shows it (#796, #845): a unit
@@ -896,15 +915,22 @@ class Replay:
         x0, z0, x1, z1 = self.refs[t]["footprint"]
         return self.gather.marker(self.map, {(x0, z0), (x1 - 1, z1 - 1)}, "attack", "@a")
 
-    def attack(self, group, target):
+    def attack(self, group, target, e=None):
         """The military units of group attack entity target, with their AoE2 walk speed; they walk no more legs.
-        Returns the commands and the rest of the group."""
+        With the ORDER e that has a tile, their replay place goes to the tile on a leg at their walk speed: the mob
+        fights there, not at the place of the order (#2635). Returns the commands and the rest of the group."""
         import ai
         out, rest = [], []
         for i, v in group:
             if self.gather.military(v.name):
                 out += [ai.speed_command(v.uuid, v.name, self.T, self.speed), f"aoe attack {v.uuid} {target}"]
                 self.moving.pop(i, None)
+                if e and e.get("tile"):
+                    x, z = int(e["tile"][0] * self.T), int(e["tile"][1] * self.T)
+                    start = self.at(v, e["time"])
+                    v.pos, v.path = (x + 0.5, float(self.map.y(x, z)), z + 0.5), []
+                    speed = next((s for k, s in SPEEDS.items() if v.name.startswith(k)), 1.0) * self.T
+                    v.leg = (start, e["time"], e["time"] + 1000 * math.dist(start[::2], v.pos[::2]) / speed)
             else:
                 rest.append((i, v))
         return out, rest
@@ -993,7 +1019,7 @@ class Replay:
     def stop(self, e):
         """STOP: the selected units stand where they are (#2549): no more legs, steps or gather steps. On Paper
         `aoe stop` ends the walk order and the attack of the plugin (the mob has no AI until its next order, as at the
-        end of a walk). An unknown ID changes nothing."""
+        end of a walk). The replay takes the unit where its entity stands (#2636). An unknown ID changes nothing."""
         self.grid()
         out = []
         for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"])):
@@ -1002,6 +1028,9 @@ class Replay:
             for state in (self.moving, self.working, self.arriving, self.entering, self.builds):
                 state.pop(i, None)
             v.pos, v.path = self.at(v, e["time"]), []
+            at = self.entity(v) if self.ai else None               # Paper: the entity walks behind its leg (#2636)
+            if at is not None and (y := self.map.y(math.floor(at[0]), math.floor(at[1]))) is not None:
+                v.pos = (at[0], float(y), at[1])
             v.leg = (v.pos, e["time"], e["time"])                  # a new order starts here, not on the old leg
             out += self.look(v, "none") + [f"aoe stop {v.uuid}"] * self.ai
             if self.ai and not ship(v.name):                        # a mob behind its leg stops short (#2633)
@@ -1054,7 +1083,7 @@ class Replay:
         slots = self.formation([v for _, v in group], e["tile"]) if to_tile and group else {}
         out = []
         if self.ai:
-            out, group = self.attack(group, target) if (target := self.enemy(e)) else ([], group)
+            out, group = self.attack(group, target, e) if (target := self.enemy(e)) else ([], group)
             out += self.target_mark(e) if target else []            # the red order marker (#845)
             for i, v in group:
                 v.pos = self.at(v, e["time"])                       # it stops its leg where it is

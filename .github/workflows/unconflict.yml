@@ -29,6 +29,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: actions/setup-python@v5    # pip for ruff (#2631): the system Python of the runner refuses it
+        with:
+          python-version: "3.12"
       - name: Merge main into the conflicted agent PRs
         env:
           GH_TOKEN: ${{ github.token }}
@@ -39,6 +42,7 @@ jobs:
           git config merge.conflictStyle diff3     # tools/unconflict.py needs the base of each hunk
           cp tools/unconflict.py tools/merge_jsonl.py "$RUNNER_TEMP/"   # main's copy: an older PR branch does not have it
           git config merge.jsonl.driver "python3 $RUNNER_TEMP/merge_jsonl.py %O %A %B"   # game/data/*.jsonl (#2004)
+          python3 -m pip install -q "$(grep '^ruff' requirements-dev.txt)"   # checks a "keep both sides" merge (#2631)
           git fetch -q origin main
           now=$(date +%s)
           for n in $(gh api "repos/$R/pulls?state=open&per_page=100" --jq ".[] | select(.head.repo.full_name == \"$R\")
@@ -63,6 +67,12 @@ jobs:
             if ! git merge -q --no-edit origin/main; then
               if python3 "$RUNNER_TEMP/unconflict.py" && git commit -q --no-edit; then
                 how='both sides only added lines, `tools/unconflict.py` kept both (#1864)'
+                py=$(git diff --name-only --diff-filter=d origin/main -- '*.py')
+                if [ -n "$py" ] && ! ruff check $py; then   # for example a function that both sides define (#2631)
+                  git reset -q --hard "origin/$branch"
+                  [ "$label" = true ] || gh api "repos/$R/issues/$n/labels" -f "labels[]=conflict" >/dev/null || true
+                  echo "#$n: the merge with both sides fails ruff: the runs solve it (autopilot step 6.10)"; continue
+                fi
               else
                 git merge --abort
                 [ "$label" = true ] || gh api "repos/$R/issues/$n/labels" -f "labels[]=conflict" >/dev/null || true   # takeover after 10 min, not 30 (claim.py)

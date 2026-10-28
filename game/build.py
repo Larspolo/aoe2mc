@@ -26,6 +26,10 @@ of the passage. On Paper the plugin raises them while an own or allied unit is n
 (aoe gate, Gates.java), as the AoE2 gate (the decision #1323).
 Fortified Wall (#1326, the key "walls" of train.jsonl): the new and the complete own stone walls and gates get the fortified design
 and its hit points (design(), upgrade()); a damaged one keeps its lost hit points, as in AoE2.
+Minimap (#2582, epic #2580): on Paper each building is a square in the player color on map 0 (`aoe minimap building`,
+Minimap.java) from its foundation on (found()), and its square goes when it falls (gather.Gather.fall: `aoe minimap
+unbuild`). run.play draws the buildings of the start (minimap()). With the fog of war, the plugin shows an enemy
+building to a team only after a tile of it was in its sight (fog.minimap, #2583).
 """
 import json
 import math
@@ -42,6 +46,7 @@ import civs  # noqa: E402
 import herd  # noqa: E402
 import menu as chest  # noqa: E402  (menu() below is the chat text)
 import monk  # noqa: E402
+import record  # noqa: E402
 from replay import Replay  # noqa: E402
 import table  # noqa: E402
 
@@ -488,6 +493,8 @@ def found(g, name, rect, way=None, tiles=None, free=False):
     for r, v in () if free else price(g, name).items():
         g.stock[r] -= v
         g.command(f"scoreboard players remove {r.capitalize()} {g.board} {v}")
+    if not free:                                                       # a free one is the start town of a mode
+        record.built(g, name, rect)                                    # Record Game (#2649)
     x0, x1, z0, z1 = rect
     color = g.players.get(str(g.player), {}).get("color", "light_gray")
     ring = [(x, g.map.y(x, z) if g.map.y(x, z) is not None else int(fleet.level(g) if name in WATER else g.map.sea(x, z)), z)
@@ -511,7 +518,25 @@ def found(g, name, rect, way=None, tiles=None, free=False):
     if tiles is not None and str(way).startswith("diag"):
         site["tiles"] = tiles
     g.sites.append(site)
+    if g.paper:                                                        # its square on the minimap (#2582)
+        g.command(minimap_square((x0, z0, x1, z1), g.player))
     return site
+
+
+def minimap_square(rect, player):
+    """The plugin command that draws the footprint rect (x0, z0, x1, z1; x1 and z1 not in it) of a building of player
+    on the minimap (Minimap.java, #1238)."""
+    return "aoe minimap building {} {} {} {} p{}".format(*rect, player)
+
+
+def minimap(g):
+    """The minimap commands of the buildings at the start of a game (#2582): the buildings of aoe2mc.json (not Gaia)
+    and the construction sites of each side (a loaded game)."""
+    rects = {tuple(o["footprint"]): o["player"] for o in g.data["objects"]
+             if o["kind"] == "building" and o["player"] > 0 and "footprint" in o}
+    for x in [g, *(b.g for b in g.bots)]:
+        rects.update({(f[0], f[2], f[1], f[3]): s["player"] for s in x.sites for f in [s["footprint"]]})
+    return [minimap_square(r, p) for r, p in sorted(rects.items())]
 
 
 def clear(g, cells):
@@ -679,10 +704,11 @@ def line(g, name, techs=None):
     return name
 
 
-def values(g, name, techs=None):
+def values(g, name, techs=None, rect=None):
     """The AoE2 values of building name of the player of g: those of its tower (line, #1374) with the building
     technologies (train.TECHS: Chemistry, Masonry, #1398). techs: the technologies (default: those of the player). A
-    technology sees the name of the tower of the values (Arrowslits: a keep +3, #1504)."""
+    technology sees the name of the tower of the values (Arrowslits: a keep +3, #1504). rect: the footprint of the
+    building, with the effect of its upgrade of one building (g.upgraded: the Defensive Town Center, #2497)."""
     import combat, train                                               # combat -> gather -> build: import it late
     techs = getattr(g, "techs", ()) if techs is None else techs
     name = line(g, name, techs)
@@ -692,6 +718,8 @@ def values(g, name, techs=None):
                 civs.handicap(g.data, g.player) if hasattr(g, "data") else 1)   # #2474
     for t in sorted(techs):
         s = train.TECHS[t](name, s)
+    if up := vars(g).get("upgraded", {}).get(rect):
+        s = train.TECHS[up](name, s)
     return s
 
 
@@ -703,16 +731,17 @@ def minimum(g, name, techs=None):
     return 0 if "MURDER_HOLES" in techs else combat.FORT_MIN_RANGE.get(name, 0)
 
 
-def retower(g, before):
+def retower(g, before, fresh=None):
     """The complete own buildings get their new values after a tower technology (#1374) or Masonry (#1398, values): the
-    target keeps its lost hit points, as a wall (upgrade). before: the technologies before the research. A destroyed
-    building stays air."""
+    target keeps its lost hit points, as a wall (upgrade). before: the technologies before the research. fresh: the
+    footprint of a building that has a new upgrade of one building (#2497), else None. A destroyed building stays air."""
     import combat, repair                                              # combat -> gather -> build: import it late
     rects = [(x0, x1, z0, z1, o["name"]) for o in g.data["objects"] if o["kind"] == "building" and o["player"] == g.player
              and "footprint" in o for x0, z0, x1, z1 in [o["footprint"]]] \
         + [(*s["footprint"], s["name"]) for s in g.sites if s.get("done") and s["player"] == g.player]
     for x0, x1, z0, z1, name in rects:
-        a, b, new = values(g, name, before), values(g, name), line(g, name)
+        rect = (x0, x1, z0, z1)
+        a, b, new = values(g, name, before, None if rect == fresh else rect), values(g, name, rect=rect), line(g, name)
         if (a, minimum(g, new, before)) == (b, minimum(g, new)) or (hp := repair.hp(g, (x0, x1, z0, z1))) is None or hp <= 0:
             continue
         uuid = combat.target_uuid([x0, z0, x1, z1])

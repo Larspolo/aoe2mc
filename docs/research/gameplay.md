@@ -251,6 +251,14 @@ The owner decides on the platform first (decision ticket). The other tickets dep
 - #137 Start a game program that controls the server through RCON.
 - #138 Let villagers gather wood on the player's command (the milestone).
 
+## Decisions of the owner (2026-10-28)
+
+- Bot difficulty (#2648, option A): the six AoE2 DE names (Easiest, Standard, Moderate, Hard, Hardest, Extreme), each
+  with its gather rate, first attack time and soldier count in a data file. AoE2 does not publish these values, so they
+  are a guess that the owner can tune (#2661).
+- Click on the minimap (#2585, option A): a map in an item frame (a "map table") near the own town center. A right
+  click with the selection wand on a pixel of the framed map sends the selection there (#2586).
+
 ## Pitfalls of the game program
 
 Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
@@ -497,3 +505,5 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - A `monkeypatch.setattr` on `from game import X` does not reach `run.play`: `run.py` imports the bare `X`, another module object. Patch the bare module (`import X as plain`, `tests/test_start_buildings.py`, #2429).
 - `game/run.py --play` has no `--seconds` option (a ticket "Verify" line can name one): run `timeout -s INT 240 python3 game/run.py W --play --log F.jsonl`; Ctrl-C saves the game and stops the server. A test world with a computer player: convert `four_civs` and set `"computer": true` on player 2 of `aoe2mc.json` (#2543).
 - A Paper test of a walk speed: measure in server ticks (`/time query gametime`) from the first step, not in wall clock time from the order. A unit stands 2 to 3 ticks before its first step (the first AI tick, the path search): on a walk of about 1 s that is 10 % of the speed (#2591, `tests/test_replay_descent.py`).
+- A real-client click test on a framed map (`tests/test_minimap_click.py`, #2586): a look at an exact pixel edge (x = -0.25 of the frame: pixel 32) gives the pixel before it (31): aim at the middle of a pixel. An RCON answer ends with `\n`: `.strip()` before `endswith`.
+- A selector of the unit tags (`aoe2mc.p1`, `aoe2mc.t<id>`, a trigger area) finds the rider of a mounted unit, not its horse: `aoe moveto` on the rider answers "Moved 1 units" and nothing walks. The plugin walks the horse (the `uuid` of `aoe2mc.json`): tag it with `execute as <sel> on vehicle run tag @s add T` (#2647).

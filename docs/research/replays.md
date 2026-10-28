@@ -199,6 +199,11 @@ used mines and farms, and the exact unit paths. Next: #438 lets Minecraft path f
 - `mgz` source: `mgz/model/definitions.py` (the `Match`, `Map`, `Tile`, `Object`, `Action` classes) and
   `mgz/fast/actions.py` (the payload of `MOVE`, `ORDER`, `BUILD`, `WALL`).
 
+## Taunt sounds (decision #2233, 2026-10-28)
+
+A taunt plays a vanilla Minecraft sound only when a good Minecraft sound fits it ("Yes", "No", a laugh); all other
+taunts show only their text. The AoE2 taunt sounds are not free to copy (#2662).
+
 ## Pitfalls
 
 Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
@@ -225,3 +230,4 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - `Replay.run` sends commands only at an event or a step candidate (the `step = min(...)` list: walks, gather steps, texts, builds, flare bursts). A repeated effect that lives longer than one command (a particle column) needs its own candidate, else it shows only when a unit walks (#2506). A check with a real client: count the commands per second in a wrapped `game.command`; a minimap mark that blinks (`PERIOD` 20 ticks) needs shots over 2 s.
 - A level-4 check of a live replay effect (#2410): run `run.replay(game, world, 1.0, "6:55")` in a daemon thread next to `mc_shot.Client`, and wrap a `Replay` method (`flare`, `expire`) to log the wall time of its commands: the shots then follow the event, not a guessed jump time. `Game.folder` is a temporary folder: copy `logs/latest.log` before the `with` ends. The replay takes the player out of spectator mode: hold the map in the offhand for the minimap.
 - `tools/replay_drift.py` numbers change from run to run of the same code (#2633, de-64.3 to 38:00: "stuck" 11 and 27, villagers "died" 2 and 25 when an eagle scout chose other targets): compare the long cases of named units (`ref`, seconds far) with a script over the `--log` file, not the table totals, and run the after case twice.
+- A level-4 check of a replay order (patrol, move) compares the unit with its replay place (`Replay.at(v, t)`, the `aoe moveto` goals of an offline `Replay(Fake(), data, ai=True)` run), not with the place of the entity: after a jump (`run(to=...)`) a scout was 50 blocks behind its replay place, and #2630 was a wrong bug ticket (#2564). Map a record ID to its replay unit: `r.units[ID].name` (the names of `aoe2mc.name_timeline`).

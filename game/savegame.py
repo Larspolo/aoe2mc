@@ -30,6 +30,7 @@ OPTIONAL = ("limit_left", "policy", "rates", "relic_timer", "switches", "upgrade
             "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
+ORDERS = ("patrols",)                                                  # scenario.py: the patrols of the triggers (#2647)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
 CHEATS = (                                                             # game/cheats.py: the cheats that the player
     "aegis",                                                           # turned on (#2533)
@@ -43,6 +44,7 @@ COUNTERS = (                                                           # the par
     "cart_heal",                                                       # trade.py
     "garrison_heal",                                                   # garrison.py
     "herd_food",
+    "military_time",                                                   # regen.py
     "regen_time",
     "repair_hp",                                                       # repair.py
     "repair_owed",
@@ -96,6 +98,7 @@ KEPT = (                                                               # the fie
     *LEFT,                                                             # one tuple per line, in alphabetical order
     *MONK,                                                             # (parallel tickets add one, #2453)
     *OPTIONAL,
+    *ORDERS,
     *RIDERS,
     *ROUTES,
     *SCORE,
@@ -106,7 +109,8 @@ KEPT = (                                                               # the fie
 JOB = ("state", "load", "res", "job", "lap", "prey")                  # fields of a gather.Villager, as they are
 BOT = ("time", "charged", "attack")                                    # fields of a bot.Bot, as they are (#2325)
 SETTINGS = (                                                           # run.py options (#2325, #2409): one per line,
-    "all_techs",                                                       # in alphabetical order (parallel tickets add)
+    "ai_difficulty",                                                   # in alphabetical order (parallel tickets add)
+    "all_techs",
     "bot",
     "bot_attack",
     "cheats",
@@ -135,6 +139,7 @@ NOT_SAVED = (                                                          # the fie
     "bots",                                                            # run.play makes the bots again
     "capture",                                                         # herd.py: a tick timer
     "census",                                                          # train.py: a tick timer
+    "chop",                                                            # bot.py: the setup value of the AI difficulty
     "conquest_at",                                                     # conquest.py: the next check time
     "data",                                                            # aoe2mc.json of the world
     "defend_at",                                                       # defend_wonder.py: the next check time
@@ -145,17 +150,23 @@ NOT_SAVED = (                                                          # the fie
     "fog",                                                             # fog.py: the next tick hides the units again
     "ghosts",                                                          # build.py: the shown building to place
     "goto_idle",                                                       # goto.py: the next idle unit to show
+    "haste_time",                                                      # train.haste: a tick timer
+    "hasted",                                                          # train.haste: a load sends the values again
     "home",                                                            # bot.py: the town center of a bot
+    "hurried",                                                         # regen.military: again in its next pass
     "kings",                                                           # regicide.setup makes it again
     "limit_at",                                                        # time_limit.py: the next check time
     "limit_shown",                                                     # time_limit.py: the shown text
     "noui",                                                            # the cheat "noui": only the hints
     "peers",                                                           # run.py: the players of the game
     "player",                                                          # run.py: the player number
+    "record",                                                          # record.py: run.play opens the file of --record again
     "regicide_at",                                                     # regicide.py: the next check time
     "repair_at",                                                       # repair.py: the next check time
     "repairs",                                                         # orders(): the repair of each villager
+    "research_skip",                                                   # scenario.py: the unknown technologies, found again
     "rows",                                                            # build.py: the shown building to place
+    "scenario_at",                                                     # scenario.py: the next check time
     "score_at",                                                        # score.py: the next check time
     "shapes",                                                          # build.py: the shown building to place
     "share",                                                           # bot.py: the techs of the human player
