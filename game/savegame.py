@@ -7,8 +7,8 @@ the train and research queues, the construction sites (also the done ones: the b
 points (#2257), and the orders of the units (#2258): the job, target and load of each villager (also the rally walk and
 the repair, #2380), the farmers, stances, control groups and garrisons. A villager keeps no path: after the load it walks
 again with Minecraft path finding (P2).
-The save also keeps the wonder and relic victory timers and the market prices (#2324), the game settings of the
-command line (`run.py` options, "settings"), the attack time and wave of the bot (#2325), the relics and the monk
+The save also keeps the wonder and relic victory timers and the market prices (#2324), the time limit (#2356), the game
+settings of the command line (`run.py` options, "settings"), the attack time and wave of the bot (#2325), the relics and the monk
 orders (#2412: `monk.relics`, the conversions and the rest of the monks), the orders of the ships, the routes of the
 trade carts and the state of the trebuchets (#2413), the passed time of the treaty (#2409), and the units inside the
 transport ships and siege towers and the units on the way to them (#2411).
@@ -21,7 +21,7 @@ import time
 FILE = "savegame.json"
 FIELDS = ("stock", "spare", "seconds", "repeats", "pop")              # dicts and numbers of Gather, as they are
 PACKED = ("queues", "trained", "sites", "rally")                       # with tuples (a building rect, a cell): pack()
-OPTIONAL = ("rates", "relic_timer", "wonder_shown", "wonders", "wonders_gone")   # only on a Gather that has them (#2324)
+OPTIONAL = ("limit_left", "rates", "relic_timer", "wonder_shown", "wonders", "wonders_gone")   # only on a Gather that has them (#2324)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
@@ -43,6 +43,7 @@ SETTINGS = (                                                           # run.py 
     "teams",
     "treaty",
     "victory",
+    "victory_value",
 )
 SKIP = ("session.lock",)                                               # the lock of the running server
 
