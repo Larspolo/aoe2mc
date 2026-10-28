@@ -32,7 +32,7 @@ def test_damage_object_damages_each_unit_of_the_player_in_the_area():
 
 def test_a_unit_type_filters_the_entity_type():
     line, = lines([effect(5, "MILITIA")])
-    assert line.startswith("execute as @e[type=minecraft:zombie,tag=aoe2mc.p1,") and line.endswith(" run damage @s 5")
+    assert line.startswith("execute as @e[tag=aoe2mc.p1,tag=!aoe2mc.mount,tag=aoe2mc.t74,") and line.endswith(" run damage @s 5")
 
 
 def test_a_gaia_effect_does_not_damage_the_players():

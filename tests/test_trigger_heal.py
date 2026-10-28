@@ -36,7 +36,7 @@ def test_heal_object_raises_the_health_of_each_unit_up_to_its_maximum():
 
 def test_a_unit_type_filters_the_entity_type():
     _, found = lines([effect(5, "MILITIA")])
-    assert found[2].startswith("execute as @e[type=minecraft:zombie,tag=aoe2mc.p1,")
+    assert found[2].startswith("execute as @e[tag=aoe2mc.p1,tag=!aoe2mc.mount,tag=aoe2mc.t74,")
     assert found[2].endswith(" run scoreboard players add @s aoe_hp 5")
 
 

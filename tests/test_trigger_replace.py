@@ -29,7 +29,7 @@ def test_the_archers_of_player_1_become_crossbowmen_of_player_2():
     mark, summon, kill = lines([effect()], stats)
     archers = aoe2mc.effect_units(effect(), 4)[0]
     assert mark == f"tag {archers} add aoe2mc.replace"
-    assert archers.startswith("@e[type=minecraft:skeleton,tag=aoe2mc.p1,") and "x=8," in archers
+    assert archers.startswith("@e[tag=aoe2mc.p1,tag=!aoe2mc.mount,tag=aoe2mc.t4,") and "x=8," in archers
     assert summon.startswith("execute at @e[tag=aoe2mc.replace] run summon minecraft:skeleton ~ ~ ~ {")
     assert "aoe2mc.p2" in summon and "aoe2mc.p1" not in summon and "UUID" not in summon
     assert kill == "kill @e[tag=aoe2mc.replace]"                       # only the old units: not the new ones

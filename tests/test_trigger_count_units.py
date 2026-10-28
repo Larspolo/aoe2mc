@@ -34,7 +34,7 @@ def test_no_area_counts_the_whole_map():
 
 def test_a_unit_type_filters_the_entity_type_and_gaia_is_not_the_players():
     assert lines([effect(name="MILITIA")])[0].startswith(
-        "execute store result score #v3 aoe_var if entity @e[type=minecraft:zombie,tag=aoe2mc.p1,")
+        "execute store result score #v3 aoe_var if entity @e[tag=aoe2mc.p1,tag=!aoe2mc.mount,tag=aoe2mc.t74,")
     assert "tag=aoe2mc.p0," in lines([effect(player=0)])[0]   # Gaia: p0 (#2916)
 
 
