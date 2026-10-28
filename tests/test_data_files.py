@@ -6,7 +6,7 @@ import os
 
 import pytest
 
-from game import build, civs, combat, table
+from game import build, civs, combat, table, train
 
 RES = {"food", "wood", "gold", "stone"}
 
@@ -94,6 +94,10 @@ def check_civs(row):
     assert not set(row["missing"]) & set(civs.ONLY), n                    # one form for each item (#2235)
     assert row.get("unique", "MILITIA") in NAMES["units.jsonl"], n
     assert set(row.get("twice", ())) <= NAMES["train.jsonl"], n
+    assert len(row.get("hp_age", [1] * 4)) == 4 and all(isinstance(a, NUMBER) and a > 0 for a in row.get("hp_age", ())), n
+    for t, group in row.get("also", {}).items():                   # one more group gets the effect (#2173)
+        assert group in civs.GROUPS and isinstance(train.EFFECTS.get(t, {}), dict) and t in train.TECHS | train.SPEEDS, (n, t)
+    assert all(t in train.TECHS and isinstance(f, NUMBER) for t, f in row.get("more", {}).items()), n
     for group, value, ages in row.get("units", ()):
         classes = {f"bonus:{c}" for t in (*combat.STATS.values(), *combat.BUILDINGS.values()) for c in t.classes}
         assert group in civs.GROUPS and value in (*combat.Stats._fields, "speed", *classes), (n, group, value)   # (#2249)
@@ -117,7 +121,7 @@ def check_gather(row):
                               "farm": int, "dark": bool, "ship": list, "civilian": bool, "mine": list, "carry": int,
                               "pace": float, "watch": bool})
     n = row["name"]
-    assert len(row) > 1 and set(row.get("drop", ())) <= RES and set(row.get("work", {})) <= RES, n
+    assert len(row) > 1 and set(row.get("drop", ())) <= RES | {"meat"} and set(row.get("work", {})) <= RES, n
     assert all(isinstance(v, NUMBER) for v in row.get("work", {}).values()), n
     if "mine" in row:                                      # [the resource, its amount, the villager name of the miner]
         res, amount, miner = row["mine"]
