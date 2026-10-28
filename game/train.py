@@ -96,7 +96,7 @@ TRAINS = {b: tuple(r["name"] for r in ROWS if r["building"] == b)    # the units
           for b in dict.fromkeys(r["building"] for r in ROWS if r["building"])}   # building, in file order
 TRAINS["DONJON"] = ("SPEARMAN",)                                  # trains() adds the Serjeant (#1873)
 TRAINS["FOLWARK"] = TRAINS["MILL"]                                 # the mill of the Poles (#1874)
-TRAINS["KREPOST"] = ()                                             # trains() adds the Konnik (#1872)
+TRAINS["KREPOST"] = ("PETARD",)                                     # trains() adds the Konnik (#1872); wiki: the petard (#2192)
 TRAINS["FORTIFIED_CHURCH"] = TRAINS["MONASTERY"]                  # the monastery of the Armenians, Georgians (#1930)
 # The unique unit of each civilization (AoE2 DE, "unique" in data/civs.jsonl, #1914), trained at its castle. A unit
 # without COSTS is not in the menu yet: it has no AoE2 combat values in combat.STATS.
@@ -228,6 +228,8 @@ def effect(e):
 
 
 TECHS = {r["name"]: effect(r["effect"]) for r in ROWS if "effect" in r}   # a technology: its change of the AoE2 values
+EACH = {r["name"]: effect({k: v for k, v in r["effect"].items() if k != "if"})   # the same change for each unit
+        for r in ROWS if isinstance(r.get("effect"), dict)}       # (civs.SMITH_UNITS, #2174)
 # technology: the unit (or a class of combat.STATS: lower case, or a group of civs.GROUPS) and its walk speed factor
 # (#1415, #1416): the key "walk" of data/train.jsonl
 SPEEDS = {r["name"]: tuple(r["walk"]) for r in ROWS if "walk" in r}
@@ -612,12 +614,13 @@ def age(g):
 
 def stats(g, name):
     """The combat values of AoE2 unit name with the bonuses of the civilization (civs.UNITS) and the technologies of
-    the player (combat.stats and TECHS), twice for civs.TWICE (#1561)."""
+    the player (combat.stats and TECHS), twice for civs.TWICE (#1561), n times for civs.SMITH_UNITS (#2174)."""
     import combat                                                  # combat imports gather, gather imports this module
     s, twice = civs.units(g, name, combat.stats(name)), civs.TWICE.get(civs.civ(g), ())
+    more = civs.smith(g, name, s)
     for t in sorted(g.techs):
-        for _ in range(count(g, t) * (1 + (t in twice))):              # "going above and beyond" stacks (#968)
-            s = TECHS[t](name, s)
+        for _ in range(count(g, t) * (1 + (t in twice)) * more.get(t, 1)):   # "going above and beyond" stacks (#968)
+            s = (EACH if t in more else TECHS)[t](name, s)
     return s
 
 
@@ -654,6 +657,7 @@ def research(g, entry):
     before = set(g.techs)
     g.techs.add(entry["name"])
     if (more := gather.FARM_TECHS.get(entry["name"])):             # the new and the live own farms get more food
+        more = round(more * civs.FARM_UPGRADES.get(civs.civ(g), 1))
         g.map.farm_food += more
         for t in g.map.own_farms:
             if g.map.farms.get(t, 0) > 0:
@@ -714,6 +718,14 @@ def research(g, entry):
         g.command("tellraw @a " + json.dumps({"text": f"Player {g.player} advances to the {age(g)}.", "color": "gold"}))
         g.command("playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1")
         return
+    for r, v in civs.TECH_GIFTS.get(civs.civ(g), {}).items():       # Spanish: 20 gold, not for an age (#2175)
+        g.stock[r] += v
+        g.command(f"scoreboard players add {r.capitalize()} {g.board} {v}")
+    if entry["name"] in civs.ECONOMY:                              # Wei: free villagers at an own town center (#2175)
+        rects = [r for r, n in homes(g).items() if n == "TOWN_CENTER"]
+        for _ in range(civs.ECONOMY_VILLAGERS.get(civs.civ(g), 0) * bool(rects)):
+            if spawn(g, rects[0], "VILLAGER_MALE"):
+                g.pop += 1
     g.command(f"tellraw {entry['player']} " + json.dumps({"text": f"{ITEMS[entry['name']][2]} is researched.",
                                                           "color": "green"}))
 
