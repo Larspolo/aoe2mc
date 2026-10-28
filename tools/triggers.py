@@ -91,6 +91,7 @@ MAP = {
     ("effect", "CHANGE_VARIABLE"): "`scoreboard players set`, `add`, `remove` or `operation` on `#vN aoe_var` (#2611)",
     ("effect", "MODIFY_VARIABLE_BY_RESOURCE"): "`scoreboard players operation #vN aoe_var = Gold aoe_resP` (or `+=`, `-=`, `*=`, `/=`): the stock of the game program, `aoe_res` for player 1 (#2823)",
     ("effect", "MODIFY_VARIABLE_BY_VARIABLE"): "`scoreboard players operation #vA aoe_var = #vB aoe_var` (or `+=`, `-=`, `*=`, `/=`, #2713); a division by 0 leaves the score as it is (Minecraft; the AoE2 wiki has no page on it)",
+    ("effect", "COUNT_UNITS_INTO_VARIABLE"): "`execute store result score #vN aoe_var if entity @e[tag=aoe2mc.pM,type=..,x=..,dx=..]`: the number of units of the player in the area, no area: the whole map (#2697)",
     ("effect", "DECLARE_VICTORY"): "`scoreboard players set #pN aoe_win 1`: the scenario mode of the game program ends the game (#2542)",
     ("effect", "TASK_OBJECT"): "`tag @e[tag=aoe2mc.pN,x=..,dx=..] add aoe_taskK` and the tile in the storage `aoe2mc:tasks`: the scenario mode of the game program walks them there with `aoe moveto` (vanilla has no walk-to command, #2646)",
     ("effect", "PATROL"): "`tag` of the units in the area and an order in the storage `aoe2mc:orders`: the scenario mode of the game program walks them with `aoe moveto` (#2647); vanilla has no walk-to command",

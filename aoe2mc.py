@@ -2838,6 +2838,7 @@ CHANGE_VIEW = 16                                                   # "Change Vie
 CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
 CLEAR_TIMER = 57                                                   # "Clear Timer" (#2696)
 COMPARE_VARIABLES = 78                                             # the condition "Compare Variables" (#2698)
+COUNT_UNITS_INTO_VARIABLE = 101                                    # "Count Units into Variable" (#2697)
 CREATE_GARRISONED_OBJECT = 49                                      # "Create Garrisoned Object" (#2764)
 CREATE_OBJECT = 11
 DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
@@ -3384,6 +3385,18 @@ def variable_by_variable_lines(e, c):
     return [f"scoreboard players operation #v{a} aoe_var {('', '+', '-', '*', '/')[op - 1]}= #v{b} aoe_var"]
 
 
+def count_lines(e, c):
+    """The command of "Count Units into Variable" (#2697): the score #vN of aoe_var (N: variable2) is the number of
+    units of the player and type in the area (effect_units; no area: the whole map). A building has no entity: no line."""
+    v = e.get("variable2", -1)
+    found = effect_units(e, c.T) if v >= 0 else None
+    if found is None:
+        c.stats["count units into variable (not supported)"] += 1
+        return []
+    c.stats["count units into variable"] += 1
+    return [f"execute store result score #v{v} aoe_var if entity {found[0]}"]
+
+
 def variable_range(c):
     """The `matches` range of the comparison of a "Variable Value" condition (#2611): Equal, Less, Larger,
     Less or Equal, Larger or Equal."""
@@ -3857,6 +3870,7 @@ def visibility_lines(e, c):
 # (effect, kinds, techs) -> value. A new effect is one line here, in alphabetical order (#2792): parallel trigger
 # tickets conflicted in one expression of read_scenario. The older effects still have their entry there.
 EFFECT_KEYS = {
+    COUNT_UNITS_INTO_VARIABLE: {"variable2": "variable2"},   # (#2697)
     INITIATE_RESEARCH: {"selected": lambda e, kinds, techs: list(e.selected_object_ids or []),   # (#2772)
                         "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
     TRAIN_UNIT: {"quantity": "quantity", "selected": lambda e, kinds, techs: list(e.selected_object_ids or [])},   # (#2772)
@@ -3888,6 +3902,7 @@ EFFECTS = {
     CHANGE_VIEW: view_lines,
     CLEAR_INSTRUCTIONS: clear_lines,
     CLEAR_TIMER: clear_timer_lines,
+    COUNT_UNITS_INTO_VARIABLE: count_lines,
     CREATE_GARRISONED_OBJECT: garrisoned_lines,
     CREATE_OBJECT: object_lines,
     DAMAGE_OBJECT: damage_lines,
@@ -4158,8 +4173,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         load += [run] * t["enabled"]
     names = sorted({f"#v{x[k]}" for t in triggers for x in t["conditions"] + t["effects"]
                     for k in ("variable", "variable2")   # "Modify Variable by Variable" has two (#2713)
-                    if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE, COMPARE_VARIABLES, MODIFY_VARIABLE_BY_RESOURCE,
-                                     MODIFY_VARIABLE_BY_VARIABLE) and x.get(k, -1) >= 0})
+                    if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE, COMPARE_VARIABLES, COUNT_UNITS_INTO_VARIABLE,
+                                     MODIFY_VARIABLE_BY_RESOURCE, MODIFY_VARIABLE_BY_VARIABLE) and x.get(k, -1) >= 0})
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
