@@ -64,8 +64,8 @@
 {"name": "STAKE_BARRICADE", "decor": "fence"}
 {"name": "WATER_POTS", "decor": "pots"}
 {"name": "AMPHORAE", "decor": "pots"}
-{"name": "LUMBER", "scatter": true}
-{"name": "FLOWER_BED", "scatter": true}
+{"name": "LUMBER"}
+{"name": "FLOWER_BED"}
 {"name": "CRATER", "no_blocks": true}
 {"name": "SMOKE", "no_blocks": true}
 {"name": "CRACKS", "no_blocks": true}

@@ -1827,7 +1827,7 @@ def player_color(p, players=None):
 MOUNTAINS = ("MOUNTAIN", "SNOW_MOUNTAIN")
 # The other objects of AoE2 (#2036). "mob": a part of the name, the first line wins; "monument" (a buildings.py
 # design), "obstacle": the start of the name; "passable": a part of the name; "decor": the design in decor() (a
-# start of the name for "statue", else the full name); "map_color", "scatter", "no_blocks": the full name.
+# start of the name for "statue", else the full name); "map_color", "no_blocks": the full name.
 OBJECTS = units.rows("objects.jsonl")
 OBJECT = {r["name"]: r for r in OBJECTS}
 MONUMENTS = tuple(r["name"] for r in OBJECTS if r.get("monument"))
@@ -1957,23 +1957,20 @@ def place_objects(objects, players, cols, rng):
         elif kind == "O" and name.startswith("PLANT"):
             plant = "fern" if ("FERN" in name or "JUNGLE" in name or "UNDERBRUSH" in name) else \
                 bush_block(cols, bx, bz, name) if ("SHRUB" in name or "BUSH" in name) else \
-                ["poppy", "dandelion", "cornflower", "allium"][int(rng.integers(4))] if "FLOWER" in name else \
                 "dead_bush" if "DEAD" in name else "short_grass"
             E.add([bx], [y], [bz], plant, hard=False)
             stats["plants"] += 1
-        elif kind == "O" and (name.startswith("RUBBLE") or "SKELETON" in name or OBJECT.get(name, {}).get("scatter")
-                              or "CART" in name or name.startswith("TORCH") or name == "SIGN"):
+        elif kind == "O" and (name.startswith("RUBBLE") or "SKELETON" in name or "CART" in name
+                              or name.startswith("TORCH")):
             things = (["cobblestone", "gravel", "mossy_cobblestone"] if name.startswith("RUBBLE") else
                       ["bone_block[axis=x]", "bone_block[axis=z]"] if "SKELETON" in name else
-                      ["oak_log[axis=x]", "oak_log[axis=x]", "spruce_log[axis=x]"] if name == "LUMBER" else
-                      ["poppy", "dandelion", "allium", "azure_bluet"] if name == "FLOWER_BED" else
                       ["spruce_slab[type=bottom]", "spruce_log[axis=z]", "barrel[facing=up]"] if "CART" in name else
                       ["oak_fence"])
             k = 1 if things == ["oak_fence"] else min(len(things), 3)
             E.add([bx, bx + 1, bx][:k], [y] * k, [bz, bz, bz + 1][:k],
-                  [B(things[int(rng.integers(len(things)))]) for _ in range(k)], hard=not name == "FLOWER_BED")
-            if name.startswith("TORCH") or name == "SIGN":
-                E.add([bx], [y + 1], [bz], "torch" if name.startswith("TORCH") else "oak_fence")
+                  [B(things[int(rng.integers(len(things)))]) for _ in range(k)])
+            if name.startswith("TORCH"):
+                E.add([bx], [y + 1], [bz], "torch")
             stats["decorations"] += 1
         elif kind == "O" and (OBJECT.get(name, {}).get("no_blocks") or name.startswith("WATERFALL")):
             pass
