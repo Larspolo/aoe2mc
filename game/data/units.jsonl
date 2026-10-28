@@ -148,8 +148,8 @@
 {"name": "FIRE_LANCER", "hp": 65, "attack": 9, "melee": 1, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"building": 1, "cavalry": 5, "camel": 4, "elephant": 5}, "classes": ["infantry", "gunpowder"], "sight": 7, "groups": ["fire lancers"]}
 {"name": "GRENADIER", "hp": 40, "attack": 12, "melee": 1, "pierce": 1, "range": 6, "reload": 3.45, "bonus": {"building": 4, "infantry": 9, "siege": 3, "spearman": 1}, "classes": ["archer", "gunpowder", "unique"], "sight": 9}
 {"name": "HEAVY_ROCKET_CART", "hp": 65, "attack": 5, "melee": 0, "pierce": 8, "range": 8, "reload": 5.35, "bonus": {"building": 12, "siege": 2}, "classes": ["gunpowder", "siege"], "melee_ranged": true, "blast": 1.25, "min_range": 2.5}
-{"name": "HEI_GUANG_CAVALRY", "hp": 60, "attack": 11, "melee": 4, "pierce": 3, "range": 0, "reload": 1.8, "bonus": {}, "classes": ["cavalry"], "groups": ["hei guang cavalry"]}
-{"name": "HEAVY_HEI_GUANG_CAVALRY", "hp": 90, "attack": 12, "melee": 4, "pierce": 3, "range": 0, "reload": 1.8, "bonus": {"infantry": 1, "condottiero": 1}, "classes": ["cavalry"], "groups": ["hei guang cavalry"]}
+{"name": "HEI_GUANG_CAVALRY", "hp": 60, "attack": 11, "melee": 4, "pierce": 3, "range": 0, "reload": 1.8, "bonus": {}, "classes": ["cavalry"], "groups": ["hei guang cavalry", "jian swordsmen, hei guang cavalry"]}
+{"name": "HEAVY_HEI_GUANG_CAVALRY", "hp": 90, "attack": 12, "melee": 4, "pierce": 3, "range": 0, "reload": 1.8, "bonus": {"infantry": 1, "condottiero": 1}, "classes": ["cavalry"], "groups": ["hei guang cavalry", "jian swordsmen, hei guang cavalry"]}
 {"name": "HOUFNICE", "hp": 90, "attack": 50, "melee": 2, "pierce": 6, "range": 12, "reload": 6.5, "bonus": {"building": 250, "heavysiege": 50, "siege": 20}, "classes": ["gunpowder", "siege"], "melee_ranged": true, "blast": 0.7, "min_range": 5}
 {"name": "IRON_PAGODA", "hp": 115, "attack": 12, "melee": 1, "pierce": 3, "range": 0, "reload": 2.16, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
 {"name": "LEGIONARY", "hp": 75, "attack": 12, "melee": 2, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 4, "infantry": 4}, "classes": ["infantry"], "sight": 7}
@@ -219,4 +219,4 @@
 {"name": "CHAMPI_WARRIOR", "hp": 55, "attack": 9, "melee": 0, "pierce": 3, "range": 0, "reload": 2.0, "bonus": {"siege": 3, "standard": 2}, "classes": ["infantry"], "sight": 6}
 {"name": "ELITE_CHAMPI_WARRIOR", "hp": 65, "attack": 11, "melee": 0, "pierce": 4, "range": 0, "reload": 2.0, "bonus": {"siege": 3, "standard": 3}, "classes": ["infantry"], "sight": 6}
 {"name": "SAVAR", "hp": 145, "attack": 14, "melee": 3, "pierce": 4, "range": 0, "reload": 1.8, "bonus": {"archer": 2}, "classes": ["cavalry"], "sight": 5, "note": "the wiki infobox \"Savar\" (#2014): base +2 vs. archers"}
-{"name": "JIAN_SWORDSMAN", "hp": 70, "attack": 8, "melee": 0, "pierce": 5, "range": 0, "reload": 2.0, "bonus": {"archer": 4, "building": 2}, "classes": ["infantry", "unique"], "sight": 4, "note": "the wiki infobox (#2134): the shielded form, base values (sight 4 without Tracking)"}
+{"name": "JIAN_SWORDSMAN", "hp": 70, "attack": 8, "melee": 0, "pierce": 5, "range": 0, "reload": 2.0, "bonus": {"archer": 4, "building": 2}, "classes": ["infantry", "unique"], "sight": 4, "groups": ["jian swordsmen, hei guang cavalry"], "note": "the wiki infobox (#2134): the shielded form, base values (sight 4 without Tracking)"}
