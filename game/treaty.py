@@ -11,6 +11,8 @@ The program counts game time: tick() adds dt (game seconds) at each call, gather
 as for the wonder timer. The state is on the Game, so all Gathers (people, bots) share it.
 A game mode with the key "treaty": "endless" in game/data/setup.jsonl (Wonder Race, #2406) has a treaty with no end:
 start(g, math.inf).
+Minecraft feature: a boss bar "Treaty: M:SS left" for all players (#2962), as time_limit.py. Its value is the seconds left.
+A treaty with no end has no bar. cheats.over removes it when the game ends.
 """
 import json
 import math
@@ -21,6 +23,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import table  # noqa: E402
 
 ENDLESS = {r["name"] for r in table.load("setup.jsonl") if r.get("treaty") == "endless"}   # the modes with no attacks
+BAR = "aoe2mc:treaty"
 
 
 def clock(seconds):
@@ -49,6 +52,32 @@ def start(g, seconds, done=0.0):
     if seconds > done:
         g.command("tellraw @a " + json.dumps({"text": f"Treaty: no player can attack another player "
                                                       f"{until(seconds)}.", "color": "yellow"}))
+    show(g)
+
+
+def show(g):
+    """The boss bar of the treaty: the seconds left as its value, a command only when the whole second changes.
+    A treaty with no end (math.inf) has no bar."""
+    game = g.game
+    if math.isinf(game.treaty) or game.treaty_time >= game.treaty:
+        return
+    left = math.ceil(game.treaty - game.treaty_time)
+    if vars(game).get("treaty_bar") == left:
+        return
+    if vars(game).get("treaty_bar") is None:
+        for c in (f'bossbar add {BAR} ""', f"bossbar set {BAR} color yellow",
+                  f"bossbar set {BAR} max {math.ceil(game.treaty)}", f"bossbar set {BAR} players @a"):
+            g.command(c)
+    game.treaty_bar = left
+    g.command(f"bossbar set {BAR} name " + json.dumps(f"Treaty: {clock(left)} left"))
+    g.command(f"bossbar set {BAR} value {left}")
+
+
+def close(g):
+    """Remove the boss bar: the game ended (cheats.over), or the treaty ended."""
+    game = getattr(g, "game", None)                                    # a test Gather can have none
+    if game is not None and vars(game).pop("treaty_bar", None) is not None:
+        g.command(f"bossbar remove {BAR}")
 
 
 def holds(g):
@@ -72,7 +101,8 @@ def tick(g, dt):
         return
     g.game.treaty_time += dt
     if holds(g):
-        return
+        return show(g)
+    close(g)
     import gather                                                      # gather imports this module
     if g.paper:
         g.command(gather.neutral_command(g.data.get("players", {})))
