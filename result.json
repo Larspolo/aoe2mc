@@ -1,0 +1,62 @@
+{
+ "CELTS": {
+  "civ": "CELTS",
+  "stock": {
+   "food": 200,
+   "wood": 200,
+   "gold": 100,
+   "stone": 200
+  },
+  "board": {
+   "food": "Food has 200 [Resources (Dark Age)]",
+   "wood": "Wood has 200 [Resources (Dark Age)]",
+   "gold": "Gold has 100 [Resources (Dark Age)]",
+   "stone": "Stone has 200 [Resources (Dark Age)]"
+  },
+  "train_speed": 1.05,
+  "expected_attr": 0.3848,
+  "attr": "The value of attribute Speed for entity Militia is 0.3848",
+  "blocks_per_s": 6.519,
+  "bar": "Custom bossbar [Militia] has a maximum of 20"
+ },
+ "BRITONS": {
+  "civ": "BRITONS",
+  "stock": {
+   "food": 200,
+   "wood": 200,
+   "gold": 100,
+   "stone": 200
+  },
+  "board": {
+   "food": "Food has 200 [Resources (Dark Age)]",
+   "wood": "Wood has 200 [Resources (Dark Age)]",
+   "gold": "Gold has 100 [Resources (Dark Age)]",
+   "stone": "Stone has 200 [Resources (Dark Age)]"
+  },
+  "train_speed": 1.0,
+  "expected_attr": 0.3755,
+  "attr": "The value of attribute Speed for entity Militia is 0.3755",
+  "blocks_per_s": 6.209,
+  "bar": "Custom bossbar [Militia] has a maximum of 20"
+ },
+ "PERSIANS": {
+  "civ": "PERSIANS",
+  "stock": {
+   "food": 250,
+   "wood": 250,
+   "gold": 100,
+   "stone": 200
+  },
+  "board": {
+   "food": "Food has 250 [Resources (Dark Age)]",
+   "wood": "Wood has 250 [Resources (Dark Age)]",
+   "gold": "Gold has 100 [Resources (Dark Age)]",
+   "stone": "Stone has 200 [Resources (Dark Age)]"
+  },
+  "train_speed": 1.0,
+  "expected_attr": 0.3755,
+  "attr": "The value of attribute Speed for entity Militia is 0.3755",
+  "blocks_per_s": 2.924,
+  "bar": "Custom bossbar [Militia] has a maximum of 20"
+ }
+}
