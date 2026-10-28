@@ -267,11 +267,16 @@ class Map:
         self.blocked |= cells - {tuple(c) for c in open_cells}
         if own and "FISH_TRAP" in name and tile:                       # the food of the fishing ships (#1438)
             self.fish[tile], self.traps[tile] = TRAP_FOOD, cells
-        for r, names in [*DROP_SITES.items(), ("meat", MEAT_SITES)]:
-            if own and any(k in name for k in names):
-                self.drops[r].append(cells)
+        if own:
+            self.drop_site(name, cells)
         if own and "DOCK" in name:                                     # the drop site of the fishing ships (#1384)
             self.docks.append(cells)
+
+    def drop_site(self, name, cells):
+        """Add the cells of an own drop site to the drops of each resource that building name takes."""
+        for r, names in [*DROP_SITES.items(), ("meat", MEAT_SITES)]:
+            if any(k in name for k in names):
+                self.drops[r].append(cells)
 
     def cells(self, tile):
         T = self.T
@@ -890,6 +895,7 @@ class Gather:
 
     def drop_goals(self, v):
         """The cells next to the drop sites of the load of a villager (a carcass: also the mule cart, #2194)."""
+        build.moved_carts(self)                                        # a mule cart can be at a new place (#2209)
         meat = self.map.drops["meat"] if v.res == "food" and v.tree in self.map.carcasses else []
         return set().union(*map(self.map.around, self.map.drops[v.res] + meat))
 

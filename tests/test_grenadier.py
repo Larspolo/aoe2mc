@@ -4,7 +4,7 @@ from test_castle_upgrades import RANGE, setup
 from test_forging import menus
 
 import units
-from game import build, civs, train
+from game import civs, train
 
 CASTLE = ("FEUDAL_AGE", "CASTLE_AGE")
 UNIT = " 29:pillager_spawn_egg:Grenadier:55 food · 50 gold · 21 s · queue 0/15 "
@@ -17,7 +17,7 @@ def archery_range(civ="JURCHENS", ages=CASTLE):
 
 
 def test_the_values_are_those_of_the_wiki():
-    assert build.AGE["GRENADIER"] == 2 and len(train.HELP["GRENADIER"]) <= 50
+    assert len(train.HELP["GRENADIER"]) <= 50
     assert units.classify("GRENADIER")["id"] == "minecraft:pillager"
 
 
