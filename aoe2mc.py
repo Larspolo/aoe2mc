@@ -428,6 +428,8 @@ def read_scenario(path):
                                                if e.effect_type == CHANGE_COLOR_MOOD and
                                                getattr(e, "color_mood", None) in set(ColorMood) else {}),
                                             **({"quantity": e.quantity} if e.effect_type == DAMAGE_OBJECT else {}),
+                                            **({"stance": e.attack_stance}                # (#2705)
+                                               if e.effect_type == CHANGE_OBJECT_STANCE else {}),
                                             **({"quantity": e.quantity, "variable": e.variable,   # (#2611)
                                                 "operation": e.operation}
                                                if e.effect_type == CHANGE_VARIABLE else {}),
@@ -2780,6 +2782,7 @@ CHANGE_OBJECT_NAME = 26                                                # "Change
 CHANGE_VIEW = 16                                                       # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                                # "Clear Instructions" (#2609)
 PATROL, ATTACK_MOVE = 19, 30                                           # "Patrol", "Attack Move" (#2647)
+CHANGE_OBJECT_STANCE = 36                                              # "Change Object Stance" (#2705)
 PLAY_SOUND = 4                                                         # "Play Sound" (#2644)
 SOUNDS = [(r["name"], r["sound"]) for r in units.rows("sounds.jsonl")]  # AoE2 sound name part -> vanilla sound
 
@@ -3025,6 +3028,16 @@ def order_lines(t, i, e, T, ground):
     return tag_lines(e, T, tag) + [f'data modify storage aoe2mc:orders list append value "{order} {tag} {where}"']
 
 
+def stance_lines(t, i, e, T):
+    """The commands of "Change Object Stance" (#2705), effect i of trigger t. Vanilla has no stance: as order_lines, the
+    units of the player in the area get the tag aoe_order<trigger>_<i>, and the order "stance <tag> <attack_stance>"
+    (0 aggressive, 1 defensive, 2 stand ground, 3 no attack) goes into the storage aoe2mc:orders for game/scenario.py."""
+    if e.get("stance") not in (0, 1, 2, 3):
+        return []
+    tag = f"aoe_order{t['id']}_{i}"
+    return tag_lines(e, T, tag) + [f'data modify storage aoe2mc:orders list append value "stance {tag} {e["stance"]}"']
+
+
 def view_lines(e, T, ground):
     """The commands of "Change View" (#2610): in Minecraft the player is the camera, so a tp of the players of the
     team pN (team_lines) to the middle of the tile, on the ground. Player -1 or 0: all players."""
@@ -3182,6 +3195,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if e["type"] in (PATROL, ATTACK_MOVE):
                 lines += order_lines(t, i, e, T, ground)
+            if e["type"] == CHANGE_OBJECT_STANCE:
+                lines += stance_lines(t, i, e, T)
+                continue
             if e["type"] == PLAY_SOUND:
                 lines += sound_lines(e, T, ground)
                 continue
