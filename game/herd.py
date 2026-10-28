@@ -64,7 +64,8 @@ def tick(g):
         return
     state["at"] = now
     gathers = [g, *(b.g for b in g.bots)]
-    dead = set().union(*(h.dead for h in gathers))
+    dead = set().union(*(h.dead for h in gathers), *(us for h in gathers for us in vars(h).get("garrisons", {}).values()))
+    #                                                                no capture of an animal in a mill (#2342)
     herds = {o["uuid"]: o for o in g.data["objects"] if o["kind"] == "unit" and o.get("uuid")
              and herdable(o["name"]) and o["uuid"] not in dead}
     if not herds:
