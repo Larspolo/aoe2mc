@@ -415,6 +415,8 @@ def read_scenario(path):
                                                **({"slot": c.timer_id} if c.condition_type == DISPLAY_TIMER_TRIGGERED else {}),
                                                **({"area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2]}     # #2620
                                                   if c.condition_type == BRING_OBJECT_TO_AREA else {}),
+                                               **({"next": c.next_object, "next_unit": c.next_object in entities}
+                                                  if c.condition_type == BRING_OBJECT_TO_OBJECT else {}),   # #2771
                                                **({"quantity": c.quantity, "player": c.source_player,
                                                    "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2],
                                                    "object": c.object_list, "group": c.object_group,
@@ -2891,6 +2893,7 @@ TICKED = COUNTED + (                                               # conditions 
 )
 ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")     # attributes 0-3: the score holders of gather.RESOURCES (#2655)
 BRING_OBJECT_TO_AREA = 1                                               # the condition "Bring Object to Area" (#2620)
+BRING_OBJECT_TO_OBJECT = 2                                             # the condition "Bring Object to Object" (#2771)
 DESTROY_OBJECT = 6                                                     # the condition "Destroy Object" (#2618)
 CAPTURE_OBJECT = 7                                                     # the condition "Capture Object" (#2619)
 OBJECT_ATTACKED = 76                                                   # the condition "Object Attacked" (#2779)
@@ -2913,7 +2916,11 @@ OBJECT_TESTS = {DESTROY_OBJECT: ("if entity @e[tag=aoe2mc.m{ref}] unless entity 
                                    "unless entity @e[tag=aoe2mc.r{ref},nbt=!{{HurtTime:0s}}]", ()),
                  # "Bring Object to Area": the unit is in the box of the area ({box}: area_box, #2620)
                  BRING_OBJECT_TO_AREA: ("if entity @e[tag=aoe2mc.r{ref}{box}]",
-                                        "unless entity @e[tag=aoe2mc.r{ref}{box}]", ())}
+                                        "unless entity @e[tag=aoe2mc.r{ref}{box}]", ()),
+                 # "Bring Object to Object": the unit is next to the other unit, within one tile ({near} blocks, #2771)
+                 BRING_OBJECT_TO_OBJECT: ("at @e[tag=aoe2mc.r{ref},limit=1] if entity @e[tag=aoe2mc.r{next},distance=..{near}]",
+                                          "at @e[tag=aoe2mc.r{ref},limit=1] unless entity "
+                                          "@e[tag=aoe2mc.r{next},distance=..{near}]", ())}
 TICKED += tuple(OBJECT_TESTS)
 STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list (AoE2 attributes 0 to 3)
 OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
@@ -3650,8 +3657,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     Technology" condition too: the game program sets the score #p<player>.<technology> of aoe_tech (#2656), and an
     "Accumulate Attribute" condition of a resource: resource_score (#2655). A "Destroy Object" condition
     (OBJECT_TESTS) tests the tag aoe2mc.r<ref> of its unit and its marker (#2618), "Bring Object to Area" the tag in
-    the box of the area (#2620). "OR" splits the conditions into groups (or_groups, #2765): one tick line per group,
-    and the trigger fires when one group holds. The commands of each effect come from its handler in EFFECTS.
+    the box of the area (#2620), "Bring Object to Object" the other tag within one tile of it (#2771). An inverted
+    object condition swaps the two tests of OBJECT_TESTS. "OR" splits the conditions into groups (or_groups, #2765):
+    one tick line per group, and the trigger fires when one group holds. The commands of each effect come from its
+    handler in EFFECTS.
     A disabled trigger runs only after an "Activate Trigger" (#2575): the score #N of aoe_on is 1 while a trigger that
     such an effect names is on (switch_lines). live: the triggers that get a function; None: all that give commands
     (an effect may name only a function that exists). A "Chance" trigger cannot be activated yet."""
@@ -3681,6 +3690,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         chance = (TRIGGER_CHANCE, False) in kinds
         rest = kinds - {(TRIGGER_CHANCE, False)}
         if any(c["type"] in OBJECT_TESTS and (c.get("ref", -1) is None or c.get("ref", -1) < 0 or not c.get("unit"))
+               or c["type"] == BRING_OBJECT_TO_OBJECT and (c.get("next") is None or c["next"] < 0 or not c.get("next_unit"))
                for c in conds):                                        # no object, or a building: blocks, no entity
             stats["object condition (not an entity, not supported yet)"] += t["enabled"]
             continue
@@ -3688,7 +3698,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             stats["OR with a timer or a chance (not supported yet)"] += t["enabled"]
             continue
         if not (t["enabled"] or t["id"] in on and t["id"] not in chancy) or not conds or \
-                not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED}) or \
+                not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED} | {(k, True) for k in OBJECT_TESTS}) or \
                 chance and len([c for c in conds if c["type"] == TRIGGER_CHANCE]) > 1 or \
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds) or \
                 any(c["type"] == VARIABLE_VALUE and (c.get("variable", -1) < 0 or variable_range(c) is None)
@@ -3718,7 +3728,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if c["type"] in OBJECT_TESTS:                              # the tag of the object (#2618)
                 test, other, before = OBJECT_TESTS[c["type"]]
-                at = dict(ref=c["ref"], player=c.get("player"), box=area_box(c.get("area", [-1] * 4), T))
+                at = dict(ref=c["ref"], player=c.get("player"), box=area_box(c.get("area", [-1] * 4), T), next=c.get("next"),
+                          near=T)
+                if c["inverted"]:                                      # the condition holds while the test fails
+                    test, other = other, test
                 counts += [x.format(**at) for x in before]
                 tests.append(test.format(**at))
                 unless.append(other.format(**at))
