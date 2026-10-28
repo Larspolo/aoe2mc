@@ -7,6 +7,7 @@ from collections import Counter
 import numpy as np
 
 import aoe2mc
+from test_trigger_unit_values import unit_value
 from tools import scenarios
 
 HP, SPEED, ARMOR, ATTACK, SIGHT = 0, 5, 8, 9, 1
@@ -25,7 +26,8 @@ def build(effects, stats=None, T=4):
 
 
 def lines(effects, stats=None):
-    return build(effects, stats)[1].get("data/aoe2mc/function/trigger/7.mcfunction", "").splitlines()
+    return [x for x in build(effects, stats)[1].get("data/aoe2mc/function/trigger/7.mcfunction", "").splitlines()
+            if not unit_value(x)]
 
 
 def test_hit_points_give_the_lines_of_change_object_hp():

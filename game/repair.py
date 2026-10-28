@@ -222,7 +222,7 @@ def march(g, men, rect, goals, job="mending", what=None):
     for k, u in enumerate(men):
         x, z = cells[k * len(cells) // len(men)] if cells else ((rect[0] + rect[1]) // 2, rect[3])
         name = g.soldiers[u]
-        ai.move(g, u, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, NORMAL * train.speed(g, name))
+        ai.move(g, u, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, NORMAL * train.speed(g, name, u))
         jobs[u] = rect if what is None else what
 
 

@@ -219,7 +219,7 @@ def rearm(g):
     names = civs.RELIC_ATTACK.get(civs.civ(g), ((),))[0]
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
         if name in names:
-            g.command(combat.stats_command(uuid, name, train.stats(g, name)))
+            g.command(combat.stats_command(uuid, name, train.stats(g, name, uuid)))
 
 
 def healable(name):

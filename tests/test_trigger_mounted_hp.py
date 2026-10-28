@@ -8,6 +8,7 @@ import pytest
 
 import aoe2mc
 import units
+from test_trigger_unit_values import unit_value
 
 AREA = [2, 3, 4, 5]
 
@@ -24,7 +25,7 @@ def build(effects=(), conditions=None):
 
 
 def lines(effects):
-    return build(effects).get("data/aoe2mc/function/trigger/7.mcfunction", "").splitlines()
+    return [x for x in build(effects).get("data/aoe2mc/function/trigger/7.mcfunction", "").splitlines() if not unit_value(x)]
 
 
 HP_EFFECTS = [effect(aoe2mc.DAMAGE_OBJECT, "KNIGHT", quantity=30),

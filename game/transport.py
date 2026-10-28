@@ -93,7 +93,7 @@ def order(g, player, ship):
         if (v := g.villagers.get(u)) is not None:                  # the villager stops its work
             v.state, v.path, v.goal, v.site = "garrison", [], None, None
         name = "VILLAGER" if u in g.villagers else g.soldiers[u]
-        ai.move(g, u, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * train.speed(g, name))
+        ai.move(g, u, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * train.speed(g, name, u))
         vars(g).setdefault("loading", {})[u] = (ship, (x, z))
     g.mark(player, {(x, z)})
     return True

@@ -5,6 +5,7 @@ from collections import Counter
 import numpy as np
 
 import aoe2mc
+from test_trigger_unit_values import unit_value
 
 SET, ADD, SUBTRACT = 1, 2, 3
 AT = "execute as @e[tag=aoe2mc.p1,tag=!aoe2mc.mount,x=8,y=-64,z=12,dx=11,dy=383,dz=11]"
@@ -22,7 +23,7 @@ def trigger(id, effects, timer):
 
 def lines(triggers, id, stats=None):
     files = aoe2mc.trigger_files(triggers, 4, np.full((64, 64), 70, np.int16), {1: {"color": "blue"}}, stats)[1]
-    return files.get(f"data/aoe2mc/function/trigger/{id}.mcfunction", "").splitlines()
+    return [x for x in files.get(f"data/aoe2mc/function/trigger/{id}.mcfunction", "").splitlines() if not unit_value(x)]
 
 
 def test_a_set_of_the_attack_removes_the_earlier_modifiers_then_sets_the_base():

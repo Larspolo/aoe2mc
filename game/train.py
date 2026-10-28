@@ -628,7 +628,7 @@ def go(g, rect, uuid, name):
     (x, z), tile = g.rally[rect]
     if uuid not in g.villagers:                                        # a military unit walks with the plugin
         import ai                                                      # ai imports gather, gather imports this module
-        ai.move(g, uuid, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * speed(g, name))
+        ai.move(g, uuid, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * speed(g, name, uuid))
     elif tile:
         g.send(tile, {uuid})
     else:
@@ -813,10 +813,10 @@ def applies(unit, name):
     return unit == name or test is not None and name in combat.STATS and test(set(combat.stats(name).classes))
 
 
-def stats(g, name):
+def stats(g, name, uuid=None):
     """The combat values of AoE2 unit name with the bonuses of the civilization (civs.UNITS) and the technologies of
     the player (combat.stats and TECHS), twice for civs.TWICE (#1561), n times for civs.SMITH_UNITS (#2174), and the
-    hit points of civs.TECH_HP (#2269)."""
+    hit points of civs.TECH_HP (#2269). With uuid: also the trigger changes of that unit (unit_values, #3083)."""
     import combat                                                  # combat imports gather, gather imports this module
     s, twice = civs.units(g, name, combat.stats(name)), civs.TWICE.get(civs.civ(g), ())
     times, also, more = civs.smith(g, name, s), civs.ALSO.get(civs.civ(g), {}), civs.MORE.get(civs.civ(g), {})
@@ -835,6 +835,9 @@ def stats(g, name):
         if applies(unit, name):
             v = max(0, OPERATIONS[op](getattr(s, field), q))
             s = s._replace(**{field: v if field in ("range", "reload") else int(v)})   # AoE2: whole hit points, armor
+    for field, op, q in vars(g).get("unit_values", {}).get(uuid, ()):   # "Change Object HP" and others (scenario.values)
+        if field in s._fields:
+            s = s._replace(**{field: int(max(0, OPERATIONS[op](getattr(s, field), q)))})
     return s
 
 
@@ -860,10 +863,16 @@ def speed(g, name, uuid=None):
     """The factor of the walk speed of unit name: the bonus of the civilization (civs.speed) and the technologies of the
     player (the key "walk": Fervor, #1261; Squires for the class infantry, #1415; Husbandry for the mounted units, #1416), with
     the changes of civs.ALSO and civs.MORE (Bohemian Fervor for the villagers, Varangian Caravan +50 %, #2173); unit uuid
-    near a Military Town Center walks faster (g.hurried, regen.military, #2496)."""
+    near a Military Town Center walks faster (g.hurried, regen.military, #2496). The speed changes of the triggers on
+    unit uuid (unit_values, scenario.values, #3083) change its tiles per second (a set: that speed)."""
     also, more = civs.ALSO.get(civs.civ(g), {}), civs.MORE.get(civs.civ(g), {})
-    return civs.speed(g, name) * vars(g).get("hurried", {}).get(uuid, 1) * math.prod((1 + (f - 1) * more[t] if t in more else f) ** count(g, t)
-                                           for t, (unit, f) in BY_KEY["walk"].items() if faster(unit, name) or t in also and faster(also[t], name))
+    f = civs.speed(g, name) * math.prod((1 + (f - 1) * more[t] if t in more else f) ** count(g, t)
+                                        for t, (unit, f) in BY_KEY["walk"].items() if faster(unit, name) or t in also and faster(also[t], name))
+    if changes := [(op, q) for field, op, q in vars(g).get("unit_values", {}).get(uuid, ()) if field == "speed"]:
+        import ai                                                  # ai imports gather, gather imports this module
+        base = ai.walk_speed(name, 1, 1)                           # tiles per AoE2 second
+        f = max(0, functools.reduce(lambda v, c: OPERATIONS[c[0]](v, c[1]), changes, base * f)) / base
+    return f * vars(g).get("hurried", {}).get(uuid, 1)
 
 
 def faster(unit, name):
@@ -911,7 +920,7 @@ def haste(g, dt):
         name = g.soldiers.get(u)
         if name is None:
             continue
-        s = stats(g, name)
+        s = stats(g, name, u)
         s = s._replace(reload=s.reload / fast.get(u, 1))
         g.command(combat.stats_command(u, name, s, civs.taken(g, name), civs.friendly(g, name)))
         if cmd := combat.range_command(u, name, T, s=s):
@@ -973,8 +982,8 @@ def research(g, entry, start=False, rect=None):
             g.soldiers[uuid] = new
             for cmd in type_tag_commands(uuid, old, new):          # the triggers count the new type (#2977)
                 g.command(cmd)
-            g.command(combat.stats_command(uuid, new, stats(g, new), civs.taken(g, new), civs.friendly(g, new)))
-            if cmd := combat.range_command(uuid, new, g.map.T, s=stats(g, new)):   # the range and blast of an onager
+            g.command(combat.stats_command(uuid, new, stats(g, new, uuid), civs.taken(g, new), civs.friendly(g, new)))
+            if cmd := combat.range_command(uuid, new, g.map.T, s=stats(g, new, uuid)):   # the range and blast of an onager
                 g.command(cmd)
             if cmd := volley_command(g, uuid, new):               # a war galley of the Armenians (#2379)
                 g.command(cmd)
@@ -985,20 +994,20 @@ def research(g, entry, start=False, rect=None):
     if vars(g).get("hasted"):                                      # the values below have no haste: haste() sends
         g.hasted = {}                                              # them again (#2497)
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
-        if stats(g, name) != combat.stats(name):
+        if stats(g, name, uuid) != combat.stats(name):
             g.command(trebuchet.stats_command(g, uuid) if name == trebuchet.NAME   # the armor of its state (#1409)
-                      else combat.stats_command(uuid, name, stats(g, name), civs.taken(g, name), civs.friendly(g, name)))
+                      else combat.stats_command(uuid, name, stats(g, name, uuid), civs.taken(g, name), civs.friendly(g, name)))
         if name == trebuchet.NAME and trebuchet.state(g, uuid) != "unpacked":
             continue                                               # packed: range 0, the unpack sends the range (#1414)
         if stats(g, name).range != combat.stats(name).range:          # Fletching (#724)
-            g.command(combat.range_command(uuid, name, g.map.T, s=stats(g, name)))
+            g.command(combat.range_command(uuid, name, g.map.T, s=stats(g, name, uuid)))
     for cmd in [c for uuid, name in g.soldiers.items() for c in fire_commands(g, uuid, name, {entry["name"]})]:
         g.command(cmd)                                             # the live fire ships: Siphons, Incendiaries (#2165)
     if entry["name"] in BY_KEY["walk"]:                            # the live units walk faster (Fervor)
         import ai, fleet                                           # ai imports gather, gather imports this module
         for uuid, name in g.soldiers.items():                      # a ship: fleet.tick reads speed() (#2136)
             if faster(value("walk", entry["name"])[0], name) and name not in fleet.SPEEDS:
-                g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))
+                g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name, uuid)))
     if entry["name"] in REQUIRES:                                  # an age: all players see it, as in AoE2
         import ai                                                  # ai imports gather, gather imports this module
         for site in [s for s in g.sites if s["name"] in combat.WALLS and s.get("done") and s["player"] == g.player]:   # #1372
@@ -1007,7 +1016,7 @@ def research(g, entry, start=False, rect=None):
                           redraw=False)
         for uuid, name in g.soldiers.items():                      # the walk speed of the age (civs.UNITS, Celts)
             if civs.speed(g, name) != 1:
-                g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))
+                g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name, uuid)))
         if start:
             return
         for r, v in civs.AGE_GIFTS.get(civs.civ(g), {}).items():    # Dravidians, Ethiopians (#1926)

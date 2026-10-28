@@ -7,6 +7,7 @@ from collections import Counter
 import numpy as np
 
 import aoe2mc
+from test_trigger_unit_values import unit_value
 from tools import scenarios
 
 
@@ -19,7 +20,7 @@ def lines(effects, stats=None, T=4):
     t = dict(id=7, name="t", enabled=True, looping=False,
              conditions=[dict(type=aoe2mc.TIMER, timer=30, inverted=False)], effects=effects)
     files = aoe2mc.trigger_files([t], T, np.full((64, 64), 70, np.int16), {1: {"color": "blue"}}, stats)[1]
-    return files.get("data/aoe2mc/function/trigger/7.mcfunction", "").splitlines()
+    return [x for x in files.get("data/aoe2mc/function/trigger/7.mcfunction", "").splitlines() if not unit_value(x)]
 
 
 AT = "execute as @e[tag=aoe2mc.p1,tag=!aoe2mc.mount,x=8,y=-64,z=12,dx=11,dy=383,dz=11]"

@@ -53,8 +53,9 @@ def move(game, uuid, name, T, x, y, z, rate=NORMAL):
     return game.command(f"aoe moveto {uuid} {x} {y} {z}")
 
 
-def attack(game, uuids, names, T, target):
-    """Send units `uuids` (AoE2 units `names`) to attack entity `target`. Units of the team of the target stay."""
-    for uuid, name in zip(uuids, names):
-        game.command(speed_command(uuid, name, T))
+def attack(game, uuids, names, T, target, rates=None):
+    """Send units `uuids` (AoE2 units `names`) to attack entity `target`, at the `rates` of each unit (default
+    Normal game speed; train.speed with the trigger changes of the unit, #3083). Units of the team of the target stay."""
+    for uuid, name, rate in zip(uuids, names, rates or [NORMAL] * len(uuids)):
+        game.command(speed_command(uuid, name, T, rate))
     return [game.command(f"aoe attack {uuid} {target}") for uuid in uuids]
