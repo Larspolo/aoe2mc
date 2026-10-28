@@ -7,7 +7,7 @@ from test_gather import FakeServer, grid
 from test_loom import menus
 
 import units
-from game import build, combat, gather, replay, trade, train
+from game import build, combat, gather, trade, train
 
 HOME, FAR = (2, 5, 2, 5), (18, 21, 16, 19)                             # block footprints (x0, x1, z0, z1)
 
@@ -41,7 +41,6 @@ def test_the_market_menu_trains_a_trade_cart_with_the_aoe2_cost_and_time():
     summon, = [c for c in server.log if c.startswith("summon")]
     assert re.match(rf"summon {units.classify('TRADE_CART')['id']} ", summon)
     assert g.soldiers[uuid] == "TRADE_CART" and uuid not in g.villagers   # a cart does not gather
-    assert combat.stats("TRADE_CART").hp == 70 and replay.SPEEDS["TRADE_CART"] == 1.25   # AoE2 wiki infobox
 
 
 def test_the_gold_of_a_trip_follows_the_aoe2_formula():

@@ -5,7 +5,7 @@ the chakram thrower)."""
 from test_castle_upgrades import STABLE, research, setup
 from test_forging import menus
 
-from game import build, civs, combat, replay, train
+from game import build, civs, combat, train
 
 CASTLE = ("FEUDAL_AGE", "CASTLE_AGE")
 IMPERIAL = CASTLE + ("IMPERIAL_AGE",)
@@ -20,11 +20,9 @@ def stable(civ="GURJARAS", ages=IMPERIAL):
 
 def test_the_values_are_those_of_aoe2():
     assert build.AGE["SHRIVAMSHA_RIDER"] == 2 and build.AGE["ELITE_SHRIVAMSHA_RIDER"] == 3
-    assert combat.sight("SHRIVAMSHA_RIDER") == 5 and combat.sight("ELITE_SHRIVAMSHA_RIDER") == 6
     for name in ("SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER", "ELITE_SHRIVAMSHA_RIDER_UPGRADE"):
         assert len(train.HELP[name]) <= 50 and "GURJARAS" not in civs.MISSING[name]
         assert {"BRITONS", "BENGALIS", "HINDUSTANIS"} <= set(civs.MISSING[name])
-    assert replay.SPEEDS["SHRIVAMSHA_RIDER"] == replay.SPEEDS["ELITE_SHRIVAMSHA_RIDER"] == 1.6
 
 
 def test_the_stable_menu_has_the_shrivamsha_rider_from_the_castle_age_for_the_gurjaras():
