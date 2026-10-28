@@ -39,7 +39,7 @@ def setup(g):
     g.command(f"kill @e[type=minecraft:glow_item_frame,tag={tag}]")    # a loaded game: one table
     g.command(f"setblock {x} {y} {z} minecraft:cartography_table")
     g.command(f"summon minecraft:glow_item_frame {x} {y + 1} {z} {{Facing:1b,Fixed:1b,Invulnerable:1b,"
-              f'Tags:["{TAG}","{tag}"],Item:{json.dumps(item)}}}')
+              f'block_pos:[I;{x},{y + 1},{z}],Tags:["{TAG}","{tag}"],Item:{json.dumps(item)}}}')
 
 
 def score(g, name, objective):
