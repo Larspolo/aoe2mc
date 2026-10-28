@@ -211,6 +211,7 @@
 {"name": "KING", "hp": 75, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": [], "sight": 6}
 {"name": "MONK", "hp": 30, "attack": 0, "melee": 0, "pierce": 0, "range": 9, "reload": 0.0, "bonus": {}, "classes": [], "groups": ["monks"], "orders": true, "convert": 9}
 {"name": "TRADE_CART", "hp": 70, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": [], "sight": 7, "groups": ["trade units"], "orders": true}
+{"name": "WAR_CHARIOT", "hp": 65, "attack": 8, "melee": 0, "pierce": 5, "range": 6, "reload": 6.5, "bonus": {"building": 2}, "classes": ["cavalry", "siege", "heavysiege", "unique"], "sight": 8, "min_range": 1, "note": "the wiki infobox (#2142): the focus fire mode is one bolt of attack 8, the barrage mode is left out"}
 {"name": "CHAMPI_SCOUT", "hp": 35, "attack": 3, "melee": 0, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"camel": 2, "cavalry": 2, "siege": 2}, "classes": ["infantry"], "sight": 5, "note": "AoE2 DE wiki (#2133): the bonus vs. shock infantry has no class here"}
 {"name": "CHAMPI_RUNNER", "hp": 40, "attack": 5, "melee": 0, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"siege": 2}, "classes": ["infantry"], "sight": 5}
 {"name": "CHAMPI_WARRIOR", "hp": 55, "attack": 9, "melee": 0, "pierce": 3, "range": 0, "reload": 2.0, "bonus": {"siege": 3, "standard": 2}, "classes": ["infantry"], "sight": 6}
