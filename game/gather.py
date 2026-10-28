@@ -1905,6 +1905,7 @@ class Gather:
             elif self.mode == "scenario":                              # the book (#2541), a trigger "Declare Victory" (#2542)
                 scenario.victory(self)
                 scenario.tick(self)
+                scenario.resources(self)                               # "Tribute", "Modify Resource" (#2576)
             fog.tick(self)                                             # after the bots: their units too (#1389)
             herd.tick(self)                                            # all players: the bots capture too (#1792)
             if self.victory == "standard" or self.mode in wonder.RACE:  # a wonder or all relics win too (#2316)

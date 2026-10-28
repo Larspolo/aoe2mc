@@ -61,9 +61,9 @@ MAP = {
     ("effect", "TASK_OBJECT"): "not supported: vanilla has no walk-to command (the game program: `aoe moveto`)",
     ("effect", "PATROL"): "not supported: vanilla has no walk-to command",
     ("effect", "ATTACK_MOVE"): "not supported: vanilla has no walk-to command",
-    ("effect", "TRIBUTE"): NO_ECONOMY,
-    ("effect", "MODIFY_RESOURCE"): NO_ECONOMY,
-    ("effect", "RESEARCH_TECHNOLOGY"): NO_ECONOMY,
+    ("effect", "TRIBUTE"): "`scoreboard players add`/`remove` on `#pN.<resource> aoe_res`; the game program puts it into the stock (`--mode scenario`: `scenario.resources`, #2576)",
+    ("effect", "MODIFY_RESOURCE"): "`scoreboard players add`/`remove` on `#pN.<resource> aoe_res`, a set on `aoe_set`; the game program puts it into the stock (`--mode scenario`: `scenario.resources`, #2576)",
+    ("effect", "RESEARCH_TECHNOLOGY"): "`scoreboard players set #rN.I aoe_tech 1`: the scenario mode of the game program gives the technology (#2577)",
     ("effect", "CHANGE_COLOR_MOOD"): "`time set` and `weather` of the mood (`MOODS`, `RAIN`; timer and area triggers: #1876); the fog stays",
     ("effect", "CHANGE_DIPLOMACY"): "not supported: the teams of a world do not fight by themselves",
 }
