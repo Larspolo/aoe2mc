@@ -432,6 +432,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     data["all_techs"] = settings["all_techs"]                    # one data for all Gathers: the people and the bot (#2298)
     data["end_age"] = train.STARTS[settings["end_age"]]["ages"]  # the last age (build.locked, #2346)
     data["full_tech_tree"] = settings["full_tech_tree"]          # (#2354)
+    data["resources"] = settings["resources"]                    # the Regicide start resources of the level (#2388)
     if settings["resources"] in gather.RANDOM:                   # each Gather picks the same level (gather.level, #2489)
         print(f"Random starting resources: {gather.level(settings['resources'], data)}.", file=sys.stderr)
     game.forceload()
