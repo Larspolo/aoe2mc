@@ -126,7 +126,7 @@
 {"name": "KOREANS: Warships cost wood -20%.", "civ": "KOREANS", "bonus": "Warships cost wood -20%.", "later": "play:naval"}
 {"name": "LITHUANIANS: Each Town Center (including starting one) provides food +100.", "civ": "LITHUANIANS", "bonus": "Each Town Center (including starting one) provides food +100.", "in": "START"}
 {"name": "LITHUANIANS: Spearman line and Skirmishers move 10% faster.", "civ": "LITHUANIANS", "bonus": "Spearman line and Skirmishers move 10% faster.", "in": "UNITS"}
-{"name": "LITHUANIANS: Each garrisoned Relic gives +1 attack to Knights and Leitis (maximum +4).", "civ": "LITHUANIANS", "bonus": "Each garrisoned Relic gives +1 attack to Knights and Leitis (maximum +4).", "later": "play:monks"}
+{"name": "LITHUANIANS: Each garrisoned Relic gives +1 attack to Knights and Leitis (maximum +4).", "civ": "LITHUANIANS", "bonus": "Each garrisoned Relic gives +1 attack to Knights and Leitis (maximum +4).", "in": "RELIC_ATTACK"}
 {"name": "MACEDONIANS: Take 10% less damage from enemies on higher elevation.", "civ": "MACEDONIANS", "bonus": "Take 10% less damage from enemies on higher elevation.", "later": "play:fight"}
 {"name": "MACEDONIANS: Recruitment Doctrines are available at the Barracks, Archery Range, and Stable.", "civ": "MACEDONIANS", "bonus": "Recruitment Doctrines are available at the Barracks, Archery Range, and Stable.", "later": "play:military-train"}
 {"name": "MACEDONIANS: Infantry armor upgrades also benefit cavalry.", "civ": "MACEDONIANS", "bonus": "Infantry armor upgrades also benefit cavalry.", "in": "SMITH_UNITS"}
@@ -156,7 +156,7 @@
 {"name": "MUISCA: Advancing to the next Age costs gold -50%.", "civ": "MUISCA", "bonus": "Advancing to the next Age costs gold -50%.", "in": "COSTS"}
 {"name": "MUISCA: Settlements cost -33% and heal allied human units within 3 tiles by 5/10/15/15 HP/min in the Dark/Feudal/Castle/Imperial Age.", "civ": "MUISCA", "bonus": "Settlements cost -33% and heal allied human units within 3 tiles by 5/10/15/15 HP/min in the Dark/Feudal/Castle/Imperial Age.", "later": "play:build"}
 {"name": "MUISCA: The Champi Scout line and Archery Range units have +1/2/3 melee armor in the Feudal/Castle/Imperial Age.", "civ": "MUISCA", "bonus": "The Champi Scout line and Archery Range units have +1/2/3 melee armor in the Feudal/Castle/Imperial Age.", "in": "UNITS"}
-{"name": "MUISCA: Monks regain faith 100% faster.", "civ": "MUISCA", "bonus": "Monks regain faith 100% faster.", "later": "play:monks"}
+{"name": "MUISCA: Monks regain faith 100% faster.", "civ": "MUISCA", "bonus": "Monks regain faith 100% faster.", "in": "FAITH"}
 {"name": "MUISCA: Caravan and Guilds are free.", "civ": "MUISCA", "bonus": "Caravan and Guilds are free.", "in": "COSTS"}
 {"name": "PERSIANS: Start the game with food +50, wood +50.", "civ": "PERSIANS", "bonus": "Start the game with food +50, wood +50.", "in": "START"}
 {"name": "PERSIANS: Town Centers and Docks have double hit points and work 5%/10%/15%/20% faster in the Dark/Feudal/Castle/Imperial Age.", "civ": "PERSIANS", "bonus": "Town Centers and Docks have double hit points and work 5%/10%/15%/20% faster in the Dark/Feudal/Castle/Imperial Age.", "in": "WORK_RATE"}
