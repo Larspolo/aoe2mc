@@ -10,10 +10,10 @@ from test_ship_gather import fish_map
 from game import civs, fleet, gather
 
 
-def test_athenian_lumberjacks_earn_food_1_for_each_wood_14_7():
+def test_athenian_lumberjacks_earn_food_1_for_each_wood_9_8_with_the_economic_policy():
     g, side = loads("ATHENIANS", "wood")
     assert g.stock["wood"] >= 100
-    assert g.stock["food"] == side["food"] == pytest.approx(g.stock["wood"] / 14.7, abs=1)
+    assert g.stock["food"] == side["food"] == pytest.approx(g.stock["wood"] / 9.8, abs=1)   # the Economic Policy (#2485)
     _, side = loads("ATHENIANS", "stone", n=2)                         # a miner: no food
     assert side["food"] == 0
 

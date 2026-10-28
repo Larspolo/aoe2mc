@@ -283,12 +283,13 @@ def cost(g, name, base, player=None):
     another player (an ally: repair.cost, #1361)."""
     import build                                                   # build imports gather, gather imports this module
     out, age = dict(base), build.ages(g)
-    for what, r, c in COSTS.get(civ(g, player), []):
+    own = player is None or player == g.player
+    for what, r, c in [*COSTS.get(civ(g, player), []), *policy(g)[1].get("costs", ()) * own]:   # (#2485)
         if has(what, name):
             for k in [r] if r else list(out):
                 if k in out:
                     out[k] = max(0, int(out[k] * c[age] + 0.5) if isinstance(c[age], float) else out[k] + c[age])
-    if player is None or player == g.player:                       # the own complete buildings (#2177)
+    if own:                                                        # the own complete buildings (#2177)
         import train                                               # train imports this module
         for what, names, each, most in COST_PER.get(civ(g, player), []):
             if has(what, name) and (n := sum(b in names for b in train.owned(g))):
@@ -494,8 +495,21 @@ def last(g, kind):
 
 def extra(g, kind):
     """The second resource of gather kind for the civilization of the player of g: (resource, amount for each unit)
-    (EXTRA), else None."""
-    return EXTRA.get(civ(g), {}).get(kind)
+    (EXTRA, or the one of the active policy), else None."""
+    return policy(g)[1].get("extra", {}).get(kind) or EXTRA.get(civ(g), {}).get(kind)
+
+
+def policies(g):
+    """The key "policies" of the civilization of the player of g (Athenians, #2485), else {}."""
+    return value("policies", civ(g), {}) if hasattr(g, "data") else {}
+
+
+def policy(g):
+    """(name, changes) of the active policy of the player of g: the start policy until the first switch
+    (train.research), else (None, {}). The changes use the keys of civs.jsonl ("costs", "extra")."""
+    p = policies(g)
+    name = vars(g).get("policy") or p.get("start")
+    return name, p.get("effects", {}).get(name, {})
 
 
 def drop_extra(g, kind):

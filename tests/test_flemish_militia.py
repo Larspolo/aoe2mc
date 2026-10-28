@@ -26,7 +26,7 @@ def test_the_unit_has_its_data():
 
 def test_the_train_time_is_shorter_from_the_castle_age():
     assert [train.seconds(barracks(ages=a)[1], NAME) for a in (FEUDAL, CASTLE, IMPERIAL)] == [16, 14, 14]
-    assert train.seconds(barracks(ages=CASTLE)[1], "EAGLE_SCOUT") == 35            # the other FASTER unit (#1555)
+    assert train.seconds(barracks(ages=CASTLE)[1], "EAGLE_SCOUT") == 35            # the other "faster" unit (#1555)
 
 
 def test_each_age_gives_the_wiki_values():

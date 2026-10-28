@@ -20,10 +20,10 @@ def test_the_unit_keys_name_units():
 
 
 def test_the_technology_keys_name_technologies_and_buildings():
-    for table in (train.SPEEDS, train.WALL_UPGRADES, train.TOWER_UPGRADES, train.REQUIRES):
+    for table in (train.BY_KEY["walk"], train.BY_KEY["walls"], train.BY_KEY["towers"], train.REQUIRES):
         assert table and set(table) <= set(train.COSTS)
-    assert all(isinstance(unit, str) and f > 1 for unit, f in train.SPEEDS.values())
+    assert all(isinstance(unit, str) and f > 1 for unit, f in train.BY_KEY["walk"].values())
     for n, (count, names, *alone) in train.REQUIRES.items():
         assert 0 < count <= len(names) and all(set(b) <= set(combat.BUILDINGS) for b in (names, *alone)), n
-    for t, towers in train.TOWER_UPGRADES.items():
-        assert train.AFTER.get(t) in (None, *list(train.TOWER_UPGRADES)[:list(train.TOWER_UPGRADES).index(t)]), t
+    for t, towers in train.BY_KEY["towers"].items():
+        assert train.BY_KEY["after"].get(t) in (None, *list(train.BY_KEY["towers"])[:list(train.BY_KEY["towers"]).index(t)]), t

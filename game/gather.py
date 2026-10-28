@@ -96,6 +96,8 @@ MEAT_SITES = tuple(t["name"] for t in ROWS if "meat" in t.get("drop", ()))   # h
 START = replay.START                                               # the AoE2 standard start resources (#973)
 # AoE2 DE setting "Starting resources" (wiki "Random map", without the civilization bonus): run.py --resources (#2264)
 LEVELS = {r["name"]: r["resources"] for r in table.load("setup.jsonl") if "resources" in r}
+INFINITE = {r["name"] for r in table.load("setup.jsonl") if r.get("infinite")}   # "Infinite": no cost lowers it (#2489)
+RANDOM = {r["name"]: r["random"] for r in table.load("setup.jsonl") if "random" in r}   # "Random": one of the levels
 NOMAD = {"wood": 275, "stone": 100}     # AoE2 Nomad (wiki "Nomad (map)"): no building at the start, the cost of a town center
 TREE_WOOD = 100                                                    # wood in one tree, as in AoE2
 # plants of the ground that are not in #minecraft:replaceable: the trunk on a slope removes them from its row (#1124)
@@ -171,6 +173,12 @@ EVENTS = {"idle": "idle", "to_tree": "walk", "chop": "chop", "to_drop": "carry",
 def only(who, *filters):
     """The selector who ("@a" or "@a[team=p2]") with more filters: only("@a[team=p2]", "name=!Alex")."""
     return who[:-1] + "," + ",".join(filters) + "]" if who.endswith("]") else who + "[" + ",".join(filters) + "]"
+
+
+def has_mode(g, name):
+    """True when the game mode name is on: the --mode of g, or a mode on top of it (g.modes: --regicide,
+    --sudden-death, --empire-wars, the AoE2 "Advanced Settings", #2490)."""
+    return getattr(g, "mode", None) == name or name in getattr(g, "modes", ())
 
 
 def allied(players, a, b):
@@ -546,6 +554,21 @@ def siege_mark(uuid, name, hp, who):
     return [glow(uuid, SIEGE_GLOW), f"title {who} actionbar " + json.dumps(text)]
 
 
+def level(name, data):
+    """The level of the AoE2 starting resources name. "Random" (RANDOM) is one of its levels, the same for each player
+    and in each run of the world (a seed from the map, as the other random choices of the game program)."""
+    if name not in RANDOM:
+        return name
+    return random.Random(f"{data.get('map_size')}-{len(data.get('objects', ()))}").choice(RANDOM[name])
+
+
+class Endless(dict):
+    """The stock of the AoE2 starting resources "Infinite" (#2489): a cost does not lower an amount, an income raises it."""
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key, max(value, self.get(key, value)))
+
+
 class Gather:
     """The gather game on a running server (game.command sends one command). Call setup(), then step() in a loop.
     log: a text file that gets one JSON line per event (state change or drop), to measure the timing (#289).
@@ -569,7 +592,9 @@ class Gather:
     victory = "standard"                                               # AoE2 "Victory"; "conquest": no wonder, no relics (#2316)
                                                                        # "king-of-the-hill": hill.py (#2360)
                                                                        # "time-limit", "score": time_limit.py (#2356)
-    mode = "standard"                                                  # AoE2 game mode; "regicide": the King (#2347)
+    mode = "standard"                                                  # AoE2 game mode; "regicide": the King (#2347),
+                                                                       # "wonder-race" (#2406)
+    modes = frozenset()                                                # the modes on top of it (has_mode, #2490)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
                  cheats=False, start=None, resources="standard", pop_limit=None):
@@ -583,6 +608,7 @@ class Gather:
         self.log, self.clock, self.t0 = log, clock, clock()
         self.cheats = cheats                                           # the AoE2 cheat codes in the chat (#816)
         self.pop_limit = pop_limit                                     # AoE2 "Population limit", else train.LIMIT (#2266)
+        resources = level(resources, data)
         if start is None:                                              # units, no building: a Nomad start (#1212)
             kinds = {o["kind"] for o in data["objects"] if o.get("player") == player}
             nomad = "unit" in kinds and "building" not in kinds
@@ -592,6 +618,8 @@ class Gather:
             start = civs.start(self, {r: v + NOMAD.get(r, 0) * nomad + tc.get(r, 0) * (not nomad)
                                       for r, v in base.items()})       # #1269
         self.stock = {**dict.fromkeys(DROP_SITES, 0), **start}             # at the drop sites (#973)
+        if resources in INFINITE:
+            self.stock = Endless(self.stock)
         self.spare = {}                                                # the fractions of the drop-off bonus (#2111)
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
                       and "VILLAGER" in o["name"]]
@@ -652,6 +680,9 @@ class Gather:
         return self.stock["wood"]
 
     def command(self, cmd):
+        if isinstance(getattr(self, "stock", None), Endless) and cmd.startswith("scoreboard players remove ") \
+                and cmd.split()[4:5] == [self.board]:
+            return ""                                                  # "Infinite" resources: the sidebar stays (#2489)
         return self.game.command(cmd)
 
     def pos(self, target):
@@ -1848,11 +1879,11 @@ class Gather:
             for b in self.bots:
                 b.step()
             conquest.tick(self)                                        # not in step(): the bot steps its own Gather
-            if self.mode == "regicide":                                # a player without its King loses (#2347)
+            if has_mode(self, "regicide"):                             # a player without its King loses (#2347)
                 regicide.tick(self)
-            elif self.mode == "sudden-death":                          # a player without its town center loses (#2407)
+            if has_mode(self, "sudden-death"):                         # a player without its town center loses (#2407)
                 sudden_death.tick(self)
-            elif self.mode == "battle-royale":                         # the Corruption takes the map (#2439)
+            if self.mode == "battle-royale":                           # the Corruption takes the map (#2439)
                 battle_royale.tick(self, self.tick * NORMAL)
             elif self.mode == "capture-the-relic":                     # the center relic in a monastery wins (#2440)
                 capture_relic.tick(self)
@@ -1862,7 +1893,8 @@ class Gather:
             herd.tick(self)                                            # all players: the bots capture too (#1792)
             if self.victory == "standard" or self.mode in wonder.RACE:  # a wonder or all relics win too (#2316)
                 wonder.tick(self, self.tick * NORMAL)                  # game seconds, as train.tick
-            if self.victory == "standard" and self.mode not in wonder.RACE:   # Defend the Wonder: only it (#2441)
+            if self.victory == "standard" and self.mode not in wonder.RACE:   # Defend the Wonder (#2441),
+                                                                       # Wonder Race (#2406): only a wonder
                 relic_victory.tick(self, self.tick * NORMAL)
             elif self.victory == "king-of-the-hill":                   # the monument in the center (#2360)
                 hill.tick(self, self.tick * NORMAL)

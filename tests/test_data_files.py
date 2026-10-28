@@ -63,11 +63,11 @@ def check_train(row):
     form(row, {"name": str, "building": (str, type(None)), "slot": int, "item": str, "label": str, "cost": dict,
                "time": int, "help": str},
          {"age": int, "after": str, "civ": str, "civs": list, "faster": list, "upgrade": list, "note": str,
-          "resist": int, "tribute_fee": int, "full_tech_tree": str})
+          "resist": int, "tribute_fee": int, "full_tech_tree": str, "doctrine": bool})
     n = row["name"]
     only(row)
     assert row["building"] is None or row["building"] in NAMES["buildings.jsonl"], n
-    assert 0 <= row["slot"] < 54 and row["time"] > 0 and row.get("age", 1) in (1, 2, 3), n
+    assert 0 <= row["slot"] < 54 and (row["time"] > 0 or row.get("doctrine")) and row.get("age", 1) in (1, 2, 3), n
     assert set(row["cost"]) <= RES and all(isinstance(v, int) and v >= 0 for v in row["cost"].values()), n
     assert 0 < len(row["help"]) <= 50 and row["label"] and row["item"] == row["item"].lower(), n   # the menu width
     assert row.get("after", n) in NAMES["train.jsonl"] and row.get("after") != n, n
@@ -102,7 +102,7 @@ def check_civs(row):
     assert set(row.get("twice", ())) <= NAMES["train.jsonl"], n
     assert len(row.get("hp_age", [1] * 4)) == 4 and all(isinstance(a, NUMBER) and a > 0 for a in row.get("hp_age", ())), n
     for t, group in row.get("also", {}).items():                   # one more group gets the effect (#2173)
-        assert group in civs.GROUPS and isinstance(train.EFFECTS.get(t, {}), dict) and t in train.TECHS | train.SPEEDS, (n, t)
+        assert group in civs.GROUPS and isinstance(train.BY_KEY["effect"].get(t, {}), dict) and t in train.TECHS | train.BY_KEY["walk"], (n, t)
     assert all(t in train.TECHS and isinstance(f, NUMBER) for t, f in row.get("more", {}).items()), n
     for key in ("housing", "sight"):                                    # building -> number (#2118)
         assert set(row.get(key, {})) <= NAMES["buildings.jsonl"] and all(type(v) is int for v in row.get(key, {}).values()), n
@@ -169,10 +169,16 @@ def check_replay(row):                                     # a walk speed (a nam
 def check_setup(row):                                      # a value of a setting of the game setup (#2264)
     form(row, {"name": str}, {"resources": dict, "ages": int, "skip": list, "note": str, "units": list,
                               "age": str, "buildings": dict, "villagers": dict, "wonder_years": int, "sides": dict,
-                              "side_buildings": dict, "ring": dict})
-    assert sum(k in row for k in ("resources", "ages", "units", "buildings", "wonder_years")) == 1, row["name"]   # a resource level, a start age
+                              "treaty": str,                                  # Wonder Race (#2406)
+                              "help": str, "module": str, "loaded": str, "bots": bool,   # a game mode (#2521)
+                              "side_buildings": dict, "ring": dict, "infinite": bool, "random": list})
+    assert sum(k in row for k in ("resources", "ages", "units", "buildings", "wonder_years", "random")) == 1, row["name"]   # a resource level, a start age
     assert all(set(v) == {"food", "wood", "gold", "stone"} for v in row.get("sides", {}).values()), row["name"]   # #2441
+    assert set(row.get("random", ())) <= {r["name"] for r in table.load("setup.jsonl") if "resources" in r}, row["name"]   # #2489
     assert set(row.get("units", ())) <= NAMES["units.jsonl"], row["name"]  # (#2265) or a game mode (#2347)
+    assert row.get("treaty", "endless") == "endless", row["name"]   # Wonder Race: a treaty with no end (#2406)
+    assert row.get("loaded", "skip") in ("skip", "start") and ("help" in row or "module" not in row), row["name"]
+    assert os.path.exists(os.path.join(os.path.dirname(table.__file__), row["module"] + ".py")) if "module" in row else True, row["name"]
     assert set(row.get("resources", RES)) == {"food", "wood", "gold", "stone"}, row["name"]
     assert all(isinstance(v, int) and v >= 0 for v in row.get("resources", {}).values()), row["name"]
     assert row.get("ages", 0) in range(5) and set(row.get("skip", ())) <= NAMES["train.jsonl"], row["name"]
@@ -199,6 +205,7 @@ CHECKS = {                                                 # one file per line: 
     "setup.jsonl": check_setup,
     "taunts.jsonl": check_taunts,
     "train.jsonl": check_train,
+    "train_keys.jsonl": check_civ_keys,                    # a key of train.jsonl that train.value reads (#2507)
     "units.jsonl": check_units,
 }
 

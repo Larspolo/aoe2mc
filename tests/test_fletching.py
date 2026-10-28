@@ -20,7 +20,7 @@ def setup(food=100, gold=50, age=1):
     g = gather.Gather(server, grid([[64] * 24 for _ in range(24)], objects)).setup()
     g.sites.append({"name": "BLACKSMITH", "player": 1, "footprint": [10, 13, 2, 5], "done": True})
     g.stock.update(food=food, gold=gold)
-    g.techs.update({"FEUDAL_AGE"} if age else ())                   # a Feudal Age technology (TECH_AGE, #1046)
+    g.techs.update({"FEUDAL_AGE"} if age else ())                   # a Feudal Age technology (the key "age", #1046)
     return server, g
 
 
