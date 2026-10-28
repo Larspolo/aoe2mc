@@ -213,6 +213,8 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tools/owner_tasks.py` | generic | None (`agent.toml`). |
 | `tools/unconflict.py` | generic | None (solves add-add conflicts for `unconflict.yml`, #1864). |
 | `tools/merge_main.py` | generic | None (merges `main` into a branch in one call: solve, commit, check, push). |
+| `tools/cycle_start.py` | generic | None (steps 1 to 5 of the autopilot skill in one call). |
+| `tools/ship_pr.py` | generic | None (checks, commit, guard, push and PR of a ticket in one call). |
 | `tools/merge_jsonl.py` | generic | None (the merge driver `merge=jsonl`: JSON lines by "name", a line that both sides changed by key and list item, #2004, #2064). |
 | `tests/test_agent_config.py` | generic | None (a test of `tools/agent_config.py`). |
 | `tests/test_claim.py` | generic | None (a test of `tools/claim.py`). |
@@ -250,6 +252,8 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_tokens_cost.py` | generic | None (a test of `tools/tokens.py`). |
 | `tests/test_unconflict.py` | generic | None (a test of `tools/unconflict.py`). |
 | `tests/test_merge_main.py` | generic | None (a test of `tools/merge_main.py`). |
+| `tests/test_cycle_start.py` | generic | None (a test of `tools/cycle_start.py`). |
+| `tests/test_ship_pr.py` | generic | None (a test of `tools/ship_pr.py`). |
 | `tests/test_merge_jsonl.py` | generic | None (a test of `tools/merge_jsonl.py`). |
 | `tests/test_pacer.py` | generic | None (a test of `tools/usage.py`). |
 | `tests/test_usage.py` | generic | None (a test of `tools/usage.py`). |

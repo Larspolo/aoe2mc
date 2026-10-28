@@ -2,8 +2,8 @@
 
 Read this file after step 8 when the argument asks for more than 1 ticket (part of the `autopilot` skill, #1700).
 
-If the argument asks for more than 1 ticket, go back to step 2 after step 8 (finish stalled PRs of other runs, then read new owner
-feedback with `python3 tools/feedback.py`, step 3). The PRs of this run (on `<session branch>` or `<session branch>-<k>`)
+If the argument asks for more than 1 ticket, go back to step 2 after step 8 (finish stalled PRs of other runs, then new owner
+feedback, step 3: run `python3 tools/cycle_start.py` again). The PRs of this run (on `<session branch>` or `<session branch>-<k>`)
 are yours in step 2: when one is red or conflicted, check out its branch (`git fetch origin <b> && git checkout -B <b>
 origin/<b>`) and fix it there (`python3 tools/merge_main.py --push N`).
 

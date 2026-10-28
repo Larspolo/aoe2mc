@@ -20,7 +20,7 @@ other runs change it too):
   (`docs/LEARNINGS.md`, a doc line) gets `— before: -`.
 
 Then add one short comment on the status issue: what you did and what is next.
-Write it with one command (#1701): `python3 tools/report.py --usage "<the Usage: line of step 1.4>" --text "<what you
+Write it with one command (#1701): `python3 tools/report.py --usage "<the Usage: line of step 1.2>" --text "<what you
 did, what is next>" --ticket N --size S --result "pr #M" --setup 0 --checks K --checks-min C --sinks "<list or none>"
 --phases read=8,claim=1,code=18,verify=9,ci=0,conflict=5,report=4 --post` (repeat the ticket options for each ticket,
 in the same order). It adds the release bar, the `Tokens:` line and the footer in the format below. Without `--post`
@@ -40,7 +40,7 @@ Result: `pr #n` when you pushed PR #n and Automerge merges it later (the usual c
 Below the metrics lines, put the output of `python3 tools/tokens.py` (one `Tokens:` line for the run: the tokens of
 this session and its largest sinks; run it just before the comment). `tools/health.py` adds these lines, and the
 `improve` skill uses them as one source to find the bottleneck.
-Put the `Usage:` line of step 1.4 above the metrics lines, unchanged: `tools/health.py` measures the quota use of one
+Put the `Usage:` line of step 1.2 above the metrics lines, unchanged: `tools/health.py` measures the quota use of one
 run per hour from pairs of these lines, and `tools/usage.py --target` uses that value (#462).
 `setup`: minutes from the start time (step 4) to the claim of the first ticket (0 for later tickets).
 `checks <k>`: rounds of the `verify` skill before the push; `checks <c> min`: their minutes in total.
