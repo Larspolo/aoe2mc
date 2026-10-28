@@ -80,6 +80,8 @@ MAP = {
     ("effect", "MODIFY_RESOURCE"): "`scoreboard players add`/`remove` on `#pN.<resource> aoe_res`, a set on `aoe_set`; the game program puts it into the stock (`--mode scenario`: `scenario.resources`, #2576)",
     ("effect", "CHANGE_OBJECT_COST"): "the cost in the storage `aoe2mc:costs`: the scenario mode of the game program uses it in the menus and when the player pays (#2776)",
     ("effect", "MODIFY_ATTRIBUTE"): "the change in the storage `aoe2mc:attributes`: the scenario mode of the game program changes the hit points, attack, melee and pierce armor, range or reload of the unit type of the player (`train.stats`, #2763); the other attributes are not supported",
+    ("effect", "ENABLE_DISABLE_OBJECT"): "the item in the storage `aoe2mc:menus`: the scenario mode of the game program shows or hides it in the menus of the player (#2775)",
+    ("effect", "ENABLE_DISABLE_TECHNOLOGY"): "the technology in the storage `aoe2mc:menus`: the scenario mode of the game program shows or hides it in the menus of the player (#2775)",
     ("effect", "RESEARCH_TECHNOLOGY"): "`scoreboard players set #rN.I aoe_tech 1`: the scenario mode of the game program gives the technology (#2577)",
     ("effect", "CHANGE_COLOR_MOOD"): "`time set` and `weather` of the mood (`MOODS`, `RAIN`; timer and area triggers: #1876); the fog stays",
     ("effect", "CHANGE_PLAYER_COLOR"): "`team modify pN color`: the chat color of the new player color (`units.TEAM_COLOR`) on the names and the glow of the units; the wool of the sheep and the banners keep the old color (#2712)",

@@ -47,6 +47,7 @@ TAG = "aoe_book"                                                       # a perso
 EVERY = 1.0                                                            # seconds between two checks for new people
 ORDERS = "aoe2mc:orders"                                               # the data storage of the trigger orders (#2647)
 ATTRIBUTES = "aoe2mc:attributes"                                       # the storage of "Modify Attribute" (#2763)
+MENUS = "aoe2mc:menus"                                                 # the storage of "Enable/Disable" (#2775)
 COSTS = "aoe2mc:costs"                                                 # the storage of "Change Object Cost" (#2776)
 NEAR = 3                                                               # blocks: a patrol turns back this near its point
 LEVELS = {r["name"]: r["aoe2"] for r in table.load("difficulty.jsonl")}  # "AI difficulty" -> AoE2 DifficultyLevel
@@ -111,6 +112,7 @@ def tick(g):
     g.book_at = g.clock() + EVERY
     tasks(g)
     orders(g)
+    menus(g)
     attributes(g)
     costs(g)
     messages = g.data.get("messages", {})
@@ -205,6 +207,20 @@ def attributes(g):
             x.command(combat.stats_command(uuid, name, s, civs.taken(x, name), civs.friendly(x, name)))
             if field == "range" and (cmd := combat.range_command(uuid, name, x.map.T, s=s)):
                 x.command(cmd)
+
+
+def menus(g):
+    """The items of "Enable/Disable Object" and "Enable/Disable Technology" (aoe2mc.menu_lines, #2775): read and empty
+    the list of the data storage MENUS, and keep each item in trigger_menus of the side of its player (True: on). An
+    item that is off is not in the menus (civs.missing); an item that is on is there also when the civilization does
+    not have it or the age is not reached (train.unlocked): as in AoE2, the age technology only enables its items."""
+    new = re.findall(r'"(\d+) (\w+) (on|off)"', g.command(f"data get storage {MENUS} list") or "")
+    if new:
+        g.command(f"data remove storage {MENUS} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for player, name, on in new:
+        if int(player) in sides:
+            vars(sides[int(player)]).setdefault("trigger_menus", {})[name] = on == "on"
 
 
 def bot_seats(players, people):
