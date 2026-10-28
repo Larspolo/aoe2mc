@@ -2775,6 +2775,7 @@ RESEARCH_TECHNOLOGY = 2
 CHANGE_OBJECT_NAME = 26                                                # "Change Object Name" (#2616)
 CHANGE_VIEW = 16                                                       # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                                # "Clear Instructions" (#2609)
+PATROL, ATTACK_MOVE = 19, 30                                           # "Patrol", "Attack Move" (#2647)
 PLAY_SOUND = 4                                                         # "Play Sound" (#2644)
 SOUNDS = [(r["name"], r["sound"]) for r in units.rows("sounds.jsonl")]  # AoE2 sound name part -> vanilla sound
 
@@ -2964,10 +2965,15 @@ def task_lines(t, i, e, T, ground):
     if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
         return []
     k = f"{t['id']}_{i}"
-    return [f"tag {unit_selector(e, T)} add aoe_task{k}",
-            f"execute as @e[tag=aoe_task{k}] on vehicle run tag @s add aoe_task{k}",
-            f"execute as @e[tag=aoe_task{k}] on vehicle on passengers run tag @s remove aoe_task{k}",
-            f"data modify storage aoe2mc:tasks k{k} set value [{x + 0.5}d, {int(ground[x, z])}.0d, {z + 0.5}d]"]
+    return tag_lines(e, T, f"aoe_task{k}") + \
+        [f"data modify storage aoe2mc:tasks k{k} set value [{x + 0.5}d, {int(ground[x, z])}.0d, {z + 0.5}d]"]
+
+
+def tag_lines(e, T, tag):
+    """The commands that give the units of the player of an effect in its area the tag (task_lines, order_lines). A
+    rider gives its tag to its horse (units.MOUNT): the plugin walks the horse."""
+    return [f"tag {unit_selector(e, T)} add {tag}", f"execute as @e[tag={tag}] on vehicle run tag @s add {tag}",
+            f"execute as @e[tag={tag}] on vehicle on passengers run tag @s remove {tag}"]
 
 
 def unit_selector(e, T):
@@ -2996,6 +3002,23 @@ def freeze_lines(e, T):
     at = unit_selector(e, T)
     return [f"execute as {at} on vehicle run data merge entity @s {{NoAI:1b}}",
             f"execute as {at} run data merge entity @s {{NoAI:1b}}"]
+
+
+def order_lines(t, i, e, T, ground):
+    """The commands of "Patrol" and "Attack Move" (#2647), effect i of trigger t. Vanilla has no walk-to command: the
+    units of the player in the area get the tag aoe_order<trigger>_<i> (tag_lines: a rider gives it to its horse), and
+    the order goes into the list of the data storage aoe2mc:orders as one text "<order> <tag> x y z" (the block of the
+    tile on the ground; a patrol also the middle of the area, where it turns back). The scenario mode of the game program (game/scenario.py orders) empties
+    the list with RCON and walks the tagged units with the Paper plugin."""
+    if min(e.get("tile", [-1])) < 0 or min(e.get("area", [-1])) < 0:
+        return []
+    a = e["area"]
+    blocks = [(int((x + 0.5) * T), int((z + 0.5) * T)) for x, z in (e["tile"], ((a[0] + a[2]) / 2, (a[1] + a[3]) / 2))]
+    if not all(0 <= x < ground.shape[0] and 0 <= z < ground.shape[1] for x, z in blocks):
+        return []
+    tag, order = f"aoe_order{t['id']}_{i}", "patrol" if e["type"] == PATROL else "attack_move"
+    where = " ".join(f"{x} {int(ground[x, z])} {z}" for x, z in blocks[:1 + (e["type"] == PATROL)])
+    return tag_lines(e, T, tag) + [f'data modify storage aoe2mc:orders list append value "{order} {tag} {where}"']
 
 
 def view_lines(e, T, ground):
@@ -3076,6 +3099,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Research Technology": a score in aoe_tech for the game program (research_list, #2577).
     "Change View": view_lines (#2610).
     "Clear Instructions": title @a clear (#2609).
+    "Patrol" and "Attack Move": order_lines (#2647).
     "Play Sound": sound_lines (#2644).
     "Task Object": task_lines (#2646).
     A disabled trigger does not run."""
@@ -3150,6 +3174,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             if e["type"] == CHANGE_VIEW:
                 lines += view_lines(e, T, ground)
                 continue
+            if e["type"] in (PATROL, ATTACK_MOVE):
+                lines += order_lines(t, i, e, T, ground)
             if e["type"] == PLAY_SOUND:
                 lines += sound_lines(e, T, ground)
                 continue
