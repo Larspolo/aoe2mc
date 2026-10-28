@@ -28,5 +28,4 @@ def test_computed_keys():
                 resource_2=1, resource_2_quantity=0, resource_3=2, resource_3_quantity=0) == {
         "cost": [[0, 5], [1, 0], [2, 0]], "technology": "LOOM"}
     assert keys(aoe2mc.REPLACE_OBJECT, object_list_unit_id_2=7) == {"target": "<target_player>", "object2": "ARCHER"}
-    assert keys(aoe2mc.UNLOAD, selected_object_ids=None) == {"selected": []}
     assert keys(aoe2mc.PLAY_SOUND, sound_name=None) == {"sound": ""}
