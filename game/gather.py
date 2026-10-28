@@ -230,6 +230,8 @@ class Map:
         self.fish, self.shore = {}, set()                              # tile -> food of a fish (#1283), shore fish
         self.fish_mobs, self.docks = {}, []                            # tile -> mob of a fish; own dock cells (#1384)
         self.traps = {}                                                # own fish trap tile -> its cells (#1438)
+        self.aura = civs.AURA.get(data.get("players", {}).get(str(player), {}).get("civ"), {})   # Thracians (#2378)
+        self.auras = []                                                # the cells of own aura buildings
         for o in data["objects"]:
             if o["kind"] == "building":
                 x0, z0, x1, z1 = o["footprint"]
@@ -284,8 +286,10 @@ class Map:
     def drop_site(self, name, cells):
         """Add the cells of an own drop site to the drops of each resource that building name takes."""
         for r, names in [*DROP_SITES.items(), ("meat", MEAT_SITES)]:
-            if any(k in name for k in names):
+            if any(k in name for k in names) or r in self.aura.get("resources", ()) and name in self.aura["buildings"]:
                 self.drops[r].append(cells)
+        if name in self.aura.get("buildings", ()):
+            self.auras.append(cells)
 
     def cells(self, tile):
         T = self.T
@@ -1466,7 +1470,7 @@ class Gather:
                 src = self.source(v)
                 kind = "farm" if v.tree in self.map.farms else "hunt" if v.tree in self.map.carcasses else \
                     "fish" if v.tree in self.map.fish else v.res               # a fisherman: no forage rate (#2349)
-                work = self.work_time(kind, v.tree in self.map.herds)
+                work = self.work_time(kind, v.tree in self.map.herds) / self.aura_rate(v, kind)
                 last = civs.last(self, "sheep" if v.tree in self.map.herds else kind)
                 take = 1 if last == 1 else 1 / last                    # 1: the amounts stay whole numbers
                 most = self.limit(v.res, "sheep" if v.tree in self.map.herds else kind)
@@ -1540,6 +1544,17 @@ class Gather:
         rate, more = civs.work(self, "sheep" if herd else res), civs.MORE.get(civs.civ(self), {})
         return self.chop.get(res, self.chop.get("food")) / rate / math.prod(
             (1 + (WORK_TECHS.get(t, {}).get(res, 1) - 1) * more.get(t, 1)) ** train.count(self, t) for t in self.techs)
+
+    def aura_rate(self, v, kind):
+        """The factor of the work rate of v for resource kind: the "rate" of civs.AURA within its "range" (tiles from the
+        footprint) of an own complete aura building that is still a drop site of kind (AoE2 wiki "Thracians"), else 1."""
+        a, m = self.map.aura, self.map
+        if kind not in a.get("resources", ()):
+            return 1
+        x, z, near = v.pos[0], v.pos[2], a["range"] * m.T
+        return a["rate"] if any(max(min(c[0] for c in cs) - x, x - max(c[0] for c in cs) - 1,
+                                    min(c[1] for c in cs) - z, z - max(c[1] for c in cs) - 1) <= near
+                                for cs in m.auras if cs in m.drops[kind]) else 1
 
     def move(self, v):
         import ai                                                      # ai imports gather
