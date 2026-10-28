@@ -73,6 +73,8 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:town-bell` The town bell as in AoE2: a click at the town center sends the villagers into the nearest own buildings, a second click lets them out
 - [ ] `play:delete` Delete an own unit or building as the AoE2 Delete key: the unit dies, the building falls down
 - [ ] `play:auto-gather` Villagers go on to work as in AoE2: a villager that builds a lumber camp, mining camp or mill gathers the nearest resource of that kind next, and the builder of a farm farms it
+- [ ] `play:co-op` Co-op as in AoE2: two or more Minecraft players control one AoE2 player (one civilization, one stock and population), each with an own selection
+- [ ] `play:unit-sounds` The AoE2 sounds of the units and buildings: a voice line when the player selects a unit and gives an order, the sound of a selected building, the age-up fanfare
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
@@ -102,7 +104,7 @@ other projects with". The `roadmap` skill makes no epics for this goal: the `imp
 
 - [ ] `system:improve` The system improves itself in its own loop, over the whole system, and only where it pays (epic #908)
 - [x] `system:reuse` The system can be set up for another project (epic #909)
-- [ ] `system:structure` The code stays easy to change: game data in data files, checks in place of rules (epic #1909)
+- [x] `system:structure` The code stays easy to change: game data in data files, checks in place of rules (epic #1909)
 
 ## Principles
 
