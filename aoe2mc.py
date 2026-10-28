@@ -412,6 +412,9 @@ def read_scenario(path):
     techs = {t.ID: other.get(t.name, t.name) for t in TechInfo}
     entities = {u.reference_id for us in scn.unit_manager.units for u in us   # the objects that are entities with the
                 if kinds.get(u.unit_const, ("?",))[0] in ("U", "H")}         # tag aoe2mc.r<ref> (#2617), not blocks
+    shown = scn.option_manager.legacy_execution_order is False   # AoE2 DE runs in the display order (#3087)
+    triggers = in_order(scn.trigger_manager.triggers, scn.trigger_manager.trigger_display_order) if shown \
+        else scn.trigger_manager.triggers
     texts["triggers"] = [dict(id=t.trigger_id, name=t.name, enabled=bool(t.enabled), looping=bool(t.looping),
                               conditions=[dict(type=c.condition_type, timer=c.timer, inverted=bool(c.inverted),
                                                **{k: v(c, entities, techs) if callable(v) else getattr(c, v)   # #2832
@@ -428,8 +431,8 @@ def read_scenario(path):
                                             **({"mood": ColorMood(e.color_mood).name}     # "Change Color Mood" (#1876)
                                                if e.effect_type == CHANGE_COLOR_MOOD and
                                                getattr(e, "color_mood", None) in set(ColorMood) else {}))
-                                       for e in t.effects])
-                         for t in scn.trigger_manager.triggers]
+                                       for e in (in_order(t.effects, t.effect_order) if shown else t.effects)])
+                         for t in triggers]
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
     texts["mood"] = (getattr(mood, "name", None) or str(mood or "DEFAULT")).upper()
     om = scn.option_manager                  # the tab "Global Victory" for the scenario mode (#2566, run.VICTORIES)
@@ -4461,8 +4464,9 @@ SCORE_TESTS = {
 
 
 def in_order(items, order):
-    """The conditions of a trigger in their display order (AoE2ScenarioParser condition_order): "OR" splits the list
-    there (#2765). An order that is not a permutation of the items: the stored order."""
+    """The conditions, effects or triggers in their display order (AoE2ScenarioParser condition_order, effect_order or
+    trigger_display_order). "OR" splits the conditions there (#2765). An order that is not a permutation of the items:
+    the stored order."""
     return [items[k] for k in order] if sorted(order) == list(range(len(items))) else list(items)
 
 
