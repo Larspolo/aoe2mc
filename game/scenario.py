@@ -55,6 +55,7 @@ ATTRIBUTES = "aoe2mc:attributes"                                       # the sto
 MENUS = "aoe2mc:menus"                                                 # the storage of "Enable/Disable" (#2775)
 COSTS = "aoe2mc:costs"                                                 # the storage of "Change Object Cost" (#2776)
 NAMES = "aoe2mc:names"                                                 # the storage of "Change Technology Name" (#2821)
+READS = "aoe2mc:reads"                                                 # "Modify Variable by Attribute" (#2858)
 NEAR = 3                                                               # blocks: a patrol turns back this near its point
 LEVELS = {r["name"]: r["aoe2"] for r in table.load("difficulty.jsonl")}  # "AI difficulty" -> AoE2 DifficultyLevel
 
@@ -122,6 +123,7 @@ def tick(g):
     menus(g)
     visible(g)
     attributes(g)
+    reads(g)
     costs(g)
     names(g)
     messages = g.data.get("messages", {})
@@ -311,6 +313,22 @@ def attributes(g):
             x.command(combat.stats_command(uuid, name, s, civs.taken(x, name), civs.friendly(x, name)))
             if field == "range" and (cmd := combat.range_command(uuid, name, x.map.T, s=s)):
                 x.command(cmd)
+
+
+def reads(g):
+    """The requests of "Modify Variable by Attribute" (aoe2mc.variable_by_attribute_lines, #2858): read and empty the
+    list of the data storage READS, and change the score #v<N> of aoe_var by the value of the unit type of the player
+    (train.stats; AoE2 variables are whole numbers) with a scoreboard operation."""
+    import combat                                                      # combat -> gather -> scenario
+    new = re.findall(r'"(\d+) (\w+) (\w+) ([1-5]) (\d+)"', g.command(f"data get storage {READS} list") or "")
+    if new:
+        g.command(f"data remove storage {READS} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for player, name, field, op, v in new:
+        if (x := sides.get(int(player))) is None or field not in combat.Stats._fields:
+            continue
+        g.command(f"scoreboard players set #read aoe_var {int(getattr(train.stats(x, name), field))}")
+        g.command(f"scoreboard players operation #v{v} aoe_var {('', '+', '-', '*', '/')[int(op) - 1]}= #read aoe_var")
 
 
 def menus(g):

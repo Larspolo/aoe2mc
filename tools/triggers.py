@@ -89,6 +89,7 @@ MAP = {
     ("effect", "ACTIVATE_TRIGGER"): "`scoreboard players set #<trigger> aoe_on 1` and the `schedule` of its timer (timer and area triggers: #2575)",
     ("effect", "DEACTIVATE_TRIGGER"): "`scoreboard players set #<trigger> aoe_on 0` and `schedule clear` of its timer (#2575)",
     ("effect", "CHANGE_VARIABLE"): "`scoreboard players set`, `add`, `remove` or `operation` on `#vN aoe_var` (#2611)",
+    ("effect", "MODIFY_VARIABLE_BY_ATTRIBUTE"): "the request in the storage `aoe2mc:reads`: the scenario mode of the game program runs `scoreboard players operation #vN aoe_var = #read aoe_var` (or `+=`, `-=`, `*=`, `/=`) with the hit points, attack, melee and pierce armor, range or reload of the unit type of the player (`train.stats`, #2858)",
     ("effect", "MODIFY_VARIABLE_BY_RESOURCE"): "`scoreboard players operation #vN aoe_var = Gold aoe_resP` (or `+=`, `-=`, `*=`, `/=`): the stock of the game program, `aoe_res` for player 1 (#2823)",
     ("effect", "MODIFY_VARIABLE_BY_VARIABLE"): "`scoreboard players operation #vA aoe_var = #vB aoe_var` (or `+=`, `-=`, `*=`, `/=`, #2713); a division by 0 leaves the score as it is (Minecraft; the AoE2 wiki has no page on it)",
     ("effect", "DECLARE_VICTORY"): "`scoreboard players set #pN aoe_win 1`: the scenario mode of the game program ends the game (#2542)",
