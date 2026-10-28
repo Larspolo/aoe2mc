@@ -378,7 +378,7 @@ def trains(g, building):
     """The units and technologies of the own building: a castle trains the unique unit of the player's civilization,
     a Krepost the Konnik, a Donjon the Serjeant."""
     new = {old: unit for t in UPGRADES if t in g.techs for old, unit in lines(t, g)}   # the barracks trains the new unit
-    unique = [n for n in [UNIQUE.get(civs.civ(g))] if n in COSTS] * (building == "CASTLE") \
+    unique = [n for n in [UNIQUE.get(civs.real(g))] if n in COSTS] * (building == "CASTLE") \
         + ["KONNIK"] * (building == "KREPOST") \
         + ["SERJEANT"] * (building == "DONJON")                    # and the spearman line (AoE2 DE wiki, #1873)
     out = unique + list(TRAINS[building]) + [f"ELITE_{n}_UPGRADE" for n in unique if f"ELITE_{n}_UPGRADE" in COSTS]   # (#1760)
@@ -710,6 +710,8 @@ def research(g, entry, start=False):
         g.repeats[entry["name"]] = g.repeats.get(entry["name"], 0) + 1
     before = set(g.techs)
     g.techs.add(entry["name"])
+    if start:                                                      # free: not in the score (score.py, #2355)
+        vars(g).setdefault("given", set()).add(entry["name"])
     if (more := gather.FARM_TECHS.get(entry["name"])):             # the new and the live own farms get more food
         more = round(more * civs.FARM_UPGRADES.get(civs.civ(g), 1))
         g.map.farm_food += more
@@ -807,8 +809,10 @@ def census(g):
     A dead villager leaves g.villagers, the selection and its farm: the idle count and the bot see only live ones (#1039)."""
     live = g.positions(list(g.villagers) + list(g.soldiers))
     import spoils                                                      # spoils imports this module
-    spoils.fallen(g, {u: "VILLAGER" if u in g.villagers else g.soldiers[u] for u in [*g.villagers, *g.soldiers]
-                      if u not in live})                               # Tupi (#2271)
+    import score                                                       # score imports this module
+    dead = {u: "VILLAGER" if u in g.villagers else g.soldiers[u] for u in [*g.villagers, *g.soldiers] if u not in live}
+    spoils.fallen(g, dead)                                             # Tupi (#2271)
+    score.fallen(g, dead)                                              # #2355
     spoils.kills(g)                                                    # Mapuche (#2271)
     for u in [u for u in g.villagers if u not in live]:
         del g.villagers[u]
