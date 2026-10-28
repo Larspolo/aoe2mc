@@ -477,6 +477,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     if not state and scout.used(data):               # the scout of each civilization (#2391), not twice after a load
         for x in [g, *(s.g for s in g.bots)]:
             scout.swap(x)
+    import start_buildings
+    if not state and start_buildings.used(data):     # the Georgian mule cart (#2429), not twice after a load
+        for x in [g, *(s.g for s in g.bots)]:
+            start_buildings.place(x)
     for x in [g, *(s.g for s in g.bots)]:
         x.modes = frozenset(modes)                               # gather.has_mode: build.locked, Gather.run (#2490)
         if MODES[settings["mode"]].get("bots") or x is g:
