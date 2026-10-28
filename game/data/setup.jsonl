@@ -8,3 +8,4 @@
 {"name": "castle", "ages": 2}
 {"name": "imperial", "ages": 3}
 {"name": "post-imperial", "ages": 4, "skip": ["SPIES"], "note": "AoE2 wiki \"Post-Imperial Age\": all technologies, not Spies/Treason, Flemish Revolution, First Crusade (not in the game program)"}
+{"name": "regicide", "units": ["KING"], "note": "AoE2 wiki \"Regicide (game mode)\": each player starts with a King, a player whose Kings all died is defeated (#2347)"}

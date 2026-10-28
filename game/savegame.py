@@ -6,6 +6,8 @@ when it stops, so a save is a copy of the world folder. The state of the program
 the train and research queues, the construction sites (also the done ones: the buildings of the game) and the rally
 points (#2257), and the orders of the units (#2258): the job, target and load of each villager, the farmers, stances,
 control groups and garrisons. A villager keeps no path: after the load it walks again with Minecraft path finding (P2).
+The save also keeps the wonder and relic victory timers and the market prices (#2324), the game settings of the
+command line (`run.py` options, "settings") and the attack time and wave of the bot (#2325).
 """
 import json
 import os
@@ -15,8 +17,11 @@ import time
 FILE = "savegame.json"
 FIELDS = ("stock", "spare", "seconds", "repeats", "pop")              # dicts and numbers of Gather, as they are
 PACKED = ("queues", "trained", "sites", "rally")                       # with tuples (a building rect, a cell): pack()
+OPTIONAL = ("rates", "relic_timer", "wonder_shown", "wonders", "wonders_gone")   # only on a Gather that has them (#2324)
 JOB = ("state", "load", "res", "job", "lap", "prey")                  # fields of a gather.Villager, as they are
 IDLE = ("to_rally", "to_repair", "repair")                             # orders that the save does not keep yet
+BOT = ("time", "charged", "attack")                                    # fields of a bot.Bot, as they are (#2325)
+SETTINGS = ("all_techs", "bot", "bot_attack", "cheats", "civ", "people", "reveal", "teams", "victory")   # run.py options
 SKIP = ("session.lock",)                                               # the lock of the running server
 
 
@@ -29,6 +34,8 @@ def pack(v):
     """v in a JSON form that unpack() turns back: a tuple and a dict with keys that are not text get a tag."""
     if isinstance(v, tuple):
         return {"tuple": [pack(x) for x in v]}
+    if isinstance(v, (set, frozenset)):
+        return {"set": sorted((pack(x) for x in v), key=repr)}
     if isinstance(v, dict) and not all(isinstance(k, str) for k in v):
         return {"items": sorted(([pack(k), pack(x)] for k, x in v.items()), key=repr)}
     if isinstance(v, dict):
@@ -39,6 +46,8 @@ def pack(v):
 def unpack(v):
     if isinstance(v, dict) and set(v) == {"tuple"}:
         return tuple(unpack(x) for x in v["tuple"])
+    if isinstance(v, dict) and set(v) == {"set"}:
+        return {unpack(x) for x in v["set"]}
     if isinstance(v, dict) and set(v) == {"items"}:
         return {unpack(k): unpack(x) for k, x in v["items"]}
     if isinstance(v, dict):
@@ -47,9 +56,22 @@ def unpack(v):
 
 
 def dump(g):
-    """The saved state of the game of g as a JSON dict (sorted keys and lists: the same game gives the same file)."""
-    return {"players": {str(x.player): {**{f: getattr(x, f) for f in FIELDS}, "techs": sorted(x.techs),
-                                        **{f: pack(getattr(x, f)) for f in PACKED}, **orders(x)} for x in sides(g)}}
+    """The saved state of the game of g as a JSON dict (sorted keys and lists: the same game gives the same file).
+    The settings of the game (run.main puts them on the server as .settings) go under "settings", the bot values under
+    the player of the bot (#2325)."""
+    d = {"players": {str(x.player): {**{f: getattr(x, f) for f in FIELDS}, "techs": sorted(x.techs),
+                                     **{f: pack(getattr(x, f)) for f in PACKED}, **orders(x),
+                                     **{f: pack(vars(x)[f]) for f in OPTIONAL if f in vars(x)}} for x in sides(g)}}
+    for b in bots(g):
+        d["players"][str(b.g.player)]["bot"] = {f: getattr(b, f) for f in BOT}
+    if getattr(g.game, "settings", None):
+        d["settings"] = dict(g.game.settings)
+    return d
+
+
+def bots(g):
+    """The bots (bot.Bot) of g: Gather.bots also holds the Sides of the people."""
+    return [b for b in getattr(g, "bots", ()) if hasattr(b, "charged")]
 
 
 def orders(x):
@@ -99,7 +121,7 @@ def load(g, d):
         for f in FIELDS:
             setattr(x, f, type(getattr(x, f))(p[f]))
         x.techs = set(p["techs"])
-        for f in PACKED:
+        for f in PACKED + OPTIONAL:                                    # the next tick shows the boss bars again
             if f in p:                                                 # a save before #2257 has no queues
                 setattr(x, f, unpack(p[f]))
         if "villagers" in p:                                           # a save from before #2258 has no orders
@@ -107,6 +129,21 @@ def load(g, d):
         for r in gather.RESOURCES:                                     # the sidebar of the resources (Gather.setup)
             x.command(f"scoreboard players set {r} {x.board} {x.stock[r.lower()]}")
         train.sidebar(x)
+    for b in bots(g):                                                  # its attack time and wave go on (#2325)
+        for f, v in d["players"].get(str(b.g.player), {}).get("bot", {}).items():
+            setattr(b, f, v)
+
+
+def settings(a, d, given=()):
+    """Put the settings of the saved state d on the run.py options a, except the options in given (the player gave
+    them with --load: they win). A save before #2325 has no settings: a keeps the options of the command line.
+    A given --bot-attack also wins over the saved attack time of the bot."""
+    for k, v in d.get("settings", {}).items():
+        if k in SETTINGS and k not in given:
+            setattr(a, k, v)
+    if "bot_attack" in given:
+        for p in d["players"].values():
+            p.get("bot", {}).pop("attack", None)
 
 
 def folder(world):
