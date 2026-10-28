@@ -466,7 +466,9 @@ def read_scenario(path):
                                             **({"cost": [[e.resource_1, e.resource_1_quantity],   # (#2776)
                                                          [e.resource_2, e.resource_2_quantity],
                                                          [e.resource_3, e.resource_3_quantity]]}
-                                               if e.effect_type == CHANGE_OBJECT_COST else {}),
+                                               if e.effect_type in (CHANGE_OBJECT_COST, CHANGE_TECHNOLOGY_COST) else {}),
+                                            **({"technology": techs.get(e.technology, str(e.technology))}   # #2819
+                                               if e.effect_type == CHANGE_TECHNOLOGY_COST else {}),
                                             **({"operation": e.operation, "quantity": e.quantity}   # (#2693)
                                                if e.effect_type == CHANGE_OBJECT_HP else {}),
                                             **({"attribute": e.object_attributes, "operation": e.operation,   # #2763
@@ -2858,6 +2860,7 @@ CHANGE_OBJECT_STANCE = 36                                          # "Change Obj
 CHANGE_OWNERSHIP = 18
 CHANGE_PLAYER_COLOR = 89                                           # "Change Player Color" (#2712)
 CHANGE_PLAYER_NAME = 45                                            # "Change Player Name" (#2711)
+CHANGE_TECHNOLOGY_COST = 63                                        # "Change Technology Cost" (#2819)
 CHANGE_VARIABLE = 56                                               # the scenario variables (#2611)
 CHANGE_VIEW = 16                                                   # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
@@ -3422,18 +3425,24 @@ def research_lines(e, c):
     return [f"scoreboard players set #r{c.t['id']}.{i} aoe_tech 1"]   # the game program reads it
 
 
-def cost_lines(e, c):
+def cost_lines(e, c, what="change object cost"):
     """The command of "Change Object Cost" (#2776): the new cost of the unit or building type of the player (up to 3
     resources of ATTRIBUTES; a quantity of 0 drops the resource) goes into the list of the data storage aoe2mc:costs as
     one text "<player> <name> <resource>=<quantity> ...". A converted world has no costs: the scenario mode of the game
     program (game/scenario.py costs) empties the list and uses the cost in the menus."""
     cost = [f"{ATTRIBUTES[r].lower()}={q}" for r, q in e.get("cost", ()) if r in range(len(ATTRIBUTES)) and q > 0]
     _, name = e.get("object") or (None, None)
-    if not name or e["player"] <= 0:
-        c.stats["change object cost (not supported)"] += 1
+    if not name or name.isdigit() or e["player"] <= 0:
+        c.stats[f"{what} (not supported)"] += 1
         return []
-    c.stats["change object cost"] += 1
+    c.stats[what] += 1
     return [f'data modify storage aoe2mc:costs list append value "{" ".join([str(e["player"]), name, *cost])}"']
+
+
+def tech_cost_lines(e, c):
+    """The command of "Change Technology Cost" (#2819): the text of cost_lines with the technology name of
+    game/data/train.jsonl (an ID with no name: not supported). civs.cost gives the price to the menu (train.price)."""
+    return cost_lines(dict(e, object=(None, e.get("technology"))), c, "change technology cost")
 
 
 # The ObjectAttribute IDs of "Modify Attribute" that the game program has in combat.Stats (#2763): attribute ->
@@ -3702,6 +3711,7 @@ EFFECTS = {
     CHANGE_OWNERSHIP: owner_lines,
     CHANGE_PLAYER_COLOR: color_lines,
     CHANGE_PLAYER_NAME: player_name_lines,
+    CHANGE_TECHNOLOGY_COST: tech_cost_lines,
     CHANGE_VARIABLE: variable_lines,
     CHANGE_VIEW: view_lines,
     CLEAR_INSTRUCTIONS: clear_lines,
