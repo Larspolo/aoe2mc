@@ -411,6 +411,8 @@ def read_scenario(path):
                               conditions=[dict(type=c.condition_type, timer=c.timer, inverted=bool(c.inverted),
                                                **({"ref": c.unit_object, "unit": c.unit_object in entities}   # #2618
                                                   if c.condition_type in OBJECT_TESTS else {}),
+                                               **({"area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2]}     # #2620
+                                                  if c.condition_type == BRING_OBJECT_TO_AREA else {}),
                                                **({"quantity": c.quantity, "player": c.source_player,
                                                    "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2],
                                                    "object": c.object_list, "group": c.object_group,
@@ -2814,12 +2816,15 @@ TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:s
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
 TICKED = COUNTED + (ACCUMULATE_ATTRIBUTE, DIFFICULTY_LEVEL, RESEARCHED, VARIABLE_VALUE)  # conditions of the tick function
 ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")     # attributes 0-3: the score holders of gather.RESOURCES (#2655)
+BRING_OBJECT_TO_AREA = 1                                               # the condition "Bring Object to Area" (#2620)
 DESTROY_OBJECT = 6                                                     # the condition "Destroy Object" (#2618)
 # The conditions on one object of the map (its tag aoe2mc.r<ref>, #2617): the test of the tick function when it holds,
 # when it does not hold (a looping trigger fires again after that), and the tick lines before the test. "Destroy
 # Object": a marker entity follows the unit; the unit is dead when the marker is loaded and the unit is not there. A
 # unit in a chunk that is not loaded is no entity for a command, and its marker is not loaded too (#2618).
-OBJECT_TESTS = {DESTROY_OBJECT: ("if entity @e[tag=aoe2mc.m{ref}] unless entity @e[tag=aoe2mc.r{ref}]",
+# "Bring Object to Area": the unit is in the box of the area ({box}: area_box, #2620).
+OBJECT_TESTS = {BRING_OBJECT_TO_AREA: ("if entity @e[tag=aoe2mc.r{ref}{box}]", "unless entity @e[tag=aoe2mc.r{ref}{box}]", ()),
+                DESTROY_OBJECT: ("if entity @e[tag=aoe2mc.m{ref}] unless entity @e[tag=aoe2mc.r{ref}]",
                                  "if entity @e[tag=aoe2mc.r{ref}]",
                                  ("execute as @e[tag=aoe2mc.r{ref}] at @s unless entity @e[tag=aoe2mc.m{ref}] run "
                                   "summon marker ~ ~ ~ {{Tags:[\"aoe2mc.m{ref}\"]}}",
@@ -2846,12 +2851,17 @@ def area_selector(c, T):
     tag too (units.MOUNT, #1045): it does not count."""
     obj = c.get("object")
     sel = [f"tag=aoe2mc.p{c['player']}", f"tag=!{units.MOUNT}"] + [f"tag=aoe2mc.t{obj}"] * (isinstance(obj, int) and obj >= 0)
-    if min(c["area"]) >= 0:
-        x1, y1, x2, y2 = c["area"]
-        x1, x2, y1, y2 = min(x1, x2), max(x1, x2), min(y1, y2), max(y1, y2)
-        sel.append(f"x={x1 * T},y={MIN_Y},z={y1 * T},dx={(x2 - x1 + 1) * T - 1},dy={HEIGHT - 1},"
-                   f"dz={(y2 - y1 + 1) * T - 1}")
-    return f"@e[{','.join(sel)}]"
+    return f"@e[{','.join(sel)}{area_box(c['area'], T)}]"
+
+
+def area_box(area, T):
+    """The selector part ",x=..,dz=.." of the blocks of the tiles x1..x2, y1..y2 (z) of an area, all heights; "" for an
+    area of -1 (the whole map)."""
+    if min(area) < 0:
+        return ""
+    x1, y1, x2, y2 = area
+    x1, x2, y1, y2 = min(x1, x2), max(x1, x2), min(y1, y2), max(y1, y2)
+    return f",x={x1 * T},y={MIN_Y},z={y1 * T},dx={(x2 - x1 + 1) * T - 1},dy={HEIGHT - 1},dz={(y2 - y1 + 1) * T - 1}"
 
 
 def object_lines(e, c):
@@ -3341,7 +3351,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     the units leave an area. A "Variable Value" condition runs in the tick function as an area (#2611), a "Research
     Technology" condition too: the game program sets the score #p<player>.<technology> of aoe_tech (#2656), and an
     "Accumulate Attribute" condition of a resource: resource_score (#2655). A "Destroy Object" condition
-    (OBJECT_TESTS) tests the tag aoe2mc.r<ref> of its unit and its marker (#2618). The commands of each effect come
+    (OBJECT_TESTS) tests the tag aoe2mc.r<ref> of its unit and its marker (#2618), "Bring Object to Area" the tag in
+    the box of the area (#2620). The commands of each effect come
     from its handler in EFFECTS.
     A disabled trigger does not run."""
     load, files, tick, setup = [], {}, [], {}
@@ -3380,9 +3391,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if c["type"] in OBJECT_TESTS:                              # the tag of the object (#2618)
                 test, other, before = OBJECT_TESTS[c["type"]]
-                counts += [x.format(ref=c["ref"]) for x in before]
-                tests.append(test.format(ref=c["ref"]))
-                unless.append(other.format(ref=c["ref"]))
+                at = dict(ref=c["ref"], box=area_box(c.get("area", [-1] * 4), T))
+                counts += [x.format(**at) for x in before]
+                tests.append(test.format(**at))
+                unless.append(other.format(**at))
                 continue
             if c["type"] not in COUNTED:                               # a timer or the chance
                 continue
