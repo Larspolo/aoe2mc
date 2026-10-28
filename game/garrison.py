@@ -14,6 +14,11 @@ Each garrisoned villager or foot archer adds one arrow to the shot of its town c
 (#1113): `aoe arrows` of the plugin. An empty town center shoots no arrow, a castle 5 (BASE, #1201).
 A dock takes only fishing ships, at most 5 (#1949): they sail to the water next to it with the /tp steps of fleet.py
 (a boat has no Minecraft path finding), and each one adds an arrow; an empty dock does not shoot, as in AoE2 DE.
+A Gurjara mill takes only herdable animals, at most 10 (civs.HERD_FOOD, BY, #2342), and they make food with no end:
+15 × ln(F / 200 + 1) per AoE2 minute for F food of all animals in own mills (AoE2 DE wiki "Gurjaras"). An animal inside
+cannot be captured (herd.tick).
+
+    garrison.pasture(g, dt)             # gather.Gather.step: dt AoE2 seconds of the food of the animals in mills
 
 An injured unit in a garrison gets its hit points back, as in AoE2 DE (#1262, AoE2 wiki "Garrison"): 0.2 per second in
 a castle, 0.1 in a town center or tower (HEAL), 6 times as fast after Herbal Medicine (HERBAL, #1585). Siege units and
@@ -51,8 +56,9 @@ CREW = "{Invulnerable:1b}"                                        # the crew of 
 
 def size(g, name):
     """The units inside a complete building name of the player of g: the bonus of its civilization (civs.GARRISON: a
-    Khmer house 5, Teuton towers twice, #2117), else SIZES, else 0."""
-    return civs.GARRISON.get(civs.civ(g), {}).get(name, SIZES.get(name, 0))
+    Khmer house 5, Teuton towers twice, #2117; civs.HERD_FOOD: a Gurjara mill 10 animals, #2342), else SIZES, else 0."""
+    herd = civs.HERD_FOOD.get(civs.civ(g), {}).get(name, (0,))[0]
+    return civs.GARRISON.get(civs.civ(g), {}).get(name, herd or SIZES.get(name, 0))
 
 
 def holders(g):
@@ -123,18 +129,23 @@ def order(g, player, cell):
         return None
     import ai, train                                               # ai and train import gather, gather imports this module
     x, z = to
-    by = BY.get(homes[rect]["name"])
-    units = [u for u in sorted(g.selected) if not by or ("VILLAGER" if u in g.villagers else g.soldiers.get(u, "")).startswith(by)]
-    if not units:                                                  # a soldier on a Khmer house: no garrison order
-        return None
+    by, flock = BY.get(homes[rect]["name"]), vars(g).get("flock", set())
+    units = [u for u in sorted(g.selected) if (unit_name(g, u).startswith(by) if by else u not in flock)]
+    if not units:                                                  # a soldier on a Khmer house, a sheep on a tower: no
+        return None                                                # garrison order
     for u in units:
         if (v := g.villagers.get(u)) is not None:                  # the villager stops its work
             v.state, v.path, v.goal, v.site = "garrison", [], None, None
-        name = "VILLAGER" if u in g.villagers else g.soldiers.get(u, "")
+        name = unit_name(g, u)
         ai.move(g, u, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * train.speed(g, name))
         g.entering[u] = rect
     g.mark(player, {to})
     return rect
+
+
+def unit_name(g, u):
+    """The AoE2 name of own unit u: "VILLAGER", a soldier, or a herdable animal (gather.Gather.flock, #2342)."""
+    return "VILLAGER" if u in g.villagers else g.soldiers.get(u) or vars(g).get("prey", {}).get(u, "")
 
 
 def dock_order(g, player, rect):
@@ -266,6 +277,25 @@ def inside(g):
     orders and the selection skip them."""
     return {u for us in [*g.garrisons.values(), *vars(g).get("towers", {}).values(), *vars(g).get("cargo", {}).values()]
             for u in us}
+
+
+def pasture(g, dt):
+    """The herdable animals in the own mills make food for dt AoE2 seconds (civs.HERD_FOOD: Gurjaras, #2342): a × ln(F / b
+    + 1) per AoE2 minute for F food of all of them (AoE2 DE wiki "Gurjaras"), with no end. The fractions add up."""
+    import gather                                                  # gather imports this module
+    pens = civs.HERD_FOOD.get(civs.civ(g), {})
+    if not pens or not g.garrisons:
+        return
+    homes = holders(g)
+    _, a, b = next(iter(pens.values()))
+    f = sum(gather.hunt_food(g.prey.get(u, "")) for rect, us in g.garrisons.items()
+            if homes.get(rect, {}).get("name") in pens for u in us if u in g.flock)
+    if not f:
+        return
+    g.herd_food = vars(g).get("herd_food", 0.0) + a * math.log(f / b + 1) / 60 * dt
+    if (n := int(g.herd_food)) > 0:
+        g.herd_food -= n
+        g.earn("food", n)
 
 
 def heal(g, dt):
