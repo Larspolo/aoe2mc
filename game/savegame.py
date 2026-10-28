@@ -143,7 +143,6 @@ NOT_SAVED = (                                                          # the fie
     "action_sent",                                                     # scenario.actions: a load sends them again
     "age_times",                                                       # recap.py: game times of this session (Gather.t0)
     "bar",                                                             # bossbar.py: the shown unit
-    "board",                                                           # bot.py: the scoreboard of a bot
     "book_at",                                                         # scenario.py: the next check time (the world keeps the tags)
     "bots",                                                            # run.play makes the bots again
     "capture",                                                         # herd.py: a tick timer

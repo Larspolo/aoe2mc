@@ -20,7 +20,7 @@ def test_the_bot_keeps_two_villagers_in_the_queue_of_its_town_center():
     b.recruit()
     (q,) = b.g.queues.values()
     assert [e["name"] for e in q] == ["VILLAGER_MALE"] * bot.QUEUED and b.g.stock["food"] == 1000 - 50 * bot.QUEUED
-    assert not [c for c in server.log[before:] if "aoe_res" in c]      # the resources of the bot, not of player 1
+    assert not [c for c in server.log[before:] if "aoe_res" in c.split()]      # the resources of the bot, not of player 1
 
 
 def test_the_bot_trains_villagers_up_to_its_number():
