@@ -79,6 +79,7 @@ import relic_victory  # noqa: E402
 import repair  # noqa: E402
 import scenario  # noqa: E402
 import score  # noqa: E402
+import spectator  # noqa: E402
 import siege_tower  # noqa: E402
 import sudden_death  # noqa: E402
 import stance  # noqa: E402
@@ -812,7 +813,7 @@ class Gather:
         pos = self.positions([u for u, n in self.soldiers.items() if n == self.soldiers[uuid]])
         if uuid not in pos:
             return
-        near = {u for u, p in pos.items() if math.dist(p, pos[uuid]) <= TYPE_REACH}
+        near = {u for u, p in pos.items() if math.dist(p, pos[uuid]) <= TYPE_REACH} - self.unpickable()
         for u in sorted(self.selected - near):
             self.command(f"data merge entity {u} {{Glowing:0b}}")
             self.command(f"tag {u} remove {SELECT}")
@@ -857,7 +858,7 @@ class Gather:
             self.command(f"aoe box-clear {name}")
         (x0, x1), (z0, z1) = sorted((first[0], cell[0])), sorted((first[1], cell[1]))
         pos = {k: v.pos for k, v in self.villagers.items()} | self.positions(list(self.soldiers) + sorted(self.herd()))
-        inside = {u for u, p in pos.items() if x0 <= p[0] < x1 + 1 and z0 <= p[2] < z1 + 1} - garrison.inside(self)
+        inside = {u for u, p in pos.items() if x0 <= p[0] < x1 + 1 and z0 <= p[2] < z1 + 1} - self.unpickable()
         pick = inside & self.soldiers.keys() or inside - self.flock or inside   # herdables come last (#1791)
         self.choose(pick, min(pick, default=None))
         self.command(f"title {name} actionbar " + json.dumps({"text": f"Selected: {len(pick)} units"}))
@@ -1396,7 +1397,12 @@ class Gather:
         army = self.selected and self.selected <= set(self.soldiers)
         hunters = self.selected & self.villagers.keys()               # villagers take an animal to hunt (#1058)
         return (set(self.soldiers) | (set(self.enemies) if army else set()) | (set(self.prey) if hunters else set())
-                | self.herd()) - garrison.inside(self)
+                | self.herd()) - self.unpickable()
+
+    def unpickable(self):
+        """The UUIDs that no click selects: the units inside a building (garrison.inside, #808) and the units of a
+        trigger "Disable Object Selection" (scenario.selection, #2854)."""
+        return garrison.inside(self) | vars(self).get("unselectable", set())
 
     def herd(self):
         """The UUIDs of the live own herdable animals (#1791): a right click selects them, as in AoE2."""
@@ -1407,7 +1413,7 @@ class Gather:
         of the mark) or None. kind: "enemy" or "unit" (key: UUID), "fort" (target UUID), "building" (an own footprint
         that takes a garrison or trains units), "tree", "mine", "bush", "farm" (tile) or "ground" (block cell).
         places: {UUID: feet} of pickable(). The click and the pointing mark use it, so both pick the same (#989)."""
-        held = garrison.inside(self)
+        held = self.unpickable()
         at = {k: v.pos for k, v in self.villagers.items() if k not in held} | \
             {k: p for k, p in places.items() if k in self.pickable()}
         if u := pick_unit(eye, d, at):
@@ -1929,6 +1935,7 @@ class Gather:
             elif self.victory == "king-of-the-hill":                   # the monument in the center (#2360)
                 hill.tick(self, self.tick * NORMAL)
             score.tick(self)
+            spectator.tick(self)                                       # the sidebar of the spectators (#2900)
             if self.victory in ("time-limit", "score"):                # after the conquest: it wins before (#2356)
                 time_limit.tick(self, self.tick * NORMAL)
             treaty.tick(self, self.tick * NORMAL)
