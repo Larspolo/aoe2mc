@@ -38,7 +38,8 @@ Lock it first: `python3 tools/claim.py 0 --refill` (one run per 10 minutes). Exi
 refill; then refill one open epic instead (the first one with open goals that an agent can do, under its lock below):
 up to 10 sub-issues (within the cap) for its open goals, then pick again. The pacer starts `refill_runs` runs more
 than the ready tickets for this (`agent.toml`): many runs close tickets faster than one refill makes them (#650;
-2026-10-28: 3 ready tickets for 40 target runs).
+2026-10-28: 3 ready tickets for 40 target runs). It starts them only while an open ticket is less than 60 minutes old
+(`usage.refill_runs`), else 1: an empty refill run costs quota.
 Give each new ticket `lane:haiku` when a Haiku run can do it as well as an Opus run (`ticket` skill, "Model lanes"):
 judge each ticket, do not aim at a number.
 Also lock each epic E with `python3 tools/claim.py E --refill` before you make its tickets (exit 1: skip that epic, #505).
