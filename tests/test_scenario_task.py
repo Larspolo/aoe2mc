@@ -48,7 +48,7 @@ class Game:
 
 def test_tick_walks_the_tagged_units_to_the_block_and_removes_the_task():
     g = Game("{k7_1: [14.5d, 70.0d, 22.5d], k9_0: [-3.5d, 64.0d, 2.5d]}")
-    g.data, g.bots, g.who = {}, (), "@a[team=p1]"
+    g.data, g.bots, g.who, g.player = {}, (), "@a[team=p1]", 1
     scenario.tick(g)
     assert [c for c in g.log if "task" in c] == [
         "data get storage aoe2mc:tasks",
