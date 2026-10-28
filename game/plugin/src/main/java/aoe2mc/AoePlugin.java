@@ -171,6 +171,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe minimap on|off|pixel <x> <z>           the live units as dots in their team color on map 0, once per
  *                                              second (#1237, Minimap.java); pixel: the map pixel of a block
  *   aoe minimap building <x0> <z0> <x1> <z1> <team>|unbuild <x0> <z0>   a replay building as a square on map 0 (#1238)
+ *   aoe minimap flare <x> <z> <team> <ticks>   a blinking cross of a replay flare on map 0 for <ticks> (#2405)
  *   aoe minimap fog <tile> <n>|off, see|dim <y,x0,x1> ..., tile <x> <z>
  *                                              the fog of the view player on map 0 (#1567): black unexplored tiles,
  *                                              dark explored tiles out of sight; tile: the fog of a block
