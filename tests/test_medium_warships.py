@@ -36,6 +36,8 @@ def test_the_dock_menu_shows_it_in_the_castle_age_and_no_fire_ship_before_it():
 def test_the_research_upgrades_the_live_ships_and_the_dock_trains_the_new_forms():
     server, g = castle()
     g.soldiers |= {"gal": "GALLEY", "fg": "FIRE_GALLEY", "fs": "FISHING_SHIP"}
+    for u in g.soldiers:                                             # alive at the census (#3122)
+        g.game.entities.setdefault(u, {"Pos": (0.5, 64.0, 0.5)})
     assert train.order(g, "Steve", train.open_menu(g, "Steve", (15, 12)), 3) == 1
     assert (g.stock["wood"], g.stock["gold"]) == (250, 200)
     train.tick(g, 49)

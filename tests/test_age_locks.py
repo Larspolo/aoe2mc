@@ -44,7 +44,7 @@ def test_each_unit_and_technology_of_the_menus_has_an_age():
                                                          "TRANSPORT_SHIP"} \
         <= build.AGE.keys()
     policies = {n for r in civs.ROWS for n in r.get("policies", {}).get("effects", {})}   # the Dark Age (#2485)
-    assert {n for n in names if n in train.TECHS} - {"LOOM", "FEUDAL_AGE", *train.DOCTRINES} - policies <= train.BY_KEY["age"].keys() | build.AGE.keys()
+    assert {n for n in names if n in train.TECHS} - {"LOOM", "FEUDAL_AGE", "FARM_RESEED", *train.DOCTRINES} - policies <= train.BY_KEY["age"].keys() | build.AGE.keys()
 
 
 @pytest.mark.parametrize("ages, need", [(0, "Needs the Castle Age"), (1, "Needs the Castle Age"), (2, None)])

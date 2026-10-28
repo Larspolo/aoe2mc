@@ -1,7 +1,7 @@
 """Progress of each goal toward its release bar (#878, #879): the rules and items of docs/RELEASE.md, the features of
 docs/ROADMAP.md and the epics on GitHub.
 
-    python3 tools/release.py     # one line for each goal: percent of C, A and B, and the tickets left
+    python3 tools/release.py     # one line for each goal: percent of C, A and B, the tickets left, the due checks
 
 Token: GITHUB_TOKEN. Without it the script uses `gh api` (cloud sessions). Python standard library only.
 """
@@ -12,6 +12,7 @@ import statistics
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "tools"))     # dashboard (api, pages)
 MILESTONES = "CAB"                                  # C = 100 %; A and B are indications
 INCLUDES = {"B": "B", "A": "BA", "C": "BAC"}         # the feature milestones that a milestone counts
 
@@ -78,6 +79,14 @@ def progress(features, rows, share, epics, closed=frozenset()):
     return out
 
 
+def due(features, rows, epics):
+    """The rows of release(): the release checks with no ticket whose milestone has 0 features left in their goal
+    (#3342). Their check tickets can start: the `roadmap` skill makes them in the next deep run."""
+    left = progress(features, rows, 0, epics)
+    return [r for r in rows if r[1] not in features and r[4] is None
+            and left.get(r[0], {}).get(r[2], (0, 0, 0))[2] == 0]
+
+
 GOALS = {1: "Convert maps", 2: "Play AoE2", 3: "Replay a game", 4: "Agent system"}
 
 
@@ -100,22 +109,35 @@ def total(result, m="C"):
     return 100 * done / (done + rest) if done + rest else 100.0
 
 
-def current():
-    """progress() of the files on disk and the epics on GitHub."""
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    from dashboard import api, pages
+def load():
+    """(features, share, rows, epics) of the files on disk and the epics on GitHub."""
+    from dashboard import pages
     with open(os.path.join(ROOT, "docs", "ROADMAP.md")) as f:
         features = roadmap(f.read())
     with open(os.path.join(ROOT, "docs", "RELEASE.md")) as f:
         share, rows = release(f.read())
-    epics = pages("issues?labels=epic&state=all")
+    return features, share, rows, pages("issues?labels=epic&state=all")
+
+
+def current(data=None):
+    """progress() of load() (or of its result `data`)."""
+    from dashboard import api
+    features, share, rows, epics = data or load()
     closed = {r[4] for r in rows if r[4] and api(f"issues/{r[4]}")["state"] == "closed"}
     return progress(features, rows, share, epics, closed)
 
 
+def due_lines(rows):
+    """The text of due(): "<id> (goal, milestone)" for each row."""
+    return [f"{r[1]} ({GOALS.get(r[0], r[0])}, {r[2]})" for r in rows]
+
+
 def main():
+    data = load()
     print("Release bar (C = 100 %, milestones A and B; left = features + checks + bug reserve):")
-    print("\n".join(lines(current())))
+    print("\n".join(lines(current(data))))
+    if checks := due_lines(due(data[0], data[2], data[3])):
+        print("Release checks with no ticket: " + " · ".join(checks))
 
 
 if __name__ == "__main__":

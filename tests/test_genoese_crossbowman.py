@@ -29,6 +29,7 @@ def test_the_castle_of_the_italians_trains_the_genoese_crossbowman():
 def test_the_upgrade_changes_the_live_and_the_new_units():
     server, g = setup("ITALIANS", food=2000, wood=2000, gold=2000, ages=3)
     g.soldiers["gc"] = "GENOESE_CROSSBOWMAN"
+    g.game.entities.setdefault("gc", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     train.open_menu(g, "Steve", CASTLE)
     assert " 5:book:Elite Genoese Crossbowman:900 food · 750 gold · 60 s · research " in menus(server)[-1] + " "
     assert train.queue(g, "Steve", CASTLE, "ELITE_GENOESE_CROSSBOWMAN_UPGRADE")

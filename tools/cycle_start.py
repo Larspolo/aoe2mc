@@ -12,8 +12,9 @@ whole context again. This tool reads all of it and prints one short section per 
 Sections: `Status` (exit 3 when the status issue has `paused`: stop), `Usage` (keep the line for the report of step 8),
 `Stuck` (`claim.py 0 --stuck`), `Flow brake` (`usage.py --flow`), `PRs` (the open agent PRs that need work: red CI,
 a conflict, a closed ticket, or green and not merged after 10 minutes), `Main CI` (the last run and the last night run),
-`Feedback` (`feedback.py`), `Triage` (open issues without a priority label) and `Candidates` (the pick order of
-`dashboard.py --next`, without the tickets that a run holds). The skill says what to do with each line.
+`Feedback` (`feedback.py`), `Triage` (open issues without a priority label), `Candidates` (the pick order of
+`dashboard.py --next`, without the tickets that a run holds) and `Release checks` (only when a check can start and has
+no ticket, `release.due()`). The skill says what to do with each line.
 """
 import argparse
 import datetime
@@ -28,7 +29,7 @@ import dashboard  # noqa: E402
 from agent_config import CONFIG  # noqa: E402
 
 TOOLS = os.path.dirname(os.path.abspath(__file__))
-AGENT = ("claude/", "agent/")         # the branches of agent PRs (autopilot step 2)
+AGENT = ("claude/", "agent/", "ccr-") # the branches of agent PRs (autopilot step 2)
 WAITS = {"needs-human", "blocked"}     # a PR of such a ticket waits for the owner or another ticket
 STALE, CONFLICT = 30, 10               # minutes without a beat: a stopped run (tools/claim.py STALE, CONFLICT)
 SWEEP = 10                             # minutes: a green PR that is still open needs the Automerge sweep (#734)
@@ -153,6 +154,18 @@ def ci_line(ci, issues):
         + (f"; closed after the red run: {'; '.join(closed)}" if closed else ""))
 
 
+def due_checks():
+    """The release checks that can start and have no ticket (`release.due()`, #3342), or [] when the read fails: a
+    planning gap must not stop the run start."""
+    import release
+    try:
+        features, _, rows, epics = release.load()
+        return release.due_lines(release.due(features, rows, epics))
+    except Exception as e:                                  # a GitHub or file error: the other sections still print
+        print(f"release checks: {e}", file=sys.stderr)
+        return []
+
+
 def section(title, lines):
     print(f"{title}: " + ("none" if not lines else lines[0] if len(lines) == 1 else "\n  " + "\n  ".join(lines)))
 
@@ -209,6 +222,8 @@ def main(argv=None):
     section(f"Candidates ({len(picks)} ready, pick order)", [
         f"#{i['number']} {i['title']} ({dashboard.tag(i, 'P')}, {dashboard.tag(i, 'size:')}, overlap "
         f"{len(dashboard.overlap(i, busy))}{', related' if last and related(i, last) else ''})" for i in picks[:SHOW]])
+    if checks := due_checks():
+        section("Release checks (no ticket, make them in the refill)", checks)
     return 0
 
 

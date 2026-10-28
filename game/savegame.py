@@ -27,7 +27,7 @@ PACKED = ("queues", "trained", "sites", "rally",                       # with tu
           "sieged",                                                    # the targets of attack orders: Gather.fall (#2537)
           "ruins",                                                     # the fallen start buildings: ruins.py (#3008)
           "soldiers", "units")                                         # the units of the game, trained or upgraded (#2532)
-OPTIONAL = ("limit_left", "policy", "rates", "relic_timer", "switches", "upgraded", "wonder_shown", "wonders",   # only on a
+OPTIONAL = ("limit_left", "policy", "rates", "relic_timer", "reseeds", "switches", "upgraded", "wonder_shown", "wonders",   # only on a
             "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
@@ -173,6 +173,8 @@ NOT_SAVED = (                                                          # the fie
     "home",                                                            # bot.py: the town center of a bot
     "hurried",                                                         # regen.military: again in its next pass
     "kings",                                                           # regicide.setup makes it again
+    "left_full",                                                       # amounts.py: the full amounts, from aoe2mc.json again
+    "left_shown",                                                      # amounts.py: the shown numbers, a load shows them again
     "limit_at",                                                        # time_limit.py: the next check time
     "limit_shown",                                                     # time_limit.py: the shown text
     "menu_opened",                                                     # train.open_menu: the time of the last open (spam clicks, #3267)
@@ -266,7 +268,50 @@ def dump(g):
         d["treaty_time"] = g.game.treaty_time
     d["stances"] = {n: {k: p[k] for k in ("team", "neutral", "sees") if k in p}   # the Diplomacy page (#2934), the
                     for n, p in sorted(g.players.items())}                       # triggers' stances and sight (#2989)
+    d["owners"] = owner_record(g)
     return d
+
+
+def owner_record(g):
+    """The owners of the game (#2999): the player of each aoe2mc.json unit (monk.take, herd.take), of each building
+    (fort_players: Redemption, owners.give_building) and of each unit that the game made (owners.KEY)."""
+    import owners
+    forts, names = {}, {}
+    for x in sides(g):
+        forts.update(vars(x).get("fort_players", {}))
+        names.update({**x.enemies, **x.soldiers})
+    return {"units": {o["uuid"]: o["player"] for o in g.data["objects"] if o["kind"] == "unit" and o.get("uuid")},
+            "buildings": dict(sorted(forts.items())), "made": {u: [p, names.get(u, "")] for u, p in sorted(g.data.get(owners.KEY, {}).items())}}
+
+
+def owners_again(g, rec):
+    """Put the owner record (owner_record) back: the players of the units, then the tables of each side (owners.py:
+    the buildings, the herdables, the enemies). A save before #2999 has no record: nothing changes."""
+    import combat
+    import gather
+    import herd
+    import owners
+    for o in g.data["objects"]:
+        if o["kind"] == "unit" and o.get("uuid") in rec["units"]:
+            o["player"] = rec["units"][o["uuid"]]
+        elif o["kind"] == "building" and "footprint" in o:             # monk.win: it trains for the new owner
+            o["player"] = rec["buildings"].get(combat.target_uuid(o["footprint"]), o["player"])
+    g.data.setdefault(owners.KEY, {}).update({u: p for u, (p, _) in rec["made"].items()})
+    for t, p in rec["buildings"].items():                              # a built site: its saved sites hold it
+        if t in vars(g).get("fort_players", {}) and g.fort_players[t] != p:
+            owners.give_building(g, t, p)
+    for h in sides(g):
+        for o in g.data["objects"]:
+            if o["kind"] == "unit" and o.get("uuid") and herd.herdable(o["name"]):
+                u = o["uuid"]
+                h.prey.pop(u, None)
+                h.flock.discard(u)
+                if o["player"] in (0, h.player) and (gather.hunt_food(o["name"]) or gather.predator(o["name"])):
+                    h.prey[u] = o["name"]
+                if o["player"] == h.player:
+                    h.flock.add(u)
+        h.enemies.update({u: n for u, (_, n) in rec["made"].items() if n})   # update_enemies reads the names here
+    owners.update_enemies(g)
 
 
 def explored(x):
@@ -456,6 +501,8 @@ def load(g, d):
         g.command(gather.allies_command(g.players))
         g.command(gather.neutral_command(g.players))
         owners.update_enemies(g)                                       # the saved enemies and allies (#2996)
+    if "owners" in d:                                                  # converted and captured units (#2999)
+        owners_again(g, d["owners"])
     for x in sides(g):                                                 # a razed building leaves the forts again (#2985)
         for u in vars(x).get("razed", {}):
             x.free(u)                                                  # the first call frees it for all sides

@@ -12,7 +12,7 @@ selection to attack it (`aoe attack`, the mob AI and the AoE2 values of game/com
 itself. A trained unit gets its AoE2 values at its spawn (`aoe stats`, `aoe range`); game/run.py gives them to the
 units and buildings of the start state (combat.setup).
 A villager gets the look of its AoE2 task (#868, gather.Gather.task): an ORDER on a resource, a BUILD (builder);
-a MOVE, an ORDER on something else, or the end of its work without a next resource gives it no profession.
+a MOVE, an ORDER on something else, or the end of its work without a next resource gives it the idle look (units.IDLE_JOB).
 Garrisons (#809): a GARRISON command, or an ORDER on an own start building with garrison room (game/garrison.py SIZES),
 puts the units inside it when they arrive (the state of the converter, #807), and UNGARRISON lets them out next to it.
 A villager with resources and an ORDER on a drop site drops them and does not go in.
@@ -41,6 +41,7 @@ sys.path.insert(0, ROOT)
 import aoe2mc  # noqa: E402
 import buildings  # noqa: E402
 import table  # noqa: E402
+import replay_input  # noqa: E402
 import units  # noqa: E402
 
 # Dye color of a player (aoe2mc.PLAYER_COLORS) -> text color of /tellraw and /title
@@ -73,6 +74,9 @@ TRAIL_MS = 1000             # ms of game time between two checks of the follower
 FIGHT_MS = 60000            # ms of game time: an attack order this near in time to one of a fight joins it (#2948)
 FIGHT_TILES = 12            # tiles: an attack order this near to one of a fight joins it (#2948)
 FIGHT_UNITS = 10            # attacking units of a large fight (#2948)
+CAMERA_MS = 10000           # ms of game time: a shot of the camera plan is held at least this long (#3366)
+CAMERA_TILES = 10           # tiles: the new buildings of a build shot lie this near to each other (#3366)
+CAMERA_BUILDS = 5           # new buildings in CAMERA_MS near each other that make a build shot (#3366)
 FAR = 8                     # tiles: a target unit this far from the tile of the ORDER (its place in AoE2) is no attack
                             # target: in de-64.3 a spearman chased a villager 200 blocks from it across the map (#2635)
 FOLLOW_MS = 15000           # ms of game time: the camera of --follow changes its unit at most this often (#738)
@@ -117,7 +121,7 @@ def pretty(name):
 
 def start_job(name):
     """The profession that units.make_entity gives a unit of this name (gather.Villager.job)."""
-    return next((j for k, j in units.VILLAGER_JOBS if k in name), "none")
+    return next((j for k, j in units.VILLAGER_JOBS if k in name), units.IDLE_JOB)
 
 
 def text(s, color=None):
@@ -233,6 +237,23 @@ def fights(events, owner):
             out.append({"start": min(e["time"] for e in g), "end": max(e["time"] for e in g), "players": players,
                         "tile": [round(sum(e["tile"][k] for e in g) / len(g), 1) for k in (0, 1)], "units": len(ids)})
     return sorted(out, key=lambda f: (-f["units"], f["start"]))
+
+
+def camera_plan(events, owner):
+    """Where the automatic camera looks during a record (#3366): a fight shot at the start of each large fight
+    (fights()), and a build shot where CAMERA_BUILDS or more new buildings lie within CAMERA_TILES of each other
+    in CAMERA_MS. A fight wins: a build shot less than CAMERA_MS from a fight shot is left out, and two shots
+    are at least CAMERA_MS apart. The camera holds a shot until the next one. owner: owners().
+    Returns [{"time" (ms), "tile" [x, y], "why": "fight" or "build"}], sorted by time."""
+    plan = [{"time": f["start"], "tile": f["tile"], "why": "fight"} for f in fights(events, owner)]
+    builds = sorted((e for e in events if e["kind"] == "build" and "tile" in e), key=lambda e: e["time"])
+    for e in builds:
+        near = [b for b in builds if 0 <= b["time"] - e["time"] < CAMERA_MS and math.dist(b["tile"], e["tile"]) <= CAMERA_TILES]
+        if len(near) < CAMERA_BUILDS or any(abs(s["time"] - e["time"]) < CAMERA_MS for s in plan):
+            continue
+        tile = [round(sum(b["tile"][k] for b in near) / len(near), 1) for k in (0, 1)]
+        plan.append({"time": e["time"], "tile": tile, "why": "build"})
+    return sorted(plan, key=lambda s: s["time"])
 
 
 def sail(g, v):
@@ -2289,6 +2310,8 @@ class Replay:
         self.control = {"speed": speed, "paused": paused, "view": self.pov,     # the view: replay_input VIEW (#1303)
                         "players": {p: self.player(p) for p in sorted(int(q) for q in self.data["players"]) if p}} | \
             ({"jump": to} if to is not None else {})
+        self.control["fights"] = fights(self.data.get("timeline", []), owners(self.data.get("objects", []),
+                                                                             self.data.get("timeline", [])))
         end, shown, counted = events[-1]["time"] if events else start, None, -math.inf
         send = self.send if bar else lambda cmds: None
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
@@ -2298,6 +2321,8 @@ class Replay:
              # over the start objects of the base image, so the start buildings get their squares (#1940)
              self.minimap_buildings(set(), set()) * (self.pov is None) +
              self.overview())
+        if to is None:                                              # not again after a jump back (#2949)
+            send(replay_input.fight_lines(self.control["fights"], self.control["players"]))
         census = self.census if bar and self.ai else lambda: None
         look = self.look_around if bar and self.ai else lambda: None          # as census: a server of run.py --replay
         while k < len(events) or self.moving or self.builds or self.charging or self.idle:
