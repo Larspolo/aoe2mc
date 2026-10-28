@@ -3915,11 +3915,16 @@ SKIN_BOXES = {
     "zombie": [(0, 0, 8, 8, 8, "head"), (16, 16, 8, 12, 4, "shirt"), (40, 16, 4, 12, 4, "arm"), (0, 16, 4, 12, 4, "leg")],
     "villager": [(0, 0, 8, 10, 8, "head"), (24, 0, 2, 4, 2, "skin"), (16, 20, 8, 12, 6, "shirt"),
                  (44, 22, 4, 12, 4, "arm"), (0, 22, 4, 12, 4, "leg")],
+    # the ravager of the war elephants (#2745, RavagerModel of 26.3): the horns are the tusks, the nose the trunk
+    "ravager": [(0, 0, 16, 20, 16, "head"), (0, 0, 4, 8, 4, "trunk"), (68, 73, 10, 10, 18, "hide"),
+                (74, 55, 2, 14, 4, "tusk"), (0, 36, 16, 3, 16, "hide"), (0, 55, 14, 16, 20, "hide"),
+                (0, 91, 12, 13, 18, "hide"), (64, 0, 8, 37, 8, "foot"), (96, 0, 8, 37, 8, "foot")],
 }
 SKINS = {   # texture -> (model, skin color); the hair, clothes and face colors are the same for all
     "entity/zombie/husk.png": ("zombie", (196, 140, 98)),
     "entity/zombie/zombie.png": ("zombie", (226, 176, 136)),
     "entity/zombie_villager/zombie_villager.png": ("villager", (214, 160, 120)),
+    "entity/illager/ravager.png": ("ravager", (128, 124, 120)),     # elephant grey (no natural ravagers in a world)
 }
 # The cart of the War Wagon in the pack (#2746, the AoE2 model: a box wagon with plank walls, an iron rim, a plank roof
 # and two large wheels): boxes (from, to) in pixels of a block at scale 1, 16 = 1 block, the ground at y 0, the horse
@@ -3961,11 +3966,41 @@ def cart_model():
 
 
 HAIR, SHIRT, PANTS, SHOES, EYE, MOUTH = (74, 50, 30), (122, 92, 56), (72, 64, 110), (52, 40, 30), (50, 90, 160), (140, 60, 50)
+IVORY, NAIL = (236, 228, 200), (204, 198, 182)                       # the tusks and toenails of an elephant (#2745)
+
+
+def hide_texture(model, tone):
+    """A 128 x 128 entity texture of elephant skin (#2745): each box gets the grey tone with darker wrinkle rows on its
+    sides, the tusks are ivory, the feet have toenails and the front of the head two small dark eyes."""
+    from PIL import Image, ImageDraw
+    im = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    dark = tuple(int(c * 0.8) for c in tone)
+    for u, v, w, h, k, part in SKIN_BOXES[model]:
+        color = IVORY if part == "tusk" else tone
+        d.rectangle([u + k, v, u + k + 2 * w - 1, v + k - 1], fill=color)            # top and bottom
+        d.rectangle([u, v + k, u + 2 * k + 2 * w - 1, v + k + h - 1], fill=color)    # the four sides
+        if part == "tusk":
+            d.rectangle([u, v + k + h - 3, u + 2 * k + 2 * w - 1, v + k + h - 1], fill=(250, 246, 232))   # the tip
+            continue
+        for y in range(v + k + 2, v + k + h, 3 if part in ("trunk", "foot") else 5):  # wrinkles: rows on the sides
+            d.line([(u, y), (u + 2 * k + 2 * w - 1, y)], fill=dark)
+        if part == "foot":
+            for x in range(u + 1, u + 2 * k + 2 * w, 3):                               # toenails above the sole
+                d.rectangle([x, v + k + h - 2, x + 1, v + k + h - 1], fill=NAIL)
+        if part == "head":
+            e = v + k + 11                                                             # the eye row of the face
+            for x in (u + k + 3, u + k + w - 5):
+                d.rectangle([x, e, x + 1, e], fill=(30, 26, 24))
+    return im
 
 
 def skin_texture(model, tone):
     """A 64 x 64 entity texture with a human skin tone and face (#2738): each box of the model gets the color of its
-    part on all six faces, the head gets hair, and the front of the head eyes, brows and a mouth."""
+    part on all six faces, the head gets hair, and the front of the head eyes, brows and a mouth. The ravager of the
+    war elephants: hide_texture."""
+    if model == "ravager":
+        return hide_texture(model, tone)
     from PIL import Image, ImageDraw
     im = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
