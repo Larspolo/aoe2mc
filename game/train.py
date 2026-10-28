@@ -266,6 +266,7 @@ AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age aft
 STARTS = {r["name"]: r for r in table.load("setup.jsonl") if "ages" in r}
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
 HOUSING = {r["name"]: r["housing"] for r in BUILDING_ROWS if "housing" in r}   # population of a complete building
+AGE_COUNT = {r["name"]: r["age_count"] for r in BUILDING_ROWS if "age_count" in r}   # types of the age rule: the Settlement 2 (#2420)
 LIMIT = 200                                                        # the AoE2 population limit
 LIMITS = (*range(25, 251, 25), 300, 400, 500)                      # the AoE2 setting "Population limit" (#2266)
 REPEAT = 256                                                       # researches of one technology: "going above and beyond"
@@ -632,8 +633,9 @@ def missing(g, name):
     import combat                                                  # combat imports gather, gather imports this module
     own = {combat.STANDS_FOR.get(b, b) for b in owned(g)}          # the Folwark is a mill, the church a monastery
     has, alone = sorted(set(names) & own), alone[0] if alone else ()
-    if len(has) < n and not set(alone) & own:
-        return f"needs {''.join(f'a {build.pretty(b).lower()} or ' for b in alone)}{n} of {', '.join(build.pretty(b).lower() for b in names)} ({len(has)}/{n})"
+    count = len(has) + sum(AGE_COUNT.get(b, 1) - 1 for b in set(owned(g)) if combat.STANDS_FOR.get(b, b) in names)
+    if count < n and not set(alone) & own:
+        return f"needs {''.join(f'a {build.pretty(b).lower()} or ' for b in alone)}{n} of {', '.join(build.pretty(b).lower() for b in names)} ({min(count, n)}/{n})"
 
 
 def age(g):

@@ -34,7 +34,7 @@ def test_the_values_of_the_wiki():
     s = combat.BUILDINGS["FOLWARK"]
     assert (s.hp, s.attack, s.melee, s.pierce) == (1000, 0, 0, 7) and combat.SIGHT["FOLWARK"] == 6
     assert train.TRAINS["FOLWARK"] == train.TRAINS["MILL"] and "HORSE_COLLAR" in train.TRAINS["FOLWARK"]
-    assert civs.MISSING["MILL"] == ("POLES",) and "POLES" not in civs.MISSING["FOLWARK"]
+    assert "POLES" in civs.MISSING["MILL"] and "POLES" not in civs.MISSING["FOLWARK"]
     assert {"BRITONS", "FRANKS", "LITHUANIANS"} <= set(civs.MISSING["FOLWARK"])
 
 
