@@ -2710,6 +2710,7 @@ def team_lines(objects, players):
 
 # AoE2 condition and effect IDs (AoE2ScenarioParser), one per line in alphabetical order (#2613)
 CHANGE_COLOR_MOOD = 72
+CHANGE_OBJECT_NAME = 26                                            # "Change Object Name" (#2616)
 CHANGE_OWNERSHIP = 18
 CHANGE_VARIABLE = 56                                               # the scenario variables (#2611)
 CHANGE_VIEW = 16                                                   # "Change View" (#2610)
@@ -2826,6 +2827,20 @@ def damage_lines(e, c):
     at = found[0]                                                      # Gaia: not the players (effect_units)
     stats["damage"] += 1
     return [f"execute as {at} run damage @s {q}"]                      # damage takes one entity
+
+
+def name_lines(e, c):
+    """The commands of "Change Object Name" (#2616): the new name (with no AoE2 color tags) on the CustomName text of
+    each unit of the effect (effect_units). The label of a unit is on its top entity (units.make_entity), and the
+    selector has no mounts: the rider gets the name. Only the text changes, so the player color stays."""
+    msg, stats = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip(), c.stats
+    found = effect_units(e, c.T) if msg else None
+    if found is None:
+        stats["change object name (not supported yet)" if msg else "change object name (no name)"] += 1
+        return []
+    stats["change object name"] += 1
+    return [f"execute as {found[0]} run data modify entity @s CustomName.text set value "   # one entity
+            f"{json.dumps(msg, ensure_ascii=False)}"]
 
 
 def owner_lines(e, c):
@@ -2990,6 +3005,7 @@ def instruction_lines(e, c):
 # alphabetical order, and its handler function (#2613): no change of trigger_files.
 EFFECTS = {
     CHANGE_COLOR_MOOD: mood_lines,
+    CHANGE_OBJECT_NAME: name_lines,
     CHANGE_OWNERSHIP: owner_lines,
     CHANGE_VARIABLE: variable_lines,
     CHANGE_VIEW: view_lines,

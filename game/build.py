@@ -701,10 +701,11 @@ def line(g, name, techs=None):
     return name
 
 
-def values(g, name, techs=None):
+def values(g, name, techs=None, rect=None):
     """The AoE2 values of building name of the player of g: those of its tower (line, #1374) with the building
     technologies (train.TECHS: Chemistry, Masonry, #1398). techs: the technologies (default: those of the player). A
-    technology sees the name of the tower of the values (Arrowslits: a keep +3, #1504)."""
+    technology sees the name of the tower of the values (Arrowslits: a keep +3, #1504). rect: the footprint of the
+    building, with the effect of its upgrade of one building (g.upgraded: the Defensive Town Center, #2497)."""
     import combat, train                                               # combat -> gather -> build: import it late
     techs = getattr(g, "techs", ()) if techs is None else techs
     name = line(g, name, techs)
@@ -714,6 +715,8 @@ def values(g, name, techs=None):
                 civs.handicap(g.data, g.player) if hasattr(g, "data") else 1)   # #2474
     for t in sorted(techs):
         s = train.TECHS[t](name, s)
+    if up := vars(g).get("upgraded", {}).get(rect):
+        s = train.TECHS[up](name, s)
     return s
 
 
@@ -725,16 +728,17 @@ def minimum(g, name, techs=None):
     return 0 if "MURDER_HOLES" in techs else combat.FORT_MIN_RANGE.get(name, 0)
 
 
-def retower(g, before):
+def retower(g, before, fresh=None):
     """The complete own buildings get their new values after a tower technology (#1374) or Masonry (#1398, values): the
-    target keeps its lost hit points, as a wall (upgrade). before: the technologies before the research. A destroyed
-    building stays air."""
+    target keeps its lost hit points, as a wall (upgrade). before: the technologies before the research. fresh: the
+    footprint of a building that has a new upgrade of one building (#2497), else None. A destroyed building stays air."""
     import combat, repair                                              # combat -> gather -> build: import it late
     rects = [(x0, x1, z0, z1, o["name"]) for o in g.data["objects"] if o["kind"] == "building" and o["player"] == g.player
              and "footprint" in o for x0, z0, x1, z1 in [o["footprint"]]] \
         + [(*s["footprint"], s["name"]) for s in g.sites if s.get("done") and s["player"] == g.player]
     for x0, x1, z0, z1, name in rects:
-        a, b, new = values(g, name, before), values(g, name), line(g, name)
+        rect = (x0, x1, z0, z1)
+        a, b, new = values(g, name, before, None if rect == fresh else rect), values(g, name, rect=rect), line(g, name)
         if (a, minimum(g, new, before)) == (b, minimum(g, new)) or (hp := repair.hp(g, (x0, x1, z0, z1))) is None or hp <= 0:
             continue
         uuid = combat.target_uuid([x0, z0, x1, z1])
