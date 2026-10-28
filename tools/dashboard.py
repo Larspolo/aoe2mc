@@ -26,7 +26,8 @@ from agent_config import CONFIG
 REPO = os.environ.get("GITHUB_REPOSITORY") or CONFIG["repo"]
 STATUS, PAUSED = CONFIG["status"]["label"], CONFIG["status"]["paused"]
 MUTED = "muted"                # the owner mutes a ticket: no agent works on it, and "Waiting for you" hides it
-SKIP = {"needs-human", "blocked", "epic", STATUS, "in-progress", MUTED}
+CLOSE = "close"                # the work is done, close.yml closes the ticket: no candidate (#2920)
+SKIP = {"needs-human", "blocked", "epic", STATUS, "in-progress", MUTED, CLOSE}
 PRIORITY = ["P0", "P1", "P2", "P3"]
 # Names in ticket text that do not count for the overlap: tools for checks, and LEARNINGS.md (merge=union: no conflicts).
 # A PR that changes them still counts (work() takes the files of the PRs as they are).
