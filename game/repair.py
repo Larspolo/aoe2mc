@@ -80,14 +80,14 @@ def buildings(g):
     return {r: n for r, (n, _) in owners(g).items()}
 
 
-def full(g, name, player):
+def full(g, name, player, rect=None):
     """The full hit points of building name of player: a wall or gate has those of its design in the age of its
     player (combat.wall, as build.target, #1360), a watch tower those of its tower technology (build.line, #1374), a
-    building those of Masonry (build.values, #1398)."""
+    building those of Masonry (build.values, #1398) and of its upgrade of one building at the footprint rect (#2497)."""
     import build, civs, combat                                     # build imports gather
     who = next((b.g for b in g.bots if b.g.player == player), g)   # an allied bot: its techs and age
     if name not in combat.WALLS:
-        return build.values(who, name).hp
+        return build.values(who, name, rect=rect).hp
     return combat.wall(build.design(who, name, player), build.ages(who), civs.civ(who, player),
                        civs.handicap(who.data, player)).hp
 
@@ -200,7 +200,7 @@ def order(g, player, cell):
     rect = next((r for r in homes if cell and r[0] <= cell[0] < r[1] and r[2] <= cell[1] < r[3]), None)
     who = sorted(g.selected & g.villagers.keys())
     men = sorted(u for u in g.selected if rect and combat.REPAIRS.get(g.soldiers.get(u)) == homes[rect][0])   # Serjeants
-    if rect is None or not (who or men) or not 0 < (hp(g, rect) or 0) < full(g, *homes[rect]):
+    if rect is None or not (who or men) or not 0 < (hp(g, rect) or 0) < full(g, *homes[rect], rect):
         return None
     x0, x1, z0, z1 = rect
     goals = g.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)})
@@ -289,7 +289,7 @@ def tick(g, dt):
             continue
         now = hp(g, rect) if rect in homes else None
         name, player = homes.get(rect, (None, None))
-        top = full(g, name, player) if rect in homes else 0
+        top = full(g, name, player, rect) if rect in homes else 0
         if not now or now >= top:                                  # fallen or full: the work ends
             stop(g, rect, vs)
             continue

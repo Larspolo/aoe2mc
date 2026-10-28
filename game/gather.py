@@ -1601,6 +1601,7 @@ class Gather:
         monk.relic_tick(self, self.tick * NORMAL)
         trade.tick(self)
         trade.heal(self, self.tick * NORMAL)
+        train.haste(self, self.tick * NORMAL)
         bossbar.tick(self)
         for site in self.sites:
             builders = [v for v in [*self.villagers.values(), *self.ships.values()] if v.state == "build" and v.site is site]
