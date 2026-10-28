@@ -15,7 +15,7 @@ def test_a_player_after_the_sides_is_a_spectator():
     for name in ("Alex", "Steve", "Bob", "Eve"):
         g.side(name)
     assert g.sides == {"Alex": 1, "Steve": 2} and g.spectators == {"Bob", "Eve"}
-    assert sent == ["team join p1 Alex", "team join p2 Steve", *run.SPECTATORS, "team join spec Bob",
+    assert sent == ["team join p1 Alex", "aoe hide Alex team", "team join p2 Steve", "aoe hide Steve team", *run.SPECTATORS, "team join spec Bob",
                     "gamemode spectator Bob", "aoe show Bob all", "team join spec Eve", "gamemode spectator Eve",
                     "aoe show Eve all"]
     assert not any("gamemode" in c for c in sent[:2])                  # the people keep the creative mode
@@ -37,7 +37,7 @@ def test_a_spectator_who_takes_a_free_side_plays_again():
     del g.sides["Steve"]                                               # Steve left its side
     sent.clear()
     assert g.choose("Bob", 2)
-    assert sent == ["team join p2 Bob", "gamemode creative Bob"] and "Bob" not in g.spectators
+    assert sent == ["team join p2 Bob", "aoe hide Bob team", "gamemode creative Bob"] and "Bob" not in g.spectators
     sent.clear()
     assert g.choose("Alex", 2) is False and not sent                   # a taken side
 

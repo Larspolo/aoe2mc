@@ -116,6 +116,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              player that joins later (#1302: the enemy units out of sight in the
  *                                              view of one replay player). With team=T in the selector: only a
  *                                              player of team T that joins later, and no spectator (#2921)
+ *   aoe hide <players> team                    each player sees the units of the hides of its own team (or of all
+ *                                              players) as hidden and all other units of the hides (a person who
+ *                                              joins a team or changes it, #3070)
  *   aoe hide <players> view <uuid> ...         the same for these players only (the view of a spectator, #2901):
  *                                              the minimap and a player that joins later do not change
  *   aoe stance <selector> <aggressive|defensive|stand_ground|no_attack>
@@ -2730,6 +2733,23 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             var who = players(sender, args[1]);
             String team = selectorTeam(args[1]);
             int n = 0;
+            if (hide && args[2].equals("team")) {                  // the hides of the own team only (#3070)
+                for (var u : hidden.keySet()) {
+                    Entity e = Bukkit.getEntity(u);
+                    if (e != null) {
+                        for (Player p : who) {
+                            if (hiddenFor(p, u)) {
+                                p.hideEntity(this, e);
+                            } else {
+                                p.showEntity(this, e);
+                            }
+                        }
+                        n++;
+                    }
+                }
+                sender.sendMessage("Hidden: " + n + " entities, " + who.size() + " players");
+                return true;
+            }
             if (!hide && args[2].equals("all")) {                  // a spectator sees through the fog of all teams (#2921)
                 for (var h : hidden.entrySet()) {
                     Entity e = Bukkit.getEntity(h.getKey());
