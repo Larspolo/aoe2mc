@@ -430,6 +430,8 @@ def read_scenario(path):
                                                if e.effect_type == CHANGE_VARIABLE else {}),
                                             **({"target": e.target_player}                # "Change Ownership" (#2570)
                                                if e.effect_type == CHANGE_OWNERSHIP else {}),
+                                            **({"target": e.target_player, "diplomacy": e.diplomacy}   # (#2645)
+                                               if e.effect_type == CHANGE_DIPLOMACY else {}),
                                             **({"target": e.target_player, "quantity": e.quantity,   # (#2576)
                                                 "resource": e.tribute_list} if e.effect_type == TRIBUTE else {}),
                                             **({"operation": e.operation, "quantity": e.quantity,
@@ -457,7 +459,8 @@ def read_scenario(path):
             garrisoned = u.garrisoned_in_id not in (None, -1)
             objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name, id=u.unit_const,
                                 player=player, x=u.x, y=u.y, rotation=float(u.rotation or 0), garrisoned=garrisoned,
-                                ref=u.reference_id, holder=u.garrisoned_in_id if garrisoned else None))
+                                ref=u.reference_id, holder=u.garrisoned_in_id if garrisoned else None,
+                                ref_tag=True))      # the tag aoe2mc.r<ref> for the triggers (#2617), not in a record
     return size, terrain, elevation, terrain_names, texts, objects, players
 
 
@@ -2761,6 +2764,8 @@ STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list
 OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
 DAMAGE_OBJECT = 24                                                     # "Damage Object" (#2571)
 DECLARE_VICTORY = 13                                                   # "Declare Victory" (#2542)
+CHANGE_DIPLOMACY = 1                                                   # "Change Diplomacy" (#2645)
+STANCES = (0, 1, 3)                                                    # DiplomacyState: ally, neutral, enemy
 TASK_OBJECT = 12                                                       # "Task Object" (#2646)
 TELEPORT_OBJECT = 35
 CHANGE_VARIABLE, VARIABLE_VALUE = 56, 22                               # the scenario variables (#2611)
@@ -2770,6 +2775,7 @@ RESEARCH_TECHNOLOGY = 2
 CHANGE_OBJECT_NAME = 26                                                # "Change Object Name" (#2616)
 CHANGE_VIEW = 16                                                       # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                                # "Clear Instructions" (#2609)
+PATROL, ATTACK_MOVE = 19, 30                                           # "Patrol", "Attack Move" (#2647)
 PLAY_SOUND = 4                                                         # "Play Sound" (#2644)
 SOUNDS = [(r["name"], r["sound"]) for r in units.rows("sounds.jsonl")]  # AoE2 sound name part -> vanilla sound
 
@@ -2959,10 +2965,15 @@ def task_lines(t, i, e, T, ground):
     if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
         return []
     k = f"{t['id']}_{i}"
-    return [f"tag {unit_selector(e, T)} add aoe_task{k}",
-            f"execute as @e[tag=aoe_task{k}] on vehicle run tag @s add aoe_task{k}",
-            f"execute as @e[tag=aoe_task{k}] on vehicle on passengers run tag @s remove aoe_task{k}",
-            f"data modify storage aoe2mc:tasks k{k} set value [{x + 0.5}d, {int(ground[x, z])}.0d, {z + 0.5}d]"]
+    return tag_lines(e, T, f"aoe_task{k}") + \
+        [f"data modify storage aoe2mc:tasks k{k} set value [{x + 0.5}d, {int(ground[x, z])}.0d, {z + 0.5}d]"]
+
+
+def tag_lines(e, T, tag):
+    """The commands that give the units of the player of an effect in its area the tag (task_lines, order_lines). A
+    rider gives its tag to its horse (units.MOUNT): the plugin walks the horse."""
+    return [f"tag {unit_selector(e, T)} add {tag}", f"execute as @e[tag={tag}] on vehicle run tag @s add {tag}",
+            f"execute as @e[tag={tag}] on vehicle on passengers run tag @s remove {tag}"]
 
 
 def unit_selector(e, T):
@@ -2991,6 +3002,23 @@ def freeze_lines(e, T):
     at = unit_selector(e, T)
     return [f"execute as {at} on vehicle run data merge entity @s {{NoAI:1b}}",
             f"execute as {at} run data merge entity @s {{NoAI:1b}}"]
+
+
+def order_lines(t, i, e, T, ground):
+    """The commands of "Patrol" and "Attack Move" (#2647), effect i of trigger t. Vanilla has no walk-to command: the
+    units of the player in the area get the tag aoe_order<trigger>_<i> (tag_lines: a rider gives it to its horse), and
+    the order goes into the list of the data storage aoe2mc:orders as one text "<order> <tag> x y z" (the block of the
+    tile on the ground; a patrol also the middle of the area, where it turns back). The scenario mode of the game program (game/scenario.py orders) empties
+    the list with RCON and walks the tagged units with the Paper plugin."""
+    if min(e.get("tile", [-1])) < 0 or min(e.get("area", [-1])) < 0:
+        return []
+    a = e["area"]
+    blocks = [(int((x + 0.5) * T), int((z + 0.5) * T)) for x, z in (e["tile"], ((a[0] + a[2]) / 2, (a[1] + a[3]) / 2))]
+    if not all(0 <= x < ground.shape[0] and 0 <= z < ground.shape[1] for x, z in blocks):
+        return []
+    tag, order = f"aoe_order{t['id']}_{i}", "patrol" if e["type"] == PATROL else "attack_move"
+    where = " ".join(f"{x} {int(ground[x, z])} {z}" for x, z in blocks[:1 + (e["type"] == PATROL)])
+    return tag_lines(e, T, tag) + [f'data modify storage aoe2mc:orders list append value "{order} {tag} {where}"']
 
 
 def view_lines(e, T, ground):
@@ -3064,15 +3092,18 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Teleport Object": teleport_lines (#2569).
     "Change Variable": variable_lines; a "Variable Value" condition runs in the tick function as an area (#2611).
     "Declare Victory" sets the score #p<player> of aoe_win to 1: the scenario mode of the game program ends the game.
+    "Change Diplomacy" sets the score #p<player>.p<target> of aoe_dip to the stance + 1 and #any of aoe_dip to 1: the
+    scenario mode changes the stance (#2645).
     "Freeze Object": freeze_lines (#2608).
     "Change Object Name": name_lines (#2616).
     "Research Technology": a score in aoe_tech for the game program (research_list, #2577).
     "Change View": view_lines (#2610).
     "Clear Instructions": title @a clear (#2609).
+    "Patrol" and "Attack Move": order_lines (#2647).
     "Play Sound": sound_lines (#2644).
     "Task Object": task_lines (#2646).
     A disabled trigger does not run."""
-    load, files, tick, win, money = [], {}, [], False, False
+    load, files, tick, win, dip, money = [], {}, [], False, False, False
     stats = Counter() if stats is None else stats
     ground = np.zeros((0, 0), np.int16) if ground is None else ground
     for t in triggers:
@@ -3115,6 +3146,14 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 stats["declare victory"] += 1
                 win = True
                 continue
+            if e["type"] == CHANGE_DIPLOMACY:                          # the scenario mode reads the score (#2645)
+                a, b = e["player"], e.get("target", -1)
+                if e.get("diplomacy") in STANCES and a > 0 and b > 0 and a != b:
+                    lines += [f"scoreboard players set #p{a}.p{b} aoe_dip {e['diplomacy'] + 1}",
+                              "scoreboard players set #any aoe_dip 1"]
+                    stats["change diplomacy"] += 1
+                    dip = True
+                continue
             if e["type"] == DISPLAY_TIMER:
                 more, timer = timer_lines(t, e)
                 lines += more
@@ -3135,6 +3174,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             if e["type"] == CHANGE_VIEW:
                 lines += view_lines(e, T, ground)
                 continue
+            if e["type"] in (PATROL, ATTACK_MOVE):
+                lines += order_lines(t, i, e, T, ground)
             if e["type"] == PLAY_SOUND:
                 lines += sound_lines(e, T, ground)
                 continue
@@ -3217,6 +3258,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
     if win:
         load.insert(0, "scoreboard objectives add aoe_win dummy")
+    if dip:
+        load.insert(0, "scoreboard objectives add aoe_dip dummy")
     if tick or any(k.endswith("_chance.mcfunction") for k in files):
         load.insert(0, "scoreboard objectives add aoe_trig dummy")
     if tick:
