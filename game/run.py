@@ -432,6 +432,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     data["all_techs"] = settings["all_techs"]                    # one data for all Gathers: the people and the bot (#2298)
     data["end_age"] = train.STARTS[settings["end_age"]]["ages"]  # the last age (build.locked, #2346)
     data["full_tech_tree"] = settings["full_tech_tree"]          # (#2354)
+    data["resources"] = settings["resources"]                    # the Regicide start resources of the level (#2388)
     if settings["resources"] in gather.RANDOM:                   # each Gather picks the same level (gather.level, #2489)
         print(f"Random starting resources: {gather.level(settings['resources'], data)}.", file=sys.stderr)
     game.forceload()
@@ -476,6 +477,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     if not state and scout.used(data):               # the scout of each civilization (#2391), not twice after a load
         for x in [g, *(s.g for s in g.bots)]:
             scout.swap(x)
+    import start_buildings
+    if not state and start_buildings.used(data):     # the Georgian mule cart (#2429), not twice after a load
+        for x in [g, *(s.g for s in g.bots)]:
+            start_buildings.place(x)
     for x in [g, *(s.g for s in g.bots)]:
         x.modes = frozenset(modes)                               # gather.has_mode: build.locked, Gather.run (#2490)
         if MODES[settings["mode"]].get("bots") or x is g:
