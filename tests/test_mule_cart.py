@@ -35,8 +35,8 @@ def setup(civ, objects=()):
 
 
 def done(objects=()):
-    """An Armenian villager builds a mule cart at blocks 4.. ."""
-    server, g = setup("ARMENIANS", objects)
+    """A Georgian villager builds a mule cart at blocks 4.. (the Armenian one costs 25 % less, #2309)."""
+    server, g = setup("GEORGIANS", objects)
     g.click("Steve")
     site, = g.sites
     assert site["name"] == "MULE_CART" and g.stock == {**g.stock, "food": 500 - 20, "wood": 500 - 80}
