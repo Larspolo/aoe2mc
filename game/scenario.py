@@ -5,6 +5,15 @@ settings. The converter writes them into aoe2mc.json "players" ("resources", "po
 them (a random map, a recorded game, an old scenario) keeps the lobby values.
 Each person also gets a written book with the scenario texts (aoe2mc.json "messages": objectives, hints,
 instructions ...), as the "Objectives" window of AoE2 DE, and the chat shows the instructions at the start (#2541).
+The trigger effect "Research Technology" (#2577) sets a score of the datapack; research() (in tick()) gives the
+technology.
+
+A scenario trigger with the effect "Declare Victory" ends the game (#2542): its datapack function sets the score
+#p<N> of aoe_win to 1 (aoe2mc.trigger_files), and victory() reads it with RCON once per conquest.EVERY seconds. Player N
+and its allies see "Victory", the others "Defeat" (cheats.over). Minecraft feature: a scoreboard, no own logic in the
+world.
+
+    scenario.victory(g)    # gather.Gather.run, in the scenario mode
 """
 import json
 import os
@@ -55,7 +64,9 @@ def unread(who):
 
 def tick(g):
     """Give each person who joined since the last check the book, and show the instructions in the chat: the people,
-    not the bots (bot.Bot), once each EVERY seconds. gather.Gather.run calls it in the scenario mode."""
+    not the bots (bot.Bot), once each EVERY seconds. gather.Gather.run calls it in the scenario mode. Also the
+    technologies of the triggers (research, #2577)."""
+    research(g)
     if g.clock() < vars(g).get("book_at", 0.0):
         return
     g.book_at = g.clock() + EVERY
@@ -82,8 +93,14 @@ def bot_seats(players, people):
 
 
 def setup(g, mode="scenario"):
-    """Put the scenario start values on the Gather of each player (the people and the bots) and show them."""
+    """Put the scenario start values on the Gather of each player (the people and the bots) and show them. The victory
+    setting of the scenario (aoe2mc.json "victory", #2566) replaces --victory: "custom" ends the game only by its
+    triggers (no conquest, wonder or relic win, #2567)."""
     sides = [g, *(s.g for s in g.bots)]
+    win = g.data.get("victory")
+    for x in sides if win else ():
+        x.victory = win["condition"]
+        x.victory_value = win.get("years", win.get("score", getattr(x, "victory_value", None)))
     rows = {x: g.players.get(str(x.player), {}) for x in sides}
     if not any("resources" in p or "pop_limit" in p for p in rows.values()):
         print("The world has no scenario start values: the game starts with the lobby settings.", file=sys.stderr)
@@ -95,3 +112,36 @@ def setup(g, mode="scenario"):
             x.command(f"scoreboard players set {r} {x.board} {x.stock[r.lower()]}")
         train.sidebar(x)
     return g
+
+
+def research(g):
+    """Once per game second: give each technology of a fired "Research Technology" effect (aoe2mc.json "research",
+    #2577) to its player at no cost, as the start age technologies (train.research), and reset its score. A loop
+    trigger sets it again. A technology that the game program does not know: one line, then no more checks."""
+    if g.clock() < vars(g).get("scenario_at", 0.0):
+        return
+    g.scenario_at = g.clock() + 1.0
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    skip = vars(g).setdefault("research_skip", set())
+    for r in g.data.get("research", ()):
+        if r["score"] in skip or not re.search(r" has [1-9]", g.command(f"scoreboard players get {r['score']} aoe_tech")):
+            continue
+        g.command(f"scoreboard players set {r['score']} aoe_tech 0")
+        if r["technology"] not in train.TECHS or r["player"] not in sides:
+            skip.add(r["score"])
+            print(f"Research Technology: the game program has no {r['technology']} for player {r['player']}.",
+                  file=sys.stderr)
+            continue
+        train.research(sides[r["player"]], {"name": r["technology"], "player": "@a"}, start=True)
+
+
+def victory(g):
+    """End the game when a trigger declared the victory of a player (the score #p<N> of aoe_win is 1)."""
+    import cheats, conquest                                            # they import gather: import them late
+    if g.ended or g.clock() < vars(g).get("win_at", 0.0):
+        return
+    g.win_at = g.clock() + conquest.EVERY
+    for n in sorted(int(p) for p in g.players if int(p)):
+        got = re.search(r" has (-?\d+) ", g.command(f"scoreboard players get #p{n} aoe_win") or "")
+        if got and int(got[1]) > 0:
+            return cheats.over(g, lambda m: gather.allied(g.players, n, m))   # allies win together

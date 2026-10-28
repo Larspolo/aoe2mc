@@ -509,6 +509,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     if game.kind == "paper":                         # the view square of each player on map 0 (#1762)
         import replay
         game.command("aoe minimap on")               # the dots of the units, as in the live replay (#2581)
+        import build
+        for c in build.minimap(g):                   # the squares of the buildings (#2582)
+            game.command(c)
         game.command(f"aoe minimap frame {replay.FRAME * data['tile_size']}")
     print(f"Join the server localhost:{game.game_port} (Minecraft {game.version}, multiplayer, direct connection).\n"
           f"{len(g.villagers)} villagers of player 1. Hold the carrot on a stick: right click a villager to select it,\n"

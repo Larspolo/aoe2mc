@@ -26,8 +26,8 @@ FIELDS = ("stock", "spare", "seconds", "repeats", "pop")              # dicts an
 PACKED = ("queues", "trained", "sites", "rally",                       # with tuples (a building rect, a cell): pack()
           "sieged",                                                    # the targets of attack orders: Gather.fall (#2537)
           "soldiers", "units")                                         # the units of the game, trained or upgraded (#2532)
-OPTIONAL = ("limit_left", "policy", "rates", "relic_timer", "switches", "wonder_shown", "wonders",   # only on a Gather that
-            "wonders_gone")                                            # has them (#2324; the policy: #2515)
+OPTIONAL = ("limit_left", "policy", "rates", "relic_timer", "switches", "upgraded", "wonder_shown", "wonders",   # only on a
+            "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
@@ -43,6 +43,7 @@ COUNTERS = (                                                           # the par
     "cart_heal",                                                       # trade.py
     "garrison_heal",                                                   # garrison.py
     "herd_food",
+    "military_time",                                                   # regen.py
     "regen_time",
     "repair_hp",                                                       # repair.py
     "repair_owed",
@@ -145,7 +146,10 @@ NOT_SAVED = (                                                          # the fie
     "fog",                                                             # fog.py: the next tick hides the units again
     "ghosts",                                                          # build.py: the shown building to place
     "goto_idle",                                                       # goto.py: the next idle unit to show
+    "haste_time",                                                      # train.haste: a tick timer
+    "hasted",                                                          # train.haste: a load sends the values again
     "home",                                                            # bot.py: the town center of a bot
+    "hurried",                                                         # regen.military: again in its next pass
     "kings",                                                           # regicide.setup makes it again
     "limit_at",                                                        # time_limit.py: the next check time
     "limit_shown",                                                     # time_limit.py: the shown text
@@ -155,7 +159,9 @@ NOT_SAVED = (                                                          # the fie
     "regicide_at",                                                     # regicide.py: the next check time
     "repair_at",                                                       # repair.py: the next check time
     "repairs",                                                         # orders(): the repair of each villager
+    "research_skip",                                                   # scenario.py: the unknown technologies, found again
     "rows",                                                            # build.py: the shown building to place
+    "scenario_at",                                                     # scenario.py: the next check time
     "score_at",                                                        # score.py: the next check time
     "shapes",                                                          # build.py: the shown building to place
     "share",                                                           # bot.py: the techs of the human player
@@ -165,6 +171,7 @@ NOT_SAVED = (                                                          # the fie
     "victory_value",                                                   # run.py: from the saved settings
     "wall_start",                                                      # build.py: the first corner of a wall
     "who",                                                             # the player name on the server
+    "win_at",                                                          # scenario.py: the next check time
     "wonder",                                                          # defend_wonder.setup makes it again
     "wonder_at",                                                       # wonder.py: the next check time
 )
