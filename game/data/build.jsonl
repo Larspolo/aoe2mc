@@ -37,6 +37,7 @@
 {"name": "IBIRAPEMA_WARRIOR", "age": 2}
 {"name": "BOMBARD_CANNON", "age": 3, "needs": "CHEMISTRY"}
 {"name": "CAMEL_RIDER", "age": 2}
+{"name": "CAMEL_SCOUT", "age": 1}
 {"name": "CANNON_GALLEON", "age": 3, "needs": "CHEMISTRY"}
 {"name": "CAPPED_RAM", "age": 3}
 {"name": "CARAVEL", "age": 2}
@@ -78,6 +79,7 @@
 {"name": "GALLEON", "age": 3}
 {"name": "GALLEY", "age": 1}
 {"name": "GENITOUR", "age": 2}
+{"name": "GRENADIER", "age": 2}
 {"name": "HALBERDIER", "age": 3}
 {"name": "HAND_CANNONEER", "age": 3, "needs": "CHEMISTRY"}
 {"name": "HEAVY_CAMEL_RIDER", "age": 3}
