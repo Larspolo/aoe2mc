@@ -15,6 +15,8 @@ A sink costs its tokens (about 4 characters each) written once to the cache, the
 Sink `base`: the system prompt, the tools, CLAUDE.md and LEARNINGS, which each call reads again; `repo` is the part
 in the repository (CLAUDE.md and its `@` files), the rest only the environment settings change (connectors, tools). Sink `output`: text,
 thinking and tool input. The rest of the eq (not in the sinks): owner messages, hook text and the carried output.
+Field `cost`: the API list price of the calls in $, by the model of each call (`PRICES`). The eq weighs a cache read
+0.1, but Opus 5.5 pays 0.05 and Haiku 5.5 pays 5 times more above 100k prompt tokens: compare lanes by the cost.
 Field `verify` (#1704): the wall minutes and the count of the check commands (`pytest`, `ruff`, `mc_check.py`, `mc_shot.py`,
 `render.py`, and `wait`: a loop that waits for the output of a background check), from the time of a tool call to the
 time of its result. A background command has its minutes in the wait loop or the notification, not in its own call.
@@ -32,6 +34,16 @@ from datetime import datetime
 W_IN, W_5M, W_1H, W_READ, W_OUT = 1.0, 1.25, 2.0, 0.1, 5.0
 CHARS = 4                    # characters per token (an estimate: the transcript has no token count of a result)
 IMAGE = 1600                 # tokens of an image in a tool result (an estimate)
+# API list prices in $ per million tokens (input, output, cache read; a cache write is the input price × W_5M or W_1H),
+# 2026-10. A second row is the price of a prompt above LONG tokens.
+PRICES = {
+    "claude-fable-5-1": ((10.0, 50.0, 0.25),),
+    "claude-haiku-5-5": ((0.10, 0.50, 0.01), (0.50, 2.50, 0.05)),
+    "claude-opus-5": ((5.0, 25.0, 0.50),),
+    "claude-opus-5-5": ((4.0, 20.0, 0.20),),
+    "claude-sonnet-5-5": ((2.0, 10.0, 0.20),),
+}
+LONG = 100_000
 
 
 def eq(u):
@@ -41,6 +53,20 @@ def eq(u):
     m5 = cc.get("ephemeral_5m_input_tokens", (u.get("cache_creation_input_tokens") or 0) - h1)
     return (W_IN * (u.get("input_tokens") or 0) + W_5M * m5 + W_1H * h1 + W_READ * (u.get("cache_read_input_tokens") or 0)
             + W_OUT * (u.get("output_tokens") or 0))
+
+
+def usd(u, model):
+    """The API list price in $ of one `usage` record of `model`, or None for a model without a price."""
+    rows = PRICES.get((model or "").split("[")[0])
+    if not rows:
+        return None
+    cc = u.get("cache_creation") or {}
+    write = u.get("cache_creation_input_tokens") or 0
+    h1 = cc.get("ephemeral_1h_input_tokens", 0)
+    m5 = cc.get("ephemeral_5m_input_tokens", write - h1)
+    read, fresh = u.get("cache_read_input_tokens") or 0, u.get("input_tokens") or 0
+    p_in, p_out, p_read = rows[-1] if fresh + write + read > LONG else rows[0]
+    return (p_in * (fresh + W_5M * m5 + W_1H * h1) + p_read * read + p_out * (u.get("output_tokens") or 0)) / 1e6
 
 
 def label(name, inp):
@@ -133,7 +159,7 @@ def analyse(records):
     """Totals and sinks of one chain of transcript records (in file order).
     Returns {"eq", "calls", "in", "write", "read", "out", "peak", "base", "sinks": {label: eq}}."""
     seen, calls, uses = set(), [], {}
-    t = dict.fromkeys(("eq", "in", "write", "read", "out", "peak", "base"), 0.0)
+    t = dict.fromkeys(("eq", "in", "write", "read", "out", "peak", "base", "usd", "unpriced"), 0.0)
     results = []                                    # (label, tokens, index of the next call)
     for r in records:
         msg = r.get("message") or {}
@@ -146,6 +172,9 @@ def analyse(records):
                 seen.add(msg.get("id"))
                 calls.append(u)
                 t["eq"] += eq(u)
+                d = usd(u, msg.get("model"))
+                t["usd"] += d or 0
+                t["unpriced"] += d is None
                 t["in"] += u.get("input_tokens") or 0
                 t["write"] += u.get("cache_creation_input_tokens") or 0
                 t["read"] += u.get("cache_read_input_tokens") or 0
@@ -201,7 +230,9 @@ def line(t, k=5, repo=None, checks=None):
     top = sorted(g.items(), key=lambda kv: -kv[1])[:k]
     m = lambda x: f"{x / 1e6:.2f}M"
     return (f"Tokens: {m(t['eq'])} eq · calls {t['calls']} · write {m(t['write'])} · read {m(t['read'])} · "
-            f"out {m(t['out'])} · peak {t['peak'] / 1e3:.0f}k · base {t['base'] / 1e3:.0f}k"
+            f"out {m(t['out'])} · cost ${t.get('usd', 0):.2f}"
+            + (f" (+{t['unpriced']:.0f} calls without a price)" if t.get("unpriced") else "")
+            + f" · peak {t['peak'] / 1e3:.0f}k · base {t['base'] / 1e3:.0f}k"
             + ("" if repo is None else f" (repo {repo / 1e3:.0f}k)")
             + ("" if checks is None else " · " + verify_field(checks)) + " · sinks "
             + ", ".join(f"{s} {x / t['eq']:.0%}" for s, x in top))

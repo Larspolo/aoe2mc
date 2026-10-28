@@ -298,6 +298,21 @@ def token_sinks(lines, k=6):
 VERIFY = re.compile(r"^Tokens: .*? · verify (.*?) · sinks ", re.M)
 
 
+COST = re.compile(r"^Tokens: .*? · cost \$(\d+(?:\.\d+)?)", re.M)
+
+
+def run_costs(comments):
+    """{lane: [$ of each run]} of the `cost` fields of the `Tokens:` lines (tools/tokens.py). The lane of a run is the
+    `· lane NAME` of its `Metrics:` lines, else "opus" (as in `lanes`)."""
+    out = {}
+    for c in comments:
+        body = c.get("body") or ""
+        for cost in COST.findall(body):
+            lane = re.search(r"^Metrics: .*?· lane (\w+)", body, re.M)
+            out.setdefault(lane[1] if lane else "opus", []).append(float(cost))
+    return out
+
+
 def verify_minutes(comments):
     """{check kind: (minutes, count)} summed over the `verify` fields of the `Tokens:` lines (tools/tokens.py, #1704)."""
     out = {}
@@ -571,8 +586,13 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
     vm = sorted(verify_minutes(status_comments).items(), key=lambda kv: -kv[1][0])
     out.append("Verify commands (min, count, of the Tokens lines with a verify field): "
                + ("; ".join(f"{k} {fmt(m)} ({n}x)" for k, (m, n) in vm) or "-"))
+    costs = run_costs(status_comments)
+    spent = sum(map(sum, costs.values()))
+    out.append(f"API list price of the runs (the `cost` of {sum(map(len, costs.values()))} Tokens lines): ${spent:.0f}"
+               + (f" · per merged PR ${spent / len(ok):.2f}" if spent and ok else ""))
     for name, (n, pr, mins, eq) in sorted(lanes(status_comments).items()):
-        out.append(f"Lane {name}: {n} runs, {pr} PRs, median {fmt(med(mins))} min, median {fmt(med(eq))}M eq")
+        out.append(f"Lane {name}: {n} runs, {pr} PRs, median {fmt(med(mins))} min, median {fmt(med(eq))}M eq"
+                   + (f", median ${med(costs[name]):.2f} per run" if costs.get(name) else ""))
     weights, source, errors, pairs = lane_fit(status_comments)
     out.append(f"Lane weights (a lane run in Opus runs, #1727; {pairs} pairs, ± standard error, #2852): " + ", ".join(
         f"{k} {w:.2f}{f' ± {errors[k]:.2f}' if k in errors else ''} ({source[k]})" for k, w in weights.items()))
