@@ -2588,11 +2588,17 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     Mob c = carrier(cart, false);
                     if (c != null) {
                         Bukkit.getMobGoals().removeGoal(c, rangeKey);
+                        if (c.hasAI()) {
+                            unit(c);                             // a carrier in a fight keeps shooting (#3011)
+                        }
                     }
                     n++;
                 } else if (e instanceof Mob mob && (mob instanceof RangedEntity || r.siege)) {
                     ranges.put(mob.getUniqueId(), r);
-                    Bukkit.getMobGoals().removeGoal(mob, rangeKey);    // the next order adds it with the new range
+                    Bukkit.getMobGoals().removeGoal(mob, rangeKey);
+                    if (mob.hasAI()) {        // the goal again with the new range: a unit in a fight keeps shooting (#3011)
+                        unit(mob);
+                    }                         // no AI: the next order adds it
                     n++;
                 }
             }
