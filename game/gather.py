@@ -267,11 +267,16 @@ class Map:
         self.blocked |= cells - {tuple(c) for c in open_cells}
         if own and "FISH_TRAP" in name and tile:                       # the food of the fishing ships (#1438)
             self.fish[tile], self.traps[tile] = TRAP_FOOD, cells
-        for r, names in [*DROP_SITES.items(), ("meat", MEAT_SITES)]:
-            if own and any(k in name for k in names):
-                self.drops[r].append(cells)
+        if own:
+            self.drop_site(name, cells)
         if own and "DOCK" in name:                                     # the drop site of the fishing ships (#1384)
             self.docks.append(cells)
+
+    def drop_site(self, name, cells):
+        """Add the cells of an own drop site to the drops of each resource that building name takes."""
+        for r, names in [*DROP_SITES.items(), ("meat", MEAT_SITES)]:
+            if any(k in name for k in names):
+                self.drops[r].append(cells)
 
     def cells(self, tile):
         T = self.T
@@ -509,6 +514,7 @@ class Gather:
     peers = ()                                                         # the Gathers of the other people (fog.py, #1631)
     reveal = "normal"                                                  # AoE2 "Reveal map"; "all": no fog (fog.py, #1389)
     speed = 1.0                                                        # times the Normal speed: shorter real steps (#2057)
+    later = {}                                                         # the bonus of the first town center (civs.TOWN_CENTER)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
                  cheats=False, start=None, resources="standard", pop_limit=None):
@@ -526,7 +532,10 @@ class Gather:
             kinds = {o["kind"] for o in data["objects"] if o.get("player") == player}
             nomad = "unit" in kinds and "building" not in kinds
             base = LEVELS[resources]
-            start = civs.start(self, {r: v + NOMAD.get(r, 0) * nomad for r, v in base.items()})   # #1269
+            tc = civs.TOWN_CENTER.get(civs.civ(self), {})              # Tupi: with the first town center (#2293)
+            self.later = dict(tc) if nomad else {}
+            start = civs.start(self, {r: v + NOMAD.get(r, 0) * nomad + tc.get(r, 0) * (not nomad)
+                                      for r, v in base.items()})       # #1269
         self.stock = {**dict.fromkeys(DROP_SITES, 0), **start}             # at the drop sites (#973)
         self.spare = {}                                                # the fractions of the drop-off bonus (#2111)
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
@@ -628,6 +637,7 @@ class Gather:
             train.lore(self)                                           # the help lines of the menus (#1160)
             self.command(allies_command(self.data.get("players", {})))   # allies do not shoot each other (#1315)
             self.command(neutral_command(self.data.get("players", {})))  # no automatic attack on neutrals (#1645)
+        self.forage()
         cheats.setup(self)
         bossbar.setup(self)
         for o in self.units:                                           # the entities must be loaded (forceload)
@@ -637,6 +647,43 @@ class Gather:
         train.census(self)                                             # the population and the limit (#613)
         self.idle()
         return self
+
+    def forage(self):
+        """The start forage bushes of the civilization (civs.BUSHES, Gurjaras: 2 of 175 food, #2293) on the free tiles
+        next to the own town center of the map, the south side first: AoE2 puts them under the town center, where here
+        the villagers walk through. The blocks of a converted bush: berries around, leaves in the middle, dirt below."""
+        count, food = civs.BUSHES.get(civs.civ(self), (0, 0))
+        tc = next((o for o in self.data["objects"] if o["kind"] == "building" and o["name"] == "TOWN_CENTER"
+                   and o["player"] == self.player), None)
+        if not count or tc is None:
+            return
+        m, T = self.map, self.map.T
+        x0, z0, x1, z1 = tc["footprint"]
+        tx0, tz0, tx1, tz1 = x0 // T, z0 // T, (x1 - 1) // T, (z1 - 1) // T
+        units = {(int(o["tile"][0]), int(o["tile"][1])) for o in self.data["objects"] if o["kind"] == "unit" and "tile" in o}
+        ring = [(x, z) for x in range(tx0 - 1, tx1 + 2) for z in range(tz0 - 1, tz1 + 2)
+                if not (tx0 <= x <= tx1 and tz0 <= z <= tz1) and (x, z) not in units
+                and all(m.free(*c) for c in m.cells((x, z)))]
+        ring.sort(key=lambda t: (abs(t[0] - (tx0 + tx1) / 2) + abs(t[1] - (tz0 + tz1) / 2), -t[1], t[0]))
+        for tile in ring[:count]:
+            m.bushes[tile] = food
+            m.blocked |= m.cells(tile)
+            bx, bz = tile[0] * T, tile[1] * T
+            for x, z in sorted(m.cells(tile)):
+                y = m.y(x, z)
+                self.command(f"setblock {x} {y - 1} {z} minecraft:grass_block")
+                if x in (bx, bx + T - 1) or z in (bz, bz + T - 1):
+                    self.command(f"setblock {x} {y} {z} minecraft:sweet_berry_bush[age=3]")
+                else:
+                    self.command(f"fill {x} {y} {z} {x} {y + 1} {z} minecraft:oak_leaves[persistent=true]")
+
+    def town_center(self):
+        """The first own town center is complete (build.rise): the bonus of a Nomad start comes now (civs.TOWN_CENTER,
+        Tupi +25 of each resource, #2293)."""
+        for r, n in sorted(self.later.items()):
+            self.stock[r] += n
+            self.command(f"scoreboard players add {r.capitalize()} {self.board} {n}")
+        self.later = {}
 
     def idle(self):
         """Show the number of idle villagers in the sidebar, as the idle villager button of AoE2 (#744), only when it
@@ -888,6 +935,12 @@ class Gather:
         """The cells where a villager works a resource: on a farm, else next to it."""
         spot = self.map.spot(tile)
         return {c for c in spot if self.map.free(*c)} if tile in self.map.farms else self.map.around(spot)
+
+    def drop_goals(self, v):
+        """The cells next to the drop sites of the load of a villager (a carcass: also the mule cart, #2194)."""
+        build.moved_carts(self)                                        # a mule cart can be at a new place (#2209)
+        meat = self.map.drops["meat"] if v.res == "food" and v.tree in self.map.carcasses else []
+        return set().union(*map(self.map.around, self.map.drops[v.res] + meat))
 
     def source(self, v):
         """The resources left in the tree, bush, mine or farm of a villager: {tile: amount} of its kind."""
@@ -1405,8 +1458,7 @@ class Gather:
                     else:
                         self.trunk(v.tree)
                 if v.load >= most or src.get(v.tree, 0) <= 0:
-                    meat = self.map.drops["meat"] if v.res == "food" and v.tree in self.map.carcasses else []
-                    self.go(v, "to_drop", set().union(*map(self.map.around, self.map.drops[v.res] + meat)))
+                    self.go(v, "to_drop", self.drop_goals(v))
         train.tick(self, self.tick * NORMAL)
         monk.heal(self, self.tick * NORMAL)
         monk.convert(self, self.tick * NORMAL)

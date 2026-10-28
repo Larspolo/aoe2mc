@@ -64,6 +64,7 @@ RULES = {
     "spearmen, skirmishers": lambda n, s: "spearman" in s.classes or tagged(n, "skirmishers"),
     "units": lambda n, s: True,
     "villagers": lambda n, s: n.startswith("VILLAGER"),
+    "warships": lambda n, s: "ship" in s.classes and not tagged(n, "fishing ships"),   # not the transport and trade ships
 }
 TAGS = {r["name"]: tuple(r["groups"]) for r in table.load("units.jsonl") if "groups" in r}
 GROUPS = {g: (lambda f, g: lambda n, s: g in TAGS.get(n, ()) or f(n, s))(RULES.get(g, lambda n, s: False), g)
@@ -74,8 +75,8 @@ GROUPS = {g: (lambda f, g: lambda n, s: g in TAGS.get(n, ()) or f(n, s))(RULES.g
 # have (the availability chart of each civilization, #1373): the menu does not show them (train.unlocked). The items
 # that few civilizations have are in ONLY, not here.
 # "units": the bonuses of the land units (#1090): [group of GROUPS, value, change in the Dark, Feudal, Castle and
-# Imperial Age]; value is a field of combat.Stats or "speed" (the walk speed); an int adds, a float multiplies ("fire
-# 25 % faster" is the reload / 1.25). "costs": the cost bonuses (#1091): [what, resource or null (all), change in each
+# Imperial Age]; value is a field of combat.Stats, "speed" (the walk speed) or "bonus:CLASS" (the attack against a
+# class of combat.Stats.classes, #2249); an int adds, a float multiplies ("fire 25 % faster" is the reload / 1.25). "costs": the cost bonuses (#1091): [what, resource or null (all), change in each
 # age]; what is a group of GROUPS (units), "buildings", "buildings but farms", "technologies", "ages", "BUILDING
 # technologies" (the technologies of the menu of that building, #1925) or a list of names; a float multiplies the cost
 # (0.0: free), an int adds to it; AoE2 rounds half up (35 × 0.75 = 26). "twice": the technologies whose effect it gets
@@ -104,6 +105,7 @@ SMITH_UNITS = {r["name"]: [tuples(b) for b in r["smith_units"]] for r in ROWS if
 ONLY = {r["name"]: set(r["civs"]) for f in ("train.jsonl", "build.jsonl") for r in table.load(f) if "civs" in r}
 MISSING = {t: tuple(sorted(r["name"] for r in ROWS if t in r["missing"] or r["name"] not in ONLY.get(t, (r["name"],))))
            for t in sorted({t for r in ROWS for t in r["missing"]} | set(ONLY))}
+GENERIC = frozenset(t for r in ROWS for t in r["missing"])   # the AoE2 setting "All Techs" gives them to all (#2298)
 ELEPHANTS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["BATTLE_ELEPHANT"])   # the battle elephant (#1556)
 EAGLES = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["EAGLE_SCOUT"])   # the eagle line (#1555)
 LANCERS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["STEPPE_LANCER"])   # the steppe lancers (#1557)
@@ -122,10 +124,14 @@ ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # th
 # center (a Nomad start gets it later); here it is in the start stock. The extra villagers of the Chinese (+3) and
 # Mayans (+1) are units of the map, not of the stock. Lithuanians: +100 food for each town center, here only for the
 # first one.
+# "town_center": the resources that the first town center gives (Tupi +25 of each, #2293): in the start stock when the
+# player has a town center at the start, else when its first town center is complete (build.rise).
+# "bushes": [count, food] of the forage bushes next to the town center at the start (Gurjaras: 2 of 175, #2293).
 # "shared": the shared unique units of its team bonus: an ally of the civilization has them too ("Team bonus", #1619).
 # "not_shared": the shared items that it does not get from an ally (Turks: no Elite Skirmisher).
 # "build", "build_wonder": the build speed of the builders (Spanish: 20 % for wonders). "build_of": the build speed of
-# some buildings, {building: factor} (Sicilian fortifications and town centers, #2115). "repair": the repair rate.
+# some buildings, {building: factor} (Sicilian fortifications and town centers, #2115). "built_food": the food that
+# a complete building gives, {building: food} (Saxons, Wu, #2114). "repair": the repair rate.
 # "repair_cost": the team bonus of the repair cost of buildings (Georgians). "repair_team": the team bonus of the
 # repair rate (Saxons). "work_rate": the train and research rate of a building in each age (Persians). "train_rate":
 # [group of GROUPS, factor, also the upgrades] (#1927). "hp": the hit points factor of a building (Persians).
@@ -134,6 +140,8 @@ ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # th
 WORK = {r["name"]: r["work"] for r in ROWS if "work" in r}
 LAST = {r["name"]: r["last"] for r in ROWS if "last" in r}   # resources last longer: a gathered unit takes 1 / factor (#2112)
 START = {r["name"]: r["start"] for r in ROWS if "start" in r}
+TOWN_CENTER = {r["name"]: r["town_center"] for r in ROWS if "town_center" in r}
+BUSHES = {r["name"]: r["bushes"] for r in ROWS if "bushes" in r}
 DROP = {r["name"]: r["drop"] for r in ROWS if "drop" in r}
 SHARED = dict(sorted((n, r["name"]) for r in ROWS for n in r.get("shared", ())))
 NOT_SHARED = {n: tuple(sorted(r["name"] for r in ROWS if n in r.get("not_shared", ())))
@@ -141,6 +149,7 @@ NOT_SHARED = {n: tuple(sorted(r["name"] for r in ROWS if n in r.get("not_shared"
 BUILD = {r["name"]: r["build"] for r in ROWS if "build" in r}
 BUILD_WONDER = {r["name"]: r["build_wonder"] for r in ROWS if "build_wonder" in r}
 BUILD_OF = {r["name"]: r["build_of"] for r in ROWS if "build_of" in r}
+BUILT_FOOD = {r["name"]: r["built_food"] for r in ROWS if "built_food" in r}
 REPAIR = {r["name"]: r["repair"] for r in ROWS if "repair" in r}
 REPAIR_COST = {r["name"]: r["repair_cost"] for r in ROWS if "repair_cost" in r}
 REPAIR_TEAM = {r["name"]: r["repair_team"] for r in ROWS if "repair_team" in r}
@@ -235,7 +244,9 @@ def units(g, name, s):
     """The combat.Stats s of unit name with the bonuses of the civilization of the player of g (UNITS), the walk speed
     aside (speed)."""
     for v, c in changes(g, name, s):
-        if v != "speed":
+        if v.startswith("bonus:") and c:                           # the attack against a class (#2249)
+            s = s._replace(bonus={**s.bonus, v[6:]: s.bonus.get(v[6:], 0) + c})
+        elif v != "speed" and not v.startswith("bonus:"):
             old = getattr(s, v)
             s = s._replace(**{v: round(old * c, 3 if v == "reload" else None) if isinstance(c, float) else old + c})
     return s
@@ -282,10 +293,11 @@ def speed(g, name):
 
 def missing(g, name):
     """True when the civilization of the player of g does not have unit or technology name (MISSING), also not as the
-    shared unit of an allied player (SHARED, gather.allied)."""
+    shared unit of an allied player (SHARED, gather.allied). The AoE2 setting "All Techs" (aoe2mc.json "all_techs",
+    run.py --all-techs, #2298) gives each civilization the GENERIC items; the unique items stay with their civilization."""
     import gather                                                  # gather imports this module
     c = civ(g)
-    if c not in MISSING.get(name, ()):
+    if c not in MISSING.get(name, ()) or g.data.get("all_techs") and name in GENERIC:
         return False
     players = g.data.get("players", {})
     return name not in SHARED or c in NOT_SHARED.get(name, ()) or not any(
@@ -322,6 +334,11 @@ def build_rate(g, name):
     BUILD_WONDER, BUILD_OF), else 1."""
     c = civ(g)
     return BUILD_OF.get(c, {}).get(name) or (BUILD_WONDER.get(c, BUILD.get(c, 1)) if name == "WONDER" else BUILD.get(c, 1))
+
+
+def built_food(g, name):
+    """The food that a complete building name of the player of g gives (BUILT_FOOD), else 0."""
+    return BUILT_FOOD.get(civ(g), {}).get(name, 0)
 
 
 def church_rate(g, pos):
