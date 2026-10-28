@@ -3931,14 +3931,29 @@ def skin_texture(model, tone):
     return im
 
 
+def stored_png(im):
+    """The PNG bytes of the RGBA image im with stored (not compressed) deflate blocks: the zlib of Pillow gives other
+    bytes on each system, and the release pack must have the bytes of the world pack of each system (#2741)."""
+    w, h = im.size
+    rgba = im.convert("RGBA").tobytes()
+    raw = b"".join(b"\0" + rgba[y * w * 4:(y + 1) * w * 4] for y in range(h))   # filter 0 on each row
+    blocks = [raw[i:i + 65535] for i in range(0, len(raw), 65535)] or [b""]
+    data = b"\x78\x01" + b"".join(bytes([k == len(blocks) - 1]) + len(b).to_bytes(2, "little") +
+                                  (len(b) ^ 0xFFFF).to_bytes(2, "little") + b for k, b in enumerate(blocks))
+    data += zlib.adler32(raw).to_bytes(4, "big")
+
+    def chunk(kind, body):
+        return len(body).to_bytes(4, "big") + kind + body + zlib.crc32(kind + body).to_bytes(4, "big")
+    return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", w.to_bytes(4, "big") + h.to_bytes(4, "big") + bytes([8, 6, 0, 0, 0])) \
+        + chunk(b"IDAT", data) + chunk(b"IEND", b"")
+
+
 def write_resourcepack(out):
     """--resource-pack (#2738): resourcepacks/resources.zip in the world folder, which single player loads with the
     world (26.x: LevelResource.MAP_RESOURCE_FILE; a world of an older version had resources.zip at its top, and the
     client moves it there, ResourcePackLocationFileFix). The zombie units get a human face, the War Wagon its cart
-    (cart_model, #2746). Same bytes for each conversion: sorted names, a fixed time, and no deflate of the zip (the zlib
-    of each Python gives other bytes, and the release pack of #2741 must have the bytes of a world pack of each system;
-    the PNG files are compressed already)."""
-    import io
+    (cart_model, #2746). Same bytes for each conversion and on each system (the release pack of #2741): sorted names, a
+    fixed time, no deflate (the zlib of each Python and Pillow gives other bytes: stored_png). About 60 kB."""
     import zipfile
     files = {"pack.mcmeta": json.dumps({"pack": {
         "description": "aoe2mc: units with a human face", "pack_format": MC["resource_format"],
@@ -3949,9 +3964,7 @@ def write_resourcepack(out):
         "fallback": VANILLA_CHEST}}, indent=1).encode()
     files["assets/aoe2mc/models/item/war_wagon.json"] = json.dumps(cart_model(), indent=1).encode()
     for path, (model, tone) in SKINS.items():
-        buf = io.BytesIO()
-        skin_texture(model, tone).save(buf, "PNG")
-        files["assets/minecraft/textures/" + path] = buf.getvalue()
+        files["assets/minecraft/textures/" + path] = stored_png(skin_texture(model, tone))
     os.makedirs(os.path.join(out, "resourcepacks"), exist_ok=True)
     with zipfile.ZipFile(os.path.join(out, "resourcepacks", "resources.zip"), "w", zipfile.ZIP_STORED) as z:
         for name in sorted(files):

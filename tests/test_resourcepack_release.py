@@ -65,3 +65,15 @@ def test_the_release_pack_has_the_bytes_of_the_world_pack(tmp_path):
     assert (tmp_path / "dist" / "aoe2mc-resourcepack.zip").read_bytes() == \
         (tmp_path / "w" / "resourcepacks" / "resources.zip").read_bytes()
     assert os.path.getsize(tmp_path / "dist" / "aoe2mc-resourcepack.zip") > 1000
+
+
+def test_a_stored_png_has_the_pixels_of_the_image():
+    import io
+
+    import aoe2mc
+    from PIL import Image
+    im = Image.new("RGBA", (300, 300), (10, 20, 30, 40))              # more than one stored block of 65535 bytes
+    im.putpixel((299, 299), (1, 2, 3, 255))
+    data = aoe2mc.stored_png(im)
+    assert Image.open(io.BytesIO(data)).tobytes() == im.tobytes()
+    assert data == aoe2mc.stored_png(im.copy())
