@@ -40,6 +40,7 @@ MAP = {
     ("condition", "ACCUMULATE_ATTRIBUTE"): "`execute if score Gold aoe_resN matches Q..`: the resource scores of the game program (#2655)",
     ("condition", "RESEARCH_TECHNOLOGY"): "`if score #pN.NAME aoe_tech matches 1..` in the tick function: the scenario mode of the game program sets the score of each researched technology (#2656)",
     ("condition", "DIFFICULTY_LEVEL"): "`execute if score #level aoe_difficulty matches N` (the game program sets the score, #2704)",
+    ("condition", "DIPLOMACY_STATE"): "`execute if score #pN.pM aoe_dipstate matches S` (the stance + 1: the scenario mode of the game program sets the score at the start and after each change, #2757)",
     ("condition", "OBJECT_SELECTED"): "not supported: Minecraft has no selection",
     ("effect", "SEND_CHAT"): "`tellraw @a[team=pN] {\"text\": ...}`",
     ("effect", "DISPLAY_INSTRUCTIONS"): "`title @a actionbar` (short text) or `title @a subtitle`",

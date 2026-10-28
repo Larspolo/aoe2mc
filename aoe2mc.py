@@ -426,7 +426,10 @@ def read_scenario(path):
                                                   if c.condition_type == ACCUMULATE_ATTRIBUTE else {}),
                                                **({"player": c.source_player,                 # (#2656)
                                                    "technology": techs.get(c.technology, str(c.technology))}
-                                                  if c.condition_type == RESEARCHED else {}))
+                                                  if c.condition_type == RESEARCHED else {}),
+                                               **({"player": c.source_player, "target": c.target_player,   # (#2757)
+                                                   "diplomacy": c.quantity}            # the stance is the quantity
+                                                  if c.condition_type == DIPLOMACY_STATE else {}))
                                           for c in t.conditions],
                               effects=[dict(type=e.effect_type, message=e.message or "", player=e.source_player,
                                             time=e.display_time, object=kinds.get(e.object_list_unit_id),
@@ -2791,6 +2794,7 @@ CREATE_OBJECT = 11
 DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
 DECLARE_VICTORY = 13                                               # "Declare Victory" (#2542)
 DIFFICULTY_LEVEL = 19                                              # the condition "Difficulty Level" (#2704)
+DIPLOMACY_STATE = 24                                               # the condition "Diplomacy State" (#2757)
 DISPLAY_INSTRUCTIONS = 20
 DISPLAY_TIMER = 37                                                 # "Display Timer" (#2572)
 FREEZE_OBJECT = 22                                                 # "Freeze Object" (#2608)
@@ -2815,7 +2819,8 @@ TRIGGER_CHANCE = 20                                                # the conditi
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
-TICKED = COUNTED + (ACCUMULATE_ATTRIBUTE, DIFFICULTY_LEVEL, RESEARCHED, VARIABLE_VALUE)  # conditions of the tick function
+TICKED = COUNTED + (ACCUMULATE_ATTRIBUTE, DIFFICULTY_LEVEL, DIPLOMACY_STATE, RESEARCHED,  # conditions of the tick function
+                     VARIABLE_VALUE)
 ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")     # attributes 0-3: the score holders of gather.RESOURCES (#2655)
 DESTROY_OBJECT = 6                                                     # the condition "Destroy Object" (#2618)
 CAPTURE_OBJECT = 7                                                     # the condition "Capture Object" (#2619)
@@ -3349,6 +3354,7 @@ Effect = namedtuple("Effect", "t T ground players stats mood files setup")
 SCORE_TESTS = {
     ACCUMULATE_ATTRIBUTE: resource_score,
     DIFFICULTY_LEVEL: lambda c: f"score #level aoe_difficulty matches {c.get('quantity', 0)}",
+    DIPLOMACY_STATE: lambda c: f"score #p{c['player']}.p{c['target']} aoe_dipstate matches {c['diplomacy'] + 1}",
     RESEARCHED: lambda c: f"score #p{c['player']}.{c['technology']} aoe_tech matches 1..",
     VARIABLE_VALUE: lambda c: f"score #v{c['variable']} aoe_var matches {variable_range(c)}",
 }
