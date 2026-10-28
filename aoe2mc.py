@@ -411,7 +411,8 @@ def read_scenario(path):
                                                    "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2],
                                                    "object": c.object_list, "group": c.object_group,
                                                    "class": c.object_type}
-                                                  if c.condition_type in COUNTED else {}),
+                                                  if c.condition_type in COUNTED else
+                                                  {"quantity": c.quantity} if c.condition_type == TRIGGER_CHANCE else {}),
                                                **({"quantity": c.quantity, "variable": c.variable,   # (#2611)
                                                    "comparison": c.comparison}
                                                   if c.condition_type == VARIABLE_VALUE else {}))
@@ -2774,6 +2775,7 @@ TASK_OBJECT = 12                                                   # "Task Objec
 TELEPORT_OBJECT = 35
 TIMER = 10
 TRIBUTE = 5                                                        # "Tribute" (#2576)
+TRIGGER_CHANCE = 20                                                # the condition "Chance" (#2574)
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
@@ -3155,7 +3157,12 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     for t in triggers:
         conds = t["conditions"]
         kinds = {(c["type"], c["inverted"]) for c in conds}
-        if not t["enabled"] or not conds or not (kinds == {(TIMER, False)} or kinds <= {(k, False) for k in TICKED}) or \
+        # "Chance" (alone, after the timers or with the ticked conditions, #2574): a roll function checks the trigger
+        # once per second, as AoE2 does, with `random value 1..100`
+        chance = (TRIGGER_CHANCE, False) in kinds
+        rest = kinds - {(TRIGGER_CHANCE, False)}
+        if not t["enabled"] or not conds or not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED}) or \
+                chance and len([c for c in conds if c["type"] == TRIGGER_CHANCE]) > 1 or \
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds) or \
                 any(c["type"] == VARIABLE_VALUE and (c.get("variable", -1) < 0 or variable_range(c) is None)
                     for c in conds):                                   # unit classes: not yet
@@ -3165,35 +3172,53 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         if not lines:
             continue
         fn, n = f"aoe2mc:trigger/{t['id']}", t["id"]
-        if conds[0]["type"] in TICKED:
-            tests, unless = [], []
-            for i, c in enumerate(conds):
-                if c["type"] == VARIABLE_VALUE:                        # a score of the variable (#2611)
-                    test = f"score #v{c['variable']} aoe_var matches {variable_range(c)}"
-                    tests.append(f"if {test}")
-                    unless.append(f"unless {test}")
-                    continue
-                whole = c["type"] != IN_AREA                           # Own (Fewer) Objects: the whole map
-                sel = area_selector(dict(c, area=[-1] * 4) if whole else c, T)
-                q = max(c["quantity"], 0 if c["type"] == OWN_FEWER_OBJECTS else 1)
-                if c["type"] == OWN_FEWER_OBJECTS:                     # count the units: q or fewer
-                    tick.append(f"execute store result score #{n}.{i} aoe_trig if entity {sel}")
-                    tests.append(f"if score #{n}.{i} aoe_trig matches ..{q}")
-                    unless.append(f"unless score #{n}.{i} aoe_trig matches ..{q}")
-                elif q == 1:
-                    tests.append(f"if entity {sel}")
-                    unless.append(f"unless entity {sel}")
-                else:                                                  # count the units: q or more
-                    tick.append(f"execute store result score #{n}.{i} aoe_trig if entity {sel}")
-                    tests.append(f"if score #{n}.{i} aoe_trig matches {q}..")
-                    unless.append(f"unless score #{n}.{i} aoe_trig matches {q}..")
-            tick.append(f"execute {' '.join(tests)} unless score #{n} aoe_trig matches 1 run function {fn}")
-            if t["looping"]:
-                tick += [f"execute {u} run scoreboard players reset #{n} aoe_trig" for u in unless]
+        tests, unless, counts = [], [], []
+        for i, c in enumerate(conds):
+            if c["type"] == VARIABLE_VALUE:                            # a score of the variable (#2611)
+                test = f"score #v{c['variable']} aoe_var matches {variable_range(c)}"
+                tests.append(f"if {test}")
+                unless.append(f"unless {test}")
+                continue
+            if c["type"] not in COUNTED:                               # a timer or the chance
+                continue
+            whole = c["type"] != IN_AREA                               # Own (Fewer) Objects: the whole map
+            sel = area_selector(dict(c, area=[-1] * 4) if whole else c, T)
+            q = max(c["quantity"], 0 if c["type"] == OWN_FEWER_OBJECTS else 1)
+            if c["type"] == OWN_FEWER_OBJECTS:                         # count the units: q or fewer
+                counts.append(f"execute store result score #{n}.{i} aoe_trig if entity {sel}")
+                tests.append(f"if score #{n}.{i} aoe_trig matches ..{q}")
+                unless.append(f"unless score #{n}.{i} aoe_trig matches ..{q}")
+            elif q == 1:
+                tests.append(f"if entity {sel}")
+                unless.append(f"unless entity {sel}")
+            else:                                                      # count the units: q or more
+                counts.append(f"execute store result score #{n}.{i} aoe_trig if entity {sel}")
+                tests.append(f"if score #{n}.{i} aoe_trig matches {q}..")
+                unless.append(f"unless score #{n}.{i} aoe_trig matches {q}..")
+        ticked = bool(tests)
+        resets = [f"execute {u} run scoreboard players reset #{n} aoe_trig" for u in unless] * t["looping"]
+        timers = [c["timer"] for c in conds if c["type"] == TIMER]
+        ticks = max(20 * max(timers, default=0), 1)                   # a schedule needs at least 1 tick
+        if chance:
+            q = next(c["quantity"] for c in conds if c["type"] == TRIGGER_CHANCE)
+            roll = f"{fn}_chance"
+            again = f"schedule function {roll} 20t replace"
+            lines += [f"schedule function {roll} {ticks}t replace"] if t["looping"] and timers else []
+            lines += [] if t["looping"] and not ticked else [f"scoreboard players set #{n} aoe_trig 1"]
+            files[f"data/aoe2mc/function/trigger/{n}_chance.mcfunction"] = "\n".join(
+                [f"execute store result score #{n}.c aoe_trig run random value 1..100",
+                 again if t["looping"] and ticked else f"execute unless score #{n} aoe_trig matches 1 run {again}"]
+                + counts + [f"execute {' '.join(tests + [f'if score #{n}.c aoe_trig matches ..{q}'])} "
+                            f"unless score #{n} aoe_trig matches 1 run function {fn}"]) + "\n"
+            files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines) + "\n"
+            load.append(f"schedule function {roll} {ticks if timers else 20}t replace")
+            tick += counts + resets if resets else []
+            continue
+        if ticked:
+            tick += counts + [f"execute {' '.join(tests)} unless score #{n} aoe_trig matches 1 run function {fn}"] + resets
             lines.append(f"scoreboard players set #{n} aoe_trig 1")
             files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines) + "\n"
             continue
-        ticks = max(20 * max(c["timer"] for c in conds), 1)          # a schedule needs at least 1 tick
         run = f"schedule function {fn} {ticks}t replace"
         files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines + [run] * t["looping"]) + "\n"
         load.append(run)
@@ -3203,8 +3228,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
     load[:0] = setup
-    if tick:
+    if tick or any(k.endswith("_chance.mcfunction") for k in files):
         load.insert(0, "scoreboard objectives add aoe_trig dummy")
+    if tick:
         files["data/minecraft/tags/function/tick.json"] = {"values": ["aoe2mc:tick"]}
         files["data/aoe2mc/function/tick.mcfunction"] = "\n".join(tick) + "\n"
     return load, files
