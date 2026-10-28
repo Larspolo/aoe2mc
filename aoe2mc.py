@@ -2689,7 +2689,7 @@ def team_lines(objects, players):
 TIMER, SEND_CHAT, DISPLAY_INSTRUCTIONS, IN_AREA = 10, 3, 20, 5   # AoE2 condition and effect IDs (AoE2ScenarioParser)
 OWN_OBJECTS, OWN_FEWER_OBJECTS = 3, 4                              # conditions on the units of a player (#2573)
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
-CREATE_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 15, 18, 72
+CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 14, 15, 18, 72
 
 
 def turn_area(area, size, k):
@@ -2717,7 +2717,8 @@ def area_selector(c, T):
 
 def object_lines(t, e, T, ground, players, stats):
     """The commands of "Create Object" and "Remove Object" (#656): a summon of the entity of units.make_entity at
-    the middle of the tile, or a kill of the units of the player and type in the area (area_selector).
+    the middle of the tile, or a kill of the units of the player and type in the area (area_selector). "Kill Object"
+    (#2568) is the same kill, also with no area (the whole map): Minecraft shows the death, as AoE2.
     Buildings and other objects are not supported yet: they count in stats."""
     kind, name = e.get("object") or (None, None)
     if e["type"] == CREATE_OBJECT and min(e.get("tile", [-1])) >= 0:
@@ -2737,19 +2738,22 @@ def object_lines(t, e, T, ground, players, stats):
             part.pop("UUID", None)
             parts += list(part.get("Passengers", []))
         return [f"summon {kind} {x + 0.5} {int(ground[x, z])} {z + 0.5} {nbt.snbt()}"]
-    if e["type"] == REMOVE_OBJECT and min(e.get("area", [-1])) >= 0:
-        at, top = area_selector(e, T), None
-        if e["player"] <= 0:                                           # Gaia units have no player tag
-            at = re.sub(r"tag=aoe2mc\.p-?\d+,?", "", at)
+    if e["type"] == KILL_OBJECT or e["type"] == REMOVE_OBJECT and min(e.get("area", [-1])) >= 0:
+        at, top, word = area_selector(e, T), None, "kill" if e["type"] == KILL_OBJECT else "remove"
+        if e["player"] <= 0:                                           # Gaia units have no player tag: never
+            at = re.sub(r"tag=aoe2mc\.p-?\d+,?", "type=!minecraft:player,", at)   # a player
+        if name is None and e["player"] <= 0 and e["type"] == KILL_OBJECT:   # Gaia units have no tag: a kill
+            stats["kill (not supported yet)"] += 1                     # of all would kill the decor entities too
+            return []
         if name is not None:
             nbt = units.make_entity(dict(name=name, player=0), {}, (0.0, 0.0, 0.0), np.random.default_rng(0)) \
                 if kind in ("U", "H") else None
             if nbt is None:
-                stats["remove (not supported yet)"] += 1
+                stats[f"{word} (not supported yet)"] += 1
                 return []
             top = units.top_entity(nbt)
-            at = f"@e[type={top['id']},{at[3:]}" if at != "@e[]" else f"@e[type={top['id']}]"
-        stats["remove"] += 1
+            at = f"@e[type={top['id']},{at[3:]}".replace(",type=!minecraft:player", "")
+        stats[word] += 1
         ride = [f"execute as {at} on vehicle run kill @s"] if top is not None and top is not nbt else []
         return ride + [f"kill {at}"]                                       # a rider: its mount goes too
     return []
@@ -2801,7 +2805,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             continue
         lines = []
         for e in t["effects"]:
-            if e["type"] in (CREATE_OBJECT, REMOVE_OBJECT):
+            if e["type"] in (CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT):
                 lines += object_lines(t, e, T, ground, players, stats)
                 continue
             if e["type"] == CHANGE_OWNERSHIP:
