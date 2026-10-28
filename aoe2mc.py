@@ -3053,9 +3053,14 @@ def object_lines(e, c):
     """The commands of "Create Object" and "Remove Object" (#656): a summon of the entity of units.make_entity at
     the middle of the tile, or a kill of the units of the player and type in the area (area_selector). "Kill Object"
     (#2568) is the same kill, also with no area (the whole map): Minecraft shows the death, as AoE2.
-    Buildings and other objects are not supported yet: they count in stats."""
+    A building of a player (#2911): the order "create <player> <building> <x> <y>" goes into the storage aoe2mc:orders,
+    and game/scenario.py create puts the complete building there. Other objects are not supported yet: they count in stats."""
     t, T, ground, players, stats = c.t, c.T, c.ground, c.players, c.stats
     kind, name = e.get("object") or (None, None)
+    if e["type"] == CREATE_OBJECT and kind == "B" and e["player"] > 0 and min(e.get("tile", [-1])) >= 0:
+        stats["create"] += 1
+        (x, y), p = e["tile"], e["player"]
+        return [f'data modify storage aoe2mc:orders list append value "create {p} {name} {x} {y}"']
     if e["type"] == CREATE_OBJECT and min(e.get("tile", [-1])) >= 0:
         x, z = (int((v + 0.5) * T) for v in e["tile"])
         o = dict(name=name, player=max(e["player"], 0), rotation=math.pi / 2)

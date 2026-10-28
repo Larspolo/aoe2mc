@@ -62,7 +62,7 @@ MAP = {
     ("effect", "CLEAR_INSTRUCTIONS"): "`title @a clear` (#2609)",
     ("effect", "CLEAR_TIMER"): "`bossbar remove aoe2mc:timerN` and `schedule clear aoe2mc:timer/N` of the slot N (#2696)",
     ("effect", "CREATE_GARRISONED_OBJECT"): "`summon` of the unit (`units.make_entity()`) in the state of a garrisoned unit (`Invulnerable`, `NoAI`, tags `aoe2mc.garrisoned`, `aoe2mc.made_inside`) on the inside cells of each selected building; the game program adds it to the garrison (#2764); a ship or ram holder: not supported yet",
-    ("effect", "CREATE_OBJECT"): "`summon` of the entity of `units.make_entity()` (units, timer triggers: #656); buildings: not supported yet",
+    ("effect", "CREATE_OBJECT"): "`summon` of the entity of `units.make_entity()` (units, timer triggers: #656); a building: the order `create` of the scenario mode, a complete building (#2911)",
     ("effect", "REMOVE_OBJECT"): "`kill @e[tag=aoe2mc.pN,type=..,x=..,y=..,z=..,dx=..,dy=..,dz=..]` (timer triggers: #656)",
     ("effect", "REPLACE_OBJECT"): "`tag` of the old units, `execute at` each one `run summon` of the new entity of the target player (`units.make_entity()`), then `kill` of the old units and their mounts (#2703); buildings: not supported yet",
     ("effect", "KILL_OBJECT"): "`kill @e[tag=aoe2mc.pN,type=..,x=..,y=..,z=..,dx=..,dy=..,dz=..]`, no area: the whole map (#2568)",

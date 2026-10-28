@@ -177,12 +177,13 @@ def orders(g):
     (gather.Gather.end_patrols, #2674) and removes the tag. An "Unload" order (#2773): unload(). A "Lock Gate" or
     "Unlock Gate" order (aoe2mc.gate_lines, #2762) locks or unlocks the gate of its reference: gate(). A "Place
     Foundation" order (aoe2mc.foundation_lines, #2825): foundation(). "Train Unit" and "Initiate Research"
-    (aoe2mc.train_lines, #2772): queues(). A "Build Object" order (aoe2mc.build_lines, #2863): finish()."""
+    (aoe2mc.train_lines, #2772): queues(). A "Build Object" order (aoe2mc.build_lines, #2863): finish(). A "Create
+    Object" order of a building (aoe2mc.object_lines, #2911): foundation(), then the site is complete at once."""
     got = g.command(f"data get storage {ORDERS} list") or ""
     new = re.findall(r'"(patrol|attack_move|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"', got)
     unloads = re.findall(r'"unload (\d+) (\d+) ?(-?\d+ -?\d+ -?\d+)?"', got)
     gates = re.findall(r'"(lock|unlock) (\d+)"', got)
-    found = re.findall(r'"found (\d+) (\w+) (\d+) (\d+)"', got)
+    found = re.findall(r'"(found|create) (\d+) (\w+) (\d+) (\d+)"', got)
     queued = re.findall(r'"(train|research) (\d+) (\w+) ?(\d+)?"', got)
     builds = re.findall(r'"build (\d+) (\w+) (-?\d+) (-?\d+) (-?\d+) (-?\d+)"', got)
     if new or unloads or gates or found or queued or builds:
@@ -192,8 +193,8 @@ def orders(g):
         unload(g, int(player), int(ref), where)
     for order, ref in gates:
         gate(g, order, int(ref))
-    for player, name, x, y in found:
-        foundation(g, int(player), name, (int(x), int(y)))
+    for order, player, name, x, y in found:
+        foundation(g, int(player), name, (int(x), int(y)), done=order == "create")
     for player, name, *area in builds:
         finish(g, int(player), name, [int(v) for v in area])
     patrols = vars(g).setdefault("patrols", [])
@@ -239,11 +240,12 @@ def selection(g):
         g.choose(g.selected - g.unselectable)
 
 
-def foundation(g, player, name, tile):
+def foundation(g, player, name, tile, done=False):
     """A "Place Foundation" order (aoe2mc.foundation_lines, #2825): the construction site of building name of the
     player (a person or a bot) with the tile in its middle, for free as in AoE2, when the place is free and flat as for
     a click of the player (build.free, shore, water, level). Its villagers build it as any site. A wall, a gate, a
-    building that the game program cannot build or a blocked place: nothing."""
+    building that the game program cannot build or a blocked place: nothing. done: "Create Object" (#2911), the
+    building is complete at once (build.rise with no end of work, as finish)."""
     import build                                                       # build imports gather
     if name not in build.MENU or name in build.WALLS + build.GATES:
         return
@@ -254,7 +256,9 @@ def foundation(g, player, name, tile):
         T = x.map.T
         rect = build.area(x, name, (tile[0] * T + T // 2, tile[1] * T + T // 2))
         if ok(x, rect) and build.level(x, name, rect):
-            build.found(x, name, rect, free=True)
+            site = build.found(x, name, rect, free=True)
+            if done:
+                build.rise(x, site, float("inf"))
 
 
 def finish(g, player, name, area):
