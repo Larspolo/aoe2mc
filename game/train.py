@@ -725,8 +725,11 @@ def doctrine(g, building, k=None):
 def switch(g, player, building):
     """The next Recruitment Doctrine of the building type, free and at once (the menu item of DOCTRINES): it changes
     the cost and time of the units queued from now on, not of the queued ones (AoE2 wiki "Macedonians (Chronicles)")."""
+    rows = civs.value("doctrines", civs.civ(g), [])
+    if not rows:                                                   # no doctrine with Full Tech Tree (#3095)
+        return
     d = vars(g).setdefault("doctrines", {})
-    d[building] = (d.get(building, 0) + 1) % len(civs.value("doctrines", civs.civ(g)))
+    d[building] = (d.get(building, 0) + 1) % len(rows)
     build.say(g, player, f"{build.pretty(building)}: {doctrine(g, building)[0]} Recruitment.")
 
 
