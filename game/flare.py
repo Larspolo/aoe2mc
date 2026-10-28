@@ -30,10 +30,12 @@ def teams(g):
     return [team(f"p{n}") for n in [g.player] + allies]
 
 
-def particles(x, y, z, team):
+def particles(x, y, z, team, rgb=None):
     """One burst of the column: end_rod particles from the ground up, only for the viewers of team (`force`: also
-    far away)."""
-    return f"particle minecraft:end_rod {x + 0.5} {y + 4} {z + 0.5} 0.1 4 0.1 0 40 force {team}"
+    far away). With a color rgb (0xRRGGBB): dust particles of that color (the player color of the replay, #2442)."""
+    kind = "end_rod" if rgb is None else "dust{color:[%s],scale:2}" % ",".join(
+        f"{(rgb >> s & 255) / 255:.2f}" for s in (16, 8, 0))
+    return f"particle minecraft:{kind} {x + 0.5} {y + 4} {z + 0.5} 0.1 4 0.1 0 40 force {team}"
 
 
 def commands(player, x, y, z, team):

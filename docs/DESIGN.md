@@ -66,7 +66,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Map table of a commander | `cartography_table` | `study`, `command_tent`, `harbor`, `market` +2 more |
 | Cushion | `red_wool` next to a low `*_slab[type=top]` table | `pavilion`, `scaffold_walk`, `scaffolding`, `cart` +46 more |
 | Table with a light (inside) | `*_slab[type=top]` with a `lantern` on it, a `*_stairs` stool | `town_hall`, `furnish`, `pagoda`, `hall_of_heroes` +41 more |
-| Storage (inside) | `chest` at the back wall | `furnish`, `throne_hall`, `decorate`, `town_hall` +25 more |
+| Storage (inside) | `chest` at the back wall | `furnish`, `throne_hall`, `town_hall`, `decorate` +25 more |
 | Shelf with goods or tools (inside) | `*_shelf` on the wall (holds items, like a stall) | `market`, `blacksmith` |
 | Strongbox of a market or a treasury (inside) | `copper_chest` | no design |
 | Rug | `*_carpet` | `hearth_room`, `furnish_worship`, `furnish`, `throne_hall` +15 more |
@@ -116,9 +116,9 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Hoist | a log post and arm, `iron_chain`, a hanging log | `harbor_chain`, `hang`, `crane`, `lumber_camp` +4 more |
 | Workbench | `crafting_table` | `lumber_camp`, `shipyard`, `dock`, `siege_workshop` |
 | Millstone | `grindstone` | `mill_room`, `decorate`, `keep_inside`, `mining_camp` +8 more |
-| Drive shaft of a windmill | `stripped_spruce_log[axis=y]` above the millstone | `crane`, `mill_room`, `barricade`, `settlement` +18 more |
+| Drive shaft of a windmill | `stripped_spruce_log[axis=y]` above the millstone | `crane`, `mill_room`, `barricade`, `wooden_bridge` +18 more |
 | Net loom, boat workbench | `loom`, `crafting_table`, `spruce_slab` | `dock`, `siege_workshop` |
-| Dried fish, ship timber | `dried_kelp_block`, `stripped_spruce_log` (stack on the quay) | `crane`, `mill_room`, `barricade`, `settlement` +19 more |
+| Dried fish, ship timber | `dried_kelp_block`, `stripped_spruce_log` (stack on the quay) | `crane`, `mill_room`, `barricade`, `wooden_bridge` +19 more |
 | Light in a room or a yard | `lantern` on a barrel, or hanging under a beam | `hang`, `keep_inside`, `furnish`, `mill_room` +36 more |
 | Ore, mined gold and stone | `gold_ore`, `raw_gold_block`, `cobblestone`, `stone`, `andesite` | `mining_camp`, `mole` |
 | Mine cart track | `rail` | `mining_camp` |
@@ -135,7 +135,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Wheel | open `*_trapdoor` on the side | `cart`, `university`, `market`, `yurt` +11 more |
 | Siege engine in the making | `stripped_spruce_log` frame, `oak_fence` posts, a `stripped_oak_log` ram beam with an `iron_block` head | `siege_workshop`, `shipyard`, `hall_with_yard`, `stable` +17 more |
 | Tent canvas | `white_wool`, a valance of wool in the player color | `command_tent`, `pasture`, `army_tent`, `pavilion` +8 more |
-| Tent poles of a pavilion | `stripped_spruce_log[axis=y]` at the corners, up to the roof edge | `crane`, `mill_room`, `barricade`, `settlement` +18 more |
+| Tent poles of a pavilion | `stripped_spruce_log[axis=y]` at the corners, up to the roof edge | `crane`, `mill_room`, `barricade`, `wooden_bridge` +18 more |
 | Lookout hut on stilts (outpost) | `*_log` stilts with `spruce_fence` braces, a `*_wool` band (player color) and `white_wool` cloth, a `white_wool` roof with a valance (player color) | `outpost`, `folwark`, `mill`, `market` +11 more |
 | Yurt felt | `blue_wool` with a zig-zag of `white_wool` (or the inverse), a flat dome with a `spruce_trapdoor` crown ring | `yurt`, `pasture`, `market`, `pavilion` +8 more |
 | Pavilion cloth | stripes of `*_wool` (player color) on `white_wool`, a `yellow_wool` valance, a white cone | `pavilion`, `command_tent`, `pasture`, `army_tent` +8 more |
@@ -169,7 +169,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Copper lamp, grille and chain (rich buildings; they turn green with age) | `copper_lantern`, `copper_bars`, `copper_chain`, `copper_torch`, and the `exposed_*`, `weathered_*`, `oxidized_*` forms | `cathedral` |
 | Cloth awning | `*_wool` in the player color | `yurt`, `pavilion`, `command_tent`, `pasture` +23 more |
 | Column | `quartz_pillar` | `throne_hall`, `oracles_temple`, `arch_of_constantine`, `theatre` +3 more |
-| Sacred tree | `oak_log`, `oak_leaves[persistent=true]` | `pagan_shrine`, `log_pile`, `decorate`, `settlement` +4 more |
+| Sacred tree | `oak_log`, `oak_leaves[persistent=true]` | `pagan_shrine`, `log_pile`, `decorate`, `house` +4 more |
 | Hides | `brown_wool` | `helepolis`, `market`, `feitoria` |
 | Nomad hide tent | `brown_wool` dome and peak, an ornament band of `white_wool` and `orange_wool`, `red_carpet` rug | `caravanserai`, `market`, `feitoria` |
 | Band in the player color | `*_wool` (player color) | `yurt`, `pavilion`, `command_tent`, `pasture` +23 more |

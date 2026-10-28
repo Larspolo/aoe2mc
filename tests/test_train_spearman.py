@@ -2,7 +2,7 @@
 and the AoE2 values of combat.STATS (the bonus against cavalry)."""
 import re
 
-from test_forging import menus                                  # with the `aoe menu-add` parts (#1647)
+from test_forging import menus                                         # also the `aoe menu-add` parts (#1647)
 from test_train_barracks import setup
 
 from game import combat, train
