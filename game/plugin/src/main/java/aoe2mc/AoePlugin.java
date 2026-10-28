@@ -1017,11 +1017,34 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         fight(victim);
         fight(from);
         victim.playHurtAnimation(0);
-        victim.setHealth(Math.max(0, victim.getHealth() - a.damage(t) * part));     // 0 kills it
+        double before = victim.getHealth();
+        victim.setHealth(Math.max(0, before - a.damage(t) * part));     // 0 kills it
+        if (before > 0 && victim.getHealth() <= 0) {
+            kill(from, a, t);
+        }
         nameLine(victim);
         if (victim.getHealth() > 0 && from instanceof LivingEntity attacker && !attacker.isDead()) {   // a detonation
             attackBack(victim, attacker, t);
         }
+    }
+
+    // A mounted unit that kills a military unit gives its side one point in aoe_mounted_kills: the Mapuche gold
+    // (game/spoils.py, #2271). Mounted: the classes of civs.mounted; military: an attack and an armor class (no
+    // villager, monk, trade unit or fishing ship). Vanilla has no killer of a mob: the plugin sees the last hit.
+    private static void kill(Entity from, Stats a, Stats t) {
+        if (from == null) {
+            return;
+        }
+        String side = side(from) == null && from.getVehicle() != null ? side(from.getVehicle()) : side(from);   // a rider
+        if (side == null || t.attack() <= 0 || t.classes().isEmpty()
+                || a.classes().stream().noneMatch(c -> c.equals("cavalry") || c.equals("camel") || c.equals("elephant"))) {
+            return;
+        }
+        Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
+        Objective o = sb.getObjective("aoe_mounted_kills");
+        o = o != null ? o : sb.registerNewObjective("aoe_mounted_kills", Criteria.DUMMY, Component.text("Mounted kills"));
+        var score = o.getScore(side);
+        score.setScore(score.getScore() + 1);
     }
 
     // The AoE2 default stance (#733): a military unit without an order and without a target attacks its attacker.
