@@ -70,7 +70,7 @@ def give(g, uuid, new):
                 del o.farmers[t]
             for group in o.groups.values():
                 group.discard(uuid)
-            if uuid in o.others() | o.selected:                                     # the old owner cannot give it orders now
+            if uuid in o.others() | o.selected:                         # the old owner cannot give it orders now
                 o.drop(uuid)
                 o.command(f"data merge entity {uuid} {{Glowing:0b}}")
                 o.command(f"tag {uuid} remove {gather.SELECT}")
