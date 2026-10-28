@@ -29,6 +29,7 @@ TABLES = (                                                            # one per 
     "COST_PER",
     "ECONOMY_VILLAGERS",
     "EXTRA",
+    "FARM_UPGRADES",
     "DROP",
     "GARRISON",
     "LAST",

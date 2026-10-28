@@ -639,6 +639,7 @@ def research(g, entry):
     before = set(g.techs)
     g.techs.add(entry["name"])
     if (more := gather.FARM_TECHS.get(entry["name"])):             # the new and the live own farms get more food
+        more = round(more * civs.FARM_UPGRADES.get(civs.civ(g), 1))
         g.map.farm_food += more
         for t in g.map.own_farms:
             if g.map.farms.get(t, 0) > 0:
