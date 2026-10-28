@@ -47,6 +47,7 @@ MAP = {
     ("condition", "RESEARCHING_TECH"): "`if score #pN.NAME aoe_techstate matches 2` in the tick function: the scenario mode of the game program sets the AoE2 TechnologyState of the technology (#2769)",
     ("condition", "TECHNOLOGY_STATE"): "`if score #pN.NAME aoe_techstate matches Q` in the tick function: the scenario mode of the game program sets the AoE2 TechnologyState of the technology (#2769)",
     ("condition", "DIFFICULTY_LEVEL"): "`execute if score #level aoe_difficulty matches N` (the game program sets the score, #2704)",
+    ("condition", "TRIGGER_ACTIVE"): "`execute if score #N aoe_on matches 1` (0 when inverted) in the tick function: the state of trigger N (#2699)",
     ("condition", "UNITS_GARRISONED"): "`if score #gREF aoe_gar matches N..` in the tick function: the scenario mode of the game program sets the number of units inside each converted building (#2714); a transport ship: not supported yet",
     ("condition", "OBJECT_SELECTED"): "not supported: Minecraft has no selection",
     ("effect", "SEND_CHAT"): "`tellraw @a[team=pN] {\"text\": ...}`",
