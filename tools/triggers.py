@@ -78,6 +78,7 @@ MAP = {
     ("effect", "CHANGE_OBJECT_STANCE"): "`tag` of the units in the area and an order in the storage `aoe2mc:orders`: the scenario mode of the game program sets the stance with `aoe stance` (#2705); vanilla has no stance",
     ("effect", "TRIBUTE"): "`scoreboard players add`/`remove` on `#pN.<resource> aoe_res`; the game program puts it into the stock (`--mode scenario`: `scenario.resources`, #2576)",
     ("effect", "MODIFY_RESOURCE"): "`scoreboard players add`/`remove` on `#pN.<resource> aoe_res`, a set on `aoe_set`; the game program puts it into the stock (`--mode scenario`: `scenario.resources`, #2576)",
+    ("effect", "MODIFY_RESOURCE_BY_VARIABLE"): "`scoreboard players operation #pN.<resource> aoe_res += or -= #vM aoe_var`, a set is `operation = #vM aoe_var` on `aoe_set`; add, subtract and set only, multiply and divide are not supported (#2768)",
     ("effect", "CHANGE_OBJECT_COST"): "the cost in the storage `aoe2mc:costs`: the scenario mode of the game program uses it in the menus and when the player pays (#2776)",
     ("effect", "MODIFY_ATTRIBUTE"): "the change in the storage `aoe2mc:attributes`: the scenario mode of the game program changes the hit points, attack, melee and pierce armor, range or reload of the unit type of the player (`train.stats`, #2763); the other attributes are not supported",
     ("effect", "RESEARCH_TECHNOLOGY"): "`scoreboard players set #rN.I aoe_tech 1`: the scenario mode of the game program gives the technology (#2577)",
