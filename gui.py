@@ -29,6 +29,8 @@ VALUES = (("name", "--name"), ("tile_size", "--tile-size"), ("level_height", "--
 FLAGS = (("preview", "--preview"), ("no_units", "--no-units"), ("resource_pack", "--resource-pack"))
 PACK_TEXT = "AoE2 look (resource pack, 4.8 MB, about +1 % frame time)"   # docs/resourcepack.md, "Cost" (#2747)
 GAME = Path(__file__).resolve().parent / "game" / "run.py"
+STOP_LINE = "\x03"                     # the byte of Ctrl-C on stdin: the Stop on Windows (run.STOP_LINE, #3003)
+NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)            # Windows: no empty console window of the game program
 PLAY_VALUES = (("server", "--server"), ("people", "--people"), ("reveal", "--reveal"))
 PLAY_FLAGS = (("play", "--play"), ("bot", "--bot"), ("cheats", "--cheats"))
 BOT_VALUES = (("bot_attack", "--bot-attack"),)                     # only with --bot (#1870)
@@ -184,8 +186,7 @@ def start_game(args, write, done, cmd=None):
     """Start the game program with args as a child process. A thread sends each line of its output to write, and its
     exit code to done at the end. stdin is a pipe: with no stdin, input() in run.main() ends the game at once."""
     p = subprocess.Popen([*(cmd or game_command()), *args], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                         text=True, bufsize=1, start_new_session=os.name != "nt",
-                         creationflags=getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
+                         text=True, bufsize=1, start_new_session=os.name != "nt", creationflags=NO_WINDOW)
 
     def read():
         for line in p.stdout:
@@ -209,17 +210,22 @@ def send_command(p, text):
     return True
 
 
-def stop_game(p, wait=30):
+def stop_game(p, wait=30, line=os.name == "nt"):
     """Stop the game program like Ctrl-C: run.main() then stops the server in all modes (--play does not read stdin).
-    Kill its process group (with the server) when it does not end in wait seconds. Returns the exit code."""
+    line (Windows): the window has no console, so it cannot send Ctrl-Break to the game program (#3003): the stop line
+    on stdin makes run.console interrupt its main thread. Kill the process tree (with the server) when it does not end
+    in wait seconds. Returns the exit code."""
     if p.poll() is not None:
         return p.returncode
-    p.send_signal(signal.CTRL_BREAK_EVENT if os.name == "nt" else signal.SIGINT)
+    if line:
+        send_command(p, STOP_LINE)
+    else:
+        p.send_signal(signal.SIGINT)
     try:
         return p.wait(wait)
     except subprocess.TimeoutExpired:
-        if os.name == "nt":
-            p.kill()
+        if os.name == "nt":                        # p.kill() ends only the game program, not its Java server
+            subprocess.run(["taskkill", "/T", "/F", "/PID", str(p.pid)], capture_output=True, creationflags=NO_WINDOW)
         else:
             os.killpg(p.pid, signal.SIGKILL)
         return p.wait()
@@ -405,7 +411,12 @@ def window():
     def stop_play(then=None):
         halt.state(["disabled"])
         if game:
-            threading.Thread(target=lambda: (stop_game(game[0]), then and q.put((then,))), daemon=True).start()
+            def stop():
+                try:
+                    stop_game(game[0])
+                finally:                           # an error of the stop must not keep the window open
+                    then and q.put((then,))
+            threading.Thread(target=stop, daemon=True).start()
         elif then:
             q.put((then,))
 
