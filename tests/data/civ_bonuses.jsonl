@@ -25,7 +25,7 @@
 {"name": "BOHEMIANS: Blacksmiths and Universities cost wood -100.", "civ": "BOHEMIANS", "bonus": "Blacksmiths and Universities cost wood -100.", "in": "COSTS"}
 {"name": "BOHEMIANS: Chemistry and Hand Cannoneer available in Castle Age.", "civ": "BOHEMIANS", "bonus": "Chemistry and Hand Cannoneer available in Castle Age.", "later": "play:ages"}
 {"name": "BOHEMIANS: Spearman-line deals +25% bonus damage.", "civ": "BOHEMIANS", "bonus": "Spearman-line deals +25% bonus damage.", "later": "play:fight"}
-{"name": "BOHEMIANS: Fervor and Sanctity affect Villagers.", "civ": "BOHEMIANS", "bonus": "Fervor and Sanctity affect Villagers.", "gap": "play:tech"}
+{"name": "BOHEMIANS: Fervor and Sanctity affect Villagers.", "civ": "BOHEMIANS", "bonus": "Fervor and Sanctity affect Villagers.", "in": "ALSO"}
 {"name": "BOHEMIANS: Mining Camp technologies are free.", "civ": "BOHEMIANS", "bonus": "Mining Camp technologies are free.", "in": "COSTS"}
 {"name": "BRITONS: Town Centers cost wood -50% starting in the Castle Age.", "civ": "BRITONS", "bonus": "Town Centers cost wood -50% starting in the Castle Age.", "in": "COSTS"}
 {"name": "BRITONS: Foot archers (except Skirmishers) have +1/+2 range in the Castle/Imperial Age.", "civ": "BRITONS", "bonus": "Foot archers (except Skirmishers) have +1/+2 range in the Castle/Imperial Age.", "in": "UNITS"}
@@ -60,7 +60,7 @@
 {"name": "DANES: Villagers and Fishing Ships drop off food +5%.", "civ": "DANES", "bonus": "Villagers and Fishing Ships drop off food +5%.", "in": "DROP"}
 {"name": "DANES: Units and buildings loot 25% of target's cost when destroying enemy buildings (except walls and gates).", "civ": "DANES", "bonus": "Units and buildings loot 25% of target's cost when destroying enemy buildings (except walls and gates).", "later": "play:fight"}
 {"name": "DANES: Barracks and Siege Workshop technologies cost gold -66%.", "civ": "DANES", "bonus": "Barracks and Siege Workshop technologies cost gold -66%.", "in": "COSTS"}
-{"name": "DANES: Varangian Guards and Longships move 10% faster.", "civ": "DANES", "bonus": "Varangian Guards and Longships move 10% faster.", "later": "play:military-train"}
+{"name": "DANES: Varangian Guards and Longships move 10% faster.", "civ": "DANES", "bonus": "Varangian Guards and Longships move 10% faster.", "in": "UNITS"}
 {"name": "DRAVIDIANS: Receive wood 200 when advancing to the next Age.", "civ": "DRAVIDIANS", "bonus": "Receive wood 200 when advancing to the next Age.", "in": "AGE_GIFTS"}
 {"name": "DRAVIDIANS: Fishermen, Oyster gatherers, and Fishing Ships carry +15.", "civ": "DRAVIDIANS", "bonus": "Fishermen, Oyster gatherers, and Fishing Ships carry +15.", "later": "play:naval"}
 {"name": "DRAVIDIANS: Barracks technologies cost -50%.", "civ": "DRAVIDIANS", "bonus": "Barracks technologies cost -50%.", "in": "COSTS"}
@@ -196,7 +196,7 @@
 {"name": "SLAVS: Farmers work 15% faster.", "civ": "SLAVS", "bonus": "Farmers work 15% faster.", "in": "WORK"}
 {"name": "SLAVS: Arson and Gambesons are free.", "civ": "SLAVS", "bonus": "Arson and Gambesons are free.", "in": "COSTS"}
 {"name": "SLAVS: Siege Workshop units are 15% cheaper.", "civ": "SLAVS", "bonus": "Siege Workshop units are 15% cheaper.", "in": "COSTS"}
-{"name": "SLAVS: Monks move 20% faster.", "civ": "SLAVS", "bonus": "Monks move 20% faster.", "later": "play:monks"}
+{"name": "SLAVS: Monks move 20% faster.", "civ": "SLAVS", "bonus": "Monks move 20% faster.", "in": "UNITS"}
 {"name": "SPANISH: Builders work 30% faster (20% for Wonders).", "civ": "SPANISH", "bonus": "Builders work 30% faster (20% for Wonders).", "in": "BUILD"}
 {"name": "SPANISH: Blacksmith upgrades don't cost gold.", "civ": "SPANISH", "bonus": "Blacksmith upgrades don't cost gold.", "in": "COSTS"}
 {"name": "SPANISH: Cannon Galleon projectiles can track moving targets and move faster.", "civ": "SPANISH", "bonus": "Cannon Galleon projectiles can track moving targets and move faster.", "later": "play:naval"}
@@ -232,7 +232,7 @@
 {"name": "TURKS: Light Cavalry and Hussar upgrades are free.", "civ": "TURKS", "bonus": "Light Cavalry and Hussar upgrades are free.", "in": "COSTS"}
 {"name": "TURKS: Scout Cavalry line gain +1 pierce armor.", "civ": "TURKS", "bonus": "Scout Cavalry line gain +1 pierce armor.", "in": "UNITS"}
 {"name": "VARANGIANS: Shepherds, fishermen, and hunters drop off an additional gold 10% in addition to food; Fishing Ships generate an additional gold 5%.", "civ": "VARANGIANS", "bonus": "Shepherds, fishermen, and hunters drop off an additional gold 10% in addition to food; Fishing Ships generate an additional gold 5%.", "later": "play:gather"}
-{"name": "VARANGIANS: Bloodlines and Caravan give +50% effect.", "civ": "VARANGIANS", "bonus": "Bloodlines and Caravan give +50% effect.", "gap": "play:tech"}
+{"name": "VARANGIANS: Bloodlines and Caravan give +50% effect.", "civ": "VARANGIANS", "bonus": "Bloodlines and Caravan give +50% effect.", "in": "MORE"}
 {"name": "VARANGIANS: Varangian Guards attack 25% faster and generate gold +50%.", "civ": "VARANGIANS", "bonus": "Varangian Guards attack 25% faster and generate gold +50%.", "later": "play:military-train"}
 {"name": "VARANGIANS: Longships and Catapult Galleons attack 15% faster.", "civ": "VARANGIANS", "bonus": "Longships and Catapult Galleons attack 15% faster.", "later": "play:naval"}
 {"name": "VIETNAMESE: Foot archers and Skirmishers +20% hit points.", "civ": "VIETNAMESE", "bonus": "Foot archers and Skirmishers +20% hit points.", "in": "UNITS"}
