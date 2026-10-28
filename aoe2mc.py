@@ -458,6 +458,8 @@ def read_scenario(path):
                                             time=e.display_time, object=kinds.get(e.object_list_unit_id),
                                             tile=[e.location_x, e.location_y],
                                             area=[e.area_x1, e.area_y1, e.area_x2, e.area_y2],
+                                            **{k: v(e, kinds, techs) if callable(v) else getattr(e, v)   # #2792
+                                               for k, v in EFFECT_KEYS.get(e.effect_type, {}).items()},
                                             **({"mood": ColorMood(e.color_mood).name}     # "Change Color Mood" (#1876)
                                                if e.effect_type == CHANGE_COLOR_MOOD and
                                                getattr(e, "color_mood", None) in set(ColorMood) else {}),
@@ -3714,6 +3716,13 @@ def visibility_lines(e, c):
     c.setup["scoreboard objectives add aoe_vis dummy"] = None
     c.stats["set player visibility"] += 1
     return [f"scoreboard players set #p{a}.p{b} aoe_vis {e['visibility'] + 1}", "scoreboard players set #any aoe_vis 1"]
+
+
+# The keys of the effect dict of read_scenario beyond the common ones: key -> attribute of the scenario effect, or
+# (effect, kinds, techs) -> value. A new effect is one line here, in alphabetical order (#2792): parallel trigger
+# tickets conflicted in one expression of read_scenario. The older effects still have their entry there.
+EFFECT_KEYS = {
+}
 
 
 # The handler of each trigger effect: (effect, Effect context) -> commands. A new effect is one line here, in
