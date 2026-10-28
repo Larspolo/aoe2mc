@@ -63,6 +63,7 @@ MAP = {
     ("effect", "TASK_OBJECT"): "`tag @e[tag=aoe2mc.pN,x=..,dx=..] add aoe_taskK` and the tile in the storage `aoe2mc:tasks`: the scenario mode of the game program walks them there with `aoe moveto` (vanilla has no walk-to command, #2646)",
     ("effect", "PATROL"): "`tag` of the units in the area and an order in the storage `aoe2mc:orders`: the scenario mode of the game program walks them with `aoe moveto` (#2647); vanilla has no walk-to command",
     ("effect", "ATTACK_MOVE"): "`tag` of the units in the area and an order in the storage `aoe2mc:orders`: the scenario mode of the game program gives them the aggressive stance and `aoe moveto` (#2647); vanilla has no walk-to command",
+    ("effect", "CHANGE_OBJECT_STANCE"): "`tag` of the units in the area and an order in the storage `aoe2mc:orders`: the scenario mode of the game program sets the stance with `aoe stance` (#2705); vanilla has no stance",
     ("effect", "TRIBUTE"): "`scoreboard players add`/`remove` on `#pN.<resource> aoe_res`; the game program puts it into the stock (`--mode scenario`: `scenario.resources`, #2576)",
     ("effect", "MODIFY_RESOURCE"): "`scoreboard players add`/`remove` on `#pN.<resource> aoe_res`, a set on `aoe_set`; the game program puts it into the stock (`--mode scenario`: `scenario.resources`, #2576)",
     ("effect", "RESEARCH_TECHNOLOGY"): "`scoreboard players set #rN.I aoe_tech 1`: the scenario mode of the game program gives the technology (#2577)",
