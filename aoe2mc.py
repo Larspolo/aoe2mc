@@ -435,6 +435,8 @@ def read_scenario(path):
                                             **({"mood": ColorMood(e.color_mood).name}     # "Change Color Mood" (#1876)
                                                if e.effect_type == CHANGE_COLOR_MOOD and
                                                getattr(e, "color_mood", None) in set(ColorMood) else {}),
+                                            **({"trigger": e.trigger_id}       # "(De)activate Trigger" (#2575)
+                                               if e.effect_type in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER) else {}),
                                             **({"quantity": e.quantity}
                                                if e.effect_type in (DAMAGE_OBJECT, HEAL_OBJECT, CHANGE_OBJECT_SPEED)
                                                else {}),
@@ -2809,6 +2811,7 @@ RESEARCH_TECHNOLOGY = 2                                            # "Research T
 SEND_CHAT = 3
 TASK_OBJECT = 12                                                   # "Task Object" (#2646)
 TELEPORT_OBJECT = 35
+ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER = 8, 9
 TIMER = 10
 TRIBUTE = 5                                                        # "Tribute" (#2576)
 TRIGGER_CHANCE = 20                                                # the condition "Chance" (#2574)
@@ -3286,6 +3289,20 @@ def victory_lines(e, c):
     return [f"scoreboard players set #p{max(e['player'], 0)} aoe_win 1"]
 
 
+def switch_lines(e, c):
+    """The commands of "Activate Trigger" and "Deactivate Trigger" (#2575): the score #N of aoe_on of trigger N (in
+    c.switch), and the start (c.timed: its ticks) or the clear of its timer. An area trigger can fire again."""
+    k, up = e.get("trigger"), e["type"] == ACTIVATE_TRIGGER
+    if k not in c.switch:
+        return []
+    fn = f"aoe2mc:trigger/{k}"
+    if up and k in c.timed:                                            # an active timer runs on: AoE2 counts from
+        more = [f"execute unless score #{k} aoe_on matches 1 run schedule function {fn} {c.timed[k]}t replace"]   # now
+    else:
+        more = [f"scoreboard players reset #{k} aoe_trig"] if up else [f"schedule clear {fn}"] * (k in c.timed)
+    return more + [f"scoreboard players set #{k} aoe_on {int(up)}"]
+
+
 def clear_lines(e, c):
     """The command of "Clear Instructions" (#2609): no message, the shown instructions go."""
     return ["title @a clear"]
@@ -3307,6 +3324,7 @@ def instruction_lines(e, c):
 # The handler of each trigger effect: (effect, Effect context) -> commands. A new effect is one line here, in
 # alphabetical order, and its handler function (#2613): no change of trigger_files.
 EFFECTS = {
+    ACTIVATE_TRIGGER: switch_lines,
     ATTACK_MOVE: order_lines,
     CHANGE_COLOR_MOOD: mood_lines,
     CHANGE_DIPLOMACY: diplomacy_lines,
@@ -3321,6 +3339,7 @@ EFFECTS = {
     CLEAR_TIMER: clear_timer_lines,
     CREATE_OBJECT: object_lines,
     DAMAGE_OBJECT: damage_lines,
+    DEACTIVATE_TRIGGER: switch_lines,
     DECLARE_VICTORY: victory_lines,
     DISPLAY_INSTRUCTIONS: instruction_lines,
     DISPLAY_TIMER: timer_lines,
@@ -3339,7 +3358,7 @@ EFFECTS = {
     TRIBUTE: resource_lines,
 }
 # The context of the effects of trigger t: a handler can add function files (files) and load lines (setup, the keys)
-Effect = namedtuple("Effect", "t T ground players stats mood files setup")
+Effect = namedtuple("Effect", "t T ground players stats mood files setup switch timed", defaults=((), {}))
 
 
 # The test of each condition on a score (execute if <test>), one line per condition in alphabetical order (#2613):
@@ -3354,7 +3373,7 @@ SCORE_TESTS = {
 }
 
 
-def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=True):
+def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=True, live=None):
     """(load lines, files) for the triggers that only have timer conditions (#648) or only "Objects in Area",
     "Own Objects" and "Own Fewer Objects" conditions (#649, #2573): one function per trigger. "Own Objects" counts the
     units of the player on the whole map (Q or more), "Own Fewer Objects" Q or fewer; buildings are blocks with no
@@ -3366,10 +3385,25 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Accumulate Attribute" condition of a resource: resource_score (#2655). A "Destroy Object" condition
     (OBJECT_TESTS) tests the tag aoe2mc.r<ref> of its unit and its marker (#2618). The commands of each effect come
     from its handler in EFFECTS.
-    A disabled trigger does not run."""
+    A disabled trigger runs only after an "Activate Trigger" (#2575): the score #N of aoe_on is 1 while a trigger that
+    such an effect names is on (switch_lines). live: the triggers that get a function; None: all that give commands
+    (an effect may name only a function that exists). A "Chance" trigger cannot be activated yet."""
+    if live is None:
+        live = {t["id"] for t in triggers}
+        while any(e["type"] in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER) for t in triggers for e in t["effects"]) and \
+                live != (made := {int(k.split("/")[-1].split(".")[0]) for k in
+                                trigger_files(triggers, T, ground, players, Counter(), mood, live)[1]
+                                if re.fullmatch(r"data/aoe2mc/function/trigger/\d+\.mcfunction", k)}):
+            live = made
     load, files, tick, setup = [], {}, [], {}
     stats = Counter() if stats is None else stats
     ground = np.zeros((0, 0), np.int16) if ground is None else ground
+    chancy = {t["id"] for t in triggers if any(c["type"] == TRIGGER_CHANCE for c in t["conditions"])}
+    on = {e.get("trigger") for t in triggers for e in t["effects"] if e["type"] == ACTIVATE_TRIGGER}
+    switch = {e.get("trigger") for t in triggers for e in t["effects"]
+              if e["type"] in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER)} & live - chancy
+    timed = {t["id"]: max(20 * max(c["timer"] for c in t["conditions"]), 1) for t in triggers  # 1 tick at least
+             if t["conditions"] and all(c["type"] == TIMER for c in t["conditions"])}
     for t in triggers:
         conds = t["conditions"]
         kinds = {(c["type"], c["inverted"]) for c in conds}
@@ -3381,7 +3415,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                for c in conds):                                        # no object, or a building: blocks, no entity
             stats["object condition (not an entity, not supported yet)"] += t["enabled"]
             continue
-        if not t["enabled"] or not conds or not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED}) or \
+        if not (t["enabled"] or t["id"] in on and t["id"] not in chancy) or not conds or \
+                not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED}) or \
                 chance and len([c for c in conds if c["type"] == TRIGGER_CHANCE]) > 1 or \
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds) or \
                 any(c["type"] == VARIABLE_VALUE and (c.get("variable", -1) < 0 or variable_range(c) is None)
@@ -3389,11 +3424,14 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     or c["type"] == ACCUMULATE_ATTRIBUTE and resource_score(c) is None
                     for c in conds):                                   # unit classes: not yet
             continue
-        ctx = Effect(t, T, ground, players, stats, mood, files, setup)
+        ctx = Effect(t, T, ground, players, stats, mood, files, setup, switch, timed)
         lines = [line for e in t["effects"] if e["type"] in EFFECTS for line in EFFECTS[e["type"]](e, ctx)]
         if not lines:
             continue
         fn, n = f"aoe2mc:trigger/{t['id']}", t["id"]
+        if n in switch:
+            load += [f"scoreboard players set #{n} aoe_on 1"] * t["enabled"]
+            lines += [f"scoreboard players set #{n} aoe_on 0"] * (not t["looping"])   # it fired: off until activated
         tests, unless, counts = [], [], []
         for i, c in enumerate(conds):
             if c["type"] in SCORE_TESTS:                               # a score of the world or the game
@@ -3424,6 +3462,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 tests.append(f"if score #{n}.{i} aoe_trig matches {q}..")
                 unless.append(f"unless score #{n}.{i} aoe_trig matches {q}..")
         ticked = bool(tests)
+        tests[:0] = [f"if score #{n} aoe_on matches 1"] * (ticked and n in switch)
         resets = [f"execute {u} run scoreboard players reset #{n} aoe_trig" for u in unless] * t["looping"]
         timers = [c["timer"] for c in conds if c["type"] == TIMER]
         ticks = max(20 * max(timers, default=0), 1)                   # a schedule needs at least 1 tick
@@ -3449,7 +3488,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             continue
         run = f"schedule function {fn} {ticks}t replace"
         files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines + [run] * t["looping"]) + "\n"
-        load.append(run)
+        load += [run] * t["enabled"]
     names = sorted({f"#v{x['variable']}" for t in triggers for x in t["conditions"] + t["effects"]
                     if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE) and x.get("variable", -1) >= 0})
     if names:
@@ -3458,6 +3497,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     for word in ("aoe_difficulty", "aoe_tech"):                       # a score that only the game program sets
         if any(f" {word} " in x for x in tick):
             setup[f"scoreboard objectives add {word} dummy"] = None
+    if switch:
+        setup["scoreboard objectives add aoe_on dummy"] = None
     load[:0] = setup
     if tick or any(k.endswith("_chance.mcfunction") for k in files):
         load.insert(0, "scoreboard objectives add aoe_trig dummy")
