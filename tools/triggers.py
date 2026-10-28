@@ -65,7 +65,7 @@ MAP = {
     ("effect", "MODIFY_RESOURCE"): NO_ECONOMY,
     ("effect", "RESEARCH_TECHNOLOGY"): NO_ECONOMY,
     ("effect", "CHANGE_COLOR_MOOD"): "`time set` and `weather` of the mood (`MOODS`, `RAIN`; timer and area triggers: #1876); the fog stays",
-    ("effect", "CHANGE_DIPLOMACY"): "not supported: the teams of a world do not fight by themselves",
+    ("effect", "CHANGE_DIPLOMACY"): "`scoreboard players set #pN.pM aoe_dip`: the scenario mode of the game program changes the stance (#2645)",
 }
 
 

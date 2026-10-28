@@ -427,6 +427,8 @@ def read_scenario(path):
                                                if e.effect_type == CHANGE_VARIABLE else {}),
                                             **({"target": e.target_player}                # "Change Ownership" (#2570)
                                                if e.effect_type == CHANGE_OWNERSHIP else {}),
+                                            **({"target": e.target_player, "diplomacy": e.diplomacy}   # (#2645)
+                                               if e.effect_type == CHANGE_DIPLOMACY else {}),
                                             **({"unit": e.time_unit, "timer": e.timer}   # "Display Timer" (#2572)
                                                if e.effect_type == DISPLAY_TIMER else {}))
                                        for e in t.effects])
@@ -2716,6 +2718,8 @@ COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions 
 CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 14, 15, 18, 72
 DAMAGE_OBJECT = 24                                                     # "Damage Object" (#2571)
 DECLARE_VICTORY = 13                                                   # "Declare Victory" (#2542)
+CHANGE_DIPLOMACY = 1                                                   # "Change Diplomacy" (#2645)
+STANCES = (0, 1, 3)                                                    # DiplomacyState: ally, neutral, enemy
 TELEPORT_OBJECT = 35
 CHANGE_VARIABLE, VARIABLE_VALUE = 56, 22                               # the scenario variables (#2611)
 TICKED = COUNTED + (VARIABLE_VALUE,)                               # conditions of the tick function
@@ -2967,12 +2971,14 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Teleport Object": teleport_lines (#2569).
     "Change Variable": variable_lines; a "Variable Value" condition runs in the tick function as an area (#2611).
     "Declare Victory" sets the score #p<player> of aoe_win to 1: the scenario mode of the game program ends the game.
+    "Change Diplomacy" sets the score #p<player>.p<target> of aoe_dip to the stance + 1 and #any of aoe_dip to 1: the
+    scenario mode changes the stance (#2645).
     "Freeze Object": freeze_lines (#2608).
     "Change Object Name": name_lines (#2616).
     "Change View": view_lines (#2610).
     "Clear Instructions": title @a clear (#2609).
     A disabled trigger does not run."""
-    load, files, tick, win = [], {}, [], False
+    load, files, tick, win, dip = [], {}, [], False, False
     stats = Counter() if stats is None else stats
     ground = np.zeros((0, 0), np.int16) if ground is None else ground
     for t in triggers:
@@ -3001,6 +3007,14 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 lines.append(f"scoreboard players set #p{max(e['player'], 0)} aoe_win 1")
                 stats["declare victory"] += 1
                 win = True
+                continue
+            if e["type"] == CHANGE_DIPLOMACY:                          # the scenario mode reads the score (#2645)
+                a, b = e["player"], e.get("target", -1)
+                if e.get("diplomacy") in STANCES and a > 0 and b > 0 and a != b:
+                    lines += [f"scoreboard players set #p{a}.p{b} aoe_dip {e['diplomacy'] + 1}",
+                              "scoreboard players set #any aoe_dip 1"]
+                    stats["change diplomacy"] += 1
+                    dip = True
                 continue
             if e["type"] == DISPLAY_TIMER:
                 more, timer = timer_lines(t, e)
@@ -3076,6 +3090,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
     if win:
         load.insert(0, "scoreboard objectives add aoe_win dummy")
+    if dip:
+        load.insert(0, "scoreboard objectives add aoe_dip dummy")
     if tick:
         load.insert(0, "scoreboard objectives add aoe_trig dummy")
         files["data/minecraft/tags/function/tick.json"] = {"values": ["aoe2mc:tick"]}

@@ -10,6 +10,9 @@ A scenario trigger with the effect "Declare Victory" ends the game (#2542): its 
 #p<N> of aoe_win to 1 (aoe2mc.trigger_files), and victory() reads it with RCON once per conquest.EVERY seconds. Player N
 and its allies see "Victory", the others "Defeat" (cheats.over). Minecraft feature: a scoreboard, no own logic in the
 world.
+A trigger with the effect "Change Diplomacy" sets the score #p<N>.p<M> of aoe_dip to the stance + 1 and #any to 1
+(#2645): diplomacy() changes the stance of player N to player M in the players of aoe2mc.json and sends the plugin
+commands of the alliances and neutral stances (gather.allies_command, gather.neutral_command).
 
     scenario.victory(g)    # gather.Gather.run, in the scenario mode
 """
@@ -23,6 +26,7 @@ import gather  # noqa: E402
 import rcon  # noqa: E402
 import replay  # noqa: E402
 import train  # noqa: E402
+import treaty  # noqa: E402
 
 SLOT = "inventory.26"                                                  # the last slot of the inventory: not the hotbar
 TAG = "aoe_book"                                                       # a person who has the book
@@ -116,7 +120,48 @@ def victory(g):
     if g.ended or g.clock() < vars(g).get("win_at", 0.0):
         return
     g.win_at = g.clock() + conquest.EVERY
+    diplomacy(g)
     for n in sorted(int(p) for p in g.players if int(p)):
         got = re.search(r" has (-?\d+) ", g.command(f"scoreboard players get #p{n} aoe_win") or "")
         if got and int(got[1]) > 0:
             return cheats.over(g, lambda m: gather.allied(g.players, n, m))   # allies win together
+
+
+STANCES = {1: "ally", 2: "neutral", 4: "enemy"}                       # the score of aoe_dip: DiplomacyState + 1
+
+
+def stance(players, n, m, kind):
+    """Set the stance of player n to player m ("ally", "neutral" or "enemy") in the players of aoe2mc.json. An alliance
+    is a team (`team`, the groups of `aoe allies`): an ally joins the team of m, and a player that leaves an ally
+    leaves its whole team, as the alliances of a world are groups."""
+    row, other = players.setdefault(str(n), {}), players.setdefault(str(m), {})
+    neutral = sorted(set(row.get("neutral", [])) - {m} | ({m} if kind == "neutral" else set()))
+    row.pop("neutral", None)
+    row |= {"neutral": neutral} if neutral else {}
+    if (kind == "ally") == gather.allied(players, n, m):
+        return
+    if kind != "ally":
+        row.pop("team")
+        return
+    if other.get("team") is None:
+        other["team"] = 1 + max((p["team"] for p in players.values() if p.get("team") is not None), default=0)
+    row["team"] = other["team"]
+
+
+def diplomacy(g):
+    """Apply the stances that "Change Diplomacy" triggers set (the scores of aoe_dip), then reset the scores. During a
+    treaty (treaty.holds) all players stay neutral: the end of the treaty sends the new stances."""
+    got = re.search(r" has (-?\d+) ", g.command("scoreboard players get #any aoe_dip") or "")
+    if not got or int(got[1]) < 1:
+        return
+    g.command("scoreboard players reset #any aoe_dip")
+    ns = sorted(int(p) for p in g.players if int(p))
+    for n in ns:
+        for m in ns:
+            got = n != m and re.search(r" has (-?\d+) ", g.command(f"scoreboard players get #p{n}.p{m} aoe_dip") or "")
+            if got and int(got[1]) in STANCES:
+                stance(g.players, n, m, STANCES[int(got[1])])
+                g.command(f"scoreboard players reset #p{n}.p{m} aoe_dip")
+    g.command(gather.allies_command(g.players))
+    if not treaty.holds(g):
+        g.command(gather.neutral_command(g.players))
