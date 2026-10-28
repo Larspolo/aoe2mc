@@ -2,7 +2,7 @@
 
 tests/data/civ_bonuses.jsonl is a copy of the "Civilization bonuses" of each civilization page of the AoE2 wiki (not the
 team bonuses and the unique technologies). Each bonus has one state: "in" names the table of game/civs.py that holds
-it (or the game/ file that has it); "gap" names the roadmap key of a bonus whose part the game program has, but not the
+it, its key of game/data/civs.jsonl (civs.KEYS, #2281) or the game/ file that has it; "gap" names the roadmap key of a bonus whose part the game program has, but not the
 bonus yet (a ticket can add it); "later" names the roadmap key of the part that the game program does not have yet.
 One line per bonus, with the name "CIV: bonus", so that tools/merge_jsonl.py merges two tickets by line (#2100)."""
 import json
@@ -34,7 +34,7 @@ def test_each_bonus_has_one_known_state():
             state = set(r) - {"bonus", "name"}
             assert len(state) == 1 and r["bonus"] and r["name"] == f"{civ}: {r['bonus']}", (civ, r)
             if "in" in r:
-                assert r["in"] in TABLES or os.path.isfile(os.path.join(ROOT, r["in"])), (civ, r)
+                assert r["in"] in TABLES or r["in"] in civs.KEYS or os.path.isfile(os.path.join(ROOT, r["in"])), (civ, r)
             else:
                 assert r.get("gap", r.get("later")) in KEYS, (civ, r)
 
