@@ -44,3 +44,7 @@ Spend 5 minutes or less: the ticket stays the main work, and this check must not
    - Else → no action.
 3. Write one sentence in the `--text` of the run report (`report.md`): `Conflict: <file>, <table or function>;
    cause <cause>; prevent: none | #ticket | PR #n`. The `improve` skill reads these sentences (weak spots).
+
+A push to your own PR branch fails with "fetch first": the workflow Unconflict merged `main` into it (#2120: three
+times in 30 minutes while main moved fast). `git fetch origin <branch> && git merge --no-edit origin/<branch>`, run
+only the tests of your files, and push at once: the new commits are main's code, and CI tests the merge.

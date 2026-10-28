@@ -85,18 +85,9 @@ def only(row):
 
 
 def check_civs(row):
-    form(row, {"name": str, "missing": list}, {     # one key per line: parallel tickets add one
-        "also": dict,
-        "arrows": list,
-        "cost_per": list,
-        "costs": list,
-        "drop": dict,
-        "farm_upgrades": float,
-        "more": dict,
-        "twice": list,
-        "unique": str,
-        "units": list,
-    })
+    form(row, {"name": str, "missing": list}, {"unique": str})
+    for k, v in row.items():                               # a rule, not a list of keys: parallel tickets add keys (#2239)
+        assert isinstance(v, (dict, list, str, int, float)) and not isinstance(v, bool), (row["name"], k, v)
     n, known = row["name"], NAMES["train.jsonl"] | NAMES["units.jsonl"] | NAMES["buildings.jsonl"]
     assert set(row.get("drop", {})) <= {"food", "forage"} and all(isinstance(v, NUMBER) for v in row.get("drop", {}).values()), n
     assert set(row["missing"]) <= known and row["missing"] == sorted(set(row["missing"])), n
