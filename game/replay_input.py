@@ -25,6 +25,8 @@ VIEW = SPEED + len(SPEEDS)            # the view of the next player (#1303): Pap
 FIGHTS = VIEW + 1                     # the menu page of the large fights (#2949): Paper only, as MENU
 FIGHT = FIGHTS + 1                    # FIGHT + i: fight i of the list (the next ticket jumps there)
 MAX_FIGHTS = 10                       # fights in the list
+FIGHT_LEAD = 10000                    # ms of game time: a fight jump goes this much before the fight start (#2950)
+FIGHT_HEIGHT = 30                     # blocks above the ground of the fight place: the viewer looks down at it
 JUMPS = {JUMP: 60000, JUMP5: 300000, JUMP10: 600000, BACK: -60000, BACK5: -300000}   # BACK: a jump back (#979)
 ITEMS = {PAUSE: (0, "clock", "Pause / continue"), NEXT: (1, "feather", "Next speed"),
          JUMP: (2, "ender_pearl", "Jump 1 minute"), SPECTATE: (7, "ender_eye", "Spectator view"),
@@ -72,7 +74,18 @@ def apply(n, control):
         views = [None, *control.get("players", {})]               # Replay.run: player -> (name, color)
         control["view"] = views[(views.index(control.get("view")) + 1) % len(views)]
         return view_name(control)
+    if FIGHT <= n < FIGHT + MAX_FIGHTS and n - FIGHT < len(control.get("fights", [])):
+        f = control["fights"][n - FIGHT]                           # forward or back: Replay.run restarts for back
+        control["jump"], control["place"] = max(0, f["start"] - FIGHT_LEAD), list(f["tile"])
+        return f"Fight at {clock_text(f['start'])}"
     return None
+
+
+def place_commands(tile, T, ground, who="@a"):
+    """The viewer above a fight place (#2950): spectator mode, FIGHT_HEIGHT blocks above the ground of the tile
+    (block = tile × T), looking straight down. ground: the ground height at the tile."""
+    x, z = (round(c * T + T / 2, 1) for c in tile)
+    return [f"gamemode spectator {who}", f"tp {who} {x} {min(319, ground + FIGHT_HEIGHT)} {z} 0 90"]
 
 
 def view_name(control):
@@ -162,7 +175,7 @@ class Input:
                 for player in (p.strip() for p in g.command("list").split(":", 1)[-1].split(",")):
                     if player and re.search(rf" has {n}\b", g.command(f"scoreboard players get {player} {OBJECTIVE}")):
                         page(player)
-        for n in [*actions(), VIEW]:
+        for n in [*actions(), VIEW, *range(FIGHT, FIGHT + MAX_FIGHTS)]:
             if self.passed(f"@a[scores={{{OBJECTIVE}={n}}}]") and (said := apply(n, control)):
                 g.command(f"title @a actionbar {json.dumps({'text': said}, ensure_ascii=False)}")
                 if n == VIEW:                                      # the chat line in the color of the player

@@ -17,7 +17,7 @@
   "part": "Deep runs",
   "group": "Runs",
   "when": "Only when the pacer starts one (no schedule); a new session each time",
-  "does": "One unattended cloud session on Opus at effort high: does the lane:deep tickets (bugs with an unknown cause, changes across many modules, process, decision, epic and large tickets), the epic check, the queue refill, the roadmap review and the process review; stops when no lane:deep ticket is ready and the refill is done",
+  "does": "One unattended cloud session on Opus at effort high: does the lane:deep tickets (a choice where a wrong answer can pass the tests: an unknown bug cause, a race, a new structure, a change to how the runs plan, a ticket that failed before, large tickets to split), the epic check, the queue refill, the roadmap review and the process review; stops when no lane:deep ticket is ready and the refill is done",
   "where": "Scheduled task “aoe2mc autopilot deep” (argument max lane deep), .claude/skills/autopilot/queue.md (Deep lane)"
  },
  {
@@ -45,7 +45,7 @@
   "part": "Model lanes",
   "group": "Rules",
   "when": "When a run writes a ticket, and each pacer cycle",
-  "does": "The ticket skill adds lane:haiku to each size:S ticket that names the place of its change and needs no render or game check (also when unsure), and lane:deep to the hard tickets (about 10 to 20 %). The main runs never take a ticket of a reserved lane",
+  "does": "The ticket skill gives each ticket the cheapest lane that does it right at the first try: lane:haiku when the body leaves nothing to decide (also when unsure), no label for the main runs, lane:deep when a wrong answer can pass the tests (about 10 to 20 %). The main runs never take a ticket of a reserved lane",
   "where": ".claude/skills/ticket (Model lanes), agent.toml [pacing] weights, tools/health.py lane_weights"
  },
  {

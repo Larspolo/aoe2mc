@@ -4,7 +4,7 @@
 
 Writes aoe2mc-merged-prs.json, aoe2mc-tickets.json, aoe2mc-epics.json, aoe2mc-roadmap.json, aoe2mc-release-bar.json
 and aoe2mc-usage.json, and copies aoe2mc-setup.json (written by hand: tools/dashboard_artifact/setup.json). The page
-reads them as attached files. The skill dashboard-refresh uploads them (#982).
+reads them as data files: `tools/dashboard_site.py` builds the GitHub Pages site with them (#982).
 """
 import datetime as dt
 import json

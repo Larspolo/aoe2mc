@@ -4,6 +4,7 @@ Measure how far the units of a live replay on Paper are from their replay positi
 
 Usage:
     python3 tools/replay_drift.py samples/de-64.3.aoe2record [--speed 4] [--until 10:00] [--log OUT.jsonl] [--server-log OUT.log]
+    python3 tools/replay_drift.py ... --profile 20:00-23:00    # also profile the server thread in that game time (#3336)
     python3 tools/replay_drift.py WORLD ...                    # a converted world of a record (the tool copies it;
                                                                # it stops on a world that a game saved, #2667)
     python3 tools/replay_drift.py --read OUT.jsonl             # only print the table of a log
@@ -186,13 +187,18 @@ def played(world, data, near=2):
                                                     (o["tile"][0] * T, o["tile"][1] * T)) > near]
 
 
-def measure(src, speed=4.0, until=None, every=10, log=None, version=None, server_log=None):
+PROFILE = []     # the tables of --profile, printed after the drift tables
+
+
+def measure(src, speed=4.0, until=None, every=10, log=None, version=None, server_log=None, profile=None):
     """Play the replay of src (a record or a converted world) on Paper; returns the samples. server_log: copy the
-    server log to this file at the end, also after an error."""
+    server log to this file at the end, also after an error. profile: (from, to) game times in ms: record the server
+    thread between them and print the tables of server_profile.py."""
     import aoe2mc
     import mc_check
     import replay
     import run
+    import server_profile
     samples = []
     with tempfile.TemporaryDirectory() as tmp:
         world = os.path.join(tmp, "DriftWorld")
@@ -212,9 +218,16 @@ def measure(src, speed=4.0, until=None, every=10, log=None, version=None, server
             combat.setup(game, data)
             r = replay.Replay(game, data, game.version, ai=True)
             due = [0]
+            prof = {"on": False, "done": profile is None, "file": os.path.join(tmp, "drift.jfr")}
 
             def poll(control):
                 now = control["time"]
+                if not prof["done"] and not prof["on"] and now >= profile[0]:
+                    server_profile.start(game.server.p.pid)
+                    prof["on"] = True
+                if prof["on"] and (now >= profile[1] or (until is not None and now >= until)):
+                    server_profile.stop(game.server.p.pid, prof["file"])
+                    prof["on"], prof["done"] = False, True
                 if until is not None and now >= until:
                     raise Done
                 if now >= due[0]:
@@ -233,8 +246,12 @@ def measure(src, speed=4.0, until=None, every=10, log=None, version=None, server
             except Done:
                 pass
             finally:
+                if prof["on"]:
+                    server_profile.stop(game.server.p.pid, prof["file"])
                 if server_log:
                     keep_log(game, server_log)
+            if os.path.exists(prof["file"]):
+                PROFILE.append(server_profile.report(prof["file"]))
     return samples
 
 
@@ -249,6 +266,7 @@ def main(argv=None):
     ap.add_argument("--read", metavar="FILE", help="only print the table of a log")
     ap.add_argument("--version", help="Minecraft version of the server")
     ap.add_argument("--server-log", metavar="FILE", help="copy the server log to this file at the end (#2464)")
+    ap.add_argument("--profile", metavar="MM:SS-MM:SS", help="profile the server thread between two game times (#3336)")
     a = ap.parse_args(argv)
     if a.read:
         with open(a.read) as f:
@@ -256,14 +274,18 @@ def main(argv=None):
     elif a.src:
         import aoe2mc
         until = aoe2mc.game_time(a.until) if a.until else None
+        profile = tuple(aoe2mc.game_time(t) for t in a.profile.split("-")) if a.profile else None
         with contextlib.ExitStack() as stack:
             log = stack.enter_context(open(a.log, "w")) if a.log else None
-            samples = measure(a.src, a.speed, until, a.every, log, a.version, a.server_log)
+            samples = measure(a.src, a.speed, until, a.every, log, a.version, a.server_log, profile=profile)
     else:
         ap.error("give a record, a world or --read FILE")
     print(table(analyze(samples)))
     print()
     print(walk_table(walk(samples)))
+    for t in PROFILE:
+        print()
+        print(t)
 
 
 if __name__ == "__main__":

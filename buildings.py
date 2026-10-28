@@ -1264,7 +1264,7 @@ def monastery(c, w, st, col, T, ctx):
         for x in (tx0, tx0 + t - 1):
             for z in (w - t, w - 1):
                 c.box(x, x + 1, th - 2, th, z, z + 1, stone)
-        c.set(mid, th - 1, w - 1 - t // 2, "bell[attachment=ceiling,facing=south]")
+        c.set(tx0 + t // 2, th - 1, w - 1 - t // 2, "bell[attachment=ceiling,facing=south]")
         c.box(tx0, tx0 + t, th, th + 1, w - t, w, stone)
         c.spire(tx0, tx0 + t, w - t, w, th + 1, family(st.roof if st.shape != "flat" else "deepslate_tile")[2],
                 steep=3, tip="lightning_rod")

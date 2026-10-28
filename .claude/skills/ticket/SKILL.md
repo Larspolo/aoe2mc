@@ -120,27 +120,20 @@ is only in a document is lost: milestones 2 and 3 of the replay research (#31) w
 
 ## Model lanes
 
-A cheap Haiku run takes the tickets with the label `lane:haiku` (#1715). Add it to each `size:S` ticket that names the
-place of its change (a file, a function or a data line) and needs no look at a render, a screenshot or the real game.
-Judge the other tickets one by one: there is no quota of Haiku tickets.
-- Haiku does well: a clear goal and a clear end, a change at a known place (the body names the files or the
-  function to change), a pattern that the code already has, values that the body gives or that a data file or a
-  merged PR shows. Size S or a small M. Tests and a slow test run are fine.
-- Opus does better: open design questions, a look to judge (renders, screenshots), a bug with an unknown cause,
-  changes across many modules, checks in the real platform (server, client), process, decision, check and epic tickets.
-  On hard coding tests Haiku 5.5 is far below Opus 5.5 (SWE-bench Pro about 65 % against 90 %), on clear tasks near it.
-- Measured here (#1717): Haiku runs merged 9 of 9 PRs, take about 2.4 times as long (34 min against 14 min) and use
-  a small part of the quota of an Opus run (`weights` in `python3 tools/usage.py --fire`).
-- Measured on 2026-10-28: 22 PRs of 24 Haiku tickets. At API prices a Haiku ticket costs about 1/8 of an Opus
-  ticket, and about 1/25 while its prompt stays below 100k tokens (one Haiku ticket: $0.07, Opus: $1.70 to $2.10).
-When you are not sure, add it (owner, 2026-10-28): a Haiku run that finds the ticket unclear removes the label
-(`autopilot` skill, `queue.md`), and then an Opus run takes it. The Haiku try costs little next to an Opus ticket.
-A deep run (Opus at high effort, 4.5 times or more the tokens of a main run at low effort) takes the tickets with
-`lane:deep` (owner, 2026-10-28). Add it when a wrong thought costs more than the lane: a bug whose cause the body does
-not name, a change across three or more modules or a new structure, a process, decision, epic or `size:L` ticket, and a
-ticket that failed before (red CI after 3 tries, a takeover, a reopened ticket). Aim at about 10 to 20 % of the tickets.
-Never both `lane:haiku` and `lane:deep`.
-While `reserved` in `[pacing]` of `agent.toml` names the lane, Opus runs never take its tickets (#1994).
+Give each ticket the cheapest lane that does it right at the first try. Ask: what must the run decide that the body
+does not say?
+
+| Lane | Label | When | Cost |
+|---|---|---|---|
+| Haiku | `lane:haiku` | Nothing to decide: the body names the place (file, function, data line) and the result, the code has a pattern to copy, and no render, screenshot or real game is needed. `size:S` or a small `size:M`. | About 1/8 of an Opus ticket, 2.4 times the time (#1717; 22 of 24 merged, 2026-10-28) |
+| Main (Opus, low effort) | none | Choices with a clear right answer: a bug with a known cause, a design or a look to judge, a check on the real server or client. | |
+| Deep (Opus, high effort) | `lane:deep` | A choice where a wrong answer can pass the tests and cost later: a bug with an unknown cause, a race or shared state, a new structure, a change to how the runs decide or plan, a ticket that failed before (red CI after 3 tries, a takeover, reopened), a `size:L` ticket to split. | 4.5 times or more the tokens of a main run |
+
+- The kind label does not choose the lane: a clear `process` ticket can be Haiku or main.
+- Not sure between Haiku and main: Haiku (owner, 2026-10-28). A Haiku run that finds the ticket unclear removes the
+  label (`autopilot` skill, `queue.md`). Not sure between main and deep: main.
+- Deep is for about 10 to 20 % of the tickets. Never both lane labels. Decision tickets and epics get no lane label.
+- While `reserved` in `[pacing]` of `agent.toml` names a lane, the main runs never take its tickets (#1994).
 
 ## Rules
 
