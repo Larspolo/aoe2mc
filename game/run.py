@@ -28,6 +28,7 @@ Usage:
     python3 game/run.py WORLD --play --mode battle-royale  # "Battle Royale": the Corruption takes the map (#2439)
     python3 game/run.py WORLD --play --mode capture-the-relic   # "Capture the Relic": the center relic wins (#2440)
     python3 game/run.py WORLD --play --mode defend-the-wonder   # "Defend the Wonder": player 1 has a Wonder (#2441)
+    python3 game/run.py WORLD --play --mode wonder-race   # "Wonder Race": no attacks, the first wonder wins (#2406)
     python3 game/run.py WORLD --play --mode capture-the-relic --regicide   # a King on top of the mode (also
                                                      # --sudden-death, --empire-wars: AoE2 "Advanced Settings", #2490)
     python3 game/run.py WORLD --play --civ 1=BRITONS --civ 2=FRANKS   # the civilization of each player (#2267)
@@ -45,6 +46,7 @@ import contextlib
 import glob
 import hashlib
 import json
+import math
 import os
 import re
 import secrets
@@ -324,6 +326,18 @@ def civ_choices(values):
     return out
 
 
+def handicap_choices(values):
+    """{player: percent} of the --handicap values ("1=150", #2474): the AoE2 setting "Handicap", 100 to 200 in steps of
+    5. A wrong value stops with a message."""
+    out = {}
+    for v in values or ():
+        player, _, pct = v.partition("=")
+        if not player.isdigit() or not pct.isdigit() or int(pct) not in range(100, 201, 5):
+            sys.exit(f"--handicap {v}: write PLAYER=PERCENT, the percent 100 to 200 in steps of 5, for example 1=150")
+        out[int(player)] = int(pct)
+    return out
+
+
 def team_choices(value, players):
     """{player: team or None} of the --teams value ("1,1,2,2", "-" is no team, #2296): one team for each player of
     aoe2mc.json "players" but Gaia, in player order. A wrong value stops with a message."""
@@ -345,6 +359,7 @@ MODES = {
     "regicide": "each player has a King, a player whose King dies is defeated",
     "standard": "the AoE2 rules",
     "sudden-death": "one town center, a player who loses it is defeated",
+    "wonder-race": "no player can attack another, the first complete wonder wins",
 }
 # The modes that a lobby option turns on on top of the --mode (AoE2 "Advanced Settings": "Sudden Death Mode (applies
 # Sudden Death setting on top of the selected game mode)", #2490): --empire-wars, --regicide, --sudden-death.
@@ -368,6 +383,7 @@ SETTINGS = {
     "empire_wars": False,             # "Empire Wars Mode" on top of the mode (ON_TOP, #2490)
     "end_age": "imperial",            # "Ending age" (build.locked, #2346)
     "full_tech_tree": False,          # "Full Tech Tree": the full tech tree and no civilization bonuses (civs.civ, #2354)
+    "handicap": None,                 # {player: percent} "Handicap" (civs.handicap, handicap_choices, #2474)
     "mode": "standard",               # the game mode (MODES; regicide.py #2347, sudden_death.py #2407, empire_wars.py #2408,
                                       # battle_royale.py #2439, defend_wonder.py #2441, capture_relic.py #2440)
     "pop_limit": None,                # "Population limit" (train.LIMITS, #2266)
@@ -405,6 +421,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         data = json.load(f)
     for player, name in (settings["civ"] or {}).items():         # before the Gathers: all bonuses (civs.civ) follow it
         data.setdefault("players", {}).setdefault(str(player), {})["civ"] = name
+    for player, pct in (settings["handicap"] or {}).items():     # before the Gathers: the start resources (#2474)
+        data.setdefault("players", {}).setdefault(str(player), {})["handicap"] = pct
     for player, team in (settings["teams"] or {}).items():       # gather.allied and the scoreboard teams follow it
         data["players"][str(player)]["team"] = team
     data["all_techs"] = settings["all_techs"]                    # one data for all Gathers: the people and the bot (#2298)
@@ -428,13 +446,16 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     if bot:                                          # after the people, next to their Sides (#1794)
         import bot as bots
         import replay
+        import treaty as treaties
         player, foe = bot_seat(data["players"], people)
         attack = max(bot_attack, settings["treaty"], key=replay.aoe2mc.game_time)   # the bot waits for the treaty too
+        if settings["mode"] in treaties.ENDLESS:     # Wonder Race: the bot never attacks (#2406)
+            attack = "never"
         g.bots = [*g.bots, bots.Bot(game, data, player=player, share=g, log=log, foe=foe,
-                                    attack=replay.aoe2mc.game_time(attack) / 1000,
+                                    attack=math.inf if attack == "never" else replay.aoe2mc.game_time(attack) / 1000,
                                     resources=settings["resources"], pop_limit=settings["pop_limit"]).setup()]
         print(f"A bot plays player {player}: {len(g.bots[-1].g.villagers)} villagers gather, its soldiers attack "
-              f"player {foe} at {attack}.", file=sys.stderr)
+              f"player {foe} {'never' if attack == 'never' else 'at ' + attack}.", file=sys.stderr)
     import combat
     combat.setup(game, data)                         # AoE2 hit points and damage (#514)
     modes = {settings["mode"], *(m for m in ON_TOP if settings[m.replace("-", "_")])} - {"standard"}   # (#2490)
@@ -450,7 +471,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
             train.start(x, settings["age"])
     for x in [g, *(s.g for s in g.bots)]:
         x.modes = frozenset(modes)                               # gather.has_mode: build.locked, Gather.run (#2490)
-        if settings["mode"] not in ("standard", "empire-wars", "defend-the-wonder") or x is g:
+        if settings["mode"] not in ("standard", "empire-wars", "defend-the-wonder", "wonder-race") or x is g:
             x.mode = settings["mode"]                            # build.locked of each player (#2407)
     if "empire-wars" in modes and not state:                     # after the age: the start town and its villagers;
         import empire_wars                                       # a loaded game has its town in the saved world
@@ -462,13 +483,15 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     import capture_relic
     import regicide
     import sudden_death
-    for mode in sorted(modes - {"empire-wars", "defend-the-wonder"}):   # after the bots: their Kings go to their
-        if mode != "capture-the-relic" or not state:             # Gathers (#2347); a loaded game has the relic in
-            {"battle-royale": battle_royale, "capture-the-relic": capture_relic,   # its save (#2440)
-             "sudden-death": sudden_death}.get(mode, regicide).setup(g, mode)
+    for mode in sorted(modes - {"empire-wars", "defend-the-wonder", "wonder-race"}):   # Wonder Race: no setup, the
+        if mode != "capture-the-relic" or not state:             # endless treaty below (#2406); the Kings go to the
+            {"battle-royale": battle_royale, "capture-the-relic": capture_relic,   # Gathers of the bots (#2347); a
+             "sudden-death": sudden_death}.get(mode, regicide).setup(g, mode)   # loaded game has the relic (#2440)
     import replay
     import treaty as treaties
-    if replay.aoe2mc.game_time(settings["treaty"]):              # after the Gathers: they set the neutral stances
+    if settings["mode"] in treaties.ENDLESS:                     # Wonder Race: a treaty with no end (#2406)
+        treaties.start(g, math.inf, (state or {}).get("treaty_time", 0.0))
+    elif replay.aoe2mc.game_time(settings["treaty"]):            # after the Gathers: they set the neutral stances
         treaties.start(g, replay.aoe2mc.game_time(settings["treaty"]) / 1000, (state or {}).get("treaty_time", 0.0))   # #2409
     if game.kind == "paper":                         # the view square of each player on map 0 (#1762)
         import replay
@@ -652,6 +675,10 @@ def main(argv=None):
     ap.add_argument("--civ", action="append", metavar="N=CIV", help="--play: player N plays civilization CIV (for "
                     "example 1=BRITONS, repeat it for more players): the game rules change, the buildings of the "
                     "world keep the architecture of the scenario")
+    ap.add_argument("--handicap", action="append", metavar="N=PCT", help="--play: the AoE2 setting \"Handicap\" of "
+                    "player N, 100 to 200 percent in steps of 5 (for example 1=150, repeat it for more players): more "
+                    "start resources, villager work rate and hit points, building hit points and military building "
+                    "work rate (default 100)")
     ap.add_argument("--teams", metavar="T,T,...", help="--play: the team of each player in player order, 1 to 4 or - "
                     "(no team), for example 1,1,2,2: allies do not fight and share their team bonuses (default: the "
                     "teams of the scenario)")
@@ -661,6 +688,7 @@ def main(argv=None):
     if state:                                        # the settings of the save, but the options given here win (#2325)
         savegame.settings(a, state, given(ap, argv))
     civ = civ_choices(a.civ)
+    handicap = handicap_choices(a.handicap)
     import train
     if min(train.STARTS[a.age]["ages"], 3) > train.STARTS[a.end_age]["ages"]:   # post-imperial is the Imperial Age
         sys.exit(f"--age {a.age} is after --end-age {a.end_age}: the game must start in or before its last age")
@@ -691,7 +719,7 @@ def main(argv=None):
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
                 g = play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal,
                          people=a.people, speed=a.speed, state=state,
-                         **{k: getattr(a, k) for k in SETTINGS} | {"civ": civ, "teams": teams})
+                         **{k: getattr(a, k) for k in SETTINGS} | {"civ": civ, "teams": teams, "handicap": handicap})
             if not getattr(g, "ended", None):
                 return
             print(f"The game ended ({g.ended}). The server stays up: type commands, Ctrl-C stops it.",
