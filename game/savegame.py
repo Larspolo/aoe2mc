@@ -378,6 +378,7 @@ def board_again(x):
 
 def load(g, d):
     """Put the saved state d (dump) on the Gather of each player that it names, and show the resources again."""
+    import build
     import gather
     import train
     for x in sides(g):
@@ -390,6 +391,8 @@ def load(g, d):
         for f in PACKED + KEPT:                                        # the next tick shows the boss bars again
             if f in p:                                                 # a save before #2257 has no queues
                 setattr(x, f, unpack(p[f]))
+        for site in x.sites:                                           # the buildings work again: farms, drops, forts (#2980)
+            build.settle(x, site, loaded=True)                         # before the saved amounts, which win
         for f, v in p.get("map", {}).items():                          # a save before #2453 has no map
             m = getattr(x.map, f)                                      # in place: the bot shares these (#2983)
             m.clear()
