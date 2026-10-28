@@ -429,6 +429,10 @@ def read_scenario(path):
                                                if e.effect_type == CHANGE_VARIABLE else {}),
                                             **({"target": e.target_player}                # "Change Ownership" (#2570)
                                                if e.effect_type == CHANGE_OWNERSHIP else {}),
+                                            **({"target": e.target_player, "quantity": e.quantity,   # (#2576)
+                                                "resource": e.tribute_list} if e.effect_type == TRIBUTE else {}),
+                                            **({"operation": e.operation, "quantity": e.quantity,
+                                                "resource": e.tribute_list} if e.effect_type == MODIFY_RESOURCE else {}),
                                             **({"technology": techs.get(e.technology, str(e.technology))}   # #2577
                                                if e.effect_type == RESEARCH_TECHNOLOGY else {}),
                                             **({"unit": e.time_unit, "timer": e.timer}   # "Display Timer" (#2572)
@@ -2733,6 +2737,7 @@ DISPLAY_TIMER = 37                                                 # "Display Ti
 FREEZE_OBJECT = 22                                                 # "Freeze Object" (#2608)
 IN_AREA = 5
 KILL_OBJECT = 14
+MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
 OWN_FEWER_OBJECTS = 4                                              # conditions on the units of a player (#2573)
 OWN_OBJECTS = 3
 PLAY_SOUND = 4                                                     # "Play Sound" (#2644)
@@ -2741,10 +2746,13 @@ RESEARCH_TECHNOLOGY = 2                                            # "Research T
 SEND_CHAT = 3
 TELEPORT_OBJECT = 35
 TIMER = 10
+TRIBUTE = 5                                                        # "Tribute" (#2576)
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
 TICKED = COUNTED + (VARIABLE_VALUE,)                               # conditions of the tick function
+STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list (AoE2 attributes 0 to 3)
+OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
 SOUNDS = [(r["name"], r["sound"]) for r in units.rows("sounds.jsonl")]  # AoE2 sound name part -> vanilla sound
 
 
@@ -2870,6 +2878,25 @@ def owner_lines(e, c):
             f"execute as {own} on vehicle run tag @s add aoe2mc.own",
             f"tag {own} remove aoe2mc.p{old}", f"tag {own} add aoe2mc.p{new}",
             f"team join p{new} {own}", f"tag {own} remove aoe2mc.own"]
+
+
+def resource_lines(e, c):
+    """The commands of "Tribute" and "Modify Resource" (#2576): a converted world has no stock, so they only change
+    the scores #p<N>.<resource> of aoe_res (the change) and aoe_set (a "set"). scenario.resources of the game program
+    reads them into the stock of player N and resets them. A tribute of a trigger has no tax (AoE2)."""
+    if not 0 <= e.get("resource", -1) < len(STORES) or e["player"] <= 0:
+        return []
+    c.setup["scoreboard objectives add aoe_res dummy"] = c.setup["scoreboard objectives add aoe_set dummy"] = None
+    res, q = STORES[e["resource"]], int(e["quantity"])
+
+    def change(n, q):
+        return [f"scoreboard players {'add' if q >= 0 else 'remove'} #p{n}.{res} aoe_res {abs(q)}"] * (n > 0)
+    if e["type"] == TRIBUTE:
+        return change(e["target"], q) + change(e["player"], -q)
+    if (op := OPERATIONS.get(e["operation"])) == "set":               # a set drops the earlier changes
+        return [f"scoreboard players set #p{e['player']}.{res} aoe_set {q}",
+                f"scoreboard players reset #p{e['player']}.{res} aoe_res"]
+    return change(e["player"], q if op == "add" else -q) if op else []
 
 
 def teleport_lines(e, c):
@@ -3053,11 +3080,13 @@ EFFECTS = {
     DISPLAY_TIMER: timer_lines,
     FREEZE_OBJECT: freeze_lines,
     KILL_OBJECT: object_lines,
+    MODIFY_RESOURCE: resource_lines,
     PLAY_SOUND: sound_lines,
     REMOVE_OBJECT: object_lines,
     RESEARCH_TECHNOLOGY: research_lines,
     SEND_CHAT: chat_lines,
     TELEPORT_OBJECT: teleport_lines,
+    TRIBUTE: resource_lines,
 }
 # The context of the effects of trigger t: a handler can add function files (files) and load lines (setup, the keys)
 Effect = namedtuple("Effect", "t T ground players stats mood files setup")
