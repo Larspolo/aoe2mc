@@ -5,10 +5,10 @@ import contextlib
 import io
 import json
 import re
-from urllib.parse import unquote
 
 import pytest
 from menu_line import item, labels, order
+from test_forging import menus                                         # a long menu: with its `aoe menu-add` parts
 from test_gather import FakeServer, grid
 from test_train_menu import RALLY, SKIRM
 
@@ -39,10 +39,6 @@ def setup(wood=25, gold=45, done=True):
     g.techs.add("FEUDAL_AGE")                                          # archers are a Feudal Age unit (#674)
     server.scores["aoe_use"] = 1
     return server, g
-
-
-def menus(server):
-    return [unquote(c) for c in server.log if c.startswith("aoe menu ")]
 
 
 def test_the_build_menu_has_the_archery_range():
