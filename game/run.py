@@ -22,6 +22,7 @@ Usage:
     python3 game/run.py WORLD --play --victory conquest  # the AoE2 setting "Victory": no wonder or relic win (#2316)
     python3 game/run.py WORLD --play --mode regicide   # the AoE2 game mode "Regicide": each player has a King (#2347)
     python3 game/run.py WORLD --play --mode sudden-death   # the AoE2 game mode "Sudden Death": one town center (#2407)
+    python3 game/run.py WORLD --play --mode capture-the-relic   # "Capture the Relic": the center relic wins (#2440)
     python3 game/run.py WORLD --play --civ 1=BRITONS --civ 2=FRANKS   # the civilization of each player (#2267)
     python3 game/run.py WORLD --play --teams 1,1,2,2   # the team of each player, - is no team (#2296)
     python3 game/run.py WORLD --play --load SAVE   # go on with a saved game: Ctrl-C of --play saves into saves/ (#2255)
@@ -337,6 +338,7 @@ SETTINGS = {
     "full_tech_tree": False,          # "Full Tech Tree": the full tech tree and no civilization bonuses (civs.civ, #2354)
     "mode": "standard",               # the game mode: "standard", "regicide" (each player has a King, regicide.MODES, #2347)
                                       # or "sudden-death" (one town center, sudden_death.py, #2407)
+                                      # or "capture-the-relic" (the relic of the map center wins, capture_relic.py, #2440)
     "pop_limit": None,                # "Population limit" (train.LIMITS, #2266)
     "resources": "standard",          # "Starting resources" (gather.LEVELS, #2264)
     "teams": None,                    # {player: team or None} in place of the scenario's (team_choices, #2296)
@@ -405,11 +407,15 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         for x in [g, *(s.g for s in g.bots)]:
             train.start(x, settings["age"])
     if settings["mode"] != "standard":                           # after the bots: their Kings go to their Gathers (#2347)
+        import capture_relic
         import regicide
         import sudden_death
         for x in [g, *(s.g for s in g.bots)]:
             x.mode = settings["mode"]                # build.locked of each player (#2407)
-        (sudden_death if settings["mode"] == "sudden-death" else regicide).setup(g, settings["mode"])
+        if settings["mode"] != "capture-the-relic":
+            (sudden_death if settings["mode"] == "sudden-death" else regicide).setup(g, settings["mode"])
+        elif not state:                              # a loaded game has the relic in its save and world (#2440)
+            capture_relic.setup(g, settings["mode"])
     import replay
     import treaty as treaties
     if replay.aoe2mc.game_time(settings["treaty"]):              # after the Gathers: they set the neutral stances
@@ -579,9 +585,11 @@ def main(argv=None):
     ap.add_argument("--pop-limit", type=pop_limit, default=200, metavar="N",
                     help="--play: the AoE2 setting \"Population limit\" of each player: 25 to 250 in steps of 25, 300, "
                     "400 or 500 (default 200)")
-    ap.add_argument("--mode", choices=["standard", "regicide", "sudden-death"], default="standard",
+    ap.add_argument("--mode", choices=["standard", "regicide", "sudden-death", "capture-the-relic"], default="standard",
                     help="--play: the AoE2 game mode (default standard; regicide: each player has a King, a player "
-                    "whose King dies is defeated; sudden-death: one town center, a player who loses it is defeated)")
+                    "whose King dies is defeated; sudden-death: one town center, a player who loses it is defeated; "
+                    "capture-the-relic: the first player who brings the relic of the map center into an own "
+                    "monastery wins)")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")
