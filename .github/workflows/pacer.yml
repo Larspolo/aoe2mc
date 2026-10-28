@@ -3,7 +3,7 @@ name: Pacer
 # Starts the autopilot runs that the quota target misses (`tools/pacer.py`, #3193):
 # a script keeps no old rule in memory (the old pacer session fired 4 runs for 8, #3147). Only while `pacer` in
 # `[pacing]` of agent.toml is "workflow" (#3194): another value stops the loop.
-# One run loops for about 5.5 hours (a cycle every 10 minutes), then starts the next run itself: GitHub fires the
+# One run loops for about 5.5 hours (a cycle every 15 minutes), then starts the next run itself: GitHub fires the
 # cron schedules of this repository only a few times per day (dashboard.yml "*/10" ran at 08:43 and 15:31 on
 # 2026-10-28). The schedule only restarts a loop that died. A workflow_dispatch by GITHUB_TOKEN starts a new run.
 on:
@@ -34,7 +34,7 @@ jobs:
         run: |
           npm install -g @anthropic-ai/claude-code
           python3 -m pip install -q numpy
-      - name: Start the runs every 10 minutes
+      - name: Start the runs every 15 minutes
         env:
           GITHUB_TOKEN: ${{ github.token }}
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -51,11 +51,11 @@ jobs:
             python3 -c "import tomllib, sys; sys.exit(tomllib.load(open('agent.toml', 'rb'))['pacing'].get('pacer') != 'workflow')" \
               || { echo "pacer is not \"workflow\" in agent.toml: stop the loop"; exit 0; }
             if ! python3 tools/pacer.py; then          # a failed call (HTTP 401, 500): red now, not after 5.5 hours
-              sleep 600                                # the next cycle waits as usual: no fast loop of red runs
+              sleep 900                                # the next cycle waits as usual: no fast loop of red runs
               gh workflow run pacer.yml --repo "$GITHUB_REPOSITORY" --ref main
               exit 1
             fi
             gh workflow run dashboard-site.yml --repo "$GITHUB_REPOSITORY" --ref main || true   # the dashboard, fresh each cycle
-            sleep 600
+            sleep 900
           done
           gh workflow run pacer.yml --repo "$GITHUB_REPOSITORY" --ref main   # the next loop

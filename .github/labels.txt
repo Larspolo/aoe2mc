@@ -20,6 +20,7 @@ agent-status|1d76db|The dashboard of the agent
 paused|b60205|On the status issue: the agent stops
 muted|d4c5f9|Muted by the owner: the agents skip it and the dashboard hides it
 hold|fbca04|On a PR: the Automerge workflow does not merge it
+automerge|0e8a16|On a PR: the Automerge workflow merges it when CI is green, on any branch
 conflict|b60205|On a PR: the Automerge workflow could not merge it
 lane:deep|5319e7|A hard ticket for a run at the default effort (ticket skill, "Model lanes")
 lane:haiku|c2e0c6|A clear, templated ticket for a Haiku run (ticket skill, "Model lanes")

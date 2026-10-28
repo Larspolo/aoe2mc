@@ -1,5 +1,5 @@
 """The pacer maximum reaches the 5-hour limit (owner, 2026-10-27): at the measured burn, `max_runs` carries 90 % of
-the window in its first 3 hours, and `max_fire` starts the runs fast enough to get there."""
+the window in its first 3 hours. `max_fire` starts at most 2 runs per 15-minute cycle (owner, 2026-10-28)."""
 import usage
 
 NOW = 1_800_000_000
@@ -13,6 +13,6 @@ def test_the_cap_carries_the_window_to_its_aim():
 
 
 def test_the_pacer_starts_up_to_max_fire_runs_per_cycle():
-    assert usage.MAX_FIRE == 8
-    assert usage.runs_to_start(target=34, claims=16, ready=30, paused=False) == 8
-    assert usage.lane_plan(34, 16, 30, 0, 0.25, False) == (8, 0)
+    assert usage.MAX_FIRE == 2
+    assert usage.runs_to_start(target=34, claims=16, ready=30, paused=False) == 2
+    assert usage.lane_plan(34, 16, 30, 0, 0.25, False) == (2, 0)

@@ -46,7 +46,7 @@ def run(tmp_path, message, state="clean"):
         "PUT repos/o/r/pulls/7/merge": [{"message": message}, 1],
         "GET repos/o/r/pulls/7": [{"merged": False, "head": {"sha": "abc"}, "mergeable_state": state}, 0]}))
     pr = json.dumps({"number": 7, "head": {"ref": "agent/7-x", "sha": "abc"}, "labels": [], "body": "A change."})
-    script = "\n".join(["R=o/r merged=0 conflict=0", "land() { return 1; }", "squash() { return 1; }",
+    script = "\n".join(["R=o/r merged=0 conflict=0 AGENT=true", "land() { return 1; }", "squash() { return 1; }",
                         merge_function(), f"merge '{pr}' abc", 'echo "conflict=$conflict"'])
     env = dict(os.environ, PATH=f"{tmp_path / 'bin'}:{os.environ['PATH']}", GH_LOG=str(tmp_path / "log"),
                GH_TABLE=str(tmp_path / "table.json"))

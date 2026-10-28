@@ -161,6 +161,7 @@ NOT_SAVED = (                                                          # the fie
     "enemies",                                                         # the enemy units of aoe2mc.json: a dead one has no position
     "explore_at",                                                      # score.py: the next check time
     "fallen_at",                                                       # scenario.fallen: the next check time
+    "fallen_bots",                                                     # cheats.ruin: the Gathers of defeated bots, for the recap only
     "fallen_sent",                                                     # scenario.fallen: a load sets the same score again
     "flares",                                                          # flare.py: the flares of a replay
     "fog",                                                             # fog.py: the next tick hides the units again; explored()
@@ -215,6 +216,7 @@ NOT_SAVED = (                                                          # the fie
     "win_at",                                                          # scenario.py: the next check time
     "wonder",                                                          # defend_wonder.setup makes it again
     "wonder_at",                                                       # wonder.py: the next check time
+    "work_on",                                                         # bot.py: a setup value (#3271)
 )
 SKIP = ("session.lock",)                                               # the lock of the running server
 

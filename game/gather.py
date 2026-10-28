@@ -539,6 +539,19 @@ def military(name):
     return not name.startswith(CIVILIANS) and (animal(name) or ("military",))[0] == "military"
 
 
+def rank(name):
+    """The place of a unit in an AoE2 formation, from the front (AoE2 wiki "Unit formation", #3414): 0 melee cavalry,
+    camels and elephants, 1 infantry, 2 archers (also on horse), 3 gunpowder foot units, 4 the siege units and the
+    civilians (monks, trade carts, kings)."""
+    import combat                                                      # combat imports this module
+    s = combat.stats(name)
+    if "siege" in s.classes or not military(name):
+        return 4
+    if "gunpowder" in s.classes and "cavalry" not in s.classes:
+        return 3
+    return 2 if s.range > 0 else 0 if {"cavalry", "camel", "elephant"} & set(s.classes) else 1
+
+
 def soldier(name):
     """True for a unit that takes move orders as a soldier (g.soldiers), not the jobs of a villager: a military unit, a
     monk, a trade cart, a ship, and the units with the key "orders" or "moves" (train.ORDERS, build.MOVES). One rule for
@@ -625,6 +638,7 @@ class Gather:
     chop: seconds per unit, one number for all resources or {resource: seconds} ("farm" for farms); default
     WORK_SECONDS, the AoE2 rates at Normal speed (#413). start: the start resources, default START as in AoE2 (#973),
     and NOMAD more for a player with units and no building (#1212); a missing resource starts at 0 ({} for none)."""
+    work_on = True                                                     # #3271: work on after a build or a tree; a bot gives its own tasks
     cheats = False                                                     # also for the adapters of Gather.__new__
     aegis = False                                                      # the cheat "aegis": all work is instant (#817)
     beyond = free_techs = noui = False                                 # cheats: repeat and free technologies, no UI (#968)
@@ -1141,6 +1155,25 @@ class Gather:
         full = [t for t, k in self.home(self.source(v)).items() if k > 0 and (t in self.map.oysters) == oyster]
         return min(full, key=lambda t: math.dist(v.cell, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), default=None)
 
+    def next_task(self, site, who):
+        """AoE2: the builders of a complete own site work on (#3271). A farm: one builder farms it. A camp (a drop site of
+        one or two resources, not a town center): the builders gather the nearest source of its resources. Else idle."""
+        if not who or not self.work_on or site.get("player", self.player) != self.player:
+            return
+        x0, x1, z0, z1 = site["footprint"]
+        if "FARM" in site["name"]:
+            if (tile := self.map.farm_at.get((x0, z0))) and tile not in self.farmers:
+                self.send(tile, {min(who)})
+            return
+        res = [r for r, names in DROP_SITES.items() if site["name"] in names]
+        if not 0 < len(res) < 3:
+            return
+        T, mid = self.map.T, ((x0 + x1) / 2, (z0 + z1) / 2)
+        full = [t for r in res for t, k in self.home(self.map.bushes if r == "food" else self.map.trees if r == "wood"
+                                                     else self.map.mines.get(r, {})).items() if k > 0]
+        if tile := min(full, key=lambda t: (math.dist(mid, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), t), default=None):
+            self.send(tile, who)
+
     def home(self, sources):
         """The sources {tile: amount} that nearest() may take: all. The bot takes only the ones at its base (#1810)."""
         return sources
@@ -1451,10 +1484,10 @@ class Gather:
 
     def walk_to(self, name, cell, units=None):
         """The selected units walk to the free block cell (x, z), as the move order of AoE2 (#1368): each one to its own
-        free cell near it, the nearest cells first (no formation yet). Military units walk with the plugin path finding
-        at their AoE2 speed; villagers stop their work and walk there. Ships sail to the water near it (fleet.order, also
-        at a water cell). units: these units, not the selection, and no mark (transport.tick, #1515). Returns the cells
-        {uuid: cell}."""
+        free cell near it, the nearest cells first; 2 or more military units end in the AoE2 line formation (#3414:
+        replay.formation_cells, rank). Military units walk with the plugin path finding at their AoE2 speed; villagers
+        stop their work and walk there. Ships sail to the water near it (fleet.order, also at a water cell). units: these
+        units, not the selection, and no mark (transport.tick, #1515). Returns the cells {uuid: cell}."""
         import ai                                                      # ai imports this module
         units = self.selected if units is None else set(units)
         self.new_order(units)
@@ -1462,10 +1495,15 @@ class Gather:
         out = fleet.order(self, boats, cell)                           # a ship sails on the water (#1383)
         transport.aim(self, out, cell)                                 # a loaded ship unloads at a land cell (#1385)
         herd = self.herd()
-        who = sorted(u for u in units - boats if u in self.villagers or u in self.soldiers or u in herd)
+        army = sorted(u for u in units - boats - herd if u in self.soldiers)
+        pos = self.positions(army) if len(army) > 1 else {}            # 2 or more: the AoE2 line formation (#3414)
+        if len(pos) > 1:
+            out |= replay.formation_cells(self.map.free, [(u, p[0], p[2], rank(self.soldiers[u]), False)
+                                                          for u, p in pos.items()], (cell[0] + 0.5, cell[1] + 0.5), "Line", self.map.T)
+        who = sorted(u for u in units - boats - out.keys() if u in self.villagers or u in self.soldiers or u in herd)
         r = math.isqrt(len(who)) + 2
         cells = sorted(((x, z) for x in range(cell[0] - r, cell[0] + r + 1) for z in range(cell[1] - r, cell[1] + r + 1)
-                        if self.map.free(x, z)), key=lambda c: (math.dist(c, cell), c))
+                        if self.map.free(x, z) and (x, z) not in out.values()), key=lambda c: (math.dist(c, cell), c))
         out |= dict(zip(who, cells))
         for u, (x, z) in [(u, c) for u, c in out.items() if u not in boats]:
             if u in self.villagers:
@@ -1667,8 +1705,8 @@ class Gather:
                     if self.map.farms[v.tree] <= 0:                    # an empty farm: the farmer stops
                         self.farmers.pop(v.tree, None)
                         v.tree = None
-                elif v.res != "wood" and self.source(v).get(v.tree, 0) <= 0:
-                    v.tree = self.nearest(v)                           # as in AoE2: the next bush or mine, or stop
+                elif (v.res != "wood" or self.work_on) and self.source(v).get(v.tree, 0) <= 0:
+                    v.tree = self.nearest(v)                           # as in AoE2: the next tree, bush or mine, or stop (#3271)
                 if self.source(v).get(v.tree, 0) > 0:
                     self.go(v, "to_tree", self.goals(v.tree))
                 else:
@@ -1751,6 +1789,8 @@ class Gather:
                         fleet.fish(self, {v.uuid}, fleet.trap(self, site))
                     else:
                         self.set(v, "idle")
+                if not nxt:
+                    self.next_task(site, {v.uuid for v in builders if v.uuid in self.villagers})
         self.idle()
 
     def work_time(self, res, herd=False, pos=None):

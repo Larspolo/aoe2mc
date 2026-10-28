@@ -13,7 +13,7 @@ paused = "paused"               # this label on the status issue stops all runs
 
 [pacing]
 max_runs = 40                   # the most runs at one time (tools/usage.py): 16 used only about 70 % of a 5-hour window at burn 0.009
-max_fire = 8                    # the most runs that the pacer starts in one 10-minute cycle (tools/usage.py)
+max_fire = 2                    # the most runs that the pacer starts in one 15-minute cycle (tools/usage.py): about 2 tickets per 15 minutes (owner, 2026-10-28)
 refill_runs = 3                # runs beyond the ready tickets: each refills one epic (tools/usage.py); 1 left 3 ready for 40 runs
 week_free = 0.60                # below this 7-day usage the runs fill each 5-hour window, no weekly pace (tools/usage.py)
 week_guard = false              # true: the 7-day usage limits the runs (week_free, #1695); false: only the 5-hour window counts (owner, 2026-10-28)
@@ -44,6 +44,3 @@ system = "docs/SYSTEM.md"
 steering = "docs/STEERING.md"
 learnings = "docs/LEARNINGS.md"
 roadmap = "docs/ROADMAP.md"
-
-[dashboard]
-artifact = "https://claude.ai/artifact/6UL256SwEuNGNgzKkxojrh"   # the owner's dashboard artifact (skill dashboard-refresh, #982)

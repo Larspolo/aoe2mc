@@ -36,7 +36,8 @@ Three runs refilled the queue of one epic within 2 minutes and made copies of ti
 refill before it makes tickets: `--refill` pushes `claim/refill-E-S` once. S is the state of the work: the number of
 closed sub-issues of epic E (a new lock when a sub-issue closes), or the UTC hour and its 10-minute slot for E = 0
 (the whole refill), for a ticket E with no sub-issue (#855) and for an epic E with all sub-issues closed (its count
-cannot change any more, #3057).
+cannot change any more, #3057). A slot lock `N-<slot>` also holds the count lock `N`: the first new sub-issue of
+that run changes the state to N, and a second run made the same sub-issues again (#3454).
 
 Parallel runs read the same `runs` counter of the status issue, so "every 5th run" lost 7 of 10 process reviews
 (#898). So `--review` locks one review: `claim/review-<gap>pr-<last review>-<k>`, and only when `gap` PRs merged after
@@ -224,7 +225,11 @@ def refill_state(epic, remote="origin", now=None):
 
 
 def claim_refill(epic, state, remote="origin"):
-    """Lock the refill of epic `epic` in state `state`: True when this run pushed `claim/refill-E-S` first."""
+    """Lock the refill of epic `epic` in state `state`: True when this run pushed `claim/refill-E-S` first. A count
+    state N is taken also by a slot lock `N-<slot>`: that run locked the epic with all N sub-issues closed, and its
+    first new sub-issue turned the state into N (#3454: #3431 and #3432 were the same ticket)."""
+    if epic and "-" not in state and git("ls-remote", remote, f"refs/heads/claim/refill-{epic}-{state}-*").stdout.strip():
+        return False
     msg = f"Claim refill {epic}-{state} by {who()} ({uuid.uuid4().hex})"
     return push(git("commit-tree", EMPTY_TREE, "-m", msg).stdout.strip(), f"claim/refill-{epic}-{state}", remote)
 

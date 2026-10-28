@@ -43,7 +43,7 @@ WEEK_GUARD = CONFIG.get("pacing", {}).get("week_guard", True)   # false: the 7-d
 WAIT = CONFIG.get("pacing", {}).get("max_waiting_prs", 10)   # flow brake: open agent PRs older than PR_MINUTES
 QUEUE = CONFIG.get("pacing", {}).get("max_ci_queue", 5)      # flow brake: queued CI runs (no runner yet)
 PR_MINUTES = CONFIG.get("pacing", {}).get("pr_minutes", 30)  # Automerge merges a green PR in a few minutes
-MAX_FIRE = CONFIG.get("pacing", {}).get("max_fire", 8)   # runs that the pacer starts per cycle: each run needs a few minutes to claim its ticket; the same as agent.toml (the pacer used an old 4, 2026-10-28)
+MAX_FIRE = CONFIG.get("pacing", {}).get("max_fire", 2)   # runs that the pacer starts per 15-minute cycle; the same as agent.toml (owner, 2026-10-28: about 2 tickets per 15 minutes)
 REFILL = CONFIG.get("pacing", {}).get("refill_runs", 1)   # runs beyond the ready tickets: each refills one epic (#609, #650)
 CALL = ["claude", "-p", "Reply with OK.", "--model", "claude-haiku-5-5", "--output-format", "stream-json", "--verbose"]
 

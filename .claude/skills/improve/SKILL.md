@@ -77,7 +77,7 @@ minutes of run time (or tickets) per day:
 2. **The loop:** the steps of `.claude/skills/autopilot` and the phase minutes of the `Metrics:` lines
    (`read`, `claim`, `code`, `verify`, `ci`, `conflict`, `report`); steps that cost time and change nothing.
 3. **Quota:** the quota per merged ticket, the release progress per quota, the quota of work that gives no merge
-   (idle runs, closed PRs, rework), the quota of the sessions that are not runs (dashboard refresh), the
+   (idle runs, closed PRs, rework), the quota of the sessions that are not runs, the
    token sinks (`Tokens:` lines). The phase shares in minutes come second.
 4. **Quality:** rework (owner corrections, reopened tickets, follow-ups of merged work), bugs found by check tickets,
    red night CI runs.

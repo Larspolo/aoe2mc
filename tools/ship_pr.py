@@ -54,8 +54,11 @@ def checks(full):
     return r.returncode == 0
 
 
-def body_with_ticket(text, number):
-    """The PR body with `Closes #N`: Automerge takes the first closing word as the ticket (#984)."""
+def body_with_ticket(text, number, part=False):
+    """The PR body with `Closes #N`: Automerge takes the first closing word as the ticket (#984). part: `Part of #N`,
+    no closing word: the ticket stays open (a check ticket that waits for its bug tickets, #3324)."""
+    if part:
+        return text if f"Part of #{number}" in text else f"{text.rstrip()}\n\nPart of #{number}\n"
     return text if claim.closes(number).search(claim.prose(text)) else f"{text.rstrip()}\n\nCloses #{number}\n"
 
 
@@ -77,6 +80,8 @@ def main(argv=None):
     ap.add_argument("--body", help="a file with the PR body (a new PR)")
     ap.add_argument("--tested", action="store_true", help="the checks of `verify` level 1 passed on this tree")
     ap.add_argument("--hold", action="store_true", help="add the label `hold`: Automerge waits for the PR's own checks")
+    ap.add_argument("--part", action="store_true", help="`Part of #N` in place of `Closes #N` in a new PR: the ticket "
+                    "stays open (a check ticket that waits for its bug tickets, autopilot `owner.md`)")
     a = ap.parse_args(argv)
     branch = git("branch", "--show-current").stdout.strip()
     if a.message:
@@ -99,7 +104,7 @@ def main(argv=None):
             return 4
         try:
             pr = dashboard.api("pulls", "POST", {"title": a.title, "head": branch, "base": CONFIG["branch"],
-                                                  "body": body_with_ticket(open(a.body, encoding="utf-8").read(), a.number)})
+                                                  "body": body_with_ticket(open(a.body, encoding="utf-8").read(), a.number, a.part)})
         except Exception as e:
             print(f"pushed, but the PR call failed ({e}): open the PR with `gh api` (`github.md`)")
             return 4

@@ -38,7 +38,7 @@ max_waiting_prs = 10            # flow brake: at this many old agent PRs the pac
 max_ci_queue = 5                # flow brake: at this many queued CI runs the pacer starts no run
 weights = {{ haiku = 0.25 }}     # a lane run in Opus runs (start value)
 pacer = "workflow"              # pacer.yml starts the runs (tools/pacer.py); another value stops its loop
-trigger = ""                    # the ID of the scheduled task "NAME autopilot": the operator skill writes it
+trigger = ""                    # the ID of the scheduled task "NAME autopilot": docs/OPERATOR.md, section 3
 
 [commands]                      # change these to the commands of the project
 install = "python3 -m pip install -r requirements-dev.txt"

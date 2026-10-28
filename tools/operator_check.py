@@ -1,8 +1,8 @@
-"""The checks of the `operator` skill that need no session tools (#981): quota, ready tickets, CI on main, old PRs,
+"""The checks of `docs/OPERATOR.md` that need no session tools (#981): quota, ready tickets, CI on main, old PRs,
 labels and owner comments without an answer.
 
 The scheduled tasks need the tools of an owner session
-(`list_triggers`, `get_session`): the skill `.claude/skills/operator/SKILL.md` checks them and the runs of `pacer.yml`. This script checks the rest from GitHub and the quota.
+(`list_triggers`, `get_session`): `docs/OPERATOR.md` checks them and the runs of `pacer.yml`. This script checks the rest from GitHub and the quota.
 
     python3 tools/operator_check.py          # one line per check: OK or PROBLEM; exit 1 when a check has a problem
 

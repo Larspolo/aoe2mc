@@ -68,6 +68,8 @@ BURST = 500                 # ms of game time between two bursts of a flare colu
 TEAM_STEP = 10000           # sidebar score of a team game: team key × TEAM_STEP + population, the panel sorts by it (#1189)
 COUNTED = "aoe2mc.pop"      # entity tag of the units that the population counts (#787)
 EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
+PANEL = "aoe2mc.panel"      # entity tag of the production texts above a building (#2811, decision #2808: C)
+PANEL_BAR = 10              # characters of the text progress bar of a production item
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
 TRAIL = 3                   # tiles: a follower farther than this from its target walks to it again (#2551)
 TRAIL_MS = 1000             # ms of game time between two checks of the followers (#2551)
@@ -281,6 +283,49 @@ def live(make, speed=1.0, start=0, restart=None, **kw):
         restart()
 
 
+def formation_cells(free, group, target, kind="Line", T=4):
+    """The end cell {key: (x, z)} of each unit of a group that walks to the block point target (#410): rows across the
+    walk direction, the first row on the target and the others behind it, FORMATION blocks apart (AoE2 line formation).
+    A slot snaps to the next free cell (free(x, z)), one unit per cell. group: (key, x, z, rank, weak) of each unit. The
+    units of the lowest rank take the front rows (gather.rank, the AoE2 unit order, #3414), then the units nearest to the
+    target, and in a row they keep their order from left to right, so that the paths do not cross. Staggered doubles
+    the gaps, Flank splits each row into two halves 4 slots apart, Box puts the weak units inside a square of the others
+    (the formations of AoE2, #2553)."""
+    n, S = len(group), FORMATION * (2 if kind == "Staggered" else 1)
+    tx, tz = target
+    cx, cz = (sum(u[k] for u in group) / n for k in (1, 2))
+    d = math.hypot(tx - cx, tz - cz)
+    dx, dz = ((tx - cx) / d, (tz - cz) / d) if d > 0.5 else (0.0, -1.0)    # walk direction (else north)
+    cols = min(n, max(1, math.ceil(math.sqrt(n)) if kind == "Box" else round(math.sqrt(2 * n))))
+    rows = -(-n // cols)
+    r = max(2 * T, math.ceil(max(cols, rows) * S) + 4 * S * (kind == "Flank"))
+    x0, z0 = int(tx), int(tz)
+    todo = {(x, z) for x in range(x0 - r, x0 + r + 1) for z in range(z0 - r, z0 + r + 1) if free(x, z)}
+    group = sorted(group, key=lambda u: (u[3], (tx - u[1]) * dx + (tz - u[2]) * dz))
+    slots = []                                                      # (key, row, offset across the walk)
+    if kind == "Box":
+        cells = [(q, j) for q in range(rows) for j in range(cols)][:n]
+        inner = [c for c in cells if 0 < c[0] < rows - 1 and 0 < c[1] < cols - 1]
+        outer = [c for c in cells if c not in inner]
+        weak = [u for u in group if u[4]]
+        order = weak + [u for u in group if not u[4]]
+        cells = inner[:len(weak)] + outer + inner[len(weak):]
+        slots = [(u[0], q, (j - (cols - 1) / 2) * S) for u, (q, j) in zip(order, cells)]
+    else:
+        for q in range(rows):
+            row = sorted(group[q * cols:q * cols + cols], key=lambda u: u[1] * -dz + u[2] * dx)
+            for j, u in enumerate(row):
+                gap = (2 * S if j >= len(row) / 2 else -2 * S) if kind == "Flank" and len(row) > 1 else 0
+                slots.append((u[0], q, (j - (len(row) - 1) / 2) * S + gap))
+    out = {}
+    for key, q, off in slots:
+        px, pz = tx - dx * q * S - dz * off, tz - dz * q * S + dx * off
+        if todo:
+            out[key] = c = min(todo, key=lambda c: ((c[0] - px) ** 2 + (c[1] - pz) ** 2, c))
+            todo.discard(c)
+    return out
+
+
 class Replay:
     """The timeline of aoe2mc.json `data` on a server (game.command sends one command)."""
 
@@ -320,6 +365,7 @@ class Replay:
         self.trail = math.inf                   # game time (ms) of the next check of the followers (#2551)
         self.adopted, self.rallied = {}, 0      # temporary ID of a unit at a gather point -> its object ID (#1227)
         self.effects = {}                       # entity tag of a research text -> game time (ms) of its end (#843)
+        self.panels = {}                        # building ID -> its shown production text (#2811)
         self.flares = []                        # (x, y, z, game time (ms) of the end, RGB) of the live flares (#2402)
         self.formations = {}                    # object ID -> the AoE2 formation of the record: Line, Box ... (#2553)
         self.burst = math.inf                   # game time (ms) of the next burst of the live flares (#2506)
@@ -530,30 +576,74 @@ class Replay:
     def research(self, e, color):
         """The name of the technology 2 blocks above the roof of its building, and particles at the roof (#843).
         The text goes after EFFECT_MS (`expire`). No known building: no commands."""
-        i, name = (e.get("objects") or [None])[0], (e.get("names") or [None])[0]
-        start = next((s for s in self.starts if s[0] == i), None)
-        rect = start[3] if start else name and self.new_building(i, name, e.get("player"))
-        if not rect:
+        spot = self.roof((e.get("objects") or [None])[0], (e.get("names") or [None])[0], e.get("player"))
+        if not spot:
             return []
+        x, top, z, (x0, x1, z0, z1) = spot
+        tag = f"{EFFECT}.{len(self.effects)}.{e['time']}"
+        self.effects[tag] = e["time"] + EFFECT_MS
+        return [f"summon text_display {x} {top + 3} {z} {{text:{json.dumps(text(e['technology'], color))},"
+                f'billboard:"center",shadow:1b,transformation:{{left_rotation:[0f,0f,0f,1f],right_rotation:[0f,0f,0f,1f],'
+                f'translation:[0f,0f,0f],scale:[{SCALE}f,{SCALE}f,{SCALE}f]}},Tags:["{EFFECT}","{tag}"]}}',
+                f"particle minecraft:enchant {x} {top + 1} {z} {(x1 - x0) / 4} 0.5 {(z1 - z0) / 4} 1 60"]
+
+    def roof(self, i, name, player):
+        """(x, top y, z, rect) of the center of the roof of the building with object ID i, or None (no known building)."""
+        start = next((s for s in self.starts if s[0] == i), None)
+        rect = start[3] if start else name and self.new_building(i, name, player)
+        if not rect:
+            return None
         x0, x1, z0, z1 = rect
         if start:                                                   # no height in aoe2mc.json: that of its design
             m = self.grid()
             ys = [y for x, z in m.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)})
                   if (y := m.y(x, z)) is not None]
             if not ys:
-                return []
+                return None
             top = max(ys) + self.height(start[2], start[1])
         else:
             top = self.tops.get(rect)
-        if top is None:
-            return []
-        tag = f"{EFFECT}.{len(self.effects)}.{e['time']}"
-        self.effects[tag] = e["time"] + EFFECT_MS
-        x, z = (x0 + x1) / 2, (z0 + z1) / 2
-        return [f"summon text_display {x} {top + 3} {z} {{text:{json.dumps(text(e['technology'], color))},"
-                f'billboard:"center",shadow:1b,transformation:{{left_rotation:[0f,0f,0f,1f],right_rotation:[0f,0f,0f,1f],'
-                f'translation:[0f,0f,0f],scale:[{SCALE}f,{SCALE}f,{SCALE}f]}},Tags:["{EFFECT}","{tag}"]}}',
-                f"particle minecraft:enchant {x} {top + 1} {z} {(x1 - x0) / 4} 0.5 {(z1 - z0) / 4} 1 60"]
+        return None if top is None else ((x0 + x1) / 2, top, (z0 + z1) / 2, rect)
+
+    def panel(self, t):
+        """The commands of the production panel at game time t (ms, #2811, decision #2808: C): above each producing
+        building a text in the player color with the item now in production (a unit with the count of its name in
+        the queue, or a research) and a text progress bar. Only the texts that changed since the last call; an empty
+        building loses its text."""
+        now = {}
+        for end, e, b in self.trainings:
+            if e["time"] <= t < end:
+                n = e.get("name") if e["kind"] == "queue" else e.get("technology")
+                if n:
+                    s = end - (aoe2mc.train_ms(n) if e["kind"] == "queue" else aoe2mc.RESEARCH_S[n] * 1000)
+                    now.setdefault(b, []).append((end, s, n, e))
+        out, shown = [], self.panels
+        for b, items in sorted(now.items()):
+            end, s, n, e = min(items, key=lambda item: item[0])
+            if s > t:                                               # the record time and the queue disagree
+                continue
+            count = sum(item[2] == n for item in items) if e["kind"] == "queue" else 1
+            done = round(PANEL_BAR * (t - s) / max(1, end - s))
+            line = f"{pretty(n) if e['kind'] == 'queue' else n}{f' ×{count}' * (count > 1)} " \
+                   f"[{'|' * done}{'.' * (PANEL_BAR - done)}]"
+            if shown.get(b) == line:
+                continue
+            tag, color = f"{PANEL}.{b}", self.label(e["player"])[1]
+            if b in shown:
+                out.append(f"data merge entity @e[type=text_display,tag={tag},limit=1] "
+                           f"{{text:{json.dumps(text(line, color))}}}")
+            elif spot := self.roof(b, (e.get("names") or [None] * len(e["objects"]))[e["objects"].index(b)],
+                                   e["player"]):
+                out.append(f"summon text_display {spot[0]} {spot[1] + 2} {spot[2]} "
+                           f"{{text:{json.dumps(text(line, color))},billboard:\"center\",shadow:1b,"
+                           f'Tags:["{PANEL}","{tag}"]}}')
+            else:
+                continue
+            shown[b] = line
+        for b in sorted(set(shown) - set(now)):
+            out.append(f"kill @e[type=text_display,tag={PANEL}.{b}]")
+            del shown[b]
+        return out
 
     def expire(self, t):
         """The commands that remove the research texts whose time ended at game time t (ms), and the particles of the
@@ -1428,49 +1518,15 @@ class Replay:
         return tuple(a + f * (b - a) for a, b in zip(start, v.pos))
 
     def formation(self, group, tile):
-        """The end cell of each unit of a group that walks to a tile (#410): rows across the walk direction, the
-        first row on the target and the others behind it, FORMATION blocks apart (AoE2 line formation). A slot
-        snaps to the next free cell, one unit per cell. The units nearest to the target take the first row, and
-        in a row they keep their order from left to right, so that the paths do not cross. The formation of the
-        record (#2553): Staggered doubles the gaps, Flank splits each row into two halves 4 slots apart, Box puts
-        the ranged and civilian units inside a square of the others."""
+        """The end cell of each unit of a group that walks to a tile (#410), in the formation of the record (#2553):
+        formation_cells. The ranged and civilian units are the weak ones inside a Box."""
         import combat                                                   # combat -> gather -> build -> replay
-        m, n, S = self.map, len(group), FORMATION
         ids = {v: i for i, v in self.units.items()}
         kind = collections.Counter(self.formations.get(ids.get(v), "Line") for v in group).most_common(1)[0][0]
-        S *= 2 if kind == "Staggered" else 1
-        tx, tz = tile[0] * self.T, tile[1] * self.T
-        cx, cz = (sum(v.pos[k] for v in group) / n for k in (0, 2))
-        d = math.hypot(tx - cx, tz - cz)
-        dx, dz = ((tx - cx) / d, (tz - cz) / d) if d > 0.5 else (0.0, -1.0)    # walk direction (else north)
-        cols = min(n, max(1, math.ceil(math.sqrt(n)) if kind == "Box" else round(math.sqrt(2 * n))))
-        rows = -(-n // cols)
-        r = max(2 * self.T, math.ceil(max(cols, rows) * S) + 4 * S * (kind == "Flank"))
-        x0, z0 = int(tx), int(tz)
-        todo = {(x, z) for x in range(x0 - r, x0 + r + 1) for z in range(z0 - r, z0 + r + 1) if m.free(x, z)}
-        group = sorted(group, key=lambda v: (tx - v.pos[0]) * dx + (tz - v.pos[2]) * dz)
-        slots = []                                                      # (unit, row, offset across the walk)
-        if kind == "Box":
-            cells = [(q, j) for q in range(rows) for j in range(cols)][:n]
-            inner = [c for c in cells if 0 < c[0] < rows - 1 and 0 < c[1] < cols - 1]
-            outer = [c for c in cells if c not in inner]
-            weak = [v for v in group if combat.stats(v.name).range > 0 or not self.gather.military(v.name)]
-            order = weak + [v for v in group if v not in weak]
-            cells = inner[:len(weak)] + outer + inner[len(weak):]
-            slots = [(v, q, (j - (cols - 1) / 2) * S) for v, (q, j) in zip(order, cells)]
-        else:
-            for q in range(rows):
-                row = sorted(group[q * cols:q * cols + cols], key=lambda v: v.pos[0] * -dz + v.pos[2] * dx)
-                for j, v in enumerate(row):
-                    gap = (2 * S if j >= len(row) / 2 else -2 * S) if kind == "Flank" and len(row) > 1 else 0
-                    slots.append((v, q, (j - (len(row) - 1) / 2) * S + gap))
-        out = {}
-        for v, q, off in slots:
-            px, pz = tx - dx * q * S - dz * off, tz - dz * q * S + dx * off
-            if todo:
-                out[v] = c = min(todo, key=lambda c: ((c[0] - px) ** 2 + (c[1] - pz) ** 2, c))
-                todo.discard(c)
-        return out
+        weak = (lambda v: combat.stats(v.name).range > 0 or not self.gather.military(v.name)) if kind == "Box" \
+            else (lambda v: False)
+        return formation_cells(self.map.free, [(v, v.pos[0], v.pos[2], 0, weak(v)) for v in group],
+                               (tile[0] * self.T, tile[1] * self.T), kind, self.T)
 
     def next_step(self, v, t):
         """The game time (ms) at which unit v reaches the next cell of its path when it leaves at t, or None."""
@@ -1928,6 +1984,13 @@ class Replay:
         self.drawn = dict(want)
         return out
 
+    def place_view(self, tile):
+        """The commands that put the viewers above a tile (#2950): replay_input.place_commands at its ground."""
+        x, z = (min(self.n - 1, max(0, int(c * self.T))) for c in tile)
+        y = self.ground[z][x] if self.ground[z][x] is not None else next(
+            (g for row in self.ground for g in row if g is not None), 64)
+        return replay_input.place_commands(tile, self.T, y)
+
     def overview(self, join=False):
         """The view of a player at the start of the replay (#737, owner decision #782): adventure mode, a text about
         the spectator view, and a place high above the map that looks down at its center (VIEW_PITCH) in the
@@ -2350,6 +2413,9 @@ class Replay:
                     if self.control.get("view") != self.pov:
                         self.pov = self.control.get("view")
                         self.send(self.fog())
+                    if (place := self.control.pop("place", None)) is not None:      # a fight jump (#2950)
+                        self.follow = None                          # the follow view ends
+                        self.send(self.place_view(place))
                 if (to := self.control.pop("jump", None)) is not None:
                     break
                 wait = POLL if self.paused else (now - g0) / 1000 / self.speed - (clock() - r0)
@@ -2377,6 +2443,7 @@ class Replay:
                     g0, r0 = to, clock()
                     shown = int(to) // 1000
                     send(self.clock_commands(to, end, self.speed) + self.score_commands())
+                    self.send(self.panel(to))
                 continue
             lag = max(lag, clock() - r0 - (now - g0) / 1000 / self.speed)
             if int(now) // 1000 != shown:                              # at most once per game second
@@ -2386,6 +2453,7 @@ class Replay:
                     look()
                     counted = clock()
                 send(self.clock_commands(now, end, self.speed) + self.score_commands() + self.overview(join=True))
+                self.send(self.panel(now))
                 self.send(self.fog())
             if e is None:                                           # behind its clock: all the steps up to the
                 late = g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed    # game time now in one
@@ -2401,7 +2469,7 @@ class Replay:
                     log(f"{m:02d}:{s:02d} {e['kind']} {e.get('name') or e.get('age') or ''} "
                         f"player {e.get('player')}: {len(cmds)} commands")
         census()
-        self.send(self.expire(math.inf))
+        self.send(self.expire(math.inf) + self.panel(math.inf))
         send(self.clock_commands(end, end, speed, done=True) + self.score_commands() + self.end_commands(end) +
              self.summary_commands() + self.timeline_commands(end))
         span = (events[-1]["time"] - start) / 1000 / speed if events else 0                 # at the start speed

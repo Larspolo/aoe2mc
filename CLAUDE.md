@@ -25,7 +25,7 @@ The README already uses this style. Keep it.
 | Check states | `tools/mcvalid.py` (`block_error`, `entity_error`, `biome_error`, `sound_error`) |
 | Coverage of AoE2 types | `python3 tools/coverage.py OUT.md` (designs, mappings, fallbacks). Do not commit `docs/coverage.md`: CI on main does it, and `tools/feature_table.py` for `docs/DESIGN.md` |
 | System numbers | `python3 tools/health.py [--hours N]` (CI, setup, takeovers, conflicts, files in git; `improve` skill) |
-| Start of the runs | `python3 tools/operator_check.py` (quota, ready tickets, CI, old PRs, labels, owner comments; the owner types `/operator` for the scheduled tasks and the pacer, #981) |
+| Start of the runs | `python3 tools/operator_check.py` (quota, ready tickets, CI, old PRs, labels, owner comments; the scheduled tasks and the pacer: `docs/OPERATOR.md`, #981) |
 | Owner feedback | `python3 tools/feedback.py` (the owner comments of the last 6 hours without a lock `claim/comment-ID`, autopilot step 3, #971) |
 | Tokens of a run | `python3 tools/tokens.py [--top N]` (the tokens of this session and the largest sinks: files, commands; the `Tokens:` line of the run report; `--verify`: the minutes of each check command) |
 | Quota and pacing | `python3 tools/usage.py` (5-hour and 7-day usage, resets; `--target`: the number of runs (90 % of the 5-hour window 2 hours before the reset, then 98 %); `--sample`: the `Usage:` line of the run report; `--fire`: the runs that the pacer starts now; `tools/pacer.py` starts them, `pacer.yml`, #3193) |
@@ -35,6 +35,7 @@ The README already uses this style. Keep it.
 | Game program | `python3 game/run.py OUTWorld` (Paper server with RCON, `--server vanilla`: Mojang's; type commands; `--bench N`: commands per second; `--play`: gather resources, `--cheats`: the AoE2 cheat codes in the chat; `--replay [--speed N]`: replay a recorded game) |
 | Gather timing | `python3 tools/measure_gather.py` (server, no client: walk, chop and trip times next to AoE2; `--read F.jsonl` reads a `game/run.py --play --log` file) |
 | Replay drift | `python3 tools/replay_drift.py samples/de-64.3.aoe2record --speed 4 --until 10:00 --log F.jsonl` (Paper, no client: distance of each unit to its replay position, stuck, stray and dead units per kind; `--read F.jsonl`, #813) |
+| Server profile | `python3 tools/server_profile.py [--seconds 60]` (next to a running Paper server: the top methods of the server thread, own and inclusive, Java Flight Recorder; `replay_drift.py --profile MM:SS-MM:SS`, #3336) |
 | Conversion cost | `python3 tools/measure_convert.py IN.aoe2scenario` (seconds and peak memory of each phase; `docs/research/large-maps.md`) |
 | Unit count cost | `python3 tools/measure_units.py [--units 200,500,1000]` (Paper, no client: RCON commands per second and `/tick query` with many units that walk with `aoe moveto`, #943) |
 | Datapack cost | `python3 tools/tick_cost.py` (server, no client: `/tick query` with and without `datapacks/aoe2mc`; `--world W`, `--ambience full`) |
