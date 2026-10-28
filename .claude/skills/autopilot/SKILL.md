@@ -56,8 +56,8 @@ List open PRs. For each PR that the agent opened (branch `claude/*` or `agent/*`
   and say so on the status issue (`github.md`, #734).
 - CI red, stalled (`overlap.md`) or owner review comments → take it over and fix it now: continue at
   step 6.8. That is the work of this cycle.
-- Merge conflict (label `conflict`, or `mergeable_state` is `dirty`, often with no CI run) → check out its branch and
-  run `python3 tools/merge_main.py --push N` (one call; exit 1: a real conflict, `conflict.md`).
+- Merge conflict (label `conflict`, or `mergeable_state` is `dirty`, often with no CI run) → on its branch:
+  `python3 tools/merge_main.py --push N` (`conflict.md`).
 - `python3 tools/usage.py --flow` exits 1 (flow brake) → repair one PR or go to step 8: no new ticket (`overlap.md`).
 
 Then read the last CI run on main (`/actions/workflows/ci.yml/runs?branch=main&per_page=1`, `conclusion`: the quick
@@ -130,8 +130,7 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
    reason in one line on the ticket and pick the next ticket.
    Push. Open a PR: title = ticket title, body = what changed, how you verified, `Closes #<number>`.
 8. Read `mergeable_state` (`/pulls/N`; `unknown` means GitHub still computes it: read it again). If it is
-   `dirty`, run `python3 tools/merge_main.py --push N` (exit 1: a real conflict, `conflict.md`): GitHub runs no CI on
-   a PR with a merge conflict, so no CI event comes.
+   `dirty`, run `python3 tools/merge_main.py --push N` (`conflict.md`): GitHub runs no CI on a conflicted PR.
    Do not wait for CI and do not merge by hand: CI runs only the quick checks on each PR (lint and fast tests,
    about 1 minute), and the Automerge workflow merges the PR when CI is green, removes `in-progress` and deletes the
    branch. The slow and server tests run only each night on main: do the levels of the `verify` skill that the
@@ -139,8 +138,7 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
    later cycle finds a red or conflicted PR.
 9. CI red → find the cause, fix, push. After 3 failed attempts stop: comment the cause on the ticket,
    add `blocked` or `needs-human` and `hold`, remove `in-progress`, and go to step 8 of the skill (report).
-10. Merge conflict (another PR changed the same lines) → `python3 tools/merge_main.py --push N`, then `conflict.md`
-    for a real conflict.
+10. Merge conflict → as in 8.
 11. CI green → the Automerge workflow merges. Add label `hold` to the PR if it must not merge yet.
 
 Ask the owner only with the label `needs-human` and a comment on the issue that needs the answer (owner rule, #862).
