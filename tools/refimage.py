@@ -36,8 +36,9 @@ def fetch(url, timeout=30, tries=4):
 
 
 def query(**params):
-    url = API + "?" + urllib.parse.urlencode(dict(action="query", format="json", **params))
-    return json.loads(fetch(url))["query"]
+    """The API result of params; action="parse" (the wikitext of a page) gives the "parse" part (#2685)."""
+    params = dict(action="query", format="json") | params
+    return json.loads(fetch(API + "?" + urllib.parse.urlencode(params)))[params["action"]]
 
 
 def search(text, limit=30):
