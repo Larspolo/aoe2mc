@@ -3968,7 +3968,9 @@ def write_resourcepack(out):
     os.makedirs(os.path.join(out, "resourcepacks"), exist_ok=True)
     with zipfile.ZipFile(os.path.join(out, "resourcepacks", "resources.zip"), "w", zipfile.ZIP_STORED) as z:
         for name in sorted(files):
-            z.writestr(zipfile.ZipInfo(name, (1980, 1, 1, 0, 0, 0)), files[name], zipfile.ZIP_STORED)
+            info = zipfile.ZipInfo(name, (1980, 1, 1, 0, 0, 0))
+            info.create_system = 3                                     # Windows writes 0: other bytes
+            z.writestr(info, files[name], zipfile.ZIP_STORED)
     return sorted(files)
 
 

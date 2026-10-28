@@ -77,3 +77,12 @@ def test_a_stored_png_has_the_pixels_of_the_image():
     data = aoe2mc.stored_png(im)
     assert Image.open(io.BytesIO(data)).tobytes() == im.tobytes()
     assert data == aoe2mc.stored_png(im.copy())
+
+
+def test_windows_writes_the_same_zip(tmp_path, monkeypatch):
+    import aoe2mc
+    aoe2mc.write_resourcepack(str(tmp_path / "a"))
+    monkeypatch.setattr(sys, "platform", "win32")                      # zipfile.ZipInfo reads it
+    aoe2mc.write_resourcepack(str(tmp_path / "b"))
+    assert (tmp_path / "a" / "resourcepacks" / "resources.zip").read_bytes() == \
+        (tmp_path / "b" / "resourcepacks" / "resources.zip").read_bytes()
