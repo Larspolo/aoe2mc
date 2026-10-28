@@ -118,6 +118,46 @@ SETTINGS = (                                                           # run.py 
     "victory",
     "victory_value",
 )
+NOT_SAVED = (                                                          # the fields that game/*.py sets on a Gather and the save
+    # does not keep, one per line with its reason, in alphabetical order (tests/test_savegame_fields.py, #2535)
+    "bar",                                                             # bossbar.py: the shown unit
+    "board",                                                           # bot.py: the scoreboard of a bot
+    "bots",                                                            # run.play makes the bots again
+    "capture",                                                         # herd.py: a tick timer
+    "census",                                                          # train.py: a tick timer
+    "conquest_at",                                                     # conquest.py: the next check time
+    "data",                                                            # aoe2mc.json of the world
+    "defend_at",                                                       # defend_wonder.py: the next check time
+    "defender",                                                        # defend_wonder.setup makes it again
+    "enemies",                                                         # the enemy units of aoe2mc.json: a dead one has no position
+    "explore_at",                                                      # score.py: the next check time
+    "flares",                                                          # flare.py: the flares of a replay
+    "fog",                                                             # fog.py: the next tick hides the units again
+    "ghosts",                                                          # build.py: the shown building to place
+    "goto_idle",                                                       # goto.py: the next idle unit to show
+    "home",                                                            # bot.py: the town center of a bot
+    "kings",                                                           # regicide.setup makes it again
+    "limit_at",                                                        # time_limit.py: the next check time
+    "limit_shown",                                                     # time_limit.py: the shown text
+    "noui",                                                            # the cheat "noui": only the hints
+    "peers",                                                           # run.py: the players of the game
+    "player",                                                          # run.py: the player number
+    "regicide_at",                                                     # regicide.py: the next check time
+    "repair_at",                                                       # repair.py: the next check time
+    "repairs",                                                         # orders(): the repair of each villager
+    "rows",                                                            # build.py: the shown building to place
+    "score_at",                                                        # score.py: the next check time
+    "shapes",                                                          # build.py: the shown building to place
+    "share",                                                           # bot.py: the techs of the human player
+    "speed",                                                           # run.py: the --speed option
+    "sudden_death_at",                                                 # sudden_death.py: the next check time
+    "victory",                                                         # run.py: from the saved settings
+    "victory_value",                                                   # run.py: from the saved settings
+    "wall_start",                                                      # build.py: the first corner of a wall
+    "who",                                                             # the player name on the server
+    "wonder",                                                          # defend_wonder.setup makes it again
+    "wonder_at",                                                       # wonder.py: the next check time
+)
 SKIP = ("session.lock",)                                               # the lock of the running server
 
 
