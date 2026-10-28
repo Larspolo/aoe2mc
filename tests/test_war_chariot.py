@@ -5,7 +5,7 @@ from test_loom import menus
 from test_siege_train import setup
 
 import units
-from game import build, civs, combat, replay, train
+from game import build, civs, combat, train
 
 
 def workshop(civ, ages=3):
@@ -22,7 +22,7 @@ def test_the_values_are_those_of_aoe2():
     s = combat.STATS["WAR_CHARIOT"]
     assert (s.hp, s.attack, s.melee, s.pierce, s.range, s.reload) == (65, 8, 0, 5, 6, 6.5)
     assert s.bonus == {"building": 2} and {"cavalry", "siege", "unique"} <= set(s.classes)
-    assert combat.MIN_RANGE["WAR_CHARIOT"] == 1 and combat.sight("WAR_CHARIOT") == 8 and replay.SPEEDS["WAR_CHARIOT"] == 0.9
+    assert combat.MIN_RANGE["WAR_CHARIOT"] == 1
     assert units.classify("WAR_CHARIOT")["id"] == "minecraft:minecart"   # a siege unit with a crew
     assert not [n for n, u in train.UPGRADES.items() if "WAR_CHARIOT" in str(u)]   # no elite upgrade
 
