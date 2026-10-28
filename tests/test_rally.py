@@ -53,4 +53,5 @@ def test_a_new_military_unit_walks_to_the_rally_point_with_the_plugin():
 
 
 def test_a_building_without_units_has_no_rally_point():
-    assert train.units_of("BLACKSMITH") == [] and train.units_of("TOWN_CENTER") == ["VILLAGER_MALE"]
+    _, g = setup()
+    assert train.units_of(g, "BLACKSMITH") == [] and train.units_of(g, "TOWN_CENTER") == ["VILLAGER_MALE"]

@@ -32,4 +32,4 @@ def order(g, building):
     technologies of train.TRAINS that the player can order now (train.trains, repeatable, unlocked), in that order, and
     the rally point of a building that trains units."""
     return [train.slots(building, n)[::2] for n in train.trains(g, building) if train.repeatable(g, n) and train.unlocked(g, n)] \
-        + [train.RALLY[::2]] * bool(train.units_of(building))
+        + [train.RALLY[::2]] * bool(train.units_of(g, building))

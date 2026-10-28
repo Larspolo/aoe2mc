@@ -351,7 +351,7 @@ def rally(g, player, which, tile, area):
         homes = train.homes(x)
         for o in x.data["objects"]:
             rect = tuple(o["footprint"][i] for i in (0, 2, 1, 3)) if o.get("footprint") else None
-            if rect not in homes or not train.units_of(homes[rect]) or \
+            if rect not in homes or not train.units_of(x, homes[rect]) or \
                     not (o.get("ref") == int(which) if which.isdigit() else o["name"] == which and inside(o["footprint"])):
                 continue
             if x is g:
