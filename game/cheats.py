@@ -66,7 +66,7 @@ def end(text, color):
 def over(g, won):
     """End the game: the team of each person gets its own title (#1936), "Victory" when won(its player), else "Defeat",
     and each Gather of the game stops (g.ended). A bot (h.share) has no Minecraft player and gets no title."""
-    import fog, relic_victory, wonder                                  # they import cheats: import them late
+    import fog, hill, relic_victory, wonder                            # they import cheats: import them late
     for h in fog.gathers(g):
         text, color = ("Victory", "gold") if won(h.player) else ("Defeat", "red")
         if not getattr(h, "share", None):
@@ -74,6 +74,7 @@ def over(g, won):
         h.ended = text
         wonder.close(h)
         relic_victory.close(h)
+        hill.close(h)
 
 
 def destroy(g, n):

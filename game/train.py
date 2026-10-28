@@ -266,6 +266,7 @@ AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age aft
 STARTS = {r["name"]: r for r in table.load("setup.jsonl") if "ages" in r}
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
 HOUSING = {r["name"]: r["housing"] for r in BUILDING_ROWS if "housing" in r}   # population of a complete building
+AGE_COUNT = {r["name"]: r["age_count"] for r in BUILDING_ROWS if "age_count" in r}   # types of the age rule: the Settlement 2 (#2420)
 LIMIT = 200                                                        # the AoE2 population limit
 LIMITS = (*range(25, 251, 25), 300, 400, 500)                      # the AoE2 setting "Population limit" (#2266)
 REPEAT = 256                                                       # researches of one technology: "going above and beyond"
@@ -299,6 +300,23 @@ def fire_commands(g, uuid, name, techs=None):
         out.append(f"aoe charge {uuid} {max(1, round(c['reload'] / gather.NORMAL * 20))} {c['attack']} {c['shots']} "
                    f"{blast} {bonus}" if kind == "charge" else f"aoe detonate {uuid} {c['attack']} {blast} {bonus}")
     return out
+
+
+def volley_command(g, uuid, name):
+    """The plugin command of the extra projectile in each shot of own unit name (the key "volley" of data/civs.jsonl:
+    the Armenian galley line and dromons, #2379), else None. Minecraft feature: one more Arrow entity; the plugin gives
+    it its AoE2 damage."""
+    attack = civs.value("volley", civs.civ(g), {}).get(name)
+    return None if attack is None else f"aoe volley {uuid} 1 {attack}"
+
+
+def lead_command(g, uuid, name):
+    """The command that lets the shots of own unit name lead a moving target, as with Ballistics (the key "lead" of
+    data/civs.jsonl: Spanish Cannon Galleons, #2430), else None. Minecraft feature: a scoreboard tag that the plugin
+    reads (AoePlugin.lead)."""
+    return f"tag {uuid} add aoe2mc.lead" if name in civs.value("lead", civs.civ(g), ()) else None
+
+
 ORDERS = {r["name"] for r in UNIT_ROWS if r.get("orders")}         # not military, but they take move orders (summon)
 
 
@@ -368,7 +386,7 @@ def trains(g, building):
     """The units and technologies of the own building: a castle trains the unique unit of the player's civilization,
     a Krepost the Konnik, a Donjon the Serjeant."""
     new = {old: unit for t in UPGRADES if t in g.techs for old, unit in lines(t, g)}   # the barracks trains the new unit
-    unique = [n for n in [UNIQUE.get(civs.civ(g))] if n in COSTS] * (building == "CASTLE") \
+    unique = [n for n in [UNIQUE.get(civs.real(g))] if n in COSTS] * (building == "CASTLE") \
         + ["KONNIK"] * (building == "KREPOST") \
         + ["SERJEANT"] * (building == "DONJON")                    # and the spearman line (AoE2 DE wiki, #1873)
     out = unique + list(TRAINS[building]) + [f"ELITE_{n}_UPGRADE" for n in unique if f"ELITE_{n}_UPGRADE" in COSTS]   # (#1760)
@@ -622,8 +640,9 @@ def missing(g, name):
     import combat                                                  # combat imports gather, gather imports this module
     own = {combat.STANDS_FOR.get(b, b) for b in owned(g)}          # the Folwark is a mill, the church a monastery
     has, alone = sorted(set(names) & own), alone[0] if alone else ()
-    if len(has) < n and not set(alone) & own:
-        return f"needs {''.join(f'a {build.pretty(b).lower()} or ' for b in alone)}{n} of {', '.join(build.pretty(b).lower() for b in names)} ({len(has)}/{n})"
+    count = len(has) + sum(AGE_COUNT.get(b, 1) - 1 for b in set(owned(g)) if combat.STANDS_FOR.get(b, b) in names)
+    if count < n and not set(alone) & own:
+        return f"needs {''.join(f'a {build.pretty(b).lower()} or ' for b in alone)}{n} of {', '.join(build.pretty(b).lower() for b in names)} ({min(count, n)}/{n})"
 
 
 def age(g):
@@ -700,6 +719,8 @@ def research(g, entry, start=False):
         g.repeats[entry["name"]] = g.repeats.get(entry["name"], 0) + 1
     before = set(g.techs)
     g.techs.add(entry["name"])
+    if start:                                                      # free: not in the score (score.py, #2355)
+        vars(g).setdefault("given", set()).add(entry["name"])
     if (more := gather.FARM_TECHS.get(entry["name"])):             # the new and the live own farms get more food
         more = round(more * civs.FARM_UPGRADES.get(civs.civ(g), 1))
         g.map.farm_food += more
@@ -724,15 +745,19 @@ def research(g, entry, start=False):
     if entry["name"] in UPGRADES:                                  # the live units of the line get the new name
         for uuid, new in [(u, new) for old, new in lines(entry["name"], g) for u, n in g.soldiers.items() if n == old]:
             g.soldiers[uuid] = new
-            g.command(combat.stats_command(uuid, new, stats(g, new), civs.taken(g, new)))
+            g.command(combat.stats_command(uuid, new, stats(g, new), civs.taken(g, new), civs.friendly(g, new)))
             if cmd := combat.range_command(uuid, new, g.map.T, s=stats(g, new)):   # the range and blast of an onager
+                g.command(cmd)
+            if cmd := volley_command(g, uuid, new):               # a war galley of the Armenians (#2379)
+                g.command(cmd)
+            if cmd := lead_command(g, uuid, new):                 # an elite Spanish cannon galleon (#2430)
                 g.command(cmd)
             g.command(combat.label_command(uuid, new))               # the name of a new unit (units.pretty)
     import trebuchet                                               # trebuchet imports this module: import it late
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
         if stats(g, name) != combat.stats(name):
             g.command(trebuchet.stats_command(g, uuid) if name == trebuchet.NAME   # the armor of its state (#1409)
-                      else combat.stats_command(uuid, name, stats(g, name), civs.taken(g, name)))
+                      else combat.stats_command(uuid, name, stats(g, name), civs.taken(g, name), civs.friendly(g, name)))
         if name == trebuchet.NAME and trebuchet.state(g, uuid) != "unpacked":
             continue                                               # packed: range 0, the unpack sends the range (#1414)
         if stats(g, name).range != combat.stats(name).range:          # Fletching (#724)
@@ -799,9 +824,12 @@ def census(g):
     A dead villager leaves g.villagers, the selection and its farm: the idle count and the bot see only live ones (#1039)."""
     live = g.positions(list(g.villagers) + list(g.soldiers))
     import spoils                                                      # spoils imports this module
-    spoils.fallen(g, {u: "VILLAGER" if u in g.villagers else g.soldiers[u] for u in [*g.villagers, *g.soldiers]
-                      if u not in live})                               # Tupi (#2271)
+    import score                                                       # score imports this module
+    dead = {u: "VILLAGER" if u in g.villagers else g.soldiers[u] for u in [*g.villagers, *g.soldiers] if u not in live}
+    spoils.fallen(g, dead)                                             # Tupi (#2271)
+    score.fallen(g, dead)                                              # #2355
     spoils.kills(g)                                                    # Mapuche (#2271)
+    spoils.attacks(g)                                                  # Varangian Guard (#2376)
     for u in [u for u in g.villagers if u not in live]:
         del g.villagers[u]
         g.selected.discard(u)
@@ -901,8 +929,15 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     uuid = units.uuid_str(nbt["UUID"])
     g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}")
     import combat, gather                                          # both import gather, gather imports this module
-    g.command(combat.stats_command(uuid, name, stats(g, name), civs.taken(g, name)))
+    g.command(combat.stats_command(uuid, name, stats(g, name), civs.taken(g, name), civs.friendly(g, name)))
+    import spoils                                                  # spoils imports this module
+    if cmd := spoils.tag_command(uuid, name):                      # its hits make gold (#2376)
+        g.command(cmd)
     if cmd := combat.range_command(uuid, name, g.map.T, s=stats(g, name)):   # an archer shoots from its range (#670)
+        g.command(cmd)
+    if cmd := volley_command(g, uuid, name):                       # an Armenian galley shoots twice (#2379)
+        g.command(cmd)
+    if cmd := lead_command(g, uuid, name):                         # a Spanish cannon galleon aims ahead (#2430)
         g.command(cmd)
     if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name)):   # it attacks enemies in sight (#775)
         g.command(cmd)

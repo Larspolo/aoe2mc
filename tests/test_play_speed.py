@@ -12,7 +12,7 @@ import run  # noqa: E402
 
 def loop(monkeypatch, speed, steps=8):
     """Run Gather.run for some steps with no server. Returns (real seconds slept, game seconds of wonder.tick)."""
-    for m in (gather.conquest, gather.fog, gather.herd):
+    for m in (gather.conquest, gather.fog, gather.herd, gather.score):
         monkeypatch.setattr(m, "tick", lambda g: None)
     game = []
     monkeypatch.setattr(gather.wonder, "tick", lambda g, dt: game.append(dt))
