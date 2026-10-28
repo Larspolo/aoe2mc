@@ -327,6 +327,8 @@ class Replay:
             return self.delete(e)
         if kind == "stance" and e.get("objects"):
             return self.stance(e)
+        if kind == "stop" and e.get("objects"):
+            return self.stop(e)
         if kind == "formation" and e.get("objects"):                # the shape of the next walks of the group (#2553)
             self.formations.update(dict.fromkeys(e["objects"], e.get("formation", "Line")))
             return []
@@ -901,6 +903,22 @@ class Replay:
         self.grid()
         group = [self.unit(i, name, e["player"]) for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"]))]
         return [combat.stance_command(v.uuid, stance) for v in group if v is not None and self.gather.military(v.name)]
+
+    def stop(self, e):
+        """STOP: the selected units stand where they are (#2549): no more legs, steps or gather steps. On Paper
+        `aoe stop` ends the walk order and the attack of the plugin (the mob has no AI until its next order, as at the
+        end of a walk). An unknown ID changes nothing."""
+        self.grid()
+        out = []
+        for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"])):
+            if (v := self.unit(i, name, e["player"])) is None:
+                continue
+            for state in (self.moving, self.working, self.arriving, self.entering, self.builds):
+                state.pop(i, None)
+            v.pos, v.path = self.at(v, e["time"]), []
+            v.leg = (v.pos, e["time"], e["time"])                  # a new order starts here, not on the old leg
+            out += self.look(v, "none") + [f"aoe stop {v.uuid}"] * self.ai
+        return out
 
     def move(self, e):
         """MOVE and ORDER: each selected unit gets a path to the target. Its steps come later (steps()). A group
