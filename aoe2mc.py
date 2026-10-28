@@ -3935,7 +3935,9 @@ def write_resourcepack(out):
     """--resource-pack (#2738): resourcepacks/resources.zip in the world folder, which single player loads with the
     world (26.x: LevelResource.MAP_RESOURCE_FILE; a world of an older version had resources.zip at its top, and the
     client moves it there, ResourcePackLocationFileFix). The zombie units get a human face, the War Wagon its cart
-    (cart_model, #2746). Same bytes for each conversion: sorted names, a fixed time."""
+    (cart_model, #2746). Same bytes for each conversion: sorted names, a fixed time, and no deflate of the zip (the zlib
+    of each Python gives other bytes, and the release pack of #2741 must have the bytes of a world pack of each system;
+    the PNG files are compressed already)."""
     import io
     import zipfile
     files = {"pack.mcmeta": json.dumps({"pack": {
@@ -3951,9 +3953,9 @@ def write_resourcepack(out):
         skin_texture(model, tone).save(buf, "PNG")
         files["assets/minecraft/textures/" + path] = buf.getvalue()
     os.makedirs(os.path.join(out, "resourcepacks"), exist_ok=True)
-    with zipfile.ZipFile(os.path.join(out, "resourcepacks", "resources.zip"), "w", zipfile.ZIP_DEFLATED) as z:
+    with zipfile.ZipFile(os.path.join(out, "resourcepacks", "resources.zip"), "w", zipfile.ZIP_STORED) as z:
         for name in sorted(files):
-            z.writestr(zipfile.ZipInfo(name, (1980, 1, 1, 0, 0, 0)), files[name], zipfile.ZIP_DEFLATED)
+            z.writestr(zipfile.ZipInfo(name, (1980, 1, 1, 0, 0, 0)), files[name], zipfile.ZIP_STORED)
     return sorted(files)
 
 
