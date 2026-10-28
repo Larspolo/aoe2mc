@@ -165,6 +165,7 @@ NOT_SAVED = (                                                          # the fie
     "victory_value",                                                   # run.py: from the saved settings
     "wall_start",                                                      # build.py: the first corner of a wall
     "who",                                                             # the player name on the server
+    "win_at",                                                          # scenario.py: the next check time
     "wonder",                                                          # defend_wonder.setup makes it again
     "wonder_at",                                                       # wonder.py: the next check time
 )

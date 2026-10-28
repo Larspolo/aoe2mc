@@ -2708,6 +2708,7 @@ CHANGE_OWNERSHIP = 18
 CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
 CREATE_OBJECT = 11
 DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
+DECLARE_VICTORY = 13                                               # "Declare Victory" (#2542)
 DISPLAY_INSTRUCTIONS = 20
 DISPLAY_TIMER = 37                                                 # "Display Timer" (#2572)
 FREEZE_OBJECT = 22                                                 # "Freeze Object" (#2608)
@@ -2917,6 +2918,14 @@ def message_text(e):
     return json.dumps({"text": msg}, ensure_ascii=False) if msg else None
 
 
+def victory_lines(e, c):
+    """The command of "Declare Victory" (#2542): the score #p<player> of aoe_win is 1, and the scenario mode of the
+    game program ends the game. The load function adds the objective (c.setup)."""
+    c.setup["scoreboard objectives add aoe_win dummy"] = None
+    c.stats["declare victory"] += 1
+    return [f"scoreboard players set #p{max(e['player'], 0)} aoe_win 1"]
+
+
 def clear_lines(e, c):
     """The command of "Clear Instructions" (#2609): no message, the shown instructions go."""
     return ["title @a clear"]
@@ -2943,6 +2952,7 @@ EFFECTS = {
     CLEAR_INSTRUCTIONS: clear_lines,
     CREATE_OBJECT: object_lines,
     DAMAGE_OBJECT: damage_lines,
+    DECLARE_VICTORY: victory_lines,
     DISPLAY_INSTRUCTIONS: instruction_lines,
     DISPLAY_TIMER: timer_lines,
     FREEZE_OBJECT: freeze_lines,
@@ -2951,7 +2961,8 @@ EFFECTS = {
     SEND_CHAT: chat_lines,
     TELEPORT_OBJECT: teleport_lines,
 }
-Effect = namedtuple("Effect", "t T ground players stats mood files")   # the context of the effects of trigger t
+# The context of the effects of trigger t: a handler can add function files (files) and load lines (setup, the keys)
+Effect = namedtuple("Effect", "t T ground players stats mood files setup")
 
 
 def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=True):
@@ -2963,7 +2974,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
     the units leave an area. The commands of each effect come from its handler in EFFECTS.
     A disabled trigger does not run."""
-    load, files, tick = [], {}, []
+    load, files, tick, setup = [], {}, [], {}
     stats = Counter() if stats is None else stats
     ground = np.zeros((0, 0), np.int16) if ground is None else ground
     for t in triggers:
@@ -2972,7 +2983,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         if not t["enabled"] or not conds or not (kinds == {(TIMER, False)} or kinds <= {(k, False) for k in COUNTED}) or \
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds):   # unit classes: not yet
             continue
-        ctx = Effect(t, T, ground, players, stats, mood, files)
+        ctx = Effect(t, T, ground, players, stats, mood, files, setup)
         lines = [line for e in t["effects"] if e["type"] in EFFECTS for line in EFFECTS[e["type"]](e, ctx)]
         if not lines:
             continue
@@ -3004,6 +3015,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         run = f"schedule function {fn} {ticks}t replace"
         files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines + [run] * t["looping"]) + "\n"
         load.append(run)
+    load[:0] = setup
     if tick:
         load.insert(0, "scoreboard objectives add aoe_trig dummy")
         files["data/minecraft/tags/function/tick.json"] = {"values": ["aoe2mc:tick"]}
