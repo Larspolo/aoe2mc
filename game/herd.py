@@ -27,7 +27,7 @@ def spawn(g, rect, name, n):
     and add them to the objects, the prey and the flock of g: they are herdables of the player, as the ones of the map
     (Tatar sheep at a new town center, #2313)."""
     import numpy as np
-    import units
+    import owners, units
     players = {int(p): v for p, v in g.data.get("players", {}).items() if p.isdigit()}
     for x, z in g.map.front(rect)[:n]:
         pos = (x + 0.5, float(g.map.y(x, z)), z + 0.5)
@@ -38,6 +38,7 @@ def spawn(g, rect, name, n):
         o["uuid"] = units.uuid_str(nbt["UUID"])
         g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}")
         g.data["objects"].append(o)
+        owners.add(g, o["uuid"], name, g.player)                   # an enemy of the other sides (#2992)
         g.prey[o["uuid"]] = name
         g.flock.add(o["uuid"])
 
