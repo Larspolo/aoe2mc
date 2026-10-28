@@ -6,8 +6,8 @@ file and the code that applies it (repair.py, build.py, train.py ...), no new li
 are the older names of some keys.
 Bonuses that the game program cannot use yet: Japanese fishing ships, Malian oyster gatherers, the Slav monks
 and the ships.
-CHURCH_RATE is the Georgian bonus of the Fortified Church (#1930): build.rise and repair.rate multiply the work of the
-villagers in the 21-tile square around it (church_rate).
+The key "church_rate" is the Georgian bonus of the Fortified Church (#1930, #2377): build.rise, repair.rate and
+Gather.work_time multiply the work of the villagers in the 21-tile square around it (church_rate).
 """
 import math
 import os
@@ -100,8 +100,6 @@ ELEPHANTS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["BATTLE_EL
 EAGLES = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["EAGLE_SCOUT"])   # the eagle line (#1555)
 LANCERS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["STEPPE_LANCER"])   # the steppe lancers (#1557)
 FIRE_LANCERS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["FIRE_LANCER"])   # the fire lancer (#1953)
-CHURCH_RATE, CHURCH_NEAR = 1.1, 10.5                              # +10 % work in the 21-tile square around a Fortified
-                                                                  # Church (tiles from its center, #1930)
 # "aura" (#2378): the own complete buildings that make the gatherers of some resources work faster near them and take
 # these resources: {"buildings", "resources", "rate", "range": tiles from the footprint} (Thracian forts and towers).
 # gather.Map.drop_site adds them to the drop sites, Gather.aura_rate gives the rate.
@@ -350,15 +348,17 @@ def built_units(g, name):
 
 
 def church_rate(g, pos):
-    """The factor of the work of a villager of the player of g at block position pos (x, z): CHURCH_RATE for a Georgian
-    in the 21-tile square around a complete own Fortified Church (AoE2 wiki "Georgians"; also to build and repair,
-    AoE2 wiki "Repairing"), else 1."""
-    if civ(g) != "GEORGIANS":
+    """The factor of the work of a villager of the player of g at block position pos (x, z): the factor of the key
+    "church_rate" in the square around a complete own building of it (a Georgian Fortified Church, AoE2 wiki
+    "Georgians": to gather, build and repair, AoE2 wiki "Repairing"), else 1. Two churches give it once."""
+    rate = value("church_rate", civ(g))
+    if not rate:
         return 1
     import train                                                   # train imports this module
-    near = CHURCH_NEAR * g.map.T
-    return CHURCH_RATE if any(max(abs(pos[0] - (x0 + x1) / 2), abs(pos[1] - (z0 + z1) / 2)) <= near
-                              for (x0, x1, z0, z1), n in train.homes(g).items() if n == "FORTIFIED_CHURCH") else 1
+    building, square, f = rate
+    near = square / 2 * g.map.T                                    # blocks from the center of the building
+    return f if any(max(abs(pos[0] - (x0 + x1) / 2), abs(pos[1] - (z0 + z1) / 2)) <= near
+                    for (x0, x1, z0, z1), n in train.homes(g).items() if n == building) else 1
 
 
 def repair_rate(g):
