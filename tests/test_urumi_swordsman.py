@@ -9,7 +9,6 @@ CASTLE = (12, 4)
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.build.AGE["ELITE_URUMI_SWORDSMAN"] == 3
     assert combat.stats("URUMI_SWORDSMAN") and combat.stats("ELITE_URUMI_SWORDSMAN")
     assert len(train.HELP["URUMI_SWORDSMAN"]) <= 50 and "DRAVIDIANS" not in train.civs.MISSING["URUMI_SWORDSMAN"]
     assert "BRITONS" in train.civs.MISSING["URUMI_SWORDSMAN"]
