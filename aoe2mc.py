@@ -465,6 +465,9 @@ def read_scenario(path):
                                                 "resource": e.tribute_list} if e.effect_type == TRIBUTE else {}),
                                             **({"operation": e.operation, "quantity": e.quantity,
                                                 "resource": e.tribute_list} if e.effect_type == MODIFY_RESOURCE else {}),
+                                            **({"operation": e.operation, "quantity": e.armour_attack_quantity,   # (#2755)
+                                                "armour_class": e.armour_attack_class}
+                                               if e.effect_type in (CHANGE_OBJECT_ARMOR, CHANGE_OBJECT_ATTACK) else {}),
                                             **({"technology": techs.get(e.technology, str(e.technology))}   # #2577
                                                if e.effect_type == RESEARCH_TECHNOLOGY else {}),
                                             **({"unit": e.time_unit, "timer": e.timer}   # "Display Timer" (#2572)
@@ -2787,6 +2790,8 @@ ACCUMULATE_ATTRIBUTE = 8                                           # a resource 
 ATTACK_MOVE = 30                                                   # "Attack Move" (#2647)
 CHANGE_COLOR_MOOD = 72
 CHANGE_DIPLOMACY = 1                                               # "Change Diplomacy" (#2645)
+CHANGE_OBJECT_ARMOR = 31                                           # "Change Object Armor" (#2755)
+CHANGE_OBJECT_ATTACK = 28                                          # "Change Object Attack" (#2755)
 CHANGE_OBJECT_NAME = 26                                            # "Change Object Name" (#2616)
 CHANGE_OBJECT_SPEED = 33                                           # "Change Object Speed" (#2694)
 CHANGE_OBJECT_STANCE = 36                                          # "Change Object Stance" (#2705)
@@ -2953,6 +2958,24 @@ def damage_lines(e, c):
     at = found[0]                                                      # Gaia: not the players (effect_units)
     stats["damage"] += 1
     return [f"execute as {at} run damage @s {q}"]                      # damage takes one entity
+
+
+def attack_lines(e, c):
+    """The commands of "Change Object Attack" and "Change Object Armor" (#2755): the units of the player in the area and
+    the mounts of the riders get an attribute modifier of `quantity` AoE2 points, add or subtract: minecraft:attack_damage
+    (the attack classes 3 pierce and 4 melee) or minecraft:armor. The game program sets these attributes from
+    combat.STATS, so the points are AoE2 points. The modifier ID is the trigger and the effect: one modifier each."""
+    q, stats = e.get("quantity") or 0, c.stats
+    armor = e["type"] == CHANGE_OBJECT_ARMOR
+    op = OPERATIONS.get(e.get("operation"))
+    if op not in ("add", "remove") or not q or (not armor and e.get("armour_class") not in (3, 4)):
+        stats["change object attack or armor (not supported yet)"] += 1
+        return []
+    stats["change object armor" if armor else "change object attack"] += 1
+    at = unit_selector(e, c.T)
+    attr = "minecraft:armor" if armor else "minecraft:attack_damage"
+    value = q if op == "add" else -q
+    return [f"execute as {at} run attribute @s {attr} modifier add aoe2mc:trig_{c.t['id']}_{effect_index(e, c)} {value} add_value"]
 
 
 def heal_lines(e, c):
@@ -3356,6 +3379,8 @@ EFFECTS = {
     ATTACK_MOVE: order_lines,
     CHANGE_COLOR_MOOD: mood_lines,
     CHANGE_DIPLOMACY: diplomacy_lines,
+    CHANGE_OBJECT_ARMOR: attack_lines,
+    CHANGE_OBJECT_ATTACK: attack_lines,
     CHANGE_OBJECT_NAME: name_lines,
     CHANGE_OBJECT_SPEED: speed_lines,
     CHANGE_OBJECT_STANCE: stance_lines,
