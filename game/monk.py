@@ -177,7 +177,10 @@ def relic_tick(g, dt):
             drop(g, i, (math.floor(x), math.floor(z)))
     for i, r in enumerate(relics(g)):
         if r["home"] and r["home"] not in homes:                   # the monastery fell: the relics come out
-            drop(g, i, next(iter(g.map.front(r["home"])), (r["home"][0], r["home"][2])))
+            taken = {q["at"] for q in relics(g) if q["at"]}        # one relic on each cell, one pot each (#3010)
+            ring = sorted(g.map.front(r["home"]))
+            cells = ring + sorted(g.map.around(set(ring)))
+            drop(g, i, next((c for c in cells if c not in taken), (r["home"][0], r["home"][2])))
     for m, (kind, target) in list(g.fetching.items()):
         r = relics(g)[target] if kind == "relic" else None
         to = r["at"] if r else next(iter(g.map.front(target)), None)
