@@ -27,6 +27,7 @@
 {"name": "UNIVERSITY", "cost": {"wood": 200}, "time": 60, "icon": "bookshelf", "age": 2}
 {"name": "WATCH_TOWER", "cost": {"wood": 35, "stone": 125}, "time": 80, "icon": "cracked_stone_bricks", "age": 1}
 {"name": "WONDER", "cost": {"wood": 1000, "gold": 1000, "stone": 1000}, "time": 3500, "icon": "weathered_cut_copper_stairs", "age": 3}
+{"name": "MULE_CART", "cost": {"food": 20, "wood": 80}, "time": 25, "icon": "spruce_trapdoor"}
 {"name": "ARBALESTER", "age": 3}
 {"name": "ARCHER", "age": 1}
 {"name": "ARMORED_ELEPHANT", "age": 2}
