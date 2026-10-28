@@ -52,6 +52,7 @@ TAG = "aoe_book"                                                       # a perso
 EVERY = 1.0                                                            # seconds between two checks for new people
 ORDERS = "aoe2mc:orders"                                               # the data storage of the trigger orders (#2647)
 ATTRIBUTES = "aoe2mc:attributes"                                       # the storage of "Modify Attribute" (#2763)
+MENUS = "aoe2mc:menus"                                                 # the storage of "Enable/Disable" (#2775)
 COSTS = "aoe2mc:costs"                                                 # the storage of "Change Object Cost" (#2776)
 NEAR = 3                                                               # blocks: a patrol turns back this near its point
 LEVELS = {r["name"]: r["aoe2"] for r in table.load("difficulty.jsonl")}  # "AI difficulty" -> AoE2 DifficultyLevel
@@ -117,6 +118,7 @@ def tick(g):
     g.book_at = g.clock() + EVERY
     tasks(g)
     orders(g)
+    menus(g)
     visible(g)
     attributes(g)
     costs(g)
@@ -133,6 +135,24 @@ def tick(g):
         g.command(f"tag {sel} add {TAG}")
 
 
+def gate(g, order, ref):
+    """Lock or unlock (order) the converted gate with the reference ref (#2762): the first order puts the portcullis
+    of the game program on it (build.portcullis: the iron bars and `aoe gate`), then the plugin locks it
+    (`aoe gate lock X Z`: the bars stay down for all units) or unlocks it (an own or allied unit opens it again).
+    A diagonal gate has no portcullis yet: no lock."""
+    import build                                                       # build imports gather
+    kind = lambda o: next((n for n in sorted(build.GATES, key=len, reverse=True) if n in o["name"]), None)
+    o = next((o for o in g.data.get("objects", ()) if o.get("ref") == ref and kind(o) and o.get("footprint")), None)
+    if o is None or o["footprint"][2] - o["footprint"][0] == o["footprint"][3] - o["footprint"][1]:
+        return
+    x0, z0, x1, z1 = o["footprint"]
+    done = vars(g).setdefault("gate_refs", set())                      # the gates with a portcullis
+    if ref not in done:
+        done.add(ref)
+        build.portcullis(g, {"name": kind(o), "player": o["player"], "footprint": [x0, x1, z0, z1]})
+    g.command(f"aoe gate {order} {(x0 + x1) // 2} {(z0 + z1) // 2}")
+
+
 def orders(g):
     """The "Patrol" and "Attack Move" orders of the triggers (aoe2mc.order_lines, #2647): read and empty the list of
     the data storage ORDERS, and walk the tagged units with the Paper plugin (`aoe moveto`, Minecraft path finding).
@@ -142,14 +162,18 @@ def orders(g):
     the tag. A new patrol with the same tag (a looping trigger) replaces the old one. A "Change Object Stance" order
     (aoe2mc.stance_lines, #2705) sets the stance of the tagged units and removes the tag. A "Stop Object" order
     (aoe2mc.stop_lines, #2754) stops the tagged units (`aoe stop`), ends their patrols as a new order of a person does
-    (gather.Gather.end_patrols, #2674) and removes the tag. An "Unload" order (#2773): unload()."""
+    (gather.Gather.end_patrols, #2674) and removes the tag. An "Unload" order (#2773): unload(). A "Lock Gate" or
+    "Unlock Gate" order (aoe2mc.gate_lines, #2762) locks or unlocks the gate of its reference: gate()."""
     got = g.command(f"data get storage {ORDERS} list") or ""
     new = re.findall(r'"(patrol|attack_move|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"', got)
     unloads = re.findall(r'"unload (\d+) (\d+) ?(-?\d+ -?\d+ -?\d+)?"', got)
-    if new or unloads:
+    gates = re.findall(r'"(lock|unlock) (\d+)"', got)
+    if new or unloads or gates:
         g.command(f"data remove storage {ORDERS} list")
     for player, ref, where in unloads:
         unload(g, int(player), int(ref), where)
+    for order, ref in gates:
+        gate(g, order, int(ref))
     patrols = vars(g).setdefault("patrols", [])
     for order, tag, where in new:
         p, sel = [int(v) for v in where.split()], f"@e[tag={tag}]"
@@ -228,6 +252,20 @@ def attributes(g):
             x.command(combat.stats_command(uuid, name, s, civs.taken(x, name), civs.friendly(x, name)))
             if field == "range" and (cmd := combat.range_command(uuid, name, x.map.T, s=s)):
                 x.command(cmd)
+
+
+def menus(g):
+    """The items of "Enable/Disable Object" and "Enable/Disable Technology" (aoe2mc.menu_lines, #2775): read and empty
+    the list of the data storage MENUS, and keep each item in trigger_menus of the side of its player (True: on). An
+    item that is off is not in the menus (civs.missing); an item that is on is there also when the civilization does
+    not have it or the age is not reached (train.unlocked): as in AoE2, the age technology only enables its items."""
+    new = re.findall(r'"(\d+) (\w+) (on|off)"', g.command(f"data get storage {MENUS} list") or "")
+    if new:
+        g.command(f"data remove storage {MENUS} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for player, name, on in new:
+        if int(player) in sides:
+            vars(sides[int(player)]).setdefault("trigger_menus", {})[name] = on == "on"
 
 
 def bot_seats(players, people):
