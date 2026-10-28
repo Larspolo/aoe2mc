@@ -230,6 +230,8 @@ def effect(e, more=1):
 
 TECHS = {r["name"]: effect(r["effect"]) for r in ROWS if "effect" in r}   # a technology: its change of the AoE2 values
 EFFECTS = {r["name"]: r["effect"] for r in ROWS if "effect" in r}   # the key "effect" itself: civs.ALSO, civs.MORE
+EACH = {r["name"]: effect({k: v for k, v in r["effect"].items() if k != "if"})   # the same change for each unit
+        for r in ROWS if isinstance(r.get("effect"), dict)}       # (civs.SMITH_UNITS, #2174)
 # technology: the unit (or a class of combat.STATS: lower case, or a group of civs.GROUPS) and its walk speed factor
 # (#1415, #1416): the key "walk" of data/train.jsonl
 SPEEDS = {r["name"]: tuple(r["walk"]) for r in ROWS if "walk" in r}
@@ -596,15 +598,15 @@ def age(g):
 
 def stats(g, name):
     """The combat values of AoE2 unit name with the bonuses of the civilization (civs.UNITS) and the technologies of
-    the player (combat.stats and TECHS), twice for civs.TWICE (#1561)."""
+    the player (combat.stats and TECHS), twice for civs.TWICE (#1561), n times for civs.SMITH_UNITS (#2174)."""
     import combat                                                  # combat imports gather, gather imports this module
     s, twice = civs.units(g, name, combat.stats(name)), civs.TWICE.get(civs.civ(g), ())
-    also, more = civs.ALSO.get(civs.civ(g), {}), civs.MORE.get(civs.civ(g), {})
+    times, also, more = civs.smith(g, name, s), civs.ALSO.get(civs.civ(g), {}), civs.MORE.get(civs.civ(g), {})
     for t in sorted(g.techs):
-        e = TECHS[t] if t not in more else effect(EFFECTS[t], more[t])   # Varangian Bloodlines +50 % (#2173)
-        if t in also and civs.GROUPS[also[t]](name, s):              # Bohemian Sanctity: the villagers too (#2173)
-            e = effect({k: v for k, v in EFFECTS[t].items() if k != "if"})
-        for _ in range(count(g, t) * (1 + (t in twice))):              # "going above and beyond" stacks (#968)
+        e = (EACH if t in times else TECHS)[t] if t not in more else effect(EFFECTS[t], more[t])   # Varangian
+        if t in also and civs.GROUPS[also[t]](name, s):              # Bloodlines +50 %; Bohemian Sanctity: the
+            e = EACH[t]                                            # villagers too (#2173)
+        for _ in range(count(g, t) * (1 + (t in twice)) * times.get(t, 1)):   # "going above and beyond" stacks (#968)
             s = e(name, s)
     return s
 
@@ -645,6 +647,7 @@ def research(g, entry):
     before = set(g.techs)
     g.techs.add(entry["name"])
     if (more := gather.FARM_TECHS.get(entry["name"])):             # the new and the live own farms get more food
+        more = round(more * civs.FARM_UPGRADES.get(civs.civ(g), 1))
         g.map.farm_food += more
         for t in g.map.own_farms:
             if g.map.farms.get(t, 0) > 0:

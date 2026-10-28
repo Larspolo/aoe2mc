@@ -95,7 +95,7 @@
 {"name": "HUNS: Mounted archers are 10%/20% cheaper in the Castle/Imperial Age.", "civ": "HUNS", "bonus": "Mounted archers are 10%/20% cheaper in the Castle/Imperial Age.", "in": "COSTS"}
 {"name": "HUNS: Trebuchets have +35% accuracy against units and small targets.", "civ": "HUNS", "bonus": "Trebuchets have +35% accuracy against units and small targets.", "later": "play:siege"}
 {"name": "INCAS: Military units cost food -15%/-20%/-25%/-30% in Dark/Feudal/Castle/Imperial Ages", "civ": "INCAS", "bonus": "Military units cost food -15%/-20%/-25%/-30% in Dark/Feudal/Castle/Imperial Ages", "in": "COSTS"}
-{"name": "INCAS: Villagers benefit from Blacksmith infantry technologies starting in the Castle Age.", "civ": "INCAS", "bonus": "Villagers benefit from Blacksmith infantry technologies starting in the Castle Age.", "gap": "play:tech"}
+{"name": "INCAS: Villagers benefit from Blacksmith infantry technologies starting in the Castle Age.", "civ": "INCAS", "bonus": "Villagers benefit from Blacksmith infantry technologies starting in the Castle Age.", "in": "SMITH_UNITS"}
 {"name": "INCAS: Houses and Settlements support 10 population.", "civ": "INCAS", "bonus": "Houses and Settlements support 10 population.", "gap": "play:train"}
 {"name": "INCAS: Buildings cost stone -15%.", "civ": "INCAS", "bonus": "Buildings cost stone -15%.", "in": "COSTS"}
 {"name": "ITALIANS: Advancing to the next Age is 15% cheaper.", "civ": "ITALIANS", "bonus": "Advancing to the next Age is 15% cheaper.", "in": "COSTS"}
@@ -129,7 +129,7 @@
 {"name": "LITHUANIANS: Each garrisoned Relic gives +1 attack to Knights and Leitis (maximum +4).", "civ": "LITHUANIANS", "bonus": "Each garrisoned Relic gives +1 attack to Knights and Leitis (maximum +4).", "later": "play:monks"}
 {"name": "MACEDONIANS: Take 10% less damage from enemies on higher elevation.", "civ": "MACEDONIANS", "bonus": "Take 10% less damage from enemies on higher elevation.", "later": "play:fight"}
 {"name": "MACEDONIANS: Recruitment Doctrines are available at the Barracks, Archery Range, and Stable.", "civ": "MACEDONIANS", "bonus": "Recruitment Doctrines are available at the Barracks, Archery Range, and Stable.", "later": "play:military-train"}
-{"name": "MACEDONIANS: Infantry armor upgrades also benefit cavalry.", "civ": "MACEDONIANS", "bonus": "Infantry armor upgrades also benefit cavalry.", "gap": "play:tech"}
+{"name": "MACEDONIANS: Infantry armor upgrades also benefit cavalry.", "civ": "MACEDONIANS", "bonus": "Infantry armor upgrades also benefit cavalry.", "in": "SMITH_UNITS"}
 {"name": "MACEDONIANS: Siege weapons have +1 pierce armor and +30% anti-building damage.", "civ": "MACEDONIANS", "bonus": "Siege weapons have +1 pierce armor and +30% anti-building damage.", "later": "play:siege"}
 {"name": "MAGYARS: Forging, Iron Casting, and Blast Furnace are free.", "civ": "MAGYARS", "bonus": "Forging, Iron Casting, and Blast Furnace are free.", "in": "COSTS"}
 {"name": "MAGYARS: Scout Cavalry line is 15% cheaper.", "civ": "MAGYARS", "bonus": "Scout Cavalry line is 15% cheaper.", "in": "COSTS"}
@@ -175,7 +175,7 @@
 {"name": "PURU: Lemboi cost -10/19/27% and gain +1/2/3 attack in the Civic/Classical/Imperial Ages respectively.", "civ": "PURU", "bonus": "Lemboi cost -10/19/27% and gain +1/2/3 attack in the Civic/Classical/Imperial Ages respectively.", "later": "play:military-train"}
 {"name": "ROMANS: Villagers gather, build, and repair 5% faster.", "civ": "ROMANS", "bonus": "Villagers gather, build, and repair 5% faster.", "in": "WORK"}
 {"name": "ROMANS: Galley-line and Dromon +1/+1 armor.", "civ": "ROMANS", "bonus": "Galley-line and Dromon +1/+1 armor.", "later": "play:naval"}
-{"name": "ROMANS: Infantry receives double the effect from Blacksmith armor upgrades.", "civ": "ROMANS", "bonus": "Infantry receives double the effect from Blacksmith armor upgrades.", "gap": "play:tech"}
+{"name": "ROMANS: Infantry receives double the effect from Blacksmith armor upgrades.", "civ": "ROMANS", "bonus": "Infantry receives double the effect from Blacksmith armor upgrades.", "in": "SMITH_UNITS"}
 {"name": "ROMANS: Scorpions cost gold -50%.", "civ": "ROMANS", "bonus": "Scorpions cost gold -50%.", "in": "COSTS"}
 {"name": "SARACENS: The commodity trading fee is 5%.", "civ": "SARACENS", "bonus": "The commodity trading fee is 5%.", "in": "game/market.py"}
 {"name": "SARACENS: Markets cost wood 75.", "civ": "SARACENS", "bonus": "Markets cost wood 75.", "in": "COSTS"}
@@ -192,7 +192,7 @@
 {"name": "SICILIANS: Start with stone +100.", "civ": "SICILIANS", "bonus": "Start with stone +100.", "in": "START"}
 {"name": "SICILIANS: Fortifications built 50%, Town Centers built 100% faster.", "civ": "SICILIANS", "bonus": "Fortifications built 50%, Town Centers built 100% faster.", "in": "BUILD_OF"}
 {"name": "SICILIANS: Land military units (except siege weapons) receive 40% less bonus damage.", "civ": "SICILIANS", "bonus": "Land military units (except siege weapons) receive 40% less bonus damage.", "later": "play:fight"}
-{"name": "SICILIANS: Farm upgrades provide additional food +125%.", "civ": "SICILIANS", "bonus": "Farm upgrades provide additional food +125%.", "gap": "play:gather"}
+{"name": "SICILIANS: Farm upgrades provide additional food +125%.", "civ": "SICILIANS", "bonus": "Farm upgrades provide additional food +125%.", "in": "FARM_UPGRADES"}
 {"name": "SLAVS: Farmers work 15% faster.", "civ": "SLAVS", "bonus": "Farmers work 15% faster.", "in": "WORK"}
 {"name": "SLAVS: Arson and Gambesons are free.", "civ": "SLAVS", "bonus": "Arson and Gambesons are free.", "in": "COSTS"}
 {"name": "SLAVS: Siege Workshop units are 15% cheaper.", "civ": "SLAVS", "bonus": "Siege Workshop units are 15% cheaper.", "in": "COSTS"}

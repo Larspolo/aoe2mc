@@ -61,8 +61,10 @@ def check_buildings(row):
 def check_train(row):
     form(row, {"name": str, "building": (str, type(None)), "slot": int, "item": str, "label": str, "cost": dict,
                "time": int, "help": str},
-         {"age": int, "after": str, "civ": str, "faster": list, "upgrade": list, "note": str, "resist": int, "tribute_fee": int})
+         {"age": int, "after": str, "civ": str, "civs": list, "faster": list, "upgrade": list, "note": str,
+          "resist": int, "tribute_fee": int})
     n = row["name"]
+    only(row)
     assert row["building"] is None or row["building"] in NAMES["buildings.jsonl"], n
     assert 0 <= row["slot"] < 54 and row["time"] > 0 and row.get("age", 1) in (1, 2, 3), n
     assert set(row["cost"]) <= RES and all(isinstance(v, int) and v >= 0 for v in row["cost"].values()), n
@@ -76,6 +78,12 @@ def check_train(row):
         assert all(len(p) == 2 and set(p) <= NAMES["units.jsonl"] for p in pairs), n
 
 
+def only(row):
+    """The key "civs" (#2235): the civilizations that have the item, sorted, fewer than all."""
+    cs = row.get("civs", ["BRITONS"])
+    assert cs and cs == sorted(set(cs)) and set(cs) < NAMES["civs.jsonl"], row["name"]
+
+
 def check_civs(row):
     form(row, {"name": str, "missing": list}, {     # one key per line: parallel tickets add one
         "also": dict,
@@ -83,6 +91,7 @@ def check_civs(row):
         "cost_per": list,
         "costs": list,
         "drop": dict,
+        "farm_upgrades": float,
         "more": dict,
         "twice": list,
         "unique": str,
@@ -91,6 +100,7 @@ def check_civs(row):
     n, known = row["name"], NAMES["train.jsonl"] | NAMES["units.jsonl"] | NAMES["buildings.jsonl"]
     assert set(row.get("drop", {})) <= {"food", "forage"} and all(isinstance(v, NUMBER) for v in row.get("drop", {}).values()), n
     assert set(row["missing"]) <= known and row["missing"] == sorted(set(row["missing"])), n
+    assert not set(row["missing"]) & set(civs.ONLY), n                    # one form for each item (#2235)
     assert row.get("unique", "MILITIA") in NAMES["units.jsonl"], n
     assert set(row.get("twice", ())) <= NAMES["train.jsonl"], n
     for t, group in row.get("also", {}).items():                   # one more group gets the effect (#2173)
@@ -128,8 +138,9 @@ def check_gather(row):
 
 def check_build(row):
     form(row, {"name": str}, {"cost": dict, "time": int, "icon": str, "age": int, "needs": str, "gate": bool,
-                              "wall": bool, "age_tech": int, "bot": int, "near": str})
+                              "wall": bool, "age_tech": int, "bot": int, "near": str, "civs": list})
     n = row["name"]
+    only(row)
     assert set(row.get("cost", {})) <= RES and all(isinstance(v, int) for v in row.get("cost", {}).values()), n
     assert row.get("time", 1) > 0 and row.get("age", 1) in (1, 2, 3), n
     assert row.get("needs", "HOUSE") in NAMES["build.jsonl"] | NAMES["train.jsonl"], n
