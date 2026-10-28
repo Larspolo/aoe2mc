@@ -1,6 +1,6 @@
 name: Automerge
 
-# Merges an agent PR (branch agent/*, claude/* or ccr-*, #3382) when its CI is green, so that the runs do not wait for CI (#232).
+# Merges an agent PR (branch agent/*, claude/* or ccr-*, #3382, or any branch with the label automerge, #3383) when its CI is green, so that the runs do not wait for CI (#232).
 # A merge with GITHUB_TOKEN starts no workflows, so this job starts CI on main, the dashboard and the claim clean-up.
 # CI runs on a head that Unconflict pushed with GITHUB_TOKEN start no workflow_run event, also not after a re-run:
 # the sweep merges those PRs. The job `sweep` of ci.yml starts it (#734): GitHub drops the cron runs (#581).
@@ -28,10 +28,8 @@ jobs:
       github.event_name != 'workflow_run' || (
       github.event.workflow_run.conclusion == 'success' &&
       (github.event.workflow_run.event == 'pull_request' || github.event.workflow_run.event == 'workflow_dispatch') &&
-      github.event.workflow_run.head_repository.full_name == github.repository &&
-      (startsWith(github.event.workflow_run.head_branch, 'agent/') ||
-       startsWith(github.event.workflow_run.head_branch, 'claude/') ||
-       startsWith(github.event.workflow_run.head_branch, 'ccr-')))
+      github.event.workflow_run.head_repository.full_name == github.repository)
+      # Each branch: the payload has no labels, so merge() checks the prefix or the label automerge (#3383).
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -58,6 +56,8 @@ jobs:
           SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           merged=0 conflict=0 labels=0
+          # An agent branch, or any branch with the label automerge (the owner's opt-in, #3383).
+          AGENT='(.head.ref | test("^(agent/|claude/|ccr-)")) or ([.labels[].name] | index("automerge") != null)'
           # GitHub computes "mergeable" without merge=jsonl and merge=union. A PR that only our drivers can merge
           # waited for Unconflict and a new CI run, and main moved again in that time: 396 failed merges in 24 hours,
           # 383 of them solved by the drivers (#3199). land() merges main with the drivers, pushes the merge commit
@@ -94,6 +94,9 @@ jobs:
             fi
             if jq -e '.labels[] | select(.name == "hold")' <<<"$pr" >/dev/null; then
               echo "#$n has label hold"; return
+            fi
+            if ! jq -e "$AGENT" <<<"$pr" >/dev/null; then
+              echo "#$n: no agent branch and no label automerge"; return
             fi
             ticket=$(jq -r .body <<<"$pr" | grep -oiE '(close[sd]?|fix(e[sd])?|resolve[sd]?) #[0-9]+' | head -1 | grep -oE '[0-9]+$' || true)
             if [ -n "$ticket" ]; then
@@ -146,7 +149,7 @@ jobs:
             # The sweep: each open agent PR without `conflict` (the runs and Unconflict solve those) whose head has a
             # green `quick` check and no failed check.
             gh api "repos/$R/pulls?state=open&per_page=100" --jq ".[] | select(.head.repo.full_name == \"$R\")
-              | select(.head.ref | test(\"^(agent/|claude/|ccr-)\")) | select([.labels[].name] | index(\"conflict\") | not)
+              | select($AGENT) | select([.labels[].name] | index(\"conflict\") | not)
               | @json" > prs.txt
             while read -r pr; do
               sha=$(jq -r .head.sha <<<"$pr")

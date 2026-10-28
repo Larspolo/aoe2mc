@@ -17,7 +17,7 @@ def test_the_workflows_name_the_same_prefixes():
     for name in ("automerge", "unconflict", "ci"):
         text = (ROOT / ".github/workflows" / f"{name}.yml").read_text()
         found = set(re.findall(r"startsWith\([^,]+, '([^']+)'\)", text))
-        for group in re.findall(r'test\(\\"\^\(([^)]*)\)', text):
+        for group in re.findall(r'test\(\\?"\^\(([^)]*)\)', text):  # automerge.yml: unescaped in AGENT (#3383)
             found |= set(group.split("|"))
         assert found == PREFIXES, name
 
