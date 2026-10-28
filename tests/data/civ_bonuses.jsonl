@@ -17,7 +17,7 @@
 {"name": "BENGALIS: Elephant units receive 25% less bonus damage and are more resistant to conversion.", "civ": "BENGALIS", "bonus": "Elephant units receive 25% less bonus damage and are more resistant to conversion.", "in": "UNITS"}
 {"name": "BENGALIS: All Town Centers spawn 2 Villagers when the next Age is reached.", "civ": "BENGALIS", "bonus": "All Town Centers spawn 2 Villagers when the next Age is reached.", "in": "AGE_VILLAGERS"}
 {"name": "BENGALIS: Cavalry units +2 attack vs Skirmishers.", "civ": "BENGALIS", "bonus": "Cavalry units +2 attack vs Skirmishers.", "in": "UNITS"}
-{"name": "BENGALIS: Ships regenerate 15 HP per minute.", "civ": "BENGALIS", "bonus": "Ships regenerate 15 HP per minute.", "later": "play:naval"}
+{"name": "BENGALIS: Ships regenerate 15 HP per minute.", "civ": "BENGALIS", "bonus": "Ships regenerate 15 HP per minute.", "in": "REGEN"}
 {"name": "BENGALIS: Monks +3/+3 armor.", "civ": "BENGALIS", "bonus": "Monks +3/+3 armor.", "later": "play:monks"}
 {"name": "BERBERS: Villagers move 5% faster in Dark Age, 10% faster starting in Feudal Age.", "civ": "BERBERS", "bonus": "Villagers move 5% faster in Dark Age, 10% faster starting in Feudal Age.", "in": "UNITS"}
 {"name": "BERBERS: Cavalry units are 15%/20% cheaper in the Castle/Imperial Age.", "civ": "BERBERS", "bonus": "Cavalry units are 15%/20% cheaper in the Castle/Imperial Age.", "in": "COSTS"}
@@ -172,7 +172,7 @@
 {"name": "PURU: Villagers gathering from Stone Mines generate food 0.69 stone per.", "civ": "PURU", "bonus": "Villagers gathering from Stone Mines generate food 0.69 stone per.", "in": "EXTRA"}
 {"name": "PURU: Stone Mines last 30% longer.", "civ": "PURU", "bonus": "Stone Mines last 30% longer.", "in": "LAST"}
 {"name": "PURU: Villagers and Fishing Ships gather from Oysters 15% faster.", "civ": "PURU", "bonus": "Villagers and Fishing Ships gather from Oysters 15% faster.", "later": "play:naval"}
-{"name": "PURU: Cavalry units heal 25 hit points per minute when no enemy units are within 10 tiles radius, starting in the Classical Age.", "civ": "PURU", "bonus": "Cavalry units heal 25 hit points per minute when no enemy units are within 10 tiles radius, starting in the Classical Age.", "later": "play:health"}
+{"name": "PURU: Cavalry units heal 25 hit points per minute when no enemy units are within 10 tiles radius, starting in the Classical Age.", "civ": "PURU", "bonus": "Cavalry units heal 25 hit points per minute when no enemy units are within 10 tiles radius, starting in the Classical Age.", "in": "REGEN"}
 {"name": "PURU: Lemboi cost -10/19/27% and gain +1/2/3 attack in the Civic/Classical/Imperial Ages respectively.", "civ": "PURU", "bonus": "Lemboi cost -10/19/27% and gain +1/2/3 attack in the Civic/Classical/Imperial Ages respectively.", "later": "play:military-train"}
 {"name": "ROMANS: Villagers gather, build, and repair 5% faster.", "civ": "ROMANS", "bonus": "Villagers gather, build, and repair 5% faster.", "in": "WORK"}
 {"name": "ROMANS: Galley-line and Dromon +1/+1 armor.", "civ": "ROMANS", "bonus": "Galley-line and Dromon +1/+1 armor.", "later": "play:naval"}

@@ -202,7 +202,8 @@ AGE_VILLAGERS = {"BENGALIS": 2}                                    # each own to
 TECH_GIFTS = {r["name"]: r["tech_gifts"] for r in ROWS if "tech_gifts" in r}
 # "regen": the regeneration of units (#2247): [group of GROUPS or a list of unit names, hit points per AoE2 minute in
 # the Dark, Feudal, Castle and Imperial Age] (Polish villagers, Georgian mounted units, Wu infantry, Thracian elite
-# skirmishers). regen.tick gives them back.
+# skirmishers, Bengali ships). A third value: the rule counts only with no enemy unit within that many tiles (Puru cavalry,
+# #2334). regen.tick gives them back.
 REGEN = {r["name"]: [tuples(b) for b in r["regen"]] for r in ROWS if "regen" in r}
 ECONOMY_VILLAGERS = {r["name"]: r["economy_villagers"] for r in ROWS if "economy_villagers" in r}
 # Resources for kills and deaths (game/spoils.py, #2271): "fallen" the part of the cost of a fallen own unit (Tupi),
@@ -256,12 +257,14 @@ def smith(g, name, s):
     return {t: c[age] for k, techs, c in SMITH_UNITS.get(civ(g), []) if c[age] and GROUPS[k](name, s) for t in techs}
 
 
-def regen(g, name, s):
+def regen(g, name, s, foe=math.inf):
     """The hit points per AoE2 minute that unit name (combat.Stats s) of the player of g regenerates in its age (REGEN),
-    else 0. Two rules of one civilization add up."""
+    else 0. Two rules of one civilization add up. foe: the tiles from the unit to the nearest enemy unit; a rule with a
+    radius counts only when foe is more than it."""
     import build                                                   # build imports gather, gather imports this module
     age = build.ages(g)
-    return sum(c[age] for k, c in REGEN.get(civ(g), []) if (name in k if isinstance(k, tuple) else GROUPS[k](name, s)))
+    return sum(c[age] for k, c, *near in REGEN.get(civ(g), []) if foe > (near or [-1])[0]
+               and (name in k if isinstance(k, tuple) else GROUPS[k](name, s)))
 
 
 def units(g, name, s):
