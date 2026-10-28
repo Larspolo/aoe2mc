@@ -26,6 +26,7 @@ Usage:
     python3 game/run.py WORLD --play --mode sudden-death   # the AoE2 game mode "Sudden Death": one town center (#2407)
     python3 game/run.py WORLD --play --mode battle-royale  # "Battle Royale": the Corruption takes the map (#2439)
     python3 game/run.py WORLD --play --mode capture-the-relic   # "Capture the Relic": the center relic wins (#2440)
+    python3 game/run.py WORLD --play --mode defend-the-wonder   # "Defend the Wonder": player 1 has a Wonder (#2441)
     python3 game/run.py WORLD --play --civ 1=BRITONS --civ 2=FRANKS   # the civilization of each player (#2267)
     python3 game/run.py WORLD --play --teams 1,1,2,2   # the team of each player, - is no team (#2296)
     python3 game/run.py WORLD --play --load SAVE   # go on with a saved game: Ctrl-C of --play saves into saves/ (#2255)
@@ -336,6 +337,7 @@ def team_choices(value, players):
 MODES = {
     "battle-royale": "the Corruption takes the map from its border to its center (battle_royale.py)",
     "capture-the-relic": "the first player who brings the relic of the map center into an own monastery wins",
+    "defend-the-wonder": "player 1 defends a Wonder for 250 years, the others win when it falls",
     "empire-wars": "each player starts with a town and 27 villagers at work, in the Feudal Age when --age is dark",
     "regicide": "each player has a King, a player whose King dies is defeated",
     "standard": "the AoE2 rules",
@@ -352,7 +354,7 @@ SETTINGS = {
     "end_age": "imperial",            # "Ending age" (build.locked, #2346)
     "full_tech_tree": False,          # "Full Tech Tree": the full tech tree and no civilization bonuses (civs.civ, #2354)
     "mode": "standard",               # the game mode (MODES; regicide.py #2347, sudden_death.py #2407, empire_wars.py #2408,
-                                      # battle_royale.py #2439, capture_relic.py #2440)
+                                      # battle_royale.py #2439, defend_wonder.py #2441, capture_relic.py #2440)
     "pop_limit": None,                # "Population limit" (train.LIMITS, #2266)
     "resources": "standard",          # "Starting resources" (gather.LEVELS, #2264)
     "teams": None,                    # {player: team or None} in place of the scenario's (team_choices, #2296)
@@ -420,6 +422,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     if settings["mode"] == "empire-wars" and settings["age"] == "dark":   # the start age of the mode (#2408)
         import empire_wars
         settings["age"] = empire_wars.MODES["empire-wars"]["age"]
+    if settings["mode"] == "defend-the-wonder" and settings["age"] == "dark":   # Post-Imperial (#2441)
+        import defend_wonder
+        settings["age"] = defend_wonder.MODE["age"]
     if not state and settings["age"] != "dark":                  # after the base values: the technologies change them
         import train
         for x in [g, *(s.g for s in g.bots)]:
@@ -429,6 +434,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         g.mode = settings["mode"]
         if not state:                                            # a loaded game has its town in the saved world
             empire_wars.setup(g, settings["mode"])
+    elif settings["mode"] == "defend-the-wonder":                # after the age: the Wonder and the resources (#2441)
+        import defend_wonder
+        g.mode = settings["mode"]
+        defend_wonder.setup(g, settings["mode"], start=not state)
     elif settings["mode"] != "standard":                         # after the bots: their Kings go to their Gathers (#2347)
         import battle_royale
         import capture_relic
