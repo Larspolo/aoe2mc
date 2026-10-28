@@ -815,6 +815,9 @@ def stance(players, n, m, kind):
     if kind != "ally":
         row.pop("team")
         return
+    if other.get("team") is None and row.get("team") is not None:
+        other["team"] = row["team"]                                    # m joins n: n keeps its other allies (#2997)
+        return
     if other.get("team") is None:
         other["team"] = 1 + max((p["team"] for p in players.values() if p.get("team") is not None), default=0)
     row["team"] = other["team"]
