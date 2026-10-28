@@ -35,6 +35,8 @@ The world is saved with Minecraft data version 26.3. Newer Minecraft versions up
 """
 import argparse
 import contextlib
+import functools
+import hashlib
 import io
 import json
 import math
@@ -477,6 +479,8 @@ def read_scenario(path):
                                                 "resource": e.tribute_list} if e.effect_type == TRIBUTE else {}),
                                             **({"operation": e.operation, "quantity": e.quantity,
                                                 "resource": e.tribute_list} if e.effect_type == MODIFY_RESOURCE else {}),
+                                            **({"operation": e.operation, "quantity": e.quantity}   # (#2767)
+                                               if e.effect_type == CHANGE_OBJECT_RANGE else {}),
                                             **({"operation": e.operation, "quantity": e.armour_attack_quantity,   # (#2755)
                                                 "armour_class": e.armour_attack_class}
                                                if e.effect_type in (CHANGE_OBJECT_ARMOR, CHANGE_OBJECT_ATTACK) else {}),
@@ -2827,6 +2831,7 @@ CHANGE_OBJECT_COST = 40                                            # "Change Obj
 CHANGE_OBJECT_HP = 27                                              # "Change Object HP" (#2693)
 CHANGE_OBJECT_NAME = 26                                            # "Change Object Name" (#2616)
 CHANGE_OBJECT_PLAYER_COLOR = 58                                    # "Change Object Player Color" (#2824)
+CHANGE_OBJECT_RANGE = 32                                           # "Change Object Range" (#2767)
 CHANGE_OBJECT_SPEED = 33                                           # "Change Object Speed" (#2694)
 CHANGE_OBJECT_STANCE = 36                                          # "Change Object Stance" (#2705)
 CHANGE_OBJECT_VISIBILITY = 107                                     # "Change Object Visibility" (#2862)
@@ -2834,7 +2839,9 @@ CHANGE_OWNERSHIP = 18
 CHANGE_PLAYER_COLOR = 89                                           # "Change Player Color" (#2712)
 CHANGE_PLAYER_NAME = 45                                            # "Change Player Name" (#2711)
 CHANGE_TECHNOLOGY_COST = 63                                        # "Change Technology Cost" (#2819)
+CHANGE_TECHNOLOGY_LOCATION = 47                                    # "Change Technology Location" (#2864)
 CHANGE_TECHNOLOGY_NAME = 65                                        # "Change Technology Name" (#2821)
+CHANGE_TRAIN_LOCATION = 46                                         # "Change Train Location" (#2864)
 CHANGE_VARIABLE = 56                                               # the scenario variables (#2611)
 CHANGE_VIEW = 16                                                   # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
@@ -2843,6 +2850,8 @@ COMPARE_VARIABLES = 78                                             # the conditi
 COUNT_UNITS_INTO_VARIABLE = 101                                    # "Count Units into Variable" (#2697)
 CREATE_GARRISONED_OBJECT = 49                                      # "Create Garrisoned Object" (#2764)
 CREATE_OBJECT = 11
+CREATE_OBJECT_ARMOR = 78                                           # "Create Object Armor" (#2855)
+CREATE_OBJECT_ATTACK = 77                                          # "Create Object Attack" (#2855)
 DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
 DECLARE_VICTORY = 13                                               # "Declare Victory" (#2542)
 DISABLE_OBJECT_SELECTION = 70                                      # "Disable Object Selection" (#2854)
@@ -2870,8 +2879,10 @@ MODIFY_ATTRIBUTE_FOR_CLASS = 104                                   # "Modify Att
 MODIFY_OBJECT_ATTRIBUTE = 105                                      # "Modify Object Attribute" (#2860)
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
 MODIFY_RESOURCE_BY_VARIABLE = 53                                   # "Modify Resource by Variable" (#2768)
+MODIFY_VARIABLE_BY_ATTRIBUTE = 87                                  # "Modify Variable by Attribute" (#2858)
 MODIFY_VARIABLE_BY_RESOURCE = 86                                   # "Modify Variable by Resource" (#2823)
 MODIFY_VARIABLE_BY_VARIABLE = 100                                  # "Modify Variable by Variable" (#2713)
+OBJECT_HAS_ACTION = 28                                             # the condition "Object Has Action" (#2867)
 OBJECT_HP = 23                                                     # "Object HP", the hit points of one object (#2701)
 OBJECT_NOT_VISIBLE = 16                                            # the conditions "Object (Not) Visible" (#2756)
 OBJECT_VISIBLE = 15
@@ -2904,6 +2915,9 @@ UNITS_GARRISONED = 18                                              # the conditi
 UNLOAD = 17                                                        # "Unload" (#2773)
 UNLOCK_GATE = 6
 VARIABLE_VALUE = 22
+# The AoE2 UnitAIAction values of "Object Has Action" that the game program knows (game/scenario.py ACTIONS, #2867):
+# build, gather, hunt, move, enter (garrison), repair, idle. The others (attack, convert, heal ...): not supported yet.
+OBJECT_ACTIONS = (3, 10, 11, 14, 18, 19, 24)
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
 VISIBLE = (OBJECT_NOT_VISIBLE, OBJECT_VISIBLE, OBJECT_VISIBLE_MULTIPLAYER)  # the sight of a player: the game program
@@ -2913,6 +2927,7 @@ TICKED = COUNTED + (                                               # conditions 
     DIFFICULTY_LEVEL,
     DIPLOMACY_STATE,
     DISPLAY_TIMER_TRIGGERED,
+    OBJECT_HAS_ACTION,
     OBJECT_HP,
     OBJECT_NOT_VISIBLE,
     OBJECT_VISIBLE,
@@ -2958,6 +2973,7 @@ OBJECT_TESTS = {DESTROY_OBJECT: ("if entity @e[tag=aoe2mc.m{ref}] unless entity 
 TICKED += tuple(OBJECT_TESTS)
 INVERTED = tuple(OBJECT_TESTS) + (                                  # conditions with an inverted test in the tick
     COMPARE_VARIABLES,                                                 # function, one per line in alphabetical order
+    OBJECT_HAS_ACTION,
     TRIGGER_ACTIVE,                                                    # (parallel tickets add lines, #2791)
 )
 
@@ -2988,6 +3004,7 @@ CONDITION_KEYS = {
     DIPLOMACY_STATE: {"player": "source_player", "target": "target_player", "diplomacy": "quantity"},   # the stance (#2757)
     DISPLAY_TIMER_TRIGGERED: {"slot": "timer_id"},                                       # (#2702)
     IN_AREA: COUNT_KEYS,
+    OBJECT_HAS_ACTION: {"ref": "unit_object", "next": "next_object", "action": "unit_ai_action"},   # (#2867)
     OBJECT_HP: {"quantity": "quantity", "ref": "unit_object", "comparison": "comparison"},   # (#2701)
     OBJECT_NOT_VISIBLE: {"ref": "unit_object", "player": lambda c, entities, techs: 1},   # player 1 sees (#2756)
     OBJECT_VISIBLE: {"ref": "unit_object", "player": lambda c, entities, techs: 1},
@@ -3254,6 +3271,20 @@ def name_lines(e, c):
     stats["change object name"] += 1
     return [f"execute as {found[0]} run data modify entity @s CustomName.text set value "   # one entity
             f"{json.dumps(msg, ensure_ascii=False)}"]
+
+
+def location_lines(e, c):
+    """The command of "Change Train Location" and "Change Technology Location" (#2864): the unit or technology of the
+    player, its new building and its AoE2 button go into the list of the data storage aoe2mc:places as one text
+    "<player> <name> <building> <button>". A converted world has no menus: the scenario mode of the game program
+    (game/scenario.py places) moves the item in the menus of the player."""
+    _, name = (e.get("object") or (None, None)) if e["type"] == CHANGE_TRAIN_LOCATION else (None, e.get("technology"))
+    _, building = e.get("object2") or (None, None)
+    if e["player"] <= 0 or not all(re.fullmatch(r"[A-Z0-9_]+", x or "") for x in (name, building)):
+        c.stats["change train or technology location (not supported)"] += 1
+        return []
+    c.stats["change train or technology location"] += 1
+    return [f'data modify storage aoe2mc:places list append value "{e["player"]} {name} {building} {e.get("button", -1)}"']
 
 
 def tech_name_lines(e, c):
@@ -3615,6 +3646,37 @@ def attribute_lines(e, c):
     return [f'data modify storage aoe2mc:attributes list append value "{e["player"]} {name} {field} {e["operation"]} {q:g}"']
 
 
+def create_lines(e, c):
+    """The command of "Create Object Attack" and "Create Object Armor" (#2855): AoE2 gives the unit type of the player
+    one more attack (armor) entry of the class, and the entries of one class add up. So the change is an add of the
+    value to the Stats field of the class (CLASS_ATTRIBUTES), in the data storage aoe2mc:attributes as "Modify
+    Attribute" (attribute_lines): the scenario mode of the game program applies it (train.stats). A class outside
+    CLASS_ATTRIBUTES (a bonus class): not supported in the stats."""
+    _, name = e.get("object") or (None, None)
+    field = CLASS_ATTRIBUTES.get((9 if e["type"] == CREATE_OBJECT_ATTACK else 8, e.get("class")))
+    q = e.get("aa")
+    if not name or e["player"] <= 0 or not field or q is None or q < 0:
+        c.stats["create object attack or armor (not supported)"] += 1
+        return []
+    c.stats["create object attack or armor"] += 1
+    return [f'data modify storage aoe2mc:attributes list append value "{e["player"]} {name} {field} 2 {q:g}"']
+
+
+def variable_by_attribute_lines(e, c):
+    """The command of "Modify Variable by Attribute" (#2858): "<player> <name> <Stats field> <operation> <variable>"
+    goes into the list of the data storage aoe2mc:reads. A converted world has no combat values: the scenario mode of
+    the game program (game/scenario.py reads) empties the list and changes the score #v<variable> of aoe_var by the
+    value of the unit type of the player (train.stats). The attributes: STAT_ATTRIBUTES and CLASS_ATTRIBUTES."""
+    _, name = e.get("object") or (None, None)
+    a, v = e.get("attribute"), e.get("variable", -1)
+    field = STAT_ATTRIBUTES.get(a) or CLASS_ATTRIBUTES.get((a, e.get("class")))
+    if not name or e["player"] <= 0 or not field or e.get("operation") not in range(1, 6) or v < 0:
+        c.stats["modify variable by attribute (not supported)"] += 1
+        return []
+    c.stats["modify variable by attribute"] += 1
+    return [f'data modify storage aoe2mc:reads list append value "{e["player"]} {name} {field} {e["operation"]} {v}"']
+
+
 def menu_lines(e, c):
     """The command of "Enable/Disable Object" and "Enable/Disable Technology" (#2775): "<player> <name> on|off" goes
     into the list of the data storage aoe2mc:menus. A converted world has no menus: the scenario mode of the game
@@ -3653,6 +3715,19 @@ def stance_lines(e, c):
         return []
     tag = f"aoe_order{c.t['id']}_{effect_index(e, c)}"
     return tag_lines(e, c.T, tag) + [f'data modify storage aoe2mc:orders list append value "stance {tag} {e["stance"]}"']
+
+
+def range_lines(e, c):
+    """The commands of "Change Object Range" (#2767). The range of a unit is a value of the Paper plugin (`aoe range`):
+    as stance_lines, the units of the player in the area get the tag aoe_order<trigger>_<effect index>, and the order
+    "range <tag> <operation> <quantity>" (1 set, 2 add, 3 subtract, 4 multiply, 5 divide; tiles) goes into the storage
+    aoe2mc:orders for game/scenario.py orders."""
+    if e.get("operation") not in (1, 2, 3, 4, 5) or (e.get("quantity") or 0) < 0:
+        c.stats["change object range (not supported)"] += 1
+        return []
+    c.stats["change object range"] += 1
+    tag, op = f"aoe_order{c.t['id']}_{effect_index(e, c)}", f'{e["operation"]} {e["quantity"]}'
+    return tag_lines(e, c.T, tag) + [f'data modify storage aoe2mc:orders list append value "range {tag} {op}"']
 
 
 def stop_lines(e, c):
@@ -3919,13 +3994,21 @@ def visibility_lines(e, c):
 # (effect, kinds, techs) -> value. A new effect is one line here, in alphabetical order (#2792): parallel trigger
 # tickets conflicted in one expression of read_scenario. The older effects still have their entry there.
 EFFECT_KEYS = {
+    CHANGE_TECHNOLOGY_LOCATION: {"button": "button_location", "object2": lambda e, kinds, techs: kinds.get(   # #2864
+        e.object_list_unit_id_2), "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
+    CHANGE_TRAIN_LOCATION: {"button": "button_location",                                                       # #2864
+                            "object2": lambda e, kinds, techs: kinds.get(e.object_list_unit_id_2)},
     COUNT_UNITS_INTO_VARIABLE: {"variable2": "variable2"},   # (#2697)
+    CREATE_OBJECT_ARMOR: {"class": "armour_attack_class", "aa": "armour_attack_quantity"},   # (#2855)
+    CREATE_OBJECT_ATTACK: {"class": "armour_attack_class", "aa": "armour_attack_quantity"},  # (#2855)
     INITIATE_RESEARCH: {"selected": lambda e, kinds, techs: list(e.selected_object_ids or []),   # (#2772)
                         "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
     MODIFY_ATTRIBUTE_FOR_CLASS: {"attribute": "object_attributes", "operation": "operation", "quantity": "quantity",
                                  "class": "armour_attack_class", "aa": "armour_attack_quantity", "group": "object_group2"},
     MODIFY_OBJECT_ATTRIBUTE: {"aa": "armour_attack_quantity", "armour_class": "armour_attack_class",   # (#2860)
                               "attribute": "object_attributes", "operation": "operation", "quantity": "quantity"},
+    MODIFY_VARIABLE_BY_ATTRIBUTE: {"attribute": "object_attributes", "class": "armour_attack_class",   # (#2858)
+                                   "operation": "operation", "variable": "variable"},
     TRAIN_UNIT: {"quantity": "quantity", "selected": lambda e, kinds, techs: list(e.selected_object_ids or [])},   # (#2772)
 }
 
@@ -3944,6 +4027,7 @@ EFFECTS = {
     CHANGE_OBJECT_HP: hp_lines,
     CHANGE_OBJECT_NAME: name_lines,
     CHANGE_OBJECT_PLAYER_COLOR: object_color_lines,
+    CHANGE_OBJECT_RANGE: range_lines,
     CHANGE_OBJECT_SPEED: speed_lines,
     CHANGE_OBJECT_STANCE: stance_lines,
     CHANGE_OBJECT_VISIBILITY: object_visibility_lines,
@@ -3951,7 +4035,9 @@ EFFECTS = {
     CHANGE_PLAYER_COLOR: color_lines,
     CHANGE_PLAYER_NAME: player_name_lines,
     CHANGE_TECHNOLOGY_COST: tech_cost_lines,
+    CHANGE_TECHNOLOGY_LOCATION: location_lines,
     CHANGE_TECHNOLOGY_NAME: tech_name_lines,
+    CHANGE_TRAIN_LOCATION: location_lines,
     CHANGE_VARIABLE: variable_lines,
     CHANGE_VIEW: view_lines,
     CLEAR_INSTRUCTIONS: clear_lines,
@@ -3959,6 +4045,8 @@ EFFECTS = {
     COUNT_UNITS_INTO_VARIABLE: count_lines,
     CREATE_GARRISONED_OBJECT: garrisoned_lines,
     CREATE_OBJECT: object_lines,
+    CREATE_OBJECT_ARMOR: create_lines,
+    CREATE_OBJECT_ATTACK: create_lines,
     DAMAGE_OBJECT: damage_lines,
     DEACTIVATE_TRIGGER: switch_lines,
     DECLARE_VICTORY: victory_lines,
@@ -3983,6 +4071,7 @@ EFFECTS = {
     MODIFY_OBJECT_ATTRIBUTE: object_attribute_lines,
     MODIFY_RESOURCE: resource_lines,
     MODIFY_RESOURCE_BY_VARIABLE: resource_by_variable_lines,
+    MODIFY_VARIABLE_BY_ATTRIBUTE: variable_by_attribute_lines,
     MODIFY_VARIABLE_BY_RESOURCE: variable_by_resource_lines,
     MODIFY_VARIABLE_BY_VARIABLE: variable_by_variable_lines,
     PATROL: order_lines,
@@ -4017,6 +4106,7 @@ SCORE_TESTS = {
     DIFFICULTY_LEVEL: lambda c: f"score #level aoe_difficulty matches {c.get('quantity', 0)}",
     DIPLOMACY_STATE: lambda c: f"score #p{c['player']}.p{c['target']} aoe_dipstate matches {c['diplomacy'] + 1}",
     DISPLAY_TIMER_TRIGGERED: lambda c: f"score #done{c.get('slot', 0)} aoe_timer matches 1..",   # set at 0 (#2702)
+    OBJECT_HAS_ACTION: lambda c: f"score #r{c['ref']} aoe_action matches {c['action']}",   # inverted: unless
     OBJECT_NOT_VISIBLE: lambda c: f"score #r{c['ref']}.p{c['player']} aoe_seen matches 0",
     OBJECT_VISIBLE: lambda c: f"score #r{c['ref']}.p{c['player']} aoe_seen matches 1",
     OBJECT_VISIBLE_MULTIPLAYER: lambda c: f"score #r{c['ref']}.p{c['player']} aoe_seen matches 1",
@@ -4120,6 +4210,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     or c["type"] == COMPARE_VARIABLES and compare_test(c) is None
                     or c["type"] == OBJECT_HP and (c.get("ref", -1) < 0 or variable_range(c) is None)
                     or c["type"] == UNITS_GARRISONED and c.get("unit", -1) < 0
+                    or c["type"] == OBJECT_HAS_ACTION and (c.get("ref", -1) < 0 or c.get("next", -1) >= 0
+                                                           or c.get("action") not in OBJECT_ACTIONS)
                     or c["type"] in VISIBLE and (c.get("ref") is None or c["ref"] < 0 or c.get("player", -1) <= 0)
                     or c["type"] == PLAYER_DEFEATED and c.get("player", -1) <= 0   # Gaia: no defeat (#2710)
                     or c["type"] == TRIGGER_ACTIVE and c.get("trigger") not in switch
@@ -4157,7 +4249,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             tests, unless = groups_tests[which[i]], groups_unless[which[i]]
             if c["type"] in SCORE_TESTS:                               # a score of the world or the game
                 test = SCORE_TESTS[c["type"]](c)
-                no = c["type"] == COMPARE_VARIABLES and compare_negated(c)   # "not equal" or "inverted": unless
+                no = c["type"] == COMPARE_VARIABLES and compare_negated(c) or \
+                    c["type"] == OBJECT_HAS_ACTION and c["inverted"]   # "not equal" or "inverted": unless
                 tests.append(f"{'unless' if no else 'if'} {test}")
                 unless.append(f"{'if' if no else 'unless'} {test}")
                 continue
@@ -4232,11 +4325,12 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     names = sorted({f"#v{x[k]}" for t in triggers for x in t["conditions"] + t["effects"]
                     for k in ("variable", "variable2")   # "Modify Variable by Variable" has two (#2713)
                     if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE, COMPARE_VARIABLES, COUNT_UNITS_INTO_VARIABLE,
+                                     MODIFY_VARIABLE_BY_ATTRIBUTE,
                                      MODIFY_VARIABLE_BY_RESOURCE, MODIFY_VARIABLE_BY_VARIABLE) and x.get(k, -1) >= 0})
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
-    for word in ("aoe_difficulty", "aoe_gar", "aoe_lost", "aoe_seen", "aoe_tech", "aoe_techstate"):  # the game program
+    for word in ("aoe_action", "aoe_difficulty", "aoe_gar", "aoe_lost", "aoe_seen", "aoe_tech", "aoe_techstate"):  # the game program
         if any(f" {word} " in x for x in tick):
             setup[f"scoreboard objectives add {word} dummy"] = None
     if switch:
@@ -4248,6 +4342,13 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         files["data/minecraft/tags/function/tick.json"] = {"values": ["aoe2mc:tick"]}
         files["data/aoe2mc/function/tick.mcfunction"] = "\n".join(tick) + "\n"
     return load, files
+
+
+def action_list(triggers):
+    """The refs of the units of the "Object Has Action" conditions that the tick function of trigger_files tests, for
+    aoe2mc.json "actions" (#2867): the scenario mode of the game program sets their score of aoe_action."""
+    tick = trigger_files(triggers)[1].get("data/aoe2mc/function/tick.mcfunction", "")
+    return sorted({int(r) for r in re.findall(r"#r(\d+) aoe_action ", tick)})
 
 
 def research_list(triggers):
@@ -4278,6 +4379,7 @@ def visible_list(triggers):
 # The lists of aoe2mc.json that the scenario mode of the game program reads: key -> function of the triggers. A new
 # list is one line here, in alphabetical order (#2832): no new keyword of write_objects.
 TRIGGER_LISTS = {
+    "actions": action_list,                                     # the units of aoe_action (#2867)
     "research": research_list,                                  # the "Research Technology" effects (#2577)
     "tech_states": tech_state_list,                             # the [player, technology] pairs of aoe_techstate (#2769)
     "visible": visible_list,                                    # the [ref, player] pairs of aoe_seen (#2756)
@@ -4440,6 +4542,9 @@ def skin_texture(model, tone):
 # leather takes the color of its item, as vanilla leather does), the overlay has the accent and crest colors.
 ARMOR_BOXES = {"head": [(0, 0, 8, 8, 8)], "chest": [(16, 16, 8, 12, 4), (40, 16, 4, 12, 4)], "feet": [(0, 16, 4, 12, 4)],
                "legs": [(16, 16, 8, 12, 4), (0, 16, 4, 12, 4)]}
+# the horse armor (#2743, layer "horse_body", 64 x 64): the boxes (u, v, w, h, d) of the body, neck and head of the
+# horse model; the legs and the tail stay bare
+HORSE_BOXES = [(0, 32, 10, 10, 22), (0, 35, 4, 12, 7), (0, 13, 6, 5, 7)]
 METAL = {"chainmail": (150, 152, 158), "diamond": (96, 214, 206), "golden": (232, 192, 64), "iron": (206, 206, 212),
          "leather": (160, 101, 64), "netherite": (74, 66, 70), "dyed": (236, 236, 236)}
 
@@ -4453,26 +4558,31 @@ def armor_shade(pattern, x, y):
             "plate": 1.12 if x % 8 in (3, 4) else 0.8 if y % 6 == 5 else 1.0}[pattern]
 
 
-def armor_textures(name):
-    """The textures (base, overlay) of layer "humanoid" and "humanoid_leggings" of a unit with a look (#2742): each
-    box gets the material of its armor piece in the pattern of the look; a helmet leaves the face open but the brow
-    (a plate helmet with a crest closes it to an eye slit), boots cover the lower leg, leggings the waist and the legs."""
+def armor_textures(name, hero=False):
+    """The textures (base, overlay) of the layers "humanoid", "humanoid_leggings" and (a mount with horse armor)
+    "horse_body" of a unit with armor (#2742, #2743): its look (units.look) and the material of each piece."""
+    look, gear = units.look(name, hero), units.pieces(units.describe(name, hero))
+    mats = tuple((slot, "dyed" if "minecraft:dyed_color" in p.get("components", {}) else str(p["id"]).split(":")[1].split("_")[0])
+                 for slot, p in sorted(gear.items()))
+    return armor_images(look["pattern"], look["accent"], look.get("crest"), mats)
+
+
+@functools.lru_cache(maxsize=None)
+def armor_images(pattern, accent, crest, mats):
+    """The textures of armor_textures from the look and the materials ((slot, material), ...): each box gets the
+    material of its armor piece in the pattern of the look; a helmet leaves the face open but the brow (a plate helmet
+    with a crest closes it to an eye slit), boots cover the lower leg, leggings the waist and the legs. The horse armor
+    covers the head, neck and body of the horse, with a hem in the accent color (HORSE_BOXES, #2743)."""
     from PIL import Image
-    look = units.LOOKS[name]
-    desc = units.classify(name)
-    while "equipment" not in desc:                                  # a mounted unit: the rider
-        desc = desc["Passengers"][0]
-    gear, pattern = desc["equipment"], look["pattern"]
-    accent, crest = (tuple(int(c[i:i + 2], 16) for i in (1, 3, 5)) if c else None for c in (look["accent"], look.get("crest")))
+    gear = dict(mats)
+    accent, crest = (tuple(int(c[i:i + 2], 16) for i in (1, 3, 5)) if c else None for c in (accent, crest))
     out = {}
     for layer, slots in (("humanoid", ("head", "chest", "feet")), ("humanoid_leggings", ("legs",))):
         base, over = (Image.new("RGBA", (64, 32), (0, 0, 0, 0)) for _ in range(2))
         for slot in slots:
-            piece = gear.get(slot)
-            if piece is None:
+            if slot not in gear:
                 continue
-            mat = str(piece["id"]).split(":")[1].split("_")[0]
-            color = METAL["dyed" if "minecraft:dyed_color" in piece.get("components", {}) else mat]
+            color = METAL[gear[slot]]
             for u, v, w, h, d in ARMOR_BOXES[slot]:
                 for x in range(u, u + 2 * d + 2 * w):
                     for y in range(v, v + d + h):
@@ -4495,6 +4605,18 @@ def armor_textures(name):
                         if crest and slot == "head" and (not side and x - u - d in (3, 4) or side and mid and r < 3):
                             over.putpixel((x, y), crest + (255,))       # the crest from the brow over the top
         out[layer] = base, over
+    if "body" in gear:                                              # the horse armor (#2743)
+        base, over = (Image.new("RGBA", (64, 64), (0, 0, 0, 0)) for _ in range(2))
+        for i, (u, v, w, h, d) in enumerate(HORSE_BOXES):
+            for x in range(u, u + 2 * d + 2 * w):
+                for y in range(v, v + d + h):
+                    side = y >= v + d
+                    if not side and not (u + d <= x < u + d + 2 * w):
+                        continue
+                    base.putpixel((x, y), tuple(min(255, int(c * armor_shade(pattern, x, y))) for c in METAL[gear["body"]]) + (255,))
+                    if i == 0 and side and y >= v + d + h - 2:
+                        over.putpixel((x, y), accent + (255,))          # the hem of the body
+        out["horse_body"] = base, over
     return out
 
 
@@ -4559,8 +4681,8 @@ def write_resourcepack(out):
     """--resource-pack (#2738): resourcepacks/resources.zip in the world folder, which single player loads with the
     world (26.x: LevelResource.MAP_RESOURCE_FILE; a world of an older version had resources.zip at its top, and the
     client moves it there, ResourcePackLocationFileFix). The zombie, skeleton and drowned units get a human face, the
-    skeleton horses a brown coat (#2752), the War Wagon its cart (cart_model, #2746), and each unit of units.LOOKS its
-    own armor (#2742). Same bytes for each conversion: sorted names, a fixed time."""
+    skeleton horses a brown coat (#2752), the War Wagon its cart (cart_model, #2746), and each unit with armor its own
+    armor (#2742, units.dressed, #2743). Same bytes for each conversion: sorted names, a fixed time."""
     import io
     import zipfile
     files = {"pack.mcmeta": json.dumps({"pack": {
@@ -4575,15 +4697,21 @@ def write_resourcepack(out):
         buf = io.BytesIO()
         skin_texture(model, tone).save(buf, "PNG")
         files["assets/minecraft/textures/" + path] = buf.getvalue()
-    for name in units.LOOKS:                                        # the armor of each unit with a look (#2742)
-        n = name.lower()
-        layers = {}
-        for layer, images in armor_textures(name).items():
-            layers[layer] = [{"texture": f"aoe2mc:{n}", "dyeable": {"color_when_undyed": 0xFFFFFF}}, {"texture": f"aoe2mc:{n}_overlay"}]
-            for im, end in zip(images, ("", "_overlay")):
+    for name, hero in units.dressed().items():                      # the armor of each unit (#2742, #2743)
+        if units.asset(name) != name:                                  # ELITE_X wears the asset of X
+            continue
+        n, layers = name.lower(), {}
+        for layer, images in armor_textures(name, hero).items():
+            pngs = []
+            for im in images:
                 buf = io.BytesIO()
                 im.save(buf, "PNG")
-                files[f"assets/aoe2mc/textures/entity/equipment/{layer}/{n}{end}.png"] = buf.getvalue()
+                pngs.append(buf.getvalue())
+            # a unit with no line in data/looks.jsonl shares the textures of the same look and materials
+            tex = n if name in units.LOOKS else "look_" + hashlib.sha1(b"".join(pngs)).hexdigest()[:12]
+            layers[layer] = [{"texture": f"aoe2mc:{tex}", "dyeable": {"color_when_undyed": 0xFFFFFF}}, {"texture": f"aoe2mc:{tex}_overlay"}]
+            for png, end in zip(pngs, ("", "_overlay")):
+                files[f"assets/aoe2mc/textures/entity/equipment/{layer}/{tex}{end}.png"] = png
         files[f"assets/aoe2mc/equipment/{n}.json"] = json.dumps({"layers": layers}, indent=1).encode()
     for w in sorted({w for _, w in units.WEAPONS}):                 # the AoE2 weapons (#2744)
         buf = io.BytesIO()
