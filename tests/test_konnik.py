@@ -9,7 +9,6 @@ CASTLE = (12, 4)
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.build.AGE["ELITE_KONNIK"] == 3
     assert len(train.HELP["KONNIK"]) <= 50 and "BULGARIANS" not in train.civs.MISSING["KONNIK"]
     assert "BRITONS" in train.civs.MISSING["KONNIK"]
     assert "BULGARIANS" not in train.civs.MISSING["ELITE_KONNIK_UPGRADE"]

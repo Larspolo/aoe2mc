@@ -14,6 +14,7 @@ Usage:
     python3 game/run.py WORLD --play --reveal all  # no fog of war: also the enemy units out of sight show (game/fog.py)
     python3 game/run.py WORLD --play --speed 2     # twice the AoE2 Normal speed: /tick rate 40 and shorter steps (#2057)
     python3 game/run.py WORLD --play --resources high  # the AoE2 setting "Starting resources" (#2264)
+    python3 game/run.py WORLD --play --all-techs       # the AoE2 setting "All Techs" (#2298)
     python3 game/run.py WORLD --play --civ 1=BRITONS --civ 2=FRANKS   # the civilization of each player (#2267)
     python3 game/run.py WORLD --play --teams 1,1,2,2   # the team of each player, - is no team (#2296)
     python3 game/run.py WORLD --play --load SAVE   # go on with a saved game: Ctrl-C of --play saves into saves/ (#2255)
@@ -311,11 +312,13 @@ def team_choices(value, players):
 
 
 def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1,
-         speed=1.0, state=None, resources="standard", civ=None, teams=None):
+         speed=1.0, state=None, resources="standard", civ=None, teams=None,
+         all_techs=False):
     """state: the saved state of the players (savegame.dump) for a loaded game (#2255).
     resources: the AoE2 setting "Starting resources" of each player and bot (gather.LEVELS, #2264).
     civ: {player: civilization} in place of the civilization of the scenario (civ_choices, #2267).
-    teams: {player: team or None} in place of the teams of the scenario (team_choices, #2296)."""
+    teams: {player: team or None} in place of the teams of the scenario (team_choices, #2296).
+    all_techs: the AoE2 setting "All Techs" for all players and bots (civs.missing, #2298)."""
     import gather
 
     def make(player):
@@ -334,6 +337,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         data.setdefault("players", {}).setdefault(str(player), {})["civ"] = name
     for player, team in (teams or {}).items():       # gather.allied and the scoreboard teams follow it
         data["players"][str(player)]["team"] = team
+    data["all_techs"] = all_techs                    # one data for all Gathers: the people and the bot (#2298)
     game.forceload()
     game.people = people
     g = make(1)
@@ -494,6 +498,8 @@ def main(argv=None):
     ap.add_argument("--resources", choices=["standard", "low", "medium", "high", "ultra"], default="standard",
                     help="--play: the AoE2 setting \"Starting resources\" of each player (default standard; ultra: "
                     "the Death Match resources)")
+    ap.add_argument("--all-techs", action="store_true", help="--play: the AoE2 setting \"All Techs\": each civilization "
+                    "has the generic units and technologies that its tech tree does not have (the bonuses stay)")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")
@@ -534,7 +540,7 @@ def main(argv=None):
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
                 g = play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal,
                          people=a.people, speed=a.speed, state=state, resources=a.resources, civ=civ,
-                         teams=teams)
+                         teams=teams, all_techs=a.all_techs)
             if not getattr(g, "ended", None):
                 return
             print(f"The game ended ({g.ended}). The server stays up: type commands, Ctrl-C stops it.",

@@ -53,3 +53,23 @@ def test_the_stat_lint_finds_the_copies():
     assert STAT.search('combat.stats("SAVAR") == (145, 14') and STAT.search('combat.BUILDINGS["DOCK"].hp == 1800')
     assert not STAT.search('combat.BUILDINGS["DOCK"].classes == ("building", combat.STANDARD)')
     assert not STAT.search("combat.sight(unit) == combat.sight(base) + 2")
+
+
+# A literal age or cost of a build.jsonl line (#2222): the same rule for the buildings and the age of the units.
+COPY_BUILD = re.compile(r"build\.(?:AGE|COSTS)\[[^\]]*\] *== *[\d{]")
+
+
+def test_no_test_copies_a_value_of_build_jsonl():
+    bad = []
+    for name in sorted(os.listdir(os.path.join(ROOT, "tests"))):
+        if name.endswith(".py") and name != "test_conflict_prone.py":
+            with open(os.path.join(ROOT, "tests", name), encoding="utf-8") as f:
+                bad += [f"{name}:{i}" for i, line in enumerate(f, 1) if COPY_BUILD.search(line)]
+    assert not bad, f"a test copies an age or a cost of build.jsonl (#2222): {bad}"
+
+
+def test_the_build_copy_lint_finds_the_copies():
+    assert COPY_BUILD.search('assert train.build.AGE["ELITE_ARAMBAI"] == 3')
+    assert COPY_BUILD.search('assert gather.NOMAD == build.COSTS["TOWN_CENTER"] == {"wood": 275}')
+    assert COPY_BUILD.search('assert build.AGE["A"] == build.AGE["B"] == 1')
+    assert not COPY_BUILD.search('assert build.AGE["KNIGHT"] == build.AGE["CAVALRY_ARCHER"]')
