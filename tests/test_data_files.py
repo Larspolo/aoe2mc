@@ -199,7 +199,7 @@ def check_setup(row):                                      # a value of a settin
 
 
 def check_difficulty(row):                                 # a level of "AI difficulty" of the bot (#2661)
-    form(row, {"name": str, "gather": NUMBER, "attack": NUMBER, "soldiers": int, "note": str})
+    form(row, {"name": str, "aoe2": int, "gather": NUMBER, "attack": NUMBER, "soldiers": int, "note": str})
     assert row["gather"] > 0 and row["attack"] > 0 and row["soldiers"] >= 1, row["name"]
 
 

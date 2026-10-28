@@ -17,6 +17,9 @@ A trigger with the effect "Change Diplomacy" sets the score #p<N>.p<M> of aoe_di
 (#2645): diplomacy() changes the stance of player N to player M in the players of aoe2mc.json and sends the plugin
 commands of the alliances and neutral stances (gather.allies_command, gather.neutral_command).
 
+The condition "Difficulty Level" (#2704) tests the score #level of aoe_difficulty: setup() sets it to the AoE2 value
+("aoe2" of game/data/difficulty.jsonl) of the setting "AI difficulty" (run.py --ai-difficulty).
+
 A trigger with the effect "Task Object" (#2646) tags the units in its area and writes the target block into the storage
 aoe2mc:tasks (aoe2mc.task_lines): tasks() walks the tagged units there with the path finding of the Paper plugin
 (aoe moveto, a selector), then removes the tags and the key. Vanilla has no walk-to command. "Patrol" and
@@ -35,6 +38,7 @@ import gather  # noqa: E402
 import rcon  # noqa: E402
 import replay  # noqa: E402
 import train  # noqa: E402
+import table  # noqa: E402
 import treaty  # noqa: E402
 
 SLOT = "inventory.26"                                                  # the last slot of the inventory: not the hotbar
@@ -42,6 +46,7 @@ TAG = "aoe_book"                                                       # a perso
 EVERY = 1.0                                                            # seconds between two checks for new people
 ORDERS = "aoe2mc:orders"                                               # the data storage of the trigger orders (#2647)
 NEAR = 3                                                               # blocks: a patrol turns back this near its point
+LEVELS = {r["name"]: r["aoe2"] for r in table.load("difficulty.jsonl")}  # "AI difficulty" -> AoE2 DifficultyLevel
 
 
 def book(who, messages):
@@ -115,14 +120,20 @@ def orders(g):
     An attack move gives them the aggressive stance (the plugin attacks the enemies on the way, as
     replay.Replay.attack_move) and removes the tag. A patrol (g.patrols: [tag, [tile, middle of the area], leg]) walks
     to the tile and back, again and again: it turns when one of its units is NEAR its point, and ends when no unit has
-    the tag. A new patrol with the same tag (a looping trigger) replaces the old one."""
-    new = re.findall(r'"(patrol|attack_move) (aoe_order[\w.]+) (-?\d+(?: -?\d+)*)"',
+    the tag. A new patrol with the same tag (a looping trigger) replaces the old one. A "Change Object Stance" order
+    (aoe2mc.stance_lines, #2705) sets the stance of the tagged units and removes the tag."""
+    new = re.findall(r'"(patrol|attack_move|stance) (aoe_order[\w.]+) (-?\d+(?: -?\d+)*)"',
                      g.command(f"data get storage {ORDERS} list") or "")
     if new:
         g.command(f"data remove storage {ORDERS} list")
     patrols = vars(g).setdefault("patrols", [])
     for order, tag, where in new:
         p, sel = [int(v) for v in where.split()], f"@e[tag={tag}]"
+        if order == "stance":                                          # "Change Object Stance" (#2705)
+            import combat                                              # combat -> gather -> scenario
+            g.command(f"aoe stance {sel} {combat.STANCES[p[0]]}")
+            g.command(f"tag {sel} remove {tag}")
+            continue
         if order == "attack_move":
             g.command(f"aoe stance {sel} aggressive")
             g.command(f"aoe moveto {sel} {p[0]} {p[1]} {p[2]}")
@@ -158,6 +169,9 @@ def setup(g, mode="scenario"):
     for x in sides if win else ():
         x.victory = win["condition"]
         x.victory_value = win.get("years", win.get("score", getattr(x, "victory_value", None)))
+    level = (getattr(g.game, "settings", None) or {}).get("ai_difficulty", "standard")
+    g.command("scoreboard objectives add aoe_difficulty dummy")        # the condition "Difficulty Level" (#2704)
+    g.command(f"scoreboard players set #level aoe_difficulty {LEVELS[level]}")
     rows = {x: g.players.get(str(x.player), {}) for x in sides}
     if not any("resources" in p or "pop_limit" in p for p in rows.values()):
         print("The world has no scenario start values: the game starts with the lobby settings.", file=sys.stderr)

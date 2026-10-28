@@ -8,6 +8,7 @@
 {"name": "loaded", "type": "str", "text": "What a game mode does in a loaded game: skip or start.", "issue": 2521}
 {"name": "module", "type": "str", "text": "The module of game/ with setup(g, mode) of a game mode.", "issue": 2521}
 {"name": "more", "type": "dict", "text": "The extra start units of a game mode: the number of each unit of train.jsonl.", "issue": 2459}
+{"name": "none", "type": "list", "text": "The resources that a game mode sets to 0 at the start (not with an infinite level).", "issue": 2686}
 {"name": "note", "type": "str", "text": "The source of the values (the AoE2 wiki page) and the issue.", "issue": 2264}
 {"name": "random", "type": "list", "kind": true, "text": "A resource level that is one of these levels, at random.", "issue": 2489}
 {"name": "resources", "type": "dict", "kind": true, "text": "A resource level: the start amount of food, wood, gold and stone.", "issue": 2264}
