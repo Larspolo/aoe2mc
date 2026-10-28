@@ -183,6 +183,7 @@ NOT_SAVED = (                                                          # the fie
     "owners_at",                                                       # scenario.owners: the next check time
     "owners_sent",                                                     # scenario.owners: a load sets the same score again
     "peers",                                                           # run.py: the players of the game
+    "person",                                                          # gather.py: the name of the click that it handles now (#3486)
     "player",                                                          # run.py: the player number
     "record",                                                          # record.py: run.play opens the file of --record again
     "regicide_at",                                                     # regicide.py: the next check time

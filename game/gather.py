@@ -644,6 +644,7 @@ class Gather:
     beyond = free_techs = noui = False                                 # cheats: repeat and free technologies, no UI (#968)
     sharing = False                                                    # cheat "sharing is caring": income to the allies (#969)
     who = "@a"                                                         # the Minecraft players: "@a[team=pN]" for two people (#1310)
+    person = ""                                                        # the name of the click that it handles now (#3486)
     pop_cap = None                                                     # the cheat "my cpu can handle it" (#968): 1000
     ended = None                                                       # "Victory" or "Defeat": run() stops (#819)
     board = "aoe_res"                                                  # the objective of the resources (the sidebar)
@@ -687,7 +688,7 @@ class Gather:
         self.spare = {}                                                # the fractions of the drop-off bonus (#2111)
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
                       and "VILLAGER" in o["name"]]
-        self.villagers, self.selected = {}, set()
+        self.villagers, self.selections = {}, {}                      # Minecraft name -> selected units (#3486)
         self.soldiers = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit"
                          and o["player"] == player and soldier(o["name"])}
         # military units, monks, trade carts and ships of the player: they take move orders (#1243, #1253, #1383)
@@ -858,11 +859,38 @@ class Gather:
             self.shown["Idle"] = n
             self.command(f"scoreboard players set Idle {self.board} {n}")
 
+    @property
+    def selected(self):
+        """The selection of Gather.person, the Minecraft player whose click this Gather handles now (#3486): each
+        person of one AoE2 player selects and orders on its own, as in AoE2 co-op. A bot and code with no click have
+        the person "": the first named person takes that selection over (a setup or a test selects, then a click)."""
+        return self.selections_of()[self.person]
+
+    @selected.setter
+    def selected(self, units):
+        self.selections_of()[self.person] = units
+
+    def selections_of(self):
+        """The selections {name: units}, with an entry for Gather.person (see selected)."""
+        sel = vars(self).setdefault("selections", {})
+        if self.person not in sel:
+            sel[self.person] = sel.pop("", set()) if self.person else set()
+        return sel
+
+    def others(self):
+        """The units that another person of this Gather has selected: they keep their glow and their tag."""
+        return set().union(*(s for n, s in vars(self).get("selections", {}).items() if n != self.person))
+
+    def drop(self, uuid):
+        """Unit uuid leaves the selection of each person (a dead unit, a unit of another owner now)."""
+        for s in vars(self).get("selections", {}).values():
+            s.discard(uuid)
+
     def select(self, uuid):
         """Select one villager (glowing), as a click in AoE2 does. A click on a military unit adds it to selected
         military units, as a shift click in AoE2 does."""
         keep = {uuid} | (self.selected if uuid in self.soldiers and self.selected <= set(self.soldiers) else set())
-        for u in self.selected - keep:
+        for u in self.selected - keep - self.others():
             self.command(f"data merge entity {u} {{Glowing:0b}}")
             self.command(f"tag {u} remove {SELECT}")
         self.command(f"data merge entity {uuid} {{Glowing:1b}}")
@@ -879,7 +907,7 @@ class Gather:
         if uuid not in pos:
             return
         near = {u for u, p in pos.items() if math.dist(p, pos[uuid]) <= TYPE_REACH} - self.unpickable()
-        for u in sorted(self.selected - near):
+        for u in sorted(self.selected - near - self.others()):
             self.command(f"data merge entity {u} {{Glowing:0b}}")
             self.command(f"tag {u} remove {SELECT}")
             self.command(f"aoe label {u}")
@@ -889,7 +917,7 @@ class Gather:
 
     def choose(self, uuids, last=None):
         """Make uuids the selection: the other units leave it, the new ones glow. The boss bar shows unit last."""
-        for u in sorted(self.selected - uuids):
+        for u in sorted(self.selected - uuids - self.others()):
             self.command(f"data merge entity {u} {{Glowing:0b}}")
             self.command(f"tag {u} remove {SELECT}")
         for u in sorted(uuids - self.selected):
@@ -908,6 +936,7 @@ class Gather:
         the player holds the right click instead (owner choice A, #992): see drag."""
         if cell is None:
             return
+        self.person = name
         if (first := self.corners.pop(name, None)) is None:
             self.corners[name], (x, z) = cell, cell
             self.command(f"particle minecraft:happy_villager {x + 0.5} {(self.map.y(x, z) or 0) + 0.5} {z + 0.5} "
@@ -1255,6 +1284,7 @@ class Gather:
             used = [o for o in objs if re.search(r"has [1-9]", scores.get(o, ""))]
             if used:
                 out.append(name)
+                self.person = name                                     # group_in_hand, hold: the selection of name
                 if "aoe_box" in used:
                     self.wands.add(name)
                 if "aoe_use" in used and (n := self.group_in_hand(name)):
@@ -1310,6 +1340,7 @@ class Gather:
         for name in self.people():
             if name and re.search(r"has [1-9]", self.command(f"scoreboard players get {name} {LEFT}")):
                 self.command(f"scoreboard players reset {name} {LEFT}")
+                self.person = name
                 self.choose(set())
                 vars(self).get("rows", {}).pop(name, None)             # the sneak clicks of build.place (#1805)
                 vars(self).get("wall_start", {}).pop(name, None)
@@ -1345,6 +1376,7 @@ class Gather:
         self.command(f"item replace entity {self.who} hotbar.{GROUPS[n][0]} with {group_item(n, len(self.groups[n]))}")
 
     def click(self, name):
+        self.person = name                                             # its own selection (#3486)
         if (n := self.grouping.pop(name, None)) is not None:          # a group item (#779): no ray
             self.group(name, *n)
             return
