@@ -52,7 +52,7 @@ MAP = {
     ("effect", "CHANGE_OWNERSHIP"): "`tag` `aoe2mc.pN` and `team join pN` of the units in the area and their mounts (timer and area triggers: #2570); Gaia: not supported yet",
     ("effect", "FREEZE_OBJECT"): "`data merge entity @s {NoAI:1b}` of the units in the area and their mounts (#2608)",
     ("effect", "CHANGE_VIEW"): "`tp @a[team=pN] x y z` to the tile, on the ground (the player is the camera, #2610)",
-    ("effect", "PLAY_SOUND"): "`playsound` with the nearest vanilla sound",
+    ("effect", "PLAY_SOUND"): "`playsound` of the vanilla sound of the name part (`data/sounds.jsonl`), at the tile or at each player (#2644)",
     ("effect", "DISPLAY_TIMER"): "`bossbar` aoe2mc:timerN and a `schedule function` each second with the time left (timer and area triggers: #2572)",
     ("effect", "ACTIVATE_TRIGGER"): "`scoreboard players set <trigger> aoe_trig 1`",
     ("effect", "DEACTIVATE_TRIGGER"): "`scoreboard players set <trigger> aoe_trig 0`",
@@ -63,7 +63,7 @@ MAP = {
     ("effect", "ATTACK_MOVE"): "not supported: vanilla has no walk-to command",
     ("effect", "TRIBUTE"): NO_ECONOMY,
     ("effect", "MODIFY_RESOURCE"): NO_ECONOMY,
-    ("effect", "RESEARCH_TECHNOLOGY"): NO_ECONOMY,
+    ("effect", "RESEARCH_TECHNOLOGY"): "`scoreboard players set #rN.I aoe_tech 1`: the scenario mode of the game program gives the technology (#2577)",
     ("effect", "CHANGE_COLOR_MOOD"): "`time set` and `weather` of the mood (`MOODS`, `RAIN`; timer and area triggers: #1876); the fog stays",
     ("effect", "CHANGE_DIPLOMACY"): "`scoreboard players set #pN.pM aoe_dip`: the scenario mode of the game program changes the stance (#2645)",
 }

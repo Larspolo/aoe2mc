@@ -159,7 +159,9 @@ NOT_SAVED = (                                                          # the fie
     "regicide_at",                                                     # regicide.py: the next check time
     "repair_at",                                                       # repair.py: the next check time
     "repairs",                                                         # orders(): the repair of each villager
+    "research_skip",                                                   # scenario.py: the unknown technologies, found again
     "rows",                                                            # build.py: the shown building to place
+    "scenario_at",                                                     # scenario.py: the next check time
     "score_at",                                                        # score.py: the next check time
     "shapes",                                                          # build.py: the shown building to place
     "share",                                                           # bot.py: the techs of the human player
