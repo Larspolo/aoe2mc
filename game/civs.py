@@ -136,7 +136,9 @@ ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # th
 # "not_shared": the shared items that it does not get from an ally (Turks: no Elite Skirmisher).
 # "build", "build_wonder": the build speed of the builders (Spanish: 20 % for wonders). "build_of": the build speed of
 # some buildings, {building: factor} (Sicilian fortifications and town centers, #2115). "built_food": the food that
-# a complete building gives, {building: food} (Saxons, Wu, #2114). "repair": the repair rate.
+# a complete building gives, {building: food} (Saxons, Wu, #2114). "built_units": the herdables that a complete
+# building gives, {building: [unit, number in the Dark, Feudal, Castle and Imperial Age]} (Tatar sheep, #2313).
+# "repair": the repair rate.
 # "repair_cost": the team bonus of the repair cost of buildings (Georgians). "repair_team": the team bonus of the
 # repair rate (Saxons). "work_rate": the train and research rate of a building in each age (Persians). "train_rate":
 # [group of GROUPS, factor, also the upgrades] (#1927). "hp": the hit points factor of a building (Persians).
@@ -157,6 +159,7 @@ BUILD = {r["name"]: r["build"] for r in ROWS if "build" in r}
 BUILD_WONDER = {r["name"]: r["build_wonder"] for r in ROWS if "build_wonder" in r}
 BUILD_OF = {r["name"]: r["build_of"] for r in ROWS if "build_of" in r}
 BUILT_FOOD = {r["name"]: r["built_food"] for r in ROWS if "built_food" in r}
+BUILT_UNITS = {r["name"]: {b: tuples(v) for b, v in r["built_units"].items()} for r in ROWS if "built_units" in r}
 REPAIR = {r["name"]: r["repair"] for r in ROWS if "repair" in r}
 REPAIR_COST = {r["name"]: r["repair_cost"] for r in ROWS if "repair_cost" in r}
 REPAIR_TEAM = {r["name"]: r["repair_team"] for r in ROWS if "repair_team" in r}
@@ -367,6 +370,14 @@ def build_rate(g, name):
 def built_food(g, name):
     """The food that a complete building name of the player of g gives (BUILT_FOOD), else 0."""
     return BUILT_FOOD.get(civ(g), {}).get(name, 0)
+
+
+def built_units(g, name):
+    """(unit, number) of the herdables that a complete building name of the player of g gives in its age
+    (BUILT_UNITS), else None."""
+    import build                                                   # build imports gather, gather imports this module
+    unit, n = BUILT_UNITS.get(civ(g), {}).get(name, (None, (0,) * 4))
+    return (unit, n[build.ages(g)]) if n[build.ages(g)] else None
 
 
 def church_rate(g, pos):
