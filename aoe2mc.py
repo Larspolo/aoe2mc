@@ -409,7 +409,10 @@ def read_scenario(path):
                                                    "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2],
                                                    "object": c.object_list, "group": c.object_group,
                                                    "class": c.object_type}
-                                                  if c.condition_type in COUNTED else {}))
+                                                  if c.condition_type in COUNTED else {}),
+                                               **({"quantity": c.quantity, "variable": c.variable,   # (#2611)
+                                                   "comparison": c.comparison}
+                                                  if c.condition_type == VARIABLE_VALUE else {}))
                                           for c in t.conditions],
                               effects=[dict(type=e.effect_type, message=e.message or "", player=e.source_player,
                                             time=e.display_time, object=kinds.get(e.object_list_unit_id),
@@ -419,6 +422,9 @@ def read_scenario(path):
                                                if e.effect_type == CHANGE_COLOR_MOOD and
                                                getattr(e, "color_mood", None) in set(ColorMood) else {}),
                                             **({"quantity": e.quantity} if e.effect_type == DAMAGE_OBJECT else {}),
+                                            **({"quantity": e.quantity, "variable": e.variable,   # (#2611)
+                                                "operation": e.operation}
+                                               if e.effect_type == CHANGE_VARIABLE else {}),
                                             **({"target": e.target_player}                # "Change Ownership" (#2570)
                                                if e.effect_type == CHANGE_OWNERSHIP else {}),
                                             **({"unit": e.time_unit, "timer": e.timer}   # "Display Timer" (#2572)
@@ -2705,6 +2711,7 @@ def team_lines(objects, players):
 # AoE2 condition and effect IDs (AoE2ScenarioParser), one per line in alphabetical order (#2613)
 CHANGE_COLOR_MOOD = 72
 CHANGE_OWNERSHIP = 18
+CHANGE_VARIABLE = 56                                               # the scenario variables (#2611)
 CHANGE_VIEW = 16                                                   # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
 CREATE_OBJECT = 11
@@ -2721,8 +2728,10 @@ REMOVE_OBJECT = 15
 SEND_CHAT = 3
 TELEPORT_OBJECT = 35
 TIMER = 10
+VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
+TICKED = COUNTED + (VARIABLE_VALUE,)                               # conditions of the tick function
 
 
 def turn_area(area, size, k):
@@ -2850,6 +2859,26 @@ def teleport_lines(e, c):
     return [f"execute as {at} on vehicle run tp @s {to}", f"tp {at} {to}"]
 
 
+def variable_lines(e, c):
+    """The commands of "Change Variable" (#2611): the score #vN of aoe_var is the AoE2 variable N. Set, Add and
+    Subtract are scoreboard commands; Multiply and Divide need a second score: the constant #cQ."""
+    v, q, op, stats = f"#v{e.get('variable', -1)} aoe_var", e.get("quantity") or 0, e.get("operation"), c.stats
+    if e.get("variable", -1) < 0 or op not in (1, 2, 3, 4, 5) or op == 5 and q == 0:
+        stats["change variable (not supported)"] += 1
+        return []
+    stats["change variable"] += 1
+    if op <= 3:
+        return [f"scoreboard players {('set', 'add', 'remove')[op - 1]} {v} {q}"]
+    return [f"scoreboard players set #c{q} aoe_var {q}", f"scoreboard players operation {v} {'*/'[op - 4]}= #c{q} aoe_var"]
+
+
+def variable_range(c):
+    """The `matches` range of the comparison of a "Variable Value" condition (#2611): Equal, Less, Larger,
+    Less or Equal, Larger or Equal."""
+    q = c.get("quantity") or 0
+    return {0: f"{q}", 1: f"..{q - 1}", 2: f"{q + 1}..", 3: f"..{q}", 4: f"{q}.."}.get(c.get("comparison"))
+
+
 def unit_selector(e, T):
     """The area_selector of the units of the player of an effect. A Gaia unit has no tag (units.make_entity): the
     entities with no tag and not the players."""
@@ -2962,6 +2991,7 @@ def instruction_lines(e, c):
 EFFECTS = {
     CHANGE_COLOR_MOOD: mood_lines,
     CHANGE_OWNERSHIP: owner_lines,
+    CHANGE_VARIABLE: variable_lines,
     CHANGE_VIEW: view_lines,
     CLEAR_INSTRUCTIONS: clear_lines,
     CREATE_OBJECT: object_lines,
@@ -2986,7 +3016,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     entity, so they do not count. The load function schedules a timer trigger at the AoE2 time (all
     timers must pass: the largest). The tick function runs an area trigger when units of its player are in all its
     areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
-    the units leave an area. The commands of each effect come from its handler in EFFECTS.
+    the units leave an area. A "Variable Value" condition runs in the tick function as an area (#2611). The commands
+    of each effect come from its handler in EFFECTS.
     A disabled trigger does not run."""
     load, files, tick, setup = [], {}, [], {}
     stats = Counter() if stats is None else stats
@@ -2994,17 +3025,24 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     for t in triggers:
         conds = t["conditions"]
         kinds = {(c["type"], c["inverted"]) for c in conds}
-        if not t["enabled"] or not conds or not (kinds == {(TIMER, False)} or kinds <= {(k, False) for k in COUNTED}) or \
-                any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds):   # unit classes: not yet
+        if not t["enabled"] or not conds or not (kinds == {(TIMER, False)} or kinds <= {(k, False) for k in TICKED}) or \
+                any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds) or \
+                any(c["type"] == VARIABLE_VALUE and (c.get("variable", -1) < 0 or variable_range(c) is None)
+                    for c in conds):                                   # unit classes: not yet
             continue
         ctx = Effect(t, T, ground, players, stats, mood, files, setup)
         lines = [line for e in t["effects"] if e["type"] in EFFECTS for line in EFFECTS[e["type"]](e, ctx)]
         if not lines:
             continue
         fn, n = f"aoe2mc:trigger/{t['id']}", t["id"]
-        if conds[0]["type"] in COUNTED:
+        if conds[0]["type"] in TICKED:
             tests, unless = [], []
             for i, c in enumerate(conds):
+                if c["type"] == VARIABLE_VALUE:                        # a score of the variable (#2611)
+                    test = f"score #v{c['variable']} aoe_var matches {variable_range(c)}"
+                    tests.append(f"if {test}")
+                    unless.append(f"unless {test}")
+                    continue
                 whole = c["type"] != IN_AREA                           # Own (Fewer) Objects: the whole map
                 sel = area_selector(dict(c, area=[-1] * 4) if whole else c, T)
                 q = max(c["quantity"], 0 if c["type"] == OWN_FEWER_OBJECTS else 1)
@@ -3029,6 +3067,11 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         run = f"schedule function {fn} {ticks}t replace"
         files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines + [run] * t["looping"]) + "\n"
         load.append(run)
+    names = sorted({f"#v{x['variable']}" for t in triggers for x in t["conditions"] + t["effects"]
+                    if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE) and x.get("variable", -1) >= 0})
+    if names:
+        load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
+            [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
     load[:0] = setup
     if tick:
         load.insert(0, "scoreboard objectives add aoe_trig dummy")
