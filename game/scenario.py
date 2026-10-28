@@ -57,6 +57,7 @@ ORDERS = "aoe2mc:orders"                                               # the dat
 ATTRIBUTES = "aoe2mc:attributes"                                       # the storage of "Modify Attribute" (#2763)
 MENUS = "aoe2mc:menus"                                                 # the storage of "Enable/Disable" (#2775)
 COSTS = "aoe2mc:costs"                                                 # the storage of "Change Object Cost" (#2776)
+TIMES = "aoe2mc:times"                                                 # "Change Technology Research Time" (#2820)
 PLACES = "aoe2mc:places"                                               # "Change Train/Technology Location" (#2864)
 UNSELECTABLE = "aoe2mc.unselectable"                                   # the tag of "Disable Object Selection" (aoe2mc)
 NAMES = "aoe2mc:names"                                                 # the storage of "Change Technology Name" (#2821)
@@ -132,6 +133,7 @@ def tick(g):
     attributes(g)
     reads(g)
     costs(g)
+    times(g)
     names(g)
     places(g)
     messages = g.data.get("messages", {})
@@ -174,13 +176,14 @@ def orders(g):
     the tag. A new patrol with the same tag (a looping trigger) replaces the old one. A "Change Object Stance" order
     (aoe2mc.stance_lines, #2705) sets the stance of the tagged units and removes the tag. A "Stop Object" order
     (aoe2mc.stop_lines, #2754) stops the tagged units (`aoe stop`), ends their patrols as a new order of a person does
-    (gather.Gather.end_patrols, #2674) and removes the tag. An "Unload" order (#2773): unload(). A "Lock Gate" or
-    "Unlock Gate" order (aoe2mc.gate_lines, #2762) locks or unlocks the gate of its reference: gate(). A "Place
-    Foundation" order (aoe2mc.foundation_lines, #2825): foundation(). "Train Unit" and "Initiate Research"
-    (aoe2mc.train_lines, #2772): queues(). A "Build Object" order (aoe2mc.build_lines, #2863): finish(). A "Set
-    Building Gather Point" order (aoe2mc.rally_lines, #2853): rally()."""
+    (gather.Gather.end_patrols, #2674) and removes the tag. A "Change Object Range" order (aoe2mc.range_lines, #2767)
+    gives each tagged ranged unit its new range (ranges) and removes the tag. An "Unload" order (#2773): unload(). A
+    "Lock Gate" or "Unlock Gate" order (aoe2mc.gate_lines, #2762) locks or unlocks the gate of its reference: gate(). A
+    "Place Foundation" order (aoe2mc.foundation_lines, #2825): foundation(). "Train Unit" and "Initiate Research"
+    (aoe2mc.train_lines, #2772): queues(). A "Build Object" order (aoe2mc.build_lines, #2863): finish(). A
+    "Set Building Gather Point" order (aoe2mc.rally_lines, #2853): rally()."""
     got = g.command(f"data get storage {ORDERS} list") or ""
-    new = re.findall(r'"(patrol|attack_move|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"', got)
+    new = re.findall(r'"(patrol|attack_move|range|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"', got)
     unloads = re.findall(r'"unload (\d+) (\d+) ?(-?\d+ -?\d+ -?\d+)?"', got)
     gates = re.findall(r'"(lock|unlock) (\d+)"', got)
     found = re.findall(r'"found (\d+) (\w+) (\d+) (\d+)"', got)
@@ -208,6 +211,10 @@ def orders(g):
             g.command(f"aoe stance {sel} {combat.STANCES[p[0]]}")
             g.command(f"tag {sel} remove {tag}")
             continue
+        if order == "range":                                           # "Change Object Range" (#2767)
+            ranges(g, tag, *p)
+            g.command(f"tag {sel} remove {tag}")
+            continue
         if order == "stop":                                            # "Stop Object" (#2754)
             for q in patrols:
                 g.command(f"tag {sel} remove {q[0]}")
@@ -229,6 +236,23 @@ def orders(g):
             g.command(f"aoe moveto @e[tag={tag}] {' '.join(map(str, points[q[2] % 2]))}")
         elif "passed" not in g.command(f"execute if entity @e[tag={tag}]"):
             patrols.remove(q)
+
+
+def ranges(g, tag, operation, quantity):
+    """Send the new range of each ranged unit with the tag (`aoe range`): the AoE2 operation (1 set, 2 add, 3 subtract,
+    4 multiply, 5 divide) on its range in tiles, not below 0. The own units have the values with the technologies of
+    the player (train.stats). A melee unit keeps its range: Minecraft gives it no shot."""
+    import combat                                                  # combat -> gather -> scenario
+    own = {u["uuid"]: u["name"] for u in g.units if "uuid" in u} | dict(g.soldiers)
+    every = {o["uuid"]: o["name"] for o in g.data.get("objects", []) if o["kind"] == "unit" and "uuid" in o} | own
+    for uuid, name in sorted(every.items()):
+        s = train.stats(g, name) if uuid in own else combat.stats(name)
+        if s.range <= 0 or "passed" not in g.command(f"execute as {uuid} if entity @s[tag={tag}]"):
+            continue
+        r = s.range
+        new = [quantity, r + quantity, r - quantity, r * quantity, r / quantity if quantity else r][operation - 1]
+        if cmd := combat.range_command(uuid, name, g.map.T, s=s._replace(range=max(0, new))):
+            g.command(cmd)
 
 
 def selection(g):
@@ -344,6 +368,19 @@ def costs(g):
         if int(player) in sides:
             vars(sides[int(player)]).setdefault("trigger_costs", {})[name] = \
                 {r: int(v) for r, v in (part.split("=") for part in cost.split())}
+
+
+def times(g):
+    """The new research times of "Change Technology Research Time" (aoe2mc.tech_time_lines, #2820): read and empty the
+    list of the data storage TIMES, and keep each time (AoE2 seconds) in trigger_times of the side of its player (the
+    people and the bots): train.seconds uses it in place of the time of game/data/train.jsonl. A later line wins."""
+    new = re.findall(r'"(\d+) (\w+) (\d+)"', g.command(f"data get storage {TIMES} list") or "")
+    if new:
+        g.command(f"data remove storage {TIMES} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for player, name, s in new:
+        if int(player) in sides:
+            vars(sides[int(player)]).setdefault("trigger_times", {})[name] = int(s)
 
 
 def places(g):
