@@ -600,9 +600,9 @@ def research(g):
     """Once per game second: give each technology of a fired "Research Technology" effect (aoe2mc.json "research",
     #2577) to its player at no cost, as the start age technologies (train.research), and reset its score. A loop
     trigger sets it again. A technology that the game program does not know: one line, then no more checks."""
-    if g.clock() < vars(g).get("scenario_at", 0.0):
+    if g.clock() < vars(g).get("research_at", 0.0):                 # its own timer: resources() has scenario_at (#2968)
         return
-    g.scenario_at = g.clock() + 1.0
+    g.research_at = g.clock() + 1.0
     sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
     skip = vars(g).setdefault("research_skip", set())
     for r in g.data.get("research", ()):

@@ -60,7 +60,7 @@ def test_tick_gives_a_technology_to_a_bot_and_waits_for_the_trigger():
     scores = Scores(server, {}).scores
     scenario.tick(g)
     assert "LOOM" not in bot.techs
-    scores["#r3.1"], g.scenario_at = 1, 0.0
+    scores["#r3.1"], g.research_at = 1, 0.0
     scenario.tick(g)
     assert "LOOM" in bot.techs and "LOOM" not in g.techs
 
