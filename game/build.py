@@ -185,8 +185,8 @@ def ages(g):
 
 def locked(g, name):
     """The text "Needs the ... Age" when the player is not yet in the AoE2 age of building or unit name, else None."""
-    if g is not None and AGE.get(name, 0) > ages(g):
-        return f"Needs the {('Dark', 'Feudal', 'Castle', 'Imperial')[AGE[name]]} Age"
+    if g is not None and (age := AGE.get(name, 0) - civs.earlier(g, name)) > ages(g):
+        return f"Needs the {('Dark', 'Feudal', 'Castle', 'Imperial')[age]} Age"
     if g is not None and name in NEEDS and NEEDS[name] not in getattr(g, "techs", ()):
         return "Needs " + pretty(NEEDS[name].removesuffix("_TECH"))
     if g is not None and name == "TOWN_CENTER" and ages(g) < (1 if civs.civ(g) == "CUMANS" else 2) and town_center(g):

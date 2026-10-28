@@ -168,6 +168,7 @@ TRAIN_RATE = {r["name"]: [tuples(b) for b in r["train_rate"]] for r in ROWS if "
 HP = {r["name"]: r["hp"] for r in ROWS if "hp" in r}
 ARROWS = {r["name"]: tuples(r["arrows"]) for r in ROWS if "arrows" in r}   # factor of the base arrows in each age (#2178)
 GARRISON = {r["name"]: r["garrison"] for r in ROWS if "garrison" in r}   # units inside a building (garrison.size, #2117)
+EARLIER = {r["name"]: set(r["earlier"]) for r in ROWS if "earlier" in r}   # one age earlier (build.locked, #2268)
 HP_AGE = {r["name"]: r["hp_age"] for r in ROWS if "hp_age" in r}   # the factor of all buildings in each age (Byzantines)
 # Technologies with another effect for the civilization (#2173, train.stats, train.speed): "also" gives the effect to
 # one more group of GROUPS too (Bohemians: Fervor and Sanctity for the villagers), "more" multiplies the change of the
@@ -343,6 +344,12 @@ def missing(g, name):
 def civ(g, player=None):
     """The civilization of the player of g, or of another player (aoe2mc.json "players"), for example "CELTS", else None."""
     return g.data.get("players", {}).get(str(g.player if player is None else player), {}).get("civ")
+
+
+def earlier(g, name):
+    """1 when the civilization of the player of g has the building, unit or technology name one age earlier (EARLIER:
+    the Armenian spearman in the Dark Age, the Cuman siege workshop in the Feudal Age, #2268), else 0."""
+    return int(hasattr(g, "data") and name in EARLIER.get(civ(g), ()))
 
 
 def age_rate(g, name):
