@@ -412,6 +412,7 @@ def read_scenario(path):
                                                **({"ref": c.unit_object, "unit": c.unit_object in entities,   # #2618
                                                    "player": c.source_player}
                                                   if c.condition_type in OBJECT_TESTS else {}),
+                                               **({"slot": c.timer_id} if c.condition_type == DISPLAY_TIMER_TRIGGERED else {}),
                                                **({"quantity": c.quantity, "player": c.source_player,
                                                    "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2],
                                                    "object": c.object_list, "group": c.object_group,
@@ -2793,6 +2794,7 @@ DECLARE_VICTORY = 13                                               # "Declare Vi
 DIFFICULTY_LEVEL = 19                                              # the condition "Difficulty Level" (#2704)
 DISPLAY_INSTRUCTIONS = 20
 DISPLAY_TIMER = 37                                                 # "Display Timer" (#2572)
+DISPLAY_TIMER_TRIGGERED = 55                                       # the condition of its score (#2702)
 FREEZE_OBJECT = 22                                                 # "Freeze Object" (#2608)
 HEAL_OBJECT = 34                                                   # "Heal Object" (#2692)
 IN_AREA = 5
@@ -2815,7 +2817,7 @@ TRIGGER_CHANCE = 20                                                # the conditi
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
-TICKED = COUNTED + (ACCUMULATE_ATTRIBUTE, DIFFICULTY_LEVEL, RESEARCHED, VARIABLE_VALUE)  # conditions of the tick function
+TICKED = COUNTED + (ACCUMULATE_ATTRIBUTE, DIFFICULTY_LEVEL, DISPLAY_TIMER_TRIGGERED, RESEARCHED, VARIABLE_VALUE)  # conditions of the tick function
 ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")     # attributes 0-3: the score holders of gather.RESOURCES (#2655)
 DESTROY_OBJECT = 6                                                     # the condition "Destroy Object" (#2618)
 CAPTURE_OBJECT = 7                                                     # the condition "Capture Object" (#2619)
@@ -3234,9 +3236,11 @@ def timer_lines(e, c):
     show += [f"execute store result bossbar {bar} value run scoreboard players get #t{slot} aoe_timer",
              f"bossbar set {bar} name {name}"]
     tick = [f"scoreboard players remove #t{slot} aoe_timer 1"] + show + \
-        [f"execute if score #t{slot} aoe_timer matches ..0 run bossbar remove {bar}",
+        [f"execute if score #t{slot} aoe_timer matches ..0 run scoreboard players set #done{slot} aoe_timer 1",
+         f"execute if score #t{slot} aoe_timer matches ..0 run bossbar remove {bar}",
          f"execute if score #t{slot} aoe_timer matches 1.. run schedule function {fn} 1s replace"]
-    lines = ["scoreboard objectives add aoe_timer dummy", f"bossbar remove {bar}", f"bossbar add {bar} \"\"",
+    lines = ["scoreboard objectives add aoe_timer dummy", f"scoreboard players reset #done{slot} aoe_timer",
+             f"bossbar remove {bar}", f"bossbar add {bar} \"\"",
              f"bossbar set {bar} max {sec}", f"bossbar set {bar} players @a",
              f"scoreboard players set #t{slot} aoe_timer {sec}"] + show + [f"schedule function {fn} 1s replace"]
     c.files[f"data/aoe2mc/function/timer/{slot}.mcfunction"] = "\n".join(tick) + "\n"
@@ -3349,6 +3353,7 @@ Effect = namedtuple("Effect", "t T ground players stats mood files setup")
 SCORE_TESTS = {
     ACCUMULATE_ATTRIBUTE: resource_score,
     DIFFICULTY_LEVEL: lambda c: f"score #level aoe_difficulty matches {c.get('quantity', 0)}",
+    DISPLAY_TIMER_TRIGGERED: lambda c: f"score #done{c.get('slot', 0)} aoe_timer matches 1..",   # set at 0 (#2702)
     RESEARCHED: lambda c: f"score #p{c['player']}.{c['technology']} aoe_tech matches 1..",
     VARIABLE_VALUE: lambda c: f"score #v{c['variable']} aoe_var matches {variable_range(c)}",
 }
