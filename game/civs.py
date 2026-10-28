@@ -109,6 +109,7 @@ NOT_SHARED = {n: tuple(sorted(r["name"] for r in ROWS if n in r.get("not_shared"
 BUILD = {r["name"]: r["build"] for r in ROWS if "build" in r}
 BUILD_WONDER = {r["name"]: r["build_wonder"] for r in ROWS if "build_wonder" in r}
 BUILD_OF = {r["name"]: r["build_of"] for r in ROWS if "build_of" in r}
+BUILT_FOOD = {r["name"]: r["built_food"] for r in ROWS if "built_food" in r}
 REPAIR = {r["name"]: r["repair"] for r in ROWS if "repair" in r}
 REPAIR_COST = {r["name"]: r["repair_cost"] for r in ROWS if "repair_cost" in r}
 REPAIR_TEAM = {r["name"]: r["repair_team"] for r in ROWS if "repair_team" in r}
@@ -124,6 +125,7 @@ FARM_UPGRADES = {r["name"]: r["farm_upgrades"] for r in ROWS if "farm_upgrades" 
 #                                                                   farm upgrades (Sicilians: +125 %, train.research, #2230)
 RESEARCH_TIME = {r["name"]: [tuples(b) for b in r["research_time"]] for r in ROWS if "research_time" in r}
 EXTRA = {r["name"]: {k: tuple(v) for k, v in r["extra"].items()} for r in ROWS if "extra" in r}
+CARRY = {r["name"]: [tuple(b) for b in r["carry"]] for r in ROWS if "carry" in r}
 # The age-up bonuses (#1926, AoE2 DE wiki): train.research applies AGE_GIFTS and AGE_VILLAGERS at the end of each age,
 # train.seconds divides the time of an age by AGE_RATE, and train.missing needs no buildings for AGE_NO_BUILDINGS (the
 # game program has no other building needs). The Muisca gold discount of the ages is in COSTS (civs.jsonl).
@@ -133,6 +135,9 @@ AGE_RATE = {"MALAY": 1.66}                                         # advancing i
 AGE_VILLAGERS = {"BENGALIS": 2}                                    # each own town center spawns 2 villagers
 TECH_GIFTS = {r["name"]: r["tech_gifts"] for r in ROWS if "tech_gifts" in r}
 REGEN = {r["name"]: [tuples(b) for b in r["regen"]] for r in ROWS if "regen" in r}
+FALLEN = {r["name"]: r["fallen"] for r in ROWS if "fallen" in r}
+KILL_GOLD = {r["name"]: r["kill_gold"] for r in ROWS if "kill_gold" in r}
+LOOT = {r["name"]: r["loot"] for r in ROWS if "loot" in r}
 
 
 def tagged(n, group):
@@ -183,7 +188,9 @@ def units(g, name, s):
     """The combat.Stats s of unit name with the bonuses of the civilization of the player of g (UNITS), the walk speed
     aside (speed)."""
     for v, c in changes(g, name, s):
-        if v != "speed":
+        if v.startswith("bonus:") and c:                           # the attack against a class (#2249)
+            s = s._replace(bonus={**s.bonus, v[6:]: s.bonus.get(v[6:], 0) + c})
+        elif v != "speed" and not v.startswith("bonus:"):
             old = getattr(s, v)
             s = s._replace(**{v: round(old * c, 3 if v == "reload" else None) if isinstance(c, float) else old + c})
     return s
@@ -272,6 +279,11 @@ def build_rate(g, name):
     return BUILD_OF.get(c, {}).get(name) or (BUILD_WONDER.get(c, BUILD.get(c, 1)) if name == "WONDER" else BUILD.get(c, 1))
 
 
+def built_food(g, name):
+    """The food that a complete building name of the player of g gives (BUILT_FOOD), else 0."""
+    return BUILT_FOOD.get(civ(g), {}).get(name, 0)
+
+
 def church_rate(g, pos):
     """The factor of the work of a villager of the player of g at block position pos (x, z): CHURCH_RATE for a Georgian
     in the 21-tile square around a complete own Fortified Church (AoE2 wiki "Georgians"; also to build and repair,
@@ -352,3 +364,8 @@ def extra(g, kind):
     """The second resource of gather kind for the civilization of the player of g: (resource, amount for each unit)
     (EXTRA), else None."""
     return EXTRA.get(civ(g), {}).get(kind)
+
+
+def carry(g, kind):
+    """The extra load of a villager of the player of g for gather kind (CARRY), else 0."""
+    return sum(n for k, n in CARRY.get(civ(g), ()) if k in (None, kind))

@@ -4,16 +4,21 @@
 {"name": "build", "text": "The build speed of the builders (a factor). build.rise multiplies the work of the builders (civs.build_rate).", "issue": 1893}
 {"name": "build_of", "text": "The build speed of some buildings, {building: factor} (Sicilian fortifications and town centers). build.rise (civs.build_rate).", "issue": 2115}
 {"name": "build_wonder", "text": "The build speed of the builders of a wonder (Spanish: 20 % for wonders). build.rise (civs.build_rate).", "issue": 1893}
+{"name": "built_food", "text": "The food that a complete building gives, {building: food} (Saxons, Wu). civs.built_food.", "issue": 2114}
+{"name": "carry", "text": "The extra load of a villager, [[gather kind or null (all), extra]]: Aztec villagers +3, Goth hunters +15. Gather.limit adds it (civs.carry).", "issue": 2270}
 {"name": "cost_per", "text": "The cost bonuses for each complete own building: [group of GROUPS, the buildings, the share less for each, the most share less] (Saxons: foot soldiers cost 5 % less per town center or castle, at most 20 %).", "issue": 2177}
 {"name": "costs", "text": "The cost bonuses: [what, resource or null (all), change in the Dark, Feudal, Castle and Imperial Age]. What is a group of GROUPS (units), \"buildings\", \"buildings but farms\", \"technologies\", \"ages\", \"BUILDING technologies\" (the technologies of the menu of that building, #1925) or a list of names. A float multiplies the cost (0.0: free), an int adds to it. AoE2 rounds half up (35 × 0.75 = 26).", "issue": 1091}
 {"name": "drop", "text": "The factor of a load at the drop site: \"food\" for each food load (also of the fishing ships), \"forage\" for a load of a fruit bush only.", "issue": 2111}
 {"name": "economy_villagers", "text": "The free villagers for each economic technology (Wei). train.research spawns them.", "issue": 2175}
 {"name": "extra", "text": "The second resource of a gather kind (\"forage\": a fruit bush), {kind: [resource, amount for each unit]}: Poles and Puru stone miners, Portuguese foragers, Shu lumberjacks. Gather.second adds it at each gathered unit.", "issue": 2113}
+{"name": "fallen", "text": "The part of the cost of a fallen own unit that the player gets back (Tupi). game/spoils.py.", "issue": 2271}
 {"name": "farm_upgrades", "text": "The factor of the food of the farm upgrades (Sicilians: +125 %). train.research.", "issue": 2230}
 {"name": "garrison", "text": "The units inside a building, {building: units} (garrison.size).", "issue": 2117}
 {"name": "hp", "text": "The hit points factor of a building, {building: factor} (Persians). build.values and combat.setup apply it before the technologies (Masonry).", "issue": 1895}
 {"name": "hp_age", "text": "The factor of the hit points of all its buildings, walls and gates in each age (Byzantines).", "issue": 2116}
+{"name": "kill_gold", "text": "The gold for each military unit that a mounted unit kills (Mapuche). game/spoils.py.", "issue": 2271}
 {"name": "last", "text": "Resources last longer, {kind: factor}: a gathered unit takes 1 / factor.", "issue": 2112}
+{"name": "loot", "text": "The part of the cost of a destroyed enemy building that the player gets (Danes). game/spoils.py.", "issue": 2271}
 {"name": "missing", "text": "The technologies and units that the civilization does not have (the availability chart of each civilization): the menu does not show them (train.unlocked). The items that few civilizations have name them in the key \"civs\" of their line in train.jsonl or build.jsonl (civs.ONLY, #2235), not here.", "issue": 1373}
 {"name": "more", "text": "Technologies whose effect change is multiplied, {technology: factor} (Varangians: Bloodlines and Caravan +50 %). train.stats, train.speed.", "issue": 2173}
 {"name": "not_shared", "text": "The shared items of an ally that the civilization does not get (Turks: no Elite Skirmisher).", "issue": 1619}
@@ -29,6 +34,6 @@
 {"name": "train_rate", "text": "The train rate of unit groups: [group of GROUPS, factor, also the upgrades] (Aztec military units, Khitan skirmishers ...). train.seconds divides by civs.train_rate().", "issue": 1927}
 {"name": "twice", "text": "The technologies whose effect the civilization gets twice (train.stats).", "issue": 1561}
 {"name": "unique", "text": "The unique unit of its castle (train.UNIQUE).", "issue": 1914}
-{"name": "units", "text": "The bonuses of the land units of combat.STATS: [group of GROUPS, value, change in the Dark, Feudal, Castle and Imperial Age]. Value is a field of combat.Stats or \"speed\" (the walk speed). An int adds, a float multiplies (\"fire 25 % faster\" is the reload / 1.25). train.stats applies them before the technologies.", "issue": 1090}
+{"name": "units", "text": "The bonuses of the land units of combat.STATS: [group of GROUPS, value, change in the Dark, Feudal, Castle and Imperial Age]. Value is a field of combat.Stats or \"speed\" (the walk speed) or \"bonus:CLASS\" (the attack against a class of combat.Stats.classes, #2249). An int adds, a float multiplies (\"fire 25 % faster\" is the reload / 1.25). train.stats applies them before the technologies.", "issue": 1090}
 {"name": "work", "text": "The work-rate factor of each gather kind of Gather (\"wood\", \"food\" (forage bushes), \"farm\", \"gold\", \"stone\", \"hunt\", \"sheep\"); a missing kind is 1. Gather.work_time divides the time of one unit of resource by it.", "issue": 1089}
 {"name": "work_rate", "text": "The train and research rate of a building in each age, {building: [Dark, Feudal, Castle, Imperial]} (Persian town centers and docks). train.seconds divides the time of an item by civs.work_rate().", "issue": 1894}

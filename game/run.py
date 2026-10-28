@@ -13,6 +13,9 @@ Usage:
     python3 game/run.py WORLD --play --log F.jsonl  # also write a timed event log (tools/measure_gather.py reads it)
     python3 game/run.py WORLD --play --reveal all  # no fog of war: also the enemy units out of sight show (game/fog.py)
     python3 game/run.py WORLD --play --speed 2     # twice the AoE2 Normal speed: /tick rate 40 and shorter steps (#2057)
+    python3 game/run.py WORLD --play --resources high  # the AoE2 setting "Starting resources" (#2264)
+    python3 game/run.py WORLD --play --civ 1=BRITONS --civ 2=FRANKS   # the civilization of each player (#2267)
+    python3 game/run.py WORLD --play --teams 1,1,2,2   # the team of each player, - is no team (#2296)
     python3 game/run.py WORLD --play --load SAVE   # go on with a saved game: Ctrl-C of --play saves into saves/ (#2255)
     python3 game/run.py WORLD --replay [--speed 4] [--follow N] [--view N]  # replay the recorded game of the world (game/replay.py), then wait for Ctrl-C
 
@@ -284,15 +287,41 @@ def bot_seat(players, people):
     return player, next((p for p in range(1, player) if not gather.allied(players, player, p)), 1)
 
 
+def civ_choices(values):
+    """{player: civilization} of the --civ values ("1=BRITONS", #2267). An unknown name stops with the list of names."""
+    import civs
+    names, out = sorted(r["name"] for r in civs.ROWS), {}
+    for v in values or ():
+        player, _, name = v.partition("=")
+        if not player.isdigit() or name.upper() not in names:
+            sys.exit(f"--civ {v}: write PLAYER=CIVILIZATION, one of: {', '.join(names)}")
+        out[int(player)] = name.upper()
+    return out
+
+
+def team_choices(value, players):
+    """{player: team or None} of the --teams value ("1,1,2,2", "-" is no team, #2296): one team for each player of
+    aoe2mc.json "players" but Gaia, in player order. A wrong value stops with a message."""
+    seats = sorted(int(p) for p in players if int(p) > 0)
+    teams = value.split(",")
+    if len(teams) != len(seats) or any(t not in ("1", "2", "3", "4", "-") for t in teams):
+        sys.exit(f"--teams {value}: write {len(seats)} teams, one for each player in player order, each 1 to 4 or - "
+                 f"(no team), for example --teams {','.join('12'[i % 2] for i in range(len(seats)))}")
+    return {p: None if t == "-" else int(t) for p, t in zip(seats, teams)}
+
+
 def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1,
-         speed=1.0, state=None):
-    """state: the saved state of the players (savegame.dump) for a loaded game (#2255)."""
+         speed=1.0, state=None, resources="standard", civ=None, teams=None):
+    """state: the saved state of the players (savegame.dump) for a loaded game (#2255).
+    resources: the AoE2 setting "Starting resources" of each player and bot (gather.LEVELS, #2264).
+    civ: {player: civilization} in place of the civilization of the scenario (civ_choices, #2267).
+    teams: {player: team or None} in place of the teams of the scenario (team_choices, #2296)."""
     import gather
 
     def make(player):
         who = "@a" if people == 1 else f"@a[team=p{player}]"
         for _ in range(60):                          # entities load in other threads
-            g = gather.Gather(game, data, player=player, log=log, cheats=cheats)
+            g = gather.Gather(game, data, player=player, log=log, cheats=cheats, resources=resources)
             g.who = who
             g.setup()
             if len(g.villagers) == len(g.units):
@@ -301,6 +330,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         return g
     with open(os.path.join(world, "aoe2mc.json")) as f:
         data = json.load(f)
+    for player, name in (civ or {}).items():         # before the Gathers: all bonuses (civs.civ) follow it
+        data.setdefault("players", {}).setdefault(str(player), {})["civ"] = name
+    for player, team in (teams or {}).items():       # gather.allied and the scoreboard teams follow it
+        data["players"][str(player)]["team"] = team
     game.forceload()
     game.people = people
     g = make(1)
@@ -319,7 +352,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         import replay
         player, foe = bot_seat(data["players"], people)
         g.bots = [*g.bots, bots.Bot(game, data, player=player, share=g, log=log, foe=foe,
-                                    attack=replay.aoe2mc.game_time(bot_attack) / 1000).setup()]
+                                    attack=replay.aoe2mc.game_time(bot_attack) / 1000,
+                                    resources=resources).setup()]
         print(f"A bot plays player {player}: {len(g.bots[-1].g.villagers)} villagers gather, its soldiers attack "
               f"player {foe} at {bot_attack}.", file=sys.stderr)
     import combat
@@ -457,12 +491,26 @@ def main(argv=None):
                     "from this game time (default 10:00)")
     ap.add_argument("--reveal", choices=["normal", "all"], default="normal", help="--play: AoE2 \"Reveal map\" "
                     "(default normal: enemy units out of sight are hidden; all: all units show)")
+    ap.add_argument("--resources", choices=["standard", "low", "medium", "high", "ultra"], default="standard",
+                    help="--play: the AoE2 setting \"Starting resources\" of each player (default standard; ultra: "
+                    "the Death Match resources)")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")
+    ap.add_argument("--civ", action="append", metavar="N=CIV", help="--play: player N plays civilization CIV (for "
+                    "example 1=BRITONS, repeat it for more players): the game rules change, the buildings of the "
+                    "world keep the architecture of the scenario")
+    ap.add_argument("--teams", metavar="T,T,...", help="--play: the team of each player in player order, 1 to 4 or - "
+                    "(no team), for example 1,1,2,2: allies do not fight and share their team bonuses (default: the "
+                    "teams of the scenario)")
     a = ap.parse_args(argv)
+    civ = civ_choices(a.civ)
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
         sys.exit(f"no level.dat in {a.world}")
+    teams = None
+    if a.teams is not None:
+        with open(os.path.join(a.world, "aoe2mc.json")) as f:
+            teams = team_choices(a.teams, json.load(f).get("players", {}))
     import savegame
     state = None
     if a.load:                                       # the saved world replaces the world (the player files stay)
@@ -485,7 +533,8 @@ def main(argv=None):
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
                 g = play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal,
-                         people=a.people, speed=a.speed, state=state)
+                         people=a.people, speed=a.speed, state=state, resources=a.resources, civ=civ,
+                         teams=teams)
             if not getattr(g, "ended", None):
                 return
             print(f"The game ended ({g.ended}). The server stays up: type commands, Ctrl-C stops it.",
@@ -499,9 +548,8 @@ def main(argv=None):
         state = savegame.dump(game.g) if getattr(game, "g", None) else None
         game.stop()                                  # the server writes the world when it stops
         if state:
-            saves = os.path.join(os.path.dirname(os.path.abspath(a.world)), "saves")
             print(f"Saved the game: python3 game/run.py {a.world} --play --load "
-                  f"{savegame.write(saves, a.world, state)}", file=sys.stderr)
+                  f"{savegame.write(savegame.folder(a.world), a.world, state)}", file=sys.stderr)
 
 
 if __name__ == "__main__":

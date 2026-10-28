@@ -104,7 +104,8 @@ def check_civs(row):
         assert group in civs.GROUPS and isinstance(train.EFFECTS.get(t, {}), dict) and t in train.TECHS | train.SPEEDS, (n, t)
     assert all(t in train.TECHS and isinstance(f, NUMBER) for t, f in row.get("more", {}).items()), n
     for group, value, ages in row.get("units", ()):
-        assert group in civs.GROUPS and value in (*combat.Stats._fields, "speed"), (n, group, value)
+        classes = {f"bonus:{c}" for t in (*combat.STATS.values(), *combat.BUILDINGS.values()) for c in t.classes}
+        assert group in civs.GROUPS and value in (*combat.Stats._fields, "speed", *classes), (n, group, value)   # (#2249)
         assert len(ages) == 4 and all(isinstance(a, NUMBER) for a in ages), (n, group)
     for what, ages in row.get("arrows", ()):                 # the factor of the base arrows of buildings (#2178)
         assert set(what) <= NAMES["buildings.jsonl"] and len(ages) == 4 and all(isinstance(a, int) for a in ages), n
@@ -159,14 +160,31 @@ def check_replay(row):                                     # a walk speed (a nam
     assert len(row) == 2 and row.get("age", 1) in (1, 2, 3) and row.get("walk", 1) > 0, row["name"]
 
 
+def check_setup(row):                                      # a value of a setting of the game setup (#2264)
+    form(row, {"name": str, "resources": dict})
+    assert set(row["resources"]) == {"food", "wood", "gold", "stone"}, row["name"]
+    assert all(isinstance(v, int) and v >= 0 for v in row["resources"].values()), row["name"]
+
+
 def check_taunts(row):                                     # a taunt: its number and AoE2 text (#2234)
     form(row, {"name": str, "text": str})
     assert row["name"].isdigit() and row["name"] == str(int(row["name"])) and row["text"], row["name"]
 
 
-CHECKS = {"build.jsonl": check_build, "buildings.jsonl": check_buildings, "cheats.jsonl": check_cheats,
-          "civ_keys.jsonl": check_civ_keys, "civs.jsonl": check_civs, "gather.jsonl": check_gather, "monk.jsonl": check_monk,
-          "replay.jsonl": check_replay, "taunts.jsonl": check_taunts, "train.jsonl": check_train, "units.jsonl": check_units}
+CHECKS = {                                                 # one file per line: parallel tickets add files (#2281)
+    "build.jsonl": check_build,
+    "buildings.jsonl": check_buildings,
+    "cheats.jsonl": check_cheats,
+    "civ_keys.jsonl": check_civ_keys,
+    "civs.jsonl": check_civs,
+    "gather.jsonl": check_gather,
+    "monk.jsonl": check_monk,
+    "replay.jsonl": check_replay,
+    "setup.jsonl": check_setup,
+    "taunts.jsonl": check_taunts,
+    "train.jsonl": check_train,
+    "units.jsonl": check_units,
+}
 
 
 # The keys with two types by design: an "effect" is data, a list of data (#2155) or the name of a function of
