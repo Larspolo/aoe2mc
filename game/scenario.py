@@ -127,8 +127,10 @@ def orders(g):
     replay.Replay.attack_move) and removes the tag. A patrol (g.patrols: [tag, [tile, middle of the area], leg]) walks
     to the tile and back, again and again: it turns when one of its units is NEAR its point, and ends when no unit has
     the tag. A new patrol with the same tag (a looping trigger) replaces the old one. A "Change Object Stance" order
-    (aoe2mc.stance_lines, #2705) sets the stance of the tagged units and removes the tag."""
-    new = re.findall(r'"(patrol|attack_move|stance) (aoe_order[\w.]+) (-?\d+(?: -?\d+)*)"',
+    (aoe2mc.stance_lines, #2705) sets the stance of the tagged units and removes the tag. A "Stop Object" order
+    (aoe2mc.stop_lines, #2754) stops the tagged units (`aoe stop`), ends their patrols as a new order of a person does
+    (gather.Gather.end_patrols, #2674) and removes the tag."""
+    new = re.findall(r'"(patrol|attack_move|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"',
                      g.command(f"data get storage {ORDERS} list") or "")
     if new:
         g.command(f"data remove storage {ORDERS} list")
@@ -138,6 +140,12 @@ def orders(g):
         if order == "stance":                                          # "Change Object Stance" (#2705)
             import combat                                              # combat -> gather -> scenario
             g.command(f"aoe stance {sel} {combat.STANCES[p[0]]}")
+            g.command(f"tag {sel} remove {tag}")
+            continue
+        if order == "stop":                                            # "Stop Object" (#2754)
+            for q in patrols:
+                g.command(f"tag {sel} remove {q[0]}")
+            g.command(f"aoe stop {sel}")
             g.command(f"tag {sel} remove {tag}")
             continue
         if order == "attack_move":
