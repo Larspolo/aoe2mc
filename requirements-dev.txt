@@ -1,4 +1,5 @@
 # Development: tests and lint
 -r requirements.txt
 pytest>=8
+pytest-xdist>=3.6
 ruff>=0.6
