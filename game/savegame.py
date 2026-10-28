@@ -386,7 +386,9 @@ def load(g, d):
             if f in p:                                                 # a save before #2257 has no queues
                 setattr(x, f, unpack(p[f]))
         for f, v in p.get("map", {}).items():                          # a save before #2453 has no map
-            setattr(x.map, f, unpack(v))
+            m = getattr(x.map, f)                                      # in place: the bot shares these (#2983)
+            m.clear()
+            m.update(unpack(v))
         for tile in [t for ts in x.map.mines.values() for t, n in ts.items() if n <= 0]:
             x.map.emptied(x.map.spot(tile))                            # empty at the save: as Gather.dig, berries
         for tile in [t for t, n in x.map.bushes.items() if n <= 0]:

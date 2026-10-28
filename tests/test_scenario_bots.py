@@ -67,7 +67,7 @@ def play(tmp_path, monkeypatch, players, **settings):
     monkeypatch.setattr(gather, "Gather", FakeGather)
     monkeypatch.setattr(bot, "Bot", FakeBot)
     monkeypatch.setattr(combat, "setup", lambda game, data: None)
-    monkeypatch.setattr(scenario, "setup", lambda g, mode: g)
+    monkeypatch.setattr(scenario, "setup", lambda g, mode, start=True: g)
     run.play(FakeGame(), str(tmp_path), **settings)
     return started
 

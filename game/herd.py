@@ -105,8 +105,10 @@ def take(g, gathers, o, new):
     for h in gathers:
         h.prey.pop(u, None)
         h.enemies.pop(u, None)
+        h.flock.discard(u)                                         # only the new owner has it in its flock (#2995)
         if h.player == new:
             h.prey[u] = o["name"]
+            h.flock.add(u)
         elif not gather.allied(h.players, h.player, new):
             h.enemies[u] = o["name"]
         if h.player != new and u in h.selected:                    # the old owner cannot give it orders now
