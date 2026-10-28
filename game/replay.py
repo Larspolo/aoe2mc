@@ -2117,6 +2117,8 @@ class Replay:
         def order(e):
             for i in e["objects"]:                                  # a new order ends the work at the old resource
                 self.skipped(i, since.pop(i, None), e["time"])
+            inside = {u: r for r, us in self.garrisons.items() for u in us}
+            out.extend(c for i in e["objects"] if i in inside for c in self.leave(i, inside[i]))   # out for good (#3023)
             out.extend(c for c in self.commands(e) if c.startswith("aoe stance "))   # the paths, targets, stances
             moved.update(e["objects"])
             walks(e["objects"])
