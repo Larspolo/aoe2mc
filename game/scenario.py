@@ -101,8 +101,21 @@ def written(who, slot, title, parts):
 def page(part):
     """One book page as an SNBT text component: (title or None, text)."""
     title, text = part
-    body = f"{{text:{json.dumps(text)}}}"
+    body = f"{{text:{json.dumps(text, ensure_ascii=False)}}}"       # a CJK character is 3 bytes, not 6 (#2969)
     return f'{{text:"",extra:[{{text:{json.dumps(title + chr(10) * 2)},bold:true}},{body}]}}' if title else body
+
+
+def chat(who, text):
+    """The tellraw commands that show text in the chat of who, each of at most rcon.MAX bytes: a long text goes in
+    several commands, in their order, and a text with no spaces is split too (#2969)."""
+    out, cmd = [], lambda part: f"tellraw {who} " + json.dumps({"text": part, "color": "gold"}, ensure_ascii=False)
+    while text:
+        n = 1
+        while n < len(text) and len(cmd(text[:n + 1]).encode()) <= rcon.MAX:
+            n += 1
+        out.append(cmd(text[:n]))
+        text = text[n:]
+    return out
 
 
 def unread(who):
@@ -157,8 +170,8 @@ def tick(g):
             continue
         for cmd in book(sel, messages):
             g.command(cmd)
-        if text:
-            g.command(f"tellraw {sel} " + json.dumps({"text": text, "color": "gold"}))
+        for cmd in chat(sel, text):
+            g.command(cmd)
         g.command(f"tag {sel} add {TAG}")
 
 
