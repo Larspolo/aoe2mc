@@ -97,18 +97,21 @@ def parse(t):
 
 
 def git(*args):
-    return subprocess.run(["git", "-C", ROOT, *args], capture_output=True, text=True)
+    return subprocess.run(["git", "-C", ROOT, *args], capture_output=True, text=True, timeout=60)
 
 
 def load(since, remote="origin"):
     """The stored comments created since `since`, from `remote`/metrics, or None when git cannot read the branch."""
-    if git("fetch", "-q", remote, f"+refs/heads/{BRANCH}:refs/remotes/{remote}/{BRANCH}").returncode:
+    try:  # a hung git call (#3290) reads as a failed one
+        if git("fetch", "-q", remote, f"+refs/heads/{BRANCH}:refs/remotes/{remote}/{BRANCH}").returncode:
+            return None
+        out, d = [], since.date()
+        while d <= datetime.datetime.now(UTC).date():
+            r = git("show", f"{remote}/{BRANCH}:status/{d:%Y-%m-%d}.jsonl")
+            out += [json.loads(line) for line in r.stdout.splitlines() if line.strip()] if r.returncode == 0 else []
+            d += datetime.timedelta(days=1)
+    except subprocess.TimeoutExpired:
         return None
-    out, d = [], since.date()
-    while d <= datetime.datetime.now(UTC).date():
-        r = git("show", f"{remote}/{BRANCH}:status/{d:%Y-%m-%d}.jsonl")
-        out += [json.loads(line) for line in r.stdout.splitlines() if line.strip()] if r.returncode == 0 else []
-        d += datetime.timedelta(days=1)
     return [c for c in out if c["created_at"] >= iso(since)]
 
 
