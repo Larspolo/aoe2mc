@@ -358,7 +358,7 @@ def map_description(d, path):
 def read_scenario(path):
     from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
     from AoE2ScenarioParser.datasets.terrains import TerrainId
-    from AoE2ScenarioParser.datasets.trigger_lists import ColorMood
+    from AoE2ScenarioParser.datasets.trigger_lists import ColorMood, VictoryCondition
 
     with contextlib.redirect_stdout(io.StringIO()):   # the parser prints a lot of status text
         scn = AoE2DEScenario.from_file(path)
@@ -422,6 +422,11 @@ def read_scenario(path):
                          for t in scn.trigger_manager.triggers]
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
     texts["mood"] = (getattr(mood, "name", None) or str(mood or "DEFAULT")).upper()
+    om = scn.option_manager                  # the tab "Global Victory" for the scenario mode (#2566, run.VICTORIES)
+    win = VictoryCondition(om.victory_condition).name.lower().replace("_", "-") \
+        if om.victory_condition in set(VictoryCondition) else "standard"
+    texts["global_victory"] = {"condition": win, **({"score": int(om.victory_score)} if win == "score" else {}),
+                              **({"years": int(om.victory_years)} if win == "time-limit" else {})}
 
     objects = []
     for player, player_units in enumerate(scn.unit_manager.units):
@@ -2564,7 +2569,8 @@ def write_region(path, chunks):
         f.write(header + body)
 
 
-def write_objects(path, size, T, H, players, objects, cols, ground, timeline=None, mood="DEFAULT", map_ground=None):
+def write_objects(path, size, T, H, players, objects, cols, ground, timeline=None, mood="DEFAULT", map_ground=None,
+                  victory=None):
     """aoe2mc.json: the data that a game program needs (docs/research/gameplay.md). Tiles are in the turned grid
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
     their footprint [x0, z0, x1, z1) in blocks. Objects of a recorded game have their object ID ("ref").
@@ -2578,7 +2584,9 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     "players" of a scenario also have its "resources" (food, wood, gold, stone), "pop_limit" and "computer" (#2539).
     "mood": the map color mood of a DE scenario (ColorMood name, #1594), else "DEFAULT".
     "map_ground": the map bytes of map 0 without the objects (map_colors), one hex string per pixel row z: the live
-    minimap of the plugin paints them where no live object is (#1940)."""
+    minimap of the plugin paints them where no live object is (#1940).
+    "victory" (DE scenarios only): the victory setting of the scenario, {"condition": a name of run.VICTORIES or
+    "custom" (only its triggers end the game), "score" or "years" of that condition} (#2566)."""
     kinds = {"U": "unit", "B": "building", "O": "other"}
     objs = []
     for o in objects:
@@ -2609,6 +2617,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     data["ground"] = [" ".join("-" if wet[x, z] else str(ground[x, z]) for x in range(n)) for z in range(n)]
     if timeline is not None:
         data["timeline"] = timeline
+    if victory is not None:
+        data["victory"] = victory
     if map_ground is not None:
         data["map_ground"] = [bytes(row).hex() for row in np.asarray(map_ground, np.uint8)]
     with open(path, "w") as f:
@@ -3433,7 +3443,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     shade *= np.where(depth > 0, np.clip(1.6 - 0.2 * depth, 1, 1.4), 1)     # shallow water is lighter, as on a map item
     img = Image.fromarray(np.clip(img * shade[..., None], 0, 255).astype(np.uint8))
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline,
-                  texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0])
+                  texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0], texts.get("global_victory"))
     triggers, tstats = texts.get("triggers", []), Counter()
     haze = FOG.get(texts.get("mood")) if mood == "on" and (fog or ambience == "full") else None
     n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze,
