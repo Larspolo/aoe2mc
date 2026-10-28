@@ -34,6 +34,11 @@ player loads it with the world. Without the option, the world is the same as bef
   `resource-pack-prompt` (`run.PROMPT`). Before the join the client shows "This server requires the use of a custom
   resource pack." with the prompt text and the buttons "Proceed" and "Disconnect". `mc_shot.Client` at 1280 × 720:
   click (407, 488) for "Proceed"; the player is in `list` only after it.
+- Release (#2741): `bundles.yml` builds the pack once (`packaging/release_pack.py`, the bytes of the world pack) as
+  `aoe2mc-resourcepack.zip`, and `installers.yml` attaches it to the release of a tag. On a tag each bundle gets
+  `release.json` (the tag and the SHA-1 of that pack). The game program of the bundle (`run.pack_source`) then sends
+  the release link, when the world pack has that SHA-1; else (a world of another version, a run from the source) it
+  uses the local `PackServer`.
 
 ## Pitfalls
 
