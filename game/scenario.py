@@ -127,6 +127,7 @@ def tick(g):
     research(g)
     garrisons(g)
     fallen(g)
+    owners(g)
     tech_states(g)
     actions(g)
     victory_timers(g)
@@ -626,6 +627,21 @@ def fallen(g):
         if "passed" not in g.command(f"execute if entity {combat.target_uuid(o['footprint'])}"):
             g.command(f"scoreboard players set #f{ref} aoe_fallen 1")
             sent.add(ref)
+
+
+def owners(g):
+    """Once per game second: the score #o<ref> of aoe_owner is the player of a converted building of the triggers
+    (aoe2mc.json "owners", #2940) in aoe2mc.json "objects": a monk conversion changes it (monk.win). One command each
+    time the owner changes."""
+    if not g.data.get("owners") or g.clock() < vars(g).get("owners_at", 0.0):
+        return
+    g.owners_at = g.clock() + 1.0
+    sent = vars(g).setdefault("owners_sent", {})
+    objects = {o["ref"]: o for o in g.data.get("objects", ()) if o.get("ref") is not None and "footprint" in o}
+    for ref in g.data["owners"]:
+        if (o := objects.get(ref)) is not None and sent.get(ref) != o["player"]:
+            g.command(f"scoreboard players set #o{ref} aoe_owner {o['player']}")
+            sent[ref] = o["player"]
 
 
 def tech_states(g):

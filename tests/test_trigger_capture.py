@@ -26,7 +26,8 @@ def test_the_player_of_the_condition_is_the_tag_of_the_owner():
     assert tick([capture(player=1)])[0].startswith("execute if entity @e[tag=aoe2mc.r7,tag=aoe2mc.p1] ")
 
 
-def test_a_building_is_not_supported_yet():
-    trig = dict(id=3, name="t", enabled=True, looping=False, conditions=[capture() | dict(unit=False)], effects=[CHAT])
+def test_a_building_with_no_player_is_not_supported():     # a building with a player: its score (#2940)
+    trig = dict(id=3, name="t", enabled=True, looping=False, conditions=[capture(player=-1) | dict(unit=False)],
+                effects=[CHAT])
     files = aoe2mc.trigger_files([trig], stats=Counter())[1]
     assert "data/aoe2mc/function/tick.mcfunction" not in files

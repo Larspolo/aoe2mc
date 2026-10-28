@@ -4400,9 +4400,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         chance = (TRIGGER_CHANCE, False) in kinds
         rest = kinds - {(TRIGGER_CHANCE, False)}
         if any(c["type"] in OBJECT_TESTS and (c.get("ref", -1) is None or c.get("ref", -1) < 0
-                                              or not c.get("unit") and not fallen_building(c))
+                                              or not c.get("unit") and not fallen_building(c) and not owned_building(c))
                or c["type"] == BRING_OBJECT_TO_OBJECT and (c.get("next") is None or c["next"] < 0 or not c.get("next_unit"))
-               for c in conds):                    # no object, or a building: blocks, no entity (but #2910: its score)
+               for c in conds):            # no object, or a building: blocks, no entity (but #2910, #2940: its score)
             stats["object condition (not an entity, not supported yet)"] += t["enabled"]
             continue
         # "OR" with a timer and other conditions (#2791) or a chance (#2815): the timer of a group is a schedule that
@@ -4464,6 +4464,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             if fallen_building(c):                                     # a building that falls: its score (#2910)
                 tests.append(f"{'unless' if c['inverted'] else 'if'} score #f{c['ref']} aoe_fallen matches 1..")
                 unless.append(f"{'if' if c['inverted'] else 'unless'} score #f{c['ref']} aoe_fallen matches 1..")
+                continue
+            if owned_building(c):                                      # the owner of a building: its score (#2940)
+                tests.append(f"{'unless' if c['inverted'] else 'if'} score #o{c['ref']} aoe_owner matches {c['player']}")
+                unless.append(f"{'if' if c['inverted'] else 'unless'} score #o{c['ref']} aoe_owner matches {c['player']}")
                 continue
             if c["type"] in SCORE_TESTS:                               # a score of the world or the game
                 test = SCORE_TESTS[c["type"]](c)
@@ -4552,6 +4556,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             "aoe_fallen",
             "aoe_gar",
             "aoe_lost",
+            "aoe_owner",
             "aoe_seen",
             "aoe_tech",
             "aoe_techstate",
@@ -4603,6 +4608,18 @@ def fallen_list(triggers):
     return sorted({int(r) for r in re.findall(r"#f(\d+) aoe_fallen ", tick)})
 
 
+def owned_building(c):
+    """The "Capture Object" condition of a building (#2940): the score #o<ref> of aoe_owner, not the tag of an entity."""
+    return c["type"] == CAPTURE_OBJECT and not c.get("unit") and c.get("player", -1) >= 0
+
+
+def owner_list(triggers):
+    """The refs of the "Capture Object" conditions of buildings that the tick function of trigger_files tests, for
+    aoe2mc.json "owners" (#2940): the scenario mode of the game program sets their score to the owner of the building."""
+    tick = trigger_files(triggers)[1].get("data/aoe2mc/function/tick.mcfunction", "")
+    return sorted({int(r) for r in re.findall(r"#o(\d+) aoe_owner ", tick)})
+
+
 def tech_state_list(triggers):
     """The [player, technology] pairs of the "Researching Technology" and "Technology State" conditions that the tick
     function of trigger_files tests, for aoe2mc.json "tech_states" (#2769): the scenario mode of the game program sets
@@ -4623,6 +4640,7 @@ def visible_list(triggers):
 TRIGGER_LISTS = {
     "actions": action_list,                                     # the units of aoe_action (#2867)
     "fallen": fallen_list,                                      # the buildings of aoe_fallen (#2910)
+    "owners": owner_list,                                       # the buildings of aoe_owner (#2940)
     "research": research_list,                                  # the "Research Technology" effects (#2577)
     "tech_states": tech_state_list,                             # the [player, technology] pairs of aoe_techstate (#2769)
     "visible": visible_list,                                    # the [ref, player] pairs of aoe_seen (#2756)
