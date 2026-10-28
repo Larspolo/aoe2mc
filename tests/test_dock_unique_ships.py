@@ -60,6 +60,7 @@ def test_the_dock_of_the_own_civ_shows_the_ship_from_the_castle_age(name):
 def test_the_elite_upgrade_turns_the_own_ships_into_the_elite_form(name):
     server, g = dock(CIV[name])
     g.soldiers["s"] = name
+    g.game.entities.setdefault("s", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     up = f"ELITE_{name}_UPGRADE"
     assert train.queue(g, "Steve", (15, 12), up)
     train.tick(g, train.TRAIN_TIMES[up])

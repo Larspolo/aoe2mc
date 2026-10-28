@@ -338,6 +338,8 @@ class Game:
         if self.people > 1 and n:
             self.sides[name] = n
             self.command(f"team join p{n} {name}")
+            for cmd in [f"aoe hide {name} team"] * (getattr(self, "kind", "paper") == "paper"):
+                self.command(cmd)            # the hides of the own team only: the plugin hid all on the join (#3070)
         elif self.people > 1:
             for cmd in [*SPECTATORS * (not self.spectators), f"team join spec {name}", f"gamemode spectator {name}",
                         *[f"aoe show {name} all"] * (getattr(self, "kind", "paper") == "paper")]:
@@ -352,6 +354,8 @@ class Game:
             return False
         self.sides[name] = n
         self.command(f"team join p{n} {name}")
+        for cmd in [f"aoe hide {name} team"] * (getattr(self, "kind", "paper") == "paper"):
+            self.command(cmd)                # a side change keeps the hides of the old team (#3070)
         if name in getattr(self, "spectators", ()):  # a spectator who takes a free side plays again (#2898)
             self.spectators = self.spectators - {name}
             self.command(f"gamemode creative {name}")
@@ -424,10 +428,13 @@ class Side:
 
 def bot_seat(players, people):
     """(player, foe) of the bot (#1794): it plays the player after the people, and attacks the first person who is
-    not its ally (aoe2mc.json teams, gather.allied), else player 1."""
+    not its ally (aoe2mc.json teams, gather.allied), else the first other player that is not its ally, else None: no
+    enemy, no attack (#3107)."""
     import gather
     player = people + 1
-    return player, next((p for p in range(1, player) if not gather.allied(players, player, p)), 1)
+    others = sorted(int(p) for p in players if int(p) > 0)
+    return player, next((p for p in [*range(1, player), *others] if p != player
+                         and not gather.allied(players, player, p)), None)
 
 
 def pop_limit(text):
@@ -449,6 +456,17 @@ def civ_choices(values):
             sys.exit(f"--civ {v}: write PLAYER=CIVILIZATION, one of: {', '.join(names)}")
         out[int(player)] = name.upper()
     return out
+
+
+def apply_civs(data, civs):
+    """Write the --civ choices {player: civilization} into the players of aoe2mc.json. A player whose scenario locks
+    its civilization ("Lock Civilizations", #3295) keeps the scenario civilization: a line on stderr says why."""
+    for player, name in (civs or {}).items():
+        p = data.setdefault("players", {}).setdefault(str(player), {})
+        if p.get("lock_civ"):
+            print(f"player {player}: the scenario locks its civilization, --civ {name} is not used", file=sys.stderr)
+            continue
+        p["civ"] = name
 
 
 def handicap_choices(values):
@@ -552,8 +570,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         return g
     with open(os.path.join(world, "aoe2mc.json")) as f:
         data = json.load(f)
-    for player, name in (settings["civ"] or {}).items():         # before the Gathers: all bonuses (civs.civ) follow it
-        data.setdefault("players", {}).setdefault(str(player), {})["civ"] = name
+    apply_civs(data, settings["civ"])                             # before the Gathers: all bonuses (civs.civ) follow it
     for player, pct in (settings["handicap"] or {}).items():     # before the Gathers: the start resources (#2474)
         data.setdefault("players", {}).setdefault(str(player), {})["handicap"] = pct
     for player, team in (settings["teams"] or {}).items():       # gather.allied and the scoreboard teams follow it
@@ -595,7 +612,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         import replay
         import treaty as treaties
         attack = max(bot_attack, settings["treaty"], key=replay.aoe2mc.game_time)   # the bot waits for the treaty too
-        if settings["mode"] in treaties.ENDLESS:     # Wonder Race: the bot never attacks (#2406)
+        if settings["mode"] in treaties.ENDLESS or foe is None:   # Wonder Race (#2406), no enemy (#3107): no attack
             attack = "never"
         g.bots = [*g.bots, bots.Bot(game, data, player=player, share=g, log=log, foe=foe,
                                     attack=math.inf if attack == "never" else replay.aoe2mc.game_time(attack) / 1000,
@@ -604,7 +621,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         at = math.inf if attack == "never" else \
             replay.aoe2mc.game_time(attack) / 1000 * bots.LEVELS[settings["ai_difficulty"]]["attack"]
         print(f"A bot ({settings['ai_difficulty']}) plays player {player}: {len(g.bots[-1].g.villagers)} villagers "
-              f"gather, its soldiers attack player {foe} "
+              f"gather, its soldiers attack {'no player (no enemy)' if foe is None else f'player {foe}'} "
               f"{'never' if at == math.inf else 'at %d:%02d' % divmod(round(at), 60)}.", file=sys.stderr)
     import combat
     combat.setup(game, data)                         # AoE2 hit points and damage (#514)

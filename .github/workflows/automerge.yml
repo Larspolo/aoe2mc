@@ -1,6 +1,6 @@
 name: Automerge
 
-# Merges an agent PR (branch agent/* or claude/*) when its CI is green, so that the runs do not wait for CI (#232).
+# Merges an agent PR (branch agent/*, claude/* or ccr-*, #3382) when its CI is green, so that the runs do not wait for CI (#232).
 # A merge with GITHUB_TOKEN starts no workflows, so this job starts CI on main, the dashboard and the claim clean-up.
 # CI runs on a head that Unconflict pushed with GITHUB_TOKEN start no workflow_run event, also not after a re-run:
 # the sweep merges those PRs. The job `sweep` of ci.yml starts it (#734): GitHub drops the cron runs (#581).
@@ -30,7 +30,8 @@ jobs:
       (github.event.workflow_run.event == 'pull_request' || github.event.workflow_run.event == 'workflow_dispatch') &&
       github.event.workflow_run.head_repository.full_name == github.repository &&
       (startsWith(github.event.workflow_run.head_branch, 'agent/') ||
-       startsWith(github.event.workflow_run.head_branch, 'claude/')))
+       startsWith(github.event.workflow_run.head_branch, 'claude/') ||
+       startsWith(github.event.workflow_run.head_branch, 'ccr-')))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -145,7 +146,7 @@ jobs:
             # The sweep: each open agent PR without `conflict` (the runs and Unconflict solve those) whose head has a
             # green `quick` check and no failed check.
             gh api "repos/$R/pulls?state=open&per_page=100" --jq ".[] | select(.head.repo.full_name == \"$R\")
-              | select(.head.ref | test(\"^(agent|claude)/\")) | select([.labels[].name] | index(\"conflict\") | not)
+              | select(.head.ref | test(\"^(agent/|claude/|ccr-)\")) | select([.labels[].name] | index(\"conflict\") | not)
               | @json" > prs.txt
             while read -r pr; do
               sha=$(jq -r .head.sha <<<"$pr")

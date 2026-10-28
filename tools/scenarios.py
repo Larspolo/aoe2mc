@@ -388,6 +388,9 @@ def four_civs(path):
     scn.player_manager.active_players = 4
     for p, (civ, *_) in enumerate(FOUR_CIVS, 1):
         scn.player_manager.players[p].civilization = civ
+        sx, sy = (1 if (p - 1) & 1 else -1), (1 if (p - 1) & 2 else -1)   # the quarter: NW, NE, SW, SE
+        view = scn.player_manager.players[p]                              # 5 tiles in front of the town center
+        view.initial_player_view_x, view.initial_player_view_y = 40 + sx * 18, 40 + sy * 18
     quarter = lambda x, y: (x >= 40) + 2 * (y >= 40)                    # noqa: E731 - 0 NW, 1 NE, 2 SW, 3 SE
     for t in scn.map_manager.terrain:
         r, edge = math.hypot(t.x - 39.5, t.y - 39.5), min(t.x, t.y, 79 - t.x, 79 - t.y)

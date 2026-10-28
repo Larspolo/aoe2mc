@@ -28,6 +28,7 @@ def test_the_castle_of_the_berbers_trains_the_camel_archer():
 def test_the_upgrade_changes_the_live_and_the_new_units():
     server, g = setup("BERBERS", wood=2000, gold=2000, ages=3)
     g.soldiers["ca"] = "CAMEL_ARCHER"
+    g.game.entities.setdefault("ca", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     train.open_menu(g, "Steve", CASTLE)
     assert " 5:book:Elite Camel Archer:1000 wood · 500 gold · 45 s · research " in menus(server)[-1] + " "
     assert train.queue(g, "Steve", CASTLE, "ELITE_CAMEL_ARCHER_UPGRADE")

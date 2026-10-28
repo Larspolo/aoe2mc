@@ -26,10 +26,13 @@ research a technology up to train.REPEAT times with stacked effects (train.count
 bar and the hints, or shows them again.
 "sharing is caring" (#969) sends the income of the player (Gather.earn: gathering, fishing, trade, relics) to its allies
 (gather.allied) in equal parts, for ever, as in AoE2. With no ally the player keeps it.
+Taunts (#3318): a chat text that starts with a taunt number ("11", "11 haha") sets the score aoe_taunt of the player
+(the plugin, also with cheats off). taunts() shows the AoE2 text and plays the sound of replay.py to each player without
+the tag aoe2mc.mute: "!mute" adds the tag to the own player, "!nomute" removes it (#2961).
 Excluded and partial codes (owner, #820, #985):
-- "!mute", "!nomute": not yet. Taunts play only in replays (#2234), not in the live chat: #3318 adds both (#2961).
 - "marco": done as it is. The fog of war hides only units, not the map: "marco" only answers in the chat ("polo").
 """
+import json
 import os
 import re
 import sys
@@ -45,6 +48,8 @@ Unit = namedtuple("Unit", "name")             # the effect of a unit cheat
 Transform = namedtuple("Transform", "to units")   # a transformation cheat: own units with units(name) become unit `to`
 
 OBJECTIVE = "aoe_cheat"
+TAUNT = "aoe_taunt"                           # the number of the last taunt of a player (#3318)
+MUTE = "aoe2mc.mute"                          # the tag of a player who hears no taunts
 ALL = {"food": 100000, "wood": 100000, "gold": 100000, "stone": 100000}
 FOG = {"all": "Fog of war: off", "normal": "Fog of war: on"}       # the chat answer of "polo" for each g.reveal
 NUMBER = r"-?\d+(?:\.\d+)?"
@@ -112,14 +117,17 @@ def destroy(g, n):
     else:
         dead = {o.get("uuid") for o in g.data["objects"] if o["player"] == n}
         g.enemies = {u: k for u, k in g.enemies.items() if u not in dead}
+    import owners                                                      # owners -> build -> gather -> this module
+    owners.killed(g, {o["uuid"] for o in g.data["objects"] if o["player"] == n and o.get("uuid")}
+                  | {u for u, p in g.data.get(owners.KEY, {}).items() if p == n})   # update_enemies keeps them out (#2996)
 
 
 def ruin(g, n):
     """Remove the construction sites (complete or not) and the queues of player n, also of a bot (#1657): a site has no
     target entity until it is complete, so `aoe destroy` leaves its blocks, and the queue of a bot spawns new units.
     The blocks of each site become air (above the water: a fish trap or a dock keeps it), and the bot of player n stops."""
-    import combat, fleet                                           # they import gather, which imports this module
-    gathers = [g, *(b.g for b in g.bots)]
+    import build, combat, fleet                                    # they import gather, which imports this module
+    gathers = build.sides(g)                                       # also from a second person (#3106)
     for h in gathers:
         for s in [s for s in h.sites if s["player"] == n]:
             x0, x1, z0, z1 = s["footprint"]
@@ -134,7 +142,8 @@ def ruin(g, n):
         h.sites = [s for s in h.sites if s["player"] != n]
         if h.player == n:
             h.queues.clear()
-    g.bots = [b for b in g.bots if b.g.player != n or not getattr(b.g, "share", None)]   # a person keeps its Side: over() titles it (#1936)
+    first = gathers[0]                                             # the Gather that runs Gather.run
+    first.bots = [b for b in first.bots if b.g.player != n or not getattr(b.g, "share", None)]   # a person keeps its Side: over() titles it (#1936)
 
 
 def flag(attr, text):
@@ -227,6 +236,8 @@ def wonders(g, player):
 
 
 CODES = {                                     # code -> the resources, the chat answer or a function
+    "!mute": lambda g, player: g.command(f"tag {player} add {MUTE}"),
+    "!nomute": lambda g, player: g.command(f"tag {player} remove {MUTE}"),
     "aegis": aegis,
     "black death": lambda g, player: [destroy(g, n) for n in others(g)],
     "cheese steak jimmy's": {"food": 10000},
@@ -267,6 +278,7 @@ NAMES = sorted(CODES)                         # the score of a code is its index
 
 def setup(g):
     """Turn the cheats on in the plugin when g.cheats is true. Without cheats the plugin knows no code."""
+    g.command(f"scoreboard objectives add {TAUNT} dummy")                # the taunts: also with cheats off
     if g.cheats:
         g.command(f'scoreboard objectives add {OBJECTIVE} dummy "Cheat"')
         g.command("aoe cheats " + ",".join(quote(c, safe="") for c in NAMES))
@@ -304,4 +316,25 @@ def clicks(g):
             g.command(f"scoreboard players reset {player} {OBJECTIVE}")
             out.append((player, NAMES[int(m.group(1)) - 1]))
             apply(g, *out[-1])
+    return out
+
+
+def taunts(g):
+    """Show the text and play the sound of each taunt of a player since the last call (#3318). Returns the
+    (player, number) pairs. The players with the tag MUTE hear no taunt."""
+    import gather                                                      # gather imports this module
+    import replay
+    if "passed" not in g.command(f"execute if entity {gather.only(g.who, f'scores={{{TAUNT}=1..}}')}"):
+        return []
+    out = []
+    for player in g.people():
+        m = player and re.search(r" has (\d+) ", g.command(f"scoreboard players get {player} {TAUNT}"))
+        if m:
+            g.command(f"scoreboard players reset {player} {TAUNT}")
+            n = str(int(m.group(1)))
+            if n in replay.TAUNTS:
+                out.append((player, n))
+                g.command("tellraw @a " + json.dumps({"text": f"<{player}> {replay.taunt(n)}", "color": "gray"}))
+                for c in replay.taunt_sound(n):
+                    g.command(c.replace(" @a ", f" @a[tag=!{MUTE}] "))
     return out

@@ -438,17 +438,40 @@ def lane_claims(now, minutes=25, remote="origin"):
     return None if lines is None else count_lanes(lines, now, minutes)
 
 
+DROPPED = "dropped"                             # a lock that a later lock of its slot followed: the review did not finish (#3337)
+
+
 def review_delays(lines, merged=None, since=None):
-    """[(time, gap, PRs late or None)] of the review locks `review-<gap>pr-...` (tools/claim.py --review, #898, #2039),
-    by time. A review opens `gap` merged PRs after the review before it (#942): the PRs that merged between two locks
-    above the gap are late, for example when no run reaches step 9 of the autopilot (a usage limit). The count starts
-    at the lock before, so the PRs of that review itself count too. merged: the merge times after `since`; None for
-    the first lock and when the lock before is before `since` (the merge times do not cover it)."""
+    """[(time, gap, PRs late, None or DROPPED)] of the review locks `review-<gap>pr-<last>-<k>` (tools/claim.py --review,
+    #898, #2039), by time. A review opens `gap` merged PRs after the review before it (#942): the PRs that merged after
+    the last review `<last>` up to the lock, minus k gaps, are late, for example when no run reaches step 9 of the
+    autopilot (a usage limit). The count starts at the lock before when `<last>` is none. merged: the merge times after
+    `since`; None for the first lock and when the start is before `since` (the merge times do not cover it)."""
     at = lambda t: datetime.datetime.fromtimestamp(t, datetime.timezone.utc)
-    got = sorted((at(int(t)), int(g)) for k, t, *_ in (x.split(" ", 2) for x in lines)
-                 for g in re.findall(r"^review-(\d+)pr-", k))
-    return [(t, g, None if i == 0 or merged is None or got[i - 1][0] < since else
-             sum(got[i - 1][0] < m <= t for m in merged) - g) for i, (t, g) in enumerate(got)]
+    slots = []
+    for x in lines:
+        k, t, *_ = x.split(" ", 2)
+        m = re.match(r"review-(\d+)pr-([^-]*)-(\d+)$", k)
+        if m:
+            slots.append((at(int(t)), int(m[1]), m[2], int(m[3])))
+    got = sorted(slots)
+    out = []
+    for i, (t, g, last, k) in enumerate(got):
+        if any(g2 == g and last2 == last for _, g2, last2, _ in got[i + 1:]):
+            out.append((t, g, DROPPED))             # a later lock of the same slot: this review was not finished
+            continue
+        try:
+            start = datetime.datetime.strptime(last, "%Y%m%dT%H%M%SZ").replace(tzinfo=datetime.timezone.utc)
+        except ValueError:                          # none: the lock before (the first lock has no start)
+            start = got[i - 1][0] if i else None
+        out.append((t, g, None if merged is None or start is None or start < since else
+                    sum(start < m <= t for m in merged) - k * g))
+    return out
+
+
+def late_text(late):
+    """The "Review slots" value of a lock: its PRs late with a sign, `dropped`, or `-` (#3337)."""
+    return "-" if late is None else late if isinstance(late, str) else f"{late:+d}"
 
 
 def active_claims(now, minutes=30):
@@ -614,7 +637,7 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
                    f"in {len(data_rows)} places")
     if reviews is not None:                     # the self-improvement loop: each slot gets its review in time (#942)
         out.append("Review slots (taken UTC, gap PRs, PRs late): " + ("; ".join(
-            f"{t:%m-%d %H:%M} {m} {'-' if late is None else f'{late:+d}'}" for t, m, late in reviews if t >= since) or "-"))
+            f"{t:%m-%d %H:%M} {m} {late_text(late)}" for t, m, late in reviews if t >= since) or "-"))
     c2m = claim_to_merge(prs, comments, since)
     out.append(f"Claim to merge (median min of {len(c2m)} PRs): {fmt(med(c2m))}")
     bad = bad_files(files)

@@ -118,7 +118,8 @@ def others(g):
 
 def name(g, n):
     civ = getattr(g, "trigger_civs", {}).get(str(n)) or build.pretty(g.players[str(n)].get("civ") or "")
-    return f"Player {n}" + (f" ({civ})" if civ else "")              # a scenario trigger renames it (#2905)
+    who = g.players[str(n)].get("name") or f"Player {n}"            # the name of the scenario player (#3295)
+    return who + (f" ({civ})" if civ else "")                        # a scenario trigger renames it (#2905)
 
 
 def items(g):
@@ -153,10 +154,12 @@ def change(g, player, n):
     """A click on the stance of player n (#2934): the next stance, the alliance and neutral commands of the plugin (not
     during a treaty: all players stay neutral, as scenario.diplomacy), and a chat line to the players of team pN."""
     import gather
+    import owners
     import scenario
     import treaty
     kind = following(stance(g, n))
     scenario.stance(g.players, g.player, n, kind)
+    owners.update_enemies(g)                                           # the new enemies and allies (#2996)
     g.command(gather.allies_command(g.players))
     if not treaty.holds(g):
         g.command(gather.neutral_command(g.players))
@@ -181,8 +184,9 @@ def cost(g, n):
 
 
 def receiver(g, n):
-    """The Gather of player n (g itself or a bot), or None."""
-    return next((x for x in [g] + [b.g for b in g.bots] if x.player == n), None)
+    """The Gather of player n (g itself, a bot or another person: build.sides, #3106), or None."""
+    import build                                                   # build imports gather, which imports this module
+    return next((x for x in [g, *build.sides(g)] if x.player == n), None)
 
 
 def send(g, player, n, res):

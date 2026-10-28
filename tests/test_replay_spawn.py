@@ -21,10 +21,10 @@ def queue(t=1000, amount=1, objects=(5,), name="VILLAGER_MALE", type=83, **kw):
 
 
 def summons(cmds):
-    """(entity, x, y, z) of the summon commands."""
+    """(entity, x, y, z) of the summon commands of units (not the production texts, #2811)."""
     out = []
     for c in cmds:
-        m = re.match(r"summon (\S+) (\S+) (\S+) (\S+) ", c)
+        m = re.match(r"summon (?!text_display)(\S+) (\S+) (\S+) (\S+) ", c)
         if m:
             out.append((m[1], float(m[2]), float(m[3]), float(m[4])))
     return out
@@ -42,7 +42,8 @@ def test_a_queue_of_two_gives_two_units_one_after_the_other():
     (k1, x1, y1, z1), (k2, x2, y2, z2) = summons(game.sent)
     assert k1 == k2 == "minecraft:villager" and y1 == y2 == 70
     assert z1 == z2 == 24.5 and (x1, z1) != (x2, z2) and 8 <= x1 < 24     # in front of the town center (south side)
-    assert "Villager" in game.sent[0] and "aoe2mc.p1" in game.sent[0]          # name and team tag
+    first = next(c for c in game.sent if replay.PANEL not in c)                # not the production text (#2811)
+    assert "Villager" in first and "aoe2mc.p1" in first                       # name and team tag
 
 
 def test_research_delays_the_next_unit():

@@ -48,7 +48,7 @@ start and before each later ticket, act on its sections, and call the API only f
 ## 2. Finish open work first
 
 Section `Stuck`: a line → `overlap.md`, "Stuck tickets".
-Section `PRs` lists the open agent PRs (branch `claude/*` or `agent/*`) that need work; it leaves out the PRs of
+Section `PRs` lists the open agent PRs (branch `claude/*`, `agent/*` or `ccr-*`, #3382) that need work; it leaves out the PRs of
 `needs-human` or `blocked` tickets and the PRs whose CI runs or is green. Do not merge by hand.
 - Its ticket is closed as "not planned" → close the PR with a one-line comment.
 - Green and open for more than 10 minutes → start the Automerge sweep and say so on the status issue (`github.md`, #734).

@@ -12,6 +12,7 @@ def workshop(civ="BOHEMIANS"):
     g.data["players"] = {"1": {"civ": civ}}
     g.techs.add("CHEMISTRY")
     g.soldiers["b"] = "BOMBARD_CANNON"
+    g.game.entities.setdefault("b", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     return server, g
 
 

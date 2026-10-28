@@ -8,6 +8,7 @@ clicks and the orders read these tables: a team read at each click costs one RCO
 import math
 
 KEY = "unit_owners"                                                    # UUID -> player of a unit of the game
+KILLED = "killed_units"                                                # UUIDs that the program killed (#2996)
 
 
 def add(g, uuid, name, player):
@@ -18,6 +19,12 @@ def add(g, uuid, name, player):
     for o in build.sides(g):
         if not gather.allied(o.players, o.player, player):
             o.enemies[uuid] = name
+
+
+def killed(g, uuids):
+    """Keep uuids as killed by the program (battle_royale.start, cheats.destroy): update_enemies keeps them out."""
+    if hasattr(g, "data"):
+        g.data.setdefault(KILLED, set()).update(uuids)
 
 
 def give_building(g, target, new):
@@ -88,3 +95,23 @@ def site_box(site):
     """The footprint of a construction site in the order of combat.target_uuid (build.target)."""
     x0, x1, z0, z1 = site["footprint"]
     return [x0, z0, x1, z1]
+
+
+def update_enemies(g):
+    """Compute `enemies` of each side again after a change of the stances in g.players (#2996: scenario.diplomacy,
+    conquest.last_man, diplomacy.change, savegame.load): the units of the aoe2mc.json objects and of the owner record,
+    with their present player, that are not of an ally, not of Gaia, not herdable (herd.take: prey, not an enemy) and
+    not killed by the program."""
+    import build, gather, herd                                              # gather -> train -> this module
+    sides = [o for o in (build.sides(g) if hasattr(g, "peers") else [g]) if hasattr(o, "enemies")]   # also a stub of a test
+    if not sides or not hasattr(g, "data"):
+        return
+    names = {u: k for o in sides for u, k in o.enemies.items()}
+    units = {o["uuid"]: (o["name"], o["player"]) for o in g.data["objects"] if o["kind"] == "unit" and o.get("uuid")}
+    for u, n in g.data.get(KEY, {}).items():                           # the units of the game: their name of a table
+        units[u] = (units.get(u, ("", 0))[0] or names.get(u) or next((o.soldiers[u] for o in sides if u in o.soldiers), ""), n)
+    dead = g.data.get(KILLED, set())
+    for o in sides:
+        o.enemies.clear()                                              # in place: other tables can hold it
+        o.enemies.update({u: k for u, (k, n) in units.items() if n and u not in dead and not herd.herdable(k)
+                          and not gather.allied(o.players, o.player, n)})

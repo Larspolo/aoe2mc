@@ -39,6 +39,7 @@ SHARE = {"food": 0.4, "wood": 0.3, "gold": 0.2, "stone": 0.1}     # the villager
 WOOD = 0.2                                                         # the wood share for farms and houses with an army
 QUEUED = 2                                                         # units in the queue of each building of the bot
 # The build order after the houses (the key "bot" of data/build.jsonl), and the resource that a drop site goes next to
+FAR = 12                                                           # tiles from a drop site to its sources (remote)
 ORDER = tuple(r["name"] for r in sorted((r for r in build.ROWS if "bot" in r), key=lambda r: r["bot"]))
 NEAR = {r["name"]: r["near"] for r in build.ROWS if "near" in r}
 HOUSE_GAP = 2                                                      # a new house at this many units below the limit
@@ -91,12 +92,14 @@ class Bot:
         m = self.g.map
         if res == "food":                                              # a farm takes one farmer (Gather.send)
             return self.home({**m.bushes, **{t: k for t, k in m.farms.items() if t in m.own_farms and t not in self.g.farmers}})
-        return self.home(m.trees if res == "wood" else m.mines[res])
+        return self.home(m.trees if res == "wood" else m.mines[res], far=True)
 
-    def home(self, sources):
+    def home(self, sources, far=False):
         """The sources {tile: amount} whose tile is not nearer to a building of the foe than to an own town center or
         drop site (#1810): an AoE2 AI gathers at its own base. Else the bot sent its villagers to the bushes next to the
-        town center of the foe when its own ones were empty, and they died there; now it builds farms (build)."""
+        town center of the foe when its own ones were empty, and they died there; now it builds farms (build).
+        far: when the base has no source left, the sources at least half the base-to-foe distance from the foe: an
+        AoE2 AI builds a lumber or mining camp at the next forest or mine (#3402)."""
         g, T = self.g, self.g.map.T
         own = tuple(sorted((sum(x for x, _ in c) / len(c), sum(z for _, z in c) / len(c))
                            for r in sorted(g.map.drops) for c in g.map.drops[r] if c))
@@ -112,7 +115,12 @@ class Bot:
         for t in sources.keys() - at.keys():
             c = ((t[0] + 0.5) * T, (t[1] + 0.5) * T)
             at[t] = min(math.dist(c, p) for p in own) <= min(math.dist(c, p) for p in foe)
-        return {t: k for t, k in sources.items() if at[t]}
+        kept = {t: k for t, k in sources.items() if at[t]}
+        if not far or any(k > 0 for k in kept.values()):
+            return kept
+        half = max(min(math.dist(p, q) for q in foe) for p in own) / 2
+        return {t: k for t, k in sources.items()
+                if min(math.dist(((t[0] + 0.5) * T, (t[1] + 0.5) * T), q) for q in foe) >= half}
 
     def step(self):
         """One tick of the gather game of the player, then the orders."""
@@ -200,7 +208,7 @@ class Bot:
         mine = g.positions(sorted(u for u, n in g.soldiers.items() if combat.stats(n).attack))   # a dead soldier
                                                                        # is not in it, a transport ship has no attack
         self.charged = len(mine) >= self.group or self.charged and bool(mine)
-        if not self.charged:
+        if not self.charged or self.foe is None:                      # no enemy: no attack (#3107)
             return
         live = {t for t in set(self.targets.values()) if "passed" in g.command(f"execute if entity {t}")}
         self.targets = {u: t for u, t in self.targets.items() if u in mine and t in live}
@@ -208,8 +216,9 @@ class Bot:
             return                                                     # all soldiers fight units
         units = {o["uuid"] for o in g.data["objects"] if o["kind"] == "unit" and o["player"] == self.foe and o.get("uuid")
                  and not herd.herdable(o["name"])}                     # AoE2: a sheep is captured, not attacked (#2049)
-        if self.share:                                                 # also the units that player 1 trained
-            units |= self.share.villagers.keys() | self.share.soldiers.keys()
+        for x in build.sides(g) if self.share else ():                 # also the units that the foe trained (#3107)
+            if x.player == self.foe:
+                units |= x.villagers.keys() | x.soldiers.keys()
         seen, T = g.seen_tiles(), g.map.T                              # the AoE2 AI sees only its sight (#2050)
         near = {k: p for k, p in g.positions(sorted(units)).items() if (int(p[0] // T), int(p[2] // T)) in seen}
         self.targets = {u: t for u, t in self.targets.items()          # a unit that comes in sight goes before a
@@ -276,7 +285,7 @@ class Bot:
         farms = sum(k > 0 for t, k in g.map.farms.items() if t in g.map.own_farms)
         hungry = not any(k > 0 for k in self.sources("food").values()) and farms < math.ceil(self.shares()["food"] * len(g.villagers))
         name = "HOUSE" if g.pop >= cap - HOUSE_GAP and cap < train.max_pop(g) else "FARM" if hungry else \
-            next((n for n in self.order if n not in have and not build.locked(g, n)), None)
+            next((n for n in self.order if (n not in have or self.remote(n)) and not build.locked(g, n)), None)
         if name is None or any(g.stock[r] < v for r, v in build.price(g, name).items()):
             return
         center = self.center()
@@ -286,6 +295,15 @@ class Bot:
         if center is None or (rect := build.near(g, name, center)) is None or not g.villagers:
             return
         self.builder(build.found(g, name, rect))
+
+    def remote(self, name):
+        """True when name takes a resource (NEAR) whose sources with something left are all farther than FAR from an
+        own drop site of it: then the bot builds one more camp there (#3402)."""
+        g = self.g
+        if not (res := NEAR.get(name)) or not (full := [t for t, k in self.sources(res).items() if k > 0]):
+            return False
+        T, drops = g.map.T, [c for d in g.map.drops.get(res, ()) for c in d]
+        return all(math.dist(((t[0] + 0.5) * T, (t[1] + 0.5) * T), c) > FAR * T for t in full for c in drops)
 
     def builder(self, site):
         """Send one villager to build site: an idle one, else the nearest."""

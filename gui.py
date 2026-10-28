@@ -21,6 +21,10 @@ import threading
 import traceback
 from pathlib import Path
 
+# Installed package (#3056): the short imports (import units) find the modules next to this file.
+if __package__:
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 INPUTS = (".aoe2scenario", ".aoe2record", ".mgz", ".mgx", ".mgl", ".scx")
 RECORDS = (".aoe2record", ".mgz", ".mgx", ".mgl")                  # --at works only for these (aoe2mc.RECORDS)
 RANDOM_MAPS = ("arabia", "arena", "black_forest", "gold_rush", "highland", "islands", "mediterranean", "nomad")  # (#1871)

@@ -22,6 +22,11 @@ USE = "aoe_replay_use"                # right clicks with a carrot on a stick
 SPEEDS = (0.5, 1.0, 2.0, 4.0, 8.0)
 PAUSE, NEXT, JUMP, MENU, JUMP5, JUMP10, SPECTATE, BACK, BACK5, SPEED = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10   # SPEED + i: SPEEDS[i]
 VIEW = SPEED + len(SPEEDS)            # the view of the next player (#1303): Paper only (`aoe hide`), so not in the help
+FIGHTS = VIEW + 1                     # the menu page of the large fights (#2949): Paper only, as MENU
+FIGHT = FIGHTS + 1                    # FIGHT + i: fight i of the list (the next ticket jumps there)
+MAX_FIGHTS = 10                       # fights in the list
+FIGHT_LEAD = 10000                    # ms of game time: a fight jump goes this much before the fight start (#2950)
+FIGHT_HEIGHT = 30                     # blocks above the ground of the fight place: the viewer looks down at it
 JUMPS = {JUMP: 60000, JUMP5: 300000, JUMP10: 600000, BACK: -60000, BACK5: -300000}   # BACK: a jump back (#979)
 ITEMS = {PAUSE: (0, "clock", "Pause / continue"), NEXT: (1, "feather", "Next speed"),
          JUMP: (2, "ender_pearl", "Jump 1 minute"), SPECTATE: (7, "ender_eye", "Spectator view"),
@@ -69,13 +74,49 @@ def apply(n, control):
         views = [None, *control.get("players", {})]               # Replay.run: player -> (name, color)
         control["view"] = views[(views.index(control.get("view")) + 1) % len(views)]
         return view_name(control)
+    if FIGHT <= n < FIGHT + MAX_FIGHTS and n - FIGHT < len(control.get("fights", [])):
+        f = control["fights"][n - FIGHT]                           # forward or back: Replay.run restarts for back
+        control["jump"], control["place"] = max(0, f["start"] - FIGHT_LEAD), list(f["tile"])
+        return f"Fight at {clock_text(f['start'])}"
     return None
+
+
+def place_commands(tile, T, ground, who="@a"):
+    """The viewer above a fight place (#2950): spectator mode, FIGHT_HEIGHT blocks above the ground of the tile
+    (block = tile × T), looking straight down. ground: the ground height at the tile."""
+    x, z = (round(c * T + T / 2, 1) for c in tile)
+    return [f"gamemode spectator {who}", f"tp {who} {x} {min(319, ground + FIGHT_HEIGHT)} {z} 0 90"]
 
 
 def view_name(control):
     """The text of the view of the control state: "View: all players" or "View: Player 2 (Aztecs)"."""
     p = control.get("view")
     return "View: " + ("all players" if p is None else control["players"][p][0])
+
+
+def clock_text(ms):
+    m, s = divmod(int(ms) // 1000, 60)
+    return f"{m:02d}:{s:02d}"
+
+
+def fight_lines(fights, players):
+    """The tellraw commands of the fight list at the start (#2949): one line per fight (at most MAX_FIGHTS), with the
+    time, the players in their colors and the number of units; a click sets the trigger FIGHT + i. fights:
+    replay.fights(); players: player -> (name, color). No fights: no lines."""
+    out = [f"tellraw @a {json.dumps({'text': 'Large fights:', 'bold': True})}"] if fights else []
+    for i, f in enumerate(fights[:MAX_FIGHTS]):
+        names = [x for k, p in enumerate(f["players"]) for x in ([{"text": " vs "}] if k else []) +
+                 [{"text": players.get(p, (f"Player {p}", "white"))[0], "color": players.get(p, ("", "white"))[1]}]]
+        out.append("tellraw @a " + json.dumps(
+            {"text": "", "click_event": {"action": "run_command", "command": f"/trigger {OBJECTIVE} set {FIGHT + i}"},
+             "extra": [{"text": f"[{clock_text(f['start'])}] ", "color": "gold"}, *names,
+                       {"text": f" ({f['units']} units)", "color": "gray"}]}, ensure_ascii=False))
+    return out
+
+
+def fight_name(f, players):
+    """The menu item name of a fight: "12:34 Player 1 (Britons) vs Player 2 (Franks)"."""
+    return f"{clock_text(f['start'])} " + " vs ".join(players.get(p, (f"Player {p}",))[0] for p in f["players"])
 
 
 class Input:
@@ -129,11 +170,12 @@ class Input:
             return
         if self.passed(f"@a[scores={{{OBJECTIVE}={SPECTATE}}}]"):        # only the player who clicked (#910)
             g.command(f"gamemode spectator @a[scores={{{OBJECTIVE}={SPECTATE}}}]")
-        if self.passed(f"@a[scores={{{OBJECTIVE}={MENU}}}]"):
-            for player in (p.strip() for p in g.command("list").split(":", 1)[-1].split(",")):
-                if player and re.search(rf" has {MENU}\b", g.command(f"scoreboard players get {player} {OBJECTIVE}")):
-                    self.open_menu(player)
-        for n in [*actions(), VIEW]:
+        for n, page in ((MENU, self.open_menu), (FIGHTS, self.open_fights)):
+            if self.passed(f"@a[scores={{{OBJECTIVE}={n}}}]"):
+                for player in (p.strip() for p in g.command("list").split(":", 1)[-1].split(",")):
+                    if player and re.search(rf" has {n}\b", g.command(f"scoreboard players get {player} {OBJECTIVE}")):
+                        page(player)
+        for n in [*actions(), VIEW, *range(FIGHT, FIGHT + MAX_FIGHTS)]:
             if self.passed(f"@a[scores={{{OBJECTIVE}={n}}}]") and (said := apply(n, control)):
                 g.command(f"title @a actionbar {json.dumps({'text': said}, ensure_ascii=False)}")
                 if n == VIEW:                                      # the chat line in the color of the player
@@ -148,10 +190,12 @@ class Input:
         """The chest menu with all actions. It stays open: a click sets the trigger score of the player."""
         icons = {PAUSE: "clock", NEXT: "feather"} | {n: "ender_pearl" if JUMPS[n] > 0 else "recovery_compass"
                                                       for n in JUMPS} | {SPEED + i: "feather" for i in range(len(SPEEDS))} | \
-            {VIEW: "spyglass"}
-        slots = [PAUSE, NEXT, JUMP, JUMP5, JUMP10, BACK, BACK5] + [SPEED + i for i in range(len(SPEEDS))] + [VIEW]
-        cells = dict(zip(slots, (0, 1, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 15)))
-        names = actions() | {VIEW: view_name(getattr(self, "control", {}))}
+            {VIEW: "spyglass", FIGHTS: "iron_sword"}
+        fights = getattr(self, "control", {}).get("fights")
+        slots = [PAUSE, NEXT, JUMP, JUMP5, JUMP10, BACK, BACK5] + [SPEED + i for i in range(len(SPEEDS))] + [VIEW] + \
+            [FIGHTS] * bool(fights)
+        cells = dict(zip(slots, (0, 1, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 15, 17)))
+        names = actions() | {VIEW: view_name(getattr(self, "control", {})), FIGHTS: "Fights"}
 
         def choose(p, slot, shift):
             n = next((a for a, c in cells.items() if c == slot), None)
@@ -160,3 +204,15 @@ class Input:
         self.opened.add(player)
         return menu.show(self.game, player, "Replay", [(cells[n], icons[n], names[n], f"/trigger {OBJECTIVE} set {n}")
                                                         for n in slots], choose)
+
+    def open_fights(self, player):
+        """The menu page of the large fights (#2949): one item per fight, a click sets the trigger FIGHT + i."""
+        control = getattr(self, "control", {})
+        fights, players = control.get("fights", [])[:MAX_FIGHTS], control.get("players", {})
+
+        def choose(p, slot, shift):
+            if slot < len(fights):
+                self.game.command(f"scoreboard players set {p} {OBJECTIVE} {FIGHT + slot}")
+        return menu.show(self.game, player, "Fights", [(i, "iron_sword", fight_name(f, players),
+                                                        f"/trigger {OBJECTIVE} set {FIGHT + i}")
+                                                       for i, f in enumerate(fights)], choose)

@@ -16,7 +16,7 @@ def test_keep_log_copies_the_server_log(tmp_path):
 
 def test_the_option_goes_to_measure(monkeypatch, tmp_path):
     calls = []
-    monkeypatch.setattr(replay_drift, "measure", lambda *a: calls.append(a) or [])
+    monkeypatch.setattr(replay_drift, "measure", lambda *a, **k: calls.append(a) or [])
     replay_drift.main(["REC", "--until", "00:30", "--server-log", str(tmp_path / "F.log")])
     replay_drift.main(["REC"])
     assert [c[-1] for c in calls] == [str(tmp_path / "F.log"), None]

@@ -55,6 +55,8 @@ def test_the_eagle_scout_trains_faster_and_hits_harder_from_the_castle_age():
 def test_the_upgrades_change_the_live_and_the_new_units():
     server, g = player(ages=("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE"))
     g.soldiers["e"] = "EAGLE_SCOUT"
+    g.game.entities.setdefault("e", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
+    g.sites.append({"name": "HOUSE", "player": 1, "footprint": [20, 22, 20, 22], "done": True})   # room for one more unit
     rect = train.open_menu(g, "Steve", BARRACKS)
     assert train.order(g, "Steve", rect, train.MORE) == 1
     train.tick(g, 50)

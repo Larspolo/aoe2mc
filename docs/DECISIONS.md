@@ -50,3 +50,4 @@ the owner chose another option, `-`: no recommendation) · principle (`P<n>`, or
 - 2026-10-28 · #2233 · Taunts: a vanilla sound only with a good Minecraft match, else text only · other · P3, P1
 - 2026-10-28 · #2808 · Production panel of the live replay: a text display with a progress bar above each producing building (C), no boss bar per player · other · P9, P1
 - 2026-10-28 · #3103 · Player 1 defeated in a game of more than two: as AoE2, the others play on, and a team wins together (A) · taken · P1, P10
+- 2026-10-28 · #3275 · Resources left: a text display above each partially drained resource (B) · taken · P9

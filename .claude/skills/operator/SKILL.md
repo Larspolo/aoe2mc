@@ -104,7 +104,7 @@ owner step. NAME is the name of `repo` in `agent.toml`.
 1. Pause: add the label `paused` to the status issue. The runs and the pacers of both accounts stop at it (autopilot
    step 1, pacer rules), so the two accounts never run at the same time.
 2. Owner, in the OLD account: claude.ai/code → Scheduled tasks: disable each task whose name starts with "NAME "
-   (autopilot, the lane tasks, pacer heartbeat, a dashboard refresh); Sessions: archive "NAME pacer" (if one runs).
+   (autopilot, the lane tasks, pacer heartbeat); Sessions: archive "NAME pacer" (if one runs).
    Else the old pacer starts runs again after step 9. The workflow pacer then gets HTTP 400 from the old tasks
    until step 7 puts the secrets of the new tasks.
 3. Owner, in the NEW account: connect GitHub (topic `github.access`). The Claude GitHub app stays on the repository.
@@ -128,9 +128,7 @@ owner step. NAME is the name of `repo` in `agent.toml`.
    `create_trigger` "NAME pacer heartbeat" (cron `36 * * * *`, `persistent_session_id` the new session, prompt
    "Pacer heartbeat: follow .claude/skills/pacer/SKILL.md.").
 8. The new values in git, one PR (Automerge merges it): `trigger` in `[pacing]` of `agent.toml` is the ID of "NAME
-   autopilot" (the pacer reads it, #1898). The dashboard page belongs to the old account: publish
-   `tools/dashboard_artifact/index.html` as a new artifact (load the artifact skills first; read the old page with
-   the Artifact tool for its capabilities while the owner can still open it), put its URL into `artifact` of
-   `[dashboard]`, and run the `dashboard-refresh` skill once.
+   autopilot" (the pacer reads it, #1898). The dashboard is the GitHub Pages site of
+   `dashboard-site.yml`: start that workflow once.
 9. Remove the label `paused`. Do the checks of section 1, then report as in section 4: what is ready, and each owner
    step that is still open.

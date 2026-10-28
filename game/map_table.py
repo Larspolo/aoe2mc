@@ -38,7 +38,10 @@ def setup(g):
     item = {"id": "minecraft:filled_map", "count": 1, "components": {"minecraft:map_id": 0}}
     g.command(f"kill @e[type=minecraft:glow_item_frame,tag={tag}]")    # a loaded game: one table
     g.command(f"setblock {x} {y} {z} minecraft:cartography_table")
+    # Pos in the tag: summon reads the tag before it moves the entity, so without Pos the frame is at 0 0 0, more
+    # than 16 blocks from block_pos, and Minecraft logs "Block-attached entity at invalid position" (#3262)
     g.command(f"summon minecraft:glow_item_frame {x} {y + 1} {z} {{Facing:1b,Fixed:1b,Invulnerable:1b,"
+              f"Pos:[{x + 0.5}d,{y + 1.0}d,{z + 0.5}d],"
               f'block_pos:[I;{x},{y + 1},{z}],Tags:["{TAG}","{tag}"],Item:{json.dumps(item)}}}')
 
 

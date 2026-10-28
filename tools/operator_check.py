@@ -38,9 +38,9 @@ def missing_labels(wanted, have):
 
 
 def old_prs(prs, now, minutes=PR_MINUTES):
-    """The open agent PRs (branch `claude/*` or `agent/*`) older than `minutes`: Automerge merges a green PR in a
+    """The open agent PRs (branch `claude/*`, `agent/*` or `ccr-*`) older than `minutes`: Automerge merges a green PR in a
     few minutes, so an older one is red, conflicted, on `hold` or waits for a stopped workflow."""
-    return [p for p in prs if p["head"]["ref"].startswith(("claude/", "agent/"))
+    return [p for p in prs if p["head"]["ref"].startswith(("claude/", "agent/", "ccr-"))
             and ts(p["created_at"]) < now - datetime.timedelta(minutes=minutes)]
 
 

@@ -50,6 +50,10 @@ import time
 import zlib
 from collections import Counter, namedtuple
 
+# Installed package (#3056): the short imports (import units) find the modules next to this file.
+if __package__:
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 import numpy as np
 from nbtlib import File
 from nbtlib.tag import Byte, ByteArray, Compound, Double, Float, Int, IntArray, List, Long, LongArray, String
@@ -398,6 +402,11 @@ def read_scenario(path):
             players[p.player_id] |= {"resources": {r: int(getattr(p, r) or 0) for r in ("food", "wood", "gold", "stone")},
                                      "pop_limit": int(p.population_cap or 200),
                                      "computer": p.active and not p.human}     # no bot on a slot above the players (#3110)
+            name = (p.tribe_name or "").strip()     # the name of the "Players" tab; "Player N" is the default (#3295)
+            if name and name != f"Player {p.player_id}":
+                players[p.player_id]["name"] = name
+            if p.lock_civ:                          # "Lock Civilizations": the player keeps its civilization (#3295)
+                players[p.player_id]["lock_civ"] = True
             if p.starting_age.name != "DARK_AGE":   # the starting age: "castle" (setup.jsonl), none in the Dark Age (#3296)
                 players[p.player_id]["age"] = p.starting_age.name[:-4].lower().replace("_", "-")
         neutral = [i for i, d in enumerate(p.diplomacy or [], 1) if d == 1 and i != p.player_id and i <= 8]
@@ -2255,16 +2264,19 @@ def free_spot(cols, bx, bz, r, water=False, taken=()):
     return int(xs[i] + x0), int(zs[i] + z0)
 
 
-def find_spawn(cols, objects, players, tile=None):
-    """Spawn block (x, y, z): the tile given (--spawn), else the start view of player 1, else in front of
-    (south of) the first town center of player 1, else the map center. Moved to the nearest free land column."""
+def find_spawn(cols, objects, players, tile=None, pid=1):
+    """Spawn block (x, y, z): the tile given (--spawn), else the start view of player pid, else in front of
+    (south of) the first town center of player pid, else the map center (player 1 only; None for the others).
+    Moved to the nearest free land column."""
     if tile is None:
-        tile = players.get(1, {}).get("view")
+        tile = players.get(pid, {}).get("view")
     if tile is None:
-        tc = next((o for o in objects if o["kind"] == "B" and o["player"] == 1 and "TOWN_CENTER" in o["name"]), None)
+        tc = next((o for o in objects if o["kind"] == "B" and o["player"] == pid and "TOWN_CENTER" in o["name"]), None)
         if tc:
             dx, dy = turn_tile(0, buildings.footprint(tc["name"]) / 2 + 0.5, 0, buildings.TURN)   # the front
             tile = (tc["x"] + dx, tc["y"] + dy)
+    if tile is None and pid != 1:
+        return None
     T, n = cols.T, cols.n
     bx, bz = (n // 2, n // 2) if tile is None else (int(min(max(tile[0] * T, 0), n - 1)),
                                                     int(min(max(tile[1] * T, 0), n - 1)))
@@ -2467,7 +2479,7 @@ PALETTE_CACHE = {}
 # Blocks that need a block entity, or Minecraft shows them wrong (banners are invisible without one).
 BE_TYPES = [("decorated_pot", "decorated_pot"), ("oak_sign", "sign"), ("wall_banner", "banner"), ("_banner", "banner"), ("bell", "bell"), ("campfire", "campfire"),
             ("barrel", "barrel"), ("chest", "chest"), ("blast_furnace", "blast_furnace"),
-            ("smoker", "smoker"), ("furnace", "furnace"), ("lectern", "lectern"), ("_shelf", "shelf"), ("_bed", "bed")]
+            ("smoker", "smoker"), ("furnace", "furnace"), ("lectern", "lectern"), ("_shelf", "shelf"), ("_skull", "skull"), ("_bed", "bed")]
 
 
 def block_entity_type(state):
@@ -2641,7 +2653,7 @@ def write_region(path, chunks):
 
 
 def write_objects(path, size, T, H, players, objects, cols, ground, timeline=None, mood="DEFAULT", map_ground=None,
-                  victory=None, messages=None, lists=None):
+                  victory=None, messages=None, lists=None, yaw=SPAWN_YAW):
     """aoe2mc.json: the data that a game program needs (docs/research/gameplay.md). Tiles are in the turned grid
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
     their footprint [x0, z0, x1, z1) in blocks. Objects of a recorded game have their object ID ("ref").
@@ -2653,7 +2665,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     "timeline" (recorded games only): the events of read_timeline, with tiles in the turned grid
     and the "names" of the selected objects (name_timeline).
     "players" of a scenario also have its "resources" (food, wood, gold, stone), "pop_limit" and "computer" (#2539),
-    and its starting "age" (setup.jsonl name, none in the Dark Age, #3296).
+    its starting "age" (setup.jsonl name, none in the Dark Age, #3296), its "name" and "lock_civ" (#3295).
     "mood": the map color mood of a DE scenario (ColorMood name, #1594), else "DEFAULT".
     lists: the lists of the scenario mode (key -> list, TRIGGER_LISTS), each one if it is not empty.
     "map_ground": the map bytes of map 0 without the objects (map_colors), one hex string per pixel row z: the live
@@ -2661,7 +2673,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     "victory" (DE scenarios only): the victory setting of the scenario, {"condition": a name of run.VICTORIES or
     "custom" (only its triggers end the game), "score" or "years" of that condition} (#2566).
     "messages": the scenario texts of CHAPTERS that are not empty (chapter -> text): the book of the scenario mode (#2541).
-    "turn": the clockwise quarter turns of --orientation, if not 0 (#3035)."""
+    "turn": the clockwise quarter turns of --orientation, if not 0 (#3035).
+    "start" of a player: the block (x, y, z) where its person starts (its start view, #3344); "yaw": the spawn yaw."""
     kinds = {"U": "unit", "B": "building", "O": "other"}
     objs = []
     for o in objects:
@@ -2686,8 +2699,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         objs.append(e)
     data = {"map_size": size, "tile_size": T, "level_height": H, "mood": mood,
             "players": {str(pid): {"civ": p["civ"], "color": p["color"], "arch": p["arch"]}
-                        | {k: p[k] for k in ("team", "neutral", "resources", "pop_limit", "computer", "age") if k in p} for pid, p in sorted(players.items())},
-            "objects": objs}
+                        | {k: p[k] for k in ("team", "neutral", "resources", "pop_limit", "computer", "age", "name", "lock_civ", "start") if k in p} for pid, p in sorted(players.items())},
+            "objects": objs, "yaw": float(yaw)}
     n, wet = cols.n, cols.wtop > cols.top
     data["ground"] = [" ".join("-" if wet[x, z] else str(ground[x, z]) for x in range(n)) for z in range(n)]
     if timeline is not None:
@@ -2773,6 +2786,8 @@ def team_lines(objects, players):
         load += [f'team add p{n} "Player {n}{f" ({civ})" if civ else ""}"',
                  f"team modify p{n} color {units.TEAM_COLOR.get(p.get('color'), 'white')}",
                  f"team modify p{n} seeFriendlyInvisibles false"]       # the invisible target slime of a building (#1538)
+        if p.get("name"):                           # the name of the scenario player (#3295)
+            load.append(f"team modify p{n} displayName " + json.dumps({"text": p["name"]}, ensure_ascii=False))
         pulse.append(f"team join p{n} @e[tag=aoe2mc.p{n},team=]")
     return load, pulse
 
@@ -2947,11 +2962,12 @@ OBJECT_TESTS = {DESTROY_OBJECT: ("if entity @e[tag=aoe2mc.m{ref}] unless entity 
                  # "Capture Object": the unit has the tag of the player of the condition (its owner, #2570)
                  CAPTURE_OBJECT: ("if entity @e[tag=aoe2mc.r{ref},tag=aoe2mc.p{player}]",
                                   "unless entity @e[tag=aoe2mc.r{ref},tag=aoe2mc.p{player}]", ()),
-                 # "Object Attacked": the unit took damage in the last 10 ticks (HurtTime, #2779). Vanilla has no
+                 # "Object Attacked": the unit took damage in the last 10 ticks (HurtTime, #2779) or an AoE2 hit of the
+                 # game program (tag aoe2mc.hit: attacked_predicate, #3085). Vanilla has no
                  # attacker of a hurt entity in a selector: each attacker counts (a "near unit of the player" test
                  # misses the archers), the source player of the condition is not tested
-                 OBJECT_ATTACKED: ("if entity @e[tag=aoe2mc.r{ref},nbt=!{{HurtTime:0s}}]",
-                                   "unless entity @e[tag=aoe2mc.r{ref},nbt=!{{HurtTime:0s}}]", ()),
+                 OBJECT_ATTACKED: ("if entity @e[tag=aoe2mc.r{ref},predicate=aoe2mc:attacked]",
+                                   "unless entity @e[tag=aoe2mc.r{ref},predicate=aoe2mc:attacked]", ()),
                  # "Bring Object to Area": the unit is in the box of the area ({box}: area_box, #2620)
                  BRING_OBJECT_TO_AREA: ("if entity @e[tag=aoe2mc.r{ref}{box}]",
                                         "unless entity @e[tag=aoe2mc.r{ref}{box}]", ()),
@@ -3121,6 +3137,15 @@ def hp_runs(found, c):
         return [f"execute as {at} {'on vehicle ' * mounted}run"]
     c.files["data/aoe2mc/predicate/rider.json"] = rider_predicate()
     return [f"execute as {at} unless predicate aoe2mc:rider run", f"execute as {at} if predicate aoe2mc:rider on vehicle run"]
+
+
+def attacked_predicate():
+    """The predicate aoe2mc:attacked: a vanilla hit (HurtTime) or an AoE2 hit of the Paper plugin, which cancels the
+    vanilla hit and sets the tag aoe2mc.hit for 10 ticks (#3085). A selector cannot test "or"."""
+    def nbt(text):
+        return {"type": "minecraft:entity_properties", "entity": "this", "predicate": {"minecraft:nbt": text}}
+    return {"type": "minecraft:any_of",
+            "terms": [{"type": "minecraft:inverted", "term": nbt("{HurtTime:0s}")}, nbt('{Tags:["aoe2mc.hit"]}')]}
 
 
 def rider_predicate():
@@ -4660,6 +4685,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if c["type"] in OBJECT_TESTS:                              # the tag of the object (#2618)
                 test, other, before = OBJECT_TESTS[c["type"]]
+                if c["type"] == OBJECT_ATTACKED:
+                    files["data/aoe2mc/predicate/attacked.json"] = attacked_predicate()
                 at = dict(ref=c["ref"], player=c.get("player"), box=area_box(c.get("area", [-1] * 4), T), next=c.get("next"),
                           near=T)
                 if c["inverted"]:                                      # the condition holds while the test fails
@@ -5215,6 +5242,12 @@ def write_resourcepack(out):
     return sorted(files)
 
 
+def once(line):
+    """A load line of the start state of the triggers (#3074): not an objective, a forceload or the loaded check."""
+    return not line.startswith(("scoreboard objectives add", "forceload", "scoreboard players add")) and \
+        "#loaded" not in line and "aoe2mc:loaded" not in line
+
+
 def write_datapack(out, objects, ground, biome_names=(), ambience="basic", players=None, triggers=(), T=4,
                    trigger_stats=None, fog=None, mood=True):
     """datapacks/aoe2mc: a function every 2 s plays a work sound at each building with a player near it
@@ -5259,7 +5292,15 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
         "pack.mcmeta": {"pack": {"description": "aoe2mc: work sounds and ambience", "pack_format": MC["pack_format"],
                                  "min_format": MC["pack_format"], "max_format": MC["pack_format"]}},
         "data/minecraft/tags/function/load.json": {"values": ["aoe2mc:load"]},
-        "data/aoe2mc/function/load.mcfunction": "\n".join(team_load + trigger_load + ["schedule function aoe2mc:pulse 40t replace"]) + "\n",
+        "data/aoe2mc/function/load.mcfunction": "\n".join(
+            [x for x in team_load if " color " not in x] + [x for x in trigger_load if not once(x)] +
+            ["scoreboard objectives add aoe_trig dummy",
+             "execute unless score #start aoe_trig matches 1 run function aoe2mc:start",
+             "schedule function aoe2mc:pulse 40t replace"]) + "\n",
+        # the start state runs at the first load only: the world keeps the scores and the waiting schedules (#3074)
+        "data/aoe2mc/function/start.mcfunction": "\n".join(
+            [x for x in team_load if " color " in x] + [x for x in trigger_load if once(x)] +
+            ["scoreboard players set #start aoe_trig 1"]) + "\n",
         "data/aoe2mc/function/pulse.mcfunction": "\n".join(lines + team_pulse + ["schedule function aoe2mc:pulse 40t replace"]) + "\n",
     }
     files.update(trigger_fns)
@@ -5758,6 +5799,10 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     for k, v in sorted(stats.items()):
         print(f"  {k}: {v}")
     spawn = find_spawn(cols, objects, players, spawn)
+    for pid in sorted(players):                    # the start place of each player (#3344)
+        start = spawn if pid == 1 else find_spawn(cols, objects, players, None, pid) if pid else None
+        if start is not None:
+            players[pid]["start"] = [int(v) for v in start]
     book = place_book(cols, edits, spawn, texts, name)
     if book:
         print(f"  book with the scenario texts: lectern at {book}")
@@ -5833,7 +5878,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     img = Image.fromarray(np.clip(img * shade[..., None], 0, 255).astype(np.uint8))
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline,
                   texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0], texts.get("global_victory"), texts,
-                  {k: f(texts.get("triggers", [])) for k, f in TRIGGER_LISTS.items()})
+                  {k: f(texts.get("triggers", [])) for k, f in TRIGGER_LISTS.items()}, yaw)
     triggers, tstats = texts.get("triggers", []), Counter()
     haze = FOG.get(texts.get("mood")) if mood == "on" and (fog or ambience == "full") else None
     n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze,

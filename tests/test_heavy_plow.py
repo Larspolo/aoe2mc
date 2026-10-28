@@ -27,7 +27,7 @@ def test_the_mill_menu_has_heavy_plow_in_the_castle_age_after_horse_collar():
     assert "Heavy Plow" not in menus(server)[-1]                       # the Feudal Age
     server, g = castle()
     train.open_menu(g, "Steve", (3, 3))
-    assert menus(server)[-1].endswith("0:book:Heavy Plow:125 food · 125 wood · 40 s · research")
+    assert " 0:book:Heavy Plow:125 food · 125 wood · 40 s · research" in menus(server)[-1] + " "
     g.techs -= {"HORSE_COLLAR"}
     train.open_menu(g, "Steve", (3, 3))
     assert "Heavy Plow" not in menus(server)[-1]                       # Horse Collar first

@@ -33,6 +33,7 @@ def test_only_the_castle_of_the_vikings_researches_them():
 def test_the_effects_change_the_live_and_the_new_units():
     server, g = setup("VIKINGS", food=2000, wood=0, gold=2000, ages=3)
     g.soldiers["bk"] = "BERSERK"
+    g.game.entities.setdefault("bk", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     before = train.stats(g, "BERSERK")
     assert train.queue(g, "Steve", CASTLE, "CHIEFTAINS")
     train.tick(g, 40)
