@@ -451,6 +451,8 @@ def classify(n, hero=False):
     # Foot soldiers
     if hero and has(n, *HEROES["ranged"]):
         return soldier("skeleton", t, "bow")
+    if (line := line_unit(n)) is not None:      # a name of LINES before its name parts (HOPLITE, #2830)
+        return line
     if has(n, "SKIRMISHER", "JAVELIN", "GBETO", "CHAKRAM", "THROWING", "PELTAST", "SLINGER", "EKDROMOS"):
         return soldier("drowned", t, "trident")
     if has(n, "SPEAR", "PIKE", "HALBERD", "KAMAYUK", "HOPLITE", "PHALANGITE", "SPARABARA"):
@@ -461,7 +463,7 @@ def classify(n, hero=False):
         return soldier("skeleton", t, "crossbow")
     if has(n, "ARCHER", "BOWMAN", "LONGBOW", "PATTIYODHA", "IMMORTAL_RANGED"):
         return soldier("skeleton", t, "bow")
-    return line_unit(n) or infantry(n, t)
+    return infantry(n, t)
 
 
 def line_unit(n):
