@@ -409,42 +409,9 @@ def read_scenario(path):
                 if kinds.get(u.unit_const, ("?",))[0] in ("U", "H")}         # tag aoe2mc.r<ref> (#2617), not blocks
     texts["triggers"] = [dict(id=t.trigger_id, name=t.name, enabled=bool(t.enabled), looping=bool(t.looping),
                               conditions=[dict(type=c.condition_type, timer=c.timer, inverted=bool(c.inverted),
-                                               **({"ref": c.unit_object, "unit": c.unit_object in entities,   # #2618
-                                                   "player": c.source_player}
-                                                  if c.condition_type in OBJECT_TESTS else {}),
-                                               **({"slot": c.timer_id} if c.condition_type == DISPLAY_TIMER_TRIGGERED else {}),
-                                               **({"area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2]}     # #2620
-                                                  if c.condition_type == BRING_OBJECT_TO_AREA else {}),
-                                               **({"next": c.next_object, "next_unit": c.next_object in entities}
-                                                  if c.condition_type == BRING_OBJECT_TO_OBJECT else {}),   # #2771
-                                               **({"quantity": c.quantity, "player": c.source_player,
-                                                   "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2],
-                                                   "object": c.object_list, "group": c.object_group,
-                                                   "class": c.object_type}
-                                                  if c.condition_type in COUNTED else
-                                                  {"quantity": c.quantity} if c.condition_type in (TRIGGER_CHANCE, DIFFICULTY_LEVEL) else {}),
-                                               **({"quantity": c.quantity, "variable": c.variable,   # (#2611)
-                                                   "comparison": c.comparison}
-                                                  if c.condition_type == VARIABLE_VALUE else {}),
-                                               **({"quantity": c.quantity, "player": c.source_player,   # (#2655)
-                                                   "attribute": c.attribute}
-                                                  if c.condition_type == ACCUMULATE_ATTRIBUTE else {}),
-                                               **({"quantity": c.quantity, "ref": c.unit_object,   # (#2701)
-                                                   "comparison": c.comparison}
-                                                  if c.condition_type == OBJECT_HP else {}),
-                                               **({"player": c.source_player,                 # (#2656)
-                                                   "technology": techs.get(c.technology, str(c.technology))}
-                                                  if c.condition_type in (RESEARCHED, RESEARCHING_TECH, TECHNOLOGY_STATE)
-                                                  else {}),
-                                               **({"quantity": c.quantity}                    # (#2769)
-                                                  if c.condition_type == TECHNOLOGY_STATE else {}),
-                                               **({"player": c.source_player}                 # (#2710)
-                                                  if c.condition_type == PLAYER_DEFEATED else {}),
-                                               **({"quantity": c.quantity, "unit": c.unit_object}   # (#2714)
-                                                  if c.condition_type == UNITS_GARRISONED else {}),
-                                               **({"player": c.source_player, "target": c.target_player,   # (#2757)
-                                                   "diplomacy": c.quantity}            # the stance is the quantity
-                                                  if c.condition_type == DIPLOMACY_STATE else {}))
+                                               **{k: v(c, entities, techs) if callable(v) else getattr(c, v)   # #2832
+                                                  for k, v in ((OBJECT_KEYS if c.condition_type in OBJECT_TESTS else {})
+                                                               | CONDITION_KEYS.get(c.condition_type, {})).items()})
                                           for c in in_order(t.conditions, t.condition_order)],
                               effects=[dict(type=e.effect_type, message=e.message or "", player=e.source_player,
                                             time=e.display_time, object=kinds.get(e.object_list_unit_id),
@@ -2687,8 +2654,7 @@ def write_region(path, chunks):
 
 
 def write_objects(path, size, T, H, players, objects, cols, ground, timeline=None, mood="DEFAULT", map_ground=None,
-                  victory=None, messages=None,
-                  research=(), tech_states=()):
+                  victory=None, messages=None, lists=None):
     """aoe2mc.json: the data that a game program needs (docs/research/gameplay.md). Tiles are in the turned grid
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
     their footprint [x0, z0, x1, z1) in blocks. Objects of a recorded game have their object ID ("ref").
@@ -2701,8 +2667,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     and the "names" of the selected objects (name_timeline).
     "players" of a scenario also have its "resources" (food, wood, gold, stone), "pop_limit" and "computer" (#2539).
     "mood": the map color mood of a DE scenario (ColorMood name, #1594), else "DEFAULT".
-    "research": the "Research Technology" effects of the triggers (research_list, #2577), if any.
-    "tech_states": the [player, technology] pairs of the conditions on aoe_techstate (tech_state_list, #2769), if any.
+    lists: the lists of the scenario mode (key -> list, TRIGGER_LISTS), each one if it is not empty.
     "map_ground": the map bytes of map 0 without the objects (map_colors), one hex string per pixel row z: the live
     minimap of the plugin paints them where no live object is (#1940).
     "victory" (DE scenarios only): the victory setting of the scenario, {"condition": a name of run.VICTORIES or
@@ -2742,10 +2707,9 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         data["victory"] = victory
     if messages and (texts := {k: v for k, v in messages.items() if k in CHAPTERS and (v or "").strip()}):
         data["messages"] = texts
-    if research:
-        data["research"] = list(research)
-    if tech_states:
-        data["tech_states"] = list(tech_states)
+    for key, items in (lists or {}).items():
+        if items:
+            data[key] = list(items)
     if map_ground is not None:
         data["map_ground"] = [bytes(row).hex() for row in np.asarray(map_ground, np.uint8)]
     with open(path, "w") as f:
@@ -2927,6 +2891,44 @@ OBJECT_TESTS = {DESTROY_OBJECT: ("if entity @e[tag=aoe2mc.m{ref}] unless entity 
                                           "at @e[tag=aoe2mc.r{ref},limit=1] unless entity "
                                           "@e[tag=aoe2mc.r{next},distance=..{near}]", ())}
 TICKED += tuple(OBJECT_TESTS)
+
+
+def area_keys(c, entities, techs):
+    return [c.area_x1, c.area_y1, c.area_x2, c.area_y2]
+
+
+def tech_name(c, entities, techs):
+    return techs.get(c.technology, str(c.technology))      # a name of game/data/train.jsonl
+
+
+# The keys of the condition dict of read_scenario beyond the common ones: key -> attribute of the scenario condition,
+# or (condition, entities, techs) -> value. A condition on one object (OBJECT_TESTS) also gets OBJECT_KEYS. A new
+# condition is one line here, in alphabetical order (#2832): parallel trigger tickets conflicted in read_scenario.
+OBJECT_KEYS = {"ref": "unit_object", "unit": lambda c, entities, techs: c.unit_object in entities,   # #2618
+               "player": "source_player"}
+COUNT_KEYS = {"quantity": "quantity", "player": "source_player", "area": area_keys, "object": "object_list",
+              "group": "object_group", "class": "object_type"}
+TECH_KEYS = {"player": "source_player", "technology": tech_name}                         # (#2656)
+CONDITION_KEYS = {
+    ACCUMULATE_ATTRIBUTE: {"quantity": "quantity", "player": "source_player", "attribute": "attribute"},   # (#2655)
+    BRING_OBJECT_TO_AREA: {"area": area_keys},                                           # (#2620)
+    BRING_OBJECT_TO_OBJECT: {"next": "next_object",                                      # (#2771)
+                             "next_unit": lambda c, entities, techs: c.next_object in entities},
+    DIFFICULTY_LEVEL: {"quantity": "quantity"},                                          # (#2704)
+    DIPLOMACY_STATE: {"player": "source_player", "target": "target_player", "diplomacy": "quantity"},   # the stance (#2757)
+    DISPLAY_TIMER_TRIGGERED: {"slot": "timer_id"},                                       # (#2702)
+    IN_AREA: COUNT_KEYS,
+    OBJECT_HP: {"quantity": "quantity", "ref": "unit_object", "comparison": "comparison"},   # (#2701)
+    OWN_FEWER_OBJECTS: COUNT_KEYS,
+    OWN_OBJECTS: COUNT_KEYS,
+    PLAYER_DEFEATED: {"player": "source_player"},                                        # (#2710)
+    RESEARCHED: TECH_KEYS,
+    RESEARCHING_TECH: TECH_KEYS,                                                         # (#2769)
+    TECHNOLOGY_STATE: TECH_KEYS | {"quantity": "quantity"},                              # (#2769)
+    TRIGGER_CHANCE: {"quantity": "quantity"},                                            # (#2574)
+    UNITS_GARRISONED: {"quantity": "quantity", "unit": "unit_object"},                   # (#2714)
+    VARIABLE_VALUE: {"quantity": "quantity", "variable": "variable", "comparison": "comparison"},   # (#2611)
+}
 STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list (AoE2 attributes 0 to 3)
 OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
 STANCES = (0, 1, 3)                                # DiplomacyState: ally, neutral, enemy
@@ -3836,6 +3838,14 @@ def tech_state_list(triggers):
     return sorted({(int(n), t) for n, t in re.findall(r"#p(\d+)\.(\w+) aoe_techstate ", tick)})
 
 
+# The lists of aoe2mc.json that the scenario mode of the game program reads: key -> function of the triggers. A new
+# list is one line here, in alphabetical order (#2832): no new keyword of write_objects.
+TRIGGER_LISTS = {
+    "research": research_list,                                  # the "Research Technology" effects (#2577)
+    "tech_states": tech_state_list,                             # the [player, technology] pairs of aoe_techstate (#2769)
+}
+
+
 # The map of the world goes into the off-hand of each player once, through the tag aoe2mc_map (#966).
 MAP_PULSE = ["execute as @a[tag=!aoe2mc_map] run item replace entity @s weapon.offhand with "
              "minecraft:filled_map[minecraft:map_id=0]",
@@ -4568,7 +4578,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     img = Image.fromarray(np.clip(img * shade[..., None], 0, 255).astype(np.uint8))
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline,
                   texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0], texts.get("global_victory"), texts,
-                  research_list(texts.get("triggers", [])), tech_state_list(texts.get("triggers", [])))
+                  {k: f(texts.get("triggers", [])) for k, f in TRIGGER_LISTS.items()})
     triggers, tstats = texts.get("triggers", []), Counter()
     haze = FOG.get(texts.get("mood")) if mood == "on" and (fog or ambience == "full") else None
     n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze,
