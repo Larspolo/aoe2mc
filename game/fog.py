@@ -11,6 +11,11 @@ Minecraft feature: Paper Player#hideEntity through the plugin (`aoe hide`, `aoe 
 the units only for the players on the team of the player (`team=p1`), not for a spectator. The plugin hides them also
 for a player who joins later. Only the changes go out: at most one hide and one show command per update (RCON_MAX).
 
+The minimap (#2583, epic #2580): each update also sends the sight of the player to the fog of its team on map 0
+(Minimap.java: `aoe minimap fog T N pN`, `see pN`, `dim pN`, minimap()): unexplored tiles are black, explored tiles out
+of sight dark, and an enemy building shows on the minimap of a team only after a tile of it was in its sight. The
+explored tiles are not in a saved game: after a load the minimap starts unexplored again.
+
     fog.tick(g)    # gather.Gather.run: once each EVERY seconds, on Paper only; run.Side.step for player 2 (#1631)
 """
 EVERY = 1.0             # real seconds between two updates (Replay.fog: one each second of the replay)
@@ -62,6 +67,7 @@ def update(g, pos):
     tiles = set().union(*(h.seen_tiles(pos, pos.keys()) for h in gathers(g) if shares(g, h)))   # a destroyed building sees nothing
     tiles |= revealed(g, start=not state.setdefault("started", False))
     state["started"] = True
+    state["tiles"] = tiles                                             # the sight for the minimap (#2583)
     towers = set().union(*vars(g).get("towers", {}).values())
     out = {u for u, p in pos.items() if u in foe and u not in towers
            and (int(p[0] // g.map.T), int(p[2] // g.map.T)) not in tiles}
@@ -118,6 +124,8 @@ def reveal(g):
     for c in commands(g, "show", sorted(state["hidden"] - towers)):
         g.command(c)
     state["hidden"] &= towers
+    if state.pop("map", None) is not None:                             # the whole minimap shows (#2583)
+        g.command(f"aoe minimap fog off p{g.player}")
 
 
 def tick(g):
@@ -130,5 +138,24 @@ def tick(g):
         return
     state["at"] = now
     own, foe = units(g)
-    for c in update(g, g.where(set(own) | set(foe) | targets(g))):
+    for c in update(g, g.where(set(own) | set(foe) | targets(g))) + minimap(g, state):
         g.command(c)
+
+
+def minimap(g, state):
+    """The commands of the fog of the team of g on the minimap (#2583, Minimap.java): the fog starts all unexplored,
+    then only the changes of the tiles in sight (state["tiles"] of update) and of the explored tiles out of sight, as
+    the live replay does for its view player (Replay.minimap_fog)."""
+    import replay
+    T, team = g.map.T, f"p{g.player}"
+    n = g.data.get("map_size") or len(getattr(g.map, "ground", ())) // T   # tiles of a map side
+    if not n:
+        return []
+    inside = {(x, y) for x, y in state.get("tiles", ()) if 0 <= x < n and 0 <= y < n}
+    explored = state.setdefault("explored", set())
+    explored |= inside
+    new = "map" not in state
+    old_see, old_dim = state.get("map") or (set(), set())
+    state["map"] = (inside, explored - inside)
+    return [f"aoe minimap fog {T} {n} {team}"] * new + replay.runs(f"aoe minimap see {team}", inside - old_see) + \
+        replay.runs(f"aoe minimap dim {team}", explored - inside - old_dim)
