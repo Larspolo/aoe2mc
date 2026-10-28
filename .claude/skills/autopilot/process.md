@@ -23,8 +23,8 @@ dashboard counts them.
 - Did something block you that only the owner can change (a host, the environment, the scheduled task, a GitHub
   setting)? → make a `needs-human` ticket with numbered steps and the exact values. Look for an open one first.
 
-After step 8, run `python3 tools/claim.py 0 --review`: exit 0 means that this run does the process review (#898: 50
-PRs merged after the last review, 100 or 200 after reviews with no change, #2039). Then run the `improve` skill.
+After step 8, run `python3 tools/claim.py 0 --review`: exit 0 means that this run does the process review (#898: 200
+PRs merged and 4 hours after the last review, 400 or 800 PRs after reviews with no change, #2039, #3465). Then run the `improve` skill.
 Run it also when this run failed, or when a ticket took more than 90 minutes. The `improve` skill reviews the whole
 system (how runs start, the loop, time and quota, quality, weak spots, reuse, code structure), checks the last change
 and the misses (owner tickets for the system), and makes one

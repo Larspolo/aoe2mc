@@ -31,12 +31,12 @@ def test_no_change_doubles_the_gap_and_a_change_resets_it():
     body = claim.reviewed(BODY, False, T)
     state = claim.agent_state(body)
     assert state == {"last_run": "2026-10-26T07:00:00Z", "runs": 150, "last_review": "2026-10-26T07:33:20Z",
-                     "review_prs": 100}                                         # review_minutes goes
+                     "review_prs": 400}                                         # review_minutes goes
     assert body.startswith("Dashboard\n<!-- agent-state: ") and body.endswith("### Process changes\n")
-    for want in (200, 200):                                                    # REVIEW_MAX (#1697)
+    for want in (800, 800):                                                    # REVIEW_MAX (#1697, #3465)
         body = claim.reviewed(body, False, T)
         assert claim.agent_state(body)["review_prs"] == want
-    assert claim.agent_state(claim.reviewed(body, True, T))["review_prs"] == 50
+    assert claim.agent_state(claim.reviewed(body, True, T))["review_prs"] == 200
 
 
 def test_the_merged_prs_without_github_start_the_review():

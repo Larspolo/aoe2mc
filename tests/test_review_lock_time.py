@@ -41,9 +41,9 @@ def test_the_state_time_without_a_newer_lock(github):
 
 
 def test_the_process_review_keeps_the_state_time(github):
-    github.update(lock=LOCK, merged=50)
+    github.update(lock=LOCK, merged=200)
     claim.main(["0", "--review"])
-    assert github["since"] == [STATE] and github["keys"] == ["50pr-20261028T064732Z-1"]
+    assert github["since"] == [STATE] and github["keys"] == ["200pr-20261028T064732Z-1"]
 
 
 def test_the_newest_lock_ref_gives_its_claim_time(clones, monkeypatch):  # noqa: F811
