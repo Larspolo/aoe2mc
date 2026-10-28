@@ -16,7 +16,7 @@ def menus(server):
 
 
 def test_the_cost_time_age_and_slot_are_those_of_aoe2():
-    assert train.AFTER["GILLNETS"] == "FISHING_LINES" and train.ITEMS["GILLNETS"][0] == train.ITEMS["FISHING_LINES"][0]
+    assert train.BY_KEY["after"]["GILLNETS"] == "FISHING_LINES" and train.ITEMS["GILLNETS"][0] == train.ITEMS["FISHING_LINES"][0]
     assert {"FISHING_LINES", "GILLNETS"} <= set(train.TRAINS["DOCK"])
 
 

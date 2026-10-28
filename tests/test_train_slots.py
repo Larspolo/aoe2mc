@@ -13,7 +13,7 @@ from game import civs, train
 def linked():
     """{name: the names of its line of upgrades}: the groups of the "after" and "upgrade" links."""
     link = defaultdict(set)
-    pairs = list(train.AFTER.items()) + [(t, n) for t in train.UPGRADES for p in train.lines(t) for n in p] \
+    pairs = list(train.BY_KEY["after"].items()) + [(t, n) for t in train.UPGRADES for p in train.lines(t) for n in p] \
         + [p for t in train.UPGRADES for p in train.lines(t)]
     for a, b in pairs:
         link[a].add(b)

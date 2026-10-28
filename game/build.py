@@ -24,7 +24,7 @@ gate), a complete wall tile loses its target.
 A complete gate gets a portcullis across its passage (#1325, #1656, portcullis()): iron bars from the ground to the top
 of the passage. On Paper the plugin raises them while an own or allied unit is near or walks a path through the gate
 (aoe gate, Gates.java), as the AoE2 gate (the decision #1323).
-Fortified Wall (#1326, train.WALL_UPGRADES): the new and the complete own stone walls and gates get the fortified design
+Fortified Wall (#1326, the key "walls" of train.jsonl): the new and the complete own stone walls and gates get the fortified design
 and its hit points (design(), upgrade()); a damaged one keeps its lost hit points, as in AoE2.
 """
 import json
@@ -194,7 +194,8 @@ def locked(g, name):
         return f"Needs the {('Dark', 'Feudal', 'Castle', 'Imperial')[age]} Age"
     if g is not None and name in NEEDS and NEEDS[name] not in getattr(g, "techs", ()):
         return "Needs " + pretty(NEEDS[name].removesuffix("_TECH"))
-    if name == "TOWN_CENTER" and getattr(g, "mode", None) == "sudden-death" and town_center(g):
+    from gather import has_mode                                        # gather imports this module
+    if name == "TOWN_CENTER" and has_mode(g, "sudden-death") and town_center(g):
         return "Sudden Death: only one town center"                    # (#2407)
     if getattr(g, "mode", None) == "capture-the-relic":
         import combat                                                  # combat -> gather -> build: import it late
@@ -647,7 +648,7 @@ def design(g, name, player):
     """The design of building name of player: a stone wall (gate) of the player after Fortified Wall is a fortified
     wall (gate), #1326."""
     import train                                                       # train imports this module
-    new = {old: wall for t, walls in train.WALL_UPGRADES.items() if t in getattr(g, "techs", ()) for old, wall in walls.items()}
+    new = {old: wall for t, walls in train.BY_KEY["walls"].items() if t in getattr(g, "techs", ()) for old, wall in walls.items()}
     return new.get(name, name) if player == g.player else name
 
 
@@ -656,7 +657,7 @@ def line(g, name, techs=None):
     those of the guard tower (keep), #1374. techs: the technologies (default: those of the player)."""
     import train                                                       # train imports this module
     techs = getattr(g, "techs", ()) if techs is None else techs
-    for t, towers in train.TOWER_UPGRADES.items():                     # in the research order
+    for t, towers in train.BY_KEY["towers"].items():                  # in the research order
         name = towers.get(name, name) if t in techs else name
     return name
 

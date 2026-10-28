@@ -66,7 +66,7 @@ def clashes(names, civ, building=None):
     """The slots with more than one item that the civilization civ sees (civs.MISSING hides the others): the elite
     upgrades of the unique units share castle slot 5, and each civ sees only its own (#1720). The slots of building:
     train.slots (the mule cart, #2208)."""
-    seen = [train.slots(building, n)[0] for n in names if train.AFTER.get(n) not in names   # AFTER: the slot of the one before
+    seen = [train.slots(building, n)[0] for n in names if train.BY_KEY["after"].get(n) not in names   # AFTER: the slot of the one before
             and civ not in train.civs.MISSING.get(n, ())]
     return sorted({s for s in seen if seen.count(s) > 1})
 
