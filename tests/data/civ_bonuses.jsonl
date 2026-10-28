@@ -25,7 +25,7 @@
 {"name": "BOHEMIANS: Blacksmiths and Universities cost wood -100.", "civ": "BOHEMIANS", "bonus": "Blacksmiths and Universities cost wood -100.", "in": "COSTS"}
 {"name": "BOHEMIANS: Chemistry and Hand Cannoneer available in Castle Age.", "civ": "BOHEMIANS", "bonus": "Chemistry and Hand Cannoneer available in Castle Age.", "later": "play:ages"}
 {"name": "BOHEMIANS: Spearman-line deals +25% bonus damage.", "civ": "BOHEMIANS", "bonus": "Spearman-line deals +25% bonus damage.", "later": "play:fight"}
-{"name": "BOHEMIANS: Fervor and Sanctity affect Villagers.", "civ": "BOHEMIANS", "bonus": "Fervor and Sanctity affect Villagers.", "gap": "play:tech"}
+{"name": "BOHEMIANS: Fervor and Sanctity affect Villagers.", "civ": "BOHEMIANS", "bonus": "Fervor and Sanctity affect Villagers.", "in": "ALSO"}
 {"name": "BOHEMIANS: Mining Camp technologies are free.", "civ": "BOHEMIANS", "bonus": "Mining Camp technologies are free.", "in": "COSTS"}
 {"name": "BRITONS: Town Centers cost wood -50% starting in the Castle Age.", "civ": "BRITONS", "bonus": "Town Centers cost wood -50% starting in the Castle Age.", "in": "COSTS"}
 {"name": "BRITONS: Foot archers (except Skirmishers) have +1/+2 range in the Castle/Imperial Age.", "civ": "BRITONS", "bonus": "Foot archers (except Skirmishers) have +1/+2 range in the Castle/Imperial Age.", "in": "UNITS"}
@@ -232,7 +232,7 @@
 {"name": "TURKS: Light Cavalry and Hussar upgrades are free.", "civ": "TURKS", "bonus": "Light Cavalry and Hussar upgrades are free.", "in": "COSTS"}
 {"name": "TURKS: Scout Cavalry line gain +1 pierce armor.", "civ": "TURKS", "bonus": "Scout Cavalry line gain +1 pierce armor.", "in": "UNITS"}
 {"name": "VARANGIANS: Shepherds, fishermen, and hunters drop off an additional gold 10% in addition to food; Fishing Ships generate an additional gold 5%.", "civ": "VARANGIANS", "bonus": "Shepherds, fishermen, and hunters drop off an additional gold 10% in addition to food; Fishing Ships generate an additional gold 5%.", "later": "play:gather"}
-{"name": "VARANGIANS: Bloodlines and Caravan give +50% effect.", "civ": "VARANGIANS", "bonus": "Bloodlines and Caravan give +50% effect.", "gap": "play:tech"}
+{"name": "VARANGIANS: Bloodlines and Caravan give +50% effect.", "civ": "VARANGIANS", "bonus": "Bloodlines and Caravan give +50% effect.", "in": "MORE"}
 {"name": "VARANGIANS: Varangian Guards attack 25% faster and generate gold +50%.", "civ": "VARANGIANS", "bonus": "Varangian Guards attack 25% faster and generate gold +50%.", "later": "play:military-train"}
 {"name": "VARANGIANS: Longships and Catapult Galleons attack 15% faster.", "civ": "VARANGIANS", "bonus": "Longships and Catapult Galleons attack 15% faster.", "later": "play:naval"}
 {"name": "VIETNAMESE: Foot archers and Skirmishers +20% hit points.", "civ": "VIETNAMESE", "bonus": "Foot archers and Skirmishers +20% hit points.", "in": "UNITS"}

@@ -145,6 +145,11 @@ TRAIN_RATE = {r["name"]: [tuples(b) for b in r["train_rate"]] for r in ROWS if "
 HP = {r["name"]: r["hp"] for r in ROWS if "hp" in r}
 ARROWS = {r["name"]: tuples(r["arrows"]) for r in ROWS if "arrows" in r}   # factor of the base arrows in each age (#2178)
 GARRISON = {r["name"]: r["garrison"] for r in ROWS if "garrison" in r}   # units inside a building (garrison.size, #2117)
+# Technologies with another effect for the civilization (#2173, train.stats, train.speed): "also" gives the effect to
+# one more group of GROUPS too (Bohemians: Fervor and Sanctity for the villagers), "more" multiplies the change of the
+# effect (Varangians: Bloodlines and Caravan +50 %).
+ALSO = {r["name"]: r["also"] for r in ROWS if "also" in r}
+MORE = {r["name"]: r["more"] for r in ROWS if "more" in r}
 FARM_UPGRADES = {r["name"]: r["farm_upgrades"] for r in ROWS if "farm_upgrades" in r}   # the factor of the food of the
 #                                                                   farm upgrades (Sicilians: +125 %, train.research, #2230)
 RESEARCH_TIME = {r["name"]: [tuples(b) for b in r["research_time"]] for r in ROWS if "research_time" in r}
