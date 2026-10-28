@@ -469,6 +469,8 @@ def read_scenario(path):
                                             **({"object2": kinds.get(e.object_list_unit_id_2),   # (#2764)
                                                 "selected": list(e.selected_object_ids or [])}
                                                if e.effect_type == CREATE_GARRISONED_OBJECT else {}),
+                                            **({"selected": list(e.selected_object_ids or [])}   # (#2773)
+                                               if e.effect_type == UNLOAD else {}),
                                             **({"target": e.target_player, "diplomacy": e.diplomacy}   # (#2645)
                                                if e.effect_type == CHANGE_DIPLOMACY else {}),
                                             **({"target": e.target_player, "quantity": e.quantity,   # (#2576)
@@ -2844,6 +2846,7 @@ TIMER = 10
 TRIBUTE = 5                                                        # "Tribute" (#2576)
 TRIGGER_CHANCE = 20                                                # the condition "Chance" (#2574)
 UNITS_GARRISONED = 18                                              # the condition "Units Garrisoned" (#2714)
+UNLOAD = 17                                                        # "Unload" (#2773)
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
@@ -3305,6 +3308,29 @@ def stop_lines(e, c):
     return tag_lines(e, c.T, tag) + [f'data modify storage aoe2mc:orders list append value "stop {tag}"']
 
 
+def unload_lines(e, c):
+    """The commands of "Unload" (#2773): each selected building of the player that takes a garrison (buildings.INSIDE),
+    or with no selection each such building with its center in the area, goes into the list of the storage
+    aoe2mc:orders as one text "unload <player> <ref>", with the block of the target tile on the ground "x y z" when
+    the effect has one. The scenario mode of the game program (game/scenario.py orders) lets the units of the holder
+    out and walks them there (aoe moveto). A ship or a ram holder: not supported yet (the game program has no garrison
+    of them from a trigger)."""
+    T, ground, a = c.T, c.ground, e.get("area", [-1])
+    refs = e.get("selected") or ([r for r, (_, _, (x, z)) in sorted(buildings.INSIDE.items())
+                                  if a[0] * T <= x < (a[2] + 1) * T and a[1] * T <= z < (a[3] + 1) * T]
+                                 if min(a, default=-1) >= 0 else [])
+    holders = [r for r in refs if r in buildings.INSIDE]
+    if not holders or e["player"] <= 0:
+        c.stats["unload (not supported yet)"] += 1
+        return []
+    c.stats["unload"] += 1
+    x, z = (int((v + 0.5) * T) for v in e.get("tile", [-1, -1]))
+    where = f" {x} {int(ground[x, z])} {z}" if min(e.get("tile", [-1])) >= 0 and ground is not None and \
+        0 <= x < ground.shape[0] and 0 <= z < ground.shape[1] else ""
+    p = e["player"]
+    return [f'data modify storage aoe2mc:orders list append value "unload {p} {r}{where}"' for r in holders]
+
+
 def view_lines(e, c):
     """The commands of "Change View" (#2610): in Minecraft the player is the camera, so a tp of the players of the
     team pN (team_lines) to the middle of the tile, on the ground. Player -1 or 0: all players."""
@@ -3479,6 +3505,7 @@ EFFECTS = {
     TASK_OBJECT: task_lines,
     TELEPORT_OBJECT: teleport_lines,
     TRIBUTE: resource_lines,
+    UNLOAD: unload_lines,
 }
 # The context of the effects of trigger t: a handler can add function files (files) and load lines (setup, the keys)
 Effect = namedtuple("Effect", "t T ground players stats mood files setup switch timed", defaults=((), {}))

@@ -133,11 +133,14 @@ def orders(g):
     the tag. A new patrol with the same tag (a looping trigger) replaces the old one. A "Change Object Stance" order
     (aoe2mc.stance_lines, #2705) sets the stance of the tagged units and removes the tag. A "Stop Object" order
     (aoe2mc.stop_lines, #2754) stops the tagged units (`aoe stop`), ends their patrols as a new order of a person does
-    (gather.Gather.end_patrols, #2674) and removes the tag."""
-    new = re.findall(r'"(patrol|attack_move|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"',
-                     g.command(f"data get storage {ORDERS} list") or "")
-    if new:
+    (gather.Gather.end_patrols, #2674) and removes the tag. An "Unload" order (#2773): unload()."""
+    got = g.command(f"data get storage {ORDERS} list") or ""
+    new = re.findall(r'"(patrol|attack_move|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"', got)
+    unloads = re.findall(r'"unload (\d+) (\d+) ?(-?\d+ -?\d+ -?\d+)?"', got)
+    if new or unloads:
         g.command(f"data remove storage {ORDERS} list")
+    for player, ref, where in unloads:
+        unload(g, int(player), int(ref), where)
     patrols = vars(g).setdefault("patrols", [])
     for order, tag, where in new:
         p, sel = [int(v) for v in where.split()], f"@e[tag={tag}]"
@@ -167,6 +170,19 @@ def orders(g):
             g.command(f"aoe moveto @e[tag={tag}] {' '.join(map(str, points[q[2] % 2]))}")
         elif "passed" not in g.command(f"execute if entity @e[tag={tag}]"):
             patrols.remove(q)
+
+
+def unload(g, player, ref, where):
+    """An "Unload" order (aoe2mc.unload_lines, #2773): the units inside the building ref of the player (a person or a
+    bot: garrison.holders) come out (garrison.out), and `aoe moveto` walks them to the block "x y z" when the order has
+    one. A building that fell or that is not of the player: nothing."""
+    for x in [g, *(s.g for s in g.bots)]:
+        if x.player != player or "objects" not in x.data:
+            continue
+        rect = next((r for r, o in garrison.holders(x).items() if o.get("ref") == ref), None)
+        for u in garrison.out(x, rect) if rect is not None else []:
+            if where:
+                x.command(f"aoe moveto {u} {where}")
 
 
 def costs(g):
