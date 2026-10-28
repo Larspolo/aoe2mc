@@ -132,6 +132,27 @@ def fixed_after(closed, start):
             if i["title"].startswith("Fix main") and (i.get("closed_at") or "") > start]
 
 
+def ci_line(ci, issues):
+    """The `Main CI` line: the runs of `main_ci()` and, for a red run, the open "Fix main" tickets of `issues` and the
+    fixes after the red run. The fixes come from all closed `P0` issues since the red run: the git log of a shallow
+    clone can miss the fix commits, and the 100 last updated closed issues miss the tickets after some hours (#3305)."""
+    fix = [f"#{n} {i['title']}" for n, i in issues.items() if "P0" in dashboard.labels(i) and i["title"].startswith("Fix main")]
+    red = [c for c in ci if c[1] in RED]
+    done, closed = "", []
+    if red:
+        since = min(t for *_, t in red)
+        fixes = [i for i in dashboard.pages(f"issues?state=closed&labels=P0&since={since}:00Z")
+                 if i["title"].startswith("Fix main")]
+        log = subprocess.run(["git", "log", f"origin/{CONFIG['branch']}", f"--since={since}Z",
+                              "--format=%s%x1f%b%x1e"], capture_output=True, text=True).stdout
+        done = merged_fix(log, {i["number"] for i in fixes})
+        closed = fixed_after(fixes, since)
+    return " · ".join(f"{n} {c} ({sha}, {t})" for n, c, sha, t in ci) + (
+        "" if not red else " → red: open P0 tickets \"Fix main\": " + ("; ".join(fix) or "none")
+        + (f"; merged after the red run: {done}" if done else "")
+        + (f"; closed after the red run: {'; '.join(closed)}" if closed else ""))
+
+
 def section(title, lines):
     print(f"{title}: " + ("none" if not lines else lines[0] if len(lines) == 1 else "\n  " + "\n  ".join(lines)))
 
@@ -173,22 +194,7 @@ def main(argv=None):
         if w:
             work.append(f"PR #{p['number']} (`{p['head']['ref']}`" + (f", #{m[1]}" if m else "") + f"): {w}")
     section(f"PRs ({len(work)} of {len(prs)} open agent PRs need work)", work)
-    ci = main_ci()
-    fix = [f"#{n} {i['title']}" for n, i in issues.items() if "P0" in dashboard.labels(i) and i["title"].startswith("Fix main")]
-    red = [c for c in ci if c[1] in RED]
-    done, closed = "", []
-    if red:
-        since = min(t for *_, t in red)
-        fixes = {i["number"] for i in dashboard.pages(f"issues?state=closed&labels=P0&since={since}:00Z")
-                 if i["title"].startswith("Fix main")}
-        log = subprocess.run(["git", "log", f"origin/{CONFIG['branch']}", f"--since={since}Z",
-                              "--format=%s%x1f%b%x1e"], capture_output=True, text=True).stdout
-        done = merged_fix(log, fixes)
-        closed = fixed_after(dashboard.api("issues?state=closed&sort=updated&direction=desc&per_page=100"), since)
-    section("Main CI", [" · ".join(f"{n} {c} ({sha}, {t})" for n, c, sha, t in ci) + (
-        "" if not red else " → red: open P0 tickets \"Fix main\": " + ("; ".join(fix) or "none")
-        + (f"; merged after the red run: {done}" if done else "")
-        + (f"; closed after the red run: {'; '.join(closed)}" if closed else ""))])
+    section("Main CI", [ci_line(main_ci(), issues)])
     code, text = tool("feedback.py")
     section("Feedback (lock each with `claim.py ID --comment`)", [t for t in text.splitlines() if re.match(r"\d+ #\d+ ", t)])
     section("Triage (no priority label)", [f"#{n} {i['title']}" for n, i in sorted(issues.items())
