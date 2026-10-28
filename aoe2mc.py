@@ -2973,7 +2973,7 @@ def task_lines(e, c):
     x, z = (int((v + 0.5) * T) for v in e["tile"])
     if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
         return []
-    k = f"{c.t['id']}_{next(i for i, x in enumerate(c.t['effects']) if x is e)}"
+    k = f"{c.t['id']}_{next(i for i, f in enumerate(c.t['effects']) if f is e)}"
     return [f"tag {unit_selector(e, T)} add aoe_task{k}",
             f"execute as @e[tag=aoe_task{k}] on vehicle run tag @s add aoe_task{k}",
             f"execute as @e[tag=aoe_task{k}] on vehicle on passengers run tag @s remove aoe_task{k}",
