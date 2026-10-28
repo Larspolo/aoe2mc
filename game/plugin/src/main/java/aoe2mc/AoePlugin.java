@@ -152,6 +152,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe sight <selector> <blocks>              an idle unit attacks an enemy in this line of sight (#775)
  *   aoe sight <selector> <blocks> only|first   ... and enemy buildings: only buildings, or buildings before units
  *                                              (#1820: the ram line and the trebuchet, the elephant and cannon galleon)
+ *   aoe sightedge <players> on|off             the edge of the line of sight of the player on the ground (#3330,
+ *                                              Sight.java; on by default); count <team|-> <x> <z> <r>: its sides
  *   aoe building <selector> <hp> <melee armor> <pierce armor> <x0> <y0> <z0> <x1> <y1> <z1>
  *                                              make the entity the target of a building (#517, combat.building)
  *   aoe building ... <attack> <range> <reload> <min>
@@ -319,6 +321,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Viewer viewer = new Viewer(this);                 // the game mode switch of a replay viewer (#910)
     private final Follow camera = new Follow();                     // the follow camera of a replay (#738, #1660)
     private final Border border = new Border();
+    private final Sight sight = new Sight(minimap);                 // the edge of the line of sight (#3330)
 
     // b: x0 y0 z0 x1 y1 z1 of box; range: the blocks from the footprint that its arrows reach, 0: no attack (#1111)
     private record Building(Stats stats, String box, int max, int[] b, double range, double min) {}
@@ -1038,6 +1041,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, this::towers, 2L, 2L);
         Bukkit.getScheduler().runTaskTimer(this, this::hold, 4L, 4L);
         Bukkit.getScheduler().runTaskTimer(this, gates::tick, Gates.PERIOD, Gates.PERIOD);
+        Bukkit.getScheduler().runTaskTimer(this, sight::tick, Sight.PERIOD, Sight.PERIOD);
         Bukkit.getPluginManager().registerEvents(this, this);
         Bukkit.getPluginManager().registerEvents(cheats, this);
         Bukkit.getPluginManager().registerEvents(deaths, this);
@@ -2673,6 +2677,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             sender.sendMessage("Sight: " + n + " units");
             return true;
+        }
+        if (args.length >= 3 && args[0].equals("sightedge")) {          // the edge of the line of sight (#3330)
+            return sight.command(sender, args, args[1].equals("count") ? List.of() : players(sender, args[1]));
         }
         if ((args.length == 11 || args.length == 12 || args.length >= 15 && args.length <= 17) && args[0].equals("building")) {
             int hp;
