@@ -57,6 +57,10 @@ SCORE = (                                                              # Gather:
     "razed",
     "tributes",                                                        # diplomacy.py
 )
+SPOILS = (                                                             # spoils.py: the plugin scores that gave gold
+    "attack_ticks",                                                    # (the world keeps the scores, #2513)
+    "kills",
+)
 RIDERS = ("berths", "boarding", "cargo", "loading", "towers", "unloads")   # transport.py, siege_tower.py (#2411)
 KEPT = (                                                               # the fields of Gather that only some have, pack():
     *LEFT,                                                             # one tuple per line, in alphabetical order
@@ -65,6 +69,7 @@ KEPT = (                                                               # the fie
     *RIDERS,
     *ROUTES,
     *SCORE,
+    *SPOILS,
     *VICTORY,
 )
 JOB = ("state", "load", "res", "job", "lap", "prey")                  # fields of a gather.Villager, as they are
