@@ -24,6 +24,7 @@ Usage:
     python3 game/run.py WORLD --play --mode regicide   # the AoE2 game mode "Regicide": each player has a King (#2347)
     python3 game/run.py WORLD --play --mode empire-wars   # the AoE2 game mode "Empire Wars": a town at work (#2408)
     python3 game/run.py WORLD --play --mode sudden-death   # the AoE2 game mode "Sudden Death": one town center (#2407)
+    python3 game/run.py WORLD --play --mode death-match   # the AoE2 game mode "Death Match": large resources (#2438)
     python3 game/run.py WORLD --play --civ 1=BRITONS --civ 2=FRANKS   # the civilization of each player (#2267)
     python3 game/run.py WORLD --play --teams 1,1,2,2   # the team of each player, - is no team (#2296)
     python3 game/run.py WORLD --play --load SAVE   # go on with a saved game: Ctrl-C of --play saves into saves/ (#2255)
@@ -332,6 +333,7 @@ def team_choices(value, players):
 # The AoE2 game modes of --mode (epic #2263), name: help text. A new mode is one line here, in alphabetical order, not a
 # change of the --mode lines of main() (#2408).
 MODES = {
+    "death-match": "the ultra resources when --resources is standard, the Post-Imperial Age when --age is dark",
     "empire-wars": "each player starts with a town and 27 villagers at work, in the Feudal Age when --age is dark",
     "regicide": "each player has a King, a player whose King dies is defeated",
     "standard": "the AoE2 rules",
@@ -356,6 +358,18 @@ SETTINGS = {
 }
 
 
+def mode_defaults(settings):
+    """The settings of the game mode in place of the defaults of SETTINGS (a setting that the player gave wins): the
+    keys "age" (the start age) and "level" (the start resources) of its line in game/data/setup.jsonl. Empire Wars
+    starts in the Feudal Age (#2408), Death Match with the "ultra" resources in the Post-Imperial Age (#2438)."""
+    import table
+    line = next((r for r in table.load("setup.jsonl") if r["name"] == settings["mode"]), {})
+    for key, setting in (("age", "age"), ("level", "resources")):
+        if key in line and settings[setting] == SETTINGS[setting]:
+            settings[setting] = line[key]
+    return settings
+
+
 def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1,
          speed=1.0, state=None, **settings):
     """state: the saved state of the players (savegame.dump) for a loaded game (#2255).
@@ -363,7 +377,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     import gather, train
     if unknown := sorted(set(settings) - set(SETTINGS)):
         raise TypeError(f"play() has no setting {', '.join(unknown)} (SETTINGS)")
-    settings = {**SETTINGS, **settings}
+    settings = mode_defaults({**SETTINGS, **settings})
 
     def make(player):
         who = "@a" if people == 1 else f"@a[team=p{player}]"
@@ -411,20 +425,17 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
               f"player {foe} at {attack}.", file=sys.stderr)
     import combat
     combat.setup(game, data)                         # AoE2 hit points and damage (#514)
-    if settings["mode"] == "empire-wars" and settings["age"] == "dark":   # the start age of the mode (#2408)
-        import empire_wars
-        settings["age"] = empire_wars.MODES["empire-wars"]["age"]
     if not state and settings["age"] != "dark":                  # after the base values: the technologies change them
         import train
         for x in [g, *(s.g for s in g.bots)]:
             train.start(x, settings["age"])
+    import regicide
     if settings["mode"] == "empire-wars":                        # after the age: the start town and its villagers
         import empire_wars
         g.mode = settings["mode"]
         if not state:                                            # a loaded game has its town in the saved world
             empire_wars.setup(g, settings["mode"])
-    elif settings["mode"] != "standard":                         # after the bots: their Kings go to their Gathers (#2347)
-        import regicide
+    elif settings["mode"] in (*regicide.MODES, "sudden-death"):   # after the bots: their Kings go to their Gathers
         import sudden_death
         for x in [g, *(s.g for s in g.bots)]:
             x.mode = settings["mode"]                # build.locked of each player (#2407)
