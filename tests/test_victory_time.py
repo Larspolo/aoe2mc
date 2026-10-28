@@ -88,3 +88,14 @@ def test_the_victory_value_goes_to_play(tmp_path, monkeypatch):
     monkeypatch.setattr(run, "console", lambda game: None)
     run.main([str(tmp_path), "--play", "--victory", "score", "--victory-value", "4000"])
     assert seen["victory"] == "score" and seen["victory_value"] == 4000
+
+
+def test_a_saved_game_keeps_the_time_left():
+    import json
+    from test_loom import setup
+    from game import savegame
+    _, g = setup()
+    g.limit_left = 123.0
+    _, h = setup()
+    savegame.load(h, json.loads(json.dumps(savegame.dump(g))))
+    assert h.limit_left == 123.0 and "victory_value" in savegame.SETTINGS

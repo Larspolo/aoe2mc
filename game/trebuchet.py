@@ -44,8 +44,8 @@ def stats(g, u):
 
 def stats_command(g, u):
     """The `aoe stats` command of trebuchet u in its state (#1409)."""
-    import combat
-    return combat.stats_command(u, NAME, stats(g, u))
+    import civs, combat
+    return combat.stats_command(u, NAME, stats(g, u), civs.taken(g, NAME), civs.friendly(g, NAME))
 
 
 def scale_command(u, packed):

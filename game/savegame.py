@@ -4,11 +4,27 @@ The Minecraft save keeps the blocks and the mobs (their UUIDs too): the server p
 when it stops, so a save is a copy of the world folder. The state of the program (`gather.Gather`) goes into
 `savegame.json` next to it: the resources, the technologies (the age comes from them) and the population of each player,
 the train and research queues, the construction sites (also the done ones: the buildings of the game) and the rally
-points (#2257), and the orders of the units (#2258): the job, target and load of each villager, the farmers, stances,
-control groups and garrisons. A villager keeps no path: after the load it walks again with Minecraft path finding (P2).
-The save also keeps the wonder and relic victory timers and the market prices (#2324), the game settings of the
-command line (`run.py` options, "settings"), the attack time and wave of the bot (#2325), and the relics and the monk
-orders (#2412: `monk.relics`, the conversions and the rest of the monks).
+points (#2257), and the orders of the units (#2258): the job, target and load of each villager (also the rally walk and
+the repair, #2380), the farmers, stances, control groups and garrisons. A villager keeps no path: after the load it walks
+again with Minecraft path finding (P2).
+The save also keeps the wonder, relic and time limit victory timers (#2356) and the market prices (#2324), the game
+settings of the
+SETTINGS = (                                                           # run.py options (#2325, #2409): one per line
+    "all_techs",
+    "bot",
+    "bot_attack",
+    "cheats",
+    "civ",
+    "end_age",
+    "full_tech_tree",
+    "mode",
+    "people",
+    "pop_limit",
+    "reveal",
+    "teams",
+    "treaty",
+    "victory",
+)
 """
 import json
 import os
@@ -18,14 +34,29 @@ import time
 FILE = "savegame.json"
 FIELDS = ("stock", "spare", "seconds", "repeats", "pop")              # dicts and numbers of Gather, as they are
 PACKED = ("queues", "trained", "sites", "rally")                       # with tuples (a building rect, a cell): pack()
-OPTIONAL = ("rates", "relic_timer", "wonder_shown", "wonders", "wonders_gone")   # only on a Gather that has them (#2324)
+OPTIONAL = ("limit_left", "rates", "relic_timer", "wonder_shown", "wonders", "wonders_gone")   # only on a Gather that has them (#2324)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
 JOB = ("state", "load", "res", "job", "lap", "prey")                  # fields of a gather.Villager, as they are
-IDLE = ("to_rally", "to_repair", "repair")                             # orders that the save does not keep yet
 BOT = ("time", "charged", "attack")                                    # fields of a bot.Bot, as they are (#2325)
-SETTINGS = ("all_techs", "bot", "bot_attack", "cheats", "civ", "full_tech_tree", "people", "reveal", "teams", "victory")   # run.py options
+SETTINGS = (                                                           # run.py options (#2325, #2409): one per line,
+    "all_techs",                                                       # in alphabetical order (parallel tickets add)
+    "bot",
+    "bot_attack",
+    "cheats",
+    "civ",
+    "end_age",
+    "full_tech_tree",
+    "mode",
+    "people",
+    "pop_limit",
+    "reveal",
+    "teams",
+    "treaty",
+    "victory",
+    "victory_value",
+)
 SKIP = ("session.lock",)                                               # the lock of the running server
 
 
@@ -71,6 +102,8 @@ def dump(g):
         d["players"][str(b.g.player)]["bot"] = {f: getattr(b, f) for f in BOT}
     if getattr(g.game, "settings", None):
         d["settings"] = dict(g.game.settings)
+    if getattr(g.game, "treaty", 0):                                   # treaty.start: the time goes on (#2409)
+        d["treaty_time"] = g.game.treaty_time
     return d
 
 
@@ -82,8 +115,10 @@ def bots(g):
 def orders(x):
     """The orders of the units of the Gather x (#2258): JSON has no tuple keys, so the tile and footprint keys go into
     sorted [key, value] lists."""
+    repairs = vars(x).get("repairs", {})
     return {"villagers": {u: {**{f: getattr(v, f) for f in JOB}, "pos": list(v.pos), "tree": v.tree and list(v.tree),
-                              "site": v.site and list(v.site["footprint"])} for u, v in sorted(x.villagers.items())},
+                              "site": v.site and list(v.site["footprint"]), "goal": goal(v),
+                              "repair": pack(repairs.get(u))} for u, v in sorted(x.villagers.items())},
             "farmers": sorted([list(t), u] for t, u in x.farmers.items()),
             "stances": dict(sorted(x.stances.items())),
             "groups": {str(n): sorted(us) for n, us in sorted(x.groups.items())},
@@ -121,10 +156,17 @@ def sail_again(x, p):
             trebuchet.walk(x, u, *then)
 
 
+def goal(v):
+    """The cell of the rally walk of villager v (Paper: its goal, else the end of its path), else None (#2380)."""
+    cell = v.goal or (v.path[-1] if v.path else None) if v.state == "to_rally" else None
+    return cell and list(cell)
+
+
 def give_orders(x, p):
     """Put the saved orders p (orders) on the Gather x. A villager that x does not know (trained in the game) comes
-    back; a walking one walks again to its tree, drop site or construction site."""
+    back; a walking one walks again to its tree, drop site, construction site, rally point or repair (#2380)."""
     import gather
+    import repair
     x.farmers = {tuple(t): u for t, u in p["farmers"]}
     x.stances, x.groups = dict(p["stances"]), {int(n): set(us) for n, us in p["groups"].items()}
     x.garrisons = {tuple(r): list(us) for r, us in p["garrisons"]}
@@ -134,8 +176,12 @@ def give_orders(x, p):
             setattr(v, f, s[f])
         v.pos, v.tree, v.path = tuple(s["pos"]), s["tree"] and tuple(s["tree"]), []
         v.site = next((t for t in x.sites if list(t["footprint"]) == s["site"]), None)   # the sites of the save (#2257)
-        if v.state in IDLE or v.state in ("to_site", "build") and v.site is None:
+        key, cell = unpack(s.get("repair")), s.get("goal")             # a save before #2380 has neither
+        if v.state in ("to_site", "build") and v.site is None or v.state == "to_rally" and not cell \
+                or v.state in ("to_repair", "repair") and not repair.resume(x, u, key, v.state):
             v.state = "idle"
+        elif v.state == "to_rally":
+            x.go(v, "to_rally", {tuple(cell)})
         elif v.state == "to_site":
             x.build(v.site, {u})
         elif v.state == "to_tree":
