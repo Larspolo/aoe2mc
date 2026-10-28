@@ -107,7 +107,7 @@
 {"name": "JAPANESE: Mills, Lumber Camps and Mining Camps are 50% cheaper.", "civ": "JAPANESE", "bonus": "Mills, Lumber Camps and Mining Camps are 50% cheaper.", "in": "COSTS"}
 {"name": "JAPANESE: Infantry attack 33% faster starting in the Feudal Age.", "civ": "JAPANESE", "bonus": "Infantry attack 33% faster starting in the Feudal Age.", "in": "UNITS"}
 {"name": "JAPANESE: Mounted archers +2 attack vs. Archers (except Skirmishers).", "civ": "JAPANESE", "bonus": "Mounted archers +2 attack vs. Archers (except Skirmishers).", "in": "UNITS"}
-{"name": "JURCHENS: Meat of hunted and livestock animals does not decay.", "civ": "JURCHENS", "bonus": "Meat of hunted and livestock animals does not decay.", "later": "play:hunt"}
+{"name": "JURCHENS: Meat of hunted and livestock animals does not decay.", "civ": "JURCHENS", "bonus": "Meat of hunted and livestock animals does not decay.", "in": "DECAY"}
 {"name": "JURCHENS: Mounted units and Fire Lancers attack 25% faster starting in the Feudal Age.", "civ": "JURCHENS", "bonus": "Mounted units and Fire Lancers attack 25% faster starting in the Feudal Age.", "in": "UNITS"}
 {"name": "JURCHENS: Siege Engineers available in the Castle Age.", "civ": "JURCHENS", "bonus": "Siege Engineers available in the Castle Age.", "later": "play:ages"}
 {"name": "JURCHENS: Siege and fortification technologies cost wood -75%.", "civ": "JURCHENS", "bonus": "Siege and fortification technologies cost wood -75%.", "in": "COSTS"}
@@ -133,7 +133,7 @@
 {"name": "MACEDONIANS: Siege weapons have +1 pierce armor and +30% anti-building damage.", "civ": "MACEDONIANS", "bonus": "Siege weapons have +1 pierce armor and +30% anti-building damage.", "later": "play:siege"}
 {"name": "MAGYARS: Forging, Iron Casting, and Blast Furnace are free.", "civ": "MAGYARS", "bonus": "Forging, Iron Casting, and Blast Furnace are free.", "in": "COSTS"}
 {"name": "MAGYARS: Scout Cavalry line is 15% cheaper.", "civ": "MAGYARS", "bonus": "Scout Cavalry line is 15% cheaper.", "in": "COSTS"}
-{"name": "MAGYARS: Villagers kill predators in one strike.", "civ": "MAGYARS", "bonus": "Villagers kill predators in one strike.", "later": "play:hunt"}
+{"name": "MAGYARS: Villagers kill predators in one strike.", "civ": "MAGYARS", "bonus": "Villagers kill predators in one strike.", "in": "PREDATOR_HIT"}
 {"name": "MALAY: Advancing in Age is +66% faster.", "civ": "MALAY", "bonus": "Advancing in Age is +66% faster.", "in": "AGE_RATE"}
 {"name": "MALAY: Fish Traps are 33% cheaper and provide food 3×.", "civ": "MALAY", "bonus": "Fish Traps are 33% cheaper and provide food 3×.", "later": "play:naval"}
 {"name": "MALAY: Battle Elephants are 25% cheaper in the Castle Age, 35% cheaper in the Imperial Age.", "civ": "MALAY", "bonus": "Battle Elephants are 25% cheaper in the Castle Age, 35% cheaper in the Imperial Age.", "in": "COSTS"}
