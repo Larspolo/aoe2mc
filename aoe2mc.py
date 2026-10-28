@@ -409,7 +409,10 @@ def read_scenario(path):
                                                    "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2],
                                                    "object": c.object_list, "group": c.object_group,
                                                    "class": c.object_type}
-                                                  if c.condition_type in COUNTED else {}))
+                                                  if c.condition_type in COUNTED else {}),
+                                               **({"quantity": c.quantity, "variable": c.variable,   # (#2611)
+                                                   "comparison": c.comparison}
+                                                  if c.condition_type == VARIABLE_VALUE else {}))
                                           for c in t.conditions],
                               effects=[dict(type=e.effect_type, message=e.message or "", player=e.source_player,
                                             time=e.display_time, object=kinds.get(e.object_list_unit_id),
@@ -419,6 +422,9 @@ def read_scenario(path):
                                                if e.effect_type == CHANGE_COLOR_MOOD and
                                                getattr(e, "color_mood", None) in set(ColorMood) else {}),
                                             **({"quantity": e.quantity} if e.effect_type == DAMAGE_OBJECT else {}),
+                                            **({"quantity": e.quantity, "variable": e.variable,   # (#2611)
+                                                "operation": e.operation}
+                                               if e.effect_type == CHANGE_VARIABLE else {}),
                                             **({"target": e.target_player}                # "Change Ownership" (#2570)
                                                if e.effect_type == CHANGE_OWNERSHIP else {}))
                                        for e in t.effects])
@@ -2706,6 +2712,8 @@ COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions 
 CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 14, 15, 18, 72
 DAMAGE_OBJECT = 24                                                     # "Damage Object" (#2571)
 TELEPORT_OBJECT = 35
+CHANGE_VARIABLE, VARIABLE_VALUE = 56, 22                               # the scenario variables (#2611)
+TICKED = COUNTED + (VARIABLE_VALUE,)                               # conditions of the tick function
 
 
 def turn_area(area, size, k):
@@ -2831,6 +2839,26 @@ def teleport_lines(e, T, ground):
     return [f"execute as {at} on vehicle run tp @s {to}", f"tp {at} {to}"]
 
 
+def variable_lines(e, stats):
+    """The commands of "Change Variable" (#2611): the score #vN of aoe_var is the AoE2 variable N. Set, Add and
+    Subtract are scoreboard commands; Multiply and Divide need a second score: the constant #cQ."""
+    v, q, op = f"#v{e.get('variable', -1)} aoe_var", e.get("quantity") or 0, e.get("operation")
+    if e.get("variable", -1) < 0 or op not in (1, 2, 3, 4, 5) or op == 5 and q == 0:
+        stats["change variable (not supported)"] += 1
+        return []
+    stats["change variable"] += 1
+    if op <= 3:
+        return [f"scoreboard players {('set', 'add', 'remove')[op - 1]} {v} {q}"]
+    return [f"scoreboard players set #c{q} aoe_var {q}", f"scoreboard players operation {v} {'*/'[op - 4]}= #c{q} aoe_var"]
+
+
+def variable_range(c):
+    """The `matches` range of the comparison of a "Variable Value" condition (#2611): Equal, Less, Larger,
+    Less or Equal, Larger or Equal."""
+    q = c.get("quantity") or 0
+    return {0: f"{q}", 1: f"..{q - 1}", 2: f"{q + 1}..", 3: f"..{q}", 4: f"{q}.."}.get(c.get("comparison"))
+
+
 def mood_lines(e):
     """The commands of "Change Color Mood" (#1876): the time of day (MOODS) and the rain (RAIN) of the new mood, as
     at the conversion. The game rules advance_time and advance_weather are 0, so they stay. The fog (FOG) is a
@@ -2851,6 +2879,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Create Object" and "Remove Object": object_lines (#656). "Change Color Mood": mood_lines (#1876), only with mood. "Change Ownership": owner_lines (#2570).
     "Damage Object": damage_lines (#2571).
     "Teleport Object": teleport_lines (#2569).
+    "Change Variable": variable_lines; a "Variable Value" condition runs in the tick function as an area (#2611).
     A disabled trigger does not run."""
     load, files, tick = [], {}, []
     stats = Counter() if stats is None else stats
@@ -2858,8 +2887,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     for t in triggers:
         conds = t["conditions"]
         kinds = {(c["type"], c["inverted"]) for c in conds}
-        if not t["enabled"] or not conds or not (kinds == {(TIMER, False)} or kinds <= {(k, False) for k in COUNTED}) or \
-                any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds):   # unit classes: not yet
+        if not t["enabled"] or not conds or not (kinds == {(TIMER, False)} or kinds <= {(k, False) for k in TICKED}) or \
+                any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds) or \
+                any(c["type"] == VARIABLE_VALUE and (c.get("variable", -1) < 0 or variable_range(c) is None)
+                    for c in conds):                                   # unit classes: not yet
             continue
         lines = []
         for e in t["effects"]:
@@ -2878,6 +2909,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             if e["type"] == TELEPORT_OBJECT:
                 lines += teleport_lines(e, T, ground)
                 continue
+            if e["type"] == CHANGE_VARIABLE:
+                lines += variable_lines(e, stats)
+                continue
             msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()   # AoE2 color tags
             if not msg:
                 continue
@@ -2890,9 +2924,14 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         if not lines:
             continue
         fn, n = f"aoe2mc:trigger/{t['id']}", t["id"]
-        if conds[0]["type"] in COUNTED:
+        if conds[0]["type"] in TICKED:
             tests, unless = [], []
             for i, c in enumerate(conds):
+                if c["type"] == VARIABLE_VALUE:                        # a score of the variable (#2611)
+                    test = f"score #v{c['variable']} aoe_var matches {variable_range(c)}"
+                    tests.append(f"if {test}")
+                    unless.append(f"unless {test}")
+                    continue
                 whole = c["type"] != IN_AREA                           # Own (Fewer) Objects: the whole map
                 sel = area_selector(dict(c, area=[-1] * 4) if whole else c, T)
                 q = max(c["quantity"], 0 if c["type"] == OWN_FEWER_OBJECTS else 1)
@@ -2917,6 +2956,11 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         run = f"schedule function {fn} {ticks}t replace"
         files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines + [run] * t["looping"]) + "\n"
         load.append(run)
+    names = sorted({f"#v{x['variable']}" for t in triggers for x in t["conditions"] + t["effects"]
+                    if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE) and x.get("variable", -1) >= 0})
+    if names:
+        load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
+            [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
     if tick:
         load.insert(0, "scoreboard objectives add aoe_trig dummy")
         files["data/minecraft/tags/function/tick.json"] = {"values": ["aoe2mc:tick"]}
