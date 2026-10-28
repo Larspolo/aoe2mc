@@ -171,6 +171,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe minimap on|off|pixel <x> <z>           the live units as dots in their team color on map 0, once per
  *                                              second (#1237, Minimap.java); pixel: the map pixel of a block
  *   aoe minimap building <x0> <z0> <x1> <z1> <team>|unbuild <x0> <z0>   a replay building as a square on map 0 (#1238)
+ *   aoe minimap flare <x> <z> <team> <ticks>   a blinking cross of a replay flare on map 0 for <ticks> (#2405)
  *   aoe minimap fog <tile> <n>|off, see|dim <y,x0,x1> ..., tile <x> <z>
  *                                              the fog of the view player on map 0 (#1567): black unexplored tiles,
  *                                              dark explored tiles out of sight; tile: the fog of a block
@@ -1715,15 +1716,23 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             var path = pf.getCurrentPath();
             if (path == null || path.getFinalPoint() == null
                     || path.getFinalPoint().distanceSquared(o.goal) > 1.5 * 1.5) {
+                double c = center(mob);
+                if (path != null && path.getFinalPoint() != null
+                        && path.getFinalPoint().clone().add(c, 0, c).distanceSquared(mob.getLocation()) <= 1.5 * 1.5) {
+                    // at the end of a part of the way: a new search from here. moveTo gives the old part again (a
+                    // not done path to the same target), so the order ended as "no path" 10 to 20 blocks before
+                    // a rally point that a new search reaches (de-64.3, #2303).
+                    pf.stopPathfinding();
+                }
                 boolean found = pf.moveTo(o.goal, o.speed);
                 Location end = pf.getCurrentPath() == null ? null : pf.getCurrentPath().getFinalPoint();
-                double c = center(mob);
                 // a part of a path that ends at the mob leads nowhere: a builder of a dock stood still with its order
                 // for a minute (#889). Drop such an order after 1 s.
                 boolean stays = found && end != null && end.clone().add(c, 0, c).distanceSquared(mob.getLocation()) <= 1.5 * 1.5;
                 if (found && !stays || (o.fails += stays ? 5 : 1) < 50) {
                     return false;
                 }
+                pf.stopPathfinding();                   // it stays here: the old part led it away (#2303)
                 if (mob instanceof Villager) {          // no path for 5 s: drop the order, and stop the brain (#811)
                     mob.setAI(false);
                 }
