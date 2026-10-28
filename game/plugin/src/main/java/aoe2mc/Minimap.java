@@ -476,8 +476,10 @@ final class Minimap extends MapRenderer {
                 }
                 seen.add(entry.getKey());
             }
-            int px0 = Math.max(0, pixel(b[0], map.getCenterX(), s)), pz0 = Math.max(0, pixel(b[1], map.getCenterZ(), s));
-            int px1 = pixel(b[2] - 1, map.getCenterX(), s), pz1 = pixel(b[3] - 1, map.getCenterZ(), s);
+            // clip both corners: pixel() gives -1 for an end corner past the east or south edge (#3081)
+            int px0 = Math.max(0, Frame.raw(b[0], map.getCenterX(), s)), pz0 = Math.max(0, Frame.raw(b[1], map.getCenterZ(), s));
+            int px1 = Math.min(127, Frame.raw(b[2] - 1, map.getCenterX(), s));
+            int pz1 = Math.min(127, Frame.raw(b[3] - 1, map.getCenterZ(), s));
             for (int px = px0; px <= px1; px++) {
                 for (int pz = pz0; pz <= pz1; pz++) {
                     canvas.setPixel(px, pz, (byte) b[4]);
