@@ -130,7 +130,7 @@
 {"name": "MACEDONIANS: Take 10% less damage from enemies on higher elevation.", "civ": "MACEDONIANS", "bonus": "Take 10% less damage from enemies on higher elevation.", "later": "play:fight"}
 {"name": "MACEDONIANS: Recruitment Doctrines are available at the Barracks, Archery Range, and Stable.", "civ": "MACEDONIANS", "bonus": "Recruitment Doctrines are available at the Barracks, Archery Range, and Stable.", "later": "play:military-train"}
 {"name": "MACEDONIANS: Infantry armor upgrades also benefit cavalry.", "civ": "MACEDONIANS", "bonus": "Infantry armor upgrades also benefit cavalry.", "in": "SMITH_UNITS"}
-{"name": "MACEDONIANS: Siege weapons have +1 pierce armor and +30% anti-building damage.", "civ": "MACEDONIANS", "bonus": "Siege weapons have +1 pierce armor and +30% anti-building damage.", "later": "play:siege"}
+{"name": "MACEDONIANS: Siege weapons have +1 pierce armor and +30% anti-building damage.", "civ": "MACEDONIANS", "bonus": "Siege weapons have +1 pierce armor and +30% anti-building damage.", "in": "UNITS"}
 {"name": "MAGYARS: Forging, Iron Casting, and Blast Furnace are free.", "civ": "MAGYARS", "bonus": "Forging, Iron Casting, and Blast Furnace are free.", "in": "COSTS"}
 {"name": "MAGYARS: Scout Cavalry line is 15% cheaper.", "civ": "MAGYARS", "bonus": "Scout Cavalry line is 15% cheaper.", "in": "COSTS"}
 {"name": "MAGYARS: Villagers kill predators in one strike.", "civ": "MAGYARS", "bonus": "Villagers kill predators in one strike.", "later": "play:hunt"}

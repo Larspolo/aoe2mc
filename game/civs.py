@@ -80,7 +80,7 @@ GROUPS = {g: (lambda f, g: lambda n, s: g in TAGS.get(n, ()) or f(n, s))(RULES.g
 # that few civilizations have are in ONLY, not here.
 # "units": the bonuses of the land units (#1090): [group of GROUPS, value, change in the Dark, Feudal, Castle and
 # Imperial Age]; value is a field of combat.Stats, "speed" (the walk speed) or "bonus:CLASS" (the attack against a
-# class of combat.Stats.classes, #2249); an int adds, a float multiplies ("fire 25 % faster" is the reload / 1.25). "costs": the cost bonuses (#1091): [what, resource or null (all), change in each
+# class of combat.Stats.classes, #2249; a float multiplies it, #2272); an int adds, a float multiplies ("fire 25 % faster" is the reload / 1.25). "costs": the cost bonuses (#1091): [what, resource or null (all), change in each
 # age]; what is a group of GROUPS (units), "buildings", "buildings but farms", "technologies", "ages", "BUILDING
 # technologies" (the technologies of the menu of that building, #1925) or a list of names; a float multiplies the cost
 # (0.0: free), an int adds to it; AoE2 rounds half up (35 × 0.75 = 26). "twice": the technologies whose effect it gets
@@ -261,7 +261,9 @@ def units(g, name, s):
     if name in names:                                              # the relics in own monasteries (monk.relic_tick)
         s = s._replace(attack=s.attack + min(each * sum(r["home"] is not None for r in getattr(g, "relics", ())), most))
     for v, c in changes(g, name, s):
-        if v.startswith("bonus:") and c:                           # the attack against a class (#2249)
+        if v.startswith("bonus:") and isinstance(c, float):        # a factor of the attack against a class (#2272)
+            s = s._replace(bonus={**s.bonus, v[6:]: math.floor(s.bonus.get(v[6:], 0) * c + 0.5)})
+        elif v.startswith("bonus:") and c:                         # the attack against a class (#2249)
             s = s._replace(bonus={**s.bonus, v[6:]: s.bonus.get(v[6:], 0) + c})
         elif v == "bonus" and isinstance(c, float):                # a factor of each bonus (#2248)
             s = s._replace(bonus={k: math.floor(n * c + 0.5) for k, n in s.bonus.items()})
