@@ -1,7 +1,7 @@
 """The pacer as a script (#3193): start the autopilot runs that the quota target misses, with no Claude session.
 
 The pacer session (skill `pacer`) kept an old "cap of 4 per cycle" in its context and fired 4 Haiku runs for H = 8
-(2026-10-28, #3147). A script has no memory: `.github/workflows/pacer.yml` runs it every 10 minutes while the
+(2026-10-28, #3147). A script has no memory: `.github/workflows/pacer.yml` runs it every 15 minutes while the
 key `pacer` in `[pacing]` of `agent.toml` is "workflow" (one switch for the session and the workflow: a PR changes it).
 
     python3 tools/pacer.py              # compute K and the lane runs (`usage.fire`), then start them
