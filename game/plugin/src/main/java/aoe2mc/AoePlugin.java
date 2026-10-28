@@ -2164,6 +2164,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 ? c : e;
     }
 
+    /** The entity with the AoE2 values of a part of a unit: the crew of a boat or of a minecart, else e (#3013). */
+    static Entity crew(Entity e) {
+        return e instanceof Minecart && !e.getPassengers().isEmpty() ? e.getPassengers().get(0) : sailors(e);
+    }
+
     /** The entity that walks for e: the carrier of a siege unit, else e. */
     private static Entity walker(Entity e) {
         return e instanceof Minecart cart && carrier(cart, false) != null ? carrier(cart, false) : e;
@@ -2350,7 +2355,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             int n = 0;
             for (Entity e : select(sender, args[1])) {
-                Entity t = e instanceof Minecart && !e.getPassengers().isEmpty() ? e.getPassengers().get(0) : sailors(e);
+                Entity t = crew(e);
                 accuracy.put(t.getUniqueId(), part);               // the crew of a siege unit has its stats (#836)
                 n++;
             }
@@ -2544,7 +2549,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             int n = 0;
             for (Entity e : select(sender, args[1])) {
-                Entity t = e instanceof Minecart && !e.getPassengers().isEmpty() ? e.getPassengers().get(0) : sailors(e);
+                Entity t = crew(e);
                 if (t instanceof LivingEntity le) {                // a siege unit or a ship: its crew takes the hits (#836, #1386)
                     AttributeInstance max = le.getAttribute(Attribute.MAX_HEALTH);
                     if (max != null) {                     // keep the lost hit points, as AoE2 does for Bloodlines (#940)
@@ -2627,7 +2632,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             int n = 0;
             for (Entity e : select(sender, args[1])) {
-                Entity c = e instanceof Minecart && !e.getPassengers().isEmpty() ? e.getPassengers().get(0) : sailors(e);
+                Entity c = crew(e);
                 if ((c instanceof Mob || e instanceof Minecart) && stats.containsKey(c.getUniqueId())) {
                     UUID id = (e instanceof Minecart ? e : c).getUniqueId();   // a siege unit: its minecart; a ship: its crew
                     sights.put(id, r);
@@ -2881,7 +2886,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         if (args.length == 3 && args[0].equals("attack")) {
             List<Entity> targets = select(sender, args[2]);
-            if (targets.isEmpty() || !(sailors(targets.get(0)) instanceof LivingEntity target)) {   // a ship: its crew
+            if (targets.isEmpty() || !(crew(targets.get(0)) instanceof LivingEntity target)) {   // a ship or a siege unit: its crew
                 sender.sendMessage("No target");
                 return true;
             }
