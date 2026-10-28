@@ -29,6 +29,7 @@ def test_until_sets_the_period_of_the_fetch(monkeypatch):
         return [], [], [], [], [], [], []
     monkeypatch.setattr(health, "fetch", fetch)
     monkeypatch.setattr(health, "git_files", lambda: [])
+    monkeypatch.setattr(health, "claim_refs", lambda remote="origin": None)
     monkeypatch.setattr("feedback.fetch", lambda: [])
     assert health.main(["--hours", "24", "--until", "2026-10-26T05:00:00Z"]) == 0
     assert seen == {"since": UNTIL - datetime.timedelta(hours=24), "until": UNTIL}
