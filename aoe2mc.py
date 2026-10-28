@@ -1950,6 +1950,7 @@ def place_objects(objects, players, cols, rng):
     E.natural = True
     cliff_ridges(E, cols, cliffs, rng)
     E.natural = False
+    free_carpets(E, cols)
     return E, stats
 
 
@@ -1988,6 +1989,37 @@ def ground_masks():
         carpet = [st.split(":")[1].split("[")[0].endswith("carpet") for st in B.states] + [False] * 1024
         GROUND_MASKS[n] = np.array(carpet), passable_states(B.states)
     return GROUND_MASKS[n]
+
+
+def free_carpets(E, cols):
+    """Take away each ground carpet with a solid block 3 over its ground in its column or a next one (#2390).
+    The step onto the carpet (1/16 block) lifts the head of a unit (1.95 blocks) into that block: the path search
+    takes the step, and the unit cannot move."""
+    if not E.parts:
+        return
+    n = cols.n
+    carpet, passable = ground_masks()
+    x, y, z, ids = (np.concatenate(p) for p in list(zip(*E.parts))[:4])
+    ok = (x >= 0) & (z >= 0) & (x < n) & (z < n) & ~passable[ids]
+    x, y, z = x[ok], y[ok], z[ok]
+    wtop = cols.wtop[:n, :n].astype(np.int32)
+    over = y > wtop[x, z]
+    low = np.full((n, n), 1 << 20, np.int32)                    # the lowest solid object block over the ground
+    np.minimum.at(low, (x[over], z[over]), y[over])
+    pad = np.pad(low, 1, constant_values=1 << 20)
+    bad = np.zeros((n, n), bool)
+    for dx in (-1, 0, 1):
+        for dz in (-1, 0, 1):
+            bad |= pad[1 + dx:1 + dx + n, 1 + dz:1 + dz + n] == wtop + 3
+    deco = cols.deco[:n, :n]
+    deco[bad & carpet[deco]] = AIR
+    for i, (px, py, pz, pids, hard) in enumerate(E.parts):
+        inside = (px >= 0) & (pz >= 0) & (px < n) & (pz < n)
+        drop = np.zeros(len(px), bool)
+        cx, cz = px[inside], pz[inside]
+        drop[inside] = carpet[pids[inside]] & bad[cx, cz] & (py[inside] == wtop[cx, cz] + 1)
+        if drop.any():
+            E.parts[i] = (px[~drop], py[~drop], pz[~drop], pids[~drop], hard[~drop])
 
 
 def seat_count(ship):
