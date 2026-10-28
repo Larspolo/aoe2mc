@@ -51,7 +51,7 @@ MAP = {
     ("effect", "CHANGE_OWNERSHIP"): "`tag` `aoe2mc.pN` and `team join pN` of the units in the area and their mounts (timer and area triggers: #2570); Gaia: not supported yet",
     ("effect", "FREEZE_OBJECT"): "`data merge entity @s {NoAI:1b}` of the units in the area and their mounts (#2608)",
     ("effect", "CHANGE_VIEW"): "`tp @a x y z` (the player is the camera)",
-    ("effect", "PLAY_SOUND"): "`playsound` with the nearest vanilla sound",
+    ("effect", "PLAY_SOUND"): "`playsound` of the vanilla sound of the name part (`data/sounds.jsonl`), at the tile or at each player (#2644)",
     ("effect", "DISPLAY_TIMER"): "`bossbar` aoe2mc:timerN and a `schedule function` each second with the time left (timer and area triggers: #2572)",
     ("effect", "ACTIVATE_TRIGGER"): "`scoreboard players set <trigger> aoe_trig 1`",
     ("effect", "DEACTIVATE_TRIGGER"): "`scoreboard players set <trigger> aoe_trig 0`",

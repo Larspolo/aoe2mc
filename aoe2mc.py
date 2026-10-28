@@ -422,7 +422,9 @@ def read_scenario(path):
                                             **({"target": e.target_player}                # "Change Ownership" (#2570)
                                                if e.effect_type == CHANGE_OWNERSHIP else {}),
                                             **({"unit": e.time_unit, "timer": e.timer}   # "Display Timer" (#2572)
-                                               if e.effect_type == DISPLAY_TIMER else {}))
+                                               if e.effect_type == DISPLAY_TIMER else {}),
+                                            **({"sound": e.sound_name or ""}             # "Play Sound" (#2644)
+                                               if e.effect_type == PLAY_SOUND else {}))
                                        for e in t.effects])
                          for t in scn.trigger_manager.triggers]
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
@@ -2713,6 +2715,8 @@ DECLARE_VICTORY = 13                                                   # "Declar
 TELEPORT_OBJECT = 35
 FREEZE_OBJECT = 22                                                     # "Freeze Object" (#2608)
 CLEAR_INSTRUCTIONS = 21                                                # "Clear Instructions" (#2609)
+PLAY_SOUND = 4                                                         # "Play Sound" (#2644)
+SOUNDS = [(r["name"], r["sound"]) for r in units.rows("sounds.jsonl")]  # AoE2 sound name part -> vanilla sound
 
 
 def turn_area(area, size, k):
@@ -2843,6 +2847,17 @@ def unit_selector(e, T):
     return re.sub(r"tag=aoe2mc\.p-?\d+", "tag=,type=!player", at) if e["player"] <= 0 else at
 
 
+def sound_lines(e, T, ground):
+    """The command of "Play Sound" (#2644): the vanilla sound of the first SOUNDS part in the AoE2 sound name, for all
+    players; at the target tile when the effect has one (heard up to 16 blocks), else at each player."""
+    name = e.get("sound", "").upper()
+    sound = next(s for part, s in SOUNDS if part in name)
+    x, z = (int((v + 0.5) * T) for v in e.get("tile", [-1, -1]))
+    if min(e.get("tile", [-1])) < 0 or not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
+        return [f"execute as @a at @s run playsound minecraft:{sound} master @s"]
+    return [f"playsound minecraft:{sound} master @a {x + 0.5} {int(ground[x, z])} {z + 0.5}"]
+
+
 def freeze_lines(e, T):
     """The commands of "Freeze Object" (#2608): the units of the player in the area and the mounts of the riders get
     NoAI, so they stay in their place (AoE2: they do not move until a new order)."""
@@ -2912,6 +2927,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Declare Victory" sets the score #p<player> of aoe_win to 1: the scenario mode of the game program ends the game.
     "Freeze Object": freeze_lines (#2608).
     "Clear Instructions": title @a clear (#2609).
+    "Play Sound": sound_lines (#2644).
     A disabled trigger does not run."""
     load, files, tick, win = [], {}, [], False
     stats = Counter() if stats is None else stats
@@ -2951,6 +2967,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if e["type"] == FREEZE_OBJECT:
                 lines += freeze_lines(e, T)
+                continue
+            if e["type"] == PLAY_SOUND:
+                lines += sound_lines(e, T, ground)
                 continue
             if e["type"] == CLEAR_INSTRUCTIONS:                            # no message
                 lines.append("title @a clear")
