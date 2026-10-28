@@ -263,7 +263,7 @@ class Bot:
         cap, have = train.limit(g), train.owned(g)
         farms = sum(k > 0 for t, k in g.map.farms.items() if t in g.map.own_farms)
         hungry = not any(k > 0 for k in self.sources("food").values()) and farms < math.ceil(self.shares()["food"] * len(g.villagers))
-        name = "HOUSE" if g.pop >= cap - HOUSE_GAP and cap < train.LIMIT else "FARM" if hungry else \
+        name = "HOUSE" if g.pop >= cap - HOUSE_GAP and cap < train.max_pop(g) else "FARM" if hungry else \
             next((n for n in ORDER if n not in have), None)
         if name is None or any(g.stock[r] < v for r, v in build.price(g, name).items()):
             return
