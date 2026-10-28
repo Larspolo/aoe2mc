@@ -270,6 +270,19 @@ class Map:
                         ("minecraft:oak_log", None) if kind == "dead" else \
                         (f"minecraft:{WOODS.get(kind, 'oak')}_log", f"minecraft:{WOODS.get(kind, 'oak')}_leaves[persistent=true]")
 
+    def heights(self, cells):
+        """The ground heights around cells (at least one)."""
+        return [y for x, z in self.around(cells) if (y := self.y(x, z)) is not None] or [0]
+
+    def emptied(self, cells):
+        """The cells of an empty mine or bush are free ground again, at the lowest height around them (Gather.dig,
+        Gather.berries; savegame.load for the ones that were empty at the save, #2453)."""
+        y = min(self.heights(cells))
+        for x, z in cells:
+            self.ground[z][x] = y
+            self.mine_at.pop((x, z), None)
+        self.blocked -= set(cells)
+
     def building(self, name, rect, tile, own, open_cells=()):
         """Add a building with the block footprint rect = (x0, x1, z0, z1) and its center tile. A farm is ground
         that a farmer stands on; own buildings are drop sites. Construction sites call it when they are complete.
@@ -1748,26 +1761,21 @@ class Gather:
         self.bushes[tile] = look
         cells = self.map.cells(tile)
         (x0, z0), (x1, z1) = min(cells), max(cells)
-        ys = [y for x, z in self.map.around(cells) if (y := self.map.y(x, z)) is not None] or [0]
+        ys = self.map.heights(cells)
         self.command(f"fill {x0} {min(ys) - 2} {z0} {x1} {max(ys) + 2} {z1} {look} replace minecraft:sweet_berry_bush")
         self.command(f"fill {x0} {min(ys) - 2} {z0} {x1} {max(ys) + 2} {z1} minecraft:barrier replace minecraft:oak_leaves")
         if food <= 0:                                  # as in AoE2, an empty bush frees its tile (#602)
             self.command(f"fill {x0} {min(ys) - 2} {z0} {x1} {max(ys) + 4} {z1} air replace minecraft:barrier")
-            for x, z in cells:
-                self.map.ground[z][x] = min(ys)
-            self.map.blocked -= cells
+            self.map.emptied(cells)
 
     def dig(self, tile, res):
         """An empty mine disappears: its heap and the barriers of its footprint. Its cells are free ground again."""
         spot = self.map.spot(tile)
-        ys = [y for x, z in self.map.around(spot) if (y := self.map.y(x, z)) is not None] or [0]
+        ys = self.map.heights(spot)
         (x0, z0), (x1, z1) = min(spot), max(spot)
         for b in MINE_BLOCKS[res] + ("barrier",):
             self.command(f"fill {x0} {min(ys)} {z0} {x1} {max(ys) + 4} {z1} air replace minecraft:{b}")
-        for x, z in spot:
-            self.map.ground[z][x] = min(ys)
-            self.map.mine_at.pop((x, z), None)
-        self.map.blocked -= spot
+        self.map.emptied(spot)
 
     def tend(self, v):
         """A farmer walks over its farm while it works, as in AoE2 (#591): one cell per food, row by row (the rows

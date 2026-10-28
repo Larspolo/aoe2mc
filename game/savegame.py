@@ -37,6 +37,22 @@ OPTIONAL = ("rates", "relic_timer", "wonder_shown", "wonders", "wonders_gone")  
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
+LEFT = (                                                               # Gather: the resources left on the map (#2453)
+    "crops",
+    "dead",
+    "trunks",
+)
+MAP = (                                                                # gather.Map: the amounts left (#2453), pack()
+    "bushes",
+    "carcasses",
+    "farms",
+    "fish",
+    "herds",
+    "mines",
+    "rot",
+    "traps",
+    "trees",
+)
 JOB = ("state", "load", "res", "job", "lap", "prey")                  # fields of a gather.Villager, as they are
 BOT = ("time", "charged", "attack")                                    # fields of a bot.Bot, as they are (#2325)
 SETTINGS = (                                                           # run.py options (#2325, #2409): one per line,
@@ -94,7 +110,8 @@ def dump(g):
     the player of the bot (#2325)."""
     d = {"players": {str(x.player): {**{f: getattr(x, f) for f in FIELDS}, "techs": sorted(x.techs),
                                      **{f: pack(getattr(x, f)) for f in PACKED}, **orders(x),
-                                     **{f: pack(vars(x)[f]) for f in OPTIONAL + MONK + ROUTES if f in vars(x)}}
+                                     **{f: pack(vars(x)[f]) for f in OPTIONAL + MONK + ROUTES + LEFT if f in vars(x)},
+                                     "map": {f: pack(getattr(x.map, f)) for f in MAP}}
                     for x in sides(g)}}
     for b in bots(g):
         d["players"][str(b.g.player)]["bot"] = {f: getattr(b, f) for f in BOT}
@@ -202,9 +219,15 @@ def load(g, d):
         for f in FIELDS:
             setattr(x, f, type(getattr(x, f))(p[f]))
         x.techs = set(p["techs"])
-        for f in PACKED + OPTIONAL + MONK + ROUTES:                             # the next tick shows the boss bars again
+        for f in PACKED + OPTIONAL + MONK + ROUTES + LEFT:                      # the next tick shows the boss bars again
             if f in p:                                                 # a save before #2257 has no queues
                 setattr(x, f, unpack(p[f]))
+        for f, v in p.get("map", {}).items():                          # a save before #2453 has no map
+            setattr(x.map, f, unpack(v))
+        for tile in [t for ts in x.map.mines.values() for t, n in ts.items() if n <= 0]:
+            x.map.emptied(x.map.spot(tile))                            # empty at the save: as Gather.dig, berries
+        for tile in [t for t, n in x.map.bushes.items() if n <= 0]:
+            x.map.emptied(x.map.cells(tile))
         if "villagers" in p:                                           # a save from before #2258 has no orders
             give_orders(x, p)
         for r in gather.RESOURCES:                                     # the sidebar of the resources (Gather.setup)
