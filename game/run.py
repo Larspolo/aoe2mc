@@ -13,6 +13,7 @@ Usage:
     python3 game/run.py WORLD --play --log F.jsonl  # also write a timed event log (tools/measure_gather.py reads it)
     python3 game/run.py WORLD --play --reveal all  # no fog of war: also the enemy units out of sight show (game/fog.py)
     python3 game/run.py WORLD --play --speed 2     # twice the AoE2 Normal speed: /tick rate 40 and shorter steps (#2057)
+    python3 game/run.py WORLD --play --load SAVE   # go on with a saved game: Ctrl-C of --play saves into saves/ (#2255)
     python3 game/run.py WORLD --replay [--speed 4] [--follow N] [--view N]  # replay the recorded game of the world (game/replay.py), then wait for Ctrl-C
 
 Join with Minecraft (multiplayer, localhost): players play in creative mode and get operator rights.
@@ -284,7 +285,8 @@ def bot_seat(players, people):
 
 
 def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1,
-         speed=1.0):
+         speed=1.0, state=None):
+    """state: the saved state of the players (savegame.dump) for a loaded game (#2255)."""
     import gather
 
     def make(player):
@@ -329,6 +331,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
           f"{len(g.villagers)} villagers of player 1. Hold the carrot on a stick: right click a villager to select it,\n"
           "then right click a tree, a fruit bush or a mine. To build: /trigger aoe_build set N (the menu is in the chat),\n"
           "then right click the ground. Right click your town center to train a villager (50 food). Ctrl-C stops.", file=sys.stderr)
+    game.g = g                                       # main saves its state on Ctrl-C (#2255)
+    if state:
+        import savegame
+        savegame.load(g, state)
     if speed != 1:                                   # Minecraft makes the mobs, paths and plugin faster (#2057)
         game.command(f"tick rate {TICKS * speed:g}")
         g.speed = speed
@@ -452,9 +458,16 @@ def main(argv=None):
     ap.add_argument("--reveal", choices=["normal", "all"], default="normal", help="--play: AoE2 \"Reveal map\" "
                     "(default normal: enemy units out of sight are hidden; all: all units show)")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
+    ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
+                    "--play with Ctrl-C saves the world and the resources, technologies and ages there)")
     a = ap.parse_args(argv)
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
         sys.exit(f"no level.dat in {a.world}")
+    import savegame
+    state = None
+    if a.load:                                       # the saved world replaces the world (the player files stay)
+        state = savegame.read(a.load)
+        restore(os.path.join(a.load, "world"), a.world)
     if hasattr(signal, "SIGBREAK"):                  # Windows: the window (gui.stop_game) sends Ctrl-Break (#1775)
         signal.signal(signal.SIGBREAK, signal.default_int_handler)
     game = Game(a.world, a.version, server=a.server)
@@ -472,7 +485,7 @@ def main(argv=None):
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
                 g = play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal,
-                         people=a.people, speed=a.speed)
+                         people=a.people, speed=a.speed, state=state)
             if not getattr(g, "ended", None):
                 return
             print(f"The game ended ({g.ended}). The server stays up: type commands, Ctrl-C stops it.",
@@ -483,7 +496,12 @@ def main(argv=None):
         pass
     finally:
         print("Stopping the server ...", file=sys.stderr)
-        game.stop()
+        state = savegame.dump(game.g) if getattr(game, "g", None) else None
+        game.stop()                                  # the server writes the world when it stops
+        if state:
+            saves = os.path.join(os.path.dirname(os.path.abspath(a.world)), "saves")
+            print(f"Saved the game: python3 game/run.py {a.world} --play --load "
+                  f"{savegame.write(saves, a.world, state)}", file=sys.stderr)
 
 
 if __name__ == "__main__":
