@@ -63,6 +63,7 @@ RECENT = 10000              # ms: a unit whose last leg ended this short a time 
 TALL = 48                   # blocks above the ground that a DELETE clears for a start building (no height in aoe2mc.json)
 BAR = "aoe2mc:replay"       # the boss bar with the game time (#684)
 POP = "aoe_pop"             # the sidebar objective with the population of each player (#741)
+BURST = 500                 # ms of game time between two bursts of a flare column: a burst lives about 1 s (#2506)
 TEAM_STEP = 10000           # sidebar score of a team game: team key × TEAM_STEP + population, the panel sorts by it (#1189)
 COUNTED = "aoe2mc.pop"      # entity tag of the units that the population counts (#787)
 EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
@@ -232,6 +233,7 @@ class Replay:
         self.adopted, self.rallied = {}, 0      # temporary ID of a unit at a gather point -> its object ID (#1227)
         self.effects = {}                       # entity tag of a research text -> game time (ms) of its end (#843)
         self.flares = []                        # (x, y, z, game time (ms) of the end, RGB) of the live flares (#2402)
+        self.burst = math.inf                   # game time (ms) of the next burst of the live flares (#2506)
         self.refs = {o["ref"]: o for o in data["objects"] if o.get("ref") is not None}
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
@@ -442,6 +444,7 @@ class Replay:
             del self.effects[tag]
         import flare                                                # game/: on the path of the replay
         self.flares = [f for f in self.flares if f[3] > t]
+        self.burst = t + BURST                                      # a step of run() while a flare lives (#2506)
         return [f"kill @e[type=text_display,tag={tag}]" for tag in done] + \
             [flare.particles(x, y, z, "@a", rgb) for x, y, z, _, rgb in self.flares]
 
@@ -455,6 +458,7 @@ class Replay:
             (g for row in self.ground for g in row if g is not None), 64)    # water: the height of the land
         rgb = FIREWORK_COLORS.get(self.data["players"].get(str(e.get("player")), {}).get("color"), FIREWORK_COLORS["white"])
         self.flares.append((x, y, z, e["time"] + flare.SECONDS * 1000, rgb))    # the column in the player color (#2442)
+        self.burst = min(self.burst, e["time"] + BURST) if len(self.flares) > 1 else e["time"] + BURST
         ticks = max(1, round(flare.SECONDS * 20 / self.speed))          # the game time of the flare at the replay speed
         return [f"playsound {flare.SOUND} master @a {x} {y} {z} 1 1 1", flare.particles(x, y, z, "@a", rgb),
                 "tellraw @a " + json.dumps([text(f"<{name}> ", color), text("Flare", "gold")])] + \
@@ -1837,6 +1841,7 @@ class Replay:
         census = self.census if bar and self.ai else lambda: None
         while k < len(events) or self.moving or self.builds:
             step = min([*self.moving.values(), *self.working.values(), *self.effects.values(),   # walk, gather, text
+                        *[self.burst] * bool(self.flares),                                        # a flare column
                         *(due for due, _ in self.builds.values()),                                # a build ends
                         *(at for _, _, at in self.entering.values() if at is not None),            # go in
                         *[c for i in self.moving if self.ai and (c := getattr(self.units[i], "check", None))]],

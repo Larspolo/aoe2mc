@@ -41,12 +41,25 @@ MAP = (                                                                # gather.
     "traps",
     "trees",
 )
+VICTORY = (                                                            # the victory modes (#2476), pack()
+    "conquest_seen",
+    "corruption_at",
+    "corruption_time",
+    "defeated",
+    "hill",
+    "monument",
+    "towns",
+)
 SCORE = (                                                              # Gather: the counts of score.py (#2475)
     "fallen",                                                          # spoils.py: the units that gave their spoils
     "given",                                                           # train.py: the free units and technologies
     "losses",
     "razed",
     "tributes",                                                        # diplomacy.py
+)
+SPOILS = (                                                             # spoils.py: the plugin scores that gave gold
+    "attack_ticks",                                                    # (the world keeps the scores, #2513)
+    "kills",
 )
 RIDERS = ("berths", "boarding", "cargo", "loading", "towers", "unloads")   # transport.py, siege_tower.py (#2411)
 KEPT = (                                                               # the fields of Gather that only some have, pack():
@@ -56,6 +69,8 @@ KEPT = (                                                               # the fie
     *RIDERS,
     *ROUTES,
     *SCORE,
+    *SPOILS,
+    *VICTORY,
 )
 JOB = ("state", "load", "res", "job", "lap", "prey")                  # fields of a gather.Villager, as they are
 BOT = ("time", "charged", "attack")                                    # fields of a bot.Bot, as they are (#2325)
@@ -65,13 +80,16 @@ SETTINGS = (                                                           # run.py 
     "bot_attack",
     "cheats",
     "civ",
+    "empire_wars",
     "end_age",
     "full_tech_tree",
     "handicap",
     "mode",
     "people",
     "pop_limit",
+    "regicide",
     "reveal",
+    "sudden_death",
     "teams",
     "treaty",
     "victory",

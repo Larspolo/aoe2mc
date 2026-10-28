@@ -29,6 +29,8 @@ Usage:
     python3 game/run.py WORLD --play --mode capture-the-relic   # "Capture the Relic": the center relic wins (#2440)
     python3 game/run.py WORLD --play --mode defend-the-wonder   # "Defend the Wonder": player 1 has a Wonder (#2441)
     python3 game/run.py WORLD --play --mode wonder-race   # "Wonder Race": no attacks, the first wonder wins (#2406)
+    python3 game/run.py WORLD --play --mode capture-the-relic --regicide   # a King on top of the mode (also
+                                                     # --sudden-death, --empire-wars: AoE2 "Advanced Settings", #2490)
     python3 game/run.py WORLD --play --civ 1=BRITONS --civ 2=FRANKS   # the civilization of each player (#2267)
     python3 game/run.py WORLD --play --teams 1,1,2,2   # the team of each player, - is no team (#2296)
     python3 game/run.py WORLD --play --load SAVE   # go on with a saved game: Ctrl-C of --play saves into saves/ (#2255)
@@ -359,6 +361,9 @@ MODES = {
     "sudden-death": "one town center, a player who loses it is defeated",
     "wonder-race": "no player can attack another, the first complete wonder wins",
 }
+# The modes that a lobby option turns on on top of the --mode (AoE2 "Advanced Settings": "Sudden Death Mode (applies
+# Sudden Death setting on top of the selected game mode)", #2490): --empire-wars, --regicide, --sudden-death.
+ON_TOP = ("empire-wars", "regicide", "sudden-death")
 VICTORIES = {                        # the AoE2 setting "Victory" (--victory, Gather.run): one per line, in alphabetical order
     "conquest": "only the conquest (#2316)",
     "king-of-the-hill": "the monument in the center (hill.py, #2360)",
@@ -375,13 +380,16 @@ SETTINGS = {
     "age": "dark",                    # "Starting age" (train.STARTS, #2265)
     "all_techs": False,               # "All Techs" (civs.missing, #2298)
     "civ": None,                      # {player: civilization} in place of the scenario's (civ_choices, #2267)
+    "empire_wars": False,             # "Empire Wars Mode" on top of the mode (ON_TOP, #2490)
     "end_age": "imperial",            # "Ending age" (build.locked, #2346)
     "full_tech_tree": False,          # "Full Tech Tree": the full tech tree and no civilization bonuses (civs.civ, #2354)
     "handicap": None,                 # {player: percent} "Handicap" (civs.handicap, handicap_choices, #2474)
     "mode": "standard",               # the game mode (MODES; regicide.py #2347, sudden_death.py #2407, empire_wars.py #2408,
                                       # battle_royale.py #2439, defend_wonder.py #2441, capture_relic.py #2440)
     "pop_limit": None,                # "Population limit" (train.LIMITS, #2266)
+    "regicide": False,                # "Regicide Mode" on top of the mode (ON_TOP, #2490)
     "resources": "standard",          # "Starting resources" (gather.LEVELS, #2264)
+    "sudden_death": False,            # "Sudden Death Mode" on top of the mode (ON_TOP, #2490)
     "teams": None,                    # {player: team or None} in place of the scenario's (team_choices, #2296)
     "treaty": "0:00",                 # "Treaty length" (MM:SS): before it no player can attack another (treaty.py, #2297)
     "victory": "standard",            # "Victory" (VICTORIES)
@@ -420,6 +428,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     data["all_techs"] = settings["all_techs"]                    # one data for all Gathers: the people and the bot (#2298)
     data["end_age"] = train.STARTS[settings["end_age"]]["ages"]  # the last age (build.locked, #2346)
     data["full_tech_tree"] = settings["full_tech_tree"]          # (#2354)
+    if settings["resources"] in gather.RANDOM:                   # each Gather picks the same level (gather.level, #2489)
+        print(f"Random starting resources: {gather.level(settings['resources'], data)}.", file=sys.stderr)
     game.forceload()
     game.people = people
     g = make(1)
@@ -450,7 +460,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
               f"player {foe} {'never' if attack == 'never' else 'at ' + attack}.", file=sys.stderr)
     import combat
     combat.setup(game, data)                         # AoE2 hit points and damage (#514)
-    if settings["mode"] == "empire-wars" and settings["age"] == "dark":   # the start age of the mode (#2408)
+    modes = {settings["mode"], *(m for m in ON_TOP if settings[m.replace("-", "_")])} - {"standard"}   # (#2490)
+    if "empire-wars" in modes and settings["age"] == "dark":     # the start age of the mode (#2408)
         import empire_wars
         settings["age"] = empire_wars.MODES["empire-wars"]["age"]
     if settings["mode"] == "defend-the-wonder" and settings["age"] == "dark":   # Post-Imperial (#2441)
@@ -460,27 +471,24 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         import train
         for x in [g, *(s.g for s in g.bots)]:
             train.start(x, settings["age"])
-    if settings["mode"] == "empire-wars":                        # after the age: the start town and its villagers
-        import empire_wars
-        g.mode = settings["mode"]
-        if not state:                                            # a loaded game has its town in the saved world
-            empire_wars.setup(g, settings["mode"])
-    elif settings["mode"] == "defend-the-wonder":                # after the age: the Wonder and the resources (#2441)
+    for x in [g, *(s.g for s in g.bots)]:
+        x.modes = frozenset(modes)                               # gather.has_mode: build.locked, Gather.run (#2490)
+        if settings["mode"] not in ("standard", "empire-wars", "defend-the-wonder", "wonder-race") or x is g:
+            x.mode = settings["mode"]                            # build.locked of each player (#2407)
+    if "empire-wars" in modes and not state:                     # after the age: the start town and its villagers;
+        import empire_wars                                       # a loaded game has its town in the saved world
+        empire_wars.setup(g, "empire-wars")
+    if settings["mode"] == "defend-the-wonder":                  # after the age: the Wonder and the resources (#2441)
         import defend_wonder
-        g.mode = settings["mode"]
         defend_wonder.setup(g, settings["mode"], start=not state)
-    elif settings["mode"] == "wonder-race":                      # no setup: the endless treaty below (#2406)
-        g.mode = settings["mode"]
-    elif settings["mode"] != "standard":                         # after the bots: their Kings go to their Gathers (#2347)
-        import battle_royale
-        import capture_relic
-        import regicide
-        import sudden_death
-        for x in [g, *(s.g for s in g.bots)]:
-            x.mode = settings["mode"]                # build.locked of each player (#2407)
-        if settings["mode"] != "capture-the-relic" or not state:   # a loaded game has the relic in its save (#2440)
-            {"battle-royale": battle_royale, "capture-the-relic": capture_relic,
-             "sudden-death": sudden_death}.get(settings["mode"], regicide).setup(g, settings["mode"])
+    import battle_royale
+    import capture_relic
+    import regicide
+    import sudden_death
+    for mode in sorted(modes - {"empire-wars", "defend-the-wonder", "wonder-race"}):   # Wonder Race: no setup, the
+        if mode != "capture-the-relic" or not state:             # endless treaty below (#2406); the Kings go to the
+            {"battle-royale": battle_royale, "capture-the-relic": capture_relic,   # Gathers of the bots (#2347); a
+             "sudden-death": sudden_death}.get(mode, regicide).setup(g, mode)   # loaded game has the relic (#2440)
     import replay
     import treaty as treaties
     if settings["mode"] in treaties.ENDLESS:                     # Wonder Race: a treaty with no end (#2406)
@@ -640,9 +648,10 @@ def main(argv=None):
     ap.add_argument("--end-age", choices=["dark", "feudal", "castle", "imperial"], default="imperial",
                     help="--play: the AoE2 setting \"Ending age\": the last age that the players can reach (default "
                     "imperial)")
-    ap.add_argument("--resources", choices=["standard", "low", "medium", "high", "ultra"], default="standard",
-                    help="--play: the AoE2 setting \"Starting resources\" of each player (default standard; ultra: "
-                    "the Death Match resources)")
+    ap.add_argument("--resources", choices=["standard", "low", "medium", "high", "ultra", "infinite", "random"],
+                    default="standard", help="--play: the AoE2 setting \"Starting resources\" of each player (default "
+                    "standard; ultra: the Death Match resources; infinite: a cost does not lower the resources; "
+                    "random: one of the levels low to ultra, the same for all players)")
     ap.add_argument("--all-techs", action="store_true", help="--play: the AoE2 setting \"All Techs\": each civilization "
                     "has the generic units and technologies that its tech tree does not have (the bonuses stay)")
     ap.add_argument("--full-tech-tree", action="store_true", help="--play: the AoE2 setting \"Full Tech Tree\": each "
@@ -657,6 +666,12 @@ def main(argv=None):
                     "400 or 500 (default 200)")
     ap.add_argument("--mode", choices=sorted(MODES), default="standard", help="--play: the AoE2 game mode (default "
                     "standard; " + "; ".join(f"{k}: {v}" for k, v in sorted(MODES.items()) if k != "standard") + ")")
+    ap.add_argument("--empire-wars", action="store_true", help="--play: the AoE2 setting \"Empire Wars Mode\" on top "
+                    "of --mode: a town and 27 villagers at work at the start")
+    ap.add_argument("--regicide", action="store_true", help="--play: the AoE2 setting \"Regicide Mode\" on top of "
+                    "--mode: each player has a King, a player whose King dies is defeated")
+    ap.add_argument("--sudden-death", action="store_true", help="--play: the AoE2 setting \"Sudden Death Mode\" on top "
+                    "of --mode: one town center, a player who loses it is defeated")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")

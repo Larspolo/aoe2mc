@@ -1,5 +1,6 @@
 {"name": "accuracy", "text": "The extra AoE2 accuracy of the siege shots of a unit at units, {unit: part} (Huns: Trebuchet +0.35, from 15 % to 50 %). combat.accuracy_command adds it to the key \"accuracy\" of data/units.jsonl and sends aoe accuracy.", "issue": 2479}
 {"name": "age_gifts", "text": "The resources that the civilization gets at each new age, {resource: amount}. train.research gives them at the end of each age.", "issue": 1926}
+{"name": "age_units", "text": "The free unit at the first own town center at the end of an age, {age: unit} (the Spartan Polemarch in the Civic and Classical Age). train.research spawns it.", "issue": 2480}
 {"name": "also", "text": "Technologies with an effect on one more group of GROUPS too, {technology: group} (Bohemians: Fervor and Sanctity for the villagers). train.stats, train.speed.", "issue": 2173}
 {"name": "arrows", "text": "The factor of the base arrows of the buildings in each age (Dark, Feudal, Castle, Imperial).", "issue": 2178}
 {"name": "attack_gold", "text": "The factor of the gold that units with the key \"attack_gold\" of units.jsonl make while they attack enemy units (Varangians: Varangian Guards 1.5). game/spoils.py.", "issue": 2376}
@@ -41,6 +42,7 @@
 {"name": "nomad_unit", "text": "The unit that the first town center of a Nomad start spawns in front of it (Huns: a tamed Hunnic Horse, a Minecraft horse with Tame). Gather.town_center summons it.", "issue": 2466}
 {"name": "not_shared", "text": "The shared items of an ally that the civilization does not get (Turks: no Elite Skirmisher).", "issue": 1619}
 {"name": "per_minute", "text": "A resource for each AoE2 minute of work of a gather kind, {kind: [resource, amount]}: Thracian hunters and shepherds 3 gold while they gather from animals.", "issue": 2308}
+{"name": "policies", "text": "The policies of the town center that the player switches between, {\"start\": the policy at the start, \"gold\": the gold of the first, second and each later switch, \"effects\": {policy: changes with the keys \"costs\" and \"extra\"}} (Athenians: Economic, Military, Naval). civs.policy, train.price, train.research.", "issue": 2485}
 {"name": "pop_cap", "text": "The extra population limit from an age on, [age, extra] (Goths: +10 in the Imperial Age). train.max_pop adds it, also to the population setting of the game.", "issue": 2118}
 {"name": "predator_hit", "text": "The attack bonus of the villagers against predators (Magyars: they kill a wolf in one strike). civs.predator_hit, Gather.", "issue": 2310}
 {"name": "regen", "text": "The regeneration of units: [group of GROUPS or a list of unit names, hit points per AoE2 minute in the Dark, Feudal, Castle and Imperial Age] (Polish villagers, Georgian mounted units, Wu infantry, Thracian elite skirmishers, Bengali ships). A third value: the rule counts only with no enemy unit within that many tiles (Puru cavalry, #2334). regen.tick gives them back.", "issue": 2247}
