@@ -443,6 +443,7 @@ def read_scenario(path):
                                                if e.effect_type == RESEARCH_TECHNOLOGY else {}),
                                             **({"unit": e.time_unit, "timer": e.timer}   # "Display Timer" (#2572)
                                                if e.effect_type == DISPLAY_TIMER else {}),
+                                            **({"timer": e.timer} if e.effect_type == CLEAR_TIMER else {}),   # (#2696)
                                             **({"sound": e.sound_name or ""}             # "Play Sound" (#2644)
                                                if e.effect_type == PLAY_SOUND else {}))
                                        for e in t.effects])
@@ -2764,6 +2765,7 @@ CHANGE_OWNERSHIP = 18
 CHANGE_VARIABLE = 56                                               # the scenario variables (#2611)
 CHANGE_VIEW = 16                                                   # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
+CLEAR_TIMER = 57                                                   # "Clear Timer" (#2696)
 CREATE_OBJECT = 11
 DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
 DECLARE_VICTORY = 13                                               # "Declare Victory" (#2542)
@@ -3119,6 +3121,14 @@ def timer_lines(e, c):
     return lines
 
 
+def clear_timer_lines(e, c):
+    """The commands of "Clear Timer" (#2696): the boss bar and the count of the slot of "Display Timer" (timer_lines)
+    go away. A slot with no bar makes the bar command fail, which stops the rest of this trigger's function."""
+    slot = e.get("timer") or 0
+    c.stats["clear timer"] += 1
+    return [f"bossbar remove aoe2mc:timer{slot}", f"schedule clear aoe2mc:timer/{slot}"]
+
+
 def message_text(e):
     """The JSON text of the message of an effect with no AoE2 color tags, or None for no message."""
     msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()
@@ -3173,6 +3183,7 @@ EFFECTS = {
     CHANGE_VARIABLE: variable_lines,
     CHANGE_VIEW: view_lines,
     CLEAR_INSTRUCTIONS: clear_lines,
+    CLEAR_TIMER: clear_timer_lines,
     CREATE_OBJECT: object_lines,
     DAMAGE_OBJECT: damage_lines,
     DECLARE_VICTORY: victory_lines,
