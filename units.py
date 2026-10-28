@@ -461,9 +461,13 @@ def make_entity(o, players, pos, rng, desc=None):
     label["CustomNameVisible"] = Byte(1)
     if o["player"] and "Color" in label:   # an own herdable has the wool of its player, as in AoE2 (#1790)
         label["Color"] = Byte(dye(o["player"], players))
+    # the reference ID of a scenario unit, also of Gaia: the triggers find one object by it (#2617)
+    ref = [String(f"aoe2mc.r{o.get('ref')}")] * (o.get("ref_tag", False) and o.get("ref") is not None)
+    if ref and not o["player"]:
+        label["Tags"] = List[String](ref)
     if o["player"]:                # the datapack puts the tagged units in the player team (#358); area triggers (#681)
         label["Tags"] = List[String]([String(f"aoe2mc.p{o['player']}")] +
-                                     [String(f"aoe2mc.t{o.get('id')}")] * ("id" in o))
+                                     [String(f"aoe2mc.t{o.get('id')}")] * ("id" in o) + ref)
         stack = [nbt]              # the horse, boat or crew of the unit: the same team, but no unit of its own (#1045)
         while stack:
             e = stack.pop()

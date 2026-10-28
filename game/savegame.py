@@ -30,6 +30,7 @@ OPTIONAL = ("limit_left", "policy", "rates", "relic_timer", "switches", "upgrade
             "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
+ORDERS = ("patrols",)                                                  # scenario.py: the patrols of the triggers (#2647)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
 CHEATS = (                                                             # game/cheats.py: the cheats that the player
     "aegis",                                                           # turned on (#2533)
@@ -97,6 +98,7 @@ KEPT = (                                                               # the fie
     *LEFT,                                                             # one tuple per line, in alphabetical order
     *MONK,                                                             # (parallel tickets add one, #2453)
     *OPTIONAL,
+    *ORDERS,
     *RIDERS,
     *ROUTES,
     *SCORE,
@@ -156,6 +158,7 @@ NOT_SAVED = (                                                          # the fie
     "noui",                                                            # the cheat "noui": only the hints
     "peers",                                                           # run.py: the players of the game
     "player",                                                          # run.py: the player number
+    "record",                                                          # record.py: run.play opens the file of --record again
     "regicide_at",                                                     # regicide.py: the next check time
     "repair_at",                                                       # repair.py: the next check time
     "repairs",                                                         # orders(): the repair of each villager

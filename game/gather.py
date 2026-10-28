@@ -72,6 +72,7 @@ import map_table  # noqa: E402
 import market  # noqa: E402
 import menu  # noqa: E402
 import monk  # noqa: E402
+import record  # noqa: E402
 import regen  # noqa: E402
 import regicide  # noqa: E402
 import relic_victory  # noqa: E402
@@ -903,6 +904,7 @@ class Gather:
         fleet.attack(self, {u for u in self.selected if replay.ship(self.soldiers.get(u, ""))}, target)   # (#1386)
         for u in sorted(self.selected - monks - trebs):
             self.command(ai.speed_command(u, self.soldiers[u], self.map.T, NORMAL * train.speed(self, self.soldiers[u], u)))
+        record.ordered(self, "order", self.selected, target=target)    # Record Game (#2649)
         if not monks and not trebs:
             return self.command(f"aoe attack @e[tag={SELECT}] {target}")
         return [self.command(f"aoe attack {u} {target}") for u in sorted(self.selected - monks - trebs)]
@@ -1376,6 +1378,7 @@ class Gather:
                 ai.move(self, u, unit, self.map.T, x + 0.5, self.map.y(x, z), z + 0.5, NORMAL * train.speed(self, unit, u))
         if out and name:
             self.mark(name, {cell})
+            record.ordered(self, "move", set(out), cell)               # Record Game (#2649)
         return out
 
     def pickable(self):
@@ -1920,4 +1923,5 @@ class Gather:
             if self.victory in ("time-limit", "score"):                # after the conquest: it wins before (#2356)
                 time_limit.tick(self, self.tick * NORMAL)
             treaty.tick(self, self.tick * NORMAL)
+            record.tick(self, self.tick * NORMAL)                      # the game time of Record Game (#2649)
             time.sleep(max(0.0, self.tick / self.speed - (time.time() - t)))   # a step stays tick game seconds
