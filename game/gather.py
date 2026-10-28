@@ -899,7 +899,7 @@ class Gather:
             trebuchet.unpack(self, u, target)
         fleet.attack(self, {u for u in self.selected if replay.ship(self.soldiers.get(u, ""))}, target)   # (#1386)
         for u in sorted(self.selected - monks - trebs):
-            self.command(ai.speed_command(u, self.soldiers[u], self.map.T, NORMAL * train.speed(self, self.soldiers[u])))
+            self.command(ai.speed_command(u, self.soldiers[u], self.map.T, NORMAL * train.speed(self, self.soldiers[u], u)))
         if not monks and not trebs:
             return self.command(f"aoe attack @e[tag={SELECT}] {target}")
         return [self.command(f"aoe attack {u} {target}") for u in sorted(self.selected - monks - trebs)]
@@ -1369,7 +1369,7 @@ class Gather:
                 self.go(v, "to_rally", {(x, z)})
             else:
                 unit = self.soldiers.get(u) or self.prey[u]            # an own herdable walks too (#1791)
-                ai.move(self, u, unit, self.map.T, x + 0.5, self.map.y(x, z), z + 0.5, NORMAL * train.speed(self, unit))
+                ai.move(self, u, unit, self.map.T, x + 0.5, self.map.y(x, z), z + 0.5, NORMAL * train.speed(self, unit, u))
         if out and name:
             self.mark(name, {cell})
         return out
@@ -1505,6 +1505,8 @@ class Gather:
             spoils.loot(self, uuid)                                    # Danes (#2271)
             score.razed(self, uuid)                                    # the military score (#2355)
             x0, y0, z0, x1, _, z1 = self.forts.pop(uuid)
+            if self.paper:                                             # its square leaves the minimap (#2582)
+                self.command(f"aoe minimap unbuild {x0} {z0}")
             for o in build.sides(self):                                # the other sides attack it no more (#1819)
                 o.forts.pop(uuid, None)
             for x in range(x0, x1 + 1):
@@ -1639,7 +1641,7 @@ class Gather:
         times the best "aura" of an upgraded own building near v (train.ONE_BUILDING: Economic Town Center, #2484)."""
         a, m = self.map.aura, self.map
         x, z = v.pos[0], v.pos[2]
-        best = max([1] + [aura["rate"] for rect, name in getattr(self, "upgraded", {}).items()
+        best = max([1] + [aura.get("rate", 1) for rect, name in getattr(self, "upgraded", {}).items()
                           if (aura := train.ONE_BUILDING.get(name)) and rect in train.homes(self)
                           and max(rect[0] - x, x - rect[1], rect[2] - z, z - rect[3]) <= aura["range"] * m.T])
         if kind not in a.get("resources", ()):
