@@ -14,6 +14,7 @@ Usage:
     python3 game/run.py WORLD --play --reveal all  # no fog of war: also the enemy units out of sight show (game/fog.py)
     python3 game/run.py WORLD --play --speed 2     # twice the AoE2 Normal speed: /tick rate 40 and shorter steps (#2057)
     python3 game/run.py WORLD --play --resources high  # the AoE2 setting "Starting resources" (#2264)
+    python3 game/run.py WORLD --play --all-techs       # the AoE2 setting "All Techs" (#2298)
     python3 game/run.py WORLD --play --load SAVE   # go on with a saved game: Ctrl-C of --play saves into saves/ (#2255)
     python3 game/run.py WORLD --replay [--speed 4] [--follow N] [--view N]  # replay the recorded game of the world (game/replay.py), then wait for Ctrl-C
 
@@ -286,9 +287,10 @@ def bot_seat(players, people):
 
 
 def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1,
-         speed=1.0, state=None, resources="standard"):
+         speed=1.0, state=None, resources="standard", all_techs=False):
     """state: the saved state of the players (savegame.dump) for a loaded game (#2255).
-    resources: the AoE2 setting "Starting resources" of each player and bot (gather.LEVELS, #2264)."""
+    resources: the AoE2 setting "Starting resources" of each player and bot (gather.LEVELS, #2264).
+    all_techs: the AoE2 setting "All Techs" for all players and bots (civs.missing, #2298)."""
     import gather
 
     def make(player):
@@ -303,6 +305,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         return g
     with open(os.path.join(world, "aoe2mc.json")) as f:
         data = json.load(f)
+    data["all_techs"] = all_techs                    # one data for all Gathers: the people and the bot (#2298)
     game.forceload()
     game.people = people
     g = make(1)
@@ -463,6 +466,8 @@ def main(argv=None):
     ap.add_argument("--resources", choices=["standard", "low", "medium", "high", "ultra"], default="standard",
                     help="--play: the AoE2 setting \"Starting resources\" of each player (default standard; ultra: "
                     "the Death Match resources)")
+    ap.add_argument("--all-techs", action="store_true", help="--play: the AoE2 setting \"All Techs\": each civilization "
+                    "has the generic units and technologies that its tech tree does not have (the bonuses stay)")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")
@@ -491,7 +496,8 @@ def main(argv=None):
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
                 g = play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal,
-                         people=a.people, speed=a.speed, state=state, resources=a.resources)
+                         people=a.people, speed=a.speed, state=state, resources=a.resources,
+                         all_techs=a.all_techs)
             if not getattr(g, "ended", None):
                 return
             print(f"The game ended ({g.ended}). The server stays up: type commands, Ctrl-C stops it.",
