@@ -2885,6 +2885,7 @@ LOAD_KEY_VALUE = 81                                                # "Load Key V
 LOCK_GATE = 7                                                      # "Lock Gate", "Unlock Gate" (#2762)
 MIRROR_DIPLOMACY = 109                                             # "Mirror Diplomacy" (#2822)
 MODIFY_ATTRIBUTE = 51                                              # "Modify Attribute" (#2763)
+MODIFY_ATTRIBUTE_BY_VARIABLE = 79                                  # "Modify Attribute by Variable" (#2856)
 MODIFY_ATTRIBUTE_FOR_CLASS = 104                                   # "Modify Attribute for Class" (#2859)
 MODIFY_OBJECT_ATTRIBUTE = 105                                      # "Modify Object Attribute" (#2860)
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
@@ -3739,11 +3740,9 @@ STAT_ATTRIBUTES = {0: "hp", 10: "reload", 12: "range"}
 CLASS_ATTRIBUTES = {(8, 3): "pierce", (8, 4): "melee", (9, 3): "attack", (9, 4): "attack"}
 
 
-def attribute_lines(e, c):
-    """The command of "Modify Attribute" (#2763): the change "<player> <name> <Stats field> <operation> <quantity>"
-    goes into the list of the data storage aoe2mc:attributes. A converted world has no combat values: the scenario mode
-    of the game program (game/scenario.py attributes) empties the list and changes the values of the unit type of the
-    player (train.stats). An attribute outside STAT_ATTRIBUTES and CLASS_ATTRIBUTES: not supported in the stats.
+def attribute_head(e):
+    """"<player> <name> <Stats field> <operation>" of "Modify Attribute" and "Modify Attribute by Variable", or None
+    for an attribute outside STAT_ATTRIBUTES and CLASS_ATTRIBUTES (not supported in the stats).
     "Modify Attribute for Class" (#2859): one line for the class, the name "@<ObjectClass name>" (train.applies)."""
     from AoE2ScenarioParser.datasets.trigger_lists import ObjectClass
     _, name = e.get("object") or (None, None)
@@ -3751,12 +3750,38 @@ def attribute_lines(e, c):
         name = f"@{ObjectClass(e['group']).name.lower()}" if e.get("group") in set(ObjectClass) else None
     a = e.get("attribute")
     field = STAT_ATTRIBUTES.get(a) or CLASS_ATTRIBUTES.get((a, e.get("class")))
-    q = e.get("aa") if a in (8, 9) else e.get("quantity")
-    if not name or e["player"] <= 0 or not field or e.get("operation") not in range(1, 6) or q is None:
+    if name and e["player"] > 0 and field and e.get("operation") in range(1, 6):
+        return f'{e["player"]} {name} {field} {e["operation"]}'
+
+
+def attribute_lines(e, c):
+    """The command of "Modify Attribute" (#2763): the change "<player> <name> <Stats field> <operation> <quantity>"
+    goes into the list of the data storage aoe2mc:attributes. A converted world has no combat values: the scenario mode
+    of the game program (game/scenario.py attributes) empties the list and changes the values of the unit type of the
+    player (train.stats)."""
+    q = e.get("aa") if e.get("attribute") in (8, 9) else e.get("quantity")
+    if not (head := attribute_head(e)) or q is None:
         c.stats["modify attribute (not supported)"] += 1
         return []
     c.stats["modify attribute"] += 1
-    return [f'data modify storage aoe2mc:attributes list append value "{e["player"]} {name} {field} {e["operation"]} {q:g}"']
+    return [f'data modify storage aoe2mc:attributes list append value "{head} {q:g}"']
+
+
+def attribute_by_variable_lines(e, c):
+    """The commands of "Modify Attribute by Variable" (#2856): the change of attribute_lines with the score #v<N> of
+    aoe_var (the AoE2 variable N) as the quantity, when the trigger fires. Minecraft feature: a macro function puts the
+    score from the storage aoe2mc:attribute_by_variable into the text of the list line."""
+    if not (head := attribute_head(e)) or e.get("variable", -1) < 0:
+        c.stats["modify attribute by variable (not supported)"] += 1
+        return []
+    c.stats["modify attribute by variable"] += 1
+    c.setup["scoreboard objectives add aoe_var dummy"] = None            # an unset variable stores 0, as in AoE2
+    c.files["data/aoe2mc/function/attribute_by_variable.mcfunction"] = \
+        '$data modify storage aoe2mc:attributes list append value "$(head) $(q)"\n'
+    return [f'data modify storage aoe2mc:attribute_by_variable head set value "{head}"',
+            f"execute store result storage aoe2mc:attribute_by_variable q int 1 run scoreboard players get "
+            f"#v{e['variable']} aoe_var",
+            "function aoe2mc:attribute_by_variable with storage aoe2mc:attribute_by_variable"]
 
 
 def create_lines(e, c):
@@ -4152,6 +4177,8 @@ EFFECT_KEYS = {
     INITIATE_RESEARCH: {"selected": lambda e, kinds, techs: list(e.selected_object_ids or []),   # (#2772)
                         "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
     LOAD_KEY_VALUE: {"quantity": "quantity", "variable": "variable"},   # (#2887)
+    MODIFY_ATTRIBUTE_BY_VARIABLE: {"attribute": "object_attributes", "class": "armour_attack_class",   # (#2856)
+                                   "operation": "operation", "variable": "variable"},
     MODIFY_ATTRIBUTE_FOR_CLASS: {"attribute": "object_attributes", "operation": "operation", "quantity": "quantity",
                                  "class": "armour_attack_class", "aa": "armour_attack_quantity", "group": "object_group2"},
     MODIFY_OBJECT_ATTRIBUTE: {"aa": "armour_attack_quantity", "armour_class": "armour_attack_class",   # (#2860)
@@ -4229,6 +4256,7 @@ EFFECTS = {
     LOCK_GATE: gate_lines,
     MIRROR_DIPLOMACY: mirror_lines,
     MODIFY_ATTRIBUTE: attribute_lines,
+    MODIFY_ATTRIBUTE_BY_VARIABLE: attribute_by_variable_lines,
     MODIFY_ATTRIBUTE_FOR_CLASS: attribute_lines,
     MODIFY_OBJECT_ATTRIBUTE: object_attribute_lines,
     MODIFY_RESOURCE: resource_lines,
