@@ -20,8 +20,10 @@ Usage:
     python3 game/run.py WORLD --play --all-techs       # the AoE2 setting "All Techs" (#2298)
     python3 game/run.py WORLD --play --full-tech-tree  # the AoE2 setting "Full Tech Tree" (#2354)
     python3 game/run.py WORLD --play --victory conquest  # the AoE2 setting "Victory": no wonder or relic win (#2316)
+    python3 game/run.py WORLD --play --victory king-of-the-hill   # hold the monument in the center (#2360)
     python3 game/run.py WORLD --play --mode regicide   # the AoE2 game mode "Regicide": each player has a King (#2347)
     python3 game/run.py WORLD --play --mode empire-wars   # the AoE2 game mode "Empire Wars": a town at work (#2408)
+    python3 game/run.py WORLD --play --mode sudden-death   # the AoE2 game mode "Sudden Death": one town center (#2407)
     python3 game/run.py WORLD --play --civ 1=BRITONS --civ 2=FRANKS   # the civilization of each player (#2267)
     python3 game/run.py WORLD --play --teams 1,1,2,2   # the team of each player, - is no team (#2296)
     python3 game/run.py WORLD --play --load SAVE   # go on with a saved game: Ctrl-C of --play saves into saves/ (#2255)
@@ -327,6 +329,16 @@ def team_choices(value, players):
     return {p: None if t == "-" else int(t) for p, t in zip(seats, teams)}
 
 
+# The AoE2 game modes of --mode (epic #2263), name: help text. A new mode is one line here, in alphabetical order, not a
+# change of the --mode lines of main() (#2408).
+MODES = {
+    "empire-wars": "each player starts with a town and 27 villagers at work, in the Feudal Age when --age is dark",
+    "regicide": "each player has a King, a player whose King dies is defeated",
+    "standard": "the AoE2 rules",
+    "sudden-death": "one town center, a player who loses it is defeated",
+}
+
+
 # The AoE2 lobby settings of play() for each player and bot (epic #2263), name: default. main() passes the option of
 # the same name. A new setting is one line here, in alphabetical order, not a change of the play() lines (#2373).
 SETTINGS = {
@@ -335,12 +347,12 @@ SETTINGS = {
     "civ": None,                      # {player: civilization} in place of the scenario's (civ_choices, #2267)
     "end_age": "imperial",            # "Ending age" (build.locked, #2346)
     "full_tech_tree": False,          # "Full Tech Tree": the full tech tree and no civilization bonuses (civs.civ, #2354)
-    "mode": "standard",               # the game mode: "standard" or "regicide" (each player has a King, regicide.MODES, #2347)
+    "mode": "standard",               # the game mode (MODES; regicide.py #2347, sudden_death.py #2407, empire_wars.py #2408)
     "pop_limit": None,                # "Population limit" (train.LIMITS, #2266)
     "resources": "standard",          # "Starting resources" (gather.LEVELS, #2264)
     "teams": None,                    # {player: team or None} in place of the scenario's (team_choices, #2296)
     "treaty": "0:00",                 # "Treaty length" (MM:SS): before it no player can attack another (treaty.py, #2297)
-    "victory": "standard",            # "Victory": "standard" (conquest, a wonder or all relics) or "conquest" (#2316)
+    "victory": "standard",            # "Victory": "standard" (conquest, a wonder or all relics), "conquest" (#2316) or "king-of-the-hill" (hill.py, #2360)
 }
 
 
@@ -413,8 +425,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
             empire_wars.setup(g, settings["mode"])
     elif settings["mode"] != "standard":                         # after the bots: their Kings go to their Gathers (#2347)
         import regicide
-        g.mode = settings["mode"]
-        regicide.setup(g, settings["mode"])
+        import sudden_death
+        for x in [g, *(s.g for s in g.bots)]:
+            x.mode = settings["mode"]                # build.locked of each player (#2407)
+        (sudden_death if settings["mode"] == "sudden-death" else regicide).setup(g, settings["mode"])
     import replay
     import treaty as treaties
     if replay.aoe2mc.game_time(settings["treaty"]):              # after the Gathers: they set the neutral stances
@@ -579,15 +593,14 @@ def main(argv=None):
                     "has the generic units and technologies that its tech tree does not have (the bonuses stay)")
     ap.add_argument("--full-tech-tree", action="store_true", help="--play: the AoE2 setting \"Full Tech Tree\": each "
                     "civilization has the full tech tree and its unique units, but no civilization and team bonuses")
-    ap.add_argument("--victory", choices=["standard", "conquest"], default="standard", help="--play: the AoE2 setting "
-                    "\"Victory\" (default standard: conquest, a wonder or all relics; conquest: only the conquest)")
+    ap.add_argument("--victory", choices=["standard", "conquest", "king-of-the-hill"], default="standard",
+                    help="--play: the AoE2 setting \"Victory\" (default standard: conquest, a wonder or all relics; "
+                    "conquest: only the conquest; king-of-the-hill: the monument in the center, #2360)")
     ap.add_argument("--pop-limit", type=pop_limit, default=200, metavar="N",
                     help="--play: the AoE2 setting \"Population limit\" of each player: 25 to 250 in steps of 25, 300, "
                     "400 or 500 (default 200)")
-    ap.add_argument("--mode", choices=["standard", "regicide", "empire-wars"], default="standard", help="--play: the "
-                    "AoE2 game mode (default standard; regicide: each player has a King, a player whose King dies is "
-                    "defeated; empire-wars: each player starts with a town and 27 villagers at work, in the Feudal Age "
-                    "when --age is dark)")
+    ap.add_argument("--mode", choices=sorted(MODES), default="standard", help="--play: the AoE2 game mode (default "
+                    "standard; " + "; ".join(f"{k}: {v}" for k, v in sorted(MODES.items()) if k != "standard") + ")")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")
