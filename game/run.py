@@ -27,6 +27,7 @@ Usage:
     python3 game/run.py WORLD --play --mode sudden-death   # the AoE2 game mode "Sudden Death": one town center (#2407)
     python3 game/run.py WORLD --play --mode battle-royale  # "Battle Royale": the Corruption takes the map (#2439)
     python3 game/run.py WORLD --play --mode capture-the-relic   # "Capture the Relic": the center relic wins (#2440)
+    python3 game/run.py WORLD --play --mode death-match   # the AoE2 game mode "Death Match": large resources (#2438)
     python3 game/run.py WORLD --play --mode defend-the-wonder   # "Defend the Wonder": player 1 has a Wonder (#2441)
     python3 game/run.py WORLD --play --mode wonder-race   # "Wonder Race": no attacks, the first wonder wins (#2406)
     python3 game/run.py WORLD --play --mode capture-the-relic --regicide   # a King on top of the mode (also
@@ -391,6 +392,15 @@ SETTINGS = {
 }
 
 
+def mode_defaults(settings):
+    """The start resources of the game mode in place of the default of SETTINGS (a --resources that the player gave
+    wins): the key "level" of its line in game/data/setup.jsonl. Death Match starts with "ultra" (#2438). The start age
+    of a mode ("age") applies in play() when --age is dark."""
+    if "level" in MODES[settings["mode"]] and settings["resources"] == SETTINGS["resources"]:
+        settings["resources"] = MODES[settings["mode"]]["level"]
+    return settings
+
+
 def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1,
          speed=1.0, state=None, **settings):
     """state: the saved state of the players (savegame.dump) for a loaded game (#2255).
@@ -398,7 +408,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     import gather, train
     if unknown := sorted(set(settings) - set(SETTINGS)):
         raise TypeError(f"play() has no setting {', '.join(unknown)} (SETTINGS)")
-    settings = {**SETTINGS, **settings}
+    settings = mode_defaults({**SETTINGS, **settings})
 
     def make(player):
         who = "@a" if people == 1 else f"@a[team=p{player}]"
