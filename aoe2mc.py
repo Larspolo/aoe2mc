@@ -415,7 +415,10 @@ def read_scenario(path):
                                                   {"quantity": c.quantity} if c.condition_type == TRIGGER_CHANCE else {}),
                                                **({"quantity": c.quantity, "variable": c.variable,   # (#2611)
                                                    "comparison": c.comparison}
-                                                  if c.condition_type == VARIABLE_VALUE else {}))
+                                                  if c.condition_type == VARIABLE_VALUE else {}),
+                                               **({"player": c.source_player,                 # (#2656)
+                                                   "technology": techs.get(c.technology, str(c.technology))}
+                                                  if c.condition_type == RESEARCHED else {}))
                                           for c in t.conditions],
                               effects=[dict(type=e.effect_type, message=e.message or "", player=e.source_player,
                                             time=e.display_time, object=kinds.get(e.object_list_unit_id),
@@ -2768,7 +2771,8 @@ STANCES = (0, 1, 3)                                                    # Diploma
 TASK_OBJECT = 12                                                       # "Task Object" (#2646)
 TELEPORT_OBJECT = 35
 CHANGE_VARIABLE, VARIABLE_VALUE = 56, 22                               # the scenario variables (#2611)
-TICKED = COUNTED + (VARIABLE_VALUE,)                               # conditions of the tick function
+RESEARCHED = 9                                                         # the condition "Research Technology" (#2656)
+TICKED = COUNTED + (VARIABLE_VALUE, RESEARCHED)                    # conditions of the tick function
 FREEZE_OBJECT = 22                                                     # "Freeze Object" (#2608)
 RESEARCH_TECHNOLOGY = 2
 CHANGE_OBJECT_NAME = 26                                                # "Change Object Name" (#2616)
@@ -3067,6 +3071,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Damage Object": damage_lines (#2571). "Display Timer": timer_lines (#2572).
     "Teleport Object": teleport_lines (#2569).
     "Change Variable": variable_lines; a "Variable Value" condition runs in the tick function as an area (#2611).
+    A "Research Technology" condition too: the game program sets the score #p<player>.<technology> of aoe_tech (#2656).
     "Declare Victory" sets the score #p<player> of aoe_win to 1: the scenario mode of the game program ends the game.
     "Change Diplomacy" sets the score #p<player>.p<target> of aoe_dip to the stance + 1 and #any of aoe_dip to 1: the
     scenario mode changes the stance (#2645).
@@ -3092,6 +3097,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 chance and len([c for c in conds if c["type"] == TRIGGER_CHANCE]) > 1 or \
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds) or \
                 any(c["type"] == VARIABLE_VALUE and (c.get("variable", -1) < 0 or variable_range(c) is None)
+                    or c["type"] == RESEARCHED and (c.get("player", -1) <= 0 or not c.get("technology"))
                     for c in conds):                                   # unit classes: not yet
             continue
         lines = []
@@ -3172,8 +3178,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         fn, n = f"aoe2mc:trigger/{t['id']}", t["id"]
         tests, unless, counts = [], [], []
         for i, c in enumerate(conds):
-            if c["type"] == VARIABLE_VALUE:                            # a score of the variable (#2611)
-                test = f"score #v{c['variable']} aoe_var matches {variable_range(c)}"
+            if c["type"] in (VARIABLE_VALUE, RESEARCHED):              # a score: of the variable (#2611), of a
+                test = f"score #v{c['variable']} aoe_var matches {variable_range(c)}" if c["type"] == VARIABLE_VALUE \
+                    else f"score #p{c['player']}.{c['technology']} aoe_tech matches 1.."   # technology of the game (#2656)
                 tests.append(f"if {test}")
                 unless.append(f"unless {test}")
                 continue
@@ -3222,7 +3229,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         load.append(run)
     if money:                                                          # resource_lines (#2576)
         load[:0] = ["scoreboard objectives add aoe_res dummy", "scoreboard objectives add aoe_set dummy"]
-    if any(" aoe_tech 1" in f for f in files.values()):
+    if any(" aoe_tech 1" in f for f in files.values()) or any(" aoe_tech " in x for x in tick):
         load.insert(0, "scoreboard objectives add aoe_tech dummy")
     names = sorted({f"#v{x['variable']}" for t in triggers for x in t["conditions"] + t["effects"]
                     if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE) and x.get("variable", -1) >= 0})
