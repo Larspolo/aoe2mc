@@ -832,7 +832,7 @@ def name_timeline(objects, timeline, window=16, water=None):
                (used[i][1] in (role, None) or used[i][1] == "G" and (role == "B" or "SHIP" in name)) and
                used[i][0] >= t - 5000 and used[i][2] <= {name} and   # 5 s: the training times are estimates
                not (used[i][3] and "VILLAGER" not in name)]         # only villagers build and gather on land (#765)
-        if (train(name) or (0, ""))[1] == "DOCK":           # a ship does not go inland (#2629): a land unit
+        if units.is_boat(units.classify(name)):             # a ship does not go inland (#2629): a land unit
             inland |= {i for i in ids[:1] if used[i][4]}     # takes the ID (below)
             ids = [i for i in ids if not used[i][4]]
         i = ids[0] if ids else nxt if nxt not in used else None
@@ -840,7 +840,7 @@ def name_timeline(objects, timeline, window=16, water=None):
             names[i] = name             # a unit skips a GARRISON target: a later building can take it
             nxt = next((j for j in range(nxt, i) if used.get(j, (0, None))[1] == "G" and j not in names), i + 1)
     trained = [(end, e.get("player"), e.get("name", "")) for end, e, _ in training(timeline)
-               if (train(e.get("name", "")) or (0, "DOCK"))[1] != "DOCK"]
+               if not units.is_boat(units.classify(e.get("name", "")))]   # a ship is no land unit (#3031)
     for i, u in sorted(used.items()):
         if i not in names and len(u[2]) == 1:
             names[i] = next(iter(u[2]))
