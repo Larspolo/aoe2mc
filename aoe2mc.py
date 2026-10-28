@@ -708,6 +708,7 @@ def apply_timeline(objects, timeline, at):
                     seen.add((name, x, y))
                     out.append(dict(kind="B", hero=False, name=name, player=player, x=x, y=y, rotation=0.0,
                                     garrisoned=False, ref=None, holder=None))
+                    first.setdefault(player, out[-1])      # a Nomad player: its first building is a BUILD
                     stats["buildings (BUILD and WALL commands)"] += 1
         elif kind == "delete":
             deleted.update(i for i in e.get("objects", ()) if i in refs)
@@ -715,6 +716,8 @@ def apply_timeline(objects, timeline, at):
             prefix, name = kinds.get(e["type"], ("?", ""))
             at_b = next((refs[i] for i in e.get("objects", ()) if i in refs and refs[i]["kind"] == "B"), None)
             at_b = at_b or first.get(player)
+            if prefix in ("U", "H") and at_b is None:
+                stats["units without a building (QUEUE commands)"] += max(1, int(e.get("amount", 1)))
             if prefix not in ("U", "H") or at_b is None or at_b.get("ref") in deleted:
                 continue
             for _ in range(max(1, int(e.get("amount", 1)))):
