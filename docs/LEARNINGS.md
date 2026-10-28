@@ -29,6 +29,7 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - A background `-m mc` run imports the code of the working tree: do not `git checkout` another branch there until it ends (#1664 tested main's `units.py` for 10 minutes). Do the next ticket in a `git worktree`.
 - `$TMPDIR` is empty in the cloud sessions: `cat > $TMPDIR/x.py <<EOF` writes `/x.py`, and a `cat > $TMPDIR/x` without a heredoc waits for input until the 120 s timeout (#2032). Use the scratchpad path.
 - A run with an open PR that does the next ticket in a local commit (`more.md`): beat the claim of the PR's ticket too (`claim.py N --beat`) until it merges. A red PR with no beat for 10 minutes is "stalled": another run took #2211 over while its run worked on #2173.
+- `git stash` during an unfinished merge drops `MERGE_HEAD`: the next commit is no merge commit. To test main without your change, use `git worktree add` (#2281).
 
 ## Code
 
@@ -66,4 +67,5 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - A new `data/*.jsonl` file needs its line in `KEYS` of `tests/test_converter_data.py` (the test compares the file list). Put it after the `animals.jsonl` line, not at the end: parallel tickets change the last line (#2036, #2072).
 - A fix of red main that open PRs port (CI rule "port the fix") merges once per PR: two versions of it can stay side by side with no conflict (#2131: `TWO_TYPES` twice and `MIXED` in `tests/test_data_files.py`). Before you push a "Fix main" PR, `git fetch origin main` and read the file again: main can have the fix already.
 - `civs.MISSING` has two sources since #2235: the key `"civs"` of a line of `game/data/train.jsonl` or `build.jsonl` (few civilizations have the item) and the `"missing"` lists of `game/data/civs.jsonl` (most have it). A ticket that says "add X to the missing list of each civ line" for a unique or regional item means the key `"civs"` on its line.
+- A new `X.tick(g, dt)` in `Gather.run`: `tests/test_play_speed.py` runs the loop on `object.__new__(gather.Gather)` with no `game`, `data` or `paper`, and stubs only the ticks that it knows. Make the tick return early on a missing attribute (`treaty.holds`, #2297).
 - A PR that changes a line of `game/data/civs.jsonl` goes `dirty` on GitHub each time main merges a change of a nearby line (GitHub merges without the `jsonl` driver): #2218 needed 5 merges of main in 60 minutes. Merge main locally and push right away; while you wait, do the next ticket in a stash or a worktree, not in the pushed branch (#2114).
