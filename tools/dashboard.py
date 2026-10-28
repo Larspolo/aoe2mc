@@ -26,7 +26,8 @@ from agent_config import CONFIG
 REPO = os.environ.get("GITHUB_REPOSITORY") or CONFIG["repo"]
 STATUS, PAUSED = CONFIG["status"]["label"], CONFIG["status"]["paused"]
 MUTED = "muted"                # the owner mutes a ticket: no agent works on it, and "Waiting for you" hides it
-SKIP = {"needs-human", "blocked", "epic", STATUS, "in-progress", MUTED}
+CLOSE = "close"                # the work is done, close.yml closes the ticket: no candidate (#2920)
+SKIP = {"needs-human", "blocked", "epic", STATUS, "in-progress", MUTED, CLOSE}
 PRIORITY = ["P0", "P1", "P2", "P3"]
 # Names in ticket text that do not count for the overlap: tools for checks, and LEARNINGS.md (merge=union: no conflicts).
 # A PR that changes them still counts (work() takes the files of the PRs as they are).
@@ -144,10 +145,23 @@ def candidates(issues, busy=frozenset(), now=None, lane=None, reserved=RESERVED,
         p = next((k for k, name in enumerate(PRIORITY) if name in labels(i)), len(PRIORITY))
         return lane is None and any(n.startswith(LANE) for n in labels(i)), p, len(overlap(i, busy)), i["number"]
     ready = [i for i in issues if not labels(i) & SKIP and not any(d in open_numbers for d in depends(i))
-             and not (start_after(i) or now) > now and not i.get("title", "").startswith("Decide:")
+             and not i.get("title", "").startswith("Decide:")
              and (LANE + lane in labels(i) if lane else not {LANE + r for r in reserved} & labels(i))
-             and not waits(i, after)]                       # last: it reads GitHub
+             and not held(i, now, after)]                   # last: it reads GitHub
     return sorted(ready, key=rank)
+
+
+def held(issue, now, after=prs_after):
+    """True while the "Start after:" line of the issue holds it (start_after, waits). A line that does not parse (a bad
+    date, a #M that is no PR: GitHub answers 404) holds only its own ticket, with one warning on stderr (#3055): an
+    error here stopped the pick of all tickets, usage.py --fire and the dashboard."""
+    try:
+        return (start_after(issue) or now) > now or waits(issue, after)
+    except Exception as e:                          # ValueError, CalledProcessError, HTTPError: the line is wrong
+        line = re.search(r"^Start after:.*", issue.get("body") or "", re.M)
+        print(f"warning: #{issue['number']} is not ready: bad line {line[0].strip() if line else ''!r} ({e})",
+              file=sys.stderr)
+        return True
 
 
 def claimed(lines, now, minutes=30):
@@ -216,10 +230,11 @@ def process_changes(prs, now, hours=24):
                and datetime.datetime.fromisoformat(p["merged_at"].replace("Z", "+00:00")) >= since)
 
 
-def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now, unanswered=None):
+def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now, unanswered=None, nxt=None):
     """The new body of the status issue. comments: {issue number: comments} for the needs-human and
-    in-progress issues. unanswered: the owner comments without a lock (`tools/feedback.py`, #971)."""
-    nxt = candidates(issues, now=now)[:5]
+    in-progress issues. unanswered: the owner comments without a lock (`tools/feedback.py`, #971).
+    nxt: the "Next up" tickets, if known (candidates() can read GitHub)."""
+    nxt = candidates(issues, now=now)[:5] if nxt is None else nxt
     issues = [i for i in issues if "pull_request" not in i]
     state = re.search(r"<!-- agent-state:.*?-->", old_body or "")
     process = re.search(r"### Process changes\n(.*?)(?=\n### |\n---\n|\n_Updated |\Z)", old_body or "", re.S)
@@ -329,8 +344,12 @@ def main(argv=None):
     closed = api("issues?state=closed&sort=updated&direction=desc&per_page=50")
     closed_prs = pages("pulls?state=closed&sort=updated&direction=desc", 5)    # about 24 h of merges (#901)
     from feedback import fetch as unanswered               # owner comments without a lock (#971)
-    body = render(status["body"], open_all, comments, api("pulls?state=open&per_page=100"), closed, closed_prs,
-                  datetime.datetime.now(datetime.timezone.utc), unanswered())
+    open_prs, owner, now = api("pulls?state=open&per_page=100"), unanswered(), datetime.datetime.now(datetime.timezone.utc)
+    nxt = candidates(open_all, now=now)[:5]
+    # Read the body again after all other reads (#3002): a run writes the state comment and the process changes
+    # while the reads above take about 20 s, and the PATCH of the old body deleted them.
+    status = api(f"issues/{status['number']}")
+    body = render(status["body"], open_all, comments, open_prs, closed, closed_prs, now, owner, nxt)
     if a.dry_run:
         print(body)
     elif re.sub(r"_Updated .*?_", "", body) != re.sub(r"_Updated .*?_", "", status["body"] or ""):

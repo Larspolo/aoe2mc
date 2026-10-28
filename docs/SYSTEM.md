@@ -9,7 +9,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 
 | Part | What it does |
 |---|---|
-| Two scheduled tasks (owner's account) | "aoe2mc autopilot" starts one run each hour at :06. "aoe2mc pacer heartbeat" wakes the pacer session each hour at :36. |
+| Scheduled tasks (owner's account) | "aoe2mc autopilot", "aoe2mc autopilot haiku" and "aoe2mc autopilot deep" have no schedule: the pacer starts them (since 2026-10-28 the workflow `pacer.yml` through their API triggers, #3194). With the pacer session: "aoe2mc pacer heartbeat" wakes it each hour at :36. |
 | Pacer session | One long-lived cloud session. Every 10 minutes it starts the runs that the quota target misses (skill `pacer`). It does no ticket work. |
 | Runs | Cloud sessions of the autopilot task. Each run follows the skill `autopilot` with the argument `max`: tickets, one PR each. Many runs work at the same time. |
 | Skills (`.claude/skills/`) | The procedures: `autopilot` (the work cycle), `verify` (checks before a push), `ticket` (write and split tickets), `design` (design tickets), `improve` (process review), `roadmap` (epics from `docs/ROADMAP.md`), `pacer`, `operator` (checks and repairs the start of the runs, only in an owner session), `human` (guides the owner through the `needs-human` tickets on the owner's computer), `demo` (a demo game on the owner's computer: a ticket for each feedback in the chat, the cause of each crash, `game/demo_watch.py`), `dashboard-refresh` (the data files of the owner's dashboard artifact, #982). |
@@ -36,7 +36,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 
 ## The loop of a run
 
-1. The pacer session (or the hourly autopilot task) starts a run. The cloud clones the repository on the session
+1. The pacer (`pacer.yml`, or the pacer session) starts a run. The cloud clones the repository on the session
    branch `claude/<name>`.
 2. The run reads `CLAUDE.md` and follows the skill `autopilot`. It stops at once when the status issue has `paused`.
    It runs `tools/usage.py --fire`: when the running runs reach the target, it only finishes stalled PRs.
@@ -75,8 +75,9 @@ the roadmap review (100), `Start after: N PRs after #M` and the window of `tools
 stopped run or follows a real clock stays in minutes, because a stopped run merges nothing: the claim beat (20), a
 stale claim (30, or 10 with the label `conflict`), a "Started by" comment (30), the Automerge sweep (10), an old PR in
 `tools/operator_check.py` (30), the pacer (10), `unconflict.yml` (20) and the refill lock (one per hour). The quota
-windows (5 hours, 7 days) follow the subscription, the owner comments of `tools/feedback.py` (6 hours) get an answer
-in time, and a run longer than 90 minutes is about the context and the container of one run.
+windows (5 hours, 7 days) follow the subscription, the owner comments of `tools/feedback.py` (6 hours before the
+last run report, at most 23, #3060) get an answer in time, and a run longer than 90 minutes is about the context and
+the container of one run.
 
 ## The quota pacing
 
@@ -136,7 +137,7 @@ on `main` yet, and the branch of an owner session is not `agent/*` or `claude/*`
    script lists them in `SETUP_NEEDS`). The hook of the project with no version file in `/etc` checks only its
    `SETUP_NEEDS`, and asks for a new script only when one is missing.
 3. **Status issue.** Open issue #1 with the label `agent-status` (the first run makes it when it is missing).
-4. **Scheduled task "aoe2mc autopilot".** Hourly at :06. Repository `Larspolo/aoe2mc`, the environment of step 2.
+4. **Scheduled task "aoe2mc autopilot".** No schedule: the pacer starts it (2026-10-28; before: hourly at :06). Repository `Larspolo/aoe2mc`, the environment of step 2.
    Its prompt: open the repository and pull `main`, read `CLAUDE.md`, follow `.claude/skills/autopilot/SKILL.md`
    with the argument `max`, report on the status issue; do not search for `fire_trigger` (#566); keep to the quota
    target of `python3 tools/usage.py --fire` (stop when the target is 0, or when the claims reach the target);
@@ -241,18 +242,24 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_claim_conflict.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_claim_first.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_claim_refill.py` | generic | None (a test of `tools/claim.py`). |
+| `tests/test_claim_release_label.py` | generic | None (a test of `tools/claim.py`). |
+| `tests/test_refill_all_closed.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_claim_revived.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_claim_takeover.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_dashboard.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_deep_lane.py` | generic | None (a test of `tools/usage.py`, `tools/claim.py` and `tools/dashboard.py`). |
 | `tests/test_dashboard_claimed.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_decide.py` | generic | None (a test of `tools/dashboard.py`). |
+| `tests/test_dashboard_fresh.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_muted.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_overlap.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_process.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_start.py` | generic | None (a test of `tools/dashboard.py`). |
+| `tests/test_dashboard_start_bad.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_start_prs.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_feedback.py` | generic | None (a test of `tools/feedback.py`). |
+| `tests/test_feedback_gap.py` | generic | None (a test of `tools/feedback.py`). |
+| `tests/test_feedback_quote.py` | generic | None (a test of `tools/feedback.py`). |
 | `tests/test_health.py` | generic | None (a test of `tools/health.py`). |
 | `tests/test_health_compare.py` | generic | None (a test of `tools/health.py`). |
 | `tests/test_health_conflicts.py` | generic | None (a test of `tools/health.py`). |

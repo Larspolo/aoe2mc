@@ -7,7 +7,8 @@ a second push of another claim commit is never a fast-forward. Later claims of t
 
     python3 tools/claim.py N              # claim ticket N; exit 0: yours (it adds `in-progress` and "Started by"),
                                           # exit 1: it names the run that was first
-    python3 tools/claim.py N --release    # give your claim back (needs-human, blocked, hand-off)
+    python3 tools/claim.py N --release    # give your claim back (needs-human, blocked, hand-off); it removes
+                                          # `in-progress` (#3234)
     python3 tools/claim.py N --takeover   # take the ticket from a dead run (stale or released claim, #502)
     python3 tools/claim.py N --show       # print the claim refs and the owner
     python3 tools/claim.py N --beat       # show that the own run is alive (at least every 20 minutes)
@@ -33,8 +34,9 @@ Three runs read one owner comment at the same time and made three copies of one 
 comment before it acts on it: `--comment` pushes `claim/comment-ID` once (no slots, no release).
 Three runs refilled the queue of one epic within 2 minutes and made copies of tickets (#505). So a run locks the
 refill before it makes tickets: `--refill` pushes `claim/refill-E-S` once. S is the state of the work: the number of
-closed sub-issues of epic E (a new lock when a sub-issue closes), or the UTC hour for E = 0 (the whole refill) and for
-a ticket E with no sub-issue (#855).
+closed sub-issues of epic E (a new lock when a sub-issue closes), or the UTC hour and its 10-minute slot for E = 0
+(the whole refill), for a ticket E with no sub-issue (#855) and for an epic E with all sub-issues closed (its count
+cannot change any more, #3057).
 
 Parallel runs read the same `runs` counter of the status issue, so "every 5th run" lost 7 of 10 process reviews
 (#898). So `--review` locks one review: `claim/review-<gap>pr-<last review>-<k>`, and only when `gap` PRs merged after
@@ -127,6 +129,17 @@ def start(number):
         print(f"the claim is yours, but the label or the comment failed ({e}): add them by hand")
 
 
+def stop(number):
+    """Remove `in-progress` after a release, as start() adds it: a run that released and left the label held 5
+    tickets for 40 minutes (#3234). A failed call (the label is not there) does not fail the release."""
+    from dashboard import api as call
+    try:
+        call(f"issues/{number}/labels/in-progress", "DELETE")
+        print(f"removed in-progress from #{number}")
+    except Exception as e:                              # the release commit is the lock
+        print(f"released, but the label call failed ({e})")
+
+
 def stale(subject_line, last, now, limit=STALE):
     """True when an open claim (not released) had no beat for `limit` seconds."""
     return not subject_line.startswith("Release") and now - last >= limit
@@ -187,12 +200,14 @@ def refill_state(epic, remote="origin", now=None):
     """The state part of the refill lock: closed sub-issues of the epic on GitHub, else the UTC hour and its 10-minute
     slot: the runs close about 25 tickets per hour, so one refill per hour, then per 15 minutes, left the queue empty
     (#609, #650). A ticket with no sub-issue gets the slot too: else the lock of a run that did not split it stays
-    for ever (#855: #397 waited 5 hours)."""
+    for ever (#855: #397 waited 5 hours). So does an epic with all sub-issues closed: its count cannot change any more
+    (#3057)."""
     t = datetime.datetime.fromtimestamp(now or time.time(), datetime.timezone.utc)
     slot = t.strftime("%Y%m%d%H") + str(t.minute // 10)
     if epic and on_github(remote):
         s = api(f"issues/{epic}").get("sub_issues_summary") or {}
-        return str(s.get("completed", 0)) if s.get("total") else "0-" + slot
+        done, total = s.get("completed", 0), s.get("total")
+        return str(done) if total and done < total else f"{done}-{slot}"
     return slot
 
 
@@ -497,6 +512,8 @@ def main(argv=None):
     if a.release:
         ref = release(a.number, a.remote)
         print(f"released {ref}" if ref else "nothing to release")
+        if ref and on_github(a.remote):
+            stop(a.number)
         return 0
     issue = api(f"issues/{a.number}") if on_github(a.remote) else None
     if isinstance(issue, dict) and issue.get("state") == "closed":   # the candidate list was older (#2339)

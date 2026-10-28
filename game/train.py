@@ -1168,6 +1168,9 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     del nbt["Pos"]
     uuid = units.uuid_str(nbt["UUID"])
     g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {units.summon_snbt(nbt)}")
+    if o["player"] > 0:
+        import owners                                              # owners imports gather, gather imports this module
+        owners.add(g, uuid, name, o["player"])                     # an enemy of the other sides (#2992)
     import combat, gather                                          # both import gather, gather imports this module
     g.command(combat.stats_command(uuid, name, stats(g, name), civs.taken(g, name), civs.friendly(g, name)))
     import spoils                                                  # spoils imports this module

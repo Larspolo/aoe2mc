@@ -52,6 +52,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import owners  # noqa: E402
 import table  # noqa: E402
 import units  # noqa: E402
 
@@ -300,7 +301,7 @@ def take(g, uuid):
     import gather                                                  # gather imports this module
     name, new = g.enemies.pop(uuid), g.player
     obj = next((o for o in g.data["objects"] if o.get("uuid") == uuid), {})
-    old, obj["player"] = obj.get("player"), new
+    old, obj["player"] = owners.player(g, uuid), new
     for run in ("", f"execute as {uuid} on vehicle run ", f"execute as {uuid} on passengers run "):
         who = "@s" if run else uuid
         for cmd in (f"tag {who} remove aoe2mc.p{old}", f"tag {who} add aoe2mc.p{new}", f"team join p{new} {who}"):
@@ -350,7 +351,7 @@ def win(g, uuid):
 def resist(g, uuid):
     """The extra conversion intervals of the unit uuid: Devotion and Faith of its player (RESIST), from the Gather of
     that player (g or one of its bots)."""
-    player = next((o.get("player") for o in g.data["objects"] if o.get("uuid") == uuid), None)
+    player = owners.player(g, uuid)                                # also a unit of the game (#2992)
     techs = next((x.techs for x in (g, *(b.g for b in g.bots)) if x.player == player), ())
     return sum(RESIST.get(t, 0) for t in techs)
 
@@ -419,7 +420,7 @@ def convert(g, dt):
             if job[2] > warm and (job[2] >= sure or g.chance.random() < chance):
                 group = [k for k, j in g.converting.items() if j[0] == target]
                 rest = [m] if "THEOCRACY" in g.techs else [k for k in group if k in pos and near(g, k, target, pos)]
-                owner = next((o.get("player") for o in g.data["objects"] if o.get("uuid") == target), None)
+                owner = owners.player(g, target)
                 (win if fort else die if heresy(g, owner) else take)(g, target)
                 for k in group:
                     del g.converting[k]

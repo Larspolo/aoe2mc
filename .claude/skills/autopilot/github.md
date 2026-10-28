@@ -8,6 +8,8 @@ Use the GitHub MCP tools (`mcp__github__*`) when the session has them. Else use 
 it works in cloud and local sessions. Cloud sessions block GraphQL and the search API, so `gh issue list`,
 `gh pr create` and `search/issues` fail there. Put long text in a file and pass it with `-F body=@file.md`.
 Put the method after the path (`... -X PATCH`): the permission rules match the start of the command.
+`gh api --paginate` stops after the first page in the cloud (403 "Numeric-ID repository paths": the next-page link
+names `repositories/ID`): add `&page=P` in a loop until a page has fewer than 100 entries (#1707).
 
 | Action | `gh api repos/OWNER/NAME` (`repo` in `agent.toml`) + |
 |---|---|
