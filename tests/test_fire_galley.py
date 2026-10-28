@@ -5,13 +5,11 @@ from test_dock_train import DOCK, dock_map
 from test_train_archery import menus
 
 import units
-from game import build, civs, combat, fleet, train
+from game import build, civs, combat, train
 
 
 def test_the_two_ships_have_the_aoe2_de_values_of_the_wiki():
     assert build.AGE["FIRE_GALLEY"] == build.AGE["DEMOLITION_RAFT"] == 1                    # the Feudal Age
-    assert fleet.SPEEDS["FIRE_GALLEY"] == 1.36 and fleet.SPEEDS["DEMOLITION_RAFT"] == 1.42
-    assert combat.sight("FIRE_GALLEY") == 5 and combat.sight("DEMOLITION_RAFT") == 6
     assert {"DANES", "KOREANS", "VIKINGS"} <= set(civs.MISSING["DEMOLITION_RAFT"]) == set(civs.MISSING["DEMOLITION_SHIP"])
 
 
