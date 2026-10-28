@@ -38,7 +38,7 @@ def stats(row):
     assert set(combat.Stats._fields) == set(STATS)
     assert row["hp"] > 0 and row["attack"] >= 0 and row["range"] >= 0 and row["reload"] >= 0, row["name"]
     assert set(row["classes"]) <= CLASSES and len(set(row["classes"])) == len(row["classes"]), row["name"]
-    bonus = CLASSES | {combat.STANDARD, combat.STONE}      # the code adds these two classes to the buildings
+    bonus = CLASSES | {combat.STANDARD, combat.STONE, combat.WALL}   # the code adds these classes to the buildings
     assert set(row["bonus"]) <= bonus and all(isinstance(v, int) for v in row["bonus"].values()), row["name"]
 
 
@@ -61,8 +61,10 @@ def check_buildings(row):
 def check_train(row):
     form(row, {"name": str, "building": (str, type(None)), "slot": int, "item": str, "label": str, "cost": dict,
                "time": int, "help": str},
-         {"age": int, "after": str, "civ": str, "faster": list, "upgrade": list, "note": str, "resist": int, "tribute_fee": int})
+         {"age": int, "after": str, "civ": str, "civs": list, "faster": list, "upgrade": list, "note": str,
+          "resist": int, "tribute_fee": int})
     n = row["name"]
+    only(row)
     assert row["building"] is None or row["building"] in NAMES["buildings.jsonl"], n
     assert 0 <= row["slot"] < 54 and row["time"] > 0 and row.get("age", 1) in (1, 2, 3), n
     assert set(row["cost"]) <= RES and all(isinstance(v, int) and v >= 0 for v in row["cost"].values()), n
@@ -76,11 +78,19 @@ def check_train(row):
         assert all(len(p) == 2 and set(p) <= NAMES["units.jsonl"] for p in pairs), n
 
 
+def only(row):
+    """The key "civs" (#2235): the civilizations that have the item, sorted, fewer than all."""
+    cs = row.get("civs", ["BRITONS"])
+    assert cs and cs == sorted(set(cs)) and set(cs) < NAMES["civs.jsonl"], row["name"]
+
+
 def check_civs(row):
     form(row, {"name": str, "missing": list}, {     # one key per line: parallel tickets add one
+        "arrows": list,
         "cost_per": list,
         "costs": list,
         "drop": dict,
+        "farm_upgrades": float,
         "twice": list,
         "unique": str,
         "units": list,
@@ -88,11 +98,14 @@ def check_civs(row):
     n, known = row["name"], NAMES["train.jsonl"] | NAMES["units.jsonl"] | NAMES["buildings.jsonl"]
     assert set(row.get("drop", {})) <= {"food", "forage"} and all(isinstance(v, NUMBER) for v in row.get("drop", {}).values()), n
     assert set(row["missing"]) <= known and row["missing"] == sorted(set(row["missing"])), n
+    assert not set(row["missing"]) & set(civs.ONLY), n                    # one form for each item (#2235)
     assert row.get("unique", "MILITIA") in NAMES["units.jsonl"], n
     assert set(row.get("twice", ())) <= NAMES["train.jsonl"], n
     for group, value, ages in row.get("units", ()):
         assert group in civs.GROUPS and value in (*combat.Stats._fields, "speed"), (n, group, value)
         assert len(ages) == 4 and all(isinstance(a, NUMBER) for a in ages), (n, group)
+    for what, ages in row.get("arrows", ()):                 # the factor of the base arrows of buildings (#2178)
+        assert set(what) <= NAMES["buildings.jsonl"] and len(ages) == 4 and all(isinstance(a, int) for a in ages), n
     for what, res, ages in row.get("costs", ()):
         names = NAMES["train.jsonl"] | set(build.COSTS)
         if isinstance(what, list):
@@ -120,8 +133,9 @@ def check_gather(row):
 
 def check_build(row):
     form(row, {"name": str}, {"cost": dict, "time": int, "icon": str, "age": int, "needs": str, "gate": bool,
-                              "wall": bool, "age_tech": int, "bot": int, "near": str})
+                              "wall": bool, "age_tech": int, "bot": int, "near": str, "civs": list})
     n = row["name"]
+    only(row)
     assert set(row.get("cost", {})) <= RES and all(isinstance(v, int) for v in row.get("cost", {}).values()), n
     assert row.get("time", 1) > 0 and row.get("age", 1) in (1, 2, 3), n
     assert row.get("needs", "HOUSE") in NAMES["build.jsonl"] | NAMES["train.jsonl"], n
@@ -143,9 +157,14 @@ def check_replay(row):                                     # a walk speed (a nam
     assert len(row) == 2 and row.get("age", 1) in (1, 2, 3) and row.get("walk", 1) > 0, row["name"]
 
 
+def check_taunts(row):                                     # a taunt: its number and AoE2 text (#2234)
+    form(row, {"name": str, "text": str})
+    assert row["name"].isdigit() and row["name"] == str(int(row["name"])) and row["text"], row["name"]
+
+
 CHECKS = {"build.jsonl": check_build, "buildings.jsonl": check_buildings, "cheats.jsonl": check_cheats,
           "civs.jsonl": check_civs, "gather.jsonl": check_gather, "monk.jsonl": check_monk,
-          "replay.jsonl": check_replay, "train.jsonl": check_train, "units.jsonl": check_units}
+          "replay.jsonl": check_replay, "taunts.jsonl": check_taunts, "train.jsonl": check_train, "units.jsonl": check_units}
 
 
 # The keys with two types by design: an "effect" is data, a list of data (#2155) or the name of a function of
