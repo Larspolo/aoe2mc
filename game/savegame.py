@@ -178,7 +178,7 @@ NOT_SAVED = (                                                          # the fie
     "player",                                                          # run.py: the player number
     "record",                                                          # record.py: run.play opens the file of --record again
     "regicide_at",                                                     # regicide.py: the next check time
-    "repair_at",                                                       # repair.py: the next check time
+    "repair_at",                                                       # repair.py: the place of a unit at its repair order, resume() sets it again
     "repairs",                                                         # orders(): the repair of each villager
     "research_at",                                                     # scenario.py: the next check time
     "research_skip",                                                   # scenario.py: the unknown technologies, found again
