@@ -103,7 +103,7 @@
 {"name": "ITALIANS: Dock and University technologies are 25% cheaper.", "civ": "ITALIANS", "bonus": "Dock and University technologies are 25% cheaper.", "in": "COSTS"}
 {"name": "ITALIANS: Fishing Ships are 15% cheaper.", "civ": "ITALIANS", "bonus": "Fishing Ships are 15% cheaper.", "in": "COSTS"}
 {"name": "ITALIANS: Gunpowder units are 20% cheaper.", "civ": "ITALIANS", "bonus": "Gunpowder units are 20% cheaper.", "in": "COSTS"}
-{"name": "JAPANESE: Fishing Ships have double hit points, +2 pierce armor, and work 5%/10%/15%/20% faster in the Dark/Feudal/Castle/Imperial Age.", "civ": "JAPANESE", "bonus": "Fishing Ships have double hit points, +2 pierce armor, and work 5%/10%/15%/20% faster in the Dark/Feudal/Castle/Imperial Age.", "later": "play:naval"}
+{"name": "JAPANESE: Fishing Ships have double hit points, +2 pierce armor, and work 5%/10%/15%/20% faster in the Dark/Feudal/Castle/Imperial Age.", "civ": "JAPANESE", "bonus": "Fishing Ships have double hit points, +2 pierce armor, and work 5%/10%/15%/20% faster in the Dark/Feudal/Castle/Imperial Age.", "in": ["UNITS", "ship_work"]}
 {"name": "JAPANESE: Mills, Lumber Camps and Mining Camps are 50% cheaper.", "civ": "JAPANESE", "bonus": "Mills, Lumber Camps and Mining Camps are 50% cheaper.", "in": "COSTS"}
 {"name": "JAPANESE: Infantry attack 33% faster starting in the Feudal Age.", "civ": "JAPANESE", "bonus": "Infantry attack 33% faster starting in the Feudal Age.", "in": "UNITS"}
 {"name": "JAPANESE: Mounted archers +2 attack vs. Archers (except Skirmishers).", "civ": "JAPANESE", "bonus": "Mounted archers +2 attack vs. Archers (except Skirmishers).", "in": "UNITS"}
@@ -219,7 +219,7 @@
 {"name": "THRACIANS: Elite Skirmisher upgrade is free.", "civ": "THRACIANS", "bonus": "Elite Skirmisher upgrade is free.", "in": "COSTS"}
 {"name": "THRACIANS: (Elite/Imperial) Skirmishers regenerate 5 (10) hit points per minute.", "civ": "THRACIANS", "bonus": "(Elite/Imperial) Skirmishers regenerate 5 (10) hit points per minute.", "in": "REGEN"}
 {"name": "THRACIANS: Battle Drills is available in the Classical Age.", "civ": "THRACIANS", "bonus": "Battle Drills is available in the Classical Age.", "in": "EARLIER"}
-{"name": "THRACIANS: All buildings except Town Centers can be built on any elevation.", "civ": "THRACIANS", "bonus": "All buildings except Town Centers can be built on any elevation.", "later": "play:build"}
+{"name": "THRACIANS: All buildings except Town Centers can be built on any elevation.", "civ": "THRACIANS", "bonus": "All buildings except Town Centers can be built on any elevation.", "gap": "play:build"}
 {"name": "THRACIANS: Forts and towers increase the work rate of nearby miners and lumberjacks in a square of aura range 8 by 15% and serve as resource drop sites for the respective resources.", "civ": "THRACIANS", "bonus": "Forts and towers increase the work rate of nearby miners and lumberjacks in a square of aura range 8 by 15% and serve as resource drop sites for the respective resources.", "in": "AURA"}
 {"name": "THRACIANS: Shepherds and hunters generate gold 3 per minute while gathering from animals (excluding Foxes).", "civ": "THRACIANS", "bonus": "Shepherds and hunters generate gold 3 per minute while gathering from animals (excluding Foxes).", "in": "PER_MINUTE"}
 {"name": "TUPI: Start with +25 of each resource once the first Town Center is built.", "civ": "TUPI", "bonus": "Start with +25 of each resource once the first Town Center is built.", "in": "TOWN_CENTER"}
