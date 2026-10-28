@@ -182,6 +182,8 @@ class Canvas:
         if h >= 6:   # beam between the two floors
             mid = y0 + h // 2
             self.walls(x0, x1, mid, mid + 1, z0, z1, f"{st.beam}[axis=x]")
+            self.box(x0, x0 + 1, mid, mid + 1, z0 + 1, z1 - 1, f"{st.beam}[axis=z]")   # log ends do not show outside
+            self.box(x1 - 1, x1, mid, mid + 1, z0 + 1, z1 - 1, f"{st.beam}[axis=z]")
         for x in range(x0 + 3, x1 - 2, 3):          # extra posts
             for z in (z0, z1 - 1):
                 self.box(x, x + 1, y0 + 1 + low_stone, top, z, z + 1, st.timber)
