@@ -1,14 +1,14 @@
-{"name": "1", "text": "Yes."}
-{"name": "2", "text": "No."}
+{"name": "1", "text": "Yes.", "sound": "entity.villager.yes"}
+{"name": "2", "text": "No.", "sound": "entity.villager.no"}
 {"name": "3", "text": "Food please."}
 {"name": "4", "text": "Wood please."}
 {"name": "5", "text": "Gold please."}
 {"name": "6", "text": "Stone please."}
-{"name": "7", "text": "Ahh!"}
+{"name": "7", "text": "Ahh!", "sound": "entity.villager.hurt"}
 {"name": "8", "text": "All hail, king of the losers!"}
 {"name": "9", "text": "Ooh!"}
 {"name": "10", "text": "I'll beat you back to Age of Empires."}
-{"name": "11", "text": "(Herb laugh)"}
+{"name": "11", "text": "(Herb laugh)", "sound": "entity.witch.celebrate"}
 {"name": "12", "text": "Ah! being rushed."}
 {"name": "13", "text": "Sure, blame it on your ISP."}
 {"name": "14", "text": "Start the game already!"}
@@ -20,14 +20,14 @@
 {"name": "20", "text": "My granny could scrap better than that."}
 {"name": "21", "text": "Nice town, I'll take it."}
 {"name": "22", "text": "Quit touching me!"}
-{"name": "23", "text": "Raiding party!"}
+{"name": "23", "text": "Raiding party!", "sound": "event.raid.horn"}
 {"name": "24", "text": "Dadgum."}
 {"name": "25", "text": "Eh, smite me."}
 {"name": "26", "text": "The wonder, the wonder, the... no!"}
 {"name": "27", "text": "You played two hours to die like this?"}
 {"name": "28", "text": "Yeah, well, you should see the other guy."}
 {"name": "29", "text": "Roggan."}
-{"name": "30", "text": "Wololo."}
+{"name": "30", "text": "Wololo.", "sound": "entity.evoker.prepare_wololo"}
 {"name": "31", "text": "Attack an enemy now."}
 {"name": "32", "text": "Cease creating extra villagers."}
 {"name": "33", "text": "Create extra villagers."}

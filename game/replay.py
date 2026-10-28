@@ -99,6 +99,7 @@ SPEEDS = {r["name"]: r["walk"] for r in ROWS if "walk" in r}
 AGES = tuple(r["name"] for r in sorted((r for r in ROWS if "age" in r), key=lambda r: r["age"]))   # (#1067)
 SOCIETY = tuple(r["name"] for r in ROWS if r.get("society"))      # the buildings of the Society tab (#1086)
 TAUNTS = {r["name"]: r["text"] for r in table.load("taunts.jsonl")}   # number: the AoE2 text (wiki "Taunt", #2234)
+TAUNT_SOUNDS = {r["name"]: r["sound"] for r in table.load("taunts.jsonl") if "sound" in r}   # a good vanilla match only (#2233, #2662)
 
 
 def pretty(name):
@@ -121,6 +122,12 @@ def taunt(chat):
     if n not in TAUNTS:
         return chat
     return f"{chat} ({TAUNTS[n].removeprefix('(').removesuffix(')')})"
+
+
+def taunt_sound(chat):
+    """The playsound command of the taunt of this chat line, or none: the other taunts are text only (#2233, #2662)."""
+    n = chat.strip().split(" ", 1)[0]
+    return [f"playsound minecraft:{TAUNT_SOUNDS[n]} master @a ~ ~ ~ 1 1 1"] if n in TAUNT_SOUNDS else []
 
 
 def mmss(ms):
@@ -348,7 +355,8 @@ class Replay:
             return []
         if kind == "chat" and e.get("text"):
             name, color = self.player(e["player"]) if e.get("player") else ("Game", "white")
-            return ["tellraw @a " + json.dumps([text(f"<{name}> ", color), text(taunt(e["text"]))])]
+            return (["tellraw @a " + json.dumps([text(f"<{name}> ", color), text(taunt(e["text"]))])]
+                    + taunt_sound(e["text"]))
         name, color = self.player(e.get("player"))
         if kind == "flare" and e.get("tile"):                     # a view player sees only its flares (#2403)
             seen = self.pov is None or self.pov == e.get("player") or self.pov in e.get("to", [self.pov])

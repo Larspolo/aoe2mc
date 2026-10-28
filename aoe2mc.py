@@ -430,6 +430,8 @@ def read_scenario(path):
                                                if e.effect_type == CHANGE_VARIABLE else {}),
                                             **({"target": e.target_player}                # "Change Ownership" (#2570)
                                                if e.effect_type == CHANGE_OWNERSHIP else {}),
+                                            **({"target": e.target_player, "diplomacy": e.diplomacy}   # (#2645)
+                                               if e.effect_type == CHANGE_DIPLOMACY else {}),
                                             **({"target": e.target_player, "quantity": e.quantity,   # (#2576)
                                                 "resource": e.tribute_list} if e.effect_type == TRIBUTE else {}),
                                             **({"operation": e.operation, "quantity": e.quantity,
@@ -457,7 +459,8 @@ def read_scenario(path):
             garrisoned = u.garrisoned_in_id not in (None, -1)
             objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name, id=u.unit_const,
                                 player=player, x=u.x, y=u.y, rotation=float(u.rotation or 0), garrisoned=garrisoned,
-                                ref=u.reference_id, holder=u.garrisoned_in_id if garrisoned else None))
+                                ref=u.reference_id, holder=u.garrisoned_in_id if garrisoned else None,
+                                ref_tag=True))      # the tag aoe2mc.r<ref> for the triggers (#2617), not in a record
     return size, terrain, elevation, terrain_names, texts, objects, players
 
 
@@ -2751,6 +2754,7 @@ def team_lines(objects, players):
 
 # AoE2 condition and effect IDs (AoE2ScenarioParser), one per line in alphabetical order (#2613)
 CHANGE_COLOR_MOOD = 72
+CHANGE_DIPLOMACY = 1                                               # "Change Diplomacy" (#2645)
 CHANGE_OBJECT_NAME = 26                                            # "Change Object Name" (#2616)
 CHANGE_OWNERSHIP = 18
 CHANGE_VARIABLE = 56                                               # the scenario variables (#2611)
@@ -2782,6 +2786,7 @@ COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions 
 TICKED = COUNTED + (VARIABLE_VALUE,)                               # conditions of the tick function
 STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list (AoE2 attributes 0 to 3)
 OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
+STANCES = (0, 1, 3)                                # DiplomacyState: ally, neutral, enemy
 SOUNDS = [(r["name"], r["sound"]) for r in units.rows("sounds.jsonl")]  # AoE2 sound name part -> vanilla sound
 
 
@@ -3086,6 +3091,17 @@ def message_text(e):
     return json.dumps({"text": msg}, ensure_ascii=False) if msg else None
 
 
+def diplomacy_lines(e, c):
+    """The commands of "Change Diplomacy" (#2645): the score #p<player>.p<target> of aoe_dip is the stance + 1 and #any
+    of aoe_dip is 1: the scenario mode of the game program changes the stance."""
+    a, b = e["player"], e.get("target", -1)
+    if e.get("diplomacy") not in STANCES or a <= 0 or b <= 0 or a == b:
+        return []
+    c.setup["scoreboard objectives add aoe_dip dummy"] = None
+    c.stats["change diplomacy"] += 1
+    return [f"scoreboard players set #p{a}.p{b} aoe_dip {e['diplomacy'] + 1}", "scoreboard players set #any aoe_dip 1"]
+
+
 def victory_lines(e, c):
     """The command of "Declare Victory" (#2542): the score #p<player> of aoe_win is 1, and the scenario mode of the
     game program ends the game. The load function adds the objective (c.setup)."""
@@ -3116,6 +3132,7 @@ def instruction_lines(e, c):
 # alphabetical order, and its handler function (#2613): no change of trigger_files.
 EFFECTS = {
     CHANGE_COLOR_MOOD: mood_lines,
+    CHANGE_DIPLOMACY: diplomacy_lines,
     CHANGE_OBJECT_NAME: name_lines,
     CHANGE_OWNERSHIP: owner_lines,
     CHANGE_VARIABLE: variable_lines,
