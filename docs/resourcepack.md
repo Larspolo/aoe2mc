@@ -15,6 +15,8 @@ player loads it with the world. Without the option, the world is the same as bef
     assets/minecraft/textures/entity/zombie/husk.png
     assets/minecraft/textures/entity/zombie/zombie.png
     assets/minecraft/textures/entity/zombie_villager/zombie_villager.png
+    assets/minecraft/items/chest.json                (#2746)
+    assets/aoe2mc/models/item/war_wagon.json         (#2746)
 ```
 
 - `pack.mcmeta`: `pack_format`, `min_format` and `max_format` are `VERSIONS[...]["resource_format"]` in `aoe2mc.py`
@@ -31,6 +33,11 @@ player loads it with the world. Without the option, the world is the same as bef
   limbs. The drowned model has its own left arm (32, 48) and leg (16, 48), and `drowned_outer_layer.png` is empty (no
   seaweed). The skeleton horse uses the horse model: one brown coat on the whole texture and the eyes at (3, 21) and
   (16, 21) (`HORSE_EYES`).
+- The cart of the War Wagon (#2746) is a vanilla `chest` item with the `custom_model_data` string `aoe2mc:war_wagon`
+  (`units.cart`). `items/chest.json` selects the cart model for it and keeps the vanilla chest definition
+  (`VANILLA_CHEST`, from the 26.3 client jar) as the fallback. So the entity is the same with and without the pack.
+- A model box out of 0..16 pixels needs an explicit `uv` on each face: else the face reads its texture from the
+  neighbors in the atlas (`cart_model`).
 - The zip has the same bytes for each conversion: sorted names and a fixed time (a release holds the same bytes).
 
 ## Client behavior (26.3, checked with `tools/mc_shot.py`)
