@@ -2952,9 +2952,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (args.length >= 2 && args[0].equals("label")) {
             int n = 0;
             for (Entity e : select(sender, args[1])) {
-                if (e instanceof Minecart cart && !cart.getPassengers().isEmpty()) {
-                    e = cart.getPassengers().get(0);         // a siege unit: its crew has the name line (#1352)
-                }
+                e = crew(e);                                 // a siege unit or a ship: its crew has the name line (#1352, #3086)
                 if (args.length > 2) {                       // a new name keeps the player color of the old one (#941)
                     if (!names.containsKey(e.getUniqueId())) {
                         nameLine(e);                         // the old name of the converter, with its color
