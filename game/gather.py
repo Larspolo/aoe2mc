@@ -57,6 +57,7 @@ import bossbar  # noqa: E402
 import cheats  # noqa: E402
 import civs  # noqa: E402
 import conquest  # noqa: E402
+import defend_wonder  # noqa: E402
 import diplomacy  # noqa: E402
 import flare  # noqa: E402
 import fleet  # noqa: E402
@@ -1817,10 +1818,13 @@ class Gather:
                 sudden_death.tick(self)
             elif self.mode == "battle-royale":                         # the Corruption takes the map (#2439)
                 battle_royale.tick(self, self.tick * NORMAL)
+            elif self.mode == "defend-the-wonder":                     # the attackers win when the Wonder falls (#2441)
+                defend_wonder.tick(self)
             fog.tick(self)                                             # after the bots: their units too (#1389)
             herd.tick(self)                                            # all players: the bots capture too (#1792)
-            if self.victory == "standard":                             # a wonder or all relics win too (#2316)
+            if self.victory == "standard" or self.mode in wonder.RACE:  # a wonder or all relics win too (#2316)
                 wonder.tick(self, self.tick * NORMAL)                  # game seconds, as train.tick
+            if self.victory == "standard" and self.mode not in wonder.RACE:   # Defend the Wonder: only it (#2441)
                 relic_victory.tick(self, self.tick * NORMAL)
             elif self.victory == "king-of-the-hill":                   # the monument in the center (#2360)
                 hill.tick(self, self.tick * NORMAL)
