@@ -61,6 +61,7 @@ the new and the complete own watch towers get the AoE2 hit points, attack and ar
 It researches Shipwright in the Imperial Age (#1490, SHIPWRIGHT): the ships of the dock cost 20 % less wood (price())
 and train 54 % faster (tick()); the technologies of the dock do not change.
 """
+import functools
 import json
 import math
 import os
@@ -205,9 +206,13 @@ def effect(e):
     """The function (name, s) -> s of the key "effect" of a technology of data/train.jsonl (#2029): the name of a
     function of this module (an effect with real logic), or {"if": [tests], "add": {field: n}, "times": {field: f},
     "bonus": {class: n}}. The unit gets the change when one of the tests holds (test(); no "if": each unit). {}: no
-    change of the combat values, the effect is in another place (its "note")."""
+    change of the combat values, the effect is in another place (its "note"). A list: each change in turn (an age gives
+    the eagle scout and the Flemish Militia other values, #2155)."""
     if isinstance(e, str):
         return globals()[e]
+    if isinstance(e, list):
+        changes = [effect(x) for x in e]
+        return lambda name, s: functools.reduce(lambda s, f: f(name, s), changes, s)
     if not e:
         return lambda name, s: s
 
@@ -227,7 +232,8 @@ TECHS = {r["name"]: effect(r["effect"]) for r in ROWS if "effect" in r}   # a te
 # (#1415, #1416): the key "walk" of data/train.jsonl
 SPEEDS = {r["name"]: tuple(r["walk"]) for r in ROWS if "walk" in r}
 SHIPWRIGHT = (0.8, 1.54)                                           # Shipwright: ships cost 80 % wood, train 54 % faster
-FASTER = {"EAGLE_SCOUT": (2, 35)}                                  # unit: the age and its train time from it (#1555)
+FASTER = {r["name"]: tuple(r["faster"]) for r in ROWS if "faster" in r}   # unit: the age and its train time from it
+#                                                                    (#1555), the key "faster" of data/train.jsonl (#2155)
 CONSCRIPT = (tuple(r["name"] for r in BUILDING_ROWS if r.get("conscription")),   # Conscription: these buildings
              next(r["factor"] for r in ROWS if r["name"] == "CONSCRIPTION"))      # train faster (#1455)
 ARROWSLITS = {r["name"]: r["arrowslits"] for r in BUILDING_ROWS if "arrowslits" in r}   # the attack of each tower (#1504)
@@ -619,10 +625,11 @@ def seconds(g, name, building=None):
     """The train time of unit or technology name: TRAIN_TIMES, or the time of FASTER from its age (the eagle scout trains
     in 46 s in the Feudal Age and in 35 s from the Castle Age, AoE2 DE wiki), divided by the work rate of the
     civilization at building (civs.work_rate: Persian town centers and docks, #1894), its rate of the unit group
-    (civs.train_rate: Aztec military units, Khitan skirmishers, #1927) and its age-up rate (civs.age_rate: the Malay, #1926)."""
+    (civs.train_rate: Aztec military units, Khitan skirmishers, #1927) and its age-up rate (civs.age_rate: the Malay, #1926),
+    times its research time of the technology (civs.research_time: the Gothic Loom at once, #2172)."""
     age, time = FASTER.get(name, (9, 0))
     return (time if build.ages(g) >= age else TRAIN_TIMES[name]) / (civs.work_rate(g, building) if building else 1) \
-        / civs.train_rate(g, name) / civs.age_rate(g, name)
+        / civs.train_rate(g, name) / civs.age_rate(g, name) * civs.research_time(g, name)
 
 
 def speed(g, name):
@@ -775,7 +782,8 @@ def tick(g, work):
             q[0]["waits"] = False
         rate = CONSCRIPT[1] if rect in fast and q[0]["name"] not in TECHS else 1   # units only, not technologies
         rate *= SHIPWRIGHT[1] if shipwright(g, q[0]["name"]) else 1          # the ships of a dock, not its technologies
-        q[0]["progress"] += 1 if getattr(g, "aegis", False) else work * rate / seconds(g, q[0]["name"], home.get(rect))   # cheats.aegis
+        time = 0 if getattr(g, "aegis", False) else seconds(g, q[0]["name"], home.get(rect))   # cheats.aegis
+        q[0]["progress"] += work * rate / time if time else 1                # 0: the Gothic Loom at once (#2172)
         if q[0]["progress"] >= 1 and q[0]["name"] in TECHS:
             research(g, q.pop(0))
         elif q[0]["progress"] >= 1 and (v := spawn(g, rect, q.pop(0)["name"])):
