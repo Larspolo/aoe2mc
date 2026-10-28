@@ -25,7 +25,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 | Workflow | When | What |
 |---|---|---|
 | `ci.yml` (CI) | Each PR, each push to `main`, each night | Quick checks (lint, fast tests) on each PR; a Markdown-only PR runs only the doc tests (`tools/ci_select.py`, #2089); a change of `game/plugin` also compiles the Paper plugin (#2437). The full suite each night on `main`. A red `main` opens a `P0` ticket. |
-| `automerge.yml` (Automerge) | After CI, every 5 minutes, by hand | Merges an agent PR with green CI. Skips `hold` and tickets with `needs-human` or `blocked`. When GitHub calls the PR `dirty`, it merges `main` into it with our merge drivers and `tools/unconflict.py` (`land()`), checks `ruff`, pushes and merges at once, with no new CI run (#3199); only a real conflict gets `conflict`, not a merge that failed because another merge landed in the same second (#3063). Then starts CI on `main`, Coverage, Claims and Dashboard. |
+| `automerge.yml` (Automerge) | After CI, every 5 minutes, by hand | Merges an agent PR with green CI, and a PR on any branch with the label `automerge` (#3383). Skips `hold` (it wins over `automerge`) and tickets with `needs-human` or `blocked`. When GitHub calls the PR `dirty`, it merges `main` into it with our merge drivers and `tools/unconflict.py` (`land()`), checks `ruff`, pushes and merges at once, with no new CI run (#3199); only a real conflict gets `conflict`, not a merge that failed because another merge landed in the same second (#3063). Then starts CI on `main`, Coverage, Claims and Dashboard. |
 | `unconflict.yml` (Unconflict) | Every 20 minutes, after each merge | Merges `main` into a conflicted agent PR when git solves the conflict alone (`merge=union` files) or both sides only add lines (`tools/unconflict.py`, #1864; not the same `def` on both sides, and the merge passes `ruff check`, #2631), and starts CI. |
 | `claims.yml` (Claims) | A ticket closes, each day | Deletes the claim refs of closed tickets and old comment locks. The runs cannot delete refs (403). |
 | `dashboard.yml` (Dashboard) | Every 10 minutes (not on events: the API rate limit, #2168) | Writes the dashboard in the body of the status issue (`tools/dashboard.py`). |
@@ -132,7 +132,8 @@ on `main` yet.
 
 1. **GitHub.** Install the Claude GitHub app on the repository. Make the repository public (free Actions minutes).
    Add the ruleset `Protect main` (Settings → Rules): no force push, no delete of `main`. Give the workflows write
-   access (Settings → Actions → General → Workflow permissions), so that Automerge can merge.
+   access (Settings → Actions → General → Workflow permissions), so that Automerge can merge. To let Automerge merge
+   a PR of your own branch, add the label `automerge` to it (#3383).
 2. **Cloud environment.** At claude.ai/code, make one environment for all runs. Network access: keep "Allow package
    managers" on and add the hosts of `docs/ENVIRONMENT.md` ("Network"). Setup script: paste
    `scripts/cloud-setup.sh`. Paste it again when an agent asks (the SessionStart hook compares `SETUP_VERSION`).
