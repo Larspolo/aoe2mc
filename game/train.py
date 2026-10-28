@@ -299,6 +299,16 @@ def fire_commands(g, uuid, name, techs=None):
         out.append(f"aoe charge {uuid} {max(1, round(c['reload'] / gather.NORMAL * 20))} {c['attack']} {c['shots']} "
                    f"{blast} {bonus}" if kind == "charge" else f"aoe detonate {uuid} {c['attack']} {blast} {bonus}")
     return out
+
+
+def volley_command(g, uuid, name):
+    """The plugin command of the extra projectile in each shot of own unit name (the key "volley" of data/civs.jsonl:
+    the Armenian galley line and dromons, #2379), else None. Minecraft feature: one more Arrow entity; the plugin gives
+    it its AoE2 damage."""
+    attack = civs.value("volley", civs.civ(g), {}).get(name)
+    return None if attack is None else f"aoe volley {uuid} 1 {attack}"
+
+
 ORDERS = {r["name"] for r in UNIT_ROWS if r.get("orders")}         # not military, but they take move orders (summon)
 
 
@@ -729,6 +739,8 @@ def research(g, entry, start=False):
             g.command(combat.stats_command(uuid, new, stats(g, new), civs.taken(g, new)))
             if cmd := combat.range_command(uuid, new, g.map.T, s=stats(g, new)):   # the range and blast of an onager
                 g.command(cmd)
+            if cmd := volley_command(g, uuid, new):               # a war galley of the Armenians (#2379)
+                g.command(cmd)
             g.command(combat.label_command(uuid, new))               # the name of a new unit (units.pretty)
     import trebuchet                                               # trebuchet imports this module: import it late
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
@@ -903,6 +915,8 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     import combat, gather                                          # both import gather, gather imports this module
     g.command(combat.stats_command(uuid, name, stats(g, name), civs.taken(g, name)))
     if cmd := combat.range_command(uuid, name, g.map.T, s=stats(g, name)):   # an archer shoots from its range (#670)
+        g.command(cmd)
+    if cmd := volley_command(g, uuid, name):                       # an Armenian galley shoots twice (#2379)
         g.command(cmd)
     if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name)):   # it attacks enemies in sight (#775)
         g.command(cmd)
