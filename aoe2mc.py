@@ -2706,6 +2706,7 @@ COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions 
 CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 14, 15, 18, 72
 DAMAGE_OBJECT = 24                                                     # "Damage Object" (#2571)
 TELEPORT_OBJECT = 35
+CHANGE_OBJECT_NAME = 26                                                # "Change Object Name" (#2616)
 
 
 def turn_area(area, size, k):
@@ -2799,6 +2800,20 @@ def damage_lines(e, T, stats):
     at = found[0]                                                      # Gaia: not the players (effect_units)
     stats["damage"] += 1
     return [f"execute as {at} run damage @s {q}"]                      # damage takes one entity
+
+
+def name_lines(e, T, stats):
+    """The commands of "Change Object Name" (#2616): the new name (with no AoE2 color tags) on the CustomName text of
+    each unit of the effect (effect_units). The label of a unit is on its top entity (units.make_entity), and the
+    selector has no mounts: the rider gets the name. Only the text changes, so the player color stays."""
+    msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()
+    found = effect_units(e, T) if msg else None
+    if found is None:
+        stats["change object name (not supported yet)" if msg else "change object name (no name)"] += 1
+        return []
+    stats["change object name"] += 1
+    return [f"execute as {found[0]} run data modify entity @s CustomName.text set value "   # one entity
+            f"{json.dumps(msg, ensure_ascii=False)}"]
 def owner_lines(e, T, stats):
     """The commands of "Change Ownership" (#2570): the units of the player in the area (area_selector) and their
     mounts get the tag and the team of the target player. A temporary tag marks them first: the selector uses the old
@@ -2850,7 +2865,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     the units leave an area. "Send Chat" is a tellraw, "Display Instructions" a subtitle for its display time;
     "Create Object" and "Remove Object": object_lines (#656). "Change Color Mood": mood_lines (#1876), only with mood. "Change Ownership": owner_lines (#2570).
     "Damage Object": damage_lines (#2571).
-    "Teleport Object": teleport_lines (#2569).
+    "Teleport Object": teleport_lines (#2569). "Change Object Name": name_lines (#2616).
     A disabled trigger does not run."""
     load, files, tick = [], {}, []
     stats = Counter() if stats is None else stats
@@ -2877,6 +2892,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if e["type"] == TELEPORT_OBJECT:
                 lines += teleport_lines(e, T, ground)
+                continue
+            if e["type"] == CHANGE_OBJECT_NAME:
+                lines += name_lines(e, T, stats)
                 continue
             msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()   # AoE2 color tags
             if not msg:
