@@ -13,7 +13,7 @@ orders (#2412: `monk.relics`, the conversions and the rest of the monks), the or
 trade carts and the state of the trebuchets (#2413), the passed time of the treaty (#2409), and the units inside the
 transport ships and siege towers and the units on the way to them (#2411). The military units and villagers that the
 player trained, and the new names of the upgrades, go into the save too (#2532): the world has their mobs, the Gather
-counts them, gives them orders and upgrades them.
+counts them, gives them orders and upgrades them. The cheats that the player turned on go into the save too (#2533).
 """
 import json
 import os
@@ -29,6 +29,13 @@ OPTIONAL = ("limit_left", "policy", "rates", "relic_timer", "switches", "wonder_
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
+CHEATS = (                                                             # game/cheats.py: the cheats that the player
+    "aegis",                                                           # turned on (#2533)
+    "beyond",
+    "free_techs",
+    "pop_cap",
+    "sharing",
+)
 COUNTERS = (                                                           # the parts that a tick did not use yet (#2514):
     "aura_time",                                                       # regen.py
     "cart_heal",                                                       # trade.py
@@ -77,6 +84,7 @@ SPOILS = (                                                             # spoils.
 )
 RIDERS = ("berths", "boarding", "cargo", "loading", "towers", "unloads")   # transport.py, siege_tower.py (#2411)
 KEPT = (                                                               # the fields of Gather that only some have, pack():
+    *CHEATS,
     *COUNTERS,
     *LEFT,                                                             # one tuple per line, in alphabetical order
     *MONK,                                                             # (parallel tickets add one, #2453)
