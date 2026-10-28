@@ -9,8 +9,9 @@ the repair, #2380), the farmers, stances, control groups and garrisons. A villag
 again with Minecraft path finding (P2).
 The save also keeps the wonder and relic victory timers and the market prices (#2324), the game settings of the
 command line (`run.py` options, "settings"), the attack time and wave of the bot (#2325), the relics and the monk
-orders (#2412: `monk.relics`, the conversions and the rest of the monks), and the units inside the transport ships and
-siege towers and the units on the way to them (#2411).
+orders (#2412: `monk.relics`, the conversions and the rest of the monks), the orders of the ships, the routes of the
+trade carts and the state of the trebuchets (#2413), the passed time of the treaty (#2409), and the units inside the
+transport ships and siege towers and the units on the way to them (#2411).
 """
 import json
 import os
@@ -202,7 +203,7 @@ def load(g, d):
         for f in FIELDS:
             setattr(x, f, type(getattr(x, f))(p[f]))
         x.techs = set(p["techs"])
-        for f in PACKED + OPTIONAL + MONK + ROUTES + RIDERS:                    # the next tick shows the boss bars again
+        for f in PACKED + OPTIONAL + MONK + ROUTES + RIDERS:                   # the next tick shows the boss bars again
             if f in p:                                                 # a save before #2257 has no queues
                 setattr(x, f, unpack(p[f]))
         if "villagers" in p:                                           # a save from before #2258 has no orders
