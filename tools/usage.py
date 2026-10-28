@@ -124,6 +124,15 @@ def runs_to_start(target, claims, ready, paused, hi=MAX_FIRE, refill=REFILL):
     return max(0, min(target - claims, ready + refill, hi))
 
 
+def refill_runs(issues, now, minutes=60, refill=REFILL):
+    """`refill` when an open ticket is newer than `minutes` (the refills still find work), else 1: when the epics have
+    no goal left, the refill runs find nothing and stop, and one run is enough to start the next epic (`roadmap`).
+    issues: the open issues and PRs; now: Unix seconds."""
+    new = any("pull_request" not in i and now - datetime.datetime.fromisoformat(
+        i["created_at"].replace("Z", "+00:00")).timestamp() < minutes * 60 for i in issues)
+    return refill if new else min(refill, 1)
+
+
 def lane_plan(target, claims, ready, ready_haiku, weight, paused, hi=MAX_FIRE, refill=REFILL):
     """(K, H): the runs that the pacer starts now, and the H of them for the Haiku task (#1715, #1727). The target and
     the claims are in Opus runs, and a Haiku run counts `weight`. The ready `lane:haiku` tickets get Haiku runs first
@@ -247,13 +256,15 @@ def main(argv=None):
         weights, source = health.lane_weights(health.status_comments())
         eq = claims if lanes is None else health.opus_equivalent(claims, lanes, weights)   # in Opus runs (#1727)
         target = target_runs(usage, now, burn, burn7=burn7)
-        k, h = lane_plan(target, eq, ready, len(dashboard.candidates(open_all, lane="haiku")), weights["haiku"], paused)
+        refill = refill_runs(open_all, now)
+        k, h = lane_plan(target, eq, ready, len(dashboard.candidates(open_all, lane="haiku")), weights["haiku"], paused,
+                         refill=refill)
         cap, flow = read_flow(now)
         if cap is not None:                                     # the flow is the bottleneck: Opus runs repair the PRs
             k, h = min(k, cap), 0
         print(k)
         print(f"haiku {h}")
-        print(f"{describe(usage, now, burn, burn7)} · claims {claims} ({eq:.2f} Opus runs) · ready {ready} · "
+        print(f"{describe(usage, now, burn, burn7)} · claims {claims} ({eq:.2f} Opus runs) · ready {ready} · refill {refill} · "
               f"paused {paused} · {flow} · weights " + ", ".join(f"{n} {w:.2f} ({source[n]})" for n, w in weights.items()),
               file=sys.stderr)
     elif a.target:

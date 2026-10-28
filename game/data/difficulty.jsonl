@@ -1,0 +1,6 @@
+{"name": "easiest", "gather": 0.6, "attack": 2.0, "soldiers": 2, "note": "AoE2 DE \"AI difficulty\" Easiest; AoE2 does not publish the values: a guess (decision #2648, option A)"}
+{"name": "standard", "gather": 1.0, "attack": 1.0, "soldiers": 5, "note": "AoE2 DE \"AI difficulty\" Standard: the bot of #397 (first attack at --bot-attack, 5 soldiers)"}
+{"name": "moderate", "gather": 1.1, "attack": 0.9, "soldiers": 6, "note": "AoE2 DE \"AI difficulty\" Moderate; a guess (#2648)"}
+{"name": "hard", "gather": 1.2, "attack": 0.8, "soldiers": 8, "note": "AoE2 DE \"AI difficulty\" Hard; a guess (#2648)"}
+{"name": "hardest", "gather": 1.35, "attack": 0.7, "soldiers": 10, "note": "AoE2 DE \"AI difficulty\" Hardest; a guess (#2648)"}
+{"name": "extreme", "gather": 1.5, "attack": 0.6, "soldiers": 12, "note": "AoE2 DE \"AI difficulty\" Extreme (the AI gets more resources in AoE2); a guess (#2648)"}
