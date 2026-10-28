@@ -9,7 +9,7 @@ The runs start from three parts (`docs/SYSTEM.md`, "Setup steps of the owner", s
 
 | Part | Expected |
 |---|---|
-| Scheduled task "aoe2mc autopilot" | Hourly at :06, enabled, repository `repo` of `agent.toml`, the prompt of `docs/SYSTEM.md` step 4. |
+| Scheduled task "aoe2mc autopilot" | No schedule (the pacer starts it), enabled, repository `repo` of `agent.toml`, the prompt of `docs/SYSTEM.md` step 4. |
 | Pacer session "aoe2mc pacer" | Alive, the last cycle less than 15 minutes old, model Haiku, skill `pacer`. |
 | Scheduled task "aoe2mc pacer heartbeat" | Hourly at :36, enabled, fires into the pacer session (`persistent_session_id`). |
 | Scheduled task "aoe2mc autopilot <lane>" for each lane of `weights` in `[pacing]` of `agent.toml` (haiku #1715, deep 2026-10-28) | No schedule (the pacer fires it), a new session on each fire (not bound to a session), enabled, the prompt of the autopilot task with the argument `max lane <lane>`; haiku: model `claude-haiku-5-5`; deep: model `claude-opus-5-5` at effort high. The main task runs at effort low. |

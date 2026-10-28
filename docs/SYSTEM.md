@@ -9,7 +9,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 
 | Part | What it does |
 |---|---|
-| Two scheduled tasks (owner's account) | "aoe2mc autopilot" starts one run each hour at :06. "aoe2mc pacer heartbeat" wakes the pacer session each hour at :36. |
+| Scheduled tasks (owner's account) | "aoe2mc autopilot", "aoe2mc autopilot haiku" and "aoe2mc autopilot deep" have no schedule: the pacer starts them (since 2026-10-28 the workflow `pacer.yml` through their API triggers, #3194). With the pacer session: "aoe2mc pacer heartbeat" wakes it each hour at :36. |
 | Pacer session | One long-lived cloud session. Every 10 minutes it starts the runs that the quota target misses (skill `pacer`). It does no ticket work. |
 | Runs | Cloud sessions of the autopilot task. Each run follows the skill `autopilot` with the argument `max`: tickets, one PR each. Many runs work at the same time. |
 | Skills (`.claude/skills/`) | The procedures: `autopilot` (the work cycle), `verify` (checks before a push), `ticket` (write and split tickets), `design` (design tickets), `improve` (process review), `roadmap` (epics from `docs/ROADMAP.md`), `pacer`, `operator` (checks and repairs the start of the runs, only in an owner session), `human` (guides the owner through the `needs-human` tickets on the owner's computer), `demo` (a demo game on the owner's computer: a ticket for each feedback in the chat, the cause of each crash, `game/demo_watch.py`), `dashboard-refresh` (the data files of the owner's dashboard artifact, #982). |
@@ -36,7 +36,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 
 ## The loop of a run
 
-1. The pacer session (or the hourly autopilot task) starts a run. The cloud clones the repository on the session
+1. The pacer (`pacer.yml`, or the pacer session) starts a run. The cloud clones the repository on the session
    branch `claude/<name>`.
 2. The run reads `CLAUDE.md` and follows the skill `autopilot`. It stops at once when the status issue has `paused`.
    It runs `tools/usage.py --fire`: when the running runs reach the target, it only finishes stalled PRs.
@@ -137,7 +137,7 @@ on `main` yet, and the branch of an owner session is not `agent/*` or `claude/*`
    script lists them in `SETUP_NEEDS`). The hook of the project with no version file in `/etc` checks only its
    `SETUP_NEEDS`, and asks for a new script only when one is missing.
 3. **Status issue.** Open issue #1 with the label `agent-status` (the first run makes it when it is missing).
-4. **Scheduled task "aoe2mc autopilot".** Hourly at :06. Repository `Larspolo/aoe2mc`, the environment of step 2.
+4. **Scheduled task "aoe2mc autopilot".** No schedule: the pacer starts it (2026-10-28; before: hourly at :06). Repository `Larspolo/aoe2mc`, the environment of step 2.
    Its prompt: open the repository and pull `main`, read `CLAUDE.md`, follow `.claude/skills/autopilot/SKILL.md`
    with the argument `max`, report on the status issue; do not search for `fire_trigger` (#566); keep to the quota
    target of `python3 tools/usage.py --fire` (stop when the target is 0, or when the claims reach the target);
