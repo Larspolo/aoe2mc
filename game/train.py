@@ -842,6 +842,8 @@ def research(g, entry, start=False, rect=None):
     g.techs.add(entry["name"])
     if not start:
         record.aged(g, entry["name"])                                  # Record Game (#2649)
+    if gather.has_mode(g, "scenario"):                             # a trigger condition "Research Technology" (#2656)
+        g.command(f"scoreboard players set #p{g.player}.{entry['name']} aoe_tech 1")
     if start:                                                      # free: not in the score (score.py, #2355)
         vars(g).setdefault("given", set()).add(entry["name"])
     if (more := gather.FARM_TECHS.get(entry["name"])):             # the new and the live own farms get more food
