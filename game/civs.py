@@ -122,6 +122,9 @@ ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # th
 # center (a Nomad start gets it later); here it is in the start stock. The extra villagers of the Chinese (+3) and
 # Mayans (+1) are units of the map, not of the stock. Lithuanians: +100 food for each town center, here only for the
 # first one.
+# "town_center": the resources that the first town center gives (Tupi +25 of each, #2293): in the start stock when the
+# player has a town center at the start, else when its first town center is complete (build.rise).
+# "bushes": [count, food] of the forage bushes next to the town center at the start (Gurjaras: 2 of 175, #2293).
 # "shared": the shared unique units of its team bonus: an ally of the civilization has them too ("Team bonus", #1619).
 # "not_shared": the shared items that it does not get from an ally (Turks: no Elite Skirmisher).
 # "build", "build_wonder": the build speed of the builders (Spanish: 20 % for wonders). "build_of": the build speed of
@@ -135,6 +138,8 @@ ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # th
 WORK = {r["name"]: r["work"] for r in ROWS if "work" in r}
 LAST = {r["name"]: r["last"] for r in ROWS if "last" in r}   # resources last longer: a gathered unit takes 1 / factor (#2112)
 START = {r["name"]: r["start"] for r in ROWS if "start" in r}
+TOWN_CENTER = {r["name"]: r["town_center"] for r in ROWS if "town_center" in r}
+BUSHES = {r["name"]: r["bushes"] for r in ROWS if "bushes" in r}
 DROP = {r["name"]: r["drop"] for r in ROWS if "drop" in r}
 SHARED = dict(sorted((n, r["name"]) for r in ROWS for n in r.get("shared", ())))
 NOT_SHARED = {n: tuple(sorted(r["name"] for r in ROWS if n in r.get("not_shared", ())))
