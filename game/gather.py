@@ -569,7 +569,8 @@ class Gather:
     victory = "standard"                                               # AoE2 "Victory"; "conquest": no wonder, no relics (#2316)
                                                                        # "king-of-the-hill": hill.py (#2360)
                                                                        # "time-limit", "score": time_limit.py (#2356)
-    mode = "standard"                                                  # AoE2 game mode; "regicide": the King (#2347)
+    mode = "standard"                                                  # AoE2 game mode; "regicide": the King (#2347),
+                                                                       # "wonder-race" (#2406)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
                  cheats=False, start=None, resources="standard", pop_limit=None):
@@ -1862,7 +1863,8 @@ class Gather:
             herd.tick(self)                                            # all players: the bots capture too (#1792)
             if self.victory == "standard" or self.mode in wonder.RACE:  # a wonder or all relics win too (#2316)
                 wonder.tick(self, self.tick * NORMAL)                  # game seconds, as train.tick
-            if self.victory == "standard" and self.mode not in wonder.RACE:   # Defend the Wonder: only it (#2441)
+            if self.victory == "standard" and self.mode not in wonder.RACE:   # Defend the Wonder (#2441),
+                                                                       # Wonder Race (#2406): only a wonder
                 relic_victory.tick(self, self.tick * NORMAL)
             elif self.victory == "king-of-the-hill":                   # the monument in the center (#2360)
                 hill.tick(self, self.tick * NORMAL)
