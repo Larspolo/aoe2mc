@@ -453,8 +453,17 @@ def save(g, player):
 
 
 def write(saves, world, state):
-    """Copy the world and the state (dump) into a new folder under saves. Returns its path."""
-    path = os.path.join(saves, f"{os.path.basename(os.path.normpath(world))}-{time.strftime('%Y%m%d-%H%M%S')}")
+    """Copy the world and the state (dump) into a new folder under saves. Returns its path. A save in the same
+    second as another one gets the suffix -2, -3 and so on (#3046)."""
+    name = f"{os.path.basename(os.path.normpath(world))}-{time.strftime('%Y%m%d-%H%M%S')}"
+    path, n = os.path.join(saves, name), 1
+    while True:
+        try:
+            os.makedirs(path)
+            break
+        except FileExistsError:
+            n += 1
+            path = os.path.join(saves, f"{name}-{n}")
     shutil.copytree(world, os.path.join(path, "world"), ignore=lambda d, names: [n for n in names if n in SKIP])
     with open(os.path.join(path, FILE), "w") as f:
         json.dump(state, f, indent=1, sort_keys=True)
