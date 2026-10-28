@@ -2406,7 +2406,7 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
             if y > top + 1 and not wtop > top and (bx, bz) not in buildings.BRIDGE_CELLS:
                 for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)):   # a shrub or leaves in the block: stand next to it (#415)
                     nx, nz = bx + dx, bz + dz
-                    if nx >> 4 != cx or nz >> 4 != cz or cols.wtop[nx, nz] > cols.top[nx, nz]:
+                    if nx >> 4 != cx or nz >> 4 != cz or cols.wtop[nx, nz] > cols.top[nx, nz] or not cols.inside(nx, nz):
                         continue
                     nt, ncol = int(cols.top[nx, nz]), vol[:, nz & 15, nx & 15]
                     if passable[ncol[nt + 1 - MIN_Y]] and passable[ncol[nt + 2 - MIN_Y]]:
