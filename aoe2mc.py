@@ -3498,11 +3498,24 @@ def resource_lines(e, c):
 
 def resource_by_variable_lines(e, c):
     """The commands of "Modify Resource by Variable" (#2768): the amount is the score #vN of aoe_var (the AoE2 variable
-    N). Add and Subtract change aoe_res, a Set goes to aoe_set, as in resource_lines. Multiply and Divide have no line."""
-    if not 0 <= e.get("resource", -1) < len(STORES) or e["player"] <= 0 or e.get("variable", -1) < 0:
+    N). Add and Subtract change aoe_res, a Set goes to aoe_set, as in resource_lines. Multiply and Divide (#2941) are a
+    set: the stock of the game program (the board score, as variable_by_resource_lines) with the change or the set of
+    earlier effects that the game program did not read yet, times (or divided by) the variable. A division by 0 keeps
+    the score (Minecraft)."""
+    p, v = e["player"], e.get("variable", -1)
+    if not 0 <= e.get("resource", -1) < len(STORES) or p <= 0 or v < 0:
         return []
     c.setup["scoreboard objectives add aoe_res dummy"] = c.setup["scoreboard objectives add aoe_set dummy"] = None
-    target, v = f"#p{e['player']}.{STORES[e['resource']]}", f"#v{e['variable']} aoe_var"
+    target, v = f"#p{p}.{STORES[e['resource']]}", f"#v{v} aoe_var"
+    if e["operation"] in (4, 5):
+        c.setup["scoreboard objectives add aoe_var dummy"] = None
+        board, r = f"{ATTRIBUTES[e['resource']]} aoe_res{p if p > 1 else ''}", "#res aoe_var"
+        new = f"execute if score {{}} matches -2147483648.. run scoreboard players operation {r} {{}} {{}}"
+        return [f"scoreboard players set {r} 0", new.format(board, "=", board),
+                new.format(f"{target} aoe_res", "+=", f"{target} aoe_res"),
+                new.format(f"{target} aoe_set", "=", f"{target} aoe_set"),
+                f"scoreboard players operation {r} {'*' if e['operation'] == 4 else '/'}= {v}",
+                f"scoreboard players operation {target} aoe_set = {r}", f"scoreboard players reset {target} aoe_res"]
     if (op := OPERATIONS.get(e["operation"])) == "set":
         return [f"scoreboard players operation {target} aoe_set = {v}", f"scoreboard players reset {target} aoe_res"]
     return [f"scoreboard players operation {target} aoe_res {'+' if op == 'add' else '-'}= {v}"] if op in ("add", "remove") else []
