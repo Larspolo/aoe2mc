@@ -21,6 +21,7 @@ Field `cost`: the API list price of the calls in $, by the model of each call (`
 Field `verify` (#1704): the wall minutes and the count of the check commands (`pytest`, `ruff`, `mc_check.py`, `mc_shot.py`,
 `render.py`, and `wait`: a loop that waits for the output of a background check), from the time of a tool call to the
 time of its result. A background command has its minutes in the wait loop or the notification, not in its own call.
+Field `force` (#3461): the count of the force pushes that failed (`git push --force`, `-f`, `+ref`; #903 forbids them).
 Phases (`--phases`): each tool call gets a phase (`phase()`), and the wall time from the call to the next call of the
 session counts for it. A call `claim.py N` that wins starts ticket N; the time before the first claim counts for
 the first ticket. The phases that runs gave by hand were guesses: 37 minutes for a 6.5-minute run (2026-10-28).
@@ -149,6 +150,29 @@ def verify_field(v, k=4):
     """The `verify` field of the Tokens: line: the k check kinds with the most minutes (`pytest 4.1m 2x`)."""
     top = sorted(v.items(), key=lambda kv: -kv[1][0])[:k]
     return "verify " + (", ".join(f"{s} {m:.1f}m {n}x" for s, (m, n) in top) or "-")
+
+
+FORCE = re.compile(r"\bgit push\b[^\n|;&]*?(?:\s--force\b|\s--force-with-lease\b|\s-f\b|\s\+\S)")
+REFUSED = re.compile(r"(?i)rejected|denied|refused|forbidden|\b403\b|non-fast-forward")
+
+
+def refused_pushes(records):
+    """The count of the force pushes of one chain of records that failed (#903, #3461): the runs must not force-push."""
+    start, n = set(), 0
+    for r in records:
+        content = (r.get("message") or {}).get("content")
+        if not isinstance(content, list):
+            continue
+        for b in content:
+            if b.get("type") == "tool_use" and b.get("name") == "Bash" \
+                    and FORCE.search(HEREDOC.sub("", (b.get("input") or {}).get("command", ""))):
+                start.add(b["id"])
+            elif b.get("type") == "tool_result" and b.get("tool_use_id") in start:
+                start.discard(b["tool_use_id"])
+                text = b.get("content")
+                text = text if isinstance(text, str) else " ".join(str(x.get("text", "")) for x in text or [])
+                n += bool(b.get("is_error") or REFUSED.search(text))
+    return n
 
 
 # The PR body, the commit message and the comment files of step 8 (a redirect or tee to such a file, `REPORT_NAME`).
@@ -292,8 +316,9 @@ def kind(lab):
     return lab if lab.startswith(("base", "output", "Skill", "mcp", "Agent")) else lab.split(" ", 1)[0]
 
 
-def line(t, k=5, repo=None, checks=None):
-    """The `Tokens:` line of the run report (tools/health.py reads it). checks: the verify() of the run (#1704)."""
+def line(t, k=5, repo=None, checks=None, force=None):
+    """The `Tokens:` line of the run report (tools/health.py reads it). checks: the verify() of the run (#1704).
+    force: the refused force pushes of the run (#3461)."""
     g = defaultdict(float)
     for s, x in t["sinks"].items():
         g[kind(s)] += x
@@ -304,7 +329,8 @@ def line(t, k=5, repo=None, checks=None):
             + (f" (+{t['unpriced']:.0f} calls without a price)" if t.get("unpriced") else "")
             + f" · peak {t['peak'] / 1e3:.0f}k · base {t['base'] / 1e3:.0f}k"
             + ("" if repo is None else f" (repo {repo / 1e3:.0f}k)")
-            + ("" if checks is None else " · " + verify_field(checks)) + " · sinks "
+            + ("" if checks is None else " · " + verify_field(checks))
+            + ("" if force is None else f" · force {force}") + " · sinks "
             + ", ".join(f"{s} {x / t['eq']:.0%}" for s, x in top))
 
 
@@ -356,7 +382,7 @@ def main(argv=None):
         for n, p in phases(chains[0]).items():
             print(f"#{n}: " + ",".join(f"{k}={m:.0f}" for k, m in p.items()))
         return 0
-    print(line(t, repo=repo_base(), checks=dict(v)))
+    print(line(t, repo=repo_base(), checks=dict(v), force=sum(refused_pushes(c) for c in chains)))
     if a.verify:
         for s, (m, n) in sorted(v.items(), key=lambda kv: -kv[1][0]):
             print(f"  {m:6.1f} min  {n:3d}x  {s}")
