@@ -433,6 +433,8 @@ def read_scenario(path):
                                                **({"player": c.source_player,                 # (#2656)
                                                    "technology": techs.get(c.technology, str(c.technology))}
                                                   if c.condition_type == RESEARCHED else {}),
+                                               **({"player": c.source_player}                 # (#2710)
+                                                  if c.condition_type == PLAYER_DEFEATED else {}),
                                                **({"quantity": c.quantity, "unit": c.unit_object}   # (#2714)
                                                   if c.condition_type == UNITS_GARRISONED else {}))
                                           for c in in_order(t.conditions, t.condition_order)],
@@ -448,6 +450,10 @@ def read_scenario(path):
                                             **({"quantity": e.quantity}
                                                if e.effect_type in (DAMAGE_OBJECT, HEAL_OBJECT, CHANGE_OBJECT_SPEED)
                                                else {}),
+                                            **({"cost": [[e.resource_1, e.resource_1_quantity],   # (#2776)
+                                                         [e.resource_2, e.resource_2_quantity],
+                                                         [e.resource_3, e.resource_3_quantity]]}
+                                               if e.effect_type == CHANGE_OBJECT_COST else {}),
                                             **({"stance": e.attack_stance}                # (#2705)
                                                if e.effect_type == CHANGE_OBJECT_STANCE else {}),
                                             **({"quantity": e.quantity, "variable": e.variable,   # (#2611)
@@ -2796,6 +2802,7 @@ AND = 57                                                           # the conditi
 ATTACK_MOVE = 30                                                   # "Attack Move" (#2647)
 CHANGE_COLOR_MOOD = 72
 CHANGE_DIPLOMACY = 1                                               # "Change Diplomacy" (#2645)
+CHANGE_OBJECT_COST = 40                                            # "Change Object Cost" (#2776)
 CHANGE_OBJECT_NAME = 26                                            # "Change Object Name" (#2616)
 CHANGE_OBJECT_RANGE = 32                                           # "Change Object Range" (#2767)
 CHANGE_OBJECT_SPEED = 33                                           # "Change Object Speed" (#2694)
@@ -2825,6 +2832,7 @@ OR = 29
 OWN_FEWER_OBJECTS = 4                                              # conditions on the units of a player (#2573)
 OWN_OBJECTS = 3
 PATROL = 19                                                        # "Patrol" (#2647)
+PLAYER_DEFEATED = 13                                               # the condition "Player Defeated" (#2710)
 PLAY_SOUND = 4                                                     # "Play Sound" (#2644)
 REMOVE_OBJECT = 15
 REPLACE_OBJECT = 43                                                # "Replace Object" (#2703)
@@ -2842,8 +2850,16 @@ UNITS_GARRISONED = 18                                              # the conditi
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
-TICKED = COUNTED + (ACCUMULATE_ATTRIBUTE, DIFFICULTY_LEVEL, DISPLAY_TIMER_TRIGGERED, OBJECT_HP, RESEARCHED,
-                     UNITS_GARRISONED, VARIABLE_VALUE)  # conditions of the tick function
+TICKED = COUNTED + (                                               # conditions of the tick function, one per line
+    ACCUMULATE_ATTRIBUTE,
+    DIFFICULTY_LEVEL,
+    DISPLAY_TIMER_TRIGGERED,
+    OBJECT_HP,
+    PLAYER_DEFEATED,
+    RESEARCHED,
+    UNITS_GARRISONED,
+    VARIABLE_VALUE,
+)
 ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")     # attributes 0-3: the score holders of gather.RESOURCES (#2655)
 BRING_OBJECT_TO_AREA = 1                                               # the condition "Bring Object to Area" (#2620)
 DESTROY_OBJECT = 6                                                     # the condition "Destroy Object" (#2618)
@@ -3242,6 +3258,20 @@ def research_lines(e, c):
     return [f"scoreboard players set #r{c.t['id']}.{i} aoe_tech 1"]   # the game program reads it
 
 
+def cost_lines(e, c):
+    """The command of "Change Object Cost" (#2776): the new cost of the unit or building type of the player (up to 3
+    resources of ATTRIBUTES; a quantity of 0 drops the resource) goes into the list of the data storage aoe2mc:costs as
+    one text "<player> <name> <resource>=<quantity> ...". A converted world has no costs: the scenario mode of the game
+    program (game/scenario.py costs) empties the list and uses the cost in the menus."""
+    cost = [f"{ATTRIBUTES[r].lower()}={q}" for r, q in e.get("cost", ()) if r in range(len(ATTRIBUTES)) and q > 0]
+    _, name = e.get("object") or (None, None)
+    if not name or e["player"] <= 0:
+        c.stats["change object cost (not supported)"] += 1
+        return []
+    c.stats["change object cost"] += 1
+    return [f'data modify storage aoe2mc:costs list append value "{" ".join([str(e["player"]), name, *cost])}"']
+
+
 def order_lines(e, c):
     """The commands of "Patrol" and "Attack Move" (#2647). Vanilla has no walk-to command: the units of the player in
     the area get the tag aoe_order<trigger>_<effect index> (tag_lines: a rider gives it to its horse), and the order
@@ -3433,6 +3463,7 @@ EFFECTS = {
     ATTACK_MOVE: order_lines,
     CHANGE_COLOR_MOOD: mood_lines,
     CHANGE_DIPLOMACY: diplomacy_lines,
+    CHANGE_OBJECT_COST: cost_lines,
     CHANGE_OBJECT_NAME: name_lines,
     CHANGE_OBJECT_RANGE: range_lines,
     CHANGE_OBJECT_SPEED: speed_lines,
@@ -3478,6 +3509,7 @@ SCORE_TESTS = {
     ACCUMULATE_ATTRIBUTE: resource_score,
     DIFFICULTY_LEVEL: lambda c: f"score #level aoe_difficulty matches {c.get('quantity', 0)}",
     DISPLAY_TIMER_TRIGGERED: lambda c: f"score #done{c.get('slot', 0)} aoe_timer matches 1..",   # set at 0 (#2702)
+    PLAYER_DEFEATED: lambda c: f"score #p{c['player']} aoe_lost matches 1..",   # conquest, regicide (#2710)
     RESEARCHED: lambda c: f"score #p{c['player']}.{c['technology']} aoe_tech matches 1..",
     UNITS_GARRISONED: lambda c: f"score #g{c['unit']} aoe_gar matches {max(c['quantity'], 1)}..",   # #2714
     VARIABLE_VALUE: lambda c: f"score #v{c['variable']} aoe_var matches {variable_range(c)}",
@@ -3559,6 +3591,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     or c["type"] == ACCUMULATE_ATTRIBUTE and resource_score(c) is None
                     or c["type"] == OBJECT_HP and (c.get("ref", -1) < 0 or variable_range(c) is None)
                     or c["type"] == UNITS_GARRISONED and c.get("unit", -1) < 0
+                    or c["type"] == PLAYER_DEFEATED and c.get("player", -1) <= 0   # Gaia: no defeat (#2710)
                     for c in conds):                                   # unit classes: not yet
             continue
         ctx = Effect(t, T, ground, players, stats, mood, files, setup, switch, timed)
@@ -3647,7 +3680,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
-    for word in ("aoe_difficulty", "aoe_gar", "aoe_tech"):            # a score that only the game program sets
+    for word in ("aoe_difficulty", "aoe_gar", "aoe_lost", "aoe_tech"):   # a score that only the game program sets
         if any(f" {word} " in x for x in tick):
             setup[f"scoreboard objectives add {word} dummy"] = None
     if switch:
