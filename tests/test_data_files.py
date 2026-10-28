@@ -85,16 +85,9 @@ def only(row):
 
 
 def check_civs(row):
-    form(row, {"name": str, "missing": list}, {     # one key per line: parallel tickets add one
-        "arrows": list,
-        "cost_per": list,
-        "costs": list,
-        "drop": dict,
-        "farm_upgrades": float,
-        "twice": list,
-        "unique": str,
-        "units": list,
-    })
+    form(row, {"name": str, "missing": list}, {"unique": str})
+    for k, v in row.items():                               # a rule, not a list of keys: parallel tickets add keys (#2239)
+        assert isinstance(v, (dict, list, str, int, float)) and not isinstance(v, bool), (row["name"], k, v)
     n, known = row["name"], NAMES["train.jsonl"] | NAMES["units.jsonl"] | NAMES["buildings.jsonl"]
     assert set(row.get("drop", {})) <= {"food", "forage"} and all(isinstance(v, NUMBER) for v in row.get("drop", {}).values()), n
     assert set(row["missing"]) <= known and row["missing"] == sorted(set(row["missing"])), n
@@ -123,7 +116,7 @@ def check_gather(row):
                               "farm": int, "dark": bool, "ship": list, "civilian": bool, "mine": list, "carry": int,
                               "pace": float, "watch": bool})
     n = row["name"]
-    assert len(row) > 1 and set(row.get("drop", ())) <= RES and set(row.get("work", {})) <= RES, n
+    assert len(row) > 1 and set(row.get("drop", ())) <= RES | {"meat"} and set(row.get("work", {})) <= RES, n
     assert all(isinstance(v, NUMBER) for v in row.get("work", {}).values()), n
     if "mine" in row:                                      # [the resource, its amount, the villager name of the miner]
         res, amount, miner = row["mine"]

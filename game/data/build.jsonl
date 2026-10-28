@@ -27,12 +27,14 @@
 {"name": "UNIVERSITY", "cost": {"wood": 200}, "time": 60, "icon": "bookshelf", "age": 2}
 {"name": "WATCH_TOWER", "cost": {"wood": 35, "stone": 125}, "time": 80, "icon": "cracked_stone_bricks", "age": 1}
 {"name": "WONDER", "cost": {"wood": 1000, "gold": 1000, "stone": 1000}, "time": 3500, "icon": "weathered_cut_copper_stairs", "age": 3}
+{"name": "MULE_CART", "cost": {"food": 20, "wood": 80}, "time": 25, "icon": "spruce_trapdoor"}
 {"name": "ARBALESTER", "age": 3}
 {"name": "ARCHER", "age": 1}
 {"name": "ARMORED_ELEPHANT", "age": 2}
 {"name": "BATTERING_RAM", "age": 2}
 {"name": "BATTLE_ELEPHANT", "age": 2}
 {"name": "BOLAS_RIDER", "age": 2}
+{"name": "IBIRAPEMA_WARRIOR", "age": 2}
 {"name": "BOMBARD_CANNON", "age": 3, "needs": "CHEMISTRY"}
 {"name": "CAMEL_RIDER", "age": 2}
 {"name": "CANNON_GALLEON", "age": 3, "needs": "CHEMISTRY"}
@@ -53,6 +55,7 @@
 {"name": "ELEPHANT_ARCHER", "age": 2}
 {"name": "ELITE_BATTLE_ELEPHANT", "age": 3}
 {"name": "ELITE_BOLAS_RIDER", "age": 3}
+{"name": "ELITE_IBIRAPEMA_WARRIOR", "age": 3}
 {"name": "ELITE_CANNON_GALLEON", "age": 3}
 {"name": "ELITE_CARAVEL", "age": 3}
 {"name": "ELITE_EAGLE_WARRIOR", "age": 3}
@@ -132,3 +135,4 @@
 {"name": "IMPERIAL_CAMEL_RIDER", "age": 3}
 {"name": "SAVAR", "age": 3}
 {"name": "LEGIONARY", "age": 3}
+{"name": "JIAN_SWORDSMAN", "age": 2}
