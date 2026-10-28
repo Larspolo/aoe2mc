@@ -173,6 +173,12 @@ def only(who, *filters):
     return who[:-1] + "," + ",".join(filters) + "]" if who.endswith("]") else who + "[" + ",".join(filters) + "]"
 
 
+def has_mode(g, name):
+    """True when the game mode name is on: the --mode of g, or a mode on top of it (g.modes: --regicide,
+    --sudden-death, --empire-wars, the AoE2 "Advanced Settings", #2490)."""
+    return getattr(g, "mode", None) == name or name in getattr(g, "modes", ())
+
+
 def allied(players, a, b):
     """True when AoE2 players a and b are allies: the same player, or the same team number of the players of
     aoe2mc.json (`team`). A player with no team is an enemy of all other players (#1312)."""
@@ -570,6 +576,7 @@ class Gather:
                                                                        # "king-of-the-hill": hill.py (#2360)
                                                                        # "time-limit", "score": time_limit.py (#2356)
     mode = "standard"                                                  # AoE2 game mode; "regicide": the King (#2347)
+    modes = frozenset()                                                # the modes on top of it (has_mode, #2490)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
                  cheats=False, start=None, resources="standard", pop_limit=None):
@@ -1847,11 +1854,11 @@ class Gather:
             for b in self.bots:
                 b.step()
             conquest.tick(self)                                        # not in step(): the bot steps its own Gather
-            if self.mode == "regicide":                                # a player without its King loses (#2347)
+            if has_mode(self, "regicide"):                             # a player without its King loses (#2347)
                 regicide.tick(self)
-            elif self.mode == "sudden-death":                          # a player without its town center loses (#2407)
+            if has_mode(self, "sudden-death"):                         # a player without its town center loses (#2407)
                 sudden_death.tick(self)
-            elif self.mode == "battle-royale":                         # the Corruption takes the map (#2439)
+            if self.mode == "battle-royale":                           # the Corruption takes the map (#2439)
                 battle_royale.tick(self, self.tick * NORMAL)
             elif self.mode == "capture-the-relic":                     # the center relic in a monastery wins (#2440)
                 capture_relic.tick(self)

@@ -193,7 +193,8 @@ def locked(g, name):
         return f"Needs the {('Dark', 'Feudal', 'Castle', 'Imperial')[age]} Age"
     if g is not None and name in NEEDS and NEEDS[name] not in getattr(g, "techs", ()):
         return "Needs " + pretty(NEEDS[name].removesuffix("_TECH"))
-    if name == "TOWN_CENTER" and getattr(g, "mode", None) == "sudden-death" and town_center(g):
+    from gather import has_mode                                        # gather imports this module
+    if name == "TOWN_CENTER" and has_mode(g, "sudden-death") and town_center(g):
         return "Sudden Death: only one town center"                    # (#2407)
     if g is not None and name == "TOWN_CENTER" and ages(g) < (1 if civs.civ(g) == "CUMANS" else 2) and town_center(g):
         return "Needs the Castle Age"                                  # a second one (AoE2; the Cumans: Feudal, #1951)
