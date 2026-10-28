@@ -45,8 +45,8 @@ def test_an_armenian_researches_double_bit_axe_and_gold_mining_at_the_mule_cart(
     for _ in range(60):
         train.tick(g, 1)                                               # one queue: 25 s, then 30 s
     assert {"DOUBLE_BIT_AXE", "GOLD_MINING"} <= g.techs and "STONE_MINING" not in g.techs
-    assert g.work_time("wood") == pytest.approx(before["wood"] / 1.2)   # the same effect as at the camps
-    assert g.work_time("gold") == pytest.approx(before["gold"] / 1.15) and g.work_time("stone") == before["stone"]
+    assert g.work_time("wood") == pytest.approx(before["wood"] / 1.28)  # 40 % more for the Armenians (#2309)
+    assert g.work_time("gold") == pytest.approx(before["gold"] / 1.21) and g.work_time("stone") == before["stone"]
 
 
 def test_the_lumber_and_mining_camp_menus_keep_their_slots():
