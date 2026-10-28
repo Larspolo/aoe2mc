@@ -236,6 +236,7 @@ def effect(e, more=1):
 
 
 TECHS = {r["name"]: effect(r["effect"]) for r in ROWS if "effect" in r}   # a technology: its change of the AoE2 values
+DOCTRINES = {r["name"]: r["building"] for r in ROWS if r.get("doctrine")}   # the switch of the Recruitment Doctrines (#2483)
 EFFECTS = {r["name"]: r["effect"] for r in ROWS if "effect" in r}   # the key "effect" itself: civs.ALSO, civs.MORE
 EACH = {r["name"]: effect({k: v for k, v in r["effect"].items() if k != "if"})   # the same change for each unit
         for r in ROWS if isinstance(r.get("effect"), dict)}       # (civs.SMITH_UNITS, #2174)
@@ -442,7 +443,7 @@ def show(g, player, rect):
             return missing(g, name) or ("researching" if queued(g, name) else "research")
         return f"queue {n}/{QUEUE}"
     items = [(slot, build.LOCKED if build.locked(g, name) else item, label,
-              (" · ".join(f"{v} {r}" for r, v in price(g, name).items()) or "free") + f" · {round(seconds(g, name, building), 1):g} s · "
+              (" · ".join(f"{v} {r}" for r, v in price(g, name, building).items()) or "free") + f" · {round(seconds(g, name, building), 1):g} s · "
               + state(name))
              for name in trains(g, building) if repeatable(g, name) and unlocked(g, name) for slot, item, label in [slots(building, name)]]
     items += [RALLY] if units_of(building) else []
@@ -572,6 +573,9 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
         return None
     if name in TECHS and (not repeatable(g, name) or queued(g, name)) or not unlocked(g, name):   # a technology once
         return None
+    if name in DOCTRINES:                                              # no queue: at once (#2483)
+        switch(g, player, homes(g)[rect])
+        return rect
     if need := build.locked(g, name):                                  # a unit or an age of a later age (#674)
         build.say(g, player, f"{build.pretty(name)}: {need}.")
         return None
@@ -582,7 +586,7 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
     if len(q) >= QUEUE:
         build.say(g, player, f"The queue is full ({QUEUE} units).")
         return None
-    cost = price(g, name)
+    cost = price(g, name, homes(g)[rect])
     if any(g.stock[r] < v for r, v in cost.items()):
         build.say(g, player, f"Not enough resources: a {build.pretty(name).lower()} costs "
                              + ", ".join(f"{v} {r}" for r, v in cost.items()) + ".")
@@ -590,7 +594,9 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
     for r, v in cost.items():
         g.stock[r] -= v
         g.command(f"scoreboard players remove {r.capitalize()} {g.board} {v}")
-    q.append({"name": name, "progress": 0.0, "player": player} | ({"paid": cost} if cost != COSTS[name] else {}))
+    k = vars(g).get("doctrines", {}).get(homes(g)[rect], 0)            # its doctrine stays (#2483)
+    q.append({"name": name, "progress": 0.0, "player": player} | ({"paid": cost} if cost != COSTS[name] else {})
+             | ({"doctrine": k} if k and name not in TECHS else {}))
     return rect
 
 
@@ -609,9 +615,10 @@ def repeatable(g, name):
         and name not in WALL_UPGRADES and count(g, name) < REPEAT
 
 
-def price(g, name):
+def price(g, name, building=None):
     """The cost of unit or technology name with the bonuses of the civilization (civs.COSTS, #1091); a technology is
-    free with the cheat "tech tech one two free" (#968). Shipwright: a ship costs 20 % less wood (#1490)."""
+    free with the cheat "tech tech one two free" (#968). Shipwright: a ship costs 20 % less wood (#1490). A unit of
+    building: the food and wood factor of its Recruitment Doctrine (doctrine(), Macedonians, #2483)."""
     if name in TECHS and getattr(g, "free_techs", False):
         return {}
     if name in (p := civs.policies(g)).get("effects", ()):          # a switch of policy: the gold of the next one (#2485)
@@ -620,7 +627,24 @@ def price(g, name):
     cost = civs.cost(g, name, per_enemy(g, name))
     if "wood" in cost and shipwright(g, name):
         cost["wood"] = int(cost["wood"] * SHIPWRIGHT[0] + 0.5)
+    if building and name not in TECHS and (f := doctrine(g, building)[1]) != 1:
+        cost.update((r, int(v * f + 0.5)) for r, v in cost.items() if r in ("food", "wood"))   # gold stays
     return cost
+
+
+def doctrine(g, building, k=None):
+    """[name, food and wood factor, time factor] of the Recruitment Doctrine k (default: the present one) of building
+    (the civ key "doctrines": Macedonians at the barracks, archery range and stable, AoE2 wiki, #2483), else no change."""
+    rows = civs.value("doctrines", civs.civ(g), []) if building in DOCTRINES.values() else []
+    return rows[vars(g).get("doctrines", {}).get(building, 0) if k is None else k] if rows else ["Balanced", 1, 1]
+
+
+def switch(g, player, building):
+    """The next Recruitment Doctrine of the building type, free and at once (the menu item of DOCTRINES): it changes
+    the cost and time of the units queued from now on, not of the queued ones (AoE2 wiki "Macedonians (Chronicles)")."""
+    d = vars(g).setdefault("doctrines", {})
+    d[building] = (d.get(building, 0) + 1) % len(civs.value("doctrines", civs.civ(g)))
+    build.say(g, player, f"{build.pretty(building)}: {doctrine(g, building)[0]} Recruitment.")
 
 
 def per_enemy(g, name):
@@ -689,17 +713,19 @@ def stats(g, name):
     return s
 
 
-def seconds(g, name, building=None):
+def seconds(g, name, building=None, k=None):
     """The train time of unit or technology name: TRAIN_TIMES, or the time of FASTER from its age (the eagle scout trains
     in 46 s in the Feudal Age and in 35 s from the Castle Age, AoE2 DE wiki), divided by the work rate of the
     civilization at building (civs.work_rate: Persian town centers and docks, #1894), its rate of the unit group
     (civs.train_rate: Aztec military units, Khitan skirmishers, #1927) and its age-up rate (civs.age_rate: the Malay, #1926),
     times its research time of the technology (civs.research_time: the Gothic Loom at once, #2172) and its time factor
-    at building (civs.train_time: Mapuche Settlements, #2432)."""
+    at building (civs.train_time: Mapuche Settlements, #2432), and of the Recruitment Doctrine k of a unit (doctrine(),
+    default the present one, #2483)."""
     age, time = FASTER.get(name, (9, 0))
     return (time if build.ages(g) >= age else TRAIN_TIMES[name]) / (civs.work_rate(g, building) if building else 1) \
         / civs.train_rate(g, name) / civs.age_rate(g, name) * civs.research_time(g, name) \
-        * (civs.train_time(g, building, name) if building else 1)
+        * (civs.train_time(g, building, name) if building else 1) \
+        * (doctrine(g, building, k)[2] if building and name not in TECHS else 1)
 
 
 def speed(g, name):
@@ -916,7 +942,8 @@ def tick(g, work):
             q[0]["waits"] = False
         rate = CONSCRIPT[1] if rect in fast and q[0]["name"] not in TECHS else 1   # units only, not technologies
         rate *= SHIPWRIGHT[1] if shipwright(g, q[0]["name"]) else 1          # the ships of a dock, not its technologies
-        time = 0 if getattr(g, "aegis", False) else seconds(g, q[0]["name"], home.get(rect))   # cheats.aegis
+        time = 0 if getattr(g, "aegis", False) else \
+            seconds(g, q[0]["name"], home.get(rect), q[0].get("doctrine", 0))   # cheats.aegis; the doctrine of the queue (#2483)
         q[0]["progress"] = min(1, q[0]["progress"] + (work * rate / time if time else 1))   # 0: the Gothic Loom at once (#2172)
         if q[0]["progress"] >= 1 and q[0]["name"] in TECHS:
             research(g, q.pop(0))
