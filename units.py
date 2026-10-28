@@ -172,6 +172,9 @@ def no_trades():
     return Compound({"Recipes": List[Compound]([])})
 
 
+CART_AT, CART_SCALE = (0.0, -0.9, -1.7), (1.1, 1.0, 1.5)   # blocks from the seat of the horse, size (#2746)
+
+
 def mob(kind, gear=None, **tags):
     """A mob that stands still. gear: the `equipment` slots {feet, ..., mainhand, offhand, saddle, body}."""
     d = {"id": String("minecraft:" + kind), "NoAI": Byte(1), "PersistenceRequired": Byte(1), "Silent": Byte(1)}
@@ -197,6 +200,19 @@ def mounted(mount, rider, tier=None, mount_tags=None):
     if rider:
         m["Passengers"] = [rider]
     return m
+
+
+def cart(model):
+    """The cart that a horse pulls (#2746): an item_display of a chest that rides the horse, moved behind it and down
+    to the ground. The item has the custom_model_data "aoe2mc:<model>": without a resource pack it is a vanilla chest,
+    with --resource-pack the model of the pack (write_resourcepack). The plugin turns it with its horse."""
+    return {"id": String("minecraft:item_display"),
+            "item": Compound({"id": String("minecraft:chest"), "count": Int(1), "components": Compound({
+                "minecraft:custom_model_data": Compound({"strings": List[String]([String(f"aoe2mc:{model}")])})})}),
+            "transformation": Compound({"translation": List[Float]([Float(v) for v in CART_AT]),
+                                        "left_rotation": List[Float]([Float(0), Float(0), Float(0), Float(1)]),
+                                        "right_rotation": List[Float]([Float(0), Float(0), Float(0), Float(1)]),
+                                        "scale": List[Float]([Float(v) for v in CART_SCALE])})}
 
 
 def vehicle(kind, crew, **tags):
@@ -275,6 +291,13 @@ def siege(n):
     return bool(d) and d["id"] == "minecraft:minecart"
 
 
+def wagon(n):
+    """A unit that a horse pulls: its cart (cart()) rides the horse. The horse shoots as a siege unit of the plugin, with
+    the blast 0 of a shot that hits only the target (combat.range_command, #2746)."""
+    d = classify(n)
+    return bool(d) and any(p["id"] == "minecraft:item_display" for p in d.get("Passengers", []))
+
+
 def classify(n, hero=False):
     """Return the entity description for unit name n, or None to skip it."""
     if invisible(n):
@@ -342,18 +365,20 @@ def classify(n, hero=False):
             return boat("dark_oak", [crew, soldier("skeleton", "crew", "bow")])
         return boat("oak", [crew])
 
+    if "WAR_WAGON" in n:              # one horse pulls the cart (#2746): the horse is the unit, the cart rides it
+        return mob("horse", Tame=Byte(1), Passengers=[cart("war_wagon")])
     # Siege weapons: minecarts with a crew
     if "MOUNTED_TREBUCHET" in n:      # a camel unit that carries its trebuchet (#2191): the trebuchet crew rides a camel
         return mounted("camel", siege_crew(n))
     if hero and has(n, *HEROES["siege"]) or n.endswith("_RAM") or has(n, "MANGONEL", "ONAGER", "SCORPION", "TREBUCHET",
                                              "BOMBARD_CANNON", "SIEGE_TOWER", "ORGAN_GUN", "HOUFNICE",
-                                             "ROCKET_CART", "WAR_WAGON", "HUSSITE_WAGON", "COBRA_CAR",
+                                             "ROCKET_CART", "HUSSITE_WAGON", "COBRA_CAR",
                                              "FLAMETHROWER", "CHARIOT", "RATHA", "CATAPULT"):
         if siege_crew(n):
             crew = siege_crew(n)
         elif n.endswith("_RAM") or "SIEGE_TOWER" in n:
             crew = soldier("zombie", "crew")
-        elif has(n, "SCORPION", "WAR_WAGON", "HUSSITE", "CHARIOT", "RATHA"):
+        elif has(n, "SCORPION", "HUSSITE", "CHARIOT", "RATHA"):
             crew = soldier("skeleton", "crew", "crossbow" if "SCORPION" in n else "bow")
         elif has(n, "BOMBARD", "ORGAN", "HOUFNICE", "ROCKET", "COBRA"):
             crew = mob("pillager", hands("crossbow"))
@@ -459,7 +484,8 @@ def uuid_str(ints):
 
 
 def top_entity(nbt):
-    while "Passengers" in nbt and len(nbt["Passengers"]):
+    """The entity of the unit: the top rider; a cart display (cart()) is no unit, its horse is (#2746)."""
+    while "Passengers" in nbt and len(nbt["Passengers"]) and nbt["Passengers"][0]["id"] != "minecraft:item_display":
         nbt = nbt["Passengers"][0]
     return nbt
 
