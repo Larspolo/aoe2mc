@@ -1082,6 +1082,7 @@ class Gather:
                 self.dead[v.prey] = tile
                 self.map.carcasses[tile] = self.map.carcasses.get(tile, 0) + hunt_food(name)
                 self.map.rot[tile] = DECAY.get("COW" if name.startswith("COW_") else name, 0) * civs.decay(self)
+                self.body(tile)
                 if herdable(name):
                     self.map.herds.add(tile)
         v.tree, v.prey, v.path = self.dead.get(v.prey), None, []
@@ -1094,6 +1095,21 @@ class Gather:
             food = self.map.carcasses[tile] = max(0, self.map.carcasses.get(tile, 0) - rate * dt)
             if not food:
                 del self.map.rot[tile]
+                self.unbody(tile)
+
+    def body(self, tile):
+        """Show the body of a carcass: a raw beef item display that lies flat on the middle of its tile, until its food
+        is gone (#3272). A display entity has no AI, hit box or drops, and a kill by its tag removes it."""
+        x, z = (int(c * self.map.T + self.map.T // 2) for c in tile)
+        self.command(f"kill @e[type=item_display,tag=aoe_carcass_{tile[0]}_{tile[1]}]")   # a second kill on the tile
+        self.command(f"summon item_display {x + 0.5} {self.map.y(x, z) + 0.05} {z + 0.5} {{Tags:[\"aoe_carcass\","
+                     f"\"aoe_carcass_{tile[0]}_{tile[1]}\"],item:{{id:\"minecraft:beef\",count:1}},"
+                     f"transformation:{{left_rotation:[0.7071f,0f,0f,0.7071f],right_rotation:[0f,0f,0f,1f],"
+                     f"translation:[0f,0f,0f],scale:[1.2f,1.2f,1.2f]}}}}")
+
+    def unbody(self, tile):
+        """Remove the body of an empty carcass (#3272)."""
+        self.command(f"kill @e[type=item_display,tag=aoe_carcass_{tile[0]}_{tile[1]}]")
 
     def goals(self, tile):
         """The cells where a villager works a resource: on a farm, else next to it."""
@@ -1677,7 +1693,8 @@ class Gather:
                         self.harvest(v.tree)
                         self.tend(v)
                     elif v.tree in self.map.carcasses:
-                        pass                                           # a carcass has no blocks
+                        if src[v.tree] <= 0:                           # a carcass has no blocks, only its body
+                            self.unbody(v.tree)
                     elif v.tree in self.map.fish:                      # a shore fish: its mob goes when empty (#2349)
                         if src[v.tree] <= 0:
                             fleet.remove(self, v.tree)
