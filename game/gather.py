@@ -71,6 +71,7 @@ import regen  # noqa: E402
 import regicide  # noqa: E402
 import relic_victory  # noqa: E402
 import repair  # noqa: E402
+import score  # noqa: E402
 import siege_tower  # noqa: E402
 import stance  # noqa: E402
 import table  # noqa: E402
@@ -231,6 +232,8 @@ class Map:
         self.fish, self.shore = {}, set()                              # tile -> food of a fish (#1283), shore fish
         self.fish_mobs, self.docks = {}, []                            # tile -> mob of a fish; own dock cells (#1384)
         self.traps = {}                                                # own fish trap tile -> its cells (#1438)
+        civ = data.get("players", {}).get(str(player), {}).get("civ")
+        self.trap_food = round(TRAP_FOOD * civs.value("trap_food", civ, 1))   # food of a new own fish trap (Malay, #2333)
         self.aura = civs.AURA.get(data.get("players", {}).get(str(player), {}).get("civ"), {})   # Thracians (#2378)
         self.auras = []                                                # the cells of own aura buildings
         for o in data["objects"]:
@@ -278,7 +281,7 @@ class Map:
             return
         self.blocked |= cells - {tuple(c) for c in open_cells}
         if own and "FISH_TRAP" in name and tile:                       # the food of the fishing ships (#1438)
-            self.fish[tile], self.traps[tile] = TRAP_FOOD, cells
+            self.fish[tile], self.traps[tile] = self.trap_food, cells
         if own:
             self.drop_site(name, cells)
         if own and "DOCK" in name:                                     # the drop site of the fishing ships (#1384)
@@ -1422,6 +1425,7 @@ class Gather:
             self.sieged.discard(uuid)
             import spoils                                              # spoils imports this module
             spoils.loot(self, uuid)                                    # Danes (#2271)
+            score.razed(self, uuid)                                    # the military score (#2355)
             x0, y0, z0, x1, _, z1 = self.forts.pop(uuid)
             for o in build.sides(self):                                # the other sides attack it no more (#1819)
                 o.forts.pop(uuid, None)
@@ -1518,6 +1522,7 @@ class Gather:
         fleet.tick(self, self.tick * NORMAL)
         monk.relic_tick(self, self.tick * NORMAL)
         trade.tick(self)
+        trade.heal(self, self.tick * NORMAL)
         bossbar.tick(self)
         for site in self.sites:
             builders = [v for v in [*self.villagers.values(), *self.ships.values()] if v.state == "build" and v.site is site]
@@ -1807,5 +1812,6 @@ class Gather:
             if self.victory == "standard":                             # a wonder or all relics win too (#2316)
                 wonder.tick(self, self.tick * NORMAL)                  # game seconds, as train.tick
                 relic_victory.tick(self, self.tick * NORMAL)
+            score.tick(self)
             treaty.tick(self, self.tick * NORMAL)
             time.sleep(max(0.0, self.tick / self.speed - (time.time() - t)))   # a step stays tick game seconds
