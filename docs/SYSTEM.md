@@ -223,6 +223,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_claim_revived.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_claim_takeover.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_dashboard.py` | generic | None (a test of `tools/dashboard.py`). |
+| `tests/test_dashboard_claimed.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_decide.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_muted.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_overlap.py` | generic | None (a test of `tools/dashboard.py`). |

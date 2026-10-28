@@ -130,6 +130,8 @@ well as an Opus run. Judge each ticket: there is no quota of Haiku tickets.
   On hard coding tests Haiku 5.5 is far below Opus 5.5 (SWE-bench Pro about 65 % against 90 %), on clear tasks near it.
 - Measured here (#1717): Haiku runs merged 9 of 9 PRs, take about 2.4 times as long (34 min against 14 min) and use
   a small part of the quota of an Opus run (`weights` in `python3 tools/usage.py --fire`).
+- Measured on 2026-10-28: 22 PRs of 24 Haiku tickets. At API prices a Haiku ticket costs about 1/8 of an Opus
+  ticket, and about 1/25 while its prompt stays below 100k tokens (one Haiku ticket: $0.07, Opus: $1.70 to $2.10).
 When you are not sure, do not add it: an Opus run takes the ticket. A Haiku run that finds the ticket unclear
 removes the label (`autopilot` skill, `queue.md`).
 While `reserved` in `[pacing]` of `agent.toml` names the lane, Opus runs never take its tickets (#1994).

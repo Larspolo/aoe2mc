@@ -8,7 +8,9 @@ when fewer tickets are ready than the target number of runs (the refill), and in
 When the argument names `lane haiku` (the scheduled task "aoe2mc autopilot haiku"), run
 `git config aoe2mc.lane haiku` first (the claims then tell the pacer that this run is cheap, #1727), pick only with
 `python3 tools/dashboard.py --next --lane haiku`, skip the epic check, the queue refill, the roadmap review and the
-process review, and stop when no `lane:haiku` ticket is ready. A ticket that is not as clear as its label says: release
+process review, and stop when no `lane:haiku` ticket is ready. Do one ticket per run: stop after its report,
+also with the argument `max` (a Haiku call costs 5 times more above 100k prompt tokens, and the Haiku runs
+reached 91k to 200k; the pacer starts a fresh run with a 65k context for the next ticket, 2026-10-28). A ticket that is not as clear as its label says: release
 the claim, remove `lane:haiku`, comment why in one line, and take the next one. Write the report with `tools/report.py` (`report.md`): it adds `· lane haiku` from the git config (#1982).
 
 ## Large tickets (step 4)
