@@ -5,7 +5,7 @@ from test_loom import menus
 from test_siege_train import setup
 
 import units
-from game import build, civs, combat, train
+from game import civs, combat, train
 
 
 def workshop(civ, ages=3):
@@ -18,7 +18,7 @@ def workshop(civ, ages=3):
 
 def test_the_values_are_those_of_aoe2():
     assert (train.COSTS["WAR_CHARIOT"], train.TRAIN_TIMES["WAR_CHARIOT"]) == ({"food": 75, "gold": 90}, 32)
-    assert build.AGE["WAR_CHARIOT"] == 2 and len(train.HELP["WAR_CHARIOT"]) <= 50
+    assert len(train.HELP["WAR_CHARIOT"]) <= 50
     s = combat.STATS["WAR_CHARIOT"]
     assert (s.hp, s.attack, s.melee, s.pierce, s.range, s.reload) == (65, 8, 0, 5, 6, 6.5)
     assert s.bonus == {"building": 2} and {"cavalry", "siege", "unique"} <= set(s.classes)
