@@ -7,6 +7,7 @@ each conflicted file when all its hunks have an empty base, checks the result (P
 `git add`s it. Exit 0: all conflicts are solved, commit the merge. Exit 1: a real conflict stays (it names it).
 A table of keyed one-line entries ("KEY": ...) stays in alphabetical order (CLAUDE.md, "Code style").
 A hunk in which both sides add a `def` or `class` of the same name stays a conflict: the second one hides the first (#2631).
+A conflicted file with no markers (one side deletes it, the other changes it) stays a conflict (#3062).
 """
 import json
 import re
@@ -76,6 +77,8 @@ def solve_some(text):
 
 def solve(text):
     """The text with each add-add hunk solved, or (None, reason)."""
+    if not any(t.startswith("<<<<<<< ") for t in text.splitlines()):    # git keeps the changed side as it is
+        return None, "no conflict markers: a modify/delete conflict, solve it with git"
     text, left = solve_some(text)
     return (None, left[0][1]) if left else (text, "")
 
@@ -99,7 +102,10 @@ def main():
                            check=True).stdout.split()
     solved = {}
     for f in files:
-        text, why = solve(open(f, encoding="utf-8").read())
+        try:
+            text, why = solve(open(f, encoding="utf-8").read())
+        except (OSError, UnicodeDecodeError) as e:     # a rename/delete leaves no file, a binary file is no text
+            text, why = None, f"cannot read: {e}"
         why = why or check(f, text)
         if why:
             print(f"{f}: {why}")
