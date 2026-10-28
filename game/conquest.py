@@ -36,7 +36,7 @@ def alive(g, n):
 
 def tick(g):
     """Check the players each EVERY seconds: defeat the ones without units and buildings, end the game."""
-    if g.ended or g.clock() < vars(g).get("conquest_at", 0.0):
+    if g.ended or g.victory == "custom" or g.clock() < vars(g).get("conquest_at", 0.0):   # a scenario: triggers (#2567)
         return
     g.conquest_at = g.clock() + EVERY
     seen, lost = vars(g).setdefault("conquest_seen", set()), vars(g).setdefault("defeated", set())

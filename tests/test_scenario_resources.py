@@ -1,5 +1,5 @@
 """#2576 (epic #2538): the trigger effects "Tribute" and "Modify Resource" change the scores #p<N>.<resource> of the
-world (aoe2mc.resource_lines), and scenario.tick of `run.py --play --mode scenario` puts them into the stocks."""
+world (aoe2mc.resource_lines), and scenario.resources of `run.py --play --mode scenario` puts them into the stocks."""
 import contextlib
 import io
 import os
@@ -68,24 +68,24 @@ class Scores:
         server.command = score
 
 
-def test_tick_puts_the_tribute_into_the_stocks_and_resets_the_scores():
+def test_resources_puts_the_tribute_into_the_stocks_and_resets_the_scores():
     server, g, bot = game({"1": {}, "2": {}})
     g.stock.update(gold=300)
     bot.stock.update(gold=50)
     scores = Scores(server, {("#p2.gold", "aoe_res"): 100, ("#p1.gold", "aoe_res"): -100})
-    scenario.tick(g)
+    scenario.resources(g)
     assert g.stock["gold"] == 200 and bot.stock["gold"] == 150 and not scores.values
     assert f"scoreboard players set Gold {g.board} 200" in server.log
     n = len(server.log)
-    scenario.tick(g)                                                   # once per EVERY seconds
+    scenario.resources(g)                                                   # once per EVERY seconds
     assert len(server.log) == n
 
 
-def test_tick_sets_a_stock_and_never_below_0():
+def test_resources_sets_a_stock_and_never_below_0():
     server, g, bot = game({"1": {}, "2": {}})
     g.stock.update(food=300, wood=20)
     Scores(server, {("#p1.food", "aoe_set"): 1000, ("#p1.food", "aoe_res"): 50, ("#p1.wood", "aoe_res"): -100})
-    scenario.tick(g)
+    scenario.resources(g)
     assert g.stock["food"] == 1050 and g.stock["wood"] == 0
 
 

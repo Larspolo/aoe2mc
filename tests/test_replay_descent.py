@@ -1,5 +1,7 @@
 """A scout cavalry (a horse, 2 x 2 blocks) walks down a slope at an angle at its walk speed, stops at its goal and
-takes no fall damage (#1078). Paper."""
+takes no fall damage (#1078). Paper.
+The speed is in server ticks from the first step to the goal (#2591): before its first step a unit stands 2 to 3 ticks
+(the first AI tick, the path search), and in wall clock time a short walk measured 87 to 92 % of the speed."""
 import math
 import shutil
 import time
@@ -9,7 +11,12 @@ import pytest
 from game import ai, run
 from test_unit_ai import data
 
-STEPS, SIDE = 16, 6                        # down 1 block per block toward -z, and SIDE blocks to the side (-x)
+STEPS, SIDE = 32, 12                       # down 1 block per block toward -z, and SIDE blocks to the side (-x)
+
+
+def tick(game):
+    """The game time of the server in ticks: a busy machine does not change it."""
+    return int(game.command("time query gametime").split()[-2])
 
 
 @pytest.mark.mc
@@ -32,11 +39,12 @@ def test_a_scout_cavalry_walks_down_a_slope_at_its_speed(tiny_world, tmp_path):
         time.sleep(1)
         health = data(game, "h", "Health")
         p0 = data(game, "h", "Pos")
-        t0 = time.time()
+        t0, first = time.time(), None
         ai.move(game, "@e[tag=h,limit=1]", "SCOUT_CAVALRY", 4, goal[0], y, goal[1], rate=4.0)
         while time.time() < t0 + 20 and math.dist((p := data(game, "h", "Pos"))[::2], goal) > 1.5:
-            time.sleep(0.02)
-        down = math.dist(p[::2], p0[::2]) / (time.time() - t0)
+            if first is None and p != p0:
+                first = p, tick(game)
+        down = math.dist(p[::2], first[0][::2]) / ((tick(game) - first[1]) / 20)
         time.sleep(1)
         end = math.dist(data(game, "h", "Pos")[::2], goal)
         want = ai.walk_speed("SCOUT_CAVALRY", 4, 4.0)                 # 19.2 blocks per second
