@@ -2518,7 +2518,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     rider(mob).setTarget(null);
                 }
                 if (gates.any()) {                                     // through an own gate (#1325, #1656)
-                    gates.raise(mob);
+                    gates.raise(mob, goal);
                 }
                 dry(mob, goal);
                 mob.getPathfinder().moveTo(goal, speed);

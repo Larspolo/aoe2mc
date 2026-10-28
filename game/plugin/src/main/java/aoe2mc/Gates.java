@@ -34,6 +34,8 @@ final class Gates {
     static final int PERIOD = 10;                         // ticks between two checks: a unit waits at most 0.5 s
     static final double NEAR = 2;                         // blocks around the bars (the decision #1323)
     static final int HOLD = 20;                           // ticks open after raise(): a unit without AI plans a tick later
+    static final double DETOUR = 1.5;                     // raise(): a gate on a way at most this times the straight way
+    static final double SLACK = 8;                        // blocks more: a short way around a corner of the wall (#3075)
 
     private record Gate(World world, String team, BoundingBox box, List<Block> bars) {}
 
@@ -114,12 +116,18 @@ final class Gates {
         return !gates.isEmpty();
     }
 
-    /** Raise the closed gates of the side of the mob and its allies before it plans the path of an order: the path
-     * may go through them, and tick() keeps them open while the path does. */
-    void raise(Mob mob) {
+    /** Raise the closed gates of the side of the mob and its allies before it plans the path of an order to goal: the
+     * path may go through them, and tick() keeps them open while the path does. Only the gates near the way from the
+     * mob to the goal (DETOUR, SLACK): the orders of own units far from a gate do not open it for an enemy (#3075). */
+    void raise(Mob mob, Location goal) {
         String side = AoePlugin.side(mob);
+        Location from = mob.getLocation();
+        double straight = from.distance(goal);
         gates.forEach((key, g) -> {
-            if (AoePlugin.allied(side, g.team()) && standing(g) && !locked.contains(key)) {
+            Location c = g.box().getCenter().toLocation(g.world());
+            boolean on = g.world().equals(from.getWorld())
+                    && from.distance(c) + c.distance(goal) <= DETOUR * straight + SLACK;
+            if (on && AoePlugin.allied(side, g.team()) && standing(g) && !locked.contains(key)) {
                 hold.put(key, Bukkit.getCurrentTick() + HOLD);
                 if (!open.getOrDefault(key, false)) {
                     set(g, key, true);
