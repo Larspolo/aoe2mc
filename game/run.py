@@ -284,9 +284,22 @@ def bot_seat(players, people):
     return player, next((p for p in range(1, player) if not gather.allied(players, player, p)), 1)
 
 
+def civ_choices(values):
+    """{player: civilization} of the --civ values ("1=BRITONS", #2267). An unknown name stops with the list of names."""
+    import civs
+    names, out = sorted(r["name"] for r in civs.ROWS), {}
+    for v in values or ():
+        player, _, name = v.partition("=")
+        if not player.isdigit() or name.upper() not in names:
+            sys.exit(f"--civ {v}: write PLAYER=CIVILIZATION, one of: {', '.join(names)}")
+        out[int(player)] = name.upper()
+    return out
+
+
 def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1,
-         speed=1.0, state=None):
-    """state: the saved state of the players (savegame.dump) for a loaded game (#2255)."""
+         speed=1.0, state=None, civ=None):
+    """state: the saved state of the players (savegame.dump) for a loaded game (#2255). civ: {player: civilization}
+    in place of the civilization of the scenario (civ_choices, #2267)."""
     import gather
 
     def make(player):
@@ -301,6 +314,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         return g
     with open(os.path.join(world, "aoe2mc.json")) as f:
         data = json.load(f)
+    for player, name in (civ or {}).items():         # before the Gathers: all bonuses (civs.civ) follow it
+        data.setdefault("players", {}).setdefault(str(player), {})["civ"] = name
     game.forceload()
     game.people = people
     g = make(1)
@@ -460,7 +475,11 @@ def main(argv=None):
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")
+    ap.add_argument("--civ", action="append", metavar="N=CIV", help="--play: player N plays civilization CIV (for "
+                    "example 1=BRITONS, repeat it for more players): the game rules change, the buildings of the "
+                    "world keep the architecture of the scenario")
     a = ap.parse_args(argv)
+    civ = civ_choices(a.civ)
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
         sys.exit(f"no level.dat in {a.world}")
     import savegame
@@ -485,7 +504,7 @@ def main(argv=None):
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
                 g = play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal,
-                         people=a.people, speed=a.speed, state=state)
+                         people=a.people, speed=a.speed, state=state, civ=civ)
             if not getattr(g, "ended", None):
                 return
             print(f"The game ended ({g.ended}). The server stays up: type commands, Ctrl-C stops it.",
