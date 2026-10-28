@@ -797,6 +797,7 @@ def name_timeline(objects, timeline, window=16, water=None):
     returns {id: name}."""
     names = {o["ref"]: o["name"] for o in objects if o.get("ref") is not None}
     top = max(names, default=0)
+    names |= {i: e["name"] for e in timeline if e["kind"] == "summon" for i in e.get("objects", ())}   # a setup (#3028)
     used = {}             # new ID -> [time of its first use, "B", "U" or None, {building of its units}, a worker,
     #                       its first MOVE goes inland (None: no MOVE yet), the player of its first use]
     far = None if water is None else ~near(water, SHORE)       # the tiles that a ship cannot go to
@@ -832,6 +833,8 @@ def name_timeline(objects, timeline, window=16, water=None):
         while k < len(firsts) and firsts[k][0] < cmd:   # an ID in use before the command is older than the object
             below, k = max(below, firsts[k][1]), k + 1
         nxt = max(nxt, below + 1)
+        while nxt in names:                              # the ID of a summoned unit (#3028)
+            nxt += 1
         ids = [i for i in range(nxt, nxt + window) if i in used and i not in names and
                (used[i][1] in (role, None) or used[i][1] == "G" and (role == "B" or "SHIP" in name)) and
                used[i][0] >= t - 5000 and used[i][2] <= {name} and   # 5 s: the training times are estimates
@@ -3142,8 +3145,10 @@ def damage_lines(e, c):
 def attack_lines(e, c, armor=None, q=None):
     """The commands of "Change Object Attack" and "Change Object Armor" (#2755): the units of the player in the area and
     the mounts of the riders get an attribute modifier of `quantity` AoE2 points, add or subtract: minecraft:attack_damage
-    (the attack classes 3 pierce and 4 melee) or minecraft:armor. The game program sets these attributes from
-    combat.STATS, so the points are AoE2 points. The modifier ID is the trigger and the effect: one modifier each.
+    (the attack classes 3 pierce and 4 melee) or minecraft:armor, for a world without the game program. The game
+    program does not read these attributes (its plugin takes the values of `aoe stats`): the value order of
+    value_lines (#3083) changes the Stats field of the class (CLASS_ATTRIBUTES). The modifier ID is the trigger and
+    the effect: one modifier each.
     A set (#2909) removes the modifiers of all add and subtract effects of the same kind of the scenario (also of
     "Modify Object Attribute" and its "by Variable", #2861; a unit that does not have one ignores the command), then
     sets the base value.
@@ -3157,6 +3162,7 @@ def attack_lines(e, c, armor=None, q=None):
     stats["change object armor" if armor else "change object attack"] += 1
     at = unit_selector(e, c.T)
     attr = "minecraft:armor" if armor else "minecraft:attack_damage"
+    order = value_lines(e, c, CLASS_ATTRIBUTES.get((8 if armor else 9, e.get("armour_class"))), q)
     if op == "set":
         kind = CHANGE_OBJECT_ARMOR if armor else CHANGE_OBJECT_ATTACK
         old = [f"aoe2mc:trig_{t['id']}_{i}" for t in c.triggers for i, f in enumerate(t["effects"])
@@ -3164,9 +3170,9 @@ def attack_lines(e, c, armor=None, q=None):
                    and f.get("attribute") == 8 + (not armor))
                and OPERATIONS.get(f.get("operation")) in ("add", "remove")]
         return [f"execute as {at} run attribute @s {attr} modifier remove {m}" for m in old] + \
-            [f"execute as {at} run attribute @s {attr} base set {max(q, 0)}"]
+            [f"execute as {at} run attribute @s {attr} base set {max(q, 0)}"] + order
     value = q if op == "add" else -q
-    return [f"execute as {at} run attribute @s {attr} modifier add aoe2mc:trig_{c.t['id']}_{effect_index(e, c)} {value} add_value"]
+    return [f"execute as {at} run attribute @s {attr} modifier add aoe2mc:trig_{c.t['id']}_{effect_index(e, c)} {value} add_value"] + order
 
 
 def object_attribute_lines(e, c):
@@ -3189,7 +3195,8 @@ def object_attribute_by_variable_lines(e, c):
     score #v<N> of aoe_var as the value, when the trigger fires. Hit points: the operation of the score on the base of
     each unit (hp_lines), then hp/apply. Armor and attack, add or subtract: the macro function object_attribute_by_variable
     puts the score into the modifier (attack_lines). Another attribute, a set of armor or attack, or the speed (its
-    attribute is a square root, which a score cannot compute): no line."""
+    attribute is a square root, which a score cannot compute): no line. The game program gets the value order of
+    value_lines with the score as the quantity (the macro function value, #3083)."""
     a, op, v, stats = e.get("attribute"), e.get("operation"), e.get("variable", -1), c.stats
     hp = HP_OPERATIONS.get(op) if a == 0 else None
     found = effect_units(e, c.T) if hp and v is not None and v >= 0 else None
@@ -3212,7 +3219,7 @@ def object_attribute_by_variable_lines(e, c):
              "execute store result storage aoe2mc:hp value int 1 run scoreboard players get #hp aoe_hp",
              "function aoe2mc:hp/apply with storage aoe2mc:hp"]) + "\n"
         c.files["data/aoe2mc/function/hp/apply.mcfunction"] = "$attribute @s minecraft:max_health base set $(value)\n"
-        return [f"{run} function aoe2mc:{name}" for run in hp_runs(found, c)]
+        return [f"{run} function aoe2mc:{name}" for run in hp_runs(found, c)] + variable_value_lines(e, c, "hp")
     s = "aoe2mc:object_attribute_by_variable"
     c.files["data/aoe2mc/function/object_attribute_by_variable.mcfunction"] = \
         "$attribute @s $(attribute) modifier add $(id) $(value) add_value\n"
@@ -3220,7 +3227,23 @@ def object_attribute_by_variable_lines(e, c):
             f'data modify storage {s} id set value "aoe2mc:trig_{c.t["id"]}_{effect_index(e, c)}"',
             f"execute store result storage {s} value int {1 if OPERATIONS[op] == 'add' else -1} run scoreboard players "
             f"get #v{v} aoe_var",
-            f"execute as {unit_selector(e, c.T)} run function aoe2mc:object_attribute_by_variable with storage {s}"]
+            f"execute as {unit_selector(e, c.T)} run function aoe2mc:object_attribute_by_variable with storage {s}"] + \
+        variable_value_lines(e, c, CLASS_ATTRIBUTES.get((a, e.get("armour_class"))))
+
+
+def variable_value_lines(e, c, field):
+    """The value order of value_lines with the score #v<N> of aoe_var as the quantity, when the trigger fires
+    (object_attribute_by_variable_lines, #3083): the macro function value appends the order text."""
+    if field is None:
+        return []
+    s, tag = "aoe2mc:value", f"aoe_order{c.t['id']}_{effect_index(e, c)}"
+    c.files["data/aoe2mc/function/value.mcfunction"] = \
+        '$data modify storage aoe2mc:orders list append value "value $(tag) $(field) $(op) $(value)"\n'
+    return tag_lines(e, c.T, tag) + [f'data modify storage {s} tag set value "{tag}"',
+                                     f'data modify storage {s} field set value "{field}"',
+                                     f'data modify storage {s} op set value "{e["operation"]}"',
+                                     f"execute store result storage {s} value int 1 run scoreboard players get "
+                                     f"#v{e['variable']} aoe_var", f"function aoe2mc:value with storage {s}"]
 
 
 def garrisoned_lines(e, c):
@@ -3268,8 +3291,10 @@ def hp_lines(e, c):
         stats["change object hp (not supported yet)"] += 1
         return []
     stats["change object hp"] += 1
+    order = value_lines(e, c, "hp", q)                                 # the game program (#3083)
     if op == "set":
-        return [f"{run} attribute @s minecraft:max_health base set {min(max(q, 1), 1024)}" for run in hp_runs(found, c)]
+        return [f"{run} attribute @s minecraft:max_health base set {min(max(q, 1), 1024)}" for run in hp_runs(found, c)] \
+            + order
     c.setup["scoreboard objectives add aoe_hp dummy"] = None
     if op in ("multiply", "divide"):
         change = [f"scoreboard players set #k aoe_hp {q}",
@@ -3285,7 +3310,7 @@ def hp_lines(e, c):
          "execute store result storage aoe2mc:hp value int 1 run scoreboard players get #hp aoe_hp",
          "function aoe2mc:hp/apply with storage aoe2mc:hp"]) + "\n"
     c.files["data/aoe2mc/function/hp/apply.mcfunction"] = "$attribute @s minecraft:max_health base set $(value)\n"
-    return [f"{run} function aoe2mc:{name}" for run in hp_runs(found, c)]
+    return [f"{run} function aoe2mc:{name}" for run in hp_runs(found, c)] + order
 
 
 def heal_lines(e, c):
@@ -3325,7 +3350,8 @@ def speed_lines(e, c):
     stats["change object speed"] += 1
     at, value = unit_selector(e, T), round(math.sqrt(q * T * 1.7 / 43.4), 4)
     return [f"execute as {at} on vehicle run attribute @s minecraft:movement_speed base set {value}",
-            f"execute as {at} run attribute @s minecraft:movement_speed base set {value}"]
+            f"execute as {at} run attribute @s minecraft:movement_speed base set {value}"] + \
+        value_lines(dict(e, operation=1), c, "speed", q, index=effect_index(e, c))   # the game program (#3083)
 
 
 def name_lines(e, c):
@@ -3944,6 +3970,21 @@ def stance_lines(e, c):
         return []
     tag = f"aoe_order{c.t['id']}_{effect_index(e, c)}"
     return tag_lines(e, c.T, tag) + [f'data modify storage aoe2mc:orders list append value "stance {tag} {e["stance"]}"']
+
+
+def value_lines(e, c, field, q, index=None):
+    """The value order of an effect that changes one value of units (#3083): attack_lines, hp_lines, speed_lines. The
+    game program sends its own values (`aoe stats`, the walk speed of each order), so the Minecraft attributes of these
+    effects last only until the next value update. As range_lines, the units get the tag aoe_order<trigger>_<effect
+    index>, and the order "value <tag> <field> <operation> <quantity>" goes into the storage aoe2mc:orders: field is a
+    combat.Stats field (hp, attack, melee, pierce) or speed (tiles per second); the operation 1 set, 2 add, 3 subtract,
+    4 multiply, 5 divide. game/scenario.py orders keeps the change on the unit (train.stats, train.speed). No field:
+    no lines."""
+    if field is None:
+        return []
+    tag = f"aoe_order{c.t['id']}_{effect_index(e, c) if index is None else index}"
+    return tag_lines(e, c.T, tag) + \
+        [f'data modify storage aoe2mc:orders list append value "value {tag} {field} {e["operation"]} {q:g}"']
 
 
 def range_lines(e, c):

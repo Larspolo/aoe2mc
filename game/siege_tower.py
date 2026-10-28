@@ -42,11 +42,12 @@ def order(g, player, tower):
     if not who:
         return False
     import ai, train                                               # ai and train import gather
+    g.new_order(who)
     for u in who:
         if (v := g.villagers.get(u)) is not None:                  # the villager stops its work
             v.state, v.path, v.goal, v.site = "garrison", [], None, None
         name = "VILLAGER" if u in g.villagers else g.soldiers[u]
-        ai.move(g, u, name, g.map.T, pos[0], pos[1], pos[2], ai.NORMAL * train.speed(g, name))
+        ai.move(g, u, name, g.map.T, pos[0], pos[1], pos[2], ai.NORMAL * train.speed(g, name, u))
         vars(g).setdefault("boarding", {})[u] = tower
     g.mark(player, {(math.floor(pos[0]), math.floor(pos[2]))})
     return True

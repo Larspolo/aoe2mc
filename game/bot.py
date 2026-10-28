@@ -66,6 +66,7 @@ class Bot:
         self.g.share = share                                           # monk.heresy: the techs of the human player
         if share:
             self.g.map.trees, self.g.map.bushes, self.g.map.mines = share.map.trees, share.map.bushes, share.map.mines
+            self.g.relics = share.relics                                # one list: each relic exists once (#3116)
         self.failed = set()                                            # sources that a villager could not reach
         self.sides = (None, {})                                        # (own and foe places, {tile: at home}) (#1810)
         self.g.home = self.home                                        # the next bush or mine of Gather.nearest too
@@ -219,7 +220,8 @@ class Bot:
         for t, us in sorted(orders.items()):
             if t in g.forts:
                 g.sieged.add(t)                                        # Gather.fall frees its footprint
-            ai.attack(g.game, us, [g.soldiers[u] for u in us], g.map.T, t)
+            ai.attack(g.game, us, [g.soldiers[u] for u in us], g.map.T, t,
+                      [gather.NORMAL * train.speed(g, g.soldiers[u], u) for u in us])
 
     def reach(self, u, at, to):
         """True when soldier u at `at` can attack a target at `to`. AoE2: a land unit cannot walk to a ship on the water

@@ -138,10 +138,9 @@ def unit_hp(g, u):
 def send(g, who, key, goals):
     """The villagers who walk to goals and repair key (a building footprint, or the UUID of a siege unit)."""
     g.repairs = vars(g).get("repairs", {})
+    g.new_order(who)
     for u in who:
         v = g.villagers[u]
-        for t in [t for t, f in g.farmers.items() if f == u]:
-            del g.farmers[t]
         v.tree, v.site, v.prey = None, None, None
         g.repairs[u] = key
         g.task(v, "BUILDER")
@@ -222,7 +221,7 @@ def march(g, men, rect, goals, job="mending", what=None):
     for k, u in enumerate(men):
         x, z = cells[k * len(cells) // len(men)] if cells else ((rect[0] + rect[1]) // 2, rect[3])
         name = g.soldiers[u]
-        ai.move(g, u, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, NORMAL * train.speed(g, name))
+        ai.move(g, u, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, NORMAL * train.speed(g, name, u))
         jobs[u] = rect if what is None else what
 
 

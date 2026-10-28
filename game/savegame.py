@@ -35,7 +35,8 @@ NOMAD = ("later", "nomad")                                             # a Nomad
 ORDERS = ("patrols", "trigger_attributes", "trigger_costs",            # scenario.py: the patrols (#2647), attributes (#2763),
           "trigger_menus", "trigger_names",                            # costs (#2776), menu items (#2775), names (#2821)
           "trigger_places", "trigger_stacks", "trigger_times",         # the menu places (#2864), stacking (#2866), times (#2820),
-          "trigger_trains", "trigger_civs")                            # train locations (#2865), civilization names (#2905)
+          "trigger_trains", "trigger_civs",                            # train locations (#2865), civilization names (#2905),
+          "unit_values")                                               # the values of single units (#3083)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
 CHEATS = (                                                             # game/cheats.py: the cheats that the player
     "aegis",                                                           # turned on (#2533)
@@ -373,11 +374,36 @@ def board_again(x):
     walks += [(u, *p) for u, t in sorted(vars(x).get("boarding", {}).items()) if (p := x.pos(t))]
     for u, *at in walks:
         name = "VILLAGER" if u in x.villagers else x.soldiers.get(u, "")
-        ai.move(x, u, name, x.map.T, *at, ai.NORMAL * train.speed(x, name))
+        ai.move(x, u, name, x.map.T, *at, ai.NORMAL * train.speed(x, name, u))
+
+
+def gates_again(g):
+    """The portcullis of each complete gate of the Gathers of g (build.portcullis: the iron bars, and on Paper the
+    plugin gate): the plugin forgets its gates at a load (#2762). A gate that fell before the save gets none."""
+    import build
+    import combat
+    gone = {u for x in sides(g) for u in vars(x).get("razed", {})}
+    for x in sides(g):
+        for site in getattr(x, "sites", ()):                          # a test Gather may have none
+            x0, x1, z0, z1 = site["footprint"]
+            if site["name"] in build.GATES and site["progress"] >= 1 and combat.target_uuid([x0, z0, x1, z1]) not in gone:
+                build.portcullis(x, site)
+
+
+def relics(d, xs):
+    """The one relic list of the game (monk.relics, #3116) in the saved state d, or None (a save before #2412). A save
+    before #3116 has a list for each player: each relic takes the entry of the player whose monk or monastery holds it."""
+    lists = [(x.player, unpack(p["relics"])) for x in xs if "relics" in (p := d["players"].get(str(x.player), {}))]
+    if len(lists) < 2:
+        return lists[0][1] if lists else None
+    return [next(iter([{"player": n, **rs[i]} for n, rs in lists if i < len(rs) and (rs[i]["monk"] or rs[i]["home"])]
+                      + [rs[i] for _, rs in lists if i < len(rs)]))
+            for i in range(max(len(rs) for _, rs in lists))]
 
 
 def load(g, d):
     """Put the saved state d (dump) on the Gather of each player that it names, and show the resources again."""
+    import build
     import gather
     import train
     for x in sides(g):
@@ -388,8 +414,10 @@ def load(g, d):
             setattr(x, f, type(getattr(x, f))(p[f]))
         x.techs = set(p["techs"])
         for f in PACKED + KEPT:                                        # the next tick shows the boss bars again
-            if f in p:                                                 # a save before #2257 has no queues
+            if f in p and f != "relics":                               # a save before #2257 has no queues
                 setattr(x, f, unpack(p[f]))
+        for site in x.sites:                                           # the buildings work again: farms, drops, forts (#2980)
+            build.settle(x, site, loaded=True)                         # before the saved amounts, which win
         for f, v in p.get("map", {}).items():                          # a save before #2453 has no map
             m = getattr(x.map, f)                                      # in place: the bot shares these (#2983)
             m.clear()
@@ -407,6 +435,9 @@ def load(g, d):
         board_again(x)
         x.show_stock()                                                 # the sidebar of the resources (Gather.setup)
         train.sidebar(x)
+    if (rs := relics(d, sides(g))) is not None:                        # in place: the sides share the list (#3116)
+        for x in sides(g):
+            x.relics[:] = [dict(r) for r in rs]
     for b in bots(g):                                                  # its attack time and wave go on (#2325)
         for f, v in d["players"].get(str(b.g.player), {}).get("bot", {}).items():
             setattr(b, f, v)
@@ -419,6 +450,7 @@ def load(g, d):
     if "stances" in d:
         g.command(gather.allies_command(g.players))
         g.command(gather.neutral_command(g.players))
+    gates_again(g)                                                     # the sites are back: their bars and plugin gates (#2762)
 
 
 def settings(a, d, given=()):
