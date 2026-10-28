@@ -195,6 +195,10 @@ def locked(g, name):
         return "Needs " + pretty(NEEDS[name].removesuffix("_TECH"))
     if name == "TOWN_CENTER" and getattr(g, "mode", None) == "sudden-death" and town_center(g):
         return "Sudden Death: only one town center"                    # (#2407)
+    if getattr(g, "mode", None) == "capture-the-relic":
+        import combat                                                  # combat -> gather -> build: import it late
+        if combat.STANDS_FOR.get(name, name) == "MONASTERY":           # the fortified church too (#1930)
+            return "Capture the Relic: no more monasteries"            # (#2458)
     if g is not None and name == "TOWN_CENTER" and ages(g) < (1 if civs.civ(g) == "CUMANS" else 2) and town_center(g):
         return "Needs the Castle Age"                                  # a second one (AoE2; the Cumans: Feudal, #1951)
 
@@ -763,7 +767,8 @@ def target(g, site):
     """A complete building of combat.BUILDINGS gets its target entity, as a building of the map (combat.setup): the
     AoE2 hit points, and the arrows of a town center, tower or castle (#1202). wonder.tick makes the one of a wonder."""
     import combat                                                      # combat -> gather -> build: import it late
-    if site["name"] not in combat.BUILDINGS and site["name"] not in combat.WALLS or site["name"] == "WONDER":
+    if site["name"] not in combat.BUILDINGS and site["name"] not in combat.WALLS or site["name"] == "WONDER" \
+            or site.get("lasting"):                                    # the monastery of Capture the Relic (#2458)
         return
     x0, x1, z0, z1 = site["footprint"]
     uuid = combat.target_uuid([x0, z0, x1, z1])
