@@ -695,6 +695,8 @@ def research(g, entry, start=False):
         g.repeats[entry["name"]] = g.repeats.get(entry["name"], 0) + 1
     before = set(g.techs)
     g.techs.add(entry["name"])
+    if start:                                                      # free: not in the score (score.py, #2355)
+        vars(g).setdefault("given", set()).add(entry["name"])
     if (more := gather.FARM_TECHS.get(entry["name"])):             # the new and the live own farms get more food
         more = round(more * civs.FARM_UPGRADES.get(civs.civ(g), 1))
         g.map.farm_food += more
@@ -789,8 +791,10 @@ def census(g):
     A dead villager leaves g.villagers, the selection and its farm: the idle count and the bot see only live ones (#1039)."""
     live = g.positions(list(g.villagers) + list(g.soldiers))
     import spoils                                                      # spoils imports this module
-    spoils.fallen(g, {u: "VILLAGER" if u in g.villagers else g.soldiers[u] for u in [*g.villagers, *g.soldiers]
-                      if u not in live})                               # Tupi (#2271)
+    import score                                                       # score imports this module
+    dead = {u: "VILLAGER" if u in g.villagers else g.soldiers[u] for u in [*g.villagers, *g.soldiers] if u not in live}
+    spoils.fallen(g, dead)                                             # Tupi (#2271)
+    score.fallen(g, dead)                                              # #2355
     spoils.kills(g)                                                    # Mapuche (#2271)
     for u in [u for u in g.villagers if u not in live]:
         del g.villagers[u]
