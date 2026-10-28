@@ -200,7 +200,7 @@ def test_work_sounds(tiny_world, tmp_path):
     assert aoe2mc.write_datapack(str(tmp_path / "A"), [smith], ground) == (1, 0)
     house = dict(smith, name="HOUSE")
     assert aoe2mc.write_datapack(str(tmp_path / "B"), [house], ground) == (0, 0)
-    assert not os.path.exists(tmp_path / "B" / "datapacks")
+    assert os.path.exists(tmp_path / "B" / "datapacks" / "aoe2mc" / "pack.mcmeta")     # the map pulse (#3034)
 
 
 def test_ambience(tiny_world, tmp_path):

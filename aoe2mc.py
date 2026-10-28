@@ -5184,8 +5184,6 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
     # each player gets the map of the world in the off-hand once, so the minimap is there without a search (#966)
     team_pulse = team_pulse + MAP_PULSE
     trigger_load, trigger_fns = trigger_files(triggers, T, ground, players, trigger_stats, mood)
-    if not lines and not groups and not team_load and not trigger_load and not fog:   # the server finds a new pack itself
-        return 0, 0
     files = {
         "pack.mcmeta": {"pack": {"description": "aoe2mc: work sounds and ambience", "pack_format": MC["pack_format"],
                                  "min_format": MC["pack_format"], "max_format": MC["pack_format"]}},
