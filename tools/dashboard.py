@@ -70,9 +70,11 @@ def ts(text):
 def merges(since=None, until=None, n=None, pages=10):
     """[(time, PR number)] of the PRs merged into the default branch, newest first (#2039): all after `since`, up to
     `until` (datetimes), at most `n`. The squash commits "Title (#N)" count; the generated commits of the workflows do
-    not."""
-    out, q = [], f"&since={since:%Y-%m-%dT%H:%M:%SZ}" if since else ""
-    for page in range(1, pages + 1):
+    not. The pages start at `until` (#3072); with `n` they go on until n merges (no page limit)."""
+    out, q = [], "".join(f"&{k}={v:%Y-%m-%dT%H:%M:%SZ}" for k, v in (("since", since), ("until", until)) if v)
+    page = 0
+    while n is not None or page < pages:
+        page += 1
         cs = api(f"commits?sha={CONFIG['branch']}&per_page=100&page={page}{q}")
         for c in cs:
             m, t = MERGE.search(c["commit"]["message"].split("\n")[0]), ts(c["commit"]["committer"]["date"])

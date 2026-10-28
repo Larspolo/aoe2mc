@@ -14,7 +14,9 @@ for a player who joins later. Only the changes go out: at most one hide and one 
 The minimap (#2583, epic #2580): each update also sends the sight of the player to the fog of its team on map 0
 (Minimap.java: `aoe minimap fog T N pN`, `see pN`, `dim pN`, minimap()): unexplored tiles are black, explored tiles out
 of sight dark, and an enemy building shows on the minimap of a team only after a tile of it was in its sight. A saved
-game keeps the explored tiles (savegame.explored, #2677): after a load the first update sends them all again.
+game keeps the explored tiles (savegame.explored, #2677): after a load the first update sends them all again. The game
+program also keeps the buildings that the team saw (state["known"], #3079): a new fog of the team (after a load, after
+the second "polo") gets them with `aoe minimap know`, so their squares stay on the dark tiles.
 The team spec of the spectators (#2898) gets no hide and no minimap fog: Minimap.java draws the whole map for a player
 with no team fog (#2899). The game mode spectator shows no held item, so a spectator sees map 0 only in a follow view.
 
@@ -159,14 +161,17 @@ def tick(g):
         return
     state["at"] = now
     own, foe = units(g)
-    for c in update(g, g.where(set(own) | set(foe) | targets(g))) + minimap(g, state):
+    out = update(g, g.where(set(own) | set(foe) | targets(g)))
+    remember(g, state)
+    for c in out + minimap(g, state):
         g.command(c)
 
 
 def minimap(g, state):
     """The commands of the fog of the team of g on the minimap (#2583, Minimap.java): the fog starts all unexplored,
     then only the changes of the tiles in sight (state["tiles"] of update) and of the explored tiles out of sight, as
-    the live replay does for its view player (Replay.minimap_fog). With g.reveal "explored" all tiles start explored."""
+    the live replay does for its view player (Replay.minimap_fog). With g.reveal "explored" all tiles start explored.
+    A new fog also gets the buildings that the team saw before (remember, know)."""
     import replay
     T, team = g.map.T, f"p{g.player}"
     n = g.data.get("map_size") or len(getattr(g.map, "ground", ())) // T   # tiles of a map side
@@ -180,5 +185,25 @@ def minimap(g, state):
         explored |= {(x, y) for x in range(n) for y in range(n)}
     old_see, old_dim = state.get("map") or (set(), set())
     state["map"] = (inside, explored - inside)
-    return [f"aoe minimap fog {T} {n} {team}"] * new + replay.runs(f"aoe minimap see {team}", inside - old_see) + \
+    return [f"aoe minimap fog {T} {n} {team}"] * new + know(team, sorted(state.get("known", ())) * new) + \
+        replay.runs(f"aoe minimap see {team}", inside - old_see) + \
         replay.runs(f"aoe minimap dim {team}", explored - inside - old_dim)
+
+
+def remember(g, state):
+    """Add the buildings with a tile in sight (state["tiles"] of update) to state["known"] (their keys (x0, z0)), as
+    Minimap.java does at a render (#3079). A fallen building goes, so a new one at its place is not known (Minimap.java:
+    `aoe minimap unbuild`)."""
+    import build
+    T, rects, inside = g.map.T, build.squares(g), state.get("tiles", set())
+    keys = state["known"] = state.get("known", set()) & {(r[0], r[1]) for r in rects}
+    keys |= {(x0, z0) for x0, z0, x1, z1 in rects if (x0, z0) not in keys
+             and any((x, z) in inside for x in range(x0 // T, (x1 - 1) // T + 1) for z in range(z0 // T, (z1 - 1) // T + 1))}
+
+
+def know(team, keys):
+    """The commands `aoe minimap know TEAM X0,Z0 ...` of the building keys, below RCON_MAX: a new fog of the team shows
+    these squares at once (#3079)."""
+    import replay
+    k = (replay.RCON_MAX - 40) // 12                                   # keys per command ("X0,Z0" and a space)
+    return [f"aoe minimap know {team} " + " ".join(f"{x},{z}" for x, z in keys[i:i + k]) for i in range(0, len(keys), k)]

@@ -132,7 +132,7 @@ def order(g, player, cell):
     monks = [u for u in sorted(g.selected) if g.soldiers.get(u) in MONKS]
     if not cell or not monks or not g.paper:
         return False
-    import ai, civs                                                # ai imports gather, gather imports this module
+    import ai, train                                               # ai imports gather, gather imports this module
     T, held = g.map.T, carriers(g)
     free = [i for i, r in enumerate(relics(g)) if r["at"] and max(abs(r["at"][0] - cell[0]), abs(r["at"][1] - cell[1])) <= REACH
             and i not in [t for k, t in g.fetching.values() if k == "relic"]]
@@ -148,7 +148,7 @@ def order(g, player, cell):
     g.new_order(go)
     for m, target in go.items():
         name = g.soldiers[m]
-        ai.move(g, m, name, T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * civs.speed(g, name))
+        ai.move(g, m, name, T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * train.speed(g, name, m))
         g.fetching[m] = target
     g.mark(player, {to})
     return True
@@ -400,7 +400,7 @@ def convert(g, dt):
             del g.faith[m]
     if not g.converting:
         return
-    import ai                                                      # ai imports gather, gather imports this module
+    import ai, train                                               # ai imports gather, gather imports this module
     pos = g.positions(sorted(set(g.converting) | {t for t, _, _ in g.converting.values()}))
     for m, job in sorted(g.converting.items()):
         if m not in g.converting:
@@ -412,7 +412,8 @@ def convert(g, dt):
             continue
         if not near(g, m, target, pos):
             job[1:] = [0.0, 0]
-            ai.move(g, m, g.soldiers.get(m, "MONK"), g.map.T, *spot(g, m, target, pos))   # walk into range; the order follows the target
+            name = g.soldiers.get(m, "MONK")
+            ai.move(g, m, name, g.map.T, *spot(g, m, target, pos), ai.NORMAL * train.speed(g, name, m))   # walk into range; the order follows the target
             continue
         if job[1] == 0 and job[2] == 0:
             g.command(f"aoe stop {m}")                             # in range: it stands and chants

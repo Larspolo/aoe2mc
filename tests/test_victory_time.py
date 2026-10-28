@@ -13,7 +13,7 @@ from test_victory_option import loop  # noqa: E402
 def side(victory, value=None, teams=None):
     """A Gather of player 1 with no server: the players 1 to 3 (teams {player: team}), its commands in g.sent."""
     g = types.SimpleNamespace(player=1, victory=victory, victory_value=value, ended=None, bots=(), peers=(), sent=[],
-                              players={str(n): {"team": (teams or {}).get(n)} for n in (1, 2, 3)}, now=0.0)
+                              players={str(n): {"team": (teams or {}).get(n)} for n in (1, 2, 3)}, now=0.0, data={})
     g.command = lambda c: g.sent.append(c) or ""
     g.clock = lambda: g.now
     return g

@@ -403,6 +403,8 @@ def read_scenario(path):
                 players[p.player_id]["name"] = name
             if p.lock_civ:                          # "Lock Civilizations": the player keeps its civilization (#3295)
                 players[p.player_id]["lock_civ"] = True
+            if p.starting_age.name != "DARK_AGE":   # the starting age: "castle" (setup.jsonl), none in the Dark Age (#3296)
+                players[p.player_id]["age"] = p.starting_age.name[:-4].lower().replace("_", "-")
         neutral = [i for i, d in enumerate(p.diplomacy or [], 1) if d == 1 and i != p.player_id and i <= 8]
         if p.player_id and neutral:             # the stance neutral (1) of DiplomacyState: no automatic attack (#1645)
             players[p.player_id]["neutral"] = neutral
@@ -2656,7 +2658,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     "timeline" (recorded games only): the events of read_timeline, with tiles in the turned grid
     and the "names" of the selected objects (name_timeline).
     "players" of a scenario also have its "resources" (food, wood, gold, stone), "pop_limit" and "computer" (#2539),
-    its "name" and "lock_civ" (#3295).
+    its starting "age" (setup.jsonl name, none in the Dark Age, #3296), its "name" and "lock_civ" (#3295).
     "mood": the map color mood of a DE scenario (ColorMood name, #1594), else "DEFAULT".
     lists: the lists of the scenario mode (key -> list, TRIGGER_LISTS), each one if it is not empty.
     "map_ground": the map bytes of map 0 without the objects (map_colors), one hex string per pixel row z: the live
@@ -2689,7 +2691,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         objs.append(e)
     data = {"map_size": size, "tile_size": T, "level_height": H, "mood": mood,
             "players": {str(pid): {"civ": p["civ"], "color": p["color"], "arch": p["arch"]}
-                        | {k: p[k] for k in ("team", "neutral", "resources", "pop_limit", "computer", "name", "lock_civ") if k in p} for pid, p in sorted(players.items())},
+                        | {k: p[k] for k in ("team", "neutral", "resources", "pop_limit", "computer", "age", "name", "lock_civ") if k in p} for pid, p in sorted(players.items())},
             "objects": objs}
     n, wet = cols.n, cols.wtop > cols.top
     data["ground"] = [" ".join("-" if wet[x, z] else str(ground[x, z]) for x in range(n)) for z in range(n)]
@@ -4561,6 +4563,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                                 if re.fullmatch(r"data/aoe2mc/function/trigger/\d+\.mcfunction", k)}):
             live = made
     load, files, tick, setup = [], {}, [], {}
+    far, boxes = False, set()                                          # forceload: the whole map, the areas (#3080)
     stats = Counter() if stats is None else stats
     ground = np.zeros((0, 0), np.int16) if ground is None else ground
     chancy = {t["id"] for t in triggers if any(c["type"] == TRIGGER_CHANCE for c in t["conditions"])}
@@ -4685,6 +4688,12 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             whole = c["type"] != IN_AREA                               # Own (Fewer) Objects: the whole map
             sel = area_selector(dict(c, area=[-1] * 4) if whole else c, T)
+            if ground.size and whole:                                  # count only when all chunks are loaded (#3080)
+                far = True
+                tests += [] if LOADED in tests else [LOADED]
+            elif ground.size and min(c.get("area", [-1])) >= 0:        # the chunks of the area stay loaded
+                x1, y1, x2, y2 = c["area"]
+                boxes.add((min(x1, x2) * T, min(y1, y2) * T, (max(x1, x2) + 1) * T - 1, (max(y1, y2) + 1) * T - 1))
             q = max(c["quantity"], 0 if c["type"] == OWN_FEWER_OBJECTS else 1)
             if c["type"] == OWN_FEWER_OBJECTS:                         # count the units: q or fewer
                 counts.append(f"execute store result score #{n}.{i} aoe_trig if entity {sel}")
@@ -4735,6 +4744,17 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             again = f"execute if score #{n} aoe_on matches 1 run {again}"
         files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines + [again] * t["looping"]) + "\n"
         load += [run] * t["enabled"]
+    if far:                                                            # a selector sees only loaded chunks (#3080)
+        x1, z1 = ground.shape[0] - 1, ground.shape[1] - 1
+        load += forceload_lines(0, 0, x1, z1) + ["scoreboard players set #loaded aoe_trig 0",
+                                                 "schedule function aoe2mc:loaded 20t replace"]
+        files["data/aoe2mc/function/loaded.mcfunction"] = "\n".join(
+            ["scoreboard players set #loaded aoe_trig 1"] +
+            [f"execute unless loaded {x} 0 {z} run scoreboard players set #loaded aoe_trig 0"
+             for x in range(0, x1 + 1, 16) for z in range(0, z1 + 1, 16)] +
+            ["execute if score #loaded aoe_trig matches 0 run schedule function aoe2mc:loaded 20t replace"]) + "\n"
+    else:
+        load += [x for b in sorted(boxes) for x in forceload_lines(*b)]
     names = sorted({f"#v{x[k]}" for t in triggers for x in t["conditions"] + t["effects"]
                     for k in ("variable", "variable2")   # "Modify Variable by Variable" has two (#2713)
                     if x["type"] in VARIABLES and x.get(k, -1) >= 0})
@@ -4769,6 +4789,15 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         files["data/minecraft/tags/function/tick.json"] = {"values": ["aoe2mc:tick"]}
         files["data/aoe2mc/function/tick.mcfunction"] = "\n".join(tick) + "\n"
     return load, files
+
+
+LOADED = "if score #loaded aoe_trig matches 1"                        # all chunks of the map are loaded (#3080)
+
+
+def forceload_lines(x0, z0, x1, z1):
+    """The "forceload add" commands of the blocks x0..x1, z0..z1: at most 16 × 16 chunks per command (#3080)."""
+    return [f"forceload add {cx * 16} {cz * 16} {min(cx + 15, x1 // 16) * 16} {min(cz + 15, z1 // 16) * 16}"
+            for cx in range(x0 // 16, x1 // 16 + 1, 16) for cz in range(z0 // 16, z1 // 16 + 1, 16)]
 
 
 def action_list(triggers):

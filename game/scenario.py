@@ -118,6 +118,13 @@ def chat(who, text):
     return out
 
 
+def ending(who, messages, won):
+    """The chat lines of the end of the game for who: its "victory" text when won, else its "loss" text, without the
+    AoE2 color tags (#3298). No text, no line."""
+    text = re.sub(r"<[^<>]*>", "", messages.get("victory" if won else "loss") or "").strip()
+    return chat(who, text)
+
+
 def unread(who):
     """The selector of the people of who that have no book yet (TAG)."""
     return f"{who[:-1]},tag=!{TAG}]" if who.endswith("]") else f"{who}[tag=!{TAG}]"
@@ -607,6 +614,8 @@ def setup(g, mode="scenario", start=True):
         print("The world has no scenario start values: the game starts with the lobby settings.", file=sys.stderr)
         return g
     for x, p in rows.items():
+        if "age" in p:                                                 # the starting age of the editor (#3296)
+            train.start(x, p["age"])                                   # before the stock: no age cost (train.start)
         x.stock.update(p.get("resources", {}))
         x.pop_limit = p.get("pop_limit", x.pop_limit)
         x.show_stock()                                                 # the sidebar of the resources (Gather.setup)
