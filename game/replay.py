@@ -1024,7 +1024,8 @@ class Replay:
                 if e and e.get("tile"):
                     x, z = int(e["tile"][0] * self.T), int(e["tile"][1] * self.T)
                     start = self.at(v, e["time"])
-                    v.pos, v.path = (x + 0.5, float(self.map.y(x, z)), z + 0.5), []
+                    y = self.map.y(x, z)                                # water has no ground: the unit keeps its height (#3000)
+                    v.pos, v.path = (x + 0.5, float(v.pos[1] if y is None else y), z + 0.5), []
                     speed = next((s for k, s in SPEEDS.items() if v.name.startswith(k)), 1.0) * self.T
                     v.leg = (start, e["time"], e["time"] + 1000 * math.dist(start[::2], v.pos[::2]) / speed)
             else:
@@ -1296,7 +1297,8 @@ class Replay:
         chain, v.stand = behind, getattr(v, "stand", None) if behind else None   # a new walk: no old place
         behind = behind or (getattr(v, "leg", None) or (0, 0, -RECENT))[2] > t - RECENT
         start = x0, _, z0 = v.pos
-        v.pos, v.path = (x + 0.5, float(self.map.y(x, z)), z + 0.5), legs[1:]
+        y = self.map.y(x, z)                                        # water has no ground: the unit keeps its height (#3000)
+        v.pos, v.path = (x + 0.5, float(v.pos[1] if y is None else y), z + 0.5), legs[1:]
         speed = next((s for k, s in SPEEDS.items() if v.name.startswith(k)), 1.0) * self.T    # blocks per second
         d = math.hypot(v.pos[0] - x0, v.pos[2] - z0)
         due = t + 1000 * d / speed
