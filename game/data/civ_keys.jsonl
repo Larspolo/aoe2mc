@@ -1,6 +1,7 @@
 {"name": "age_gifts", "text": "The resources that the civilization gets at each new age, {resource: amount}. train.research gives them at the end of each age.", "issue": 1926}
 {"name": "also", "text": "Technologies with an effect on one more group of GROUPS too, {technology: group} (Bohemians: Fervor and Sanctity for the villagers). train.stats, train.speed.", "issue": 2173}
 {"name": "arrows", "text": "The factor of the base arrows of the buildings in each age (Dark, Feudal, Castle, Imperial).", "issue": 2178}
+{"name": "aura", "text": "The own complete buildings that make the gatherers of some resources work faster near them and take these resources: {\"buildings\", \"resources\", \"rate\", \"range\": tiles from the footprint} (Thracian forts and towers). gather.Map.drop_site, Gather.aura_rate.", "issue": 2378}
 {"name": "build", "text": "The build speed of the builders (a factor). build.rise multiplies the work of the builders (civs.build_rate).", "issue": 1893}
 {"name": "build_of", "text": "The build speed of some buildings, {building: factor} (Sicilian fortifications and town centers). build.rise (civs.build_rate).", "issue": 2115}
 {"name": "build_wonder", "text": "The build speed of the builders of a wonder (Spanish: 20 % for wonders). build.rise (civs.build_rate).", "issue": 1893}

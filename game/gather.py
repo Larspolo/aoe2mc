@@ -231,7 +231,8 @@ class Map:
         self.fish, self.shore = {}, set()                              # tile -> food of a fish (#1283), shore fish
         self.fish_mobs, self.docks = {}, []                            # tile -> mob of a fish; own dock cells (#1384)
         self.traps = {}                                                # own fish trap tile -> its cells (#1438)
-        self.aura = civs.AURA.get(data.get("players", {}).get(str(player), {}).get("civ"), {})   # Thracians (#2378)
+        self.aura = civs.AURA.get(None if data.get("full_tech_tree") else   # Thracians (#2378); no civilization
+                                  data.get("players", {}).get(str(player), {}).get("civ"), {})   # bonus: #2354
         self.auras = []                                                # the cells of own aura buildings
         for o in data["objects"]:
             if o["kind"] == "building":

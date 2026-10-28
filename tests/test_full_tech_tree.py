@@ -5,7 +5,7 @@ import pytest
 from test_castle_upgrades import STABLE, setup
 from test_forging import menus
 
-from game import run, train
+from game import combat, run, train
 
 civs = train.civs                                    # with the unique units of train.own_civ_only (#1760)
 
@@ -84,3 +84,10 @@ def test_run_offers_the_setting(capsys):
     with pytest.raises(SystemExit):
         run.main(["--help"])
     assert "--full-tech-tree" in capsys.readouterr().out
+
+
+def test_the_bonuses_of_the_world_data_go():
+    data = {"level_height": 2, "players": {"1": {"civ": "GEORGIANS"}, "2": {"civ": "FRANKS"}}}
+    assert combat.elevation_command(data).split()[3][3:] != combat.elevation_command(data).split()[4][3:]
+    data["full_tech_tree"] = True
+    assert combat.elevation_command(data).split()[3][3:] == combat.elevation_command(data).split()[4][3:]
