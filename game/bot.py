@@ -16,7 +16,8 @@ most one working villager from a resource above its share to the resource most b
 
 Attack (#859): until the game time `attack` (AoE2 seconds) the soldiers stay at their buildings. Then each soldier
 without a live target attacks the nearest unit of player `foe`, else its nearest building, with the mob AI of the
-plugin (`ai.attack`, `aoe attack`). A soldier gets a new target when its target dies.
+plugin (`ai.attack`, `aoe attack`). A soldier gets a new target when its target dies, and when it comes no nearer to
+its target and does no damage to it for STALL seconds (#3441): AoE2 units that cannot reach a target take another one.
 
 Difficulty (#2661, decision #2648): the AoE2 DE setting "AI difficulty" (run.py --ai-difficulty) is one line of
 game/data/difficulty.jsonl (LEVELS): "gather" times the work rate of the bot villagers, "attack" times the time of the
@@ -24,6 +25,7 @@ first attack, "soldiers" in the first wave. AoE2 does not publish what each leve
 """
 import math
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -46,7 +48,13 @@ NEAR = {r["name"]: r["near"] for r in build.ROWS if "near" in r}
 HOUSE_GAP = 2                                                      # a new house at this many units below the limit
 ATTACK = 600.0                                                     # AoE2 seconds: the first attack at 10:00
 LOOK = 2.0                                                         # AoE2 seconds between two looks for targets
+STALL = 30.0                                                       # AoE2 seconds with no step nearer and no damage
 LEVELS = {r["name"]: r for r in table.load("difficulty.jsonl")}    # "AI difficulty", in the order of the AoE2 lobby
+
+
+def box_gap(box, p):
+    """Blocks from position p to the side of building box (x0, y0, z0, x1, y1, z1) on the ground; 0 inside it."""
+    return math.hypot(max(box[0] - p[0], 0, p[0] - box[3] - 1), max(box[2] - p[2], 0, p[2] - box[5] - 1))
 
 
 class Bot:
@@ -68,6 +76,8 @@ class Bot:
         self.group = level["soldiers"] if group is None else group
         self.charged = False                                           # the wave attacks: new soldiers join it
         self.time, self.looked, self.targets = 0.0, -LOOK, {}          # AoE2 seconds of the game, soldier -> target
+        self.chase = {}                                                # soldier -> (target, gap, hit points, since)
+        self.lost = {}                                                 # soldier -> {target it gave up: its position}
         self.nobody = f"@a[tag=aoe2mc.bot{player}]"                     # the texts of the queues go to no player
         if own is None:                                                # conquest.main: a Gather with a share is a bot
             self.g.share = share                                       # monk.heresy: the techs of the human player
@@ -215,6 +225,7 @@ class Bot:
         inside = garrison.inside(self.share) if self.share else set()  # a unit in a building is no target (#3429)
         live = {t for t in set(self.targets.values()) if t not in inside and "passed" in g.command(f"execute if entity {t}")}
         self.targets = {u: t for u, t in self.targets.items() if u in mine and t in live}
+        self.stalled(mine)
         if not mine.keys() - {u for u, t in self.targets.items() if t not in g.forts}:
             return                                                     # all soldiers fight units
         units = {o["uuid"] for o in g.data["objects"] if o["kind"] == "unit" and o["player"] == self.foe and o.get("uuid")
@@ -226,15 +237,18 @@ class Bot:
         near = {k: p for k, p in g.positions(sorted(units)).items() if k not in inside
                 and (int(p[0] // T), int(p[2] // T)) in seen}
         self.targets = {u: t for u, t in self.targets.items()          # a unit that comes in sight goes before a
-                        if t not in g.forts or not any(self.reach(u, mine[u], p) for p in near.values())}   # building
+                        if t not in g.forts or not any(self.reach(u, mine[u], p) and not self.gave_up(u, k, p)
+                                                       for k, p in near.items())}   # building
         free = sorted(mine.keys() - self.targets.keys())
         forts, orders = None, {}
         for u in free:
-            ok = {k: p for k, p in near.items() if self.reach(u, mine[u], p)}
+            ok = {k: p for k, p in near.items() if self.reach(u, mine[u], p) and not self.gave_up(u, k, p)}
             if not ok:                                                 # no unit in reach, for example only a ship on
                 if forts is None:                                      # the water: the buildings, as in AoE2 (#1770)
                     forts = {t: ((b[0] + b[3] + 1) / 2, b[1], (b[2] + b[5] + 1) / 2) for t, b in self.forts().items()}
-                ok = {k: p for k, p in forts.items() if self.reach(u, mine[u], p)}
+                ok = {k: p for k, p in forts.items() if self.reach(u, mine[u], p) and not self.gave_up(u, k, p)}
+            if not ok and self.lost.pop(u, None):                      # nothing else left: try the old targets again
+                ok = {k: p for k, p in {**near, **forts}.items() if self.reach(u, mine[u], p)}
             if not ok:
                 continue
             t = min(ok, key=lambda k: (math.dist(ok[k], mine[u]), k))
@@ -245,6 +259,46 @@ class Bot:
                 g.sieged.add(t)                                        # Gather.fall frees its footprint
             ai.attack(g.game, us, [g.soldiers[u] for u in us], g.map.T, t,
                       [gather.NORMAL * train.speed(g, g.soldiers[u], u) for u in us])
+
+    def stalled(self, mine):
+        """Drop the target of each soldier that came no block nearer to it and did no damage to it for STALL AoE2
+        seconds, and the unit target that went on the water out of its reach (#3441). In the games of #3324, 13 to 40
+        soldiers destroyed nothing for 26 minutes: a soldier kept a live target that it could not hit (a garrisoned
+        unit, #3429), and a unit in sight takes the soldiers away from a building. The soldier keeps the position of
+        the target that it gave up (self.lost): it takes it again only after the target moved."""
+        g = self.g
+        pos = g.positions(sorted({t for t in self.targets.values() if t not in g.forts}))
+        hps = {t: self.hp(t) for t in sorted(set(self.targets.values()))}   # one command for each target
+        for u, t in sorted(self.targets.items()):
+            if t in pos and not self.reach(u, mine[u], pos[t]):
+                del self.targets[u]                                    # a ship that sailed away from the shore
+                continue
+            gap = box_gap(g.forts[t], mine[u]) if t in g.forts else math.dist(pos[t][::2], mine[u][::2]) if t in pos \
+                else math.inf
+            hp, last = hps[t], self.chase.get(u)
+            if last is None or last[0] != t or gap < last[1] - 1 or hp is not None and last[2] is not None and hp < last[2]:
+                self.chase[u] = (t, min(gap, last[1]) if last and last[0] == t else gap, hp, self.time)
+            elif self.time - last[3] >= STALL:
+                del self.targets[u]
+                self.lost.setdefault(u, {})[t] = pos.get(t)
+        self.chase = {u: c for u, c in self.chase.items() if self.targets.get(u) == c[0]}
+        self.lost = {u: k for u, k in self.lost.items() if u in mine}
+
+    def gave_up(self, u, t, p):
+        """True when soldier u gave up target t (stalled) and t is still near the place where it gave up: a building
+        does not move, a unit must move a tile away first."""
+        if t not in self.lost.get(u, ()):
+            return False
+        was = self.lost[u][t]
+        return was is None or math.dist(was[::2], p[::2]) < self.g.map.T
+
+    def hp(self, t):
+        """The hit points of target t (the score aoe_hp of a building, the Health of a unit), or None."""
+        if t in self.g.forts:
+            m = re.search(r" has (-?\d+) ", self.g.command(f"scoreboard players get {t} aoe_hp"))
+        else:
+            m = re.search(gather.NUMBER, self.g.command(f"data get entity {t} Health").rsplit(":", 1)[-1])
+        return float(m[1]) if m else None
 
     def reach(self, u, at, to):
         """True when soldier u at `at` can attack a target at `to`. AoE2: a land unit cannot walk to a ship on the water
