@@ -297,7 +297,7 @@ def token_sinks(lines, k=6):
     return sorted(((s, x / total) for s, x in by.items()), key=lambda kv: -kv[1])[:k] if total else []
 
 
-VERIFY = re.compile(r"^Tokens: .*? · verify (.*?) · sinks ", re.M)
+VERIFY = re.compile(r"^Tokens: .*? · verify (.*?)(?: · force \d+)? · sinks ", re.M)
 
 
 COST = re.compile(r"^Tokens: .*? · cost \$(\d+(?:\.\d+)?)", re.M)
@@ -313,6 +313,15 @@ def run_costs(comments):
             lane = re.search(r"^Metrics: .*?· lane (\w+)", body, re.M)
             out.setdefault(lane[1] if lane else "opus", []).append(float(cost))
     return out
+
+
+FORCE = re.compile(r"^Tokens: .*? · force (\d+) · sinks ", re.M)
+
+
+def refused_pushes(comments):
+    """(refused force pushes, Tokens lines with a force field) of the run reports (tools/tokens.py, #3461)."""
+    found = [int(n) for c in comments for n in FORCE.findall(c.get("body") or "")]
+    return sum(found), len(found)
 
 
 def verify_minutes(comments):
@@ -614,6 +623,8 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
     vm = sorted(verify_minutes(status_comments).items(), key=lambda kv: -kv[1][0])
     out.append("Verify commands (min, count, of the Tokens lines with a verify field): "
                + ("; ".join(f"{k} {fmt(m)} ({n}x)" for k, (m, n) in vm) or "-"))
+    out.append("Refused force pushes (of the {1} Tokens lines with a force field, #3461): {0}".format(
+        *refused_pushes(status_comments)))
     costs = run_costs(status_comments)
     spent = sum(map(sum, costs.values()))
     out.append(f"API list price of the runs (the `cost` of {sum(map(len, costs.values()))} Tokens lines): ${spent:.0f}"
