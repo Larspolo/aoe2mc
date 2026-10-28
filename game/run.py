@@ -678,8 +678,11 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
           "then right click the ground. Right click your town center to train a villager (50 food). Ctrl-C stops.", file=sys.stderr)
     game.g = g                                       # main saves its state on Ctrl-C (#2255)
     if speed != 1:                                   # Minecraft makes the mobs, paths and plugin faster (#2057)
+        import savegame
         game.command(f"tick rate {TICKS * speed:g}")
         g.speed = speed
+        for h in savegame.sides(g)[1:]:              # the bots keep the game time of player 1 (#3513)
+            h.speed = speed
     g.run(seconds)
     if g.ended:
         unveil(g)
