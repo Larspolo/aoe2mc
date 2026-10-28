@@ -102,7 +102,7 @@ def check_civs(row):
     assert set(row.get("twice", ())) <= NAMES["train.jsonl"], n
     assert len(row.get("hp_age", [1] * 4)) == 4 and all(isinstance(a, NUMBER) and a > 0 for a in row.get("hp_age", ())), n
     for t, group in row.get("also", {}).items():                   # one more group gets the effect (#2173)
-        assert group in civs.GROUPS and isinstance(train.EFFECTS.get(t, {}), dict) and t in train.TECHS | train.SPEEDS, (n, t)
+        assert group in civs.GROUPS and isinstance(train.BY_KEY["effect"].get(t, {}), dict) and t in train.TECHS | train.BY_KEY["walk"], (n, t)
     assert all(t in train.TECHS and isinstance(f, NUMBER) for t, f in row.get("more", {}).items()), n
     for key in ("housing", "sight"):                                    # building -> number (#2118)
         assert set(row.get(key, {})) <= NAMES["buildings.jsonl"] and all(type(v) is int for v in row.get(key, {}).values()), n
@@ -202,6 +202,7 @@ CHECKS = {                                                 # one file per line: 
     "setup.jsonl": check_setup,
     "taunts.jsonl": check_taunts,
     "train.jsonl": check_train,
+    "train_keys.jsonl": check_civ_keys,                    # a key of train.jsonl that train.value reads (#2507)
     "units.jsonl": check_units,
 }
 

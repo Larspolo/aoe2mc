@@ -16,7 +16,7 @@ def other(monkeypatch, first=True):
     monkeypatch.setitem(train.ITEMS, OTHER, (5, "book", "Elite Test"))
     monkeypatch.setitem(train.COSTS, OTHER, {"food": 1})
     monkeypatch.setitem(train.TRAIN_TIMES, OTHER, 1)
-    monkeypatch.setitem(train.TECH_AGE, OTHER, 3)
+    monkeypatch.setitem(train.BY_KEY["age"], OTHER, 3)
     monkeypatch.setitem(train.civs.MISSING, OTHER, tuple(sorted(set().union(*train.civs.MISSING.values()) - {"BRITONS"})))
 
 

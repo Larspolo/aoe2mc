@@ -19,7 +19,7 @@ def imperial(civ):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.AFTER["IMPERIAL_SKIRMISHER_UPGRADE"] == "ELITE_SKIRMISHER_UPGRADE"
+    assert train.BY_KEY["after"]["IMPERIAL_SKIRMISHER_UPGRADE"] == "ELITE_SKIRMISHER_UPGRADE"
     assert len(train.HELP["IMPERIAL_SKIRMISHER_UPGRADE"]) <= 50
     assert "VIETNAMESE" not in civs.MISSING["IMPERIAL_SKIRMISHER_UPGRADE"]
     assert {"BRITONS", "CHINESE", "MAYANS"} <= set(civs.MISSING["IMPERIAL_SKIRMISHER_UPGRADE"])
