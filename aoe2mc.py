@@ -3009,9 +3009,12 @@ def turn_area(area, size, k):
 def area_selector(c, T):
     """The entity selector of the units of the player of an "Objects in Area" condition: the blocks of the tiles
     x1..x2, y1..y2 (z), all heights. An area of -1 is the whole map. A unit type filter is the tag aoe2mc.t<id>
-    of the units (#681); the "object" of an effect (a name, #656) is not a filter here. The horse of a unit has the player
-    tag too (units.MOUNT, #1045): it does not count."""
+    of the units (#681). The "object" of an effect is a (kind, name) pair: its type tag is the ID of the name (#2978).
+    The horse of a unit has the player tag too (units.MOUNT, #1045): it does not count."""
     obj = c.get("object")
+    if isinstance(obj, tuple):
+        kind, name = obj
+        obj = units.type_ids().get(name) if kind in ("U", "H") else None
     sel = [f"tag=aoe2mc.p{c['player']}", f"tag=!{units.MOUNT}"] + [f"tag=aoe2mc.t{obj}"] * (isinstance(obj, int) and obj >= 0)
     return f"@e[{','.join(sel)}{area_box(c['area'], T)}]"
 
@@ -3069,18 +3072,18 @@ def object_lines(e, c):
 
 def effect_units(e, T):
     """(selector, top entity, entity) of the units of an effect: its player (Gaia: the tag aoe2mc.p0, unit_selector,
-    #2916), area (area_selector) and unit type (the type of the top entity of units.make_entity). No type: (selector,
-    None, None). A type with no entity (a building): None."""
+    #2916), area (area_selector) and unit type (the tag aoe2mc.t<id>, #2978). No type: (selector, None, None).
+    A type with no entity (a building): None. The top entity tells a rider from its mount (kill, hp_runs)."""
     kind, name = e.get("object") or (None, None)
     at = unit_selector(e, T)
     if name is None:
         return at, None, None
-    nbt = units.make_entity(dict(name=name, player=0), {}, (0.0, 0.0, 0.0), np.random.default_rng(0)) \
+    nbt = units.make_entity(dict(name=name, player=0, hero=kind == "H"), {}, (0.0, 0.0, 0.0), np.random.default_rng(0)) \
         if kind in ("U", "H") else None
     if nbt is None:
         return None
     top = units.top_entity(nbt)
-    return f"@e[type={top['id']},{at[3:]}", top, nbt
+    return f"@e[{at[3:]}", top, nbt
 
 
 def hp_runs(found, c):

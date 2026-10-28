@@ -21,7 +21,7 @@ def lines(effects, stats=None, T=4):
 def test_change_object_name_sets_the_name_on_the_units_of_the_type_in_the_area():
     stats = Counter()
     line, = lines([effect("Sir William")], stats)
-    assert line == ("execute as @e[type=minecraft:zombie,tag=aoe2mc.p1,tag=!aoe2mc.mount,x=8,y=-64,z=12,dx=11,dy=383,"
+    assert line == ("execute as @e[tag=aoe2mc.p1,tag=!aoe2mc.mount,tag=aoe2mc.t74,x=8,y=-64,z=12,dx=11,dy=383,"
                     'dz=11] run data modify entity @s CustomName.text set value "Sir William"')   # the color stays
     assert stats == Counter({"change object name": 1})
 
