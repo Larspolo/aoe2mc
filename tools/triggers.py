@@ -57,7 +57,7 @@ MAP = {
     ("effect", "ACTIVATE_TRIGGER"): "`scoreboard players set <trigger> aoe_trig 1`",
     ("effect", "DEACTIVATE_TRIGGER"): "`scoreboard players set <trigger> aoe_trig 0`",
     ("effect", "CHANGE_VARIABLE"): "`scoreboard players set`, `add` or `remove` on `<variable> aoe_var`",
-    ("effect", "DECLARE_VICTORY"): "`title @a title \"Victory\"`",
+    ("effect", "DECLARE_VICTORY"): "`scoreboard players set #pN aoe_win 1`: the scenario mode of the game program ends the game (#2542)",
     ("effect", "TASK_OBJECT"): "not supported: vanilla has no walk-to command (the game program: `aoe moveto`)",
     ("effect", "PATROL"): "not supported: vanilla has no walk-to command",
     ("effect", "ATTACK_MOVE"): "not supported: vanilla has no walk-to command",

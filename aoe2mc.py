@@ -2709,6 +2709,7 @@ OWN_OBJECTS, OWN_FEWER_OBJECTS = 3, 4                              # conditions 
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
 CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 14, 15, 18, 72
 DAMAGE_OBJECT = 24                                                     # "Damage Object" (#2571)
+DECLARE_VICTORY = 13                                                   # "Declare Victory" (#2542)
 TELEPORT_OBJECT = 35
 FREEZE_OBJECT = 22                                                     # "Freeze Object" (#2608)
 CHANGE_OBJECT_NAME = 26                                                # "Change Object Name" (#2616)
@@ -2923,11 +2924,12 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Create Object" and "Remove Object": object_lines (#656). "Change Color Mood": mood_lines (#1876), only with mood. "Change Ownership": owner_lines (#2570).
     "Damage Object": damage_lines (#2571). "Display Timer": timer_lines (#2572).
     "Teleport Object": teleport_lines (#2569).
+    "Declare Victory" sets the score #p<player> of aoe_win to 1: the scenario mode of the game program ends the game.
     "Freeze Object": freeze_lines (#2608).
     "Change Object Name": name_lines (#2616).
     "Clear Instructions": title @a clear (#2609).
     A disabled trigger does not run."""
-    load, files, tick = [], {}, []
+    load, files, tick, win = [], {}, [], False
     stats = Counter() if stats is None else stats
     ground = np.zeros((0, 0), np.int16) if ground is None else ground
     for t in triggers:
@@ -2949,6 +2951,11 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if e["type"] == DAMAGE_OBJECT:
                 lines += damage_lines(e, T, stats)
+                continue
+            if e["type"] == DECLARE_VICTORY:                           # the scenario mode reads the score (#2542)
+                lines.append(f"scoreboard players set #p{max(e['player'], 0)} aoe_win 1")
+                stats["declare victory"] += 1
+                win = True
                 continue
             if e["type"] == DISPLAY_TIMER:
                 more, timer = timer_lines(t, e)
@@ -3006,6 +3013,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         run = f"schedule function {fn} {ticks}t replace"
         files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines + [run] * t["looping"]) + "\n"
         load.append(run)
+    if win:
+        load.insert(0, "scoreboard objectives add aoe_win dummy")
     if tick:
         load.insert(0, "scoreboard objectives add aoe_trig dummy")
         files["data/minecraft/tags/function/tick.json"] = {"values": ["aoe2mc:tick"]}
