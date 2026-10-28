@@ -44,7 +44,7 @@ import sys
 import textwrap
 import time
 import zlib
-from collections import Counter
+from collections import Counter, namedtuple
 
 import numpy as np
 from nbtlib import File
@@ -2757,33 +2757,45 @@ def team_lines(objects, players):
     return load, pulse
 
 
-TIMER, SEND_CHAT, DISPLAY_INSTRUCTIONS, IN_AREA = 10, 3, 20, 5   # AoE2 condition and effect IDs (AoE2ScenarioParser)
-TRIGGER_CHANCE = 20                                               # the condition "Chance" (#2574)
-DISPLAY_TIMER = 37                                                     # "Display Timer" (#2572)
+# AoE2 condition and effect IDs (AoE2ScenarioParser), one per line in alphabetical order (#2613)
+ATTACK_MOVE = 30                                                   # "Attack Move" (#2647)
+CHANGE_COLOR_MOOD = 72
+CHANGE_DIPLOMACY = 1                                               # "Change Diplomacy" (#2645)
+CHANGE_OBJECT_NAME = 26                                            # "Change Object Name" (#2616)
+CHANGE_OBJECT_STANCE = 36                                          # "Change Object Stance" (#2705)
+CHANGE_OWNERSHIP = 18
+CHANGE_VARIABLE = 56                                               # the scenario variables (#2611)
+CHANGE_VIEW = 16                                                   # "Change View" (#2610)
+CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
+CREATE_OBJECT = 11
+DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
+DECLARE_VICTORY = 13                                               # "Declare Victory" (#2542)
+DISPLAY_INSTRUCTIONS = 20
+DISPLAY_TIMER = 37                                                 # "Display Timer" (#2572)
+FREEZE_OBJECT = 22                                                 # "Freeze Object" (#2608)
+IN_AREA = 5
+KILL_OBJECT = 14
+MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
+OWN_FEWER_OBJECTS = 4                                              # conditions on the units of a player (#2573)
+OWN_OBJECTS = 3
+PATROL = 19                                                        # "Patrol" (#2647)
+PLAY_SOUND = 4                                                     # "Play Sound" (#2644)
+REMOVE_OBJECT = 15
+RESEARCHED = 9                                                     # the condition "Research Technology" (#2656)
+RESEARCH_TECHNOLOGY = 2                                            # "Research Technology" (#2577)
+SEND_CHAT = 3
+TASK_OBJECT = 12                                                   # "Task Object" (#2646)
+TELEPORT_OBJECT = 35
+TIMER = 10
+TRIBUTE = 5                                                        # "Tribute" (#2576)
+TRIGGER_CHANCE = 20                                                # the condition "Chance" (#2574)
+VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
-OWN_OBJECTS, OWN_FEWER_OBJECTS = 3, 4                              # conditions on the units of a player (#2573)
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
-CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 14, 15, 18, 72
-TRIBUTE, MODIFY_RESOURCE = 5, 52
+TICKED = COUNTED + (VARIABLE_VALUE, RESEARCHED)                   # conditions of the tick function
 STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list (AoE2 attributes 0 to 3)
 OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
-DAMAGE_OBJECT = 24                                                     # "Damage Object" (#2571)
-DECLARE_VICTORY = 13                                                   # "Declare Victory" (#2542)
-CHANGE_DIPLOMACY = 1                                                   # "Change Diplomacy" (#2645)
-STANCES = (0, 1, 3)                                                    # DiplomacyState: ally, neutral, enemy
-TASK_OBJECT = 12                                                       # "Task Object" (#2646)
-TELEPORT_OBJECT = 35
-CHANGE_VARIABLE, VARIABLE_VALUE = 56, 22                               # the scenario variables (#2611)
-RESEARCHED = 9                                                         # the condition "Research Technology" (#2656)
-TICKED = COUNTED + (VARIABLE_VALUE, RESEARCHED)                    # conditions of the tick function
-FREEZE_OBJECT = 22                                                     # "Freeze Object" (#2608)
-RESEARCH_TECHNOLOGY = 2
-CHANGE_OBJECT_NAME = 26                                                # "Change Object Name" (#2616)
-CHANGE_VIEW = 16                                                       # "Change View" (#2610)
-CLEAR_INSTRUCTIONS = 21                                                # "Clear Instructions" (#2609)
-PATROL, ATTACK_MOVE = 19, 30                                           # "Patrol", "Attack Move" (#2647)
-CHANGE_OBJECT_STANCE = 36                                              # "Change Object Stance" (#2705)
-PLAY_SOUND = 4                                                         # "Play Sound" (#2644)
+STANCES = (0, 1, 3)                                # DiplomacyState: ally, neutral, enemy
 SOUNDS = [(r["name"], r["sound"]) for r in units.rows("sounds.jsonl")]  # AoE2 sound name part -> vanilla sound
 
 
@@ -2810,11 +2822,12 @@ def area_selector(c, T):
     return f"@e[{','.join(sel)}]"
 
 
-def object_lines(t, e, T, ground, players, stats):
+def object_lines(e, c):
     """The commands of "Create Object" and "Remove Object" (#656): a summon of the entity of units.make_entity at
     the middle of the tile, or a kill of the units of the player and type in the area (area_selector). "Kill Object"
     (#2568) is the same kill, also with no area (the whole map): Minecraft shows the death, as AoE2.
     Buildings and other objects are not supported yet: they count in stats."""
+    t, T, ground, players, stats = c.t, c.T, c.ground, c.players, c.stats
     kind, name = e.get("object") or (None, None)
     if e["type"] == CREATE_OBJECT and min(e.get("tile", [-1])) >= 0:
         x, z = (int((v + 0.5) * T) for v in e["tile"])
@@ -2866,12 +2879,12 @@ def effect_units(e, T):
     return f"@e[type={top['id']},{at[3:]}".replace(",type=!minecraft:player", ""), top, nbt
 
 
-def damage_lines(e, T, stats):
+def damage_lines(e, c):
     """The commands of "Damage Object" (#2571): a `damage` of each unit of the effect (effect_units) by its amount.
     The amount is in AoE2 hit points: the game program gives each unit max_health = its AoE2 hit points
     (combat.stats_command); a vanilla world keeps the health of the mob. A negative amount heals in AoE2: not yet."""
-    q = e.get("quantity") or 0
-    found = effect_units(e, T) if q > 0 else None
+    q, stats = e.get("quantity") or 0, c.stats
+    found = effect_units(e, c.T) if q > 0 else None
     if found is None:
         stats["damage (heal or building, not supported yet)" if q else "damage (no amount)"] += 1
         return []
@@ -2880,23 +2893,25 @@ def damage_lines(e, T, stats):
     return [f"execute as {at} run damage @s {q}"]                      # damage takes one entity
 
 
-def name_lines(e, T, stats):
+def name_lines(e, c):
     """The commands of "Change Object Name" (#2616): the new name (with no AoE2 color tags) on the CustomName text of
     each unit of the effect (effect_units). The label of a unit is on its top entity (units.make_entity), and the
     selector has no mounts: the rider gets the name. Only the text changes, so the player color stays."""
-    msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()
-    found = effect_units(e, T) if msg else None
+    msg, stats = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip(), c.stats
+    found = effect_units(e, c.T) if msg else None
     if found is None:
         stats["change object name (not supported yet)" if msg else "change object name (no name)"] += 1
         return []
     stats["change object name"] += 1
     return [f"execute as {found[0]} run data modify entity @s CustomName.text set value "   # one entity
             f"{json.dumps(msg, ensure_ascii=False)}"]
-def owner_lines(e, T, stats):
+
+
+def owner_lines(e, c):
     """The commands of "Change Ownership" (#2570): the units of the player in the area (area_selector) and their
     mounts get the tag and the team of the target player. A temporary tag marks them first: the selector uses the old
     player tag. Gaia has no player tag and no team: not supported yet."""
-    old, new = e["player"], e.get("target", -1)
+    old, new, T, stats = e["player"], e.get("target", -1), c.T, c.stats
     if old <= 0 or new <= 0 or old == new:
         stats["change ownership (not supported yet)"] += old != new
         return []
@@ -2908,12 +2923,13 @@ def owner_lines(e, T, stats):
             f"team join p{new} {own}", f"tag {own} remove aoe2mc.own"]
 
 
-def resource_lines(e):
+def resource_lines(e, c):
     """The commands of "Tribute" and "Modify Resource" (#2576): a converted world has no stock, so they only change
     the scores #p<N>.<resource> of aoe_res (the change) and aoe_set (a "set"). scenario.resources of the game program
     reads them into the stock of player N and resets them. A tribute of a trigger has no tax (AoE2)."""
     if not 0 <= e.get("resource", -1) < len(STORES) or e["player"] <= 0:
         return []
+    c.setup["scoreboard objectives add aoe_res dummy"] = c.setup["scoreboard objectives add aoe_set dummy"] = None
     res, q = STORES[e["resource"]], int(e["quantity"])
 
     def change(n, q):
@@ -2926,13 +2942,14 @@ def resource_lines(e):
     return change(e["player"], q if op == "add" else -q) if op else []
 
 
-def teleport_lines(e, T, ground):
+def teleport_lines(e, c):
     """The commands of "Teleport Object" (#2569): a tp of the units of the player in the area (area_selector) to the
     middle of the target tile, on the ground. A rider is not in the selector of its horse (units.MOUNT): the first line
     moves the mounts of the riders in the area, and the riders go with them. Then the riders are out of the area, so
     the second line (a tp of a rider takes it off its horse) moves only the units on foot."""
     if min(e.get("tile", [-1])) < 0 or min(e.get("area", [-1])) < 0:
         return []
+    T, ground = c.T, c.ground
     x, z = (int((v + 0.5) * T) for v in e["tile"])
     if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
         return []
@@ -2940,10 +2957,10 @@ def teleport_lines(e, T, ground):
     return [f"execute as {at} on vehicle run tp @s {to}", f"tp {at} {to}"]
 
 
-def variable_lines(e, stats):
+def variable_lines(e, c):
     """The commands of "Change Variable" (#2611): the score #vN of aoe_var is the AoE2 variable N. Set, Add and
     Subtract are scoreboard commands; Multiply and Divide need a second score: the constant #cQ."""
-    v, q, op = f"#v{e.get('variable', -1)} aoe_var", e.get("quantity") or 0, e.get("operation")
+    v, q, op, stats = f"#v{e.get('variable', -1)} aoe_var", e.get("quantity") or 0, e.get("operation"), c.stats
     if e.get("variable", -1) < 0 or op not in (1, 2, 3, 4, 5) or op == 5 and q == 0:
         stats["change variable (not supported)"] += 1
         return []
@@ -2960,20 +2977,26 @@ def variable_range(c):
     return {0: f"{q}", 1: f"..{q - 1}", 2: f"{q + 1}..", 3: f"..{q}", 4: f"{q}.."}.get(c.get("comparison"))
 
 
-def task_lines(t, i, e, T, ground):
+def task_lines(e, c):
     """The commands of "Task Object" (#2646), effect i of trigger t: the units of the player in the area get the tag
     aoe_task<t>_<i>, and the storage aoe2mc:tasks gets the key k<t>_<i> with the block of the middle of the tile, on the
     ground. Vanilla has no walk-to command: the scenario mode of the game program reads the storage (scenario.tasks)
     and walks the tagged units there with the Paper plugin (aoe moveto). A rider gives its tag to its horse (units.MOUNT):
     the plugin walks the horse. No area or no tile: no line."""
+    T, ground = c.T, c.ground
     if min(e.get("tile", [-1])) < 0 or min(e.get("area", [-1])) < 0:
         return []
     x, z = (int((v + 0.5) * T) for v in e["tile"])
     if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
         return []
-    k = f"{t['id']}_{i}"
+    k = f"{c.t['id']}_{effect_index(e, c)}"
     return tag_lines(e, T, f"aoe_task{k}") + \
         [f"data modify storage aoe2mc:tasks k{k} set value [{x + 0.5}d, {int(ground[x, z])}.0d, {z + 0.5}d]"]
+
+
+def effect_index(e, c):
+    """The index of effect e in its trigger c.t: a score or a tag of one effect (research_lines, task_lines)."""
+    return next(i for i, f in enumerate(c.t["effects"]) if f is e)
 
 
 def tag_lines(e, T, tag):
@@ -2990,9 +3013,10 @@ def unit_selector(e, T):
     return re.sub(r"tag=aoe2mc\.p-?\d+", "tag=,type=!player", at) if e["player"] <= 0 else at
 
 
-def sound_lines(e, T, ground):
+def sound_lines(e, c):
     """The command of "Play Sound" (#2644): the vanilla sound of the first SOUNDS part in the AoE2 sound name, for all
     players; at the target tile when the effect has one (heard up to 16 blocks), else at each player."""
+    T, ground = c.T, c.ground
     name = e.get("sound", "").upper()
     sound = next(s for part, s in SOUNDS if part in name)
     x, z = (int((v + 0.5) * T) for v in e.get("tile", [-1, -1]))
@@ -3001,68 +3025,80 @@ def sound_lines(e, T, ground):
     return [f"playsound minecraft:{sound} master @a {x + 0.5} {int(ground[x, z])} {z + 0.5}"]
 
 
-def freeze_lines(e, T):
+def freeze_lines(e, c):
     """The commands of "Freeze Object" (#2608): the units of the player in the area and the mounts of the riders get
     NoAI, so they stay in their place (AoE2: they do not move until a new order)."""
     if min(e.get("area", [-1])) < 0:
         return []
-    at = unit_selector(e, T)
+    at = unit_selector(e, c.T)
     return [f"execute as {at} on vehicle run data merge entity @s {{NoAI:1b}}",
             f"execute as {at} run data merge entity @s {{NoAI:1b}}"]
 
 
-def order_lines(t, i, e, T, ground):
-    """The commands of "Patrol" and "Attack Move" (#2647), effect i of trigger t. Vanilla has no walk-to command: the
-    units of the player in the area get the tag aoe_order<trigger>_<i> (tag_lines: a rider gives it to its horse), and
-    the order goes into the list of the data storage aoe2mc:orders as one text "<order> <tag> x y z" (the block of the
-    tile on the ground; a patrol also the middle of the area, where it turns back). The scenario mode of the game program (game/scenario.py orders) empties
-    the list with RCON and walks the tagged units with the Paper plugin."""
+def research_lines(e, c):
+    """The command of "Research Technology" (#2577): the score #r<trigger>.<effect index> of aoe_tech is 1. A
+    converted world has no technologies: the scenario mode of the game program reads the score (research_list)."""
+    if not e.get("technology") or e["player"] <= 0:
+        return []
+    c.setup["scoreboard objectives add aoe_tech dummy"] = None
+    c.stats["research"] += 1
+    i = effect_index(e, c)
+    return [f"scoreboard players set #r{c.t['id']}.{i} aoe_tech 1"]   # the game program reads it
+
+
+def order_lines(e, c):
+    """The commands of "Patrol" and "Attack Move" (#2647). Vanilla has no walk-to command: the units of the player in
+    the area get the tag aoe_order<trigger>_<effect index> (tag_lines: a rider gives it to its horse), and the order
+    goes into the list of the data storage aoe2mc:orders as one text "<order> <tag> x y z" (the block of the tile on
+    the ground; a patrol also the middle of the area, where it turns back). The scenario mode of the game program
+    (game/scenario.py orders) empties the list with RCON and walks the tagged units with the Paper plugin."""
+    T, ground = c.T, c.ground
     if min(e.get("tile", [-1])) < 0 or min(e.get("area", [-1])) < 0:
         return []
     a = e["area"]
     blocks = [(int((x + 0.5) * T), int((z + 0.5) * T)) for x, z in (e["tile"], ((a[0] + a[2]) / 2, (a[1] + a[3]) / 2))]
     if not all(0 <= x < ground.shape[0] and 0 <= z < ground.shape[1] for x, z in blocks):
         return []
-    tag, order = f"aoe_order{t['id']}_{i}", "patrol" if e["type"] == PATROL else "attack_move"
+    tag, order = f"aoe_order{c.t['id']}_{effect_index(e, c)}", "patrol" if e["type"] == PATROL else "attack_move"
     where = " ".join(f"{x} {int(ground[x, z])} {z}" for x, z in blocks[:1 + (e["type"] == PATROL)])
     return tag_lines(e, T, tag) + [f'data modify storage aoe2mc:orders list append value "{order} {tag} {where}"']
 
 
-def stance_lines(t, i, e, T):
-    """The commands of "Change Object Stance" (#2705), effect i of trigger t. Vanilla has no stance: as order_lines, the
-    units of the player in the area get the tag aoe_order<trigger>_<i>, and the order "stance <tag> <attack_stance>"
-    (0 aggressive, 1 defensive, 2 stand ground, 3 no attack) goes into the storage aoe2mc:orders for game/scenario.py."""
+def stance_lines(e, c):
+    """The commands of "Change Object Stance" (#2705). Vanilla has no stance: as order_lines, the units of the player in
+    the area get the tag aoe_order<trigger>_<effect index>, and the order "stance <tag> <attack_stance>" (0 aggressive,
+    1 defensive, 2 stand ground, 3 no attack) goes into the storage aoe2mc:orders for game/scenario.py orders."""
     if e.get("stance") not in (0, 1, 2, 3):
         return []
-    tag = f"aoe_order{t['id']}_{i}"
-    return tag_lines(e, T, tag) + [f'data modify storage aoe2mc:orders list append value "stance {tag} {e["stance"]}"']
+    tag = f"aoe_order{c.t['id']}_{effect_index(e, c)}"
+    return tag_lines(e, c.T, tag) + [f'data modify storage aoe2mc:orders list append value "stance {tag} {e["stance"]}"']
 
 
-def view_lines(e, T, ground):
+def view_lines(e, c):
     """The commands of "Change View" (#2610): in Minecraft the player is the camera, so a tp of the players of the
     team pN (team_lines) to the middle of the tile, on the ground. Player -1 or 0: all players."""
     if min(e.get("tile", [-1])) < 0:
         return []
-    x, z = (int((v + 0.5) * T) for v in e["tile"])
-    if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
+    x, z = (int((v + 0.5) * c.T) for v in e["tile"])
+    if not (0 <= x < c.ground.shape[0] and 0 <= z < c.ground.shape[1]):
         return []
     who = f"@a[team=p{e['player']}]" if e["player"] > 0 else "@a"
-    return [f"tp {who} {x + 0.5} {int(ground[x, z])} {z + 0.5}"]
+    return [f"tp {who} {x + 0.5} {int(c.ground[x, z])} {z + 0.5}"]
 
 
-def mood_lines(e):
+def mood_lines(e, c):
     """The commands of "Change Color Mood" (#1876): the time of day (MOODS) and the rain (RAIN) of the new mood, as
-    at the conversion. The game rules advance_time and advance_weather are 0, so they stay. The fog (FOG) is a
-    timeline of the dimension type: a command cannot change it, so the fog of the map mood stays."""
-    if e.get("mood") not in MOODS:
+    at the conversion, only with c.mood. The game rules advance_time and advance_weather are 0, so they stay. The fog
+    (FOG) is a timeline of the dimension type: a command cannot change it, so the fog of the map mood stays."""
+    if not c.mood or e.get("mood") not in MOODS:
         return []
     return [f"time set {MOODS[e['mood']]}", f"weather {'rain' if e['mood'] in RAIN else 'clear'}"]
 
 
-def timer_lines(t, e):
-    """(commands, files) of "Display Timer" (#2572): the boss bar aoe2mc:timer<slot> with the text of the effect, "%d"
-    is the time left in the unit of the effect (TIME_UNITS; m:ss for minutes and seconds). The function
-    aoe2mc:timer/<slot> runs each second (schedule): it lowers the score #t<slot> of aoe_timer, the bar and the
+def timer_lines(e, c):
+    """The commands of "Display Timer" (#2572), and its function file in c.files: the boss bar aoe2mc:timer<slot>
+    with the text of the effect, "%d" is the time left in the unit of the effect (TIME_UNITS; m:ss for minutes and
+    seconds). The function aoe2mc:timer/<slot> runs each second (schedule): it lowers the score #t<slot> of aoe_timer, the bar and the
     text, and removes the bar at 0. A new timer in the same slot replaces the old one, as in AoE2."""
     unit, slot = e.get("unit", 2), e.get("timer", 0)
     sec, bar, fn = max(int(e["time"] * TIME_UNITS.get(unit, 1)), 1), f"aoe2mc:timer{slot}", f"aoe2mc:timer/{slot}"
@@ -3092,7 +3128,84 @@ def timer_lines(t, e):
     lines = ["scoreboard objectives add aoe_timer dummy", f"bossbar remove {bar}", f"bossbar add {bar} \"\"",
              f"bossbar set {bar} max {sec}", f"bossbar set {bar} players @a",
              f"scoreboard players set #t{slot} aoe_timer {sec}"] + show + [f"schedule function {fn} 1s replace"]
-    return lines, {f"data/aoe2mc/function/timer/{slot}.mcfunction": "\n".join(tick) + "\n"}
+    c.files[f"data/aoe2mc/function/timer/{slot}.mcfunction"] = "\n".join(tick) + "\n"
+    return lines
+
+
+def message_text(e):
+    """The JSON text of the message of an effect with no AoE2 color tags, or None for no message."""
+    msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()
+    return json.dumps({"text": msg}, ensure_ascii=False) if msg else None
+
+
+def diplomacy_lines(e, c):
+    """The commands of "Change Diplomacy" (#2645): the score #p<player>.p<target> of aoe_dip is the stance + 1 and #any
+    of aoe_dip is 1: the scenario mode of the game program changes the stance."""
+    a, b = e["player"], e.get("target", -1)
+    if e.get("diplomacy") not in STANCES or a <= 0 or b <= 0 or a == b:
+        return []
+    c.setup["scoreboard objectives add aoe_dip dummy"] = None
+    c.stats["change diplomacy"] += 1
+    return [f"scoreboard players set #p{a}.p{b} aoe_dip {e['diplomacy'] + 1}", "scoreboard players set #any aoe_dip 1"]
+
+
+def victory_lines(e, c):
+    """The command of "Declare Victory" (#2542): the score #p<player> of aoe_win is 1, and the scenario mode of the
+    game program ends the game. The load function adds the objective (c.setup)."""
+    c.setup["scoreboard objectives add aoe_win dummy"] = None
+    c.stats["declare victory"] += 1
+    return [f"scoreboard players set #p{max(e['player'], 0)} aoe_win 1"]
+
+
+def clear_lines(e, c):
+    """The command of "Clear Instructions" (#2609): no message, the shown instructions go."""
+    return ["title @a clear"]
+
+
+def chat_lines(e, c):
+    """The command of "Send Chat": a tellraw to all players."""
+    return [f"tellraw @a {text}"] if (text := message_text(e)) else []
+
+
+def instruction_lines(e, c):
+    """The commands of "Display Instructions": a subtitle for the display time of the effect (AoE2 default: 10 s)."""
+    if not (text := message_text(e)):
+        return []
+    ticks = 20 * (e["time"] if e["time"] > 0 else 10)
+    return [f"title @a times 10 {ticks} 20", f"title @a subtitle {text}", 'title @a title ""']
+
+
+# The handler of each trigger effect: (effect, Effect context) -> commands. A new effect is one line here, in
+# alphabetical order, and its handler function (#2613): no change of trigger_files.
+EFFECTS = {
+    ATTACK_MOVE: order_lines,
+    CHANGE_COLOR_MOOD: mood_lines,
+    CHANGE_DIPLOMACY: diplomacy_lines,
+    CHANGE_OBJECT_NAME: name_lines,
+    CHANGE_OBJECT_STANCE: stance_lines,
+    CHANGE_OWNERSHIP: owner_lines,
+    CHANGE_VARIABLE: variable_lines,
+    CHANGE_VIEW: view_lines,
+    CLEAR_INSTRUCTIONS: clear_lines,
+    CREATE_OBJECT: object_lines,
+    DAMAGE_OBJECT: damage_lines,
+    DECLARE_VICTORY: victory_lines,
+    DISPLAY_INSTRUCTIONS: instruction_lines,
+    DISPLAY_TIMER: timer_lines,
+    FREEZE_OBJECT: freeze_lines,
+    KILL_OBJECT: object_lines,
+    MODIFY_RESOURCE: resource_lines,
+    PATROL: order_lines,
+    PLAY_SOUND: sound_lines,
+    REMOVE_OBJECT: object_lines,
+    RESEARCH_TECHNOLOGY: research_lines,
+    SEND_CHAT: chat_lines,
+    TASK_OBJECT: task_lines,
+    TELEPORT_OBJECT: teleport_lines,
+    TRIBUTE: resource_lines,
+}
+# The context of the effects of trigger t: a handler can add function files (files) and load lines (setup, the keys)
+Effect = namedtuple("Effect", "t T ground players stats mood files setup")
 
 
 def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=True):
@@ -3102,26 +3215,11 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     entity, so they do not count. The load function schedules a timer trigger at the AoE2 time (all
     timers must pass: the largest). The tick function runs an area trigger when units of its player are in all its
     areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
-    the units leave an area. "Send Chat" is a tellraw, "Display Instructions" a subtitle for its display time;
-    "Create Object" and "Remove Object": object_lines (#656). "Change Color Mood": mood_lines (#1876), only with mood. "Change Ownership": owner_lines (#2570).
-    "Tribute" and "Modify Resource": resource_lines (#2576), scores for the game program.
-    "Damage Object": damage_lines (#2571). "Display Timer": timer_lines (#2572).
-    "Teleport Object": teleport_lines (#2569).
-    "Change Variable": variable_lines; a "Variable Value" condition runs in the tick function as an area (#2611).
-    A "Research Technology" condition too: the game program sets the score #p<player>.<technology> of aoe_tech (#2656).
-    "Declare Victory" sets the score #p<player> of aoe_win to 1: the scenario mode of the game program ends the game.
-    "Change Diplomacy" sets the score #p<player>.p<target> of aoe_dip to the stance + 1 and #any of aoe_dip to 1: the
-    scenario mode changes the stance (#2645).
-    "Freeze Object": freeze_lines (#2608).
-    "Change Object Name": name_lines (#2616).
-    "Research Technology": a score in aoe_tech for the game program (research_list, #2577).
-    "Change View": view_lines (#2610).
-    "Clear Instructions": title @a clear (#2609).
-    "Patrol" and "Attack Move": order_lines (#2647).
-    "Play Sound": sound_lines (#2644).
-    "Task Object": task_lines (#2646).
+    the units leave an area. A "Variable Value" condition runs in the tick function as an area (#2611), a "Research
+    Technology" condition too: the game program sets the score #p<player>.<technology> of aoe_tech (#2656). The
+    commands of each effect come from its handler in EFFECTS.
     A disabled trigger does not run."""
-    load, files, tick, win, dip, money = [], {}, [], False, False, False
+    load, files, tick, setup = [], {}, [], {}
     stats = Counter() if stats is None else stats
     ground = np.zeros((0, 0), np.int16) if ground is None else ground
     for t in triggers:
@@ -3138,84 +3236,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     or c["type"] == RESEARCHED and (c.get("player", -1) <= 0 or not c.get("technology"))
                     for c in conds):                                   # unit classes: not yet
             continue
-        lines = []
-        for i, e in enumerate(t["effects"]):
-            if e["type"] == RESEARCH_TECHNOLOGY and e.get("technology") and e["player"] > 0:
-                lines.append(f"scoreboard players set #r{t['id']}.{i} aoe_tech 1")   # the game program reads it
-                stats["research"] += 1                                 # (research_list, #2577)
-                continue
-            if e["type"] in (CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT):
-                lines += object_lines(t, e, T, ground, players, stats)
-                continue
-            if e["type"] == CHANGE_OWNERSHIP:
-                lines += owner_lines(e, T, stats)
-                continue
-            if e["type"] in (TRIBUTE, MODIFY_RESOURCE):
-                res = resource_lines(e)
-                lines, money = lines + res, money or bool(res)
-                continue
-            if e["type"] == CHANGE_COLOR_MOOD:
-                lines += mood_lines(e) if mood else []
-                continue
-            if e["type"] == DAMAGE_OBJECT:
-                lines += damage_lines(e, T, stats)
-                continue
-            if e["type"] == DECLARE_VICTORY:                           # the scenario mode reads the score (#2542)
-                lines.append(f"scoreboard players set #p{max(e['player'], 0)} aoe_win 1")
-                stats["declare victory"] += 1
-                win = True
-                continue
-            if e["type"] == CHANGE_DIPLOMACY:                          # the scenario mode reads the score (#2645)
-                a, b = e["player"], e.get("target", -1)
-                if e.get("diplomacy") in STANCES and a > 0 and b > 0 and a != b:
-                    lines += [f"scoreboard players set #p{a}.p{b} aoe_dip {e['diplomacy'] + 1}",
-                              "scoreboard players set #any aoe_dip 1"]
-                    stats["change diplomacy"] += 1
-                    dip = True
-                continue
-            if e["type"] == DISPLAY_TIMER:
-                more, timer = timer_lines(t, e)
-                lines += more
-                files.update(timer)
-                continue
-            if e["type"] == TELEPORT_OBJECT:
-                lines += teleport_lines(e, T, ground)
-                continue
-            if e["type"] == CHANGE_VARIABLE:
-                lines += variable_lines(e, stats)
-                continue
-            if e["type"] == FREEZE_OBJECT:
-                lines += freeze_lines(e, T)
-                continue
-            if e["type"] == CHANGE_OBJECT_NAME:
-                lines += name_lines(e, T, stats)
-                continue
-            if e["type"] == CHANGE_VIEW:
-                lines += view_lines(e, T, ground)
-                continue
-            if e["type"] in (PATROL, ATTACK_MOVE):
-                lines += order_lines(t, i, e, T, ground)
-            if e["type"] == CHANGE_OBJECT_STANCE:
-                lines += stance_lines(t, i, e, T)
-                continue
-            if e["type"] == PLAY_SOUND:
-                lines += sound_lines(e, T, ground)
-                continue
-            if e["type"] == TASK_OBJECT:
-                lines += task_lines(t, i, e, T, ground)
-                continue
-            if e["type"] == CLEAR_INSTRUCTIONS:                            # no message
-                lines.append("title @a clear")
-                continue
-            msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()   # AoE2 color tags
-            if not msg:
-                continue
-            text = json.dumps({"text": msg}, ensure_ascii=False)
-            if e["type"] == SEND_CHAT:
-                lines.append(f"tellraw @a {text}")
-            elif e["type"] == DISPLAY_INSTRUCTIONS:
-                ticks = 20 * (e["time"] if e["time"] > 0 else 10)          # AoE2 default: 10 s
-                lines += [f"title @a times 10 {ticks} 20", f"title @a subtitle {text}", 'title @a title ""']
+        ctx = Effect(t, T, ground, players, stats, mood, files, setup)
+        lines = [line for e in t["effects"] if e["type"] in EFFECTS for line in EFFECTS[e["type"]](e, ctx)]
         if not lines:
             continue
         fn, n = f"aoe2mc:trigger/{t['id']}", t["id"]
@@ -3270,19 +3292,14 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         run = f"schedule function {fn} {ticks}t replace"
         files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines + [run] * t["looping"]) + "\n"
         load.append(run)
-    if money:                                                          # resource_lines (#2576)
-        load[:0] = ["scoreboard objectives add aoe_res dummy", "scoreboard objectives add aoe_set dummy"]
-    if any(" aoe_tech 1" in f for f in files.values()) or any(" aoe_tech " in x for x in tick):
-        load.insert(0, "scoreboard objectives add aoe_tech dummy")
     names = sorted({f"#v{x['variable']}" for t in triggers for x in t["conditions"] + t["effects"]
                     if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE) and x.get("variable", -1) >= 0})
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
-    if win:
-        load.insert(0, "scoreboard objectives add aoe_win dummy")
-    if dip:
-        load.insert(0, "scoreboard objectives add aoe_dip dummy")
+    if any(" aoe_tech " in x for x in tick):                         # a "Research Technology" condition (#2656)
+        setup["scoreboard objectives add aoe_tech dummy"] = None
+    load[:0] = setup
     if tick or any(k.endswith("_chance.mcfunction") for k in files):
         load.insert(0, "scoreboard objectives add aoe_trig dummy")
     if tick:

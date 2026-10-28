@@ -296,6 +296,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Alerts alerts = new Alerts(this, AoePlugin::side);   // "under attack" for the team of the target (#1231)
     private final Minimap minimap = new Minimap(this, u -> this.hidden.contains(u));   // no dot for a hidden unit (#1567)
     private final Gates gates = new Gates();                           // the gates of the game program (#1325)
+    private final MapTable mapTable = new MapTable();              // a click on the framed map (#2586)
     private final Viewer viewer = new Viewer(this);                 // the game mode switch of a replay viewer (#910)
     private final Follow camera = new Follow();                     // the follow camera of a replay (#738, #1660)
     private final Border border = new Border();
@@ -993,6 +994,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(this, this);
         Bukkit.getPluginManager().registerEvents(cheats, this);
         Bukkit.getPluginManager().registerEvents(deaths, this);
+        Bukkit.getPluginManager().registerEvents(mapTable, this);
         Bukkit.getPluginManager().registerEvents(viewer, this);
     }
 
