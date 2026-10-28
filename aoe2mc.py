@@ -428,7 +428,9 @@ def read_scenario(path):
                                             **({"target": e.target_player}                # "Change Ownership" (#2570)
                                                if e.effect_type == CHANGE_OWNERSHIP else {}),
                                             **({"unit": e.time_unit, "timer": e.timer}   # "Display Timer" (#2572)
-                                               if e.effect_type == DISPLAY_TIMER else {}))
+                                               if e.effect_type == DISPLAY_TIMER else {}),
+                                            **({"sound": e.sound_name or ""}             # "Play Sound" (#2644)
+                                               if e.effect_type == PLAY_SOUND else {}))
                                        for e in t.effects])
                          for t in scn.trigger_manager.triggers]
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
@@ -2725,6 +2727,7 @@ IN_AREA = 5
 KILL_OBJECT = 14
 OWN_FEWER_OBJECTS = 4                                              # conditions on the units of a player (#2573)
 OWN_OBJECTS = 3
+PLAY_SOUND = 4                                                     # "Play Sound" (#2644)
 REMOVE_OBJECT = 15
 SEND_CHAT = 3
 TELEPORT_OBJECT = 35
@@ -2733,6 +2736,7 @@ VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
 TICKED = COUNTED + (VARIABLE_VALUE,)                               # conditions of the tick function
+SOUNDS = [(r["name"], r["sound"]) for r in units.rows("sounds.jsonl")]  # AoE2 sound name part -> vanilla sound
 
 
 def turn_area(area, size, k):
@@ -2901,6 +2905,18 @@ def unit_selector(e, T):
     return re.sub(r"tag=aoe2mc\.p-?\d+", "tag=,type=!player", at) if e["player"] <= 0 else at
 
 
+def sound_lines(e, c):
+    """The command of "Play Sound" (#2644): the vanilla sound of the first SOUNDS part in the AoE2 sound name, for all
+    players; at the target tile when the effect has one (heard up to 16 blocks), else at each player."""
+    T, ground = c.T, c.ground
+    name = e.get("sound", "").upper()
+    sound = next(s for part, s in SOUNDS if part in name)
+    x, z = (int((v + 0.5) * T) for v in e.get("tile", [-1, -1]))
+    if min(e.get("tile", [-1])) < 0 or not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
+        return [f"execute as @a at @s run playsound minecraft:{sound} master @s"]
+    return [f"playsound minecraft:{sound} master @a {x + 0.5} {int(ground[x, z])} {z + 0.5}"]
+
+
 def freeze_lines(e, c):
     """The commands of "Freeze Object" (#2608): the units of the player in the area and the mounts of the riders get
     NoAI, so they stay in their place (AoE2: they do not move until a new order)."""
@@ -3017,6 +3033,7 @@ EFFECTS = {
     DISPLAY_TIMER: timer_lines,
     FREEZE_OBJECT: freeze_lines,
     KILL_OBJECT: object_lines,
+    PLAY_SOUND: sound_lines,
     REMOVE_OBJECT: object_lines,
     SEND_CHAT: chat_lines,
     TELEPORT_OBJECT: teleport_lines,
