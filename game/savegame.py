@@ -25,6 +25,7 @@ FILE = "savegame.json"
 FIELDS = ("stock", "spare", "seconds", "repeats", "pop")              # dicts and numbers of Gather, as they are
 PACKED = ("queues", "trained", "sites", "rally",                       # with tuples (a building rect, a cell): pack()
           "sieged",                                                    # the targets of attack orders: Gather.fall (#2537)
+          "ruins",                                                     # the fallen start buildings: ruins.py (#3008)
           "soldiers", "units")                                         # the units of the game, trained or upgraded (#2532)
 OPTIONAL = ("limit_left", "policy", "rates", "relic_timer", "switches", "upgraded", "wonder_shown", "wonders",   # only on a
             "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)
@@ -185,6 +186,8 @@ NOT_SAVED = (                                                          # the fie
     "research_at",                                                     # scenario.py: the next check time
     "research_skip",                                                   # scenario.py: the unknown technologies, found again
     "rows",                                                            # build.py: the shown building to place
+    "ruins_at",                                                        # ruins.py: the next check time
+    "ruins_seen",                                                      # ruins.py: the next answer of `aoe where` fills it again
     "scenario_at",                                                     # scenario.py: the next check time
     "score_at",                                                        # score.py: the next check time
     "shapes",                                                          # build.py: the shown building to place

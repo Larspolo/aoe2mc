@@ -80,6 +80,7 @@ import garrison  # noqa: E402
 import menu  # noqa: E402
 import monk  # noqa: E402
 import record  # noqa: E402
+import ruins  # noqa: E402
 import table  # noqa: E402
 
 DATA = os.path.join(table.DIR, "train.jsonl")
@@ -395,9 +396,9 @@ def swapped(g, name):
 
 def homes(g):
     """{block footprint (x0, x1, z0, z1): building name} of the complete own buildings that train units (TRAINS):
-    the start ones and the built ones."""
+    the start ones and the built ones, not the fallen ones (ruins.py)."""
     out = {(x0, x1, z0, z1): o["name"] for o in g.data["objects"] if o["kind"] == "building" and o["name"] in TRAINS
-           and o["player"] == g.player for x0, z0, x1, z1 in [o["footprint"]]}
+           and o["player"] == g.player and not ruins.fallen(g, o) for x0, z0, x1, z1 in [o["footprint"]]}
     return out | {tuple(s["footprint"]): s["name"] for s in g.sites if s["name"] in TRAINS and s.get("done")}
 
 
@@ -762,8 +763,10 @@ def queued(g, name):
 
 
 def owned(g):
-    """The names of the complete own buildings of the player: the start ones and the built ones."""
-    return [o["name"] for o in g.data["objects"] if o["kind"] == "building" and o["player"] == g.player] + \
+    """The names of the complete own buildings of the player: the start ones and the built ones, not the fallen ones
+    (ruins.py)."""
+    return [o["name"] for o in g.data["objects"] if o["kind"] == "building" and o["player"] == g.player
+            and not ruins.fallen(g, o)] + \
         [s["name"] for s in g.sites if s.get("done") and s["player"] == g.player]
 
 

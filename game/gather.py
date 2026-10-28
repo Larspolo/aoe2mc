@@ -77,6 +77,7 @@ import regen  # noqa: E402
 import regicide  # noqa: E402
 import relic_victory  # noqa: E402
 import repair  # noqa: E402
+import ruins  # noqa: E402
 import scenario  # noqa: E402
 import score  # noqa: E402
 import spectator  # noqa: E402
@@ -695,6 +696,7 @@ class Gather:
         self.fort_players = {combat.target_uuid(o["footprint"]): o["player"] for o in data["objects"]
                              if o["kind"] == "building" and "footprint" in o}  # target UUID -> owner (bot.forts, #1819)
         self.sieged = set()                                            # the targets of attack orders
+        self.ruins = set()                                             # footprints of fallen start buildings (ruins.py)
         self.wands, self.corners = set(), {}                           # players who clicked the wand, player -> corner 1
         self.holds = {}                                                # player -> time of the last wand use of a drag
         self.pending, self.looks = {}, {}                              # player -> (time, look) of a stick use (#1786)
@@ -1586,6 +1588,7 @@ class Gather:
     def step(self):
         """One tick: walk one block, chop, drop the wood, or build."""
         self.fall()
+        ruins.tick(self)
         garrison.tick(self)
         siege_tower.tick(self)
         transport.tick(self)
