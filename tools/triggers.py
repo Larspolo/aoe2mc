@@ -35,6 +35,7 @@ MAP = {
     ("condition", "DESTROY_OBJECT"): "`execute unless entity @e[tag=aoe2mc.rN]` in the tick function (units, #2618); a building: not supported yet",
     ("condition", "OBJECT_ATTACKED"): "`execute if entity @e[tag=aoe2mc.rN,nbt=!{HurtTime:0s}]` in the tick function: the unit took damage from any attacker in the last 10 ticks, vanilla has no attacker in a selector (units, #2779); a building: not supported yet",
     ("condition", "CAPTURE_OBJECT"): "`execute if entity @e[tag=aoe2mc.rN,tag=aoe2mc.pN]` in the tick function (units, #2619); a building: not supported yet",
+    ("condition", "DISPLAY_TIMER_TRIGGERED"): "`execute if score #doneN aoe_timer matches 1..` in the tick function: the timer sets the score at 0 (#2702)",
     ("condition", "OBJECT_HP"): "`execute store result score ... run data get entity @e[tag=aoe2mc.rN,limit=1] Health` in the tick function, then `if score ... matches` (#2701)",
     ("condition", "VARIABLE_VALUE"): "`execute if score #vN aoe_var matches ..` in the tick function, once (#2611)",
     ("condition", "AND"): "the default between two conditions: all conditions of one group in one `execute if ... if ...` line (#2765)",
