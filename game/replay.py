@@ -730,6 +730,21 @@ class Replay:
             [f"execute as @a[gamemode=spectator] run spectate @e[tag={FOLLOWED},limit=1] @s"] * \
             (getattr(self.game, "kind", "paper") == "vanilla")
 
+    @functools.cached_property
+    def trainings(self):
+        """aoe2mc.training of the timeline: (end ms, QUEUE event, building ID) for each unit."""
+        return aoe2mc.training(self.data.get("timeline", ()))
+
+    def production(self, t):
+        """{player: [(name, count, start, end), ...]}: the units in training or in the queue of their building at game
+        time t (ms, #2809), grouped by name in the order of the next end; start and end are those of the first one."""
+        out = {}
+        for end, e, _ in self.trainings:
+            if e["time"] <= t < end and e.get("name"):
+                out.setdefault(e["player"], {}).setdefault(e["name"], []).append(end)
+        return {p: sorted(((n, len(ends), min(ends) - aoe2mc.train_ms(n), min(ends)) for n, ends in names.items()),
+                          key=lambda item: item[3]) for p, names in out.items()}
+
     def spawns(self):
         """A "spawn" event for each unit that a QUEUE command trains, at the end of its training."""
         return [{"time": end, "player": e["player"], "kind": "spawn", "type": e["type"], "name": e["name"],
