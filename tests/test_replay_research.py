@@ -31,7 +31,7 @@ def play(timeline, objects=(), jump=None):
 
 
 def texts(sent):
-    return [c for c in sent if c.startswith("summon text_display")]
+    return [c for c in sent if c.startswith("summon text_display") and replay.EFFECT in c]    # not the panel (#2811)
 
 
 def test_a_research_of_a_start_building_shows_its_name_above_the_roof():
@@ -79,6 +79,6 @@ def test_a_jump_skips_the_text_and_removes_an_old_one():
     assert texts(sent) == []                                         # the skipped time shows no text
     sent = play([research(1000, 5, "TOWN_CENTER"), {"time": 60000, "player": 1, "kind": "chat", "text": "x"}],
                 [TC], (2000, 30000))
-    kills = [k for k, c in enumerate(sent) if c.startswith("kill @e[type=text_display")]
+    kills = [k for k, c in enumerate(sent) if c.startswith(f"kill @e[type=text_display,tag={replay.EFFECT}")]
     assert len(texts(sent)) == len(kills) == 1
     assert kills[0] < next(k for k, c in enumerate(sent) if c.startswith("tellraw"))   # at the jump, not at the end
