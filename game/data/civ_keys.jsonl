@@ -1,6 +1,7 @@
 {"name": "age_gifts", "text": "The resources that the civilization gets at each new age, {resource: amount}. train.research gives them at the end of each age.", "issue": 1926}
 {"name": "also", "text": "Technologies with an effect on one more group of GROUPS too, {technology: group} (Bohemians: Fervor and Sanctity for the villagers). train.stats, train.speed.", "issue": 2173}
 {"name": "arrows", "text": "The factor of the base arrows of the buildings in each age (Dark, Feudal, Castle, Imperial).", "issue": 2178}
+{"name": "attack_gold", "text": "The factor of the gold that units with the key \"attack_gold\" of units.jsonl make while they attack enemy units (Varangians: Varangian Guards 1.5). game/spoils.py.", "issue": 2376}
 {"name": "aura", "text": "The own complete buildings that make the gatherers of some resources work faster near them and take these resources, {\"buildings\", \"resources\", \"rate\", \"range\": tiles from the footprint} (Thracian forts and towers). gather.Map.drop_site, Gather.aura_rate.", "issue": 2378}
 {"name": "build", "text": "The build speed of the builders (a factor). build.rise multiplies the work of the builders (civs.build_rate).", "issue": 1893}
 {"name": "build_of", "text": "The build speed of some buildings, {building: factor} (Sicilian fortifications and town centers). build.rise (civs.build_rate).", "issue": 2115}
@@ -9,6 +10,7 @@
 {"name": "built_units", "text": "The herdables that a complete building gives, {building: [unit, number in the Dark, Feudal, Castle and Imperial Age]} (Tatar sheep).", "issue": 2313}
 {"name": "bushes", "text": "[count, food] of the forage bushes next to the town center at the start (Gurjaras: 2 of 175).", "issue": 2293}
 {"name": "carry", "text": "The extra load of a villager, [[gather kind or null (all), extra]]: Aztec villagers +3, Goth hunters +15. Gather.limit adds it (civs.carry). The kind \"ship\": the load of a fishing ship (fleet.carry, Dravidians +15, #2333).", "issue": 2270}
+{"name": "church_rate", "text": "[building, size of the square in tiles, factor]: the villagers in the square around a complete own building of this kind work faster (Georgian Fortified Church: 21 tiles, +10 %, once for two churches). Gather.work_time, build.rise and repair.rate multiply by civs.church_rate().", "issue": 2377}
 {"name": "cost_per", "text": "The cost bonuses for each complete own building: [group of GROUPS, the buildings, the share less for each, the most share less] (Saxons: foot soldiers cost 5 % less per town center or castle, at most 20 %).", "issue": 2177}
 {"name": "costs", "text": "The cost bonuses: [what, resource or null (all), change in the Dark, Feudal, Castle and Imperial Age]. What is a group of GROUPS (units), \"buildings\", \"buildings but farms\", \"technologies\", \"ages\", \"BUILDING technologies\" (the technologies of the menu of that building, #1925) or a list of names. A float multiplies the cost (0.0: free), an int adds to it. AoE2 rounds half up (35 × 0.75 = 26).", "issue": 1091}
 {"name": "decay", "text": "The factor of the decay of carcasses (Jurchens: 0, the meat does not decay).", "issue": 2310}
@@ -21,6 +23,7 @@
 {"name": "faith", "text": "The factor of the speed of the monks that regain faith after a conversion (Muisca: 100 % faster). game/monk.py.", "issue": 2314}
 {"name": "fallen", "text": "The part of the cost of a fallen own unit that the player gets back (Tupi). game/spoils.py.", "issue": 2271}
 {"name": "farm_upgrades", "text": "The factor of the food of the farm upgrades (Sicilians: +125 %). train.research.", "issue": 2230}
+{"name": "free_relic", "text": "The free relics of the first complete own building of a kind, {building: relics} (Armenians: one relic in the first Fortified Church). monk.free_relic puts them into it.", "issue": 2419}
 {"name": "garrison", "text": "The units inside a building, {building: units} (garrison.size).", "issue": 2117}
 {"name": "heal_range", "text": "The factor of the heal range of the monks.", "issue": 2269}
 {"name": "herd_food", "text": "Herdable animals in a building make food (garrison.pasture), {building: [size, a, b]}: at most size animals in each, a × ln(F / b + 1) food per AoE2 minute for F food of the animals in all of them (Gurjara mills: 10, 15, 200, AoE2 DE wiki).", "issue": 2342}
