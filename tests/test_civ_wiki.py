@@ -23,6 +23,7 @@ TABLES = (                                                            # one per 
     "AGE_RATE",
     "AGE_VILLAGERS",
     "ARROWS",
+    "BUILD",
     "BUILD_OF",
     "COSTS",
     "COST_PER",
@@ -37,6 +38,7 @@ TABLES = (                                                            # one per 
     "TWICE",
     "UNITS",
     "WORK",
+    "WORK_RATE",
 )
 KEYS = set(re.findall(r"`(play:[a-z-]+)`", open(os.path.join(ROOT, "docs", "ROADMAP.md")).read()))
 
@@ -72,8 +74,8 @@ def test_each_bonus_of_a_table_has_its_entry():
 
 def test_each_table_entry_is_a_bonus_of_the_list():
     """The other way: an entry of a table with no bonus of that state in the list is a bonus that the wiki does not
-    name, or a list that is not up to date. Not REPAIR (the Roman villager bonus of WORK) and REPAIR_COST (a team
-    bonus)."""
-    for name in set(TABLES) - {"REPAIR", "REPAIR_COST"}:
+    name, or a list that is not up to date. Not BUILD and REPAIR (the Roman villager bonus of WORK) and REPAIR_COST (a
+    team bonus)."""
+    for name in set(TABLES) - {"BUILD", "REPAIR", "REPAIR_COST"}:
         for civ in getattr(civs, name):
             assert any(r.get("in") == name for r in BONUSES[civ]), (name, civ)
