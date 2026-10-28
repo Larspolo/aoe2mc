@@ -3447,7 +3447,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Accumulate Attribute" condition of a resource: resource_score (#2655). A "Destroy Object" condition
     (OBJECT_TESTS) tests the tag aoe2mc.r<ref> of its unit and its marker (#2618), "Bring Object to Area" the tag in
     the box of the area (#2620). "OR" splits the conditions into groups (or_groups, #2765): one tick line per group,
-    and the trigger fires when one group holds. The commands of each effect come from its handler in EFFECTS.
+    and the trigger fires when one group holds; the timer of a group sets the score #N.t<group> of aoe_trig (#2791).
+    The commands of each effect come from its handler in EFFECTS.
     A disabled trigger runs only after an "Activate Trigger" (#2575): the score #N of aoe_on is 1 while a trigger that
     such an effect names is on (switch_lines). live: the triggers that get a function; None: all that give commands
     (an effect may name only a function that exists). A "Chance" trigger cannot be activated yet."""
@@ -3465,8 +3466,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     on = {e.get("trigger") for t in triggers for e in t["effects"] if e["type"] == ACTIVATE_TRIGGER}
     switch = {e.get("trigger") for t in triggers for e in t["effects"]
               if e["type"] in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER)} & live - chancy
-    timed = {t["id"]: max(20 * max(c["timer"] for c in cs), 1) for t in triggers  # 1 tick at least
-             if (cs := sum(or_groups(t["conditions"]), [])) and all(c["type"] == TIMER for c in cs)}
+    timed = {t["id"]: max(20 * min(max(c["timer"] for c in g) for g in gs), 1) for t in triggers   # 1 tick at least;
+             if (gs := or_groups(t["conditions"])) and all(c["type"] == TIMER for g in gs for c in g)}   # OR: the first
     for t in triggers:
         groups = or_groups(t["conditions"])
         conds = sum(groups, [])
@@ -3480,11 +3481,14 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                for c in conds):                                        # no object, or a building: blocks, no entity
             stats["object condition (not an entity, not supported yet)"] += t["enabled"]
             continue
-        if len(groups) > 1 and any(c["type"] in (TIMER, TRIGGER_CHANCE) for c in conds):
-            stats["OR with a timer or a chance (not supported yet)"] += t["enabled"]
+        # "OR" with a timer and other conditions (#2791): the timer of a group is a schedule that sets the score
+        # #N.t<group> of aoe_trig, and the tick line of the group tests it
+        clocked = len(groups) > 1 and (TIMER, False) in rest and rest != {(TIMER, False)}
+        if len(groups) > 1 and chance or clocked and not t["enabled"]:
+            stats["OR with a chance, or with a timer in a disabled trigger (not supported yet)"] += t["enabled"]
             continue
         if not (t["enabled"] or t["id"] in on and t["id"] not in chancy) or not conds or \
-                not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED}) or \
+                not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED + (TIMER,) * clocked}) or \
                 chance and len([c for c in conds if c["type"] == TRIGGER_CHANCE]) > 1 or \
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds) or \
                 any(c["type"] == VARIABLE_VALUE and (c.get("variable", -1) < 0 or variable_range(c) is None)
@@ -3503,6 +3507,15 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             load += [f"scoreboard players set #{n} aoe_on 1"] * t["enabled"]
             lines += [f"scoreboard players set #{n} aoe_on 0"] * (not t["looping"])   # it fired: off until activated
         groups_tests, groups_unless, counts = [[] for _ in groups], [[] for _ in groups], []
+        for k, g in enumerate(groups) if clocked else ():
+            if not (timers := [c["timer"] for c in g if c["type"] == TIMER]):
+                continue
+            clock, at = f"#{n}.t{k} aoe_trig", f"schedule function {fn}_t{k} {max(20 * max(timers), 1)}t replace"
+            files[f"data/aoe2mc/function/trigger/{n}_t{k}.mcfunction"] = f"scoreboard players set {clock} 1\n"
+            load.append(at)
+            lines += [f"scoreboard players reset {clock}", at] * t["looping"]   # the timer starts again
+            groups_tests[k].append(f"if score {clock} matches 1")
+            groups_unless[k].append(f"unless score {clock} matches 1")
         for i, c in enumerate(conds):
             tests, unless = groups_tests[which[i]], groups_unless[which[i]]
             if c["type"] in SCORE_TESTS:                               # a score of the world or the game
@@ -3550,7 +3563,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 [f"execute {' '.join(g)} run scoreboard players set #{n}.or aoe_trig 1" for g in groups_tests] + \
                 [f"execute if score #{n}.or aoe_trig matches 0 run scoreboard players reset #{n} aoe_trig"]
         timers = [c["timer"] for c in conds if c["type"] == TIMER]
-        ticks = max(20 * max(timers, default=0), 1)                   # a schedule needs at least 1 tick
+        ticks = timed.get(n) or max(20 * max(timers, default=0), 1)  # a schedule needs at least 1 tick
         if chance:
             q = next(c["quantity"] for c in conds if c["type"] == TRIGGER_CHANCE)
             roll = f"{fn}_chance"
@@ -4299,7 +4312,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
                             mood == "on")
     if resource_pack:
         print(f"  resource pack (resourcepacks/resources.zip): {len(write_resourcepack(out)) - 1} textures")
-    k = sum("/trigger/" in f for f in trigger_files(triggers, T, ground, players, mood=mood == "on")[1]) \
+    k = sum(bool(re.search(r"/trigger/\d+\.mcfunction$", f))     # not the roll and timer functions (#2791)
+            for f in trigger_files(triggers, T, ground, players, mood=mood == "on")[1]) \
         if ambience != "off" else 0
     if k:
         print(f"  timer and area triggers (chat, instructions, objects): {k}"
