@@ -503,6 +503,8 @@ def read_scenario(path):
                                                if e.effect_type == UNLOAD else {}),
                                             **({"target": e.target_player, "diplomacy": e.diplomacy}   # (#2645)
                                                if e.effect_type == CHANGE_DIPLOMACY else {}),
+                                            **({"target": e.target_player}                # (#2822)
+                                               if e.effect_type == MIRROR_DIPLOMACY else {}),
                                             **({"target": e.target_player, "visibility": e.visibility_state}   # (#2774)
                                                if e.effect_type == SET_PLAYER_VISIBILITY else {}),
                                             **({"target": e.target_player, "quantity": e.quantity,   # (#2576)
@@ -2884,6 +2886,7 @@ HEAL_OBJECT = 34                                                   # "Heal Objec
 IN_AREA = 5
 KILL_OBJECT = 14
 LOCK_GATE = 7                                                      # "Lock Gate", "Unlock Gate" (#2762)
+MIRROR_DIPLOMACY = 109                                             # "Mirror Diplomacy" (#2822)
 MODIFY_ATTRIBUTE = 51                                              # "Modify Attribute" (#2763)
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
 MODIFY_RESOURCE_BY_VARIABLE = 53                                   # "Modify Resource by Variable" (#2768)
@@ -3642,6 +3645,18 @@ def diplomacy_lines(e, c):
     return [f"scoreboard players set #p{a}.p{b} aoe_dip {e['diplomacy'] + 1}", "scoreboard players set #any aoe_dip 1"]
 
 
+def mirror_lines(e, c):
+    """The commands of "Mirror Diplomacy" (#2822): the source player (player) takes the stances of the target player
+    toward each other player. The score #m<player>.p<target> of aoe_dip is 1 and #any of aoe_dip is 1: the scenario
+    mode of the game program copies the stances (scenario.diplomacy)."""
+    a, b = e["player"], e.get("target", -1)
+    if a <= 0 or b <= 0 or a == b:
+        return []
+    c.setup["scoreboard objectives add aoe_dip dummy"] = None
+    c.stats["mirror diplomacy"] += 1
+    return [f"scoreboard players set #m{a}.p{b} aoe_dip 1", "scoreboard players set #any aoe_dip 1"]
+
+
 def color_lines(e, c):
     """The command of "Change Player Color" (#2712): the team p<player> gets the chat color of the new player color
     (PlayerColorId 1 to 8, units.TEAM_COLOR). It colors the names and the glow of the units; wool and banners stay."""
@@ -3740,6 +3755,7 @@ EFFECTS = {
     HEAL_OBJECT: heal_lines,
     KILL_OBJECT: object_lines,
     LOCK_GATE: gate_lines,
+    MIRROR_DIPLOMACY: mirror_lines,
     MODIFY_ATTRIBUTE: attribute_lines,
     MODIFY_RESOURCE: resource_lines,
     MODIFY_RESOURCE_BY_VARIABLE: resource_by_variable_lines,
