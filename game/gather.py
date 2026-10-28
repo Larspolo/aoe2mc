@@ -935,6 +935,12 @@ class Gather:
         spot = self.map.spot(tile)
         return {c for c in spot if self.map.free(*c)} if tile in self.map.farms else self.map.around(spot)
 
+    def drop_goals(self, v):
+        """The cells next to the drop sites of the load of a villager (a carcass: also the mule cart, #2194)."""
+        build.moved_carts(self)                                        # a mule cart can be at a new place (#2209)
+        meat = self.map.drops["meat"] if v.res == "food" and v.tree in self.map.carcasses else []
+        return set().union(*map(self.map.around, self.map.drops[v.res] + meat))
+
     def source(self, v):
         """The resources left in the tree, bush, mine or farm of a villager: {tile: amount} of its kind."""
         if v.tree in self.map.farms:
@@ -1451,9 +1457,7 @@ class Gather:
                     else:
                         self.trunk(v.tree)
                 if v.load >= most or src.get(v.tree, 0) <= 0:
-                    build.moved_carts(self)                            # a mule cart can be at a new place (#2209)
-                    meat = self.map.drops["meat"] if v.res == "food" and v.tree in self.map.carcasses else []
-                    self.go(v, "to_drop", set().union(*map(self.map.around, self.map.drops[v.res] + meat)))
+                    self.go(v, "to_drop", self.drop_goals(v))
         train.tick(self, self.tick * NORMAL)
         monk.heal(self, self.tick * NORMAL)
         monk.convert(self, self.tick * NORMAL)
