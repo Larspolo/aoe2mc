@@ -827,6 +827,7 @@ def target(g, site):
                              factor=civs.arrows(g, name, site["player"])) \
             + [f"tag {uuid} add {combat.WALL_TAG}"] * wall + [combat.label_command(uuid, name)]:
         g.command(c)
+    forts(g, site)
 
 
 def is_fort(site):
@@ -855,7 +856,7 @@ def settle(g, site, loaded=False):
     open_cells = cells - tile_cells(g, site["tiles"]) if "tiles" in site else ()   # beside a diagonal gate (#1655)
     g.map.building(site["name"], site["footprint"], (x0 // T + s // 2, z0 // T + s // 2), site["player"] == g.player,
                    open_cells)
-    if is_fort(site):
+    if loaded and is_fort(site):                                       # rise() does it in target()
         forts(g, site)
 
 
