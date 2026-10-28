@@ -3,19 +3,18 @@
 Read this file after step 8 when the argument asks for more than 1 ticket (part of the `autopilot` skill, #1700).
 
 If the argument asks for more than 1 ticket, go back to step 2 after step 8 (finish stalled PRs of other runs, then read new owner
-feedback with `python3 tools/feedback.py`, step 3). In a
-cloud session, reset the branch first: `git fetch origin main && git checkout -B <branch> origin/main` (fetch `main` alone:
-a fetch that also names a deleted branch fails as a whole, and `origin/main` stays old). Never force-push: the auto mode denies it
-("Git Destructive"; 33 runs lost a step on it on 2026-10-26). Push with
-`git ls-remote --exit-code --heads origin <branch>` first: exit 2 (the usual case: Automerge deletes the branch after
-the merge) → `git push -u origin <branch>`. Exit 0 → `git fetch origin <branch> && git merge --no-edit origin/<branch>`
-(its commits are on main already, so the PR diff stays the same), then `git push origin HEAD:<branch>`. A conflict in that merge: take your side (`git checkout --ours FILE`):
-main has the squashed old commits, so check that `git diff --stat origin/main` shows only your ticket (#523).
-The session branch can carry only one open PR: do the next ticket in a local commit, and push it only when the PR
-of the last ticket is merged or closed (`/pulls?head=OWNER:<branch>&state=open` is empty). Else a push replaces
-the open PR. While you wait for that merge, beat both claims (the PR's ticket and the local one) at least every 10
-minutes: a conflicted PR can wait 45 minutes, and #2713 was taken over as "stuck" with its tested commit still local. After `checkout -B` the upstream is
-`origin/main`, so a bare `git push` fails: check that the output shows `-> <branch>`, else the PR has old commits.
+feedback with `python3 tools/feedback.py`, step 3). The PRs of this run (on `<session branch>` or `<session branch>-<k>`)
+are yours in step 2: when one is red or conflicted, check out its branch (`git fetch origin <b> && git checkout -B <b>
+origin/<b>`) and fix it there (`python3 tools/merge_main.py --push N`).
+
+Do each later ticket on a new branch, also while the PR of the last ticket is open: do not wait for that PR (one run
+spent 32 calls on such a wait, 2026-10-28). Before the claim of step 5, run `git fetch origin main && git checkout -B
+<session branch>-<k> origin/main` (k = 2, 3, ...: one more for each new branch of this run; fetch `main` alone: a fetch
+that also names a deleted branch fails as a whole). The scheduled task allows the push to these branches.
+`tools/claim.py` names the owner of a claim by the current branch, so claim, beat, guard and push on the new branch.
+Push it with `git push -u origin <session branch>-<k>`, and check that the output shows `-> <session branch>-<k>`.
+The open PR of the last ticket needs no wait: Automerge merges it when CI is green, and `unconflict.yml` merges `main`
+into it. Never force-push: the auto mode denies it ("Git Destructive"; 33 runs lost a step on it on 2026-10-26).
 Stop when the context is above 200k tokens (`python3 tools/tokens.py` prints it as `peak`). The window has 1M, but
 above 200k each call costs more than 3 times a call of a fresh run (about 65k), so a new run does the next ticket
 for less (2026-10-28).

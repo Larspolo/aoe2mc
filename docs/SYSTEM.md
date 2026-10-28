@@ -44,7 +44,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 5. It picks a ticket in the order of `tools/dashboard.py --next` (`P0` to `P3`, the least overlap with other work,
    the lowest number) and claims it (`tools/claim.py N`). When the queue is short, it makes new tickets from the
    epics and the roadmap.
-6. It does the ticket on its session branch: a failing test first for a bug, the change, the checks of the skill
+6. It does the ticket on its session branch (a later ticket of the run: on `<session branch>-<k>`, `more.md`): a failing test first for a bug, the change, the checks of the skill
    `verify`, and the process improvements (autopilot step 9) in the same PR.
 7. It runs `tools/claim.py N --guard`, pushes and opens a PR with `Closes #N`. It does not wait for CI.
 8. CI runs the quick checks. Automerge merges the PR when they are green. The merge closes the ticket. Claims
