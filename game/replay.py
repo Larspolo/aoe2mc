@@ -231,6 +231,7 @@ class Replay:
         self.points = {}                        # object ID of a building -> its last GATHER POINT event (#1227)
         self.adopted, self.rallied = {}, 0      # temporary ID of a unit at a gather point -> its object ID (#1227)
         self.effects = {}                       # entity tag of a research text -> game time (ms) of its end (#843)
+        self.flares = []                        # (x, y, z, game time (ms) of the end) of the live flares (#2402)
         self.refs = {o["ref"]: o for o in data["objects"] if o.get("ref") is not None}
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
@@ -319,6 +320,8 @@ class Replay:
             name, color = self.player(e["player"]) if e.get("player") else ("Game", "white")
             return ["tellraw @a " + json.dumps([text(f"<{name}> ", color), text(taunt(e["text"]))])]
         name, color = self.player(e.get("player"))
+        if kind == "flare" and e.get("tile"):
+            return self.flare(e, name, color)
         if kind == "age" and e.get("age"):
             self.age(e)
             return ["title @a subtitle " + json.dumps(text(name, color)),
@@ -431,11 +434,26 @@ class Replay:
                 f"particle minecraft:enchant {x} {top + 1} {z} {(x1 - x0) / 4} 0.5 {(z1 - z0) / 4} 1 60"]
 
     def expire(self, t):
-        """The commands that remove the research texts whose time ended at game time t (ms)."""
+        """The commands that remove the research texts whose time ended at game time t (ms), and the particles of the
+        live flares (a particle burst lives less than a second, as flare.tick in the game program)."""
         done = [tag for tag, end in self.effects.items() if end <= t]
         for tag in done:
             del self.effects[tag]
-        return [f"kill @e[type=text_display,tag={tag}]" for tag in done]
+        import flare                                                # game/: on the path of the replay
+        self.flares = [f for f in self.flares if f[3] > t]
+        return [f"kill @e[type=text_display,tag={tag}]" for tag in done] + \
+            [flare.particles(x, y, z, "@a") for x, y, z, _ in self.flares]
+
+    def flare(self, e, name, color):
+        """A flare of the record (#2402): the bell, the light column of the game program (flare.py) at the block of
+        its tile for flare.SECONDS of game time, and a chat line in the player color."""
+        import flare
+        x, z = (min(self.n - 1, max(0, int(c * self.T))) for c in e["tile"])
+        y = self.ground[z][x] if self.ground[z][x] is not None else next(
+            (g for row in self.ground for g in row if g is not None), 64)    # water: the height of the land
+        self.flares.append((x, y, z, e["time"] + flare.SECONDS * 1000))
+        return [f"playsound {flare.SOUND} master @a {x} {y} {z} 1 1 1", flare.particles(x, y, z, "@a"),
+                "tellraw @a " + json.dumps([text(f"<{name}> ", color), text("Flare", "gold")])]
 
     @functools.lru_cache(maxsize=None)
     def height(self, name, player):
