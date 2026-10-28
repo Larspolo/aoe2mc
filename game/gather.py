@@ -54,6 +54,7 @@ import build  # noqa: E402
 import replay  # noqa: E402  (build imports it too)
 import battle_royale  # noqa: E402
 import bossbar  # noqa: E402
+import capture_relic  # noqa: E402
 import cheats  # noqa: E402
 import civs  # noqa: E402
 import conquest  # noqa: E402
@@ -1829,6 +1830,8 @@ class Gather:
                 sudden_death.tick(self)
             elif self.mode == "battle-royale":                         # the Corruption takes the map (#2439)
                 battle_royale.tick(self, self.tick * NORMAL)
+            elif self.mode == "capture-the-relic":                     # the center relic in a monastery wins (#2440)
+                capture_relic.tick(self)
             elif self.mode == "defend-the-wonder":                     # the attackers win when the Wonder falls (#2441)
                 defend_wonder.tick(self)
             fog.tick(self)                                             # after the bots: their units too (#1389)
