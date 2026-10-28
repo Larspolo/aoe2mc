@@ -63,6 +63,7 @@ import fog  # noqa: E402
 import garrison  # noqa: E402
 import goto  # noqa: E402
 import herd  # noqa: E402
+import hill  # noqa: E402
 import hints  # noqa: E402
 import market  # noqa: E402
 import menu  # noqa: E402
@@ -73,6 +74,7 @@ import relic_victory  # noqa: E402
 import repair  # noqa: E402
 import score  # noqa: E402
 import siege_tower  # noqa: E402
+import sudden_death  # noqa: E402
 import stance  # noqa: E402
 import table  # noqa: E402
 import time_limit  # noqa: E402
@@ -534,6 +536,7 @@ class Gather:
     speed = 1.0                                                        # times the Normal speed: shorter real steps (#2057)
     later = {}                                                         # the bonus of the first town center (civs.TOWN_CENTER)
     victory = "standard"                                               # AoE2 "Victory"; "conquest": no wonder, no relics (#2316)
+                                                                       # "king-of-the-hill": hill.py (#2360)
                                                                        # "time-limit", "score": time_limit.py (#2356)
     mode = "standard"                                                  # AoE2 game mode; "regicide": the King (#2347)
 
@@ -1811,11 +1814,15 @@ class Gather:
             conquest.tick(self)                                        # not in step(): the bot steps its own Gather
             if self.mode == "regicide":                                # a player without its King loses (#2347)
                 regicide.tick(self)
+            elif self.mode == "sudden-death":                          # a player without its town center loses (#2407)
+                sudden_death.tick(self)
             fog.tick(self)                                             # after the bots: their units too (#1389)
             herd.tick(self)                                            # all players: the bots capture too (#1792)
             if self.victory == "standard":                             # a wonder or all relics win too (#2316)
                 wonder.tick(self, self.tick * NORMAL)                  # game seconds, as train.tick
                 relic_victory.tick(self, self.tick * NORMAL)
+            elif self.victory == "king-of-the-hill":                   # the monument in the center (#2360)
+                hill.tick(self, self.tick * NORMAL)
             score.tick(self)
             if self.victory in ("time-limit", "score"):                # after the conquest: it wins before (#2356)
                 time_limit.tick(self, self.tick * NORMAL)

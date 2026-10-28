@@ -3,7 +3,7 @@
 {"name": "ACHAEMENIDS: Stable technologies research 50% faster (-33% time taken).", "civ": "ACHAEMENIDS", "bonus": "Stable technologies research 50% faster (-33% time taken).", "in": "RESEARCH_TIME"}
 {"name": "ARMENIANS: Mule Carts cost -25%. Mule Carts replace Lumber Camps and Mining Camps.", "civ": "ARMENIANS", "bonus": "Mule Carts cost -25%. Mule Carts replace Lumber Camps and Mining Camps.", "in": "COSTS"}
 {"name": "ARMENIANS: Mule Cart technologies are 40% more effective.", "civ": "ARMENIANS", "bonus": "Mule Cart technologies are 40% more effective.", "in": "MORE"}
-{"name": "ARMENIANS: Fortified Churches replace Monasteries, and the first one constructed receives a free Relic.", "civ": "ARMENIANS", "bonus": "Fortified Churches replace Monasteries, and the first one constructed receives a free Relic.", "later": "play:monks"}
+{"name": "ARMENIANS: Fortified Churches replace Monasteries, and the first one constructed receives a free Relic.", "civ": "ARMENIANS", "bonus": "Fortified Churches replace Monasteries, and the first one constructed receives a free Relic.", "in": "free_relic"}
 {"name": "ARMENIANS: Long Swordsman and above, and Spearman line available one Age earlier.", "civ": "ARMENIANS", "bonus": "Long Swordsman and above, and Spearman line available one Age earlier.", "in": "EARLIER"}
 {"name": "ARMENIANS: The Galley line and Dromons* fire one additional projectile each, which deal 1 attack and advertised attack, respectively.", "civ": "ARMENIANS", "bonus": "The Galley line and Dromons* fire one additional projectile each, which deal 1 attack and advertised attack, respectively.", "in": "volley"}
 {"name": "ATHENIANS: Athenians can be changed between Economic, Naval, and Military at the Town Center.", "civ": "ATHENIANS", "bonus": "Athenians can be changed between Economic, Naval, and Military at the Town Center.", "later": "play:setup"}
@@ -180,7 +180,7 @@
 {"name": "ROMANS: Scorpions cost gold -50%.", "civ": "ROMANS", "bonus": "Scorpions cost gold -50%.", "in": "COSTS"}
 {"name": "SARACENS: The commodity trading fee is 5%.", "civ": "SARACENS", "bonus": "The commodity trading fee is 5%.", "in": "game/market.py"}
 {"name": "SARACENS: Markets cost wood 75.", "civ": "SARACENS", "bonus": "Markets cost wood 75.", "in": "COSTS"}
-{"name": "SARACENS: Transport Ships have double hit points and +20 carry capacity.", "civ": "SARACENS", "bonus": "Transport Ships have double hit points and +20 carry capacity.", "later": "play:naval"}
+{"name": "SARACENS: Transport Ships have double hit points and +20 carry capacity.", "civ": "SARACENS", "bonus": "Transport Ships have double hit points and +20 carry capacity.", "in": "transport"}
 {"name": "SARACENS: Galleys attack 25% faster.", "civ": "SARACENS", "bonus": "Galleys attack 25% faster.", "in": "UNITS"}
 {"name": "SARACENS: Camel units +25% hit points.", "civ": "SARACENS", "bonus": "Camel units +25% hit points.", "in": "UNITS"}
 {"name": "SAXONS: Mills, Lumber Camps, and Mining Camps provide food 35 when built.", "civ": "SAXONS", "bonus": "Mills, Lumber Camps, and Mining Camps provide food 35 when built.", "in": "BUILT_FOOD"}
@@ -235,7 +235,7 @@
 {"name": "VARANGIANS: Shepherds, fishermen, and hunters drop off an additional gold 10% in addition to food; Fishing Ships generate an additional gold 5%.", "civ": "VARANGIANS", "bonus": "Shepherds, fishermen, and hunters drop off an additional gold 10% in addition to food; Fishing Ships generate an additional gold 5%.", "in": "DROP_EXTRA"}
 {"name": "VARANGIANS: Bloodlines and Caravan give +50% effect.", "civ": "VARANGIANS", "bonus": "Bloodlines and Caravan give +50% effect.", "in": "MORE"}
 {"name": "VARANGIANS: Varangian Guards attack 25% faster.", "civ": "VARANGIANS", "bonus": "Varangian Guards attack 25% faster.", "in": "UNITS"}
-{"name": "VARANGIANS: Varangian Guards generate gold +50%.", "civ": "VARANGIANS", "bonus": "Varangian Guards generate gold +50%.", "later": "play:military-train"}
+{"name": "VARANGIANS: Varangian Guards generate gold +50%.", "civ": "VARANGIANS", "bonus": "Varangian Guards generate gold +50%.", "in": "attack_gold"}
 {"name": "VARANGIANS: Longships and Catapult Galleons attack 15% faster.", "civ": "VARANGIANS", "bonus": "Longships and Catapult Galleons attack 15% faster.", "in": "UNITS"}
 {"name": "VIETNAMESE: Foot archers and Skirmishers +20% hit points.", "civ": "VIETNAMESE", "bonus": "Foot archers and Skirmishers +20% hit points.", "in": "UNITS"}
 {"name": "VIETNAMESE: Reveal enemy initial Town Centers location at the start of the game.", "civ": "VIETNAMESE", "bonus": "Reveal enemy initial Town Centers location at the start of the game.", "in": "REVEAL"}
