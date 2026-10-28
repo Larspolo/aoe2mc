@@ -168,12 +168,12 @@ def check_replay(row):                                     # a walk speed (a nam
 
 def check_setup(row):                                      # a value of a setting of the game setup (#2264)
     form(row, {"name": str}, {"resources": dict, "ages": int, "skip": list, "note": str, "units": list,
-                              "age": str, "buildings": dict, "villagers": dict, "start": dict, "more": dict,
+                              "age": str, "buildings": dict, "villagers": dict, "level": str, "start": dict, "more": dict,
                               "sites": dict, "swap": dict, "wonder_years": int, "sides": dict,
                               "treaty": str,                                  # Wonder Race (#2406)
                               "help": str, "module": str, "loaded": str, "bots": bool,   # a game mode (#2521)
                               "side_buildings": dict, "ring": dict, "infinite": bool, "random": list})
-    assert sum(k in row for k in ("resources", "ages", "units", "buildings", "wonder_years", "random")) == 1, row["name"]   # a resource level, a start age
+    assert sum(k in row for k in ("resources", "ages", "units", "buildings", "level", "wonder_years", "random")) == 1, row["name"]   # a resource level, a start age
     assert all(set(v) == {"food", "wood", "gold", "stone"} for v in row.get("sides", {}).values()), row["name"]   # #2441
     assert set(row.get("random", ())) <= {r["name"] for r in table.load("setup.jsonl") if "resources" in r}, row["name"]   # #2489
     assert set(row.get("units", ())) <= NAMES["units.jsonl"], row["name"]  # (#2265) or a game mode (#2347)
