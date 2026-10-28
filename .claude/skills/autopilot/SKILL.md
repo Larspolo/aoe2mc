@@ -59,7 +59,7 @@ Section `PRs` lists the open agent PRs (branch `claude/*`, `agent/*` or `ccr-*`,
 
 Section `Main CI` red (the last run on main, or the night run with the full suite) and no "Fix main" merge after it:
 find the open `P0` ticket "Fix main: ..." or make one (`P0`, `bug`, `size:S`: the failing test and the commit that
-broke it), and do it first. CI makes the same ticket by itself.
+broke it), and do it first. CI makes the same ticket by itself. Make it only under a lock (`overlap.md`, "Fix main").
 
 ## 3. Read the owner's feedback
 
@@ -113,11 +113,11 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
 1. Branch: use the branch that the session instructions name. Else `git fetch origin main` and
    `git checkout -b agent/<number>-<short-slug> origin/main`.
 2. Beat (`python3 tools/claim.py N --beat`) at least every 20 minutes until you open the PR.
-   Read the ticket body and all its comments first: the owner's comments win over the body. Read only the code that the ticket needs (see the code map in `CLAUDE.md`). Use Grep, not full-file reads.
+   Read the ticket and its comments (the claim prints them, #3459) first: the owner's comments win. Read only the code that the ticket needs (see the code map in `CLAUDE.md`). Use Grep, not full-file reads.
 3. For a bug, write a failing test first. Then change the code. Keep the diff small and in the existing style.
    Put new tests in a new file `tests/test_<topic>.py`: parallel tickets that append to the end of one test file
    conflict (66 merge conflicts in 6 hours on 2026-10-25).
-4. Verify with the `verify` skill. The level depends on the change.
+4. Verify with the `verify` skill (by the change; the full suite once, before the push, #3460).
 5. Improve the process (step 9, `process.md`) now, so that the changes go into the same PR.
 6. Stage only the files of the ticket: read `git status --short` first (no `logs/`, worlds or images; not
    `docs/coverage.md` or a `MAX` change in `tests/test_coverage.py`: `coverage.yml` does it on main).
@@ -162,5 +162,4 @@ Answer the questions of `process.md`. Do the action for each "yes". Spend little
 If the argument asks for more than 1 ticket, go back to step 2 after step 8: read `more.md` first (branch reset,
 push). Never force-push. Stop when the context is above 200k tokens (`more.md`).
 Argument `max`: continue until no ticket is ready, a usage limit stops you, or the context is above 200k.
-Do not start other runs: a run of the scheduled task has no `fire_trigger` (#566). The pacer (`pacer.yml`, #3193)
-starts the runs that the quota target misses, every 10 minutes.
+Do not start other runs (no `fire_trigger`, #566): the pacer (`pacer.yml`, #3193) starts them.

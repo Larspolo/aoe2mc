@@ -72,12 +72,12 @@ quota), the tokens per run and per merged PR and the largest token sinks (from t
 Go through the seven areas. For each one, note its largest loss in quota (share of the 5-hour and 7-day usage), else in
 minutes of run time (or tickets) per day:
 
-1. **How runs start:** the scheduled task prompt, the pacer (`tools/usage.py`, `.claude/skills/pacer`), the quota
+1. **How runs start:** the scheduled task prompt, the pacer (`tools/usage.py`, `tools/pacer.py`, `pacer.yml`), the quota
    target, idle runs (no ticket ready, stopped at once), runs that hit the usage limit.
 2. **The loop:** the steps of `.claude/skills/autopilot` and the phase minutes of the `Metrics:` lines
    (`read`, `claim`, `code`, `verify`, `ci`, `conflict`, `report`); steps that cost time and change nothing.
 3. **Quota:** the quota per merged ticket, the release progress per quota, the quota of work that gives no merge
-   (idle runs, closed PRs, rework), the quota of the sessions that are not runs (pacer), the
+   (idle runs, closed PRs, rework), the quota of the sessions that are not runs, the
    token sinks (`Tokens:` lines). The phase shares in minutes come second.
 4. **Quality:** rework (owner corrections, reopened tickets, follow-ups of merged work), bugs found by check tickets,
    red night CI runs.
@@ -196,9 +196,9 @@ Comment 3–5 lines: the result of step 0 and the misses, the numbers of the sev
 "no change: largest loss X, below the threshold"), and what you expect. The owner can reject the change in a comment. Then revert it
 and add the reason to `docs/LEARNINGS.md`.
 
-Then set the next review: `python3 tools/claim.py 0 --reviewed change` after a change (the next review comes after 50
-merged PRs), or `--reviewed none` when no loss was large enough for a change (the gap doubles, at most 200 merged PRs,
-#898, #1697, #2039).
+Then set the next review: `python3 tools/claim.py 0 --reviewed change` after a change (the next review comes after 200
+merged PRs and 4 hours), or `--reviewed none` when no loss was large enough for a change (the gap doubles, at most 800
+merged PRs, #898, #1697, #2039, #3465).
 
 ## Guardrails
 

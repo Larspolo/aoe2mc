@@ -55,6 +55,7 @@ FIREWORK_COLORS = {"black": 0x1E1B1B, "blue": 0x253192, "brown": 0x51301A, "cyan
 FLAT = 16                   # tiles of the flat map that draws one design
 MAX_FILL = 32768            # blocks of one /fill command
 FORMATION = 2              # blocks between the units of a group in a formation (#410)
+FAR_TILES = 30            # a Line walk to a target farther than this takes 2 columns, not a wide row (#3417)
 LEG = 48                    # path cells of one plugin order: within the reach of a Minecraft path search (#438)
 CATCH_UP = 1.5              # the largest factor of the walk speed of a unit behind its replay position (#1168)
 CLOSE = 5000                # ms of game time in which a unit behind its replay position closes the lag (#1291)
@@ -283,20 +284,23 @@ def live(make, speed=1.0, start=0, restart=None, **kw):
         restart()
 
 
-def formation_cells(free, group, target, kind="Line", T=4):
+def formation_cells(free, group, target, kind="Line", T=4, long=False):
     """The end cell {key: (x, z)} of each unit of a group that walks to the block point target (#410): rows across the
     walk direction, the first row on the target and the others behind it, FORMATION blocks apart (AoE2 line formation).
     A slot snaps to the next free cell (free(x, z)), one unit per cell. group: (key, x, z, rank, weak) of each unit. The
     units of the lowest rank take the front rows (gather.rank, the AoE2 unit order, #3414), then the units nearest to the
     target, and in a row they keep their order from left to right, so that the paths do not cross. Staggered doubles
     the gaps, Flank splits each row into two halves 4 slots apart, Box puts the weak units inside a square of the others
-    (the formations of AoE2, #2553)."""
+    (the formations of AoE2, #2553). long: a Line walk farther than FAR_TILES takes a long column of 2 units across
+    (1 for 2 units), as in AoE2 (#3417); the replay keeps the formation of the record."""
     n, S = len(group), FORMATION * (2 if kind == "Staggered" else 1)
     tx, tz = target
     cx, cz = (sum(u[k] for u in group) / n for k in (1, 2))
     d = math.hypot(tx - cx, tz - cz)
     dx, dz = ((tx - cx) / d, (tz - cz) / d) if d > 0.5 else (0.0, -1.0)    # walk direction (else north)
     cols = min(n, max(1, math.ceil(math.sqrt(n)) if kind == "Box" else round(math.sqrt(2 * n))))
+    if long and kind == "Line" and d > FAR_TILES * T:
+        cols = 1 if n == 2 else min(n, 2)
     rows = -(-n // cols)
     r = max(2 * T, math.ceil(max(cols, rows) * S) + 4 * S * (kind == "Flank"))
     x0, z0 = int(tx), int(tz)
@@ -438,6 +442,8 @@ class Replay:
     def commands(self, e):
         """The commands of one timeline event (an empty list for the events that change nothing visible)."""
         kind = e["kind"]
+        if kind == "news":                                      # a fight starts: the chat line and the horn (#2951)
+            return replay_input.fight_news(self.control["fights"][e["fight"]], e["fight"], self.control["players"])
         if kind in ("attack_move", "move", "order", "stop", "delete", "garrison", "follow", "guard", "autoscout"):
             for i in e.get("objects") or ():                    # another order ends the patrol (#2550), the scouting (#2678)
                 self.patrols.pop(i, None)
@@ -2366,15 +2372,16 @@ class Replay:
         `paused`: start in a pause. The replay ends at the time of its last event, as the record (#978); `finish`:
         play the walks and the trainings to their end (tests of one walk or one queue)."""
         last = math.inf if finish else max((e["time"] for e in self.data.get("timeline", [])), default=start)
-        events = sorted((e for e in self.data.get("timeline", []) + self.spawns() if start <= e["time"] <= last),
+        found = fights(self.data.get("timeline", []), owners(self.data.get("objects", []), self.data.get("timeline", [])))
+        news = [{"time": f["start"], "kind": "news", "fight": i} for i, f in enumerate(found)]    # the fight starts (#2951)
+        events = sorted((e for e in self.data.get("timeline", []) + self.spawns() + news if start <= e["time"] <= last),
                         key=lambda e: e["time"])                     # the record ends at `last`: no spawn after it
         g0, r0, lag, n, k = start, clock(), 0.0, 0, 0                 # game time g0 (ms) at real time r0
         self.speed, self.paused = speed, paused
         self.control = {"speed": speed, "paused": paused, "view": self.pov,     # the view: replay_input VIEW (#1303)
                         "players": {p: self.player(p) for p in sorted(int(q) for q in self.data["players"]) if p}} | \
             ({"jump": to} if to is not None else {})
-        self.control["fights"] = fights(self.data.get("timeline", []), owners(self.data.get("objects", []),
-                                                                             self.data.get("timeline", [])))
+        self.control["fights"] = found
         end, shown, counted = events[-1]["time"] if events else start, None, -math.inf
         send = self.send if bar else lambda cmds: None
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",

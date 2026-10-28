@@ -139,8 +139,16 @@ def raw_samples(comments):
 
 
 def lane_weights(comments, need=10):
-    """({lane: weight}, {lane: "measured" or "start"}): the quota of one lane run in Opus runs (lane_fit, #1727)."""
-    return lane_fit(comments, need)[:2]
+    """({lane: weight}, {lane: "cost", "measured" or "start"}): the quota of one lane run in Opus runs. A lane with
+    `need` runs with a `cost` (and as many Opus runs) gets the ratio of the median costs (#3457: the fit had an error
+    of half its value), else the fit of lane_fit (#1727)."""
+    weights, source = lane_fit(comments, need)[:2]
+    costs = run_costs(comments)
+    if len(costs.get("opus", ())) >= need and (base := numpy.median(costs["opus"])) > 0:
+        for k in weights:
+            if len(costs.get(k, ())) >= need:
+                weights[k], source[k] = max(float(numpy.median(costs[k]) / base), 0.02), "cost"
+    return weights, source
 
 
 def lane_fit(comments, need=10):
@@ -297,7 +305,7 @@ def token_sinks(lines, k=6):
     return sorted(((s, x / total) for s, x in by.items()), key=lambda kv: -kv[1])[:k] if total else []
 
 
-VERIFY = re.compile(r"^Tokens: .*? · verify (.*?) · sinks ", re.M)
+VERIFY = re.compile(r"^Tokens: .*? · verify (.*?)(?: · force \d+)? · sinks ", re.M)
 
 
 COST = re.compile(r"^Tokens: .*? · cost \$(\d+(?:\.\d+)?)", re.M)
@@ -313,6 +321,15 @@ def run_costs(comments):
             lane = re.search(r"^Metrics: .*?· lane (\w+)", body, re.M)
             out.setdefault(lane[1] if lane else "opus", []).append(float(cost))
     return out
+
+
+FORCE = re.compile(r"^Tokens: .*? · force (\d+) · sinks ", re.M)
+
+
+def refused_pushes(comments):
+    """(refused force pushes, Tokens lines with a force field) of the run reports (tools/tokens.py, #3461)."""
+    found = [int(n) for c in comments for n in FORCE.findall(c.get("body") or "")]
+    return sum(found), len(found)
 
 
 def verify_minutes(comments):
@@ -614,6 +631,8 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
     vm = sorted(verify_minutes(status_comments).items(), key=lambda kv: -kv[1][0])
     out.append("Verify commands (min, count, of the Tokens lines with a verify field): "
                + ("; ".join(f"{k} {fmt(m)} ({n}x)" for k, (m, n) in vm) or "-"))
+    out.append("Refused force pushes (of the {1} Tokens lines with a force field, #3461): {0}".format(
+        *refused_pushes(status_comments)))
     costs = run_costs(status_comments)
     spent = sum(map(sum, costs.values()))
     out.append(f"API list price of the runs (the `cost` of {sum(map(len, costs.values()))} Tokens lines): ${spent:.0f}"
@@ -684,7 +703,7 @@ def clip(until, runs, status_comments, comments, prs, issues, events):
             [i for i in issues if early(i["created_at"])], [e for e in events if early(e["created_at"])])
 
 
-EVENT_PAGES_PER_DAY = 100   # the repository has about 65 pages of issue events a day, newest first (#2005)
+EVENT_PAGES_PER_DAY = 170   # 107 pages of issue events in 24 hours (2026-10-28, 22:56 UTC), newest first (#2005, #3433)
 
 
 def event_pages(since, now=None):

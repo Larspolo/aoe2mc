@@ -25,6 +25,7 @@ VIEW = SPEED + len(SPEEDS)            # the view of the next player (#1303): Pap
 FIGHTS = VIEW + 1                     # the menu page of the large fights (#2949): Paper only, as MENU
 FIGHT = FIGHTS + 1                    # FIGHT + i: fight i of the list (the next ticket jumps there)
 MAX_FIGHTS = 10                       # fights in the list
+PLACE = FIGHT + MAX_FIGHTS            # PLACE + i: the place of fight i only, no time jump (the chat line, #2951)
 FIGHT_LEAD = 10000                    # ms of game time: a fight jump goes this much before the fight start (#2950)
 FIGHT_HEIGHT = 30                     # blocks above the ground of the fight place: the viewer looks down at it
 JUMPS = {JUMP: 60000, JUMP5: 300000, JUMP10: 600000, BACK: -60000, BACK5: -300000}   # BACK: a jump back (#979)
@@ -78,6 +79,9 @@ def apply(n, control):
         f = control["fights"][n - FIGHT]                           # forward or back: Replay.run restarts for back
         control["jump"], control["place"] = max(0, f["start"] - FIGHT_LEAD), list(f["tile"])
         return f"Fight at {clock_text(f['start'])}"
+    if PLACE <= n < PLACE + len(control.get("fights", [])):
+        control["place"] = list(control["fights"][n - PLACE]["tile"])     # the view only (#2951)
+        return "Fight place"
     return None
 
 
@@ -99,19 +103,32 @@ def clock_text(ms):
     return f"{m:02d}:{s:02d}"
 
 
+def fight_players(f, players):
+    """The names of the players of a fight in their colors, "A vs B" (fight_lines, fight_news)."""
+    return [x for k, p in enumerate(f["players"]) for x in ([{"text": " vs "}] if k else []) +
+            [{"text": players.get(p, (f"Player {p}", "white"))[0], "color": players.get(p, ("", "white"))[1]}]]
+
+
 def fight_lines(fights, players):
     """The tellraw commands of the fight list at the start (#2949): one line per fight (at most MAX_FIGHTS), with the
     time, the players in their colors and the number of units; a click sets the trigger FIGHT + i. fights:
     replay.fights(); players: player -> (name, color). No fights: no lines."""
     out = [f"tellraw @a {json.dumps({'text': 'Large fights:', 'bold': True})}"] if fights else []
     for i, f in enumerate(fights[:MAX_FIGHTS]):
-        names = [x for k, p in enumerate(f["players"]) for x in ([{"text": " vs "}] if k else []) +
-                 [{"text": players.get(p, (f"Player {p}", "white"))[0], "color": players.get(p, ("", "white"))[1]}]]
         out.append("tellraw @a " + json.dumps(
             {"text": "", "click_event": {"action": "run_command", "command": f"/trigger {OBJECTIVE} set {FIGHT + i}"},
-             "extra": [{"text": f"[{clock_text(f['start'])}] ", "color": "gold"}, *names,
+             "extra": [{"text": f"[{clock_text(f['start'])}] ", "color": "gold"}, *fight_players(f, players),
                        {"text": f" ({f['units']} units)", "color": "gray"}]}, ensure_ascii=False))
     return out
+
+
+def fight_news(f, i, players):
+    """The chat line and the horn of a fight start (#2951): "Fight: A vs B, N units". A click sets the trigger
+    PLACE + i: the viewer goes above the place, without a time jump."""
+    line = {"text": "", "click_event": {"action": "run_command", "command": f"/trigger {OBJECTIVE} set {PLACE + i}"},
+            "extra": [{"text": "Fight: "}, *fight_players(f, players), {"text": f", {f['units']} units", "color": "gray"}]}
+    return ["tellraw @a " + json.dumps(line, ensure_ascii=False),
+            "playsound minecraft:event.raid.horn master @a ~ ~ ~ 1 1 1"]
 
 
 def fight_name(f, players):

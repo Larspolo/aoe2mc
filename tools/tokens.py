@@ -21,6 +21,7 @@ Field `cost`: the API list price of the calls in $, by the model of each call (`
 Field `verify` (#1704): the wall minutes and the count of the check commands (`pytest`, `ruff`, `mc_check.py`, `mc_shot.py`,
 `render.py`, and `wait`: a loop that waits for the output of a background check), from the time of a tool call to the
 time of its result. A background command has its minutes in the wait loop or the notification, not in its own call.
+Field `force` (#3461): the count of the force pushes that failed (`git push --force`, `-f`, `+ref`; #903 forbids them).
 Phases (`--phases`): each tool call gets a phase (`phase()`), and the wall time from the call to the next call of the
 session counts for it. A call `claim.py N` that wins starts ticket N; the time before the first claim counts for
 the first ticket. The phases that runs gave by hand were guesses: 37 minutes for a 6.5-minute run (2026-10-28).
@@ -32,7 +33,7 @@ import json
 import os
 import re
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import datetime
 
 W_IN, W_5M, W_1H, W_READ, W_OUT = 1.0, 1.25, 2.0, 0.1, 5.0
@@ -151,6 +152,29 @@ def verify_field(v, k=4):
     return "verify " + (", ".join(f"{s} {m:.1f}m {n}x" for s, (m, n) in top) or "-")
 
 
+FORCE = re.compile(r"\bgit push\b[^\n|;&]*?(?:\s--force\b|\s--force-with-lease\b|\s-f\b|\s\+\S)")
+REFUSED = re.compile(r"(?i)rejected|denied|refused|forbidden|\b403\b|non-fast-forward")
+
+
+def refused_pushes(records):
+    """The count of the force pushes of one chain of records that failed (#903, #3461): the runs must not force-push."""
+    start, n = set(), 0
+    for r in records:
+        content = (r.get("message") or {}).get("content")
+        if not isinstance(content, list):
+            continue
+        for b in content:
+            if b.get("type") == "tool_use" and b.get("name") == "Bash" \
+                    and FORCE.search(HEREDOC.sub("", (b.get("input") or {}).get("command", ""))):
+                start.add(b["id"])
+            elif b.get("type") == "tool_result" and b.get("tool_use_id") in start:
+                start.discard(b["tool_use_id"])
+                text = b.get("content")
+                text = text if isinstance(text, str) else " ".join(str(x.get("text", "")) for x in text or [])
+                n += bool(b.get("is_error") or REFUSED.search(text))
+    return n
+
+
 # The PR body, the commit message and the comment files of step 8 (a redirect or tee to such a file, `REPORT_NAME`).
 REPORT_FILE = r"(?i)(?:\bcat >|\btee)\s*\S*(?:body|msg|message|comment)[^/\s]*"
 REPORT_NAME = re.compile(r"body|msg|message|comment", re.I)
@@ -179,6 +203,26 @@ def phase(name, inp):
     if name.startswith("mcp__github__"):
         return "ci" if re.search(r"pull_request|check|job", name) else "report" if "comment" in name else "read"
     return "read"
+
+
+def calls(records):
+    """(calls per phase, calls per `label()`, pairs of consecutive labels) of one chain of records (#3459): the
+    frequent sequences are the candidates for one combined script call."""
+    by_phase, by_label, pairs, last = Counter(), Counter(), Counter(), None
+    for r in records:
+        content = (r.get("message") or {}).get("content")
+        if r.get("type") != "assistant" or not isinstance(content, list):
+            continue
+        for b in content:
+            if b.get("type") == "tool_use":
+                name, inp = b.get("name", ""), b.get("input") or {}
+                lab = label(name, inp)
+                by_phase[phase(name, inp)] += 1
+                by_label[lab] += 1
+                if last:
+                    pairs[(last, lab)] += 1
+                last = lab
+    return by_phase, by_label, pairs
 
 
 def phases(records):
@@ -292,8 +336,9 @@ def kind(lab):
     return lab if lab.startswith(("base", "output", "Skill", "mcp", "Agent")) else lab.split(" ", 1)[0]
 
 
-def line(t, k=5, repo=None, checks=None):
-    """The `Tokens:` line of the run report (tools/health.py reads it). checks: the verify() of the run (#1704)."""
+def line(t, k=5, repo=None, checks=None, force=None):
+    """The `Tokens:` line of the run report (tools/health.py reads it). checks: the verify() of the run (#1704).
+    force: the refused force pushes of the run (#3461)."""
     g = defaultdict(float)
     for s, x in t["sinks"].items():
         g[kind(s)] += x
@@ -304,7 +349,8 @@ def line(t, k=5, repo=None, checks=None):
             + (f" (+{t['unpriced']:.0f} calls without a price)" if t.get("unpriced") else "")
             + f" · peak {t['peak'] / 1e3:.0f}k · base {t['base'] / 1e3:.0f}k"
             + ("" if repo is None else f" (repo {repo / 1e3:.0f}k)")
-            + ("" if checks is None else " · " + verify_field(checks)) + " · sinks "
+            + ("" if checks is None else " · " + verify_field(checks))
+            + ("" if force is None else f" · force {force}") + " · sinks "
             + ", ".join(f"{s} {x / t['eq']:.0%}" for s, x in top))
 
 
@@ -339,6 +385,8 @@ def main(argv=None):
     ap.add_argument("file", nargs="?", help="a transcript (default: the newest session of this directory)")
     ap.add_argument("--top", type=int, help="print the N largest sinks, one per line")
     ap.add_argument("--verify", action="store_true", help="print each check command kind: minutes and count (#1704)")
+    ap.add_argument("--calls", type=int, metavar="N", help="print the tool calls per phase and the N most frequent "
+                    "calls and pairs of calls (#3459)")
     ap.add_argument("--phases", action="store_true", help="print the measured phase minutes of each claimed ticket")
     a = ap.parse_args(argv)
     path = a.file or newest()
@@ -352,11 +400,19 @@ def main(argv=None):
         for s, (m, n) in verify(c).items():
             v[s][0] += m
             v[s][1] += n
+    if a.calls:
+        ph, lab, pairs = calls(chains[0])
+        print(f"calls {sum(ph.values())}: " + ", ".join(f"{k} {n}" for k, n in ph.most_common()))
+        for k, n in lab.most_common(a.calls):
+            print(f"  {n:4d}x  {k}")
+        for (x, y), n in pairs.most_common(a.calls):
+            print(f"  {n:4d}x  {x} -> {y}")
+        return 0
     if a.phases:
         for n, p in phases(chains[0]).items():
             print(f"#{n}: " + ",".join(f"{k}={m:.0f}" for k, m in p.items()))
         return 0
-    print(line(t, repo=repo_base(), checks=dict(v)))
+    print(line(t, repo=repo_base(), checks=dict(v), force=sum(refused_pushes(c) for c in chains)))
     if a.verify:
         for s, (m, n) in sorted(v.items(), key=lambda kv: -kv[1][0]):
             print(f"  {m:6.1f} min  {n:3d}x  {s}")

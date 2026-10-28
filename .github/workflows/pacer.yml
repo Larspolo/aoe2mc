@@ -1,8 +1,8 @@
 name: Pacer
 
-# Starts the autopilot runs that the quota target misses (`tools/pacer.py`, #3193), in place of the pacer session:
-# a script keeps no old rule in memory (the session fired 4 runs for 8, #3147). Only while `pacer` in `[pacing]` of
-# agent.toml is "workflow" (#3194): the session pacer stops at the same key, so they never both start runs.
+# Starts the autopilot runs that the quota target misses (`tools/pacer.py`, #3193):
+# a script keeps no old rule in memory (the old pacer session fired 4 runs for 8, #3147). Only while `pacer` in
+# `[pacing]` of agent.toml is "workflow" (#3194): another value stops the loop.
 # One run loops for about 5.5 hours (a cycle every 15 minutes), then starts the next run itself: GitHub fires the
 # cron schedules of this repository only a few times per day (dashboard.yml "*/10" ran at 08:43 and 15:31 on
 # 2026-10-28). The schedule only restarts a loop that died. A workflow_dispatch by GITHUB_TOKEN starts a new run.
