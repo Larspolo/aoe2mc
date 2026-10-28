@@ -1712,7 +1712,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     mob.setAI(false);               // so it stands still until the next order
                 } else if (center(mob) >= 1) {      // steer() skips path points: Minecraft walks back to them (#1078)
                     mob.getPathfinder().stopPathfinding();
-                } else if (elsewhere(mob, o.goal)) {
+                } else if (elsewhere(mob, o.goal) || behind(mob, o.goal)) {
                     mob.getPathfinder().stopPathfinding();
                     mob.setVelocity(new Vector(0, mob.getVelocity().getY(), 0));   // a fast unit slid on (#1292)
                 }
@@ -1809,6 +1809,18 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         var path = mob.getPathfinder().getCurrentPath();
         Location end = path == null ? null : path.getFinalPoint();
         return end == null || end.getBlockX() != goal.getBlockX() || end.getBlockZ() != goal.getBlockZ();
+    }
+
+    // The next point of the path is not at the goal: steer() and glide() took the mob past points that Minecraft did
+    // not count (passed() looks only on the ground), and with no order it walks back to them. A spearman of de-64.3
+    // arrived and then walked 25 blocks back up the hill that it came down (#2303: 22 strays in 35 minutes).
+    private static boolean behind(Mob mob, Location goal) {
+        var path = mob.getPathfinder().getCurrentPath();
+        if (path == null || path.getNextPointIndex() >= path.getPoints().size()) {
+            return false;
+        }
+        double c = center(mob);
+        return path.getPoints().get(path.getNextPointIndex()).clone().add(c, 0, c).distanceSquared(goal) > 1.5 * 1.5;
     }
 
     // The mob is on the ground beyond the next point of its path. Down a slope it lands past the point after each
