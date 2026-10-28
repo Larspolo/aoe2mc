@@ -30,6 +30,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import ai  # noqa: E402
 import build  # noqa: E402
 import combat  # noqa: E402
+import garrison  # noqa: E402
 import gather  # noqa: E402
 import herd  # noqa: E402
 import table  # noqa: E402
@@ -211,7 +212,8 @@ class Bot:
         self.charged = len(mine) >= self.group or self.charged and bool(mine)
         if not self.charged or self.foe is None:                      # no enemy: no attack (#3107)
             return
-        live = {t for t in set(self.targets.values()) if "passed" in g.command(f"execute if entity {t}")}
+        inside = garrison.inside(self.share) if self.share else set()  # a unit in a building is no target (#3429)
+        live = {t for t in set(self.targets.values()) if t not in inside and "passed" in g.command(f"execute if entity {t}")}
         self.targets = {u: t for u, t in self.targets.items() if u in mine and t in live}
         if not mine.keys() - {u for u, t in self.targets.items() if t not in g.forts}:
             return                                                     # all soldiers fight units
@@ -221,7 +223,8 @@ class Bot:
             if x.player == self.foe:
                 units |= x.villagers.keys() | x.soldiers.keys()
         seen, T = g.seen_tiles(), g.map.T                              # the AoE2 AI sees only its sight (#2050)
-        near = {k: p for k, p in g.positions(sorted(units)).items() if (int(p[0] // T), int(p[2] // T)) in seen}
+        near = {k: p for k, p in g.positions(sorted(units)).items() if k not in inside
+                and (int(p[0] // T), int(p[2] // T)) in seen}
         self.targets = {u: t for u, t in self.targets.items()          # a unit that comes in sight goes before a
                         if t not in g.forts or not any(self.reach(u, mine[u], p) for p in near.values())}   # building
         free = sorted(mine.keys() - self.targets.keys())
