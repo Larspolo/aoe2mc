@@ -12,6 +12,9 @@ Source: the infobox "LOS" of each unit page (MediaWiki API, `action=parse&prop=w
 from game import combat
 
 WIKI = {"CATAPULT_GALLEON": 14, "DRAGON_SHIP": 6, "DROMON": 14, "LOU_CHUAN": 15, "THIRISADAI": 9,   # (#1935)
+        "ARABIAN_WOLF": 12, "ARCTIC_WOLF": 12, "BLACK_BEAR": 10, "BROWN_BEAR": 3, "CAIMAN": 12, "CROCODILE": 5,   # (#3396)
+        "DIRE_WOLF": 5, "IRON_BOAR": 4, "JAGUAR": 12, "KOMODO": 5, "LION": 3, "LYNX": 12, "PANTHER": 12,
+        "POLAR_BEAR": 10, "RABID_WOLF": 3, "SNAKE": 12, "SNOW_LEOPARD": 12, "TIGER": 12, "WOLF": 3,
         "WAR_CHARIOT": 8,   # (#2142)
         "ALARIC_THE_GOTH": 5, "ATTILA": 5,   # (#2688)
         "CHAMPI_SCOUT": 5, "CHAMPI_RUNNER": 5, "CHAMPI_WARRIOR": 6, "ELITE_CHAMPI_WARRIOR": 6,   # (#2133)
