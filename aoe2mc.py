@@ -2854,6 +2854,7 @@ KILL_OBJECT = 14
 LOCK_GATE = 7                                                      # "Lock Gate", "Unlock Gate" (#2762)
 MIRROR_DIPLOMACY = 109                                             # "Mirror Diplomacy" (#2822)
 MODIFY_ATTRIBUTE = 51                                              # "Modify Attribute" (#2763)
+MODIFY_OBJECT_ATTRIBUTE = 105                                      # "Modify Object Attribute" (#2860)
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
 MODIFY_RESOURCE_BY_VARIABLE = 53                                   # "Modify Resource by Variable" (#2768)
 MODIFY_VARIABLE_BY_RESOURCE = 86                                   # "Modify Variable by Resource" (#2823)
@@ -3094,13 +3095,14 @@ def damage_lines(e, c):
     return [f"execute as {at} run damage @s {q}"]                      # damage takes one entity
 
 
-def attack_lines(e, c):
+def attack_lines(e, c, armor=None, q=None):
     """The commands of "Change Object Attack" and "Change Object Armor" (#2755): the units of the player in the area and
     the mounts of the riders get an attribute modifier of `quantity` AoE2 points, add or subtract: minecraft:attack_damage
     (the attack classes 3 pierce and 4 melee) or minecraft:armor. The game program sets these attributes from
-    combat.STATS, so the points are AoE2 points. The modifier ID is the trigger and the effect: one modifier each."""
-    q, stats = e.get("quantity") or 0, c.stats
-    armor = e["type"] == CHANGE_OBJECT_ARMOR
+    combat.STATS, so the points are AoE2 points. The modifier ID is the trigger and the effect: one modifier each.
+    armor and q: the kind and the points of "Modify Object Attribute" (object_attribute_lines)."""
+    q, stats = (e.get("quantity") if q is None else q) or 0, c.stats
+    armor = e["type"] == CHANGE_OBJECT_ARMOR if armor is None else armor
     op = OPERATIONS.get(e.get("operation"))
     if op not in ("add", "remove") or not q or (not armor and e.get("armour_class") not in (3, 4)):
         stats["change object attack or armor (not supported yet)"] += 1
@@ -3110,6 +3112,21 @@ def attack_lines(e, c):
     attr = "minecraft:armor" if armor else "minecraft:attack_damage"
     value = q if op == "add" else -q
     return [f"execute as {at} run attribute @s {attr} modifier add aoe2mc:trig_{c.t['id']}_{effect_index(e, c)} {value} add_value"]
+
+
+def object_attribute_lines(e, c):
+    """The commands of "Modify Object Attribute" (#2860): the value of the units of the effect, not of the unit type, with
+    the handler of the effect that changes one value of units: hit points (hp_lines), the movement speed (speed_lines:
+    only a set), armor and attack (attack_lines: the armor or attack points of the class). Another attribute: no line."""
+    a, stats = e.get("attribute"), c.stats
+    if a in (8, 9):
+        lines = attack_lines(e, c, armor=a == 8, q=e.get("aa"))
+    elif a == 0 or (a == 5 and e.get("operation") == 1):
+        lines = (hp_lines if a == 0 else speed_lines)(e, c)
+    else:
+        lines = []
+    stats["modify object attribute" if lines else "modify object attribute (not supported)"] += 1
+    return lines
 
 
 def garrisoned_lines(e, c):
@@ -3790,6 +3807,8 @@ def visibility_lines(e, c):
 # (effect, kinds, techs) -> value. A new effect is one line here, in alphabetical order (#2792): parallel trigger
 # tickets conflicted in one expression of read_scenario. The older effects still have their entry there.
 EFFECT_KEYS = {
+    MODIFY_OBJECT_ATTRIBUTE: {"aa": "armour_attack_quantity", "armour_class": "armour_attack_class",   # (#2860)
+                              "attribute": "object_attributes", "operation": "operation", "quantity": "quantity"},
 }
 
 
@@ -3835,6 +3854,7 @@ EFFECTS = {
     LOCK_GATE: gate_lines,
     MIRROR_DIPLOMACY: mirror_lines,
     MODIFY_ATTRIBUTE: attribute_lines,
+    MODIFY_OBJECT_ATTRIBUTE: object_attribute_lines,
     MODIFY_RESOURCE: resource_lines,
     MODIFY_RESOURCE_BY_VARIABLE: resource_by_variable_lines,
     MODIFY_VARIABLE_BY_RESOURCE: variable_by_resource_lines,

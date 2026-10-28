@@ -75,6 +75,7 @@ MAP = {
     ("effect", "CHANGE_OBJECT_HP"): "`attribute ... minecraft:max_health base set N` (AoE2 hit points, 1 to 1024); add, subtract, multiply, divide: the function `hp/<op>_<N>` reads the base into the score #hp of aoe_hp and sets it with the macro `hp/apply` (#2693)",
     ("effect", "CHANGE_OWNERSHIP"): "`tag` `aoe2mc.pN` and `team join pN` of the units in the area and their mounts (timer and area triggers: #2570); Gaia: not supported yet",
     ("effect", "CHANGE_OBJECT_SPEED"): "`attribute @e[..] minecraft:movement_speed base set V` of the units in the area and their mounts, V from the walk speed of the game program (game/ai.py, #2694)",
+    ("effect", "MODIFY_OBJECT_ATTRIBUTE"): "the commands of the effect of the attribute on the units of the player in the area: hit points as Change Object HP, a set of the speed as Change Object Speed, armor and attack as Change Object Armor and Attack (`attribute ... modifier add`); another attribute: not supported (#2860)",
     ("effect", "DISABLE_UNIT_ATTACKABLE"): "`data merge entity @s {Invulnerable:1b}` of the units of the player in the area (#2695)",
     ("effect", "ENABLE_UNIT_ATTACKABLE"): "`data merge entity @s {Invulnerable:0b}` of the units in the area, not the garrisoned ones (#2695)",
     ("effect", "DISABLE_UNIT_TARGETING"): "`tag @e[..] add aoe2mc.notarget` of the units of the player in the area: no unit or tower chooses them as a target, an attack order still hits (#2826)",
