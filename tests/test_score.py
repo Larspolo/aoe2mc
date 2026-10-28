@@ -98,6 +98,7 @@ def test_the_score_lines_reach_the_sidebar_on_a_server(tmp_path):
         g = gather.Gather(game, data).setup()
         bot = gather.Gather(game, data, player=2)
         g.bots = [types.SimpleNamespace(g=bot)]
+        g.explore_at = bot.explore_at = float("inf")                    # no new explored tiles between the ticks (#2965)
 
         def shown(n):
             m = re.search(r"has (\d+)", game.command(f"scoreboard players get Score{n} {g.board}"))
