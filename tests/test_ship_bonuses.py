@@ -18,7 +18,7 @@ def test_the_ships_of_five_civilizations_get_their_bonuses():
 
 
 def test_other_units_keep_their_values():
-    for civ, name in (("SAXONS", "GALLEY"), ("ROMANS", "FIRE_GALLEY"), ("JAPANESE", "GALLEY"), ("SARACENS", "GALLEY"),
+    for civ, name in (("SAXONS", "GALLEY"), ("ROMANS", "FIRE_GALLEY"), ("JAPANESE", "GALLEY"), ("SARACENS", "FISHING_SHIP"),
                       ("PORTUGUESE", "KNIGHT")):
         assert train.stats(setup(civ), name) == combat.stats(name), (civ, name)
 
