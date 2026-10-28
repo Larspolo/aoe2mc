@@ -409,7 +409,8 @@ def read_scenario(path):
                 if kinds.get(u.unit_const, ("?",))[0] in ("U", "H")}         # tag aoe2mc.r<ref> (#2617), not blocks
     texts["triggers"] = [dict(id=t.trigger_id, name=t.name, enabled=bool(t.enabled), looping=bool(t.looping),
                               conditions=[dict(type=c.condition_type, timer=c.timer, inverted=bool(c.inverted),
-                                               **({"ref": c.unit_object, "unit": c.unit_object in entities}   # #2618
+                                               **({"ref": c.unit_object, "unit": c.unit_object in entities,   # #2618
+                                                   "player": c.source_player}
                                                   if c.condition_type in OBJECT_TESTS else {}),
                                                **({"quantity": c.quantity, "player": c.source_player,
                                                    "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2],
@@ -438,7 +439,8 @@ def read_scenario(path):
                                                if e.effect_type == CHANGE_COLOR_MOOD and
                                                getattr(e, "color_mood", None) in set(ColorMood) else {}),
                                             **({"quantity": e.quantity}
-                                               if e.effect_type in (DAMAGE_OBJECT, HEAL_OBJECT) else {}),
+                                               if e.effect_type in (DAMAGE_OBJECT, HEAL_OBJECT, CHANGE_OBJECT_SPEED)
+                                               else {}),
                                             **({"stance": e.attack_stance}                # (#2705)
                                                if e.effect_type == CHANGE_OBJECT_STANCE else {}),
                                             **({"quantity": e.quantity, "variable": e.variable,   # (#2611)
@@ -2780,6 +2782,7 @@ ATTACK_MOVE = 30                                                   # "Attack Mov
 CHANGE_COLOR_MOOD = 72
 CHANGE_DIPLOMACY = 1                                               # "Change Diplomacy" (#2645)
 CHANGE_OBJECT_NAME = 26                                            # "Change Object Name" (#2616)
+CHANGE_OBJECT_SPEED = 33                                           # "Change Object Speed" (#2694)
 CHANGE_OBJECT_STANCE = 36                                          # "Change Object Stance" (#2705)
 CHANGE_OWNERSHIP = 18
 CHANGE_PLAYER_COLOR = 89                                           # "Change Player Color" (#2712)
@@ -2819,6 +2822,7 @@ COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions 
 TICKED = COUNTED + (ACCUMULATE_ATTRIBUTE, DIFFICULTY_LEVEL, OBJECT_HP, RESEARCHED, VARIABLE_VALUE)  # conditions of the tick function
 ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")     # attributes 0-3: the score holders of gather.RESOURCES (#2655)
 DESTROY_OBJECT = 6                                                     # the condition "Destroy Object" (#2618)
+CAPTURE_OBJECT = 7                                                     # the condition "Capture Object" (#2619)
 # The conditions on one object of the map (its tag aoe2mc.r<ref>, #2617): the test of the tick function when it holds,
 # when it does not hold (a looping trigger fires again after that), and the tick lines before the test. "Destroy
 # Object": a marker entity follows the unit; the unit is dead when the marker is loaded and the unit is not there. A
@@ -2827,7 +2831,10 @@ OBJECT_TESTS = {DESTROY_OBJECT: ("if entity @e[tag=aoe2mc.m{ref}] unless entity 
                                  "if entity @e[tag=aoe2mc.r{ref}]",
                                  ("execute as @e[tag=aoe2mc.r{ref}] at @s unless entity @e[tag=aoe2mc.m{ref}] run "
                                   "summon marker ~ ~ ~ {{Tags:[\"aoe2mc.m{ref}\"]}}",
-                                  "execute as @e[tag=aoe2mc.r{ref}] at @s run tp @e[tag=aoe2mc.m{ref}] ~ ~ ~"))}
+                                  "execute as @e[tag=aoe2mc.r{ref}] at @s run tp @e[tag=aoe2mc.m{ref}] ~ ~ ~")),
+                 # "Capture Object": the unit has the tag of the player of the condition (its owner, #2570)
+                 CAPTURE_OBJECT: ("if entity @e[tag=aoe2mc.r{ref},tag=aoe2mc.p{player}]",
+                                  "unless entity @e[tag=aoe2mc.r{ref},tag=aoe2mc.p{player}]", ())}
 TICKED += tuple(OBJECT_TESTS)
 STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list (AoE2 attributes 0 to 3)
 OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
@@ -2946,6 +2953,21 @@ def heal_lines(e, c):
             f"execute as {at} run scoreboard players add @s aoe_hp {q}",
             f"execute as {at} run scoreboard players operation @s aoe_hp < @s aoe_max",
             f"execute as {at} store result entity @s Health float 1 run scoreboard players get @s aoe_hp"]
+
+
+def speed_lines(e, c):
+    """The commands of "Change Object Speed" (#2694): the units of the player in the area and the mounts of the riders
+    get the walk speed of `quantity` tiles per AoE2 second. The attribute is the rule of the game program
+    (game/ai.py movement_speed, WALK; NORMAL of game/gather.py): sqrt(speed * T * NORMAL / WALK). Constants copied:
+    the converter does not import the game program."""
+    q, T, stats = e.get("quantity") or 0, c.T, c.stats
+    if q <= 0 or min(e.get("area", [-1])) < 0:
+        stats["change object speed (not supported)"] += 1
+        return []
+    stats["change object speed"] += 1
+    at, value = unit_selector(e, T), round(math.sqrt(q * T * 1.7 / 43.4), 4)
+    return [f"execute as {at} on vehicle run attribute @s minecraft:movement_speed base set {value}",
+            f"execute as {at} run attribute @s minecraft:movement_speed base set {value}"]
 
 
 def name_lines(e, c):
@@ -3293,6 +3315,7 @@ EFFECTS = {
     CHANGE_COLOR_MOOD: mood_lines,
     CHANGE_DIPLOMACY: diplomacy_lines,
     CHANGE_OBJECT_NAME: name_lines,
+    CHANGE_OBJECT_SPEED: speed_lines,
     CHANGE_OBJECT_STANCE: stance_lines,
     CHANGE_OWNERSHIP: owner_lines,
     CHANGE_PLAYER_COLOR: color_lines,
@@ -3385,9 +3408,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if c["type"] in OBJECT_TESTS:                              # the tag of the object (#2618)
                 test, other, before = OBJECT_TESTS[c["type"]]
-                counts += [x.format(ref=c["ref"]) for x in before]
-                tests.append(test.format(ref=c["ref"]))
-                unless.append(other.format(ref=c["ref"]))
+                counts += [x.format(ref=c["ref"], player=c.get("player")) for x in before]
+                tests.append(test.format(ref=c["ref"], player=c.get("player")))
+                unless.append(other.format(ref=c["ref"], player=c.get("player")))
                 continue
             if c["type"] == OBJECT_HP:                                 # the Health of the object (tag aoe2mc.r<ref>): none when dead
                 tag = f"aoe2mc.r{c['ref']}"
