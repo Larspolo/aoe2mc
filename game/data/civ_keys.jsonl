@@ -21,6 +21,7 @@
 {"name": "faith", "text": "The factor of the speed of the monks that regain faith after a conversion (Muisca: 100 % faster). game/monk.py.", "issue": 2314}
 {"name": "fallen", "text": "The part of the cost of a fallen own unit that the player gets back (Tupi). game/spoils.py.", "issue": 2271}
 {"name": "farm_upgrades", "text": "The factor of the food of the farm upgrades (Sicilians: +125 %). train.research.", "issue": 2230}
+{"name": "free_relic", "text": "The free relics of the first complete own building of a kind, {building: relics} (Armenians: one relic in the first Fortified Church). monk.free_relic puts them into it.", "issue": 2419}
 {"name": "garrison", "text": "The units inside a building, {building: units} (garrison.size).", "issue": 2117}
 {"name": "heal_range", "text": "The factor of the heal range of the monks.", "issue": 2269}
 {"name": "herd_food", "text": "Herdable animals in a building make food (garrison.pasture), {building: [size, a, b]}: at most size animals in each, a × ln(F / b + 1) food per AoE2 minute for F food of the animals in all of them (Gurjara mills: 10, 15, 200, AoE2 DE wiki).", "issue": 2342}

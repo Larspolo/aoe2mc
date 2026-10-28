@@ -41,6 +41,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import civs  # noqa: E402
 import herd  # noqa: E402
 import menu as chest  # noqa: E402  (menu() below is the chat text)
+import monk  # noqa: E402
 from replay import Replay  # noqa: E402
 import table  # noqa: E402
 
@@ -580,6 +581,8 @@ def rise(g, site, work):
             g.earn("food", food)                                       # Saxon camps, Wu military buildings (#2114)
         if site["player"] == g.player and (born := civs.built_units(g, site["name"])):
             herd.spawn(g, site["footprint"], *born)                    # Tatar sheep at a town center (#2313)
+        if site["player"] == g.player:
+            monk.free_relic(g, site)                                   # the first Armenian Fortified Church (#2419)
     return site["progress"] >= 1
 
 
