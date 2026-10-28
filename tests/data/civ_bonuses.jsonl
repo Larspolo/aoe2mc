@@ -40,7 +40,7 @@
 {"name": "BURMESE: Battle Elephants have +1/+1 armor.", "civ": "BURMESE", "bonus": "Battle Elephants have +1/+1 armor.", "in": "UNITS"}
 {"name": "BURMESE: Infantry units have +1/+2/+3 attack in the Feudal/Castle/Imperial Age.", "civ": "BURMESE", "bonus": "Infantry units have +1/+2/+3 attack in the Feudal/Castle/Imperial Age.", "in": "UNITS"}
 {"name": "BURMESE: Monastery technologies are 50% cheaper.", "civ": "BURMESE", "bonus": "Monastery technologies are 50% cheaper.", "later": "play:monks"}
-{"name": "BYZANTINES: Buildings, Walls/Gates, and Farms have +10%/+20%/+30%/+40% hit points in the Dark/Feudal/Castle/Imperial Age.", "civ": "BYZANTINES", "bonus": "Buildings, Walls/Gates, and Farms have +10%/+20%/+30%/+40% hit points in the Dark/Feudal/Castle/Imperial Age.", "gap": "play:fight"}
+{"name": "BYZANTINES: Buildings, Walls/Gates, and Farms have +10%/+20%/+30%/+40% hit points in the Dark/Feudal/Castle/Imperial Age.", "civ": "BYZANTINES", "bonus": "Buildings, Walls/Gates, and Farms have +10%/+20%/+30%/+40% hit points in the Dark/Feudal/Castle/Imperial Age.", "in": "HP_AGE"}
 {"name": "BYZANTINES: Camel Rider, Skirmisher, and Spearman lines are 25% cheaper.", "civ": "BYZANTINES", "bonus": "Camel Rider, Skirmisher, and Spearman lines are 25% cheaper.", "in": "COSTS"}
 {"name": "BYZANTINES: Fire Ships and Dromons fire 25% faster.", "civ": "BYZANTINES", "bonus": "Fire Ships and Dromons fire 25% faster.", "later": "play:naval"}
 {"name": "BYZANTINES: Advancing to the Imperial Age is 33% cheaper.", "civ": "BYZANTINES", "bonus": "Advancing to the Imperial Age is 33% cheaper.", "in": "COSTS"}
@@ -76,7 +76,7 @@
 {"name": "GEORGIANS: Start with a Mule Cart. Mule Carts replace Lumber Camps and Mining Camps.", "civ": "GEORGIANS", "bonus": "Start with a Mule Cart. Mule Carts replace Lumber Camps and Mining Camps.", "later": "play:gather"}
 {"name": "GEORGIANS: Fortified Churches replace Monasteries, and provide +10% work rate to Villagers in a 21-tile square.", "civ": "GEORGIANS", "bonus": "Fortified Churches replace Monasteries, and provide +10% work rate to Villagers in a 21-tile square.", "later": "play:monks"}
 {"name": "GEORGIANS: Units and buildings receive -20% damage (-40% instead of -25%) when fighting from higher elevation.", "civ": "GEORGIANS", "bonus": "Units and buildings receive -20% damage (-40% instead of -25%) when fighting from higher elevation.", "later": "play:fight"}
-{"name": "GEORGIANS: Mounted units regenerate 2/8/14 hit points per minute in the Feudal/Castle/Imperial Age.", "civ": "GEORGIANS", "bonus": "Mounted units regenerate 2/8/14 hit points per minute in the Feudal/Castle/Imperial Age.", "later": "play:health"}
+{"name": "GEORGIANS: Mounted units regenerate 2/8/14 hit points per minute in the Feudal/Castle/Imperial Age.", "civ": "GEORGIANS", "bonus": "Mounted units regenerate 2/8/14 hit points per minute in the Feudal/Castle/Imperial Age.", "in": "REGEN"}
 {"name": "GOTHS: Infantry units are 15%/20%/25%/30% cheaper in the Dark/Feudal/Castle/Imperial Age.", "civ": "GOTHS", "bonus": "Infantry units are 15%/20%/25%/30% cheaper in the Dark/Feudal/Castle/Imperial Age.", "in": "COSTS"}
 {"name": "GOTHS: Infantry units have +1/+2/+3 attack bonus against Standard Buildings in the Feudal/Castle/Imperial Age.", "civ": "GOTHS", "bonus": "Infantry units have +1/+2/+3 attack bonus against Standard Buildings in the Feudal/Castle/Imperial Age.", "later": "play:fight"}
 {"name": "GOTHS: Hunters carry food +15; hunt lasts 20% longer.", "civ": "GOTHS", "bonus": "Hunters carry food +15; hunt lasts 20% longer.", "later": "play:hunt"}
@@ -108,7 +108,7 @@
 {"name": "JAPANESE: Infantry attack 33% faster starting in the Feudal Age.", "civ": "JAPANESE", "bonus": "Infantry attack 33% faster starting in the Feudal Age.", "in": "UNITS"}
 {"name": "JAPANESE: Mounted archers +2 attack vs. Archers (except Skirmishers).", "civ": "JAPANESE", "bonus": "Mounted archers +2 attack vs. Archers (except Skirmishers).", "later": "play:fight"}
 {"name": "JURCHENS: Meat of hunted and livestock animals does not decay.", "civ": "JURCHENS", "bonus": "Meat of hunted and livestock animals does not decay.", "later": "play:hunt"}
-{"name": "JURCHENS: Mounted units and Fire Lancers attack 25% faster starting in the Feudal Age.", "civ": "JURCHENS", "bonus": "Mounted units and Fire Lancers attack 25% faster starting in the Feudal Age.", "gap": "play:fight"}
+{"name": "JURCHENS: Mounted units and Fire Lancers attack 25% faster starting in the Feudal Age.", "civ": "JURCHENS", "bonus": "Mounted units and Fire Lancers attack 25% faster starting in the Feudal Age.", "in": "UNITS"}
 {"name": "JURCHENS: Siege Engineers available in the Castle Age.", "civ": "JURCHENS", "bonus": "Siege Engineers available in the Castle Age.", "later": "play:ages"}
 {"name": "JURCHENS: Siege and fortification technologies cost wood -75%.", "civ": "JURCHENS", "bonus": "Siege and fortification technologies cost wood -75%.", "in": "COSTS"}
 {"name": "JURCHENS: Siege and fortification technologies are researched 100% faster.", "civ": "JURCHENS", "bonus": "Siege and fortification technologies are researched 100% faster.", "in": "RESEARCH_TIME"}
@@ -143,7 +143,7 @@
 {"name": "MALIANS: Villagers drop off gold +10%: gold miners work 10% faster.", "civ": "MALIANS", "bonus": "Villagers drop off gold +10%: gold miners work 10% faster.", "in": "WORK"}
 {"name": "MAPUCHE: Foragers drop off food +25%.", "civ": "MAPUCHE", "bonus": "Foragers drop off food +25%.", "in": "DROP"}
 {"name": "MAPUCHE: Settlements can train the Spearman and Skirmisher lines in 2.15×/1.61×/same time as regular production buildings in the Feudal/Castle/Imperial Ages, respectively.", "civ": "MAPUCHE", "bonus": "Settlements can train the Spearman and Skirmisher lines in 2.15×/1.61×/same time as regular production buildings in the Feudal/Castle/Imperial Ages, respectively.", "later": "play:military-train"}
-{"name": "MAPUCHE: Infantry, Slingers, and Skirmishers get +5/10/15 hit points in the Feudal/Castle/Imperial Age.", "civ": "MAPUCHE", "bonus": "Infantry, Slingers, and Skirmishers get +5/10/15 hit points in the Feudal/Castle/Imperial Age.", "gap": "play:fight"}
+{"name": "MAPUCHE: Infantry, Slingers, and Skirmishers get +5/10/15 hit points in the Feudal/Castle/Imperial Age.", "civ": "MAPUCHE", "bonus": "Infantry, Slingers, and Skirmishers get +5/10/15 hit points in the Feudal/Castle/Imperial Age.", "in": "UNITS"}
 {"name": "MAPUCHE: Mounted units generate gold +3 per military unit killed.", "civ": "MAPUCHE", "bonus": "Mounted units generate gold +3 per military unit killed.", "later": "play:fight"}
 {"name": "MAPUCHE: Enemy Castles are revealed on the map.", "civ": "MAPUCHE", "bonus": "Enemy Castles are revealed on the map.", "later": "play:fog"}
 {"name": "MAYANS: Start the game with an Eagle Scout.", "civ": "MAYANS", "bonus": "Start the game with an Eagle Scout.", "later": "play:setup"}
@@ -155,14 +155,14 @@
 {"name": "MONGOLS: Hunters work 40% faster.", "civ": "MONGOLS", "bonus": "Hunters work 40% faster.", "in": "WORK"}
 {"name": "MUISCA: Advancing to the next Age costs gold -50%.", "civ": "MUISCA", "bonus": "Advancing to the next Age costs gold -50%.", "in": "COSTS"}
 {"name": "MUISCA: Settlements cost -33% and heal allied human units within 3 tiles by 5/10/15/15 HP/min in the Dark/Feudal/Castle/Imperial Age.", "civ": "MUISCA", "bonus": "Settlements cost -33% and heal allied human units within 3 tiles by 5/10/15/15 HP/min in the Dark/Feudal/Castle/Imperial Age.", "later": "play:build"}
-{"name": "MUISCA: The Champi Scout line and Archery Range units have +1/2/3 melee armor in the Feudal/Castle/Imperial Age.", "civ": "MUISCA", "bonus": "The Champi Scout line and Archery Range units have +1/2/3 melee armor in the Feudal/Castle/Imperial Age.", "gap": "play:fight"}
+{"name": "MUISCA: The Champi Scout line and Archery Range units have +1/2/3 melee armor in the Feudal/Castle/Imperial Age.", "civ": "MUISCA", "bonus": "The Champi Scout line and Archery Range units have +1/2/3 melee armor in the Feudal/Castle/Imperial Age.", "in": "UNITS"}
 {"name": "MUISCA: Monks regain faith 100% faster.", "civ": "MUISCA", "bonus": "Monks regain faith 100% faster.", "later": "play:monks"}
 {"name": "MUISCA: Caravan and Guilds are free.", "civ": "MUISCA", "bonus": "Caravan and Guilds are free.", "in": "COSTS"}
 {"name": "PERSIANS: Start the game with food +50, wood +50.", "civ": "PERSIANS", "bonus": "Start the game with food +50, wood +50.", "in": "START"}
 {"name": "PERSIANS: Town Centers and Docks have double hit points and work 5%/10%/15%/20% faster in the Dark/Feudal/Castle/Imperial Age.", "civ": "PERSIANS", "bonus": "Town Centers and Docks have double hit points and work 5%/10%/15%/20% faster in the Dark/Feudal/Castle/Imperial Age.", "in": "WORK_RATE"}
 {"name": "PERSIANS: Parthian Tactics available in the Castle Age.", "civ": "PERSIANS", "bonus": "Parthian Tactics available in the Castle Age.", "later": "play:ages"}
 {"name": "PERSIANS: Can build Caravanserais in the Imperial Age.", "civ": "PERSIANS", "bonus": "Can build Caravanserais in the Imperial Age.", "later": "play:market"}
-{"name": "POLES: Villagers regenerate 10/15/20 hit points per minute in the Feudal/Castle/Imperial Age.", "civ": "POLES", "bonus": "Villagers regenerate 10/15/20 hit points per minute in the Feudal/Castle/Imperial Age.", "later": "play:health"}
+{"name": "POLES: Villagers regenerate 10/15/20 hit points per minute in the Feudal/Castle/Imperial Age.", "civ": "POLES", "bonus": "Villagers regenerate 10/15/20 hit points per minute in the Feudal/Castle/Imperial Age.", "in": "REGEN"}
 {"name": "POLES: Stone miners generate gold 33% in addition to stone.", "civ": "POLES", "bonus": "Stone miners generate gold 33% in addition to stone.", "in": "EXTRA"}
 {"name": "POLES: Bloodlines and Scout Cavalry-line upgrades cost food -50%.", "civ": "POLES", "bonus": "Bloodlines and Scout Cavalry-line upgrades cost food -50%.", "in": "COSTS"}
 {"name": "PORTUGUESE: All units cost gold –20%.", "civ": "PORTUGUESE", "bonus": "All units cost gold –20%.", "in": "COSTS"}
@@ -216,7 +216,7 @@
 {"name": "TEUTONS: Town Centers can garrison +10 units.", "civ": "TEUTONS", "bonus": "Town Centers can garrison +10 units.", "in": "GARRISON"}
 {"name": "TEUTONS: Infantry and mounted units receive +1/+2 melee armor in the Castle/Imperial Age.", "civ": "TEUTONS", "bonus": "Infantry and mounted units receive +1/+2 melee armor in the Castle/Imperial Age.", "in": "UNITS"}
 {"name": "THRACIANS: Elite Skirmisher upgrade is free.", "civ": "THRACIANS", "bonus": "Elite Skirmisher upgrade is free.", "in": "COSTS"}
-{"name": "THRACIANS: (Elite/Imperial) Skirmishers regenerate 5 (10) hit points per minute.", "civ": "THRACIANS", "bonus": "(Elite/Imperial) Skirmishers regenerate 5 (10) hit points per minute.", "later": "play:health"}
+{"name": "THRACIANS: (Elite/Imperial) Skirmishers regenerate 5 (10) hit points per minute.", "civ": "THRACIANS", "bonus": "(Elite/Imperial) Skirmishers regenerate 5 (10) hit points per minute.", "in": "REGEN"}
 {"name": "THRACIANS: Battle Drills is available in the Classical Age.", "civ": "THRACIANS", "bonus": "Battle Drills is available in the Classical Age.", "later": "play:ages"}
 {"name": "THRACIANS: All buildings except Town Centers can be built on any elevation.", "civ": "THRACIANS", "bonus": "All buildings except Town Centers can be built on any elevation.", "later": "play:build"}
 {"name": "THRACIANS: Forts and towers increase the work rate of nearby miners and lumberjacks in a square of aura range 8 by 15% and serve as resource drop sites for the respective resources.", "civ": "THRACIANS", "bonus": "Forts and towers increase the work rate of nearby miners and lumberjacks in a square of aura range 8 by 15% and serve as resource drop sites for the respective resources.", "later": "play:gather"}
@@ -246,6 +246,6 @@
 {"name": "WEI: Hei Guang Cavalry and Xianbei Raider +20%/30% hit points in Castle/Imperial Age", "civ": "WEI", "bonus": "Hei Guang Cavalry and Xianbei Raider +20%/30% hit points in Castle/Imperial Age", "later": "play:military-train"}
 {"name": "WEI: Traction Trebuchets and Lou Chuans cost -25%", "civ": "WEI", "bonus": "Traction Trebuchets and Lou Chuans cost -25%", "later": "play:siege"}
 {"name": "WU: Barracks, Archery Ranges, Stables, Siege Workshops, Castles, and Docks provide food +55 when constructed.", "civ": "WU", "bonus": "Barracks, Archery Ranges, Stables, Siege Workshops, Castles, and Docks provide food +55 when constructed.", "gap": "play:build"}
-{"name": "WU: Infantry regenerate 10/15/30 hit points per minute in Feudal/Castle/Imperial Age.", "civ": "WU", "bonus": "Infantry regenerate 10/15/30 hit points per minute in Feudal/Castle/Imperial Age.", "later": "play:health"}
+{"name": "WU: Infantry regenerate 10/15/30 hit points per minute in Feudal/Castle/Imperial Age.", "civ": "WU", "bonus": "Infantry regenerate 10/15/30 hit points per minute in Feudal/Castle/Imperial Age.", "in": "REGEN"}
 {"name": "WU: Jian Swordsmen and Hei Guang Cavalry have +2 attack in Imperial Age.", "civ": "WU", "bonus": "Jian Swordsmen and Hei Guang Cavalry have +2 attack in Imperial Age.", "later": "play:military-train"}
 {"name": "WU: Careening and Dry Dock are free.", "civ": "WU", "bonus": "Careening and Dry Dock are free.", "later": "play:naval"}

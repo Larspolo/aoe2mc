@@ -22,8 +22,9 @@ UNITS holds the bonuses of the land units of combat.STATS (#1090): hit points, a
 speed, per age. train.stats applies them before the technologies; the walk speed goes through speed(). Bonuses of
 this kind that the game program cannot use yet: the bonus damage (Bengali elephants and Sicilian units take less,
 Gurjara mounted units and Bohemian spearmen deal more, Bengali cavalry and Japanese mounted archers against some
-classes, Goth infantry against buildings), the Georgian and Polish regeneration, the elevation (Georgians, Tatars),
+classes, Goth infantry against buildings), the elevation (Georgians, Tatars),
 the Lithuanian relics, the Aztec and Slav monks, and the ships.
+REGEN holds the regeneration of the units (#2247): regen.tick gives them their hit points back.
 """
 import math
 import os
@@ -40,16 +41,20 @@ RULES = {
     "camels": lambda n, s: "camel" in s.classes,
     "cavalry": lambda n, s: "cavalry" in s.classes,
     "cavalry archers": lambda n, s: "archer" in s.classes and "cavalry" in s.classes,
+    "champi scout line, archery range units": lambda n, s: "CHAMPI_" in n   # the wiki: all archers but the conquistador
+        or "archer" in s.classes and not tagged(n, "conquistador type"),     # type (#2116)
     "foot archers": lambda n, s: foot_archer(s),
     "foot archers but skirmishers": lambda n, s: foot_archer(s) and not tagged(n, "skirmishers"),
     "foot archers but skirmishers, condottieri": lambda n, s: GROUPS["foot archers but skirmishers"](n, s),
     "gunpowder": lambda n, s: "gunpowder" in s.classes,
     "infantry": lambda n, s: "infantry" in s.classes,
     "infantry, mounted": lambda n, s: "infantry" in s.classes or mounted(s),
+    "infantry, slingers, skirmishers": lambda n, s: "infantry" in s.classes or tagged(n, "slingers") or tagged(n, "skirmishers"),
     "land siege, Lou Chuans": lambda n, s: "siege" in s.classes,   # the ships of the group: "groups" (data/units.jsonl)
     "military": lambda n, s: not n.startswith("VILLAGER"),
     "military units": lambda n, s: not civilian(n),
     "mounted": lambda n, s: mounted(s),
+    "mounted, fire lancers": lambda n, s: mounted(s) or tagged(n, "fire lancers"),
     "scout line, steppe lancers": lambda n, s: tagged(n, "scout line"),
     "ships": lambda n, s: "ship" in s.classes or n.endswith(("_COG", "_SHIP")),   # also the trade cog and transport ship
     "siege": lambda n, s: "siege" in s.classes,
@@ -74,7 +79,8 @@ GROUPS = {g: (lambda f, g: lambda n, s: g in TAGS.get(n, ()) or f(n, s))(RULES.g
 # age]; what is a group of GROUPS (units), "buildings", "buildings but farms", "technologies", "ages", "BUILDING
 # technologies" (the technologies of the menu of that building, #1925) or a list of names; a float multiplies the cost
 # (0.0: free), an int adds to it; AoE2 rounds half up (35 × 0.75 = 26). "twice": the technologies whose effect it gets
-# twice (train.stats, #1561). "age_gifts": the resources that it gets at each new age (#1926). "smith_units": [group of
+# twice (train.stats, #1561). "age_gifts": the resources that it gets at each new age (#1926). "hp_age": the
+# factor of the hit points of all its buildings, walls and gates in each age (#2116). "smith_units": [group of
 # GROUPS, blacksmith technologies, times in the Dark, Feudal, Castle and Imperial Age]: the units of the group get the
 # effect of each technology that many times, also when the test of the effect does not cover them (smith, #2174).
 # "cost_per": the cost bonuses for each complete own building (#2177): [group of GROUPS, the buildings, the share less
@@ -143,6 +149,7 @@ TRAIN_RATE = {r["name"]: [tuples(b) for b in r["train_rate"]] for r in ROWS if "
 HP = {r["name"]: r["hp"] for r in ROWS if "hp" in r}
 ARROWS = {r["name"]: tuples(r["arrows"]) for r in ROWS if "arrows" in r}   # factor of the base arrows in each age (#2178)
 GARRISON = {r["name"]: r["garrison"] for r in ROWS if "garrison" in r}   # units inside a building (garrison.size, #2117)
+HP_AGE = {r["name"]: r["hp_age"] for r in ROWS if "hp_age" in r}   # the factor of all buildings in each age (Byzantines)
 # Technologies with another effect for the civilization (#2173, train.stats, train.speed): "also" gives the effect to
 # one more group of GROUPS too (Bohemians: Fervor and Sanctity for the villagers), "more" multiplies the change of the
 # effect (Varangians: Bloodlines and Caravan +50 %).
@@ -164,6 +171,10 @@ AGE_VILLAGERS = {"BENGALIS": 2}                                    # each own to
 # "tech_gifts": the resources for each technology but an age (Spanish), "economy_villagers": the free villagers for
 # each economic technology (Wei, #2175).
 TECH_GIFTS = {r["name"]: r["tech_gifts"] for r in ROWS if "tech_gifts" in r}
+# "regen": the regeneration of units (#2247): [group of GROUPS or a list of unit names, hit points per AoE2 minute in
+# the Dark, Feudal, Castle and Imperial Age] (Polish villagers, Georgian mounted units, Wu infantry, Thracian elite
+# skirmishers). regen.tick gives them back.
+REGEN = {r["name"]: [tuples(b) for b in r["regen"]] for r in ROWS if "regen" in r}
 ECONOMY_VILLAGERS = {r["name"]: r["economy_villagers"] for r in ROWS if "economy_villagers" in r}
 
 
@@ -201,6 +212,14 @@ def smith(g, name, s):
     import build                                                   # build imports gather, gather imports this module
     age = build.ages(g)
     return {t: c[age] for k, techs, c in SMITH_UNITS.get(civ(g), []) if c[age] and GROUPS[k](name, s) for t in techs}
+
+
+def regen(g, name, s):
+    """The hit points per AoE2 minute that unit name (combat.Stats s) of the player of g regenerates in its age (REGEN),
+    else 0. Two rules of one civilization add up."""
+    import build                                                   # build imports gather, gather imports this module
+    age = build.ages(g)
+    return sum(c[age] for k, c in REGEN.get(civ(g), []) if (name in k if isinstance(k, tuple) else GROUPS[k](name, s)))
 
 
 def units(g, name, s):
@@ -327,9 +346,11 @@ def repair_cost(g):
                + [REPAIR_COST.get(civ(g), 1)])
 
 
-def hp(civ, building, s):
-    """The combat.Stats s of building (a name) with the hit points bonus of civilization civ (HP, #1895)."""
-    return s._replace(hp=s.hp * HP.get(civ, {}).get(building, 1))
+def hp(civ, building, s, age=0):
+    """The combat.Stats s of building (a name) with the hit points bonus of civilization civ (HP, #1895) and of its
+    age (HP_AGE: 0 = Dark .. 3 = Imperial, #2116). AoE2 rounds the hit points to a whole number."""
+    f = HP.get(civ, {}).get(building, 1) * HP_AGE.get(civ, (1,) * 4)[min(age, 3)]
+    return s if f == 1 else s._replace(hp=round(s.hp * f))
 
 
 def work_rate(g, building):
