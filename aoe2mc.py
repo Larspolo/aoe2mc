@@ -2827,6 +2827,7 @@ AND = 57                                                           # the conditi
 ADD_TRAIN_LOCATION = 102                                           # "Add Train Location" (#2865)
 ATTACK_MOVE = 30                                                   # "Attack Move" (#2647)
 BUILD_OBJECT = 108                                                 # "Build Object" (#2863)
+CHANGE_CIVILIZATION_NAME = 48                                      # "Change Civilization Name" (#2905)
 CHANGE_COLOR_MOOD = 72
 CHANGE_DIPLOMACY = 1                                               # "Change Diplomacy" (#2645)
 CHANGE_OBJECT_ARMOR = 31                                           # "Change Object Armor" (#2755)
@@ -3298,6 +3299,20 @@ def location_lines(e, c):
         return []
     c.stats["change train or technology location"] += 1
     return [f'data modify storage aoe2mc:places list append value "{e["player"]} {name} {building} {e.get("button", -1)}"']
+
+
+def civ_name_lines(e, c):
+    """The command of "Change Civilization Name" (#2905): the new name (with no AoE2 color tags) of the civilization of
+    the player goes into the list "civs" of the data storage aoe2mc:names as one text "<player> <name>". A converted world
+    shows no civilization: the scenario mode of the game program (game/scenario.py civ_names) shows it next to the player
+    name. A name of the game files only (string_id, no message): not supported."""
+    msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").replace("\n", " ").strip()
+    if e["player"] <= 0 or not msg:
+        c.stats["change civilization name (not supported)"] += 1
+        return []
+    c.stats["change civilization name"] += 1
+    text = f"{e['player']} {msg}".replace("\\", "\\\\").replace('"', '\\"')
+    return [f'data modify storage aoe2mc:names civs append value "{text}"']
 
 
 def tech_name_lines(e, c):
@@ -4083,6 +4098,7 @@ EFFECTS = {
     ADD_TRAIN_LOCATION: train_location_lines,
     ATTACK_MOVE: order_lines,
     BUILD_OBJECT: build_lines,
+    CHANGE_CIVILIZATION_NAME: civ_name_lines,
     CHANGE_COLOR_MOOD: mood_lines,
     CHANGE_DIPLOMACY: diplomacy_lines,
     CHANGE_OBJECT_ARMOR: attack_lines,

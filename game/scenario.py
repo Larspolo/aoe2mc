@@ -142,6 +142,7 @@ def tick(g):
     costs(g)
     times(g)
     names(g)
+    civ_names(g)
     locations(g)
     places(g)
     messages = g.data.get("messages", {})
@@ -389,6 +390,20 @@ def names(g):
         player, name, text = found[:3] if found[0] else found[3:]
         if int(player) in sides:
             vars(sides[int(player)]).setdefault("trigger_names", {})[name] = re.sub(r"\\(.)", r"\1", text)
+
+
+def civ_names(g):
+    """The new civilization names of "Change Civilization Name" (aoe2mc.civ_name_lines, #2905): read and empty the list
+    "civs" of the data storage NAMES, and keep each name in trigger_civs {player: name} of each side (the people and
+    the bots): all players see it next to the player name (lobby.name, diplomacy.name). A later line wins."""
+    got = g.command(f"data get storage {NAMES} civs") or ""
+    new = re.findall(r'"(\d+) ((?:[^"\\]|\\.)*)"|\'(\d+) ((?:[^\'\\]|\\.)*)\'', got)
+    if new:
+        g.command(f"data remove storage {NAMES} civs")
+    for found in new:
+        player, text = found[:2] if found[0] else found[2:]
+        for x in [g, *(s.g for s in g.bots)]:
+            vars(x).setdefault("trigger_civs", {})[player] = re.sub(r"\\(.)", r"\1", text)
 
 
 def locations(g):
