@@ -2887,6 +2887,7 @@ ENABLE_UNIT_TARGETING = 62                                         # "Enable Uni
 DISPLAY_TIMER_TRIGGERED = 55                                       # the condition of its score (#2702)
 FREEZE_OBJECT = 22                                                 # "Freeze Object" (#2608)
 HEAL_OBJECT = 34                                                   # "Heal Object" (#2692)
+INITIATE_RESEARCH = 76                                             # "Initiate Research" (#2772)
 IN_AREA = 5
 KILL_OBJECT = 14
 LOCK_GATE = 7                                                      # "Lock Gate", "Unlock Gate" (#2762)
@@ -2917,6 +2918,7 @@ TECHNOLOGY_STATE = 21                                              # the conditi
 TELEPORT_OBJECT = 35
 ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER = 8, 9
 TIMER = 10
+TRAIN_UNIT = 75                                                    # "Train Unit" (#2772)
 TRIBUTE = 5                                                        # "Tribute" (#2576)
 TRIGGER_ACTIVE = 79                                                # the condition "Trigger Active" (#2699)
 TRIGGER_CHANCE = 20                                                # the condition "Chance" (#2574)
@@ -3575,6 +3577,22 @@ def unload_lines(e, c):
     return [f'data modify storage aoe2mc:orders list append value "unload {p} {r}{where}"' for r in holders]
 
 
+def train_lines(e, c):
+    """The commands of "Train Unit" and "Initiate Research" (#2772). A converted world has no queues: for each selected
+    object the order "train <ref> <unit> <quantity>" or "research <ref> <technology>" goes into the list of the data
+    storage aoe2mc:orders. The scenario mode of the game program (game/scenario.py orders) queues it at the building of
+    that reference as a click of its menu does: the player pays, as in AoE2."""
+    research = e["type"] == INITIATE_RESEARCH
+    name = e.get("technology") if research else (e.get("object") or (None, None))[1]
+    refs = [r for r in e.get("selected", []) if r >= 0]
+    if not name or not refs or e["player"] <= 0:
+        c.stats["train or research (not supported)"] += 1
+        return []
+    c.stats["train or research"] += 1
+    order = f"research {{}} {name}" if research else f"train {{}} {name} {max(e.get('quantity', 1), 1)}"
+    return [f'data modify storage aoe2mc:orders list append value "{order.format(r)}"' for r in refs]
+
+
 def view_lines(e, c):
     """The commands of "Change View" (#2610): in Minecraft the player is the camera, so a tp of the players of the
     team pN (team_lines) to the middle of the tile, on the ground. Player -1 or 0: all players."""
@@ -3726,6 +3744,9 @@ def visibility_lines(e, c):
 # (effect, kinds, techs) -> value. A new effect is one line here, in alphabetical order (#2792): parallel trigger
 # tickets conflicted in one expression of read_scenario. The older effects still have their entry there.
 EFFECT_KEYS = {
+    INITIATE_RESEARCH: {"selected": lambda e, kinds, techs: list(e.selected_object_ids or []),   # (#2772)
+                        "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
+    TRAIN_UNIT: {"quantity": "quantity", "selected": lambda e, kinds, techs: list(e.selected_object_ids or [])},   # (#2772)
 }
 
 
@@ -3765,6 +3786,7 @@ EFFECTS = {
     ENABLE_UNIT_TARGETING: targeting_lines,
     FREEZE_OBJECT: freeze_lines,
     HEAL_OBJECT: heal_lines,
+    INITIATE_RESEARCH: train_lines,
     KILL_OBJECT: object_lines,
     LOCK_GATE: gate_lines,
     MODIFY_ATTRIBUTE: attribute_lines,
@@ -3781,6 +3803,7 @@ EFFECTS = {
     STOP_OBJECT: stop_lines,
     TASK_OBJECT: task_lines,
     TELEPORT_OBJECT: teleport_lines,
+    TRAIN_UNIT: train_lines,
     TRIBUTE: resource_lines,
     UNLOAD: unload_lines,
     UNLOCK_GATE: gate_lines,
