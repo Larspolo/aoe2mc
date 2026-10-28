@@ -228,7 +228,7 @@ def wall(name, age):
     return Stats(hp[age], 0, melee, pierce, 0, 0.0, {}, ("building",) + (STONE,) * (not name.startswith("PALISADE")))
 
 
-def building(uuid, name, player, box, T=4, inside=(), s=None, low=None):
+def building(uuid, name, player, box, T=4, inside=(), s=None, low=None, factor=1):
     """The commands that make building `name` of `player` a target of attacks (#517): an invisible slime without AI
     that fills the footprint takes the attacks (a mob attacks only a living entity: AoePlugin.java), and the plugin
     keeps the AoE2 hit points. box: the blocks (x0, y0, z0, x1, y1, z1), both ends included, y0 the ground.
@@ -237,7 +237,8 @@ def building(uuid, name, player, box, T=4, inside=(), s=None, low=None):
     number of arrows of the units `inside` (garrison.arrows: an empty town center shoots none, #1201), and its
     minimum range in blocks (FORT_MIN_RANGE, 0 for the town center): no shot at a unit nearer (#1546). low: the
     minimum range in tiles (default FORT_MIN_RANGE; 0 after Murder Holes: build.minimum, #1547).
-    s: the Stats (default: stats(name); a wall of the game program: wall(), #1322).
+    s: the Stats (default: stats(name); a wall of the game program: wall(), #1322). factor: of the base arrows
+    (civs.arrows, #2178).
     At 0 hit points the plugin fills the box with air. The invisibility effect hides the slime: the tag Invisible is
     only for armor stands, the server drops it on a slime (#636)."""
     x0, y0, z0, x1, y1, z1 = box
@@ -249,7 +250,7 @@ def building(uuid, name, player, box, T=4, inside=(), s=None, low=None):
     return [f"summon slime {(x0 + x1 + 1) / 2} {y0} {(z0 + z1 + 1) / 2} {{Size:{size - 1},NoAI:1b,Silent:1b,"
             f"NoGravity:1b,PersistenceRequired:1b,{INVISIBLE},Tags:[\"aoe2mc.building\"],UUID:[I;{ints}]}}",
             f"team join p{player} {uuid}"] + \
-        [f"aoe arrows {uuid} {garrison.arrows(name, inside)}"] * bool(s.attack and s.range) + \
+        [f"aoe arrows {uuid} {garrison.arrows(name, inside, factor)}"] * bool(s.attack and s.range) + \
         [f"aoe building {uuid} {s.hp} {s.melee} {s.pierce} {' '.join(map(str, box))}"   # after the arrows: no shot of 1
          + (f" {s.attack} {s.range * T} {round(s.reload / NORMAL * 20)} {low * T}"   # (#1546)
             if s.attack and s.range else "")
