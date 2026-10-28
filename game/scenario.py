@@ -166,13 +166,15 @@ def orders(g):
     (aoe2mc.stop_lines, #2754) stops the tagged units (`aoe stop`), ends their patrols as a new order of a person does
     (gather.Gather.end_patrols, #2674) and removes the tag. An "Unload" order (#2773): unload(). A "Lock Gate" or
     "Unlock Gate" order (aoe2mc.gate_lines, #2762) locks or unlocks the gate of its reference: gate(). A "Place
-    Foundation" order (aoe2mc.foundation_lines, #2825): foundation()."""
+    Foundation" order (aoe2mc.foundation_lines, #2825): foundation(). A "Build Object" order (aoe2mc.build_lines,
+    #2863): finish()."""
     got = g.command(f"data get storage {ORDERS} list") or ""
     new = re.findall(r'"(patrol|attack_move|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"', got)
     unloads = re.findall(r'"unload (\d+) (\d+) ?(-?\d+ -?\d+ -?\d+)?"', got)
     gates = re.findall(r'"(lock|unlock) (\d+)"', got)
     found = re.findall(r'"found (\d+) (\w+) (\d+) (\d+)"', got)
-    if new or unloads or gates or found:
+    builds = re.findall(r'"build (\d+) (\w+) (-?\d+) (-?\d+) (-?\d+) (-?\d+)"', got)
+    if new or unloads or gates or found or builds:
         g.command(f"data remove storage {ORDERS} list")
     for player, ref, where in unloads:
         unload(g, int(player), int(ref), where)
@@ -180,6 +182,8 @@ def orders(g):
         gate(g, order, int(ref))
     for player, name, x, y in found:
         foundation(g, int(player), name, (int(x), int(y)))
+    for player, name, *area in builds:
+        finish(g, int(player), name, [int(v) for v in area])
     patrols = vars(g).setdefault("patrols", [])
     for order, tag, where in new:
         p, sel = [int(v) for v in where.split()], f"@e[tag={tag}]"
@@ -227,6 +231,23 @@ def foundation(g, player, name, tile):
         rect = build.area(x, name, (tile[0] * T + T // 2, tile[1] * T + T // 2))
         if ok(x, rect) and build.level(x, name, rect):
             build.found(x, name, rect, free=True)
+
+
+def finish(g, player, name, area):
+    """A "Build Object" order (aoe2mc.build_lines, #2863): each construction site of the player (a person or a bot) of
+    building name (ANY: each building) with its middle tile in the area [x1, y1, x2, y2] (-1: the whole map) is
+    complete at once, with no villager work (build.rise with no end of work, as empire_wars.town). Its builders stop in
+    the next step of the Gather. No such site: nothing, as in AoE2."""
+    import build                                                       # build imports gather
+    for x in [g, *(s.g for s in g.bots)]:
+        if x.player != player:
+            continue
+        T = x.map.T
+        for site in [s for s in x.sites if not s.get("done") and name in ("ANY", s["name"])]:
+            x0, x1, z0, z1 = site["footprint"]
+            tx, ty = (x0 + x1) // 2 // T, (z0 + z1) // 2 // T
+            if area[0] < 0 or area[0] <= tx <= area[2] and area[1] <= ty <= area[3]:
+                build.rise(x, site, float("inf"))
 
 
 def unload(g, player, ref, where):
