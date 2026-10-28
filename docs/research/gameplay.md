@@ -101,6 +101,8 @@ on an attack alert line in the chat goes to its place with the same view (`Alert
 
 1. The converter writes `aoe2mc.json` into the world folder: each object with its AoE2 ID, name, owner,
    tile position and the UUID of its entity.
+   The "players" of a scenario also have the start "resources", the "pop_limit" and "computer" of the
+   tab "Players" of the editor (#2539).
 2. The program starts the vanilla server with RCON, reads `aoe2mc.json` and gives each unit of player 1 a tag.
 3. Input: the player holds a "command stick" (`carrot_on_a_stick`). A right click on a villager selects it
    (glowing). A right click on a tree sends the villager there. The datapack detects the click with the
