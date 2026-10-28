@@ -4,8 +4,7 @@ data/civs.jsonl (#1914), and each key of those lines has one line in data/civ_ke
 issue. BY_KEY[key][civ] (or value(key, civ, default)) holds the value of each key: a new key is one line in each data
 file and the code that applies it (repair.py, build.py, train.py ...), no new line here. The tables in capitals below
 are the older names of some keys.
-Bonuses that the game program cannot use yet: Japanese fishing ships, Malian oyster gatherers, the Slav monks
-and the ships.
+Bonuses that the game program cannot use yet: oyster gatherers (Malians, Dravidians), the Slav monks and the ships.
 The key "church_rate" is the Georgian bonus of the Fortified Church (#1930, #2377): build.rise, repair.rate and
 Gather.work_time multiply the work of the villagers in the 21-tile square around it (church_rate).
 """
@@ -391,6 +390,12 @@ def work_rate(g, building):
     """The factor of the train and research rate of building (a name) of the player of g in its age (WORK_RATE), else 1."""
     import build                                                   # build imports gather, gather imports this module
     return WORK_RATE.get(civ(g), {}).get(building, (1,) * 4)[min(build.ages(g), 3)]
+
+
+def ship_work(g):
+    """The factor of the work rate of a fishing ship of the player of g in its age (the key "ship_work"), else 1."""
+    import build                                                   # build imports gather, gather imports this module
+    return value("ship_work", civ(g), (1,) * 4)[min(build.ages(g), 3)]
 
 
 def train_rate(g, name):
