@@ -120,6 +120,8 @@ def order(g, player, cell):
     carts = sorted(u for u in g.selected if g.soldiers.get(u, "").startswith(CART))   # also TRADE_CART_FULL
     if rect is None or not carts or len(own) < 2 or not g.paper:
         return None
+    rest = {u: g.trade[u].get("rest", 0.0) for u in carts if u in g.trade}   # new_order ends the old route
+    g.new_order(carts)
     pos = g.positions(carts)
     for u in carts:
         if u not in pos:
@@ -128,7 +130,7 @@ def order(g, player, cell):
         home = min((r for r in own if r != rect), key=lambda r: (math.dist(mid(r), (pos[u][0], pos[u][2])), r))
         if (legs := walk(g, u, rect, pos[u])) is not None:
             g.trade[u] = {"home": home, "market": rect, "to": rect, "cell": legs[-1], "legs": legs,
-                          "rest": g.trade.get(u, {}).get("rest", 0.0)}
+                          "rest": rest.get(u, 0.0)}
     g.mark(player, {(rect[0], rect[2]), (rect[1] - 1, rect[3] - 1)})
     return rect
 
