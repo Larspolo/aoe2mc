@@ -173,6 +173,8 @@ NOT_SAVED = (                                                          # the fie
     "home",                                                            # bot.py: the town center of a bot
     "hurried",                                                         # regen.military: again in its next pass
     "kings",                                                           # regicide.setup makes it again
+    "left_full",                                                       # amounts.py: the full amounts, from aoe2mc.json again
+    "left_shown",                                                      # amounts.py: the shown numbers, a load shows them again
     "limit_at",                                                        # time_limit.py: the next check time
     "limit_shown",                                                     # time_limit.py: the shown text
     "noui",                                                            # the cheat "noui": only the hints

@@ -52,6 +52,7 @@ from units import TEAM_COLOR, VILLAGER_JOBS, animal, pretty  # noqa: E402
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import replay  # noqa: E402  (build imports it too)
+import amounts  # noqa: E402
 import battle_royale  # noqa: E402
 import bossbar  # noqa: E402
 import capture_relic  # noqa: E402
@@ -1707,6 +1708,7 @@ class Gather:
         trade.heal(self, self.tick * NORMAL)
         train.haste(self, self.tick * NORMAL)
         bossbar.tick(self)
+        amounts.tick(self)
         for site in self.sites:
             builders = [v for v in [*self.villagers.values(), *self.ships.values()] if v.state == "build" and v.site is site]
             men = repair.raisers(self, site)                           # Serjeants at their Donjon site (#2129)
