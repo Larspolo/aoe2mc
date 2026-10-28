@@ -9,7 +9,8 @@ The timer is in AoE2 years (1 year = 5 game seconds) and depends on the map size
 Medium, 300 Normal, 350 Large, 400 Huge). The program counts game time: tick() adds dt (game seconds) at each call,
 gather.Gather.run gives it tick × NORMAL, as for the training queues. At the end, the owner wins: the human player sees
 "Victory" for its own wonder and "Defeat" for a wonder of a rival; the game then ends (g.ended).
-A game mode with the key "wonder_years" in game/data/setup.jsonl has that timer (Defend the Wonder: 250, #2441).
+A game mode with the key "wonder_years" in game/data/setup.jsonl has that timer (Defend the Wonder: 250, #2441; Wonder
+Race: 0, the completion of the first wonder wins, #2406).
 """
 import json
 import math

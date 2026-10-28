@@ -3,7 +3,7 @@ locked until the age (#1082). The ages of the AoE2 DE wiki (0: Dark, 1: Feudal, 
 import pytest
 from test_train_castle import menus, setup
 
-from game import train
+from game import civs, train
 
 build = train.build                                                    # the module that train uses: AGE of the unique units
 
@@ -40,10 +40,11 @@ def test_each_unit_and_technology_of_the_menus_has_an_age():
     names = {n for ns in train.TRAINS.values() for n in ns} | set(train.UNIQUE.values()) | set(build.COSTS)
     assert {n for n in names if n not in train.TECHS} - {"VILLAGER_MALE", "MILITIA", "CHAMPI_SCOUT", "HOUSE", "LUMBER_CAMP",
                                                          "MINING_CAMP", "MILL", "FOLWARK", "MULE_CART", "SETTLEMENT", "FARM", "BARRACKS", "TOWN_CENTER", "DONJON",
-                                                         "PALISADE_GATE", "PALISADE_WALL", "DOCK", "FISHING_SHIP",
+                                                         "PALISADE_GATE", "PALISADE_WALL", "DOCK", "FISHING_SHIP", "LEMBOS",
                                                          "TRANSPORT_SHIP"} \
         <= build.AGE.keys()
-    assert {n for n in names if n in train.TECHS} - {"LOOM", "FEUDAL_AGE"} <= train.TECH_AGE.keys() | build.AGE.keys()
+    policies = {n for r in civs.ROWS for n in r.get("policies", {}).get("effects", {})}   # the Dark Age (#2485)
+    assert {n for n in names if n in train.TECHS} - {"LOOM", "FEUDAL_AGE"} - policies <= train.TECH_AGE.keys() | build.AGE.keys()
 
 
 @pytest.mark.parametrize("ages, need", [(0, "Needs the Castle Age"), (1, "Needs the Castle Age"), (2, None)])
