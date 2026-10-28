@@ -86,7 +86,7 @@ DROP_SITES = {r.lower(): tuple(t["name"] for t in ROWS if r.lower() in t.get("dr
 MEAT_SITES = tuple(t["name"] for t in ROWS if "meat" in t.get("drop", ()))   # hunted food only (mule cart, #2194)
 START = replay.START                                               # the AoE2 standard start resources (#973)
 # AoE2 DE setting "Starting resources" (wiki "Random map", without the civilization bonus): run.py --resources (#2264)
-LEVELS = {r["name"]: r["resources"] for r in table.load("setup.jsonl")}
+LEVELS = {r["name"]: r["resources"] for r in table.load("setup.jsonl") if "resources" in r}
 NOMAD = {"wood": 275, "stone": 100}     # AoE2 Nomad (wiki "Nomad (map)"): no building at the start, the cost of a town center
 TREE_WOOD = 100                                                    # wood in one tree, as in AoE2
 # plants of the ground that are not in #minecraft:replaceable: the trunk on a slope removes them from its row (#1124)
@@ -935,6 +935,12 @@ class Gather:
         spot = self.map.spot(tile)
         return {c for c in spot if self.map.free(*c)} if tile in self.map.farms else self.map.around(spot)
 
+    def drop_goals(self, v):
+        """The cells next to the drop sites of the load of a villager (a carcass: also the mule cart, #2194)."""
+        build.moved_carts(self)                                        # a mule cart can be at a new place (#2209)
+        meat = self.map.drops["meat"] if v.res == "food" and v.tree in self.map.carcasses else []
+        return set().union(*map(self.map.around, self.map.drops[v.res] + meat))
+
     def source(self, v):
         """The resources left in the tree, bush, mine or farm of a villager: {tile: amount} of its kind."""
         if v.tree in self.map.farms:
@@ -1451,9 +1457,7 @@ class Gather:
                     else:
                         self.trunk(v.tree)
                 if v.load >= most or src.get(v.tree, 0) <= 0:
-                    build.moved_carts(self)                            # a mule cart can be at a new place (#2209)
-                    meat = self.map.drops["meat"] if v.res == "food" and v.tree in self.map.carcasses else []
-                    self.go(v, "to_drop", set().union(*map(self.map.around, self.map.drops[v.res] + meat)))
+                    self.go(v, "to_drop", self.drop_goals(v))
         train.tick(self, self.tick * NORMAL)
         monk.heal(self, self.tick * NORMAL)
         monk.convert(self, self.tick * NORMAL)
@@ -1486,11 +1490,13 @@ class Gather:
 
     def work_time(self, res, herd=False):
         """Real seconds per unit of resource res ("farm" for farms) with the technologies of the player (WORK_TECHS) and
-        the work-rate bonus of its civilization (civs.WORK; herd: the carcass of a herdable animal, for shepherds)."""
+        the work-rate bonus of its civilization (civs.WORK; herd: the carcass of a herdable animal, for shepherds).
+        civs.MORE multiplies the change of a technology (Armenians: the mule cart technologies 40 % more, #2309)."""
         if self.aegis:
             return 0.0                                                 # a full load in one work step
-        rate = civs.work(self, "sheep" if herd else res)
-        return self.chop.get(res, self.chop.get("food")) / rate / math.prod(WORK_TECHS.get(t, {}).get(res, 1) ** train.count(self, t) for t in self.techs)
+        rate, more = civs.work(self, "sheep" if herd else res), civs.MORE.get(civs.civ(self), {})
+        return self.chop.get(res, self.chop.get("food")) / rate / math.prod(
+            (1 + (WORK_TECHS.get(t, {}).get(res, 1) - 1) * more.get(t, 1)) ** train.count(self, t) for t in self.techs)
 
     def move(self, v):
         import ai                                                      # ai imports gather
