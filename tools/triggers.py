@@ -71,6 +71,7 @@ MAP = {
     ("effect", "CHANGE_OWNERSHIP"): "`tag` `aoe2mc.pN` and `team join pN` of the units in the area and their mounts (timer and area triggers: #2570); Gaia: not supported yet",
     ("effect", "CHANGE_PLAYER_COLOR"): "`team modify pN color`: the chat color of the new player color (`units.TEAM_COLOR`) on the names and the glow of the units; the wool of the sheep and the banners keep the old color (#2712)",
     ("effect", "CHANGE_PLAYER_NAME"): "`team modify pN displayName {\"text\": \"...\"}`: the sidebar and the tab list (#2711)",
+    ("effect", "CHANGE_TECHNOLOGY_COST"): "the cost of the technology in the storage `aoe2mc:costs`: the scenario mode of the game program uses it in the menus and when the player pays (#2819)",
     ("effect", "CHANGE_VARIABLE"): "`scoreboard players set`, `add`, `remove` or `operation` on `#vN aoe_var` (#2611)",
     ("effect", "CHANGE_VIEW"): "`tp @a[team=pN] x y z` to the tile, on the ground (the player is the camera, #2610)",
     ("effect", "CLEAR_INSTRUCTIONS"): "`title @a clear` (#2609)",
