@@ -102,6 +102,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe attack <selector> <target selector>    Mob#setTarget: the mob attacks with its own AI
  *   aoe ballistics <team> on|off               Ballistics of the player (#1549): its archers and buildings aim where a
  *                                              moving target will be
+ *   aoe batch <command> ...                    run the commands in this order, each URL-encoded ("+" is a space): one
+ *                                              RCON round trip for many commands, with no feedback in the log (#2761:
+ *                                              a round trip took 2 to 5 ms at a 45 ms tick, the replay fell behind)
  *   aoe gate <team> <x0> <y0> <z0> <x1> <y1> <z1>
  *                                              a gate of the team (#1325, Gates.java): its iron bars in the box rise
  *                                              while an own or allied unit is near or walks a path through it; the
@@ -113,6 +116,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              player that joins later (#1302: the enemy units out of sight in the
  *                                              view of one replay player). With team=T in the selector: only a
  *                                              player of team T that joins later, and no spectator (#2921)
+ *   aoe hide <players> view <uuid> ...         the same for these players only (the view of a spectator, #2901):
+ *                                              the minimap and a player that joins later do not change
  *   aoe stance <selector> <aggressive|defensive|stand_ground|no_attack>
  *                                              the AoE2 stance of a unit (#1104): no_attack never attacks without an
  *                                              order, stand_ground attacks only an enemy in its range and does not walk,
@@ -816,6 +821,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     private static final Map<String, String> HELP = new HashMap<>();   // "material:name" -> help line (aoe lore)
+    // the sender of aoe batch: the rights of the console, and its feedback goes nowhere (the console logs each line)
+    private CommandSender quiet;
 
     private static String text(String s) {
         return URLDecoder.decode(s, StandardCharsets.UTF_8);
@@ -2382,6 +2389,17 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Ballistics: " + BALLISTICS);
             return true;
         }
+        if (args.length >= 2 && args[0].equals("batch")) {              // many commands in one round trip (#2761)
+            if (quiet == null) {
+                quiet = Bukkit.createCommandSender(feedback -> { });
+            }
+            int n = 0;
+            for (int i = 1; i < args.length; i++) {
+                n += Bukkit.dispatchCommand(quiet, text(args[i])) ? 1 : 0;
+            }
+            sender.sendMessage("Batch: " + n + "/" + (args.length - 1));
+            return true;
+        }
         if (args.length == 7 && args[0].equals("charge")) {            // Siphons (#2165)
             return charges(sender, args[1], charges, args[2], args[3], args[4], args[5], args[6]);
         }
@@ -2673,6 +2691,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         if (args.length >= 3 && (args[0].equals("hide") || args[0].equals("show"))) {   // one command per second (#1302)
             boolean hide = args[0].equals("hide");
+            boolean view = args[2].equals("view");                     // only these players (#2901)
             var who = players(sender, args[1]);
             String team = selectorTeam(args[1]);
             int n = 0;
@@ -2694,7 +2713,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 } catch (IllegalArgumentException e) {
                     continue;
                 }
-                if (hide) {
+                if (view) {
+                    // the global set stays: the minimap dots and the players that join later (#2901)
+                } else if (hide) {
                     hidden.computeIfAbsent(u, k -> new HashSet<>()).add(team);
                 } else if (team.equals(ALL) || hidden.containsKey(u) && hidden.get(u).remove(team) && hidden.get(u).isEmpty()) {
                     hidden.remove(u);

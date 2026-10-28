@@ -3,6 +3,7 @@ import json
 import os
 import re
 import sys
+import urllib.parse
 
 import pytest
 
@@ -169,8 +170,9 @@ def test_a_right_click_pauses_and_continues_a_replay_on_a_server(tiny_world, tmp
         at, command = {}, game.command
 
         def timed(c):
-            if c.startswith("tellraw @a ["):                           # a chat event, not the view text (#737)
-                at[json.loads(c[len("tellraw @a "):])[-1]["text"]] = time.monotonic() - t0
+            for one in [urllib.parse.unquote_plus(x) for x in c.split(" ")[2:]] if c.startswith("aoe batch ") else [c]:
+                if one.startswith("tellraw @a ["):                     # a chat event, not the view text (#737)
+                    at[json.loads(one[len("tellraw @a "):])[-1]["text"]] = time.monotonic() - t0   # (in a batch, #2761)
             return command(c)
         game.command = timed
 

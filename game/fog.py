@@ -114,10 +114,11 @@ def revealed(g, start=False):
     return out
 
 
-def commands(g, verb, uuids):
-    """The plugin commands "aoe hide" or "aoe show" of the sorted uuids for the team of the player, below RCON_MAX."""
+def commands(g, verb, uuids, who=None):
+    """The plugin commands "aoe hide" or "aoe show" of the sorted uuids for the team of the player (who: other
+    players, for example "Alex view": the view of a spectator, #2901), below RCON_MAX."""
     import replay
-    who, k = f"@a[team=p{g.player}]", (replay.RCON_MAX - 40) // 37   # UUIDs per command (36 characters and a space)
+    who, k = who or f"@a[team=p{g.player}]", (replay.RCON_MAX - 40) // 37   # UUIDs per command (36 characters and a space)
     return [f"aoe {verb} {who} {' '.join(uuids[i:i + k])}" for i in range(0, len(uuids), k)]
 
 

@@ -64,6 +64,7 @@ def test_bossbar_commands_work_on_a_server(tiny_world, tmp_path):
             sent.append((c, out))
             return out
         game.command = command
+        game.batch = lambda cmds: [command(c) for c in cmds]        # the answer of each command, no aoe batch (#2761)
         r.run(speed=4, log=None, bar=True)
         bars = [(c, out) for c, out in sent if c.startswith("bossbar")]
         assert len(bars) >= 9 and all(out.startswith(("Created", "Custom bossbar", "Nothing changed"))

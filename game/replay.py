@@ -70,6 +70,9 @@ EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
 TRAIL = 3                   # tiles: a follower farther than this from its target walks to it again (#2551)
 TRAIL_MS = 1000             # ms of game time between two checks of the followers (#2551)
+FIGHT_MS = 60000            # ms of game time: an attack order this near in time to one of a fight joins it (#2948)
+FIGHT_TILES = 12            # tiles: an attack order this near to one of a fight joins it (#2948)
+FIGHT_UNITS = 10            # attacking units of a large fight (#2948)
 FAR = 8                     # tiles: a target unit this far from the tile of the ORDER (its place in AoE2) is no attack
                             # target: in de-64.3 a spearman chased a villager 200 blocks from it across the map (#2635)
 FOLLOW_MS = 15000           # ms of game time: the camera of --follow changes its unit at most this often (#738)
@@ -86,8 +89,12 @@ CLOUDS = 192                # the vanilla cloud height: the overview stays below
 RCON_MAX = 1446             # bytes of one RCON command: the server closes the connection after a longer one
 BOOK_COLS, BOOK_ROWS = 19, 14   # characters per line and lines of a book page (aoe2mc.book_pages)
 POLL = 0.2                  # seconds between two calls of the poll of Replay.run while it waits (#685)
+CENSUS = 1.0                # seconds of real time between two censuses: each count is one RCON round trip (2 to 5 ms
+                            # at a 45 ms server tick); once per game second at speed 4 took 23 % of the loop (#2761)
 NEXT = 5                    # tiles: an empty resource sends its villager to the next one this near (#720)
 NEAR = 2                    # blocks: a unit of the plugin this near to its replay position is at its resource (#766)
+SEEN = 32                   # blocks: the server sends a particle only to the players this near (a sound of volume 1
+                            # carries 16): a gather step farther from each player sends no look (#2761, the loop lag)
 WAIT = 1000                 # ms of game time between two position checks of a unit that is late on its path (#766)
 LATE = 60000                # ms of game time: a unit that is still not at its resource then goes there with /tp
 STILL = 4000                # ms of game time: a walking unit that stands this long on one place gets free (unstick)
@@ -188,6 +195,46 @@ def runs(cmd, tiles):
     return out + [line] * (line != cmd)
 
 
+def owners(objects, events):
+    """{object ID: player} of a record (#2948): the start objects (`ref`, no animals: a herd changes its owner) and
+    each ID that a player selects in a command (a player selects only own units and buildings)."""
+    out = {o["ref"]: o["player"] for o in objects
+           if o.get("ref") is not None and o.get("player") and not units.animal(o["name"])}
+    for e in events:
+        if e["kind"] in aoe2mc.UNIT_USE | aoe2mc.BUILDING_USE and e.get("player"):
+            out.update(dict.fromkeys(e.get("objects", ()), e["player"]))
+    return out
+
+
+def fights(events, owner):
+    """The large fights of a record (#2948): the record has no deaths (#1086), so a fight is a group of attack orders
+    (an ORDER on a unit or building of another player, not of Gaia, and an ATTACK_MOVE), each less than FIGHT_MS and FIGHT_TILES from
+    another one of the group, of two or more players and FIGHT_UNITS or more attacking units. owner: owners().
+    Returns [{"start", "end" (ms), "tile" [x, y], "players", "units"}], the largest first."""
+    groups = []
+    for e in events:
+        p, t = e.get("player"), e.get("target")
+        if "tile" not in e or not p or not (e["kind"] == "attack_move" or
+                                            e["kind"] == "order" and owner.get(t) not in (None, 0, p)):
+            continue
+        near = [g for g in groups if e["time"] - g[-1]["time"] <= FIGHT_MS
+                and any(math.dist(e["tile"], f["tile"]) <= FIGHT_TILES for f in g)]
+        for g in near[1:]:                                          # the order joins two groups
+            near[0] += g
+            groups.remove(g)
+        if near:
+            near[0].append(e)
+        else:
+            groups.append([e])
+    out = []
+    for g in groups:
+        players, ids = sorted({e["player"] for e in g}), {i for e in g for i in e.get("objects", ())}
+        if len(players) > 1 and len(ids) >= FIGHT_UNITS:
+            out.append({"start": min(e["time"] for e in g), "end": max(e["time"] for e in g), "players": players,
+                        "tile": [round(sum(e["tile"][k] for e in g) / len(g), 1) for k in (0, 1)], "units": len(ids)})
+    return sorted(out, key=lambda f: (-f["units"], f["start"]))
+
+
 def sail(g, v):
     """Move ship v one cell on its water path with /tp, facing the step. The y of the boat stays (`at @s`, `~`):
     the water carries it, and aoe2mc.json has no height for the water."""
@@ -267,6 +314,8 @@ class Replay:
         self.censused = False                   # a census counted the live units (the base of the units lost)
         self.reached, self.researched = {}, {}  # player -> {age: game time (ms)}, researched technologies (#1067)
         self.vills, self.vhigh = {}, {}         # player -> live villagers (est.), the highest count (#1086)
+        self.eyes = None                        # (x, y, z) of each player; None: not known, each gather step shows (#2761)
+        self.queue = None                       # in run() on Paper: the commands that wait for flush() (#2761)
         for o in data["objects"]:
             if o["kind"] == "unit" and o.get("player") and not units.animal(o["name"]):
                 self.pop[o["player"]] = self.pop.get(o["player"], 0) + 1
@@ -1276,6 +1325,7 @@ class Replay:
 
     def entity(self, v):
         """(x, z) of the entity of unit v, or None."""
+        self.flush()
         m = re.findall(self.gather.NUMBER, self.game.command(f"data get entity {v.uuid} Pos").rsplit(":", 1)[-1])
         return (float(m[0]), float(m[2])) if len(m) == 3 else None
 
@@ -1439,7 +1489,8 @@ class Replay:
                 self.resources(v.player)[v.res] += 1
                 g = self.gathered.setdefault(v.player, dict.fromkeys(START, 0))
                 g[v.res] += 1
-                self.crew.work(v)
+                if self.eyes is None or any(math.dist(e, (v.pos[0], v.pos[1] + 1, v.pos[2])) <= SEEN for e in self.eyes):
+                    self.crew.work(v)                               # the look and sound of the step (#592, #2761)
                 if v.tree in self.map.farms:                            # the wheat gets younger, the farmer walks
                     self.crew.harvest(v.tree)
                     self.crew.tend(v)
@@ -1985,6 +2036,7 @@ class Replay:
         """With the fights of the plugin (ai) a unit dies without a timeline event (#787): count the live units of
         each player with the entity selector of their tags (a dead entity does not match). The chunks are loaded
         (run.py --replay: forceload)."""
+        self.flush()
         for p in self.pop:
             m = re.search(r"Count: (\d+)", self.game.command(f"execute if entity @e[tag={COUNTED},tag=aoe2mc.p{p}]"))
             n = int(m[1]) if m else 0
@@ -1996,10 +2048,36 @@ class Replay:
             self.villager(p, 0, int(m[1]) if m else 0)               # the record has no deaths (#1086)
         self.censused = True
 
+    def flush(self):
+        """Send the commands of the queue in one batch (run.Game.batch): before each wait of run() and each read of
+        the server, so a read sees the changes before it. Each RCON round trip waits for the main thread of the
+        server (2 to 5 ms at a 45 ms tick): one send per step was a third of the loop of de-63.0 at speed 4 (#2761)."""
+        if self.queue:
+            cmds, self.queue = self.queue, None
+            self.send(cmds)
+            self.queue = []
+
+    def look_around(self):
+        """Read the places of the players with each census (#2761): with many villagers at speed 4 the gather looks
+        were about half of all commands, and the replay loop fell behind its clock (de-63.0 after 16 minutes). A
+        server answer that is no player list (a test without a server) keeps `eyes` None: each step shows."""
+        self.flush()
+        m = re.search(r"There are (\d+)", self.game.command("list") or "")
+        out = self.game.command("execute as @a run data get entity @s Pos") if m and int(m[1]) else ""
+        self.eyes = None if m is None else [tuple(map(float, p)) for p in re.findall(
+            r"\[{0}d, {0}d, {0}d\]".format(r"(-?[\d.]+(?:E-?\d+)?)"), out or "")]
+
     def send(self, cmds):
+        """Send cmds to the server; in run() on Paper add them to the queue (flush)."""
+        if self.queue is not None:
+            self.queue += cmds
+            return
         t = time.perf_counter()
-        for c in cmds:
-            self.game.command(c)
+        if many := getattr(self.game, "batch", None):               # Paper: many commands per round trip (#2761)
+            many(cmds)
+        else:
+            for c in cmds:
+                self.game.command(c)
         self.sent += len(cmds)
         self.busy += time.perf_counter() - t
 
@@ -2134,8 +2212,17 @@ class Replay:
         self.resources(v.player)[res] += n
         self.gathered.setdefault(v.player, dict.fromkeys(START, 0))[res] += n     # the summary (#1097)
 
-    def run(self, speed=1.0, start=0, clock=time.monotonic, sleep=time.sleep, log=print, bar=False, poll=None,
-            finish=False, to=None, paused=False, rewind=False):
+    def run(self, *args, **kw):
+        """Play the timeline (`play`). On Paper the commands wait in `queue` and go out in batches (flush, #2761)."""
+        self.queue = [] if getattr(self.game, "batch", None) else None
+        try:
+            return self.play(*args, **kw)
+        finally:
+            self.flush()
+            self.queue = None
+
+    def play(self, speed=1.0, start=0, clock=time.monotonic, sleep=time.sleep, log=print, bar=False, poll=None,
+             finish=False, to=None, paused=False, rewind=False):
         """Play the timeline from game time `start` (ms) at `speed` times the game speed; `bar`: show the game time
         in a boss bar (`clock_commands`). Returns the stats:
         commands, events, the seconds of sending, the largest lag behind the timeline (s), commands per second
@@ -2155,7 +2242,7 @@ class Replay:
         self.control = {"speed": speed, "paused": paused, "view": self.pov,     # the view: replay_input VIEW (#1303)
                         "players": {p: self.player(p) for p in sorted(int(q) for q in self.data["players"]) if p}} | \
             ({"jump": to} if to is not None else {})
-        end, shown = events[-1]["time"] if events else start, None
+        end, shown, counted = events[-1]["time"] if events else start, None, -math.inf
         send = self.send if bar else lambda cmds: None
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
                    f"bossbar set {BAR} max {max(1, int(end) // 1000)}"] +
@@ -2165,6 +2252,7 @@ class Replay:
              self.minimap_buildings(set(), set()) * (self.pov is None) +
              self.overview())
         census = self.census if bar and self.ai else lambda: None
+        look = self.look_around if bar and self.ai else lambda: None          # as census: a server of run.py --replay
         while k < len(events) or self.moving or self.builds or self.charging or self.idle:
             step = min([*self.moving.values(), *self.working.values(), *self.effects.values(),   # walk, gather, text
                         *[self.calm_at(i) for i in self.charging if i not in self.moving],         # an attack-move ends
@@ -2182,6 +2270,7 @@ class Replay:
             now = e["time"] if e else step
             to = None
             while True:
+                self.flush()                                        # the commands so far go out before the wait
                 if poll:
                     self.control["time"] = g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed
                     poll(self.control)
@@ -2220,11 +2309,16 @@ class Replay:
             lag = max(lag, clock() - r0 - (now - g0) / 1000 / self.speed)
             if int(now) // 1000 != shown:                              # at most once per game second
                 shown = int(now) // 1000
-                census()
+                if clock() - counted >= CENSUS:
+                    census()
+                    look()
+                    counted = clock()
                 send(self.clock_commands(now, end, self.speed) + self.score_commands() + self.overview(join=True))
                 self.send(self.fog())
-            if e is None:
-                self.send(self.steps(now))
+            if e is None:                                           # behind its clock: all the steps up to the
+                late = g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed    # game time now in one
+                nxt = events[k]["time"] if k < len(events) else math.inf     # send, before the next event (#2761)
+                self.send(self.steps(max(now, min(late, nxt - 1))))
                 continue
             cmds = self.commands(e) + self.spectate(e)
             if cmds:
@@ -2241,3 +2335,16 @@ class Replay:
         span = (events[-1]["time"] - start) / 1000 / speed if events else 0                 # at the start speed
         return {"events": n, "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2),
                 "rate": round(self.sent / self.busy) if self.busy else 0, "need": round(self.sent / span) if span else 0}
+
+
+if __name__ == "__main__":
+    import argparse
+    ap = argparse.ArgumentParser(description="Information of a recorded game for the live replay.")
+    ap.add_argument("record", help="the .aoe2record file")
+    ap.add_argument("--fights", action="store_true", help="print the large fights of the record (#2948)")
+    a = ap.parse_args()
+    if a.fights:
+        timeline = aoe2mc.read_timeline(a.record) or []
+        for f in fights(timeline, owners(aoe2mc.read_record(a.record)[5], timeline)):
+            print(f"{mmss(f['start'])}-{mmss(f['end'])} tile ({f['tile'][0]:g}, {f['tile'][1]:g}) "
+                  f"players {', '.join(map(str, f['players']))} units {f['units']}")

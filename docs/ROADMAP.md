@@ -23,6 +23,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `convert:random-maps` Make a world from an AoE2 random map script (`.rms`: Arabia, Arena, Black Forest) and a seed, with no scenario file (epic #959)
 - [x] `convert:random-maps-more` More random map scripts of the ranked pool and the classic ones (Nomad, Islands, Gold Rush, Highland, Mediterranean) with their player starts (epic #1172)
 - [x] `convert:mood` The map color mood and weather of a DE scenario (`map_color_mood`: morning, noon, evening, night, snow, fog) as the Minecraft time of day, weather and fog (epic #1593)
+- [ ] `convert:start-view` The start view of each scenario player (`initial_camera_x`, `initial_camera_y` of the scenario): the Minecraft spawn at the view of player 1, and in the game program each side starts at the view of its player
 
 ## 2. Play AoE2 in Minecraft (`game/`)
 
@@ -36,9 +37,9 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `play:menu` Choose the options of a building and the build menu in a chest menu (epic #618, owner decision)
 - [x] `play:health` Health indication: hit points over each unit and building, a boss bar for the selected unit, damage effects (#657)
 - [x] `play:military-train` Train all units at their buildings (barracks, archery range, stable, castle) with a queue and a rally point (epic #704)
-- [ ] `play:tech` Technologies and upgrades (blacksmith, university, unit lines) with cost, time and effect on the Minecraft attributes
+- [x] `play:tech` Technologies and upgrades (blacksmith, university, unit lines) with cost, time and effect on the Minecraft attributes (epic #936)
 - [x] `play:ages` Age up from the Dark Age to the Imperial Age: cost, time, the buildings and units that each age unlocks (epic #1079)
-- [ ] `play:civs` Civilizations: the bonuses, unique technologies and team bonus of each civilization change costs and attributes
+- [x] `play:civs` Civilizations: the bonuses, unique technologies and team bonus of each civilization change costs and attributes (epic #1088)
 - [x] `play:feedback` Show what the player points at and the result of each action (epic #793)
 - [x] `play:alerts` Alerts as in AoE2: a sound and a chat line with the place when own units or buildings are attacked, and a flare that a player puts on the map (epic #1230)
 - [x] `play:control` Select and order many units: a selection box, groups, formations, an idle villager item (epic #742)
@@ -57,10 +58,10 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `play:cheats` The AoE2 cheat codes in the chat when cheats are on (epic #820)
 - [x] `play:fog` The explored area and the fog of war: a player sees only what the own units and buildings see (epic #1387)
 - [x] `play:save` Save a game of the game program and load it again (units, resources, queues, ages) (epic #2253)
-- [ ] `play:hunt` Hunt and herd: villagers kill deer, lure and kill boars, and herd sheep that the first player who sees them owns
+- [x] `play:hunt` Hunt and herd: villagers kill deer, lure and kill boars, and herd sheep that the first player who sees them owns (#1058, `game/herd.py`, #2310)
 - [ ] `play:setup` Set up a game before it starts: the starting age, starting resources, population limit, the civilizations and the number of bots
 - [ ] `play:scenario` Play a converted scenario in the game program: its objectives, triggers and victory conditions work, the scenario AI players are bots
-- [ ] `play:minimap` A minimap as in AoE2: a held Minecraft map item that shows the own and the seen enemy units and buildings as markers in the player colors, and a click on it sends the selection there
+- [x] `play:minimap` A minimap as in AoE2: a held Minecraft map item that shows the own and the seen enemy units and buildings as markers in the player colors, and a click on it sends the selection there (epic #2580)
 - [ ] `play:spectate` Spectators on the server of a game: they fly and see all players, without a side, as the AoE2 spectator mode
 - [ ] `play:unit-commands` The other AoE2 orders: patrol between points, guard a unit or building, follow a unit, attack-move (attack each enemy on the way)
 - [ ] `play:speed` Pause and game speed of the game program, as the AoE2 pause key and the speed setting: the units, queues and gathering stop and go on
@@ -94,11 +95,12 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `replay:team-games` Team games of up to 8 players: the score panel, the colors, the views and the summary work with all players (epic #1187)
 - [x] `replay:minimap` A live minimap of the replay: a Minecraft map item that shows the units and buildings of all players in their colors and changes with the game (epic #1236)
 - [x] `replay:fog` The view of one player in the replay: only what the units and buildings of that player see, as the AoE2 "line of sight" option of the replay (epic #1299)
-- [ ] `replay:taunts` The taunts of the record (a chat line with a number) play their sound and show their text in the live replay
+- [x] `replay:taunts` The taunts of the record (a chat line with a number) play their sound and show their text in the live replay (epic #2232)
 - [x] `replay:flares` The flares of the record (a player marks a place for the allies) show at their place in the live replay: a beacon light and a chat line in the player color (epic #2401)
-- [ ] `replay:orders` The other orders of the record change the units of the live replay: stances, formations, patrol and the town bell
+- [x] `replay:orders` The other orders of the record change the units of the live replay: stances, formations, patrol and the town bell (epic #2547)
 - [ ] `replay:production` A production panel of each player in the live replay, as the AoE2 DE replay overlay: the units in training and the technologies in research, with their progress
 - [ ] `replay:highlights` A list of the large fights of the record (where and when many units die): a jump to the time and the place of each fight
+- [ ] `replay:auto-camera` An automatic camera of the live replay, as a caster view: the spectator view moves by itself to the place with the most fights or the most new buildings
 
 ## 4. The agent system (`.claude/skills/`, `tools/`, `.github/workflows/`)
 
