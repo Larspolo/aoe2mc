@@ -1666,7 +1666,9 @@ class Gather:
                 repair.drop(self, men)                                 # complete: the Serjeants stand
                 if nxt := build.next_tile(self, site):                 # a wall line: on to its next tile (#1322)
                     self.build(nxt, {v.uuid for v in builders})
-                    continue
+                    ships = {v.uuid for v in builders if v.uuid in self.ships}
+                    sail = fleet.build_site(self, ships, nxt) if nxt["name"] in build.WATER else set()   # the next trap (#3114)
+                    builders = [v for v in builders if v.uuid in ships - sail]   # the ships that stay: they fish below
                 for v in builders:                                     # complete: the builders stop
                     v.site = None
                     if v.uuid in self.ships:                           # a fishing ship fishes its new fish trap
