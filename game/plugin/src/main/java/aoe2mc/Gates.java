@@ -182,6 +182,19 @@ final class Gates {
         return false;
     }
 
+    /** True for a block in the box of a gate or in the row above it (#3073): the wear of a building
+     *  (AoePlugin.wear) does not touch them, so the bars stay as Gates sets them and the gate stays standing. */
+    boolean holds(World world, int x, int y, int z) {
+        for (Gate g : gates.values()) {
+            BoundingBox b = g.box();
+            if (g.world().equals(world) && x >= b.getMinX() && x < b.getMaxX() && z >= b.getMinZ() && z < b.getMaxZ()
+                    && y >= b.getMinY() && y <= b.getMaxY()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** True while a block above a column of bars is not air: the gate stands. */
     private static boolean standing(Gate g) {
         int top = (int) g.box().getMaxY();
