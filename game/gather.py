@@ -71,6 +71,7 @@ import regen  # noqa: E402
 import regicide  # noqa: E402
 import relic_victory  # noqa: E402
 import repair  # noqa: E402
+import score  # noqa: E402
 import siege_tower  # noqa: E402
 import stance  # noqa: E402
 import table  # noqa: E402
@@ -1424,6 +1425,7 @@ class Gather:
             self.sieged.discard(uuid)
             import spoils                                              # spoils imports this module
             spoils.loot(self, uuid)                                    # Danes (#2271)
+            score.razed(self, uuid)                                    # the military score (#2355)
             x0, y0, z0, x1, _, z1 = self.forts.pop(uuid)
             for o in build.sides(self):                                # the other sides attack it no more (#1819)
                 o.forts.pop(uuid, None)
@@ -1810,5 +1812,6 @@ class Gather:
             if self.victory == "standard":                             # a wonder or all relics win too (#2316)
                 wonder.tick(self, self.tick * NORMAL)                  # game seconds, as train.tick
                 relic_victory.tick(self, self.tick * NORMAL)
+            score.tick(self)
             treaty.tick(self, self.tick * NORMAL)
             time.sleep(max(0.0, self.tick / self.speed - (time.time() - t)))   # a step stays tick game seconds
