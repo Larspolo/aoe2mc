@@ -42,3 +42,11 @@ from step 6 (start from its branch when it has one). That is the work of this cy
 than `pr_minutes`, no `hold`) or CI has a queue: then CI or the merges are the bottleneck, not the quota, and a new PR
 only makes more conflicts. The run then only repairs: fix one red, stalled or conflicted PR, also an older PR whose
 run stopped. When no PR needs a fix, do no new ticket: go to step 8 and report "flow brake: no PR to repair".
+
+## Fix main
+
+One break of main gave 8 "Fix main" tickets in 6 minutes and 4 fix PRs (#3480): each run found no open `P0` ticket
+and made its own. Before you make a "Fix main" ticket (step 2), also for a break that CI does not show (a workflow
+that GitHub refuses), lock it: `python3 tools/claim.py 0 --fixmain --state SHA` (SHA = the commit that broke main).
+Exit 0: make the ticket. Exit 1: another run makes it: wait one minute, list the open `P0` tickets again and claim
+that one, or pick another ticket.

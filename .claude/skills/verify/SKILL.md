@@ -16,7 +16,10 @@ The Minecraft client runs only headless: it makes screenshots (level 5). Write t
 `-n auto` runs the tests on all cores (`pytest-xdist`, #2415: 106 s, without it 287 s). Use it only for the full fast
 suite: a few test files start faster without it, and do not use it for `-m mc` (each test starts a server).
 
-Run the full fast suite once, before the first push of a PR. After that (a fix of a review or of CI, a merge of
+Run the full suite once, before the push: after the last edit, not after each edit (#3460: 1697 full runs, about 2.5
+per run, in 24 hours). Between edits, run `ruff check .` and only the changed test files and the test files of the
+changed code (`grep -l MODULE tests/*.py`). Run the full suite again only when a code change follows it.
+Never push red: the one full run before the push stays. After that (a fix of a review or of CI, a merge of
 `origin/main`), run `ruff check .` and only the test files of the change and of the conflicted files
 (`python3 -m pytest tests/test_a.py tests/test_b.py`), then push: the quick CI runs the full fast suite on each push,
 and Automerge waits for it. 255 full runs in 69 runs took 891 minutes, and main moved during each one (#1732).

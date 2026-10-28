@@ -1,4 +1,4 @@
-"""The pacer session starts the runs that the quota target misses (#566): runs cannot start other runs."""
+"""The pacer starts the runs that the quota target misses (#566): runs cannot start other runs."""
 import usage
 
 
