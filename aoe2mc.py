@@ -841,10 +841,11 @@ def train_ms(unit):
     return (train(unit) or (30,))[0] * 1000
 
 
-def training(timeline):
+def training(timeline, research=False):
     """The trainings of a recorded game: (end time ms, QUEUE event, building ID) for each unit, in the order of the
     QUEUE commands. A building trains one unit after the other; its research (RESEARCH_S) delays them. The record
-    does not show a cancelled queue or the population limit."""
+    does not show a cancelled queue or the population limit. research: also (end, RESEARCH event, building ID) for
+    each technology with a RESEARCH_S value (#2810)."""
     busy, out = {}, []                   # building -> free at
     for e in timeline:
         kind, t = e["kind"], e["time"]
@@ -854,7 +855,7 @@ def training(timeline):
             for n in range(max(1, int(e.get("amount", 1))) if kind == "queue" else 1):
                 b = e["objects"][n % len(e["objects"])]
                 busy[b] = max(busy.get(b, 0), t) + s
-                if kind == "queue":
+                if kind == "queue" or research and s:
                     out.append((busy[b], e, b))
     return out
 
