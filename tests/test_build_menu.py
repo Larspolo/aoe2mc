@@ -92,4 +92,5 @@ def test_the_build_menu_is_valid_on_paper(tiny_world, tmp_path):
     from game import menu, run
     world = shutil.copytree(tiny_world[0], tmp_path / "W")
     with run.Game(world) as game:
-        assert game.command(menu.command("@a", "Build", build.items())).strip() == "Menu: 0 players"   # no "Bad item"
+        answers = [game.command(c).strip() for c in menu.commands("@a", "Build", build.items())]   # in parts (#2556)
+        assert answers == ["Menu: 0 players"] * len(answers)          # no "Bad item"
