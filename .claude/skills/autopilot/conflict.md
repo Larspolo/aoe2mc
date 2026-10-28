@@ -14,7 +14,8 @@ In a long session, refresh the copy of the merge driver first (the SessionStart 
 `git show origin/main:tools/merge_jsonl.py > "$(git rev-parse --git-common-dir)/merge_jsonl.py"`.
 
 Merge conflict (another PR changed the same lines) → merge `origin/main` into the branch, solve the
-conflict, run `ruff check .`, the fast tests and only the `mc` tests of the files of your ticket, and push at
+conflict, run `ruff check .`, the test files of the conflicted files and of your ticket (not the full fast suite:
+the quick CI runs it, `verify` level 1, #1732) and only the `mc` tests of the files of your ticket, and push at
 once. Do not run other `mc` tests for a merge: while they run, main moves again and the PR stays without CI
 (#604 waited an hour, #669). The quick CI checks the PR, the night CI runs the full suite. A test failure after the
 push: fix it in the next push. Do not rebase or force-push a branch that has an open PR.
