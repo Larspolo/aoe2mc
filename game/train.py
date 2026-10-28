@@ -1103,12 +1103,12 @@ def census(g):
     spoils.attacks(g)                                                  # Varangian Guard (#2376)
     for u in [u for u in g.villagers if u not in live]:
         del g.villagers[u]
-        g.selected.discard(u)
+        g.drop(u)                                                      # from the selection of each person (#3486)
         for t in [t for t, f in g.farmers.items() if f == u]:
             del g.farmers[t]
     for u in [u for u in g.soldiers if u not in live]:                # the ticks of ships and towers wait for it (#3122)
         del g.soldiers[u]
-        g.selected.discard(u)
+        g.drop(u)                                                      # from the selection of each person (#3486)
     g.pop, g.census = sum(g.soldiers.get(u) not in build.MOVES for u in live), 0.0   # a mule cart is a building
     sidebar(g)
 

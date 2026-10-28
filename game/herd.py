@@ -112,8 +112,8 @@ def take(g, gathers, o, new):
             h.flock.add(u)
         elif not gather.allied(h.players, h.player, new):
             h.enemies[u] = o["name"]
-        if h.player != new and u in h.selected:                    # the old owner cannot give it orders now
-            h.selected.discard(u)
+        if h.player != new and u in h.others() | h.selected:                    # the old owner cannot give it orders now
+            h.drop(u)
             h.command(f"data merge entity {u} {{Glowing:0b}}")
             h.command(f"tag {u} remove {gather.SELECT}")
         for v in h.villagers.values():

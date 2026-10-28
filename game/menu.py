@@ -83,5 +83,6 @@ def clicks(g):
             g.command(f"scoreboard players reset {player} {OBJECTIVE}")
             slot = abs(int(m.group(1))) - 1
             out.append((player, slot))
+            g.person = player                                      # the menu acts on its selection (#3486)
             handler(player, slot, int(m.group(1)) < 0)
     return out

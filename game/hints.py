@@ -30,6 +30,8 @@ def state(g, player=None):
         return "corner", TEXTS["corner"]
     if building := getattr(g, "ghosts", {}).get(player, [None])[0]:
         return "building", TEXTS["building"].format(building=pretty(building))
+    if player is not None:                                         # the own selection of player (#3486)
+        g.person = player
     army, aim = g.selected & g.soldiers.keys(), getattr(g, "pointing", {}).get(player)
     if army:
         kind, text = "military", TEXTS["military"].format(n=len(army), s="s" * (len(army) != 1))

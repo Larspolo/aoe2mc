@@ -330,12 +330,13 @@ def owner(g, tag, new):
 def selection(g):
     """The units of "Disable Object Selection" (aoe2mc.selection_lines, #2854): read the UUIDs with the tag UNSELECTABLE
     (one `aoe where` per check, not one command per click) into g.unselectable, which the clicks, the selection box and
-    the double click skip (gather.Gather.unpickable). A selected unit that gets the tag leaves the selection. Vanilla
+    the double click skip (gather.Gather.unpickable). A selected unit that gets the tag leaves each selection. Vanilla
     has no `aoe where`: there all units stay selectable."""
     if not getattr(g, "paper", False):
         return
     g.unselectable = set(g.where(None, f"@e[tag={UNSELECTABLE}]"))
-    if g.selected & g.unselectable:
+    for name in [n for n, s in vars(g).get("selections", {}).items() if s & g.unselectable]:   # each person (#3486)
+        g.person = name
         g.choose(g.selected - g.unselectable)
 
 
