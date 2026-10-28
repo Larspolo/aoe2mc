@@ -1082,6 +1082,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         gold(from, victim, a);
         if (before > 0 && victim.getHealth() <= 0) {
             kill(from, a, t);
+            unitKill(from, victim, a);
         }
         nameLine(victim);
         if (victim.getHealth() > 0 && from instanceof LivingEntity attacker && !attacker.isDead()) {   // a detonation
@@ -1120,6 +1121,27 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
         Objective o = sb.getObjective("aoe_mounted_kills");
         o = o != null ? o : sb.registerNewObjective("aoe_mounted_kills", Criteria.DUMMY, Component.text("Mounted kills"));
+        var score = o.getScore(side);
+        score.setScore(score.getScore() + 1);
+    }
+
+    // An infantry or cavalry unit that kills an enemy unit gives its side one point in aoe_unit_kills: the gold of the
+    // Athenian Military Policy (game/spoils.py, #2512). AoE2 wiki "Military Policy": no gold for a King (tag
+    // aoe2mc.king) or a trade unit (tag aoe2mc.trade, spoils.tag_command); no point for a Gaia animal (no side).
+    private static void unitKill(Entity from, Entity victim, Stats a) {
+        if (from == null) {
+            return;
+        }
+        String side = side(from) == null && from.getVehicle() != null ? side(from.getVehicle()) : side(from);   // a rider
+        String foe = side(victim) == null && victim.getVehicle() != null ? side(victim.getVehicle()) : side(victim);
+        if (side == null || foe == null || sameTeam(from, victim) || victim.getScoreboardTags().contains("aoe2mc.king")
+                || victim.getScoreboardTags().contains("aoe2mc.trade")
+                || a.classes().stream().noneMatch(c -> c.equals("infantry") || c.equals("cavalry"))) {
+            return;
+        }
+        Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
+        Objective o = sb.getObjective("aoe_unit_kills");
+        o = o != null ? o : sb.registerNewObjective("aoe_unit_kills", Criteria.DUMMY, Component.text("Unit kills"));
         var score = o.getScore(side);
         score.setScore(score.getScore() + 1);
     }
