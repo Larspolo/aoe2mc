@@ -145,10 +145,23 @@ def candidates(issues, busy=frozenset(), now=None, lane=None, reserved=RESERVED,
         p = next((k for k, name in enumerate(PRIORITY) if name in labels(i)), len(PRIORITY))
         return lane is None and any(n.startswith(LANE) for n in labels(i)), p, len(overlap(i, busy)), i["number"]
     ready = [i for i in issues if not labels(i) & SKIP and not any(d in open_numbers for d in depends(i))
-             and not (start_after(i) or now) > now and not i.get("title", "").startswith("Decide:")
+             and not i.get("title", "").startswith("Decide:")
              and (LANE + lane in labels(i) if lane else not {LANE + r for r in reserved} & labels(i))
-             and not waits(i, after)]                       # last: it reads GitHub
+             and not held(i, now, after)]                   # last: it reads GitHub
     return sorted(ready, key=rank)
+
+
+def held(issue, now, after=prs_after):
+    """True while the "Start after:" line of the issue holds it (start_after, waits). A line that does not parse (a bad
+    date, a #M that is no PR: GitHub answers 404) holds only its own ticket, with one warning on stderr (#3055): an
+    error here stopped the pick of all tickets, usage.py --fire and the dashboard."""
+    try:
+        return (start_after(issue) or now) > now or waits(issue, after)
+    except Exception as e:                          # ValueError, CalledProcessError, HTTPError: the line is wrong
+        line = re.search(r"^Start after:.*", issue.get("body") or "", re.M)
+        print(f"warning: #{issue['number']} is not ready: bad line {line[0].strip() if line else ''!r} ({e})",
+              file=sys.stderr)
+        return True
 
 
 def claimed(lines, now, minutes=30):
