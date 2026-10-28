@@ -79,6 +79,12 @@ LINES = {r["name"]: (r["mob"], tuple(tuple(p[:1]) + (int(p[1][1:], 16),) if isin
                      r["main"], r["off"], *([tags(r)] if "tags" in r else [])) for r in rows("lines.jsonl")}
 TRIM = Compound({"material": String("minecraft:gold"), "pattern": String("minecraft:sentry")})
 
+# The own armor look of a unit in the resource pack (#2742): one line each in data/looks.jsonl ("pattern", "accent",
+# "crest"). With ASSETS (--resource-pack, or a game on a world with the pack) each armor piece of the unit has the
+# equipment asset aoe2mc:<name> (its textures: aoe2mc.write_resourcepack); ELITE_X wears the asset of X.
+LOOKS = {r["name"]: r for r in rows("looks.jsonl")}
+ASSETS = False
+
 # The names of data/units.jsonl (#2035), one line each; the keys of a line:
 # "tier": the upgrade step of a standard unit line (other units are "unique", "elite" or "hero").
 # "invisible": the reason to skip an invisible marker or internal unit (a keyword; place_objects, classify() and
@@ -145,6 +151,17 @@ def armor_items(pieces):
     return out
 
 
+def wear(n, gear):
+    """The armor pieces of gear get the equipment asset of unit n when ASSETS is on and n has a look (#2742)."""
+    n = n[6:] if n not in LOOKS and n.startswith("ELITE_") else n
+    if ASSETS and n in LOOKS:
+        for slot in ("head", "chest", "legs", "feet"):
+            if slot in gear:
+                gear[slot].setdefault("components", Compound({}))["minecraft:equippable"] = Compound({
+                    "slot": String(slot), "asset_id": String("aoe2mc:" + n.lower())})
+    return gear
+
+
 def hands(main=None, off=None):
     return {slot: item(n) for slot, n in (("mainhand", main), ("offhand", off)) if n}
 
@@ -153,6 +170,9 @@ def no_trades():
     """An empty trade list: a right click on the villager opens no trade menu, and the statistic
     talked_to_villager still counts the click (the selection of the game program, #988)."""
     return Compound({"Recipes": List[Compound]([])})
+
+
+CART_AT, CART_SCALE = (0.0, -0.9, -1.7), (1.1, 1.0, 1.5)   # blocks from the seat of the horse, size (#2746)
 
 
 def mob(kind, gear=None, **tags):
@@ -180,6 +200,19 @@ def mounted(mount, rider, tier=None, mount_tags=None):
     if rider:
         m["Passengers"] = [rider]
     return m
+
+
+def cart(model):
+    """The cart that a horse pulls (#2746): an item_display of a chest that rides the horse, moved behind it and down
+    to the ground. The item has the custom_model_data "aoe2mc:<model>": without a resource pack it is a vanilla chest,
+    with --resource-pack the model of the pack (write_resourcepack). The plugin turns it with its horse."""
+    return {"id": String("minecraft:item_display"),
+            "item": Compound({"id": String("minecraft:chest"), "count": Int(1), "components": Compound({
+                "minecraft:custom_model_data": Compound({"strings": List[String]([String(f"aoe2mc:{model}")])})})}),
+            "transformation": Compound({"translation": List[Float]([Float(v) for v in CART_AT]),
+                                        "left_rotation": List[Float]([Float(0), Float(0), Float(0), Float(1)]),
+                                        "right_rotation": List[Float]([Float(0), Float(0), Float(0), Float(1)]),
+                                        "scale": List[Float]([Float(v) for v in CART_SCALE])})}
 
 
 def vehicle(kind, crew, **tags):
@@ -258,6 +291,13 @@ def siege(n):
     return bool(d) and d["id"] == "minecraft:minecart"
 
 
+def wagon(n):
+    """A unit that a horse pulls: its cart (cart()) rides the horse. The horse shoots as a siege unit of the plugin, with
+    the blast 0 of a shot that hits only the target (combat.range_command, #2746)."""
+    d = classify(n)
+    return bool(d) and any(p["id"] == "minecraft:item_display" for p in d.get("Passengers", []))
+
+
 def classify(n, hero=False):
     """Return the entity description for unit name n, or None to skip it."""
     if invisible(n):
@@ -325,18 +365,20 @@ def classify(n, hero=False):
             return boat("dark_oak", [crew, soldier("skeleton", "crew", "bow")])
         return boat("oak", [crew])
 
+    if "WAR_WAGON" in n:              # one horse pulls the cart (#2746): the horse is the unit, the cart rides it
+        return mob("horse", Tame=Byte(1), Passengers=[cart("war_wagon")])
     # Siege weapons: minecarts with a crew
     if "MOUNTED_TREBUCHET" in n:      # a camel unit that carries its trebuchet (#2191): the trebuchet crew rides a camel
         return mounted("camel", siege_crew(n))
     if hero and has(n, *HEROES["siege"]) or n.endswith("_RAM") or has(n, "MANGONEL", "ONAGER", "SCORPION", "TREBUCHET",
                                              "BOMBARD_CANNON", "SIEGE_TOWER", "ORGAN_GUN", "HOUFNICE",
-                                             "ROCKET_CART", "WAR_WAGON", "HUSSITE_WAGON", "COBRA_CAR",
+                                             "ROCKET_CART", "HUSSITE_WAGON", "COBRA_CAR",
                                              "FLAMETHROWER", "CHARIOT", "RATHA", "CATAPULT"):
         if siege_crew(n):
             crew = siege_crew(n)
         elif n.endswith("_RAM") or "SIEGE_TOWER" in n:
             crew = soldier("zombie", "crew")
-        elif has(n, "SCORPION", "WAR_WAGON", "HUSSITE", "CHARIOT", "RATHA"):
+        elif has(n, "SCORPION", "HUSSITE", "CHARIOT", "RATHA"):
             crew = soldier("skeleton", "crew", "crossbow" if "SCORPION" in n else "bow")
         elif has(n, "BOMBARD", "ORGAN", "HOUFNICE", "ROCKET", "COBRA"):
             crew = mob("pillager", hands("crossbow"))
@@ -385,7 +427,7 @@ def classify(n, hero=False):
     if has(n, "SKIRMISHER", "JAVELIN", "GBETO", "CHAKRAM", "THROWING", "PELTAST", "SLINGER", "EKDROMOS"):
         return soldier("drowned", t, "trident")
     if has(n, "SPEAR", "PIKE", "HALBERD", "KAMAYUK", "HOPLITE", "PHALANGITE", "SPARABARA"):
-        return soldier("zombie", t, "trident")
+        return mob("zombie", wear(n, armor(t)) | hands("trident"))
     if has(n, "CANNONEER", "JANISSARY", "GRENADIER", "ARQUEBUS", "FIRE_LANCER"):
         return mob("pillager", hands("crossbow"))
     if has(n, "CROSSBOW", "ARBALEST", "CHU_KO_NU"):
@@ -405,7 +447,7 @@ def line_unit(n):
     if elite:
         worn = next(armor[k] for k in ("chest", "head", "legs", "feet") if k in armor)     # chestplate first
         worn.setdefault("components", Compound({}))["minecraft:trim"] = TRIM
-    man = mob("zombie" if kind == "mounted" else kind, armor | hands(main, off), **(tags[0] if tags else {}))
+    man = mob("zombie" if kind == "mounted" else kind, wear(n, armor) | hands(main, off), **(tags[0] if tags else {}))
     return mounted("horse", man, 3, {"Variant": Int(4)}) if kind == "mounted" else man
 
 
@@ -442,7 +484,8 @@ def uuid_str(ints):
 
 
 def top_entity(nbt):
-    while "Passengers" in nbt and len(nbt["Passengers"]):
+    """The entity of the unit: the top rider; a cart display (cart()) is no unit, its horse is (#2746)."""
+    while "Passengers" in nbt and len(nbt["Passengers"]) and nbt["Passengers"][0]["id"] != "minecraft:item_display":
         nbt = nbt["Passengers"][0]
     return nbt
 

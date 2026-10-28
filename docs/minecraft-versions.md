@@ -196,3 +196,4 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - A `mc_shot.Client` player in spectator mode shows no hand items: the map item in the off-hand is not in the image. Use `gamemode creative` and pitch 50 (the map at the lower left, #2581).
 - The 26.3 sound event names are the list `"sounds"` of `tools/mcdata/26.3.json` (from `"sound_event"` of mcmeta `26.3-summary/registries/data.json`, #2644): check a new `playsound` name with `mcvalid.sound_error` (#2662).
 - 26.x reads the world resource pack from `<world>/resourcepacks/resources.zip`, not `<world>/resources.zip` (#2738, `docs/resourcepack.md`).
+- A `mc_shot.Client` player in creative mode falls after a `tp` into the air (no flight): a right click from above hits the ground, not the building. For a real click on a building, `tp` the player onto the ground near it, then `execute as P at @s run tp @s ~ ~ ~ facing X Y Z` (#2805).

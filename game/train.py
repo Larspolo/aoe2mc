@@ -81,7 +81,7 @@ import monk  # noqa: E402
 import record  # noqa: E402
 import table  # noqa: E402
 
-DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "train.jsonl")
+DATA = os.path.join(table.DIR, "train.jsonl")
 
 
 def load(path=DATA):
@@ -364,8 +364,10 @@ def ship(name, s):
 def unlocked(g, name):
     """True when the player has the age of technology name (the key "age"). As in AoE2, the menu shows a technology only
     from its age, but a building or unit of a later age as a gray item (build.locked), and never one that the
-    civilization of the player does not have (civs.missing: also not as a team bonus of an ally, #1619)."""
-    return value("age", name, 0) - civs.earlier(g, name) <= build.ages(g) and value("after", name, "") in {""} | set(getattr(g, "techs", ())) \
+    civilization of the player does not have (civs.missing: also not as a team bonus of an ally, #1619). An item that
+    a scenario trigger turned on (g.trigger_menus, #2775) needs no age."""
+    return (value("age", name, 0) - civs.earlier(g, name) <= build.ages(g) or getattr(g, "trigger_menus", {}).get(name, False)) \
+        and value("after", name, "") in {""} | set(getattr(g, "techs", ())) \
         and not (hasattr(g, "data") and civs.missing(g, name)) \
         and (name not in UPGRADES or name in REQUIRES or bool(lines(name, g))) and not swapped(g, name)   # not of this
                                                                    # civilization (#1373), no new unit (#1483); an

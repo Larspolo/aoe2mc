@@ -49,10 +49,10 @@ def test_a_looping_or_trigger_fires_again_only_after_no_group_holds():
                          "execute if score #3.or aoe_trig matches 0 run scoreboard players reset #3 aoe_trig"]
 
 
-def test_or_with_a_timer_gives_no_trigger():
+def test_or_with_a_chance_gives_no_trigger():
     stats = Counter()
-    assert tick([dict(type=aoe2mc.TIMER, timer=5, inverted=False), OR, VALUE], stats=stats)[1] == {}
-    assert stats["OR with a timer or a chance (not supported yet)"] == 1
+    assert tick([dict(type=aoe2mc.TRIGGER_CHANCE, timer=0, inverted=False, quantity=50), OR, VALUE], stats=stats)[1] == {}
+    assert stats["OR with a chance, or with a timer in a disabled trigger (not supported yet)"] == 1   # a timer: #2791
 
 
 def test_read_scenario_keeps_the_display_order_of_the_conditions(tmp_path):
