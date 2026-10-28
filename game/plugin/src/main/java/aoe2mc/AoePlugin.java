@@ -1625,7 +1625,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     /** Show the damage stage of building t (#1522): at each stage a fixed random share of its blocks above the floor
      *  is worn (worn()) or gone (holes, cobwebs at the last stage), more at each stage, so that almost destroyed looks clearly
      *  other than a little damaged. The blocks go anywhere in the building, not from the top as a construction site
-     *  (build.rise). A repair puts the blocks of each stage back. No change to barriers, block entities and fluids: the
+     *  (build.rise). A repair puts the blocks of each stage back. No change to barriers, block entities, fluids and gate bars (#3073): the
      *  units never stand in a block (a hole only removes one), and no item drops (no block updates). */
     private void wear(Entity t, Building b, int stage) {
         Wear w = wear.get(t.getUniqueId());
@@ -1640,7 +1640,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     for (int z = b.b[2]; z <= b.b[5]; z++) {
                         Block block = world.getBlockAt(x, y, z);
                         Material m = block.getType();
-                        if (!m.isAir() && m != Material.BARRIER && !block.isLiquid()
+                        if (!m.isAir() && m != Material.BARRIER && !block.isLiquid() && !gates.holds(world, x, y, z)
                                 && !(block.getState() instanceof org.bukkit.block.TileState)) {
                             w.blocks.put(Block.getBlockKey(x, y, z), block.getBlockData());
                         }
