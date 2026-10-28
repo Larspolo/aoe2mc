@@ -2704,6 +2704,7 @@ OWN_OBJECTS, OWN_FEWER_OBJECTS = 3, 4                              # conditions 
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
 CREATE_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 15, 18, 72
 DAMAGE_OBJECT = 24                                                     # "Damage Object" (#2571)
+TELEPORT_OBJECT = 35
 ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER = 8, 9
 
 
@@ -2809,6 +2810,22 @@ def owner_lines(e, T, stats):
             f"team join p{new} {own}", f"tag {own} remove aoe2mc.own"]
 
 
+def teleport_lines(e, T, ground):
+    """The commands of "Teleport Object" (#2569): a tp of the units of the player in the area (area_selector) to the
+    middle of the target tile, on the ground. A rider is not in the selector of its horse (units.MOUNT): the first line
+    moves the mounts of the riders in the area, and the riders go with them. Then the riders are out of the area, so
+    the second line (a tp of a rider takes it off its horse) moves only the units on foot."""
+    if min(e.get("tile", [-1])) < 0 or min(e.get("area", [-1])) < 0:
+        return []
+    x, z = (int((v + 0.5) * T) for v in e["tile"])
+    if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
+        return []
+    at, to = area_selector(e, T), f"{x + 0.5} {int(ground[x, z])} {z + 0.5}"
+    if e["player"] <= 0:                                               # Gaia units have no player tag: not the players
+        at = re.sub(r"tag=aoe2mc\.p-?\d+", "type=!player", at)
+    return [f"execute as {at} on vehicle run tp @s {to}", f"tp {at} {to}"]
+
+
 def mood_lines(e):
     """The commands of "Change Color Mood" (#1876): the time of day (MOODS) and the rain (RAIN) of the new mood, as
     at the conversion. The game rules advance_time and advance_weather are 0, so they stay. The fog (FOG) is a
@@ -2831,6 +2848,9 @@ def trigger_lines(t, live, timer, T, ground, players, stats, mood):
             continue
         if e["type"] == DAMAGE_OBJECT:
             lines += damage_lines(e, T, stats)
+            continue
+        if e["type"] == TELEPORT_OBJECT:
+            lines += teleport_lines(e, T, ground)
             continue
         if e["type"] == CHANGE_COLOR_MOOD:
             lines += mood_lines(e) if mood else []
@@ -2869,9 +2889,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
     the units leave an area. "Send Chat" is a tellraw, "Display Instructions" a subtitle for its display time;
     "Create Object" and "Remove Object": object_lines (#656). "Change Color Mood": mood_lines (#1876), only with mood.
-    "Change Ownership": owner_lines (#2570). "Damage Object": damage_lines (#2571).
-    A disabled trigger runs only after an "Activate Trigger" (#2575): the score #N of aoe_on is 1 while a trigger that
-    such an effect names is on. Its timer counts from the activation; "Deactivate Trigger" clears it."""
+    "Change Ownership": owner_lines (#2570). "Damage Object": damage_lines (#2571). "Teleport Object": teleport_lines
+    (#2569). A disabled trigger runs only after an "Activate Trigger" (#2575): the score #N of aoe_on is 1 while a
+    trigger that such an effect names is on. Its timer counts from the activation; "Deactivate Trigger" clears it."""
     load, files, tick = [], {}, []
     stats = Counter() if stats is None else stats
     ground = np.zeros((0, 0), np.int16) if ground is None else ground

@@ -12,6 +12,15 @@ import gather  # noqa: E402
 import train  # noqa: E402
 
 
+def bot_seats(players, people):
+    """[(player, foe)] of the bots of the scenario mode (#2543): one bot for each computer player of aoe2mc.json
+    "players" after the seats of the people. Its foe is the first human player of the scenario that is not its ally
+    (gather.allied), else player 1, as run.bot_seat. A human seat that no person takes stays idle, as in AoE2."""
+    computer = sorted(int(p) for p, row in players.items() if row.get("computer") and int(p) > people)
+    humans = sorted(int(p) for p, row in players.items() if not row.get("computer") and int(p) > 0)
+    return [(b, next((p for p in humans if not gather.allied(players, b, p)), 1)) for b in computer]
+
+
 def setup(g, mode="scenario"):
     """Put the scenario start values on the Gather of each player (the people and the bots) and show them."""
     sides = [g, *(s.g for s in g.bots)]
