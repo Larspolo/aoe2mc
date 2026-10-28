@@ -111,7 +111,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe goals <selector>                       the goals of the first unit (#436), for checks
  *   aoe hide <players> <uuid> ...              Player#hideEntity: the players do not see these entities, also a
  *                                              player that joins later (#1302: the enemy units out of sight in the
- *                                              view of one replay player)
+ *                                              view of one replay player). With team=T in the selector: only a
+ *                                              player of team T that joins later, and no spectator (#2921)
  *   aoe stance <selector> <aggressive|defensive|stand_ground|no_attack>
  *                                              the AoE2 stance of a unit (#1104): no_attack never attacks without an
  *                                              order, stand_ground attacks only an enemy in its range and does not walk,
@@ -136,6 +137,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              passes through (the chakram thrower, #1638)
  *   aoe sees <player> <uuid>                   "Sees: 1" or "Sees: 0" (Player#canSee), for checks
  *   aoe show <players> <uuid> ...              Player#showEntity: the players see these entities again (#1302)
+ *   aoe show <players> all                     the players see all the units that a team=T hide hides (a spectator,
+ *                                              team spec, #2921); a hide with no team stays
  *   aoe sight <selector> <blocks>              an idle unit attacks an enemy in this line of sight (#775)
  *   aoe sight <selector> <blocks> only|first   ... and enemy buildings: only buildings, or buildings before units
  *                                              (#1820: the ram line and the trebuchet, the elephant and cannon galleon)
@@ -298,7 +301,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Cheats cheats = new Cheats(this);
     private final Deaths deaths = new Deaths(this);
     private final Alerts alerts = new Alerts(this, AoePlugin::side);   // "under attack" for the team of the target (#1231)
-    private final Minimap minimap = new Minimap(this, u -> this.hidden.contains(u));   // no dot for a hidden unit (#1567)
+    private final Minimap minimap = new Minimap(this, this::hiddenFor);   // no dot for a hidden unit (#1567)
     private final Gates gates = new Gates();                           // the gates of the game program (#1325)
     private final MapTable mapTable = new MapTable();              // a click on the framed map (#2586)
     private final Viewer viewer = new Viewer(this);                 // the game mode switch of a replay viewer (#910)
@@ -311,7 +314,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Building> buildings = new HashMap<>();
     private final Map<UUID, Integer> arrows = new HashMap<>();       // the arrows of a shot of a building (#1113)
     private final Map<UUID, Wear> wear = new HashMap<>();             // the damage stage of a building and its blocks (#1522)
-    private final Set<UUID> hidden = new HashSet<>();                 // aoe hide: also for a player that joins later
+    // aoe hide: also for a player that joins later. The teams that do not see the unit, ALL: each player (#2921)
+    private final Map<UUID, Set<String>> hidden = new HashMap<>();
+    private static final String ALL = "*";
     private final Map<UUID, Component> names = new HashMap<>();      // the name in the name line (#661)
     private final Map<UUID, TextDisplay> labels = new HashMap<>();   // the name line over the roof of a building (#1811)
     static final String LABEL = "aoe2mc.label";                       // the tag of that text display
@@ -946,12 +951,32 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent ev) {                           // the view of one replay player (#1302)
-        for (UUID u : hidden) {
+        for (UUID u : hidden.keySet()) {
             Entity e = Bukkit.getEntity(u);
-            if (e != null) {
+            if (e != null && hiddenFor(ev.getPlayer(), u)) {
                 ev.getPlayer().hideEntity(this, e);
             }
         }
+    }
+
+    /** A hide of the team of the player, or of all players (a player with no team yet: each hide, the replay). */
+    private boolean hiddenFor(Player p, UUID u) {
+        var teams = hidden.get(u);
+        if (teams == null) {
+            return false;
+        }
+        Team t = Bukkit.getScoreboardManager().getMainScoreboard().getEntryTeam(p.getName());
+        return teams.contains(ALL) || t == null || teams.contains(t.getName());
+    }
+
+    /** The team T of a selector with team=T, else ALL (no team, or team=!T). */
+    private static String selectorTeam(String selector) {
+        int i = selector.indexOf("team=");
+        if (i < 0) {
+            return ALL;
+        }
+        String t = selector.substring(i + 5).split("[,\\]]", 2)[0];
+        return t.isEmpty() || t.startsWith("!") ? ALL : t;
     }
 
     @EventHandler
@@ -2648,7 +2673,19 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (args.length >= 3 && (args[0].equals("hide") || args[0].equals("show"))) {   // one command per second (#1302)
             boolean hide = args[0].equals("hide");
             var who = players(sender, args[1]);
+            String team = selectorTeam(args[1]);
             int n = 0;
+            if (!hide && args[2].equals("all")) {                  // a spectator sees through the fog of all teams (#2921)
+                for (var h : hidden.entrySet()) {
+                    Entity e = Bukkit.getEntity(h.getKey());
+                    if (e != null && !h.getValue().contains(ALL)) {
+                        who.forEach(p -> p.showEntity(this, e));
+                        n++;
+                    }
+                }
+                sender.sendMessage("Shown: " + n + " entities, " + who.size() + " players");
+                return true;
+            }
             for (int i = 2; i < args.length; i++) {
                 UUID u;
                 try {
@@ -2657,8 +2694,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     continue;
                 }
                 if (hide) {
-                    hidden.add(u);
-                } else {
+                    hidden.computeIfAbsent(u, k -> new HashSet<>()).add(team);
+                } else if (team.equals(ALL) || hidden.containsKey(u) && hidden.get(u).remove(team) && hidden.get(u).isEmpty()) {
                     hidden.remove(u);
                 }
                 Entity e = Bukkit.getEntity(u);

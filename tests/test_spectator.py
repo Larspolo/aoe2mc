@@ -16,7 +16,8 @@ def test_a_player_after_the_sides_is_a_spectator():
         g.side(name)
     assert g.sides == {"Alex": 1, "Steve": 2} and g.spectators == {"Bob", "Eve"}
     assert sent == ["team join p1 Alex", "team join p2 Steve", *run.SPECTATORS, "team join spec Bob",
-                    "gamemode spectator Bob", "team join spec Eve", "gamemode spectator Eve"]
+                    "gamemode spectator Bob", "aoe show Bob all", "team join spec Eve", "gamemode spectator Eve",
+                    "aoe show Eve all"]
     assert not any("gamemode" in c for c in sent[:2])                  # the people keep the creative mode
 
 
@@ -26,7 +27,7 @@ def test_a_spectator_who_joins_again_is_a_spectator_again():
         g.side(name)
     sent.clear()
     g.side("Bob")                                                      # force-gamemode made it creative on the join
-    assert sent == ["team join spec Bob", "gamemode spectator Bob"]
+    assert sent == ["team join spec Bob", "gamemode spectator Bob", "aoe show Bob all"]
 
 
 def test_a_spectator_who_takes_a_free_side_plays_again():
