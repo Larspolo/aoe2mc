@@ -209,16 +209,16 @@ def test(t, name, s):
     return globals()[t["test"]](name, s)
 
 
-def effect(e):
+def effect(e, more=1):
     """The function (name, s) -> s of the key "effect" of a technology of data/train.jsonl (#2029): the name of a
     function of this module (an effect with real logic), or {"if": [tests], "add": {field: n}, "times": {field: f},
     "bonus": {class: n}}. The unit gets the change when one of the tests holds (test(); no "if": each unit). {}: no
     change of the combat values, the effect is in another place (its "note"). A list: each change in turn (an age gives
-    the eagle scout and the Flemish Militia other values, #2155)."""
+    the eagle scout and the Flemish Militia other values, #2155). more: the factor of the change (civs.MORE, #2173)."""
     if isinstance(e, str):
         return globals()[e]
     if isinstance(e, list):
-        changes = [effect(x) for x in e]
+        changes = [effect(x, more) for x in e]
         return lambda name, s: functools.reduce(lambda s, f: f(name, s), changes, s)
     if not e:
         return lambda name, s: s
@@ -226,15 +226,17 @@ def effect(e):
     def change(name, s):
         if "if" in e and not any(test(t, name, s) for t in e["if"]):
             return s
-        new = {k: getattr(s, k) + n for k, n in e.get("add", {}).items()}
-        new |= {k: round(getattr(s, k) * f) for k, f in e.get("times", {}).items()}
+        part = (lambda n: n) if more == 1 else (lambda n: round(n * more))
+        new = {k: getattr(s, k) + part(n) for k, n in e.get("add", {}).items()}
+        new |= {k: round(getattr(s, k) * (f if more == 1 else 1 + (f - 1) * more)) for k, f in e.get("times", {}).items()}
         if "bonus" in e:
-            new["bonus"] = {**s.bonus, **{k: s.bonus.get(k, 0) + n for k, n in e["bonus"].items()}}
+            new["bonus"] = {**s.bonus, **{k: s.bonus.get(k, 0) + part(n) for k, n in e["bonus"].items()}}
         return s._replace(**new)
     return change
 
 
 TECHS = {r["name"]: effect(r["effect"]) for r in ROWS if "effect" in r}   # a technology: its change of the AoE2 values
+EFFECTS = {r["name"]: r["effect"] for r in ROWS if "effect" in r}   # the key "effect" itself: civs.ALSO, civs.MORE
 EACH = {r["name"]: effect({k: v for k, v in r["effect"].items() if k != "if"})   # the same change for each unit
         for r in ROWS if isinstance(r.get("effect"), dict)}       # (civs.SMITH_UNITS, #2174)
 # technology: the unit (or a class of combat.STATS: lower case, or a group of civs.GROUPS) and its walk speed factor
@@ -630,10 +632,13 @@ def stats(g, name):
     the player (combat.stats and TECHS), twice for civs.TWICE (#1561), n times for civs.SMITH_UNITS (#2174)."""
     import combat                                                  # combat imports gather, gather imports this module
     s, twice = civs.units(g, name, combat.stats(name)), civs.TWICE.get(civs.civ(g), ())
-    more = civs.smith(g, name, s)
+    times, also, more = civs.smith(g, name, s), civs.ALSO.get(civs.civ(g), {}), civs.MORE.get(civs.civ(g), {})
     for t in sorted(g.techs):
-        for _ in range(count(g, t) * (1 + (t in twice)) * more.get(t, 1)):   # "going above and beyond" stacks (#968)
-            s = (EACH if t in more else TECHS)[t](name, s)
+        e = (EACH if t in times else TECHS)[t] if t not in more else effect(EFFECTS[t], more[t])   # Varangian
+        if t in also and civs.GROUPS[also[t]](name, s):              # Bloodlines +50 %; Bohemian Sanctity: the
+            e = EACH[t]                                            # villagers too (#2173)
+        for _ in range(count(g, t) * (1 + (t in twice)) * times.get(t, 1)):   # "going above and beyond" stacks (#968)
+            s = e(name, s)
     return s
 
 
@@ -650,8 +655,11 @@ def seconds(g, name, building=None):
 
 def speed(g, name):
     """The factor of the walk speed of unit name: the bonus of the civilization (civs.speed) and the technologies of the
-    player (SPEEDS: Fervor, #1261; Squires for the class infantry, #1415; Husbandry for the mounted units, #1416)."""
-    return civs.speed(g, name) * math.prod(f ** count(g, t) for t, (unit, f) in SPEEDS.items() if faster(unit, name))
+    player (SPEEDS: Fervor, #1261; Squires for the class infantry, #1415; Husbandry for the mounted units, #1416), with
+    the changes of civs.ALSO and civs.MORE (Bohemian Fervor for the villagers, Varangian Caravan +50 %, #2173)."""
+    also, more = civs.ALSO.get(civs.civ(g), {}), civs.MORE.get(civs.civ(g), {})
+    return civs.speed(g, name) * math.prod((1 + (f - 1) * more[t] if t in more else f) ** count(g, t)
+                                           for t, (unit, f) in SPEEDS.items() if faster(unit, name) or t in also and faster(also[t], name))
 
 
 def faster(unit, name):
@@ -678,7 +686,7 @@ def research(g, entry):
     if entry["name"] in WALL_UPGRADES:                             # the complete own walls become the new wall (#1326)
         for site in [s for s in g.sites if s["name"] in WALL_UPGRADES[entry["name"]] and s.get("done")
                      and s["player"] == g.player]:
-            build.upgrade(g, site, combat.wall(site["name"], build.ages(g)))
+            build.upgrade(g, site, combat.wall(site["name"], build.ages(g), civs.civ(g)))
     build.retower(g, before)                                       # the complete own towers get the new values (#1374),
                                                                    # the buildings those of Masonry and Fletching (#1398, #1408)
     if entry["name"] in build.AGE_TECHS:                           # the base arrows of the new age (civs.ARROWS, #2178)
@@ -716,7 +724,8 @@ def research(g, entry):
     if entry["name"] in REQUIRES:                                  # an age: all players see it, as in AoE2
         import ai                                                  # ai imports gather, gather imports this module
         for site in [s for s in g.sites if s["name"] in combat.WALLS and s.get("done") and s["player"] == g.player]:   # #1372
-            build.upgrade(g, site, combat.wall(build.design(g, site["name"], g.player), build.ages(g) - 1), redraw=False)
+            build.upgrade(g, site, combat.wall(build.design(g, site["name"], g.player), build.ages(g) - 1, civs.civ(g)),
+                          redraw=False)
         for uuid, name in g.soldiers.items():                      # the walk speed of the age (civs.UNITS, Celts)
             if civs.speed(g, name) != 1:
                 g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))

@@ -67,6 +67,7 @@ import hints  # noqa: E402
 import market  # noqa: E402
 import menu  # noqa: E402
 import monk  # noqa: E402
+import regen  # noqa: E402
 import relic_victory  # noqa: E402
 import repair  # noqa: E402
 import siege_tower  # noqa: E402
@@ -1112,7 +1113,8 @@ class Gather:
             self.mark(name, {(x0, z0), (x1, z1)}, "attack")
             import combat                                              # combat imports this module
             what = self.fort_names.get(u, "")
-            full = civs.hp(civs.civ(self, self.fort_players.get(u, 0)), what, combat.stats(what)).hp   # Persians (#1895)
+            owner = self.fort_players.get(u, 0)                        # Persians (#1895), Byzantines in the own age (#2116)
+            full = civs.hp(civs.civ(self, owner), what, combat.stats(what), build.ages(self) if owner == self.player else 0).hp
             for c in siege_mark(u, what, full, name):
                 self.command(c)
             return
@@ -1402,6 +1404,7 @@ class Gather:
         monk.heal(self, self.tick * NORMAL)
         monk.convert(self, self.tick * NORMAL)
         garrison.heal(self, self.tick * NORMAL)
+        regen.tick(self, self.tick * NORMAL)
         repair.tick(self, self.tick * NORMAL)
         trebuchet.tick(self, self.tick * NORMAL)
         fleet.tick(self, self.tick * NORMAL)
@@ -1440,7 +1443,7 @@ class Gather:
         if v.goal:
             x, z = v.goal
             ai.move(self, v.uuid, "VILLAGER", self.map.T, x + 0.5, self.map.y(x, z), z + 0.5,
-                    NORMAL * civs.speed(self, "VILLAGER") * math.prod(PACE.get(t, 1) ** train.count(self, t) for t in self.techs))
+                    NORMAL * train.speed(self, "VILLAGER") * math.prod(PACE.get(t, 1) ** train.count(self, t) for t in self.techs))
         v.moved, v.tries = self.clock(), v.tries + 1
 
     def second(self, v):
