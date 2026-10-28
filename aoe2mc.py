@@ -423,83 +423,7 @@ def read_scenario(path):
                                                for k, v in EFFECT_KEYS.get(e.effect_type, {}).items()},
                                             **({"mood": ColorMood(e.color_mood).name}     # "Change Color Mood" (#1876)
                                                if e.effect_type == CHANGE_COLOR_MOOD and
-                                               getattr(e, "color_mood", None) in set(ColorMood) else {}),
-                                            **({"trigger": e.trigger_id}       # "(De)activate Trigger" (#2575)
-                                               if e.effect_type in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER) else {}),
-                                            **({"quantity": e.quantity}
-                                               if e.effect_type in (DAMAGE_OBJECT, HEAL_OBJECT, CHANGE_OBJECT_SPEED)
-                                               else {}),
-                                            **({"cost": [[e.resource_1, e.resource_1_quantity],   # (#2776)
-                                                         [e.resource_2, e.resource_2_quantity],
-                                                         [e.resource_3, e.resource_3_quantity]]}
-                                               if e.effect_type in (CHANGE_OBJECT_COST, CHANGE_TECHNOLOGY_COST) else {}),
-                                            **({"technology": techs.get(e.technology, str(e.technology))}   # #2819
-                                               if e.effect_type == CHANGE_TECHNOLOGY_COST else {}),
-                                            **({"operation": e.operation, "quantity": e.quantity}   # (#2693)
-                                               if e.effect_type == CHANGE_OBJECT_HP else {}),
-                                            **({"attribute": e.object_attributes, "operation": e.operation,   # #2763
-                                                "quantity": e.quantity, "class": e.armour_attack_class,
-                                                "aa": e.armour_attack_quantity}
-                                               if e.effect_type == MODIFY_ATTRIBUTE else {}),
-                                            **({"enabled": e.enabled,                     # (#2775)
-                                                "technology": techs.get(e.technology, str(e.technology))}
-                                               if e.effect_type in (ENABLE_DISABLE_OBJECT, ENABLE_DISABLE_TECHNOLOGY) else {}),
-                                            **({"stance": e.attack_stance}                # (#2705)
-                                               if e.effect_type == CHANGE_OBJECT_STANCE else {}),
-                                            **({"quantity": e.quantity, "variable": e.variable,   # (#2611)
-                                                "operation": e.operation}
-                                               if e.effect_type == CHANGE_VARIABLE else {}),
-                                            **({"variable": e.variable, "variable2": e.variable2,   # (#2713)
-                                                "operation": e.operation}
-                                               if e.effect_type == MODIFY_VARIABLE_BY_VARIABLE else {}),
-                                            **({"target": e.target_player}                # "Change Ownership" (#2570)
-                                               if e.effect_type == CHANGE_OWNERSHIP else {}),
-                                            **({"color": e.player_color}                 # (#2712, #2824)
-                                               if e.effect_type in (CHANGE_OBJECT_PLAYER_COLOR, CHANGE_PLAYER_COLOR) else {}),
-                                            **({"target": e.target_player,                # "Replace Object" (#2703)
-                                                "object2": kinds.get(e.object_list_unit_id_2)}
-                                               if e.effect_type == REPLACE_OBJECT else {}),
-                                            **({"object2": kinds.get(e.object_list_unit_id_2),   # (#2764)
-                                                "selected": list(e.selected_object_ids or [])}
-                                               if e.effect_type == CREATE_GARRISONED_OBJECT else {}),
-                                            **({"selected": list(e.selected_object_ids or [])}   # (#2762)
-                                               if e.effect_type in (LOCK_GATE, UNLOCK_GATE) else {}),
-                                            **({"selected": list(e.selected_object_ids or [])}   # (#2773)
-                                               if e.effect_type == UNLOAD else {}),
-                                            **({"target": e.target_player, "diplomacy": e.diplomacy}   # (#2645)
-                                               if e.effect_type == CHANGE_DIPLOMACY else {}),
-                                            **({"target": e.target_player}                # (#2822)
-                                               if e.effect_type == MIRROR_DIPLOMACY else {}),
-                                            **({"target": e.target_player, "visibility": e.visibility_state}   # (#2774)
-                                               if e.effect_type == SET_PLAYER_VISIBILITY else {}),
-                                            **({"target": e.target_player, "visibility": e.visibility_state,   # #2862
-                                                "selected": list(e.selected_object_ids or [])}
-                                               if e.effect_type == CHANGE_OBJECT_VISIBILITY else {}),
-                                            **({"target": e.target_player, "quantity": e.quantity,   # (#2576)
-                                                "resource": e.tribute_list} if e.effect_type == TRIBUTE else {}),
-                                            **({"operation": e.operation, "quantity": e.quantity,
-                                                "resource": e.tribute_list} if e.effect_type == MODIFY_RESOURCE else {}),
-                                            **({"operation": e.operation, "quantity": e.quantity}   # (#2767)
-                                               if e.effect_type == CHANGE_OBJECT_RANGE else {}),
-                                            **({"operation": e.operation, "quantity": e.armour_attack_quantity,   # (#2755)
-                                                "armour_class": e.armour_attack_class}
-                                               if e.effect_type in (CHANGE_OBJECT_ARMOR, CHANGE_OBJECT_ATTACK) else {}),
-                                            **({"operation": e.operation, "variable": e.variable,   # (#2768)
-                                                "resource": e.tribute_list}
-                                               if e.effect_type == MODIFY_RESOURCE_BY_VARIABLE else {}),
-                                            **({"operation": e.operation, "variable": e.variable,   # (#2823)
-                                                "resource": e.tribute_list}
-                                               if e.effect_type == MODIFY_VARIABLE_BY_RESOURCE else {}),
-                                            **({"technology": techs.get(e.technology, str(e.technology))}   # #2577
-                                               if e.effect_type in (CHANGE_TECHNOLOGY_NAME, RESEARCH_TECHNOLOGY) else {}),
-                                            **({"technology": techs.get(e.technology, str(e.technology)),
-                                                "quantity": e.quantity}                     # (#2820)
-                                               if e.effect_type == CHANGE_TECHNOLOGY_RESEARCH_TIME else {}),
-                                            **({"unit": e.time_unit, "timer": e.timer}   # "Display Timer" (#2572)
-                                               if e.effect_type == DISPLAY_TIMER else {}),
-                                            **({"timer": e.timer} if e.effect_type == CLEAR_TIMER else {}),   # (#2696)
-                                            **({"sound": e.sound_name or ""}             # "Play Sound" (#2644)
-                                               if e.effect_type == PLAY_SOUND else {}))
+                                               getattr(e, "color_mood", None) in set(ColorMood) else {}))
                                        for e in t.effects])
                          for t in scn.trigger_manager.triggers]
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
@@ -4223,39 +4147,89 @@ def visibility_lines(e, c):
     return [f"scoreboard players set #p{a}.p{b} aoe_vis {e['visibility'] + 1}", "scoreboard players set #any aoe_vis 1"]
 
 
+def _cost(e, kinds, techs):
+    return [[e.resource_1, e.resource_1_quantity], [e.resource_2, e.resource_2_quantity],
+            [e.resource_3, e.resource_3_quantity]]
+
+
+def _tech(e, kinds, techs):
+    return techs.get(e.technology, str(e.technology))
+
+
+def _object2(e, kinds, techs):
+    return kinds.get(e.object_list_unit_id_2)
+
+
+def _selected(e, kinds, techs):
+    return list(e.selected_object_ids or [])
+
+
 # The keys of the effect dict of read_scenario beyond the common ones: key -> attribute of the scenario effect, or
 # (effect, kinds, techs) -> value. A new effect is one line here, in alphabetical order (#2792): parallel trigger
-# tickets conflicted in one expression of read_scenario. The older effects still have their entry there.
+# tickets conflicted in one expression of read_scenario (#2873: all effects but "mood", which tests its value).
 EFFECT_KEYS = {
-    ADD_TRAIN_LOCATION: {"building": lambda e, kinds, techs: kinds.get(e.object_list_unit_id_2), "button": "button_location",
-                         "seconds": "train_time"},
-    CHANGE_TECHNOLOGY_LOCATION: {"button": "button_location", "object2": lambda e, kinds, techs: kinds.get(   # #2864
-        e.object_list_unit_id_2), "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
-    CHANGE_TRAIN_LOCATION: {"button": "button_location",                                                       # #2864
-                            "object2": lambda e, kinds, techs: kinds.get(e.object_list_unit_id_2)},
+    ACTIVATE_TRIGGER: {"trigger": "trigger_id"},
+    ADD_TRAIN_LOCATION: {"building": _object2, "button": "button_location", "seconds": "train_time"},
+    CHANGE_DIPLOMACY: {"target": "target_player", "diplomacy": "diplomacy"},
+    CHANGE_OBJECT_ARMOR: {"operation": "operation", "quantity": "armour_attack_quantity", "armour_class": "armour_attack_class"},
+    CHANGE_OBJECT_ATTACK: {"operation": "operation", "quantity": "armour_attack_quantity", "armour_class": "armour_attack_class"},
+    CHANGE_OBJECT_COST: {"cost": _cost},
+    CHANGE_OBJECT_HP: {"operation": "operation", "quantity": "quantity"},
+    CHANGE_OBJECT_PLAYER_COLOR: {"color": "player_color"},
+    CHANGE_OBJECT_RANGE: {"operation": "operation", "quantity": "quantity"},   # (#2767)
+    CHANGE_OBJECT_SPEED: {"quantity": "quantity"},
+    CHANGE_OBJECT_STANCE: {"stance": "attack_stance"},
+    CHANGE_OBJECT_VISIBILITY: {"target": "target_player", "visibility": "visibility_state", "selected": _selected},
+    CHANGE_OWNERSHIP: {"target": "target_player"},
+    CHANGE_PLAYER_COLOR: {"color": "player_color"},
+    CHANGE_TECHNOLOGY_COST: {"cost": _cost, "technology": _tech},
+    CHANGE_TECHNOLOGY_LOCATION: {"button": "button_location", "object2": _object2, "technology": _tech},   # #2864
+    CHANGE_TECHNOLOGY_NAME: {"technology": _tech},
+    CHANGE_TECHNOLOGY_RESEARCH_TIME: {"technology": _tech, "quantity": "quantity"},   # (#2820)
+    CHANGE_TRAIN_LOCATION: {"button": "button_location", "object2": _object2},   # #2864
+    CHANGE_VARIABLE: {"quantity": "quantity", "variable": "variable", "operation": "operation"},
+    CLEAR_TIMER: {"timer": "timer"},
     COUNT_UNITS_INTO_VARIABLE: {"variable2": "variable2"},   # (#2697)
     CREATE_DECISION: {"decision": "decision_id", "option1": "message_option1", "option2": "message_option2"},
+    CREATE_GARRISONED_OBJECT: {"object2": _object2, "selected": _selected},
     CREATE_OBJECT_ARMOR: {"class": "armour_attack_class", "aa": "armour_attack_quantity"},   # (#2855)
     CREATE_OBJECT_ATTACK: {"class": "armour_attack_class", "aa": "armour_attack_quantity"},  # (#2855)
-    DISABLE_TECHNOLOGY_STACKING: {"technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},   # (#2866)
-    ENABLE_TECHNOLOGY_STACKING: {"quantity": "quantity",                                                            # (#2866)
-                                 "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
-    INITIATE_RESEARCH: {"selected": lambda e, kinds, techs: list(e.selected_object_ids or []),   # (#2772)
-                        "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
+    DAMAGE_OBJECT: {"quantity": "quantity"},
+    DEACTIVATE_TRIGGER: {"trigger": "trigger_id"},
+    DISABLE_TECHNOLOGY_STACKING: {"technology": _tech},   # (#2866)
+    DISPLAY_TIMER: {"unit": "time_unit", "timer": "timer"},
+    ENABLE_DISABLE_OBJECT: {"enabled": "enabled", "technology": _tech},
+    ENABLE_DISABLE_TECHNOLOGY: {"enabled": "enabled", "technology": _tech},
+    ENABLE_TECHNOLOGY_STACKING: {"quantity": "quantity", "technology": _tech},   # (#2866)
+    HEAL_OBJECT: {"quantity": "quantity"},
+    INITIATE_RESEARCH: {"selected": _selected, "technology": _tech},   # (#2772)
     LOAD_KEY_VALUE: {"quantity": "quantity", "variable": "variable"},   # (#2887)
+    LOCK_GATE: {"selected": _selected},
+    MIRROR_DIPLOMACY: {"target": "target_player"},
+    MODIFY_ATTRIBUTE: {"attribute": "object_attributes", "operation": "operation", "quantity": "quantity", "class": "armour_attack_class", "aa": "armour_attack_quantity"},
     MODIFY_ATTRIBUTE_BY_VARIABLE: {"attribute": "object_attributes", "class": "armour_attack_class",   # (#2856)
                                    "operation": "operation", "variable": "variable"},
-    MODIFY_ATTRIBUTE_FOR_CLASS: {"attribute": "object_attributes", "operation": "operation", "quantity": "quantity",
-                                 "class": "armour_attack_class", "aa": "armour_attack_quantity", "group": "object_group2"},
+    MODIFY_ATTRIBUTE_FOR_CLASS: {"attribute": "object_attributes", "operation": "operation", "quantity": "quantity", "class": "armour_attack_class", "aa": "armour_attack_quantity", "group": "object_group2"},
     MODIFY_OBJECT_ATTRIBUTE: {"aa": "armour_attack_quantity", "armour_class": "armour_attack_class",   # (#2860)
                               "attribute": "object_attributes", "operation": "operation", "quantity": "quantity"},
     MODIFY_OBJECT_ATTRIBUTE_BY_VARIABLE: {"armour_class": "armour_attack_class", "attribute": "object_attributes",  # #2861
                                           "operation": "operation", "variable": "variable"},
+    MODIFY_RESOURCE: {"operation": "operation", "quantity": "quantity", "resource": "tribute_list"},
+    MODIFY_RESOURCE_BY_VARIABLE: {"operation": "operation", "variable": "variable", "resource": "tribute_list"},
     MODIFY_VARIABLE_BY_ATTRIBUTE: {"attribute": "object_attributes", "class": "armour_attack_class",   # (#2858)
                                    "operation": "operation", "variable": "variable"},
-    SET_BUILDING_GATHER_POINT: {"selected": lambda e, kinds, techs: list(e.selected_object_ids or [])},
+    MODIFY_VARIABLE_BY_RESOURCE: {"operation": "operation", "variable": "variable", "resource": "tribute_list"},
+    MODIFY_VARIABLE_BY_VARIABLE: {"variable": "variable", "variable2": "variable2", "operation": "operation"},
+    PLAY_SOUND: {"sound": lambda e, kinds, techs: e.sound_name or ""},
+    REPLACE_OBJECT: {"target": "target_player", "object2": _object2},
+    RESEARCH_TECHNOLOGY: {"technology": _tech},
+    SET_BUILDING_GATHER_POINT: {"selected": _selected},
+    SET_PLAYER_VISIBILITY: {"target": "target_player", "visibility": "visibility_state"},
     STORE_KEY_VALUE: {"variable": "variable"},                         # (#2887)
-    TRAIN_UNIT: {"quantity": "quantity", "selected": lambda e, kinds, techs: list(e.selected_object_ids or [])},   # (#2772)
+    TRAIN_UNIT: {"quantity": "quantity", "selected": _selected},   # (#2772)
+    TRIBUTE: {"target": "target_player", "quantity": "quantity", "resource": "tribute_list"},
+    UNLOAD: {"selected": _selected},
+    UNLOCK_GATE: {"selected": _selected},
 }
 
 
