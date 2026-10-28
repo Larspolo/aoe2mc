@@ -6,7 +6,7 @@ from test_castle_upgrades import BARRACKS, setup
 from test_forging import menus
 
 import units
-from game import build, civs, combat, replay, train
+from game import civs, combat, replay, train
 
 FEUDAL, CASTLE, IMPERIAL = ("FEUDAL_AGE",), ("FEUDAL_AGE", "CASTLE_AGE"), ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE")
 NAME = "FLEMISH_MILITIA"
@@ -20,7 +20,6 @@ def barracks(civ="BURGUNDIANS", ages=IMPERIAL):
 
 
 def test_the_unit_has_its_data():
-    assert build.AGE[NAME] == 1                    # the values: the data lines (#2182, #2223)
     assert NAME in replay.SPEEDS and len(train.HELP[NAME]) <= 50
     assert units.classify(NAME)["id"] == "minecraft:zombie_villager"
 

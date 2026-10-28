@@ -1,11 +1,25 @@
 """game/build.py, game/gather.py: the mule cart of the Armenians and Georgians (#2194, AoE2 DE wiki "Mule Cart",
 MediaWiki API, 2026-10-27: 20 food, 80 wood, 25 s). It is the drop site of wood, gold, stone and hunted meat, in place
 of the lumber camp and the mining camp, and counts for the Feudal Age. Fake server, no Minecraft."""
+import re
+
 from test_build_done import DOWN
-from test_build_site import Server
+from test_build_site import Server as SiteServer
 from test_gather import grid
 
+import units
 from game import build, civs, gather, train
+
+
+class Server(SiteServer):
+    """The fake server of test_build_site that keeps the summoned mobs, and an "aoe moveto" puts a mob at its goal."""
+
+    def command(self, cmd):
+        if m := re.fullmatch(r"summon \S+ (\S+) (\S+) (\S+) .*UUID: ?\[I; ?([-\d, ]+)\].*", cmd):
+            self.entities[units.uuid_str(m[4].split(","))] = {"Pos": tuple(map(float, m.groups()[:3]))}
+        if (m := re.fullmatch(r"aoe moveto (\S+) (\S+) (\S+) (\S+)", cmd)) and m[1] in self.entities:
+            self.entities[m[1]]["Pos"] = tuple(map(float, m.groups()[1:]))
+        return super().command(cmd)
 
 
 def setup(civ, objects=()):
