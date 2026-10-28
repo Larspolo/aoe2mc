@@ -412,6 +412,10 @@ def main(argv=None):
         ref = release(a.number, a.remote)
         print(f"released {ref}" if ref else "nothing to release")
         return 0
+    issue = api(f"issues/{a.number}") if on_github(a.remote) else None
+    if isinstance(issue, dict) and issue.get("state") == "closed":   # the candidate list was older (#2339)
+        print(f"#{a.number} is closed: pick the next candidate")
+        return 1
     if not a.takeover and on_github(a.remote):
         other = started_by_other(api(f"issues/{a.number}/comments?per_page=100"), who(), time.time())
         if other:

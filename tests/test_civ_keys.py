@@ -5,8 +5,9 @@ import pytest
 from game import civs, table
 
 # The older tables have the name of their key in capitals and the same values as BY_KEY (frozen: lists as tuples). Not
-# so: MISSING, SHARED and NOT_SHARED, the tables by item (also from the key "civs" of other data files).
-OLD = sorted(k.upper() for k in civs.KEYS if hasattr(civs, k.upper()) and k not in ("missing", "shared", "not_shared"))
+# so: MISSING, SHARED and NOT_SHARED, the tables by item (also from the key "civs" of other data files), and EARLIER (sets).
+OLD = sorted(k.upper() for k in civs.KEYS if hasattr(civs, k.upper())
+             and k not in ("earlier", "missing", "shared", "not_shared"))
 
 
 def test_each_key_of_a_civilization_line_has_its_description():

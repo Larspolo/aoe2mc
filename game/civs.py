@@ -27,6 +27,7 @@ RULES = {
     "champi scout line, archery range units": lambda n, s: "CHAMPI_" in n   # the wiki: all archers but the conquistador
         or "archer" in s.classes and not tagged(n, "conquistador type"),     # type (#2116)
     "elephants": lambda n, s: "elephant" in s.classes,
+    "fire galley line, fire lancers": lambda n, s: tagged(n, "fire galley line") or tagged(n, "fire lancers"),
     "foot archers": lambda n, s: foot_archer(s),
     "foot archers but skirmishers": lambda n, s: foot_archer(s) and not tagged(n, "skirmishers"),
     "foot archers but skirmishers, condottieri": lambda n, s: GROUPS["foot archers but skirmishers"](n, s),
@@ -120,6 +121,7 @@ BUILD = {r["name"]: r["build"] for r in ROWS if "build" in r}
 BUILD_WONDER = {r["name"]: r["build_wonder"] for r in ROWS if "build_wonder" in r}
 BUILD_OF = {r["name"]: r["build_of"] for r in ROWS if "build_of" in r}
 BUILT_FOOD = {r["name"]: r["built_food"] for r in ROWS if "built_food" in r}
+BUILT_UNITS = {r["name"]: {b: tuples(v) for b, v in r["built_units"].items()} for r in ROWS if "built_units" in r}
 REPAIR = {r["name"]: r["repair"] for r in ROWS if "repair" in r}
 REPAIR_COST = {r["name"]: r["repair_cost"] for r in ROWS if "repair_cost" in r}
 REPAIR_TEAM = {r["name"]: r["repair_team"] for r in ROWS if "repair_team" in r}
@@ -128,6 +130,7 @@ TRAIN_RATE = {r["name"]: [tuples(b) for b in r["train_rate"]] for r in ROWS if "
 HP = {r["name"]: r["hp"] for r in ROWS if "hp" in r}
 ARROWS = {r["name"]: tuples(r["arrows"]) for r in ROWS if "arrows" in r}   # factor of the base arrows in each age (#2178)
 GARRISON = {r["name"]: r["garrison"] for r in ROWS if "garrison" in r}   # units inside a building (garrison.size, #2117)
+EARLIER = {r["name"]: set(r["earlier"]) for r in ROWS if "earlier" in r}   # one age earlier (build.locked, #2268)
 HP_AGE = {r["name"]: r["hp_age"] for r in ROWS if "hp_age" in r}   # the factor of all buildings in each age (Byzantines)
 ALSO = {r["name"]: r["also"] for r in ROWS if "also" in r}
 MORE = {r["name"]: r["more"] for r in ROWS if "more" in r}
@@ -150,6 +153,7 @@ REGEN = {r["name"]: [tuples(b) for b in r["regen"]] for r in ROWS if "regen" in 
 FALLEN = {r["name"]: r["fallen"] for r in ROWS if "fallen" in r}
 KILL_GOLD = {r["name"]: r["kill_gold"] for r in ROWS if "kill_gold" in r}
 LOOT = {r["name"]: r["loot"] for r in ROWS if "loot" in r}
+REVEAL = {r["name"]: [tuple(b) for b in r["reveal"]] for r in ROWS if "reveal" in r}
 RELIC_ATTACK = {r["name"]: tuples(r["relic_attack"]) for r in ROWS if "relic_attack" in r}
 FAITH = {r["name"]: r["faith"] for r in ROWS if "faith" in r}
 
@@ -190,12 +194,14 @@ def smith(g, name, s):
     return {t: c[age] for k, techs, c in SMITH_UNITS.get(civ(g), []) if c[age] and GROUPS[k](name, s) for t in techs}
 
 
-def regen(g, name, s):
+def regen(g, name, s, foe=math.inf):
     """The hit points per AoE2 minute that unit name (combat.Stats s) of the player of g regenerates in its age (REGEN),
-    else 0. Two rules of one civilization add up."""
+    else 0. Two rules of one civilization add up. foe: the tiles from the unit to the nearest enemy unit; a rule with a
+    radius counts only when foe is more than it."""
     import build                                                   # build imports gather, gather imports this module
     age = build.ages(g)
-    return sum(c[age] for k, c in REGEN.get(civ(g), []) if (name in k if isinstance(k, tuple) else GROUPS[k](name, s)))
+    return sum(c[age] for k, c, *near in REGEN.get(civ(g), []) if foe > (near or [-1])[0]
+               and (name in k if isinstance(k, tuple) else GROUPS[k](name, s)))
 
 
 def units(g, name, s):
@@ -205,7 +211,9 @@ def units(g, name, s):
     if name in names:                                              # the relics in own monasteries (monk.relic_tick)
         s = s._replace(attack=s.attack + min(each * sum(r["home"] is not None for r in getattr(g, "relics", ())), most))
     for v, c in changes(g, name, s):
-        if v.startswith("bonus:") and c:                           # the attack against a class (#2249)
+        if v.startswith("bonus:") and isinstance(c, float):        # a factor of the attack against a class (#2272)
+            s = s._replace(bonus={**s.bonus, v[6:]: math.floor(s.bonus.get(v[6:], 0) * c + 0.5)})
+        elif v.startswith("bonus:") and c:                         # the attack against a class (#2249)
             s = s._replace(bonus={**s.bonus, v[6:]: s.bonus.get(v[6:], 0) + c})
         elif v == "bonus" and isinstance(c, float):                # a factor of each bonus (#2248)
             s = s._replace(bonus={k: math.floor(n * c + 0.5) for k, n in s.bonus.items()})
@@ -278,6 +286,12 @@ def civ(g, player=None):
     return g.data.get("players", {}).get(str(g.player if player is None else player), {}).get("civ")
 
 
+def earlier(g, name):
+    """1 when the civilization of the player of g has the building, unit or technology name one age earlier (EARLIER:
+    the Armenian spearman in the Dark Age, the Cuman siege workshop in the Feudal Age, #2268), else 0."""
+    return int(hasattr(g, "data") and name in EARLIER.get(civ(g), ()))
+
+
 def age_rate(g, name):
     """The factor of the research rate of technology name for the civilization of the player of g: AGE_RATE for an
     age, else 1."""
@@ -308,6 +322,14 @@ def build_rate(g, name):
 def built_food(g, name):
     """The food that a complete building name of the player of g gives (BUILT_FOOD), else 0."""
     return BUILT_FOOD.get(civ(g), {}).get(name, 0)
+
+
+def built_units(g, name):
+    """(unit, number) of the herdables that a complete building name of the player of g gives in its age
+    (BUILT_UNITS), else None."""
+    import build                                                   # build imports gather, gather imports this module
+    unit, n = BUILT_UNITS.get(civ(g), {}).get(name, (None, (0,) * 4))
+    return (unit, n[build.ages(g)]) if n[build.ages(g)] else None
 
 
 def church_rate(g, pos):
