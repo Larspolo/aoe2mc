@@ -61,7 +61,7 @@ def check_buildings(row):
 def check_train(row):
     form(row, {"name": str, "building": (str, type(None)), "slot": int, "item": str, "label": str, "cost": dict,
                "time": int, "help": str},
-         {"age": int, "after": str, "civ": str, "upgrade": list, "note": str, "resist": int, "tribute_fee": int})
+         {"age": int, "after": str, "civ": str, "faster": list, "upgrade": list, "note": str, "resist": int, "tribute_fee": int})
     n = row["name"]
     assert row["building"] is None or row["building"] in NAMES["buildings.jsonl"], n
     assert 0 <= row["slot"] < 54 and row["time"] > 0 and row.get("age", 1) in (1, 2, 3), n
@@ -69,6 +69,8 @@ def check_train(row):
     assert 0 < len(row["help"]) <= 50 and row["label"] and row["item"] == row["item"].lower(), n   # the menu width
     assert row.get("after", n) in NAMES["train.jsonl"] and row.get("after") != n, n
     assert row.get("civ", "BRITONS") in NAMES["civs.jsonl"], n                  # a unique technology of the castle
+    if "faster" in row:                                    # the age and the train time from it (#2155)
+        assert row["faster"][0] in (1, 2, 3) and 0 < row["faster"][1] < row["time"], n
     if "upgrade" in row:
         pairs = row["upgrade"] if isinstance(row["upgrade"][0], list) else [row["upgrade"]]
         assert all(len(p) == 2 and set(p) <= NAMES["units.jsonl"] for p in pairs), n
@@ -146,8 +148,9 @@ CHECKS = {"build.jsonl": check_build, "buildings.jsonl": check_buildings, "cheat
           "replay.jsonl": check_replay, "train.jsonl": check_train, "units.jsonl": check_units}
 
 
-# The keys with two types by design: an "effect" is data or the name of a function of game/train.py (#2098, #2122)
-TWO_TYPES = {("train.jsonl", "effect"): (dict, str)}
+# The keys with two types by design: an "effect" is data, a list of data (#2155) or the name of a function of
+# game/train.py (#2098, #2122)
+TWO_TYPES = {("train.jsonl", "effect"): (dict, list, str)}
 
 
 @pytest.mark.parametrize("name", sorted(NAMES))
