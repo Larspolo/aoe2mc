@@ -501,6 +501,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         treaties.start(g, replay.aoe2mc.game_time(settings["treaty"]) / 1000, (state or {}).get("treaty_time", 0.0))   # #2409
     if game.kind == "paper":                         # the view square of each player on map 0 (#1762)
         import replay
+        game.command("aoe minimap on")               # the dots of the units, as in the live replay (#2581)
         game.command(f"aoe minimap frame {replay.FRAME * data['tile_size']}")
     print(f"Join the server localhost:{game.game_port} (Minecraft {game.version}, multiplayer, direct connection).\n"
           f"{len(g.villagers)} villagers of player 1. Hold the carrot on a stick: right click a villager to select it,\n"
