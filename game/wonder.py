@@ -9,6 +9,8 @@ The timer is in AoE2 years (1 year = 5 game seconds) and depends on the map size
 Medium, 300 Normal, 350 Large, 400 Huge). The program counts game time: tick() adds dt (game seconds) at each call,
 gather.Gather.run gives it tick × NORMAL, as for the training queues. At the end, the owner wins: the human player sees
 "Victory" for its own wonder and "Defeat" for a wonder of a rival; the game then ends (g.ended).
+A game mode with the key "wonder_years" in game/data/setup.jsonl has that timer (Wonder Race: 0, the completion of the
+first wonder wins, #2406).
 """
 import json
 import math
@@ -18,10 +20,12 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cheats  # noqa: E402
+import table  # noqa: E402
 
 YEAR = 5.0           # game seconds of one AoE2 year
 YEARS = ((168, 200), (200, 300), (220, 350), (math.inf, 400))   # (largest map size in tiles, years)
 EVERY = 3.0          # seconds between two checks of the targets
+RACE = {r["name"]: r["wonder_years"] for r in table.load("setup.jsonl") if "wonder_years" in r}   # mode -> years
 
 
 def years(size):
@@ -69,7 +73,7 @@ def tick(g, dt):
             if not any(t["player"] == n for t in timers.values()):
                 g.command(f"bossbar remove {bar(n)}")
                 shown.pop(n, None)
-        total = years(g.data.get("map_size")) * YEAR
+        total = RACE.get(g.mode, years(g.data.get("map_size"))) * YEAR
         for uuid, (n, site) in found(g).items():
             if uuid in timers or uuid in gone:
                 continue

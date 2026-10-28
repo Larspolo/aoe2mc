@@ -161,9 +161,11 @@ def check_replay(row):                                     # a walk speed (a nam
 
 
 def check_setup(row):                                      # a value of a setting of the game setup (#2264)
-    form(row, {"name": str}, {"resources": dict, "ages": int, "skip": list, "note": str, "units": list})
-    assert sum(k in row for k in ("resources", "ages", "units")) == 1, row["name"]   # a resource level, a start age
-    assert set(row.get("units", ())) <= NAMES["units.jsonl"], row["name"]  # (#2265) or a game mode (#2347)
+    form(row, {"name": str}, {"resources": dict, "ages": int, "skip": list, "note": str, "units": list,
+                    "treaty": str, "wonder_years": int})
+    assert sum(k in row for k in ("resources", "ages", "units", "treaty")) == 1, row["name"]   # a resource level, a
+    assert set(row.get("units", ())) <= NAMES["units.jsonl"], row["name"]  # start age (#2265) or a game mode (#2347)
+    assert row.get("treaty", "endless") == "endless" and row.get("wonder_years", 0) >= 0, row["name"]   # (#2406)
     assert set(row.get("resources", RES)) == {"food", "wood", "gold", "stone"}, row["name"]
     assert all(isinstance(v, int) and v >= 0 for v in row.get("resources", {}).values()), row["name"]
     assert row.get("ages", 0) in range(5) and set(row.get("skip", ())) <= NAMES["train.jsonl"], row["name"]

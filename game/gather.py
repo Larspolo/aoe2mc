@@ -530,7 +530,8 @@ class Gather:
     speed = 1.0                                                        # times the Normal speed: shorter real steps (#2057)
     later = {}                                                         # the bonus of the first town center (civs.TOWN_CENTER)
     victory = "standard"                                               # AoE2 "Victory"; "conquest": no wonder, no relics (#2316)
-    mode = "standard"                                                  # AoE2 game mode; "regicide": the King (#2347)
+    mode = "standard"                                                  # AoE2 game mode; "regicide": the King (#2347),
+                                                                       # "wonder-race" (#2406)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
                  cheats=False, start=None, resources="standard", pop_limit=None):
@@ -1804,8 +1805,9 @@ class Gather:
                 regicide.tick(self)
             fog.tick(self)                                             # after the bots: their units too (#1389)
             herd.tick(self)                                            # all players: the bots capture too (#1792)
-            if self.victory == "standard":                             # a wonder or all relics win too (#2316)
+            if self.victory == "standard" or self.mode in wonder.RACE:  # a wonder or all relics win too (#2316)
                 wonder.tick(self, self.tick * NORMAL)                  # game seconds, as train.tick
+            if self.victory == "standard" and self.mode not in wonder.RACE:   # Wonder Race: only a wonder (#2406)
                 relic_victory.tick(self, self.tick * NORMAL)
             treaty.tick(self, self.tick * NORMAL)
             time.sleep(max(0.0, self.tick / self.speed - (time.time() - t)))   # a step stays tick game seconds

@@ -9,3 +9,4 @@
 {"name": "imperial", "ages": 3}
 {"name": "post-imperial", "ages": 4, "skip": ["SPIES"], "note": "AoE2 wiki \"Post-Imperial Age\": all technologies, not Spies/Treason, Flemish Revolution, First Crusade (not in the game program)"}
 {"name": "regicide", "units": ["KING"], "note": "AoE2 wiki \"Regicide (game mode)\": each player starts with a King, a player whose Kings all died is defeated (#2347)"}
+{"name": "wonder-race", "treaty": "endless", "wonder_years": 0, "note": "AoE2 wiki \"Wonder Race\": no player can attack another player, the first player with a complete wonder wins (#2406)"}

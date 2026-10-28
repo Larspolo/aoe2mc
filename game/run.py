@@ -20,6 +20,7 @@ Usage:
     python3 game/run.py WORLD --play --all-techs       # the AoE2 setting "All Techs" (#2298)
     python3 game/run.py WORLD --play --victory conquest  # the AoE2 setting "Victory": no wonder or relic win (#2316)
     python3 game/run.py WORLD --play --mode regicide   # the AoE2 game mode "Regicide": each player has a King (#2347)
+    python3 game/run.py WORLD --play --mode wonder-race   # "Wonder Race": no attacks, the first wonder wins (#2406)
     python3 game/run.py WORLD --play --civ 1=BRITONS --civ 2=FRANKS   # the civilization of each player (#2267)
     python3 game/run.py WORLD --play --teams 1,1,2,2   # the team of each player, - is no team (#2296)
     python3 game/run.py WORLD --play --load SAVE   # go on with a saved game: Ctrl-C of --play saves into saves/ (#2255)
@@ -35,6 +36,7 @@ import contextlib
 import glob
 import hashlib
 import json
+import math
 import os
 import re
 import secrets
@@ -338,7 +340,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     victory: the AoE2 setting "Victory": "standard" (conquest, a wonder or all relics) or "conquest" (#2316).
     pop_limit: the AoE2 setting "Population limit" of each player and bot (train.LIMITS, #2266).
     end_age: the AoE2 setting "Ending age" of each player and bot (build.locked, #2346).
-    mode: the AoE2 game mode: "standard" or "regicide" (each player has a King, regicide.MODES, #2347).
+    mode: the AoE2 game mode: "standard", "regicide" (each player has a King, regicide.MODES, #2347) or "wonder-race"
+    (no attacks, the first complete wonder wins, treaty.ENDLESS and wonder.RACE, #2406).
     treaty: the AoE2 setting "Treaty length" (MM:SS, #2297): before it no player can attack another (treaty.py)."""
     import gather, train
 
@@ -378,26 +381,31 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     if bot:                                          # after the people, next to their Sides (#1794)
         import bot as bots
         import replay
+        import treaty as treaties
         player, foe = bot_seat(data["players"], people)
         attack = max(bot_attack, treaty, key=replay.aoe2mc.game_time)   # the bot waits for the treaty too
+        if mode in treaties.ENDLESS:                 # Wonder Race: the bot never attacks (#2406)
+            attack = "never"
         g.bots = [*g.bots, bots.Bot(game, data, player=player, share=g, log=log, foe=foe,
-                                    attack=replay.aoe2mc.game_time(attack) / 1000,
+                                    attack=math.inf if attack == "never" else replay.aoe2mc.game_time(attack) / 1000,
                                     resources=resources, pop_limit=pop_limit).setup()]
         print(f"A bot plays player {player}: {len(g.bots[-1].g.villagers)} villagers gather, its soldiers attack "
-              f"player {foe} at {attack}.", file=sys.stderr)
+              f"player {foe} {'never' if attack == 'never' else 'at ' + attack}.", file=sys.stderr)
     import combat
     combat.setup(game, data)                         # AoE2 hit points and damage (#514)
     if not state and age != "dark":                  # after the base values: the technologies change them
         import train
         for x in [g, *(s.g for s in g.bots)]:
             train.start(x, age)
-    if mode != "standard":                           # after the bots: their Kings go to their Gathers (#2347)
-        import regicide
-        g.mode = mode
+    g.mode = mode
+    import regicide
+    if mode in regicide.MODES:                       # after the bots: their Kings go to their Gathers (#2347)
         regicide.setup(g, mode)
     import replay
     import treaty as treaties
-    if replay.aoe2mc.game_time(treaty):              # after the Gathers: they set the neutral stances
+    if mode in treaties.ENDLESS:                     # Wonder Race: a treaty with no end (#2406)
+        treaties.start(g, math.inf)
+    elif replay.aoe2mc.game_time(treaty):            # after the Gathers: they set the neutral stances
         treaties.start(g, replay.aoe2mc.game_time(treaty) / 1000)
     if game.kind == "paper":                         # the view square of each player on map 0 (#1762)
         import replay
@@ -562,8 +570,9 @@ def main(argv=None):
     ap.add_argument("--pop-limit", type=pop_limit, default=200, metavar="N",
                     help="--play: the AoE2 setting \"Population limit\" of each player: 25 to 250 in steps of 25, 300, "
                     "400 or 500 (default 200)")
-    ap.add_argument("--mode", choices=["standard", "regicide"], default="standard", help="--play: the AoE2 game mode "
-                    "(default standard; regicide: each player has a King, a player whose King dies is defeated)")
+    ap.add_argument("--mode", choices=["standard", "regicide", "wonder-race"], default="standard", help="--play: the "
+                    "AoE2 game mode (default standard; regicide: each player has a King, a player whose King dies is "
+                    "defeated; wonder-race: no player can attack another, the first complete wonder wins)")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")
