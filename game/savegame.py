@@ -156,6 +156,7 @@ NOT_SAVED = (                                                          # the fie
     "noui",                                                            # the cheat "noui": only the hints
     "peers",                                                           # run.py: the players of the game
     "player",                                                          # run.py: the player number
+    "record",                                                          # record.py: run.play opens the file of --record again
     "regicide_at",                                                     # regicide.py: the next check time
     "repair_at",                                                       # repair.py: the next check time
     "repairs",                                                         # orders(): the repair of each villager
