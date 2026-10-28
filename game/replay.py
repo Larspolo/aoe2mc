@@ -12,7 +12,7 @@ selection to attack it (`aoe attack`, the mob AI and the AoE2 values of game/com
 itself. A trained unit gets its AoE2 values at its spawn (`aoe stats`, `aoe range`); game/run.py gives them to the
 units and buildings of the start state (combat.setup).
 A villager gets the look of its AoE2 task (#868, gather.Gather.task): an ORDER on a resource, a BUILD (builder);
-a MOVE, an ORDER on something else, or the end of its work without a next resource gives it no profession.
+a MOVE, an ORDER on something else, or the end of its work without a next resource gives it the idle look (units.IDLE_JOB).
 Garrisons (#809): a GARRISON command, or an ORDER on an own start building with garrison room (game/garrison.py SIZES),
 puts the units inside it when they arrive (the state of the converter, #807), and UNGARRISON lets them out next to it.
 A villager with resources and an ORDER on a drop site drops them and does not go in.
@@ -117,7 +117,7 @@ def pretty(name):
 
 def start_job(name):
     """The profession that units.make_entity gives a unit of this name (gather.Villager.job)."""
-    return next((j for k, j in units.VILLAGER_JOBS if k in name), "none")
+    return next((j for k, j in units.VILLAGER_JOBS if k in name), units.IDLE_JOB)
 
 
 def text(s, color=None):
