@@ -480,6 +480,18 @@ def console(game):
     return t
 
 
+def given(ap, argv):
+    """The names (dest) of the options of ap that the command line argv gives: parse it with no defaults."""
+    defaults = [(x, x.default) for x in ap._actions]
+    for x, _ in defaults:
+        x.default = argparse.SUPPRESS
+    try:
+        return set(vars(ap.parse_args(argv)))
+    finally:
+        for x, d in defaults:
+            x.default = d
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0].strip(),
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -524,6 +536,10 @@ def main(argv=None):
                     "(no team), for example 1,1,2,2: allies do not fight and share their team bonuses (default: the "
                     "teams of the scenario)")
     a = ap.parse_args(argv)
+    import savegame
+    state = savegame.read(a.load) if a.load else None
+    if state:                                        # the settings of the save, but the options given here win (#2325)
+        savegame.settings(a, state, given(ap, argv))
     civ = civ_choices(a.civ)
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
         sys.exit(f"no level.dat in {a.world}")
@@ -531,15 +547,13 @@ def main(argv=None):
     if a.teams is not None:
         with open(os.path.join(a.world, "aoe2mc.json")) as f:
             teams = team_choices(a.teams, json.load(f).get("players", {}))
-    import savegame
-    state = None
     if a.load:                                       # the saved world replaces the world (the player files stay)
-        state = savegame.read(a.load)
         restore(os.path.join(a.load, "world"), a.world)
     if hasattr(signal, "SIGBREAK"):                  # Windows: the window (gui.stop_game) sends Ctrl-Break (#1775)
         signal.signal(signal.SIGBREAK, signal.default_int_handler)
     game = Game(a.world, a.version, server=a.server)
     game.people = a.people                           # the join order counts from the first player (#1310)
+    game.settings = {k: getattr(a, k) for k in savegame.SETTINGS}   # savegame.dump keeps them (#2325)
     try:
         game.start()
         print(f"Server is ready. RCON on 127.0.0.1:{game.port}. Ctrl-C stops the server.", file=sys.stderr)
