@@ -29,6 +29,7 @@ TABLES = (                                                            # one per 
     "EXTRA",
     "DROP",
     "GARRISON",
+    "LAST",
     "REPAIR",
     "REPAIR_COST",
     "RESEARCH_TIME",
