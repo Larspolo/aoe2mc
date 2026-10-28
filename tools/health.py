@@ -716,7 +716,13 @@ def merge_times(n, until):
 def pr_hours(times, until, n):
     """The hours of the last n merged PRs before `until` and of the n PRs before them (`--prs`, #1909). `times`: the
     merge times, newest first. A window of PRs keeps its size when the speed of the project changes; a window of hours
-    does not (about 350 merges a day on 2026-10-27)."""
+    does not (about 350 merges a day on 2026-10-27). A young repository has fewer merges: the oldest one ends the
+    period, with a warning that names the count (#3072)."""
+    if not times:
+        sys.exit(f"no merged PR up to {until:%Y-%m-%dT%H:%M:%SZ}: use --hours")
+    if len(times) < 2 * n + 1:
+        print(f"warning: only {len(times)} merge times up to {until:%Y-%m-%dT%H:%M:%SZ}, {2 * n + 1} needed: "
+              "the oldest merge ends the periods", file=sys.stderr)
     a, b = times[min(n, len(times) - 1)], times[min(2 * n, len(times) - 1)]
     return (until - a).total_seconds() / 3600, (a - b).total_seconds() / 3600
 
