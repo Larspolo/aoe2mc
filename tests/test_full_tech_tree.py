@@ -32,7 +32,7 @@ def test_the_britons_keep_only_the_longbowman_at_the_castle():
     _, g = game("BRITONS")
     castle = train.trains(g, "CASTLE")
     assert "LONGBOWMAN" in castle and "MANGUDAI" not in castle
-    assert not any(t in castle for t, c in train.CIV_TECHS.items())            # no unique technologies
+    assert not any(t in castle for t, c in train.BY_KEY["civ"].items())            # no unique technologies
     assert civs.missing(g, "JAGUAR_WARRIOR") and not civs.missing(g, "LONGBOWMAN")
 
 

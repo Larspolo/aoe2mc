@@ -1,7 +1,7 @@
 """game/train.py: the barracks trains the eagle scout and upgrades it to the eagle warrior and the elite eagle warrior
 (#1555, AoE2 DE wiki infoboxes "Eagle Scout", "Eagle Warrior", "Elite Eagle Warrior"): only the Aztecs and the Mayans
 (civs.EAGLES; the Incas lost it in The Last Chieftains). The eagle scout trains in 46 s in the Feudal Age and in 35 s
-from the Castle Age (train.FASTER), with 7 attack and the cavalry, camel and ship bonus from the Castle Age."""
+from the Castle Age (train.BY_KEY["faster"]), with 7 attack and the cavalry, camel and ship bonus from the Castle Age."""
 from test_forging import menus, setup
 
 from game import build, civs, combat, train

@@ -101,6 +101,8 @@ on an attack alert line in the chat goes to its place with the same view (`Alert
 
 1. The converter writes `aoe2mc.json` into the world folder: each object with its AoE2 ID, name, owner,
    tile position and the UUID of its entity.
+   The "players" of a scenario also have the start "resources", the "pop_limit" and "computer" of the
+   tab "Players" of the editor (#2539).
 2. The program starts the vanilla server with RCON, reads `aoe2mc.json` and gives each unit of player 1 a tag.
 3. Input: the player holds a "command stick" (`carrot_on_a_stick`). A right click on a villager selects it
    (glowing). A right click on a tree sends the villager there. The datapack detects the click with the
@@ -489,3 +491,4 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - A new unit of `game/data/units.jsonl` also needs its wiki "LOS" in `WIKI` of `tests/test_unit_sight.py` and an age line in `game/data/build.jsonl` (ages 1 to 3; a Dark Age unit goes in the list of `tests/test_age_locks.py`), and its test must not copy a stat (`tests/test_conflict_prone.py`). A bonus line of `tests/data/civ_bonuses.jsonl` with two tables: `"in": ["COSTS", "UNITS"]` (#2482). The wiki text of a page: `refimage.fetch(API + "?action=parse&page=NAME&prop=wikitext&format=json&redirects=1")` (`refimage.query` sets `action=query`).
 - An in-game check of the game program needs no clicks (#2381): with a `mc_shot.Client` joined, `g = run.play(game, W, seconds=2)` gives the Gather; drive it with `train.queue`, `build.found`, `Gather.build`, `Gather.send`, then `g.run(N)`; a load is `run.restore(SAVE/world, W)` and `run.play(..., state=savegame.read(SAVE))`. Copy the values that you compare (`json.loads(json.dumps(...))`): a dict that holds the live `g.queues` lists shows their later state.
 - The mode setup chain of `run.play` (`if settings["mode"] == ...` / `elif`) and the last line of the `form(...)` keys of `check_setup` (`tests/test_data_files.py`) conflict on each new mode: #2406 needed 6 merges of main in 90 minutes. Add a new `elif` branch before `elif settings["mode"] != "standard"`, a new key on its own line before the last line, and do not change the lines of other modes.
+- A split menu (longer than one RCON command, `menu.commands`) sends its items with the last slot first: a test of the full order (`menu_line.order`) must accept that order too (`test_train_barracks.py`, #2483). `test_loom.menus` joins the `aoe menu-add` parts now, as `test_forging.menus`.
