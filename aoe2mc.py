@@ -465,6 +465,9 @@ def read_scenario(path):
                                                 "resource": e.tribute_list} if e.effect_type == TRIBUTE else {}),
                                             **({"operation": e.operation, "quantity": e.quantity,
                                                 "resource": e.tribute_list} if e.effect_type == MODIFY_RESOURCE else {}),
+                                            **({"operation": e.operation, "variable": e.variable,   # (#2768)
+                                                "resource": e.tribute_list}
+                                               if e.effect_type == MODIFY_RESOURCE_BY_VARIABLE else {}),
                                             **({"technology": techs.get(e.technology, str(e.technology))}   # #2577
                                                if e.effect_type == RESEARCH_TECHNOLOGY else {}),
                                             **({"unit": e.time_unit, "timer": e.timer}   # "Display Timer" (#2572)
@@ -2807,6 +2810,7 @@ HEAL_OBJECT = 34                                                   # "Heal Objec
 IN_AREA = 5
 KILL_OBJECT = 14
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
+MODIFY_RESOURCE_BY_VARIABLE = 53                                   # "Modify Resource by Variable" (#2768)
 OBJECT_HP = 23                                                     # "Object HP", the hit points of one object (#2701)
 OWN_FEWER_OBJECTS = 4                                              # conditions on the units of a player (#2573)
 OWN_OBJECTS = 3
@@ -3064,6 +3068,18 @@ def resource_lines(e, c):
         return [f"scoreboard players set #p{e['player']}.{res} aoe_set {q}",
                 f"scoreboard players reset #p{e['player']}.{res} aoe_res"]
     return change(e["player"], q if op == "add" else -q) if op else []
+
+
+def resource_by_variable_lines(e, c):
+    """The commands of "Modify Resource by Variable" (#2768): the amount is the score #vN of aoe_var (the AoE2 variable
+    N). Add and Subtract change aoe_res, a Set goes to aoe_set, as in resource_lines. Multiply and Divide have no line."""
+    if not 0 <= e.get("resource", -1) < len(STORES) or e["player"] <= 0 or e.get("variable", -1) < 0:
+        return []
+    c.setup["scoreboard objectives add aoe_res dummy"] = c.setup["scoreboard objectives add aoe_set dummy"] = None
+    target, v = f"#p{e['player']}.{STORES[e['resource']]}", f"#v{e['variable']} aoe_var"
+    if (op := OPERATIONS.get(e["operation"])) == "set":
+        return [f"scoreboard players operation {target} aoe_set = {v}", f"scoreboard players reset {target} aoe_res"]
+    return [f"scoreboard players operation {target} aoe_res {'+' if op == 'add' else '-'}= {v}"] if op in ("add", "remove") else []
 
 
 def teleport_lines(e, c):
@@ -3375,6 +3391,7 @@ EFFECTS = {
     HEAL_OBJECT: heal_lines,
     KILL_OBJECT: object_lines,
     MODIFY_RESOURCE: resource_lines,
+    MODIFY_RESOURCE_BY_VARIABLE: resource_by_variable_lines,
     PATROL: order_lines,
     PLAY_SOUND: sound_lines,
     REMOVE_OBJECT: object_lines,
