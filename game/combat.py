@@ -115,6 +115,26 @@ def damage(attacker, target, a=None, t=None, taken=1.0):
     return max(1, max(0, a.attack - armor) + math.floor(sum(a.bonus.get(c, 0) for c in t.classes) * taken + 0.5))
 
 
+def elevation(dy, H, attacker_civ=None, target_civ=None):
+    """The factor of the damage of a hit from dy blocks above the target (#2307, AoE2 wiki "Elevation"; the same rule
+    in AoePlugin.java): one elevation level (H blocks) or more higher: the "up" factor of the attacker's civilization
+    times the "high" factor of the target's; one level or more lower: the "low" factor of the target's; else 1. The
+    damage is max(1, damage * factor), the AoE2 order: the factor comes after the armor."""
+    if H <= 0 or abs(dy) < H:
+        return 1.0
+    return civs.elevation(attacker_civ)[0] * civs.elevation(target_civ)[2] if dy > 0 else civs.elevation(target_civ)[1]
+
+
+def elevation_command(data):
+    """The plugin command of the elevation rule (#2307): the blocks of one level, and the factors up:low:high of each
+    player's team (civs.elevation). None for data without a level height."""
+    if not data.get("level_height"):
+        return None
+    players = sorted(data.get("players", {}).items(), key=lambda p: int(p[0]))
+    return " ".join([f"aoe elevation {data['level_height']}"] + [f"p{n}:" + ":".join(f"{f:g}" for f in
+                                                                   civs.elevation(p.get("civ"))) for n, p in players])
+
+
 def stats_command(uuid, name, s=None, taken=1.0):
     """The plugin command that gives entity `uuid` the values of AoE2 unit `name` (or the values s, for example with
     technologies, #655): max_health = hit points (at most 1024, the limit of the attribute), the lost hit points stay lost
@@ -195,6 +215,8 @@ def setup(game, data):
     Each building of a player with AoE2 hit points gets a target of attacks (`building`).
     The entities must be loaded (forceload). Returns the number of units that got the values."""
     ground = [r.split() for r in data.get("ground", ())]
+    if cmd := elevation_command(data):               # the damage from higher ground (#2307)
+        game.command(cmd)
     held = {}                                        # the units that the converter put inside (#807): their arrows
     for o in data["objects"]:
         if o["kind"] == "unit" and o.get("holder") is not None:

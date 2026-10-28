@@ -4,8 +4,8 @@ data/civs.jsonl (#1914), and each key of those lines has one line in data/civ_ke
 issue. BY_KEY[key][civ] (or value(key, civ, default)) holds the value of each key: a new key is one line in each data
 file and the code that applies it (repair.py, build.py, train.py ...), no new line here. The tables in capitals below
 are the older names of some keys.
-Bonuses that the game program cannot use yet: Japanese fishing ships, Malian oyster gatherers, the elevation
-(Georgians, Tatars), the Lithuanian relics, the Slav monks, and the ships.
+Bonuses that the game program cannot use yet: Japanese fishing ships, Malian oyster gatherers, the Slav monks
+and the ships.
 CHURCH_RATE is the Georgian bonus of the Fortified Church (#1930): build.rise and repair.rate multiply the work of the
 villagers in the 21-tile square around it (church_rate).
 """
@@ -156,6 +156,16 @@ FALLEN = {r["name"]: r["fallen"] for r in ROWS if "fallen" in r}
 KILL_GOLD = {r["name"]: r["kill_gold"] for r in ROWS if "kill_gold" in r}
 LOOT = {r["name"]: r["loot"] for r in ROWS if "loot" in r}
 REVEAL = {r["name"]: [tuple(b) for b in r["reveal"]] for r in ROWS if "reveal" in r}
+ELEVATION = {r["name"]: r["elevation"] for r in ROWS if "elevation" in r}
+ELEVATION_BASE = {"up": 1.25, "low": 0.75, "high": 1.0}
+
+
+def elevation(civ):
+    """The elevation factors (up, low, high) of civilization civ (ELEVATION_BASE and its key "elevation")."""
+    e = {**ELEVATION_BASE, **ELEVATION.get(civ, {})}
+    return e["up"], e["low"], e["high"]
+
+
 RELIC_ATTACK = {r["name"]: tuples(r["relic_attack"]) for r in ROWS if "relic_attack" in r}
 FAITH = {r["name"]: r["faith"] for r in ROWS if "faith" in r}
 HERD_FOOD = {r["name"]: {b: tuple(v) for b, v in r["herd_food"].items()} for r in ROWS if "herd_food" in r}

@@ -15,6 +15,7 @@
 {"name": "drop_extra", "text": "A second resource at the drop site, {kind: [resource, factor of the load]}: \"hunt\" (hunters and shepherds), \"fish\" (fishermen), \"ship\" (fishing ships). Varangians: +10 % gold, +5 % for the ships.", "issue": 2308}
 {"name": "earlier", "text": "The buildings, units and technologies that the civilization has one age earlier (build.locked, civs.earlier).", "issue": 2268}
 {"name": "economy_villagers", "text": "The free villagers for each economic technology (Wei). train.research spawns them.", "issue": 2175}
+{"name": "elevation", "text": "The elevation factors of the damage (AoE2 wiki \"Elevation\"), changes of civs.ELEVATION_BASE: \"up\" multiplies the hits of a unit or building of the civilization from higher ground, \"low\" the hits that it takes from lower ground, \"high\" the hits that it takes from higher ground (Tatars, Georgians, Macedonians). combat.elevation and the plugin (aoe elevation).", "issue": 2307}
 {"name": "extra", "text": "The second resource of a gather kind (\"forage\": a fruit bush), {kind: [resource, amount for each unit]}: Poles and Puru stone miners, Portuguese foragers, Shu lumberjacks. Gather.second adds it at each gathered unit.", "issue": 2113}
 {"name": "faith", "text": "The factor of the speed of the monks that regain faith after a conversion (Muisca: 100 % faster). game/monk.py.", "issue": 2314}
 {"name": "fallen", "text": "The part of the cost of a fallen own unit that the player gets back (Tupi). game/spoils.py.", "issue": 2271}
