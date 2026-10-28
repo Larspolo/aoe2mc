@@ -136,6 +136,25 @@ def send(g, who, key, goals):
         g.go(v, "to_repair", goals)
 
 
+def resume(g, u, key, state):
+    """Villager u of a loaded game repairs key again (a building footprint or the UUID of a siege unit, savegame, #2380):
+    "to_repair" walks to it again, "repair" works on at its place. Returns False when key is gone."""
+    import fleet                                                   # fleet imports gather
+    if isinstance(key, str) and (pos := g.pos(key)):
+        cell = (math.floor(pos[0]), math.floor(pos[2]))
+        goals = shore(g, cell) if g.soldiers.get(key) in fleet.SPEEDS else g.map.around({cell})
+    elif isinstance(key, tuple) and key in owners(g):
+        goals = g.map.around({(x, z) for x in range(key[0], key[1]) for z in range(key[2], key[3])})
+    else:
+        return False
+    if state == "to_repair":
+        send(g, [u], key, goals)
+    else:
+        g.repairs = vars(g).get("repairs", {})
+        g.repairs[u] = key
+    return True
+
+
 def shore(g, cell):
     """The free land cells within REACH tiles of the ship on the water cell cell: the villagers repair it from there."""
     r, (x, z) = REACH * g.map.T, cell

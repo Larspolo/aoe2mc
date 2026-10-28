@@ -12,6 +12,8 @@ its entities not loaded yet, is not in the game. A defeated rival loses its rest
 The human player sees "Defeat" when it has nothing left, "Victory" when no rival is left; the game then ends (g.ended).
 Allies (the `team` of aoe2mc.json, gather.allied, #1313) win together, as in AoE2: "Victory" when all players of the
 other teams are defeated, also while an ally is still in the game. A defeated ally does not end the game.
+The AoE2 setting "Last Man Standing" (g.victory "last-man-standing", #2358): when only allies are left, the alliances
+end (no `team` in g.players, the plugin command `aoe allies`) and the chat says so; only the last player alive wins.
 """
 import json
 import os
@@ -47,6 +49,25 @@ def tick(g):
                 return cheats.end("Defeat", "red")(g, None)
             cheats.destroy(g, n)
             g.command("tellraw @a " + json.dumps({"text": f"Player {n} is defeated.", "color": "red"}))
-    from gather import allied                                       # gather imports this module
+    from gather import allied, allies_command                       # gather imports this module
+    if g.victory == "last-man-standing":
+        return last_man(g, seen - lost, lost, allied, allies_command)
     if any(not allied(g.players, g.player, n) for n in lost) and all(allied(g.players, g.player, n) for n in seen - lost):
         cheats.end("Victory", "gold")(g, None)                      # a rival lost, and only allies are left (#1313)
+
+
+def last_man(g, left, lost, allied, allies_command):
+    """Last Man Standing (#2358): the last player alive wins alone; when a rival lost and only allies are left, they
+    become enemies (the Minecraft teams of the plugin, `aoe allies`)."""
+    if not lost:
+        return
+    if len(left) == 1:
+        winner, = left
+        return cheats.over(g, lambda n: n == winner)
+    if len(left) > 1 and all(allied(g.players, a, b) for a in left for b in left):
+        for n in left:
+            g.players[str(n)].pop("team", None)
+        if g.paper:
+            g.command(allies_command(g.players))
+        g.command("tellraw @a " + json.dumps({"text": "Only allies are left: the alliances end. The last player alive "
+                                                      "wins.", "color": "gold"}))

@@ -266,6 +266,7 @@ AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age aft
 STARTS = {r["name"]: r for r in table.load("setup.jsonl") if "ages" in r}
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
 HOUSING = {r["name"]: r["housing"] for r in BUILDING_ROWS if "housing" in r}   # population of a complete building
+AGE_COUNT = {r["name"]: r["age_count"] for r in BUILDING_ROWS if "age_count" in r}   # types of the age rule: the Settlement 2 (#2420)
 LIMIT = 200                                                        # the AoE2 population limit
 LIMITS = (*range(25, 251, 25), 300, 400, 500)                      # the AoE2 setting "Population limit" (#2266)
 REPEAT = 256                                                       # researches of one technology: "going above and beyond"
@@ -632,8 +633,9 @@ def missing(g, name):
     import combat                                                  # combat imports gather, gather imports this module
     own = {combat.STANDS_FOR.get(b, b) for b in owned(g)}          # the Folwark is a mill, the church a monastery
     has, alone = sorted(set(names) & own), alone[0] if alone else ()
-    if len(has) < n and not set(alone) & own:
-        return f"needs {''.join(f'a {build.pretty(b).lower()} or ' for b in alone)}{n} of {', '.join(build.pretty(b).lower() for b in names)} ({len(has)}/{n})"
+    count = len(has) + sum(AGE_COUNT.get(b, 1) - 1 for b in set(owned(g)) if combat.STANDS_FOR.get(b, b) in names)
+    if count < n and not set(alone) & own:
+        return f"needs {''.join(f'a {build.pretty(b).lower()} or ' for b in alone)}{n} of {', '.join(build.pretty(b).lower() for b in names)} ({min(count, n)}/{n})"
 
 
 def age(g):
@@ -736,7 +738,7 @@ def research(g, entry, start=False):
     if entry["name"] in UPGRADES:                                  # the live units of the line get the new name
         for uuid, new in [(u, new) for old, new in lines(entry["name"], g) for u, n in g.soldiers.items() if n == old]:
             g.soldiers[uuid] = new
-            g.command(combat.stats_command(uuid, new, stats(g, new), civs.taken(g, new)))
+            g.command(combat.stats_command(uuid, new, stats(g, new), civs.taken(g, new), civs.friendly(g, new)))
             if cmd := combat.range_command(uuid, new, g.map.T, s=stats(g, new)):   # the range and blast of an onager
                 g.command(cmd)
             if cmd := volley_command(g, uuid, new):               # a war galley of the Armenians (#2379)
@@ -746,7 +748,7 @@ def research(g, entry, start=False):
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
         if stats(g, name) != combat.stats(name):
             g.command(trebuchet.stats_command(g, uuid) if name == trebuchet.NAME   # the armor of its state (#1409)
-                      else combat.stats_command(uuid, name, stats(g, name), civs.taken(g, name)))
+                      else combat.stats_command(uuid, name, stats(g, name), civs.taken(g, name), civs.friendly(g, name)))
         if name == trebuchet.NAME and trebuchet.state(g, uuid) != "unpacked":
             continue                                               # packed: range 0, the unpack sends the range (#1414)
         if stats(g, name).range != combat.stats(name).range:          # Fletching (#724)
@@ -914,7 +916,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     uuid = units.uuid_str(nbt["UUID"])
     g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}")
     import combat, gather                                          # both import gather, gather imports this module
-    g.command(combat.stats_command(uuid, name, stats(g, name), civs.taken(g, name)))
+    g.command(combat.stats_command(uuid, name, stats(g, name), civs.taken(g, name), civs.friendly(g, name)))
     import spoils                                                  # spoils imports this module
     if cmd := spoils.tag_command(uuid, name):                      # its hits make gold (#2376)
         g.command(cmd)

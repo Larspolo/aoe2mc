@@ -54,7 +54,7 @@ def test_a_tick_moves_the_border_and_destroys_outside_it():
     west, east, north, south = boxes(g.log)
     assert west[2] <= 24 and east[0] == 72 and north[3] <= 24 and south[1] == 72   # the square 24..72 stays
     assert north[0] == south[0] == 24 and north[2] == south[2] == 72
-    assert all(f"team=!,type=!player," in c for c in g.log if c.startswith("kill"))
+    assert all("team=!,type=!player," in c for c in g.log if c.startswith("kill"))
     g.log.clear()
     battle_royale.tick(g, 1.0)                                    # less than EVERY seconds later: no command
     assert g.log == []

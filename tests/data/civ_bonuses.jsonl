@@ -112,7 +112,7 @@
 {"name": "JURCHENS: Siege Engineers available in the Castle Age.", "civ": "JURCHENS", "bonus": "Siege Engineers available in the Castle Age.", "in": "EARLIER"}
 {"name": "JURCHENS: Siege and fortification technologies cost wood -75%.", "civ": "JURCHENS", "bonus": "Siege and fortification technologies cost wood -75%.", "in": "COSTS"}
 {"name": "JURCHENS: Siege and fortification technologies are researched 100% faster.", "civ": "JURCHENS", "bonus": "Siege and fortification technologies are researched 100% faster.", "in": "RESEARCH_TIME"}
-{"name": "JURCHENS: Military units receive -50% friendly fire damage.", "civ": "JURCHENS", "bonus": "Military units receive -50% friendly fire damage.", "later": "play:fight"}
+{"name": "JURCHENS: Military units receive -50% friendly fire damage.", "civ": "JURCHENS", "bonus": "Military units receive -50% friendly fire damage.", "in": "UNITS"}
 {"name": "KHITANS: The effects of Forging and Iron Casting are doubled.", "civ": "KHITANS", "bonus": "The effects of Forging and Iron Casting are doubled.", "in": "TWICE"}
 {"name": "KHITANS: Skirmishers, Genitours, and the Spearman and Scout Cavalry lines are trained and upgraded 15% faster.", "civ": "KHITANS", "bonus": "Skirmishers, Genitours, and the Spearman and Scout Cavalry lines are trained and upgraded 15% faster.", "in": "TRAIN_RATE"}
 {"name": "KHITANS: Heavy Cavalry Archer upgrade available in the Castle Age and costs -50%", "civ": "KHITANS", "bonus": "Heavy Cavalry Archer upgrade available in the Castle Age and costs -50%", "in": ["COSTS", "EARLIER"]}
@@ -180,7 +180,7 @@
 {"name": "ROMANS: Scorpions cost gold -50%.", "civ": "ROMANS", "bonus": "Scorpions cost gold -50%.", "in": "COSTS"}
 {"name": "SARACENS: The commodity trading fee is 5%.", "civ": "SARACENS", "bonus": "The commodity trading fee is 5%.", "in": "game/market.py"}
 {"name": "SARACENS: Markets cost wood 75.", "civ": "SARACENS", "bonus": "Markets cost wood 75.", "in": "COSTS"}
-{"name": "SARACENS: Transport Ships have double hit points and +20 carry capacity.", "civ": "SARACENS", "bonus": "Transport Ships have double hit points and +20 carry capacity.", "later": "play:naval"}
+{"name": "SARACENS: Transport Ships have double hit points and +20 carry capacity.", "civ": "SARACENS", "bonus": "Transport Ships have double hit points and +20 carry capacity.", "in": "transport"}
 {"name": "SARACENS: Galleys attack 25% faster.", "civ": "SARACENS", "bonus": "Galleys attack 25% faster.", "in": "UNITS"}
 {"name": "SARACENS: Camel units +25% hit points.", "civ": "SARACENS", "bonus": "Camel units +25% hit points.", "in": "UNITS"}
 {"name": "SAXONS: Mills, Lumber Camps, and Mining Camps provide food 35 when built.", "civ": "SAXONS", "bonus": "Mills, Lumber Camps, and Mining Camps provide food 35 when built.", "in": "BUILT_FOOD"}
