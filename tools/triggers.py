@@ -51,6 +51,7 @@ MAP = {
     ("condition", "DIFFICULTY_LEVEL"): "`execute if score #level aoe_difficulty matches N` (the game program sets the score, #2704)",
     ("condition", "TRIGGER_ACTIVE"): "`execute if score #N aoe_on matches 1` (0 when inverted) in the tick function: the state of trigger N (#2699)",
     ("condition", "DIPLOMACY_STATE"): "`execute if score #pN.pM aoe_dipstate matches S` (the stance + 1: the scenario mode of the game program sets the score at the start and after each change, #2757)",
+    ("condition", "DECISION_TRIGGERED"): "`execute if score #last aoe_decision matches <id × 10 + option>` (`unless` when inverted) in the tick function: the last click on an option of \"Create Decision\" (#2888)",
     ("condition", "OBJECT_HAS_ACTION"): "`execute if score #rN aoe_action matches A` (`unless` when inverted) in the tick function: the scenario mode of the game program sets the AoE2 UnitAIAction of the villager state (`scenario.ACTIONS`: build, gather, hunt, move, enter, repair, idle, #2867); another action, a target object or no unit object: not supported yet",
     ("condition", "OBJECT_NOT_VISIBLE"): "`execute if score #rN.p1 aoe_seen matches 0` in the tick function: the scenario mode of the game program sets the score from the sight of player 1 (#2756)",
     ("condition", "OBJECT_VISIBLE"): "`execute if score #rN.p1 aoe_seen matches 1` in the tick function: the scenario mode of the game program sets the score from the sight of player 1 (#2756)",
