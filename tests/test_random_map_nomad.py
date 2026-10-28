@@ -1,4 +1,4 @@
-"""--random-map nomad: no town center, the villagers apart, a sea in the middle of the map (#1176)."""
+"""--random-map nomad: no town center, the villagers apart, a sea at the map edges (#1176, #2336)."""
 from itertools import combinations
 
 import numpy as np
@@ -16,7 +16,7 @@ def test_no_town_center_and_three_villagers_apart_and_a_sea(seed, players):
     t = np.array(d["terrain"])
     n = t.shape[0]
     assert not any(o["name"] == "TOWN_CENTER" for o in d["objects"])
-    assert t[n // 2, n // 2] == T["WATER"] and (t == T["WATER"]).mean() >= 0.15
+    assert t[n // 2, n // 2] != T["WATER"] and (t == T["WATER"]).mean() >= 0.15        # land in the middle (#2336)
     for p in range(1, players + 1):
         vils = [(o["x"], o["y"]) for o in d["objects"] if o["name"].startswith("VILLAGER") and o["player"] == p]
         assert len(vils) == 3
