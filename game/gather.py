@@ -1890,7 +1890,10 @@ class Gather:
                 capture_relic.tick(self)
             elif self.mode == "defend-the-wonder":                     # the attackers win when the Wonder falls (#2441)
                 defend_wonder.tick(self)
-            fog.tick(self)                                             # after the bots: their units too (#1389)
+            elif self.mode == "scenario":                              # the resource triggers of the world (#2576)
+                import scenario                                        # not at the top: scenario imports gather
+                scenario.tick(self)
+            fog.tick(self)                                            # after the bots: their units too (#1389)
             herd.tick(self)                                            # all players: the bots capture too (#1792)
             if self.victory == "standard" or self.mode in wonder.RACE:  # a wonder or all relics win too (#2316)
                 wonder.tick(self, self.tick * NORMAL)                  # game seconds, as train.tick

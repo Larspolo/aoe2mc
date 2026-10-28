@@ -153,6 +153,7 @@ NOT_SAVED = (                                                          # the fie
     "repair_at",                                                       # repair.py: the next check time
     "repairs",                                                         # orders(): the repair of each villager
     "rows",                                                            # build.py: the shown building to place
+    "scenario_at",                                                     # scenario.py: the next check time
     "score_at",                                                        # score.py: the next check time
     "shapes",                                                          # build.py: the shown building to place
     "share",                                                           # bot.py: the techs of the human player

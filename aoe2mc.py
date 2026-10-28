@@ -419,7 +419,11 @@ def read_scenario(path):
                                                if e.effect_type == CHANGE_COLOR_MOOD and
                                                getattr(e, "color_mood", None) in set(ColorMood) else {}),
                                             **({"target": e.target_player}                # "Change Ownership" (#2570)
-                                               if e.effect_type == CHANGE_OWNERSHIP else {}))
+                                               if e.effect_type == CHANGE_OWNERSHIP else {}),
+                                            **({"target": e.target_player, "quantity": e.quantity,   # (#2576)
+                                                "resource": e.tribute_list} if e.effect_type == TRIBUTE else {}),
+                                            **({"operation": e.operation, "quantity": e.quantity,
+                                                "resource": e.tribute_list} if e.effect_type == MODIFY_RESOURCE else {}))
                                        for e in t.effects])
                          for t in scn.trigger_manager.triggers]
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
@@ -2688,6 +2692,9 @@ def team_lines(objects, players):
 
 TIMER, SEND_CHAT, DISPLAY_INSTRUCTIONS, IN_AREA = 10, 3, 20, 5   # AoE2 condition and effect IDs (AoE2ScenarioParser)
 CREATE_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 15, 18, 72
+TRIBUTE, MODIFY_RESOURCE = 5, 52
+STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list (AoE2 attributes 0 to 3)
+OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
 
 
 def turn_area(area, size, k):
@@ -2769,6 +2776,24 @@ def owner_lines(e, T, stats):
             f"team join p{new} {own}", f"tag {own} remove aoe2mc.own"]
 
 
+def resource_lines(e):
+    """The commands of "Tribute" and "Modify Resource" (#2576): a converted world has no stock, so they only change
+    the scores #p<N>.<resource> of aoe_res (the change) and aoe_set (a "set"). scenario.tick of the game program reads
+    them into the stock of player N and resets them. A tribute of a trigger has no tax (AoE2)."""
+    if not 0 <= e.get("resource", -1) < len(STORES) or e["player"] <= 0:
+        return []
+    res, q = STORES[e["resource"]], int(e["quantity"])
+
+    def change(n, q):
+        return [f"scoreboard players {'add' if q >= 0 else 'remove'} #p{n}.{res} aoe_res {abs(q)}"] * (n > 0)
+    if e["type"] == TRIBUTE:
+        return change(e["target"], q) + change(e["player"], -q)
+    if (op := OPERATIONS.get(e["operation"])) == "set":               # a set drops the earlier changes
+        return [f"scoreboard players set #p{e['player']}.{res} aoe_set {q}",
+                f"scoreboard players reset #p{e['player']}.{res} aoe_res"]
+    return change(e["player"], q if op == "add" else -q) if op else []
+
+
 def mood_lines(e):
     """The commands of "Change Color Mood" (#1876): the time of day (MOODS) and the rain (RAIN) of the new mood, as
     at the conversion. The game rules advance_time and advance_weather are 0, so they stay. The fog (FOG) is a
@@ -2785,8 +2810,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
     the units leave an area. "Send Chat" is a tellraw, "Display Instructions" a subtitle for its display time;
     "Create Object" and "Remove Object": object_lines (#656). "Change Color Mood": mood_lines (#1876), only with mood. "Change Ownership": owner_lines (#2570).
+    "Tribute" and "Modify Resource": resource_lines (#2576), scores for the game program.
     A disabled trigger does not run."""
-    load, files, tick = [], {}, []
+    load, files, tick, money = [], {}, [], False
     stats = Counter() if stats is None else stats
     ground = np.zeros((0, 0), np.int16) if ground is None else ground
     for t in triggers:
@@ -2802,6 +2828,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if e["type"] == CHANGE_OWNERSHIP:
                 lines += owner_lines(e, T, stats)
+                continue
+            if e["type"] in (TRIBUTE, MODIFY_RESOURCE):
+                res = resource_lines(e)
+                lines, money = lines + res, money or bool(res)
                 continue
             if e["type"] == CHANGE_COLOR_MOOD:
                 lines += mood_lines(e) if mood else []
@@ -2839,6 +2869,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         run = f"schedule function {fn} {ticks}t replace"
         files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines + [run] * t["looping"]) + "\n"
         load.append(run)
+    if money:                                                          # resource_lines (#2576)
+        load[:0] = ["scoreboard objectives add aoe_res dummy", "scoreboard objectives add aoe_set dummy"]
     if tick:
         load.insert(0, "scoreboard objectives add aoe_trig dummy")
         files["data/minecraft/tags/function/tick.json"] = {"values": ["aoe2mc:tick"]}
