@@ -18,18 +18,18 @@ dependencies = [          # the same as requirements.txt
 ]
 
 [project.scripts]
-aoe2mc = "aoe2mc:main"
+aoe2mc = "aoe2mc_app.aoe2mc:main"
 
 [project.gui-scripts]
-aoe2mc-gui = "gui:run"            # the converter window (#1540)
+aoe2mc-gui = "aoe2mc_app.gui:run"            # the converter window (#1540)
 
 [tool.setuptools]
-py-modules = ["aoe2mc", "buildings", "rmap", "units", "scx", "gui"]
-packages = ["tools.mcdata", "data"]   # aoe2mc.py reads tools/mcdata/26.3.json, units.py data/*.jsonl (#1917)
+package-dir = {"aoe2mc_app" = "."}   # one top-level name, not units, gui ... (#3056)
+packages = ["aoe2mc_app", "aoe2mc_app.data", "aoe2mc_app.tools.mcdata"]   # 26.3.json and data/*.jsonl (#1917)
 
 [tool.setuptools.package-data]
-"tools.mcdata" = ["26.3.json"]
-"data" = ["*.jsonl"]
+"aoe2mc_app.tools.mcdata" = ["26.3.json"]
+"aoe2mc_app.data" = ["*.jsonl"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
