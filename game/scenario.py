@@ -139,11 +139,14 @@ def orders(g):
     the tag. A new patrol with the same tag (a looping trigger) replaces the old one. A "Change Object Stance" order
     (aoe2mc.stance_lines, #2705) sets the stance of the tagged units and removes the tag. A "Stop Object" order
     (aoe2mc.stop_lines, #2754) stops the tagged units (`aoe stop`), ends their patrols as a new order of a person does
-    (gather.Gather.end_patrols, #2674) and removes the tag."""
-    new = re.findall(r'"(patrol|attack_move|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"',
-                     g.command(f"data get storage {ORDERS} list") or "")
-    if new:
+    (gather.Gather.end_patrols, #2674) and removes the tag. An "Unload" order (#2773): unload()."""
+    got = g.command(f"data get storage {ORDERS} list") or ""
+    new = re.findall(r'"(patrol|attack_move|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"', got)
+    unloads = re.findall(r'"unload (\d+) (\d+) ?(-?\d+ -?\d+ -?\d+)?"', got)
+    if new or unloads:
         g.command(f"data remove storage {ORDERS} list")
+    for player, ref, where in unloads:
+        unload(g, int(player), int(ref), where)
     patrols = vars(g).setdefault("patrols", [])
     for order, tag, where in new:
         p, sel = [int(v) for v in where.split()], f"@e[tag={tag}]"
@@ -173,6 +176,19 @@ def orders(g):
             g.command(f"aoe moveto @e[tag={tag}] {' '.join(map(str, points[q[2] % 2]))}")
         elif "passed" not in g.command(f"execute if entity @e[tag={tag}]"):
             patrols.remove(q)
+
+
+def unload(g, player, ref, where):
+    """An "Unload" order (aoe2mc.unload_lines, #2773): the units inside the building ref of the player (a person or a
+    bot: garrison.holders) come out (garrison.out), and `aoe moveto` walks them to the block "x y z" when the order has
+    one. A building that fell or that is not of the player: nothing."""
+    for x in [g, *(s.g for s in g.bots)]:
+        if x.player != player or "objects" not in x.data:
+            continue
+        rect = next((r for r, o in garrison.holders(x).items() if o.get("ref") == ref), None)
+        for u in garrison.out(x, rect) if rect is not None else []:
+            if where:
+                x.command(f"aoe moveto {u} {where}")
 
 
 def costs(g):
@@ -232,6 +248,8 @@ def setup(g, mode="scenario"):
     level = (getattr(g.game, "settings", None) or {}).get("ai_difficulty", "standard")
     g.command("scoreboard objectives add aoe_difficulty dummy")        # the condition "Difficulty Level" (#2704)
     g.command(f"scoreboard players set #level aoe_difficulty {LEVELS[level]}")
+    g.command("scoreboard objectives add aoe_dipstate dummy")         # the condition "Diplomacy State" (#2757)
+    states(g)
     rows = {x: g.players.get(str(x.player), {}) for x in sides}
     if not any("resources" in p or "pop_limit" in p for p in rows.values()):
         print("The world has no scenario start values: the game starts with the lobby settings.", file=sys.stderr)
@@ -323,6 +341,7 @@ def victory(g):
 
 
 STANCES = {1: "ally", 2: "neutral", 4: "enemy"}                       # the score of aoe_dip: DiplomacyState + 1
+SCORES = {kind: score for score, kind in STANCES.items()}
 
 
 def stance(players, n, m, kind):
@@ -343,6 +362,16 @@ def stance(players, n, m, kind):
     row["team"] = other["team"]
 
 
+def states(g):
+    """Set the score #p<N>.p<M> of aoe_dipstate to the stance of player N to player M + 1 (STANCES): the condition
+    "Diplomacy State" of the converted world tests it (#2757)."""
+    ns = sorted(int(p) for p in g.players if int(p))
+    for n, m in ((n, m) for n in ns for m in ns if n != m):
+        kind = "ally" if gather.allied(g.players, n, m) else \
+            "neutral" if m in g.players[str(n)].get("neutral", ()) else "enemy"
+        g.command(f"scoreboard players set #p{n}.p{m} aoe_dipstate {SCORES[kind]}")
+
+
 def diplomacy(g):
     """Apply the stances that "Change Diplomacy" triggers set (the scores of aoe_dip), then reset the scores. During a
     treaty (treaty.holds) all players stay neutral: the end of the treaty sends the new stances."""
@@ -357,6 +386,7 @@ def diplomacy(g):
             if got and int(got[1]) in STANCES:
                 stance(g.players, n, m, STANCES[int(got[1])])
                 g.command(f"scoreboard players reset #p{n}.p{m} aoe_dip")
+    states(g)
     g.command(gather.allies_command(g.players))
     if not treaty.holds(g):
         g.command(gather.neutral_command(g.players))

@@ -415,6 +415,8 @@ def read_scenario(path):
                                                **({"slot": c.timer_id} if c.condition_type == DISPLAY_TIMER_TRIGGERED else {}),
                                                **({"area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2]}     # #2620
                                                   if c.condition_type == BRING_OBJECT_TO_AREA else {}),
+                                               **({"next": c.next_object, "next_unit": c.next_object in entities}
+                                                  if c.condition_type == BRING_OBJECT_TO_OBJECT else {}),   # #2771
                                                **({"quantity": c.quantity, "player": c.source_player,
                                                    "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2],
                                                    "object": c.object_list, "group": c.object_group,
@@ -441,7 +443,10 @@ def read_scenario(path):
                                                **({"player": c.source_player}                 # (#2710)
                                                   if c.condition_type == PLAYER_DEFEATED else {}),
                                                **({"quantity": c.quantity, "unit": c.unit_object}   # (#2714)
-                                                  if c.condition_type == UNITS_GARRISONED else {}))
+                                                  if c.condition_type == UNITS_GARRISONED else {}),
+                                               **({"player": c.source_player, "target": c.target_player,   # (#2757)
+                                                   "diplomacy": c.quantity}            # the stance is the quantity
+                                                  if c.condition_type == DIPLOMACY_STATE else {}))
                                           for c in in_order(t.conditions, t.condition_order)],
                               effects=[dict(type=e.effect_type, message=e.message or "", player=e.source_player,
                                             time=e.display_time, object=kinds.get(e.object_list_unit_id),
@@ -478,6 +483,8 @@ def read_scenario(path):
                                             **({"object2": kinds.get(e.object_list_unit_id_2),   # (#2764)
                                                 "selected": list(e.selected_object_ids or [])}
                                                if e.effect_type == CREATE_GARRISONED_OBJECT else {}),
+                                            **({"selected": list(e.selected_object_ids or [])}   # (#2773)
+                                               if e.effect_type == UNLOAD else {}),
                                             **({"target": e.target_player, "diplomacy": e.diplomacy}   # (#2645)
                                                if e.effect_type == CHANGE_DIPLOMACY else {}),
                                             **({"target": e.target_player, "visibility": e.visibility_state}   # (#2774)
@@ -2832,9 +2839,12 @@ CREATE_GARRISONED_OBJECT = 49                                      # "Create Gar
 CREATE_OBJECT = 11
 DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
 DECLARE_VICTORY = 13                                               # "Declare Victory" (#2542)
+DISABLE_UNIT_ATTACKABLE = 98                                       # "Disable Unit Attackable" (#2695)
 DIFFICULTY_LEVEL = 19                                              # the condition "Difficulty Level" (#2704)
+DIPLOMACY_STATE = 24                                               # the condition "Diplomacy State" (#2757)
 DISPLAY_INSTRUCTIONS = 20
 DISPLAY_TIMER = 37                                                 # "Display Timer" (#2572)
+ENABLE_UNIT_ATTACKABLE = 99                                       # "Enable Unit Attackable" (#2695)
 DISPLAY_TIMER_TRIGGERED = 55                                       # the condition of its score (#2702)
 FREEZE_OBJECT = 22                                                 # "Freeze Object" (#2608)
 HEAL_OBJECT = 34                                                   # "Heal Object" (#2692)
@@ -2867,12 +2877,14 @@ TRIBUTE = 5                                                        # "Tribute" (
 TRIGGER_ACTIVE = 79                                                # the condition "Trigger Active" (#2699)
 TRIGGER_CHANCE = 20                                                # the condition "Chance" (#2574)
 UNITS_GARRISONED = 18                                              # the condition "Units Garrisoned" (#2714)
+UNLOAD = 17                                                        # "Unload" (#2773)
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
 TICKED = COUNTED + (                                               # conditions of the tick function, one per line
     ACCUMULATE_ATTRIBUTE,
     DIFFICULTY_LEVEL,
+    DIPLOMACY_STATE,
     DISPLAY_TIMER_TRIGGERED,
     OBJECT_HP,
     PLAYER_DEFEATED,
@@ -2885,6 +2897,7 @@ TICKED = COUNTED + (                                               # conditions 
 )
 ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")     # attributes 0-3: the score holders of gather.RESOURCES (#2655)
 BRING_OBJECT_TO_AREA = 1                                               # the condition "Bring Object to Area" (#2620)
+BRING_OBJECT_TO_OBJECT = 2                                             # the condition "Bring Object to Object" (#2771)
 DESTROY_OBJECT = 6                                                     # the condition "Destroy Object" (#2618)
 CAPTURE_OBJECT = 7                                                     # the condition "Capture Object" (#2619)
 OBJECT_ATTACKED = 76                                                   # the condition "Object Attacked" (#2779)
@@ -2907,7 +2920,11 @@ OBJECT_TESTS = {DESTROY_OBJECT: ("if entity @e[tag=aoe2mc.m{ref}] unless entity 
                                    "unless entity @e[tag=aoe2mc.r{ref},nbt=!{{HurtTime:0s}}]", ()),
                  # "Bring Object to Area": the unit is in the box of the area ({box}: area_box, #2620)
                  BRING_OBJECT_TO_AREA: ("if entity @e[tag=aoe2mc.r{ref}{box}]",
-                                        "unless entity @e[tag=aoe2mc.r{ref}{box}]", ())}
+                                        "unless entity @e[tag=aoe2mc.r{ref}{box}]", ()),
+                 # "Bring Object to Object": the unit is next to the other unit, within one tile ({near} blocks, #2771)
+                 BRING_OBJECT_TO_OBJECT: ("at @e[tag=aoe2mc.r{ref},limit=1] if entity @e[tag=aoe2mc.r{next},distance=..{near}]",
+                                          "at @e[tag=aoe2mc.r{ref},limit=1] unless entity "
+                                          "@e[tag=aoe2mc.r{next},distance=..{near}]", ())}
 TICKED += tuple(OBJECT_TESTS)
 STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list (AoE2 attributes 0 to 3)
 OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
@@ -3272,6 +3289,16 @@ def sound_lines(e, c):
     return [f"playsound minecraft:{sound} master @a {x + 0.5} {int(ground[x, z])} {z + 0.5}"]
 
 
+def attackable_lines(e, c):
+    """The commands of "Disable Unit Attackable" and "Enable Unit Attackable" (#2695): the tag Invulnerable of the
+    units of the player in the area. Enable keeps the garrisoned units invulnerable (#807)."""
+    if min(e.get("area", [-1])) < 0:
+        return []
+    disable = e["type"] == DISABLE_UNIT_ATTACKABLE
+    guard = "" if disable else f" unless entity @s[tag={GARRISONED}]"
+    return [f"execute as {unit_selector(e, c.T)}{guard} run data merge entity @s {{Invulnerable:{int(disable)}b}}"]
+
+
 def freeze_lines(e, c):
     """The commands of "Freeze Object" (#2608): the units of the player in the area and the mounts of the riders get
     NoAI, so they stay in their place (AoE2: they do not move until a new order)."""
@@ -3363,6 +3390,29 @@ def stop_lines(e, c):
     into the storage aoe2mc:orders. game/scenario.py orders stops them (`aoe stop`) and ends their patrols."""
     tag = f"aoe_order{c.t['id']}_{effect_index(e, c)}"
     return tag_lines(e, c.T, tag) + [f'data modify storage aoe2mc:orders list append value "stop {tag}"']
+
+
+def unload_lines(e, c):
+    """The commands of "Unload" (#2773): each selected building of the player that takes a garrison (buildings.INSIDE),
+    or with no selection each such building with its center in the area, goes into the list of the storage
+    aoe2mc:orders as one text "unload <player> <ref>", with the block of the target tile on the ground "x y z" when
+    the effect has one. The scenario mode of the game program (game/scenario.py orders) lets the units of the holder
+    out and walks them there (aoe moveto). A ship or a ram holder: not supported yet (the game program has no garrison
+    of them from a trigger)."""
+    T, ground, a = c.T, c.ground, e.get("area", [-1])
+    refs = e.get("selected") or ([r for r, (_, _, (x, z)) in sorted(buildings.INSIDE.items())
+                                  if a[0] * T <= x < (a[2] + 1) * T and a[1] * T <= z < (a[3] + 1) * T]
+                                 if min(a, default=-1) >= 0 else [])
+    holders = [r for r in refs if r in buildings.INSIDE]
+    if not holders or e["player"] <= 0:
+        c.stats["unload (not supported yet)"] += 1
+        return []
+    c.stats["unload"] += 1
+    x, z = (int((v + 0.5) * T) for v in e.get("tile", [-1, -1]))
+    where = f" {x} {int(ground[x, z])} {z}" if min(e.get("tile", [-1])) >= 0 and ground is not None and \
+        0 <= x < ground.shape[0] and 0 <= z < ground.shape[1] else ""
+    p = e["player"]
+    return [f'data modify storage aoe2mc:orders list append value "unload {p} {r}{where}"' for r in holders]
 
 
 def view_lines(e, c):
@@ -3535,8 +3585,10 @@ EFFECTS = {
     DAMAGE_OBJECT: damage_lines,
     DEACTIVATE_TRIGGER: switch_lines,
     DECLARE_VICTORY: victory_lines,
+    DISABLE_UNIT_ATTACKABLE: attackable_lines,
     DISPLAY_INSTRUCTIONS: instruction_lines,
     DISPLAY_TIMER: timer_lines,
+    ENABLE_UNIT_ATTACKABLE: attackable_lines,
     FREEZE_OBJECT: freeze_lines,
     HEAL_OBJECT: heal_lines,
     KILL_OBJECT: object_lines,
@@ -3554,6 +3606,7 @@ EFFECTS = {
     TASK_OBJECT: task_lines,
     TELEPORT_OBJECT: teleport_lines,
     TRIBUTE: resource_lines,
+    UNLOAD: unload_lines,
 }
 # The context of the effects of trigger t: a handler can add function files (files) and load lines (setup, the keys)
 Effect = namedtuple("Effect", "t T ground players stats mood files setup switch timed", defaults=((), {}))
@@ -3568,6 +3621,7 @@ Effect = namedtuple("Effect", "t T ground players stats mood files setup switch 
 SCORE_TESTS = {
     ACCUMULATE_ATTRIBUTE: resource_score,
     DIFFICULTY_LEVEL: lambda c: f"score #level aoe_difficulty matches {c.get('quantity', 0)}",
+    DIPLOMACY_STATE: lambda c: f"score #p{c['player']}.p{c['target']} aoe_dipstate matches {c['diplomacy'] + 1}",
     DISPLAY_TIMER_TRIGGERED: lambda c: f"score #done{c.get('slot', 0)} aoe_timer matches 1..",   # set at 0 (#2702)
     PLAYER_DEFEATED: lambda c: f"score #p{c['player']} aoe_lost matches 1..",   # conquest, regicide (#2710)
     RESEARCHED: lambda c: f"score #p{c['player']}.{c['technology']} aoe_tech matches 1..",
@@ -3608,8 +3662,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     Technology" condition too: the game program sets the score #p<player>.<technology> of aoe_tech (#2656), and an
     "Accumulate Attribute" condition of a resource: resource_score (#2655). A "Destroy Object" condition
     (OBJECT_TESTS) tests the tag aoe2mc.r<ref> of its unit and its marker (#2618), "Bring Object to Area" the tag in
-    the box of the area (#2620). "OR" splits the conditions into groups (or_groups, #2765): one tick line per group,
-    and the trigger fires when one group holds. The commands of each effect come from its handler in EFFECTS.
+    the box of the area (#2620), "Bring Object to Object" the other tag within one tile of it (#2771). An inverted
+    object condition swaps the two tests of OBJECT_TESTS. "OR" splits the conditions into groups (or_groups, #2765):
+    one tick line per group, and the trigger fires when one group holds. The commands of each effect come from its
+    handler in EFFECTS.
     A disabled trigger runs only after an "Activate Trigger" (#2575): the score #N of aoe_on is 1 while a trigger that
     such an effect names is on (switch_lines). live: the triggers that get a function; None: all that give commands
     (an effect may name only a function that exists). A "Chance" trigger cannot be activated yet."""
@@ -3642,6 +3698,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         chance = (TRIGGER_CHANCE, False) in kinds
         rest = kinds - {(TRIGGER_CHANCE, False)}
         if any(c["type"] in OBJECT_TESTS and (c.get("ref", -1) is None or c.get("ref", -1) < 0 or not c.get("unit"))
+               or c["type"] == BRING_OBJECT_TO_OBJECT and (c.get("next") is None or c["next"] < 0 or not c.get("next_unit"))
                for c in conds):                                        # no object, or a building: blocks, no entity
             stats["object condition (not an entity, not supported yet)"] += t["enabled"]
             continue
@@ -3649,7 +3706,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             stats["OR with a timer or a chance (not supported yet)"] += t["enabled"]
             continue
         if not (t["enabled"] or t["id"] in on and t["id"] not in chancy) or not conds or \
-                not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED} | {(TRIGGER_ACTIVE, True)}) or \
+                not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED} | {(k, True) for k in OBJECT_TESTS} | {(TRIGGER_ACTIVE, True)}) or \
                 chance and len([c for c in conds if c["type"] == TRIGGER_CHANCE]) > 1 or \
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds) or \
                 any(c["type"] == VARIABLE_VALUE and (c.get("variable", -1) < 0 or variable_range(c) is None)
@@ -3680,7 +3737,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if c["type"] in OBJECT_TESTS:                              # the tag of the object (#2618)
                 test, other, before = OBJECT_TESTS[c["type"]]
-                at = dict(ref=c["ref"], player=c.get("player"), box=area_box(c.get("area", [-1] * 4), T))
+                at = dict(ref=c["ref"], player=c.get("player"), box=area_box(c.get("area", [-1] * 4), T), next=c.get("next"),
+                          near=T)
+                if c["inverted"]:                                      # the condition holds while the test fails
+                    test, other = other, test
                 counts += [x.format(**at) for x in before]
                 tests.append(test.format(**at))
                 unless.append(other.format(**at))

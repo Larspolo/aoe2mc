@@ -14,7 +14,7 @@ def test_trigger_files_runs_the_handler_of_each_effect_in_order(monkeypatch):
 
 
 def test_an_effect_with_no_handler_gives_no_command():
-    assert 99 not in aoe2mc.EFFECTS and lines([effect(99)]) == []
+    assert 1000 not in aoe2mc.EFFECTS and lines([effect(1000)]) == []     # 99 is "Enable Unit Attackable" (#2695)
 
 
 def test_the_effects_are_in_alphabetical_order():
