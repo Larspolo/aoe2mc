@@ -249,6 +249,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_deep_lane.py` | generic | None (a test of `tools/usage.py`, `tools/claim.py` and `tools/dashboard.py`). |
 | `tests/test_dashboard_claimed.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_decide.py` | generic | None (a test of `tools/dashboard.py`). |
+| `tests/test_dashboard_fresh.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_muted.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_overlap.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_process.py` | generic | None (a test of `tools/dashboard.py`). |
