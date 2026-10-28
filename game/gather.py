@@ -726,6 +726,12 @@ class Gather:
         own player; player 1 also the sidebar of all, for a Minecraft player in no team."""
         return ["sidebar"] * (self.player == 1) + [f"sidebar.team.{self.color()}"]
 
+    def show_stock(self):
+        """Write each resource of the stock to the board (the sidebar). Each path that sets the stock calls it, so the
+        board and the stock never differ (#3111); a cost and a gathered load then add to or remove from both."""
+        for r in RESOURCES:
+            self.command(f"scoreboard players set {r} {self.board} {self.stock[r.lower()]}")
+
     def setup(self):
         for cmd in ("scoreboard objectives add aoe_use minecraft.used:minecraft.carrot_on_a_stick",
                     f"scoreboard objectives add aoe_box minecraft.used:minecraft.{WAND}",
@@ -735,8 +741,7 @@ class Gather:
         for cmd in [f'team add p{self.player} "Player {self.player}"', f"team modify p{self.player} color {self.color()}"] \
                 + [f"scoreboard objectives setdisplay {slot} {self.board}" for slot in self.sidebars()]:
             self.command(cmd)
-        for r in RESOURCES:
-            self.command(f"scoreboard players set {r} {self.board} {self.stock[r.lower()]}")   # the start resources
+        self.show_stock()                                              # the start resources
         self.command(f'scoreboard players display name Idle {self.board} "Idle villagers"')   # a name has no space
         # The players get the side of the units for the attack alerts of the plugin (AoePlugin.side, #1241): the team,
         # not the tag aoe2mc.pN, because cheats.destroy kills and conquest.alive counts the entities with that tag.

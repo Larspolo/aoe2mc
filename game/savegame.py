@@ -400,8 +400,7 @@ def load(g, d):
         if "villagers" in p:                                           # a save from before #2258 has no orders
             give_orders(x, p)
         board_again(x)
-        for r in gather.RESOURCES:                                     # the sidebar of the resources (Gather.setup)
-            x.command(f"scoreboard players set {r} {x.board} {x.stock[r.lower()]}")
+        x.show_stock()                                                 # the sidebar of the resources (Gather.setup)
         train.sidebar(x)
     for b in bots(g):                                                  # its attack time and wave go on (#2325)
         for f, v in d["players"].get(str(b.g.player), {}).get("bot", {}).items():

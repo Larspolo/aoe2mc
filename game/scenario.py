@@ -567,8 +567,7 @@ def setup(g, mode="scenario", start=True):
     for x, p in rows.items():
         x.stock.update(p.get("resources", {}))
         x.pop_limit = p.get("pop_limit", x.pop_limit)
-        for r in gather.RESOURCES:                                     # the sidebar of the resources (Gather.setup)
-            x.command(f"scoreboard players set {r} {x.board} {x.stock[r.lower()]}")
+        x.show_stock()                                                 # the sidebar of the resources (Gather.setup)
         train.sidebar(x)
     return g
 
