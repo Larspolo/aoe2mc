@@ -389,8 +389,20 @@ def gates_again(g):
                 build.portcullis(x, site)
 
 
+def relics(d, xs):
+    """The one relic list of the game (monk.relics, #3116) in the saved state d, or None (a save before #2412). A save
+    before #3116 has a list for each player: each relic takes the entry of the player whose monk or monastery holds it."""
+    lists = [(x.player, unpack(p["relics"])) for x in xs if "relics" in (p := d["players"].get(str(x.player), {}))]
+    if len(lists) < 2:
+        return lists[0][1] if lists else None
+    return [next(iter([{"player": n, **rs[i]} for n, rs in lists if i < len(rs) and (rs[i]["monk"] or rs[i]["home"])]
+                      + [rs[i] for _, rs in lists if i < len(rs)]))
+            for i in range(max(len(rs) for _, rs in lists))]
+
+
 def load(g, d):
     """Put the saved state d (dump) on the Gather of each player that it names, and show the resources again."""
+    import build
     import gather
     import train
     for x in sides(g):
@@ -401,8 +413,10 @@ def load(g, d):
             setattr(x, f, type(getattr(x, f))(p[f]))
         x.techs = set(p["techs"])
         for f in PACKED + KEPT:                                        # the next tick shows the boss bars again
-            if f in p:                                                 # a save before #2257 has no queues
+            if f in p and f != "relics":                               # a save before #2257 has no queues
                 setattr(x, f, unpack(p[f]))
+        for site in x.sites:                                           # the buildings work again: farms, drops, forts (#2980)
+            build.settle(x, site, loaded=True)                         # before the saved amounts, which win
         for f, v in p.get("map", {}).items():                          # a save before #2453 has no map
             m = getattr(x.map, f)                                      # in place: the bot shares these (#2983)
             m.clear()
@@ -420,6 +434,9 @@ def load(g, d):
         board_again(x)
         x.show_stock()                                                 # the sidebar of the resources (Gather.setup)
         train.sidebar(x)
+    if (rs := relics(d, sides(g))) is not None:                        # in place: the sides share the list (#3116)
+        for x in sides(g):
+            x.relics[:] = [dict(r) for r in rs]
     for b in bots(g):                                                  # its attack time and wave go on (#2325)
         for f, v in d["players"].get(str(b.g.player), {}).get("bot", {}).items():
             setattr(b, f, v)

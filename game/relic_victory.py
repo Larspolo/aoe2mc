@@ -4,10 +4,11 @@ map for the relic timer wins, as in the AoE2 DE "Standard" game. The timer has t
 (wonder.years: AoE2 wiki, "Wonder (Age of Empires II)", section WonderRelicVictoryTime, which the page "Relic (Age of
 Empires II)" includes). A relic that leaves a monastery (the monastery falls, monk.relic_tick) stops the timer, and a
 new holder starts it again from the full time. With no relic on the map there is no relic victory.
-The relics of a player are the ones of its Gather (monk.relics): the human player and each bot (bot.Bot holds its
-Gather in b.g). The boss bar aoe2mc:relics shows the countdown to all players (Minecraft feature, as wonder.py), and
-gather.Gather.run gives tick() the game seconds (tick × NORMAL). At the end, the human player sees "Victory" for its
-own relics and "Defeat" for the relics of a rival; the game then ends (g.ended), and cheats.end calls close().
+All Gathers of a game share one list of the relics (monk.relics, #3116): a player holds a relic when it is in a
+monastery of its Gather (the people and each bot; bot.Bot holds its Gather in b.g). The boss bar aoe2mc:relics shows
+the countdown to all players (Minecraft feature, as wonder.py), and gather.Gather.run gives tick() the game seconds
+(tick × NORMAL). At the end, the human player sees "Victory" for its own relics and "Defeat" for the relics of a
+rival; the game then ends (g.ended), and cheats.end calls close().
 """
 import json
 import math

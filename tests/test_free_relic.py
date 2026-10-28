@@ -14,7 +14,8 @@ def church(g, rect):
 def test_the_first_armenian_church_holds_a_relic_that_gives_gold():
     _, g = castle("ARMENIANS")
     home = church(g, (12, 15, 8, 11))
-    assert [r for r in monk.relics(g) if r["home"]] == [{"at": None, "monk": None, "home": home, "free": True}]
+    assert [r for r in monk.relics(g) if r["home"]] == [{"at": None, "monk": None, "home": home, "free": True,
+                                                          "player": 1}]
     gold = g.stock["gold"]
     for _ in range(60):
         monk.relic_tick(g, monk.EVERY)

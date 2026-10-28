@@ -190,13 +190,14 @@ def share(g, uuid):
 
 def transform(g, t):
     """Turn each own unit of g whose name passes t.units into unit t.to at the same place (train.summon)."""
-    import train                                                   # train -> gather -> cheats: import it late
+    import record, train                                           # train -> gather -> cheats: import it late
     names = {o["uuid"]: o["name"] for o in g.units if o.get("uuid") in g.villagers} | g.soldiers
     gone = set()
     for uuid, name in sorted(names.items()):
         if name == t.to or not t.units(name) or not (pos := g.pos(uuid)):
             continue
         part = share(g, uuid)
+        record.removed(g, uuid)                                        # the start scout of scout.swap (#3028)
         g.command(f"execute as {uuid} on passengers run kill @s")      # the rider of a horse or camel
         g.command(f"kill {uuid}")
         g.soldiers.pop(uuid, None)

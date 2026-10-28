@@ -493,8 +493,7 @@ def found(g, name, rect, way=None, tiles=None, free=False):
     for r, v in () if free else price(g, name).items():
         g.stock[r] -= v
         g.command(f"scoreboard players remove {r.capitalize()} {g.board} {v}")
-    if not free:                                                       # a free one is the start town of a mode
-        record.built(g, name, rect)                                    # Record Game (#2649)
+    record.built(g, name, rect, free)                                  # Record Game (#2649), free: a setup (#3028)
     x0, x1, z0, z1 = rect
     color = g.players.get(str(g.player), {}).get("color", "light_gray")
     ring = [(x, g.map.y(x, z) if g.map.y(x, z) is not None else int(fleet.level(g) if name in WATER else g.map.sea(x, z)), z)
@@ -620,12 +619,7 @@ def rise(g, site, work):
             return True
         x0, x1, z0, z1 = site["footprint"]
         s, T = footprint(site["name"]), g.map.T
-        if "FARM" in site["name"]:                                     # free ground again: the farmer stands on it
-            g.map.blocked -= {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
-        open_cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)} - tile_cells(g, site["tiles"]) \
-            if "tiles" in site else ()                                 # beside a diagonal gate (#1655)
-        g.map.building(site["name"], site["footprint"], (x0 // T + s // 2, z0 // T + s // 2), site["player"] == g.player,
-                       open_cells)
+        settle(g, site)                                                # the map and the forts (as savegame.load)
         if "FARM" in site["name"] and site["player"] == g.player:
             folwark(g, site, (x0 // T + s // 2, z0 // T + s // 2))
         if site["name"] == "TOWN_CENTER" and site["player"] == g.player:
@@ -820,8 +814,7 @@ def target(g, site):
     """A complete building of combat.BUILDINGS gets its target entity, as a building of the map (combat.setup): the
     AoE2 hit points, and the arrows of a town center, tower or castle (#1202). wonder.tick makes the one of a wonder."""
     import combat                                                      # combat -> gather -> build: import it late
-    if site["name"] not in combat.BUILDINGS and site["name"] not in combat.WALLS or site["name"] == "WONDER" \
-            or site.get("lasting"):                                    # the monastery of Capture the Relic (#2458)
+    if not is_fort(site):
         return
     x0, x1, z0, z1 = site["footprint"]
     uuid = combat.target_uuid([x0, z0, x1, z1])
@@ -833,7 +826,47 @@ def target(g, site):
                              factor=civs.arrows(g, name, site["player"])) \
             + [f"tag {uuid} add {combat.WALL_TAG}"] * wall + [combat.label_command(uuid, name)]:
         g.command(c)
-    for o in sides(g):                     # each other side can attack it: the bot and player 1 alike (#1819)
+    forts(g, site)
+
+
+def is_fort(site):
+    """A complete building that the sides can attack: a building or a wall of combat.py, but not a wonder (#2458)."""
+    import combat                                                      # combat -> gather -> build: import it late
+    return (site["name"] in combat.BUILDINGS or site["name"] in combat.WALLS) and site["name"] != "WONDER" \
+        and not site.get("lasting")                                    # the monastery of Capture the Relic (#2458)
+
+
+def settle(g, site, loaded=False):
+    """Put a site on the map (#2980): a foundation blocks its cells, and a complete building works (Map.building and the
+    forts of the sides). rise() calls it at the completion. loaded: a saved site (savegame.load), which sends no command
+    and gives no one-time gift again: the world keeps the blocks and the targets, and the saved amounts win."""
+    x0, x1, z0, z1 = site["footprint"]
+    cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
+    if not site.get("done"):
+        g.map.blocked |= tile_cells(g, site["tiles"]) if "tiles" in site else cells
+        return
+    if site["name"] in MOVES:                                          # a cart: its drop cells (cart)
+        if loaded and "cells" in site:
+            g.map.drop_site(site["name"], site["cells"])
+        return
+    s, T = footprint(site["name"]), g.map.T
+    if "FARM" in site["name"]:                                         # free ground again: the farmer stands on it
+        g.map.blocked -= cells
+    open_cells = cells - tile_cells(g, site["tiles"]) if "tiles" in site else ()   # beside a diagonal gate (#1655)
+    g.map.building(site["name"], site["footprint"], (x0 // T + s // 2, z0 // T + s // 2), site["player"] == g.player,
+                   open_cells)
+    if loaded and is_fort(site):                                       # rise() does it in target()
+        forts(g, site)
+
+
+def forts(g, site):
+    """Each side knows a complete building as a fort, with its target entity: each other side can attack it, the bot and
+    player 1 alike (#1819). No command: the target entity is in the world already (savegame.load, #2980)."""
+    import combat                                                      # combat -> gather -> build: import it late
+    x0, x1, z0, z1 = site["footprint"]
+    uuid = combat.target_uuid([x0, z0, x1, z1])
+    box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
+    for o in sides(g):
         o.fort_names[uuid] = site["name"]
         if site["player"] != o.player:
             o.forts[uuid] = box

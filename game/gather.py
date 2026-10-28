@@ -947,8 +947,8 @@ class Gather:
         not attack: it converts (monk.convert_order, #1245) or stays."""
         import ai                                                      # ai imports this module
         monks = self.monks()
-        repair.drop(self, self.selected)                               # Serjeants stop a repair (#2128)
-        self.end_patrols(self.selected)
+        converts = {m for m in monks if self.converting.get(m, [None])[0] == target}   # the order of the same click
+        self.new_order(self.selected - converts)
         trebs = {u for u in self.selected if self.soldiers.get(u) == trebuchet.NAME}
         for u in sorted(trebs):                                        # it unpacks first (#1351)
             trebuchet.unpack(self, u, target)
@@ -1003,10 +1003,10 @@ class Gather:
         """Send the selected villagers (or the villagers who) to the tree, the fruit bush, the mine or the farm on tile.
         A farm takes one farmer: the next villagers go to the nearest free farms, or stop."""
         res, job = self.map.resource(tile), job_of(self.map, tile)
-        for u in sorted((self.selected if who is None else who) & self.villagers.keys()):   # a scout cannot (#589)
+        who = (self.selected if who is None else who) & self.villagers.keys()   # a scout cannot (#589)
+        self.new_order(who)
+        for u in sorted(who):
             v = self.villagers[u]
-            for t in [t for t, f in self.farmers.items() if f == u]:
-                del self.farmers[t]
             to = tile
             if tile in self.map.farms:
                 v.tree = None
@@ -1027,10 +1027,10 @@ class Gather:
         (#418). They keep their load, as in AoE2."""
         x0, x1, z0, z1 = site["footprint"]
         goals = self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)})
-        for u in sorted((self.selected if who is None else who) & self.villagers.keys()):   # not a scout (#589)
+        who = (self.selected if who is None else who) & self.villagers.keys()   # not a scout (#589)
+        self.new_order(who)
+        for u in sorted(who):
             v = self.villagers[u]
-            for t in [t for t, f in self.farmers.items() if f == u]:
-                del self.farmers[t]
             v.tree, v.site = None, site
             self.task(v, "BUILDER")
             self.go(v, "to_site", goals)
@@ -1045,10 +1045,10 @@ class Gather:
             return
         self.seen[prey] = pos
         cell = math.floor(pos[0]), math.floor(pos[2])
-        for u in sorted((self.selected if who is None else who) & self.villagers.keys()):
+        who = (self.selected if who is None else who) & self.villagers.keys()
+        self.new_order(who)
+        for u in sorted(who):
             v = self.villagers[u]
-            for t in [t for t, f in self.farmers.items() if f == u]:
-                del self.farmers[t]
             self.task(v, "HUNTER")
             if v.load and v.res != "food":
                 v.load = 0                                             # AoE2 drops a load of another resource
@@ -1395,6 +1395,20 @@ class Gather:
                 and (cell := fleet.pick(self, eye, d)) and self.map.wet(*cell):
             self.walk_to(name, cell)                                   # the ships sail on the water (#1383)
 
+    def new_order(self, units):
+        """A new order ends each old order of the units, as in AoE2 (#3007): the repair of a Serjeant (#2128), the
+        trigger patrols (#2674), the walk into a building, a siege tower or a transport ship, a conversion, a relic
+        trip and the farm of a farmer. Each order function calls it before it sets its own state."""
+        units = set(units)
+        repair.drop(self, units)
+        self.end_patrols(units)
+        for key in ("entering", "boarding", "loading", "converting", "fetching"):
+            table = vars(self).get(key, {})
+            for u in units & table.keys():
+                del table[u]
+        for t in [t for t, f in self.farmers.items() if f in units]:
+            del self.farmers[t]
+
     def end_patrols(self, units):
         """A new order ends the trigger patrols of the units, as in AoE2 DE (#2674): their patrol tags of
         scenario.orders go, so the next leg does not walk them back. No command when no patrol walks."""
@@ -1417,8 +1431,7 @@ class Gather:
         {uuid: cell}."""
         import ai                                                      # ai imports this module
         units = self.selected if units is None else set(units)
-        repair.drop(self, units)                                       # Serjeants stop a repair (#2128)
-        self.end_patrols(units)
+        self.new_order(units)
         boats = {u for u in units if replay.ship(self.soldiers.get(u, ""))}
         out = fleet.order(self, boats, cell)                           # a ship sails on the water (#1383)
         transport.aim(self, out, cell)                                 # a loaded ship unloads at a land cell (#1385)
@@ -1431,8 +1444,6 @@ class Gather:
         for u, (x, z) in [(u, c) for u, c in out.items() if u not in boats]:
             if u in self.villagers:
                 v = self.villagers[u]
-                for t in [t for t, f in self.farmers.items() if f == u]:
-                    del self.farmers[t]
                 v.tree, v.site, v.prey = None, None, None
                 self.go(v, "to_rally", {(x, z)})
             else:

@@ -42,6 +42,7 @@ def order(g, player, tower):
     if not who:
         return False
     import ai, train                                               # ai and train import gather
+    g.new_order(who)
     for u in who:
         if (v := g.villagers.get(u)) is not None:                  # the villager stops its work
             v.state, v.path, v.goal, v.site = "garrison", [], None, None

@@ -578,6 +578,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         g.bots = [Side(make(n)) for n in range(2, people + 1)]
         for s in g.bots:                             # the same trees, bushes and mines, as with a bot
             s.g.map.trees, s.g.map.bushes, s.g.map.mines = g.map.trees, g.map.bushes, g.map.mines
+            s.g.relics = g.relics                    # one list: each relic exists once (#3116)
             s.g.reveal, s.g.peers = reveal, [g, *(o.g for o in g.bots)]   # its fog sees all units (#1631)
             s.g.unlock_speed = settings["unlock_speed"]          # each person has the Game menu (#2933)
         for name in list(game.sides):                # players who joined before the teams were there
@@ -619,6 +620,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         import train
         for x in [g, *(s.g for s in g.bots)]:
             train.start(x, settings["age"])
+    if settings["record"]:                                       # the orders of the people and the bots (#2649), and
+        import record                                            # the objects of the setups below at 0:00 (#3028)
+        record.start([g, *(b.g for b in g.bots)], settings["record"])
     import scout
     if not state and scout.used(data):               # the scout of each civilization (#2391), not twice after a load
         for x in [g, *(s.g for s in g.bots)]:
@@ -641,9 +645,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         treaties.start(g, math.inf, (state or {}).get("treaty_time", 0.0))
     elif replay.aoe2mc.game_time(settings["treaty"]):            # after the Gathers: they set the neutral stances
         treaties.start(g, replay.aoe2mc.game_time(settings["treaty"]) / 1000, (state or {}).get("treaty_time", 0.0))   # #2409
-    if settings["record"]:                                       # the orders of the people and the bots (#2649)
+    if settings["record"]:                                       # the setups end, the game starts (#3028)
         import record
-        record.start([g, *(b.g for b in g.bots)], settings["record"])
+        record.play([g, *(b.g for b in g.bots)])
     if game.kind == "paper":                         # the view square of each player on map 0 (#1762)
         import replay
         game.command("aoe minimap on")               # the dots of the units, as in the live replay (#2581)

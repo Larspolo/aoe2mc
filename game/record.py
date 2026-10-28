@@ -7,6 +7,9 @@ objects ({"refs": {key: ID}}): the game program knows a unit by its UUID and a b
 its object ID. A start object keeps its "ref" of aoe2mc.json; a new object (a foundation, a trained unit) takes the next
 ID when it appears, as in the model of aoe2mc.name_timeline. Recorded: a building (each wall piece as one), a unit in a queue,
 a research, an age, a move and an attack order of the human player (the bots: their buildings, queues and ages).
+The setups of run.play (the scout of a civilization, the start buildings, the town and units of a game mode) come at
+0:00, before the game starts (#3028): a free foundation is a "build" event with "free", a unit that a setup kills a
+"delete" event with "free" (no loss), and a unit that it summons a "summon" event with its new ID and tile.
 """
 import functools
 import json
@@ -21,6 +24,7 @@ import aoe2mc  # noqa: E402
 class Recorder:
     def __init__(self, path, objects):
         self.f, self.time, self.ids, self.clock = open(path, "w"), 0.0, {}, None   # game seconds; UUID or footprint -> ID
+        self.setup = True                                              # until play(): the setups of run.play (#3028)
         self.rects = {}                                                # UUID of a building -> its footprint (x0, x1, z0, z1)
         for o in objects:
             if o["kind"] == "building" and "footprint" in o:
@@ -89,6 +93,14 @@ def start(gathers, path):
         g.record = r
 
 
+def play(gathers):
+    """The setups of run.play end and the game starts: a summoned unit is no longer a setup (a trained unit takes its
+    ID in trained())."""
+    for g in gathers:
+        if (r := getattr(g, "record", None)) is not None:
+            r.setup = False
+
+
 def tick(g, dt):
     """Count dt game seconds (Gather.run of the human player)."""
     if (r := getattr(g, "record", None)) is not None and r.clock is g:
@@ -110,11 +122,31 @@ def tile(g, rect):
     return [round((x0 + x1) / 2 / g.map.T, 3), round((z0 + z1) / 2 / g.map.T, 3)]
 
 
-def built(g, name, rect):
-    """A foundation of name on the footprint rect (build.place)."""
+def built(g, name, rect, free=False):
+    """A foundation of name on the footprint rect (build.place). free: a free one of a setup or a trigger, which the
+    replay does not pay for (#3028)."""
     if getattr(g, "record", None) is not None and name in types():
         g.record.id(rect)
-        event(g, "build", type=types()[name], name=name, tile=tile(g, rect))
+        event(g, "build", type=types()[name], name=name, tile=tile(g, rect), **{"free": True} if free else {})
+
+
+def summoned(g, uuid, name, pos, player=None):
+    """A unit that a setup summons at the block position pos (train.summon: the scout of scout.swap, the villagers
+    of Empire Wars, the King of Regicide, #3028): a "summon" event with its new ID, which the replay summons at its
+    tile. A unit of the game (a queue: trained(), a cheat) writes none."""
+    import train                                                       # train imports this module
+    if (r := getattr(g, "record", None)) is None or not r.setup or (unit := train.value("aoe2_name", name, name)) \
+            not in types() or not isinstance(uuid, str):
+        return
+    i = r.id(uuid)
+    event(g, "summon", type=types()[unit], name=name, objects=[i], tile=[round(pos[0] / g.map.T, 3),
+          round(pos[2] / g.map.T, 3)], free=True, **{"player": player} if player not in (None, g.player) else {})
+
+
+def removed(g, uuid):
+    """A unit that a setup kills (cheats.transform of scout.swap, #3028): a "delete" event of its ID, no loss."""
+    if (r := getattr(g, "record", None)) is not None and r.setup:
+        event(g, "delete", objects=[r.id(uuid)], free=True)
 
 
 def queued(g, name, rect):

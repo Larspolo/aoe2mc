@@ -13,6 +13,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import monk  # noqa: E402
 import table  # noqa: E402
 
 # The units of each group (unit name, combat.Stats). "Mounted" in AoE2: cavalry, camels and elephants. A unit is in a
@@ -238,7 +239,8 @@ def units(g, name, s):
     walk speed aside (speed)."""
     names, each, most = RELIC_ATTACK.get(civ(g), ((), 0, 0))
     if name in names:                                              # the relics in own monasteries (monk.relic_tick)
-        s = s._replace(attack=s.attack + min(each * sum(r["home"] is not None for r in getattr(g, "relics", ())), most))
+        s = s._replace(attack=s.attack + min(each * sum(r["home"] is not None and monk.own(g, r)
+                                                        for r in getattr(g, "relics", ())), most))
     for v, c in changes(g, name, s):
         if v.startswith("bonus:") and isinstance(c, float):        # a factor of the attack against a class (#2272)
             s = s._replace(bonus={**s.bonus, v[6:]: math.floor(s.bonus.get(v[6:], 0) * c + 0.5)})
