@@ -118,12 +118,13 @@ def main(argv=None):
     found = scan()
     counts = {p: len(v) for p, v in found.items()}
     if a.shrink:
+        rows = read(LIST)                           # before the open: mode "w" empties the file (#3066)
         with open(LIST, "w", encoding="utf-8") as f:
-            f.write(HEAD + "".join(line + "\n" for line in shrink(counts, read())))
+            f.write(HEAD + "".join(line + "\n" for line in shrink(counts, rows)))
     for p, v in sorted(found.items()):
         for line, ns in v:
             print(f"{p.split(':')[0]}:{line} {p.split(':')[1]}: {', '.join(ns[:4])}{' ...' if len(ns) > 4 else ''}")
-    errors = problems(counts, read())
+    errors = problems(counts, read(LIST))
     print(f"{sum(counts.values())} literals with AoE2 names in {len(counts)} places", file=sys.stderr)
     print("\n".join(errors), file=sys.stderr)
     return 1 if errors else 0
