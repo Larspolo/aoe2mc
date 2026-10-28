@@ -2751,6 +2751,7 @@ AND = 57                                                           # the conditi
 ADD_TRAIN_LOCATION = 102                                           # "Add Train Location" (#2865)
 ATTACK_MOVE = 30                                                   # "Attack Move" (#2647)
 BUILD_OBJECT = 108                                                 # "Build Object" (#2863)
+BUILDING_IS_TRADING = 54                                           # the condition "Building Is Trading" (#2868)
 CHANGE_CIVILIZATION_NAME = 48                                      # "Change Civilization Name" (#2905)
 CHANGE_COLOR_MOOD = 72
 CHANGE_DIPLOMACY = 1                                               # "Change Diplomacy" (#2645)
@@ -2864,6 +2865,7 @@ COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions 
 VISIBLE = (OBJECT_NOT_VISIBLE, OBJECT_VISIBLE, OBJECT_VISIBLE_MULTIPLAYER)  # the sight of a player: the game program
 TICKED = COUNTED + (                                               # conditions of the tick function, one per line
     ACCUMULATE_ATTRIBUTE,
+    BUILDING_IS_TRADING,
     COMPARE_VARIABLES,
     DECISION_TRIGGERED,
     DIFFICULTY_LEVEL,
@@ -2926,6 +2928,7 @@ OBJECT_TESTS = {DESTROY_OBJECT: ("if entity @e[tag=aoe2mc.m{ref}] unless entity 
                                           "@e[tag=aoe2mc.r{next},distance=..{near}]", ())}
 TICKED += tuple(OBJECT_TESTS)
 INVERTED = tuple(OBJECT_TESTS) + (                                  # conditions with an inverted test in the tick
+    BUILDING_IS_TRADING,
     COMPARE_VARIABLES,                                                 # function, one per line in alphabetical order
     DECISION_TRIGGERED,
     OBJECT_HAS_ACTION,
@@ -2954,6 +2957,7 @@ CONDITION_KEYS = {
     BRING_OBJECT_TO_AREA: {"area": area_keys},                                           # (#2620)
     BRING_OBJECT_TO_OBJECT: {"next": "next_object",                                      # (#2771)
                              "next_unit": lambda c, entities, techs: c.next_object in entities},
+    BUILDING_IS_TRADING: {"ref": "unit_object"},                                         # (#2868)
     COMPARE_VARIABLES: {"variable": "variable", "variable2": "variable2", "comparison": "comparison"},   # (#2698)
     DECISION_TRIGGERED: {"decision": "decision_id", "option": "decision_option"},          # (#2888)
     DIFFICULTY_LEVEL: {"quantity": "quantity"},                                          # (#2704)
@@ -4341,6 +4345,7 @@ Effect = namedtuple("Effect", "t T ground players stats mood files setup switch 
 # "Variable Value" (#2611): the score #v<N> of aoe_var. A world with no game program has no score: no fire.
 SCORE_TESTS = {
     ACCUMULATE_ATTRIBUTE: resource_score,
+    BUILDING_IS_TRADING: lambda c: f"score #r{c['ref']} aoe_trade matches {int(not c['inverted'])}",   # #2868
     COMPARE_VARIABLES: compare_test,
     DECISION_TRIGGERED: lambda c: f"score #last aoe_decision matches {c['decision'] * 10 + c['option']}",   # #2888
     DIFFICULTY_LEVEL: lambda c: f"score #level aoe_difficulty matches {c.get('quantity', 0)}",
@@ -4454,6 +4459,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     or c["type"] == DECISION_TRIGGERED and (c.get("decision", -1) < 0 or c.get("option") not in (1, 2))
                     or c["type"] == OBJECT_HP and (c.get("ref", -1) < 0 or variable_range(c) is None)
                     or c["type"] == UNITS_GARRISONED and c.get("unit", -1) < 0
+                    or c["type"] == BUILDING_IS_TRADING and c.get("ref", -1) < 0
                     or c["type"] == VICTORY_TIMER and (c.get("player", -1) <= 0 or c.get("timer_type") not in (0, 1, 2)
                                                        or variable_range(c) is None)
                     or c["type"] == OBJECT_HAS_ACTION and (c.get("ref", -1) < 0 or c.get("next", -1) >= 0
@@ -4592,6 +4598,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             "aoe_seen",
             "aoe_tech",
             "aoe_techstate",
+            "aoe_trade",
             "aoe_vic",
     ):
         if any(f" {word} " in x for x in tick):

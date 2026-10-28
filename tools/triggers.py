@@ -34,6 +34,7 @@ MAP = {
     ("condition", "AND"): "the default between two conditions: all conditions of one group in one `execute if ... if ...` line (#2765)",
     ("condition", "BRING_OBJECT_TO_AREA"): "`execute if entity @e[tag=aoe2mc.rN,x=..,dx=..]` in the tick function (units, #2620); a building: not supported yet",
     ("condition", "BRING_OBJECT_TO_OBJECT"): "`execute at @e[tag=aoe2mc.rA,limit=1] if entity @e[tag=aoe2mc.rB,distance=..T]` in the tick function: within one tile (units, #2771); a building: not supported yet",
+    ("condition", "BUILDING_IS_TRADING"): "`if score #rN aoe_trade matches 1` (0 when inverted) in the tick function: the scenario mode of the game program sets the score while a trade cart has the market on its route (#2868); a dock: not supported (no trade cogs)",
     ("condition", "CAPTURE_OBJECT"): "`execute if entity @e[tag=aoe2mc.rN,tag=aoe2mc.pN]` in the tick function (units, #2619); a building: `if score #oN aoe_owner matches N`, set by the scenario mode to its owner (#2940)",
     ("condition", "CHANCE"): "`execute store result score ... run random value 1..100` once per second (alone, after the timers or with the ticked conditions: #2574)",
     ("condition", "COMPARE_VARIABLES"): "`execute if score #vA aoe_var <op> #vB aoe_var` in the tick function, once; `unless` for not equal and inverted (#2698)",
