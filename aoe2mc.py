@@ -433,6 +433,9 @@ def read_scenario(path):
                                                if e.effect_type == CHANGE_VARIABLE else {}),
                                             **({"target": e.target_player}                # "Change Ownership" (#2570)
                                                if e.effect_type == CHANGE_OWNERSHIP else {}),
+                                            **({"target": e.target_player,                # "Replace Object" (#2703)
+                                                "object2": kinds.get(e.object_list_unit_id_2)}
+                                               if e.effect_type == REPLACE_OBJECT else {}),
                                             **({"target": e.target_player, "diplomacy": e.diplomacy}   # (#2645)
                                                if e.effect_type == CHANGE_DIPLOMACY else {}),
                                             **({"target": e.target_player, "quantity": e.quantity,   # (#2576)
@@ -2778,6 +2781,7 @@ OWN_OBJECTS = 3
 PATROL = 19                                                        # "Patrol" (#2647)
 PLAY_SOUND = 4                                                     # "Play Sound" (#2644)
 REMOVE_OBJECT = 15
+REPLACE_OBJECT = 43                                                # "Replace Object" (#2703)
 RESEARCHED = 9                                                     # the condition "Research Technology" (#2656)
 RESEARCH_TECHNOLOGY = 2                                            # "Research Technology" (#2577)
 SEND_CHAT = 3
@@ -2918,6 +2922,34 @@ def owner_lines(e, c):
             f"execute as {own} on vehicle run tag @s add aoe2mc.own",
             f"tag {own} remove aoe2mc.p{old}", f"tag {own} add aoe2mc.p{new}",
             f"team join p{new} {own}", f"tag {own} remove aoe2mc.own"]
+
+
+def replace_lines(e, c):
+    """The commands of "Replace Object" (#2703): a summon of the entity of the new type (units.make_entity, as "Create
+    Object") of the target player at each unit of the effect (effect_units), then a kill of the old units and their
+    mounts. Minecraft cannot change the type of a mob. A temporary tag marks the old units first: a new unit of the
+    same entity type and player must stay. A type with no entity (a building) is not supported yet."""
+    T, stats = c.T, c.stats
+    kind, name = e.get("object2") or (None, None)
+    found = effect_units(e, T) if e.get("object") else None
+    nbt = units.make_entity(dict(name=name, player=max(e.get("target", -1), 0), rotation=math.pi / 2), c.players or {},
+                            (0.0, 0.0, 0.0), np.random.default_rng(c.t["id"])) if kind in ("U", "H") else None
+    if found is None or nbt is None:
+        stats["replace (not supported yet)"] += 1
+        return []
+    stats["replace"] += 1
+    at, top, old = found
+    entity = str(nbt.pop("id"))
+    del nbt["Pos"]
+    parts = [nbt]                                                      # Minecraft gives new UUIDs (object_lines)
+    while parts:
+        part = parts.pop()
+        part.pop("UUID", None)
+        parts += list(part.get("Passengers", []))
+    mark = "@e[tag=aoe2mc.replace]"
+    ride = [f"execute as {mark} on vehicle run kill @s"] if top is not old else []   # a rider: its mount goes too
+    return [f"tag {at} add aoe2mc.replace", f"execute at {mark} run summon {entity} ~ ~ ~ {nbt.snbt()}"] + ride + \
+        [f"kill {mark}"]
 
 
 def resource_lines(e, c):
@@ -3184,6 +3216,7 @@ EFFECTS = {
     PATROL: order_lines,
     PLAY_SOUND: sound_lines,
     REMOVE_OBJECT: object_lines,
+    REPLACE_OBJECT: replace_lines,
     RESEARCH_TECHNOLOGY: research_lines,
     SEND_CHAT: chat_lines,
     TASK_OBJECT: task_lines,
