@@ -310,6 +310,13 @@ def volley_command(g, uuid, name):
     return None if attack is None else f"aoe volley {uuid} 1 {attack}"
 
 
+def lead_command(g, uuid, name):
+    """The command that lets the shots of own unit name lead a moving target, as with Ballistics (the key "lead" of
+    data/civs.jsonl: Spanish Cannon Galleons, #2430), else None. Minecraft feature: a scoreboard tag that the plugin
+    reads (AoePlugin.lead)."""
+    return f"tag {uuid} add aoe2mc.lead" if name in civs.value("lead", civs.civ(g), ()) else None
+
+
 ORDERS = {r["name"] for r in UNIT_ROWS if r.get("orders")}         # not military, but they take move orders (summon)
 
 
@@ -743,6 +750,8 @@ def research(g, entry, start=False):
                 g.command(cmd)
             if cmd := volley_command(g, uuid, new):               # a war galley of the Armenians (#2379)
                 g.command(cmd)
+            if cmd := lead_command(g, uuid, new):                 # an elite Spanish cannon galleon (#2430)
+                g.command(cmd)
             g.command(combat.label_command(uuid, new))               # the name of a new unit (units.pretty)
     import trebuchet                                               # trebuchet imports this module: import it late
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
@@ -923,6 +932,8 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     if cmd := combat.range_command(uuid, name, g.map.T, s=stats(g, name)):   # an archer shoots from its range (#670)
         g.command(cmd)
     if cmd := volley_command(g, uuid, name):                       # an Armenian galley shoots twice (#2379)
+        g.command(cmd)
+    if cmd := lead_command(g, uuid, name):                         # a Spanish cannon galleon aims ahead (#2430)
         g.command(cmd)
     if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name)):   # it attacks enemies in sight (#775)
         g.command(cmd)
