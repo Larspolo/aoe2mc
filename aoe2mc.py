@@ -456,6 +456,9 @@ def read_scenario(path):
                                             **({"target": e.target_player,                # "Replace Object" (#2703)
                                                 "object2": kinds.get(e.object_list_unit_id_2)}
                                                if e.effect_type == REPLACE_OBJECT else {}),
+                                            **({"object2": kinds.get(e.object_list_unit_id_2),   # (#2764)
+                                                "selected": list(e.selected_object_ids or [])}
+                                               if e.effect_type == CREATE_GARRISONED_OBJECT else {}),
                                             **({"target": e.target_player, "diplomacy": e.diplomacy}   # (#2645)
                                                if e.effect_type == CHANGE_DIPLOMACY else {}),
                                             **({"target": e.target_player, "quantity": e.quantity,   # (#2576)
@@ -2114,6 +2117,8 @@ def seat_count(ship):
     return 1 if "_chest_" in str(ship["id"]) else 2      # a chest boat has one seat
 CHAIN = 4                   # units per boat seat: each garrisoned unit rides the unit below it (#382)
 GARRISONED = "aoe2mc.garrisoned"    # entity tag of a unit inside its building (#807; the game program: #808)
+MADE_INSIDE = "aoe2mc.made_inside"  # entity tag of a unit that a trigger made inside a building: the game program adds
+                                    # it to the garrison of the building (#2764)
 GARRISON_CELLS = 20         # free cells of a building in aoe2mc.json: the largest AoE2 garrison (castle, #808)
 SUN = ("minecraft:zombie", "minecraft:zombie_villager", "minecraft:skeleton", "minecraft:stray", "minecraft:drowned")
 
@@ -2793,6 +2798,7 @@ CHANGE_VARIABLE = 56                                               # the scenari
 CHANGE_VIEW = 16                                                   # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
 CLEAR_TIMER = 57                                                   # "Clear Timer" (#2696)
+CREATE_GARRISONED_OBJECT = 49                                      # "Create Garrisoned Object" (#2764)
 CREATE_OBJECT = 11
 DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
 DECLARE_VICTORY = 13                                               # "Declare Victory" (#2542)
@@ -2948,6 +2954,38 @@ def damage_lines(e, c):
     at = found[0]                                                      # Gaia: not the players (effect_units)
     stats["damage"] += 1
     return [f"execute as {at} run damage @s {q}"]                      # damage takes one entity
+
+
+def garrisoned_lines(e, c):
+    """The commands of "Create Garrisoned Object" (#2764): a summon of the unit (object2, units.make_entity) in the
+    state of a garrisoned unit of the converter (plan_units, #807) on the inside cells of each selected building
+    (buildings.INSIDE). The tag MADE_INSIDE lets the game program add it to the garrison, so UNGARRISON lets it out.
+    A holder that is not a building with rooms (a ship, a ram) or no selected object: not supported yet."""
+    kind, name = e.get("object2") or (None, None)
+    holders = [r for r in e.get("selected", []) if r in buildings.INSIDE]
+    nbt = units.make_entity(dict(name=name, player=max(e["player"], 0), rotation=math.pi / 2), c.players or {},
+                            (0.0, 0.0, 0.0), np.random.default_rng(c.t["id"])) if kind in ("U", "H") else None
+    if nbt is None or not holders:
+        c.stats["create garrisoned (not supported yet)"] += 1
+        return []
+    c.stats["create garrisoned"] += 1
+    label = units.top_entity(nbt)
+    label["CustomNameVisible"] = Byte(0)
+    label["Tags"] = List[String](list(label.get("Tags", [])) + [String(GARRISONED), String(MADE_INSIDE)])
+    entity = str(nbt.pop("id"))
+    del nbt["Pos"]
+    parts = [nbt]                                                      # new UUIDs (object_lines), no damage inside
+    while parts:
+        part = parts.pop()
+        part.pop("UUID", None)
+        part["Invulnerable"], part["NoAI"] = Byte(1), Byte(1)
+        parts += list(part.get("Passengers", []))
+    lines = []
+    for ref in holders:                                                # one unit per building, as in AoE2
+        cells, y, center = buildings.INSIDE[ref]
+        x, z = cells[0] if len(cells) else center
+        lines.append(f"summon {entity} {x + 0.5} {int(y)} {z + 0.5} {nbt.snbt()}")
+    return lines
 
 
 def heal_lines(e, c):
@@ -3352,6 +3390,7 @@ EFFECTS = {
     CHANGE_VIEW: view_lines,
     CLEAR_INSTRUCTIONS: clear_lines,
     CLEAR_TIMER: clear_timer_lines,
+    CREATE_GARRISONED_OBJECT: garrisoned_lines,
     CREATE_OBJECT: object_lines,
     DAMAGE_OBJECT: damage_lines,
     DEACTIVATE_TRIGGER: switch_lines,
