@@ -338,8 +338,10 @@ class Game:
             self.sides[name] = n
             self.command(f"team join p{n} {name}")
         elif self.people > 1:
-            for cmd in [*SPECTATORS * (not self.spectators), f"team join spec {name}", f"gamemode spectator {name}"]:
-                self.command(cmd)                    # a join again: force-gamemode made it creative
+            for cmd in [*SPECTATORS * (not self.spectators), f"team join spec {name}", f"gamemode spectator {name}",
+                        *[f"aoe show {name} all"] * (getattr(self, "kind", "paper") == "paper")]:
+                self.command(cmd)                    # a join again: force-gamemode made it creative; the plugin hid
+                                                     # the fog units of all teams on the join, with no team yet (#2921)
             self.spectators = {*self.spectators, name}
 
     def choose(self, name, n):

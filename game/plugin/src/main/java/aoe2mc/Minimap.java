@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Predicate;
+import java.util.function.BiPredicate;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -98,11 +98,11 @@ final class Minimap extends MapRenderer {
     private MapView view;
     private BukkitTask task;
     private final JavaPlugin plugin;
-    private final Predicate<UUID> hidden;                 // aoe hide: no dot for these units
+    private final BiPredicate<Player, UUID> hidden;       // aoe hide: no dot for these units of the team of the player
 
     private final Frame frame = new Frame();
 
-    Minimap(JavaPlugin plugin, Predicate<UUID> hidden) {
+    Minimap(JavaPlugin plugin, BiPredicate<Player, UUID> hidden) {
         super(true);                                      // an own image for each player: the fog of its team (#2583)
         this.plugin = plugin;
         this.hidden = hidden;
@@ -479,7 +479,7 @@ final class Minimap extends MapRenderer {
             }
         }
         for (LivingEntity e : world.getLivingEntities()) {
-            if (e instanceof Player || hidden.test(e.getUniqueId()) || !player.canSee(e)   // hidden for this player
+            if (e instanceof Player || hidden.test(player, e.getUniqueId()) || !player.canSee(e)   // hidden for this player
                     || e.getScoreboardTags().contains("aoe2mc.building")) {   // the target slime of a building: the
                 continue;                                     // building has its square, a dot shows it in the fog (#1800)
             }

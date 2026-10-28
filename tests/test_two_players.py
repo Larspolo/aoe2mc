@@ -100,7 +100,7 @@ def test_the_join_order_gives_the_sides():
         game.side(name)
     assert game.sides == {"Alex": 1, "Steve": 2}
     assert sent == ["team join p1 Alex", "team join p2 Steve", *run.SPECTATORS, "team join spec Bob",
-                    "gamemode spectator Bob", "team join p1 Alex"]                 # Bob watches (#2898)
+                    "gamemode spectator Bob", "aoe show Bob all", "team join p1 Alex"]    # Bob watches (#2898, #2921)
 
 
 def test_one_person_keeps_all_players_on_team_p1():
