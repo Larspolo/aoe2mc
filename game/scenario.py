@@ -3,13 +3,82 @@ The scenario mode of the game program (#2540, epic #2538; run.py --mode scenario
 resources and the population limit of the scenario (tab "Players" of the AoE2 DE scenario editor), not with the lobby
 settings. The converter writes them into aoe2mc.json "players" ("resources", "pop_limit", #2539). A player without
 them (a random map, a recorded game, an old scenario) keeps the lobby values.
+Each person also gets a written book with the scenario texts (aoe2mc.json "messages": objectives, hints,
+instructions ...), as the "Objectives" window of AoE2 DE, and the chat shows the instructions at the start (#2541).
 """
+import json
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gather  # noqa: E402
+import rcon  # noqa: E402
+import replay  # noqa: E402
 import train  # noqa: E402
+
+SLOT = "inventory.26"                                                  # the last slot of the inventory: not the hotbar
+TAG = "aoe_book"                                                       # a person who has the book
+EVERY = 1.0                                                            # seconds between two checks for new people
+
+
+def book(who, messages):
+    """The commands that put a written book with the scenario texts (aoe2mc.book_pages: one chapter per text, the
+    title in bold) into the inventory slot SLOT of who: one command holds at most rcon.MAX bytes, so the pages after the
+    first command go in with the item modifier set_written_book_pages (mode append). No command when all texts are
+    empty."""
+    out, pages = [], [page(p) for p in replay.aoe2mc.book_pages(messages)]
+    head = (f"item replace entity {who} {SLOT} with written_book[written_book_content="
+            '{title:"Objectives",author:"aoe2mc",pages:[', "]}]")
+    more = (f'item modify entity {who} {SLOT} {{type:"minecraft:set_written_book_pages",mode:"append",pages:[', "]}")
+    while pages:
+        start, end = more if out else head
+        n = 1
+        while n < len(pages) and len(f"{start}{','.join(pages[:n + 1])}{end}".encode()) <= rcon.MAX:
+            n += 1
+        out.append(f"{start}{','.join(pages[:n])}{end}")
+        pages = pages[n:]
+    return out
+
+
+def page(part):
+    """One book page as an SNBT text component: (title or None, text)."""
+    title, text = part
+    body = f"{{text:{json.dumps(text)}}}"
+    return f'{{text:"",extra:[{{text:{json.dumps(title + chr(10) * 2)},bold:true}},{body}]}}' if title else body
+
+
+def unread(who):
+    """The selector of the people of who that have no book yet (TAG)."""
+    return f"{who[:-1]},tag=!{TAG}]" if who.endswith("]") else f"{who}[tag=!{TAG}]"
+
+
+def tick(g):
+    """Give each person who joined since the last check the book, and show the instructions in the chat: the people,
+    not the bots (bot.Bot), once each EVERY seconds. gather.Gather.run calls it in the scenario mode."""
+    if g.clock() < vars(g).get("book_at", 0.0):
+        return
+    g.book_at = g.clock() + EVERY
+    messages = g.data.get("messages", {})
+    text = re.sub(r"<[^<>]*>", "", messages.get("instructions", "")).strip()   # AoE2 color tags (book_pages)
+    for who in sorted({x.who for x in [g, *(s.g for s in g.bots if not hasattr(s, "charged"))]}):
+        sel = unread(who)
+        if "passed" not in g.command(f"execute if entity {sel}"):
+            continue
+        for cmd in book(sel, messages):
+            g.command(cmd)
+        if text:
+            g.command(f"tellraw {sel} " + json.dumps({"text": text, "color": "gold"}))
+        g.command(f"tag {sel} add {TAG}")
+
+
+def bot_seats(players, people):
+    """[(player, foe)] of the bots of the scenario mode (#2543): one bot for each computer player of aoe2mc.json
+    "players" after the seats of the people. Its foe is the first human player of the scenario that is not its ally
+    (gather.allied), else player 1, as run.bot_seat. A human seat that no person takes stays idle, as in AoE2."""
+    computer = sorted(int(p) for p, row in players.items() if row.get("computer") and int(p) > people)
+    humans = sorted(int(p) for p, row in players.items() if not row.get("computer") and int(p) > 0)
+    return [(b, next((p for p in humans if not gather.allied(players, b, p)), 1)) for b in computer]
 
 
 def setup(g, mode="scenario"):
