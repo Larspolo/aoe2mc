@@ -39,6 +39,7 @@ MAP = {
     ("condition", "PLAYER_DEFEATED"): "`execute unless entity @e[team=pN]`",
     ("condition", "ACCUMULATE_ATTRIBUTE"): NO_ECONOMY,
     ("condition", "RESEARCH_TECHNOLOGY"): "`if score #pN.NAME aoe_tech matches 1..` in the tick function: the scenario mode of the game program sets the score of each researched technology (#2656)",
+    ("condition", "DIFFICULTY_LEVEL"): "`execute if score #level aoe_difficulty matches N` (the game program sets the score, #2704)",
     ("condition", "OBJECT_SELECTED"): "not supported: Minecraft has no selection",
     ("effect", "SEND_CHAT"): "`tellraw @a[team=pN] {\"text\": ...}`",
     ("effect", "DISPLAY_INSTRUCTIONS"): "`title @a actionbar` (short text) or `title @a subtitle`",
