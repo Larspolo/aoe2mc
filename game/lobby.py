@@ -25,8 +25,8 @@ def shown(g):
 
 
 def name(g, n):
-    civ = g.players.get(str(n), {}).get("civ")
-    return f"Player {n}" + (f" ({build.pretty(civ)})" if civ else "")
+    civ = getattr(g, "trigger_civs", {}).get(str(n)) or build.pretty(g.players.get(str(n), {}).get("civ") or "")
+    return f"Player {n}" + (f" ({civ})" if civ else "")              # a scenario trigger renames it (#2905)
 
 
 def items(g, player):

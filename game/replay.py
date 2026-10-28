@@ -839,7 +839,7 @@ class Replay:
         v.name, v.player, v.job = e["name"], e["player"], start_job(e["name"])
         self.new.append((e["player"], v))
         self.pop[e["player"]] = self.pop.get(e["player"], 0) + 1
-        out = [f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}"]
+        out = [f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {units.summon_snbt(nbt)}"]
         if self.ai:                                                 # the AoE2 values: plugin commands (#632)
             import combat                                           # combat -> gather -> build -> replay
             out += [combat.stats_command(v.uuid, v.name)] + [c for c in [combat.range_command(v.uuid, v.name, self.T)] if c]
@@ -848,13 +848,24 @@ class Replay:
 
     def rally(self, e, v):
         """The unit v of spawn event e walks to the gather point of its building, with a temporary negative ID, as
-        after a MOVE (a point on the ground) or an ORDER (a point on a resource or an object). Returns the commands."""
+        after a MOVE (a point on the ground) or an ORDER (a point on a resource or an object). Returns the commands.
+        A point on the ground: the free cell nearest to it that no other unit stands on or walks to (#2880), so that
+        the collision of the entities does not push the units of one gather point apart."""
         p = self.points.get(e.get("building"))
         if p is None:
             return []
         self.rallied += 1
         i = -self.rallied
         self.units[i] = v
+        if p.get("target") is None and p.get("tile"):
+            m, T = self.grid(), self.T
+            tx, tz = p["tile"][0] * T, p["tile"][1] * T
+            taken = {tuple(u.path[-1]) if u.path else u.cell for u in self.units.values() if u is not v}
+            free = [(x, z) for x in range(int(tx) - 2 * T, int(tx) + 2 * T + 1)
+                    for z in range(int(tz) - 2 * T, int(tz) + 2 * T + 1) if m.free(x, z) and (x, z) not in taken]
+            if free:                                                    # formation() keeps a cell of a group of one
+                c = min(free, key=lambda c: ((c[0] - tx) ** 2 + (c[1] - tz) ** 2, c))
+                p = dict(p, tile=[c[0] / T, c[1] / T])
         return self.move(dict(p, time=e["time"], kind="order" if p.get("target") is not None else "move",
                               objects=[i], names=[v.name]))
 
