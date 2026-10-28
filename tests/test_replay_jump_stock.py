@@ -39,7 +39,7 @@ def test_a_jump_counts_the_skipped_gather(ai, t, target, obj, res, monkeypatch):
     """t = 0: the villagers walk or gather when the jump starts; else a skipped ORDER sends them. A plugin unit that
     works when the jump ends catches up in steps() when it is at its resource (the fake RCON: at once). The reference
     plays without the plugin: the fake RCON has no entity that walks."""
-    monkeypatch.setattr(replay.Replay, "arrived", lambda self, v: True)
+    monkeypatch.setattr(replay.Replay, "entity", lambda self, v: None)
     start, walked, jumped = replay.START[res], play(False, False, target, obj, t), play(ai, True, target, obj, t)
     assert walked[res] > start + 20
     assert abs(jumped[res] - walked[res]) <= 0.25 * (walked[res] - start)
