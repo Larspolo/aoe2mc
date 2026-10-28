@@ -96,6 +96,8 @@ MEAT_SITES = tuple(t["name"] for t in ROWS if "meat" in t.get("drop", ()))   # h
 START = replay.START                                               # the AoE2 standard start resources (#973)
 # AoE2 DE setting "Starting resources" (wiki "Random map", without the civilization bonus): run.py --resources (#2264)
 LEVELS = {r["name"]: r["resources"] for r in table.load("setup.jsonl") if "resources" in r}
+INFINITE = {r["name"] for r in table.load("setup.jsonl") if r.get("infinite")}   # "Infinite": no cost lowers it (#2489)
+RANDOM = {r["name"]: r["random"] for r in table.load("setup.jsonl") if "random" in r}   # "Random": one of the levels
 NOMAD = {"wood": 275, "stone": 100}     # AoE2 Nomad (wiki "Nomad (map)"): no building at the start, the cost of a town center
 TREE_WOOD = 100                                                    # wood in one tree, as in AoE2
 # plants of the ground that are not in #minecraft:replaceable: the trunk on a slope removes them from its row (#1124)
@@ -532,6 +534,21 @@ def siege_mark(uuid, name, hp, who):
     return [glow(uuid, SIEGE_GLOW), f"title {who} actionbar " + json.dumps(text)]
 
 
+def level(name, data):
+    """The level of the AoE2 starting resources name. "Random" (RANDOM) is one of its levels, the same for each player
+    and in each run of the world (a seed from the map, as the other random choices of the game program)."""
+    if name not in RANDOM:
+        return name
+    return random.Random(f"{data.get('map_size')}-{len(data.get('objects', ()))}").choice(RANDOM[name])
+
+
+class Endless(dict):
+    """The stock of the AoE2 starting resources "Infinite" (#2489): a cost does not lower an amount, an income raises it."""
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key, max(value, self.get(key, value)))
+
+
 class Gather:
     """The gather game on a running server (game.command sends one command). Call setup(), then step() in a loop.
     log: a text file that gets one JSON line per event (state change or drop), to measure the timing (#289).
@@ -568,6 +585,7 @@ class Gather:
         self.log, self.clock, self.t0 = log, clock, clock()
         self.cheats = cheats                                           # the AoE2 cheat codes in the chat (#816)
         self.pop_limit = pop_limit                                     # AoE2 "Population limit", else train.LIMIT (#2266)
+        resources = level(resources, data)
         if start is None:                                              # units, no building: a Nomad start (#1212)
             kinds = {o["kind"] for o in data["objects"] if o.get("player") == player}
             nomad = "unit" in kinds and "building" not in kinds
@@ -577,6 +595,8 @@ class Gather:
             start = civs.start(self, {r: v + NOMAD.get(r, 0) * nomad + tc.get(r, 0) * (not nomad)
                                       for r, v in base.items()})       # #1269
         self.stock = {**dict.fromkeys(DROP_SITES, 0), **start}             # at the drop sites (#973)
+        if resources in INFINITE:
+            self.stock = Endless(self.stock)
         self.spare = {}                                                # the fractions of the drop-off bonus (#2111)
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
                       and "VILLAGER" in o["name"]]
@@ -637,6 +657,9 @@ class Gather:
         return self.stock["wood"]
 
     def command(self, cmd):
+        if isinstance(getattr(self, "stock", None), Endless) and cmd.startswith("scoreboard players remove ") \
+                and cmd.split()[4:5] == [self.board]:
+            return ""                                                  # "Infinite" resources: the sidebar stays (#2489)
         return self.game.command(cmd)
 
     def pos(self, target):
