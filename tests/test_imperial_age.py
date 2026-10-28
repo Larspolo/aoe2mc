@@ -2,12 +2,13 @@
 Age the item is gray; then it needs a castle or 2 types of Castle Age buildings; after the research the sidebar title
 shows the Imperial Age, all players see it, and the item leaves the menu (#1081)."""
 from test_feudal_age import add
+from menu_line import item
 from test_loom import menus, setup
-from test_train_menu import IMPERIAL, RALLY
+from test_train_menu import IMPERIAL
 
 from game import train
 
-NEED = " 5:bell:Imperial Age:1000 food · 800 gold · 190 s · needs a castle or 2 of monastery, university, siege workshop"
+NEED = "5:bell:Imperial Age:1000 food · 800 gold · 190 s · needs a castle or 2 of monastery, university, siege workshop"
 
 
 def castle_age(**stock):
@@ -21,8 +22,7 @@ def test_in_the_feudal_age_the_item_is_gray_and_a_click_does_nothing():
     g.techs.add("FEUDAL_AGE")
     add(g, "CASTLE")
     rect = train.open_menu(g, "Steve", (3, 3))
-    assert IMPERIAL in menus(server)[-1]   # Town Watch (slot 6) comes after it (#1454)
-    assert menus(server)[-1].endswith(RALLY)
+    assert item(menus(server)[-1], "Imperial Age") == IMPERIAL
     assert train.order(g, "Steve", rect, 5) == 0 and (g.stock["food"], g.stock["gold"]) == (1000, 1000)
     assert not g.queues.get(rect) and any("Imperial Age: Needs the Castle Age." in c for c in server.log)
 
@@ -31,8 +31,7 @@ def test_in_the_castle_age_the_item_says_what_is_missing_and_a_click_does_nothin
     server, g = castle_age(food=1000, gold=1000)
     add(g, "MONASTERY", "STABLE")                                       # a Feudal Age building does not count
     rect = train.open_menu(g, "Steve", (3, 3))
-    assert NEED + " (1/2)" in menus(server)[-1]   # Town Watch (slot 6) comes after it (#1454)
-    assert menus(server)[-1].endswith(RALLY)
+    assert item(menus(server)[-1], "Imperial Age") == NEED + " (1/2)"
     assert train.order(g, "Steve", rect, 5) == 0 and g.stock["food"] == 1000 and not g.queues.get(rect)
     assert any("Imperial Age needs a castle or 2 of" in c for c in server.log)
 
@@ -42,20 +41,17 @@ def test_two_castle_age_buildings_complete_the_need():
     add(g, "UNIVERSITY")
     g.sites.append({"name": "SIEGE_WORKSHOP", "player": 1, "footprint": [11, 10, 13, 12], "done": True})
     train.open_menu(g, "Steve", (3, 3))
-    assert NEED.split(" · needs")[0] + " · research" in menus(server)[-1]   # Town Watch (slot 6) comes after it (#1454)
-    assert menus(server)[-1].endswith(RALLY)
+    assert item(menus(server)[-1], "Imperial Age") == NEED.split(" · needs")[0] + " · research"
 
 
 def test_a_castle_alone_completes_the_need_and_a_click_queues_the_age_once():
     server, g = castle_age(food=1000, gold=1000)
     add(g, "CASTLE")
     rect = train.open_menu(g, "Steve", (3, 3))
-    assert NEED.split(" · needs")[0] + " · research" in menus(server)[-1]   # Town Watch (slot 6) comes after it (#1454)
-    assert menus(server)[-1].endswith(RALLY)
+    assert item(menus(server)[-1], "Imperial Age") == NEED.split(" · needs")[0] + " · research"
     assert train.order(g, "Steve", rect, 5, shift=True) == 1 and (g.stock["food"], g.stock["gold"]) == (0, 200)
     assert train.order(g, "Steve", rect, 5) == 0 and not g.queues[rect][1:]
-    assert NEED.split(" · needs")[0] + " · researching" in menus(server)[-1]   # Town Watch (slot 6) comes after it (#1454)
-    assert menus(server)[-1].endswith(RALLY)
+    assert item(menus(server)[-1], "Imperial Age") == NEED.split(" · needs")[0] + " · researching"
 
 
 def test_after_190_seconds_the_player_is_in_the_imperial_age():
