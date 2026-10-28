@@ -259,6 +259,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_dashboard_start_prs.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_feedback.py` | generic | None (a test of `tools/feedback.py`). |
 | `tests/test_feedback_gap.py` | generic | None (a test of `tools/feedback.py`). |
+| `tests/test_feedback_quote.py` | generic | None (a test of `tools/feedback.py`). |
 | `tests/test_health.py` | generic | None (a test of `tools/health.py`). |
 | `tests/test_health_compare.py` | generic | None (a test of `tools/health.py`). |
 | `tests/test_health_conflicts.py` | generic | None (a test of `tools/health.py`). |
