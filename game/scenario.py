@@ -54,6 +54,7 @@ ORDERS = "aoe2mc:orders"                                               # the dat
 ATTRIBUTES = "aoe2mc:attributes"                                       # the storage of "Modify Attribute" (#2763)
 MENUS = "aoe2mc:menus"                                                 # the storage of "Enable/Disable" (#2775)
 COSTS = "aoe2mc:costs"                                                 # the storage of "Change Object Cost" (#2776)
+UNSELECTABLE = "aoe2mc.unselectable"                                   # the tag of "Disable Object Selection" (aoe2mc)
 NAMES = "aoe2mc:names"                                                 # the storage of "Change Technology Name" (#2821)
 NEAR = 3                                                               # blocks: a patrol turns back this near its point
 LEVELS = {r["name"]: r["aoe2"] for r in table.load("difficulty.jsonl")}  # "AI difficulty" -> AoE2 DifficultyLevel
@@ -119,6 +120,7 @@ def tick(g):
     g.book_at = g.clock() + EVERY
     tasks(g)
     orders(g)
+    selection(g)
     menus(g)
     visible(g)
     attributes(g)
@@ -166,20 +168,26 @@ def orders(g):
     (aoe2mc.stop_lines, #2754) stops the tagged units (`aoe stop`), ends their patrols as a new order of a person does
     (gather.Gather.end_patrols, #2674) and removes the tag. An "Unload" order (#2773): unload(). A "Lock Gate" or
     "Unlock Gate" order (aoe2mc.gate_lines, #2762) locks or unlocks the gate of its reference: gate(). A "Place
-    Foundation" order (aoe2mc.foundation_lines, #2825): foundation()."""
+    Foundation" order (aoe2mc.foundation_lines, #2825): foundation(). "Train Unit" and "Initiate Research"
+    (aoe2mc.train_lines, #2772): queues(). A "Build Object" order (aoe2mc.build_lines, #2863): finish()."""
     got = g.command(f"data get storage {ORDERS} list") or ""
     new = re.findall(r'"(patrol|attack_move|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"', got)
     unloads = re.findall(r'"unload (\d+) (\d+) ?(-?\d+ -?\d+ -?\d+)?"', got)
     gates = re.findall(r'"(lock|unlock) (\d+)"', got)
     found = re.findall(r'"found (\d+) (\w+) (\d+) (\d+)"', got)
-    if new or unloads or gates or found:
+    queued = re.findall(r'"(train|research) (\d+) (\w+) ?(\d+)?"', got)
+    builds = re.findall(r'"build (\d+) (\w+) (-?\d+) (-?\d+) (-?\d+) (-?\d+)"', got)
+    if new or unloads or gates or found or queued or builds:
         g.command(f"data remove storage {ORDERS} list")
+    queues(g, queued)
     for player, ref, where in unloads:
         unload(g, int(player), int(ref), where)
     for order, ref in gates:
         gate(g, order, int(ref))
     for player, name, x, y in found:
         foundation(g, int(player), name, (int(x), int(y)))
+    for player, name, *area in builds:
+        finish(g, int(player), name, [int(v) for v in area])
     patrols = vars(g).setdefault("patrols", [])
     for order, tag, where in new:
         p, sel = [int(v) for v in where.split()], f"@e[tag={tag}]"
@@ -211,6 +219,18 @@ def orders(g):
             patrols.remove(q)
 
 
+def selection(g):
+    """The units of "Disable Object Selection" (aoe2mc.selection_lines, #2854): read the UUIDs with the tag UNSELECTABLE
+    (one `aoe where` per check, not one command per click) into g.unselectable, which the clicks, the selection box and
+    the double click skip (gather.Gather.unpickable). A selected unit that gets the tag leaves the selection. Vanilla
+    has no `aoe where`: there all units stay selectable."""
+    if not getattr(g, "paper", False):
+        return
+    g.unselectable = set(g.where(None, f"@e[tag={UNSELECTABLE}]"))
+    if g.selected & g.unselectable:
+        g.choose(g.selected - g.unselectable)
+
+
 def foundation(g, player, name, tile):
     """A "Place Foundation" order (aoe2mc.foundation_lines, #2825): the construction site of building name of the
     player (a person or a bot) with the tile in its middle, for free as in AoE2, when the place is free and flat as for
@@ -229,6 +249,23 @@ def foundation(g, player, name, tile):
             build.found(x, name, rect, free=True)
 
 
+def finish(g, player, name, area):
+    """A "Build Object" order (aoe2mc.build_lines, #2863): each construction site of the player (a person or a bot) of
+    building name (ANY: each building) with its middle tile in the area [x1, y1, x2, y2] (-1: the whole map) is
+    complete at once, with no villager work (build.rise with no end of work, as empire_wars.town). Its builders stop in
+    the next step of the Gather. No such site: nothing, as in AoE2."""
+    import build                                                       # build imports gather
+    for x in [g, *(s.g for s in g.bots)]:
+        if x.player != player:
+            continue
+        T = x.map.T
+        for site in [s for s in x.sites if not s.get("done") and name in ("ANY", s["name"])]:
+            x0, x1, z0, z1 = site["footprint"]
+            tx, ty = (x0 + x1) // 2 // T, (z0 + z1) // 2 // T
+            if area[0] < 0 or area[0] <= tx <= area[2] and area[1] <= ty <= area[3]:
+                build.rise(x, site, float("inf"))
+
+
 def unload(g, player, ref, where):
     """An "Unload" order (aoe2mc.unload_lines, #2773): the units inside the building ref of the player (a person or a
     bot: garrison.holders) come out (garrison.out), and `aoe moveto` walks them to the block "x y z" when the order has
@@ -240,6 +277,22 @@ def unload(g, player, ref, where):
         for u in garrison.out(x, rect) if rect is not None else []:
             if where:
                 x.command(f"aoe moveto {u} {where}")
+
+
+def queues(g, queued):
+    """The "train <ref> <unit> <quantity>" and "research <ref> <technology>" orders of the triggers (#2772): queue them
+    at the converted building of that reference, for its player (the people and the bots), as clicks of its menu
+    (train.queue): the player pays, and a full queue, a missing technology or too few resources stop the rest."""
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    refs = {o["ref"]: o for o in g.data.get("objects", ()) if o["kind"] == "building" and o.get("ref") is not None}
+    for _, ref, name, n in queued:
+        o = refs.get(int(ref))
+        if o is None or (x := sides.get(o["player"])) is None:
+            continue
+        x0, z0, _, _ = o["footprint"]
+        for _ in range(int(n or 1)):
+            if not train.queue(x, getattr(x, "who", "@a"), (x0, z0), name):
+                break
 
 
 def costs(g):
@@ -274,11 +327,12 @@ def names(g):
 
 def attributes(g):
     """The changes of "Modify Attribute" (aoe2mc.attribute_lines, #2763): read and empty the list of the data storage
-    ATTRIBUTES, and add each change to trigger_attributes of the side of its player (the people and the bots):
+    ATTRIBUTES, and add each change to trigger_attributes of the side of its player (the people and the bots; a
+    unit type or a class "@<class>" of "Modify Attribute for Class", train.applies, #2859):
     train.stats applies them in order, so the units that the player trains later get the new values. The units of the
     type that exist get the new values at once (the same commands as a technology, train.research)."""
     import civs, combat                                                # combat -> gather -> scenario
-    new = re.findall(r'"(\d+) (\w+) (\w+) ([1-5]) (-?[\d.]+)"', g.command(f"data get storage {ATTRIBUTES} list") or "")
+    new = re.findall(r'"(\d+) (@?\w+) (\w+) ([1-5]) (-?[\d.]+)"', g.command(f"data get storage {ATTRIBUTES} list") or "")
     if new:
         g.command(f"data remove storage {ATTRIBUTES} list")
     sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
@@ -286,11 +340,12 @@ def attributes(g):
         if (x := sides.get(int(player))) is None or field not in combat.Stats._fields:
             continue
         vars(x).setdefault("trigger_attributes", []).append([name, field, int(op), float(q)])
-        s = train.stats(x, name)
-        for uuid in [u["uuid"] for u in x.units if "uuid" in u and u["name"] == name] + \
-                [u for u, n in x.soldiers.items() if n == name]:
-            x.command(combat.stats_command(uuid, name, s, civs.taken(x, name), civs.friendly(x, name)))
-            if field == "range" and (cmd := combat.range_command(uuid, name, x.map.T, s=s)):
+        for uuid, n in [(u["uuid"], u["name"]) for u in x.units if "uuid" in u] + list(x.soldiers.items()):
+            if not train.applies(name, n):                             # a type, or a class (#2859)
+                continue
+            s = train.stats(x, n)
+            x.command(combat.stats_command(uuid, n, s, civs.taken(x, n), civs.friendly(x, n)))
+            if field == "range" and (cmd := combat.range_command(uuid, n, x.map.T, s=s)):
                 x.command(cmd)
 
 
