@@ -71,6 +71,7 @@ MAP = {
     ("effect", "CHANGE_OBJECT_ATTACK"): "`execute as @e[tag=aoe2mc.pN,type=..,x=..,dx=..] run attribute @s minecraft:attack_damage modifier add aoe2mc:trig_N_I V add_value` for the attack classes 3 and 4 (add and subtract; set: not supported yet, #2755)",
     ("effect", "CHANGE_PLAYER_NAME"): "`team modify pN displayName {\"text\": \"...\"}`: the sidebar and the tab list (#2711)",
     ("effect", "CHANGE_OBJECT_NAME"): "`execute as @e[tag=aoe2mc.pN,type=..,x=..,dx=..] run data modify entity @s CustomName.text set value \"...\"` (the player color stays, #2616)",
+    ("effect", "CHANGE_OBJECT_HP"): "`attribute ... minecraft:max_health base set N` (AoE2 hit points, 1 to 1024); add, subtract, multiply, divide: the function `hp/<op>_<N>` reads the base into the score #hp of aoe_hp and sets it with the macro `hp/apply` (#2693)",
     ("effect", "CHANGE_OWNERSHIP"): "`tag` `aoe2mc.pN` and `team join pN` of the units in the area and their mounts (timer and area triggers: #2570); Gaia: not supported yet",
     ("effect", "CHANGE_OBJECT_SPEED"): "`attribute @e[..] minecraft:movement_speed base set V` of the units in the area and their mounts, V from the walk speed of the game program (game/ai.py, #2694)",
     ("effect", "DISABLE_UNIT_ATTACKABLE"): "`data merge entity @s {Invulnerable:1b}` of the units of the player in the area (#2695)",
