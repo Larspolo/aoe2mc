@@ -221,6 +221,8 @@ class Map:
         self.fish, self.shore = {}, set()                              # tile -> food of a fish (#1283), shore fish
         self.fish_mobs, self.docks = {}, []                            # tile -> mob of a fish; own dock cells (#1384)
         self.traps = {}                                                # own fish trap tile -> its cells (#1438)
+        civ = data.get("players", {}).get(str(player), {}).get("civ")
+        self.trap_food = round(TRAP_FOOD * civs.TRAP_FOOD.get(civ, 1))  # food of a new own fish trap (Malay 3×, #2333)
         for o in data["objects"]:
             if o["kind"] == "building":
                 x0, z0, x1, z1 = o["footprint"]
@@ -266,7 +268,7 @@ class Map:
             return
         self.blocked |= cells - {tuple(c) for c in open_cells}
         if own and "FISH_TRAP" in name and tile:                       # the food of the fishing ships (#1438)
-            self.fish[tile], self.traps[tile] = TRAP_FOOD, cells
+            self.fish[tile], self.traps[tile] = self.trap_food, cells
         if own:
             self.drop_site(name, cells)
         if own and "DOCK" in name:                                     # the drop site of the fishing ships (#1384)
@@ -1433,7 +1435,7 @@ class Gather:
                 work = self.work_time(kind, v.tree in self.map.herds)
                 last = civs.last(self, "sheep" if v.tree in self.map.herds else kind)
                 take = 1 if last == 1 else 1 / last                    # 1: the amounts stay whole numbers
-                most = self.limit(v.res, "sheep" if v.tree in self.map.herds else kind)
+                most = self.limit(v.res, "sheep" if v.tree in self.map.herds else "fish" if v.tree in self.map.fish else kind)
                 while v.timer >= work and v.load < most and src.get(v.tree, 0) > 0:
                     v.timer -= work
                     v.load += 1
@@ -1445,8 +1447,8 @@ class Gather:
                     if v.tree in self.map.farms:
                         self.harvest(v.tree)
                         self.tend(v)
-                    elif v.tree in self.map.carcasses:
-                        pass                                           # a carcass has no blocks
+                    elif v.tree in self.map.carcasses or v.tree in self.map.fish:
+                        pass                                           # a carcass or a fish has no blocks
                     elif v.res == "food":
                         self.berries(v.tree)
                     elif v.res != "wood":

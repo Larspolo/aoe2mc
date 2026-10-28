@@ -3,7 +3,7 @@ The civilization bonuses of the players in the game program (#1089, part of #108
 the AoE2 DE civilizations (the AoE2 wiki, "Civilization bonuses" of each civilization): Gather.work_time divides the
 time of one unit of resource by the factor of the player's civilization. The keys are the gather kinds of Gather:
 "wood", "food" (forage bushes), "farm", "gold", "stone", "hunt" (hunted animals) and "sheep" (herdable animals).
-Bonuses that the game program cannot use yet: Japanese fishing ships, Malian oyster gatherers.
+Bonuses that the game program cannot use yet: oyster gatherers (Malians, Dravidians).
 CHURCH_RATE is the Georgian bonus of the Fortified Church (#1930): build.rise and repair.rate multiply the work of the
 villagers in the 21-tile square around it (church_rate).
 BUILD, BUILD_WONDER and BUILD_OF hold the build speed bonuses (#1893, #2115): build.rise multiplies the work of the builders (build_rate).
@@ -171,8 +171,12 @@ RESEARCH_TIME = {r["name"]: [tuples(b) for b in r["research_time"]] for r in ROW
 # and Puru stone miners, Portuguese foragers, Shu lumberjacks (#2113). Gather.second adds it at each gathered unit.
 EXTRA = {r["name"]: {k: tuple(v) for k, v in r["extra"].items()} for r in ROWS if "extra" in r}
 # "carry": the extra load of a villager, [[gather kind or null (all), extra]]: Aztec villagers +3, Goth hunters +15
-# (#2270). Gather.limit adds it.
+# (#2270). Gather.limit adds it. The kind "ship" is the load of a fishing ship (fleet.carry: Dravidians +15, #2333).
 CARRY = {r["name"]: [tuple(b) for b in r["carry"]] for r in ROWS if "carry" in r}
+# The fishing bonuses (#2333): the factor of the work rate of a fishing ship in each age (fleet.rate: Japanese) and the
+# factor of the food of a new own fish trap (gather.Map: Malay).
+SHIP_WORK = {r["name"]: tuple(r["ship_work"]) for r in ROWS if "ship_work" in r}
+TRAP_FOOD = {r["name"]: r["trap_food"] for r in ROWS if "trap_food" in r}
 # The age-up bonuses (#1926, AoE2 DE wiki): train.research applies AGE_GIFTS and AGE_VILLAGERS at the end of each age,
 # train.seconds divides the time of an age by AGE_RATE, and train.missing needs no buildings for AGE_NO_BUILDINGS (the
 # game program has no other building needs). The Muisca gold discount of the ages is in COSTS (civs.jsonl).
@@ -383,6 +387,12 @@ def work_rate(g, building):
     """The factor of the train and research rate of building (a name) of the player of g in its age (WORK_RATE), else 1."""
     import build                                                   # build imports gather, gather imports this module
     return WORK_RATE.get(civ(g), {}).get(building, (1,) * 4)[min(build.ages(g), 3)]
+
+
+def ship_work(g):
+    """The factor of the work rate of a fishing ship of the player of g in its age (SHIP_WORK), else 1."""
+    import build                                                   # build imports gather, gather imports this module
+    return SHIP_WORK.get(civ(g), (1,) * 4)[min(build.ages(g), 3)]
 
 
 def train_rate(g, name):
