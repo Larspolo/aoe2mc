@@ -1921,6 +1921,11 @@ class Gather:
         self.command(f"fill {fx0} {min(ys) - 2} {fz0} {fx1 - 1} {max(ys) + 3} {fz1 - 1} air replace minecraft:barrier")
         if flat or not felled:
             self.stump(sx, sz, ys)
+        if flat:                                                       # a building may go on the stump, as in AoE2 (#3265)
+            for x in range(fx0, fx1):
+                for z in range(fz0, fz1):
+                    self.map.blocked.discard((x, z))
+                    self.map.ground[z][x] = ys[0]
         self.trunks.pop(tile, None)
 
     def berries(self, tile):
