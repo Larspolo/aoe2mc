@@ -66,7 +66,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:unit-commands` The other AoE2 orders: patrol between points, guard a unit or building, follow a unit, attack-move (attack each enemy on the way)
 - [ ] `play:speed` Pause and game speed of the game program, as the AoE2 pause key and the speed setting: the units, queues and gathering stop and go on
 - [x] `play:postgame` The statistics at the end of a game of the game program, as the AoE2 achievements screen: military, economy, technology, the time of each age (the recap book, #2660, #2706)
-- [ ] `play:taunts` AoE2 taunts: a player types a taunt number (1-105) in the chat, and all players hear its sound and see its text
+- [x] `play:taunts` AoE2 taunts: a player types a taunt number (1-105) in the chat, and all players hear its sound and see its text (#3318)
 - [ ] `play:wildlife` Wild predators as in AoE2: wolves, tigers and other predators of the map attack villagers and units near them
 - [ ] `play:farm-reseed` Farm reseeds as in AoE2: the mill queues farms, and an exhausted farm is built again by its farmer when the player has the wood
 - [x] `play:game-modes` The AoE2 game modes in the game setup: Regicide (a king per player), Death Match (large start resources), King of the Hill (hold the monument) and Empire Wars (a running start economy) (#2387, #2452, #2383, #2428)
@@ -77,6 +77,10 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:co-op` Co-op as in AoE2: two or more Minecraft players control one AoE2 player (one civilization, one stock and population), each with an own selection
 - [ ] `play:unit-sounds` The AoE2 sounds of the units and buildings: a voice line when the player selects a unit and gives an order, the sound of a selected building, the age-up fanfare
 - [ ] `play:campaign` Play a campaign in the game program: its scenarios in order, the next scenario after a victory, the intro and history texts of each scenario
+- [ ] `play:waypoints` Queued orders as in AoE2 (a shift click): a selected group walks to several points in a row, and a villager builds several construction sites one after the other
+- [ ] `play:auto-queue` The AoE2 DE auto-queue: a building trains one unit again and again while the player has the resources and the population, until the player stops it
+- [ ] `play:tech-tree` The AoE2 tech tree screen: the units, buildings and technologies of the own civilization by age and building, and the ones that the civilization does not have
+- [ ] `play:team-chat` The AoE2 chat targets: a chat line to all players, to the allies only or to one player, in the player color (Minecraft `/teammsg` and `/msg`)
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
@@ -101,6 +105,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `replay:production` A production panel of each player in the live replay, as the AoE2 DE replay overlay: the units in training and the technologies in research, with their progress
 - [ ] `replay:highlights` A list of the large fights of the record (where and when many units die): a jump to the time and the place of each fight
 - [ ] `replay:auto-camera` An automatic camera of the live replay, as a caster view: the spectator view moves by itself to the place with the most fights or the most new buildings
+- [ ] `replay:graphs` Live graphs of the replay, as the statistics of the AoE2 DE replay overlay: the military, the economy and the population of each player over the game time
 
 ## 4. The agent system (`.claude/skills/`, `tools/`, `.github/workflows/`)
 
