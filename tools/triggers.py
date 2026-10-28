@@ -54,6 +54,7 @@ MAP = {
     ("effect", "DAMAGE_OBJECT"): "`execute as @e[tag=aoe2mc.pN,type=..,x=..,dx=..] run damage @s N` (N in AoE2 hit points; timer and area triggers: #2571); heal: not supported yet",
     ("effect", "HEAL_OBJECT"): "`execute as @e[tag=aoe2mc.pN,type=..,x=..,dx=..] store result score` of Health and max_health, `scoreboard players add`, then `store result entity @s Health` (AoE2 hit points, not above the maximum, #2692)",
     ("effect", "TELEPORT_OBJECT"): "`tp @e[tag=aoe2mc.pN,x=..,dx=..] x y z` and the mounts of the riders (#2569)",
+    ("effect", "CHANGE_PLAYER_NAME"): "`team modify pN displayName {\"text\": \"...\"}`: the sidebar and the tab list (#2711)",
     ("effect", "CHANGE_OBJECT_NAME"): "`execute as @e[tag=aoe2mc.pN,type=..,x=..,dx=..] run data modify entity @s CustomName.text set value \"...\"` (the player color stays, #2616)",
     ("effect", "CHANGE_OWNERSHIP"): "`tag` `aoe2mc.pN` and `team join pN` of the units in the area and their mounts (timer and area triggers: #2570); Gaia: not supported yet",
     ("effect", "CHANGE_OBJECT_SPEED"): "`attribute @e[..] minecraft:movement_speed base set V` of the units in the area and their mounts, V from the walk speed of the game program (game/ai.py, #2694)",
