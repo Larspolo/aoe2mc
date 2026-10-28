@@ -418,6 +418,7 @@ def read_scenario(path):
                                             **({"mood": ColorMood(e.color_mood).name}     # "Change Color Mood" (#1876)
                                                if e.effect_type == CHANGE_COLOR_MOOD and
                                                getattr(e, "color_mood", None) in set(ColorMood) else {}),
+                                            **({"quantity": e.quantity} if e.effect_type == DAMAGE_OBJECT else {}),
                                             **({"target": e.target_player}                # "Change Ownership" (#2570)
                                                if e.effect_type == CHANGE_OWNERSHIP else {}))
                                        for e in t.effects])
@@ -2703,6 +2704,8 @@ TIMER, SEND_CHAT, DISPLAY_INSTRUCTIONS, IN_AREA = 10, 3, 20, 5   # AoE2 conditio
 OWN_OBJECTS, OWN_FEWER_OBJECTS = 3, 4                              # conditions on the units of a player (#2573)
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
 CREATE_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 15, 18, 72
+DAMAGE_OBJECT = 24                                                     # "Damage Object" (#2571)
+TELEPORT_OBJECT = 35
 
 
 def turn_area(area, size, k):
@@ -2751,23 +2754,46 @@ def object_lines(t, e, T, ground, players, stats):
             parts += list(part.get("Passengers", []))
         return [f"summon {kind} {x + 0.5} {int(ground[x, z])} {z + 0.5} {nbt.snbt()}"]
     if e["type"] == REMOVE_OBJECT and min(e.get("area", [-1])) >= 0:
-        at, top = area_selector(e, T), None
-        if e["player"] <= 0:                                           # Gaia units have no player tag
-            at = re.sub(r"tag=aoe2mc\.p-?\d+,?", "", at)
-        if name is not None:
-            nbt = units.make_entity(dict(name=name, player=0), {}, (0.0, 0.0, 0.0), np.random.default_rng(0)) \
-                if kind in ("U", "H") else None
-            if nbt is None:
-                stats["remove (not supported yet)"] += 1
-                return []
-            top = units.top_entity(nbt)
-            at = f"@e[type={top['id']},{at[3:]}" if at != "@e[]" else f"@e[type={top['id']}]"
+        if (found := effect_units(e, T)) is None:
+            stats["remove (not supported yet)"] += 1
+            return []
+        at, top, nbt = found
         stats["remove"] += 1
         ride = [f"execute as {at} on vehicle run kill @s"] if top is not None and top is not nbt else []
         return ride + [f"kill {at}"]                                       # a rider: its mount goes too
     return []
 
 
+def effect_units(e, T):
+    """(selector, top entity, entity) of the units of an effect: its player (Gaia units have no player tag), area
+    (area_selector) and unit type (the type of the top entity of units.make_entity). No type: (selector, None, None).
+    A type with no entity (a building): None."""
+    kind, name = e.get("object") or (None, None)
+    at = area_selector(e, T)
+    if e["player"] <= 0:
+        at = re.sub(r"tag=aoe2mc\.p-?\d+,?", "", at)
+    if name is None:
+        return at, None, None
+    nbt = units.make_entity(dict(name=name, player=0), {}, (0.0, 0.0, 0.0), np.random.default_rng(0)) \
+        if kind in ("U", "H") else None
+    if nbt is None:
+        return None
+    top = units.top_entity(nbt)
+    return (f"@e[type={top['id']},{at[3:]}" if at != "@e[]" else f"@e[type={top['id']}]"), top, nbt
+
+
+def damage_lines(e, T, stats):
+    """The commands of "Damage Object" (#2571): a `damage` of each unit of the effect (effect_units) by its amount.
+    The amount is in AoE2 hit points: the game program gives each unit max_health = its AoE2 hit points
+    (combat.stats_command); a vanilla world keeps the health of the mob. A negative amount heals in AoE2: not yet."""
+    q = e.get("quantity") or 0
+    found = effect_units(e, T) if q > 0 else None
+    if found is None:
+        stats["damage (heal or building, not supported yet)" if q else "damage (no amount)"] += 1
+        return []
+    at = found[0] if found[1] or e["player"] > 0 else f"@e[type=!minecraft:player,{found[0][3:]}"   # Gaia: not the players
+    stats["damage"] += 1
+    return [f"execute as {at} run damage @s {q}"]                      # damage takes one entity
 def owner_lines(e, T, stats):
     """The commands of "Change Ownership" (#2570): the units of the player in the area (area_selector) and their
     mounts get the tag and the team of the target player. A temporary tag marks them first: the selector uses the old
@@ -2782,6 +2808,22 @@ def owner_lines(e, T, stats):
             f"execute as {own} on vehicle run tag @s add aoe2mc.own",
             f"tag {own} remove aoe2mc.p{old}", f"tag {own} add aoe2mc.p{new}",
             f"team join p{new} {own}", f"tag {own} remove aoe2mc.own"]
+
+
+def teleport_lines(e, T, ground):
+    """The commands of "Teleport Object" (#2569): a tp of the units of the player in the area (area_selector) to the
+    middle of the target tile, on the ground. A rider is not in the selector of its horse (units.MOUNT): the first line
+    moves the mounts of the riders in the area, and the riders go with them. Then the riders are out of the area, so
+    the second line (a tp of a rider takes it off its horse) moves only the units on foot."""
+    if min(e.get("tile", [-1])) < 0 or min(e.get("area", [-1])) < 0:
+        return []
+    x, z = (int((v + 0.5) * T) for v in e["tile"])
+    if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
+        return []
+    at, to = area_selector(e, T), f"{x + 0.5} {int(ground[x, z])} {z + 0.5}"
+    if e["player"] <= 0:                                               # Gaia units have no player tag: not the players
+        at = re.sub(r"tag=aoe2mc\.p-?\d+", "type=!player", at)
+    return [f"execute as {at} on vehicle run tp @s {to}", f"tp {at} {to}"]
 
 
 def mood_lines(e):
@@ -2802,6 +2844,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
     the units leave an area. "Send Chat" is a tellraw, "Display Instructions" a subtitle for its display time;
     "Create Object" and "Remove Object": object_lines (#656). "Change Color Mood": mood_lines (#1876), only with mood. "Change Ownership": owner_lines (#2570).
+    "Damage Object": damage_lines (#2571).
+    "Teleport Object": teleport_lines (#2569).
     A disabled trigger does not run."""
     load, files, tick = [], {}, []
     stats = Counter() if stats is None else stats
@@ -2822,6 +2866,12 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if e["type"] == CHANGE_COLOR_MOOD:
                 lines += mood_lines(e) if mood else []
+                continue
+            if e["type"] == DAMAGE_OBJECT:
+                lines += damage_lines(e, T, stats)
+                continue
+            if e["type"] == TELEPORT_OBJECT:
+                lines += teleport_lines(e, T, ground)
                 continue
             msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()   # AoE2 color tags
             if not msg:

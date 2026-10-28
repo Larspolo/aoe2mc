@@ -193,3 +193,4 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - A tag at its default value is not saved: `data get entity U CustomNameVisible` answers "Found no elements matching CustomNameVisible" when it is false. Test with `not ...endswith("1b")` (#1811).
 - The world border hurts only players: a zombie and a slime outside it keep their health (Paper 26.3, #2439). The time of `worldborder set <width> <time>` is in ticks: `5` is 0.25 s, write `5s` for seconds.
 - An inline item modifier of `item modify` names its function with the key `type` in 26.3 (`{type:"minecraft:set_written_book_pages",mode:"append",pages:[...]}`): the key `function` gives "No key type in MapLike" (Paper 26.3, #2541). A command longer than `rcon.MAX` can append the rest of a written book this way.
+- A `mc_shot.Client` player in spectator mode shows no hand items: the map item in the off-hand is not in the image. Use `gamemode creative` and pitch 50 (the map at the lower left, #2581).
