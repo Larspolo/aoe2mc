@@ -2836,8 +2836,16 @@ UNITS_GARRISONED = 18                                              # the conditi
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
-TICKED = COUNTED + (ACCUMULATE_ATTRIBUTE, DIFFICULTY_LEVEL, OBJECT_HP, RESEARCHED, RESEARCHING_TECH, TECHNOLOGY_STATE,
-                     UNITS_GARRISONED, VARIABLE_VALUE)  # conditions of the tick function
+TICKED = COUNTED + (                                               # conditions of the tick function, one per line in
+    ACCUMULATE_ATTRIBUTE,                                          # alphabetical order: parallel tickets add lines (#2769)
+    DIFFICULTY_LEVEL,
+    OBJECT_HP,
+    RESEARCHED,
+    RESEARCHING_TECH,
+    TECHNOLOGY_STATE,
+    UNITS_GARRISONED,
+    VARIABLE_VALUE,
+)
 ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")     # attributes 0-3: the score holders of gather.RESOURCES (#2655)
 BRING_OBJECT_TO_AREA = 1                                               # the condition "Bring Object to Area" (#2620)
 DESTROY_OBJECT = 6                                                     # the condition "Destroy Object" (#2618)
