@@ -216,10 +216,11 @@ def process_changes(prs, now, hours=24):
                and datetime.datetime.fromisoformat(p["merged_at"].replace("Z", "+00:00")) >= since)
 
 
-def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now, unanswered=None):
+def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now, unanswered=None, nxt=None):
     """The new body of the status issue. comments: {issue number: comments} for the needs-human and
-    in-progress issues. unanswered: the owner comments without a lock (`tools/feedback.py`, #971)."""
-    nxt = candidates(issues, now=now)[:5]
+    in-progress issues. unanswered: the owner comments without a lock (`tools/feedback.py`, #971).
+    nxt: the "Next up" tickets, if known (candidates() can read GitHub)."""
+    nxt = candidates(issues, now=now)[:5] if nxt is None else nxt
     issues = [i for i in issues if "pull_request" not in i]
     state = re.search(r"<!-- agent-state:.*?-->", old_body or "")
     process = re.search(r"### Process changes\n(.*?)(?=\n### |\n---\n|\n_Updated |\Z)", old_body or "", re.S)
@@ -329,8 +330,12 @@ def main(argv=None):
     closed = api("issues?state=closed&sort=updated&direction=desc&per_page=50")
     closed_prs = pages("pulls?state=closed&sort=updated&direction=desc", 5)    # about 24 h of merges (#901)
     from feedback import fetch as unanswered               # owner comments without a lock (#971)
-    body = render(status["body"], open_all, comments, api("pulls?state=open&per_page=100"), closed, closed_prs,
-                  datetime.datetime.now(datetime.timezone.utc), unanswered())
+    open_prs, owner, now = api("pulls?state=open&per_page=100"), unanswered(), datetime.datetime.now(datetime.timezone.utc)
+    nxt = candidates(open_all, now=now)[:5]
+    # Read the body again after all other reads (#3002): a run writes the state comment and the process changes
+    # while the reads above take about 20 s, and the PATCH of the old body deleted them.
+    status = api(f"issues/{status['number']}")
+    body = render(status["body"], open_all, comments, open_prs, closed, closed_prs, now, owner, nxt)
     if a.dry_run:
         print(body)
     elif re.sub(r"_Updated .*?_", "", body) != re.sub(r"_Updated .*?_", "", status["body"] or ""):
