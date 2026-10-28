@@ -1,4 +1,5 @@
 {"name": "age_gifts", "text": "The resources that the civilization gets at each new age, {resource: amount}. train.research gives them at the end of each age.", "issue": 1926}
+{"name": "age_units", "text": "The free unit at the first own town center at the end of an age, {age: unit} (the Spartan Polemarch in the Civic and Classical Age). train.research spawns it.", "issue": 2480}
 {"name": "also", "text": "Technologies with an effect on one more group of GROUPS too, {technology: group} (Bohemians: Fervor and Sanctity for the villagers). train.stats, train.speed.", "issue": 2173}
 {"name": "arrows", "text": "The factor of the base arrows of the buildings in each age (Dark, Feudal, Castle, Imperial).", "issue": 2178}
 {"name": "attack_gold", "text": "The factor of the gold that units with the key \"attack_gold\" of units.jsonl make while they attack enemy units (Varangians: Varangian Guards 1.5). game/spoils.py.", "issue": 2376}
