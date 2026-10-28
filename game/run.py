@@ -751,7 +751,10 @@ def console(game):
     def read():
         for line in sys.stdin:
             if line := line.strip().lstrip("/"):
-                print(game.command(line), flush=True)
+                try:
+                    print(game.command(line), flush=True)
+                except Exception as e:                # one failed command (too long, no server) keeps the line open
+                    print(f"The command failed: {e}", file=sys.stderr, flush=True)
     t = threading.Thread(target=read, daemon=True)
     t.start()
     return t
