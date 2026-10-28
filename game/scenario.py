@@ -51,6 +51,7 @@ import garrison  # noqa: E402
 import gather  # noqa: E402
 import rcon  # noqa: E402
 import replay  # noqa: E402
+import trade  # noqa: E402
 import train  # noqa: E402
 import table  # noqa: E402
 import treaty  # noqa: E402
@@ -130,6 +131,7 @@ def tick(g):
     owners(g)
     tech_states(g)
     actions(g)
+    trading(g)
     victory_timers(g)
     if g.clock() < vars(g).get("book_at", 0.0):
         return
@@ -642,6 +644,24 @@ def owners(g):
         if (o := objects.get(ref)) is not None and sent.get(ref) != o["player"]:
             g.command(f"scoreboard players set #o{ref} aoe_owner {o['player']}")
             sent[ref] = o["player"]
+
+
+def trading(g):
+    """The score #r<ref> of aoe_trade of each converted building that trains a trade cart (the market): 1 while a trade
+    cart of a player (the people and the bots) has the building at one end of its route (trade.order, g.trade), else
+    0, for the condition "Building Is Trading" of the triggers (aoe2mc.trigger_files, #2868). The first call sets each
+    one, so that an inverted condition fires with no cart; then one command per change. The game program has no trade
+    cogs: a dock gets no score, and its condition does not fire."""
+    sent = vars(g).setdefault("trade_sent", {})
+    ends = {r for x in [g, *(s.g for s in g.bots)] for t in vars(x).get("trade", {}).values()
+            for r in (t["home"], t["market"])}
+    for o in g.data.get("objects", ()):
+        if o["kind"] == "building" and trade.CART in train.TRAINS.get(o["name"], ()) and o.get("ref") is not None and "footprint" in o:
+            x0, z0, x1, z1 = o["footprint"]
+            n = int((x0, x1, z0, z1) in ends)
+            if sent.get(o["ref"]) != n:
+                g.command(f"scoreboard players set #r{o['ref']} aoe_trade {n}")
+                sent[o["ref"]] = n
 
 
 def tech_states(g):

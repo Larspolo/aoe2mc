@@ -58,6 +58,7 @@ MAP = {
     ("condition", "OBJECT_VISIBLE_MULTIPLAYER"): "`execute if score #rN.pM aoe_seen matches 1` in the tick function: the scenario mode of the game program sets the score from the sight of player M (#2756)",
     ("condition", "VICTORY_TIMER"): "`execute if score #pN.T aoe_vic matches ..` in the tick function: the scenario mode of the game program sets the years left on the wonder (T 0), relic (1) or King of the Hill (2) timer of player N and resets the score when the timer stops (#2906); inverted: not supported yet",
     ("condition", "UNITS_GARRISONED"): "`if score #gREF aoe_gar matches N..` in the tick function: the scenario mode of the game program sets the number of units inside each converted building (#2714); a transport ship: not supported yet",
+    ("condition", "BUILDING_IS_TRADING"): "`if score #rN aoe_trade matches 1` (0 when inverted) in the tick function: the scenario mode of the game program sets the score while a trade cart has the market on its route (#2868); a dock: not supported (no trade cogs)",
     ("condition", "OBJECT_SELECTED"): "not supported: Minecraft has no selection",
     ("condition", "OBJECT_SELECTED_MULTIPLAYER"): "not supported: Minecraft has no selection",
     ("condition", "OBJECT_HAS_TARGET"): "not supported: Minecraft has no readable target of a mob",
