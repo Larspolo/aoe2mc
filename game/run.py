@@ -505,9 +505,8 @@ def main(argv=None):
         state = savegame.dump(game.g) if getattr(game, "g", None) else None
         game.stop()                                  # the server writes the world when it stops
         if state:
-            saves = os.path.join(os.path.dirname(os.path.abspath(a.world)), "saves")
             print(f"Saved the game: python3 game/run.py {a.world} --play --load "
-                  f"{savegame.write(saves, a.world, state)}", file=sys.stderr)
+                  f"{savegame.write(savegame.folder(a.world), a.world, state)}", file=sys.stderr)
 
 
 if __name__ == "__main__":

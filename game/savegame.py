@@ -41,9 +41,29 @@ def load(g, d):
         train.sidebar(x)
 
 
-def write(folder, world, state):
-    """Copy the stopped world and the state (dump) into a new folder under folder. Returns its path."""
-    path = os.path.join(folder, f"{os.path.basename(os.path.normpath(world))}-{time.strftime('%Y%m%d-%H%M%S')}")
+def folder(world):
+    """The folder of the saves of world: saves/ next to it."""
+    return os.path.join(os.path.dirname(os.path.abspath(world)), "saves")
+
+
+def save(g, player):
+    """Save the running game (the button "Save" of the Game menu, #2259): the world after `save-all flush`, with no
+    autosave while it copies, and the state of all players (the Gather of run.play, also for a click of another
+    person). The chat line of player names the save. Returns its path."""
+    game = g.game
+    game.command("save-off")
+    game.command("save-all flush")
+    try:
+        path = write(folder(game.world), game.world, dump(getattr(game, "g", None) or g))
+    finally:
+        game.command("save-on")
+    g.command(f"tellraw {player} " + json.dumps({"text": f"Saved the game: {os.path.basename(path)}", "color": "green"}))
+    return path
+
+
+def write(saves, world, state):
+    """Copy the world and the state (dump) into a new folder under saves. Returns its path."""
+    path = os.path.join(saves, f"{os.path.basename(os.path.normpath(world))}-{time.strftime('%Y%m%d-%H%M%S')}")
     shutil.copytree(world, os.path.join(path, "world"), ignore=lambda d, names: [n for n in names if n in SKIP])
     with open(os.path.join(path, FILE), "w") as f:
         json.dump(state, f, indent=1, sort_keys=True)
