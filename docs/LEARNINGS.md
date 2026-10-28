@@ -33,6 +33,7 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - `git stash` during an unfinished merge drops `MERGE_HEAD`: the next commit is no merge commit. To test main without your change, use `git worktree add` (#2281).
 - The refill lock `claim.py 0 --refill` does not lock an epic: run `claim.py E --refill` for each epic E before you make its sub-issues, and list its open sub-issues again just before. A parallel run made 4 of the same trigger tickets in the same minute (#2612 copied #2609, #2621 copied #2611).
 - The fast suite stops at one percent and runs on: add `-o faulthandler_timeout=90` (pytest dumps the stack of a test that runs longer). #2484: `train.start()` looped for ever on a technology that never goes into `g.techs`.
+- A test that passes in the foreground and fails only in a background run: check the signals. A background job ignores SIGINT, and Python and its children keep that (`(trap '' INT; python3 -m pytest ...)` reproduces it, #2658).
 - `git checkout --ours FILE` in a merge takes your whole file: it drops the hunks of main that merged with no conflict (#2627 lost the `name_timeline` change of #2659). Resolve only the marker hunks, then read `git diff origin/main --stat` and the hunk list of the file: only your change may differ.
 
 ## Code
@@ -76,3 +77,4 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - Two ready tickets can ask for the same feature with other words (#2357 `--victory regicide`, #2347 `--mode regicide`): before the code, `git log origin/main --oneline -10` and the open tickets of the same epic; fetch main again before the push (#2387 merged #2347 while #2357 was coded).
 - A new field that `game/*.py` sets on a Gather (`g.x =`, `vars(g).setdefault("x"`) fails `tests/test_savegame_fields.py`: save it in a key tuple of `game/savegame.py` (game state), or add it to `savegame.NOT_SAVED` with its reason (a tick timer, a shown thing, a setup value, #2535).
 - The `texts` dict of `read_scenario` holds the message chapters (`CHAPTERS`: `book_pages` reads `"victory"`, `"loss"` as text): a new key needs a name that is no chapter key (#2566 used `"global_victory"`).
+- Trigger effect IDs: the constants of `aoe2mc.py` (`HEAL_OBJECT = 34`) follow `EffectId` of AoE2ScenarioParser (`datasets/effects.py`), not the order of the AoE2 editor menu (#2692).
