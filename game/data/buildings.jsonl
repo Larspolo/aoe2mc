@@ -1,4 +1,4 @@
-{"name": "HOUSE", "hp": 550, "attack": 0, "melee": 0, "pierce": 7, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 2, "housing": 5}
+{"name": "HOUSE", "hp": 550, "attack": 0, "melee": 0, "pierce": 7, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 2, "housing": 5, "garrison_by": ["KING", "VILLAGER"]}
 {"name": "BARRACKS", "hp": 1200, "attack": 0, "melee": 0, "pierce": 7, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 6, "conscription": true}
 {"name": "ARCHERY_RANGE", "hp": 1500, "attack": 0, "melee": 0, "pierce": 7, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 6, "conscription": true}
 {"name": "STABLE", "hp": 1500, "attack": 0, "melee": 0, "pierce": 7, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 6, "conscription": true}

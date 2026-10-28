@@ -75,8 +75,16 @@ def check_train(row):
 
 
 def check_civs(row):
-    form(row, {"name": str, "missing": list}, {"unique": str, "units": list, "costs": list, "twice": list})
+    form(row, {"name": str, "missing": list}, {     # one key per line: parallel tickets add one
+        "cost_per": list,
+        "costs": list,
+        "drop": dict,
+        "twice": list,
+        "unique": str,
+        "units": list,
+    })
     n, known = row["name"], NAMES["train.jsonl"] | NAMES["units.jsonl"] | NAMES["buildings.jsonl"]
+    assert set(row.get("drop", {})) <= {"food", "forage"} and all(isinstance(v, NUMBER) for v in row.get("drop", {}).values()), n
     assert set(row["missing"]) <= known and row["missing"] == sorted(set(row["missing"])), n
     assert row.get("unique", "MILITIA") in NAMES["units.jsonl"], n
     assert set(row.get("twice", ())) <= NAMES["train.jsonl"], n
@@ -91,6 +99,8 @@ def check_civs(row):
             assert any(civs.has(what, x) for x in sorted(names | NAMES["units.jsonl"])), (n, what)
         assert res is None or res in RES, (n, what, res)
         assert len(ages) == 4 and all(isinstance(a, NUMBER) for a in ages), (n, what)
+    for group, buildings, each, most in row.get("cost_per", ()):     # #2177
+        assert group in civs.GROUPS and set(buildings) <= NAMES["buildings.jsonl"] and 0 < each <= most < 1, n
 
 
 def check_gather(row):
