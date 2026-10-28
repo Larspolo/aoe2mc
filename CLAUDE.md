@@ -143,7 +143,7 @@ hook, `.gitignore` and the claim and dashboard rules. The aim is more closed tic
   asserts less) could have prevented it. Act only when it is good practice anyway (`autopilot/conflict.md`).
 - Only the owner can change the environment settings (setup script, network, variables), the scheduled task and the
   GitHub settings. When one of them costs time, make a `needs-human` ticket with numbered steps and the exact text.
-- One run per review (`tools/claim.py 0 --review`, after 50 merged PRs, more after reviews with no change): the `improve` skill measures the runs, CI and the environment and makes one larger improvement.
+- One run per review (`tools/claim.py 0 --review`, after 200 merged PRs and 4 hours, more after reviews with no change): the `improve` skill measures the runs, CI and the environment and makes one larger improvement.
 - Never weaken tests, CI or safety rules to save time. List each process change on the status issue.
 Keep this file short: put details in skills or docs.
 
