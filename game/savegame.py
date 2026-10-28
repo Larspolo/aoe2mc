@@ -41,6 +41,13 @@ MAP = (                                                                # gather.
     "traps",
     "trees",
 )
+SCORE = (                                                              # Gather: the counts of score.py (#2475)
+    "fallen",                                                          # spoils.py: the units that gave their spoils
+    "given",                                                           # train.py: the free units and technologies
+    "losses",
+    "razed",
+    "tributes",                                                        # diplomacy.py
+)
 RIDERS = ("berths", "boarding", "cargo", "loading", "towers", "unloads")   # transport.py, siege_tower.py (#2411)
 KEPT = (                                                               # the fields of Gather that only some have, pack():
     *LEFT,                                                             # one tuple per line, in alphabetical order
@@ -48,6 +55,7 @@ KEPT = (                                                               # the fie
     *OPTIONAL,
     *RIDERS,
     *ROUTES,
+    *SCORE,
 )
 JOB = ("state", "load", "res", "job", "lap", "prey")                  # fields of a gather.Villager, as they are
 BOT = ("time", "charged", "attack")                                    # fields of a bot.Bot, as they are (#2325)
