@@ -743,7 +743,7 @@ def max_pop(g):
 def census(g):
     """Count the live villagers and military units of the player (a dead unit has no position) and show the counts.
     A dead villager leaves g.villagers, the selection and its farm: the idle count and the bot see only live ones (#1039)."""
-    live = g.positions(list(g.villagers) + list(g.soldiers))
+    live = g.positions(list(g.villagers) + [u for u, n in g.soldiers.items() if n not in build.MOVES])   # a building
     for u in [u for u in g.villagers if u not in live]:
         del g.villagers[u]
         g.selected.discard(u)
@@ -855,7 +855,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     for cmd in fire_commands(g, uuid, name):                       # a new fire ship after Siphons (#2165)
         g.command(cmd)
     # they take move orders as a soldier (#1243, #1253); a ship sails with fleet.py (#1383)
-    if gather.military(name) or name in ORDERS or units.is_boat(units.classify(name)):
+    if gather.military(name) or name in ORDERS or name in build.MOVES or units.is_boat(units.classify(name)):
         g.soldiers[uuid] = name
         return uuid
     g.villagers[uuid] = gather.Villager(uuid, pos)
