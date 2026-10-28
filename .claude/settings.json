@@ -62,7 +62,31 @@
     "deny": [
       "Bash(git push --force:*)",
       "Bash(git push -f:*)",
-      "Bash(gh repo delete:*)"
+      "Bash(gh repo delete:*)",
+      "Artifact",
+      "ArtifactComments",
+      "ArtifactData",
+      "CronCreate",
+      "CronDelete",
+      "CronList",
+      "DesignSync",
+      "ListConnectors",
+      "ListMcpResourcesTool",
+      "ListPlugins",
+      "ListSkills",
+      "NotebookEdit",
+      "PushNotification",
+      "ReadMcpResourceDirTool",
+      "ReadMcpResourceTool",
+      "SearchMcpRegistry",
+      "SearchPlugins",
+      "SearchSkills",
+      "SendUserFile",
+      "ShowOnboardingRolePicker",
+      "SuggestConnectors",
+      "SuggestPluginInstall",
+      "SuggestSkills",
+      "Workflow"
     ]
   },
   "hooks": {

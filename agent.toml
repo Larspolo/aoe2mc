@@ -44,6 +44,3 @@ system = "docs/SYSTEM.md"
 steering = "docs/STEERING.md"
 learnings = "docs/LEARNINGS.md"
 roadmap = "docs/ROADMAP.md"
-
-[dashboard]
-artifact = "https://claude.ai/artifact/6UL256SwEuNGNgzKkxojrh"   # the owner's dashboard artifact (skill dashboard-refresh, #982)
