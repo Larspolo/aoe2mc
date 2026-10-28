@@ -135,7 +135,8 @@ def elevation_command(data):
         return None
     players = sorted(data.get("players", {}).items(), key=lambda p: int(p[0]))
     return " ".join([f"aoe elevation {data['level_height']}"] + [f"p{n}:" + ":".join(f"{f:g}" for f in
-                                                                   civs.elevation(p.get("civ"))) for n, p in players])
+                                                                   civs.elevation(full.get("civ"))) for n, p in players
+                                                                   for full in [{} if data.get("full_tech_tree") else p]])
 
 
 def stats_command(uuid, name, s=None, taken=1.0):
@@ -227,6 +228,7 @@ def setup(game, data):
     for o in data["objects"]:
         if o["kind"] == "building" and o["player"] and "footprint" in o and o["name"] in BUILDINGS:
             uuid, civ = target_uuid(o["footprint"]), data.get("players", {}).get(str(o["player"]), {}).get("civ")
+            civ = None if data.get("full_tech_tree") else civ          # no civilization bonus (#2354)
             for c in building(uuid, o["name"], o["player"], building_box(o, ground), data.get("tile_size", 4),
                               held.get(o.get("ref"), ()), civs.hp(civ, o["name"], stats(o["name"]))) \
                     + [label_command(uuid, o["name"])]:
