@@ -27,12 +27,12 @@ def hand_items(nbt):
 
 
 def entity(name, models=True):
-    old, units.ITEM_MODELS = units.ITEM_MODELS, models
+    old, units.ASSETS = units.ASSETS, models
     try:
         return units.make_entity({"name": name, "player": 1, "x": 0, "y": 0}, {1: {"color": "blue"}}, (0.5, 70, 0.5),
                                  np.random.default_rng(0))
     finally:
-        units.ITEM_MODELS = old
+        units.ASSETS = old
 
 
 @pytest.fixture(scope="module")
@@ -87,13 +87,13 @@ def test_the_game_program_uses_the_models_of_a_world_with_the_pack(tmp_path):
     import sys
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
     import run
-    old = units.ITEM_MODELS
+    old = units.ASSETS
     try:
         run.Game(str(tmp_path))
-        assert units.ITEM_MODELS is False
+        assert units.ASSETS is False
         (tmp_path / "resourcepacks").mkdir()
         (tmp_path / "resourcepacks" / "resources.zip").write_bytes(b"")
         run.Game(str(tmp_path))
-        assert units.ITEM_MODELS is True
+        assert units.ASSETS is True
     finally:
-        units.ITEM_MODELS = old
+        units.ASSETS = old
