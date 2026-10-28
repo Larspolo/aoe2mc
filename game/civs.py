@@ -66,7 +66,8 @@ GROUPS = {g: (lambda f, g: lambda n, s: g in TAGS.get(n, ()) or f(n, s))(RULES.g
 
 # The tables of each civilization: one line per civilization in data/civs.jsonl (#1914, `table.load`), from the AoE2 DE
 # wiki. "unique": the unique unit of its castle (train.UNIQUE). "missing": the technologies and units that it does not
-# have (the availability chart of each civilization, #1373): the menu does not show them (train.unlocked).
+# have (the availability chart of each civilization, #1373): the menu does not show them (train.unlocked). The items
+# that few civilizations have are in ONLY, not here.
 # "units": the bonuses of the land units (#1090): [group of GROUPS, value, change in the Dark, Feudal, Castle and
 # Imperial Age]; value is a field of combat.Stats or "speed" (the walk speed); an int adds, a float multiplies ("fire
 # 25 % faster" is the reload / 1.25). "costs": the cost bonuses (#1091): [what, resource or null (all), change in each
@@ -86,12 +87,15 @@ UNIQUE = {r["name"]: r["unique"] for r in ROWS if "unique" in r}
 UNITS = {r["name"]: [tuples(b) for b in r["units"]] for r in ROWS if "units" in r}
 COSTS = {r["name"]: [tuples(b) for b in r["costs"]] for r in ROWS if "costs" in r}
 TWICE = {r["name"]: tuples(r["twice"]) for r in ROWS if "twice" in r}
-MISSING = {t: tuple(sorted(r["name"] for r in ROWS if t in r["missing"]))
-           for t in sorted({t for r in ROWS for t in r["missing"]})}
-ELEPHANTS = tuple(r["name"] for r in ROWS if "BATTLE_ELEPHANT" not in r["missing"])   # the battle elephant (#1556)
-EAGLES = tuple(r["name"] for r in ROWS if "EAGLE_SCOUT" not in r["missing"])   # the eagle line (#1555)
-LANCERS = tuple(r["name"] for r in ROWS if "STEPPE_LANCER" not in r["missing"])   # the steppe lancers (#1557)
-FIRE_LANCERS = tuple(r["name"] for r in ROWS if "FIRE_LANCER" not in r["missing"])   # the fire lancer (#1953)
+# An item that few civilizations have names them in the key "civs" of its line in data/train.jsonl or data/build.jsonl
+# (#2235): a new unique or regional unit then changes only its own line, not each line of data/civs.jsonl.
+ONLY = {r["name"]: set(r["civs"]) for f in ("train.jsonl", "build.jsonl") for r in table.load(f) if "civs" in r}
+MISSING = {t: tuple(sorted(r["name"] for r in ROWS if t in r["missing"] or r["name"] not in ONLY.get(t, (r["name"],))))
+           for t in sorted({t for r in ROWS for t in r["missing"]} | set(ONLY))}
+ELEPHANTS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["BATTLE_ELEPHANT"])   # the battle elephant (#1556)
+EAGLES = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["EAGLE_SCOUT"])   # the eagle line (#1555)
+LANCERS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["STEPPE_LANCER"])   # the steppe lancers (#1557)
+FIRE_LANCERS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["FIRE_LANCER"])   # the fire lancer (#1953)
 CHURCH_RATE, CHURCH_NEAR = 1.1, 10.5                              # +10 % work in the 21-tile square around a Fortified
                                                                   # Church (tiles from its center, #1930)
 TECH_ROWS = table.load("train.jsonl")
