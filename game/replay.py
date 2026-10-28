@@ -231,7 +231,7 @@ class Replay:
         self.points = {}                        # object ID of a building -> its last GATHER POINT event (#1227)
         self.adopted, self.rallied = {}, 0      # temporary ID of a unit at a gather point -> its object ID (#1227)
         self.effects = {}                       # entity tag of a research text -> game time (ms) of its end (#843)
-        self.flares = []                        # (x, y, z, game time (ms) of the end) of the live flares (#2402)
+        self.flares = []                        # (x, y, z, game time (ms) of the end, RGB) of the live flares (#2402)
         self.refs = {o["ref"]: o for o in data["objects"] if o.get("ref") is not None}
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
@@ -443,17 +443,18 @@ class Replay:
         import flare                                                # game/: on the path of the replay
         self.flares = [f for f in self.flares if f[3] > t]
         return [f"kill @e[type=text_display,tag={tag}]" for tag in done] + \
-            [flare.particles(x, y, z, "@a") for x, y, z, _ in self.flares]
+            [flare.particles(x, y, z, "@a", rgb) for x, y, z, _, rgb in self.flares]
 
     def flare(self, e, name, color):
-        """A flare of the record (#2402): the bell, the light column of the game program (flare.py) at the block of
-        its tile for flare.SECONDS of game time, and a chat line in the player color."""
+        """A flare of the record (#2402): the bell, the light column of the game program (flare.py) in the player color
+        at the block of its tile for flare.SECONDS of game time, and a chat line in the player color."""
         import flare
         x, z = (min(self.n - 1, max(0, int(c * self.T))) for c in e["tile"])
         y = self.ground[z][x] if self.ground[z][x] is not None else next(
             (g for row in self.ground for g in row if g is not None), 64)    # water: the height of the land
-        self.flares.append((x, y, z, e["time"] + flare.SECONDS * 1000))
-        return [f"playsound {flare.SOUND} master @a {x} {y} {z} 1 1 1", flare.particles(x, y, z, "@a"),
+        rgb = FIREWORK_COLORS.get(self.data["players"].get(str(e.get("player")), {}).get("color"), FIREWORK_COLORS["white"])
+        self.flares.append((x, y, z, e["time"] + flare.SECONDS * 1000, rgb))    # the column in the player color (#2442)
+        return [f"playsound {flare.SOUND} master @a {x} {y} {z} 1 1 1", flare.particles(x, y, z, "@a", rgb),
                 "tellraw @a " + json.dumps([text(f"<{name}> ", color), text("Flare", "gold")])]
 
     @functools.lru_cache(maxsize=None)

@@ -52,10 +52,12 @@ from units import TEAM_COLOR, VILLAGER_JOBS, animal, pretty  # noqa: E402
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import replay  # noqa: E402  (build imports it too)
+import battle_royale  # noqa: E402
 import bossbar  # noqa: E402
 import cheats  # noqa: E402
 import civs  # noqa: E402
 import conquest  # noqa: E402
+import defend_wonder  # noqa: E402
 import diplomacy  # noqa: E402
 import flare  # noqa: E402
 import fleet  # noqa: E402
@@ -77,6 +79,7 @@ import siege_tower  # noqa: E402
 import sudden_death  # noqa: E402
 import stance  # noqa: E402
 import table  # noqa: E402
+import time_limit  # noqa: E402
 import trade  # noqa: E402
 import transport  # noqa: E402
 import train  # noqa: E402
@@ -536,6 +539,7 @@ class Gather:
     later = {}                                                         # the bonus of the first town center (civs.TOWN_CENTER)
     victory = "standard"                                               # AoE2 "Victory"; "conquest": no wonder, no relics (#2316)
                                                                        # "king-of-the-hill": hill.py (#2360)
+                                                                       # "time-limit", "score": time_limit.py (#2356)
     mode = "standard"                                                  # AoE2 game mode; "regicide": the King (#2347)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
@@ -861,7 +865,8 @@ class Gather:
         watch = combat.WATCH * len({t['name'] for t in ROWS if t.get('watch')} & set(getattr(self, "techs", ())))   # (#1454, #1579)
         lit = {n for n, _, _ in placed} - combat.WALLS.keys() - {t['name'] for t in ROWS if t.get('dark')}   # as in AoE2
         return replay.seen(mobs, [(self.player, n, fp) for n, fp, _ in placed], self.player, self.map.T,
-                           lambda n: combat.sight(n) + printing * (n in monk.MONKS) + watch * (n in lit))
+                           lambda n: combat.sight(n) + printing * (n in monk.MONKS) + watch * (n in lit)
+                           + civs.SIGHT.get(civs.civ(self), {}).get(n, 0))   # the Chinese town center (#2118)
 
     def task(self, v, name):
         """Give the villager the look of its AoE2 task (`LUMBERJACK` ...), with the table of the converter."""
@@ -1814,13 +1819,20 @@ class Gather:
                 regicide.tick(self)
             elif self.mode == "sudden-death":                          # a player without its town center loses (#2407)
                 sudden_death.tick(self)
+            elif self.mode == "battle-royale":                         # the Corruption takes the map (#2439)
+                battle_royale.tick(self, self.tick * NORMAL)
+            elif self.mode == "defend-the-wonder":                     # the attackers win when the Wonder falls (#2441)
+                defend_wonder.tick(self)
             fog.tick(self)                                             # after the bots: their units too (#1389)
             herd.tick(self)                                            # all players: the bots capture too (#1792)
-            if self.victory == "standard":                             # a wonder or all relics win too (#2316)
+            if self.victory == "standard" or self.mode in wonder.RACE:  # a wonder or all relics win too (#2316)
                 wonder.tick(self, self.tick * NORMAL)                  # game seconds, as train.tick
+            if self.victory == "standard" and self.mode not in wonder.RACE:   # Defend the Wonder: only it (#2441)
                 relic_victory.tick(self, self.tick * NORMAL)
             elif self.victory == "king-of-the-hill":                   # the monument in the center (#2360)
                 hill.tick(self, self.tick * NORMAL)
             score.tick(self)
+            if self.victory in ("time-limit", "score"):                # after the conquest: it wins before (#2356)
+                time_limit.tick(self, self.tick * NORMAL)
             treaty.tick(self, self.tick * NORMAL)
             time.sleep(max(0.0, self.tick / self.speed - (time.time() - t)))   # a step stays tick game seconds
