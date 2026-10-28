@@ -153,6 +153,8 @@ NOT_SAVED = (                                                          # the fie
     "defender",                                                        # defend_wonder.setup makes it again
     "enemies",                                                         # the enemy units of aoe2mc.json: a dead one has no position
     "explore_at",                                                      # score.py: the next check time
+    "fallen_at",                                                       # scenario.fallen: the next check time
+    "fallen_sent",                                                     # scenario.fallen: a load sets the same score again
     "flares",                                                          # flare.py: the flares of a replay
     "fog",                                                             # fog.py: the next tick hides the units again; explored()
     "garrison_sent",                                                   # scenario.garrisons: a load sends them again

@@ -4381,9 +4381,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         # once per second, as AoE2 does, with `random value 1..100`
         chance = (TRIGGER_CHANCE, False) in kinds
         rest = kinds - {(TRIGGER_CHANCE, False)}
-        if any(c["type"] in OBJECT_TESTS and (c.get("ref", -1) is None or c.get("ref", -1) < 0 or not c.get("unit"))
+        if any(c["type"] in OBJECT_TESTS and (c.get("ref", -1) is None or c.get("ref", -1) < 0
+                                              or not c.get("unit") and not fallen_building(c))
                or c["type"] == BRING_OBJECT_TO_OBJECT and (c.get("next") is None or c["next"] < 0 or not c.get("next_unit"))
-               for c in conds):                                        # no object, or a building: blocks, no entity
+               for c in conds):                    # no object, or a building: blocks, no entity (but #2910: its score)
             stats["object condition (not an entity, not supported yet)"] += t["enabled"]
             continue
         # "OR" with a timer and other conditions (#2791) or a chance (#2815): the timer of a group is a schedule that
@@ -4441,6 +4442,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             groups_unless[k].append(f"unless score {roll} matches ..{qs[0]}")
         for i, c in enumerate(conds):
             tests, unless = groups_tests[which[i]], groups_unless[which[i]]
+            if fallen_building(c):                                     # a building that falls: its score (#2910)
+                tests.append(f"{'unless' if c['inverted'] else 'if'} score #f{c['ref']} aoe_fallen matches 1..")
+                unless.append(f"{'if' if c['inverted'] else 'unless'} score #f{c['ref']} aoe_fallen matches 1..")
+                continue
             if c["type"] in SCORE_TESTS:                               # a score of the world or the game
                 test = SCORE_TESTS[c["type"]](c)
                 no = c["type"] == COMPARE_VARIABLES and compare_negated(c) or \
@@ -4522,8 +4527,17 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
-    for word in ("aoe_action", "aoe_difficulty", "aoe_gar", "aoe_lost", "aoe_seen", "aoe_tech", "aoe_techstate",
-                 "aoe_vic"):                                                        # the scores of the game program
+    for word in (                                                       # the scores of the game program: one per line
+            "aoe_action",
+            "aoe_difficulty",
+            "aoe_fallen",
+            "aoe_gar",
+            "aoe_lost",
+            "aoe_seen",
+            "aoe_tech",
+            "aoe_techstate",
+            "aoe_vic",
+    ):
         if any(f" {word} " in x for x in tick):
             setup[f"scoreboard objectives add {word} dummy"] = None
     if "scoreboard objectives add aoe_decision trigger" in setup:     # the clicks of "Create Decision" (#2886)
@@ -4556,6 +4570,18 @@ def research_list(triggers):
             for t in triggers for i, e in enumerate(t["effects"]) if f"#r{t['id']}.{i} aoe_tech 1" in found]
 
 
+def fallen_building(c):
+    """The "Destroy Object" condition of a building (#2910): the score #f<ref> of aoe_fallen, not the tag of an entity."""
+    return c["type"] == DESTROY_OBJECT and not c.get("unit")
+
+
+def fallen_list(triggers):
+    """The refs of the "Destroy Object" conditions of buildings that the tick function of trigger_files tests, for
+    aoe2mc.json "fallen" (#2910): the scenario mode of the game program sets their score when the building falls."""
+    tick = trigger_files(triggers)[1].get("data/aoe2mc/function/tick.mcfunction", "")
+    return sorted({int(r) for r in re.findall(r"#f(\d+) aoe_fallen ", tick)})
+
+
 def tech_state_list(triggers):
     """The [player, technology] pairs of the "Researching Technology" and "Technology State" conditions that the tick
     function of trigger_files tests, for aoe2mc.json "tech_states" (#2769): the scenario mode of the game program sets
@@ -4575,6 +4601,7 @@ def visible_list(triggers):
 # list is one line here, in alphabetical order (#2832): no new keyword of write_objects.
 TRIGGER_LISTS = {
     "actions": action_list,                                     # the units of aoe_action (#2867)
+    "fallen": fallen_list,                                      # the buildings of aoe_fallen (#2910)
     "research": research_list,                                  # the "Research Technology" effects (#2577)
     "tech_states": tech_state_list,                             # the [player, technology] pairs of aoe_techstate (#2769)
     "visible": visible_list,                                    # the [ref, player] pairs of aoe_seen (#2756)
