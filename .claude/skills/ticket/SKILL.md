@@ -120,8 +120,9 @@ is only in a document is lost: milestones 2 and 3 of the replay research (#31) w
 
 ## Model lanes
 
-A cheap Haiku run takes the tickets with the label `lane:haiku` (#1715). Add it when a Haiku run can do the ticket as
-well as an Opus run. Judge each ticket: there is no quota of Haiku tickets.
+A cheap Haiku run takes the tickets with the label `lane:haiku` (#1715). Add it to each `size:S` ticket that names the
+place of its change (a file, a function or a data line) and needs no look at a render, a screenshot or the real game.
+Judge the other tickets one by one: there is no quota of Haiku tickets.
 - Haiku does well: a clear goal and a clear end, a change at a known place (the body names the files or the
   function to change), a pattern that the code already has, values that the body gives or that a data file or a
   merged PR shows. Size S or a small M. Tests and a slow test run are fine.
@@ -132,8 +133,8 @@ well as an Opus run. Judge each ticket: there is no quota of Haiku tickets.
   a small part of the quota of an Opus run (`weights` in `python3 tools/usage.py --fire`).
 - Measured on 2026-10-28: 22 PRs of 24 Haiku tickets. At API prices a Haiku ticket costs about 1/8 of an Opus
   ticket, and about 1/25 while its prompt stays below 100k tokens (one Haiku ticket: $0.07, Opus: $1.70 to $2.10).
-When you are not sure, do not add it: an Opus run takes the ticket. A Haiku run that finds the ticket unclear
-removes the label (`autopilot` skill, `queue.md`).
+When you are not sure, add it (owner, 2026-10-28): a Haiku run that finds the ticket unclear removes the label
+(`autopilot` skill, `queue.md`), and then an Opus run takes it. The Haiku try costs little next to an Opus ticket.
 While `reserved` in `[pacing]` of `agent.toml` names the lane, Opus runs never take its tickets (#1994).
 
 ## Rules

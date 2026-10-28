@@ -42,3 +42,16 @@ def test_the_prs_of_this_run_are_its_own():
     assert "a PR of this run" in start.pr_work(pr(ref=run), ISSUES, RED, beat, NOW, me=run + "-2")
     assert "a PR of this run" in start.pr_work(pr(ref=run + "-3"), ISSUES, RED, beat, NOW, me=run)
     assert "leave it" in start.pr_work(pr(ref="claude/kind-a1b2c4"), ISSUES, RED, beat, NOW, me=run)
+
+
+def ticket(n, body, *labels):
+    return {"number": n, "body": body, "labels": [{"name": x} for x in labels]}
+
+
+def test_a_later_ticket_prefers_the_code_that_the_run_read():
+    last = ticket(1, "Part of #50. Change `aoe2mc.py` `effect_lines()`.", "P1")
+    picks = [ticket(2, "Change `buildings.py`.", "P1"), ticket(3, "Part of #50.", "P2"),
+             ticket(4, "Fix `effect_lines()`.", "P1"), ticket(5, "x", "P1", "lane:haiku"),
+             ticket(6, "Part of #50.", "P1", "lane:haiku")]
+    assert [i["number"] for i in start.prefer(picks, last)] == [4, 2, 3, 6, 5]     # never above a higher priority
+    assert start.related(picks[2], last) and not start.related(picks[0], last)
