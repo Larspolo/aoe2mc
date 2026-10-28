@@ -70,7 +70,7 @@ MAP = {
     ("effect", "CLEAR_INSTRUCTIONS"): "`title @a clear` (#2609)",
     ("effect", "CLEAR_TIMER"): "`bossbar remove aoe2mc:timerN` and `schedule clear aoe2mc:timer/N` of the slot N (#2696)",
     ("effect", "CREATE_GARRISONED_OBJECT"): "`summon` of the unit (`units.make_entity()`) in the state of a garrisoned unit (`Invulnerable`, `NoAI`, tags `aoe2mc.garrisoned`, `aoe2mc.made_inside`) on the inside cells of each selected building; the game program adds it to the garrison (#2764); a ship or ram holder: not supported yet",
-    ("effect", "CREATE_OBJECT"): "`summon` of the entity of `units.make_entity()` (units, timer triggers: #656); buildings: not supported yet",
+    ("effect", "CREATE_OBJECT"): "`summon` of the entity of `units.make_entity()` (units, timer triggers: #656); a building: the order `create` of the scenario mode, a complete building (#2911)",
     ("effect", "CREATE_OBJECT_ARMOR"): "the change \"N NAME melee 2 V\" or \"N NAME pierce 2 V\" in the storage `aoe2mc:attributes` (an add, as AoE2 adds the entries of one class): the scenario mode of the game program adds V to the melee or pierce armor of the unit type of the player (`train.stats`, #2855); the other armor classes are not supported",
     ("effect", "CREATE_OBJECT_ATTACK"): "the change \"N NAME attack 2 V\" in the storage `aoe2mc:attributes` for the attack classes 3 and 4: the scenario mode of the game program adds V to the attack of the unit type of the player (`train.stats`, #2855); the bonus classes are not supported",
     ("effect", "REMOVE_OBJECT"): "`kill @e[tag=aoe2mc.pN,type=..,x=..,y=..,z=..,dx=..,dy=..,dz=..]` (timer triggers: #656)",
