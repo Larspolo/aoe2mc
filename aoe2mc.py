@@ -36,12 +36,14 @@ The world is saved with Minecraft data version 26.3. Newer Minecraft versions up
 import argparse
 import contextlib
 import functools
+import glob
 import hashlib
 import io
 import json
 import math
 import os
 import re
+import shutil
 import sys
 import textwrap
 import time
@@ -5555,6 +5557,20 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
         units.ASSETS = False
 
 
+def clear_old_output(out):
+    """Remove the outputs of an earlier aoe2mc world in the folder, so that it gives the same world as a new folder
+    (#3030). A folder with no aoe2mc.json holds another world: it loses no file."""
+    if not os.path.exists(os.path.join(out, "aoe2mc.json")):
+        return
+    shutil.rmtree(os.path.join(out, "datapacks", "aoe2mc"), ignore_errors=True)
+    for f in [os.path.join(out, "resourcepacks", "resources.zip"), os.path.join(out, "preview.png")]:
+        if os.path.exists(f):
+            os.remove(f)
+    for d in ("region", "entities"):
+        for f in glob.glob(os.path.join(out, "dimensions", "minecraft", "overworld", d, "*.mca")):
+            os.remove(f)
+
+
 def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
              verbose, garrison, border_design, ambience, at=None, mood="on", fog=False, resource_pack=False):
     buildings.BARRIERS = barriers
@@ -5648,6 +5664,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         print(f"  {k}: {stats[k]}")
     passable = passable_states(B.states)
 
+    clear_old_output(out)
     dim = os.path.join(out, "dimensions", "minecraft", "overworld")
     for d in ("region", "entities"):
         os.makedirs(os.path.join(dim, d), exist_ok=True)
