@@ -34,6 +34,7 @@ MAP = {
     ("condition", "OWN_FEWER_OBJECTS"): "`execute store result score ... if entity @e[tag=aoe2mc.pN]`, then `if score ... matches ..N` (units only, #2573)",
     ("condition", "DESTROY_OBJECT"): "`execute unless entity @e[tag=aoe2mc.rN]` in the tick function (units, #2618); a building: not supported yet",
     ("condition", "CAPTURE_OBJECT"): "`execute if entity @e[tag=aoe2mc.rN,tag=aoe2mc.pN]` in the tick function (units, #2619); a building: not supported yet",
+    ("condition", "OBJECT_HP"): "`execute store result score ... run data get entity @e[tag=aoe2mc.rN,limit=1] Health` in the tick function, then `if score ... matches` (#2701)",
     ("condition", "VARIABLE_VALUE"): "`execute if score #vN aoe_var matches ..` in the tick function, once (#2611)",
     ("condition", "CHANCE"): "`execute store result score ... run random value 1..100` once per second (alone, after the timers or with the ticked conditions: #2574)",
     ("condition", "PLAYER_DEFEATED"): "`execute unless entity @e[team=pN]`",
