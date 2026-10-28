@@ -288,7 +288,7 @@ def read_scx(path):
     try:
         s = scx.read(path)
     except scx.ScxError as e:
-        raise OptionError(str(e)) from None
+        raise ScxFormatError(str(e)) from None
     w, h = s["width"], s["height"]
     size = max(w, h)
     terrain, elevation = (np.pad(a, ((0, size - w), (0, size - h)), mode="edge") for a in (s["terrain"], s["elevation"]))
@@ -5800,6 +5800,10 @@ class OptionError(ValueError):
     """A command-line option that does not match the scenario."""
 
 
+class ScxFormatError(OptionError):
+    """An old scenario (.scx) that scx.py cannot read: a campaign gives the DE editor steps for it (#3036)."""
+
+
 def int_range(lo, hi):
     def parse(v):
         try:
@@ -5914,7 +5918,7 @@ def convert_campaign(src, out, only=None, name=None, **kw):
                     try:
                         convert(path, os.path.join(out, f"{i} {stem}"), name=f"{name} {i}" if name else stem, **kw)
                         continue
-                    except OptionError as e:      # another format version, or a file that scx.py cannot read
+                    except ScxFormatError as e:   # another format version, or a file that scx.py cannot read
                         print(f"{i} {fn}: {e}")
             old.append((i, fn, data))
         if old:
