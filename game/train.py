@@ -515,7 +515,7 @@ def show(g, player, rect):
               + state(name))
              for name in trains(g, building) if offered(g, rect, name) and not covered(g, building, name)
              for slot, item, label in [placed(g, building, name)]]
-    items += [RALLY] if units_of(building) else []
+    items += [RALLY] if units_of(g, building) else []
     items += [garrison.ungarrison(building)] if getattr(g, "garrisons", {}).get(rect) else []   # only with units inside (#808)
     if building == "MARKET":                                           # the buy and sell rows under the queue (#1286)
         import market                                                  # only for a market
@@ -547,9 +547,10 @@ def refresh(g):
             show(g, player, rect)
 
 
-def units_of(building):
-    """The units (not the technologies) that building trains: only such a building has a rally point."""
-    return [n for n in TRAINS[building] if n not in TECHS]
+def units_of(g, building):
+    """The units (not the technologies) that building trains, with trains() (the Mapuche Settlement, the upgraded
+    units, #3100): only such a building has a rally point."""
+    return [n for n in trains(g, building) if n not in TECHS]
 
 
 def groups(q):
@@ -582,7 +583,7 @@ def order(g, player, rect, slot, shift=False):
     allow) at the building rect, or cancel a unit of the queue row (cancel()), and refresh the menu. Returns the
     number of queued units. A click on RALLY closes the menu: the next right click on the ground sets the rally point
     (gather.Gather.click calls rally())."""
-    if slot == RALLY[0] and units_of(homes(g)[rect]):
+    if slot == RALLY[0] and units_of(g, homes(g)[rect]):
         g.rallying[player] = rect
         menu.close(g, player)
         g.command(f"tellraw {player} " + json.dumps({"text": "Right click the ground for the rally point.",
@@ -744,9 +745,15 @@ def per_enemy(g, name):
     return {r: min(v * n, most.get(r, v * n)) for r, v in COSTS[name].items()}
 
 
+SHIPS = {n for n in TRAINS["DOCK"] if n not in TECHS}                 # the ships of the dock (#1490) ...
+for _ in UPGRADES:                                                    # ... and the ships that its upgrades make (#3100)
+    SHIPS |= {new for t in UPGRADES for old, new in lines(t) if old in SHIPS}
+
+
 def shipwright(g, name):
-    """True when name is a ship of the dock and the player researched Shipwright (#1490)."""
-    return "SHIPWRIGHT" in getattr(g, "techs", ()) and name in units_of("DOCK")
+    """True when name is a ship of the dock, also after an upgrade (SHIPS), and the player researched Shipwright (#1490):
+    a ship in the queue keeps the bonus when its line is upgraded."""
+    return "SHIPWRIGHT" in getattr(g, "techs", ()) and name in SHIPS
 
 
 def queued(g, name):
